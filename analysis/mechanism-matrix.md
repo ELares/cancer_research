@@ -4,51 +4,51 @@ Cross-tabulation of article counts by therapeutic mechanism and cancer type.
 
 | Mechanism | bladder | breast | cervical | colorect | esophage | gastric | glioblas | head-and | kidney | leukemia | liver | lung | lymphoma | melanoma | mesothel | myeloma | neurobla | ovarian | pancreat | prostate | sarcoma | thyroid | Total |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| **antibody-drug-conjugate** | 36 | 179 | 19 | 33 | 7 | 28 | 7 | 12 | 5 | 7 | 5 | 91 | 20 | 5 | 5 | 6 | 6 | 56 | 27 | 16 | 9 | . | 579 |
-| **bioelectric** | 14 | 144 | 19 | 51 | 3 | 21 | 35 | 23 | 2 | 31 | 39 | 83 | 13 | 25 | 2 | 5 | 6 | 30 | 23 | 30 | 15 | 3 | 617 |
-| **bispecific-antibody** | 4 | 34 | 9 | 27 | 2 | 17 | 6 | 6 | 2 | 17 | 15 | 73 | 51 | 7 | 1 | 63 | 3 | 13 | 22 | 11 | 7 | . | 390 |
-| **car-t** | 6 | 41 | 3 | 28 | 1 | 26 | 45 | 8 | 11 | 70 | 27 | 43 | 95 | 20 | 4 | 56 | 12 | 26 | 38 | 14 | 11 | 3 | 588 |
-| **crispr** | 8 | 34 | 14 | 31 | 1 | 5 | 17 | 8 | 5 | 18 | 15 | 48 | 18 | 21 | 1 | 8 | 2 | 15 | 15 | 11 | 2 | 1 | 298 |
-| **electrochemical-therapy** | 2 | 15 | 4 | 19 | . | . | 14 | 1 | 10 | . | 49 | 10 | . | 8 | . | . | . | 1 | 180 | 100 | 8 | 1 | 422 |
+| **antibody-drug-conjugate** | 38 | 204 | 23 | 35 | 7 | 34 | 9 | 12 | 5 | 14 | 6 | 106 | 35 | 8 | 6 | 14 | 8 | 62 | 32 | 17 | 11 | . | 686 |
+| **bioelectric** | 14 | 153 | 19 | 54 | 3 | 21 | 35 | 24 | 2 | 31 | 39 | 87 | 13 | 25 | 2 | 5 | 6 | 30 | 24 | 30 | 15 | 4 | 636 |
+| **bispecific-antibody** | 4 | 35 | 9 | 28 | 2 | 17 | 6 | 6 | 2 | 22 | 16 | 75 | 58 | 7 | 1 | 65 | 3 | 13 | 23 | 12 | 7 | . | 411 |
+| **car-t** | 7 | 47 | 3 | 30 | 1 | 29 | 53 | 11 | 12 | 83 | 28 | 49 | 108 | 25 | 4 | 63 | 16 | 31 | 44 | 17 | 11 | 3 | 675 |
+| **crispr** | 8 | 43 | 14 | 33 | 1 | 5 | 19 | 11 | 6 | 25 | 17 | 52 | 26 | 29 | 1 | 10 | 6 | 20 | 21 | 13 | 2 | 1 | 363 |
+| **electrochemical-therapy** | 2 | 15 | 4 | 20 | . | . | 14 | 1 | 11 | . | 62 | 13 | 1 | 11 | . | . | . | 1 | 203 | 102 | 8 | 1 | 469 |
 | **electrolysis** | . | 4 | 1 | 6 | 2 | . | . | 1 | . | . | 4 | 4 | . | 1 | . | . | . | . | 7 | 2 | 5 | 1 | 38 |
-| **epigenetic** | 2 | 22 | 2 | 20 | 1 | 3 | 19 | 9 | 3 | 32 | 6 | 25 | 20 | 5 | 2 | 4 | 3 | 8 | 14 | 8 | 7 | . | 215 |
-| **frequency-therapy** | . | 11 | 2 | 10 | . | . | 4 | . | 4 | 1 | 18 | 5 | 2 | 3 | 1 | . | 2 | 1 | 14 | 6 | 6 | . | 90 |
-| **hifu** | 1 | 42 | 4 | 21 | . | 3 | 3 | 2 | 11 | . | 22 | 7 | . | 2 | . | 1 | . | 2 | 50 | 237 | 7 | 2 | 417 |
-| **immunotherapy** | 66 | 192 | 37 | 174 | 9 | 78 | 167 | 58 | 68 | 76 | 165 | 313 | 116 | 226 | 30 | 57 | 13 | 85 | 151 | 57 | 32 | 5 | 2175 |
-| **mRNA-vaccine** | 7 | 30 | 10 | 10 | 1 | 5 | 19 | 10 | 4 | 21 | 15 | 31 | 30 | 51 | 2 | 11 | . | 6 | 20 | 9 | 3 | 1 | 296 |
-| **metabolic-targeting** | . | 27 | 2 | 13 | . | 4 | 11 | 3 | 6 | 2 | 10 | 12 | . | 5 | . | 1 | 1 | 5 | 9 | 5 | 4 | 1 | 121 |
-| **microbiome** | 3 | 4 | . | 19 | . | 4 | 2 | 3 | 3 | . | 6 | 18 | . | 14 | . | . | . | . | 4 | 1 | 1 | . | 82 |
-| **nanoparticle** | 15 | 172 | 23 | 54 | 1 | 9 | 55 | 25 | 6 | 11 | 66 | 76 | 13 | 49 | . | 4 | 4 | 33 | 54 | 29 | 3 | 4 | 706 |
-| **oncolytic-virus** | 9 | 40 | 8 | 35 | 1 | 6 | 67 | 14 | 3 | 6 | 21 | 23 | 2 | 47 | . | 1 | . | 18 | 34 | 14 | 10 | . | 359 |
-| **sonodynamic** | 8 | 92 | 5 | 13 | . | 4 | 22 | 5 | 1 | 2 | 30 | 12 | 2 | 7 | . | . | . | 11 | 27 | 12 | 1 | 1 | 255 |
-| **synthetic-lethality** | 3 | 93 | 3 | 29 | 2 | 12 | 11 | 3 | 8 | 5 | 13 | 28 | 2 | 4 | 3 | . | 2 | 85 | 36 | 23 | 10 | 1 | 376 |
+| **epigenetic** | 4 | 33 | 2 | 25 | 2 | 3 | 23 | 10 | 3 | 34 | 8 | 32 | 23 | 9 | 2 | 5 | 3 | 11 | 16 | 10 | 8 | . | 266 |
+| **frequency-therapy** | 1 | 21 | 2 | 12 | . | . | 7 | . | 5 | 1 | 36 | 10 | 2 | 4 | 1 | . | 2 | 1 | 20 | 7 | 8 | . | 140 |
+| **hifu** | 1 | 42 | 4 | 22 | . | 3 | 6 | 2 | 11 | . | 24 | 7 | . | 3 | . | 1 | . | 2 | 54 | 239 | 10 | 2 | 433 |
+| **immunotherapy** | 85 | 282 | 45 | 231 | 16 | 104 | 200 | 76 | 87 | 92 | 222 | 419 | 136 | 344 | 30 | 67 | 19 | 104 | 217 | 79 | 43 | 11 | 2909 |
+| **mRNA-vaccine** | 8 | 31 | 11 | 12 | 1 | 6 | 22 | 10 | 7 | 21 | 18 | 43 | 31 | 62 | 2 | 12 | . | 6 | 27 | 10 | 3 | 1 | 344 |
+| **metabolic-targeting** | 4 | 42 | 3 | 18 | 1 | 8 | 19 | 5 | 8 | 3 | 23 | 22 | . | 8 | . | 3 | 1 | 8 | 14 | 6 | 4 | 3 | 203 |
+| **microbiome** | 4 | 5 | 1 | 31 | . | 6 | 2 | 3 | 5 | . | 10 | 28 | . | 26 | . | . | . | . | 6 | 4 | 1 | . | 132 |
+| **nanoparticle** | 17 | 207 | 23 | 65 | 1 | 11 | 62 | 27 | 7 | 12 | 71 | 90 | 16 | 70 | . | 5 | 5 | 36 | 72 | 34 | 5 | 6 | 842 |
+| **oncolytic-virus** | 10 | 47 | 9 | 41 | 1 | 7 | 79 | 20 | 3 | 8 | 25 | 31 | 3 | 81 | 1 | 3 | . | 21 | 44 | 17 | 12 | 2 | 465 |
+| **sonodynamic** | 9 | 111 | 5 | 16 | . | 4 | 31 | 5 | 1 | 3 | 33 | 16 | 3 | 13 | . | . | . | 12 | 37 | 16 | 4 | 3 | 322 |
+| **synthetic-lethality** | 3 | 130 | 3 | 31 | 3 | 12 | 22 | 3 | 8 | 15 | 16 | 35 | 5 | 6 | 3 | 7 | 3 | 119 | 42 | 36 | 14 | 1 | 517 |
 | **ttfields** | . | 15 | . | 6 | . | 4 | 384 | 2 | 2 | 1 | 13 | 51 | . | 8 | 38 | . | . | 15 | 27 | . | 9 | . | 575 |
-| **Total** | 184 | 1191 | 165 | 599 | 31 | 229 | 888 | 193 | 154 | 300 | 539 | 953 | 384 | 508 | 89 | 217 | 54 | 410 | 752 | 585 | 150 | 24 | 8599 |
+| **Total** | 219 | 1467 | 181 | 716 | 41 | 274 | 993 | 229 | 185 | 365 | 671 | 1170 | 460 | 740 | 91 | 260 | 72 | 492 | 930 | 651 | 180 | 39 | 10426 |
 
 ## Key Observations
 
 ### Top 20 Mechanism-Cancer Pairs (by article count)
 
+- **immunotherapy × lung**: 419 articles
 - **ttfields × glioblastoma**: 384 articles
-- **immunotherapy × lung**: 313 articles
-- **hifu × prostate**: 237 articles
-- **immunotherapy × melanoma**: 226 articles
-- **immunotherapy × breast**: 192 articles
-- **electrochemical-therapy × pancreatic**: 180 articles
-- **antibody-drug-conjugate × breast**: 179 articles
-- **immunotherapy × colorectal**: 174 articles
-- **nanoparticle × breast**: 172 articles
-- **immunotherapy × glioblastoma**: 167 articles
-- **immunotherapy × liver**: 165 articles
-- **immunotherapy × pancreatic**: 151 articles
-- **bioelectric × breast**: 144 articles
-- **immunotherapy × lymphoma**: 116 articles
-- **electrochemical-therapy × prostate**: 100 articles
-- **car-t × lymphoma**: 95 articles
-- **synthetic-lethality × breast**: 93 articles
-- **sonodynamic × breast**: 92 articles
-- **antibody-drug-conjugate × lung**: 91 articles
-- **immunotherapy × ovarian**: 85 articles
+- **immunotherapy × melanoma**: 344 articles
+- **immunotherapy × breast**: 282 articles
+- **hifu × prostate**: 239 articles
+- **immunotherapy × colorectal**: 231 articles
+- **immunotherapy × liver**: 222 articles
+- **immunotherapy × pancreatic**: 217 articles
+- **nanoparticle × breast**: 207 articles
+- **antibody-drug-conjugate × breast**: 204 articles
+- **electrochemical-therapy × pancreatic**: 203 articles
+- **immunotherapy × glioblastoma**: 200 articles
+- **bioelectric × breast**: 153 articles
+- **immunotherapy × lymphoma**: 136 articles
+- **synthetic-lethality × breast**: 130 articles
+- **synthetic-lethality × ovarian**: 119 articles
+- **sonodynamic × breast**: 111 articles
+- **car-t × lymphoma**: 108 articles
+- **antibody-drug-conjugate × lung**: 106 articles
+- **immunotherapy × gastric**: 104 articles
 
 ### Broad-Spectrum Mechanisms (spanning most cancer types)
 
@@ -57,17 +57,17 @@ Cross-tabulation of article counts by therapeutic mechanism and cancer type.
 - **bispecific-antibody**: researched across 21/22 cancer types
 - **car-t**: researched across 22/22 cancer types
 - **crispr**: researched across 22/22 cancer types
-- **electrochemical-therapy**: researched across 15/22 cancer types
+- **electrochemical-therapy**: researched across 16/22 cancer types
 - **electrolysis**: researched across 12/22 cancer types
 - **epigenetic**: researched across 21/22 cancer types
-- **frequency-therapy**: researched across 16/22 cancer types
+- **frequency-therapy**: researched across 17/22 cancer types
 - **hifu**: researched across 17/22 cancer types
 - **immunotherapy**: researched across 22/22 cancer types
 - **mRNA-vaccine**: researched across 21/22 cancer types
-- **metabolic-targeting**: researched across 18/22 cancer types
-- **microbiome**: researched across 13/22 cancer types
+- **metabolic-targeting**: researched across 20/22 cancer types
+- **microbiome**: researched across 14/22 cancer types
 - **nanoparticle**: researched across 21/22 cancer types
-- **oncolytic-virus**: researched across 19/22 cancer types
+- **oncolytic-virus**: researched across 21/22 cancer types
 - **sonodynamic**: researched across 18/22 cancer types
-- **synthetic-lethality**: researched across 21/22 cancer types
+- **synthetic-lethality**: researched across 22/22 cancer types
 - **ttfields**: researched across 14/22 cancer types
