@@ -89,3 +89,10 @@
 89. PMID: 32734509 -- Ghiaseddin AP et al. Tumor Treating Fields in the Management of Patients with Malignant Gliomas. *Current treatment options in oncology* (2020). 101 citations.
 90. PMID: 38363528 -- Volodina O et al. The Future of Gene Therapy: A Review of In Vivo and Ex Vivo Delivery Methods for Genome Editing-Based Therapies. *Molecular biotechnology* (2025). 33 citations.
 91. PMID: 39627502 -- Ngoi NYL et al. Synthetic lethal strategies for the development of cancer therapeutics. *Nature reviews. Clinical oncology* (2025). 41 citations.
+92. PMID: 34027953 -- Xiong Y et al. Engineering nanomedicine for glutathione depletion-augmented cancer therapy. *Chemical Society reviews* (2021). 643 citations.
+93. PMID: 33408790 -- Xu Q et al. Manganese porphyrin-based metal-organic framework for synergistic sonodynamic therapy and ferroptosis in hypoxic tumors. *Theranostics* (2021). 289 citations.
+94. PMID: 34655115 -- Dong Y et al. 2D Piezoelectric Bi2 MoO6 Nanoribbons for GSH-Enhanced Sonodynamic Therapy. *Advanced materials (Deerfield Beach, Fla.)* (2021). 323 citations.
+95. PMID: 34646381 -- Ren J et al. Ultrasound (US)-activated redox dyshomeostasis therapy reinforced by immunogenic cell death (ICD) through a mitochondrial targeting liposomal nanosystem. *Theranostics* (2021). 67 citations.
+96. PMID: 37312610 -- Yu J et al. Polymeric STING Pro-agonists for Tumor-Specific Sonodynamic Immunotherapy. *Angewandte Chemie (International ed. in English)* (2023). 74 citations.
+97. PMID: 38064417 -- Liu R et al. A "One Arrow Three Eagle" Strategy to Improve CM-272 Primed Bladder Cancer Immunotherapy. *Advanced materials (Deerfield Beach, Fla.)* (2024). 34 citations.
+98. PMID: 40490790 -- Liao H et al. Sonodynamic therapy-boosted biomimetic nanoplatform targets ferroptosis and CD47 as vulnerabilities for cancer immunotherapy. *Journal of nanobiotechnology* (2025). 8 citations.
