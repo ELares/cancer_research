@@ -1,23 +1,20 @@
-# Sonodynamic Therapy as a Physically-Triggered Ferroptosis Inducer for Post-Resistance Cancer Therapy
+# Depth-Extended Ferroptosis-ICD Therapy: Can SDT Reach Tumors That PDT Cannot?
 
-A cross-literature analysis of 10,413 cancer research articles identifying SDT as uniquely positioned among physical modalities to exploit the ferroptosis vulnerability of therapy-resistant persister cells.
+A cross-literature analysis of 10,413 cancer research articles examining whether sonodynamic therapy can extend photodynamic therapy's ferroptosis-ICD mechanism to deep-seated tumors.
 
 ## The Hypothesis
 
-Recent work (Higuchi et al., *Science Advances* 2026) demonstrates that therapy-resistant cancer persister cells are sensitized to ferroptosis. The question our analysis addresses: **which therapeutic modality best exploits this vulnerability?**
+PDT already exploits persister-cell ferroptosis vulnerability through ROS-mediated ferroptosis and immunogenic cell death (355 PubMed ferroptosis articles, 67 ferroptosis+ICD). But PDT is limited to superficial tumors (light penetrates millimeters).
 
-Pharmacologic ferroptosis inducers (RSL3, erastin) lack spatial selectivity. Our corpus-wide analysis identifies **sonodynamic therapy (SDT)** as a candidate alternative — the only physical modality that engages ferroptosis at scale (42 articles, vs 0-3 for TTFields/HIFU/IRE), with the added advantage of local ROS delivery via focused ultrasound and generation of immunogenic cell death that could synergize with checkpoint immunotherapy.
+SDT uses ultrasound instead of light to trigger the same mechanism (121 PubMed ferroptosis articles). Ultrasound penetrates centimeters. For deep tumors (pancreatic, hepatic, pelvic), SDT may deliver ferroptosis-ICD where PDT physically cannot.
 
-**What's genuinely novel** (verified):
-1. The cross-modality comparison on ferroptosis engagement has not been published
-2. The connection of persister-ferroptosis biology to SDT specifically has not been made
+**This is an incremental advance, not a paradigmatic one.** The mechanism is shared; the advantage is depth.
 
-**What's already known** (and we say so):
-- Persister cells are ferroptosis-sensitive (PMID:41481741, Science Advances 2026)
-- SDT triggers ferroptosis via ROS/GSH depletion (dozens of nanoparticle papers)
-- Resistance creates vulnerabilities (Gatenby adaptive therapy, collateral sensitivity)
+**What's genuinely novel**: The connection of the emerging persister-ferroptosis biology to SDT as a depth-extended alternative to PDT for deep tumors.
 
-**Key caveat**: Most SDT-ferroptosis data involves engineered nanosonosensitizers designed to deplete GSH, not inherent SDT properties. This confound must be resolved experimentally.
+**What's already known**: Persister ferroptosis sensitivity (PMID:41481741), PDT-ferroptosis-ICD (355 papers), SDT-ferroptosis (121 papers), resistance tradeoffs (Gatenby, collateral sensitivity).
+
+**Key caveat**: PDT has been in development 40 years without demonstrating robust ICD-immune synergy clinically. SDT must outperform this baseline.
 
 ## Decisive Experiment
 

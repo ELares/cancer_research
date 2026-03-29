@@ -6,10 +6,10 @@ Produce a publishable hypothesis article proposing sonodynamic therapy as a phys
 
 ## Central Hypothesis
 
-Therapy-resistant cancer persister cells are ferroptosis-sensitive (established by others, PMID:41481741). SDT is the only physical modality engaging ferroptosis at scale (42 articles vs 0-3 for TTFields/HIFU/IRE). SDT may be superior to pharmacologic ferroptosis inducers (RSL3, erastin) because it delivers ROS locally and triggers immunogenic cell death for immunotherapy synergy.
+PDT exploits persister-cell ferroptosis via ROS-ICD (355 PubMed articles) but is depth-limited. SDT uses the same mechanism via ultrasound (121 articles) and can reach deep tumors PDT cannot. The question: can SDT extend PDT's ferroptosis-ICD approach to deep-seated tumors?
 
-**What we claim**: The cross-modality comparison and the SDT-persister connection are new.
-**What we don't claim**: We did not discover that resistance creates ferroptosis vulnerability.
+**What we claim**: SDT as a depth-extended PDT alternative for persister ferroptosis in deep tumors is a connection not made in the literature.
+**What we don't claim**: SDT is unique or superior to PDT. PDT dominates on every metric. SDT's only advantage is tissue penetration depth.
 
 ## Corpus
 
