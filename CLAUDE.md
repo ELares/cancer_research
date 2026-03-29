@@ -6,7 +6,7 @@ Produce a publishable hypothesis article proposing sonodynamic therapy as a phys
 
 ## Central Hypothesis
 
-Therapy-resistant cancer persister cells are ferroptosis-sensitive (established by others, PMID:41481741). SDT is the only physical modality engaging ferroptosis at scale (39 articles vs 0-1 for TTFields/HIFU/IRE). SDT may be superior to pharmacologic ferroptosis inducers (RSL3, erastin) because it delivers ROS locally and triggers immunogenic cell death for immunotherapy synergy.
+Therapy-resistant cancer persister cells are ferroptosis-sensitive (established by others, PMID:41481741). SDT is the only physical modality engaging ferroptosis at scale (42 articles vs 0-3 for TTFields/HIFU/IRE). SDT may be superior to pharmacologic ferroptosis inducers (RSL3, erastin) because it delivers ROS locally and triggers immunogenic cell death for immunotherapy synergy.
 
 **What we claim**: The cross-modality comparison and the SDT-persister connection are new.
 **What we don't claim**: We did not discover that resistance creates ferroptosis vulnerability.

@@ -6,7 +6,7 @@ A cross-literature analysis of 10,413 cancer research articles identifying SDT a
 
 Recent work (Higuchi et al., *Science Advances* 2026) demonstrates that therapy-resistant cancer persister cells are sensitized to ferroptosis. The question our analysis addresses: **which therapeutic modality best exploits this vulnerability?**
 
-Pharmacologic ferroptosis inducers (RSL3, erastin) lack spatial selectivity. Our corpus-wide analysis identifies **sonodynamic therapy (SDT)** as a candidate alternative — the only physical modality that engages ferroptosis at scale (39 articles, vs 0-1 for TTFields/HIFU/IRE), with the added advantage of local ROS delivery via focused ultrasound and generation of immunogenic cell death that could synergize with checkpoint immunotherapy.
+Pharmacologic ferroptosis inducers (RSL3, erastin) lack spatial selectivity. Our corpus-wide analysis identifies **sonodynamic therapy (SDT)** as a candidate alternative — the only physical modality that engages ferroptosis at scale (42 articles, vs 0-3 for TTFields/HIFU/IRE), with the added advantage of local ROS delivery via focused ultrasound and generation of immunogenic cell death that could synergize with checkpoint immunotherapy.
 
 **What's genuinely novel** (verified):
 1. The cross-modality comparison on ferroptosis engagement has not been published
