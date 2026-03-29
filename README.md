@@ -1,128 +1,63 @@
-# The Obligate Tradeoff of Resistance
+# Sonodynamic Therapy as a Physically-Triggered Ferroptosis Inducer for Post-Resistance Cancer Therapy
 
-A systematic analysis of 10,413 cancer research articles identifying a non-obvious therapeutic connection: therapy-resistant tumors that switch to oxidative phosphorylation become selectively vulnerable to sonodynamic therapy-triggered ferroptosis.
+A cross-literature analysis of 10,413 cancer research articles identifying SDT as uniquely positioned among physical modalities to exploit the ferroptosis vulnerability of therapy-resistant persister cells.
 
-## The Core Hypothesis
+## The Hypothesis
 
-**Resistance escape routes impose obligate biophysical costs.** When tumors survive therapy by switching to OXPHOS (oxidative phosphorylation), they acquire high iron demand, elevated mitochondrial ROS, and lipid-rich membranes — precisely the preconditions for ferroptosis. Sonodynamic therapy (SDT) is the only physical modality that triggers ferroptosis at scale (39 articles) through a traceable ROS → GSH depletion → GPX4 inactivation chain. Yet only 4 papers in 10,413 bridge these two literatures.
+Recent work (Higuchi et al., *Science Advances* 2026) demonstrates that therapy-resistant cancer persister cells are sensitized to ferroptosis. The question our analysis addresses: **which therapeutic modality best exploits this vulnerability?**
 
-**What's genuinely novel** (not what's already known):
-1. **A comparison that hasn't been published**: No paper compares physical modalities on ferroptosis engagement. SDT has 39 ferroptosis articles; TTFields, HIFU, and IRE have 0-1 each.
-2. **A therapeutic connection that hasn't been made**: OXPHOS-resistance (61 articles) and SDT-ferroptosis (39 articles) overlap in only 4 papers — a 0.04% bridge between two large, separate literatures.
+Pharmacologic ferroptosis inducers (RSL3, erastin) lack spatial selectivity. Our corpus-wide analysis identifies **sonodynamic therapy (SDT)** as a candidate alternative — the only physical modality that engages ferroptosis at scale (39 articles, vs 0-1 for TTFields/HIFU/IRE), with the added advantage of local ROS delivery via focused ultrasound and generation of immunogenic cell death that could synergize with checkpoint immunotherapy.
+
+**What's genuinely novel** (verified):
+1. The cross-modality comparison on ferroptosis engagement has not been published
+2. The connection of persister-ferroptosis biology to SDT specifically has not been made
 
 **What's already known** (and we say so):
-- Ferroptosis as a cancer vulnerability (2,045-citation review exists)
-- SDT triggers ferroptosis via ROS and GSH depletion (dozens of papers)
-- Immunogenic cell death following ferroptosis (established)
+- Persister cells are ferroptosis-sensitive (PMID:41481741, Science Advances 2026)
+- SDT triggers ferroptosis via ROS/GSH depletion (dozens of nanoparticle papers)
+- Resistance creates vulnerabilities (Gatenby adaptive therapy, collateral sensitivity)
 
-**Article**: `article/drafts/v1.md` (~14,700 words, 98 verified references, 8 figure placeholders)
+**Key caveat**: Most SDT-ferroptosis data involves engineered nanosonosensitizers designed to deplete GSH, not inherent SDT properties. This confound must be resolved experimentally.
 
-**Target journals**: *Trends in Cancer*, *Nature Reviews Cancer*, *Cancer Discovery*
+## Decisive Experiment
+
+Compare SDT vs RSL3 vs erastin for killing persister cells (using existing models from PMID:41481741). Measure both cell death AND ICD markers (calreticulin, HMGB1, STING). If SDT produces equivalent killing with superior ICD, the hypothesis is supported.
+
+## Article
+
+`article/drafts/v1.md` — ~11,000 words, 112 verified references, underwent 9 review rounds including adversarial peer review and falsification analysis.
 
 ## Corpus
 
-10,413 articles from 1,668 journals (2015-2026), sourced from PubMed (8,220) and Semantic Scholar (2,193).
-
-| Metric | Count |
-|--------|-------|
-| Total articles | 10,413 |
-| Open access | 6,395 (61%) |
-| With mechanism tags | 9,684 (93%) |
-| With iCite citation metrics | 7,905 (76%) |
-| Mechanisms tracked | 19 |
-| Cancer types tracked | 22 |
-| Phase 3-tier articles | 273 |
+10,413 articles from 1,668 journals (2015-2026). Sources: PubMed (8,220) + Semantic Scholar (2,193). Enriched with OpenAlex, PubTator3, and iCite.
 
 ## Repository Structure
 
 ```
-cancer_cure/
-├── article/drafts/v1.md           # The manuscript (14,700 words, 98 refs)
-├── article/references/            # Verified reference list
-│
-├── analysis/                      # Data-driven findings
-│   ├── hypothesis-sdt-ferroptosis-icd.md    # SDT ferroptosis-ICD hypothesis
-│   ├── principle-resistance-tradeoff.md     # The resistance tradeoff principle
-│   ├── distilled-hypotheses-final.md        # What survived ruthless scrutiny
-│   ├── deep-pattern-analysis.md             # 4 candidate breakthroughs ranked
-│   ├── mechanism-matrix.md                  # 19×22 cross-tabulation
-│   ├── convergence-map.md                   # Multi-mechanism co-occurrence
-│   ├── gap-analysis.md                      # Zero-publication gaps
-│   ├── evidence-tiers.md                    # Clinical evidence by mechanism
-│   ├── key-findings.md                      # Top 100 articles by impact
-│   └── timeline.md                          # 2015-2026 breakthroughs
-│
-├── corpus/                        # 10,413 articles
-│   ├── INDEX.jsonl                # Master index
-│   ├── by-pmid/                   # Markdown files with YAML frontmatter
-│   └── by-doi/                    # DOI → PMID lookup
-│
-├── tags/                          # Pre-computed indexes
-│   ├── by-mechanism/              # 19 mechanism files
-│   ├── by-cancer-type/            # 22 cancer type files
-│   ├── by-evidence-level/         # 6 evidence tiers
-│   └── by-journal/                # 1,668 journal files
-│
-├── scripts/                       # Reproducible pipeline
-│   ├── fetch_articles.py          # PubMed search + OpenAlex + PMC full text
-│   ├── fetch_semantic_scholar.py  # S2 search + citation discovery + TLDR
-│   ├── enrich_metadata.py         # PubTator3 + iCite metrics
-│   ├── tag_articles.py            # Auto-tag mechanism/cancer/evidence
-│   ├── build_index.py             # Rebuild INDEX.jsonl
-│   ├── analyze_corpus.py          # Generate analysis files
-│   ├── verify_references.py       # Check article refs against corpus
-│   ├── config.py                  # API keys, rate limiters, keywords
-│   ├── article_io.py              # Shared I/O utilities
-│   └── queries.txt                # PubMed search queries
-│
-├── plans/                         # Research plans and status
-├── CLAUDE.md                      # AI assistant project guide
-├── requirements.txt               # Python dependencies
-└── .env.example                   # API key template
+article/drafts/v1.md           # The manuscript
+analysis/                      # Hypothesis documents + data analysis
+corpus/by-pmid/                # 10,413 articles with YAML frontmatter
+tags/                          # Pre-computed indexes
+scripts/                       # Reproducible Python pipeline
+plans/                         # Research plans
 ```
 
-## How to Reproduce
+## Reproduction
 
 ```bash
-pip install -r requirements.txt
-cp .env.example .env  # Add API keys
-
+pip install -r requirements.txt && cp .env.example .env
 cd scripts/
-python fetch_articles.py --query-file queries.txt --max 500   # PubMed corpus
-python fetch_semantic_scholar.py --mode search --max 200       # S2 expansion
-python enrich_metadata.py                                      # Annotations + citations
-python tag_articles.py                                         # Auto-tag
-python build_index.py                                          # Master index
-python analyze_corpus.py                                       # Analysis files
-python verify_references.py                                    # Reference check
+python fetch_articles.py --query-file queries.txt --max 500
+python fetch_semantic_scholar.py --mode search --max 200
+python enrich_metadata.py && python tag_articles.py
+python build_index.py && python analyze_corpus.py
+python verify_references.py
 ```
 
 ## Review History
 
-The manuscript underwent 8 review rounds:
-
-| Round | Focus | Key Changes |
-|-------|-------|-------------|
-| 1 | Scientific integrity | 16 fixes: false method claims, mechanism errors |
-| 2 | Citation spot-check (20 PMIDs) | 7 fixes: wrong authors, journals |
-| 3 | Full reference audit (91 refs) | 25 fixes: hallucinated authors/journals |
-| 4 | Adversarial peer review | 8 flaws: inflated convergence, missing trials |
-| 5 | Citation & evidence audit | Failed trials cited, speculative claims hedged |
-| 6 | Falsification review | 6 assumptions strengthened, ICD gap acknowledged |
-| 7 | Hypothesis distillation | Eliminated known ideas, sharpened novel claims |
-| 8 | Principle extraction | Resistance tradeoff framework, OXPHOS→ferroptosis |
-
-## APIs Used
-
-| API | Purpose | Key Required |
-|-----|---------|-------------|
-| PubMed E-utilities | Article search + metadata | Free (optional for 10 req/s) |
-| Semantic Scholar | Citation graph + TLDR + broader search | Free key |
-| OpenAlex | OA status, citations, topics | Free (email for polite pool) |
-| PMC BioC | Full-text download | Free |
-| PubTator3 | Gene/disease/drug annotations | Free |
-| NIH iCite | Citation impact metrics | Free |
+9 rounds: scientific integrity → citation verification (112/112 clean) → adversarial peer review → falsification → hypothesis distillation → novelty assessment with honest acknowledgment of prior art.
 
 ## License
 
-Research use. Article draft is pre-publication — do not redistribute without permission.
+Research use. Pre-publication — do not redistribute without permission.
