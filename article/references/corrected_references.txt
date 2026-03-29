@@ -1,0 +1,91 @@
+1. PMID: 29260225 -- Stupp R et al. Effect of Tumor-Treating Fields Plus Maintenance Temozolomide vs Maintenance Temozolomide Alone on Survival in Patients With Glioblastoma: A Randomized Clinical Trial. *JAMA* (2017). 2494 citations.
+2. PMID: 37165196 -- Rojas LA et al. Personalized RNA neoantigen vaccines stimulate T cells in pancreatic cancer. *Nature* (2023). 1153 citations.
+3. PMID: 32478924 -- Tan AC et al. Management of glioblastoma: State of the art and future directions. *CA: a cancer journal for clinicians* (2020). 1989 citations.
+4. PMID: 35621637 -- Shiravand Y et al. Immune Checkpoint Inhibitors in Cancer Therapy. *Current oncology (Toronto, Ont.)* (2022). 1191 citations.
+5. PMID: 26670971 -- Stupp R et al. Maintenance Therapy With Tumor-Treating Fields Plus Temozolomide vs Temozolomide Alone for Glioblastoma: A Randomized Clinical Trial. *JAMA* (2015). 1203 citations.
+6. PMID: 39604730 -- Steffin D et al. Interleukin-15-armoured GPC3 CAR T cells for patients with solid cancers. *Nature* (2025). 170 citations.
+7. PMID: 34862480 -- Stine ZE et al. Targeting cancer metabolism in the era of precision oncology. *Nature reviews. Drug discovery* (2022). 1127 citations.
+8. PMID: 38961290 -- Chen H et al. NBS1 lactylation is required for efficient DNA repair and chemotherapy resistance. *Nature* (2024). 413 citations.
+9. PMID: 39614090 -- Zhou F et al. The changing treatment landscape of EGFR-mutant non-small-cell lung cancer. *Nature reviews. Clinical oncology* (2025). 106 citations.
+10. PMID: 24561446 -- Chu KF et al. Thermal ablation of tumours: biological mechanisms and advances in therapy. *Nature reviews. Cancer* (2014). 1938 citations.
+11. PMID: 31848460 -- Rafiq S et al. Engineering strategies to overcome the current roadblocks in CAR T cell therapy. *Nature reviews. Clinical oncology* (2020). 1400 citations.
+12. PMID: 36631681 -- Shalhout SZ et al. Therapy with oncolytic viruses: progress and challenges. *Nature reviews. Clinical oncology* (2023). 489 citations.
+13. PMID: 32972405 -- Zou S et al. Targeting STAT3 in Cancer Immunotherapy. *Molecular cancer* (2020). 1011 citations.
+14. PMID: 39134804 -- Peng L et al. CAR-T and CAR-NK as cellular cancer immunotherapy for solid tumors. *Cellular & molecular immunology* (2024). 252 citations.
+15. PMID: 40303342 -- Guo C et al. Nano drug delivery systems for advanced immune checkpoint blockade therapy. *Theranostics* (2025). 101 citations.
+16. PMID: 33826908 -- Levin M et al. Bioelectric signaling: Reprogrammable circuits underlying embryogenesis, regeneration, and cancer. *Cell* (2021). 463 citations.
+17. PMID: 28633567 -- Levin M et al. Endogenous Bioelectric Signaling Networks: Exploiting Voltage Gradients for Control of Growth and Form. *Annual review of biomedical engineering* (2017). 289 citations.
+18. PMID: 26674251 -- Sukumar M et al. Mitochondrial Membrane Potential Identifies Cells with Enhanced Stemness for Cellular Therapy. *Cell metabolism* (2016). 370 citations.
+19. PMID: 35534566 -- Qi C et al. Claudin18.2-specific CAR T cells in gastrointestinal cancers: phase 1 trial interim results. *Nature medicine* (2022). 546 citations.
+20. PMID: 37495877 -- Baker DJ et al. CAR T therapy beyond cancer: the evolution of a living drug. *Nature* (2023). 437 citations.
+21. PMID: 38168996 -- Zhao Y et al. IL-10-expressing CAR T cells resist dysfunction and mediate durable clearance of solid tumors and metastases. *Nature biotechnology* (2024). 228 citations.
+22. PMID: 36002574 -- Carnevale J et al. RASA2 ablation in T cells boosts antigen sensitivity and long-term function. *Nature* (2022). 207 citations.
+23. PMID: 34050151 -- Giuffrida L et al. CRISPR/Cas9 mediated deletion of the adenosine A2A receptor enhances CAR T cell efficacy. *Nature communications* (2021). 199 citations.
+24. PMID: 39617017 -- Iyer SP et al. Safety and activity of CTX130, a CD70-targeted allogeneic CRISPR-Cas9-engineered CAR T-cell therapy, in patients with relapsed or refractory T-cell malignancies (COBALT-LYM): a single-arm, open-label, phase 1, dose-escalation study. *The Lancet. Oncology* (2025). 58 citations.
+25. PMID: 35303871 -- Dimitri A et al. Engineering the next-generation of CAR T-cells with CRISPR-Cas9 gene editing. *Molecular cancer* (2022). 314 citations.
+26. PMID: 36356599 -- Foy SP et al. Non-viral precision T cell receptor replacement for personalized cell therapy. *Nature* (2023). 256 citations.
+27. PMID: 40457437 -- Sabit H et al. Precision nanomedicine: navigating the tumor microenvironment for enhanced cancer immunotherapy and targeted drug delivery. *Molecular cancer* (2025). 101 citations.
+28. PMID: 38245601 -- Riedhammer C et al. Real-world analysis of teclistamab in 123 RRMM patients from Germany. *Leukemia* (2024). 94 citations.
+29. PMID: 38508135 -- Zhao Y et al. KN046, a bispecific antibody against PD-L1 and CTLA-4, plus chemotherapy as first-line treatment for metastatic NSCLC: A multicenter phase 2 trial. *Cell reports. Medicine* (2024). 38 citations.
+30. PMID: 35189345 -- Szabó GT et al. COVID-19 mRNA vaccines: Platforms and current developments. *Molecular therapy : the journal of the American Society of Gene Therapy* (2022). 279 citations.
+31. PMID: 36174631 -- Lorentzen CL et al. Clinical advances and ongoing trials on mRNA vaccines for cancer treatment. *The Lancet. Oncology* (2022). 470 citations.
+32. PMID: 39798545 -- Yaremenko AV et al. Clinical advances of mRNA vaccines for cancer immunotherapy. *Med (New York, N.Y.)* (2025). 74 citations.
+33. PMID: 35969778 -- Chen J et al. Lipid nanoparticle-mediated lymph node-targeting delivery of mRNA cancer vaccine elicits robust CD8+ T cell response. *Proceedings of the National Academy of Sciences of the United States of America* (2022). 371 citations.
+34. PMID: 39826543 -- Zhong L et al. Hyperacute rejection-engineered oncolytic virus for interventional clinical trial in refractory cancer patients. *Cell* (2025). 67 citations.
+35. PMID: 40108464 -- Shen Y et al. Oncolytic virus VG161 in refractory hepatocellular carcinoma. *Nature* (2025). 53 citations.
+36. PMID: 36402738 -- Ma R et al. The emerging field of oncolytic virus-based cancer immunotherapy. *Trends in cancer* (2023). 264 citations.
+37. PMID: 34579759 -- Zhu S et al. Combination strategies to maximize the benefits of cancer immunotherapy. *Journal of hematology & oncology* (2021). 633 citations.
+38. PMID: 36933770 -- Rimassa L et al. Combination immunotherapy for hepatocellular carcinoma. *Journal of hepatology* (2023). 310 citations.
+39. PMID: 37657460 -- Leal T et al. Tumor Treating Fields therapy with standard systemic therapy versus standard systemic therapy alone in metastatic non-small-cell lung cancer following progression on or after platinum-based therapy (LUNAR): a randomised, open-label, pivotal phase 3 study. *The Lancet. Oncology* (2023). 95 citations.
+40. PMID: 33144698 -- Rominiyi O et al. Tumour treating fields therapy for glioblastoma: current advances and future directions. *British journal of cancer* (2021). 301 citations.
+41. PMID: 28281173 -- Chen R et al. Glioma Subclassifications and Their Clinical Significance. *Neurotherapeutics : the journal of the American Society for Experimental NeuroTherapeutics* (2017). 838 citations.
+42. PMID: 31712683 -- Huang A et al. Synthetic lethality as an engine for cancer drug target discovery. *Nature reviews. Drug discovery* (2020). 458 citations.
+43. PMID: 38509368 -- Petropoulos M et al. Transcription-replication conflicts underlie sensitivity to PARP inhibitors. *Nature* (2024). 160 citations.
+44. PMID: 39791278 -- Hage CC et al. A pan-tumor review of the role of poly(adenosine diphosphate ribose) polymerase inhibitors. *CA: a cancer journal for clinicians* (2025). 21 citations.
+45. PMID: 32563252 -- Li H et al. PARP inhibitor resistance: the underlying mechanisms and clinical implications. *Molecular cancer* (2020). 515 citations.
+46. PMID: 34583722 -- Hu J et al. Targeting mutant p53 for cancer therapy: direct and indirect strategies. *Journal of hematology & oncology* (2021). 551 citations.
+47. PMID: 39501968 -- Singh P et al. Advanced Nanomaterials for Cancer Therapy: Gold, Silver, and Iron Oxide Nanoparticles in Oncological Applications. *Advanced healthcare materials* (2025). 88 citations.
+48. PMID: 37047585 -- Fulton MD et al. Liposomes in Cancer Therapy: How Did We Start and Where Are We Now. *International journal of molecular sciences* (2023). 215 citations.
+49. PMID: 38225241 -- Yu X et al. Cancer epigenetics: from laboratory studies and clinical trials to precision medicine. *Cell death discovery* (2024). 223 citations.
+50. PMID: 37217462 -- Yang J et al. Epigenetic regulation in the tumor microenvironment: molecular mechanisms and therapeutic targets. *Signal transduction and targeted therapy* (2023). 322 citations.
+51. PMID: 20570523 -- Wise DR et al. Glutamine addiction: a new therapeutic target in cancer. *Trends in biochemical sciences* (2010). 1747 citations.
+52. PMID: 36768924 -- Chelakkot C et al. Modulating Glycolysis to Improve Cancer Therapy. *International journal of molecular sciences* (2023). 341 citations.
+53. PMID: 36253536 -- Fernandes MR et al. Targeting the gut microbiota for cancer therapy. *Nature reviews. Cancer* (2022). 258 citations.
+54. PMID: 35440726 -- Park EM et al. Targeting the gut and tumor microbiota in cancer. *Nature medicine* (2022). 467 citations.
+55. PMID: 39826104 -- Lin A et al. From chaos to order: optimizing fecal microbiota transplantation for enhanced immune checkpoint inhibitors efficacy. *Gut microbes* (2025). 56 citations.
+56. PMID: 40484955 -- Lin A et al. Microbiota boost immunotherapy? A meta-analysis dives into fecal microbiota transplantation and immune checkpoint inhibitors. *BMC medicine* (2025). 23 citations.
+57. PMID: 39633321 -- Farias RM et al. Diet and Immune Effects Trial (DIET)- a randomized, double-blinded dietary intervention study in patients with melanoma receiving immunotherapy. *BMC cancer* (2024). 21 citations.
+58. PMID: 15771276 -- Davalos RV et al. Tissue ablation with irreversible electroporation. *Annals of biomedical engineering* (2005). 1241 citations.
+59. PMID: 26258317 -- Martin RCG et al. Treatment of 200 locally advanced (stage III) pancreatic adenocarcinoma patients with irreversible electroporation: safety and efficacy. *Annals of surgery* (2015). 400 citations.
+60. PMID: 27150293 -- Scheltema MJV et al. Focal vs extended ablation in localized prostate cancer with irreversible electroporation; a multi-center randomized controlled trial. *BMC cancer* (2016). 40 citations.
+61. PMID: 29594551 -- Scheltema MJ et al. Pair-matched patient-reported quality of life and early oncological control following focal irreversible electroporation versus robot-assisted radical prostatectomy. *World journal of urology* (2018). 40 citations.
+62. PMID: 31130474 -- Ringel-Scaia VM et al. High-frequency irreversible electroporation is an effective tumor ablation strategy that induces immunologic cell death and promotes systemic anti-tumor immunity. *EBioMedicine* (2019). 168 citations.
+63. PMID: 31409607 -- Narayanan JSS et al. Irreversible Electroporation Combined with Checkpoint Blockade and TLR7 Stimulation Induces Antitumor Immunity in a Murine Pancreatic Cancer Model. *Cancer immunology research* (2019). 111 citations.
+64. PMID: 25367011 -- Maloney E et al. Emerging HIFU applications in cancer therapy. *International journal of hyperthermia : the official journal of European Society for Hyperthermic Oncology, North American Hyperthermia Group* (2015). 239 citations.
+65. PMID: 29960750 -- Guillaumier S et al. A Multicentre Study of 5-year Outcomes Following Focal Therapy in Treating Clinically Significant Nonmetastatic Prostate Cancer. *European urology* (2018). 309 citations.
+66. PMID: 33840627 -- van dVEMF et al. Thermal Ablation as an Alternative for Surgical Resection of Small (≤ 2 cm) Breast Cancers: A Meta-Analysis. *Clinical breast cancer* (2021). 70 citations.
+67. PMID: 29613770 -- Zhu P et al. Nanoenzyme-Augmented Cancer Sonodynamic Therapy by Catalytic Tumor Oxygenation. *ACS nano* (2018). 571 citations.
+68. PMID: 28829584 -- Dai C et al. Two-Dimensional Graphene Augments Nanosonosensitized Sonocatalytic Tumor Eradication. *ACS nano* (2017). 300 citations.
+69. PMID: 35699224 -- Zhao Y et al. Piezotronic Effect-Augmented Cu2-xO-BaTiO3 Sonosensitizers for Multifunctional Cancer Dynamic Therapy. *ACS nano* (2022). 218 citations.
+70. PMID: 33122099 -- Xu M et al. Sonodynamic therapy-derived multimodal synergistic cancer therapy. *Cancer letters* (2021). 198 citations.
+71. PMID: 36437106 -- Yang Y et al. Emerging Sonodynamic Therapy-Based Nanomedicines for Cancer Immunotherapy. *Advanced science (Weinheim, Baden-Wurttemberg, Germany)* (2023). 213 citations.
+72. PMID: 33064322 -- Liang S et al. Recent Advances in Nanomaterial-Assisted Combinational Sonodynamic Cancer Therapy. *Advanced materials (Deerfield Beach, Fla.)* (2020). 568 citations.
+73. PMID: 27748048 -- Vadalà M et al. Mechanisms and therapeutic effectiveness of pulsed electromagnetic field therapy in oncology. *Cancer medicine* (2016). 113 citations.
+74. PMID: 28918265 -- Sun X et al. Amorphous liquid metal electrodes enabled conformable electrochemical therapy of tumors. *Biomaterials* (2017). 114 citations.
+75. PMID: 30734370 -- Gu T et al. Platinum Nanoparticles to Enable Electrodynamic Therapy for Effective Cancer Treatment. *Advanced materials (Deerfield Beach, Fla.)* (2019). 211 citations.
+76. PMID: 33008426 -- Qian Y et al. Molecular alterations and targeted therapy in pancreatic ductal adenocarcinoma. *Journal of hematology & oncology* (2020). 301 citations.
+77. PMID: 25728459 -- Wood AKW et al. A review of low-intensity ultrasound for cancer therapy. *Ultrasound in medicine & biology* (2015). 344 citations.
+78. PMID: 26486350 -- McHale AP et al. Sonodynamic Therapy: Concept, Mechanism and Application to Cancer Treatment. *Advances in experimental medicine and biology* (2016). 339 citations.
+79. PMID: 38835055 -- Farhangnia P et al. Current and future immunotherapeutic approaches in pancreatic cancer treatment. *Journal of hematology & oncology* (2024). 165 citations.
+80. PMID: 38679698 -- Shen K et al. Immunosuppressive tumor microenvironment and immunotherapy of hepatocellular carcinoma: current status and prospectives. *Journal of hematology & oncology* (2024). 156 citations.
+81. PMID: 34894519 -- Mehrabadi AZ et al. Therapeutic potential of CAR T cell in malignancies: A scoping review. *Biomedicine & pharmacotherapy = Biomedecine & pharmacotherapie* (2022). 106 citations.
+82. PMID: 37046777 -- Yalamarty SSK et al. Mechanisms of Resistance and Current Treatment Options for Glioblastoma Multiforme (GBM). *Cancers* (2023). 235 citations.
+83. PMID: 38491817 -- Manzari-Tavakoli A et al. Integrating natural compounds and nanoparticle-based drug delivery systems: A novel strategy for enhanced efficacy and selectivity in cancer therapy. *Cancer medicine* (2024). 135 citations.
+84. PMID: 39669573 -- Yan J et al. Gut microbiota as a biomarker and modulator of anti-tumor immunotherapy outcomes. *Frontiers in immunology* (2024). 30 citations.
+85. PMID: 25787829 -- Al EM et al. Stage III pancreatic cancer and the role of irreversible electroporation. *BMJ (Clinical research ed.)* (2015). 48 citations.
+86. PMID: 33387088 -- Guo R et al. Cryoablation, high-intensity focused ultrasound, irreversible electroporation, and vascular-targeted photodynamic therapy for prostate cancer: a systemic review and meta-analysis. *International journal of clinical oncology* (2021). 26 citations.
+87. PMID: 31560378 -- Fitzmaurice C et al. Global, Regional, and National Cancer Incidence, Mortality, Years of Life Lost, Years Lived With Disability, and Disability-Adjusted Life-Years for 29 Cancer Groups, 1990 to 2017: A Systematic Analysis for the Global Burden of Disease Study. *JAMA oncology* (2019). 2637 citations.
+88. PMID: 36059065 -- Basha NJ et al. An insight into therapeutic efficacy of heterocycles as histone-modifying enzyme inhibitors that targets cancer epigenetic pathways. *Chemical biology & drug design* (2022). 27 citations.
+89. PMID: 32734509 -- Ghiaseddin AP et al. Tumor Treating Fields in the Management of Patients with Malignant Gliomas. *Current treatment options in oncology* (2020). 101 citations.
+90. PMID: 38363528 -- Volodina O et al. The Future of Gene Therapy: A Review of In Vivo and Ex Vivo Delivery Methods for Genome Editing-Based Therapies. *Molecular biotechnology* (2025). 33 citations.
+91. PMID: 39627502 -- Ngoi NYL et al. Synthetic lethal strategies for the development of cancer therapeutics. *Nature reviews. Clinical oncology* (2025). 41 citations.
