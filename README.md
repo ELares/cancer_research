@@ -1,20 +1,18 @@
-# Depth-Extended Ferroptosis-ICD Therapy: Can SDT Reach Tumors That PDT Cannot?
+# Physical ROS-Generating Modalities as Persister-Cell Ferroptosis Inducers
 
-A cross-literature analysis of 10,413 cancer research articles examining whether sonodynamic therapy can extend photodynamic therapy's ferroptosis-ICD mechanism to deep-seated tumors.
+A cross-literature analysis of 10,413 cancer articles proposing that the persister-ferroptosis field should evaluate physical modalities (PDT, SDT) as spatially selective alternatives to pharmacologic ferroptosis inducers.
 
-## The Hypothesis
+## The Idea
 
-PDT already exploits persister-cell ferroptosis vulnerability through ROS-mediated ferroptosis and immunogenic cell death (355 PubMed ferroptosis articles, 67 ferroptosis+ICD). But PDT is limited to superficial tumors (light penetrates millimeters).
+Drug-tolerant persister cells are ferroptosis-sensitive (established, PMID:41481741). The field is searching for clinical ferroptosis inducers using *only pharmacologic agents* (RSL3, erastin). Meanwhile, PDT (355 ferroptosis articles) and SDT (121) trigger ferroptosis through ROS + produce immunogenic cell death — advantages systemic drugs lack.
 
-SDT uses ultrasound instead of light to trigger the same mechanism (121 PubMed ferroptosis articles). Ultrasound penetrates centimeters. For deep tumors (pancreatic, hepatic, pelvic), SDT may deliver ferroptosis-ICD where PDT physically cannot.
+**The proposal**: Physical ROS modalities should be evaluated as persister-targeting tools offering (1) spatial selectivity and (2) ICD for immunotherapy synergy. SDT extends this to deep tumors where PDT can't reach.
 
-**This is an incremental advance, not a paradigmatic one.** The mechanism is shared; the advantage is depth.
+**What's novel**: The modality-class question — should the persister field look beyond drugs? — has not been systematically framed despite 355 PDT and 121 SDT ferroptosis papers existing independently.
 
-**What's genuinely novel**: The connection of the emerging persister-ferroptosis biology to SDT as a depth-extended alternative to PDT for deep tumors.
+**What's known**: Persister ferroptosis (44 papers), PDT-ferroptosis-ICD (67 papers), SDT-ferroptosis (121 papers). The individual components are published; the cross-community connection is absent.
 
-**What's already known**: Persister ferroptosis sensitivity (PMID:41481741), PDT-ferroptosis-ICD (355 papers), SDT-ferroptosis (121 papers), resistance tradeoffs (Gatenby, collateral sensitivity).
-
-**Key caveat**: PDT has been in development 40 years without demonstrating robust ICD-immune synergy clinically. SDT must outperform this baseline.
+**Key caveat**: PDT has 40 years of development without demonstrating robust ICD-immune synergy in randomized trials. The pharmacologic-to-physical translation may not improve outcomes.
 
 ## Decisive Experiment
 

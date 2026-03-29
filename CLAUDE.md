@@ -6,10 +6,10 @@ Produce a publishable hypothesis article proposing sonodynamic therapy as a phys
 
 ## Central Hypothesis
 
-PDT exploits persister-cell ferroptosis via ROS-ICD (355 PubMed articles) but is depth-limited. SDT uses the same mechanism via ultrasound (121 articles) and can reach deep tumors PDT cannot. The question: can SDT extend PDT's ferroptosis-ICD approach to deep-seated tumors?
+The persister-ferroptosis field searches only among drugs (RSL3, erastin). Physical ROS modalities (PDT 355 articles, SDT 121) trigger ferroptosis + ICD but haven't been proposed as a persister-targeting class. We frame this question: should physical modalities be evaluated as spatially selective alternatives with ICD advantage?
 
-**What we claim**: SDT as a depth-extended PDT alternative for persister ferroptosis in deep tumors is a connection not made in the literature.
-**What we don't claim**: SDT is unique or superior to PDT. PDT dominates on every metric. SDT's only advantage is tissue penetration depth.
+**What we claim**: The modality-class framing connecting persister biology to physical ROS modalities is absent from the literature.
+**What we don't claim**: Any of the individual components are new, or that physical modalities will outperform drugs.
 
 ## Corpus
 
