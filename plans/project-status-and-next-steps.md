@@ -1,7 +1,7 @@
 # Project Status & Next Steps — Cancer Cure Research
 
-**Last updated**: 2026-03-28
-**Phase**: Corpus built. Analysis & article writing next.
+**Last updated**: 2026-03-29
+**Phase**: Article draft v1 complete (6 review rounds). Corpus expanded with Semantic Scholar.
 
 ---
 
@@ -68,7 +68,10 @@ python tag_articles.py --dry-run
 - `resilient_get()` with 2 retries and exponential backoff for all HTTP calls
 - Rate limiters per API (NCBI 9/s, OpenAlex 9/s, PMC BioC 2/s, PubTator 2/s, iCite 5/s)
 
-### 4. Corpus — 8,220 Articles
+### 4. Corpus — 10,413 Articles (expanded from 8,220)
+
+**Sources**: PubMed (22 queries, 8,220 articles) + Semantic Scholar (18 queries, 2,193 additional)
+
 
 **Search queries used** (in `scripts/queries.txt`):
 1. Tumor Treating Fields + cancer
