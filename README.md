@@ -1,171 +1,127 @@
-# Convergent Therapeutic Mechanisms in Cancer
+# The Obligate Tradeoff of Resistance
 
-A systematic analysis of 8,220 cancer research articles across 19 therapeutic mechanisms and 22 cancer types, producing a publishable review article on multi-mechanism convergence in oncology.
+A systematic analysis of 10,413 cancer research articles identifying a non-obvious therapeutic connection: therapy-resistant tumors that switch to oxidative phosphorylation become selectively vulnerable to sonodynamic therapy-triggered ferroptosis.
 
-## What This Is
+## The Core Hypothesis
 
-This repository contains everything needed to reproduce a large-scale literature analysis of the cancer therapy landscape and a peer-review-ready manuscript arguing that the next frontier lies at convergence zones where mechanistically orthogonal therapies intersect.
+**Resistance escape routes impose obligate biophysical costs.** When tumors survive therapy by switching to OXPHOS (oxidative phosphorylation), they acquire high iron demand, elevated mitochondrial ROS, and lipid-rich membranes — precisely the preconditions for ferroptosis. Sonodynamic therapy (SDT) is the only physical modality that triggers ferroptosis at scale (39 articles) through a traceable ROS → GSH depletion → GPX4 inactivation chain. Yet only 4 papers in 10,413 bridge these two literatures.
 
-**Article**: `article/drafts/v1.md` (~12,700 words, 95 verified references, 7 figure placeholders)
+**What's genuinely novel** (not what's already known):
+1. **A comparison that hasn't been published**: No paper compares physical modalities on ferroptosis engagement. SDT has 39 ferroptosis articles; TTFields, HIFU, and IRE have 0-1 each.
+2. **A therapeutic connection that hasn't been made**: OXPHOS-resistance (61 articles) and SDT-ferroptosis (39 articles) overlap in only 4 papers — a 0.04% bridge between two large, separate literatures.
 
-**Target journals**: *Trends in Cancer*, *Nature Reviews Cancer*
+**What's already known** (and we say so):
+- Ferroptosis as a cancer vulnerability (2,045-citation review exists)
+- SDT triggers ferroptosis via ROS and GSH depletion (dozens of papers)
+- Immunogenic cell death following ferroptosis (established)
 
-## Key Findings
+**Article**: `article/drafts/v1.md` (~14,700 words, 98 verified references, 8 figure placeholders)
 
-- **8,220 articles** analyzed from 1,507 journals (2015-2026)
-- **37% reference 2+ mechanisms**, but subsample analysis estimates only **~9% are experimental combination studies**
-- **14x publication growth** from 134 articles (2015) to 1,911 (2025)
-- **47 unexplored mechanism-combination pairs** identified (independently verified)
-- **Translational bottlenecks**: sonodynamic therapy (503 articles, limited clinical evidence), novel nanoparticle platforms (1,000+ articles, few beyond Phase 1 despite approved nanomedicines like Abraxane/Doxil)
-- **Physical-immune interface** identified as the least-explored convergence territory, though clinical synergy evidence remains absent
-- **6 failed trials** (CheckMate-498, KEYNOTE-361, BIND-014, Pexa-Vec, CAR-T solid tumor failures, TTFields compliance) discussed as counterweight
+**Target journals**: *Trends in Cancer*, *Nature Reviews Cancer*, *Cancer Discovery*
+
+## Corpus
+
+10,413 articles from 1,668 journals (2015-2026), sourced from PubMed (8,220) and Semantic Scholar (2,193).
+
+| Metric | Count |
+|--------|-------|
+| Total articles | 10,413 |
+| Open access | 6,395 (61%) |
+| With mechanism tags | 9,684 (93%) |
+| With iCite citation metrics | 7,905 (76%) |
+| Mechanisms tracked | 19 |
+| Cancer types tracked | 22 |
+| Phase 3-tier articles | 273 |
 
 ## Repository Structure
 
 ```
 cancer_cure/
-├── README.md                  # This file
-├── CLAUDE.md                  # AI assistant project guide
-├── requirements.txt           # Python dependencies
-├── .env.example               # API key template
+├── article/drafts/v1.md           # The manuscript (14,700 words, 98 refs)
+├── article/references/            # Verified reference list
 │
-├── article/                   # The manuscript
-│   ├── drafts/v1.md           # Current draft (12,700 words, 95 refs)
-│   └── references/            # Verified reference list
+├── analysis/                      # Data-driven findings
+│   ├── hypothesis-sdt-ferroptosis-icd.md    # SDT ferroptosis-ICD hypothesis
+│   ├── principle-resistance-tradeoff.md     # The resistance tradeoff principle
+│   ├── distilled-hypotheses-final.md        # What survived ruthless scrutiny
+│   ├── deep-pattern-analysis.md             # 4 candidate breakthroughs ranked
+│   ├── mechanism-matrix.md                  # 19×22 cross-tabulation
+│   ├── convergence-map.md                   # Multi-mechanism co-occurrence
+│   ├── gap-analysis.md                      # Zero-publication gaps
+│   ├── evidence-tiers.md                    # Clinical evidence by mechanism
+│   ├── key-findings.md                      # Top 100 articles by impact
+│   └── timeline.md                          # 2015-2026 breakthroughs
 │
-├── corpus/                    # 8,220 research articles
-│   ├── INDEX.jsonl            # Master index (one JSON line per article)
-│   ├── by-pmid/               # 8,220 markdown files with YAML frontmatter
-│   └── by-doi/                # DOI → PMID lookup
+├── corpus/                        # 10,413 articles
+│   ├── INDEX.jsonl                # Master index
+│   ├── by-pmid/                   # Markdown files with YAML frontmatter
+│   └── by-doi/                    # DOI → PMID lookup
 │
-├── tags/                      # Pre-computed tag indexes
-│   ├── by-mechanism/          # 19 mechanism files (PMID lists)
-│   ├── by-cancer-type/        # 22 cancer type files
-│   ├── by-evidence-level/     # 6 evidence tier files
-│   └── by-journal/            # 1,507 journal files
+├── tags/                          # Pre-computed indexes
+│   ├── by-mechanism/              # 19 mechanism files
+│   ├── by-cancer-type/            # 22 cancer type files
+│   ├── by-evidence-level/         # 6 evidence tiers
+│   └── by-journal/                # 1,668 journal files
 │
-├── analysis/                  # Data-driven analysis outputs
-│   ├── mechanism-matrix.md    # 19x22 mechanism-cancer cross-tabulation
-│   ├── convergence-map.md     # Multi-mechanism co-occurrence patterns
-│   ├── gap-analysis.md        # Zero-publication gaps + independent verification
-│   ├── evidence-tiers.md      # Clinical evidence level per mechanism
-│   ├── key-findings.md        # Top 100 articles by iCite impact
-│   └── timeline.md            # 2015-2026 breakthrough timeline
+├── scripts/                       # Reproducible pipeline
+│   ├── fetch_articles.py          # PubMed search + OpenAlex + PMC full text
+│   ├── fetch_semantic_scholar.py  # S2 search + citation discovery + TLDR
+│   ├── enrich_metadata.py         # PubTator3 + iCite metrics
+│   ├── tag_articles.py            # Auto-tag mechanism/cancer/evidence
+│   ├── build_index.py             # Rebuild INDEX.jsonl
+│   ├── analyze_corpus.py          # Generate analysis files
+│   ├── verify_references.py       # Check article refs against corpus
+│   ├── config.py                  # API keys, rate limiters, keywords
+│   ├── article_io.py              # Shared I/O utilities
+│   └── queries.txt                # PubMed search queries
 │
-├── plans/                     # Research plans and methodology docs
-│   ├── project-status-and-next-steps.md
-│   ├── research-sources-and-directory-plan.md
-│   └── fetch-scripts-plan.md
-│
-└── scripts/                   # Reproducible pipeline
-    ├── fetch_articles.py      # PubMed search + OpenAlex + PMC full text
-    ├── enrich_metadata.py     # PubTator3 annotations + iCite metrics
-    ├── tag_articles.py        # Auto-tag mechanism/cancer/evidence
-    ├── build_index.py         # Rebuild INDEX.jsonl
-    ├── analyze_corpus.py      # Generate all analysis files
-    ├── verify_references.py   # Check article refs against corpus
-    ├── config.py              # API keys, rate limiters, keyword dicts
-    ├── article_io.py          # Shared file I/O utilities
-    └── queries.txt            # 22 PubMed search queries
+├── plans/                         # Research plans and status
+├── CLAUDE.md                      # AI assistant project guide
+├── requirements.txt               # Python dependencies
+└── .env.example                   # API key template
 ```
 
 ## How to Reproduce
 
-### 1. Setup
-
 ```bash
 pip install -r requirements.txt
-cp .env.example .env
-# Add your API keys to .env (OpenAlex, optionally NCBI, Semantic Scholar)
-```
+cp .env.example .env  # Add API keys
 
-### 2. Build the Corpus
-
-```bash
 cd scripts/
-
-# Fetch articles (22 queries × 500 max each, ~35 min)
-python fetch_articles.py --query-file queries.txt --max 500
-
-# Enrich with gene/drug annotations + citation metrics (~3 min)
-python enrich_metadata.py
-
-# Auto-tag by mechanism, cancer type, evidence level (~30 sec)
-python tag_articles.py
-
-# Build master index (~15 sec)
-python build_index.py
+python fetch_articles.py --query-file queries.txt --max 500   # PubMed corpus
+python fetch_semantic_scholar.py --mode search --max 200       # S2 expansion
+python enrich_metadata.py                                      # Annotations + citations
+python tag_articles.py                                         # Auto-tag
+python build_index.py                                          # Master index
+python analyze_corpus.py                                       # Analysis files
+python verify_references.py                                    # Reference check
 ```
 
-### 3. Generate Analysis
+## Review History
 
-```bash
-python analyze_corpus.py
-```
+The manuscript underwent 8 review rounds:
 
-### 4. Verify References
-
-```bash
-python verify_references.py
-```
-
-## Article Review History
-
-The manuscript underwent 6 rounds of increasingly adversarial review:
-
-| Round | Focus | Corrections |
+| Round | Focus | Key Changes |
 |-------|-------|-------------|
-| 1. First-pass review | Scientific integrity, methodology | 16 fixes: false method claims, mechanism errors, journal mismatches |
-| 2. Citation spot-check | 20 PMIDs verified against corpus | 7 fixes: wrong authors, wrong journals, claim mischaracterization |
-| 3. Full reference audit | All 91 references verified | 25 fixes: 4 wrong authors, 15 wrong journals, 1 wrong year |
-| 4. Adversarial peer review | Break the paper mentally | 8 flaws addressed: inflated convergence rate, unverified gaps, missing approved therapies, missing failed trials |
-| 5. Citation & evidence audit | Every claim vs its citation | Failed trials cited, citation mismatches fixed, evaluative language softened |
-| 6. Falsification review | Try to disprove the hypothesis | 6 assumptions strengthened: ICD translation gap, rational omissions, multiplicative compliance, taxonomy sensitivity |
-
-**Final state**: 95 references (all verified), 12,700 words, honest methodology, balanced thesis with counterarguments.
-
-## Corpus Details
-
-Each article in `corpus/by-pmid/` is a markdown file with structured YAML frontmatter:
-
-```yaml
-pmid: "35199647"
-doi: 10.1172/JCI149258
-title: "Tumor Treating Fields dually activate STING and AIM2..."
-authors: [Chen Dongjiang, ...]
-journal: "The Journal of clinical investigation"
-year: 2022
-mechanisms: [immunotherapy, ttfields]
-cancer_types: [glioblastoma, melanoma]
-evidence_level: preclinical-invivo
-genes: [AIM2, STING, cGAS]
-icite_rcr: 8.23
-```
-
-**Search the corpus**:
-```
-# By mechanism
-cat tags/by-mechanism/ttfields.txt
-
-# By gene
-grep "BRAF" corpus/by-pmid/*.md
-
-# Full text search
-grep -l "Warburg effect" corpus/by-pmid/*.md
-
-# High-impact articles
-grep "icite_rcr: [1-9][0-9]" corpus/by-pmid/*.md
-```
+| 1 | Scientific integrity | 16 fixes: false method claims, mechanism errors |
+| 2 | Citation spot-check (20 PMIDs) | 7 fixes: wrong authors, journals |
+| 3 | Full reference audit (91 refs) | 25 fixes: hallucinated authors/journals |
+| 4 | Adversarial peer review | 8 flaws: inflated convergence, missing trials |
+| 5 | Citation & evidence audit | Failed trials cited, speculative claims hedged |
+| 6 | Falsification review | 6 assumptions strengthened, ICD gap acknowledged |
+| 7 | Hypothesis distillation | Eliminated known ideas, sharpened novel claims |
+| 8 | Principle extraction | Resistance tradeoff framework, OXPHOS→ferroptosis |
 
 ## APIs Used
 
 | API | Purpose | Key Required |
 |-----|---------|-------------|
-| PubMed E-utilities | Article search + metadata | Free (optional key for 10 req/s) |
+| PubMed E-utilities | Article search + metadata | Free (optional for 10 req/s) |
+| Semantic Scholar | Citation graph + TLDR + broader search | Free key |
 | OpenAlex | OA status, citations, topics | Free (email for polite pool) |
 | PMC BioC | Full-text download | Free |
 | PubTator3 | Gene/disease/drug annotations | Free |
-| NIH iCite | Citation impact metrics (RCR) | Free |
+| NIH iCite | Citation impact metrics | Free |
 
 ## License
 

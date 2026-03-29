@@ -2,120 +2,120 @@
 
 ## Project Goal
 
-This repository is a research project aimed at producing a publishable scientific journal article. The core mission is to systematically analyze the global landscape of cancer research — across all cancer types — and identify promising, underexplored, or convergent therapeutic mechanisms that could lead to novel curative approaches.
+This repository produces a publishable hypothesis-driven research article from systematic analysis of the cancer therapy literature. The goal is not to summarize oncology — it is to identify non-obvious, evidence-grounded therapeutic hypotheses that could change what scientists test.
 
-## Research Scope
+## Central Hypothesis
 
-### Primary Research Questions
+**Therapy-resistant tumors that switch to oxidative phosphorylation (OXPHOS) become selectively vulnerable to sonodynamic therapy (SDT)-triggered ferroptosis, creating a rational post-resistance therapeutic sequence.**
 
-1. **What are the most significant recent findings across global cancer research?** — Systematic review of high-impact journals, preprints, and clinical trial data across all cancer types.
-2. **Can natural frequencies (resonance-based therapies) selectively destroy cancer cells?** — Investigate tumor-treating fields (TTFields), piezoelectric nanoparticles, ultrasound-mediated therapies, and bioelectromagnetic approaches.
-3. **Can electrolysis or bioelectric modulation be used as a therapeutic mechanism?** — Explore electrolytic tumor ablation, bioelectric signaling reprogramming, and electrochemical therapy (EChT).
-4. **What novel targeted mechanisms are emerging that challenge conventional paradigms?** — Identify approaches beyond traditional chemo/immunotherapy: synthetic lethality, metabolic reprogramming, epigenetic editing, oncolytic viruses, microbiome-mediated therapies, and others.
-5. **Where do these mechanisms converge?** — Look for combinatorial or synergistic strategies that could yield breakthrough results.
+This rests on two novel findings from corpus-wide analysis:
+1. SDT is the only physical modality engaging ferroptosis at scale (39 articles vs 0-1 for TTFields/HIFU/IRE) — a comparison nobody has published
+2. OXPHOS-resistance (61 articles) and SDT-ferroptosis (39 articles) are bridged by only 4 papers in 10,413 — a major blind spot
 
-### Cancer Types
+## Corpus
 
-All cancer types are in scope. Cross-cancer pattern analysis is a priority — mechanisms that work across multiple cancer types are of highest interest.
-
-### Key Therapeutic Domains to Investigate
-
-- **Frequency-based therapies**: TTFields (Optune), resonant frequency destruction, pulsed electromagnetic fields (PEMF), focused ultrasound (HIFU/FUS), sonodynamic therapy
-- **Electrolysis & bioelectric approaches**: Electrochemical therapy (EChT), bioelectric membrane potential manipulation, iontophoresis for drug delivery, irreversible electroporation (IRE)
-- **Targeted & emerging mechanisms**: CRISPR-based gene editing, CAR-T and next-gen cell therapies, antibody-drug conjugates (ADCs), bispecific antibodies, mRNA cancer vaccines, synthetic lethality (PARP inhibitors, etc.), metabolic targeting (Warburg effect exploitation), epigenetic reprogramming, oncolytic virotherapy, nanoparticle-mediated delivery, microbiome modulation
-- **Convergent / combinatorial strategies**: Multi-modal approaches that combine the above
-
-## Output: Publishable Research Article
-
-The end product is a scientific review/perspective article suitable for submission to a peer-reviewed journal. The article should:
-
-- Follow standard scientific article structure (Abstract, Introduction, Methods, Results/Analysis, Discussion, Conclusion, References)
-- Be rigorously sourced with proper citations (APA or journal-specific format)
-- Present original synthesis — not just a literature dump, but novel analysis of patterns, gaps, and opportunities
-- Include clear figures/diagrams where appropriate
-- Target journals such as: *Nature Reviews Cancer*, *The Lancet Oncology*, *Cancer Research*, *Trends in Cancer*, or similar
+- **10,413 articles** from 1,668 journals (2015-2026)
+- Sources: PubMed (8,220 via E-utilities) + Semantic Scholar (2,193)
+- Enriched with: OpenAlex (OA/citations), PubTator3 (gene/drug NER), iCite (impact metrics)
+- 19 therapeutic mechanisms, 22 cancer types, 6 evidence tiers
 
 ## Repository Structure
 
 ```
-cancer_cure/
-├── CLAUDE.md                          # This file (project guide)
-├── plans/                             # Research plans and methodology
-│
-├── corpus/                            # ALL downloaded articles live here
-│   ├── INDEX.jsonl                    # Master index (one JSON line per article)
-│   ├── by-pmid/                       # Article content as .md with YAML frontmatter
-│   │   └── {PMID}.md                  # e.g., 38000001.md
-│   └── by-doi/
-│       └── DOI_LOOKUP.jsonl           # DOI → PMID mapping
-│
-├── tags/                              # Pre-computed tag indexes (PMID lists)
-│   ├── by-mechanism/                  # e.g., ttfields.txt, car-t.txt, crispr.txt
-│   ├── by-cancer-type/                # e.g., glioblastoma.txt, breast.txt
-│   ├── by-evidence-level/             # e.g., phase3-clinical.txt, preclinical-invivo.txt
-│   └── by-journal/                    # e.g., nature-cancer.txt
-│
-├── analysis/                          # Cross-cutting synthesis and notes
-│   └── notes/
-│
-├── article/                           # The manuscript
-│   ├── drafts/
-│   ├── figures/
-│   ├── references/                    # bibliography.bib
-│   └── supplementary/
-│
-└── scripts/                           # Fetch, enrich, index, tag automation
+corpus/by-pmid/{PMID}.md    # Articles with YAML frontmatter
+tags/by-mechanism/*.txt      # Pre-computed PMID lists per mechanism
+tags/by-cancer-type/*.txt    # Pre-computed PMID lists per cancer type
+corpus/INDEX.jsonl           # Master index (one JSON line per article)
+article/drafts/v1.md         # The manuscript (~14,700 words, 98 refs)
+analysis/                    # Hypothesis docs and data analysis
+scripts/                     # Reproducible pipeline (Python 3.11+)
+plans/                       # Research plans and status docs
 ```
 
-### Article File Format
+## How to Search the Corpus
 
-Each article in `corpus/by-pmid/` is a markdown file with YAML frontmatter for structured search:
+```bash
+# By mechanism
+cat tags/by-mechanism/sonodynamic.txt
+
+# By gene/drug
+grep "GPX4" corpus/by-pmid/*.md
+
+# Full text search
+grep -l "ferroptosis" corpus/by-pmid/*.md
+
+# By cancer type
+cat tags/by-cancer-type/glioblastoma.txt
+
+# High-impact articles (iCite RCR > 10)
+grep "icite_rcr: [1-9][0-9]" corpus/by-pmid/*.md
+
+# Specific article
+cat corpus/by-pmid/35199647.md
+
+# Master index
+cat corpus/INDEX.jsonl | head -5
+```
+
+## Scripts
+
+All scripts run from `scripts/` directory:
+
+| Script | Purpose |
+|--------|---------|
+| `fetch_articles.py` | PubMed search + OpenAlex + PMC full text |
+| `fetch_semantic_scholar.py` | S2 search, citation discovery, TLDR enrichment |
+| `enrich_metadata.py` | PubTator3 gene/drug NER + iCite citation metrics |
+| `tag_articles.py` | Auto-tag by mechanism, cancer type, evidence level |
+| `build_index.py` | Rebuild INDEX.jsonl master index |
+| `analyze_corpus.py` | Generate all analysis files |
+| `verify_references.py` | Check article references against corpus data |
+
+## Article File Format
+
+Each article in `corpus/by-pmid/` has YAML frontmatter:
 
 ```yaml
----
-pmid: "38000001"
-doi: "10.1038/..."
-title: "..."
-authors: ["Smith J", "Lee K"]
-journal: "Nature Cancer"
-year: 2024
-mechanisms: ["ttfields", "immunotherapy"]
-cancer_types: ["glioblastoma"]
-evidence_level: "phase2-clinical"
-mesh_terms: ["..."]
-genes: ["PD-L1"]
-drugs: ["pembrolizumab"]
-date_added: "2026-03-28"
----
+pmid: "35199647"
+doi: 10.1172/JCI149258
+title: "Tumor Treating Fields dually activate STING..."
+journal: "The Journal of clinical investigation"
+year: 2022
+mechanisms: [immunotherapy, ttfields]
+cancer_types: [glioblastoma, melanoma]
+evidence_level: preclinical-invivo
+genes: [AIM2, STING, cGAS]
+drugs: []
+icite_rcr: 8.23
 ```
 
-### How to Search the Corpus
+## Key Design Decisions
 
-- **By mechanism**: `Grep 'mechanisms:.*ttfields' corpus/by-pmid/` or `Read tags/by-mechanism/ttfields.txt`
-- **By cancer type**: `Read tags/by-cancer-type/glioblastoma.txt`
-- **By gene/drug**: `Grep "BRAF" corpus/by-pmid/`
-- **Full text search**: `Grep "Warburg effect" corpus/by-pmid/`
-- **Specific article**: `Read corpus/by-pmid/{PMID}.md`
+- **Automated keyword tagging** (not manual curation) — disclosed honestly in article methods
+- **Word-boundary matching** for short keywords (<=4 chars) to prevent false positives
+- **`resilient_get()`** with 2 retries and exponential backoff for all HTTP calls
+- **Rate limiters per API** in config.py
+- **PMID-keyed flat files** for deterministic paths and fast Grep/Glob access
+- **Tag index files** for O(1) mechanism/cancer lookups
+- **JSONL index** for fast programmatic corpus queries
 
-## Methodology
+## What the Article Claims (and Doesn't)
 
-1. **Literature Collection** — Systematic search of PubMed, Google Scholar, bioRxiv, clinical trial registries (ClinicalTrials.gov), and major oncology journals
-2. **Categorization & Tagging** — Organize findings by cancer type, mechanism, stage of research (preclinical/clinical/approved), and efficacy data
-3. **Gap Analysis** — Identify underexplored intersections (e.g., frequency therapy + immunotherapy combinations)
-4. **Synthesis** — Develop original thesis on convergent curative strategies
-5. **Article Writing** — Draft, review, revise to journal submission standards
+**Claims**:
+- SDT is quantitatively unique among physical modalities on ferroptosis (comparison not published elsewhere)
+- OXPHOS-resistance and SDT-ferroptosis are connected by only 4 papers (blind spot identified)
+- A specific therapeutic sequence (OXPHOS detection → sub-ablative SDT → checkpoint immunotherapy) is rationally grounded but untested
+
+**Does not claim**:
+- SDT cures cancer
+- The resistance tradeoff is universal or proven
+- Preclinical data predicts clinical success (Pexa-Vec precedent cited)
+- SDT's ferroptosis engagement is inherent vs nanosonosensitizer-dependent (explicitly flagged)
 
 ## Conventions
 
-- All claims must be traceable to a cited source
-- Distinguish clearly between: established evidence, emerging evidence, and speculative/theoretical
-- Use precise scientific terminology
-- Maintain objectivity — present evidence for and against each approach
-- Date all research notes so temporal context is preserved
-
-## Important Notes
-
-- This is a serious scientific endeavor aimed at real publication — rigor is paramount
-- No unsupported health claims — everything must be evidence-based
-- Prioritize recent research (2020-present) but include foundational/landmark studies where relevant
-- Consider both efficacy AND safety/feasibility of proposed mechanisms
+- Every claim must be traceable to a cited PMID
+- Distinguish established evidence from speculation
+- All references verified against corpus (98/98 clean)
+- Failed trials cited with PMIDs as counterweight
+- The article underwent 8 review rounds (see README)
