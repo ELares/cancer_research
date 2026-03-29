@@ -42,7 +42,12 @@ Despite this imperative, to our knowledge, no systematic effort has mapped the f
 
 This article presents a systematic analysis of 10,413 cancer research articles spanning 19 therapeutic mechanisms and 22 cancer types, drawn from 1,668 journals (2015-2026). While the Results section provides a comprehensive landscape of therapeutic mechanisms, evidence tiers, and convergence patterns, our primary contribution is more specific: a cross-literature analysis proposing that the drug-tolerant persister ferroptosis field should evaluate physical ROS-generating modalities (PDT and SDT) as spatially selective alternatives to systemic pharmacologic ferroptosis inducers — a modality-class question that, to our knowledge, has not been systematically framed.
 
-% [Figure 1 placeholder]
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\textwidth]{../figures/fig5_publication_trends.pdf}
+\caption{Publication volume by mechanism (2015--2025). The 14-fold increase from 134 articles (2015) to 1,911 (2025) reflects the diversification of therapeutic mechanisms, with a marked inflection in 2020 coinciding with mRNA platform maturation and broadening checkpoint immunotherapy experience.}
+\label{fig:pub_trends}
+\end{figure}
 
 ---
 
@@ -92,7 +97,12 @@ Several limitations should be acknowledged. First, all tagging was performed by 
 
 The final corpus comprised 10,413 articles from 1,668 journals, with impact metrics available for 7,905 articles via iCite. Publication volume increased 14-fold over the study period, from 134 articles in 2015 to 1,911 articles in 2025, with 486 articles already indexed in the first quarter of 2026. Growth was non-linear, with a marked inflection point in 2020 (407 articles, a 2.6-fold increase over 2019's 158 articles), coinciding with the maturation of mRNA technology catalyzed by COVID-19 vaccine development and the broadening clinical experience with checkpoint immunotherapy.
 
-% [Figure 2 placeholder]
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\textwidth]{../figures/fig2_mechanism_heatmap.pdf}
+\caption{Mechanism $\times$ cancer type article count matrix. Rows (19 mechanisms) and columns (22 cancer types) are sorted by total article count. Immunotherapy--lung (313) and TTFields--glioblastoma (384) are the dominant pairs. Gray crosses mark zero-count cells.}
+\label{fig:heatmap}
+\end{figure}
 
 The fastest-growing mechanisms by absolute article count between 2020 and 2025 were immunotherapy (+487\% annual articles), nanoparticle delivery (+674\%), CAR-T therapy (+255\%), and sonodynamic therapy (+212\%). These growth rates reflect both the maturation of established approaches and the emergence of new platform technologies.
 
@@ -246,7 +256,12 @@ Microbiome-immunotherapy convergence (141 articles) dominates the microbiome lit
 
 Of the 10,413 articles in our corpus, 3,071 (37\%) are tagged with two or more therapeutic mechanism keywords, and 611 carry three or more tags. To estimate the true experimental combination rate, we performed a subsample analysis: title-based classification of 50 randomly selected multi-tagged articles found that approximately 24\% (12/50; 95\% CI: 13-38\%) described experimental combination studies, while 76\% were reviews, perspectives, or articles that discussed multiple mechanisms without testing them in combination. Extrapolating to the full corpus, we estimate approximately 740 articles ($\sim$9\% of the total corpus) represent genuine experimental combination research. The remaining co-tagged articles map the intellectual territory where researchers are connecting mechanisms conceptually — a precursor to deliberate combination design, but not equivalent to experimental evidence of synergy. We report both the co-occurrence rate (37\%) and the estimated experimental combination rate (9\%) throughout, and caution against conflating the two.
 
-% [Figure 3 placeholder]
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\textwidth]{../figures/fig1_ferroptosis_comparison.pdf}
+\caption{Ferroptosis, ICD, and GSH/GPX4 pathway engagement by physical modality (as \% of each modality's articles). SDT is a statistical outlier ($\chi^2 = 97.3$, $p < 5.9 \times 10^{-23}$ vs all other physical modalities combined for ferroptosis engagement).}
+\label{fig:ferro_comparison}
+\end{figure}
 
 The convergence landscape is organized around a central hub: checkpoint immunotherapy participates in 8 of the top 10 mechanism pairs and co-occurs with every other mechanism in the corpus. The top 10 convergence pairs are:
 
@@ -263,7 +278,12 @@ The convergence landscape is organized around a central hub: checkpoint immunoth
 
 Notable triple-mechanism articles include the landmark thermal ablation review integrating electrochemical therapy, frequency therapy, and immunotherapy \cite{chu2014_24561446} (1,938 citations), the personalized mRNA neoantigen vaccine study combining immunotherapy, mRNA vaccine, and nanoparticle platforms \cite{rojas2023_37165196} (1,153 citations), and the CRISPR-engineered CAR-T review \cite{dimitri2022_35303871} (314 citations).
 
-% [Figure 4 placeholder]
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\textwidth]{../figures/fig4_molecular_overlap.pdf}
+\caption{Molecular pathway engagement by physical modality (normalized \%). SDT uniquely engages the ferroptosis pathway (7\%) and the GSH/GPX4 axis (14\%) while also having the highest ROS generation literature (56\%). TTFields, IRE, and HIFU show 0\% ferroptosis engagement.}
+\label{fig:mol_overlap}
+\end{figure}
 
 \subsection{The Mechanism-Cancer Matrix: What Works Where}
 
@@ -277,7 +297,12 @@ The 19 x 22 mechanism-cancer matrix reveals both deep concentrations and systema
 
 The most intensively researched cancer types across all mechanisms are breast cancer (1,191 total cross-mechanism article-instances), lung cancer (953), glioblastoma (888), pancreatic cancer (752), colorectal cancer (599), and prostate cancer (585). The least-researched cancer types are thyroid (24), neuroblastoma (54), esophageal (31), and mesothelioma (89).
 
-% [Figure 5 placeholder]
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\textwidth]{../figures/fig3_literature_disconnect.pdf}
+\caption{Literature disconnect between the persister-ferroptosis and SDT-ferroptosis research communities. Left: community sizes within our corpus. Right: cross-community article overlap matrix showing zero shared articles between persister-ferroptosis and SDT-ferroptosis literatures.}
+\label{fig:disconnect}
+\end{figure}
 
 ---
 
@@ -335,7 +360,12 @@ The mechanism is shared: sensitizer-activated ROS $\rightarrow$ GSH depletion $\
 
 \textbf{Critical caveats remain}: Most SDT-ferroptosis data involves engineered nanosonosensitizers \cite{xu2021_33408790,dong2021_34655115}. No clinical study has verified SDT-induced ferroptosis or ICD in human tumors. The PDT precedent — 40 years of development without demonstrating robust ICD-mediated immune synergy in randomized trials — applies as a direct cautionary parallel.
 
-% [Figure 6 placeholder]
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\textwidth]{../figures/fig6_sdt_chain_evidence.pdf}
+\caption{Evidence depth along the SDT $\rightarrow$ ferroptosis $\rightarrow$ ICD chain. Each bar represents the number of SDT articles (out of 617 total) engaging each mechanistic step. The chain is supported at each link but thins substantially at GPX4 inactivation (9 articles), identifying the weakest evidential link.}
+\label{fig:chain}
+\end{figure}
 
 \subsection{Counterarguments, Precedents, and Reasons This Could Fail}
 
