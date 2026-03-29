@@ -96,3 +96,10 @@
 96. PMID: 37312610 -- Yu J et al. Polymeric STING Pro-agonists for Tumor-Specific Sonodynamic Immunotherapy. *Angewandte Chemie (International ed. in English)* (2023). 74 citations.
 97. PMID: 38064417 -- Liu R et al. A "One Arrow Three Eagle" Strategy to Improve CM-272 Primed Bladder Cancer Immunotherapy. *Advanced materials (Deerfield Beach, Fla.)* (2024). 34 citations.
 98. PMID: 40490790 -- Liao H et al. Sonodynamic therapy-boosted biomimetic nanoplatform targets ferroptosis and CD47 as vulnerabilities for cancer immunotherapy. *Journal of nanobiotechnology* (2025). 8 citations.
+99. PMID: 29575297 -- Zhang Q et al. Sonodynamic therapy-assisted immunotherapy: A novel modality for cancer treatment. *Cancer science* (2018). 152 citations.
+100. PMID: 33384955 -- Atas E et al. The Implications of PDK1-4 on Tumor Energy Metabolism, Aggressiveness and Therapy Resistance. *Frontiers in oncology* (2020). 111 citations.
+101. PMID: 35199647 -- Chen D et al. Tumor Treating Fields dually activate STING and AIM2 inflammasomes to induce adjuvant immunity in glioblastoma. *The Journal of clinical investigation* (2022). 120 citations.
+102. PMID: 35338310 -- Lei G et al. Targeting ferroptosis as a vulnerability in cancer. *Nature reviews. Cancer* (2022). 2045 citations.
+103. PMID: 36077431 -- Fukushi A et al. Revisited Metabolic Control and Reprogramming Cancers by Means of the Warburg Effect in Tumor Cells. *International journal of molecular sciences* (2022). 194 citations.
+104. PMID: 37064872 -- Yang K et al. The role of lipid metabolic reprogramming in tumor microenvironment. *Theranostics* (2023). 202 citations.
+105. PMID: 41417728 -- Huber A et al. CRISPR screens define unified hallmarks of cancer cell-autonomous immune evasion. *Cell reports* (2026). 3 citations.
