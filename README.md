@@ -1,4 +1,4 @@
-# Physical ROS-Generating Modalities as Persister-Cell Ferroptosis Inducers
+# Physical ROS-Generating Modalities as Spatially Selective Ferroptosis Inducers for Drug-Tolerant Persister Cells
 
 A cross-literature analysis of 10,413 cancer articles proposing that the persister-ferroptosis field should evaluate physical modalities (PDT, SDT) as spatially selective alternatives to pharmacologic ferroptosis inducers.
 
@@ -20,7 +20,13 @@ Compare SDT vs RSL3 vs erastin for killing persister cells (using existing model
 
 ## Article
 
-`article/drafts/v1.md` — ~11,000 words, 112 verified references, underwent 9 review rounds including adversarial peer review and falsification analysis.
+**Author:** Ezequiel Lares
+
+- `article/drafts/v1.md` — Markdown draft (~11,200 words, 114 verified references)
+- `article/drafts/v1.tex` — LaTeX version with `\cite{}` references
+- `article/references/bibliography.bib` — BibTeX bibliography (114 entries)
+
+10+ review rounds including adversarial peer review, falsification analysis, and novelty assessment with honest prior-art acknowledgment.
 
 ## Corpus
 

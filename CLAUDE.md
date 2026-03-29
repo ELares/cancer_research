@@ -1,8 +1,12 @@
 # CLAUDE.md
 
+## Author
+
+Ezequiel Lares
+
 ## Project Goal
 
-Produce a publishable hypothesis article proposing sonodynamic therapy as a physically-triggered ferroptosis inducer for post-resistance cancer therapy.
+Produce a publishable perspective article proposing that the drug-tolerant persister ferroptosis field should evaluate physical ROS-generating modalities (PDT, SDT) as spatially selective alternatives to pharmacologic ferroptosis inducers.
 
 ## Central Hypothesis
 
