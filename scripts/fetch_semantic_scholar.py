@@ -242,7 +242,7 @@ def citation_discovery(seed_pmids: list[str], max_per_seed: int = 100) -> list[d
 
 def fetch_and_save_new_articles(papers: list[dict]) -> int:
     """Fetch PubMed metadata for discovered papers and save to corpus."""
-    from fetch_articles import fetch_pubmed_metadata, enrich_with_openalex, fetch_pmc_fulltext, save_article as save_new, update_doi_lookup
+    from fetch_articles import fetch_best_fulltext, fetch_pubmed_metadata, enrich_with_openalex, save_article as save_new, update_doi_lookup
 
     existing = {p.stem for p in PMID_DIR.glob("*.md")}
     new_pmids = [p["pmid"] for p in papers if p["pmid"] not in existing]
@@ -268,11 +268,11 @@ def fetch_and_save_new_articles(papers: list[dict]) -> int:
     enrich_with_openalex(articles)
 
     # Download full text for OA articles with PMC IDs
-    oa_with_pmc = [a for a in articles if a.get("pmcid")]
-    if oa_with_pmc:
-        print(f"Downloading full text from PMC ({len(oa_with_pmc)} articles)...")
-        for art in tqdm(oa_with_pmc, desc="  PMC full text"):
-            art["_full_text"] = fetch_pmc_fulltext(art["pmcid"])
+    oa_candidates = [a for a in articles if a.get("pmcid") or a.get("oa_url")]
+    if oa_candidates:
+        print(f"Downloading full text ({len(oa_candidates)} OA/PMC candidates)...")
+        for art in tqdm(oa_candidates, desc="  Full text"):
+            art["_full_text"] = fetch_best_fulltext(art)
 
     print("Saving articles...")
     saved = 0

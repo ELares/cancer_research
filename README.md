@@ -1,6 +1,6 @@
-# Physical ROS-Generating Modalities as Spatially Selective Ferroptosis Inducers for Drug-Tolerant Persister Cells
+# Beyond Pharmacologic Ferroptosis Inducers: Physical ROS Modalities for Drug-Tolerant Persister Cells
 
-A cross-literature analysis of 10,413 cancer articles with Monte Carlo biochemical simulation proposing that the persister-ferroptosis field should evaluate physical modalities (PDT, SDT) as spatially selective alternatives to pharmacologic ferroptosis inducers.
+A cross-literature analysis of 4,830 full-text cancer articles, plus a separate archive of 5,584 abstract-only records, with Monte Carlo biochemical simulation proposing that the persister-ferroptosis field should evaluate physical modalities (PDT, SDT) as spatially selective alternatives to pharmacologic ferroptosis inducers.
 
 ## The Idea
 
@@ -31,7 +31,7 @@ Key features: autocatalytic LP propagation gated by GSH/GPX4, dynamic GPX4 regul
 
 - `article/drafts/v1.md` — Markdown draft (~11,800 words, 114 references)
 - `article/drafts/v1.tex` — LaTeX with proper tables and embedded figures
-- `article/drafts/v1.pdf` — Compiled PDF (34 pages, 7 figures, 2 tables)
+- `article/drafts/v1.pdf` — Compiled PDF manuscript
 - `article/references/bibliography.bib` — BibTeX bibliography (114 entries)
 
 10+ review rounds including adversarial peer review, falsification analysis, novelty assessment, and simulation validation.
@@ -54,7 +54,8 @@ Key features: autocatalytic LP propagation gated by GSH/GPX4, dynamic GPX4 regul
 article/drafts/          # Manuscript (md, tex, pdf)
 article/figures/         # 7 publication-quality figures (pdf + png)
 article/references/      # BibTeX bibliography
-corpus/                  # 10,413 articles with YAML frontmatter
+corpus/by-pmid/          # 4,830 full-text articles with YAML frontmatter
+corpus/abstracts/by-pmid/ # 5,584 abstract-only records
 tags/                    # Pre-computed indexes
 scripts/                 # Python pipeline (fetch, enrich, tag, analyze, figures)
 simulations/             # Rust Monte Carlo ferroptosis simulation

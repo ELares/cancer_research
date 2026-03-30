@@ -14,14 +14,15 @@ load_dotenv(PROJECT_ROOT / ".env")
 # --- Paths ---
 CORPUS_DIR = PROJECT_ROOT / "corpus"
 PMID_DIR = CORPUS_DIR / "by-pmid"
+ABSTRACT_PMID_DIR = CORPUS_DIR / "abstracts" / "by-pmid"
 DOI_LOOKUP = CORPUS_DIR / "by-doi" / "DOI_LOOKUP.jsonl"
 INDEX_FILE = CORPUS_DIR / "INDEX.jsonl"
 TAGS_DIR = PROJECT_ROOT / "tags"
 
 # --- API Keys ---
 NCBI_API_KEY = os.getenv("NCBI_API_KEY", "")
-OPENALEX_EMAIL = os.getenv("OPENALEX_EMAIL", "")
-OPENALEX_API_KEY = os.getenv("OPENALEX_API_KEY", "")
+OPENALEX_EMAIL = os.getenv("OPENALEX_EMAIL", "") or os.getenv("OPENALEX_EMAIL", "")
+OPENALEX_API_KEY = os.getenv("OPENALEX_API_KEY", "") or os.getenv("OPENALEX_API_KEY", "")
 SEMANTIC_SCHOLAR_API_KEY = os.getenv("SEMANTIC_SCHOLAR_API_KEY", "")
 CORE_API_KEY = os.getenv("CORE_API_KEY", "")
 

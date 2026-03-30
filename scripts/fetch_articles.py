@@ -17,12 +17,14 @@ from datetime import date
 from pathlib import Path
 from xml.etree import ElementTree as ET
 
+import fitz
 import requests
 import yaml
+from lxml import html
 from tqdm import tqdm
 
 from config import (
-    CORPUS_DIR, DOI_LOOKUP, INDEX_FILE, NCBI_API_KEY, NCBI_RATE,
+    ABSTRACT_PMID_DIR, CORPUS_DIR, DOI_LOOKUP, INDEX_FILE, NCBI_API_KEY, NCBI_RATE,
     OPENALEX_API_KEY, OPENALEX_EMAIL, OPENALEX_RATE, OPENALEX_WORKS,
     PMC_BIOC, PMC_BIOC_RATE, PMID_DIR, PUBMED_EFETCH, PUBMED_ESEARCH,
     resilient_get,
@@ -294,10 +296,84 @@ def fetch_pmc_fulltext(pmcid: str) -> str | None:
         return None
 
 
+def extract_text_from_pdf_bytes(pdf_bytes: bytes) -> str | None:
+    """Extract plain text from a PDF byte stream."""
+    try:
+        with fitz.open(stream=pdf_bytes, filetype="pdf") as doc:
+            texts = []
+            for page in doc:
+                text = page.get_text("text").strip()
+                if text:
+                    texts.append(text)
+        joined = "\n\n".join(texts).strip()
+        return joined if len(joined) >= 1000 else None
+    except Exception:
+        return None
+
+
+def extract_text_from_html(html_bytes: bytes) -> str | None:
+    """Extract article-like paragraph text from HTML bytes."""
+    try:
+        doc = html.fromstring(html_bytes)
+    except Exception:
+        return None
+
+    for xpath in [
+        "//main//p",
+        "//article//p",
+        "//div[contains(@class,'article')]//p",
+        "//body//p",
+    ]:
+        paragraphs = [p.text_content().strip() for p in doc.xpath(xpath)]
+        paragraphs = [p for p in paragraphs if len(p) > 40]
+        if paragraphs:
+            joined = "\n\n".join(paragraphs).strip()
+            return joined if len(joined) >= 1000 else None
+    return None
+
+
+def fetch_oa_fulltext(oa_url: str) -> str | None:
+    """Fetch full text from an OA URL, supporting both PDF and HTML."""
+    if not oa_url:
+        return None
+
+    try:
+        resp = resilient_get(oa_url, timeout=60, retries=1)
+        if resp.status_code != 200:
+            return None
+    except requests.RequestException:
+        return None
+
+    content_type = (resp.headers.get("content-type") or "").lower()
+    final_url = resp.url.lower()
+
+    if "application/pdf" in content_type or final_url.endswith(".pdf") or "pdf" in final_url:
+        return extract_text_from_pdf_bytes(resp.content)
+
+    return extract_text_from_html(resp.content)
+
+
+def fetch_best_fulltext(article: dict) -> str | None:
+    """Try PMC first, then fall back to the article's OA URL."""
+    pmcid = article.get("pmcid") or ""
+    if pmcid:
+        full_text = fetch_pmc_fulltext(pmcid)
+        if full_text:
+            return full_text
+
+    oa_url = article.get("oa_url") or ""
+    if oa_url:
+        return fetch_oa_fulltext(oa_url)
+
+    return None
+
+
 def save_article(article: dict, full_text: str | None) -> Path:
     """Save article as markdown with YAML frontmatter."""
     pmid = article["pmid"]
-    filepath = PMID_DIR / f"{pmid}.md"
+    target_dir = PMID_DIR if full_text else ABSTRACT_PMID_DIR
+    target_dir.mkdir(parents=True, exist_ok=True)
+    filepath = target_dir / f"{pmid}.md"
 
     # Build frontmatter
     frontmatter = {
@@ -417,10 +493,12 @@ def main():
 
     # Ensure directories exist
     PMID_DIR.mkdir(parents=True, exist_ok=True)
+    ABSTRACT_PMID_DIR.mkdir(parents=True, exist_ok=True)
     DOI_LOOKUP.parent.mkdir(parents=True, exist_ok=True)
 
     # Check which PMIDs we already have
     existing_pmids = {p.stem for p in PMID_DIR.glob("*.md")}
+    existing_pmids.update(p.stem for p in ABSTRACT_PMID_DIR.glob("*.md"))
     print(f"Existing articles in corpus: {len(existing_pmids)}")
 
     total_new = 0
@@ -455,12 +533,12 @@ def main():
             oa_count = sum(1 for a in articles if a.get("is_oa"))
             print(f"  Open access: {oa_count}/{len(articles)}")
 
-        # Step 4: Download full text for OA articles with PMC IDs
+        # Step 4: Download full text for open-access articles via PMC or OA URL
         if not args.skip_fulltext:
-            oa_with_pmc = [a for a in articles if a.get("pmcid")]
-            print(f"Downloading full text from PMC ({len(oa_with_pmc)} articles with PMCID)...")
-            for art in tqdm(oa_with_pmc, desc="  PMC full text"):
-                full_text = fetch_pmc_fulltext(art["pmcid"])
+            oa_candidates = [a for a in articles if a.get("pmcid") or a.get("oa_url")]
+            print(f"Downloading full text ({len(oa_candidates)} OA/PMC candidates)...")
+            for art in tqdm(oa_candidates, desc="  Full text"):
+                full_text = fetch_best_fulltext(art)
                 art["_full_text"] = full_text
 
         # Step 5: Save articles

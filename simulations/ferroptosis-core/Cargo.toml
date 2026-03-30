@@ -1,0 +1,14 @@
+[package]
+name = "ferroptosis-core"
+version = "0.2.0"
+edition = "2021"
+description = "Shared ferroptosis biochemistry engine for the simulation suite"
+
+[dependencies]
+rand = { workspace = true }
+rand_distr = { workspace = true }
+rayon = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+ndarray = { workspace = true }
+csv = { workspace = true }

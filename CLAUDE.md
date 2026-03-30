@@ -6,7 +6,7 @@ Ezequiel Lares
 
 ## Project Goal
 
-Produce a publishable perspective article proposing that the drug-tolerant persister ferroptosis field should evaluate physical ROS-generating modalities (PDT, SDT) as spatially selective alternatives to pharmacologic ferroptosis inducers. Includes Monte Carlo biochemical simulation as computational validation.
+Produce a publishable perspective article, **Beyond Pharmacologic Ferroptosis Inducers: Physical ROS Modalities for Drug-Tolerant Persister Cells**, proposing that the drug-tolerant persister ferroptosis field should evaluate physical ROS-generating modalities (PDT, SDT) as spatially selective alternatives to pharmacologic ferroptosis inducers. Includes Monte Carlo biochemical simulation as computational validation.
 
 ## Central Hypothesis
 
@@ -17,7 +17,7 @@ The persister-ferroptosis field searches only among drugs. Physical ROS modaliti
 
 ## Corpus
 
-10,413 articles, 1,668 journals, 2015-2026. PubMed (8,220) + Semantic Scholar (2,193). 19 mechanisms, 22 cancer types.
+4,830 full-text articles, 803 journals, 2001-2026. Separate abstract-only archive: 5,584 records. 19 mechanisms, 22 cancer types.
 
 ## Simulation
 
@@ -25,7 +25,7 @@ Rust-based Monte Carlo: 16M cells, 4 phenotypes × 4 treatments. Features autoca
 
 ## Article
 
-`article/drafts/v1.pdf` — 34 pages, 7 figures, 2 tables, 114 references. All citations verified.
+`article/drafts/v1.pdf` — compiled manuscript PDF with figures, tables, and bibliography. All citations verified.
 
 ## Key Files
 
@@ -33,7 +33,8 @@ Rust-based Monte Carlo: 16M cells, 4 phenotypes × 4 treatments. Features autoca
 article/drafts/v1.{md,tex,pdf}    # The manuscript
 article/figures/fig*.{pdf,png}      # 7 figures
 article/references/bibliography.bib # BibTeX
-corpus/by-pmid/{PMID}.md           # 10,413 articles
+corpus/by-pmid/{PMID}.md           # 4,830 full-text articles
+corpus/abstracts/by-pmid/{PMID}.md # 5,584 abstract-only records
 corpus/INDEX.jsonl                   # Master index
 tags/by-mechanism/*.txt              # PMID lists
 simulations/src/main.rs              # Rust simulation

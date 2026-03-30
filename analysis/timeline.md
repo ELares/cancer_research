@@ -7,20 +7,18 @@ Major milestones chronologically, based on highest-impact articles per year per 
 
 - **ttfields**: *Maintenance Therapy With Tumor-Treating Fields Plus Temozolomide vs Temozolomide Alone for Glioblastoma: A Randomized Cl*
   PMID 26670971 | JAMA | 1203 citations | glioblastoma
-- **immunotherapy**: *Radiation and checkpoint blockade immunotherapy: radiosensitisation and potential mechanisms of synergy.*
-  PMID 26433823 | The Lancet. Oncology | 871 citations | bladder, kidney
-- **synthetic-lethality**: *Synthetic lethality and cancer therapy: lessons learned from the development of PARP inhibitors.*
-  PMID 25341009 | Annual review of medicine | 479 citations | breast, ovarian
-- **electrochemical-therapy**: *Treatment of 200 locally advanced (stage III) pancreatic adenocarcinoma patients with irreversible electroporation: safe*
-  PMID 26258317 | Annals of surgery | 400 citations | pancreatic
 - **sonodynamic**: *A review of low-intensity ultrasound for cancer therapy.*
   PMID 25728459 | Ultrasound in medicine & biology | 344 citations | various
-- **hifu**: *Emerging HIFU applications in cancer therapy.*
-  PMID 25367011 | International journal of hyperthermia : the official journal of European Society for Hyperthermic Oncology, North American Hyperthermia Group | 239 citations | prostate
-- **oncolytic-virus** [preclinical-invivo]: *Newcastle disease virotherapy induces long-term survival and tumor-specific immune memory in orthotopic glioma through t*
-  PMID 25208916 | International journal of cancer | 207 citations | glioblastoma
-- **nanoparticle** [preclinical-invivo]: *Core-shell structured Fe3O4@TiO2-doxorubicin nanoparticles for targeted chemo-sonodynamic therapy of cancer.*
-  PMID 25841570 | International journal of pharmaceutics | 167 citations | various
+- **immunotherapy** [phase2-clinical]: *Randomized phase II/III clinical trial of elpamotide for patients with advanced pancreatic cancer: PEGASUS-PC Study.*
+  PMID 25867139 | Cancer science | 91 citations | pancreatic
+- **bioelectric** [preclinical-invivo]: *Antibody and lectin target podoplanin to inhibit oral squamous carcinoma cell migration and viability by distinct mechan*
+  PMID 25826087 | Oncotarget | 87 citations | head-and-neck
+- **electrochemical-therapy**: *Electrochemotherapy (ECT) and irreversible electroporation (IRE) -advanced techniques for treating deep-seated tumors ba*
+  PMID 26355606 | Biomedical engineering online | 80 citations | various
+- **frequency-therapy** [preclinical-invivo]: *Increases in microvascular perfusion and tissue oxygenation via pulsed electromagnetic fields in the healthy rat brain.*
+  PMID 25343187 | Journal of neurosurgery | 65 citations | various
+- **nanoparticle**: *Optical Imaging, Photodynamic Therapy and Optically Triggered Combination Treatments.*
+  PMID 26049699 | Cancer journal (Sudbury, Mass.) | 56 citations | various
 
 ## 2016
 
@@ -28,14 +26,14 @@ Major milestones chronologically, based on highest-impact articles per year per 
   PMID 27668386 | Clinical journal of oncology nursing | 1185 citations | glioblastoma
 - **ttfields**: *Glioblastoma: Overview of Disease and Treatment.*
   PMID 27668386 | Clinical journal of oncology nursing | 1185 citations | glioblastoma
-- **nanoparticle** [preclinical-invivo]: *Micro/Nanoparticle-Augmented Sonodynamic Therapy (SDT): Breaking the Depth Shallow of Photoactivation.*
-  PMID 27384408 | Advanced materials (Deerfield Beach, Fla.) | 867 citations | various
-- **sonodynamic** [preclinical-invivo]: *Micro/Nanoparticle-Augmented Sonodynamic Therapy (SDT): Breaking the Depth Shallow of Photoactivation.*
-  PMID 27384408 | Advanced materials (Deerfield Beach, Fla.) | 867 citations | various
 - **oncolytic-virus**: *Talimogene Laherparepvec in Combination With Ipilimumab in Previously Untreated, Unresectable Stage IIIB-IV Melanoma.*
   PMID 27298410 | Journal of clinical oncology : official journal of the American Society of Clinical Oncology | 545 citations | melanoma
 - **bioelectric** [preclinical-invivo]: *Mitochondrial Membrane Potential Identifies Cells with Enhanced Stemness for Cellular Therapy.*
   PMID 26674251 | Cell metabolism | 370 citations | melanoma
+- **nanoparticle** [preclinical-invivo]: *ROS-generating TiO2 nanoparticles for non-invasive sonodynamic therapy of cancer.*
+  PMID 26996446 | Scientific reports | 319 citations | various
+- **sonodynamic** [preclinical-invivo]: *ROS-generating TiO2 nanoparticles for non-invasive sonodynamic therapy of cancer.*
+  PMID 26996446 | Scientific reports | 319 citations | various
 - **frequency-therapy** [preclinical-invivo]: *PD-1 Blockade Boosts Radiofrequency Ablation-Elicited Adaptive Immune Responses against Tumor.*
   PMID 26933175 | Clinical cancer research : an official journal of the American Association for Cancer Research | 299 citations | colorectal
 - **car-t**: *Chimeric Antigen Receptors Modified T-Cells for Cancer Therapy.*
@@ -57,27 +55,27 @@ Major milestones chronologically, based on highest-impact articles per year per 
   PMID 28436963 | Nature nanotechnology | 870 citations | colorectal, melanoma
 - **epigenetic** [preclinical-invivo]: *Epigenetic Therapy Ties MYC Depletion to Reversing Immune Evasion and Treating Lung Cancer.*
   PMID 29195073 | Cell | 509 citations | lung
-- **sonodynamic** [preclinical-invivo]: *Oxygen-Self-Produced Nanoplatform for Relieving Hypoxia and Breaking Resistance to Sonodynamic Treatment of Pancreatic C*
-  PMID 29236476 | ACS nano | 453 citations | pancreatic
+- **bioelectric** [preclinical-invivo]: *Endogenous Bioelectric Signaling Networks: Exploiting Voltage Gradients for Control of Growth and Form.*
+  PMID 28633567 | Annual review of biomedical engineering | 289 citations | various
 
 ## 2018
 
-- **immunotherapy**: *Gut microbiome influences efficacy of PD-1-based immunotherapy against epithelial tumors.*
-  PMID 29097494 | Science (New York, N.Y.) | 5249 citations | various
-- **microbiome**: *Gut microbiome influences efficacy of PD-1-based immunotherapy against epithelial tumors.*
-  PMID 29097494 | Science (New York, N.Y.) | 5249 citations | various
-- **oncolytic-virus** [phase2-clinical]: *Randomized, Open-Label Phase II Study Evaluating the Efficacy and Safety of Talimogene Laherparepvec in Combination With*
-  PMID 28981385 | Journal of clinical oncology : official journal of the American Society of Clinical Oncology | 607 citations | melanoma
-- **nanoparticle** [preclinical-invivo]: *Nanoenzyme-Augmented Cancer Sonodynamic Therapy by Catalytic Tumor Oxygenation.*
-  PMID 29613770 | ACS nano | 571 citations | various
-- **sonodynamic** [preclinical-invivo]: *Nanoenzyme-Augmented Cancer Sonodynamic Therapy by Catalytic Tumor Oxygenation.*
-  PMID 29613770 | ACS nano | 571 citations | various
-- **synthetic-lethality**: *Mechanisms of PARP inhibitor sensitivity and resistance.*
-  PMID 30177437 | DNA repair | 476 citations | breast, ovarian
-- **metabolic-targeting**: *Metabolic reprogramming for cancer cells and their microenvironment: Beyond the Warburg Effect.*
-  PMID 29959989 | Biochimica et biophysica acta. Reviews on cancer | 369 citations | various
-- **ttfields**: *Tumor-Treating Fields: A Fourth Modality in Cancer Treatment.*
-  PMID 28765323 | Clinical cancer research : an official journal of the American Association for Cancer Research | 367 citations | glioblastoma
+- **immunotherapy** [preclinical-invivo]: *Gut microbiome modulates response to anti-PD-1 immunotherapy in melanoma patients.*
+  PMID 29097493 | Science (New York, N.Y.) | 4526 citations | melanoma
+- **microbiome** [preclinical-invivo]: *Gut microbiome modulates response to anti-PD-1 immunotherapy in melanoma patients.*
+  PMID 29097493 | Science (New York, N.Y.) | 4526 citations | melanoma
+- **nanoparticle**: *Nanoparticle-assisted ultrasound: A special focus on sonodynamic therapy against cancer.*
+  PMID 30881202 | Chemical engineering journal (Lausanne, Switzerland : 1996) | 441 citations | various
+- **sonodynamic**: *Nanoparticle-assisted ultrasound: A special focus on sonodynamic therapy against cancer.*
+  PMID 30881202 | Chemical engineering journal (Lausanne, Switzerland : 1996) | 441 citations | various
+- **hifu**: *A Multicentre Study of 5-year Outcomes Following Focal Therapy in Treating Clinically Significant Nonmetastatic Prostate*
+  PMID 29960750 | European urology | 309 citations | prostate
+- **synthetic-lethality** [preclinical-invitro]: *BRD4 Inhibition Is Synthetic Lethal with PARP Inhibitors through the Induction of Homologous Recombination Deficiency.*
+  PMID 29533782 | Cancer cell | 298 citations | ovarian
+- **bioelectric**: *Emerging Roles of the Membrane Potential: Action Beyond the Action Potential.*
+  PMID 30519193 | Frontiers in physiology | 277 citations | various
+- **oncolytic-virus**: *Therapeutic advances in anaplastic thyroid cancer: a current perspective.*
+  PMID 30352606 | Molecular cancer | 264 citations | thyroid
 
 ## 2019
 
@@ -85,18 +83,18 @@ Major milestones chronologically, based on highest-impact articles per year per 
   PMID 30016571 | Angewandte Chemie (International ed. in English) | 999 citations | various
 - **nanoparticle**: *Nanoparticle-Mediated Immunogenic Cell Death Enables and Potentiates Cancer Immunotherapy.*
   PMID 30016571 | Angewandte Chemie (International ed. in English) | 999 citations | various
-- **metabolic-targeting** [preclinical-invitro]: *The Warburg effect: essential part of metabolic reprogramming and central contributor to cancer progression.*
-  PMID 30822194 | International journal of radiation biology | 863 citations | various
 - **sonodynamic** [preclinical-invitro]: *Checkpoint blockade and nanosonosensitizer-augmented noninvasive sonodynamic therapy combination reduces tumour growth a*
   PMID 31048681 | Nature communications | 582 citations | various
-- **synthetic-lethality**: *PARP Inhibitor Resistance: A Tug-of-War in BRCA-Mutated Cells.*
-  PMID 31421928 | Trends in cell biology | 459 citations | breast, ovarian
 - **electrochemical-therapy** [preclinical-invivo]: *Irreversible electroporation reverses resistance to immune checkpoint blockade in pancreatic cancer.*
   PMID 30796212 | Nature communications | 259 citations | melanoma, pancreatic
 - **ttfields**: *Treatment of Glioblastoma (GBM) with the Addition of Tumor-Treating Fields (TTF): A Review.*
   PMID 30717372 | Cancers | 234 citations | glioblastoma
-- **bioelectric** [preclinical-invitro]: *Targeted delivery of quercetin via pH-responsive zinc oxide nanoparticles for breast cancer therapy.*
-  PMID 30948047 | Materials science & engineering. C, Materials for biological applications | 216 citations | breast
+- **car-t**: *One-step generation of modular CAR-T cells with AAV-Cpf1.*
+  PMID 30804551 | Nature methods | 165 citations | various
+- **crispr**: *One-step generation of modular CAR-T cells with AAV-Cpf1.*
+  PMID 30804551 | Nature methods | 165 citations | various
+- **bioelectric** [preclinical-invivo]: *ROS as a novel indicator to predict anticancer drug efficacy.*
+  PMID 31842863 | BMC cancer | 131 citations | various
 
 ## 2020
 
@@ -106,42 +104,42 @@ Major milestones chronologically, based on highest-impact articles per year per 
   PMID 32478924 | CA: a cancer journal for clinicians | 1989 citations | glioblastoma
 - **car-t** [preclinical-invivo]: *Engineering strategies to overcome the current roadblocks in CAR T cell therapy.*
   PMID 31848460 | Nature reviews. Clinical oncology | 1400 citations | leukemia, lymphoma
-- **nanoparticle**: *Multifunctional sonosensitizers in sonodynamic cancer therapy.*
-  PMID 32337527 | Chemical Society reviews | 1076 citations | various
-- **sonodynamic**: *Multifunctional sonosensitizers in sonodynamic cancer therapy.*
-  PMID 32337527 | Chemical Society reviews | 1076 citations | various
 - **oncolytic-virus**: *Targeting immunogenic cell death in cancer.*
   PMID 33179413 | Molecular oncology | 854 citations | various
 - **synthetic-lethality**: *PARP inhibitor resistance: the underlying mechanisms and clinical implications.*
   PMID 32563252 | Molecular cancer | 515 citations | breast, ovarian
-- **crispr**: *Synthetic lethality as an engine for cancer drug target discovery.*
-  PMID 31712683 | Nature reviews. Drug discovery | 458 citations | various
+- **hifu**: *An Introduction to High Intensity Focused Ultrasound: Systematic Review on Principles, Devices, and Clinical Application*
+  PMID 32046072 | Journal of clinical medicine | 415 citations | sarcoma
+- **epigenetic**: *The emerging role of epigenetic therapeutics in immuno-oncology.*
+  PMID 31548600 | Nature reviews. Clinical oncology | 411 citations | various
+- **crispr** [preclinical-invivo]: *CRISPR screens in cancer spheroids identify 3D growth-specific vulnerabilities.*
+  PMID 32238925 | Nature | 326 citations | lung
 
 ## 2021
 
-- **immunotherapy** [phase1-clinical]: *Fecal microbiota transplant promotes response in immunotherapy-refractory melanoma patients.*
-  PMID 33303685 | Science (New York, N.Y.) | 1516 citations | melanoma
-- **microbiome** [phase1-clinical]: *Fecal microbiota transplant promotes response in immunotherapy-refractory melanoma patients.*
-  PMID 33303685 | Science (New York, N.Y.) | 1516 citations | melanoma
-- **electrochemical-therapy**: *Locoregional therapies in the era of molecular and immune treatments for hepatocellular carcinoma.*
-  PMID 33510460 | Nature reviews. Gastroenterology & hepatology | 970 citations | liver
-- **frequency-therapy**: *Locoregional therapies in the era of molecular and immune treatments for hepatocellular carcinoma.*
-  PMID 33510460 | Nature reviews. Gastroenterology & hepatology | 970 citations | liver
-- **nanoparticle**: *Engineering nanomedicine for glutathione depletion-augmented cancer therapy.*
-  PMID 34027953 | Chemical Society reviews | 643 citations | various
-- **sonodynamic**: *Engineering nanomedicine for glutathione depletion-augmented cancer therapy.*
-  PMID 34027953 | Chemical Society reviews | 643 citations | various
+- **immunotherapy**: *Fecal microbiota transplant overcomes resistance to anti-PD-1 therapy in melanoma patients.*
+  PMID 33542131 | Science (New York, N.Y.) | 1511 citations | melanoma
+- **microbiome**: *Fecal microbiota transplant overcomes resistance to anti-PD-1 therapy in melanoma patients.*
+  PMID 33542131 | Science (New York, N.Y.) | 1511 citations | melanoma
 - **oncolytic-virus**: *Combination strategies to maximize the benefits of cancer immunotherapy.*
   PMID 34579759 | Journal of hematology & oncology | 633 citations | various
 - **synthetic-lethality**: *Targeting mutant p53 for cancer therapy: direct and indirect strategies.*
   PMID 34583722 | Journal of hematology & oncology | 551 citations | various
+- **nanoparticle** [preclinical-invivo]: *Targeting immunogenic cancer cell death by photodynamic therapy: past, present and future.*
+  PMID 33431631 | Journal for immunotherapy of cancer | 520 citations | various
+- **bioelectric** [theoretical]: *Bioelectric signaling: Reprogrammable circuits underlying embryogenesis, regeneration, and cancer.*
+  PMID 33826908 | Cell | 463 citations | various
+- **car-t** [preclinical-invitro]: *Metabolic reprogramming of terminally exhausted CD8+ T cells by IL-10 enhances anti-tumor immunity.*
+  PMID 34031618 | Nature immunology | 398 citations | various
+- **metabolic-targeting** [preclinical-invitro]: *Metabolic reprogramming of terminally exhausted CD8+ T cells by IL-10 enhances anti-tumor immunity.*
+  PMID 34031618 | Nature immunology | 398 citations | various
 
 ## 2022
 
-- **immunotherapy**: *Gastric Cancer, Version 2.2022, NCCN Clinical Practice Guidelines in Oncology.*
-  PMID 35130500 | Journal of the National Comprehensive Cancer Network : JNCCN | 1640 citations | gastric
 - **antibody-drug-conjugate** [phase3-clinical]: *Antibody drug conjugate: the "biological missile" for targeted cancer therapy.*
   PMID 35318309 | Signal transduction and targeted therapy | 1402 citations | various
+- **immunotherapy**: *Immune Checkpoint Inhibitors in Cancer Therapy.*
+  PMID 35621637 | Current oncology (Toronto, Ont.) | 1191 citations | head-and-neck, kidney
 - **metabolic-targeting**: *Targeting cancer metabolism in the era of precision oncology.*
   PMID 34862480 | Nature reviews. Drug discovery | 1127 citations | leukemia
 - **car-t** [preclinical-invitro]: *CAR race to cancer immunotherapy: from CAR T, CAR NK to CAR macrophage therapy.*
@@ -150,10 +148,10 @@ Major milestones chronologically, based on highest-impact articles per year per 
   PMID 36174631 | The Lancet. Oncology | 470 citations | various
 - **nanoparticle**: *Lipid nanoparticle-mediated lymph node-targeting delivery of mRNA cancer vaccine elicits robust CD8+ T cell response.*
   PMID 35969778 | Proceedings of the National Academy of Sciences of the United States of America | 371 citations | melanoma
-- **sonodynamic** [preclinical-invivo]: *Engineering Macrophage Exosome Disguised Biodegradable Nanoplatform for Enhanced Sonodynamic Therapy of Glioblastoma.*
-  PMID 35133042 | Advanced materials (Deerfield Beach, Fla.) | 338 citations | glioblastoma
 - **crispr**: *Engineering the next-generation of CAR T-cells with CRISPR-Cas9 gene editing.*
   PMID 35303871 | Molecular cancer | 314 citations | various
+- **synthetic-lethality**: *Targeting signaling pathways in prostate cancer: mechanisms and clinical trials.*
+  PMID 35750683 | Signal transduction and targeted therapy | 242 citations | prostate
 
 ## 2023
 
@@ -163,8 +161,6 @@ Major milestones chronologically, based on highest-impact articles per year per 
   PMID 37165196 | Nature | 1153 citations | pancreatic
 - **nanoparticle**: *Personalized RNA neoantigen vaccines stimulate T cells in pancreatic cancer.*
   PMID 37165196 | Nature | 1153 citations | pancreatic
-- **antibody-drug-conjugate**: *Antibody-drug conjugates come of age in oncology.*
-  PMID 37308581 | Nature reviews. Drug discovery | 704 citations | various
 - **crispr**: *Immune checkpoint therapy for solid tumours: clinical dilemmas and future trends.*
   PMID 37635168 | Signal transduction and targeted therapy | 494 citations | lung, melanoma
 - **oncolytic-virus**: *Immune checkpoint therapy for solid tumours: clinical dilemmas and future trends.*
@@ -173,13 +169,13 @@ Major milestones chronologically, based on highest-impact articles per year per 
   PMID 36082969 | Journal of clinical oncology : official journal of the American Society of Clinical Oncology | 446 citations | leukemia, ovarian
 - **car-t**: *CAR T therapy beyond cancer: the evolution of a living drug.*
   PMID 37495877 | Nature | 437 citations | various
+- **metabolic-targeting**: *Modulating Glycolysis to Improve Cancer Therapy.*
+  PMID 36768924 | International journal of molecular sciences | 341 citations | various
 
 ## 2024
 
 - **immunotherapy**: *Ferroptosis in cancer: From molecular mechanisms to therapeutic strategies.*
   PMID 38453898 | Signal transduction and targeted therapy | 597 citations | various
-- **antibody-drug-conjugate**: *Exploring the next generation of antibody-drug conjugates.*
-  PMID 38191923 | Nature reviews. Clinical oncology | 452 citations | various
 - **epigenetic** [preclinical-invitro]: *NBS1 lactylation is required for efficient DNA repair and chemotherapy resistance.*
   PMID 38961290 | Nature | 413 citations | various
 - **metabolic-targeting** [preclinical-invitro]: *NBS1 lactylation is required for efficient DNA repair and chemotherapy resistance.*
@@ -188,10 +184,12 @@ Major milestones chronologically, based on highest-impact articles per year per 
   PMID 38693104 | Cell death & disease | 272 citations | various
 - **car-t**: *CAR-T and CAR-NK as cellular cancer immunotherapy for solid tumors.*
   PMID 39134804 | Cellular & molecular immunology | 252 citations | various
-- **mRNA-vaccine**: *Challenges in developing personalized neoantigen cancer vaccines.*
-  PMID 37783860 | Nature reviews. Immunology | 204 citations | various
-- **nanoparticle** [preclinical-invivo]: *In Vivo mRNA CAR T Cell Engineering via Targeted Ionizable Lipid Nanoparticles with Extrahepatic Tropism.*
-  PMID 38072809 | Small (Weinheim an der Bergstrasse, Germany) | 180 citations | various
+- **mRNA-vaccine** [phase1-clinical]: *Personalized neoantigen vaccine and pembrolizumab in advanced hepatocellular carcinoma: a phase 1/2 trial.*
+  PMID 38584166 | Nature medicine | 189 citations | liver
+- **synthetic-lethality**: *Transcription-replication conflicts underlie sensitivity to PARP inhibitors.*
+  PMID 38509368 | Nature | 160 citations | various
+- **nanoparticle**: *Integrating natural compounds and nanoparticle-based drug delivery systems: A novel strategy for enhanced efficacy and s*
+  PMID 38491817 | Cancer medicine | 135 citations | various
 
 ## 2025
 
@@ -209,39 +207,36 @@ Major milestones chronologically, based on highest-impact articles per year per 
   PMID 40739089 | Signal transduction and targeted therapy | 116 citations | various
 - **oncolytic-virus**: *Immune evasion in cancer: mechanisms and cutting-edge therapeutic approaches.*
   PMID 40739089 | Signal transduction and targeted therapy | 116 citations | various
-- **bispecific-antibody**: *The changing treatment landscape of EGFR-mutant non-small-cell lung cancer.*
-  PMID 39614090 | Nature reviews. Clinical oncology | 106 citations | lung
+- **crispr**: *Precision nanomedicine: navigating the tumor microenvironment for enhanced cancer immunotherapy and targeted drug delive*
+  PMID 40457437 | Molecular cancer | 101 citations | various
 
 ## Trend Summary
 
 ### Publication volume by year
 
-- 2015:   160 articles ███
-- 2016:   232 articles ████
-- 2017:   241 articles ████
-- 2018:   255 articles █████
-- 2019:   275 articles █████
-- 2020:   569 articles ███████████
-- 2021:   763 articles ███████████████
-- 2022:   956 articles ███████████████████
-- 2023:  1524 articles ██████████████████████████████
-- 2024:  1770 articles ███████████████████████████████████
-- 2025:  2245 articles ████████████████████████████████████████████
-- 2026:   567 articles ███████████
+- 2015:    38 articles 
+- 2016:    82 articles █
+- 2017:    79 articles █
+- 2018:    98 articles █
+- 2019:   106 articles ██
+- 2020:   257 articles █████
+- 2021:   380 articles ███████
+- 2022:   591 articles ███████████
+- 2023:   784 articles ███████████████
+- 2024:   905 articles ██████████████████
+- 2025:  1165 articles ███████████████████████
+- 2026:   204 articles ████
 
 ### Fastest-growing mechanisms (2022 vs 2020)
 
-- **antibody-drug-conjugate**: 16 → 156 articles/year (+875%)
-- **bioelectric**: 42 → 53 articles/year (+26%)
-- **car-t**: 56 → 180 articles/year (+221%)
-- **crispr**: 68 → 123 articles/year (+81%)
-- **epigenetic**: 7 → 50 articles/year (+614%)
-- **frequency-therapy**: 8 → 22 articles/year (+175%)
-- **hifu**: 11 → 27 articles/year (+145%)
-- **immunotherapy**: 199 → 864 articles/year (+334%)
-- **metabolic-targeting**: 28 → 79 articles/year (+182%)
-- **nanoparticle**: 49 → 312 articles/year (+537%)
-- **oncolytic-virus**: 82 → 131 articles/year (+60%)
-- **sonodynamic**: 29 → 102 articles/year (+252%)
-- **synthetic-lethality**: 79 → 94 articles/year (+19%)
-- **ttfields**: 36 → 47 articles/year (+31%)
+- **bioelectric**: 12 → 23 articles/year (+92%)
+- **car-t**: 30 → 102 articles/year (+240%)
+- **crispr**: 29 → 62 articles/year (+114%)
+- **electrochemical-therapy**: 11 → 17 articles/year (+55%)
+- **immunotherapy**: 95 → 508 articles/year (+435%)
+- **metabolic-targeting**: 16 → 54 articles/year (+238%)
+- **nanoparticle**: 13 → 111 articles/year (+754%)
+- **oncolytic-virus**: 27 → 83 articles/year (+207%)
+- **sonodynamic**: 6 → 37 articles/year (+517%)
+- **synthetic-lethality**: 43 → 48 articles/year (+12%)
+- **ttfields**: 18 → 33 articles/year (+83%)

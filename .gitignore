@@ -6,6 +6,9 @@ venv/
 node_modules/
 # Rust build artifacts
 simulations/target/
+# Simulation output (regenerated, not committed)
+simulations/output/
+!simulations/output/.gitkeep
 
 # LaTeX auxiliary files
 *.aux

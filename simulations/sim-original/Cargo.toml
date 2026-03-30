@@ -1,0 +1,9 @@
+[package]
+name = "sim-original"
+version = "0.2.0"
+edition = "2021"
+description = "Original v3 Monte Carlo ferroptosis simulation (bitwise-identical reproduction)"
+
+[dependencies]
+ferroptosis-core = { workspace = true }
+serde_json = { workspace = true }

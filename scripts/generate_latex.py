@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Convert v1.md to v1.tex with proper LaTeX formatting."""
-import re, sys
+import re
+import unicodedata
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -8,13 +9,15 @@ MD = ROOT / "article" / "drafts" / "v1.md"
 TEX = ROOT / "article" / "drafts" / "v1.tex"
 
 md = MD.read_text()
+title = re.search(r'^# (.+)$', md, re.MULTILINE).group(1).strip()
 
 # Build cite map from reference list
 cite_map = {}
 for line in md.split('\n'):
     m = re.match(r'^(\d+)\. PMID: (\d+) -- (\w+)', line.strip())
     if m:
-        pmid, first = m.group(2), m.group(3).lower()
+        pmid = m.group(2)
+        first = unicodedata.normalize('NFKD', m.group(3)).encode('ascii', 'ignore').decode().lower()
         ym = re.search(r'\((\d{4})\)', line)
         year = ym.group(1) if ym else '2024'
         cite_map[pmid] = f'{first}{year}_{pmid}'
@@ -36,6 +39,7 @@ abstract = re.sub(r'PMID: (\d+)', repl, abstract)
 
 # Markdown → LaTeX
 def cvt(t):
+    t = re.sub(r'^#### (\d+\.\d+\.\d+) (.+)$', r'\\subsubsection{\2}', t, flags=re.MULTILINE)
     t = re.sub(r'^## (\d+)\. (.+)$', r'\\section{\2}', t, flags=re.MULTILINE)
     t = re.sub(r'^### (\d+\.\d+) (.+)$', r'\\subsection{\2}', t, flags=re.MULTILINE)
     t = re.sub(r'\*\*(.+?)\*\*', r'\\textbf{\1}', t)
@@ -67,24 +71,19 @@ abstract_tex = re.sub(r'CITEPLACEHOLDER\{([^}]+)\}', r'\\cite{\1}', abstract_tex
 # Remove square brackets around \cite (markdown artifact: [PMID: X] → [\cite{x}])
 body_tex = re.sub(r'\[\\cite\{', r'\\cite{', body_tex)
 abstract_tex = re.sub(r'\[\\cite\{', r'\\cite{', abstract_tex)
+body_tex = re.sub(r'\\cite\{([^}]+)\}\]', r'\\cite{\1}', body_tex)
+abstract_tex = re.sub(r'\\cite\{([^}]+)\}\]', r'\\cite{\1}', abstract_tex)
+
+# Remove markdown horizontal rules, which are invalid in LaTeX body text.
+body_tex = re.sub(r'^\s*---\s*$', '', body_tex, flags=re.MULTILINE)
 
 # Replace markdown tables with LaTeX tables
 # Find pipe-delimited tables and replace
 def replace_table(text, marker, caption, label, headers, rows):
-    idx = text.find(marker)
-    if idx < 0:
+    pattern = r'(?m)^' + re.escape(marker) + r'.*\n(?:^\|.*\n)+'
+    match = re.search(pattern, text)
+    if not match:
         return text
-    # Find end of table block
-    end = idx
-    while end < len(text) and (text[end] == '|' or text[end] in ' \n' or text[end:end+2] == '|-'):
-        nl = text.find('\n', end+1)
-        if nl < 0: break
-        next_line = text[nl+1:nl+2]
-        if next_line == '|' or next_line == '\n':
-            end = nl + 1
-        else:
-            end = nl
-            break
 
     h = ' & '.join(f'\\textbf{{{h}}}' for h in headers)
     r = ' \\\\\n'.join(' & '.join(cells) for cells in rows)
@@ -102,7 +101,7 @@ def replace_table(text, marker, caption, label, headers, rows):
 \\bottomrule
 \\end{{tabular}}
 \\end{{table}}"""
-    return text[:idx] + table + text[end:]
+    return text[:match.start()] + table + text[match.end():]
 
 # Simulation table
 body_tex = replace_table(body_tex, '| Phenotype |',
@@ -137,22 +136,20 @@ figs = {
     '6': ('fig6_sdt_chain_evidence', 'SDT ferroptosis-ICD chain evidence.'),
     '7': ('fig7_monte_carlo_simulation', 'Monte Carlo simulation (1M cells/condition).'),
 }
-for num, (fn, cap) in figs.items():
-    for pat in [f'[FIGURE {num}:', f'\\% [FIGURE {num}:']:
-        idx = body_tex.find(pat)
-        if idx >= 0:
-            end = body_tex.find(']', idx) + 1
-            fig = f"""\\begin{{figure}}[ht]
+def repl_figure(match):
+    num = match.group(1)
+    fn, cap = figs[num]
+    return f"""\\begin{{figure}}[ht]
 \\centering
 \\includegraphics[width=\\textwidth]{{../figures/{fn}.pdf}}
 \\caption{{{cap}}}
 \\label{{fig:{fn}}}
 \\end{{figure}}"""
-            body_tex = body_tex[:idx] + fig + body_tex[end:]
+
+body_tex = re.sub(r'\[FIGURE ([1-7]):[^\n]*\]', repl_figure, body_tex)
 
 # Remove any leftover placeholders
 body_tex = re.sub(r'\[FIGURE \d+:.*?\]', '', body_tex)
-body_tex = re.sub(r'\\% \[FIGURE \d+:.*?\]', '', body_tex)
 
 latex = f"""\\documentclass[12pt,a4paper]{{article}}
 \\usepackage[utf8]{{inputenc}}
@@ -169,7 +166,7 @@ latex = f"""\\documentclass[12pt,a4paper]{{article}}
 \\geometry{{margin=1in}}
 \\onehalfspacing
 
-\\title{{Physical ROS-Generating Modalities as Spatially Selective Ferroptosis Inducers for Drug-Tolerant Persister Cells: A Cross-Literature Analysis of 10,413 Articles}}
+\\title{{{title}}}
 
 \\author[1]{{Ezequiel Lares}}
 \\affil[1]{{Independent Researcher}}
