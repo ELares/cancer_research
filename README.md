@@ -1,6 +1,6 @@
 # Physical ROS-Generating Modalities as Spatially Selective Ferroptosis Inducers for Drug-Tolerant Persister Cells
 
-A cross-literature analysis of 10,413 cancer articles proposing that the persister-ferroptosis field should evaluate physical modalities (PDT, SDT) as spatially selective alternatives to pharmacologic ferroptosis inducers.
+A cross-literature analysis of 10,413 cancer articles with Monte Carlo biochemical simulation proposing that the persister-ferroptosis field should evaluate physical modalities (PDT, SDT) as spatially selective alternatives to pharmacologic ferroptosis inducers.
 
 ## The Idea
 
@@ -10,54 +10,78 @@ Drug-tolerant persister cells are ferroptosis-sensitive (established, PMID:41481
 
 **What's novel**: The modality-class question — should the persister field look beyond drugs? — has not been systematically framed despite 355 PDT and 121 SDT ferroptosis papers existing independently.
 
-**What's known**: Persister ferroptosis (44 papers), PDT-ferroptosis-ICD (67 papers), SDT-ferroptosis (121 papers). The individual components are published; the cross-community connection is absent.
+**Key caveat**: PDT has 40 years of development without demonstrating robust ICD-immune synergy in randomized trials.
 
-**Key caveat**: PDT has 40 years of development without demonstrating robust ICD-immune synergy in randomized trials. The pharmacologic-to-physical translation may not improve outcomes.
+## Computational Simulation
 
-## Decisive Experiment
+A Rust-based Monte Carlo simulation of the ferroptosis cascade (16M cells across 16 conditions) validates the biochemical plausibility:
 
-Compare SDT vs RSL3 vs erastin for killing persister cells (using existing models from PMID:41481741). Measure both cell death AND ICD markers (calreticulin, HMGB1, STING). If SDT produces equivalent killing with superior ICD, the hypothesis is supported.
+| Phenotype | Control | RSL3 | SDT/PDT |
+|-----------|---------|------|---------|
+| Glycolytic | 0.00% | 0.00% | 87.2% |
+| OXPHOS | 0.04% | 1.1% | 99.9% |
+| **Persister (FSP1↓)** | 1.2% | **42.5%** | **100.0%** |
+| Persister+NRF2 | 0.00% | 0.05% | 99.5% |
+
+Key features: autocatalytic LP propagation gated by GSH/GPX4, dynamic GPX4 regulation, FSP1 as GPX4-independent repair pathway. All baselines <2%. Sensitivity: 22/22 holds (100%). RSL3 kills persisters (42.5%) — matching published biology (PMID:41481741). NRF2 rescues from RSL3 but NOT from SDT.
 
 ## Article
 
 **Author:** Ezequiel Lares
 
-- `article/drafts/v1.md` — Markdown draft (~11,200 words, 114 verified references)
-- `article/drafts/v1.tex` — LaTeX version with `\cite{}` references
+- `article/drafts/v1.md` — Markdown draft (~11,800 words, 114 references)
+- `article/drafts/v1.tex` — LaTeX with proper tables and embedded figures
+- `article/drafts/v1.pdf` — Compiled PDF (34 pages, 7 figures, 2 tables)
 - `article/references/bibliography.bib` — BibTeX bibliography (114 entries)
 
-10+ review rounds including adversarial peer review, falsification analysis, and novelty assessment with honest prior-art acknowledgment.
+10+ review rounds including adversarial peer review, falsification analysis, novelty assessment, and simulation validation.
 
-## Corpus
+## Figures
 
-10,413 articles from 1,668 journals (2015-2026). Sources: PubMed (8,220) + Semantic Scholar (2,193). Enriched with OpenAlex, PubTator3, and iCite.
+| Figure | Content |
+|--------|---------|
+| Fig 1 | Publication trends 2015-2025 |
+| Fig 2 | 19×22 mechanism-cancer heatmap |
+| Fig 3 | Ferroptosis engagement comparison (χ²=97.3, p<10⁻²³) |
+| Fig 4 | Molecular pathway overlap across modalities |
+| Fig 5 | Literature disconnect between communities |
+| Fig 6 | SDT ferroptosis-ICD chain evidence depth |
+| Fig 7 | Monte Carlo simulation results (1M cells/condition) |
 
 ## Repository Structure
 
 ```
-article/drafts/v1.md           # The manuscript
-analysis/                      # Hypothesis documents + data analysis
-corpus/by-pmid/                # 10,413 articles with YAML frontmatter
-tags/                          # Pre-computed indexes
-scripts/                       # Reproducible Python pipeline
-plans/                         # Research plans
+article/drafts/          # Manuscript (md, tex, pdf)
+article/figures/         # 7 publication-quality figures (pdf + png)
+article/references/      # BibTeX bibliography
+corpus/                  # 10,413 articles with YAML frontmatter
+tags/                    # Pre-computed indexes
+scripts/                 # Python pipeline (fetch, enrich, tag, analyze, figures)
+simulations/             # Rust Monte Carlo ferroptosis simulation
+analysis/                # Hypothesis documents and data analysis
+books/                   # Reference textbooks (LFS)
+plans/                   # Research plans
 ```
 
 ## Reproduction
 
 ```bash
+# Corpus
 pip install -r requirements.txt && cp .env.example .env
 cd scripts/
 python fetch_articles.py --query-file queries.txt --max 500
 python fetch_semantic_scholar.py --mode search --max 200
 python enrich_metadata.py && python tag_articles.py
 python build_index.py && python analyze_corpus.py
-python verify_references.py
+python generate_figures.py
+
+# Simulation
+cd ../simulations && cargo build --release
+./target/release/ferroptosis-sim
+
+# PDF
+cd ../article/drafts && pdflatex v1.tex && bibtex v1 && pdflatex v1.tex && pdflatex v1.tex
 ```
-
-## Review History
-
-9 rounds: scientific integrity → citation verification (112/112 clean) → adversarial peer review → falsification → hypothesis distillation → novelty assessment with honest acknowledgment of prior art.
 
 ## License
 
