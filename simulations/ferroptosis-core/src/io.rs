@@ -1,15 +1,9 @@
-//! Output helpers: JSON, CSV, deterministic seeding.
+//! Output helpers: JSON, CSV.
 
 use std::io;
 use std::path::Path;
 
 use ndarray::Array2;
-use rand::prelude::*;
-
-/// Create a deterministic StdRng from a base seed and an offset.
-pub fn seeded_rng(base_seed: u64, offset: u64) -> StdRng {
-    StdRng::seed_from_u64(base_seed.wrapping_add(offset))
-}
 
 /// Write a 2D u8 array as CSV (for heatmap plotting).
 pub fn write_heatmap_csv(path: &Path, data: &Array2<u8>) -> io::Result<()> {

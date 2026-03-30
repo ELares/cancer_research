@@ -4,7 +4,8 @@ use rand::prelude::*;
 use rand_distr::Normal;
 use serde::{Deserialize, Serialize};
 
-/// Sample from a normal distribution, clamped to positive.
+/// Sample from a normal distribution. Does NOT clamp — callers must apply
+/// `.max(threshold)` if a positive value is required.
 pub fn norm(rng: &mut StdRng, mean: f64, sd: f64) -> f64 {
     Normal::new(mean, sd).unwrap().sample(rng)
 }
@@ -137,10 +138,7 @@ impl Default for RecoveryRates {
 /// Apply time-dependent recovery to a persister cell.
 /// Returns new parameter means (not a full Cell — caller generates stochastic cell from these).
 pub fn recovered_persister_means(days: f64, rates: &RecoveryRates) -> (f64, f64, f64, f64) {
-    let recovery = |t_half: f64| -> f64 {
-        1.0 - (-days.ln_1p().abs() * (2.0_f64.ln() / t_half)).min(50.0).exp()
-    };
-    // Actually use simpler exponential: fraction recovered = 1 - exp(-ln(2) * t / t_half)
+    // Exponential recovery: fraction recovered = 1 - exp(-ln(2) * t / t_half)
     let frac = |t_half: f64| -> f64 {
         1.0 - (-(2.0_f64.ln()) * days / t_half).exp()
     };
@@ -151,7 +149,6 @@ pub fn recovered_persister_means(days: f64, rates: &RecoveryRates) -> (f64, f64,
     let nrf2 = 0.7 + (1.0 - 0.7) * frac(rates.nrf2_half_recovery_days);
     let gsh = 4.8 + (5.0 - 4.8) * frac(rates.gsh_half_recovery_days);
 
-    let _ = recovery; // suppress warning for the unused closure
     (fsp1, gpx4, nrf2, gsh)
 }
 

@@ -70,10 +70,12 @@ pub fn immune_cascade(
     let (total_damps, damp_per_dead_cell) = calculate_damp_release(dead_cell_lps, params);
     let n_dead = dead_cell_lps.len();
 
-    // DC activation: saturating response to total DAMP
-    let dc_activation_fraction = total_damps / (total_damps + params.dc_activation_kd);
+    // DC activation: saturating response to DAMP *per dead cell* (quality of death).
+    // Using per-cell average rather than total prevents the number of dead cells from
+    // dominating the activation signal, allowing SDT vs RSL3 quality differences to show.
+    let dc_activation_fraction = damp_per_dead_cell / (damp_per_dead_cell + params.dc_activation_kd);
 
-    // Mature DCs (proportional to activation and number of dead cells presenting antigens)
+    // Mature DCs: activation quality × maturation rate × number of antigen-presenting deaths
     let mature_dcs = dc_activation_fraction * params.dc_maturation_rate * n_dead as f64;
 
     // T cell priming

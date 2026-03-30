@@ -91,13 +91,17 @@ fn run_spatial(
                     continue;
                 }
 
+                // Seed incorporates a large offset to avoid collision with init seeds
                 let mut rng = StdRng::seed_from_u64(
-                    seed.wrapping_add(1000)
+                    seed.wrapping_add(500_000)
                         .wrapping_add(idx as u64)
                         .wrapping_add(step as u64 * 1_000_000),
                 );
 
+                // Consume extra_iron this step, then reset (iron is consumed by Fenton reaction)
                 let extra_iron = grid.cells[idx].extra_iron;
+                grid.cells[idx].extra_iron = 0.0;
+
                 let gc = &mut grid.cells[idx];
                 let died = sim_cell_step(
                     &mut gc.state,

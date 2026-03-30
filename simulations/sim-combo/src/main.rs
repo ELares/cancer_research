@@ -99,15 +99,21 @@ fn main() {
                 let ferroptosis_kill_rate = dead_cell_lps.len() as f64 / n as f64;
 
                 // Phase 3: immune cascade
+                // Scale dead_cell_lps to the biological population size (not simulation sample size)
+                // to avoid saturating the immune cascade with 50K entries against 1K tumor cells.
+                let ferroptosis_killed = (ferroptosis_kill_rate * initial_tumor_cells as f64).round() as usize;
+                let scaled_dead_lps: Vec<f64> = dead_cell_lps.iter()
+                    .take(ferroptosis_killed)
+                    .copied()
+                    .collect();
                 let immune = immune_cascade(
-                    &dead_cell_lps,
+                    &scaled_dead_lps,
                     initial_tumor_cells,
                     &immune_params,
                     with_pd1,
                 );
 
                 // Total tumor reduction: ferroptosis kills + immune kills
-                let ferroptosis_killed = (ferroptosis_kill_rate * initial_tumor_cells as f64).round() as usize;
                 let immune_killed = immune.immune_kills.round() as usize;
                 let total_killed = (ferroptosis_killed + immune_killed).min(initial_tumor_cells);
                 let survivors = initial_tumor_cells - total_killed;
