@@ -1,0 +1,82 @@
+name: Build & Release PDF
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'article/**'
+      - 'scripts/generate_latex.py'
+      - '.github/workflows/release-pdf.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  build-pdf:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Install Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install LaTeX
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            texlive-latex-base \
+            texlive-latex-recommended \
+            texlive-latex-extra \
+            texlive-fonts-recommended \
+            texlive-science \
+            texlive-bibtex-extra \
+            biber \
+            latexmk
+
+      - name: Generate LaTeX from Markdown
+        run: python3 scripts/generate_latex.py
+
+      - name: Compile PDF (pdflatex + bibtex, 3-pass)
+        working-directory: article/drafts
+        run: |
+          pdflatex -interaction=nonstopmode v1.tex
+          bibtex v1
+          pdflatex -interaction=nonstopmode v1.tex
+          pdflatex -interaction=nonstopmode v1.tex
+
+      - name: Verify PDF was generated
+        run: |
+          if [ ! -f article/drafts/v1.pdf ]; then
+            echo "ERROR: PDF not generated"
+            exit 1
+          fi
+          echo "PDF size: $(du -h article/drafts/v1.pdf | cut -f1)"
+          echo "PDF pages: $(pdfinfo article/drafts/v1.pdf 2>/dev/null | grep Pages || echo 'unknown')"
+
+      - name: Generate release tag
+        id: tag
+        run: |
+          TAG="v$(date -u +%Y.%m.%d)-$(echo ${GITHUB_SHA} | cut -c1-7)"
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+          echo "date=$(date -u +%Y-%m-%d)" >> "$GITHUB_OUTPUT"
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.tag.outputs.tag }}
+          name: "Article PDF — ${{ steps.tag.outputs.date }}"
+          body: |
+            Compiled PDF of *Beyond Pharmacologic Ferroptosis Inducers: Physical ROS Modalities for Drug-Tolerant Persister Cells*.
+
+            Built from commit ${{ github.sha }}.
+
+            **Changes in this release:**
+            ${{ github.event.head_commit.message }}
+          files: article/drafts/v1.pdf
+          draft: false
+          prerelease: false
