@@ -86,4 +86,4 @@ cd ../article/drafts && pdflatex v1.tex && bibtex v1 && pdflatex v1.tex && pdfla
 
 ## License
 
-Research use. Pre-publication — do not redistribute without permission.
+MIT License. See [LICENSE](LICENSE) for details.
