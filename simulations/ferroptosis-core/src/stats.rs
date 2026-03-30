@@ -24,7 +24,14 @@ pub struct SimResult {
 }
 
 /// Wilson score confidence interval for binomial proportion.
+///
+/// Returns (0.0, 0.0) if `n == 0`. Panics in debug mode if `k > n`.
+#[must_use]
 pub fn wilson_ci(n: usize, k: usize) -> (f64, f64) {
+    debug_assert!(k <= n, "wilson_ci: k ({k}) > n ({n})");
+    if n == 0 {
+        return (0.0, 0.0);
+    }
     let (nf, p, z) = (n as f64, k as f64 / n as f64, 1.96);
     let d = 1.0 + z * z / nf;
     let c = (p + z * z / (2.0 * nf)) / d;

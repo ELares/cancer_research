@@ -30,6 +30,14 @@ pub struct Params {
     pub pdt_ros: f64,
     pub rsl3_gpx4_inhib: f64,
 
+    // === GSH Homeostasis ===
+    /// Maximum intracellular GSH (mM). Ref: ~10-12 mM in healthy cells.
+    pub gsh_max: f64,
+
+    // === GPX4 Target ===
+    /// Multiplier for NRF2-driven GPX4 target level. GPX4_target = nrf2 * this value.
+    pub gpx4_nrf2_target_multiplier: f64,
+
     // === Death ===
     pub death_threshold: f64,
 }
@@ -50,6 +58,8 @@ impl Default for Params {
             sdt_ros: 5.0,
             pdt_ros: 5.0,
             rsl3_gpx4_inhib: 0.92,
+            gsh_max: 12.0,
+            gpx4_nrf2_target_multiplier: 1.0,
             death_threshold: 10.0,
         }
     }
