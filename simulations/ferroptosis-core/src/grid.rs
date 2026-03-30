@@ -4,12 +4,13 @@
 
 use ndarray::Array2;
 use rand::prelude::*;
+use serde::Serialize;
 
 use crate::cell::{gen_cell, Cell, Phenotype};
 use crate::biochem::CellState;
 
 /// A single cell in the spatial grid.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize)]
 pub struct GridCell {
     pub cell: Cell,
     pub phenotype: Phenotype,
@@ -147,8 +148,11 @@ impl TumorGrid {
 
     /// Return indices of Moore neighborhood (8-neighbors) for cell (r, c).
     /// Respects grid boundaries (no wrapping).
-    pub fn neighbors(&self, r: usize, c: usize) -> Vec<(usize, usize)> {
-        let mut result = Vec::with_capacity(8);
+    /// Returns (array, count) — use `&result[..count]` to iterate.
+    /// Zero-allocation: uses a stack-allocated fixed-size array.
+    pub fn neighbors(&self, r: usize, c: usize) -> ([(usize, usize); 8], usize) {
+        let mut result = [(0usize, 0usize); 8];
+        let mut count = 0;
         for dr in [-1_i64, 0, 1] {
             for dc in [-1_i64, 0, 1] {
                 if dr == 0 && dc == 0 {
@@ -157,11 +161,12 @@ impl TumorGrid {
                 let nr = r as i64 + dr;
                 let nc = c as i64 + dc;
                 if nr >= 0 && nr < self.rows as i64 && nc >= 0 && nc < self.cols as i64 {
-                    result.push((nr as usize, nc as usize));
+                    result[count] = (nr as usize, nc as usize);
+                    count += 1;
                 }
             }
         }
-        result
+        (result, count)
     }
 
     /// Distribute iron from newly dead cells to their living neighbors.
@@ -175,8 +180,8 @@ impl TumorGrid {
 
         // Distribute iron to living neighbors
         for (r, c) in dead_positions {
-            let neighbors = self.neighbors(r, c);
-            for (nr, nc) in neighbors {
+            let (neighbors, count) = self.neighbors(r, c);
+            for &(nr, nc) in &neighbors[..count] {
                 let neighbor = self.get_mut(nr, nc);
                 if !neighbor.state.dead {
                     neighbor.extra_iron += iron_per_death * neighbor_fraction;

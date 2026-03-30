@@ -4,12 +4,13 @@
 //! and the full 180-step loop (for single-cell simulations).
 
 use rand::prelude::*;
+use serde::{Deserialize, Serialize};
 
 use crate::cell::{norm, Cell, Treatment};
 use crate::params::Params;
 
 /// Mutable state carried between timesteps.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct CellState {
     pub gsh: f64,
     pub gpx4: f64,
@@ -98,8 +99,7 @@ pub fn sim_cell_step(
     state.gsh = state.gsh.max(0.0);
 
     // === NRF2-DRIVEN GSH RESYNTHESIS ===
-    let gsh_max = 12.0;
-    let deficit_fraction = ((gsh_max - state.gsh) / gsh_max).max(0.0);
+    let deficit_fraction = ((params.gsh_max - state.gsh) / params.gsh_max).max(0.0);
     state.gsh += cell.nrf2 * params.nrf2_gsh_rate * deficit_fraction;
 
     // === LIPID PEROXIDATION ===
@@ -123,7 +123,7 @@ pub fn sim_cell_step(
     if total_ros > 1.0 {
         state.gpx4 -= params.gpx4_degradation_by_ros * (total_ros - 1.0);
     }
-    let gpx4_target = cell.nrf2 * 1.0;
+    let gpx4_target = cell.nrf2 * params.gpx4_nrf2_target_multiplier;
     state.gpx4 += params.gpx4_nrf2_upregulation * (gpx4_target - state.gpx4);
     state.gpx4 = state.gpx4.max(0.0);
 
@@ -185,8 +185,7 @@ pub fn sim_cell(
         gsh = gsh.max(0.0);
 
         // === NRF2-DRIVEN GSH RESYNTHESIS ===
-        let gsh_max = 12.0;
-        let deficit_fraction = ((gsh_max - gsh) / gsh_max).max(0.0);
+        let deficit_fraction = ((params.gsh_max - gsh) / params.gsh_max).max(0.0);
         gsh += cell.nrf2 * params.nrf2_gsh_rate * deficit_fraction;
 
         // === LIPID PEROXIDATION ===
@@ -208,7 +207,7 @@ pub fn sim_cell(
         if total_ros > 1.0 {
             gpx4 -= params.gpx4_degradation_by_ros * (total_ros - 1.0);
         }
-        let gpx4_target = cell.nrf2 * 1.0;
+        let gpx4_target = cell.nrf2 * params.gpx4_nrf2_target_multiplier;
         gpx4 += params.gpx4_nrf2_upregulation * (gpx4_target - gpx4);
         gpx4 = gpx4.max(0.0);
 
