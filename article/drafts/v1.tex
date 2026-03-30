@@ -346,14 +346,23 @@ To test whether the proposed persister ferroptosis vulnerability is biochemicall
 
 \textbf{Calibration constraint}: All phenotypes must show <2\% death under Control (no treatment), reflecting the biological reality that even fragile persister cells are viable at baseline.
 
-\textbf{Results} (Figure 7):
+\textbf{Results} (Figure~\ref{fig:fig7}, Table~\ref{tab:sim}):
 
-| Phenotype | Control | RSL3 | SDT/PDT |
-|-----------|---------|------|---------|
-| Glycolytic | 0.00\% | 0.00\% | 87.2\% |
-| OXPHOS | 0.04\% | 1.1\% | 99.9\% |
-| Persister (FSP1$\downarrow$) | 1.2\% | 42.5\% | 100.0\% |
-| Persister + NRF2 | 0.00\% | 0.05\% | 99.5\% |
+\begin{table}[ht]
+\centering
+\caption{Monte Carlo ferroptosis simulation results (n = 1,000,000 cells per condition). All baselines $<$2\%. Sensitivity analysis: 22/22 parameter perturbations preserve the qualitative result.}
+\label{tab:sim}
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Phenotype} & \textbf{Control} & \textbf{RSL3} & \textbf{SDT} & \textbf{PDT} \\
+\midrule
+Glycolytic           & 0.00\% & 0.00\% & 87.2\% & 87.2\% \\
+OXPHOS               & 0.04\% & 1.1\%  & 99.9\% & 99.9\% \\
+Persister (FSP1$\downarrow$) & 1.2\%  & 42.5\% & 100.0\% & 100.0\% \\
+Persister + NRF2     & 0.00\% & 0.05\% & 99.5\% & 99.5\% \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \textbf{Key findings from the simulation}:
 
@@ -380,13 +389,22 @@ To test whether the proposed persister ferroptosis vulnerability is biochemicall
 
 If OXPHOS-resistant persister cells are ferroptosis-vulnerable, which modality best exploits this? Our initial corpus analysis identified SDT as uniquely positioned among \textit{physical ablative modalities} (42 ferroptosis articles vs 0 for TTFields, 1 for HIFU, 3 for IRE). However, broader PubMed verification reveals a critical context we must address honestly:
 
-| Modality | PubMed ferroptosis articles | Ferroptosis + ICD | Tissue depth |
-|----------|---------------------------|-------------------|-------------|
-| \textbf{PDT} | \textbf{355} | \textbf{67} | Superficial (mm) |
-| \textbf{SDT} | \textbf{121} | \textbf{25} | Deep (cm) |
-| \textbf{IRE} | \textbf{15} | emerging | Invasive (needles) |
-| \textbf{HIFU} | \textbf{3} | minimal | Deep (cm) |
-| \textbf{TTFields} | \textbf{0} | \textbf{0} | Surface arrays |
+\begin{table}[ht]
+\centering
+\caption{Ferroptosis engagement across physical modalities (PubMed, March 2026). PDT dominates SDT $\sim$3:1 on every metric.}
+\label{tab:modality}
+\begin{tabular}{lccl}
+\toprule
+\textbf{Modality} & \textbf{Ferroptosis articles} & \textbf{Ferroptosis + ICD} & \textbf{Tissue depth} \\
+\midrule
+\textbf{PDT}      & \textbf{355} & \textbf{67} & Superficial (mm) \\
+\textbf{SDT}      & \textbf{121} & \textbf{25} & Deep (cm) \\
+IRE               & 15           & emerging     & Invasive (needles) \\
+HIFU              & 3            & minimal      & Deep (cm) \\
+TTFields          & 0            & 0            & Surface arrays \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \textbf{PDT dominates SDT on every ferroptosis and ICD metric by approximately 3:1.} This fundamentally challenges any claim that SDT is "uniquely positioned" for ferroptosis-ICD. PDT — using light rather than ultrasound to activate sensitizers — triggers the same ROS $\rightarrow$ GSH depletion $\rightarrow$ ferroptosis $\rightarrow$ ICD chain with a larger evidence base, more clinical experience, and approved photosensitizers.
 
