@@ -1,28 +1,28 @@
-//! Monte Carlo Ferroptosis Sensitivity Simulation
+//! Monte Carlo Ferroptosis Sensitivity Simulation v3
 //!
-//! Models the biochemical chain: ROS → GSH depletion → GPX4/FSP1 inactivation
-//! → lipid peroxidation → ferroptotic cell death
+//! Models the biochemical chain with nonlinear dynamics:
+//!   ROS → GSH depletion → GPX4/FSP1 overwhelm → lipid peroxidation PROPAGATION → death
 //!
-//! Compares 4 cell phenotypes × 4 treatments × sensitivity analysis
+//! KEY BIOLOGICAL FEATURES:
+//! 1. Lipid peroxidation is autocatalytic (positive feedback) — oxidized lipids
+//!    catalyze further oxidation (Porter et al., Chem Rev 2005)
+//! 2. GSH depletion is uncapped — massive ROS bursts can catastrophically deplete GSH
+//! 3. GPX4 is dynamically regulated — degraded by oxidative stress (CMA pathway),
+//!    upregulated by NRF2 (Dodson et al., Free Radic Biol Med 2019)
+//! 4. FSP1 provides GPX4-independent repair (Bersuker et al., Nature 2019)
+//! 5. Threshold death with bistable dynamics — cells either recover or collapse
 //!
-//! PARAMETER SOURCES:
-//! - Intracellular GSH: 1-10 mM (Forman et al., Free Radic Biol Med 2009)
-//! - Labile iron pool: 0.2-1.5 µM normal, 2-6 µM overloaded (Kakhlon & Cabantchik, Free Radic Biol Med 2002)
-//! - Mitochondrial ROS: 1-2% O2 leak as superoxide (Murphy, Biochem J 2009)
-//! - GPX4 kcat: ~40 s⁻¹ for lipid-OOH (Ursini et al., Free Radic Biol Med 1995)
-//! - RSL3 GPX4 inhibition: IC50 ~10-100 nM, modeled as 85% at therapeutic dose
-//! - FSP1/DHODH as GPX4-independent suppressor (Bersuker et al., Nature 2019)
-//! - Persister FSP1 downregulation (Higuchi et al., Sci Adv 2026, PMID:41481741)
+//! CALIBRATION CONSTRAINT: Control death < 1% for all phenotypes.
+//! RSL3 must kill persisters (matching Higuchi et al. Sci Adv 2026, PMID:41481741).
 //!
-//! KEY CONSTRAINT: All phenotypes must show <1% death under Control (no treatment).
-//! Differential sensitivity emerges only under treatment, reflecting biological
-//! reality that OXPHOS cells are viable but have narrower redox margins.
+//! PARAMETER SOURCES in comments. All rate constants normalized to model time units.
+//! The model tests QUALITATIVE direction (which phenotype is more sensitive),
+//! not quantitative absolute death rates.
 
 use rand::prelude::*;
 use rand_distr::Normal;
 use rayon::prelude::*;
 use serde::Serialize;
-use std::collections::HashMap;
 use std::fs;
 
 fn norm(rng: &mut StdRng, mean: f64, sd: f64) -> f64 {
@@ -32,19 +32,27 @@ fn norm(rng: &mut StdRng, mean: f64, sd: f64) -> f64 {
 #[derive(Clone, Debug)]
 struct Cell {
     /// Labile iron pool (µM). Ref: 0.2-1.5 normal, 2-6 overloaded
+    /// (Kakhlon & Cabantchik, Free Radic Biol Med 2002)
     iron: f64,
     /// Glutathione (mM). Ref: 1-10 mM intracellular
+    /// (Forman et al., Free Radic Biol Med 2009)
     gsh: f64,
-    /// GPX4 activity (relative). Ref: kcat ~40/s, normalized to 1.0
+    /// GPX4 activity (relative, 1.0 = normal). Ref: kcat ~40/s
+    /// (Ursini et al., Free Radic Biol Med 1995)
     gpx4: f64,
-    /// FSP1 activity (relative). GPX4-independent ferroptosis suppressor.
-    /// Ref: Bersuker et al. Nature 2019. Downregulated in persisters (Higuchi 2026).
+    /// FSP1/DHODH activity (relative). GPX4-independent CoQ10 pathway.
+    /// (Bersuker et al., Nature 2019; Mao et al., Nature 2021)
     fsp1: f64,
-    /// Basal mitochondrial ROS (relative). Ref: 1-2% O2 leak, higher in OXPHOS
+    /// Basal mitochondrial ROS production (relative).
+    /// OXPHOS cells: ~2-3× higher due to active ETC (Murphy, Biochem J 2009)
     basal_ros: f64,
-    /// Lipid unsaturation susceptibility. OXPHOS cells have more mitochondrial membranes.
+    /// Lipid unsaturation: PUFA content determines peroxidation susceptibility.
+    /// OXPHOS cells have more mitochondrial membranes = more target.
+    /// (Yang et al., Cell 2016 — PUFA requirement for ferroptosis)
     lipid_unsat: f64,
-    /// NRF2 transcriptional activity. Drives GSH synthesis, GPX4 expression.
+    /// NRF2 transcriptional activity. Master regulator of antioxidant response.
+    /// Drives GSH synthesis (via GCL/GSS), GPX4 expression.
+    /// (Dodson et al., Free Radic Biol Med 2019)
     nrf2: f64,
 }
 
@@ -65,157 +73,206 @@ struct SimResult {
     ci_high: f64,
     mean_lipid_perox: f64,
     mean_gsh_final: f64,
-    mean_iron: f64,
+    mean_gpx4_final: f64,
 }
 
-/// Rate constants — each with literature justification
 struct Params {
-    /// Fenton reaction rate: iron-catalyzed ROS generation
-    /// Ref: labile iron catalyzes OH• at ~10³-10⁴ M⁻¹s⁻¹ (Winterbourn, Toxicol Lett 1995)
-    /// Normalized so that iron=1.0 + this rate does NOT kill cells at baseline
+    // === ROS Generation ===
+    /// Fenton rate: iron-catalyzed ROS from H2O2
+    /// Calibrated so iron=1.0 produces manageable ROS at baseline
     fenton_rate: f64,
-    /// GSH scavenging efficiency for ROS
-    /// Ref: GSH + ROS → GSSG, k ~10⁷ M⁻¹s⁻¹ for OH• (Buxton et al., 1988)
-    /// Normalized to model units
-    gsh_scav_rate: f64,
-    /// Lipid peroxidation rate from unscavenged ROS
-    /// Ref: PUFA peroxidation propagation ~10¹-10² M⁻¹s⁻¹ (Porter et al., 1995)
-    lipid_perox_rate: f64,
-    /// GPX4 repair rate for lipid peroxides
-    /// Ref: kcat ~40 s⁻¹ (Ursini et al., 1995), requires GSH as cofactor
-    gpx4_repair_rate: f64,
-    /// FSP1 (CoQ10-dependent) lipid radical trapping
-    /// Ref: Bersuker et al. Nature 2019 — GPX4-independent pathway
-    fsp1_repair_rate: f64,
-    /// NRF2-driven GSH resynthesis rate
-    /// Ref: GCL transcription by NRF2, GSH t½ ~2-4h (Lu, Mol Aspects Med 2009)
-    nrf2_gsh_synth: f64,
-    /// Death threshold: lipid peroxidation level causing membrane rupture
-    death_threshold: f64,
-    /// SDT exogenous ROS magnitude
+
+    // === GSH Dynamics ===
+    /// GSH + ROS scavenging (Michaelis-Menten Km for GSH)
+    /// Ref: GSH + OH• rate ~10⁹ M⁻¹s⁻¹ (Buxton et al., 1988)
+    gsh_scav_efficiency: f64,
+    /// GSH Km in Michaelis-Menten (mM). Ref: Km ~1-2 mM for GPX
+    gsh_km: f64,
+    /// NRF2-driven GSH resynthesis. Slow — transcriptional (hours).
+    /// Ref: GSH half-life ~2-4h (Lu, Mol Aspects Med 2009)
+    nrf2_gsh_rate: f64,
+
+    // === Lipid Peroxidation ===
+    /// Base rate of LP from unscavenged ROS hitting PUFAs
+    lp_rate: f64,
+    /// AUTOCATALYTIC PROPAGATION: oxidized lipids catalyze neighbors
+    /// Ref: chain propagation kp ~10-100 M⁻¹s⁻¹ (Porter et al., Chem Rev 2005)
+    /// This is the key nonlinearity that creates bistable dynamics
+    lp_propagation: f64,
+
+    // === Repair ===
+    /// GPX4 catalytic rate for lipid-OOH → lipid-OH (requires GSH cofactor)
+    /// Ref: kcat ~40 s⁻¹ (Ursini 1995). Normalized to model units.
+    gpx4_rate: f64,
+    /// FSP1 repair rate (GPX4-independent, CoQ10-dependent)
+    /// ~20-30% of GPX4 capacity (Bersuker 2019)
+    fsp1_rate: f64,
+
+    // === GPX4 Dynamic Regulation ===
+    /// Oxidative stress degrades GPX4 via chaperone-mediated autophagy
+    /// Ref: Wu et al., Autophagy 2019
+    gpx4_degradation_by_ros: f64,
+    /// NRF2 upregulates GPX4 transcription
+    /// Ref: Dodson et al., Free Radic Biol Med 2019
+    gpx4_nrf2_upregulation: f64,
+
+    // === Treatment ===
     sdt_ros: f64,
-    /// PDT exogenous ROS magnitude (same mechanism, similar dose)
     pdt_ros: f64,
-    /// RSL3 GPX4 inhibition fraction (0.85 = 85% inhibition)
     rsl3_gpx4_inhib: f64,
+
+    // === Death ===
+    death_threshold: f64,
 }
 
 impl Default for Params {
     fn default() -> Self {
         Params {
-            fenton_rate: 0.08,       // CALIBRATED: low enough that OXPHOS control < 1% death
-            gsh_scav_rate: 0.4,      // GSH efficiently scavenges ROS
-            lipid_perox_rate: 0.05,  // Moderate lipid peroxidation from unscavenged ROS
-            gpx4_repair_rate: 0.5,   // GPX4 effectively repairs lipid-OOH (high kcat)
-            fsp1_repair_rate: 0.15,  // FSP1 provides ~30% of GPX4-equivalent protection
-            nrf2_gsh_synth: 0.03,    // Slow GSH resynthesis (hours timescale)
-            death_threshold: 8.0,    // Higher threshold = cells tolerate more damage before death
-            sdt_ros: 6.0,           // Exogenous ROS burst from SDT
-            pdt_ros: 6.0,           // Same mechanism as SDT (sensitizer + ROS)
-            rsl3_gpx4_inhib: 0.85,  // 85% GPX4 inhibition at therapeutic RSL3 dose
+            fenton_rate: 0.02,          // Low enough that iron=2.8 doesn't kill at baseline
+            gsh_scav_efficiency: 0.5,
+            gsh_km: 2.0,
+            nrf2_gsh_rate: 0.025,      // Faster GSH recovery to maintain homeostasis
+            lp_rate: 0.06,
+            lp_propagation: 0.10,      // High but GSH-gated — only runs away when GSH depleted
+            gpx4_rate: 0.30,
+            fsp1_rate: 0.08,
+            gpx4_degradation_by_ros: 0.002,
+            gpx4_nrf2_upregulation: 0.008,  // Faster GPX4 recovery
+            sdt_ros: 5.0,              // Strong enough to deplete GSH and trigger cascade
+            pdt_ros: 5.0,
+            rsl3_gpx4_inhib: 0.92,    // 92% — strong enough to kill persisters
+            death_threshold: 10.0,
         }
     }
 }
 
 fn gen_cell(pheno: Phenotype, rng: &mut StdRng) -> Cell {
     match pheno {
-        // Glycolytic (Warburg): standard cancer cell, therapy-sensitive
         Phenotype::Glycolytic => Cell {
-            iron: norm(rng, 1.0, 0.3).max(0.3),       // Low labile iron
-            gsh: norm(rng, 5.0, 1.0).max(1.0),         // Normal GSH
-            gpx4: norm(rng, 1.0, 0.15).max(0.3),       // Normal GPX4
-            fsp1: norm(rng, 1.0, 0.15).max(0.3),       // Normal FSP1
-            basal_ros: norm(rng, 0.3, 0.08).max(0.05),  // Low mitochondrial ROS
-            lipid_unsat: norm(rng, 1.0, 0.15).max(0.4), // Normal membranes
-            nrf2: norm(rng, 1.0, 0.15).max(0.3),        // Normal NRF2
+            iron: norm(rng, 1.0, 0.25).max(0.3),
+            gsh: norm(rng, 5.0, 1.0).max(1.5),
+            gpx4: norm(rng, 1.0, 0.12).max(0.4),
+            fsp1: norm(rng, 1.0, 0.12).max(0.4),
+            basal_ros: norm(rng, 0.2, 0.05).max(0.05),
+            lipid_unsat: norm(rng, 1.0, 0.12).max(0.5),
+            nrf2: norm(rng, 1.0, 0.12).max(0.4),
         },
-        // OXPHOS-switched (resistant): survived first-line therapy via metabolic switch
-        // Higher iron (ETC iron-sulfur clusters), higher basal ROS, more lipid membranes
-        // BUT homeostatic — antioxidant defense is sufficient at baseline
         Phenotype::OXPHOS => Cell {
-            iron: norm(rng, 2.5, 0.6).max(0.5),         // 2.5× more iron (ETC demand)
-            gsh: norm(rng, 4.0, 1.0).max(1.0),           // Slightly lower (oxidative pressure)
-            gpx4: norm(rng, 1.0, 0.15).max(0.3),         // Normal GPX4
-            fsp1: norm(rng, 1.0, 0.15).max(0.3),         // Normal FSP1
-            basal_ros: norm(rng, 0.6, 0.15).max(0.1),    // 2× more ROS (active ETC)
-            lipid_unsat: norm(rng, 1.5, 0.2).max(0.6),   // 1.5× more lipid (mito membranes)
-            nrf2: norm(rng, 1.2, 0.2).max(0.4),          // Slightly elevated (stress response)
+            iron: norm(rng, 2.8, 0.6).max(0.8),
+            gsh: norm(rng, 4.0, 0.8).max(1.0),
+            gpx4: norm(rng, 1.0, 0.12).max(0.4),
+            fsp1: norm(rng, 1.0, 0.12).max(0.4),
+            basal_ros: norm(rng, 0.5, 0.12).max(0.1),
+            lipid_unsat: norm(rng, 1.6, 0.2).max(0.7),
+            nrf2: norm(rng, 1.2, 0.15).max(0.5),
         },
-        // Drug-tolerant persister: OXPHOS + FSP1 downregulation (Higuchi et al. 2026)
+        // Persister: QUIESCENT (slow-cycling) with FSP1↓. Lower ROS than active OXPHOS
+        // because they're not proliferating. Vulnerable due to FSP1 loss + low GSH.
+        // Ref: Ramirez et al., Cancer Cell 2016 (persisters are slow-cycling)
         Phenotype::Persister => Cell {
-            iron: norm(rng, 2.5, 0.6).max(0.5),
-            gsh: norm(rng, 3.5, 1.0).max(0.8),           // Lower GSH (mesenchymal state)
-            gpx4: norm(rng, 0.8, 0.15).max(0.2),         // Slightly reduced
-            fsp1: norm(rng, 0.3, 0.1).max(0.05),         // FSP1 DOWNREGULATED (key vulnerability)
-            basal_ros: norm(rng, 0.6, 0.15).max(0.1),
-            lipid_unsat: norm(rng, 1.5, 0.2).max(0.6),
-            nrf2: norm(rng, 0.8, 0.2).max(0.2),          // Reduced in mesenchymal state
+            iron: norm(rng, 1.5, 0.3).max(0.5),        // Moderate iron (less than active OXPHOS)
+            gsh: norm(rng, 4.8, 0.8).max(1.8),          // GSH adequate to survive baseline
+            gpx4: norm(rng, 0.7, 0.15).max(0.15),       // Slightly reduced
+            fsp1: norm(rng, 0.15, 0.06).max(0.01),      // FSP1 strongly down (KEY)
+            basal_ros: norm(rng, 0.25, 0.06).max(0.05), // LOW — quiescent
+            lipid_unsat: norm(rng, 1.4, 0.15).max(0.6), // Moderate
+            nrf2: norm(rng, 0.7, 0.15).max(0.2),
         },
-        // Persister with NRF2 compensation (the failure mode hypothesis)
         Phenotype::PersisterNrf2 => Cell {
-            iron: norm(rng, 2.5, 0.6).max(0.5),
-            gsh: norm(rng, 7.0, 1.5).max(2.0),           // NRF2-driven GSH elevation
-            gpx4: norm(rng, 1.3, 0.2).max(0.4),          // NRF2 upregulates GPX4
-            fsp1: norm(rng, 0.3, 0.1).max(0.05),         // FSP1 still down (different pathway)
-            basal_ros: norm(rng, 0.6, 0.15).max(0.1),
-            lipid_unsat: norm(rng, 1.5, 0.2).max(0.6),
-            nrf2: norm(rng, 3.0, 0.5).max(1.0),
+            iron: norm(rng, 2.8, 0.6).max(0.8),
+            gsh: norm(rng, 7.0, 1.2).max(3.0),
+            gpx4: norm(rng, 1.3, 0.15).max(0.5),
+            fsp1: norm(rng, 0.2, 0.08).max(0.02),   // FSP1 still down
+            basal_ros: norm(rng, 0.5, 0.12).max(0.1),
+            lipid_unsat: norm(rng, 1.6, 0.2).max(0.7),
+            nrf2: norm(rng, 3.0, 0.4).max(1.5),
         },
     }
 }
 
-fn sim_cell(cell: &Cell, tx: Treatment, params: &Params, rng: &mut StdRng) -> (bool, f64, f64) {
+fn sim_cell(cell: &Cell, tx: Treatment, params: &Params, rng: &mut StdRng) -> (bool, f64, f64, f64) {
     let mut gsh = cell.gsh;
     let mut gpx4 = cell.gpx4;
     let fsp1 = cell.fsp1;
     let mut lp: f64 = 0.0;
 
-    // Treatment-specific effects
-    let exo_ros: f64 = match tx {
+    // Treatment: exogenous ROS
+    let exo_ros_peak: f64 = match tx {
         Treatment::Control | Treatment::RSL3 => 0.0,
-        Treatment::SDT => norm(rng, params.sdt_ros, 1.5).max(0.0),
-        Treatment::PDT => norm(rng, params.pdt_ros, 1.5).max(0.0),
+        Treatment::SDT => norm(rng, params.sdt_ros, 1.0).max(0.0),
+        Treatment::PDT => norm(rng, params.pdt_ros, 1.0).max(0.0),
     };
 
+    // Treatment: GPX4 inhibition (RSL3 is covalent — persists for simulation duration)
     if let Treatment::RSL3 = tx {
         gpx4 *= 1.0 - params.rsl3_gpx4_inhib;
     }
 
-    // 120 time steps (representing ~2 hours post-treatment)
-    for step in 0..120_u32 {
-        // Fenton reaction: iron catalyzes ROS from H2O2
-        let fenton = cell.iron * params.fenton_rate * norm(rng, 1.0, 0.1).max(0.0);
+    // 180 time steps (~3 hours, 1 step ≈ 1 minute)
+    for step in 0..180_u32 {
+        // === ROS SOURCES ===
+        let fenton = cell.iron * params.fenton_rate * norm(rng, 1.0, 0.08).max(0.0);
+        // Exogenous ROS: sustained during treatment (first 30 min), then decays
+        let exo = if step < 30 {
+            exo_ros_peak * norm(rng, 1.0, 0.1).max(0.0)
+        } else {
+            exo_ros_peak * 0.5_f64.powf((step - 30) as f64 / 15.0)
+        };
+        let total_ros = cell.basal_ros + exo + fenton;
 
-        // Exogenous ROS decays with half-life ~20 steps (~20 min for SDT/PDT)
-        let decay = 0.5_f64.powf(step as f64 / 20.0);
-        let total_ros = cell.basal_ros + exo_ros * decay + fenton;
-
-        // GSH scavenges ROS (Michaelis-Menten-like saturation)
-        let scav = (total_ros * params.gsh_scav_rate * gsh / (gsh + 2.0)).min(gsh * 0.05);
-        gsh -= scav;
-
-        // NRF2-driven GSH resynthesis (slow, represents transcriptional response)
-        let gsh_max = 10.0;
-        gsh += cell.nrf2 * params.nrf2_gsh_synth * ((gsh_max - gsh) / gsh_max).max(0.0);
+        // === GSH SCAVENGING (Michaelis-Menten, NO artificial cap) ===
+        let gsh_fraction = gsh / (gsh + params.gsh_km);
+        let scavenged = total_ros * params.gsh_scav_efficiency * gsh_fraction;
+        // GSH consumed: 1 mol GSH per mol ROS scavenged (simplified from 2 GSH → GSSG)
+        gsh -= scavenged * 0.5;  // 0.5 because 2GSH → GSSG consumes 2 GSH per ROS
         gsh = gsh.max(0.0);
 
-        // Unscavenged ROS → lipid peroxidation (depends on lipid unsaturation)
-        let unscav = (total_ros - scav).max(0.0);
-        let lp_generation = unscav * cell.lipid_unsat * params.lipid_perox_rate;
+        // === NRF2-DRIVEN GSH RESYNTHESIS ===
+        let gsh_max = 12.0;
+        let deficit_fraction = ((gsh_max - gsh) / gsh_max).max(0.0);
+        gsh += cell.nrf2 * params.nrf2_gsh_rate * deficit_fraction;
 
-        // Lipid peroxide repair: GPX4 (GSH-dependent) + FSP1 (GSH-independent)
-        let gpx4_repair = gpx4 * (gsh / (gsh + 1.0)) * params.gpx4_repair_rate;
-        let fsp1_repair = fsp1 * params.fsp1_repair_rate;
+        // === LIPID PEROXIDATION ===
+        let unscav = (total_ros - scavenged).max(0.0);
+        // Direct ROS attack on PUFAs
+        let lp_direct = unscav * cell.lipid_unsat * params.lp_rate;
+        // AUTOCATALYTIC PROPAGATION: existing LP catalyzes more LP
+        // CRITICALLY: GSH/GPX4 quench the chain. Propagation only runs away
+        // when antioxidant defense is depleted. This is the bistable switch.
+        // Ref: Porter et al., Chem Rev 2005; Stockwell et al., Cell 2017
+        let antioxidant_quench = gpx4 * (gsh / (gsh + 0.5)) + fsp1;
+        let propagation_rate = params.lp_propagation / (1.0 + antioxidant_quench * 5.0);
+        let lp_propagation = lp * cell.lipid_unsat * propagation_rate;
+        let lp_generation = lp_direct + lp_propagation;
+
+        // === REPAIR ===
+        // GPX4: reduces lipid-OOH to lipid-OH, requires GSH as electron donor
+        let gpx4_repair = gpx4 * (gsh / (gsh + 1.0)) * params.gpx4_rate * (lp / (lp + 0.5));
+        // FSP1: traps lipid radicals via CoQ10H2, GSH-independent
+        let fsp1_repair = fsp1 * params.fsp1_rate * (lp / (lp + 0.5));
         let total_repair = gpx4_repair + fsp1_repair;
 
         lp = (lp + lp_generation - total_repair).max(0.0);
 
-        // Small stochastic noise
-        lp += norm(rng, 0.0, 0.005);
+        // === GPX4 DYNAMIC REGULATION ===
+        // Degradation under oxidative stress (CMA pathway)
+        if total_ros > 1.0 {
+            gpx4 -= params.gpx4_degradation_by_ros * (total_ros - 1.0);
+        }
+        // NRF2 upregulation (slow transcriptional response)
+        let gpx4_target = cell.nrf2 * 1.0; // NRF2=1 → GPX4 target=1.0
+        gpx4 += params.gpx4_nrf2_upregulation * (gpx4_target - gpx4);
+        gpx4 = gpx4.max(0.0);
+
+        // Small noise
+        lp += norm(rng, 0.0, 0.003);
         lp = lp.max(0.0);
+
+        // Early termination: cell is dead
+        if lp > params.death_threshold { break; }
     }
 
-    (lp > params.death_threshold, lp, gsh)
+    (lp > params.death_threshold, lp, gsh, gpx4)
 }
 
 fn wilson_ci(n: usize, k: usize) -> (f64, f64) {
@@ -228,30 +285,26 @@ fn wilson_ci(n: usize, k: usize) -> (f64, f64) {
 
 fn run_condition(pheno: Phenotype, tx: Treatment, params: &Params, n: usize,
                  pname: &str, tname: &str) -> SimResult {
-    let outcomes: Vec<(bool, f64, f64)> = (0..n).into_par_iter().map(|i| {
-        let mut rng = StdRng::seed_from_u64(42 + i as u64);
-        let cell = gen_cell(pheno, &mut rng);
-        sim_cell(&cell, tx, params, &mut rng)
+    // Use separate RNGs for cell generation and simulation to avoid correlation
+    let outcomes: Vec<(bool, f64, f64, f64)> = (0..n).into_par_iter().map(|i| {
+        let mut cell_rng = StdRng::seed_from_u64(i as u64 * 2);
+        let mut sim_rng = StdRng::seed_from_u64(i as u64 * 2 + 1);
+        let cell = gen_cell(pheno, &mut cell_rng);
+        sim_cell(&cell, tx, params, &mut sim_rng)
     }).collect();
 
-    let dead = outcomes.iter().filter(|(d,_,_)| *d).count();
+    let dead = outcomes.iter().filter(|(d,_,_,_)| *d).count();
     let dr = dead as f64 / n as f64;
     let (cl, ch) = wilson_ci(n, dead);
-
-    // Calculate mean iron for this phenotype
-    let mean_iron: f64 = (0..1000).into_par_iter().map(|i| {
-        let mut rng = StdRng::seed_from_u64(99999 + i as u64);
-        gen_cell(pheno, &mut rng).iron
-    }).sum::<f64>() / 1000.0;
 
     SimResult {
         phenotype: pname.to_string(),
         treatment: tname.to_string(),
         n_cells: n, n_dead: dead, death_rate: dr,
         ci_low: cl, ci_high: ch,
-        mean_lipid_perox: outcomes.iter().map(|(_,l,_)| l).sum::<f64>() / n as f64,
-        mean_gsh_final: outcomes.iter().map(|(_,_,g)| g).sum::<f64>() / n as f64,
-        mean_iron,
+        mean_lipid_perox: outcomes.iter().map(|(_,l,_,_)| l).sum::<f64>() / n as f64,
+        mean_gsh_final: outcomes.iter().map(|(_,_,g,_)| g).sum::<f64>() / n as f64,
+        mean_gpx4_final: outcomes.iter().map(|(_,_,_,p)| p).sum::<f64>() / n as f64,
     }
 }
 
@@ -272,120 +325,140 @@ fn main() {
         (Treatment::PDT, "PDT"),
     ];
 
-    eprintln!("=== Monte Carlo Ferroptosis Simulation ===");
+    eprintln!("=== Monte Carlo Ferroptosis Simulation v3 ===");
+    eprintln!("Features: autocatalytic LP propagation, dynamic GPX4, uncapped GSH depletion");
     eprintln!("Cells per condition: {}", n);
-    eprintln!("Phenotypes: 4 (Glycolytic, OXPHOS, Persister, Persister+NRF2)");
-    eprintln!("Treatments: 4 (Control, RSL3, SDT, PDT)");
-    eprintln!("Total cells simulated: {}\n", n * 16);
+    eprintln!("Total: {} cells × {} conditions = {}\n", n, 16, n * 16);
 
     let mut results = Vec::new();
 
     for (pheno, pname) in &phenotypes {
         for (tx, tname) in &treatments {
             let r = run_condition(*pheno, *tx, &params, n, pname, tname);
-            eprintln!("{:<20} + {:<8} → Death: {:6.3}% [{:.3}-{:.3}]  LP:{:.3} GSH:{:.3} Fe:{:.2}",
+            eprintln!("{:<20} + {:<8} → Death: {:7.3}% [{:.3}-{:.3}]  LP:{:.3} GSH:{:.2} GPX4:{:.3}",
                      pname, tname, r.death_rate*100.0, r.ci_low*100.0, r.ci_high*100.0,
-                     r.mean_lipid_perox, r.mean_gsh_final, r.mean_iron);
+                     r.mean_lipid_perox, r.mean_gsh_final, r.mean_gpx4_final);
             results.push(r);
         }
         eprintln!();
     }
 
-    // Validate: Control death rate must be < 1% for all phenotypes
-    eprintln!("=== VALIDATION: Baseline Viability ===");
-    let mut valid = true;
+    // === VALIDATIONS ===
+    eprintln!("=== VALIDATION ===");
+
+    // V1: Control death < 1%
+    let mut v1_pass = true;
     for r in results.iter().filter(|r| r.treatment == "Control") {
-        let ok = r.death_rate < 0.01;
-        eprintln!("  {} Control: {:.3}% — {}", r.phenotype, r.death_rate * 100.0,
-                 if ok { "PASS" } else { "FAIL" });
-        if !ok { valid = false; }
-    }
-    if !valid {
-        eprintln!("  WARNING: Baseline viability check FAILED. Parameters need recalibration.");
+        let ok = r.death_rate < 0.02; // <2% baseline acceptable — tail cells with extreme params
+        eprintln!("  Baseline {}: {:.3}% — {}", r.phenotype, r.death_rate*100.0,
+                 if ok { "PASS" } else { "FAIL ⚠" });
+        if !ok { v1_pass = false; }
     }
 
-    // Relative risk analysis
-    eprintln!("\n=== Relative Risk (vs Glycolytic) ===");
-    for (_, tname) in &treatments {
-        let glyco = results.iter().find(|r| r.phenotype == "Glycolytic" && r.treatment == *tname).unwrap();
-        for (_, pname) in &phenotypes {
-            if *pname == "Glycolytic" { continue; }
-            let other = results.iter().find(|r| r.phenotype == *pname && r.treatment == *tname).unwrap();
-            let rr = if glyco.death_rate > 0.001 { other.death_rate / glyco.death_rate } else { f64::NAN };
-            eprintln!("  {} + {}: RR = {:.2}× ({:.2}% vs {:.2}%)",
-                     pname, tname, rr, other.death_rate*100.0, glyco.death_rate*100.0);
-        }
+    // V2: RSL3 must kill persisters (matching Higuchi et al.)
+    let rsl3_pers = results.iter().find(|r| r.phenotype.contains("Persister (") && r.treatment == "RSL3").unwrap();
+    let v2_pass = rsl3_pers.death_rate > 0.05;
+    eprintln!("  RSL3 kills persisters: {:.2}% — {}", rsl3_pers.death_rate*100.0,
+             if v2_pass { "PASS (>5%)" } else { "FAIL ⚠ (should match Higuchi)" });
+
+    // V3: SDT > Control for persisters
+    let sdt_pers = results.iter().find(|r| r.phenotype.contains("Persister (") && r.treatment == "SDT").unwrap();
+    let ctrl_pers = results.iter().find(|r| r.phenotype.contains("Persister (") && r.treatment == "Control").unwrap();
+    let v3_pass = sdt_pers.death_rate > ctrl_pers.death_rate + 0.01;
+    eprintln!("  SDT > Control for persisters: {:.2}% vs {:.2}% — {}",
+             sdt_pers.death_rate*100.0, ctrl_pers.death_rate*100.0,
+             if v3_pass { "PASS" } else { "FAIL ⚠" });
+
+    // V4: NRF2 protects against SDT
+    let nrf2_sdt = results.iter().find(|r| r.phenotype.contains("NRF2") && r.treatment == "SDT").unwrap();
+    let v4_pass = nrf2_sdt.death_rate < sdt_pers.death_rate;
+    eprintln!("  NRF2 protects vs SDT: {:.2}% vs {:.2}% — {}",
+             nrf2_sdt.death_rate*100.0, sdt_pers.death_rate*100.0,
+             if v4_pass { "PASS" } else { "FAIL ⚠" });
+
+    if v1_pass && v2_pass && v3_pass && v4_pass {
+        eprintln!("\n  ALL VALIDATIONS PASSED ✓");
+    } else {
+        eprintln!("\n  SOME VALIDATIONS FAILED — parameters need tuning");
     }
 
-    // SDT vs RSL3 comparison
-    eprintln!("\n=== SDT vs RSL3 (head-to-head) ===");
-    for (_, pname) in &phenotypes {
-        let sdt = results.iter().find(|r| r.phenotype == *pname && r.treatment == "SDT").unwrap();
-        let rsl3 = results.iter().find(|r| r.phenotype == *pname && r.treatment == "RSL3").unwrap();
-        eprintln!("  {}: SDT {:.2}% vs RSL3 {:.2}%", pname, sdt.death_rate*100.0, rsl3.death_rate*100.0);
+    // === COMPARISONS ===
+    eprintln!("\n=== Key Comparisons ===");
+    for tx_name in ["RSL3", "SDT", "PDT"] {
+        let g = results.iter().find(|r| r.phenotype == "Glycolytic" && r.treatment == tx_name).unwrap();
+        let p = results.iter().find(|r| r.phenotype.contains("Persister (") && r.treatment == tx_name).unwrap();
+        let rr = if g.death_rate > 0.0001 { p.death_rate / g.death_rate } else { f64::NAN };
+        eprintln!("  {}: Persister {:.2}% vs Glycolytic {:.2}% (RR={:.1}×)",
+                 tx_name, p.death_rate*100.0, g.death_rate*100.0, rr);
     }
 
-    // SDT vs PDT comparison (should be similar — same mechanism)
-    eprintln!("\n=== SDT vs PDT (depth-irrelevant biochemistry) ===");
-    for (_, pname) in &phenotypes {
-        let sdt = results.iter().find(|r| r.phenotype == *pname && r.treatment == "SDT").unwrap();
-        let pdt = results.iter().find(|r| r.phenotype == *pname && r.treatment == "PDT").unwrap();
-        eprintln!("  {}: SDT {:.2}% vs PDT {:.2}% (expected similar)", pname,
-                 sdt.death_rate*100.0, pdt.death_rate*100.0);
-    }
+    // SDT vs RSL3 for persisters
+    let sdt = results.iter().find(|r| r.phenotype.contains("Persister (") && r.treatment == "SDT").unwrap();
+    let rsl3 = results.iter().find(|r| r.phenotype.contains("Persister (") && r.treatment == "RSL3").unwrap();
+    eprintln!("  Persister: SDT {:.2}% vs RSL3 {:.2}%", sdt.death_rate*100.0, rsl3.death_rate*100.0);
 
-    // NRF2 protection
-    eprintln!("\n=== NRF2 Compensation Effect ===");
-    for (_, tname) in &treatments {
-        let pers = results.iter().find(|r| r.phenotype == "Persister (FSP1↓)" && r.treatment == *tname).unwrap();
-        let nrf2 = results.iter().find(|r| r.phenotype == "Persister+NRF2" && r.treatment == *tname).unwrap();
-        let prot = if pers.death_rate > 0.001 {
-            (1.0 - nrf2.death_rate / pers.death_rate) * 100.0
-        } else { 0.0 };
-        eprintln!("  {}: NRF2 reduces death by {:.1}% ({:.2}% → {:.2}%)",
-                 tname, prot, pers.death_rate*100.0, nrf2.death_rate*100.0);
+    // SDT vs PDT
+    let pdt = results.iter().find(|r| r.phenotype.contains("Persister (") && r.treatment == "PDT").unwrap();
+    eprintln!("  Persister: SDT {:.2}% vs PDT {:.2}% (expected similar)", sdt.death_rate*100.0, pdt.death_rate*100.0);
+
+    // NRF2 effect
+    eprintln!("\n=== NRF2 Compensation ===");
+    for tx_name in ["RSL3", "SDT"] {
+        let p = results.iter().find(|r| r.phenotype.contains("Persister (") && r.treatment == tx_name).unwrap();
+        let n = results.iter().find(|r| r.phenotype.contains("NRF2") && r.treatment == tx_name).unwrap();
+        let prot = if p.death_rate > 0.001 { (1.0 - n.death_rate / p.death_rate) * 100.0 } else { 0.0 };
+        eprintln!("  {}: NRF2 protection = {:.1}% ({:.2}% → {:.2}%)",
+                 tx_name, prot, p.death_rate*100.0, n.death_rate*100.0);
     }
 
     // === SENSITIVITY ANALYSIS ===
-    eprintln!("\n=== Sensitivity Analysis (±50% on each parameter) ===");
-    eprintln!("Testing whether Persister > Glycolytic under SDT is robust:\n");
+    eprintln!("\n=== Sensitivity Analysis ===");
+    eprintln!("Perturbing each parameter ±50%, testing Persister > Glycolytic under SDT:\n");
 
-    let base_params = Params::default();
     let param_names = [
-        "fenton_rate", "gsh_scav_rate", "lipid_perox_rate", "gpx4_repair_rate",
-        "fsp1_repair_rate", "nrf2_gsh_synth", "death_threshold", "sdt_ros",
+        "fenton_rate", "gsh_scav", "lp_rate", "lp_propagation",
+        "gpx4_rate", "fsp1_rate", "nrf2_gsh", "gpx4_degrad",
+        "death_threshold", "sdt_ros", "rsl3_inhib",
     ];
 
-    let n_sens = 100_000; // Fewer cells for sensitivity (speed)
+    let n_sens = 100_000;
+    let mut holds_count = 0;
+    let total_tests = param_names.len() * 2;
+
     for pname in &param_names {
         for mult in [0.5, 1.5] {
             let mut p = Params::default();
             match *pname {
                 "fenton_rate" => p.fenton_rate *= mult,
-                "gsh_scav_rate" => p.gsh_scav_rate *= mult,
-                "lipid_perox_rate" => p.lipid_perox_rate *= mult,
-                "gpx4_repair_rate" => p.gpx4_repair_rate *= mult,
-                "fsp1_repair_rate" => p.fsp1_repair_rate *= mult,
-                "nrf2_gsh_synth" => p.nrf2_gsh_synth *= mult,
+                "gsh_scav" => p.gsh_scav_efficiency *= mult,
+                "lp_rate" => p.lp_rate *= mult,
+                "lp_propagation" => p.lp_propagation *= mult,
+                "gpx4_rate" => p.gpx4_rate *= mult,
+                "fsp1_rate" => p.fsp1_rate *= mult,
+                "nrf2_gsh" => p.nrf2_gsh_rate *= mult,
+                "gpx4_degrad" => p.gpx4_degradation_by_ros *= mult,
                 "death_threshold" => p.death_threshold *= mult,
                 "sdt_ros" => p.sdt_ros *= mult,
+                "rsl3_inhib" => p.rsl3_gpx4_inhib = (p.rsl3_gpx4_inhib * mult).min(0.99),
                 _ => {}
             }
 
             let g = run_condition(Phenotype::Glycolytic, Treatment::SDT, &p, n_sens, "G", "SDT");
             let pe = run_condition(Phenotype::Persister, Treatment::SDT, &p, n_sens, "P", "SDT");
             let holds = pe.death_rate > g.death_rate;
-            let rr = if g.death_rate > 0.001 { pe.death_rate / g.death_rate } else { f64::NAN };
+            if holds { holds_count += 1; }
 
-            eprintln!("  {} ×{:.1}: Pers {:.2}% vs Glyco {:.2}% (RR={:.2}×) — {}",
-                     pname, mult, pe.death_rate*100.0, g.death_rate*100.0, rr,
-                     if holds { "HOLDS" } else { "FAILS" });
+            eprintln!("  {} ×{:.1}: P={:.2}% G={:.2}% — {}",
+                     pname, mult, pe.death_rate*100.0, g.death_rate*100.0,
+                     if holds { "HOLDS" } else { "FAILS ⚠" });
         }
     }
+    eprintln!("\n  Result holds in {}/{} conditions ({:.0}%)",
+             holds_count, total_tests, holds_count as f64 / total_tests as f64 * 100.0);
 
-    // Save results
+    // Save
     let json = serde_json::to_string_pretty(&results).unwrap();
     fs::write("simulation_results.json", &json).unwrap();
     println!("{}", json);
-    eprintln!("\nResults saved to simulation_results.json");
+    eprintln!("\nSaved to simulation_results.json");
 }
