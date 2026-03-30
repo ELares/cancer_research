@@ -59,6 +59,12 @@ def cvt(t):
     t = t.replace('—', '---')
     t = t.replace('≥', '$\\geq$')
     t = t.replace('≤', '$\\leq$')
+    t = t.replace('≈', '$\\approx$')
+    t = t.replace('δ', '$\\delta$')
+    t = t.replace('α', '$\\alpha$')
+    t = t.replace('µ', '$\\mu$')
+    t = t.replace('−', '$-$')
+    t = t.replace('₀', '$_0$')
     # No blanket brace fixes needed — protection handles it
     return t
 

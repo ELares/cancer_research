@@ -372,12 +372,12 @@ Persister + NRF2 & 0.00\% & 0.05\% & 99.5\% & 99.5\% \\
 
 \#\#\# 4.3.1 Spatial Tumor Simulation: Depth-Dependent Energy Deposition
 
-To address the single-cell model's lack of spatial context, we extended the simulation to a 2D heterogeneous tumor grid (500 $\times$ 500 cells, 20 µm/cell = 1 cm $\times$ 1 cm tissue cross-section) with physics-based energy attenuation. The tumor architecture consists of a glycolytic core (80\% glycolytic, 15\% OXPHOS, 5\% persister), an OXPHOS-rich periphery (70\% OXPHOS, 20\% glycolytic, 8\% persister, 2\% persister+NRF2), persister cluster pockets, and a stromal border --- totaling 159,033 tumor cells per simulation.
+To address the single-cell model's lack of spatial context, we extended the simulation to a 2D heterogeneous tumor grid (500 x 500 cells, 20 um/cell = 1 cm x 1 cm tissue cross-section) with physics-based energy attenuation. The tumor architecture consists of a glycolytic core (80\% glycolytic, 15\% OXPHOS, 5\% persister), an OXPHOS-rich periphery (70\% OXPHOS, 20\% glycolytic, 8\% persister, 2\% persister+NRF2), persister cluster pockets, and a stromal border --- totaling 159,033 tumor cells per simulation.
 
 Energy is applied from the tissue surface (row 0) with physically grounded attenuation models:
 
-- \textbf{PDT}: Modified Beer-Lambert law, I(z) = I₀ $\times$ exp(−µ_eff $\times$ z), with µ_eff = 0.31/mm (δ ≈ 3.2 mm at 630 nm; Jacques, Phys Med Biol 2013)
-- \textbf{SDT}: Acoustic attenuation, I(z) = I₀ $\times$ 10^(−α $\times$ f $\times$ z / 10), with α = 0.7 dB/cm/MHz at f = 1 MHz (Cobbold, Foundations of Biomedical Ultrasound, 2007)
+- \textbf{PDT}: Modified Beer-Lambert law, I(z) = I0 x exp(-ueff x z), with ueff = 0.31/mm (penetration depth $\sim$3.2 mm at 630 nm; Jacques, Phys Med Biol 2013)
+- \textbf{SDT}: Acoustic attenuation, I(z) = I0 x 10^(-a x f x z / 10), with a = 0.7 dB/cm/MHz at f = 1 MHz (Cobbold, Foundations of Biomedical Ultrasound, 2007)
 - \textbf{RSL3}: Uniform concentration (systemic drug, no depth dependence)
 
 Dead cells release labile iron to their Moore neighborhood (8-neighbors), modeling the bystander ferroptosis effect. Iron is consumed by Fenton chemistry each timestep rather than accumulating permanently.
