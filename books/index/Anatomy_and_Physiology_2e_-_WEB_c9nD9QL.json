@@ -1,0 +1,89 @@
+{
+  "filename": "Anatomy_and_Physiology_2e_-_WEB_c9nD9QL.pdf",
+  "total_pages": 1317,
+  "relevance": "Validates ICD \u2192 immune response chain",
+  "term_pages": {
+    "immune": [
+      13,
+      100,
+      105,
+      110,
+      112,
+      127,
+      129,
+      130,
+      157,
+      158
+    ],
+    "T cell": [
+      37,
+      49,
+      51,
+      60,
+      97,
+      98,
+      107,
+      114,
+      116,
+      118
+    ],
+    "dendritic cell": [
+      182,
+      196,
+      202,
+      915,
+      916,
+      917,
+      918,
+      919,
+      923,
+      924
+    ],
+    "antigen presentation": [
+      931,
+      956,
+      960,
+      1296
+    ],
+    "inflammation": [
+      44,
+      84,
+      160,
+      167,
+      172,
+      174,
+      176,
+      177,
+      198,
+      199
+    ],
+    "adaptive immunity": [
+      913
+    ],
+    "natural killer": [
+      733,
+      747,
+      761,
+      764,
+      765,
+      914,
+      915,
+      924,
+      957,
+      960
+    ],
+    "cytokine": [
+      123,
+      124,
+      125,
+      126,
+      132,
+      134,
+      136,
+      158,
+      732,
+      734
+    ]
+  },
+  "summary": "Found 65 relevant page hits across 8 terms"
+}

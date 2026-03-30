@@ -1,0 +1,130 @@
+{
+  "filename": "Biology2e-WEB.pdf",
+  "total_pages": 1487,
+  "relevance": "Validates ferroptosis biology, mitochondrial function, cell death pathways",
+  "term_pages": {
+    "apoptosis": [
+      274,
+      276,
+      277,
+      282,
+      283,
+      285,
+      286,
+      302,
+      303,
+      304
+    ],
+    "necrosis": [
+      283,
+      568,
+      569,
+      580,
+      606,
+      1473
+    ],
+    "mitochondria": [
+      43,
+      108,
+      125,
+      130,
+      131,
+      132,
+      133,
+      141,
+      147,
+      148
+    ],
+    "electron transport chain": [
+      104,
+      222,
+      223,
+      225,
+      226,
+      227,
+      233,
+      234,
+      235,
+      236
+    ],
+    "oxidative phosphorylation": [
+      9,
+      211,
+      215,
+      222,
+      223,
+      225,
+      226,
+      231,
+      235,
+      236
+    ],
+    "membrane": [
+      8,
+      43,
+      45,
+      49,
+      50,
+      52,
+      68,
+      93,
+      94,
+      98
+    ],
+    "lipid bilayer": [
+      99,
+      100,
+      115,
+      127,
+      128,
+      130,
+      148,
+      149,
+      157,
+      160
+    ],
+    "iron": [
+      19,
+      30,
+      38,
+      39,
+      41,
+      42,
+      44,
+      47,
+      49,
+      50
+    ],
+    "glutathione": [
+      1021
+    ],
+    "reactive oxygen": [
+      1247
+    ],
+    "cell death": [
+      264,
+      276,
+      282,
+      283,
+      303,
+      456,
+      478,
+      482,
+      565,
+      580
+    ],
+    "immune response": [
+      18,
+      128,
+      154,
+      158,
+      285,
+      472,
+      558,
+      559,
+      564,
+      565
+    ]
+  },
+  "summary": "Found 98 relevant page hits across 12 terms"
+}

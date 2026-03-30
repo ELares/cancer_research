@@ -1,0 +1,84 @@
+{
+  "filename": "Microbiology-WEB.pdf",
+  "total_pages": 1221,
+  "relevance": "Validates immune evasion mechanisms",
+  "term_pages": {
+    "immune evasion": [
+      632,
+      1040
+    ],
+    "antigen": [
+      11,
+      64,
+      111,
+      114,
+      174,
+      178,
+      238,
+      245,
+      255,
+      256
+    ],
+    "MHC": [
+      694,
+      695,
+      722,
+      723,
+      724,
+      725,
+      726,
+      727,
+      728,
+      729
+    ],
+    "pathogen recognition": [
+      10,
+      110,
+      621,
+      673,
+      692,
+      697,
+      699,
+      700,
+      701,
+      707
+    ],
+    "inflammatory response": [
+      281,
+      290,
+      499,
+      511,
+      627,
+      628,
+      632,
+      637,
+      688,
+      693
+    ],
+    "complement": [
+      57,
+      123,
+      242,
+      243,
+      387,
+      390,
+      391,
+      394,
+      395,
+      405
+    ],
+    "antibody": [
+      11,
+      54,
+      63,
+      64,
+      76,
+      81,
+      254,
+      255,
+      256,
+      496
+    ]
+  },
+  "summary": "Found 62 relevant page hits across 7 terms"
+}

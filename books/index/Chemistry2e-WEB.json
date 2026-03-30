@@ -1,0 +1,117 @@
+{
+  "filename": "Chemistry2e-WEB.pdf",
+  "total_pages": 1221,
+  "relevance": "Validates ROS/GSH redox chemistry, Fenton reaction kinetics, reaction rate constants",
+  "term_pages": {
+    "oxidation-reduction": [
+      180,
+      188,
+      190,
+      212,
+      216,
+      217,
+      845,
+      854,
+      863,
+      866
+    ],
+    "free radical": [
+      344,
+      372,
+      373,
+      1074,
+      1217
+    ],
+    "redox": [
+      11,
+      188,
+      189,
+      190,
+      191,
+      192,
+      193,
+      194,
+      205,
+      212
+    ],
+    "reaction rate": [
+      10,
+      613,
+      614,
+      615,
+      616,
+      617,
+      618,
+      619,
+      620,
+      621
+    ],
+    "kinetics": [
+      10,
+      613,
+      614,
+      616,
+      618,
+      620,
+      622,
+      624,
+      626,
+      628
+    ],
+    "equilibrium": [
+      10,
+      11,
+      184,
+      187,
+      229,
+      238,
+      457,
+      476,
+      507,
+      508
+    ],
+    "Gibbs": [
+      811,
+      823,
+      824,
+      1217
+    ],
+    "thermodynamics": [
+      11,
+      227,
+      247,
+      248,
+      261,
+      262,
+      563,
+      581,
+      797,
+      798
+    ],
+    "electrochemistry": [
+      11,
+      831,
+      832,
+      833,
+      834,
+      836,
+      838,
+      839,
+      840,
+      842
+    ],
+    "half-life": [
+      628,
+      636,
+      637,
+      638,
+      639,
+      656,
+      657,
+      663,
+      664,
+      798
+    ]
+  },
+  "summary": "Found 89 relevant page hits across 10 terms"
+}

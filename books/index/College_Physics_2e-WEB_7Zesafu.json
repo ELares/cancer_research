@@ -1,0 +1,89 @@
+{
+  "filename": "College_Physics_2e-WEB_7Zesafu.pdf",
+  "total_pages": 1697,
+  "relevance": "Validates SDT/PDT tissue penetration claims, ultrasound physics",
+  "term_pages": {
+    "ultrasound": [
+      12,
+      350,
+      527,
+      539,
+      701,
+      702,
+      731,
+      742,
+      743,
+      744
+    ],
+    "acoustic": [
+      26,
+      742,
+      775,
+      776,
+      777,
+      778,
+      784,
+      785,
+      790,
+      1691
+    ],
+    "intensity": [
+      11,
+      12,
+      622,
+      623,
+      695,
+      731,
+      732,
+      733,
+      734,
+      735
+    ],
+    "penetration depth": [
+      790,
+      1639
+    ],
+    "attenuation": [
+      762,
+      782,
+      1358
+    ],
+    "frequency": [
+      11,
+      12,
+      36,
+      37,
+      622,
+      695,
+      700,
+      701,
+      702,
+      703
+    ],
+    "wavelength": [
+      12,
+      35,
+      36,
+      39,
+      201,
+      622,
+      626,
+      723,
+      726,
+      727
+    ],
+    "tissue": [
+      218,
+      232,
+      320,
+      329,
+      396,
+      486,
+      487,
+      533,
+      552,
+      615
+    ]
+  },
+  "summary": "Found 65 relevant page hits across 8 terms"
+}

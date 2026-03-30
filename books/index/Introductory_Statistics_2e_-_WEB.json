@@ -1,0 +1,71 @@
+{
+  "filename": "Introductory_Statistics_2e_-_WEB.pdf",
+  "total_pages": 849,
+  "relevance": "Validates our statistical methods (chi-squared test, Wilson CI)",
+  "term_pages": {
+    "chi-square": [
+      10,
+      14,
+      577,
+      578,
+      579,
+      580,
+      582,
+      584,
+      586,
+      588
+    ],
+    "confidence interval": [
+      9,
+      14,
+      35,
+      37,
+      419,
+      420,
+      421,
+      422,
+      423,
+      424
+    ],
+    "hypothesis test": [
+      9,
+      10,
+      14,
+      475,
+      476,
+      478,
+      480,
+      481,
+      482,
+      483
+    ],
+    "p-value": [
+      481,
+      482,
+      483,
+      484,
+      485,
+      486,
+      487,
+      488,
+      489,
+      490
+    ],
+    "Wilson": [
+      81
+    ],
+    "proportion": [
+      9,
+      10,
+      19,
+      21,
+      22,
+      25,
+      26,
+      31,
+      32,
+      39
+    ]
+  },
+  "summary": "Found 51 relevant page hits across 6 terms"
+}
