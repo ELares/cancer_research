@@ -21,8 +21,8 @@ TAGS_DIR = PROJECT_ROOT / "tags"
 
 # --- API Keys ---
 NCBI_API_KEY = os.getenv("NCBI_API_KEY", "")
-OPENALEX_EMAIL = os.getenv("OPENALEX_EMAIL", "") or os.getenv("OPENALEX_EMAIL", "")
-OPENALEX_API_KEY = os.getenv("OPENALEX_API_KEY", "") or os.getenv("OPENALEX_API_KEY", "")
+OPENALEX_EMAIL = os.getenv("OPENALEX_EMAIL", "")
+OPENALEX_API_KEY = os.getenv("OPENALEX_API_KEY", "")
 SEMANTIC_SCHOLAR_API_KEY = os.getenv("SEMANTIC_SCHOLAR_API_KEY", "")
 CORE_API_KEY = os.getenv("CORE_API_KEY", "")
 
