@@ -36,6 +36,37 @@ EVIDENCE_PUBTYPE_MARKERS = {
     "clinical-other": ("clinical trial", "controlled clinical trial", "observational study", "case reports"),
 }
 
+MRNA_VACCINE_PLATFORM_TERMS = (
+    "mrna vaccine", "mrna vaccines", "mrna cancer vaccine",
+    "messenger rna vaccine", "messenger rna vaccines",
+    "mrna-based vaccine", "mrna-based vaccines",
+    "rna neoantigen vaccine", "rna neoantigen vaccines",
+    "personalized rna vaccine", "individualized rna vaccine",
+    "individualized mrna vaccine", "individualized mrna vaccines",
+)
+
+MRNA_VACCINE_THERAPEUTIC_TERMS = (
+    "neoantigen", "tumor antigen", "tumour antigen",
+    "cancer vaccine", "cancer vaccines",
+    "therapeutic vaccination", "therapeutic vaccine", "therapeutic vaccines",
+    "antitumor", "anti-tumor", "antitumour", "anti-tumour",
+    "tumor-specific antigen", "tumour-specific antigen",
+)
+
+MRNA_VACCINE_STRONG_THERAPEUTIC_PHRASES = (
+    "mrna cancer vaccine",
+    "neoantigen vaccine", "neoantigen vaccines",
+    "rna neoantigen vaccine", "rna neoantigen vaccines",
+    "individualized mrna vaccine", "individualized mrna vaccines",
+)
+
+MRNA_VACCINE_EXCLUSION_TERMS = (
+    "covid", "sars-cov-2", "coronavirus", "omicron",
+    "bnt162", "mrna-1273", "moderna", "pfizer", "booster",
+    "infectious disease", "viral infection", "bacterial infection",
+    "pseudomonas", "rsv vaccine", "influenza vaccine",
+)
+
 
 def has_cancer_context(text: str) -> bool:
     """Require generic cancer context for broad mechanism tags."""
@@ -102,11 +133,30 @@ def match_resistant_states(text: str) -> list[str]:
     return sorted(matched)
 
 
+def match_mrna_vaccine(text: str) -> bool:
+    """Match therapeutic cancer-vaccine mRNA studies while excluding supportive/infectious vaccine papers."""
+    has_platform = any(term in text for term in MRNA_VACCINE_PLATFORM_TERMS)
+    has_therapeutic = any(term in text for term in MRNA_VACCINE_THERAPEUTIC_TERMS)
+    has_strong_phrase = any(term in text for term in MRNA_VACCINE_STRONG_THERAPEUTIC_PHRASES)
+    has_exclusion = any(term in text for term in MRNA_VACCINE_EXCLUSION_TERMS)
+
+    if has_strong_phrase:
+        return True
+    if not has_platform or not has_therapeutic:
+        return False
+    return not has_exclusion
+
+
 def match_mechanisms(text: str) -> list[str]:
     """Match mechanisms with a coarse cancer-context gate to reduce off-target tags."""
     if not has_cancer_context(text):
         return []
-    return match_keywords(text, MECHANISM_KEYWORDS)
+    matched = set(match_keywords(text, MECHANISM_KEYWORDS))
+    if match_mrna_vaccine(text):
+        matched.add("mRNA-vaccine")
+    else:
+        matched.discard("mRNA-vaccine")
+    return sorted(matched)
 
 
 def match_evidence_level(fm: dict, text: str) -> str:

@@ -175,7 +175,7 @@ Mechanisms: car-t | Cancer: leukemia, lymphoma, myeloma | Evidence:
 ### 29. PMID 37635168 — RCR 41.4, 99.9th percentile
 **Immune checkpoint therapy for solid tumours: clinical dilemmas and future trends.**
 *Signal transduction and targeted therapy* (2023) | 494 citations | OA
-Mechanisms: crispr, immunotherapy, mRNA-vaccine, nanoparticle, oncolytic-virus | Cancer: lung, melanoma | Evidence: 
+Mechanisms: crispr, immunotherapy, nanoparticle, oncolytic-virus | Cancer: lung, melanoma | Evidence: 
 **Key insight**: Immune-checkpoint inhibitors (ICBs), in addition to targeting CTLA-4, PD-1, and PD-L1, novel targeting LAG-3 drugs have also been approved in clinical application. With the widespread use of the drug, we must deeply analyze the dilemma of the agents and seek a breakthrough in the treatment prospect.
 
 ### 30. PMID 30388456 — RCR 40.0, 99.9th percentile
@@ -373,7 +373,7 @@ Mechanisms: immunotherapy, nanoparticle | Cancer: general | Evidence:
 ### 62. PMID 36174631 — RCR 24.6, 99.6th percentile
 **Clinical advances and ongoing trials on mRNA vaccines for cancer treatment.**
 *The Lancet. Oncology* (2022) | 470 citations | OA
-Mechanisms: immunotherapy, mRNA-vaccine | Cancer: general | Evidence: 
+Mechanisms: immunotherapy | Cancer: general | Evidence: 
 **Key insight**: Years of research exploring mRNA vaccines for cancer treatment in preclinical and clinical trials have set the stage for the rapid development of mRNA vaccines during the COVID-19 pandemic. Therapeutic cancer vaccines based on mRNA are well tolerated, and the inherent advantage in ease of product...
 
 ### 63. PMID 39826104 — RCR 24.5
