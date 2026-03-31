@@ -1,12 +1,22 @@
 # Cancer Research Synthesis and Analysis
 
-## Why This Repo Exists
+## Why This Exists
 
-Cancer research is too important to leave trapped in disconnected literatures, siloed tooling, or narrow framing.
+Too often has cancer taken from us the people we love.
 
-This repository is an open attempt to map, compare, and stress-test therapeutic ideas across a large cancer-research corpus using literature analysis, tagging pipelines, generated audits, and simulation work. It started from a specific hypothesis around PDT/SDT, ferroptosis, and drug-tolerant persister cells, but the repo has grown beyond that one thesis.
+There was a point in my life where I volunteered at a children's hospital and saw firsthand what this disease does to little kids and their families. It traumatized me. I wanted to help — but my mind wasn't built for medicine. Mathematics and computers came easier to me, and I went into computer science instead.
 
-The current goal is not to prove a predetermined answer. It is to build a transparent workspace where hypotheses can be tested, weakened, expanded, or replaced when the corpus and external evidence demand it.
+But now we have AI. And we should be using it for more than vibe-coding the next get-rich-quick app.
+
+This repository is an attempt to do something that matters. It's a cross-literature analysis of thousands of cancer research articles, combined with Monte Carlo biochemical simulations, proposing a specific and testable idea: that physical ROS-generating modalities (PDT, SDT) should be evaluated as spatially selective ferroptosis inducers for drug-tolerant persister cells. The full analysis, data, simulations, and article are here — open, free, and reproducible.
+
+**I want nothing in return.** If someone takes this idea, validates it in a lab, spins it off, and it works — the world benefits. That's the point. Much like the polio vaccine, breakthroughs against diseases that destroy lives should be a human right, not a revenue stream.
+
+**The mission is to crowdsource the minds of the global community — researchers, engineers, students, anyone — amplified by AI, to work on problems that actually matter.** Not another SaaS product. Not another chatbot wrapper. Real problems. Hard problems. The kind where the payoff isn't money — it's fewer empty chairs at the dinner table.
+
+If you have expertise in oncology, biochemistry, ferroptosis, photodynamic therapy, sonodynamic therapy, immunology, computational biology, or just have ideas — open an issue, submit a PR, or fork and run with it. Everything here is MIT licensed. Take it. Use it. Make it better.
+
+— Ezequiel Lares
 
 ## Current Framing
 
