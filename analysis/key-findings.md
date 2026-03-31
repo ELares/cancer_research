@@ -601,5 +601,5 @@ Mechanisms: epigenetic, immunotherapy | Cancer: general | Evidence:
 ### 100. PMID 40016450 — RCR 18.0
 **Neoadjuvant triplet immune checkpoint blockade in newly diagnosed glioblastoma.**
 *Nature medicine* (2025) | 49 citations | OA
-Mechanisms: immunotherapy | Cancer: glioblastoma, melanoma | Evidence: 
+Mechanisms: immunotherapy | Cancer: glioblastoma, melanoma | Evidence: clinical-other
 **Key insight**: Glioblastoma (GBM) is an aggressive primary adult brain tumor that rapidly recurs after standard-of-care treatments, including surgery, chemotherapy and radiotherapy. While immune checkpoint inhibitor therapies have transformed outcomes in many tumor types, particularly when used neoadjuvantly or...

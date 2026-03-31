@@ -243,8 +243,9 @@ def build_gap_analysis(entries: list[dict]) -> str:
 
     # Evidence matrix
     evidence_matrix = defaultdict(lambda: defaultdict(str))
-    evidence_rank = {"phase3-clinical": 6, "phase2-clinical": 5, "phase1-clinical": 4,
-                     "preclinical-invivo": 3, "preclinical-invitro": 2, "theoretical": 1, "": 0}
+    evidence_rank = {"phase3-clinical": 7, "phase2-clinical": 6, "phase1-clinical": 5,
+                     "clinical-other": 4, "preclinical-invivo": 3, "preclinical-invitro": 2,
+                     "theoretical": 1, "": 0}
     for e in entries:
         ev = e.get("evidence_level", "")
         for m in e.get("mechanisms", []):
@@ -347,23 +348,26 @@ def build_evidence_tiers(entries: list[dict]) -> str:
         f"({coverage/len(entries):.1%}). Reviews/meta-analyses ({reason_counts['review_like']}) "
         f"and protocols ({reason_counts['protocol_like']}) are intentionally left unclassified; "
         f"among primary-study-like records, coverage is {coverage}/{primary_like_total} "
-        f"({coverage/primary_like_denominator:.1%}). Absence claims remain provisional.\n"
+        f"({coverage/primary_like_denominator:.1%}). `clinical-other` counts patient-level evidence "
+        f"without phase labeling and should not be read as equivalent to phase-labeled trial maturity. "
+        f"Absence claims remain provisional.\n"
     )
 
     mechanisms = sorted(MECHANISM_KEYWORDS.keys())
-    evidence_order = ["phase3-clinical", "phase2-clinical", "phase1-clinical",
+    evidence_order = ["phase3-clinical", "phase2-clinical", "phase1-clinical", "clinical-other",
                       "preclinical-invivo", "preclinical-invitro", "theoretical"]
     evidence_labels = {
         "phase3-clinical": "Phase III RCT",
         "phase2-clinical": "Phase II",
         "phase1-clinical": "Phase I",
+        "clinical-other": "Clinical (non-phase)",
         "preclinical-invivo": "Preclinical (in vivo)",
         "preclinical-invitro": "Preclinical (in vitro)",
         "theoretical": "Theoretical/Computational",
     }
 
-    lines.append("| Mechanism | Highest Evidence | Phase 3 | Phase 2 | Phase 1 | In Vivo | In Vitro | Theory | Total |")
-    lines.append("|-----------|-----------------|---------|---------|---------|---------|----------|--------|-------|")
+    lines.append("| Mechanism | Highest Evidence | Phase 3 | Phase 2 | Phase 1 | Clinical Other | In Vivo | In Vitro | Theory | Total |")
+    lines.append("|-----------|-----------------|---------|---------|---------|----------------|---------|----------|--------|-------|")
 
     for m in mechanisms:
         m_articles = [e for e in entries if m in e.get("mechanisms", [])]
@@ -513,20 +517,24 @@ def build_evidence_coverage_audit(entries: list[dict]) -> str:
 
     lines.append("\n## What The Current Miss-Rate Signal Likely Means\n")
     lines.append(
-        "- The raw 36.8% coverage number is pessimistic because review-like and protocol-like records are intentionally excluded from evidence tagging."
+        f"- The raw {len(tagged)/total:.1%} coverage number is pessimistic because review-like and protocol-like records are intentionally excluded from evidence tagging."
     )
     lines.append(
         "- The more relevant upper-bound miss rate is the share of `other_untagged` records within the primary-study-like subset. Mechanisms with the largest remaining uncertainty are immunotherapy, mRNA-vaccine, electrochemical-therapy, TTFields, and CAR-T."
     )
     lines.append(
-        "- The sampled uncategorized records are enriched for observational clinical studies, biomarker/antigen-discovery papers, and translational engineering studies that do not announce phase or preclinical status in obvious keywords."
+        "- After adding a `clinical-other` bucket, the remaining uncategorized records are still enriched for translational engineering studies, biomarker/antigen-discovery papers, and mechanistic studies that do not announce phase or preclinical status in obvious keywords."
     )
     lines.append(
-        "- This means the main risk is overstating `no detected clinical evidence` for modalities with many non-phase clinical or translational papers, not silently missing large numbers of explicit Phase III trials."
+        "- The main residual risk is now twofold: under-classifying ambiguous patient studies that still do not emit clear textual signals, and overstating absence when key landmark papers are missing from the local full-text archive."
+    )
+    lines.append(
+        "- See `analysis/landmark-corpus-gaps.md` for a small manually curated shortlist of known missing papers that are important enough to change field-level interpretation."
     )
 
     lines.append("\n## Recommended Interpretation Guardrails\n")
     lines.append("- Treat `0 Phase 2+` as `not detected in current keyword-derived evidence tags` unless manually verified.")
+    lines.append("- Treat `clinical-other` as patient-level evidence that is informative for field maturity, but not interchangeable with registrational phase evidence.")
     lines.append("- Distinguish review/protocol exclusions from true uncategorized primary-study-like records when discussing evidence coverage.")
     lines.append("- Re-check any high-priority mechanism with external PubMed or trial-registry verification before using it as a headline gap.")
     lines.append("- Prefer coverage-aware language in the manuscript and analysis files whenever evidence tagging is below 50% for a mechanism.")

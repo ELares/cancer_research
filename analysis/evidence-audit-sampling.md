@@ -25,4 +25,8 @@ This note documents a manual spot-check of uncategorized primary-study-like reco
 
 ## Practical implication
 
-The next meaningful decision is not just "add more keywords." It is whether the repo wants to keep the current six-tier evidence model, with coverage-aware caveats, or introduce a broader `clinical-other` bucket for non-phase patient studies and case-series evidence.
+This repo now treats non-phase patient evidence as a separate `clinical-other` bucket rather than forcing it into the phase ladder or leaving it silently uncategorized. That policy should be interpreted conservatively:
+
+- `clinical-other` means patient-level evidence exists, but not in a phase-labeled form that should be read like registrational trial evidence.
+- Phase II/III absence claims should still be phrased as `not detected` unless manually verified against external sources.
+- Residual uncategorized records are now more likely to be true translational edge cases or corpus-coverage artifacts than simple schema omissions.
