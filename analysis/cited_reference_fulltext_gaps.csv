@@ -35,4 +35,3 @@ pmid,status,title,journal,year,missing_kind,path
 39798545,incomplete,Clinical advances of mRNA vaccines for cancer immunotherapy.,"Med (New York, N.Y.)",2025,paywalled,corpus/by-pmid/39798545.md
 39826543,incomplete,Hyperacute rejection-engineered oncolytic virus for interventional clinical trial in refractory cancer patients.,Cell,2025,open access,corpus/by-pmid/39826543.md
 40108464,incomplete,Oncolytic virus VG161 in refractory hepatocellular carcinoma.,Nature,2025,paywalled,corpus/by-pmid/40108464.md
-41872128,missing_file,,,,missing_file,corpus/by-pmid/41872128.md

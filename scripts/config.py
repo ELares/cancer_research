@@ -122,8 +122,9 @@ MECHANISM_KEYWORDS = {
         "olaparib", "niraparib", "rucaparib", "talazoparib", "brca synthetic",
     ],
     "bioelectric": [
-        "bioelectric", "membrane potential", "bioelectricity",
-        "vmem", "depolarization cancer", "ion channel cancer",
+        "bioelectricity", "bioelectric signaling", "bioelectric signalling",
+        "membrane potential", "transmembrane potential", "vmem",
+        "depolarization cancer", "ion channel cancer",
     ],
     "electrolysis": [
         "electrolysis", "electrochemical therapy", "electrochemical treatment",

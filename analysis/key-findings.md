@@ -2,7 +2,7 @@
 
 Ranked by iCite Relative Citation Ratio (field-normalized impact).
 
-Total articles with RCR: 3738
+Total articles with RCR: 3739
 
 ### 1. PMID 35338310 — RCR 141.7, 100.0th percentile
 **Targeting ferroptosis as a vulnerability in cancer.**
@@ -43,7 +43,7 @@ Mechanisms: immunotherapy, mRNA-vaccine, nanoparticle | Cancer: pancreatic | Evi
 ### 7. PMID 35318309 — RCR 89.4, 100.0th percentile
 **Antibody drug conjugate: the "biological missile" for targeted cancer therapy.**
 *Signal transduction and targeted therapy* (2022) | 1402 citations | OA
-Mechanisms: antibody-drug-conjugate | Cancer: general | Evidence: phase3-clinical
+Mechanisms: antibody-drug-conjugate | Cancer: general | Evidence: 
 **Key insight**: Antibody-drug conjugate (ADC) is typically composed of a monoclonal antibody (mAbs) covalently attached to a cytotoxic drug via a chemical linker. It combines both the advantages of highly specific targeting ability and highly potent killing effect to achieve accurate and efficient elimination of...
 
 ### 8. PMID 32478924 — RCR 80.2, 100.0th percentile
@@ -169,7 +169,7 @@ Mechanisms: immunotherapy | Cancer: breast | Evidence:
 ### 28. PMID 31848460 — RCR 42.3, 99.9th percentile
 **Engineering strategies to overcome the current roadblocks in CAR T cell therapy.**
 *Nature reviews. Clinical oncology* (2020) | 1400 citations | OA
-Mechanisms: car-t | Cancer: leukemia, lymphoma, myeloma | Evidence: preclinical-invivo
+Mechanisms: car-t | Cancer: leukemia, lymphoma, myeloma | Evidence: 
 **Key insight**: T cells genetically engineered to express chimeric antigen receptors (CARs) have proven - and impressive - therapeutic activity in patients with certain subtypes of B cell leukaemia or lymphoma, with promising efficacy also demonstrated in patients with multiple myeloma. Nevertheless, various bar...
 
 ### 29. PMID 37635168 — RCR 41.4, 99.9th percentile
@@ -211,7 +211,7 @@ Mechanisms: immunotherapy, oncolytic-virus | Cancer: general | Evidence:
 ### 35. PMID 35361234 — RCR 36.0, 99.8th percentile
 **CAR race to cancer immunotherapy: from CAR T, CAR NK to CAR macrophage therapy.**
 *Journal of experimental & clinical cancer research : CR* (2022) | 603 citations | OA
-Mechanisms: car-t, immunotherapy | Cancer: general | Evidence: preclinical-invitro
+Mechanisms: car-t, immunotherapy | Cancer: general | Evidence: 
 **Key insight**: Adoptive cell therapy with chimeric antigen receptor (CAR) immunotherapy has made tremendous progress with five CAR T therapies approved by the US Food and Drug Administration for hematological malignancies. However, CAR immunotherapy in solid tumors lags significantly behind.
 
 ### 36. PMID 35652198 — RCR 35.9, 99.8th percentile
@@ -223,7 +223,7 @@ Mechanisms: immunotherapy | Cancer: general | Evidence:
 ### 37. PMID 33243969 — RCR 34.6, 99.8th percentile
 **Detection of immunogenic cell death and its relevance for cancer therapy.**
 *Cell death & disease* (2020) | 1032 citations | OA
-Mechanisms: immunotherapy | Cancer: general | Evidence: preclinical-invitro
+Mechanisms: immunotherapy | Cancer: general | Evidence: 
 **Key insight**: Chemotherapy, radiation therapy, as well as targeted anticancer agents can induce clinically relevant tumor-targeting immune responses, which critically rely on the antigenicity of malignant cells and their capacity to generate adjuvant signals. In particular, immunogenic cell death (ICD) is acco...
 
 ### 38. PMID 31329516 — RCR 34.5, 99.8th percentile
@@ -265,7 +265,7 @@ Mechanisms: car-t, immunotherapy | Cancer: general | Evidence:
 ### 44. PMID 20570523 — RCR 31.0, 99.7th percentile
 **Glutamine addiction: a new therapeutic target in cancer.**
 *Trends in biochemical sciences* (2010) | 1747 citations | OA
-Mechanisms: bioelectric | Cancer: general | Evidence: preclinical-invitro
+Mechanisms: bioelectric | Cancer: general | Evidence: 
 **Key insight**: Most cancers depend on a high rate of aerobic glycolysis for their continued growth and survival. Paradoxically, some cancer cell lines also display addiction to glutamine despite the fact that glutamine is a nonessential amino acid that can be synthesized from glucose.
 
 ### 45. PMID 33179413 — RCR 30.9, 99.7th percentile
@@ -367,7 +367,7 @@ Mechanisms: immunotherapy | Cancer: general | Evidence:
 ### 61. PMID 33431631 — RCR 24.7, 99.6th percentile
 **Targeting immunogenic cancer cell death by photodynamic therapy: past, present and future.**
 *Journal for immunotherapy of cancer* (2021) | 520 citations | OA
-Mechanisms: immunotherapy, nanoparticle | Cancer: general | Evidence: preclinical-invivo
+Mechanisms: immunotherapy, nanoparticle | Cancer: general | Evidence: 
 **Key insight**: The past decade has witnessed major breakthroughs in cancer immunotherapy. This development has been largely motivated by cancer cell evasion of immunological control and consequent tumor resistance to conventional therapies.
 
 ### 62. PMID 36174631 — RCR 24.6, 99.6th percentile
@@ -379,7 +379,7 @@ Mechanisms: immunotherapy, mRNA-vaccine | Cancer: general | Evidence:
 ### 63. PMID 39826104 — RCR 24.5
 **From chaos to order: optimizing fecal microbiota transplantation for enhanced immune checkpoint inhibitors efficacy.**
 *Gut microbes* (2025) | 56 citations | OA
-Mechanisms: immunotherapy, microbiome | Cancer: general | Evidence: phase3-clinical
+Mechanisms: immunotherapy, microbiome | Cancer: general | Evidence: 
 **Key insight**: The integration of fecal microbiota transplantation (FMT) with immune checkpoint inhibitors (ICIs) presents a promising approach for enhancing cancer treatment efficacy and overcoming therapeutic resistance. This review critically examines the controversial effects of FMT on ICIs outcomes and elu...
 
 ### 64. PMID 37046777 — RCR 24.4, 99.6th percentile
@@ -469,7 +469,7 @@ Mechanisms: synthetic-lethality | Cancer: general | Evidence:
 ### 78. PMID 28281173 — RCR 21.0, 99.4th percentile
 **Glioma Subclassifications and Their Clinical Significance.**
 *Neurotherapeutics : the journal of the American Society for Experimental NeuroTherapeutics* (2017) | 838 citations | OA
-Mechanisms: ttfields | Cancer: glioblastoma | Evidence: phase3-clinical
+Mechanisms: ttfields | Cancer: glioblastoma | Evidence: 
 **Key insight**: The impact of targeted therapies in glioma has been modest. All the therapies that have demonstrated a significant survival benefit for gliomas in Phase III trials, including radiation, chemotherapy (temozolomide and PCV [procarbazine, lomustine, vincristine]), and tumor-treating fields, are base...
 
 ### 79. PMID 39574178 — RCR 20.9, 99.4th percentile

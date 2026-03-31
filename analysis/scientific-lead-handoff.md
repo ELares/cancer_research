@@ -23,7 +23,6 @@ The lead: SDT may be a superior tool for exploiting post-resistance ferroptosis 
 
 **Established**:
 - Persister cells are ferroptosis-sensitive (PMID:41481741, Science Advances 2026)
-- BRAFi-resistant melanoma cells are ferroptosis-vulnerable (PMID:41872128, Cell Death Discovery 2026)
 - SDT generates ROS that depletes GSH and inactivates GPX4: 72 articles in corpus
 - SDT-triggered ferroptosis releases ICD markers (calreticulin, HMGB1): 6 dual-pathway articles in corpus
 - OXPHOS-resistant cells have high iron, elevated ROS, and lipid-rich membranes: multiple reviews
@@ -41,7 +40,7 @@ The lead: SDT may be a superior tool for exploiting post-resistance ferroptosis 
 
 ## 4. What the Field May Be Missing
 
-**The persister-ferroptosis community** is not considering physical modalities as ferroptosis inducers. Their entire therapeutic focus is on small-molecule GPX4/FSP1 inhibitors. SDT offers something these drugs cannot: spatial selectivity (focused ultrasound targets a defined tumor volume) and ICD generation (which RSL3/erastin have not been shown to produce).
+**The persister-ferroptosis community** is not considering physical modalities as ferroptosis inducers. Their entire therapeutic focus is on small-molecule GPX4/FSP1 inhibitors. SDT offers something these drugs cannot: spatial selectivity (focused ultrasound targets a defined tumor volume) and potentially an ICD-linked immune effect, though that has not been established head-to-head against pharmacologic inducers.
 
 **The SDT community** is positioning SDT as an ablative therapy competing with HIFU and radiation — a competition it cannot win. The ferroptosis-ICD data in their own literature suggests a different clinical path (sub-ablative immune priming) that they are not pursuing because they read materials chemistry journals, not persister biology papers.
 
