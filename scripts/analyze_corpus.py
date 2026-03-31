@@ -25,6 +25,7 @@ from config import (
     MECHANISM_KEYWORDS,
     CANCER_TYPE_KEYWORDS,
     EVIDENCE_LEVEL_KEYWORDS,
+    PATHWAY_TARGET_KEYWORDS,
     PROJECT_ROOT,
     RESISTANT_STATE_RULES,
 )
@@ -532,6 +533,121 @@ def build_evidence_coverage_audit(entries: list[dict]) -> str:
     return "\n".join(lines)
 
 
+def build_pathway_target_audit(entries: list[dict]) -> str:
+    lines = ["# Pathway Target Audit\n"]
+    lines.append(
+        "First-pass tracking for ferroptosis-resistance and adjacent cell-death pathway targets "
+        "that were previously present in the corpus text but not modeled as a dedicated layer.\n"
+    )
+
+    targets = sorted(PATHWAY_TARGET_KEYWORDS.keys())
+    tagged_count = sum(1 for e in entries if e.get("pathway_targets"))
+    lines.append(
+        f"Current pathway-target coverage in the index: {tagged_count}/{len(entries)} records "
+        f"({tagged_count/len(entries):.1%}).\n"
+    )
+
+    lines.append("## Target Counts\n")
+    lines.append(
+        "Counts below are split so broad review coverage does not get conflated with pathway-centered "
+        "primary-study-like signal.\n"
+    )
+    lines.append("| Pathway target | Total | Primary-study-like | Review-like | Protocol-like | Top mechanisms | Top cancers |")
+    lines.append("|---|---|---|---|---|---|---|")
+
+    target_sets = {}
+    summary_rows = []
+    for target in targets:
+        target_articles = [e for e in entries if target in e.get("pathway_targets", [])]
+        target_sets[target] = {e.get("pmid", "") for e in target_articles}
+        reason_counts = Counter(classify_evidence_reason(e) for e in target_articles)
+        mech_counts = Counter()
+        cancer_counts = Counter()
+        for entry in target_articles:
+            for mech in entry.get("mechanisms", []):
+                mech_counts[mech] += 1
+            for cancer in entry.get("cancer_types", []):
+                cancer_counts[cancer] += 1
+        top_mechs = ", ".join(f"{m} ({c})" for m, c in mech_counts.most_common(3)) or "none"
+        top_cancers = ", ".join(f"{c} ({n})" for c, n in cancer_counts.most_common(3)) or "general"
+        primary_like = reason_counts["tagged"] + reason_counts["other_untagged"]
+        lines.append(
+            f"| **{target}** | {len(target_articles)} | {primary_like} | {reason_counts['review_like']} | "
+            f"{reason_counts['protocol_like']} | {top_mechs} | {top_cancers} |"
+        )
+        summary_rows.append((target, len(target_articles), primary_like, reason_counts, mech_counts, cancer_counts, target_articles))
+
+    overlap_pairs = []
+    for i, left in enumerate(targets):
+        left_set = target_sets[left]
+        if not left_set:
+            continue
+        for right in targets[i + 1:]:
+            right_set = target_sets[right]
+            if not right_set:
+                continue
+            overlap = left_set & right_set
+            if not overlap:
+                continue
+            union = left_set | right_set
+            jaccard = len(overlap) / len(union)
+            if jaccard >= 0.8:
+                overlap_pairs.append((left, right, len(overlap), len(union), jaccard))
+
+    lines.append("\n## Example Articles\n")
+    lines.append(
+        "Examples prefer primary-study-like records when available, then fall back to the most-cited review-like articles.\n"
+    )
+    for target, count, primary_like, _, _, _, target_articles in sorted(summary_rows, key=lambda row: (-row[2], -row[1], row[0]))[:5]:
+        if count == 0:
+            continue
+        lines.append(f"\n### {target}\n")
+        primary_examples = [
+            e for e in target_articles
+            if classify_evidence_reason(e) in ("tagged", "other_untagged")
+        ]
+        fallback_examples = [
+            e for e in target_articles
+            if classify_evidence_reason(e) not in ("tagged", "other_untagged")
+        ]
+        example_pool = primary_examples or fallback_examples
+        top_examples = sorted(
+            example_pool,
+            key=lambda e: (-(e.get("cited_by_count") or 0), -(e.get("year") or 0), e.get("pmid", "")),
+        )[:3]
+        for e in top_examples:
+            mechs = ", ".join(e.get("mechanisms", [])[:2]) or "untagged"
+            evidence = e.get("evidence_level") or classify_evidence_reason(e)
+            lines.append(
+                f"- **PMID {e['pmid']}** ({e.get('year')}) — {mechs} — `{evidence}` — *{e.get('title', '')[:150]}*"
+            )
+
+    if overlap_pairs:
+        lines.append("\n## Notable Overlap\n")
+        lines.append(
+            "The rows below are not additive. They capture highly overlapping views of the same article set and should be interpreted as alternate lenses rather than independent signals.\n"
+        )
+        for left, right, overlap_count, union_count, jaccard in sorted(overlap_pairs, key=lambda row: (-row[4], -row[2], row[0], row[1])):
+            lines.append(
+                f"- **{left}** and **{right}** overlap in {overlap_count}/{union_count} records ({jaccard:.1%} Jaccard overlap)."
+            )
+
+    lines.append("\n## Interpretation\n")
+    lines.append(
+        "- `scd-mufa-axis` and `disulfidptosis-core` already have enough corpus presence to affect how the repo frames in vivo ferroptosis escape and residual-state vulnerabilities."
+    )
+    lines.append(
+        "- `dhodh-defense`, `dhcr7-7dhc-axis`, `fdx1-cuproptosis-axis`, and `trim25-gpx4-degradation` are smaller but non-zero. They should be treated as candidate stratification or escape markers rather than ignored side notes."
+    )
+    lines.append(
+        "- The total counts are still inflated by broad reviews and pathway-survey papers, so prioritization should use the primary-study-like column rather than the raw total alone."
+    )
+    lines.append(
+        "- The key repo-level shift is from modality-only comparison to vulnerability-layer comparison: these targets help explain when ferroptosis logic fails, and when adjacent programs like cuproptosis or disulfidptosis may be more relevant."
+    )
+    return "\n".join(lines)
+
+
 # ============================================================
 # Analysis 5: Key Findings (Top 100 articles by impact)
 # ============================================================
@@ -658,6 +774,7 @@ def main():
         ("evidence-tiers.md", "Evidence Tiers", build_evidence_tiers),
         ("resistant-state-map.md", "Resistant-State Map", build_resistant_state_map),
         ("evidence-coverage-audit.md", "Evidence Coverage Audit", build_evidence_coverage_audit),
+        ("pathway-target-audit.md", "Pathway Target Audit", build_pathway_target_audit),
         ("key-findings.md", "Key Findings (top 100)", build_key_findings),
         ("timeline.md", "Timeline", build_timeline),
     ]
