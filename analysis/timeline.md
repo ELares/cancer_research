@@ -5,13 +5,13 @@ Major milestones chronologically, based on highest-impact articles per year per 
 
 ## 2015
 
-- **ttfields**: *Maintenance Therapy With Tumor-Treating Fields Plus Temozolomide vs Temozolomide Alone for Glioblastoma: A Randomized Cl*
+- **ttfields** [phase3-clinical]: *Maintenance Therapy With Tumor-Treating Fields Plus Temozolomide vs Temozolomide Alone for Glioblastoma: A Randomized Cl*
   PMID 26670971 | JAMA | 1203 citations | glioblastoma
 - **radioligand-therapy**: *A review of low-intensity ultrasound for cancer therapy.*
   PMID 25728459 | Ultrasound in medicine & biology | 344 citations | various
 - **sonodynamic**: *A review of low-intensity ultrasound for cancer therapy.*
   PMID 25728459 | Ultrasound in medicine & biology | 344 citations | various
-- **immunotherapy** [phase2-clinical]: *Randomized phase II/III clinical trial of elpamotide for patients with advanced pancreatic cancer: PEGASUS-PC Study.*
+- **immunotherapy** [phase3-clinical]: *Randomized phase II/III clinical trial of elpamotide for patients with advanced pancreatic cancer: PEGASUS-PC Study.*
   PMID 25867139 | Cancer science | 91 citations | pancreatic
 - **bioelectric** [preclinical-invivo]: *Antibody and lectin target podoplanin to inhibit oral squamous carcinoma cell migration and viability by distinct mechan*
   PMID 25826087 | Oncotarget | 87 citations | head-and-neck
@@ -26,7 +26,7 @@ Major milestones chronologically, based on highest-impact articles per year per 
   PMID 27668386 | Clinical journal of oncology nursing | 1185 citations | glioblastoma
 - **ttfields**: *Glioblastoma: Overview of Disease and Treatment.*
   PMID 27668386 | Clinical journal of oncology nursing | 1185 citations | glioblastoma
-- **oncolytic-virus**: *Talimogene Laherparepvec in Combination With Ipilimumab in Previously Untreated, Unresectable Stage IIIB-IV Melanoma.*
+- **oncolytic-virus** [phase3-clinical]: *Talimogene Laherparepvec in Combination With Ipilimumab in Previously Untreated, Unresectable Stage IIIB-IV Melanoma.*
   PMID 27298410 | Journal of clinical oncology : official journal of the American Society of Clinical Oncology | 545 citations | melanoma
 - **bioelectric** [preclinical-invivo]: *Mitochondrial Membrane Potential Identifies Cells with Enhanced Stemness for Cellular Therapy.*
   PMID 26674251 | Cell metabolism | 370 citations | melanoma
@@ -43,7 +43,7 @@ Major milestones chronologically, based on highest-impact articles per year per 
 
 - **synthetic-lethality**: *PARP inhibitors: Synthetic lethality in the clinic.*
   PMID 28302823 | Science (New York, N.Y.) | 2766 citations | various
-- **ttfields**: *Effect of Tumor-Treating Fields Plus Maintenance Temozolomide vs Maintenance Temozolomide Alone on Survival in Patients *
+- **ttfields** [phase3-clinical]: *Effect of Tumor-Treating Fields Plus Maintenance Temozolomide vs Maintenance Temozolomide Alone on Survival in Patients *
   PMID 29260225 | JAMA | 2494 citations | glioblastoma
 - **immunotherapy**: *Colony-stimulating factor 1 receptor (CSF1R) inhibitors in cancer therapy.*
   PMID 28716061 | Journal for immunotherapy of cancer | 982 citations | various
@@ -70,7 +70,7 @@ Major milestones chronologically, based on highest-impact articles per year per 
   PMID 30881202 | Chemical engineering journal (Lausanne, Switzerland : 1996) | 441 citations | various
 - **hifu**: *A Multicentre Study of 5-year Outcomes Following Focal Therapy in Treating Clinically Significant Nonmetastatic Prostate*
   PMID 29960750 | European urology | 309 citations | prostate
-- **synthetic-lethality** [preclinical-invitro]: *BRD4 Inhibition Is Synthetic Lethal with PARP Inhibitors through the Induction of Homologous Recombination Deficiency.*
+- **synthetic-lethality** [preclinical-invivo]: *BRD4 Inhibition Is Synthetic Lethal with PARP Inhibitors through the Induction of Homologous Recombination Deficiency.*
   PMID 29533782 | Cancer cell | 298 citations | ovarian
 - **bioelectric**: *Emerging Roles of the Membrane Potential: Action Beyond the Action Potential.*
   PMID 30519193 | Frontiers in physiology | 277 citations | various
@@ -117,9 +117,9 @@ Major milestones chronologically, based on highest-impact articles per year per 
 
 ## 2021
 
-- **immunotherapy**: *Fecal microbiota transplant overcomes resistance to anti-PD-1 therapy in melanoma patients.*
+- **immunotherapy** [phase2-clinical]: *Fecal microbiota transplant overcomes resistance to anti-PD-1 therapy in melanoma patients.*
   PMID 33542131 | Science (New York, N.Y.) | 1511 citations | melanoma
-- **microbiome**: *Fecal microbiota transplant overcomes resistance to anti-PD-1 therapy in melanoma patients.*
+- **microbiome** [phase2-clinical]: *Fecal microbiota transplant overcomes resistance to anti-PD-1 therapy in melanoma patients.*
   PMID 33542131 | Science (New York, N.Y.) | 1511 citations | melanoma
 - **oncolytic-virus**: *Combination strategies to maximize the benefits of cancer immunotherapy.*
   PMID 34579759 | Journal of hematology & oncology | 633 citations | various
@@ -146,7 +146,7 @@ Major milestones chronologically, based on highest-impact articles per year per 
   PMID 35361234 | Journal of experimental & clinical cancer research : CR | 603 citations | various
 - **mRNA-vaccine**: *Clinical advances and ongoing trials on mRNA vaccines for cancer treatment.*
   PMID 36174631 | The Lancet. Oncology | 470 citations | various
-- **nanoparticle**: *Lipid nanoparticle-mediated lymph node-targeting delivery of mRNA cancer vaccine elicits robust CD8+ T cell response.*
+- **nanoparticle** [preclinical-invivo]: *Lipid nanoparticle-mediated lymph node-targeting delivery of mRNA cancer vaccine elicits robust CD8+ T cell response.*
   PMID 35969778 | Proceedings of the National Academy of Sciences of the United States of America | 371 citations | melanoma
 - **crispr**: *Engineering the next-generation of CAR T-cells with CRISPR-Cas9 gene editing.*
   PMID 35303871 | Molecular cancer | 314 citations | various
@@ -155,11 +155,11 @@ Major milestones chronologically, based on highest-impact articles per year per 
 
 ## 2023
 
-- **immunotherapy**: *Personalized RNA neoantigen vaccines stimulate T cells in pancreatic cancer.*
+- **immunotherapy** [phase1-clinical]: *Personalized RNA neoantigen vaccines stimulate T cells in pancreatic cancer.*
   PMID 37165196 | Nature | 1153 citations | pancreatic
-- **mRNA-vaccine**: *Personalized RNA neoantigen vaccines stimulate T cells in pancreatic cancer.*
+- **mRNA-vaccine** [phase1-clinical]: *Personalized RNA neoantigen vaccines stimulate T cells in pancreatic cancer.*
   PMID 37165196 | Nature | 1153 citations | pancreatic
-- **nanoparticle**: *Personalized RNA neoantigen vaccines stimulate T cells in pancreatic cancer.*
+- **nanoparticle** [phase1-clinical]: *Personalized RNA neoantigen vaccines stimulate T cells in pancreatic cancer.*
   PMID 37165196 | Nature | 1153 citations | pancreatic
 - **crispr**: *Immune checkpoint therapy for solid tumours: clinical dilemmas and future trends.*
   PMID 37635168 | Signal transduction and targeted therapy | 494 citations | lung, melanoma
@@ -184,7 +184,7 @@ Major milestones chronologically, based on highest-impact articles per year per 
   PMID 38693104 | Cell death & disease | 272 citations | various
 - **car-t**: *CAR-T and CAR-NK as cellular cancer immunotherapy for solid tumors.*
   PMID 39134804 | Cellular & molecular immunology | 252 citations | various
-- **mRNA-vaccine** [phase1-clinical]: *Personalized neoantigen vaccine and pembrolizumab in advanced hepatocellular carcinoma: a phase 1/2 trial.*
+- **mRNA-vaccine** [phase2-clinical]: *Personalized neoantigen vaccine and pembrolizumab in advanced hepatocellular carcinoma: a phase 1/2 trial.*
   PMID 38584166 | Nature medicine | 189 citations | liver
 - **synthetic-lethality**: *Transcription-replication conflicts underlie sensitivity to PARP inhibitors.*
   PMID 38509368 | Nature | 160 citations | various
@@ -199,7 +199,7 @@ Major milestones chronologically, based on highest-impact articles per year per 
   PMID 39972124 | Nature | 187 citations | pancreatic
 - **nanoparticle** [phase1-clinical]: *RNA neoantigen vaccines prime long-lived CD8+ T cells in pancreatic cancer.*
   PMID 39972124 | Nature | 187 citations | pancreatic
-- **car-t**: *Interleukin-15-armoured GPC3 CAR T cells for patients with solid cancers.*
+- **car-t** [phase1-clinical]: *Interleukin-15-armoured GPC3 CAR T cells for patients with solid cancers.*
   PMID 39604730 | Nature | 170 citations | various
 - **antibody-drug-conjugate**: *Antibody-Drug Conjugates (ADCs): current and future biopharmaceuticals.*
   PMID 40307936 | Journal of hematology & oncology | 117 citations | various

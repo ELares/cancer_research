@@ -270,7 +270,10 @@ CANCER_TYPE_KEYWORDS = {
 }
 
 EVIDENCE_LEVEL_KEYWORDS = {
-    "phase3-clinical": ["phase 3", "phase iii", "phase-3", "pivotal trial", "randomized controlled trial"],
+    "phase3-clinical": [
+        "phase 3", "phase iii", "phase-3",
+        "pivotal trial", "randomized controlled trial", "randomized clinical trial",
+    ],
     "phase2-clinical": ["phase 2", "phase ii", "phase-2"],
     "phase1-clinical": ["phase 1", "phase i ", "phase-1", "first-in-human", "dose-escalation"],
     "preclinical-invivo": ["in vivo", "mouse model", "xenograft", "animal model", "murine", "tumor-bearing mice"],

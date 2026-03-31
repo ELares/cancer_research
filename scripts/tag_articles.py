@@ -28,6 +28,12 @@ GENERIC_CANCER_TERMS = (
     "leukemia", "lymphoma", "myeloma",
 )
 
+EVIDENCE_PUBTYPE_MARKERS = {
+    "phase3-clinical": ("clinical trial, phase iii", "clinical trial, phase 3", "clinical trial, phase iv", "clinical trial, phase 4"),
+    "phase2-clinical": ("clinical trial, phase ii", "clinical trial, phase 2"),
+    "phase1-clinical": ("clinical trial, phase i", "clinical trial, phase 1", "clinical trial, phase i/ii"),
+}
+
 
 def is_review_like(fm: dict) -> bool:
     """Return True for reviews, meta-analyses, evidence maps, and similar summaries."""
@@ -53,6 +59,11 @@ def has_cancer_context(text: str) -> bool:
     return any(term in text for term in GENERIC_CANCER_TERMS)
 
 
+def normalize_text(text: str) -> str:
+    """Normalize case and whitespace so keyword matching survives Unicode spacing."""
+    return re.sub(r"\s+", " ", text).strip().lower()
+
+
 def get_searchable_text(fm: dict, body: str) -> str:
     """Combine title, abstract, MeSH terms, and body into searchable text."""
     parts = [
@@ -68,7 +79,7 @@ def get_searchable_text(fm: dict, body: str) -> str:
     if abstract_match:
         parts.append(abstract_match.group(1))
 
-    return " ".join(parts).lower()
+    return normalize_text(" ".join(parts))
 
 
 def match_keywords(text: str, keyword_dict: dict) -> list[str]:
@@ -126,6 +137,11 @@ def match_evidence_level(fm: dict, text: str) -> str:
     """
     if is_review_like(fm) or is_protocol_like(fm):
         return ""
+
+    pub_types = [normalize_text(p) for p in fm.get("pub_types", [])]
+    for level in ["phase3-clinical", "phase2-clinical", "phase1-clinical"]:
+        if any(marker in pub_types for marker in EVIDENCE_PUBTYPE_MARKERS[level]):
+            return level
 
     for level in ["phase3-clinical", "phase2-clinical", "phase1-clinical",
                    "preclinical-invivo", "preclinical-invitro", "theoretical"]:

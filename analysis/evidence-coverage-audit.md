@@ -1,29 +1,29 @@
 # Evidence Coverage Audit
 
-Evidence-level tags are present for 1779/4830 records (36.8%). Of the unclassified records, 1921 are review-like and 29 are protocol-like by design; 1101 primary-study-like records remain uncategorized. Primary-study-like evidence coverage is 1779/2880 (61.8%).
+Evidence-level tags are present for 1826/4830 records (37.8%). Of the unclassified records, 1921 are review-like and 29 are protocol-like by design; 1054 primary-study-like records remain uncategorized. Primary-study-like evidence coverage is 1826/2880 (63.4%).
 
 ## Mechanisms Most Exposed To Overstated Absence Claims
 
 | Mechanism | Total | Tagged | Review-like | Protocol-like | Other untagged | Primary-study-like coverage |
 |---|---|---|---|---|---|---|
-| **immunotherapy** | 2297 | 660 | 1161 | 15 | 461 | 660/1121 (58.9%) |
-| **mRNA-vaccine** | 317 | 81 | 95 | 0 | 141 | 81/222 (36.5%) |
-| **electrochemical-therapy** | 185 | 61 | 47 | 2 | 75 | 61/136 (44.9%) |
-| **ttfields** | 262 | 112 | 72 | 4 | 74 | 112/186 (60.2%) |
+| **immunotherapy** | 2297 | 682 | 1161 | 15 | 439 | 682/1121 (60.8%) |
+| **mRNA-vaccine** | 317 | 84 | 95 | 0 | 138 | 84/222 (37.8%) |
+| **electrochemical-therapy** | 185 | 63 | 47 | 2 | 73 | 63/136 (46.3%) |
+| **ttfields** | 262 | 115 | 72 | 4 | 71 | 115/186 (61.8%) |
 | **synthetic-lethality** | 367 | 173 | 128 | 1 | 65 | 173/238 (72.7%) |
-| **nanoparticle** | 515 | 223 | 230 | 0 | 62 | 223/285 (78.2%) |
-| **car-t** | 473 | 124 | 297 | 0 | 52 | 124/176 (70.5%) |
-| **bispecific-antibody** | 247 | 146 | 47 | 5 | 49 | 146/195 (74.9%) |
-| **antibody-drug-conjugate** | 284 | 124 | 121 | 2 | 37 | 124/161 (77.0%) |
-| **crispr** | 331 | 141 | 155 | 0 | 35 | 141/176 (80.1%) |
+| **nanoparticle** | 515 | 228 | 230 | 0 | 57 | 228/285 (80.0%) |
+| **bispecific-antibody** | 247 | 150 | 47 | 5 | 45 | 150/195 (76.9%) |
+| **car-t** | 474 | 133 | 298 | 0 | 43 | 133/176 (75.6%) |
 | **metabolic-targeting** | 274 | 74 | 166 | 0 | 34 | 74/108 (68.5%) |
-| **oncolytic-virus** | 378 | 173 | 172 | 0 | 33 | 173/206 (84.0%) |
-| **epigenetic** | 183 | 80 | 71 | 1 | 31 | 80/111 (72.1%) |
+| **antibody-drug-conjugate** | 284 | 127 | 121 | 2 | 34 | 127/161 (78.9%) |
+| **crispr** | 331 | 144 | 155 | 0 | 32 | 144/176 (81.8%) |
 | **hifu** | 81 | 22 | 29 | 1 | 29 | 22/51 (43.1%) |
-| **sonodynamic** | 187 | 111 | 50 | 0 | 26 | 111/137 (81.0%) |
+| **epigenetic** | 183 | 82 | 71 | 1 | 29 | 82/111 (73.9%) |
+| **oncolytic-virus** | 378 | 177 | 172 | 0 | 29 | 177/206 (85.9%) |
+| **sonodynamic** | 187 | 113 | 50 | 0 | 24 | 113/137 (82.5%) |
 | **frequency-therapy** | 71 | 14 | 36 | 1 | 20 | 14/34 (41.2%) |
-| **bioelectric** | 182 | 143 | 19 | 0 | 20 | 143/163 (87.7%) |
-| **microbiome** | 109 | 9 | 84 | 2 | 14 | 9/23 (39.1%) |
+| **bioelectric** | 182 | 144 | 19 | 0 | 19 | 144/163 (88.3%) |
+| **microbiome** | 109 | 10 | 84 | 2 | 13 | 10/23 (43.5%) |
 | **radioligand-therapy** | 52 | 20 | 23 | 1 | 8 | 20/28 (71.4%) |
 | **electrolysis** | 11 | 5 | 0 | 0 | 6 | 5/11 (45.5%) |
 | **phagocytosis-checkpoint** | 28 | 18 | 5 | 0 | 5 | 18/23 (78.3%) |
@@ -37,15 +37,15 @@ Illustrative examples below come from the uncategorized primary-study-like pool 
 
 ### immunotherapy
 
-- **PMID 33542131** (2021) — *Fecal microbiota transplant overcomes resistance to anti-PD-1 therapy in melanoma patients.*
-- **PMID 37165196** (2023) — *Personalized RNA neoantigen vaccines stimulate T cells in pancreatic cancer.*
 - **PMID 28436963** (2017) — *A STING-activating nanovaccine for cancer immunotherapy.*
+- **PMID 35488273** (2022) — *Integrated analysis of single-cell and bulk RNA sequencing data reveals a pan-cancer stemness signature predicting immunotherapy response.*
+- **PMID 33473101** (2021) — *Personalized neoantigen pulsed dendritic cell vaccine for advanced lung cancer.*
 
 ### mRNA-vaccine
 
-- **PMID 37165196** (2023) — *Personalized RNA neoantigen vaccines stimulate T cells in pancreatic cancer.*
-- **PMID 35969778** (2022) — *Lipid nanoparticle-mediated lymph node-targeting delivery of mRNA cancer vaccine elicits robust CD8+ T cell response.*
 - **PMID 33473101** (2021) — *Personalized neoantigen pulsed dendritic cell vaccine for advanced lung cancer.*
+- **PMID 34861036** (2022) — *Efficacy of a third BNT162b2 mRNA COVID-19 vaccine dose in patients with CLL who failed standard 2-dose vaccination.*
+- **PMID 35661819** (2022) — *Durable complete response to neoantigen-loaded dendritic-cell vaccine following anti-PD-1 therapy in metastatic gastric cancer.*
 
 ### electrochemical-therapy
 
@@ -55,9 +55,9 @@ Illustrative examples below come from the uncategorized primary-study-like pool 
 
 ### ttfields
 
-- **PMID 29260225** (2017) — *Effect of Tumor-Treating Fields Plus Maintenance Temozolomide vs Maintenance Temozolomide Alone on Survival in Patients With Glioblastoma: A Randomize*
-- **PMID 26670971** (2015) — *Maintenance Therapy With Tumor-Treating Fields Plus Temozolomide vs Temozolomide Alone for Glioblastoma: A Randomized Clinical Trial.*
 - **PMID 30534421** (2018) — *Tumor treating fields increases membrane permeability in glioblastoma cells.*
+- **PMID 33080774** (2020) — *Tumor Treating Fields (TTFields) Hinder Cancer Cell Motility through Regulation of Microtubule and Acting Dynamics.*
+- **PMID 23095807** (2012) — *Long-term survival of patients suffering from glioblastoma multiforme treated with tumor-treating fields.*
 
 ### synthetic-lethality
 

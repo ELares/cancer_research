@@ -3,13 +3,13 @@
 Articles that combine multiple therapeutic mechanisms — identifying synergistic research.
 
 **Total articles with 2+ mechanisms**: 2008 (41% of corpus)
-**Total articles with 3+ mechanisms**: 430
+**Total articles with 3+ mechanisms**: 431
 
 ## Top 30 Mechanism Combinations
 
 | Rank | Mechanism A | Mechanism B | Articles | Example (top-cited) |
 |------|------------|------------|----------|---------------------|
-| 1 | car-t | immunotherapy | 416 | [CAR-engineered cell therapies: current understandings and fu...](by-pmid/41559435.md) (5 cites) |
+| 1 | car-t | immunotherapy | 417 | [CAR-engineered cell therapies: current understandings and fu...](by-pmid/41559435.md) (5 cites) |
 | 2 | immunotherapy | oncolytic-virus | 262 | [Quantitative dynamic granzyme B PET imaging to characterize ...](by-pmid/41510159.md) (1 cites) |
 | 3 | immunotherapy | nanoparticle | 193 | [The application of nanotechnology in regulating mitochondria...](by-pmid/41328341.md) (1 cites) |
 | 4 | immunotherapy | mRNA-vaccine | 172 | [Smart dendrimer nanogels boost mRNA-based cancer therapy via...](by-pmid/41141584.md) (1 cites) |
@@ -18,7 +18,7 @@ Articles that combine multiple therapeutic mechanisms — identifying synergisti
 | 7 | immunotherapy | metabolic-targeting | 127 | [From mechanism to targeted therapy: Advances in histone lact...](by-pmid/41277911.md) (2 cites) |
 | 8 | nanoparticle | sonodynamic | 116 | [The application of nanotechnology in regulating mitochondria...](by-pmid/41328341.md) (1 cites) |
 | 9 | immunotherapy | microbiome | 100 | [Microbiome modulation of tumorigenesis and immune responses....](by-pmid/41486167.md) (2 cites) |
-| 10 | car-t | crispr | 94 | [Advancing Medulloblastoma Treatment: Molecular Mechanisms, D...](by-pmid/41168621.md) (2 cites) |
+| 10 | car-t | crispr | 95 | [Advancing Medulloblastoma Treatment: Molecular Mechanisms, D...](by-pmid/41168621.md) (2 cites) |
 | 11 | epigenetic | immunotherapy | 82 | [Targeting epigenetic regulators as a promising avenue to ove...](by-pmid/40675967.md) (57 cites) |
 | 12 | antibody-drug-conjugate | immunotherapy | 78 | [A data-driven cartography of NSCLC vaccine research: Quantif...](by-pmid/41630477.md) (0 cites) |
 | 13 | mRNA-vaccine | nanoparticle | 70 | [RNA neoantigen vaccines prime long-lived CD8+ T cells in pan...](by-pmid/39972124.md) (187 cites) |
