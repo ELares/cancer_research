@@ -154,7 +154,9 @@ pub fn sim_cell_step(
 /// Full 180-step simulation for a single cell.
 /// Returns (is_dead, final_lp, final_gsh, final_gpx4).
 ///
-/// This is bitwise-identical to the original v3 `sim_cell` function.
+/// This retains the original structure of the v3 engine but now optionally
+/// includes a generic in vivo-like MUFA protection term when the corresponding
+/// params are non-zero.
 pub fn sim_cell(
     cell: &Cell,
     tx: Treatment,

@@ -49,4 +49,4 @@ The current repo is strongest when it explains why a residual state becomes vuln
 
 ## Implementation note
 
-The tagging pipeline now has a `resistant_states` axis in code, but the full corpus has not yet been re-tagged in this PR. Regenerating that layer should happen in a follow-up once the taxonomy changes are reviewed.
+The tagging pipeline now has a `resistant_states` axis in code, implemented as composite rules rather than single-keyword OR matches, but the full corpus has not yet been re-tagged in this PR. Regenerating that layer should happen in a follow-up once the taxonomy changes are reviewed.

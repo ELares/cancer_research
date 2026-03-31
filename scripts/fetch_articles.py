@@ -395,6 +395,7 @@ def save_article(article: dict, full_text: str | None) -> Path:
         "mesh_terms": article.get("mesh_terms", []),
         "pub_types": article.get("pub_types", []),
         "mechanisms": [],
+        "biology_processes": [],
         "cancer_types": [],
         "evidence_level": "",
         "resistant_states": [],

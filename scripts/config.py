@@ -183,8 +183,11 @@ MECHANISM_KEYWORDS = {
         "cd47", "sirpa", "sirpalpha", "phagocytosis checkpoint",
         "don't eat me signal", "dont eat me signal",
     ],
+}
+
+BIOLOGY_PROCESS_KEYWORDS = {
     "autophagy": [
-        "autophagy", "autophagic", "lysosomal degradation", "chloroquine sensitizes",
+        "autophagy", "autophagic", "lysosomal degradation", "autophagosome",
     ],
     "senescence-sasp": [
         "senescence", "senescent", "sasp", "senolytic",
@@ -202,31 +205,43 @@ MECHANISM_KEYWORDS = {
     ],
 }
 
-RESISTANT_STATE_KEYWORDS = {
-    "oxphos-dependent-persister": [
-        "drug-tolerant persister", "drug tolerant persister", "persister cell",
-        "oxidative phosphorylation", "oxphos", "mitochondrial respiration",
-    ],
-    "nrf2-compensated-ferroptosis-resistant": [
-        "nrf2", "antioxidant response", "gsh homeostasis", "gpx4 compensation",
-        "ferroptosis resistance",
-    ],
-    "slc7a11-high-disulfidptosis-prone": [
-        "slc7a11", "xct", "cystine transporter", "disulfidptosis",
-        "glucose starvation",
-    ],
-    "therapy-induced-senescence": [
-        "therapy-induced senescence", "senescence", "senescent", "sasp",
-        "growth arrest",
-    ],
-    "stromal-sheltered-immune-excluded": [
-        "cancer-associated fibroblast", "tumor microenvironment", "extracellular matrix",
-        "immune exclusion", "stromal barrier", "ecm remodeling",
-    ],
-    "epigenetically-plastic": [
-        "epigenetic plasticity", "chromatin state", "kdm5", "ezh2",
-        "hdac inhibitor", "dedifferentiation",
-    ],
+RESISTANT_STATE_RULES = {
+    "oxphos-dependent-persister": {
+        "all_of": [
+            ["drug-tolerant persister", "drug tolerant persister", "persister cell", "residual disease"],
+            ["oxidative phosphorylation", "oxphos", "mitochondrial respiration"],
+        ]
+    },
+    "nrf2-compensated-ferroptosis-resistant": {
+        "all_of": [
+            ["nrf2", "antioxidant response"],
+            ["ferroptosis resistance", "gpx4 compensation", "gsh homeostasis", "redox compensation"],
+        ]
+    },
+    "slc7a11-high-disulfidptosis-prone": {
+        "all_of": [
+            ["slc7a11", "xct", "cystine transporter"],
+            ["disulfidptosis", "glucose starvation", "disulfide stress"],
+        ]
+    },
+    "therapy-induced-senescence": {
+        "all_of": [
+            ["senescence", "senescent", "therapy-induced senescence"],
+            ["therapy", "drug resistance", "persister", "treatment"],
+        ]
+    },
+    "stromal-sheltered-immune-excluded": {
+        "all_of": [
+            ["cancer-associated fibroblast", "tumor microenvironment", "extracellular matrix", "stromal barrier"],
+            ["immune exclusion", "delivery barrier", "therapy resistance", "stromal shelter"],
+        ]
+    },
+    "epigenetically-plastic": {
+        "all_of": [
+            ["epigenetic plasticity", "chromatin state", "kdm5", "ezh2", "hdac inhibitor", "dedifferentiation"],
+            ["persister", "drug tolerance", "adaptive resistance", "cell state transition"],
+        ]
+    },
 }
 
 CANCER_TYPE_KEYWORDS = {

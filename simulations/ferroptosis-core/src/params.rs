@@ -20,7 +20,12 @@ pub struct Params {
     // === Repair ===
     pub gpx4_rate: f64,
     pub fsp1_rate: f64,
+    /// Generic in vivo-like lipid-remodeling rate that accumulates MUFA-style
+    /// protection against peroxidation. This is a coarse hook, not a literal
+    /// mechanistic SCD model.
     pub scd_mufa_rate: f64,
+    /// Maximum fraction of PUFA vulnerability suppressed by the coarse MUFA-like
+    /// protection term.
     pub scd_mufa_max: f64,
 
     // === GPX4 Dynamic Regulation ===

@@ -24,7 +24,7 @@ from config import (
     CANCER_TYPE_KEYWORDS,
     EVIDENCE_LEVEL_KEYWORDS,
     PROJECT_ROOT,
-    RESISTANT_STATE_KEYWORDS,
+    RESISTANT_STATE_RULES,
 )
 
 INDEX_FILE = PROJECT_ROOT / "corpus" / "INDEX.jsonl"
@@ -362,8 +362,18 @@ def build_resistant_state_map(entries: list[dict]) -> str:
         "prioritization and literature review, not to assert that a paper experimentally validated a state transition.\n"
     )
 
-    states = sorted(RESISTANT_STATE_KEYWORDS.keys())
+    states = sorted(RESISTANT_STATE_RULES.keys())
     mechanisms = sorted(MECHANISM_KEYWORDS.keys())
+    tagged_count = sum(1 for e in entries if e.get("resistant_states"))
+    lines.append(
+        f"Current resistant-state coverage in the index: {tagged_count}/{len(entries)} records "
+        f"({tagged_count/len(entries):.1%}).\n"
+    )
+    if tagged_count == 0:
+        lines.append(
+            "WARNING: no resistant-state tags are present in the current index. "
+            "Re-run `tag_articles.py` and `build_index.py` before interpreting the table below.\n"
+        )
 
     lines.append("\n## Resistant States Tracked\n")
     for state in states:
@@ -537,6 +547,9 @@ def main():
     print("Loading index...")
     entries = load_index()
     print(f"  Loaded {len(entries)} articles")
+    resistant_state_coverage = sum(1 for e in entries if e.get("resistant_states"))
+    if resistant_state_coverage == 0:
+        print("  Warning: resistant_states is empty in INDEX.jsonl; regenerate tags before relying on resistant-state outputs")
 
     ANALYSIS_DIR.mkdir(parents=True, exist_ok=True)
 
