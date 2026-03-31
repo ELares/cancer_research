@@ -17,8 +17,9 @@ from tqdm import tqdm
 
 from article_io import load_article, save_article
 from config import (
-    CANCER_TYPE_KEYWORDS, EVIDENCE_LEVEL_KEYWORDS, MECHANISM_KEYWORDS,
+    BIOLOGY_PROCESS_KEYWORDS, CANCER_TYPE_KEYWORDS, EVIDENCE_LEVEL_KEYWORDS, MECHANISM_KEYWORDS,
     PMID_DIR, TAGS_DIR,
+    RESISTANT_STATE_RULES,
 )
 
 GENERIC_CANCER_TERMS = (
@@ -92,6 +93,24 @@ def match_keywords(text: str, keyword_dict: dict) -> list[str]:
     return sorted(matched)
 
 
+def text_matches_keyword(text: str, keyword: str) -> bool:
+    """Return True when a keyword is present in text with stricter handling for short terms."""
+    kw_lower = keyword.lower()
+    if len(kw_lower) <= 4:
+        return bool(re.search(r'\b' + re.escape(kw_lower) + r'\b', text))
+    return kw_lower in text
+
+
+def match_resistant_states(text: str) -> list[str]:
+    """Match resistant states using composite rules rather than single-keyword OR logic."""
+    matched = []
+    for state, rule in RESISTANT_STATE_RULES.items():
+        all_groups = rule.get("all_of", [])
+        if all(any(text_matches_keyword(text, kw) for kw in group) for group in all_groups):
+            matched.append(state)
+    return sorted(matched)
+
+
 def match_mechanisms(text: str) -> list[str]:
     """Match mechanisms with a coarse cancer-context gate to reduce off-target tags."""
     if not has_cancer_context(text):
@@ -150,11 +169,13 @@ def main():
 
     # Accumulators for tag index files
     mechanism_pmids: dict[str, list[str]] = {k: [] for k in MECHANISM_KEYWORDS}
+    biology_process_pmids: dict[str, list[str]] = {k: [] for k in BIOLOGY_PROCESS_KEYWORDS}
     cancer_pmids: dict[str, list[str]] = {k: [] for k in CANCER_TYPE_KEYWORDS}
     evidence_pmids: dict[str, list[str]] = {k: [] for k in EVIDENCE_LEVEL_KEYWORDS}
+    resistant_state_pmids: dict[str, list[str]] = {k: [] for k in RESISTANT_STATE_RULES}
     journal_pmids: dict[str, list[str]] = {}
 
-    stats = {"mechanisms": 0, "cancer_types": 0, "evidence": 0}
+    stats = {"mechanisms": 0, "biology_processes": 0, "cancer_types": 0, "evidence": 0, "resistant_states": 0}
 
     for filepath in tqdm(files, desc="  Tagging"):
         fm, body = load_article(filepath)
@@ -166,13 +187,17 @@ def main():
 
         # Match
         mechanisms = match_mechanisms(text)
+        biology_processes = match_keywords(text, BIOLOGY_PROCESS_KEYWORDS)
         cancer_types = match_keywords(text, CANCER_TYPE_KEYWORDS)
         evidence = match_evidence_level(fm, text)
+        resistant_states = match_resistant_states(text)
 
         # Update frontmatter
         fm["mechanisms"] = mechanisms
+        fm["biology_processes"] = biology_processes
         fm["cancer_types"] = cancer_types
         fm["evidence_level"] = evidence
+        fm["resistant_states"] = resistant_states
 
         if not args.dry_run:
             save_article(filepath, fm, body)
@@ -180,10 +205,14 @@ def main():
         # Accumulate for tag files
         for m in mechanisms:
             mechanism_pmids[m].append(pmid)
+        for b in biology_processes:
+            biology_process_pmids[b].append(pmid)
         for c in cancer_types:
             cancer_pmids[c].append(pmid)
         if evidence:
             evidence_pmids[evidence].append(pmid)
+        for r in resistant_states:
+            resistant_state_pmids[r].append(pmid)
 
         # Journal tag
         journal = fm.get("journal", "")
@@ -196,27 +225,40 @@ def main():
         # Stats
         if mechanisms:
             stats["mechanisms"] += 1
+        if biology_processes:
+            stats["biology_processes"] += 1
         if cancer_types:
             stats["cancer_types"] += 1
         if evidence:
             stats["evidence"] += 1
+        if resistant_states:
+            stats["resistant_states"] += 1
 
     # Write tag index files
     if not args.dry_run:
         print("\nWriting tag index files...")
         write_tag_files("by-mechanism", mechanism_pmids)
+        write_tag_files("by-biology-process", biology_process_pmids)
         write_tag_files("by-cancer-type", cancer_pmids)
         write_tag_files("by-evidence-level", evidence_pmids)
+        write_tag_files("by-resistant-state", resistant_state_pmids)
         write_tag_files("by-journal", journal_pmids)
 
     # Print summary
     print(f"\nTagging complete:")
     print(f"  Articles with mechanism tags: {stats['mechanisms']}/{len(files)}")
+    print(f"  Articles with biology-process tags: {stats['biology_processes']}/{len(files)}")
     print(f"  Articles with cancer type tags: {stats['cancer_types']}/{len(files)}")
     print(f"  Articles with evidence level: {stats['evidence']}/{len(files)}")
+    print(f"  Articles with resistant-state tags: {stats['resistant_states']}/{len(files)}")
 
     print(f"\nMechanism distribution:")
     for tag, pmids in sorted(mechanism_pmids.items(), key=lambda x: -len(x[1])):
+        if pmids:
+            print(f"  {tag}: {len(pmids)}")
+
+    print(f"\nBiology-process distribution:")
+    for tag, pmids in sorted(biology_process_pmids.items(), key=lambda x: -len(x[1])):
         if pmids:
             print(f"  {tag}: {len(pmids)}")
 
@@ -227,6 +269,11 @@ def main():
 
     print(f"\nEvidence level distribution:")
     for tag, pmids in sorted(evidence_pmids.items(), key=lambda x: -len(x[1])):
+        if pmids:
+            print(f"  {tag}: {len(pmids)}")
+
+    print(f"\nResistant-state distribution:")
+    for tag, pmids in sorted(resistant_state_pmids.items(), key=lambda x: -len(x[1])):
         if pmids:
             print(f"  {tag}: {len(pmids)}")
 

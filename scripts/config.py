@@ -134,6 +134,10 @@ MECHANISM_KEYWORDS = {
         "sonodynamic", "sonosensitizer", "ultrasound therapy cancer",
         "acoustic therapy cancer",
     ],
+    "cold-atmospheric-plasma": [
+        "cold atmospheric plasma", "cap therapy", "plasma jet cancer",
+        "non-thermal plasma cancer", "atmospheric pressure plasma",
+    ],
     "hifu": [
         "hifu", "high intensity focused ultrasound", "focused ultrasound ablation",
         "mrgfus", "mr-guided focused ultrasound",
@@ -166,6 +170,78 @@ MECHANISM_KEYWORDS = {
         "bispecific antibody", "bispecific t-cell", "bispecific engager",
         "blinatumomab", "teclistamab", "mosunetuzumab", "glofitamab",
     ],
+    "radioligand-therapy": [
+        "radioligand therapy", "radiopharmaceutical therapy", "theranostic",
+        "theranostics", "lutetium-177", "pluvicto", "lutathera",
+        "psma radioligand", "radionuclide therapy",
+    ],
+    "targeted-protein-degradation": [
+        "protac", "proteolysis targeting chimera", "molecular glue",
+        "targeted protein degradation", "degrader",
+    ],
+    "phagocytosis-checkpoint": [
+        "cd47", "sirpa", "sirpalpha", "phagocytosis checkpoint",
+        "don't eat me signal", "dont eat me signal",
+    ],
+}
+
+BIOLOGY_PROCESS_KEYWORDS = {
+    "autophagy": [
+        "autophagy", "autophagic", "lysosomal degradation", "autophagosome",
+    ],
+    "senescence-sasp": [
+        "senescence", "senescent", "sasp", "senolytic",
+        "therapy-induced senescence",
+    ],
+    "tme-stroma": [
+        "tumor microenvironment", "tumour microenvironment", "cancer-associated fibroblast",
+        "caf", "cafs", "extracellular matrix", "stromal barrier", "ecm remodeling",
+    ],
+    "cuproptosis": [
+        "cuproptosis", "copper ionophore", "elesclomol", "fdx1",
+    ],
+    "disulfidptosis": [
+        "disulfidptosis", "glucose starvation-induced disulfide stress",
+    ],
+}
+
+RESISTANT_STATE_RULES = {
+    "oxphos-dependent-persister": {
+        "all_of": [
+            ["drug-tolerant persister", "drug tolerant persister", "persister cell", "residual disease"],
+            ["oxidative phosphorylation", "oxphos", "mitochondrial respiration"],
+        ]
+    },
+    "nrf2-compensated-ferroptosis-resistant": {
+        "all_of": [
+            ["nrf2", "antioxidant response"],
+            ["ferroptosis resistance", "gpx4 compensation", "gsh homeostasis", "redox compensation"],
+        ]
+    },
+    "slc7a11-high-disulfidptosis-prone": {
+        "all_of": [
+            ["slc7a11", "xct", "cystine transporter"],
+            ["disulfidptosis", "glucose starvation", "disulfide stress"],
+        ]
+    },
+    "therapy-induced-senescence": {
+        "all_of": [
+            ["therapy-induced senescence", "treatment-induced senescence", "senescent tumor cell"],
+            ["drug resistance", "persister", "adaptive resistance", "residual disease"],
+        ]
+    },
+    "stromal-sheltered-immune-excluded": {
+        "all_of": [
+            ["cancer-associated fibroblast", "tumor microenvironment", "extracellular matrix", "stromal barrier"],
+            ["immune exclusion", "immune desert", "t cell exclusion", "stromal-mediated resistance", "stromal shelter"],
+        ]
+    },
+    "epigenetically-plastic": {
+        "all_of": [
+            ["epigenetic plasticity", "chromatin state", "kdm5", "ezh2", "hdac inhibitor", "dedifferentiation"],
+            ["persister", "drug tolerance", "adaptive resistance", "cell state transition"],
+        ]
+    },
 }
 
 CANCER_TYPE_KEYWORDS = {

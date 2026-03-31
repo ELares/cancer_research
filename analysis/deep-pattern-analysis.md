@@ -2,6 +2,8 @@
 
 Extracted from systematic mining of 10,413 articles across 19 mechanisms and 22 cancer types.
 
+This document remains useful, but it should now be read through a resistant-state lens. The repo's next iteration should treat OXPHOS-dependent persisters, NRF2-compensated escape, stromal sheltering, and therapy-induced senescence as the primary analytical layer, with modalities such as SDT, PDT, CAP, radioligands, or cell therapy mapped onto those states.
+
 ---
 
 ## Candidate Insight #1: The Redox-Iron-Immune Triangle
@@ -34,7 +36,7 @@ A therapy designed to hit all three nodes simultaneously — disrupt redox balan
 - The Pexa-Vec precedent: preclinical ICD doesn't guarantee clinical immune synergy
 
 ### Verdict: **Potentially breakthrough-relevant**
-This is the strongest pattern in the corpus because it is mechanistically specific, supported by convergent evidence from multiple independent research groups, and generates testable predictions.
+This is the strongest pattern in the corpus because it is mechanistically specific, supported by convergent evidence from multiple independent research groups, and generates testable predictions. The main new caveat is that in vivo lipid remodeling and backup defense programs can break this chain before it becomes clinically meaningful.
 
 ---
 
@@ -142,4 +144,4 @@ The biology is solid and the literature is large, but the clinical measurement c
 | **3** | **ΔΨm as physical therapy biomarker** | Medium | Strong (392 articles) | Medium — patient selection | **Worth deeper analysis** |
 | **4** | **mTOR as ferroptosis sensitivity biomarker** | Low | Weak (correlational) | Low — too pleiotropic | **Interesting but weak** |
 
-The #1 and #2 insights are connected: if OXPHOS-resistant cells are ferroptosis-vulnerable, and SDT uniquely triggers ferroptosis + ICD, then **SDT may be the ideal second-line therapy after resistance develops via metabolic switch**. This would give SDT a specific, evidence-grounded clinical indication that no other physical modality can claim.
+The #1 and #2 insights are connected: if OXPHOS-resistant cells are ferroptosis-vulnerable, and SDT or CAP can trigger ferroptosis + ICD, then **physical ROS modalities may be rational second-line tools after resistance develops via metabolic switch**. This is now best framed as a resistant-state-matched strategy, not as a modality-first claim.

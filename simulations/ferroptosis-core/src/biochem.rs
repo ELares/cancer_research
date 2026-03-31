@@ -15,6 +15,7 @@ pub struct CellState {
     pub gsh: f64,
     pub gpx4: f64,
     pub fsp1: f64,
+    pub mufa_protection: f64,
     pub lp: f64,
     pub dead: bool,
     pub death_step: Option<u32>,
@@ -38,6 +39,7 @@ impl CellState {
             gsh: cell.gsh,
             gpx4,
             fsp1: cell.fsp1,
+            mufa_protection: 0.0,
             lp: 0.0,
             dead: false,
             death_step: None,
@@ -56,12 +58,21 @@ impl CellState {
             gsh: cell.gsh,
             gpx4,
             fsp1: cell.fsp1,
+            mufa_protection: 0.0,
             lp: 0.0,
             dead: false,
             death_step: None,
             exo_ros_peak,
         }
     }
+}
+
+#[inline]
+fn update_mufa_protection(current: f64, nrf2: f64, params: &Params) -> f64 {
+    (
+        current + params.scd_mufa_rate * nrf2 * (1.0 - current / (params.scd_mufa_max + 1e-9))
+    )
+        .clamp(0.0, params.scd_mufa_max.max(0.0))
 }
 
 /// Execute a single timestep of the ferroptosis biochemistry.
@@ -104,11 +115,14 @@ pub fn sim_cell_step(
 
     // === LIPID PEROXIDATION ===
     let unscav = (total_ros - scavenged).max(0.0);
-    let lp_direct = unscav * cell.lipid_unsat * params.lp_rate;
+    state.mufa_protection = update_mufa_protection(state.mufa_protection, cell.nrf2, params);
+
+    let effective_unsat = (cell.lipid_unsat * (1.0 - state.mufa_protection)).max(0.05);
+    let lp_direct = unscav * effective_unsat * params.lp_rate;
     // AUTOCATALYTIC PROPAGATION — GSH-gated bistable switch
     let antioxidant_quench = state.gpx4 * (state.gsh / (state.gsh + 0.5)) + state.fsp1;
     let propagation_rate = params.lp_propagation / (1.0 + antioxidant_quench * 5.0);
-    let lp_propagation = state.lp * cell.lipid_unsat * propagation_rate;
+    let lp_propagation = state.lp * effective_unsat * propagation_rate;
     let lp_generation = lp_direct + lp_propagation;
 
     // === REPAIR ===
@@ -144,7 +158,9 @@ pub fn sim_cell_step(
 /// Full 180-step simulation for a single cell.
 /// Returns (is_dead, final_lp, final_gsh, final_gpx4).
 ///
-/// This is bitwise-identical to the original v3 `sim_cell` function.
+/// This retains the original structure of the v3 engine but now optionally
+/// includes a generic in vivo-like MUFA protection term when the corresponding
+/// params are non-zero.
 pub fn sim_cell(
     cell: &Cell,
     tx: Treatment,
@@ -154,6 +170,7 @@ pub fn sim_cell(
     let mut gsh = cell.gsh;
     let mut gpx4 = cell.gpx4;
     let fsp1 = cell.fsp1;
+    let mut mufa_protection = 0.0;
     let mut lp: f64 = 0.0;
 
     // Treatment: exogenous ROS
@@ -190,10 +207,12 @@ pub fn sim_cell(
 
         // === LIPID PEROXIDATION ===
         let unscav = (total_ros - scavenged).max(0.0);
-        let lp_direct = unscav * cell.lipid_unsat * params.lp_rate;
+        mufa_protection = update_mufa_protection(mufa_protection, cell.nrf2, params);
+        let effective_unsat = (cell.lipid_unsat * (1.0 - mufa_protection)).max(0.05);
+        let lp_direct = unscav * effective_unsat * params.lp_rate;
         let antioxidant_quench = gpx4 * (gsh / (gsh + 0.5)) + fsp1;
         let propagation_rate = params.lp_propagation / (1.0 + antioxidant_quench * 5.0);
-        let lp_propagation = lp * cell.lipid_unsat * propagation_rate;
+        let lp_propagation = lp * effective_unsat * propagation_rate;
         let lp_generation = lp_direct + lp_propagation;
 
         // === REPAIR ===

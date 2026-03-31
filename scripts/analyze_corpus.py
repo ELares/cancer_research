@@ -19,7 +19,13 @@ import re
 from collections import Counter, defaultdict
 from pathlib import Path
 
-from config import MECHANISM_KEYWORDS, CANCER_TYPE_KEYWORDS, EVIDENCE_LEVEL_KEYWORDS, PROJECT_ROOT
+from config import (
+    MECHANISM_KEYWORDS,
+    CANCER_TYPE_KEYWORDS,
+    EVIDENCE_LEVEL_KEYWORDS,
+    PROJECT_ROOT,
+    RESISTANT_STATE_RULES,
+)
 
 INDEX_FILE = PROJECT_ROOT / "corpus" / "INDEX.jsonl"
 PMID_DIR = PROJECT_ROOT / "corpus" / "by-pmid"
@@ -195,6 +201,11 @@ def build_convergence_map(entries: list[dict]) -> str:
 
 def build_gap_analysis(entries: list[dict]) -> str:
     lines = ["# Gap Analysis: Underexplored Research Areas\n"]
+    lines.append(
+        "This file is useful for hypothesis generation, but it is taxonomy-dependent. "
+        "All zero-count and low-evidence findings here should be read as corpus-level "
+        "non-detection rather than definitive absence unless they are externally verified.\n"
+    )
 
     mechanisms = sorted(MECHANISM_KEYWORDS.keys())
     cancer_types = sorted(CANCER_TYPE_KEYWORDS.keys())
@@ -289,6 +300,11 @@ def build_gap_analysis(entries: list[dict]) -> str:
 def build_evidence_tiers(entries: list[dict]) -> str:
     lines = ["# Evidence Tiers by Mechanism\n"]
     lines.append("Highest level of clinical evidence for each therapeutic mechanism.\n")
+    coverage = sum(1 for e in entries if e.get("evidence_level"))
+    lines.append(
+        f"Evidence tags are currently populated for {coverage}/{len(entries)} full-text records "
+        f"({coverage/len(entries):.1%}), so absence claims remain provisional.\n"
+    )
 
     mechanisms = sorted(MECHANISM_KEYWORDS.keys())
     evidence_order = ["phase3-clinical", "phase2-clinical", "phase1-clinical",
@@ -333,6 +349,88 @@ def build_evidence_tiers(entries: list[dict]) -> str:
                 lines.append(f"- **PMID {e['pmid']}** ({e.get('year')}, {cites} cites) — {cancers}")
                 lines.append(f"  *{e.get('title', '')[:150]}*")
 
+    return "\n".join(lines)
+
+
+def build_resistant_state_map(entries: list[dict]) -> str:
+    lines = ["# Resistant-State Map\n"]
+    lines.append(
+        "First-pass scaffold for analyzing the corpus by resistant state rather than by modality alone.\n"
+    )
+    lines.append(
+        "These state assignments are keyword-derived heuristics. They are intended to support "
+        "prioritization and literature review, not to assert that a paper experimentally validated a state transition.\n"
+    )
+
+    states = sorted(RESISTANT_STATE_RULES.keys())
+    mechanisms = sorted(MECHANISM_KEYWORDS.keys())
+    tagged_count = sum(1 for e in entries if e.get("resistant_states"))
+    lines.append(
+        f"Current resistant-state coverage in the index: {tagged_count}/{len(entries)} records "
+        f"({tagged_count/len(entries):.1%}).\n"
+    )
+    if tagged_count == 0:
+        lines.append(
+            "WARNING: no resistant-state tags are present in the current index. "
+            "Re-run `tag_articles.py` and `build_index.py` before interpreting the table below.\n"
+        )
+
+    lines.append("\n## Resistant States Tracked\n")
+    for state in states:
+        lines.append(f"- **{state}**")
+
+    lines.append("\n## State × Mechanism Counts\n")
+    lines.append("| Resistant State | Top linked mechanisms | Tagged articles |")
+    lines.append("|---|---|---|")
+
+    for state in states:
+        state_articles = [e for e in entries if state in e.get("resistant_states", [])]
+        mech_counts = Counter()
+        for entry in state_articles:
+            for mech in entry.get("mechanisms", []):
+                mech_counts[mech] += 1
+        top_mechs = ", ".join(f"{m} ({c})" for m, c in mech_counts.most_common(5)) or "none"
+        lines.append(f"| **{state}** | {top_mechs} | {len(state_articles)} |")
+
+    lines.append("\n## Interpretation\n")
+    lines.append(
+        "- The repo should use these states as the primary decision layer when comparing interventions."
+    )
+    lines.append(
+        "- Physical ROS modalities should be framed as best-matched to OXPHOS-dependent, ferroptosis-prone persisters rather than as a universal answer to resistance."
+    )
+    lines.append(
+        "- Senescence, stromal sheltering, and NRF2/SLC7A11 compensation should be treated as parallel escape states, not edge cases."
+    )
+    return "\n".join(lines)
+
+
+def build_evidence_coverage_audit(entries: list[dict]) -> str:
+    lines = ["# Evidence Coverage Audit\n"]
+    total = len(entries)
+    tagged = [e for e in entries if e.get("evidence_level")]
+    untagged = total - len(tagged)
+    lines.append(
+        f"Evidence-level tags are present for {len(tagged)}/{total} records ({len(tagged)/total:.1%}). "
+        f"{untagged} records remain unclassified.\n"
+    )
+
+    lines.append("## Mechanisms Most Exposed To Overstated Absence Claims\n")
+    lines.append("| Mechanism | Total | Tagged for evidence | Coverage |")
+    lines.append("|---|---|---|---|")
+    for mechanism in sorted(MECHANISM_KEYWORDS.keys()):
+        mech_articles = [e for e in entries if mechanism in e.get('mechanisms', [])]
+        if not mech_articles:
+            continue
+        mech_tagged = sum(1 for e in mech_articles if e.get("evidence_level"))
+        lines.append(
+            f"| **{mechanism}** | {len(mech_articles)} | {mech_tagged} | {mech_tagged/len(mech_articles):.1%} |"
+        )
+
+    lines.append("\n## Recommended Interpretation Guardrails\n")
+    lines.append("- Treat `0 Phase 2+` as `not detected in current keyword-derived evidence tags` unless manually verified.")
+    lines.append("- Re-check any high-priority mechanism with external PubMed or trial-registry verification before using it as a headline gap.")
+    lines.append("- Prefer coverage-aware language in the manuscript and analysis files whenever evidence tagging is below 50% for a mechanism.")
     return "\n".join(lines)
 
 
@@ -449,6 +547,9 @@ def main():
     print("Loading index...")
     entries = load_index()
     print(f"  Loaded {len(entries)} articles")
+    resistant_state_coverage = sum(1 for e in entries if e.get("resistant_states"))
+    if resistant_state_coverage == 0:
+        print("  Warning: resistant_states is empty in INDEX.jsonl; regenerate tags before relying on resistant-state outputs")
 
     ANALYSIS_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -457,6 +558,8 @@ def main():
         ("convergence-map.md", "Convergence Map", build_convergence_map),
         ("gap-analysis.md", "Gap Analysis", build_gap_analysis),
         ("evidence-tiers.md", "Evidence Tiers", build_evidence_tiers),
+        ("resistant-state-map.md", "Resistant-State Map", build_resistant_state_map),
+        ("evidence-coverage-audit.md", "Evidence Coverage Audit", build_evidence_coverage_audit),
         ("key-findings.md", "Key Findings (top 100)", build_key_findings),
         ("timeline.md", "Timeline", build_timeline),
     ]

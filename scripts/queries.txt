@@ -6,6 +6,7 @@
 "Tumor Treating Fields"[All Fields] AND cancer
 "alternating electric fields"[All Fields] AND neoplasms
 "sonodynamic therapy"[All Fields] AND cancer
+"cold atmospheric plasma"[All Fields] AND cancer AND 2020:2026[dp]
 "high intensity focused ultrasound"[All Fields] AND cancer
 "pulsed electromagnetic field"[All Fields] AND neoplasms
 
@@ -17,6 +18,8 @@
 "irreversible electroporation"[All Fields] AND cancer
 
 # Novel targeted mechanisms
+# Newer expansion queries intentionally use narrower date windows so the first
+# pass does not overwhelm the historically broader 19-mechanism corpus.
 "CRISPR"[All Fields] AND cancer AND therapy AND 2020:2026[dp]
 "CAR-T"[All Fields] AND cancer AND 2020:2026[dp]
 "antibody-drug conjugate"[All Fields] AND cancer AND 2023:2026[dp]
@@ -27,6 +30,16 @@
 "cancer metabolism"[All Fields] AND therapy AND warburg AND 2020:2026[dp]
 "epigenetic therapy"[All Fields] AND cancer AND 2022:2026[dp]
 "microbiome"[All Fields] AND cancer AND immunotherapy AND 2022:2026[dp]
+"radioligand therapy"[All Fields] AND cancer AND 2020:2026[dp]
+"theranostic"[All Fields] AND cancer AND 2020:2026[dp]
+"targeted protein degradation"[All Fields] AND cancer AND 2020:2026[dp]
+"PROTAC"[All Fields] AND cancer AND 2020:2026[dp]
+"CD47"[All Fields] AND cancer AND therapy AND 2020:2026[dp]
+"autophagy inhibition"[All Fields] AND cancer AND therapy AND 2020:2026[dp]
+"senolytic"[All Fields] AND cancer AND 2020:2026[dp]
+"tumor microenvironment"[All Fields] AND cancer AND therapy AND 2020:2026[dp]
+"cuproptosis"[All Fields] AND cancer AND 2022:2026[dp]
+"disulfidptosis"[All Fields] AND cancer AND 2023:2026[dp]
 
 # Cross-mechanism / convergent approaches
 "combination immunotherapy"[All Fields] AND cancer AND 2023:2026[dp]
