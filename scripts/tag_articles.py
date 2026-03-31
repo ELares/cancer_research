@@ -19,6 +19,7 @@ from article_io import load_article, save_article
 from config import (
     CANCER_TYPE_KEYWORDS, EVIDENCE_LEVEL_KEYWORDS, MECHANISM_KEYWORDS,
     PMID_DIR, TAGS_DIR,
+    RESISTANT_STATE_KEYWORDS,
 )
 
 GENERIC_CANCER_TERMS = (
@@ -152,9 +153,10 @@ def main():
     mechanism_pmids: dict[str, list[str]] = {k: [] for k in MECHANISM_KEYWORDS}
     cancer_pmids: dict[str, list[str]] = {k: [] for k in CANCER_TYPE_KEYWORDS}
     evidence_pmids: dict[str, list[str]] = {k: [] for k in EVIDENCE_LEVEL_KEYWORDS}
+    resistant_state_pmids: dict[str, list[str]] = {k: [] for k in RESISTANT_STATE_KEYWORDS}
     journal_pmids: dict[str, list[str]] = {}
 
-    stats = {"mechanisms": 0, "cancer_types": 0, "evidence": 0}
+    stats = {"mechanisms": 0, "cancer_types": 0, "evidence": 0, "resistant_states": 0}
 
     for filepath in tqdm(files, desc="  Tagging"):
         fm, body = load_article(filepath)
@@ -168,11 +170,13 @@ def main():
         mechanisms = match_mechanisms(text)
         cancer_types = match_keywords(text, CANCER_TYPE_KEYWORDS)
         evidence = match_evidence_level(fm, text)
+        resistant_states = match_keywords(text, RESISTANT_STATE_KEYWORDS)
 
         # Update frontmatter
         fm["mechanisms"] = mechanisms
         fm["cancer_types"] = cancer_types
         fm["evidence_level"] = evidence
+        fm["resistant_states"] = resistant_states
 
         if not args.dry_run:
             save_article(filepath, fm, body)
@@ -184,6 +188,8 @@ def main():
             cancer_pmids[c].append(pmid)
         if evidence:
             evidence_pmids[evidence].append(pmid)
+        for r in resistant_states:
+            resistant_state_pmids[r].append(pmid)
 
         # Journal tag
         journal = fm.get("journal", "")
@@ -200,6 +206,8 @@ def main():
             stats["cancer_types"] += 1
         if evidence:
             stats["evidence"] += 1
+        if resistant_states:
+            stats["resistant_states"] += 1
 
     # Write tag index files
     if not args.dry_run:
@@ -207,6 +215,7 @@ def main():
         write_tag_files("by-mechanism", mechanism_pmids)
         write_tag_files("by-cancer-type", cancer_pmids)
         write_tag_files("by-evidence-level", evidence_pmids)
+        write_tag_files("by-resistant-state", resistant_state_pmids)
         write_tag_files("by-journal", journal_pmids)
 
     # Print summary
@@ -214,6 +223,7 @@ def main():
     print(f"  Articles with mechanism tags: {stats['mechanisms']}/{len(files)}")
     print(f"  Articles with cancer type tags: {stats['cancer_types']}/{len(files)}")
     print(f"  Articles with evidence level: {stats['evidence']}/{len(files)}")
+    print(f"  Articles with resistant-state tags: {stats['resistant_states']}/{len(files)}")
 
     print(f"\nMechanism distribution:")
     for tag, pmids in sorted(mechanism_pmids.items(), key=lambda x: -len(x[1])):
@@ -227,6 +237,11 @@ def main():
 
     print(f"\nEvidence level distribution:")
     for tag, pmids in sorted(evidence_pmids.items(), key=lambda x: -len(x[1])):
+        if pmids:
+            print(f"  {tag}: {len(pmids)}")
+
+    print(f"\nResistant-state distribution:")
+    for tag, pmids in sorted(resistant_state_pmids.items(), key=lambda x: -len(x[1])):
         if pmids:
             print(f"  {tag}: {len(pmids)}")
 

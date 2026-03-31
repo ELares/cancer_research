@@ -108,6 +108,7 @@ impl TumorGrid {
                     gsh: cell.gsh,
                     gpx4: cell.gpx4,
                     fsp1: cell.fsp1,
+                    mufa_protection: 0.0,
                     lp: 0.0,
                     dead: false,
                     death_step: None,

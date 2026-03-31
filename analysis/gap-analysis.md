@@ -1,8 +1,10 @@
 # Gap Analysis: Underexplored Research Areas
 
+This gap analysis is taxonomy-dependent. Zero-count pairs here are best treated as leads for manual verification, not as proof that no literature exists. The current search and tagging stack still overweights physical modalities relative to several clinically active areas such as radioligands, autophagy, senescence, stromal biology, and targeted protein degradation.
+
 ## 1. Complete Gaps (0 articles)
 
-Mechanism × cancer type pairs with zero research articles in our corpus.
+Mechanism × cancer type pairs with zero research articles in our corpus. These reflect current corpus coverage, not necessarily true absence in PubMed or the clinic.
 
 - **microbiome × glioblastoma** — mechanism has 80 articles total, cancer has 528 total, but 0 overlap
 - **ttfields × lymphoma** — mechanism has 311 articles total, cancer has 216 total, but 0 overlap

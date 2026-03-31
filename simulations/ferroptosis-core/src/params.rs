@@ -20,6 +20,8 @@ pub struct Params {
     // === Repair ===
     pub gpx4_rate: f64,
     pub fsp1_rate: f64,
+    pub scd_mufa_rate: f64,
+    pub scd_mufa_max: f64,
 
     // === GPX4 Dynamic Regulation ===
     pub gpx4_degradation_by_ros: f64,
@@ -53,6 +55,8 @@ impl Default for Params {
             lp_propagation: 0.10,
             gpx4_rate: 0.30,
             fsp1_rate: 0.08,
+            scd_mufa_rate: 0.0,
+            scd_mufa_max: 0.0,
             gpx4_degradation_by_ros: 0.002,
             gpx4_nrf2_upregulation: 0.008,
             sdt_ros: 5.0,

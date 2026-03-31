@@ -2,6 +2,8 @@
 
 Highest level of clinical evidence for each therapeutic mechanism.
 
+Evidence tags are incomplete and should be interpreted as a non-detection layer rather than as a definitive registry of every trial result. Several mechanism families still have substantial untagged full-text coverage, so claims of "no Phase II/III evidence" require manual or external verification before being promoted to article-level conclusions.
+
 | Mechanism | Highest Evidence | Phase 3 | Phase 2 | Phase 1 | In Vivo | In Vitro | Theory | Total |
 |-----------|-----------------|---------|---------|---------|---------|----------|--------|-------|
 | **antibody-drug-conjugate** | Phase III RCT | 7 | 8 | 16 | 78 | 14 | 1 | 284 |

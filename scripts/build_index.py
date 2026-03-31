@@ -20,7 +20,7 @@ from config import INDEX_FILE, PMID_DIR
 INDEX_FIELDS = [
     "pmid", "doi", "pmcid", "title", "journal", "year", "month",
     "is_oa", "oa_status", "cited_by_count",
-    "mechanisms", "cancer_types", "evidence_level",
+    "mechanisms", "cancer_types", "evidence_level", "resistant_states",
     "icite_rcr", "icite_percentile", "icite_is_clinical",
     "date_added",
 ]

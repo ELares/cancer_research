@@ -397,6 +397,7 @@ def save_article(article: dict, full_text: str | None) -> Path:
         "mechanisms": [],
         "cancer_types": [],
         "evidence_level": "",
+        "resistant_states": [],
         "genes": [],
         "drugs": [],
         "date_added": str(date.today()),

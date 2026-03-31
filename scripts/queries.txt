@@ -6,6 +6,7 @@
 "Tumor Treating Fields"[All Fields] AND cancer
 "alternating electric fields"[All Fields] AND neoplasms
 "sonodynamic therapy"[All Fields] AND cancer
+"cold atmospheric plasma"[All Fields] AND cancer
 "high intensity focused ultrasound"[All Fields] AND cancer
 "pulsed electromagnetic field"[All Fields] AND neoplasms
 
@@ -27,6 +28,16 @@
 "cancer metabolism"[All Fields] AND therapy AND warburg AND 2020:2026[dp]
 "epigenetic therapy"[All Fields] AND cancer AND 2022:2026[dp]
 "microbiome"[All Fields] AND cancer AND immunotherapy AND 2022:2026[dp]
+"radioligand therapy"[All Fields] AND cancer
+"theranostic"[All Fields] AND cancer
+"targeted protein degradation"[All Fields] AND cancer
+"PROTAC"[All Fields] AND cancer
+"CD47"[All Fields] AND cancer
+"autophagy"[All Fields] AND cancer AND therapy
+"senescence"[All Fields] AND cancer AND therapy
+"tumor microenvironment"[All Fields] AND cancer AND therapy
+"cuproptosis"[All Fields] AND cancer
+"disulfidptosis"[All Fields] AND cancer
 
 # Cross-mechanism / convergent approaches
 "combination immunotherapy"[All Fields] AND cancer AND 2023:2026[dp]
