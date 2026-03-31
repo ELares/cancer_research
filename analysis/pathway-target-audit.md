@@ -54,6 +54,12 @@ Examples prefer primary-study-like records when available, then fall back to the
 - **PMID 35286311** (2022) — metabolic-targeting, synthetic-lethality — `preclinical-invitro` — *A network-based approach to integrate nutrient microenvironment in the prediction of synthetic lethality in cancer metabolism.*
 - **PMID 40490790** (2025) — immunotherapy, nanoparticle — `preclinical-invitro` — *Sonodynamic therapy-boosted biomimetic nanoplatform targets ferroptosis and CD47 as vulnerabilities for cancer immunotherapy.*
 
+## Notable Overlap
+
+The rows below are not additive. They capture highly overlapping views of the same article set and should be interpreted as alternate lenses rather than independent signals.
+
+- **cuproptosis-core** and **fdx1-cuproptosis-axis** overlap in 38/38 records (100.0% Jaccard overlap).
+
 ## Interpretation
 
 - `scd-mufa-axis` and `disulfidptosis-core` already have enough corpus presence to affect how the repo frames in vivo ferroptosis escape and residual-state vulnerabilities.

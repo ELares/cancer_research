@@ -555,9 +555,11 @@ def build_pathway_target_audit(entries: list[dict]) -> str:
     lines.append("| Pathway target | Total | Primary-study-like | Review-like | Protocol-like | Top mechanisms | Top cancers |")
     lines.append("|---|---|---|---|---|---|---|")
 
+    target_sets = {}
     summary_rows = []
     for target in targets:
         target_articles = [e for e in entries if target in e.get("pathway_targets", [])]
+        target_sets[target] = {e.get("pmid", "") for e in target_articles}
         reason_counts = Counter(classify_evidence_reason(e) for e in target_articles)
         mech_counts = Counter()
         cancer_counts = Counter()
@@ -574,6 +576,23 @@ def build_pathway_target_audit(entries: list[dict]) -> str:
             f"{reason_counts['protocol_like']} | {top_mechs} | {top_cancers} |"
         )
         summary_rows.append((target, len(target_articles), primary_like, reason_counts, mech_counts, cancer_counts, target_articles))
+
+    overlap_pairs = []
+    for i, left in enumerate(targets):
+        left_set = target_sets[left]
+        if not left_set:
+            continue
+        for right in targets[i + 1:]:
+            right_set = target_sets[right]
+            if not right_set:
+                continue
+            overlap = left_set & right_set
+            if not overlap:
+                continue
+            union = left_set | right_set
+            jaccard = len(overlap) / len(union)
+            if jaccard >= 0.8:
+                overlap_pairs.append((left, right, len(overlap), len(union), jaccard))
 
     lines.append("\n## Example Articles\n")
     lines.append(
@@ -601,6 +620,16 @@ def build_pathway_target_audit(entries: list[dict]) -> str:
             evidence = e.get("evidence_level") or classify_evidence_reason(e)
             lines.append(
                 f"- **PMID {e['pmid']}** ({e.get('year')}) — {mechs} — `{evidence}` — *{e.get('title', '')[:150]}*"
+            )
+
+    if overlap_pairs:
+        lines.append("\n## Notable Overlap\n")
+        lines.append(
+            "The rows below are not additive. They capture highly overlapping views of the same article set and should be interpreted as alternate lenses rather than independent signals.\n"
+        )
+        for left, right, overlap_count, union_count, jaccard in sorted(overlap_pairs, key=lambda row: (-row[4], -row[2], row[0], row[1])):
+            lines.append(
+                f"- **{left}** and **{right}** overlap in {overlap_count}/{union_count} records ({jaccard:.1%} Jaccard overlap)."
             )
 
     lines.append("\n## Interpretation\n")
