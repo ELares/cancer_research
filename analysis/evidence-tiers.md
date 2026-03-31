@@ -2,33 +2,33 @@
 
 Highest level of clinical evidence for each therapeutic mechanism.
 
-Evidence tags are currently populated for 1826/4830 full-text records (37.8%). Reviews/meta-analyses (1921) and protocols (29) are intentionally left unclassified; among primary-study-like records, coverage is 1826/2880 (63.4%). Absence claims remain provisional.
+Evidence tags are currently populated for 2020/4830 full-text records (41.8%). Reviews/meta-analyses (1921) and protocols (29) are intentionally left unclassified; among primary-study-like records, coverage is 2020/2880 (70.1%). `clinical-other` counts patient-level evidence without phase labeling and should not be read as equivalent to phase-labeled trial maturity. Absence claims remain provisional.
 
-| Mechanism | Highest Evidence | Phase 3 | Phase 2 | Phase 1 | In Vivo | In Vitro | Theory | Total |
-|-----------|-----------------|---------|---------|---------|---------|----------|--------|-------|
-| **antibody-drug-conjugate** | Phase III RCT | 7 | 7 | 20 | 78 | 14 | 1 | 284 |
-| **bioelectric** | Preclinical (in vivo) | 0 | 0 | 0 | 59 | 83 | 2 | 182 |
-| **bispecific-antibody** | Phase III RCT | 6 | 15 | 28 | 76 | 23 | 2 | 247 |
-| **car-t** | Phase III RCT | 2 | 1 | 10 | 92 | 27 | 1 | 474 |
-| **cold-atmospheric-plasma** | Preclinical (in vivo) | 0 | 0 | 0 | 1 | 0 | 0 | 3 |
-| **crispr** | Phase I | 0 | 0 | 2 | 108 | 34 | 0 | 331 |
-| **electrochemical-therapy** | Phase III RCT | 3 | 2 | 0 | 41 | 15 | 2 | 185 |
-| **electrolysis** | Preclinical (in vivo) | 0 | 0 | 0 | 4 | 1 | 0 | 11 |
-| **epigenetic** | Phase III RCT | 1 | 10 | 3 | 38 | 29 | 1 | 183 |
-| **frequency-therapy** | Preclinical (in vivo) | 0 | 0 | 0 | 6 | 7 | 1 | 71 |
-| **hifu** | Phase II | 0 | 2 | 0 | 14 | 6 | 0 | 81 |
-| **immunotherapy** | Phase III RCT | 22 | 43 | 50 | 423 | 133 | 11 | 2297 |
-| **mRNA-vaccine** | Phase III RCT | 2 | 2 | 8 | 45 | 16 | 11 | 317 |
-| **metabolic-targeting** | Preclinical (in vivo) | 0 | 0 | 0 | 43 | 31 | 0 | 274 |
-| **microbiome** | Phase II | 0 | 2 | 0 | 7 | 1 | 0 | 109 |
-| **nanoparticle** | Phase II | 0 | 1 | 4 | 144 | 75 | 4 | 515 |
-| **oncolytic-virus** | Phase III RCT | 1 | 4 | 13 | 110 | 47 | 2 | 378 |
-| **phagocytosis-checkpoint** | Preclinical (in vivo) | 0 | 0 | 0 | 11 | 7 | 0 | 28 |
-| **radioligand-therapy** | Preclinical (in vivo) | 0 | 0 | 0 | 16 | 4 | 0 | 52 |
-| **sonodynamic** | Phase I | 0 | 0 | 1 | 80 | 32 | 0 | 187 |
-| **synthetic-lethality** | Phase III RCT | 2 | 5 | 1 | 100 | 63 | 2 | 367 |
-| **targeted-protein-degradation** | Preclinical (in vivo) | 0 | 0 | 0 | 5 | 2 | 0 | 19 |
-| **ttfields** | Phase III RCT | 22 | 3 | 2 | 33 | 40 | 15 | 262 |
+| Mechanism | Highest Evidence | Phase 3 | Phase 2 | Phase 1 | Clinical Other | In Vivo | In Vitro | Theory | Total |
+|-----------|-----------------|---------|---------|---------|----------------|---------|----------|--------|-------|
+| **antibody-drug-conjugate** | Phase III RCT | 7 | 7 | 19 | 15 | 77 | 14 | 1 | 284 |
+| **bioelectric** | Preclinical (in vivo) | 0 | 0 | 0 | 0 | 59 | 83 | 2 | 182 |
+| **bispecific-antibody** | Phase III RCT | 6 | 15 | 28 | 18 | 76 | 23 | 2 | 247 |
+| **car-t** | Phase III RCT | 2 | 1 | 10 | 3 | 92 | 27 | 1 | 474 |
+| **cold-atmospheric-plasma** | Preclinical (in vivo) | 0 | 0 | 0 | 0 | 1 | 0 | 0 | 3 |
+| **crispr** | Phase I | 0 | 0 | 2 | 0 | 108 | 34 | 0 | 331 |
+| **electrochemical-therapy** | Phase III RCT | 3 | 2 | 0 | 26 | 39 | 15 | 1 | 185 |
+| **electrolysis** | Clinical (non-phase) | 0 | 0 | 0 | 1 | 3 | 1 | 0 | 11 |
+| **epigenetic** | Phase III RCT | 1 | 10 | 3 | 3 | 38 | 29 | 1 | 183 |
+| **frequency-therapy** | Clinical (non-phase) | 0 | 0 | 0 | 7 | 5 | 7 | 1 | 71 |
+| **hifu** | Phase II | 0 | 2 | 0 | 7 | 14 | 6 | 0 | 81 |
+| **immunotherapy** | Phase III RCT | 21 | 43 | 50 | 84 | 421 | 133 | 11 | 2297 |
+| **mRNA-vaccine** | Phase III RCT | 2 | 2 | 8 | 24 | 44 | 15 | 11 | 317 |
+| **metabolic-targeting** | Clinical (non-phase) | 0 | 0 | 0 | 2 | 43 | 31 | 0 | 274 |
+| **microbiome** | Phase II | 0 | 2 | 0 | 2 | 7 | 1 | 0 | 109 |
+| **nanoparticle** | Phase II | 0 | 1 | 4 | 0 | 144 | 75 | 4 | 515 |
+| **oncolytic-virus** | Phase III RCT | 1 | 4 | 13 | 5 | 110 | 47 | 2 | 378 |
+| **phagocytosis-checkpoint** | Preclinical (in vivo) | 0 | 0 | 0 | 0 | 11 | 7 | 0 | 28 |
+| **radioligand-therapy** | Clinical (non-phase) | 0 | 0 | 0 | 1 | 16 | 4 | 0 | 52 |
+| **sonodynamic** | Phase I | 0 | 0 | 1 | 0 | 80 | 32 | 0 | 187 |
+| **synthetic-lethality** | Phase III RCT | 2 | 5 | 1 | 6 | 99 | 63 | 2 | 367 |
+| **targeted-protein-degradation** | Preclinical (in vivo) | 0 | 0 | 0 | 0 | 5 | 2 | 0 | 19 |
+| **ttfields** | Phase III RCT | 20 | 3 | 2 | 27 | 32 | 38 | 13 | 262 |
 
 ## Mechanisms with Phase III Clinical Evidence
 
@@ -80,7 +80,7 @@ Evidence tags are currently populated for 1826/4830 full-text records (37.8%). R
 - **PMID 41652014** (2026, 0 cites) — ovarian
   *Pembrolizumab and epigenetic modification with azacitidine reshapes the tumor microenvironment of platinum-resistant epithelial ovarian cancer: a phas*
 
-### immunotherapy (22 Phase III articles)
+### immunotherapy (21 Phase III articles)
 
 - **PMID 27298410** (2016, 545 cites) — melanoma
   *Talimogene Laherparepvec in Combination With Ipilimumab in Previously Untreated, Unresectable Stage IIIB-IV Melanoma.*
@@ -112,7 +112,7 @@ Evidence tags are currently populated for 1826/4830 full-text records (37.8%). R
 - **PMID 36600534** (2023, 182 cites) — various
   *Refining adjuvant treatment in endometrial cancer based on molecular features: the RAINBO clinical trial program.*
 
-### ttfields (22 Phase III articles)
+### ttfields (20 Phase III articles)
 
 - **PMID 29260225** (2017, 2494 cites) — glioblastoma
   *Effect of Tumor-Treating Fields Plus Maintenance Temozolomide vs Maintenance Temozolomide Alone on Survival in Patients With Glioblastoma: A Randomize*

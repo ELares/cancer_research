@@ -33,6 +33,7 @@ EVIDENCE_PUBTYPE_MARKERS = {
     "phase3-clinical": ("clinical trial, phase iii", "clinical trial, phase 3", "clinical trial, phase iv", "clinical trial, phase 4"),
     "phase2-clinical": ("clinical trial, phase ii", "clinical trial, phase 2"),
     "phase1-clinical": ("clinical trial, phase i", "clinical trial, phase 1", "clinical trial, phase i/ii"),
+    "clinical-other": ("clinical trial", "controlled clinical trial", "observational study", "case reports"),
 }
 
 
@@ -112,7 +113,7 @@ def match_evidence_level(fm: dict, text: str) -> str:
     """Match text against evidence level keywords, return best match.
 
     Uses word-boundary matching for short keywords to avoid false positives.
-    Priority order: phase3 > phase2 > phase1 > invivo > invitro > theoretical.
+    Priority order: phase3 > phase2 > phase1 > clinical-other > invivo > invitro > theoretical.
     """
     if is_review_like(fm) or is_protocol_like(fm):
         return ""
@@ -122,7 +123,10 @@ def match_evidence_level(fm: dict, text: str) -> str:
         if any(marker in pub_types for marker in EVIDENCE_PUBTYPE_MARKERS[level]):
             return level
 
-    for level in ["phase3-clinical", "phase2-clinical", "phase1-clinical",
+    if any(marker in pub_types for marker in EVIDENCE_PUBTYPE_MARKERS["clinical-other"]):
+        return "clinical-other"
+
+    for level in ["phase3-clinical", "phase2-clinical", "phase1-clinical", "clinical-other",
                    "preclinical-invivo", "preclinical-invitro", "theoretical"]:
         for kw in EVIDENCE_LEVEL_KEYWORDS[level]:
             kw_lower = kw.lower()

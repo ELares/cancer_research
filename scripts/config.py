@@ -305,6 +305,13 @@ EVIDENCE_LEVEL_KEYWORDS = {
     ],
     "phase2-clinical": ["phase 2", "phase ii", "phase-2"],
     "phase1-clinical": ["phase 1", "phase i ", "phase-1", "first-in-human", "dose-escalation"],
+    "clinical-other": [
+        "pilot study", "pilot trial", "feasibility study", "feasibility trial",
+        "single-arm", "single arm", "retrospective study", "retrospective analysis",
+        "case report", "case series", "investigator-initiated", "investigator initiated",
+        "real-world study", "real world study", "clinical experience",
+        "reported a case", "single patient",
+    ],
     "preclinical-invivo": ["in vivo", "mouse model", "xenograft", "animal model", "murine", "tumor-bearing mice"],
     "preclinical-invitro": ["in vitro", "cell line", "cell culture", "cultured cells"],
     "theoretical": ["computational model", "mathematical model", "simulation", "theoretical framework", "in silico"],

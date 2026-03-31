@@ -44,6 +44,7 @@ The cost of that correction is sparsity. The resistant-state layer currently mat
 - The resistant-state layer was previously vulnerable to false-positive keyword matches. Tightening it into composite rules revealed that much of the earlier apparent state coverage was likely taxonomy inflation rather than validated resistant-state evidence.
 - Some apparent zero-count gaps are already known search artifacts rather than real absences. The clearest confirmed example remains `synthetic-lethality × myeloma`, where independent PubMed verification shows relevant PARP-related literature despite the corpus-level non-detection.
 - `radioligand-therapy` remains underrepresented in the fetched full-text corpus relative to the real clinical field. Landmark clinical evidence such as the VISION trial (`PMID 34161051`) is not currently present in the local archive, so `0 clinical trials detected` for radioligands should be treated as a corpus-coverage artifact rather than a biologically meaningful absence.
+- See `analysis/landmark-corpus-gaps.md` for a short, manually curated shortlist of missing full-text papers that are important enough to change how absence claims should be phrased.
 - The newly added intervention families do matter, but the rerun suggests they are additive rather than revolutionary at the current corpus scale: `radioligand-therapy` (52), `phagocytosis-checkpoint` (28), `targeted-protein-degradation` (19), and `cold-atmospheric-plasma` (3) do not overturn the top-level structure of the mechanism-cancer matrix.
 
 ## Implication for issue #10
