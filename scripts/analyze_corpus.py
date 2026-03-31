@@ -28,17 +28,11 @@ from config import (
     PROJECT_ROOT,
     RESISTANT_STATE_RULES,
 )
+from evidence_utils import is_protocol_like, is_review_like
 
 INDEX_FILE = PROJECT_ROOT / "corpus" / "INDEX.jsonl"
 PMID_DIR = PROJECT_ROOT / "corpus" / "by-pmid"
 ANALYSIS_DIR = PROJECT_ROOT / "analysis"
-
-REVIEW_MARKERS = (
-    "review", "systematic review", "meta-analysis", "meta analysis",
-    "scoping review", "narrative review", "evidence map",
-)
-PROTOCOL_MARKERS = ("protocol", "study protocol", "trial protocol", "protocol for")
-
 
 def load_index() -> list[dict]:
     entries = []
@@ -71,20 +65,6 @@ def load_article_frontmatter(pmid: str) -> dict:
         return {}
     fm, _ = load_article(fp)
     return fm
-
-
-def is_review_like(fm: dict) -> bool:
-    pub_types = [p.lower() for p in fm.get("pub_types", [])]
-    title = fm.get("title", "").lower()
-    return any("review" in p or "meta-analysis" in p for p in pub_types) or any(
-        marker in title for marker in REVIEW_MARKERS
-    )
-
-
-def is_protocol_like(fm: dict) -> bool:
-    pub_types = [p.lower() for p in fm.get("pub_types", [])]
-    title = fm.get("title", "").lower()
-    return any("protocol" in p for p in pub_types) or any(marker in title for marker in PROTOCOL_MARKERS)
 
 
 def classify_evidence_reason(entry: dict) -> str:
@@ -360,12 +340,13 @@ def build_evidence_tiers(entries: list[dict]) -> str:
     reason_counts = Counter(classify_evidence_reason(e) for e in entries)
     coverage = reason_counts["tagged"]
     primary_like_total = reason_counts["tagged"] + reason_counts["other_untagged"]
+    primary_like_denominator = max(primary_like_total, 1)
     lines.append(
         f"Evidence tags are currently populated for {coverage}/{len(entries)} full-text records "
         f"({coverage/len(entries):.1%}). Reviews/meta-analyses ({reason_counts['review_like']}) "
         f"and protocols ({reason_counts['protocol_like']}) are intentionally left unclassified; "
         f"among primary-study-like records, coverage is {coverage}/{primary_like_total} "
-        f"({coverage/primary_like_total:.1%}). Absence claims remain provisional.\n"
+        f"({coverage/primary_like_denominator:.1%}). Absence claims remain provisional.\n"
     )
 
     mechanisms = sorted(MECHANISM_KEYWORDS.keys())
@@ -473,12 +454,13 @@ def build_evidence_coverage_audit(entries: list[dict]) -> str:
     reason_counts = Counter(classify_evidence_reason(e) for e in entries)
     tagged = [e for e in entries if e.get("evidence_level")]
     primary_like_total = reason_counts["tagged"] + reason_counts["other_untagged"]
+    primary_like_denominator = max(primary_like_total, 1)
     lines.append(
         f"Evidence-level tags are present for {len(tagged)}/{total} records ({len(tagged)/total:.1%}). "
         f"Of the unclassified records, {reason_counts['review_like']} are review-like and "
         f"{reason_counts['protocol_like']} are protocol-like by design; {reason_counts['other_untagged']} "
         f"primary-study-like records remain uncategorized. Primary-study-like evidence coverage is "
-        f"{reason_counts['tagged']}/{primary_like_total} ({reason_counts['tagged']/primary_like_total:.1%}).\n"
+        f"{reason_counts['tagged']}/{primary_like_total} ({reason_counts['tagged']/primary_like_denominator:.1%}).\n"
     )
 
     lines.append("## Mechanisms Most Exposed To Overstated Absence Claims\n")

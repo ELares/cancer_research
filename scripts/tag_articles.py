@@ -21,6 +21,7 @@ from config import (
     PMID_DIR, TAGS_DIR,
     RESISTANT_STATE_RULES,
 )
+from evidence_utils import is_protocol_like, is_review_like, normalize_text
 
 GENERIC_CANCER_TERMS = (
     "cancer", "neoplasm", "carcinoma", "tumor", "tumour",
@@ -35,33 +36,9 @@ EVIDENCE_PUBTYPE_MARKERS = {
 }
 
 
-def is_review_like(fm: dict) -> bool:
-    """Return True for reviews, meta-analyses, evidence maps, and similar summaries."""
-    pub_types = [p.lower() for p in fm.get("pub_types", [])]
-    title = fm.get("title", "").lower()
-    review_markers = (
-        "review", "systematic review", "meta-analysis", "meta analysis",
-        "scoping review", "narrative review", "evidence map",
-    )
-    return any("review" in p or "meta-analysis" in p for p in pub_types) or any(m in title for m in review_markers)
-
-
-def is_protocol_like(fm: dict) -> bool:
-    """Return True for protocols and planned studies that should not count as completed evidence."""
-    pub_types = [p.lower() for p in fm.get("pub_types", [])]
-    title = fm.get("title", "").lower()
-    protocol_markers = ("protocol", "study protocol", "trial protocol", "protocol for")
-    return any("protocol" in p for p in pub_types) or any(m in title for m in protocol_markers)
-
-
 def has_cancer_context(text: str) -> bool:
     """Require generic cancer context for broad mechanism tags."""
     return any(term in text for term in GENERIC_CANCER_TERMS)
-
-
-def normalize_text(text: str) -> str:
-    """Normalize case and whitespace so keyword matching survives Unicode spacing."""
-    return re.sub(r"\s+", " ", text).strip().lower()
 
 
 def get_searchable_text(fm: dict, body: str) -> str:
