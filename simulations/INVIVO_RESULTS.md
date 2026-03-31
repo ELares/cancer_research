@@ -61,7 +61,9 @@ Note: "Exo. ROS" = exogenous ROS modality. SDT and PDT are modeled identically i
 
 ### Parameter sensitivity
 
-MUFA sweep for Persister + SDT (50K cells per point):
+The sweep runs two modes: **onset** (cells start at mufa=0, modeling freshly entering 3D context) and **steady-state** (cells start at the analytical steady state M_ss for each rate/max/decay combo, modeling established tumors). The steady-state sweep is the proper comparison for in-vivo claims. All sweeps use decay=0.005 (matching `Params::invivo()`).
+
+#### Onset sweep — Persister + exogenous ROS (50K cells per point)
 
 | rate \ max | 0.20 | 0.30 | 0.40 | 0.50 | 0.60 |
 |------------|------|------|------|------|------|
@@ -71,19 +73,39 @@ MUFA sweep for Persister + SDT (50K cells per point):
 | 0.020 | 100.0% | 100.0% | 100.0% | 100.0% | 100.0% |
 | 0.040 | 100.0% | 100.0% | 100.0% | 100.0% | 99.9% |
 
-Exogenous ROS kills persisters at ≥99.9% across the entire tested parameter space. The result is insensitive to MUFA parameter choices.
-
-MUFA sweep for Persister + RSL3 (50K cells per point):
+#### Steady-state sweep — Persister + exogenous ROS (50K cells per point)
 
 | rate \ max | 0.20 | 0.30 | 0.40 | 0.50 | 0.60 |
 |------------|------|------|------|------|------|
-| 0.002 | 31.3% | 30.0% | 29.3% | 28.8% | 28.5% |
-| 0.005 | 24.1% | 20.4% | 17.8% | 16.1% | 14.8% |
-| 0.010 | 19.8% | 13.8% | 9.6% | 7.0% | 5.1% |
-| 0.020 | 17.2% | 9.7% | 5.1% | 2.4% | 1.1% |
-| 0.040 | 15.9% | 7.8% | 3.2% | 1.1% | 0.2% |
+| 0.002 | 100.0% | 100.0% | 100.0% | 100.0% | 100.0% |
+| 0.005 | 100.0% | 100.0% | 100.0% | 100.0% | 100.0% |
+| 0.010 | 100.0% | 100.0% | 100.0% | 100.0% | 100.0% |
+| 0.020 | 100.0% | 100.0% | 100.0% | 100.0% | 99.9% |
+| 0.040 | 100.0% | 100.0% | 100.0% | 100.0% | 99.8% |
 
-RSL3 shows a steep gradient: at low MUFA (rate=0.002, max=0.20), efficacy drops from 42% to 31%. At high MUFA (rate=0.04, max=0.60), efficacy drops to 0.2% — a >200× reduction. Note: the sweep starts cells at mufa_protection=0 (onset scenario), not at steady state. The main comparison uses steady-state initial conditions.
+Exogenous ROS kills persisters at ≥99.8% across the entire parameter space in both modes.
+
+#### Onset sweep — Persister + RSL3 (50K cells per point)
+
+| rate \ max | 0.20 | 0.30 | 0.40 | 0.50 | 0.60 |
+|------------|------|------|------|------|------|
+| 0.002 | 32.8% | 31.8% | 31.3% | 30.9% | 30.7% |
+| 0.005 | 25.9% | 22.7% | 20.8% | 19.5% | 18.4% |
+| 0.010 | 21.1% | 15.7% | 12.2% | 9.6% | 7.8% |
+| 0.020 | 18.1% | 11.0% | 6.5% | 3.8% | 2.0% |
+| 0.040 | 16.4% | 8.5% | 4.0% | 1.5% | 0.5% |
+
+#### Steady-state sweep — Persister + RSL3 (50K cells per point)
+
+| rate \ max | 0.20 | 0.30 | 0.40 | 0.50 | 0.60 |
+|------------|------|------|------|------|------|
+| 0.002 | 23.0% | 18.4% | 15.2% | 13.0% | 11.2% |
+| 0.005 | 18.9% | 12.1% | 7.6% | 4.8% | 3.0% |
+| 0.010 | 17.2% | 9.5% | 4.8% | 2.2% | 0.9% |
+| 0.020 | 16.2% | 8.1% | 3.5% | 1.2% | 0.3% |
+| 0.040 | 15.7% | 7.4% | 2.8% | 0.8% | 0.1% |
+
+The steady-state RSL3 sweep shows stronger protection than onset because cells start pre-protected. At default parameters (rate=0.01, max=0.50), steady-state RSL3 drops to 2.2% — consistent with the main comparison's 2.3%. The gradient from 42% (2D) to 0.1% (high MUFA, steady state) spans a >400× range.
 
 ## What conclusions survive
 
@@ -105,7 +127,7 @@ RSL3 shows a steep gradient: at low MUFA (rate=0.002, max=0.20), efficacy drops 
 
 - SDT and PDT are modeled identically (shared exogenous ROS parameter). Independent claims about SDT vs PDT are not supported by this simulation.
 - The decay model is first-order (constant fractional turnover). Real lipid dynamics are more complex.
-- The MUFA parameter sweep starts cells at mufa_protection=0 rather than steady state, so it represents onset dynamics rather than established tumors.
+- The MUFA parameter sweep runs both onset (mufa=0) and steady-state modes. Claims about established tumors should reference the steady-state tables.
 - Other in-vivo resistance axes (DHODH, DHCR7/7-DHC, stromal buffering) are not modeled.
 - The 0.05 floor on effective_unsat means cells always retain minimal PUFA vulnerability.
 
