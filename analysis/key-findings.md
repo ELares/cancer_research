@@ -373,7 +373,7 @@ Mechanisms: immunotherapy, nanoparticle | Cancer: general | Evidence:
 ### 62. PMID 36174631 — RCR 24.6, 99.6th percentile
 **Clinical advances and ongoing trials on mRNA vaccines for cancer treatment.**
 *The Lancet. Oncology* (2022) | 470 citations | OA
-Mechanisms: immunotherapy | Cancer: general | Evidence: 
+Mechanisms: immunotherapy, mRNA-vaccine | Cancer: general | Evidence: 
 **Key insight**: Years of research exploring mRNA vaccines for cancer treatment in preclinical and clinical trials have set the stage for the rapid development of mRNA vaccines during the COVID-19 pandemic. Therapeutic cancer vaccines based on mRNA are well tolerated, and the inherent advantage in ease of product...
 
 ### 63. PMID 39826104 — RCR 24.5

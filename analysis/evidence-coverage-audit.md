@@ -9,7 +9,7 @@ Evidence-level tags are present for 2020/4830 records (41.8%). Of the unclassifi
 | **immunotherapy** | 2297 | 763 | 1161 | 15 | 358 | 763/1121 (68.1%) |
 | **synthetic-lethality** | 367 | 178 | 128 | 1 | 60 | 178/238 (74.8%) |
 | **nanoparticle** | 515 | 228 | 230 | 0 | 57 | 228/285 (80.0%) |
-| **mRNA-vaccine** | 158 | 60 | 46 | 0 | 52 | 60/112 (53.6%) |
+| **mRNA-vaccine** | 179 | 67 | 60 | 0 | 52 | 67/119 (56.3%) |
 | **ttfields** | 262 | 135 | 72 | 4 | 51 | 135/186 (72.6%) |
 | **electrochemical-therapy** | 185 | 86 | 47 | 2 | 50 | 86/136 (63.2%) |
 | **car-t** | 474 | 136 | 298 | 0 | 40 | 136/176 (77.3%) |

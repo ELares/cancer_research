@@ -18,7 +18,7 @@ Evidence tags are currently populated for 2020/4830 full-text records (41.8%). R
 | **frequency-therapy** | Clinical (non-phase) | 0 | 0 | 0 | 7 | 5 | 7 | 1 | 71 |
 | **hifu** | Phase II | 0 | 2 | 0 | 7 | 14 | 6 | 0 | 81 |
 | **immunotherapy** | Phase III RCT | 21 | 43 | 50 | 84 | 421 | 133 | 11 | 2297 |
-| **mRNA-vaccine** | Phase II | 0 | 2 | 8 | 3 | 30 | 11 | 6 | 158 |
+| **mRNA-vaccine** | Phase II | 0 | 2 | 8 | 3 | 33 | 13 | 8 | 179 |
 | **metabolic-targeting** | Clinical (non-phase) | 0 | 0 | 0 | 2 | 43 | 31 | 0 | 274 |
 | **microbiome** | Phase II | 0 | 2 | 0 | 2 | 7 | 1 | 0 | 109 |
 | **nanoparticle** | Phase II | 0 | 1 | 4 | 0 | 144 | 75 | 4 | 515 |

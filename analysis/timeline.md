@@ -144,8 +144,8 @@ Major milestones chronologically, based on highest-impact articles per year per 
   PMID 34862480 | Nature reviews. Drug discovery | 1127 citations | leukemia
 - **car-t**: *CAR race to cancer immunotherapy: from CAR T, CAR NK to CAR macrophage therapy.*
   PMID 35361234 | Journal of experimental & clinical cancer research : CR | 603 citations | various
-- **mRNA-vaccine** [preclinical-invivo]: *Lipid nanoparticle-mediated lymph node-targeting delivery of mRNA cancer vaccine elicits robust CD8+ T cell response.*
-  PMID 35969778 | Proceedings of the National Academy of Sciences of the United States of America | 371 citations | melanoma
+- **mRNA-vaccine**: *Clinical advances and ongoing trials on mRNA vaccines for cancer treatment.*
+  PMID 36174631 | The Lancet. Oncology | 470 citations | various
 - **nanoparticle** [preclinical-invivo]: *Lipid nanoparticle-mediated lymph node-targeting delivery of mRNA cancer vaccine elicits robust CD8+ T cell response.*
   PMID 35969778 | Proceedings of the National Academy of Sciences of the United States of America | 371 citations | melanoma
 - **crispr**: *Engineering the next-generation of CAR T-cells with CRISPR-Cas9 gene editing.*

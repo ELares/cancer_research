@@ -49,7 +49,7 @@ MRNA_VACCINE_THERAPEUTIC_TERMS = (
     "neoantigen", "tumor antigen", "tumour antigen",
     "cancer vaccine", "cancer vaccines",
     "therapeutic vaccination", "therapeutic vaccine", "therapeutic vaccines",
-    "antitumor", "anti-tumor", "antitumour", "anti-tumour",
+    "cancer treatment",
     "tumor-specific antigen", "tumour-specific antigen",
 )
 
@@ -58,6 +58,9 @@ MRNA_VACCINE_STRONG_THERAPEUTIC_PHRASES = (
     "neoantigen vaccine", "neoantigen vaccines",
     "rna neoantigen vaccine", "rna neoantigen vaccines",
     "individualized mrna vaccine", "individualized mrna vaccines",
+    "mrna vaccines for cancer treatment",
+    "mrna vaccination in breast cancer",
+    "mRNA-based precision targeting of neoantigens".lower(),
 )
 
 MRNA_VACCINE_EXCLUSION_TERMS = (
@@ -133,12 +136,12 @@ def match_resistant_states(text: str) -> list[str]:
     return sorted(matched)
 
 
-def match_mrna_vaccine(text: str) -> bool:
+def match_mrna_vaccine(text: str, title_text: str) -> bool:
     """Match therapeutic cancer-vaccine mRNA studies while excluding supportive/infectious vaccine papers."""
     has_platform = any(term in text for term in MRNA_VACCINE_PLATFORM_TERMS)
     has_therapeutic = any(term in text for term in MRNA_VACCINE_THERAPEUTIC_TERMS)
     has_strong_phrase = any(term in text for term in MRNA_VACCINE_STRONG_THERAPEUTIC_PHRASES)
-    has_exclusion = any(term in text for term in MRNA_VACCINE_EXCLUSION_TERMS)
+    has_exclusion = any(term in title_text for term in MRNA_VACCINE_EXCLUSION_TERMS)
 
     if has_strong_phrase:
         return True
@@ -147,12 +150,12 @@ def match_mrna_vaccine(text: str) -> bool:
     return not has_exclusion
 
 
-def match_mechanisms(text: str) -> list[str]:
+def match_mechanisms(text: str, title_text: str) -> list[str]:
     """Match mechanisms with a coarse cancer-context gate to reduce off-target tags."""
     if not has_cancer_context(text):
         return []
     matched = set(match_keywords(text, MECHANISM_KEYWORDS))
-    if match_mrna_vaccine(text):
+    if match_mrna_vaccine(text, title_text):
         matched.add("mRNA-vaccine")
     else:
         matched.discard("mRNA-vaccine")
@@ -238,10 +241,11 @@ def main():
 
         pmid = fm.get("pmid", filepath.stem)
         text = get_searchable_text(fm, body)
+        title_text = normalize_text(fm.get("title", ""))
         pathway_text = get_searchable_text(fm, body, include_full_text=True)
 
         # Match
-        mechanisms = match_mechanisms(text)
+        mechanisms = match_mechanisms(text, title_text)
         biology_processes = match_keywords(text, BIOLOGY_PROCESS_KEYWORDS)
         pathway_targets = match_keywords(pathway_text, PATHWAY_TARGET_KEYWORDS)
         cancer_types = match_keywords(text, CANCER_TYPE_KEYWORDS)
