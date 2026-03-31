@@ -17,8 +17,10 @@ Usage:
 import json
 import re
 from collections import Counter, defaultdict
+from functools import lru_cache
 from pathlib import Path
 
+from article_io import load_article
 from config import (
     MECHANISM_KEYWORDS,
     CANCER_TYPE_KEYWORDS,
@@ -26,11 +28,11 @@ from config import (
     PROJECT_ROOT,
     RESISTANT_STATE_RULES,
 )
+from evidence_utils import is_protocol_like, is_review_like
 
 INDEX_FILE = PROJECT_ROOT / "corpus" / "INDEX.jsonl"
 PMID_DIR = PROJECT_ROOT / "corpus" / "by-pmid"
 ANALYSIS_DIR = PROJECT_ROOT / "analysis"
-
 
 def load_index() -> list[dict]:
     entries = []
@@ -54,6 +56,26 @@ def load_article_abstract(pmid: str) -> str:
     content = fp.read_text(encoding="utf-8")
     match = re.search(r"## Abstract\n\n?(.*?)(?=\n## |\Z)", content, re.DOTALL)
     return match.group(1).strip() if match else ""
+
+
+@lru_cache(maxsize=None)
+def load_article_frontmatter(pmid: str) -> dict:
+    fp = PMID_DIR / f"{pmid}.md"
+    if not fp.exists():
+        return {}
+    fm, _ = load_article(fp)
+    return fm
+
+
+def classify_evidence_reason(entry: dict) -> str:
+    if entry.get("evidence_level"):
+        return "tagged"
+    fm = load_article_frontmatter(entry.get("pmid", ""))
+    if is_review_like(fm):
+        return "review_like"
+    if is_protocol_like(fm):
+        return "protocol_like"
+    return "other_untagged"
 
 
 # ============================================================
@@ -204,7 +226,8 @@ def build_gap_analysis(entries: list[dict]) -> str:
     lines.append(
         "This file is useful for hypothesis generation, but it is taxonomy-dependent. "
         "All zero-count and low-evidence findings here should be read as corpus-level "
-        "non-detection rather than definitive absence unless they are externally verified.\n"
+        "non-detection rather than definitive absence unless they are externally verified. "
+        "See `analysis/taxonomy-rerun-notes.md` for the current list of known taxonomy/query artifacts.\n"
     )
 
     mechanisms = sorted(MECHANISM_KEYWORDS.keys())
@@ -237,8 +260,8 @@ def build_gap_analysis(entries: list[dict]) -> str:
         for c in cancer_types:
             if matrix[m][c] == 0:
                 # Only flag if both mechanism and cancer type have substantial corpus
-                m_total = sum(matrix[m].values())
-                c_total = sum(matrix[mm][c] for mm in mechanisms)
+                m_total = sum(1 for e in entries if m in e.get("mechanisms", []))
+                c_total = sum(1 for e in entries if c in e.get("cancer_types", []))
                 if m_total >= 50 and c_total >= 50:
                     complete_gaps.append((m, c, m_total, c_total))
 
@@ -248,15 +271,29 @@ def build_gap_analysis(entries: list[dict]) -> str:
 
     # 2. Preclinical-only mechanisms with high article counts
     lines.append("\n## 2. Mechanisms Stuck in Preclinical\n")
-    lines.append("Mechanisms with many articles but no Phase 2+ clinical evidence.\n")
+    lines.append(
+        "Mechanisms with many articles but no Phase 2+ clinical evidence detected in the current "
+        "keyword-derived evidence tags. Coverage values below use only primary-study-like records "
+        "(excluding review-like and protocol-like papers that are intentionally left unclassified).\n"
+    )
 
     for m in mechanisms:
         m_articles = [e for e in entries if m in e.get("mechanisms", [])]
         phase2_plus = [e for e in m_articles if e.get("evidence_level", "") in ("phase2-clinical", "phase3-clinical")]
+        primary_like = [e for e in m_articles if classify_evidence_reason(e) in ("tagged", "other_untagged")]
+        primary_tagged = sum(1 for e in primary_like if e.get("evidence_level"))
+        primary_cov = (primary_tagged / len(primary_like)) if primary_like else 1.0
         if len(m_articles) >= 100 and len(phase2_plus) == 0:
-            lines.append(f"- **{m}**: {len(m_articles)} articles, 0 Phase 2+ clinical trials")
+            lines.append(
+                f"- **{m}**: {len(m_articles)} articles, 0 Phase 2+ clinical trials detected; "
+                f"primary-study-like coverage {primary_tagged}/{len(primary_like)} ({primary_cov:.1%})"
+            )
         elif len(m_articles) >= 100 and len(phase2_plus) <= 3:
-            lines.append(f"- **{m}**: {len(m_articles)} articles, only {len(phase2_plus)} Phase 2+ ({100*len(phase2_plus)//len(m_articles)}%)")
+            lines.append(
+                f"- **{m}**: {len(m_articles)} articles, only {len(phase2_plus)} Phase 2+ "
+                f"({100*len(phase2_plus)//len(m_articles)}%); primary-study-like coverage "
+                f"{primary_tagged}/{len(primary_like)} ({primary_cov:.1%})"
+            )
 
     # 3. Cancer types with limited novel mechanism research
     lines.append("\n## 3. Cancer Types Underserved by Novel Mechanisms\n")
@@ -300,10 +337,16 @@ def build_gap_analysis(entries: list[dict]) -> str:
 def build_evidence_tiers(entries: list[dict]) -> str:
     lines = ["# Evidence Tiers by Mechanism\n"]
     lines.append("Highest level of clinical evidence for each therapeutic mechanism.\n")
-    coverage = sum(1 for e in entries if e.get("evidence_level"))
+    reason_counts = Counter(classify_evidence_reason(e) for e in entries)
+    coverage = reason_counts["tagged"]
+    primary_like_total = reason_counts["tagged"] + reason_counts["other_untagged"]
+    primary_like_denominator = max(primary_like_total, 1)
     lines.append(
         f"Evidence tags are currently populated for {coverage}/{len(entries)} full-text records "
-        f"({coverage/len(entries):.1%}), so absence claims remain provisional.\n"
+        f"({coverage/len(entries):.1%}). Reviews/meta-analyses ({reason_counts['review_like']}) "
+        f"and protocols ({reason_counts['protocol_like']}) are intentionally left unclassified; "
+        f"among primary-study-like records, coverage is {coverage}/{primary_like_total} "
+        f"({coverage/primary_like_denominator:.1%}). Absence claims remain provisional.\n"
     )
 
     mechanisms = sorted(MECHANISM_KEYWORDS.keys())
@@ -408,27 +451,82 @@ def build_resistant_state_map(entries: list[dict]) -> str:
 def build_evidence_coverage_audit(entries: list[dict]) -> str:
     lines = ["# Evidence Coverage Audit\n"]
     total = len(entries)
+    reason_counts = Counter(classify_evidence_reason(e) for e in entries)
     tagged = [e for e in entries if e.get("evidence_level")]
-    untagged = total - len(tagged)
+    primary_like_total = reason_counts["tagged"] + reason_counts["other_untagged"]
+    primary_like_denominator = max(primary_like_total, 1)
     lines.append(
         f"Evidence-level tags are present for {len(tagged)}/{total} records ({len(tagged)/total:.1%}). "
-        f"{untagged} records remain unclassified.\n"
+        f"Of the unclassified records, {reason_counts['review_like']} are review-like and "
+        f"{reason_counts['protocol_like']} are protocol-like by design; {reason_counts['other_untagged']} "
+        f"primary-study-like records remain uncategorized. Primary-study-like evidence coverage is "
+        f"{reason_counts['tagged']}/{primary_like_total} ({reason_counts['tagged']/primary_like_denominator:.1%}).\n"
     )
 
     lines.append("## Mechanisms Most Exposed To Overstated Absence Claims\n")
-    lines.append("| Mechanism | Total | Tagged for evidence | Coverage |")
-    lines.append("|---|---|---|---|")
+    lines.append("| Mechanism | Total | Tagged | Review-like | Protocol-like | Other untagged | Primary-study-like coverage |")
+    lines.append("|---|---|---|---|---|---|---|")
+    mechanism_rows = []
     for mechanism in sorted(MECHANISM_KEYWORDS.keys()):
         mech_articles = [e for e in entries if mechanism in e.get('mechanisms', [])]
         if not mech_articles:
             continue
-        mech_tagged = sum(1 for e in mech_articles if e.get("evidence_level"))
+        mech_counts = Counter(classify_evidence_reason(e) for e in mech_articles)
+        primary_like = mech_counts["tagged"] + mech_counts["other_untagged"]
+        primary_cov = (mech_counts["tagged"] / primary_like) if primary_like else 1.0
+        mechanism_rows.append((mechanism, mech_articles, mech_counts, primary_cov))
+    for mechanism, mech_articles, mech_counts, primary_cov in sorted(
+        mechanism_rows,
+        key=lambda row: (-row[2]["other_untagged"], row[3], row[0]),
+    ):
         lines.append(
-            f"| **{mechanism}** | {len(mech_articles)} | {mech_tagged} | {mech_tagged/len(mech_articles):.1%} |"
+            f"| **{mechanism}** | {len(mech_articles)} | {mech_counts['tagged']} | {mech_counts['review_like']} | "
+            f"{mech_counts['protocol_like']} | {mech_counts['other_untagged']} | {mech_counts['tagged']}/{mech_counts['tagged'] + mech_counts['other_untagged']} ({primary_cov:.1%}) |"
         )
+
+    lines.append("\n## Sample Of Unclassified Primary-Study-Like Records\n")
+    lines.append(
+        "Illustrative examples below come from the uncategorized primary-study-like pool rather than the "
+        "review/protocol bucket. These are the records most likely to affect absence claims if the evidence "
+        "classifier is expanded.\n"
+    )
+    focus_mechanisms = [
+        row[0] for row in sorted(
+            mechanism_rows,
+            key=lambda row: (-row[2]["other_untagged"], row[3], row[0]),
+        )
+        if row[2]["other_untagged"] > 0 and len(row[1]) >= 50
+    ][:5]
+    for mechanism in focus_mechanisms:
+        candidates = [
+            e for e in entries
+            if mechanism in e.get("mechanisms", [])
+            and classify_evidence_reason(e) == "other_untagged"
+        ]
+        candidates.sort(key=lambda e: (-(e.get("cited_by_count") or 0), -(e.get("year") or 0), e.get("pmid", "")))
+        lines.append(f"\n### {mechanism}\n")
+        for e in candidates[:3]:
+            lines.append(
+                f"- **PMID {e['pmid']}** ({e.get('year')}) — *{e.get('title', '')[:150]}*"
+            )
+
+    lines.append("\n## What The Current Miss-Rate Signal Likely Means\n")
+    lines.append(
+        "- The raw 36.8% coverage number is pessimistic because review-like and protocol-like records are intentionally excluded from evidence tagging."
+    )
+    lines.append(
+        "- The more relevant upper-bound miss rate is the share of `other_untagged` records within the primary-study-like subset. Mechanisms with the largest remaining uncertainty are immunotherapy, mRNA-vaccine, electrochemical-therapy, TTFields, and CAR-T."
+    )
+    lines.append(
+        "- The sampled uncategorized records are enriched for observational clinical studies, biomarker/antigen-discovery papers, and translational engineering studies that do not announce phase or preclinical status in obvious keywords."
+    )
+    lines.append(
+        "- This means the main risk is overstating `no detected clinical evidence` for modalities with many non-phase clinical or translational papers, not silently missing large numbers of explicit Phase III trials."
+    )
 
     lines.append("\n## Recommended Interpretation Guardrails\n")
     lines.append("- Treat `0 Phase 2+` as `not detected in current keyword-derived evidence tags` unless manually verified.")
+    lines.append("- Distinguish review/protocol exclusions from true uncategorized primary-study-like records when discussing evidence coverage.")
     lines.append("- Re-check any high-priority mechanism with external PubMed or trial-registry verification before using it as a headline gap.")
     lines.append("- Prefer coverage-aware language in the manuscript and analysis files whenever evidence tagging is below 50% for a mechanism.")
     return "\n".join(lines)

@@ -21,6 +21,7 @@ from config import (
     PMID_DIR, TAGS_DIR,
     RESISTANT_STATE_RULES,
 )
+from evidence_utils import is_protocol_like, is_review_like, normalize_text
 
 GENERIC_CANCER_TERMS = (
     "cancer", "neoplasm", "carcinoma", "tumor", "tumour",
@@ -28,24 +29,11 @@ GENERIC_CANCER_TERMS = (
     "leukemia", "lymphoma", "myeloma",
 )
 
-
-def is_review_like(fm: dict) -> bool:
-    """Return True for reviews, meta-analyses, evidence maps, and similar summaries."""
-    pub_types = [p.lower() for p in fm.get("pub_types", [])]
-    title = fm.get("title", "").lower()
-    review_markers = (
-        "review", "systematic review", "meta-analysis", "meta analysis",
-        "scoping review", "narrative review", "evidence map",
-    )
-    return any("review" in p or "meta-analysis" in p for p in pub_types) or any(m in title for m in review_markers)
-
-
-def is_protocol_like(fm: dict) -> bool:
-    """Return True for protocols and planned studies that should not count as completed evidence."""
-    pub_types = [p.lower() for p in fm.get("pub_types", [])]
-    title = fm.get("title", "").lower()
-    protocol_markers = ("protocol", "study protocol", "trial protocol", "protocol for")
-    return any("protocol" in p for p in pub_types) or any(m in title for m in protocol_markers)
+EVIDENCE_PUBTYPE_MARKERS = {
+    "phase3-clinical": ("clinical trial, phase iii", "clinical trial, phase 3", "clinical trial, phase iv", "clinical trial, phase 4"),
+    "phase2-clinical": ("clinical trial, phase ii", "clinical trial, phase 2"),
+    "phase1-clinical": ("clinical trial, phase i", "clinical trial, phase 1", "clinical trial, phase i/ii"),
+}
 
 
 def has_cancer_context(text: str) -> bool:
@@ -68,7 +56,7 @@ def get_searchable_text(fm: dict, body: str) -> str:
     if abstract_match:
         parts.append(abstract_match.group(1))
 
-    return " ".join(parts).lower()
+    return normalize_text(" ".join(parts))
 
 
 def match_keywords(text: str, keyword_dict: dict) -> list[str]:
@@ -126,6 +114,11 @@ def match_evidence_level(fm: dict, text: str) -> str:
     """
     if is_review_like(fm) or is_protocol_like(fm):
         return ""
+
+    pub_types = [normalize_text(p) for p in fm.get("pub_types", [])]
+    for level in ["phase3-clinical", "phase2-clinical", "phase1-clinical"]:
+        if any(marker in pub_types for marker in EVIDENCE_PUBTYPE_MARKERS[level]):
+            return level
 
     for level in ["phase3-clinical", "phase2-clinical", "phase1-clinical",
                    "preclinical-invivo", "preclinical-invitro", "theoretical"]:

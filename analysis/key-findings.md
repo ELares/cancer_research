@@ -37,7 +37,7 @@ Mechanisms: untagged | Cancer: breast, colorectal, gastric | Evidence:
 ### 6. PMID 37165196 — RCR 90.3, 100.0th percentile
 **Personalized RNA neoantigen vaccines stimulate T cells in pancreatic cancer.**
 *Nature* (2023) | 1153 citations | OA
-Mechanisms: immunotherapy, mRNA-vaccine, nanoparticle | Cancer: pancreatic | Evidence: 
+Mechanisms: immunotherapy, mRNA-vaccine, nanoparticle | Cancer: pancreatic | Evidence: phase1-clinical
 **Key insight**: Pancreatic ductal adenocarcinoma (PDAC) is lethal in 88% of patients1, yet harbours mutation-derived T cell neoantigens that are suitable for vaccines 2,3. Here in a phase I trial of adjuvant autogene cevumeran, an individualized neoantigen vaccine based on uridine mRNA-lipoplex nanoparticles, we...
 
 ### 7. PMID 35318309 — RCR 89.4, 100.0th percentile
@@ -85,13 +85,13 @@ Mechanisms: untagged | Cancer: general | Evidence:
 ### 14. PMID 29260225 — RCR 69.5, 100.0th percentile
 **Effect of Tumor-Treating Fields Plus Maintenance Temozolomide vs Maintenance Temozolomide Alone on Survival in Patients With Glioblastoma: A Randomized Clinical Trial.**
 *JAMA* (2017) | 2494 citations | OA
-Mechanisms: ttfields | Cancer: glioblastoma | Evidence: 
+Mechanisms: ttfields | Cancer: glioblastoma | Evidence: phase3-clinical
 **Key insight**: **IMPORTANCE**: Tumor-treating fields (TTFields) is an antimitotic treatment modality that interferes with glioblastoma cell division and organelle assembly by delivering low-intensity alternating electric fields to the tumor. **OBJECTIVE**: To investigate whether TTFields improves progression-fr...
 
 ### 15. PMID 39604730 — RCR 69.5
 **Interleukin-15-armoured GPC3 CAR T cells for patients with solid cancers.**
 *Nature* (2025) | 170 citations | OA
-Mechanisms: car-t, immunotherapy | Cancer: general | Evidence: 
+Mechanisms: car-t, immunotherapy | Cancer: general | Evidence: phase1-clinical
 **Key insight**: Interleukin-15 (IL-15) promotes the survival of T lymphocytes and enhances the antitumour properties of chimeric antigen receptor (CAR) T cells in preclinical models of solid neoplasms in which CAR T cells have limited efficacy1-4. Glypican-3 (GPC3) is expressed in a group of solid cancers5-10, a...
 
 ### 16. PMID 33637672 — RCR 68.5, 100.0th percentile
@@ -109,7 +109,7 @@ Mechanisms: synthetic-lethality | Cancer: general | Evidence:
 ### 18. PMID 33542131 — RCR 66.3, 100.0th percentile
 **Fecal microbiota transplant overcomes resistance to anti-PD-1 therapy in melanoma patients.**
 *Science (New York, N.Y.)* (2021) | 1511 citations | OA
-Mechanisms: immunotherapy, microbiome | Cancer: melanoma | Evidence: 
+Mechanisms: immunotherapy, microbiome | Cancer: melanoma | Evidence: phase2-clinical
 **Key insight**: Anti-programmed cell death protein 1 (PD-1) therapy provides long-term clinical benefits to patients with advanced melanoma. The composition of the gut microbiota correlates with anti-PD-1 efficacy in preclinical models and cancer patients.
 
 ### 19. PMID 22439925 — RCR 65.4, 100.0th percentile
@@ -139,7 +139,7 @@ Mechanisms: epigenetic, metabolic-targeting | Cancer: general | Evidence: precli
 ### 23. PMID 39910301 — RCR 53.0
 **A neoantigen vaccine generates antitumour immunity in renal cell carcinoma.**
 *Nature* (2025) | 129 citations | OA
-Mechanisms: immunotherapy, mRNA-vaccine | Cancer: kidney | Evidence: 
+Mechanisms: immunotherapy, mRNA-vaccine | Cancer: kidney | Evidence: phase1-clinical
 **Key insight**: Personalized cancer vaccines (PCVs) can generate circulating immune responses against predicted neoantigens1-6. However, whether such responses can target cancer driver mutations, lead to immune recognition of a patient's tumour and result in clinical activity are largely unknown.
 
 ### 24. PMID 40307936 — RCR 52.0
@@ -247,7 +247,7 @@ Mechanisms: immunotherapy, nanoparticle | Cancer: general | Evidence:
 ### 41. PMID 26670971 — RCR 32.0, 99.8th percentile
 **Maintenance Therapy With Tumor-Treating Fields Plus Temozolomide vs Temozolomide Alone for Glioblastoma: A Randomized Clinical Trial.**
 *JAMA* (2015) | 1203 citations | OA
-Mechanisms: ttfields | Cancer: glioblastoma | Evidence: 
+Mechanisms: ttfields | Cancer: glioblastoma | Evidence: phase3-clinical
 **Key insight**: **IMPORTANCE**: Glioblastoma is the most devastating primary malignancy of the central nervous system in adults. Most patients die within 1 to 2 years of diagnosis.
 
 ### 42. PMID 35534566 — RCR 31.9, 99.8th percentile
@@ -337,7 +337,7 @@ Mechanisms: nanoparticle | Cancer: general | Evidence:
 ### 56. PMID 35969778 — RCR 25.8, 99.6th percentile
 **Lipid nanoparticle-mediated lymph node-targeting delivery of mRNA cancer vaccine elicits robust CD8+ T cell response.**
 *Proceedings of the National Academy of Sciences of the United States of America* (2022) | 371 citations | OA
-Mechanisms: mRNA-vaccine, nanoparticle | Cancer: melanoma | Evidence: 
+Mechanisms: mRNA-vaccine, nanoparticle | Cancer: melanoma | Evidence: preclinical-invivo
 **Key insight**: The targeted delivery of messenger RNA (mRNA) to desired organs remains a great challenge for in vivo applications of mRNA technology. For mRNA vaccines, the targeted delivery to the lymph node (LN) is predicted to reduce side effects and increase the immune response.
 
 ### 57. PMID 38168996 — RCR 25.5, 99.6th percentile
@@ -409,7 +409,7 @@ Mechanisms: immunotherapy, metabolic-targeting | Cancer: liver | Evidence: precl
 ### 68. PMID 38584166 — RCR 24.0, 99.6th percentile
 **Personalized neoantigen vaccine and pembrolizumab in advanced hepatocellular carcinoma: a phase 1/2 trial.**
 *Nature medicine* (2024) | 189 citations | OA
-Mechanisms: immunotherapy, mRNA-vaccine | Cancer: liver | Evidence: phase1-clinical
+Mechanisms: immunotherapy, mRNA-vaccine | Cancer: liver | Evidence: phase2-clinical
 **Key insight**: Programmed cell death protein 1 (PD-1) inhibitors have modest efficacy as a monotherapy in hepatocellular carcinoma (HCC). A personalized therapeutic cancer vaccine (PTCV) may enhance responses to PD-1 inhibitors through the induction of tumor-specific immunity.
 
 ### 69. PMID 38491817 — RCR 23.7, 99.6th percentile
