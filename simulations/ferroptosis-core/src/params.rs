@@ -20,12 +20,14 @@ pub struct Params {
     // === Repair ===
     pub gpx4_rate: f64,
     pub fsp1_rate: f64,
-    /// Generic in vivo-like lipid-remodeling rate that accumulates MUFA-style
-    /// protection against peroxidation. This is a coarse hook, not a literal
-    /// mechanistic SCD model.
+    /// SCD1-driven MUFA lipid-remodeling rate. In 3D culture and in vivo,
+    /// SCD1 (regulated by SREBP1/mTORC1, not NRF2) converts SFA→MUFA,
+    /// displacing PUFAs from membranes and reducing ferroptosis susceptibility.
+    /// Zero in 2D culture (default); non-zero in in-vivo contexts.
+    /// (Dixon/Park, Cancer Res 2025; Tesfay et al., Cancer Res 2019)
     pub scd_mufa_rate: f64,
-    /// Maximum fraction of PUFA vulnerability suppressed by the coarse MUFA-like
-    /// protection term.
+    /// Maximum fraction of PUFA vulnerability suppressed by MUFA enrichment.
+    /// Literature range: 0.40–0.60 (40–60% PUFA displacement in 3D/in vivo).
     pub scd_mufa_max: f64,
 
     // === GPX4 Dynamic Regulation ===
@@ -70,6 +72,25 @@ impl Default for Params {
             gsh_max: 12.0,
             gpx4_nrf2_target_multiplier: 1.0,
             death_threshold: 10.0,
+        }
+    }
+}
+
+impl Params {
+    /// In-vivo / 3D culture parameters with SCD1-driven MUFA protection enabled.
+    ///
+    /// SCD1 is constitutively active in 3D/in-vivo contexts via SREBP1/mTORC1.
+    /// `scd_mufa_rate: 0.01` gives a logistic time constant of ~50 steps
+    /// (63% at step 50, 86% at step 100, 95% at step 150), broadly matching
+    /// the 48–72 h lipidome remodeling onset from Magtanong 2019.
+    /// `scd_mufa_max: 0.50` means 50% PUFA displacement at steady state,
+    /// consistent with Dixon/Park 2025 lipidomics (40–60% range) and
+    /// Tesfay 2019 showing ~3–5× ferroptosis resensitization upon SCD1 inhibition.
+    pub fn invivo() -> Self {
+        Params {
+            scd_mufa_rate: 0.01,
+            scd_mufa_max: 0.50,
+            ..Params::default()
         }
     }
 }
