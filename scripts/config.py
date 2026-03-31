@@ -195,7 +195,7 @@ BIOLOGY_PROCESS_KEYWORDS = {
     ],
     "tme-stroma": [
         "tumor microenvironment", "tumour microenvironment", "cancer-associated fibroblast",
-        "caf", "extracellular matrix", "stromal barrier", "ecm remodeling",
+        "caf", "cafs", "extracellular matrix", "stromal barrier", "ecm remodeling",
     ],
     "cuproptosis": [
         "cuproptosis", "copper ionophore", "elesclomol", "fdx1",
@@ -226,14 +226,14 @@ RESISTANT_STATE_RULES = {
     },
     "therapy-induced-senescence": {
         "all_of": [
-            ["senescence", "senescent", "therapy-induced senescence"],
-            ["therapy", "drug resistance", "persister", "treatment"],
+            ["therapy-induced senescence", "treatment-induced senescence", "senescent tumor cell"],
+            ["drug resistance", "persister", "adaptive resistance", "residual disease"],
         ]
     },
     "stromal-sheltered-immune-excluded": {
         "all_of": [
             ["cancer-associated fibroblast", "tumor microenvironment", "extracellular matrix", "stromal barrier"],
-            ["immune exclusion", "delivery barrier", "therapy resistance", "stromal shelter"],
+            ["immune exclusion", "immune desert", "t cell exclusion", "stromal-mediated resistance", "stromal shelter"],
         ]
     },
     "epigenetically-plastic": {

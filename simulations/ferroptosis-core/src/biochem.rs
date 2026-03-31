@@ -67,6 +67,14 @@ impl CellState {
     }
 }
 
+#[inline]
+fn update_mufa_protection(current: f64, nrf2: f64, params: &Params) -> f64 {
+    (
+        current + params.scd_mufa_rate * nrf2 * (1.0 - current / (params.scd_mufa_max + 1e-9))
+    )
+        .clamp(0.0, params.scd_mufa_max.max(0.0))
+}
+
 /// Execute a single timestep of the ferroptosis biochemistry.
 ///
 /// Returns `true` if the cell died this step.
@@ -107,11 +115,7 @@ pub fn sim_cell_step(
 
     // === LIPID PEROXIDATION ===
     let unscav = (total_ros - scavenged).max(0.0);
-    state.mufa_protection = (
-        state.mufa_protection
-            + params.scd_mufa_rate * cell.nrf2 * (1.0 - state.mufa_protection / (params.scd_mufa_max + 1e-9))
-    )
-        .clamp(0.0, params.scd_mufa_max.max(0.0));
+    state.mufa_protection = update_mufa_protection(state.mufa_protection, cell.nrf2, params);
 
     let effective_unsat = (cell.lipid_unsat * (1.0 - state.mufa_protection)).max(0.05);
     let lp_direct = unscav * effective_unsat * params.lp_rate;
@@ -203,11 +207,7 @@ pub fn sim_cell(
 
         // === LIPID PEROXIDATION ===
         let unscav = (total_ros - scavenged).max(0.0);
-        mufa_protection = (
-            mufa_protection
-                + params.scd_mufa_rate * cell.nrf2 * (1.0 - mufa_protection / (params.scd_mufa_max + 1e-9))
-        )
-            .clamp(0.0, params.scd_mufa_max.max(0.0));
+        mufa_protection = update_mufa_protection(mufa_protection, cell.nrf2, params);
         let effective_unsat = (cell.lipid_unsat * (1.0 - mufa_protection)).max(0.05);
         let lp_direct = unscav * effective_unsat * params.lp_rate;
         let antioxidant_quench = gpx4 * (gsh / (gsh + 0.5)) + fsp1;

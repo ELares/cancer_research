@@ -1,4 +1,4 @@
-# Resistant-State Map
+# Resistant-State Design
 
 First-pass scaffold for analyzing the repo by resistant state rather than by modality alone.
 

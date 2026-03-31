@@ -18,6 +18,8 @@
 "irreversible electroporation"[All Fields] AND cancer
 
 # Novel targeted mechanisms
+# Newer expansion queries intentionally use narrower date windows so the first
+# pass does not overwhelm the historically broader 19-mechanism corpus.
 "CRISPR"[All Fields] AND cancer AND therapy AND 2020:2026[dp]
 "CAR-T"[All Fields] AND cancer AND 2020:2026[dp]
 "antibody-drug conjugate"[All Fields] AND cancer AND 2023:2026[dp]
