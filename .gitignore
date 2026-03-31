@@ -20,3 +20,6 @@ simulations/output/
 *.bbl
 *.blg
 *.synctex.gz
+
+# Generated manuscript PDFs
+article/drafts/*.pdf

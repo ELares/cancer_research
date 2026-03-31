@@ -338,7 +338,7 @@ def build_gap_analysis(entries: list[dict]) -> str:
 
 def build_evidence_tiers(entries: list[dict]) -> str:
     lines = ["# Evidence Tiers by Mechanism\n"]
-    lines.append("Highest level of clinical evidence for each therapeutic mechanism.\n")
+    lines.append("Highest level of evidence maturity detected for each therapeutic mechanism.\n")
     reason_counts = Counter(classify_evidence_reason(e) for e in entries)
     coverage = reason_counts["tagged"]
     primary_like_total = reason_counts["tagged"] + reason_counts["other_untagged"]
@@ -348,8 +348,8 @@ def build_evidence_tiers(entries: list[dict]) -> str:
         f"({coverage/len(entries):.1%}). Reviews/meta-analyses ({reason_counts['review_like']}) "
         f"and protocols ({reason_counts['protocol_like']}) are intentionally left unclassified; "
         f"among primary-study-like records, coverage is {coverage}/{primary_like_total} "
-        f"({coverage/primary_like_denominator:.1%}). `clinical-other` counts patient-level evidence "
-        f"without phase labeling and should not be read as equivalent to phase-labeled trial maturity. "
+        f"({coverage/primary_like_denominator:.1%}). `clinical-other` counts non-phase patient-study signal "
+        f"and should not be read as equivalent to phase-labeled trial maturity. "
         f"Absence claims remain provisional.\n"
     )
 
@@ -508,6 +508,23 @@ def build_evidence_coverage_audit(entries: list[dict]) -> str:
             if mechanism in e.get("mechanisms", [])
             and classify_evidence_reason(e) == "other_untagged"
         ]
+        if mechanism == "mRNA-vaccine":
+            # Prefer therapeutic cancer-vaccine records here so the audit does not
+            # showcase known COVID/non-oncology taxonomy contamination as if it were
+            # representative uncertainty in the evidence classifier.
+            cancer_scoped = [e for e in candidates if e.get("cancer_types")]
+            if cancer_scoped:
+                candidates = cancer_scoped
+            infectious_markers = ("covid", "sars-cov-2", "coronavirus", "pseudomonas")
+            oncology_focused = [
+                e for e in candidates
+                if not any(
+                    marker in f"{e.get('title', '')} {e.get('openalex_topic', '')}".lower()
+                    for marker in infectious_markers
+                )
+            ]
+            if oncology_focused:
+                candidates = oncology_focused
         candidates.sort(key=lambda e: (-(e.get("cited_by_count") or 0), -(e.get("year") or 0), e.get("pmid", "")))
         lines.append(f"\n### {mechanism}\n")
         for e in candidates[:3]:
@@ -534,7 +551,7 @@ def build_evidence_coverage_audit(entries: list[dict]) -> str:
 
     lines.append("\n## Recommended Interpretation Guardrails\n")
     lines.append("- Treat `0 Phase 2+` as `not detected in current keyword-derived evidence tags` unless manually verified.")
-    lines.append("- Treat `clinical-other` as patient-level evidence that is informative for field maturity, but not interchangeable with registrational phase evidence.")
+    lines.append("- Treat `clinical-other` as non-phase patient-study signal that is informative for field maturity, but not interchangeable with registrational phase evidence.")
     lines.append("- Distinguish review/protocol exclusions from true uncategorized primary-study-like records when discussing evidence coverage.")
     lines.append("- Re-check any high-priority mechanism with external PubMed or trial-registry verification before using it as a headline gap.")
     lines.append("- Prefer coverage-aware language in the manuscript and analysis files whenever evidence tagging is below 50% for a mechanism.")

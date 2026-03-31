@@ -1,4 +1,4 @@
-# Beyond Pharmacologic Ferroptosis Inducers: Physical ROS Modalities for Drug-Tolerant Persister Cells
+# Cancer Research Synthesis and Analysis
 
 ## Why This Exists
 
@@ -18,100 +18,121 @@ If you have expertise in oncology, biochemistry, ferroptosis, photodynamic thera
 
 — Ezequiel Lares
 
----
+## Current Framing
 
-## The Idea
+This repo currently supports several linked but distinct workstreams:
 
-Drug-tolerant persister cells are ferroptosis-sensitive (established, PMID:41481741). The field is searching for clinical ferroptosis inducers using *only pharmacologic agents* (RSL3, erastin). Meanwhile, PDT (355 ferroptosis articles) and SDT (121) engage ferroptosis-related ROS biology in a separate literature that the persister field rarely discusses.
+- cross-literature mapping of therapeutic mechanisms across cancer types
+- evidence-tier analysis with explicit coverage caveats
+- taxonomy and query refinement so field-level claims are less artifact-prone
+- pathway-target and resistant-state tracking for recurrence and therapy escape
+- manuscript drafting and revision
+- simulation work around ferroptosis-related dynamics and escape mechanisms
 
-**The proposal**: Physical ROS modalities should be evaluated as persister-targeting tools offering (1) spatial selectivity and potentially (2) ICD-linked immunotherapy synergy. SDT extends this to deep tumors where PDT can't reach.
+The PDT/SDT-persister-ferroptosis hypothesis is still part of the project, but it is now treated as one candidate research direction inside a broader resistant-state and cross-modality analysis effort.
 
-**What's novel**: The modality-class question — should the persister field look beyond drugs? — has not been systematically framed despite 355 PDT and 121 SDT ferroptosis papers existing independently.
+## What The Repo Contains
 
-**Key caveats**: Most of the strongest SDT ferroptosis papers use engineered nanosonosensitizers rather than plain SDT, and PDT has 40 years of development without demonstrating robust ICD-immune synergy in randomized trials.
+- a local corpus of full-text and abstract-only cancer research records
+- Python scripts for fetching, enriching, tagging, indexing, and analyzing the corpus
+- generated analysis files that summarize mechanism coverage, evidence tiers, pathway-target signals, and known gaps
+- manuscript drafts and figures
+- Rust simulations for ferroptosis-related modeling
 
-## Computational Simulation
+## Current Priorities
 
-A Rust-based Monte Carlo simulation of the ferroptosis cascade (16M cells across 16 conditions) supports the biochemical plausibility of a strong exogenous ROS pulse overwhelming ferroptosis defenses:
+The repo is currently oriented around questions like:
 
-| Phenotype | Control | RSL3 | SDT/PDT |
-|-----------|---------|------|---------|
-| Glycolytic | 0.00% | 0.00% | 87.2% |
-| OXPHOS | 0.04% | 1.1% | 99.9% |
-| **Persister (FSP1↓)** | 1.2% | **42.5%** | **100.0%** |
-| Persister+NRF2 | 0.00% | 0.05% | 99.5% |
+- are our conclusions stable under better taxonomy and evidence tagging?
+- where are the biggest corpus-coverage blind spots?
+- which signals are real versus query artifacts?
+- are we over-centered on PDT/SDT relative to the broader field?
+- which alternative modalities, targets, or resistant states deserve equal or greater attention?
 
-Key features: autocatalytic LP propagation gated by GSH/GPX4, dynamic GPX4 regulation, FSP1 as GPX4-independent repair pathway. All baselines <2%. Sensitivity under SDT: 22/22 holds. RSL3 kills persisters (42.5%) — matching published biology (PMID:41481741). NRF2 rescues from RSL3 but NOT from the model's high-ROS SDT setting.
+## Known Limits
 
-## Article
+Several important constraints should shape how this repo is used:
 
-**Author:** Ezequiel Lares
+- the corpus is large, but not complete
+- some field-defining papers are missing from the local full-text archive
+- evidence tagging is heuristic and coverage-aware, not definitive
+- taxonomy choices materially affect gap counts and field comparisons
+- resistant-state tagging is intentionally conservative and still sparse
+- simulation outputs are useful for hypothesis support, not experimental proof
 
-- `article/drafts/v1.md` — Markdown draft (~12,000 words, 113 references)
-- `article/drafts/v1.tex` — LaTeX with proper tables and embedded figures
-- `article/drafts/v1.pdf` — Compiled PDF manuscript
-- `article/references/bibliography.bib` — BibTeX bibliography (113 entries)
+In practice, repo outputs should be read as structured non-detection, prioritization support, and hypothesis scaffolding unless externally verified.
 
-10+ review rounds including adversarial peer review, falsification analysis, novelty assessment, and simulation validation.
+## Key Entry Points
 
-## Figures
-
-| Figure | Content |
-|--------|---------|
-| Fig 1 | Publication trends 2015-2025 |
-| Fig 2 | 19×22 mechanism-cancer heatmap |
-| Fig 3 | Ferroptosis engagement comparison (χ²=97.3, p<10⁻²³) |
-| Fig 4 | Molecular pathway overlap across modalities |
-| Fig 5 | Literature disconnect between communities |
-| Fig 6 | SDT ferroptosis-ICD chain evidence depth |
-| Fig 7 | Monte Carlo simulation results (1M cells/condition) |
+- [article/drafts/v1.md](article/drafts/v1.md)
+  Current manuscript draft.
+- [analysis/evidence-coverage-audit.md](analysis/evidence-coverage-audit.md)
+  Evidence-tag coverage and interpretation guardrails.
+- [analysis/taxonomy-rerun-notes.md](analysis/taxonomy-rerun-notes.md)
+  What changed after taxonomy tightening and reruns.
+- [analysis/pathway-target-audit.md](analysis/pathway-target-audit.md)
+  First-pass pathway-target layer for ferroptosis resistance and adjacent programs.
+- [analysis/landmark-corpus-gaps.md](analysis/landmark-corpus-gaps.md)
+  Known missing papers large enough to distort claims.
+- [scripts/](scripts/)
+  Fetching, enrichment, tagging, indexing, and analysis pipeline.
+- [simulations/](simulations/)
+  Rust simulation code.
 
 ## Repository Structure
 
-```
-article/drafts/          # Manuscript (md, tex, pdf)
-article/figures/         # 7 publication-quality figures (pdf + png)
-article/references/      # BibTeX bibliography
-corpus/by-pmid/          # 4,830 full-text articles with YAML frontmatter
-corpus/abstracts/by-pmid/ # 5,584 abstract-only records
-tags/                    # Pre-computed indexes
-scripts/                 # Python pipeline (fetch, enrich, tag, analyze, figures)
-simulations/             # Rust Monte Carlo ferroptosis simulation suite
-analysis/                # Hypothesis documents and data analysis
-books/                   # Reference textbooks (LFS)
-plans/                   # Research plans
+```text
+analysis/                    generated audits, maps, gap notes, and interpretation docs
+article/drafts/              manuscript drafts
+article/figures/             figure outputs
+article/references/          bibliography
+corpus/by-pmid/              local full-text corpus
+corpus/abstracts/by-pmid/    abstract-only archive
+scripts/                     Python pipeline
+simulations/                 Rust simulation work
+tags/                        precomputed tag indexes
+plans/                       planning notes
+books/                       reference texts
 ```
 
 ## Reproduction
 
 ```bash
-# Corpus
-pip install -r requirements.txt && cp .env.example .env
-cd scripts/
-python fetch_articles.py --query-file queries.txt --max 500
-python fetch_semantic_scholar.py --mode search --max 200
-python enrich_metadata.py && python tag_articles.py
-python build_index.py && python analyze_corpus.py
-python generate_figures.py
+pip install -r requirements.txt
+cp .env.example .env
 
-# Simulation
-cd ../simulations && cargo build --release
-cargo run --release -p sim-original        # Original single-cell model
-cargo run --release -p sim-spatial         # Spatial tumor with energy physics
-cargo run --release -p sim-window          # Vulnerability window dynamics
-cargo run --release -p sim-icd             # ICD-immune cascade comparison
-cargo run --release -p sim-combo           # Combination therapy optimizer
+python scripts/tag_articles.py
+python scripts/build_index.py
+python scripts/analyze_corpus.py
+python scripts/generate_figures.py
+```
 
-# PDF
-cd ../article/drafts && pdflatex v1.tex && bibtex v1 && pdflatex v1.tex && pdflatex v1.tex
+Simulation examples:
+
+```bash
+cd simulations
+cargo build --release
+cargo run --release -p sim-original
+cargo run --release -p sim-spatial
+cargo run --release -p sim-window
+cargo run --release -p sim-icd
+cargo run --release -p sim-combo
 ```
 
 ## Contributing
 
-Open an issue. Submit a PR. Fork it and run. No permission needed — that's the point.
+Open an issue or pull request if you want to:
 
-If you're a researcher with lab access and want to test the core hypothesis (PDT vs SDT vs RSL3 on persister cells, measuring cell death + ICD markers), please reach out. That single experiment is the decisive test.
+- challenge a conclusion
+- tighten the taxonomy
+- add missing landmark papers
+- broaden the mechanism or pathway coverage
+- improve the evidence model
+- revise the manuscript
+- extend the simulations or charts
+
+The repo is most useful when it stays falsifiable and open to revision.
 
 ## License
 
-MIT License. See [LICENSE](LICENSE) for details.
+MIT License. See [LICENSE](LICENSE).

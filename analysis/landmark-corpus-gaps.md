@@ -6,7 +6,7 @@ This note records a small set of clinically important papers that are missing fr
 
 | Mechanism | PMID | Current local status | Why it matters |
 |---|---|---|---|
-| radioligand-therapy | 34161051 | missing from `corpus/by-pmid/` and `corpus/abstracts/by-pmid/` | VISION is a field-defining trial for `177Lu-PSMA-617`; its absence makes `0 clinical trials detected` for radioligands a corpus artifact rather than a biological signal. |
+| radioligand-therapy | 34161051 | missing from `corpus/by-pmid/` and `corpus/abstracts/by-pmid/` | VISION is a field-defining trial for `177Lu-PSMA-617`; its absence makes `0 phase-labeled trial evidence detected` for radioligands a corpus artifact rather than a biological signal. |
 | ttfields | 40448572 | present in `corpus/abstracts/by-pmid/`, missing from `corpus/by-pmid/` | PANOVA-3 is a pivotal phase III TTFields study in locally advanced pancreatic cancer and materially affects how mature TTFields looks outside glioblastoma. |
 | mRNA-vaccine | 33016924 | present in `corpus/abstracts/by-pmid/`, missing from `corpus/by-pmid/` | Phase I/II gastrointestinal neoantigen-vaccine study with strong citation impact; omission weakens the apparent patient-level depth of the vaccine field. |
 | mRNA-vaccine | 36027916 | present in `corpus/abstracts/by-pmid/`, missing from `corpus/by-pmid/` | Phase I NEO-PV-01 plus chemotherapy and anti-PD-1 in NSCLC; important for combination-vaccine framing in lung cancer. |

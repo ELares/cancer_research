@@ -1,8 +1,8 @@
 # Evidence Tiers by Mechanism
 
-Highest level of clinical evidence for each therapeutic mechanism.
+Highest level of evidence maturity detected for each therapeutic mechanism.
 
-Evidence tags are currently populated for 2020/4830 full-text records (41.8%). Reviews/meta-analyses (1921) and protocols (29) are intentionally left unclassified; among primary-study-like records, coverage is 2020/2880 (70.1%). `clinical-other` counts patient-level evidence without phase labeling and should not be read as equivalent to phase-labeled trial maturity. Absence claims remain provisional.
+Evidence tags are currently populated for 2020/4830 full-text records (41.8%). Reviews/meta-analyses (1921) and protocols (29) are intentionally left unclassified; among primary-study-like records, coverage is 2020/2880 (70.1%). `clinical-other` counts non-phase patient-study signal and should not be read as equivalent to phase-labeled trial maturity. Absence claims remain provisional.
 
 | Mechanism | Highest Evidence | Phase 3 | Phase 2 | Phase 1 | Clinical Other | In Vivo | In Vitro | Theory | Total |
 |-----------|-----------------|---------|---------|---------|----------------|---------|----------|--------|-------|
