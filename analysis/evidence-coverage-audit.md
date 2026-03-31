@@ -44,8 +44,8 @@ Illustrative examples below come from the uncategorized primary-study-like pool 
 ### mRNA-vaccine
 
 - **PMID 34872567** (2021) — *Tumor antigens and immune subtypes guided mRNA vaccine development for kidney renal clear cell carcinoma.*
-- **PMID 37231060** (2023) — *Strong immune responses and protection of PcrV and OprF-I mRNA vaccine candidates against Pseudomonas aeruginosa.*
-- **PMID 35271706** (2022) — *Humoral Responses Against Variants of Concern by COVID-19 mRNA Vaccines in Immunocompromised Patients.*
+- **PMID 37428918** (2023) — *Comb-structured mRNA vaccine tethered with short double-stranded RNA adjuvants maximizes cellular immunity for cancer treatment.*
+- **PMID 35185876** (2022) — *Identification of Tumor Antigens and Immune Subtypes of Glioblastoma for mRNA Vaccine Development.*
 
 ### synthetic-lethality
 
@@ -76,7 +76,7 @@ Illustrative examples below come from the uncategorized primary-study-like pool 
 ## Recommended Interpretation Guardrails
 
 - Treat `0 Phase 2+` as `not detected in current keyword-derived evidence tags` unless manually verified.
-- Treat `clinical-other` as patient-level evidence that is informative for field maturity, but not interchangeable with registrational phase evidence.
+- Treat `clinical-other` as non-phase patient-study signal that is informative for field maturity, but not interchangeable with registrational phase evidence.
 - Distinguish review/protocol exclusions from true uncategorized primary-study-like records when discussing evidence coverage.
 - Re-check any high-priority mechanism with external PubMed or trial-registry verification before using it as a headline gap.
 - Prefer coverage-aware language in the manuscript and analysis files whenever evidence tagging is below 50% for a mechanism.

@@ -4,59 +4,87 @@
 
 Ezequiel Lares
 
-## Project Goal
+## Repo Goal
 
-Produce a publishable perspective article, **Beyond Pharmacologic Ferroptosis Inducers: Physical ROS Modalities for Drug-Tolerant Persister Cells**, proposing that the drug-tolerant persister ferroptosis field should evaluate physical ROS-generating modalities (PDT, SDT) as spatially selective alternatives to pharmacologic ferroptosis inducers. Includes Monte Carlo biochemical simulation as computational validation.
+Maintain this repository as an open cancer-research synthesis workspace that compares therapeutic mechanisms, evidence depth, resistant-state biology, pathway targets, and simulation-based hypotheses without assuming a single answer in advance.
 
-## Central Hypothesis
+The repo began around a PDT/SDT-persister-ferroptosis thesis. That thesis is still worth evaluating, but it is no longer the only organizing frame. The repo should stay open to alternative modalities, targets, pathways, and interpretations when the corpus or external literature supports them.
 
-The persister-ferroptosis field searches only among drugs. Physical ROS modalities (PDT 355 articles, SDT 121) trigger ferroptosis + ICD but haven't been proposed as a persister-targeting class. SDT extends to deep tumors where PDT can't reach.
+## Working Principle
 
-**What we claim**: The modality-class framing is absent from the literature. SDT as depth-extended PDT for persister ferroptosis is a new connection.
-**What we don't claim**: Any individual component is new, or that physical modalities will outperform drugs.
+Do not let the current manuscript title or earlier repo framing hard-code the conclusion.
 
-## Corpus
+When reviewing or extending the work:
 
-4,830 full-text articles, 803 journals, 2001-2026. Separate abstract-only archive: 5,584 records. 19 mechanisms, 22 cancer types.
+- treat PDT/SDT as one candidate lane, not the default winner
+- prefer resistant-state and evidence-quality questions over modality loyalty
+- distinguish intervention classes from broad biology/process terms
+- treat corpus-level non-detection as provisional unless externally verified
+- surface known artifacts, missing landmark papers, and tagging limitations early
 
-## Simulation
+## Current Workstreams
 
-Rust-based Monte Carlo: 16M cells, 4 phenotypes × 4 treatments. Features autocatalytic LP propagation (GSH-gated), dynamic GPX4, FSP1 pathway. All baselines <2%, sensitivity 22/22 holds. Located in `simulations/`.
+- manuscript drafting and revision
+- corpus fetching, enrichment, tagging, and indexing
+- evidence-tier audits and coverage caveats
+- taxonomy and search refinement
+- pathway-target and resistant-state analysis
+- simulation work around ferroptosis and escape mechanisms
+- broader strategy review of alternative therapies and biological bottlenecks
 
-## Article
+## Current Repo State
 
-`article/drafts/v1.pdf` — compiled manuscript PDF with figures, tables, and bibliography. All citations verified.
+- local full-text corpus: 4,830 records
+- abstract-only archive: 5,584 records
+- mechanism taxonomy, evidence tiers, pathway-targets, biology-process tags, and resistant-state scaffolding are all active
+- evidence tagging is improved but still incomplete
+- some landmark papers are known to be missing from the local full-text archive
+
+## What To Optimize For
+
+- claims that are traceable and caveated
+- taxonomy choices that do not inflate conclusions
+- docs and manuscript language that reflect uncertainty honestly
+- outputs that help compare alternatives fairly
+- maintainable scripts and reproducible reruns
+
+## What To Avoid
+
+- assuming the repo exists only to defend PDT/SDT
+- writing stronger absence claims than the evidence model supports
+- confusing patient-study signal with phase-labeled trial maturity
+- treating broad process coverage as proof of therapeutic depth
+- letting historical framing survive after the underlying analysis changed
 
 ## Key Files
 
-```
-article/drafts/v1.{md,tex,pdf}         # The manuscript
-article/figures/fig*.{pdf,png}           # 7 figures
-article/references/bibliography.bib      # BibTeX
-corpus/by-pmid/{PMID}.md                # 4,830 full-text articles
-corpus/abstracts/by-pmid/{PMID}.md      # 5,584 abstract-only records
-corpus/INDEX.jsonl                        # Master index
-tags/by-mechanism/*.txt                   # PMID lists
-simulations/ferroptosis-core/            # Shared Rust library (biochemistry, physics, grid, immune)
-simulations/sim-{original,spatial,window,icd,combo}/ # 5 simulation binaries
-simulations/simulation_results.json      # Original v3 results
-scripts/                                  # Python pipeline
-books/                                    # Reference textbooks (LFS)
+```text
+README.md                                 repo-level framing and entry points
+article/drafts/v1.{md,tex,pdf}            manuscript drafts
+analysis/evidence-coverage-audit.md       evidence-tier coverage and guardrails
+analysis/taxonomy-rerun-notes.md          taxonomy/query caveats after reruns
+analysis/pathway-target-audit.md          pathway-target coverage
+analysis/landmark-corpus-gaps.md          known missing papers that distort claims
+corpus/INDEX.jsonl                        master index
+scripts/                                  Python pipeline
+simulations/                              Rust simulation work
+tags/                                     precomputed tag indexes
 ```
 
-## Search
+## Search Conventions
+
+Prefer fast repo-native inspection first:
 
 ```bash
-cat tags/by-mechanism/sonodynamic.txt
-grep "ferroptosis" corpus/by-pmid/*.md
-grep "GPX4" corpus/by-pmid/*.md
+rg "term" scripts analysis article
+rg --files corpus/by-pmid | head
+sed -n '1,120p' analysis/evidence-coverage-audit.md
 ```
 
-## Conventions
+## Writing Conventions
 
-- Every claim traceable to PMID
-- Known findings acknowledged as known
-- Nanosonosensitizer confound explicitly flagged
-- Failed trials cited (CheckMate-498, BIND-014, Pexa-Vec)
-- 114/114 references verified
-- Simulation validated: all baselines <2%, sensitivity 22/22
+- every strong claim should be traceable to the corpus, analysis outputs, or external verification
+- separate generated outputs from handwritten interpretation notes
+- use coverage-aware language such as `not detected in the local keyword-derived analysis` where appropriate
+- if a known taxonomy artifact or corpus gap applies, mention it directly rather than burying it
+- keep the repo open to thesis revision rather than optimizing for rhetorical neatness
