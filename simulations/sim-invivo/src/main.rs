@@ -61,12 +61,16 @@ struct ComparisonResult {
     mean_gpx4: f64,
     scd_mufa_rate: f64,
     scd_mufa_max: f64,
+    scd_mufa_decay: f64,
+    initial_mufa_protection: f64,
 }
 
 #[derive(Serialize, Clone, Debug)]
 struct SweepResult {
     scd_mufa_rate: f64,
     scd_mufa_max: f64,
+    scd_mufa_decay: f64,
+    initial_mufa_protection: f64,
     phenotype: String,
     treatment: String,
     n_cells: usize,
@@ -121,6 +125,8 @@ fn run_context(
                 mean_gpx4: outcomes.iter().map(|(_, _, _, p)| p).sum::<f64>() / n as f64,
                 scd_mufa_rate: params.scd_mufa_rate,
                 scd_mufa_max: params.scd_mufa_max,
+                scd_mufa_decay: params.scd_mufa_decay,
+                initial_mufa_protection: params.initial_mufa_protection,
             });
         }
         eprintln!();
@@ -161,10 +167,7 @@ fn main() {
     // SCD1 inhibitor administration.
     let params_scd1i = Params {
         scd_mufa_rate: 0.0,
-        scd_mufa_max: params_invivo.scd_mufa_max,
-        scd_mufa_decay: params_invivo.scd_mufa_decay,
-        initial_mufa_protection: params_invivo.initial_mufa_protection,
-        ..Params::default()
+        ..params_invivo.clone()
     };
 
     eprintln!("--- Context: 2D (MUFA off, scd_mufa_rate=0) ---");
@@ -232,12 +235,17 @@ fn main() {
 
     // ============================================================
     // Part 4: MUFA parameter sweep (Persister × SDT and RSL3)
+    //
+    // Two sweep modes:
+    //   "onset"        — cells start at mufa=0 (freshly entering 3D context)
+    //   "steady-state" — cells start at analytical steady state for each rate/max/decay
     // ============================================================
     eprintln!("\n=== MUFA Parameter Sweep (Persister) ===");
     eprintln!("Cells per point: {}\n", args.n_sweep);
 
     let rates = [0.002, 0.005, 0.01, 0.02, 0.04];
     let maxes = [0.20, 0.30, 0.40, 0.50, 0.60];
+    let decay = params_invivo.scd_mufa_decay;
 
     let sweep_treatments: [(Treatment, &str); 2] = [
         (Treatment::SDT, "SDT"),
@@ -249,57 +257,75 @@ fn main() {
 
     let mut sweep_results: Vec<SweepResult> = Vec::new();
 
-    for (sweep_tx, sweep_tx_name) in &sweep_treatments {
-        let baseline = match *sweep_tx {
-            Treatment::SDT => baseline_sdt,
-            Treatment::RSL3 => baseline_rsl3,
-            _ => 1.0,
-        };
+    let sweep_modes: [(&str, bool); 2] = [
+        ("onset (mufa=0)", false),
+        ("steady-state", true),
+    ];
 
-        eprintln!("--- Persister + {} ---", sweep_tx_name);
-        eprintln!("  {:>8} | {}", "rate\\max", maxes.iter().map(|m| format!("{:>8.2}", m)).collect::<Vec<_>>().join(" | "));
-        eprintln!("  ---------+-{}", maxes.iter().map(|_| "----------").collect::<Vec<_>>().join("-+-"));
+    for (mode_label, use_steady_state) in &sweep_modes {
+        eprintln!("=== Sweep mode: {} ===\n", mode_label);
 
-        for &rate in &rates {
-            let mut row_strs = Vec::new();
-            for &max_val in &maxes {
-                let p = Params {
-                    scd_mufa_rate: rate,
-                    scd_mufa_max: max_val,
-                    ..Params::default()
-                };
-                let n = args.n_sweep;
-                let outcomes: Vec<(bool, f64, f64, f64)> = (0..n)
-                    .into_par_iter()
-                    .map(|i| {
-                        let mut cell_rng = StdRng::seed_from_u64(args.seed.wrapping_add(i as u64 * 2));
-                        let mut sim_rng = StdRng::seed_from_u64(args.seed.wrapping_add(i as u64 * 2 + 1));
-                        let cell = gen_cell(Phenotype::Persister, &mut cell_rng);
-                        sim_cell(&cell, *sweep_tx, &p, &mut sim_rng)
-                    })
-                    .collect();
+        for (sweep_tx, sweep_tx_name) in &sweep_treatments {
+            let baseline = match *sweep_tx {
+                Treatment::SDT => baseline_sdt,
+                Treatment::RSL3 => baseline_rsl3,
+                _ => 1.0,
+            };
 
-                let dead = outcomes.iter().filter(|(d, _, _, _)| *d).count();
-                let dr = dead as f64 / n as f64;
-                let (ci_lo, ci_hi) = wilson_ci(n, dead);
-                let pf = if dr > 0.0001 { baseline / dr } else { f64::INFINITY };
+            eprintln!("--- Persister + {} ({}) ---", sweep_tx_name, mode_label);
+            eprintln!("  {:>8} | {}", "rate\\max", maxes.iter().map(|m| format!("{:>8.2}", m)).collect::<Vec<_>>().join(" | "));
+            eprintln!("  ---------+-{}", maxes.iter().map(|_| "----------").collect::<Vec<_>>().join("-+-"));
 
-                row_strs.push(format!("{:>7.1}%", dr * 100.0));
-                sweep_results.push(SweepResult {
-                    scd_mufa_rate: rate,
-                    scd_mufa_max: max_val,
-                    phenotype: "Persister (FSP1↓)".to_string(),
-                    treatment: sweep_tx_name.to_string(),
-                    n_cells: n,
-                    death_rate: dr,
-                    ci_low: ci_lo,
-                    ci_high: ci_hi,
-                    protection_factor: pf,
-                });
+            for &rate in &rates {
+                let mut row_strs = Vec::new();
+                for &max_val in &maxes {
+                    let initial = if *use_steady_state {
+                        rate * max_val / (rate + decay * max_val)
+                    } else {
+                        0.0
+                    };
+                    let p = Params {
+                        scd_mufa_rate: rate,
+                        scd_mufa_max: max_val,
+                        scd_mufa_decay: decay,
+                        initial_mufa_protection: initial,
+                        ..Params::default()
+                    };
+                    let n = args.n_sweep;
+                    let outcomes: Vec<(bool, f64, f64, f64)> = (0..n)
+                        .into_par_iter()
+                        .map(|i| {
+                            let mut cell_rng = StdRng::seed_from_u64(args.seed.wrapping_add(i as u64 * 2));
+                            let mut sim_rng = StdRng::seed_from_u64(args.seed.wrapping_add(i as u64 * 2 + 1));
+                            let cell = gen_cell(Phenotype::Persister, &mut cell_rng);
+                            sim_cell(&cell, *sweep_tx, &p, &mut sim_rng)
+                        })
+                        .collect();
+
+                    let dead = outcomes.iter().filter(|(d, _, _, _)| *d).count();
+                    let dr = dead as f64 / n as f64;
+                    let (ci_lo, ci_hi) = wilson_ci(n, dead);
+                    let pf = if dr > 0.0001 { baseline / dr } else { f64::INFINITY };
+
+                    row_strs.push(format!("{:>7.1}%", dr * 100.0));
+                    sweep_results.push(SweepResult {
+                        scd_mufa_rate: rate,
+                        scd_mufa_max: max_val,
+                        scd_mufa_decay: decay,
+                        initial_mufa_protection: initial,
+                        phenotype: "Persister (FSP1↓)".to_string(),
+                        treatment: sweep_tx_name.to_string(),
+                        n_cells: n,
+                        death_rate: dr,
+                        ci_low: ci_lo,
+                        ci_high: ci_hi,
+                        protection_factor: pf,
+                    });
+                }
+                eprintln!("  {:>8.3} | {}", rate, row_strs.join(" | "));
             }
-            eprintln!("  {:>8.3} | {}", rate, row_strs.join(" | "));
+            eprintln!();
         }
-        eprintln!();
     }
 
     // ============================================================
