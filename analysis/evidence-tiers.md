@@ -2,7 +2,7 @@
 
 Highest level of clinical evidence for each therapeutic mechanism.
 
-Evidence tags are incomplete and should be interpreted as a non-detection layer rather than as a definitive registry of every trial result. Several mechanism families still have substantial untagged full-text coverage, so claims of "no Phase II/III evidence" require manual or external verification before being promoted to article-level conclusions.
+Evidence tags are currently populated for 1779/4830 full-text records (36.8%), so absence claims remain provisional.
 
 | Mechanism | Highest Evidence | Phase 3 | Phase 2 | Phase 1 | In Vivo | In Vitro | Theory | Total |
 |-----------|-----------------|---------|---------|---------|---------|----------|--------|-------|
@@ -10,6 +10,7 @@ Evidence tags are incomplete and should be interpreted as a non-detection layer 
 | **bioelectric** | Preclinical (in vivo) | 0 | 0 | 0 | 58 | 83 | 2 | 182 |
 | **bispecific-antibody** | Phase III RCT | 8 | 15 | 21 | 77 | 22 | 3 | 247 |
 | **car-t** | Phase III RCT | 2 | 1 | 8 | 86 | 26 | 1 | 473 |
+| **cold-atmospheric-plasma** | Preclinical (in vivo) | 0 | 0 | 0 | 1 | 0 | 0 | 3 |
 | **crispr** | Phase I | 0 | 0 | 2 | 103 | 36 | 0 | 331 |
 | **electrochemical-therapy** | Phase III RCT | 2 | 1 | 0 | 41 | 15 | 2 | 185 |
 | **electrolysis** | Preclinical (in vivo) | 0 | 0 | 0 | 4 | 1 | 0 | 11 |
@@ -22,8 +23,11 @@ Evidence tags are incomplete and should be interpreted as a non-detection layer 
 | **microbiome** | Phase II | 0 | 1 | 0 | 7 | 1 | 0 | 109 |
 | **nanoparticle** | Phase II | 0 | 1 | 3 | 141 | 74 | 4 | 515 |
 | **oncolytic-virus** | Phase II | 0 | 5 | 11 | 108 | 47 | 2 | 378 |
+| **phagocytosis-checkpoint** | Preclinical (in vivo) | 0 | 0 | 0 | 11 | 7 | 0 | 28 |
+| **radioligand-therapy** | Preclinical (in vivo) | 0 | 0 | 0 | 16 | 4 | 0 | 52 |
 | **sonodynamic** | Phase I | 0 | 0 | 1 | 77 | 33 | 0 | 187 |
 | **synthetic-lethality** | Phase III RCT | 2 | 4 | 0 | 98 | 67 | 2 | 367 |
+| **targeted-protein-degradation** | Preclinical (in vivo) | 0 | 0 | 0 | 5 | 2 | 0 | 19 |
 | **ttfields** | Phase III RCT | 19 | 3 | 2 | 33 | 40 | 15 | 262 |
 
 ## Mechanisms with Phase III Clinical Evidence

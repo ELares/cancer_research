@@ -8,6 +8,7 @@ Cross-tabulation of article counts by therapeutic mechanism and cancer type.
 | **bioelectric** | 1 | 42 | 3 | 11 | . | 5 | 11 | 4 | 1 | 6 | 14 | 18 | 2 | 7 | . | 1 | 4 | 13 | 6 | 4 | 4 | . | 157 |
 | **bispecific-antibody** | 1 | 20 | 8 | 18 | 1 | 12 | 5 | 4 | 1 | 15 | 10 | 40 | 22 | 6 | . | 22 | 1 | 8 | 17 | 7 | 4 | . | 222 |
 | **car-t** | 3 | 32 | 2 | 14 | 1 | 11 | 33 | 6 | 6 | 44 | 17 | 26 | 53 | 17 | 2 | 25 | 13 | 15 | 21 | 6 | 7 | 1 | 355 |
+| **cold-atmospheric-plasma** | . | . | . | . | . | . | 1 | . | . | . | . | . | . | . | . | . | . | . | 1 | . | . | . | 2 |
 | **crispr** | 4 | 25 | 3 | 21 | 1 | 2 | 10 | 5 | 4 | 16 | 9 | 29 | 14 | 18 | . | 5 | 5 | 12 | 12 | 5 | 1 | . | 201 |
 | **electrochemical-therapy** | 1 | 7 | 1 | 7 | . | . | 5 | 1 | 2 | . | 31 | 5 | 1 | 6 | . | . | . | . | 61 | 30 | 2 | . | 160 |
 | **electrolysis** | . | 1 | . | 1 | . | . | . | . | . | . | . | . | . | . | . | . | . | . | 1 | . | . | . | 3 |
@@ -20,10 +21,13 @@ Cross-tabulation of article counts by therapeutic mechanism and cancer type.
 | **microbiome** | 3 | 4 | . | 18 | . | 4 | . | 1 | 4 | . | 7 | 16 | . | 16 | . | . | . | . | 4 | 3 | . | . | 80 |
 | **nanoparticle** | 6 | 71 | 4 | 19 | . | 2 | 32 | 10 | 4 | 3 | 32 | 31 | 6 | 28 | . | 4 | 3 | 14 | 30 | 8 | 2 | 4 | 313 |
 | **oncolytic-virus** | 4 | 26 | 3 | 26 | . | 3 | 43 | 12 | 1 | 3 | 13 | 14 | 2 | 51 | . | 1 | . | 16 | 28 | 12 | 7 | 2 | 267 |
+| **phagocytosis-checkpoint** | . | . | . | 3 | . | . | . | . | . | 2 | 1 | 2 | 3 | 1 | . | 1 | 1 | 1 | . | . | . | . | 15 |
+| **radioligand-therapy** | 1 | 10 | . | . | . | . | 2 | 1 | 2 | . | 1 | 2 | . | 1 | . | 1 | . | 1 | 2 | 7 | . | . | 31 |
 | **sonodynamic** | 2 | 42 | . | 4 | . | . | 11 | . | 1 | 1 | 19 | 6 | 1 | 2 | . | . | . | 4 | 12 | 6 | 2 | 2 | 115 |
 | **synthetic-lethality** | 2 | 69 | 1 | 17 | 2 | 6 | 14 | . | 4 | 7 | 7 | 16 | 2 | 4 | 1 | 5 | 1 | 73 | 25 | 24 | 10 | 1 | 291 |
+| **targeted-protein-degradation** | . | 4 | . | 1 | . | 1 | . | . | . | 1 | . | 1 | . | 1 | . | . | . | . | 4 | 2 | . | . | 15 |
 | **ttfields** | . | 9 | . | 5 | . | 2 | 204 | 1 | 1 | 1 | 10 | 24 | . | 5 | 23 | . | . | 10 | 9 | . | 7 | . | 311 |
-| **Total** | 104 | 689 | 63 | 372 | 20 | 127 | 528 | 104 | 100 | 177 | 358 | 591 | 216 | 424 | 49 | 107 | 51 | 271 | 426 | 206 | 97 | 19 | 5099 |
+| **Total** | 105 | 703 | 63 | 376 | 20 | 128 | 531 | 105 | 102 | 180 | 360 | 596 | 219 | 427 | 49 | 109 | 52 | 273 | 433 | 215 | 97 | 19 | 5162 |
 
 ## Key Observations
 
@@ -67,6 +71,7 @@ Cross-tabulation of article counts by therapeutic mechanism and cancer type.
 - **microbiome**: researched across 11/22 cancer types
 - **nanoparticle**: researched across 20/22 cancer types
 - **oncolytic-virus**: researched across 19/22 cancer types
+- **radioligand-therapy**: researched across 12/22 cancer types
 - **sonodynamic**: researched across 15/22 cancer types
 - **synthetic-lethality**: researched across 21/22 cancer types
 - **ttfields**: researched across 14/22 cancer types

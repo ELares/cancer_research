@@ -7,6 +7,8 @@ Major milestones chronologically, based on highest-impact articles per year per 
 
 - **ttfields**: *Maintenance Therapy With Tumor-Treating Fields Plus Temozolomide vs Temozolomide Alone for Glioblastoma: A Randomized Cl*
   PMID 26670971 | JAMA | 1203 citations | glioblastoma
+- **radioligand-therapy**: *A review of low-intensity ultrasound for cancer therapy.*
+  PMID 25728459 | Ultrasound in medicine & biology | 344 citations | various
 - **sonodynamic**: *A review of low-intensity ultrasound for cancer therapy.*
   PMID 25728459 | Ultrasound in medicine & biology | 344 citations | various
 - **immunotherapy** [phase2-clinical]: *Randomized phase II/III clinical trial of elpamotide for patients with advanced pancreatic cancer: PEGASUS-PC Study.*
@@ -91,8 +93,8 @@ Major milestones chronologically, based on highest-impact articles per year per 
   PMID 30804551 | Nature methods | 165 citations | various
 - **crispr**: *One-step generation of modular CAR-T cells with AAV-Cpf1.*
   PMID 30804551 | Nature methods | 165 citations | various
-- **bioelectric** [preclinical-invivo]: *ROS as a novel indicator to predict anticancer drug efficacy.*
-  PMID 31842863 | BMC cancer | 131 citations | various
+- **radioligand-therapy** [preclinical-invitro]: *Focused ultrasound-augmented targeting delivery of nanosonosensitizers from homogenous exosomes for enhanced sonodynamic*
+  PMID 31410214 | Theranostics | 148 citations | breast, lung
 
 ## 2020
 
@@ -148,7 +150,7 @@ Major milestones chronologically, based on highest-impact articles per year per 
   PMID 35969778 | Proceedings of the National Academy of Sciences of the United States of America | 371 citations | melanoma
 - **crispr**: *Engineering the next-generation of CAR T-cells with CRISPR-Cas9 gene editing.*
   PMID 35303871 | Molecular cancer | 314 citations | various
-- **synthetic-lethality**: *Targeting signaling pathways in prostate cancer: mechanisms and clinical trials.*
+- **radioligand-therapy**: *Targeting signaling pathways in prostate cancer: mechanisms and clinical trials.*
   PMID 35750683 | Signal transduction and targeted therapy | 242 citations | prostate
 
 ## 2023
