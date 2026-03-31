@@ -370,7 +370,7 @@ Persister + NRF2 & 0.00\% & 0.05\% & 99.5\% & 99.5\% \\
 
 \textbf{Model limitations}: This is a qualitative model testing directional predictions, not a quantitative predictor of clinical death rates. The absolute percentages (87\%, 42\%, etc.) depend on model-specific rate constants and should not be interpreted as clinical predictions. Its value is in demonstrating that the proposed biochemical chain produces the expected differential sensitivity under biologically plausible parameters.
 
-\#\#\# 4.3.1 Spatial Tumor Simulation: Depth-Dependent Energy Deposition
+\subsubsection{Spatial Tumor Simulation: Depth-Dependent Energy Deposition}
 
 To address the single-cell model's lack of spatial context, we extended the simulation to a 2D heterogeneous tumor grid (500 x 500 cells, 20 um/cell = 1 cm x 1 cm tissue cross-section) with physics-based energy attenuation. The tumor architecture consists of a glycolytic core (80\% glycolytic, 15\% OXPHOS, 5\% persister), an OXPHOS-rich periphery (70\% OXPHOS, 20\% glycolytic, 8\% persister, 2\% persister+NRF2), persister cluster pockets, and a stromal border --- totaling 159,033 tumor cells per simulation.
 
@@ -404,7 +404,7 @@ Dead cells release labile iron to their Moore neighborhood (8-neighbors), modeli
 
 
 
-\#\#\# 4.3.2 Vulnerability Window: How Long Does the Ferroptosis-Sensitive Window Stay Open?
+\subsubsection{Vulnerability Window: How Long Does the Ferroptosis-Sensitive Window Stay Open?}
 
 A critical question for clinical translation is timing: how long after chemotherapy withdrawal do persister cells remain ferroptosis-sensitive? We modeled the recovery of defense pathways (FSP1, GPX4, NRF2, GSH) using exponential kinetics with literature-estimated half-times (FSP1: 7 days, GPX4: 3 days, NRF2: 5 days, GSH: 1 day) and simulated 100,000 cells per condition at each timepoint.
 
