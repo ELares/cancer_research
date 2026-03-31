@@ -7,9 +7,9 @@ Evidence-level tags are present for 2020/4830 records (41.8%). Of the unclassifi
 | Mechanism | Total | Tagged | Review-like | Protocol-like | Other untagged | Primary-study-like coverage |
 |---|---|---|---|---|---|---|
 | **immunotherapy** | 2297 | 763 | 1161 | 15 | 358 | 763/1121 (68.1%) |
-| **mRNA-vaccine** | 317 | 106 | 95 | 0 | 116 | 106/222 (47.7%) |
 | **synthetic-lethality** | 367 | 178 | 128 | 1 | 60 | 178/238 (74.8%) |
 | **nanoparticle** | 515 | 228 | 230 | 0 | 57 | 228/285 (80.0%) |
+| **mRNA-vaccine** | 179 | 67 | 60 | 0 | 52 | 67/119 (56.3%) |
 | **ttfields** | 262 | 135 | 72 | 4 | 51 | 135/186 (72.6%) |
 | **electrochemical-therapy** | 185 | 86 | 47 | 2 | 50 | 86/136 (63.2%) |
 | **car-t** | 474 | 136 | 298 | 0 | 40 | 136/176 (77.3%) |
@@ -41,12 +41,6 @@ Illustrative examples below come from the uncategorized primary-study-like pool 
 - **PMID 35488273** (2022) — *Integrated analysis of single-cell and bulk RNA sequencing data reveals a pan-cancer stemness signature predicting immunotherapy response.*
 - **PMID 31186412** (2019) — *LIF regulates CXCL9 in tumor-associated macrophages and prevents CD8+ T cell tumor-infiltration impairing anti-PD1 therapy.*
 
-### mRNA-vaccine
-
-- **PMID 34872567** (2021) — *Tumor antigens and immune subtypes guided mRNA vaccine development for kidney renal clear cell carcinoma.*
-- **PMID 37428918** (2023) — *Comb-structured mRNA vaccine tethered with short double-stranded RNA adjuvants maximizes cellular immunity for cancer treatment.*
-- **PMID 35185876** (2022) — *Identification of Tumor Antigens and Immune Subtypes of Glioblastoma for mRNA Vaccine Development.*
-
 ### synthetic-lethality
 
 - **PMID 35444283** (2022) — *CCNE1 amplification is synthetic lethal with PKMYT1 kinase inhibition.*
@@ -58,6 +52,12 @@ Illustrative examples below come from the uncategorized primary-study-like pool 
 - **PMID 28436963** (2017) — *A STING-activating nanovaccine for cancer immunotherapy.*
 - **PMID 30881202** (2018) — *Nanoparticle-assisted ultrasound: A special focus on sonodynamic therapy against cancer.*
 - **PMID 37626073** (2023) — *A photo-triggered self-accelerated nanoplatform for multifunctional image-guided combination cancer immunotherapy.*
+
+### mRNA-vaccine
+
+- **PMID 34872567** (2021) — *Tumor antigens and immune subtypes guided mRNA vaccine development for kidney renal clear cell carcinoma.*
+- **PMID 37428918** (2023) — *Comb-structured mRNA vaccine tethered with short double-stranded RNA adjuvants maximizes cellular immunity for cancer treatment.*
+- **PMID 35185876** (2022) — *Identification of Tumor Antigens and Immune Subtypes of Glioblastoma for mRNA Vaccine Development.*
 
 ### ttfields
 

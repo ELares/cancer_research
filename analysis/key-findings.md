@@ -175,7 +175,7 @@ Mechanisms: car-t | Cancer: leukemia, lymphoma, myeloma | Evidence:
 ### 29. PMID 37635168 — RCR 41.4, 99.9th percentile
 **Immune checkpoint therapy for solid tumours: clinical dilemmas and future trends.**
 *Signal transduction and targeted therapy* (2023) | 494 citations | OA
-Mechanisms: crispr, immunotherapy, mRNA-vaccine, nanoparticle, oncolytic-virus | Cancer: lung, melanoma | Evidence: 
+Mechanisms: crispr, immunotherapy, nanoparticle, oncolytic-virus | Cancer: lung, melanoma | Evidence: 
 **Key insight**: Immune-checkpoint inhibitors (ICBs), in addition to targeting CTLA-4, PD-1, and PD-L1, novel targeting LAG-3 drugs have also been approved in clinical application. With the widespread use of the drug, we must deeply analyze the dilemma of the agents and seek a breakthrough in the treatment prospect.
 
 ### 30. PMID 30388456 — RCR 40.0, 99.9th percentile

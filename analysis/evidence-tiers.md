@@ -18,7 +18,7 @@ Evidence tags are currently populated for 2020/4830 full-text records (41.8%). R
 | **frequency-therapy** | Clinical (non-phase) | 0 | 0 | 0 | 7 | 5 | 7 | 1 | 71 |
 | **hifu** | Phase II | 0 | 2 | 0 | 7 | 14 | 6 | 0 | 81 |
 | **immunotherapy** | Phase III RCT | 21 | 43 | 50 | 84 | 421 | 133 | 11 | 2297 |
-| **mRNA-vaccine** | Phase III RCT | 2 | 2 | 8 | 24 | 44 | 15 | 11 | 317 |
+| **mRNA-vaccine** | Phase II | 0 | 2 | 8 | 3 | 33 | 13 | 8 | 179 |
 | **metabolic-targeting** | Clinical (non-phase) | 0 | 0 | 0 | 2 | 43 | 31 | 0 | 274 |
 | **microbiome** | Phase II | 0 | 2 | 0 | 2 | 7 | 1 | 0 | 109 |
 | **nanoparticle** | Phase II | 0 | 1 | 4 | 0 | 144 | 75 | 4 | 515 |
@@ -92,13 +92,6 @@ Evidence tags are currently populated for 2020/4830 full-text records (41.8%). R
   *Randomized phase II/III clinical trial of elpamotide for patients with advanced pancreatic cancer: PEGASUS-PC Study.*
 - **PMID 36814222** (2023, 28 cites) — esophageal
   *INTEGRATE II: randomised phase III controlled trials of regorafenib containing regimens versus standard of care in refractory Advanced Gastro-Oesophag*
-
-### mRNA-vaccine (2 Phase III articles)
-
-- **PMID 35732350** (2022, 18 cites) — myeloma
-  *Antibody and T cell responses to COVID-19 vaccination in patients receiving anticancer therapies.*
-- **PMID 37031282** (2023, 7 cites) — breast
-  *Side effects of COVID-19 vaccinations in patients treated for breast cancer.*
 
 ### oncolytic-virus (1 Phase III articles)
 

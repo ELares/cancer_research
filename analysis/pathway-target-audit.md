@@ -28,7 +28,7 @@ Examples prefer primary-study-like records when available, then fall back to the
 
 - **PMID 37889752** (2023) — crispr, immunotherapy — `preclinical-invitro` — *KEAP1 mutation in lung adenocarcinoma promotes immune evasion and immunotherapy resistance.*
 - **PMID 36594611** (2023) — sonodynamic — `other_untagged` — *Covalent Organic Framework Nanobowls as Activatable Nanosensitizers for Tumor-Specific and Ferroptosis-Augmented Sonodynamic Therapy.*
-- **PMID 37369808** (2023) — immunotherapy, mRNA-vaccine — `preclinical-invitro` — *Crosstalk of ferroptosis regulators and tumor immunity in pancreatic adenocarcinoma: novel perspective to mRNA vaccines and personalized immunotherapy*
+- **PMID 37369808** (2023) — immunotherapy — `preclinical-invitro` — *Crosstalk of ferroptosis regulators and tumor immunity in pancreatic adenocarcinoma: novel perspective to mRNA vaccines and personalized immunotherapy*
 
 ### scd-mufa-axis
 

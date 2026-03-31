@@ -2,8 +2,8 @@
 
 Articles that combine multiple therapeutic mechanisms — identifying synergistic research.
 
-**Total articles with 2+ mechanisms**: 2008 (41% of corpus)
-**Total articles with 3+ mechanisms**: 431
+**Total articles with 2+ mechanisms**: 1966 (40% of corpus)
+**Total articles with 3+ mechanisms**: 418
 
 ## Top 30 Mechanism Combinations
 
@@ -12,20 +12,20 @@ Articles that combine multiple therapeutic mechanisms — identifying synergisti
 | 1 | car-t | immunotherapy | 417 | [CAR-engineered cell therapies: current understandings and fu...](by-pmid/41559435.md) (5 cites) |
 | 2 | immunotherapy | oncolytic-virus | 262 | [Quantitative dynamic granzyme B PET imaging to characterize ...](by-pmid/41510159.md) (1 cites) |
 | 3 | immunotherapy | nanoparticle | 193 | [The application of nanotechnology in regulating mitochondria...](by-pmid/41328341.md) (1 cites) |
-| 4 | immunotherapy | mRNA-vaccine | 172 | [Smart dendrimer nanogels boost mRNA-based cancer therapy via...](by-pmid/41141584.md) (1 cites) |
-| 5 | crispr | immunotherapy | 166 | [CRISPR screens define unified hallmarks of cancer cell-auton...](by-pmid/41417728.md) (3 cites) |
-| 6 | bispecific-antibody | immunotherapy | 139 | [Immune Checkpoint Inhibitor-Induced Ureteritis and Cystitis ...](by-pmid/41036598.md) (1 cites) |
+| 4 | crispr | immunotherapy | 166 | [CRISPR screens define unified hallmarks of cancer cell-auton...](by-pmid/41417728.md) (3 cites) |
+| 5 | bispecific-antibody | immunotherapy | 139 | [Immune Checkpoint Inhibitor-Induced Ureteritis and Cystitis ...](by-pmid/41036598.md) (1 cites) |
+| 6 | immunotherapy | mRNA-vaccine | 131 | [Individualized mRNA vaccines evoke durable T cell immunity i...](by-pmid/41708868.md) (1 cites) |
 | 7 | immunotherapy | metabolic-targeting | 127 | [From mechanism to targeted therapy: Advances in histone lact...](by-pmid/41277911.md) (2 cites) |
 | 8 | nanoparticle | sonodynamic | 116 | [The application of nanotechnology in regulating mitochondria...](by-pmid/41328341.md) (1 cites) |
 | 9 | immunotherapy | microbiome | 100 | [Microbiome modulation of tumorigenesis and immune responses....](by-pmid/41486167.md) (2 cites) |
 | 10 | car-t | crispr | 95 | [Advancing Medulloblastoma Treatment: Molecular Mechanisms, D...](by-pmid/41168621.md) (2 cites) |
 | 11 | epigenetic | immunotherapy | 82 | [Targeting epigenetic regulators as a promising avenue to ove...](by-pmid/40675967.md) (57 cites) |
 | 12 | antibody-drug-conjugate | immunotherapy | 78 | [A data-driven cartography of NSCLC vaccine research: Quantif...](by-pmid/41630477.md) (0 cites) |
-| 13 | mRNA-vaccine | nanoparticle | 70 | [RNA neoantigen vaccines prime long-lived CD8+ T cells in pan...](by-pmid/39972124.md) (187 cites) |
-| 14 | immunotherapy | sonodynamic | 53 | [Recent advances in the bench-to-bedside translation of cance...](by-pmid/40041906.md) (58 cites) |
-| 15 | electrochemical-therapy | immunotherapy | 52 | [Multiparametric MRI to Predict Response to Irreversible Elec...](by-pmid/41266946.md) (1 cites) |
-| 16 | crispr | synthetic-lethality | 50 | [Characterization of TNG348: A Selective, Allosteric USP1 Inh...](by-pmid/39886906.md) (14 cites) |
-| 17 | immunotherapy | synthetic-lethality | 50 | [Clinical approaches to overcome PARP inhibitor resistance....](by-pmid/40442774.md) (51 cites) |
+| 13 | immunotherapy | sonodynamic | 53 | [Recent advances in the bench-to-bedside translation of cance...](by-pmid/40041906.md) (58 cites) |
+| 14 | electrochemical-therapy | immunotherapy | 52 | [Multiparametric MRI to Predict Response to Irreversible Elec...](by-pmid/41266946.md) (1 cites) |
+| 15 | crispr | synthetic-lethality | 50 | [Characterization of TNG348: A Selective, Allosteric USP1 Inh...](by-pmid/39886906.md) (14 cites) |
+| 16 | immunotherapy | synthetic-lethality | 50 | [Clinical approaches to overcome PARP inhibitor resistance....](by-pmid/40442774.md) (51 cites) |
+| 17 | mRNA-vaccine | nanoparticle | 47 | [RNA neoantigen vaccines prime long-lived CD8+ T cells in pan...](by-pmid/39972124.md) (187 cites) |
 | 18 | immunotherapy | ttfields | 47 | [Recent advances in Tumor Treating Fields (TTFields) therapy ...](by-pmid/39401002.md) (32 cites) |
 | 19 | car-t | oncolytic-virus | 40 | [CAR-T therapy dilemma and innovative design strategies for n...](by-pmid/40148310.md) (31 cites) |
 | 20 | nanoparticle | radioligand-therapy | 35 | [Nectin-4-Targeting Radiotracers: Novel Theranostic Agents fo...](by-pmid/40474033.md) (8 cites) |
@@ -52,7 +52,7 @@ Articles that combine multiple therapeutic mechanisms — identifying synergisti
   *Review of poly (ADP-ribose) polymerase (PARP) mechanisms of action and rationale for targeting in cancer and other disea*
 - **[31048681]** (2019, 582 cites) — immunotherapy, nanoparticle, sonodynamic — general
   *Checkpoint blockade and nanosonosensitizer-augmented noninvasive sonodynamic therapy combination reduces tumour growth a*
-- **[37635168]** (2023, 494 cites) — crispr, immunotherapy, mRNA-vaccine, nanoparticle, oncolytic-virus — lung, melanoma
+- **[37635168]** (2023, 494 cites) — crispr, immunotherapy, nanoparticle, oncolytic-virus — lung, melanoma
   *Immune checkpoint therapy for solid tumours: clinical dilemmas and future trends.*
 - **[34031618]** (2021, 398 cites) — car-t, immunotherapy, metabolic-targeting — general
   *Metabolic reprogramming of terminally exhausted CD8+ T cells by IL-10 enhances anti-tumor immunity.*
@@ -91,6 +91,7 @@ Pairs with zero or very few articles — potential research opportunities.
 - bioelectric + cold-atmospheric-plasma: **ZERO** articles
 - bioelectric + frequency-therapy: **ZERO** articles
 - bioelectric + hifu: **ZERO** articles
+- bioelectric + mRNA-vaccine: **ZERO** articles
 - bioelectric + microbiome: **ZERO** articles
 - bioelectric + phagocytosis-checkpoint: **ZERO** articles
 - bispecific-antibody + cold-atmospheric-plasma: **ZERO** articles
@@ -106,4 +107,3 @@ Pairs with zero or very few articles — potential research opportunities.
 - bispecific-antibody + targeted-protein-degradation: **ZERO** articles
 - bispecific-antibody + ttfields: **ZERO** articles
 - car-t + electrolysis: **ZERO** articles
-- car-t + frequency-therapy: **ZERO** articles
