@@ -39,7 +39,7 @@ impl CellState {
             gsh: cell.gsh,
             gpx4,
             fsp1: cell.fsp1,
-            mufa_protection: 0.0,
+            mufa_protection: params.initial_mufa_protection,
             lp: 0.0,
             dead: false,
             death_step: None,
@@ -58,7 +58,7 @@ impl CellState {
             gsh: cell.gsh,
             gpx4,
             fsp1: cell.fsp1,
-            mufa_protection: 0.0,
+            mufa_protection: params.initial_mufa_protection,
             lp: 0.0,
             dead: false,
             death_step: None,
@@ -79,10 +79,9 @@ impl CellState {
 /// non-zero in in-vivo-like conditions (Params::invivo).
 #[inline]
 fn update_mufa_protection(current: f64, params: &Params) -> f64 {
-    (
-        current + params.scd_mufa_rate * (1.0 - current / (params.scd_mufa_max + 1e-9))
-    )
-        .clamp(0.0, params.scd_mufa_max.max(0.0))
+    let growth = params.scd_mufa_rate * (1.0 - current / (params.scd_mufa_max + 1e-9));
+    let decay = params.scd_mufa_decay * current;
+    (current + growth - decay).clamp(0.0, params.scd_mufa_max.max(0.0))
 }
 
 /// Execute a single timestep of the ferroptosis biochemistry.
@@ -180,7 +179,7 @@ pub fn sim_cell(
     let mut gsh = cell.gsh;
     let mut gpx4 = cell.gpx4;
     let fsp1 = cell.fsp1;
-    let mut mufa_protection = 0.0;
+    let mut mufa_protection = params.initial_mufa_protection;
     let mut lp: f64 = 0.0;
 
     // Treatment: exogenous ROS

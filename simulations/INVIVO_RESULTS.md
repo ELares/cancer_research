@@ -2,46 +2,62 @@
 
 ## What this simulation tests
 
-Dixon/Park (Cancer Research, 2025) showed that GPX4 inhibition kills cancer cells in 2D culture but fails in vivo because SCD1-driven MUFA enrichment displaces PUFAs from membranes, reducing ferroptosis susceptibility. This simulation tests whether that finding changes the conclusions about physical ROS modalities (SDT/PDT).
+Dixon/Park (Cancer Research, 2025) showed that GPX4 inhibition kills cancer cells in 2D culture but fails in vivo because SCD1-driven MUFA enrichment displaces PUFAs from membranes, reducing ferroptosis susceptibility. This simulation tests whether that finding changes the conclusions about physical ROS modalities (modeled here as a shared exogenous ROS burst — SDT and PDT use identical parameters in this binary).
 
 ## Model
 
-The MUFA protection model uses saturable logistic accumulation:
+The MUFA protection model uses saturable logistic accumulation with natural lipid-turnover decay:
 
 ```
-mufa_protection(t+1) = mufa_protection(t) + rate × (1 - mufa_protection / max)
-effective_unsat = lipid_unsat × (1 - mufa_protection), clamped ≥ 0.05
+growth = rate × (1 - M / max)
+decay  = decay_rate × M
+M(t+1) = M(t) + growth - decay
+effective_unsat = lipid_unsat × (1 - M), clamped ≥ 0.05
 ```
+
+Steady state (with SCD1 active): `M_ss = rate × max / (rate + decay × max)`
 
 Default parameters (from `Params::invivo()`):
-- `scd_mufa_rate: 0.01` — time constant ~50 steps; 86% of max at step 100
-- `scd_mufa_max: 0.50` — 50% PUFA displacement at steady state
+- `scd_mufa_rate: 0.01` — accumulation rate
+- `scd_mufa_max: 0.50` — maximum PUFA displacement
+- `scd_mufa_decay: 0.005` — natural lipid turnover
+- `initial_mufa_protection: 0.40` — steady state (established in-vivo remodeling)
 
-Biological basis: SCD1 is regulated by SREBP1/mTORC1 (not NRF2) and is constitutively active in 3D/in vivo. MUFA incorporation onset ~6-10h (Magtanong 2019), steady state ~48-72h. Protection factor ~3-5× (Tesfay 2019).
+Cells start with pre-accumulated protection representing established tumors, not freshly seeded 2D culture.
+
+Biological basis: SCD1 is regulated by SREBP1/mTORC1 (not NRF2) and is constitutively active in 3D/in vivo. MUFA incorporation onset ~6-10h (Magtanong 2019), steady state ~48-72h. Protection factor ~3-5× (Tesfay 2019). Membrane phospholipid half-life ~24-48h drives the decay term.
+
+## Three contexts
+
+1. **2D**: `initial_mufa_protection=0, rate=0, decay=0` — standard in-vitro conditions, no MUFA remodeling
+2. **In-vivo**: `initial_mufa_protection=0.40, rate=0.01, decay=0.005` — established tumor with active SCD1 maintaining MUFA at steady state
+3. **In-vivo + SCD1 inhibitor**: `initial_mufa_protection=0.40, rate=0, decay=0.005` — SCD1 blocked, existing MUFA decays via natural lipid turnover
+
+The SCD1i context is NOT identical to 2D. Cells start with pre-existing MUFA that gradually depletes, producing intermediate results.
 
 ## Key results
 
 ### Three-context comparison (100K cells per condition)
 
-| Phenotype | Treatment | 2D Death% | In-Vivo Death% | Protection Factor |
-|-----------|-----------|-----------|----------------|-------------------|
-| Glycolytic | SDT | 87.1% | 51.6% | 1.69× |
-| OXPHOS | RSL3 | 1.2% | 0.0% | >>1× |
-| OXPHOS | SDT | 99.9% | 98.5% | 1.01× |
-| **Persister** | **RSL3** | **42.4%** | **7.1%** | **5.99×** |
-| **Persister** | **SDT** | **100.0%** | **99.99%** | **1.00×** |
-| Persister+NRF2 | RSL3 | 0.04% | 0.0% | >>1× |
-| Persister+NRF2 | SDT | 99.5% | 97.9% | 1.02× |
+| Phenotype | Treatment | 2D Death% | In-Vivo Death% | SCD1i Death% | Protection Factor |
+|-----------|-----------|-----------|----------------|-------------|-------------------|
+| Glycolytic | Exo. ROS | 87.1% | 12.9% | 26.2% | 6.76× |
+| OXPHOS | RSL3 | 1.2% | 0.0% | 0.01% | >>1× |
+| OXPHOS | Exo. ROS | 99.9% | 90.5% | 96.0% | 1.10× |
+| **Persister** | **RSL3** | **42.4%** | **2.3%** | **7.2%** | **18.6×** |
+| **Persister** | **Exo. ROS** | **100.0%** | **99.98%** | **100.0%** | **1.00×** |
+| Persister+NRF2 | RSL3 | 0.04% | 0.0% | 0.0% | >>1× |
+| Persister+NRF2 | Exo. ROS | 99.5% | 90.5% | 94.4% | 1.10× |
 
-SCD1 inhibitor fully restores 2D sensitivity in all conditions (invivo+scd1i matches 2D exactly).
+Note: "Exo. ROS" = exogenous ROS modality. SDT and PDT are modeled identically in this binary (shared `sdt_ros`/`pdt_ros` = 5.0). Independent conclusions about SDT vs PDT cannot be drawn from this simulation.
 
 ### Biological predictions
 
-1. **Dixon 2025 confirmed**: RSL3 kills 42.4% of persisters in 2D but only 7.1% in vivo. MUFA remodeling provides ~6× protection against pharmacologic GPX4 inhibition.
+1. **Dixon 2025 confirmed**: RSL3 kills 42.4% of persisters in 2D but only 2.3% in vivo. Pre-accumulated MUFA provides ~19× protection against pharmacologic GPX4 inhibition.
 
-2. **SDT/PDT bypass MUFA defense**: Physical ROS modalities maintain ≥97.9% kill across all phenotypes in vivo. The exogenous ROS burst (5.0 relative units, decaying over ~45 steps) overwhelms GSH before MUFA protection can fully accumulate. By the time MUFA reaches meaningful levels (~step 50), the cell's antioxidant defenses are already depleted and autocatalytic propagation is underway.
+2. **Exogenous ROS still effective on persisters**: Physical ROS modalities maintain 99.98% kill on persisters even with established MUFA defense. The exogenous ROS burst overwhelms pre-accumulated MUFA protection. However, for other phenotypes the effect is substantial — glycolytic cells drop from 87% to 13%, and NRF2-compensated persisters drop from 99.5% to 90.5%.
 
-3. **SCD1 inhibitor resensitization confirmed**: Tesfay 2019 predicted that SCD1 inhibition restores ferroptosis sensitivity. The simulation confirms complete resensitization (in-vivo + SCD1i = exact 2D match).
+3. **SCD1 inhibitor partially resensitizes**: SCD1i produces intermediate results (RSL3 on persisters: 2.3% → 7.2%), not full restoration to 2D levels (42.4%). This is because existing MUFA decays gradually — it is not instantly depleted. Full resensitization would require waiting for complete lipid turnover.
 
 ### Parameter sensitivity
 
@@ -55,7 +71,7 @@ MUFA sweep for Persister + SDT (50K cells per point):
 | 0.020 | 100.0% | 100.0% | 100.0% | 100.0% | 100.0% |
 | 0.040 | 100.0% | 100.0% | 100.0% | 100.0% | 99.9% |
 
-SDT kills persisters at ≥99.9% across the entire tested parameter space. The result is insensitive to MUFA parameter choices.
+Exogenous ROS kills persisters at ≥99.9% across the entire tested parameter space. The result is insensitive to MUFA parameter choices.
 
 MUFA sweep for Persister + RSL3 (50K cells per point):
 
@@ -67,31 +83,31 @@ MUFA sweep for Persister + RSL3 (50K cells per point):
 | 0.020 | 17.2% | 9.7% | 5.1% | 2.4% | 1.1% |
 | 0.040 | 15.9% | 7.8% | 3.2% | 1.1% | 0.2% |
 
-RSL3 shows a steep gradient: at low MUFA (rate=0.002, max=0.20), efficacy drops from 42% to 31%. At high MUFA (rate=0.04, max=0.60), efficacy drops to 0.2% — a >200× reduction. The Dixon 2025 prediction holds across the entire parameter space but the magnitude depends strongly on how fast and how completely MUFA displacement occurs. At the default in-vivo parameters (rate=0.01, max=0.50), RSL3 drops to 7.0% — a ~6× protection factor.
+RSL3 shows a steep gradient: at low MUFA (rate=0.002, max=0.20), efficacy drops from 42% to 31%. At high MUFA (rate=0.04, max=0.60), efficacy drops to 0.2% — a >200× reduction. Note: the sweep starts cells at mufa_protection=0 (onset scenario), not at steady state. The main comparison uses steady-state initial conditions.
 
 ## What conclusions survive
 
-1. **SDT/PDT kill persisters even with in-vivo lipid remodeling.** This is the simulation's strongest result. The massive exogenous ROS burst overwhelms MUFA protection because it depletes GSH before membrane remodeling can prevent lipid peroxidation cascade.
+1. **Exogenous ROS kills persisters even with established in-vivo lipid remodeling.** This is the simulation's strongest result. For persisters specifically, pre-accumulated MUFA barely dents exogenous ROS efficacy (99.98% vs 100%).
 
-2. **Physical modalities have a specific advantage over drugs for this resistance mechanism.** RSL3 (GPX4 inhibition) loses most of its efficacy in vivo (42% → 7%), but SDT/PDT maintain near-complete kill. The mechanism: drugs inhibit a single enzyme (GPX4), which can be compensated by MUFA-mediated substrate reduction. Physical modalities impose overwhelming oxidative stress that depletes all defenses simultaneously.
+2. **Physical modalities have a specific advantage over drugs for this resistance mechanism.** RSL3 loses most of its efficacy (42% → 2.3%), but exogenous ROS maintains near-complete kill on persisters. The mechanism: drugs inhibit a single enzyme (GPX4), which MUFA-mediated substrate reduction can compensate. Exogenous ROS imposes overwhelming oxidative stress that depletes all defenses simultaneously.
 
-3. **SCD1 inhibitor + RSL3 is a viable combination.** If SDT/PDT are unavailable, pharmacologic ferroptosis induction can be rescued by co-administering an SCD1 inhibitor to prevent MUFA compensation.
+3. **The advantage is strongest for persisters, weaker for other phenotypes.** Glycolytic cells (87% → 13%) and NRF2-compensated persisters (99.5% → 90.5%) are substantially affected by established MUFA. Only the FSP1-downregulated persister phenotype retains near-complete vulnerability.
 
 ## What conclusions are now 2D-only artifacts
 
-1. **RSL3 efficacy on persisters (42.4%) is a 2D artifact.** In vivo, this drops to 7.1%. The manuscript should not present RSL3 as comparably effective to SDT/PDT without this caveat.
+1. **RSL3 efficacy on persisters (42.4%) is a 2D artifact.** In vivo, this drops to 2.3%.
 
-2. **Glycolytic cell sensitivity to SDT (87%) is partially a 2D artifact.** In vivo, this drops to 52%. Glycolytic cells have lower baseline ROS, giving MUFA more time to accumulate before oxidative stress overwhelms it.
+2. **Exogenous ROS efficacy on glycolytic cells (87%) is largely a 2D artifact.** In vivo, this drops to 13%.
 
-3. **Baseline persister death rate (1.2%) is partially a 2D artifact.** In vivo, spontaneous ferroptosis drops to 0.01%. MUFA protection stabilizes borderline-vulnerable cells.
+3. **The near-100% kill across all phenotypes under SDT/PDT is partially a 2D artifact.** In vivo, only the persister phenotype retains near-complete kill. Other phenotypes show 10-30% survival.
 
 ## Limitations
 
-- The model uses a single coarse MUFA-protection term, not a full lipidomics simulation.
-- SCD1 activity is modeled as a context switch (on/off via Params), not as a dynamic per-cell variable.
+- SDT and PDT are modeled identically (shared exogenous ROS parameter). Independent claims about SDT vs PDT are not supported by this simulation.
+- The decay model is first-order (constant fractional turnover). Real lipid dynamics are more complex.
+- The MUFA parameter sweep starts cells at mufa_protection=0 rather than steady state, so it represents onset dynamics rather than established tumors.
 - Other in-vivo resistance axes (DHODH, DHCR7/7-DHC, stromal buffering) are not modeled.
-- The 180-step simulation compresses biological time; the rate calibration maps approximately to 48-72h onset but is not a literal timescale.
-- The 0.05 floor on effective_unsat means cells always retain minimal PUFA vulnerability, which may overstate physical-modality efficacy at extreme MUFA protection levels.
+- The 0.05 floor on effective_unsat means cells always retain minimal PUFA vulnerability.
 
 ## References
 

@@ -11,7 +11,7 @@
 //!
 //! Key predictions to test:
 //! - Dixon 2025: RSL3 (GPX4 inhibitor) should lose efficacy in vivo due to MUFA remodeling
-//! - SDT/PDT: massive exogenous ROS may still overwhelm MUFA defense
+//! - Exogenous ROS (SDT and PDT are modeled identically as a shared ROS burst): may still overwhelm MUFA defense
 //! - SCD1 inhibition should restore ferroptosis sensitivity (Tesfay 2019)
 
 use std::path::PathBuf;
@@ -154,11 +154,17 @@ fn main() {
 
     let params_2d = Params::default();
     let params_invivo = Params::invivo();
-    // SCD1 inhibitor in vivo: MUFA protection disabled but other params unchanged
+    // SCD1 inhibitor in vivo: cells start with pre-existing membrane MUFA
+    // but SCD1 is blocked (rate=0). Natural lipid turnover (decay) gradually
+    // depletes existing MUFA. This is NOT identical to 2D (no initial MUFA)
+    // or in-vivo (steady-state maintenance). It models the acute phase after
+    // SCD1 inhibitor administration.
     let params_scd1i = Params {
         scd_mufa_rate: 0.0,
-        scd_mufa_max: 0.0,
-        ..Params::invivo()
+        scd_mufa_max: params_invivo.scd_mufa_max,
+        scd_mufa_decay: params_invivo.scd_mufa_decay,
+        initial_mufa_protection: params_invivo.initial_mufa_protection,
+        ..Params::default()
     };
 
     eprintln!("--- Context: 2D (MUFA off, scd_mufa_rate=0) ---");

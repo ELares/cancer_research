@@ -29,6 +29,15 @@ pub struct Params {
     /// Maximum fraction of PUFA vulnerability suppressed by MUFA enrichment.
     /// Literature range: 0.40–0.60 (40–60% PUFA displacement in 3D/in vivo).
     pub scd_mufa_max: f64,
+    /// Starting MUFA protection level. In established 3D/in-vivo tumors,
+    /// SCD1-driven remodeling has already reached steady state, so cells
+    /// begin with pre-accumulated membrane MUFA. Zero in 2D culture.
+    pub initial_mufa_protection: f64,
+    /// MUFA decay rate from natural phospholipid turnover. When SCD1 is
+    /// active, accumulation outpaces decay and protection reaches steady
+    /// state. When SCD1 is inhibited (rate=0), decay gradually depletes
+    /// existing membrane MUFA. Membrane lipid half-life ~24-48h.
+    pub scd_mufa_decay: f64,
 
     // === GPX4 Dynamic Regulation ===
     pub gpx4_degradation_by_ros: f64,
@@ -64,6 +73,8 @@ impl Default for Params {
             fsp1_rate: 0.08,
             scd_mufa_rate: 0.0,
             scd_mufa_max: 0.0,
+            initial_mufa_protection: 0.0,
+            scd_mufa_decay: 0.0,
             gpx4_degradation_by_ros: 0.002,
             gpx4_nrf2_upregulation: 0.008,
             sdt_ros: 5.0,
@@ -79,17 +90,27 @@ impl Default for Params {
 impl Params {
     /// In-vivo / 3D culture parameters with SCD1-driven MUFA protection enabled.
     ///
-    /// SCD1 is constitutively active in 3D/in-vivo contexts via SREBP1/mTORC1.
-    /// `scd_mufa_rate: 0.01` gives a logistic time constant of ~50 steps
-    /// (63% at step 50, 86% at step 100, 95% at step 150), broadly matching
-    /// the 48–72 h lipidome remodeling onset from Magtanong 2019.
-    /// `scd_mufa_max: 0.50` means 50% PUFA displacement at steady state,
-    /// consistent with Dixon/Park 2025 lipidomics (40–60% range) and
-    /// Tesfay 2019 showing ~3–5× ferroptosis resensitization upon SCD1 inhibition.
+    /// Cells start at the accumulation–decay steady state (M_ss ≈ 0.40),
+    /// representing established in-vivo lipid remodeling. The `scd_mufa_rate`
+    /// maintains protection while `scd_mufa_decay` models natural phospholipid
+    /// turnover. When SCD1 is inhibited (rate=0), existing MUFA decays.
+    ///
+    /// `scd_mufa_max: 0.50` caps PUFA displacement, consistent with
+    /// Dixon/Park 2025 lipidomics (40–60% range) and Tesfay 2019 showing
+    /// ~3–5× ferroptosis resensitization upon SCD1 inhibition.
     pub fn invivo() -> Self {
+        // Steady state with decay: rate*(1-M/max) = decay*M
+        // → M_ss = rate*max / (rate + decay*max) = 0.01*0.5 / (0.01 + 0.005*0.5) = 0.40
+        // Cells start at this steady state.
+        let rate = 0.01;
+        let max = 0.50;
+        let decay = 0.005;
+        let steady_state = rate * max / (rate + decay * max);
         Params {
-            scd_mufa_rate: 0.01,
-            scd_mufa_max: 0.50,
+            scd_mufa_rate: rate,
+            scd_mufa_max: max,
+            scd_mufa_decay: decay,
+            initial_mufa_protection: steady_state,
             ..Params::default()
         }
     }
