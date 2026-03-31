@@ -2,7 +2,7 @@
 
 Highest level of clinical evidence for each therapeutic mechanism.
 
-Evidence tags are currently populated for 1779/4830 full-text records (36.8%), so absence claims remain provisional.
+Evidence tags are currently populated for 1779/4830 full-text records (36.8%). Reviews/meta-analyses (1921) and protocols (29) are intentionally left unclassified; among primary-study-like records, coverage is 1779/2880 (61.8%). Absence claims remain provisional.
 
 | Mechanism | Highest Evidence | Phase 3 | Phase 2 | Phase 1 | In Vivo | In Vitro | Theory | Total |
 |-----------|-----------------|---------|---------|---------|---------|----------|--------|-------|

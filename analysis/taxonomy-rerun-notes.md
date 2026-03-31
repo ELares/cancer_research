@@ -36,6 +36,14 @@ The tightened taxonomy corrected a structural problem in the repo:
 
 The cost of that correction is sparsity. The resistant-state layer currently matches only 10/4830 full-text articles, which is safer than false-positive over-tagging but too thin to support strong corpus-level resistant-state conclusions yet.
 
+## Known taxonomy and query artifacts
+
+- Broad biology terms such as `tme-stroma`, `autophagy`, and `senescence-sasp` were previously liable to act like top-level intervention families. Separating them into `biology_processes` reduced the risk of mistaking background cancer biology coverage for therapeutic modality depth.
+- The repo's historical gap lists should not be read as if they were stable under ontology changes. Splitting intervention tags from process tags preserves the high-level dominance of immunotherapy, TTFields, and established device/drug classes, but it weakens confidence in any claim that depended on heterogeneous category counts alone.
+- The resistant-state layer was previously vulnerable to false-positive keyword matches. Tightening it into composite rules revealed that much of the earlier apparent state coverage was likely taxonomy inflation rather than validated resistant-state evidence.
+- Some apparent zero-count gaps are already known search artifacts rather than real absences. The clearest confirmed example remains `synthetic-lethality × myeloma`, where independent PubMed verification shows relevant PARP-related literature despite the corpus-level non-detection.
+- The newly added intervention families do matter, but the rerun suggests they are additive rather than revolutionary at the current corpus scale: `radioligand-therapy` (52), `phagocytosis-checkpoint` (28), `targeted-protein-degradation` (19), and `cold-atmospheric-plasma` (3) do not overturn the top-level structure of the mechanism-cancer matrix.
+
 ## Implication for issue #10
 
 This rerun completes the first half of the issue:
