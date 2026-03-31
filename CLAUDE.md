@@ -30,17 +30,18 @@ Rust-based Monte Carlo: 16M cells, 4 phenotypes × 4 treatments. Features autoca
 ## Key Files
 
 ```
-article/drafts/v1.{md,tex,pdf}    # The manuscript
-article/figures/fig*.{pdf,png}      # 7 figures
-article/references/bibliography.bib # BibTeX
-corpus/by-pmid/{PMID}.md           # 4,830 full-text articles
-corpus/abstracts/by-pmid/{PMID}.md # 5,584 abstract-only records
-corpus/INDEX.jsonl                   # Master index
-tags/by-mechanism/*.txt              # PMID lists
-simulations/src/main.rs              # Rust simulation
-simulations/simulation_results.json  # Results
-scripts/                             # Python pipeline
-books/                               # Reference textbooks (LFS)
+article/drafts/v1.{md,tex,pdf}         # The manuscript
+article/figures/fig*.{pdf,png}           # 7 figures
+article/references/bibliography.bib      # BibTeX
+corpus/by-pmid/{PMID}.md                # 4,830 full-text articles
+corpus/abstracts/by-pmid/{PMID}.md      # 5,584 abstract-only records
+corpus/INDEX.jsonl                        # Master index
+tags/by-mechanism/*.txt                   # PMID lists
+simulations/ferroptosis-core/            # Shared Rust library (biochemistry, physics, grid, immune)
+simulations/sim-{original,spatial,window,icd,combo}/ # 5 simulation binaries
+simulations/simulation_results.json      # Original v3 results
+scripts/                                  # Python pipeline
+books/                                    # Reference textbooks (LFS)
 ```
 
 ## Search

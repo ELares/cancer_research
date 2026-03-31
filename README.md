@@ -47,7 +47,7 @@ Key features: autocatalytic LP propagation gated by GSH/GPX4, dynamic GPX4 regul
 
 **Author:** Ezequiel Lares
 
-- `article/drafts/v1.md` — Markdown draft (~11,800 words, 114 references)
+- `article/drafts/v1.md` — Markdown draft (~12,000 words, 114 references)
 - `article/drafts/v1.tex` — LaTeX with proper tables and embedded figures
 - `article/drafts/v1.pdf` — Compiled PDF manuscript
 - `article/references/bibliography.bib` — BibTeX bibliography (114 entries)
