@@ -18,7 +18,7 @@ from tqdm import tqdm
 from article_io import load_article, save_article
 from config import (
     BIOLOGY_PROCESS_KEYWORDS, CANCER_TYPE_KEYWORDS, EVIDENCE_LEVEL_KEYWORDS, MECHANISM_KEYWORDS,
-    PMID_DIR, TAGS_DIR,
+    PATHWAY_TARGET_KEYWORDS, PMID_DIR, TAGS_DIR,
     RESISTANT_STATE_RULES,
 )
 from evidence_utils import is_protocol_like, is_review_like, normalize_text
@@ -41,8 +41,8 @@ def has_cancer_context(text: str) -> bool:
     return any(term in text for term in GENERIC_CANCER_TERMS)
 
 
-def get_searchable_text(fm: dict, body: str) -> str:
-    """Combine title, abstract, MeSH terms, and body into searchable text."""
+def get_searchable_text(fm: dict, body: str, include_full_text: bool = False) -> str:
+    """Combine title, abstract, metadata, and optionally full text into searchable text."""
     parts = [
         fm.get("title", ""),
         " ".join(fm.get("mesh_terms", [])),
@@ -55,6 +55,8 @@ def get_searchable_text(fm: dict, body: str) -> str:
     abstract_match = re.search(r"## Abstract\n\n?(.*?)(?=\n## |\Z)", body, re.DOTALL)
     if abstract_match:
         parts.append(abstract_match.group(1))
+    if include_full_text:
+        parts.append(body)
 
     return normalize_text(" ".join(parts))
 
@@ -168,7 +170,12 @@ def main():
     resistant_state_pmids: dict[str, list[str]] = {k: [] for k in RESISTANT_STATE_RULES}
     journal_pmids: dict[str, list[str]] = {}
 
-    stats = {"mechanisms": 0, "biology_processes": 0, "cancer_types": 0, "evidence": 0, "resistant_states": 0}
+    pathway_target_pmids: dict[str, list[str]] = {k: [] for k in PATHWAY_TARGET_KEYWORDS}
+
+    stats = {
+        "mechanisms": 0, "biology_processes": 0, "pathway_targets": 0,
+        "cancer_types": 0, "evidence": 0, "resistant_states": 0,
+    }
 
     for filepath in tqdm(files, desc="  Tagging"):
         fm, body = load_article(filepath)
@@ -177,10 +184,12 @@ def main():
 
         pmid = fm.get("pmid", filepath.stem)
         text = get_searchable_text(fm, body)
+        pathway_text = get_searchable_text(fm, body, include_full_text=True)
 
         # Match
         mechanisms = match_mechanisms(text)
         biology_processes = match_keywords(text, BIOLOGY_PROCESS_KEYWORDS)
+        pathway_targets = match_keywords(pathway_text, PATHWAY_TARGET_KEYWORDS)
         cancer_types = match_keywords(text, CANCER_TYPE_KEYWORDS)
         evidence = match_evidence_level(fm, text)
         resistant_states = match_resistant_states(text)
@@ -188,6 +197,7 @@ def main():
         # Update frontmatter
         fm["mechanisms"] = mechanisms
         fm["biology_processes"] = biology_processes
+        fm["pathway_targets"] = pathway_targets
         fm["cancer_types"] = cancer_types
         fm["evidence_level"] = evidence
         fm["resistant_states"] = resistant_states
@@ -200,6 +210,8 @@ def main():
             mechanism_pmids[m].append(pmid)
         for b in biology_processes:
             biology_process_pmids[b].append(pmid)
+        for p in pathway_targets:
+            pathway_target_pmids[p].append(pmid)
         for c in cancer_types:
             cancer_pmids[c].append(pmid)
         if evidence:
@@ -220,6 +232,8 @@ def main():
             stats["mechanisms"] += 1
         if biology_processes:
             stats["biology_processes"] += 1
+        if pathway_targets:
+            stats["pathway_targets"] += 1
         if cancer_types:
             stats["cancer_types"] += 1
         if evidence:
@@ -232,6 +246,7 @@ def main():
         print("\nWriting tag index files...")
         write_tag_files("by-mechanism", mechanism_pmids)
         write_tag_files("by-biology-process", biology_process_pmids)
+        write_tag_files("by-pathway-target", pathway_target_pmids)
         write_tag_files("by-cancer-type", cancer_pmids)
         write_tag_files("by-evidence-level", evidence_pmids)
         write_tag_files("by-resistant-state", resistant_state_pmids)
@@ -241,6 +256,7 @@ def main():
     print(f"\nTagging complete:")
     print(f"  Articles with mechanism tags: {stats['mechanisms']}/{len(files)}")
     print(f"  Articles with biology-process tags: {stats['biology_processes']}/{len(files)}")
+    print(f"  Articles with pathway-target tags: {stats['pathway_targets']}/{len(files)}")
     print(f"  Articles with cancer type tags: {stats['cancer_types']}/{len(files)}")
     print(f"  Articles with evidence level: {stats['evidence']}/{len(files)}")
     print(f"  Articles with resistant-state tags: {stats['resistant_states']}/{len(files)}")
@@ -252,6 +268,11 @@ def main():
 
     print(f"\nBiology-process distribution:")
     for tag, pmids in sorted(biology_process_pmids.items(), key=lambda x: -len(x[1])):
+        if pmids:
+            print(f"  {tag}: {len(pmids)}")
+
+    print(f"\nPathway-target distribution:")
+    for tag, pmids in sorted(pathway_target_pmids.items(), key=lambda x: -len(x[1])):
         if pmids:
             print(f"  {tag}: {len(pmids)}")
 

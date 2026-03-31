@@ -205,6 +205,35 @@ BIOLOGY_PROCESS_KEYWORDS = {
     ],
 }
 
+PATHWAY_TARGET_KEYWORDS = {
+    "dhodh-defense": [
+        "dhodh", "dihydroorotate dehydrogenase", "brequinar",
+    ],
+    "dhcr7-7dhc-axis": [
+        "dhcr7", "7-dhc", "7-dehydrocholesterol", "7 dehydrocholesterol",
+    ],
+    "mboat1-mboat2-axis": [
+        "mboat1", "mboat2",
+    ],
+    "scd-mufa-axis": [
+        "scd", "scd1", "stearoyl-coa desaturase", "stearoyl coa desaturase",
+        "monounsaturated fatty acid", "mufa enrichment",
+    ],
+    "fdx1-cuproptosis-axis": [
+        "fdx1", "ferredoxin 1", "cuproptosis", "elesclomol", "copper ionophore",
+    ],
+    "trim25-gpx4-degradation": [
+        "trim25", "n6f11", "gpx4 degradation", "selective gpx4 degradation",
+    ],
+    "cuproptosis-core": [
+        "cuproptosis", "copper ionophore", "elesclomol", "fdx1", "lipoylated tca",
+    ],
+    "disulfidptosis-core": [
+        "disulfidptosis", "disulfide stress", "glucose starvation-induced disulfide stress",
+        "slc7a11", "xct-dependent disulfide stress",
+    ],
+}
+
 RESISTANT_STATE_RULES = {
     "oxphos-dependent-persister": {
         "all_of": [
