@@ -26,6 +26,13 @@ INDEX_FIELDS = [
 ]
 
 
+def sanitize_index_value(value):
+    """Normalize strings so each JSONL record stays on one physical line."""
+    if isinstance(value, str):
+        return " ".join(value.split())
+    return value
+
+
 def main():
     files = sorted(PMID_DIR.glob("*.md"))
     if not files:
@@ -43,13 +50,13 @@ def main():
         entry = {}
         for field in INDEX_FIELDS:
             if field in fm:
-                entry[field] = fm[field]
+                entry[field] = sanitize_index_value(fm[field])
 
         # Add author count (not full list — too large for index)
         authors = fm.get("authors", [])
         entry["author_count"] = len(authors)
         if authors:
-            entry["first_author"] = authors[0]
+            entry["first_author"] = sanitize_index_value(authors[0])
 
         entries.append(entry)
 

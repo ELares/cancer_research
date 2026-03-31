@@ -22,17 +22,17 @@ If you have expertise in oncology, biochemistry, ferroptosis, photodynamic thera
 
 ## The Idea
 
-Drug-tolerant persister cells are ferroptosis-sensitive (established, PMID:41481741). The field is searching for clinical ferroptosis inducers using *only pharmacologic agents* (RSL3, erastin). Meanwhile, PDT (355 ferroptosis articles) and SDT (121) trigger ferroptosis through ROS + produce immunogenic cell death — advantages systemic drugs lack.
+Drug-tolerant persister cells are ferroptosis-sensitive (established, PMID:41481741). The field is searching for clinical ferroptosis inducers using *only pharmacologic agents* (RSL3, erastin). Meanwhile, PDT (355 ferroptosis articles) and SDT (121) engage ferroptosis-related ROS biology in a separate literature that the persister field rarely discusses.
 
-**The proposal**: Physical ROS modalities should be evaluated as persister-targeting tools offering (1) spatial selectivity and (2) ICD for immunotherapy synergy. SDT extends this to deep tumors where PDT can't reach.
+**The proposal**: Physical ROS modalities should be evaluated as persister-targeting tools offering (1) spatial selectivity and potentially (2) ICD-linked immunotherapy synergy. SDT extends this to deep tumors where PDT can't reach.
 
 **What's novel**: The modality-class question — should the persister field look beyond drugs? — has not been systematically framed despite 355 PDT and 121 SDT ferroptosis papers existing independently.
 
-**Key caveat**: PDT has 40 years of development without demonstrating robust ICD-immune synergy in randomized trials.
+**Key caveats**: Most of the strongest SDT ferroptosis papers use engineered nanosonosensitizers rather than plain SDT, and PDT has 40 years of development without demonstrating robust ICD-immune synergy in randomized trials.
 
 ## Computational Simulation
 
-A Rust-based Monte Carlo simulation of the ferroptosis cascade (16M cells across 16 conditions) validates the biochemical plausibility:
+A Rust-based Monte Carlo simulation of the ferroptosis cascade (16M cells across 16 conditions) supports the biochemical plausibility of a strong exogenous ROS pulse overwhelming ferroptosis defenses:
 
 | Phenotype | Control | RSL3 | SDT/PDT |
 |-----------|---------|------|---------|
@@ -41,16 +41,16 @@ A Rust-based Monte Carlo simulation of the ferroptosis cascade (16M cells across
 | **Persister (FSP1↓)** | 1.2% | **42.5%** | **100.0%** |
 | Persister+NRF2 | 0.00% | 0.05% | 99.5% |
 
-Key features: autocatalytic LP propagation gated by GSH/GPX4, dynamic GPX4 regulation, FSP1 as GPX4-independent repair pathway. All baselines <2%. Sensitivity: 22/22 holds (100%). RSL3 kills persisters (42.5%) — matching published biology (PMID:41481741). NRF2 rescues from RSL3 but NOT from SDT.
+Key features: autocatalytic LP propagation gated by GSH/GPX4, dynamic GPX4 regulation, FSP1 as GPX4-independent repair pathway. All baselines <2%. Sensitivity under SDT: 22/22 holds. RSL3 kills persisters (42.5%) — matching published biology (PMID:41481741). NRF2 rescues from RSL3 but NOT from the model's high-ROS SDT setting.
 
 ## Article
 
 **Author:** Ezequiel Lares
 
-- `article/drafts/v1.md` — Markdown draft (~12,000 words, 114 references)
+- `article/drafts/v1.md` — Markdown draft (~12,000 words, 113 references)
 - `article/drafts/v1.tex` — LaTeX with proper tables and embedded figures
 - `article/drafts/v1.pdf` — Compiled PDF manuscript
-- `article/references/bibliography.bib` — BibTeX bibliography (114 entries)
+- `article/references/bibliography.bib` — BibTeX bibliography (113 entries)
 
 10+ review rounds including adversarial peer review, falsification analysis, novelty assessment, and simulation validation.
 

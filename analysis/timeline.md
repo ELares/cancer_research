@@ -15,8 +15,6 @@ Major milestones chronologically, based on highest-impact articles per year per 
   PMID 25826087 | Oncotarget | 87 citations | head-and-neck
 - **electrochemical-therapy**: *Electrochemotherapy (ECT) and irreversible electroporation (IRE) -advanced techniques for treating deep-seated tumors ba*
   PMID 26355606 | Biomedical engineering online | 80 citations | various
-- **frequency-therapy** [preclinical-invivo]: *Increases in microvascular perfusion and tissue oxygenation via pulsed electromagnetic fields in the healthy rat brain.*
-  PMID 25343187 | Journal of neurosurgery | 65 citations | various
 - **nanoparticle**: *Optical Imaging, Photodynamic Therapy and Optically Triggered Combination Treatments.*
   PMID 26049699 | Cancer journal (Sudbury, Mass.) | 56 citations | various
 
@@ -55,7 +53,7 @@ Major milestones chronologically, based on highest-impact articles per year per 
   PMID 28436963 | Nature nanotechnology | 870 citations | colorectal, melanoma
 - **epigenetic** [preclinical-invivo]: *Epigenetic Therapy Ties MYC Depletion to Reversing Immune Evasion and Treating Lung Cancer.*
   PMID 29195073 | Cell | 509 citations | lung
-- **bioelectric** [preclinical-invivo]: *Endogenous Bioelectric Signaling Networks: Exploiting Voltage Gradients for Control of Growth and Form.*
+- **bioelectric**: *Endogenous Bioelectric Signaling Networks: Exploiting Voltage Gradients for Control of Growth and Form.*
   PMID 28633567 | Annual review of biomedical engineering | 289 citations | various
 
 ## 2018
@@ -102,7 +100,7 @@ Major milestones chronologically, based on highest-impact articles per year per 
   PMID 32478924 | CA: a cancer journal for clinicians | 1989 citations | glioblastoma
 - **ttfields**: *Management of glioblastoma: State of the art and future directions.*
   PMID 32478924 | CA: a cancer journal for clinicians | 1989 citations | glioblastoma
-- **car-t** [preclinical-invivo]: *Engineering strategies to overcome the current roadblocks in CAR T cell therapy.*
+- **car-t**: *Engineering strategies to overcome the current roadblocks in CAR T cell therapy.*
   PMID 31848460 | Nature reviews. Clinical oncology | 1400 citations | leukemia, lymphoma
 - **oncolytic-virus**: *Targeting immunogenic cell death in cancer.*
   PMID 33179413 | Molecular oncology | 854 citations | various
@@ -125,9 +123,9 @@ Major milestones chronologically, based on highest-impact articles per year per 
   PMID 34579759 | Journal of hematology & oncology | 633 citations | various
 - **synthetic-lethality**: *Targeting mutant p53 for cancer therapy: direct and indirect strategies.*
   PMID 34583722 | Journal of hematology & oncology | 551 citations | various
-- **nanoparticle** [preclinical-invivo]: *Targeting immunogenic cancer cell death by photodynamic therapy: past, present and future.*
+- **nanoparticle**: *Targeting immunogenic cancer cell death by photodynamic therapy: past, present and future.*
   PMID 33431631 | Journal for immunotherapy of cancer | 520 citations | various
-- **bioelectric** [theoretical]: *Bioelectric signaling: Reprogrammable circuits underlying embryogenesis, regeneration, and cancer.*
+- **bioelectric**: *Bioelectric signaling: Reprogrammable circuits underlying embryogenesis, regeneration, and cancer.*
   PMID 33826908 | Cell | 463 citations | various
 - **car-t** [preclinical-invitro]: *Metabolic reprogramming of terminally exhausted CD8+ T cells by IL-10 enhances anti-tumor immunity.*
   PMID 34031618 | Nature immunology | 398 citations | various
@@ -136,13 +134,13 @@ Major milestones chronologically, based on highest-impact articles per year per 
 
 ## 2022
 
-- **antibody-drug-conjugate** [phase3-clinical]: *Antibody drug conjugate: the "biological missile" for targeted cancer therapy.*
+- **antibody-drug-conjugate**: *Antibody drug conjugate: the "biological missile" for targeted cancer therapy.*
   PMID 35318309 | Signal transduction and targeted therapy | 1402 citations | various
 - **immunotherapy**: *Immune Checkpoint Inhibitors in Cancer Therapy.*
   PMID 35621637 | Current oncology (Toronto, Ont.) | 1191 citations | head-and-neck, kidney
 - **metabolic-targeting**: *Targeting cancer metabolism in the era of precision oncology.*
   PMID 34862480 | Nature reviews. Drug discovery | 1127 citations | leukemia
-- **car-t** [preclinical-invitro]: *CAR race to cancer immunotherapy: from CAR T, CAR NK to CAR macrophage therapy.*
+- **car-t**: *CAR race to cancer immunotherapy: from CAR T, CAR NK to CAR macrophage therapy.*
   PMID 35361234 | Journal of experimental & clinical cancer research : CR | 603 citations | various
 - **mRNA-vaccine**: *Clinical advances and ongoing trials on mRNA vaccines for cancer treatment.*
   PMID 36174631 | The Lancet. Oncology | 470 citations | various
@@ -223,20 +221,20 @@ Major milestones chronologically, based on highest-impact articles per year per 
 - 2021:   380 articles ███████
 - 2022:   591 articles ███████████
 - 2023:   784 articles ███████████████
-- 2024:   905 articles ██████████████████
-- 2025:  1165 articles ███████████████████████
+- 2024:   906 articles ██████████████████
+- 2025:  1167 articles ███████████████████████
 - 2026:   204 articles ████
 
 ### Fastest-growing mechanisms (2022 vs 2020)
 
-- **bioelectric**: 12 → 23 articles/year (+92%)
+- **bioelectric**: 10 → 15 articles/year (+50%)
 - **car-t**: 30 → 102 articles/year (+240%)
-- **crispr**: 29 → 62 articles/year (+114%)
+- **crispr**: 28 → 62 articles/year (+121%)
 - **electrochemical-therapy**: 11 → 17 articles/year (+55%)
 - **immunotherapy**: 95 → 508 articles/year (+435%)
-- **metabolic-targeting**: 16 → 54 articles/year (+238%)
-- **nanoparticle**: 13 → 111 articles/year (+754%)
+- **metabolic-targeting**: 15 → 53 articles/year (+253%)
+- **nanoparticle**: 13 → 109 articles/year (+738%)
 - **oncolytic-virus**: 27 → 83 articles/year (+207%)
-- **sonodynamic**: 6 → 37 articles/year (+517%)
-- **synthetic-lethality**: 43 → 48 articles/year (+12%)
+- **sonodynamic**: 6 → 36 articles/year (+500%)
+- **synthetic-lethality**: 43 → 47 articles/year (+9%)
 - **ttfields**: 18 → 33 articles/year (+83%)

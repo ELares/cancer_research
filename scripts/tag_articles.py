@@ -21,6 +21,36 @@ from config import (
     PMID_DIR, TAGS_DIR,
 )
 
+GENERIC_CANCER_TERMS = (
+    "cancer", "neoplasm", "carcinoma", "tumor", "tumour",
+    "oncology", "malign", "glioblastoma", "melanoma", "sarcoma",
+    "leukemia", "lymphoma", "myeloma",
+)
+
+
+def is_review_like(fm: dict) -> bool:
+    """Return True for reviews, meta-analyses, evidence maps, and similar summaries."""
+    pub_types = [p.lower() for p in fm.get("pub_types", [])]
+    title = fm.get("title", "").lower()
+    review_markers = (
+        "review", "systematic review", "meta-analysis", "meta analysis",
+        "scoping review", "narrative review", "evidence map",
+    )
+    return any("review" in p or "meta-analysis" in p for p in pub_types) or any(m in title for m in review_markers)
+
+
+def is_protocol_like(fm: dict) -> bool:
+    """Return True for protocols and planned studies that should not count as completed evidence."""
+    pub_types = [p.lower() for p in fm.get("pub_types", [])]
+    title = fm.get("title", "").lower()
+    protocol_markers = ("protocol", "study protocol", "trial protocol", "protocol for")
+    return any("protocol" in p for p in pub_types) or any(m in title for m in protocol_markers)
+
+
+def has_cancer_context(text: str) -> bool:
+    """Require generic cancer context for broad mechanism tags."""
+    return any(term in text for term in GENERIC_CANCER_TERMS)
+
 
 def get_searchable_text(fm: dict, body: str) -> str:
     """Combine title, abstract, MeSH terms, and body into searchable text."""
@@ -62,12 +92,22 @@ def match_keywords(text: str, keyword_dict: dict) -> list[str]:
     return sorted(matched)
 
 
-def match_evidence_level(text: str) -> str:
+def match_mechanisms(text: str) -> list[str]:
+    """Match mechanisms with a coarse cancer-context gate to reduce off-target tags."""
+    if not has_cancer_context(text):
+        return []
+    return match_keywords(text, MECHANISM_KEYWORDS)
+
+
+def match_evidence_level(fm: dict, text: str) -> str:
     """Match text against evidence level keywords, return best match.
 
     Uses word-boundary matching for short keywords to avoid false positives.
     Priority order: phase3 > phase2 > phase1 > invivo > invitro > theoretical.
     """
+    if is_review_like(fm) or is_protocol_like(fm):
+        return ""
+
     for level in ["phase3-clinical", "phase2-clinical", "phase1-clinical",
                    "preclinical-invivo", "preclinical-invitro", "theoretical"]:
         for kw in EVIDENCE_LEVEL_KEYWORDS[level]:
@@ -125,9 +165,9 @@ def main():
         text = get_searchable_text(fm, body)
 
         # Match
-        mechanisms = match_keywords(text, MECHANISM_KEYWORDS)
+        mechanisms = match_mechanisms(text)
         cancer_types = match_keywords(text, CANCER_TYPE_KEYWORDS)
-        evidence = match_evidence_level(text)
+        evidence = match_evidence_level(fm, text)
 
         # Update frontmatter
         fm["mechanisms"] = mechanisms
