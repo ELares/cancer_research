@@ -1,0 +1,14 @@
+[package]
+name = "sim-invivo"
+version = "0.2.0"
+edition = "2021"
+description = "2D vs in-vivo ferroptosis comparison with SCD1/MUFA lipid remodeling"
+
+[dependencies]
+ferroptosis-core = { workspace = true }
+rand = { workspace = true }
+rayon = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+csv = { workspace = true }
+clap = { workspace = true }

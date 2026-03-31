@@ -463,6 +463,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "sim-invivo"
+version = "0.2.0"
+dependencies = [
+ "clap",
+ "csv",
+ "ferroptosis-core",
+ "rand",
+ "rayon",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "sim-original"
 version = "0.2.0"
 dependencies = [

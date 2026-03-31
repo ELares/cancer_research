@@ -39,7 +39,7 @@ impl CellState {
             gsh: cell.gsh,
             gpx4,
             fsp1: cell.fsp1,
-            mufa_protection: 0.0,
+            mufa_protection: params.initial_mufa_protection,
             lp: 0.0,
             dead: false,
             death_step: None,
@@ -58,7 +58,7 @@ impl CellState {
             gsh: cell.gsh,
             gpx4,
             fsp1: cell.fsp1,
-            mufa_protection: 0.0,
+            mufa_protection: params.initial_mufa_protection,
             lp: 0.0,
             dead: false,
             death_step: None,
@@ -67,12 +67,21 @@ impl CellState {
     }
 }
 
+/// Accumulate MUFA-style lipid-remodeling protection against peroxidation.
+///
+/// SCD1 (the enzyme converting SFA→MUFA) is regulated by SREBP1/mTORC1,
+/// NOT by NRF2. In 3D culture and in vivo, SCD1 is constitutively active
+/// and enriches membranes with MUFAs that displace PUFAs, reducing
+/// ferroptosis susceptibility (Dixon/Park, Cancer Research 2025;
+/// Magtanong et al., Mol Cell 2019; Tesfay et al., Cancer Res 2019).
+///
+/// The rate is context-dependent: zero in 2D culture (Params::default),
+/// non-zero in in-vivo-like conditions (Params::invivo).
 #[inline]
-fn update_mufa_protection(current: f64, nrf2: f64, params: &Params) -> f64 {
-    (
-        current + params.scd_mufa_rate * nrf2 * (1.0 - current / (params.scd_mufa_max + 1e-9))
-    )
-        .clamp(0.0, params.scd_mufa_max.max(0.0))
+fn update_mufa_protection(current: f64, params: &Params) -> f64 {
+    let growth = params.scd_mufa_rate * (1.0 - current / (params.scd_mufa_max + 1e-9));
+    let decay = params.scd_mufa_decay * current;
+    (current + growth - decay).clamp(0.0, params.scd_mufa_max.max(0.0))
 }
 
 /// Execute a single timestep of the ferroptosis biochemistry.
@@ -115,7 +124,7 @@ pub fn sim_cell_step(
 
     // === LIPID PEROXIDATION ===
     let unscav = (total_ros - scavenged).max(0.0);
-    state.mufa_protection = update_mufa_protection(state.mufa_protection, cell.nrf2, params);
+    state.mufa_protection = update_mufa_protection(state.mufa_protection, params);
 
     let effective_unsat = (cell.lipid_unsat * (1.0 - state.mufa_protection)).max(0.05);
     let lp_direct = unscav * effective_unsat * params.lp_rate;
@@ -170,7 +179,7 @@ pub fn sim_cell(
     let mut gsh = cell.gsh;
     let mut gpx4 = cell.gpx4;
     let fsp1 = cell.fsp1;
-    let mut mufa_protection = 0.0;
+    let mut mufa_protection = params.initial_mufa_protection;
     let mut lp: f64 = 0.0;
 
     // Treatment: exogenous ROS
@@ -207,7 +216,7 @@ pub fn sim_cell(
 
         // === LIPID PEROXIDATION ===
         let unscav = (total_ros - scavenged).max(0.0);
-        mufa_protection = update_mufa_protection(mufa_protection, cell.nrf2, params);
+        mufa_protection = update_mufa_protection(mufa_protection, params);
         let effective_unsat = (cell.lipid_unsat * (1.0 - mufa_protection)).max(0.05);
         let lp_direct = unscav * effective_unsat * params.lp_rate;
         let antioxidant_quench = gpx4 * (gsh / (gsh + 0.5)) + fsp1;
