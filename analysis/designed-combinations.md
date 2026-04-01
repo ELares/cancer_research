@@ -13,30 +13,30 @@ This layer is heuristic. It is designed to complement the existing co-occurrence
 
 ## Corpus-Level Counts
 
-- **designed-combination-clinical**: 67 (3.4% of 2+ mechanism papers)
-- **designed-combination-preclinical**: 319 (16.3% of 2+ mechanism papers)
-- **co-mention-only**: 621 (31.8% of 2+ mechanism papers)
+- **designed-combination-clinical**: 59 (3.0% of 2+ mechanism papers)
+- **designed-combination-preclinical**: 325 (16.6% of 2+ mechanism papers)
+- **co-mention-only**: 623 (31.9% of 2+ mechanism papers)
 - **review-or-perspective-multi-lane**: 945 (48.4% of 2+ mechanism papers)
 
 ## Highest-Count Designed Combination Lanes
 
 | Mechanism pair | Designed-combination articles |
 |---|---|
-| **immunotherapy + oncolytic-virus** | 69 |
-| **nanoparticle + sonodynamic** | 52 |
-| **immunotherapy + nanoparticle** | 44 |
-| **bispecific-antibody + immunotherapy** | 42 |
-| **car-t + immunotherapy** | 33 |
-| **immunotherapy + sonodynamic** | 22 |
-| **epigenetic + immunotherapy** | 22 |
-| **crispr + immunotherapy** | 20 |
-| **immunotherapy + mRNA-vaccine** | 20 |
+| **immunotherapy + oncolytic-virus** | 68 |
+| **nanoparticle + sonodynamic** | 53 |
+| **immunotherapy + nanoparticle** | 43 |
+| **bispecific-antibody + immunotherapy** | 43 |
+| **car-t + immunotherapy** | 32 |
+| **immunotherapy + sonodynamic** | 21 |
+| **epigenetic + immunotherapy** | 21 |
+| **immunotherapy + mRNA-vaccine** | 18 |
+| **crispr + immunotherapy** | 16 |
 | **mRNA-vaccine + nanoparticle** | 13 |
-| **crispr + synthetic-lethality** | 12 |
+| **electrochemical-therapy + immunotherapy** | 12 |
+| **crispr + synthetic-lethality** | 11 |
 | **antibody-drug-conjugate + immunotherapy** | 10 |
-| **car-t + crispr** | 10 |
-| **immunotherapy + metabolic-targeting** | 10 |
 | **bioelectric + nanoparticle** | 10 |
+| **immunotherapy + metabolic-targeting** | 9 |
 
 ## Audited Priority Lanes
 
@@ -52,8 +52,8 @@ The samples below are manually reviewed examples selected from recent or highly 
 ### immunotherapy + mRNA-vaccine
 
 - **PMID 36168634** (2022) — `designed-combination-preclinical` / `preclinical-invivo` — *Circular RNA cancer vaccines drive immunity in hard-to-treat malignancies.*
-- **PMID 38584166** (2024) — `designed-combination-clinical` / `phase2-clinical` — *Personalized neoantigen vaccine and pembrolizumab in advanced hepatocellular carcinoma: a phase 1/2 trial.*
 - **PMID 38268001** (2024) — `designed-combination-preclinical` / `preclinical-invivo` — *mRNA-based precision targeting of neoantigens and tumor-associated antigens in malignant brain tumors.*
+- **PMID 36248865** (2022) — `designed-combination-clinical` / `clinical-other` — *Combination treatment of radiofrequency ablation and peptide neoantigen vaccination: Promising modality for future cancer immunotherapy.*
 
 ### immunotherapy + radioligand-therapy
 

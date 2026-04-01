@@ -80,6 +80,7 @@ RADIOLIGAND_CORE_TERMS = (
 RADIOLIGAND_SUPPORT_TERMS = (
     "radiopharmaceutical", "radionuclide", "radioligand", "radiolabeled",
     "radiolabelled", "radioisotope", "radioisotopic",
+    "theranostic", "theranostics",
 )
 
 RADIOLIGAND_THERAPY_TERMS = (
@@ -100,9 +101,10 @@ RADIOLIGAND_ISOTOPE_TERMS = (
 
 COMBINATION_LANGUAGE_TERMS = (
     "combination therapy", "combination treatment", "combination regimen",
-    "in combination with", "combined with", "combined ", "combined strategy", "combined modality",
-    "combinatorial", "co-treatment", "cotherapy", "plus ", " plus ", "together with",
-    "synergizes with", "synergy with", "synergistic", "added to", "augment",
+    "in combination with", "combined with", "combined therapy", "combined treatment",
+    "combined regimen", "combined strategy", "combined modality", "combination of",
+    "co-treatment", "cotherapy", "together with", "synergizes with", "synergy with",
+    "synergistic", "added to", "augment",
 )
 
 
@@ -207,7 +209,7 @@ def match_radioligand_therapy(text: str, title_text: str) -> bool:
 
     if title_has_core or title_has_isotope:
         return True
-    if title_has_support and (title_has_target or title_has_therapy):
+    if title_has_support and (title_has_target or title_has_isotope):
         return True
     if has_core and has_isotope:
         return True
