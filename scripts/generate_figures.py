@@ -11,6 +11,7 @@ Produces:
   article/figures/fig6_sdt_pdt_depth.pdf
 """
 
+import csv
 import json
 import os
 import re
@@ -457,13 +458,322 @@ def fig6_sdt_chain_evidence(articles):
 
 
 # ============================================================
+# Fig 9: Evidence Tier Composition
+# ============================================================
+
+EVIDENCE_ORDER = [
+    "phase3-clinical", "phase2-clinical", "phase1-clinical", "clinical-other",
+    "preclinical-invivo", "preclinical-invitro", "theoretical",
+]
+EVIDENCE_LABELS = {
+    "phase3-clinical": "Phase III",
+    "phase2-clinical": "Phase II",
+    "phase1-clinical": "Phase I",
+    "clinical-other": "Clinical (non-phase)",
+    "preclinical-invivo": "Preclinical in vivo",
+    "preclinical-invitro": "Preclinical in vitro",
+    "theoretical": "Theoretical",
+}
+EVIDENCE_COLORS = {
+    "phase3-clinical": "#b71c1c",
+    "phase2-clinical": "#e65100",
+    "phase1-clinical": "#f9a825",
+    "clinical-other": "#4fc3f7",
+    "preclinical-invivo": "#388e3c",
+    "preclinical-invitro": "#81c784",
+    "theoretical": "#bdbdbd",
+}
+
+TIER_RANK = {lvl: i for i, lvl in enumerate(reversed(EVIDENCE_ORDER))}
+
+
+def load_index():
+    """Load INDEX.jsonl as a list of dicts."""
+    entries = []
+    with open(INDEX_FILE) as f:
+        for line in f:
+            entries.append(json.loads(line))
+    return entries
+
+
+def fig9_evidence_tiers(index):
+    """Stacked horizontal bar: evidence tier composition per mechanism."""
+    print("Figure 9: Evidence tier composition...")
+
+    mech_tiers = defaultdict(lambda: Counter())
+    for e in index:
+        ev = e.get("evidence_level", "")
+        if not ev:
+            continue
+        for m in e.get("mechanisms", []):
+            mech_tiers[m][ev] += 1
+
+    if not mech_tiers:
+        print("  No evidence data — skipping")
+        return
+
+    def highest_tier(counts):
+        for lvl in EVIDENCE_ORDER:
+            if counts.get(lvl, 0) > 0:
+                return TIER_RANK[lvl]
+        return -1
+
+    mechs = sorted(mech_tiers.keys(), key=lambda m: highest_tier(mech_tiers[m]))
+
+    fig, ax = plt.subplots(figsize=(10, max(6, len(mechs) * 0.35)))
+
+    y_pos = np.arange(len(mechs))
+    lefts = np.zeros(len(mechs))
+
+    for lvl in EVIDENCE_ORDER:
+        widths = [mech_tiers[m].get(lvl, 0) for m in mechs]
+        ax.barh(y_pos, widths, left=lefts, height=0.7,
+                color=EVIDENCE_COLORS[lvl], label=EVIDENCE_LABELS[lvl])
+        lefts += widths
+
+    ax.set_yticks(y_pos)
+    ax.set_yticklabels(mechs, fontsize=9)
+    ax.set_xlabel("Number of articles")
+    ax.set_title("Evidence Tier Composition by Mechanism")
+    ax.legend(loc="lower right", fontsize=8, framealpha=0.9)
+    ax.text(0.5, -0.08,
+            "Only articles with detected evidence tags shown. "
+            "Untagged and review-like articles excluded.",
+            transform=ax.transAxes, ha='center', fontsize=8, style='italic', color='gray')
+
+    plt.tight_layout()
+    fig.savefig(FIG_DIR / "fig9_evidence_tiers.pdf")
+    fig.savefig(FIG_DIR / "fig9_evidence_tiers.png")
+    plt.close()
+    print(f"  {len(mechs)} mechanisms plotted")
+
+
+# ============================================================
+# Fig 10: In-Vivo vs 2D Ferroptosis Comparison
+# ============================================================
+
+INVIVO_JSON = PROJECT_ROOT / "simulations" / "output" / "invivo" / "invivo_comparison.json"
+
+
+def fig10_invivo_comparison():
+    """Grouped bar: 2D vs in-vivo vs SCD1i for RSL3 and exogenous ROS."""
+    print("Figure 10: In-vivo ferroptosis comparison...")
+
+    if not INVIVO_JSON.exists():
+        print(f"  {INVIVO_JSON} not found — run sim-invivo first. Skipping.")
+        return
+
+    data = json.loads(INVIVO_JSON.read_text())
+
+    phenotype_order = ["Glycolytic", "OXPHOS", "Persister (FSP1↓)", "Persister+NRF2"]
+    context_order = ["2d", "invivo", "invivo+scd1i"]
+    context_labels = {"2d": "2D culture", "invivo": "In vivo", "invivo+scd1i": "In vivo + SCD1i"}
+    context_colors = {"2d": "#1565c0", "invivo": "#c62828", "invivo+scd1i": "#f9a825"}
+
+    # Use SDT rows as the exogenous ROS representative (SDT = PDT in this binary)
+    treatments = [("RSL3", "RSL3 (GPX4 inhibitor)"), ("SDT", "Exogenous ROS")]
+
+    fig, axes = plt.subplots(1, 2, figsize=(14, 5), sharey=True)
+
+    for ax_idx, (tx_key, tx_label) in enumerate(treatments):
+        ax = axes[ax_idx]
+        x = np.arange(len(phenotype_order))
+        width = 0.25
+
+        for ci, ctx in enumerate(context_order):
+            rates = []
+            ci_lo = []
+            ci_hi = []
+            for pheno in phenotype_order:
+                rec = next((r for r in data
+                           if r["context"] == ctx and r["phenotype"] == pheno and r["treatment"] == tx_key), None)
+                if rec:
+                    rates.append(rec["death_rate"] * 100)
+                    ci_lo.append((rec["death_rate"] - rec["ci_low"]) * 100)
+                    ci_hi.append((rec["ci_high"] - rec["death_rate"]) * 100)
+                else:
+                    rates.append(0)
+                    ci_lo.append(0)
+                    ci_hi.append(0)
+
+            offset = (ci - 1) * width
+            bars = ax.bar(x + offset, rates, width, yerr=[ci_lo, ci_hi],
+                         color=context_colors[ctx], label=context_labels[ctx],
+                         capsize=3, error_kw={"lw": 0.8})
+
+        ax.set_xlabel("Cell phenotype")
+        ax.set_xticks(x)
+        ax.set_xticklabels(phenotype_order, fontsize=9, rotation=15, ha='right')
+        ax.set_title(tx_label)
+        ax.set_ylim(0, 105)
+
+    axes[0].set_ylabel("Death rate (%)")
+    axes[0].legend(fontsize=8, loc="upper left")
+
+    fig.suptitle("Effect of SCD1/MUFA Lipid Remodeling on Ferroptosis Sensitivity", fontsize=13, y=1.02)
+    fig.text(0.5, -0.04,
+             "SDT and PDT are modeled identically (shared exogenous ROS). "
+             "In-vivo cells start at MUFA steady state (40% PUFA displacement).",
+             ha='center', fontsize=8, style='italic', color='gray')
+
+    plt.tight_layout()
+    fig.savefig(FIG_DIR / "fig10_invivo_comparison.pdf")
+    fig.savefig(FIG_DIR / "fig10_invivo_comparison.png")
+    plt.close()
+    print("  2 panels (RSL3 + Exo. ROS)")
+
+
+# ============================================================
+# Fig 11: MUFA Sweep Heatmaps
+# ============================================================
+
+SWEEP_CSV = PROJECT_ROOT / "simulations" / "output" / "invivo" / "mufa_sweep.csv"
+
+
+def fig11_mufa_sweep():
+    """Side-by-side heatmaps: RSL3 vs exogenous ROS death rate across MUFA parameter space."""
+    print("Figure 11: MUFA parameter sweep heatmaps...")
+
+    if not SWEEP_CSV.exists():
+        print(f"  {SWEEP_CSV} not found — run sim-invivo first. Skipping.")
+        return
+
+    rows = []
+    with open(SWEEP_CSV) as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            rows.append(row)
+
+    # Filter to steady-state only (initial_mufa_protection > 0)
+    steady = [r for r in rows if float(r["initial_mufa_protection"]) > 0]
+
+    if not steady:
+        print("  No steady-state sweep data found — skipping")
+        return
+
+    # SDT rows represent exogenous ROS
+    treatments = [("RSL3", "RSL3 (GPX4 inhibitor)"), ("SDT", "Exogenous ROS")]
+
+    rates_sorted = sorted(set(float(r["scd_mufa_rate"]) for r in steady))
+    maxes_sorted = sorted(set(float(r["scd_mufa_max"]) for r in steady))
+
+    fig, axes = plt.subplots(1, 2, figsize=(12, 4.5))
+
+    for ax_idx, (tx_key, tx_label) in enumerate(treatments):
+        ax = axes[ax_idx]
+        tx_rows = [r for r in steady if r["treatment"] == tx_key]
+
+        grid = np.zeros((len(rates_sorted), len(maxes_sorted)))
+        for r in tx_rows:
+            ri = rates_sorted.index(float(r["scd_mufa_rate"]))
+            mi = maxes_sorted.index(float(r["scd_mufa_max"]))
+            grid[ri, mi] = float(r["death_rate"]) * 100
+
+        im = ax.imshow(grid, cmap="RdYlGn_r", vmin=0, vmax=100, aspect="auto",
+                       origin="lower")
+        ax.set_xticks(range(len(maxes_sorted)))
+        ax.set_xticklabels([f"{m:.2f}" for m in maxes_sorted], fontsize=8)
+        ax.set_yticks(range(len(rates_sorted)))
+        ax.set_yticklabels([f"{r:.3f}" for r in rates_sorted], fontsize=8)
+        ax.set_xlabel("scd_mufa_max")
+        ax.set_ylabel("scd_mufa_rate")
+        ax.set_title(tx_label)
+
+        for i in range(len(rates_sorted)):
+            for j in range(len(maxes_sorted)):
+                val = grid[i, j]
+                color = "white" if val > 50 else "black"
+                ax.text(j, i, f"{val:.1f}", ha="center", va="center",
+                       fontsize=7, color=color)
+
+    fig.colorbar(im, ax=axes, shrink=0.8, label="Persister death rate (%)")
+    fig.suptitle("MUFA Parameter Sensitivity — Persister Cells (steady-state)", fontsize=13, y=1.02)
+    fig.text(0.5, -0.04,
+             "Cells start at analytically computed MUFA steady state. "
+             "Decay rate fixed at 0.005 across all points.",
+             ha='center', fontsize=8, style='italic', color='gray')
+
+    fig.savefig(FIG_DIR / "fig11_mufa_sweep.pdf", bbox_inches='tight')
+    fig.savefig(FIG_DIR / "fig11_mufa_sweep.png", bbox_inches='tight')
+    plt.close()
+    print(f"  {len(rates_sorted)}×{len(maxes_sorted)} grid, 2 panels")
+
+
+# ============================================================
+# Fig 12: Pathway Target Prevalence
+# ============================================================
+
+def _is_review_or_protocol(entry: dict) -> bool:
+    """Title-based approximation of the canonical review/protocol classification.
+
+    INDEX.jsonl lacks pub_types, so this uses the same title markers as
+    evidence_utils.is_review_like / is_protocol_like. This matches the
+    primary-study-like definition in analyze_corpus.py (tagged + other_untagged).
+    """
+    title = entry.get("title", "").lower()
+    review_markers = ("review", "systematic review", "meta-analysis", "meta analysis",
+                      "scoping review", "narrative review", "evidence map")
+    protocol_markers = ("protocol", "study protocol", "trial protocol", "protocol for")
+    return any(m in title for m in review_markers) or any(m in title for m in protocol_markers)
+
+
+def fig12_pathway_targets(index):
+    """Horizontal bar: pathway target prevalence, total vs primary-study-like."""
+    print("Figure 12: Pathway target prevalence...")
+
+    target_total = Counter()
+    target_primary = Counter()
+
+    for e in index:
+        for pt in e.get("pathway_targets", []):
+            target_total[pt] += 1
+            if not _is_review_or_protocol(e):
+                target_primary[pt] += 1
+
+    if not target_total:
+        print("  No pathway target data — skipping")
+        return
+
+    targets = sorted(target_total.keys(), key=lambda t: target_total[t])
+    totals = [target_total[t] for t in targets]
+    primaries = [target_primary.get(t, 0) for t in targets]
+
+    fig, ax = plt.subplots(figsize=(9, max(4, len(targets) * 0.45)))
+    y = np.arange(len(targets))
+    height = 0.35
+
+    ax.barh(y + height / 2, totals, height, color="#90a4ae", label="Total (incl. reviews)")
+    ax.barh(y - height / 2, primaries, height, color="#1565c0", label="Primary-study-like")
+
+    ax.set_yticks(y)
+    ax.set_yticklabels(targets, fontsize=9)
+    ax.set_xlabel("Number of articles")
+    ax.set_title("Pathway Target Prevalence in Corpus")
+    ax.legend(fontsize=9, loc="lower right")
+    ax.text(0.5, -0.1,
+            "Primary-study-like = non-review, non-protocol articles (title-based classification). "
+            "cuproptosis-core and fdx1-cuproptosis-axis overlap ~100%.",
+            transform=ax.transAxes, ha='center', fontsize=8, style='italic', color='gray')
+
+    plt.tight_layout()
+    fig.savefig(FIG_DIR / "fig12_pathway_targets.pdf")
+    fig.savefig(FIG_DIR / "fig12_pathway_targets.png")
+    plt.close()
+    print(f"  {len(targets)} targets plotted")
+
+
+# ============================================================
 # Main
 # ============================================================
 
 def main():
     print("Loading corpus...")
     articles = load_corpus()
-    print(f"  Loaded {len(articles)} articles\n")
+    print(f"  Loaded {len(articles)} articles")
+
+    print("Loading index...")
+    index = load_index()
+    print(f"  Loaded {len(index)} index records\n")
 
     fig1_ferroptosis_comparison(articles)
     fig2_mechanism_heatmap(articles)
@@ -471,6 +781,11 @@ def main():
     fig4_molecular_overlap(articles)
     fig5_publication_trends(articles)
     fig6_sdt_chain_evidence(articles)
+
+    fig9_evidence_tiers(index)
+    fig10_invivo_comparison()
+    fig11_mufa_sweep()
+    fig12_pathway_targets(index)
 
     print(f"\nAll figures saved to {FIG_DIR}/")
     print("Files:")
