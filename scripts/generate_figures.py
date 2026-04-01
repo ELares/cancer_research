@@ -703,6 +703,20 @@ def fig11_mufa_sweep():
 # Fig 12: Pathway Target Prevalence
 # ============================================================
 
+def _is_review_or_protocol(entry: dict) -> bool:
+    """Title-based approximation of the canonical review/protocol classification.
+
+    INDEX.jsonl lacks pub_types, so this uses the same title markers as
+    evidence_utils.is_review_like / is_protocol_like. This matches the
+    primary-study-like definition in analyze_corpus.py (tagged + other_untagged).
+    """
+    title = entry.get("title", "").lower()
+    review_markers = ("review", "systematic review", "meta-analysis", "meta analysis",
+                      "scoping review", "narrative review", "evidence map")
+    protocol_markers = ("protocol", "study protocol", "trial protocol", "protocol for")
+    return any(m in title for m in review_markers) or any(m in title for m in protocol_markers)
+
+
 def fig12_pathway_targets(index):
     """Horizontal bar: pathway target prevalence, total vs primary-study-like."""
     print("Figure 12: Pathway target prevalence...")
@@ -713,7 +727,7 @@ def fig12_pathway_targets(index):
     for e in index:
         for pt in e.get("pathway_targets", []):
             target_total[pt] += 1
-            if e.get("evidence_level"):
+            if not _is_review_or_protocol(e):
                 target_primary[pt] += 1
 
     if not target_total:
@@ -737,7 +751,7 @@ def fig12_pathway_targets(index):
     ax.set_title("Pathway Target Prevalence in Corpus")
     ax.legend(fontsize=9, loc="lower right")
     ax.text(0.5, -0.1,
-            "Primary-study-like = articles with a detected evidence-level tag. "
+            "Primary-study-like = non-review, non-protocol articles (title-based classification). "
             "cuproptosis-core and fdx1-cuproptosis-axis overlap ~100%.",
             transform=ax.transAxes, ha='center', fontsize=8, style='italic', color='gray')
 
