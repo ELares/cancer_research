@@ -4,23 +4,23 @@
 
 Ezequiel Lares
 
-## Repo Goal
+## What This Repo Is For
 
-Maintain this repository as an open cancer-research synthesis workspace that compares therapeutic mechanisms, evidence depth, resistant-state biology, pathway targets, and simulation-based hypotheses without assuming a single answer in advance.
+This is an open cancer-research workspace. The point is to help people—not to be right about one hypothesis.
 
-The repo began around a PDT/SDT-persister-ferroptosis thesis. That thesis is still worth evaluating, but it is no longer the only organizing frame. The repo should stay open to alternative modalities, targets, pathways, and interpretations when the corpus or external literature supports them.
+The repo exists to compare therapeutic mechanisms, evidence depth, resistant-state biology, pathway targets, and simulation-based ideas honestly, so that anyone who reads it can form their own informed view. If the evidence says a direction is weak, say so. If a new direction looks promising, surface it. Don't protect old framing at the expense of clarity.
 
-## Working Principle
+## Guiding Principles
 
-Do not let the current manuscript title or earlier repo framing hard-code the conclusion.
+1. **Let the evidence lead.** The repo started around a PDT/SDT-persister-ferroptosis thesis. That's still worth evaluating, but it's one lane among many. Don't treat it as the default winner.
 
-When reviewing or extending the work:
+2. **Stay open.** New modalities, targets, pathways, and interpretations should be welcomed when the corpus or external literature supports them. The README invites anyone with curiosity to contribute—the codebase should reflect that same openness.
 
-- treat PDT/SDT as one candidate lane, not the default winner
-- prefer resistant-state and evidence-quality questions over modality loyalty
-- distinguish intervention classes from broad biology/process terms
-- treat corpus-level non-detection as provisional unless externally verified
-- surface known artifacts, missing landmark papers, and tagging limitations early
+3. **Be honest about what we don't know.** Corpus-level non-detection is provisional, not proof of absence. Missing landmark papers distort field-level claims. Taxonomy choices inflate or deflate conclusions. Say so directly rather than burying caveats.
+
+4. **Make it reproducible.** Scripts should be re-runnable. Analysis outputs should be regenerated, not hand-edited. Separate generated files from handwritten interpretation notes so it's clear what came from the pipeline and what came from a person.
+
+5. **Keep it human.** This project matters because cancer takes people from their families. Technical rigor serves that mission—but so does making the work accessible, welcoming contributions, and not hiding behind jargon when plain language works.
 
 ## Current Workstreams
 
@@ -44,9 +44,10 @@ When reviewing or extending the work:
 
 - claims that are traceable and caveated
 - taxonomy choices that do not inflate conclusions
-- docs and manuscript language that reflect uncertainty honestly
+- language that reflects uncertainty honestly
 - outputs that help compare alternatives fairly
 - maintainable scripts and reproducible reruns
+- a tone that invites contribution rather than gatekeeping
 
 ## What To Avoid
 
@@ -55,6 +56,7 @@ When reviewing or extending the work:
 - confusing patient-study signal with phase-labeled trial maturity
 - treating broad process coverage as proof of therapeutic depth
 - letting historical framing survive after the underlying analysis changed
+- making the codebase feel closed or intimidating to newcomers
 
 ## Key Files
 
