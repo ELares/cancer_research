@@ -11,6 +11,7 @@ Produces:
   article/figures/fig6_sdt_pdt_depth.pdf
 """
 
+import csv
 import json
 import os
 import re
@@ -457,7 +458,7 @@ def fig6_sdt_chain_evidence(articles):
 
 
 # ============================================================
-# Fig 7: Evidence Tier Composition
+# Fig 9: Evidence Tier Composition
 # ============================================================
 
 EVIDENCE_ORDER = [
@@ -495,9 +496,9 @@ def load_index():
     return entries
 
 
-def fig7_evidence_tiers(index):
+def fig9_evidence_tiers(index):
     """Stacked horizontal bar: evidence tier composition per mechanism."""
-    print("Figure 7: Evidence tier composition...")
+    print("Figure 9: Evidence tier composition...")
 
     mech_tiers = defaultdict(lambda: Counter())
     for e in index:
@@ -541,22 +542,22 @@ def fig7_evidence_tiers(index):
             transform=ax.transAxes, ha='center', fontsize=8, style='italic', color='gray')
 
     plt.tight_layout()
-    fig.savefig(FIG_DIR / "fig7_evidence_tiers.pdf")
-    fig.savefig(FIG_DIR / "fig7_evidence_tiers.png")
+    fig.savefig(FIG_DIR / "fig9_evidence_tiers.pdf")
+    fig.savefig(FIG_DIR / "fig9_evidence_tiers.png")
     plt.close()
     print(f"  {len(mechs)} mechanisms plotted")
 
 
 # ============================================================
-# Fig 8: In-Vivo vs 2D Ferroptosis Comparison
+# Fig 10: In-Vivo vs 2D Ferroptosis Comparison
 # ============================================================
 
 INVIVO_JSON = PROJECT_ROOT / "simulations" / "output" / "invivo" / "invivo_comparison.json"
 
 
-def fig8_invivo_comparison():
+def fig10_invivo_comparison():
     """Grouped bar: 2D vs in-vivo vs SCD1i for RSL3 and exogenous ROS."""
-    print("Figure 8: In-vivo ferroptosis comparison...")
+    print("Figure 10: In-vivo ferroptosis comparison...")
 
     if not INVIVO_JSON.exists():
         print(f"  {INVIVO_JSON} not found — run sim-invivo first. Skipping.")
@@ -616,28 +617,27 @@ def fig8_invivo_comparison():
              ha='center', fontsize=8, style='italic', color='gray')
 
     plt.tight_layout()
-    fig.savefig(FIG_DIR / "fig8_invivo_comparison.pdf")
-    fig.savefig(FIG_DIR / "fig8_invivo_comparison.png")
+    fig.savefig(FIG_DIR / "fig10_invivo_comparison.pdf")
+    fig.savefig(FIG_DIR / "fig10_invivo_comparison.png")
     plt.close()
     print("  2 panels (RSL3 + Exo. ROS)")
 
 
 # ============================================================
-# Fig 9: MUFA Sweep Heatmaps
+# Fig 11: MUFA Sweep Heatmaps
 # ============================================================
 
 SWEEP_CSV = PROJECT_ROOT / "simulations" / "output" / "invivo" / "mufa_sweep.csv"
 
 
-def fig9_mufa_sweep():
+def fig11_mufa_sweep():
     """Side-by-side heatmaps: RSL3 vs exogenous ROS death rate across MUFA parameter space."""
-    print("Figure 9: MUFA parameter sweep heatmaps...")
+    print("Figure 11: MUFA parameter sweep heatmaps...")
 
     if not SWEEP_CSV.exists():
         print(f"  {SWEEP_CSV} not found — run sim-invivo first. Skipping.")
         return
 
-    import csv
     rows = []
     with open(SWEEP_CSV) as f:
         reader = csv.DictReader(f)
@@ -693,20 +693,19 @@ def fig9_mufa_sweep():
              "Decay rate fixed at 0.005 across all points.",
              ha='center', fontsize=8, style='italic', color='gray')
 
-    plt.tight_layout()
-    fig.savefig(FIG_DIR / "fig9_mufa_sweep.pdf")
-    fig.savefig(FIG_DIR / "fig9_mufa_sweep.png")
+    fig.savefig(FIG_DIR / "fig11_mufa_sweep.pdf", bbox_inches='tight')
+    fig.savefig(FIG_DIR / "fig11_mufa_sweep.png", bbox_inches='tight')
     plt.close()
     print(f"  {len(rates_sorted)}×{len(maxes_sorted)} grid, 2 panels")
 
 
 # ============================================================
-# Fig 10: Pathway Target Prevalence
+# Fig 12: Pathway Target Prevalence
 # ============================================================
 
-def fig10_pathway_targets(index):
+def fig12_pathway_targets(index):
     """Horizontal bar: pathway target prevalence, total vs primary-study-like."""
-    print("Figure 10: Pathway target prevalence...")
+    print("Figure 12: Pathway target prevalence...")
 
     target_total = Counter()
     target_primary = Counter()
@@ -743,8 +742,8 @@ def fig10_pathway_targets(index):
             transform=ax.transAxes, ha='center', fontsize=8, style='italic', color='gray')
 
     plt.tight_layout()
-    fig.savefig(FIG_DIR / "fig10_pathway_targets.pdf")
-    fig.savefig(FIG_DIR / "fig10_pathway_targets.png")
+    fig.savefig(FIG_DIR / "fig12_pathway_targets.pdf")
+    fig.savefig(FIG_DIR / "fig12_pathway_targets.png")
     plt.close()
     print(f"  {len(targets)} targets plotted")
 
@@ -769,10 +768,10 @@ def main():
     fig5_publication_trends(articles)
     fig6_sdt_chain_evidence(articles)
 
-    fig7_evidence_tiers(index)
-    fig8_invivo_comparison()
-    fig9_mufa_sweep()
-    fig10_pathway_targets(index)
+    fig9_evidence_tiers(index)
+    fig10_invivo_comparison()
+    fig11_mufa_sweep()
+    fig12_pathway_targets(index)
 
     print(f"\nAll figures saved to {FIG_DIR}/")
     print("Files:")
