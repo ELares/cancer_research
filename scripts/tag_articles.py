@@ -18,7 +18,7 @@ from tqdm import tqdm
 from article_io import load_article, save_article
 from config import (
     BIOLOGY_PROCESS_KEYWORDS, CANCER_TYPE_KEYWORDS, EVIDENCE_LEVEL_KEYWORDS, MECHANISM_KEYWORDS,
-    PATHWAY_TARGET_KEYWORDS, PMID_DIR, TAGS_DIR,
+    PATHWAY_TARGET_KEYWORDS, PMID_DIR, RADIOLIGAND_TARGET_KEYWORDS, TAGS_DIR,
     RESISTANT_STATE_RULES,
 )
 from evidence_utils import is_protocol_like, is_review_like, normalize_text
@@ -68,6 +68,43 @@ MRNA_VACCINE_EXCLUSION_TERMS = (
     "bnt162", "mrna-1273", "moderna", "pfizer", "booster",
     "infectious disease", "viral infection", "bacterial infection",
     "pseudomonas", "rsv vaccine", "influenza vaccine",
+)
+
+RADIOLIGAND_CORE_TERMS = (
+    "radioligand therapy", "radiopharmaceutical therapy", "radionuclide therapy",
+    "targeted radionuclide therapy", "targeted radioligand therapy",
+    "peptide receptor radionuclide therapy", "prrt", "radioiodine therapy",
+    "psma radioligand", "radioligand therapeutic", "targeted radionuclide",
+)
+
+RADIOLIGAND_SUPPORT_TERMS = (
+    "radiopharmaceutical", "radionuclide", "radioligand", "radiolabeled",
+    "radiolabelled", "radioisotope", "radioisotopic",
+    "theranostic", "theranostics",
+)
+
+RADIOLIGAND_THERAPY_TERMS = (
+    "therapy", "therapeutic", "treatment", "treated", "dose escalation",
+    "phase i", "phase ii", "phase iii", "theranostic agent", "theranostic agents",
+)
+
+RADIOLIGAND_ISOTOPE_TERMS = (
+    "lutetium-177", "lutetium 177", "lu-177", "177lu",
+    "actinium-225", "actinium 225", "ac-225", "225ac",
+    "yttrium-90", "yttrium 90", "y-90", "90y",
+    "iodine-131", "iodine 131", "i-131", "131i",
+    "radium-223", "radium 223", "223ra",
+    "terbium-161", "terbium 161", "tb-161",
+    "lutathera", "pluvicto", "xofigo",
+    "vipivotide tetraxetan", "dotatate", "dotatoc",
+)
+
+COMBINATION_LANGUAGE_TERMS = (
+    "combination therapy", "combination treatment", "combination regimen",
+    "in combination with", "combined with", "combined therapy", "combined treatment",
+    "combined regimen", "combined strategy", "combined modality", "combination of",
+    "co-treatment", "cotherapy", "together with", "synergizes with", "synergy with",
+    "synergistic", "added to", "augment",
 )
 
 
@@ -150,6 +187,61 @@ def match_mrna_vaccine(text: str, title_text: str) -> bool:
     return not has_exclusion
 
 
+def match_radioligand_therapy(text: str, title_text: str) -> bool:
+    """Require radionuclide-specific therapy signals instead of generic theranostic language."""
+    title_has_core = any(term in title_text for term in RADIOLIGAND_CORE_TERMS)
+    title_has_support = any(term in title_text for term in RADIOLIGAND_SUPPORT_TERMS)
+    title_has_isotope = any(term in title_text for term in RADIOLIGAND_ISOTOPE_TERMS)
+    title_has_target = any(
+        text_matches_keyword(title_text, kw)
+        for keywords in RADIOLIGAND_TARGET_KEYWORDS.values()
+        for kw in keywords
+    )
+    title_has_therapy = any(term in title_text for term in RADIOLIGAND_THERAPY_TERMS)
+    has_core = any(term in text for term in RADIOLIGAND_CORE_TERMS)
+    has_isotope = any(term in text for term in RADIOLIGAND_ISOTOPE_TERMS)
+    has_target = any(
+        text_matches_keyword(text, kw)
+        for keywords in RADIOLIGAND_TARGET_KEYWORDS.values()
+        for kw in keywords
+    )
+    has_support = any(term in text for term in RADIOLIGAND_SUPPORT_TERMS)
+
+    if title_has_core or title_has_isotope:
+        return True
+    if title_has_support and (title_has_target or title_has_isotope):
+        return True
+    if has_core and has_isotope:
+        return True
+    return False
+
+
+def match_radioligand_targets(text: str, mechanisms: list[str]) -> list[str]:
+    """Tag explicit radioligand targets only inside the cleaned radioligand lane."""
+    if "radioligand-therapy" not in mechanisms:
+        return []
+    return match_keywords(text, RADIOLIGAND_TARGET_KEYWORDS)
+
+
+def classify_combination_evidence(fm: dict, title_text: str, abstract_text: str, mechanisms: list[str], evidence: str) -> str:
+    """Separate broad co-mentions from deliberate combination studies."""
+    if len(mechanisms) < 2:
+        return ""
+    if is_review_like(fm) or is_protocol_like(fm):
+        return "review-or-perspective-multi-lane"
+
+    combo_text = f"{title_text} {abstract_text}"
+    has_combo_language = any(term in combo_text for term in COMBINATION_LANGUAGE_TERMS)
+    if not has_combo_language:
+        return "co-mention-only"
+
+    if evidence in ("phase3-clinical", "phase2-clinical", "phase1-clinical", "clinical-other"):
+        return "designed-combination-clinical"
+    if evidence in ("preclinical-invivo", "preclinical-invitro"):
+        return "designed-combination-preclinical"
+    return "co-mention-only"
+
+
 def match_mechanisms(text: str, title_text: str) -> list[str]:
     """Match mechanisms with a coarse cancer-context gate to reduce off-target tags."""
     if not has_cancer_context(text):
@@ -159,6 +251,10 @@ def match_mechanisms(text: str, title_text: str) -> list[str]:
         matched.add("mRNA-vaccine")
     else:
         matched.discard("mRNA-vaccine")
+    if match_radioligand_therapy(text, title_text):
+        matched.add("radioligand-therapy")
+    else:
+        matched.discard("radioligand-therapy")
     return sorted(matched)
 
 
@@ -225,6 +321,13 @@ def main():
     cancer_pmids: dict[str, list[str]] = {k: [] for k in CANCER_TYPE_KEYWORDS}
     evidence_pmids: dict[str, list[str]] = {k: [] for k in EVIDENCE_LEVEL_KEYWORDS}
     resistant_state_pmids: dict[str, list[str]] = {k: [] for k in RESISTANT_STATE_RULES}
+    radioligand_target_pmids: dict[str, list[str]] = {k: [] for k in RADIOLIGAND_TARGET_KEYWORDS}
+    combination_pmids: dict[str, list[str]] = {
+        "co-mention-only": [],
+        "designed-combination-preclinical": [],
+        "designed-combination-clinical": [],
+        "review-or-perspective-multi-lane": [],
+    }
     journal_pmids: dict[str, list[str]] = {}
 
     pathway_target_pmids: dict[str, list[str]] = {k: [] for k in PATHWAY_TARGET_KEYWORDS}
@@ -232,6 +335,7 @@ def main():
     stats = {
         "mechanisms": 0, "biology_processes": 0, "pathway_targets": 0,
         "cancer_types": 0, "evidence": 0, "resistant_states": 0,
+        "radioligand_targets": 0, "combination_evidence": 0,
     }
 
     for filepath in tqdm(files, desc="  Tagging"):
@@ -243,6 +347,8 @@ def main():
         text = get_searchable_text(fm, body)
         title_text = normalize_text(fm.get("title", ""))
         pathway_text = get_searchable_text(fm, body, include_full_text=True)
+        abstract_match = re.search(r"## Abstract\n\n?(.*?)(?=\n## |\Z)", body, re.DOTALL)
+        abstract_text = normalize_text(abstract_match.group(1) if abstract_match else "")
 
         # Match
         mechanisms = match_mechanisms(text, title_text)
@@ -251,6 +357,8 @@ def main():
         cancer_types = match_keywords(text, CANCER_TYPE_KEYWORDS)
         evidence = match_evidence_level(fm, text)
         resistant_states = match_resistant_states(text)
+        radioligand_targets = match_radioligand_targets(pathway_text, mechanisms)
+        combination_evidence = classify_combination_evidence(fm, title_text, abstract_text, mechanisms, evidence)
 
         # Update frontmatter
         fm["mechanisms"] = mechanisms
@@ -259,6 +367,14 @@ def main():
         fm["cancer_types"] = cancer_types
         fm["evidence_level"] = evidence
         fm["resistant_states"] = resistant_states
+        if radioligand_targets:
+            fm["radioligand_targets"] = radioligand_targets
+        else:
+            fm.pop("radioligand_targets", None)
+        if combination_evidence:
+            fm["combination_evidence"] = combination_evidence
+        else:
+            fm.pop("combination_evidence", None)
 
         if not args.dry_run:
             save_article(filepath, fm, body)
@@ -276,6 +392,10 @@ def main():
             evidence_pmids[evidence].append(pmid)
         for r in resistant_states:
             resistant_state_pmids[r].append(pmid)
+        for target in radioligand_targets:
+            radioligand_target_pmids[target].append(pmid)
+        if combination_evidence:
+            combination_pmids[combination_evidence].append(pmid)
 
         # Journal tag
         journal = fm.get("journal", "")
@@ -298,6 +418,10 @@ def main():
             stats["evidence"] += 1
         if resistant_states:
             stats["resistant_states"] += 1
+        if radioligand_targets:
+            stats["radioligand_targets"] += 1
+        if combination_evidence:
+            stats["combination_evidence"] += 1
 
     # Write tag index files
     if not args.dry_run:
@@ -308,6 +432,8 @@ def main():
         write_tag_files("by-cancer-type", cancer_pmids)
         write_tag_files("by-evidence-level", evidence_pmids)
         write_tag_files("by-resistant-state", resistant_state_pmids)
+        write_tag_files("by-radioligand-target", radioligand_target_pmids)
+        write_tag_files("by-combination-evidence", combination_pmids)
         write_tag_files("by-journal", journal_pmids)
 
     # Print summary
@@ -318,6 +444,8 @@ def main():
     print(f"  Articles with cancer type tags: {stats['cancer_types']}/{len(files)}")
     print(f"  Articles with evidence level: {stats['evidence']}/{len(files)}")
     print(f"  Articles with resistant-state tags: {stats['resistant_states']}/{len(files)}")
+    print(f"  Articles with radioligand target tags: {stats['radioligand_targets']}/{len(files)}")
+    print(f"  Articles with combination evidence: {stats['combination_evidence']}/{len(files)}")
 
     print(f"\nMechanism distribution:")
     for tag, pmids in sorted(mechanism_pmids.items(), key=lambda x: -len(x[1])):
@@ -346,6 +474,16 @@ def main():
 
     print(f"\nResistant-state distribution:")
     for tag, pmids in sorted(resistant_state_pmids.items(), key=lambda x: -len(x[1])):
+        if pmids:
+            print(f"  {tag}: {len(pmids)}")
+
+    print(f"\nRadioligand-target distribution:")
+    for tag, pmids in sorted(radioligand_target_pmids.items(), key=lambda x: -len(x[1])):
+        if pmids:
+            print(f"  {tag}: {len(pmids)}")
+
+    print(f"\nCombination-evidence distribution:")
+    for tag, pmids in sorted(combination_pmids.items(), key=lambda x: -len(x[1])):
         if pmids:
             print(f"  {tag}: {len(pmids)}")
 

@@ -171,9 +171,11 @@ MECHANISM_KEYWORDS = {
         "blinatumomab", "teclistamab", "mosunetuzumab", "glofitamab",
     ],
     "radioligand-therapy": [
-        "radioligand therapy", "radiopharmaceutical therapy", "theranostic",
-        "theranostics", "lutetium-177", "pluvicto", "lutathera",
-        "psma radioligand", "radionuclide therapy",
+        "radioligand therapy", "radiopharmaceutical therapy", "radionuclide therapy",
+        "targeted radionuclide therapy", "targeted radioligand therapy",
+        "peptide receptor radionuclide therapy", "prrt", "psma radioligand",
+        "lutetium-177", "actinium-225", "radium-223", "lutathera", "pluvicto",
+        "177lu-dotatate", "177lu psma", "225ac psma", "radioiodine therapy",
     ],
     "targeted-protein-degradation": [
         "protac", "proteolysis targeting chimera", "molecular glue",
@@ -231,6 +233,22 @@ PATHWAY_TARGET_KEYWORDS = {
     "disulfidptosis-core": [
         "disulfidptosis", "disulfide stress", "glucose starvation-induced disulfide stress",
         "slc7a11", "xct-dependent disulfide stress",
+    ],
+}
+
+RADIOLIGAND_TARGET_KEYWORDS = {
+    "psma": [
+        "psma", "prostate-specific membrane antigen", "prostate specific membrane antigen",
+        "vipivotide tetraxetan",
+    ],
+    "fap": [
+        "fap", "fibroblast activation protein", "fibroblast activation protein alpha", "fapi",
+    ],
+    "sstr": [
+        "sstr", "somatostatin receptor", "somatostatin receptor 2", "sst2", "dotatate", "dotatoc",
+    ],
+    "cea": [
+        "cea", "ceacam5", "carcinoembryonic antigen",
     ],
 }
 

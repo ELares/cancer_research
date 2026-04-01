@@ -12,7 +12,6 @@ Mechanism × cancer type pairs with zero research articles in our corpus.
 - **metabolic-targeting × lymphoma** — mechanism has 274 articles total, cancer has 133 total, but 0 overlap
 - **ttfields × lymphoma** — mechanism has 262 articles total, cancer has 133 total, but 0 overlap
 - **electrochemical-therapy × ovarian** — mechanism has 185 articles total, cancer has 202 total, but 0 overlap
-- **radioligand-therapy × colorectal** — mechanism has 52 articles total, cancer has 282 total, but 0 overlap
 - **ttfields × bladder** — mechanism has 262 articles total, cancer has 69 total, but 0 overlap
 - **ttfields × myeloma** — mechanism has 262 articles total, cancer has 68 total, but 0 overlap
 - **microbiome × ovarian** — mechanism has 109 articles total, cancer has 202 total, but 0 overlap
@@ -30,12 +29,13 @@ Mechanism × cancer type pairs with zero research articles in our corpus.
 - **frequency-therapy × lymphoma** — mechanism has 71 articles total, cancer has 133 total, but 0 overlap
 - **hifu × leukemia** — mechanism has 81 articles total, cancer has 112 total, but 0 overlap
 - **microbiome × sarcoma** — mechanism has 109 articles total, cancer has 77 total, but 0 overlap
-- **radioligand-therapy × lymphoma** — mechanism has 52 articles total, cancer has 133 total, but 0 overlap
 - **frequency-therapy × leukemia** — mechanism has 71 articles total, cancer has 112 total, but 0 overlap
 - **microbiome × myeloma** — mechanism has 109 articles total, cancer has 68 total, but 0 overlap
 - **hifu × gastric** — mechanism has 81 articles total, cancer has 89 total, but 0 overlap
-- **radioligand-therapy × leukemia** — mechanism has 52 articles total, cancer has 112 total, but 0 overlap
 - **frequency-therapy × gastric** — mechanism has 71 articles total, cancer has 89 total, but 0 overlap
+- **hifu × kidney** — mechanism has 81 articles total, cancer has 71 total, but 0 overlap
+- **hifu × bladder** — mechanism has 81 articles total, cancer has 69 total, but 0 overlap
+- **hifu × myeloma** — mechanism has 81 articles total, cancer has 68 total, but 0 overlap
 
 ## 2. Mechanisms Stuck in Preclinical
 
