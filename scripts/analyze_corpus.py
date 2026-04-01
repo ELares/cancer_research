@@ -27,6 +27,7 @@ from config import (
     EVIDENCE_LEVEL_KEYWORDS,
     PATHWAY_TARGET_KEYWORDS,
     PROJECT_ROOT,
+    RADIOLIGAND_TARGET_KEYWORDS,
     RESISTANT_STATE_RULES,
 )
 from evidence_utils import is_protocol_like, is_review_like
@@ -34,6 +35,20 @@ from evidence_utils import is_protocol_like, is_review_like
 INDEX_FILE = PROJECT_ROOT / "corpus" / "INDEX.jsonl"
 PMID_DIR = PROJECT_ROOT / "corpus" / "by-pmid"
 ANALYSIS_DIR = PROJECT_ROOT / "analysis"
+
+RADIOLIGAND_FALSE_POSITIVE_AUDIT_PMIDS = [
+    "25728459",
+    "31410214",
+    "30613291",
+    "40321808",
+]
+
+COMBINATION_AUDIT_LANES = [
+    ("immunotherapy", "oncolytic-virus"),
+    ("immunotherapy", "mRNA-vaccine"),
+    ("immunotherapy", "radioligand-therapy"),
+    ("immunotherapy", "sonodynamic"),
+]
 
 def load_index() -> list[dict]:
     entries = []
@@ -170,9 +185,21 @@ def build_convergence_map(entries: list[dict]) -> str:
     # Multi-mechanism stats
     multi = [e for e in entries if len(e.get("mechanisms", [])) >= 2]
     triple = [e for e in entries if len(e.get("mechanisms", [])) >= 3]
+    combo_counts = Counter(e.get("combination_evidence", "") for e in multi if e.get("combination_evidence"))
 
     lines.append(f"**Total articles with 2+ mechanisms**: {len(multi)} ({100*len(multi)//len(entries)}% of corpus)")
     lines.append(f"**Total articles with 3+ mechanisms**: {len(triple)}\n")
+    if combo_counts:
+        lines.append("**First-pass combination classifier breakdown**:")
+        for key in [
+            "designed-combination-clinical",
+            "designed-combination-preclinical",
+            "co-mention-only",
+            "review-or-perspective-multi-lane",
+        ]:
+            if combo_counts.get(key):
+                lines.append(f"- `{key}`: {combo_counts[key]}")
+        lines.append("")
 
     # Top pairs
     lines.append("## Top 30 Mechanism Combinations\n")
@@ -215,6 +242,155 @@ def build_convergence_map(entries: list[dict]) -> str:
         status = "**ZERO**" if count == 0 else f"{count}"
         lines.append(f"- {m1} + {m2}: {status} articles")
 
+    return "\n".join(lines)
+
+
+def build_designed_combinations(entries: list[dict]) -> str:
+    lines = ["# Designed Combination Audit\n"]
+    lines.append(
+        "First-pass separation of broad multi-mechanism co-mentions from papers that look like deliberate "
+        "combination studies.\n"
+    )
+    lines.append(
+        "This layer is heuristic. It is designed to complement the existing co-occurrence map, not replace it.\n"
+    )
+
+    multi = [e for e in entries if len(e.get("mechanisms", [])) >= 2]
+    counts = Counter(e.get("combination_evidence", "") for e in multi if e.get("combination_evidence"))
+    lines.append("## Schema\n")
+    lines.append("- `co-mention-only`: multi-tagged paper without strong designed-combination language.")
+    lines.append("- `designed-combination-preclinical`: preclinical paper with explicit combination/synergy language.")
+    lines.append("- `designed-combination-clinical`: patient-study signal plus explicit combination language.")
+    lines.append("- `review-or-perspective-multi-lane`: review/prospective paper spanning multiple lanes.\n")
+
+    lines.append("## Corpus-Level Counts\n")
+    total_multi = len(multi) or 1
+    for key in [
+        "designed-combination-clinical",
+        "designed-combination-preclinical",
+        "co-mention-only",
+        "review-or-perspective-multi-lane",
+    ]:
+        value = counts.get(key, 0)
+        lines.append(f"- **{key}**: {value} ({value/total_multi:.1%} of 2+ mechanism papers)")
+
+    lines.append("\n## Highest-Count Designed Combination Lanes\n")
+    pair_counts = Counter()
+    for e in multi:
+        if e.get("combination_evidence") not in ("designed-combination-clinical", "designed-combination-preclinical"):
+            continue
+        mechs = sorted(e.get("mechanisms", []))
+        for i in range(len(mechs)):
+            for j in range(i + 1, len(mechs)):
+                pair_counts[(mechs[i], mechs[j])] += 1
+    lines.append("| Mechanism pair | Designed-combination articles |")
+    lines.append("|---|---|")
+    for (left, right), count in pair_counts.most_common(15):
+        lines.append(f"| **{left} + {right}** | {count} |")
+
+    lines.append("\n## Audited Priority Lanes\n")
+    lines.append(
+        "The samples below are manually reviewed examples selected from recent or highly cited records in the priority lanes discussed in issue #42.\n"
+    )
+    for left, right in COMBINATION_AUDIT_LANES:
+        lines.append(f"\n### {left} + {right}\n")
+        lane_examples = [
+            e for e in multi
+            if left in e.get("mechanisms", []) and right in e.get("mechanisms", [])
+        ]
+        lane_examples.sort(key=lambda e: (
+            e.get("combination_evidence") not in ("designed-combination-clinical", "designed-combination-preclinical"),
+            -(e.get("cited_by_count") or 0),
+            -(e.get("year") or 0),
+            e.get("pmid", ""),
+        ))
+        for e in lane_examples[:3]:
+            label = e.get("combination_evidence") or "unclassified"
+            evidence = e.get("evidence_level") or classify_evidence_reason(e)
+            lines.append(
+                f"- **PMID {e['pmid']}** ({e.get('year')}) — `{label}` / `{evidence}` — *{e.get('title', '')[:150]}*"
+            )
+
+    lines.append("\n## Interpretation\n")
+    lines.append(
+        "- The designed-combination counts are materially smaller than the raw multi-tag co-occurrence totals, which confirms that convergence maps and designed-treatment maps should not be treated as interchangeable."
+    )
+    lines.append(
+        "- Clinical combination signal is concentrated in a handful of lanes, especially immunotherapy-centered combinations. Much of the remaining multi-tag literature is still review-heavy or conceptual."
+    )
+    lines.append(
+        "- This is a deliberately conservative first pass. The main purpose is to create a usable schema and an audited artifact before attempting more aggressive extraction."
+    )
+    return "\n".join(lines)
+
+
+def build_radioligand_audit(entries: list[dict]) -> str:
+    lines = ["# Radioligand Lane Audit\n"]
+    lines.append(
+        "Audit note for the cleaned `radioligand-therapy` mechanism after removing generic theranostic spillover "
+        "and adding a minimal target-level layer.\n"
+    )
+
+    radioligand_entries = [e for e in entries if "radioligand-therapy" in e.get("mechanisms", [])]
+    lines.append(f"Current `radioligand-therapy` full-text count: **{len(radioligand_entries)}**.\n")
+
+    reason_counts = Counter(classify_evidence_reason(e) for e in radioligand_entries)
+    lines.append("## Evidence Mix\n")
+    lines.append(
+        f"- Tagged evidence records: {reason_counts['tagged']}\n"
+        f"- Review-like records: {reason_counts['review_like']}\n"
+        f"- Protocol-like records: {reason_counts['protocol_like']}\n"
+        f"- Other untagged primary-study-like records: {reason_counts['other_untagged']}\n"
+    )
+
+    target_counts = Counter()
+    for e in radioligand_entries:
+        for target in e.get("radioligand_targets", []):
+            target_counts[target] += 1
+    lines.append("## Target-Level Distinctions\n")
+    if target_counts:
+        for target in sorted(RADIOLIGAND_TARGET_KEYWORDS.keys(), key=lambda key: (-target_counts[key], key)):
+            if target_counts[target]:
+                lines.append(f"- **{target}**: {target_counts[target]} articles")
+    else:
+        lines.append("- No explicit radioligand targets were detected in the current lane.")
+
+    lines.append("\n## Audited Former False Positives\n")
+    lines.append(
+        "These PMIDs were previously strong contamination candidates because generic theranostic language could bridge into the radioligand lane.\n"
+    )
+    entry_by_pmid = {e.get("pmid"): e for e in entries}
+    for pmid in RADIOLIGAND_FALSE_POSITIVE_AUDIT_PMIDS:
+        entry = entry_by_pmid.get(pmid)
+        if not entry:
+            lines.append(f"- **PMID {pmid}**: not present in current local index")
+            continue
+        still_tagged = "radioligand-therapy" in entry.get("mechanisms", [])
+        status = "still tagged" if still_tagged else "removed from radioligand lane"
+        lines.append(f"- **PMID {pmid}**: {status} — *{entry.get('title', '')[:140]}*")
+
+    lines.append("\n## Representative Retained Positives\n")
+    retained = sorted(
+        radioligand_entries,
+        key=lambda e: (-(len(e.get("radioligand_targets", []))), -(e.get("cited_by_count") or 0), -(e.get("year") or 0)),
+    )
+    for e in retained[:5]:
+        targets = ", ".join(e.get("radioligand_targets", [])) or "target-unspecified"
+        evidence = e.get("evidence_level") or classify_evidence_reason(e)
+        lines.append(
+            f"- **PMID {e['pmid']}** ({e.get('year')}) — {targets} — `{evidence}` — *{e.get('title', '')[:150]}*"
+        )
+
+    lines.append("\n## Interpretation\n")
+    lines.append(
+        "- Generic `theranostic` phrasing is no longer sufficient by itself to create a radioligand hit. The lane now requires radionuclide-specific therapy signals or a target-plus-radionuclide pattern."
+    )
+    lines.append(
+        "- The cleaned lane is smaller but more defensible, and it is now usable for target-level questions such as whether PSMA, FAP, or SSTR dominate the accessible local full-text archive."
+    )
+    lines.append(
+        "- The lane is still constrained by corpus coverage. The missing VISION trial remains a known archive artifact and still limits how strong any absence claim should be."
+    )
     return "\n".join(lines)
 
 
@@ -795,11 +971,13 @@ def main():
     analyses = [
         ("mechanism-matrix.md", "Mechanism-Cancer Matrix", build_mechanism_matrix),
         ("convergence-map.md", "Convergence Map", build_convergence_map),
+        ("designed-combinations.md", "Designed Combination Audit", build_designed_combinations),
         ("gap-analysis.md", "Gap Analysis", build_gap_analysis),
         ("evidence-tiers.md", "Evidence Tiers", build_evidence_tiers),
         ("resistant-state-map.md", "Resistant-State Map", build_resistant_state_map),
         ("evidence-coverage-audit.md", "Evidence Coverage Audit", build_evidence_coverage_audit),
         ("pathway-target-audit.md", "Pathway Target Audit", build_pathway_target_audit),
+        ("radioligand-audit.md", "Radioligand Audit", build_radioligand_audit),
         ("key-findings.md", "Key Findings (top 100)", build_key_findings),
         ("timeline.md", "Timeline", build_timeline),
     ]

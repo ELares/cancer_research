@@ -24,9 +24,9 @@ Evidence-level tags are present for 2020/4830 records (41.8%). Of the unclassifi
 | **bioelectric** | 182 | 144 | 19 | 0 | 19 | 144/163 (88.3%) |
 | **frequency-therapy** | 71 | 20 | 36 | 1 | 14 | 20/34 (58.8%) |
 | **microbiome** | 109 | 12 | 84 | 2 | 11 | 12/23 (52.2%) |
-| **radioligand-therapy** | 52 | 21 | 23 | 1 | 7 | 21/28 (75.0%) |
 | **electrolysis** | 11 | 5 | 0 | 0 | 6 | 5/11 (45.5%) |
 | **phagocytosis-checkpoint** | 28 | 18 | 5 | 0 | 5 | 18/23 (78.3%) |
+| **radioligand-therapy** | 11 | 8 | 1 | 1 | 1 | 8/9 (88.9%) |
 | **cold-atmospheric-plasma** | 3 | 1 | 2 | 0 | 0 | 1/1 (100.0%) |
 | **targeted-protein-degradation** | 19 | 7 | 12 | 0 | 0 | 7/7 (100.0%) |
 

@@ -24,7 +24,7 @@ Evidence tags are currently populated for 2020/4830 full-text records (41.8%). R
 | **nanoparticle** | Phase II | 0 | 1 | 4 | 0 | 144 | 75 | 4 | 515 |
 | **oncolytic-virus** | Phase III RCT | 1 | 4 | 13 | 5 | 110 | 47 | 2 | 378 |
 | **phagocytosis-checkpoint** | Preclinical (in vivo) | 0 | 0 | 0 | 0 | 11 | 7 | 0 | 28 |
-| **radioligand-therapy** | Clinical (non-phase) | 0 | 0 | 0 | 1 | 16 | 4 | 0 | 52 |
+| **radioligand-therapy** | Clinical (non-phase) | 0 | 0 | 0 | 2 | 6 | 0 | 0 | 11 |
 | **sonodynamic** | Phase I | 0 | 0 | 1 | 0 | 80 | 32 | 0 | 187 |
 | **synthetic-lethality** | Phase III RCT | 2 | 5 | 1 | 6 | 99 | 63 | 2 | 367 |
 | **targeted-protein-degradation** | Preclinical (in vivo) | 0 | 0 | 0 | 0 | 5 | 2 | 0 | 19 |

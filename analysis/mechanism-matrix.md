@@ -22,12 +22,12 @@ Cross-tabulation of article counts by therapeutic mechanism and cancer type.
 | **nanoparticle** | 6 | 71 | 4 | 19 | . | 2 | 32 | 10 | 4 | 3 | 32 | 31 | 6 | 28 | . | 4 | 3 | 14 | 30 | 8 | 2 | 4 | 313 |
 | **oncolytic-virus** | 4 | 26 | 3 | 26 | . | 3 | 43 | 12 | 1 | 3 | 13 | 14 | 2 | 51 | . | 1 | . | 16 | 28 | 12 | 7 | 2 | 267 |
 | **phagocytosis-checkpoint** | . | . | . | 3 | . | . | . | . | . | 2 | 1 | 2 | 3 | 1 | . | 1 | 1 | 1 | . | . | . | . | 15 |
-| **radioligand-therapy** | 1 | 10 | . | . | . | . | 2 | 1 | 2 | . | 1 | 2 | . | 1 | . | 1 | . | 1 | 2 | 7 | . | . | 31 |
+| **radioligand-therapy** | . | 2 | . | 1 | . | . | . | . | 1 | . | . | . | . | . | . | 1 | . | . | 1 | 4 | . | 1 | 11 |
 | **sonodynamic** | 2 | 42 | . | 4 | . | . | 11 | . | 1 | 1 | 19 | 6 | 1 | 2 | . | . | . | 4 | 12 | 6 | 2 | 2 | 115 |
 | **synthetic-lethality** | 2 | 69 | 1 | 17 | 2 | 6 | 14 | . | 4 | 7 | 7 | 16 | 2 | 4 | 1 | 5 | 1 | 73 | 25 | 24 | 10 | 1 | 291 |
 | **targeted-protein-degradation** | . | 4 | . | 1 | . | 1 | . | . | . | 1 | . | 1 | . | 1 | . | . | . | . | 4 | 2 | . | . | 15 |
 | **ttfields** | . | 9 | . | 5 | . | 2 | 204 | 1 | 1 | 1 | 10 | 24 | . | 5 | 23 | . | . | 10 | 9 | . | 7 | . | 311 |
-| **Total** | 105 | 694 | 61 | 374 | 20 | 126 | 530 | 100 | 102 | 169 | 360 | 585 | 202 | 422 | 49 | 103 | 52 | 271 | 431 | 213 | 97 | 19 | 5085 |
+| **Total** | 104 | 686 | 61 | 375 | 20 | 126 | 528 | 99 | 101 | 169 | 359 | 583 | 202 | 421 | 49 | 103 | 52 | 270 | 430 | 210 | 97 | 20 | 5065 |
 
 ## Key Observations
 
@@ -71,7 +71,6 @@ Cross-tabulation of article counts by therapeutic mechanism and cancer type.
 - **microbiome**: researched across 11/22 cancer types
 - **nanoparticle**: researched across 20/22 cancer types
 - **oncolytic-virus**: researched across 19/22 cancer types
-- **radioligand-therapy**: researched across 12/22 cancer types
 - **sonodynamic**: researched across 15/22 cancer types
 - **synthetic-lethality**: researched across 21/22 cancer types
 - **ttfields**: researched across 14/22 cancer types
