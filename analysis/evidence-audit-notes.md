@@ -46,3 +46,16 @@ The pipeline code now includes better hooks for broader taxonomy work, but a ful
 
 - improved automated classification, or
 - manual sampling of untagged records by mechanism
+
+That follow-up now exists as a first-pass gold-set evaluation:
+
+- `analysis/evidence-gold-set-v1.csv`
+- `analysis/evidence-gold-labels-v1.csv`
+- `analysis/evidence-gold-eval.md`
+
+The current measured result is that the heuristic tagger behaves conservatively:
+
+- binary evidence-detection precision is high in the sampled set
+- recall is much lower, especially for `clinical-other`, `theoretical`, and unclassified preclinical records
+
+So evidence-level absence claims should still be phrased as `not detected by the current heuristic layer` unless they have been externally verified.
