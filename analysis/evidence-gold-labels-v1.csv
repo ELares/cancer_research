@@ -1,0 +1,101 @@
+pmid,gold_evidence_level,gold_label_status,gold_notes
+36405739,preclinical-invivo,manual-v1,
+36717184,preclinical-invivo,manual-v1,
+37433716,preclinical-invivo,manual-v1,
+38022659,phase1-clinical,manual-v1,
+39679828,preclinical-invivo,manual-v1,predicted in vitro but title and abstract indicate orthotopic tumor work
+40040833,preclinical-invivo,manual-v1,
+40069686,preclinical-invivo,manual-v1,abscopal framing suggests animal efficacy work
+40406146,theoretical,manual-v1,conceptual exploration rather than completed experiment
+40817248,preclinical-invivo,manual-v1,
+40943370,preclinical-invivo,manual-v1,
+37370255,none-applicable,manual-v1,conceptual neoantigen discussion rather than direct evidence study
+37655661,preclinical-invivo,manual-v1,
+38858600,preclinical-invivo,manual-v1,
+39210987,none-applicable,manual-v1,clinical commentary
+39435274,none-applicable,manual-v1,management consensus guideline
+39830952,clinical-other,manual-v1,clinical outcome association paper
+40753395,clinical-other,manual-v1,biomarker-focused multicenter patient study
+41313664,clinical-other,manual-v1,retrospective patient cohort after treatment
+41567187,none-applicable,manual-v1,editorial
+41660849,theoretical,manual-v1,multi-omics response prediction study
+35890409,none-applicable,manual-v1,formulation development paper for future phase II use
+36313716,preclinical-invivo,manual-v1,
+39380383,preclinical-invivo,manual-v1,
+39403328,theoretical,manual-v1,antigen and immune subtype discovery study
+39910301,phase1-clinical,manual-v1,
+39972124,phase1-clinical,manual-v1,
+40519325,preclinical-invivo,manual-v1,toxicology in rats and pigs
+40700574,preclinical-invivo,manual-v1,
+41088223,preclinical-invivo,manual-v1,
+41760870,preclinical-invivo,manual-v1,
+35265614,theoretical,manual-v1,
+35818395,theoretical,manual-v1,
+36245631,theoretical,manual-v1,
+36405755,theoretical,manual-v1,
+36671475,theoretical,manual-v1,
+37428918,preclinical-invivo,manual-v1,
+38514186,clinical-other,manual-v1,patient immunogenicity and effectiveness framing
+40432113,theoretical,manual-v1,
+41377431,none-applicable,manual-v1,letter
+41662350,theoretical,manual-v1,algorithmic vaccine-design optimization
+25928327,preclinical-invivo,manual-v1,
+27693939,preclinical-invitro,manual-v1,breast cancer cells in title
+30071778,preclinical-invivo,manual-v1,canine proof-of-principle tumor study
+30986263,clinical-other,manual-v1,
+31581445,preclinical-invivo,manual-v1,
+33114476,preclinical-invivo,manual-v1,
+33396317,preclinical-invitro,manual-v1,
+33882773,preclinical-invivo,manual-v1,
+39557959,preclinical-invitro,manual-v1,
+41554743,preclinical-invitro,manual-v1,
+21878233,preclinical-invitro,manual-v1,
+31780711,theoretical,manual-v1,real-time prediction framing
+31956003,preclinical-invivo,manual-v1,canine proof-of-principle study
+32167722,none-applicable,manual-v1,editorial comment
+33093457,clinical-other,manual-v1,randomized patient study without phase label
+33763295,preclinical-invivo,manual-v1,
+34110490,none-applicable,manual-v1,visualization and planning support paper
+36671876,preclinical-invitro,manual-v1,EMT-6 breast cancer cells in title
+37846332,none-applicable,manual-v1,mechanism-and-combination overview paper
+39610376,clinical-other,manual-v1,
+26010837,preclinical-invitro,manual-v1,
+27339426,preclinical-invivo,manual-v1,
+28358361,preclinical-invitro,manual-v1,
+28849310,phase3-clinical,manual-v1,
+29261637,clinical-other,manual-v1,
+29284495,preclinical-invitro,manual-v1,glioma cells in title
+30506499,phase3-clinical,manual-v1,
+32666048,none-applicable,manual-v1,current-usage overview
+36358594,preclinical-invitro,manual-v1,ex vivo model study
+37213481,theoretical,manual-v1,
+25620708,clinical-other,manual-v1,preliminary patient observation
+29471879,theoretical,manual-v1,planning study
+35426370,none-applicable,manual-v1,commentary
+35821680,clinical-other,manual-v1,outcome association in treated patients
+36483066,theoretical,manual-v1,field-modulation modeling paper
+36741707,none-applicable,manual-v1,experience overview rather than direct trial report
+37335714,none-applicable,manual-v1,management-focused complications paper
+40067514,clinical-other,manual-v1,prospective multicenter survival study
+40175974,theoretical,manual-v1,dosimetry analysis
+40404987,clinical-other,manual-v1,recurrence report during long-term treatment
+30889466,preclinical-invitro,manual-v1,
+35715861,preclinical-invivo,manual-v1,
+36865165,preclinical-invivo,manual-v1,
+38036782,preclinical-invitro,manual-v1,cultured human cells in title
+38043609,theoretical,manual-v1,AI design framework
+38330461,clinical-other,manual-v1,advanced cancer genomic-loss clinical cohort
+38630886,preclinical-invivo,manual-v1,
+39305483,theoretical,manual-v1,analysis of vulnerabilities across contexts
+40038300,preclinical-invivo,manual-v1,
+40308947,preclinical-invitro,manual-v1,
+30101194,preclinical-invitro,manual-v1,
+33167404,preclinical-invitro,manual-v1,VERO cells in title
+34469736,theoretical,manual-v1,paralog-pair discovery study
+35921524,preclinical-invitro,manual-v1,model response study
+36180906,preclinical-invitro,manual-v1,drug-response mapping in cancer cells
+37105990,preclinical-invitro,manual-v1,mechanistic pathway paper in neoplasia context
+38509368,preclinical-invitro,manual-v1,
+40033056,theoretical,manual-v1,transcriptomic architecture analysis
+40091075,preclinical-invitro,manual-v1,
+41112293,theoretical,manual-v1,integrative prognostic-model study
