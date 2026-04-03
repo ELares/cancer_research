@@ -13,7 +13,6 @@ Usage:
 import csv
 import random
 import re
-from pathlib import Path
 
 from article_io import load_article
 from config import PMID_DIR, PROJECT_ROOT
@@ -25,17 +24,6 @@ TARGET_MECHANISMS = [
     "electrochemical-therapy",
     "ttfields",
     "synthetic-lethality",
-]
-
-EVIDENCE_LEVELS = [
-    "phase3-clinical",
-    "phase2-clinical",
-    "phase1-clinical",
-    "clinical-other",
-    "preclinical-invivo",
-    "preclinical-invitro",
-    "theoretical",
-    "none-applicable",
 ]
 
 SAMPLES_PER_BUCKET = 10
@@ -81,6 +69,7 @@ def build_row(frontmatter: dict, body: str, sample_mechanism: str, sample_bucket
 def main() -> None:
     rng = random.Random(RANDOM_SEED)
     rows = []
+    sampled_pmids = set()
 
     articles = []
     for filepath in sorted(PMID_DIR.glob("*.md")):
@@ -111,6 +100,10 @@ def main() -> None:
                 )
             sampled = rng.sample(pool, SAMPLES_PER_BUCKET)
             for frontmatter, body in sorted(sampled, key=lambda item: int(item[0].get("pmid", 0))):
+                pmid = frontmatter.get("pmid", "")
+                if pmid in sampled_pmids:
+                    raise SystemExit(f"Duplicate PMID in sampled gold set: {pmid}")
+                sampled_pmids.add(pmid)
                 rows.append(build_row(frontmatter, body, mechanism, bucket_name))
 
     OUTPUT_FILE.parent.mkdir(parents=True, exist_ok=True)

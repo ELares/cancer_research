@@ -7,12 +7,13 @@ Manual labels are present for **100** sampled records from `analysis/evidence-go
 
 ## Overall Metrics
 
-- Exact-label accuracy: **35/100 (35.0%)**
+- Exact-label accuracy: **46/100 (46.0%)**
 - Binary evidence-detection precision: **96.0%** (48/50)
 - Binary evidence-detection recall: **55.2%** (48/87)
 - Binary evidence-detection F1: **0.701**
 - Gold positive rows: **87**; predicted positive rows: **50**
 
+- Exact-label scoring treats an empty heuristic prediction as equivalent to `none-applicable`, because both represent an intentional no-evidence assignment.
 ## Per-Label Metrics
 
 | Label | TP | FP | FN | Precision | Recall | F1 |
@@ -24,29 +25,27 @@ Manual labels are present for **100** sampled records from `analysis/evidence-go
 | **preclinical-invivo** | 19 | 4 | 10 | 82.6% | 65.5% | 0.731 |
 | **preclinical-invitro** | 7 | 5 | 13 | 58.3% | 35.0% | 0.438 |
 | **theoretical** | 1 | 0 | 19 | 100.0% | 5.0% | 0.095 |
-| **none-applicable** | 0 | 0 | 13 | 0.0% | 0.0% | 0.000 |
+| **none-applicable** | 11 | 39 | 2 | 22.0% | 84.6% | 0.349 |
 
 ## Per-Mechanism Exact Accuracy
 
 | Mechanism | Labeled rows | Exact accuracy | Predicted positive | Gold positive |
 |---|---|---|---|---|
-| **electrochemical-therapy** | 20 | 40.0% | 10 | 17 |
-| **immunotherapy** | 20 | 35.0% | 10 | 16 |
-| **mRNA-vaccine** | 20 | 30.0% | 10 | 18 |
+| **electrochemical-therapy** | 20 | 55.0% | 10 | 17 |
+| **immunotherapy** | 20 | 55.0% | 10 | 16 |
+| **mRNA-vaccine** | 20 | 35.0% | 10 | 18 |
 | **synthetic-lethality** | 20 | 35.0% | 10 | 20 |
-| **ttfields** | 20 | 35.0% | 10 | 16 |
+| **ttfields** | 20 | 50.0% | 10 | 16 |
 
 ## Most Common Confusions
 
-- **theoretical -> unclassified**: 15  
+- **theoretical -> none-applicable**: 15  
   Example PMIDs: 41660849 (immunotherapy), 35265614 (mRNA-vaccine), 35818395 (mRNA-vaccine)
-- **none-applicable -> unclassified**: 11  
-  Example PMIDs: 37370255 (immunotherapy), 39210987 (immunotherapy), 39435274 (immunotherapy)
-- **clinical-other -> unclassified**: 10  
+- **clinical-other -> none-applicable**: 10  
   Example PMIDs: 39830952 (immunotherapy), 40753395 (immunotherapy), 41313664 (immunotherapy)
-- **preclinical-invitro -> unclassified**: 9  
+- **preclinical-invitro -> none-applicable**: 9  
   Example PMIDs: 21878233 (electrochemical-therapy), 36671876 (electrochemical-therapy), 30101194 (synthetic-lethality)
-- **preclinical-invivo -> unclassified**: 5  
+- **preclinical-invivo -> none-applicable**: 5  
   Example PMIDs: 37655661 (immunotherapy), 38858600 (immunotherapy), 37428918 (mRNA-vaccine)
 - **preclinical-invivo -> preclinical-invitro**: 3  
   Example PMIDs: 39679828 (immunotherapy), 40069686 (immunotherapy), 39380383 (mRNA-vaccine)
@@ -62,6 +61,8 @@ Manual labels are present for **100** sampled records from `analysis/evidence-go
   Example PMIDs: 40519325 (mRNA-vaccine)
 - **preclinical-invivo -> clinical-other**: 1  
   Example PMIDs: 30071778 (electrochemical-therapy)
+- **preclinical-invitro -> phase3-clinical**: 1  
+  Example PMIDs: 29284495 (ttfields)
 
 ## Interpretation
 

@@ -8,7 +8,6 @@ Usage:
 
 import csv
 from collections import Counter, defaultdict
-from pathlib import Path
 
 from config import PROJECT_ROOT
 
@@ -40,30 +39,48 @@ def safe_ratio(num: int, den: int) -> float:
     return num / den if den else 0.0
 
 
+def normalized_prediction(row: dict) -> str:
+    """Treat an empty evidence prediction as the explicit none-applicable class."""
+    return row["predicted_evidence_level"] or "none-applicable"
+
+
 def main() -> None:
     with open(INPUT_FILE, newline="", encoding="utf-8") as handle:
         rows = list(csv.DictReader(handle))
 
     with open(LABEL_FILE, newline="", encoding="utf-8") as handle:
-        labels = {row["pmid"]: row for row in csv.DictReader(handle)}
+        label_rows = list(csv.DictReader(handle))
+
+    seen_pmids = set()
+    labels = {}
+    for label_row in label_rows:
+        pmid = label_row["pmid"]
+        if pmid in seen_pmids:
+            raise SystemExit(f"Duplicate PMID in label file: {pmid}")
+        seen_pmids.add(pmid)
+        gold_level = label_row.get("gold_evidence_level", "")
+        if gold_level not in LABELS:
+            raise SystemExit(f"Unknown gold_evidence_level `{gold_level}` for PMID {pmid}")
+        labels[pmid] = label_row
 
     labeled = []
     unlabeled_pmids = []
     for row in rows:
-        label = labels.get(row["pmid"])
-        if not label:
+        label_row = labels.get(row["pmid"])
+        if not label_row:
             unlabeled_pmids.append(row["pmid"])
             continue
         merged = dict(row)
-        merged["gold_evidence_level"] = label["gold_evidence_level"]
-        merged["gold_label_status"] = label.get("gold_label_status", "")
-        merged["gold_notes"] = label.get("gold_notes", "")
+        merged["gold_evidence_level"] = label_row["gold_evidence_level"]
+        merged["gold_label_status"] = label_row.get("gold_label_status", "")
+        merged["gold_notes"] = label_row.get("gold_notes", "")
+        merged["predicted_evidence_normalized"] = normalized_prediction(merged)
         labeled.append(merged)
 
     if not labeled:
         raise SystemExit(f"No labeled rows found in {LABEL_FILE}")
 
-    exact = sum(1 for row in labeled if row["predicted_evidence_level"] == row["gold_evidence_level"])
+    exact = sum(1 for row in labeled if row["predicted_evidence_normalized"] == row["gold_evidence_level"])
     gold_positive = sum(1 for row in labeled if row["gold_evidence_level"] != "none-applicable")
     pred_positive = sum(1 for row in labeled if row["predicted_evidence_level"])
     tp_binary = sum(
@@ -87,17 +104,17 @@ def main() -> None:
         tp = sum(
             1
             for row in labeled
-            if row["gold_evidence_level"] == label and row["predicted_evidence_level"] == label
+            if row["gold_evidence_level"] == label and row["predicted_evidence_normalized"] == label
         )
         fp = sum(
             1
             for row in labeled
-            if row["gold_evidence_level"] != label and row["predicted_evidence_level"] == label
+            if row["gold_evidence_level"] != label and row["predicted_evidence_normalized"] == label
         )
         fn = sum(
             1
             for row in labeled
-            if row["gold_evidence_level"] == label and row["predicted_evidence_level"] != label
+            if row["gold_evidence_level"] == label and row["predicted_evidence_normalized"] != label
         )
         per_label[label] = {
             "tp": tp,
@@ -115,7 +132,7 @@ def main() -> None:
     confusion = Counter()
     confusion_examples = defaultdict(list)
     for row in labeled:
-        predicted = row["predicted_evidence_level"] or "unclassified"
+        predicted = row["predicted_evidence_normalized"]
         gold = row["gold_evidence_level"]
         if gold == predicted:
             continue
@@ -144,17 +161,20 @@ def main() -> None:
     lines.append(f"- Exact-label accuracy: **{exact}/{len(labeled)} ({exact/len(labeled):.1%})**")
     lines.append(
         f"- Binary evidence-detection precision: **{safe_ratio(tp_binary, tp_binary + fp_binary):.1%}** "
-        f"({tp_binary}/{tp_binary + fp_binary or 1})"
+        f"({tp_binary}/{tp_binary + fp_binary})"
     )
     lines.append(
         f"- Binary evidence-detection recall: **{safe_ratio(tp_binary, tp_binary + fn_binary):.1%}** "
-        f"({tp_binary}/{tp_binary + fn_binary or 1})"
+        f"({tp_binary}/{tp_binary + fn_binary})"
     )
     lines.append(
         f"- Binary evidence-detection F1: **{f1(tp_binary, fp_binary, fn_binary):.3f}**"
     )
     lines.append(
         f"- Gold positive rows: **{gold_positive}**; predicted positive rows: **{pred_positive}**\n"
+    )
+    lines.append(
+        "- Exact-label scoring treats an empty heuristic prediction as equivalent to `none-applicable`, because both represent an intentional no-evidence assignment."
     )
 
     lines.append("## Per-Label Metrics\n")
@@ -172,7 +192,7 @@ def main() -> None:
     lines.append("|---|---|---|---|---|")
     for mechanism in sorted(per_mechanism):
         subset = per_mechanism[mechanism]
-        subset_exact = sum(1 for row in subset if row["predicted_evidence_level"] == row["gold_evidence_level"])
+        subset_exact = sum(1 for row in subset if row["predicted_evidence_normalized"] == row["gold_evidence_level"])
         subset_pred_positive = sum(1 for row in subset if row["predicted_evidence_level"])
         subset_gold_positive = sum(1 for row in subset if row["gold_evidence_level"] != "none-applicable")
         lines.append(
