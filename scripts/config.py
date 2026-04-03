@@ -316,6 +316,39 @@ CANCER_TYPE_KEYWORDS = {
     "neuroblastoma": ["neuroblastoma"],
 }
 
+TISSUE_CATEGORY_ORDER = [
+    "epithelial",
+    "hematologic",
+    "mesenchymal",
+    "neuroectodermal",
+    "mesothelial",
+]
+
+CANCER_TYPE_TO_TISSUE = {
+    "breast": "epithelial",
+    "lung": "epithelial",
+    "colorectal": "epithelial",
+    "pancreatic": "epithelial",
+    "melanoma": "neuroectodermal",
+    "leukemia": "hematologic",
+    "lymphoma": "hematologic",
+    "prostate": "epithelial",
+    "ovarian": "epithelial",
+    "liver": "epithelial",
+    "gastric": "epithelial",
+    "cervical": "epithelial",
+    "bladder": "epithelial",
+    "kidney": "epithelial",
+    "thyroid": "epithelial",
+    "esophageal": "epithelial",
+    "head-and-neck": "epithelial",
+    "sarcoma": "mesenchymal",
+    "myeloma": "hematologic",
+    "mesothelioma": "mesothelial",
+    "glioblastoma": "neuroectodermal",
+    "neuroblastoma": "neuroectodermal",
+}
+
 EVIDENCE_LEVEL_KEYWORDS = {
     "phase3-clinical": [
         "phase 3", "phase iii", "phase-3",
