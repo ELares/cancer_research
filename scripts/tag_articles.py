@@ -177,14 +177,6 @@ def match_resistant_states(text: str) -> list[str]:
     return sorted(matched)
 
 
-def _text_has_keyword(text: str, kw: str) -> bool:
-    """Check if keyword appears in text, using word-boundary matching for short keywords."""
-    kw_lower = kw.lower()
-    if len(kw_lower) <= 4:
-        return bool(re.search(r'\b' + re.escape(kw_lower) + r'\b', text))
-    return kw_lower in text
-
-
 def match_diagnostic_therapy_links(text: str) -> list[str]:
     """Match diagnostic-to-therapy chains requiring intervention + at least one other link.
 
@@ -196,9 +188,9 @@ def match_diagnostic_therapy_links(text: str) -> list[str]:
     matched = []
     for chain_id in DIAGNOSTIC_THERAPY_ORDER:
         chain = DIAGNOSTIC_THERAPY_KEYWORDS[chain_id]
-        has_diagnostic = any(_text_has_keyword(text, kw) for kw in chain["diagnostic"])
-        has_feature = any(_text_has_keyword(text, kw) for kw in chain["feature"])
-        has_intervention = any(_text_has_keyword(text, kw) for kw in chain["intervention"])
+        has_diagnostic = any(text_matches_keyword(text, kw) for kw in chain["diagnostic"])
+        has_feature = any(text_matches_keyword(text, kw) for kw in chain["feature"])
+        has_intervention = any(text_matches_keyword(text, kw) for kw in chain["intervention"])
         if has_intervention and (has_diagnostic or has_feature):
             matched.append(chain_id)
     return matched
