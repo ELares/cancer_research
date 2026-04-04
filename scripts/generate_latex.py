@@ -141,21 +141,41 @@ figs = {
     '5': ('fig3_literature_disconnect', 'Literature disconnect between communities.'),
     '6': ('fig6_sdt_chain_evidence', 'SDT ferroptosis-ICD chain evidence.'),
     '7': ('fig7_monte_carlo_simulation', 'Monte Carlo simulation (1M cells/condition).'),
+    '8': ('fig8_simulation_by_treatment', 'Spatial tumor simulation: depth-kill curves and 2D death heatmaps.'),
+    '9': ('fig13_gold_set_eval', 'Evidence tagger performance: gold-set evaluation (100-article stratified sample).'),
+    '10': ('fig9_evidence_tiers', 'Evidence tier composition by mechanism.'),
+    '11': ('fig14_tissue_mechanism_heatmap', 'Tissue-of-origin $\\times$ mechanism article counts (coverage: 62\\%).'),
+    '12': ('fig15_designed_combinations', 'Classification of multi-mechanism articles into designed combinations, co-mentions, and reviews.'),
+    '13': ('fig16_weighted_evidence', 'Weighted evidence score by mechanism (tier $\\times$ citation percentile $\\times$ recency).'),
 }
 def repl_figure(match):
     num = match.group(1)
+    if num not in figs:
+        return match.group(0)
     fn, cap = figs[num]
-    return f"""\\begin{{figure}}[ht]
+    has_description = ':' in match.group(0)
+    # Standalone placeholders (with description, on own line) → full figure environment
+    # Inline references (no description, inside paragraph) → ref only
+    if has_description:
+        return f"""\\begin{{figure}}[ht]
 \\centering
 \\includegraphics[width=\\textwidth]{{../figures/{fn}.pdf}}
 \\caption{{{cap}}}
 \\label{{fig:{fn}}}
 \\end{{figure}}"""
+    else:
+        return f'(Figure~\\ref{{fig:{fn}}})'
 
-body_tex = re.sub(r'\[FIGURE ([1-7]):[^\n]*\]', repl_figure, body_tex)
+body_tex = re.sub(r'\[FIGURE (\d+)(?::[^\]]*)?\]', repl_figure, body_tex)
 
-# Remove any leftover placeholders
-body_tex = re.sub(r'\[FIGURE \d+:.*?\]', '', body_tex)
+# Fail loudly if any figure placeholders survived substitution
+leftover = re.findall(r'\[FIGURE \d+(?::[^\]]*)?\]', body_tex)
+if leftover:
+    print("ERROR: Unhandled figure placeholders in manuscript:")
+    for placeholder in leftover:
+        print(f"  {placeholder[:80]}")
+    print("Add missing entries to the `figs` dict in generate_latex.py.")
+    raise SystemExit(1)
 
 latex = f"""\\documentclass[12pt,a4paper]{{article}}
 \\usepackage[utf8]{{inputenc}}
