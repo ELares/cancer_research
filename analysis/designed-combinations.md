@@ -13,9 +13,9 @@ This layer is heuristic. It is designed to complement the existing co-occurrence
 
 ## Corpus-Level Counts
 
-- **designed-combination-clinical**: 59 (3.0% of 2+ mechanism papers)
+- **designed-combination-clinical**: 60 (3.1% of 2+ mechanism papers)
 - **designed-combination-preclinical**: 325 (16.6% of 2+ mechanism papers)
-- **co-mention-only**: 623 (31.9% of 2+ mechanism papers)
+- **co-mention-only**: 622 (31.9% of 2+ mechanism papers)
 - **review-or-perspective-multi-lane**: 945 (48.4% of 2+ mechanism papers)
 
 ## Highest-Count Designed Combination Lanes
@@ -31,8 +31,8 @@ This layer is heuristic. It is designed to complement the existing co-occurrence
 | **epigenetic + immunotherapy** | 21 |
 | **immunotherapy + mRNA-vaccine** | 18 |
 | **crispr + immunotherapy** | 16 |
+| **electrochemical-therapy + immunotherapy** | 13 |
 | **mRNA-vaccine + nanoparticle** | 13 |
-| **electrochemical-therapy + immunotherapy** | 12 |
 | **crispr + synthetic-lethality** | 11 |
 | **antibody-drug-conjugate + immunotherapy** | 10 |
 | **bioelectric + nanoparticle** | 10 |

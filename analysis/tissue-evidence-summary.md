@@ -4,11 +4,11 @@ Evidence-tier mix by derived tissue-of-origin category. Counts below use article
 
 | Tissue | Phase 3 | Phase 2 | Phase 1 | Clinical Other | In Vivo | In Vitro | Theory | Primary-study-like coverage |
 |---|---|---|---|---|---|---|---|---|
-| **epithelial** | 34 | 57 | 56 | 125 | 599 | 266 | 15 | 1152/1545 (74.6%) |
-| **hematologic** | 6 | 7 | 10 | 14 | 57 | 14 | 2 | 110/163 (67.5%) |
+| **epithelial** | 32 | 55 | 56 | 138 | 599 | 266 | 15 | 1161/1545 (75.1%) |
+| **hematologic** | 4 | 7 | 10 | 19 | 57 | 14 | 2 | 113/163 (69.3%) |
 | **mesenchymal** | 0 | 3 | 2 | 7 | 25 | 11 | 1 | 49/58 (84.5%) |
-| **neuroectodermal** | 23 | 11 | 17 | 46 | 140 | 81 | 11 | 329/434 (75.8%) |
-| **mesothelial** | 0 | 3 | 1 | 0 | 8 | 3 | 0 | 15/23 (65.2%) |
+| **neuroectodermal** | 22 | 9 | 16 | 55 | 140 | 81 | 11 | 334/434 (77.0%) |
+| **mesothelial** | 0 | 2 | 1 | 1 | 8 | 3 | 0 | 15/23 (65.2%) |
 
 ## Interpretation
 

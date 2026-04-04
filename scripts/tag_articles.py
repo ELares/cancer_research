@@ -18,9 +18,9 @@ from tqdm import tqdm
 from article_io import load_article, save_article
 from config import (
     BIOLOGY_PROCESS_KEYWORDS, CANCER_TYPE_KEYWORDS, EVIDENCE_LEVEL_KEYWORDS, MECHANISM_KEYWORDS,
-    CANCER_TYPE_TO_TISSUE, PATHWAY_TARGET_KEYWORDS, PMID_DIR, RADIOLIGAND_TARGET_KEYWORDS, TAGS_DIR,
-    RESISTANT_STATE_RULES,
+    PATHWAY_TARGET_KEYWORDS, PMID_DIR, RADIOLIGAND_TARGET_KEYWORDS, TAGS_DIR, RESISTANT_STATE_RULES,
     TISSUE_CATEGORY_ORDER,
+    derive_tissue_categories,
 )
 from evidence_utils import is_protocol_like, is_review_like, normalize_text
 
@@ -174,11 +174,6 @@ def match_resistant_states(text: str) -> list[str]:
     return sorted(matched)
 
 
-def derive_tissue_categories(cancer_types: list[str]) -> list[str]:
-    derived = {CANCER_TYPE_TO_TISSUE[c] for c in cancer_types if c in CANCER_TYPE_TO_TISSUE}
-    return [t for t in TISSUE_CATEGORY_ORDER if t in derived]
-
-
 def match_mrna_vaccine(text: str, title_text: str) -> bool:
     """Match therapeutic cancer-vaccine mRNA studies while excluding supportive/infectious vaccine papers."""
     has_platform = any(term in text for term in MRNA_VACCINE_PLATFORM_TERMS)
@@ -279,6 +274,14 @@ def match_evidence_level(fm: dict, text: str) -> str:
             return level
 
     if any(marker in pub_types for marker in EVIDENCE_PUBTYPE_MARKERS["clinical-other"]):
+        return "clinical-other"
+
+    clinical_other_terms = EVIDENCE_LEVEL_KEYWORDS["clinical-other"]
+    has_clinical_other_signal = any(
+        re.search(r'\b' + re.escape(term.lower()) + r'\b', text) if len(term) <= 4 else term.lower() in text
+        for term in clinical_other_terms
+    )
+    if has_clinical_other_signal:
         return "clinical-other"
 
     for level in ["phase3-clinical", "phase2-clinical", "phase1-clinical", "clinical-other",

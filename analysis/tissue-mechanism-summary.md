@@ -2,6 +2,8 @@
 
 Cross-tabulation of article counts by derived tissue-of-origin category and therapeutic mechanism.
 
+Rows are not mutually exclusive; multi-tissue articles contribute to each relevant tissue row.
+
 | Tissue | antibody-drug-conjugate | bioelectric | bispecific-antibody | car-t | cold-atmospheric-plasma | crispr | electrochemical-therapy | electrolysis | epigenetic | frequency-therapy | hifu | immunotherapy | mRNA-vaccine | metabolic-targeting | microbiome | nanoparticle | oncolytic-virus | phagocytosis-checkpoint | radioligand-therapy | sonodynamic | synthetic-lethality | targeted-protein-degradation | ttfields | Total |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | **epithelial** | 197 | 111 | 122 | 126 | 1 | 117 | 141 | 3 | 82 | 45 | 55 | 1023 | 95 | 106 | 54 | 212 | 140 | 7 | 9 | 88 | 192 | 10 | 50 | 2212 |
@@ -16,4 +18,5 @@ Cross-tabulation of article counts by derived tissue-of-origin category and ther
 - Tissue slicing currently covers 2995/4830 records (62.0%); the remainder do not yet have a derived tissue category.
 - Localized physical-modality article presence is concentrated in epithelial (303), hematologic (3), mesenchymal (9), neuroectodermal (29).
 - Hematologic and mesothelial categories provide a direct check against over-generalizing localized solid-tumor strategies to all cancers.
+- Melanoma is grouped under `neuroectodermal` here because the mapping follows tissue-of-origin biology rather than the usual broad solid-tumor grouping.
 - This layer is derived from existing cancer-type tags. It improves interpretation but does not fix upstream cancer-tagging errors.
