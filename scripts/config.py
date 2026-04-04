@@ -310,11 +310,41 @@ CANCER_TYPE_KEYWORDS = {
     "thyroid": ["thyroid cancer", "thyroid carcinoma", "papillary thyroid", "thyroid neoplasm"],
     "esophageal": ["esophageal cancer", "oesophageal cancer", "esophageal carcinoma"],
     "head-and-neck": ["head and neck cancer", "oral cancer", "oropharyngeal", "nasopharyngeal", "hnscc"],
-    "sarcoma": ["sarcoma", "osteosarcoma", "soft tissue sarcoma", "ewing sarcoma"],
+    "sarcoma": [
+        "sarcoma", "osteosarcoma", "osteogenic sarcoma", "soft tissue sarcoma",
+        "soft-tissue sarcoma", "ewing sarcoma", "ewing's sarcoma",
+        "rhabdomyosarcoma", "synovial sarcoma",
+    ],
     "myeloma": ["multiple myeloma", "myeloma", "plasma cell myeloma"],
     "mesothelioma": ["mesothelioma", "pleural mesothelioma"],
     "neuroblastoma": ["neuroblastoma"],
 }
+
+CANCER_SUBTYPE_KEYWORDS = {
+    "osteosarcoma": [
+        "osteosarcoma", "osteogenic sarcoma",
+    ],
+    "ewing-sarcoma": [
+        "ewing sarcoma", "ewing's sarcoma", "ewing family tumor", "ewing family tumour",
+    ],
+    "rhabdomyosarcoma": [
+        "rhabdomyosarcoma", "embryonal rhabdomyosarcoma", "alveolar rhabdomyosarcoma",
+    ],
+    "synovial-sarcoma": [
+        "synovial sarcoma",
+    ],
+    "soft-tissue-sarcoma": [
+        "soft tissue sarcoma", "soft-tissue sarcoma",
+    ],
+}
+
+CANCER_SUBTYPE_ORDER = [
+    "osteosarcoma",
+    "ewing-sarcoma",
+    "rhabdomyosarcoma",
+    "synovial-sarcoma",
+    "soft-tissue-sarcoma",
+]
 
 TISSUE_CATEGORY_ORDER = [
     "epithelial",
@@ -353,6 +383,32 @@ CANCER_TYPE_TO_TISSUE = {
 def derive_tissue_categories(cancer_types: list[str]) -> list[str]:
     derived = {CANCER_TYPE_TO_TISSUE[c] for c in cancer_types if c in CANCER_TYPE_TO_TISSUE}
     return [t for t in TISSUE_CATEGORY_ORDER if t in derived]
+
+
+def derive_sarcoma_subtypes(
+    matched_subtypes: list[str],
+    cancer_types: list[str],
+    title_subtypes: list[str] | None = None,
+    abstract_subtypes: list[str] | None = None,
+) -> list[str]:
+    """Only surface sarcoma-family subtypes when the paper looks subtype-focused.
+
+    Title mentions are treated as strong focus signals. Abstract-only mentions are
+    accepted only when the article is otherwise sarcoma-focused, which avoids
+    promoting broad multi-cancer comparison papers into subtype counts.
+    """
+    if "sarcoma" not in cancer_types:
+        return []
+    title_set = set(title_subtypes or [])
+    abstract_set = set(abstract_subtypes or [])
+    subtype_set = set(matched_subtypes)
+    if title_set:
+        subtype_set &= title_set
+    elif len(cancer_types) == 1:
+        subtype_set &= abstract_set
+    else:
+        return []
+    return [subtype for subtype in CANCER_SUBTYPE_ORDER if subtype in subtype_set]
 
 EVIDENCE_LEVEL_KEYWORDS = {
     "phase3-clinical": [

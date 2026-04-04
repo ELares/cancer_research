@@ -17,12 +17,14 @@ from tqdm import tqdm
 
 from article_io import load_article, save_article
 from config import (
-    BIOLOGY_PROCESS_KEYWORDS, CANCER_TYPE_KEYWORDS, EVIDENCE_LEVEL_KEYWORDS, MECHANISM_KEYWORDS,
+    BIOLOGY_PROCESS_KEYWORDS, CANCER_SUBTYPE_KEYWORDS, CANCER_SUBTYPE_ORDER, CANCER_TYPE_KEYWORDS,
+    EVIDENCE_LEVEL_KEYWORDS, MECHANISM_KEYWORDS,
     PATHWAY_TARGET_KEYWORDS, PMID_DIR, RADIOLIGAND_TARGET_KEYWORDS, TAGS_DIR, RESISTANT_STATE_RULES,
     TISSUE_CATEGORY_ORDER,
-    derive_tissue_categories,
+    derive_sarcoma_subtypes, derive_tissue_categories,
 )
 from evidence_utils import is_protocol_like, is_review_like, normalize_text
+from provenance import append_provenance_record
 
 GENERIC_CANCER_TERMS = (
     "cancer", "neoplasm", "carcinoma", "tumor", "tumour",
@@ -331,6 +333,7 @@ def main():
     mechanism_pmids: dict[str, list[str]] = {k: [] for k in MECHANISM_KEYWORDS}
     biology_process_pmids: dict[str, list[str]] = {k: [] for k in BIOLOGY_PROCESS_KEYWORDS}
     cancer_pmids: dict[str, list[str]] = {k: [] for k in CANCER_TYPE_KEYWORDS}
+    cancer_subtype_pmids: dict[str, list[str]] = {k: [] for k in CANCER_SUBTYPE_ORDER}
     tissue_pmids: dict[str, list[str]] = {k: [] for k in TISSUE_CATEGORY_ORDER}
     evidence_pmids: dict[str, list[str]] = {k: [] for k in EVIDENCE_LEVEL_KEYWORDS}
     resistant_state_pmids: dict[str, list[str]] = {k: [] for k in RESISTANT_STATE_RULES}
@@ -347,7 +350,7 @@ def main():
 
     stats = {
         "mechanisms": 0, "biology_processes": 0, "pathway_targets": 0,
-        "cancer_types": 0, "tissue_categories": 0, "evidence": 0, "resistant_states": 0,
+        "cancer_types": 0, "cancer_subtypes": 0, "tissue_categories": 0, "evidence": 0, "resistant_states": 0,
         "radioligand_targets": 0, "combination_evidence": 0,
     }
 
@@ -368,6 +371,15 @@ def main():
         biology_processes = match_keywords(text, BIOLOGY_PROCESS_KEYWORDS)
         pathway_targets = match_keywords(pathway_text, PATHWAY_TARGET_KEYWORDS)
         cancer_types = match_keywords(text, CANCER_TYPE_KEYWORDS)
+        matched_subtypes = match_keywords(text, CANCER_SUBTYPE_KEYWORDS)
+        title_subtypes = match_keywords(title_text, CANCER_SUBTYPE_KEYWORDS)
+        abstract_subtypes = match_keywords(abstract_text, CANCER_SUBTYPE_KEYWORDS)
+        cancer_subtypes = derive_sarcoma_subtypes(
+            matched_subtypes,
+            cancer_types,
+            title_subtypes=title_subtypes,
+            abstract_subtypes=abstract_subtypes,
+        )
         tissue_categories = derive_tissue_categories(cancer_types)
         evidence = match_evidence_level(fm, text)
         resistant_states = match_resistant_states(text)
@@ -379,6 +391,10 @@ def main():
         fm["biology_processes"] = biology_processes
         fm["pathway_targets"] = pathway_targets
         fm["cancer_types"] = cancer_types
+        if cancer_subtypes:
+            fm["cancer_subtypes"] = cancer_subtypes
+        else:
+            fm.pop("cancer_subtypes", None)
         fm["tissue_categories"] = tissue_categories
         fm["evidence_level"] = evidence
         fm["resistant_states"] = resistant_states
@@ -403,6 +419,8 @@ def main():
             pathway_target_pmids[p].append(pmid)
         for c in cancer_types:
             cancer_pmids[c].append(pmid)
+        for subtype in cancer_subtypes:
+            cancer_subtype_pmids[subtype].append(pmid)
         for tissue in tissue_categories:
             tissue_pmids[tissue].append(pmid)
         if evidence:
@@ -431,6 +449,8 @@ def main():
             stats["pathway_targets"] += 1
         if cancer_types:
             stats["cancer_types"] += 1
+        if cancer_subtypes:
+            stats["cancer_subtypes"] += 1
         if tissue_categories:
             stats["tissue_categories"] += 1
         if evidence:
@@ -449,6 +469,7 @@ def main():
         write_tag_files("by-biology-process", biology_process_pmids)
         write_tag_files("by-pathway-target", pathway_target_pmids)
         write_tag_files("by-cancer-type", cancer_pmids)
+        write_tag_files("by-cancer-subtype", cancer_subtype_pmids)
         write_tag_files("by-tissue-category", tissue_pmids)
         write_tag_files("by-evidence-level", evidence_pmids)
         write_tag_files("by-resistant-state", resistant_state_pmids)
@@ -462,6 +483,7 @@ def main():
     print(f"  Articles with biology-process tags: {stats['biology_processes']}/{len(files)}")
     print(f"  Articles with pathway-target tags: {stats['pathway_targets']}/{len(files)}")
     print(f"  Articles with cancer type tags: {stats['cancer_types']}/{len(files)}")
+    print(f"  Articles with cancer subtype tags: {stats['cancer_subtypes']}/{len(files)}")
     print(f"  Articles with tissue-category tags: {stats['tissue_categories']}/{len(files)}")
     print(f"  Articles with evidence level: {stats['evidence']}/{len(files)}")
     print(f"  Articles with resistant-state tags: {stats['resistant_states']}/{len(files)}")
@@ -485,6 +507,12 @@ def main():
 
     print(f"\nCancer type distribution:")
     for tag, pmids in sorted(cancer_pmids.items(), key=lambda x: -len(x[1])):
+        if pmids:
+            print(f"  {tag}: {len(pmids)}")
+
+    print(f"\nCancer subtype distribution:")
+    for tag in CANCER_SUBTYPE_ORDER:
+        pmids = cancer_subtype_pmids[tag]
         if pmids:
             print(f"  {tag}: {len(pmids)}")
 
@@ -517,6 +545,19 @@ def main():
     print(f"\nJournals represented: {len([j for j, p in journal_pmids.items() if p])}")
 
     if not args.dry_run:
+        append_provenance_record(
+            "tag_articles.py",
+            {
+                "tagged_article_count": len(files),
+                "mechanism_tagged_count": stats["mechanisms"],
+                "cancer_type_tagged_count": stats["cancer_types"],
+                "cancer_subtype_tagged_count": stats["cancer_subtypes"],
+                "tissue_tagged_count": stats["tissue_categories"],
+                "evidence_tagged_count": stats["evidence"],
+                "dry_run": False,
+            },
+        )
+        print("  Local provenance appended to analysis/provenance.jsonl")
         print(f"\nNext step:")
         print(f"  python build_index.py    # Rebuild INDEX.jsonl")
 
