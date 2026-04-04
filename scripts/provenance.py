@@ -15,20 +15,28 @@ from config import INDEX_FILE, PMID_DIR, PROJECT_ROOT
 ANALYSIS_DIR = PROJECT_ROOT / "analysis"
 PROVENANCE_LOG = ANALYSIS_DIR / "provenance.jsonl"
 QUERY_FILE = PROJECT_ROOT / "scripts" / "queries.txt"
-PACKAGE_NAMES = [
-    "PyYAML",
-    "python-dotenv",
-    "requests",
-    "tqdm",
-    "matplotlib",
-    "numpy",
-    "scipy",
-]
+REQUIREMENTS_FILE = PROJECT_ROOT / "requirements.txt"
+
+
+def _parse_requirements_packages() -> list[str]:
+    """Extract package names from requirements.txt, falling back to a static list."""
+    if not REQUIREMENTS_FILE.exists():
+        return ["PyYAML", "python-dotenv", "requests", "tqdm", "matplotlib", "numpy", "scipy"]
+    packages = []
+    for line in REQUIREMENTS_FILE.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#"):
+            continue
+        # Strip version specifiers (>=, ==, ~=, etc.)
+        name = line.split(">=")[0].split("==")[0].split("~=")[0].split("<=")[0].split("!=")[0].split("[")[0].strip()
+        if name:
+            packages.append(name)
+    return packages
 
 
 def _safe_package_versions() -> dict[str, str]:
     versions: dict[str, str] = {}
-    for package in PACKAGE_NAMES:
+    for package in _parse_requirements_packages():
         try:
             versions[package] = version(package)
         except PackageNotFoundError:
