@@ -372,7 +372,14 @@ def main():
         pathway_targets = match_keywords(pathway_text, PATHWAY_TARGET_KEYWORDS)
         cancer_types = match_keywords(text, CANCER_TYPE_KEYWORDS)
         matched_subtypes = match_keywords(text, CANCER_SUBTYPE_KEYWORDS)
-        cancer_subtypes = derive_sarcoma_subtypes(matched_subtypes, cancer_types)
+        title_subtypes = match_keywords(title_text, CANCER_SUBTYPE_KEYWORDS)
+        abstract_subtypes = match_keywords(abstract_text, CANCER_SUBTYPE_KEYWORDS)
+        cancer_subtypes = derive_sarcoma_subtypes(
+            matched_subtypes,
+            cancer_types,
+            title_subtypes=title_subtypes,
+            abstract_subtypes=abstract_subtypes,
+        )
         tissue_categories = derive_tissue_categories(cancer_types)
         evidence = match_evidence_level(fm, text)
         resistant_states = match_resistant_states(text)
@@ -550,7 +557,7 @@ def main():
                 "dry_run": False,
             },
         )
-        print("  Provenance appended to analysis/provenance.jsonl")
+        print("  Local provenance appended to analysis/provenance.jsonl")
         print(f"\nNext step:")
         print(f"  python build_index.py    # Rebuild INDEX.jsonl")
 

@@ -349,6 +349,7 @@ def build_sarcoma_subtype_audit(entries: list[dict]) -> str:
         )
     else:
         lines.append("- Sarcoma articles with at least one explicit subtype: 0/0 (0.0%)")
+    lines.append("- Subtype rows below are not mutually exclusive; one paper can contribute to multiple subtype rows.")
 
     lines.append("\n## Subtype Counts\n")
     lines.append("| Subtype | Article count | Top mechanisms |")
@@ -1301,7 +1302,7 @@ def main():
             "analysis_outputs": [filename for filename, _, _ in analyses],
         },
     )
-    print("  Provenance appended to analysis/provenance.jsonl")
+    print("  Local provenance appended to analysis/provenance.jsonl")
 
     print(f"\nAll analysis files written to {ANALYSIS_DIR}/")
 

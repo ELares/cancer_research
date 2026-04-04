@@ -385,11 +385,29 @@ def derive_tissue_categories(cancer_types: list[str]) -> list[str]:
     return [t for t in TISSUE_CATEGORY_ORDER if t in derived]
 
 
-def derive_sarcoma_subtypes(matched_subtypes: list[str], cancer_types: list[str]) -> list[str]:
-    """Only surface sarcoma-family subtypes alongside the broad sarcoma bucket."""
+def derive_sarcoma_subtypes(
+    matched_subtypes: list[str],
+    cancer_types: list[str],
+    title_subtypes: list[str] | None = None,
+    abstract_subtypes: list[str] | None = None,
+) -> list[str]:
+    """Only surface sarcoma-family subtypes when the paper looks subtype-focused.
+
+    Title mentions are treated as strong focus signals. Abstract-only mentions are
+    accepted only when the article is otherwise sarcoma-focused, which avoids
+    promoting broad multi-cancer comparison papers into subtype counts.
+    """
     if "sarcoma" not in cancer_types:
         return []
+    title_set = set(title_subtypes or [])
+    abstract_set = set(abstract_subtypes or [])
     subtype_set = set(matched_subtypes)
+    if title_set:
+        subtype_set &= title_set
+    elif len(cancer_types) == 1:
+        subtype_set &= abstract_set
+    else:
+        return []
     return [subtype for subtype in CANCER_SUBTYPE_ORDER if subtype in subtype_set]
 
 EVIDENCE_LEVEL_KEYWORDS = {

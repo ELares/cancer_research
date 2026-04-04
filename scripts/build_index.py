@@ -99,7 +99,7 @@ def main():
             "index_rcr_count": with_rcr,
         },
     )
-    print("  Provenance appended to analysis/provenance.jsonl")
+    print("  Local provenance appended to analysis/provenance.jsonl")
 
 
 if __name__ == "__main__":

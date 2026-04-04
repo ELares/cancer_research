@@ -3,17 +3,18 @@
 Focused subtype slice under the broad `sarcoma` category. This preserves the broad matrix while surfacing osteosarcoma and other sarcoma-family distinctions.
 
 - Broad sarcoma articles: 77
-- Sarcoma articles with at least one explicit subtype: 46/77 (59.7%)
+- Sarcoma articles with at least one explicit subtype: 32/77 (41.6%)
+- Subtype rows below are not mutually exclusive; one paper can contribute to multiple subtype rows.
 
 ## Subtype Counts
 
 | Subtype | Article count | Top mechanisms |
 |---|---|---|
-| **osteosarcoma** | 22 | immunotherapy (9), antibody-drug-conjugate (3), frequency-therapy (3) |
-| **ewing-sarcoma** | 5 | synthetic-lethality (2), bioelectric (1), bispecific-antibody (1) |
-| **rhabdomyosarcoma** | 6 | immunotherapy (2), oncolytic-virus (2), antibody-drug-conjugate (1) |
-| **synovial-sarcoma** | 3 | immunotherapy (2), synthetic-lethality (1), epigenetic (1) |
-| **soft-tissue-sarcoma** | 11 | immunotherapy (5), bispecific-antibody (2), oncolytic-virus (2) |
+| **osteosarcoma** | 14 | immunotherapy (7), frequency-therapy (3), antibody-drug-conjugate (2) |
+| **ewing-sarcoma** | 4 | synthetic-lethality (2), bioelectric (1), oncolytic-virus (1) |
+| **rhabdomyosarcoma** | 3 | car-t (1), immunotherapy (1), metabolic-targeting (1) |
+| **synovial-sarcoma** | 2 | immunotherapy (2), epigenetic (1) |
+| **soft-tissue-sarcoma** | 9 | immunotherapy (3), oncolytic-virus (2), bispecific-antibody (1) |
 
 ## Example Papers
 
@@ -34,13 +35,12 @@ Focused subtype slice under the broad `sarcoma` category. This preserves the bro
 
 - **PMID 34472721** (2021) — metabolic-targeting — *Inhibition of lipid metabolism exerts antitumor effects on rhabdomyosarcoma.*
 - **PMID 37858275** (2023) — untagged — *Pharmacological EZH2 inhibition combined with retinoic acid treatment promotes differentiation and apoptosis in rhabdomyosarcoma cells.*
-- **PMID 36092638** (2022) — immunotherapy, oncolytic-virus — *CXCL10-armed oncolytic adenovirus promotes tumor-infiltrating T-cell chemotaxis to enhance anti-PD-1 therapy.*
+- **PMID 34415995** (2021) — car-t, immunotherapy — *Single-cell imaging of T cell immunotherapy responses in vivo.*
 
 ### synovial-sarcoma
 
 - **PMID 39451213** (2024) — epigenetic, immunotherapy — *Genetic and Molecular Heterogeneity of Synovial Sarcoma and Associated Challenges in Therapy.*
 - **PMID 38323364** (2024) — immunotherapy — *Remarkable response to pazopanib plus vivolumab in a patient with pericardial synovial sarcoma carrying a novel genotype BRCA2 c.968dupT: A *
-- **PMID 39625239** (2025) — synthetic-lethality — *Efficacy of CBP/p300 Dual Inhibitors against Derepression of KREMEN2 in cBAF-Deficient Cancers.*
 
 ### soft-tissue-sarcoma
 

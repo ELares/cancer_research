@@ -23,3 +23,6 @@ simulations/output/
 
 # Generated manuscript PDFs
 article/drafts/*.pdf
+
+# Local pipeline provenance log
+analysis/provenance.jsonl
