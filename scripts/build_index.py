@@ -14,6 +14,7 @@ from tqdm import tqdm
 
 from article_io import load_frontmatter
 from config import INDEX_FILE, PMID_DIR
+from provenance import append_provenance_record
 
 
 # Fields to include in the index (keep it lean for fast reads)
@@ -21,7 +22,7 @@ INDEX_FIELDS = [
     "pmid", "doi", "pmcid", "title", "journal", "year", "month",
     "is_oa", "oa_status", "cited_by_count",
     "mechanisms", "biology_processes", "pathway_targets", "radioligand_targets",
-    "cancer_types", "tissue_categories", "evidence_level", "resistant_states", "combination_evidence",
+    "cancer_types", "cancer_subtypes", "tissue_categories", "evidence_level", "resistant_states", "combination_evidence",
     "icite_rcr", "icite_percentile", "icite_is_clinical",
     "date_added",
 ]
@@ -86,6 +87,19 @@ def main():
 
     with_rcr = sum(1 for e in entries if e.get("icite_rcr"))
     print(f"  With iCite RCR: {with_rcr}/{len(entries)}")
+
+    append_provenance_record(
+        "build_index.py",
+        {
+            "index_entry_count": len(entries),
+            "index_year_min": min(years) if years else None,
+            "index_year_max": max(years) if years else None,
+            "index_open_access_count": oa_count,
+            "index_mechanism_tagged_count": tagged,
+            "index_rcr_count": with_rcr,
+        },
+    )
+    print("  Provenance appended to analysis/provenance.jsonl")
 
 
 if __name__ == "__main__":

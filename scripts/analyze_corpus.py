@@ -22,6 +22,8 @@ from pathlib import Path
 
 from article_io import load_article
 from config import (
+    CANCER_SUBTYPE_ORDER,
+    CANCER_SUBTYPE_KEYWORDS,
     MECHANISM_KEYWORDS,
     CANCER_TYPE_KEYWORDS,
     EVIDENCE_LEVEL_KEYWORDS,
@@ -32,7 +34,8 @@ from config import (
     TISSUE_CATEGORY_ORDER,
     derive_tissue_categories,
 )
-from evidence_utils import is_protocol_like, is_review_like
+from evidence_utils import is_protocol_like, is_review_like, normalize_text
+from provenance import append_provenance_record
 
 INDEX_FILE = PROJECT_ROOT / "corpus" / "INDEX.jsonl"
 PMID_DIR = PROJECT_ROOT / "corpus" / "by-pmid"
@@ -317,6 +320,76 @@ def build_tissue_evidence_summary(entries: list[dict]) -> str:
     lines.append(
         "- Coverage remains dependent on the current evidence tagger. Use these rows as maturity comparisons within the detected-evidence subset, not as complete estimates of the whole tissue literature."
     )
+    return "\n".join(lines)
+
+
+def build_sarcoma_subtype_audit(entries: list[dict]) -> str:
+    lines = ["# Sarcoma Subtype Audit\n"]
+    lines.append(
+        "Focused subtype slice under the broad `sarcoma` category. This preserves the broad matrix while surfacing osteosarcoma and other sarcoma-family distinctions.\n"
+    )
+
+    sarcoma_entries = [e for e in entries if "sarcoma" in e.get("cancer_types", [])]
+    subtype_totals = Counter()
+    subtype_mechanisms = defaultdict(Counter)
+    subtype_examples = defaultdict(list)
+
+    for entry in sarcoma_entries:
+        for subtype in entry.get("cancer_subtypes", []):
+            subtype_totals[subtype] += 1
+            subtype_examples[subtype].append(entry)
+            for mechanism in entry.get("mechanisms", []):
+                subtype_mechanisms[subtype][mechanism] += 1
+
+    unique_with_subtype = sum(1 for entry in sarcoma_entries if entry.get("cancer_subtypes"))
+    lines.append(f"- Broad sarcoma articles: {len(sarcoma_entries)}")
+    if sarcoma_entries:
+        lines.append(
+            f"- Sarcoma articles with at least one explicit subtype: {unique_with_subtype}/{len(sarcoma_entries)} ({(unique_with_subtype / len(sarcoma_entries)):.1%})"
+        )
+    else:
+        lines.append("- Sarcoma articles with at least one explicit subtype: 0/0 (0.0%)")
+
+    lines.append("\n## Subtype Counts\n")
+    lines.append("| Subtype | Article count | Top mechanisms |")
+    lines.append("|---|---|---|")
+    for subtype in CANCER_SUBTYPE_ORDER:
+        count = subtype_totals[subtype]
+        if not count:
+            lines.append(f"| **{subtype}** | 0 | . |")
+            continue
+        top_mechanisms = ", ".join(
+            f"{mechanism} ({count})"
+            for mechanism, count in subtype_mechanisms[subtype].most_common(3)
+        ) or "."
+        lines.append(f"| **{subtype}** | {count} | {top_mechanisms} |")
+
+    lines.append("\n## Example Papers\n")
+    for subtype in CANCER_SUBTYPE_ORDER:
+        subtype_title_terms = [normalize_text(term) for term in CANCER_SUBTYPE_KEYWORDS.get(subtype, [])]
+        examples = sorted(
+            subtype_examples[subtype],
+            key=lambda e: (
+                -int(any(term in normalize_text(e.get("title", "")) for term in subtype_title_terms)),
+                len(e.get("cancer_types", [])),
+                -(e.get("cited_by_count") or 0),
+                -(e.get("year") or 0),
+                e.get("pmid", ""),
+            ),
+        )[:3]
+        if not examples:
+            continue
+        lines.append(f"\n### {subtype}\n")
+        for entry in examples:
+            mechs = ", ".join(entry.get("mechanisms", [])[:3]) or "untagged"
+            lines.append(
+                f"- **PMID {entry['pmid']}** ({entry.get('year')}) — {mechs} — *{entry.get('title', '')[:140]}*"
+            )
+
+    lines.append("\n## Interpretation\n")
+    lines.append("- The broad `sarcoma` bucket is preserved for backward compatibility in the main matrices.")
+    lines.append("- Osteosarcoma and related sarcoma-family tumors are now visible as explicit subtypes rather than being collapsed completely into generic sarcoma counts.")
+    lines.append("- This is a first-pass subtype layer, not a general pan-cancer subtype ontology.")
     return "\n".join(lines)
 
 
@@ -1199,6 +1272,7 @@ def main():
         ("mechanism-matrix.md", "Mechanism-Cancer Matrix", build_mechanism_matrix),
         ("tissue-mechanism-summary.md", "Tissue-Mechanism Summary", build_tissue_mechanism_summary),
         ("tissue-evidence-summary.md", "Tissue-Evidence Summary", build_tissue_evidence_summary),
+        ("sarcoma-subtype-audit.md", "Sarcoma Subtype Audit", build_sarcoma_subtype_audit),
         ("convergence-map.md", "Convergence Map", build_convergence_map),
         ("designed-combinations.md", "Designed Combination Audit", build_designed_combinations),
         ("gap-analysis.md", "Gap Analysis", build_gap_analysis),
@@ -1219,6 +1293,15 @@ def main():
         filepath.write_text(content, encoding="utf-8")
         line_count = content.count("\n")
         print(f"  Written {filepath.name} ({line_count} lines)")
+
+    append_provenance_record(
+        "analyze_corpus.py",
+        {
+            "analysis_entry_count": len(entries),
+            "analysis_outputs": [filename for filename, _, _ in analyses],
+        },
+    )
+    print("  Provenance appended to analysis/provenance.jsonl")
 
     print(f"\nAll analysis files written to {ANALYSIS_DIR}/")
 
