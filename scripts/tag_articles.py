@@ -263,7 +263,10 @@ def match_evidence_level(fm: dict, text: str) -> str:
     """Match text against evidence level keywords, return best match.
 
     Uses word-boundary matching for short keywords to avoid false positives.
-    Priority order: phase3 > phase2 > phase1 > clinical-other > invivo > invitro > theoretical.
+    PubMed publication types take precedence for explicit phase labels.
+    For text-only inference, strong retrospective/real-world patient-study language
+    is allowed to resolve to ``clinical-other`` before generic phase mentions so
+    landmark real-world cohorts are not over-promoted into phase-labeled buckets.
     """
     if is_review_like(fm) or is_protocol_like(fm):
         return ""
