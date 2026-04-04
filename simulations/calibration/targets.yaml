@@ -1,0 +1,101 @@
+# Calibration targets linking simulation observables to published data.
+#
+# Each target specifies what the simulation should produce given its current
+# parameters, what published data says the value should be, and how much
+# tolerance is acceptable.  The evaluate script reads these targets and
+# compares against existing simulation outputs.
+
+targets:
+  - id: persister_rsl3_death_rate
+    description: "Persister (FSP1-low) cell death rate under RSL3 in 2D culture"
+    source_pmid: "41481741"
+    source_description: "Higuchi et al., Science Advances 2026 — FSP1 and HDACs suppress persister ferroptosis"
+    binary: sim-original
+    output_file: "simulation_results.json"
+    extraction:
+      phenotype_contains: "Persister"
+      phenotype_excludes: "NRF2"
+      treatment: "RSL3"
+      field: "death_rate"
+    target_value: 0.425
+    tolerance: 0.10
+    confidence: "medium"
+    note: "Dose-response data extrapolated from IC50 curves; exact match depends on assumed RSL3 concentration"
+    parameters_affected:
+      - fsp1_rate
+      - rsl3_gpx4_inhib
+      - death_threshold
+
+  - id: pdt_kill_at_9mm
+    description: "PDT kill rate at 9mm tissue depth"
+    source_description: "Jacques SL, Phys Med Biol 2013 — tissue optical properties at 630nm"
+    binary: sim-spatial
+    output_file: "spatial/depth_kill_curves.csv"
+    extraction:
+      treatment: "PDT"
+      depth_um_range: [8500, 9500]
+      field: "death_rate"
+      aggregation: "mean"
+    target_value: 0.005
+    tolerance: 0.015
+    confidence: "high"
+    note: "Well-established tissue optics; µ_eff = 0.31/mm directly from literature"
+    parameters_affected:
+      - pdt_mu_eff
+
+  - id: rsl3_window_closure_72h
+    description: "RSL3 death rate drops below 10% by 72 hours post-treatment"
+    source_description: "GPX4 transcriptional recovery kinetics — consensus from multiple ferroptosis studies"
+    binary: sim-window
+    output_file: "window/vulnerability_window.csv"
+    extraction:
+      treatment: "RSL3"
+      timepoint_hours: 72.0
+      field: "death_rate"
+    target_comparator: "<"
+    target_value: 0.10
+    tolerance: 0.05
+    confidence: "medium"
+    note: "Recovery rate inferred from transcriptional kinetics; no single paper provides exact time-course"
+    parameters_affected:
+      - gpx4_half_recovery_days
+
+  - id: invivo_mufa_protection_factor
+    description: "In-vivo MUFA provides ~18x protection against RSL3 for persisters"
+    source_pmid: "35859734"
+    source_description: "Dixon/Park, Cancer Res 2025; Tesfay et al., Cancer Res 2019 — SCD1/MUFA/ferroptosis"
+    binary: sim-invivo
+    output_file: "invivo/invivo_comparison.json"
+    extraction:
+      contexts: ["2d", "invivo"]
+      phenotype_contains: "Persister"
+      phenotype_excludes: "NRF2"
+      treatment: "RSL3"
+      derived: "death_rate_2d / death_rate_invivo"
+    target_value: 18.6
+    tolerance: 5.0
+    confidence: "medium"
+    note: "Composite from two independent papers; protection factor sensitive to MUFA steady-state level"
+    parameters_affected:
+      - scd_mufa_rate
+      - scd_mufa_max
+      - initial_mufa_protection
+
+  - id: sdt_penetration_1cm
+    description: "SDT maintains >84% kill rate through 1cm tissue depth"
+    source_description: "Cobbold RSC, Foundations of Biomedical Ultrasound 2007 — soft tissue attenuation"
+    binary: sim-spatial
+    output_file: "spatial/depth_kill_curves.csv"
+    extraction:
+      treatment: "SDT"
+      depth_um_range: [0, 10000]
+      field: "death_rate"
+      aggregation: "min"
+    target_comparator: ">"
+    target_value: 0.84
+    tolerance: 0.10
+    confidence: "high"
+    note: "Acoustic attenuation coefficient α=0.7 dB/cm/MHz is well-established for soft tissue"
+    parameters_affected:
+      - sdt_alpha
+      - sdt_freq_mhz
