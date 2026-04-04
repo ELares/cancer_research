@@ -18,6 +18,7 @@ from tqdm import tqdm
 from article_io import load_article, save_article
 from config import (
     BIOLOGY_PROCESS_KEYWORDS, CANCER_SUBTYPE_KEYWORDS, CANCER_SUBTYPE_ORDER, CANCER_TYPE_KEYWORDS,
+    DIAGNOSTIC_THERAPY_KEYWORDS, DIAGNOSTIC_THERAPY_ORDER,
     EVIDENCE_LEVEL_KEYWORDS, MECHANISM_KEYWORDS,
     PATHWAY_TARGET_KEYWORDS, PMID_DIR, RADIOLIGAND_TARGET_KEYWORDS, TAGS_DIR, RESISTANT_STATE_RULES,
     TISSUE_CATEGORY_ORDER,
@@ -174,6 +175,25 @@ def match_resistant_states(text: str) -> list[str]:
         if all(any(text_matches_keyword(text, kw) for kw in group) for group in all_groups):
             matched.append(state)
     return sorted(matched)
+
+
+def match_diagnostic_therapy_links(text: str) -> list[str]:
+    """Match diagnostic-to-therapy chains requiring intervention + at least one other link.
+
+    Each chain has three keyword groups: diagnostic, feature, intervention.
+    To reduce false positives, the intervention link is mandatory — a paper must
+    mention a specific therapy AND either a diagnostic modality or a targetable
+    feature to qualify.
+    """
+    matched = []
+    for chain_id in DIAGNOSTIC_THERAPY_ORDER:
+        chain = DIAGNOSTIC_THERAPY_KEYWORDS[chain_id]
+        has_diagnostic = any(text_matches_keyword(text, kw) for kw in chain["diagnostic"])
+        has_feature = any(text_matches_keyword(text, kw) for kw in chain["feature"])
+        has_intervention = any(text_matches_keyword(text, kw) for kw in chain["intervention"])
+        if has_intervention and (has_diagnostic or has_feature):
+            matched.append(chain_id)
+    return matched
 
 
 def match_mrna_vaccine(text: str, title_text: str) -> bool:
@@ -338,6 +358,7 @@ def main():
     evidence_pmids: dict[str, list[str]] = {k: [] for k in EVIDENCE_LEVEL_KEYWORDS}
     resistant_state_pmids: dict[str, list[str]] = {k: [] for k in RESISTANT_STATE_RULES}
     radioligand_target_pmids: dict[str, list[str]] = {k: [] for k in RADIOLIGAND_TARGET_KEYWORDS}
+    diagnostic_therapy_pmids: dict[str, list[str]] = {k: [] for k in DIAGNOSTIC_THERAPY_ORDER}
     combination_pmids: dict[str, list[str]] = {
         "co-mention-only": [],
         "designed-combination-preclinical": [],
@@ -351,7 +372,7 @@ def main():
     stats = {
         "mechanisms": 0, "biology_processes": 0, "pathway_targets": 0,
         "cancer_types": 0, "cancer_subtypes": 0, "tissue_categories": 0, "evidence": 0, "resistant_states": 0,
-        "radioligand_targets": 0, "combination_evidence": 0,
+        "radioligand_targets": 0, "diagnostic_therapy": 0, "combination_evidence": 0,
     }
 
     for filepath in tqdm(files, desc="  Tagging"):
@@ -384,6 +405,7 @@ def main():
         evidence = match_evidence_level(fm, text)
         resistant_states = match_resistant_states(text)
         radioligand_targets = match_radioligand_targets(pathway_text, mechanisms)
+        diagnostic_therapy_links = match_diagnostic_therapy_links(text)
         combination_evidence = classify_combination_evidence(fm, title_text, abstract_text, mechanisms, evidence)
 
         # Update frontmatter
@@ -402,6 +424,10 @@ def main():
             fm["radioligand_targets"] = radioligand_targets
         else:
             fm.pop("radioligand_targets", None)
+        if diagnostic_therapy_links:
+            fm["diagnostic_therapy_links"] = diagnostic_therapy_links
+        else:
+            fm.pop("diagnostic_therapy_links", None)
         if combination_evidence:
             fm["combination_evidence"] = combination_evidence
         else:
@@ -429,6 +455,8 @@ def main():
             resistant_state_pmids[r].append(pmid)
         for target in radioligand_targets:
             radioligand_target_pmids[target].append(pmid)
+        for dtl in diagnostic_therapy_links:
+            diagnostic_therapy_pmids[dtl].append(pmid)
         if combination_evidence:
             combination_pmids[combination_evidence].append(pmid)
 
@@ -459,6 +487,8 @@ def main():
             stats["resistant_states"] += 1
         if radioligand_targets:
             stats["radioligand_targets"] += 1
+        if diagnostic_therapy_links:
+            stats["diagnostic_therapy"] += 1
         if combination_evidence:
             stats["combination_evidence"] += 1
 
@@ -474,6 +504,7 @@ def main():
         write_tag_files("by-evidence-level", evidence_pmids)
         write_tag_files("by-resistant-state", resistant_state_pmids)
         write_tag_files("by-radioligand-target", radioligand_target_pmids)
+        write_tag_files("by-diagnostic-therapy", diagnostic_therapy_pmids)
         write_tag_files("by-combination-evidence", combination_pmids)
         write_tag_files("by-journal", journal_pmids)
 
@@ -488,6 +519,7 @@ def main():
     print(f"  Articles with evidence level: {stats['evidence']}/{len(files)}")
     print(f"  Articles with resistant-state tags: {stats['resistant_states']}/{len(files)}")
     print(f"  Articles with radioligand target tags: {stats['radioligand_targets']}/{len(files)}")
+    print(f"  Articles with diagnostic-therapy links: {stats['diagnostic_therapy']}/{len(files)}")
     print(f"  Articles with combination evidence: {stats['combination_evidence']}/{len(files)}")
 
     print(f"\nMechanism distribution:")
@@ -519,6 +551,12 @@ def main():
     print(f"\nTissue-category distribution:")
     for tag in TISSUE_CATEGORY_ORDER:
         pmids = tissue_pmids[tag]
+        if pmids:
+            print(f"  {tag}: {len(pmids)}")
+
+    print(f"\nDiagnostic-therapy chain distribution:")
+    for tag in DIAGNOSTIC_THERAPY_ORDER:
+        pmids = diagnostic_therapy_pmids[tag]
         if pmids:
             print(f"  {tag}: {len(pmids)}")
 

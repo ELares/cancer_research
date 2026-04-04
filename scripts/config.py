@@ -410,6 +410,118 @@ def derive_sarcoma_subtypes(
         return []
     return [subtype for subtype in CANCER_SUBTYPE_ORDER if subtype in subtype_set]
 
+# ---------------------------------------------------------------------------
+# Diagnostic-to-Therapy Matching (pilot layer — issue #41)
+# ---------------------------------------------------------------------------
+# Each chain maps a diagnostic modality through a targetable feature to an
+# intervention class.  Matching requires the intervention link PLUS at least
+# one of (diagnostic, feature) to reduce false positives from papers that
+# discuss only a diagnostic or only a therapy in passing.
+
+DIAGNOSTIC_THERAPY_KEYWORDS = {
+    "psma-imaging-to-radioligand": {
+        "diagnostic": [
+            "psma pet", "psma imaging", "psma scan", "68ga-psma", "psma-11",
+            "psma pet/ct", "psma-pet",
+        ],
+        "feature": [
+            "psma expression", "psma-positive", "psma positive",
+            "prostate-specific membrane antigen",
+        ],
+        "intervention": [
+            "177lu-psma", "lu-psma", "psma radioligand", "psma-617",
+            "vipivotide", "pluvicto", "lutetium-psma",
+        ],
+    },
+    "sstr-imaging-to-prrt": {
+        "diagnostic": [
+            "sstr scintigraphy", "dotatate pet", "dotatoc pet",
+            "68ga-dotatate", "68ga-dotatoc",
+            "somatostatin receptor imaging", "sstr pet",
+        ],
+        "feature": [
+            "sstr expression", "sstr2-positive", "sstr2 positive",
+            "somatostatin receptor positive",
+        ],
+        "intervention": [
+            "lutathera", "177lu-dotatate", "177lu-dotatoc",
+            "peptide receptor radionuclide therapy", "prrt",
+        ],
+    },
+    "pdl1-ihc-to-checkpoint": {
+        "diagnostic": [
+            "pd-l1 immunohistochemistry", "pd-l1 ihc", "pd-l1 staining",
+            "tps score", "tumor proportion score",
+            "cps score", "combined positive score",
+        ],
+        "feature": [
+            "pd-l1 positive", "pd-l1 high", "pd-l1 expression",
+            "pd-l1-positive",
+        ],
+        "intervention": [
+            "pembrolizumab", "nivolumab", "atezolizumab", "durvalumab",
+            "avelumab", "cemiplimab",
+        ],
+    },
+    "tmb-msi-to-immunotherapy": {
+        "diagnostic": [
+            "tumor mutational burden", "tmb-high", "tmb-h",
+            "microsatellite instability", "msi-high", "msi-h",
+            "mismatch repair deficient", "dmmr",
+        ],
+        "feature": [
+            "tmb-high", "tmb-h", "msi-h", "msi-high",
+            "hypermutated", "mismatch repair deficient",
+        ],
+        "intervention": [
+            "pembrolizumab", "nivolumab", "checkpoint inhibitor",
+            "immune checkpoint", "anti-pd-1", "anti-pd1",
+        ],
+    },
+    "neoantigen-profiling-to-mrna-vaccine": {
+        "diagnostic": [
+            "neoantigen prediction", "neoantigen profiling",
+            "neoantigen identification", "neoantigen discovery",
+            "whole exome sequencing", "tumor sequencing",
+            "mutanome", "immunopeptidome",
+        ],
+        "feature": [
+            "neoantigen", "neo-antigen", "tumor-specific antigen",
+            "personalized antigen", "individualized neoantigen",
+        ],
+        "intervention": [
+            "mrna vaccine", "mrna cancer vaccine", "personalized vaccine",
+            "individualized mrna", "neoantigen vaccine",
+            "autogene cevumeran", "mrna-4157",
+        ],
+    },
+    "oncolytic-susceptibility-to-virotherapy": {
+        "diagnostic": [
+            "viral receptor expression", "nectin-1 expression",
+            "cd46 expression", "coxsackievirus receptor",
+            "herpes simplex entry", "oncolytic susceptibility",
+        ],
+        "feature": [
+            "viral entry receptor", "nectin-1", "cd46",
+            "interferon deficiency", "interferon-deficient",
+        ],
+        "intervention": [
+            "t-vec", "talimogene", "oncolytic herpes",
+            "oncolytic adenovirus", "oncolytic virus therapy",
+            "oncolytic vaccinia", "oncolytic reovirus",
+        ],
+    },
+}
+
+DIAGNOSTIC_THERAPY_ORDER = [
+    "psma-imaging-to-radioligand",
+    "sstr-imaging-to-prrt",
+    "pdl1-ihc-to-checkpoint",
+    "tmb-msi-to-immunotherapy",
+    "neoantigen-profiling-to-mrna-vaccine",
+    "oncolytic-susceptibility-to-virotherapy",
+]
+
 EVIDENCE_LEVEL_KEYWORDS = {
     "phase3-clinical": [
         "phase 3", "phase iii", "phase-3",

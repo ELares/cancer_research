@@ -24,6 +24,8 @@ from article_io import load_article
 from config import (
     CANCER_SUBTYPE_ORDER,
     CANCER_SUBTYPE_KEYWORDS,
+    DIAGNOSTIC_THERAPY_KEYWORDS,
+    DIAGNOSTIC_THERAPY_ORDER,
     MECHANISM_KEYWORDS,
     CANCER_TYPE_KEYWORDS,
     EVIDENCE_LEVEL_KEYWORDS,
@@ -391,6 +393,87 @@ def build_sarcoma_subtype_audit(entries: list[dict]) -> str:
     lines.append("- The broad `sarcoma` bucket is preserved for backward compatibility in the main matrices.")
     lines.append("- Osteosarcoma and related sarcoma-family tumors are now visible as explicit subtypes rather than being collapsed completely into generic sarcoma counts.")
     lines.append("- This is a first-pass subtype layer, not a general pan-cancer subtype ontology.")
+    return "\n".join(lines)
+
+
+def build_diagnostic_therapy_audit(entries: list[dict]) -> str:
+    """Audit of diagnostic-to-therapy matching chains."""
+    lines = ["# Diagnostic-to-Therapy Matching Audit\n"]
+    lines.append(
+        "First-pass extraction of diagnostic → targetable feature → intervention chains. "
+        "Matching requires the intervention link plus at least one of (diagnostic, feature).\n"
+    )
+
+    chain_entries = defaultdict(list)
+    for e in entries:
+        for chain_id in e.get("diagnostic_therapy_links", []):
+            chain_entries[chain_id].append(e)
+
+    total_with_links = sum(1 for e in entries if e.get("diagnostic_therapy_links"))
+    lines.append(f"- Articles with at least one diagnostic-therapy link: **{total_with_links}** / {len(entries)}")
+    lines.append(f"- Chains evaluated: {len(DIAGNOSTIC_THERAPY_ORDER)}")
+    lines.append("")
+
+    # Per-chain counts
+    lines.append("## Chain Counts\n")
+    lines.append("| Chain | Articles | Top cancer types | Top evidence levels |")
+    lines.append("|---|---|---|---|")
+    for chain_id in DIAGNOSTIC_THERAPY_ORDER:
+        matched = chain_entries[chain_id]
+        count = len(matched)
+        if not count:
+            lines.append(f"| **{chain_id}** | 0 | . | . |")
+            continue
+        cancer_counts = Counter()
+        evidence_counts = Counter()
+        for e in matched:
+            for c in e.get("cancer_types", []):
+                cancer_counts[c] += 1
+            ev = e.get("evidence_level", "")
+            if ev:
+                evidence_counts[ev] += 1
+        top_cancers = ", ".join(f"{c} ({n})" for c, n in cancer_counts.most_common(3)) or "."
+        top_evidence = ", ".join(f"{ev} ({n})" for ev, n in evidence_counts.most_common(3)) or "."
+        lines.append(f"| **{chain_id}** | {count} | {top_cancers} | {top_evidence} |")
+
+    # Example papers per chain
+    lines.append("\n## Example Papers\n")
+    for chain_id in DIAGNOSTIC_THERAPY_ORDER:
+        matched = chain_entries[chain_id]
+        if not matched:
+            continue
+        examples = sorted(
+            matched,
+            key=lambda e: (-(e.get("cited_by_count") or 0), -(e.get("year") or 0)),
+        )[:3]
+        lines.append(f"\n### {chain_id}\n")
+        chain_def = DIAGNOSTIC_THERAPY_KEYWORDS[chain_id]
+        lines.append(
+            f"*Diagnostic:* {', '.join(chain_def['diagnostic'][:3])} | "
+            f"*Feature:* {', '.join(chain_def['feature'][:3])} | "
+            f"*Intervention:* {', '.join(chain_def['intervention'][:3])}\n"
+        )
+        for e in examples:
+            mechs = ", ".join(e.get("mechanisms", [])[:3]) or "untagged"
+            ev = e.get("evidence_level", "") or "unclassified"
+            lines.append(
+                f"- **PMID {e['pmid']}** ({e.get('year')}, {e.get('cited_by_count', 0)} cites) "
+                f"— {ev} — {mechs} — *{e.get('title', '')[:120]}*"
+            )
+
+    lines.append("\n## Interpretation\n")
+    lines.append(
+        "- This is a first-pass pilot covering 6 diagnostic-therapy chains across 4 modalities "
+        "(radioligands, checkpoint selection, mRNA vaccines, oncolytic viruses)."
+    )
+    lines.append(
+        "- The matching rule (intervention required + at least one other link) is conservative; "
+        "papers that discuss only a diagnostic or only a therapy without the chain are excluded."
+    )
+    lines.append(
+        "- Chain counts depend on keyword coverage and should not be read as exhaustive. "
+        "Papers using non-standard terminology for diagnostics or interventions may be missed."
+    )
     return "\n".join(lines)
 
 
@@ -1274,6 +1357,7 @@ def main():
         ("tissue-mechanism-summary.md", "Tissue-Mechanism Summary", build_tissue_mechanism_summary),
         ("tissue-evidence-summary.md", "Tissue-Evidence Summary", build_tissue_evidence_summary),
         ("sarcoma-subtype-audit.md", "Sarcoma Subtype Audit", build_sarcoma_subtype_audit),
+        ("diagnostic-therapy-audit.md", "Diagnostic-Therapy Audit", build_diagnostic_therapy_audit),
         ("convergence-map.md", "Convergence Map", build_convergence_map),
         ("designed-combinations.md", "Designed Combination Audit", build_designed_combinations),
         ("gap-analysis.md", "Gap Analysis", build_gap_analysis),

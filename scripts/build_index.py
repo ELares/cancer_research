@@ -22,7 +22,8 @@ INDEX_FIELDS = [
     "pmid", "doi", "pmcid", "title", "journal", "year", "month",
     "is_oa", "oa_status", "cited_by_count",
     "mechanisms", "biology_processes", "pathway_targets", "radioligand_targets",
-    "cancer_types", "cancer_subtypes", "tissue_categories", "evidence_level", "resistant_states", "combination_evidence",
+    "cancer_types", "cancer_subtypes", "tissue_categories", "evidence_level", "resistant_states",
+    "diagnostic_therapy_links", "combination_evidence",
     "icite_rcr", "icite_percentile", "icite_is_clinical",
     "date_added",
 ]
