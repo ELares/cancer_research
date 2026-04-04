@@ -18,8 +18,9 @@ from tqdm import tqdm
 from article_io import load_article, save_article
 from config import (
     BIOLOGY_PROCESS_KEYWORDS, CANCER_TYPE_KEYWORDS, EVIDENCE_LEVEL_KEYWORDS, MECHANISM_KEYWORDS,
-    PATHWAY_TARGET_KEYWORDS, PMID_DIR, RADIOLIGAND_TARGET_KEYWORDS, TAGS_DIR,
-    RESISTANT_STATE_RULES,
+    PATHWAY_TARGET_KEYWORDS, PMID_DIR, RADIOLIGAND_TARGET_KEYWORDS, TAGS_DIR, RESISTANT_STATE_RULES,
+    TISSUE_CATEGORY_ORDER,
+    derive_tissue_categories,
 )
 from evidence_utils import is_protocol_like, is_review_like, normalize_text
 
@@ -262,7 +263,10 @@ def match_evidence_level(fm: dict, text: str) -> str:
     """Match text against evidence level keywords, return best match.
 
     Uses word-boundary matching for short keywords to avoid false positives.
-    Priority order: phase3 > phase2 > phase1 > clinical-other > invivo > invitro > theoretical.
+    PubMed publication types take precedence for explicit phase labels.
+    For text-only inference, strong retrospective/real-world patient-study language
+    is allowed to resolve to ``clinical-other`` before generic phase mentions so
+    landmark real-world cohorts are not over-promoted into phase-labeled buckets.
     """
     if is_review_like(fm) or is_protocol_like(fm):
         return ""
@@ -273,6 +277,14 @@ def match_evidence_level(fm: dict, text: str) -> str:
             return level
 
     if any(marker in pub_types for marker in EVIDENCE_PUBTYPE_MARKERS["clinical-other"]):
+        return "clinical-other"
+
+    clinical_other_terms = EVIDENCE_LEVEL_KEYWORDS["clinical-other"]
+    has_clinical_other_signal = any(
+        re.search(r'\b' + re.escape(term.lower()) + r'\b', text) if len(term) <= 4 else term.lower() in text
+        for term in clinical_other_terms
+    )
+    if has_clinical_other_signal:
         return "clinical-other"
 
     for level in ["phase3-clinical", "phase2-clinical", "phase1-clinical", "clinical-other",
@@ -319,6 +331,7 @@ def main():
     mechanism_pmids: dict[str, list[str]] = {k: [] for k in MECHANISM_KEYWORDS}
     biology_process_pmids: dict[str, list[str]] = {k: [] for k in BIOLOGY_PROCESS_KEYWORDS}
     cancer_pmids: dict[str, list[str]] = {k: [] for k in CANCER_TYPE_KEYWORDS}
+    tissue_pmids: dict[str, list[str]] = {k: [] for k in TISSUE_CATEGORY_ORDER}
     evidence_pmids: dict[str, list[str]] = {k: [] for k in EVIDENCE_LEVEL_KEYWORDS}
     resistant_state_pmids: dict[str, list[str]] = {k: [] for k in RESISTANT_STATE_RULES}
     radioligand_target_pmids: dict[str, list[str]] = {k: [] for k in RADIOLIGAND_TARGET_KEYWORDS}
@@ -334,7 +347,7 @@ def main():
 
     stats = {
         "mechanisms": 0, "biology_processes": 0, "pathway_targets": 0,
-        "cancer_types": 0, "evidence": 0, "resistant_states": 0,
+        "cancer_types": 0, "tissue_categories": 0, "evidence": 0, "resistant_states": 0,
         "radioligand_targets": 0, "combination_evidence": 0,
     }
 
@@ -355,6 +368,7 @@ def main():
         biology_processes = match_keywords(text, BIOLOGY_PROCESS_KEYWORDS)
         pathway_targets = match_keywords(pathway_text, PATHWAY_TARGET_KEYWORDS)
         cancer_types = match_keywords(text, CANCER_TYPE_KEYWORDS)
+        tissue_categories = derive_tissue_categories(cancer_types)
         evidence = match_evidence_level(fm, text)
         resistant_states = match_resistant_states(text)
         radioligand_targets = match_radioligand_targets(pathway_text, mechanisms)
@@ -365,6 +379,7 @@ def main():
         fm["biology_processes"] = biology_processes
         fm["pathway_targets"] = pathway_targets
         fm["cancer_types"] = cancer_types
+        fm["tissue_categories"] = tissue_categories
         fm["evidence_level"] = evidence
         fm["resistant_states"] = resistant_states
         if radioligand_targets:
@@ -388,6 +403,8 @@ def main():
             pathway_target_pmids[p].append(pmid)
         for c in cancer_types:
             cancer_pmids[c].append(pmid)
+        for tissue in tissue_categories:
+            tissue_pmids[tissue].append(pmid)
         if evidence:
             evidence_pmids[evidence].append(pmid)
         for r in resistant_states:
@@ -414,6 +431,8 @@ def main():
             stats["pathway_targets"] += 1
         if cancer_types:
             stats["cancer_types"] += 1
+        if tissue_categories:
+            stats["tissue_categories"] += 1
         if evidence:
             stats["evidence"] += 1
         if resistant_states:
@@ -430,6 +449,7 @@ def main():
         write_tag_files("by-biology-process", biology_process_pmids)
         write_tag_files("by-pathway-target", pathway_target_pmids)
         write_tag_files("by-cancer-type", cancer_pmids)
+        write_tag_files("by-tissue-category", tissue_pmids)
         write_tag_files("by-evidence-level", evidence_pmids)
         write_tag_files("by-resistant-state", resistant_state_pmids)
         write_tag_files("by-radioligand-target", radioligand_target_pmids)
@@ -442,6 +462,7 @@ def main():
     print(f"  Articles with biology-process tags: {stats['biology_processes']}/{len(files)}")
     print(f"  Articles with pathway-target tags: {stats['pathway_targets']}/{len(files)}")
     print(f"  Articles with cancer type tags: {stats['cancer_types']}/{len(files)}")
+    print(f"  Articles with tissue-category tags: {stats['tissue_categories']}/{len(files)}")
     print(f"  Articles with evidence level: {stats['evidence']}/{len(files)}")
     print(f"  Articles with resistant-state tags: {stats['resistant_states']}/{len(files)}")
     print(f"  Articles with radioligand target tags: {stats['radioligand_targets']}/{len(files)}")
@@ -464,6 +485,12 @@ def main():
 
     print(f"\nCancer type distribution:")
     for tag, pmids in sorted(cancer_pmids.items(), key=lambda x: -len(x[1])):
+        if pmids:
+            print(f"  {tag}: {len(pmids)}")
+
+    print(f"\nTissue-category distribution:")
+    for tag in TISSUE_CATEGORY_ORDER:
+        pmids = tissue_pmids[tag]
         if pmids:
             print(f"  {tag}: {len(pmids)}")
 

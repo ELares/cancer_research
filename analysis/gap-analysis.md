@@ -42,11 +42,11 @@ Mechanism × cancer type pairs with zero research articles in our corpus.
 Mechanisms with many articles but no Phase 2+ clinical evidence detected in the current keyword-derived evidence tags. Coverage values below use only primary-study-like records (excluding review-like and protocol-like papers that are intentionally left unclassified).
 
 - **bioelectric**: 182 articles, 0 Phase 2+ clinical trials detected; primary-study-like coverage 144/163 (88.3%)
-- **car-t**: 474 articles, only 3 Phase 2+ (0%); primary-study-like coverage 136/176 (77.3%)
+- **car-t**: 474 articles, only 1 Phase 2+ (0%); primary-study-like coverage 136/176 (77.3%)
 - **crispr**: 331 articles, 0 Phase 2+ clinical trials detected; primary-study-like coverage 144/176 (81.8%)
 - **mRNA-vaccine**: 179 articles, only 2 Phase 2+ (1%); primary-study-like coverage 67/119 (56.3%)
 - **metabolic-targeting**: 274 articles, 0 Phase 2+ clinical trials detected; primary-study-like coverage 76/108 (70.4%)
-- **microbiome**: 109 articles, only 2 Phase 2+ (1%); primary-study-like coverage 12/23 (52.2%)
+- **microbiome**: 109 articles, only 1 Phase 2+ (0%); primary-study-like coverage 12/23 (52.2%)
 - **nanoparticle**: 515 articles, only 1 Phase 2+ (0%); primary-study-like coverage 228/285 (80.0%)
 - **sonodynamic**: 187 articles, 0 Phase 2+ clinical trials detected; primary-study-like coverage 113/137 (82.5%)
 

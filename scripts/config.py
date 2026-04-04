@@ -316,6 +316,44 @@ CANCER_TYPE_KEYWORDS = {
     "neuroblastoma": ["neuroblastoma"],
 }
 
+TISSUE_CATEGORY_ORDER = [
+    "epithelial",
+    "hematologic",
+    "mesenchymal",
+    "neuroectodermal",
+    "mesothelial",
+]
+
+CANCER_TYPE_TO_TISSUE = {
+    "breast": "epithelial",
+    "lung": "epithelial",
+    "colorectal": "epithelial",
+    "pancreatic": "epithelial",
+    "melanoma": "neuroectodermal",
+    "leukemia": "hematologic",
+    "lymphoma": "hematologic",
+    "prostate": "epithelial",
+    "ovarian": "epithelial",
+    "liver": "epithelial",
+    "gastric": "epithelial",
+    "cervical": "epithelial",
+    "bladder": "epithelial",
+    "kidney": "epithelial",
+    "thyroid": "epithelial",
+    "esophageal": "epithelial",
+    "head-and-neck": "epithelial",
+    "sarcoma": "mesenchymal",
+    "myeloma": "hematologic",
+    "mesothelioma": "mesothelial",
+    "glioblastoma": "neuroectodermal",
+    "neuroblastoma": "neuroectodermal",
+}
+
+
+def derive_tissue_categories(cancer_types: list[str]) -> list[str]:
+    derived = {CANCER_TYPE_TO_TISSUE[c] for c in cancer_types if c in CANCER_TYPE_TO_TISSUE}
+    return [t for t in TISSUE_CATEGORY_ORDER if t in derived]
+
 EVIDENCE_LEVEL_KEYWORDS = {
     "phase3-clinical": [
         "phase 3", "phase iii", "phase-3",
@@ -326,8 +364,11 @@ EVIDENCE_LEVEL_KEYWORDS = {
     "clinical-other": [
         "pilot study", "pilot trial", "feasibility study", "feasibility trial",
         "single-arm", "single arm", "retrospective study", "retrospective analysis",
+        "retrospective cohort", "retrospective review",
         "case report", "case series", "investigator-initiated", "investigator initiated",
-        "real-world study", "real world study", "clinical experience",
+        "real-world study", "real world study", "real-world analysis", "real world analysis",
+        "real-world cohort", "real world cohort", "registry study", "registry analysis",
+        "clinical experience",
         "reported a case", "single patient",
     ],
     "preclinical-invivo": ["in vivo", "mouse model", "xenograft", "animal model", "murine", "tumor-bearing mice"],

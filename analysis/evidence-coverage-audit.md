@@ -1,17 +1,17 @@
 # Evidence Coverage Audit
 
-Evidence-level tags are present for 2020/4830 records (41.8%). Of the unclassified records, 1921 are review-like and 29 are protocol-like by design; 860 primary-study-like records remain uncategorized. Primary-study-like evidence coverage is 2020/2880 (70.1%).
+Evidence-level tags are present for 2038/4830 records (42.2%). Of the unclassified records, 1921 are review-like and 29 are protocol-like by design; 842 primary-study-like records remain uncategorized. Primary-study-like evidence coverage is 2038/2880 (70.8%).
 
 ## Mechanisms Most Exposed To Overstated Absence Claims
 
 | Mechanism | Total | Tagged | Review-like | Protocol-like | Other untagged | Primary-study-like coverage |
 |---|---|---|---|---|---|---|
-| **immunotherapy** | 2297 | 763 | 1161 | 15 | 358 | 763/1121 (68.1%) |
-| **synthetic-lethality** | 367 | 178 | 128 | 1 | 60 | 178/238 (74.8%) |
+| **immunotherapy** | 2297 | 769 | 1161 | 15 | 352 | 769/1121 (68.6%) |
+| **synthetic-lethality** | 367 | 179 | 128 | 1 | 59 | 179/238 (75.2%) |
 | **nanoparticle** | 515 | 228 | 230 | 0 | 57 | 228/285 (80.0%) |
 | **mRNA-vaccine** | 179 | 67 | 60 | 0 | 52 | 67/119 (56.3%) |
-| **ttfields** | 262 | 135 | 72 | 4 | 51 | 135/186 (72.6%) |
-| **electrochemical-therapy** | 185 | 86 | 47 | 2 | 50 | 86/136 (63.2%) |
+| **ttfields** | 262 | 138 | 72 | 4 | 48 | 138/186 (74.2%) |
+| **electrochemical-therapy** | 185 | 90 | 47 | 2 | 46 | 90/136 (66.2%) |
 | **car-t** | 474 | 136 | 298 | 0 | 40 | 136/176 (77.3%) |
 | **metabolic-targeting** | 274 | 76 | 166 | 0 | 32 | 76/108 (70.4%) |
 | **crispr** | 331 | 144 | 155 | 0 | 32 | 144/176 (81.8%) |
@@ -20,9 +20,9 @@ Evidence-level tags are present for 2020/4830 records (41.8%). Of the unclassifi
 | **sonodynamic** | 187 | 113 | 50 | 0 | 24 | 113/137 (82.5%) |
 | **oncolytic-virus** | 378 | 182 | 172 | 0 | 24 | 182/206 (88.3%) |
 | **hifu** | 81 | 29 | 29 | 1 | 22 | 29/51 (56.9%) |
-| **antibody-drug-conjugate** | 284 | 140 | 121 | 2 | 21 | 140/161 (87.0%) |
 | **bioelectric** | 182 | 144 | 19 | 0 | 19 | 144/163 (88.3%) |
-| **frequency-therapy** | 71 | 20 | 36 | 1 | 14 | 20/34 (58.8%) |
+| **antibody-drug-conjugate** | 284 | 143 | 121 | 2 | 18 | 143/161 (88.8%) |
+| **frequency-therapy** | 71 | 21 | 36 | 1 | 13 | 21/34 (61.8%) |
 | **microbiome** | 109 | 12 | 84 | 2 | 11 | 12/23 (52.2%) |
 | **electrolysis** | 11 | 5 | 0 | 0 | 6 | 5/11 (45.5%) |
 | **phagocytosis-checkpoint** | 28 | 18 | 5 | 0 | 5 | 18/23 (78.3%) |
@@ -67,7 +67,7 @@ Illustrative examples below come from the uncategorized primary-study-like pool 
 
 ## What The Current Miss-Rate Signal Likely Means
 
-- The raw 41.8% coverage number is pessimistic because review-like and protocol-like records are intentionally excluded from evidence tagging.
+- The raw 42.2% coverage number is pessimistic because review-like and protocol-like records are intentionally excluded from evidence tagging.
 - The more relevant upper-bound miss rate is the share of `other_untagged` records within the primary-study-like subset. Mechanisms with the largest remaining uncertainty are immunotherapy, mRNA-vaccine, electrochemical-therapy, TTFields, and CAR-T.
 - After adding a `clinical-other` bucket, the remaining uncategorized records are still enriched for translational engineering studies, biomarker/antigen-discovery papers, and mechanistic studies that do not announce phase or preclinical status in obvious keywords.
 - The main residual risk is now twofold: under-classifying ambiguous patient studies that still do not emit clear textual signals, and overstating absence when key landmark papers are missing from the local full-text archive.

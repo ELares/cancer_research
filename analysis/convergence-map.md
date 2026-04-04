@@ -6,9 +6,9 @@ Articles that combine multiple therapeutic mechanisms — identifying synergisti
 **Total articles with 3+ mechanisms**: 396
 
 **First-pass combination classifier breakdown**:
-- `designed-combination-clinical`: 59
+- `designed-combination-clinical`: 60
 - `designed-combination-preclinical`: 325
-- `co-mention-only`: 623
+- `co-mention-only`: 622
 - `review-or-perspective-multi-lane`: 945
 
 ## Top 30 Mechanism Combinations

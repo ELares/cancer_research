@@ -29,6 +29,8 @@ from config import (
     PROJECT_ROOT,
     RADIOLIGAND_TARGET_KEYWORDS,
     RESISTANT_STATE_RULES,
+    TISSUE_CATEGORY_ORDER,
+    derive_tissue_categories,
 )
 from evidence_utils import is_protocol_like, is_review_like
 
@@ -49,6 +51,36 @@ COMBINATION_AUDIT_LANES = [
     ("immunotherapy", "radioligand-therapy"),
     ("immunotherapy", "sonodynamic"),
 ]
+
+EVIDENCE_RANK = {
+    "phase3-clinical": 7,
+    "phase2-clinical": 6,
+    "phase1-clinical": 5,
+    "clinical-other": 4,
+    "preclinical-invivo": 3,
+    "preclinical-invitro": 2,
+    "theoretical": 1,
+    "": 0,
+}
+
+EVIDENCE_TIER_WEIGHTS = {
+    "phase3-clinical": 12.0,
+    "phase2-clinical": 8.0,
+    "phase1-clinical": 5.0,
+    "clinical-other": 3.0,
+    "preclinical-invivo": 2.0,
+    "preclinical-invitro": 1.0,
+    "theoretical": 0.5,
+}
+
+LOCALIZED_MODALITIES = {
+    "sonodynamic",
+    "cold-atmospheric-plasma",
+    "hifu",
+    "electrochemical-therapy",
+    "frequency-therapy",
+    "electrolysis",
+}
 
 def load_index() -> list[dict]:
     entries = []
@@ -92,6 +124,37 @@ def classify_evidence_reason(entry: dict) -> str:
     if is_protocol_like(fm):
         return "protocol_like"
     return "other_untagged"
+
+
+def get_tissue_categories(entry: dict) -> list[str]:
+    tissues = entry.get("tissue_categories")
+    if tissues:
+        return tissues
+    return derive_tissue_categories(entry.get("cancer_types", []))
+
+
+def evidence_weight(entry: dict) -> float:
+    """Heuristic quality weight for already-detected evidence tags."""
+    level = entry.get("evidence_level", "")
+    base = EVIDENCE_TIER_WEIGHTS.get(level)
+    if not base:
+        return 0.0
+
+    pct = entry.get("icite_percentile") or 0
+    try:
+        pct = max(0.0, min(float(pct), 100.0))
+    except (TypeError, ValueError):
+        pct = 0.0
+    citation_modifier = 1.0 + (pct / 200.0)  # 1.0-1.5
+
+    year = entry.get("year") or 0
+    if year:
+        year = max(2015, min(int(year), 2026))
+        recency_modifier = 0.9 + ((year - 2015) / (2026 - 2015)) * 0.2  # 0.9-1.1
+    else:
+        recency_modifier = 1.0
+
+    return base * citation_modifier * recency_modifier
 
 
 # ============================================================
@@ -156,6 +219,104 @@ def build_mechanism_matrix(entries: list[dict]) -> str:
         if cancer_count >= 10:
             lines.append(f"- **{m}**: researched across {cancer_count}/{len(cancer_types)} cancer types")
 
+    return "\n".join(lines)
+
+
+def build_tissue_mechanism_summary(entries: list[dict]) -> str:
+    lines = ["# Tissue × Mechanism Summary\n"]
+    lines.append(
+        "Cross-tabulation of article counts by derived tissue-of-origin category and therapeutic mechanism.\n"
+    )
+    lines.append(
+        "Rows are not mutually exclusive; multi-tissue articles contribute to each relevant tissue row.\n"
+    )
+    tissues = list(TISSUE_CATEGORY_ORDER)
+    mechanisms = sorted(MECHANISM_KEYWORDS.keys())
+    matrix = defaultdict(Counter)
+    tissue_totals = Counter()
+    assigned_total = 0
+    for e in entries:
+        tissues_for_entry = get_tissue_categories(e)
+        if tissues_for_entry:
+            assigned_total += 1
+        for tissue in tissues_for_entry:
+            tissue_totals[tissue] += 1
+            for mech in e.get("mechanisms", []):
+                matrix[tissue][mech] += 1
+
+    lines.append(f"| Tissue | {' | '.join(mechanisms)} | Total |")
+    lines.append(f"|---|{'---|' * len(mechanisms)}---|")
+    for tissue in tissues:
+        row = [str(matrix[tissue][mech]) if matrix[tissue][mech] else "." for mech in mechanisms]
+        lines.append(f"| **{tissue}** | {' | '.join(row)} | {tissue_totals[tissue]} |")
+
+    lines.append("\n## Interpretation\n")
+    if tissue_totals:
+        dominant = ", ".join(
+            f"{tissue} ({count})" for tissue, count in tissue_totals.most_common()
+        )
+        lines.append(f"- Tissue-tagged articles are concentrated in: {dominant}.")
+    lines.append(
+        f"- Tissue slicing currently covers {assigned_total}/{len(entries)} records ({(assigned_total / len(entries)):.1%}); the remainder do not yet have a derived tissue category."
+    )
+    localized_counts = Counter()
+    for tissue in tissues:
+        localized_counts[tissue] = sum(
+            1
+            for e in entries
+            if tissue in get_tissue_categories(e)
+            and any(mech in e.get("mechanisms", []) for mech in LOCALIZED_MODALITIES)
+        )
+    if sum(localized_counts.values()):
+        lines.append(
+            "- Localized physical-modality article presence is concentrated in "
+            + ", ".join(f"{tissue} ({localized_counts[tissue]})" for tissue in tissues if localized_counts[tissue])
+            + "."
+        )
+    lines.append(
+        "- Hematologic and mesothelial categories provide a direct check against over-generalizing localized solid-tumor strategies to all cancers."
+    )
+    lines.append(
+        "- Melanoma is grouped under `neuroectodermal` here because the mapping follows tissue-of-origin biology rather than the usual broad solid-tumor grouping."
+    )
+    lines.append(
+        "- This layer is derived from existing cancer-type tags. It improves interpretation but does not fix upstream cancer-tagging errors."
+    )
+    return "\n".join(lines)
+
+
+def build_tissue_evidence_summary(entries: list[dict]) -> str:
+    lines = ["# Tissue × Evidence Summary\n"]
+    lines.append(
+        "Evidence-tier mix by derived tissue-of-origin category. Counts below use article presence, not mutually exclusive assignment.\n"
+    )
+    tissues = list(TISSUE_CATEGORY_ORDER)
+    assigned_total = sum(1 for e in entries if get_tissue_categories(e))
+    evidence_order = [
+        "phase3-clinical", "phase2-clinical", "phase1-clinical",
+        "clinical-other", "preclinical-invivo", "preclinical-invitro", "theoretical",
+    ]
+    lines.append("| Tissue | Phase 3 | Phase 2 | Phase 1 | Clinical Other | In Vivo | In Vitro | Theory | Primary-study-like coverage |")
+    lines.append("|---|---|---|---|---|---|---|---|---|")
+    for tissue in tissues:
+        tissue_entries = [e for e in entries if tissue in get_tissue_categories(e)]
+        counts = Counter(e.get("evidence_level", "") for e in tissue_entries if e.get("evidence_level"))
+        primary_like = sum(1 for e in tissue_entries if classify_evidence_reason(e) in ("tagged", "other_untagged"))
+        tagged = sum(1 for e in tissue_entries if e.get("evidence_level"))
+        coverage = f"{tagged}/{primary_like} ({(tagged / primary_like):.1%})" if primary_like else "n/a"
+        row = [str(counts.get(ev, 0)) for ev in evidence_order]
+        lines.append(f"| **{tissue}** | {' | '.join(row)} | {coverage} |")
+
+    lines.append("\n## Interpretation\n")
+    lines.append(
+        f"- These rows cover the {assigned_total}/{len(entries)} records ({(assigned_total / len(entries)):.1%}) with a derived tissue category."
+    )
+    lines.append(
+        "- Tissue slicing makes it easier to see whether a mechanism’s apparent maturity is broad or mostly inherited from epithelial/solid-tumor literature."
+    )
+    lines.append(
+        "- Coverage remains dependent on the current evidence tagger. Use these rows as maturity comparisons within the detected-evidence subset, not as complete estimates of the whole tissue literature."
+    )
     return "\n".join(lines)
 
 
@@ -419,14 +580,11 @@ def build_gap_analysis(entries: list[dict]) -> str:
 
     # Evidence matrix
     evidence_matrix = defaultdict(lambda: defaultdict(str))
-    evidence_rank = {"phase3-clinical": 7, "phase2-clinical": 6, "phase1-clinical": 5,
-                     "clinical-other": 4, "preclinical-invivo": 3, "preclinical-invitro": 2,
-                     "theoretical": 1, "": 0}
     for e in entries:
         ev = e.get("evidence_level", "")
         for m in e.get("mechanisms", []):
             for c in e.get("cancer_types", []):
-                if evidence_rank.get(ev, 0) > evidence_rank.get(evidence_matrix[m][c], 0):
+                if EVIDENCE_RANK.get(ev, 0) > EVIDENCE_RANK.get(evidence_matrix[m][c], 0):
                     evidence_matrix[m][c] = ev
 
     # 1. Complete gaps (mechanism × cancer = 0 articles)
@@ -849,6 +1007,68 @@ def build_pathway_target_audit(entries: list[dict]) -> str:
     return "\n".join(lines)
 
 
+def build_weighted_evidence_summary(entries: list[dict]) -> str:
+    lines = ["# Weighted Evidence Summary\n"]
+    lines.append(
+        "Heuristic weighting of detected evidence by tier, citation percentile, and recency.\n"
+    )
+    lines.append(
+        "This is a ranking aid, not a formal study-quality score. It only applies to records with detected evidence tags, and it inherits the tagger’s conservative recall.\n"
+    )
+    lines.append(
+        "Weight formula: `tier_weight × citation_modifier × recency_modifier`, "
+        "with evidence tier as the dominant term.\n"
+    )
+    lines.append(
+        "Multi-tag papers contribute to every mechanism they are tagged with, so scores are useful for within-lane ranking but are not independent or additive across mechanisms.\n"
+    )
+
+    mechanisms = sorted(MECHANISM_KEYWORDS.keys())
+    rows = []
+    for mechanism in mechanisms:
+        mech_entries = [e for e in entries if mechanism in e.get("mechanisms", [])]
+        tagged_entries = [e for e in mech_entries if e.get("evidence_level")]
+        primary_like = [e for e in mech_entries if classify_evidence_reason(e) in ("tagged", "other_untagged")]
+        total_weight = sum(evidence_weight(e) for e in tagged_entries)
+        avg_weight = total_weight / len(tagged_entries) if tagged_entries else 0.0
+        coverage = (len(tagged_entries) / len(primary_like)) if primary_like else 0.0
+        rows.append((mechanism, total_weight, avg_weight, len(tagged_entries), len(primary_like), coverage, tagged_entries))
+
+    lines.append("## Weighted Ranking By Mechanism\n")
+    lines.append("| Mechanism | Weighted score | Tagged evidence rows | Primary-study-like coverage | Avg weight per tagged row |")
+    lines.append("|---|---|---|---|---|")
+    for mechanism, total_weight, avg_weight, tagged_count, primary_like_count, coverage, _ in sorted(
+        rows,
+        key=lambda row: (-row[1], -row[2], row[0]),
+    ):
+        coverage_text = f"{tagged_count}/{primary_like_count} ({coverage:.1%})" if primary_like_count else "n/a"
+        lines.append(
+            f"| **{mechanism}** | {total_weight:.1f} | {tagged_count} | {coverage_text} | {avg_weight:.2f} |"
+        )
+
+    lines.append("\n## Top Weighted Studies By Mechanism\n")
+    for mechanism, total_weight, _, tagged_count, _, _, tagged_entries in sorted(
+        rows,
+        key=lambda row: (-row[1], row[0]),
+    )[:8]:
+        if not tagged_entries:
+            continue
+        lines.append(f"\n### {mechanism}\n")
+        for entry in sorted(tagged_entries, key=lambda e: (-evidence_weight(e), -(e.get("cited_by_count") or 0), -(e.get("year") or 0)))[:3]:
+            lines.append(
+                f"- **PMID {entry['pmid']}** ({entry.get('year')}) — `{entry.get('evidence_level')}` — "
+                f"weight {evidence_weight(entry):.2f} — *{entry.get('title', '')[:140]}*"
+            )
+
+    lines.append("\n## Guardrails\n")
+    lines.append("- Evidence tier dominates the score. Citation percentile and recency only adjust within-tier ordering.")
+    lines.append("- Scores are taxonomy-overlap dependent because the same study can legitimately contribute to umbrella and subclass mechanism lanes.")
+    lines.append("- These weights do not estimate true study quality, patient benefit, or sample size.")
+    lines.append("- Mechanisms with low evidence-tag coverage can still be under-ranked even if their real literature is stronger.")
+    lines.append("- The gold-set evaluation suggests the tagger is conservative, so use this report as `quality among detected evidence`, not `quality of the whole field`.")
+    return "\n".join(lines)
+
+
 # ============================================================
 # Analysis 5: Key Findings (Top 100 articles by impact)
 # ============================================================
@@ -965,15 +1185,25 @@ def main():
     resistant_state_coverage = sum(1 for e in entries if e.get("resistant_states"))
     if resistant_state_coverage == 0:
         print("  Warning: resistant_states is empty in INDEX.jsonl; regenerate tags before relying on resistant-state outputs")
+    tissue_field_coverage = sum(1 for e in entries if e.get("tissue_categories"))
+    cancer_type_coverage = sum(1 for e in entries if e.get("cancer_types"))
+    if cancer_type_coverage and tissue_field_coverage < cancer_type_coverage:
+        print(
+            "  Warning: tissue_categories coverage is lower than cancer_types coverage in INDEX.jsonl; "
+            "regenerate tags and rebuild the index before relying on tissue outputs"
+        )
 
     ANALYSIS_DIR.mkdir(parents=True, exist_ok=True)
 
     analyses = [
         ("mechanism-matrix.md", "Mechanism-Cancer Matrix", build_mechanism_matrix),
+        ("tissue-mechanism-summary.md", "Tissue-Mechanism Summary", build_tissue_mechanism_summary),
+        ("tissue-evidence-summary.md", "Tissue-Evidence Summary", build_tissue_evidence_summary),
         ("convergence-map.md", "Convergence Map", build_convergence_map),
         ("designed-combinations.md", "Designed Combination Audit", build_designed_combinations),
         ("gap-analysis.md", "Gap Analysis", build_gap_analysis),
         ("evidence-tiers.md", "Evidence Tiers", build_evidence_tiers),
+        ("weighted-evidence-summary.md", "Weighted Evidence Summary", build_weighted_evidence_summary),
         ("resistant-state-map.md", "Resistant-State Map", build_resistant_state_map),
         ("evidence-coverage-audit.md", "Evidence Coverage Audit", build_evidence_coverage_audit),
         ("pathway-target-audit.md", "Pathway Target Audit", build_pathway_target_audit),
