@@ -9,6 +9,10 @@ Produces:
   article/figures/fig4_molecular_overlap.pdf
   article/figures/fig5_publication_trends.pdf
   article/figures/fig6_sdt_pdt_depth.pdf
+  article/figures/fig13_gold_set_eval.pdf
+  article/figures/fig14_tissue_mechanism_heatmap.pdf
+  article/figures/fig15_designed_combinations.pdf
+  article/figures/fig16_weighted_evidence.pdf
 """
 
 import csv
@@ -763,6 +767,342 @@ def fig12_pathway_targets(index):
 
 
 # ============================================================
+# Fig 13: Gold-Set Evaluation
+# ============================================================
+
+GOLD_SET_FILE = PROJECT_ROOT / "analysis" / "evidence-gold-set-v1.csv"
+GOLD_LABELS_FILE = PROJECT_ROOT / "analysis" / "evidence-gold-labels-v1.csv"
+
+GOLD_LABEL_ORDER = [
+    "phase3-clinical", "phase2-clinical", "phase1-clinical", "clinical-other",
+    "preclinical-invivo", "preclinical-invitro", "theoretical", "none-applicable",
+]
+
+
+def fig13_gold_set_eval():
+    """Grouped horizontal bar: precision and recall per evidence label from gold-set evaluation."""
+    print("Figure 13: Gold-set evaluation...")
+
+    if not GOLD_SET_FILE.exists() or not GOLD_LABELS_FILE.exists():
+        print("  Gold-set CSV files not found — skipping")
+        return
+
+    with open(GOLD_SET_FILE, newline="", encoding="utf-8") as f:
+        rows = list(csv.DictReader(f))
+    with open(GOLD_LABELS_FILE, newline="", encoding="utf-8") as f:
+        labels = {r["pmid"]: r for r in csv.DictReader(f)}
+
+    labeled = []
+    for row in rows:
+        label_row = labels.get(row["pmid"])
+        if not label_row:
+            continue
+        predicted = row["predicted_evidence_level"] or "none-applicable"
+        gold = label_row["gold_evidence_level"]
+        labeled.append({"predicted": predicted, "gold": gold})
+
+    if not labeled:
+        print("  No labeled rows — skipping")
+        return
+
+    per_label = {}
+    for label in GOLD_LABEL_ORDER:
+        tp = sum(1 for r in labeled if r["gold"] == label and r["predicted"] == label)
+        fp = sum(1 for r in labeled if r["gold"] != label and r["predicted"] == label)
+        fn = sum(1 for r in labeled if r["gold"] == label and r["predicted"] != label)
+        precision = tp / (tp + fp) if (tp + fp) else 0.0
+        recall = tp / (tp + fn) if (tp + fn) else 0.0
+        per_label[label] = {"precision": precision, "recall": recall, "tp": tp, "fp": fp, "fn": fn}
+
+    # Binary metrics
+    tp_bin = sum(1 for r in labeled if r["gold"] != "none-applicable" and r["predicted"] != "none-applicable")
+    fp_bin = sum(1 for r in labeled if r["gold"] == "none-applicable" and r["predicted"] != "none-applicable")
+    fn_bin = sum(1 for r in labeled if r["gold"] != "none-applicable" and r["predicted"] == "none-applicable")
+    exact = sum(1 for r in labeled if r["predicted"] == r["gold"])
+    bin_prec = tp_bin / (tp_bin + fp_bin) if (tp_bin + fp_bin) else 0.0
+    bin_rec = tp_bin / (tp_bin + fn_bin) if (tp_bin + fn_bin) else 0.0
+    bin_f1 = 2 * bin_prec * bin_rec / (bin_prec + bin_rec) if (bin_prec + bin_rec) else 0.0
+
+    display_labels = [EVIDENCE_LABELS.get(l, l.replace("-", " ").title()) for l in GOLD_LABEL_ORDER]
+    prec_vals = [per_label[l]["precision"] for l in GOLD_LABEL_ORDER]
+    rec_vals = [per_label[l]["recall"] for l in GOLD_LABEL_ORDER]
+
+    fig, ax = plt.subplots(figsize=(10, 6))
+    y = np.arange(len(GOLD_LABEL_ORDER))
+    height = 0.35
+
+    ax.barh(y + height / 2, prec_vals, height, color="#1565c0", label="Precision")
+    ax.barh(y - height / 2, rec_vals, height, color="#e65100", label="Recall")
+
+    ax.set_yticks(y)
+    ax.set_yticklabels(display_labels, fontsize=10)
+    ax.set_xlabel("Score")
+    ax.set_xlim(0, 1.15)
+    ax.set_title("Evidence Tagger Performance: Gold-Set Evaluation\n(100-article stratified sample)")
+    ax.legend(fontsize=10, loc="lower right")
+
+    # Annotation box with overall metrics
+    summary = (
+        f"Overall (n={len(labeled)})\n"
+        f"Exact accuracy: {exact}/{len(labeled)} ({exact/len(labeled):.0%})\n"
+        f"Binary precision: {bin_prec:.0%}\n"
+        f"Binary recall: {bin_rec:.0%}\n"
+        f"Binary F1: {bin_f1:.3f}"
+    )
+    ax.text(0.98, 0.98, summary, transform=ax.transAxes, fontsize=9,
+            verticalalignment='top', horizontalalignment='right',
+            bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.8))
+
+    for i, (p, r) in enumerate(zip(prec_vals, rec_vals)):
+        if p > 0:
+            ax.text(p + 0.02, i + height / 2, f"{p:.0%}", va='center', fontsize=8)
+        if r > 0:
+            ax.text(r + 0.02, i - height / 2, f"{r:.0%}", va='center', fontsize=8)
+
+    plt.tight_layout()
+    fig.savefig(FIG_DIR / "fig13_gold_set_eval.pdf")
+    fig.savefig(FIG_DIR / "fig13_gold_set_eval.png")
+    plt.close()
+    print(f"  {len(labeled)} labeled rows, exact accuracy {exact/len(labeled):.0%}")
+
+
+# ============================================================
+# Fig 14: Tissue × Mechanism Heatmap
+# ============================================================
+
+TISSUE_ORDER = ["epithelial", "hematologic", "mesenchymal", "neuroectodermal", "mesothelial"]
+TISSUE_DISPLAY = {
+    "epithelial": "Epithelial",
+    "hematologic": "Hematologic",
+    "mesenchymal": "Mesenchymal",
+    "neuroectodermal": "Neuroectodermal",
+    "mesothelial": "Mesothelial",
+}
+
+
+def fig14_tissue_mechanism_heatmap(index):
+    """Heatmap: tissue-of-origin × mechanism article counts."""
+    print("Figure 14: Tissue × mechanism heatmap...")
+
+    from config import MECHANISM_KEYWORDS
+    mechanisms = sorted(MECHANISM_KEYWORDS.keys())
+
+    matrix = defaultdict(Counter)
+    tissue_totals = Counter()
+    assigned = 0
+
+    for e in index:
+        tissues = e.get("tissue_categories", [])
+        if not tissues:
+            continue
+        assigned += 1
+        for tissue in tissues:
+            tissue_totals[tissue] += 1
+            for mech in e.get("mechanisms", []):
+                matrix[tissue][mech] += 1
+
+    data = np.zeros((len(TISSUE_ORDER), len(mechanisms)))
+    for i, tissue in enumerate(TISSUE_ORDER):
+        for j, mech in enumerate(mechanisms):
+            data[i, j] = matrix[tissue].get(mech, 0)
+
+    fig, ax = plt.subplots(figsize=(16, 5))
+    im = ax.imshow(data, cmap="YlOrRd", aspect="auto", interpolation="nearest")
+
+    ax.set_xticks(np.arange(len(mechanisms)))
+    ax.set_xticklabels([m.replace("-", "\n") for m in mechanisms], fontsize=7, rotation=45, ha="right")
+    ax.set_yticks(np.arange(len(TISSUE_ORDER)))
+    ax.set_yticklabels(
+        [f"{TISSUE_DISPLAY[t]} ({tissue_totals[t]})" for t in TISSUE_ORDER],
+        fontsize=10,
+    )
+
+    # Cell value annotations
+    for i in range(len(TISSUE_ORDER)):
+        for j in range(len(mechanisms)):
+            val = int(data[i, j])
+            if val > 0:
+                color = "white" if val > data.max() * 0.6 else "black"
+                ax.text(j, i, str(val), ha="center", va="center", fontsize=6, color=color)
+
+    ax.set_title(
+        f"Tissue-of-Origin × Mechanism Article Counts\n"
+        f"(Coverage: {assigned:,}/{len(index):,} records = {assigned/len(index):.0%})"
+    )
+    plt.colorbar(im, ax=ax, label="Article count", shrink=0.8, pad=0.02)
+
+    plt.tight_layout()
+    fig.savefig(FIG_DIR / "fig14_tissue_mechanism_heatmap.pdf")
+    fig.savefig(FIG_DIR / "fig14_tissue_mechanism_heatmap.png")
+    plt.close()
+    print(f"  {assigned} tissue-tagged records, {len(TISSUE_ORDER)}×{len(mechanisms)} matrix")
+
+
+# ============================================================
+# Fig 15: Designed-Combination Breakdown
+# ============================================================
+
+COMBINATION_CATEGORIES = [
+    ("designed-combination-clinical", "Clinical\ndesigned", "#b71c1c"),
+    ("designed-combination-preclinical", "Preclinical\ndesigned", "#e65100"),
+    ("co-mention-only", "Co-mention\nonly", "#4fc3f7"),
+    ("review-or-perspective-multi-lane", "Review /\nperspective", "#bdbdbd"),
+]
+
+
+def fig15_designed_combinations(index):
+    """Horizontal stacked bar: multi-mechanism article classification."""
+    print("Figure 15: Designed-combination breakdown...")
+
+    counts = Counter()
+    for e in index:
+        combo = e.get("combination_evidence", "")
+        if combo:
+            counts[combo] += 1
+
+    total = sum(counts.values())
+    if total == 0:
+        print("  No combination_evidence data — skipping")
+        return
+
+    fig, ax = plt.subplots(figsize=(12, 3.5))
+
+    left = 0
+    for key, label, color in COMBINATION_CATEGORIES:
+        val = counts.get(key, 0)
+        pct = val / total * 100 if total else 0
+        ax.barh(0, val, left=left, color=color, edgecolor="white", linewidth=0.5, height=0.6)
+        if val > 40:
+            ax.text(left + val / 2, 0, f"{label}\n{val} ({pct:.1f}%)",
+                    ha="center", va="center", fontsize=9, fontweight="bold",
+                    color="white" if key in ("designed-combination-clinical",) else "black")
+        left += val
+
+    ax.set_xlim(0, total)
+    ax.set_yticks([])
+    ax.set_xlabel("Number of articles")
+    ax.set_title(
+        f"Classification of {total:,} Multi-Mechanism Articles\n"
+        f"(articles tagged with 2+ therapeutic mechanisms)"
+    )
+
+    # Legend
+    patches = [mpatches.Patch(color=c, label=f"{l.replace(chr(10), ' ')} ({counts.get(k, 0)})")
+               for k, l, c in COMBINATION_CATEGORIES]
+    ax.legend(handles=patches, fontsize=9, loc="upper right", ncol=2)
+
+    plt.tight_layout()
+    fig.savefig(FIG_DIR / "fig15_designed_combinations.pdf")
+    fig.savefig(FIG_DIR / "fig15_designed_combinations.png")
+    plt.close()
+    print(f"  {total} multi-mechanism articles classified")
+
+
+# ============================================================
+# Fig 16: Weighted Evidence Score by Mechanism
+# ============================================================
+
+EVIDENCE_TIER_WEIGHTS = {
+    "phase3-clinical": 12.0,
+    "phase2-clinical": 8.0,
+    "phase1-clinical": 5.0,
+    "clinical-other": 3.0,
+    "preclinical-invivo": 2.0,
+    "preclinical-invitro": 1.0,
+    "theoretical": 0.5,
+}
+
+
+def _evidence_weight(entry: dict) -> float:
+    """Heuristic quality weight — mirrors analyze_corpus.evidence_weight()."""
+    level = entry.get("evidence_level", "")
+    base = EVIDENCE_TIER_WEIGHTS.get(level)
+    if not base:
+        return 0.0
+
+    pct = entry.get("icite_percentile") or 0
+    try:
+        pct = max(0.0, min(float(pct), 100.0))
+    except (TypeError, ValueError):
+        pct = 0.0
+    citation_modifier = 1.0 + (pct / 200.0)
+
+    year = entry.get("year") or 0
+    if year:
+        year = max(2015, min(int(year), 2026))
+        recency_modifier = 0.9 + ((year - 2015) / (2026 - 2015)) * 0.2
+    else:
+        recency_modifier = 1.0
+
+    return base * citation_modifier * recency_modifier
+
+
+def fig16_weighted_evidence(index):
+    """Horizontal lollipop: weighted evidence score per mechanism."""
+    print("Figure 16: Weighted evidence scores...")
+
+    from config import MECHANISM_KEYWORDS
+    mechanisms = sorted(MECHANISM_KEYWORDS.keys())
+
+    mech_data = {}
+    for mech in mechanisms:
+        mech_entries = [e for e in index if mech in e.get("mechanisms", [])]
+        tagged = [e for e in mech_entries if e.get("evidence_level")]
+        primary_like = [e for e in mech_entries if not _is_review_or_protocol(e)]
+        total_weight = sum(_evidence_weight(e) for e in tagged)
+        coverage = len(tagged) / len(primary_like) if primary_like else 0.0
+
+        # Highest tier for dot color
+        best_tier = ""
+        for lvl in EVIDENCE_ORDER:
+            if any(e.get("evidence_level") == lvl for e in tagged):
+                best_tier = lvl
+                break
+
+        mech_data[mech] = {
+            "weight": total_weight,
+            "tagged": len(tagged),
+            "coverage": coverage,
+            "best_tier": best_tier,
+        }
+
+    sorted_mechs = sorted(mechanisms, key=lambda m: mech_data[m]["weight"])
+    weights = [mech_data[m]["weight"] for m in sorted_mechs]
+    colors = [EVIDENCE_COLORS.get(mech_data[m]["best_tier"], "#bdbdbd") for m in sorted_mechs]
+    coverages = [mech_data[m]["coverage"] for m in sorted_mechs]
+
+    fig, ax = plt.subplots(figsize=(10, 8))
+    y = np.arange(len(sorted_mechs))
+
+    # Lollipop stems
+    for i, (w, c) in enumerate(zip(weights, colors)):
+        ax.plot([0, w], [i, i], color=c, linewidth=1.5, alpha=0.6)
+    # Dots
+    ax.scatter(weights, y, c=colors, s=80, zorder=5, edgecolors="white", linewidths=0.5)
+
+    ax.set_yticks(y)
+    ax.set_yticklabels([m.replace("-", " ") for m in sorted_mechs], fontsize=9)
+    ax.set_xlabel("Weighted evidence score")
+    ax.set_title("Weighted Evidence Score by Mechanism\n(tier × citation percentile × recency)")
+
+    # Coverage labels on right
+    for i, (w, cov) in enumerate(zip(weights, coverages)):
+        ax.text(max(weights) * 1.02, i, f"{cov:.0%} cov", fontsize=7, va="center", color="gray")
+
+    # Legend for tier colors
+    tier_patches = [mpatches.Patch(color=EVIDENCE_COLORS[lvl], label=EVIDENCE_LABELS[lvl])
+                    for lvl in EVIDENCE_ORDER if any(mech_data[m]["best_tier"] == lvl for m in mechanisms)]
+    ax.legend(handles=tier_patches, fontsize=8, loc="lower right", title="Highest tier", title_fontsize=9)
+
+    ax.set_xlim(0, max(weights) * 1.15)
+    plt.tight_layout()
+    fig.savefig(FIG_DIR / "fig16_weighted_evidence.pdf")
+    fig.savefig(FIG_DIR / "fig16_weighted_evidence.png")
+    plt.close()
+    print(f"  {len(mechanisms)} mechanisms, top score: {max(weights):.1f}")
+
+
+# ============================================================
 # Main
 # ============================================================
 
@@ -786,6 +1126,11 @@ def main():
     fig10_invivo_comparison()
     fig11_mufa_sweep()
     fig12_pathway_targets(index)
+
+    fig13_gold_set_eval()
+    fig14_tissue_mechanism_heatmap(index)
+    fig15_designed_combinations(index)
+    fig16_weighted_evidence(index)
 
     print(f"\nAll figures saved to {FIG_DIR}/")
     print("Files:")
