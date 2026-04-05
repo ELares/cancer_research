@@ -241,9 +241,17 @@ def generate_report(results: list[dict]) -> str:
     lines.append("Comparison of current simulation outputs against published calibration targets.\n")
 
     passed = sum(1 for r in results if r["status"] == "PASS")
+    stale = sum(1 for r in results if r["status"] == "STALE")
     failed = sum(1 for r in results if r["status"] == "FAIL")
     skipped = sum(1 for r in results if r["status"] == "SKIP")
-    lines.append(f"**Results: {passed} PASS, {failed} FAIL, {skipped} SKIP out of {len(results)} targets.**\n")
+    parts = [f"{passed} PASS"]
+    if stale:
+        parts.append(f"{stale} STALE")
+    if failed:
+        parts.append(f"{failed} FAIL")
+    if skipped:
+        parts.append(f"{skipped} SKIP")
+    lines.append(f"**Results: {', '.join(parts)} out of {len(results)} targets.**\n")
 
     lines.append("| Target | Status | Observed | Target | Residual | Tolerance | Confidence |")
     lines.append("|--------|--------|----------|--------|----------|-----------|------------|")
@@ -261,22 +269,18 @@ def generate_report(results: list[dict]) -> str:
 
     lines.append("\n## Details\n")
     for r in results:
-        emoji = {"PASS": "+", "FAIL": "!", "SKIP": "?"}[r["status"]]
+        emoji = {"PASS": "+", "FAIL": "!", "SKIP": "?", "STALE": "~"}[r["status"]]
         lines.append(f"- [{emoji}] **{r['id']}**: {r['description']}")
         if r["status"] == "SKIP":
             lines.append(f"  - Skipped: {r.get('reason', 'unknown')}")
+        elif r["status"] == "STALE":
+            lines.append(f"  - Value within tolerance but output is stale: {r.get('stale_warning', '')}")
         elif r["status"] == "FAIL":
             lines.append(f"  - Observed {r['observed']} vs target {r['target']} (residual {r['residual']:+.4f}, tolerance {r['tolerance']})")
 
-    # Staleness warnings
-    stale = [r for r in results if r.get("stale_warning")]
-    if stale:
-        lines.append("\n## Staleness Warnings\n")
-        for r in stale:
-            lines.append(f"- **{r['id']}**: {r['stale_warning']}")
-
     lines.append("\n## Interpretation\n")
-    lines.append("- PASS means the current simulation output is within tolerance of the published target.")
+    lines.append("- PASS means the simulation output is within tolerance and the output file is current.")
+    lines.append("- STALE means the value is within tolerance but the output file is older than the source code — re-run the simulation to confirm.")
     lines.append("- FAIL means the output is outside tolerance and the parameter may need adjustment.")
     lines.append("- SKIP means the required simulation output file was not found locally.")
     lines.append("- Targets with `target_type: self-consistency` verify that the binary reproduces its own hard-coded physics assumptions. They are useful as regression checks but do not constitute independent experimental validation.")
@@ -302,31 +306,25 @@ def main():
     targets = load_targets()
     print(f"Loaded {len(targets)} calibration targets from {TARGETS_FILE.name}\n")
 
-    stale_warnings = []
     results = []
     for target in targets:
         warning = check_output_freshness(target)
-        if warning:
-            stale_warnings.append((target["id"], warning))
         result = evaluate_target(target)
-        if warning:
+        if warning and result["status"] == "PASS":
+            result["status"] = "STALE"
             result["stale_warning"] = warning
         obs_str = f"{result['observed']:.4f}" if result["observed"] is not None else "N/A"
         print(f"  [{result['status']}] {result['id']}: observed={obs_str}, target={result['target']}")
         results.append(result)
-
-    if stale_warnings:
-        print(f"\nWARNING: {len(stale_warnings)} output(s) may be stale:")
-        for tid, msg in stale_warnings:
-            print(f"  {tid}: {msg}")
 
     report = generate_report(results)
     REPORT_FILE.write_text(report, encoding="utf-8")
     print(f"\nReport written to {REPORT_FILE}")
 
     passed = sum(1 for r in results if r["status"] == "PASS")
+    stale = sum(1 for r in results if r["status"] == "STALE")
     total = len(results)
-    print(f"Overall: {passed}/{total} targets passed")
+    print(f"Overall: {passed}/{total} targets passed" + (f" ({stale} stale)" if stale else ""))
 
 
 if __name__ == "__main__":
