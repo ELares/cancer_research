@@ -22,6 +22,34 @@ SIM_ROOT = SCRIPT_DIR.parent
 TARGETS_FILE = SCRIPT_DIR / "targets.yaml"
 REPORT_FILE = SCRIPT_DIR / "calibration_report.md"
 
+# Source files whose modification should invalidate cached outputs.
+SOURCE_SENTINEL_GLOBS = [
+    "ferroptosis-core/src/**/*.rs",
+    "Cargo.lock",
+]
+
+
+def _newest_source_mtime() -> float:
+    """Return the newest mtime among simulation source files."""
+    newest = 0.0
+    for pattern in SOURCE_SENTINEL_GLOBS:
+        for path in SIM_ROOT.glob(pattern):
+            newest = max(newest, path.stat().st_mtime)
+    return newest
+
+
+def check_output_freshness(target: dict) -> str | None:
+    """Return a warning string if the output file is older than the source, or None if fresh."""
+    path = _resolve_output_path(target)
+    if not path.exists():
+        return None  # Will be caught as SKIP by the extractor
+    source_mtime = _newest_source_mtime()
+    if source_mtime == 0.0:
+        return None  # No source files found — can't check
+    if path.stat().st_mtime < source_mtime:
+        return f"Output {path.name} is older than source code — results may be stale. Re-run the simulation."
+    return None
+
 
 def load_targets() -> list[dict]:
     with open(TARGETS_FILE, encoding="utf-8") as f:
@@ -240,10 +268,18 @@ def generate_report(results: list[dict]) -> str:
         elif r["status"] == "FAIL":
             lines.append(f"  - Observed {r['observed']} vs target {r['target']} (residual {r['residual']:+.4f}, tolerance {r['tolerance']})")
 
+    # Staleness warnings
+    stale = [r for r in results if r.get("stale_warning")]
+    if stale:
+        lines.append("\n## Staleness Warnings\n")
+        for r in stale:
+            lines.append(f"- **{r['id']}**: {r['stale_warning']}")
+
     lines.append("\n## Interpretation\n")
     lines.append("- PASS means the current simulation output is within tolerance of the published target.")
     lines.append("- FAIL means the output is outside tolerance and the parameter may need adjustment.")
     lines.append("- SKIP means the required simulation output file was not found locally.")
+    lines.append("- Targets with `target_type: self-consistency` verify that the binary reproduces its own hard-coded physics assumptions. They are useful as regression checks but do not constitute independent experimental validation.")
     lines.append("- See `parameter_provenance.md` for the source and confidence of each parameter.")
     lines.append("- See `targets.yaml` for the full target definitions including source PMIDs.")
     return "\n".join(lines) + "\n"
@@ -266,13 +302,23 @@ def main():
     targets = load_targets()
     print(f"Loaded {len(targets)} calibration targets from {TARGETS_FILE.name}\n")
 
+    stale_warnings = []
     results = []
     for target in targets:
+        warning = check_output_freshness(target)
+        if warning:
+            stale_warnings.append((target["id"], warning))
         result = evaluate_target(target)
-        status_mark = {"PASS": "PASS", "FAIL": "FAIL", "SKIP": "SKIP"}[result["status"]]
+        if warning:
+            result["stale_warning"] = warning
         obs_str = f"{result['observed']:.4f}" if result["observed"] is not None else "N/A"
-        print(f"  [{status_mark}] {result['id']}: observed={obs_str}, target={result['target']}")
+        print(f"  [{result['status']}] {result['id']}: observed={obs_str}, target={result['target']}")
         results.append(result)
+
+    if stale_warnings:
+        print(f"\nWARNING: {len(stale_warnings)} output(s) may be stale:")
+        for tid, msg in stale_warnings:
+            print(f"  {tid}: {msg}")
 
     report = generate_report(results)
     REPORT_FILE.write_text(report, encoding="utf-8")

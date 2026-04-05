@@ -17,7 +17,18 @@ This directory contains calibration infrastructure for the ferroptosis simulatio
 python simulations/calibration/calibrate.py --evaluate
 ```
 
-This reads existing simulation output files (no recompilation needed) and reports how close each observable is to its published calibration target.
+This reads existing simulation output files (no recompilation needed) and reports how close each observable is to its calibration targets.
+
+## Target types
+
+Each target has a `target_type` field:
+
+- **`calibration`**: The target value comes from independent experimental data. A PASS means the model reproduces a measured outcome.
+- **`self-consistency`**: The target value follows from the model's own hard-coded physics assumptions (e.g., Beer-Lambert attenuation from `pdt_mu_eff`). A PASS only verifies the binary reproduces those assumptions correctly — useful as a regression check, but not independent validation.
+
+## Staleness detection
+
+The script checks whether simulation output files are older than the Rust source code. If so, results may reflect a previous build and a warning is printed. Re-run the relevant simulation to get current outputs.
 
 ## How it works
 
@@ -27,9 +38,9 @@ This reads existing simulation output files (no recompilation needed) and report
    - The target value and acceptable tolerance
    - The source publication (PMID where available)
 
-2. `calibrate.py --evaluate` loads the targets, reads the existing JSON/CSV output files from `simulations/output/`, extracts the relevant observable, and computes the residual.
+2. `calibrate.py --evaluate` loads the targets, reads the existing JSON/CSV output files, extracts the relevant observable, and computes the residual.
 
-3. The report shows PASS/FAIL/SKIP for each target.
+3. The report shows PASS/FAIL/SKIP for each target, plus staleness warnings.
 
 ## Adding new targets
 
@@ -37,6 +48,7 @@ Add an entry to the `targets` list in `targets.yaml`:
 
 ```yaml
 - id: new_target_name
+  target_type: calibration  # or self-consistency
   description: "What this target measures"
   source_pmid: "12345678"
   binary: sim-original  # or sim-spatial, sim-window, sim-invivo
