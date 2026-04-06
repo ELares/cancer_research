@@ -1,0 +1,113 @@
+# Calibration targets linking simulation observables to published data.
+#
+# Each target specifies what the simulation should produce given its current
+# parameters, what published data says the value should be, and how much
+# tolerance is acceptable.  The evaluate script reads these targets and
+# compares against existing simulation outputs.
+#
+# target_type distinguishes two categories:
+#   - "calibration": the target value comes from independent experimental
+#     data and validates that the model reproduces a measured outcome.
+#   - "self-consistency": the target value follows from the model's own
+#     hard-coded physics/parameter assumptions and only verifies that the
+#     binary reproduces those assumptions correctly. Useful for regression
+#     testing, but does not constitute independent validation.
+
+targets:
+  - id: persister_rsl3_death_rate
+    target_type: calibration
+    description: "Persister (FSP1-low) cell death rate under RSL3 in 2D culture"
+    source_pmid: "41481741"
+    source_description: "Higuchi et al., Science Advances 2026 — FSP1 and HDACs suppress persister ferroptosis"
+    binary: sim-original
+    output_file: "simulation_results.json"
+    extraction:
+      phenotype_contains: "Persister"
+      phenotype_excludes: "NRF2"
+      treatment: "RSL3"
+      field: "death_rate"
+    target_value: 0.425
+    tolerance: 0.10
+    confidence: "medium"
+    note: "Dose-response data extrapolated from IC50 curves; exact match depends on assumed RSL3 concentration"
+    parameters_affected:
+      - fsp1_rate
+      - rsl3_gpx4_inhib
+      - death_threshold
+
+  - id: pdt_kill_at_9mm
+    target_type: self-consistency
+    description: "PDT kill rate at 9mm tissue depth"
+    source_description: "Jacques SL, Phys Med Biol 2013 — tissue optical properties at 630nm. This target verifies that the spatial simulation reproduces the expected exponential attenuation from the hard-coded pdt_mu_eff parameter. It is a self-consistency check, not an independent calibration."
+    binary: sim-spatial
+    output_file: "spatial/depth_kill_curves.csv"
+    extraction:
+      treatment: "PDT"
+      depth_um_range: [8500, 9500]
+      field: "death_rate"
+      aggregation: "mean"
+    target_value: 0.005
+    tolerance: 0.015
+    confidence: "high"
+    note: "Self-consistency: verifies Beer-Lambert attenuation from hard-coded µ_eff = 0.31/mm"
+    parameters_affected:
+      - pdt_mu_eff
+
+  - id: rsl3_window_closure_72h
+    target_type: calibration
+    description: "RSL3 death rate drops below 10% by 72 hours post-treatment"
+    source_description: "GPX4 transcriptional recovery kinetics — consensus from multiple ferroptosis studies"
+    binary: sim-window
+    output_file: "window/vulnerability_window.csv"
+    extraction:
+      treatment: "RSL3"
+      timepoint_hours: 72.0
+      field: "death_rate"
+    target_comparator: "<"
+    target_value: 0.10
+    tolerance: 0.05
+    confidence: "medium"
+    note: "Recovery rate inferred from transcriptional kinetics; no single paper provides exact time-course"
+    parameters_affected:
+      - gpx4_half_recovery_days
+
+  - id: invivo_mufa_protection_factor
+    target_type: calibration
+    description: "In-vivo MUFA provides substantial protection against RSL3 for persisters"
+    source_description: "Composite model target derived from two independent lines of evidence. Dixon/Park (unpublished 2025 Cancer Research submission) showed 40-60% PUFA displacement by MUFA in 3D/in-vivo contexts. Tesfay et al., Cancer Res 2019 (PMID 31292161) showed ~3-5x ferroptosis resensitization upon SCD1 inhibition. The 18.6x protection factor is a model-derived composite, not a single published measurement."
+    binary: sim-invivo
+    output_file: "invivo/invivo_comparison.json"
+    extraction:
+      contexts: ["2d", "invivo"]
+      phenotype_contains: "Persister"
+      phenotype_excludes: "NRF2"
+      treatment: "RSL3"
+      derived: "death_rate_2d / death_rate_invivo"
+    target_value: 18.6
+    tolerance: 5.0
+    confidence: "low"
+    note: "Model-derived composite from two papers, not a single published measurement. Tesfay 2019 (PMID 31292161) provides the SCD1 resensitization direction; Dixon/Park 2025 provides the PUFA displacement range. The exact 18.6x factor emerges from the model's steady-state MUFA calculation."
+    parameters_affected:
+      - scd_mufa_rate
+      - scd_mufa_max
+      - initial_mufa_protection
+
+  - id: sdt_penetration_1cm
+    target_type: self-consistency
+    description: "SDT maintains >84% kill rate through 1cm tissue depth"
+    source_description: "Cobbold RSC, Foundations of Biomedical Ultrasound 2007 — soft tissue attenuation. This target verifies that the spatial simulation reproduces the expected acoustic attenuation from the hard-coded sdt_alpha parameter. It is a self-consistency check, not an independent calibration."
+    binary: sim-spatial
+    output_file: "spatial/depth_kill_curves.csv"
+    extraction:
+      treatment: "SDT"
+      depth_um_range: [0, 10000]
+      field: "death_rate"
+      aggregation: "min"
+    target_comparator: ">"
+    target_value: 0.84
+    tolerance: 0.10
+    confidence: "high"
+    note: "Self-consistency: verifies acoustic attenuation from hard-coded α = 0.7 dB/cm/MHz"
+    parameters_affected:
+      - sdt_alpha
+      - sdt_freq_mhz
