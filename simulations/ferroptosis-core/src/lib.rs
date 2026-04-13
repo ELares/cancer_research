@@ -26,6 +26,7 @@
 //! | [`grid`] | 2D tumor grid with heterogeneous architecture |
 //! | [`immune`] | ICD/DAMP immune cascade model |
 //! | [`io`] | JSON and CSV output helpers |
+//! | [`drug_transport`] | Tissue-specific drug penetration (Krogh cylinder approximation) |
 
 pub mod cell;
 pub mod params;
@@ -35,3 +36,4 @@ pub mod physics;
 pub mod grid;
 pub mod immune;
 pub mod io;
+pub mod drug_transport;
