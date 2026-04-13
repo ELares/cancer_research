@@ -7,6 +7,7 @@ members = [
     "sim-icd",
     "sim-combo",
     "sim-invivo",
+    "sim-tissue-pk",
 ]
 resolver = "2"
 
