@@ -129,12 +129,14 @@ fn main() {
     eprintln!("=== Tissue-Specific Drug Penetration Simulation ===");
     eprintln!("Cells per radial bin: {N_CELLS_PER_BIN}");
     eprintln!("Radial bins: {N_RADIAL_BINS}");
-    eprintln!("Phenotype: Persister (FSP1-low)\n");
+    eprintln!("Phenotype: Persister (FSP1-low)");
+    eprintln!("NOTE: All drugs use the RSL3/GPX4-inhibition pathway. Differences");
+    eprintln!("      reflect transport profiles only, not distinct pharmacology.\n");
 
     let base_params = Params::default();
     let seed: u64 = 42;
 
-    let drugs: Vec<DrugParams> = vec![drug_transport::rsl3_like(), drug_transport::doxorubicin()];
+    let drugs: Vec<DrugParams> = vec![drug_transport::rsl3_like(), drug_transport::doxorubicin_transport_reference()];
 
     let tissues: Vec<TissueParams> = vec![
         drug_transport::epithelial_well_vascularized(),
@@ -207,16 +209,14 @@ fn main() {
         );
     }
 
-    // Calibration check
-    let dox_lambda = penetration_length_um(&drug_transport::doxorubicin());
-    eprintln!("\n=== Calibration Check ===");
+    // Transport parameter consistency check (not independent calibration —
+    // the parameters were chosen to produce a λ in the published range)
+    let dox_lambda = penetration_length_um(&drug_transport::doxorubicin_transport_reference());
+    eprintln!("\n=== Transport Consistency Check ===");
     eprintln!(
-        "Doxorubicin penetration length: {:.1} μm (literature: 40-80 μm, Minchinton 2006)",
+        "Doxorubicin-transport λ: {:.1} μm (published range: 40-80 μm, Minchinton 2006)",
         dox_lambda
     );
-    if dox_lambda >= 30.0 && dox_lambda <= 120.0 {
-        eprintln!("  PASS — within calibration range");
-    } else {
-        eprintln!("  WARNING — outside expected range");
-    }
+    eprintln!("  Note: this is a self-consistency check on chosen transport parameters,");
+    eprintln!("  not independent calibration against experimental outcome data.");
 }

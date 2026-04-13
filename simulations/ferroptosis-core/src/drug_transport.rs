@@ -141,12 +141,19 @@ pub fn rsl3_like() -> DrugParams {
     }
 }
 
-/// Doxorubicin — calibration drug with well-characterized penetration.
+/// Doxorubicin-like transport profile (penetration calibration reference).
 ///
-/// MW ~540 Da. Known penetration depth ~40-80μm in solid tumors
-/// (Minchinton & Tannock 2006). Higher uptake than RSL3 due to DNA
-/// intercalation trapping.
-pub fn doxorubicin() -> DrugParams {
+/// Uses doxorubicin's well-characterized transport parameters
+/// (MW ~540 Da, D ≈ 3×10⁻⁷ cm²/s, high uptake from DNA trapping)
+/// to validate that the exponential model produces a penetration
+/// length in the published 40-80μm range (Minchinton & Tannock 2006).
+///
+/// **Important:** This is a transport-only reference. The cell-level
+/// pharmacology still uses the RSL3/GPX4-inhibition pathway, not
+/// doxorubicin's actual mechanism (DNA intercalation, topoisomerase II).
+/// Comparative kill rates between this and `rsl3_like()` reflect only
+/// differences in tissue penetration depth, not drug mechanism.
+pub fn doxorubicin_transport_reference() -> DrugParams {
     DrugParams {
         // Doxorubicin D ≈ 3 × 10⁻⁷ cm²/s in tissue
         // Ref: El-Kareh & Secomb 2000
@@ -157,7 +164,7 @@ pub fn doxorubicin() -> DrugParams {
         metabolism_rate: 0.002,
         // Freely permeable
         vessel_wall_conc: 1.0,
-        name: "Doxorubicin",
+        name: "Doxorubicin-transport",
     }
 }
 
@@ -253,13 +260,13 @@ mod tests {
     }
 
     #[test]
-    fn doxorubicin_penetration_matches_literature() {
+    fn doxorubicin_transport_penetration_matches_literature() {
         // Minchinton & Tannock 2006: doxorubicin penetrates ~40-80μm
-        let drug = doxorubicin();
+        let drug = doxorubicin_transport_reference();
         let lambda = penetration_length_um(&drug);
         assert!(
             lambda > 30.0 && lambda < 120.0,
-            "Doxorubicin λ should be ~50-80μm, got {lambda:.1}μm"
+            "Doxorubicin transport λ should be ~50-80μm, got {lambda:.1}μm"
         );
     }
 
