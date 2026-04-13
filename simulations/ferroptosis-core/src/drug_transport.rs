@@ -35,9 +35,12 @@ pub struct DrugParams {
     /// Extracellular metabolism/degradation rate (1/s).
     pub metabolism_rate: f64,
 
-    /// Concentration at the vessel wall (normalized, 0-1).
-    /// Represents the fraction of plasma concentration that crosses the
-    /// endothelium. Equals 1.0 for freely permeable drugs.
+    /// Drug-intrinsic bioavailability at the vessel wall (normalized, 0-1).
+    /// Accounts for plasma protein binding and endothelial exclusion
+    /// specific to the drug molecule. Set to 1.0 for freely permeable
+    /// small molecules. This is multiplied by the tissue's vascular
+    /// permeability to get the interstitial concentration, so do NOT
+    /// duplicate the tissue permeability factor here.
     pub vessel_wall_conc: f64,
 
     /// Human-readable name for output.
