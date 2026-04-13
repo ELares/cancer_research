@@ -2,7 +2,7 @@
 
 Embeddable ferroptosis biochemistry engine for cancer simulation.
 
-This library provides a mechanistic model of the ferroptosis cell death pathway — from ROS generation through GSH depletion, GPX4 inactivation, lipid peroxidation, and cell death — with parameters informed by published experimental data. It is designed to be embedded in multi-scale cancer simulators (PhysiCell, CompuCell3D, custom frameworks) or used standalone for parameter exploration.
+This library provides a mechanistic model of the ferroptosis cell death pathway — from ROS generation through GSH depletion, GPX4 inactivation, lipid peroxidation, and cell death. Some parameters are grounded in published measurements; others are estimated from literature ranges or assumed as mechanistic placeholders (see parameter provenance below). It is designed to be embedded in multi-scale cancer simulators (PhysiCell, CompuCell3D, custom frameworks) or used standalone for parameter exploration.
 
 ## Quick start
 
@@ -59,7 +59,7 @@ gen_cell(phenotype, rng) -> Cell
 
 ## Parameters
 
-All ~30 simulation parameters are documented with literature sources and sensitivity ratings in [`calibration/parameter_provenance.md`](../calibration/parameter_provenance.md).
+All ~30 simulation parameters are documented with literature sources and sensitivity ratings in [`parameter_provenance.md`](https://github.com/ELares/cancer_research/blob/main/simulations/calibration/parameter_provenance.md) (in the parent repository's `simulations/calibration/` directory).
 
 ## License
 
