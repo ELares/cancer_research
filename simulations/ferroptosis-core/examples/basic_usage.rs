@@ -44,16 +44,22 @@ fn main() {
         }
     }
 
-    // Demonstrate in-vivo parameters (MUFA protection)
+    // Demonstrate in-vivo parameters (MUFA protection) with a small population
     println!("\n--- In-vivo context (SCD1-driven MUFA protection) ---\n");
     let invivo_params = Params::invivo();
     println!("MUFA steady-state protection: {:.2}", invivo_params.initial_mufa_protection);
-    let mut rng = StdRng::seed_from_u64(seed);
-    let cell = gen_cell(Phenotype::Persister, &mut rng);
-    let mut sim_rng = StdRng::seed_from_u64(seed + 1);
-    let (dead_2d, _, _, _) = sim_cell(&cell, Treatment::RSL3, &params, &mut sim_rng);
-    let mut sim_rng = StdRng::seed_from_u64(seed + 1);
-    let (dead_vivo, _, _, _) = sim_cell(&cell, Treatment::RSL3, &invivo_params, &mut sim_rng);
-    println!("Persister + RSL3 (2D):     dead = {}", dead_2d);
-    println!("Persister + RSL3 (in-vivo): dead = {}", dead_vivo);
+    let n = 500;
+    let mut deaths_2d = 0;
+    let mut deaths_vivo = 0;
+    for i in 0..n {
+        let mut rng = StdRng::seed_from_u64(i * 2);
+        let cell = gen_cell(Phenotype::Persister, &mut rng);
+        let mut sr = StdRng::seed_from_u64(i * 2 + 1);
+        if sim_cell(&cell, Treatment::RSL3, &params, &mut sr).0 { deaths_2d += 1; }
+        let mut sr = StdRng::seed_from_u64(i * 2 + 1);
+        if sim_cell(&cell, Treatment::RSL3, &invivo_params, &mut sr).0 { deaths_vivo += 1; }
+    }
+    println!("Persister + RSL3 (2D):     {deaths_2d}/{n} dead ({:.0}%)", deaths_2d as f64 / n as f64 * 100.0);
+    println!("Persister + RSL3 (in-vivo): {deaths_vivo}/{n} dead ({:.0}%)", deaths_vivo as f64 / n as f64 * 100.0);
+    println!("MUFA protection factor: {:.1}x", deaths_2d as f64 / deaths_vivo.max(1) as f64);
 }
