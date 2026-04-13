@@ -2,7 +2,12 @@
 name = "ferroptosis-core"
 version = "0.2.0"
 edition = "2021"
-description = "Shared ferroptosis biochemistry engine for the simulation suite"
+description = "Embeddable ferroptosis biochemistry engine for cancer simulation"
+license = "MIT"
+repository = "https://github.com/ELares/cancer_research"
+keywords = ["ferroptosis", "cancer", "simulation", "biochemistry", "pharmacology"]
+categories = ["science", "simulation"]
+readme = "README.md"
 
 [dependencies]
 rand = { workspace = true }

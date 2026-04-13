@@ -250,3 +250,73 @@ pub fn sim_cell(
 
     (lp > params.death_threshold, lp, gsh, gpx4)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::cell::{gen_cell, Phenotype};
+    use rand::SeedableRng;
+
+    #[test]
+    fn control_does_not_kill_glycolytic() {
+        let params = Params::default();
+        let mut rng = StdRng::seed_from_u64(0);
+        let cell = gen_cell(Phenotype::Glycolytic, &mut rng);
+        let mut sim_rng = StdRng::seed_from_u64(1);
+        let (dead, lp, _, _) = sim_cell(&cell, Treatment::Control, &params, &mut sim_rng);
+        assert!(!dead, "Glycolytic cell should survive Control");
+        assert!(lp < params.death_threshold, "LP should stay below threshold");
+    }
+
+    #[test]
+    fn sdt_kills_persister() {
+        let params = Params::default();
+        let mut rng = StdRng::seed_from_u64(0);
+        let cell = gen_cell(Phenotype::Persister, &mut rng);
+        let mut sim_rng = StdRng::seed_from_u64(1);
+        let (dead, _, _, _) = sim_cell(&cell, Treatment::SDT, &params, &mut sim_rng);
+        assert!(dead, "Persister cell should die under SDT");
+    }
+
+    #[test]
+    fn rsl3_inhibits_gpx4() {
+        let params = Params::default();
+        let mut rng = StdRng::seed_from_u64(0);
+        let cell = gen_cell(Phenotype::Glycolytic, &mut rng);
+        let mut sim_rng = StdRng::seed_from_u64(1);
+        let state = CellState::from_cell(&cell, Treatment::RSL3, &params, &mut sim_rng);
+        let expected = cell.gpx4 * (1.0 - params.rsl3_gpx4_inhib);
+        assert!((state.gpx4 - expected).abs() < 1e-10, "RSL3 should reduce GPX4 by {}%", params.rsl3_gpx4_inhib * 100.0);
+    }
+
+    #[test]
+    fn mufa_protection_reduces_death_rate() {
+        // In-vivo MUFA should protect persisters from RSL3 relative to 2D
+        let params_2d = Params::default();
+        let params_vivo = Params::invivo();
+        let n = 1000;
+        let mut deaths_2d = 0;
+        let mut deaths_vivo = 0;
+        for i in 0..n {
+            let mut rng = StdRng::seed_from_u64(i * 2);
+            let cell = gen_cell(Phenotype::Persister, &mut rng);
+            let mut sr = StdRng::seed_from_u64(i * 2 + 1);
+            if sim_cell(&cell, Treatment::RSL3, &params_2d, &mut sr).0 { deaths_2d += 1; }
+            let mut sr = StdRng::seed_from_u64(i * 2 + 1);
+            if sim_cell(&cell, Treatment::RSL3, &params_vivo, &mut sr).0 { deaths_vivo += 1; }
+        }
+        assert!(deaths_vivo < deaths_2d, "In-vivo MUFA should reduce RSL3 deaths: 2D={deaths_2d}, vivo={deaths_vivo}");
+    }
+
+    #[test]
+    fn single_step_does_not_kill_healthy_cell() {
+        let params = Params::default();
+        let mut rng = StdRng::seed_from_u64(0);
+        let cell = gen_cell(Phenotype::Glycolytic, &mut rng);
+        let mut sim_rng = StdRng::seed_from_u64(1);
+        let mut state = CellState::from_cell(&cell, Treatment::Control, &params, &mut sim_rng);
+        let dead = sim_cell_step(&mut state, &cell, &params, 0, 0.0, &mut sim_rng);
+        assert!(!dead, "One step should not kill a healthy glycolytic cell");
+        assert!(state.lp < 1.0, "LP should be near zero after one step");
+    }
+}
