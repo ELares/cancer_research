@@ -132,16 +132,37 @@ fn apply_effects(
     (modified_cell, state)
 }
 
+/// Aggregated pathway-node state across a population of cells.
+#[derive(Clone, Serialize)]
+struct PathwaySummary {
+    mean_gpx4_final: f64,
+    mean_fsp1_final: f64,
+    mean_gsh_final: f64,
+    mean_lp_final: f64,
+}
+
+/// Result from running N cells through the biochemistry.
+struct ConditionResult {
+    n_dead: usize,
+    death_rate: f64,
+    ci_low: f64,
+    ci_high: f64,
+    pathway: PathwaySummary,
+}
+
 /// Run N cells through the 180-step biochemistry with given drug effects.
-/// Returns (n_dead, death_rate, ci_low, ci_high).
 fn run_condition(
     effects: &[&DrugEffect],
     params: &Params,
     phenotype: Phenotype,
     n: usize,
     seed: u64,
-) -> (usize, f64, f64, f64) {
+) -> ConditionResult {
     let mut n_dead = 0usize;
+    let mut sum_gpx4 = 0.0_f64;
+    let mut sum_fsp1 = 0.0_f64;
+    let mut sum_gsh = 0.0_f64;
+    let mut sum_lp = 0.0_f64;
 
     for i in 0..n {
         let cell_seed = seed + (i as u64) * 2;
@@ -160,11 +181,27 @@ fn run_condition(
         if state.dead {
             n_dead += 1;
         }
+        sum_gpx4 += state.gpx4;
+        sum_fsp1 += state.fsp1;
+        sum_gsh += state.gsh;
+        sum_lp += state.lp;
     }
 
-    let rate = n_dead as f64 / n as f64;
+    let nf = n as f64;
+    let rate = n_dead as f64 / nf;
     let (ci_low, ci_high) = wilson_ci(n, n_dead);
-    (n_dead, rate, ci_low, ci_high)
+    ConditionResult {
+        n_dead,
+        death_rate: rate,
+        ci_low,
+        ci_high,
+        pathway: PathwaySummary {
+            mean_gpx4_final: sum_gpx4 / nf,
+            mean_fsp1_final: sum_fsp1 / nf,
+            mean_gsh_final: sum_gsh / nf,
+            mean_lp_final: sum_lp / nf,
+        },
+    }
 }
 
 // ============================================================
@@ -179,6 +216,10 @@ struct SingleResult {
     ci_high: f64,
     n_dead: usize,
     n_cells: usize,
+    mean_gpx4_final: f64,
+    mean_fsp1_final: f64,
+    mean_gsh_final: f64,
+    mean_lp_final: f64,
 }
 
 #[derive(Serialize)]
@@ -194,6 +235,10 @@ struct ComboResult {
     ci_high: f64,
     n_dead: usize,
     n_cells: usize,
+    mean_gpx4_final: f64,
+    mean_fsp1_final: f64,
+    mean_gsh_final: f64,
+    mean_lp_final: f64,
 }
 
 // ============================================================
@@ -219,20 +264,25 @@ fn main() {
     let mut single_results: Vec<SingleResult> = Vec::new();
 
     // Control (no drugs)
-    let (n_dead, rate, ci_low, ci_high) = run_condition(&[], &params, phenotype, N_CELLS, seed);
-    eprintln!("  Control: {:.1}% ({n_dead}/{N_CELLS})", rate * 100.0);
-    single_rates.push(("Control".to_string(), rate));
+    let cr = run_condition(&[], &params, phenotype, N_CELLS, seed);
+    eprintln!("  Control: {:.1}% ({}/{})", cr.death_rate * 100.0, cr.n_dead, N_CELLS);
+    single_rates.push(("Control".to_string(), cr.death_rate));
     single_results.push(SingleResult {
-        drug: "Control".to_string(), death_rate: rate, ci_low, ci_high, n_dead, n_cells: N_CELLS,
+        drug: "Control".to_string(), death_rate: cr.death_rate, ci_low: cr.ci_low,
+        ci_high: cr.ci_high, n_dead: cr.n_dead, n_cells: N_CELLS,
+        mean_gpx4_final: cr.pathway.mean_gpx4_final, mean_fsp1_final: cr.pathway.mean_fsp1_final,
+        mean_gsh_final: cr.pathway.mean_gsh_final, mean_lp_final: cr.pathway.mean_lp_final,
     });
 
     for drug in &drugs {
-        let (n_dead, rate, ci_low, ci_high) =
-            run_condition(&[drug], &params, phenotype, N_CELLS, seed);
-        eprintln!("  {}: {:.1}% ({n_dead}/{N_CELLS})", drug.name, rate * 100.0);
-        single_rates.push((drug.name.to_string(), rate));
+        let cr = run_condition(&[drug], &params, phenotype, N_CELLS, seed);
+        eprintln!("  {}: {:.1}% ({}/{})", drug.name, cr.death_rate * 100.0, cr.n_dead, N_CELLS);
+        single_rates.push((drug.name.to_string(), cr.death_rate));
         single_results.push(SingleResult {
-            drug: drug.name.to_string(), death_rate: rate, ci_low, ci_high, n_dead, n_cells: N_CELLS,
+            drug: drug.name.to_string(), death_rate: cr.death_rate, ci_low: cr.ci_low,
+            ci_high: cr.ci_high, n_dead: cr.n_dead, n_cells: N_CELLS,
+            mean_gpx4_final: cr.pathway.mean_gpx4_final, mean_fsp1_final: cr.pathway.mean_fsp1_final,
+            mean_gsh_final: cr.pathway.mean_gsh_final, mean_lp_final: cr.pathway.mean_lp_final,
         });
     }
 
@@ -262,12 +312,11 @@ fn main() {
                 .map(|(_, r)| *r)
                 .unwrap();
 
-            let (n_dead, rate_combo, ci_low, ci_high) =
-                run_condition(&[drug_a, drug_b], &params, phenotype, N_CELLS, seed);
+            let cr = run_condition(&[drug_a, drug_b], &params, phenotype, N_CELLS, seed);
 
             let bliss = rate_a + rate_b - rate_a * rate_b;
             let synergy = if bliss > 0.001 {
-                rate_combo / bliss
+                cr.death_rate / bliss
             } else {
                 f64::NAN
             };
@@ -276,7 +325,7 @@ fn main() {
                 "{:<12} {:<12} {:>7.1}% {:>7.1}% {:>7.1}% {:>7.1}% {:>8.2}",
                 drug_a.name, drug_b.name,
                 rate_a * 100.0, rate_b * 100.0,
-                rate_combo * 100.0, bliss * 100.0,
+                cr.death_rate * 100.0, bliss * 100.0,
                 synergy,
             );
 
@@ -285,13 +334,17 @@ fn main() {
                 drug_b: drug_b.name.to_string(),
                 rate_a,
                 rate_b,
-                rate_combo,
+                rate_combo: cr.death_rate,
                 bliss_prediction: bliss,
                 synergy_score: synergy,
-                ci_low,
-                ci_high,
-                n_dead,
+                ci_low: cr.ci_low,
+                ci_high: cr.ci_high,
+                n_dead: cr.n_dead,
                 n_cells: N_CELLS,
+                mean_gpx4_final: cr.pathway.mean_gpx4_final,
+                mean_fsp1_final: cr.pathway.mean_fsp1_final,
+                mean_gsh_final: cr.pathway.mean_gsh_final,
+                mean_lp_final: cr.pathway.mean_lp_final,
             });
         }
     }
