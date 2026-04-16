@@ -1,0 +1,31 @@
+name: Rust Tests
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'simulations/**'
+      - '.github/workflows/cargo-test.yml'
+  pull_request:
+    paths:
+      - 'simulations/**'
+      - '.github/workflows/cargo-test.yml'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Cargo registry and build
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: simulations
+
+      - name: Run tests and compile all binaries
+        working-directory: simulations
+        run: cargo test --workspace

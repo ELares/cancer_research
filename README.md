@@ -56,12 +56,15 @@ python scripts/analyze_corpus.py
 python scripts/generate_figures.py
 ```
 
-For the simulations:
+For the simulations (see [simulations/README.md](simulations/README.md) for details):
 
 ```bash
 cd simulations
 cargo build --release
-cargo run --release -p sim-original   # try other sim-* packages
+cargo test --workspace                 # 19 unit tests
+cargo run --release -p sim-original    # Monte Carlo ferroptosis baseline
+cargo run --release -p sim-spatial     # 2D tumor with PDT/SDT depth physics
+cargo run --release -p sim-tissue-pk   # drug penetration across tissue types
 ```
 
 ## Contribute
