@@ -26,10 +26,13 @@ The repo exists to compare therapeutic mechanisms, evidence depth, resistant-sta
 
 - manuscript drafting and revision
 - corpus fetching, enrichment, tagging, and indexing
-- evidence-tier audits and coverage caveats
+- evidence-tier audits and coverage caveats (gold-set evaluation: 46% exact, 96% precision, 55% recall)
 - taxonomy and search refinement
 - pathway-target and resistant-state analysis
-- simulation work around ferroptosis and escape mechanisms
+- diagnostic-to-therapy chain extraction (6 chains, 129 articles mapped)
+- tissue-of-origin analysis layer (5 tissue categories, 62% coverage)
+- simulation work: ferroptosis biochemistry, drug penetration, calibration
+- ferroptosis-core library packaging for external use
 - broader strategy review of alternative therapies and biological bottlenecks
 
 ## Current Repo State
@@ -37,7 +40,12 @@ The repo exists to compare therapeutic mechanisms, evidence depth, resistant-sta
 - local full-text corpus: 4,830 records
 - abstract-only archive: 5,584 records
 - mechanism taxonomy, evidence tiers, pathway-targets, biology-process tags, and resistant-state scaffolding are all active
-- evidence tagging is improved but still incomplete
+- evidence tagging is improved but still incomplete (gold-set measured)
+- tissue-of-origin and weighted-evidence layers are active
+- diagnostic-therapy matching layer covers 4 modalities (radioligand, checkpoint, mRNA vaccine, oncolytic)
+- simulation suite: 7 binaries + ferroptosis-core library (MIT licensed, 19 unit tests)
+- simulation calibration: 5 targets documented, evaluate script operational
+- drug penetration module: 3 tissue types, exponential Krogh approximation
 - some landmark papers are known to be missing from the local full-text archive
 
 ## What To Optimize For
