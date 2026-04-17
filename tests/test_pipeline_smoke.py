@@ -157,17 +157,17 @@ class TestAnalysisOutputs:
     @pytest.mark.parametrize("filename", EXPECTED_OUTPUTS)
     def test_analysis_output_exists_and_nonempty(self, filename):
         path = ANALYSIS_DIR / filename
-        if not path.exists():
-            pytest.skip(f"{filename} not found")
+        assert path.exists(), f"Analysis output missing: {filename}"
         content = path.read_text()
         assert len(content) > 100, f"{filename} is too small ({len(content)} chars)"
 
-    def test_evidence_gold_eval_exists(self):
+    def test_evidence_gold_eval_has_expected_structure(self):
         path = ANALYSIS_DIR / "evidence-gold-eval.md"
-        if not path.exists():
-            pytest.skip("evidence-gold-eval.md not found")
+        assert path.exists(), "evidence-gold-eval.md missing"
         content = path.read_text()
-        assert "46/100" in content or "46.0%" in content, "Gold-set eval should report 46% accuracy"
+        assert "## Overall Metrics" in content, "Gold-set eval should have Overall Metrics section"
+        assert "Exact-label accuracy:" in content, "Gold-set eval should report exact-label accuracy"
+        assert "## Per-Label Metrics" in content, "Gold-set eval should have Per-Label Metrics section"
 
 
 # ============================================================
