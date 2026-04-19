@@ -600,8 +600,8 @@ fn main() {
     ];
 
     eprintln!("\n=== Spatial Immune Coupling (O2 gradient λ=120μm) ===");
-    eprintln!("NOTE: LP at death ≈ 10.0 for all treatments (threshold-locked).");
-    eprintln!("DAMP differential comes from kill DENSITY, not per-cell DAMP quality.");
+    eprintln!("NOTE: LP overshoot multiplier applied (SDT/PDT: 2.0×, RSL3/Control: 1.05×).");
+    eprintln!("DAMP differential comes from both kill DENSITY and per-cell DAMP quality.");
     eprintln!("Immune model: resident T cell phase only (0-48h), not systemic.\n");
 
     for (immune_label, immune_cfg) in &immune_modes {
