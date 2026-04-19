@@ -236,7 +236,7 @@ impl ImmuneConfig {
 }
 
 /// Run spatial sim WITH immune coupling: DAMP diffusion + immune kill.
-/// Returns (ferroptosis_kills, immune_kills).
+/// Returns (ferroptosis_kills, immune_kills, final_damp_field).
 fn run_spatial_with_immune(
     grid: &mut TumorGrid,
     tx: Treatment,
@@ -244,7 +244,7 @@ fn run_spatial_with_immune(
     spatial_params: &SpatialParams,
     immune: &ImmuneConfig,
     seed: u64,
-) -> (usize, usize) {
+) -> (usize, usize, Vec<f64>) {
     let base_ros = match tx {
         Treatment::SDT => params.sdt_ros,
         Treatment::PDT => params.pdt_ros,
@@ -377,7 +377,7 @@ fn run_spatial_with_immune(
         }
     }
 
-    (ferroptosis_kills, immune_kills)
+    (ferroptosis_kills, immune_kills, damp_field)
 }
 
 // ============================================================
@@ -593,7 +593,7 @@ fn main() {
             let mut grid = TumorGrid::generate(GRID_SIZE, GRID_SIZE, CELL_SIZE_UM, SEED);
             apply_o2_gradient(&mut grid, 120.0);
 
-            let (ferr_kills, imm_kills) = run_spatial_with_immune(
+            let (ferr_kills, imm_kills, final_damp) = run_spatial_with_immune(
                 &mut grid, *tx, &params, &spatial_params, immune_cfg,
                 SEED.wrapping_add((*tx as u64) * 10_000_000),
             );
@@ -603,6 +603,26 @@ fn main() {
             let (norm_r, trans_r, hyp_r) = zone_kill_rates(&grid, ZONE_REF_LAMBDA);
             eprintln!("  {}: overall={:.1}% (ferr={}, immune={}), hypoxic={:.1}%",
                 tx_name, overall * 100.0, ferr_kills, imm_kills, hyp_r * 100.0);
+
+            // Export DAMP and immune-kill heatmaps for the first immune mode only
+            if *immune_label == "immune_on" {
+                // DAMP concentration heatmap (scaled to u8 for CSV export)
+                let damp_max = final_damp.iter().cloned().fold(0.0_f64, f64::max).max(1.0);
+                let mut damp_hm = ndarray::Array2::<u8>::zeros((grid.rows, grid.cols));
+                for r in 0..grid.rows {
+                    for c in 0..grid.cols {
+                        let val = final_damp[r * grid.cols + c] / damp_max;
+                        damp_hm[[r, c]] = (val * 255.0).round() as u8;
+                    }
+                }
+                let path = output_dir.join(format!("damp_field_{}.csv", tx_name.to_lowercase()));
+                write_heatmap_csv(&path, &damp_hm).expect("Failed to write DAMP heatmap");
+
+                // Immune-kill death heatmap (shows which cells were immune-killed vs ferroptosis-killed)
+                let death_hm = death_heatmap(&grid);
+                let path = output_dir.join(format!("death_{}_immune.csv", tx_name.to_lowercase()));
+                write_heatmap_csv(&path, &death_hm).expect("Failed to write immune death heatmap");
+            }
 
             all_results.push(ConditionResult {
                 treatment: tx_name.to_string(),
@@ -635,14 +655,14 @@ fn main() {
     // --- Print comparison table ---
     eprintln!("\n=== Comparison Table ===\n");
     eprintln!(
-        "{:<10} {:<20} {:>10} {:>10} {:>10} {:>10}",
-        "Treatment", "O2 Condition", "Overall", "Normoxic", "Transit.", "Hypoxic"
+        "{:<10} {:<20} {:<18} {:>10} {:>10} {:>10} {:>10}",
+        "Treatment", "O2 Condition", "Immune", "Overall", "Normoxic", "Transit.", "Hypoxic"
     );
-    eprintln!("{}", "-".repeat(82));
+    eprintln!("{}", "-".repeat(100));
     for r in &all_results {
         eprintln!(
-            "{:<10} {:<20} {:>9.1}% {:>9.1}% {:>9.1}% {:>9.1}%",
-            r.treatment, r.o2_condition,
+            "{:<10} {:<20} {:<18} {:>9.1}% {:>9.1}% {:>9.1}% {:>9.1}%",
+            r.treatment, r.o2_condition, r.immune_mode,
             r.overall_kill_rate * 100.0,
             r.normoxic_kill_rate * 100.0,
             r.transition_kill_rate * 100.0,
