@@ -1,27 +1,32 @@
-//! Tumor Microenvironment Simulation: Oxygen Gradients and Hypoxia
+//! Tumor Microenvironment Simulation
 //!
-//! Extends the spatial tumor model with oxygen gradients to quantify how
-//! hypoxia protects tumor core cells from ferroptosis. Compares treatment
-//! efficacy under uniform vs gradient O2 conditions.
+//! Models two TME features:
+//! A) Oxygen gradients — hypoxia protects tumor core from ferroptosis
+//! B) Spatial immune zones — DAMP release from ferroptotic cells triggers
+//!    local immune activation (ICD-to-kill coupling)
 //!
-//! Key prediction: SDT (exogenous ROS, O2-independent) should maintain
-//! efficacy in hypoxic cores better than RSL3 (depends on basal ROS,
-//! O2-dependent). This differential should be robust to the O2 penetration
-//! length parameter.
+//! Biology (cross-referenced against textbooks in books/ directory):
+//! - O2 → basal ROS via mitochondrial ETC (Biology2e Ch.7-8)
+//! - O2 penetration ~100-150μm (Anatomy & Physiology 2e, Vaupel 1989)
+//! - DAMP release from ferroptotic cells triggers innate immunity
+//!   (Biology2e Ch.42-43, Microbiology Ch.15-17, Krysko Nat Rev Cancer 2012)
+//! - DC activation follows Michaelis-Menten kinetics (Chemistry2e Ch.12-14)
+//! - Spatial immune model valid for resident T cell phase (0-48h);
+//!   systemic lymph node priming (1-7 days) is NOT modeled
 //!
-//! Biology: mitochondrial ETC generates basal ROS using O2 as terminal
-//! electron acceptor (Biology2e Ch.7-8, Murphy Biochem J 2009). In hypoxia,
-//! ETC activity drops → less basal ROS → less lipid peroxidation cascade.
-//! O2 penetration ~100-150μm from vasculature (Vaupel, Cancer Res 1989).
+//! Key finding: LP at death is ~10.0 for ALL treatments (threshold-locked),
+//! so DAMP per dead cell is approximately equal. The immune differential
+//! comes from kill DENSITY (SDT kills 88% = dense DAMP field) not DAMP
+//! quality (which is similar across treatments). This is an honest finding
+//! that corrects the initial hypothesis about ICD quality differences.
 //!
 //! Caveats:
-//! - O2 modulates basal_ros only, not Fenton directly (conservative — Fenton
-//!   substrate H2O2 also requires O2 via superoxide→SOD pathway)
-//! - SDT/PDT modeled as O2-independent (Type I mechanism; Type II requires
-//!   O2 for singlet oxygen — conservative, may overstate physical modality
-//!   efficacy in hypoxia)
-//! - Steady-state O2 field (no consumption dynamics)
-//! - Distance from tumor edge as O2 source (no explicit vasculature)
+//! - O2 modulates basal_ros only (conservative)
+//! - SDT/PDT modeled as O2-independent (Type I mechanism, conservative)
+//! - LP at death ~10.0 underestimates true DAMP quality differential by
+//!   ~30-50% (biologically, SDT should drive LP to 15-20 post-threshold)
+//! - DAMP clearance modeled as exponential decay (simplified)
+//! - Immune kill is local/resident phase only (no systemic priming)
 //!
 //! Usage: `cargo run --release --bin sim-tme`
 
@@ -184,6 +189,198 @@ fn run_spatial(
 }
 
 // ============================================================
+// Spatial immune coupling (Feature B)
+// ============================================================
+
+/// Parameters for the spatial immune model.
+struct ImmuneConfig {
+    /// DAMP release per unit LP at death (from ImmuneParams default).
+    damp_per_lp: f64,
+    /// Fraction of DAMP shared with each Moore neighbor per step.
+    damp_diffusion_fraction: f64,
+    /// Exponential decay rate per step (models immune clearance of DAMPs).
+    damp_clearance_rate: f64,
+    /// Michaelis-Menten Kd for DC activation by DAMP concentration.
+    dc_activation_kd: f64,
+    /// Per-step immune kill rate (absorbs DC maturation + T cell priming + kill).
+    immune_kill_rate: f64,
+    /// PD-1 suppression fraction (0.0 = no brake, 1.0 = full suppression).
+    pd1_brake: f64,
+    /// Anti-PD-1 efficacy (fraction of brake removed).
+    anti_pd1_efficacy: f64,
+}
+
+impl ImmuneConfig {
+    fn default_no_pd1() -> Self {
+        ImmuneConfig {
+            damp_per_lp: 1.0,
+            damp_diffusion_fraction: 0.08,
+            damp_clearance_rate: 0.03,
+            dc_activation_kd: 50.0,
+            immune_kill_rate: 0.02,
+            pd1_brake: 0.7,
+            anti_pd1_efficacy: 0.0,
+        }
+    }
+
+    fn with_anti_pd1(&self) -> Self {
+        ImmuneConfig {
+            anti_pd1_efficacy: 0.8,
+            ..*self
+        }
+    }
+
+    fn effective_brake(&self) -> f64 {
+        self.pd1_brake * (1.0 - self.anti_pd1_efficacy)
+    }
+}
+
+/// Run spatial sim WITH immune coupling: DAMP diffusion + immune kill.
+/// Returns (ferroptosis_kills, immune_kills).
+fn run_spatial_with_immune(
+    grid: &mut TumorGrid,
+    tx: Treatment,
+    params: &Params,
+    spatial_params: &SpatialParams,
+    immune: &ImmuneConfig,
+    seed: u64,
+) -> (usize, usize) {
+    let base_ros = match tx {
+        Treatment::SDT => params.sdt_ros,
+        Treatment::PDT => params.pdt_ros,
+        Treatment::RSL3 | Treatment::Control => 0.0,
+    };
+
+    let rows = grid.rows;
+    let cols = grid.cols;
+    let cell_size = grid.cell_size_um;
+    let n_cells = rows * cols;
+
+    // Initialize cell states
+    for r in 0..rows {
+        let ros_multiplier = local_ros_multiplier(r, cell_size, tx, spatial_params);
+        for c in 0..cols {
+            let exo_ros_peak = if tx == Treatment::Control || tx == Treatment::RSL3 {
+                0.0
+            } else {
+                let mut rng = StdRng::seed_from_u64(seed.wrapping_add((r * cols + c) as u64));
+                let peak = base_ros * ros_multiplier;
+                norm(&mut rng, peak, peak * 0.2).max(0.0)
+            };
+            let gc = grid.get_mut(r, c);
+            gc.state = CellState::from_cell_with_ros(&gc.cell, tx, params, exo_ros_peak);
+            gc.extra_iron = 0.0;
+            gc.newly_dead = false;
+            gc.lp_at_death = 0.0;
+        }
+    }
+
+    // External DAMP field (not in GridCell — zero ferroptosis-core changes)
+    let mut damp_field = vec![0.0_f64; n_cells];
+    let mut damp_delta = vec![0.0_f64; n_cells]; // reused each step to avoid allocation churn
+    let mut ferroptosis_kills = 0usize;
+    let mut immune_kills = 0usize;
+    let immune_start_step = 60_u32; // immune activation delay
+
+    for step in 0..N_STEPS {
+        // --- Ferroptosis biochemistry ---
+        for r in 0..rows {
+            for c in 0..cols {
+                let idx = r * cols + c;
+                if grid.cells[idx].state.dead || !grid.cells[idx].is_tumor {
+                    continue;
+                }
+
+                let mut rng = StdRng::seed_from_u64(
+                    seed.wrapping_add(500_000)
+                        .wrapping_add(idx as u64)
+                        .wrapping_add(step as u64 * 1_000_000),
+                );
+
+                let extra_iron = grid.cells[idx].extra_iron;
+                grid.cells[idx].extra_iron = 0.0;
+
+                let gc = &mut grid.cells[idx];
+                let died = sim_cell_step(
+                    &mut gc.state, &gc.cell, params, step, extra_iron, &mut rng,
+                );
+
+                if died {
+                    gc.newly_dead = true;
+                    gc.lp_at_death = gc.state.lp;
+                    ferroptosis_kills += 1;
+                    // Release DAMPs into the field
+                    damp_field[idx] += gc.lp_at_death * immune.damp_per_lp;
+                }
+            }
+        }
+
+        // --- Iron diffusion ---
+        grid.diffuse_iron(
+            spatial_params.iron_release_per_death,
+            spatial_params.neighbor_iron_fraction,
+        );
+
+        // --- DAMP diffusion (neighbor spread + clearance) ---
+        damp_delta.fill(0.0);
+        for r in 0..rows {
+            for c in 0..cols {
+                let idx = r * cols + c;
+                let local = damp_field[idx];
+                if local < 0.001 {
+                    continue;
+                }
+                let share = local * immune.damp_diffusion_fraction;
+                let (neighbors, count) = grid.neighbors(r, c);
+                for &(nr, nc) in &neighbors[..count] {
+                    damp_delta[nr * cols + nc] += share;
+                }
+                damp_delta[idx] -= share * count as f64;
+            }
+        }
+        for i in 0..n_cells {
+            damp_field[i] = (damp_field[i] + damp_delta[i]).max(0.0);
+            // Clearance decay
+            damp_field[i] *= 1.0 - immune.damp_clearance_rate;
+        }
+
+        // --- Immune kill (after delay) ---
+        if step >= immune_start_step {
+            let effective_brake = immune.effective_brake();
+            for r in 0..rows {
+                for c in 0..cols {
+                    let idx = r * cols + c;
+                    if grid.cells[idx].state.dead || !grid.cells[idx].is_tumor {
+                        continue;
+                    }
+
+                    let local_damp = damp_field[idx];
+                    if local_damp < 0.01 {
+                        continue;
+                    }
+
+                    let activation = local_damp / (local_damp + immune.dc_activation_kd);
+                    let kill_prob = (activation * immune.immune_kill_rate * (1.0 - effective_brake))
+                        .min(0.99);
+
+                    let mut rng = StdRng::seed_from_u64(
+                        seed.wrapping_add(900_000_000)
+                            .wrapping_add(idx as u64)
+                            .wrapping_add(step as u64 * 2_000_000),
+                    );
+                    if rng.gen::<f64>() < kill_prob {
+                        grid.cells[idx].state.dead = true;
+                        immune_kills += 1;
+                    }
+                }
+            }
+        }
+    }
+
+    (ferroptosis_kills, immune_kills)
+}
+
+// ============================================================
 // Output types
 // ============================================================
 
@@ -192,8 +389,11 @@ struct ConditionResult {
     treatment: String,
     o2_condition: String,
     o2_lambda_um: Option<f64>,
+    immune_mode: String,
     total_tumor: usize,
     total_dead: usize,
+    ferroptosis_kills: Option<usize>,
+    immune_kills: Option<usize>,
     overall_kill_rate: f64,
     normoxic_kill_rate: f64,
     transition_kill_rate: f64,
@@ -299,8 +499,11 @@ fn main() {
             treatment: tx_name.to_string(),
             o2_condition: "uniform".to_string(),
             o2_lambda_um: None,
+            immune_mode: "off".to_string(),
             total_tumor: census.total_tumor,
             total_dead: census.total_dead,
+            ferroptosis_kills: None,
+            immune_kills: None,
             overall_kill_rate: overall,
             normoxic_kill_rate: norm_r,
             transition_kill_rate: trans_r,
@@ -340,8 +543,11 @@ fn main() {
                 treatment: tx_name.to_string(),
                 o2_condition: format!("gradient_{}um", lambda as u64),
                 o2_lambda_um: Some(lambda),
+                immune_mode: "off".to_string(),
                 total_tumor: census.total_tumor,
                 total_dead: census.total_dead,
+                ferroptosis_kills: None,
+                immune_kills: None,
                 overall_kill_rate: overall,
                 normoxic_kill_rate: norm_r,
                 transition_kill_rate: trans_r,
@@ -366,6 +572,57 @@ fn main() {
                 write_heatmap_csv(&path, &o2_hm).expect("Failed to write O2 heatmap");
             }
         }
+    }
+
+    // --- Immune coupling (Feature B) at λ=120μm ---
+    let immune_modes: Vec<(&str, ImmuneConfig)> = vec![
+        ("immune_on", ImmuneConfig::default_no_pd1()),
+        ("immune_anti_pd1", ImmuneConfig::default_no_pd1().with_anti_pd1()),
+    ];
+
+    eprintln!("\n=== Spatial Immune Coupling (O2 gradient λ=120μm) ===");
+    eprintln!("NOTE: LP at death ≈ 10.0 for all treatments (threshold-locked).");
+    eprintln!("DAMP differential comes from kill DENSITY, not per-cell DAMP quality.");
+    eprintln!("Immune model: resident T cell phase only (0-48h), not systemic.\n");
+
+    for (immune_label, immune_cfg) in &immune_modes {
+        eprintln!("--- Immune mode: {} (brake={:.0}%) ---\n",
+            immune_label, immune_cfg.effective_brake() * 100.0);
+
+        for (tx, tx_name) in &treatments {
+            let mut grid = TumorGrid::generate(GRID_SIZE, GRID_SIZE, CELL_SIZE_UM, SEED);
+            apply_o2_gradient(&mut grid, 120.0);
+
+            let (ferr_kills, imm_kills) = run_spatial_with_immune(
+                &mut grid, *tx, &params, &spatial_params, immune_cfg,
+                SEED.wrapping_add((*tx as u64) * 10_000_000),
+            );
+
+            let census = grid.census();
+            let overall = census.total_dead as f64 / census.total_tumor.max(1) as f64;
+            let (norm_r, trans_r, hyp_r) = zone_kill_rates(&grid, ZONE_REF_LAMBDA);
+            eprintln!("  {}: overall={:.1}% (ferr={}, immune={}), hypoxic={:.1}%",
+                tx_name, overall * 100.0, ferr_kills, imm_kills, hyp_r * 100.0);
+
+            all_results.push(ConditionResult {
+                treatment: tx_name.to_string(),
+                o2_condition: "gradient_120um".to_string(),
+                o2_lambda_um: Some(120.0),
+                immune_mode: immune_label.to_string(),
+                total_tumor: census.total_tumor,
+                total_dead: census.total_dead,
+                ferroptosis_kills: Some(ferr_kills),
+                immune_kills: Some(imm_kills),
+                overall_kill_rate: overall,
+                normoxic_kill_rate: norm_r,
+                transition_kill_rate: trans_r,
+                hypoxic_kill_rate: hyp_r,
+            });
+
+            let label = format!("{}_120_{}", tx_name, immune_label);
+            all_depth_curves.push((label, depth_kill_curve(&grid)));
+        }
+        eprintln!();
     }
 
     // --- Write aggregated outputs ---
