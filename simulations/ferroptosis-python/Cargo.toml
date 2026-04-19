@@ -1,0 +1,16 @@
+[package]
+name = "ferroptosis-python"
+version = "0.1.0"
+edition = "2021"
+description = "Python bindings for the ferroptosis-core biochemistry engine"
+license = "MIT"
+
+[lib]
+name = "ferroptosis_core"
+crate-type = ["cdylib"]
+
+[dependencies]
+ferroptosis-core = { path = "../ferroptosis-core" }
+pyo3 = { version = "0.23", features = ["extension-module"] }
+rand = "0.8"
+rayon = "1.10"
