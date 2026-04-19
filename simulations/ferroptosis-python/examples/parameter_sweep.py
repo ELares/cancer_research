@@ -17,6 +17,7 @@ Run:
 
 Build the extension first:
     cd simulations
+    python -m venv .venv && source .venv/bin/activate   # virtualenv required
     pip install maturin matplotlib numpy
     maturin develop -m ferroptosis-python/Cargo.toml --release
 """
