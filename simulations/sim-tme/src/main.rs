@@ -618,10 +618,12 @@ fn main() {
                 let path = output_dir.join(format!("damp_field_{}.csv", tx_name.to_lowercase()));
                 write_heatmap_csv(&path, &damp_hm).expect("Failed to write DAMP heatmap");
 
-                // Immune-kill death heatmap (shows which cells were immune-killed vs ferroptosis-killed)
+                // Final death map for the immune-enabled run (same encoding as other
+                // death heatmaps: 0=stromal, 1=dead tumor, 2=alive tumor; does NOT
+                // distinguish immune kills from ferroptotic kills)
                 let death_hm = death_heatmap(&grid);
-                let path = output_dir.join(format!("death_{}_immune.csv", tx_name.to_lowercase()));
-                write_heatmap_csv(&path, &death_hm).expect("Failed to write immune death heatmap");
+                let path = output_dir.join(format!("death_{}_immune_run.csv", tx_name.to_lowercase()));
+                write_heatmap_csv(&path, &death_hm).expect("Failed to write death heatmap");
             }
 
             all_results.push(ConditionResult {
