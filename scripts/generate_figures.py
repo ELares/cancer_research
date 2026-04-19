@@ -13,6 +13,7 @@ Produces:
   article/figures/fig14_tissue_mechanism_heatmap.pdf
   article/figures/fig15_designed_combinations.pdf
   article/figures/fig16_weighted_evidence.pdf
+  article/figures/fig17_damp_heatmap.pdf
 """
 
 import csv
@@ -1103,6 +1104,72 @@ def fig16_weighted_evidence(index):
 
 
 # ============================================================
+# Fig 17: DAMP Heatmap (TME Immune Coupling)
+# ============================================================
+
+TME_DIR = PROJECT_ROOT / "simulations" / "output" / "tme"
+
+
+def fig17_damp_heatmap():
+    """3-panel DAMP concentration heatmap: Control / RSL3 / SDT."""
+    print("Figure 17: DAMP concentration heatmap...")
+
+    treatments = [
+        ("control", "Control", 0, "0 immune kills"),
+        ("rsl3", "RSL3", 2, "2 immune kills"),
+        ("sdt", "SDT", 539, "539 immune kills"),
+    ]
+
+    # Check that files exist
+    for tx_key, _, _, _ in treatments:
+        path = TME_DIR / f"damp_field_{tx_key}.csv"
+        if not path.exists():
+            print(f"  {path} not found — run sim-tme first. Skipping.")
+            return
+
+    # Load all panels and find global max for shared colorbar
+    panels = []
+    for tx_key, tx_label, imm_kills, imm_text in treatments:
+        data = np.loadtxt(TME_DIR / f"damp_field_{tx_key}.csv", delimiter=",")
+        panels.append((tx_label, data, imm_kills, imm_text))
+
+    # Use raw u8 values (0-255, pre-normalized per-treatment by sim-tme)
+    # Re-normalize to a shared scale: divide by global max across all panels
+    global_max = max(d.max() for _, d, _, _ in panels)
+    if global_max == 0:
+        global_max = 1.0
+
+    fig, axes = plt.subplots(1, 3, figsize=(14, 4.5), constrained_layout=True)
+
+    for ax, (label, data, imm_kills, imm_text) in zip(axes, panels):
+        normed = data / global_max
+        im = ax.imshow(normed, cmap="inferno", vmin=0, vmax=1, aspect="equal",
+                       origin="upper")
+        ax.set_title(f"{label}\n({imm_text})", fontsize=11)
+        ax.set_xlabel("x (cells)")
+        ax.set_xticks([0, 249, 499])
+        ax.set_xticklabels(["0", "5", "10 mm"])
+        ax.set_yticks([0, 249, 499])
+        ax.set_yticklabels(["0", "5", "10 mm"])
+
+    axes[0].set_ylabel("y (cells)")
+
+    # Shared colorbar
+    cbar = fig.colorbar(im, ax=axes, shrink=0.85, pad=0.02)
+    cbar.set_label("DAMP concentration (normalized)")
+
+    fig.suptitle(
+        "DAMP Concentration Field After Immune Coupling\n"
+        "(O$_2$ gradient $\\lambda$=120$\\mu$m, 500×500 grid)",
+        fontsize=13, y=1.04)
+
+    fig.savefig(FIG_DIR / "fig17_damp_heatmap.pdf")
+    fig.savefig(FIG_DIR / "fig17_damp_heatmap.png")
+    plt.close()
+    print(f"  3 panels, global max DAMP value: {global_max}")
+
+
+# ============================================================
 # Main
 # ============================================================
 
@@ -1137,6 +1204,7 @@ def main():
     fig14_tissue_mechanism_heatmap(index)
     fig15_designed_combinations(index)
     fig16_weighted_evidence(index)
+    fig17_damp_heatmap()
 
     print(f"\nAll figures saved to {FIG_DIR}/")
     print("Files:")

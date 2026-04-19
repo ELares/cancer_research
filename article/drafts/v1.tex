@@ -490,6 +490,13 @@ Ferroptotic cell death releases damage-associated molecular patterns (DAMPs) ---
 
 The DAMP quality per dead cell is not equal across treatments. Lipid peroxidation is an autocatalytic free-radical chain reaction: each peroxyl radical abstracts a hydrogen from an adjacent polyunsaturated fatty acid, generating a new radical and propagating the cascade (established biochemistry; for the role of O2 as terminal electron acceptor driving basal ROS via the mitochondrial ETC, see Biology2e Ch.7, Sec.7.4). For high-ROS treatments, this cascade continues post-threshold: SDT/PDT drive LP to approximately 2$\times$ the death threshold (LP $\sim$20 vs threshold 10) because exogenous ROS sustains the chain reaction, while RSL3's slower LP accumulation barely exceeds the threshold (LP $\sim$10.5). This is modeled as a treatment-specific LP overshoot multiplier (SDT/PDT: 2.0$\times$, RSL3/Control: 1.05$\times$), an estimated parameter. The DAMP differential therefore comes from both kill \textit{density} (SDT kills $\sim$140K cells vs RSL3's $\sim$163) and kill \textit{quality} (each SDT dead cell releases $\sim$2$\times$ more DAMPs).
 
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\textwidth]{../figures/fig17_damp_heatmap.pdf}
+\caption{DAMP concentration field after immune coupling (O$_2$ gradient $\lambda$=120$\mu$m). SDT saturates the tumor field; RSL3 produces sparse hotspots.}
+\label{fig:fig17_damp_heatmap}
+\end{figure}
+
 Results (O2 gradient $\lambda$=120$\mu$m, 500$\times$500 grid): SDT with immune coupling produces 139,641 ferroptotic kills plus 539 immune kills (88.1\% total), compared to 87.8\% with ferroptosis alone. Adding simulated anti-PD-1 increases immune kills to 1,520 (88.7\% total) --- a 2.8$\times$ amplification. RSL3 produces only 2 immune kills without anti-PD-1 and 10 with it, because its sparse kill field generates negligible local DAMP concentration. The SDT-to-RSL3 immune kill ratio is 270:1 without anti-PD-1 and 152:1 with it.
 
 The absolute immune contribution is modest ($\sim$0.4-0.9\% additional kill for SDT), which is expected for a resident T cell model without systemic immune recruitment. The qualitative finding matters more: treatments that produce dense spatial kill patterns generate self-reinforcing immune activation that pharmacologic approaches with sparse kill cannot achieve. This suggests that the physical-modality advantage extends beyond direct ROS delivery --- the spatial kill density itself creates a secondary immune mechanism that further widens the gap.
