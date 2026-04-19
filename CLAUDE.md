@@ -22,6 +22,8 @@ The repo exists to compare therapeutic mechanisms, evidence depth, resistant-sta
 
 5. **Keep it human.** This project matters because cancer takes people from their families. Technical rigor serves that mission—but so does making the work accessible, welcoming contributions, and not hiding behind jargon when plain language works.
 
+6. **The work is more important than the paper.** Don't optimize for journal word limits or publication constraints. If a finding needs context, give context. If a decision needs explaining, explain it. Clarity and contribution to the scientific community matter more than fitting a format. A reader should understand why we made each decision, what the results yield, and why we believe they signal value.
+
 ## Current Workstreams
 
 - manuscript drafting and revision
