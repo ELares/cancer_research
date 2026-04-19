@@ -55,6 +55,17 @@ fn parse_treatment(s: &str) -> PyResult<Treatment> {
     }
 }
 
+fn parse_context(s: &str) -> PyResult<Params> {
+    match s {
+        "2d" | "default" => Ok(Params::default()),
+        "invivo" | "in-vivo" | "in_vivo" => Ok(Params::invivo()),
+        _ => Err(PyValueError::new_err(format!(
+            "Unknown context '{}'. Valid: 2d, invivo",
+            s
+        ))),
+    }
+}
+
 // ============================================================
 // Params helpers
 // ============================================================
@@ -140,22 +151,24 @@ fn invivo_params(py: Python<'_>) -> PyResult<Py<PyDict>> {
 ///     phenotype: "Glycolytic", "OXPHOS", "Persister", "PersisterNrf2", or "Stromal"
 ///     treatment: "Control", "RSL3", "SDT", or "PDT"
 ///     seed: RNG seed for reproducibility
+///     context: "2d" (default) or "invivo" (enables SCD1/MUFA protection)
 ///     **kwargs: parameter overrides (e.g., rsl3_gpx4_inhib=0.5)
 ///
 /// Returns:
 ///     dict with keys: dead (bool), lp, gsh, gpx4 (floats)
 #[pyfunction]
-#[pyo3(signature = (phenotype, treatment, seed, **kwargs))]
+#[pyo3(signature = (phenotype, treatment, seed, context="2d", **kwargs))]
 fn sim_cell(
     py: Python<'_>,
     phenotype: &str,
     treatment: &str,
     seed: u64,
+    context: &str,
     kwargs: Option<HashMap<String, f64>>,
 ) -> PyResult<Py<PyDict>> {
     let pheno = parse_phenotype(phenotype)?;
     let tx = parse_treatment(treatment)?;
-    let mut params = Params::default();
+    let mut params = parse_context(context)?;
     if let Some(overrides) = &kwargs {
         apply_overrides(&mut params, overrides)?;
     }
@@ -183,24 +196,29 @@ fn sim_cell(
 ///     treatment: "Control", "RSL3", "SDT", or "PDT"
 ///     n: number of cells to simulate
 ///     seed: RNG seed for reproducibility
+///     context: "2d" (default) or "invivo" (enables SCD1/MUFA protection)
 ///     **kwargs: parameter overrides (e.g., rsl3_gpx4_inhib=0.5)
 ///
 /// Returns:
 ///     dict with keys: death_rate, ci_low, ci_high, n_dead, n_cells,
 ///                     mean_lp, mean_gsh, mean_gpx4
 #[pyfunction]
-#[pyo3(signature = (phenotype, treatment, n, seed, **kwargs))]
+#[pyo3(signature = (phenotype, treatment, n, seed, context="2d", **kwargs))]
 fn sim_batch(
     py: Python<'_>,
     phenotype: &str,
     treatment: &str,
     n: usize,
     seed: u64,
+    context: &str,
     kwargs: Option<HashMap<String, f64>>,
 ) -> PyResult<Py<PyDict>> {
     let pheno = parse_phenotype(phenotype)?;
     let tx = parse_treatment(treatment)?;
-    let mut params = Params::default();
+    if n == 0 {
+        return Err(PyValueError::new_err("n must be > 0"));
+    }
+    let mut params = parse_context(context)?;
     if let Some(overrides) = &kwargs {
         apply_overrides(&mut params, overrides)?;
     }
