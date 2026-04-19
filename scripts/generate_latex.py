@@ -48,8 +48,9 @@ def cvt(t):
     t = t.replace('%', '\\%')
     t = t.replace('&', '\\&')
     t = t.replace('#', '\\#')
-    # Don't escape underscores globally — too many false positives in LaTeX commands
-    # Only escape bare underscores not in CITEPLACEHOLDER or LaTeX commands
+    # NOTE: underscore escaping is done AFTER all LaTeX conversions
+    # (cites, figures, tables) to avoid breaking citation keys and labels.
+    # See the escape_prose_underscores() call below cvt().
     # Unicode → LaTeX
     t = t.replace('→', '$\\rightarrow$')
     t = t.replace('×', '$\\times$')
@@ -63,6 +64,12 @@ def cvt(t):
     t = t.replace('δ', '$\\delta$')
     t = t.replace('α', '$\\alpha$')
     t = t.replace('µ', '$\\mu$')
+    t = t.replace('μ', '$\\mu$')      # U+03BC (Greek mu) — distinct from U+00B5 (micro sign)
+    t = t.replace('λ', '$\\lambda$')
+    t = re.sub(r'√\(([^)]+)\)', r'$\\sqrt{\1}$', t)  # √(x) → $\sqrt{x}$
+    t = t.replace('√', '$\\sqrt{}$')                    # bare √ fallback
+    t = t.replace('²', '$^2$')
+    t = t.replace('₂', '$_2$')
     t = t.replace('−', '$-$')
     t = t.replace('₀', '$_0$')
     # No blanket brace fixes needed — protection handles it
@@ -176,6 +183,24 @@ if leftover:
         print(f"  {placeholder[:80]}")
     print("Add missing entries to the `figs` dict in generate_latex.py.")
     raise SystemExit(1)
+
+# Escape underscores in prose AFTER all LaTeX conversions (cites, figures,
+# tables) are complete. Then un-escape inside \cite{}, \label{}, \ref{},
+# and \includegraphics{} commands where underscores are valid.
+def escape_prose_underscores(t):
+    # Step 1: escape all word_word underscores
+    t = re.sub(r'(?<=\w)_(?=\w)', r'\\_', t)
+    # Step 2: un-escape inside LaTeX commands that use underscored keys
+    def unescape_braces(m):
+        return m.group(0).replace('\\_', '_')
+    t = re.sub(r'\\cite\{[^}]+\}', unescape_braces, t)
+    t = re.sub(r'\\label\{[^}]+\}', unescape_braces, t)
+    t = re.sub(r'\\ref\{[^}]+\}', unescape_braces, t)
+    t = re.sub(r'\\includegraphics\[[^\]]*\]\{[^}]+\}', unescape_braces, t)
+    return t
+
+body_tex = escape_prose_underscores(body_tex)
+abstract_tex = escape_prose_underscores(abstract_tex)
 
 latex = f"""\\documentclass[12pt,a4paper]{{article}}
 \\usepackage[utf8]{{inputenc}}
