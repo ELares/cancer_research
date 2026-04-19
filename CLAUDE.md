@@ -22,6 +22,8 @@ The repo exists to compare therapeutic mechanisms, evidence depth, resistant-sta
 
 5. **Keep it human.** This project matters because cancer takes people from their families. Technical rigor serves that mission—but so does making the work accessible, welcoming contributions, and not hiding behind jargon when plain language works.
 
+6. **The work is more important than the paper.** Don't optimize for journal word limits or publication constraints. If a finding needs context, give context. If a decision needs explaining, explain it. Clarity and contribution to the scientific community matter more than fitting a format. A reader should understand why we made each decision, what the results yield, and why we believe they signal value.
+
 ## Current Workstreams
 
 - manuscript drafting and revision
@@ -42,10 +44,12 @@ The repo exists to compare therapeutic mechanisms, evidence depth, resistant-sta
 - mechanism taxonomy, evidence tiers, pathway-targets, biology-process tags, and resistant-state scaffolding are all active
 - evidence tagging is improved but still incomplete (gold-set measured)
 - tissue-of-origin and weighted-evidence layers are active
-- diagnostic-therapy matching layer covers 4 modalities (radioligand, checkpoint, mRNA vaccine, oncolytic)
-- simulation suite: 7 binaries + ferroptosis-core library (MIT licensed, 19 unit tests)
+- diagnostic-therapy matching layer covers 6 chains across 4 modalities (radioligand, checkpoint, mRNA vaccine, oncolytic)
+- simulation suite: 9 binaries + ferroptosis-core library (MIT licensed, 19 unit tests) + Python bindings
 - simulation calibration: 5 targets documented, evaluate script operational
 - drug penetration module: 3 tissue types, exponential Krogh approximation
+- drug combination modeling: 4 drugs, pairwise Bliss synergy scoring with pathway traces
+- tumor microenvironment: oxygen gradients with multi-treatment comparison
 - some landmark papers are known to be missing from the local full-text archive
 
 ## What To Optimize For

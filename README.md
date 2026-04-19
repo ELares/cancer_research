@@ -20,25 +20,38 @@ If you have expertise in oncology, biochemistry, ferroptosis, immunology, comput
 
 ## What's here
 
-- A local collection of cancer research papers (full-text and abstracts)
-- Python scripts to fetch, tag, index, and analyze the corpus
-- Generated analyses, gap notes, and a draft manuscript
-- Rust simulations exploring biochemical dynamics
+- **4,830 full-text cancer research articles** across 19 mechanisms, 22 cancer types, 803 journals (2001-2026)
+- **Python pipeline** for corpus fetching, tagging (7 tag layers), indexing, analysis, and figure generation
+- **9 Rust simulation binaries** modeling ferroptosis biochemistry: single-cell Monte Carlo, spatial tumors, drug penetration, drug combinations, tumor microenvironment (oxygen gradients), vulnerability windows, ICD immune cascades
+- **ferroptosis-core library** (MIT, with Python bindings) — embeddable ferroptosis biochemistry engine with 19 unit tests
+- **Calibration infrastructure** linking simulation parameters to published experimental data
+- **Manuscript** with 13 figures, cross-referenced against all analysis outputs
 
 Everything is organised so you can re-run the pipeline, challenge the conclusions, or extend the work in directions we haven't thought of yet.
 
-## Explore the work
+## What we found
 
-The repository is structured to make it easy to dig in:
+Three simulation findings that, if validated experimentally, would have translational implications:
+
+1. **RSL3 + FSP1 inhibitor produces 1.99× Bliss synergy** through dual-pathway depletion — depleting both GPX4 and FSP1 repair pathways simultaneously drops antioxidant defense below the autocatalytic lipid peroxidation threshold.
+
+2. **Tumor hypoxia devastates pharmacologic ferroptosis inducers but barely affects physical modalities.** Under oxygen gradients, RSL3 kill collapses from 3.7% to 0.1% (depends on mitochondrial ROS, which requires O2). SDT maintains 87.8% kill (delivers exogenous ROS, O2-independent). This differential is robust across all tested O2 penetration lengths.
+
+3. **Tissue-specific drug penetration creates a substantial in-vitro-to-in-vivo gap.** RSL3-like drug kill drops from 40% (2D culture) to 12.1% (well-vascularized) to 2.6% (poorly-vascularized) to 1.8% (CNS/BBB) — even at the blood vessel wall.
+
+These are computational predictions with documented assumptions and caveats, not clinical claims. All parameters are documented with literature sources and confidence ratings. See the [manuscript](article/drafts/v1.md) for full context.
+
+## Explore the work
 
 | Directory | What you'll find |
 |-----------|-----------------|
-| `analysis/` | Audits, gap notes, and interpretative documents |
-| `article/drafts/` | Current manuscript drafts |
-| `scripts/` | Python pipeline for fetching, tagging, and analysis |
-| `simulations/` | Rust simulation code |
-| `corpus/` | Raw text data (by PubMed ID) |
-| `tags/` | Precomputed tag indexes |
+| `analysis/` | 15+ analysis outputs: evidence tiers, tissue-of-origin, diagnostic-therapy matching, combination audits, gap analysis |
+| `article/drafts/` | Manuscript (v1.md + v1.tex) with 13 figures |
+| `scripts/` | Python pipeline: tagging, indexing, analysis, figure generation, LaTeX generation |
+| `simulations/` | [9 Rust binaries](simulations/README.md) + ferroptosis-core library + [Python bindings](simulations/ferroptosis-python/) + calibration infrastructure |
+| `corpus/` | Full-text articles by PubMed ID + INDEX.jsonl |
+| `tags/` | Precomputed tag indexes (mechanism, cancer type, tissue, evidence level, diagnostic-therapy) |
+| `tests/` | 33 Python smoke tests for the analysis pipeline |
 
 Start with the files in `analysis/` if you want to see what we've concluded so far—and where we're still uncertain.
 
@@ -56,16 +69,33 @@ python scripts/analyze_corpus.py
 python scripts/generate_figures.py
 ```
 
-For the simulations (see [simulations/README.md](simulations/README.md) for details):
+For the simulations (see [simulations/README.md](simulations/README.md) for all 9 binaries):
 
 ```bash
 cd simulations
 cargo build --release
-cargo test --workspace                 # 19 unit tests
-cargo run --release -p sim-original    # Monte Carlo ferroptosis baseline
-cargo run --release -p sim-spatial     # 2D tumor with PDT/SDT depth physics
-cargo run --release -p sim-tissue-pk   # drug penetration across tissue types
+cargo test --workspace                  # 19 unit tests
+cargo run --release -p sim-original     # Monte Carlo ferroptosis baseline
+cargo run --release -p sim-spatial      # 2D tumor with PDT/SDT depth physics
+cargo run --release -p sim-tissue-pk    # drug penetration across tissue types
+cargo run --release -p sim-combo-mech   # pairwise drug combination synergy
+cargo run --release -p sim-tme          # tumor microenvironment (O2 gradients)
 ```
+
+For the Python bindings:
+
+```bash
+cd simulations
+pip install maturin
+maturin develop -m ferroptosis-python/Cargo.toml --release
+python -c "import ferroptosis_core as fc; print(fc.sim_batch('Persister', 'RSL3', n=1000, seed=42))"
+```
+
+## Philosophy
+
+**The work is more important than the paper.** We don't optimize for journal word limits or publication formats. If a finding needs context, we give context. If a decision needs explaining, we explain it. Every result in this repo includes the reasoning chain that produced it — what we assumed, what we measured, what we're uncertain about, and why we believe the finding signals value despite those uncertainties.
+
+We'd rather publish a longer, clearer document that a graduate student can follow end-to-end than a compressed paper that only specialists can decode. Breakthroughs against diseases that destroy lives should be accessible to anyone willing to read carefully.
 
 ## Contribute
 
