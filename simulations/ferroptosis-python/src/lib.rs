@@ -95,6 +95,35 @@ fn params_to_dict(py: Python<'_>, params: &Params) -> PyResult<Py<PyDict>> {
     Ok(dict.into())
 }
 
+fn validate_params(params: &Params) -> PyResult<()> {
+    let checks: &[(&str, f64, f64, f64)] = &[
+        ("fenton_rate", params.fenton_rate, 0.0, 10.0),
+        ("gsh_scav_efficiency", params.gsh_scav_efficiency, 0.0, 1.0),
+        ("gsh_km", params.gsh_km, 0.0, 100.0),
+        ("lp_rate", params.lp_rate, 0.0, 10.0),
+        ("lp_propagation", params.lp_propagation, 0.0, 10.0),
+        ("gpx4_rate", params.gpx4_rate, 0.0, 10.0),
+        ("fsp1_rate", params.fsp1_rate, 0.0, 10.0),
+        ("rsl3_gpx4_inhib", params.rsl3_gpx4_inhib, 0.0, 1.0),
+        ("gsh_max", params.gsh_max, 0.0, 100.0),
+        ("death_threshold", params.death_threshold, 0.0, 1000.0),
+        ("sdt_ros", params.sdt_ros, 0.0, 100.0),
+        ("pdt_ros", params.pdt_ros, 0.0, 100.0),
+        ("scd_mufa_rate", params.scd_mufa_rate, 0.0, 1.0),
+        ("scd_mufa_max", params.scd_mufa_max, 0.0, 1.0),
+        ("initial_mufa_protection", params.initial_mufa_protection, 0.0, 1.0),
+    ];
+    for (name, val, lo, hi) in checks {
+        if *val < *lo || *val > *hi {
+            return Err(PyValueError::new_err(format!(
+                "Parameter '{}' = {} is out of range [{}, {}]",
+                name, val, lo, hi
+            )));
+        }
+    }
+    Ok(())
+}
+
 fn apply_overrides(params: &mut Params, overrides: &HashMap<String, f64>) -> PyResult<()> {
     for (key, val) in overrides {
         match key.as_str() {
@@ -172,6 +201,7 @@ fn sim_cell(
     if let Some(overrides) = &kwargs {
         apply_overrides(&mut params, overrides)?;
     }
+    validate_params(&params)?;
 
     let mut cell_rng = StdRng::seed_from_u64(seed);
     let cell = gen_cell(pheno, &mut cell_rng);
@@ -222,27 +252,35 @@ fn sim_batch(
     if let Some(overrides) = &kwargs {
         apply_overrides(&mut params, overrides)?;
     }
+    validate_params(&params)?;
 
-    // Run in parallel, releasing the GIL so Python threads aren't blocked
-    let results: Vec<(bool, f64, f64, f64)> = py.allow_threads(|| {
+    // Parallel fold/reduce — O(1) memory per thread, no Vec<> allocation.
+    let (n_dead, sum_lp, sum_gsh, sum_gpx4) = py.allow_threads(|| {
         (0..n)
             .into_par_iter()
-            .map(|i| {
-                let cell_seed = seed.wrapping_add((i as u64) * 2);
-                let mut cell_rng = StdRng::seed_from_u64(cell_seed);
-                let cell = gen_cell(pheno, &mut cell_rng);
-                let mut sim_rng = StdRng::seed_from_u64(cell_seed.wrapping_add(1));
-                rust_sim_cell(&cell, tx, &params, &mut sim_rng)
-            })
-            .collect()
+            .fold(
+                || (0usize, 0.0f64, 0.0f64, 0.0f64),
+                |(dead, lp, gsh, gpx4), i| {
+                    let cell_seed = seed.wrapping_add((i as u64) * 2);
+                    let mut cell_rng = StdRng::seed_from_u64(cell_seed);
+                    let cell = gen_cell(pheno, &mut cell_rng);
+                    let mut sim_rng = StdRng::seed_from_u64(cell_seed.wrapping_add(1));
+                    let (d, l, g, p) = rust_sim_cell(&cell, tx, &params, &mut sim_rng);
+                    (dead + d as usize, lp + l, gsh + g, gpx4 + p)
+                },
+            )
+            .reduce(
+                || (0, 0.0, 0.0, 0.0),
+                |(d1, l1, g1, p1), (d2, l2, g2, p2)| (d1 + d2, l1 + l2, g1 + g2, p1 + p2),
+            )
     });
 
-    let n_dead = results.iter().filter(|(dead, _, _, _)| *dead).count();
-    let death_rate = n_dead as f64 / n as f64;
+    let nf = n as f64;
+    let death_rate = n_dead as f64 / nf;
     let (ci_low, ci_high) = wilson_ci(n, n_dead);
-    let mean_lp = results.iter().map(|(_, lp, _, _)| lp).sum::<f64>() / n as f64;
-    let mean_gsh = results.iter().map(|(_, _, gsh, _)| gsh).sum::<f64>() / n as f64;
-    let mean_gpx4 = results.iter().map(|(_, _, _, gpx4)| gpx4).sum::<f64>() / n as f64;
+    let mean_lp = sum_lp / nf;
+    let mean_gsh = sum_gsh / nf;
+    let mean_gpx4 = sum_gpx4 / nf;
 
     let dict = PyDict::new(py);
     dict.set_item("death_rate", death_rate)?;
