@@ -48,7 +48,7 @@ These are computational predictions with documented assumptions and caveats, not
 | `analysis/` | 15+ analysis outputs: evidence tiers, tissue-of-origin, diagnostic-therapy matching, combination audits, gap analysis |
 | `article/drafts/` | Manuscript (v1.md + v1.tex) with 13 figures |
 | `scripts/` | Python pipeline: tagging, indexing, analysis, figure generation, LaTeX generation |
-| `simulations/` | [10 Rust binaries](simulations/README.md) + ferroptosis-core library + [Python bindings](simulations/ferroptosis-python/) + calibration infrastructure |
+| `simulations/` | [9 Rust binaries](simulations/README.md) + ferroptosis-core library + [Python bindings](simulations/ferroptosis-python/) + calibration infrastructure |
 | `corpus/` | Full-text articles by PubMed ID + INDEX.jsonl |
 | `tags/` | Precomputed tag indexes (mechanism, cancer type, tissue, evidence level, diagnostic-therapy) |
 | `tests/` | 33 Python smoke tests for the analysis pipeline |
@@ -69,7 +69,7 @@ python scripts/analyze_corpus.py
 python scripts/generate_figures.py
 ```
 
-For the simulations (see [simulations/README.md](simulations/README.md) for all 10 binaries):
+For the simulations (see [simulations/README.md](simulations/README.md) for all 9 binaries):
 
 ```bash
 cd simulations
