@@ -13,6 +13,7 @@ Produces:
   article/figures/fig14_tissue_mechanism_heatmap.pdf
   article/figures/fig15_designed_combinations.pdf
   article/figures/fig16_weighted_evidence.pdf
+  article/figures/fig17_damp_heatmap.pdf
 """
 
 import csv
@@ -1103,6 +1104,80 @@ def fig16_weighted_evidence(index):
 
 
 # ============================================================
+# Fig 17: DAMP Heatmap (TME Immune Coupling)
+# ============================================================
+
+TME_DIR = PROJECT_ROOT / "simulations" / "output" / "tme"
+
+
+def fig17_damp_heatmap():
+    """3-panel DAMP concentration heatmap: Control / RSL3 / SDT."""
+    print("Figure 17: DAMP concentration heatmap...")
+
+    treatment_keys = [
+        ("control", "Control"),
+        ("rsl3", "RSL3"),
+        ("sdt", "SDT"),
+    ]
+
+    # Check that files exist
+    for tx_key, _ in treatment_keys:
+        path = TME_DIR / f"damp_field_{tx_key}.csv"
+        if not path.exists():
+            print(f"  {path} not found — run sim-tme first. Skipping.")
+            return
+
+    # Read immune kill counts from tme_summary.json (avoid hardcoding)
+    summary_path = TME_DIR / "tme_summary.json"
+    imm_kills_map = {}
+    if summary_path.exists():
+        summary = json.loads(summary_path.read_text())
+        for r in summary:
+            if r.get("immune_mode") == "immune_on":
+                imm_kills_map[r["treatment"]] = r.get("immune_kills", 0)
+
+    # Load DAMP fields
+    # NOTE: sim-tme encodes each treatment's DAMP field independently as u8
+    # (each treatment normalized to its own max). The CSVs are NOT on the
+    # same absolute scale. We normalize each panel independently so each
+    # uses the full colormap range, and rely on the immune kill annotation
+    # for quantitative comparison.
+    panels = []
+    for tx_key, tx_label in treatment_keys:
+        data = np.loadtxt(TME_DIR / f"damp_field_{tx_key}.csv", delimiter=",")
+        imm_kills = imm_kills_map.get(tx_label, 0)
+        panels.append((tx_label, data, int(imm_kills)))
+
+    fig, axes = plt.subplots(1, 3, figsize=(14, 4.5), constrained_layout=True)
+
+    for ax, (label, data, imm_kills) in zip(axes, panels):
+        panel_max = data.max()
+        if panel_max == 0:
+            panel_max = 1.0
+        normed = data / panel_max
+        ax.imshow(normed, cmap="inferno", vmin=0, vmax=1, aspect="equal",
+                  origin="upper")
+        ax.set_title(f"{label}\n({imm_kills} immune kills)", fontsize=11)
+        ax.set_xlabel("x (cells)")
+        ax.set_xticks([0, 249, 499])
+        ax.set_xticklabels(["0", "5", "10 mm"])
+        ax.set_yticks([0, 249, 499])
+        ax.set_yticklabels(["0", "5", "10 mm"])
+
+    axes[0].set_ylabel("y (cells)")
+
+    fig.suptitle(
+        "DAMP Spatial Distribution After Immune Coupling\n"
+        "(O$_2$ gradient $\\lambda$=120$\\mu$m, 500×500 grid, per-panel scaling)",
+        fontsize=13, y=1.04)
+
+    fig.savefig(FIG_DIR / "fig17_damp_heatmap.pdf")
+    fig.savefig(FIG_DIR / "fig17_damp_heatmap.png")
+    plt.close()
+    print(f"  3 panels, immune kills: {[p[2] for p in panels]}")
+
+
+# ============================================================
 # Main
 # ============================================================
 
@@ -1137,6 +1212,7 @@ def main():
     fig14_tissue_mechanism_heatmap(index)
     fig15_designed_combinations(index)
     fig16_weighted_evidence(index)
+    fig17_damp_heatmap()
 
     print(f"\nAll figures saved to {FIG_DIR}/")
     print("Files:")
