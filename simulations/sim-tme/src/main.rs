@@ -47,6 +47,11 @@ const SEED: u64 = 42;
 /// Literature range: 100-150μm (Vaupel, Cancer Res 1989).
 const O2_LAMBDAS: &[f64] = &[80.0, 100.0, 120.0, 150.0];
 
+/// Fixed reference λ for zone boundary definitions (μm).
+/// Zone kill rates use this CONSTANT regardless of the sweep λ, so the
+/// sensitivity table compares a fixed anatomical region across conditions.
+const ZONE_REF_LAMBDA: f64 = 120.0;
+
 // ============================================================
 // O2 field computation
 // ============================================================
@@ -286,7 +291,7 @@ fn main() {
 
         let census = grid.census();
         let overall = census.total_dead as f64 / census.total_tumor.max(1) as f64;
-        let (norm_r, trans_r, hyp_r) = zone_kill_rates(&grid, 120.0);
+        let (norm_r, trans_r, hyp_r) = zone_kill_rates(&grid, ZONE_REF_LAMBDA);
         eprintln!("  {}: overall={:.1}%, normoxic={:.1}%, transition={:.1}%, hypoxic={:.1}%",
             tx_name, overall * 100.0, norm_r * 100.0, trans_r * 100.0, hyp_r * 100.0);
 
@@ -327,7 +332,7 @@ fn main() {
 
             let census = grid.census();
             let overall = census.total_dead as f64 / census.total_tumor.max(1) as f64;
-            let (norm_r, trans_r, hyp_r) = zone_kill_rates(&grid, lambda);
+            let (norm_r, trans_r, hyp_r) = zone_kill_rates(&grid, ZONE_REF_LAMBDA);
             eprintln!("  {}: overall={:.1}%, normoxic={:.1}%, transition={:.1}%, hypoxic={:.1}%",
                 tx_name, overall * 100.0, norm_r * 100.0, trans_r * 100.0, hyp_r * 100.0);
 
@@ -404,7 +409,7 @@ fn main() {
         eprintln!("{:<10} {:>14.1}% {:>14.1}% {:>15.1}×", lambda, rsl3_hyp * 100.0, sdt_hyp * 100.0, ratio);
     }
 
-    eprintln!("\nZone definitions: normoxic = within λ of edge, transition = λ to 3λ, hypoxic = deeper than 3λ.");
+    eprintln!("\nZone definitions (fixed at λ_ref = {ZONE_REF_LAMBDA}μm): normoxic = within {ZONE_REF_LAMBDA}μm of edge, transition = {ZONE_REF_LAMBDA}-{}μm, hypoxic = deeper than {}μm.", ZONE_REF_LAMBDA * 3.0, ZONE_REF_LAMBDA * 3.0);
     eprintln!("If SDT/RSL3 ratio is consistently >1 across all λ values,");
     eprintln!("the finding is robust: SDT maintains efficacy in hypoxia better than RSL3.");
 
