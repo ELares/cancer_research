@@ -18,12 +18,12 @@ No Rust toolchain required — pre-built wheels are provided for Linux, macOS, a
 import ferroptosis_core as fc
 
 # Single cell
-result = fc.sim_cell("Persister", "RSL3", seed=42)
-print(result)  # {'dead': True, 'lp': 10.56, 'gsh': 0.02, 'gpx4': 0.40}
+result = fc.sim_cell("Persister", "RSL3", seed=1)
+print(result)  # {'dead': True, 'lp': 10.34, 'gsh': 2.69, 'gpx4': 0.40}
 
 # Population (10,000 cells, parallel)
 stats = fc.sim_batch("Persister", "RSL3", n=10000, seed=42)
-print(f"Death rate: {stats['death_rate']:.1%}")  # ~40%
+print(f"Death rate: {stats['death_rate']:.1%}")  # 42.3%
 ```
 
 ## API
