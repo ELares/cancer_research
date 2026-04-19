@@ -208,6 +208,13 @@ struct ImmuneConfig {
     pd1_brake: f64,
     /// Anti-PD-1 efficacy (fraction of brake removed).
     anti_pd1_efficacy: f64,
+    /// LP overshoot multiplier for physical modalities (SDT/PDT).
+    /// Estimates the post-threshold LP cascade: LP reaches ~2× threshold
+    /// for high-ROS treatments (Biology2e Ch.7-8: autocatalytic propagation).
+    physical_modality_overshoot: f64,
+    /// LP overshoot multiplier for pharmacologic treatments (RSL3, Control).
+    /// Minimal momentum past threshold for slow LP accumulation.
+    pharmacologic_overshoot: f64,
 }
 
 impl ImmuneConfig {
@@ -220,6 +227,8 @@ impl ImmuneConfig {
             immune_kill_rate: 0.02,
             pd1_brake: 0.7,
             anti_pd1_efficacy: 0.0,
+            physical_modality_overshoot: 2.0,
+            pharmacologic_overshoot: 1.05,
         }
     }
 
@@ -310,7 +319,17 @@ fn run_spatial_with_immune(
                     gc.lp_at_death = gc.state.lp;
                     ferroptosis_kills += 1;
                     // Release DAMPs into the field
-                    damp_field[idx] += gc.lp_at_death * immune.damp_per_lp;
+                    // LP overshoot: biologically, the autocatalytic LP cascade
+                    // continues 1-3 steps post-threshold for high-ROS treatments
+                    // (Biology2e Ch.7-8: chain reaction propagation). SDT/PDT drive
+                    // LP to ~20 (2× threshold) while RSL3 barely exceeds ~10.5.
+                    // This is an estimated multiplier (Option C from issue #82);
+                    // Option A (emergent overshoot from dynamics) is a follow-up.
+                    let overshoot = match tx {
+                        Treatment::SDT | Treatment::PDT => immune.physical_modality_overshoot,
+                        _ => immune.pharmacologic_overshoot,
+                    };
+                    damp_field[idx] += gc.lp_at_death * immune.damp_per_lp * overshoot;
                 }
             }
         }
