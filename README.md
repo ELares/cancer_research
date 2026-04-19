@@ -22,7 +22,7 @@ If you have expertise in oncology, biochemistry, ferroptosis, immunology, comput
 
 - **4,830 full-text cancer research articles** across 19 mechanisms, 22 cancer types, 803 journals (2001-2026)
 - **Python pipeline** for corpus fetching, tagging (7 tag layers), indexing, analysis, and figure generation
-- **10 Rust simulation binaries** modeling ferroptosis biochemistry: single-cell Monte Carlo, spatial tumors, drug penetration, drug combinations, tumor microenvironment (oxygen gradients), vulnerability windows, ICD immune cascades
+- **9 Rust simulation binaries** modeling ferroptosis biochemistry: single-cell Monte Carlo, spatial tumors, drug penetration, drug combinations, tumor microenvironment (oxygen gradients), vulnerability windows, ICD immune cascades
 - **ferroptosis-core library** (MIT, with Python bindings) — embeddable ferroptosis biochemistry engine with 19 unit tests
 - **Calibration infrastructure** linking simulation parameters to published experimental data
 - **Manuscript** with 13 figures, cross-referenced against all analysis outputs

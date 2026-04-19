@@ -44,10 +44,12 @@ The repo exists to compare therapeutic mechanisms, evidence depth, resistant-sta
 - mechanism taxonomy, evidence tiers, pathway-targets, biology-process tags, and resistant-state scaffolding are all active
 - evidence tagging is improved but still incomplete (gold-set measured)
 - tissue-of-origin and weighted-evidence layers are active
-- diagnostic-therapy matching layer covers 4 modalities (radioligand, checkpoint, mRNA vaccine, oncolytic)
-- simulation suite: 7 binaries + ferroptosis-core library (MIT licensed, 19 unit tests)
+- diagnostic-therapy matching layer covers 6 chains across 4 modalities (radioligand, checkpoint, mRNA vaccine, oncolytic)
+- simulation suite: 9 binaries + ferroptosis-core library (MIT licensed, 19 unit tests) + Python bindings
 - simulation calibration: 5 targets documented, evaluate script operational
 - drug penetration module: 3 tissue types, exponential Krogh approximation
+- drug combination modeling: 4 drugs, pairwise Bliss synergy scoring with pathway traces
+- tumor microenvironment: oxygen gradients with multi-treatment comparison
 - some landmark papers are known to be missing from the local full-text archive
 
 ## What To Optimize For
