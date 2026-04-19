@@ -48,8 +48,9 @@ def cvt(t):
     t = t.replace('%', '\\%')
     t = t.replace('&', '\\&')
     t = t.replace('#', '\\#')
-    # Don't escape underscores globally — too many false positives in LaTeX commands
-    # Only escape bare underscores not in CITEPLACEHOLDER or LaTeX commands
+    # Escape underscores in prose (word_word patterns) but not in LaTeX commands
+    # (LaTeX commands use _ for subscripts inside $ delimiters)
+    t = re.sub(r'(?<=\w)_(?=\w)', r'\\_', t)
     # Unicode → LaTeX
     t = t.replace('→', '$\\rightarrow$')
     t = t.replace('×', '$\\times$')
@@ -65,7 +66,8 @@ def cvt(t):
     t = t.replace('µ', '$\\mu$')
     t = t.replace('μ', '$\\mu$')      # U+03BC (Greek mu) — distinct from U+00B5 (micro sign)
     t = t.replace('λ', '$\\lambda$')
-    t = t.replace('√', '$\\sqrt{}$')
+    t = re.sub(r'√\(([^)]+)\)', r'$\\sqrt{\1}$', t)  # √(x) → $\sqrt{x}$
+    t = t.replace('√', '$\\sqrt{}$')                    # bare √ fallback
     t = t.replace('²', '$^2$')
     t = t.replace('₂', '$_2$')
     t = t.replace('−', '$-$')
