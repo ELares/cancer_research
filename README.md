@@ -22,7 +22,7 @@ If you have expertise in oncology, biochemistry, ferroptosis, immunology, comput
 
 - **4,830 full-text cancer research articles** across 19 mechanisms, 22 cancer types, 803 journals (2001-2026)
 - **Python pipeline** for corpus fetching, tagging (7 tag layers), indexing, analysis, and figure generation
-- **9 Rust simulation binaries** modeling ferroptosis biochemistry: single-cell Monte Carlo, spatial tumors, drug penetration, drug combinations, tumor microenvironment (oxygen gradients), vulnerability windows, ICD immune cascades
+- **9 Rust simulation binaries** modeling ferroptosis biochemistry: single-cell Monte Carlo, spatial tumors, drug penetration, drug combinations, tumor microenvironment (oxygen gradients, spatial immune zones, DAMP-mediated T cell activation), vulnerability windows, ICD immune cascades
 - **ferroptosis-core library** (MIT, with Python bindings) — embeddable ferroptosis biochemistry engine with 19 unit tests
 - **Calibration infrastructure** linking simulation parameters to published experimental data
 - **Manuscript** with 13 figures, cross-referenced against all analysis outputs
@@ -35,7 +35,7 @@ Three simulation findings that, if validated experimentally, would have translat
 
 1. **RSL3 + FSP1 inhibitor produces 1.99× Bliss synergy** through dual-pathway depletion — depleting both GPX4 and FSP1 repair pathways simultaneously drops antioxidant defense below the autocatalytic lipid peroxidation threshold.
 
-2. **Tumor hypoxia devastates pharmacologic ferroptosis inducers but barely affects physical modalities.** Under oxygen gradients, RSL3 kill collapses from 3.7% to 0.1% (depends on mitochondrial ROS, which requires O2). SDT maintains 87.8% kill (delivers exogenous ROS, O2-independent). This differential is robust across all tested O2 penetration lengths.
+2. **Tumor hypoxia devastates pharmacologic ferroptosis inducers but barely affects physical modalities.** Under oxygen gradients, RSL3 kill collapses from 3.7% to 0.1% (depends on mitochondrial ROS, which requires O2). SDT maintains 87.8% kill (delivers exogenous ROS). Adding spatial immune coupling, SDT's dense kill field generates 270× more immune kills than RSL3, and anti-PD-1 amplifies this 2.8×. This differential is robust across all tested O2 penetration lengths.
 
 3. **Tissue-specific drug penetration creates a substantial in-vitro-to-in-vivo gap.** RSL3-like drug kill drops from 40% (2D culture) to 12.1% (well-vascularized) to 2.6% (poorly-vascularized) to 1.8% (CNS/BBB) — even at the blood vessel wall.
 
