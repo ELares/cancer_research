@@ -32,6 +32,3 @@ Issues = "https://github.com/ELares/cancer_research/issues"
 [tool.maturin]
 features = ["pyo3/extension-module"]
 module-name = "ferroptosis_core"
-include = [
-    { path = "../ferroptosis-core/**/*", format = "sdist" },
-]
