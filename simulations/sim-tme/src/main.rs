@@ -417,6 +417,9 @@ struct ConditionResult {
     normoxic_kill_rate: f64,
     transition_kill_rate: f64,
     hypoxic_kill_rate: f64,
+    /// LP overshoot multiplier used for this condition (None when immune is off).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    lp_overshoot_multiplier: Option<f64>,
 }
 
 /// Compute kill rates for three O2-defined zones:
@@ -496,6 +499,14 @@ fn main() {
     let output_dir = Path::new("output/tme");
     fs::create_dir_all(output_dir).expect("Failed to create output directory");
 
+    // Remove stale legacy files from previous naming convention (_immune.csv → _immune_run.csv)
+    for name in &["death_control_immune.csv", "death_rsl3_immune.csv", "death_sdt_immune.csv"] {
+        let p = output_dir.join(name);
+        if p.exists() {
+            let _ = fs::remove_file(&p);
+        }
+    }
+
     let mut all_results: Vec<ConditionResult> = Vec::new();
     let mut all_depth_curves: Vec<(String, Vec<(f64, f64, usize)>)> = Vec::new();
 
@@ -527,6 +538,7 @@ fn main() {
             normoxic_kill_rate: norm_r,
             transition_kill_rate: trans_r,
             hypoxic_kill_rate: hyp_r,
+            lp_overshoot_multiplier: None,
         });
 
         let label = format!("{}_uniform", tx_name);
@@ -571,6 +583,7 @@ fn main() {
                 normoxic_kill_rate: norm_r,
                 transition_kill_rate: trans_r,
                 hypoxic_kill_rate: hyp_r,
+                lp_overshoot_multiplier: None,
             });
 
             let label = format!("{}_{}", tx_name, lambda as u64);
@@ -645,6 +658,10 @@ fn main() {
                 write_heatmap_csv(&path, &death_hm).expect("Failed to write death heatmap");
             }
 
+            let overshoot = match tx {
+                Treatment::SDT | Treatment::PDT => immune_cfg.physical_modality_overshoot,
+                _ => immune_cfg.pharmacologic_overshoot,
+            };
             all_results.push(ConditionResult {
                 treatment: tx_name.to_string(),
                 o2_condition: "gradient_120um".to_string(),
@@ -658,6 +675,7 @@ fn main() {
                 normoxic_kill_rate: norm_r,
                 transition_kill_rate: trans_r,
                 hypoxic_kill_rate: hyp_r,
+                lp_overshoot_multiplier: Some(overshoot),
             });
 
             let label = format!("{}_120_{}", tx_name, immune_label);
