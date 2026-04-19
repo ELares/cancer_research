@@ -407,7 +407,7 @@ Persister + NRF2 & 0.00\% & 0.05\% & 99.5\% & 99.5\% \\
 \label{fig:fig7_monte_carlo_simulation}
 \end{figure}
 
-\textbf{Model limitations}: This is a qualitative model testing directional predictions, not a quantitative predictor of clinical death rates. The absolute percentages (87\%, 42\%, etc.) depend on model-specific rate constants and should not be interpreted as clinical predictions. Its value is in demonstrating that the proposed biochemical chain produces the expected differential sensitivity under biologically plausible parameters.
+\textbf{Model limitations}: This is a qualitative model testing directional predictions, not a quantitative predictor of clinical death rates. The absolute percentages (87\%, 42\%, etc.) depend on model-specific rate constants and should not be interpreted as clinical predictions. Its value is in demonstrating that the proposed biochemical chain produces the expected differential sensitivity under biologically plausible parameters. All $\sim$30 simulation parameters are documented with literature sources and confidence ratings. A calibration layer evaluates 5 targets against existing simulation outputs: 3 are independent calibration targets (persister RSL3 death rate, RSL3 window closure timing, MUFA protection factor) and 2 are self-consistency checks on physics parameters (PDT attenuation, SDT penetration).
 
 \subsubsection{Spatial Tumor Simulation: Depth-Dependent Energy Deposition}
 
@@ -448,6 +448,8 @@ Dead cells release labile iron to their Moore neighborhood (8-neighbors), modeli
 \label{fig:fig8_simulation_by_treatment}
 \end{figure}
 
+The spatial model treats RSL3 as uniformly distributed, but real drug concentration drops with distance from the nearest blood vessel. A tissue-specific drug penetration module using the exponential Krogh cylinder approximation (C(r) = C$_0$ $\times$ exp(-r/λ), where λ = √(D/k) is the penetration length) shows that even at the vessel wall (the highest-concentration position), tissue-specific vascular permeability reduces effective drug exposure --- yielding vessel-wall persister kill rates of 12.1\% in well-vascularized epithelial tissue, 2.6\% in poorly-vascularized tissue (pancreatic), and 1.8\% behind the blood-brain barrier (glioblastoma), with overall tumor kill rates even lower (6.6\%, 2.1\%, 1.5\% respectively). These are substantially lower than the 40\% kill rate observed in 2D culture, reinforcing the in-vitro-to-in-vivo translation gap. All transport parameters are estimated, not calibrated --- the comparison across tissue types is directionally informative, not quantitatively precise.
+
 \subsubsection{Vulnerability Window: How Long Does the Ferroptosis-Sensitive Window Stay Open?}
 
 A critical question for clinical translation is timing: how long after chemotherapy withdrawal do persister cells remain ferroptosis-sensitive? We modeled the recovery of defense pathways (FSP1, GPX4, NRF2, GSH) using exponential kinetics with literature-estimated half-times (FSP1: 7 days, GPX4: 3 days, NRF2: 5 days, GSH: 1 day) and simulated 100,000 cells per condition at each timepoint.
@@ -463,6 +465,12 @@ A critical question for clinical translation is timing: how long after chemother
 
 
 \textbf{The RSL3 vulnerability window closes within 3 days} as GPX4 is re-expressed. By one week, RSL3 is completely ineffective (0.01\%). \textbf{The SDT window remains open for at least 4 weeks} (99.5\% kill at day 28), because the exogenous ROS burst overwhelms even partially recovered antioxidant defenses. This differential has direct clinical implications: pharmacologic ferroptosis inducers require intervention within days of chemotherapy, while physical modalities offer a much wider scheduling window. To our knowledge, this is the first computational estimate of the persister ferroptosis vulnerability window duration.
+
+\subsubsection{Mechanistic Combination Modeling: Why Drug Pairs Synergize}
+
+The ferroptosis pathway has two parallel repair arms: GPX4 (GSH-dependent) and FSP1 (CoQ10-dependent). These feed into a shared antioxidant quench term that suppresses autocatalytic lipid peroxidation propagation. Depleting both arms simultaneously should produce mechanistic synergy --- the simulation lets us test this prediction quantitatively.
+
+Running pairwise combinations of four interventions (RSL3/GPX4 inhibitor, SDT/exogenous ROS, FSP1 inhibitor, HDAC inhibitor/basal ROS upregulation) on 1,000 persister cells per condition and comparing against Bliss-independent predictions reveals three synergistic pairs. RSL3 + FSP1i is the strongest (Bliss synergy score 1.99): single-agent RSL3 kills 40\% and FSP1i kills 3.7\%, but the combination kills 84.1\% --- nearly double the 42.2\% Bliss prediction. The pathway traces show why: with both GPX4 and FSP1 depleted, mean lipid peroxidation reaches 8.7 (near the 10.0 death threshold), whereas RSL3 alone only drives LP to 4.5 because intact FSP1 partially compensates. RSL3 + HDACi (1.25x) and FSP1i + HDACi (1.21x) are also synergistic. SDT combinations are merely additive because SDT alone already kills 100\% of persisters (ceiling effect). Drug potency parameters (FSP1i 85\% inhibition, HDACi 2x ROS) are estimates --- exact synergy scores depend on these assumptions, but the directional finding (dual-pathway depletion > single-pathway) is robust to parameter variation.
 
 \subsection{Other Directions The Repo Was Underweighting}
 
