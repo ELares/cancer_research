@@ -1,0 +1,13 @@
+[package]
+name = "sim-tme"
+version = "0.1.0"
+edition = "2021"
+description = "Tumor microenvironment simulation: oxygen gradients and hypoxia effects on ferroptosis"
+
+[dependencies]
+ferroptosis-core = { workspace = true }
+rand = { workspace = true }
+ndarray = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+csv = { workspace = true }
