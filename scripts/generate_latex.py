@@ -154,7 +154,7 @@ figs = {
     '11': ('fig14_tissue_mechanism_heatmap', 'Tissue-of-origin $\\times$ mechanism article counts (coverage: 62\\%).'),
     '12': ('fig15_designed_combinations', 'Classification of multi-mechanism articles into designed combinations, co-mentions, and reviews.'),
     '13': ('fig16_weighted_evidence', 'Weighted evidence score by mechanism (tier $\\times$ citation percentile $\\times$ recency).'),
-    '14': ('fig17_damp_heatmap', 'DAMP concentration field after immune coupling (O$_2$ gradient $\\lambda$=120$\\mu$m). SDT saturates the tumor field; RSL3 produces sparse hotspots.'),
+    '14': ('fig17_damp_heatmap', 'DAMP spatial distribution after immune coupling (O$_2$ gradient $\\lambda$=120$\\mu$m, per-panel scaling). SDT saturates the tumor field; RSL3 produces sparse hotspots.'),
 }
 def repl_figure(match):
     num = match.group(1)

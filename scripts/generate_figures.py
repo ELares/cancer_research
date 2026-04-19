@@ -1114,38 +1114,50 @@ def fig17_damp_heatmap():
     """3-panel DAMP concentration heatmap: Control / RSL3 / SDT."""
     print("Figure 17: DAMP concentration heatmap...")
 
-    treatments = [
-        ("control", "Control", 0, "0 immune kills"),
-        ("rsl3", "RSL3", 2, "2 immune kills"),
-        ("sdt", "SDT", 539, "539 immune kills"),
+    treatment_keys = [
+        ("control", "Control"),
+        ("rsl3", "RSL3"),
+        ("sdt", "SDT"),
     ]
 
     # Check that files exist
-    for tx_key, _, _, _ in treatments:
+    for tx_key, _ in treatment_keys:
         path = TME_DIR / f"damp_field_{tx_key}.csv"
         if not path.exists():
             print(f"  {path} not found — run sim-tme first. Skipping.")
             return
 
-    # Load all panels and find global max for shared colorbar
-    panels = []
-    for tx_key, tx_label, imm_kills, imm_text in treatments:
-        data = np.loadtxt(TME_DIR / f"damp_field_{tx_key}.csv", delimiter=",")
-        panels.append((tx_label, data, imm_kills, imm_text))
+    # Read immune kill counts from tme_summary.json (avoid hardcoding)
+    summary_path = TME_DIR / "tme_summary.json"
+    imm_kills_map = {}
+    if summary_path.exists():
+        summary = json.loads(summary_path.read_text())
+        for r in summary:
+            if r.get("immune_mode") == "immune_on":
+                imm_kills_map[r["treatment"]] = r.get("immune_kills", 0)
 
-    # Use raw u8 values (0-255, pre-normalized per-treatment by sim-tme)
-    # Re-normalize to a shared scale: divide by global max across all panels
-    global_max = max(d.max() for _, d, _, _ in panels)
-    if global_max == 0:
-        global_max = 1.0
+    # Load DAMP fields
+    # NOTE: sim-tme encodes each treatment's DAMP field independently as u8
+    # (each treatment normalized to its own max). The CSVs are NOT on the
+    # same absolute scale. We normalize each panel independently so each
+    # uses the full colormap range, and rely on the immune kill annotation
+    # for quantitative comparison.
+    panels = []
+    for tx_key, tx_label in treatment_keys:
+        data = np.loadtxt(TME_DIR / f"damp_field_{tx_key}.csv", delimiter=",")
+        imm_kills = imm_kills_map.get(tx_label, 0)
+        panels.append((tx_label, data, int(imm_kills)))
 
     fig, axes = plt.subplots(1, 3, figsize=(14, 4.5), constrained_layout=True)
 
-    for ax, (label, data, imm_kills, imm_text) in zip(axes, panels):
-        normed = data / global_max
-        im = ax.imshow(normed, cmap="inferno", vmin=0, vmax=1, aspect="equal",
-                       origin="upper")
-        ax.set_title(f"{label}\n({imm_text})", fontsize=11)
+    for ax, (label, data, imm_kills) in zip(axes, panels):
+        panel_max = data.max()
+        if panel_max == 0:
+            panel_max = 1.0
+        normed = data / panel_max
+        ax.imshow(normed, cmap="inferno", vmin=0, vmax=1, aspect="equal",
+                  origin="upper")
+        ax.set_title(f"{label}\n({imm_kills} immune kills)", fontsize=11)
         ax.set_xlabel("x (cells)")
         ax.set_xticks([0, 249, 499])
         ax.set_xticklabels(["0", "5", "10 mm"])
@@ -1154,19 +1166,15 @@ def fig17_damp_heatmap():
 
     axes[0].set_ylabel("y (cells)")
 
-    # Shared colorbar
-    cbar = fig.colorbar(im, ax=axes, shrink=0.85, pad=0.02)
-    cbar.set_label("DAMP concentration (normalized)")
-
     fig.suptitle(
-        "DAMP Concentration Field After Immune Coupling\n"
-        "(O$_2$ gradient $\\lambda$=120$\\mu$m, 500×500 grid)",
+        "DAMP Spatial Distribution After Immune Coupling\n"
+        "(O$_2$ gradient $\\lambda$=120$\\mu$m, 500×500 grid, per-panel scaling)",
         fontsize=13, y=1.04)
 
     fig.savefig(FIG_DIR / "fig17_damp_heatmap.pdf")
     fig.savefig(FIG_DIR / "fig17_damp_heatmap.png")
     plt.close()
-    print(f"  3 panels, global max DAMP value: {global_max}")
+    print(f"  3 panels, immune kills: {[p[2] for p in panels]}")
 
 
 # ============================================================
