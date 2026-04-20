@@ -633,6 +633,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "sim-tumor-pk"
+version = "0.1.0"
+dependencies = [
+ "csv",
+ "ferroptosis-core",
+ "rand",
+ "rayon",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "sim-window"
 version = "0.2.0"
 dependencies = [

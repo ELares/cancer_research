@@ -1,0 +1,13 @@
+[package]
+name = "sim-tumor-pk"
+version = "0.1.0"
+edition = "2021"
+description = "Tumor PBPK compartment model: time-varying drug exposure and ferroptosis"
+
+[dependencies]
+ferroptosis-core = { path = "../ferroptosis-core" }
+rand = { workspace = true }
+rayon = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+csv = { workspace = true }
