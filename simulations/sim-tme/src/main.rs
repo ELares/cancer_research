@@ -520,6 +520,12 @@ struct ConditionResult {
     /// Number of tumor cells receiving CAF protection.
     #[serde(skip_serializing_if = "Option::is_none")]
     stromal_adjacent_count: Option<usize>,
+    /// CAF GSH boost rate per step (None when stromal is off).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    stromal_gsh_boost: Option<f64>,
+    /// CAF MUFA boost rate per step (None when stromal is off).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    stromal_mufa_boost: Option<f64>,
 }
 
 /// Compute kill rates for three O2-defined zones:
@@ -642,6 +648,8 @@ fn main() {
             stromal_mode: None,
             stromal_adjacent_kill_rate: None,
             stromal_adjacent_count: None,
+            stromal_gsh_boost: None,
+            stromal_mufa_boost: None,
         });
 
         let label = format!("{}_uniform", tx_name);
@@ -690,6 +698,8 @@ fn main() {
                 stromal_mode: None,
                 stromal_adjacent_kill_rate: None,
                 stromal_adjacent_count: None,
+                stromal_gsh_boost: None,
+                stromal_mufa_boost: None,
             });
 
             let label = format!("{}_{}", tx_name, lambda as u64);
@@ -792,6 +802,8 @@ fn main() {
                 stromal_mode: Some("off".to_string()),
                 stromal_adjacent_kill_rate: Some(adj_rate_baseline),
                 stromal_adjacent_count: Some(stromal_adj_count),
+                stromal_gsh_boost: None,
+                stromal_mufa_boost: None,
             });
 
             let label = format!("{}_120_{}", tx_name, immune_label);
@@ -867,6 +879,8 @@ fn main() {
                 stromal_mode: Some("stromal_on".to_string()),
                 stromal_adjacent_kill_rate: Some(adj_rate),
                 stromal_adjacent_count: Some(stromal_adj_count),
+                stromal_gsh_boost: Some(stromal_cfg.gsh_boost_per_step),
+                stromal_mufa_boost: Some(stromal_cfg.mufa_boost_per_step),
             });
 
             let label = format!("{}_120_{}_stromal", tx_name, immune_label);
