@@ -49,7 +49,7 @@ The repo exists to compare therapeutic mechanisms, evidence depth, resistant-sta
 - simulation calibration: 5 targets documented, evaluate script operational
 - drug penetration module: 3 tissue types, exponential Krogh approximation
 - drug combination modeling: 4 drugs, pairwise Bliss synergy scoring with pathway traces
-- tumor microenvironment: oxygen gradients, spatial immune zones (DAMP diffusion, T cell activation, anti-PD-1), LP overshoot multiplier, CAF-mediated stromal protection (GSH/MUFA supply)
+- tumor microenvironment: oxygen gradients, spatial immune zones (DAMP diffusion, T cell activation, anti-PD-1), LP overshoot multiplier, CAF-mediated stromal protection (GSH/MUFA supply), pH gradient (iron release + drug ion trapping)
 - some landmark papers are known to be missing from the local full-text archive
 
 ## What To Optimize For

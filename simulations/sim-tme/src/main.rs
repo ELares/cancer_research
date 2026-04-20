@@ -1118,8 +1118,8 @@ fn main() {
 
     // Export pH field heatmap
     {
-        let mask_grid_ph = TumorGrid::generate(GRID_SIZE, GRID_SIZE, CELL_SIZE_UM, SEED);
-        let ph_map_vis = apply_ph_gradient(&mut { mask_grid_ph }, &ph_cfg);
+        let mut ph_vis_grid = TumorGrid::generate(GRID_SIZE, GRID_SIZE, CELL_SIZE_UM, SEED);
+        let ph_map_vis = apply_ph_gradient(&mut ph_vis_grid, &ph_cfg);
         let mut ph_hm = ndarray::Array2::<u8>::zeros((GRID_SIZE, GRID_SIZE));
         for &(r, c, ph) in &ph_map_vis {
             // Map pH 6.5-7.4 to 0-255
@@ -1140,15 +1140,16 @@ fn main() {
     // --- Print comparison table ---
     eprintln!("\n=== Comparison Table ===\n");
     eprintln!(
-        "{:<10} {:<20} {:<18} {:<12} {:>10} {:>10} {:>10} {:>10}",
-        "Treatment", "O2 Condition", "Immune", "Stromal", "Overall", "Normoxic", "Transit.", "Hypoxic"
+        "{:<10} {:<20} {:<18} {:<12} {:<8} {:>10} {:>10} {:>10} {:>10}",
+        "Treatment", "O2 Condition", "Immune", "Stromal", "pH", "Overall", "Normoxic", "Transit.", "Hypoxic"
     );
-    eprintln!("{}", "-".repeat(112));
+    eprintln!("{}", "-".repeat(120));
     for r in &all_results {
         let stromal_label = r.stromal_mode.as_deref().unwrap_or("off");
+        let ph_label = r.ph_mode.as_deref().unwrap_or("off");
         eprintln!(
-            "{:<10} {:<20} {:<18} {:<12} {:>9.1}% {:>9.1}% {:>9.1}% {:>9.1}%",
-            r.treatment, r.o2_condition, r.immune_mode, stromal_label,
+            "{:<10} {:<20} {:<18} {:<12} {:<8} {:>9.1}% {:>9.1}% {:>9.1}% {:>9.1}%",
+            r.treatment, r.o2_condition, r.immune_mode, stromal_label, ph_label,
             r.overall_kill_rate * 100.0,
             r.normoxic_kill_rate * 100.0,
             r.transition_kill_rate * 100.0,
