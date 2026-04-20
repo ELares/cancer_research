@@ -244,7 +244,81 @@ impl ImmuneConfig {
     }
 }
 
+// ============================================================
+// Stromal protection (Feature C)
+// ============================================================
+
+/// Parameters for CAF-mediated protection of stromal-adjacent tumor cells.
+/// Biology: cancer-associated fibroblasts (CAFs) supply cysteine and oleic
+/// acid to adjacent tumor cells, boosting GSH antioxidant capacity and MUFA
+/// membrane protection. All parameters are ESTIMATED — no textbook coverage
+/// exists for CAF biology. Refs: PMID 34373744 (CAF metabolic reprogramming),
+/// PMID 31813804 (ACSL3-mediated oleic acid), PMID 30842648 (MUFA ferroptosis).
+struct StromalConfig {
+    /// Per-step GSH boost for stromal-adjacent tumor cells.
+    /// GGT1-mediated cysteine supply: CAFs cleave extracellular GSH, tumor
+    /// cells reimport cysteine via SLC7A11. ~2.5× endogenous NRF2 rate (0.025).
+    gsh_boost_per_step: f64,
+    /// Maximum GSH from CAF supply (1.5× normal gsh_max of 12.0).
+    gsh_boost_cap: f64,
+    /// Per-step MUFA boost from ACSL3-mediated oleic acid uptake.
+    /// ~30% of in-vivo SCD1 rate; CAF supply is supplementary.
+    mufa_boost_per_step: f64,
+    /// Maximum MUFA from CAF supply (50% of in-vivo SCD1 max).
+    mufa_boost_cap: f64,
+}
+
+impl StromalConfig {
+    fn default() -> Self {
+        StromalConfig {
+            gsh_boost_per_step: 0.06,
+            gsh_boost_cap: 18.0,
+            mufa_boost_per_step: 0.003,
+            mufa_boost_cap: 0.25,
+        }
+    }
+}
+
+/// Compute a boolean mask: true for tumor cells with at least one stromal
+/// (is_tumor=false) Moore neighbor. These cells receive CAF-mediated protection.
+fn stromal_adjacency_mask(grid: &TumorGrid) -> Vec<bool> {
+    let n = grid.rows * grid.cols;
+    let mut mask = vec![false; n];
+    for r in 0..grid.rows {
+        for c in 0..grid.cols {
+            let idx = r * grid.cols + c;
+            if !grid.cells[idx].is_tumor {
+                continue;
+            }
+            let (neighbors, count) = grid.neighbors(r, c);
+            for &(nr, nc) in &neighbors[..count] {
+                if !grid.cells[nr * grid.cols + nc].is_tumor {
+                    mask[idx] = true;
+                    break;
+                }
+            }
+        }
+    }
+    mask
+}
+
+/// Kill rate among stromal-adjacent tumor cells only.
+fn stromal_adjacent_kill_rate(grid: &TumorGrid, mask: &[bool]) -> f64 {
+    let mut total = 0usize;
+    let mut dead = 0usize;
+    for (idx, gc) in grid.cells.iter().enumerate() {
+        if gc.is_tumor && mask[idx] {
+            total += 1;
+            if gc.state.dead {
+                dead += 1;
+            }
+        }
+    }
+    if total > 0 { dead as f64 / total as f64 } else { 0.0 }
+}
+
 /// Run spatial sim WITH immune coupling: DAMP diffusion + immune kill.
+/// Optionally applies CAF-mediated stromal protection to masked cells.
 /// Returns (ferroptosis_kills, immune_kills, final_damp_field).
 fn run_spatial_with_immune(
     grid: &mut TumorGrid,
@@ -252,6 +326,7 @@ fn run_spatial_with_immune(
     params: &Params,
     spatial_params: &SpatialParams,
     immune: &ImmuneConfig,
+    stromal: Option<(&[bool], &StromalConfig)>,
     seed: u64,
 ) -> (usize, usize, Vec<f64>) {
     let base_ros = match tx {
@@ -330,6 +405,22 @@ fn run_spatial_with_immune(
                         _ => immune.pharmacologic_overshoot,
                     };
                     damp_field[idx] += gc.lp_at_death * immune.damp_per_lp * overshoot;
+                }
+
+                // CAF-mediated protection: boost GSH and MUFA for stromal-adjacent cells.
+                // Applied AFTER sim_cell_step so the boost takes effect on the next step
+                // (biologically: cysteine/oleic acid must be transported before use).
+                if !died {
+                    if let Some((mask, cfg)) = &stromal {
+                        if mask[idx] {
+                            let gc = &mut grid.cells[idx];
+                            gc.state.gsh = (gc.state.gsh + cfg.gsh_boost_per_step)
+                                .min(cfg.gsh_boost_cap);
+                            gc.state.mufa_protection = (gc.state.mufa_protection
+                                + cfg.mufa_boost_per_step)
+                                .min(cfg.mufa_boost_cap);
+                        }
+                    }
                 }
             }
         }
@@ -420,6 +511,15 @@ struct ConditionResult {
     /// LP overshoot multiplier used for this condition (None when immune is off).
     #[serde(skip_serializing_if = "Option::is_none")]
     lp_overshoot_multiplier: Option<f64>,
+    /// Stromal protection mode: "off" or "stromal_on".
+    #[serde(skip_serializing_if = "Option::is_none")]
+    stromal_mode: Option<String>,
+    /// Kill rate among stromal-adjacent tumor cells specifically.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    stromal_adjacent_kill_rate: Option<f64>,
+    /// Number of tumor cells receiving CAF protection.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    stromal_adjacent_count: Option<usize>,
 }
 
 /// Compute kill rates for three O2-defined zones:
@@ -539,6 +639,9 @@ fn main() {
             transition_kill_rate: trans_r,
             hypoxic_kill_rate: hyp_r,
             lp_overshoot_multiplier: None,
+            stromal_mode: None,
+            stromal_adjacent_kill_rate: None,
+            stromal_adjacent_count: None,
         });
 
         let label = format!("{}_uniform", tx_name);
@@ -584,6 +687,9 @@ fn main() {
                 transition_kill_rate: trans_r,
                 hypoxic_kill_rate: hyp_r,
                 lp_overshoot_multiplier: None,
+                stromal_mode: None,
+                stromal_adjacent_kill_rate: None,
+                stromal_adjacent_count: None,
             });
 
             let label = format!("{}_{}", tx_name, lambda as u64);
@@ -626,7 +732,7 @@ fn main() {
             apply_o2_gradient(&mut grid, 120.0);
 
             let (ferr_kills, imm_kills, final_damp) = run_spatial_with_immune(
-                &mut grid, *tx, &params, &spatial_params, immune_cfg,
+                &mut grid, *tx, &params, &spatial_params, immune_cfg, None,
                 SEED.wrapping_add((*tx as u64) * 10_000_000),
             );
 
@@ -676,12 +782,113 @@ fn main() {
                 transition_kill_rate: trans_r,
                 hypoxic_kill_rate: hyp_r,
                 lp_overshoot_multiplier: Some(overshoot),
+                stromal_mode: Some("off".to_string()),
+                stromal_adjacent_kill_rate: None,
+                stromal_adjacent_count: None,
             });
 
             let label = format!("{}_120_{}", tx_name, immune_label);
             all_depth_curves.push((label, depth_kill_curve(&grid)));
         }
         eprintln!();
+    }
+
+    // --- Stromal protection (Feature C) at λ=120μm with immune_on ---
+    let stromal_cfg = StromalConfig::default();
+    // Compute adjacency mask on a fresh grid (mask is grid-geometry-dependent, not treatment-dependent)
+    let mask_grid = TumorGrid::generate(GRID_SIZE, GRID_SIZE, CELL_SIZE_UM, SEED);
+    let stromal_mask = stromal_adjacency_mask(&mask_grid);
+    let stromal_adj_count = stromal_mask.iter().filter(|&&b| b).count();
+
+    eprintln!("\n=== Stromal Protection / CAF-Mediated Shielding (O2 gradient λ=120μm) ===");
+    eprintln!("Stromal-adjacent tumor cells: {} ({:.1}% of tumor)",
+        stromal_adj_count,
+        stromal_adj_count as f64 / mask_grid.census().total_tumor as f64 * 100.0);
+    eprintln!("CAF boost: GSH +{:.3}/step (cap {:.0}), MUFA +{:.4}/step (cap {:.2})",
+        stromal_cfg.gsh_boost_per_step, stromal_cfg.gsh_boost_cap,
+        stromal_cfg.mufa_boost_per_step, stromal_cfg.mufa_boost_cap);
+    eprintln!("All parameters ESTIMATED (no textbook coverage). Refs: PMID 34373744, 31813804.\n");
+
+    let stromal_immune_modes: Vec<(&str, ImmuneConfig)> = vec![
+        ("immune_on", ImmuneConfig::default_no_pd1()),
+        ("immune_anti_pd1", ImmuneConfig::default_no_pd1().with_anti_pd1()),
+    ];
+
+    for (immune_label, immune_cfg) in &stromal_immune_modes {
+        eprintln!("--- Stromal ON + {} (brake={:.0}%) ---\n",
+            immune_label, immune_cfg.effective_brake() * 100.0);
+
+        for (tx, tx_name) in &treatments {
+            let mut grid = TumorGrid::generate(GRID_SIZE, GRID_SIZE, CELL_SIZE_UM, SEED);
+            apply_o2_gradient(&mut grid, 120.0);
+
+            let (ferr_kills, imm_kills, _final_damp) = run_spatial_with_immune(
+                &mut grid, *tx, &params, &spatial_params, &immune_cfg,
+                Some((&stromal_mask, &stromal_cfg)),
+                SEED.wrapping_add((*tx as u64) * 10_000_000),
+            );
+
+            let census = grid.census();
+            let overall = census.total_dead as f64 / census.total_tumor.max(1) as f64;
+            let (norm_r, trans_r, hyp_r) = zone_kill_rates(&grid, ZONE_REF_LAMBDA);
+            let adj_rate = stromal_adjacent_kill_rate(&grid, &stromal_mask);
+            eprintln!("  {}: overall={:.1}% (ferr={}, immune={}), normoxic={:.1}%, hypoxic={:.1}%, stromal_adj={:.1}%",
+                tx_name, overall * 100.0, ferr_kills, imm_kills,
+                norm_r * 100.0, hyp_r * 100.0, adj_rate * 100.0);
+
+            // Export death heatmap for stromal_on + immune_on
+            if *immune_label == "immune_on" {
+                let death_hm = death_heatmap(&grid);
+                let path = output_dir.join(format!("death_{}_stromal.csv", tx_name.to_lowercase()));
+                write_heatmap_csv(&path, &death_hm).expect("Failed to write stromal death heatmap");
+            }
+
+            let overshoot = match tx {
+                Treatment::SDT | Treatment::PDT => immune_cfg.physical_modality_overshoot,
+                _ => immune_cfg.pharmacologic_overshoot,
+            };
+            all_results.push(ConditionResult {
+                treatment: tx_name.to_string(),
+                o2_condition: "gradient_120um".to_string(),
+                o2_lambda_um: Some(120.0),
+                immune_mode: immune_label.to_string(),
+                total_tumor: census.total_tumor,
+                total_dead: census.total_dead,
+                ferroptosis_kills: Some(ferr_kills),
+                immune_kills: Some(imm_kills),
+                overall_kill_rate: overall,
+                normoxic_kill_rate: norm_r,
+                transition_kill_rate: trans_r,
+                hypoxic_kill_rate: hyp_r,
+                lp_overshoot_multiplier: Some(overshoot),
+                stromal_mode: Some("stromal_on".to_string()),
+                stromal_adjacent_kill_rate: Some(adj_rate),
+                stromal_adjacent_count: Some(stromal_adj_count),
+            });
+
+            let label = format!("{}_120_{}_stromal", tx_name, immune_label);
+            all_depth_curves.push((label, depth_kill_curve(&grid)));
+        }
+        eprintln!();
+    }
+
+    // Export stromal adjacency mask as heatmap (0=stromal, 1=adjacent tumor, 2=non-adjacent tumor)
+    {
+        let mut mask_hm = ndarray::Array2::<u8>::zeros((mask_grid.rows, mask_grid.cols));
+        for r in 0..mask_grid.rows {
+            for c in 0..mask_grid.cols {
+                let idx = r * mask_grid.cols + c;
+                if !mask_grid.cells[idx].is_tumor {
+                    mask_hm[[r, c]] = 0;
+                } else if stromal_mask[idx] {
+                    mask_hm[[r, c]] = 1;
+                } else {
+                    mask_hm[[r, c]] = 2;
+                }
+            }
+        }
+        let path = output_dir.join("stromal_mask.csv");
+        write_heatmap_csv(&path, &mask_hm).expect("Failed to write stromal mask");
     }
 
     // --- Write aggregated outputs ---
