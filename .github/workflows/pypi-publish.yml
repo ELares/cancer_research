@@ -29,6 +29,8 @@ jobs:
           - { os: windows-latest, target: x86_64-pc-windows-msvc }
     steps:
       - uses: actions/checkout@v4
+        with:
+          sparse-checkout: simulations
 
       - uses: actions/setup-python@v5
         with:
@@ -51,6 +53,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          sparse-checkout: simulations
 
       - uses: PyO3/maturin-action@v1
         with:
@@ -75,6 +79,8 @@ jobs:
           - { os: windows-latest, target: x86_64-pc-windows-msvc }
     steps:
       - uses: actions/checkout@v4
+        with:
+          sparse-checkout: simulations
 
       - uses: actions/setup-python@v5
         with:
