@@ -58,6 +58,14 @@ pub struct Params {
 
     // === Death ===
     pub death_threshold: f64,
+
+    /// Number of simulation steps to continue after LP crosses the death
+    /// threshold. During post-death steps, LP continues to accumulate via
+    /// the autocatalytic chain reaction with zero repair (defenses have
+    /// failed). This makes LP at death treatment-dependent: high-ROS
+    /// treatments (SDT/PDT) drive LP to ~14 (5 steps), while slow-
+    /// accumulation treatments (RSL3) barely exceed ~10.5.
+    pub post_death_steps: u32,
 }
 
 impl Default for Params {
@@ -83,6 +91,7 @@ impl Default for Params {
             gsh_max: 12.0,
             gpx4_nrf2_target_multiplier: 1.0,
             death_threshold: 10.0,
+            post_death_steps: 5,
         }
     }
 }

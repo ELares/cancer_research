@@ -151,8 +151,15 @@ fn run_spatial(
         for r in 0..rows {
             for c in 0..cols {
                 let idx = r * cols + c;
-                if grid.cells[idx].state.dead || !grid.cells[idx].is_tumor {
+                if !grid.cells[idx].is_tumor {
                     continue;
+                }
+                if grid.cells[idx].state.dead {
+                    if let Some(ds) = grid.cells[idx].state.death_step {
+                        if step >= ds + params.post_death_steps { continue; }
+                    } else {
+                        continue;
+                    }
                 }
 
                 let mut rng = StdRng::seed_from_u64(
@@ -176,6 +183,10 @@ fn run_spatial(
 
                 if died {
                     gc.newly_dead = true;
+                    gc.lp_at_death = gc.state.lp;
+                }
+                // Update lp_at_death during grace period
+                if gc.state.dead {
                     gc.lp_at_death = gc.state.lp;
                 }
             }
@@ -208,13 +219,8 @@ struct ImmuneConfig {
     pd1_brake: f64,
     /// Anti-PD-1 efficacy (fraction of brake removed).
     anti_pd1_efficacy: f64,
-    /// LP overshoot multiplier for physical modalities (SDT/PDT).
-    /// Estimates the post-threshold LP cascade: LP reaches ~2× threshold
-    /// for high-ROS treatments (Biology2e Ch.7-8: autocatalytic propagation).
-    physical_modality_overshoot: f64,
-    /// LP overshoot multiplier for pharmacologic treatments (RSL3, Control).
-    /// Minimal momentum past threshold for slow LP accumulation.
-    pharmacologic_overshoot: f64,
+    // LP overshoot is now emergent from ferroptosis-core post-death dynamics
+    // (post_death_steps in Params). Option C multiplier removed (issue #85).
 }
 
 impl ImmuneConfig {
@@ -227,8 +233,6 @@ impl ImmuneConfig {
             immune_kill_rate: 0.02,
             pd1_brake: 0.7,
             anti_pd1_efficacy: 0.0,
-            physical_modality_overshoot: 2.0,
-            pharmacologic_overshoot: 1.05,
         }
     }
 
@@ -483,8 +487,25 @@ fn run_spatial_with_immune(
         for r in 0..rows {
             for c in 0..cols {
                 let idx = r * cols + c;
-                if grid.cells[idx].state.dead || !grid.cells[idx].is_tumor {
+                if !grid.cells[idx].is_tumor {
                     continue;
+                }
+                if grid.cells[idx].state.dead {
+                    // Post-death grace period: LP continues accumulating
+                    if let Some(ds) = grid.cells[idx].state.death_step {
+                        let grace_end = ds + params.post_death_steps;
+                        if step == grace_end {
+                            // Grace period just ended: release DAMP with accumulated LP
+                            grid.cells[idx].lp_at_death = grid.cells[idx].state.lp;
+                            damp_field[idx] += grid.cells[idx].lp_at_death * immune.damp_per_lp;
+                        }
+                        if step >= grace_end {
+                            continue; // fully dead
+                        }
+                        // In grace period: fall through to sim_cell_step
+                    } else {
+                        continue;
+                    }
                 }
 
                 let mut rng = StdRng::seed_from_u64(
@@ -505,24 +526,13 @@ fn run_spatial_with_immune(
                     gc.newly_dead = true;
                     gc.lp_at_death = gc.state.lp;
                     ferroptosis_kills += 1;
-                    // Release DAMPs into the field
-                    // LP overshoot: biologically, the autocatalytic LP cascade
-                    // continues 1-3 steps post-threshold for high-ROS treatments
-                    // (Biology2e Ch.7-8: chain reaction propagation). SDT/PDT drive
-                    // LP to ~20 (2× threshold) while RSL3 barely exceeds ~10.5.
-                    // This is an estimated multiplier (Option C from issue #82);
-                    // Option A (emergent overshoot from dynamics) is a follow-up.
-                    let overshoot = match tx {
-                        Treatment::SDT | Treatment::PDT => immune.physical_modality_overshoot,
-                        _ => immune.pharmacologic_overshoot,
-                    };
-                    damp_field[idx] += gc.lp_at_death * immune.damp_per_lp * overshoot;
+                    // DAMP release is deferred until the post-death grace
+                    // period ends (emergent LP overshoot, issue #85).
+                    // Iron diffusion still happens immediately via newly_dead.
                 }
 
-                // CAF-mediated protection: boost GSH and MUFA for stromal-adjacent cells.
-                // Applied AFTER sim_cell_step so the boost takes effect on the next step
-                // (biologically: cysteine/oleic acid must be transported before use).
-                if !died {
+                // CAF-mediated protection for alive cells only (not dead/grace period)
+                if !died && !gc.state.dead {
                     if let Some((mask, cfg)) = &stromal {
                         if mask[idx] {
                             let gc = &mut grid.cells[idx];
@@ -599,6 +609,21 @@ fn run_spatial_with_immune(
         }
     }
 
+    // Release DAMP for cells whose grace period extends past the simulation
+    // (e.g., cells dying at step 176+ with 5 post-death steps).
+    for idx in 0..n_cells {
+        if grid.cells[idx].is_tumor && grid.cells[idx].state.dead {
+            if let Some(ds) = grid.cells[idx].state.death_step {
+                let grace_end = ds + params.post_death_steps;
+                if grace_end >= N_STEPS {
+                    // Grace period wasn't completed in the loop — release DAMP now
+                    grid.cells[idx].lp_at_death = grid.cells[idx].state.lp;
+                    damp_field[idx] += grid.cells[idx].lp_at_death * immune.damp_per_lp;
+                }
+            }
+        }
+    }
+
     (ferroptosis_kills, immune_kills, damp_field)
 }
 
@@ -620,9 +645,8 @@ struct ConditionResult {
     normoxic_kill_rate: f64,
     transition_kill_rate: f64,
     hypoxic_kill_rate: f64,
-    /// LP overshoot multiplier used for this condition (None when immune is off).
-    #[serde(skip_serializing_if = "Option::is_none")]
-    lp_overshoot_multiplier: Option<f64>,
+    // lp_overshoot_multiplier removed — overshoot is now emergent from
+    // ferroptosis-core post_death_steps (issue #85).
     /// Stromal protection mode: "off" or "stromal_on".
     #[serde(skip_serializing_if = "Option::is_none")]
     stromal_mode: Option<String>,
@@ -774,7 +798,6 @@ fn main() {
             normoxic_kill_rate: norm_r,
             transition_kill_rate: trans_r,
             hypoxic_kill_rate: hyp_r,
-            lp_overshoot_multiplier: None,
             stromal_mode: None,
             stromal_adjacent_kill_rate: None,
             stromal_adjacent_count: None,
@@ -830,7 +853,6 @@ fn main() {
                 normoxic_kill_rate: norm_r,
                 transition_kill_rate: trans_r,
                 hypoxic_kill_rate: hyp_r,
-                lp_overshoot_multiplier: None,
                 stromal_mode: None,
                 stromal_adjacent_kill_rate: None,
                 stromal_adjacent_count: None,
@@ -923,10 +945,6 @@ fn main() {
                 write_heatmap_csv(&path, &death_hm).expect("Failed to write death heatmap");
             }
 
-            let overshoot = match tx {
-                Treatment::SDT | Treatment::PDT => immune_cfg.physical_modality_overshoot,
-                _ => immune_cfg.pharmacologic_overshoot,
-            };
             all_results.push(ConditionResult {
                 treatment: tx_name.to_string(),
                 o2_condition: "gradient_120um".to_string(),
@@ -940,7 +958,6 @@ fn main() {
                 normoxic_kill_rate: norm_r,
                 transition_kill_rate: trans_r,
                 hypoxic_kill_rate: hyp_r,
-                lp_overshoot_multiplier: Some(overshoot),
                 stromal_mode: Some("off".to_string()),
                 stromal_adjacent_kill_rate: Some(adj_rate_baseline),
                 stromal_adjacent_count: Some(stromal_adj_count),
@@ -1006,10 +1023,6 @@ fn main() {
                 write_heatmap_csv(&path, &death_hm).expect("Failed to write stromal death heatmap");
             }
 
-            let overshoot = match tx {
-                Treatment::SDT | Treatment::PDT => immune_cfg.physical_modality_overshoot,
-                _ => immune_cfg.pharmacologic_overshoot,
-            };
             all_results.push(ConditionResult {
                 treatment: tx_name.to_string(),
                 o2_condition: "gradient_120um".to_string(),
@@ -1023,7 +1036,6 @@ fn main() {
                 normoxic_kill_rate: norm_r,
                 transition_kill_rate: trans_r,
                 hypoxic_kill_rate: hyp_r,
-                lp_overshoot_multiplier: Some(overshoot),
                 stromal_mode: Some("stromal_on".to_string()),
                 stromal_adjacent_kill_rate: Some(adj_rate),
                 stromal_adjacent_count: Some(stromal_adj_count),
@@ -1104,10 +1116,6 @@ fn main() {
         let path = output_dir.join(format!("death_{}_ph.csv", tx_name.to_lowercase()));
         write_heatmap_csv(&path, &death_hm).expect("Failed to write pH death heatmap");
 
-        let overshoot = match tx {
-            Treatment::SDT | Treatment::PDT => immune_for_ph.physical_modality_overshoot,
-            _ => immune_for_ph.pharmacologic_overshoot,
-        };
         all_results.push(ConditionResult {
             treatment: tx_name.to_string(),
             o2_condition: "gradient_120um".to_string(),
@@ -1121,7 +1129,6 @@ fn main() {
             normoxic_kill_rate: norm_r,
             transition_kill_rate: trans_r,
             hypoxic_kill_rate: hyp_r,
-            lp_overshoot_multiplier: Some(overshoot),
             stromal_mode: None,
             stromal_adjacent_kill_rate: Some(adj_rate),
             stromal_adjacent_count: Some(stromal_adj_count),
