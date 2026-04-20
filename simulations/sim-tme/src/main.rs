@@ -317,8 +317,98 @@ fn stromal_adjacent_kill_rate(grid: &TumorGrid, mask: &[bool]) -> f64 {
     if total > 0 { dead as f64 / total as f64 } else { 0.0 }
 }
 
+// ============================================================
+// pH gradient and ion trapping (Feature D)
+// ============================================================
+
+/// Parameters for tumor acidic pH gradient.
+/// Biology: glycolytic tumors produce lactic acid (Warburg effect), lowering
+/// extracellular pH to 6.5-6.8 in the core. Two competing effects on ferroptosis:
+/// 1. Iron release: low pH destabilizes ferritin → more Fenton ROS (pro-ferroptosis)
+/// 2. Drug ion trapping: weak-base drugs protonated at low pH → less intracellular
+///    drug (anti-ferroptosis). Governed by Henderson-Hasselbalch (Chemistry2e Sec.14.2).
+///
+/// All parameters ESTIMATED. Tumor pH ranges from primary literature (Stubbs 2000,
+/// Gatenby & Gillies 2004). Ferritin iron release from Harrison & Arosio 1996.
+/// Warburg effect not covered in any reference textbook (Biology2e describes lactic
+/// acid fermentation only in anaerobic contexts). RSL3 pKa is not well-characterized
+/// (chloroacetamide, not a classic weak base) — ion_trap_sensitivity is the most
+/// uncertain parameter in this model.
+struct PhConfig {
+    /// pH at tumor edge (well-perfused, normal arterial blood).
+    ph_edge: f64,
+    /// pH at deep tumor core (Warburg effect lactic acid accumulation).
+    ph_core: f64,
+    /// pH penetration length (μm). Matches O2 reference λ; both are perfusion-limited.
+    lambda_ph_um: f64,
+    /// Iron-pH sensitivity: ferritin releases stored Fe²⁺ at low pH.
+    /// iron_multiplier = 1.0 + sensitivity * (ph_edge - local_ph).
+    /// At pH 6.5: 1.0 + 1.5 * 0.9 = 2.35× iron.
+    iron_ph_sensitivity: f64,
+    /// Ion trapping sensitivity for weak-base drugs (RSL3 only).
+    /// drug_factor = 1.0 - sensitivity * (ph_edge - local_ph), clamped [0.3, 1.0].
+    /// At pH 6.5: 1.0 - 0.4 * 0.9 = 0.64 (36% drug lost).
+    /// Linearized Henderson-Hasselbalch; valid over narrow pH 6.5-7.4 range.
+    ion_trap_sensitivity: f64,
+}
+
+impl PhConfig {
+    fn default() -> Self {
+        PhConfig {
+            ph_edge: 7.4,
+            ph_core: 6.5,
+            lambda_ph_um: 120.0,
+            iron_ph_sensitivity: 1.5,
+            ion_trap_sensitivity: 0.4,
+        }
+    }
+}
+
+/// Compute steady-state pH field and apply iron modulation.
+/// pH decreases inward: pH(d) = ph_edge - delta * (1 - exp(-d/λ)).
+/// Modifies cell.iron in place (ferritin destabilization at low pH).
+/// Returns Vec of (row, col, local_ph) for RSL3 GPX4 correction and heatmap.
+fn apply_ph_gradient(grid: &mut TumorGrid, cfg: &PhConfig) -> Vec<(usize, usize, f64)> {
+    let rows = grid.rows;
+    let cols = grid.cols;
+    let cell_size = grid.cell_size_um;
+    let center_r = rows as f64 / 2.0;
+    let center_c = cols as f64 / 2.0;
+    let tumor_radius = (rows.min(cols) as f64) * 0.45;
+    let ph_drop = cfg.ph_edge - cfg.ph_core;
+
+    let mut ph_map = Vec::with_capacity(rows * cols);
+
+    for r in 0..rows {
+        for c in 0..cols {
+            let gc = grid.get_mut(r, c);
+            if !gc.is_tumor {
+                ph_map.push((r, c, cfg.ph_edge));
+                continue;
+            }
+
+            let dist_from_center =
+                ((r as f64 - center_r).powi(2) + (c as f64 - center_c).powi(2)).sqrt();
+            let depth_from_edge_um =
+                (tumor_radius - dist_from_center).max(0.0) * cell_size;
+
+            let local_ph = cfg.ph_edge
+                - ph_drop * (1.0 - (-depth_from_edge_um / cfg.lambda_ph_um).exp());
+            let local_ph = local_ph.clamp(cfg.ph_core, cfg.ph_edge);
+
+            // Iron modulation: ferritin destabilization at low pH
+            let iron_multiplier = 1.0 + cfg.iron_ph_sensitivity * (cfg.ph_edge - local_ph);
+            gc.cell.iron *= iron_multiplier;
+
+            ph_map.push((r, c, local_ph));
+        }
+    }
+
+    ph_map
+}
+
 /// Run spatial sim WITH immune coupling: DAMP diffusion + immune kill.
-/// Optionally applies CAF-mediated stromal protection to masked cells.
+/// Optionally applies CAF-mediated stromal protection and pH ion trapping.
 /// Returns (ferroptosis_kills, immune_kills, final_damp_field).
 fn run_spatial_with_immune(
     grid: &mut TumorGrid,
@@ -327,6 +417,7 @@ fn run_spatial_with_immune(
     spatial_params: &SpatialParams,
     immune: &ImmuneConfig,
     stromal: Option<(&[bool], &StromalConfig)>,
+    ph: Option<(&[(usize, usize, f64)], &PhConfig)>,
     seed: u64,
 ) -> (usize, usize, Vec<f64>) {
     let base_ros = match tx {
@@ -356,6 +447,27 @@ fn run_spatial_with_immune(
             gc.extra_iron = 0.0;
             gc.newly_dead = false;
             gc.lp_at_death = 0.0;
+        }
+    }
+
+    // pH-dependent RSL3 ion trapping: partially restore GPX4 for cells in
+    // acidic zones. Drug availability decreases at low pH (Henderson-Hasselbalch,
+    // Chemistry2e Sec.14.2), reducing effective GPX4 inhibition.
+    if let Some((ph_map, ph_cfg)) = &ph {
+        if tx == Treatment::RSL3 {
+            for &(r, c, local_ph) in ph_map.iter() {
+                let idx = r * cols + c;
+                if !grid.cells[idx].is_tumor {
+                    continue;
+                }
+                let drug_factor = (1.0
+                    - ph_cfg.ion_trap_sensitivity * (ph_cfg.ph_edge - local_ph))
+                    .clamp(0.3, 1.0);
+                // Correct GPX4: from (1-inhib) to (1-inhib*drug_factor)
+                let correction = (1.0 - params.rsl3_gpx4_inhib * drug_factor)
+                    / (1.0 - params.rsl3_gpx4_inhib);
+                grid.cells[idx].state.gpx4 *= correction;
+            }
         }
     }
 
@@ -526,6 +638,15 @@ struct ConditionResult {
     /// CAF MUFA boost rate per step (None when stromal is off).
     #[serde(skip_serializing_if = "Option::is_none")]
     stromal_mufa_boost: Option<f64>,
+    /// pH gradient mode: "off" or "ph_on".
+    #[serde(skip_serializing_if = "Option::is_none")]
+    ph_mode: Option<String>,
+    /// pH iron sensitivity parameter (None when pH is off).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    ph_iron_sensitivity: Option<f64>,
+    /// pH ion trapping sensitivity (None when pH is off).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    ph_ion_trap_sensitivity: Option<f64>,
 }
 
 /// Compute kill rates for three O2-defined zones:
@@ -650,6 +771,9 @@ fn main() {
             stromal_adjacent_count: None,
             stromal_gsh_boost: None,
             stromal_mufa_boost: None,
+            ph_mode: None,
+            ph_iron_sensitivity: None,
+            ph_ion_trap_sensitivity: None,
         });
 
         let label = format!("{}_uniform", tx_name);
@@ -700,6 +824,9 @@ fn main() {
                 stromal_adjacent_count: None,
                 stromal_gsh_boost: None,
                 stromal_mufa_boost: None,
+                ph_mode: None,
+                ph_iron_sensitivity: None,
+                ph_ion_trap_sensitivity: None,
             });
 
             let label = format!("{}_{}", tx_name, lambda as u64);
@@ -748,7 +875,7 @@ fn main() {
             apply_o2_gradient(&mut grid, 120.0);
 
             let (ferr_kills, imm_kills, final_damp) = run_spatial_with_immune(
-                &mut grid, *tx, &params, &spatial_params, immune_cfg, None,
+                &mut grid, *tx, &params, &spatial_params, immune_cfg, None, None,
                 SEED.wrapping_add((*tx as u64) * 10_000_000),
             );
 
@@ -804,6 +931,9 @@ fn main() {
                 stromal_adjacent_count: Some(stromal_adj_count),
                 stromal_gsh_boost: None,
                 stromal_mufa_boost: None,
+                ph_mode: None,
+                ph_iron_sensitivity: None,
+                ph_ion_trap_sensitivity: None,
             });
 
             let label = format!("{}_120_{}", tx_name, immune_label);
@@ -839,7 +969,7 @@ fn main() {
 
             let (ferr_kills, imm_kills, _final_damp) = run_spatial_with_immune(
                 &mut grid, *tx, &params, &spatial_params, &immune_cfg,
-                Some((&stromal_mask, &stromal_cfg)),
+                Some((&stromal_mask, &stromal_cfg)), None,
                 SEED.wrapping_add((*tx as u64) * 10_000_000),
             );
 
@@ -881,6 +1011,9 @@ fn main() {
                 stromal_adjacent_count: Some(stromal_adj_count),
                 stromal_gsh_boost: Some(stromal_cfg.gsh_boost_per_step),
                 stromal_mufa_boost: Some(stromal_cfg.mufa_boost_per_step),
+                ph_mode: None,
+                ph_iron_sensitivity: None,
+                ph_ion_trap_sensitivity: None,
             });
 
             let label = format!("{}_120_{}_stromal", tx_name, immune_label);
@@ -906,6 +1039,95 @@ fn main() {
         }
         let path = output_dir.join("stromal_mask.csv");
         write_heatmap_csv(&path, &mask_hm).expect("Failed to write stromal mask");
+    }
+
+    // --- pH gradient (Feature D) at λ=120μm with immune_on ---
+    let ph_cfg = PhConfig::default();
+    let immune_for_ph = ImmuneConfig::default_no_pd1();
+
+    eprintln!("\n=== pH Gradient / Ion Trapping (O2 gradient λ=120μm, immune_on) ===");
+    eprintln!("pH range: {:.1} (edge) → {:.1} (core), λ_pH={:.0}μm",
+        ph_cfg.ph_edge, ph_cfg.ph_core, ph_cfg.lambda_ph_um);
+    eprintln!("Iron sensitivity: {:.1} (→ {:.2}× at pH {:.1})",
+        ph_cfg.iron_ph_sensitivity,
+        1.0 + ph_cfg.iron_ph_sensitivity * (ph_cfg.ph_edge - ph_cfg.ph_core),
+        ph_cfg.ph_core);
+    eprintln!("Ion trapping: {:.1} (→ {:.0}% drug loss at pH {:.1}, RSL3 only)",
+        ph_cfg.ion_trap_sensitivity,
+        ph_cfg.ion_trap_sensitivity * (ph_cfg.ph_edge - ph_cfg.ph_core) * 100.0,
+        ph_cfg.ph_core);
+    eprintln!("All parameters ESTIMATED. Henderson-Hasselbalch: Chemistry2e Sec.14.2.");
+    eprintln!("Warburg effect, ferritin iron release: primary literature only.\n");
+
+    for (tx, tx_name) in &treatments {
+        let mut grid = TumorGrid::generate(GRID_SIZE, GRID_SIZE, CELL_SIZE_UM, SEED);
+        apply_o2_gradient(&mut grid, 120.0);
+        let ph_map = apply_ph_gradient(&mut grid, &ph_cfg);
+
+        let (ferr_kills, imm_kills, _final_damp) = run_spatial_with_immune(
+            &mut grid, *tx, &params, &spatial_params, &immune_for_ph,
+            None, Some((&ph_map, &ph_cfg)),
+            SEED.wrapping_add((*tx as u64) * 10_000_000),
+        );
+
+        let census = grid.census();
+        let overall = census.total_dead as f64 / census.total_tumor.max(1) as f64;
+        let (norm_r, trans_r, hyp_r) = zone_kill_rates(&grid, ZONE_REF_LAMBDA);
+        let adj_rate = stromal_adjacent_kill_rate(&grid, &stromal_mask);
+        eprintln!("  {}: overall={:.1}% (ferr={}, immune={}), normoxic={:.1}%, hypoxic={:.1}%",
+            tx_name, overall * 100.0, ferr_kills, imm_kills,
+            norm_r * 100.0, hyp_r * 100.0);
+
+        // Export death heatmap
+        let death_hm = death_heatmap(&grid);
+        let path = output_dir.join(format!("death_{}_ph.csv", tx_name.to_lowercase()));
+        write_heatmap_csv(&path, &death_hm).expect("Failed to write pH death heatmap");
+
+        let overshoot = match tx {
+            Treatment::SDT | Treatment::PDT => immune_for_ph.physical_modality_overshoot,
+            _ => immune_for_ph.pharmacologic_overshoot,
+        };
+        all_results.push(ConditionResult {
+            treatment: tx_name.to_string(),
+            o2_condition: "gradient_120um".to_string(),
+            o2_lambda_um: Some(120.0),
+            immune_mode: "immune_on".to_string(),
+            total_tumor: census.total_tumor,
+            total_dead: census.total_dead,
+            ferroptosis_kills: Some(ferr_kills),
+            immune_kills: Some(imm_kills),
+            overall_kill_rate: overall,
+            normoxic_kill_rate: norm_r,
+            transition_kill_rate: trans_r,
+            hypoxic_kill_rate: hyp_r,
+            lp_overshoot_multiplier: Some(overshoot),
+            stromal_mode: None,
+            stromal_adjacent_kill_rate: Some(adj_rate),
+            stromal_adjacent_count: Some(stromal_adj_count),
+            stromal_gsh_boost: None,
+            stromal_mufa_boost: None,
+            ph_mode: Some("ph_on".to_string()),
+            ph_iron_sensitivity: Some(ph_cfg.iron_ph_sensitivity),
+            ph_ion_trap_sensitivity: Some(ph_cfg.ion_trap_sensitivity),
+        });
+
+        let label = format!("{}_120_immune_on_ph", tx_name);
+        all_depth_curves.push((label, depth_kill_curve(&grid)));
+    }
+    eprintln!();
+
+    // Export pH field heatmap
+    {
+        let mask_grid_ph = TumorGrid::generate(GRID_SIZE, GRID_SIZE, CELL_SIZE_UM, SEED);
+        let ph_map_vis = apply_ph_gradient(&mut { mask_grid_ph }, &ph_cfg);
+        let mut ph_hm = ndarray::Array2::<u8>::zeros((GRID_SIZE, GRID_SIZE));
+        for &(r, c, ph) in &ph_map_vis {
+            // Map pH 6.5-7.4 to 0-255
+            let normed = ((ph - ph_cfg.ph_core) / (ph_cfg.ph_edge - ph_cfg.ph_core)).clamp(0.0, 1.0);
+            ph_hm[[r, c]] = (normed * 255.0).round() as u8;
+        }
+        let path = output_dir.join("ph_field.csv");
+        write_heatmap_csv(&path, &ph_hm).expect("Failed to write pH heatmap");
     }
 
     // --- Write aggregated outputs ---
