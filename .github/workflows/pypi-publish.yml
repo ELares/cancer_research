@@ -32,7 +32,10 @@ jobs:
         with:
           sparse-checkout: simulations
 
+      # setup-python only needed for macOS/Windows (host builds).
+      # Linux manylinux builds use a Docker container with Python built in.
       - uses: actions/setup-python@v5
+        if: runner.os != 'Linux'
         with:
           python-version: '3.12'
 
