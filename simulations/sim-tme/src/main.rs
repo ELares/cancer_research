@@ -901,14 +901,15 @@ fn main() {
     // --- Print comparison table ---
     eprintln!("\n=== Comparison Table ===\n");
     eprintln!(
-        "{:<10} {:<20} {:<18} {:>10} {:>10} {:>10} {:>10}",
-        "Treatment", "O2 Condition", "Immune", "Overall", "Normoxic", "Transit.", "Hypoxic"
+        "{:<10} {:<20} {:<18} {:<12} {:>10} {:>10} {:>10} {:>10}",
+        "Treatment", "O2 Condition", "Immune", "Stromal", "Overall", "Normoxic", "Transit.", "Hypoxic"
     );
-    eprintln!("{}", "-".repeat(100));
+    eprintln!("{}", "-".repeat(112));
     for r in &all_results {
+        let stromal_label = r.stromal_mode.as_deref().unwrap_or("off");
         eprintln!(
-            "{:<10} {:<20} {:<18} {:>9.1}% {:>9.1}% {:>9.1}% {:>9.1}%",
-            r.treatment, r.o2_condition, r.immune_mode,
+            "{:<10} {:<20} {:<18} {:<12} {:>9.1}% {:>9.1}% {:>9.1}% {:>9.1}%",
+            r.treatment, r.o2_condition, r.immune_mode, stromal_label,
             r.overall_kill_rate * 100.0,
             r.normoxic_kill_rate * 100.0,
             r.transition_kill_rate * 100.0,
