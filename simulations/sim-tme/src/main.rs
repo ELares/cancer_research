@@ -647,6 +647,15 @@ struct ConditionResult {
     /// pH ion trapping sensitivity (None when pH is off).
     #[serde(skip_serializing_if = "Option::is_none")]
     ph_ion_trap_sensitivity: Option<f64>,
+    /// pH at tumor edge (None when pH is off).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    ph_edge: Option<f64>,
+    /// pH at tumor core (None when pH is off).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    ph_core: Option<f64>,
+    /// pH penetration length in μm (None when pH is off).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    ph_lambda_um: Option<f64>,
 }
 
 /// Compute kill rates for three O2-defined zones:
@@ -774,6 +783,9 @@ fn main() {
             ph_mode: None,
             ph_iron_sensitivity: None,
             ph_ion_trap_sensitivity: None,
+            ph_edge: None,
+            ph_core: None,
+            ph_lambda_um: None,
         });
 
         let label = format!("{}_uniform", tx_name);
@@ -827,6 +839,9 @@ fn main() {
                 ph_mode: None,
                 ph_iron_sensitivity: None,
                 ph_ion_trap_sensitivity: None,
+                ph_edge: None,
+                ph_core: None,
+                ph_lambda_um: None,
             });
 
             let label = format!("{}_{}", tx_name, lambda as u64);
@@ -934,6 +949,9 @@ fn main() {
                 ph_mode: None,
                 ph_iron_sensitivity: None,
                 ph_ion_trap_sensitivity: None,
+                ph_edge: None,
+                ph_core: None,
+                ph_lambda_um: None,
             });
 
             let label = format!("{}_120_{}", tx_name, immune_label);
@@ -1014,6 +1032,9 @@ fn main() {
                 ph_mode: None,
                 ph_iron_sensitivity: None,
                 ph_ion_trap_sensitivity: None,
+                ph_edge: None,
+                ph_core: None,
+                ph_lambda_um: None,
             });
 
             let label = format!("{}_120_{}_stromal", tx_name, immune_label);
@@ -1109,6 +1130,9 @@ fn main() {
             ph_mode: Some("ph_on".to_string()),
             ph_iron_sensitivity: Some(ph_cfg.iron_ph_sensitivity),
             ph_ion_trap_sensitivity: Some(ph_cfg.ion_trap_sensitivity),
+            ph_edge: Some(ph_cfg.ph_edge),
+            ph_core: Some(ph_cfg.ph_core),
+            ph_lambda_um: Some(ph_cfg.lambda_ph_um),
         });
 
         let label = format!("{}_120_immune_on_ph", tx_name);
