@@ -35,7 +35,7 @@ Three simulation findings that, if validated experimentally, would have translat
 
 1. **RSL3 + FSP1 inhibitor produces 1.99× Bliss synergy** through dual-pathway depletion — depleting both GPX4 and FSP1 repair pathways simultaneously drops antioxidant defense below the autocatalytic lipid peroxidation threshold.
 
-2. **Tumor hypoxia devastates pharmacologic ferroptosis inducers but barely affects physical modalities.** Under oxygen gradients, RSL3 kill collapses from 3.7% to 0.1% (depends on mitochondrial ROS, which requires O2). SDT maintains 87.8% kill (delivers exogenous ROS, less O2-dependent). Adding spatial immune coupling, SDT's dense kill field generates 270× more immune kills than RSL3, and anti-PD-1 amplifies this 2.8×. This differential is robust across all tested O2 penetration lengths.
+2. **The tumor microenvironment selectively favors physical over pharmacologic ferroptosis inducers.** Hypoxia collapses RSL3 kill from 3.7% to 0.1%; SDT maintains 87.8% (less O2-dependent). CAF-mediated stromal shielding halves RSL3's peripheral kill rate (3.0% to 1.5%) but barely affects SDT (96.1% to 91.1%). SDT's dense kill field also generates 270× more immune kills than RSL3, amplified 2.8× by anti-PD-1. Two resistance mechanisms (hypoxia, stromal) and one amplification effect (immune coupling) all favor physical modalities.
 
 3. **Tissue-specific drug penetration creates a substantial in-vitro-to-in-vivo gap.** RSL3-like drug kill drops from 40% (2D culture) to 12.1% (well-vascularized) to 2.6% (poorly-vascularized) to 1.8% (CNS/BBB) — even at the blood vessel wall.
 
