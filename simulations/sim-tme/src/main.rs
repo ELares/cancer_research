@@ -853,7 +853,7 @@ fn main() {
                 normoxic_kill_rate: norm_r,
                 transition_kill_rate: trans_r,
                 hypoxic_kill_rate: hyp_r,
-                    stromal_mode: None,
+                stromal_mode: None,
                 stromal_adjacent_kill_rate: None,
                 stromal_adjacent_count: None,
                 stromal_gsh_boost: None,
