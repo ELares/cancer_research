@@ -99,6 +99,25 @@ pub fn sim_cell_step(
     rng: &mut StdRng,
 ) -> bool {
     if state.dead {
+        // Post-death LP accumulation: the autocatalytic chain reaction
+        // continues for post_death_steps after the threshold is crossed.
+        // No repair (cell defenses have failed), only ROS → LP.
+        if let Some(ds) = state.death_step {
+            if step < ds + params.post_death_steps {
+                let effective_iron = cell.iron + extra_iron;
+                let fenton = effective_iron * params.fenton_rate * norm(rng, 1.0, 0.08).max(0.0);
+                let exo = if step < 30 {
+                    state.exo_ros_peak * norm(rng, 1.0, 0.1).max(0.0)
+                } else {
+                    state.exo_ros_peak * 0.5_f64.powf((step - 30) as f64 / 15.0)
+                };
+                let total_ros = cell.basal_ros + exo + fenton;
+                let effective_unsat = cell.lipid_unsat; // no MUFA protection
+                let lp_direct = total_ros * effective_unsat * params.lp_rate;
+                let lp_propagation = state.lp * effective_unsat * params.lp_propagation;
+                state.lp += lp_direct + lp_propagation;
+            }
+        }
         return false;
     }
 
@@ -179,6 +198,7 @@ pub fn sim_cell(
     let mut gsh = cell.gsh;
     let mut gpx4 = cell.gpx4;
     let fsp1 = cell.fsp1;
+    let mut death_step: Option<u32> = None;
     let mut mufa_protection = params.initial_mufa_protection;
     let mut lp: f64 = 0.0;
 
@@ -195,7 +215,7 @@ pub fn sim_cell(
     }
 
     for step in 0..180_u32 {
-        // === ROS SOURCES ===
+        // === ROS SOURCES (used by both alive and post-death paths) ===
         let fenton = cell.iron * params.fenton_rate * norm(rng, 1.0, 0.08).max(0.0);
         let exo = if step < 30 {
             exo_ros_peak * norm(rng, 1.0, 0.1).max(0.0)
@@ -203,6 +223,18 @@ pub fn sim_cell(
             exo_ros_peak * 0.5_f64.powf((step - 30) as f64 / 15.0)
         };
         let total_ros = cell.basal_ros + exo + fenton;
+
+        if death_step.is_some() {
+            // Post-death: LP-only accumulation (no GSH, no repair, no GPX4)
+            let effective_unsat = cell.lipid_unsat;
+            let lp_direct = total_ros * effective_unsat * params.lp_rate;
+            let lp_prop = lp * effective_unsat * params.lp_propagation;
+            lp += lp_direct + lp_prop;
+            if step >= death_step.unwrap() + params.post_death_steps {
+                break;
+            }
+            continue;
+        }
 
         // === GSH SCAVENGING ===
         let gsh_fraction = gsh / (gsh + params.gsh_km);
@@ -243,12 +275,13 @@ pub fn sim_cell(
         lp += norm(rng, 0.0, 0.003);
         lp = lp.max(0.0);
 
+        // Death check
         if lp > params.death_threshold {
-            break;
+            death_step = Some(step);
         }
     }
 
-    (lp > params.death_threshold, lp, gsh, gpx4)
+    (death_step.is_some(), lp, gsh, gpx4)
 }
 
 #[cfg(test)]

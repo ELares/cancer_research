@@ -87,8 +87,15 @@ fn run_spatial(
         for r in 0..rows {
             for c in 0..cols {
                 let idx = r * cols + c;
-                if grid.cells[idx].state.dead || !grid.cells[idx].is_tumor {
+                if !grid.cells[idx].is_tumor {
                     continue;
+                }
+                if grid.cells[idx].state.dead {
+                    if let Some(ds) = grid.cells[idx].state.death_step {
+                        if step >= ds + params.post_death_steps { continue; }
+                    } else {
+                        continue;
+                    }
                 }
 
                 // Seed incorporates a large offset to avoid collision with init seeds
@@ -114,6 +121,10 @@ fn run_spatial(
 
                 if died {
                     gc.newly_dead = true;
+                    gc.lp_at_death = gc.state.lp;
+                }
+                // Update lp_at_death during grace period
+                if gc.state.dead {
                     gc.lp_at_death = gc.state.lp;
                 }
             }
