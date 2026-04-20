@@ -712,6 +712,12 @@ fn main() {
         }
     }
 
+    // --- Compute stromal adjacency mask (used by both Feature B and C) ---
+    // Mask is grid-geometry-dependent, not treatment-dependent.
+    let mask_grid = TumorGrid::generate(GRID_SIZE, GRID_SIZE, CELL_SIZE_UM, SEED);
+    let stromal_mask = stromal_adjacency_mask(&mask_grid);
+    let stromal_adj_count = stromal_mask.iter().filter(|&&b| b).count();
+
     // --- Immune coupling (Feature B) at λ=120μm ---
     let immune_modes: Vec<(&str, ImmuneConfig)> = vec![
         ("immune_on", ImmuneConfig::default_no_pd1()),
@@ -739,8 +745,9 @@ fn main() {
             let census = grid.census();
             let overall = census.total_dead as f64 / census.total_tumor.max(1) as f64;
             let (norm_r, trans_r, hyp_r) = zone_kill_rates(&grid, ZONE_REF_LAMBDA);
-            eprintln!("  {}: overall={:.1}% (ferr={}, immune={}), hypoxic={:.1}%",
-                tx_name, overall * 100.0, ferr_kills, imm_kills, hyp_r * 100.0);
+            let adj_rate_baseline = stromal_adjacent_kill_rate(&grid, &stromal_mask);
+            eprintln!("  {}: overall={:.1}% (ferr={}, immune={}), hypoxic={:.1}%, stromal_adj={:.1}%",
+                tx_name, overall * 100.0, ferr_kills, imm_kills, hyp_r * 100.0, adj_rate_baseline * 100.0);
 
             // Export DAMP and immune-kill heatmaps for the first immune mode only
             if *immune_label == "immune_on" {
@@ -783,8 +790,8 @@ fn main() {
                 hypoxic_kill_rate: hyp_r,
                 lp_overshoot_multiplier: Some(overshoot),
                 stromal_mode: Some("off".to_string()),
-                stromal_adjacent_kill_rate: None,
-                stromal_adjacent_count: None,
+                stromal_adjacent_kill_rate: Some(adj_rate_baseline),
+                stromal_adjacent_count: Some(stromal_adj_count),
             });
 
             let label = format!("{}_120_{}", tx_name, immune_label);
@@ -795,10 +802,6 @@ fn main() {
 
     // --- Stromal protection (Feature C) at λ=120μm with immune_on ---
     let stromal_cfg = StromalConfig::default();
-    // Compute adjacency mask on a fresh grid (mask is grid-geometry-dependent, not treatment-dependent)
-    let mask_grid = TumorGrid::generate(GRID_SIZE, GRID_SIZE, CELL_SIZE_UM, SEED);
-    let stromal_mask = stromal_adjacency_mask(&mask_grid);
-    let stromal_adj_count = stromal_mask.iter().filter(|&&b| b).count();
 
     eprintln!("\n=== Stromal Protection / CAF-Mediated Shielding (O2 gradient λ=120μm) ===");
     eprintln!("Stromal-adjacent tumor cells: {} ({:.1}% of tumor)",
