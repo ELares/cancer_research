@@ -225,14 +225,16 @@ pub fn sim_cell(
         let total_ros = cell.basal_ros + exo + fenton;
 
         if death_step.is_some() {
-            // Post-death: LP-only accumulation (no GSH, no repair, no GPX4)
+            // Post-death: LP-only accumulation (no GSH, no repair, no GPX4).
+            // Break check BEFORE accumulation to match sim_cell_step, which
+            // only accumulates when step < death_step + post_death_steps.
+            if step >= death_step.unwrap() + params.post_death_steps {
+                break;
+            }
             let effective_unsat = cell.lipid_unsat;
             let lp_direct = total_ros * effective_unsat * params.lp_rate;
             let lp_prop = lp * effective_unsat * params.lp_propagation;
             lp += lp_direct + lp_prop;
-            if step >= death_step.unwrap() + params.post_death_steps {
-                break;
-            }
             continue;
         }
 

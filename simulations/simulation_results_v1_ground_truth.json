@@ -25,7 +25,7 @@
     "death_rate": 0.8718899999999999,
     "ci_low": 0.8712300000000001,
     "ci_high": 0.8725400000000001,
-    "mean_lipid_perox": 15.726,
+    "mean_lipid_perox": 14.1,
     "mean_gsh_final": 0.19,
     "mean_gpx4_final": 0.768
   },
@@ -35,7 +35,7 @@
     "death_rate": 0.8718899999999999,
     "ci_low": 0.8712300000000001,
     "ci_high": 0.8725400000000001,
-    "mean_lipid_perox": 15.726,
+    "mean_lipid_perox": 14.1,
     "mean_gsh_final": 0.19,
     "mean_gpx4_final": 0.768
   },
@@ -45,7 +45,7 @@
     "death_rate": 0.00037,
     "ci_low": 0.00034,
     "ci_high": 0.00041,
-    "mean_lipid_perox": 0.227,
+    "mean_lipid_perox": 0.225,
     "mean_gsh_final": 0.59,
     "mean_gpx4_final": 1.153
   },
@@ -55,7 +55,7 @@
     "death_rate": 0.01137,
     "ci_low": 0.01117,
     "ci_high": 0.01158,
-    "mean_lipid_perox": 0.612,
+    "mean_lipid_perox": 0.572,
     "mean_gsh_final": 0.59,
     "mean_gpx4_final": 0.935
   },
@@ -65,7 +65,7 @@
     "death_rate": 0.9988800000000001,
     "ci_low": 0.99881,
     "ci_high": 0.99894,
-    "mean_lipid_perox": 25.427,
+    "mean_lipid_perox": 21.437,
     "mean_gsh_final": 0.05,
     "mean_gpx4_final": 0.859
   },
@@ -75,7 +75,7 @@
     "death_rate": 0.9988800000000001,
     "ci_low": 0.99881,
     "ci_high": 0.99894,
-    "mean_lipid_perox": 25.427,
+    "mean_lipid_perox": 21.437,
     "mean_gsh_final": 0.05,
     "mean_gpx4_final": 0.859
   },
@@ -85,7 +85,7 @@
     "death_rate": 0.011930000000000001,
     "ci_low": 0.01172,
     "ci_high": 0.01214,
-    "mean_lipid_perox": 0.573,
+    "mean_lipid_perox": 0.546,
     "mean_gsh_final": 1.08,
     "mean_gpx4_final": 0.7
   },
@@ -95,7 +95,7 @@
     "death_rate": 0.42475,
     "ci_low": 0.42379,
     "ci_high": 0.42572000000000004,
-    "mean_lipid_perox": 8.934,
+    "mean_lipid_perox": 7.831,
     "mean_gsh_final": 1.41,
     "mean_gpx4_final": 0.501
   },
@@ -105,7 +105,7 @@
     "death_rate": 0.9999899999999999,
     "ci_low": 0.9999800000000001,
     "ci_high": 1.0,
-    "mean_lipid_perox": 23.358,
+    "mean_lipid_perox": 20.084,
     "mean_gsh_final": 0.03,
     "mean_gpx4_final": 0.562
   },
@@ -115,7 +115,7 @@
     "death_rate": 0.9999899999999999,
     "ci_low": 0.9999800000000001,
     "ci_high": 1.0,
-    "mean_lipid_perox": 23.358,
+    "mean_lipid_perox": 20.084,
     "mean_gsh_final": 0.03,
     "mean_gpx4_final": 0.562
   },
@@ -135,7 +135,7 @@
     "death_rate": 0.00045,
     "ci_low": 0.00041,
     "ci_high": 0.00049,
-    "mean_lipid_perox": 0.067,
+    "mean_lipid_perox": 0.065,
     "mean_gsh_final": 2.07,
     "mean_gpx4_final": 2.317
   },
@@ -145,7 +145,7 @@
     "death_rate": 0.9954500000000001,
     "ci_low": 0.99531,
     "ci_high": 0.99558,
-    "mean_lipid_perox": 25.625,
+    "mean_lipid_perox": 21.606,
     "mean_gsh_final": 0.13,
     "mean_gpx4_final": 1.403
   },
@@ -155,7 +155,7 @@
     "death_rate": 0.9954500000000001,
     "ci_low": 0.99531,
     "ci_high": 0.99558,
-    "mean_lipid_perox": 25.625,
+    "mean_lipid_perox": 21.606,
     "mean_gsh_final": 0.13,
     "mean_gpx4_final": 1.403
   }
