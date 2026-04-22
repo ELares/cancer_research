@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
-"""Convert v1.md to v1.tex with proper LaTeX formatting."""
+"""Convert v1.md to v1.tex with proper LaTeX formatting.
+
+Supports book-style structure with Parts, Chapters, Sections, and Subsections.
+Document class: report (not book — avoids forced recto chapter starts).
+See article/AUTHORING.md for heading conventions.
+"""
 import re
 import unicodedata
 from pathlib import Path
@@ -21,14 +26,24 @@ for line in md.split('\n'):
         ym = re.search(r'\((\d{4})\)', line)
         year = ym.group(1) if ym else '2024'
         cite_map[pmid] = f'{first}{year}_{pmid}'
-# Fix known parsing issues
+# Fix known parsing issues:
+# PMID 31130474 (Breitbach 2019, Pexa-Vec Phase 3) — first-author surname
+# starts with non-ASCII or has a parsing edge case in the reference line.
+# PMID 29978216 (Von Hoff 2018, BIND-014 Phase 2) — "Von" is captured as
+# first token but the cite key convention expects a single lowercase word.
 cite_map['31130474'] = 'unknown2019_31130474'
 cite_map['29978216'] = 'unknown2018_29978216'
 
 # Extract sections
 abstract = re.search(r'## Abstract\n\n(.*?)(?=\n\*\*Keywords)', md, re.DOTALL).group(1).strip()
 keywords = re.search(r'\*\*Keywords:\*\*\s*(.+)', md).group(1).strip()
-body = re.search(r'## 1\. Introduction(.*?)## References', md, re.DOTALL).group(0).replace('## References','').strip()
+
+# Body: everything from the first Part header to just before References.
+body_start = re.search(r'^# Part [IVX]+: ', md, re.MULTILINE)
+ref_match = re.search(r'^## References', md, re.MULTILINE)
+if not body_start or not ref_match:
+    raise SystemExit("ERROR: Could not find '# Part ...' or '## References' boundaries in v1.md")
+body = md[body_start.start():ref_match.start()].strip()
 
 # Convert PMID citations to placeholders (will become \cite after text conversion)
 def repl(m):
@@ -39,12 +54,25 @@ abstract = re.sub(r'PMID: (\d+)', repl, abstract)
 
 # Markdown → LaTeX
 def cvt(t):
-    t = re.sub(r'^#### (\d+\.\d+\.\d+) (.+)$', r'\\subsubsection{\2}', t, flags=re.MULTILINE)
-    t = re.sub(r'^## (\d+)\. (.+)$', r'\\section{\2}', t, flags=re.MULTILINE)
-    t = re.sub(r'^### (\d+\.\d+) (.+)$', r'\\subsection{\2}', t, flags=re.MULTILINE)
+    # Book-structure headings (report document class)
+    t = re.sub(r'^# Part [IVX]+: (.+)$', r'\\part{\1}', t, flags=re.MULTILINE)
+    t = re.sub(r'^## Chapter \d+: (.+)$', r'\\chapter{\1}', t, flags=re.MULTILINE)
+    t = re.sub(r'^### \d+\.\d+ (.+)$', r'\\section{\1}', t, flags=re.MULTILINE)
+    t = re.sub(r'^### (.+)$', r'\\section{\1}', t, flags=re.MULTILINE)  # unnumbered fallback
+    t = re.sub(r'^#### \d+\.\d+\.\d+ (.+)$', r'\\subsection{\1}', t, flags=re.MULTILINE)
+    t = re.sub(r'^#### (.+)$', r'\\subsection{\1}', t, flags=re.MULTILINE)  # unnumbered fallback
     t = re.sub(r'\*\*(.+?)\*\*', r'\\textbf{\1}', t)
     t = re.sub(r'(?<!\*)\*([^*\n]+?)\*(?!\*)', r'\\textit{\1}', t)
-    # Escape special chars BEFORE replacing unicode
+    # Escape special chars BEFORE replacing unicode.
+    # $, %, &, # are all special in LaTeX and must be escaped when they
+    # appear as literal characters in prose.  The $ escape must run BEFORE
+    # the unicode→LaTeX block below (which inserts $...$ math wrappers);
+    # escaping first ensures only literal prose $ are hit.
+    # NOTE: { and } are NOT escaped here because CITEPLACEHOLDER{key}
+    # tokens are still in the text at this point — escaping braces would
+    # break the \cite conversion that runs after cvt().  Bare braces in
+    # prose will cause LaTeX errors; avoid them in v1.md.
+    t = t.replace('$', '\\$')
     t = t.replace('%', '\\%')
     t = t.replace('&', '\\&')
     t = t.replace('#', '\\#')
@@ -116,7 +144,12 @@ def replace_table(text, marker, caption, label, headers, rows):
 \\end{{table}}"""
     return text[:match.start()] + table + text[match.end():]
 
-# Simulation table
+# Hardcoded LaTeX tables intentionally diverge from the markdown source:
+# - Simulation table splits SDT/PDT into separate columns (markdown combines
+#   them because values are identical).
+# - Modality table uses abbreviated headers for column width.
+# If the markdown table data changes, these hardcoded versions must be
+# updated manually to match.
 body_tex = replace_table(body_tex, '| Phenotype |',
     'Monte Carlo ferroptosis simulation (n=1M cells/condition).', 'tab:sim',
     ['Phenotype', 'Control', 'RSL3', 'SDT', 'PDT'],
@@ -189,7 +222,14 @@ if leftover:
 # tables) are complete. Then un-escape inside \cite{}, \label{}, \ref{},
 # and \includegraphics{} commands where underscores are valid.
 def escape_prose_underscores(t):
-    # Step 1: escape all word_word underscores
+    # Step 1: escape underscores between word characters (e.g., gene_name).
+    # Pattern is intentionally narrow: (?<=\w)_(?=\w) catches the common
+    # case but misses edge cases like _foo or foo_.  A broader pattern
+    # would also match the _ in math-mode subscripts ($_2$, $_0$) inserted
+    # by cvt(), breaking them.  The narrow pattern is a trade-off:
+    # - Catches: GPX4_activity, SLC7A11_high, file_name
+    # - Misses: _italic_ (already handled by bold/italic conversion),
+    #   bare _ at word boundaries (rare in scientific prose)
     t = re.sub(r'(?<=\w)_(?=\w)', r'\\_', t)
     # Step 2: un-escape inside LaTeX commands that use underscored keys
     def unescape_braces(m):
@@ -203,7 +243,7 @@ def escape_prose_underscores(t):
 body_tex = escape_prose_underscores(body_tex)
 abstract_tex = escape_prose_underscores(abstract_tex)
 
-latex = f"""\\documentclass[12pt,a4paper]{{article}}
+latex = f"""\\documentclass[12pt,a4paper]{{report}}
 \\usepackage[utf8]{{inputenc}}
 \\usepackage[T1]{{fontenc}}
 \\usepackage{{amsmath,amssymb}}
@@ -213,16 +253,12 @@ latex = f"""\\documentclass[12pt,a4paper]{{article}}
 \\usepackage{{booktabs}}
 \\usepackage{{geometry}}
 \\usepackage{{setspace}}
-\\usepackage{{authblk}}
 
 \\geometry{{margin=1in}}
 \\onehalfspacing
 
 \\title{{{title}}}
-
-\\author[1]{{Ezequiel Lares}}
-\\affil[1]{{Independent Researcher}}
-
+\\author{{Ezequiel Lares \\\\ Independent Researcher}}
 \\date{{}}
 
 \\begin{{document}}
@@ -233,7 +269,9 @@ latex = f"""\\documentclass[12pt,a4paper]{{article}}
 {abstract_tex}
 \\end{{abstract}}
 
-\\textbf{{Keywords:}} {keywords}
+\\noindent\\textbf{{Keywords:}} {keywords}
+
+\\tableofcontents
 
 {body_tex}
 
