@@ -546,6 +546,17 @@ EVIDENCE_LEVEL_KEYWORDS = {
 
 # --- News Source Tiers ---
 # See analysis/news-source-criteria.md for full framework documentation.
+#
+# This is a first-pass subset of the 31 sources listed in the criteria doc.
+# Sources behind paywalls or those requiring manual URL discovery (e.g.
+# university press offices) are omitted here and must be matched manually.
+# classify_source() should match the longest path prefix, not the bare domain.
+#
+# IMPORTANT: Only editorial/news surfaces belong here.  Primary research
+# paths (e.g. nature.com/articles, science.org/doi, nejm.org/doi) are
+# PubMed-indexed journal content and must NOT be classified as news-tier
+# sources.  If a URL matches a journal's primary-research path, it belongs
+# in the corpus layer, not the news layer.
 
 SOURCE_TIER_DEFINITIONS = {
     "tier1": {
@@ -553,9 +564,6 @@ SOURCE_TIER_DEFINITIONS = {
         "trust": "high",
         "cite_as": "evidence",
         "verified_threshold": 0.80,
-        # Path prefixes narrow matching to editorial content, not user-generated
-        # or sponsored pages on the same domain.  classify_source() should match
-        # the longest prefix, not just the bare domain.
         "path_prefixes": [
             "cancer.gov/news-events",
             "cancer.gov/about-nci",
@@ -565,12 +573,10 @@ SOURCE_TIER_DEFINITIONS = {
             "fda.gov/news-events",
             "clinicaltrials.gov",
             "nature.com/news",
-            "nature.com/articles",
             "science.org/news",
-            "science.org/doi",
             "cell.com/news",
             "thelancet.com/news",
-            "nejm.org",
+            "jwatch.org",
             "gco.iarc.fr",
         ],
     },
@@ -602,6 +608,8 @@ SOURCE_TIER_DEFINITIONS = {
         "verified_threshold": 0.0,
         "path_prefixes": [
             "connection.asco.org",
+            "science.org/blogs/pipeline",
+            "vinayprasad.com",
             "cancer.org/research/acs-research-news",
             "lls.org/news",
             "broadinstitute.org/blog",
