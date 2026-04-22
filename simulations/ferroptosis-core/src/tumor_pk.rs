@@ -314,7 +314,7 @@ pub fn sim_cell_with_pk(
     for step in 0..n_steps as u32 {
         // Covalent GPX4 inactivation: drug destroys enzyme proportional to
         // drug concentration and available GPX4. NRF2 makes new GPX4 inside
-        // sim_cell_step. At conc=1.0, steady-state GPX4 ≈ 0.15-0.20.
+        // sim_cell_step. At conc=1.0, effective GPX4 ≈ 0.20-0.25.
         if !state.dead {
             let conc = conc_schedule[step as usize].clamp(0.0, 1.0);
             state.gpx4 -= gpx4_inactivation_rate * conc * state.gpx4;
