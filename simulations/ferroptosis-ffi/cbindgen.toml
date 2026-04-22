@@ -1,0 +1,7 @@
+language = "C"
+include_guard = "FERROPTOSIS_CORE_H"
+cpp_compat = true
+sys_includes = ["stdbool.h", "stdint.h"]
+
+[export]
+include = ["FerroCell", "FerroParams", "FerroResult", "FerroRng"]

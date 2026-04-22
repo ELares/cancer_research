@@ -12,6 +12,7 @@ members = [
     "ferroptosis-python",
     "sim-tme",
     "sim-tumor-pk",
+    "ferroptosis-ffi",
 ]
 resolver = "2"
 
