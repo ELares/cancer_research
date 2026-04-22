@@ -249,8 +249,8 @@ fn main() {
 
         eprintln!("  {} (r_max={:.0}μm):", tumor_name, r_max);
         for &r in &radial_bins {
-            if r > *r_max * 1.5 {
-                continue; // skip distances far beyond the inter-vessel spacing
+            if r > *r_max {
+                continue; // skip distances beyond the tissue half-distance
             }
             let schedule = compute_spatial_temporal_schedule(&pk_result, r, lambda_met);
             let peak: f64 = schedule.iter().cloned().fold(0.0, f64::max);
