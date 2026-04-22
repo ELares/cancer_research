@@ -264,9 +264,9 @@ def fig21_ph():
 # ── Figure 22: Decision flowchart ─────────────────────────────────────
 
 def fig22_flowchart():
-    fig, ax = plt.subplots(figsize=(10, 8))
+    fig, ax = plt.subplots(figsize=(10, 9))
     ax.set_xlim(0, 10)
-    ax.set_ylim(-0.5, 10.5)
+    ax.set_ylim(-1, 11)
     ax.axis("off")
     ax.set_facecolor("white")
 
@@ -280,91 +280,95 @@ def fig22_flowchart():
     red = "#E65100"
     gray = "#666666"
 
-    # Use text objects so we can get their bounding boxes for arrows
-    # We'll place arrows with simple lines + arrowheads using ax.plot + ax.annotate
+    # Helper: draw arrow between two center points, shrinking to stop at box edges.
+    # shrinkA/B in points; ~22-28pt works for these font sizes.
+    def conn(x1, y1, x2, y2, color, sA=26, sB=26, style="-|>", lw=1.8, ls="-"):
+        ax.annotate("", xy=(x2, y2), xytext=(x1, y1),
+                    arrowprops=dict(arrowstyle=style, color=color, lw=lw,
+                                    shrinkA=sA, shrinkB=sB, linestyle=ls))
 
-    # ── Level 1: Is tumor localizable? (y=9) ──
-    ax.text(5, 9, "Is the tumor\nlocalizable?", ha="center", va="center",
+    def label(x, y, txt, color):
+        ax.text(x, y, txt, fontsize=9, color=color, fontweight="bold",
+                ha="center", va="center",
+                bbox=dict(boxstyle="round,pad=0.15", fc="white", ec="none"))
+
+    # ── Node positions ──
+    # Level 1
+    n1 = (5, 9.5)
+    n1_no = (8.5, 9.5)
+    # Level 2
+    n2 = (5, 7.2)
+    n2_yes = (1.8, 5.5)
+    n2_no = (8.2, 5.5)
+    # Level 3
+    n3 = (5, 3.5)
+    n3_no = (8.8, 3.5)
+    # Level 4
+    n4 = (5, 1.5)
+    n4_yes = (2, -0.2)
+    n4_no = (8, -0.2)
+
+    # ── Draw boxes ──
+    ax.text(*n1, "Is the tumor\nlocalizable?", ha="center", va="center",
             fontsize=10, fontweight="bold", bbox=decision)
-
-    # No → right
-    ax.plot([6.5, 7.5], [9, 9], color=red, lw=1.5)
-    ax.annotate("", xy=(7.5, 9), xytext=(7.3, 9),
-                arrowprops=dict(arrowstyle="-|>", color=red, lw=1.5))
-    ax.text(7.0, 9.2, "No", fontsize=9, color=red, fontweight="bold", ha="center")
-    ax.text(8.7, 9, "Alternative\napproaches\n(Ch 8.1)", ha="center", va="center", fontsize=7, bbox=outcome_no)
-
-    # Yes ↓
-    ax.plot([5, 5], [8.3, 7.7], color=green, lw=1.5)
-    ax.annotate("", xy=(5, 7.7), xytext=(5, 7.9),
-                arrowprops=dict(arrowstyle="-|>", color=green, lw=1.5))
-    ax.text(5.3, 8.0, "Yes", fontsize=9, color=green, fontweight="bold")
-
-    # ── Level 2: Is it deep-seated? (y=7) ──
-    ax.text(5, 7, "Is it\ndeep-seated?", ha="center", va="center",
-            fontsize=10, fontweight="bold", bbox=decision)
-
-    # Yes → left (SDT)
-    ax.plot([3.5, 2.8], [7, 6.2], color=green, lw=1.5)
-    ax.annotate("", xy=(2.8, 6.2), xytext=(2.9, 6.35),
-                arrowprops=dict(arrowstyle="-|>", color=green, lw=1.5))
-    ax.text(2.8, 6.8, "Yes", fontsize=9, color=green, fontweight="bold", ha="center")
-    ax.text(2, 5.5, "SDT range\n(cm depth)\nCh 6.1", ha="center", va="center",
-            fontsize=8, fontweight="bold", bbox=sdt_box)
-
-    # No → right (PDT)
-    ax.plot([6.5, 7.2], [7, 6.2], color=red, lw=1.5)
-    ax.annotate("", xy=(7.2, 6.2), xytext=(7.1, 6.35),
-                arrowprops=dict(arrowstyle="-|>", color=red, lw=1.5))
-    ax.text(7.2, 6.8, "No", fontsize=9, color=red, fontweight="bold", ha="center")
-    ax.text(8, 5.5, "PDT range\n(mm depth)\nCh 6.1", ha="center", va="center",
-            fontsize=8, bbox=pdt_box)
-
-    # Convergence: SDT ↘ and PDT ↙ to ferroptosis question
-    ax.plot([2, 4.3], [4.8, 4.0], color=gray, lw=1, ls="--")
-    ax.annotate("", xy=(4.3, 4.0), xytext=(4.1, 4.1),
-                arrowprops=dict(arrowstyle="-|>", color=gray, lw=1))
-    ax.plot([8, 5.7], [4.8, 4.0], color=gray, lw=1, ls="--")
-    ax.annotate("", xy=(5.7, 4.0), xytext=(5.9, 4.1),
-                arrowprops=dict(arrowstyle="-|>", color=gray, lw=1))
-
-    # ── Level 3: Ferroptosis-prone? (y=3.5) ──
-    ax.text(5, 3.5, "Are residual cells\nferroptosis-prone?", ha="center", va="center",
-            fontsize=10, fontweight="bold", bbox=decision)
-
-    # No → right
-    ax.plot([6.5, 7.5], [3.5, 3.5], color=red, lw=1.5)
-    ax.annotate("", xy=(7.5, 3.5), xytext=(7.3, 3.5),
-                arrowprops=dict(arrowstyle="-|>", color=red, lw=1.5))
-    ax.text(7.0, 3.7, "No", fontsize=9, color=red, fontweight="bold", ha="center")
-    ax.text(9, 3.5, "Pathway-target or\nimmune approaches\n(Ch 8.1, 10.4)", ha="center", va="center",
+    ax.text(*n1_no, "Alternative\napproaches\n(Ch 8.1)", ha="center", va="center",
             fontsize=7, bbox=outcome_no)
 
-    # Yes ↓
-    ax.plot([5, 5], [2.8, 2.2], color=green, lw=1.5)
-    ax.annotate("", xy=(5, 2.2), xytext=(5, 2.4),
-                arrowprops=dict(arrowstyle="-|>", color=green, lw=1.5))
-    ax.text(5.3, 2.5, "Yes", fontsize=9, color=green, fontweight="bold")
-
-    # ── Level 4: Immunocompetent? (y=1.5) ──
-    ax.text(5, 1.5, "Immunocompetent\nsetting?", ha="center", va="center",
+    ax.text(*n2, "Is it\ndeep-seated?", ha="center", va="center",
             fontsize=10, fontweight="bold", bbox=decision)
+    ax.text(*n2_yes, "SDT range\n(cm depth)\nCh 6.1", ha="center", va="center",
+            fontsize=8, fontweight="bold", bbox=sdt_box)
+    ax.text(*n2_no, "PDT range\n(mm depth)\nCh 6.1", ha="center", va="center",
+            fontsize=8, bbox=pdt_box)
 
-    # Yes → left
-    ax.plot([3.5, 2.8], [1.5, 0.2], color=green, lw=1.5)
-    ax.annotate("", xy=(2.8, 0.2), xytext=(2.9, 0.35),
-                arrowprops=dict(arrowstyle="-|>", color=green, lw=1.5))
-    ax.text(2.8, 1.1, "Yes", fontsize=9, color=green, fontweight="bold", ha="center")
-    ax.text(2.2, -0.3, "Physical ROS\n+ anti-PD-1\n(Ch 7.2, 9.5)", ha="center", va="center",
+    ax.text(*n3, "Are residual cells\nferroptosis-prone?", ha="center", va="center",
+            fontsize=10, fontweight="bold", bbox=decision)
+    ax.text(*n3_no, "Pathway-target or\nimmune approaches\n(Ch 8.1, 10.4)", ha="center", va="center",
+            fontsize=7, bbox=outcome_no)
+
+    ax.text(*n4, "Immunocompetent\nsetting?", ha="center", va="center",
+            fontsize=10, fontweight="bold", bbox=decision)
+    ax.text(*n4_yes, "Physical ROS\n+ anti-PD-1\n(Ch 7.2, 9.5)", ha="center", va="center",
             fontsize=8, fontweight="bold", bbox=terminal)
-
-    # No → right
-    ax.plot([6.5, 7.2], [1.5, 0.2], color=red, lw=1.5)
-    ax.annotate("", xy=(7.2, 0.2), xytext=(7.1, 0.35),
-                arrowprops=dict(arrowstyle="-|>", color=red, lw=1.5))
-    ax.text(7.2, 1.1, "No", fontsize=9, color=red, fontweight="bold", ha="center")
-    ax.text(7.8, -0.3, "Physical ROS\n(direct kill)\n(Ch 6-7)", ha="center", va="center",
+    ax.text(*n4_no, "Physical ROS\n(direct kill)\n(Ch 6-7)", ha="center", va="center",
             fontsize=8, bbox=terminal)
+
+    # ── Draw arrows (center-to-center, shrink stops at box edge) ──
+    # Level 1 → No
+    conn(*n1, *n1_no, red)
+    label(6.8, 9.8, "No", red)
+
+    # Level 1 → Yes → Level 2
+    conn(*n1, *n2, green)
+    label(5.35, 8.35, "Yes", green)
+
+    # Level 2 → Yes → SDT
+    conn(*n2, *n2_yes, green)
+    label(3.0, 6.6, "Yes", green)
+
+    # Level 2 → No → PDT
+    conn(*n2, *n2_no, red)
+    label(7.0, 6.6, "No", red)
+
+    # Convergence: SDT → Level 3, PDT → Level 3 (dashed)
+    conn(*n2_yes, *n3, gray, sA=28, sB=28, style="-|>", lw=1, ls="--")
+    conn(*n2_no, *n3, gray, sA=28, sB=28, style="-|>", lw=1, ls="--")
+
+    # Level 3 → No
+    conn(*n3, *n3_no, red)
+    label(7.0, 3.8, "No", red)
+
+    # Level 3 → Yes → Level 4
+    conn(*n3, *n4, green)
+    label(5.35, 2.5, "Yes", green)
+
+    # Level 4 → Yes → Physical ROS + anti-PD-1
+    conn(*n4, *n4_yes, green)
+    label(3.0, 0.9, "Yes", green)
+
+    # Level 4 → No → Physical ROS direct
+    conn(*n4, *n4_no, red)
+    label(7.0, 0.9, "No", red)
 
     ax.set_title("Decision Framework: Which Modality for Which Clinical Context?",
                  fontsize=11, fontweight="bold", pad=10)
