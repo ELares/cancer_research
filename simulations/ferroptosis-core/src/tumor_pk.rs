@@ -170,11 +170,11 @@ pub fn rsl3_iv_bolus() -> PlasmaModel {
     }
 }
 
-/// Constant max-exposure reference: concentration = 1.0 for all time.
-/// NOT equivalent to the standard sim_cell RSL3 baseline (~42%): this model
-/// applies continuous inhibition via GPX4 clamp (preventing NRF2 recovery),
-/// while sim_cell applies one-time GPX4 reduction at init. Use as a
-/// theoretical maximum for computing relative protection factors.
+/// 2D culture reference: constant drug concentration = 1.0 for all time.
+/// With the inactivation rate model (k_inact=0.015), this produces ~41%
+/// kill for Persisters — matching the repo's Persister+RSL3 death rate (~42.5%).
+/// Note: internal state (LP, GSH, GPX4) differs from sim_cell due to the
+/// continuous inactivation model vs one-time init reduction.
 pub fn constant_reference() -> PlasmaModel {
     PlasmaModel::Constant { concentration: 1.0 }
 }
@@ -283,12 +283,24 @@ pub struct PKCellResult {
     pub final_gpx4: f64,
 }
 
+/// GPX4 inactivation rate for RSL3-like covalent GPX4 inhibitors.
+/// Calibrated directly in Rust (10K Persister cells, constant conc=1.0):
+/// k_inact=0.015 gives ~41% death rate, matching sim_cell RSL3+Persister
+/// death rate (~42.5%). Internal state (LP, GSH, GPX4) differs.
+pub const RSL3_INACTIVATION_RATE: f64 = 0.015;
+
 /// Simulate a single cell with time-varying drug concentration.
 ///
-/// At each timestep, GPX4 inhibition tracks the interstitial drug
-/// concentration: `effective_gpx4 = intrinsic_gpx4 × (1 - base_inhib × conc[step])`.
-/// This models competitive inhibition where the drug and NRF2 upregulation
-/// fight for GPX4 control at each moment.
+/// Models drug as a covalent GPX4 inhibitor: at each timestep, the drug
+/// inactivates GPX4 at a rate proportional to concentration × available
+/// enzyme: dGPX4/dt_drug = -k_inact × conc × GPX4. NRF2 produces new
+/// GPX4 inside sim_cell_step, balancing destruction. The steady state
+/// depends on the ratio of production to inactivation.
+///
+/// At constant conc=1.0 with RSL3_INACTIVATION_RATE (0.015), this produces
+/// ~41% kill for Persisters — matching the Persister+RSL3 death rate.
+/// Internal state (LP, GSH, GPX4) differs from sim_cell's init model.
+/// When drug washes out (IV bolus), inactivation drops and GPX4 recovers.
 ///
 /// The cell is initialized as Treatment::Control (no initial GPX4 reduction).
 /// Drug effect is applied dynamically through the concentration schedule.
@@ -296,7 +308,7 @@ pub fn sim_cell_with_pk(
     cell: &Cell,
     params: &Params,
     conc_schedule: &[f64],
-    base_gpx4_inhib: f64,
+    gpx4_inactivation_rate: f64,
     seed: u64,
 ) -> PKCellResult {
     let n_steps = conc_schedule.len().min(180);
@@ -304,16 +316,13 @@ pub fn sim_cell_with_pk(
     let mut rng = rand::rngs::StdRng::seed_from_u64(seed);
 
     for step in 0..n_steps as u32 {
-        // Time-varying drug inhibition: CLAMP GPX4 BEFORE the step so the
-        // repair calculation uses the drug-limited level. The drug is a
-        // reversible competitive inhibitor that prevents GPX4 from exceeding
-        // a concentration-dependent ceiling. NRF2 can upregulate GPX4 between
-        // steps, but the drug caps it before the next repair calculation.
-        // When drug washes out (conc→0), the cap lifts and GPX4 recovers.
+        // Covalent GPX4 inactivation: drug destroys enzyme proportional to
+        // drug concentration and available GPX4. NRF2 makes new GPX4 inside
+        // sim_cell_step. At conc=1.0, effective GPX4 ≈ 0.20-0.25.
         if !state.dead {
-            let conc = conc_schedule[step as usize];
-            let max_gpx4 = cell.gpx4 * (1.0 - base_gpx4_inhib * conc.clamp(0.0, 1.0));
-            state.gpx4 = state.gpx4.min(max_gpx4);
+            let conc = conc_schedule[step as usize].clamp(0.0, 1.0);
+            state.gpx4 -= gpx4_inactivation_rate * conc * state.gpx4;
+            state.gpx4 = state.gpx4.max(0.0);
         }
 
         let _died = sim_cell_step(&mut state, cell, params, step, 0.0, &mut rng);

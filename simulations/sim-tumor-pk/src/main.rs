@@ -26,7 +26,7 @@ const N_STEPS: usize = 180;
 #[derive(Serialize)]
 struct ScenarioResult {
     tumor_type: String,
-    context: String, // "tumor_pk" or "max_exposure_ref"
+    context: String, // "tumor_pk" or "2d_culture_ref"
     n_cells: usize,
     n_dead: usize,
     death_rate: f64,
@@ -51,7 +51,8 @@ fn run_scenario(
             let cell_seed = seed.wrapping_add(i as u64).wrapping_add(1_000_000);
             let mut rng = rand::rngs::StdRng::seed_from_u64(cell_seed);
             let cell = gen_cell(Phenotype::Persister, &mut rng);
-            sim_cell_with_pk(&cell, params, conc_schedule, params.rsl3_gpx4_inhib, cell_seed)
+            // Use a different seed for sim vs gen_cell to avoid RNG correlation
+            sim_cell_with_pk(&cell, params, conc_schedule, RSL3_INACTIVATION_RATE, cell_seed.wrapping_add(500_000))
         })
         .collect();
 
@@ -86,13 +87,11 @@ fn main() {
     eprintln!("All tumor PK parameters ESTIMATED (no textbook coverage).\n");
 
     let mut all_results: Vec<ScenarioResult> = Vec::new();
-    // --- Constant max-exposure reference (conc = 1.0 at all steps) ---
-    // This is the theoretical maximum: drug at full concentration for all
-    // 180 steps with no PK barriers. NOT equivalent to the repo's standard
-    // 2D RSL3 baseline (~42.5% in sim-original), which uses a one-time
-    // GPX4 reduction at init. The clamp model here applies continuous
-    // inhibition (preventing NRF2 recovery), producing ~100% kill.
-    // Protection factors are relative to this max-exposure reference.
+    // --- 2D culture reference (conc = 1.0 at all steps) ---
+    // Drug at full concentration for all 180 steps with no PK barriers.
+    // With the inactivation rate model (k_inact=0.015), this produces
+    // ~41% death rate — matching the Persister+RSL3 death rate (~42.5%).
+    // Internal state (LP, GSH, GPX4) differs from sim_cell's init model.
     let ref_death_rate;
     {
         let conc_schedule: Vec<f64> = vec![1.0; N_STEPS];
@@ -102,7 +101,7 @@ fn main() {
         ref_death_rate = n_dead as f64 / N_CELLS as f64;
 
         eprintln!(
-            "  Max-exposure ref: death_rate={:.1}% [{:.1}-{:.1}], LP={:.2}, GSH={:.2}, GPX4={:.3}",
+            "  2D culture ref: death_rate={:.1}% [{:.1}-{:.1}], LP={:.2}, GSH={:.2}, GPX4={:.3}",
             ref_death_rate * 100.0,
             ci_lo * 100.0,
             ci_hi * 100.0,
@@ -112,8 +111,8 @@ fn main() {
         );
 
         all_results.push(ScenarioResult {
-            tumor_type: "Max exposure ref".to_string(),
-            context: "max_exposure_ref".to_string(),
+            tumor_type: "2D culture ref".to_string(),
+            context: "2d_culture_ref".to_string(),
             n_cells: N_CELLS,
             n_dead,
             death_rate: ref_death_rate,
