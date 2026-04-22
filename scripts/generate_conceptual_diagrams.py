@@ -113,50 +113,68 @@ def fig18_hypoxia():
 # ── Figure 19: Immune coupling flow ───────────────────────────────────
 
 def fig19_immune():
-    fig, ax = plt.subplots(figsize=(9, 4))
-    ax.set_xlim(0, 10)
-    ax.set_ylim(0, 5)
-    ax.axis("off")
-    ax.set_facecolor("white")
+    """Generate immune coupling flow diagram using Graphviz."""
+    import graphviz
+    import subprocess
 
-    box_style = dict(boxstyle="round,pad=0.4", fc="#E8E8E8", ec="black", lw=1.2)
-    sdt_style = dict(boxstyle="round,pad=0.4", fc="#FFE0B2", ec=COLORS["sdt"], lw=1.5)
-    rsl3_style = dict(boxstyle="round,pad=0.4", fc="#D1C4E9", ec=COLORS["rsl3"], lw=1.5)
+    dot = graphviz.Digraph("immune", format="pdf")
+    dot.attr(rankdir="LR", bgcolor="white", fontname="Helvetica",
+             label="Immune Coupling: Kill density determines DAMP-mediated immune activation",
+             labelloc="t", fontsize="13", fontcolor="black", nodesep="0.6", ranksep="0.5")
+    dot.attr("node", fontname="Helvetica", fontsize="9", style="filled,rounded",
+             shape="box", penwidth="1.5")
+    dot.attr("edge", penwidth="1.5", color="black")
 
-    # SDT path (top)
-    ax.text(1.0, 3.8, "SDT kills\n~140K cells", ha="center", fontsize=8, fontweight="bold",
-            bbox=sdt_style)
-    ax.text(3.2, 3.8, "High LP\novershoot\n(LP~20)", ha="center", fontsize=7, bbox=sdt_style)
-    ax.text(5.3, 3.8, "Dense\nDAMP field", ha="center", fontsize=7, bbox=sdt_style)
-    ax.text(7.2, 3.8, "DC\nactivation", ha="center", fontsize=7, bbox=box_style)
-    ax.text(9.0, 3.8, "521 immune\nkills", ha="center", fontsize=8, fontweight="bold",
-            bbox=sdt_style)
+    # SDT path (orange) — top row
+    sdt_attr = dict(fillcolor="#FFE0B2", color="#FF8C00")
+    dot.node("s1", "SDT kills\n~140K cells", **sdt_attr, fontsize="10")
+    dot.node("s2", "High LP overshoot\n(LP~20)", **sdt_attr)
+    dot.node("s3", "Dense\nDAMP field", **sdt_attr)
+    dot.node("s4", "Strong DC\nactivation", **sdt_attr)
+    dot.node("s5", "521 immune\nkills", **sdt_attr, fontsize="10")
 
-    # RSL3 path (bottom)
-    ax.text(1.0, 1.2, "RSL3 kills\n~163 cells", ha="center", fontsize=8, fontweight="bold",
-            bbox=rsl3_style)
-    ax.text(3.2, 1.2, "Low LP\novershoot\n(LP~7.8)", ha="center", fontsize=7, bbox=rsl3_style)
-    ax.text(5.3, 1.2, "Sparse\nDAMP field", ha="center", fontsize=7, bbox=rsl3_style)
-    ax.text(7.2, 1.2, "Minimal DC\nactivation", ha="center", fontsize=7, bbox=box_style)
-    ax.text(9.0, 1.2, "5 immune\nkills", ha="center", fontsize=8, fontweight="bold",
-            bbox=rsl3_style)
+    dot.edge("s1", "s2")
+    dot.edge("s2", "s3")
+    dot.edge("s3", "s4")
+    dot.edge("s4", "s5")
 
-    # Arrows — use plot lines + arrowheads for precise connection
-    for y in [3.8, 1.2]:
-        for x1, x2 in [(1.65, 2.55), (3.85, 4.65), (5.95, 6.55), (7.85, 8.35)]:
-            ax.plot([x1, x2], [y, y], color="black", lw=1.2)
-            ax.annotate("", xy=(x2, y), xytext=(x2 - 0.15, y),
-                        arrowprops=dict(arrowstyle="-|>", color="black", lw=1.2))
+    # RSL3 path (purple) — bottom row
+    rsl3_attr = dict(fillcolor="#D1C4E9", color="#6A5ACD")
+    dot.node("r1", "RSL3 kills\n~163 cells", **rsl3_attr, fontsize="10")
+    dot.node("r2", "Low LP overshoot\n(LP~7.8)", **rsl3_attr)
+    dot.node("r3", "Sparse\nDAMP field", **rsl3_attr)
+    dot.node("r4", "Minimal DC\nactivation", **rsl3_attr)
+    dot.node("r5", "5 immune\nkills", **rsl3_attr, fontsize="10")
 
-    # Ratio label
-    ax.text(5.0, 2.5, "104:1 immune kill ratio",
-            ha="center", fontsize=10, fontweight="bold", color=COLORS["damp"],
-            bbox=dict(boxstyle="round", fc="white", ec=COLORS["damp"], lw=1.5))
+    dot.edge("r1", "r2")
+    dot.edge("r2", "r3")
+    dot.edge("r3", "r4")
+    dot.edge("r4", "r5")
 
-    ax.set_title("Immune Coupling: Kill density determines DAMP-mediated immune activation",
-                 fontsize=10, fontweight="bold")
+    # Force each stage to align vertically (same rank = same column in LR)
+    for s_node, r_node in [("s1","r1"), ("s2","r2"), ("s3","r3"), ("s4","r4"), ("s5","r5")]:
+        with dot.subgraph() as sub:
+            sub.attr(rank="same")
+            sub.node(s_node)
+            sub.node(r_node)
 
-    save(fig, "fig19_immune_coupling_flow")
+    # Ratio label between the two paths
+    dot.node("ratio", "104:1\nimmune kill ratio",
+             shape="box", style="filled,rounded,bold", fillcolor="white",
+             color="#FF4500", fontcolor="#FF4500", fontsize="11", penwidth="2")
+
+    # Position ratio between s3 and r3 using invisible edges
+    dot.edge("s3", "ratio", style="invis", weight="10")
+    dot.edge("ratio", "r3", style="invis", weight="10")
+
+    out_base = str(OUT / "fig19_immune_coupling_flow")
+    gv_path = out_base + ".gv"
+    with open(gv_path, "w") as f:
+        f.write(dot.source)
+    subprocess.run(["dot", "-Tpdf", "-o", out_base + ".pdf", gv_path], check=True)
+    subprocess.run(["dot", "-Tpng", "-Gdpi=300", "-o", out_base + ".png", gv_path], check=True)
+    Path(gv_path).unlink(missing_ok=True)
+    print(f"  fig19_immune_coupling_flow")
 
 
 # ── Figure 20: Stromal shielding ──────────────────────────────────────
