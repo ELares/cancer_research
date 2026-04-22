@@ -76,6 +76,8 @@ fn main() {
         ("Breast", breast_tumor()),
         ("Pancreatic", pancreatic_tumor()),
         ("GBM", glioblastoma_tumor()),
+        ("Melanoma", melanoma_tumor()),
+        ("Sarcoma", sarcoma_tumor()),
     ];
 
     let plasma = rsl3_iv_bolus();
@@ -232,6 +234,8 @@ fn main() {
         ("Breast", breast_tumor(), 60.0),       // half of 120μm inter-vessel
         ("Pancreatic", pancreatic_tumor(), 125.0), // half of 250μm
         ("GBM", glioblastoma_tumor(), 75.0),    // half of 150μm
+        ("Melanoma", melanoma_tumor(), 60.0),    // well-vasc, similar to breast
+        ("Sarcoma", sarcoma_tumor(), 100.0),     // poorly-vasc, half of ~200μm
     ];
 
     let radial_bins = [0.0, 25.0, 50.0, 75.0, 100.0, 125.0];
@@ -255,7 +259,7 @@ fn main() {
             let schedule = compute_spatial_temporal_schedule(&pk_result, r, lambda_met);
             let peak: f64 = schedule.iter().cloned().fold(0.0, f64::max);
 
-            let (n_dead, mean_lp, _mean_gsh, _mean_gpx4) =
+            let (n_dead, _mean_lp, _mean_gsh, _mean_gpx4) =
                 run_scenario(&schedule, &params, SEED);
             let (ci_lo, ci_hi) = wilson_ci(N_CELLS, n_dead);
             let death_rate = n_dead as f64 / N_CELLS as f64;
