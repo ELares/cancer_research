@@ -130,12 +130,55 @@ pub fn glioblastoma_tumor() -> TumorPKParams {
     }
 }
 
+/// Melanoma: superficial, well-vascularized with reactive angiogenesis.
+/// Ref: Boucher et al., Cancer Res 1990 (IFP 5-20 mmHg); Jain 1988 (Q 0.10-0.30).
+/// Parameters are midpoints of issue #48 ranges. All ESTIMATED.
+pub fn melanoma_tumor() -> TumorPKParams {
+    TumorPKParams {
+        blood_flow_q: 0.20,
+        vascular_fraction: 0.065,
+        interstitial_fraction: 0.25,
+        ps_product: 0.08,
+        partition_coeff: 0.45,
+        ifp_mmhg: 12.0,
+        mvp_mmhg: 25.0,
+        hydraulic_conductivity: 1e-7,
+        reflection_coeff: 0.9,
+        k_uptake_bulk: 0.02,
+        km_uptake: 0.5,
+        k_met_v: 0.001,
+        k_met_i: 0.001,
+        name: "Melanoma (superficial)",
+    }
+}
+
+/// Sarcoma (bone): poorly vascularized, moderate-to-high IFP.
+/// Ref: Jain 1988 (Q 0.03-0.10); estimated IFP 20-60 mmHg.
+/// Parameters are midpoints of issue #48 ranges. All ESTIMATED.
+pub fn sarcoma_tumor() -> TumorPKParams {
+    TumorPKParams {
+        blood_flow_q: 0.06,
+        vascular_fraction: 0.035,
+        interstitial_fraction: 0.20,
+        ps_product: 0.04,
+        partition_coeff: 0.35,
+        ifp_mmhg: 40.0,
+        mvp_mmhg: 25.0,
+        hydraulic_conductivity: 1e-7,
+        reflection_coeff: 0.9,
+        k_uptake_bulk: 0.02,
+        km_uptake: 0.5,
+        k_met_v: 0.001,
+        k_met_i: 0.001,
+        name: "Sarcoma (bone)",
+    }
+}
+
 // ============================================================
 // Plasma concentration models
 // ============================================================
 
-/// Analytical plasma concentration models.
-/// Phase 1 uses analytical solutions; Phase 2 will add PK-Sim CSV import.
+/// Plasma concentration models: analytical or from external data.
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum PlasmaModel {
     /// IV bolus: C(t) = C0 × exp(-k_el × t)
@@ -149,6 +192,15 @@ pub enum PlasmaModel {
     Constant {
         concentration: f64,
     },
+    /// External plasma time-course (e.g., PK-Sim export).
+    /// Auto-normalized so peak = 1.0. Linear interpolation between points.
+    /// Returns 0 after the last time point.
+    CsvTimeCourse {
+        /// Time points in minutes (must be sorted ascending).
+        time_min: Vec<f64>,
+        /// Normalized concentration at each time point (peak = 1.0).
+        conc: Vec<f64>,
+    },
 }
 
 impl PlasmaModel {
@@ -157,7 +209,77 @@ impl PlasmaModel {
         match self {
             PlasmaModel::IvBolus { c0, k_el } => c0 * (-k_el * t_min).exp(),
             PlasmaModel::Constant { concentration } => *concentration,
+            PlasmaModel::CsvTimeCourse { time_min, conc } => {
+                if time_min.is_empty() {
+                    return 0.0;
+                }
+                if t_min <= time_min[0] {
+                    return conc[0];
+                }
+                if t_min >= *time_min.last().unwrap() {
+                    return 0.0; // drug eliminated after last time point
+                }
+                // Binary search for bracketing interval
+                let idx = time_min.partition_point(|&t| t <= t_min);
+                if idx == 0 {
+                    return conc[0];
+                }
+                let i = idx - 1;
+                let t0 = time_min[i];
+                let t1 = time_min[i + 1];
+                let c0 = conc[i];
+                let c1 = conc[i + 1];
+                let frac = (t_min - t0) / (t1 - t0);
+                c0 + frac * (c1 - c0)
+            }
         }
+    }
+
+    /// Parse a CSV string with "time,concentration" columns.
+    /// Time is expected in minutes. Concentrations are auto-normalized
+    /// so peak = 1.0 (compatible with the GPX4 inactivation model).
+    /// First line is treated as header if it doesn't parse as numbers.
+    pub fn from_csv(csv_content: &str) -> Result<Self, String> {
+        let mut time_min = Vec::new();
+        let mut conc_raw = Vec::new();
+
+        for (i, line) in csv_content.lines().enumerate() {
+            let line = line.trim();
+            if line.is_empty() {
+                continue;
+            }
+            let parts: Vec<&str> = line.split(',').collect();
+            if parts.len() < 2 {
+                return Err(format!("Line {}: expected 'time,concentration', got '{}'", i + 1, line));
+            }
+            // Skip header line
+            let t: f64 = match parts[0].trim().parse() {
+                Ok(v) => v,
+                Err(_) => {
+                    if i == 0 { continue; } // likely header
+                    return Err(format!("Line {}: invalid time '{}'", i + 1, parts[0]));
+                }
+            };
+            let c: f64 = match parts[1].trim().parse() {
+                Ok(v) => v,
+                Err(_) => return Err(format!("Line {}: invalid concentration '{}'", i + 1, parts[1])),
+            };
+            time_min.push(t);
+            conc_raw.push(c);
+        }
+
+        if time_min.len() < 2 {
+            return Err(format!("CSV must have at least 2 data points, got {}", time_min.len()));
+        }
+
+        // Auto-normalize: peak = 1.0
+        let max_conc = conc_raw.iter().cloned().fold(0.0_f64, f64::max);
+        if max_conc <= 0.0 {
+            return Err("All concentrations are zero or negative".to_string());
+        }
+        let conc: Vec<f64> = conc_raw.iter().map(|&c| (c / max_conc).max(0.0)).collect();
+
+        Ok(PlasmaModel::CsvTimeCourse { time_min, conc })
     }
 }
 
@@ -177,6 +299,21 @@ pub fn rsl3_iv_bolus() -> PlasmaModel {
 /// continuous inactivation model vs one-time init reduction.
 pub fn constant_reference() -> PlasmaModel {
     PlasmaModel::Constant { concentration: 1.0 }
+}
+
+/// Doxorubicin IV bolus. Distribution-phase t_half ≈ 30 min.
+/// Real doxorubicin PK is multi-compartment (terminal t_half ~20-48h)
+/// but the IV bolus model captures the immediate distribution phase.
+///
+/// NOTE: sim_cell_with_pk models GPX4 inhibition, NOT DNA intercalation.
+/// Doxorubicin kill rates from sim_cell_with_pk are biologically meaningless.
+/// Use this preset for C(r,t) timecourse comparison (valid physics) and
+/// for demonstrating multi-drug PK-Sim interoperability.
+pub fn doxorubicin_iv_bolus() -> PlasmaModel {
+    PlasmaModel::IvBolus {
+        c0: 1.0,
+        k_el: (2.0_f64).ln() / 30.0, // t_half ≈ 30 min (distribution phase)
+    }
 }
 
 // ============================================================
@@ -420,7 +557,7 @@ mod tests {
     #[test]
     fn concentrations_never_negative() {
         let plasma = rsl3_iv_bolus();
-        for tumor_fn in [breast_tumor, pancreatic_tumor, glioblastoma_tumor] {
+        for tumor_fn in [breast_tumor, pancreatic_tumor, glioblastoma_tumor, melanoma_tumor, sarcoma_tumor] {
             let tumor = tumor_fn();
             let result = solve_tumor_pk(&plasma, &tumor, 180, 100);
             for (i, &c) in result.c_interstitial.iter().enumerate() {
@@ -509,6 +646,60 @@ mod tests {
         assert!(
             lambda_met > lambda_full,
             "Metabolism-only lambda ({lambda_met}) should exceed full ({lambda_full})"
+        );
+    }
+
+    #[test]
+    fn csv_plasma_parses_and_interpolates() {
+        let csv = "time,concentration\n0,100\n30,50\n60,25\n180,0";
+        let model = PlasmaModel::from_csv(csv).unwrap();
+        // Auto-normalized: peak (100) → 1.0
+        assert!((model.concentration_at(0.0) - 1.0).abs() < 0.01);
+        assert!((model.concentration_at(30.0) - 0.5).abs() < 0.01);
+        // Interpolation at t=15 (midpoint of 0-30): (1.0+0.5)/2 = 0.75
+        assert!((model.concentration_at(15.0) - 0.75).abs() < 0.01);
+        // After last point: returns 0
+        assert!(model.concentration_at(200.0) == 0.0);
+    }
+
+    #[test]
+    fn csv_plasma_rejects_empty() {
+        let csv = "time,concentration\n";
+        assert!(PlasmaModel::from_csv(csv).is_err());
+    }
+
+    #[test]
+    fn csv_plasma_matches_analytical_iv_bolus() {
+        // Generate CSV data from analytical IV bolus, then parse and compare
+        let k_el = (2.0_f64).ln() / 30.0;
+        let mut csv = String::from("time,conc\n");
+        for t in (0..=180).step_by(5) {
+            let c = (-k_el * t as f64).exp();
+            csv.push_str(&format!("{},{:.6}\n", t, c));
+        }
+        let model = PlasmaModel::from_csv(&csv).unwrap();
+        let analytical = rsl3_iv_bolus();
+        // Compare at several points (CSV is sampled every 5 min, so interpolation applies)
+        for t in [0.0, 10.0, 30.0, 60.0, 120.0] {
+            let csv_val = model.concentration_at(t);
+            let ana_val = analytical.concentration_at(t);
+            assert!(
+                (csv_val - ana_val).abs() < 0.02,
+                "CSV vs analytical at t={t}: {csv_val:.4} vs {ana_val:.4}"
+            );
+        }
+    }
+
+    #[test]
+    fn melanoma_higher_exposure_than_sarcoma() {
+        let plasma = rsl3_iv_bolus();
+        let mel = solve_tumor_pk(&plasma, &melanoma_tumor(), 180, 100);
+        let sar = solve_tumor_pk(&plasma, &sarcoma_tumor(), 180, 100);
+        let auc_mel: f64 = mel.c_interstitial.iter().sum();
+        let auc_sar: f64 = sar.c_interstitial.iter().sum();
+        assert!(
+            auc_mel > auc_sar,
+            "Melanoma AUC ({auc_mel}) should exceed sarcoma ({auc_sar})"
         );
     }
 }

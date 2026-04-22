@@ -76,6 +76,8 @@ fn main() {
         ("Breast", breast_tumor()),
         ("Pancreatic", pancreatic_tumor()),
         ("GBM", glioblastoma_tumor()),
+        ("Melanoma", melanoma_tumor()),
+        ("Sarcoma", sarcoma_tumor()),
     ];
 
     let plasma = rsl3_iv_bolus();
@@ -232,6 +234,8 @@ fn main() {
         ("Breast", breast_tumor(), 60.0),       // half of 120μm inter-vessel
         ("Pancreatic", pancreatic_tumor(), 125.0), // half of 250μm
         ("GBM", glioblastoma_tumor(), 75.0),    // half of 150μm
+        ("Melanoma", melanoma_tumor(), 60.0),    // well-vasc, similar to breast
+        ("Sarcoma", sarcoma_tumor(), 100.0),     // poorly-vasc, half of ~200μm
     ];
 
     let radial_bins = [0.0, 25.0, 50.0, 75.0, 100.0, 125.0];
