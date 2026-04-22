@@ -274,6 +274,16 @@ impl PlasmaModel {
             return Err(format!("CSV must have at least 2 data points, got {}", time_min.len()));
         }
 
+        // Validate monotonically increasing time
+        for i in 1..time_min.len() {
+            if time_min[i] <= time_min[i - 1] {
+                return Err(format!(
+                    "Time must be strictly increasing: t[{}]={} <= t[{}]={}",
+                    i, time_min[i], i - 1, time_min[i - 1]
+                ));
+            }
+        }
+
         // Auto-normalize: peak = 1.0
         let max_conc = conc_raw.iter().cloned().fold(0.0_f64, f64::max);
         if max_conc <= 0.0 {
