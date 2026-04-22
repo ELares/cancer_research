@@ -874,15 +874,87 @@ These structural limitations define the boundaries of what the computational wor
 
 \chapter{Research Roadmap}
 
-\section{Research Priorities}
+\section{From Predictions to Experiments}
 
-\textbf{Priority 1} (highest value, $\sim$3 months): Comparative resistant-state killing experiment. Using persister or residual-disease models grounded in the current literature \cite{higuchi2026_41481741}, compare PDT, SDT, and pharmacologic ferroptosis inducers under matched conditions. Measure cell death, lipid-peroxidation markers, and ICD outputs (calreticulin, HMGB1, STING). Include conventional sensitizers and nanosensitizer conditions so the modality-versus-nanoplatform question is not blurred.
+Chapter 8 catalogued the reasons this hypothesis could fail --- biologically, clinically, and computationally. This chapter proposes a research program designed to test whether it does. The program is organized not by which finding seems most exciting but by which predictions rest on the best-characterized parameters, because the failure of a high-confidence prediction is more informative than the failure of one that depends on uncertain estimates.
 
-\textbf{Priority 2} ($\sim$1 month): Measure the vulnerability window and backup defenses. After drug withdrawal from persister-inducing therapy, quantify GPX4, FSP1, NRF2, SCD/MUFA markers, and ferroptosis sensitivity at serial timepoints. If the window closes rapidly or lipid remodeling rises immediately, the translational case weakens substantially.
+Chapters 6 and 7 each proposed specific experiments attached to individual simulation findings --- seven in total, each with a hypothesis, model system, and expected outcomes if the prediction holds or fails. This chapter does not restate those proposals. Instead, it organizes them into a phased program: which experiments to run first and why, which experiments gate which follow-ups, what new experiments are needed beyond the individual-finding tests, and what the field learns if the entire program fails.
 
-\textbf{Priority 3} ($\sim$2-3 months): Compare the physical-ROS hypothesis against other adjacent lanes rather than against nothing. Radioligand therapy, checkpoint-plus-myeloid strategies, and pathway-target approaches should be evaluated on the same axes: tissue reach, evidence maturity, delivery burden, and biological plausibility for residual disease.
+This chapter is for research prioritization, not treatment advice. The experimental suggestions identify what to test and why --- they are not clinical protocols, statistical designs, or grant-ready specifications. A researcher using this chapter as a starting point would still need to optimize assay conditions, determine sample sizes, and adapt the proposals to their specific model systems and expertise.
 
-\textbf{Priority 4} (if Priorities 1-3 are encouraging, $\sim$6 months): Move to in vivo comparison with honest comparators. Any mouse study should include PDT + anti-PD-1, SDT + anti-PD-1, and a pharmacologic ferroptosis arm; otherwise the experiment cannot tell whether SDT offers a meaningful advantage over its closest precedent.
+\section{Confidence Tiers}
+
+Not all simulation predictions are equally trustworthy. Some rest on well-characterized biochemistry and measured physical constants; others depend on parameters that are estimated from indirect evidence or, in one case, entirely uncharacterized. Assigning a confidence tier to each prediction makes the program's risk profile explicit and helps a researcher decide where to invest effort first.
+
+The tiers are defined by parameter provenance:
+
+- \textbf{High confidence}: The prediction depends primarily on textbook biochemistry or well-measured physical constants. Sensitivity analysis confirms directional robustness. Failure of a high-confidence prediction would require a fundamental assumption to be wrong.
+- \textbf{Medium confidence}: The underlying mechanism is published, but key magnitude parameters are estimated from indirect evidence rather than measured in the model system. The prediction's direction is robust but its quantitative magnitude could shift substantially with better data.
+- \textbf{Low confidence}: The prediction depends on parameters that are explicitly flagged as the model's most uncertain. The prediction could change qualitatively --- not just quantitatively --- if the parameter is wrong.
+
+\textbf{High confidence:}
+
+\textit{Hypoxia resistance (Section 7.1).} The model predicts RSL3 kill collapses more than 30-fold in hypoxic conditions while SDT maintains greater than 85\% kill. This rests on established biochemistry: oxygen is the terminal electron acceptor for mitochondrial ROS generation (textbook), and SDT's Type I mechanism is documented as less O2-dependent than Type II. If this prediction fails, the endogenous-vs-exogenous ROS asymmetry --- the most fundamental claim in the simulation work --- would need revision.
+
+\textit{Spatial penetration differential (Section 6.1).} PDT kill collapses beyond 3 mm depth; SDT maintains efficacy through 1 cm. This is physics, not biology: light attenuation at 630 nm and acoustic attenuation at 1 MHz are well-measured constants. If this prediction fails in a spheroid experiment, the attenuation model is wrong --- which would be surprising for well-characterized physics but would be immediately informative.
+
+\textit{Dual-pathway synergy (Section 6.3).} RSL3 + FSP1 inhibitor produces approximately 2x Bliss synergy through dual-pathway depletion. GPX4 and FSP1 independence is published (Bersuker et al., Nature 2019). The directional prediction (dual > single) is robust to parameter variation. If the combination index shows additivity rather than synergy, FSP1's role as an independent parallel repair pathway needs reassessment --- a finding with implications well beyond this project.
+
+\textbf{Medium confidence:}
+
+\textit{Vulnerability window timing (Section 6.2).} RSL3 sensitivity window closes within 3 days; exogenous-ROS sensitivity persists for weeks. The defense-pathway recovery half-lives (GPX4: 3 days, FSP1: 7 days) are literature-estimated, not measured in the specific persister model system the simulation uses. If recovery is much faster than estimated (hours instead of days), the therapeutic window may be too narrow for any follow-up treatment to exploit.
+
+\textit{Immune coupling (Section 7.2).} SDT generates 104x more immune kills than RSL3 through spatial DAMP density. The LP overshoot that drives DAMP quality is emergent from the biochemistry, but all immune parameters (T cell kill rate, DAMP diffusion, DC activation threshold) are estimated. Chapter 8.4 flags that systemic immune dynamics could amplify or suppress the local advantage --- and the clinical trial failure rate (Section 8.3) suggests suppression is the more probable default.
+
+\textit{Stromal shielding (Section 7.3).} CAF-mediated GSH and MUFA supply halves RSL3 kill at the tumor boundary while barely affecting SDT. The CAF supply mechanism is published, but the specific supply rates used in the model have no textbook source. The overall tumor impact is small (1.1\% of cells affected) even if the per-cell effect is large.
+
+\textbf{Low confidence:}
+
+\textit{pH ion trapping (Section 7.4).} Acidic pH reduces RSL3 kill by 53\% through Henderson-Hasselbalch-driven drug trapping. RSL3 is a chloroacetamide, not a classic weak base --- its pKa is uncharacterized, and the ion trapping sensitivity is the most uncertain parameter in the entire model. This prediction is the most likely to fail experimentally. If it does fail, the pH resistance mechanism is eliminated, leaving only hypoxia and stromal shielding as TME resistance factors. If it succeeds, it identifies a previously unrecognized pharmacokinetic limitation of chloroacetamide-class compounds in acidic tumors.
+
+\section{Program Structure}
+
+The experimental program has a gated structure designed to maximize information per experiment and minimize wasted effort.
+
+\textbf{Phase 1 --- High-confidence in-vitro tests.} Run the hypoxia (7.1), spatial penetration (6.1), and dual-pathway synergy (6.3) experiments first. These test the cleanest predictions using the best-characterized parameters. If any of these fails, the specific model assumption that broke should be identified before proceeding --- it may require revising the simulation architecture before the remaining predictions are worth testing.
+
+\textbf{Phase 2 --- Medium-confidence refinements.} If Phase 1 confirms the directional findings, run the vulnerability window (6.2), immune coupling (7.2), and stromal shielding (7.3) experiments. These refine the picture: how long is the treatment window? Does kill density actually translate to immune activation? Does stromal protection matter at the population level? Phase 2 experiments depend on the directional findings from Phase 1 holding --- if drugs and physical modalities show similar hypoxic sensitivity, the TME-resistance framing needs revision before investing in refinement experiments.
+
+\textbf{Phase 3 --- Low-confidence test.} Run the pH ion-trapping experiment (7.4) last among the in-vitro studies. This is the most likely to fail and the result either validates or eliminates one of the three proposed TME resistance mechanisms. Running it after Phases 1-2 means the broader program isn't derailed by a single uncertain parameter.
+
+\textbf{Running in parallel --- Broader comparison (Section 9.4).} This is analytical, not experimental. It runs alongside the wet-lab program and asks whether the entire approach justifies its complexity relative to existing alternatives.
+
+\textbf{Gated --- In-vivo integration (Section 9.5).} This is the definitive test and the most expensive. It should only proceed after the in-vitro program confirms the directional predictions. Running it prematurely would risk investing substantial resources in an approach whose foundational assumptions haven't been verified.
+
+\section{Broader Comparison: Does This Hypothesis Justify Its Complexity?}
+
+This is not an experiment. It is an analytical evaluation of whether the physical-ROS ferroptosis approach is worth pursuing relative to existing alternatives --- a question the simulation cannot answer because it doesn't model the alternatives.
+
+The comparison should evaluate each approach on shared axes: regulatory maturity (how far from clinical use?), evidence depth (clinical trials vs preclinical vs computational?), delivery burden (how complex is the treatment logistics?), and applicability to residual disease (does it target the residual-cell biology this project focuses on?).
+
+The most informative comparison is against radioligand therapy. Radioligand uses targeted radiation delivered by molecules that seek specific receptors on cancer cells --- it shares the intuitive appeal of spatially selective tumor killing while operating within a more mature regulatory framework (FDA approvals for prostate and neuroendocrine cancers, established dosimetry pipelines, and a large clinical trial base). If radioligand therapy addresses the same clinical need --- treating localized residual disease --- with a simpler development path, the physical-ROS hypothesis becomes academically interesting but clinically unnecessary.
+
+The comparison is not winner-take-all. Different approaches may be optimal for different clinical contexts: radioligand for tumors with targetable receptors, checkpoint combinations for immunologically hot tumors, and physical-ROS modalities for deep-seated tumors without targetable receptors in immunocompetent settings where ICD might matter. The value of the comparison is not in crowning a winner but in defining the niche --- if any --- where the physical-ROS approach adds something the alternatives cannot.
+
+\section{In-Vivo Integration}
+
+The in-vitro experiments in Phases 1-3 test individual predictions in controlled conditions. The in-vivo integration experiment tests whether those predictions survive the full complexity of a living system --- where hypoxia, pH gradients, stromal shielding, immune activation, drug penetration, and evolutionary dynamics all operate simultaneously.
+
+The experiment should use a syngeneic mouse model (immunocompetent, so the immune coupling prediction can be tested) with a persister-generating protocol (chemotherapy followed by recovery period to select residual disease). Treatment arms must include honest comparators: SDT with anti-PD-1 (the strongest prediction from the simulation), PDT with anti-PD-1 (the established-modality control), RSL3 alone (the pharmacologic ferroptosis arm), and RSL3 plus FSP1 inhibitor (the dual-pathway combination). Primary endpoint: progression-free survival. Secondary endpoints: immune infiltrate composition, ferroptosis markers in treated tumors, and lipid peroxidation at tumor core versus periphery.
+
+This experiment is expensive, time-consuming, and tests multiple predictions simultaneously. Running it without in-vitro confirmation from Phases 1-2 would be premature because failure would be uninterpretable --- you would not know which prediction failed or why. Running it after in-vitro confirmation means failure would identify the specific gap between controlled conditions and biological reality, which is itself valuable.
+
+If the predictions hold: SDT plus anti-PD-1 outperforms other arms in deep tumors with hypoxic cores, with higher immune infiltrate and ferroptosis markers at depth than PDT or RSL3 arms. If the predictions fail: the TME resistance asymmetry does not translate in vivo, which could mean that (a) the in-vitro-to-in-vivo gap is larger than the spatial simulation predicts, (b) the immune coupling does not scale from local DAMP signaling to systemic anti-tumor immunity, or (c) evolutionary escape operates faster than the one-cycle snapshot suggests.
+
+\section{What the Field Learns If the Program Fails}
+
+The most important question a research program can answer is not "does it work?" but "what do we learn either way?" A program that only produces knowledge when it succeeds is advocacy, not science. Each phase of this program has defined failure criteria that advance understanding regardless of outcome.
+
+If the high-confidence experiments fail --- if RSL3 and SDT show similar sensitivity to hypoxia, or if light and sound attenuate similarly in tissue, or if dual-pathway depletion produces additive rather than synergistic kill --- the most fundamental predictions of the model are wrong. The ROS-source asymmetry (endogenous versus exogenous) is smaller than the simulation estimates, or it doesn't exist at the treatment-relevant scale. The field learns that the physical-modality advantage for ferroptosis is purely spatial (depth of penetration), not biochemical. This narrows the claim substantially but does not eliminate it: depth advantage is still real for deep-seated tumors.
+
+If the medium-confidence experiments fail --- if the vulnerability window is much shorter than predicted, if DAMP release does not correlate with treatment modality, or if CAF co-culture provides no detectable protection --- the directional findings from Phase 1 may still hold, but the quantitative magnitudes are wrong and the model's parameter estimates need substantial revision. The field learns what calibration data is needed for the next generation of ferroptosis models.
+
+If the entire program fails --- if every in-vitro experiment shows no modality-dependent differential --- the directional findings were computational artifacts produced by estimated parameters that do not reflect real biology. This is not a wasted outcome. It defines the limits of computational hypothesis generation in this parameter regime: models with estimated parameters can identify directions worth exploring, but they cannot reliably distinguish real biological patterns from parameter-driven artifacts without experimental calibration. Future modeling efforts in the ferroptosis space would know to calibrate against experimental data before making predictions, not after. That methodological lesson has value beyond this specific hypothesis.
 
 \chapter{The Broader Landscape}
 
@@ -908,9 +980,89 @@ This article began as a modality-centered question and ends in a broader place.
 
 The right next step is therefore not to defend one favored modality, but to run the comparative experiments and cross-lane evaluations that could falsify it quickly.
 
+\section{Where the Field Is Going}
+
+The cancer research landscape in 2026 is defined by several structural trends that provide context for where this work sits and where it might become irrelevant.
+
+\textbf{Immunotherapy remains the dominant paradigm, but resistance is the dominant problem.} Checkpoint inhibitors have transformed outcomes for some cancers --- melanoma, non-small-cell lung cancer, renal cell carcinoma --- and their use continues to expand. But the core challenge has shifted from "does immunotherapy work?" to "why doesn't it work for most patients?" Primary resistance (tumors that never respond), acquired resistance (tumors that respond and then escape), and the immunosuppressive tumor microenvironment are now the central obstacles. The same TME features modeled in Chapter 7 --- hypoxia, stromal shielding, acidic pH --- are recognized as barriers to immunotherapy effectiveness, not just to ferroptosis induction.
+
+\textbf{Engineered cell therapies face the solid-tumor wall.} CAR-T cells have been transformative in B-cell leukemias and lymphomas, but extending their success to solid tumors remains the field's greatest challenge. The tumor microenvironment suppresses, exhausts, and excludes T cells attempting to infiltrate solid tumors. Every advance in CAR-T for solid tumors is, at root, an advance in overcoming TME suppression --- the same biological landscape this project models from a different angle.
+
+\textbf{Radioligand therapy is the clearest clinically advancing competitor to any spatially selective hypothesis.} Lutetium-177 PSMA-617 (Pluvicto) is FDA-approved for metastatic castration-resistant prostate cancer. Lutetium-177 dotatate (Lutathera) is approved for gastroenteropancreatic neuroendocrine tumors. The theranostic pipeline --- using imaging to identify targetable tumors and then treating with the same targeting molecule carrying a radioactive payload --- is more clinically mature than anything in the ferroptosis-SDT space. For tumors with targetable receptors, radioligand may already offer what the physical-ROS hypothesis proposes --- spatially selective killing with systemic delivery.
+
+\textbf{AI and computational biology are accelerating hypothesis generation.} Machine learning is transforming drug target identification, compound screening, and biomarker discovery. This project is one instance of a broader trend: using computational tools to map research landscapes and identify gaps that individual researchers miss. The specific tools (Monte Carlo biochemical simulation, cross-literature corpus analysis) are distinctive, but the underlying approach --- computational hypothesis generation followed by experimental validation --- is becoming standard practice.
+
+\textbf{mRNA cancer vaccines are advancing toward personalized treatment.} Individualized neoantigen vaccines that train the immune system to recognize mutations specific to each patient's tumor are in late-stage clinical trials. This approach addresses the immune-recognition problem directly rather than relying on immunogenic cell death to trigger an immune response. If personalized mRNA vaccines prove effective at eliminating residual disease, the ICD component of the physical-ROS hypothesis becomes less important --- though the direct cytotoxic advantage of physical modalities in hypoxic tumors would remain.
+
+\section{Where This Work Fits --- and Where It Doesn't}
+
+This project contributes a computational framework for comparing therapeutic approaches across the boundaries that normally separate research communities. Its value lies in the questions it raises and the comparisons it surfaces, not in clinical claims.
+
+\textbf{Where it fits.} The hypothesis generation is most relevant for locally targetable, deep-seated solid tumors with evidence of ferroptosis-prone residual states --- specifically, tumors where pharmacologic drug delivery faces TME barriers (hypoxia, stromal shielding, acidic pH) that the simulation predicts physical modalities can bypass. Pancreatic, hepatic, and pelvic tumors in immunocompetent patients during a post-treatment vulnerability window are the narrowest and most defensible application context.
+
+\textbf{Where it does not fit.} Hematologic malignancies (no spatial targeting needed). Diffuse metastatic disease (no localizable target for focused ultrasound or light). Tumors without ferroptosis-prone residual states (no vulnerability to exploit). Immunocompromised patients (ICD-to-immunity chain cannot operate). Settings where the vulnerability window has closed (persister cells have already restored defenses). This is not a general theory of cancer treatment. It is a conditional prediction about a specific clinical context.
+
+\textbf{The honest framing.} This work identifies questions worth asking, not answers worth implementing. Every simulation finding is a hypothesis, not a demonstrated clinical advantage. The experimental program in Chapter 9 is designed to determine which --- if any --- of these hypotheses survive contact with real biology. If none do, the contribution is the computational framework and the cross-literature methodology, which remain useful for other hypotheses and other research communities.
+
+\section{Competing Hypotheses Worth Taking Seriously}
+
+Intellectual honesty requires acknowledging that the ferroptosis-persister-physical-ROS hypothesis could be rendered irrelevant by developments in adjacent fields, independent of whether its specific predictions hold.
+
+\textbf{The ferroptosis-persister connection might be a niche phenomenon.} The evidence that persister cells are ferroptosis-sensitive comes from specific model systems (primarily EGFR-mutant lung cancer persisters). Whether this sensitivity generalizes across cancer types, treatment histories, and genetic backgrounds is unknown. If it doesn't generalize, the hypothesis applies to a narrow population rather than the broad residual-disease problem described in Chapter 1.
+
+\textbf{Radioligand therapy might render the spatial-selectivity argument unnecessary.} For tumors with targetable surface receptors, radioligand delivers spatially selective killing through systemic injection --- no focused ultrasound or light source required. If the receptor-targeting approach expands to cover more tumor types, the physical-modality advantage narrows to the subset of tumors without targetable receptors.
+
+\textbf{Immune checkpoint combinations might solve residual disease independently.} If next-generation checkpoint combinations (anti-PD-1 + anti-CTLA-4 + anti-LAG-3, or checkpoint plus costimulatory agonists) prove effective at eliminating minimal residual disease, the ferroptosis-ICD pathway becomes one of many ways to achieve immune clearance rather than a uniquely valuable approach.
+
+\textbf{The nanoparticle engineering confound might mean there is no SDT-as-modality advantage.} As Chapter 8.3 noted, most SDT-ferroptosis data comes from engineered nanoparticles designed to deplete GSH and release iron. If plain SDT with conventional sonosensitizers does not trigger ferroptosis, the entire hypothesis is about nanoparticle design, not about ultrasound as a therapeutic modality.
+
+The field may move past the ferroptosis-persister hypothesis entirely. If it does, this project's lasting contribution would be the computational methodology --- the ferroptosis-core simulation engine, the cross-literature analysis pipeline, and the framework for comparing therapeutic approaches on shared axes. Those tools are useful regardless of whether the specific hypothesis they were built to test turns out to be correct.
+
 \chapter{How To Contribute}
 
-[To be added in \#103]
+This project is built to be extended, challenged, and improved. Everything --- the code, the data, the analysis pipeline, and this manuscript --- is publicly available under the MIT license. This chapter describes specific ways to engage, organized by background.
+
+\section{For Researchers}
+
+The ferroptosis-core simulation engine is a standalone Rust library designed to be used independently of this manuscript. It models the ferroptosis cascade (ROS generation, GSH depletion, GPX4/FSP1 repair, lipid peroxidation, and cell death) with configurable parameters and stochastic variation.
+
+The simplest way to engage is to challenge the predictions. Every simulation finding in Chapters 6 and 7 depends on specific parameter values documented in the parameter provenance file (see `simulations/calibration/parameter\_provenance.md`). Changing a parameter and rerunning the simulation tests whether the directional result survives. If it doesn't, you've identified a load-bearing assumption --- which is exactly what the experimental program in Chapter 9 aims to do with wet-lab experiments. The Python bindings (`pip install ferroptosis-core`) make this accessible without learning Rust: import the library, call `sim\_cell` or `sim\_batch` with modified parameters, and compare against the published results.
+
+If you have experimental data that could calibrate model parameters --- measured GPX4 recovery kinetics after drug withdrawal, quantified CAF supply rates of GSH or MUFA, or RSL3 intracellular concentration at different pH values --- those measurements would directly improve the model's parameter estimates and change the confidence tiers in Chapter 9. The project welcomes data contributions as GitHub issues linking to published or preprint data.
+
+If you find articles missing from the local corpus that would materially change the analysis --- particularly landmark papers that the corpus-gaps document (`analysis/landmark-corpus-gaps.md`) already identifies --- submitting a pull request or issue with the PMID helps close known coverage gaps.
+
+\section{For Engineers and Developers}
+
+The simulation architecture is modular by design. The ferroptosis-core library (see `simulations/ferroptosis-core/README.md`) exposes eight modules: `cell` (types and phenotypes), `params` (rate constants), `biochem` (core engine), `stats` (confidence intervals and parallel Monte Carlo), `physics` (depth-dependent energy), `grid` (2D tumor architecture), `immune` (ICD/DAMP cascade), and `io` (JSON/CSV output). Each module can be extended independently.
+
+\textbf{Adding new TME features.} The sim-tme binary demonstrates how to compose ferroptosis-core with spatial features (O2 gradients, pH fields, stromal layers, immune coupling). Adding a new feature follows the same pattern: define the spatial field, modify cell parameters per-step based on the cell's position, and run the existing biochemistry engine. The adaptive-evolution model identified as missing in Chapter 8.4 --- where surviving cells mutate and evolve resistance across treatment cycles --- would be the most impactful extension.
+
+\textbf{Python bindings.} The ferroptosis-python package (see `simulations/ferroptosis-python/README.md`) wraps the Rust engine via PyO3. Install with `pip install ferroptosis-core` (no Rust toolchain required). The API exposes `default\_params()`, `invivo\_params()`, `sim\_cell()`, and `sim\_batch()` with full parameter override support. Performance is native Rust speed with the GIL released during computation.
+
+\textbf{C FFI for PhysiCell integration.} The ferroptosis-ffi crate (see `simulations/ferroptosis-ffi/`) provides a C-compatible API for embedding the ferroptosis engine in agent-based modeling platforms like PhysiCell. This enables multi-scale simulations combining ferroptosis biochemistry with cell migration, proliferation, and tissue-level dynamics that the current model does not capture.
+
+\section{For Students}
+
+This project is designed to be a starting point, not a finished product. Several of the limitations identified in Chapter 8.4 translate directly into thesis-level research projects.
+
+\textbf{Computational biology thesis ideas:}
+
+\textit{Calibrate the vulnerability window model against experimental data (extends Chapter 6.2).} The current model uses literature-estimated recovery half-lives for GPX4, FSP1, NRF2, and GSH. A project that measures these recovery kinetics in a specific persister cell model and re-parameterizes the simulation would convert a medium-confidence prediction into a high-confidence one --- or reveal that the model's assumptions are wrong. Skills needed: cell culture, Western blot/qPCR for protein quantification, basic Rust or Python for model modification.
+
+\textit{Build the systemic immune model that Chapter 8.4 identifies as missing (extends Chapter 7.2).} The current immune layer models resident T cell activation over 0-48 hours. A systemic model incorporating circulating immune cell recruitment, regulatory T cell suppression, and adaptive memory formation would resolve the "amplification vs dampening" uncertainty identified in Chapter 8.4. Skills needed: computational modeling, immunology background, Rust programming.
+
+\textit{Add adaptive evolution to the simulation (addresses Chapter 8.4's structural limitation).} The current model simulates one treatment cycle. A population-dynamics extension that models mutation, clonal selection, and resistance evolution across multiple cycles would answer the durability question the current model cannot address. Skills needed: evolutionary dynamics, agent-based modeling, Rust or Python.
+
+\section{For Clinicians}
+
+This project does not make treatment recommendations. Nothing in this book should be interpreted as clinical guidance. The simulation predictions are hypothesis-generating tools, not validated clinical evidence.
+
+What clinicians can watch for: any clinical trial that tests ferroptosis-inducing agents in hypoxic solid tumors would provide real-world evidence for or against the predictions in Chapter 7. Any trial combining SDT with immunotherapy would test the immune-coupling prediction from Section 7.2. Any trial measuring ferroptosis markers as secondary endpoints after physical-modality treatment would provide calibration data for the model.
+
+How to interpret the simulation predictions: directional findings (physical modalities bypass TME resistance better than drugs) are the claims most worth following --- they are robust to parameter variation and represent the model's strongest predictions. Quantitative values (the specific percentages, ratios, and synergy scores) should be treated as order-of-magnitude estimates, not precise forecasts. The confidence tiers in Chapter 9 provide a guide to which predictions rest on the strongest evidence.
+
+The contribution clinicians can make is judgment. Computational biologists can identify patterns in data; clinicians can judge whether those patterns matter in the context of real patient care, real treatment logistics, and real clinical endpoints. If the experimental program in Chapter 9 produces results, clinician input on study design for the in-vivo integration experiment (Section 9.5) would be valuable --- particularly on endpoint selection, comparator arm design, and the clinical context most likely to test the hypothesis fairly.
 
 \part{References and Tools}
 
