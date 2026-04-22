@@ -26,7 +26,7 @@ const N_STEPS: usize = 180;
 #[derive(Serialize)]
 struct ScenarioResult {
     tumor_type: String,
-    context: String, // "tumor_pk" or "2d_reference"
+    context: String, // "tumor_pk" or "max_exposure_ref"
     n_cells: usize,
     n_dead: usize,
     death_rate: f64,
@@ -86,10 +86,13 @@ fn main() {
     eprintln!("All tumor PK parameters ESTIMATED (no textbook coverage).\n");
 
     let mut all_results: Vec<ScenarioResult> = Vec::new();
-    // --- 2D reference (constant drug concentration = 1.0 at all steps) ---
-    // This represents ideal 2D culture where drug bathes cells directly.
-    // Do NOT run through the tumor ODE — that models tumor barriers which
-    // don't exist in 2D culture.
+    // --- Constant max-exposure reference (conc = 1.0 at all steps) ---
+    // This is the theoretical maximum: drug at full concentration for all
+    // 180 steps with no PK barriers. NOT equivalent to the repo's standard
+    // 2D RSL3 baseline (~42.5% in sim-original), which uses a one-time
+    // GPX4 reduction at init. The clamp model here applies continuous
+    // inhibition (preventing NRF2 recovery), producing ~100% kill.
+    // Protection factors are relative to this max-exposure reference.
     let ref_death_rate;
     {
         let conc_schedule: Vec<f64> = vec![1.0; N_STEPS];
@@ -99,7 +102,7 @@ fn main() {
         ref_death_rate = n_dead as f64 / N_CELLS as f64;
 
         eprintln!(
-            "  2D reference: death_rate={:.1}% [{:.1}-{:.1}], LP={:.2}, GSH={:.2}, GPX4={:.3}",
+            "  Max-exposure ref: death_rate={:.1}% [{:.1}-{:.1}], LP={:.2}, GSH={:.2}, GPX4={:.3}",
             ref_death_rate * 100.0,
             ci_lo * 100.0,
             ci_hi * 100.0,
@@ -109,8 +112,8 @@ fn main() {
         );
 
         all_results.push(ScenarioResult {
-            tumor_type: "2D reference".to_string(),
-            context: "2d_reference".to_string(),
+            tumor_type: "Max exposure ref".to_string(),
+            context: "max_exposure_ref".to_string(),
             n_cells: N_CELLS,
             n_dead,
             death_rate: ref_death_rate,

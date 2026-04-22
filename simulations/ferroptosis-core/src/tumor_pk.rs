@@ -170,8 +170,11 @@ pub fn rsl3_iv_bolus() -> PlasmaModel {
     }
 }
 
-/// 2D culture reference: constant drug concentration = 1.0 for all time.
-/// Should reproduce the standard sim_cell RSL3 kill rate (~42% for Persisters).
+/// Constant max-exposure reference: concentration = 1.0 for all time.
+/// NOT equivalent to the standard sim_cell RSL3 baseline (~42%): this model
+/// applies continuous inhibition via GPX4 clamp (preventing NRF2 recovery),
+/// while sim_cell applies one-time GPX4 reduction at init. Use as a
+/// theoretical maximum for computing relative protection factors.
 pub fn constant_reference() -> PlasmaModel {
     PlasmaModel::Constant { concentration: 1.0 }
 }
