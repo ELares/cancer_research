@@ -26,7 +26,11 @@ for line in md.split('\n'):
         ym = re.search(r'\((\d{4})\)', line)
         year = ym.group(1) if ym else '2024'
         cite_map[pmid] = f'{first}{year}_{pmid}'
-# Fix known parsing issues
+# Fix known parsing issues:
+# PMID 31130474 (Breitbach 2019, Pexa-Vec Phase 3) — first-author surname
+# starts with non-ASCII or has a parsing edge case in the reference line.
+# PMID 29978216 (Von Hoff 2018, BIND-014 Phase 2) — "Von" is captured as
+# first token but the cite key convention expects a single lowercase word.
 cite_map['31130474'] = 'unknown2019_31130474'
 cite_map['29978216'] = 'unknown2018_29978216'
 
@@ -59,7 +63,16 @@ def cvt(t):
     t = re.sub(r'^#### (.+)$', r'\\subsection{\1}', t, flags=re.MULTILINE)  # unnumbered fallback
     t = re.sub(r'\*\*(.+?)\*\*', r'\\textbf{\1}', t)
     t = re.sub(r'(?<!\*)\*([^*\n]+?)\*(?!\*)', r'\\textit{\1}', t)
-    # Escape special chars BEFORE replacing unicode
+    # Escape special chars BEFORE replacing unicode.
+    # $, %, &, # are all special in LaTeX and must be escaped when they
+    # appear as literal characters in prose.  The $ escape must run BEFORE
+    # the unicode→LaTeX block below (which inserts $...$ math wrappers);
+    # escaping first ensures only literal prose $ are hit.
+    # NOTE: { and } are NOT escaped here because CITEPLACEHOLDER{key}
+    # tokens are still in the text at this point — escaping braces would
+    # break the \cite conversion that runs after cvt().  Bare braces in
+    # prose will cause LaTeX errors; avoid them in v1.md.
+    t = t.replace('$', '\\$')
     t = t.replace('%', '\\%')
     t = t.replace('&', '\\&')
     t = t.replace('#', '\\#')
@@ -131,7 +144,12 @@ def replace_table(text, marker, caption, label, headers, rows):
 \\end{{table}}"""
     return text[:match.start()] + table + text[match.end():]
 
-# Simulation table
+# Hardcoded LaTeX tables intentionally diverge from the markdown source:
+# - Simulation table splits SDT/PDT into separate columns (markdown combines
+#   them because values are identical).
+# - Modality table uses abbreviated headers for column width.
+# If the markdown table data changes, these hardcoded versions must be
+# updated manually to match.
 body_tex = replace_table(body_tex, '| Phenotype |',
     'Monte Carlo ferroptosis simulation (n=1M cells/condition).', 'tab:sim',
     ['Phenotype', 'Control', 'RSL3', 'SDT', 'PDT'],
@@ -204,7 +222,14 @@ if leftover:
 # tables) are complete. Then un-escape inside \cite{}, \label{}, \ref{},
 # and \includegraphics{} commands where underscores are valid.
 def escape_prose_underscores(t):
-    # Step 1: escape all word_word underscores
+    # Step 1: escape underscores between word characters (e.g., gene_name).
+    # Pattern is intentionally narrow: (?<=\w)_(?=\w) catches the common
+    # case but misses edge cases like _foo or foo_.  A broader pattern
+    # would also match the _ in math-mode subscripts ($_2$, $_0$) inserted
+    # by cvt(), breaking them.  The narrow pattern is a trade-off:
+    # - Catches: GPX4_activity, SLC7A11_high, file_name
+    # - Misses: _italic_ (already handled by bold/italic conversion),
+    #   bare _ at word boundaries (rare in scientific prose)
     t = re.sub(r'(?<=\w)_(?=\w)', r'\\_', t)
     # Step 2: un-escape inside LaTeX commands that use underscored keys
     def unescape_braces(m):
