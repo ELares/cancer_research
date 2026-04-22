@@ -32,11 +32,147 @@ Cancer-therapy literatures often mature in parallel without being compared on sh
 
 \chapter{The Problem}
 
-[To be added in \#101]
+\section{The Scale of Loss}
+
+Cancer accounted for nearly 10 million deaths worldwide in 2022, making it one of the leading causes of death on Earth [News: WHO, "Cancer Fact Sheet", who.int, 2024. Verified: IARC GCO]. Lung cancer alone produced 2.5 million new cases that year. Behind each of those numbers is a person, a family, a dinner table with an empty chair. The statistics are so large that they lose their human weight --- but the weight is there.
+
+This is not a new crisis. Governments, pharmaceutical companies, academic institutions, and advocacy organizations have spent decades and hundreds of billions of dollars fighting cancer. And in some areas, the investment has paid off remarkably well. Five-year survival rates for childhood acute lymphoblastic leukemia --- once a near-certain death sentence --- now exceed 90\% (NCI SEER, 2014-2020). In the 1960s, a child diagnosed with ALL faced roughly a 10\% chance of surviving five years. Today, through a combination of multi-agent chemotherapy, risk-stratified treatment protocols, and improvements in supportive care, that number has climbed above 90\%. Female breast cancer, caught at the localized stage, has a five-year survival rate of nearly 100\% (NCI SEER, 2015-2021). Overall, breast cancer survival stands at 91.7\%, reflecting decades of investment in screening, surgical technique, and targeted therapies such as tamoxifen and trastuzumab. Testicular cancer is among the most curable solid tumors, with overall cure rates exceeding 95\%.
+
+These are genuine triumphs. They represent what cancer medicine can accomplish when early detection is possible, when effective therapies exist, and when the biology of the disease cooperates.
+
+But the picture is radically uneven. Pancreatic cancer has an overall five-year survival rate of 13.3\% (NCI SEER, 2015-2021). More than half of patients are diagnosed only after the disease has spread to distant sites, where survival drops to 3.2\%. Even among the 15\% of patients whose cancer is detected at the localized stage, the five-year survival rate is only 43.6\% --- far below the near-100\% rates seen for localized breast cancer. Pancreatic ductal adenocarcinoma is lethal in approximately 88\% of patients \cite{rojas2023_37165196}, a statistic that has improved only marginally over the past several decades.
+
+Glioblastoma, the most common malignant primary brain tumor, has a median survival of less than two years even with maximal treatment including surgery, radiation, and chemotherapy \cite{tan2020_32478924}. The addition of tumor-treating fields --- a novel device-based approach --- extended median survival to approximately 21 months compared to 16 months with chemotherapy alone \cite{stupp2017_29260225}, a meaningful improvement but still measured in months, not years.
+
+Lung cancer, despite the revolution in immunotherapy, still carries a 28.1\% five-year survival rate overall (NCI SEER, 2015-2021). For patients diagnosed with distant-stage disease --- which represents the majority of cases for several lung cancer subtypes --- that number falls to 9.7\%.
+
+The contrast is stark. For cancers where early detection works and biology cooperates, survival rates approach 100\%. For cancers that are diagnosed late, grow in hard-to-reach locations, and harbor cells that resist treatment, survival rates remain in the single or low double digits despite decades of effort.
+
+The question is not whether cancer research is making progress. It is. The question is why progress is so uneven --- and what keeps certain cancers stubbornly resistant to everything we throw at them.
+
+\section{Where Treatments Stall}
+
+The cancers with the worst outcomes share a pattern. They tend to be diagnosed late, when the disease has already spread. They tend to involve tissues that are hard to reach surgically or with drugs. And critically, they tend to harbor cells that survive initial treatment and come back stronger.
+
+Consider the trajectory of a patient with pancreatic ductal adenocarcinoma. The disease is lethal in approximately 88\% of patients \cite{rojas2023_37165196}. Surgery is possible in only a minority of cases, because most tumors are locally advanced or metastatic at diagnosis. Chemotherapy can shrink tumors and extend survival by months, sometimes years. But in the vast majority of cases, the disease returns. Not because the chemotherapy did nothing --- it often does a great deal --- but because a small population of cells survived, adapted, and eventually re-established the tumor.
+
+The same pattern appears in glioblastoma, where surgical resection followed by radiation and temozolomide produces a median progression-free survival of approximately 7 months before the tumor recurs. It appears in metastatic melanoma, where immunotherapy produces dramatic responses in some patients but leaves others with progressive disease driven by resistant clones. It appears in ovarian cancer, where platinum-based chemotherapy often produces an initial complete response, only for the disease to recur in a platinum-resistant form.
+
+This pattern --- initial response followed by relapse driven by surviving cells --- is the central obstacle to durable remission. It is the reason why a 99\% tumor reduction can still end in death. The cancer doesn't need to outsmart the treatment at every turn. It only needs to survive it once.
+
+Understanding why those cells survive, what makes them different from the cells that responded, and whether their survival creates new vulnerabilities that could be exploited before they recover --- these are among the most important questions in modern oncology.
+
+\section{Why Treatments Fail}
+
+Three biological realities explain why cancer is so difficult to eradicate, even when initial treatment works well.
+
+\textbf{Tumors are populations, not clones.} A single tumor can contain billions of cells, and not all of them are the same. They carry different mutations, express different proteins, and rely on different metabolic strategies. When a drug targets one characteristic --- say, a specific mutation --- it kills the cells that depend on that characteristic. But the cells that don't depend on it survive. The tumor doesn't fight back in any conscious sense. It is simply a diverse population being filtered by selective pressure.
+
+This is the same principle that drives antibiotic resistance in bacteria. When you expose a bacterial population to an antibiotic, the resistant survivors repopulate the colony. The antibiotic didn't create resistance; it selected for it from the existing diversity. Cancer works the same way, except the population is inside a person.
+
+\textbf{Drug resistance is an almost inevitable consequence of treatment.} The cells that survive a first round of chemotherapy are, by definition, the ones that had some trait allowing them to survive. When those cells divide, they produce progeny that share that trait. Over time, the population shifts from drug-sensitive to drug-resistant. This is why many targeted therapies that produce dramatic initial responses --- shrinking tumors by 90\% or more --- eventually fail. The responding cells are eliminated; the resistant cells remain and expand into the space left behind.
+
+Resistance can emerge through many routes. Some cells physically pump drugs out before they can take effect, using molecular transporters that act like bilge pumps ejecting water from a leaking ship. Others alter the drug's molecular target so the drug can no longer bind to it --- like changing a lock so the key no longer fits. Still others activate alternative survival pathways that bypass the one being blocked, maintaining cell survival through a different route even when the original pathway is shut down. And some cells simply stop dividing, entering a dormant state where they consume less energy, present fewer targets, and wait out the treatment like a bear in hibernation.
+
+The details vary by cancer type and treatment, but the principle is consistent: \textbf{selective pressure drives adaptation.} This is not a bug in cancer biology. It is a fundamental feature of how evolution works at the cellular level, and it operates on timescales of weeks to months --- fast enough to undermine even initially successful therapies.
+
+\textbf{Killing most of a tumor is not the same as curing the disease.} This is perhaps the hardest reality for patients and families to understand. Imaging shows the tumor has shrunk. Blood markers have dropped. The clinical response looks excellent. But if even a small population of altered cells persists --- hidden in tissue niches, metabolically dormant, invisible to standard detection --- those cells can eventually reawaken and seed a recurrence that is harder to treat than the original.
+
+This is not a failure of medicine so much as a reflection of how evolution works at the cellular level. Treatment changes the selective landscape. The cells that emerge from that landscape are the ones that were least affected by the treatment. And the next treatment must contend with a population that has already been filtered for survival.
+
+\section{The Residual Disease Problem}
+
+The cells that survive treatment are not merely leftovers. Increasingly, research shows that treatment itself can push cancer cells into altered states --- sometimes called drug-tolerant persister states --- where their biology is fundamentally different from the original tumor \cite{higuchi2026_41481741}.
+
+These residual cells may shift their metabolism, relying on different energy sources than the cells that responded to treatment. Where the original tumor might have relied heavily on rapid glucose consumption --- the so-called Warburg effect that has defined cancer metabolism for nearly a century --- the surviving cells may switch to mitochondrial respiration, fatty acid oxidation, or other metabolic strategies that are less affected by the treatment that just killed their neighbors.
+
+They may enter a state of suspended proliferation, dividing slowly or not at all. This makes them less visible to drugs that target rapidly dividing cells and less detectable by standard imaging methods that rely on metabolic activity. They may also upregulate protective mechanisms --- molecular defenses that scavenge the toxic byproducts of cellular stress and repair damage faster than it accumulates.
+
+And critically, these altered states may be temporary. Given time --- days, weeks, perhaps months --- the cells can revert, resume growing, and establish a recurrence that carries the resistance lessons learned from the first treatment. The clock is ticking in both directions: the patient needs the residual cells eliminated before they recover, and the residual cells need time to restore the defenses that will make them resistant to the next round of treatment.
+
+This creates both a challenge and an opportunity. The challenge is obvious: residual cells are hard to find, hard to target, and biologically different from the cells we know how to kill. Standard approaches that worked against the original tumor may not work against the survivors because the survivors are not the same cells.
+
+The opportunity is less obvious but potentially more important: \textbf{if the altered state that makes these cells resistant to one type of attack also makes them vulnerable to a different type of attack, there is a window --- possibly brief --- during which they could be eliminated before they recover.}
+
+This concept --- that resistance to one insult might create sensitivity to another --- is not new in biology. It has been observed in antibiotic combination therapy, where bacteria resistant to one antibiotic sometimes become hypersensitive to another. It appears in the concept of collateral sensitivity, where the evolutionary trade-offs required for resistance to one drug create dependencies that a second drug can exploit. And it is the foundation of synthetic lethality approaches in cancer, where two genetic events that are individually survivable become lethal in combination.
+
+What is less clear is which specific vulnerabilities residual cancer cells develop, how long those vulnerabilities persist, which therapeutic approaches could realistically exploit them, and whether the exploitation window is long enough to matter clinically. A vulnerability that lasts 48 hours is biologically real but may be clinically useless if the treatment can't be delivered in time. A vulnerability that lasts three months is clinically actionable --- but does it actually exist?
+
+These are the questions that motivated this project. Not the claim that one particular approach is the answer, but the recognition that answering these questions requires comparing across therapeutic modalities and biological mechanisms in a way that the current literature --- organized by individual modalities and studied within individual research communities --- does not easily support.
+
+\section{The Current Landscape}
+
+The field is not short of promising approaches.
+
+\textbf{Immune checkpoint inhibitors} have transformed outcomes for some cancers. The immune system has an inherent ability to recognize and attack cancer cells, but tumors often deploy molecular signals that tell immune cells to stand down. Checkpoint inhibitors block those signals, releasing the brakes on the immune response. Drugs such as pembrolizumab and nivolumab have produced durable responses in melanoma, non-small-cell lung cancer, renal cell carcinoma, and several other tumor types --- in some cases, converting previously terminal diagnoses into long-term survivorship. But the response is far from universal. Many patients do not respond at all. Among those who do, resistance can develop over time. And the tumor microenvironment --- the complex ecosystem of immune cells, blood vessels, structural proteins, and signaling molecules that surrounds the tumor --- plays a decisive role in determining whether immunotherapy succeeds or fails. "Cold" tumors that exclude immune cells remain largely impervious to checkpoint blockade.
+
+\textbf{Engineered cell therapies}, particularly chimeric antigen receptor T cells (CAR-T), represent a different strategy: rather than releasing the brakes on existing immune cells, they manufacture new immune cells specifically designed to attack cancer. CAR-T therapy has been transformative in certain blood cancers. Patients with previously untreatable B-cell leukemias and lymphomas have achieved complete remissions that would have been unthinkable a decade ago. But extending this success to solid tumors has proven far more difficult. Solid tumors create hostile environments that suppress immune cells attempting to infiltrate them, surround themselves with physical barriers of connective tissue and extracellular matrix, and present a moving target as tumor cell populations evolve and change their surface markers.
+
+\textbf{Targeted therapies} --- drugs designed to exploit specific molecular features of a patient's cancer --- represent the precision medicine ideal. When a tumor depends on a single mutated protein for its growth, a drug that blocks that protein can produce rapid, dramatic shrinkage. But resistance is the rule rather than the exception. Within months, cancer cells find alternative molecular routes to the same outcome, bypass the blocked pathway entirely, or mutate the drug target so it is no longer recognizable. The targeted therapy literature is filled with stories of dramatic initial responses followed by inevitable relapse.
+
+\textbf{Newer modalities} are advancing through clinical trials and early adoption. Radioligand therapy attaches radioactive atoms to molecules that seek out specific receptors on cancer cells, delivering targeted radiation directly to tumors while sparing surrounding tissue. Bispecific antibodies are engineered proteins that physically bridge immune cells and cancer cells, forcing them into contact. mRNA cancer vaccines train the immune system to recognize tumor-specific mutations unique to each patient's cancer. Antibody-drug conjugates deliver toxic payloads directly to cancer cells using antibody guidance, like molecular guided missiles. Each of these approaches addresses a real limitation of earlier strategies, and several are producing encouraging results in clinical trials.
+
+The challenge is not that we lack ideas. It is that each approach is typically developed, studied, and promoted within its own research community. The immunotherapy literature compares checkpoint inhibitors to each other. The cell therapy literature compares CAR-T designs. The targeted therapy literature compares small molecules against specific mutations. But the questions that matter most to patients --- which approaches work under which conditions, for which types of resistance, in which tissue contexts --- require comparisons that cut across these boundaries.
+
+That cross-boundary comparison is what this project attempts.
 
 \chapter{What We Set Out To Do}
 
-[To be added in \#101]
+\section{The Open-Science Bet}
+
+This project started from a simple conviction: breakthroughs against diseases that destroy lives should be a human right, not a revenue stream. That conviction shapes every decision in this repository, from the MIT license on all code to the publicly available data and the openly documented analysis pipeline.
+
+Open science is not a marketing strategy. It is a deliberate bet that the work has more value in the hands of the global research community than behind any paywall or patent wall. Every script, every simulation, every analysis document, and every draft of this manuscript is publicly accessible. Anyone can re-run the analysis from scratch, challenge the conclusions, extend the simulations, or take an idea in a direction we never considered. If someone takes something from this work, validates it in a lab, and it helps a patient --- that is the point.
+
+The trade-off is real. Open-sourcing everything means forgoing patent protection, proprietary advantage, and the kind of controlled dissemination that academic publishing traditionally provides. We accept that trade-off because the goal is contribution, not credit. Much like the polio vaccine --- which Jonas Salk famously declined to patent, asking "Could you patent the sun?" --- we believe that tools and findings aimed at reducing human suffering should be freely available to anyone who can use them.
+
+The mission, stated plainly: to crowdsource the minds of the global community --- researchers, engineers, students, anyone with curiosity --- amplified by computational tools, to work on problems that actually matter. Not another proprietary dataset. Not another paywalled analysis. Real contributions to real problems, where the payoff is not commercial advantage but fewer families shattered by a disease that should have been more beatable than it is.
+
+This is also why the repository welcomes contribution in any form. Open an issue, submit a pull request, fork the entire project and take it somewhere better. The ferroptosis-core simulation engine is published as a standalone Rust library with Python bindings, so any researcher can use it independently of this manuscript. The corpus analysis pipeline is fully documented and re-runnable. Nothing is hidden, nothing requires special access, and nothing requires our permission.
+
+\section{Two Computational Lenses}
+
+This project uses two complementary computational approaches, neither of which replaces laboratory experiments but both of which can help focus them.
+
+\textbf{Cross-literature analysis.} We used software to systematically read and categorize 4,830 full-text cancer research articles from 803 journals, spanning 19 therapeutic mechanisms and 22 cancer types. A separate archive of 5,584 abstract-only records provides additional coverage. The software tags each article by mechanism, cancer type, evidence level, tissue of origin, and other categories, then maps the relationships between them.
+
+This reveals patterns that individual researchers are unlikely to see, because most researchers read within their field. An immunotherapy specialist reads immunotherapy papers. A nanomedicine researcher reads nanoparticle papers. A ferroptosis biologist reads ferroptosis papers. Each sees their own literature clearly but may not know what adjacent fields have found --- or failed to find --- about the same biological questions. Are the mechanisms that make cancer cells resistant to one type of treatment the same mechanisms that another field has already learned to exploit? Are two different research communities studying the same biological process under different names? Is a "gap" in one field's literature actually well-covered in another? These are the kinds of questions that emerge when you read across fields rather than within them.
+
+The cross-literature analysis maps the full landscape so that comparisons across boundaries become visible. It does not replace expert judgment. It maps terrain; experts navigate it. And it has known limitations: the evidence tagger that classifies articles has 96\% precision but only 55\% recall, meaning what it tags is almost always real, but it misses a substantial share of valid evidence. Absence in our data is not absence in the field. Every gap claim in this book should be read as "not detected in our keyword-based analysis of 4,830 articles" rather than "does not exist."
+
+\textbf{Monte Carlo biochemical simulation.} We built a computational model of a specific cell-death pathway --- ferroptosis, a type of cell death driven by iron-catalyzed damage to the lipid membranes that surround cells --- and ran it millions of times with random variation to understand which conditions make cells more or less vulnerable.
+
+Monte Carlo simulation is named after the casino in Monaco, but the output is statistical knowledge, not luck. By running the same model thousands or millions of times with slightly different starting conditions, we generate not a single answer but a distribution of possible outcomes. This tells us which results are robust (they happen every time regardless of variation) and which are fragile (they depend on specific parameter values being exactly right). When a simulation result holds across a wide range of random variation, it suggests a pattern worth investigating in the laboratory. When it doesn't, it flags an assumption that needs experimental verification.
+
+The simulations are hypothesis-generating tools. They identify which biological questions are worth asking and which parameter combinations lead to interesting outcomes. They do not prove that any particular treatment works. Computation without experimental validation is speculation. But experiment without computational guidance is inefficient when there are more hypotheses to test than any laboratory can pursue.
+
+\section{What We Can and Cannot Contribute}
+
+Honesty about scope is not a disclaimer to bury at the end. It is a core feature of how this project operates.
+
+We are not clinicians. Nothing in this book is medical advice, treatment guidance, or a clinical recommendation. The analysis and simulations are tools for research prioritization, not for patient decision-making.
+
+We are not experimentalists. Our simulations use estimated parameters drawn from published literature where available and from reasonable approximations where not. The results are directionally informative --- they show which conditions favor which outcomes --- but they are not quantitatively predictive. A simulation showing that drug efficacy drops under low-oxygen conditions identifies a mechanism worth testing; it does not predict what will happen in a specific patient.
+
+Our corpus is 4,830 full-text articles, not all of PubMed. The local archive was constructed from PubMed queries targeting our 19 mechanism categories, which means articles using non-standard terminology, articles in non-English languages, and articles outside our search scope are not included. We also maintain a separate archive of 5,584 abstract-only records that extends our coverage but without the depth of full-text analysis. When we report that a particular combination has not been studied, we mean it was not detected in our local keyword-based analysis --- not that it does not exist in the broader literature. Some landmark papers that are clearly field-defining at the PubMed level are known to be missing from our local archive.
+
+Our evidence tagger is imperfect. At 96\% precision and 55\% recall, what we tag is almost always real but we miss nearly half of the valid evidence. Claims about the absence of evidence for specific mechanisms should be interpreted with this limitation in mind. We have documented these gaps in detail --- not to excuse them, but because transparency about what we don't know is as important as reporting what we found.
+
+The value of this work lies in the questions it raises and the comparisons it surfaces --- not in clinical claims. Every finding in this book should be read as: "Under these assumptions, the model suggests X. Here is what would need to be true for X to hold in reality, and here is what would falsify it."
+
+\section{How To Read This Book}
+
+This book is written for multiple audiences. Not every chapter is equally relevant to every reader.
+
+\textbf{Researchers in oncology} may want to skip Part I and start at Chapter 3, which maps the literature landscape across all 19 mechanism categories. Chapter 7 presents four tumor microenvironment features --- hypoxia, immune coupling, stromal shielding, and acidic pH --- that the simulations suggest selectively disadvantage drug-based approaches while leaving physical modalities relatively unaffected. Chapter 9 translates simulation findings into specific experimental proposals with expected outcomes and falsification criteria.
+
+\textbf{Graduate students} will benefit from reading cover to cover. Part I provides the human and scientific context. Part II demonstrates how a cross-literature analysis works in practice --- including where it fails and how to interpret its limitations. Part III shows computational biology applied to real research questions, with every model assumption documented and every result accompanied by caveats. Part IV describes where the research goes next and how to contribute.
+
+\textbf{Clinicians} may find Chapter 1 familiar territory --- the problem of treatment resistance and residual disease is what you contend with daily. Chapter 7 quantifies microenvironment mechanisms that affect drug delivery in your patients' tumors. Chapter 9 describes the experimental directions that could eventually inform clinical practice, though we emphasize that nothing here constitutes treatment guidance.
+
+\textbf{Engineers and software developers} should look at Chapter 5, which describes the simulation architecture, and Chapter 11, which explains how to extend the computational work. The ferroptosis-core library is a standalone MIT-licensed Rust crate with Python bindings via PyO3. Appendix B provides a step-by-step reproduction guide for every analysis and simulation in the book.
+
+Part I has motivated the problem and described the project. It has not made therapeutic recommendations or presented results. For the evidence, turn to Part II.
 
 \part{What We Found}
 
