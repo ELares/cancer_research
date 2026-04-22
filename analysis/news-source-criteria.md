@@ -96,7 +96,7 @@ For each candidate news article, apply these five steps sequentially:
 
 | Check | How | Pass/Fail |
 |-------|-----|-----------|
-| Is the source in Tier 1-3? | Match URL domain against tier lists | Required |
+| Is the source in Tier 1-3? | Match URL path prefix against tier lists (not bare domain — see config.py `path_prefixes`) | Required |
 | Is the author identifiable? | Look for byline, author bio, institutional affiliation | Required for Tier 1-2 |
 | Is there an editorial process? | Check for editorial board, corrections policy, masthead | Required for Tier 1-2 |
 | Is the publication date verifiable? | Check for date stamp, last-updated timestamp | Required |
@@ -135,10 +135,12 @@ score = tier_weight × (40 × verified_ratio + 30 × author_score + 20 × recenc
 | Component | Weight | Computation |
 |-----------|--------|-------------|
 | `tier_weight` | multiplier | Tier 1: 1.0, Tier 2: 0.8, Tier 3: 0.6 |
-| `verified_ratio` | 0-1 | verified_claims / total_factual_claims |
+| `verified_ratio` | 0-1 | verified_claims / total_factual_claims (if total_factual_claims = 0, use 1.0) |
 | `author_score` | 0-1 | 1.0 if named + credentialed, 0.7 if named only, 0.3 if anonymous |
 | `recency` | 0-1 | 1.0 if <6 months old, 0.8 if <1 year, 0.5 if <3 years, 0.2 if older |
 | `cross_citation` | 0-1 | 1.0 if 3+ other trusted sources report same finding, 0.5 if 1-2, 0.0 if unique |
+
+**Edge case — zero factual claims**: Some articles (especially Tier 3 expert commentary) are entirely interpretive or speculative with no verifiable factual assertions. When `total_factual_claims = 0`, set `verified_ratio = 1.0` — an article with no factual claims has no factual risk. The score then depends on `author_score`, `recency`, and `cross_citation`. This is the correct behavior: pure commentary should be evaluated on author credibility and recency, not penalized for lacking facts to verify.
 
 **Score interpretation**:
 - 70-100: High confidence — integrate as supporting evidence
@@ -279,12 +281,18 @@ News sources use a distinct citation format to differentiate from peer-reviewed 
 
 1. **The credibility score is a starting point**, not a gold standard. Weights (40/30/20/10) are reasonable defaults but not empirically validated. Adjust based on experience.
 
-2. **Paywalled sources** (STAT News, The Cancer Letter) may have higher-quality content that's harder to verify. Note accessibility status but don't penalize for paywalls.
+2. **Paywalled sources** (STAT News, The Cancer Letter) may have higher-quality content that's harder to verify. Paywalled articles that cannot be fetched programmatically should still be scored — but note the accessibility status and flag that cross-reference verification was performed against publicly available metadata (titles, abstracts, press releases) rather than full article text. This is weaker verification than full-text comparison.
 
-3. **Self-referencing sources** (WHO citing IARC, NCI citing its own data) receive "verified" status because the institution IS the authority. This is different from independent verification.
+3. **Self-referencing verification is not independent verification.** WHO citing IARC data, or NCI citing its own research, receives "SELF-REFERENCING" status (not "VERIFIED") because the institution is both the claimant and the authority. This is legitimate for institutional data but does not provide the error-catching benefit of independent cross-referencing. When self-referencing is the only verification available, note it explicitly in the citation. Do not treat self-referenced claims as independently verified when computing `cross_citation` scores.
 
 4. **Expert commentary** (Tier 3) can contain valuable insights that no peer-reviewed paper captures. The framework intentionally preserves this voice while preventing it from being cited as factual evidence.
 
-5. **The framework evaluates individual articles**, not sources as a whole. A Tier 2 source can publish both excellent and poor articles. Each article is scored independently.
+5. **The framework evaluates individual articles**, not sources as a whole. A Tier 2 source can publish both excellent and poor articles. Each article is scored independently. Domain-level tier assignment (in `config.py`) is a starting heuristic — the article-level pipeline (Steps 1-5) is the actual evaluation.
 
-6. **This framework is for the cancer research manuscript specifically**. It does not claim to be a general-purpose news credibility framework.
+6. **Recency scoring has threshold discontinuities.** An article published 5.9 months ago scores `recency = 1.0` while one published 6.1 months ago scores `0.8` — a 4-point swing from 8 days' difference. In automated scoring (issue #99), consider using a continuous decay function (e.g., `recency = max(0.2, 1.0 − 0.05 × months_old)`) instead of the step function defined here. The step function is adequate for manual evaluation but brittle at scale.
+
+7. **All three examples have 100% verified ratio.** This validates the "high confidence" path but leaves the "moderate" and "low confidence" paths untested. The first real deployment will encounter articles with 40-60% verified ratios — borderline cases where the integration decision matrix matters most. When issue #99 builds the automated pipeline, the test suite must include synthetic articles with partial verification to exercise the `<60%` and `<20%` decision paths.
+
+8. **Path-prefix matching reduces but does not eliminate domain false positives.** A Tier 1 domain like `nature.com/articles` covers both peer-reviewed research and opinion pieces. Step 1 (source verification) must still confirm editorial oversight for the specific article, even when the URL matches a trusted path prefix. Automated matching (issue #99) should flag path-prefix matches for human review rather than auto-promoting to tier status.
+
+9. **This framework is for the cancer research manuscript specifically**. It does not claim to be a general-purpose news credibility framework.

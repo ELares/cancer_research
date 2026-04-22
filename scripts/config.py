@@ -553,9 +553,24 @@ SOURCE_TIER_DEFINITIONS = {
         "trust": "high",
         "cite_as": "evidence",
         "verified_threshold": 0.80,
-        "domains": [
-            "cancer.gov", "nih.gov", "who.int", "fda.gov", "clinicaltrials.gov",
-            "nature.com", "science.org", "cell.com", "thelancet.com", "nejm.org",
+        # Path prefixes narrow matching to editorial content, not user-generated
+        # or sponsored pages on the same domain.  classify_source() should match
+        # the longest prefix, not just the bare domain.
+        "path_prefixes": [
+            "cancer.gov/news-events",
+            "cancer.gov/about-nci",
+            "nih.gov/news-events",
+            "who.int/news-room",
+            "fda.gov/drugs",
+            "fda.gov/news-events",
+            "clinicaltrials.gov",
+            "nature.com/news",
+            "nature.com/articles",
+            "science.org/news",
+            "science.org/doi",
+            "cell.com/news",
+            "thelancet.com/news",
+            "nejm.org",
             "gco.iarc.fr",
         ],
     },
@@ -564,11 +579,20 @@ SOURCE_TIER_DEFINITIONS = {
         "trust": "medium",
         "cite_as": "context",
         "verified_threshold": 0.60,
-        "domains": [
-            "statnews.com", "cancerletter.com", "endpointsnews.com",
-            "reuters.com", "apnews.com", "sciencedaily.com",
-            "medicalnewstoday.com", "arstechnica.com", "theconversation.com",
-            "fiercepharma.com", "fiercebiotech.com",
+        # Tier 2 outlets are editorially independent; full-domain matching is
+        # acceptable because these outlets don't host user-generated content.
+        "path_prefixes": [
+            "statnews.com",
+            "cancerletter.com",
+            "endpointsnews.com",
+            "reuters.com/business/healthcare-pharmaceuticals",
+            "apnews.com/health",
+            "sciencedaily.com",
+            "medicalnewstoday.com",
+            "arstechnica.com/science",
+            "theconversation.com",
+            "fiercepharma.com",
+            "fiercebiotech.com",
         ],
     },
     "tier3": {
@@ -576,10 +600,15 @@ SOURCE_TIER_DEFINITIONS = {
         "trust": "context-only",
         "cite_as": "opinion",
         "verified_threshold": 0.0,
-        "domains": [
-            "connection.asco.org", "cancer.org", "lls.org",
-            "broadinstitute.org", "mdanderson.org", "icr.ac.uk",
-            "cancerresearchuk.org", "patientpower.info",
+        "path_prefixes": [
+            "connection.asco.org",
+            "cancer.org/research/acs-research-news",
+            "lls.org/news",
+            "broadinstitute.org/blog",
+            "mdanderson.org/cancerwise",
+            "icr.ac.uk/blogs",
+            "cancerresearchuk.org/about-cancer",
+            "patientpower.info",
         ],
     },
 }
