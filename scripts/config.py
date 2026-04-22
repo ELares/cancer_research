@@ -543,3 +543,80 @@ EVIDENCE_LEVEL_KEYWORDS = {
     "preclinical-invitro": ["in vitro", "cell line", "cell culture", "cultured cells"],
     "theoretical": ["computational model", "mathematical model", "simulation", "theoretical framework", "in silico"],
 }
+
+# --- News Source Tiers ---
+# See analysis/news-source-criteria.md for full framework documentation.
+#
+# This is a first-pass subset of the 31 sources listed in the criteria doc.
+# Sources behind paywalls or those requiring manual URL discovery (e.g.
+# university press offices) are omitted here and must be matched manually.
+# classify_source() should match the longest path prefix, not the bare domain.
+#
+# IMPORTANT: Only editorial/news surfaces belong here.  Primary research
+# paths (e.g. nature.com/articles, science.org/doi, nejm.org/doi) are
+# PubMed-indexed journal content and must NOT be classified as news-tier
+# sources.  If a URL matches a journal's primary-research path, it belongs
+# in the corpus layer, not the news layer.
+
+SOURCE_TIER_DEFINITIONS = {
+    "tier1": {
+        "name": "Institutional and peer-adjacent",
+        "trust": "high",
+        "cite_as": "evidence",
+        "verified_threshold": 0.80,
+        "path_prefixes": [
+            "cancer.gov/news-events",
+            "cancer.gov/about-nci",
+            "nih.gov/news-events",
+            "who.int/news-room",
+            "fda.gov/drugs",
+            "fda.gov/news-events",
+            "clinicaltrials.gov",
+            "nature.com/news",
+            "science.org/news",
+            "cell.com/news",
+            "thelancet.com/news",
+            "jwatch.org",
+            "gco.iarc.fr",
+        ],
+    },
+    "tier2": {
+        "name": "Science journalism",
+        "trust": "medium",
+        "cite_as": "context",
+        "verified_threshold": 0.60,
+        # Tier 2 outlets are editorially independent; full-domain matching is
+        # acceptable because these outlets don't host user-generated content.
+        "path_prefixes": [
+            "statnews.com",
+            "cancerletter.com",
+            "endpointsnews.com",
+            "reuters.com/business/healthcare-pharmaceuticals",
+            "apnews.com/health",
+            "sciencedaily.com",
+            "medicalnewstoday.com",
+            "arstechnica.com/science",
+            "theconversation.com",
+            "fiercepharma.com",
+            "fiercebiotech.com",
+        ],
+    },
+    "tier3": {
+        "name": "Expert blogs and commentary",
+        "trust": "context-only",
+        "cite_as": "opinion",
+        "verified_threshold": 0.0,
+        "path_prefixes": [
+            "connection.asco.org",
+            "science.org/blogs/pipeline",
+            "vinayprasad.com",
+            "cancer.org/research/acs-research-news",
+            "lls.org/news",
+            "broadinstitute.org/blog",
+            "mdanderson.org/cancerwise",
+            "icr.ac.uk/blogs",
+            "cancerresearchuk.org/about-cancer",
+            "patientpower.info",
+        ],
+    },
+}
