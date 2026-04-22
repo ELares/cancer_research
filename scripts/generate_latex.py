@@ -188,6 +188,11 @@ figs = {
     '12': ('fig15_designed_combinations', 'Classification of multi-mechanism articles into designed combinations, co-mentions, and reviews.'),
     '13': ('fig16_weighted_evidence', 'Weighted evidence score by mechanism (tier $\\times$ citation percentile $\\times$ recency).'),
     '14': ('fig17_damp_heatmap', 'DAMP spatial distribution after immune coupling (O$_2$ gradient $\\lambda$=120$\\mu$m, per-panel scaling---intensity not comparable across panels). SDT covers the full tumor area (139,641 kills, 539 immune kills); RSL3 produces sparse isolated hotspots (163 kills, 2 immune kills).'),
+    '15': ('fig18_hypoxia_crosssection', 'Hypoxia cross-section: O$_2$ gradient from blood vessel (left) into tumor core (right). RSL3 efficacy collapses as basal ROS disappears; SDT maintains efficacy via exogenous ROS delivery.'),
+    '16': ('fig19_immune_coupling_flow', 'Immune coupling pathway: SDT produces dense kill with high LP overshoot, generating strong DAMP fields and 104$\\times$ more immune kills than RSL3.'),
+    '17': ('fig20_stromal_shielding', 'Stromal shielding: CAF-mediated GSH and MUFA supply halves RSL3 kill at the tumor boundary (3.0\\% $\\rightarrow$ 1.5\\%) while barely affecting SDT (96.1\\% $\\rightarrow$ 91.2\\%).'),
+    '18': ('fig21_ph_ion_trapping', 'pH-driven ion trapping: acidic tumor core protonates and traps drug molecules, reducing RSL3 kills by 53\\%. SDT is pH-independent (no drug to trap).'),
+    '19': ('fig22_decision_flowchart', 'Decision framework: which modality for which clinical context, based on tumor localizability, depth, ferroptosis-prone residual state, and immunocompetence.'),
 }
 def repl_figure(match):
     num = match.group(1)
