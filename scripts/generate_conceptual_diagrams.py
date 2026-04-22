@@ -257,80 +257,80 @@ def fig21_ph():
 # ── Figure 22: Decision flowchart ─────────────────────────────────────
 
 def fig22_flowchart():
-    fig, ax = plt.subplots(figsize=(9, 6))
-    ax.set_xlim(0, 12)
+    fig, ax = plt.subplots(figsize=(10, 7))
+    ax.set_xlim(0, 10)
     ax.set_ylim(0, 10)
     ax.axis("off")
     ax.set_facecolor("white")
 
     decision = dict(boxstyle="round,pad=0.5", fc="#E3F2FD", ec="#1565C0", lw=1.5)
-    outcome_yes = dict(boxstyle="round,pad=0.4", fc="#E8F5E9", ec="#2E7D32", lw=1.2)
     outcome_no = dict(boxstyle="round,pad=0.4", fc="#FFF3E0", ec="#E65100", lw=1.2)
     terminal = dict(boxstyle="round,pad=0.4", fc="#F3E5F5", ec="#6A1B9A", lw=1.2)
 
-    # Level 1: Is tumor localizable?
-    ax.text(6, 9, "Is the tumor\nlocalizable?", ha="center", fontsize=9,
+    def arrow(x1, y1, x2, y2, label, color, label_side="mid"):
+        ax.annotate("", xy=(x2, y2), xytext=(x1, y1),
+                    arrowprops=dict(arrowstyle="-|>", color=color, lw=1.5,
+                                    connectionstyle="arc3,rad=0"))
+        mx, my = (x1 + x2) / 2, (y1 + y2) / 2
+        offset = 0.25
+        if label_side == "left":
+            ax.text(mx - offset, my, label, fontsize=8, color=color, ha="right", fontweight="bold")
+        elif label_side == "right":
+            ax.text(mx + offset, my, label, fontsize=8, color=color, ha="left", fontweight="bold")
+        else:
+            ax.text(mx + offset, my + 0.1, label, fontsize=8, color=color, ha="left", fontweight="bold")
+
+    green = "#2E7D32"
+    red = "#E65100"
+
+    # Level 1: localizable?
+    ax.text(5, 9.2, "Is the tumor\nlocalizable?", ha="center", fontsize=10, fontweight="bold", bbox=decision)
+    ax.text(9, 9.2, "Alternative\napproaches\n(Ch 8.1)", ha="center", fontsize=7, bbox=outcome_no)
+    arrow(6.3, 9.2, 7.8, 9.2, "No", red, "mid")
+
+    # Yes ↓
+    arrow(5, 8.5, 5, 7.7, "Yes", green, "right")
+
+    # Level 2: deep-seated?
+    ax.text(5, 7.2, "Is it\ndeep-seated?", ha="center", fontsize=10, fontweight="bold", bbox=decision)
+
+    # Yes → SDT
+    ax.text(2, 6.0, "SDT range\n(cm depth)\nCh 6.1", ha="center", fontsize=8, fontweight="bold",
+            bbox=dict(boxstyle="round,pad=0.4", fc="#FFE0B2", ec=COLORS["sdt"], lw=1.2))
+    arrow(3.8, 6.8, 2.8, 6.4, "Yes", green, "left")
+
+    # No → PDT
+    ax.text(8, 6.0, "PDT range\n(mm depth)\nCh 6.1", ha="center", fontsize=8,
+            bbox=dict(boxstyle="round,pad=0.4", fc="#FFCDD2", ec=COLORS["pdt"], lw=1.2))
+    arrow(6.2, 6.8, 7.2, 6.4, "No", red, "right")
+
+    # Both converge ↓ to ferroptosis question
+    arrow(2, 5.3, 4.5, 4.8, "", "gray")
+    arrow(8, 5.3, 5.5, 4.8, "", "gray")
+
+    # Level 3: ferroptosis-prone?
+    ax.text(5, 4.5, "Are residual cells\nferroptosis-prone?", ha="center", fontsize=10,
             fontweight="bold", bbox=decision)
 
-    # No → alternative approaches
-    ax.text(10.5, 9, "Alternative\napproaches\n(Ch 8.1)", ha="center", fontsize=7, bbox=outcome_no)
-    ax.annotate("No", xy=(9.3, 9), xytext=(7.3, 9),
-                arrowprops=dict(arrowstyle="->", color="#E65100", lw=1.2),
-                fontsize=8, color="#E65100", ha="center")
+    ax.text(9, 4.5, "Pathway-target or\nimmune approaches\n(Ch 8.1, 10.4)", ha="center", fontsize=7, bbox=outcome_no)
+    arrow(6.5, 4.5, 7.6, 4.5, "No", red, "mid")
 
-    # Yes → Is it deep-seated?
-    ax.text(4, 7, "Is it\ndeep-seated?", ha="center", fontsize=9,
+    # Yes ↓
+    arrow(5, 3.8, 5, 3.0, "Yes", green, "right")
+
+    # Level 4: immunocompetent?
+    ax.text(5, 2.5, "Immunocompetent\nsetting?", ha="center", fontsize=10,
             fontweight="bold", bbox=decision)
-    ax.annotate("Yes", xy=(4.5, 7.8), xytext=(5.5, 8.5),
-                arrowprops=dict(arrowstyle="->", color="#2E7D32", lw=1.2),
-                fontsize=8, color="#2E7D32")
 
-    # Deep: SDT range
-    ax.text(1.5, 5.5, "SDT range\n(cm depth)\nCh 6.1", ha="center", fontsize=7,
-            fontweight="bold", bbox=outcome_yes)
-    ax.annotate("Yes", xy=(1.8, 6.3), xytext=(3.2, 6.7),
-                arrowprops=dict(arrowstyle="->", color="#2E7D32", lw=1.2),
-                fontsize=8, color="#2E7D32")
-
-    # Superficial: PDT range
-    ax.text(6.5, 5.5, "PDT range\n(mm depth)\nCh 6.1", ha="center", fontsize=7, bbox=outcome_yes)
-    ax.annotate("No", xy=(6.2, 6.2), xytext=(5.0, 6.7),
-                arrowprops=dict(arrowstyle="->", color="#E65100", lw=1.2),
-                fontsize=8, color="#E65100")
-
-    # Level 3: Are persisters ferroptosis-prone?
-    ax.text(4, 3.8, "Are residual cells\nferroptosis-prone?", ha="center", fontsize=9,
-            fontweight="bold", bbox=decision)
-    ax.annotate("", xy=(4, 4.6), xytext=(4, 5.1),
-                arrowprops=dict(arrowstyle="->", color="gray", lw=1))
-
-    # No → other approaches
-    ax.text(8.5, 3.8, "Pathway-target\napproaches\n(Ch 8.1)", ha="center", fontsize=7,
-            bbox=outcome_no)
-    ax.annotate("No", xy=(7.2, 3.8), xytext=(5.5, 3.8),
-                arrowprops=dict(arrowstyle="->", color="#E65100", lw=1.2),
-                fontsize=8, color="#E65100")
-
-    # Yes → Immunocompetent?
-    ax.text(2.5, 2, "Immunocompetent\nsetting?", ha="center", fontsize=9,
-            fontweight="bold", bbox=decision)
-    ax.annotate("Yes", xy=(2.8, 2.8), xytext=(3.5, 3.4),
-                arrowprops=dict(arrowstyle="->", color="#2E7D32", lw=1.2),
-                fontsize=8, color="#2E7D32")
-
-    # Yes → ICD potential
-    ax.text(1, 0.5, "Physical ROS +\nanti-PD-1\n(Ch 7, 9.5)", ha="center", fontsize=7,
+    # Yes → Physical ROS + anti-PD-1
+    ax.text(2.5, 0.8, "Physical ROS\n+ anti-PD-1\n(Ch 7.2, 9.5)", ha="center", fontsize=8,
             fontweight="bold", bbox=terminal)
-    ax.annotate("Yes", xy=(1.2, 1.0), xytext=(1.8, 1.5),
-                arrowprops=dict(arrowstyle="->", color="#2E7D32", lw=1.2),
-                fontsize=8, color="#2E7D32")
+    arrow(3.8, 2.1, 3.0, 1.5, "Yes", green, "left")
 
-    # No → Direct kill only
-    ax.text(5, 0.5, "Physical ROS\n(direct kill only)\nCh 6-7", ha="center", fontsize=7,
+    # No → Direct kill
+    ax.text(7.5, 0.8, "Physical ROS\n(direct kill)\n(Ch 6-7)", ha="center", fontsize=8,
             bbox=terminal)
-    ax.annotate("No", xy=(4.3, 0.8), xytext=(3.5, 1.5),
-                arrowprops=dict(arrowstyle="->", color="#E65100", lw=1.2),
-                fontsize=8, color="#E65100")
+    arrow(6.2, 2.1, 7.0, 1.5, "No", red, "right")
 
     ax.set_title("Decision Framework: Which Modality for Which Clinical Context?",
                  fontsize=11, fontweight="bold", pad=10)
