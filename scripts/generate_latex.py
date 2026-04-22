@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
-"""Convert v1.md to v1.tex with proper LaTeX formatting."""
+"""Convert v1.md to v1.tex with proper LaTeX formatting.
+
+Supports book-style structure with Parts, Chapters, Sections, and Subsections.
+Document class: report (not book — avoids forced recto chapter starts).
+See article/AUTHORING.md for heading conventions.
+"""
 import re
 import unicodedata
 from pathlib import Path
@@ -28,7 +33,13 @@ cite_map['29978216'] = 'unknown2018_29978216'
 # Extract sections
 abstract = re.search(r'## Abstract\n\n(.*?)(?=\n\*\*Keywords)', md, re.DOTALL).group(1).strip()
 keywords = re.search(r'\*\*Keywords:\*\*\s*(.+)', md).group(1).strip()
-body = re.search(r'## 1\. Introduction(.*?)## References', md, re.DOTALL).group(0).replace('## References','').strip()
+
+# Body: everything from the first Part header to just before References.
+body_start = re.search(r'^# Part ', md, re.MULTILINE)
+ref_match = re.search(r'^## References', md, re.MULTILINE)
+if not body_start or not ref_match:
+    raise SystemExit("ERROR: Could not find '# Part ...' or '## References' boundaries in v1.md")
+body = md[body_start.start():ref_match.start()].strip()
 
 # Convert PMID citations to placeholders (will become \cite after text conversion)
 def repl(m):
@@ -39,9 +50,12 @@ abstract = re.sub(r'PMID: (\d+)', repl, abstract)
 
 # Markdown → LaTeX
 def cvt(t):
-    t = re.sub(r'^#### (\d+\.\d+\.\d+) (.+)$', r'\\subsubsection{\2}', t, flags=re.MULTILINE)
-    t = re.sub(r'^## (\d+)\. (.+)$', r'\\section{\2}', t, flags=re.MULTILINE)
-    t = re.sub(r'^### (\d+\.\d+) (.+)$', r'\\subsection{\2}', t, flags=re.MULTILINE)
+    # Book-structure headings (report document class)
+    t = re.sub(r'^# Part [IVX]+: (.+)$', r'\\part{\1}', t, flags=re.MULTILINE)
+    t = re.sub(r'^## Chapter \d+: (.+)$', r'\\chapter{\1}', t, flags=re.MULTILINE)
+    t = re.sub(r'^### \d+\.\d+ (.+)$', r'\\section{\1}', t, flags=re.MULTILINE)
+    t = re.sub(r'^#### \d+\.\d+\.\d+ (.+)$', r'\\subsection{\1}', t, flags=re.MULTILINE)
+    t = re.sub(r'^#### (.+)$', r'\\subsection{\1}', t, flags=re.MULTILINE)  # unnumbered fallback
     t = re.sub(r'\*\*(.+?)\*\*', r'\\textbf{\1}', t)
     t = re.sub(r'(?<!\*)\*([^*\n]+?)\*(?!\*)', r'\\textit{\1}', t)
     # Escape special chars BEFORE replacing unicode
@@ -203,7 +217,7 @@ def escape_prose_underscores(t):
 body_tex = escape_prose_underscores(body_tex)
 abstract_tex = escape_prose_underscores(abstract_tex)
 
-latex = f"""\\documentclass[12pt,a4paper]{{article}}
+latex = f"""\\documentclass[12pt,a4paper]{{report}}
 \\usepackage[utf8]{{inputenc}}
 \\usepackage[T1]{{fontenc}}
 \\usepackage{{amsmath,amssymb}}
@@ -213,16 +227,12 @@ latex = f"""\\documentclass[12pt,a4paper]{{article}}
 \\usepackage{{booktabs}}
 \\usepackage{{geometry}}
 \\usepackage{{setspace}}
-\\usepackage{{authblk}}
 
 \\geometry{{margin=1in}}
 \\onehalfspacing
 
 \\title{{{title}}}
-
-\\author[1]{{Ezequiel Lares}}
-\\affil[1]{{Independent Researcher}}
-
+\\author{{Ezequiel Lares \\\\ Independent Researcher}}
 \\date{{}}
 
 \\begin{{document}}
@@ -233,7 +243,9 @@ latex = f"""\\documentclass[12pt,a4paper]{{article}}
 {abstract_tex}
 \\end{{abstract}}
 
-\\textbf{{Keywords:}} {keywords}
+\\noindent\\textbf{{Keywords:}} {keywords}
+
+\\tableofcontents
 
 {body_tex}
 

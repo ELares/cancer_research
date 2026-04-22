@@ -1,4 +1,4 @@
-\documentclass[12pt,a4paper]{article}
+\documentclass[12pt,a4paper]{report}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage{amsmath,amssymb}
@@ -8,16 +8,12 @@
 \usepackage{booktabs}
 \usepackage{geometry}
 \usepackage{setspace}
-\usepackage{authblk}
 
 \geometry{margin=1in}
 \onehalfspacing
 
 \title{Mapping Cancer Therapy Mechanisms, Evidence Gaps, and Resistant-State Hypotheses: A Cross-Literature Analysis}
-
-\author[1]{Ezequiel Lares}
-\affil[1]{Independent Researcher}
-
+\author{Ezequiel Lares \\ Independent Researcher}
 \date{}
 
 \begin{document}
@@ -28,7 +24,23 @@
 Cancer-therapy literatures often mature in parallel without being compared on shared axes such as evidence depth, resistant-state biology, pathway dependencies, or delivery constraints. Here we present a cross-literature analysis of 4,830 full-text cancer research articles (803 journals, 19 mechanisms, 22 cancer types, 2001-2026), alongside a separate archive of 5,584 abstract-only records, to map where research is concentrated, where apparent gaps are likely to be artifacts, and which mechanistic ideas deserve broader comparison. We measure the quality of our own evidence tagger (46\% exact-label accuracy, 96\% binary precision, 55\% recall on a 100-article gold set), derive tissue-of-origin and weighted-evidence layers to sharpen mechanism comparisons, and introduce a diagnostic-to-therapy matching framework covering six translational chains. Monte Carlo and spatial simulations explore ferroptosis biochemistry across cell phenotypes, tissue depths, drug penetration gradients, drug combinations, and oxygen-mediated tumor microenvironment effects. Key simulation findings: (1) RSL3 + FSP1 inhibitor produces 1.99$\times$ Bliss synergy through dual-pathway depletion, (2) RSL3 efficacy collapses from 3.7\% to 0.1\% under tumor hypoxia while SDT maintains 87.8\% kill because exogenous ROS bypasses the mitochondrial bottleneck, and (3) tissue-specific drug penetration reduces RSL3 kill from 40\% (2D) to 1.8\% behind the blood-brain barrier. Within this broader landscape, one specific hypothesis survives as worth testing rather than assuming: physical ROS-generating modalities, especially sonodynamic therapy (SDT), may maintain efficacy in conditions --- hypoxia, deep tissue, limited drug penetration --- where pharmacologic ferroptosis inducers fail. We frame this as a conditional implication of the wider analysis, not the article's starting assumption. The result is a more cautious but more useful conclusion: the important question is not simply which modality looks interesting, but which interventions remain plausible after accounting for resistance state, tissue access, tumor microenvironment, evidence maturity, and known corpus artifacts. All simulation code (MIT-licensed Rust library with Python bindings), analysis pipelines, and data are openly available for replication and extension.
 \end{abstract}
 
-\textbf{Keywords:} cross-literature analysis, resistant states, evidence gaps, ferroptosis, photodynamic therapy, sonodynamic therapy, radioligand therapy, immunotherapy, pathway targets, cancer therapy
+\noindent\textbf{Keywords:} cross-literature analysis, resistant states, evidence gaps, ferroptosis, photodynamic therapy, sonodynamic therapy, radioligand therapy, immunotherapy, pathway targets, cancer therapy
+
+\tableofcontents
+
+\part{Why This Exists}
+
+\chapter{The Problem}
+
+[To be added in \#101]
+
+\chapter{What We Set Out To Do}
+
+[To be added in \#101]
+
+\part{What We Found}
+
+\chapter{The Literature Landscape}
 
 \section{Introduction}
 
@@ -47,17 +59,15 @@ We present a systematic analysis of 4,830 full-text cancer research articles spa
 \label{fig:fig5_publication_trends}
 \end{figure}
 
-\section{Methods}
-
-\subsection{Search Strategy and Corpus Construction}
+\section{Search Strategy and Corpus Construction}
 
 We conducted a systematic literature search of PubMed using the NCBI E-utilities API, covering publications indexed through March 2026. The search strategy employed mechanism-specific query sets using established MeSH terms and free-text synonyms: for example, "tumor treating fields" OR "TTFields" OR "Optune" for TTFields; "chimeric antigen receptor" OR "CAR-T" OR "CAR T cell" for CAR-T therapy; "sonodynamic therapy" OR "sonosensitizer" for sonodynamic approaches. During revision, we also identified additional underrepresented areas for future corpus expansion, including CAP, radioligand therapy/theranostics, targeted protein degradation, phagocytosis checkpoints, autophagy, senescence/SASP, stromal biology, cuproptosis, and disulfidptosis. The quantitative results reported in this manuscript still refer to the frozen 19-mechanism corpus analyzed here; the expanded taxonomy is a next-pass scaffold rather than a retroactive redefinition of the present results. Results were enriched with metadata from OpenAlex (open access status, citation counts, topic classification) and PubMed Central or publisher-hosted OA URLs (full-text retrieval for open access articles).
 
-\subsection{Inclusion and Exclusion Criteria}
+\section{Inclusion and Exclusion Criteria}
 
 Articles were included if they were returned by the PubMed search queries and addressed at least one of the 19 therapeutic mechanisms in the context of cancer treatment or cancer biology. No additional manual inclusion or exclusion filtering was applied beyond the search query constraints. The resulting archive therefore includes original research, clinical trial reports, systematic reviews, narrative reviews, and some case series. For quantitative analyses in this manuscript, we indexed only the 4,830 records for which local full text was available; the remaining 5,584 metadata/abstract-only records were retained in a separate archive and not used for the full-text-derived corpus statistics reported below. This distinction is important: article counts in the Results section refer to the full-text corpus unless explicitly stated otherwise.
 
-\subsection{Categorization Framework}
+\section{Categorization Framework}
 
 Each article was tagged along three axes:
 
@@ -67,7 +77,7 @@ Each article was tagged along three axes:
 
 \textbf{Evidence level:} Original-research-like articles were classified into one of seven tiers: (1) Phase III clinical trial or randomized controlled trial, (2) Phase II clinical trial, (3) Phase I clinical trial, (4) non-phase clinical / patient-series evidence (`clinical-other`), (5) preclinical in vivo, (6) preclinical in vitro, or (7) theoretical/computational. Review-like articles (reviews, systematic reviews, meta-analyses, evidence maps) and protocols were intentionally left unclassified rather than being forced into an evidence tier. Classification was based on keyword detection plus publication-type metadata for the highest level of evidence reported in the article text. The `clinical-other` bucket is deliberately conservative: it indicates patient-level evidence exists, but should not be interpreted as equivalent to phase-labeled trial maturity.
 
-\subsection{Analytical Approach}
+\section{Analytical Approach}
 
 Four primary analyses were conducted:
 
@@ -81,7 +91,7 @@ Four primary analyses were conducted:
 
 Impact metrics (citation counts, iCite Relative Citation Ratio) were used to identify landmark publications and assess field-normalized influence. Publication volume was tracked annually to identify growth trajectories.
 
-\subsection{Limitations}
+\section{Limitations}
 
 Several limitations should be acknowledged. First, all tagging was performed by automated keyword matching against curated dictionaries (no manual article-level review), introducing potential misclassification. A 100-article stratified gold-set evaluation of the evidence tagger measured 46\% exact-label accuracy, with binary evidence-detection precision of 96\%, recall of 55\%, and F1 of 0.701 (Figure~\ref{fig:fig13_gold_set_eval}). The tagger therefore behaves as a conservative detector: when it assigns an evidence label, that label is almost always correct, but it misses roughly half of valid evidence-bearing records --- particularly in the clinical-other (23\% recall), theoretical (5\% recall), and preclinical-in-vitro (35\% recall) categories. These metrics should be used to calibrate how absence claims are interpreted throughout.
 
@@ -92,11 +102,9 @@ Several limitations should be acknowledged. First, all tagging was performed by 
 \label{fig:fig13_gold_set_eval}
 \end{figure}
 
-Short or ambiguous terms may generate false positives, and articles using non-standard terminology may be missed. Second, the archive was constructed from PubMed queries only and does not capture every relevant publication, particularly articles in non-English languages, preprints not yet indexed in PubMed, or studies using unconventional terminology for established mechanisms. Third, the quantitative corpus analyzed here is restricted to the 4,830 records with local full text; although this improves traceability and reproducibility, it also excludes 5,584 abstract-only records that may materially change article-count-based field comparisons. A second-order consequence is that some landmark papers are missing from the local full-text archive even when they are clearly field-defining at the PubMed level; radioligand therapy is the clearest current example because the VISION trial (PMID 34161051) is not locally present. Fourth, evidence-level classification was based on keyword detection plus publication-type metadata (e.g., "Clinical Trial, Phase III", "phase 3", "pilot study", "case report", "in vivo") rather than independent trial registry verification; importantly, evidence-tier coverage remains incomplete even after adding a conservative `clinical-other` bucket for non-phase patient studies. Claims about the absence of clinical trials for specific mechanisms should therefore be interpreted as "not detected in our local keyword-based analysis" rather than definitive statements. Fifth, multi-mechanism co-occurrence counts reflect articles tagged with multiple mechanism keywords, which includes both intentional combination studies and reviews that discuss multiple mechanisms without testing them in combination; a corpus-wide designed-combination classifier (Section 3.7) measures the designed-combination rate at 19.7\%, substantially below the 40\% co-occurrence rate. Sixth, the 19-mechanism taxonomy has not been tested for sensitivity: collapsing the 7 physical/energy categories into 2-3 broader groups (physical ablation, bioelectric modulation, field-based therapy) would reduce the number of "zero publication gaps" and could change the gap analysis conclusions. Our findings should be interpreted as taxonomy-dependent until sensitivity analyses with alternative groupings are performed. Seventh, our current simulation framework does not fully model in vivo lipid remodeling, including SCD-driven MUFA enrichment and other backup ferroptosis defense programs, so computational support for ferroptosis-based interventions remains stronger for in vitro-like assumptions than for established human tumor biology. Finally, article counts serve as a proxy for research intensity but do not directly measure quality, reproducibility, or clinical significance, and the corpus inherits any publication biases present in the indexed literature.
+Short or ambiguous terms may generate false positives, and articles using non-standard terminology may be missed. Second, the archive was constructed from PubMed queries only and does not capture every relevant publication, particularly articles in non-English languages, preprints not yet indexed in PubMed, or studies using unconventional terminology for established mechanisms. Third, the quantitative corpus analyzed here is restricted to the 4,830 records with local full text; although this improves traceability and reproducibility, it also excludes 5,584 abstract-only records that may materially change article-count-based field comparisons. A second-order consequence is that some landmark papers are missing from the local full-text archive even when they are clearly field-defining at the PubMed level; radioligand therapy is the clearest current example because the VISION trial (PMID 34161051) is not locally present. Fourth, evidence-level classification was based on keyword detection plus publication-type metadata (e.g., "Clinical Trial, Phase III", "phase 3", "pilot study", "case report", "in vivo") rather than independent trial registry verification; importantly, evidence-tier coverage remains incomplete even after adding a conservative `clinical-other` bucket for non-phase patient studies. Claims about the absence of clinical trials for specific mechanisms should therefore be interpreted as "not detected in our local keyword-based analysis" rather than definitive statements. Fifth, multi-mechanism co-occurrence counts reflect articles tagged with multiple mechanism keywords, which includes both intentional combination studies and reviews that discuss multiple mechanisms without testing them in combination; a corpus-wide designed-combination classifier (Section 3.13) measures the designed-combination rate at 19.7\%, substantially below the 40\% co-occurrence rate. Sixth, the 19-mechanism taxonomy has not been tested for sensitivity: collapsing the 7 physical/energy categories into 2-3 broader groups (physical ablation, bioelectric modulation, field-based therapy) would reduce the number of "zero publication gaps" and could change the gap analysis conclusions. Our findings should be interpreted as taxonomy-dependent until sensitivity analyses with alternative groupings are performed. Seventh, our current simulation framework does not fully model in vivo lipid remodeling, including SCD-driven MUFA enrichment and other backup ferroptosis defense programs, so computational support for ferroptosis-based interventions remains stronger for in vitro-like assumptions than for established human tumor biology. Finally, article counts serve as a proxy for research intensity but do not directly measure quality, reproducibility, or clinical significance, and the corpus inherits any publication biases present in the indexed literature.
 
-\section{Results}
-
-\subsection{Corpus Overview}
+\section{Corpus Overview}
 
 The final full-text corpus comprised 4,830 articles from 803 journals, with impact metrics available for 3,739 articles via iCite. Publication volume increased 31-fold over the study period, from 38 full-text articles in 2015 to 1,167 in 2025, with 186 articles already indexed in the first quarter of 2026. Growth was non-linear, with a marked inflection point in 2020 (257 full-text articles, a 2.4-fold increase over 2019's 106 articles), coinciding with the maturation of checkpoint immunotherapy, cell therapy, and RNA-platform attention. One important revision-era lesson is that not every post-2020 rise should be read as cancer-therapy-specific signal: for example, mRNA-vaccine counts were materially inflated until supportive and infectious-vaccine spillover was removed from that tag.
 
@@ -109,9 +117,9 @@ The final full-text corpus comprised 4,830 articles from 803 journals, with impa
 
 The fastest-growing mechanisms by absolute article count between 2020 and 2025 were immunotherapy (+504\% annual articles), nanoparticle delivery (+800\%), CAR-T therapy (+423\%), and sonodynamic therapy (+355\%). These growth rates reflect both the maturation of established approaches and the emergence of new platform technologies.
 
-\subsection{Physical and Energy-Based Mechanisms}
+\section{Physical and Energy-Based Mechanisms}
 
-\subsubsection{Tumor-Treating Fields (TTFields)}
+\subsection{Tumor-Treating Fields (TTFields)}
 
 TTFields, which deliver low-intensity (1-3 V/cm), intermediate-frequency (100-300 kHz) alternating electric fields to disrupt mitotic spindle formation and organelle assembly in dividing cells \cite{rominiyi2021_33144698}, represent the most clinically advanced physical therapy mechanism in our corpus. We identified 262 TTFields-tagged full-text articles across 14 of 22 cancer types. The evidence-level analysis identified 19 articles classified at the Phase III tier; however, this count still includes secondary analyses and trial-adjacent reports in addition to primary Phase III trial publications. The true number of distinct Phase III TTFields trial reports is therefore smaller than the keyword-derived total.
 
@@ -121,13 +129,13 @@ Beyond glioblastoma, TTFields are being investigated in mesothelioma (38 article
 
 TTFields have zero or near-zero publications in prostate cancer, lymphoma, myeloma, bladder cancer, and cervical cancer in our corpus, though some of these gaps may reflect search query design rather than genuine absence.
 
-\subsubsection{High-Intensity Focused Ultrasound (HIFU)}
+\subsection{High-Intensity Focused Ultrasound (HIFU)}
 
 HIFU uses convergent acoustic energy to achieve thermal ablation of tumor tissue at a defined focal point without incision. Our full-text corpus contains 81 HIFU articles across 12 cancer types. The dominant application is prostate cancer (29 full-text articles), where HIFU is established as a focal therapy option \cite{maloney2015_25367011}; \cite{guillaumier2018_29960750}. Notably, a multicentric study reported 5-year outcomes of focal HIFU for clinically significant nonmetastatic prostate cancer \cite{guillaumier2018_29960750} (309 citations), demonstrating favorable oncologic control with preserved quality of life.
 
 HIFU research in breast cancer (42 articles), pancreatic cancer (50 articles), and liver cancer (22 articles) is expanding. A systematic review positions HIFU alongside radiofrequency ablation, microwave ablation, and cryoablation as viable alternatives to surgical resection for small tumors \cite{van2021_33840627}.
 
-\subsubsection{Sonodynamic Therapy}
+\subsection{Sonodynamic Therapy}
 
 Sonodynamic therapy (SDT) exploits low-intensity ultrasound to activate sonosensitizer molecules that generate reactive oxygen species (ROS) within tumor tissue. Our full-text corpus contains 187 SDT articles across 15 cancer types, making it one of the most active physical modalities in the energy-based subset. However, SDT faces significant translational challenges. Our keyword-based evidence classification detected only 1 Phase I article in the local full-text corpus, with the balance of the literature remaining heavily preclinical. Broader PubMed verification suggests more early clinical activity may exist outside the locally indexed full-text set, but within the reproducible corpus analyzed here SDT remains overwhelmingly a preclinical field with no detected Phase II or Phase III full-text signal.
 
@@ -137,19 +145,19 @@ A distinctive molecular signature emerges from our full-text corpus analysis tha
 
 The primary barriers to clinical translation include the lack of standardized sonosensitizer formulations approved for human use, the absence of validated ultrasound dosimetry protocols for SDT (as distinct from diagnostic or HIFU applications), and the challenge of demonstrating SDT superiority or complementarity to established modalities in registrational trials. Breast cancer is the most studied SDT target in the full-text corpus (42 articles), followed by liver cancer (19 articles) and pancreatic cancer (12 articles).
 
-\subsubsection{Frequency Therapy and Electrolysis}
+\subsection{Frequency Therapy and Electrolysis}
 
 Frequency therapy --- encompassing pulsed electromagnetic fields (PEMF), radiofrequency ablation in immunomodulatory contexts, and resonance-based approaches --- is represented by 71 full-text articles across 11 cancer types. This is a nascent field with mechanistic diversity that complicates systematic evaluation. A foundational review \cite{vadala2016_27748048} (113 citations) described mechanisms of PEMF in oncology, including disruption of mitotic spindle formation, induction of apoptosis, and immunomodulatory effects.
 
 Electrolysis as a direct antitumor mechanism is the smallest category in our full-text corpus (11 articles across only a handful of cancer contexts), but includes innovative work on amorphous liquid metal electrodes for conformable electrochemical tumor therapy \cite{sun2017_28918265} (114 citations) and platinum nanoparticle-enabled electrodynamic therapy \cite{gu2019_30734370} (211 citations).
 
-\subsubsection{Electrochemical Therapy}
+\subsection{Electrochemical Therapy}
 
 Electrochemical therapy (EChT), dominated by irreversible electroporation (IRE), is represented by 185 full-text articles across 14 cancer types. Pancreatic cancer (61 articles) and prostate cancer (30 articles) are the primary applications. A foundational paper introduced the concept of tissue ablation through irreversible electroporation \cite{davalos2005_15771276} (1,241 citations), and subsequent clinical development has demonstrated safety and feasibility in locally advanced pancreatic cancer \cite{martin2015_26258317} (400 citations) and localized prostate cancer \cite{scheltema2016_27150293}; \cite{scheltema2018_29594551}.
 
 A pivotal development is the combination of IRE with immunotherapy: high-frequency IRE has been shown to induce immunogenic cell death \cite{unknown2019_31130474} (168 citations), and emerging data demonstrate synergy between IRE and checkpoint blockade plus TLR7 stimulation \cite{narayanan2019_31409607} (111 citations). The IRE-immunotherapy convergence (45 articles) represents a growing axis of investigation. However, lymphoma, leukemia, gastric cancer, and myeloma have zero EChT publications despite established clinical experience in other solid tumors.
 
-\subsection{Bioelectric Modulation}
+\section{Bioelectric Modulation}
 
 Bioelectric research encompasses membrane potential manipulation, ion channel modulation, voltage-gated signaling in cancer biology, and electroporation-based drug delivery. Our full-text corpus contains 182 articles across 19 cancer types, with broad conceptual range but limited direct clinical antitumor translation.
 
@@ -157,9 +165,9 @@ A landmark Cell paper established the conceptual framework for bioelectric signa
 
 Despite this conceptual richness, translational progress toward direct antitumor bioelectric interventions has been limited. In the current evidence-tier rerun, no phase-labeled trial evidence was detected for direct bioelectric antitumor therapy. The practical implication is that the bioelectric literature remains conceptually rich but clinically immature within this corpus.
 
-\subsection{Immune-Based Approaches}
+\section{Immune-Based Approaches}
 
-\subsubsection{Checkpoint Immunotherapy}
+\subsection{Checkpoint Immunotherapy}
 
 Checkpoint immunotherapy is the dominant mechanism in our full-text corpus, with 2,297 articles across all 22 cancer types. This reflects its established clinical role across multiple tumor types. The highest concentrations are in lung cancer (250 articles), melanoma (207 articles), breast cancer (162 articles), pancreatic cancer (138 articles), colorectal cancer (136 articles), liver cancer (133 articles), and glioblastoma (117 articles).
 
@@ -167,7 +175,7 @@ Key landmark articles include a comprehensive review of PD-1/PD-L1 and CTLA-4 ch
 
 The most active convergence axes for immunotherapy in the full-text corpus include combinations with CAR-T (417 articles), oncolytic viruses (262 articles), nanoparticle delivery (193 articles), mRNA vaccines (131 articles), CRISPR (166 articles), bispecific antibodies (139 articles), metabolic targeting (127 articles), microbiome modulation (100 articles), ADCs (78 articles), SDT (53 articles), and TTFields (47 articles). Immunotherapy remains the central hub of the convergence network.
 
-\subsubsection{CAR-T Cell Therapy}
+\subsection{CAR-T Cell Therapy}
 
 CAR-T therapy is represented by 474 full-text articles across all 22 cancer types. The literature has evolved from early hematologic successes in B-cell leukemia and lymphoma \cite{rafiq2020_31848460} (1,400 citations) toward aggressive expansion into solid tumors.
 
@@ -175,13 +183,13 @@ Key developments include: IL-15-armored GPC3-targeted CAR-T cells for solid canc
 
 CRISPR-based engineering of CAR-T cells is a rapidly growing convergence axis (95 full-text articles), exemplified by RASA2 ablation enhancing antigen sensitivity \cite{carnevale2022_36002574} (207 citations) and adenosine A2A receptor deletion enhancing efficacy \cite{giuffrida2021_34050151} (199 citations). The allogeneic CRISPR-Cas9-engineered CAR-T therapy CTX130, targeting CD70 in T-cell lymphoma, has demonstrated safety in Phase I \cite{iyer2025_39617017} (58 citations), representing a milestone for gene-edited cell therapies. CAR-T combined with oncolytic viruses (40 articles) and bispecific antibodies (30 articles) represents additional emerging convergence zones.
 
-\subsubsection{Bispecific Antibodies}
+\subsection{Bispecific Antibodies}
 
 Bispecific antibodies, engineered to simultaneously bind two distinct targets (typically a tumor antigen and an immune effector molecule), are represented by 247 full-text articles across 20 of 22 cancer types. Myeloma is a particularly active area (22 articles), with real-world data on teclistamab demonstrating clinical utility in relapsed/refractory disease \cite{riedhammer2024_38245601} (94 citations). Lung cancer applications are expanding, with KN046, a PD-L1/CTLA-4 bispecific, showing Phase II results in combination with chemotherapy for first-line metastatic NSCLC \cite{zhao2024_38508135} (38 citations), and the EGFRxHER3 bispecific izalontamab reporting first-in-human results \cite{xue2025_40260627}.
 
 Bispecific antibody convergence with ADCs (42 articles) is an active area combining target engagement with cytotoxic payload delivery.
 
-\subsubsection{mRNA Cancer Vaccines}
+\subsection{mRNA Cancer Vaccines}
 
 mRNA cancer vaccines represent one of the more dynamic but also more taxonomy-sensitive areas in the full-text corpus: 179 articles across 20 cancer types after tightening the mechanism tag to therapeutic cancer-vaccine studies. Earlier drafts materially overcounted this lane because supportive and infectious-vaccine papers in cancer cohorts bled into the mechanism definition. The field was nevertheless catalyzed by the COVID-19 mRNA platform moment, which demonstrated the feasibility of rapid, scalable mRNA production and lipid nanoparticle delivery \cite{szabo2022_35189345} (279 citations). A comprehensive Lancet Oncology review established the clinical landscape \cite{lorentzen2022_36174631} (470 citations), documenting the depth of ongoing therapeutic development.
 
@@ -189,7 +197,7 @@ The landmark article in this category is the Nature report on personalized RNA n
 
 The mRNA vaccine field still intersects strongly with immunotherapy (131 co-tagged full-text articles) and nanoparticle delivery (47 co-tagged articles), reflecting the inherent dependence of mRNA vaccines on both immune activation and delivery technology. In the current evidence-tier table, the mechanism reaches Phase II, but its local full-text signal remains review-heavy and only partially covered by patient-study tagging. That means the field is clearly active, but mechanistic article counts should not be mistaken for mature comparative clinical evidence. A recent clinical advances review documents the current pipeline across melanoma, glioblastoma, lung, breast, and prostate cancers \cite{yaremenko2025_39798545} (74 citations). Lipid nanoparticle-mediated lymph node-targeting delivery of mRNA cancer vaccines has been shown to elicit robust CD8+ T-cell responses \cite{chen2022_35969778} (371 citations).
 
-\subsubsection{Oncolytic Viruses}
+\subsection{Oncolytic Viruses}
 
 Oncolytic virotherapy is represented by 378 full-text articles across 19 cancer types. Glioblastoma is the most studied target (43 articles), followed by melanoma (51 articles), where T-VEC (talimogene laherparepvec) established the precedent for oncolytic virus approval. A comprehensive Nature Reviews Clinical Oncology review characterizes the field's progress and challenges \cite{shalhout2023_36631681} (489 citations), noting that oncolytic viruses offer selective replication in tumor cells, delivery of multiple transgene payloads, induction of immunogenic cell death, and promotion of antitumor immunity.
 
@@ -197,9 +205,9 @@ A notable 2025 Cell paper reported a hyperacute rejection-engineered oncolytic v
 
 The strongest convergence axis is oncolytic virus-immunotherapy (262 full-text articles), consistent with the mechanistic rationale that viral oncolysis generates immunogenic cell death that may synergize with checkpoint blockade \cite{shalhout2023_36631681}; \cite{ma2023_36402738}. Combinations with CAR-T (40 articles) and nanoparticle delivery remain emergent.
 
-\subsection{Precision Molecular Approaches}
+\section{Precision Molecular Approaches}
 
-\subsubsection{CRISPR Gene Editing}
+\subsection{CRISPR Gene Editing}
 
 CRISPR-based approaches are represented by 331 full-text articles across 20 cancer types, with no Phase II or Phase III articles detected by our automated classification, placing CRISPR among the most preclinical-heavy mechanisms in our analysis. Despite this, the conceptual impact is enormous: CRISPR screens have defined unified hallmarks of cancer cell-autonomous immune evasion, providing a systematic map of therapeutic targets \cite{huber2026_41417728}.
 
@@ -207,7 +215,7 @@ Key convergence axes include CRISPR-immunotherapy (166 articles), CRISPR-CAR-T (
 
 Precision nanomedicine integrating CRISPR with nanoparticle delivery for tumor microenvironment modulation represents a growing area \cite{sabit2025_40457437} (101 citations).
 
-\subsubsection{Synthetic Lethality}
+\subsection{Synthetic Lethality}
 
 Synthetic lethality --- the paradigm in which loss of two genes is lethal while loss of either alone is viable ---is represented by 367 full-text articles across 21 cancer types. PARP inhibitors, the clinical embodiment of this concept, have achieved broad clinical use in breast cancer (69 articles), ovarian cancer (73 articles), pancreatic cancer (25 articles), and prostate cancer (24 articles). A pan-tumor review documented the expanding role of PARP inhibitors across multiple malignancies \cite{hage2025_39791278} (21 citations).
 
@@ -215,13 +223,13 @@ The concept of synthetic lethality as an engine for cancer drug target discovery
 
 Our corpus detected zero synthetic lethality-myeloma co-tagged articles; however, independent PubMed verification reveals at least 11 publications on PARP inhibitors in multiple myeloma, including early-phase clinical data on veliparib combined with bortezomib. This gap is therefore an artifact of our search query design rather than a genuine absence of research. The myeloma-PARP axis is under-researched relative to breast or ovarian cancer applications, but it is not unexplored.
 
-\subsubsection{Antibody-Drug Conjugates (ADCs)}
+\subsection{Antibody-Drug Conjugates (ADCs)}
 
 ADCs are represented by 284 full-text articles across 21 cancer types. The field is dominated by breast cancer applications (92 articles), lung cancer (48 articles), and ovarian cancer (29 articles). The changing treatment landscape of EGFR-mutant NSCLC has been shaped by ADC development alongside bispecific antibodies \cite{zhou2025_39614090} (106 citations).
 
 ADC convergence with immunotherapy (160 articles) is well established, and combinations with CAR-T (42 articles) and bispecific antibodies (42 articles) are emerging.
 
-\subsubsection{Epigenetic Therapy}
+\subsection{Epigenetic Therapy}
 
 Epigenetic approaches (DNA methylation inhibitors, histone deacetylase inhibitors, bromodomain inhibitors, and related agents) are represented by 183 full-text articles across 20 cancer types. A landmark Cell Death Discovery review established the current state of clinical translation \cite{yu2024_38225241} (223 citations), and a Signal Transduction and Targeted Therapy paper provided a comprehensive framework for epigenetic regulation in the tumor microenvironment \cite{yang2023_37217462} (322 citations).
 
@@ -229,9 +237,9 @@ The most impactful single finding in this category is the Nature paper demonstra
 
 Epigenetic-immunotherapy convergence (78 articles) is the dominant combination.
 
-\subsection{Delivery and Microenvironment}
+\section{Delivery and Microenvironment}
 
-\subsubsection{Nanoparticle Delivery}
+\subsection{Nanoparticle Delivery}
 
 Nanoparticle-based delivery systems constitute the second-largest mechanism category in our full-text corpus: 515 articles across 20 cancer types. An important distinction must be drawn between established and experimental nanoplatforms. Several nanomedicines have achieved FDA approval, including liposomal doxorubicin (Doxil, 1995), nab-paclitaxel (Abraxane, 2005), liposomal irinotecan (Onivyde, 2015), and liposomal daunorubicin-cytarabine (Vyxeos, 2017) \cite{fulton2023_37047585}. These approved nanomedicines are typically described by drug name rather than "nanoparticle" in the literature and are therefore underrepresented in our corpus. The translational gap identified here primarily applies to novel experimental nanoplatforms --- metal, polymer, and inorganic nanoparticles --- which remain overwhelmingly preclinical in our full-text corpus. This distinction between proven liposomal/albumin-bound formulations and the broader experimental nanoparticle literature is critical: the former demonstrate that nanomedicine can succeed clinically, while the latter face substantial barriers to replicating that success.
 
@@ -239,7 +247,7 @@ The nanoparticle literature spans gold, silver, and iron oxide nanoparticles \ci
 
 The fundamental translational barriers include: (a) heterogeneous nanoparticle pharmacokinetics and biodistribution that are difficult to predict from preclinical models; (b) manufacturing scalability and reproducibility challenges; (c) regulatory uncertainty around the classification and approval pathway for nanoparticle-drug combinations; and (d) the enhanced permeability and retention (EPR) effect, which is robust in rodent tumors but inconsistent in human cancers. Breast cancer (172 articles), lung cancer (76 articles), and liver cancer (66 articles) are the primary targets. Mesothelioma has zero nanoparticle publications despite the appeal of local delivery to pleural surfaces.
 
-\subsubsection{Metabolic Targeting}
+\subsection{Metabolic Targeting}
 
 Metabolic targeting --- exploitation of altered cancer cell metabolism, particularly the Warburg effect, glutamine addiction, and lipid metabolism dependencies ---is represented by 274 full-text articles across 20 cancer types. A comprehensive Nature Reviews Drug Discovery article \cite{stine2022_34862480} (1,127 citations) chronicles the hundred-year journey from Warburg's discovery to contemporary precision metabolic oncology.
 
@@ -247,7 +255,7 @@ The convergence of metabolic targeting with immunotherapy (127 articles) reflect
 
 Metabolic targeting has limited representation in lymphoma within our corpus, though broader PubMed searches suggest this gap partly reflects our search query design.
 
-\subsubsection{Microbiome Modulation}
+\subsection{Microbiome Modulation}
 
 Microbiome modulation is the most recently emergent mechanism in our analysis: 109 full-text articles across 11 cancer types. The field has been catalyzed by the recognition that gut microbiota composition influences checkpoint immunotherapy response, as comprehensively reviewed in Nature Reviews Cancer \cite{fernandes2022_36253536} (258 citations) and Nature Medicine \cite{park2022_35440726} (467 citations).
 
@@ -255,7 +263,7 @@ Fecal microbiota transplantation (FMT) combined with checkpoint inhibitors has e
 
 Microbiome-immunotherapy convergence (100 articles) dominates the microbiome literature in our corpus.
 
-\subsection{Cross-Mechanism Convergence: Where Synergies Emerge}
+\section{Cross-Mechanism Convergence: Where Synergies Emerge}
 
 Of the 4,830 articles in our full-text corpus, 1,952 (40\%) are tagged with two or more therapeutic mechanism keywords, and 396 carry three or more tags. To distinguish deliberate combination studies from incidental co-mentions, we applied a corpus-wide designed-combination classifier using explicit combination/synergy language and study-type signals. Of the 1,952 multi-mechanism articles, 385 (19.7\%) are classified as designed combination studies --- 60 with clinical patient-study signal and 325 preclinical --- while 622 (31.9\%) are co-mentions only and 945 (48.4\%) are reviews or perspectives spanning multiple lanes (Figure~\ref{fig:fig15_designed_combinations}). An earlier 50-article manual subsample had estimated $\sim$10\% experimental combinations; the automated classifier yields a higher rate primarily because it captures preclinical combination designs that the small manual sample underrepresented. The remaining co-tagged articles map the intellectual territory where researchers are connecting mechanisms conceptually --- a precursor to deliberate combination design, but not equivalent to experimental evidence of synergy. We distinguish between the co-occurrence rate (40\%) and the measured designed-combination rate (19.7\%), and caution against conflating the two.
 
@@ -295,7 +303,7 @@ Notable triple-mechanism articles include the landmark thermal ablation review i
 \label{fig:fig4_molecular_overlap}
 \end{figure}
 
-\subsection{The Mechanism-Cancer Matrix: What Works Where}
+\section{The Mechanism-Cancer Matrix: What Works Where}
 
 The 19 x 22 mechanism-cancer matrix reveals both deep concentrations and systematic gaps.
 
@@ -314,9 +322,11 @@ The most intensively researched cancer types across all mechanisms are breast ca
 \label{fig:fig3_literature_disconnect}
 \end{figure}
 
-\subsection{Evidence Maturity and Weighted Scoring}
+\chapter{Evidence Quality and Gaps}
 
-Evidence tags are currently populated for 2,038 of 4,830 full-text records (42.2\%). Reviews and meta-analyses (1,921) and protocols (29) are intentionally left unclassified; among the remaining primary-study-like records, coverage is 2,038 of 2,880 (70.8\%). The gold-set evaluation described in Section 2.5 confirms that this coverage reflects a conservative detector: tagged evidence is almost always real, but a substantial share of valid evidence goes undetected, particularly in the clinical-other, theoretical, and preclinical-in-vitro categories.
+\section{Evidence Maturity and Weighted Scoring}
+
+Evidence tags are currently populated for 2,038 of 4,830 full-text records (42.2\%). Reviews and meta-analyses (1,921) and protocols (29) are intentionally left unclassified; among the remaining primary-study-like records, coverage is 2,038 of 2,880 (70.8\%). The gold-set evaluation described in Section 3.6 confirms that this coverage reflects a conservative detector: tagged evidence is almost always real, but a substantial share of valid evidence goes undetected, particularly in the clinical-other, theoretical, and preclinical-in-vitro categories.
 
 \begin{figure}[ht]
 \centering
@@ -334,9 +344,7 @@ To move beyond raw counts, we computed a weighted evidence score for each mechan
 \label{fig:fig16_weighted_evidence}
 \end{figure}
 
-\section{Discussion}
-
-\subsection{Main Contribution: A Broader Frame Before A Narrower Hypothesis}
+\section{Main Contribution: A Broader Frame Before A Narrower Hypothesis}
 
 The most important contribution of this article is not a claim that one modality should replace another. It is a change in framing. The frozen 19-mechanism corpus shows that oncology is not short of therapeutic ideas; it is short of disciplined ways to compare them. Mechanism counts, convergence maps, and evidence tiers reveal a field dominated by a few high-volume hubs, but they also show how quickly apparently clean conclusions can be destabilized by taxonomy choices, missing full text, incomplete evidence tagging, and tag contamination from adjacent literatures. That matters because many attractive “gaps” are not true absences, and many active literatures are not equally mature.
 
@@ -351,7 +359,7 @@ A tissue-of-origin layer derived from existing cancer-type tags provides a coars
 \label{fig:fig14_tissue_mechanism_heatmap}
 \end{figure}
 
-\subsection{What The Corpus Actually Supports About PDT, SDT, and CAP}
+\section{What The Corpus Actually Supports About PDT, SDT, and CAP}
 
 The corpus and external cross-checking support a more modest position than our earlier framing implied.
 
@@ -363,7 +371,11 @@ The corpus and external cross-checking support a more modest position than our e
 
 \textbf{Fourth, the strongest version of the PDT/SDT claim is now conditional.} Physical ROS modalities are most plausible when residual disease is locally targetable, when spatial selectivity matters more than systemic reach, and when ferroptosis-related vulnerability is expected to persist long enough for intervention. The unresolved in vivo problem is exactly where this claim can fail: SCD/MUFA remodeling, DHODH-linked backup defenses, NRF2 compensation, stromal buffering, and other context-dependent escape programs may narrow or erase the apparent window.
 
-\subsection{Computational Simulation: Ferroptosis Sensitivity Across Cell Phenotypes}
+\part{What The Simulations Show}
+
+\chapter{The Ferroptosis Engine}
+
+\section{Computational Simulation: Ferroptosis Sensitivity Across Cell Phenotypes}
 
 To test whether the proposed persister ferroptosis vulnerability is biochemically plausible, we developed a Monte Carlo simulation of the ferroptosis cascade. The model simulates the ROS $\rightarrow$ GSH depletion $\rightarrow$ GPX4/FSP1 inactivation $\rightarrow$ lipid peroxidation $\rightarrow$ cell death chain for individual cells with stochastic parameter variation, using literature-sourced biochemical values (Methods in Supplementary). We simulated 1,000,000 cells for each of 16 conditions (4 phenotypes $\times$ 4 treatments = 16,000,000 total cells).
 
@@ -409,7 +421,9 @@ Persister + NRF2 & 0.00\% & 0.05\% & 99.5\% & 99.5\% \\
 
 \textbf{Model limitations}: This is a qualitative model testing directional predictions, not a quantitative predictor of clinical death rates. The absolute percentages (87\%, 42\%, etc.) depend on model-specific rate constants and should not be interpreted as clinical predictions. Its value is in demonstrating that the proposed biochemical chain produces the expected differential sensitivity under biologically plausible parameters. All $\sim$30 simulation parameters are documented with literature sources and confidence ratings. A calibration layer evaluates 5 targets against existing simulation outputs: 3 are independent calibration targets (persister RSL3 death rate, RSL3 window closure timing, MUFA protection factor) and 2 are self-consistency checks on physics parameters (PDT attenuation, SDT penetration).
 
-\subsubsection{Spatial Tumor Simulation: Depth-Dependent Energy Deposition}
+\chapter{Drug Combinations and Penetration}
+
+\section{Spatial Tumor Simulation: Depth-Dependent Energy Deposition}
 
 To address the single-cell model's lack of spatial context, we extended the simulation to a 2D heterogeneous tumor grid (500 x 500 cells, 20 um/cell = 1 cm x 1 cm tissue cross-section) with physics-based energy attenuation. The tumor architecture consists of a glycolytic core (80\% glycolytic, 15\% OXPHOS, 5\% persister), an OXPHOS-rich periphery (70\% OXPHOS, 20\% glycolytic, 8\% persister, 2\% persister+NRF2), persister cluster pockets, and a stromal border --- totaling 159,033 tumor cells per simulation.
 
@@ -450,7 +464,7 @@ Dead cells release labile iron to their Moore neighborhood (8-neighbors), modeli
 
 The spatial model treats RSL3 as uniformly distributed, but real drug concentration drops with distance from the nearest blood vessel. A tissue-specific drug penetration module using the exponential Krogh cylinder approximation (C(r) = C$_0$ $\times$ exp(-r/$\lambda$), where $\lambda$ = $\sqrt{D/k}$ is the penetration length) shows that even at the vessel wall (the highest-concentration position), tissue-specific vascular permeability reduces effective drug exposure --- yielding vessel-wall persister kill rates of 12.1\% in well-vascularized epithelial tissue, 2.6\% in poorly-vascularized tissue (pancreatic), and 1.8\% behind the blood-brain barrier (glioblastoma), with overall tumor kill rates even lower (6.6\%, 2.1\%, 1.5\% respectively). These are substantially lower than the 40\% kill rate observed in 2D culture, reinforcing the in-vitro-to-in-vivo translation gap. All transport parameters are estimated, not calibrated --- the comparison across tissue types is directionally informative, not quantitatively precise.
 
-\subsubsection{Vulnerability Window: How Long Does the Ferroptosis-Sensitive Window Stay Open?}
+\section{Vulnerability Window: How Long Does the Ferroptosis-Sensitive Window Stay Open?}
 
 A critical question for clinical translation is timing: how long after chemotherapy withdrawal do persister cells remain ferroptosis-sensitive? We modeled the recovery of defense pathways (FSP1, GPX4, NRF2, GSH) using exponential kinetics with literature-estimated half-times (FSP1: 7 days, GPX4: 3 days, NRF2: 5 days, GSH: 1 day) and simulated 100,000 cells per condition at each timepoint.
 
@@ -466,13 +480,15 @@ A critical question for clinical translation is timing: how long after chemother
 
 \textbf{The RSL3 vulnerability window closes within 3 days} as GPX4 is re-expressed. By one week, RSL3 is completely ineffective (0.01\%). \textbf{The SDT window remains open for at least 4 weeks} (99.5\% kill at day 28), because the exogenous ROS burst overwhelms even partially recovered antioxidant defenses. This differential has direct clinical implications: pharmacologic ferroptosis inducers require intervention within days of chemotherapy, while physical modalities offer a much wider scheduling window. To our knowledge, this is the first computational estimate of the persister ferroptosis vulnerability window duration.
 
-\subsubsection{Mechanistic Combination Modeling: Why Drug Pairs Synergize}
+\section{Mechanistic Combination Modeling: Why Drug Pairs Synergize}
 
 The ferroptosis pathway has two parallel repair arms: GPX4 (GSH-dependent) and FSP1 (CoQ10-dependent). These feed into a shared antioxidant quench term that suppresses autocatalytic lipid peroxidation propagation. Depleting both arms simultaneously should produce mechanistic synergy --- the simulation lets us test this prediction quantitatively.
 
 Running pairwise combinations of four interventions (RSL3/GPX4 inhibitor, SDT/exogenous ROS, FSP1 inhibitor, HDAC inhibitor/basal ROS upregulation) on 1,000 persister cells per condition and comparing against Bliss-independent predictions reveals three synergistic pairs. RSL3 + FSP1i is the strongest (Bliss synergy score 1.99): single-agent RSL3 kills 40\% and FSP1i kills 3.7\%, but the combination kills 84.1\% --- nearly double the 42.2\% Bliss prediction. The pathway traces show why: with both GPX4 and FSP1 depleted, mean lipid peroxidation reaches 8.7 (near the 10.0 death threshold), whereas RSL3 alone only drives LP to 4.5 because intact FSP1 partially compensates. RSL3 + HDACi (1.25x) and FSP1i + HDACi (1.21x) are also synergistic. SDT combinations are merely additive because SDT alone already kills 100\% of persisters (ceiling effect). Drug potency parameters (FSP1i 85\% inhibition, HDACi 2x ROS) are estimates --- exact synergy scores depend on these assumptions, but the directional finding (dual-pathway depletion > single-pathway) is robust to parameter variation.
 
-\subsubsection{Tumor Microenvironment: Oxygen Gradients and Hypoxia}
+\chapter{Resistance Mechanisms}
+
+\section{Tumor Microenvironment: Oxygen Gradients and Hypoxia}
 
 The preceding simulations assumed uniform oxygenation --- every cell generates the same basal ROS regardless of position. Real tumors have oxygen gradients: O2 penetrates approximately 100-150$\mu$m from the vasculature (Vaupel, Cancer Research 1989; modeled via the Krogh cylinder approximation, with underlying O2 transport physiology consistent with Anatomy \& Physiology 2e, Ch.22.4), creating hypoxic cores where mitochondrial ETC activity drops and basal ROS production falls (Biology2e Ch.7, Sec.7.4: O2 is the terminal electron acceptor for the electron transport chain).
 
@@ -480,11 +496,11 @@ To quantify this, we applied an exponential O2 gradient from the tumor edge inwa
 
 The result is striking. Under the O2 gradient ($\lambda$ = 120$\mu$m), RSL3 overall kill collapses from 3.7\% to 0.1\%, and in the hypoxic zone (deeper than 360$\mu$m from the tumor edge) RSL3 kills zero cells. SDT overall kill drops only modestly --- from 91.9\% to 87.8\% --- and maintains 86.6\% kill even in the hypoxic zone. This differential is robust across all tested penetration lengths ($\lambda$ = 80, 100, 120, 150$\mu$m) and emerges directly from the biochemistry: RSL3 inhibits GPX4 but depends on the cell's own mitochondrial ROS to initiate lipid peroxidation. In hypoxia, there is no basal ROS to drive the cascade, regardless of how thoroughly GPX4 is inhibited. SDT delivers exogenous ROS via sonosensitizer activation (primarily Type I electron-transfer mechanism, less O2-dependent than the Type II singlet-oxygen pathway), bypassing the mitochondrial bottleneck.
 
-This finding has two implications. First, it quantifies a specific mechanism by which the tumor microenvironment protects cells from pharmacologic ferroptosis inducers --- not through upregulation of defense pathways (the NRF2/MUFA mechanisms modeled in Section 4.3), but through the absence of the upstream trigger (basal ROS). Second, it provides a mechanistic rationale for why physical ROS modalities might maintain efficacy in contexts where pharmacologic approaches fail: they supply what hypoxic cells lack. This is the same depth-vs-penetration argument made in Section 4.5, but now grounded in TME biology rather than tissue optics alone.
+This finding has two implications. First, it quantifies a specific mechanism by which the tumor microenvironment protects cells from pharmacologic ferroptosis inducers --- not through upregulation of defense pathways (the NRF2/MUFA mechanisms modeled in Chapter 5), but through the absence of the upstream trigger (basal ROS). Second, it provides a mechanistic rationale for why physical ROS modalities might maintain efficacy in contexts where pharmacologic approaches fail: they supply what hypoxic cells lack. This is the same depth-vs-penetration argument made in Section 8.2, but now grounded in TME biology rather than tissue optics alone.
 
 Caveats: the O2 model treats SDT/PDT as fully O2-independent, which is conservative (the Type II photodynamic mechanism requires O2 for singlet oxygen generation). The Fenton reaction substrate (H2O2) is also O2-derived via the superoxide$\rightarrow$SOD pathway, but we modulate only basal\_ros, not Fenton rate directly. The O2 field is steady-state (no consumption dynamics) and uses distance from the tumor edge as the O2 source (no explicit vasculature). All of these simplifications mean the actual hypoxic protection is likely STRONGER than what we report.
 
-\subsubsection{Immune Coupling: DAMP-Mediated T Cell Activation}
+\section{Immune Coupling: DAMP-Mediated T Cell Activation}
 
 Ferroptotic cell death releases damage-associated molecular patterns (DAMPs) --- particularly HMGB1, calreticulin, and ATP --- that activate dendritic cells and prime local T cell responses (immunogenic cell death, ICD). To explore whether the kill-density and kill-quality differential between SDT and RSL3 translates into differential immune activation, we added a spatial immune coupling layer to the TME simulation. Dead cells release DAMPs into a diffusion field; local DAMP concentration activates resident T cells via a half-maximal response function (Kd = 5.0); activated T cells kill adjacent tumor cells at rate 0.02 per step, suppressed by a PD-1 brake (70\% inhibition baseline, reduced to 14\% with simulated anti-PD-1).
 
@@ -503,7 +519,7 @@ The absolute immune contribution is modest ($\sim$0.3-0.9\% additional kill for 
 
 Caveats: the immune model represents resident T cell activation only (0-48h), not systemic immune recruitment or adaptive immune memory. All immune parameters (kill rate, DAMP diffusion, DC activation threshold) are estimated, not calibrated to experimental data. The LP overshoot is now emergent from the biochemistry (5 post-death steps with zero repair) rather than an estimated multiplier. PD-1/anti-PD-1 parameters are simplified (single brake coefficient). These results establish qualitative directionality --- dense ferroptotic kill enables immune amplification --- but the absolute magnitudes should not be treated as predictions.
 
-\subsubsection{Stromal Shielding: CAF-Mediated Protection at the Tumor Periphery}
+\section{Stromal Shielding: CAF-Mediated Protection at the Tumor Periphery}
 
 The preceding TME features modeled the tumor interior (hypoxia, immune coupling). But the tumor boundary presents a different biology: cancer-associated fibroblasts (CAFs) at the tumor-stroma interface supply neighboring tumor cells with cysteine (for GSH synthesis via the GGT1/SLC7A11 pathway) and oleic acid (MUFA for membrane remodeling via ACSL3-mediated uptake). This metabolic cooperation has been documented in CAF co-culture studies \cite{pmid34373744} and lipid-ferroptosis research \cite{pmid31813804}; \cite{pmid30842648}, but has not been quantified in a spatial ferroptosis simulation.
 
@@ -513,11 +529,11 @@ The result is treatment-selective. Among the 1,796 stromal-adjacent cells, CAF p
 
 The mechanism behind the treatment selectivity is the same ROS imbalance that drives the hypoxia finding: RSL3 depends on slow basal ROS ($\sim$0.3 relative units) to drive the LP cascade through compromised GPX4. A 2.4$\times$ GSH supply boost meaningfully slows this cascade --- each step, more ROS is scavenged before it reaches lipid membranes. SDT delivers $\sim$17$\times$ higher exogenous ROS ($\sim$5.0 relative units), overwhelming the CAF defense within a few steps regardless of the GSH boost. The Michaelis-Menten scavenging kinetics (GSH of 18 provides only 26\% better scavenging than GSH of 5) ensure that even maximal CAF supply cannot rescue cells from SDT's ROS flood.
 
-This finding complements the hypoxia and immune coupling results: physical modalities bypass both hypoxic protection (Section 4.3.4) and CAF-mediated stromal shielding, while also generating stronger downstream immune activation (Section 4.3.5). Hypoxia and stromal shielding are direct resistance mechanisms that blunt pharmacologic ferroptosis induction; immune coupling is a separate amplification effect that favors treatments with dense spatial kill patterns.
+This finding complements the hypoxia and immune coupling results: physical modalities bypass both hypoxic protection (Section 7.1) and CAF-mediated stromal shielding, while also generating stronger downstream immune activation (Section 7.2). Hypoxia and stromal shielding are direct resistance mechanisms that blunt pharmacologic ferroptosis induction; immune coupling is a separate amplification effect that favors treatments with dense spatial kill patterns.
 
 Caveats: all stromal parameters are estimated, not calibrated to experimental data. The model treats all boundary stromal cells as equally protective CAFs (in reality, CAF density and phenotype vary). CAF metabolic exhaustion is not modeled --- the supply rate is constant regardless of demand. ECM-mediated drug diffusion barriers are not included (deferred to a future iteration). Only the outermost ring of tumor cells (depth = 1 cell layer) receives CAF protection; paracrine signaling range may extend further. These results establish that stromal shielding is treatment-selective in the model, but the absolute magnitudes depend on estimated parameters.
 
-\subsubsection{Acidic pH: Iron Release vs Drug Ion Trapping}
+\section{Acidic pH: Iron Release vs Drug Ion Trapping}
 
 Tumor cores are acidic (pH 6.5-6.8) due to lactic acid accumulation from aerobic glycolysis (the Warburg effect --- not covered in the reference textbooks, which associate lactic acid fermentation with anaerobic conditions only). This acidity creates two competing effects on ferroptosis: (1) ferritin protein shells destabilize below pH $\sim$6.5, releasing stored iron into the labile iron pool and increasing Fenton-driven ROS generation (pro-ferroptosis); (2) weak-base drugs become protonated at low extracellular pH and are trapped in acidic compartments, reducing intracellular drug availability (anti-ferroptosis, governed by Henderson-Hasselbalch equilibria --- Chemistry2e Sec.14.2). The net effect on ferroptosis is not obvious from first principles: does the iron boost or the drug loss dominate?
 
@@ -525,11 +541,13 @@ To quantify this, we applied an exponential pH gradient from the tumor edge inwa
 
 The result is unambiguous: drug trapping dominates. RSL3 ferroptosis kills drop from 163 to 77 (53\% reduction) because the GPX4 restoration (from 8\% to 41\% of normal activity) is a 5.1$\times$ repair boost, while the iron-driven ROS increase is only 7\%. SDT is barely affected (+0.8\%, from 139,640 to 140,693 ferroptosis kills) because ultrasound energy delivery is pH-independent --- there is no drug to trap --- and the iron boost adds only 0.4\% to SDT's total ROS (dwarfed by exogenous ROS of 5.0 relative units). Control shows a tiny increase (1 to 2 ferroptosis kills) from the Fenton boost alone.
 
-This adds a third direct resistance mechanism --- alongside hypoxia (Section 4.3.4) and stromal shielding (Section 4.3.6) --- that selectively penalizes pharmacologic ferroptosis inducers while leaving physical modalities unaffected. All three share the same structural asymmetry: pharmacologic approaches depend on endogenous processes that the TME can disrupt --- basal ROS generation (removed by hypoxia), GSH depletion (counteracted by stromal cysteine supply), and intracellular drug bioavailability (reduced by pH-driven ion trapping) --- while physical modalities deliver exogenous energy that bypasses these vulnerabilities.
+This adds a third direct resistance mechanism --- alongside hypoxia (Section 7.1) and stromal shielding (Section 7.3) --- that selectively penalizes pharmacologic ferroptosis inducers while leaving physical modalities unaffected. All three share the same structural asymmetry: pharmacologic approaches depend on endogenous processes that the TME can disrupt --- basal ROS generation (removed by hypoxia), GSH depletion (counteracted by stromal cysteine supply), and intracellular drug bioavailability (reduced by pH-driven ion trapping) --- while physical modalities deliver exogenous energy that bypasses these vulnerabilities.
 
 Caveats: all pH parameters are estimated. RSL3 is a chloroacetamide, not a classic weak base --- its pKa and ion trapping behavior are poorly characterized, making the ion\_trap\_sensitivity the most uncertain parameter in this model. The linear Henderson-Hasselbalch approximation is valid over the narrow pH 6.5-7.4 range but would break down at more extreme pH values. The pH field is steady-state (no lactate production or buffering dynamics). Tumor pH ranges (6.5-6.8) are from primary literature; no reference textbook covers tumor-specific pH data.
 
-\subsection{Other Directions The Repo Was Underweighting}
+\chapter{Counterarguments and Failure Modes}
+
+\section{Other Directions The Repo Was Underweighting}
 
 One reason to widen the article framing is that the repo is no longer only telling a PDT/SDT story. Even under conservative tagging, several adjacent directions deserve explicit mention because they may compete with or complement the physical-ROS hypothesis.
 
@@ -539,11 +557,11 @@ One reason to widen the article framing is that the repo is no longer only telli
 
 \textbf{Pathway-target layers} such as SCD/MUFA remodeling, DHODH-linked backup defenses, DHCR7/7-DHC biology, and TRIM25/GPX4 degradation matter because they may explain why ferroptosis-looking vulnerabilities repeatedly weaken in vivo.
 
-\textbf{Stromal shielding, senescence programs, and broader tumor-microenvironment biology} are not side notes. They may be the main reason apparently elegant modality-level ideas stall during translation. The stromal protection simulation (Section 4.3.6) now quantifies one component of this: CAF-mediated metabolic support halves RSL3's peripheral kill rate while leaving SDT largely unaffected.
+\textbf{Stromal shielding, senescence programs, and broader tumor-microenvironment biology} are not side notes. They may be the main reason apparently elegant modality-level ideas stall during translation. The stromal protection simulation (Section 7.3) now quantifies one component of this: CAF-mediated metabolic support halves RSL3's peripheral kill rate while leaving SDT largely unaffected.
 
 The practical implication is that resistant-state matching should become the primary decision layer. Modality choice matters, but it should come after the biology of residual survival is defined.
 
-\subsection{The Modality Question: PDT, SDT, and the Tissue-Penetration Tradeoff}
+\section{The Modality Question: PDT, SDT, and the Tissue-Penetration Tradeoff}
 
 If OXPHOS-resistant persister cells are ferroptosis-vulnerable, which modality best exploits this? Our initial corpus analysis identified SDT as unusually aligned with ferroptosis among physical ablative modalities. However, broader PubMed verification reveals a critical context we must address honestly:
 
@@ -580,7 +598,7 @@ The mechanism is shared: sensitizer-activated ROS $\rightarrow$ GSH depletion $\
 \label{fig:fig6_sdt_chain_evidence}
 \end{figure}
 
-\subsection{Counterarguments, Precedents, and Reasons This Could Fail}
+\section{Counterarguments, Precedents, and Reasons This Could Fail}
 
 \textbf{The photodynamic therapy precedent.} PDT is conceptually identical to SDT: physical energy (light vs ultrasound) activates a sensitizer to generate ROS, causing cell death with ICD potential. PDT has been in clinical development for 40+ years and has achieved approval for a few indications (esophageal, skin) but has never demonstrated the "ROS $\rightarrow$ ICD $\rightarrow$ immune synergy $\rightarrow$ durable response" chain in a randomized clinical trial. PDT + immunotherapy combinations remain at the case report level \cite{li2026_41833681}. If this logic worked robustly, PDT would have shown it by now. SDT's claimed advantages over PDT --- deeper tissue penetration and potentially superior ferroptosis engagement via engineered nanosonosensitizers --- are plausible but incremental, not paradigmatic. The SDT hypothesis must explain why it would succeed where PDT has not demonstrated clear immune synergy.
 
@@ -598,7 +616,11 @@ The mechanism is shared: sensitizer-activated ROS $\rightarrow$ GSH depletion $\
 
 \textbf{Prior art.} Collateral sensitivity (Pluchino et al., 2012), adaptive therapy (Gatenby \& Brown, 2009), and synthetic lethality are established frameworks for exploiting resistance tradeoffs. What our analysis adds is the specific SDT connection, not the general principle.
 
-\subsection{Research Priorities}
+\part{What Should Happen Next}
+
+\chapter{Research Roadmap}
+
+\section{Research Priorities}
 
 \textbf{Priority 1} (highest value, $\sim$3 months): Comparative resistant-state killing experiment. Using persister or residual-disease models grounded in the current literature \cite{higuchi2026_41481741}, compare PDT, SDT, and pharmacologic ferroptosis inducers under matched conditions. Measure cell death, lipid-peroxidation markers, and ICD outputs (calreticulin, HMGB1, STING). Include conventional sensitizers and nanosensitizer conditions so the modality-versus-nanoplatform question is not blurred.
 
@@ -607,6 +629,8 @@ The mechanism is shared: sensitizer-activated ROS $\rightarrow$ GSH depletion $\
 \textbf{Priority 3} ($\sim$2-3 months): Compare the physical-ROS hypothesis against other adjacent lanes rather than against nothing. Radioligand therapy, checkpoint-plus-myeloid strategies, and pathway-target approaches should be evaluated on the same axes: tissue reach, evidence maturity, delivery burden, and biological plausibility for residual disease.
 
 \textbf{Priority 4} (if Priorities 1-3 are encouraging, $\sim$6 months): Move to in vivo comparison with honest comparators. Any mouse study should include PDT + anti-PD-1, SDT + anti-PD-1, and a pharmacologic ferroptosis arm; otherwise the experiment cannot tell whether SDT offers a meaningful advantage over its closest precedent.
+
+\chapter{The Broader Landscape}
 
 \section{Conclusion}
 
@@ -630,6 +654,13 @@ This article began as a modality-centered question and ends in a broader place.
 
 The right next step is therefore not to defend one favored modality, but to run the comparative experiments and cross-lane evaluations that could falsify it quickly.
 
+\chapter{How To Contribute}
+
+[To be added in \#103]
+
+\part{References and Tools}
+
+[Appendices A-C to be added in \#104]
 
 \bibliographystyle{unsrtnat}
 \bibliography{../references/bibliography}
