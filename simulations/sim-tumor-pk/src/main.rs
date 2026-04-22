@@ -78,7 +78,6 @@ fn main() {
     ];
 
     let plasma = rsl3_iv_bolus();
-    let ref_plasma = constant_reference();
 
     eprintln!("=== Tumor PBPK Compartment Model ===");
     eprintln!("Drug: RSL3-like IV bolus (t_half=30 min)");
@@ -87,11 +86,13 @@ fn main() {
     eprintln!("All tumor PK parameters ESTIMATED (no textbook coverage).\n");
 
     let mut all_results: Vec<ScenarioResult> = Vec::new();
-    // --- 2D reference (constant drug concentration) ---
+    // --- 2D reference (constant drug concentration = 1.0 at all steps) ---
+    // This represents ideal 2D culture where drug bathes cells directly.
+    // Do NOT run through the tumor ODE — that models tumor barriers which
+    // don't exist in 2D culture.
     let ref_death_rate;
     {
-        let ref_result = solve_tumor_pk(&ref_plasma, &breast_tumor(), N_STEPS, 100);
-        let conc_schedule: Vec<f64> = ref_result.c_interstitial.clone();
+        let conc_schedule: Vec<f64> = vec![1.0; N_STEPS];
         let (n_dead, mean_lp, mean_gsh, mean_gpx4) =
             run_scenario(&conc_schedule, &params, SEED);
         let (ci_lo, ci_hi) = wilson_ci(N_CELLS, n_dead);
