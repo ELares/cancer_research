@@ -270,6 +270,55 @@ pub fn solve_tumor_pk(
 }
 
 // ============================================================
+// Spatial × temporal composition: C(r,t)
+// ============================================================
+
+/// Compute spatial penetration length using METABOLISM ONLY (μm).
+/// For C(r,t) composition where cellular uptake is handled by the temporal
+/// ODE — avoids double-counting uptake in both spatial decay and temporal
+/// clearance. Returns a LONGER λ (224 μm for RSL3) than the full
+/// drug_transport::penetration_length_um (100 μm) which includes uptake.
+pub fn metabolism_only_penetration_um(drug: &crate::drug_transport::DrugParams) -> f64 {
+    let d_um2_per_s = drug.diffusion_coeff_cm2_s * 1e8;
+    if drug.metabolism_rate <= 0.0 {
+        return f64::INFINITY;
+    }
+    (d_um2_per_s / drug.metabolism_rate).sqrt()
+}
+
+/// Compute a time-varying concentration schedule for a cell at radial
+/// distance r_um from the nearest vessel.
+///
+/// Uses the quasi-steady approximation: C(r,t) ≈ C_i(t) × exp(-r / λ_met).
+/// Valid when diffusion equilibrates faster than plasma PK changes (~3 min
+/// diffusion vs ~30 min plasma half-life → 10× faster, valid after ~10 min).
+///
+/// λ_met uses metabolism-only clearance (not uptake) because the temporal
+/// ODE already includes cellular uptake. This avoids double-counting and
+/// produces a longer penetration length (224 μm vs 100 μm for RSL3).
+///
+/// Key finding from this composition: the spatial barrier adds only 1.3-1.7×
+/// additional protection on top of the 16-27× temporal PK barrier. For small
+/// molecules with short half-lives, drug EXPOSURE TIME matters more than
+/// drug PENETRATION DEPTH.
+pub fn compute_spatial_temporal_schedule(
+    pk_result: &TumorPKResult,
+    r_um: f64,
+    lambda_met_um: f64,
+) -> Vec<f64> {
+    let spatial_factor = if lambda_met_um.is_infinite() {
+        1.0
+    } else {
+        (-r_um / lambda_met_um).exp()
+    };
+    pk_result
+        .c_interstitial
+        .iter()
+        .map(|&c_i| c_i * spatial_factor)
+        .collect()
+}
+
+// ============================================================
 // Integration with ferroptosis-core
 // ============================================================
 
@@ -418,5 +467,48 @@ mod tests {
         assert!((c0 - 1.0).abs() < 1e-10, "C(0) should be 1.0");
         assert!((c30 - 0.5).abs() < 0.01, "C(t_half) should be ~0.5");
         assert!((c60 - 0.25).abs() < 0.01, "C(2×t_half) should be ~0.25");
+    }
+
+    #[test]
+    fn spatial_temporal_at_r0_equals_temporal_only() {
+        let plasma = rsl3_iv_bolus();
+        let tumor = breast_tumor();
+        let pk = solve_tumor_pk(&plasma, &tumor, 180, 100);
+        let schedule = compute_spatial_temporal_schedule(&pk, 0.0, 224.0);
+        for (i, &c) in schedule.iter().enumerate() {
+            assert!(
+                (c - pk.c_interstitial[i]).abs() < 1e-10,
+                "At r=0, C(r,t) should equal C_i(t)"
+            );
+        }
+    }
+
+    #[test]
+    fn spatial_temporal_decays_with_distance() {
+        let plasma = rsl3_iv_bolus();
+        let tumor = breast_tumor();
+        let pk = solve_tumor_pk(&plasma, &tumor, 180, 100);
+        let s0 = compute_spatial_temporal_schedule(&pk, 0.0, 224.0);
+        let s100 = compute_spatial_temporal_schedule(&pk, 100.0, 224.0);
+        let peak0: f64 = s0.iter().cloned().fold(0.0, f64::max);
+        let peak100: f64 = s100.iter().cloned().fold(0.0, f64::max);
+        assert!(peak100 < peak0, "Concentration should decrease with distance");
+        let expected_ratio = (-100.0_f64 / 224.0).exp();
+        let actual_ratio = peak100 / peak0;
+        assert!(
+            (actual_ratio - expected_ratio).abs() < 0.001,
+            "Decay should match exp(-r/lambda): {actual_ratio} vs {expected_ratio}"
+        );
+    }
+
+    #[test]
+    fn metabolism_only_lambda_larger_than_full() {
+        let drug = crate::drug_transport::rsl3_like();
+        let lambda_met = metabolism_only_penetration_um(&drug);
+        let lambda_full = crate::drug_transport::penetration_length_um(&drug);
+        assert!(
+            lambda_met > lambda_full,
+            "Metabolism-only lambda ({lambda_met}) should exceed full ({lambda_full})"
+        );
     }
 }

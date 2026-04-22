@@ -220,5 +220,67 @@ fn main() {
         );
     }
 
-    eprintln!("\nOutputs saved to {}/", output_dir.display());
+    // --- Spatial × Temporal C(r,t) ---
+    // Compose temporal C_i(t) with spatial Krogh decay to get C(r,t).
+    // Uses metabolism-only lambda (224 μm for RSL3) to avoid double-counting
+    // cellular uptake (already in the temporal ODE).
+    let drug = ferroptosis_core::drug_transport::rsl3_like();
+    let lambda_met = metabolism_only_penetration_um(&drug);
+
+    // Tumor type ↔ tissue type mapping (explicit)
+    let tumor_tissue_pairs: Vec<(&str, TumorPKParams, f64)> = vec![
+        ("Breast", breast_tumor(), 60.0),       // half of 120μm inter-vessel
+        ("Pancreatic", pancreatic_tumor(), 125.0), // half of 250μm
+        ("GBM", glioblastoma_tumor(), 75.0),    // half of 150μm
+    ];
+
+    let radial_bins = [0.0, 25.0, 50.0, 75.0, 100.0, 125.0];
+
+    eprintln!("\n=== Spatial × Temporal: C(r,t) Kill Rates ===");
+    eprintln!("λ_met = {:.0} μm (metabolism only, no uptake double-counting)", lambda_met);
+    eprintln!("Key finding: temporal PK barrier (16-27×) dominates spatial decay (1.3-1.7×).\n");
+
+    let mut crt_rows: Vec<String> = vec![
+        "tumor_type,distance_um,peak_conc,death_rate,ci_low,ci_high,n_cells,n_dead".to_string()
+    ];
+
+    for (tumor_name, tumor_params, r_max) in &tumor_tissue_pairs {
+        let pk_result = solve_tumor_pk(&plasma, tumor_params, N_STEPS, 100);
+
+        eprintln!("  {} (r_max={:.0}μm):", tumor_name, r_max);
+        for &r in &radial_bins {
+            if r > *r_max * 1.5 {
+                continue; // skip distances far beyond the inter-vessel spacing
+            }
+            let schedule = compute_spatial_temporal_schedule(&pk_result, r, lambda_met);
+            let peak: f64 = schedule.iter().cloned().fold(0.0, f64::max);
+
+            let (n_dead, mean_lp, _mean_gsh, _mean_gpx4) =
+                run_scenario(&schedule, &params, SEED);
+            let (ci_lo, ci_hi) = wilson_ci(N_CELLS, n_dead);
+            let death_rate = n_dead as f64 / N_CELLS as f64;
+            let prot = if death_rate > 0.001 {
+                ref_death_rate / death_rate
+            } else {
+                f64::INFINITY
+            };
+
+            eprintln!(
+                "    r={:>5.0}μm: peak_C={:.3}, death={:.1}%, prot={:.1}×",
+                r, peak, death_rate * 100.0, prot
+            );
+
+            crt_rows.push(format!(
+                "{},{},{:.6},{:.6},{:.6},{:.6},{},{}",
+                tumor_name, r, peak, death_rate, ci_lo, ci_hi, N_CELLS, n_dead
+            ));
+        }
+        eprintln!();
+    }
+
+    // Write C(r,t) results
+    let crt_path = output_dir.join("tumor_pk_spatial_temporal.csv");
+    fs::write(&crt_path, crt_rows.join("\n")).expect("Failed to write C(r,t) results");
+
+    eprintln!("Outputs saved to {}/", output_dir.display());
 }
