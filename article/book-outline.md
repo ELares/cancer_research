@@ -4,13 +4,19 @@
 
 **Target:** ~50,000 words (current: ~16,000). 5 Parts, 11 chapters, 3 appendices.
 
+> **Note:** This is a planning document, not manuscript content. Headings here
+> use the outline's own hierarchy for readability. The manuscript heading
+> convention is defined in `AUTHORING.md` and encoded in `v1.md`:
+> `# Part` / `## Chapter` / `### Section` / `#### Subsection`.
+> Do not copy heading levels from this file into `v1.md`.
+
 ---
 
-## Part I: Why This Exists
+# Part I: Why This Exists
 
 *NEW content. Issue #101.*
 
-### Chapter 1: The Problem (~3,500 words)
+## Chapter 1: The Problem (~3,500 words)
 
 **Scope:** The human reality of cancer: survival statistics (sourced from WHO, NCI, IARC), why treatments fail for some patients, the residual disease problem, and what the current therapeutic landscape looks like. Written for non-specialists — no jargon without inline definition.
 
@@ -18,7 +24,7 @@
 
 **Source material:** README.md narrative voice, WHO cancer fact sheet (news-source-criteria.md example 1), NCI statistics, landmark papers on drug resistance and persister cells.
 
-### Chapter 2: What We Set Out To Do (~2,500 words)
+## Chapter 2: What We Set Out To Do (~2,500 words)
 
 **Scope:** The open-science mission, why computational approaches complement experiments, what Monte Carlo simulation means in plain language, what corpus analysis is, and an honest framing of what we can and cannot contribute. Reader guide for different audiences (researchers, students, clinicians, engineers).
 
@@ -28,11 +34,11 @@
 
 ---
 
-## Part II: What We Found
+# Part II: What We Found
 
 *MIGRATED from current v1.md sections 1-3 + 4.1-4.2. Expansion owned by issues #102, #104.*
 
-### Chapter 3: The Literature Landscape (~5,000 words current, expandable to ~7,000)
+## Chapter 3: The Literature Landscape (~5,000 words current, expandable to ~7,000)
 
 **Scope:** Introduction to the cross-literature analysis, search strategy, corpus construction, categorization framework, analytical approach, limitations, corpus overview, all 19 mechanism categories (physical, immune, precision molecular, delivery), cross-mechanism convergence, and the mechanism-cancer matrix.
 
@@ -58,7 +64,7 @@
 
 **Source material:** corpus/INDEX.jsonl, analysis/convergence-map.md, analysis/mechanism-matrix.md, analysis/taxonomy-rerun-notes.md.
 
-### Chapter 4: Evidence Quality and Gaps (~3,000 words current, expandable to ~5,000)
+## Chapter 4: Evidence Quality and Gaps (~3,000 words current, expandable to ~5,000)
 
 **Scope:** Evidence maturity scoring, weighted evidence methodology, gold-set evaluation (46% exact, 96% precision, 55% recall), tissue-of-origin layer, diagnostic-therapy matching, evidence coverage caveats, known corpus gaps, and interpretive framing of what the corpus supports about specific modalities. This chapter bridges the corpus analysis (Part II) and simulation work (Part III).
 
@@ -75,11 +81,11 @@
 
 ---
 
-## Part III: What The Simulations Show
+# Part III: What The Simulations Show
 
 *MIGRATED from current v1.md sections 4.3-4.6. Expansion owned by issue #102.*
 
-### Chapter 5: The Ferroptosis Engine (~3,000 words)
+## Chapter 5: The Ferroptosis Engine (~3,000 words)
 
 **Scope:** How the ferroptosis simulation works, explained for non-programmers. What each parameter represents biologically. The cell model (GSH, GPX4, FSP1, lipid peroxidation, death threshold). Why Monte Carlo. Key calibration decisions and their sources. What the model CAN and CANNOT represent.
 
@@ -92,7 +98,7 @@
 
 **Source material:** simulations/ferroptosis-core/src/biochem.rs, simulations/ferroptosis-core/src/params.rs, analysis/hypothesis-sdt-ferroptosis-icd.md.
 
-### Chapter 6: Drug Combinations and Penetration (~4,000 words)
+## Chapter 6: Drug Combinations and Penetration (~4,000 words)
 
 **Scope:** Spatial tumor simulation (depth-dependent kill), vulnerability window timing, drug combination synergy (Bliss independence), and the in-vitro-to-in-vivo gap from tissue-specific pharmacokinetics.
 
@@ -107,7 +113,7 @@
 
 **Source material:** simulations/sim-spatial, sim-vuln-window, sim-combo-mech, sim-tumor-pk output.
 
-### Chapter 7: Resistance Mechanisms (~6,000 words)
+## Chapter 7: Resistance Mechanisms (~6,000 words)
 
 **Scope:** Four TME resistance/amplification mechanisms, each with: plain-language opening, simulation finding, "what this means," "how to test this," and honest limitations. The key insight: three resistance mechanisms (hypoxia, stromal shielding, acidic pH) selectively penalize pharmacologic ferroptosis inducers while leaving physical modalities unaffected. One amplification mechanism (immune coupling) favors dense spatial kill patterns.
 
@@ -125,7 +131,7 @@
 
 **Source material:** simulations/sim-tme output, analysis/principle-resistance-tradeoff.md.
 
-### Chapter 8: Counterarguments and Failure Modes (~3,500 words)
+## Chapter 8: Counterarguments and Failure Modes (~3,500 words)
 
 **Scope:** Honest assessment of what could go wrong. Other directions the repo was underweighting (radioligand therapy, immune strategies, pathway-target layers, stromal biology). Historical precedents (PDT's 40-year translational plateau). The nanosonosensitizer confound. Evolutionary escape. Where the simulation architecture is structurally too simple.
 
@@ -142,11 +148,11 @@
 
 ---
 
-## Part IV: What Should Happen Next
+# Part IV: What Should Happen Next
 
 *PARTIALLY NEW. Issues #103 (Ch 9-10), #105 (news integration sidebars).*
 
-### Chapter 9: Research Roadmap (~6,000 words)
+## Chapter 9: Research Roadmap (~6,000 words)
 
 **Scope:** Current Section 4.7 expanded into experiment-level detail. Each proposed experiment includes: hypothesis, model system, expected outcome if right, expected outcome if wrong, confidence tier (high/medium/low based on how well-calibrated the underlying simulation parameters are). Ordered by confidence and feasibility.
 
@@ -159,7 +165,7 @@
 
 **Source material:** simulation outputs, analysis/distilled-hypotheses-final.md.
 
-### Chapter 10: The Broader Landscape (~3,500 words)
+## Chapter 10: The Broader Landscape (~3,500 words)
 
 **Scope:** Current Section 5 (Conclusion) expanded with field context. Where the current therapeutic landscape is heading (immunotherapy plateau, CAR-T solid tumor challenge, radioligand rise, AI in drug discovery). How this work fits. What's missing from everyone's approach. Competing hypotheses worth taking seriously.
 
@@ -172,7 +178,7 @@
 
 **Source material:** analysis/deep-pattern-analysis.md, news sources (after #99 pipeline).
 
-### Chapter 11: How To Contribute (~2,000 words)
+## Chapter 11: How To Contribute (~2,000 words)
 
 **Scope:** Practical guide for researchers (use ferroptosis-core, challenge parameters), engineers (extend simulations, Python bindings, PhysiCell), students (thesis project ideas), and clinicians (what to watch for in upcoming trials). Links to code, data, and the MIT license.
 
@@ -182,19 +188,19 @@
 
 ---
 
-## Part V: References and Tools
+# Part V: References and Tools
 
 *NEW content. Issue #104.*
 
-### Appendix A: Parameter Documentation (~3,000 words)
+## Appendix A: Parameter Documentation (~3,000 words)
 
 Every simulation parameter: name, default value, biological meaning, literature source or "estimated," confidence level, sensitivity at 2x/0.5x.
 
-### Appendix B: Reproduction Guide (~1,500 words)
+## Appendix B: Reproduction Guide (~1,500 words)
 
 Step-by-step: clone, build, run analysis, run simulations, compile PDF.
 
-### Appendix C: Glossary (~3,500 words)
+## Appendix C: Glossary (~3,500 words)
 
 80-120 terms, plain-language definitions, cross-referenced to chapters where used.
 
