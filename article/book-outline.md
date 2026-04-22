@@ -34,9 +34,9 @@
 
 ### Chapter 3: The Literature Landscape (~5,000 words current, expandable to ~7,000)
 
-**Scope:** Introduction to the cross-literature analysis, search strategy, corpus construction, categorization framework, analytical approach, limitations, corpus overview, all 19 mechanism categories (physical, immune, precision molecular, delivery), cross-mechanism convergence, the mechanism-cancer matrix, and interpretive framing of what the corpus supports.
+**Scope:** Introduction to the cross-literature analysis, search strategy, corpus construction, categorization framework, analytical approach, limitations, corpus overview, all 19 mechanism categories (physical, immune, precision molecular, delivery), cross-mechanism convergence, and the mechanism-cancer matrix.
 
-**Non-scope:** Does not present simulation results (Part III). Does not present evidence-tier scoring (Chapter 4). Does not make clinical recommendations.
+**Non-scope:** Does not present simulation results (Part III). Does not present evidence-tier scoring or interpretive corpus framing (Chapter 4). Does not make clinical recommendations.
 
 **Migrated content:**
 | Current section | New location |
@@ -55,21 +55,21 @@
 | 3.6 Delivery/Microenvironment | 3.12 |
 | 3.7 Cross-Mechanism Convergence | 3.13 |
 | 3.8 Mechanism-Cancer Matrix | 3.14 |
-| 4.1 Main Contribution | 3.15 |
-| 4.2 Corpus Support for PDT/SDT/CAP | 3.16 |
 
 **Source material:** corpus/INDEX.jsonl, analysis/convergence-map.md, analysis/mechanism-matrix.md, analysis/taxonomy-rerun-notes.md.
 
 ### Chapter 4: Evidence Quality and Gaps (~3,000 words current, expandable to ~5,000)
 
-**Scope:** Evidence maturity scoring, weighted evidence methodology, gold-set evaluation (46% exact, 96% precision, 55% recall), tissue-of-origin layer, diagnostic-therapy matching, evidence coverage caveats, and known corpus gaps.
+**Scope:** Evidence maturity scoring, weighted evidence methodology, gold-set evaluation (46% exact, 96% precision, 55% recall), tissue-of-origin layer, diagnostic-therapy matching, evidence coverage caveats, known corpus gaps, and interpretive framing of what the corpus supports about specific modalities. This chapter bridges the corpus analysis (Part II) and simulation work (Part III).
 
-**Non-scope:** Does not discuss simulation findings. Does not make claims about which therapies are "best" — only which have deeper or shallower evidence bases.
+**Non-scope:** Does not present simulation results. Does not make claims about which therapies are "best" — only which have deeper or shallower evidence bases and what the corpus evidence supports conditionally.
 
 **Migrated content:**
 | Current section | New location |
 |----------------|-------------|
 | 3.9 Evidence Maturity and Weighted Scoring | 4.1 |
+| 4.1 Main Contribution | 4.2 |
+| 4.2 What The Corpus Supports About PDT/SDT/CAP | 4.3 |
 
 **Source material:** analysis/evidence-coverage-audit.md, analysis/evidence-gold-eval.md, analysis/tissue-evidence-summary.md, analysis/diagnostic-therapy-audit.md, analysis/landmark-corpus-gaps.md, analysis/weighted-evidence-summary.md.
 

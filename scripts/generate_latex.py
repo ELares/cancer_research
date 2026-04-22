@@ -35,7 +35,7 @@ abstract = re.search(r'## Abstract\n\n(.*?)(?=\n\*\*Keywords)', md, re.DOTALL).g
 keywords = re.search(r'\*\*Keywords:\*\*\s*(.+)', md).group(1).strip()
 
 # Body: everything from the first Part header to just before References.
-body_start = re.search(r'^# Part ', md, re.MULTILINE)
+body_start = re.search(r'^# Part [IVX]+: ', md, re.MULTILINE)
 ref_match = re.search(r'^## References', md, re.MULTILINE)
 if not body_start or not ref_match:
     raise SystemExit("ERROR: Could not find '# Part ...' or '## References' boundaries in v1.md")
@@ -54,6 +54,7 @@ def cvt(t):
     t = re.sub(r'^# Part [IVX]+: (.+)$', r'\\part{\1}', t, flags=re.MULTILINE)
     t = re.sub(r'^## Chapter \d+: (.+)$', r'\\chapter{\1}', t, flags=re.MULTILINE)
     t = re.sub(r'^### \d+\.\d+ (.+)$', r'\\section{\1}', t, flags=re.MULTILINE)
+    t = re.sub(r'^### (.+)$', r'\\section{\1}', t, flags=re.MULTILINE)  # unnumbered fallback
     t = re.sub(r'^#### \d+\.\d+\.\d+ (.+)$', r'\\subsection{\1}', t, flags=re.MULTILINE)
     t = re.sub(r'^#### (.+)$', r'\\subsection{\1}', t, flags=re.MULTILINE)  # unnumbered fallback
     t = re.sub(r'\*\*(.+?)\*\*', r'\\textbf{\1}', t)

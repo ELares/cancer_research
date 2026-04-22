@@ -71,9 +71,17 @@ These rules prevent the expansion from inflating confidence beyond what the evid
 ## Citation Standards
 
 - **PubMed:** `[PMID: XXXXX]` (existing convention, converted to `\cite{}` by generate_latex.py)
+- **Author-year (non-PubMed literature):** `(Author et al., Journal Year)` in running text — e.g., `(Porter et al., Chem Rev 2005)`. Used for references that are not in the local PubMed corpus but are established literature.
+- **Textbook references:** `TextbookName Ch.N, Sec.N.N` — e.g., `Biology2e Ch.7, Sec.7.4`. Used for standard biochemistry/physics foundations. Include the specific section so readers can verify the claim.
 - **News sources:** `[News: Author, "Title", Publication, Date. Verified: PMID:XXXXX]` or `[Commentary: ...]` (see `analysis/news-source-criteria.md` Section 4)
 - **Simulation output:** Reference the binary name and key parameters in prose (e.g., "sim-tme with O2 gradient lambda=120um, n=1M cells")
-- **Figures:** `[FIGURE N: description]` — placeholder converted to `\includegraphics` by generate_latex.py
+
+## Figures
+
+- **Placeholders in v1.md:** `[FIGURE N: description]` — generate_latex.py converts these to `\includegraphics` using a lookup table in the `figs` dict. The number N is the manuscript figure number (1-14 currently), not the filename number.
+- **File naming:** `article/figures/fig{N}_{short_name}.{pdf,png}`. Both PDF and PNG versions are stored. LaTeX uses the PDF; the PNG is for GitHub preview.
+- **Adding a new figure:** (1) Generate the figure via a script in `scripts/`, (2) save as `fig{N}_{name}.pdf` and `.png` in `article/figures/`, (3) add an entry to the `figs` dict in `generate_latex.py` mapping the manuscript number to the filename and caption, (4) add the `[FIGURE N: description]` placeholder in v1.md. Figure numbers are globally sequential across the entire manuscript.
+- **Figures are generated, not hand-drawn.** Regenerate from scripts rather than hand-editing. If a figure needs updating, update the script that generates it.
 
 ## Cross-References
 
