@@ -543,3 +543,43 @@ EVIDENCE_LEVEL_KEYWORDS = {
     "preclinical-invitro": ["in vitro", "cell line", "cell culture", "cultured cells"],
     "theoretical": ["computational model", "mathematical model", "simulation", "theoretical framework", "in silico"],
 }
+
+# --- News Source Tiers ---
+# See analysis/news-source-criteria.md for full framework documentation.
+
+SOURCE_TIER_DEFINITIONS = {
+    "tier1": {
+        "name": "Institutional and peer-adjacent",
+        "trust": "high",
+        "cite_as": "evidence",
+        "verified_threshold": 0.80,
+        "domains": [
+            "cancer.gov", "nih.gov", "who.int", "fda.gov", "clinicaltrials.gov",
+            "nature.com", "science.org", "cell.com", "thelancet.com", "nejm.org",
+            "gco.iarc.fr",
+        ],
+    },
+    "tier2": {
+        "name": "Science journalism",
+        "trust": "medium",
+        "cite_as": "context",
+        "verified_threshold": 0.60,
+        "domains": [
+            "statnews.com", "cancerletter.com", "endpointsnews.com",
+            "reuters.com", "apnews.com", "sciencedaily.com",
+            "medicalnewstoday.com", "arstechnica.com", "theconversation.com",
+            "fiercepharma.com", "fiercebiotech.com",
+        ],
+    },
+    "tier3": {
+        "name": "Expert blogs and commentary",
+        "trust": "context-only",
+        "cite_as": "opinion",
+        "verified_threshold": 0.0,
+        "domains": [
+            "connection.asco.org", "cancer.org", "lls.org",
+            "broadinstitute.org", "mdanderson.org", "icr.ac.uk",
+            "cancerresearchuk.org", "patientpower.info",
+        ],
+    },
+}
