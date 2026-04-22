@@ -264,116 +264,84 @@ def fig21_ph():
 # ── Figure 22: Decision flowchart ─────────────────────────────────────
 
 def fig22_flowchart():
-    fig, ax = plt.subplots(figsize=(10, 9))
-    ax.set_xlim(0, 10)
-    ax.set_ylim(-1, 11)
-    ax.axis("off")
-    ax.set_facecolor("white")
+    """Generate flowchart using Graphviz (proper arrow-to-box connections)."""
+    import graphviz
+    import subprocess
 
-    decision = dict(boxstyle="round,pad=0.5", fc="#E3F2FD", ec="#1565C0", lw=1.5)
-    outcome_no = dict(boxstyle="round,pad=0.4", fc="#FFF3E0", ec="#E65100", lw=1.2)
-    terminal = dict(boxstyle="round,pad=0.4", fc="#F3E5F5", ec="#6A1B9A", lw=1.2)
-    sdt_box = dict(boxstyle="round,pad=0.4", fc="#FFE0B2", ec=COLORS["sdt"], lw=1.2)
-    pdt_box = dict(boxstyle="round,pad=0.4", fc="#FFCDD2", ec=COLORS["pdt"], lw=1.2)
+    dot = graphviz.Digraph("flowchart", format="pdf")
+    dot.attr(rankdir="TB", bgcolor="white", fontname="Helvetica",
+             label="Decision Framework: Which Modality for Which Clinical Context?",
+             labelloc="t", fontsize="14", fontcolor="black")
+    dot.attr("node", fontname="Helvetica", fontsize="10", style="filled,rounded",
+             shape="box", penwidth="1.5")
+    dot.attr("edge", fontname="Helvetica", fontsize="9", penwidth="1.5")
 
+    # Decision nodes (blue)
+    dec_attr = dict(fillcolor="#E3F2FD", color="#1565C0")
+    dot.node("q1", "Is the tumor\nlocalizable?", **dec_attr)
+    dot.node("q2", "Is it\ndeep-seated?", **dec_attr)
+    dot.node("q3", "Are residual cells\nferroptosis-prone?", **dec_attr)
+    dot.node("q4", "Immunocompetent\nsetting?", **dec_attr)
+
+    # "No" exit nodes (orange)
+    no_attr = dict(fillcolor="#FFF3E0", color="#E65100", fontsize="8")
+    dot.node("alt", "Alternative approaches\n(Ch 8.1)", **no_attr)
+    dot.node("path", "Pathway-target or\nimmune approaches\n(Ch 8.1, 10.4)", **no_attr)
+
+    # Modality nodes
+    dot.node("sdt", "SDT range\n(cm depth)\nCh 6.1",
+             fillcolor="#FFE0B2", color="#FF8C00", fontsize="9")
+    dot.node("pdt", "PDT range\n(mm depth)\nCh 6.1",
+             fillcolor="#FFCDD2", color="#DC143C", fontsize="9")
+
+    # Terminal nodes (purple)
+    term_attr = dict(fillcolor="#F3E5F5", color="#6A1B9A", fontsize="9")
+    dot.node("combo", "Physical ROS\n+ anti-PD-1\n(Ch 7.2, 9.5)", **term_attr)
+    dot.node("direct", "Physical ROS\n(direct kill)\n(Ch 6-7)", **term_attr)
+
+    # Invisible convergence node
+    dot.node("conv", "", shape="point", width="0.01", height="0.01")
+
+    # Edges — Yes (green), No (red/orange)
     green = "#2E7D32"
     red = "#E65100"
-    gray = "#666666"
+    gray = "#888888"
 
-    # Helper: draw arrow between two center points, shrinking to stop at box edges.
-    # shrinkA/B in points; ~22-28pt works for these font sizes.
-    def conn(x1, y1, x2, y2, color, sA=26, sB=26, style="-|>", lw=1.8, ls="-"):
-        ax.annotate("", xy=(x2, y2), xytext=(x1, y1),
-                    arrowprops=dict(arrowstyle=style, color=color, lw=lw,
-                                    shrinkA=sA, shrinkB=sB, linestyle=ls))
+    dot.edge("q1", "q2", label="  Yes  ", color=green, fontcolor=green)
+    dot.edge("q1", "alt", label="  No  ", color=red, fontcolor=red)
 
-    def label(x, y, txt, color):
-        ax.text(x, y, txt, fontsize=9, color=color, fontweight="bold",
-                ha="center", va="center",
-                bbox=dict(boxstyle="round,pad=0.15", fc="white", ec="none"))
+    dot.edge("q2", "sdt", label="  Yes  ", color=green, fontcolor=green)
+    dot.edge("q2", "pdt", label="  No  ", color=red, fontcolor=red)
 
-    # ── Node positions ──
-    # Level 1
-    n1 = (5, 9.5)
-    n1_no = (8.5, 9.5)
-    # Level 2
-    n2 = (5, 7.2)
-    n2_yes = (1.8, 5.5)
-    n2_no = (8.2, 5.5)
-    # Level 3
-    n3 = (5, 3.5)
-    n3_no = (8.8, 3.5)
-    # Level 4
-    n4 = (5, 1.5)
-    n4_yes = (2, -0.2)
-    n4_no = (8, -0.2)
+    # Convergence: SDT and PDT both feed into ferroptosis question
+    dot.edge("sdt", "conv", style="dashed", color=gray, arrowhead="none")
+    dot.edge("pdt", "conv", style="dashed", color=gray, arrowhead="none")
+    dot.edge("conv", "q3", style="dashed", color=gray)
 
-    # ── Draw boxes ──
-    ax.text(*n1, "Is the tumor\nlocalizable?", ha="center", va="center",
-            fontsize=10, fontweight="bold", bbox=decision)
-    ax.text(*n1_no, "Alternative\napproaches\n(Ch 8.1)", ha="center", va="center",
-            fontsize=7, bbox=outcome_no)
+    dot.edge("q3", "q4", label="  Yes  ", color=green, fontcolor=green)
+    dot.edge("q3", "path", label="  No  ", color=red, fontcolor=red)
 
-    ax.text(*n2, "Is it\ndeep-seated?", ha="center", va="center",
-            fontsize=10, fontweight="bold", bbox=decision)
-    ax.text(*n2_yes, "SDT range\n(cm depth)\nCh 6.1", ha="center", va="center",
-            fontsize=8, fontweight="bold", bbox=sdt_box)
-    ax.text(*n2_no, "PDT range\n(mm depth)\nCh 6.1", ha="center", va="center",
-            fontsize=8, bbox=pdt_box)
+    dot.edge("q4", "combo", label="  Yes  ", color=green, fontcolor=green)
+    dot.edge("q4", "direct", label="  No  ", color=red, fontcolor=red)
 
-    ax.text(*n3, "Are residual cells\nferroptosis-prone?", ha="center", va="center",
-            fontsize=10, fontweight="bold", bbox=decision)
-    ax.text(*n3_no, "Pathway-target or\nimmune approaches\n(Ch 8.1, 10.4)", ha="center", va="center",
-            fontsize=7, bbox=outcome_no)
+    # Render: save .gv source, then generate PDF and high-DPI PNG
+    out_base = str(OUT / "fig22_decision_flowchart")
+    gv_path = out_base + ".gv"
 
-    ax.text(*n4, "Immunocompetent\nsetting?", ha="center", va="center",
-            fontsize=10, fontweight="bold", bbox=decision)
-    ax.text(*n4_yes, "Physical ROS\n+ anti-PD-1\n(Ch 7.2, 9.5)", ha="center", va="center",
-            fontsize=8, fontweight="bold", bbox=terminal)
-    ax.text(*n4_no, "Physical ROS\n(direct kill)\n(Ch 6-7)", ha="center", va="center",
-            fontsize=8, bbox=terminal)
+    # Write source
+    with open(gv_path, "w") as f:
+        f.write(dot.source)
 
-    # ── Draw arrows (center-to-center, shrink stops at box edge) ──
-    # Level 1 → No
-    conn(*n1, *n1_no, red)
-    label(6.8, 9.8, "No", red)
+    # Generate PDF
+    subprocess.run(["dot", "-Tpdf", "-o", out_base + ".pdf", gv_path], check=True)
 
-    # Level 1 → Yes → Level 2
-    conn(*n1, *n2, green)
-    label(5.35, 8.35, "Yes", green)
+    # Generate high-DPI PNG
+    subprocess.run(["dot", "-Tpng", "-Gdpi=300", "-o", out_base + ".png", gv_path], check=True)
 
-    # Level 2 → Yes → SDT
-    conn(*n2, *n2_yes, green)
-    label(3.0, 6.6, "Yes", green)
+    # Clean up .gv source (reproducible from the script itself)
+    Path(gv_path).unlink(missing_ok=True)
 
-    # Level 2 → No → PDT
-    conn(*n2, *n2_no, red)
-    label(7.0, 6.6, "No", red)
-
-    # Convergence: SDT → Level 3, PDT → Level 3 (dashed)
-    conn(*n2_yes, *n3, gray, sA=28, sB=28, style="-|>", lw=1, ls="--")
-    conn(*n2_no, *n3, gray, sA=28, sB=28, style="-|>", lw=1, ls="--")
-
-    # Level 3 → No
-    conn(*n3, *n3_no, red)
-    label(7.0, 3.8, "No", red)
-
-    # Level 3 → Yes → Level 4
-    conn(*n3, *n4, green)
-    label(5.35, 2.5, "Yes", green)
-
-    # Level 4 → Yes → Physical ROS + anti-PD-1
-    conn(*n4, *n4_yes, green)
-    label(3.0, 0.9, "Yes", green)
-
-    # Level 4 → No → Physical ROS direct
-    conn(*n4, *n4_no, red)
-    label(7.0, 0.9, "No", red)
-
-    ax.set_title("Decision Framework: Which Modality for Which Clinical Context?",
-                 fontsize=11, fontweight="bold", pad=10)
-
-    save(fig, "fig22_decision_flowchart")
+    print(f"  fig22_decision_flowchart")
 
 
 if __name__ == "__main__":
