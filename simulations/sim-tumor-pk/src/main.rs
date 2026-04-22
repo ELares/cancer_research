@@ -90,7 +90,8 @@ fn main() {
     // --- 2D culture reference (conc = 1.0 at all steps) ---
     // Drug at full concentration for all 180 steps with no PK barriers.
     // With the inactivation rate model (k_inact=0.015), this produces
-    // ~41% kill — matching the repo's standard sim_cell RSL3 baseline.
+    // ~41% death rate — matching the Persister+RSL3 death rate (~42.5%).
+    // Internal state (LP, GSH, GPX4) differs from sim_cell's init model.
     let ref_death_rate;
     {
         let conc_schedule: Vec<f64> = vec![1.0; N_STEPS];

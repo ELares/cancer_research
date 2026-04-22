@@ -172,7 +172,9 @@ pub fn rsl3_iv_bolus() -> PlasmaModel {
 
 /// 2D culture reference: constant drug concentration = 1.0 for all time.
 /// With the inactivation rate model (k_inact=0.015), this produces ~41%
-/// kill for Persisters — matching the repo's standard sim_cell RSL3 baseline.
+/// kill for Persisters — matching the repo's Persister+RSL3 death rate (~42.5%).
+/// Note: internal state (LP, GSH, GPX4) differs from sim_cell due to the
+/// continuous inactivation model vs one-time init reduction.
 pub fn constant_reference() -> PlasmaModel {
     PlasmaModel::Constant { concentration: 1.0 }
 }
@@ -283,7 +285,8 @@ pub struct PKCellResult {
 
 /// GPX4 inactivation rate for RSL3-like covalent GPX4 inhibitors.
 /// Calibrated directly in Rust (10K Persister cells, constant conc=1.0):
-/// k_inact=0.015 gives ~41% kill, matching sim_cell RSL3+Persister (~42.5%).
+/// k_inact=0.015 gives ~41% death rate, matching sim_cell RSL3+Persister
+/// death rate (~42.5%). Internal state (LP, GSH, GPX4) differs.
 pub const RSL3_INACTIVATION_RATE: f64 = 0.015;
 
 /// Simulate a single cell with time-varying drug concentration.
@@ -295,7 +298,8 @@ pub const RSL3_INACTIVATION_RATE: f64 = 0.015;
 /// depends on the ratio of production to inactivation.
 ///
 /// At constant conc=1.0 with RSL3_INACTIVATION_RATE (0.015), this produces
-/// ~41% kill for Persisters — matching the repo's standard 2D baseline.
+/// ~41% kill for Persisters — matching the Persister+RSL3 death rate.
+/// Internal state (LP, GSH, GPX4) differs from sim_cell's init model.
 /// When drug washes out (IV bolus), inactivation drops and GPX4 recovers.
 ///
 /// The cell is initialized as Treatment::Control (no initial GPX4 reduction).
