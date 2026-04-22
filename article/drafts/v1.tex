@@ -84,7 +84,7 @@ This is not a failure of medicine so much as a reflection of how evolution works
 
 The cells that survive treatment are not merely leftovers. Increasingly, research shows that treatment itself can push cancer cells into altered states --- sometimes called drug-tolerant persister states --- where their biology is fundamentally different from the original tumor \cite{higuchi2026_41481741}.
 
-These residual cells may shift their metabolism, relying on different energy sources than the cells that responded to treatment. Where the original tumor might have relied heavily on rapid glucose consumption --- the so-called Warburg effect --- a preference for fermenting glucose even when oxygen is available --- that has defined cancer metabolism for over a century --- the surviving cells may switch to mitochondrial respiration, fatty acid oxidation, or other metabolic strategies that are less affected by the treatment that just killed their neighbors.
+These residual cells may shift their metabolism, relying on different energy sources than the cells that responded to treatment. Where the original tumor might have relied heavily on rapid glucose consumption --- the so-called Warburg effect, a preference for fermenting glucose even when oxygen is available that has defined cancer metabolism for over a century, --- the surviving cells may switch to mitochondrial respiration, fatty acid oxidation, or other metabolic strategies that are less affected by the treatment that just killed their neighbors.
 
 They may enter a state of suspended proliferation, dividing slowly or not at all. This makes them less visible to drugs that target rapidly dividing cells and less detectable by standard imaging methods that rely on metabolic activity. They may also upregulate protective mechanisms --- molecular defenses that scavenge the toxic byproducts of cellular stress and repair damage faster than it accumulates.
 
@@ -124,7 +124,7 @@ This project started from a simple conviction: breakthroughs against diseases th
 
 Open science is not a marketing strategy. It is a deliberate bet that the work has more value in the hands of the global research community than behind any paywall or patent wall. Every script, every simulation, every analysis document, and every draft of this manuscript is publicly accessible. Anyone can re-run the analysis from scratch, challenge the conclusions, extend the simulations, or take an idea in a direction we never considered. If someone takes something from this work, validates it in a lab, and it helps a patient --- that is the point.
 
-The trade-off is real. Open-sourcing everything means forgoing patent protection, proprietary advantage, and the kind of controlled dissemination that academic publishing traditionally provides. We accept that trade-off because the work has more value in the open than behind a paywall. If someone takes an idea from this work, validates it in a lab, and it helps a patient --- that matters more than who gets credit.
+The trade-off is real. Open-sourcing everything means forgoing patent protection, proprietary advantage, and the kind of controlled dissemination that academic publishing traditionally provides. We accept that trade-off because the goal is contribution, not credit.
 
 Concretely, this means: all code is MIT-licensed. The ferroptosis-core simulation engine is published as a standalone Rust library with Python bindings, so any researcher can use it independently of this manuscript. The corpus analysis pipeline is fully documented and re-runnable. The repository welcomes contributions --- open an issue, submit a pull request, fork the entire project and take it somewhere better. Nothing is hidden, nothing requires special access, and nothing requires our permission.
 
@@ -323,7 +323,7 @@ Bispecific antibody convergence with ADCs (42 articles) is an active area combin
 
 mRNA cancer vaccines represent one of the more dynamic but also more taxonomy-sensitive areas in the full-text corpus: 179 articles across 20 cancer types after tightening the mechanism tag to therapeutic cancer-vaccine studies. Earlier drafts materially overcounted this lane because supportive and infectious-vaccine papers in cancer cohorts bled into the mechanism definition. The field was nevertheless catalyzed by the COVID-19 mRNA platform moment, which demonstrated the feasibility of rapid, scalable mRNA production and lipid nanoparticle delivery \cite{szabo2022_35189345} (279 citations). A comprehensive Lancet Oncology review established the clinical landscape \cite{lorentzen2022_36174631} (470 citations), documenting the depth of ongoing therapeutic development.
 
-The landmark article in this category is the Nature report on personalized RNA neoantigen vaccines stimulating T-cell responses in pancreatic ductal adenocarcinoma \cite{rojas2023_37165196} (1,153 citations, RCR 90.3, 100th percentile) ---the second-highest-impact article in our entire corpus. This Phase I trial of autogene cevumeran, an individualized neoantigen vaccine based on uridine mRNA-lipoplex nanoparticles, demonstrated that personalized vaccination could elicit measurable T-cell responses against patient-specific neoantigens in one of the most treatment-resistant cancers.
+The landmark article in this category is the Nature report on personalized RNA neoantigen vaccines stimulating T-cell responses in pancreatic ductal adenocarcinoma \cite{rojas2023_37165196} (1,153 citations, RCR 90.3, 100th percentile) --- the second-highest-impact article in our entire corpus. This Phase I trial of autogene cevumeran, an individualized neoantigen vaccine based on uridine mRNA-lipoplex nanoparticles, demonstrated that personalized vaccination could elicit measurable T-cell responses against patient-specific neoantigens in one of the most treatment-resistant cancers.
 
 The mRNA vaccine field still intersects strongly with immunotherapy (131 co-tagged full-text articles) and nanoparticle delivery (47 co-tagged articles), reflecting the inherent dependence of mRNA vaccines on both immune activation and delivery technology. In the current evidence-tier table, the mechanism reaches Phase II, but its local full-text signal remains review-heavy and only partially covered by patient-study tagging. That means the field is clearly active, but mechanistic article counts should not be mistaken for mature comparative clinical evidence. A recent clinical advances review documents the current pipeline across melanoma, glioblastoma, lung, breast, and prostate cancers \cite{yaremenko2025_39798545} (74 citations). Lipid nanoparticle-mediated lymph node-targeting delivery of mRNA cancer vaccines has been shown to elicit robust CD8+ T-cell responses \cite{chen2022_35969778} (371 citations).
 
@@ -347,7 +347,7 @@ Precision nanomedicine integrating CRISPR with nanoparticle delivery for tumor m
 
 \subsection{Synthetic Lethality}
 
-Synthetic lethality --- the paradigm in which loss of two genes is lethal while loss of either alone is viable ---is represented by 367 full-text articles across 21 cancer types. PARP inhibitors, the clinical embodiment of this concept, have achieved broad clinical use in breast cancer (69 articles), ovarian cancer (73 articles), pancreatic cancer (25 articles), and prostate cancer (24 articles). A pan-tumor review documented the expanding role of PARP inhibitors across multiple malignancies \cite{hage2025_39791278} (21 citations).
+Synthetic lethality --- the paradigm in which loss of two genes is lethal while loss of either alone is viable --- is represented by 367 full-text articles across 21 cancer types. PARP inhibitors, the clinical embodiment of this concept, have achieved broad clinical use in breast cancer (69 articles), ovarian cancer (73 articles), pancreatic cancer (25 articles), and prostate cancer (24 articles). A pan-tumor review documented the expanding role of PARP inhibitors across multiple malignancies \cite{hage2025_39791278} (21 citations).
 
 The concept of synthetic lethality as an engine for cancer drug target discovery has been comprehensively reviewed \cite{huang2020_31712683} (458 citations), and CRISPR-synthetic lethality combinations (63 articles) represent a powerful approach for systematic identification of new synthetic lethal pairs. Transcription-replication conflicts have been identified as a mechanistic basis for PARP inhibitor sensitivity \cite{petropoulos2024_38509368} (160 citations), expanding the theoretical framework beyond BRCA mutations.
 
@@ -379,7 +379,7 @@ The fundamental translational barriers include: (a) heterogeneous nanoparticle p
 
 \subsection{Metabolic Targeting}
 
-Metabolic targeting --- exploitation of altered cancer cell metabolism, particularly the Warburg effect, glutamine addiction, and lipid metabolism dependencies ---is represented by 274 full-text articles across 20 cancer types. A comprehensive Nature Reviews Drug Discovery article \cite{stine2022_34862480} (1,127 citations) chronicles the hundred-year journey from Warburg's discovery to contemporary precision metabolic oncology.
+Metabolic targeting --- exploitation of altered cancer cell metabolism, particularly the Warburg effect, glutamine addiction, and lipid metabolism dependencies --- is represented by 274 full-text articles across 20 cancer types. A comprehensive Nature Reviews Drug Discovery article \cite{stine2022_34862480} (1,127 citations) chronicles the hundred-year journey from Warburg's discovery to contemporary precision metabolic oncology.
 
 The convergence of metabolic targeting with immunotherapy (127 articles) reflects the recognition that metabolic reprogramming of the tumor microenvironment suppresses immune function and that metabolic interventions can restore immunocompetence. The landmark demonstration that glycolysis modulation can enhance checkpoint immunotherapy \cite{chelakkot2023_36768924} (341 citations) illustrates this principle. Glutamine addiction as a therapeutic target was comprehensively reviewed in a highly cited Trends in Biochemical Sciences paper \cite{wise2010_20570523} (1,747 citations).
 
@@ -439,7 +439,7 @@ The 19 x 22 mechanism-cancer matrix reveals both deep concentrations and systema
 
 \textbf{Dominant mechanism-cancer pairs} (top 5 by article count): immunotherapy-lung (250), immunotherapy-melanoma (207), TTFields-glioblastoma (204), immunotherapy-breast (162), and immunotherapy-pancreatic (138). These represent the densest full-text research axes in the current indexed corpus, though maturity of evidence varies substantially across them.
 
-\textbf{Broad-spectrum mechanisms} ---those studied across the widest range of cancer types ---include CAR-T therapy and checkpoint immunotherapy (22/22 cancer types), synthetic lethality and ADCs (21/22), and CRISPR, bispecific antibodies, epigenetic therapy, mRNA vaccines, metabolic targeting, and nanoparticles (20/22).
+\textbf{Broad-spectrum mechanisms} --- those studied across the widest range of cancer types --- include CAR-T therapy and checkpoint immunotherapy (22/22 cancer types), synthetic lethality and ADCs (21/22), and CRISPR, bispecific antibodies, epigenetic therapy, mRNA vaccines, metabolic targeting, and nanoparticles (20/22).
 
 \textbf{Narrow-spectrum mechanisms} include electrolysis (3/22), microbiome modulation and frequency therapy (11/22 each), HIFU (12/22), TTFields and electrochemical therapy (14/22 each), and sonodynamic therapy (15/22). The narrowness of TTFields coverage is particularly noteworthy given its strong clinical evidence base.
 
@@ -611,7 +611,7 @@ The model is a hypothesis-testing tool, not a digital twin of a tumor. It identi
 
 A drug that works in a petri dish may fail in a patient for reasons that have nothing to do with biology. Tumors are three-dimensional structures with blood vessels at the periphery and drug-starved interiors. Light, ultrasound, and drug molecules each attenuate differently as they travel through tissue. If a treatment can't physically reach cancer cells deep inside a tumor, its biochemical potency is irrelevant.
 
-To address the single-cell model's lack of spatial context, we extended the simulation to a 2D heterogeneous tumor grid (500 x 500 cells, 20 um/cell = 1 cm x 1 cm tissue cross-section) with physics-based energy attenuation. The tumor architecture consists of a glycolytic core (80\% glycolytic, 15\% OXPHOS, 5\% persister), an OXPHOS-rich periphery (70\% OXPHOS, 20\% glycolytic, 8\% persister, 2\% persister+NRF2), persister cluster pockets, and a stromal border --- totaling 159,033 tumor cells per simulation.
+To address the single-cell model's lack of spatial context, we extended the simulation to a 2D heterogeneous tumor grid (500 x 500 cells, 20 $\mu$m/cell = 1 cm x 1 cm tissue cross-section) with physics-based energy attenuation. The tumor architecture consists of a glycolytic core (80\% glycolytic, 15\% OXPHOS, 5\% persister), an OXPHOS-rich periphery (70\% OXPHOS, 20\% glycolytic, 8\% persister, 2\% persister+NRF2), persister cluster pockets, and a stromal border --- totaling 159,033 tumor cells per simulation.
 
 Energy is applied from the tissue surface (row 0) with physically grounded attenuation models:
 
@@ -708,13 +708,20 @@ This chapter examines four features of the tumor microenvironment (TME) that the
 
 The center of a solid tumor has almost no oxygen. Blood vessels penetrate only the outer 100-150 micrometers of tissue, and cells deeper than that rely on whatever oxygen diffuses inward --- which, for many tumors, is close to zero. This matters for ferroptosis because the earliest step in the cascade --- generation of basal reactive oxygen species by the mitochondrial electron transport chain --- requires oxygen as the terminal electron acceptor. If there is no oxygen, there is no basal ROS, and a drug like RSL3 that works by disabling the cell's defense against ROS-driven lipid damage has nothing to defend against. It is like hiring a firefighter in a town where no fires ever start.
 
-The preceding simulations assumed uniform oxygenation --- every cell generates the same basal ROS regardless of position. Real tumors have oxygen gradients: O2 penetrates approximately 100-150$\mu$m from the vasculature (Vaupel, Cancer Research 1989; modeled via the Krogh cylinder approximation, with underlying O2 transport physiology consistent with Anatomy \& Physiology 2e, Ch.22.4), creating hypoxic cores where mitochondrial ETC activity drops and basal ROS production falls (Biology2e Ch.7, Sec.7.4: O2 is the terminal electron acceptor for the electron transport chain).
+The preceding simulations assumed uniform oxygenation --- every cell generates the same basal ROS regardless of position. Real tumors have oxygen gradients: O2 penetrates approximately 100-150 $\mu$m from the vasculature (Vaupel, Cancer Research 1989; modeled via the Krogh cylinder approximation, with underlying O2 transport physiology consistent with Anatomy \& Physiology 2e, Ch.22.4), creating hypoxic cores where mitochondrial ETC activity drops and basal ROS production falls (Biology2e Ch.7, Sec.7.4: O2 is the terminal electron acceptor for the electron transport chain).
 
 To quantify this, we applied an exponential O2 gradient from the tumor edge inward (O2(d) = exp(-d/$\lambda$), same Krogh approximation used for drug penetration) and compared treatment efficacy under uniform vs gradient conditions. Because the model only modulates basal ROS (not Fenton chemistry or SDT/PDT dose), this is a conservative estimate of hypoxia's protective effect.
 
 The result is striking. Under the O2 gradient ($\lambda$ = 120$\mu$m), RSL3 overall kill collapses from 3.7\% to 0.1\%, and in the hypoxic zone (deeper than 360$\mu$m from the tumor edge) RSL3 kills zero cells. SDT overall kill drops only modestly --- from 91.9\% to 87.8\% --- and maintains 86.6\% kill even in the hypoxic zone. This differential is robust across all tested penetration lengths ($\lambda$ = 80, 100, 120, 150$\mu$m) and emerges directly from the biochemistry: RSL3 inhibits GPX4 but depends on the cell's own mitochondrial ROS to initiate lipid peroxidation. In hypoxia, there is no basal ROS to drive the cascade, regardless of how thoroughly GPX4 is inhibited. SDT delivers exogenous ROS via sonosensitizer activation (primarily Type I electron-transfer mechanism, less O2-dependent than the Type II singlet-oxygen pathway), bypassing the mitochondrial bottleneck.
 
 This finding has two implications. First, it quantifies a specific mechanism by which the tumor microenvironment protects cells from pharmacologic ferroptosis inducers --- not through upregulation of defense pathways (the NRF2/MUFA mechanisms modeled in Chapter 5), but through the absence of the upstream trigger (basal ROS). Second, it provides a mechanistic rationale for why physical ROS modalities might maintain efficacy in contexts where pharmacologic approaches fail: they supply what hypoxic cells lack. This is the same depth-vs-penetration argument made in Section 8.2, but now grounded in TME biology rather than tissue optics alone.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\textwidth]{../figures/fig18_hypoxia_crosssection.pdf}
+\caption{Hypoxia cross-section: O$_2$ gradient from blood vessel (left) into tumor core (right). RSL3 efficacy collapses as basal ROS disappears; SDT maintains efficacy via exogenous ROS delivery.}
+\label{fig:fig18_hypoxia_crosssection}
+\end{figure}
 
 \textbf{How to test this prediction.} Compare RSL3 and SDT efficacy in normoxic (21\% O2) versus hypoxic (1\% O2) conditions using a hypoxia chamber or 3D tumor spheroids with verified hypoxic cores (pimonidazole staining).
 
@@ -743,6 +750,13 @@ Results (O2 gradient $\lambda$=120$\mu$m, 500$\times$500 grid): SDT with immune 
 
 The absolute immune contribution is modest ($\sim$0.3-0.9\% additional kill for SDT), which is expected for a resident T cell model without systemic immune recruitment. The qualitative finding matters more: treatments that produce dense spatial kill patterns generate self-reinforcing immune activation that pharmacologic approaches with sparse kill cannot achieve. This suggests that the physical-modality advantage extends beyond direct ROS delivery --- the spatial kill density itself creates a secondary immune mechanism that further widens the gap.
 
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\textwidth]{../figures/fig19_immune_coupling_flow.pdf}
+\caption{Immune coupling pathway: SDT produces dense kill with high LP overshoot, generating strong DAMP fields and 104$\times$ more immune kills than RSL3.}
+\label{fig:fig19_immune_coupling_flow}
+\end{figure}
+
 \textbf{How to test this prediction.} Treat persister-enriched cancer cells with SDT versus RSL3 and measure immunogenic cell death (ICD) markers: calreticulin surface exposure (flow cytometry), HMGB1 release (ELISA on culture supernatant), and ATP release (luminescence assay). For the spatial-density component, compare ICD marker release in 2D monolayer (uniform kill) versus 3D spheroid (spatially structured kill).
 
 \textit{Expected if prediction holds}: SDT-killed cells release at least 2-fold more HMGB1 and ATP per dead cell than RSL3-killed cells. In 3D spheroids, dense SDT kill regions show measurably higher DAMP concentrations and immune cell recruitment (if co-cultured with dendritic cells or PBMCs) than sparse RSL3 kill regions.
@@ -763,6 +777,13 @@ The mechanism behind the treatment selectivity is the same ROS imbalance that dr
 
 This finding complements the hypoxia and immune coupling results: physical modalities bypass both hypoxic protection (Section 7.1) and CAF-mediated stromal shielding, while also generating stronger downstream immune activation (Section 7.2). Hypoxia and stromal shielding are direct resistance mechanisms that blunt pharmacologic ferroptosis induction; immune coupling is a separate amplification effect that favors treatments with dense spatial kill patterns.
 
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\textwidth]{../figures/fig20_stromal_shielding.pdf}
+\caption{Stromal shielding: CAF-mediated GSH and MUFA supply halves RSL3 kill at the tumor boundary (3.0\% $\rightarrow$ 1.5\%) while barely affecting SDT (96.1\% $\rightarrow$ 91.2\%).}
+\label{fig:fig20_stromal_shielding}
+\end{figure}
+
 \textbf{How to test this prediction.} Co-culture persister-enriched cancer cells with cancer-associated fibroblasts (CAFs) isolated from patient tumors or established CAF cell lines. Compare ferroptosis markers (C11-BODIPY lipid peroxidation, GSH quantification, cell viability) in four conditions: tumor cells alone + RSL3, tumor cells alone + SDT, tumor cells with CAFs + RSL3, tumor cells with CAFs + SDT.
 
 \textit{Expected if prediction holds}: CAF co-culture reduces RSL3-induced cell death by more than 30\% (the simulation predicts 50\% relative reduction) while reducing SDT-induced death by less than 10\% (simulation: 5.1\% relative). GSH levels in tumor cells adjacent to CAFs should be measurably higher than in tumor cells without CAF contact, confirming the metabolic supply mechanism.
@@ -780,6 +801,13 @@ To quantify this, we applied an exponential pH gradient from the tumor edge inwa
 In the model, drug trapping dominates. RSL3 ferroptosis kills drop from 163 to 77 (53\% reduction) because the GPX4 restoration (from 8\% to 41\% of normal activity) is a 5.1$\times$ repair boost, while the iron-driven ROS increase is only 7\%. SDT is barely affected (+0.8\%, from 139,640 to 140,693 ferroptosis kills) because ultrasound energy delivery is pH-independent --- there is no drug to trap --- and the iron boost adds only 0.4\% to SDT's total ROS (dwarfed by exogenous ROS of 5.0 relative units). Control shows a tiny increase (1 to 2 ferroptosis kills) from the Fenton boost alone.
 
 This adds a third direct resistance mechanism --- alongside hypoxia (Section 7.1) and stromal shielding (Section 7.3) --- that selectively penalizes pharmacologic ferroptosis inducers while leaving physical modalities unaffected. All three share the same structural asymmetry: pharmacologic approaches depend on endogenous processes that the TME can disrupt --- basal ROS generation (removed by hypoxia), GSH depletion (counteracted by stromal cysteine supply), and intracellular drug bioavailability (reduced by pH-driven ion trapping) --- while physical modalities deliver exogenous energy that bypasses these vulnerabilities.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\textwidth]{../figures/fig21_ph_ion_trapping.pdf}
+\caption{pH-driven ion trapping: acidic tumor core protonates and traps drug molecules, reducing RSL3 kills by 53\%. SDT is pH-independent (no drug to trap).}
+\label{fig:fig21_ph_ion_trapping}
+\end{figure}
 
 \textbf{How to test this prediction.} Measure RSL3 efficacy at pH 7.4 versus pH 6.5 in buffered culture medium. Additionally, measure intracellular RSL3 concentration (or a fluorescent RSL3 analog) at both pH values using HPLC or fluorescence microscopy to directly test the ion-trapping mechanism.
 
@@ -943,6 +971,13 @@ The experimental program has a gated structure designed to maximize information 
 \textbf{Running in parallel --- Broader comparison (Section 9.4).} This is analytical, not experimental. It runs alongside the wet-lab program and asks whether the entire approach justifies its complexity relative to existing alternatives.
 
 \textbf{Gated --- In-vivo integration (Section 9.5).} This is the definitive test and the most expensive. It should only proceed after the in-vitro program confirms the directional predictions. Running it prematurely would risk investing substantial resources in an approach whose foundational assumptions haven't been verified.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\textwidth]{../figures/fig22_decision_flowchart.pdf}
+\caption{Decision framework: which modality for which clinical context, based on tumor localizability, depth, ferroptosis-prone residual state, and immunocompetence.}
+\label{fig:fig22_decision_flowchart}
+\end{figure}
 
 \section{Broader Comparison: Does This Hypothesis Justify Its Complexity?}
 
