@@ -291,7 +291,7 @@ pub fn metabolism_only_penetration_um(drug: &crate::drug_transport::DrugParams) 
 ///
 /// Uses the quasi-steady approximation: C(r,t) ≈ C_i(t) × exp(-r / λ_met).
 /// Valid when diffusion equilibrates faster than plasma PK changes (~3 min
-/// diffusion vs ~30 min plasma half-life → 10× faster, valid after ~10 min).
+/// diffusion vs ~43 min PK timescale → ~13× faster, valid after ~10 min).
 ///
 /// λ_met uses metabolism-only clearance (not uptake) because the temporal
 /// ODE already includes cellular uptake. This avoids double-counting and
