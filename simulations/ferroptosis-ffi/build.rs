@@ -11,16 +11,11 @@ fn main() {
     let config = cbindgen::Config::from_file(&config_path)
         .unwrap_or_default();
 
-    match cbindgen::Builder::new()
+    let bindings = cbindgen::Builder::new()
         .with_crate(&crate_dir)
         .with_config(config)
         .generate()
-    {
-        Ok(bindings) => {
-            bindings.write_to_file(&output_path);
-        }
-        Err(e) => {
-            eprintln!("cargo:warning=cbindgen failed: {e}");
-        }
-    }
+        .expect("cbindgen failed to generate ferroptosis.h — FFI header must stay in sync with Rust code");
+
+    bindings.write_to_file(&output_path);
 }
