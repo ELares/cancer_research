@@ -22,10 +22,10 @@ If you have expertise in oncology, biochemistry, ferroptosis, immunology, comput
 
 - **4,830 full-text cancer research articles** across 19 mechanisms, 22 cancer types, 803 journals (2001-2026)
 - **Python pipeline** for corpus fetching, tagging (7 tag layers), indexing, analysis, and figure generation
-- **9 Rust simulation binaries** modeling ferroptosis biochemistry: single-cell Monte Carlo, spatial tumors, drug penetration, drug combinations, tumor microenvironment (oxygen gradients, spatial immune zones, DAMP-mediated T cell activation), vulnerability windows, ICD immune cascades
-- **ferroptosis-core library** (MIT, with Python bindings) — embeddable ferroptosis biochemistry engine with 19 unit tests
+- **10 Rust simulation binaries** modeling ferroptosis biochemistry: single-cell Monte Carlo, spatial tumors, drug penetration, drug combinations, tumor microenvironment (oxygen gradients, spatial immune zones, DAMP-mediated T cell activation), vulnerability windows, ICD immune cascades, tumor PK
+- **ferroptosis-core library** (MIT, with Python bindings) — embeddable ferroptosis biochemistry engine with 10 modules and 31 unit tests
 - **Calibration infrastructure** linking simulation parameters to published experimental data
-- **Manuscript** with 14 figures, cross-referenced against all analysis outputs
+- **112-page book-format manuscript** with 11 chapters, 3 appendices, and 19 figures (33,344 words), cross-referenced against all analysis outputs
 
 Everything is organised so you can re-run the pipeline, challenge the conclusions, or extend the work in directions we haven't thought of yet.
 
@@ -46,9 +46,9 @@ These are computational predictions with documented assumptions and caveats, not
 | Directory | What you'll find |
 |-----------|-----------------|
 | `analysis/` | 15+ analysis outputs: evidence tiers, tissue-of-origin, diagnostic-therapy matching, combination audits, gap analysis |
-| `article/drafts/` | Manuscript (v1.md + v1.tex) with 14 figures |
+| `article/drafts/` | Manuscript (v1.md + v1.tex) with 19 figures |
 | `scripts/` | Python pipeline: tagging, indexing, analysis, figure generation, LaTeX generation |
-| `simulations/` | [9 Rust binaries](simulations/README.md) + ferroptosis-core library + [Python bindings](simulations/ferroptosis-python/) + calibration infrastructure |
+| `simulations/` | [10 Rust binaries](simulations/README.md) + ferroptosis-core library + [Python bindings](simulations/ferroptosis-python/) + calibration infrastructure |
 | `corpus/` | Full-text articles by PubMed ID + INDEX.jsonl |
 | `tags/` | Precomputed tag indexes (mechanism, cancer type, tissue, evidence level, diagnostic-therapy) |
 | `tests/` | 33 Python smoke tests for the analysis pipeline |
@@ -69,12 +69,12 @@ python scripts/analyze_corpus.py
 python scripts/generate_figures.py
 ```
 
-For the simulations (see [simulations/README.md](simulations/README.md) for all 9 binaries):
+For the simulations (see [simulations/README.md](simulations/README.md) for all 10 binaries):
 
 ```bash
 cd simulations
 cargo build --release
-cargo test --workspace                  # 19 unit tests
+cargo test --workspace                  # 31 unit tests
 cargo run --release -p sim-original     # Monte Carlo ferroptosis baseline
 cargo run --release -p sim-spatial      # 2D tumor with PDT/SDT depth physics
 cargo run --release -p sim-tissue-pk    # drug penetration across tissue types

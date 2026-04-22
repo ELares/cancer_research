@@ -210,21 +210,21 @@ Step-by-step: clone, build, run analysis, run simulations, compile PDF.
 
 | Part | Chapters | Current words | Target words |
 |------|----------|--------------|-------------|
-| I: Why This Exists | 1-2 | 0 | 6,000 |
-| II: What We Found | 3-4 | ~8,000 | 12,000 |
-| III: Simulations | 5-8 | ~7,000 | 16,500 |
-| IV: What's Next | 9-11 | ~1,000 | 11,500 |
-| V: References/Tools | Apps A-C | 0 | 8,000 |
-| **Total** | **11 + 3 apps** | **~16,000** | **~54,000** |
+| I: Why This Exists | 1-2 | ~4,100 | 6,000 |
+| II: What We Found | 3-4 | ~7,700 | 12,000 |
+| III: Simulations | 5-8 | ~9,200 | 16,500 |
+| IV: What's Next | 9-11 | ~4,700 | 11,500 |
+| V: References/Tools | Apps A-C | ~9,600 | 8,000 |
+| **Total** | **11 + 3 apps** | **~33,300** | **~54,000** |
 
 ## Chapter → Issue Mapping
 
 | Chapter | Owner Issue | Depends On |
 |---------|-----------|------------|
-| 1-2 | #101 | #100 (this outline) |
-| 3-4 | #102, #104 | #100 |
-| 5-8 | #102 | #100 |
-| 9-10 | #103 | #102 (findings must exist to reference) |
-| 11 | #103 | #100 |
-| Apps A-C | #104 | #102 (content must exist to audit) |
-| News sidebars | #105 | #99, #101, #102 |
+| 1-2 | #101 (closed) | #100 (closed) |
+| 3-4 | #102 (closed), #104 (closed) | #100 (closed) |
+| 5-8 | #102 (closed) | #100 (closed) |
+| 9-10 | #103 (closed) | #102 (closed) |
+| 11 | #103 (closed) | #100 (closed) |
+| Apps A-C | #104 (closed) | #102 (closed) |
+| News sidebars | #105 | #99, #101 (closed), #102 (closed) |

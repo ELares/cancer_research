@@ -26,7 +26,7 @@ The repo exists to compare therapeutic mechanisms, evidence depth, resistant-sta
 
 ## Current Workstreams
 
-- manuscript drafting and revision
+- manuscript drafting and revision (Parts I–V substantially complete: 112 pages, 11 chapters + 3 appendices)
 - corpus fetching, enrichment, tagging, and indexing
 - evidence-tier audits and coverage caveats (gold-set evaluation: 46% exact, 96% precision, 55% recall)
 - taxonomy and search refinement
@@ -45,7 +45,8 @@ The repo exists to compare therapeutic mechanisms, evidence depth, resistant-sta
 - evidence tagging is improved but still incomplete (gold-set measured)
 - tissue-of-origin and weighted-evidence layers are active
 - diagnostic-therapy matching layer covers 6 chains across 4 modalities (radioligand, checkpoint, mRNA vaccine, oncolytic)
-- simulation suite: 9 binaries + ferroptosis-core library (MIT licensed, 19 unit tests) + Python bindings
+- manuscript: 112 pages (book format), 11 chapters + 3 appendices, 19 figures, 33,344 words
+- simulation suite: 10 binaries (incl. sim-tumor-pk) + ferroptosis-core library (MIT licensed, 10 modules, 31 unit tests) + Python bindings + 33 Python smoke tests
 - simulation calibration: 5 targets documented, evaluate script operational
 - drug penetration module: 3 tissue types, exponential Krogh approximation
 - drug combination modeling: 4 drugs, pairwise Bliss synergy scoring with pathway traces
@@ -82,7 +83,12 @@ analysis/landmark-corpus-gaps.md          known missing papers that distort clai
 corpus/INDEX.jsonl                        master index
 scripts/                                  Python pipeline
 simulations/                              Rust simulation work
+simulations/ferroptosis-python/           Python bindings (PyO3)
+simulations/ferroptosis-ffi/              C FFI bindings (PhysiCell integration)
 tags/                                     precomputed tag indexes
+article/book-outline.md                   frozen book outline and chapter contracts
+article/AUTHORING.md                      writing rules and heading conventions
+news/                                     news source scaffolding (issue #99)
 ```
 
 ## Search Conventions
