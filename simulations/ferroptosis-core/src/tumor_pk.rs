@@ -194,7 +194,7 @@ pub enum PlasmaModel {
     },
     /// External plasma time-course (e.g., PK-Sim export).
     /// Auto-normalized so peak = 1.0. Linear interpolation between points.
-    /// Returns 0 after the last time point.
+    /// Returns last concentration value at or past the last time point.
     CsvTimeCourse {
         /// Time points in minutes (must be sorted ascending).
         time_min: Vec<f64>,
@@ -217,7 +217,9 @@ impl PlasmaModel {
                     return conc[0];
                 }
                 if t_min >= *time_min.last().unwrap() {
-                    return 0.0; // drug eliminated after last time point
+                    // At or past the last time point: return last concentration
+                    // (typically 0 for IV bolus, but could be non-zero for infusion)
+                    return *conc.last().unwrap();
                 }
                 // Binary search for bracketing interval
                 let idx = time_min.partition_point(|&t| t <= t_min);
@@ -658,7 +660,8 @@ mod tests {
         assert!((model.concentration_at(30.0) - 0.5).abs() < 0.01);
         // Interpolation at t=15 (midpoint of 0-30): (1.0+0.5)/2 = 0.75
         assert!((model.concentration_at(15.0) - 0.75).abs() < 0.01);
-        // After last point: returns 0
+        // At/after last point: returns last conc value (0.0 in this case)
+        assert!(model.concentration_at(180.0) == 0.0);
         assert!(model.concentration_at(200.0) == 0.0);
     }
 
