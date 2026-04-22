@@ -259,7 +259,7 @@ fn main() {
             let schedule = compute_spatial_temporal_schedule(&pk_result, r, lambda_met);
             let peak: f64 = schedule.iter().cloned().fold(0.0, f64::max);
 
-            let (n_dead, mean_lp, _mean_gsh, _mean_gpx4) =
+            let (n_dead, _mean_lp, _mean_gsh, _mean_gpx4) =
                 run_scenario(&schedule, &params, SEED);
             let (ci_lo, ci_hi) = wilson_ci(N_CELLS, n_dead);
             let death_rate = n_dead as f64 / N_CELLS as f64;
