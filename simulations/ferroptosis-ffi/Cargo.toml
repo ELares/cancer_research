@@ -1,0 +1,17 @@
+[package]
+name = "ferroptosis-ffi"
+version = "0.1.0"
+edition = "2021"
+description = "C FFI bindings for the ferroptosis-core biochemistry engine"
+license = "MIT"
+repository = "https://github.com/ELares/cancer_research"
+
+[lib]
+crate-type = ["cdylib", "staticlib"]
+
+[dependencies]
+ferroptosis-core = { path = "../ferroptosis-core" }
+rand = { workspace = true }
+
+[build-dependencies]
+cbindgen = "0.27"
