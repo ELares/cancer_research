@@ -35,6 +35,7 @@ The repo exists to compare therapeutic mechanisms, evidence depth, resistant-sta
 - tissue-of-origin analysis layer (5 tissue categories, 62% coverage)
 - simulation work: ferroptosis biochemistry, drug penetration, calibration
 - ferroptosis-core library packaging for external use
+- news source authentication pipeline (fetch, extract claims, verify, score, index)
 - broader strategy review of alternative therapies and biological bottlenecks
 
 ## Current Repo State
@@ -46,7 +47,8 @@ The repo exists to compare therapeutic mechanisms, evidence depth, resistant-sta
 - tissue-of-origin and weighted-evidence layers are active
 - diagnostic-therapy matching layer covers 6 chains across 4 modalities (radioligand, checkpoint, mRNA vaccine, oncolytic)
 - manuscript: 112 pages (book format), 11 chapters + 3 appendices, 19 figures, 33,344 words
-- simulation suite: 10 binaries (incl. sim-tumor-pk) + ferroptosis-core library (MIT licensed, 10 modules, 31 unit tests) + Python bindings + 33 Python smoke tests
+- simulation suite: 10 binaries (incl. sim-tumor-pk) + ferroptosis-core library (MIT licensed, 10 modules, 31 unit tests) + Python bindings + 50 Python smoke tests
+- news authentication pipeline: 5 scripts (fetch, extract claims, verify against PubMed, score credibility, build claim-centric index) implementing the 3-tier source framework from analysis/news-source-criteria.md
 - simulation calibration: 5 targets documented, evaluate script operational
 - drug penetration module: 3 tissue types, exponential Krogh approximation
 - drug combination modeling: 4 drugs, pairwise Bliss synergy scoring with pathway traces

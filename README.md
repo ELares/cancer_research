@@ -47,11 +47,11 @@ These are computational predictions with documented assumptions and caveats, not
 |-----------|-----------------|
 | `analysis/` | 15+ analysis outputs: evidence tiers, tissue-of-origin, diagnostic-therapy matching, combination audits, gap analysis |
 | `article/drafts/` | Manuscript (v1.md + v1.tex) with 19 figures |
-| `scripts/` | Python pipeline: tagging, indexing, analysis, figure generation, LaTeX generation |
+| `scripts/` | Python pipeline: tagging, indexing, analysis, figure generation, LaTeX generation, news authentication pipeline |
 | `simulations/` | [10 Rust binaries](simulations/README.md) + ferroptosis-core library + [Python bindings](simulations/ferroptosis-python/) + calibration infrastructure |
 | `corpus/` | Full-text articles by PubMed ID + INDEX.jsonl |
 | `tags/` | Precomputed tag indexes (mechanism, cancer type, tissue, evidence level, diagnostic-therapy) |
-| `tests/` | 33 Python smoke tests for the analysis pipeline |
+| `tests/` | 50 Python smoke tests for the analysis and news pipelines |
 
 Start with the files in `analysis/` if you want to see what we've concluded so far—and where we're still uncertain.
 
