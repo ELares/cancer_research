@@ -225,11 +225,32 @@ def extract_search_terms(claim_text: str) -> list[str]:
 # Claim verification
 # ---------------------------------------------------------------------------
 
-def verify_claim(claim: dict, corpus_index: list[dict]) -> dict:
+# Tier 1 institutional domains whose claims cite their own data.
+# Claims from these sources are "self-referencing" — the institution IS
+# the authority, so verification is legitimate but not independent.
+_SELF_REFERENCING_DOMAINS = frozenset([
+    "who.int", "cancer.gov", "fda.gov", "gco.iarc.fr",
+    "clinicaltrials.gov", "nih.gov",
+])
+
+
+def verify_claim(
+    claim: dict,
+    corpus_index: list[dict],
+    source_domain: str = "",
+) -> dict:
     """Verify a single claim against local corpus, then PubMed.
 
     Only FACTUAL claims are verified.  Other categories are returned
     unchanged.
+
+    Verification statuses (per criteria doc Step 3):
+      - verified:          primary source found (PMID/DOI linked)
+      - unverified:        no primary source found
+      - self-referencing:  the news source IS the primary authority
+                           (e.g., WHO citing IARC data)
+      - disputed:          reserved for future use when primary source
+                           contradicts the claim
 
     Updates ``verification_status``, ``verification_source``, and
     ``linked_pmids`` on the claim dict (mutated in place and returned).
@@ -239,6 +260,15 @@ def verify_claim(claim: dict, corpus_index: list[dict]) -> dict:
 
     terms = extract_search_terms(claim.get("text", ""))
     if not terms:
+        return claim
+
+    # --- Self-referencing check ---
+    # Tier 1 institutional sources that cite their own data are
+    # "self-referencing" — legitimate but not independently verified.
+    domain_base = source_domain.removeprefix("www.")
+    if domain_base in _SELF_REFERENCING_DOMAINS:
+        claim["verification_status"] = "self-referencing"
+        claim["verification_source"] = f"institutional authority ({domain_base})"
         return claim
 
     # --- Local corpus search ---
@@ -283,11 +313,12 @@ def verify_article(article_path: Path) -> int:
         return 0
 
     corpus_index = load_corpus_index()
+    source_domain = fm.get("source_domain", "")
     changed = 0
 
     for claim in claims:
         old_status = claim.get("verification_status")
-        verify_claim(claim, corpus_index)
+        verify_claim(claim, corpus_index, source_domain=source_domain)
         if claim.get("verification_status") != old_status:
             changed += 1
 

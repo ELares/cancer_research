@@ -69,8 +69,11 @@ def compute_score(fm: dict) -> float:
     claims = fm.get("claims", [])
     factual_claims = [c for c in claims if c.get("category") == "FACTUAL"]
     if factual_claims:
+        # Both "verified" and "self-referencing" count as verified for scoring.
+        # Per criteria doc: self-referencing sources ARE the authority.
         verified_count = sum(
-            1 for c in factual_claims if c.get("verification_status") == "verified"
+            1 for c in factual_claims
+            if c.get("verification_status") in ("verified", "self-referencing")
         )
         verified_ratio: float = verified_count / len(factual_claims)
     else:
