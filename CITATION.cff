@@ -1,0 +1,29 @@
+cff-version: 1.2.0
+message: "If you use this work, please cite it as below."
+authors:
+  - family-names: "Lares"
+    given-names: "Ezequiel"
+    affiliation: "Independent Researcher"
+title: "Cancer Research: Cross-Literature Analysis and Ferroptosis Simulation"
+type: software
+version: "2026-04"
+date-released: "2026-04-23"
+license: MIT
+url: "https://github.com/ELares/cancer_research"
+repository-code: "https://github.com/ELares/cancer_research"
+abstract: >
+  Open-source cancer research combining cross-literature analysis of
+  4,830 research articles with Monte Carlo biochemical simulations of
+  ferroptosis sensitivity across cell phenotypes, drug combinations,
+  and tumor microenvironment features. Includes a reusable Rust
+  simulation engine (ferroptosis-core) with Python bindings, a news
+  source authentication pipeline, and a 112-page book-format manuscript.
+keywords:
+  - cancer research
+  - ferroptosis
+  - Monte Carlo simulation
+  - cross-literature analysis
+  - drug-tolerant persister cells
+  - tumor microenvironment
+  - sonodynamic therapy
+  - open science
