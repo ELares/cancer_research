@@ -1,0 +1,64 @@
+name: Python Tests
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/**'
+      - 'tests/**'
+      - 'corpus/INDEX.jsonl'
+      - 'analysis/**'
+      - 'requirements*.txt'
+      - '.github/workflows/python-test.yml'
+  pull_request:
+    paths:
+      - 'scripts/**'
+      - 'tests/**'
+      - 'corpus/INDEX.jsonl'
+      - 'analysis/**'
+      - 'requirements*.txt'
+      - '.github/workflows/python-test.yml'
+  schedule:
+    - cron: '0 8 * * 1'  # Weekly Monday 8am UTC (macOS only)
+
+jobs:
+  test-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          lfs: false
+          fetch-depth: 1
+
+      - name: Install Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install -r requirements-lock.txt
+
+      - name: Run smoke tests
+        run: python -m pytest tests/ -v --tb=short
+
+  test-macos:
+    if: github.event_name == 'schedule'
+    runs-on: macos-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          lfs: false
+          fetch-depth: 1
+
+      - name: Install Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install -r requirements-lock.txt
+
+      - name: Run smoke tests
+        run: python -m pytest tests/ -v --tb=short
