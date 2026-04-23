@@ -1,15 +1,18 @@
 """
-Validates FIGURES.yaml stays in sync with article/figures/ on disk.
+Validates FIGURES.yaml stays in sync with article/figures/ on disk
+and with the figs dict in scripts/generate_latex.py.
 
 Catches:
 - Figure PDFs on disk without a YAML entry (new figure, forgot to update)
 - YAML entries without a PDF on disk (deleted figure, forgot to update)
 - Manuscript figure numbers 1-19 present and unique
 - Generator functions exist in the claimed scripts
+- FIGURES.yaml and generate_latex.py figs dict disagree on filename for a manuscript figure
 
 Run: pytest tests/test_figure_traceability.py -v
 """
 
+import re
 from pathlib import Path
 
 import pytest
@@ -18,6 +21,7 @@ import yaml
 REPO_ROOT = Path(__file__).resolve().parent.parent
 FIGURES_YAML = REPO_ROOT / "FIGURES.yaml"
 FIGURES_DIR = REPO_ROOT / "article" / "figures"
+GENERATE_LATEX = REPO_ROOT / "scripts" / "generate_latex.py"
 
 
 @pytest.fixture
@@ -115,4 +119,41 @@ class TestFigureTraceability:
         for entry in figures_data:
             assert entry["status"] in allowed, (
                 f"{entry['filename']} has invalid status: {entry['status']}"
+            )
+
+    def test_yaml_matches_latex_figs_dict(self, figures_data):
+        """FIGURES.yaml manuscript figures map to the same filenames as generate_latex.py figs dict."""
+        if not GENERATE_LATEX.exists():
+            pytest.skip("generate_latex.py not found")
+
+        # Extract figure-number-to-filename pairs from the figs dict.
+        # Each entry looks like: '1': ('fig5_publication_trends', 'caption...'),
+        # We parse line-by-line to avoid LaTeX escapes breaking ast.literal_eval.
+        source = GENERATE_LATEX.read_text()
+        figs = {}
+        for m in re.finditer(r"'(\d+)'\s*:\s*\('(\w+)'", source):
+            figs[m.group(1)] = m.group(2)
+
+        # Build YAML mapping: manuscript_figure -> filename
+        yaml_map = {
+            e["manuscript_figure"]: e["filename"]
+            for e in figures_data
+            if e["manuscript_figure"] is not None
+        }
+
+        # Every figs dict entry must match the corresponding YAML entry
+        for fig_num_str, latex_filename in figs.items():
+            fig_num = int(fig_num_str)
+            assert fig_num in yaml_map, (
+                f"figs dict has figure {fig_num} but FIGURES.yaml does not"
+            )
+            assert yaml_map[fig_num] == latex_filename, (
+                f"Figure {fig_num}: FIGURES.yaml says '{yaml_map[fig_num]}' "
+                f"but figs dict says '{latex_filename}'"
+            )
+
+        # Every YAML manuscript figure must be in figs dict
+        for fig_num, yaml_filename in yaml_map.items():
+            assert str(fig_num) in figs, (
+                f"FIGURES.yaml has manuscript figure {fig_num} but figs dict does not"
             )
