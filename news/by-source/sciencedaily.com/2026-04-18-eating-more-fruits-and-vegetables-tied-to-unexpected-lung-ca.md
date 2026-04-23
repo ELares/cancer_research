@@ -6,7 +6,7 @@ tier: 2
 tier_name: Science journalism
 title: Eating more fruits and vegetables tied to unexpected lung cancer risk
 date_published: '2026-04-18'
-content_hash: sha256:20db486bfcbb23311250d9e86ae4560f2dcdb7ef63ebe926bb070f28173ffc25
+content_hash: sha256:dee0c07a7894bc26f003424ccd5174b6688489c4bb936b12c509f2a97b53261e
 paywall: false
 claims:
 - id: sciencedaily.com-2026-04-18-eating-more-fruits-and-vegetables-tied-t-001
@@ -38,16 +38,6 @@ claims:
 - id: sciencedaily.com-2026-04-18-eating-more-fruits-and-vegetables-tied-t-004
   text: The next step, according to Nieva, is to measure pesticide levels directly
     in patients through blood or urine samples.
-  type: opinion
-  category: INTERPRETIVE
-  verification_status: null
-  verification_source: null
-  linked_pmids: []
-- id: sciencedaily.com-2026-04-18-eating-more-fruits-and-vegetables-tied-t-005
-  text: "Global Diet Study Challenges Advice to Limit High-Fat Dairy Foods\nJuly 6,\
-    \ 2023 Â\x97\nUnprocessed red meat and whole grains can be included or left out\
-    \ of a healthy diet, according to a study conducted in 80 countries across all\
-    \ inhabited continents."
   type: opinion
   category: INTERPRETIVE
   verification_status: null
@@ -86,21 +76,3 @@ The next step, according to Nieva, is to measure pesticide levels directly in pa
 The research is supported by the Addario Lung Cancer Medical Institute, a nonprofit focused on advancing lung cancer research and care, as well as AstraZeneca, the Beth Longwell Foundation, Genentech, GO2 for Lung Cancer and Upstage Lung Cancer.
 Researchers also received funding from the National Institutes of Health, grant number R25CA225513 and the National Cancer Institute, grant number P30CA014089.
 Disclosure: Dr. Nieva has received consulting payments from AstraZeneca and Genentech.
-University of Southern California - Health Sciences. (2026, April 17). Eating more fruits and vegetables tied to unexpected lung cancer risk.
-A sweeping new study reveals that whatâs on your plate may directly shape the pesticides circulating in your body. Researchers found that people who eat more fruits and vegetables known to carry ...
-Food as Medicine: How Diet Shapes Gut Microbiome Health
-May 6, 2025 Â
-Researchers show how mice fed a Western-style diet are not able to rebuild a 'healthy,' diverse gut microbiome following antibiotic treatment. These mice were also more susceptible to ...
-Deadly Diets Driving Digestive Diseases
-Against the backdrop of an alarming increase in the number of people under 50 being diagnosed with bowel cancer, researchers are urging people to bump up their fiber intake and improve their eating ...
-Adherence to a Mediterranean Lifestyle Associated With Lower Risk of All-Cause and Cancer Mortality
-People who adhere to a Mediterranean lifestyle -- which includes a diet rich in fruits, vegetables, and whole grains; healthy eating habits like limiting added salts and sugars; and habits promoting ...
-Global Diet Study Challenges Advice to Limit High-Fat Dairy Foods
-July 6, 2023 Â
-Unprocessed red meat and whole grains can be included or left out of a healthy diet, according to a study conducted in 80 countries across all inhabited continents. Diets emphasizing fruit, ...
-MIND and Mediterranean Diets Associated With Fewer Alzheimer's Plaques and Tangles
-People who eat diets rich in green leafy vegetables as well as other vegetables, fruits, whole grains, olive oil, beans, nuts and fish may have fewer amyloid plaques and tau tangles in their brain -- ...
-Early Warning Signals of Esophageal Cancer May Be Hiding in Plain Sight
-âLike Liquid Metalâ: Scientists Create Strange Shape-Shifting Material
-Researchers Have Discovered a THC-Free Cannabis Compound That May Replace Opioids
-Common Blood Pressure Drug Shows Surprising Power Against Deadly Antibiotic-Resistant Superbug

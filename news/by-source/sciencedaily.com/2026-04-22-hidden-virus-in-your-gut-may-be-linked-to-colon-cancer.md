@@ -6,7 +6,7 @@ tier: 2
 tier_name: Science journalism
 title: Hidden virus in your gut may be linked to colon cancer
 date_published: '2026-04-22'
-content_hash: sha256:5ee6db33a5448aad15e65f11e835de08747dacf7ede76604a295ff63b65c2af7
+content_hash: sha256:0c41376e5589aa9686bc7fdefe4dba0cb337c88257ec9d02088e183c75ea444f
 paywall: false
 claims:
 - id: sciencedaily.com-2026-04-22-hidden-virus-in-your-gut-may-be-linked-t-001
@@ -24,21 +24,6 @@ claims:
   - '39705641'
   - '38375030'
   - '35472554'
-- id: sciencedaily.com-2026-04-22-hidden-virus-in-your-gut-may-be-linked-t-002
-  text: 'Bacteria Subtype Linked to Growth in Up to 50% of Human Colorectal Cancers
-
-    Researchers have found that a specific subtype of a microbe commonly found in
-    the mouth is able to travel to the gut and grow within colorectal cancer tumors.'
-  type: result
-  category: FACTUAL
-  verification_status: verified
-  verification_source: corpus
-  linked_pmids:
-  - '40846998'
-  - '41231502'
-  - '40652009'
-  - '39837982'
-  - '39739618'
 review_status: pending
 credibility_score: 55.2
 ---
@@ -114,25 +99,3 @@ Bacteroides fragilis
 . They compared bacterial samples from patients who later developed colorectal cancer with samples from patients who did not develop the disease.
 The finding was subsequently examined in stool samples from 877 individuals with and without colorectal cancer from several countries to determine whether the same viruses occurred more frequently in patients with cancer.
 The study was supported by the Region of Southern Denmark, the Harboe Foundation and the Novo Nordisk Foundation.
-Flemming Damgaard, Magnus G. Jespersen, Jens K. MÃ¸ller, John E. Coia, Ram B. Dessau, Thomas V. Sydenham, Mikael L. Strube, Jakob MÃ¸ller-Jensen, Ulrik S. Justesen.
-Distinct prophage infections in colorectal cancer-associated Bacteroides fragilis
-Communications Medicine
-, 2026; 6 (1) DOI:
-10.1038/s43856-026-01403-1
-University of Southern Denmark Faculty of Health Sciences. (2026, April 22). Hidden virus in your gut may be linked to colon cancer.
-A newly uncovered immune chain reaction in the gut may explain why people with inflammatory bowel disease face a much higher risk of colorectal cancer. Researchers found that a powerful inflammatory ...
-Designer Microbe Shows Promise for Reducing Mercury Absorption from Seafood
-May 1, 2025 Â
-Scientists inserted DNA-encoding methylmercury detoxification enzymes into the genome of an abundant human gut bacterium. The engineered bacterium detoxified methylmercury in the gut of mice and ...
-The Surprising Role of Gut Infection in Alzheimer's Disease
-Researchers have discovered a surprising link between a chronic gut infection caused by a common virus and the development of Alzheimer's disease in a subset of people. It is believed most ...
-All People Are Unique -- Also in the Gut
-A new study increases our knowledge about the gut and the life of gut bacteria. The study shows, among other things, that changes in the gut environment have an impact on the composition and activity ...
-Beneficial Gut Microbe Has Surprising Metabolic Capabilities
-Researchers discovered potentially far-reaching effects of a particular gut bacterium that was linked to better growth in Bangladeshi children receiving a therapeutic food designed to nurture healthy ...
-Bacteria Subtype Linked to Growth in Up to 50% of Human Colorectal Cancers
-Researchers have found that a specific subtype of a microbe commonly found in the mouth is able to travel to the gut and grow within colorectal cancer tumors. This microbe is also a culprit for ...
-Early Warning Signals of Esophageal Cancer May Be Hiding in Plain Sight
-âLike Liquid Metalâ: Scientists Create Strange Shape-Shifting Material
-Researchers Have Discovered a THC-Free Cannabis Compound That May Replace Opioids
-Common Blood Pressure Drug Shows Surprising Power Against Deadly Antibiotic-Resistant Superbug

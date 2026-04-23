@@ -6,7 +6,7 @@ tier: 2
 tier_name: Science journalism
 title: Scientists find hidden brain cells helping deadly cancer grow
 date_published: '2026-04-05'
-content_hash: sha256:ba018b03afa387e98ab13cda264a3f6a4785757c05af1be1c5a85ff99a7d2318
+content_hash: sha256:4127c6049eec7e2624d1c0a48e6f3b4357ae158e3395e740e827230eac2344e9
 paywall: false
 claims: []
 review_status: pending
@@ -31,23 +31,3 @@ A key part of this signaling process involves a receptor called CCR5. This recep
 Building on Earlier Discoveries
 These findings build on earlier work by Singh and Moffat published in Nature Medicine in 2024, which showed that cancer cells can take advantage of pathways normally used during brain development to spread. Together, these studies point toward a new direction in glioblastoma research focused on disrupting the communication systems that tumors rely on.
 The research was supported by the 2020 William Donald Nash Brain Tumour Research Fellowship and the Canadian Institutes for Health Research. Singh is a Tier 1 Canada Research Chair in Human Cancer Stem Cell Biology, and Moffat holds the GlaxoSmithKline Chair in Genetics & Genome Biology at The Hospital for Sick Children.
-Nicholas Mikolajewicz, Kui Zhai, Anish Puri, Petar Miletic, Nazanin Tatari, Jiarun Wei, Neil Savage, Zhi Huang, Qian Huang, Seon Yong Lee, Mahta Jan-Ahmadnejad, Roseanne Nguyen, David Chen, Tiegan Korman, Daniel Mobilio, Maxwell Topley, Jack Qinyu Lu, Matthew R. Voisin, Zsolt Zador, Shawn C. Chafe, Chitra Venugopal, Kevin R. Brown, Gelareh Zadeh, Hong Han, Julien Muffat, Shideng Bao, Sheila K. Singh, Jason Moffat.
-Reactive oligodendrocytes promote glioblastoma progression through CCL5/CCR5-mediated glioma stem cell maintenance
-, 2026; 114 (2): 237 DOI:
-10.1016/j.neuron.2025.12.012
-McMaster University. (2026, April 5). Scientists find hidden brain cells helping deadly cancer grow.
-Researchers uncovered a powerful weakness in lung cancer by shutting down a protein that helps tumors survive stress. When this protein, FSP1, was blocked, lung tumors in mice shrank dramatically, ...
-The Hidden DNA Organizer Linking Fertility and Cancer
-Scientists at Kyoto University have uncovered a hidden protein complex that organizes DNA in sperm stem cells, a discovery that reveals surprising ties between fertility and cancer. When this ...
-Scientists Uncover Sugar Pathway Driving Aggressive Childhood Cancer
-Scientists have uncovered a hidden weakness in one of the deadliest childhood cancers. The tumors, which spread quickly and are notoriously hard to treat, rely on a sugar-processing pathway to ...
-Multi-Target Approach Counters Tumor Growth in Several Cancers
-The tissue adjacent to a tumor behaves differently than areas farther away: The tumor's cancerous cells influence their surroundings, blocking the body's immune defenses and creating a sort ...
-New Method Eradicates Deadly Brain Tumors by 'Starving' Them of Energy Source
-In a new study, researchers report that they effectively eradicated glioblastoma, a highly lethal type of brain cancer. The researchers achieved the outcome using a method they developed based on ...
-Burst of Radiation and Vesicles-Based Immunotherapy Suppress Brain Cancer Growth
-The priming of glioblastoma with a burst of radiation increased dramatically the uptake of extracellular vesicles-based immunotherapy by the tumor and the surrounding microenvironment, halting tumor ...
-Early Warning Signals of Esophageal Cancer May Be Hiding in Plain Sight
-âLike Liquid Metalâ: Scientists Create Strange Shape-Shifting Material
-Researchers Have Discovered a THC-Free Cannabis Compound That May Replace Opioids
-Common Blood Pressure Drug Shows Surprising Power Against Deadly Antibiotic-Resistant Superbug

@@ -7,7 +7,7 @@ tier_name: Science journalism
 title: Blocking a surprising master regulator of immunity eradicates liver tumors
   in mice
 date_published: '2025-04-24'
-content_hash: sha256:aadad055d6f08abcba2fe0b459118df8a2159e07321d9eb78784a884930e5178
+content_hash: sha256:8946402d8763b53cbae213ac3ac52aef09953b7036a0372cf4a10da58d78fdf1
 paywall: false
 claims:
 - id: sciencedaily.com-2025-04-24-blocking-a-surprising-master-regulator-o-001
@@ -23,33 +23,6 @@ claims:
   - '42014210'
   - '42005346'
   - '42003393'
-- id: sciencedaily.com-2025-04-24-blocking-a-surprising-master-regulator-o-002
-  text: "Biomaterial-Delivered One-Two Punch Boosts Cancer Immunotherapy\nJuly 13,\
-    \ 2023 Â\x97\nIn contrast to different blood cancers, the effectiveness of adoptive\
-    \ T cell therapies in the treatment of solid tumors, which comprise about 90%\
-    \ of all tumors, has been very limited because of ..."
-  type: result
-  category: FACTUAL
-  verification_status: verified
-  verification_source: corpus
-  linked_pmids:
-  - '41355950'
-  - '41277911'
-  - '41526899'
-  - '41501774'
-  - '41560593'
-- id: sciencedaily.com-2025-04-24-blocking-a-surprising-master-regulator-o-003
-  text: Today, the oceans experience just 25% of the number of cold ...
-  type: result
-  category: FACTUAL
-  verification_status: verified
-  verification_source: pubmed
-  linked_pmids:
-  - '42020189'
-  - '42019880'
-  - '42019879'
-  - '42019201'
-  - '42019200'
 review_status: pending
 credibility_score: 52.0
 ---
@@ -84,25 +57,3 @@ Engleman and his colleagues are now designing treatments targeting EPO signaling
 Researchers from the New York Blood Center and the pharmaceutical company ImmunEdge Inc. contributed to the research.
 The study was funded by the National Institutes of Health (grants R01CA262361, P01CA244114, U54CA2745115 and P01HL149626).
 Chiu is a cofounder of ImmunEdge Inc. Engleman is a founder, shareholder and board member of ImmunEdge Inc. Chiu and Engleman are Stanford-affiliated inventors of PCT/US2023/063997, entitled "EPO receptor agonists and antagonists."
-David Kung-Chun Chiu, Xiangyue Zhang, Bowie Yik-Ling Cheng, Qiang Liu, Kazukuni Hayashi, Bo Yu, Ryan Lee, Catherine Zhang, Xiuli An, Jayakumar Rajadas, Nathan E. Reticker-Flynn, Erinn B. Rankin, Edgar G. Engleman.
-Tumor-derived erythropoietin acts as an immunosuppressive switch in cancer immunity
-, 2025; 388 (6745) DOI:
-10.1126/science.adr3026
-Stanford Medicine. (2025, April 25). Blocking a surprising master regulator of immunity eradicates liver tumors in mice.
-Mutations of the tumor suppressor p53 not only have a growth-promoting effect on the cancer cells themselves, but also influence the cells in the tumor's microenvironment. Scientists have now ...
-Cancer's Sweet Achilles Heel
-A high expression of the enzyme beta1,4-galactosyltransferase-3, or B4GALT3Â is associated with noticeably shortened survival rates in several types of immunotherapy cancersdeficiency in mice TIME ...
-Biomaterial-Delivered One-Two Punch Boosts Cancer Immunotherapy
-July 13, 2023 Â
-In contrast to different blood cancers, the effectiveness of adoptive T cell therapies in the treatment of solid tumors, which comprise about 90% of all tumors, has been very limited because of ...
-Study Hints at How Cancer Immunotherapy Can Be Safer
-June 21, 2023 Â
-Cancer immunotherapy has revolutionized treatment of many forms of cancer by unleashing the immune system response against tumors. Immunotherapies that block checkpoint receptors like PD-1, proteins ...
-Dietary Change Starves Cancer Cells, Overcoming Treatment Resistance
-A dietary change could be a key to enhancing colon cancer treatment, a new study finds. Researchers found in cells and in mice that a low-protein diet blocked the nutrient signaling pathway that ...
-As Oceans Warm, Marine Cold Spells Are Disappearing
-Marine cold spells are cold versions of heat waves: periods of exceptionally cold water, able to hurt or help the ecosystems they hit. Today, the oceans experience just 25% of the number of cold ...
-Early Warning Signals of Esophageal Cancer May Be Hiding in Plain Sight
-âLike Liquid Metalâ: Scientists Create Strange Shape-Shifting Material
-Researchers Have Discovered a THC-Free Cannabis Compound That May Replace Opioids
-Common Blood Pressure Drug Shows Surprising Power Against Deadly Antibiotic-Resistant Superbug

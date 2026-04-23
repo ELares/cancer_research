@@ -6,7 +6,7 @@ tier: 2
 tier_name: Science journalism
 title: Unusual carbon build-up found in lungs of COPD patients
 date_published: '2025-06-11'
-content_hash: sha256:2a4326b63a8c569f60592d98f82a6b2750468b067350efa097f8ecc04ed85f4c
+content_hash: sha256:c24af9b140d24220fa2a550b48b0226094cff91b6f1c33ee3310215c3b00f62c
 paywall: false
 claims:
 - id: sciencedaily.com-2025-06-11-unusual-carbon-build-up-found-in-lungs-o-001
@@ -35,16 +35,6 @@ claims:
   - '42020927'
   - '42020925'
   - '42020921'
-- id: sciencedaily.com-2025-06-11-unusual-carbon-build-up-found-in-lungs-o-003
-  text: "Cell Death Discovery Could Lead to New Treatment for COPD\nJune 17, 2021\
-    \ Â\x97\nInhibiting necroptosis, a form of cell death, could yield a new treatment\
-    \ approach for chronic obstructive pulmonary disease (COPD), an inflammatory lung\
-    \ condition also known as emphysema, new ..."
-  type: speculation
-  category: SPECULATIVE
-  verification_status: null
-  verification_source: null
-  linked_pmids: []
 review_status: pending
 credibility_score: 52.0
 ---
@@ -69,21 +59,3 @@ Dr Lea said: "As we compared cells from COPD patients with cells from smokers, w
 "In future, it would be interesting to study how this carbon builds up and how lung cells respond over a longer period of time."
 Professor Fabio Ricciardolo is Chair of the European Respiratory Society's group on monitoring airway disease, based at the University of Torino, Italy, and was not involved in the research. He said: "This set of experiments suggest that people with COPD accumulate unusually large amounts of carbon in the cells of their lungs. This build-up seems to be altering those cells, potentially causing inflammation in the lungs and leading to worse lung function.
 "In addition, this research offers some clues about why polluted air might cause or worsen COPD. However, we know that smoking and air pollution are risk factors for COPD and other lung conditions, so we need to reduce levels of pollution in the air we breathe and we need to help people to quit smoking."
-European Respiratory Society. (2025, June 10). Unusual carbon build-up found in lungs of COPD patients.
-Researchers in Japan discovered that Parkinsonâs patients diagnosed in their 80s are far more likely to show signs of amyloid buildup, a hallmark of Alzheimerâs, even without dementia symptoms. ...
-Low-Level Traffic Air Pollution Linked to Liver Damage and Fatty Liver Disease
-Breathing in even small amounts of traffic pollution could be quietly damaging your liver. New research from Australian scientists reveals that long-term exposure to fine particles in polluted ...
-Human Lung Chip Leveraged to Faithfully Model Radiation-Induced Lung Injury
-Researchers have developed a humanÂ in vitroÂ model that closely mimics the complexities of radiation-induced lung injury (RILI) and radiation dose sensitivity of the human lung. Using a previously ...
-Study Suggests Why Most Smokers Don't Get Lung Cancer
-Cigarette smoking is overwhelmingly the main cause of lung cancer, yet only a minority of smokers develop the disease. A study suggests that some smokers may have robust mechanisms that protect them ...
-Cell Death Discovery Could Lead to New Treatment for COPD
-June 17, 2021 Â
-Inhibiting necroptosis, a form of cell death, could yield a new treatment approach for chronic obstructive pulmonary disease (COPD), an inflammatory lung condition also known as emphysema, new ...
-Is Elevated Level of Lung Protein an Early Predictor for COPD?
-June 3, 2021 Â
-Researcher had previously discovered that the total mucin concentrations in the lungs are associated with COPD disease progression and could be used as diagnostic markers of chronic bronchitis, a ...
-Early Warning Signals of Esophageal Cancer May Be Hiding in Plain Sight
-âLike Liquid Metalâ: Scientists Create Strange Shape-Shifting Material
-Researchers Have Discovered a THC-Free Cannabis Compound That May Replace Opioids
-Common Blood Pressure Drug Shows Surprising Power Against Deadly Antibiotic-Resistant Superbug

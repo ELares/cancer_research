@@ -6,7 +6,7 @@ tier: 2
 tier_name: Science journalism
 title: Rogue DNA rings may be the secret spark driving deadly brain cancer
 date_published: '2025-09-18'
-content_hash: sha256:2081ba471850988d276b3b08a602f67b66204e2d90e466a871b8cef0d2503f3a
+content_hash: sha256:839957758758ac6416521377779a76148b3422f3882b9ebd9f95ee429d6c6db6
 paywall: false
 claims:
 - id: sciencedaily.com-2025-09-18-rogue-dna-rings-may-be-the-secret-spark--001
@@ -68,24 +68,3 @@ Paul Mischel, MD, the Fortinet Founders Professor and professor and vice chair o
 "These findings reveal an important new insight into the role of ecDNA in tumour development and progression. Previous work from our collaborative team and other researchers, has shown that ecDNA can arise early in tumor development, including at the stage of high-grade dysplasia, and it can also arise later to drive tumor progression and treatment resistance. The findings here show that in glioblastoma, there is an early event driven by ecDNA that could potentially be more actionable, raising the possibility that glioblastoma is another cancer for which earlier detection and intervention based upon ecDNA may be possible."
 Director of Cancer Grand Challenges, Dr David Scott, says:
 "This study exemplifies the bold, boundary-pushing science Cancer Grand Challenges was created to support. By unravelling the evolutionary history of ecDNA in glioblastoma, team eDyNAmiC is not only deepening our understanding of one of the most devastating cancers but also illuminating new paths for earlier detection and treatment. It's a powerful reminder that when we bring together diverse disciplines and global talent, we can begin to solve the toughest problems facing cancer research."
-Imran Noorani, Magnus Haughey, Jens Luebeck, Andrew Rowan, Eva GrÃ¶nroos, Francesco Terenzi, Ivy Tsz-Lo Wong, Davide Pradella, Marta Lisi, Jeanette Kittel, Natasha Sharma, Chris Bailey, Clare E. Weeden, Donald M. Bell, Eric Joo, Vittorio BarbÃ¨, Matthew G. Jones, King L. Hung, Emma L. Nye, Mary Green, Lucy Meader, Emma J. Norton, Mark Fabian, Nnennaya Kanu, Mariam Jamal-Hanjani, Thomas Santarius, Andrea Ventura, James A.R. Nicoll, Delphine Boche, Howard Y. Chang, Vineet Bafna, Weini Huang, Paul S. Mischel, Charles Swanton, Benjamin Werner.
-Extrachromosomal DNAâDriven Oncogene Spatial Heterogeneity and Evolution in Glioblastoma
-, 2025; OF1 DOI:
-10.1158/2159-8290.CD-24-1555
-Queen Mary University of London. (2025, September 17). Rogue DNA rings may be the secret spark driving deadly brain cancer.
-A new study shows glioblastoma isnât confined to the brainâit erodes the skull and hijacks the immune system within skull marrow. The cancer opens channels that let inflammatory cells enter the ...
-Cracking the Code of DNA Circles in Cancer: Potential Therapy
-Tiny circles called ecDNA are critical in cancer development and drug resistance. An international team publishes landmark studies detailing new findings and potential ...
-Specific Type of DNA Could Be a Target of Future Cancer Therapies
-Researchers found a higher concentration of a specific kind of DNA -- extrachromosomal or ecDNA -- in more aggressive and advanced cancers that could mark them as targets for future therapies. They ...
-Electrical Currents May Make Body's Cancer-Killing Cells Even Better Killers
-July 25, 2024 Â
-Scientists have discovered that electrical currents may make Natural Killer (NK) cells -- our very own cancer-killing immune cells -- even better killers, which could have significant implications ...
-Cracking the Mystery Behind a Deadly Brain Cancer
-Glioblastoma is a deadly brain cancer with a grim prognosis. Unlike most cancers, it still grows in the presence of the P53 protein. For decades, scientists have been unable to crack the case . . . ...
-In Science, Small Groups Create Big Ideas
-To understand the dynamics of emerging topics in science and medicine, researchers looked at researcher participation in articles containing emerging keywords over 50 years. They found that although ...
-Early Warning Signals of Esophageal Cancer May Be Hiding in Plain Sight
-âLike Liquid Metalâ: Scientists Create Strange Shape-Shifting Material
-Researchers Have Discovered a THC-Free Cannabis Compound That May Replace Opioids
-Common Blood Pressure Drug Shows Surprising Power Against Deadly Antibiotic-Resistant Superbug

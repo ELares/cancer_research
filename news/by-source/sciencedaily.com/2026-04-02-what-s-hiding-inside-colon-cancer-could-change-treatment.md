@@ -6,7 +6,7 @@ tier: 2
 tier_name: Science journalism
 title: "Whatâ\x80\x99s hiding inside colon cancer could change treatment"
 date_published: '2026-04-02'
-content_hash: sha256:e948012c00ad312fa17276464d6172a1ec53b57b671ef324923d8eef21593508
+content_hash: sha256:adb77b05138093abdb78279bc60a3e13aa24fe1a4ac416ee5e7b786081f83103
 paywall: false
 claims:
 - id: sciencedaily.com-2026-04-02-what-s-hiding-inside-colon-cancer-could--001
@@ -51,22 +51,8 @@ claims:
   verification_status: null
   verification_source: null
   linked_pmids: []
-- id: sciencedaily.com-2026-04-02-what-s-hiding-inside-colon-cancer-could--005
-  text: "Whatâ\x80\x99s hiding inside colon cancer could change treatment."
-  type: speculation
-  category: SPECULATIVE
-  verification_status: null
-  verification_source: null
-  linked_pmids: []
-- id: sciencedaily.com-2026-04-02-what-s-hiding-inside-colon-cancer-could--006
-  text: Using a 24-hour wearable device, researchers achieved nearly 97% ...
-  type: result
-  category: FACTUAL
-  verification_status: unverified
-  verification_source: null
-  linked_pmids: []
 review_status: pending
-credibility_score: 39.2
+credibility_score: 55.2
 ---
 
 Whatâs hiding inside colon cancer could change treatment
@@ -104,25 +90,3 @@ Prof Daniel Brewer, from UEA's Norwich Medical School, said: "This study highlig
 "The findings also suggest that oral cancer, in some cases, may be a close diagnostic consideration, further emphasizing the importance of comprehensive genomic profiling in clinical decision-making."
 Collaboration and funding
 The project was led by UEA and involved researchers from multiple institutions, including the University of Leeds, the Quadram Institute, Oxford Nanopore Technologies, the Institute of Cancer Research, London, the University of Manchester, National Institute for Health and Care Research (NIHR) Manchester Biomedical Research Centre, the University of Athens (Greece) the University of Liverpool, Cambridge University Hospitals NHS Foundation Trust, University College London, the University of Southampton, the University of North Carolina (US) and the Earlham Institute.
-Abraham Gihawi, Henry M. Wood, Jeremy Clark, Justin OâGrady, Rosalind A. Eeles, David C. Wedge, G. Maria Jakobsdottir, Gkikas Magiorkinis, Andrew G. Schache, Liam Masterson, Matt Lechner, Tim R. Fenton, Terry M. Jones, Adrienne M. Flanagan, Solange De Noon, Alex Rubinsteyn, Rachel Hurst, Colin S. Cooper, Daniel S. Brewer.
-The landscape of microbial associations in human cancer
-Science Translational Medicine
-, 2025; 17 (814) DOI:
-10.1126/scitranslmed.ads6166
-University of East Anglia. (2026, April 1). Whatâs hiding inside colon cancer could change treatment.
-Researchers have found hundreds of metabolic enzymes attached to human DNA inside the cell nucleus. Different tissues and cancers show unique patterns of these enzymes, forming a ânuclear metabolic ...
-165,000 Dementia Patients Reveal Hidden Stroke Risk from Common Drug
-A massive UK study of more than 165,000 dementia patients has uncovered troubling new evidence about risperidone, a commonly used drug for severe agitation. Researchers found the antipsychotic ...
-Surprising Giant DNA Discovery May Be Linked to Gum Disease and Cancer
-Scientists in Tokyo have uncovered âInocles,â massive strands of extrachromosomal DNA hidden inside bacteria in human mouths. These giants, overlooked by traditional sequencing, could explain how ...
-Invisible ID: How a Single Breath Could Reveal Your Healthâand Your Identity
-June 13, 2025 Â
-Scientists have discovered that your breathing pattern is as unique as a fingerprint and it may reveal more than just your identity. Using a 24-hour wearable device, researchers achieved nearly 97% ...
-Epigenetics Blood Markers Can Help Explain Dementia Risk
-Researchers assessed DNA methylation at 800,000 sites in the genome in blood samples collected from 900 people. The study includes extensive clinical information on participants, who all provided ...
-How Alike Are the Cancer Cells from a Single Patient?
-Using an experimental system involving new genetic technology, researchers analyzed the gene expression signatures of a representative sample of barcoded leukemia cells. After implanting some of the ...
-Early Warning Signals of Esophageal Cancer May Be Hiding in Plain Sight
-âLike Liquid Metalâ: Scientists Create Strange Shape-Shifting Material
-Researchers Have Discovered a THC-Free Cannabis Compound That May Replace Opioids
-Common Blood Pressure Drug Shows Surprising Power Against Deadly Antibiotic-Resistant Superbug

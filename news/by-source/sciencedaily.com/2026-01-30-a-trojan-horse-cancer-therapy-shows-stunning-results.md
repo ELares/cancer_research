@@ -6,7 +6,7 @@ tier: 2
 tier_name: Science journalism
 title: A Trojan horse cancer therapy shows stunning results
 date_published: '2026-01-30'
-content_hash: sha256:214d4ee35b6da3b8d73d7410a177a4fbfe17cfa08fceca5eb90b3a12a2ff6fdf
+content_hash: sha256:fd95cdfe4bbbe88848282ec0e7926109408817e397637914719f3fe5b3c6e94c
 paywall: false
 claims:
 - id: sciencedaily.com-2026-01-30-a-trojan-horse-cancer-therapy-shows-stun-001
@@ -15,22 +15,6 @@ claims:
     cancer cells from attack.
   type: opinion
   category: INTERPRETIVE
-  verification_status: null
-  verification_source: null
-  linked_pmids: []
-- id: sciencedaily.com-2026-01-30-a-trojan-horse-cancer-therapy-shows-stun-002
-  text: "Discovery Could Lead to Better Cancer Immunotherapy\nMay 31, 2022 Â\x97\n\
-    A type of white blood cell previously known only as a helper in the immune system\
-    \ appears also to be the instigator of the body's defenses against cancerous tumors."
-  type: speculation
-  category: SPECULATIVE
-  verification_status: null
-  verification_source: null
-  linked_pmids: []
-- id: sciencedaily.com-2026-01-30-a-trojan-horse-cancer-therapy-shows-stun-003
-  text: The discovery could lead to ...
-  type: speculation
-  category: SPECULATIVE
   verification_status: null
   verification_source: null
   linked_pmids: []
@@ -66,25 +50,3 @@ The team is now refining the approach, with a focus on controlling where and how
 The paper is titled "Armored macrophage-targeted CAR-T cells reset and reprogram the tumor microenvironment and control metastatic cancer growth."
 The study's authors, as listed in the journal, are Jaime Mateus-Tique, Ashwitha Lakshmi, Bhavya Singh, Rhea Iyer, Alfonso R. Sánchez-Paulete, Chiara Falcomata, Matthew Lin, Gvantsa Pantsulaia, Alexander Tepper, Trung Nguyen, Angelo Amabile, Gurkan Mollaoglu, Luisanna Pia, Divya Chhamalwan, Jessica Le Berichel, Hunter Potak, Marco Colonna, Alessia Baccarini, Joshua Brody, Miriam Merad, and Brian D. Brown.
 The work was supported by NIH grants (U01CA28408, R01CA254104), the Alliance for Cancer Gene Therapy, the Feldman Family Foundation, and the Applebaum Foundation.
-Jaime Mateus-Tique, Ashwitha Lakshmi, Bhavya Singh, Rhea Iyer, Alfonso R. SÃ¡nchez-Paulete, Chiara FalcomatÃ , Matthew Lin, Gvantsa Pantsulaia, Alexander Tepper, Trung Nguyen, Angelo Amabile, Gurkan Mollaoglu, Luisanna Pia, Divya Chhamalwan, Jessica Le Berichel, Hunter Potak, Marco Colonna, Alessia Baccarini, Joshua Brody, Miriam Merad, Brian D. Brown.
-Armored macrophage-targeted CAR-T cells reset and reprogram the tumor microenvironment and control metastatic cancer growth
-, 2026; DOI:
-10.1016/j.ccell.2025.12.021
-The Mount Sinai Hospital / Mount Sinai School of Medicine. (2026, January 30). A Trojan horse cancer therapy shows stunning results.
-Scientists at Stanford Medicine have unveiled a bold new kind of âuniversalâ vaccine that could one day protect against everything from COVID-19 and the flu to bacterial pneumonia and even common ...
-Scientists Turn Tumor Immune Cells Into Cancer Killers
-Scientists at KAIST have found a way to turn a tumorâs own immune cells into powerful cancer fightersâright inside the body. Tumors are packed with macrophages, immune cells that should attack ...
-Study Hints at How Cancer Immunotherapy Can Be Safer
-June 21, 2023 Â
-Cancer immunotherapy has revolutionized treatment of many forms of cancer by unleashing the immune system response against tumors. Immunotherapies that block checkpoint receptors like PD-1, proteins ...
-TBX20 Enhances Reprogramming of Heart Fibroblasts Into Heart Muscle Cells
-One promising strategy to remuscularize the injured heart is the direct cardiac reprogramming of heart fibroblast cells into cardiomyocytes. Researchers have identified TBX20 as the key missing ...
-Study Maps How Brain Reacts to Infections
-Researchers have mapped in detail how the immune system acts against pathogens invading the brain. The results show that the first line of defense is formed by brain-resident macrophages. These ...
-Discovery Could Lead to Better Cancer Immunotherapy
-May 31, 2022 Â
-A type of white blood cell previously known only as a helper in the immune system appears also to be the instigator of the body's defenses against cancerous tumors. The discovery could lead to ...
-Early Warning Signals of Esophageal Cancer May Be Hiding in Plain Sight
-âLike Liquid Metalâ: Scientists Create Strange Shape-Shifting Material
-Researchers Have Discovered a THC-Free Cannabis Compound That May Replace Opioids
-Common Blood Pressure Drug Shows Surprising Power Against Deadly Antibiotic-Resistant Superbug

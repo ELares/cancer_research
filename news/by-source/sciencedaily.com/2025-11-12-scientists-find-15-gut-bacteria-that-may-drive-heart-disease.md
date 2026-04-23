@@ -6,7 +6,7 @@ tier: 2
 tier_name: Science journalism
 title: Scientists find 15 gut bacteria that may drive heart disease
 date_published: '2025-11-12'
-content_hash: sha256:29f9ec2385d316400db5584b7f1c34762f4a6cb69efbe706dc8a829c32f10dd5
+content_hash: sha256:b93b15cc89039f19b3ab806ae97bf468199d3fcc1ae7434307d0ef5b605079b2
 paywall: false
 claims:
 - id: sciencedaily.com-2025-11-12-scientists-find-15-gut-bacteria-that-may-001
@@ -69,23 +69,3 @@ Toward Precision Microbial Medicine
 The researchers plan to combine microbial data with genetic and metabolic information to better understand how gut microbes influence heart disease at a mechanistic level. Their long-term goal is to develop precision-based treatments that use microbial insights to prevent cardiovascular disease before it begins.
 Kim emphasized that prevention is the most promising approach to lowering the global impact of heart disease. Potential strategies could include microbial therapies -- such as stool-based diagnostic screening -- or dietary interventions designed to restore beneficial bacteria or inhibit harmful pathways.
 By uncovering the specific bacterial species and biological mechanisms involved, scientists are moving closer to using the gut microbiome as a powerful tool for maintaining heart health.
-Soomin Lee, Shahbaz Raza, Eun-Ju Lee, Yoosoo Chang, Seungho Ryu, Hyung-Lae Kim, Si-Hyuck Kang, Han-Na Kim.
-Metagenome-assembled genomes reveal microbial signatures and metabolic pathways linked to coronary artery disease
-, 2025; DOI:
-10.1128/msystems.00954-25
-American Society for Microbiology. (2025, November 12). Scientists find 15 gut bacteria that may drive heart disease.
-Training harder may do more than build muscleâit could transform your gut. Researchers found that intense workouts change the balance of bacteria and important compounds in athletesâ digestive ...
-Gut Bacteria Can Sense Their Environment and Itâs Key to Your Health
-Your gut is home to trillions of bacteria that constantly âsenseâ their surroundings to survive and thrive. New research shows that beneficial gut microbes, especially common Clostridia bacteria, ...
-The Secret to Human Intelligence? It Might Be in Our Gut
-New research shows gut bacteria can directly influence how the brain develops and functions. When scientists transferred microbes from different primates into mice, the animalsâ brains began to ...
-The Secret to Our Big Brains Might Be in Our Gut
-What if your gut microbes helped power your brain? A new study reveals that the energy-hungry human brain may have evolved with a big assist from our gut bacteria. By transplanting gut microbes from ...
-We May Be Overestimating the Association Between Gut Bacteria and Disease, Machine Learning Study Finds
-Many bacterial-linked illnesses, such as inflammatory bowel disease or colorectal cancer, are associated with an overgrowth of gut bacteria thought to be bad actors. But when researchers used a ...
-Eye Color Genes Are Critical for Retinal Health
-Metabolic pathways consist of a series of biochemical reactions in cells that convert a starting component into other products. There is growing evidence that metabolic pathways coupled with external ...
-Early Warning Signals of Esophageal Cancer May Be Hiding in Plain Sight
-âLike Liquid Metalâ: Scientists Create Strange Shape-Shifting Material
-Researchers Have Discovered a THC-Free Cannabis Compound That May Replace Opioids
-Common Blood Pressure Drug Shows Surprising Power Against Deadly Antibiotic-Resistant Superbug

@@ -7,7 +7,7 @@ tier_name: Science journalism
 title: "Scientists discover hidden â\x80\x9Cmaster switchâ\x80\x9D driving skin cancer\
   \ growth and immune escape"
 date_published: '2026-04-21'
-content_hash: sha256:a29cfbaa70bcf1ffea19484980bd5f99f1451aa93fafd923b1bab1952ae2fdf2
+content_hash: sha256:82f8fc1a561edbba62fae7e3210e5f128801803d995da3240fcf678914e62dc2
 paywall: false
 claims:
 - id: sciencedaily.com-2026-04-21-scientists-discover-hidden-master-switch-001
@@ -29,20 +29,6 @@ claims:
   verification_status: null
   verification_source: null
   linked_pmids: []
-- id: sciencedaily.com-2026-04-21-scientists-discover-hidden-master-switch-003
-  text: Colorectal cancer has long baffled scientists because, unlike most tumors,
-    patients often do better when their cancers are packed with immune-suppressing
-    regulatory T cells.
-  type: mechanism
-  category: FACTUAL
-  verification_status: verified
-  verification_source: pubmed
-  linked_pmids:
-  - '42020914'
-  - '42020818'
-  - '42020735'
-  - '42020360'
-  - '42020271'
 review_status: pending
 credibility_score: 55.2
 ---
@@ -73,26 +59,3 @@ Funding and Research Team
 The study was supported by National Institutes of Health grants P30CA016087, R01CA274100, P50CA225450, and U54CA263001, along with funding from the Melanoma Research Foundation, the Melanoma Research Alliance, United Kingdom Medical Research Council grant MR/S01473X/1, Brazilian National Council for Scientific and Technological Development (CNPQ) grants 442091/2023-0 and 309661/2023-4, and the Wellcome Trust Career Development Award 227228/Z/23/Z.
 In addition to Hernando-Monge and Berico, contributors from NYU Langone included Amanda Flores Yanke, Fatemeh Vand Rajabpour, Catherine Do, Ines Delclaux, Tara Muijlwijk, Robert Stagnitta, Theodore Sakellaropoulos, Michelle Krogsgaard, Ata Moshiri, Iman Osman, Jane Skok, Amanda Lund, and Markus Schober.
 Collaborators from outside institutions included Irving Wilmer and M. Estefania Vazquez-Cruz, along with principal investigator Carla Daniela Robles-Espinoza at the National Autonomous University of Mexico in Juriquilla. Additional contributors were Matheus Riberio and Annie Squiavinato, with principal investigator Patricia Possik at the Brazilian National Cancer Institute in Rio de Janeiro.
-Pietro Berico, Amanda Flores Yanke, Fatemeh Vand-Rajabpour, Catherine Do, Irving Simonin Wilmer, Ines Delclaux, Tara Muijlwijk, Robert Stagnitta, Martha Estefania VÃ¡zquez-Cruz, Theodore Sakellaropoulos, Matheus Ribeiro. Costa, Annie Cristhine Moraes Sousa-Squiavinato, Michelle Krogsgaard, Ata S. Moshiri, Iman Osman, Jane A. Skok, Patricia A. Possik, Carla Daniela Robles-Espinoza, Amanda W. Lund, Markus Schober, Eva Hernando.
-A targetable developmental program co-regulates angiogenesis and immune evasion in melanoma
-, 2026; DOI:
-10.1158/2159-8290.CD-24-1853
-NYU Langone Health / NYU Grossman School of Medicine. (2026, April 21). Scientists discover hidden âmaster switchâ driving skin cancer growth and immune escape.
-Colorectal cancer has long baffled scientists because, unlike most tumors, patients often do better when their cancers are packed with immune-suppressing regulatory T cells. New research finally ...
-Scientists Exposed How Cancer Hides in Plain Sight
-Pancreatic cancer may evade the immune system using a clever molecular trick. Researchers found that the cancer-driving protein MYC also suppresses immune alarm signals, allowing tumors to grow ...
-CRISPR Uncovers Gene That Supercharges Vitamin Dâand Stops Tumors in Their Tracks
-July 18, 2025 Â
-A gene called SDR42E1 has been identified as a key player in how our bodies absorb and process vitamin D. Researchers found that disabling this gene in colorectal cancer cells not only crippled their ...
-New RNA-Based Therapy Combats Melanoma in Mouse Models
-July 27, 2023 Â
-Investigators have designed an innovative RNA-based strategy to activate dendritic cells--which play a key role in immune response -- that eradicated tumors and prevented their recurrence in mouse ...
-Study Hints at How Cancer Immunotherapy Can Be Safer
-June 21, 2023 Â
-Cancer immunotherapy has revolutionized treatment of many forms of cancer by unleashing the immune system response against tumors. Immunotherapies that block checkpoint receptors like PD-1, proteins ...
-Spatial Maps of Melanoma
-Melanoma is a somewhat unusual cancer -- one that blooms before our very eyes, often on sun-exposed skin, and can quickly become deadly as it turns our own skin against us and spreads to other ...
-Early Warning Signals of Esophageal Cancer May Be Hiding in Plain Sight
-âLike Liquid Metalâ: Scientists Create Strange Shape-Shifting Material
-Researchers Have Discovered a THC-Free Cannabis Compound That May Replace Opioids
-Common Blood Pressure Drug Shows Surprising Power Against Deadly Antibiotic-Resistant Superbug

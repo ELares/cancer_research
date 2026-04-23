@@ -6,7 +6,7 @@ tier: 2
 tier_name: Science journalism
 title: "This overlooked hormone could be why your blood pressure wonâ\x80\x99t drop"
 date_published: '2026-03-30'
-content_hash: sha256:68c8c4f41ba595f883f9b57d2cb0e87570ca4dd25ba2e8fd852312ead517184d
+content_hash: sha256:283fed7fdb8df584cc8149a706b0ba0f71f47b6b30a7a043ad40b88e744a699a
 paywall: false
 claims:
 - id: sciencedaily.com-2026-03-30-this-overlooked-hormone-could-be-why-you-001
@@ -67,20 +67,3 @@ Study Funding and Presentation
 Study Funding: Corcept Therapeutics Incorporated was the study sponsor and funded the study.
 Dr. Bhatt is a paid consultant for Corcept Therapeutics Incorporated.
 Meeting: American College of Cardiology's Annual Scientific Session
-The Mount Sinai Hospital / Mount Sinai School of Medicine. (2026, March 30). This overlooked hormone could be why your blood pressure wonât drop.
-A snippet of hair can reveal a pregnant person's stress level and may one day help warn of unexpected birth problems, a study indicates. Researchers measured the stress hormone cortisol in hair ...
-Study Shows Long-Term Health Impacts After Exposure to Environmental Disaster
-Exposure to a large-scale disaster, such as a tsunami, impacts population health over a decade later. A new study has found that women who lived along the coast of Aceh, Indonesia when it was hit by ...
-Limited Postpartum Follow-Up May Miss High Blood Pressure in 1 in 10 New Moms
-An analysis of more than 2,400 women who did not have high blood pressure while pregnant found that about 1 in 10 were diagnosed with high blood pressure in the year after childbirth. Almost a ...
-Some Blood Pressure Medicine May Decrease the Aneurysm Rupture Risk for People With High Blood Pressure
-June 3, 2022 Â
-A new study has found that RAAS inhibitors, a class of blood pressure-lowering medicine, may be better at reducing the risk of brain aneurysm rupture. People with a brain aneurysm -- a weakened area ...
-Meditation Training Reduces Long-Term Stress, Hair Analysis Shows
-A new study finds that mental training reduces the concentration of the stress hormone cortisol in hair. The amount of cortisol in hair provides information about how much a person is burdened by ...
-Elevated Stress Hormones Linked to Higher Risk of High Blood Pressure and Heart Events
-In a study of more than 400 adults with normal blood pressure, those who had high levels of stress hormones detected in their urine were more likely to develop high blood pressure over the next 6-7 ...
-Early Warning Signals of Esophageal Cancer May Be Hiding in Plain Sight
-âLike Liquid Metalâ: Scientists Create Strange Shape-Shifting Material
-Researchers Have Discovered a THC-Free Cannabis Compound That May Replace Opioids
-Common Blood Pressure Drug Shows Surprising Power Against Deadly Antibiotic-Resistant Superbug

@@ -6,7 +6,7 @@ tier: 2
 tier_name: Science journalism
 title: Doctors just found a way to slow one of the deadliest prostate cancers
 date_published: '2025-10-22'
-content_hash: sha256:2f195f8d0c321fe7c2fc8be4f57e3fe05c80ef263d82df3ffcbf5a0df3a3c37a
+content_hash: sha256:ba71cbfda31e61746ca18b9d8282b39f8cc1be7da9a285773f8ec6d6056520df
 paywall: false
 claims:
 - id: sciencedaily.com-2025-10-22-doctors-just-found-a-way-to-slow-one-of--001
@@ -118,90 +118,8 @@ claims:
   verification_status: unverified
   verification_source: null
   linked_pmids: []
-- id: sciencedaily.com-2025-10-22-doctors-just-found-a-way-to-slow-one-of--009
-  text: 'Niraparib and abiraterone acetate plus prednisone for HRR-deficient metastatic
-    castration-sensitive prostate cancer: a randomized phase 3 trial
-
-    , 2025; DOI:
-
-    10.1038/s41591-025-03961-8
-
-    University College London. (2025, October 21).'
-  type: result
-  category: FACTUAL
-  verification_status: verified
-  verification_source: pubmed
-  linked_pmids:
-  - '42015879'
-  - '41844641'
-  - '41518601'
-  - '41191357'
-  - '41057655'
-- id: sciencedaily.com-2025-10-22-doctors-just-found-a-way-to-slow-one-of--010
-  text: In a global trial, patients receiving the experimental drug zilebesiran alongside
-    standard therapy saw greater blood ...
-  type: result
-  category: FACTUAL
-  verification_status: unverified
-  verification_source: null
-  linked_pmids: []
-- id: sciencedaily.com-2025-10-22-doctors-just-found-a-way-to-slow-one-of--011
-  text: 'This Powerful Drug Combo Cuts Prostate Cancer Deaths by 40%
-
-    A new drug combo of enzalutamide and hormone therapy has been shown to extend
-    survival for men with recurring prostate cancer, reducing death risk by over 40%.'
-  type: result
-  category: FACTUAL
-  verification_status: verified
-  verification_source: corpus
-  linked_pmids:
-  - '41493473'
-  - '41571637'
-  - '41629133'
-  - '41677622'
-  - '41313802'
-- id: sciencedaily.com-2025-10-22-doctors-just-found-a-way-to-slow-one-of--012
-  text: 'The Changes to Cell DNA That Could Revolutionize Disease Prevention
-
-    Researchers have discovered a mechanism in DNA that regulates how disease-causing
-    mutations are inherited.'
-  type: speculation
-  category: SPECULATIVE
-  verification_status: null
-  verification_source: null
-  linked_pmids: []
-- id: sciencedaily.com-2025-10-22-doctors-just-found-a-way-to-slow-one-of--013
-  text: 'The team identified two enzymes that regulate a chemical modification, 6mA,
-    in mitochondrial ...
-
-    ''Exceptional'' Results in Phase III Leukemia Trial
-
-    Leukaemia trial shows ''exceptional'' results.'
-  type: mechanism
-  category: FACTUAL
-  verification_status: verified
-  verification_source: corpus
-  linked_pmids:
-  - '41490885'
-  - '41540424'
-  - '41652014'
-  - '41775435'
-  - '41856971'
-- id: sciencedaily.com-2025-10-22-doctors-just-found-a-way-to-slow-one-of--014
-  text: Personalized treatment for the most common form of adult leukemia helps patients
-    survive for longer and stay in remission, a phase III trial has ...
-  type: result
-  category: FACTUAL
-  verification_status: verified
-  verification_source: pubmed
-  linked_pmids:
-  - '42020646'
-  - '42020136'
-  - '42019971'
-  - '42019888'
-  - '42019760'
 review_status: pending
-credibility_score: 45.4
+credibility_score: 43.2
 ---
 
 Doctors just found a way to slow one of the deadliest prostate cancers
@@ -245,25 +163,3 @@ PARP inhibitors, such as niraparib, are a type of targeted therapy that work by 
 Abiraterone acetate and prednisone (APP) are both hormone therapies. This combination blocks androgen production in the testes, adrenal glands, and the tumor itself, slowing cancer growth by reducing the available testosterone for the cancer cells.
 In the UK, Niraparib is approved to treat some types of cancer but has not yet been approved for prostate cancer. The National Institute for Clinical Excellence has said it waiting for further information, before it can make a decision.
 https://www.nice.org.uk/guidance/ta1032
-Gerhardt Attard, Neeraj Agarwal, Julie N. Graff, Shahneen Sandhu, Eleni Efstathiou, Mustafa ÃzgÃ¼roÄlu, Andrea J. Pereira de Santana Gomes, Karina Vianna, Hong Luo, Geoffrey T. Gotto, Heather H. Cheng, Won Kim, Carly R. Varela, Daneen Schaeffer, Kassie Kramer, Susan Li, Benoit Baron, Fei Shen, Suneel D. Mundle, Sharon A. McCarthy, David Olmos, Kim N. Chi, Dana E. Rathkopf.
-Niraparib and abiraterone acetate plus prednisone for HRR-deficient metastatic castration-sensitive prostate cancer: a randomized phase 3 trial
-, 2025; DOI:
-10.1038/s41591-025-03961-8
-University College London. (2025, October 21). Doctors just found a way to slow one of the deadliest prostate cancers.
-A twice-yearly injection may soon change how high blood pressure is treated. In a global trial, patients receiving the experimental drug zilebesiran alongside standard therapy saw greater blood ...
-This Powerful Drug Combo Cuts Prostate Cancer Deaths by 40%
-A new drug combo of enzalutamide and hormone therapy has been shown to extend survival for men with recurring prostate cancer, reducing death risk by over 40%. The study followed more than 1,000 ...
-The Changes to Cell DNA That Could Revolutionize Disease Prevention
-Researchers have discovered a mechanism in DNA that regulates how disease-causing mutations are inherited. The team identified two enzymes that regulate a chemical modification, 6mA, in mitochondrial ...
-'Exceptional' Results in Phase III Leukemia Trial
-Leukaemia trial shows 'exceptional' results. Personalized treatment for the most common form of adult leukemia helps patients survive for longer and stay in remission, a phase III trial has ...
-Most 'Silent' Genetic Mutations Are Harmful, Not Neutral -- A Finding With Broad Implications
-June 8, 2022 Â
-Occasionally, single-letter misspellings in the genetic code, known as point mutations, occur. Point mutations that alter the resulting protein sequences are called nonsynonymous mutations, while ...
-New Findings Offer Improved Therapy of Early-Stage, BRCA Mutation-Associated Breast Cancer
-June 4, 2021 Â
-A new treatment has potential to improve the outcomes for patients with hereditary BRCA mutations and high-risk, early-stage breast cancer. These results represent the first time a PARP inhibitor has ...
-Early Warning Signals of Esophageal Cancer May Be Hiding in Plain Sight
-âLike Liquid Metalâ: Scientists Create Strange Shape-Shifting Material
-Researchers Have Discovered a THC-Free Cannabis Compound That May Replace Opioids
-Common Blood Pressure Drug Shows Surprising Power Against Deadly Antibiotic-Resistant Superbug

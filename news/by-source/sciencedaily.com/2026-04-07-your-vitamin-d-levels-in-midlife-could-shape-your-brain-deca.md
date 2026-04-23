@@ -6,7 +6,7 @@ tier: 2
 tier_name: Science journalism
 title: Your vitamin D levels in midlife could shape your brain decades later
 date_published: '2026-04-07'
-content_hash: sha256:5c2dea466613b2c38f4148eb5ebd91e52538a1f1d1f0dce0b1f3077f501bedc7
+content_hash: sha256:41b6747d7ed0efd739062803af41c740558b3ca6dcbd16e81f0dd84c31b6889d
 paywall: false
 claims:
 - id: sciencedaily.com-2026-04-07-your-vitamin-d-levels-in-midlife-could-s-001
@@ -35,27 +35,6 @@ claims:
   - '41915276'
   - '41799187'
   - '41762384'
-- id: sciencedaily.com-2026-04-07-your-vitamin-d-levels-in-midlife-could-s-003
-  text: 'Anti-Amyloid Drug Shows Signs of Preventing Alzheimer''s Dementia
-
-    An experimental drug appears to reduce the risk of Alzheimer''s-related dementia
-    in people destined to develop the disease in their 30s, 40s or 50s, according
-    to the results of a new study.'
-  type: opinion
-  category: INTERPRETIVE
-  verification_status: null
-  verification_source: null
-  linked_pmids: []
-- id: sciencedaily.com-2026-04-07-your-vitamin-d-levels-in-midlife-could-s-004
-  text: "Novel Tau PET Tracer Exhibits High Sensitivity and Specificity, Allowing\
-    \ for Earlier Identification of Alzheimer's Disease\nA new tau PET radiotracer,Â 18F-SNFT-1,\
-    \ has been found to be more effective than existing tau PET radiotracers in identifying\
-    \ Alzheimerâ\x80\x99s disease in its earliest stages, according to research."
-  type: opinion
-  category: INTERPRETIVE
-  verification_status: null
-  verification_source: null
-  linked_pmids: []
 review_status: pending
 credibility_score: 55.2
 ---
@@ -84,24 +63,3 @@ The study shows a link, but it does not prove that vitamin D directly reduces de
 Researchers found no connection between vitamin D levels and amyloid beta, another Alzheimer's biomarker
 Further research is needed to confirm these findings and better understand the role of vitamin D in brain health
 The study was supported by the National Institute on Aging, National Institute of Neurological Disorders and Stroke, Irish Research Council and Health Research Board of Ireland.
-Martin David Mulligan, Matthew R. Scott, Qiong Yang, Ruiqi Wang, Saptaparni Ghosh, Keith A. Johnson, Alexa S. Beiser, Sudha Seshadri, Emer R. McGrath.
-Association of Circulating Vitamin D in Midlife With Increased Tau-PET Burden in Dementia-Free Adults
-Neurology Open Access
-, 2026; 2 (2) DOI:
-10.1212/WN9.0000000000000057
-American Academy of Neurology. (2026, April 7). Your vitamin D levels in midlife could shape your brain decades later.
-A large, decades-long study suggests that signs of ADHD in childhood may have consequences that extend well beyond school and behavior. Researchers followed nearly 11,000 people from childhood into ...
-Scientists Find âmaster Regulatorâ That Could Reverse Brain Aging
-Researchers have identified OTULIN, an immune-regulating enzyme, as a key trigger of tau buildup in the brain. When OTULIN was disabled, tau vanished from neurons and brain cells remained healthy. ...
-First Synthetic 'Mini Prion' Shows How Protein Misfolding Multiplies
-Prions transmit their abnormally folded shape onto other proteins. Researchers designed a synthetic fragment of the tau protein that exhibits prion-like behavior. Misfolded tau proteins are the ...
-Anti-Amyloid Drug Shows Signs of Preventing Alzheimer's Dementia
-An experimental drug appears to reduce the risk of Alzheimer's-related dementia in people destined to develop the disease in their 30s, 40s or 50s, according to the results of a new study. The ...
-Novel Tau PET Tracer Exhibits High Sensitivity and Specificity, Allowing for Earlier Identification of Alzheimer's Disease
-A new tau PET radiotracer,Â 18F-SNFT-1, has been found to be more effective than existing tau PET radiotracers in identifying Alzheimerâs disease in its earliest stages, according to research. In a ...
-Researchers Discover New Insights About Tau Proteins in People Living With ALS
-Investigators found elevated levels of tau and a phosphorylated form of the tau protein in brain tissue from deceased people who had amyotrophic lateral sclerosis (ALS) and carried a mutation in the ...
-Early Warning Signals of Esophageal Cancer May Be Hiding in Plain Sight
-âLike Liquid Metalâ: Scientists Create Strange Shape-Shifting Material
-Researchers Have Discovered a THC-Free Cannabis Compound That May Replace Opioids
-Common Blood Pressure Drug Shows Surprising Power Against Deadly Antibiotic-Resistant Superbug

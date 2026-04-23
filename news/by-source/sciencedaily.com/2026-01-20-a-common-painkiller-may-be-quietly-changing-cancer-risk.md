@@ -6,7 +6,7 @@ tier: 2
 tier_name: Science journalism
 title: A common painkiller may be quietly changing cancer risk
 date_published: '2026-01-20'
-content_hash: sha256:004cf6fe39ab4404fc145f015870b923e37e90edb185539e9159a2304d58c9a3
+content_hash: sha256:d45d063657934915295f0b10d3c1d9df5d7f93ae38765be8690f995df11173b2
 paywall: false
 claims:
 - id: sciencedaily.com-2026-01-20-a-common-painkiller-may-be-quietly-chang-001
@@ -27,34 +27,6 @@ claims:
   type: result
   category: FACTUAL
   verification_status: unverified
-  verification_source: null
-  linked_pmids: []
-- id: sciencedaily.com-2026-01-20-a-common-painkiller-may-be-quietly-chang-003
-  text: Researchers found that middle-aged adults, especially women, are far more
-    likely to be addicted to ultra-processed foods than older generations.
-  type: speculation
-  category: SPECULATIVE
-  verification_status: null
-  verification_source: null
-  linked_pmids: []
-- id: sciencedaily.com-2026-01-20-a-common-painkiller-may-be-quietly-chang-004
-  text: 'Outdoor Air Pollution May Increase Non-Lung Cancer Risk in Older Adults [CORRECTED]
-
-    Chronic exposure to fine particulate air pollutants (PM2.5) and nitrogen dioxide
-    (NO2) may increase non-lung cancer risk in older adults, according to new research.'
-  type: opinion
-  category: INTERPRETIVE
-  verification_status: null
-  verification_source: null
-  linked_pmids: []
-- id: sciencedaily.com-2026-01-20-a-common-painkiller-may-be-quietly-chang-005
-  text: 'HSD3B1 Gene Research Shows Association Between Genotype and Endometrial Cancer
-
-    The HSD3B1 gene could hold clues for predicting and treating endometrial cancer,
-    according to a novel finding.'
-  type: opinion
-  category: INTERPRETIVE
-  verification_status: null
   verification_source: null
   linked_pmids: []
 review_status: pending
@@ -121,19 +93,3 @@ The idea that a humble painkiller could help prevent cancer is both  exciting an
 For now, experts agree it’s wiser to focus on lifestyle-based prevention: eating anti-inflammatory foods,
 maintaining a healthy weight and staying physically active
 Everyday medicines may still hold unexpected potential, but until the science is settled, the most reliable advice remains simple: eat well, stay active, and talk with your doctor before relying on any medication for prevention.
-The Conversation. (2026, January 20). A common painkiller may be quietly changing cancer risk.
-Researchers found that middle-aged adults, especially women, are far more likely to be addicted to ultra-processed foods than older generations. Marketing of diet-focused processed foods in the 1980s ...
-Jacket Uses AI to Keep You Comfortable
-Electronic textiles, such as heating pads and electric blankets, can keep the wearer warm and help ease aches and pains. However, prolonged use of these devices could possibly cause heat-related ...
-Multi-Target Approach Counters Tumor Growth in Several Cancers
-The tissue adjacent to a tumor behaves differently than areas farther away: The tumor's cancerous cells influence their surroundings, blocking the body's immune defenses and creating a sort ...
-Women Living in More Walkable Neighborhoods Have Lower Rates of Obesity-Related Cancers
-Residing in a more walkable neighborhood protects against the risk of overall obesity-related cancers in women, specifically postmenopausal breast cancer, but also ovarian cancer, endometrial cancer, ...
-Outdoor Air Pollution May Increase Non-Lung Cancer Risk in Older Adults [CORRECTED]
-Chronic exposure to fine particulate air pollutants (PM2.5) and nitrogen dioxide (NO2) may increase non-lung cancer risk in older adults, according to new research. In a cohort study of millions of ...
-HSD3B1 Gene Research Shows Association Between Genotype and Endometrial Cancer
-The HSD3B1 gene could hold clues for predicting and treating endometrial cancer, according to a novel finding. Researchers found a certain HSD3B1 genotype was more common in women with type 2 ...
-Early Warning Signals of Esophageal Cancer May Be Hiding in Plain Sight
-âLike Liquid Metalâ: Scientists Create Strange Shape-Shifting Material
-Researchers Have Discovered a THC-Free Cannabis Compound That May Replace Opioids
-Common Blood Pressure Drug Shows Surprising Power Against Deadly Antibiotic-Resistant Superbug

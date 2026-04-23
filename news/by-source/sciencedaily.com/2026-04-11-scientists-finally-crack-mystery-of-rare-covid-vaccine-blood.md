@@ -6,7 +6,7 @@ tier: 2
 tier_name: Science journalism
 title: Scientists finally crack mystery of rare COVID vaccine blood clots
 date_published: '2026-04-11'
-content_hash: sha256:892626d3051b211fa86d2e82e866fcd44dcd8bfe16aadfb49b988bdec2bea542
+content_hash: sha256:7adc91694b3d337c48c0b47127b69310f22f1eeac2c4f3c1210fda43aa95e10d
 paywall: false
 claims:
 - id: sciencedaily.com-2026-04-11-scientists-finally-crack-mystery-of-rare-001
@@ -33,14 +33,6 @@ claims:
     vaccines play an important role in preventing disease.
   type: speculation
   category: SPECULATIVE
-  verification_status: null
-  verification_source: null
-  linked_pmids: []
-- id: sciencedaily.com-2026-04-11-scientists-finally-crack-mystery-of-rare-004
-  text: A rare condition surged among previously unaffected groups of people during
-    the COVID-19 pandemic and led to the deaths of nine patients, researchers say.
-  type: opinion
-  category: INTERPRETIVE
   verification_status: null
   verification_source: null
   linked_pmids: []
@@ -78,25 +70,3 @@ Immunologist Professor James McCluskey from the University of Melbourne and the 
 "It is a brilliant piece of molecular sleuthing, the culmination of a body of work that unravels the genetic and structural basis for how a normal immune response to a virus protein leads to pathogenic autoimmunity," says Professor McCluskey.
 With the exact trigger now identified, researchers say vaccine developers can adjust the pVII protein in adenovirus-based vaccines to remove this rare risk.
 These findings are expected to support the development of safer vaccines that remain effective and widely accessible, especially in regions where adenovirus-based vaccines play an important role in preventing disease.
-Jing Jing Wang, Linda SchÃ¶nborn, Theodore E. Warkentin, Luisa MÃ¼ller, Thomas Thiele, Lena Ulm, Uwe VÃ¶lker, Sabine Ameling, SÃ¶ren Franzenburg, Lars Kaderali, Ana Tzvetkova, Alex Colella, Tim Chataway, Chee Wee Tan, Bridie Armour, Alexander Troelnikov, Lucy Rutten, James McCluskey, Roland Zahn, Tom P. Gordon, Andreas Greinacher.
-Adenoviral Inciting Antigen and Somatic Hypermutation in VITT
-New England Journal of Medicine
-, 2026; 394 (7): 669 DOI:
-10.1056/NEJMoa2514824
-Flinders University. (2026, April 10). Scientists finally crack mystery of rare COVID vaccine blood clots.
-A rare condition surged among previously unaffected groups of people during the COVID-19 pandemic and led to the deaths of nine patients, researchers say. The condition is a type of autoimmune ...
-Researchers Find Male and Female Immune Systems Get Trained Differently in Response to Infections
-The human immune system is adaptive, remembering past infections and training itself to guard against future similar infections. But what happens when people have compromised immune systems due to ...
-Platelets Can Replicate the Benefits of Exercise in the Brain
-Researchers have found an injection of a specific blood factor can replicate the benefits of exercise in the brain. They've discovered that platelets secrete a protein, exerkine CXCL4/Platelet ...
-Complex Assembly Process Involved in DNA Virus Replication
-In a twist on the question, 'Which came first, the chicken or the egg?', scientists have long faced a similar question about how human adenovirus replicates: 'Which comes first, ...
-New Study Suggests Two Paths Toward 'Super Immunity' to COVID-19
-New laboratory research reveals more than one path toward robust immunity from COVID-19. A new study finds that two forms of immunity -- breakthrough infections following vaccination or natural ...
-How Vaccine-Induced Immune Thrombotic Thrombocytopenia (VITT) Happens
-July 7, 2021 Â
-Researchers recently discovered how, exactly, the COVID-19 vaccines that use adenovirus vectors trigger a rare but sometimes fatal blood clotting reaction called vaccine-induced immune thrombotic ...
-Early Warning Signals of Esophageal Cancer May Be Hiding in Plain Sight
-âLike Liquid Metalâ: Scientists Create Strange Shape-Shifting Material
-Researchers Have Discovered a THC-Free Cannabis Compound That May Replace Opioids
-Common Blood Pressure Drug Shows Surprising Power Against Deadly Antibiotic-Resistant Superbug

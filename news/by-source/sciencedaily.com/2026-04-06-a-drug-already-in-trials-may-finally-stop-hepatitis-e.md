@@ -6,36 +6,9 @@ tier: 2
 tier_name: Science journalism
 title: A drug already in trials may finally stop hepatitis E
 date_published: '2026-04-06'
-content_hash: sha256:921360d71d1a5243415dd6433511960167ba3ecb67c51f63ffdf427b1cef9de9
+content_hash: sha256:1383627e5f4c1b4dd79772d3081830fc17540459dee8a03885735045c12bb111
 paywall: false
-claims:
-- id: sciencedaily.com-2026-04-06-a-drug-already-in-trials-may-finally-sto-001
-  text: "Unchecked Emissions Could Double Heat-Related Child Mortality\nJuly 5, 2022\
-    \ Â\x97\nIf carbon emissions are limited to slow temperature rise, up to an estimated\
-    \ 6,000 child deaths could be prevented in Africa each year, according to new\
-    \ research."
-  type: opinion
-  category: INTERPRETIVE
-  verification_status: null
-  verification_source: null
-  linked_pmids: []
-- id: sciencedaily.com-2026-04-06-a-drug-already-in-trials-may-finally-sto-002
-  text: 'Hepatitis C Drugs Combined With Remdesivir Show Strong Effectiveness Against
-    COVID-19, Study Finds
-
-    A combination of remdesivir, a drug currently approved in the United States for
-    treating COVID-19 patients, and repurposed drugs for hepatitis C virus (HCV) was
-    10 times more effective at inhibiting ...'
-  type: event
-  category: FACTUAL
-  verification_status: verified
-  verification_source: corpus
-  linked_pmids:
-  - '40108113'
-  - '41117996'
-  - '40515479'
-  - '40563656'
-  - '40276504'
+claims: []
 review_status: pending
 credibility_score: 55.2
 ---
@@ -59,25 +32,3 @@ The disease was first documented in a major outbreak between 1955 to 1956, but i
 International Collaboration and Research Support
 This research involved the Department of Molecular and Medical Virology at Ruhr University Bochum, the Dao Thi Lab at the Center for Integrative Infectious Disease Research (CIID) of Heidelberg University Hospital, and the Lin Wang Lab at Peking University in China.
 The study received support from multiple funding sources, including the National Key Research and Development Program of China (2023YFC2306900), the research program "Antiviral Therapies" of the Baden-Württemberg Stiftung, the German Research Foundation within Collaborative Research Center 1129 (project number 240245660), the German Center for Infection Research -- TTU Hepatitis Project 05.823, the Beijing Municipal Natural Science Foundation (L244032), and the National Natural Science Foundation of China (82522053).
-Jungen Hu, Tianxu Liu, Mara KlÃ¶hn, Andrew Freistaedter, Elif Toprak, Huanting Chi, AndrÃ© GÃ¶mer, Lilli Pottkaemper, Paula Jordan, Xinyue Yang, He Zhang, Johanna Becker, Shirin Nkongolo, Volker Lohmann, Eike Steinmann, Lin Wang, Viet Loan Dao Thi.
-Nucleotide analogue bemnifosbuvir inhibits hepatitis E virus replication in preclinical models
-, 2026; gutjnl-2025-336714 DOI:
-10.1136/gutjnl-2025-336714
-Ruhr-University Bochum. (2026, April 6). A drug already in trials may finally stop hepatitis E.
-Researchers have discovered a way that ovarian cancer tumors manipulate their environment to resist immunotherapy and identified a drug target that could overcome that resistance. The study used a ...
-First Effective Treatment Found for Spitting Cobra Snakebite
-May 7, 2024 Â
-Scientists have discovered a new snakebite treatment to prevent the devastating tissue damage caused by African spitting cobra venom. Spitting cobra venom is incredibly potent and causes ...
-Off-Patent Liver Disease Drug Could Prevent COVID-19 Infection and Protect Against Future Variants, Researchers Find
-Scientists have identified an off-patent drug that can be repurposed to prevent COVID-19 -- and may be capable of protecting against future variants of the virus -- in research involving a unique mix ...
-Unchecked Emissions Could Double Heat-Related Child Mortality
-July 5, 2022 Â
-If carbon emissions are limited to slow temperature rise, up to an estimated 6,000 child deaths could be prevented in Africa each year, according to new research. New work estimated the impact of ...
-New Drug Combo Identified for Liver Cancer Via CRISPR-Cas9 Screen
-A research team has successfully repurposed an approved drug ifenprodil, a vasodilator, to be used in combination with the FDA-approved first-line drug sorafenib for hepatocellular carcinoma (HCC) ...
-Hepatitis C Drugs Combined With Remdesivir Show Strong Effectiveness Against COVID-19, Study Finds
-A combination of remdesivir, a drug currently approved in the United States for treating COVID-19 patients, and repurposed drugs for hepatitis C virus (HCV) was 10 times more effective at inhibiting ...
-Early Warning Signals of Esophageal Cancer May Be Hiding in Plain Sight
-âLike Liquid Metalâ: Scientists Create Strange Shape-Shifting Material
-Researchers Have Discovered a THC-Free Cannabis Compound That May Replace Opioids
-Common Blood Pressure Drug Shows Surprising Power Against Deadly Antibiotic-Resistant Superbug

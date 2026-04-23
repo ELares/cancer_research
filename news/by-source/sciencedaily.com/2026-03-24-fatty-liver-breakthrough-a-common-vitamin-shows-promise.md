@@ -6,7 +6,7 @@ tier: 2
 tier_name: Science journalism
 title: 'Fatty liver breakthrough: A common vitamin shows promise'
 date_published: '2026-03-24'
-content_hash: sha256:4de3dfecef04e4cbd28bd966dfddec7943e04ab1bd316aacf95dffe8feafd530
+content_hash: sha256:cfd0167c9719112740d8c2233a61b7f22da8883f2e90378459f6475e596970a1
 paywall: false
 claims:
 - id: sciencedaily.com-2026-03-24-fatty-liver-breakthrough-a-common-vitami-001
@@ -42,25 +42,3 @@ Study Support and Publication Details
 This work was supported by several organizations, including the National Research Foundation of Korea (NRF) and the Korea Research Institute of Bioscience and Biotechnology (KRIBB). The findings were published online in
 Metabolism: Clinical and Experimental
 . Key contributors include Dr. Yo Han Lee and Kieun Park from UNIST, along with Professor Joonho Jeong from Ulsan University Hospital and Jinyoung Lee from Pusan National University, who served as co-first authors.
-Yo Han Lee, Jinyoung Lee, Joonho Jeong, Kieun Park, Bukyung Baik, Yuseong Kwon, Kimyeong Kim, Keon Woo Khim, Haneul Ji, Ji Young Lee, Kwangho Kim, Ji Won Kim, Tam Dao, Misung Kim, Tae Young Lee, Yong Ryoul Yang, Haejin Yoon, Dongryeol Ryu, Seonghwan Hwang, Haeseung Lee, Dougu Nam, Won Kon Kim, Neung Hwa Park, Hwayoung Yun, Jang Hyun Choi.
-Hepatic miR-93 promotes the pathogenesis of metabolic dysfunction-associated steatotic liver disease by suppressing SIRT1
-, 2025; 169: 156266 DOI:
-10.1016/j.metabol.2025.156266
-UNIST. (2026, March 24). Fatty liver breakthrough: A common vitamin shows promise.
-A high-fat diet does more than overload the liver with fat. New research from MIT shows that prolonged exposure to fatty foods can push liver cells into a survival mode that quietly raises the risk ...
-Fatty Liver Breakthrough: A Safe, Cheap Vitamin Shows Promise
-Researchers identified microRNA-93 as a genetic driver of fatty liver disease and showed that vitamin B3 can effectively suppress it. This breakthrough suggests niacin could be repurposed as a ...
-New Approach Against Fatty Liver
-June 14, 2024 Â
-Fatty liver disease (steatotic liver disease, SLD for short) is increasingly causing failure of the liver as a vital organ. A team led by researchers has now discovered that a saturated fatty acid in ...
-Intermittent Fasting Protects Against Liver Inflammation and Liver Cancer
-May 7, 2024 Â
-Fatty liver disease often leads to chronic liver inflammation and can even result in liver cancer. Scientists have now shown in mice that intermittent fasting on a 5:2 schedule can halt this ...
-Pressure in the Biliary System Leads to Tissue Changes in the Liver
-The liver produces bile, which the intestine uses for digestion. For the transport of bile, the liver relies on a network of microscopic tubings, known as bile canaliculi, formed by liver cells ...
-About 1 in 4 Adults Has an Often-Missed Liver Disorder Linked to Higher Heart Disease Risk
-It is estimated that about one in four adults worldwide has an abnormal build-up of fat in the liver, called non-alcoholic fatty liver disease (NAFLD). NAFLD can lead to permanent liver damage, and ...
-Early Warning Signals of Esophageal Cancer May Be Hiding in Plain Sight
-âLike Liquid Metalâ: Scientists Create Strange Shape-Shifting Material
-Researchers Have Discovered a THC-Free Cannabis Compound That May Replace Opioids
-Common Blood Pressure Drug Shows Surprising Power Against Deadly Antibiotic-Resistant Superbug

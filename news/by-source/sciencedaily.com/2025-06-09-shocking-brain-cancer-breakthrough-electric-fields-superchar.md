@@ -6,7 +6,7 @@ tier: 2
 tier_name: Science journalism
 title: 'Shocking brain cancer breakthrough: Electric fields supercharge immune assault'
 date_published: '2025-06-09'
-content_hash: sha256:ea725f3f6895727fb3be722f468034c118b83d10258f070ecb0ae4f54eabf018
+content_hash: sha256:44015ca1b0b443d346b6d2bfab1be59becc5d33b272ae7b7a76b0de32d397ece
 paywall: false
 claims:
 - id: sciencedaily.com-2025-06-09-shocking-brain-cancer-breakthrough-elect-001
@@ -94,67 +94,8 @@ claims:
   - '39705641'
   - '38375030'
   - '33129040'
-- id: sciencedaily.com-2025-06-09-shocking-brain-cancer-breakthrough-elect-008
-  text: 'Efficacy and safety of adjuvant TTFields plus pembrolizumab and temozolomide
-    in newly diagnosed glioblastoma: A phase 2 study
-
-    , 2025; 100708 DOI:
-
-    10.1016/j.medj.2025.100708
-
-    University of Southern California - Health Sciences. (2025, June 9).'
-  type: result
-  category: FACTUAL
-  verification_status: verified
-  verification_source: pubmed
-  linked_pmids:
-  - '41997804'
-  - '41995880'
-  - '41987364'
-  - '41971274'
-  - '41967661'
-- id: sciencedaily.com-2025-06-09-shocking-brain-cancer-breakthrough-elect-009
-  text: Interim data from the Phase I dose escalation part of the mRNA cancer immunotherapy
-    (mRNA-4359), show promise in patients with advanced solid cancers.
-  type: result
-  category: FACTUAL
-  verification_status: verified
-  verification_source: corpus
-  linked_pmids:
-  - '41490885'
-  - '41775435'
-  - '39920148'
-  - '40450573'
-  - '40779733'
-- id: sciencedaily.com-2025-06-09-shocking-brain-cancer-breakthrough-elect-010
-  text: "Encouraging Phase 1 Data for Glioblastoma Treatment\nJune 6, 2024 Â\x97\n\
-    Preliminary clinical data for glioblastoma multiforme patients enrolled in a Phase\
-    \ 1 clinical trial demonstrated that 92 percent of evaluable patients treated\
-    \ with INB-200 exceeded a median ..."
-  type: result
-  category: FACTUAL
-  verification_status: verified
-  verification_source: corpus
-  linked_pmids:
-  - '41537177'
-  - '41540424'
-  - '40779733'
-  - '40595067'
-  - '40309350'
-- id: sciencedaily.com-2025-06-09-shocking-brain-cancer-breakthrough-elect-011
-  text: Glioblastomas are almost always lethal with a median survival time of 14 ...
-  type: result
-  category: FACTUAL
-  verification_status: verified
-  verification_source: pubmed
-  linked_pmids:
-  - '42020859'
-  - '42020844'
-  - '42020378'
-  - '42019175'
-  - '42018124'
 review_status: pending
-credibility_score: 48.8
+credibility_score: 46.7
 ---
 
 Shocking brain cancer breakthrough: Electric fields supercharge immune assault
@@ -185,26 +126,3 @@ Keck Medicine is participating in the multicenter Phase 3 clinical trial to vali
 This Phase 3 trial, currently open at 28 sites across the United States, Europe and Israel, aims to enroll over 740 patients through April 2029, including those with gross total resection, partial resection or biopsy-only tumors to assess the extent of how surgically removing tumors influences immune response.
 Keck School of Medicine of USC authors of this study include Dongjiang Chen, PhD, assistant professor of research neurological surgery; Son Le, PhD, assistant professor of research neurological surgery; Harshit Manektalia, research programmer; Ming Li, PhD, professor of research population and public health sciences; and Adam O'Dell, research lab specialist. Ashley Ghiaseddin, MD, and Maryam Rahman, MD, MS, colleagues from the University of Florida, also contributed to this work.
 This study was funded by a grant from Novocure, which manufactures Optune, the TTFields device used in this study. Tran has received honoraria from Novocure for consultant work. Chen and Tran are inventors of two patent applications related to work reported in this study
-Dongjiang Chen, Son B. Le, Ashley P. Ghiaseddin, Harshit Manektalia, Ming Li, Adam OâDell, Maryam Rahman, David D. Tran.
-Efficacy and safety of adjuvant TTFields plus pembrolizumab and temozolomide in newly diagnosed glioblastoma: A phase 2 study
-, 2025; 100708 DOI:
-10.1016/j.medj.2025.100708
-University of Southern California - Health Sciences. (2025, June 9). Shocking brain cancer breakthrough: Electric fields supercharge immune assault.
-Interim data from the Phase I dose escalation part of the mRNA cancer immunotherapy (mRNA-4359), show promise in patients with advanced solid cancers. The investigational mRNA cancer immunotherapy is ...
-Electrical Currents May Make Body's Cancer-Killing Cells Even Better Killers
-July 25, 2024 Â
-Scientists have discovered that electrical currents may make Natural Killer (NK) cells -- our very own cancer-killing immune cells -- even better killers, which could have significant implications ...
-Encouraging Phase 1 Data for Glioblastoma Treatment
-June 6, 2024 Â
-Preliminary clinical data for glioblastoma multiforme patients enrolled in a Phase 1 clinical trial demonstrated that 92 percent of evaluable patients treated with INB-200 exceeded a median ...
-Genetically Engineering a Treatment for Incurable Brain Tumors
-Scientists are developing and validating a patent-pending novel immunotherapy to be used against glioblastoma brain tumors. Glioblastomas are almost always lethal with a median survival time of 14 ...
-Nanotechnology Used to Destroy and Prevent Relapse of Solid Tumor Cancers
-June 7, 2022 Â
-As people across the globe look forward to longer life expectancies, malignant cancers continue to pose threats to human health. The exploration and development of immunotherapy aims to seek new ...
-Burst of Radiation and Vesicles-Based Immunotherapy Suppress Brain Cancer Growth
-The priming of glioblastoma with a burst of radiation increased dramatically the uptake of extracellular vesicles-based immunotherapy by the tumor and the surrounding microenvironment, halting tumor ...
-Early Warning Signals of Esophageal Cancer May Be Hiding in Plain Sight
-âLike Liquid Metalâ: Scientists Create Strange Shape-Shifting Material
-Researchers Have Discovered a THC-Free Cannabis Compound That May Replace Opioids
-Common Blood Pressure Drug Shows Surprising Power Against Deadly Antibiotic-Resistant Superbug

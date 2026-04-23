@@ -6,7 +6,7 @@ tier: 2
 tier_name: Science journalism
 title: "Why colorectal cancer breaks the immune systemâ\x80\x99s rules"
 date_published: '2026-02-06'
-content_hash: sha256:ef0e711db813604e2dbdc9be4b1e83ae5dd6e09c26a9b147fafbc82960ef7018
+content_hash: sha256:f553128dddc2d77e48f6894498ab2e1c8cf72650c12b3d6ab8f4fe749885b4f1
 paywall: false
 claims:
 - id: sciencedaily.com-2026-02-06-why-colorectal-cancer-breaks-the-immune--001
@@ -74,38 +74,8 @@ claims:
   verification_status: null
   verification_source: null
   linked_pmids: []
-- id: sciencedaily.com-2026-02-06-why-colorectal-cancer-breaks-the-immune--007
-  text: 'Bacteria Subtype Linked to Growth in Up to 50% of Human Colorectal Cancers
-
-    Researchers have found that a specific subtype of a microbe commonly found in
-    the mouth is able to travel to the gut and grow within colorectal cancer tumors.'
-  type: result
-  category: FACTUAL
-  verification_status: verified
-  verification_source: corpus
-  linked_pmids:
-  - '40846998'
-  - '41231502'
-  - '40652009'
-  - '39837982'
-  - '39739618'
-- id: sciencedaily.com-2026-02-06-why-colorectal-cancer-breaks-the-immune--008
-  text: "Biomaterial-Delivered One-Two Punch Boosts Cancer Immunotherapy\nJuly 13,\
-    \ 2023 Â\x97\nIn contrast to different blood cancers, the effectiveness of adoptive\
-    \ T cell therapies in the treatment of solid tumors, which comprise about 90%\
-    \ of all tumors, has been very limited because of ..."
-  type: result
-  category: FACTUAL
-  verification_status: verified
-  verification_source: corpus
-  linked_pmids:
-  - '41355950'
-  - '41277911'
-  - '41526899'
-  - '41501774'
-  - '41560593'
 review_status: pending
-credibility_score: 47.2
+credibility_score: 39.2
 ---
 
 Why colorectal cancer breaks the immune systemâs rules
@@ -157,25 +127,3 @@ Additional authors include Emma Andretta, Nima Hooshdaran, Aazam Ghelani, Eric W
 The Integrated Genomics Operation and the Single Cell Research Initiative at MSK played key roles in the research.
 Dr. Rudensky serves on scientific advisory boards and holds equity in Sonoma Biotherapeutics, RAPT Therapeutics, Coherus Oncology, Santa Ana Bio, Odyssey Therapeutics, and Nilo Therapeutics. He is also a scientific advisory board member of Amgen, BioInvent, and Vedanta Biosciences, has consulted for AbbVie, and serves as an editor of the Journal of Experimental Medicine and an editorial advisor to Immunity.
 Dr. Rudensky and Dr. Plitas are inventors on patents and patent applications held by MSK related to CCR8-based therapeutic depletion of tumoral Treg cells and novel antibodies against CCR8.
-Xiao Huang, Dan Feng, Sneha Mitra, Emma S. Andretta, Nima B. Hooshdaran, Aazam P. Ghelani, Eric Y. Wang, Joe N. Frost, Victoria R. Lawless, Aparna Vancheswaran, Qingwen Jiang, Cheryl Mai, Karuna Ganesh, Christina S. Leslie, Alexander Y. Rudensky.
-Opposing functions of distinct regulatory T cell subsets in colorectal cancer
-, 2026; 59 (1): 145 DOI:
-10.1016/j.immuni.2025.11.014
-Memorial Sloan Kettering Cancer Center. (2026, February 6). Why colorectal cancer breaks the immune systemâs rules.
-Scientists at KAIST have found a way to turn a tumorâs own immune cells into powerful cancer fightersâright inside the body. Tumors are packed with macrophages, immune cells that should attack ...
-Multi-Target Approach Counters Tumor Growth in Several Cancers
-The tissue adjacent to a tumor behaves differently than areas farther away: The tumor's cancerous cells influence their surroundings, blocking the body's immune defenses and creating a sort ...
-Bacteria Subtype Linked to Growth in Up to 50% of Human Colorectal Cancers
-Researchers have found that a specific subtype of a microbe commonly found in the mouth is able to travel to the gut and grow within colorectal cancer tumors. This microbe is also a culprit for ...
-Biomaterial-Delivered One-Two Punch Boosts Cancer Immunotherapy
-July 13, 2023 Â
-In contrast to different blood cancers, the effectiveness of adoptive T cell therapies in the treatment of solid tumors, which comprise about 90% of all tumors, has been very limited because of ...
-How Regulatory T Cells Halt Aberrant, Self-Reactive T Cells
-New research findings show in detail how self-reactive T cells -- white blood cells dubbed Teffs that mistakenly attack healthy instead of infected cells, thereby causing an autoimmune or an ...
-Face Shields Don't Give High Level COVID Protection, Study Shows
-July 27, 2022 Â
-New research shows that face shields didn't give high levels of protection against COVID. They were a popular choice of PPE during the pandemic, but until now there hasn't been a great deal ...
-Early Warning Signals of Esophageal Cancer May Be Hiding in Plain Sight
-âLike Liquid Metalâ: Scientists Create Strange Shape-Shifting Material
-Researchers Have Discovered a THC-Free Cannabis Compound That May Replace Opioids
-Common Blood Pressure Drug Shows Surprising Power Against Deadly Antibiotic-Resistant Superbug

@@ -6,7 +6,7 @@ tier: 2
 tier_name: Science journalism
 title: New AI tool predicts cancer spread with surprising accuracy
 date_published: '2026-03-21'
-content_hash: sha256:c1b33c6df625925584d3e84f677fcfcee14d133a771905f9cf447733710a753b
+content_hash: sha256:4de2292a281006d8481b02ec2bba633010e0784c401b287a16d16f5fe41b9c4d
 paywall: false
 claims:
 - id: sciencedaily.com-2026-03-21-new-ai-tool-predicts-cancer-spread-with--001
@@ -40,16 +40,6 @@ claims:
   verification_status: unverified
   verification_source: null
   linked_pmids: []
-- id: sciencedaily.com-2026-03-21-new-ai-tool-predicts-cancer-spread-with--004
-  text: 'Spontaneous Baby Movements Have Purpose
-
-    Spontaneous, random baby movements aid development of their sensorimotor system,
-    according to new research.'
-  type: opinion
-  category: INTERPRETIVE
-  verification_status: null
-  verification_source: null
-  linked_pmids: []
 review_status: pending
 credibility_score: 39.2
 ---
@@ -76,24 +66,3 @@ After training, the model was able to predict metastasis and colon cancer recurr
 Toward More Personalized Cancer Care
 MangroveGS can work directly with tumor samples collected in hospitals. Cells are analyzed, their RNA is sequenced, and a metastasis risk score is quickly generated and shared securely with doctors and patients through an encrypted platform.
 "This information will prevent the overtreatment of low-risk patients, thereby limiting side effects and unnecessary costs, while intensifying the monitoring and treatment of those at high risk," says Ariel Ruiz i Altaba. "It also offers the possibility of optimizing the selection of participants in clinical trials, reducing the number of volunteers required, increasing the statistical power of studies, and providing therapeutic benefits to the patients who need it most."
-Aravind Srinivasan, Arwen Conod, Yann Tapponnier, Marianna Silvano, Luca DallâOlio, CÃ©line Delucinge-Vivier, Isabel Borges-Grazina, Ariel Ruiz i Altaba.
-Emergence of high-metastatic potentials and prediction of recurrence and metastasis
-, 2026; 45 (1): 116834 DOI:
-10.1016/j.celrep.2025.116834
-UniversitÃ© de GenÃ¨ve. (2026, March 21). New AI tool predicts cancer spread with surprising accuracy.
-A recent study marks the first reported instance of generative AI designing synthetic molecules that can successfully control gene expression in healthy mammalian cells. As a proof-of-concept, the ...
-Multi-Target Approach Counters Tumor Growth in Several Cancers
-The tissue adjacent to a tumor behaves differently than areas farther away: The tumor's cancerous cells influence their surroundings, blocking the body's immune defenses and creating a sort ...
-Glioblastoma: New Treatment Attacks Brain Tumors from Multiple Angles
-Glioblastoma is the most common kind of malignant brain tumor in adults. So far, no treatment has been able to make this aggressive tumor permanently disappear. The tumor cells are too varied, and ...
-Spontaneous Baby Movements Have Purpose
-Spontaneous, random baby movements aid development of their sensorimotor system, according to new research. Detailed motion capture of newborns and infants was combined with a musculoskeletal ...
-Colon Cancer: Dying Cancer Cells Give Neighboring Tumor Cells Instructions on How to Survive
-Researchers have discovered a new mechanism that explains why only some of the cells in a colon tumor respond to chemotherapy. The research team was able to establish that tumor cells dying off ...
-Childhood Cancer Discovery May Stop Tumor Spread Before It Starts
-June 1, 2021 Â
-A new discovery in Ewing sarcoma, an aggressive and often fatal childhood cancer, has uncovered the potential to prevent cancer cells from spreading beyond their primary tumour site. Researchers have ...
-Early Warning Signals of Esophageal Cancer May Be Hiding in Plain Sight
-âLike Liquid Metalâ: Scientists Create Strange Shape-Shifting Material
-Researchers Have Discovered a THC-Free Cannabis Compound That May Replace Opioids
-Common Blood Pressure Drug Shows Surprising Power Against Deadly Antibiotic-Resistant Superbug

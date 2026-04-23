@@ -6,7 +6,7 @@ tier: 2
 tier_name: Science journalism
 title: A common nutrient could supercharge cancer treatment
 date_published: '2026-04-10'
-content_hash: sha256:0a4c7bba7dbdc5a0cb8c862e3ca5cf3430e93e555e03b1eb084b7744075d007f
+content_hash: sha256:7dd766d9e3fdb3f3e6d5d0ea3eddce756dbd953c24c585c115dbf7106dc86f91
 paywall: false
 claims:
 - id: sciencedaily.com-2026-04-10-a-common-nutrient-could-supercharge-canc-001
@@ -21,22 +21,6 @@ claims:
   verification_status: null
   verification_source: null
   linked_pmids: []
-- id: sciencedaily.com-2026-04-10-a-common-nutrient-could-supercharge-canc-002
-  text: 'Experimental mRNA Cancer Vaccine Shows Potential for Advanced Stage Cancer
-    Patients in Phase 1 Trial
-
-    Interim data from the Phase I dose escalation part of the mRNA cancer immunotherapy
-    (mRNA-4359), show promise in patients with advanced solid cancers.'
-  type: speculation
-  category: FACTUAL
-  verification_status: verified
-  verification_source: corpus
-  linked_pmids:
-  - '41231502'
-  - '41036598'
-  - '41493473'
-  - '41496455'
-  - '41601019'
 review_status: pending
 credibility_score: 55.2
 ---
@@ -65,27 +49,3 @@ While the results are promising, the researchers stress that the work is still i
 "Our findings open a new field of nutritional immunology that looks at how specific dietary components interact with the immune system at the molecular level," Chen said. "With more research, we may discover natural compounds that make today's cancer therapies more effective and accessible."
 The study, "Zeaxanthin augments CD8+ effector T cell function and immunotherapy efficacy," was supported by grants from the National Institutes of Health, the Ludwig Center at the University of Chicago, and the Harborview Foundation Gift Fund.
 Additional authors include Freya Zhang, Jiacheng Li, Rukang Zhang, Jiayi Tu, Zhicheng Xie, Takemasa Tsuji, Hardik Shah, Matthew Ross, Ruitu Lyu, Junko Matsuzaki, Anna Tabor, Kelly Xue, Chunzhao Yin, Hamed R. Youshanlouei, Syed Shah, Michael W. Drazer, Yu-Ying He, Marc Bissonnette, Jun Huang, Chuan He, Kunle Odunsi, and Hao Fan from the University of Chicago; Fatima Choudhry from DePaul University, Chicago; Yuancheng Li and Hui Mao from Emory University School of Medicine, Atlanta; Lei Dong from University of Texas Southwestern Medical Center, Dallas; and Rui Su from Beckman Research Institute, City of Hope, Duarte, CA.
-Freya Q. Zhang, Jiacheng Li, Rukang Zhang, Jiayi Tu, Zhicheng Xie, Takemasa Tsuji, Hardik Shah, Matthew O. Ross, Ruitu Lyu, Junko Matsuzaki, Anna Tabor, Kelly Xue, Fatima Choudhry, Chunzhao Yin, Hamed R. Youshanlouei, Syed Shah, Michael W. Drazer, Yu-Ying He, B. Marc Bissonnette, Yuancheng Li, Hui Mao, Jun Huang, Lei Dong, Rui Su, Chuan He, Kunle Odunsi, Jing Chen, Hao Fan.
-Zeaxanthin augments CD8  effector T cell function and immunotherapy efficacy
-Cell Reports Medicine
-, 2025; 6 (9): 102324 DOI:
-10.1016/j.xcrm.2025.102324
-University of Chicago Medical Center. (2026, April 10). A common nutrient could supercharge cancer treatment.
-Zeaxanthin, best known for eye health, has been found to boost the tumor-killing power of T cells. Researchers showed it strengthens T-cell receptors, enhances immune signaling, and improves the ...
-Evaluating the Safety and Efficacy of a Smallpox Vaccine for Preventing Mpox
-May 8, 2025 Â
-The recent global monkeypox (mpox) outbreak, with a new and aggressive variant, has underscored the dire need for safe, broadly effective, and accessible vaccines. The LC16m8 vaccine, an attenuated ...
-Experimental mRNA Cancer Vaccine Shows Potential for Advanced Stage Cancer Patients in Phase 1 Trial
-Interim data from the Phase I dose escalation part of the mRNA cancer immunotherapy (mRNA-4359), show promise in patients with advanced solid cancers. The investigational mRNA cancer immunotherapy is ...
-To Boost Cancer Immunotherapy's Fighting Power, Look to the Gut
-May 3, 2023 Â
-Immunotherapy has redefined cancer treatment, but not all patients experience the same benefit when treated. New research in mice identifies how gut bacteria alter the body's response to a ...
-Cancer-Seeking Molecular Delivery System Could Boost Immunotherapy Drug
-Researchers have demonstrated a promising new approach to delivering immunotherapy agents to fight cancer. The approach involves tethering an immunotherapy agent called a STING agonist to an ...
-Machine Learning Helps in Predicting When Immunotherapy Will Be Effective
-June 30, 2021 Â
-Cancer cells can put the body's immune cells into sleep mode. Immunotherapy can reverse this, but it doesn't work for all patients and all cancer types. Researchers have now developed ...
-Early Warning Signals of Esophageal Cancer May Be Hiding in Plain Sight
-âLike Liquid Metalâ: Scientists Create Strange Shape-Shifting Material
-Researchers Have Discovered a THC-Free Cannabis Compound That May Replace Opioids
-Common Blood Pressure Drug Shows Surprising Power Against Deadly Antibiotic-Resistant Superbug

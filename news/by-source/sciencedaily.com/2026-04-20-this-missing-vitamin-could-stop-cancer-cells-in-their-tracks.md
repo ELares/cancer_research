@@ -6,7 +6,7 @@ tier: 2
 tier_name: Science journalism
 title: This missing vitamin could stop cancer cells in their tracks
 date_published: '2026-04-20'
-content_hash: sha256:be2557651a72db72a33c46cefc4773f2c70d1ae39be8338af38f8191d0de2546
+content_hash: sha256:3169115eef7c39c2d70b5d6c352708082a7ffaac27dc419e6227dc8aaaf617bd
 paywall: false
 claims: []
 review_status: pending
@@ -36,25 +36,3 @@ mutations found in patients can directly trigger this increased dependence on gl
 Why Some Cancer Treatments Fail and What Comes Next
 The findings also help explain why therapies aimed at blocking glutamine do not always succeed. Cancer cells can switch to alternative metabolic pathways to survive.
 "In the longer term, this research opens up new avenues for better understanding the metabolic vulnerabilities of cancers and for designing innovative therapeutic strategies that take into account the great metabolic flexibility of tumor cells, notably by targeting several metabolic pathways simultaneously," concludes Alexis Jourdain, senior author of the study.
-Miriam Lisci, Fanny Vericel, Yifan Liu, Hector Gallart-Ayala, Julijana Ivanisevic, Owen S. Skinner, Alexis A. Jourdain.
-Functional nutrient-genetic profiling reveals biotin and FBXW7 are essential to bypass glutamine addiction
-, 2026; 86 (5): 901 DOI:
-10.1016/j.molcel.2026.02.002
-University of Lausanne. (2026, April 20). This missing vitamin could stop cancer cells in their tracks.
-A gene called SDR42E1 has been identified as a key player in how our bodies absorb and process vitamin D. Researchers found that disabling this gene in colorectal cancer cells not only crippled their ...
-New Gene Editing Tool Shows Promise for Treating Diseases With Multiple Mutations
-Investigators have developed STITCHR, a new gene editing tool that can insert therapeutic genes into specific locations without causing unwanted mutations. The system can be formulated completely as ...
-Study Links Metabolism Changes in Certain Brain Cells to Huntington's Disease
-A research team has linked the mutation that causes Huntington's disease to developmental deficits in the brain's oligodendrocyte cells that are caused by changes in metabolism. They found ...
-Most 'Silent' Genetic Mutations Are Harmful, Not Neutral -- A Finding With Broad Implications
-June 8, 2022 Â
-Occasionally, single-letter misspellings in the genetic code, known as point mutations, occur. Point mutations that alter the resulting protein sequences are called nonsynonymous mutations, while ...
-Researchers Discover a Dependency of Glioblastoma on Biotin Distribution
-Researchers have discovered that the FDA-approved anti-fungal drug, sulconazole, exhibits anti-cancer properties towards glioblastoma cells. An in-depth investigation of this compound revealed that ...
-Vitamin D Deficiency May Increase Risk for Addiction to Opioids and Ultraviolet Rays
-June 11, 2021 Â
-Lab animals deficient in vitamin D crave and become dependent on opioids, which is curbed when normal levels of the vitamin are restored. Human health records indicate that people with low vitamin D ...
-Early Warning Signals of Esophageal Cancer May Be Hiding in Plain Sight
-âLike Liquid Metalâ: Scientists Create Strange Shape-Shifting Material
-Researchers Have Discovered a THC-Free Cannabis Compound That May Replace Opioids
-Common Blood Pressure Drug Shows Surprising Power Against Deadly Antibiotic-Resistant Superbug

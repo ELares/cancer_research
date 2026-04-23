@@ -7,7 +7,7 @@ tier_name: Science journalism
 title: New approach to treating aggressive breast cancers shows significant improvement
   in survival
 date_published: '2025-05-13'
-content_hash: sha256:b43d4c5328e563219a46ff8a9602503b2b0186863583ca22d38f8069a1ca94a6
+content_hash: sha256:d11a0bf2c3b27c907d31dd305eb4772a0922ea3f4f67ea93ce1a4bece7f07413
 paywall: false
 claims:
 - id: sciencedaily.com-2025-05-13-new-approach-to-treating-aggressive-brea-001
@@ -85,68 +85,8 @@ claims:
   verification_status: unverified
   verification_source: null
   linked_pmids: []
-- id: sciencedaily.com-2025-05-13-new-approach-to-treating-aggressive-brea-009
-  text: 'Neoadjuvant PARP inhibitor scheduling in BRCA1 and BRCA2 related breast cancer:
-    PARTNER, a randomized phase II/III trial
-
-    Nature Communications
-
-    , 2025; 16 (1) DOI:
-
-    10.1038/s41467-025-59151-0
-
-    University of Cambridge. (2025, May 13).'
-  type: mechanism
-  category: FACTUAL
-  verification_status: verified
-  verification_source: corpus
-  linked_pmids:
-  - '40192976'
-- id: sciencedaily.com-2025-05-13-new-approach-to-treating-aggressive-brea-010
-  text: Patients with pancreatic cancer who received chemotherapy both before and
-    after surgery experienced longer survival rates than would be expected from surgery
-    followed by chemotherapy, according to a ...
-  type: opinion
-  category: INTERPRETIVE
-  verification_status: null
-  verification_source: null
-  linked_pmids: []
-- id: sciencedaily.com-2025-05-13-new-approach-to-treating-aggressive-brea-011
-  text: "Encouraging Phase 1 Data for Glioblastoma Treatment\nJune 6, 2024 Â\x97\n\
-    Preliminary clinical data for glioblastoma multiforme patients enrolled in a Phase\
-    \ 1 clinical trial demonstrated that 92 percent of evaluable patients treated\
-    \ with INB-200 exceeded a median ...\n'Exhausted' Immune Cells in Healthy Women\
-    \ Could Be Target for Breast Cancer Prevention\nPeople carrying BRCA1 and BRCA2\
-    \ gene mutations are at high risk of developing breast and ovarian cancer."
-  type: result
-  category: FACTUAL
-  verification_status: verified
-  verification_source: corpus
-  linked_pmids:
-  - '41737316'
-  - '41417728'
-  - '40923270'
-  - '41158759'
-  - '41277911'
-- id: sciencedaily.com-2025-05-13-new-approach-to-treating-aggressive-brea-012
-  text: 'Advanced Melanoma Survival Improves Significantly When Immunotherapy Is Given
-    Before Targeted Therapy
-
-    A clinical trial showed a remarkable 20 percent advantage in the two-year overall
-    survival rate for people with advanced melanoma who first received immunotherapy
-    (72 percent survival rate) versus ...'
-  type: result
-  category: FACTUAL
-  verification_status: verified
-  verification_source: corpus
-  linked_pmids:
-  - '41355950'
-  - '41277911'
-  - '41526899'
-  - '41266946'
-  - '41342316'
 review_status: pending
-credibility_score: 30.7
+credibility_score: 20.0
 ---
 
 New approach to treating aggressive breast cancers shows significant improvement in survival
@@ -177,26 +117,3 @@ Chief Executive of Cancer Research UK, Michelle Mitchell, said:"One of the best 
 "Research like this can help find safer and kinder ways to treat certain types of cancer. Further studies in more patients are needed to confirm whether this new technique is safe and effective enough to be used by the NHS."
 Professor Abraham and team are now planning the next phase of the research, which will look to replicate the results in a larger study and confirm that the Partner approach offers a less toxic treatment for patients as well as being more cost effective, compared to the current standard of care.
 The Partner trial was sponsored by Cambridge University Hospitals NHS Foundation Trust and the University of Cambridge, funded by Cancer Research UK and AstraZeneca, and supported by the NIHR Cambridge Biomedical Research Centre, the Cancer Research UK Cambridge Centre and Addenbrooke's Charitable Trust (ACT).
-. The original text of this story is licensed under a <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License</a>.
-Jean E. Abraham, Lenka Oplustil OâConnor, Louise Grybowicz, Karen Pinilla Alba, Alimu Dayimu, Nikolaos Demiris, Caron Harvey, Lynsey M. Drewett, Rebecca Lucey, Alexander Fulton, Anne N. Roberts, Joanna R. Worley, Ms Anita Chhabra, Wendi Qian, Jessica Brown, Richard Hardy, Anne-Laure Vallier, Steve Chan, Maria Esther Una Cidon, Elizabeth Sherwin, Amitabha Chakrabarti, Claire Sadler, Jen Barnes, Mojca Persic, Sarah Smith, Sanjay Raj, Annabel Borley, Jeremy P. Braybrooke, Emma Staples, Lucy C. Scott, Cheryl A. Palmer, Margaret Moody, Mark J. Churn, Domenic Pilger, Guido Zagnoli-Vieira, Paul W. G. Wijnhoven, Mukesh B. Mukesh, Rebecca R. Roylance, Philip C. Schouten, Nicola C. Levitt, Karen McAdam, Anne C. Armstrong, Ellen R. Copson, Emma McMurtry, Susan Galbraith, Marc Tischkowitz, Elena Provenzano, Mark J. OâConnor, Helena M. Earl.
-Neoadjuvant PARP inhibitor scheduling in BRCA1 and BRCA2 related breast cancer: PARTNER, a randomized phase II/III trial
-Nature Communications
-, 2025; 16 (1) DOI:
-10.1038/s41467-025-59151-0
-University of Cambridge. (2025, May 13). New approach to treating aggressive breast cancers shows significant improvement in survival.
-Patients with pancreatic cancer who received chemotherapy both before and after surgery experienced longer survival rates than would be expected from surgery followed by chemotherapy, according to a ...
-Encouraging Phase 1 Data for Glioblastoma Treatment
-June 6, 2024 Â
-Preliminary clinical data for glioblastoma multiforme patients enrolled in a Phase 1 clinical trial demonstrated that 92 percent of evaluable patients treated with INB-200 exceeded a median ...
-'Exhausted' Immune Cells in Healthy Women Could Be Target for Breast Cancer Prevention
-People carrying BRCA1 and BRCA2 gene mutations are at high risk of developing breast and ovarian cancer. Researchers have found that changes occur in the immune cells of breast tissue in carriers of ...
-Lung Cancer Outcomes Significantly Improved With Immunotherapy-Based Treatment Given Before and After Surgery
-A regimen of pre-surgical immunotherapy and chemotherapy followed by post-surgical immunotherapy significantly improved event-free survival (EFS) and pathologic complete response (pCR) rates compared ...
-Advanced Melanoma Survival Improves Significantly When Immunotherapy Is Given Before Targeted Therapy
-A clinical trial showed a remarkable 20 percent advantage in the two-year overall survival rate for people with advanced melanoma who first received immunotherapy (72 percent survival rate) versus ...
-Pancreatic Cancer: Cellular Process Suggests Path to New Treatment Options
-Drug resistance is a major obstacle in the treatment of cancers. In an aggressive type of pancreatic cancer, for instance, drug resistance is associated with the suppression of programmed cell death, ...
-Early Warning Signals of Esophageal Cancer May Be Hiding in Plain Sight
-âLike Liquid Metalâ: Scientists Create Strange Shape-Shifting Material
-Researchers Have Discovered a THC-Free Cannabis Compound That May Replace Opioids
-Common Blood Pressure Drug Shows Surprising Power Against Deadly Antibiotic-Resistant Superbug

@@ -6,7 +6,7 @@ tier: 2
 tier_name: Science journalism
 title: New genetic test can diagnose brain tumors in as little as two hours
 date_published: '2025-05-21'
-content_hash: sha256:c927b6fcdf3a6122fd61b131873596626cf59b626bc94b3c92be1b8c255c2882
+content_hash: sha256:ca6ad84e587811aa7953c0b5440eb45aa3ca3cacce5c73d025a6deaf76022247
 paywall: false
 claims:
 - id: sciencedaily.com-2025-05-21-new-genetic-test-can-diagnose-brain-tumo-001
@@ -75,25 +75,3 @@ The team are now looking to get the new testing rolled out at NHS Trusts across 
 "Not only is the test more accurate and quicker, but it is also cheaper than current methods," said Professor Loose. "Our calculations stand at around £450 per person, potentially less when scaled-up. There are a few reasons for this. Our method can eliminate the need for four to five separate tests, reducing costs as a consequence as we are getting more information from the single test we do. Most importantly, it delivers results to the patients when they need them."
 Dr Simon Newman, Chief Scientific Officer at The Brain Tumour Charity, said: "The delivery of an accurate diagnosis within hours of surgery will be transformative for all patients ensuring rapid access to the optimal standard of care and -- crucially -- removing the uncertainty patients face when having to wait weeks for their diagnosis and prognosis.
 "The potential to combine so many separate tests into one and deliver at a localised level is a game changer for driving equity of access to rapid and accurate molecular diagnosis. The BRAIN MATRIX Trial, funded by the Brain Tumour Charity, is now exploring how this technology can match patients to personalised clinical trials across the UK."
-Simon Deacon, Inswasti Cahyani, Nadine Holmes, Graeme Fox, Rory Munro, Satrio Wibowo, Thomas Murray, Hannah Mason, Mark Housley, Daniel Martin, Abdi Sharif, Areeba Patel, Robert Goldspring, Sebastian Brandner, Felix Sahm, Stuart Smith, Simon Paine, Matthew Loose.
-ROBIN: A unified nanopore-based assay integrating intraoperative methylome classification and next-day comprehensive profiling for ultra-rapid tumor diagnosis
-, 2025; DOI:
-10.1093/neuonc/noaf103
-University of Nottingham. (2025, May 21). New genetic test can diagnose brain tumors in as little as two hours.
-A revolutionary STI test developed by UK-based Linear Diagnostics is on track to dramatically reduce the time it takes to detect infections like gonorrhea and chlamydia. Built on ultra-fast EXPAR DNA ...
-Diagnostic Uncertainty in Parkinson's Disease: Study Calls for Improved Diagnostic Processes
-A study found that a significant proportion of Parkinson's disease diagnoses are later corrected. Up to one in six diagnoses changed after ten years of follow-up, and the majority of new ...
-Repetitive Behaviors and Special Interests Are More Indicative of an Autism Diagnosis Than a Lack of Social Skills
-People with autism are typically diagnosed by clinical observation and assessment. To deconstruct the clinical decision process, which is often subjective and difficult to describe, researchers used ...
-AI Predicts Infant Age, Gender Based on Temperament
-May 10, 2022 Â
-A new study used machine learning to classify infants as either male or female at 0-24 weeks of age, 24-48 weeks of age and older than 48 weeks based off 14 temperament dimensions. Accuracy rates ...
-Sorting Cancers by 'Immune Archetypes' Represents Potential New Approach to Developing Precision Immunotherapies
-Using data from over 300 patient tumors, researchers have described 12 classes of 'immune archetypes' to classify cancer tumors. Their findings reveal that cancers from different parts of ...
-Rapid COVID-19 Diagnostic Test Delivers Results Within 4 Minutes With 90 Percent Accuracy
-May 12, 2021 Â
-A low-cost, rapid diagnostic test provides COVID-19 results within four minutes with 90 percent accuracy, researchers report. A paper details the fast and inexpensive diagnostic test, called RAPID ...
-Early Warning Signals of Esophageal Cancer May Be Hiding in Plain Sight
-âLike Liquid Metalâ: Scientists Create Strange Shape-Shifting Material
-Researchers Have Discovered a THC-Free Cannabis Compound That May Replace Opioids
-Common Blood Pressure Drug Shows Surprising Power Against Deadly Antibiotic-Resistant Superbug

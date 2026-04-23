@@ -6,7 +6,7 @@ tier: 2
 tier_name: Science journalism
 title: "Scientists discover why cancer drugs donâ\x80\x99t work for everyone"
 date_published: '2026-03-27'
-content_hash: sha256:f3b9274ba7c936c2da86827c113d3113a77612cdacd28dbf955153bf244f9dee
+content_hash: sha256:fa1d7a48ac006d3f37f70c10b12d9659fe861a17d65666a30f5e0d2a4f91c919
 paywall: false
 claims:
 - id: sciencedaily.com-2026-03-27-scientists-discover-why-cancer-drugs-don-001
@@ -44,25 +44,3 @@ PARP inhibitors are already widely used to treat ovarian, breast, and prostate c
 "By understanding how drugs are taken up into cells, we can understand whether this influences why cancer drugs work for some people and not for others. Eventually, we hope to be able study the molecular signature of a patient's tumor to help to tailor therapeutic approaches in a more personalized way," says Dr. Louise Fets, senior author and Head of the LMS' Drug Transport and Tumour metabolism Group.
 This study was conducted using tumor tissue maintained outside the body. In real patients, drugs are delivered through the bloodstream, and tumor blood vessels are often disorganized, which may further contribute to uneven drug distribution. Future studies will use animal models and larger patient groups to better understand how drug delivery, tumor structure, and lysosomal storage interact in clinical settings, including in relapsed cancers.
 This research was supported by funding from the Medical Research Council, Cancer Research UK, a PhD studentship from the Integrative Toxicology Training Partnership administered by the MRC Toxicology Unit, and a Victoria's Secret Global Fund for Women's Cancers Career Development Award, in partnership with Pelotonia and AACR.
-Carmen R. Moncayo, Restuadi Restuadi, Guanying Zhang, Daniel Marks, Paula Ortega-Prieto, Emily Doherty, Nathalie Lambie, Chad Whilding, Ivan Andrew, Alex Montoya, Bhavik Patel, Katie Tyson, Betheney R. Pennycook, Lauren Pendergast, Vincen Wu, Zoltan Takats, Nik Matthews, George R. Young, Priyanka Verma, Pavel Shliaha, Laurence Game, Boris Lenhard, Iain McNeish, Christina Fotopoulou, Alexis R. Barr, Paula Cunnea, Zoe Hall, Louise Fets.
-Multimodal imaging reveals a lysosomal drug reservoir that drives heterogeneous distribution of PARP inhibitors
-Nature Communications
-, 2026; DOI:
-10.1038/s41467-026-70558-1
-Medical Research Council (MRC) Laboratory of Medical Sciences. (2026, March 27). Scientists discover why cancer drugs donât work for everyone.
-Scientists have uncovered a startling split in the venom of Australiaâs Eastern Brown Snake. In the south, bites cause rock-solid blood clots, while in the north, they trigger flimsy clots that ...
-Multi-Target Approach Counters Tumor Growth in Several Cancers
-The tissue adjacent to a tumor behaves differently than areas farther away: The tumor's cancerous cells influence their surroundings, blocking the body's immune defenses and creating a sort ...
-Why Cancer Immunotherapies Don't Work for Everyone
-Scientists uncovered a mechanism by which cancer cells prevent the immune system from activating and attacking the cancerous invaders. The study sheds light on why immunotherapy treatments don't ...
-Extracting the Best Flavor from Coffee
-May 9, 2023 Â
-Researchers explore the role of uneven coffee extraction using a simple mathematical model. They split the coffee into two regions to examine whether uneven flow does in fact make weaker espresso. ...
-Scientists Discover How Cells Repair Longevity-Promoting 'Recycling System'
-Researchers described a pathway by which cells repair damaged lysosomes, structures that contribute to longevity by recycling cellular trash. The findings are an important step towards understanding ...
-Preserving the Goods: A New Technique for Isolating Intact Lysosomes from Cell Cultures
-Lysosomes are organelles that play essential roles in cellular digestion and waste management, and lysosomal dysfunction typically leads to serious diseases. In a recent study, scientists developed a ...
-Early Warning Signals of Esophageal Cancer May Be Hiding in Plain Sight
-âLike Liquid Metalâ: Scientists Create Strange Shape-Shifting Material
-Researchers Have Discovered a THC-Free Cannabis Compound That May Replace Opioids
-Common Blood Pressure Drug Shows Surprising Power Against Deadly Antibiotic-Resistant Superbug

@@ -7,7 +7,7 @@ tier_name: Science journalism
 title: 95% of people carry this virus and scientists may have just found how to stop
   it
 date_published: '2026-04-15'
-content_hash: sha256:5997b3f8e9eb73c05ccd832762b1250efbef7f0a447734ac94ea84e6051fe629
+content_hash: sha256:28ee35d30bb7b3367137266d1245cc94c40244b6476f43e53e75078b66aa4fd6
 paywall: false
 claims:
 - id: sciencedaily.com-2026-04-15-95-of-people-carry-this-virus-and-scient-001
@@ -45,28 +45,6 @@ claims:
   - '40274835'
   - '40203774'
   - '39957237'
-- id: sciencedaily.com-2026-04-15-95-of-people-carry-this-virus-and-scient-003
-  text: 'Transgenic mouse-derived human monoclonal antibodies targeting EBV gp350
-    and gp42 provide basis for therapeutic development
-
-    Cell Reports Medicine
-
-    , 2026; 7 (2): 102618 DOI:
-
-    10.1016/j.xcrm.2026.102618
-
-    Fred Hutchinson Cancer Center. (2026, April 15). 95% of people carry this virus
-    and scientists may have just found how to stop it.'
-  type: result
-  category: FACTUAL
-  verification_status: verified
-  verification_source: corpus
-  linked_pmids:
-  - '41417728'
-  - '40923270'
-  - '41509977'
-  - '41629133'
-  - '41635510'
 review_status: pending
 credibility_score: 55.2
 ---
@@ -92,24 +70,3 @@ Toward a Preventive Antibody Therapy
 The research team envisions a future where these monoclonal antibodies could be given as an infusion to prevent EBV infection or reactivation, especially in high-risk groups. By blocking the virus early, such a therapy could help prevent PTLD and other complications.
 Fred Hutch has filed intellectual property claims related to the antibodies discovered in the study. McGuire and Chhan are now working with collaborators and an industry partner to move the research closer to clinical use. The next steps could include safety testing in healthy adults, followed by clinical trials in patients who are most at risk.
 "There's momentum to advance our discovery to a therapy that would make a huge difference for patients undergoing transplant," said McGuire. "After many years of searching for a viable way to protect against Epstein Barr virus, this is a significant stride for the scientific community and the people at the highest risk of complications from this virus."
-Crystal B. Chhan, Kevin Lang, Amelia R. Davis, Yu-Hsin Wan, Nicholas T. Aldridge, Gargi Kher, Samuel C. Scharffenberger, Samantha R. Hardy, Roman Iureniev, Natalia V. Giltiay, Kristina R. Edwards, Stefan Radtke, Hans-Peter Kiem, Marie Pancera, Andrew T. McGuire.
-Transgenic mouse-derived human monoclonal antibodies targeting EBV gp350 and gp42 provide basis for therapeutic development
-Cell Reports Medicine
-, 2026; 7 (2): 102618 DOI:
-10.1016/j.xcrm.2026.102618
-Fred Hutchinson Cancer Center. (2026, April 15). 95% of people carry this virus and scientists may have just found how to stop it.
-Researchers have discovered a significant association between specific Epstein-Barr virus (EBV) variants and nasopharyngeal carcinoma (NPC). NPC is a cancer notably prevalent in southern China, where ...
-New Research Offers Insight Into the Future Understanding of MS and Its Treatments
-Researchers have developed a new and unique blood test to measure the immune response to the Epstein Barr Virus (EBV) which is the leading risk factor for developing multiple sclerosis (MS). Their ...
-Scientists Find Weak Points on Epstein-Barr Virus
-Studies of interactions between two lab-generated monoclonal antibodies (mAbs) and an essential Epstein-Barr virus (EBV) protein have uncovered targets that could be exploited in designing treatments ...
-How the Epstein-Barr Virus Transforms B Cells
-Epstein-Barr virus (EBV) infection is known to convert resting B lymphocytes into immortal cells that continuously multiply, leading to posttransplant lymphoproliferative disorder (PTLD). Researchers ...
-Experimental Monoclonal Antibodies Show Promise Against Epstein-Barr Virus
-A panel of investigational monoclonal antibodies (mAbs) targeting different sites of the Epstein-Barr virus (EBV) blocked infection when tested in human cells in a laboratory setting. Moreover, one ...
-Epstein-Barr Virus May Be Leading Cause of Multiple Sclerosis
-A new study provides compelling evidence of causality between Epstein-Barr virus and multiple sclerosis. It suggests that most MS cases could be prevented by stopping EBV infection, and that ...
-Early Warning Signals of Esophageal Cancer May Be Hiding in Plain Sight
-âLike Liquid Metalâ: Scientists Create Strange Shape-Shifting Material
-Researchers Have Discovered a THC-Free Cannabis Compound That May Replace Opioids
-Common Blood Pressure Drug Shows Surprising Power Against Deadly Antibiotic-Resistant Superbug

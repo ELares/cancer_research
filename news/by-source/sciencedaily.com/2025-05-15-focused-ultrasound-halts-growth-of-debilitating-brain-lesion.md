@@ -6,7 +6,7 @@ tier: 2
 tier_name: Science journalism
 title: Focused ultrasound halts growth of debilitating brain lesions
 date_published: '2025-05-15'
-content_hash: sha256:b716fa5c2d4dae972c01a1811683f58645ccf059c92ee7f9b732c71f8b3c514b
+content_hash: sha256:b93af292ec69eb9127e1e7a0e72c2edf77b7e9ebf9af85f5a30f810a967a2269
 paywall: false
 claims:
 - id: sciencedaily.com-2025-05-15-focused-ultrasound-halts-growth-of-debil-001
@@ -70,26 +70,3 @@ Price and his collaborator Petr Tvrdik, PhD, recently received more than $3 mill
 About Focused Ultrasound
 UVA Health was one of the earliest pioneers in the field of focused ultrasound. UVA's expertise with the technology has led to a robust research program examining the use of focused ultrasound to treat many different conditions.
 The tremendous promise of focused ultrasound prompted UVA Health and the Charlottesville-based Focused Ultrasound Foundation to launch the Focused Ultrasound Cancer Immunotherapy Center, the world's first center dedicated specifically to advancing a fo
-Delaney G. Fisher, Tanya Cruz, Matthew R. Hoch, Khadijeh A. Sharifi, Ishaan M. Shah, Catherine M. Gorick, Victoria R. Breza, Anna C. Debski, Joshua D. Samuels, Jason P. Sheehan, David Schlesinger, David Moore, James W. Mandell, John R. Lukens, G. Wilson Miller, Petr Tvrdik, Richard J. Price.
-Focused ultrasound-microbubble treatment arrests the growth and formation of cerebral cavernous malformations
-Nature Biomedical Engineering
-, 2025; DOI:
-10.1038/s41551-025-01390-z
-University of Virginia Health System. (2025, May 16). Focused ultrasound halts growth of debilitating brain lesions.
-A parasite that may already be hiding in your brain has a shocking survival trick: it can infect the very immune cells sent to destroy it. Yet most people never get sick, and new research from UVA ...
-First Bioavailable Compound That Specifically Inhibits Free Radical Production in Mitochondria Prevents and Treats Metabolic Syndrome in Mice
-July 10, 2023 Â
-The free radical theory of aging is back in play after falling out of favor decades ago. (Remember when people were taking massive doses of various vitamins and minerals? Mopping up free radicals ...
-From COVID-19 to the Common Cold: Scientists Identify Broadly-Effective, Infection-Halting Compound
-Researchers have identified a compound that shows early promise at halting infections from a range of coronaviruses, including all variants of SARS-CoV-2 and the common cold. Their testing yielded ...
-A 'Perfect Storm' of Genetic Mutations Is Behind Rare Sporadic Brain Malformations That Cause Stroke, Seizures
-A new study found that specific genetic mutations occurring in just the right locations in the brain are behind the formation of cavernous angiomas, which can bleed and cause strokes and ...
-Researchers Discover a New Cause for the Cerebral Cavernous Malformation
-June 8, 2021 Â
-Researchers have recently uncovered a new gene mutation responsible for the non-familial patients of cerebral cavernous malformation (CCM) -- a brain vascular disorder which inflicted about 10-30 ...
-Cancer-Linked Mutation Accelerates Growth of Abnormal Stroke-Causing Brain Blood Vessels
-Researchers have discovered an explanation for why cerebral cavernous malformations (CCMs) -- clusters of dilated blood vessels in the brain -- can suddenly grow to cause seizures or stroke. ...
-Early Warning Signals of Esophageal Cancer May Be Hiding in Plain Sight
-âLike Liquid Metalâ: Scientists Create Strange Shape-Shifting Material
-Researchers Have Discovered a THC-Free Cannabis Compound That May Replace Opioids
-Common Blood Pressure Drug Shows Surprising Power Against Deadly Antibiotic-Resistant Superbug

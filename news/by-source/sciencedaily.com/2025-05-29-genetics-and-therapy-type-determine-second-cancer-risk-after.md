@@ -6,7 +6,7 @@ tier: 2
 tier_name: Science journalism
 title: Genetics and therapy type determine second cancer risk after childhood treatment
 date_published: '2025-05-29'
-content_hash: sha256:6d0b0da7517ff857ee52c0ee56e1b38637bf8c5c6abbedffacfe88da6ea2599b
+content_hash: sha256:2ab92a6da57e2c1683a44ab040ebc350ae3f2d8aa185917e14e7a611ebc55ff3
 paywall: false
 claims:
 - id: sciencedaily.com-2025-05-29-genetics-and-therapy-type-determine-seco-001
@@ -82,24 +82,3 @@ Changing care for survivors of childhood cancer
 "Second cancers remain the leading cause of mortality for childhood cancer survivors," Sapkota said. "Now that we have quantified the contributions of treatment, genetics and lifestyle to the risk of secondary disease, we have a better understanding of where to focus efforts to prevent, detect and treat these cancers, and hopefully extend these survivors' lives."
 The study's first author is Achal Neupane, of St. Jude. The study's other authors are Siddhant Taneja, Jennifer French, Matthew Ehrhardt, Tara Brinkman, Rachel Webster, Jun Yang, Kirsten Ness, Melissa Hudson, Gregory Armstrong, Leslie Robison and Yutaka Yasui; St. Jude; Qi Liu; University of Alberta; Cindy Im, Lucie Turcotte and Joseph Neglia; University of Minnesota; Monica Gramatges, Baylor College of Medicine; Rebecca Howell, University of Texas MD Anderson Cancer Center and Smita Bhatia; University of Alabama at Birmingham.
 The study was supported by grants from the National Cancer Institute (R01HL173881, R01CA216354, R21CA261833, U24CA55727, U01CA195547 and CA21765) and ALSAC, the fundraising and awareness organization of St. Jude.
-Achal Neupane, Qi Liu, Siddhant Taneja, Jennifer French, Matthew J Ehrhardt, Tara M Brinkman, Rachel Webster, Jun J Yang, Cindy Im, Lucie M Turcotte, Joseph P Neglia, M Monica Gramatges, Rebecca M Howell, Smita Bhatia, Kirsten K Ness, Melissa M Hudson, Gregory T Armstrong, Leslie L Robison, Yutaka Yasui, Yadav Sapkota.
-Contributions of cancer treatment and genetic predisposition to risk of subsequent neoplasms in long-term survivors of childhood cancer: a report from the St Jude Lifetime Cohort and the Childhood Cancer Survivor Study
-, 2025; 26 (6): 806 DOI:
-10.1016/S1470-2045(25)00157-3
-St. Jude Children's Research Hospital. (2025, May 30). Genetics and therapy type determine second cancer risk after childhood treatment.
-A new study further illustrates that when it comes to risk of Alzheimer's disease, even genetically determined forms of the disease, genetics is only one piece of the puzzle. Researchers ...
-CT Scan Best at Predicting Heart Disease Risk in Middle Age
-May 23, 2023 Â
-CT scans are better at predicting a middle-aged person's risk for a heart disease, such as a heart attack, than genetics, reports a new study. Conventional measures of risk factor levels include ...
-Twin Study Links Exercise to Beneficial Epigenetic Changes
-Consistent exercise can change not just waistlines but the very molecules in the human body that influence how genes behave, a new study of twins indicates. The study found that the more physically ...
-Age Vs. Genetics: Which Is More Important for Determining How We Age?
-Our genetics, the environment and our age all play important roles in our health, but which of these is the most important? A new study suggests that in many cases, age plays a more important role ...
-Childhood Trauma and Genetics Linked to Increased Obesity Risk
-New research has found associations between genetics, obesity, and childhood trauma, linking social health determinants, genetics, and disease. The study found that participants with specific genetic ...
-Study of East Africans Illuminates New Genetic Factors Underlying Human Faces
-A new study of the genetics underlying facial features finds that East Africans have some unique facial genetics and some that are shared with Europeans. The findings add to our understanding of how ...
-Early Warning Signals of Esophageal Cancer May Be Hiding in Plain Sight
-âLike Liquid Metalâ: Scientists Create Strange Shape-Shifting Material
-Researchers Have Discovered a THC-Free Cannabis Compound That May Replace Opioids
-Common Blood Pressure Drug Shows Surprising Power Against Deadly Antibiotic-Resistant Superbug

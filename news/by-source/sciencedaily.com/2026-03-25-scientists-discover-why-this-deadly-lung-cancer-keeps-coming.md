@@ -6,7 +6,7 @@ tier: 2
 tier_name: Science journalism
 title: Scientists discover why this deadly lung cancer keeps coming back
 date_published: '2026-03-25'
-content_hash: sha256:15e9f908789147919ba69cd6408b978cb32fc070db6738e286164891207fbe8b
+content_hash: sha256:13a0d68a9f951b0e4c492abd694d32d6908d3ce07fe2a54604a15fc5bf224957
 paywall: false
 claims:
 - id: sciencedaily.com-2026-03-25-scientists-discover-why-this-deadly-lung-001
@@ -42,26 +42,3 @@ This inflammatory environment weakens the body's natural defenses by suppressing
 Implications for Future Treatments and Early Detection
 It is still unclear whether this type of pre-tumoral inflammation occurs in human patients. However, the study highlights a key mechanism that may drive both the aggressiveness of SCLC and its tendency to return after treatment. These insights could help guide the development of more effective therapies and improve early detection strategies.
 This research was supported by the German Research Foundation within Collaborative Research Centre (CRC) 1399 "Mechanisms of drug sensitivity and resistance in small cell lung cancer."
-Ariadne Androulidaki, Fanyu Liu, Christina M. Bebber, Ilmars Kisis, Vignesh Sakthivelu, Pascal Hunold, Lioba Koerner, Alina Dahlhaus, Fatma Isil Yapici, Christina Grimm, Alicja Pacholewska, Sofya Tishina, Franka Doskotz, Lucia A. Torres FernÃ¡ndez, Jenny Stroh, Ali T. Abdallah, Julia Beck, Lejla Mulalic, Anna Schmitt, Holger GrÃ¼ll, Thorsten Persigehl, Alexander Quaas, Martin Peifer, Johannes BrÃ¤gelmann, H. Christian Reinhardt, Pascal Nieper, Robert HÃ¤nsel-Hertsch, Roman K. Thomas, Julie George, Michal R. Schweiger, Manolis Pasparakis, Filippo Beleggia, Silvia von Karstedt.
-Lack of caspase 8 directs neuronal progenitor-like reprogramming and small cell lung cancer progression
-Nature Communications
-, 2025; 16 (1) DOI:
-10.1038/s41467-025-67142-4
-University of Cologne. (2026, March 25). Scientists discover why this deadly lung cancer keeps coming back.
-Even years after they have recovered, a person who once struggled with alcohol or opioid addiction can relapse--and that relapse is more likely to occur during particularly stressful times. Now, ...
-Researchers Turn Back the Clock on Cancer Cells to Offer New Treatment Paradigm
-Scientists reversed an aggressive cancer, reverting malignant cells towards a more normal state. Rhabdoid tumors are an aggressive cancer which is missing a key tumor suppressor protein. Scientists ...
-Human Lung Chip Leveraged to Faithfully Model Radiation-Induced Lung Injury
-Researchers have developed a humanÂ in vitroÂ model that closely mimics the complexities of radiation-induced lung injury (RILI) and radiation dose sensitivity of the human lung. Using a previously ...
-New Study Finds Blocking Histones Using Antibodies Alleviated Lung Fibrosis
-Lung fibrosis is a debilitating disease affecting nearly 250,000 people in the U.S. alone with 50,000 new cases reported each year. There is currently no cure and limited available treatment options, ...
-Single-Cell Atlas of the Whole Human Lung
-June 8, 2023 Â
-The largest and most comprehensive cell map of the human lung has been completed. The Human Lung Cell Atlas reveals the great diversity of cell types in the lung and shows key differences between ...
-Scientists Discover Mechanism Controlling Spread of Pancreatic Cancer
-June 29, 2022 Â
-Scientists have shown it is possible to reverse a key process that allows pancreatic cancer cells to grow and spread around the body. These findings show that a protein called GREM1 is key to ...
-Early Warning Signals of Esophageal Cancer May Be Hiding in Plain Sight
-âLike Liquid Metalâ: Scientists Create Strange Shape-Shifting Material
-Researchers Have Discovered a THC-Free Cannabis Compound That May Replace Opioids
-Common Blood Pressure Drug Shows Surprising Power Against Deadly Antibiotic-Resistant Superbug

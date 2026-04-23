@@ -6,7 +6,7 @@ tier: 2
 tier_name: Science journalism
 title: Wildfire smoke could kill 70,000 Americans a year by 2050
 date_published: '2025-09-19'
-content_hash: sha256:a0fec085448c7a5b421fe2ece42e6509aec5574875b96e25d0e98495f32cf1ef
+content_hash: sha256:68c9c2404b5925e37c20bfd82d93054ce748dc896c50c04bdea2b40815a0272a
 paywall: false
 claims:
 - id: sciencedaily.com-2025-09-19-wildfire-smoke-could-kill-70-000-america-001
@@ -78,24 +78,3 @@ Actions by public health officials and communities can mitigate this growing thr
 Burke is also a professor (by courtesy) of Earth system science; deputy director at the Center on Food Security and the Environment; and a senior fellow with the Stanford Institute for Economic Policy Research (SIEPR), the Woods Institute for the Environment, and the Freeman Spogli Institute for International Studies.
 Additional Stanford co-authors include Jessica Li, a research data analyst at the Center on Food Security and the Environment; Renzhi Jing, a postdoctoral researcher in primary care and population policy; Makoto Kelp, a postdoctoral researcher in Earth system science; Jeff Wen, a PhD student in Earth system science; Mathew Kiang, assistant professor of epidemiology and population health; Sam Heft-Neal, a senior research scholar at the Center on Food Security and the Environment; and Noah Diffenbaugh, the Kara J Foundation Professor and Kimmelman Family Senior Fellow. Other study co-authors are from the University of California, San Diego, the University of Washington, Princeton University, the National Oceanic and Atmospheric Administration, and the National Bureau of Economic Research.
 This research was supported by the Keck Foundation, Stanford's Center for Innovation in Global Health, Stony Brook University, the Harvard University Center for the Environment, and the Stanford Research Computing Center.
-Minghao Qiu, Jessica Li, Carlos F. Gould, Renzhi Jing, Makoto Kelp, Marissa L. Childs, Jeff Wen, Yuanyu Xie, Meiyun Lin, Mathew V. Kiang, Sam Heft-Neal, Noah S. Diffenbaugh, Marshall Burke.
-Wildfire smoke exposure and mortality burden in the US under climate change
-, 2025; DOI:
-10.1038/s41586-025-09611-w
-Stanford University. (2025, September 19). Wildfire smoke could kill 70,000 Americans a year by 2050.
-Wildfires are becoming more intense and dangerous, but a new Stanford-led study offers hope: prescribed burnsâintentionally set, controlled firesâcan significantly lessen their impact. By ...
-New Research Highlights Opportunities to Protect Carbon and Communities from Forest Fires
-As the climate and wildfire crises have intensified, so too have concerns regarding the loss of carbon captured and stored in forests from decades to centuries of tree growth. A new study describes ...
-REBURN: A New Tool to Model Wildfires in the Pacific Northwest and Beyond
-Researchers have developed a new tool, REBURN, that can simulate large forest landscapes and wildfire dynamics over decades or centuries under different wildfire management strategies. The model can ...
-New Model Provides Improved Air-Quality Predictions in Fire-Prone Areas
-Globally, wildfires are becoming more frequent and destructive, generating a significant amount of smoke that can be transported thousands of miles, driving the need for more accurate air pollution ...
-Western U.S. Wildfire Smoke Plumes Are Getting Taller, Researchers Find
-July 27, 2022 Â
-In recent years the plumes of smoke crawling upward from Western wildfires have trended taller, with more smoke and aerosols lofted up where they can spread farther and impact air quality over a ...
-Chemical Analysis Reveals Effects of Wildfire Smoke on Grapes and Wines
-As wildfire season in the West grows in length and severity, it is taking a toll on the wine industry through the effects of wildfire smoke on the quality of wine grapes. Volatile compounds in the ...
-Early Warning Signals of Esophageal Cancer May Be Hiding in Plain Sight
-âLike Liquid Metalâ: Scientists Create Strange Shape-Shifting Material
-Researchers Have Discovered a THC-Free Cannabis Compound That May Replace Opioids
-Common Blood Pressure Drug Shows Surprising Power Against Deadly Antibiotic-Resistant Superbug

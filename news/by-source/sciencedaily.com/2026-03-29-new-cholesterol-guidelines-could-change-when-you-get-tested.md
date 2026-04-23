@@ -6,7 +6,7 @@ tier: 2
 tier_name: Science journalism
 title: New cholesterol guidelines could change when you get tested
 date_published: '2026-03-29'
-content_hash: sha256:fcbe6e0d492eac3b82d4e8ccda823fd6e64767dd8f44f050475c2e4de2c1ee5c
+content_hash: sha256:cfb48fe031b0afcce48678a648546559f607f934396e5e956e3af9ba5b8fe109
 paywall: false
 claims:
 - id: sciencedaily.com-2026-03-29-new-cholesterol-guidelines-could-change--001
@@ -42,26 +42,8 @@ claims:
   verification_status: unverified
   verification_source: null
   linked_pmids: []
-- id: sciencedaily.com-2026-03-29-new-cholesterol-guidelines-could-change--004
-  text: New cholesterol guidelines could change when you get tested.
-  type: speculation
-  category: SPECULATIVE
-  verification_status: null
-  verification_source: null
-  linked_pmids: []
-- id: sciencedaily.com-2026-03-29-new-cholesterol-guidelines-could-change--005
-  text: 'More Than Half of American Indian Youth May Have Abnormal or High Cholesterol
-
-    More than 70% of American Indian young adults aged 20-39 and 50% of American Indian
-    teens have cholesterol levels or elevated fat in the blood that put them at risk
-    for cardiovascular disease, a new ...'
-  type: result
-  category: FACTUAL
-  verification_status: unverified
-  verification_source: null
-  linked_pmids: []
 review_status: pending
-credibility_score: 33.9
+credibility_score: 39.2
 ---
 
 New cholesterol guidelines could change when you get tested
@@ -97,23 +79,3 @@ In addition to statins, the guideline includes updated recommendations on other 
 For people without cardiovascular disease, LDL-C levels below 100 mg/dL are considered optimal. Those at intermediate risk are advised to lower levels below 70 mg/dL, while high-risk individuals should aim for less than 55 mg/dL. The guideline also includes targets for non-HDL cholesterol and apolipoprotein B.
 In an accompanying editorial, experts suggest that future recommendations may further emphasize lowering LDL-C to below 55 mg/dL for people with moderate atherosclerosis. This direction is supported by findings from the VESALIUS-CV clinical trial, which showed benefits from aggressively lowering cholesterol using a combination of therapies.
 The 2026 Guideline on the Management of Dyslipidemia was developed by the American College of Cardiology and the American Heart Association in collaboration with multiple medical organizations focused on cardiovascular health, prevention, and patient care.
-Roger S. Blumenthal, Pamela B. Morris, Mario Gaudino, Heather M. Johnson, Timothy S. Anderson, Vera A. Bittner, Ron Blankstein, LaPrincess C. Brewer, Leslie Cho, Sarah D. de Ferranti, Eugenia Gianos, Ty J. Gluckman, Kristen F. Gradney, Ijeoma Isiadinso, Donald M. Lloyd-Jones, Joel C. Marrs, Seth S. Martin, Kellie H. McLain, Laxmi S. Mehta, Samia Mora, Wudeneh M. Mulugeta, Pradeep Natarajan, Ann Marie Navar, Carl E. Orringer, Tamar S. Polonsky, Harmony R. Reynolds, Joseph J. Saseen, Michael D. Shapiro, Daniel E. Soffer, Sheila A. Tynes, ChloÃ© D. Villavaso, Salim S. Virani, John T. Wilkins.
-2026 ACC/AHA/AACVPR/ABC/ACPM/ADA/AGS/APhA/ASPC/NLA/PCNA Guideline on the Management of Dyslipidemia
-, 2026; DOI:
-10.1016/j.jacc.2025.11.016
-Johns Hopkins Medicine. (2026, March 29). New cholesterol guidelines could change when you get tested.
-Eggs are finally being vindicated after decades of cholesterol-related blame. New research from the University of South Australia reveals that eggs, despite their cholesterol content, aren't the ...
-A Protein at the Heart of Heart Disease
-Low-density lipoproteins (LDL) -- commonly known as bad cholesterol -- have long been on scientists' radar as a major contributor to heart disease. But these microscopic troublemakers have ...
-New Insights About How 'Bad' Cholesterol Works in the Body
-Scientists have made a significant breakthrough in understanding how 'bad' cholesterol, known as low-density lipoprotein-cholesterol or LDL-C, builds up in the body. The researchers were ...
-More Than Half of American Indian Youth May Have Abnormal or High Cholesterol
-More than 70% of American Indian young adults aged 20-39 and 50% of American Indian teens have cholesterol levels or elevated fat in the blood that put them at risk for cardiovascular disease, a new ...
-Cardiologists Reveal New Heart Disease Risk Calculator
-The new American Heart Association PREVENTTMÂ risk calculator estimates the 10- and 30-year risk of total cardiovascular disease for people aged 30 years and older.Â The calculator estimates the risk ...
-Eating Walnuts Daily Lowered 'Bad' Cholesterol and May Reduce Cardiovascular Disease Risk
-Older adults who added a handful of walnuts to their daily diet for two years saw modest reductions in LDL cholesterol and total cholesterol, as well as fewer small, dense LDL particles linked to ...
-Early Warning Signals of Esophageal Cancer May Be Hiding in Plain Sight
-âLike Liquid Metalâ: Scientists Create Strange Shape-Shifting Material
-Researchers Have Discovered a THC-Free Cannabis Compound That May Replace Opioids
-Common Blood Pressure Drug Shows Surprising Power Against Deadly Antibiotic-Resistant Superbug

@@ -7,7 +7,7 @@ tier_name: Science journalism
 title: Removing ovaries and fallopian tubes linked to lower risk of early death among
   breast cancer patients with BRCA cancer genes
 date_published: '2025-05-08'
-content_hash: sha256:7791b9993131dd6ee01d7e2be77602f60405a95e807432b32b36fe9660c23b37
+content_hash: sha256:1784aa28037fc23bc26da5644ff254d9f30c5eb66cfa57221b6b8b21432f1b99
 paywall: false
 claims:
 - id: sciencedaily.com-2025-05-08-removing-ovaries-and-fallopian-tubes-lin-001
@@ -54,24 +54,8 @@ claims:
   - '41962617'
   - '41959815'
   - '41951978'
-- id: sciencedaily.com-2025-05-08-removing-ovaries-and-fallopian-tubes-lin-005
-  text: 'Tiny Robots, Big Impact: Revolutionizing Infertility Treatment With Magnetic
-    Microrobots
-
-    Infertility affects an estimated 186 million people worldwide, with fallopian
-    tube obstruction contributing to 11%-67% of female infertility cases.'
-  type: result
-  category: FACTUAL
-  verification_status: verified
-  verification_source: corpus
-  linked_pmids:
-  - '40364013'
-  - '40849685'
-  - '41398969'
-  - '38449862'
-  - '38891962'
 review_status: pending
-credibility_score: 39.2
+credibility_score: 36.0
 ---
 
 Removing ovaries and fallopian tubes linked to lower risk of early death among breast cancer patients with BRCA cancer genes
@@ -96,23 +80,3 @@ Professor Antonis Antoniou, from the Department of Public Health and Primary Car
 Professor Antoniou, who is also Director of the Cancer Data-Driven Detection programme, added: "The study also highlights the power of exceptional NHS datasets in driving impactful, clinically relevant research."
 The research was funded by Cancer Research UK, with additional support from the National Institute for Health and Care Research (NIHR) Cambridge Biomedical Research Centre.
 The University of Cambridge and Addenbrooke's Charitable Trust (ACT) are fundraising for a new hospital that will transform how we diagnose and treat cancer. Cambridge Cancer Research Hospital, a partnership with Cambridge University Hospitals NHS Foundation Trust, will treat patients across the East of England, but the research that takes place there promises to change the lives of cancer patients across the UK and beyond. Find out more here.
-. The original text of this story is licensed under a <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License</a>.
-Long-term health outcomes of bilateral salpingo-oophorectomy in BRCA1 and BRCA2 pathogenic variant carriers with personal history of breast cancer: a retrospective cohort study using linked electronic health records
-, 2025 DOI:
-10.1016/S1470-2045(25)00156-1
-University of Cambridge. (2025, May 8). Removing ovaries and fallopian tubes linked to lower risk of early death among breast cancer patients with BRCA cancer genes.
-BRCA1 and BRCA2 genes play a crucial role in repairing damaged DNA. Mutations in BRCA1 and BRCA2 substantially increase the likelihood of breast and ovarian cancer, respectively. This new research ...
-Tiny Robots, Big Impact: Revolutionizing Infertility Treatment With Magnetic Microrobots
-Infertility affects an estimated 186 million people worldwide, with fallopian tube obstruction contributing to 11%-67% of female infertility cases. Researchers have developed an innovative solution ...
-Fallopian Tubes Can Be Safely Removed During Sterilization, Study Suggests
-Women whose Fallopian tubes are removed during sterilization via laparoscopy have only marginally more surgical complications than those whose tubes are simply cut, a study shows. The removal, ...
-'Exhausted' Immune Cells in Healthy Women Could Be Target for Breast Cancer Prevention
-People carrying BRCA1 and BRCA2 gene mutations are at high risk of developing breast and ovarian cancer. Researchers have found that changes occur in the immune cells of breast tissue in carriers of ...
-Faulty BRCA Genes Linked to Prostate and Pancreatic Cancers
-Faulty versions of the BRCA1 and BRCA2 genes are well known to increase the risk of breast cancer in men and women, and in ovarian cancer. Now BRCA1 and BRCA2 have been linked to several other ...
-Researchers Solve Structure of BRCA2 Protein Complex Important in DNA Repair
-The initials BRCA2 may be best known for a gene associated with many cases of breast cancer, and the protein encoded by the BRCA2 gene is critical to repairing breaks in DNA. The breakdown of this ...
-Early Warning Signals of Esophageal Cancer May Be Hiding in Plain Sight
-âLike Liquid Metalâ: Scientists Create Strange Shape-Shifting Material
-Researchers Have Discovered a THC-Free Cannabis Compound That May Replace Opioids
-Common Blood Pressure Drug Shows Surprising Power Against Deadly Antibiotic-Resistant Superbug

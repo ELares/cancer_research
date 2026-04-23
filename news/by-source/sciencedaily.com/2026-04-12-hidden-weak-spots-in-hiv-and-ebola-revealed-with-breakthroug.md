@@ -6,7 +6,7 @@ tier: 2
 tier_name: Science journalism
 title: Hidden weak spots in HIV and Ebola revealed with breakthrough nanodisc technology
 date_published: '2026-04-12'
-content_hash: sha256:324c6c6fb82bbf34925905044ee57820e3e422db8d71e54aba4fbc1dc78978c7
+content_hash: sha256:a5b4a3a766c1ae80c2a70e3c6326f32fcb15c72bb92aef295d34b28cbcb9e329
 paywall: false
 claims: []
 review_status: pending
@@ -40,25 +40,3 @@ While the platform itself is not a vaccine, it serves as a powerful tool to supp
 "This gives the field a more realistic, accurate way to test ideas early on," emphasizes Schief. "By improving how we study viral proteins and antibody responses, we hope this platform will help advance next-generation vaccines against some of the world's most challenging viruses."
 In addition to Schief and Rantalainen, authors of the study "Virus glycoprotein nanodisc platform for vaccine analytics," include Alessia Liguori, Gabriel Ozorowski, Claudia Flynn, Jon M. Steichen, Olivia M. Swanson, Patrick J. Madden, Sabyasachi Baboo, Swastik Phulera, Anant Gharpure, Danny Lu, Oleksandr Kalyuzhniy, Patrick Skog, Sierra Terada, Monolina Shil, Jolene K. Diedrich, Erik Georgeson, Ryan Tingle, Saman Eskandarzadeh, Wen-Hsin Lee, Nushin Alavi, Diana Goodwin, Michael Kubitz, Sonya Amirzehni, Devin Sok, Jeong Hyun Lee, John R. Yates III, James C. Paulson, Shane Crotty, Torben Schiffner and Andrew B. Ward of Scripps Research; and Sunny Himansu of Moderna Inc.
 This work was supported by funding from the National Institute of Allergy and Infectious Diseases of the National Institutes of Health (grants UM1 AI144462, R01 AI147826, R56 AI192143 and 5F31AI179426-02); the Bill and Melinda Gates Foundation Collaboration for AIDS Vaccine Discovery (grants INV-007522, INV-008813 and INV-002916); the IAVI Neutralizing Antibody Center (INV-034657 and INV-064772); and the Alexander von Humboldt Foundation.
-Kimmo Rantalainen, Alessia Liguori, Gabriel Ozorowski, Claudia Flynn, Jon M. Steichen, Olivia M. Swanson, Patrick J. Madden, Sabyasachi Baboo, Swastik Phulera, Anant Gharpure, Danny Lu, Oleksandr Kalyuzhniy, Patrick Skog, Sierra Terada, Monolina Shil, Jolene K. Diedrich, Erik Georgeson, Ryan Tingle, Saman Eskandarzadeh, Wen-Hsin Lee, Nushin Alavi, Diana Goodwin, Michael Kubitz, Sonya Amirzehni, Sunny Himansu, Devin Sok, Jeong Hyun Lee, John R. Yates, James C. Paulson, Shane Crotty, Torben Schiffner, Andrew B. Ward, William R. Schief.
-Virus glycoprotein nanodisc platform for vaccine analytics
-Nature Communications
-, 2026; 17 (1) DOI:
-10.1038/s41467-026-68985-1
-Scripps Research Institute. (2026, April 12). Hidden weak spots in HIV and Ebola revealed with breakthrough nanodisc technology.
-mRNA vaccines saved millions of lives during COVID-19 but have limitations like waning immunity and complex production. Scientists are now testing a new platform called DoriVac, which uses folded DNA ...
-Engineering Antibodies With a Novel Fusion Protein
-Even with significant expansion in the global market for antibodies used in clinical care and research, scientists recognize that there is still untapped potential for finding new antibodies. Many ...
-A Chain Reaction: HIV Vaccines Can Lead to Antibodies Against Antibodies
-Many vaccines work by introducing a protein to the body that resembles part of a virus. Ideally, the immune system will produce long-lasting antibodies recognizing that specific virus, thereby ...
-HIV Antibodies Protect Animals in Proof-of-Concept Study
-Three different HIV antibodies each independently protected monkeys from acquiring simian-HIV (SHIV) in a placebo-controlled proof-of-concept study intended to inform development of a preventive HIV ...
-New Anti-HIV Antibody Function Discovered: Tethering of Viral Particles at the Surface of Cells
-Researchers have discovered a new function of anti-HIV-1 antibodies by applying cutting-edge microscopy techniques to in vitro viral cultures. The scientists found that certain antibodies already ...
-Personalized Immunotherapy: Rapid Screening of Therapeutic Combinations
-July 22, 2021 Â
-An innovative testing platform that more closely mimics what cancer encounters in the body may allow for more precise, personalized therapies by enabling the rapid study of multiple therapeutic ...
-Early Warning Signals of Esophageal Cancer May Be Hiding in Plain Sight
-âLike Liquid Metalâ: Scientists Create Strange Shape-Shifting Material
-Researchers Have Discovered a THC-Free Cannabis Compound That May Replace Opioids
-Common Blood Pressure Drug Shows Surprising Power Against Deadly Antibiotic-Resistant Superbug

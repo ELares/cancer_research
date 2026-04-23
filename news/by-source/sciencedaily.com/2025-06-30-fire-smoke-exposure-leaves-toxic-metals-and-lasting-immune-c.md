@@ -6,7 +6,7 @@ tier: 2
 tier_name: Science journalism
 title: Fire smoke exposure leaves toxic metals and lasting immune changes
 date_published: '2025-06-30'
-content_hash: sha256:1e67f8604b30c1cb5299c9acb19f54b89e8c97fd53161677ef4e5d56c43c7ed4
+content_hash: sha256:769410e5cd32fa7b0ea253f1f2597d8b59ece06271f52627880906dbafc442c3
 paywall: false
 claims:
 - id: sciencedaily.com-2025-06-30-fire-smoke-exposure-leaves-toxic-metals--001
@@ -61,24 +61,3 @@ The study found several cellular-level changes in the smoke-exposed individuals 
 The researchers also noted that the study could help inform environmental and public health policies and investments. "Knowing more about exactly how smoke exposure is harming the body, we may increase public health campaigns about the dangers of smoke exposure and the importance of following evacuation procedures during wildfires," Nadeau said. "We may also reconsider what levels of smoke exposure we consider toxic."
 Other Harvard Chan co-authors included Abhinav Kaushik, Olivia Kline, Xiaoying Zhou, and Elisabeth Simonin.
 The study was funded by the National Institute of Environmental Health Sciences (R01 ES032253), the National Heart, Lung, and Blood Institute (P01 HL152953, T32HL007118), the National Institute of Allergy and Infectious Diseases (U19AI167903), the San Francisco Cancer Prevention Foundation, the Asthma and Allergic Diseases Cooperative Research Center, and the Keck Foundation.
-Mary M. Johnson, Abhinav Kaushik, Olivia A. Kline, Eric M. Smith, Xiaoying Zhou, Yagiz Pat, Laura Buergi, Juan Aguilera, Shifaa Alkotob, Elisabeth M. Simonin, Alberto Favaro, Miguel Couto, Oscar Bennett, R. Sharon Chinthrajah, Ella Parsons, Mohamed Shamji, Marshall Burke, Melissa Bondy, Mubeccel Akdis, Cezmi A. Akdis, Kari C. Nadeau.
-Immune impacts of fire smoke exposure
-, 2025; DOI:
-10.1038/s41591-025-03777-6
-Harvard T.H. Chan School of Public Health. (2025, June 30). Fire smoke exposure leaves toxic metals and lasting immune changes.
-Scientists have discovered a newly identified marine fungus that can infect and kill toxic algae responsible for harmful blooms. The microscopic parasite, named Algophthora mediterranea, attacks ...
-Fighting Fire With Fire: How Prescribed Burns Reduce Wildfire Damage and Pollution
-June 30, 2025 Â
-Wildfires are becoming more intense and dangerous, but a new Stanford-led study offers hope: prescribed burnsâintentionally set, controlled firesâcan significantly lessen their impact. By ...
-Generating International Testing Standards for Large Outdoor Fires
-The recent LA fires drove home how dangerous wildfires can be when they encroach on urban areas. So-called 'wildland-urban interface' fires are on the rise. However, building codes and ...
-Dry Lightning Can Spark Wildfires Even Under Wetter Conditions
-Dry lightning can still be disastrous even when conditions aren't so dry, a study has found.Â These cloud-to-ground strikes during little to no rainfall were previously thought to pose wildfire ...
-Smoke from the Black Summer Wildfires in Australia Impacted the Climate and High Altitude Winds of the Southern Hemisphere for More Than a Year and a Half
-The 2019/20 wildfires in Australia transported more smoke into the atmosphere than observed ever before anywhere in the world. In the so-called Black Summer, three times as many particles reached ...
-The Path from Pollutants in Food to a Heightened Allergic Response
-Exposure to the heavy metal cadmium is known to irritate the stomach and lungs or cause kidney disease, but new research links another health issue to inadvertently ingesting low doses of the ...
-Early Warning Signals of Esophageal Cancer May Be Hiding in Plain Sight
-âLike Liquid Metalâ: Scientists Create Strange Shape-Shifting Material
-Researchers Have Discovered a THC-Free Cannabis Compound That May Replace Opioids
-Common Blood Pressure Drug Shows Surprising Power Against Deadly Antibiotic-Resistant Superbug

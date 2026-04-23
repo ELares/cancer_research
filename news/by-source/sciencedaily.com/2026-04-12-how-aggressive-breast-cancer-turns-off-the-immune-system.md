@@ -6,7 +6,7 @@ tier: 2
 tier_name: Science journalism
 title: How aggressive breast cancer turns off the immune system
 date_published: '2026-04-12'
-content_hash: sha256:ff2fdc2b4b56e4b4f0305b55df8e4025f038fa2827774c07400be7938c636a9c
+content_hash: sha256:8dc63131b110b65ee0deb2ce619b4d34f346ff421e997e39324e0757ca64b92c
 paywall: false
 claims:
 - id: sciencedaily.com-2026-04-12-how-aggressive-breast-cancer-turns-off-t-001
@@ -49,21 +49,3 @@ Ultimately, the goal is to move toward more personalized care, where treatments 
 Funding and Future Impact
 The BRIDGE project is supported by the iNOVA4Health Lighthouse Projects (LHP) 2025 program, which funds research with strong potential to move from the lab into clinical practice. By encouraging collaboration between scientists, clinicians, and technology experts, the initiative aims to accelerate progress in addressing major health challenges.
 Over the next two years, the project will receive up to €75,000 to support its work. Researchers hope this investment will help speed up the development of new strategies to better understand, monitor, and treat some of the most aggressive forms of breast cancer.
-Instituto de Tecnologia QuÃ­mica e BiolÃ³gica AntÃ³nio Xavier da Universidade NOVA de Lisboa ITQB NOVA
-Instituto de Tecnologia QuÃ­mica e BiolÃ³gica AntÃ³nio Xavier da Universidade NOVA de Lisboa ITQB NOVA. (2026, April 12). How aggressive breast cancer turns off the immune system.
-New findings could help make immunotherapies for brain cancer more effective. The team analyzed almost 200,000 individual immune cells in tumor samples taken from patients with glioma, the most ...
-New Therapeutic Strategy Identified for Triple Negative Breast Cancer
-Triple negative breast cancer (TNBC) remains the most aggressive and deadly type of breast cancer, but new findings from cancer researchers are pointing the way toward therapeutic strategies that ...
-Discovery of 'New Rules of the Immune System' Could Improve Treatment of Inflammatory Diseases, Say Scientists
-June 18, 2024 Â
-A single large population of healer cells, called regulatory T cells, is whizzing around our body -- not multiple specialist populations restricted to specific parts of the body as previously ...
-AI May Spare Breast Cancer Patients Unnecessary Treatments
-A new AI (Artificial Intelligence) tool may make it possible to spare breast cancer patients unnecessary chemotherapy treatments by using a more precise method of predicting their outcomes, reports a ...
-Genetic Findings Offer Opportunity for Personalized Heart Failure Treatment
-Investigators set out to identify molecules and pathways that may contribute to heart failure, with the aim of informing more effective and personalized treatment. Using single nucleus RNA sequencing ...
-Spatial Maps of Melanoma
-Melanoma is a somewhat unusual cancer -- one that blooms before our very eyes, often on sun-exposed skin, and can quickly become deadly as it turns our own skin against us and spreads to other ...
-Early Warning Signals of Esophageal Cancer May Be Hiding in Plain Sight
-âLike Liquid Metalâ: Scientists Create Strange Shape-Shifting Material
-Researchers Have Discovered a THC-Free Cannabis Compound That May Replace Opioids
-Common Blood Pressure Drug Shows Surprising Power Against Deadly Antibiotic-Resistant Superbug

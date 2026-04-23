@@ -214,21 +214,19 @@ def _strip_boilerplate(text: str) -> str:
         if not stripped:
             continue
 
-        # Detect start of related-stories / journal-reference sections
+        # Detect start of related-stories / journal-reference sections.
+        # Once detected, EVERYTHING after this point is skipped — there
+        # is no "return to article content" because ScienceDaily puts
+        # article content BEFORE related stories, never after.
         stripped_lower = stripped.lower()
         if any(marker in stripped_lower for marker in
                ("related stories", "related topics", "story source",
-                "journal reference", "cite this page")):
+                "journal reference", "cite this page", "about sciencedaily")):
             in_related_section = True
             continue
 
-        # Once in a related section, skip everything until a clear
-        # article-content signal (a long sentence).
         if in_related_section:
-            if len(stripped) > 100:
-                in_related_section = False  # back to article content
-            else:
-                continue
+            continue
 
         # Skip lines matching boilerplate patterns
         if any(bp.lower() in stripped_lower for bp in _BOILERPLATE_PATTERNS):
@@ -243,6 +241,34 @@ def _strip_boilerplate(text: str) -> str:
             continue
 
         cleaned.append(line)
+    # Final pass: detect where article content ends and related-story
+    # headlines begin.  Related stories appear as a sequence of short
+    # Title-Case lines (< 120 chars, mostly capitalized words) in the
+    # second half of the text.  Once we see 2+ consecutive headline-style
+    # lines, truncate everything from the first one onward.
+    result_lines: list[str] = []
+    consecutive_headlines = 0
+    truncate_at: int | None = None
+
+    for i, line in enumerate(cleaned):
+        stripped = line.strip()
+        words = stripped.split()
+        is_headline = (
+            len(stripped) < 120
+            and len(words) >= 4
+            and sum(1 for w in words if w[0:1].isupper()) >= len(words) * 0.6
+            and i > len(cleaned) * 0.4  # only in the second half
+        )
+        if is_headline:
+            consecutive_headlines += 1
+            if consecutive_headlines >= 2 and truncate_at is None:
+                truncate_at = i - 1  # truncate before the first headline
+        else:
+            consecutive_headlines = 0
+
+    if truncate_at is not None and truncate_at > 0:
+        cleaned = cleaned[:truncate_at]
+
     return "\n".join(cleaned)
 
 

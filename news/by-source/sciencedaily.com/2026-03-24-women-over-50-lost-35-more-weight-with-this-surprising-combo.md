@@ -6,7 +6,7 @@ tier: 2
 tier_name: Science journalism
 title: Women over 50 lost 35% more weight with this surprising combo
 date_published: '2026-03-24'
-content_hash: sha256:e75e0e3c10fe77d1844562055b30694dab8a5f73882714ac07e2618faac0d568
+content_hash: sha256:cdb4b933e2c4153daa6b96218afdd663cdae72f38e6383446d475ab8c14be028
 paywall: false
 claims:
 - id: sciencedaily.com-2026-03-24-women-over-50-lost-35-more-weight-with-t-001
@@ -96,72 +96,8 @@ claims:
   verification_status: null
   verification_source: null
   linked_pmids: []
-- id: sciencedaily.com-2026-03-24-women-over-50-lost-35-more-weight-with-t-008
-  text: Women over 50 lost 35% more weight with this surprising combo.
-  type: result
-  category: FACTUAL
-  verification_status: verified
-  verification_source: pubmed
-  linked_pmids:
-  - '42020845'
-  - '42020842'
-  - '42020840'
-  - '42020820'
-  - '42020802'
-- id: sciencedaily.com-2026-03-24-women-over-50-lost-35-more-weight-with-t-009
-  text: 'Review of Over 70 Years of Menopause Science Highlights Research Gaps and
-    Calls for Individualized Treatment
-
-    Although about half of people go through menopause, less than 15% of them receive
-    effective treatment for their symptoms.'
-  type: mechanism
-  category: FACTUAL
-  verification_status: verified
-  verification_source: corpus
-  linked_pmids:
-  - '41416429'
-  - '41789674'
-  - '40659604'
-  - '40004731'
-  - '39856676'
-- id: sciencedaily.com-2026-03-24-women-over-50-lost-35-more-weight-with-t-010
-  text: "Hormonal Changes During Menopause Are Directly Related to Decline in Cardiovascular\
-    \ Health\nMay 15, 2022 Â\x97\nLevels of bad cholesterol rise during menopause,\
-    \ and 10% of this increase is likely due to shifts in sex hormones."
-  type: result
-  category: FACTUAL
-  verification_status: verified
-  verification_source: corpus
-  linked_pmids:
-  - '40631904'
-  - '37737046'
-  - '34295655'
-  - '34630085'
-  - '33481149'
-- id: sciencedaily.com-2026-03-24-women-over-50-lost-35-more-weight-with-t-011
-  text: 'Early Menopause May Raise Risk of Dementia Later in Life
-
-    Compared with women who enter menopause around age 50, women who experience very
-    early menopause (before the age of 40) were found to be 35% more likely to develop
-    some type of dementia later in ...'
-  type: result
-  category: FACTUAL
-  verification_status: verified
-  verification_source: corpus
-  linked_pmids:
-  - '38194344'
-  - '38401548'
-  - '29594551'
-  - '28849310'
-- id: sciencedaily.com-2026-03-24-women-over-50-lost-35-more-weight-with-t-012
-  text: According to the authors, ...
-  type: opinion
-  category: INTERPRETIVE
-  verification_status: null
-  verification_source: null
-  linked_pmids: []
 review_status: pending
-credibility_score: 48.1
+credibility_score: 42.4
 ---
 
 Women over 50 lost 35% more weight with this surprising combo
@@ -182,26 +118,3 @@ Although more controlled studies are needed, researchers say the findings are cl
 What Comes Next for Research
 Future research will focus on confirming these results in randomized clinical trials and exploring whether the benefits go beyond weight loss. "Next, we plan to test these observations in a randomized clinical trial and determine if benefits extend beyond weight loss -- specifically, whether hormone therapy also enhances the effects of these medications on cardiometabolic measures," adds Dr. Hurtado Andrade. "If confirmed, this work could speed the development and adoption of new, evidence-based strategies to reduce this risk for millions of postmenopausal women navigating this life stage."
 This research was funded by the Mayo Clinic Center for Women's Health Research.
-Regina Castaneda, Dima Bechenati, Elif Tama, Rene Rivera Gutierrez, Maria A Espinosa, Jose Villamarin, Tamim I Rajjo, Andres Acosta, Stephanie Faubion, Chrisandra Shufelt, Maria D Hurtado Andrade.
-The role of menopause hormone therapy in modulating                        tirzepatide-associated weight loss in postmenopausal women with overweight                        or obesity: a retrospective cohort study
-The Lancet Obstetrics, Gynaecology,
-, 2026; 2 (2): e118 DOI:
-10.1016/S3050-5038(25)00145-1
-Mayo Clinic. (2026, March 23). Women over 50 lost 35% more weight with this surprising combo.
-A cutting-edge mouse study reveals that tirzepatide, the dual GLP-1/GIP drug already hailed for impressive weight loss, does more than trim fat: it slashes the growth of obesity-linked breast tumors. ...
-Hormone Therapy Supercharges Tirzepatide, Unleashing Major Weight Loss After Menopause
-July 13, 2025 Â
-Postmenopausal women struggling with weight loss may find a powerful solution by combining the diabetes drug tirzepatide with menopause hormone therapy. A Mayo Clinic study revealed that this dual ...
-Review of Over 70 Years of Menopause Science Highlights Research Gaps and Calls for Individualized Treatment
-Although about half of people go through menopause, less than 15% of them receive effective treatment for their symptoms. Treatment options for people experiencing irritating or severe menopause ...
-Hormonal Changes During Menopause Are Directly Related to Decline in Cardiovascular Health
-May 15, 2022 Â
-Levels of bad cholesterol rise during menopause, and 10% of this increase is likely due to shifts in sex hormones. Women usually undergo menopause at the age of 48 to 52 years, leading to a decline ...
-Early Menopause May Raise Risk of Dementia Later in Life
-Compared with women who enter menopause around age 50, women who experience very early menopause (before the age of 40) were found to be 35% more likely to develop some type of dementia later in ...
-Scientists Claim That Overeating Is Not the Primary Cause of Obesity
-A perspective article challenges the 'energy balance model,' which says weight gain occurs because individuals consume more energy than they expend. According to the authors, ...
-Early Warning Signals of Esophageal Cancer May Be Hiding in Plain Sight
-âLike Liquid Metalâ: Scientists Create Strange Shape-Shifting Material
-Researchers Have Discovered a THC-Free Cannabis Compound That May Replace Opioids
-Common Blood Pressure Drug Shows Surprising Power Against Deadly Antibiotic-Resistant Superbug

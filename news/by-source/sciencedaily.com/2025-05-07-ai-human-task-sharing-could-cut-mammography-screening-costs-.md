@@ -6,7 +6,7 @@ tier: 2
 tier_name: Science journalism
 title: AI-human task-sharing could cut mammography screening costs by up to 30%
 date_published: '2025-05-07'
-content_hash: sha256:cf320c695ce5a8a5c6b057b88dc6e60114d7b4cbdbb354159b290ae4ac6d64d7
+content_hash: sha256:13d33fefd72691b27e1474409e9b681da3a8ebced86b65ae2c2f059f9e40bf0d
 paywall: false
 claims:
 - id: sciencedaily.com-2025-05-07-ai-human-task-sharing-could-cut-mammogra-001
@@ -74,20 +74,8 @@ claims:
   verification_status: null
   verification_source: null
   linked_pmids: []
-- id: sciencedaily.com-2025-05-07-ai-human-task-sharing-could-cut-mammogra-006
-  text: AI-human task-sharing could cut mammography screening costs by up to 30%.
-  type: speculation
-  category: FACTUAL
-  verification_status: verified
-  verification_source: pubmed
-  linked_pmids:
-  - '42020876'
-  - '42020874'
-  - '42020866'
-  - '42020854'
-  - '42020832'
 review_status: pending
-credibility_score: 39.2
+credibility_score: 36.0
 ---
 
 AI-human task-sharing could cut mammography screening costs by up to 30%
@@ -116,20 +104,3 @@ Another potential landmine involves legal liability. If AI systems are held to s
 The findings are potentially applicable to other areas of medicine such as pathology and dermatology, where diagnostic accuracy is critical, but AI is potentially able to improve workflow efficiency.
 With the infinite work capacity of AI, "we can use it 24/7, and it doesn't need to take a coffee break," Ahsen said. "AI is only going to continue to make inroads into health care, and our framework can guide hospitals, insurers, policymakers and health care practitioners in making evidence-based decisions about AI integration.
 "We're not just interrogating what AI can do -- we're asking if it should do it, and when, how and under what conditions it should be deployed as a tool to help humans."
-University of Illinois at Urbana-Champaign, News Bureau. (2025, May 7). AI-human task-sharing could cut mammography screening costs by up to 30%.
-Scientists have made an enormous step toward understanding the human brain by building a neuron-by-neuron and synapse-by-synapse roadmap -- scientifically speaking, a 'connectome' -- ...
-Let Me Take a Look: AI Could Boost Diagnostic Imaging Results
-Researchers compared the diagnostic accuracy of ChatGPT and radiologists in radiological imaging with 106 musculoskeletal radiology cases. The results showed that the diagnostic accuracy of the ...
-AI Detects More Breast Cancers With Fewer False Positives
-June 4, 2024 Â
-Using artificial intelligence (AI), breast radiologists in Denmark have improved breast cancer screening performance and reduced the rate of false-positive ...
-Safety of AI-Supported Mammography Screening
-Mammography screening supported by artificial intelligence (AI) is a safe alternative to today's conventional double reading by radiologists and can reduce heavy workloads for doctors. This has ...
-Engineering Team Develops New AI Algorithms for High Accuracy and Cost Effective Medical Image Diagnostics
-Medical imaging is an important part of modern healthcare, enhancing both the precision, reliability and development of treatment for various diseases. Artificial intelligence has also been widely ...
-Study Finds Artificial Intelligence Accurately Detects Fractures on X-Rays, Alert Human Readers
-Emergency room and urgent care clinics are typically busy and patients often have to wait many hours before they can be seen, evaluated and receive treatment. Waiting for x-rays to be interpreted by ...
-Early Warning Signals of Esophageal Cancer May Be Hiding in Plain Sight
-âLike Liquid Metalâ: Scientists Create Strange Shape-Shifting Material
-Researchers Have Discovered a THC-Free Cannabis Compound That May Replace Opioids
-Common Blood Pressure Drug Shows Surprising Power Against Deadly Antibiotic-Resistant Superbug

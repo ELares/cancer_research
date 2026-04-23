@@ -7,7 +7,7 @@ tier_name: Science journalism
 title: "Why Ozempic doesnâ\x80\x99t work for everyone: Scientists just found a hidden\
   \ reason"
 date_published: '2026-04-12'
-content_hash: sha256:6adcf93f9a7facbc4fdf163119bd55a5c665d5d7175201460b3a9f8bc50cbcba
+content_hash: sha256:8b3403da181cbacfe4f3cc01697df75c9b12562b6d09858e4da490ebf8496491
 paywall: false
 claims:
 - id: sciencedaily.com-2026-04-12-why-ozempic-doesn-t-work-for-everyone-sc-001
@@ -104,23 +104,3 @@ For now, the biological cause of GLP-1 resistance remains unclear and is likely 
 "There are a whole class of medications that are insulin sensitizers, so perhaps we can develop medications that will allow people to be sensitized to GLP-1s or find formulations of GLP-1, like the longer-acting versions, that avoid the GLP-1 resistance," she said.
 Researchers from University of Oxford, University of Dundee, University of Copenhagen, University of British Columbia, Churchill Hospital, Newcastle University, University of Bath and University of Exeter also contributed to the work.
 The study received funding from Wellcome, Medical Research Council, European Union Horizon 2020 Programme, the National Institutes of Health (grants U01-DK105535, U01-DK085545 and UM-1DK126185), the National Institute for Health Research Oxford Biomedical Research Centre, the Canadian Institutes of Health Research, the Novo Nordisk Foundation, Boehringer Ingelheim and Diabetes Australia.
-Mahesh M. Umapathysivam, Elisa Araldi, Benoit Hastoy, Adem Y. Dawed, Hasan Vatandaslar, Johanna E. Mayrhofer, Peter Lindquist, Pamuditha N. Silva, Algera Goga, Geraldine O. TrÃ¼llinger, Svenja Godbersen, Shahana Sengupta, Adrian Kaufmann, SÃ¸ren Krogsgaard Thomsen, Bolette Hartmann, Yi-Chun Chen, Anna E. Jonsson, Hasan Kabakci, Swaraj Thaman, Niels Grarup, Christian T. Have, Lindsay P. Pallo, Kristine Faerch, Anette P. Gjesing, Sameena Nawaz, Jane Cheeseman, Matthew J. Neville, Oluf Pedersen, Mark Walker, Han Sun, Christopher Jennison, Andrew T. Hattersley, Jens F. Rehfeld, Rury R. Holman, Bruce C. Verchere, Torben Hansen, Fredrik Karpe, Jens J. Holst, Mette M. Rosenkilde, Angus G. Jones, Michael Ristow, Mark I. McCarthy, Ewan R. Pearson, Markus Stoffel, Anna L. Gloyn.
-Type 2 diabetes risk alleles in peptidyl-glycine alpha-amidating monooxygenase influence GLP-1 levels and response to GLP-1 receptor agonists
-, 2026; DOI:
-10.1186/s13073-026-01630-0
-Stanford Medicine. (2026, April 12). Why Ozempic doesnât work for everyone: Scientists just found a hidden reason.
-A hormone called FGF21 can reverse obesity in mice by activating a newly identified brain circuit tied to metabolism. Surprisingly, it works in the hindbrainâthe same region targeted by GLP-1 drugs ...
-Ozempic-Like Weight Loss Drugs May Help the Heart Recover After a Heart Attack
-Popular weight-loss drugs such as Ozempic, Wegovy, and Mounjaro may do more than help people shed pounds. New research suggests these GLP-1 medications could also help protect the heart after a heart ...
-How to Keep Ozempic/Wegovy Weight Loss Without the Nausea
-Scientists are uncovering how GLP-1 drugs like Ozempic and Wegovy act on brain regions that control hunger, nausea, pleasure-based eating, and thirst. These discoveries may help create treatments ...
-Your Pancreas May Be Making Its Own Version of Ozempic
-Duke University scientists have discovered that pancreatic alpha cells, long believed to only produce glucagon, actually generate powerful amounts of GLP-1 â the same hormone mimicked by popular ...
-The Next Ozempic: A 4-in-1 Breakthrough for Lasting Weight Loss
-Scientists are racing to improve weight loss treatments beyond drugs like Ozempic and Wegovy, which are effective but plagued by nausea, bone loss, and weight regain. Tufts University chemists have ...
-Genetic Evidence That Diabetes Drug GLP-1 Receptor Agonists Achieve Weight Loss Primarily by Reducing Fat Mass More Than Muscle
-Diabetes and obesity have become pressing health issues worldwide. Glucagon-like peptide-1 (GLP-1) receptor agonists, a class of medications widely used in the treatment of type 2 diabetes (T2D), ...
-Early Warning Signals of Esophageal Cancer May Be Hiding in Plain Sight
-âLike Liquid Metalâ: Scientists Create Strange Shape-Shifting Material
-Researchers Have Discovered a THC-Free Cannabis Compound That May Replace Opioids
-Common Blood Pressure Drug Shows Surprising Power Against Deadly Antibiotic-Resistant Superbug

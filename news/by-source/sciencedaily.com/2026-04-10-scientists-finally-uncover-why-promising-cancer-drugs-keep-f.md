@@ -6,7 +6,7 @@ tier: 2
 tier_name: Science journalism
 title: Scientists finally uncover why promising cancer drugs keep failing
 date_published: '2026-04-10'
-content_hash: sha256:9ef90848883ab7a23380353fa5f87725d05e3a75792bcfa39d44a5a3d11723ec
+content_hash: sha256:4226203e60d34dd1c35a94fb88f5da60485ae342dc5025519ddd5a36eaf887c3
 paywall: false
 claims:
 - id: sciencedaily.com-2026-04-10-scientists-finally-uncover-why-promising-001
@@ -59,27 +59,3 @@ Two proteins, two distinct jobs:
 The study reveals that BET proteins BRD2 and BRD4 play different roles in turning genes on. This crucial difference helps explain why targeting them together may not work as expected.
 A path to better treatments:
 Most current drugs block both proteins at once. The new findings suggest that more precise targeting of BRD2 and BRD4 could lead to more effective and predictable cancer therapies.
-Niyazi Umut Erdogdu, Sukanya Guhathakurta, Ronald Oellers, Maria Shvedunova, Jose A. Morin, Eric M. Patrick, Janine Seyfferth, Ward Deboutte, Alejandro Gomez-Auli, Gerhard Mittler, Ibrahim I. CissÃ©, Asifa Akhtar.
-Histone acetylation-dependent clustering of BRD2 instructs transcription dynamics
-, 2026; DOI:
-10.1038/s41588-026-02533-x
-Max Planck Institute of Immunobiology and Epigenetics. (2026, April 9). Scientists finally uncover why promising cancer drugs keep failing.
-Immune checkpoint inhibitors are a type of cancer treatment that helps the immune system attack cancer cells more effectively. One of the key proteins involved in this process is Lymphocyte ...
-Scientists Discover a Previously Unknown Way Cells Break Down Proteins
-Short-lived proteins control gene expression in cells to carry out a number of vital tasks, from helping the brain form connections to helping the body mount an immune defense. These proteins are ...
-Study Hints at How Cancer Immunotherapy Can Be Safer
-June 21, 2023 Â
-Cancer immunotherapy has revolutionized treatment of many forms of cancer by unleashing the immune system response against tumors. Immunotherapies that block checkpoint receptors like PD-1, proteins ...
-Whole Exome Sequencing Predicts Whether Patients Respond to Cancer Immunotherapy
-July 8, 2022 Â
-Immunotherapies, such as immune checkpoint inhibitors, have transformed the treatment of advanced stage cancers. Unlike chemotherapies that kill cancer cells, these drugs help the body's immune ...
-Novel Approach Identifies Highly Specific Anti-Cancer Compounds
-June 3, 2022 Â
-Researchers have identified potent, highly specific compounds that interfere with bromodomain (BD)-containing proteins involved in cancer. The compounds, called BET BD1-inhibitors, are a starting ...
-Drugs Showing Promise in Cancer Trials Reduce Scarring for Scleroderma
-May 9, 2022 Â
-Epigenetic drugs that have shown promise in cancer trials significantly reduce scarring in the cells of patients with scleroderma, a new study shows. ResultsÂ reveal thatÂ drugs that inhibit BRD4, ...
-Early Warning Signals of Esophageal Cancer May Be Hiding in Plain Sight
-âLike Liquid Metalâ: Scientists Create Strange Shape-Shifting Material
-Researchers Have Discovered a THC-Free Cannabis Compound That May Replace Opioids
-Common Blood Pressure Drug Shows Surprising Power Against Deadly Antibiotic-Resistant Superbug
