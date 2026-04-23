@@ -37,6 +37,7 @@ The repo exists to compare therapeutic mechanisms, evidence depth, resistant-sta
 - ferroptosis-core library packaging for external use
 - news source authentication pipeline (fetch, extract claims, verify, score, index)
 - broader strategy review of alternative therapies and biological bottlenecks
+- operational maturity: CI, figure traceability, archival release (Phase 2 in progress)
 
 ## Current Repo State
 
@@ -54,6 +55,9 @@ The repo exists to compare therapeutic mechanisms, evidence depth, resistant-sta
 - drug combination modeling: 4 drugs, pairwise Bliss synergy scoring with pathway traces
 - tumor microenvironment: oxygen gradients, spatial immune zones (DAMP diffusion, T cell activation, anti-PD-1), LP overshoot multiplier, CAF-mediated stromal protection (GSH/MUFA supply), pH gradient (iron release + drug ion trapping)
 - some landmark papers are known to be missing from the local full-text archive
+- content provenance manifest (PROVENANCE.yaml) documents asset licensing and redistribution rights
+- pinned Python environment (requirements-lock.txt, 32 packages) and Rust toolchain (rust-toolchain.toml, 1.92.0)
+- contributor guide (CONTRIBUTING.md), citation metadata (CITATION.cff), and pytest in tracked dependencies
 
 ## What To Optimize For
 
@@ -91,6 +95,10 @@ tags/                                     precomputed tag indexes
 article/book-outline.md                   frozen book outline and chapter contracts
 article/AUTHORING.md                      writing rules and heading conventions
 news/                                     news source scaffolding (issue #99)
+PROVENANCE.yaml                           content provenance and redistribution rights
+CONTRIBUTING.md                           contributor setup, testing, and PR guide
+CITATION.cff                              citation metadata (renders GitHub "Cite" button)
+requirements-lock.txt                     pinned Python dependency versions
 ```
 
 ## Search Conventions

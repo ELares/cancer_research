@@ -2,7 +2,7 @@
 
 **Working title:** Mapping Cancer Therapy Mechanisms, Evidence Gaps, and Resistant-State Hypotheses
 
-**Target:** ~50,000 words (current: ~16,000). 5 Parts, 11 chapters, 3 appendices.
+**Target:** ~50,000 words (current: ~33,300). 5 Parts, 11 chapters, 3 appendices.
 
 > **Note:** This is a planning document, not manuscript content. Headings here
 > use the outline's own hierarchy for readability. The manuscript heading
