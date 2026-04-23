@@ -27,6 +27,7 @@
 //! | [`immune`] | ICD/DAMP immune cascade model |
 //! | [`io`] | JSON and CSV output helpers |
 //! | [`drug_transport`] | Tissue-specific drug penetration (Krogh cylinder approximation) |
+//! | [`tumor_pk`] | Two-compartment vascular/interstitial pharmacokinetics |
 
 pub mod cell;
 pub mod params;

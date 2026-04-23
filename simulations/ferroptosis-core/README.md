@@ -35,6 +35,8 @@ Run the included example: `cargo run -p ferroptosis-core --example basic_usage`
 | `grid` | 2D tumor grid with heterogeneous architecture, neighbor iteration, iron diffusion |
 | `immune` | ICD/DAMP immune cascade: ferroptotic death quality drives dendritic cell activation and T cell priming |
 | `io` | JSON and CSV output helpers |
+| `drug_transport` | Krogh cylinder drug penetration model |
+| `tumor_pk` | Two-compartment vascular/interstitial pharmacokinetics |
 
 ## Key API
 
