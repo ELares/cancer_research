@@ -58,13 +58,10 @@ books:
       attribution: "OpenStax Microbiology, Rice University"
 
     - file: "Principles-of-Data-Science-WEB.pdf"
-      source: "UNVERIFIED"
-      license: "UNVERIFIED — publisher and license unknown"
-      redistributable: false
-      note: >
-        Not a known OpenStax title. Publisher, license, and redistribution
-        status must be verified before this file can be considered
-        redistributable. Conservative default: not redistributable.
+      source: "OpenStax (Rice University)"
+      license: "CC BY 4.0"
+      redistributable: true
+      attribution: "OpenStax Principles of Data Science, Rice University"
 
   generated_output_inheritance: >
     Generated outputs (manuscript, figures, simulation results) cite
