@@ -1,0 +1,121 @@
+# Content Provenance and Rights Manifest
+#
+# This file documents the source, license, and redistribution status of
+# all non-code assets in this repository. The MIT license (see LICENSE)
+# applies to CODE only — scripts, simulations, and pipeline logic.
+# Data assets have their own licensing as documented below.
+#
+# Machine-readable format: YAML. Per-asset-class entries.
+# See also: LICENSE (MIT, code only).
+
+books:
+  description: >
+    Reference textbooks used for cross-referencing simulation parameters
+    and biochemistry fundamentals. Stored via Git LFS. These are NOT
+    covered by the MIT license — each has its own license as noted below.
+  assets:
+    - file: "Biology2e-WEB.pdf"
+      source: "OpenStax (Rice University)"
+      url: "https://openstax.org/details/books/biology-2e"
+      license: "CC BY 4.0"
+      redistributable: true
+      attribution: "OpenStax Biology 2e, Rice University"
+      note: "Identified by filename pattern; verify by opening PDF if needed."
+
+    - file: "Chemistry2e-WEB.pdf"
+      source: "OpenStax (Rice University)"
+      url: "https://openstax.org/details/books/chemistry-2e"
+      license: "CC BY 4.0"
+      redistributable: true
+      attribution: "OpenStax Chemistry 2e, Rice University"
+
+    - file: "Anatomy_and_Physiology_2e_-_WEB_c9nD9QL.pdf"
+      source: "OpenStax (Rice University)"
+      url: "https://openstax.org/details/books/anatomy-and-physiology-2e"
+      license: "CC BY 4.0"
+      redistributable: true
+      attribution: "OpenStax Anatomy and Physiology 2e, Rice University"
+
+    - file: "College_Physics_2e-WEB_7Zesafu.pdf"
+      source: "OpenStax (Rice University)"
+      url: "https://openstax.org/details/books/college-physics-2e"
+      license: "CC BY 4.0"
+      redistributable: true
+      attribution: "OpenStax College Physics 2e, Rice University"
+
+    - file: "Introductory_Statistics_2e_-_WEB.pdf"
+      source: "OpenStax (Rice University)"
+      url: "https://openstax.org/details/books/introductory-statistics-2e"
+      license: "CC BY 4.0"
+      redistributable: true
+      attribution: "OpenStax Introductory Statistics 2e, Rice University"
+
+    - file: "Microbiology-WEB.pdf"
+      source: "OpenStax (Rice University)"
+      url: "https://openstax.org/details/books/microbiology"
+      license: "CC BY 4.0"
+      redistributable: true
+      attribution: "OpenStax Microbiology, Rice University"
+
+    - file: "Principles-of-Data-Science-WEB.pdf"
+      source: "UNVERIFIED"
+      license: "UNVERIFIED — publisher and license unknown"
+      redistributable: false
+      note: >
+        Not a known OpenStax title. Publisher, license, and redistribution
+        status must be verified before this file can be considered
+        redistributable. Conservative default: not redistributable.
+
+  generated_output_inheritance: >
+    Generated outputs (manuscript, figures, simulation results) cite
+    textbook sections for parameter provenance (e.g., "Anatomy &
+    Physiology 2e, Ch.22.4") but do not reproduce copyrighted text or
+    figures verbatim. Under CC BY 4.0, derivative works require
+    attribution but are not otherwise restricted. Numerical parameter
+    values (facts) are not copyrightable. If any future content directly
+    reproduces a textbook figure or extended quote, CC BY attribution
+    must be added to that specific element.
+
+corpus:
+  description: >
+    4,830 full-text cancer research articles stored as processed
+    markdown files (YAML frontmatter + extracted text) in corpus/by-pmid/.
+    Sourced from PubMed via scripts/fetch_articles.py.
+  total_articles: 4830
+  open_access:
+    count: 4769
+    fraction: 0.987
+    note: >
+      98.7% of articles are classified as Open Access per OpenAlex
+      metadata. OA articles are typically CC BY, CC BY-NC, or equivalent
+      licenses that permit redistribution with attribution.
+  non_open_access:
+    count: 61
+    note: >
+      61 articles have full text stored but are NOT confirmed as Open
+      Access. These may be copyrighted by their publishers. Redistribution
+      of full-text copyrighted articles without publisher permission may
+      violate copyright. Follow-up action: verify each article's actual
+      OA status (OpenAlex has ~5% error rate) and downgrade confirmed
+      non-OA articles to abstract-only storage.
+  abstract_archive:
+    count: 5584
+    note: >
+      Abstract-only records in corpus/abstracts/by-pmid/. Bibliographic
+      metadata and abstracts are generally not copyrightable under US law
+      (Feist Publications v. Rural Telephone Service).
+
+news:
+  description: >
+    51 news articles fetched by scripts/fetch_news.py from public
+    RSS feeds and web pages. Stored as extracted text with metadata
+    in news/by-source/.
+  sources:
+    - "who.int (Tier 1 — institutional)"
+    - "sciencedaily.com (Tier 2 — science journalism)"
+    - "cancer.org (Tier 3 — advocacy/research)"
+  note: >
+    News content is stored for research and commentary purposes.
+    Individual article redistribution rights depend on each source's
+    terms of use. ScienceDaily content summarizes published research
+    and is typically available for non-commercial educational use.

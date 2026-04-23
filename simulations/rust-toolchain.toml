@@ -1,0 +1,5 @@
+[toolchain]
+channel = "1.92.0"
+# Tested version for all simulation binaries and ferroptosis-core.
+# Edition 2021 requires Rust 1.56+; 1.92.0 is the verified development version.
+# To update: change the channel, run `cargo build --release`, and verify with `cargo test`.
