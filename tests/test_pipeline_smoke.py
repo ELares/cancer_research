@@ -297,6 +297,22 @@ class TestNewsPipeline:
         terms = extract_search_terms("The Phase 3 trial of pembrolizumab showed 43% response rate.")
         assert len(terms) > 0
 
+    def test_extract_opinion_claim(self):
+        from extract_claims import split_sentences, detect_factual_markers
+        from config import CLAIM_OPINION_TRIGGERS
+        sentence = "According to Dr. Smith, the results are encouraging."
+        # No factual markers
+        assert len(detect_factual_markers(sentence)) == 0
+        # But should match opinion trigger
+        assert any(t in sentence.lower() for t in CLAIM_OPINION_TRIGGERS)
+
+    def test_extract_speculation_claim(self):
+        from extract_claims import split_sentences, detect_factual_markers
+        from config import CLAIM_SPECULATION_TRIGGERS
+        sentence = "This could lead to new treatments within the next decade."
+        assert len(detect_factual_markers(sentence)) == 0
+        assert any(t in sentence.lower() for t in CLAIM_SPECULATION_TRIGGERS)
+
     def test_config_has_news_additions(self):
         from config import NEWS_RATE, NEWS_DIR, CLAIM_FACTUAL_MARKERS, CLAIM_TYPE_MARKERS
         assert NEWS_RATE is not None

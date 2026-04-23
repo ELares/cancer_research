@@ -657,3 +657,41 @@ CLAIM_TYPE_MARKERS = {
     'speculation': ['could', 'might', 'may lead', 'potential', 'if confirmed',
                     'promising', 'expected to', 'likely to', 'remains to be seen'],
 }
+
+# High-specificity multi-word phrases that trigger extraction of non-factual
+# claims (opinion and speculation).  Single-word markers like "could" or
+# "said" are too broad — they match almost every sentence.  These phrases
+# are specific enough to indicate a genuine opinion or speculative claim
+# rather than ordinary narrative.
+CLAIM_OPINION_TRIGGERS = [
+    'according to',
+    'argues that',
+    'believes that',
+    'in the opinion of',
+    'experts say',
+    'researchers say',
+    'scientists believe',
+    'noted that',
+    'emphasized that',
+    'cautioned that',
+    'warned that',
+]
+
+CLAIM_SPECULATION_TRIGGERS = [
+    'could lead to',
+    'may lead to',
+    'might lead to',
+    'if confirmed',
+    'remains to be seen',
+    'expected to',
+    'likely to be',
+    'has the potential to',
+    'could change',
+    'could revolutionize',
+    'within the next',
+    'in the coming years',
+    'is expected to',
+    'are expected to',
+    'if successful',
+    'if approved',
+]

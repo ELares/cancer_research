@@ -160,29 +160,58 @@ def extract_claims(article_path: Path) -> list[dict]:
     claims: list[dict] = []
     claim_index = 1
 
+    # Import high-specificity triggers for non-factual claims.
+    from config import CLAIM_OPINION_TRIGGERS, CLAIM_SPECULATION_TRIGGERS
+
     for sentence in sentences:
         factual_markers = detect_factual_markers(sentence)
         has_factual = bool(factual_markers)
 
-        # Only extract claims that contain factual markers.
-        # Type markers are used to classify the claim, not to trigger extraction.
-        if not has_factual:
+        # Path 1: Factual claims — triggered by factual markers (numbers,
+        # endpoints, trial phases, etc.).
+        if has_factual:
+            claim_type = classify_claim_type(sentence)
+            category = classify_claim_category(sentence, has_factual)
+            claim = {
+                "id": _make_claim_id(domain, date, slug, claim_index),
+                "text": sentence,
+                "type": claim_type,
+                "category": category,
+                "verification_status": "unverified",
+                "verification_source": None,
+                "linked_pmids": [],
+            }
+            claims.append(claim)
+            claim_index += 1
             continue
 
-        claim_type = classify_claim_type(sentence)
-        category = classify_claim_category(sentence, has_factual)
+        # Path 2: Non-factual claims — triggered by high-specificity
+        # multi-word phrases only.  Single-word markers like "could" or
+        # "said" are too broad and would match almost every sentence.
+        sentence_lower = sentence.lower()
 
-        claim = {
-            "id": _make_claim_id(domain, date, slug, claim_index),
-            "text": sentence,
-            "type": claim_type,
-            "category": category,
-            "verification_status": "unverified",
-            "verification_source": None,
-            "linked_pmids": [],
-        }
-        claims.append(claim)
-        claim_index += 1
+        is_opinion = any(t in sentence_lower for t in CLAIM_OPINION_TRIGGERS)
+        is_speculation = any(t in sentence_lower for t in CLAIM_SPECULATION_TRIGGERS)
+
+        if is_opinion or is_speculation:
+            if is_speculation:
+                category = "SPECULATIVE"
+                claim_type = "speculation"
+            else:
+                category = "INTERPRETIVE"
+                claim_type = "opinion"
+
+            claim = {
+                "id": _make_claim_id(domain, date, slug, claim_index),
+                "text": sentence,
+                "type": claim_type,
+                "category": category,
+                "verification_status": None,  # non-factual: not verified
+                "verification_source": None,
+                "linked_pmids": [],
+            }
+            claims.append(claim)
+            claim_index += 1
 
     fm["claims"] = claims
     save_article(article_path, fm, body)
