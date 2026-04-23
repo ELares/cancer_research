@@ -620,3 +620,40 @@ SOURCE_TIER_DEFINITIONS = {
         ],
     },
 }
+
+# --- News Pipeline ---
+
+NEWS_RATE = RateLimiter(2)  # conservative: 2 req/s for news sites
+
+NEWS_DIR = PROJECT_ROOT / "news"
+
+# Regex patterns that indicate a sentence contains a verifiable factual claim.
+CLAIM_FACTUAL_MARKERS = [
+    r'\d+\.?\d*\s*%',                          # percentages
+    r'\$[\d,.]+\s*(?:million|billion|M|B)?',    # dollar amounts
+    r'[Pp]hase\s+[I1-3]{1,3}\b',               # trial phases
+    r'FDA\s+approv',                            # FDA actions
+    r'[Ee]nrolled\s+[\d,]+',                    # enrollment numbers
+    r'[\d,]+\s+patients',                       # patient counts
+    r'overall\s+survival',                      # clinical endpoints
+    r'progression.free\s+survival',             # clinical endpoints
+    r'response\s+rate',                         # clinical endpoints
+    r'hazard\s+ratio',                          # statistical measures
+    r'p\s*[<=]\s*0\.\d+',                       # p-values
+    r'median\s+(?:survival|OS|PFS)',            # survival endpoints
+    r'five.year\s+survival|5.year\s+survival',  # survival rates
+]
+
+# Keywords that suggest a claim's type (checked in priority order).
+CLAIM_TYPE_MARKERS = {
+    'event':       ['approved', 'announced', 'launched', 'granted', 'designated',
+                    'authorized', 'cleared', 'recalled', 'withdrew', 'submitted'],
+    'result':      ['showed', 'demonstrated', 'found', 'observed', 'measured',
+                    'produced', 'achieved', 'reported a', 'yielded', 'detected'],
+    'mechanism':   ['through', 'via', 'pathway', 'mediated', 'mechanism',
+                    'inhibit', 'activat', 'regulat', 'modulat', 'target'],
+    'opinion':     ['believes', 'argues', 'suggests that', 'according to',
+                    'noted that', 'said', 'commented', 'emphasized'],
+    'speculation': ['could', 'might', 'may lead', 'potential', 'if confirmed',
+                    'promising', 'expected to', 'likely to', 'remains to be seen'],
+}
