@@ -96,12 +96,11 @@ def build_index(approved_only: bool = False) -> int:
             entry.update(article_meta)
             entries.append(entry)
 
-    # Sort by date descending (newest first), then by claim_id
-    def _sort_key(e: dict) -> tuple:
-        d = e.get("date_published") or ""
-        return (d == "", d)  # empty dates sort last
-
-    entries.sort(key=_sort_key, reverse=True)
+    # Sort: dated entries newest-first, undated entries at the end
+    dated = [e for e in entries if e.get("date_published")]
+    undated = [e for e in entries if not e.get("date_published")]
+    dated.sort(key=lambda e: e["date_published"], reverse=True)
+    entries = dated + undated
 
     # Write index
     index_path = NEWS_DIR / "NEWS_INDEX.jsonl"

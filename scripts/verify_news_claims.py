@@ -89,13 +89,12 @@ def search_corpus(keywords: list[str], index: list[dict]) -> list[dict]:
         title = (entry.get("title") or "").lower()
         if not title:
             continue
-        for kw in lower_keywords:
-            if kw in title:
-                pmid = entry.get("pmid", "")
-                if pmid and pmid not in seen_pmids:
-                    seen_pmids.add(pmid)
-                    matches.append(entry)
-                break  # one keyword match is enough per entry
+        hit_count = sum(1 for kw in lower_keywords if kw in title)
+        if hit_count >= 2:
+            pmid = entry.get("pmid", "")
+            if pmid and pmid not in seen_pmids:
+                seen_pmids.add(pmid)
+                matches.append(entry)
 
     return matches
 

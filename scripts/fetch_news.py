@@ -51,7 +51,7 @@ def classify_source(url: str) -> tuple[int, str, str]:
         no prefix matches.
     """
     parsed = urlparse(url)
-    domain = parsed.netloc.lstrip("www.")
+    domain = parsed.netloc.removeprefix("www.")
     # Build a normalised URL fragment: "domain/path" without scheme or www.
     url_path = f"{domain}{parsed.path}".rstrip("/")
 
@@ -63,7 +63,7 @@ def classify_source(url: str) -> tuple[int, str, str]:
         tier_num = int(tier_key[-1])  # "tier1" -> 1
         tier_name = tier_def["name"]
         for prefix in tier_def["path_prefixes"]:
-            prefix_norm = prefix.lstrip("www.").rstrip("/")
+            prefix_norm = prefix.removeprefix("www.").rstrip("/")
             if url_path.startswith(prefix_norm) and len(prefix_norm) > best_len:
                 best_tier = tier_num
                 best_name = tier_name
@@ -84,6 +84,8 @@ def fetch_url(url: str) -> tuple[str, str, bool]:
         response indicates a paywall (HTTP 402 or body < 500 chars).
     """
     resp = resilient_get(url, rate_limiter=NEWS_RATE)
+    if resp.status_code >= 400 and resp.status_code != 402:
+        raise RuntimeError(f"HTTP {resp.status_code} fetching {url}")
     final_url = resp.url
     is_paywall = False
 
@@ -173,9 +175,15 @@ def extract_text(html: str) -> tuple[str, str, str, str]:
 # Hashing & slugifying
 # ---------------------------------------------------------------------------
 
-def compute_content_hash(text: str) -> str:
-    """SHA-256 of whitespace-normalised text, prefixed with ``sha256:``."""
+def compute_content_hash(text: str, url: str = "") -> str:
+    """SHA-256 of whitespace-normalised text, prefixed with ``sha256:``.
+
+    When *text* is empty or whitespace-only the *url* is included in the
+    hash so that distinct empty-body articles do not collide.
+    """
     normalised = " ".join(text.split())
+    if not normalised:
+        normalised = url + normalised
     digest = hashlib.sha256(normalised.encode("utf-8")).hexdigest()
     return f"sha256:{digest}"
 
@@ -343,7 +351,7 @@ def process_url(url: str) -> Path | None:
 
     html_text, final_url, is_paywall = fetch_url(url)
     title, author, date_str, body_text = extract_text(html_text)
-    content_hash = compute_content_hash(body_text)
+    content_hash = compute_content_hash(body_text, url=url)
 
     return store_article(
         url=url,

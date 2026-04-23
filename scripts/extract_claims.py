@@ -164,15 +164,9 @@ def extract_claims(article_path: Path) -> list[dict]:
         factual_markers = detect_factual_markers(sentence)
         has_factual = bool(factual_markers)
 
-        # Check claim-type markers regardless of factual markers
-        lower = sentence.lower()
-        has_type_marker = any(
-            kw in lower
-            for keywords in CLAIM_TYPE_MARKERS.values()
-            for kw in keywords
-        )
-
-        if not has_factual and not has_type_marker:
+        # Only extract claims that contain factual markers.
+        # Type markers are used to classify the claim, not to trigger extraction.
+        if not has_factual:
             continue
 
         claim_type = classify_claim_type(sentence)

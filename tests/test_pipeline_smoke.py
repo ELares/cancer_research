@@ -289,6 +289,14 @@ class TestNewsPipeline:
         assert result.islower() or result.replace("-", "").isalnum()
         assert len(result) <= 60
 
+    def test_verify_imports(self):
+        from verify_news_claims import search_corpus, extract_search_terms
+
+    def test_extract_search_terms(self):
+        from verify_news_claims import extract_search_terms
+        terms = extract_search_terms("The Phase 3 trial of pembrolizumab showed 43% response rate.")
+        assert len(terms) > 0
+
     def test_config_has_news_additions(self):
         from config import NEWS_RATE, NEWS_DIR, CLAIM_FACTUAL_MARKERS, CLAIM_TYPE_MARKERS
         assert NEWS_RATE is not None
