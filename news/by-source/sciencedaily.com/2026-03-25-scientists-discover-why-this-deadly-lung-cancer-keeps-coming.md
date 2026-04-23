@@ -47,15 +47,7 @@ Lack of caspase 8 directs neuronal progenitor-like reprogramming and small cell 
 Nature Communications
 , 2025; 16 (1) DOI:
 10.1038/s41467-025-67142-4
-2026
-03
-260325005917.htm>.
 University of Cologne. (2026, March 25). Scientists discover why this deadly lung cancer keeps coming back.
-2026
-03
-260325005917.htm
-2026
-03
 Even years after they have recovered, a person who once struggled with alcohol or opioid addiction can relapse--and that relapse is more likely to occur during particularly stressful times. Now, ...
 Researchers Turn Back the Clock on Cancer Cells to Offer New Treatment Paradigm
 Scientists reversed an aggressive cancer, reverting malignant cells towards a more normal state. Rhabdoid tumors are an aggressive cancer which is missing a key tumor suppressor protein. Scientists ...

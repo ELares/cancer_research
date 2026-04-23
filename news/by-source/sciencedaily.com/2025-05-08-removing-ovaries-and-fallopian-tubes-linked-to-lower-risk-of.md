@@ -100,15 +100,7 @@ The University of Cambridge and Addenbrooke's Charitable Trust (ACT) are fundrai
 Long-term health outcomes of bilateral salpingo-oophorectomy in BRCA1 and BRCA2 pathogenic variant carriers with personal history of breast cancer: a retrospective cohort study using linked electronic health records
 , 2025 DOI:
 10.1016/S1470-2045(25)00156-1
-2025
-05
-250507200800.htm>.
 University of Cambridge. (2025, May 8). Removing ovaries and fallopian tubes linked to lower risk of early death among breast cancer patients with BRCA cancer genes.
-2025
-05
-250507200800.htm
-2025
-05
 BRCA1 and BRCA2 genes play a crucial role in repairing damaged DNA. Mutations in BRCA1 and BRCA2 substantially increase the likelihood of breast and ovarian cancer, respectively. This new research ...
 Tiny Robots, Big Impact: Revolutionizing Infertility Treatment With Magnetic Microrobots
 Infertility affects an estimated 186 million people worldwide, with fallopian tube obstruction contributing to 11%-67% of female infertility cases. Researchers have developed an innovative solution ...

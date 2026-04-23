@@ -46,31 +46,27 @@ claims:
   - '40203774'
   - '39957237'
 - id: sciencedaily.com-2026-04-15-95-of-people-carry-this-virus-and-scient-003
-  text: 'Fred Hutchinson Cancer Center. (2026, April 15). 95% of people carry this
-    virus and scientists may have just found how to stop it.
+  text: 'Transgenic mouse-derived human monoclonal antibodies targeting EBV gp350
+    and gp42 provide basis for therapeutic development
 
-    2026
+    Cell Reports Medicine
 
-    04
+    , 2026; 7 (2): 102618 DOI:
 
-    260414075650.htm
+    10.1016/j.xcrm.2026.102618
 
-    2026
-
-    04
-
-    Researchers have discovered a significant association between specific Epstein-Barr
-    virus (EBV) variants and nasopharyngeal carcinoma (NPC).'
+    Fred Hutchinson Cancer Center. (2026, April 15). 95% of people carry this virus
+    and scientists may have just found how to stop it.'
   type: result
   category: FACTUAL
   verification_status: verified
   verification_source: corpus
   linked_pmids:
-  - '41495048'
-  - '40098719'
-  - '40274835'
-  - '40203774'
-  - '39957237'
+  - '41417728'
+  - '40923270'
+  - '41509977'
+  - '41629133'
+  - '41635510'
 review_status: pending
 credibility_score: 55.2
 ---
@@ -101,15 +97,7 @@ Transgenic mouse-derived human monoclonal antibodies targeting EBV gp350 and gp4
 Cell Reports Medicine
 , 2026; 7 (2): 102618 DOI:
 10.1016/j.xcrm.2026.102618
-2026
-04
-260414075650.htm>.
 Fred Hutchinson Cancer Center. (2026, April 15). 95% of people carry this virus and scientists may have just found how to stop it.
-2026
-04
-260414075650.htm
-2026
-04
 Researchers have discovered a significant association between specific Epstein-Barr virus (EBV) variants and nasopharyngeal carcinoma (NPC). NPC is a cancer notably prevalent in southern China, where ...
 New Research Offers Insight Into the Future Understanding of MS and Its Treatments
 Researchers have developed a new and unique blood test to measure the immune response to the Epstein Barr Virus (EBV) which is the leading risk factor for developing multiple sclerosis (MS). Their ...

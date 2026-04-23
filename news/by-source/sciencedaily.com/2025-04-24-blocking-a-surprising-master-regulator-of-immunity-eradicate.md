@@ -88,15 +88,7 @@ David Kung-Chun Chiu, Xiangyue Zhang, Bowie Yik-Ling Cheng, Qiang Liu, Kazukuni 
 Tumor-derived erythropoietin acts as an immunosuppressive switch in cancer immunity
 , 2025; 388 (6745) DOI:
 10.1126/science.adr3026
-2025
-04
-250424165403.htm>.
 Stanford Medicine. (2025, April 25). Blocking a surprising master regulator of immunity eradicates liver tumors in mice.
-2025
-04
-250424165403.htm
-2025
-04
 Mutations of the tumor suppressor p53 not only have a growth-promoting effect on the cancer cells themselves, but also influence the cells in the tumor's microenvironment. Scientists have now ...
 Cancer's Sweet Achilles Heel
 A high expression of the enzyme beta1,4-galactosyltransferase-3, or B4GALT3Â is associated with noticeably shortened survival rates in several types of immunotherapy cancersdeficiency in mice TIME ...

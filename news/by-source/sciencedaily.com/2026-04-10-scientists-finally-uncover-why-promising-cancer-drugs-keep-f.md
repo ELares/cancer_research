@@ -63,15 +63,7 @@ Niyazi Umut Erdogdu, Sukanya Guhathakurta, Ronald Oellers, Maria Shvedunova, Jos
 Histone acetylation-dependent clustering of BRD2 instructs transcription dynamics
 , 2026; DOI:
 10.1038/s41588-026-02533-x
-2026
-04
-260409101055.htm>.
 Max Planck Institute of Immunobiology and Epigenetics. (2026, April 9). Scientists finally uncover why promising cancer drugs keep failing.
-2026
-04
-260409101055.htm
-2026
-04
 Immune checkpoint inhibitors are a type of cancer treatment that helps the immune system attack cancer cells more effectively. One of the key proteins involved in this process is Lymphocyte ...
 Scientists Discover a Previously Unknown Way Cells Break Down Proteins
 Short-lived proteins control gene expression in cells to carry out a number of vital tasks, from helping the brain form connections to helping the body mount an immune defense. These proteins are ...

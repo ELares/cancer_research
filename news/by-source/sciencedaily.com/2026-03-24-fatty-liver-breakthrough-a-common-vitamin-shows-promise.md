@@ -46,15 +46,7 @@ Yo Han Lee, Jinyoung Lee, Joonho Jeong, Kieun Park, Bukyung Baik, Yuseong Kwon, 
 Hepatic miR-93 promotes the pathogenesis of metabolic dysfunction-associated steatotic liver disease by suppressing SIRT1
 , 2025; 169: 156266 DOI:
 10.1016/j.metabol.2025.156266
-2026
-03
-260324080203.htm>.
 UNIST. (2026, March 24). Fatty liver breakthrough: A common vitamin shows promise.
-2026
-03
-260324080203.htm
-2026
-03
 A high-fat diet does more than overload the liver with fat. New research from MIT shows that prolonged exposure to fatty foods can push liver cells into a survival mode that quietly raises the risk ...
 Fatty Liver Breakthrough: A Safe, Cheap Vitamin Shows Promise
 Researchers identified microRNA-93 as a genetic driver of fatty liver disease and showed that vitamin B3 can effectively suppress it. This breakthrough suggests niacin could be repurposed as a ...

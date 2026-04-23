@@ -47,15 +47,7 @@ The mechanosensitive adhesion G protein-coupled receptor 133 (GPR133/ADGRD1) enh
 Signal Transduction and Targeted Therapy
 , 2025; 10 (1) DOI:
 10.1038/s41392-025-02291-y
-2026
-04
-260406080131.htm>.
 UniversitÃ¤t Leipzig. (2026, April 6). Scientists may have found a way to keep your bones strong for life.
-2026
-04
-260406080131.htm
-2026
-04
 Scientists have discovered that a âlongevity geneâ found in people who live beyond 100 can reverse heart aging in models of Progeria, a devastating disease that causes children to age rapidly. By ...
 Scientists May Have Found a Way to Strengthen Bones for Life
 Scientists at Leipzig University have identified a little-known receptor, GPR133, as a key player in bone health. By stimulating this receptor with a new compound called AP503, they were able to ...

@@ -63,15 +63,7 @@ Jungen Hu, Tianxu Liu, Mara KlÃ¶hn, Andrew Freistaedter, Elif Toprak, Huanting
 Nucleotide analogue bemnifosbuvir inhibits hepatitis E virus replication in preclinical models
 , 2026; gutjnl-2025-336714 DOI:
 10.1136/gutjnl-2025-336714
-2026
-04
-260405003949.htm>.
 Ruhr-University Bochum. (2026, April 6). A drug already in trials may finally stop hepatitis E.
-2026
-04
-260405003949.htm
-2026
-04
 Researchers have discovered a way that ovarian cancer tumors manipulate their environment to resist immunotherapy and identified a drug target that could overcome that resistance. The study used a ...
 First Effective Treatment Found for Spitting Cobra Snakebite
 May 7, 2024 Â

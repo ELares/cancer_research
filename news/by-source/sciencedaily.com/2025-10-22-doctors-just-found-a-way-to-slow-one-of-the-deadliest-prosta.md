@@ -30,27 +30,18 @@ claims:
     , the Phase III AMPLITUDE trial tested whether adding niraparib, a targeted cancer
     therapy known as a PARP inhibitor
 
-    1
-
     , could enhance the effectiveness of the current standard treatment, abiraterone
-    acetate and prednisone (AAP).
-
-    2
-
-    Targeting Genetic Weaknesses in Prostate Cancer
-
-    The study focused on men with advanced prostate cancer that had spread to other
-    parts of the body and who were beginning treatment for the first time.'
+    acetate and prednisone (AAP).'
   type: result
   category: FACTUAL
   verification_status: verified
   verification_source: corpus
   linked_pmids:
-  - '41737316'
-  - '41158759'
-  - '41370931'
-  - '41493473'
-  - '41629133'
+  - '40779733'
+  - '41037766'
+  - '40008409'
+  - '38302933'
+  - '39626160'
 - id: sciencedaily.com-2025-10-22-doctors-just-found-a-way-to-slow-one-of--003
   text: However, patients with HRR gene mutations typically experience faster disease
     progression and shorter survival under standard care.
@@ -135,17 +126,17 @@ claims:
 
     10.1038/s41591-025-03961-8
 
-    2025
-
-    10
-
-    251021083642.htm>.'
+    University College London. (2025, October 21).'
   type: result
   category: FACTUAL
   verification_status: verified
   verification_source: pubmed
   linked_pmids:
-  - '40159790'
+  - '42015879'
+  - '41844641'
+  - '41518601'
+  - '41191357'
+  - '41057655'
 - id: sciencedaily.com-2025-10-22-doctors-just-found-a-way-to-slow-one-of--010
   text: In a global trial, patients receiving the experimental drug zilebesiran alongside
     standard therapy saw greater blood ...
@@ -220,9 +211,7 @@ University College London
 A powerful new drug combinationâniraparib added to standard prostate cancer therapyâhas been shown to significantly delay disease progression in men with specific DNA repair gene mutations. In the large AMPLITUDE trial, patients receiving the combo lived longer without symptoms worsening and saw nearly a 50% risk reduction in BRCA-mutated cases. While side effects like anemia were more common, the results mark a major step toward precision medicine for prostate cancer.
 A major international study led by UCL researchers has found that combining two cancer drugs could substantially slow the progression of a severe and often deadly form of prostate cancer in men with specific genetic mutations.
 , the Phase III AMPLITUDE trial tested whether adding niraparib, a targeted cancer therapy known as a PARP inhibitor
-1
 , could enhance the effectiveness of the current standard treatment, abiraterone acetate and prednisone (AAP).
-2
 Targeting Genetic Weaknesses in Prostate Cancer
 The study focused on men with advanced prostate cancer that had spread to other parts of the body and who were beginning treatment for the first time. All participants had mutations in genes involved in homologous recombination repair (HRR), a key system that helps repair damaged DNA.
 BRCA1
@@ -246,7 +235,6 @@ A trend toward improved overall survival was seen in the niraparib group, though
 Professor Attard said: "Although current standard treatments are very effective for the majority of patients with advanced prostate cancer, a small but very significant proportion of patients have limited benefit. We now know that prostate cancers with alterations in HRR genes account for a significant group of patients whose disease recurs quickly and has an aggressive course. By combining with niraparib we can delay the cancer returning and hopefully significantly prolonging life expectancy.
 "These findings are striking because they support widespread genomic testing at diagnosis with use of a targeted treatment for patients who stand to derive the greatest benefit.
 "For cancers with a mutation in one of the eligible HRR genes, where niraparib has been approved, a doctor should consider a discussion that balances the risks of side effects against the clear benefit to delaying disease growth and worsening symptoms."
-3
 Side Effects and Safety
 While the treatment was generally well tolerated, side effects were more common in the niraparib group. Significantly more cases of anemia and high blood pressure were reported with niraparib, and 25% of patients required blood transfusions. Treatment-related deaths were also higher in the niraparib group (14 versus 7), though overall discontinuation rates remained low.
 The study's authors note that while the results are promising, further research is needed to confirm long-term survival benefits and to explore the impact of newer imaging techniques and broader genetic testing.
@@ -261,15 +249,7 @@ Gerhardt Attard, Neeraj Agarwal, Julie N. Graff, Shahneen Sandhu, Eleni Efstathi
 Niraparib and abiraterone acetate plus prednisone for HRR-deficient metastatic castration-sensitive prostate cancer: a randomized phase 3 trial
 , 2025; DOI:
 10.1038/s41591-025-03961-8
-2025
-10
-251021083642.htm>.
 University College London. (2025, October 21). Doctors just found a way to slow one of the deadliest prostate cancers.
-2025
-10
-251021083642.htm
-2025
-10
 A twice-yearly injection may soon change how high blood pressure is treated. In a global trial, patients receiving the experimental drug zilebesiran alongside standard therapy saw greater blood ...
 This Powerful Drug Combo Cuts Prostate Cancer Deaths by 40%
 A new drug combo of enzalutamide and hormone therapy has been shown to extend survival for men with recurring prostate cancer, reducing death risk by over 40%. The study followed more than 1,000 ...

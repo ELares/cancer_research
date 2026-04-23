@@ -43,15 +43,7 @@ KÄ±Ìlauea Volcanic Ash Induced a Massive Phytoplankton Bloom in the Nutrien
 Journal of Geophysical Research: Oceans
 , 2025; 130 (3) DOI:
 10.1029/2023JC020676
-2025
-04
-250409115406.htm>.
 University of Hawaii at Manoa. (2025, April 10). Kilauea volcano's ash prompted largest open ocean phytoplankton bloom.
-2025
-04
-250409115406.htm
-2025
-04
 A new study suggests that people who are trying to conceive and live close to oil and gas development sites have a heightened risk of developing adverse mental health outcomes. The study found that ...
 Switching to Vegan or Ketogenic Diet Rapidly Impacts Immune System
 Researchers have observed rapid and distinct immune system changes in a small study of people who switched to a vegan or a ketogenic (also called keto) diet. Scientists closely monitored various ...

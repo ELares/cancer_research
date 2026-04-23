@@ -75,31 +75,17 @@ claims:
   verification_source: null
   linked_pmids: []
 - id: sciencedaily.com-2025-05-07-ai-human-task-sharing-could-cut-mammogra-006
-  text: 'AI-human task-sharing could cut mammography screening costs by up to 30%.
-
-    2025
-
-    05
-
-    250507130005.htm
-
-    2025
-
-    05
-
-    Scientists have made an enormous step toward understanding the human brain by
-    building a neuron-by-neuron and synapse-by-synapse roadmap -- scientifically speaking,
-    a ''connectome'' -- ...'
+  text: AI-human task-sharing could cut mammography screening costs by up to 30%.
   type: speculation
   category: FACTUAL
   verification_status: verified
   verification_source: pubmed
   linked_pmids:
-  - '42018420'
-  - '42016515'
-  - '42014719'
-  - '42011063'
-  - '42011047'
+  - '42020876'
+  - '42020874'
+  - '42020866'
+  - '42020854'
+  - '42020832'
 review_status: pending
 credibility_score: 39.2
 ---
@@ -130,15 +116,7 @@ Another potential landmine involves legal liability. If AI systems are held to s
 The findings are potentially applicable to other areas of medicine such as pathology and dermatology, where diagnostic accuracy is critical, but AI is potentially able to improve workflow efficiency.
 With the infinite work capacity of AI, "we can use it 24/7, and it doesn't need to take a coffee break," Ahsen said. "AI is only going to continue to make inroads into health care, and our framework can guide hospitals, insurers, policymakers and health care practitioners in making evidence-based decisions about AI integration.
 "We're not just interrogating what AI can do -- we're asking if it should do it, and when, how and under what conditions it should be deployed as a tool to help humans."
-2025
-05
-250507130005.htm>.
 University of Illinois at Urbana-Champaign, News Bureau. (2025, May 7). AI-human task-sharing could cut mammography screening costs by up to 30%.
-2025
-05
-250507130005.htm
-2025
-05
 Scientists have made an enormous step toward understanding the human brain by building a neuron-by-neuron and synapse-by-synapse roadmap -- scientifically speaking, a 'connectome' -- ...
 Let Me Take a Look: AI Could Boost Diagnostic Imaging Results
 Researchers compared the diagnostic accuracy of ChatGPT and radiologists in radiological imaging with 106 musculoskeletal radiology cases. The results showed that the diagnostic accuracy of the ...

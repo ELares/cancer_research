@@ -30,21 +30,19 @@ claims:
   verification_source: null
   linked_pmids: []
 - id: sciencedaily.com-2026-04-21-scientists-discover-hidden-master-switch-003
-  text: "Scientists discover hidden â\x80\x9Cmaster switchâ\x80\x9D driving skin cancer\
-    \ growth and immune escape.\n2026\n04\n260420014746.htm\n2026\n04\nColorectal\
-    \ cancer has long baffled scientists because, unlike most tumors, patients often\
-    \ do better when their cancers are packed with immune-suppressing regulatory T\
-    \ cells."
+  text: Colorectal cancer has long baffled scientists because, unlike most tumors,
+    patients often do better when their cancers are packed with immune-suppressing
+    regulatory T cells.
   type: mechanism
   category: FACTUAL
   verification_status: verified
   verification_source: pubmed
   linked_pmids:
-  - '42008161'
-  - '41947036'
-  - '41930781'
-  - '41900943'
-  - '41897362'
+  - '42020914'
+  - '42020818'
+  - '42020735'
+  - '42020360'
+  - '42020271'
 review_status: pending
 credibility_score: 55.2
 ---
@@ -79,15 +77,7 @@ Pietro Berico, Amanda Flores Yanke, Fatemeh Vand-Rajabpour, Catherine Do, Irving
 A targetable developmental program co-regulates angiogenesis and immune evasion in melanoma
 , 2026; DOI:
 10.1158/2159-8290.CD-24-1853
-2026
-04
-260420014746.htm>.
 NYU Langone Health / NYU Grossman School of Medicine. (2026, April 21). Scientists discover hidden âmaster switchâ driving skin cancer growth and immune escape.
-2026
-04
-260420014746.htm
-2026
-04
 Colorectal cancer has long baffled scientists because, unlike most tumors, patients often do better when their cancers are packed with immune-suppressing regulatory T cells. New research finally ...
 Scientists Exposed How Cancer Hides in Plain Sight
 Pancreatic cancer may evade the immune system using a clever molecular trick. Researchers found that the cancer-driving protein MYC also suppresses immune alarm signals, allowing tumors to grow ...

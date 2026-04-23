@@ -50,15 +50,7 @@ Funding and Future Impact
 The BRIDGE project is supported by the iNOVA4Health Lighthouse Projects (LHP) 2025 program, which funds research with strong potential to move from the lab into clinical practice. By encouraging collaboration between scientists, clinicians, and technology experts, the initiative aims to accelerate progress in addressing major health challenges.
 Over the next two years, the project will receive up to €75,000 to support its work. Researchers hope this investment will help speed up the development of new strategies to better understand, monitor, and treat some of the most aggressive forms of breast cancer.
 Instituto de Tecnologia QuÃ­mica e BiolÃ³gica AntÃ³nio Xavier da Universidade NOVA de Lisboa ITQB NOVA
-2026
-04
-260411022031.htm>.
 Instituto de Tecnologia QuÃ­mica e BiolÃ³gica AntÃ³nio Xavier da Universidade NOVA de Lisboa ITQB NOVA. (2026, April 12). How aggressive breast cancer turns off the immune system.
-2026
-04
-260411022031.htm
-2026
-04
 New findings could help make immunotherapies for brain cancer more effective. The team analyzed almost 200,000 individual immune cells in tumor samples taken from patients with glioma, the most ...
 New Therapeutic Strategy Identified for Triple Negative Breast Cancer
 Triple negative breast cancer (TNBC) remains the most aggressive and deadly type of breast cancer, but new findings from cancer researchers are pointing the way toward therapeutic strategies that ...

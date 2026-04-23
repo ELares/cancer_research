@@ -72,15 +72,7 @@ Imran Noorani, Magnus Haughey, Jens Luebeck, Andrew Rowan, Eva GrÃ¶nroos, Fran
 Extrachromosomal DNAâDriven Oncogene Spatial Heterogeneity and Evolution in Glioblastoma
 , 2025; OF1 DOI:
 10.1158/2159-8290.CD-24-1555
-2025
-09
-250916221917.htm>.
 Queen Mary University of London. (2025, September 17). Rogue DNA rings may be the secret spark driving deadly brain cancer.
-2025
-09
-250916221917.htm
-2025
-09
 A new study shows glioblastoma isnât confined to the brainâit erodes the skull and hijacks the immune system within skull marrow. The cancer opens channels that let inflammatory cells enter the ...
 Cracking the Code of DNA Circles in Cancer: Potential Therapy
 Tiny circles called ecDNA are critical in cancer development and drug resistance. An international team publishes landmark studies detailing new findings and potential ...

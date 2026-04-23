@@ -70,15 +70,7 @@ Zeaxanthin augments CD8  effector T cell function and immunotherapy efficacy
 Cell Reports Medicine
 , 2025; 6 (9): 102324 DOI:
 10.1016/j.xcrm.2025.102324
-2026
-04
-260410083114.htm>.
 University of Chicago Medical Center. (2026, April 10). A common nutrient could supercharge cancer treatment.
-2026
-04
-260410083114.htm
-2026
-04
 Zeaxanthin, best known for eye health, has been found to boost the tumor-killing power of T cells. Researchers showed it strengthens T-cell receptors, enhances immune signaling, and improves the ...
 Evaluating the Safety and Efficacy of a Smallpox Vaccine for Preventing Mpox
 May 8, 2025 Â

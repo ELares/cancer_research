@@ -87,20 +87,7 @@ claims:
   verification_source: null
   linked_pmids: []
 - id: sciencedaily.com-2026-03-30-powerful-cholesterol-drug-cuts-heart-att-007
-  text: 'Powerful cholesterol drug cuts heart attack risk by 31%.
-
-    2026
-
-    03
-
-    260330001129.htm
-
-    2026
-
-    03
-
-    An experimental drug once known for helping control type 2 diabetes may also fight
-    heart disease.'
+  text: Powerful cholesterol drug cuts heart attack risk by 31%.
   type: result
   category: FACTUAL
   verification_status: verified
@@ -167,15 +154,7 @@ Nicholas A. Marston, Erin A. Bohula, Ajay K. Bhatia, Gaetano M. De Ferrari, Lawr
 Evolocumab to Reduce First Major Cardiovascular Events in Patients Without Known Significant Atherosclerosis and With Diabetes
 , 2026; DOI:
 10.1001/jama.2026.3277
-2026
-03
-260330001129.htm>.
 Mass General Brigham. (2026, March 30). Powerful cholesterol drug cuts heart attack risk by 31%.
-2026
-03
-260330001129.htm
-2026
-03
 An experimental drug once known for helping control type 2 diabetes may also fight heart disease. Researchers found IC7Fc lowered cholesterol, blood fats, and artery-clogging plaques while calming ...
 Everyday Microplastics Could Be Fueling Heart Disease
 Microplasticsâtiny particles now found in food, water, air, and even human tissuesâmay directly accelerate artery-clogging disease, and new research shows the danger may be far greater for males. ...

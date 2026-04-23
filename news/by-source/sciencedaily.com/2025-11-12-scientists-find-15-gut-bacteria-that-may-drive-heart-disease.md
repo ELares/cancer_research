@@ -73,15 +73,7 @@ Soomin Lee, Shahbaz Raza, Eun-Ju Lee, Yoosoo Chang, Seungho Ryu, Hyung-Lae Kim, 
 Metagenome-assembled genomes reveal microbial signatures and metabolic pathways linked to coronary artery disease
 , 2025; DOI:
 10.1128/msystems.00954-25
-2025
-11
-251112011818.htm>.
 American Society for Microbiology. (2025, November 12). Scientists find 15 gut bacteria that may drive heart disease.
-2025
-11
-251112011818.htm
-2025
-11
 Training harder may do more than build muscleâit could transform your gut. Researchers found that intense workouts change the balance of bacteria and important compounds in athletesâ digestive ...
 Gut Bacteria Can Sense Their Environment and Itâs Key to Your Health
 Your gut is home to trillions of bacteria that constantly âsenseâ their surroundings to survive and thrive. New research shows that beneficial gut microbes, especially common Clostridia bacteria, ...

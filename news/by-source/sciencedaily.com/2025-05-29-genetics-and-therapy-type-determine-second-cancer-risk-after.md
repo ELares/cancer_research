@@ -86,15 +86,7 @@ Achal Neupane, Qi Liu, Siddhant Taneja, Jennifer French, Matthew J Ehrhardt, Tar
 Contributions of cancer treatment and genetic predisposition to risk of subsequent neoplasms in long-term survivors of childhood cancer: a report from the St Jude Lifetime Cohort and the Childhood Cancer Survivor Study
 , 2025; 26 (6): 806 DOI:
 10.1016/S1470-2045(25)00157-3
-2025
-05
-250529124355.htm>.
 St. Jude Children's Research Hospital. (2025, May 30). Genetics and therapy type determine second cancer risk after childhood treatment.
-2025
-05
-250529124355.htm
-2025
-05
 A new study further illustrates that when it comes to risk of Alzheimer's disease, even genetically determined forms of the disease, genetics is only one piece of the puzzle. Researchers ...
 CT Scan Best at Predicting Heart Disease Risk in Middle Age
 May 23, 2023 Â

@@ -78,26 +78,18 @@ claims:
 
     10.1038/s41591-025-03877-3
 
-    2025
-
-    09
-
-    250902085143.htm>.'
+    University of Pennsylvania School of Medicine. (2025, September 3).'
   type: mechanism
   category: FACTUAL
   verification_status: verified
-  verification_source: pubmed
+  verification_source: corpus
   linked_pmids:
-  - '42020312'
-  - '42018276'
-  - '42017749'
-  - '42016370'
-  - '42013233'
+  - '40125427'
+  - '35831624'
+  - '34215565'
 - id: sciencedaily.com-2025-09-02-scientists-discover-how-to-wipe-out-brea-007
-  text: "Scientists discover how to wipe out breast cancerâ\x80\x99s hidden cells.\n\
-    2025\n09\n250902085143.htm\n2025\n09\nFear of another heart attack was a significant\
-    \ ongoing contributor to how heart attack survivors perceive their health, according\
-    \ to a study."
+  text: Fear of another heart attack was a significant ongoing contributor to how
+    heart attack survivors perceive their health, according to a study.
   type: opinion
   category: INTERPRETIVE
   verification_status: null
@@ -135,15 +127,7 @@ Angela DeMichele, Amy S. Clark, Emily Shea, Lauren J. Bayne, Christopher J. Ster
 Targeting dormant tumor cells to prevent recurrent breast cancer: a randomized phase 2 trial
 , 2025; DOI:
 10.1038/s41591-025-03877-3
-2025
-09
-250902085143.htm>.
 University of Pennsylvania School of Medicine. (2025, September 3). Scientists discover how to wipe out breast cancerâs hidden cells.
-2025
-09
-250902085143.htm
-2025
-09
 Fear of another heart attack was a significant ongoing contributor to how heart attack survivors perceive their health, according to a study. While anxiety and depression are recognized as common ...
 Researchers Identify Brain Region Involved in Oxycodone Relapse
 July 9, 2024 Â

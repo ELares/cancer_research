@@ -75,15 +75,7 @@ Focused ultrasound-microbubble treatment arrests the growth and formation of cer
 Nature Biomedical Engineering
 , 2025; DOI:
 10.1038/s41551-025-01390-z
-2025
-05
-250515131836.htm>.
 University of Virginia Health System. (2025, May 16). Focused ultrasound halts growth of debilitating brain lesions.
-2025
-05
-250515131836.htm
-2025
-05
 A parasite that may already be hiding in your brain has a shocking survival trick: it can infect the very immune cells sent to destroy it. Yet most people never get sick, and new research from UVA ...
 First Bioavailable Compound That Specifically Inhibits Free Radical Production in Mitochondria Prevents and Treats Metabolic Syndrome in Mice
 July 10, 2023 Â

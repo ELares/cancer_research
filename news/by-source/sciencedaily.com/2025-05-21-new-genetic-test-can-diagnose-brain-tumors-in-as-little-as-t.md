@@ -79,15 +79,7 @@ Simon Deacon, Inswasti Cahyani, Nadine Holmes, Graeme Fox, Rory Munro, Satrio Wi
 ROBIN: A unified nanopore-based assay integrating intraoperative methylome classification and next-day comprehensive profiling for ultra-rapid tumor diagnosis
 , 2025; DOI:
 10.1093/neuonc/noaf103
-2025
-05
-250520224245.htm>.
 University of Nottingham. (2025, May 21). New genetic test can diagnose brain tumors in as little as two hours.
-2025
-05
-250520224245.htm
-2025
-05
 A revolutionary STI test developed by UK-based Linear Diagnostics is on track to dramatically reduce the time it takes to detect infections like gonorrhea and chlamydia. Built on ultra-fast EXPAR DNA ...
 Diagnostic Uncertainty in Parkinson's Disease: Study Calls for Improved Diagnostic Processes
 A study found that a significant proportion of Parkinson's disease diagnoses are later corrected. Up to one in six diagnoses changed after ten years of follow-up, and the majority of new ...

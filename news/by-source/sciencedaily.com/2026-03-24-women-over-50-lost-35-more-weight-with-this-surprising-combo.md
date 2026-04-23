@@ -97,31 +97,17 @@ claims:
   verification_source: null
   linked_pmids: []
 - id: sciencedaily.com-2026-03-24-women-over-50-lost-35-more-weight-with-t-008
-  text: 'Women over 50 lost 35% more weight with this surprising combo.
-
-    2026
-
-    03
-
-    260323005543.htm
-
-    2026
-
-    03
-
-    A cutting-edge mouse study reveals that tirzepatide, the dual GLP-1/GIP drug already
-    hailed for impressive weight loss, does more than trim fat: it slashes the growth
-    of obesity-linked breast tumors. ...'
+  text: Women over 50 lost 35% more weight with this surprising combo.
   type: result
   category: FACTUAL
   verification_status: verified
   verification_source: pubmed
   linked_pmids:
-  - '41968220'
-  - '41948476'
-  - '41945627'
-  - '41927408'
-  - '41885132'
+  - '42020845'
+  - '42020842'
+  - '42020840'
+  - '42020820'
+  - '42020802'
 - id: sciencedaily.com-2026-03-24-women-over-50-lost-35-more-weight-with-t-009
   text: 'Review of Over 70 Years of Menopause Science Highlights Research Gaps and
     Calls for Individualized Treatment
@@ -201,15 +187,7 @@ The role of menopause hormone therapy in modulating                        tirze
 The Lancet Obstetrics, Gynaecology,
 , 2026; 2 (2): e118 DOI:
 10.1016/S3050-5038(25)00145-1
-2026
-03
-260323005543.htm>.
 Mayo Clinic. (2026, March 23). Women over 50 lost 35% more weight with this surprising combo.
-2026
-03
-260323005543.htm
-2026
-03
 A cutting-edge mouse study reveals that tirzepatide, the dual GLP-1/GIP drug already hailed for impressive weight loss, does more than trim fat: it slashes the growth of obesity-linked breast tumors. ...
 Hormone Therapy Supercharges Tirzepatide, Unleashing Major Weight Loss After Menopause
 July 13, 2025 Â

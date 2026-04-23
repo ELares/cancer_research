@@ -89,15 +89,7 @@ Improving a Plasma Biomarker Panel for Early Detection of Pancreatic Ductal Aden
 Clinical Cancer Research
 , 2026; 32 (4): 756 DOI:
 10.1158/1078-0432.CCR-25-3297
-2026
-03
-260323005540.htm>.
 NIH. (2026, March 23). New blood test could catch pancreatic cancer before itâs too late.
-2026
-03
-260323005540.htm
-2026
-03
 A new study suggests Alzheimerâs disease may be detectable through subtle shape changes in proteins found in the blood. Researchers discovered that structural differences in three blood proteins ...
 New Cells in Connective Tissue Open Up Strategy Against Pancreatic Cancer
 Researchers have discovered a previously unknown type of connective tissue cells that surround cancer cells in pancreatic tumors. The newly discovered cells counteract tumor development and may ...

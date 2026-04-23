@@ -66,15 +66,7 @@ Estrogen-related receptors regulate innate and adaptive muscle mitochondrial ene
 Proceedings of the National Academy of Sciences
 , 2025; 122 (20) DOI:
 10.1073/pnas.2426179122
-2025
-05
-250512165549.htm>.
 Salk Institute. (2025, May 13). Estrogen-related receptors could be key to treating metabolic and muscular disorders.
-2025
-05
-250512165549.htm
-2025
-05
 A novel drug holds promise for treating Duchenne muscular dystrophy (DMD), a rare genetic disorder that causes severe muscle degeneration. Researchers have discovered that an experimental compound ...
 New Gene Therapy for Muscular Dystrophy Offers Hope
 July 17, 2024 Â

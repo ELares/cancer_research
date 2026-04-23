@@ -108,15 +108,7 @@ Mahesh M. Umapathysivam, Elisa Araldi, Benoit Hastoy, Adem Y. Dawed, Hasan Vatan
 Type 2 diabetes risk alleles in peptidyl-glycine alpha-amidating monooxygenase influence GLP-1 levels and response to GLP-1 receptor agonists
 , 2026; DOI:
 10.1186/s13073-026-01630-0
-2026
-04
-260411022029.htm>.
 Stanford Medicine. (2026, April 12). Why Ozempic doesnât work for everyone: Scientists just found a hidden reason.
-2026
-04
-260411022029.htm
-2026
-04
 A hormone called FGF21 can reverse obesity in mice by activating a newly identified brain circuit tied to metabolism. Surprisingly, it works in the hindbrainâthe same region targeted by GLP-1 drugs ...
 Ozempic-Like Weight Loss Drugs May Help the Heart Recover After a Heart Attack
 Popular weight-loss drugs such as Ozempic, Wegovy, and Mounjaro may do more than help people shed pounds. New research suggests these GLP-1 medications could also help protect the heart after a heart ...

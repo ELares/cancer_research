@@ -59,15 +59,7 @@ Hyperinflammatory repolarisation of ovarian cancer patient macrophages by anti-t
 Nature Communications
 , 2025; 16 (1) DOI:
 10.1038/s41467-025-57870-y
-2025
-04
-250410130742.htm>.
 King's College London. (2025, April 14). Study shows how new antibody therapy works against ovarian cancer.
-2025
-04
-250410130742.htm
-2025
-04
 New research has uncovered how lipid-rich fluid in the abdomen, known as ascites, plays a central role in weakening the body's immune response in advanced ovarian cancer. The findings offer new ...
 Study Identifies How Ovarian Cancer Protects Itself, Paves Way for Improved Immunotherapy Approach
 Researchers have discovered a way that ovarian cancer tumors manipulate their environment to resist immunotherapy and identified a drug target that could overcome that resistance. The study used a ...

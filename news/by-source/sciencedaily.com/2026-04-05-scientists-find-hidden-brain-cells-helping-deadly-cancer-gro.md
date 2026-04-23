@@ -35,15 +35,7 @@ Nicholas Mikolajewicz, Kui Zhai, Anish Puri, Petar Miletic, Nazanin Tatari, Jiar
 Reactive oligodendrocytes promote glioblastoma progression through CCL5/CCR5-mediated glioma stem cell maintenance
 , 2026; 114 (2): 237 DOI:
 10.1016/j.neuron.2025.12.012
-2026
-04
-260405003933.htm>.
 McMaster University. (2026, April 5). Scientists find hidden brain cells helping deadly cancer grow.
-2026
-04
-260405003933.htm
-2026
-04
 Researchers uncovered a powerful weakness in lung cancer by shutting down a protein that helps tumors survive stress. When this protein, FSP1, was blocked, lung tumors in mice shrank dramatically, ...
 The Hidden DNA Organizer Linking Fertility and Cancer
 Scientists at Kyoto University have uncovered a hidden protein complex that organizes DNA in sperm stem cells, a discovery that reveals surprising ties between fertility and cancer. When this ...

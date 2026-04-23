@@ -86,15 +86,7 @@ The next step, according to Nieva, is to measure pesticide levels directly in pa
 The research is supported by the Addario Lung Cancer Medical Institute, a nonprofit focused on advancing lung cancer research and care, as well as AstraZeneca, the Beth Longwell Foundation, Genentech, GO2 for Lung Cancer and Upstage Lung Cancer.
 Researchers also received funding from the National Institutes of Health, grant number R25CA225513 and the National Cancer Institute, grant number P30CA014089.
 Disclosure: Dr. Nieva has received consulting payments from AstraZeneca and Genentech.
-2026
-04
-260417224454.htm>.
 University of Southern California - Health Sciences. (2026, April 17). Eating more fruits and vegetables tied to unexpected lung cancer risk.
-2026
-04
-260417224454.htm
-2026
-04
 A sweeping new study reveals that whatâs on your plate may directly shape the pesticides circulating in your body. Researchers found that people who eat more fruits and vegetables known to carry ...
 Food as Medicine: How Diet Shapes Gut Microbiome Health
 May 6, 2025 Â

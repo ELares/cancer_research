@@ -45,15 +45,7 @@ Virus glycoprotein nanodisc platform for vaccine analytics
 Nature Communications
 , 2026; 17 (1) DOI:
 10.1038/s41467-026-68985-1
-2026
-04
-260411022027.htm>.
 Scripps Research Institute. (2026, April 12). Hidden weak spots in HIV and Ebola revealed with breakthrough nanodisc technology.
-2026
-04
-260411022027.htm
-2026
-04
 mRNA vaccines saved millions of lives during COVID-19 but have limitations like waning immunity and complex production. Scientists are now testing a new platform called DoriVac, which uses folded DNA ...
 Engineering Antibodies With a Novel Fusion Protein
 Even with significant expansion in the global market for antibodies used in clinical care and research, scientists recognize that there is still untapped potential for finding new antibodies. Many ...

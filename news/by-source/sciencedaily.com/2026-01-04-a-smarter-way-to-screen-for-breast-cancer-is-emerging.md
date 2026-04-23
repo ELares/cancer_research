@@ -89,20 +89,8 @@ claims:
   verification_source: null
   linked_pmids: []
 - id: sciencedaily.com-2026-01-04-a-smarter-way-to-screen-for-breast-cance-008
-  text: 'A smarter way to screen for breast cancer is emerging.
-
-    2026
-
-    01
-
-    260103155036.htm
-
-    2026
-
-    01
-
-    Rates of Breast and Colorectal Cancer Screening Nearly Four-Fold Higher Than Lung
-    Cancer Screening Among Those Eligible
+  text: 'Rates of Breast and Colorectal Cancer Screening Nearly Four-Fold Higher Than
+    Lung Cancer Screening Among Those Eligible
 
     Lung cancer screening has the potential to catch lung cancer early and save lives
     -- but only if people get screened.'
@@ -163,15 +151,7 @@ Laura J. Esserman, Allison S. Fiscalini, Arash Naeim, Laura J. vanât Veer, 
 Risk-Based vs Annual Breast Cancer Screening
 , 2025; DOI:
 10.1001/jama.2025.24784
-2026
-01
-260103155036.htm>.
 University of California - San Francisco. (2026, January 4). A smarter way to screen for breast cancer is emerging.
-2026
-01
-260103155036.htm
-2026
-01
 Rates of Breast and Colorectal Cancer Screening Nearly Four-Fold Higher Than Lung Cancer Screening Among Those Eligible
 Lung cancer screening has the potential to catch lung cancer early and save lives -- but only if people get screened. Although lung cancer screening is recommended in the U.S. for certain individuals ...
 New Study Supports Annual Breast Cancer Screening for Women Over 40

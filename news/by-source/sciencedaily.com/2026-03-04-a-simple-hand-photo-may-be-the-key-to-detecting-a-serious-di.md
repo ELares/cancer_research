@@ -79,15 +79,7 @@ Automatic acromegaly detection using deep learning on hand images: a multicenter
 The Journal of Clinical Endocrinology
 , 2026; DOI:
 10.1210/clinem/dgag027
-2026
-03
-260303201807.htm>.
 Kobe University. (2026, March 4). A simple hand photo may be the key to detecting a serious disease.
-2026
-03
-260303201807.htm
-2026
-03
 Global Life Expectancy to Increase by Nearly 5 Years by 2050 Despite Geopolitical, Metabolic, and Environmental Threats
 May 17, 2024 Â
 The latest findings forecast that global life expectancy will increase by 4.9 years in males and 4.2 years in females between 2022 and 2050. Increases are expected to be largest in countries where ...

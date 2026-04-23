@@ -52,9 +52,7 @@ claims:
   verification_source: null
   linked_pmids: []
 - id: sciencedaily.com-2026-04-02-what-s-hiding-inside-colon-cancer-could--005
-  text: "Whatâ\x80\x99s hiding inside colon cancer could change treatment.\n2026\n\
-    04\n260401071951.htm\n2026\n04\nResearchers have found hundreds of metabolic enzymes\
-    \ attached to human DNA inside the cell nucleus."
+  text: "Whatâ\x80\x99s hiding inside colon cancer could change treatment."
   type: speculation
   category: SPECULATIVE
   verification_status: null
@@ -111,15 +109,7 @@ The landscape of microbial associations in human cancer
 Science Translational Medicine
 , 2025; 17 (814) DOI:
 10.1126/scitranslmed.ads6166
-2026
-04
-260401071951.htm>.
 University of East Anglia. (2026, April 1). Whatâs hiding inside colon cancer could change treatment.
-2026
-04
-260401071951.htm
-2026
-04
 Researchers have found hundreds of metabolic enzymes attached to human DNA inside the cell nucleus. Different tissues and cancers show unique patterns of these enzymes, forming a ânuclear metabolic ...
 165,000 Dementia Patients Reveal Hidden Stroke Risk from Common Drug
 A massive UK study of more than 165,000 dementia patients has uncovered troubling new evidence about risperidone, a commonly used drug for severe agitation. Researchers found the antipsychotic ...

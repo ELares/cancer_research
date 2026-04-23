@@ -161,15 +161,7 @@ Xiao Huang, Dan Feng, Sneha Mitra, Emma S. Andretta, Nima B. Hooshdaran, Aazam P
 Opposing functions of distinct regulatory T cell subsets in colorectal cancer
 , 2026; 59 (1): 145 DOI:
 10.1016/j.immuni.2025.11.014
-2026
-02
-260206012229.htm>.
 Memorial Sloan Kettering Cancer Center. (2026, February 6). Why colorectal cancer breaks the immune systemâs rules.
-2026
-02
-260206012229.htm
-2026
-02
 Scientists at KAIST have found a way to turn a tumorâs own immune cells into powerful cancer fightersâright inside the body. Tumors are packed with macrophages, immune cells that should attack ...
 Multi-Target Approach Counters Tumor Growth in Several Cancers
 The tissue adjacent to a tumor behaves differently than areas farther away: The tumor's cancerous cells influence their surroundings, blocking the body's immune defenses and creating a sort ...

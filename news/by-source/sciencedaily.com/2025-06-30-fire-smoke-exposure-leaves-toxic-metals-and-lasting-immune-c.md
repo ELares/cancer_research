@@ -65,15 +65,7 @@ Mary M. Johnson, Abhinav Kaushik, Olivia A. Kline, Eric M. Smith, Xiaoying Zhou,
 Immune impacts of fire smoke exposure
 , 2025; DOI:
 10.1038/s41591-025-03777-6
-2025
-06
-250629033449.htm>.
 Harvard T.H. Chan School of Public Health. (2025, June 30). Fire smoke exposure leaves toxic metals and lasting immune changes.
-2025
-06
-250629033449.htm
-2025
-06
 Scientists have discovered a newly identified marine fungus that can infect and kill toxic algae responsible for harmful blooms. The microscopic parasite, named Algophthora mediterranea, attacks ...
 Fighting Fire With Fire: How Prescribed Burns Reduce Wildfire Damage and Pollution
 June 30, 2025 Â

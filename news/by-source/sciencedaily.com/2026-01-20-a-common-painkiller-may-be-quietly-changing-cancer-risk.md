@@ -30,20 +30,8 @@ claims:
   verification_source: null
   linked_pmids: []
 - id: sciencedaily.com-2026-01-20-a-common-painkiller-may-be-quietly-chang-003
-  text: 'A common painkiller may be quietly changing cancer risk.
-
-    2026
-
-    01
-
-    260120000323.htm
-
-    2026
-
-    01
-
-    Researchers found that middle-aged adults, especially women, are far more likely
-    to be addicted to ultra-processed foods than older generations.'
+  text: Researchers found that middle-aged adults, especially women, are far more
+    likely to be addicted to ultra-processed foods than older generations.
   type: speculation
   category: SPECULATIVE
   verification_status: null
@@ -133,15 +121,7 @@ The idea that a humble painkiller could help prevent cancer is both  exciting an
 For now, experts agree it’s wiser to focus on lifestyle-based prevention: eating anti-inflammatory foods,
 maintaining a healthy weight and staying physically active
 Everyday medicines may still hold unexpected potential, but until the science is settled, the most reliable advice remains simple: eat well, stay active, and talk with your doctor before relying on any medication for prevention.
-2026
-01
-260120000323.htm>.
 The Conversation. (2026, January 20). A common painkiller may be quietly changing cancer risk.
-2026
-01
-260120000323.htm
-2026
-01
 Researchers found that middle-aged adults, especially women, are far more likely to be addicted to ultra-processed foods than older generations. Marketing of diet-focused processed foods in the 1980s ...
 Jacket Uses AI to Keep You Comfortable
 Electronic textiles, such as heating pads and electric blankets, can keep the wearer warm and help ease aches and pains. However, prolonged use of these devices could possibly cause heat-related ...

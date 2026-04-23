@@ -102,37 +102,21 @@ claims:
 
     10.1016/j.medj.2025.100708
 
-    2025
-
-    06
-
-    250609060137.htm>.'
+    University of Southern California - Health Sciences. (2025, June 9).'
   type: result
   category: FACTUAL
   verification_status: verified
   verification_source: pubmed
   linked_pmids:
-  - '42012381'
-  - '42011328'
-  - '42009866'
-  - '42006889'
-  - '42006514'
+  - '41997804'
+  - '41995880'
+  - '41987364'
+  - '41971274'
+  - '41967661'
 - id: sciencedaily.com-2025-06-09-shocking-brain-cancer-breakthrough-elect-009
-  text: 'Shocking brain cancer breakthrough: Electric fields supercharge immune assault.
-
-    2025
-
-    06
-
-    250609060137.htm
-
-    2025
-
-    06
-
-    Interim data from the Phase I dose escalation part of the mRNA cancer immunotherapy
-    (mRNA-4359), show promise in patients with advanced solid cancers.'
-  type: mechanism
+  text: Interim data from the Phase I dose escalation part of the mRNA cancer immunotherapy
+    (mRNA-4359), show promise in patients with advanced solid cancers.
+  type: result
   category: FACTUAL
   verification_status: verified
   verification_source: corpus
@@ -205,15 +189,7 @@ Dongjiang Chen, Son B. Le, Ashley P. Ghiaseddin, Harshit Manektalia, Ming Li, Ad
 Efficacy and safety of adjuvant TTFields plus pembrolizumab and temozolomide in newly diagnosed glioblastoma: A phase 2 study
 , 2025; 100708 DOI:
 10.1016/j.medj.2025.100708
-2025
-06
-250609060137.htm>.
 University of Southern California - Health Sciences. (2025, June 9). Shocking brain cancer breakthrough: Electric fields supercharge immune assault.
-2025
-06
-250609060137.htm
-2025
-06
 Interim data from the Phase I dose escalation part of the mRNA cancer immunotherapy (mRNA-4359), show promise in patients with advanced solid cancers. The investigational mRNA cancer immunotherapy is ...
 Electrical Currents May Make Body's Cancer-Killing Cells Even Better Killers
 July 25, 2024 Â

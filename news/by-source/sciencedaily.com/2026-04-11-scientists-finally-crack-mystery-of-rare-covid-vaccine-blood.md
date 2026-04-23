@@ -37,20 +37,8 @@ claims:
   verification_source: null
   linked_pmids: []
 - id: sciencedaily.com-2026-04-11-scientists-finally-crack-mystery-of-rare-004
-  text: 'Scientists finally crack mystery of rare COVID vaccine blood clots.
-
-    2026
-
-    04
-
-    260409101106.htm
-
-    2026
-
-    04
-
-    A rare condition surged among previously unaffected groups of people during the
-    COVID-19 pandemic and led to the deaths of nine patients, researchers say.'
+  text: A rare condition surged among previously unaffected groups of people during
+    the COVID-19 pandemic and led to the deaths of nine patients, researchers say.
   type: opinion
   category: INTERPRETIVE
   verification_status: null
@@ -95,15 +83,7 @@ Adenoviral Inciting Antigen and Somatic Hypermutation in VITT
 New England Journal of Medicine
 , 2026; 394 (7): 669 DOI:
 10.1056/NEJMoa2514824
-2026
-04
-260409101106.htm>.
 Flinders University. (2026, April 10). Scientists finally crack mystery of rare COVID vaccine blood clots.
-2026
-04
-260409101106.htm
-2026
-04
 A rare condition surged among previously unaffected groups of people during the COVID-19 pandemic and led to the deaths of nine patients, researchers say. The condition is a type of autoimmune ...
 Researchers Find Male and Female Immune Systems Get Trained Differently in Response to Infections
 The human immune system is adaptive, remembering past infections and training itself to guard against future similar infections. But what happens when people have compromised immune systems due to ...

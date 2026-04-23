@@ -89,15 +89,7 @@ Association of Circulating Vitamin D in Midlife With Increased Tau-PET Burden in
 Neurology Open Access
 , 2026; 2 (2) DOI:
 10.1212/WN9.0000000000000057
-2026
-04
-260407073850.htm>.
 American Academy of Neurology. (2026, April 7). Your vitamin D levels in midlife could shape your brain decades later.
-2026
-04
-260407073850.htm
-2026
-04
 A large, decades-long study suggests that signs of ADHD in childhood may have consequences that extend well beyond school and behavior. Researchers followed nearly 11,000 people from childhood into ...
 Scientists Find âmaster Regulatorâ That Could Reverse Brain Aging
 Researchers have identified OTULIN, an immune-regulating enzyme, as a key trigger of tau buildup in the brain. When OTULIN was disabled, tau vanished from neurons and brain cells remained healthy. ...

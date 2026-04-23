@@ -69,15 +69,7 @@ Dr Lea said: "As we compared cells from COPD patients with cells from smokers, w
 "In future, it would be interesting to study how this carbon builds up and how lung cells respond over a longer period of time."
 Professor Fabio Ricciardolo is Chair of the European Respiratory Society's group on monitoring airway disease, based at the University of Torino, Italy, and was not involved in the research. He said: "This set of experiments suggest that people with COPD accumulate unusually large amounts of carbon in the cells of their lungs. This build-up seems to be altering those cells, potentially causing inflammation in the lungs and leading to worse lung function.
 "In addition, this research offers some clues about why polluted air might cause or worsen COPD. However, we know that smoking and air pollution are risk factors for COPD and other lung conditions, so we need to reduce levels of pollution in the air we breathe and we need to help people to quit smoking."
-2025
-06
-250610230533.htm>.
 European Respiratory Society. (2025, June 10). Unusual carbon build-up found in lungs of COPD patients.
-2025
-06
-250610230533.htm
-2025
-06
 Researchers in Japan discovered that Parkinsonâs patients diagnosed in their 80s are far more likely to show signs of amyloid buildup, a hallmark of Alzheimerâs, even without dementia symptoms. ...
 Low-Level Traffic Air Pollution Linked to Liver Damage and Fatty Liver Disease
 Breathing in even small amounts of traffic pollution could be quietly damaging your liver. New research from Australian scientists reveals that long-term exposure to fine particles in polluted ...

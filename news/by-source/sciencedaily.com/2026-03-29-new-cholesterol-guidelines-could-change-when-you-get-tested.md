@@ -43,19 +43,7 @@ claims:
   verification_source: null
   linked_pmids: []
 - id: sciencedaily.com-2026-03-29-new-cholesterol-guidelines-could-change--004
-  text: 'New cholesterol guidelines could change when you get tested.
-
-    2026
-
-    03
-
-    260328043554.htm
-
-    2026
-
-    03
-
-    Eggs are finally being vindicated after decades of cholesterol-related blame.'
+  text: New cholesterol guidelines could change when you get tested.
   type: speculation
   category: SPECULATIVE
   verification_status: null
@@ -113,15 +101,7 @@ Roger S. Blumenthal, Pamela B. Morris, Mario Gaudino, Heather M. Johnson, Timoth
 2026 ACC/AHA/AACVPR/ABC/ACPM/ADA/AGS/APhA/ASPC/NLA/PCNA Guideline on the Management of Dyslipidemia
 , 2026; DOI:
 10.1016/j.jacc.2025.11.016
-2026
-03
-260328043554.htm>.
 Johns Hopkins Medicine. (2026, March 29). New cholesterol guidelines could change when you get tested.
-2026
-03
-260328043554.htm
-2026
-03
 Eggs are finally being vindicated after decades of cholesterol-related blame. New research from the University of South Australia reveals that eggs, despite their cholesterol content, aren't the ...
 A Protein at the Heart of Heart Disease
 Low-density lipoproteins (LDL) -- commonly known as bad cholesterol -- have long been on scientists' radar as a major contributor to heart disease. But these microscopic troublemakers have ...

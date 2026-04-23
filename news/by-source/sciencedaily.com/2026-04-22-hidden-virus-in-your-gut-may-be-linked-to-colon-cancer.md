@@ -119,15 +119,7 @@ Distinct prophage infections in colorectal cancer-associated Bacteroides fragili
 Communications Medicine
 , 2026; 6 (1) DOI:
 10.1038/s43856-026-01403-1
-2026
-04
-260422044630.htm>.
 University of Southern Denmark Faculty of Health Sciences. (2026, April 22). Hidden virus in your gut may be linked to colon cancer.
-2026
-04
-260422044630.htm
-2026
-04
 A newly uncovered immune chain reaction in the gut may explain why people with inflammatory bowel disease face a much higher risk of colorectal cancer. Researchers found that a powerful inflammatory ...
 Designer Microbe Shows Promise for Reducing Mercury Absorption from Seafood
 May 1, 2025 Â

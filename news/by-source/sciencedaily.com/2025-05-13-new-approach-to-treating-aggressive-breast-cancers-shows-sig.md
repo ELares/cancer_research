@@ -95,11 +95,7 @@ claims:
 
     10.1038/s41467-025-59151-0
 
-    2025
-
-    05
-
-    250513112139.htm>.'
+    University of Cambridge. (2025, May 13).'
   type: mechanism
   category: FACTUAL
   verification_status: verified
@@ -107,32 +103,14 @@ claims:
   linked_pmids:
   - '40192976'
 - id: sciencedaily.com-2025-05-13-new-approach-to-treating-aggressive-brea-010
-  text: 'New approach to treating aggressive breast cancers shows significant improvement
-    in survival.
-
-    2025
-
-    05
-
-    250513112139.htm
-
-    2025
-
-    05
-
-    Patients with pancreatic cancer who received chemotherapy both before and after
-    surgery experienced longer survival rates than would be expected from surgery
-    followed by chemotherapy, according to a ...'
+  text: Patients with pancreatic cancer who received chemotherapy both before and
+    after surgery experienced longer survival rates than would be expected from surgery
+    followed by chemotherapy, according to a ...
   type: opinion
-  category: FACTUAL
-  verification_status: verified
-  verification_source: pubmed
-  linked_pmids:
-  - '42020933'
-  - '42020928'
-  - '42020927'
-  - '42020925'
-  - '42020921'
+  category: INTERPRETIVE
+  verification_status: null
+  verification_source: null
+  linked_pmids: []
 - id: sciencedaily.com-2025-05-13-new-approach-to-treating-aggressive-brea-011
   text: "Encouraging Phase 1 Data for Glioblastoma Treatment\nJune 6, 2024 Â\x97\n\
     Preliminary clinical data for glioblastoma multiforme patients enrolled in a Phase\
@@ -168,7 +146,7 @@ claims:
   - '41266946'
   - '41342316'
 review_status: pending
-credibility_score: 32.8
+credibility_score: 30.7
 ---
 
 New approach to treating aggressive breast cancers shows significant improvement in survival
@@ -205,15 +183,7 @@ Neoadjuvant PARP inhibitor scheduling in BRCA1 and BRCA2 related breast cancer: 
 Nature Communications
 , 2025; 16 (1) DOI:
 10.1038/s41467-025-59151-0
-2025
-05
-250513112139.htm>.
 University of Cambridge. (2025, May 13). New approach to treating aggressive breast cancers shows significant improvement in survival.
-2025
-05
-250513112139.htm
-2025
-05
 Patients with pancreatic cancer who received chemotherapy both before and after surgery experienced longer survival rates than would be expected from surgery followed by chemotherapy, according to a ...
 Encouraging Phase 1 Data for Glioblastoma Treatment
 June 6, 2024 Â

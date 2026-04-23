@@ -67,15 +67,7 @@ Study Funding and Presentation
 Study Funding: Corcept Therapeutics Incorporated was the study sponsor and funded the study.
 Dr. Bhatt is a paid consultant for Corcept Therapeutics Incorporated.
 Meeting: American College of Cardiology's Annual Scientific Session
-2026
-03
-260330001131.htm>.
 The Mount Sinai Hospital / Mount Sinai School of Medicine. (2026, March 30). This overlooked hormone could be why your blood pressure wonât drop.
-2026
-03
-260330001131.htm
-2026
-03
 A snippet of hair can reveal a pregnant person's stress level and may one day help warn of unexpected birth problems, a study indicates. Researchers measured the stress hormone cortisol in hair ...
 Study Shows Long-Term Health Impacts After Exposure to Environmental Disaster
 Exposure to a large-scale disaster, such as a tsunami, impacts population health over a decade later. A new study has found that women who lived along the coast of Aceh, Indonesia when it was hit by ...

@@ -70,15 +70,7 @@ Jaime Mateus-Tique, Ashwitha Lakshmi, Bhavya Singh, Rhea Iyer, Alfonso R. SÃ¡n
 Armored macrophage-targeted CAR-T cells reset and reprogram the tumor microenvironment and control metastatic cancer growth
 , 2026; DOI:
 10.1016/j.ccell.2025.12.021
-2026
-01
-260128075332.htm>.
 The Mount Sinai Hospital / Mount Sinai School of Medicine. (2026, January 30). A Trojan horse cancer therapy shows stunning results.
-2026
-01
-260128075332.htm
-2026
-01
 Scientists at Stanford Medicine have unveiled a bold new kind of âuniversalâ vaccine that could one day protect against everything from COVID-19 and the flu to bacterial pneumonia and even common ...
 Scientists Turn Tumor Immune Cells Into Cancer Killers
 Scientists at KAIST have found a way to turn a tumorâs own immune cells into powerful cancer fightersâright inside the body. Tumors are packed with macrophages, immune cells that should attack ...

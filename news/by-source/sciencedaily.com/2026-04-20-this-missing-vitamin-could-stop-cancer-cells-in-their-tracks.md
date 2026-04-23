@@ -40,15 +40,7 @@ Miriam Lisci, Fanny Vericel, Yifan Liu, Hector Gallart-Ayala, Julijana Ivanisevi
 Functional nutrient-genetic profiling reveals biotin and FBXW7 are essential to bypass glutamine addiction
 , 2026; 86 (5): 901 DOI:
 10.1016/j.molcel.2026.02.002
-2026
-04
-260420014744.htm>.
 University of Lausanne. (2026, April 20). This missing vitamin could stop cancer cells in their tracks.
-2026
-04
-260420014744.htm
-2026
-04
 A gene called SDR42E1 has been identified as a key player in how our bodies absorb and process vitamin D. Researchers found that disabling this gene in colorectal cancer cells not only crippled their ...
 New Gene Editing Tool Shows Promise for Treating Diseases With Multiple Mutations
 Investigators have developed STITCHR, a new gene editing tool that can insert therapeutic genes into specific locations without causing unwanted mutations. The system can be formulated completely as ...

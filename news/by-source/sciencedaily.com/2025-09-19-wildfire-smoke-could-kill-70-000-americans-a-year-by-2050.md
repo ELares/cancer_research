@@ -82,15 +82,7 @@ Minghao Qiu, Jessica Li, Carlos F. Gould, Renzhi Jing, Makoto Kelp, Marissa L. C
 Wildfire smoke exposure and mortality burden in the US under climate change
 , 2025; DOI:
 10.1038/s41586-025-09611-w
-2025
-09
-250918225016.htm>.
 Stanford University. (2025, September 19). Wildfire smoke could kill 70,000 Americans a year by 2050.
-2025
-09
-250918225016.htm
-2025
-09
 Wildfires are becoming more intense and dangerous, but a new Stanford-led study offers hope: prescribed burnsâintentionally set, controlled firesâcan significantly lessen their impact. By ...
 New Research Highlights Opportunities to Protect Carbon and Communities from Forest Fires
 As the climate and wildfire crises have intensified, so too have concerns regarding the loss of carbon captured and stored in forests from decades to centuries of tree growth. A new study describes ...

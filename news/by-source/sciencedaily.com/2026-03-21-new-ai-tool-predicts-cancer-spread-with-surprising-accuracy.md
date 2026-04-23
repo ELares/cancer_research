@@ -80,15 +80,7 @@ Aravind Srinivasan, Arwen Conod, Yann Tapponnier, Marianna Silvano, Luca Dallâ�
 Emergence of high-metastatic potentials and prediction of recurrence and metastasis
 , 2026; 45 (1): 116834 DOI:
 10.1016/j.celrep.2025.116834
-2026
-03
-260321012709.htm>.
 UniversitÃ© de GenÃ¨ve. (2026, March 21). New AI tool predicts cancer spread with surprising accuracy.
-2026
-03
-260321012709.htm
-2026
-03
 A recent study marks the first reported instance of generative AI designing synthetic molecules that can successfully control gene expression in healthy mammalian cells. As a proof-of-concept, the ...
 Multi-Target Approach Counters Tumor Growth in Several Cancers
 The tissue adjacent to a tumor behaves differently than areas farther away: The tumor's cancerous cells influence their surroundings, blocking the body's immune defenses and creating a sort ...
