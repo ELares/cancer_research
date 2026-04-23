@@ -175,6 +175,103 @@ def extract_text(html: str) -> tuple[str, str, str, str]:
 # Hashing & slugifying
 # ---------------------------------------------------------------------------
 
+# Phrases that indicate page chrome / navigation, not article content.
+_BOILERPLATE_PATTERNS = [
+    "Explore More", "RELATED STORIES", "RELATED TOPICS",
+    "READ MORE", "ADVERTISEMENT", "Subscribe to",
+    "Share this story", "Share on Facebook", "Share on Twitter",
+    "Sign up for", "Newsletter", "Terms of Use",
+    "Privacy Policy", "Cookie Policy",
+    "About ScienceDaily", "Free Newsletters",
+    "Materials provided by", "Note: Content may be edited",
+    "Content may be edited", "MOST POPULAR THIS WEEK",
+    "Strange & Offbeat", "Story Source", "Journal Reference",
+    "Cite This Page", "Credit: Shutterstock", "Credit:",
+    "from research organizations", "accessed April",
+    "accessed March", "accessed February", "accessed January",
+    "accessed May", "accessed June", "accessed July",
+    "accessed August", "accessed September", "accessed October",
+    "accessed November", "accessed December",
+    "provided by", "ScienceDaily.",
+    "RELATED:", "LATEST NEWS", "TOP STORIES",
+]
+
+# ScienceDaily embeds "Related Stories" blurbs with abbreviated dates
+# like "Sep. 18, 2025" or "Mar. 20, 2024".  These are not article content.
+_RELATED_STORY_DATE_RE = re.compile(
+    r"^(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\.\s+\d{1,2},\s+\d{4}"
+)
+
+
+def _strip_boilerplate(text: str) -> str:
+    """Remove lines containing known page-chrome phrases and related-story blurbs."""
+    lines = text.split("\n")
+    cleaned = []
+    in_related_section = False
+
+    for line in lines:
+        stripped = line.strip()
+        if not stripped:
+            continue
+
+        # Detect start of related-stories / journal-reference sections.
+        # Once detected, EVERYTHING after this point is skipped — there
+        # is no "return to article content" because ScienceDaily puts
+        # article content BEFORE related stories, never after.
+        stripped_lower = stripped.lower()
+        if any(marker in stripped_lower for marker in
+               ("related stories", "related topics", "story source",
+                "journal reference", "cite this page", "about sciencedaily")):
+            in_related_section = True
+            continue
+
+        if in_related_section:
+            continue
+
+        # Skip lines matching boilerplate patterns
+        if any(bp.lower() in stripped_lower for bp in _BOILERPLATE_PATTERNS):
+            continue
+
+        # Skip related-story date lines ("Sep. 18, 2025 ...")
+        if _RELATED_STORY_DATE_RE.match(stripped):
+            continue
+
+        # Skip very short lines (navigation crumbs, labels)
+        if len(stripped) < 20 and not any(c.isdigit() for c in stripped):
+            continue
+
+        cleaned.append(line)
+    # Final pass: detect where article content ends and related-story
+    # headlines begin.  Related stories appear as a sequence of short
+    # Title-Case lines (< 120 chars, mostly capitalized words) in the
+    # second half of the text.  Once we see 2+ consecutive headline-style
+    # lines, truncate everything from the first one onward.
+    result_lines: list[str] = []
+    consecutive_headlines = 0
+    truncate_at: int | None = None
+
+    for i, line in enumerate(cleaned):
+        stripped = line.strip()
+        words = stripped.split()
+        is_headline = (
+            len(stripped) < 120
+            and len(words) >= 4
+            and sum(1 for w in words if w[0:1].isupper()) >= len(words) * 0.6
+            and i > len(cleaned) * 0.4  # only in the second half
+        )
+        if is_headline:
+            consecutive_headlines += 1
+            if consecutive_headlines >= 2 and truncate_at is None:
+                truncate_at = i - 1  # truncate before the first headline
+        else:
+            consecutive_headlines = 0
+
+    if truncate_at is not None and truncate_at > 0:
+        cleaned = cleaned[:truncate_at]
+
+    return "\n".join(cleaned)
+
+
 def compute_content_hash(text: str, url: str = "") -> str:
     """SHA-256 of whitespace-normalised text, prefixed with ``sha256:``.
 
@@ -326,10 +423,18 @@ def fetch_rss_entries(feed_url: str, limit: int | None = None) -> list[dict]:
         link = entry.get("link")
         if not link:
             continue
+        # Use published_parsed (time struct) for reliable date extraction
+        pub_date = ""
+        parsed_time = entry.get("published_parsed")
+        if parsed_time:
+            pub_date = f"{parsed_time.tm_year:04d}-{parsed_time.tm_mon:02d}-{parsed_time.tm_mday:02d}"
+        elif entry.get("published"):
+            pub_date = entry["published"]
+
         entries.append({
             "link": link,
             "title": entry.get("title", ""),
-            "published": entry.get("published", ""),
+            "published": pub_date,
         })
         if limit and len(entries) >= limit:
             break
@@ -340,8 +445,12 @@ def fetch_rss_entries(feed_url: str, limit: int | None = None) -> list[dict]:
 # CLI
 # ---------------------------------------------------------------------------
 
-def process_url(url: str) -> Path | None:
-    """End-to-end: fetch, extract, classify, store a single URL."""
+def process_url(url: str, rss_date: str = "") -> Path | None:
+    """End-to-end: fetch, extract, classify, store a single URL.
+
+    *rss_date* is an optional fallback date from the RSS feed entry,
+    used when the HTML extraction cannot find a date.
+    """
     tier, tier_name, domain = classify_source(url)
     if tier == 0:
         print(f"  excluded (no tier match): {url}")
@@ -351,6 +460,27 @@ def process_url(url: str) -> Path | None:
 
     html_text, final_url, is_paywall = fetch_url(url)
     title, author, date_str, body_text = extract_text(html_text)
+
+    # Use RSS date as fallback if HTML extraction didn't find one
+    if not date_str and rss_date:
+        date_match = re.search(r"(\d{4}-\d{2}-\d{2})", rss_date)
+        if date_match:
+            date_str = date_match.group(1)
+        else:
+            # Try parsing common RSS date formats (e.g., "Wed, 16 Apr 2026 ...")
+            for fmt in ("%a, %d %b %Y %H:%M:%S %z", "%a, %d %b %Y %H:%M:%S %Z",
+                        "%Y-%m-%dT%H:%M:%S%z", "%Y-%m-%dT%H:%M:%SZ"):
+                try:
+                    from datetime import datetime
+                    dt = datetime.strptime(rss_date.strip(), fmt)
+                    date_str = dt.strftime("%Y-%m-%d")
+                    break
+                except ValueError:
+                    continue
+
+    # Strip common boilerplate from body text
+    body_text = _strip_boilerplate(body_text)
+
     content_hash = compute_content_hash(body_text, url=url)
 
     return store_article(
@@ -387,7 +517,7 @@ def main() -> None:
         entries = fetch_rss_entries(args.rss, limit=args.limit)
         print(f"RSS feed: {len(entries)} entries")
         for entry in tqdm(entries, desc="  Fetching"):
-            process_url(entry["link"])
+            process_url(entry["link"], rss_date=entry.get("published", ""))
 
 
 if __name__ == "__main__":

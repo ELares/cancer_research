@@ -32,6 +32,40 @@ from article_io import load_article, save_article
 
 
 # ---------------------------------------------------------------------------
+# Body text cleaning (pre-sentence-splitting)
+# ---------------------------------------------------------------------------
+
+# Matches ScienceDaily release-path fragments: "260420014746.htm" etc.
+_HTM_PATH_RE = re.compile(r"\d{8,}\.htm\b")
+# Matches bare year or month lines that are URL path residue
+_BARE_YEAR_RE = re.compile(r"^\d{4}$")
+_BARE_MONTH_RE = re.compile(r"^\d{1,2}$")
+
+
+def _clean_body_text(text: str) -> str:
+    """Remove URL path fragments and other extraction artifacts from body text.
+
+    ScienceDaily pages embed related-story URLs whose path components
+    (e.g., "2026", "04", "260420014746.htm") survive HTML extraction as
+    separate lines.  This function strips them before sentence splitting
+    so they don't contaminate claim text.
+    """
+    lines = text.split("\n")
+    cleaned = []
+    for line in lines:
+        stripped = line.strip()
+        # Remove lines that are just URL path fragments
+        if _HTM_PATH_RE.search(stripped):
+            continue
+        if _BARE_YEAR_RE.match(stripped):
+            continue
+        if _BARE_MONTH_RE.match(stripped):
+            continue
+        cleaned.append(line)
+    return "\n".join(cleaned)
+
+
+# ---------------------------------------------------------------------------
 # Sentence splitting
 # ---------------------------------------------------------------------------
 
@@ -155,6 +189,10 @@ def extract_claims(article_path: Path) -> list[dict]:
     domain = fm.get("source_domain", "unknown")
     date = fm.get("date_published", "") or ""
     slug = _slug_from_path(article_path)
+
+    # Clean body text: remove URL path fragments, bare year/month lines,
+    # and other artifacts from HTML extraction before sentence splitting.
+    body = _clean_body_text(body)
 
     sentences = split_sentences(body)
     claims: list[dict] = []

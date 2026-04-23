@@ -1,0 +1,63 @@
+---
+url: https://www.sciencedaily.com/releases/2025/06/250629033449.htm
+canonical_url: https://www.sciencedaily.com/releases/2025/06/250629033449.htm
+source_domain: sciencedaily.com
+tier: 2
+tier_name: Science journalism
+title: Fire smoke exposure leaves toxic metals and lasting immune changes
+date_published: '2025-06-30'
+content_hash: sha256:769410e5cd32fa7b0ea253f1f2597d8b59ece06271f52627880906dbafc442c3
+paywall: false
+claims:
+- id: sciencedaily.com-2025-06-30-fire-smoke-exposure-leaves-toxic-metals--001
+  text: According to the researchers, the findings may pave the way for new therapeutics
+    to mitigate, or prevent altogether, the health effects of smoke exposure and environmental
+    contaminants.
+  type: opinion
+  category: INTERPRETIVE
+  verification_status: null
+  verification_source: null
+  linked_pmids: []
+- id: sciencedaily.com-2025-06-30-fire-smoke-exposure-leaves-toxic-metals--002
+  text: Exposure to fire smoke -- which can be composed of particulate matter, gases,
+    materials from buildings such as perfluoroalkyl and polyfluoroalkyl substances
+    (PFAS), toxic metals, and carcinogenic compounds -- may alter the immune system
+    on a cellular level, according to a new study led by researchers at Harvard T.H.
+  type: opinion
+  category: INTERPRETIVE
+  verification_status: null
+  verification_source: null
+  linked_pmids: []
+- id: sciencedaily.com-2025-06-30-fire-smoke-exposure-leaves-toxic-metals--003
+  text: '"Knowing exactly how may help us detect immune dysfunction from smoke exposure
+    earlier and could pave the way for new therapeutics to mitigate, or prevent altogether,
+    the health effects of smoke exposure and environmental contaminants."
+
+    The researchers also noted that the study could help inform environmental and
+    public health policies and investments.'
+  type: opinion
+  category: INTERPRETIVE
+  verification_status: null
+  verification_source: null
+  linked_pmids: []
+review_status: pending
+credibility_score: 52.0
+---
+
+Fire smoke exposure leaves toxic metals and lasting immune changes
+June 30, 2025
+Harvard T.H. Chan School of Public Health
+Smoke from wildfires and structural fires doesn t just irritate lungs it actually changes your immune system. Harvard scientists found that even healthy people exposed to smoke showed signs of immune system activation, genetic changes tied to allergies, and even toxic metals inside their immune cells.
+Healthy adults exposed to fire smoke -- which can be composed of gases, particulate matter, and toxins -- showed alterations to their immune systems, including changes in the regulation of genes associated with asthma and allergies, and in immune cells that play a key role in fighting pathogens, compared to adults who had no exposure to fire smoke.
+The study is the first to examine the specific immune mechanisms associated with fire smoke exposure, showing cellular-level changes related to smoke's known negative impacts on respiratory, cardiac, neurological, and pregnancy outcomes.
+According to the researchers, the findings may pave the way for new therapeutics to mitigate, or prevent altogether, the health effects of smoke exposure and environmental contaminants.
+Exposure to fire smoke -- which can be composed of particulate matter, gases, materials from buildings such as perfluoroalkyl and polyfluoroalkyl substances (PFAS), toxic metals, and carcinogenic compounds -- may alter the immune system on a cellular level, according to a new study led by researchers at Harvard T.H. Chan School of Public Health. The study is the first to examine the specific cellular changes associated with fire smoke exposure, documenting how smoke can damage the body through the immune system.
+"We've known that smoke exposure causes poor respiratory, cardiac, neurological, and pregnancy outcomes, but we haven't understood how," said corresponding author Kari Nadeau, John Rock Professor of Climate and Population Studies and chair of the Department of Environmental Health. "Our study fills in this knowledge gap, so that clinicians and public health leaders are better equipped to respond to the growing threat of difficult to contain, toxic wildfires."
+The study was published pn June 26 in
+The researchers collected blood from two cohorts matched by age, sex, and socioeconomic status: 31 smoke-exposed adults, both firefighters and civilians, and 29 non-smoke-exposed adults. None of the participants had an acute or chronic condition, and none were taking immunomodulatory drugs at or before the time of the blood draw, which took place within one month after participants had been exposed to fire smoke.
+Using cutting-edge single-cell -omic techniques -- epigenetic assays and mass cytometry -- and bioinformatic analytical tools, the researchers examined and analyzed individual cells within each blood sample.
+The study found several cellular-level changes in the smoke-exposed individuals compared to the non-smoke-exposed individuals. Smoke-exposed individuals showed an increase in memory CD8+ T cells (a type of immune cell critical to long-term immunity against pathogens) and elevated activation and chemokine receptor biomarkers (indicators of inflammation and immune activity) within multiple cell types. Additionally, those who had been exposed to smoke showed changes in133 genes related to allergies and asthma, and more of their immune cells were bound with toxic metals, including mercury and cadmium.
+"Our findings demonstrate that the immune system is extremely sensitive to environmental exposures like fire smoke, even in healthy individuals," said lead author Mary Johnson, principal research scientist in the Department of Environmental Health. "Knowing exactly how may help us detect immune dysfunction from smoke exposure earlier and could pave the way for new therapeutics to mitigate, or prevent altogether, the health effects of smoke exposure and environmental contaminants."
+The researchers also noted that the study could help inform environmental and public health policies and investments. "Knowing more about exactly how smoke exposure is harming the body, we may increase public health campaigns about the dangers of smoke exposure and the importance of following evacuation procedures during wildfires," Nadeau said. "We may also reconsider what levels of smoke exposure we consider toxic."
+Other Harvard Chan co-authors included Abhinav Kaushik, Olivia Kline, Xiaoying Zhou, and Elisabeth Simonin.
+The study was funded by the National Institute of Environmental Health Sciences (R01 ES032253), the National Heart, Lung, and Blood Institute (P01 HL152953, T32HL007118), the National Institute of Allergy and Infectious Diseases (U19AI167903), the San Francisco Cancer Prevention Foundation, the Asthma and Allergic Diseases Cooperative Research Center, and the Keck Foundation.
