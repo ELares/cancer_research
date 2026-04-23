@@ -51,16 +51,17 @@ These are computational predictions with documented assumptions and caveats, not
 | `simulations/` | [10 Rust binaries](simulations/README.md) + ferroptosis-core library + [Python bindings](simulations/ferroptosis-python/) + calibration infrastructure |
 | `corpus/` | Full-text articles by PubMed ID + INDEX.jsonl |
 | `tags/` | Precomputed tag indexes (mechanism, cancer type, tissue, evidence level, diagnostic-therapy) |
+| `news/` | News source scaffolding: fetched articles, extracted claims, verification results, credibility scores |
 | `tests/` | 50 Python smoke tests for the analysis and news pipelines |
 
 Start with the files in `analysis/` if you want to see what we've concluded so far—and where we're still uncertain.
 
 ## Get it running
 
-If you want to reproduce or modify the analysis:
+See [CONTRIBUTING.md](CONTRIBUTING.md) for full setup instructions, or the quick version:
 
 ```bash
-pip install -r requirements.txt
+pip install -r requirements.txt          # or requirements-lock.txt for exact versions
 cp .env.example .env
 
 python scripts/tag_articles.py
@@ -101,12 +102,17 @@ We'd rather publish a longer, clearer document that a graduate student can follo
 
 This project is most useful when it's questioned, expanded, and corrected. You don't need to be a cancer researcher—curiosity and a willingness to look at the evidence are enough.
 
+- Read [CONTRIBUTING.md](CONTRIBUTING.md) for setup, testing, and PR guidelines
 - Open an issue with a question, a counter-example, or a missing paper
 - Submit a pull request that improves the code, the corpus, or the manuscript
 - Fork the repo and go in a completely new direction—MIT license means you're free to do that
 
 We're not trying to steer everyone toward one answer. The goal is to build a shared space where good ideas can emerge.
 
+## Cite this work
+
+If you use this work in your research, GitHub renders a "Cite this repository" button from [CITATION.cff](CITATION.cff). Content provenance and redistribution rights for bundled assets are documented in [PROVENANCE.yaml](PROVENANCE.yaml).
+
 ## License
 
-MIT License. See [LICENSE](LICENSE).
+MIT License (code only). See [LICENSE](LICENSE). Bundled data assets have their own licenses — see [PROVENANCE.yaml](PROVENANCE.yaml) for details.
