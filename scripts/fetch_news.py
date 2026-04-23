@@ -175,6 +175,37 @@ def extract_text(html: str) -> tuple[str, str, str, str]:
 # Hashing & slugifying
 # ---------------------------------------------------------------------------
 
+# Phrases that indicate page chrome / navigation, not article content.
+_BOILERPLATE_PATTERNS = [
+    "Explore More", "RELATED STORIES", "RELATED TOPICS",
+    "READ MORE", "ADVERTISEMENT", "Subscribe to",
+    "Share this story", "Share on Facebook", "Share on Twitter",
+    "Sign up for", "Newsletter", "Terms of Use",
+    "Privacy Policy", "Cookie Policy", "ScienceDaily.",
+    "About ScienceDaily", "Free Newsletters",
+    "Materials provided by", "Note: Content may be edited",
+    "MOST POPULAR THIS WEEK", "Strange & Offbeat",
+]
+
+
+def _strip_boilerplate(text: str) -> str:
+    """Remove lines containing known page-chrome phrases."""
+    lines = text.split("\n")
+    cleaned = []
+    for line in lines:
+        stripped = line.strip()
+        if not stripped:
+            continue
+        # Skip lines that are entirely boilerplate
+        if any(bp.lower() in stripped.lower() for bp in _BOILERPLATE_PATTERNS):
+            continue
+        # Skip very short lines (navigation crumbs, labels)
+        if len(stripped) < 20 and not any(c.isdigit() for c in stripped):
+            continue
+        cleaned.append(line)
+    return "\n".join(cleaned)
+
+
 def compute_content_hash(text: str, url: str = "") -> str:
     """SHA-256 of whitespace-normalised text, prefixed with ``sha256:``.
 
@@ -326,10 +357,18 @@ def fetch_rss_entries(feed_url: str, limit: int | None = None) -> list[dict]:
         link = entry.get("link")
         if not link:
             continue
+        # Use published_parsed (time struct) for reliable date extraction
+        pub_date = ""
+        parsed_time = entry.get("published_parsed")
+        if parsed_time:
+            pub_date = f"{parsed_time.tm_year:04d}-{parsed_time.tm_mon:02d}-{parsed_time.tm_mday:02d}"
+        elif entry.get("published"):
+            pub_date = entry["published"]
+
         entries.append({
             "link": link,
             "title": entry.get("title", ""),
-            "published": entry.get("published", ""),
+            "published": pub_date,
         })
         if limit and len(entries) >= limit:
             break
@@ -340,8 +379,12 @@ def fetch_rss_entries(feed_url: str, limit: int | None = None) -> list[dict]:
 # CLI
 # ---------------------------------------------------------------------------
 
-def process_url(url: str) -> Path | None:
-    """End-to-end: fetch, extract, classify, store a single URL."""
+def process_url(url: str, rss_date: str = "") -> Path | None:
+    """End-to-end: fetch, extract, classify, store a single URL.
+
+    *rss_date* is an optional fallback date from the RSS feed entry,
+    used when the HTML extraction cannot find a date.
+    """
     tier, tier_name, domain = classify_source(url)
     if tier == 0:
         print(f"  excluded (no tier match): {url}")
@@ -351,6 +394,27 @@ def process_url(url: str) -> Path | None:
 
     html_text, final_url, is_paywall = fetch_url(url)
     title, author, date_str, body_text = extract_text(html_text)
+
+    # Use RSS date as fallback if HTML extraction didn't find one
+    if not date_str and rss_date:
+        date_match = re.search(r"(\d{4}-\d{2}-\d{2})", rss_date)
+        if date_match:
+            date_str = date_match.group(1)
+        else:
+            # Try parsing common RSS date formats (e.g., "Wed, 16 Apr 2026 ...")
+            for fmt in ("%a, %d %b %Y %H:%M:%S %z", "%a, %d %b %Y %H:%M:%S %Z",
+                        "%Y-%m-%dT%H:%M:%S%z", "%Y-%m-%dT%H:%M:%SZ"):
+                try:
+                    from datetime import datetime
+                    dt = datetime.strptime(rss_date.strip(), fmt)
+                    date_str = dt.strftime("%Y-%m-%d")
+                    break
+                except ValueError:
+                    continue
+
+    # Strip common boilerplate from body text
+    body_text = _strip_boilerplate(body_text)
+
     content_hash = compute_content_hash(body_text, url=url)
 
     return store_article(
@@ -387,7 +451,7 @@ def main() -> None:
         entries = fetch_rss_entries(args.rss, limit=args.limit)
         print(f"RSS feed: {len(entries)} entries")
         for entry in tqdm(entries, desc="  Fetching"):
-            process_url(entry["link"])
+            process_url(entry["link"], rss_date=entry.get("published", ""))
 
 
 if __name__ == "__main__":
