@@ -200,3 +200,123 @@ class TestMatchingFunctions:
         from evidence_utils import normalize_text
         result = normalize_text("  Hello   World  ")
         assert result == "hello world"
+
+
+class TestNewsPipeline:
+    """Smoke tests for the news integration pipeline (issue #99)."""
+
+    def test_news_imports(self):
+        from fetch_news import classify_source, slugify
+        from extract_claims import split_sentences, detect_factual_markers
+        from score_news import compute_score
+        from build_news_index import build_index
+
+    def test_classify_source_tier1(self):
+        from fetch_news import classify_source
+        tier, name, domain = classify_source("https://cancer.gov/news-events/some-article")
+        assert tier == 1
+        assert domain == "cancer.gov"
+
+    def test_classify_source_tier2(self):
+        from fetch_news import classify_source
+        tier, name, domain = classify_source("https://statnews.com/2026/02/article")
+        assert tier == 2
+
+    def test_classify_source_excluded(self):
+        from fetch_news import classify_source
+        tier, name, domain = classify_source("https://twitter.com/post/123")
+        assert tier == 0
+        assert name == "Excluded"
+
+    def test_classify_source_longest_prefix(self):
+        from fetch_news import classify_source
+        # nature.com/news is Tier 1; nature.com/articles is NOT in config
+        tier1, _, _ = classify_source("https://nature.com/news/some-article")
+        tier0, _, _ = classify_source("https://nature.com/articles/s41586-paper")
+        assert tier1 == 1
+        assert tier0 == 0
+
+    def test_split_sentences(self):
+        from extract_claims import split_sentences
+        result = split_sentences("Dr. Smith found a 43.2% response rate. This is important.")
+        assert len(result) == 2
+        assert "43.2%" in result[0]
+
+    def test_detect_factual_markers(self):
+        from extract_claims import detect_factual_markers
+        markers = detect_factual_markers("The Phase 3 trial showed a 43% response rate.")
+        assert len(markers) >= 2  # percentage + phase
+
+    def test_detect_no_factual_markers(self):
+        from extract_claims import detect_factual_markers
+        markers = detect_factual_markers("This is an interesting development.")
+        assert len(markers) == 0
+
+    def test_classify_claim_type(self):
+        from extract_claims import classify_claim_type
+        assert classify_claim_type("The FDA approved the drug.") == "event"
+        assert classify_claim_type("This could lead to new treatments.") == "speculation"
+
+    def test_score_formula_tier1(self):
+        from score_news import compute_score
+        fm = {
+            "tier": 1,
+            "claims": [{"category": "FACTUAL", "verification_status": "verified"}] * 5,
+            "author_credentialed": True,
+            "author": "Test Author",
+            "date_published": "2026-04-01",
+        }
+        score = compute_score(fm)
+        # tier_weight=1.0, verified_ratio=1.0, author=1.0, recency=1.0, cross=0.0
+        # 1.0 * (40 + 30 + 20 + 0) = 90
+        assert 85 <= score <= 95
+
+    def test_score_zero_factual_claims(self):
+        from score_news import compute_score
+        fm = {
+            "tier": 3,
+            "claims": [{"category": "INTERPRETIVE", "verification_status": None}],
+            "author_credentialed": True,
+            "author": "Expert",
+            "date_published": "2026-04-01",
+        }
+        score = compute_score(fm)
+        assert score > 0  # Should not be zero — verified_ratio defaults to 1.0
+
+    def test_slugify(self):
+        from fetch_news import slugify
+        result = slugify("Key Study of Grail's Cancer Detection Test Fails!")
+        assert result.islower() or result.replace("-", "").isalnum()
+        assert len(result) <= 60
+
+    def test_verify_imports(self):
+        from verify_news_claims import search_corpus, extract_search_terms
+
+    def test_extract_search_terms(self):
+        from verify_news_claims import extract_search_terms
+        terms = extract_search_terms("The Phase 3 trial of pembrolizumab showed 43% response rate.")
+        assert len(terms) > 0
+
+    def test_extract_opinion_claim(self):
+        from extract_claims import split_sentences, detect_factual_markers
+        from config import CLAIM_OPINION_TRIGGERS
+        sentence = "According to Dr. Smith, the results are encouraging."
+        # No factual markers
+        assert len(detect_factual_markers(sentence)) == 0
+        # But should match opinion trigger
+        assert any(t in sentence.lower() for t in CLAIM_OPINION_TRIGGERS)
+
+    def test_extract_speculation_claim(self):
+        from extract_claims import split_sentences, detect_factual_markers
+        from config import CLAIM_SPECULATION_TRIGGERS
+        sentence = "This could lead to new treatments within the next decade."
+        assert len(detect_factual_markers(sentence)) == 0
+        assert any(t in sentence.lower() for t in CLAIM_SPECULATION_TRIGGERS)
+
+    def test_config_has_news_additions(self):
+        from config import NEWS_RATE, NEWS_DIR, CLAIM_FACTUAL_MARKERS, CLAIM_TYPE_MARKERS
+        assert NEWS_RATE is not None
+        assert NEWS_DIR is not None
+        assert len(CLAIM_FACTUAL_MARKERS) >= 10
+        assert "event" in CLAIM_TYPE_MARKERS
+        assert "speculation" in CLAIM_TYPE_MARKERS
