@@ -6,7 +6,7 @@ tier: 2
 tier_name: Science journalism
 title: A smarter way to screen for breast cancer is emerging
 date_published: '2026-01-04'
-content_hash: sha256:d0a15cdf91751b3aa1fc2d4612683ae8ee3f5f17e4ab0624b6b521bae5d99f98
+content_hash: sha256:3fa5415d15e559b623f100647169230db5b02bfa4766a85f9c19ea213f300371
 paywall: false
 claims:
 - id: sciencedaily.com-2026-01-04-a-smarter-way-to-screen-for-breast-cance-001
@@ -89,20 +89,34 @@ claims:
   verification_source: null
   linked_pmids: []
 - id: sciencedaily.com-2026-01-04-a-smarter-way-to-screen-for-breast-cance-008
-  text: "Rates of Breast and Colorectal Cancer Screening Nearly Four-Fold Higher Than\
-    \ Lung Cancer Screening Among Those Eligible\nApr. 2, 2025 Â\x97\nLung cancer\
-    \ screening has the potential to catch lung cancer early and save lives -- but\
-    \ only if people get screened."
+  text: 'A smarter way to screen for breast cancer is emerging.
+
+    2026
+
+    01
+
+    260103155036.htm
+
+    2026
+
+    01
+
+    Rates of Breast and Colorectal Cancer Screening Nearly Four-Fold Higher Than Lung
+    Cancer Screening Among Those Eligible
+
+    Lung cancer screening has the potential to catch lung cancer early and save lives
+    -- but only if people get screened.'
   type: speculation
   category: SPECULATIVE
   verification_status: null
   verification_source: null
   linked_pmids: []
 - id: sciencedaily.com-2026-01-04-a-smarter-way-to-screen-for-breast-cance-009
-  text: "New Study Supports Annual Breast Cancer Screening for Women Over 40\nAug.\
-    \ 27, 2024 Â\x97\nWomen diagnosed with breast cancer who had regular screening\
-    \ mammograms every year were less likely to have late-stage cancer and had higher\
-    \ overall survival than those who received screening every ..."
+  text: 'New Study Supports Annual Breast Cancer Screening for Women Over 40
+
+    Women diagnosed with breast cancer who had regular screening mammograms every
+    year were less likely to have late-stage cancer and had higher overall survival
+    than those who received screening every ...'
   type: speculation
   category: FACTUAL
   verification_status: verified
@@ -117,12 +131,10 @@ review_status: pending
 credibility_score: 43.2
 ---
 
-from research organizations
 A smarter way to screen for breast cancer is emerging
 January 4, 2026
 University of California - San Francisco
 A groundbreaking study shows that breast cancer screening works better when itâs personalized. Instead of annual mammograms for all, women were screened based on genetics, health history, and lifestyle factors. This approach reduced advanced cancers without increasing risk for those screened less often. Most women preferred the personalized model, hinting at a major shift in future screening guidelines.
-Breast cancer screening may be entering a new eraâone where your personal risk, not your age, determines how often youâre checked. Credit: Shutterstock
 A large new study suggests that tailoring breast cancer screening to a woman's individual risk may be safer and more effective than relying on routine annual mammograms for everyone. By matching screening frequency to personal risk levels, researchers found it was possible to reduce the likelihood of diagnosing more advanced cancers while still ensuring people receive the level of screening they need.
 The findings are based on data from 46,000 women across the United States who took part in the first phase of the WISDOM study. The results point to a major change in how breast cancer screening could be approached, moving away from age-based rules and toward a system built around comprehensive risk evaluation. UCSF served as the coordinating center for the study.
 Why Age Alone May Not Be Enough
@@ -147,13 +159,6 @@ Co-Authors: From UCSF, authors include Laura J. van 't Veer, PhD; Maren T. Scheu
 Other investigators are at UC Los Angeles; UC Irvine; UC San Diego; San Francisco VA Health Care System; Sanford Health in North Dakota; University of Chicago; Diagnostic Center of Miami; University of Alabama; Virginia Commonwealth University; Weill Cornell Medicine in New York; and the Karolinka Institutet in Stockholm.
 Funding: Study support included the Patient Center Outcomes Research Institute, the National Cancer Institute (R01CA237533), and the Breast Cancer Research Foundation. Please see the paper for other funding sources.
 Conflicts of Interest: Esserman is a medical advisory panel member for Blue Cross Blue Shield and has receive author fees from the UpToDate electronic medical information resource. Please see the paper for disclosures of other investigators.
-Personalized Medicine
-Diet and Weight Loss
-Diseases and Conditions
-Patient Education and Counseling
-Personalized medicine
-Monoclonal antibody therapy
-University of California - San Francisco
 Laura J. Esserman, Allison S. Fiscalini, Arash Naeim, Laura J. vanât Veer, Andrea Kaster, Maren T. Scheuner, Andrea Z. LaCroix, Alexander D. Borowsky, Hoda Anton-Culver, Olufunmilayo I. Olopade, James Esserman, Rachael Lancaster, Lisa Madlensky, Amie M. Blanco, Katherine S. Ross, Deborah L. Goodman, Barry S. Tong, Michael Hogarth, Diane Heditsian, Susie Brain, Vivian Lee, Kelly Blum, Mi-Ok Kim, Leah P. Sabacan, Kirkpatrick B. Fergus, Christina Yau, Hannah L. Park, Barbara A. Parker, Celia Kaplan, Kim F. Rhoads, Suzanne Eder, Kelly Adduci, Jeffrey B. Matthews, Neil S. Wenger, Yiwey Shieh, Robert A. Hiatt, Elad Ziv, Jeffrey A. Tice, Martin Eklund.
 Risk-Based vs Annual Breast Cancer Screening
 , 2025; DOI:
@@ -167,24 +172,17 @@ University of California - San Francisco. (2026, January 4). A smarter way to sc
 260103155036.htm
 2026
 01
-260103155036.htm (accessed April 22, 2026).
 Rates of Breast and Colorectal Cancer Screening Nearly Four-Fold Higher Than Lung Cancer Screening Among Those Eligible
-Apr. 2, 2025 Â
 Lung cancer screening has the potential to catch lung cancer early and save lives -- but only if people get screened. Although lung cancer screening is recommended in the U.S. for certain individuals ...
 New Study Supports Annual Breast Cancer Screening for Women Over 40
-Aug. 27, 2024 Â
 Women diagnosed with breast cancer who had regular screening mammograms every year were less likely to have late-stage cancer and had higher overall survival than those who received screening every ...
 Study Shows Annual Screening Before Age 50 Leads to Lower Proportions of Advanced Breast Cancer
-Aug. 10, 2022 Â
 A new study has found Canadian provinces that annually screen women aged 40-49 had lower proportions of advanced breast cancer compared to women aged 50-59 from provinces that did not hold annual ...
 Half of All Women Experience False Positive Mammograms After 10 Years of Annual Screening
-Mar. 25, 2022 Â
 Half of all women experience a false positive mammogram after 10 years of annual breast cancer screening with 3D mammography, a UC Davis-led study estimates. This risk was lower for women who had ...
 New Findings Suggest That âone Size Does Not Fit Allâ With Regard to Breast Density Education
-Mar. 21, 2022 Â
 Breast density notifications aim to educate women about the risks of high breast density, defined as having more fibroglandular tissue than fatty tissue, as visualized on a mammogram. Prompted by ...
 Researchers Identify Misperceptions Surrounding Breast Density Across Race/ethnicity and Health Literacy Levels
-Mar. 14, 2022 Â
 Having dense breasts (more fibroglandular tissue than fatty tissue, as visualized on a mammogram) reduces the sensitivity of mammography by masking breast cancers and carries a 1.6- to 2.0-fold ...
 Early Warning Signals of Esophageal Cancer May Be Hiding in Plain Sight
 âLike Liquid Metalâ: Scientists Create Strange Shape-Shifting Material

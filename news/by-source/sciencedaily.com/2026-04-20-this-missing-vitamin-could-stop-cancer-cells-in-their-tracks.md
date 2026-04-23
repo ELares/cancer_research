@@ -6,14 +6,13 @@ tier: 2
 tier_name: Science journalism
 title: This missing vitamin could stop cancer cells in their tracks
 date_published: '2026-04-20'
-content_hash: sha256:190440625a2c4e1901f86eba90beace34721c567869f98191362a2680285aef8
+content_hash: sha256:be2557651a72db72a33c46cefc4773f2c70d1ae39be8338af38f8191d0de2546
 paywall: false
 claims: []
 review_status: pending
 credibility_score: 55.2
 ---
 
-from research organizations
 This missing vitamin could stop cancer cells in their tracks
 April 20, 2026
 University of Lausanne
@@ -37,13 +36,6 @@ mutations found in patients can directly trigger this increased dependence on gl
 Why Some Cancer Treatments Fail and What Comes Next
 The findings also help explain why therapies aimed at blocking glutamine do not always succeed. Cancer cells can switch to alternative metabolic pathways to survive.
 "In the longer term, this research opens up new avenues for better understanding the metabolic vulnerabilities of cancers and for designing innovative therapeutic strategies that take into account the great metabolic flexibility of tumor cells, notably by targeting several metabolic pathways simultaneously," concludes Alexis Jourdain, senior author of the study.
-Alternative Medicine
-Diseases and Conditions
-Personalized Medicine
-Dietary Supplements and Minerals
-Central nervous system
-Monoclonal antibody therapy
-University of Lausanne
 Miriam Lisci, Fanny Vericel, Yifan Liu, Hector Gallart-Ayala, Julijana Ivanisevic, Owen S. Skinner, Alexis A. Jourdain.
 Functional nutrient-genetic profiling reveals biotin and FBXW7 are essential to bypass glutamine addiction
 , 2026; 86 (5): 901 DOI:
@@ -57,21 +49,15 @@ University of Lausanne. (2026, April 20). This missing vitamin could stop cancer
 260420014744.htm
 2026
 04
-260420014744.htm (accessed April 22, 2026).
-CRISPR Uncovers Gene That Supercharges Vitamin Dâand Stops Tumors in Their Tracks
-July 18, 2025 Â
 A gene called SDR42E1 has been identified as a key player in how our bodies absorb and process vitamin D. Researchers found that disabling this gene in colorectal cancer cells not only crippled their ...
 New Gene Editing Tool Shows Promise for Treating Diseases With Multiple Mutations
-Apr. 9, 2025 Â
 Investigators have developed STITCHR, a new gene editing tool that can insert therapeutic genes into specific locations without causing unwanted mutations. The system can be formulated completely as ...
 Study Links Metabolism Changes in Certain Brain Cells to Huntington's Disease
-Dec. 21, 2022 Â
 A research team has linked the mutation that causes Huntington's disease to developmental deficits in the brain's oligodendrocyte cells that are caused by changes in metabolism. They found ...
 Most 'Silent' Genetic Mutations Are Harmful, Not Neutral -- A Finding With Broad Implications
 June 8, 2022 Â
 Occasionally, single-letter misspellings in the genetic code, known as point mutations, occur. Point mutations that alter the resulting protein sequences are called nonsynonymous mutations, while ...
 Researchers Discover a Dependency of Glioblastoma on Biotin Distribution
-Sep. 15, 2021 Â
 Researchers have discovered that the FDA-approved anti-fungal drug, sulconazole, exhibits anti-cancer properties towards glioblastoma cells. An in-depth investigation of this compound revealed that ...
 Vitamin D Deficiency May Increase Risk for Addiction to Opioids and Ultraviolet Rays
 June 11, 2021 Â

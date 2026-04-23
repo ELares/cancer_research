@@ -6,13 +6,11 @@ tier: 2
 tier_name: Science journalism
 title: New cholesterol guidelines could change when you get tested
 date_published: '2026-03-29'
-content_hash: sha256:ca9d6298ec9cf0da9142737ca06b8cbc91fcfa95e7865868299c2856d0d52633
+content_hash: sha256:fcbe6e0d492eac3b82d4e8ccda823fd6e64767dd8f44f050475c2e4de2c1ee5c
 paywall: false
 claims:
 - id: sciencedaily.com-2026-03-29-new-cholesterol-guidelines-could-change--001
-  text: 'from research organizations
-
-    New cholesterol guidelines could change when you get tested
+  text: 'New cholesterol guidelines could change when you get tested
 
     Start earlier, personalize more: a new guideline aims to stop heart disease decades
     before it strikes.'
@@ -57,38 +55,32 @@ claims:
 
     03
 
-    260328043554.htm (accessed April 22, 2026).'
+    Eggs are finally being vindicated after decades of cholesterol-related blame.'
   type: speculation
   category: SPECULATIVE
   verification_status: null
   verification_source: null
   linked_pmids: []
 - id: sciencedaily.com-2026-03-29-new-cholesterol-guidelines-could-change--005
-  text: "More Than Half of American Indian Youth May Have Abnormal or High Cholesterol\n\
-    Mar. 6, 2024 Â\x97\nMore than 70% of American Indian young adults aged 20-39 and\
-    \ 50% of American Indian teens have cholesterol levels or elevated fat in the\
-    \ blood that put them at risk for cardiovascular disease, a new ..."
+  text: 'More Than Half of American Indian Youth May Have Abnormal or High Cholesterol
+
+    More than 70% of American Indian young adults aged 20-39 and 50% of American Indian
+    teens have cholesterol levels or elevated fat in the blood that put them at risk
+    for cardiovascular disease, a new ...'
   type: result
   category: FACTUAL
-  verification_status: verified
-  verification_source: corpus
-  linked_pmids:
-  - '40753395'
-  - '39526448'
-  - '33099812'
-  - '32535723'
-  - '31956003'
+  verification_status: unverified
+  verification_source: null
+  linked_pmids: []
 review_status: pending
-credibility_score: 44.5
+credibility_score: 33.9
 ---
 
-from research organizations
 New cholesterol guidelines could change when you get tested
 Start earlier, personalize more: a new guideline aims to stop heart disease decades before it strikes.
 March 29, 2026
 Johns Hopkins Medicine
 A major new U.S. cholesterol guideline is shifting the focus toward earlier, more personalized prevention of heart disease. It urges people to start screening soonerâsometimes even in childhoodâand highlights the importance of tracking not just LDL (âbadâ) cholesterol but also genetic risk factors like lipoprotein(a). A new, more advanced risk calculator now uses broader health data to better predict heart attack and stroke risk over decades.
-A new cholesterol guideline calls for earlier testing and more tailored risk assessments to prevent heart disease. It combines lifestyle changes, improved screening tools, and expanded treatment options to better protect long-term health. Credit: Shutterstock
 For the first time since 2018, the American College of Cardiology and the American Heart Association have released updated clinical guidance on how to screen for and manage blood cholesterol. The recommendations were published in the
 Journal of the American College of Cardiology
 and were presented March 28 at the American College of Cardiology's 75th Annual Scientific Session in New Orleans.
@@ -117,14 +109,6 @@ In addition to statins, the guideline includes updated recommendations on other 
 For people without cardiovascular disease, LDL-C levels below 100 mg/dL are considered optimal. Those at intermediate risk are advised to lower levels below 70 mg/dL, while high-risk individuals should aim for less than 55 mg/dL. The guideline also includes targets for non-HDL cholesterol and apolipoprotein B.
 In an accompanying editorial, experts suggest that future recommendations may further emphasize lowering LDL-C to below 55 mg/dL for people with moderate atherosclerosis. This direction is supported by findings from the VESALIUS-CV clinical trial, which showed benefits from aggressively lowering cholesterol using a combination of therapies.
 The 2026 Guideline on the Management of Dyslipidemia was developed by the American College of Cardiology and the American Heart Association in collaboration with multiple medical organizations focused on cardiovascular health, prevention, and patient care.
-Diet and Weight Loss
-Personalized Medicine
-Diseases and Conditions
-Personalized medicine
-Low density lipoprotein
-Ischaemic heart disease
-Antibiotic resistance
-Johns Hopkins Medicine
 Roger S. Blumenthal, Pamela B. Morris, Mario Gaudino, Heather M. Johnson, Timothy S. Anderson, Vera A. Bittner, Ron Blankstein, LaPrincess C. Brewer, Leslie Cho, Sarah D. de Ferranti, Eugenia Gianos, Ty J. Gluckman, Kristen F. Gradney, Ijeoma Isiadinso, Donald M. Lloyd-Jones, Joel C. Marrs, Seth S. Martin, Kellie H. McLain, Laxmi S. Mehta, Samia Mora, Wudeneh M. Mulugeta, Pradeep Natarajan, Ann Marie Navar, Carl E. Orringer, Tamar S. Polonsky, Harmony R. Reynolds, Joseph J. Saseen, Michael D. Shapiro, Daniel E. Soffer, Sheila A. Tynes, ChloÃ© D. Villavaso, Salim S. Virani, John T. Wilkins.
 2026 ACC/AHA/AACVPR/ABC/ACPM/ADA/AGS/APhA/ASPC/NLA/PCNA Guideline on the Management of Dyslipidemia
 , 2026; DOI:
@@ -138,24 +122,16 @@ Johns Hopkins Medicine. (2026, March 29). New cholesterol guidelines could chang
 260328043554.htm
 2026
 03
-260328043554.htm (accessed April 22, 2026).
-Eggs Are Off the Hookâstudy Reveals Baconâs the Real Heart Risk
-July 27, 2025 Â
 Eggs are finally being vindicated after decades of cholesterol-related blame. New research from the University of South Australia reveals that eggs, despite their cholesterol content, aren't the ...
 A Protein at the Heart of Heart Disease
-Feb. 3, 2025 Â
 Low-density lipoproteins (LDL) -- commonly known as bad cholesterol -- have long been on scientists' radar as a major contributor to heart disease. But these microscopic troublemakers have ...
 New Insights About How 'Bad' Cholesterol Works in the Body
-Dec. 11, 2024 Â
 Scientists have made a significant breakthrough in understanding how 'bad' cholesterol, known as low-density lipoprotein-cholesterol or LDL-C, builds up in the body. The researchers were ...
 More Than Half of American Indian Youth May Have Abnormal or High Cholesterol
-Mar. 6, 2024 Â
 More than 70% of American Indian young adults aged 20-39 and 50% of American Indian teens have cholesterol levels or elevated fat in the blood that put them at risk for cardiovascular disease, a new ...
 Cardiologists Reveal New Heart Disease Risk Calculator
-Nov. 10, 2023 Â
 The new American Heart Association PREVENTTMÂ risk calculator estimates the 10- and 30-year risk of total cardiovascular disease for people aged 30 years and older.Â The calculator estimates the risk ...
 Eating Walnuts Daily Lowered 'Bad' Cholesterol and May Reduce Cardiovascular Disease Risk
-Aug. 30, 2021 Â
 Older adults who added a handful of walnuts to their daily diet for two years saw modest reductions in LDL cholesterol and total cholesterol, as well as fewer small, dense LDL particles linked to ...
 Early Warning Signals of Esophageal Cancer May Be Hiding in Plain Sight
 âLike Liquid Metalâ: Scientists Create Strange Shape-Shifting Material

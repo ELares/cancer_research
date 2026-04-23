@@ -6,7 +6,7 @@ tier: 2
 tier_name: Science journalism
 title: A common nutrient could supercharge cancer treatment
 date_published: '2026-04-10'
-content_hash: sha256:9b75ac3859da1f30832c87d997cc73334b4887e62dc1f91bc8e3c9667c8dc877
+content_hash: sha256:0a4c7bba7dbdc5a0cb8c862e3ca5cf3430e93e555e03b1eb084b7744075d007f
 paywall: false
 claims:
 - id: sciencedaily.com-2026-04-10-a-common-nutrient-could-supercharge-canc-001
@@ -22,10 +22,11 @@ claims:
   verification_source: null
   linked_pmids: []
 - id: sciencedaily.com-2026-04-10-a-common-nutrient-could-supercharge-canc-002
-  text: "Experimental mRNA Cancer Vaccine Shows Potential for Advanced Stage Cancer\
-    \ Patients in Phase 1 Trial\nSep. 13, 2024 Â\x97\nInterim data from the Phase\
-    \ I dose escalation part of the mRNA cancer immunotherapy (mRNA-4359), show promise\
-    \ in patients with advanced solid cancers."
+  text: 'Experimental mRNA Cancer Vaccine Shows Potential for Advanced Stage Cancer
+    Patients in Phase 1 Trial
+
+    Interim data from the Phase I dose escalation part of the mRNA cancer immunotherapy
+    (mRNA-4359), show promise in patients with advanced solid cancers.'
   type: speculation
   category: FACTUAL
   verification_status: verified
@@ -40,13 +41,11 @@ review_status: pending
 credibility_score: 55.2
 ---
 
-from research organizations
 A common nutrient could supercharge cancer treatment
 A simple nutrient from everyday vegetables could help supercharge the bodyâs fight against cancer.
 April 10, 2026
 University of Chicago Medical Center
 A common eye-health nutrient, zeaxanthin, may also help the body fight cancer more effectively. Scientists discovered it strengthens T cells and enhances the impact of immunotherapy treatments. Found in everyday vegetables and supplements, itâs safe, accessible, and shows strong potential as a cancer therapy booster. Human trials are the next step.
-Zeaxanthin, a nutrient found in leafy greens, can boost immune cellsâ ability to attack cancer. It may also make modern immunotherapy treatments more effective. Credit: Shutterstock
 Researchers at the University of Chicago have uncovered a surprising new role for zeaxanthin, a plant-based compound best known for supporting eye health. According to findings published in
 Cell Reports Medicine
 , this common carotenoid may also help the immune system fight cancer by enhancing the activity of key immune cells. The discovery points to zeaxanthin as a simple, widely available supplement that could improve how well cancer immunotherapies work.
@@ -66,10 +65,6 @@ While the results are promising, the researchers stress that the work is still i
 "Our findings open a new field of nutritional immunology that looks at how specific dietary components interact with the immune system at the molecular level," Chen said. "With more research, we may discover natural compounds that make today's cancer therapies more effective and accessible."
 The study, "Zeaxanthin augments CD8+ effector T cell function and immunotherapy efficacy," was supported by grants from the National Institutes of Health, the Ludwig Center at the University of Chicago, and the Harborview Foundation Gift Fund.
 Additional authors include Freya Zhang, Jiacheng Li, Rukang Zhang, Jiayi Tu, Zhicheng Xie, Takemasa Tsuji, Hardik Shah, Matthew Ross, Ruitu Lyu, Junko Matsuzaki, Anna Tabor, Kelly Xue, Chunzhao Yin, Hamed R. Youshanlouei, Syed Shah, Michael W. Drazer, Yu-Ying He, Marc Bissonnette, Jun Huang, Chuan He, Kunle Odunsi, and Hao Fan from the University of Chicago; Fatima Choudhry from DePaul University, Chicago; Yuancheng Li and Hui Mao from Emory University School of Medicine, Atlanta; Lei Dong from University of Texas Southwestern Medical Center, Dallas; and Rui Su from Beckman Research Institute, City of Hope, Duarte, CA.
-Diet and Weight Loss
-Alternative Medicine
-Personalized medicine
-University of Chicago Medical Center
 Freya Q. Zhang, Jiacheng Li, Rukang Zhang, Jiayi Tu, Zhicheng Xie, Takemasa Tsuji, Hardik Shah, Matthew O. Ross, Ruitu Lyu, Junko Matsuzaki, Anna Tabor, Kelly Xue, Fatima Choudhry, Chunzhao Yin, Hamed R. Youshanlouei, Syed Shah, Michael W. Drazer, Yu-Ying He, B. Marc Bissonnette, Yuancheng Li, Hui Mao, Jun Huang, Lei Dong, Rui Su, Chuan He, Kunle Odunsi, Jing Chen, Hao Fan.
 Zeaxanthin augments CD8  effector T cell function and immunotherapy efficacy
 Cell Reports Medicine
@@ -84,21 +79,16 @@ University of Chicago Medical Center. (2026, April 10). A common nutrient could 
 260410083114.htm
 2026
 04
-260410083114.htm (accessed April 22, 2026).
-A Common Supplement Could Supercharge Cancer Treatments
-Oct. 1, 2025 Â
 Zeaxanthin, best known for eye health, has been found to boost the tumor-killing power of T cells. Researchers showed it strengthens T-cell receptors, enhances immune signaling, and improves the ...
 Evaluating the Safety and Efficacy of a Smallpox Vaccine for Preventing Mpox
 May 8, 2025 Â
 The recent global monkeypox (mpox) outbreak, with a new and aggressive variant, has underscored the dire need for safe, broadly effective, and accessible vaccines. The LC16m8 vaccine, an attenuated ...
 Experimental mRNA Cancer Vaccine Shows Potential for Advanced Stage Cancer Patients in Phase 1 Trial
-Sep. 13, 2024 Â
 Interim data from the Phase I dose escalation part of the mRNA cancer immunotherapy (mRNA-4359), show promise in patients with advanced solid cancers. The investigational mRNA cancer immunotherapy is ...
 To Boost Cancer Immunotherapy's Fighting Power, Look to the Gut
 May 3, 2023 Â
 Immunotherapy has redefined cancer treatment, but not all patients experience the same benefit when treated. New research in mice identifies how gut bacteria alter the body's response to a ...
 Cancer-Seeking Molecular Delivery System Could Boost Immunotherapy Drug
-Oct. 18, 2022 Â
 Researchers have demonstrated a promising new approach to delivering immunotherapy agents to fight cancer. The approach involves tethering an immunotherapy agent called a STING agonist to an ...
 Machine Learning Helps in Predicting When Immunotherapy Will Be Effective
 June 30, 2021 Â

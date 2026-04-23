@@ -6,7 +6,7 @@ tier: 2
 tier_name: Science journalism
 title: A drug already in trials may finally stop hepatitis E
 date_published: '2026-04-06'
-content_hash: sha256:cbc39a00b1410577971f0451225c6acea923e626e4bca24c8835ff09fdfc4c8a
+content_hash: sha256:921360d71d1a5243415dd6433511960167ba3ecb67c51f63ffdf427b1cef9de9
 paywall: false
 claims:
 - id: sciencedaily.com-2026-04-06-a-drug-already-in-trials-may-finally-sto-001
@@ -20,11 +20,12 @@ claims:
   verification_source: null
   linked_pmids: []
 - id: sciencedaily.com-2026-04-06-a-drug-already-in-trials-may-finally-sto-002
-  text: "Hepatitis C Drugs Combined With Remdesivir Show Strong Effectiveness Against\
-    \ COVID-19, Study Finds\nApr. 27, 2021 Â\x97\nA combination of remdesivir, a drug\
-    \ currently approved in the United States for treating COVID-19 patients, and\
-    \ repurposed drugs for hepatitis C virus (HCV) was 10 times more effective at\
-    \ inhibiting ..."
+  text: 'Hepatitis C Drugs Combined With Remdesivir Show Strong Effectiveness Against
+    COVID-19, Study Finds
+
+    A combination of remdesivir, a drug currently approved in the United States for
+    treating COVID-19 patients, and repurposed drugs for hepatitis C virus (HCV) was
+    10 times more effective at inhibiting ...'
   type: event
   category: FACTUAL
   verification_status: verified
@@ -39,12 +40,10 @@ review_status: pending
 credibility_score: 55.2
 ---
 
-from research organizations
 A drug already in trials may finally stop hepatitis E
 April 6, 2026
 Ruhr-University Bochum
 Scientists have identified a potential new weapon against hepatitis E, a virus with no approved treatment and tens of thousands of deaths each year. The drug bemnifosbuvir, currently in trials for hepatitis C, was found to block the virus from replicating by disrupting its genetic machinery. Tests in cells and animals showed strong effectiveness without harming healthy tissue. If ongoing trials succeed, the drug could soon be repurposed for hepatitis E.
-Researchers have discovered a compound that prevents hepatitis E viruses from replicating. Credit: Â© RUB, Marquard
 A drug currently being tested to treat hepatitis C may also work against hepatitis E by stopping the virus from reproducing.
 Hepatitis E infects millions of people worldwide and leads to about 70,000 deaths each year. Despite its impact, there is still no approved vaccine or targeted treatment. That situation may soon change with the discovery of bemnifosbuvir, a compound that shows strong activity against hepatitis E viruses (HEV).
 An international team of researchers from Bochum and Heidelberg in Germany and Beijing in China identified the drug while screening a collection of antiviral compounds. Bemnifosbuvir belongs to a class of molecules known as nucleotide/nucleoside analogues. Because it is already being tested in clinical trials for hepatitis C, scientists are hopeful it could be repurposed more quickly as a treatment for hepatitis E. Their findings were published in the journal
@@ -60,13 +59,6 @@ The disease was first documented in a major outbreak between 1955 to 1956, but i
 International Collaboration and Research Support
 This research involved the Department of Molecular and Medical Virology at Ruhr University Bochum, the Dao Thi Lab at the Center for Integrative Infectious Disease Research (CIID) of Heidelberg University Hospital, and the Lin Wang Lab at Peking University in China.
 The study received support from multiple funding sources, including the National Key Research and Development Program of China (2023YFC2306900), the research program "Antiviral Therapies" of the Baden-Württemberg Stiftung, the German Research Foundation within Collaborative Research Center 1129 (project number 240245660), the German Center for Infection Research -- TTU Hepatitis Project 05.823, the Beijing Municipal Natural Science Foundation (L244032), and the National Natural Science Foundation of China (82522053).
-Diseases and Conditions
-Personalized Medicine
-Pregnancy and Childbirth
-Antibiotic resistance
-Personalized medicine
-H5N1
-Ruhr-University Bochum
 Jungen Hu, Tianxu Liu, Mara KlÃ¶hn, Andrew Freistaedter, Elif Toprak, Huanting Chi, AndrÃ© GÃ¶mer, Lilli Pottkaemper, Paula Jordan, Xinyue Yang, He Zhang, Johanna Becker, Shirin Nkongolo, Volker Lohmann, Eike Steinmann, Lin Wang, Viet Loan Dao Thi.
 Nucleotide analogue bemnifosbuvir inhibits hepatitis E virus replication in preclinical models
 , 2026; gutjnl-2025-336714 DOI:
@@ -80,24 +72,18 @@ Ruhr-University Bochum. (2026, April 6). A drug already in trials may finally st
 260405003949.htm
 2026
 04
-260405003949.htm (accessed April 22, 2026).
-Study Identifies How Ovarian Cancer Protects Itself, Paves Way for Improved Immunotherapy Approach
-Oct. 30, 2024 Â
 Researchers have discovered a way that ovarian cancer tumors manipulate their environment to resist immunotherapy and identified a drug target that could overcome that resistance. The study used a ...
 First Effective Treatment Found for Spitting Cobra Snakebite
 May 7, 2024 Â
 Scientists have discovered a new snakebite treatment to prevent the devastating tissue damage caused by African spitting cobra venom. Spitting cobra venom is incredibly potent and causes ...
 Off-Patent Liver Disease Drug Could Prevent COVID-19 Infection and Protect Against Future Variants, Researchers Find
-Dec. 5, 2022 Â
 Scientists have identified an off-patent drug that can be repurposed to prevent COVID-19 -- and may be capable of protecting against future variants of the virus -- in research involving a unique mix ...
 Unchecked Emissions Could Double Heat-Related Child Mortality
 July 5, 2022 Â
 If carbon emissions are limited to slow temperature rise, up to an estimated 6,000 child deaths could be prevented in Africa each year, according to new research. New work estimated the impact of ...
 New Drug Combo Identified for Liver Cancer Via CRISPR-Cas9 Screen
-Jan. 11, 2022 Â
 A research team has successfully repurposed an approved drug ifenprodil, a vasodilator, to be used in combination with the FDA-approved first-line drug sorafenib for hepatocellular carcinoma (HCC) ...
 Hepatitis C Drugs Combined With Remdesivir Show Strong Effectiveness Against COVID-19, Study Finds
-Apr. 27, 2021 Â
 A combination of remdesivir, a drug currently approved in the United States for treating COVID-19 patients, and repurposed drugs for hepatitis C virus (HCV) was 10 times more effective at inhibiting ...
 Early Warning Signals of Esophageal Cancer May Be Hiding in Plain Sight
 âLike Liquid Metalâ: Scientists Create Strange Shape-Shifting Material

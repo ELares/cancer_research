@@ -6,7 +6,7 @@ tier: 2
 tier_name: Science journalism
 title: "This overlooked hormone could be why your blood pressure wonâ\x80\x99t drop"
 date_published: '2026-03-30'
-content_hash: sha256:12283c16130b562b2ee4d833ddb27025c5cf7ff412fcf5c57fd4fbdb3215d6eb
+content_hash: sha256:68c8c4f41ba595f883f9b57d2cb0e87570ca4dd25ba2e8fd852312ead517184d
 paywall: false
 claims:
 - id: sciencedaily.com-2026-03-30-this-overlooked-hormone-could-be-why-you-001
@@ -42,12 +42,10 @@ review_status: pending
 credibility_score: 39.2
 ---
 
-from research organizations
 This overlooked hormone could be why your blood pressure wonât drop
 March 30, 2026
 The Mount Sinai Hospital / Mount Sinai School of Medicine
 A large U.S. study reveals that more than a quarter of people with hard-to-treat high blood pressure may have an overlooked hormone problem. Elevated cortisolâoften linked to stressâwas found in 27% of these patients, far higher than expected. This hidden condition could explain why standard medications fail. The discovery could lead to new testing and treatments that finally help bring blood pressure under control.
-A hidden hormone imbalance may be the missing link behind millions of cases of stubborn high blood pressure. Credit: Shutterstock
 The MOMENTUM study revealed that 27 percent of patients with resistant hypertension have hypercortisolism. This finding is important because it shows that excess cortisol is far more common in these patients than researchers and clinicians previously believed.
 Resistant hypertension occurs when blood pressure remains high even after taking three or more medications. Nearly 10 million people in the United States are affected by this condition. Researchers are increasingly recognizing that underlying health issues may be preventing standard treatments from working.
 One of those issues is hypercortisolism, a condition in which the body produces too much cortisol. Often called the "stress hormone," cortisol helps regulate the body's response to stress. However, when cortisol levels stay elevated over time, it can lead to serious health problems.
@@ -69,11 +67,6 @@ Study Funding and Presentation
 Study Funding: Corcept Therapeutics Incorporated was the study sponsor and funded the study.
 Dr. Bhatt is a paid consultant for Corcept Therapeutics Incorporated.
 Meeting: American College of Cardiology's Annual Scientific Session
-Diet and Weight Loss
-Diseases and Conditions
-Antibiotic resistance
-Personalized medicine
-The Mount Sinai Hospital / Mount Sinai School of Medicine
 2026
 03
 260330001131.htm>.
@@ -83,24 +76,17 @@ The Mount Sinai Hospital / Mount Sinai School of Medicine. (2026, March 30). Thi
 260330001131.htm
 2026
 03
-260330001131.htm (accessed April 22, 2026).
-Potential Link Between High Maternal Cortisol, Unpredicted Birth Complications
-Jan. 31, 2024 Â
 A snippet of hair can reveal a pregnant person's stress level and may one day help warn of unexpected birth problems, a study indicates. Researchers measured the stress hormone cortisol in hair ...
 Study Shows Long-Term Health Impacts After Exposure to Environmental Disaster
-Oct. 16, 2023 Â
 Exposure to a large-scale disaster, such as a tsunami, impacts population health over a decade later. A new study has found that women who lived along the coast of Aceh, Indonesia when it was hit by ...
 Limited Postpartum Follow-Up May Miss High Blood Pressure in 1 in 10 New Moms
-Nov. 15, 2022 Â
 An analysis of more than 2,400 women who did not have high blood pressure while pregnant found that about 1 in 10 were diagnosed with high blood pressure in the year after childbirth. Almost a ...
 Some Blood Pressure Medicine May Decrease the Aneurysm Rupture Risk for People With High Blood Pressure
 June 3, 2022 Â
 A new study has found that RAAS inhibitors, a class of blood pressure-lowering medicine, may be better at reducing the risk of brain aneurysm rupture. People with a brain aneurysm -- a weakened area ...
 Meditation Training Reduces Long-Term Stress, Hair Analysis Shows
-Oct. 7, 2021 Â
 A new study finds that mental training reduces the concentration of the stress hormone cortisol in hair. The amount of cortisol in hair provides information about how much a person is burdened by ...
 Elevated Stress Hormones Linked to Higher Risk of High Blood Pressure and Heart Events
-Sep. 13, 2021 Â
 In a study of more than 400 adults with normal blood pressure, those who had high levels of stress hormones detected in their urine were more likely to develop high blood pressure over the next 6-7 ...
 Early Warning Signals of Esophageal Cancer May Be Hiding in Plain Sight
 âLike Liquid Metalâ: Scientists Create Strange Shape-Shifting Material

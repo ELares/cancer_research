@@ -6,7 +6,7 @@ tier: 2
 tier_name: Science journalism
 title: A Trojan horse cancer therapy shows stunning results
 date_published: '2026-01-30'
-content_hash: sha256:b0123257baf16205158f0b0d9403b69445948136f3a2150c955cc8e6c6699faa
+content_hash: sha256:214d4ee35b6da3b8d73d7410a177a4fbfe17cfa08fceca5eb90b3a12a2ff6fdf
 paywall: false
 claims:
 - id: sciencedaily.com-2026-01-30-a-trojan-horse-cancer-therapy-shows-stun-001
@@ -38,13 +38,11 @@ review_status: pending
 credibility_score: 55.2
 ---
 
-from research organizations
 A Trojan horse cancer therapy shows stunning results
 Scientists have found a way to turn cancerâs own bodyguards into its downfall.
 January 30, 2026
 The Mount Sinai Hospital / Mount Sinai School of Medicine
 Scientists at Mount Sinai have unveiled a bold new way to fight metastatic cancer by turning the tumorâs own defenses against it. Instead of attacking cancer cells head-on, the experimental immunotherapy targets macrophagesâimmune cells that tumors hijack to shield themselves from attack. By eliminating or reprogramming these âbodyguards,â the treatment cracks open the tumorâs protective barrier and allows the immune system to flood in and destroy the cancer.
-A new immunotherapy flips the script on metastatic cancer by targeting the immune cells that tumors use as shields rather than the cancer cells themselves. In animal studies, this Trojan horseâstyle approach opened tumors to immune attack and wiped out aggressive lung and ovarian cancers. Credit: Shutterstock
 Scientists at the Icahn School of Medicine at Mount Sinai have created an experimental immunotherapy that approaches metastatic cancer from a different angle. Rather than attacking cancer cells directly, the treatment focuses on the cells that surround and protect them.
 The research, published in the January 22 online issue of
 , a Cell Press Journal, tested the strategy in aggressive preclinical models of metastatic ovarian and lung cancer. The findings suggest a promising new direction for treating advanced solid tumors that have resisted existing therapies.
@@ -68,10 +66,6 @@ The team is now refining the approach, with a focus on controlling where and how
 The paper is titled "Armored macrophage-targeted CAR-T cells reset and reprogram the tumor microenvironment and control metastatic cancer growth."
 The study's authors, as listed in the journal, are Jaime Mateus-Tique, Ashwitha Lakshmi, Bhavya Singh, Rhea Iyer, Alfonso R. Sánchez-Paulete, Chiara Falcomata, Matthew Lin, Gvantsa Pantsulaia, Alexander Tepper, Trung Nguyen, Angelo Amabile, Gurkan Mollaoglu, Luisanna Pia, Divya Chhamalwan, Jessica Le Berichel, Hunter Potak, Marco Colonna, Alessia Baccarini, Joshua Brody, Miriam Merad, and Brian D. Brown.
 The work was supported by NIH grants (U01CA28408, R01CA254104), the Alliance for Cancer Gene Therapy, the Feldman Family Foundation, and the Applebaum Foundation.
-Personalized Medicine
-Diseases and Conditions
-Monoclonal antibody therapy
-The Mount Sinai Hospital / Mount Sinai School of Medicine
 Jaime Mateus-Tique, Ashwitha Lakshmi, Bhavya Singh, Rhea Iyer, Alfonso R. SÃ¡nchez-Paulete, Chiara FalcomatÃ , Matthew Lin, Gvantsa Pantsulaia, Alexander Tepper, Trung Nguyen, Angelo Amabile, Gurkan Mollaoglu, Luisanna Pia, Divya Chhamalwan, Jessica Le Berichel, Hunter Potak, Marco Colonna, Alessia Baccarini, Joshua Brody, Miriam Merad, Brian D. Brown.
 Armored macrophage-targeted CAR-T cells reset and reprogram the tumor microenvironment and control metastatic cancer growth
 , 2026; DOI:
@@ -85,21 +79,15 @@ The Mount Sinai Hospital / Mount Sinai School of Medicine. (2026, January 30). A
 260128075332.htm
 2026
 01
-260128075332.htm (accessed April 22, 2026).
-Scientists Create Universal Nasal Spray Vaccine That Protects Against COVID, Flu, and Pneumonia
-Feb. 23, 2026 Â
 Scientists at Stanford Medicine have unveiled a bold new kind of âuniversalâ vaccine that could one day protect against everything from COVID-19 and the flu to bacterial pneumonia and even common ...
 Scientists Turn Tumor Immune Cells Into Cancer Killers
-Jan. 28, 2026 Â
 Scientists at KAIST have found a way to turn a tumorâs own immune cells into powerful cancer fightersâright inside the body. Tumors are packed with macrophages, immune cells that should attack ...
 Study Hints at How Cancer Immunotherapy Can Be Safer
 June 21, 2023 Â
 Cancer immunotherapy has revolutionized treatment of many forms of cancer by unleashing the immune system response against tumors. Immunotherapies that block checkpoint receptors like PD-1, proteins ...
 TBX20 Enhances Reprogramming of Heart Fibroblasts Into Heart Muscle Cells
-Oct. 21, 2022 Â
 One promising strategy to remuscularize the injured heart is the direct cardiac reprogramming of heart fibroblast cells into cardiomyocytes. Researchers have identified TBX20 as the key missing ...
 Study Maps How Brain Reacts to Infections
-Oct. 12, 2022 Â
 Researchers have mapped in detail how the immune system acts against pathogens invading the brain. The results show that the first line of defense is formed by brain-resident macrophages. These ...
 Discovery Could Lead to Better Cancer Immunotherapy
 May 31, 2022 Â

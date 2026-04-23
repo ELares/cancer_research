@@ -6,15 +6,13 @@ tier: 2
 tier_name: Science journalism
 title: Your vitamin D levels in midlife could shape your brain decades later
 date_published: '2026-04-07'
-content_hash: sha256:ecb93675e033b7aec2deccaf91f9ac696cd04bf3c3b400e4a492e65e94bc611f
+content_hash: sha256:5c2dea466613b2c38f4148eb5ebd91e52538a1f1d1f0dce0b1f3077f501bedc7
 paywall: false
 claims:
 - id: sciencedaily.com-2026-04-07-your-vitamin-d-levels-in-midlife-could-s-001
-  text: 'Credit: Shutterstock
-
-    People with higher levels of vitamin D in midlife may have lower levels of tau
-    protein in the brain years later, according to a study published April 1, 2026,
-    in
+  text: 'People with higher levels of vitamin D in midlife may have lower levels of
+    tau protein in the brain years later, according to a study published April 1,
+    2026, in
 
     Neurology Open Access
 
@@ -38,10 +36,11 @@ claims:
   - '41799187'
   - '41762384'
 - id: sciencedaily.com-2026-04-07-your-vitamin-d-levels-in-midlife-could-s-003
-  text: "Anti-Amyloid Drug Shows Signs of Preventing Alzheimer's Dementia\nMar. 19,\
-    \ 2025 Â\x97\nAn experimental drug appears to reduce the risk of Alzheimer's-related\
-    \ dementia in people destined to develop the disease in their 30s, 40s or 50s,\
-    \ according to the results of a new study."
+  text: 'Anti-Amyloid Drug Shows Signs of Preventing Alzheimer''s Dementia
+
+    An experimental drug appears to reduce the risk of Alzheimer''s-related dementia
+    in people destined to develop the disease in their 30s, 40s or 50s, according
+    to the results of a new study.'
   type: opinion
   category: INTERPRETIVE
   verification_status: null
@@ -49,10 +48,9 @@ claims:
   linked_pmids: []
 - id: sciencedaily.com-2026-04-07-your-vitamin-d-levels-in-midlife-could-s-004
   text: "Novel Tau PET Tracer Exhibits High Sensitivity and Specificity, Allowing\
-    \ for Earlier Identification of Alzheimer's Disease\nSep. 29, 2023 Â\x97\nA new\
-    \ tau PET radiotracer,Â 18F-SNFT-1, has been found to be more effective than existing\
-    \ tau PET radiotracers in identifying Alzheimerâ\x80\x99s disease in its earliest\
-    \ stages, according to research."
+    \ for Earlier Identification of Alzheimer's Disease\nA new tau PET radiotracer,Â 18F-SNFT-1,\
+    \ has been found to be more effective than existing tau PET radiotracers in identifying\
+    \ Alzheimerâ\x80\x99s disease in its earliest stages, according to research."
   type: opinion
   category: INTERPRETIVE
   verification_status: null
@@ -62,12 +60,10 @@ review_status: pending
 credibility_score: 55.2
 ---
 
-from research organizations
 Your vitamin D levels in midlife could shape your brain decades later
 April 7, 2026
 American Academy of Neurology
 Vitamin D levels in midlife may play a bigger role in long-term brain health than previously thought. In a study following nearly 800 people over 16 years, those with higher vitamin D levels in their 30s and 40s had lower levels of tau protein later on, a key marker linked to dementia.
-Higher vitamin D levels in midlife were linked to fewer signs of dementia in the brain years later. Credit: Shutterstock
 People with higher levels of vitamin D in midlife may have lower levels of tau protein in the brain years later, according to a study published April 1, 2026, in
 Neurology Open Access
 , an official journal of the American Academy of Neurology. Tau is a protein closely linked to dementia.
@@ -88,12 +84,6 @@ The study shows a link, but it does not prove that vitamin D directly reduces de
 Researchers found no connection between vitamin D levels and amyloid beta, another Alzheimer's biomarker
 Further research is needed to confirm these findings and better understand the role of vitamin D in brain health
 The study was supported by the National Institute on Aging, National Institute of Neurological Disorders and Stroke, Irish Research Council and Health Research Board of Ireland.
-Mental Health Research
-Alzheimer's Research
-Dementia with Lewy bodies
-Antibiotic resistance
-Multi-infarct dementia
-American Academy of Neurology
 Martin David Mulligan, Matthew R. Scott, Qiong Yang, Ruiqi Wang, Saptaparni Ghosh, Keith A. Johnson, Alexa S. Beiser, Sudha Seshadri, Emer R. McGrath.
 Association of Circulating Vitamin D in Midlife With Increased Tau-PET Burden in Dementia-Free Adults
 Neurology Open Access
@@ -108,24 +98,16 @@ American Academy of Neurology. (2026, April 7). Your vitamin D levels in midlife
 260407073850.htm
 2026
 04
-260407073850.htm (accessed April 22, 2026).
-The Hidden Health Impact of Growing Up With ADHD Traits
-Jan. 24, 2026 Â
 A large, decades-long study suggests that signs of ADHD in childhood may have consequences that extend well beyond school and behavior. Researchers followed nearly 11,000 people from childhood into ...
 Scientists Find âmaster Regulatorâ That Could Reverse Brain Aging
-Jan. 16, 2026 Â
 Researchers have identified OTULIN, an immune-regulating enzyme, as a key trigger of tau buildup in the brain. When OTULIN was disabled, tau vanished from neurons and brain cells remained healthy. ...
 First Synthetic 'Mini Prion' Shows How Protein Misfolding Multiplies
-Apr. 28, 2025 Â
 Prions transmit their abnormally folded shape onto other proteins. Researchers designed a synthetic fragment of the tau protein that exhibits prion-like behavior. Misfolded tau proteins are the ...
 Anti-Amyloid Drug Shows Signs of Preventing Alzheimer's Dementia
-Mar. 19, 2025 Â
 An experimental drug appears to reduce the risk of Alzheimer's-related dementia in people destined to develop the disease in their 30s, 40s or 50s, according to the results of a new study. The ...
 Novel Tau PET Tracer Exhibits High Sensitivity and Specificity, Allowing for Earlier Identification of Alzheimer's Disease
-Sep. 29, 2023 Â
 A new tau PET radiotracer,Â 18F-SNFT-1, has been found to be more effective than existing tau PET radiotracers in identifying Alzheimerâs disease in its earliest stages, according to research. In a ...
 Researchers Discover New Insights About Tau Proteins in People Living With ALS
-Nov. 15, 2021 Â
 Investigators found elevated levels of tau and a phosphorylated form of the tau protein in brain tissue from deceased people who had amyotrophic lateral sclerosis (ALS) and carried a mutation in the ...
 Early Warning Signals of Esophageal Cancer May Be Hiding in Plain Sight
 âLike Liquid Metalâ: Scientists Create Strange Shape-Shifting Material

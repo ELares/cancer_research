@@ -6,7 +6,7 @@ tier: 2
 tier_name: Science journalism
 title: "Scientists discover how to wipe out breast cancerâ\x80\x99s hidden cells"
 date_published: '2025-09-02'
-content_hash: sha256:1025de06b94bb989db6743396e8a427f71ddd69c5374b12008bdba1c59a2a640
+content_hash: sha256:8aedfd0f8f23df1c81344afadb635e2f61f8f75f5eee1df68335f309fd7ac825
 paywall: false
 claims:
 - id: sciencedaily.com-2025-09-02-scientists-discover-how-to-wipe-out-brea-001
@@ -94,8 +94,8 @@ claims:
   - '42016370'
   - '42013233'
 - id: sciencedaily.com-2025-09-02-scientists-discover-how-to-wipe-out-brea-007
-  text: "Fear of Another Heart Attack May Be a Major Source of Ongoing Stress for\
-    \ Survivors\nNov. 11, 2024 Â\x97\nFear of another heart attack was a significant\
+  text: "Scientists discover how to wipe out breast cancerâ\x80\x99s hidden cells.\n\
+    2025\n09\n250902085143.htm\n2025\n09\nFear of another heart attack was a significant\
     \ ongoing contributor to how heart attack survivors perceive their health, according\
     \ to a study."
   type: opinion
@@ -107,13 +107,11 @@ review_status: pending
 credibility_score: 41.3
 ---
 
-from research organizations
 Scientists discover how to wipe out breast cancerâs hidden cells
 Clinical trial offers proof-of-concept for a treatment approach to prevent breast cancer recurrence.
 September 3, 2025
 University of Pennsylvania School of Medicine
 Scientists at the University of Pennsylvania have shown for the first time that itâs possible to detect dormant cancer cells in breast cancer survivors and eliminate them with repurposed drugs, potentially preventing recurrence. In a clinical trial, existing medications cleared these hidden cells in most participants, leading to survival rates above 90%. The findings open a new era of proactive treatment against breast cancerâs lingering threat, offering hope to survivors haunted by the fear of relapse.
-Dormant cancer cells that trigger breast cancer relapses can now be detected and eliminated with existing drugs, dramatically improving survival rates. Credit: Shutterstock
 A first-of-its-kind, federally funded clinical trial has shown it's possible to identify breast cancer survivors who are at higher risk of their cancer coming back due to the presence of dormant cancer cells and to effectively treat these cells with repurposed, existing drugs. The research, led by scientists from the Abramson Cancer Center of the University of Pennsylvania and Penn's Perelman School of Medicine was published today in
 While breast cancer survival continues to improve, thanks to advances in detection and treatment, when breast cancer relapses -- or returns after initial treatment -- it is still incurable. For the 30 percent of women and men who do relapse, the only option is continuous and indefinite treatment which cannot eliminate the cancer completely. Some breast cancers, like triple negative and HER2+, recur within a few years, and others like ER+ can recur decades later. Until now, there has not been a way to identify those breast cancer survivors who harbor the dormant cells that lead to recurrence in real time and to intervene with a treatment that can prevent incurable relapse.
 In a randomized phase II clinical trial with 51 breast cancer survivors, existing drugs were able to clear dormant tumor cells from 80 percent of the study participants. The three-year survival rate without any disease recurrence was above 90 percent in patients who received one drug and 100 percent for patients who received both study drugs.
@@ -133,9 +131,6 @@ If dormant tumor cells were found, patients were then eligible to enroll in the 
 The team is already enrolling patients in two larger, ongoing studies to confirm and extend the results of the CLEVER study: the Phase II ABBY clinical trial and the Phase II PALAVY clinical trial, available at several cancer centers across the country.
 Patients interested in learning more about these or other breast cancer clinical trials at Penn Medicine should contact
 The research was made possible with funding from the National Cancer Institute (R01CA208273) and Department of Defense (BC160784), with additional support from the V Foundation, Breast Cancer Research Foundation, QVC "Shoes on Sale," Avon Foundation, Raynier Institute & Foundation, and generous philanthropic donations. DeMichele previously reported interim outcomes data from the study at the European Society for Medical Oncology (ESMO) Congress 2023.
-Monoclonal antibody therapy
-Pharmaceutical company
-University of Pennsylvania School of Medicine
 Angela DeMichele, Amy S. Clark, Emily Shea, Lauren J. Bayne, Christopher J. Sterner, Killian Rohn, Samantha Dwyer, Tien-chi Pan, Isoris Nivar, Yan Chen, Paul Wileyto, Lindsay R. Berry, Shannon Deluca, Jessica Savage, Igor Makhlin, Dhruv K. Pant, Heather Martin, Adetutu Egunsola, Nathan Mears, Brooke L. Goodspeed, Elizabeth M. Chislock, Jewell Graves, Jianping Wang, Natalie Shih, George K. Belka, Don Berry, Anupma Nayak, Michael Feldman, Lewis A. Chodosh.
 Targeting dormant tumor cells to prevent recurrent breast cancer: a randomized phase 2 trial
 , 2025; DOI:
@@ -149,9 +144,6 @@ University of Pennsylvania School of Medicine. (2025, September 3). Scientists d
 250902085143.htm
 2025
 09
-250902085143.htm (accessed April 22, 2026).
-Fear of Another Heart Attack May Be a Major Source of Ongoing Stress for Survivors
-Nov. 11, 2024 Â
 Fear of another heart attack was a significant ongoing contributor to how heart attack survivors perceive their health, according to a study. While anxiety and depression are recognized as common ...
 Researchers Identify Brain Region Involved in Oxycodone Relapse
 July 9, 2024 Â
@@ -160,13 +152,10 @@ Promising Approach to Prevent Recurrence of Breast Cancer
 June 17, 2024 Â
 Treatment outcomes for breast cancer have become better over the years, but proportion of breast cancers still recur even after long periods without signs of cancer remaining dormant in the body. ...
 Beating Back Bitter Taste in Medicine
-Apr. 9, 2024 Â
 The bitter taste of certain drugs is a barrier to taking some medications as prescribed, especially for people who are particularly sensitive to bitter taste. A team found that the diabetes drug ...
 'Living Medicine' Created to Tackle Drug-Resistant Lung Infections
-Jan. 19, 2023 Â
 Researchers demonstrate that a bacteria can be modified to act as 'living medicine' in the lung. The treatment significantly reduced acute lung infections in mice and doubled their survival ...
 The Brain Uses Bodily Signals to Regulate Fear
-Nov. 18, 2021 Â
 Fear is essential for survival, but must be well regulated to avoid harmful behaviors such as panic attacks or exaggerated risk taking. Scientists have now demonstrated in mice that the brain relies ...
 Early Warning Signals of Esophageal Cancer May Be Hiding in Plain Sight
 âLike Liquid Metalâ: Scientists Create Strange Shape-Shifting Material

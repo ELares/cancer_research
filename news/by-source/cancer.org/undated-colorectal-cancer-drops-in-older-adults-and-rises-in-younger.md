@@ -6,7 +6,7 @@ tier: 3
 tier_name: Expert blogs and commentary
 title: Colorectal Cancer Drops in Older Adults and Rises in Younger Ones
 date_published: null
-content_hash: sha256:2e24d893464226d8f2d460861b2efa4397f474a6581212cf21c2894574607de8
+content_hash: sha256:1b4ab2d92a53392e75ad9e6f3322596d002178eb497da0598131cde031e5d8d4
 paywall: false
 claims:
 - id: cancer.org-undated-undated-colorectal-cancer-drops-in-older-001
@@ -457,11 +457,6 @@ Available any time of day or night
 Our highly trained specialists are available 24/7 via phone and on weekdays can assist through online chat. We connect patients, caregivers, and family members with essential services and resources at every step of their cancer journey. Ask us how you can get involved and support the fight against cancer. Some of the topics we can assist with include:
 Referrals to patient-related programs or resources
 Donations, website, or event-related assistance
-Volunteer opportunities
-For medical questions, we encourage you to review our information with your doctor.
-Colorectal Cancer Drops in Older Adults and Rises in Younger Ones
-Colon and Rectal Cancer
-Colorectal Cancer Drops in Older Adults and Rises in Younger Ones
 The ACS 2026 Colorectal Cancer Statistics report says CRC incidence rates in the US are moving in two directions—
 down for 65+ and
 up for ages <65 (esp. in the distal colon and rectum).

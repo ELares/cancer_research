@@ -181,27 +181,67 @@ _BOILERPLATE_PATTERNS = [
     "READ MORE", "ADVERTISEMENT", "Subscribe to",
     "Share this story", "Share on Facebook", "Share on Twitter",
     "Sign up for", "Newsletter", "Terms of Use",
-    "Privacy Policy", "Cookie Policy", "ScienceDaily.",
+    "Privacy Policy", "Cookie Policy",
     "About ScienceDaily", "Free Newsletters",
     "Materials provided by", "Note: Content may be edited",
-    "MOST POPULAR THIS WEEK", "Strange & Offbeat",
+    "Content may be edited", "MOST POPULAR THIS WEEK",
+    "Strange & Offbeat", "Story Source", "Journal Reference",
+    "Cite This Page", "Credit: Shutterstock", "Credit:",
+    "from research organizations", "accessed April",
+    "accessed March", "accessed February", "accessed January",
+    "accessed May", "accessed June", "accessed July",
+    "accessed August", "accessed September", "accessed October",
+    "accessed November", "accessed December",
+    "provided by", "ScienceDaily.",
+    "RELATED:", "LATEST NEWS", "TOP STORIES",
 ]
+
+# ScienceDaily embeds "Related Stories" blurbs with abbreviated dates
+# like "Sep. 18, 2025" or "Mar. 20, 2024".  These are not article content.
+_RELATED_STORY_DATE_RE = re.compile(
+    r"^(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\.\s+\d{1,2},\s+\d{4}"
+)
 
 
 def _strip_boilerplate(text: str) -> str:
-    """Remove lines containing known page-chrome phrases."""
+    """Remove lines containing known page-chrome phrases and related-story blurbs."""
     lines = text.split("\n")
     cleaned = []
+    in_related_section = False
+
     for line in lines:
         stripped = line.strip()
         if not stripped:
             continue
-        # Skip lines that are entirely boilerplate
-        if any(bp.lower() in stripped.lower() for bp in _BOILERPLATE_PATTERNS):
+
+        # Detect start of related-stories / journal-reference sections
+        stripped_lower = stripped.lower()
+        if any(marker in stripped_lower for marker in
+               ("related stories", "related topics", "story source",
+                "journal reference", "cite this page")):
+            in_related_section = True
             continue
+
+        # Once in a related section, skip everything until a clear
+        # article-content signal (a long sentence).
+        if in_related_section:
+            if len(stripped) > 100:
+                in_related_section = False  # back to article content
+            else:
+                continue
+
+        # Skip lines matching boilerplate patterns
+        if any(bp.lower() in stripped_lower for bp in _BOILERPLATE_PATTERNS):
+            continue
+
+        # Skip related-story date lines ("Sep. 18, 2025 ...")
+        if _RELATED_STORY_DATE_RE.match(stripped):
+            continue
+
         # Skip very short lines (navigation crumbs, labels)
         if len(stripped) < 20 and not any(c.isdigit() for c in stripped):
             continue
+
         cleaned.append(line)
     return "\n".join(cleaned)
 

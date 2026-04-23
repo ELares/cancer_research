@@ -6,14 +6,14 @@ tier: 2
 tier_name: Science journalism
 title: "Whatâ\x80\x99s hiding inside colon cancer could change treatment"
 date_published: '2026-04-02'
-content_hash: sha256:2f53a1ae6472aa2861c955810ccc1f4bfad74a99b71604f55a34cb0e05444870
+content_hash: sha256:e948012c00ad312fa17276464d6172a1ec53b57b671ef324923d8eef21593508
 paywall: false
 claims:
 - id: sciencedaily.com-2026-04-02-what-s-hiding-inside-colon-cancer-could--001
-  text: "from research organizations\nWhatâ\x80\x99s hiding inside colon cancer could\
-    \ change treatment\nApril 1, 2026\nUniversity of East Anglia\nColorectal cancer\
-    \ may carry a unique microbial â\x80\x9Cfingerprint,â\x80\x9D setting it apart\
-    \ from other cancers and opening a new frontier in diagnosis and treatment."
+  text: "Whatâ\x80\x99s hiding inside colon cancer could change treatment\nApril 1,\
+    \ 2026\nUniversity of East Anglia\nColorectal cancer may carry a unique microbial\
+    \ â\x80\x9Cfingerprint,â\x80\x9D setting it apart from other cancers and opening\
+    \ a new frontier in diagnosis and treatment."
   type: speculation
   category: SPECULATIVE
   verification_status: null
@@ -53,7 +53,8 @@ claims:
   linked_pmids: []
 - id: sciencedaily.com-2026-04-02-what-s-hiding-inside-colon-cancer-could--005
   text: "Whatâ\x80\x99s hiding inside colon cancer could change treatment.\n2026\n\
-    04\n260401071951.htm\n2026\n04\n260401071951.htm (accessed April 22, 2026)."
+    04\n260401071951.htm\n2026\n04\nResearchers have found hundreds of metabolic enzymes\
+    \ attached to human DNA inside the cell nucleus."
   type: speculation
   category: SPECULATIVE
   verification_status: null
@@ -70,12 +71,10 @@ review_status: pending
 credibility_score: 39.2
 ---
 
-from research organizations
 Whatâs hiding inside colon cancer could change treatment
 April 1, 2026
 University of East Anglia
 Colorectal cancer may carry a unique microbial âfingerprint,â setting it apart from other cancers and opening a new frontier in diagnosis and treatment. By analyzing DNA from over 9,000 patients, researchers discovered that only colorectal tumors consistently host distinct microbial communitiesâchallenging the long-held belief that all cancers have their own microbial signatures.
-Colorectal cancerâs hidden microbial âfingerprintâ could unlock smarter diagnoses and more personalized treatments. Credit: Shutterstock
 Colorectal cancer appears to stand apart from other cancers in a surprising way. New research from the University of East Anglia suggests it carries its own distinct microbial "fingerprint," a discovery that could reshape how doctors understand and treat the disease.
 Colorectal cancer is the fourth most common cancer in the UK and the second leading cause of cancer-related death. The new findings may help clinicians better understand how the disease develops, how aggressive it may become, and how patients might respond to different treatments.
 The team analyzed whole genome sequencing (WGS) data from more than 9,000 cancer patients. Their results, published in
@@ -107,10 +106,6 @@ Prof Daniel Brewer, from UEA's Norwich Medical School, said: "This study highlig
 "The findings also suggest that oral cancer, in some cases, may be a close diagnostic consideration, further emphasizing the importance of comprehensive genomic profiling in clinical decision-making."
 Collaboration and funding
 The project was led by UEA and involved researchers from multiple institutions, including the University of Leeds, the Quadram Institute, Oxford Nanopore Technologies, the Institute of Cancer Research, London, the University of Manchester, National Institute for Health and Care Research (NIHR) Manchester Biomedical Research Centre, the University of Athens (Greece) the University of Liverpool, Cambridge University Hospitals NHS Foundation Trust, University College London, the University of Southampton, the University of North Carolina (US) and the Earlham Institute.
-Funding for the study was provided by the Big C Cancer Charity and Prostate Cancer UK.
-Diseases and Conditions
-Personalized Medicine
-University of East Anglia
 Abraham Gihawi, Henry M. Wood, Jeremy Clark, Justin OâGrady, Rosalind A. Eeles, David C. Wedge, G. Maria Jakobsdottir, Gkikas Magiorkinis, Andrew G. Schache, Liam Masterson, Matt Lechner, Tim R. Fenton, Terry M. Jones, Adrienne M. Flanagan, Solange De Noon, Alex Rubinsteyn, Rachel Hurst, Colin S. Cooper, Daniel S. Brewer.
 The landscape of microbial associations in human cancer
 Science Translational Medicine
@@ -125,24 +120,17 @@ University of East Anglia. (2026, April 1). Whatâs hiding inside colon canc
 260401071951.htm
 2026
 04
-260401071951.htm (accessed April 22, 2026).
-Hidden Metabolism Found Operating Inside the Cell Nucleus
-Mar. 9, 2026 Â
 Researchers have found hundreds of metabolic enzymes attached to human DNA inside the cell nucleus. Different tissues and cancers show unique patterns of these enzymes, forming a ânuclear metabolic ...
 165,000 Dementia Patients Reveal Hidden Stroke Risk from Common Drug
-Mar. 8, 2026 Â
 A massive UK study of more than 165,000 dementia patients has uncovered troubling new evidence about risperidone, a commonly used drug for severe agitation. Researchers found the antipsychotic ...
 Surprising Giant DNA Discovery May Be Linked to Gum Disease and Cancer
-Sep. 13, 2025 Â
 Scientists in Tokyo have uncovered âInocles,â massive strands of extrachromosomal DNA hidden inside bacteria in human mouths. These giants, overlooked by traditional sequencing, could explain how ...
 Invisible ID: How a Single Breath Could Reveal Your Healthâand Your Identity
 June 13, 2025 Â
 Scientists have discovered that your breathing pattern is as unique as a fingerprint and it may reveal more than just your identity. Using a 24-hour wearable device, researchers achieved nearly 97% ...
 Epigenetics Blood Markers Can Help Explain Dementia Risk
-Aug. 28, 2024 Â
 Researchers assessed DNA methylation at 800,000 sites in the genome in blood samples collected from 900 people. The study includes extensive clinical information on participants, who all provided ...
 How Alike Are the Cancer Cells from a Single Patient?
-Nov. 11, 2021 Â
 Using an experimental system involving new genetic technology, researchers analyzed the gene expression signatures of a representative sample of barcoded leukemia cells. After implanting some of the ...
 Early Warning Signals of Esophageal Cancer May Be Hiding in Plain Sight
 âLike Liquid Metalâ: Scientists Create Strange Shape-Shifting Material

@@ -6,7 +6,7 @@ tier: 2
 tier_name: Science journalism
 title: New AI tool predicts cancer spread with surprising accuracy
 date_published: '2026-03-21'
-content_hash: sha256:8297cbae1e03dcd4f4f492f98e7c62ed777b42d716a0b91c2c54ee09d1c6eedd
+content_hash: sha256:c1b33c6df625925584d3e84f677fcfcee14d133a771905f9cf447733710a753b
 paywall: false
 claims:
 - id: sciencedaily.com-2026-03-21-new-ai-tool-predicts-cancer-spread-with--001
@@ -41,9 +41,10 @@ claims:
   verification_source: null
   linked_pmids: []
 - id: sciencedaily.com-2026-03-21-new-ai-tool-predicts-cancer-spread-with--004
-  text: "Spontaneous Baby Movements Have Purpose\nDec. 26, 2022 Â\x97\nSpontaneous,\
-    \ random baby movements aid development of their sensorimotor system, according\
-    \ to new research."
+  text: 'Spontaneous Baby Movements Have Purpose
+
+    Spontaneous, random baby movements aid development of their sensorimotor system,
+    according to new research.'
   type: opinion
   category: INTERPRETIVE
   verification_status: null
@@ -53,13 +54,11 @@ review_status: pending
 credibility_score: 39.2
 ---
 
-from research organizations
 New AI tool predicts cancer spread with surprising accuracy
 A new AI tool can predict which cancers will spreadâbefore itâs too late.
 March 21, 2026
 UniversitÃ© de GenÃ¨ve
 Researchers have discovered that cancer spread isnât randomâit follows a kind of biological âprogram.â By studying colon tumor cells, they identified gene patterns that signal whether a cancer is likely to metastasize. Their AI model, MangroveGS, can predict this risk with about 80% accuracy and even works across multiple cancer types. This could transform how doctors decide who needs aggressive treatment and who doesnât.
-Group of human colon cancer cells with invasive behaviour. Cell nuclei are in yellow and cell bodies in red. The finger-like protrusions of invasive cells are on the upper right region. Credit: Â© Ariel Ruiz i Altaba, UNIGE
 Why do some tumors spread while others remain localized? Scientists still do not fully understand what controls a cancer cell's ability to metastasize, but answering this question is essential for improving patient care. Researchers at the University of Geneva (UNIGE) studied cells from colon cancer and identified key factors that influence whether a tumor is likely to spread. They also uncovered specific gene expression patterns that can be used to estimate that risk.
 Building on these findings, the team developed an artificial intelligence tool (MangroveGS) that converts these genetic signals into highly reliable predictions across multiple cancer types. The study, published in
 , could lead to more personalized treatments and help uncover new therapeutic targets.
@@ -77,12 +76,6 @@ After training, the model was able to predict metastasis and colon cancer recurr
 Toward More Personalized Cancer Care
 MangroveGS can work directly with tumor samples collected in hospitals. Cells are analyzed, their RNA is sequenced, and a metastasis risk score is quickly generated and shared securely with doctors and patients through an encrypted platform.
 "This information will prevent the overtreatment of low-risk patients, thereby limiting side effects and unnecessary costs, while intensifying the monitoring and treatment of those at high risk," says Ariel Ruiz i Altaba. "It also offers the possibility of optimizing the selection of participants in clinical trials, reducing the number of volunteers required, increasing the statistical power of studies, and providing therapeutic benefits to the patients who need it most."
-Personalized Medicine
-Gastrointestinal Problems
-Diseases and Conditions
-Monoclonal antibody therapy
-Antibiotic resistance
-UniversitÃ© de GenÃ¨ve
 Aravind Srinivasan, Arwen Conod, Yann Tapponnier, Marianna Silvano, Luca DallâOlio, CÃ©line Delucinge-Vivier, Isabel Borges-Grazina, Ariel Ruiz i Altaba.
 Emergence of high-metastatic potentials and prediction of recurrence and metastasis
 , 2026; 45 (1): 116834 DOI:
@@ -96,21 +89,14 @@ UniversitÃ© de GenÃ¨ve. (2026, March 21). New AI tool predicts cancer spread
 260321012709.htm
 2026
 03
-260321012709.htm (accessed April 22, 2026).
-AI-Designed DNA Controls Genes in Healthy Mammalian Cells for First Time
-May 8, 2025 Â
 A recent study marks the first reported instance of generative AI designing synthetic molecules that can successfully control gene expression in healthy mammalian cells. As a proof-of-concept, the ...
 Multi-Target Approach Counters Tumor Growth in Several Cancers
-Jan. 16, 2025 Â
 The tissue adjacent to a tumor behaves differently than areas farther away: The tumor's cancerous cells influence their surroundings, blocking the body's immune defenses and creating a sort ...
 Glioblastoma: New Treatment Attacks Brain Tumors from Multiple Angles
-Nov. 12, 2024 Â
 Glioblastoma is the most common kind of malignant brain tumor in adults. So far, no treatment has been able to make this aggressive tumor permanently disappear. The tumor cells are too varied, and ...
 Spontaneous Baby Movements Have Purpose
-Dec. 26, 2022 Â
 Spontaneous, random baby movements aid development of their sensorimotor system, according to new research. Detailed motion capture of newborns and infants was combined with a musculoskeletal ...
 Colon Cancer: Dying Cancer Cells Give Neighboring Tumor Cells Instructions on How to Survive
-Nov. 17, 2022 Â
 Researchers have discovered a new mechanism that explains why only some of the cells in a colon tumor respond to chemotherapy. The research team was able to establish that tumor cells dying off ...
 Childhood Cancer Discovery May Stop Tumor Spread Before It Starts
 June 1, 2021 Â

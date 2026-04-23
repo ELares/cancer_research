@@ -6,7 +6,7 @@ tier: 1
 tier_name: Institutional and peer-adjacent
 title: Cancer
 date_published: null
-content_hash: sha256:c83ddcbe8e5ed770c38c80ac8aaac2b721947819a82a7f50501b73854e90f5b9
+content_hash: sha256:f7da4453e439be7e01544da26666a0e439fe6bc71eea5ea215e1666c2dcc51bd
 paywall: false
 claims:
 - id: who.int-undated-undated-cancer-001
@@ -170,7 +170,6 @@ provide technical assistance for rapid, effective transfer of best practice inte
 (1)
 Ferlay J, Ervik M, Lam F, Colombet M, Mery L, Piñeros M, et al. Global Cancer Observatory: Cancer Today. Lyon: International Agency for Research on Cancer; 2020 (
 https://gco.iarc.fr/today
- accessed February 2021).
 (2)
 Fink H, Langselius O, Vignat J, Rumgay H, Rehm J, et at. Global and regional cancer burden attributable to modifiable risk factors  to guide  prevention. Nat Medicine. 2026
 (3)

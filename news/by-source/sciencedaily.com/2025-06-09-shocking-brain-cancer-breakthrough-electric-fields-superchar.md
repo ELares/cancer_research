@@ -6,7 +6,7 @@ tier: 2
 tier_name: Science journalism
 title: 'Shocking brain cancer breakthrough: Electric fields supercharge immune assault'
 date_published: '2025-06-09'
-content_hash: sha256:d0dc267cf3ca6021436513668e8fd5703a08a7878e589af54d3c210296719aa8
+content_hash: sha256:ea725f3f6895727fb3be722f468034c118b83d10258f070ecb0ae4f54eabf018
 paywall: false
 claims:
 - id: sciencedaily.com-2025-06-09-shocking-brain-cancer-breakthrough-elect-001
@@ -118,20 +118,30 @@ claims:
   - '42006889'
   - '42006514'
 - id: sciencedaily.com-2025-06-09-shocking-brain-cancer-breakthrough-elect-009
-  text: "Experimental mRNA Cancer Vaccine Shows Potential for Advanced Stage Cancer\
-    \ Patients in Phase 1 Trial\nSep. 13, 2024 Â\x97\nInterim data from the Phase\
-    \ I dose escalation part of the mRNA cancer immunotherapy (mRNA-4359), show promise\
-    \ in patients with advanced solid cancers."
-  type: speculation
+  text: 'Shocking brain cancer breakthrough: Electric fields supercharge immune assault.
+
+    2025
+
+    06
+
+    250609060137.htm
+
+    2025
+
+    06
+
+    Interim data from the Phase I dose escalation part of the mRNA cancer immunotherapy
+    (mRNA-4359), show promise in patients with advanced solid cancers.'
+  type: mechanism
   category: FACTUAL
   verification_status: verified
   verification_source: corpus
   linked_pmids:
-  - '41231502'
-  - '41036598'
-  - '41493473'
-  - '41496455'
-  - '41601019'
+  - '41490885'
+  - '41775435'
+  - '39920148'
+  - '40450573'
+  - '40779733'
 - id: sciencedaily.com-2025-06-09-shocking-brain-cancer-breakthrough-elect-010
   text: "Encouraging Phase 1 Data for Glioblastoma Treatment\nJune 6, 2024 Â\x97\n\
     Preliminary clinical data for glioblastoma multiforme patients enrolled in a Phase\
@@ -163,13 +173,11 @@ review_status: pending
 credibility_score: 48.8
 ---
 
-from research organizations
 Shocking brain cancer breakthrough: Electric fields supercharge immune assault
 Electric field device placed on the scalp, along with immunotherapy and chemotherapy may help patients with glioblastoma live longer, particularly those with large, inoperable tumors
 June 9, 2025
 University of Southern California - Health Sciences
 A breakthrough study from Keck Medicine of USC may have found a powerful new triple therapy for glioblastoma, one of the deadliest brain cancers. By combining Tumor Treating Fields (TTFields), which deliver electric waves into tumors, with immunotherapy and chemotherapy, researchers saw a major boost in survival.
-Targeted electric fields plus immunotherapy might finally crack glioblastomaâs defenses, dramatically boosting survival for patients with inoperable brain tumors. Credit: Shutterstock
 A new study led by Keck Medicine of USC researchers may have uncovered an effective combination therapy for glioblastoma, a brain tumor diagnosis with few available effective treatments. According to the National Brain Tumor Society, the average survival for patients diagnosed with glioblastoma is eight months.
 The study finds that using Tumor Treating Fields therapy (TTFields), which delivers targeted waves of electric fields directly into tumors to stop their growth and signal the body's immune system to attack cancerous tumor cells, may extend survival among patients with glioblastoma, when combined with immunotherapy (pembrolizumab) and chemotherapy (temozolomide).
 TTFields disrupt tumor growth using low-intensity, alternating electric fields that push and pull key structures inside tumor cells in continually shifting directions, making it difficult for the cells to multiply. Preventing tumor growth gives patients a better chance of successfully fighting the cancer. When used to treat glioblastoma, TTFields are delivered through a set of mesh electrodes that are strategically positioned on the scalp, generating fields at a precise frequency and intensity focused on the tumor. Patients wear the electrodes for approximately 18 hours a day.
@@ -193,12 +201,6 @@ Keck Medicine is participating in the multicenter Phase 3 clinical trial to vali
 This Phase 3 trial, currently open at 28 sites across the United States, Europe and Israel, aims to enroll over 740 patients through April 2029, including those with gross total resection, partial resection or biopsy-only tumors to assess the extent of how surgically removing tumors influences immune response.
 Keck School of Medicine of USC authors of this study include Dongjiang Chen, PhD, assistant professor of research neurological surgery; Son Le, PhD, assistant professor of research neurological surgery; Harshit Manektalia, research programmer; Ming Li, PhD, professor of research population and public health sciences; and Adam O'Dell, research lab specialist. Ashley Ghiaseddin, MD, and Maryam Rahman, MD, MS, colleagues from the University of Florida, also contributed to this work.
 This study was funded by a grant from Novocure, which manufactures Optune, the TTFields device used in this study. Tran has received honoraria from Novocure for consultant work. Chen and Tran are inventors of two patent applications related to work reported in this study
-Diet and Weight Loss
-Personalized Medicine
-Diseases and Conditions
-Monoclonal antibody therapy
-Personalized medicine
-University of Southern California - Health Sciences
 Dongjiang Chen, Son B. Le, Ashley P. Ghiaseddin, Harshit Manektalia, Ming Li, Adam OâDell, Maryam Rahman, David D. Tran.
 Efficacy and safety of adjuvant TTFields plus pembrolizumab and temozolomide in newly diagnosed glioblastoma: A phase 2 study
 , 2025; 100708 DOI:
@@ -212,9 +214,6 @@ University of Southern California - Health Sciences. (2025, June 9). Shocking br
 250609060137.htm
 2025
 06
-250609060137.htm (accessed April 22, 2026).
-Experimental mRNA Cancer Vaccine Shows Potential for Advanced Stage Cancer Patients in Phase 1 Trial
-Sep. 13, 2024 Â
 Interim data from the Phase I dose escalation part of the mRNA cancer immunotherapy (mRNA-4359), show promise in patients with advanced solid cancers. The investigational mRNA cancer immunotherapy is ...
 Electrical Currents May Make Body's Cancer-Killing Cells Even Better Killers
 July 25, 2024 Â
@@ -223,13 +222,11 @@ Encouraging Phase 1 Data for Glioblastoma Treatment
 June 6, 2024 Â
 Preliminary clinical data for glioblastoma multiforme patients enrolled in a Phase 1 clinical trial demonstrated that 92 percent of evaluable patients treated with INB-200 exceeded a median ...
 Genetically Engineering a Treatment for Incurable Brain Tumors
-Apr. 22, 2024 Â
 Scientists are developing and validating a patent-pending novel immunotherapy to be used against glioblastoma brain tumors. Glioblastomas are almost always lethal with a median survival time of 14 ...
 Nanotechnology Used to Destroy and Prevent Relapse of Solid Tumor Cancers
 June 7, 2022 Â
 As people across the globe look forward to longer life expectancies, malignant cancers continue to pose threats to human health. The exploration and development of immunotherapy aims to seek new ...
 Burst of Radiation and Vesicles-Based Immunotherapy Suppress Brain Cancer Growth
-Jan. 31, 2022 Â
 The priming of glioblastoma with a burst of radiation increased dramatically the uptake of extracellular vesicles-based immunotherapy by the tumor and the surrounding microenvironment, halting tumor ...
 Early Warning Signals of Esophageal Cancer May Be Hiding in Plain Sight
 âLike Liquid Metalâ: Scientists Create Strange Shape-Shifting Material

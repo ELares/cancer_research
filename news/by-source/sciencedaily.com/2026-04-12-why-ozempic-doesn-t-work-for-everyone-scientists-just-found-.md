@@ -7,7 +7,7 @@ tier_name: Science journalism
 title: "Why Ozempic doesnâ\x80\x99t work for everyone: Scientists just found a hidden\
   \ reason"
 date_published: '2026-04-12'
-content_hash: sha256:2f0b61d68f88a251f319af4e1d8b31f345e7d17f264f060e2631cfbb65661494
+content_hash: sha256:6adcf93f9a7facbc4fdf163119bd55a5c665d5d7175201460b3a9f8bc50cbcba
 paywall: false
 claims:
 - id: sciencedaily.com-2026-04-12-why-ozempic-doesn-t-work-for-everyone-sc-001
@@ -60,12 +60,10 @@ review_status: pending
 credibility_score: 44.5
 ---
 
-from research organizations
 Why Ozempic doesnât work for everyone: Scientists just found a hidden reason
 A newly discovered genetic âGLP-1 resistanceâ may be why some people donât respond to Ozempic-like drugs at all.
 April 12, 2026
 A new study reveals that popular diabetes and weight-loss drugs like Ozempic and Wegovy may not work as effectively for about 10% of people due to specific genetic variants. These individuals appear to have a puzzling condition called âGLP-1 resistance,â where their bodies produce higher levels of the hormone targeted by these drugsâbut donât respond to it properly.
-A hidden genetic quirk may explain why some patients see little benefit from popular GLP-1 drugs like Ozempic. Credit: Shutterstock
 More than one in four people with Type 2 diabetes use GLP-1 receptor agonists, a class of widely prescribed medications. However, new research from Stanford Medicine and international collaborators suggests these drugs may be less effective for some individuals due to genetic differences.
 About 10% of the population carries certain genetic variants linked to a newly identified phenomenon called GLP-1 resistance. In these individuals, levels of the hormone GLP-1 (glucagon-like peptide-1), which helps regulate blood sugar, are actually higher than normal but appear to be less effective at doing their job.
 It is still unclear whether these genetic variants influence weight loss outcomes from GLP-1 drugs such as Ozempic and Wegovy, which are increasingly used to treat obesity. These medications are typically prescribed at higher doses for weight loss than for diabetes.
@@ -106,12 +104,6 @@ For now, the biological cause of GLP-1 resistance remains unclear and is likely 
 "There are a whole class of medications that are insulin sensitizers, so perhaps we can develop medications that will allow people to be sensitized to GLP-1s or find formulations of GLP-1, like the longer-acting versions, that avoid the GLP-1 resistance," she said.
 Researchers from University of Oxford, University of Dundee, University of Copenhagen, University of British Columbia, Churchill Hospital, Newcastle University, University of Bath and University of Exeter also contributed to the work.
 The study received funding from Wellcome, Medical Research Council, European Union Horizon 2020 Programme, the National Institutes of Health (grants U01-DK105535, U01-DK085545 and UM-1DK126185), the National Institute for Health Research Oxford Biomedical Research Centre, the Canadian Institutes of Health Research, the Novo Nordisk Foundation, Boehringer Ingelheim and Diabetes Australia.
-Diet and Weight Loss
-Personalized Medicine
-Diseases and Conditions
-Antibiotic resistance
-Diabetes mellitus type 1
-Personalized medicine
 Mahesh M. Umapathysivam, Elisa Araldi, Benoit Hastoy, Adem Y. Dawed, Hasan Vatandaslar, Johanna E. Mayrhofer, Peter Lindquist, Pamuditha N. Silva, Algera Goga, Geraldine O. TrÃ¼llinger, Svenja Godbersen, Shahana Sengupta, Adrian Kaufmann, SÃ¸ren Krogsgaard Thomsen, Bolette Hartmann, Yi-Chun Chen, Anna E. Jonsson, Hasan Kabakci, Swaraj Thaman, Niels Grarup, Christian T. Have, Lindsay P. Pallo, Kristine Faerch, Anette P. Gjesing, Sameena Nawaz, Jane Cheeseman, Matthew J. Neville, Oluf Pedersen, Mark Walker, Han Sun, Christopher Jennison, Andrew T. Hattersley, Jens F. Rehfeld, Rury R. Holman, Bruce C. Verchere, Torben Hansen, Fredrik Karpe, Jens J. Holst, Mette M. Rosenkilde, Angus G. Jones, Michael Ristow, Mark I. McCarthy, Ewan R. Pearson, Markus Stoffel, Anna L. Gloyn.
 Type 2 diabetes risk alleles in peptidyl-glycine alpha-amidating monooxygenase influence GLP-1 levels and response to GLP-1 receptor agonists
 , 2026; DOI:
@@ -125,24 +117,16 @@ Stanford Medicine. (2026, April 12). Why Ozempic doesnât work for everyone:
 260411022029.htm
 2026
 04
-260411022029.htm (accessed April 22, 2026).
-Scientists Discover Natural Hormone That Reverses Obesity
-Apr. 16, 2026 Â
 A hormone called FGF21 can reverse obesity in mice by activating a newly identified brain circuit tied to metabolism. Surprisingly, it works in the hindbrainâthe same region targeted by GLP-1 drugs ...
 Ozempic-Like Weight Loss Drugs May Help the Heart Recover After a Heart Attack
-Mar. 4, 2026 Â
 Popular weight-loss drugs such as Ozempic, Wegovy, and Mounjaro may do more than help people shed pounds. New research suggests these GLP-1 medications could also help protect the heart after a heart ...
 How to Keep Ozempic/Wegovy Weight Loss Without the Nausea
-Nov. 18, 2025 Â
 Scientists are uncovering how GLP-1 drugs like Ozempic and Wegovy act on brain regions that control hunger, nausea, pleasure-based eating, and thirst. These discoveries may help create treatments ...
 Your Pancreas May Be Making Its Own Version of Ozempic
-Sep. 21, 2025 Â
 Duke University scientists have discovered that pancreatic alpha cells, long believed to only produce glucagon, actually generate powerful amounts of GLP-1 â the same hormone mimicked by popular ...
 The Next Ozempic: A 4-in-1 Breakthrough for Lasting Weight Loss
-Sep. 1, 2025 Â
 Scientists are racing to improve weight loss treatments beyond drugs like Ozempic and Wegovy, which are effective but plagued by nausea, bone loss, and weight regain. Tufts University chemists have ...
 Genetic Evidence That Diabetes Drug GLP-1 Receptor Agonists Achieve Weight Loss Primarily by Reducing Fat Mass More Than Muscle
-Feb. 24, 2025 Â
 Diabetes and obesity have become pressing health issues worldwide. Glucagon-like peptide-1 (GLP-1) receptor agonists, a class of medications widely used in the treatment of type 2 diabetes (T2D), ...
 Early Warning Signals of Esophageal Cancer May Be Hiding in Plain Sight
 âLike Liquid Metalâ: Scientists Create Strange Shape-Shifting Material

@@ -6,7 +6,7 @@ tier: 2
 tier_name: Science journalism
 title: Scientists finally crack mystery of rare COVID vaccine blood clots
 date_published: '2026-04-11'
-content_hash: sha256:3705accdb7af538810833c72e80981ecabe5cf8e17e64693d126ac716fe5e45c
+content_hash: sha256:892626d3051b211fa86d2e82e866fcd44dcd8bfe16aadfb49b988bdec2bea542
 paywall: false
 claims:
 - id: sciencedaily.com-2026-04-11-scientists-finally-crack-mystery-of-rare-001
@@ -37,10 +37,20 @@ claims:
   verification_source: null
   linked_pmids: []
 - id: sciencedaily.com-2026-04-11-scientists-finally-crack-mystery-of-rare-004
-  text: "Rare Health Condition Cases Surge During COVID-19 Pandemic\nMay 23, 2024\
-    \ Â\x97\nA rare condition surged among previously unaffected groups of people\
-    \ during the COVID-19 pandemic and led to the deaths of nine patients, researchers\
-    \ say."
+  text: 'Scientists finally crack mystery of rare COVID vaccine blood clots.
+
+    2026
+
+    04
+
+    260409101106.htm
+
+    2026
+
+    04
+
+    A rare condition surged among previously unaffected groups of people during the
+    COVID-19 pandemic and led to the deaths of nine patients, researchers say.'
   type: opinion
   category: INTERPRETIVE
   verification_status: null
@@ -50,11 +60,9 @@ review_status: pending
 credibility_score: 55.2
 ---
 
-from research organizations
 Scientists finally crack mystery of rare COVID vaccine blood clots
 April 10, 2026
 Researchers have uncovered why a rare blood clotting disorder can occur after certain COVID-19 vaccines or adenovirus infections. The immune system can mistakenly target a normal blood protein (PF4) after confusing it with a viral protein. This triggers clotting in extremely rare cases. The breakthrough means vaccines can now be redesigned to avoid this reaction while staying effective.
-Scientists have cracked the mystery behind rare COVID vaccine blood clotsâand now know how to prevent them. Credit: Shutterstock
 Researchers led by Flinders University, working with international collaborators, have uncovered how a rare blood clotting condition can develop after certain COVID19 adenovirus-based vaccines or even after a natural adenovirus infection.
 The team, which included scientists from Flinders University and Greifswald University, discovered that in a very small number of people, the immune system can mistakenly confuse a normal adenovirus protein with a human blood protein called platelet factor 4 (or PF4).
 Immune System Mix-Up Triggers Clotting
@@ -82,10 +90,6 @@ Immunologist Professor James McCluskey from the University of Melbourne and the 
 "It is a brilliant piece of molecular sleuthing, the culmination of a body of work that unravels the genetic and structural basis for how a normal immune response to a virus protein leads to pathogenic autoimmunity," says Professor McCluskey.
 With the exact trigger now identified, researchers say vaccine developers can adjust the pVII protein in adenovirus-based vaccines to remove this rare risk.
 These findings are expected to support the development of safer vaccines that remain effective and widely accessible, especially in regions where adenovirus-based vaccines play an important role in preventing disease.
-Diseases and Conditions
-Pregnancy and Childbirth
-Antibiotic resistance
-Monoclonal antibody therapy
 Jing Jing Wang, Linda SchÃ¶nborn, Theodore E. Warkentin, Luisa MÃ¼ller, Thomas Thiele, Lena Ulm, Uwe VÃ¶lker, Sabine Ameling, SÃ¶ren Franzenburg, Lars Kaderali, Ana Tzvetkova, Alex Colella, Tim Chataway, Chee Wee Tan, Bridie Armour, Alexander Troelnikov, Lucy Rutten, James McCluskey, Roland Zahn, Tom P. Gordon, Andreas Greinacher.
 Adenoviral Inciting Antigen and Somatic Hypermutation in VITT
 New England Journal of Medicine
@@ -100,21 +104,14 @@ Flinders University. (2026, April 10). Scientists finally crack mystery of rare 
 260409101106.htm
 2026
 04
-260409101106.htm (accessed April 22, 2026).
-Rare Health Condition Cases Surge During COVID-19 Pandemic
-May 23, 2024 Â
 A rare condition surged among previously unaffected groups of people during the COVID-19 pandemic and led to the deaths of nine patients, researchers say. The condition is a type of autoimmune ...
 Researchers Find Male and Female Immune Systems Get Trained Differently in Response to Infections
-Aug. 30, 2023 Â
 The human immune system is adaptive, remembering past infections and training itself to guard against future similar infections. But what happens when people have compromised immune systems due to ...
 Platelets Can Replicate the Benefits of Exercise in the Brain
-Aug. 17, 2023 Â
 Researchers have found an injection of a specific blood factor can replicate the benefits of exercise in the brain. They've discovered that platelets secrete a protein, exerkine CXCL4/Platelet ...
 Complex Assembly Process Involved in DNA Virus Replication
-Apr. 5, 2023 Â
 In a twist on the question, 'Which came first, the chicken or the egg?', scientists have long faced a similar question about how human adenovirus replicates: 'Which comes first, ...
 New Study Suggests Two Paths Toward 'Super Immunity' to COVID-19
-Jan. 25, 2022 Â
 New laboratory research reveals more than one path toward robust immunity from COVID-19. A new study finds that two forms of immunity -- breakthrough infections following vaccination or natural ...
 How Vaccine-Induced Immune Thrombotic Thrombocytopenia (VITT) Happens
 July 7, 2021 Â

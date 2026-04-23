@@ -6,7 +6,7 @@ tier: 2
 tier_name: Science journalism
 title: Wildfire smoke could kill 70,000 Americans a year by 2050
 date_published: '2025-09-19'
-content_hash: sha256:a280c18aa30a2d9b0139769d9764f366d470d8d3c2874023a62c01436f4d6ae1
+content_hash: sha256:a0fec085448c7a5b421fe2ece42e6509aec5574875b96e25d0e98495f32cf1ef
 paywall: false
 claims:
 - id: sciencedaily.com-2025-09-19-wildfire-smoke-could-kill-70-000-america-001
@@ -56,11 +56,9 @@ review_status: pending
 credibility_score: 36.0
 ---
 
-from research organizations
 Wildfire smoke could kill 70,000 Americans a year by 2050
 September 19, 2025
 Wildfires are no longer a seasonal nuisance but a deadly, nationwide health crisis. Fueled by climate change, smoke is spreading farther and lingering longer, with new research warning of tens of thousands of additional deaths annually by mid-century. The health costs alone could surpass all other climate damages combined, revealing wildfire smoke as one of the most underestimated threats of our warming world.
-Wildfire smoke is emerging as the deadliest climate threat in America, linked to tens of thousands of annual deaths. Researchers warn the burden will grow sharply even with major emission cuts. Credit: Shutterstock
 Wildfires burning across Canada and the Western United States are spewing smoke over millions of Americans - the latest examples of ashy haze becoming a regular experience, with health impacts far greater than scientists previously estimated.
 Although wildfires have long been part of life in the Western U.S., warmer, drier conditions are fueling bigger blazes that occur more often and for longer. Smoke from these blazes is spreading farther and lingering longer than in the past. In a Sept. 18 study in
 , Stanford University researchers estimate that continued global warming could lead to about 30,000 additional deaths each year nationwide by 2050, as climate-driven increases in fire activity generate more smoke pollution across North America.
@@ -80,13 +78,6 @@ Actions by public health officials and communities can mitigate this growing thr
 Burke is also a professor (by courtesy) of Earth system science; deputy director at the Center on Food Security and the Environment; and a senior fellow with the Stanford Institute for Economic Policy Research (SIEPR), the Woods Institute for the Environment, and the Freeman Spogli Institute for International Studies.
 Additional Stanford co-authors include Jessica Li, a research data analyst at the Center on Food Security and the Environment; Renzhi Jing, a postdoctoral researcher in primary care and population policy; Makoto Kelp, a postdoctoral researcher in Earth system science; Jeff Wen, a PhD student in Earth system science; Mathew Kiang, assistant professor of epidemiology and population health; Sam Heft-Neal, a senior research scholar at the Center on Food Security and the Environment; and Noah Diffenbaugh, the Kara J Foundation Professor and Kimmelman Family Senior Fellow. Other study co-authors are from the University of California, San Diego, the University of Washington, Princeton University, the National Oceanic and Atmospheric Administration, and the National Bureau of Economic Research.
 This research was supported by the Keck Foundation, Stanford's Center for Innovation in Global Health, Stony Brook University, the Harvard University Center for the Environment, and the Stanford Research Computing Center.
-Pregnancy and Childbirth
-Environmental Science
-Environmental Issues
-Attribution of recent climate change
-IPCC Report on Climate Change - 2007
-Climate change mitigation
-Effects of global warming
 Minghao Qiu, Jessica Li, Carlos F. Gould, Renzhi Jing, Makoto Kelp, Marissa L. Childs, Jeff Wen, Yuanyu Xie, Meiyun Lin, Mathew V. Kiang, Sam Heft-Neal, Noah S. Diffenbaugh, Marshall Burke.
 Wildfire smoke exposure and mortality burden in the US under climate change
 , 2025; DOI:
@@ -100,24 +91,17 @@ Stanford University. (2025, September 19). Wildfire smoke could kill 70,000 Amer
 250918225016.htm
 2025
 09
-250918225016.htm (accessed April 22, 2026).
-Fighting Fire With Fire: How Prescribed Burns Reduce Wildfire Damage and Pollution
-June 30, 2025 Â
 Wildfires are becoming more intense and dangerous, but a new Stanford-led study offers hope: prescribed burnsâintentionally set, controlled firesâcan significantly lessen their impact. By ...
 New Research Highlights Opportunities to Protect Carbon and Communities from Forest Fires
-Sep. 6, 2023 Â
 As the climate and wildfire crises have intensified, so too have concerns regarding the loss of carbon captured and stored in forests from decades to centuries of tree growth. A new study describes ...
 REBURN: A New Tool to Model Wildfires in the Pacific Northwest and Beyond
-Aug. 21, 2023 Â
 Researchers have developed a new tool, REBURN, that can simulate large forest landscapes and wildfire dynamics over decades or centuries under different wildfire management strategies. The model can ...
 New Model Provides Improved Air-Quality Predictions in Fire-Prone Areas
-Mar. 14, 2023 Â
 Globally, wildfires are becoming more frequent and destructive, generating a significant amount of smoke that can be transported thousands of miles, driving the need for more accurate air pollution ...
 Western U.S. Wildfire Smoke Plumes Are Getting Taller, Researchers Find
 July 27, 2022 Â
 In recent years the plumes of smoke crawling upward from Western wildfires have trended taller, with more smoke and aerosols lofted up where they can spread farther and impact air quality over a ...
 Chemical Analysis Reveals Effects of Wildfire Smoke on Grapes and Wines
-Mar. 11, 2022 Â
 As wildfire season in the West grows in length and severity, it is taking a toll on the wine industry through the effects of wildfire smoke on the quality of wine grapes. Volatile compounds in the ...
 Early Warning Signals of Esophageal Cancer May Be Hiding in Plain Sight
 âLike Liquid Metalâ: Scientists Create Strange Shape-Shifting Material

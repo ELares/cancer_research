@@ -6,7 +6,7 @@ tier: 2
 tier_name: Science journalism
 title: Age-related genetic changes in the blood associated with poor cancer prognosis
 date_published: '2025-04-23'
-content_hash: sha256:a4ee5a0880f0265c11b2cd6982a6c410f133f22fbb2d29689c96363ae5a5e00e
+content_hash: sha256:132d7bcd47d5250a5093613803ac8e4f0c68bdf35b1acc2ab4a40eda73641c09
 paywall: false
 claims:
 - id: sciencedaily.com-2025-04-23-age-related-genetic-changes-in-the-blood-001
@@ -55,7 +55,6 @@ review_status: pending
 credibility_score: 41.3
 ---
 
-from research organizations
 Age-related genetic changes in the blood associated with poor cancer prognosis
 April 25, 2025
 The Francis Crick Institute
@@ -95,9 +94,6 @@ Oriol Pich, Postdoctoral Project Research Scientist in the Crick's Cancer Evolut
 Charlie Swanton, Deputy Clinical Director at the Crick, Chief Clinician at Cancer Research UK and Chief Investigator for TRACERx, said: "This is the first time that we've been able to see at scale, the interaction of two different types of 'clonal proliferations', age-related CHIP and cancer, providing insight into how ageing might impact cancer risk.
 "As we start to piece together the picture of the most important mutations which evolve during the ageing process in cells from the bone marrow, and the impact they have in disease, we hope we can start to identify opportunities for intervention and maybe even prevention of some age-related cancers."
 This work was supported by Cancer Research UK and the National Institute of Health and Care Research UCLH Biomedical Research Centre, alongside additional funders.
-Diseases and Conditions
-Personalized Medicine
-The Francis Crick Institute
 Oriol Pich, Elsa Bernard, Maria Zagorulya, Andrew Rowan, Constandina Pospori, Ramy Slama, Hector Huerga Encabo, Jennifer OâSullivan, Despoina Papazoglou, Panayiotis Anastasiou, Chrysante S. Iliakis, Sally-Ann Clark, Krijn K. Dijkstra, Vittorio BarbÃ¨, Chris Bailey, Aaron J. Stonestrom, Katey S.S. Enfield, Mary Green, Charlotte K. Brierley, Alastair Magness, David R. Pearce, Robert E. Hynds, Rija Zaidi, Jayant K. Rane, Ãngel F. Ãlvarez-Prado, Kerstin Thol, Rachel Scott, Supreet Kaur Bola, Elena Hoxha, Steve K. Harris, Karl S. Peggs, Sergio A. Quezada, Allan Hackshaw, Simone Zaccaria, Johanna A. Joyce, Ilaria Malanchi, Michael F. Berger, Mariam Jamal-Hanjani, Andreas Wack, Julian Downward, William Grey, Cristina Lo Celso, Eva GrÃ¶nroos, Charles M. Rudin, Adam J. Mead, Dominique Bonnet, Elli Papaemmanuil, Charles Swanton.
 Tumor-Infiltrating Clonal Hematopoiesis
 New England Journal of Medicine
@@ -112,21 +108,16 @@ The Francis Crick Institute. (2025, April 25). Age-related genetic changes in th
 250423185925.htm
 2025
 04
-250423185925.htm (accessed April 22, 2026).
-Scientists Engineer Precision Tool for Mitochondrial DNA Manipulation
-May 2, 2025 Â
 Many mitochondrial diseases have been difficult to study and treat due to the inherent challenges in accessing mitochondrial DNA (mtDNA). Now, researchers have optimized mitochondrial-targeted ...
 Expanding a Lymph Node, Boosting a Vaccine
 May 6, 2024 Â
 Researchers have found a way to enhance and extend LN expansion, and study how this phenomenon affects both the immune system and efficacy of vaccinations against tumors. While the oversized LNs ...
 As We Age, Our Cells Are Less Likely to Express Longer Genes
-Mar. 21, 2024 Â
 Aging may be less about specific 'aging genes' and more about how long a gene is. Many of the changes associated with aging could be occurring due to decreased expression of long genes, say ...
 Close Up on Aging Reveals How Different Cell Types in the Body Age at Different Pace
 June 15, 2023 Â
 A team or researchers reports the first Aging Fly Cell Atlas (AFCA), a detailed characterization of the aging process in 163 distinct cell types in the laboratory fruit fly. Their in-depth analysis ...
 Cryptic Transcription, a Novel Phenomenon in Mammalian Stem Cells, Linked to Aging
-Aug. 2, 2021 Â
 Researchers have discovered that a cellular phenomenon called cryptic transcription, which had been previously described and linked to aging in yeasts and worms, is also involved in mammalian aging. ...
 How Pancreatic Cancer Cells Dodge Drug Treatments
 June 22, 2021 Â

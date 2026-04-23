@@ -6,13 +6,14 @@ tier: 2
 tier_name: Science journalism
 title: Kilauea volcano's ash prompted largest open ocean phytoplankton bloom
 date_published: '2025-04-09'
-content_hash: sha256:8692fe50c170f1fe12951b96a196c6b11d0e968cfb767e87957beb81a7affada
+content_hash: sha256:ff2ef441d55ade2e223634de8370e713d20b53e0e91b655a1ccc857805a3c325
 paywall: false
 claims:
 - id: sciencedaily.com-2025-04-09-kilauea-volcano-s-ash-prompted-largest-o-001
-  text: "Study Finds\nMar. 31, 2022 Â\x97\nLaw enforcement seizures of pills containing\
-    \ illicit fentanyl increased dramatically between January 2018 and December 2021,\
-    \ according to a new U.S. study."
+  text: 'Study Finds
+
+    Law enforcement seizures of pills containing illicit fentanyl increased dramatically
+    between January 2018 and December 2021, according to a new U.S. study.'
   type: opinion
   category: INTERPRETIVE
   verification_status: null
@@ -22,7 +23,6 @@ review_status: pending
 credibility_score: 47.2
 ---
 
-from research organizations
 Kilauea volcano's ash prompted largest open ocean phytoplankton bloom
 April 10, 2025
 University of Hawaii at Manoa
@@ -39,15 +39,6 @@ Carbon out, carbon in
 The growth of these specialized phytoplankton produced a lot of organic matter. When the organisms die and sink to the deep ocean, a large amount of organic carbon is exported from the surface, essentially removing carbon from the upper ocean and atmosphere.
 "Our estimates are that export of organic carbon may be equivalent to about half of the carbon dioxide initially released from the eruption," said Karl. "This marine carbon dioxide sequestration is a natural process that probably occurs whenever volcanic eruptions inject ash into the atmosphere and carry that particulate matter out to sea. The combination of ash deposition and the nutrient starved conditions in our study area aligned to create a massive bloom that was easily seen by satellite remote sensing and Argo floats that had been previously deployed in that region."
 The research team is prepared to track future volcanic eruptions and their effects on phytoplankton blooms. If another major eruption occurs, they plan to deploy a research vessel to study the bloom's development and response in real-time.
-Pregnancy and Childbirth
-Patient Education and Counseling
-Multiple Sclerosis Research
-Diseases and Conditions
-Monoclonal antibody therapy
-University of Hawaii at Manoa
-. Original written by Marcie Grabowski.
-Satellite data shows deposition of ash from the K?lauea eruption
-C. H. Chow, W. Cheah, R. M. Letelier, D. M. Karl, J.âH. Tai.
 KÄ±Ìlauea Volcanic Ash Induced a Massive Phytoplankton Bloom in the NutrientâPoor North Pacific Subtropical Gyre
 Journal of Geophysical Research: Oceans
 , 2025; 130 (3) DOI:
@@ -61,12 +52,8 @@ University of Hawaii at Manoa. (2025, April 10). Kilauea volcano's ash prompted 
 250409115406.htm
 2025
 04
-250409115406.htm (accessed April 22, 2026).
-Living Near Oil and Gas Activity Linked to Poor Mental Health During Preconception
-July 11, 2024 Â
 A new study suggests that people who are trying to conceive and live close to oil and gas development sites have a heightened risk of developing adverse mental health outcomes. The study found that ...
 Switching to Vegan or Ketogenic Diet Rapidly Impacts Immune System
-Jan. 30, 2024 Â
 Researchers have observed rapid and distinct immune system changes in a small study of people who switched to a vegan or a ketogenic (also called keto) diet. Scientists closely monitored various ...
 Record-Breaking Heat in the Summer of 2022 Caused More Than 61,000 Deaths in Europe
 July 10, 2023 Â
@@ -78,7 +65,6 @@ North 'Plaza' in Cahokia Was Likely Inundated Year-Round
 July 21, 2022 Â
 The ancient North American city of Cahokia had as its focal point a feature now known as Monks Mound, a giant earthwork surrounded on its north, south, east and west by large rectangular open areas. ...
 Law Enforcement Seizures of Pills Containing Fentanyl Increased Dramatically Between 2018-2021, U.S. Study Finds
-Mar. 31, 2022 Â
 Law enforcement seizures of pills containing illicit fentanyl increased dramatically between January 2018 and December 2021, according to a new U.S. study. The number of individual pills seized by ...
 Early Warning Signals of Esophageal Cancer May Be Hiding in Plain Sight
 âLike Liquid Metalâ: Scientists Create Strange Shape-Shifting Material

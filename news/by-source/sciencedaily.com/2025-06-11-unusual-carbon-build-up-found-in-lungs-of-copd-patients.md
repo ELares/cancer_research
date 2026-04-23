@@ -6,13 +6,11 @@ tier: 2
 tier_name: Science journalism
 title: Unusual carbon build-up found in lungs of COPD patients
 date_published: '2025-06-11'
-content_hash: sha256:9dff154642a00f866f593c4a22442cfac43021641b7a56ec9a9b053380231fbf
+content_hash: sha256:2a4326b63a8c569f60592d98f82a6b2750468b067350efa097f8ecc04ed85f4c
 paywall: false
 claims:
 - id: sciencedaily.com-2025-06-11-unusual-carbon-build-up-found-in-lungs-o-001
-  text: 'Credit: Shutterstock
-
-    Cells taken from the lungs of people with chronic obstructive pulmonary disease
+  text: 'Cells taken from the lungs of people with chronic obstructive pulmonary disease
     (COPD) have a larger accumulation of soot-like carbon deposits compared to cells
     taken from people who smoke but do not have COPD, according to a study published
     today, June 10, in
@@ -51,13 +49,11 @@ review_status: pending
 credibility_score: 52.0
 ---
 
-from research organizations
 Unusual carbon build-up found in lungs of COPD patients
 As a result, cells grow abnormally large and cause inflammation
 June 10, 2025
 European Respiratory Society
 Scientists have discovered that people with COPD have lung cells that contain over three times as much soot-like carbon as those of smokers without the disease. These overloaded cells are larger and trigger more inflammation, suggesting that pollution and carbon buildup not just smoking may drive the disease.
-COPD patientsâ lung cells store triple the carbon of smokersâ cellsâand swell up with inflammation-causing proteins. This suggests that carbon buildup, possibly from pollution, plays a deeper role in disease development than previously known. Credit: Shutterstock
 Cells taken from the lungs of people with chronic obstructive pulmonary disease (COPD) have a larger accumulation of soot-like carbon deposits compared to cells taken from people who smoke but do not have COPD, according to a study published today, June 10, in
 . Carbon can enter the lungs via cigarette smoke, diesel exhaust and polluted air.
 The cells, called alveolar macrophages, normally protect the body by engulfing any particles or bacteria that reach the lungs. But, in their new study, researchers found that when these cells are exposed to carbon they grow larger and encourage inflammation.
@@ -73,12 +69,6 @@ Dr Lea said: "As we compared cells from COPD patients with cells from smokers, w
 "In future, it would be interesting to study how this carbon builds up and how lung cells respond over a longer period of time."
 Professor Fabio Ricciardolo is Chair of the European Respiratory Society's group on monitoring airway disease, based at the University of Torino, Italy, and was not involved in the research. He said: "This set of experiments suggest that people with COPD accumulate unusually large amounts of carbon in the cells of their lungs. This build-up seems to be altering those cells, potentially causing inflammation in the lungs and leading to worse lung function.
 "In addition, this research offers some clues about why polluted air might cause or worsen COPD. However, we know that smoking and air pollution are risk factors for COPD and other lung conditions, so we need to reduce levels of pollution in the air we breathe and we need to help people to quit smoking."
-Diseases and Conditions
-European Respiratory Society
-James Baker, Sophie Booth, Josiah Dungwa, Andrew Higham, Dave Singh, Simon Lea.
-Alveolar macrophage carbon is associated with COPD severity
-, 2025; 00933-2024 DOI:
-10.1183/23120541.00933-2024
 2025
 06
 250610230533.htm>.
@@ -88,18 +78,12 @@ European Respiratory Society. (2025, June 10). Unusual carbon build-up found in 
 250610230533.htm
 2025
 06
-250610230533.htm (accessed April 22, 2026).
-Hidden Alzheimerâs Warning Signs Found in Parkinsonâs Patients Without Dementia
-Sep. 28, 2025 Â
 Researchers in Japan discovered that Parkinsonâs patients diagnosed in their 80s are far more likely to show signs of amyloid buildup, a hallmark of Alzheimerâs, even without dementia symptoms. ...
 Low-Level Traffic Air Pollution Linked to Liver Damage and Fatty Liver Disease
-Jan. 31, 2025 Â
 Breathing in even small amounts of traffic pollution could be quietly damaging your liver. New research from Australian scientists reveals that long-term exposure to fine particles in polluted ...
 Human Lung Chip Leveraged to Faithfully Model Radiation-Induced Lung Injury
-Oct. 17, 2023 Â
 Researchers have developed a humanÂ in vitroÂ model that closely mimics the complexities of radiation-induced lung injury (RILI) and radiation dose sensitivity of the human lung. Using a previously ...
 Study Suggests Why Most Smokers Don't Get Lung Cancer
-Apr. 11, 2022 Â
 Cigarette smoking is overwhelmingly the main cause of lung cancer, yet only a minority of smokers develop the disease. A study suggests that some smokers may have robust mechanisms that protect them ...
 Cell Death Discovery Could Lead to New Treatment for COPD
 June 17, 2021 Â

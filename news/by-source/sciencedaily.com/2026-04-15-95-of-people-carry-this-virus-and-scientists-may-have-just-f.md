@@ -7,14 +7,12 @@ tier_name: Science journalism
 title: 95% of people carry this virus and scientists may have just found how to stop
   it
 date_published: '2026-04-15'
-content_hash: sha256:00aa492517d53cde39dbbc8cf12d2e5bc817154ce9b0abff387b85979fbdff02
+content_hash: sha256:5997b3f8e9eb73c05ccd832762b1250efbef7f0a447734ac94ea84e6051fe629
 paywall: false
 claims:
 - id: sciencedaily.com-2026-04-15-95-of-people-carry-this-virus-and-scient-001
-  text: 'from research organizations
-
-    95% of people carry this virus and scientists may have just found how to stop
-    it
+  text: '95% of people carry this virus and scientists may have just found how to
+    stop it
 
     April 15, 2026
 
@@ -33,12 +31,10 @@ claims:
   - '40203774'
   - '39957237'
 - id: sciencedaily.com-2026-04-15-95-of-people-carry-this-virus-and-scient-002
-  text: 'Credit: Shutterstock
-
-    Fred Hutch Cancer Center researchers have made a significant advance in the effort
-    to block Epstein Barr virus (EBV), a widespread infection that affects about 95%
-    of people worldwide and is linked to several cancers, neurodegenerative conditions,
-    and other long-term illnesses.'
+  text: Fred Hutch Cancer Center researchers have made a significant advance in the
+    effort to block Epstein Barr virus (EBV), a widespread infection that affects
+    about 95% of people worldwide and is linked to several cancers, neurodegenerative
+    conditions, and other long-term illnesses.
   type: result
   category: FACTUAL
   verification_status: verified
@@ -63,27 +59,26 @@ claims:
 
     04
 
-    260414075650.htm (accessed April 22, 2026).'
+    Researchers have discovered a significant association between specific Epstein-Barr
+    virus (EBV) variants and nasopharyngeal carcinoma (NPC).'
   type: result
   category: FACTUAL
   verification_status: verified
   verification_source: corpus
   linked_pmids:
+  - '41495048'
+  - '40098719'
+  - '40274835'
   - '40203774'
-  - '39825061'
-  - '40563656'
-  - '40070819'
-  - '40129986'
+  - '39957237'
 review_status: pending
 credibility_score: 55.2
 ---
 
-from research organizations
 95% of people carry this virus and scientists may have just found how to stop it
 April 15, 2026
 Fred Hutchinson Cancer Center
 Scientists have taken a major step toward stopping Epstein-Barr virus (EBV), an extremely common infection linked to cancer and chronic disease. By using mice engineered with human antibody genes, researchers created powerful human-like antibodies that block the virus from attaching to and entering immune cells. One of these antibodies completely prevented infection in lab models with human immune systems, marking a breakthrough after years of difficulty tackling EBVâs ability to invade nearly all B cells.
-A major breakthrough reveals antibodies that may finally stop one of the worldâs most commonâand dangerousâviruses in its tracks. Credit: Shutterstock
 Fred Hutch Cancer Center researchers have made a significant advance in the effort to block Epstein Barr virus (EBV), a widespread infection that affects about 95% of people worldwide and is linked to several cancers, neurodegenerative conditions, and other long-term illnesses.
 By working with mice engineered to produce human antibodies, the team created new monoclonal antibodies designed to stop the virus from attaching to and entering human immune cells. The findings, published in Cell Reports Medicine, show that one of these antibodies was able to completely prevent infection in mice with human-like immune systems when exposed to EBV.
 "Finding human antibodies that block Epstein Barr virus from infecting our immune cells has been particularly challenging because, unlike other viruses, EBV finds a way to bind to nearly every one of our B cells," explained Andrew McGuire, PhD, a biochemist and cellular biologist in the Vaccine and Infectious Disease Division at Fred Hutch. "We decided to use new technologies to try to fill this knowledge gap and we ended up taking a critical step toward blocking one of the world's most common viruses."
@@ -101,12 +96,6 @@ Toward a Preventive Antibody Therapy
 The research team envisions a future where these monoclonal antibodies could be given as an infusion to prevent EBV infection or reactivation, especially in high-risk groups. By blocking the virus early, such a therapy could help prevent PTLD and other complications.
 Fred Hutch has filed intellectual property claims related to the antibodies discovered in the study. McGuire and Chhan are now working with collaborators and an industry partner to move the research closer to clinical use. The next steps could include safety testing in healthy adults, followed by clinical trials in patients who are most at risk.
 "There's momentum to advance our discovery to a therapy that would make a huge difference for patients undergoing transplant," said McGuire. "After many years of searching for a viable way to protect against Epstein Barr virus, this is a significant stride for the scientific community and the people at the highest risk of complications from this virus."
-Diseases and Conditions
-Monoclonal antibody therapy
-Antibiotic resistance
-Obstructive sleep apnea
-Infectious mononucleosis
-Fred Hutchinson Cancer Center
 Crystal B. Chhan, Kevin Lang, Amelia R. Davis, Yu-Hsin Wan, Nicholas T. Aldridge, Gargi Kher, Samuel C. Scharffenberger, Samantha R. Hardy, Roman Iureniev, Natalia V. Giltiay, Kristina R. Edwards, Stefan Radtke, Hans-Peter Kiem, Marie Pancera, Andrew T. McGuire.
 Transgenic mouse-derived human monoclonal antibodies targeting EBV gp350 and gp42 provide basis for therapeutic development
 Cell Reports Medicine
@@ -121,24 +110,16 @@ Fred Hutchinson Cancer Center. (2026, April 15). 95% of people carry this virus 
 260414075650.htm
 2026
 04
-260414075650.htm (accessed April 22, 2026).
-Meta-Analysis Links High-Risk Epstein-Barr Virus Lineage to Nasopharyngeal Cancer in Southern China
-Nov. 15, 2024 Â
 Researchers have discovered a significant association between specific Epstein-Barr virus (EBV) variants and nasopharyngeal carcinoma (NPC). NPC is a cancer notably prevalent in southern China, where ...
 New Research Offers Insight Into the Future Understanding of MS and Its Treatments
-Apr. 4, 2024 Â
 Researchers have developed a new and unique blood test to measure the immune response to the Epstein Barr Virus (EBV) which is the leading risk factor for developing multiple sclerosis (MS). Their ...
 Scientists Find Weak Points on Epstein-Barr Virus
-Mar. 12, 2024 Â
 Studies of interactions between two lab-generated monoclonal antibodies (mAbs) and an essential Epstein-Barr virus (EBV) protein have uncovered targets that could be exploited in designing treatments ...
 How the Epstein-Barr Virus Transforms B Cells
-Aug. 7, 2023 Â
 Epstein-Barr virus (EBV) infection is known to convert resting B lymphocytes into immortal cells that continuously multiply, leading to posttransplant lymphoproliferative disorder (PTLD). Researchers ...
 Experimental Monoclonal Antibodies Show Promise Against Epstein-Barr Virus
-Oct. 27, 2022 Â
 A panel of investigational monoclonal antibodies (mAbs) targeting different sites of the Epstein-Barr virus (EBV) blocked infection when tested in human cells in a laboratory setting. Moreover, one ...
 Epstein-Barr Virus May Be Leading Cause of Multiple Sclerosis
-Jan. 13, 2022 Â
 A new study provides compelling evidence of causality between Epstein-Barr virus and multiple sclerosis. It suggests that most MS cases could be prevented by stopping EBV infection, and that ...
 Early Warning Signals of Esophageal Cancer May Be Hiding in Plain Sight
 âLike Liquid Metalâ: Scientists Create Strange Shape-Shifting Material

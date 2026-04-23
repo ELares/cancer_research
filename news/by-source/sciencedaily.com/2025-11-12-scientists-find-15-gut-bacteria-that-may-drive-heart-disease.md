@@ -6,7 +6,7 @@ tier: 2
 tier_name: Science journalism
 title: Scientists find 15 gut bacteria that may drive heart disease
 date_published: '2025-11-12'
-content_hash: sha256:c1876ae5ea5dd154e6c1b3aef3e95f1d8ec44bd37d99bf497b3116db2f068f8d
+content_hash: sha256:29f9ec2385d316400db5584b7f1c34762f4a6cb69efbe706dc8a829c32f10dd5
 paywall: false
 claims:
 - id: sciencedaily.com-2025-11-12-scientists-find-15-gut-bacteria-that-may-001
@@ -40,13 +40,11 @@ review_status: pending
 credibility_score: 55.2
 ---
 
-from research organizations
 Scientists find 15 gut bacteria that may drive heart disease
 Gut microbes may hold the key to unlocking new ways to prevent and treat heart disease.
 November 12, 2025
 American Society for Microbiology
 Scientists in Seoul have uncovered 15 gut bacterial species linked to coronary artery disease, showing that microbes can influence heart health far beyond digestion. Their findings reveal how shifts in gut microbial function â including inflammation, loss of protective species, and overactive metabolic pathways â may drive disease progression. Intriguingly, even âgoodâ bacteria like Faecalibacterium prausnitzii and Akkermansia muciniphila can become harmful under certain conditions.
-Scientists have linked specific gut bacteria to coronary artery disease, uncovering how microbial imbalances trigger inflammation and metabolic stress. Credit: Shutterstock
 Heart disease remains the world's top killer, claiming more lives each year than any other condition.
 Scientists are uncovering how gut microbes may influence coronary artery disease (CAD), one of the most common and serious forms of heart disease.
 A research team in Seoul has identified 15 specific bacterial species connected to CAD, offering new insight into how the gut and heart interact.
@@ -71,13 +69,6 @@ Toward Precision Microbial Medicine
 The researchers plan to combine microbial data with genetic and metabolic information to better understand how gut microbes influence heart disease at a mechanistic level. Their long-term goal is to develop precision-based treatments that use microbial insights to prevent cardiovascular disease before it begins.
 Kim emphasized that prevention is the most promising approach to lowering the global impact of heart disease. Potential strategies could include microbial therapies -- such as stool-based diagnostic screening -- or dietary interventions designed to restore beneficial bacteria or inhibit harmful pathways.
 By uncovering the specific bacterial species and biological mechanisms involved, scientists are moving closer to using the gut microbiome as a powerful tool for maintaining heart health.
-Diet and Weight Loss
-Alternative Medicine
-Diseases and Conditions
-Gastrointestinal Problems
-Ischaemic heart disease
-Coronary heart disease
-American Society for Microbiology
 Soomin Lee, Shahbaz Raza, Eun-Ju Lee, Yoosoo Chang, Seungho Ryu, Hyung-Lae Kim, Si-Hyuck Kang, Han-Na Kim.
 Metagenome-assembled genomes reveal microbial signatures and metabolic pathways linked to coronary artery disease
 , 2025; DOI:
@@ -91,24 +82,16 @@ American Society for Microbiology. (2025, November 12). Scientists find 15 gut b
 251112011818.htm
 2025
 11
-251112011818.htm (accessed April 22, 2026).
-Training Harder Could Be Rewiring Your Gut Bacteria
-Feb. 23, 2026 Â
 Training harder may do more than build muscleâit could transform your gut. Researchers found that intense workouts change the balance of bacteria and important compounds in athletesâ digestive ...
 Gut Bacteria Can Sense Their Environment and Itâs Key to Your Health
-Feb. 8, 2026 Â
 Your gut is home to trillions of bacteria that constantly âsenseâ their surroundings to survive and thrive. New research shows that beneficial gut microbes, especially common Clostridia bacteria, ...
 The Secret to Human Intelligence? It Might Be in Our Gut
-Jan. 5, 2026 Â
 New research shows gut bacteria can directly influence how the brain develops and functions. When scientists transferred microbes from different primates into mice, the animalsâ brains began to ...
 The Secret to Our Big Brains Might Be in Our Gut
-Dec. 3, 2024 Â
 What if your gut microbes helped power your brain? A new study reveals that the energy-hungry human brain may have evolved with a big assist from our gut bacteria. By transplanting gut microbes from ...
 We May Be Overestimating the Association Between Gut Bacteria and Disease, Machine Learning Study Finds
-Nov. 13, 2024 Â
 Many bacterial-linked illnesses, such as inflammatory bowel disease or colorectal cancer, are associated with an overgrowth of gut bacteria thought to be bad actors. But when researchers used a ...
 Eye Color Genes Are Critical for Retinal Health
-Mar. 23, 2023 Â
 Metabolic pathways consist of a series of biochemical reactions in cells that convert a starting component into other products. There is growing evidence that metabolic pathways coupled with external ...
 Early Warning Signals of Esophageal Cancer May Be Hiding in Plain Sight
 âLike Liquid Metalâ: Scientists Create Strange Shape-Shifting Material

@@ -6,20 +6,18 @@ tier: 2
 tier_name: Science journalism
 title: Hidden weak spots in HIV and Ebola revealed with breakthrough nanodisc technology
 date_published: '2026-04-12'
-content_hash: sha256:9b41c5ea80f154adebf29b6dd449078ab16ff7c40dff9462734703de865ac6f2
+content_hash: sha256:324c6c6fb82bbf34925905044ee57820e3e422db8d71e54aba4fbc1dc78978c7
 paywall: false
 claims: []
 review_status: pending
 credibility_score: 55.2
 ---
 
-from research organizations
 Hidden weak spots in HIV and Ebola revealed with breakthrough nanodisc technology
 A new ânanodiscâ technology lets scientists see viruses as they truly areâopening the door to smarter, more powerful vaccines.
 April 12, 2026
 Scripps Research Institute
 A new nanodisc-based platform lets scientists study viral proteins in a form that closely mimics real viruses, revealing how antibodies truly recognize them. This approach uncovered hidden interactions in viruses like HIV and Ebola that traditional methods missed. By recreating the virusâs membrane environment, researchers can better understand how immune defenses work. The technique could speed up the development of more effective vaccines.
-Researchers have developed a nanodisc system that recreates viral proteins in their natural membrane environment, exposing how antibodies actually attack viruses. Credit: Shutterstock
 Viruses are highly effective at entering human cells, largely because of specialized proteins that cover their outer surfaces. These proteins are key targets in vaccine development. To study them, scientists typically create lab versions to see how the immune system might respond. However, these simplified versions often leave out important sections that normally sit within the virus's outer membrane. As a result, they do not always behave the same way they would in a real infection, making it harder to understand how antibodies truly recognize and stop viruses.
 Researchers at Scripps Research, working with IAVI and other collaborators, have now developed a new platform that allows these viral proteins to be studied in a much more natural form. Their method uses nanodisc technology, which places the proteins into tiny particles made of lipids. This setup mimics the virus's outer membrane, helping preserve the proteins' natural structure and behavior. The approach offers a clearer view of how antibodies interact with viruses and could help guide future vaccine design.
 Nanodisc Technology Mimics Viral Membranes
@@ -42,11 +40,6 @@ While the platform itself is not a vaccine, it serves as a powerful tool to supp
 "This gives the field a more realistic, accurate way to test ideas early on," emphasizes Schief. "By improving how we study viral proteins and antibody responses, we hope this platform will help advance next-generation vaccines against some of the world's most challenging viruses."
 In addition to Schief and Rantalainen, authors of the study "Virus glycoprotein nanodisc platform for vaccine analytics," include Alessia Liguori, Gabriel Ozorowski, Claudia Flynn, Jon M. Steichen, Olivia M. Swanson, Patrick J. Madden, Sabyasachi Baboo, Swastik Phulera, Anant Gharpure, Danny Lu, Oleksandr Kalyuzhniy, Patrick Skog, Sierra Terada, Monolina Shil, Jolene K. Diedrich, Erik Georgeson, Ryan Tingle, Saman Eskandarzadeh, Wen-Hsin Lee, Nushin Alavi, Diana Goodwin, Michael Kubitz, Sonya Amirzehni, Devin Sok, Jeong Hyun Lee, John R. Yates III, James C. Paulson, Shane Crotty, Torben Schiffner and Andrew B. Ward of Scripps Research; and Sunny Himansu of Moderna Inc.
 This work was supported by funding from the National Institute of Allergy and Infectious Diseases of the National Institutes of Health (grants UM1 AI144462, R01 AI147826, R56 AI192143 and 5F31AI179426-02); the Bill and Melinda Gates Foundation Collaboration for AIDS Vaccine Discovery (grants INV-007522, INV-008813 and INV-002916); the IAVI Neutralizing Antibody Center (INV-034657 and INV-064772); and the Alexander von Humboldt Foundation.
-Diseases and Conditions
-Personalized Medicine
-Monoclonal antibody therapy
-H5N1
-Scripps Research Institute
 Kimmo Rantalainen, Alessia Liguori, Gabriel Ozorowski, Claudia Flynn, Jon M. Steichen, Olivia M. Swanson, Patrick J. Madden, Sabyasachi Baboo, Swastik Phulera, Anant Gharpure, Danny Lu, Oleksandr Kalyuzhniy, Patrick Skog, Sierra Terada, Monolina Shil, Jolene K. Diedrich, Erik Georgeson, Ryan Tingle, Saman Eskandarzadeh, Wen-Hsin Lee, Nushin Alavi, Diana Goodwin, Michael Kubitz, Sonya Amirzehni, Sunny Himansu, Devin Sok, Jeong Hyun Lee, John R. Yates, James C. Paulson, Shane Crotty, Torben Schiffner, Andrew B. Ward, William R. Schief.
 Virus glycoprotein nanodisc platform for vaccine analytics
 Nature Communications
@@ -61,21 +54,14 @@ Scripps Research Institute. (2026, April 12). Hidden weak spots in HIV and Ebola
 260411022027.htm
 2026
 04
-260411022027.htm (accessed April 22, 2026).
-DNA Origami Vaccines Could Be the Next Leap Beyond mRNA
-Mar. 17, 2026 Â
 mRNA vaccines saved millions of lives during COVID-19 but have limitations like waning immunity and complex production. Scientists are now testing a new platform called DoriVac, which uses folded DNA ...
 Engineering Antibodies With a Novel Fusion Protein
-Mar. 25, 2025 Â
 Even with significant expansion in the global market for antibodies used in clinical care and research, scientists recognize that there is still untapped potential for finding new antibodies. Many ...
 A Chain Reaction: HIV Vaccines Can Lead to Antibodies Against Antibodies
-Jan. 17, 2025 Â
 Many vaccines work by introducing a protein to the body that resembles part of a virus. Ideally, the immune system will produce long-lasting antibodies recognizing that specific virus, thereby ...
 HIV Antibodies Protect Animals in Proof-of-Concept Study
-Jan. 17, 2024 Â
 Three different HIV antibodies each independently protected monkeys from acquiring simian-HIV (SHIV) in a placebo-controlled proof-of-concept study intended to inform development of a preventive HIV ...
 New Anti-HIV Antibody Function Discovered: Tethering of Viral Particles at the Surface of Cells
-Feb. 3, 2022 Â
 Researchers have discovered a new function of anti-HIV-1 antibodies by applying cutting-edge microscopy techniques to in vitro viral cultures. The scientists found that certain antibodies already ...
 Personalized Immunotherapy: Rapid Screening of Therapeutic Combinations
 July 22, 2021 Â

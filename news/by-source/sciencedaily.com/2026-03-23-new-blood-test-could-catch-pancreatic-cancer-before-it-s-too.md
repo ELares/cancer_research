@@ -6,7 +6,7 @@ tier: 2
 tier_name: Science journalism
 title: "New blood test could catch pancreatic cancer before itâ\x80\x99s too late"
 date_published: '2026-03-23'
-content_hash: sha256:c8f4bce199bda367d21ea081c702fb8e5fe6d7de29bda03aa2d7b4b32ea87ab3
+content_hash: sha256:c79c13a08b14863f4f442a90c3927610e80cebccc9e707695ec3165c619f0cc3
 paywall: false
 claims:
 - id: sciencedaily.com-2026-03-23-new-blood-test-could-catch-pancreatic-ca-001
@@ -64,12 +64,10 @@ review_status: pending
 credibility_score: 39.2
 ---
 
-from research organizations
 New blood test could catch pancreatic cancer before itâs too late
 A simple blood test may soon help catch one of the deadliest cancers before itâs too late.
 March 23, 2026
 A new blood test could change the outlook for one of the deadliest cancersâpancreatic cancerâby catching it much earlier than ever before. Researchers identified two previously unknown proteins in the blood that, when combined with existing markers, dramatically improved detection accuracy. The four-marker test was able to spot pancreatic cancer in over 90% of cases and performed especially well even in early stages, when treatment has the best chance of success.
-A new blood test combining four biomarkers can detect pancreatic cancer with impressive accuracy, even in its early stages. This breakthrough could make early diagnosisâand better survivalâfinally possible. Credit: Shutterstock
 Researchers supported by the National Institutes of Health (NIH) have created a new blood test designed to identify pancreatic ductal adenocarcinoma, one of the most lethal types of cancer. Because pancreatic cancer is often discovered only after it has advanced, treatment options are limited and survival rates remain low. This new approach, detailed in
 Clinical Cancer Research
 , could help detect the disease sooner and improve patient outcomes.
@@ -86,13 +84,6 @@ An important advantage of the test is its ability to differentiate pancreatic ca
 Next Steps Toward Screening
 "Our retrospective study findings warrant further testing in larger populations, particularly in people before they show symptoms," Zaret said. "Such 'prediagnostic' studies would help determine if the test could be used as a screening tool for people at high risk of developing the disease based on family history, genetic screening results or personal history of pancreatic cysts or pancreatitis."
 The study was supported by NIH grants U01CA210138, P50CA102701, S10 OD023586-01, P30 DK020579, UL1 TR002345, P30CA091842, and U01CA210138.
-Diet and Weight Loss
-Diseases and Conditions
-Personalized Medicine
-Patient Education and Counseling
-Antibiotic resistance
-In vitro fertilization
-Erikson's stages of psychosocial development
 Brianna M. Krusen, Phyllis A. Gimotty, Greg Donahue, Jacob E. Till, Melinda Yin, Erin E. Carlson, William R. Bamlet, Erica L. Carpenter, Shounak Majumder, Ann L. Oberg, Kenneth S. Zaret.
 Improving a Plasma Biomarker Panel for Early Detection of Pancreatic Ductal Adenocarcinoma with Aminopeptidase N (ANPEP) and Polymeric Immunoglobulin Receptor (PIGR)
 Clinical Cancer Research
@@ -107,21 +98,14 @@ NIH. (2026, March 23). New blood test could catch pancreatic cancer before itâ�
 260323005540.htm
 2026
 03
-260323005540.htm (accessed April 22, 2026).
-A Surprising Blood Protein Pattern May Reveal Alzheimerâs
-Mar. 12, 2026 Â
 A new study suggests Alzheimerâs disease may be detectable through subtle shape changes in proteins found in the blood. Researchers discovered that structural differences in three blood proteins ...
 New Cells in Connective Tissue Open Up Strategy Against Pancreatic Cancer
-Apr. 23, 2025 Â
 Researchers have discovered a previously unknown type of connective tissue cells that surround cancer cells in pancreatic tumors. The newly discovered cells counteract tumor development and may ...
 Metal Baseball Bats Still Help Little Leaguers Hit a Little Better
-Aug. 27, 2024 Â
 While meant to simulate wood bats, regulation USA Baseball metal bats are more forgiving than wood for young players who might not connect with the ball on a bat's optimal 'sweet ...
 Early Detection of Breast Cancer: Study Confirms the Effectiveness of a New Approach
-Jan. 17, 2024 Â
 Early detection of disease is considered positive -- but what if it finds 'too much'? While early diagnosis can improve the chances of recovery, early detection can also have unwanted side ...
 Spatial Maps of Melanoma
-Apr. 14, 2022 Â
 Melanoma is a somewhat unusual cancer -- one that blooms before our very eyes, often on sun-exposed skin, and can quickly become deadly as it turns our own skin against us and spreads to other ...
 Potential Marker for Success of Immunotherapy in the Treatment of Lung Cancer
 July 8, 2021 Â

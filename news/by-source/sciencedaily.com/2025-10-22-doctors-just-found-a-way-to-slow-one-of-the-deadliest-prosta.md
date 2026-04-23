@@ -6,7 +6,7 @@ tier: 2
 tier_name: Science journalism
 title: Doctors just found a way to slow one of the deadliest prostate cancers
 date_published: '2025-10-22'
-content_hash: sha256:b5814989ff46fbcd9c909994842f8076748f084d986cee91756b3f0b4a8845a7
+content_hash: sha256:2f195f8d0c321fe7c2fc8be4f57e3fe05c80ef263d82df3ffcbf5a0df3a3c37a
 paywall: false
 claims:
 - id: sciencedaily.com-2025-10-22-doctors-just-found-a-way-to-slow-one-of--001
@@ -23,11 +23,9 @@ claims:
   - '42013351'
   - '42011088'
 - id: sciencedaily.com-2025-10-22-doctors-just-found-a-way-to-slow-one-of--002
-  text: 'Credit: Shutterstock
-
-    A major international study led by UCL researchers has found that combining two
-    cancer drugs could substantially slow the progression of a severe and often deadly
-    form of prostate cancer in men with specific genetic mutations.
+  text: 'A major international study led by UCL researchers has found that combining
+    two cancer drugs could substantially slow the progression of a severe and often
+    deadly form of prostate cancer in men with specific genetic mutations.
 
     , the Phase III AMPLITUDE trial tested whether adding niraparib, a targeted cancer
     therapy known as a PARP inhibitor
@@ -157,10 +155,10 @@ claims:
   verification_source: null
   linked_pmids: []
 - id: sciencedaily.com-2025-10-22-doctors-just-found-a-way-to-slow-one-of--011
-  text: "This Powerful Drug Combo Cuts Prostate Cancer Deaths by 40%\nOct. 19, 2025\
-    \ Â\x97\nA new drug combo of enzalutamide and hormone therapy has been shown to\
-    \ extend survival for men with recurring prostate cancer, reducing death risk\
-    \ by over 40%."
+  text: 'This Powerful Drug Combo Cuts Prostate Cancer Deaths by 40%
+
+    A new drug combo of enzalutamide and hormone therapy has been shown to extend
+    survival for men with recurring prostate cancer, reducing death risk by over 40%.'
   type: result
   category: FACTUAL
   verification_status: verified
@@ -172,18 +170,22 @@ claims:
   - '41677622'
   - '41313802'
 - id: sciencedaily.com-2025-10-22-doctors-just-found-a-way-to-slow-one-of--012
-  text: "The Changes to Cell DNA That Could Revolutionize Disease Prevention\nAug.\
-    \ 21, 2024 Â\x97\nResearchers have discovered a mechanism in DNA that regulates\
-    \ how disease-causing mutations are inherited."
+  text: 'The Changes to Cell DNA That Could Revolutionize Disease Prevention
+
+    Researchers have discovered a mechanism in DNA that regulates how disease-causing
+    mutations are inherited.'
   type: speculation
   category: SPECULATIVE
   verification_status: null
   verification_source: null
   linked_pmids: []
 - id: sciencedaily.com-2025-10-22-doctors-just-found-a-way-to-slow-one-of--013
-  text: "The team identified two enzymes that regulate a chemical modification, 6mA,\
-    \ in mitochondrial ...\n'Exceptional' Results in Phase III Leukemia Trial\nDec.\
-    \ 10, 2023 Â\x97\nLeukaemia trial shows 'exceptional' results."
+  text: 'The team identified two enzymes that regulate a chemical modification, 6mA,
+    in mitochondrial ...
+
+    ''Exceptional'' Results in Phase III Leukemia Trial
+
+    Leukaemia trial shows ''exceptional'' results.'
   type: mechanism
   category: FACTUAL
   verification_status: verified
@@ -211,13 +213,11 @@ review_status: pending
 credibility_score: 45.4
 ---
 
-from research organizations
 Doctors just found a way to slow one of the deadliest prostate cancers
 A targeted drug combo slashes prostate cancer progression and ushers in a new era of personalized treatment.
 October 21, 2025
 University College London
 A powerful new drug combinationâniraparib added to standard prostate cancer therapyâhas been shown to significantly delay disease progression in men with specific DNA repair gene mutations. In the large AMPLITUDE trial, patients receiving the combo lived longer without symptoms worsening and saw nearly a 50% risk reduction in BRCA-mutated cases. While side effects like anemia were more common, the results mark a major step toward precision medicine for prostate cancer.
-A global study found that combining niraparib with standard therapy significantly delays disease progression in men with HRR-related prostate cancer. Credit: Shutterstock
 A major international study led by UCL researchers has found that combining two cancer drugs could substantially slow the progression of a severe and often deadly form of prostate cancer in men with specific genetic mutations.
 , the Phase III AMPLITUDE trial tested whether adding niraparib, a targeted cancer therapy known as a PARP inhibitor
 1
@@ -257,10 +257,6 @@ PARP inhibitors, such as niraparib, are a type of targeted therapy that work by 
 Abiraterone acetate and prednisone (APP) are both hormone therapies. This combination blocks androgen production in the testes, adrenal glands, and the tumor itself, slowing cancer growth by reducing the available testosterone for the cancer cells.
 In the UK, Niraparib is approved to treat some types of cancer but has not yet been approved for prostate cancer. The National Institute for Clinical Excellence has said it waiting for further information, before it can make a decision.
 https://www.nice.org.uk/guidance/ta1032
-Personalized Medicine
-Diseases and Conditions
-Antibiotic resistance
-University College London
 Gerhardt Attard, Neeraj Agarwal, Julie N. Graff, Shahneen Sandhu, Eleni Efstathiou, Mustafa ÃzgÃ¼roÄlu, Andrea J. Pereira de Santana Gomes, Karina Vianna, Hong Luo, Geoffrey T. Gotto, Heather H. Cheng, Won Kim, Carly R. Varela, Daneen Schaeffer, Kassie Kramer, Susan Li, Benoit Baron, Fei Shen, Suneel D. Mundle, Sharon A. McCarthy, David Olmos, Kim N. Chi, Dana E. Rathkopf.
 Niraparib and abiraterone acetate plus prednisone for HRR-deficient metastatic castration-sensitive prostate cancer: a randomized phase 3 trial
 , 2025; DOI:
@@ -274,18 +270,12 @@ University College London. (2025, October 21). Doctors just found a way to slow 
 251021083642.htm
 2025
 10
-251021083642.htm (accessed April 22, 2026).
-Forget Daily Pills. This Shot Works When Blood Pressure Meds Fail
-Apr. 13, 2026 Â
 A twice-yearly injection may soon change how high blood pressure is treated. In a global trial, patients receiving the experimental drug zilebesiran alongside standard therapy saw greater blood ...
 This Powerful Drug Combo Cuts Prostate Cancer Deaths by 40%
-Oct. 19, 2025 Â
 A new drug combo of enzalutamide and hormone therapy has been shown to extend survival for men with recurring prostate cancer, reducing death risk by over 40%. The study followed more than 1,000 ...
 The Changes to Cell DNA That Could Revolutionize Disease Prevention
-Aug. 21, 2024 Â
 Researchers have discovered a mechanism in DNA that regulates how disease-causing mutations are inherited. The team identified two enzymes that regulate a chemical modification, 6mA, in mitochondrial ...
 'Exceptional' Results in Phase III Leukemia Trial
-Dec. 10, 2023 Â
 Leukaemia trial shows 'exceptional' results. Personalized treatment for the most common form of adult leukemia helps patients survive for longer and stay in remission, a phase III trial has ...
 Most 'Silent' Genetic Mutations Are Harmful, Not Neutral -- A Finding With Broad Implications
 June 8, 2022 Â

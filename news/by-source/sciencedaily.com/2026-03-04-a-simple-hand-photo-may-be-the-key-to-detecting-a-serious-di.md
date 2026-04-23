@@ -6,7 +6,7 @@ tier: 2
 tier_name: Science journalism
 title: A simple hand photo may be the key to detecting a serious disease
 date_published: '2026-03-04'
-content_hash: sha256:cdfe2c3b9a5c188416c5a05ffbdf172faf01635c35e8d1e2714cc58787ba6f79
+content_hash: sha256:c7fa8f0e7b0b50bc5b237d2fb602e702c7192ad1ae3e8e952d4318c06bc9d55a
 paywall: false
 claims:
 - id: sciencedaily.com-2026-03-04-a-simple-hand-photo-may-be-the-key-to-de-001
@@ -53,11 +53,9 @@ review_status: pending
 credibility_score: 55.2
 ---
 
-from research organizations
 A simple hand photo may be the key to detecting a serious disease
 March 4, 2026
 Researchers at Kobe University have developed an AI system that can detect acromegaly, a rare hormone disorder, by analyzing photos of the back of the hand and a clenched fist. The disease often develops slowly and can take years to diagnose, even though untreated cases may shorten life expectancy.
-An AI developed by Kobe University endocrinologists can accurately diagnose acromegaly just by analyzing pictures of the back of the hand and the clenched fist. The privacy-conscious achievement holds promise for establishing more efficient referral systems and reducing healthcare disparities across communities. Credit: Kobe University
 Researchers at Kobe University have created an artificial intelligence system that can identify a rare endocrine disease simply by examining photos of the back of the hand and a clenched fist. The approach avoids facial images, helping protect patient privacy while still achieving high diagnostic accuracy. Scientists say the technology could eventually help doctors refer patients to specialists more quickly and improve access to care in underserved areas.
 The disease the AI targets is acromegaly, an uncommon condition that usually appears in middle age. It is caused by excessive production of growth hormone, which leads to enlarged hands and feet, changes in facial appearance, and abnormal growth of bones and internal organs. Because the disorder develops gradually over many years, it can be difficult to recognize early.
 If untreated, acromegaly can lead to serious health problems and shorten life expectancy by about 10 years. "Because the condition progresses so slowly, and because it is a rare disease, it is not uncommon to take up to a decade for it to be diagnosed," says Kobe University endocrinologist Hidenori Fukuoka. He adds, "With the progress of AI tools, there have been attempts to use photographs for early detection, but they have not been adopted in clinical practice."
@@ -76,7 +74,6 @@ Supporting Doctors and Improving Access to Care
 In real clinical settings, doctors rely on far more than hand images when diagnosing patients. Medical history, lab tests and physical exams all play important roles. The Kobe University researchers see their AI tool as something that could assist physicians rather than replace them. In their study, they describe the technology as a way to "complement clinical expertise, reduce diagnostic oversight and enable earlier intervention."
 Study lead Fukuoka says: "We believe that, by further developing this technology, it could lead to creating a medical infrastructure during comprehensive health check-ups to connect suspected cases of hand-related disorders to specialists. Furthermore, it could support non-specialist physicians in regional healthcare settings, thus contributing to a reduction of healthcare disparities there."
 The research received funding from the Hyogo Foundation for Science Technology. The project also involved collaborators from Fukuoka University, Hyogo Medical University, Nagoya University, Hiroshima University, Toranomon Hospital, Nippon Medical School, Kagoshima University, Tottori University, Yamagata University, Okayama University, Hyogo Prefectural Kakogawa Medical Center, Hokkaido University, International University of Health and Welfare, Moriyama Memorial Hospital and Konan Women's University.
-Artificial Intelligence
 Yuka Ohmachi, Mizuho Nishio, Ichiro Abe, Kunihisa Kobayashi, Tomoko Iida, Manabu Shirakawa, Yuichi Nagata, Kazuhito Takeuchi, Akira Taguchi, Yasuyuki Kinoshita, Noriaki Fukuhara, Hiroshi Nishioka, Shigeyuki Tahara, Shingo Fujio, Takafumi Ogura, Masamichi Kurosaki, Yurika Hada, Shinji Susa, Yuki Otsuka, Fumio Otsuka, Ikuhiro Ishida, Hiraku Kameda, Kenichi Oyama, Shozo Yamada, Masaki Kobatake, Yuka Oi-Yo, Genki Fujii, Seiji Tomofuji, Yuriko Sasaki, Hironori Bando, Masaaki Yamamoto, Genzo Iguchi, Yuma Motomura, Yasutaka Tsujimoto, Naoki Yamamoto, Masaki Suzuki, Shin Urai, Michiko Takahashi, Takamichi Murakami, Wataru Ogawa, Hidenori Fukuoka.
 Automatic acromegaly detection using deep learning on hand images: a multicenter observational study
 The Journal of Clinical Endocrinology
@@ -91,21 +88,16 @@ Kobe University. (2026, March 4). A simple hand photo may be the key to detectin
 260303201807.htm
 2026
 03
-260303201807.htm (accessed April 22, 2026).
 Global Life Expectancy to Increase by Nearly 5 Years by 2050 Despite Geopolitical, Metabolic, and Environmental Threats
 May 17, 2024 Â
 The latest findings forecast that global life expectancy will increase by 4.9 years in males and 4.2 years in females between 2022 and 2050. Increases are expected to be largest in countries where ...
 New AI Technology Enables 3D Capture and Editing of Real-Life Objects
-Mar. 13, 2024 Â
 Imagine performing a sweep around an object with your smartphone and getting a realistic, fully editable 3D model that you can view from any angle -- this is fast becoming reality, thanks to advances ...
 Type 2 Diabetes Diagnosis at Age 30 Can Reduce Life Expectancy by Up to 14 Years
-Oct. 3, 2023 Â
 An individual diagnosed with type 2 diabetes at age 30 years could see their life expectancy fall by as much as 14 years, an international team of researchers has warned. Even people who do not ...
 AI and Machine Learning Can Successfully Diagnose Polycystic Ovary Syndrome
-Sep. 18, 2023 Â
 Artificial intelligence (AI) and machine learning (ML) can effectively detect and diagnose Polycystic Ovary Syndrome (PCOS), which is the most common hormone disorder among women, typically between ...
 Facial Analysis Improves Diagnosis
-Feb. 10, 2022 Â
 Rare genetic diseases can sometimes be recognized through facial features, such as characteristically shaped brows, nose or cheeks. Researchers have now trained software that uses portrait photos to ...
 Pandemic Drives Largest Decrease in U.S. Life Expectancy Since 1943
 June 23, 2021 Â

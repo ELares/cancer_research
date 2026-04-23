@@ -6,14 +6,16 @@ tier: 2
 tier_name: Science journalism
 title: Study shows how new antibody therapy works against ovarian cancer
 date_published: '2025-04-10'
-content_hash: sha256:dd55ae6287c31cf85ea07ad4e1d8f0df272811814b938dd2634ed609d5391163
+content_hash: sha256:a11d87d5444eec05485f763574252e69a3daee72b3d7634ce27992291fec761c
 paywall: false
 claims:
 - id: sciencedaily.com-2025-04-10-study-shows-how-new-antibody-therapy-wor-001
-  text: "A New Therapeutic Drug for Alzheimer's Disease Without Inflammatory Side\
-    \ Effects\nAug. 4, 2022 Â\x97\nAlthough Aduhelm, a monoclonal antibody targeting\
-    \ amyloid beta (A?), recently became the first US FDA approved drug for Alzheimer's\
-    \ disease (AD) based on its ability to decrease A? plaque burden ..."
+  text: 'A New Therapeutic Drug for Alzheimer''s Disease Without Inflammatory Side
+    Effects
+
+    Although Aduhelm, a monoclonal antibody targeting amyloid beta (A?), recently
+    became the first US FDA approved drug for Alzheimer''s disease (AD) based on its
+    ability to decrease A? plaque burden ...'
   type: event
   category: FACTUAL
   verification_status: verified
@@ -21,14 +23,13 @@ claims:
   linked_pmids:
   - '41595133'
   - '41659862'
-  - '41788857'
   - '41803088'
   - '40029253'
+  - '40201309'
 review_status: pending
 credibility_score: 47.2
 ---
 
-from research organizations
 Study shows how new antibody therapy works against ovarian cancer
 April 14, 2025
 King's College London
@@ -53,10 +54,6 @@ After seeing these results in the lab, the team looked at tumour biopsies from t
 Dr Debra Josephs, consultant medical oncologist at Guy's and St Thomas' NHS Foundation Trust and co-author of the study who developed pre-clinical research studies that guided MOv18 IgE to clinical testing said: "Our focus is to deepen our understanding of the immune system and its interaction with cancer, with the goal of discovering better treatments for patients. During the preclinical development of MOv18 IgE we demonstrated the important role of activation and migration of tumour-associated macrophages into cancer lesions for this antibody treatment to be effective. This research marks an important next step in the development of MOv18 IgE by advancing our understanding of macrophage-mediated mechanisms, thus supporting the therapeutic potential of this novel antibody."
 Professor James Spicer, Professor of Experimental Cancer Medicine at King's College London, consultant in medical oncology at Guy's and St Thomas' NHS Foundation Trust and Chief Clinical Investigator of the MOv18 IgE Phase Ia trial, who is co-author of the study said: "We need to achieve better outcomes for our patients. Clear progress is being made by studying the immune system and the environment in which the cancer grows. In our ongoing research we are striving to understand how we can capitalise on the power of IgE to develop novel effective treatments, which will complement established IgG antibody drugs used in the clinic."
 The authors also acknowledge support from the Cancer Research UK City of London Centre and the King's Health Partners Centre for Translational Medicine.
-Personalized Medicine
-Diseases and Conditions
-Monoclonal antibody therapy
-King's College London
 Gabriel Osborn, Jacobo LÃ³pez-Abente, Rebecca Adams, Roman Laddach, Melanie Grandits, Heather J. Bax, Jitesh Chauhan, Giulia Pellizzari, Mano Nakamura, Chara Stavraka, Alicia Chenoweth, Lais C. G. F. Palhares, Theodore Evan, Jessica Hui Cheah Lim, Amanda Gross, Lenny Moise, Shashi Jatiani, Mariangela Figini, Rodolfo Bianchini, Erika Jensen-Jarolim, Sharmistha Ghosh, Ana Montes, Ahmad Sayasneh, Rebecca Kristeleit, Sophia Tsoka, James Spicer, Debra H. Josephs, Sophia N. Karagiannis.
 Hyperinflammatory repolarisation of ovarian cancer patient macrophages by anti-tumour IgE antibody, MOv18, restricts an immunosuppressive macrophage:Treg cell interaction
 Nature Communications
@@ -71,21 +68,14 @@ King's College London. (2025, April 14). Study shows how new antibody therapy wo
 250410130742.htm
 2025
 04
-250410130742.htm (accessed April 22, 2026).
-Fat-Rich Fluid Fuels Immune Failure in Ovarian Cancer
-May 9, 2025 Â
 New research has uncovered how lipid-rich fluid in the abdomen, known as ascites, plays a central role in weakening the body's immune response in advanced ovarian cancer. The findings offer new ...
 Study Identifies How Ovarian Cancer Protects Itself, Paves Way for Improved Immunotherapy Approach
-Oct. 30, 2024 Â
 Researchers have discovered a way that ovarian cancer tumors manipulate their environment to resist immunotherapy and identified a drug target that could overcome that resistance. The study used a ...
 In Major Breakthrough, Researchers Close in on Potential Preeclampsia Cure
-Sep. 15, 2023 Â
 Researchers have achieved a significant breakthrough in identifying the primary cause and potential treatment for preeclampsia, a severe pregnancy complication. Experts pinpointed a toxic protein ...
 A New Therapeutic Drug for Alzheimer's Disease Without Inflammatory Side Effects
-Aug. 4, 2022 Â
 Although Aduhelm, a monoclonal antibody targeting amyloid beta (A?), recently became the first US FDA approved drug for Alzheimer's disease (AD) based on its ability to decrease A? plaque burden ...
 Key Characteristics of Immune Cells in Ovarian Cancer
-Apr. 14, 2022 Â
 Researchers want to improve their understanding of the immune environment in ovarian cancer in hopes of making immunotherapy an option for these patients. Researchers now report on key ...
 Novel Antibody Drug Wakes Up the Body's Defense System in Advanced-Stage Cancer
 June 3, 2021 Â

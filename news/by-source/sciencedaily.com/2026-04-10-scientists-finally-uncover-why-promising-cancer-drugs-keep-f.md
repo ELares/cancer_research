@@ -6,7 +6,7 @@ tier: 2
 tier_name: Science journalism
 title: Scientists finally uncover why promising cancer drugs keep failing
 date_published: '2026-04-10'
-content_hash: sha256:00100b3ea100b66ee69c308ac7e41ee50d85d461898dea2e09a002213f922d92
+content_hash: sha256:9ef90848883ab7a23380353fa5f87725d05e3a75792bcfa39d44a5a3d11723ec
 paywall: false
 claims:
 - id: sciencedaily.com-2026-04-10-scientists-finally-uncover-why-promising-001
@@ -30,13 +30,11 @@ review_status: pending
 credibility_score: 55.2
 ---
 
-from research organizations
 Scientists finally uncover why promising cancer drugs keep failing
 A hidden difference between two nearly identical proteins could explain why promising cancer drugs keep disappointingâand how to fix them.
 April 9, 2026
 Max Planck Institute of Immunobiology and Epigenetics
 Cancer drugs known as BET inhibitors once looked like a breakthrough, but in real patients theyâve often fallen short. New research reveals a key reason why: two closely related proteins, BRD2 and BRD4, donât actually do the same job. Instead, BRD2 acts like a âstage manager,â preparing genes for activation, while BRD4 triggers the final step that turns them on. By blocking both at once, current drugs may be disrupting the process in unpredictable ways.
-A long-standing cancer drug strategy may have been missing a crucial detail: its targets arenât interchangeable. By separating the roles of BRD2 and BRD4, researchers uncovered why treatments have struggledâand how to make them better. Credit: Shutterstock
 For more than a decade, scientists have tested a group of cancer drugs known as BET inhibitors with high hopes. The science behind them seemed strong. Many tumors rely on oncogenes that are switched on with help from "Bromo- and Extra-Terminal domain" (BET) proteins, so blocking those proteins was expected to slow cancer growth. In laboratory experiments, that approach often worked. But in real patients, the results have been far less impressive, with modest benefits, notable side effects, and no reliable way to predict who might respond.
 Now, researchers at the Max Planck Institute of Immunobiology and Epigenetics (MPI-IE) in Freiburg believe they have uncovered a key reason for this gap between theory and reality. Their findings also point toward a more precise way to design future treatments.
 Rethinking BET Proteins as Drug Targets
@@ -61,9 +59,6 @@ Two proteins, two distinct jobs:
 The study reveals that BET proteins BRD2 and BRD4 play different roles in turning genes on. This crucial difference helps explain why targeting them together may not work as expected.
 A path to better treatments:
 Most current drugs block both proteins at once. The new findings suggest that more precise targeting of BRD2 and BRD4 could lead to more effective and predictable cancer therapies.
-Diseases and Conditions
-Antibiotic resistance
-Max Planck Institute of Immunobiology and Epigenetics
 Niyazi Umut Erdogdu, Sukanya Guhathakurta, Ronald Oellers, Maria Shvedunova, Jose A. Morin, Eric M. Patrick, Janine Seyfferth, Ward Deboutte, Alejandro Gomez-Auli, Gerhard Mittler, Ibrahim I. CissÃ©, Asifa Akhtar.
 Histone acetylation-dependent clustering of BRD2 instructs transcription dynamics
 , 2026; DOI:
@@ -77,12 +72,8 @@ Max Planck Institute of Immunobiology and Epigenetics. (2026, April 9). Scientis
 260409101055.htm
 2026
 04
-260409101055.htm (accessed April 22, 2026).
-Researchers Reveal Key LAG3 Mechanisms That Could Transform Cancer Immunotherapy
-Sep. 4, 2024 Â
 Immune checkpoint inhibitors are a type of cancer treatment that helps the immune system attack cancer cells more effectively. One of the key proteins involved in this process is Lymphocyte ...
 Scientists Discover a Previously Unknown Way Cells Break Down Proteins
-Aug. 24, 2023 Â
 Short-lived proteins control gene expression in cells to carry out a number of vital tasks, from helping the brain form connections to helping the body mount an immune defense. These proteins are ...
 Study Hints at How Cancer Immunotherapy Can Be Safer
 June 21, 2023 Â

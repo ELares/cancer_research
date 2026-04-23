@@ -6,13 +6,11 @@ tier: 2
 tier_name: Science journalism
 title: AI-human task-sharing could cut mammography screening costs by up to 30%
 date_published: '2025-05-07'
-content_hash: sha256:03587bf1c49498ca7e261b4aba2807e59076257dbeb9a37a65379033b12f8ceb
+content_hash: sha256:cf320c695ce5a8a5c6b057b88dc6e60114d7b4cbdbb354159b290ae4ac6d64d7
 paywall: false
 claims:
 - id: sciencedaily.com-2025-05-07-ai-human-task-sharing-could-cut-mammogra-001
-  text: 'from research organizations
-
-    AI-human task-sharing could cut mammography screening costs by up to 30%
+  text: 'AI-human task-sharing could cut mammography screening costs by up to 30%
 
     May 7, 2025
 
@@ -89,22 +87,23 @@ claims:
 
     05
 
-    250507130005.htm (accessed April 22, 2026).'
+    Scientists have made an enormous step toward understanding the human brain by
+    building a neuron-by-neuron and synapse-by-synapse roadmap -- scientifically speaking,
+    a ''connectome'' -- ...'
   type: speculation
   category: FACTUAL
   verification_status: verified
   verification_source: pubmed
   linked_pmids:
-  - '42010040'
-  - '42008165'
-  - '42006280'
-  - '42002815'
-  - '42002684'
+  - '42018420'
+  - '42016515'
+  - '42014719'
+  - '42011063'
+  - '42011047'
 review_status: pending
 credibility_score: 39.2
 ---
 
-from research organizations
 AI-human task-sharing could cut mammography screening costs by up to 30%
 May 7, 2025
 University of Illinois at Urbana-Champaign, News Bureau
@@ -131,17 +130,6 @@ Another potential landmine involves legal liability. If AI systems are held to s
 The findings are potentially applicable to other areas of medicine such as pathology and dermatology, where diagnostic accuracy is critical, but AI is potentially able to improve workflow efficiency.
 With the infinite work capacity of AI, "we can use it 24/7, and it doesn't need to take a coffee break," Ahsen said. "AI is only going to continue to make inroads into health care, and our framework can guide hospitals, insurers, policymakers and health care practitioners in making evidence-based decisions about AI integration.
 "We're not just interrogating what AI can do -- we're asking if it should do it, and when, how and under what conditions it should be deployed as a tool to help humans."
-Mental Health Research
-Patient Education and Counseling
-Monoclonal antibody therapy
-Antibiotic resistance
-University of Illinois at Urbana-Champaign, News Bureau
-. Original written by Phil Ciciora.
-Mehmet Eren Ahsen, Mehmet U. S. Ayvaci, Radha Mookerjee, Gustavo Stolovitzky.
-Economics of AI and human task sharing for decision making in screening mammography
-Nature Communications
-, 2025; 16 (1) DOI:
-10.1038/s41467-025-57409-1
 2025
 05
 250507130005.htm>.
@@ -151,24 +139,17 @@ University of Illinois at Urbana-Champaign, News Bureau. (2025, May 7). AI-human
 250507130005.htm
 2025
 05
-250507130005.htm (accessed April 22, 2026).
-Neuroscience Breakthrough: Entire Brain of Adult Fruit Fly Mapped
-Oct. 2, 2024 Â
 Scientists have made an enormous step toward understanding the human brain by building a neuron-by-neuron and synapse-by-synapse roadmap -- scientifically speaking, a 'connectome' -- ...
 Let Me Take a Look: AI Could Boost Diagnostic Imaging Results
-Aug. 22, 2024 Â
 Researchers compared the diagnostic accuracy of ChatGPT and radiologists in radiological imaging with 106 musculoskeletal radiology cases. The results showed that the diagnostic accuracy of the ...
 AI Detects More Breast Cancers With Fewer False Positives
 June 4, 2024 Â
 Using artificial intelligence (AI), breast radiologists in Denmark have improved breast cancer screening performance and reduced the rate of false-positive ...
 Safety of AI-Supported Mammography Screening
-Aug. 1, 2023 Â
 Mammography screening supported by artificial intelligence (AI) is a safe alternative to today's conventional double reading by radiologists and can reduce heavy workloads for doctors. This has ...
 Engineering Team Develops New AI Algorithms for High Accuracy and Cost Effective Medical Image Diagnostics
-Apr. 12, 2022 Â
 Medical imaging is an important part of modern healthcare, enhancing both the precision, reliability and development of treatment for various diseases. Artificial intelligence has also been widely ...
 Study Finds Artificial Intelligence Accurately Detects Fractures on X-Rays, Alert Human Readers
-Dec. 21, 2021 Â
 Emergency room and urgent care clinics are typically busy and patients often have to wait many hours before they can be seen, evaluated and receive treatment. Waiting for x-rays to be interpreted by ...
 Early Warning Signals of Esophageal Cancer May Be Hiding in Plain Sight
 âLike Liquid Metalâ: Scientists Create Strange Shape-Shifting Material

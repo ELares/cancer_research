@@ -6,15 +6,14 @@ tier: 2
 tier_name: Science journalism
 title: "Why colorectal cancer breaks the immune systemâ\x80\x99s rules"
 date_published: '2026-02-06'
-content_hash: sha256:5188c06430757f409e56fa1c0e68fa591fa9cd9546b0e0755d7821c4fb392a23
+content_hash: sha256:ef0e711db813604e2dbdc9be4b1e83ae5dd6e09c26a9b147fafbc82960ef7018
 paywall: false
 claims:
 - id: sciencedaily.com-2026-02-06-why-colorectal-cancer-breaks-the-immune--001
-  text: "from research organizations\nWhy colorectal cancer breaks the immune systemâ\x80\
-    \x99s rules\nFebruary 6, 2026\nMemorial Sloan Kettering Cancer Center\nColorectal\
-    \ cancer has long baffled scientists because, unlike most tumors, patients often\
-    \ do better when their cancers are packed with immune-suppressing regulatory T\
-    \ cells."
+  text: "Why colorectal cancer breaks the immune systemâ\x80\x99s rules\nFebruary\
+    \ 6, 2026\nMemorial Sloan Kettering Cancer Center\nColorectal cancer has long\
+    \ baffled scientists because, unlike most tumors, patients often do better when\
+    \ their cancers are packed with immune-suppressing regulatory T cells."
   type: mechanism
   category: FACTUAL
   verification_status: verified
@@ -76,10 +75,10 @@ claims:
   verification_source: null
   linked_pmids: []
 - id: sciencedaily.com-2026-02-06-why-colorectal-cancer-breaks-the-immune--007
-  text: "Bacteria Subtype Linked to Growth in Up to 50% of Human Colorectal Cancers\n\
-    Mar. 20, 2024 Â\x97\nResearchers have found that a specific subtype of a microbe\
-    \ commonly found in the mouth is able to travel to the gut and grow within colorectal\
-    \ cancer tumors."
+  text: 'Bacteria Subtype Linked to Growth in Up to 50% of Human Colorectal Cancers
+
+    Researchers have found that a specific subtype of a microbe commonly found in
+    the mouth is able to travel to the gut and grow within colorectal cancer tumors.'
   type: result
   category: FACTUAL
   verification_status: verified
@@ -88,8 +87,8 @@ claims:
   - '40846998'
   - '41231502'
   - '40652009'
-  - '41193778'
   - '39837982'
+  - '39739618'
 - id: sciencedaily.com-2026-02-06-why-colorectal-cancer-breaks-the-immune--008
   text: "Biomaterial-Delivered One-Two Punch Boosts Cancer Immunotherapy\nJuly 13,\
     \ 2023 Â\x97\nIn contrast to different blood cancers, the effectiveness of adoptive\
@@ -109,12 +108,10 @@ review_status: pending
 credibility_score: 47.2
 ---
 
-from research organizations
 Why colorectal cancer breaks the immune systemâs rules
 February 6, 2026
 Memorial Sloan Kettering Cancer Center
 Colorectal cancer has long baffled scientists because, unlike most tumors, patients often do better when their cancers are packed with immune-suppressing regulatory T cells. New research finally explains why. Scientists discovered that these T cells arenât all the same: one subtype actually helps keep tumors in check, while another shields cancer from immune attack. The balance between these âgoodâ and âbadâ cells can determine whether a tumor grows or shrinks.
-Colorectal cancer turns out to be protectedâor sabotagedâby a hidden tug-of-war between âgoodâ and âbadâ immune cells, and researchers now know how to tip the balance. Credit: Shutterstock
 In most solid tumors, large numbers of regulatory T (Treg) cells are linked to worse outcomes. These immune cells normally act as brakes on the immune system, which means they can weaken the body's ability to attack cancer.
 Colorectal cancer stands out as a rare and confusing exception. In this disease, tumors with more Treg cells are often associated with longer survival. For years, researchers have not understood why this pattern is so different from what is seen in other cancers.
 A new study from researchers at the Sloan Kettering Institute at Memorial Sloan Kettering Cancer Center (MSK) now offers a clear explanation. The findings could help improve immunotherapy for most people with colorectal cancer and may also apply to cancers that develop in tissues like the skin and the lining of the stomach, mouth, and throat.
@@ -158,13 +155,8 @@ This result highlights the need for treatment strategies that account for both t
 Authors, Funding, and Disclosures
 Additional authors include Emma Andretta, Nima Hooshdaran, Aazam Ghelani, Eric Wang, Joe Frost, Victoria Lawless, Aparna Vancheswaran, Qingwen Jiang, Cheryl Mai, and Karuna Ganesh.
 The Integrated Genomics Operation and the Single Cell Research Initiative at MSK played key roles in the research.
-Funding was provided by the National Cancer Institute (P30 CA008748, U54 CA274492, T32 CA009512), the National Institute of Allergy and Infectious Diseases (AI034206), the Ludwig Center for Cancer Immunotherapy at MSK, the Howard Hughes Medical Institute, the Cancer Research Institute, and a Marie-Joseé Kravis Fellowship in Quantitative Biology.
 Dr. Rudensky serves on scientific advisory boards and holds equity in Sonoma Biotherapeutics, RAPT Therapeutics, Coherus Oncology, Santa Ana Bio, Odyssey Therapeutics, and Nilo Therapeutics. He is also a scientific advisory board member of Amgen, BioInvent, and Vedanta Biosciences, has consulted for AbbVie, and serves as an editor of the Journal of Experimental Medicine and an editorial advisor to Immunity.
 Dr. Rudensky and Dr. Plitas are inventors on patents and patent applications held by MSK related to CCR8-based therapeutic depletion of tumoral Treg cells and novel antibodies against CCR8.
-Diseases and Conditions
-Personalized Medicine
-Monoclonal antibody therapy
-Memorial Sloan Kettering Cancer Center
 Xiao Huang, Dan Feng, Sneha Mitra, Emma S. Andretta, Nima B. Hooshdaran, Aazam P. Ghelani, Eric Y. Wang, Joe N. Frost, Victoria R. Lawless, Aparna Vancheswaran, Qingwen Jiang, Cheryl Mai, Karuna Ganesh, Christina S. Leslie, Alexander Y. Rudensky.
 Opposing functions of distinct regulatory T cell subsets in colorectal cancer
 , 2026; 59 (1): 145 DOI:
@@ -178,21 +170,15 @@ Memorial Sloan Kettering Cancer Center. (2026, February 6). Why colorectal cance
 260206012229.htm
 2026
 02
-260206012229.htm (accessed April 22, 2026).
-Scientists Turn Tumor Immune Cells Into Cancer Killers
-Jan. 28, 2026 Â
 Scientists at KAIST have found a way to turn a tumorâs own immune cells into powerful cancer fightersâright inside the body. Tumors are packed with macrophages, immune cells that should attack ...
 Multi-Target Approach Counters Tumor Growth in Several Cancers
-Jan. 16, 2025 Â
 The tissue adjacent to a tumor behaves differently than areas farther away: The tumor's cancerous cells influence their surroundings, blocking the body's immune defenses and creating a sort ...
 Bacteria Subtype Linked to Growth in Up to 50% of Human Colorectal Cancers
-Mar. 20, 2024 Â
 Researchers have found that a specific subtype of a microbe commonly found in the mouth is able to travel to the gut and grow within colorectal cancer tumors. This microbe is also a culprit for ...
 Biomaterial-Delivered One-Two Punch Boosts Cancer Immunotherapy
 July 13, 2023 Â
 In contrast to different blood cancers, the effectiveness of adoptive T cell therapies in the treatment of solid tumors, which comprise about 90% of all tumors, has been very limited because of ...
 How Regulatory T Cells Halt Aberrant, Self-Reactive T Cells
-Jan. 24, 2023 Â
 New research findings show in detail how self-reactive T cells -- white blood cells dubbed Teffs that mistakenly attack healthy instead of infected cells, thereby causing an autoimmune or an ...
 Face Shields Don't Give High Level COVID Protection, Study Shows
 July 27, 2022 Â

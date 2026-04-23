@@ -6,13 +6,11 @@ tier: 2
 tier_name: Science journalism
 title: Women over 50 lost 35% more weight with this surprising combo
 date_published: '2026-03-24'
-content_hash: sha256:4fa970ef1b18c3ae5f59ae568912606c69fca65232ea71e2c8e4f63435bf72c5
+content_hash: sha256:e75e0e3c10fe77d1844562055b30694dab8a5f73882714ac07e2618faac0d568
 paywall: false
 claims:
 - id: sciencedaily.com-2026-03-24-women-over-50-lost-35-more-weight-with-t-001
-  text: 'from research organizations
-
-    Women over 50 lost 35% more weight with this surprising combo
+  text: 'Women over 50 lost 35% more weight with this surprising combo
 
     March 23, 2026
 
@@ -111,22 +109,25 @@ claims:
 
     03
 
-    260323005543.htm (accessed April 22, 2026).'
+    A cutting-edge mouse study reveals that tirzepatide, the dual GLP-1/GIP drug already
+    hailed for impressive weight loss, does more than trim fat: it slashes the growth
+    of obesity-linked breast tumors. ...'
   type: result
   category: FACTUAL
   verification_status: verified
   verification_source: pubmed
   linked_pmids:
-  - '42020179'
-  - '42019123'
-  - '42018321'
-  - '42017462'
-  - '42017135'
+  - '41968220'
+  - '41948476'
+  - '41945627'
+  - '41927408'
+  - '41885132'
 - id: sciencedaily.com-2026-03-24-women-over-50-lost-35-more-weight-with-t-009
-  text: "Review of Over 70 Years of Menopause Science Highlights Research Gaps and\
-    \ Calls for Individualized Treatment\nSep. 6, 2023 Â\x97\nAlthough about half\
-    \ of people go through menopause, less than 15% of them receive effective treatment\
-    \ for their symptoms."
+  text: 'Review of Over 70 Years of Menopause Science Highlights Research Gaps and
+    Calls for Individualized Treatment
+
+    Although about half of people go through menopause, less than 15% of them receive
+    effective treatment for their symptoms.'
   type: mechanism
   category: FACTUAL
   verification_status: verified
@@ -152,20 +153,20 @@ claims:
   - '34630085'
   - '33481149'
 - id: sciencedaily.com-2026-03-24-women-over-50-lost-35-more-weight-with-t-011
-  text: "Early Menopause May Raise Risk of Dementia Later in Life\nMar. 2, 2022 Â\x97\
-    \nCompared with women who enter menopause around age 50, women who experience\
-    \ very early menopause (before the age of 40) were found to be 35% more likely\
-    \ to develop some type of dementia later in ..."
+  text: 'Early Menopause May Raise Risk of Dementia Later in Life
+
+    Compared with women who enter menopause around age 50, women who experience very
+    early menopause (before the age of 40) were found to be 35% more likely to develop
+    some type of dementia later in ...'
   type: result
   category: FACTUAL
   verification_status: verified
   verification_source: corpus
   linked_pmids:
-  - '41683874'
-  - '40406094'
-  - '40753395'
   - '38194344'
   - '38401548'
+  - '29594551'
+  - '28849310'
 - id: sciencedaily.com-2026-03-24-women-over-50-lost-35-more-weight-with-t-012
   text: According to the authors, ...
   type: opinion
@@ -177,11 +178,9 @@ review_status: pending
 credibility_score: 48.1
 ---
 
-from research organizations
 Women over 50 lost 35% more weight with this surprising combo
 March 23, 2026
 Postmenopausal women may have a powerful new edge in the battle against weight gain. A Mayo Clinic study found that those using menopausal hormone therapy while taking the obesity drug tirzepatide lost about 35% more weight than those on the drug alone. The findings hint at a surprising synergy between hormones and cutting-edge weight-loss medications, potentially opening the door to more effective, personalized treatments for millions of women facing increased cardiometabolic risks after menopause.
-Hormone therapy may supercharge a leading weight-loss drugâhelping postmenopausal women shed significantly more weight. Credit: Shutterstock
 A Mayo Clinic-led study reports that postmenopausal women using menopausal hormone therapy experienced significantly greater weight loss when taking tirzepatide, a Food and Drug Administration-approved medication for overweight and obesity. On average, these women lost about 35% more weight compared to those using tirzepatide alone. The results, published in
 The Lancet Obstetrics, Gynaecology, & Women's Health
 , point to new possibilities for treating obesity and related health conditions in women after menopause.
@@ -197,13 +196,6 @@ Although more controlled studies are needed, researchers say the findings are cl
 What Comes Next for Research
 Future research will focus on confirming these results in randomized clinical trials and exploring whether the benefits go beyond weight loss. "Next, we plan to test these observations in a randomized clinical trial and determine if benefits extend beyond weight loss -- specifically, whether hormone therapy also enhances the effects of these medications on cardiometabolic measures," adds Dr. Hurtado Andrade. "If confirmed, this work could speed the development and adoption of new, evidence-based strategies to reduce this risk for millions of postmenopausal women navigating this life stage."
 This research was funded by the Mayo Clinic Center for Women's Health Research.
-Sleep Disorder Research
-Personalized Medicine
-Diet and Weight Loss
-Mental Health Research
-Personalized medicine
-Hormone replacement therapy
-Antibiotic resistance
 Regina Castaneda, Dima Bechenati, Elif Tama, Rene Rivera Gutierrez, Maria A Espinosa, Jose Villamarin, Tamim I Rajjo, Andres Acosta, Stephanie Faubion, Chrisandra Shufelt, Maria D Hurtado Andrade.
 The role of menopause hormone therapy in modulating                        tirzepatide-associated weight loss in postmenopausal women with overweight                        or obesity: a retrospective cohort study
 The Lancet Obstetrics, Gynaecology,
@@ -218,24 +210,18 @@ Mayo Clinic. (2026, March 23). Women over 50 lost 35% more weight with this surp
 260323005543.htm
 2026
 03
-260323005543.htm (accessed April 22, 2026).
-Weight-Loss Wonder Drug Mounjaro/Zepbound Shrinks Breast Cancer Tumors
-July 15, 2025 Â
 A cutting-edge mouse study reveals that tirzepatide, the dual GLP-1/GIP drug already hailed for impressive weight loss, does more than trim fat: it slashes the growth of obesity-linked breast tumors. ...
 Hormone Therapy Supercharges Tirzepatide, Unleashing Major Weight Loss After Menopause
 July 13, 2025 Â
 Postmenopausal women struggling with weight loss may find a powerful solution by combining the diabetes drug tirzepatide with menopause hormone therapy. A Mayo Clinic study revealed that this dual ...
 Review of Over 70 Years of Menopause Science Highlights Research Gaps and Calls for Individualized Treatment
-Sep. 6, 2023 Â
 Although about half of people go through menopause, less than 15% of them receive effective treatment for their symptoms. Treatment options for people experiencing irritating or severe menopause ...
 Hormonal Changes During Menopause Are Directly Related to Decline in Cardiovascular Health
 May 15, 2022 Â
 Levels of bad cholesterol rise during menopause, and 10% of this increase is likely due to shifts in sex hormones. Women usually undergo menopause at the age of 48 to 52 years, leading to a decline ...
 Early Menopause May Raise Risk of Dementia Later in Life
-Mar. 2, 2022 Â
 Compared with women who enter menopause around age 50, women who experience very early menopause (before the age of 40) were found to be 35% more likely to develop some type of dementia later in ...
 Scientists Claim That Overeating Is Not the Primary Cause of Obesity
-Sep. 13, 2021 Â
 A perspective article challenges the 'energy balance model,' which says weight gain occurs because individuals consume more energy than they expend. According to the authors, ...
 Early Warning Signals of Esophageal Cancer May Be Hiding in Plain Sight
 âLike Liquid Metalâ: Scientists Create Strange Shape-Shifting Material

@@ -6,7 +6,7 @@ tier: 2
 tier_name: Science journalism
 title: Eating more fruits and vegetables tied to unexpected lung cancer risk
 date_published: '2026-04-18'
-content_hash: sha256:304b6c650821be7d5d63e8a8f93b9f4dea0861a3c18de9d77ef526e5b3ba8a0a
+content_hash: sha256:20db486bfcbb23311250d9e86ae4560f2dcdb7ef63ebe926bb070f28173ffc25
 paywall: false
 claims:
 - id: sciencedaily.com-2026-04-18-eating-more-fruits-and-vegetables-tied-t-001
@@ -57,13 +57,11 @@ review_status: pending
 credibility_score: 23.2
 ---
 
-from research organizations
 Eating more fruits and vegetables tied to unexpected lung cancer risk
 A âhealthyâ diet may carry an unexpected lung cancer risk for young non-smokersâpossibly due to pesticides.
 April 17, 2026
 University of Southern California - Health Sciences
 A surprising new study suggests that eating a very healthy dietâpacked with fruits, vegetables, and whole grainsâmight be linked to a higher risk of lung cancer in younger non-smokers. Researchers found that patients under 50 diagnosed with lung cancer often had better-than-average diets, raising the possibility that pesticide exposure from conventionally grown produce could be a hidden culprit.
-Young non-smokers with lung cancer were found to have unusually healthy diets, raising questions about hidden risks tied to fruits, vegetables, and grains. Researchers suspect pesticides may play a role, but more evidence is needed. Credit: Shutterstock
 Eating plenty of fruits, vegetables and whole grains is widely recommended to improve health and reduce the risk of cancer and other diseases.
 But new findings from USC Norris Comprehensive Cancer Center, part of Keck Medicine of USC, suggest there may be an unexpected risk for a specific group. Research presented at the annual meeting of the American Association for Cancer Research indicates that non-smoking Americans under age 50 who follow healthier diets could face a higher risk of developing lung cancer.
 "Our research shows that younger non-smokers who eat a higher quantity of healthy foods than the general population are more likely to develop lung cancer," said Jorge Nieva, MD, a medical oncologist and lung cancer specialist with USC Norris and lead investigator of the study. "These counter-intuitive findings raise important questions about an unknown environmental risk factor for lung cancer related to otherwise beneficial food that needs to be addressed."
@@ -88,10 +86,6 @@ The next step, according to Nieva, is to measure pesticide levels directly in pa
 The research is supported by the Addario Lung Cancer Medical Institute, a nonprofit focused on advancing lung cancer research and care, as well as AstraZeneca, the Beth Longwell Foundation, Genentech, GO2 for Lung Cancer and Upstage Lung Cancer.
 Researchers also received funding from the National Institutes of Health, grant number R25CA225513 and the National Cancer Institute, grant number P30CA014089.
 Disclosure: Dr. Nieva has received consulting payments from AstraZeneca and Genentech.
-Diet and Weight Loss
-Personalized Medicine
-Diseases and Conditions
-University of Southern California - Health Sciences
 2026
 04
 260417224454.htm>.
@@ -101,24 +95,18 @@ University of Southern California - Health Sciences. (2026, April 17). Eating mo
 260417224454.htm
 2026
 04
-260417224454.htm (accessed April 22, 2026).
-Popular Fruits and Vegetables Linked to Higher Pesticide Levels
-Mar. 4, 2026 Â
 A sweeping new study reveals that whatâs on your plate may directly shape the pesticides circulating in your body. Researchers found that people who eat more fruits and vegetables known to carry ...
 Food as Medicine: How Diet Shapes Gut Microbiome Health
 May 6, 2025 Â
 Researchers show how mice fed a Western-style diet are not able to rebuild a 'healthy,' diverse gut microbiome following antibiotic treatment. These mice were also more susceptible to ...
 Deadly Diets Driving Digestive Diseases
-Dec. 2, 2024 Â
 Against the backdrop of an alarming increase in the number of people under 50 being diagnosed with bowel cancer, researchers are urging people to bump up their fiber intake and improve their eating ...
 Adherence to a Mediterranean Lifestyle Associated With Lower Risk of All-Cause and Cancer Mortality
-Aug. 16, 2023 Â
 People who adhere to a Mediterranean lifestyle -- which includes a diet rich in fruits, vegetables, and whole grains; healthy eating habits like limiting added salts and sugars; and habits promoting ...
 Global Diet Study Challenges Advice to Limit High-Fat Dairy Foods
 July 6, 2023 Â
 Unprocessed red meat and whole grains can be included or left out of a healthy diet, according to a study conducted in 80 countries across all inhabited continents. Diets emphasizing fruit, ...
 MIND and Mediterranean Diets Associated With Fewer Alzheimer's Plaques and Tangles
-Mar. 8, 2023 Â
 People who eat diets rich in green leafy vegetables as well as other vegetables, fruits, whole grains, olive oil, beans, nuts and fish may have fewer amyloid plaques and tau tangles in their brain -- ...
 Early Warning Signals of Esophageal Cancer May Be Hiding in Plain Sight
 âLike Liquid Metalâ: Scientists Create Strange Shape-Shifting Material

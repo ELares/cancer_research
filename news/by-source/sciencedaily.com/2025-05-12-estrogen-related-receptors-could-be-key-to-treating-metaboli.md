@@ -7,7 +7,7 @@ tier_name: Science journalism
 title: Estrogen-related receptors could be key to treating metabolic and muscular
   disorders
 date_published: '2025-05-12'
-content_hash: sha256:0c1dd1fb02016ef62bdc18c9e378296123f8f9468b4ddb14b073bff54a752564
+content_hash: sha256:9aaa6e55bc91ace190a4d3a4d3c4245c333357f2038c30d4a3d8cfa4d2415597
 paywall: false
 claims:
 - id: sciencedaily.com-2025-05-12-estrogen-related-receptors-could-be-key--001
@@ -37,7 +37,6 @@ review_status: pending
 credibility_score: 52.0
 ---
 
-from research organizations
 Estrogen-related receptors could be key to treating metabolic and muscular disorders
 May 13, 2025
 Researchers confirm and explore the role of estrogen-related receptors in regulating energy production in muscle cells during exercise. The findings indicate that developing a drug to boost estrogen-related receptors could be a powerful way to restore energy supplies in people with metabolic disorders, such as muscular dystrophy.
@@ -62,10 +61,6 @@ When Evans' lab looked at the muscle cells after exercise, they found that PGC1�
 Understanding how estrogen-related receptors function in muscle cells creates new opportunities to treat all parts of the body affected by mitochondrial dysfunction. Future research will continue to explore the function and regulation of both alpha- and gamma-type receptors, which may lead to other potential therapeutic targets.
 Other authors include Hui Wang, Lillian Crossley, Mingxiao He, Hunter Robbins, Chandra Koopari, Yang Dai, Morgan Truitt, Ruth Yu, Annette Atkins, and Michael Downes of Salk; Tae Gyu Oh of Salk and the University of Oklahoma; and Christopher Liddle of the University of Sydney, Australia.
 The work was supported by the National Institutes of Health (P01HL147835, DK057978, DK120515, 1R21OD030076, CCSG P30CA23100, CCSG P30 CA014195, CCSG P30 CA014195, P30 AG068635), Department of the Navy (N00014-16-1-3159), Larry L. Hillblom Foundation, Inc. (2021-D-001-NET), Wu Tsai Human Performance Alliance, Henry L. Guenther Foundation, and Waitt Foundation.
-Diseases and Conditions
-Multiple Sclerosis Research
-Antibiotic resistance
-Monoclonal antibody therapy
 Weiwei Fan, Tae Gyu Oh, Hui J. Wang, Lillian Crossley, Mingxiao He, Hunter Robbins, Chandra Koopari, Yang Dai, Morgan L. Truitt, Christopher Liddle, Ruth T. Yu, Annette R. Atkins, Michael Downes, Ronald M. Evans.
 Estrogen-related receptors regulate innate and adaptive muscle mitochondrial energetics through cooperative and distinct actions
 Proceedings of the National Academy of Sciences
@@ -80,24 +75,17 @@ Salk Institute. (2025, May 13). Estrogen-related receptors could be key to treat
 250512165549.htm
 2025
 05
-250512165549.htm (accessed April 22, 2026).
-New Drug Shows Promise Against Duchenne Muscular Dystrophy
-Dec. 16, 2024 Â
 A novel drug holds promise for treating Duchenne muscular dystrophy (DMD), a rare genetic disorder that causes severe muscle degeneration. Researchers have discovered that an experimental compound ...
 New Gene Therapy for Muscular Dystrophy Offers Hope
 July 17, 2024 Â
 A new gene therapy treatment for Duchenne muscular dystrophy (DMD) shows promise of not only arresting the decline of the muscles of those affected by this inherited genetic disease, but perhaps, in ...
 Novel Method With Implications for Treatment of Fukuyama Muscular Dystrophy, a Widespread Neuromuscular Disorder
-Dec. 12, 2022 Â
 Fukuyama congenital muscular dystrophy (FCMD) is the second most common form of childhood muscular dystrophy in Japan. The disease manifests itself in the form of a severe neuromuscular disorder. One ...
 New Research Shows Certain Exercises Can Help With Muscular Dystrophy
-Mar. 24, 2022 Â
 A new study using neuromuscular electrical stimulation (NMES) in zebrafish found that certain activities may help strengthen muscles affected by Duchenne muscular dystrophy, a severe type of muscular ...
 New Gene Therapy Approach Offers a Potential Long-Term Treatment for Limb-Girdle Muscular Dystrophy 2B
-Jan. 4, 2022 Â
 Medical experts have developed a new pre-clinical gene therapy for a rare disorder, known as limb-girdle muscular dystrophy (LGMD) 2B, that addresses the primary cellular deficit associated with this ...
 New Insights on Mechanism That Could Help Treat Muscle-Related Diseases
-Aug. 19, 2021 Â
 Expression of the MyoD gene combined with exposure to three chemicals causes skin cells to become primitive muscle progenitors that can be maintained indefinitely in the lab and later coaxed into ...
 Early Warning Signals of Esophageal Cancer May Be Hiding in Plain Sight
 âLike Liquid Metalâ: Scientists Create Strange Shape-Shifting Material
