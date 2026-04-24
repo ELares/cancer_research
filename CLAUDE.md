@@ -37,7 +37,7 @@ The repo exists to compare therapeutic mechanisms, evidence depth, resistant-sta
 - ferroptosis-core library packaging for external use
 - news source authentication pipeline (fetch, extract claims, verify, score, index)
 - broader strategy review of alternative therapies and biological bottlenecks
-- operational maturity: CI and figure traceability done (#126, #127); archival release (#131) next
+- operational maturity: Phase 2 complete — CI (#126), figure traceability (#127), archival release tooling (#131)
 
 ## Current Repo State
 
@@ -60,6 +60,7 @@ The repo exists to compare therapeutic mechanisms, evidence depth, resistant-sta
 - contributor guide (CONTRIBUTING.md), citation metadata (CITATION.cff), and pytest in tracked dependencies
 - Python CI workflow (.github/workflows/python-test.yml): Linux on PR/push, macOS weekly
 - figure traceability index (FIGURES.yaml) mapping all 23 figures to generators, inputs, and types
+- archival release tooling (.zenodo.json metadata template, scripts/generate_release_manifest.py for SHA256 manifest + filtered archive)
 
 ## What To Optimize For
 
@@ -103,6 +104,8 @@ CITATION.cff                              citation metadata (renders GitHub "Cit
 requirements-lock.txt                     pinned Python dependency versions
 FIGURES.yaml                              figure-to-script traceability index (23 figures)
 .github/workflows/python-test.yml         Python CI (Linux PR/push, macOS weekly)
+.zenodo.json                              Zenodo deposit metadata template
+scripts/generate_release_manifest.py      SHA256 manifest + filtered archive builder
 ```
 
 ## Search Conventions
