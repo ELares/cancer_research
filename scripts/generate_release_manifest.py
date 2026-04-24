@@ -23,7 +23,8 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 # Prefixes excluded from the release scope.
 # corpus/by-pmid/  — 61 of 4,830 articles are non-OA; redistribution unsafe
 # books/           — LFS pointers only; actual PDFs are 1.6 GB reference material
-EXCLUDE_PREFIXES = ("corpus/by-pmid/", "books/")
+# news/            — fetched articles under fair use; not a redistributable license
+EXCLUDE_PREFIXES = ("corpus/by-pmid/", "books/", "news/")
 
 MANIFEST_FILE = PROJECT_ROOT / "MANIFEST.sha256"
 ARCHIVE_FILE = PROJECT_ROOT / "release.tar.gz"
@@ -86,7 +87,7 @@ def main():
     excluded_count = len(all_files) - len(in_scope)
 
     print(f"  Total tracked files: {len(all_files)}")
-    print(f"  Excluded (corpus/by-pmid/ + books/): {excluded_count}")
+    print(f"  Excluded (corpus/by-pmid/ + books/ + news/): {excluded_count}")
     print(f"  In release scope: {len(in_scope)}")
 
     # Compute checksums and write manifest

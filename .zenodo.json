@@ -1,7 +1,7 @@
 {
   "title": "Cancer Research: Cross-Literature Analysis and Ferroptosis Simulation",
   "upload_type": "dataset",
-  "description": "Open-source cancer research combining cross-literature analysis of 4,830 research articles with Monte Carlo biochemical simulations of ferroptosis sensitivity. Includes Python analysis pipeline (13 scripts), Rust simulation engine (ferroptosis-core, 10 binaries, 31 unit tests), 23 manuscript figures with traceability index, and a 112-page book-format manuscript (~33,600 words). Full-text corpus articles are excluded for licensing reasons; corpus/INDEX.jsonl provides metadata (PMIDs, mechanisms, cancer types, evidence tiers) for reconstruction from PubMed. See PROVENANCE.yaml for asset licensing details.",
+  "description": "Open-source cancer research combining cross-literature analysis of 4,830 research articles with Monte Carlo biochemical simulations of ferroptosis sensitivity. Content classes and rights: (1) Code — Python pipeline, Rust simulation engine, tests: MIT licensed. (2) Manuscript and analysis — authored by the depositor, released under the repo MIT license. (3) Corpus metadata — INDEX.jsonl contains bibliographic metadata (PMIDs, mechanisms, cancer types, evidence tiers); factual metadata is not copyrightable. (4) Corpus abstracts — 5,584 abstract-only records; abstracts are non-copyrightable factual summaries (Feist v. Rural, 1991). Excluded from this deposit: full-text corpus articles (61 of 4,830 have unconfirmed OA status), reference textbooks (Git LFS, CC BY 4.0 but 1.6 GB), and news articles (fair use, not a redistributable license). See PROVENANCE.yaml for full asset licensing details.",
   "creators": [
     {
       "name": "Lares, Ezequiel",
