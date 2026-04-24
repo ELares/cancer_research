@@ -1,0 +1,30 @@
+{
+  "title": "Cancer Research: Cross-Literature Analysis and Ferroptosis Simulation",
+  "upload_type": "dataset",
+  "description": "Open-source cancer research combining cross-literature analysis of 4,830 research articles with Monte Carlo biochemical simulations of ferroptosis sensitivity. Includes Python analysis pipeline (13 scripts), Rust simulation engine (ferroptosis-core, 10 binaries, 31 unit tests), 23 manuscript figures with traceability index, and a 112-page book-format manuscript (~33,600 words). Full-text corpus articles are excluded for licensing reasons; corpus/INDEX.jsonl provides metadata (PMIDs, mechanisms, cancer types, evidence tiers) for reconstruction from PubMed. See PROVENANCE.yaml for asset licensing details.",
+  "creators": [
+    {
+      "name": "Lares, Ezequiel",
+      "affiliation": "Independent Researcher"
+    }
+  ],
+  "license": "MIT",
+  "keywords": [
+    "cancer research",
+    "ferroptosis",
+    "Monte Carlo simulation",
+    "cross-literature analysis",
+    "drug-tolerant persister cells",
+    "tumor microenvironment",
+    "sonodynamic therapy",
+    "open science"
+  ],
+  "related_identifiers": [
+    {
+      "identifier": "https://github.com/ELares/cancer_research",
+      "relation": "isSupplementTo",
+      "scheme": "url"
+    }
+  ],
+  "version": "manuscript-v1-data"
+}
