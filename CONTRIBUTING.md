@@ -22,7 +22,7 @@ cd ..
 ## Running Tests
 
 ```bash
-# Python pipeline + news tests (50 tests)
+# Python pipeline, news, and figure traceability tests (60 tests)
 python3 -m pytest tests/ -q
 
 # Rust simulation tests (31+ tests)

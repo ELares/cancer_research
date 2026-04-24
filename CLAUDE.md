@@ -37,7 +37,7 @@ The repo exists to compare therapeutic mechanisms, evidence depth, resistant-sta
 - ferroptosis-core library packaging for external use
 - news source authentication pipeline (fetch, extract claims, verify, score, index)
 - broader strategy review of alternative therapies and biological bottlenecks
-- operational maturity: CI, figure traceability, archival release (Phase 2 in progress)
+- operational maturity: CI and figure traceability done (#126, #127); archival release (#131) next
 
 ## Current Repo State
 
@@ -47,8 +47,8 @@ The repo exists to compare therapeutic mechanisms, evidence depth, resistant-sta
 - evidence tagging is improved but still incomplete (gold-set measured)
 - tissue-of-origin and weighted-evidence layers are active
 - diagnostic-therapy matching layer covers 6 chains across 4 modalities (radioligand, checkpoint, mRNA vaccine, oncolytic)
-- manuscript: 112 pages (book format), 11 chapters + 3 appendices, 19 figures, 33,344 words
-- simulation suite: 10 binaries (incl. sim-tumor-pk) + ferroptosis-core library (MIT licensed, 10 modules, 31 unit tests) + Python bindings + 50 Python smoke tests
+- manuscript: 112 pages (book format), 11 chapters + 3 appendices, 19 figures, ~33,600 words
+- simulation suite: 10 binaries (incl. sim-tumor-pk) + ferroptosis-core library (MIT licensed, 10 modules, 31 unit tests) + Python bindings + 60 Python tests (50 pipeline smoke + 10 figure traceability)
 - news authentication pipeline: 5 scripts (fetch, extract claims, verify against PubMed, score credibility, build claim-centric index) implementing the 3-tier source framework from analysis/news-source-criteria.md
 - simulation calibration: 5 targets documented, evaluate script operational
 - drug penetration module: 3 tissue types, exponential Krogh approximation
@@ -58,6 +58,8 @@ The repo exists to compare therapeutic mechanisms, evidence depth, resistant-sta
 - content provenance manifest (PROVENANCE.yaml) documents asset licensing and redistribution rights
 - pinned Python environment (requirements-lock.txt, 32 packages) and Rust toolchain (rust-toolchain.toml, 1.92.0)
 - contributor guide (CONTRIBUTING.md), citation metadata (CITATION.cff), and pytest in tracked dependencies
+- Python CI workflow (.github/workflows/python-test.yml): Linux on PR/push, macOS weekly
+- figure traceability index (FIGURES.yaml) mapping all 23 figures to generators, inputs, and types
 
 ## What To Optimize For
 
@@ -99,6 +101,8 @@ PROVENANCE.yaml                           content provenance and redistribution 
 CONTRIBUTING.md                           contributor setup, testing, and PR guide
 CITATION.cff                              citation metadata (renders GitHub "Cite" button)
 requirements-lock.txt                     pinned Python dependency versions
+FIGURES.yaml                              figure-to-script traceability index (23 figures)
+.github/workflows/python-test.yml         Python CI (Linux PR/push, macOS weekly)
 ```
 
 ## Search Conventions
