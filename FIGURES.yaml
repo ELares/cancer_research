@@ -2,10 +2,10 @@
 #
 # Maps every figure file in article/figures/ to its generator,
 # input data, and manuscript position. Machine-readable companion
-# to the figs dict in scripts/generate_latex.py (lines 176-196).
+# to the figs dict in scripts/generate_latex.py.
 #
 # Fields:
-#   manuscript_figure: number in the compiled manuscript (1-19), or null
+#   manuscript_figure: number in the compiled manuscript (1-20), or null
 #   filename: basename without extension (both PDF and PNG exist)
 #   generator:
 #     script: path relative to repo root (or null for orphans)
@@ -20,7 +20,7 @@
 # validates that this file stays in sync with disk.
 
 figures:
-  # ── Manuscript figures (1-19) ──────────────────────────────────
+  # ── Manuscript figures (1-20) ──────────────────────────────────
 
   - manuscript_figure: 1
     filename: fig5_publication_trends
@@ -219,6 +219,16 @@ figures:
     generator:
       script: scripts/generate_conceptual_diagrams.py
       function: fig22_flowchart
+    inputs: []
+    type: conceptual
+    status: manuscript
+    note: Requires graphviz (dot) binary installed.
+
+  - manuscript_figure: 20
+    filename: fig23_prisma_flow
+    generator:
+      script: scripts/generate_conceptual_diagrams.py
+      function: fig23_prisma_flow
     inputs: []
     type: conceptual
     status: manuscript

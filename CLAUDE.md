@@ -47,7 +47,7 @@ The repo exists to compare therapeutic mechanisms, evidence depth, resistant-sta
 - evidence tagging is improved but still incomplete (gold-set measured)
 - tissue-of-origin and weighted-evidence layers are active
 - diagnostic-therapy matching layer covers 6 chains across 4 modalities (radioligand, checkpoint, mRNA vaccine, oncolytic)
-- manuscript: 112 pages (book format), 11 chapters + 3 appendices, 19 figures, ~33,600 words
+- manuscript: 112 pages (book format), 11 chapters + 3 appendices, 20 figures, ~33,600 words
 - simulation suite: 10 binaries (incl. sim-tumor-pk) + ferroptosis-core library (MIT licensed, 10 modules, 31 unit tests) + Python bindings + 60 Python tests (50 pipeline smoke + 10 figure traceability)
 - news authentication pipeline: 5 scripts (fetch, extract claims, verify against PubMed, score credibility, build claim-centric index) implementing the 3-tier source framework from analysis/news-source-criteria.md
 - simulation calibration: 5 targets documented, evaluate script operational
