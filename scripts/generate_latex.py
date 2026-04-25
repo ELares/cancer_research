@@ -6,7 +6,6 @@ Document class: report (not book — avoids forced recto chapter starts).
 See article/AUTHORING.md for heading conventions.
 """
 import re
-import unicodedata
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
