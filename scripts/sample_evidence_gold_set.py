@@ -8,7 +8,7 @@ The sample is stratified by:
 
 Usage:
     python scripts/sample_evidence_gold_set.py               # v1 (100 articles, 5 mechanisms)
-    python scripts/sample_evidence_gold_set.py --version v2   # v2 (250 articles, 10 mechanisms)
+    python scripts/sample_evidence_gold_set.py --version v2   # v2 (270 articles, 10 mechanisms + v1 carry-forward)
 """
 
 import argparse
@@ -224,7 +224,7 @@ def write_csv(rows, output_file):
 def main() -> None:
     parser = argparse.ArgumentParser(description="Sample evidence gold set.")
     parser.add_argument("--version", choices=["v1", "v2"], default="v1",
-                        help="v1: 100 articles (5 mechanisms), v2: 250 articles (10 mechanisms)")
+                        help="v1: 100 articles (5 mechanisms), v2: 270 articles (10 mechanisms + v1 carry-forward)")
     args = parser.parse_args()
 
     print("Loading articles...")
