@@ -106,6 +106,38 @@ fn apply_o2_gradient(
 }
 
 // ============================================================
+// O2 cycling helpers
+// ============================================================
+
+/// Precompute per-cell depth from tumor edge (micrometers).
+/// Reuses the same geometry as `apply_o2_gradient`.
+fn compute_depth_map(grid: &TumorGrid) -> Vec<f64> {
+    let rows = grid.rows;
+    let cols = grid.cols;
+    let cell_size = grid.cell_size_um;
+    let center_r = rows as f64 / 2.0;
+    let center_c = cols as f64 / 2.0;
+    let tumor_radius = (rows.min(cols) as f64) * 0.45;
+
+    (0..rows * cols)
+        .map(|idx| {
+            let (r, c) = (idx / cols, idx % cols);
+            if !grid.cells[idx].is_tumor {
+                return 0.0;
+            }
+            let dist = ((r as f64 - center_r).powi(2) + (c as f64 - center_c).powi(2)).sqrt();
+            (tumor_radius - dist).max(0.0) * cell_size
+        })
+        .collect()
+}
+
+/// Square-wave O2 cycling: λ alternates between low (hypoxic) and
+/// high (normoxic) on a fixed period. First half = normoxic, second half = hypoxic.
+fn cycling_lambda(step: u32, period: u32, lambda_low: f64, lambda_high: f64) -> f64 {
+    if (step % period) < period / 2 { lambda_high } else { lambda_low }
+}
+
+// ============================================================
 // Spatial simulation (reuses sim-spatial's pattern)
 // ============================================================
 
@@ -186,6 +218,119 @@ fn run_spatial(
                     gc.lp_at_death = gc.state.lp;
                 }
                 // Update lp_at_death during grace period
+                if gc.state.dead {
+                    gc.lp_at_death = gc.state.lp;
+                }
+            }
+        }
+
+        grid.diffuse_iron(
+            spatial_params.iron_release_per_death,
+            spatial_params.neighbor_iron_fraction,
+        );
+    }
+}
+
+/// Run spatial simulation with per-step O2 cycling (square-wave).
+///
+/// `depths` and `original_ros` are precomputed from the grid before
+/// any O2 modification. Each step, basal_ros is recomputed using the
+/// cycling lambda for the current phase.
+fn run_spatial_cycling(
+    grid: &mut TumorGrid,
+    tx: Treatment,
+    params: &Params,
+    spatial_params: &SpatialParams,
+    seed: u64,
+    depths: &[f64],
+    original_ros: &[f64],
+    period: u32,
+    lambda_low: f64,
+    lambda_high: f64,
+) {
+    let base_ros = match tx {
+        Treatment::SDT => params.sdt_ros,
+        Treatment::PDT => params.pdt_ros,
+        Treatment::RSL3 | Treatment::Control => 0.0,
+    };
+
+    let rows = grid.rows;
+    let cols = grid.cols;
+    let cell_size = grid.cell_size_um;
+
+    // Initialize cell states with depth-dependent ROS (use lambda_high for initial state)
+    for r in 0..rows {
+        let ros_multiplier = local_ros_multiplier(r, cell_size, tx, spatial_params);
+        for c in 0..cols {
+            let exo_ros_peak = if tx == Treatment::Control || tx == Treatment::RSL3 {
+                0.0
+            } else {
+                let mut rng = StdRng::seed_from_u64(seed.wrapping_add((r * cols + c) as u64));
+                let peak = base_ros * ros_multiplier;
+                norm(&mut rng, peak, peak * 0.2).max(0.0)
+            };
+
+            let idx = r * cols + c;
+            // Set initial basal_ros from the normoxic phase
+            let o2_factor = (-depths[idx] / lambda_high).exp().clamp(0.0, 1.0);
+            grid.cells[idx].cell.basal_ros = original_ros[idx] * o2_factor;
+
+            let gc = grid.get_mut(r, c);
+            gc.state = CellState::from_cell_with_ros(&gc.cell, tx, params, exo_ros_peak);
+            gc.extra_iron = 0.0;
+            gc.newly_dead = false;
+            gc.lp_at_death = 0.0;
+        }
+    }
+
+    // 180-step loop with per-step O2 cycling
+    for step in 0..N_STEPS {
+        // Update O2 field for this step's cycle phase
+        let lambda = cycling_lambda(step, period, lambda_low, lambda_high);
+        for idx in 0..grid.cells.len() {
+            if grid.cells[idx].is_tumor && !grid.cells[idx].state.dead {
+                let o2_factor = (-depths[idx] / lambda).exp().clamp(0.0, 1.0);
+                grid.cells[idx].cell.basal_ros = original_ros[idx] * o2_factor;
+            }
+        }
+
+        for r in 0..rows {
+            for c in 0..cols {
+                let idx = r * cols + c;
+                if !grid.cells[idx].is_tumor {
+                    continue;
+                }
+                if grid.cells[idx].state.dead {
+                    if let Some(ds) = grid.cells[idx].state.death_step {
+                        if step >= ds + params.post_death_steps { continue; }
+                    } else {
+                        continue;
+                    }
+                }
+
+                let mut rng = StdRng::seed_from_u64(
+                    seed.wrapping_add(500_000)
+                        .wrapping_add(idx as u64)
+                        .wrapping_add(step as u64 * 1_000_000),
+                );
+
+                let extra_iron = grid.cells[idx].extra_iron;
+                grid.cells[idx].extra_iron = 0.0;
+
+                let gc = &mut grid.cells[idx];
+                let died = sim_cell_step(
+                    &mut gc.state,
+                    &gc.cell,
+                    params,
+                    step,
+                    extra_iron,
+                    &mut rng,
+                );
+
+                if died {
+                    gc.newly_dead = true;
+                    gc.lp_at_death = gc.state.lp;
+                }
                 if gc.state.dead {
                     gc.lp_at_death = gc.state.lp;
                 }
@@ -883,6 +1028,72 @@ fn main() {
                 let path = output_dir.join("o2_field.csv");
                 write_heatmap_csv(&path, &o2_hm).expect("Failed to write O2 heatmap");
             }
+        }
+    }
+
+    // --- O2 cycling condition (square-wave, λ=80↔150μm, period=60 steps) ---
+    {
+        let cycle_period: u32 = 60;
+        let lambda_low = 80.0_f64;
+        let lambda_high = 150.0_f64;
+        eprintln!(
+            "\n=== O2 cycling (square-wave λ={}↔{}μm, period={} steps) ===\n",
+            lambda_low as u64, lambda_high as u64, cycle_period
+        );
+
+        for (tx, tx_name) in &treatments {
+            let mut grid = TumorGrid::generate(GRID_SIZE, GRID_SIZE, CELL_SIZE_UM, SEED);
+            let depths = compute_depth_map(&grid);
+            let original_ros: Vec<f64> = grid.cells.iter().map(|gc| gc.cell.basal_ros).collect();
+
+            run_spatial_cycling(
+                &mut grid, *tx, &params, &spatial_params,
+                SEED.wrapping_add((*tx as u64) * 10_000_000),
+                &depths, &original_ros,
+                cycle_period, lambda_low, lambda_high,
+            );
+
+            let census = grid.census();
+            let overall = census.total_dead as f64 / census.total_tumor.max(1) as f64;
+            let (norm_r, trans_r, hyp_r) = zone_kill_rates(&grid, ZONE_REF_LAMBDA);
+            eprintln!(
+                "  {}: overall={:.1}%, normoxic={:.1}%, transition={:.1}%, hypoxic={:.1}%",
+                tx_name, overall * 100.0, norm_r * 100.0, trans_r * 100.0, hyp_r * 100.0
+            );
+
+            all_results.push(ConditionResult {
+                treatment: tx_name.to_string(),
+                o2_condition: format!(
+                    "cycling_{}_{}_p{}",
+                    lambda_low as u64, lambda_high as u64, cycle_period
+                ),
+                o2_lambda_um: None,
+                immune_mode: "off".to_string(),
+                total_tumor: census.total_tumor,
+                total_dead: census.total_dead,
+                ferroptosis_kills: None,
+                immune_kills: None,
+                overall_kill_rate: overall,
+                normoxic_kill_rate: norm_r,
+                transition_kill_rate: trans_r,
+                hypoxic_kill_rate: hyp_r,
+                stromal_mode: None,
+                stromal_adjacent_kill_rate: None,
+                stromal_adjacent_count: None,
+                stromal_gsh_boost: None,
+                stromal_mufa_boost: None,
+                ph_mode: None,
+                ph_iron_sensitivity: None,
+                ph_ion_trap_sensitivity: None,
+                ph_edge: None,
+                ph_core: None,
+                ph_lambda_um: None,
+            });
+
+            all_depth_curves.push((
+                format!("{}_{}", tx_name, "cycling"),
+                depth_kill_curve(&grid),
+            ));
         }
     }
 
