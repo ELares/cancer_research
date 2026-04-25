@@ -39,7 +39,8 @@ The repo exists to compare therapeutic mechanisms, evidence depth, resistant-sta
 - broader strategy review of alternative therapies and biological bottlenecks
 - operational maturity: Phase 2 complete — CI (#126), figure traceability (#127), archival release tooling (#131)
 - manuscript integrity: Phase 3 complete — immune coupling confidence (#130), structural uncertainty qualifiers (#137), PRISMA corpus flow diagram (#135), retrieval bias subsection (#140)
-- sensitivity analyses: weight-sensitivity (#128), taxonomy-sensitivity (#133), and PRCC global sensitivity (#134) complete — pre-registered, run, results in manuscript
+- sensitivity analyses: weight-sensitivity (#128), taxonomy-sensitivity (#133), PRCC global sensitivity (#134), and O2 cycling (#138) complete — pre-registered, run, results in manuscript
+- test expansion (#139) complete — 19 invariant/integration tests added (schema, weight monotonicity, tagging correctness)
 
 ## Current Repo State
 
