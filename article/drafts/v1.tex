@@ -212,22 +212,7 @@ The corpus construction pipeline introduces bias at two stages, quantified below
 
 \textbf{Open-access bias.} The full-text corpus is overwhelmingly open access: 4,769 of 4,830 articles (98.7\%) are classified as OA by OpenAlex. This is not a random sample of PubMed results --- the pipeline retrieves full text from PubMed Central and publisher OA endpoints, systematically excluding paywalled articles. Journals with lower OA rates (common in engineering, physics, and device-focused fields) are therefore under-represented in the full-text corpus even when their articles appear in PubMed.
 
-\textbf{Abstract-vs-full-text sensitivity check.} To assess whether the full-text restriction materially changes mechanism rankings, we compared mechanism tag frequencies between the 4,830 full-text articles and the 5,584 abstract-only records (93.0\% of which have mechanism tags from the same keyword-based tagger operating on abstract text). The top 10 mechanisms by full-text rank, with abstract rank shifts:
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-Notable mechanisms rising in abstract-only rankings: bioelectric modulation (full-text rank 14 $\rightarrow$ abstract rank 3, +11), HIFU (17 $\rightarrow$ 7, +10), sonodynamic therapy (11 $\rightarrow$ 5, +6), and electrochemical therapy (12 $\rightarrow$ 8, +4). All four are physical/energy modalities published in engineering and device-focused journals with lower OA rates.
+\textbf{Abstract-vs-full-text sensitivity check.} To assess whether the full-text restriction materially changes mechanism rankings, we compared mechanism tag frequencies between the 4,830 full-text articles and the 5,584 abstract-only records (93.0\% of which have mechanism tags from the same keyword-based tagger operating on abstract text). The top two mechanisms --- immunotherapy (2,297 full-text vs 1,800 abstract-only articles) and nanoparticle delivery (515 vs 982) --- maintain their rank positions. However, four physical/energy modalities shift substantially upward in abstract-only rankings: bioelectric modulation rises from full-text rank 14 to abstract rank 3 (+11 positions, 182 vs 595 articles), HIFU from 17 to 7 (+10, 81 vs 382), sonodynamic therapy from 11 to 5 (+6, 187 vs 428), and electrochemical therapy from 12 to 8 (+4, 185 vs 378). Conversely, several mechanisms drop in abstract-only rankings: metabolic targeting falls from rank 8 to 15 ($-$7), and both oncolytic virus and synthetic lethality drop 6 positions. All four rising modalities are physical/energy approaches published in engineering and device-focused journals with lower OA rates.
 
 This sensitivity check should not be treated as interchangeable with the full-text analysis --- abstract-derived tags operate on shorter text with potentially different precision/recall characteristics. However, the directional finding is clear: physical modalities are systematically under-represented in the full-text corpus. Mechanism rankings and article-count-based claims for these modalities should be interpreted with this bias in mind. The full-text analysis remains the primary evidence base for this manuscript because it enables richer tagging (evidence levels, pathway targets, tissue categories) that abstracts alone cannot support.
 
