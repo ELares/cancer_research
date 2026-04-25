@@ -1,0 +1,368 @@
+{
+  "metadata": {
+    "n_samples": 2000,
+    "n_cells_per_condition": 1000,
+    "seed": 42,
+    "n_parameters": 11,
+    "parameters": [
+      "fenton_rate",
+      "gsh_scav_efficiency",
+      "lp_rate",
+      "lp_propagation",
+      "gpx4_rate",
+      "fsp1_rate",
+      "nrf2_gsh_rate",
+      "gpx4_degradation_by_ros",
+      "death_threshold",
+      "sdt_ros",
+      "rsl3_gpx4_inhib"
+    ],
+    "parameter_ranges": {
+      "fenton_rate": [
+        0.01,
+        0.04
+      ],
+      "gsh_scav_efficiency": [
+        0.25,
+        1.0
+      ],
+      "lp_rate": [
+        0.03,
+        0.12
+      ],
+      "lp_propagation": [
+        0.05,
+        0.2
+      ],
+      "gpx4_rate": [
+        0.15,
+        0.6
+      ],
+      "fsp1_rate": [
+        0.04,
+        0.16
+      ],
+      "nrf2_gsh_rate": [
+        0.0125,
+        0.05
+      ],
+      "gpx4_degradation_by_ros": [
+        0.001,
+        0.004
+      ],
+      "death_threshold": [
+        5.0,
+        20.0
+      ],
+      "sdt_ros": [
+        2.5,
+        10.0
+      ],
+      "rsl3_gpx4_inhib": [
+        0.8,
+        0.99
+      ]
+    }
+  },
+  "conditions": [
+    {
+      "phenotype": "Persister",
+      "treatment": "SDT",
+      "output": "death_rate",
+      "mean_death_rate": 0.9980035,
+      "std_death_rate": 0.009578647490642926,
+      "prcc": {
+        "fenton_rate": 0.02803897542987881,
+        "gsh_scav_efficiency": 0.15824729753060093,
+        "lp_rate": 0.11844233150695951,
+        "lp_propagation": 0.12479921805681778,
+        "gpx4_rate": -0.10960994934375522,
+        "fsp1_rate": -0.023211546729118692,
+        "nrf2_gsh_rate": -0.05396439898519273,
+        "gpx4_degradation_by_ros": -0.008711396826249216,
+        "death_threshold": -0.05191023364255413,
+        "sdt_ros": 0.6294510403950261,
+        "rsl3_gpx4_inhib": 0.004402972131062364
+      },
+      "p_values": {
+        "fenton_rate": 0.21117144757887774,
+        "gsh_scav_efficiency": 9.063860773039778e-13,
+        "lp_rate": 1.0544199380291275e-07,
+        "lp_propagation": 2.06034262983934e-08,
+        "gpx4_rate": 8.852601949271843e-07,
+        "fsp1_rate": 0.30069151545023587,
+        "nrf2_gsh_rate": 0.01599562516493047,
+        "gpx4_degradation_by_ros": 0.6977703386322911,
+        "death_threshold": 0.020500298606163314,
+        "sdt_ros": 0.0,
+        "rsl3_gpx4_inhib": 0.8444005541051907
+      },
+      "ranked_by_abs_prcc": [
+        "sdt_ros",
+        "gsh_scav_efficiency",
+        "lp_propagation",
+        "lp_rate",
+        "gpx4_rate",
+        "nrf2_gsh_rate",
+        "death_threshold",
+        "fenton_rate",
+        "fsp1_rate",
+        "gpx4_degradation_by_ros",
+        "rsl3_gpx4_inhib"
+      ]
+    },
+    {
+      "phenotype": "Persister",
+      "treatment": "RSL3",
+      "output": "death_rate",
+      "mean_death_rate": 0.521712,
+      "std_death_rate": 0.32728746700110595,
+      "prcc": {
+        "fenton_rate": 0.3105388239590157,
+        "gsh_scav_efficiency": 0.37890187082039084,
+        "lp_rate": 0.7953609820350326,
+        "lp_propagation": 0.9168003851055421,
+        "gpx4_rate": -0.8725958821278995,
+        "fsp1_rate": -0.38561446229504204,
+        "nrf2_gsh_rate": -0.4392254223114512,
+        "gpx4_degradation_by_ros": 0.020508438147114585,
+        "death_threshold": -0.1484325496910473,
+        "sdt_ros": -0.009392188361437842,
+        "rsl3_gpx4_inhib": 0.6137463078890243
+      },
+      "p_values": {
+        "fenton_rate": 0.0,
+        "gsh_scav_efficiency": 0.0,
+        "lp_rate": 0.0,
+        "lp_propagation": 0.0,
+        "gpx4_rate": 0.0,
+        "fsp1_rate": 0.0,
+        "nrf2_gsh_rate": 0.0,
+        "gpx4_degradation_by_ros": 0.3605214617188435,
+        "death_threshold": 2.2224000417736534e-11,
+        "sdt_ros": 0.6754481342295997,
+        "rsl3_gpx4_inhib": 0.0
+      },
+      "ranked_by_abs_prcc": [
+        "lp_propagation",
+        "gpx4_rate",
+        "lp_rate",
+        "rsl3_gpx4_inhib",
+        "nrf2_gsh_rate",
+        "fsp1_rate",
+        "gsh_scav_efficiency",
+        "fenton_rate",
+        "death_threshold",
+        "gpx4_degradation_by_ros",
+        "sdt_ros"
+      ]
+    },
+    {
+      "phenotype": "Glycolytic",
+      "treatment": "SDT",
+      "output": "death_rate",
+      "mean_death_rate": 0.8161225,
+      "std_death_rate": 0.2946154977148181,
+      "prcc": {
+        "fenton_rate": 0.012788880294671307,
+        "gsh_scav_efficiency": 0.21777597269921384,
+        "lp_rate": 0.7555009972195524,
+        "lp_propagation": 0.5102181081551743,
+        "gpx4_rate": -0.18586500062996075,
+        "fsp1_rate": -0.485637215003753,
+        "nrf2_gsh_rate": -0.20696650683121315,
+        "gpx4_degradation_by_ros": 0.0972307513104761,
+        "death_threshold": -0.35778601577321195,
+        "sdt_ros": 0.9017997815296044,
+        "rsl3_gpx4_inhib": -0.014982151410054977
+      },
+      "p_values": {
+        "fenton_rate": 0.5685956896480637,
+        "gsh_scav_efficiency": 0.0,
+        "lp_rate": 0.0,
+        "lp_propagation": 0.0,
+        "gpx4_rate": 0.0,
+        "fsp1_rate": 0.0,
+        "nrf2_gsh_rate": 0.0,
+        "gpx4_degradation_by_ros": 1.3320677304307083e-05,
+        "death_threshold": 0.0,
+        "sdt_ros": 0.0,
+        "rsl3_gpx4_inhib": 0.5041871982723873
+      },
+      "ranked_by_abs_prcc": [
+        "sdt_ros",
+        "lp_rate",
+        "lp_propagation",
+        "fsp1_rate",
+        "death_threshold",
+        "gsh_scav_efficiency",
+        "nrf2_gsh_rate",
+        "gpx4_rate",
+        "gpx4_degradation_by_ros",
+        "rsl3_gpx4_inhib",
+        "fenton_rate"
+      ]
+    },
+    {
+      "phenotype": "Glycolytic",
+      "treatment": "RSL3",
+      "output": "death_rate",
+      "mean_death_rate": 2e-06,
+      "std_death_rate": 5.4735728733616044e-05,
+      "prcc": {
+        "fenton_rate": -0.010267001477633382,
+        "gsh_scav_efficiency": -0.033533368854309714,
+        "lp_rate": 0.05508598684315324,
+        "lp_propagation": 0.0432505017576638,
+        "gpx4_rate": -0.06178526871553097,
+        "fsp1_rate": -0.05221608552969582,
+        "nrf2_gsh_rate": -0.036933826096271744,
+        "gpx4_degradation_by_ros": -0.018587602007742732,
+        "death_threshold": -0.016725460982931997,
+        "sdt_ros": -0.010860461281339155,
+        "rsl3_gpx4_inhib": 0.041479334431252526
+      },
+      "p_values": {
+        "fenton_rate": 0.6471796976795048,
+        "gsh_scav_efficiency": 0.13475345166290165,
+        "lp_rate": 0.01392335243001952,
+        "lp_propagation": 0.053640238817417085,
+        "gpx4_rate": 0.005790789767526672,
+        "fsp1_rate": 0.01976642806855944,
+        "nrf2_gsh_rate": 0.09945981577842922,
+        "gpx4_degradation_by_ros": 0.40727418930254844,
+        "death_threshold": 0.45587600575451015,
+        "sdt_ros": 0.6282850489986769,
+        "rsl3_gpx4_inhib": 0.06423197481958809
+      },
+      "ranked_by_abs_prcc": [
+        "gpx4_rate",
+        "lp_rate",
+        "fsp1_rate",
+        "lp_propagation",
+        "rsl3_gpx4_inhib",
+        "nrf2_gsh_rate",
+        "gsh_scav_efficiency",
+        "gpx4_degradation_by_ros",
+        "death_threshold",
+        "sdt_ros",
+        "fenton_rate"
+      ]
+    },
+    {
+      "phenotype": "Persister",
+      "treatment": "Control",
+      "output": "death_rate",
+      "mean_death_rate": 0.1464375,
+      "std_death_rate": 0.21118170871017689,
+      "prcc": {
+        "fenton_rate": 0.3182503424617316,
+        "gsh_scav_efficiency": 0.9093154134755125,
+        "lp_rate": 0.7269608392697795,
+        "lp_propagation": 0.8321879014335003,
+        "gpx4_rate": -0.8060884593924738,
+        "fsp1_rate": -0.21139408212558958,
+        "nrf2_gsh_rate": -0.7017309233811229,
+        "gpx4_degradation_by_ros": -0.012353060955860612,
+        "death_threshold": -0.2740939753344753,
+        "sdt_ros": -0.010871756902321164,
+        "rsl3_gpx4_inhib": -0.00991515090486195
+      },
+      "p_values": {
+        "fenton_rate": 0.0,
+        "gsh_scav_efficiency": 0.0,
+        "lp_rate": 0.0,
+        "lp_propagation": 0.0,
+        "gpx4_rate": 0.0,
+        "fsp1_rate": 0.0,
+        "nrf2_gsh_rate": 0.0,
+        "gpx4_degradation_by_ros": 0.581846664613406,
+        "death_threshold": 0.0,
+        "sdt_ros": 0.6279277143272479,
+        "rsl3_gpx4_inhib": 0.6584911638744999
+      },
+      "ranked_by_abs_prcc": [
+        "gsh_scav_efficiency",
+        "lp_propagation",
+        "gpx4_rate",
+        "lp_rate",
+        "nrf2_gsh_rate",
+        "fenton_rate",
+        "death_threshold",
+        "fsp1_rate",
+        "gpx4_degradation_by_ros",
+        "sdt_ros",
+        "rsl3_gpx4_inhib"
+      ]
+    },
+    {
+      "phenotype": "PersisterNrf2",
+      "treatment": "SDT",
+      "output": "death_rate",
+      "mean_death_rate": 0.9484889999999999,
+      "std_death_rate": 0.14447932336151081,
+      "prcc": {
+        "fenton_rate": 0.006905592968331278,
+        "gsh_scav_efficiency": 0.3526955928461307,
+        "lp_rate": 0.2869455066586857,
+        "lp_propagation": 0.24076605008604202,
+        "gpx4_rate": -0.22832243037232963,
+        "fsp1_rate": -0.013809552507505325,
+        "nrf2_gsh_rate": -0.26075148813560434,
+        "gpx4_degradation_by_ros": 0.05161168028596966,
+        "death_threshold": -0.10010917891997105,
+        "sdt_ros": 0.8467046167124141,
+        "rsl3_gpx4_inhib": -0.010265935526713402
+      },
+      "p_values": {
+        "fenton_rate": 0.758212057725212,
+        "gsh_scav_efficiency": 0.0,
+        "lp_rate": 0.0,
+        "lp_propagation": 0.0,
+        "gpx4_rate": 0.0,
+        "fsp1_rate": 0.5381385792652464,
+        "nrf2_gsh_rate": 0.0,
+        "gpx4_degradation_by_ros": 0.021239427070953498,
+        "death_threshold": 7.292247979684419e-06,
+        "sdt_ros": 0.0,
+        "rsl3_gpx4_inhib": 0.6472138454859011
+      },
+      "ranked_by_abs_prcc": [
+        "sdt_ros",
+        "gsh_scav_efficiency",
+        "lp_rate",
+        "nrf2_gsh_rate",
+        "lp_propagation",
+        "gpx4_rate",
+        "death_threshold",
+        "gpx4_degradation_by_ros",
+        "fsp1_rate",
+        "rsl3_gpx4_inhib",
+        "fenton_rate"
+      ]
+    }
+  ],
+  "sobol_decision": {
+    "warranted": false,
+    "criterion": "|Pearson \u2212 Spearman| > 0.2 on >2 parameter\u00d7condition pairs",
+    "divergence_threshold": 0.2,
+    "non_monotonic_flags": [
+      {
+        "condition": "Persister \u00d7 SDT",
+        "parameter": "sdt_ros",
+        "pearson": 0.318,
+        "spearman": 0.615,
+        "divergence": 0.296
+      },
+      {
+        "condition": "PersisterNrf2 \u00d7 SDT",
+        "parameter": "sdt_ros",
+        "pearson": 0.461,
+        "spearman": 0.798,
+        "divergence": 0.336
+      }
+    ],
+    "n_flags": 2,
+    "reason": "Found 2 parameter\u00d7condition pairs with |Pearson \u2212 Spearman| > 0.2. Below the >2 threshold for Sobol escalation."
+  }
+}
