@@ -344,6 +344,25 @@
   ],
   "sobol_decision": {
     "warranted": false,
-    "reason": "No non-monotonic interactions detected across conditions. PRCC parameter rankings are consistent. Stage 2 (Sobol) not needed."
+    "criterion": "|Pearson \u2212 Spearman| > 0.2 on >2 parameter\u00d7condition pairs",
+    "divergence_threshold": 0.2,
+    "non_monotonic_flags": [
+      {
+        "condition": "Persister \u00d7 SDT",
+        "parameter": "sdt_ros",
+        "pearson": 0.318,
+        "spearman": 0.615,
+        "divergence": 0.296
+      },
+      {
+        "condition": "PersisterNrf2 \u00d7 SDT",
+        "parameter": "sdt_ros",
+        "pearson": 0.461,
+        "spearman": 0.798,
+        "divergence": 0.336
+      }
+    ],
+    "n_flags": 2,
+    "reason": "Found 2 parameter\u00d7condition pairs with |Pearson \u2212 Spearman| > 0.2. Below the >2 threshold for Sobol escalation."
   }
 }

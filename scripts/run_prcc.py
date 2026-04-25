@@ -129,6 +129,11 @@ def main():
         "conditions": [],
     }
 
+    from scipy.stats import pearsonr, spearmanr
+
+    # Store raw death_rates per condition for Sobol decision check after PRCC
+    raw_death_rates = {}
+
     for phenotype, treatment in CONDITIONS:
         print(f"  {phenotype} × {treatment}...", end="", flush=True)
         death_rates = np.zeros(args.samples)
@@ -137,6 +142,7 @@ def main():
             result = fc.sim_batch(phenotype, treatment, n=args.cells, seed=i + 100, **kwargs)
             death_rates[i] = result["death_rate"]
 
+        raw_death_rates[(phenotype, treatment)] = death_rates
         prcc_results = compute_prcc(X, death_rates)
 
         condition_data = {
@@ -153,20 +159,49 @@ def main():
         }
         all_results["conditions"].append(condition_data)
 
-        # Print top 3
         top3 = condition_data["ranked_by_abs_prcc"][:3]
         top3_str = ", ".join(f"{p}={condition_data['prcc'][p]:+.3f}" for p in top3)
         print(f" done. Top 3: {top3_str}")
 
-    # Sobol decision criterion
-    # Check for non-monotonic interactions: if any parameter has opposite signs
-    # across conditions for the same phenotype, it suggests interaction.
-    sobol_warranted = False
+    # Sobol decision criterion: compare Pearson (linear) vs Spearman (monotonic)
+    # correlations for each parameter × condition. Large divergence indicates
+    # non-monotonic relationships where PRCC (which assumes monotonicity) may
+    # be unreliable, warranting Sobol analysis.
+    print("\n  Checking Sobol escalation criterion (Pearson vs Spearman divergence)...")
+    DIVERGENCE_THRESHOLD = 0.2
+    non_monotonic_flags = []
+
+    for (phenotype, treatment), death_rates in raw_death_rates.items():
+        if np.std(death_rates) < 1e-10:
+            continue  # constant output — skip
+        for j, pname in enumerate(param_names):
+            r_pearson, _ = pearsonr(X[:, j], death_rates)
+            r_spearman, _ = spearmanr(X[:, j], death_rates)
+            divergence = abs(r_pearson - r_spearman)
+            if divergence > DIVERGENCE_THRESHOLD:
+                non_monotonic_flags.append({
+                    "condition": f"{phenotype} × {treatment}",
+                    "parameter": pname,
+                    "pearson": round(r_pearson, 3),
+                    "spearman": round(r_spearman, 3),
+                    "divergence": round(divergence, 3),
+                })
+
+    sobol_warranted = len(non_monotonic_flags) > 2
     all_results["sobol_decision"] = {
         "warranted": sobol_warranted,
-        "reason": "No non-monotonic interactions detected across conditions. "
-                  "PRCC parameter rankings are consistent. Stage 2 (Sobol) not needed.",
+        "criterion": f"|Pearson − Spearman| > {DIVERGENCE_THRESHOLD} on >2 parameter×condition pairs",
+        "divergence_threshold": DIVERGENCE_THRESHOLD,
+        "non_monotonic_flags": non_monotonic_flags,
+        "n_flags": len(non_monotonic_flags),
+        "reason": (
+            f"Found {len(non_monotonic_flags)} parameter×condition pairs with "
+            f"|Pearson − Spearman| > {DIVERGENCE_THRESHOLD}. "
+            + ("Stage 2 (Sobol) warranted." if sobol_warranted
+               else "Below the >2 threshold for Sobol escalation.")
+        ),
     }
+    print(f"  Flags: {len(non_monotonic_flags)}, Sobol warranted: {sobol_warranted}")
 
     OUTPUT_FILE.parent.mkdir(parents=True, exist_ok=True)
     OUTPUT_FILE.write_text(json.dumps(all_results, indent=2) + "\n")
