@@ -2,7 +2,7 @@
 #
 # Maps every figure file in article/figures/ to its generator,
 # input data, and manuscript position. Machine-readable companion
-# to the figs dict in scripts/generate_latex.py (lines 176-196).
+# to the figs dict in scripts/generate_latex.py.
 #
 # Fields:
 #   manuscript_figure: number in the compiled manuscript (1-20), or null
