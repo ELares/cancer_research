@@ -142,9 +142,10 @@ def sample_v1(articles):
 
 
 def sample_v2(articles):
-    """Expanded v2 sampling: 10 mechanisms × (12 tagged + 13 untagged) = 250.
+    """Expanded v2 sampling: 10 mechanisms × (12 tagged + 13 untagged) = 250 new + v1 carry-forward.
 
-    Includes all v1 articles (with their existing gold labels) plus 150 new articles.
+    Includes all v1 articles (with their existing gold labels, including 20 mRNA-vaccine)
+    plus ~170 new articles, yielding ~270 total.
     """
     rng = random.Random(RANDOM_SEED_V2)
     rows = []
