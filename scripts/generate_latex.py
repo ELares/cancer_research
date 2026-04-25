@@ -94,6 +94,13 @@ def repl_footnote(m):
     text = footnote_defs.get(label, f'[{label}]')
     # Escape LaTeX special chars in footnote text
     text = text.replace('&', '\\&').replace('%', '\\%').replace('#', '\\#')
+    # Handle Unicode that pdflatex can't render directly
+    text = text.replace('≤', '$\\leq$').replace('≥', '$\\geq$')
+    text = text.replace('×', '$\\times$')
+    text = text.replace('\u2009', ' ')  # thin space → regular space
+    text = text.replace('—', '---').replace('–', '--')
+    text = text.replace('→', '$\\rightarrow$')
+    # Accented chars: keep as-is (fontenc T1 handles common Latin accents)
     return f'\\footnote{{{text}}}'
 
 body_tex = re.sub(r'\[\^(\w+)\]', repl_footnote, body_tex)
@@ -240,7 +247,7 @@ latex = f"""\\documentclass[12pt,a4paper]{{report}}
 \\usepackage{{amsmath,amssymb}}
 \\usepackage{{graphicx}}
 \\usepackage{{hyperref}}
-\% Citations use inline \\footnote{{}} — no natbib/bibtex needed
+% Citations use inline footnotes — no natbib/bibtex needed
 \\usepackage{{booktabs}}
 \\usepackage{{geometry}}
 \\usepackage{{setspace}}
