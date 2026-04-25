@@ -176,7 +176,7 @@ body_tex = re.sub(r'^\|.*\|$', '', body_tex, flags=re.MULTILINE)
 figs = {
     '1': ('fig5_publication_trends', 'Publication volume 2015--2025.'),
     '2': ('fig2_mechanism_heatmap', 'Mechanism $\\times$ cancer type matrix.'),
-    '3': ('fig1_ferroptosis_comparison', 'Ferroptosis engagement ($\\chi^2=97.3$, $p<5.9\\times10^{-23}$).'),
+    '3': ('fig1_ferroptosis_comparison', 'Ferroptosis engagement ($\\chi^2=97.3$, $p<5.9\\times10^{-23}$; corpus-derived, subject to tagging and taxonomy uncertainty).'),
     '4': ('fig4_molecular_overlap', 'Molecular pathway engagement (normalized \\%).'),
     '5': ('fig3_literature_disconnect', 'Literature disconnect between communities.'),
     '6': ('fig6_sdt_chain_evidence', 'SDT ferroptosis-ICD chain evidence.'),
