@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
-"""Generate conceptual diagrams for TME mechanisms and decision flowchart.
+"""Generate conceptual diagrams for TME mechanisms, decision flowchart, and corpus flow.
 
-Creates 5 figures:
+Creates 6 figures:
   fig18_hypoxia_crosssection.pdf  — O2 gradient with drug efficacy overlay
   fig19_immune_coupling_flow.pdf  — DAMP → DC → T cell pathway
   fig20_stromal_shielding.pdf     — CAF boundary protection
   fig21_ph_ion_trapping.pdf       — pH gradient with drug trapping
   fig22_decision_flowchart.pdf    — Which modality for which context
+  fig23_prisma_flow.pdf           — PRISMA-inspired corpus construction flow
 
 Usage:
   python3 scripts/generate_conceptual_diagrams.py
@@ -362,6 +363,84 @@ def fig22_flowchart():
     print(f"  fig22_decision_flowchart")
 
 
+# ── Figure 23: PRISMA-inspired corpus construction flow ──────────────
+
+def fig23_prisma_flow():
+    """PRISMA-inspired corpus construction flow diagram (Graphviz)."""
+    import graphviz
+    import subprocess
+
+    dot = graphviz.Digraph("prisma", format="pdf")
+    dot.attr(rankdir="TB", bgcolor="white", fontname="Helvetica",
+             label="PRISMA-Inspired Corpus Construction Flow",
+             labelloc="t", fontsize="14", fontcolor="black")
+    dot.attr("node", fontname="Helvetica", fontsize="10",
+             style="filled,rounded", shape="box", penwidth="1.5")
+    dot.attr("edge", fontname="Helvetica", fontsize="9", penwidth="1.5")
+
+    # Pipeline stages (blue)
+    blue = dict(fillcolor="#E3F2FD", color="#1565C0")
+    dot.node("search",
+             "PubMed Search\n19 mechanism-specific queries\n"
+             "(MeSH terms + free-text synonyms)\n"
+             "Coverage through March 2026",
+             **blue)
+    dot.node("identified",
+             "Records Identified\nn = 10,414 unique PMIDs",
+             **blue)
+
+    # Branch: full-text (green) vs abstract-only (orange)
+    green_box = dict(fillcolor="#C8E6C9", color="#2E7D32")
+    orange_box = dict(fillcolor="#FFF3E0", color="#E65100")
+    dot.node("fulltext",
+             "Full Text Obtained\nn = 4,830\n803 journals, 2001\u20132026",
+             **green_box)
+    dot.node("abstract",
+             "Full Text Unavailable\nAbstract-Only Archive\nn = 5,584\n"
+             "(retained separately;\nnot used for quantitative results)",
+             **orange_box)
+
+    # Force side-by-side layout for the branch
+    with dot.subgraph() as s:
+        s.attr(rank="same")
+        s.node("fulltext")
+        s.node("abstract")
+
+    # Downstream stages (blue)
+    dot.node("enrichment",
+             "Enrichment & Indexing\nOpenAlex metadata "
+             "(OA status, citations, topics)\n"
+             "Indexed: 4,830 articles\n"
+             "Open Access: 4,769 (98.7%) | Non-OA: 61 (1.3%)",
+             **blue)
+    dot.node("tagging",
+             "Automated Tagging\n"
+             "19 mechanisms \u00d7 22 cancer types \u00d7 7 evidence tiers\n"
+             "Evidence-tagged: 2,038 (42.2%)\n"
+             "Precision 96%, Recall 55% (100-article gold set)",
+             **blue)
+
+    # Edges
+    dot.edge("search", "identified")
+    dot.edge("identified", "fulltext", label="  Full text\n  available  ")
+    dot.edge("identified", "abstract", label="  Full text\n  unavailable  ")
+    dot.edge("fulltext", "enrichment")
+    dot.edge("enrichment", "tagging")
+
+    # Render: save .gv source, then generate PDF and high-DPI PNG
+    out_base = str(OUT / "fig23_prisma_flow")
+    gv_path = out_base + ".gv"
+
+    with open(gv_path, "w") as f:
+        f.write(dot.source)
+
+    subprocess.run(["dot", "-Tpdf", "-o", out_base + ".pdf", gv_path], check=True)
+    subprocess.run(["dot", "-Tpng", "-Gdpi=300", "-o", out_base + ".png", gv_path], check=True)
+
+    Path(gv_path).unlink(missing_ok=True)
+    print(f"  fig23_prisma_flow")
+
+
 if __name__ == "__main__":
     print("Generating conceptual diagrams...")
     fig18_hypoxia()
@@ -369,4 +448,5 @@ if __name__ == "__main__":
     fig20_stromal()
     fig21_ph()
     fig22_flowchart()
+    fig23_prisma_flow()
     print("Done.")

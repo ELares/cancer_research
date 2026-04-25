@@ -5,7 +5,7 @@ and with the figs dict in scripts/generate_latex.py.
 Catches:
 - Figure PDFs on disk without a YAML entry (new figure, forgot to update)
 - YAML entries without a PDF on disk (deleted figure, forgot to update)
-- Manuscript figure numbers 1-19 present and unique
+- Manuscript figure numbers 1-N present and unique (N from YAML)
 - Generator functions exist in the claimed scripts
 - FIGURES.yaml and generate_latex.py figs dict disagree on filename for a manuscript figure
 
@@ -59,13 +59,13 @@ class TestFigureTraceability:
             )
 
     def test_manuscript_figures_complete(self, figures_data):
-        """Manuscript figures 1-19 are all present."""
+        """Manuscript figures 1-N are all present (N from YAML)."""
         manuscript_nums = {
             e["manuscript_figure"]
             for e in figures_data
             if e["manuscript_figure"] is not None
         }
-        expected = set(range(1, 20))
+        expected = set(range(1, max(manuscript_nums) + 1))
         missing = expected - manuscript_nums
         assert not missing, f"Missing manuscript figures: {missing}"
 

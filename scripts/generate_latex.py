@@ -193,6 +193,7 @@ figs = {
     '17': ('fig20_stromal_shielding', 'Stromal shielding: CAF-mediated GSH and MUFA supply halves RSL3 kill at the tumor boundary (3.0\\% $\\rightarrow$ 1.5\\%) while barely affecting SDT (96.1\\% $\\rightarrow$ 91.2\\%).'),
     '18': ('fig21_ph_ion_trapping', 'pH-driven ion trapping: acidic tumor core protonates and traps drug molecules, reducing RSL3 kills by 53\\%. SDT is pH-independent (no drug to trap).'),
     '19': ('fig22_decision_flowchart', 'Decision framework: which modality for which clinical context, based on tumor localizability, depth, ferroptosis-prone residual state, and immunocompetence.'),
+    '20': ('fig23_prisma_flow', 'PRISMA-inspired corpus construction flow. 10,414 unique PubMed records across 19 mechanism queries; 4,830 full-text articles indexed (803 journals, 2001--2026), 5,584 abstract-only records retained separately. No manual screening or exclusion criteria were applied; this is an automated keyword-driven pipeline, not a formal systematic review.'),
 }
 def repl_figure(match):
     num = match.group(1)
