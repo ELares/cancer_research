@@ -35,7 +35,7 @@ would reduce the number of 'zero publication gaps'."
 | Grouping | Physical categories | Result mechanisms |
 |----------|-------------------|------------------|
 | Baseline | 7 separate | 19 |
-| A: 3-group | acoustic (SDT+HIFU), electric (TTFields+bioelectric+electrochem+electrolysis+frequency) | 15 |
+| A: 3-group | acoustic (SDT+HIFU), electric (TTFields+bioelectric+electrochem+electrolysis+frequency) | 14 |
 | B: single-group | all 7 → "physical-energy" | 13 |
 | C: maturity-split | TTFields alone (Phase III), other 6 → "preclinical-physical" | 14 |
 
