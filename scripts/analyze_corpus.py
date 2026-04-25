@@ -188,11 +188,6 @@ TAXONOMY_GROUPINGS = {
 }
 
 
-def apply_taxonomy_grouping(mechanisms: list[str], grouping: dict[str, str]) -> list[str]:
-    """Remap mechanism names using a taxonomy grouping, deduplicating."""
-    return list({grouping.get(m, m) for m in mechanisms})
-
-
 def run_taxonomy_sensitivity(entries: list[dict]) -> str:
     """Run taxonomy-sensitivity analysis across all groupings. Returns markdown report."""
     from collections import Counter, defaultdict
