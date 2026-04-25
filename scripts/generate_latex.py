@@ -16,23 +16,10 @@ TEX = ROOT / "article" / "drafts" / "v1.tex"
 md = MD.read_text()
 title = re.search(r'^# (.+)$', md, re.MULTILINE).group(1).strip()
 
-# Build cite map from reference list
-cite_map = {}
-for line in md.split('\n'):
-    m = re.match(r'^(\d+)\. PMID: (\d+) -- (\w+)', line.strip())
-    if m:
-        pmid = m.group(2)
-        first = unicodedata.normalize('NFKD', m.group(3)).encode('ascii', 'ignore').decode().lower()
-        ym = re.search(r'\((\d{4})\)', line)
-        year = ym.group(1) if ym else '2024'
-        cite_map[pmid] = f'{first}{year}_{pmid}'
-# Fix known parsing issues:
-# PMID 31130474 (Breitbach 2019, Pexa-Vec Phase 3) — first-author surname
-# starts with non-ASCII or has a parsing edge case in the reference line.
-# PMID 29978216 (Von Hoff 2018, BIND-014 Phase 2) — "Von" is captured as
-# first token but the cite key convention expects a single lowercase word.
-cite_map['31130474'] = 'unknown2019_31130474'
-cite_map['29978216'] = 'unknown2018_29978216'
+# Build footnote definition map from Markdown [^label]: text patterns
+footnote_defs = {}
+for m in re.finditer(r'^\[\^(\w+)\]:\s*(.+)$', md, re.MULTILINE):
+    footnote_defs[m.group(1)] = m.group(2).strip()
 
 # Extract sections
 abstract = re.search(r'## Abstract\n\n(.*?)(?=\n\*\*Keywords)', md, re.DOTALL).group(1).strip()
@@ -45,12 +32,8 @@ if not body_start or not ref_match:
     raise SystemExit("ERROR: Could not find '# Part ...' or '## References' boundaries in v1.md")
 body = md[body_start.start():ref_match.start()].strip()
 
-# Convert PMID citations to placeholders (will become \cite after text conversion)
-def repl(m):
-    key = cite_map.get(m.group(1), 'pmid'+m.group(1))
-    return f'CITEPLACEHOLDER{{{key}}}'
-body = re.sub(r'PMID: (\d+)', repl, body)
-abstract = re.sub(r'PMID: (\d+)', repl, abstract)
+# Remove footnote definition lines from the body (they'll become \footnote{} inline)
+body = re.sub(r'^\[\^\w+\]:\s*.+$', '', body, flags=re.MULTILINE)
 
 # Markdown → LaTeX
 def cvt(t):
@@ -106,14 +89,17 @@ def cvt(t):
 body_tex = cvt(body)
 abstract_tex = cvt(abstract)
 
-# Now convert CITEPLACEHOLDER{key} → \cite{key}
-body_tex = re.sub(r'CITEPLACEHOLDER\{([^}]+)\}', r'\\cite{\1}', body_tex)
-abstract_tex = re.sub(r'CITEPLACEHOLDER\{([^}]+)\}', r'\\cite{\1}', abstract_tex)
-# Remove square brackets around \cite (markdown artifact: [PMID: X] → [\cite{x}])
-body_tex = re.sub(r'\[\\cite\{', r'\\cite{', body_tex)
-abstract_tex = re.sub(r'\[\\cite\{', r'\\cite{', abstract_tex)
-body_tex = re.sub(r'\\cite\{([^}]+)\}\]', r'\\cite{\1}', body_tex)
-abstract_tex = re.sub(r'\\cite\{([^}]+)\}\]', r'\\cite{\1}', abstract_tex)
+# Convert footnote references [^label] → \footnote{definition text}
+def repl_footnote(m):
+    label = m.group(1)
+    text = footnote_defs.get(label, f'[{label}]')
+    # Escape LaTeX special chars in footnote text
+    text = text.replace('&', '\\&').replace('%', '\\%').replace('#', '\\#')
+    return f'\\footnote{{{text}}}'
+
+body_tex = re.sub(r'\[\^(\w+)\]', repl_footnote, body_tex)
+# Remove any leftover footnote definition lines that survived the earlier cleanup
+body_tex = re.sub(r'^\[\^\w+\]:\s*.+$', '', body_tex, flags=re.MULTILINE)
 
 # Remove markdown horizontal rules, which are invalid in LaTeX body text.
 body_tex = re.sub(r'^\s*---\s*$', '', body_tex, flags=re.MULTILINE)
@@ -255,7 +241,7 @@ latex = f"""\\documentclass[12pt,a4paper]{{report}}
 \\usepackage{{amsmath,amssymb}}
 \\usepackage{{graphicx}}
 \\usepackage{{hyperref}}
-\\usepackage{{natbib}}
+\% Citations use inline \\footnote{{}} — no natbib/bibtex needed
 \\usepackage{{booktabs}}
 \\usepackage{{geometry}}
 \\usepackage{{setspace}}
@@ -281,8 +267,7 @@ latex = f"""\\documentclass[12pt,a4paper]{{report}}
 
 {body_tex}
 
-\\bibliographystyle{{unsrtnat}}
-\\bibliography{{../references/bibliography}}
+% Reference list kept as appendix in v1.md; citations are inline footnotes.
 
 \\end{{document}}
 """

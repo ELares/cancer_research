@@ -70,11 +70,14 @@ These rules prevent the expansion from inflating confidence beyond what the evid
 
 ## Citation Standards
 
-- **PubMed:** `[PMID: XXXXX]` (existing convention, converted to `\cite{}` by generate_latex.py)
-- **Author-year (non-PubMed literature):** `(Author et al., Journal Year)` in running text — e.g., `(Porter et al., Chem Rev 2005)`. Used for references that are not in the local PubMed corpus but are established literature.
-- **Textbook references:** `TextbookName Ch.N, Sec.N.N` — e.g., `Biology2e Ch.7, Sec.7.4`. Used for standard biochemistry/physics foundations. Include the specific section so readers can verify the claim.
-- **News sources:** `[News: Author, "Title", Publication, Date. Verified: PMID:XXXXX]` or `[Commentary: ...]` (see `analysis/news-source-criteria.md` Section 4)
-- **Simulation output:** Reference the binary name and key parameters in prose (e.g., "sim-tme with O2 gradient lambda=120um, n=1M cells")
+All citations use **Markdown footnote syntax** for a natural reading experience. The generate_latex.py script converts `[^label]` to LaTeX `\footnote{text}`, producing superscript numbers with full references at the bottom of each page.
+
+- **Format in v1.md:** Place `[^label]` inline where the citation goes. Define `[^label]: Full reference text.` at the end of the section.
+- **Label conventions:** Use `[^pmidXXXXX]` for PubMed articles, `[^newsN]` for news sources, `[^authorYear]` for non-PubMed literature, `[^textbook_ref]` for textbooks.
+- **Multi-source footnotes:** When multiple sources support one claim, use a single footnote with all sources listed inside: `[^refs_groupN]: Source 1; Source 2; Source 3.`
+- **Prose style:** Citations should blend naturally into sentences. Avoid parenthetical author names — put the full reference in the footnote, not in the running text.
+- **Simulation output:** Reference the binary name and key parameters in prose (e.g., "sim-tme with O2 gradient lambda=120um, n=1M cells") — no footnote needed for simulation references.
+- **Reference appendix:** The numbered reference list at the end of v1.md is preserved as a consolidated appendix for readers who want a single list.
 
 ## Figures
 
