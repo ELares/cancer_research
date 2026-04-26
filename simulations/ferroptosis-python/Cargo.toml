@@ -14,4 +14,4 @@ crate-type = ["cdylib"]
 ferroptosis-core = { path = "../ferroptosis-core" }
 pyo3 = { version = "0.24", features = ["extension-module"] }
 rand = "0.8"
-rayon = "1.10"
+rayon = "1.12"
