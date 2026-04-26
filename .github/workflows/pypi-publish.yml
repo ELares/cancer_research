@@ -34,7 +34,7 @@ jobs:
 
       # setup-python only needed for macOS/Windows (host builds).
       # Linux manylinux builds use a Docker container with Python built in.
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         if: runner.os != 'Linux'
         with:
           python-version: '3.12'
@@ -85,7 +85,7 @@ jobs:
         with:
           sparse-checkout: simulations
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
 
