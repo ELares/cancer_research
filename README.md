@@ -48,7 +48,7 @@ These are computational predictions with documented assumptions and caveats, not
 | `analysis/` | 15+ analysis outputs: evidence tiers, tissue-of-origin, diagnostic-therapy matching, combination audits, gap analysis |
 | `article/drafts/` | Manuscript (v1.md + v1.tex) with 20 figures |
 | `scripts/` | Python pipeline: tagging, indexing, analysis, figure generation, LaTeX generation, news authentication pipeline |
-| `simulations/` | [10 Rust binaries](simulations/README.md) + ferroptosis-core library + [Python bindings](simulations/ferroptosis-python/) + calibration infrastructure |
+| `simulations/` | [10 Rust binaries](simulations/README.md) (each with its own README) + [ferroptosis-core library](simulations/ferroptosis-core/) + [Python bindings](simulations/ferroptosis-python/) + [calibration](simulations/calibration/) |
 | `corpus/` | Full-text articles by PubMed ID + INDEX.jsonl |
 | `tags/` | Precomputed tag indexes (mechanism, cancer type, tissue, evidence level, diagnostic-therapy) |
 | `news/` | News source scaffolding: fetched articles, extracted claims, verification results, credibility scores |

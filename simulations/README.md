@@ -4,18 +4,20 @@ Rust workspace containing the ferroptosis biochemistry engine and simulation bin
 
 ## Binaries
 
-| Binary | Purpose | Key output |
-|--------|---------|------------|
-| `sim-original` | Monte Carlo single-cell ferroptosis (1M cells × 16 conditions) | `simulation_results.json` |
-| `sim-spatial` | 2D tumor grid with PDT/SDT energy physics and bystander iron diffusion | `output/spatial/` |
-| `sim-window` | Ferroptosis vulnerability window dynamics post-chemotherapy | `output/window/` |
-| `sim-icd` | ICD-immune cascade comparison across treatment modalities | `output/icd/` |
-| `sim-combo` | Combination therapy optimizer (SDT timing × anti-PD1 timing) | `output/combo/` |
-| `sim-invivo` | 2D vs in-vivo ferroptosis with SCD1/MUFA lipid remodeling | `output/invivo/` |
-| `sim-tissue-pk` | Tissue-specific drug penetration and efficacy across tissue types | `output/tissue-pk/` |
-| `sim-combo-mech` | Mechanistic combination therapy with pathway-traced Bliss synergy scoring | `output/combo-mech/` |
-| `sim-tme` | Tumor microenvironment: oxygen gradients, immune zones, stromal shielding, pH effects | `output/tme/` |
-| `sim-tumor-pk` | Two-compartment vascular/interstitial pharmacokinetics | `output/tumor-pk/` |
+| Binary | Purpose | Manuscript | Key output |
+|--------|---------|------------|------------|
+| [`sim-original`](sim-original/) | Monte Carlo single-cell ferroptosis (1M cells x 16 conditions) | Ch 5, Fig 7 | `simulation_results.json` |
+| [`sim-spatial`](sim-spatial/) | 2D tumor grid with PDT/SDT energy physics and bystander iron diffusion | Ch 6.1, Fig 8 | `output/spatial/` |
+| [`sim-window`](sim-window/) | Ferroptosis vulnerability window dynamics post-chemotherapy | Ch 6.2 | `output/window/` |
+| [`sim-icd`](sim-icd/) | ICD-immune cascade comparison across treatment modalities | Ch 7.2 | `output/icd/` |
+| [`sim-combo`](sim-combo/) | Combination therapy optimizer (SDT timing x anti-PD1 timing) | Ch 6.2 + 7.2 | `output/combo/` |
+| [`sim-invivo`](sim-invivo/) | 2D vs in-vivo ferroptosis with SCD1/MUFA lipid remodeling | Ch 7.1 | `output/invivo/` |
+| [`sim-tissue-pk`](sim-tissue-pk/) | Tissue-specific drug penetration and efficacy across tissue types | Ch 8.2 | `output/tissue-pk/` |
+| [`sim-combo-mech`](sim-combo-mech/) | Mechanistic combination therapy with pathway-traced Bliss synergy | Ch 6.3 | `output/combo-mech/` |
+| [`sim-tme`](sim-tme/) | Tumor microenvironment: O2 gradients, immune, stromal, pH | Ch 7.1-7.5, Fig 14 | `output/tme/` |
+| [`sim-tumor-pk`](sim-tumor-pk/) | Two-compartment vascular/interstitial pharmacokinetics | Ch 8.2 | `output/tumor-pk/` |
+
+Each binary has its own README with parameters, output format, example commands, and instructions for reproducing specific manuscript claims.
 
 ## Shared library
 
