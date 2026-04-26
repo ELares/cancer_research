@@ -297,7 +297,7 @@ def main():
         print("ERROR: SEMANTIC_SCHOLAR_API_KEY not set in .env", file=sys.stderr)
         sys.exit(1)
 
-    print(f"Semantic Scholar API key: ...{SEMANTIC_SCHOLAR_API_KEY[-6:]}")
+    print("Semantic Scholar API key: configured")
     print(f"Mode: {args.mode}\n")
 
     if args.mode == "search":
