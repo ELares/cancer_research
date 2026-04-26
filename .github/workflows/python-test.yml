@@ -21,6 +21,9 @@ on:
   schedule:
     - cron: '0 8 * * 1'  # Weekly Monday 8am UTC (macOS only)
 
+permissions:
+  contents: read
+
 jobs:
   test-linux:
     if: github.event_name != 'schedule'
