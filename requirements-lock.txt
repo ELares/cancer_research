@@ -26,7 +26,7 @@ idna==3.13
 iniconfig==2.3.0
 kiwisolver==1.5.0
 lxml==6.1.0
-matplotlib==3.10.8
+matplotlib==3.10.9
 numpy==2.4.4
 packaging==26.2
 pillow==12.2.0
