@@ -25,7 +25,7 @@ If you have expertise in oncology, biochemistry, ferroptosis, immunology, comput
 - **10 Rust simulation binaries** modeling ferroptosis biochemistry: single-cell Monte Carlo, spatial tumors, drug penetration, drug combinations, tumor microenvironment (oxygen gradients, spatial immune zones, DAMP-mediated T cell activation), vulnerability windows, ICD immune cascades, tumor PK
 - **ferroptosis-core library** (MIT, with Python bindings) — embeddable ferroptosis biochemistry engine with 10 modules and 31 unit tests
 - **Calibration infrastructure** linking simulation parameters to published experimental data
-- **112-page book-format manuscript** with 11 chapters, 3 appendices, and 20 figures (~34,600 words), cross-referenced against all analysis outputs
+- **112-page book-format manuscript** with 11 chapters, 3 appendices, and 20 figures (~36,700 words), cross-referenced against all analysis outputs
 
 Everything is organised so you can re-run the pipeline, challenge the conclusions, or extend the work in directions we haven't thought of yet.
 
