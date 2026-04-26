@@ -41,11 +41,9 @@ jobs:
       - name: Generate LaTeX from Markdown
         run: python3 scripts/generate_latex.py
 
-      - name: Compile PDF (pdflatex + bibtex, 3-pass)
+      - name: Compile PDF (pdflatex, 2-pass)
         working-directory: article/drafts
         run: |
-          pdflatex -interaction=nonstopmode v1.tex
-          bibtex v1
           pdflatex -interaction=nonstopmode v1.tex
           pdflatex -interaction=nonstopmode v1.tex
 
