@@ -35,9 +35,10 @@ Runtime: ~2-5 minutes (parallelized via rayon, 100K cells main + 50K cells per s
 | `--output-dir` | `output/invivo` | Directory for output files |
 
 In-vivo MUFA parameters are hardcoded via `Params::invivo()`:
-- `scd_mufa_rate` -- SCD1 enzyme activity (MUFA synthesis rate per step)
-- `scd_mufa_max` -- maximum MUFA membrane fraction
-- `scd_mufa_decay` -- natural lipid turnover rate
+- `scd_mufa_rate = 0.01` -- SCD1 enzyme activity (MUFA synthesis rate per step)
+- `scd_mufa_max = 0.50` -- maximum MUFA membrane fraction (40-60% range per Dixon/Park 2025)
+- `scd_mufa_decay = 0.005` -- natural phospholipid turnover (half-life ~24-48h)
+- `initial_mufa_protection = 0.40` -- steady-state MUFA level (cells start pre-accumulated: M_ss = rate*max / (rate + decay*max) = 0.40)
 
 MUFA sweep grid: rates [0.002, 0.005, 0.01, 0.02, 0.04] x max [0.20, 0.30, 0.40, 0.50, 0.60].
 
@@ -61,9 +62,9 @@ JSON array of 48 objects (3 contexts x 4 phenotypes x 4 treatments):
   "mean_gsh": 2.85,
   "mean_gpx4": 0.04,
   "scd_mufa_rate": 0.01,
-  "scd_mufa_max": 0.40,
-  "scd_mufa_decay": 0.002,
-  "initial_mufa_protection": 0.0
+  "scd_mufa_max": 0.50,
+  "scd_mufa_decay": 0.005,
+  "initial_mufa_protection": 0.40
 }
 ```
 
@@ -72,9 +73,9 @@ JSON array of 48 objects (3 contexts x 4 phenotypes x 4 treatments):
 ```json
 {
   "scd_mufa_rate": 0.01,
-  "scd_mufa_max": 0.40,
-  "scd_mufa_decay": 0.002,
-  "initial_mufa_protection": 0.0,
+  "scd_mufa_max": 0.50,
+  "scd_mufa_decay": 0.005,
+  "initial_mufa_protection": 0.40,
   "phenotype": "Persister (FSP1\u2193)",
   "treatment": "RSL3",
   "n_cells": 50000,
