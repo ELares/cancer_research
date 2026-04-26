@@ -11,6 +11,9 @@ on:
       - 'simulations/**'
       - '.github/workflows/cargo-test.yml'
 
+permissions:
+  contents: read
+
 jobs:
   test:
     runs-on: ubuntu-latest
