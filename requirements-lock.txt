@@ -32,7 +32,7 @@ packaging==26.2
 pillow==12.2.0
 pluggy==1.6.0
 Pygments==2.20.0
-PyMuPDF==1.27.2.2
+PyMuPDF==1.27.2.3
 pyparsing==3.3.2
 pytest==9.0.3
 python-dateutil==2.9.0.post0
