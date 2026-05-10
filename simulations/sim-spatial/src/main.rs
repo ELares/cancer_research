@@ -184,7 +184,7 @@ fn main() {
         }
     };
     if let Err(e) = validate_dli_h(args.dli_h) {
-        eprintln!("error: {e}");
+        eprintln!("error: --dli-h: {e}");
         std::process::exit(2);
     }
 

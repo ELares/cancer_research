@@ -87,38 +87,37 @@ impl Photosensitizer {
     ///
     /// Errors on unknown variant, unparseable number, or any value that
     /// fails [`Photosensitizer::validate`]. Round-trips with the
-    /// `Display` impl: `parse(format!("{ps}")) == Ok(ps)` for every valid
-    /// `Photosensitizer`.
+    /// `Display` impl: `Photosensitizer::from_cli_spec(&format!("{ps}"))
+    /// == Ok(ps)` for every valid `Photosensitizer`.
     pub fn from_cli_spec(s: &str) -> Result<Self, String> {
         let s = s.trim();
         let (name, value) = match s.split_once('=') {
             Some((n, v)) => (n.trim(), Some(v.trim())),
             None => (s, None),
         };
-        let ps = match name.to_ascii_lowercase().as_str() {
-            "uniform" => {
-                let c = match value {
-                    Some(v) => v
-                        .parse::<f64>()
-                        .map_err(|e| format!("uniform=N: cannot parse N={v:?}: {e}"))?,
-                    None => 1.0,
-                };
-                Self::Uniform(c)
-            }
-            "porfimer" => {
-                let t_half_h = match value {
-                    Some(v) => v
-                        .parse::<f64>()
-                        .map_err(|e| format!("porfimer=N: cannot parse N={v:?}: {e}"))?,
-                    None => 504.0, // Bellnier 2006 terminal t½ in humans, hours.
-                };
-                Self::Porfimer { t_half_h }
-            }
-            _ => {
-                return Err(format!(
-                    "unknown photosensitizer {name:?}; expected one of: uniform, uniform=N, porfimer, porfimer=N (case-insensitive)"
-                ));
-            }
+        // `eq_ignore_ascii_case` avoids allocating a lowercased String
+        // for every CLI parse. Match-on-lowercase would be tidier syntax
+        // but allocates per call.
+        let ps = if name.eq_ignore_ascii_case("uniform") {
+            let c = match value {
+                Some(v) => v
+                    .parse::<f64>()
+                    .map_err(|e| format!("uniform=N: cannot parse N={v:?}: {e}"))?,
+                None => 1.0,
+            };
+            Self::Uniform(c)
+        } else if name.eq_ignore_ascii_case("porfimer") {
+            let t_half_h = match value {
+                Some(v) => v
+                    .parse::<f64>()
+                    .map_err(|e| format!("porfimer=N: cannot parse N={v:?}: {e}"))?,
+                None => 504.0, // Bellnier 2006 terminal t½ in humans, hours.
+            };
+            Self::Porfimer { t_half_h }
+        } else {
+            return Err(format!(
+                "unknown photosensitizer {name:?}; expected one of: uniform, uniform=N, porfimer, porfimer=N (case-insensitive)"
+            ));
         };
         ps.validate()?;
         Ok(ps)
@@ -198,16 +197,21 @@ impl Photosensitizer {
     }
 }
 
-/// Validate a CLI `--dli-h` argument: reject NaN, negative, and infinite
-/// values so they cannot reach `concentration_at` and produce silent
-/// non-physical PDT output. Pair with [`Photosensitizer::from_cli_spec`]
-/// at the same parse-time gate.
+/// Validate a drug-light-interval value (hours): reject NaN, negative,
+/// and infinite inputs so they cannot reach `concentration_at` and
+/// produce silent non-physical PDT output. Pair with
+/// [`Photosensitizer::from_cli_spec`] at the same parse-time gate.
+///
+/// Error messages refer to the field as `dli_h` (matching the parameter
+/// name) rather than embedding any specific CLI flag name; callers are
+/// free to prefix with their flag spelling — e.g. sim-spatial wraps the
+/// error as `--dli-h: <message>`.
 pub fn validate_dli_h(dli_h: f64) -> Result<(), String> {
     if !dli_h.is_finite() {
-        return Err(format!("--dli-h must be finite, got {dli_h}"));
+        return Err(format!("dli_h must be finite, got {dli_h}"));
     }
     if dli_h < 0.0 {
-        return Err(format!("--dli-h must be >= 0, got {dli_h}"));
+        return Err(format!("dli_h must be >= 0, got {dli_h}"));
     }
     Ok(())
 }
@@ -506,7 +510,9 @@ mod tests {
     #[test]
     fn validate_dli_h_rejects_negative() {
         let err = validate_dli_h(-1.0).unwrap_err();
-        assert!(err.contains("--dli-h"));
+        // Error message is library-friendly (`dli_h`), not CLI-coupled
+        // (`--dli-h`); callers are free to prefix with their flag name.
+        assert!(err.contains("dli_h"));
         assert!(err.contains(">= 0"));
     }
 
