@@ -28,6 +28,7 @@
 //! | [`io`] | JSON and CSV output helpers |
 //! | [`drug_transport`] | Tissue-specific drug penetration (Krogh cylinder approximation) |
 //! | [`tumor_pk`] | Two-compartment vascular/interstitial pharmacokinetics |
+//! | [`photosensitizer_pk`] | Photosensitizer plasma PK and drug-light-interval scaling for PDT |
 
 pub mod cell;
 pub mod params;
@@ -39,3 +40,4 @@ pub mod immune;
 pub mod io;
 pub mod drug_transport;
 pub mod tumor_pk;
+pub mod photosensitizer_pk;

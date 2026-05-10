@@ -37,6 +37,7 @@ Run the included example: `cargo run -p ferroptosis-core --example basic_usage`
 | `io` | JSON and CSV output helpers |
 | `drug_transport` | Krogh cylinder drug penetration model |
 | `tumor_pk` | Two-compartment vascular/interstitial pharmacokinetics |
+| `photosensitizer_pk` | Photosensitizer plasma PK and drug-light-interval scaling for PDT |
 
 ## Key API
 

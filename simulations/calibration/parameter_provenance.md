@@ -40,6 +40,8 @@ Every simulation parameter, its default value, source, and whether it is experim
 | `sdt_freq_mhz` | 1.0 | Typical SDT frequency | Grounded | Moderate — operating frequency |
 | `sdt_i0` | 1.0 | Relative units | N/A | Low — incident intensity normalization |
 | `neighbor_iron_fraction` | 0.1 | Mechanistic estimate (8-neighborhood) | Assumed | Low |
+| `photosensitizer` | `Uniform(1.0)` (default) | `Photosensitizer::Porfimer { t_half_h: 504.0 }` from Bellnier DA et al., Lasers Surg Med 2006 (PMID 16634075): porfimer terminal plasma t½ ≈ 21 d in humans; reported range ~250–500+ h depending on infusion protocol | Estimated (porfimer); N/A (`Uniform` default) | Low at DLI ≪ t½; scales linearly with DLI/t½ ratio |
+| `t_drug_light_interval_h` | 0.0 | Operational parameter (clinical schedule choice, not biology) | N/A | High — at DLI = 0 has no effect; at DLI ~ t½ halves PDT dose |
 
 ## Immune Cascade (`ImmuneParams`)
 
@@ -68,3 +70,11 @@ Every simulation parameter, its default value, source, and whether it is experim
 - **Estimated** (informed by literature ranges but not directly calibrated): most biochemistry rates
 - **Assumed** (mechanistic placeholder with no direct data): `gsh_km`, `gpx4_degradation_by_ros`, `gpx4_nrf2_upregulation`, `death_threshold`, immune cascade parameters
 - **Derived** (calculated from other parameters): `initial_mufa_protection`
+
+## RSL3 pharmacokinetics: known uncalibrated
+
+`tumor_pk::TumorPKParams` and the Krogh penetration model in `drug_transport` use RSL3-like parameters (e.g., plasma t½ ≈ 30 min, `k_uptake_bulk`, `km_uptake`) that are **order-of-magnitude estimates from chemical-probe literature, not clinical measurements.** RSL3 has no published clinical PK profile — it is widely cited as a research probe with poor pharmacokinetics, not a development candidate (e.g., review in Yang et al., Nature 2023, on ferroptosis therapeutics). Sensitivity of manuscript claims to these values is bounded by the protection-factor range reported in Chapter 8.2 (4.8×–27×) — qualitative conclusions about tumor-PK barriers are robust, but absolute kill rates should be read as approximate. A future issue should anchor PK parameters either to a clinically published ferroptosis inducer (e.g., IKE) or to a non-RSL3 reference compound.
+
+## Photosensitizer pharmacokinetics: plasma vs. cellular
+
+`Photosensitizer::Porfimer { t_half_h }` represents *plasma* terminal half-life. Cellular concentration is assumed to track plasma proportionally — a reasonable approximation for porfimer (slow-distributing, weeks-scale t½, ~100% serum-protein bound, Vd ≈ plasma volume per Bellnier 2006) but explicitly wrong for 5-ALA/PpIX, which accumulates intracellularly via ferrochelatase deficiency rather than decaying. The current model captures *intra-drug temporal* PK only; it does not account for inter-drug singlet-O₂ quantum-yield differences (`phi_so2`), which are implicit in the calibrated `Params::pdt_ros`. Inter-drug ROS-yield comparisons require explicit `phi_so2` normalization — see issue #200 follow-ups.
