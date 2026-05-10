@@ -7,14 +7,18 @@
 //! coupling, #191 vasculature, #197 cell-level biochem) share.
 //!
 //! **Physical model.** O₂ at radial depth `d` from the spheroid surface is
-//! modelled as `O2(d) = exp(-d/λ)` clamped to `[0, 1]`, the standard
-//! first-order Krogh-cylinder approximation. The *exact* spheroidal
-//! diffusion solution is the Krogh-Riley result
-//! `O2(r) ∝ sinh(r·√(k/D))/(r·sinh(R·√(k/D)))`, which the exponential
+//! modelled as `O2(d) = exp(-d/λ)` clamped to `[0, 1]` — a first-order
+//! exponential-decay approximation. The *exact* spheroidal diffusion
+//! solution (Riley equation) is
+//! `O2(r) ∝ sinh(r·√(k/D)) / (r·sinh(R·√(k/D)))`, which the exponential
 //! approximates well near the surface but underestimates deep in the
 //! core (more shoulder, less tail). Same approximation level as the 2D
-//! `sim-tme` binary; consistent across geometries. Ref: Krogh A, *J
-//! Physiol* 1919; Vaupel P, *Cancer Res* 1989, p.6449.
+//! `sim-tme` binary; consistent across geometries. (Note: Krogh's
+//! original 1919 work derived the *cylinder* model for O₂ transport
+//! around capillaries — the spheroid form here is the standard
+//! exponential generalization, not Krogh's cylinder per se.) Ref:
+//! Krogh A, *J Physiol* 1919 (cylinder model); Vaupel P, *Cancer Res*
+//! 1989 (spheroid O₂ and hypoxia).
 //!
 //! **Stromal convention.** Cells outside the spheroid (negative
 //! `radial_depth_um`, `is_tumor == false`) return `O2 = 1.0`. They
@@ -72,10 +76,14 @@ use crate::grid::TumorGrid3D;
 /// `NaN`/`Inf` for `λ ≤ 0` and silently clip `NaN` results to `0.0` via
 /// `f64::clamp`. Matches the validation posture of [`crate::physics`].
 ///
-/// **Cost.** O(N) for N = `grid.cells.len()`. Computes `radial_depth_um`
-/// per cell, which (per `radial_depth_um`'s own perf note) recomputes
-/// geometry constants — fine for tens of thousands of cells, worth
-/// pre-hoisting in #194's sim-spatial-3d inner loop.
+/// **Cost.** O(N) for N = `grid.cells.len()`. Each iteration calls
+/// [`TumorGrid3D::radial_depth_um`] which recomputes geometry constants
+/// (`center_{r,c,l}`, `tumor_radius`) per call — see that method's perf
+/// note tagged for #194. The same hoisting applies here: sim-spatial-3d's
+/// inner loop (#194) should hoist the constants once and inline the
+/// depth math rather than call `radial_o2_field` per step on full grids.
+/// Cost is negligible for hundreds of thousands of cells (tens of
+/// microseconds) and worth addressing only at the binary's inner loop.
 pub fn radial_o2_field(grid: &TumorGrid3D, lambda_um: f64) -> Vec<f64> {
     debug_assert!(
         lambda_um.is_finite() && lambda_um > 0.0,
