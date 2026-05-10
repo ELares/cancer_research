@@ -17,6 +17,7 @@ use ferroptosis_core::cell::{norm, Treatment};
 use ferroptosis_core::grid::{depth_kill_curve, death_heatmap, TumorGrid};
 use ferroptosis_core::io::{write_depth_curves_csv, write_heatmap_csv, write_json};
 use ferroptosis_core::params::{Params, SpatialParams};
+use ferroptosis_core::photosensitizer_pk::Photosensitizer;
 use ferroptosis_core::physics::local_ros_multiplier;
 
 #[derive(Parser)]
@@ -41,6 +42,65 @@ struct Args {
     /// Number of biochemistry timesteps per cell.
     #[arg(long, default_value_t = 180)]
     n_steps: u32,
+
+    /// Photosensitizer PK model for PDT light scaling. Spec format:
+    /// `uniform` (= `uniform=1.0`, the default), `uniform=N` (constant
+    /// fraction), `porfimer` (= `porfimer=504`, Bellnier 2006 t½ in hours),
+    /// or `porfimer=N` (custom t½ in hours).
+    #[arg(long, default_value = "uniform")]
+    photosensitizer: String,
+
+    /// Drug-light interval in hours: time from photosensitizer
+    /// post-distribution peak to light delivery. NOT the clinical DLI
+    /// from injection — see ferroptosis_core::photosensitizer_pk for the
+    /// distinction. Default 0.0 means light at peak.
+    #[arg(long, default_value_t = 0.0)]
+    dli_h: f64,
+}
+
+/// Parse a `--photosensitizer` SPEC into a `Photosensitizer` value.
+///
+/// Accepted forms:
+/// - `uniform` → `Uniform(1.0)`
+/// - `uniform=N` → `Uniform(N)`
+/// - `porfimer` → `Porfimer { t_half_h: 504.0 }`
+/// - `porfimer=N` → `Porfimer { t_half_h: N }`
+///
+/// Errors on unknown variant, unparseable number, or any value that fails
+/// `Photosensitizer::validate()`.
+fn parse_photosensitizer_spec(s: &str) -> Result<Photosensitizer, String> {
+    let s = s.trim();
+    let (name, value) = match s.split_once('=') {
+        Some((n, v)) => (n.trim(), Some(v.trim())),
+        None => (s, None),
+    };
+    let ps = match name {
+        "uniform" => {
+            let c = match value {
+                Some(v) => v
+                    .parse::<f64>()
+                    .map_err(|e| format!("uniform=N: cannot parse N={v:?}: {e}"))?,
+                None => 1.0,
+            };
+            Photosensitizer::Uniform(c)
+        }
+        "porfimer" => {
+            let t_half_h = match value {
+                Some(v) => v
+                    .parse::<f64>()
+                    .map_err(|e| format!("porfimer=N: cannot parse N={v:?}: {e}"))?,
+                None => 504.0, // Bellnier 2006 terminal t½, hours.
+            };
+            Photosensitizer::Porfimer { t_half_h }
+        }
+        other => {
+            return Err(format!(
+                "unknown photosensitizer {other:?}; expected one of: uniform, uniform=N, porfimer, porfimer=N"
+            ));
+        }
+    };
+    ps.validate()?;
+    Ok(ps)
 }
 
 fn run_spatial(
@@ -158,6 +218,14 @@ fn run_spatial(
 fn main() {
     let args = Args::parse();
 
+    let photosensitizer = match parse_photosensitizer_spec(&args.photosensitizer) {
+        Ok(ps) => ps,
+        Err(e) => {
+            eprintln!("error: --photosensitizer {:?}: {}", args.photosensitizer, e);
+            std::process::exit(2);
+        }
+    };
+
     eprintln!("=== Spatial Tumor Ferroptosis Simulation ===");
     eprintln!(
         "Grid: {}×{} cells ({:.1}mm × {:.1}mm tissue)",
@@ -167,11 +235,17 @@ fn main() {
         args.grid_size as f64 * args.cell_size / 1000.0,
     );
     eprintln!("Cell size: {} µm", args.cell_size);
-    eprintln!("Seed: {}\n", args.seed);
+    eprintln!("Seed: {}", args.seed);
+    eprintln!(
+        "Photosensitizer: {:?}, DLI: {} h\n",
+        photosensitizer, args.dli_h
+    );
 
     let params = Params::default();
     let spatial_params = SpatialParams {
         cell_size_um: args.cell_size,
+        photosensitizer,
+        t_drug_light_interval_h: args.dli_h,
         ..Default::default()
     };
 
@@ -268,4 +342,90 @@ fn main() {
     eprintln!("  depth_kill_curves.csv — death rate by depth for all treatments");
     eprintln!("  spatial_death_{{treatment}}.csv — 2D death heatmaps");
     eprintln!("  spatial_summary.json — aggregate statistics");
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parse_uniform_default() {
+        let ps = parse_photosensitizer_spec("uniform").unwrap();
+        assert_eq!(ps, Photosensitizer::Uniform(1.0));
+    }
+
+    #[test]
+    fn parse_uniform_with_value() {
+        let ps = parse_photosensitizer_spec("uniform=0.5").unwrap();
+        assert_eq!(ps, Photosensitizer::Uniform(0.5));
+    }
+
+    #[test]
+    fn parse_porfimer_default_is_bellnier() {
+        let ps = parse_photosensitizer_spec("porfimer").unwrap();
+        assert_eq!(ps, Photosensitizer::Porfimer { t_half_h: 504.0 });
+    }
+
+    #[test]
+    fn parse_porfimer_with_value() {
+        let ps = parse_photosensitizer_spec("porfimer=336").unwrap();
+        assert_eq!(ps, Photosensitizer::Porfimer { t_half_h: 336.0 });
+    }
+
+    #[test]
+    fn parse_trims_whitespace() {
+        let ps = parse_photosensitizer_spec("  porfimer = 504  ").unwrap();
+        assert_eq!(ps, Photosensitizer::Porfimer { t_half_h: 504.0 });
+    }
+
+    #[test]
+    fn parse_unknown_variant_errors() {
+        let err = parse_photosensitizer_spec("photochlor").unwrap_err();
+        assert!(err.contains("photochlor"));
+        assert!(err.contains("uniform"));
+        assert!(err.contains("porfimer"));
+    }
+
+    #[test]
+    fn parse_unparseable_number_errors() {
+        let err = parse_photosensitizer_spec("porfimer=abc").unwrap_err();
+        assert!(err.contains("porfimer=N"));
+        assert!(err.contains("abc"));
+    }
+
+    #[test]
+    fn parse_negative_t_half_h_rejected_via_validate() {
+        let err = parse_photosensitizer_spec("porfimer=-1").unwrap_err();
+        // Photosensitizer::validate() rejects t_half_h <= 0
+        assert!(err.contains("t_half_h"));
+    }
+
+    #[test]
+    fn parse_zero_t_half_h_rejected_via_validate() {
+        let err = parse_photosensitizer_spec("porfimer=0").unwrap_err();
+        assert!(err.contains("t_half_h"));
+    }
+
+    #[test]
+    fn parse_negative_uniform_rejected_via_validate() {
+        let err = parse_photosensitizer_spec("uniform=-0.5").unwrap_err();
+        assert!(err.contains("must be >= 0"));
+    }
+
+    #[test]
+    fn parse_nan_rejected_via_validate() {
+        let err = parse_photosensitizer_spec("uniform=NaN").unwrap_err();
+        assert!(err.contains("must be finite"));
+    }
+
+    #[test]
+    fn default_args_match_default_spatial_params() {
+        // The CLI default `--photosensitizer uniform --dli-h 0` must produce
+        // a Photosensitizer + DLI equal to SpatialParams::default(), so
+        // running with no flags is byte-identical to pre-CLI behavior.
+        let ps = parse_photosensitizer_spec("uniform").unwrap();
+        let default_sp = SpatialParams::default();
+        assert_eq!(ps, default_sp.photosensitizer);
+        assert_eq!(0.0, default_sp.t_drug_light_interval_h);
+    }
 }

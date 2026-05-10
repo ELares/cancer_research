@@ -31,8 +31,34 @@ Runtime: several minutes (500x500 grid x 4 treatments x 180 steps, single-thread
 | `--seed` | 42 | Random seed (same seed = same tumor topology) |
 | `--output-dir` | `output/spatial` | Directory for output files |
 | `--n-steps` | 180 | Number of biochemistry timesteps per cell |
+| `--photosensitizer` | `uniform` | Photosensitizer PK model. Spec format: `uniform` (= `uniform=1.0`, default), `uniform=N` (constant fraction), `porfimer` (= `porfimer=504`, Bellnier 2006 t½ in hours), or `porfimer=N` (custom t½). Validated at parse time. |
+| `--dli-h` | 0.0 | Drug-light interval in hours from photosensitizer **post-distribution peak** to light delivery. **Not** the clinical DLI from injection — see `ferroptosis_core::photosensitizer_pk` for the distinction. |
 
 Biochemistry and physics parameters are hardcoded via `Params::default()` and `SpatialParams::default()`. See `simulations/calibration/parameter_provenance.md` for literature sources.
+
+### Photosensitizer / DLI examples
+
+```bash
+# Default — Photosensitizer::Uniform(1.0), DLI=0. Byte-identical to pre-CLI behavior.
+cargo run --release -p sim-spatial -- --output-dir output/spatial
+
+# Porfimer at one terminal half-life past peak (DLI ≈ 21 d).
+# PDT kill rate drops to ~47% (vs ~81% at peak) on the 100×100 fixture.
+cargo run --release -p sim-spatial \
+    --grid-size 100 \
+    --photosensitizer porfimer --dli-h 504 \
+    --output-dir output/spatial-porfimer-504h
+
+# Drug-presence sweep: shell-driven for now (a built-in --dli-sweep is a follow-up).
+for dli in 0 24 168 504 1008; do
+    cargo run --release -p sim-spatial \
+        --grid-size 100 --seed 42 \
+        --photosensitizer porfimer --dli-h "$dli" \
+        --output-dir "output/sweep/dli-${dli}h"
+done
+```
+
+Only PDT kill rate is affected by `--photosensitizer` / `--dli-h`. Control / RSL3 / SDT remain identical to the default invocation regardless of these flags.
 
 ## Output format
 
