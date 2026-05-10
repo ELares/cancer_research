@@ -32,8 +32,8 @@ Run the included example: `cargo run -p ferroptosis-core --example basic_usage`
 | `params` | All rate constants: `Params` (biochemistry), `SpatialParams` (physics), `ImmuneParams` (immune cascade), `RecoveryRates` |
 | `biochem` | Core simulation engine: `sim_cell` (full 180-step loop), `sim_cell_step` (single timestep for spatial interleaving) |
 | `stats` | Wilson confidence intervals, parallel Monte Carlo execution via rayon |
-| `physics` | Depth-dependent energy deposition: Beer-Lambert (PDT), acoustic attenuation (SDT), uniform (RSL3) |
-| `grid` | 2D `TumorGrid` (8-Moore, circular) and 3D `TumorGrid3D` (26-Moore, spherical) with heterogeneous architecture, neighbor iteration, iron diffusion. 3D analytics (radial-depth curves, volumetric heatmaps) land with the binary that consumes them (#194). |
+| `physics` | Depth-dependent energy deposition: Beer-Lambert (PDT), acoustic attenuation (SDT), uniform (RSL3). 2D row-based (`local_ros_multiplier`) and 3D radial-depth (`local_ros_multiplier_3d`) dispatchers share the same per-treatment depth functions (#186). |
+| `grid` | 2D `TumorGrid` (8-Moore, circular) and 3D `TumorGrid3D` (26-Moore, spherical) with heterogeneous architecture, neighbor iteration, iron diffusion. `TumorGrid3D::radial_depth_um` provides per-cell signed depth from the spheroid surface for energy physics (#185, #186). 3D analytics (radial-depth curves, volumetric heatmaps) and the consuming binary land with #194. |
 | `immune` | ICD/DAMP immune cascade: ferroptotic death quality drives dendritic cell activation and T cell priming |
 | `io` | JSON and CSV output helpers |
 | `drug_transport` | Krogh cylinder drug penetration model |
@@ -68,6 +68,20 @@ exponential plasma decay with optional saturating distribution-phase
 hold and relative singlet-O₂ yield). All defaults preserve identity-
 preserving physics. `physics::pdt_intensity_at_depth` calls `yield_at`
 to compose drug presence + yield with depth-attenuated light.
+
+**3D spheroid energy physics (#186):**
+```rust
+let g = TumorGrid3D::generate(40, 40, 40, 20.0, 42);
+let depth_um = g.radial_depth_um(r, c, l);   // signed: + inside, − outside
+let m = local_ros_multiplier_3d(depth_um, Treatment::PDT, &spatial_params);
+```
+Negative depths (cells outside the spheroid) are clipped to the surface
+value. The 3D dispatcher reaches the same per-treatment depth functions
+the 2D path uses, so the matched-depth invariant `local_ros_multiplier(row,
+cell_size, ...) == local_ros_multiplier_3d(row × cell_size, ...)` holds
+bit-exact across all `Treatment` variants — the physical *geometries*
+differ (planar slab vs. spheroid + nearest-surface 1-D approximation),
+but the dispatcher math does not.
 
 **Parameter contexts:**
 - `Params::default()` — 2D culture baseline

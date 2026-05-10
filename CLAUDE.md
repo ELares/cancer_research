@@ -33,7 +33,7 @@ The repo exists to compare therapeutic mechanisms, evidence depth, resistant-sta
 - pathway-target and resistant-state analysis
 - diagnostic-to-therapy chain extraction (6 chains, 129 articles mapped)
 - tissue-of-origin analysis layer (5 tissue categories, 62% coverage)
-- simulation work: ferroptosis biochemistry, drug penetration, calibration, photosensitizer PK (drug-light-interval scaling, saturating distribution phase, relative singlet-O₂ yield, FromStr-based clap CLI integration in sim-spatial)
+- simulation work: ferroptosis biochemistry, drug penetration, calibration, photosensitizer PK (drug-light-interval scaling, saturating distribution phase, relative singlet-O₂ yield, FromStr-based clap CLI integration in sim-spatial), 3D spheroid scaffolding (TumorGrid3D #185, signed radial depth + 3D energy-physics dispatcher #186) for the #185–#197 spheroid-validation series
 - ferroptosis-core library packaging for external use
 - news source authentication pipeline (fetch, extract claims, verify, score, index)
 - broader strategy review of alternative therapies and biological bottlenecks
@@ -51,7 +51,7 @@ The repo exists to compare therapeutic mechanisms, evidence depth, resistant-sta
 - tissue-of-origin and weighted-evidence layers are active
 - diagnostic-therapy matching layer covers 6 chains across 4 modalities (radioligand, checkpoint, mRNA vaccine, oncolytic)
 - manuscript: 112 pages (book format), 11 chapters + 3 appendices, 20 figures, ~36,700 words
-- simulation suite: 10 binaries (incl. sim-tumor-pk) + ferroptosis-core library (MIT licensed, 11 modules including `photosensitizer_pk`; current unit-test count tracked in CI / `cargo test --workspace`) + Python bindings + 91 Python tests (pipeline smoke + figure traceability + invariant/integration + ferroptosis-python bindings)
+- simulation suite: 10 binaries (incl. sim-tumor-pk) + ferroptosis-core library (MIT licensed, 11 modules including `photosensitizer_pk`; v0.7.0 adds 3D radial-depth + 3D ROS-multiplier APIs alongside the 2D path #185–#186; current unit-test count tracked in CI / `cargo test --workspace`) + Python bindings + 91 Python tests (pipeline smoke + figure traceability + invariant/integration + ferroptosis-python bindings)
 - news authentication pipeline: 5 scripts (fetch, extract claims, verify against PubMed, score credibility, build claim-centric index) implementing the 3-tier source framework from analysis/news-source-criteria.md
 - simulation calibration: 5 targets documented, evaluate script operational
 - drug penetration module: 3 tissue types, exponential Krogh approximation
