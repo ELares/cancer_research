@@ -260,7 +260,8 @@ fn sim_batch(
     validate_params(&params)?;
 
     // Parallel fold/reduce — O(1) memory per thread, no Vec<> allocation.
-    let (n_dead, sum_lp, sum_gsh, sum_gpx4) = py.allow_threads(|| {
+    // `detach` is the PyO3 0.28 replacement for the removed `allow_threads`.
+    let (n_dead, sum_lp, sum_gsh, sum_gpx4) = py.detach(|| {
         (0..n)
             .into_par_iter()
             .fold(
