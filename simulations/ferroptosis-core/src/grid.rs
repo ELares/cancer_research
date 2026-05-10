@@ -650,6 +650,14 @@ impl TumorGrid3D {
     /// within the grid (matching the no-bounds-check convention of
     /// [`get`](Self::get) and [`get_mut`](Self::get_mut)). Out-of-range
     /// indices give nonsense distances but won't panic.
+    ///
+    /// **Perf note (#194):** the four constants `center_{r,c,l}` and
+    /// `tumor_radius` depend only on grid dimensions and are recomputed
+    /// every call. `#[inline]` lets the compiler hoist them at a single
+    /// call site, but a per-cell sweep over ~10⁵–10⁶ cells in
+    /// sim-spatial-3d should precompute them once outside the loop (or
+    /// store them on the struct) to avoid `usize::min` + cast + multiply
+    /// per cell. Cheap to address when the consumer lands.
     #[inline]
     pub fn radial_depth_um(&self, r: usize, c: usize, l: usize) -> f64 {
         let center_r = self.rows as f64 / 2.0;
@@ -922,9 +930,15 @@ mod tests_3d {
     /// Radial depth at the geometric center equals tumor_radius × cell_size.
     /// For a 20×20×20 grid the center is at (10,10,10) and the cell at
     /// (10,10,10) lies offset by exactly (0,0,0) from the center, so depth
-    /// is `tumor_radius_lattice × cell_size_um = (20·0.45) × 20 = 180.0 µm`.
-    /// Hand-computed in pure-rational arithmetic so the assertion is
-    /// IEEE-exact.
+    /// is `tumor_radius_lattice × cell_size_um = (20·0.45) × 20`.
+    ///
+    /// `0.45` is *not* exact in IEEE 754 (its binary expansion is
+    /// repeating), but the f64 round-to-nearest result of `20.0 × 0.45`
+    /// happens to land on exactly `9.0` (the rounding error in `0.45`'s
+    /// nearest-double is well under half-ULP at 9.0), so the assertion
+    /// `(20·0.45) × 20 == 9.0 × 20.0 = 180.0` holds bit-exact. Strict
+    /// equality is safe here because of that rounding-friendly arithmetic,
+    /// not because it's provably exact rationally.
     #[test]
     fn radial_depth_at_center_is_max() {
         let g = TumorGrid3D::generate(20, 20, 20, 20.0, 42);
@@ -986,17 +1000,20 @@ mod tests_3d {
         }
     }
 
-    /// A cell sitting exactly on the spheroid boundary returns depth ≈ 0.
+    /// A cell sitting exactly on the spheroid boundary returns depth = 0.
     /// Defends the sign-convention contract: `depth = 0` at the surface,
-    /// positive inside, negative outside. Picks a grid where the
-    /// (r, c, l) offset from center hits an exact rational distance equal
-    /// to `tumor_radius_lattice`, so the assertion is precise.
+    /// positive inside, negative outside.
     ///
     /// For a `(20, 20, 20)` grid: center = (10, 10, 10), tumor_radius
-    /// = 20 × TUMOR_RADIUS_FRACTION = 9.0 lattice units. Cell (10, 10, 19)
-    /// is 9.0 lattice units offset from center along the `l` axis, so
-    /// `depth = (9.0 - 9.0) × cell_size = 0.0` exactly (subtracting
-    /// equal f64s yields a true zero, no libm involved).
+    /// = 20 × TUMOR_RADIUS_FRACTION. As noted in
+    /// `radial_depth_at_center_is_max`, `0.45` is not exact in IEEE 754
+    /// but `20.0 × 0.45` rounds to exactly `9.0`. Cell (10, 10, 19) is
+    /// 9.0 lattice units offset from center along the `l` axis;
+    /// `sqrt(81.0) = 9.0` is IEEE-required-correct (perfect square →
+    /// exact result), so `tumor_radius - dist = 9.0 - 9.0 = 0.0` exactly
+    /// and `0.0 × cell_size = 0.0` exactly. The assertion is bit-exact
+    /// because of these rounding-friendly inputs, not provable
+    /// rationally.
     #[test]
     fn radial_depth_at_sphere_surface_is_zero() {
         let g = TumorGrid3D::generate(20, 20, 20, 20.0, 42);
