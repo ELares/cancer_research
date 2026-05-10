@@ -30,11 +30,8 @@
 //! | [`drug_transport`] | Tissue-specific drug penetration (Krogh cylinder approximation) |
 //! | [`tumor_pk`] | Two-compartment vascular/interstitial pharmacokinetics |
 
-// `photosensitizer_pk` is declared before `params` because `SpatialParams`
-// holds a `Photosensitizer`. Rust resolves all `mod` declarations together
-// so the order is not required by the compiler, but listing the dependency
-// first matches reading order.
 pub mod cell;
+// Listed before `params` because `SpatialParams` holds a `Photosensitizer`.
 pub mod photosensitizer_pk;
 pub mod params;
 pub mod biochem;

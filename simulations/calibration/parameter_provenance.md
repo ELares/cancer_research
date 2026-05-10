@@ -41,7 +41,7 @@ Every simulation parameter, its default value, source, and whether it is experim
 | `sdt_i0` | 1.0 | Relative units | N/A | Low — incident intensity normalization |
 | `neighbor_iron_fraction` | 0.1 | Mechanistic estimate (8-neighborhood) | Assumed | Low |
 | `photosensitizer` | `Uniform(1.0)` (default) | `Photosensitizer::Porfimer { t_half_h: 504.0 }` from Bellnier DA et al., Lasers Surg Med 2006 (PMID 16634075): porfimer terminal plasma t½ ≈ 21 d in humans; reported range ~250–500+ h depending on infusion protocol | Estimated (porfimer); N/A (`Uniform` default) | Low at DLI ≪ t½; scales linearly with DLI/t½ ratio |
-| `t_drug_light_interval_h` | 0.0 | Operational parameter (clinical schedule choice, not biology) | N/A | High — at DLI = 0 has no effect; at DLI ~ t½ halves PDT dose |
+| `t_drug_light_interval_h` | 0.0 | Operational parameter. Hours from photosensitizer post-distribution peak to light, passed to `Photosensitizer::concentration_at`. **Not** the clinical DLI from injection — clinical DLI ≈ distribution_phase + this. Distribution phase is ~24–48 h for porfimer (Bellnier 2006); larger relative error for short-t½ drugs. | N/A | High — at DLI = 0 has no effect; at DLI ~ t½ halves PDT dose |
 
 ## Immune Cascade (`ImmuneParams`)
 

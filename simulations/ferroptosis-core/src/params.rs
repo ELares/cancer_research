@@ -157,11 +157,20 @@ pub struct SpatialParams {
     /// See `photosensitizer_pk` module.
     #[serde(default)]
     pub photosensitizer: Photosensitizer,
-    /// Drug-light interval (DLI) in hours: time between photosensitizer
-    /// administration and light delivery. Used by PDT physics to scale
-    /// light intensity by `photosensitizer.concentration_at(this)`.
-    /// Default 0.0 (light delivered at administration) preserves
-    /// pre-PK behavior when combined with `Photosensitizer::Uniform(1.0)`.
+    /// Hours from photosensitizer **post-distribution peak** to light
+    /// delivery, passed directly to `photosensitizer.concentration_at(t_h)`.
+    ///
+    /// This is NOT the standard clinical "drug-light interval" measured
+    /// from injection. The model's `t = 0` is post-distribution peak, so
+    /// clinical DLI ≈ distribution_phase + this field. For porfimer the
+    /// distribution phase is roughly 24–48 h (Bellnier 2006); for drugs
+    /// with shorter t½ (e.g., 5-ALA at ~24 h) ignoring the distribution
+    /// phase is a large error. Explicit distribution-phase modeling is a
+    /// follow-up — see the `photosensitizer_pk` module docstring.
+    ///
+    /// Default 0.0 (light delivered at peak) combined with the default
+    /// `Photosensitizer::Uniform(1.0)` reproduces pre-PK PDT physics
+    /// exactly.
     #[serde(default)]
     pub t_drug_light_interval_h: f64,
 }
