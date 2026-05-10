@@ -355,10 +355,14 @@ impl TumorGrid3D {
         // size against their own hardware. 10^9 cells × 170 B ≈ 170 GB
         // is well past any realistic spheroid sim and almost certainly
         // an off-by-orders-of-magnitude error.
+        //
+        // `saturating_mul` is used here (not for the caller's benefit) to
+        // avoid `usize` wraparound on hostile inputs that could make the
+        // check pass when it shouldn't.
+        let total_cells = rows.saturating_mul(cols).saturating_mul(layers);
         debug_assert!(
-            rows.saturating_mul(cols).saturating_mul(layers) <= 1_000_000_000,
-            "TumorGrid3D::generate: rows*cols*layers = {} exceeds 1e9 — likely a typo (use saturating mul to avoid wraparound)",
-            rows.saturating_mul(cols).saturating_mul(layers)
+            total_cells <= 1_000_000_000,
+            "TumorGrid3D::generate: rows*cols*layers = {total_cells} exceeds 1e9 — likely a typo"
         );
         let mut rng = StdRng::seed_from_u64(seed);
         let center_r = rows as f64 / 2.0;
