@@ -21,7 +21,7 @@ Each binary has its own README with parameters, output format, example commands,
 
 ## Shared library
 
-`ferroptosis-core` provides the biochemistry engine, cell types, physics models (Beer-Lambert PDT, acoustic SDT), spatial grid, immune cascade, drug transport (Krogh penetration), tumor PK (two-compartment), and photosensitizer PK (single-exponential kinetics with optional saturating distribution phase + relative singlet-O₂ yield) used by all binaries. See [ferroptosis-core/README.md](ferroptosis-core/README.md).
+`ferroptosis-core` provides the biochemistry engine, cell types, physics models (Beer-Lambert PDT, acoustic SDT), spatial grid (2D `TumorGrid` with 8-Moore neighbors and circular tumor; 3D `TumorGrid3D` with 26-Moore neighbors and spherical tumor, foundational scaffolding for the spheroid series #186–#197), immune cascade, drug transport (Krogh penetration), tumor PK (two-compartment), and photosensitizer PK (single-exponential kinetics with optional saturating distribution phase + relative singlet-O₂ yield) used by all binaries. See [ferroptosis-core/README.md](ferroptosis-core/README.md).
 
 ## Quick start
 

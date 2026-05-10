@@ -34,6 +34,7 @@ The repo exists to compare therapeutic mechanisms, evidence depth, resistant-sta
 - diagnostic-to-therapy chain extraction (6 chains, 129 articles mapped)
 - tissue-of-origin analysis layer (5 tissue categories, 62% coverage)
 - simulation work: ferroptosis biochemistry, drug penetration, calibration, photosensitizer PK (drug-light-interval scaling, saturating distribution phase, relative singlet-O₂ yield, FromStr-based clap CLI integration in sim-spatial)
+- 3D spheroid infrastructure: foundational `TumorGrid3D` merged (#185); consumer features (3D energy physics #186, O2 gradient #187, stromal #189, pH #190, performance #192) and consumer binary (#194) pending
 - ferroptosis-core library packaging for external use
 - news source authentication pipeline (fetch, extract claims, verify, score, index)
 - broader strategy review of alternative therapies and biological bottlenecks
