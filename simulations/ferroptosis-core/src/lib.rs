@@ -19,6 +19,7 @@
 //! | Module | Purpose |
 //! |--------|---------|
 //! | [`cell`] | Phenotypes, treatments, stochastic cell generation |
+//! | [`photosensitizer_pk`] | Photosensitizer plasma PK and drug-light-interval scaling for PDT |
 //! | [`params`] | Rate constants for biochemistry, physics, immune cascade |
 //! | [`biochem`] | Core simulation engine |
 //! | [`stats`] | Wilson CIs, parallel Monte Carlo execution |
@@ -30,6 +31,8 @@
 //! | [`tumor_pk`] | Two-compartment vascular/interstitial pharmacokinetics |
 
 pub mod cell;
+// Listed before `params` because `SpatialParams` holds a `Photosensitizer`.
+pub mod photosensitizer_pk;
 pub mod params;
 pub mod biochem;
 pub mod stats;

@@ -2,6 +2,8 @@
 
 use serde::{Deserialize, Serialize};
 
+use crate::photosensitizer_pk::Photosensitizer;
+
 /// Core biochemistry parameters. Identical to v3 simulation defaults.
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Params {
@@ -149,6 +151,28 @@ pub struct SpatialParams {
     pub sdt_i0: f64,
     /// Fraction of released iron reaching each neighbor cell.
     pub neighbor_iron_fraction: f64,
+    /// Photosensitizer PK model. `Uniform(1.0)` (default) reproduces
+    /// pre-PK PDT physics exactly. `Porfimer { t_half_h }` enables
+    /// drug-light-interval-aware scaling of the PDT dose.
+    /// See `photosensitizer_pk` module.
+    #[serde(default)]
+    pub photosensitizer: Photosensitizer,
+    /// Hours from photosensitizer **post-distribution peak** to light
+    /// delivery, passed directly to `photosensitizer.concentration_at(t_h)`.
+    ///
+    /// This is NOT the standard clinical "drug-light interval" measured
+    /// from injection. The model's `t = 0` is post-distribution peak, so
+    /// clinical DLI ≈ distribution_phase + this field. For porfimer the
+    /// distribution phase is roughly 24–48 h (Bellnier 2006); for drugs
+    /// with shorter t½ (e.g., 5-ALA at ~24 h) ignoring the distribution
+    /// phase is a large error. Explicit distribution-phase modeling is a
+    /// follow-up — see the `photosensitizer_pk` module docstring.
+    ///
+    /// Default 0.0 (light delivered at peak) combined with the default
+    /// `Photosensitizer::Uniform(1.0)` reproduces pre-PK PDT physics
+    /// exactly.
+    #[serde(default)]
+    pub t_drug_light_interval_h: f64,
 }
 
 impl Default for SpatialParams {
@@ -163,6 +187,8 @@ impl Default for SpatialParams {
             sdt_freq_mhz: 1.0,
             sdt_i0: 1.0,
             neighbor_iron_fraction: 0.1,
+            photosensitizer: Photosensitizer::default(),
+            t_drug_light_interval_h: 0.0,
         }
     }
 }
@@ -197,5 +223,32 @@ impl Default for ImmuneParams {
             pd1_brake: 0.7,
             anti_pd1_efficacy: 0.8,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// SpatialParams JSON written before the photosensitizer/DLI fields
+    /// existed must still deserialize, with new fields filled by serde
+    /// defaults that reproduce pre-PK behavior.
+    #[test]
+    fn spatial_params_legacy_json_deserializes_with_defaults() {
+        let legacy = r#"{
+            "cell_size_um": 20.0,
+            "iron_diffusion_coeff": 281.0,
+            "iron_release_per_death": 2.0,
+            "pdt_mu_eff": 0.31,
+            "pdt_i0": 1.0,
+            "sdt_alpha": 0.7,
+            "sdt_freq_mhz": 1.0,
+            "sdt_i0": 1.0,
+            "neighbor_iron_fraction": 0.1
+        }"#;
+        let p: SpatialParams = serde_json::from_str(legacy).unwrap();
+        assert_eq!(p.photosensitizer, Photosensitizer::Uniform(1.0));
+        assert_eq!(p.t_drug_light_interval_h, 0.0);
+        assert_eq!(p.photosensitizer.concentration_at(p.t_drug_light_interval_h), 1.0);
     }
 }

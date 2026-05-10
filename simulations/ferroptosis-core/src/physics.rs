@@ -6,22 +6,51 @@
 use crate::cell::Treatment;
 use crate::params::SpatialParams;
 
-/// PDT: Modified Beer-Lambert law for light in tissue.
+/// PDT: Modified Beer-Lambert law for light in tissue, scaled by the
+/// fraction of photosensitizer present at the drug-light interval.
 ///
-/// I(z) = I₀ × exp(-µ_eff × z)
+/// I_eff(z, t_DLI) = I₀ × exp(-µ_eff × z) × C_drug(t_DLI)
 ///
 /// µ_eff = sqrt(3 × µ_a × (µ_a + µ_s'))
 ///
 /// At 630nm red light: δ = 1/µ_eff ≈ 3.2mm
 /// At 660nm red light: δ ≈ 4-10mm
 ///
+/// The drug-presence multiplier `C_drug(t_DLI)` comes from
+/// `SpatialParams::photosensitizer.concentration_at(t_drug_light_interval_h)`.
+/// The default `Photosensitizer::Uniform(1.0)` with DLI=0 returns exactly
+/// 1.0, preserving pre-PK behavior bit-for-bit.
+///
+/// TODO(#200): inter-drug singlet-O₂ quantum yield (phi_so2) is NOT in
+/// this scalar — it is implicit in `Params::pdt_ros`. Inter-drug
+/// comparisons (porfimer vs Photochlor vs 5-ALA) need explicit phi_so2
+/// normalization. Spawn a follow-up issue.
+///
 /// Ref: Jacques SL, "Optical properties of biological tissues: a review",
 ///      Phys Med Biol 58(11):R37-61, 2013
+/// Ref: Bellnier DA et al., Lasers Surg Med 38(5):439-444, 2006 — clinical
+///      photosensitizer PK (porfimer, Photochlor, 5-ALA-PpIX).
 ///
-/// Returns intensity multiplier in [0, 1] relative to surface.
+/// Returns a non-negative intensity multiplier relative to surface.
+///
+/// For valid `Photosensitizer::Uniform(c)` with `c ≤ 1.0` or any valid
+/// `Photosensitizer::Porfimer`, the value stays in `[0, 1]`. `Uniform(c)`
+/// with `c > 1.0` is intentionally permitted (forward-compat hook for
+/// drug-enrichment models) and can produce multipliers above 1.0.
+///
+/// Invalid configurations (NaN, negative, non-positive `t_half_h`) trigger
+/// `debug_assert!` failures in test/debug builds. In release builds those
+/// asserts are compiled out and outputs are not bounded — call
+/// [`Photosensitizer::validate`] explicitly when loading from untrusted
+/// sources.
+///
+/// [`Photosensitizer::validate`]: crate::photosensitizer_pk::Photosensitizer::validate
 pub fn pdt_intensity_at_depth(z_um: f64, params: &SpatialParams) -> f64 {
     let z_mm = z_um / 1000.0;
-    params.pdt_i0 * (-params.pdt_mu_eff * z_mm).exp()
+    let drug_at_dli = params
+        .photosensitizer
+        .concentration_at(params.t_drug_light_interval_h);
+    params.pdt_i0 * (-params.pdt_mu_eff * z_mm).exp() * drug_at_dli
 }
 
 /// SDT: Ultrasound attenuation in soft tissue.
@@ -133,6 +162,43 @@ mod tests {
     #[test]
     fn rsl3_is_uniform() {
         assert_eq!(rsl3_concentration(0.0), rsl3_concentration(100_000.0));
+    }
+
+    #[test]
+    fn pdt_with_porfimer_at_one_halflife_is_half_of_default() {
+        use crate::photosensitizer_pk::Photosensitizer;
+
+        let z_um = 1000.0; // arbitrary depth
+        let baseline_params = SpatialParams::default();
+        let baseline = pdt_intensity_at_depth(z_um, &baseline_params);
+
+        let pk_params = SpatialParams {
+            photosensitizer: Photosensitizer::Porfimer { t_half_h: 504.0 },
+            t_drug_light_interval_h: 504.0,
+            ..Default::default()
+        };
+        let with_pk = pdt_intensity_at_depth(z_um, &pk_params);
+
+        // `exp(-ln(2))` lands on 0.5 on most libms but is not guaranteed
+        // bit-exact across platforms; use a tight relative tolerance.
+        let expected = baseline * 0.5;
+        assert!(
+            (with_pk - expected).abs() < 1e-12,
+            "with_pk = {with_pk}, expected ~{expected}"
+        );
+    }
+
+    #[test]
+    fn pdt_with_default_photosensitizer_unchanged() {
+        // The default Uniform(1.0) + DLI=0 must not perturb existing physics.
+        let params = SpatialParams::default();
+        let z_um = 3226.0; // 1/µ_eff at default 0.31 /mm
+        let intensity = pdt_intensity_at_depth(z_um, &params);
+        let expected = 1.0 / std::f64::consts::E;
+        assert!(
+            (intensity - expected).abs() < 0.01,
+            "expected ~{expected:.4}, got {intensity:.4}"
+        );
     }
 
     #[test]
