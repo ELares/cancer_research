@@ -121,6 +121,44 @@ pub fn local_ros_multiplier(
     }
 }
 
+/// 3D analog of [`local_ros_multiplier`] for spheroid energy deposition.
+///
+/// Takes a **raw signed radial depth** in micrometers (positive inside the
+/// spheroid, negative outside) — typically produced by
+/// [`crate::grid::TumorGrid3D::radial_depth_um`]. Negative depths are
+/// clipped to zero (cells outside the spheroid are treated as if at the
+/// surface), then dispatched to the same depth-attenuation functions
+/// used by the 2D path.
+///
+/// **Why the signature differs from the 2D version:** the 2D model lays
+/// energy onto a planar surface (row 0), so `local_ros_multiplier` takes
+/// `(row, cell_size)` and computes `z = row × cell_size` internally. The
+/// 3D model treats energy as entering isotropically through the spheroid
+/// surface, so per-cell depth is **not** a simple coordinate × size — it
+/// depends on geometry. Computing depth lives in `TumorGrid3D`; this
+/// function takes the already-derived depth so physics stays decoupled
+/// from grid representation.
+///
+/// **2D ≡ 3D at matched depth:** for any treatment and parameter set, if
+/// the 3D caller passes `depth = row × cell_size_um` (the same value the
+/// 2D path would compute internally), this function returns the same
+/// multiplier as `local_ros_multiplier(row, cell_size_um, ...)`. Locked
+/// down by `pdt_2d_3d_match_at_same_depth_*` tests below.
+///
+/// Returns a multiplier in `[0, ∞)`. For `Control`, always returns 0.
+pub fn local_ros_multiplier_3d(radial_depth_um: f64, tx: Treatment, params: &SpatialParams) -> f64 {
+    // Outside-spheroid cells (negative depth) get the surface value.
+    // Physically: energy enters at the surface; we don't model
+    // attenuation through stromal tissue outside the tumor (yet).
+    let z_um = radial_depth_um.max(0.0);
+    match tx {
+        Treatment::SDT => sdt_intensity_at_depth(z_um, params),
+        Treatment::PDT => pdt_intensity_at_depth(z_um, params),
+        Treatment::RSL3 => rsl3_concentration(z_um),
+        Treatment::Control => 0.0,
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -258,5 +296,106 @@ mod tests {
             intensity > 0.15,
             "SDT at 10cm should still be significant, got {intensity}"
         );
+    }
+
+    /// Matched-depth invariant: when the 3D caller passes the same depth
+    /// the 2D path computes internally (`row × cell_size_um`), the two
+    /// dispatchers must return bit-identical values for **every** treatment
+    /// variant. Locks down the contract that 3D physics is not a separate
+    /// implementation — it's the same depth-functions reached through a
+    /// different per-cell depth derivation.
+    ///
+    /// Iterates all four `Treatment` variants (including `Control` for the
+    /// trivial 0.0 case and `RSL3` for the depth-independent 1.0 case) so a
+    /// future refactor that introduced 3D-only physics quirks would fail
+    /// here.
+    #[test]
+    fn local_ros_multiplier_2d_3d_match_at_same_depth() {
+        let params = SpatialParams::default();
+        let cell_size_um = 20.0_f64;
+        // Probe several depths including row 0 (surface) and deeper.
+        for row in [0usize, 1, 5, 25, 100] {
+            // Compute the depth the 2D path uses internally, then pass the
+            // SAME f64 to the 3D path. Any other phrasing (e.g.
+            // `(row * cell_size_um) as f64` via mixed types) could
+            // introduce 1-ULP drift and weaken the invariant.
+            let z_um = row as f64 * cell_size_um;
+            for tx in [
+                Treatment::Control,
+                Treatment::RSL3,
+                Treatment::SDT,
+                Treatment::PDT,
+            ] {
+                let v2d = local_ros_multiplier(row, cell_size_um, tx, &params);
+                let v3d = local_ros_multiplier_3d(z_um, tx, &params);
+                assert_eq!(
+                    v2d, v3d,
+                    "2D and 3D dispatchers diverged at row={row}, tx={tx:?}, z={z_um}: \
+                     2D = {v2d}, 3D = {v3d}"
+                );
+            }
+        }
+    }
+
+    /// Negative radial depth (cells outside the spheroid) must be clipped
+    /// to zero — i.e. behave like surface intensity, not produce
+    /// `exp(positive)` blowup or `10^positive` amplification.
+    ///
+    /// IEEE-exact: `(-z).max(0.0) == 0.0` exactly, then `exp(0) == 1.0`
+    /// and `10^0 == 1.0` exactly, so the multiplier equals `I₀`. The
+    /// default `SpatialParams` has `pdt_i0 = sdt_i0 = 1.0` so the
+    /// surface multiplier is exactly 1.0 for PDT/SDT.
+    #[test]
+    fn local_ros_multiplier_3d_negative_depth_clips_to_surface() {
+        let params = SpatialParams::default();
+        for &z_negative in &[-1.0, -100.0, -10_000.0] {
+            for tx in [Treatment::SDT, Treatment::PDT] {
+                let at_surface = local_ros_multiplier_3d(0.0, tx, &params);
+                let at_negative = local_ros_multiplier_3d(z_negative, tx, &params);
+                assert_eq!(
+                    at_negative, at_surface,
+                    "negative depth z={z_negative} for {tx:?} should clip to surface value"
+                );
+            }
+            // RSL3 is depth-independent; Control is identically 0.
+            assert_eq!(
+                local_ros_multiplier_3d(z_negative, Treatment::RSL3, &params),
+                1.0
+            );
+            assert_eq!(
+                local_ros_multiplier_3d(z_negative, Treatment::Control, &params),
+                0.0
+            );
+        }
+    }
+
+    /// The photosensitizer PK path composes correctly when reached via the
+    /// 3D dispatcher. Sanity check that the 0.5-yield phi factor produces
+    /// exactly half the PDT multiplier the default Uniform(1.0) does, at
+    /// the same depth — same property `pdt_with_porfimer_phi_half_is_half`
+    /// asserts via the 2D-style direct call, but routed through
+    /// `local_ros_multiplier_3d` so a future split in the PDT path would
+    /// be caught.
+    #[test]
+    fn local_ros_multiplier_3d_composes_with_photosensitizer() {
+        use crate::photosensitizer_pk::Photosensitizer;
+
+        let baseline_params = SpatialParams::default();
+        let half_params = SpatialParams {
+            photosensitizer: Photosensitizer::Porfimer {
+                t_half_h: 504.0,
+                t_distribution_h: 0.0,
+                phi_so2_relative: 0.5,
+            },
+            t_drug_light_interval_h: 0.0,
+            ..Default::default()
+        };
+
+        let depth_um = 1000.0_f64; // 1 mm — well inside spheroid range
+        let baseline = local_ros_multiplier_3d(depth_um, Treatment::PDT, &baseline_params);
+        let half = local_ros_multiplier_3d(depth_um, Treatment::PDT, &half_params);
+
+        // 0.5 is IEEE-exact, so strict equality is safe.
+        assert_eq!(half, baseline * 0.5);
     }
 }

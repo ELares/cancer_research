@@ -602,6 +602,41 @@ impl TumorGrid3D {
         }
         census
     }
+
+    /// Signed radial depth from the spheroid surface in micrometers.
+    ///
+    /// `depth = (tumor_radius_lattice − distance_from_center) × cell_size_um`
+    ///
+    /// Sign convention: **positive inside the sphere, negative outside, zero
+    /// at the surface.** The deepest interior cell has the largest positive
+    /// value (the sphere center); cells far from the tumor (corners of the
+    /// bounding box) return negative values.
+    ///
+    /// **Geometry:** matches [`TumorGrid3D::generate`] — sphere center at
+    /// `(rows/2, cols/2, layers/2)`, lattice-centered coords (no voxel
+    /// offset), and `tumor_radius = min(rows, cols, layers) × 0.45`.
+    ///
+    /// **Intended use:** pair with [`crate::physics::local_ros_multiplier_3d`]
+    /// for spheroid PDT/SDT energy deposition — energy enters from the
+    /// (isotropic) sphere surface and attenuates inward, so penetration
+    /// depth maps to this signed radial coordinate clipped at zero.
+    ///
+    /// **Not yet bounds-checked:** caller is expected to pass `(r, c, l)`
+    /// within the grid (matching the no-bounds-check convention of
+    /// [`get`](Self::get) and [`get_mut`](Self::get_mut)). Out-of-range
+    /// indices give nonsense distances but won't panic.
+    #[inline]
+    pub fn radial_depth_um(&self, r: usize, c: usize, l: usize) -> f64 {
+        let center_r = self.rows as f64 / 2.0;
+        let center_c = self.cols as f64 / 2.0;
+        let center_l = self.layers as f64 / 2.0;
+        let tumor_radius = (self.rows.min(self.cols).min(self.layers) as f64) * 0.45;
+        let dr = r as f64 - center_r;
+        let dc = c as f64 - center_c;
+        let dl = l as f64 - center_l;
+        let dist = (dr * dr + dc * dc + dl * dl).sqrt();
+        (tumor_radius - dist) * self.cell_size_um
+    }
 }
 
 #[cfg(test)]
@@ -856,5 +891,72 @@ mod tests_3d {
         assert_eq!(census.oxphos_dead, 0);
         assert_eq!(census.persister_dead, 0);
         assert_eq!(census.persister_nrf2_dead, 0);
+    }
+
+    /// Radial depth at the geometric center equals tumor_radius × cell_size.
+    /// For a 20×20×20 grid the center is at (10,10,10) and the cell at
+    /// (10,10,10) lies offset by exactly (0,0,0) from the center, so depth
+    /// is `tumor_radius_lattice × cell_size_um = (20·0.45) × 20 = 180.0 µm`.
+    /// Hand-computed in pure-rational arithmetic so the assertion is
+    /// IEEE-exact.
+    #[test]
+    fn radial_depth_at_center_is_max() {
+        let g = TumorGrid3D::generate(20, 20, 20, 20.0, 42);
+        // center coord is rows/2 = 10.0; cell (10,10,10) has dr=dc=dl=0
+        // (since 10 - 10.0 = 0 exactly in f64).
+        assert_eq!(g.radial_depth_um(10, 10, 10), 9.0 * 20.0);
+    }
+
+    /// Cells well outside the spheroid (grid corners) return negative depth.
+    /// For a 20×20×20 grid with cell_size=20, the corner (0,0,0) is at
+    /// distance sqrt(3·10²) ≈ 17.32 lattice units from center; tumor
+    /// radius is 9.0 lattice units, so depth ≈ (9.0 - 17.32) × 20 ≈ -166 µm.
+    #[test]
+    fn radial_depth_outside_sphere_is_negative() {
+        let g = TumorGrid3D::generate(20, 20, 20, 20.0, 42);
+        let depth = g.radial_depth_um(0, 0, 0);
+        assert!(
+            depth < 0.0,
+            "corner cell should have negative radial depth, got {depth}"
+        );
+        // Sanity-bound the magnitude. Hand-derived: dist = sqrt(300), depth =
+        // (9 - sqrt(300)) * 20 ≈ -166.4 µm.
+        let expected = (9.0 - 300.0_f64.sqrt()) * 20.0;
+        assert!(
+            (depth - expected).abs() < 1e-9,
+            "depth = {depth}, expected {expected}"
+        );
+    }
+
+    /// Anisotropic grid: tumor radius is set by the *smallest* dimension,
+    /// so a (20, 20, 5) grid has `tumor_radius = 5·0.45 = 2.25` lattice
+    /// units. Verifies the radial geometry doesn't accidentally use the
+    /// wrong dimension (e.g. rows when it should be min).
+    #[test]
+    fn radial_depth_anisotropic_grid() {
+        let g = TumorGrid3D::generate(20, 20, 5, 10.0, 42);
+        // Center of layer axis is layers/2 = 2.5, so cell at l=2 is 0.5
+        // off-center in the l direction. (10, 10, 2): dr=0, dc=0, dl=-0.5,
+        // dist=0.5, depth = (2.25 - 0.5) * 10 = 17.5 µm.
+        let depth = g.radial_depth_um(10, 10, 2);
+        assert_eq!(depth, (2.25 - 0.5) * 10.0);
+        // Far corner is outside the (very small) sphere.
+        let corner = g.radial_depth_um(0, 0, 0);
+        assert!(
+            corner < 0.0,
+            "corner should be outside spheroid, got {corner}"
+        );
+    }
+
+    /// Determinism check: same grid, same indices, same depth. Cheap
+    /// regression guard for any future refactor that introduces RNG or
+    /// caching into the depth path.
+    #[test]
+    fn radial_depth_is_deterministic() {
+        let g1 = TumorGrid3D::generate(10, 10, 10, 20.0, 42);
+        let g2 = TumorGrid3D::generate(10, 10, 10, 20.0, 42);
+        for &(r, c, l) in &[(0, 0, 0), (5, 5, 5), (9, 9, 9), (3, 7, 2)] {
+            assert_eq!(g1.radial_depth_um(r, c, l), g2.radial_depth_um(r, c, l));
+        }
     }
 }
