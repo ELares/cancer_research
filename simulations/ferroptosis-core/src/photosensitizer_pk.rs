@@ -77,6 +77,53 @@ impl fmt::Display for Photosensitizer {
 }
 
 impl Photosensitizer {
+    /// Parse a CLI `--photosensitizer` SPEC string into a `Photosensitizer`.
+    ///
+    /// Accepted forms (case-insensitive on the variant name):
+    /// - `uniform` → `Uniform(1.0)`
+    /// - `uniform=N` → `Uniform(N)`
+    /// - `porfimer` → `Porfimer { t_half_h: 504.0 }` (Bellnier 2006 t½ in hours)
+    /// - `porfimer=N` → `Porfimer { t_half_h: N }`
+    ///
+    /// Errors on unknown variant, unparseable number, or any value that
+    /// fails [`Photosensitizer::validate`]. Round-trips with the
+    /// `Display` impl: `parse(format!("{ps}")) == Ok(ps)` for every valid
+    /// `Photosensitizer`.
+    pub fn from_cli_spec(s: &str) -> Result<Self, String> {
+        let s = s.trim();
+        let (name, value) = match s.split_once('=') {
+            Some((n, v)) => (n.trim(), Some(v.trim())),
+            None => (s, None),
+        };
+        let ps = match name.to_ascii_lowercase().as_str() {
+            "uniform" => {
+                let c = match value {
+                    Some(v) => v
+                        .parse::<f64>()
+                        .map_err(|e| format!("uniform=N: cannot parse N={v:?}: {e}"))?,
+                    None => 1.0,
+                };
+                Self::Uniform(c)
+            }
+            "porfimer" => {
+                let t_half_h = match value {
+                    Some(v) => v
+                        .parse::<f64>()
+                        .map_err(|e| format!("porfimer=N: cannot parse N={v:?}: {e}"))?,
+                    None => 504.0, // Bellnier 2006 terminal t½ in humans, hours.
+                };
+                Self::Porfimer { t_half_h }
+            }
+            _ => {
+                return Err(format!(
+                    "unknown photosensitizer {name:?}; expected one of: uniform, uniform=N, porfimer, porfimer=N (case-insensitive)"
+                ));
+            }
+        };
+        ps.validate()?;
+        Ok(ps)
+    }
+
     /// Validate that the photosensitizer's parameters are physically
     /// reasonable. Returns `Ok(())` for valid configurations and a
     /// descriptive `Err` otherwise.
@@ -149,6 +196,20 @@ impl Photosensitizer {
             }
         }
     }
+}
+
+/// Validate a CLI `--dli-h` argument: reject NaN, negative, and infinite
+/// values so they cannot reach `concentration_at` and produce silent
+/// non-physical PDT output. Pair with [`Photosensitizer::from_cli_spec`]
+/// at the same parse-time gate.
+pub fn validate_dli_h(dli_h: f64) -> Result<(), String> {
+    if !dli_h.is_finite() {
+        return Err(format!("--dli-h must be finite, got {dli_h}"));
+    }
+    if dli_h < 0.0 {
+        return Err(format!("--dli-h must be >= 0, got {dli_h}"));
+    }
+    Ok(())
 }
 
 #[cfg(test)]
@@ -317,5 +378,149 @@ mod tests {
         // returns 0.0 and concentration_at(NaN) is deterministic.
         let p = Photosensitizer::Porfimer { t_half_h: 504.0 };
         assert_eq!(p.concentration_at(f64::NAN), 1.0);
+    }
+
+    // -- from_cli_spec --
+
+    #[test]
+    fn from_cli_spec_uniform_default() {
+        assert_eq!(
+            Photosensitizer::from_cli_spec("uniform").unwrap(),
+            Photosensitizer::Uniform(1.0)
+        );
+    }
+
+    #[test]
+    fn from_cli_spec_uniform_with_value() {
+        assert_eq!(
+            Photosensitizer::from_cli_spec("uniform=0.5").unwrap(),
+            Photosensitizer::Uniform(0.5)
+        );
+    }
+
+    #[test]
+    fn from_cli_spec_porfimer_default_is_bellnier() {
+        assert_eq!(
+            Photosensitizer::from_cli_spec("porfimer").unwrap(),
+            Photosensitizer::Porfimer { t_half_h: 504.0 }
+        );
+    }
+
+    #[test]
+    fn from_cli_spec_porfimer_with_value() {
+        assert_eq!(
+            Photosensitizer::from_cli_spec("porfimer=336").unwrap(),
+            Photosensitizer::Porfimer { t_half_h: 336.0 }
+        );
+    }
+
+    #[test]
+    fn from_cli_spec_trims_whitespace() {
+        assert_eq!(
+            Photosensitizer::from_cli_spec("  porfimer = 504  ").unwrap(),
+            Photosensitizer::Porfimer { t_half_h: 504.0 }
+        );
+    }
+
+    #[test]
+    fn from_cli_spec_case_insensitive() {
+        assert_eq!(
+            Photosensitizer::from_cli_spec("Uniform").unwrap(),
+            Photosensitizer::Uniform(1.0)
+        );
+        assert_eq!(
+            Photosensitizer::from_cli_spec("PORFIMER=504").unwrap(),
+            Photosensitizer::Porfimer { t_half_h: 504.0 }
+        );
+        assert_eq!(
+            Photosensitizer::from_cli_spec("PorFimEr").unwrap(),
+            Photosensitizer::Porfimer { t_half_h: 504.0 }
+        );
+    }
+
+    #[test]
+    fn from_cli_spec_unknown_variant_errors() {
+        let err = Photosensitizer::from_cli_spec("photochlor").unwrap_err();
+        assert!(err.contains("photochlor"));
+        assert!(err.contains("uniform"));
+        assert!(err.contains("porfimer"));
+    }
+
+    #[test]
+    fn from_cli_spec_unparseable_number_errors() {
+        let err = Photosensitizer::from_cli_spec("porfimer=abc").unwrap_err();
+        assert!(err.contains("porfimer=N"));
+        assert!(err.contains("abc"));
+    }
+
+    #[test]
+    fn from_cli_spec_negative_t_half_h_rejected() {
+        let err = Photosensitizer::from_cli_spec("porfimer=-1").unwrap_err();
+        assert!(err.contains("t_half_h"));
+    }
+
+    #[test]
+    fn from_cli_spec_zero_t_half_h_rejected() {
+        let err = Photosensitizer::from_cli_spec("porfimer=0").unwrap_err();
+        assert!(err.contains("t_half_h"));
+    }
+
+    #[test]
+    fn from_cli_spec_negative_uniform_rejected() {
+        let err = Photosensitizer::from_cli_spec("uniform=-0.5").unwrap_err();
+        assert!(err.contains("must be >= 0"));
+    }
+
+    #[test]
+    fn from_cli_spec_nan_rejected() {
+        let err = Photosensitizer::from_cli_spec("uniform=NaN").unwrap_err();
+        assert!(err.contains("must be finite"));
+    }
+
+    #[test]
+    fn display_round_trips_through_from_cli_spec() {
+        // Display's contract is round-trip parseability via from_cli_spec.
+        for ps in [
+            Photosensitizer::Uniform(1.0),
+            Photosensitizer::Uniform(0.5),
+            Photosensitizer::Porfimer { t_half_h: 504.0 },
+            Photosensitizer::Porfimer { t_half_h: 336.5 },
+        ] {
+            let rendered = format!("{ps}");
+            let reparsed = Photosensitizer::from_cli_spec(&rendered)
+                .unwrap_or_else(|e| panic!("round-trip failed for {ps:?}: {e}"));
+            assert_eq!(reparsed, ps, "round-trip mismatch via {rendered:?}");
+        }
+    }
+
+    // -- validate_dli_h --
+
+    #[test]
+    fn validate_dli_h_accepts_zero_and_positive() {
+        assert!(validate_dli_h(0.0).is_ok());
+        assert!(validate_dli_h(24.0).is_ok());
+        assert!(validate_dli_h(504.0).is_ok());
+        assert!(validate_dli_h(1e9).is_ok());
+    }
+
+    #[test]
+    fn validate_dli_h_rejects_negative() {
+        let err = validate_dli_h(-1.0).unwrap_err();
+        assert!(err.contains("--dli-h"));
+        assert!(err.contains(">= 0"));
+    }
+
+    #[test]
+    fn validate_dli_h_rejects_nan() {
+        let err = validate_dli_h(f64::NAN).unwrap_err();
+        assert!(err.contains("finite"));
+    }
+
+    #[test]
+    fn validate_dli_h_rejects_infinity() {
+        assert!(validate_dli_h(f64::INFINITY).unwrap_err().contains("finite"));
+        assert!(validate_dli_h(f64::NEG_INFINITY)
+            .unwrap_err()
+            .contains("finite"));
     }
 }

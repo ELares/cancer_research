@@ -17,7 +17,7 @@ use ferroptosis_core::cell::{norm, Treatment};
 use ferroptosis_core::grid::{depth_kill_curve, death_heatmap, TumorGrid};
 use ferroptosis_core::io::{write_depth_curves_csv, write_heatmap_csv, write_json};
 use ferroptosis_core::params::{Params, SpatialParams};
-use ferroptosis_core::photosensitizer_pk::Photosensitizer;
+use ferroptosis_core::photosensitizer_pk::{validate_dli_h, Photosensitizer};
 use ferroptosis_core::physics::local_ros_multiplier;
 
 #[derive(Parser)]
@@ -60,63 +60,6 @@ struct Args {
     dli_h: f64,
 }
 
-/// Parse a `--photosensitizer` SPEC into a `Photosensitizer` value.
-///
-/// Accepted forms (case-insensitive on the variant name):
-/// - `uniform` → `Uniform(1.0)`
-/// - `uniform=N` → `Uniform(N)`
-/// - `porfimer` → `Porfimer { t_half_h: 504.0 }`
-/// - `porfimer=N` → `Porfimer { t_half_h: N }`
-///
-/// Errors on unknown variant, unparseable number, or any value that fails
-/// `Photosensitizer::validate()`.
-fn parse_photosensitizer_spec(s: &str) -> Result<Photosensitizer, String> {
-    let s = s.trim();
-    let (name, value) = match s.split_once('=') {
-        Some((n, v)) => (n.trim(), Some(v.trim())),
-        None => (s, None),
-    };
-    let ps = match name.to_ascii_lowercase().as_str() {
-        "uniform" => {
-            let c = match value {
-                Some(v) => v
-                    .parse::<f64>()
-                    .map_err(|e| format!("uniform=N: cannot parse N={v:?}: {e}"))?,
-                None => 1.0,
-            };
-            Photosensitizer::Uniform(c)
-        }
-        "porfimer" => {
-            let t_half_h = match value {
-                Some(v) => v
-                    .parse::<f64>()
-                    .map_err(|e| format!("porfimer=N: cannot parse N={v:?}: {e}"))?,
-                None => 504.0, // Bellnier 2006 terminal t½, hours.
-            };
-            Photosensitizer::Porfimer { t_half_h }
-        }
-        _ => {
-            return Err(format!(
-                "unknown photosensitizer {name:?}; expected one of: uniform, uniform=N, porfimer, porfimer=N (case-insensitive)"
-            ));
-        }
-    };
-    ps.validate()?;
-    Ok(ps)
-}
-
-/// Validate `--dli-h` at the same parse-time gate as the photosensitizer
-/// spec — reject NaN, negative, and infinite values rather than letting
-/// them propagate to silently non-physical PDT physics.
-fn validate_dli_h(dli_h: f64) -> Result<(), String> {
-    if !dli_h.is_finite() {
-        return Err(format!("--dli-h must be finite, got {dli_h}"));
-    }
-    if dli_h < 0.0 {
-        return Err(format!("--dli-h must be >= 0, got {dli_h}"));
-    }
-    Ok(())
-}
 
 fn run_spatial(
     grid: &mut TumorGrid,
@@ -233,7 +176,7 @@ fn run_spatial(
 fn main() {
     let args = Args::parse();
 
-    let photosensitizer = match parse_photosensitizer_spec(&args.photosensitizer) {
+    let photosensitizer = match Photosensitizer::from_cli_spec(&args.photosensitizer) {
         Ok(ps) => ps,
         Err(e) => {
             eprintln!("error: --photosensitizer {:?}: {}", args.photosensitizer, e);
@@ -364,159 +307,21 @@ fn main() {
 mod tests {
     use super::*;
 
-    #[test]
-    fn parse_uniform_default() {
-        let ps = parse_photosensitizer_spec("uniform").unwrap();
-        assert_eq!(ps, Photosensitizer::Uniform(1.0));
-    }
-
-    #[test]
-    fn parse_uniform_with_value() {
-        let ps = parse_photosensitizer_spec("uniform=0.5").unwrap();
-        assert_eq!(ps, Photosensitizer::Uniform(0.5));
-    }
-
-    #[test]
-    fn parse_porfimer_default_is_bellnier() {
-        let ps = parse_photosensitizer_spec("porfimer").unwrap();
-        assert_eq!(ps, Photosensitizer::Porfimer { t_half_h: 504.0 });
-    }
-
-    #[test]
-    fn parse_porfimer_with_value() {
-        let ps = parse_photosensitizer_spec("porfimer=336").unwrap();
-        assert_eq!(ps, Photosensitizer::Porfimer { t_half_h: 336.0 });
-    }
-
-    #[test]
-    fn parse_trims_whitespace() {
-        let ps = parse_photosensitizer_spec("  porfimer = 504  ").unwrap();
-        assert_eq!(ps, Photosensitizer::Porfimer { t_half_h: 504.0 });
-    }
-
-    #[test]
-    fn parse_unknown_variant_errors() {
-        let err = parse_photosensitizer_spec("photochlor").unwrap_err();
-        assert!(err.contains("photochlor"));
-        assert!(err.contains("uniform"));
-        assert!(err.contains("porfimer"));
-    }
-
-    #[test]
-    fn parse_unparseable_number_errors() {
-        let err = parse_photosensitizer_spec("porfimer=abc").unwrap_err();
-        assert!(err.contains("porfimer=N"));
-        assert!(err.contains("abc"));
-    }
-
-    #[test]
-    fn parse_negative_t_half_h_rejected_via_validate() {
-        let err = parse_photosensitizer_spec("porfimer=-1").unwrap_err();
-        // Photosensitizer::validate() rejects t_half_h <= 0
-        assert!(err.contains("t_half_h"));
-    }
-
-    #[test]
-    fn parse_zero_t_half_h_rejected_via_validate() {
-        let err = parse_photosensitizer_spec("porfimer=0").unwrap_err();
-        assert!(err.contains("t_half_h"));
-    }
-
-    #[test]
-    fn parse_negative_uniform_rejected_via_validate() {
-        let err = parse_photosensitizer_spec("uniform=-0.5").unwrap_err();
-        assert!(err.contains("must be >= 0"));
-    }
-
-    #[test]
-    fn parse_nan_rejected_via_validate() {
-        let err = parse_photosensitizer_spec("uniform=NaN").unwrap_err();
-        assert!(err.contains("must be finite"));
-    }
-
-    #[test]
-    fn parse_case_insensitive_variant_names() {
-        // Variant name matching is intentionally case-insensitive so users
-        // who hit shift get sensible behavior.
-        assert_eq!(
-            parse_photosensitizer_spec("Uniform").unwrap(),
-            Photosensitizer::Uniform(1.0)
-        );
-        assert_eq!(
-            parse_photosensitizer_spec("PORFIMER=504").unwrap(),
-            Photosensitizer::Porfimer { t_half_h: 504.0 }
-        );
-        assert_eq!(
-            parse_photosensitizer_spec("PorFimEr").unwrap(),
-            Photosensitizer::Porfimer { t_half_h: 504.0 }
-        );
-    }
-
-    // -- validate_dli_h --
-
-    #[test]
-    fn validate_dli_h_accepts_zero_and_positive() {
-        assert!(validate_dli_h(0.0).is_ok());
-        assert!(validate_dli_h(24.0).is_ok());
-        assert!(validate_dli_h(504.0).is_ok());
-        assert!(validate_dli_h(1e9).is_ok());
-    }
-
-    #[test]
-    fn validate_dli_h_rejects_negative() {
-        let err = validate_dli_h(-1.0).unwrap_err();
-        assert!(err.contains("--dli-h"));
-        assert!(err.contains(">= 0"));
-    }
-
-    #[test]
-    fn validate_dli_h_rejects_nan() {
-        let err = validate_dli_h(f64::NAN).unwrap_err();
-        assert!(err.contains("--dli-h"));
-        assert!(err.contains("finite"));
-    }
-
-    #[test]
-    fn validate_dli_h_rejects_infinity() {
-        assert!(validate_dli_h(f64::INFINITY).unwrap_err().contains("finite"));
-        assert!(validate_dli_h(f64::NEG_INFINITY)
-            .unwrap_err()
-            .contains("finite"));
-    }
-
+    /// Spec / DLI parsers and their edge-case rejection logic live in
+    /// `ferroptosis_core::photosensitizer_pk`; their unit tests live with
+    /// them. The remaining test here covers the only binary-specific
+    /// concern: that clap's `default_value` attributes still map to
+    /// `SpatialParams::default()`. Without this, the parser-level
+    /// invariant could pass while the clap defaults silently drifted.
     #[test]
     fn default_args_match_default_spatial_params() {
-        // Invokes clap with no user-supplied flags so the test catches
-        // accidental changes to the `default_value` attributes (e.g.
-        // someone bumping `--photosensitizer` default to `porfimer`).
-        // Without this, the parser-level invariant could pass while the
-        // clap defaults silently drifted from `SpatialParams::default()`.
         let args = Args::parse_from(["sim-spatial"]);
-        let parsed_ps = parse_photosensitizer_spec(&args.photosensitizer).unwrap();
+        let parsed_ps = Photosensitizer::from_cli_spec(&args.photosensitizer).unwrap();
         let default_sp = SpatialParams::default();
         assert_eq!(parsed_ps, default_sp.photosensitizer);
         assert_eq!(args.dli_h, default_sp.t_drug_light_interval_h);
-        // Defensively also check the clap default string itself, since
-        // a renaming of the canonical "uniform" form would be visible
-        // in stderr but not in the parsed enum value.
+        // Also pin the canonical CLI string so a rename would be visible
+        // in stderr but not just in the parsed enum value.
         assert_eq!(args.photosensitizer, "uniform");
-    }
-
-    #[test]
-    fn display_round_trips_through_parser() {
-        // Display's contract is round-trip parseability via
-        // `parse_photosensitizer_spec`. Verify both variants.
-        for ps in [
-            Photosensitizer::Uniform(1.0),
-            Photosensitizer::Uniform(0.5),
-            Photosensitizer::Porfimer { t_half_h: 504.0 },
-            Photosensitizer::Porfimer { t_half_h: 336.5 },
-        ] {
-            let rendered = format!("{ps}");
-            let reparsed = parse_photosensitizer_spec(&rendered).unwrap_or_else(|e| {
-                panic!("Display→parse round-trip failed for {ps:?} (rendered={rendered:?}): {e}")
-            });
-            assert_eq!(reparsed, ps, "round-trip mismatch via {rendered:?}");
-        }
     }
 }
