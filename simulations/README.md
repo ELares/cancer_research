@@ -21,14 +21,14 @@ Each binary has its own README with parameters, output format, example commands,
 
 ## Shared library
 
-`ferroptosis-core` provides the biochemistry engine, cell types, physics models, spatial grid, immune cascade, and drug transport used by all binaries. See [ferroptosis-core/README.md](ferroptosis-core/README.md).
+`ferroptosis-core` provides the biochemistry engine, cell types, physics models (Beer-Lambert PDT, acoustic SDT), spatial grid, immune cascade, drug transport (Krogh penetration), tumor PK (two-compartment), and photosensitizer PK (single-exponential kinetics with optional saturating distribution phase + relative singlet-O₂ yield) used by all binaries. See [ferroptosis-core/README.md](ferroptosis-core/README.md).
 
 ## Quick start
 
 ```bash
 cd simulations
 cargo build --release
-cargo test --workspace              # 31 unit tests
+cargo test --workspace              # ferroptosis-core unit tests + per-binary integration tests (see CI for current count)
 cargo run --release -p sim-original # Monte Carlo baseline
 cargo run --release -p sim-tissue-pk # drug penetration across tissues
 ```

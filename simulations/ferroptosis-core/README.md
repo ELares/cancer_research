@@ -56,6 +56,19 @@ sim_cell_step(state, cell, params, step, extra_iron, rng) -> dead
 gen_cell(phenotype, rng) -> Cell
 ```
 
+**Photosensitizer PK (PDT light-dose scaling):**
+```rust
+let ps: Photosensitizer = "porfimer=504,36,0.65".parse()?;  // FromStr
+ps.concentration_at(t_h);  // drug present at time t_h post-administration
+ps.yield_at(t_h);          // ROS yield = concentration × phi_so2_relative
+```
+Variants: `Uniform(c)` (constant fraction; default 1.0 = no PK model) and
+`Porfimer { t_half_h, t_distribution_h, phi_so2_relative }` (single-
+exponential plasma decay with optional saturating distribution-phase
+hold and relative singlet-O₂ yield). All defaults preserve identity-
+preserving physics. `physics::pdt_intensity_at_depth` calls `yield_at`
+to compose drug presence + yield with depth-attenuated light.
+
 **Parameter contexts:**
 - `Params::default()` — 2D culture baseline
 - `Params::invivo()` — 3D/in-vivo with SCD1-driven MUFA lipid remodeling (M_ss = 0.40)
