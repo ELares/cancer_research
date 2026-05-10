@@ -47,12 +47,20 @@ pub enum Photosensitizer {
     /// with optional pre-decay distribution phase and a relative
     /// singlet-O₂ quantum-yield scalar.
     ///
-    /// `t_distribution_h` models the absorption / redistribution rise:
-    /// drug is held at peak for the first `t_distribution_h` hours after
-    /// administration, then begins single-exponential decay with
-    /// `t_half_h`. Default `0.0` recovers the previous "light at peak"
-    /// behavior bit-exactly. Bellnier 2006 reports porfimer redistribution
-    /// over ~24-48 h; default 0 is preserved for backwards compatibility.
+    /// `t_distribution_h` *approximates* the absorption / redistribution
+    /// rise as instantaneous saturation: drug is held at peak for the
+    /// first `t_distribution_h` hours after administration, then begins
+    /// single-exponential decay with `t_half_h`. The real PK has a
+    /// rising curve from 0 to peak (bi- or tri-exponential, formulation-
+    /// dependent); this saturating-step model is a deliberate
+    /// simplification per #203's design choice (issue body recommended
+    /// the simpler subtract-before-decay path). For drugs where the
+    /// rising-curve shape matters more than its area-under-the-curve
+    /// approximation, a two-phase variant would be a separate issue.
+    ///
+    /// Default `0.0` recovers the previous "light at peak" behavior
+    /// bit-exactly. Bellnier 2006 reports porfimer redistribution over
+    /// ~24–48 h; default 0 is preserved for backwards compatibility.
     ///
     /// `phi_so2_relative` scales the per-photon ROS yield relative to a
     /// porfimer-equivalent baseline (`1.0` = porfimer). `Params::pdt_ros`
@@ -476,6 +484,41 @@ mod tests {
         let json = serde_json::to_string(&p).unwrap();
         let q: Photosensitizer = serde_json::from_str(&json).unwrap();
         assert_eq!(p, q);
+    }
+
+    #[test]
+    fn legacy_porfimer_json_deserializes_with_serde_defaults() {
+        // JSON written before the t_distribution_h / phi_so2_relative
+        // fields existed must still deserialize, with new fields filled
+        // by `serde(default)` to identity-preserving values
+        // (t_distribution_h=0, phi_so2_relative=1). This is the
+        // backwards-compat guarantee the PR claims.
+        let legacy_json = r#"{"Porfimer":{"t_half_h":504.0}}"#;
+        let p: Photosensitizer = serde_json::from_str(legacy_json).unwrap();
+        assert_eq!(
+            p,
+            Photosensitizer::Porfimer {
+                t_half_h: 504.0,
+                t_distribution_h: 0.0,
+                phi_so2_relative: 1.0,
+            }
+        );
+    }
+
+    #[test]
+    fn legacy_porfimer_json_with_partial_new_fields_deserializes() {
+        // Mid-migration JSON that has t_distribution_h but not yet
+        // phi_so2_relative — phi defaults to 1.0.
+        let mid_json = r#"{"Porfimer":{"t_half_h":504.0,"t_distribution_h":36.0}}"#;
+        let p: Photosensitizer = serde_json::from_str(mid_json).unwrap();
+        assert_eq!(
+            p,
+            Photosensitizer::Porfimer {
+                t_half_h: 504.0,
+                t_distribution_h: 36.0,
+                phi_so2_relative: 1.0,
+            }
+        );
     }
 
     // -- input validation --

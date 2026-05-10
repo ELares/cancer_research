@@ -172,6 +172,36 @@ mod tests {
     }
 
     #[test]
+    fn pdt_with_porfimer_phi_half_is_half_of_default() {
+        // Locks down the phi-scaling path in pdt_intensity_at_depth.
+        // If anyone refactors the function to bypass yield_at, the
+        // unit-tested phi behavior on Photosensitizer is still right
+        // but the wired-through physics path would silently regress.
+        // This test catches that.
+        use crate::photosensitizer_pk::Photosensitizer;
+
+        let z_um = 1000.0; // arbitrary depth
+        let baseline = pdt_intensity_at_depth(z_um, &SpatialParams::default());
+
+        let phi_half_params = SpatialParams {
+            photosensitizer: Photosensitizer::Porfimer {
+                t_half_h: 504.0,
+                t_distribution_h: 0.0,
+                phi_so2_relative: 0.5,
+            },
+            t_drug_light_interval_h: 0.0, // peak — only phi affects the result
+            ..Default::default()
+        };
+        let phi_half = pdt_intensity_at_depth(z_um, &phi_half_params);
+
+        // baseline * 0.5 is IEEE-exact (multiplying any finite f64 by 0.5
+        // is exact since 0.5 has an exact binary representation), so
+        // strict equality is safe here — distinct from the libm-dependent
+        // exp(-ln(2)) used in the half-life test below.
+        assert_eq!(phi_half, baseline * 0.5);
+    }
+
+    #[test]
     fn pdt_with_porfimer_at_one_halflife_is_half_of_default() {
         use crate::photosensitizer_pk::Photosensitizer;
 

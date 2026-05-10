@@ -31,8 +31,8 @@ Runtime: several minutes (500x500 grid x 4 treatments x 180 steps, single-thread
 | `--seed` | 42 | Random seed (same seed = same tumor topology) |
 | `--output-dir` | `output/spatial` | Directory for output files |
 | `--n-steps` | 180 | Number of biochemistry timesteps per cell |
-| `--photosensitizer` | `uniform=1` | Photosensitizer PK model. Spec format (case-insensitive): `uniform` (= `uniform=1`, the default), `uniform=N` (constant fraction), `porfimer` (= `porfimer=504`, Bellnier 2006 t½ in hours), or `porfimer=N` (custom t½). Parsed via `FromStr` and validated by clap at parse time; `Photosensitizer::Default` Display renders as `uniform=1`, which is what `--help` shows. |
-| `--dli-h` | 0.0 | Drug-light interval in hours from photosensitizer **post-distribution peak** to light delivery. **Not** the clinical DLI from injection — see `ferroptosis_core::photosensitizer_pk` for the distinction. |
+| `--photosensitizer` | `uniform=1` | Photosensitizer PK model. Spec format (case-insensitive): `uniform[=N]` (constant fraction; default `1`) or `porfimer[=t_half[,t_dist[,phi]]]` (single-exponential plasma kinetics with optional saturating distribution phase and relative singlet-O₂ yield). Defaults: `t_half=504` h (Bellnier 2006), `t_dist=0` h (legacy "light at peak"; set to ~24-48 h to model porfimer absorption rise), `phi=1.0` (porfimer-equivalent yield baseline). |
+| `--dli-h` | 0.0 | Drug-light interval in hours: time to light delivery. With `t_dist=0` (default), this is post-distribution-peak; with `t_dist>0`, this can be the **clinical DLI from injection** (the model holds drug at peak for the first `t_dist` hours then begins decay). Validated as finite and ≥ 0. |
 
 Biochemistry and physics parameters are hardcoded via `Params::default()` and `SpatialParams::default()`. See `simulations/calibration/parameter_provenance.md` for literature sources.
 
@@ -42,15 +42,32 @@ Biochemistry and physics parameters are hardcoded via `Params::default()` and `S
 # Default — Photosensitizer::Uniform(1.0), DLI=0. Byte-identical to pre-CLI behavior.
 cargo run --release -p sim-spatial -- --output-dir output/spatial
 
-# Porfimer at one terminal half-life past peak (DLI ≈ 21 d).
-# Drug is at ~50% of peak, so the PDT kill rate drops materially below the
-# default invocation (Control / RSL3 / SDT outputs are unaffected).
+# Porfimer at one terminal half-life past peak (DLI ≈ 21 d), legacy spec form.
+# Drug is at ~50% of peak, so the PDT kill rate drops materially.
 cargo run --release -p sim-spatial \
     --grid-size 100 \
     --photosensitizer porfimer --dli-h 504 \
     --output-dir output/spatial-porfimer-504h
 
-# Drug-presence sweep: shell-driven for now (a built-in --dli-sweep is a follow-up).
+# Phi sweep — half ROS yield via the third positional spec field.
+# `porfimer=504,0,0.5` reads: t_half=504, t_dist=0, phi=0.5.
+cargo run --release -p sim-spatial \
+    --grid-size 100 \
+    --photosensitizer "porfimer=504,0,0.5" \
+    --output-dir output/spatial-porfimer-phi05
+
+# Distribution-phase: clinical DLI from injection.
+# Setting t_dist=36 h (Bellnier 2006 midpoint) lets --dli-h be the
+# clinical drug-light interval; the model holds drug at peak for the
+# first 36 h, then begins exponential decay. Here the user asks for
+# a 24-h clinical DLI, which falls inside the distribution phase, so
+# the simulated drug stays at peak (PDT identical to baseline).
+cargo run --release -p sim-spatial \
+    --grid-size 100 \
+    --photosensitizer "porfimer=504,36" --dli-h 24 \
+    --output-dir output/spatial-porfimer-clinical-dli24
+
+# Drug-presence sweep across DLI (built-in --dli-sweep is a follow-up).
 for dli in 0 24 168 504 1008; do
     cargo run --release -p sim-spatial \
         --grid-size 100 --seed 42 \

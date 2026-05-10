@@ -44,22 +44,36 @@ struct Args {
     n_steps: u32,
 
     /// Photosensitizer PK model for PDT light scaling. Spec format
-    /// (case-insensitive): `uniform` (= `uniform=1.0`, the default),
-    /// `uniform=N` (constant fraction; values >1.0 represent enrichment
-    /// rather than the typical [0, 1] drug-presence range, intentional
-    /// forward-compat hook), `porfimer` (= `porfimer=504`, Bellnier 2006
-    /// t½ in hours), or `porfimer=N` (custom t½ in hours).
+    /// (case-insensitive):
     ///
-    /// Parsed via `Photosensitizer`'s `FromStr` impl, so clap validates
-    /// the spec at flag-parse time and reports errors via clap's standard
-    /// formatter (no manual `eprintln! + exit(2)` dance in `main()`).
+    ///   uniform[=N]                    constant fraction (default 1)
+    ///   porfimer[=t_half[,t_dist[,phi]]]  single-exponential decay
+    ///                                  with saturating distribution phase
+    ///                                  and relative singlet-O₂ yield
+    ///
+    /// Porfimer defaults: t_half=504 h (Bellnier 2006), t_dist=0 h
+    /// (legacy "light at peak"; set ~24–48 h to model porfimer absorption
+    /// rise), phi=1.0 (porfimer-equivalent yield baseline). Examples:
+    ///
+    ///   --photosensitizer porfimer=504           t_half only (legacy)
+    ///   --photosensitizer porfimer=504,36        t_half + t_dist
+    ///   --photosensitizer porfimer=504,0,0.65    t_half + phi (half-yield via 3-positional)
+    ///   --photosensitizer "uniform=2"            enrichment hook (>1)
+    ///
+    /// Values >1.0 for `uniform` and `phi` are intentionally permitted
+    /// (enrichment / sensitizer-engineered variants). Parsed via
+    /// `Photosensitizer`'s `FromStr` impl, so clap validates at flag-
+    /// parse time and reports errors via clap's standard formatter.
     #[arg(long, default_value_t = Photosensitizer::default())]
     photosensitizer: Photosensitizer,
 
-    /// Drug-light interval in hours: time from photosensitizer
-    /// post-distribution peak to light delivery. NOT the clinical DLI
-    /// from injection — see ferroptosis_core::photosensitizer_pk for the
-    /// distinction. Default 0.0 means light at peak.
+    /// Drug-light interval in hours: time to light delivery. With the
+    /// default `Porfimer.t_distribution_h = 0` (legacy "light at peak"),
+    /// this is interpreted as time from post-distribution peak. With
+    /// `t_distribution_h > 0`, the model holds drug at peak for the
+    /// first `t_distribution_h` hours and then begins decay — so this
+    /// flag can be the clinical DLI from injection. Validated as finite
+    /// and ≥ 0.
     #[arg(long, default_value_t = 0.0)]
     dli_h: f64,
 }
