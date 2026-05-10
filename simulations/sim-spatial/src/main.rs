@@ -60,7 +60,7 @@ struct Args {
 
 /// Parse a `--photosensitizer` SPEC into a `Photosensitizer` value.
 ///
-/// Accepted forms:
+/// Accepted forms (case-insensitive on the variant name):
 /// - `uniform` → `Uniform(1.0)`
 /// - `uniform=N` → `Uniform(N)`
 /// - `porfimer` → `Porfimer { t_half_h: 504.0 }`
@@ -74,7 +74,7 @@ fn parse_photosensitizer_spec(s: &str) -> Result<Photosensitizer, String> {
         Some((n, v)) => (n.trim(), Some(v.trim())),
         None => (s, None),
     };
-    let ps = match name {
+    let ps = match name.to_ascii_lowercase().as_str() {
         "uniform" => {
             let c = match value {
                 Some(v) => v
@@ -93,14 +93,27 @@ fn parse_photosensitizer_spec(s: &str) -> Result<Photosensitizer, String> {
             };
             Photosensitizer::Porfimer { t_half_h }
         }
-        other => {
+        _ => {
             return Err(format!(
-                "unknown photosensitizer {other:?}; expected one of: uniform, uniform=N, porfimer, porfimer=N"
+                "unknown photosensitizer {name:?}; expected one of: uniform, uniform=N, porfimer, porfimer=N (case-insensitive)"
             ));
         }
     };
     ps.validate()?;
     Ok(ps)
+}
+
+/// Validate `--dli-h` at the same parse-time gate as the photosensitizer
+/// spec — reject NaN, negative, and infinite values rather than letting
+/// them propagate to silently non-physical PDT physics.
+fn validate_dli_h(dli_h: f64) -> Result<(), String> {
+    if !dli_h.is_finite() {
+        return Err(format!("--dli-h must be finite, got {dli_h}"));
+    }
+    if dli_h < 0.0 {
+        return Err(format!("--dli-h must be >= 0, got {dli_h}"));
+    }
+    Ok(())
 }
 
 fn run_spatial(
@@ -225,6 +238,10 @@ fn main() {
             std::process::exit(2);
         }
     };
+    if let Err(e) = validate_dli_h(args.dli_h) {
+        eprintln!("error: {e}");
+        std::process::exit(2);
+    }
 
     eprintln!("=== Spatial Tumor Ferroptosis Simulation ===");
     eprintln!(
@@ -236,10 +253,7 @@ fn main() {
     );
     eprintln!("Cell size: {} µm", args.cell_size);
     eprintln!("Seed: {}", args.seed);
-    eprintln!(
-        "Photosensitizer: {:?}, DLI: {} h\n",
-        photosensitizer, args.dli_h
-    );
+    eprintln!("Photosensitizer: {photosensitizer}, DLI: {} h\n", args.dli_h);
 
     let params = Params::default();
     let spatial_params = SpatialParams {
@@ -416,6 +430,56 @@ mod tests {
     fn parse_nan_rejected_via_validate() {
         let err = parse_photosensitizer_spec("uniform=NaN").unwrap_err();
         assert!(err.contains("must be finite"));
+    }
+
+    #[test]
+    fn parse_case_insensitive_variant_names() {
+        // Variant name matching is intentionally case-insensitive so users
+        // who hit shift get sensible behavior.
+        assert_eq!(
+            parse_photosensitizer_spec("Uniform").unwrap(),
+            Photosensitizer::Uniform(1.0)
+        );
+        assert_eq!(
+            parse_photosensitizer_spec("PORFIMER=504").unwrap(),
+            Photosensitizer::Porfimer { t_half_h: 504.0 }
+        );
+        assert_eq!(
+            parse_photosensitizer_spec("PorFimEr").unwrap(),
+            Photosensitizer::Porfimer { t_half_h: 504.0 }
+        );
+    }
+
+    // -- validate_dli_h --
+
+    #[test]
+    fn validate_dli_h_accepts_zero_and_positive() {
+        assert!(validate_dli_h(0.0).is_ok());
+        assert!(validate_dli_h(24.0).is_ok());
+        assert!(validate_dli_h(504.0).is_ok());
+        assert!(validate_dli_h(1e9).is_ok());
+    }
+
+    #[test]
+    fn validate_dli_h_rejects_negative() {
+        let err = validate_dli_h(-1.0).unwrap_err();
+        assert!(err.contains("--dli-h"));
+        assert!(err.contains(">= 0"));
+    }
+
+    #[test]
+    fn validate_dli_h_rejects_nan() {
+        let err = validate_dli_h(f64::NAN).unwrap_err();
+        assert!(err.contains("--dli-h"));
+        assert!(err.contains("finite"));
+    }
+
+    #[test]
+    fn validate_dli_h_rejects_infinity() {
+        assert!(validate_dli_h(f64::INFINITY).unwrap_err().contains("finite"));
+        assert!(validate_dli_h(f64::NEG_INFINITY)
+            .unwrap_err()
+            .contains("finite"));
     }
 
     #[test]

@@ -43,7 +43,8 @@ Biochemistry and physics parameters are hardcoded via `Params::default()` and `S
 cargo run --release -p sim-spatial -- --output-dir output/spatial
 
 # Porfimer at one terminal half-life past peak (DLI ≈ 21 d).
-# PDT kill rate drops to ~47% (vs ~81% at peak) on the 100×100 fixture.
+# Drug is at ~50% of peak, so the PDT kill rate drops materially below the
+# default invocation (Control / RSL3 / SDT outputs are unaffected).
 cargo run --release -p sim-spatial \
     --grid-size 100 \
     --photosensitizer porfimer --dli-h 504 \

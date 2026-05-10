@@ -29,6 +29,8 @@
 //! clinical PK of porfimer sodium, Photochlor, and 5-ALA-induced PpIX
 //! in humans (PMID 16634075).
 
+use std::fmt;
+
 use serde::{Deserialize, Serialize};
 
 /// Photosensitizer pharmacokinetic model used to scale PDT light dose by
@@ -52,6 +54,18 @@ pub enum Photosensitizer {
 impl Default for Photosensitizer {
     fn default() -> Self {
         Self::Uniform(1.0)
+    }
+}
+
+impl fmt::Display for Photosensitizer {
+    /// Human-readable form. Mirrors the CLI spec parsed by
+    /// `sim-spatial`'s `--photosensitizer` flag (lowercase variant
+    /// name, optional `=N`) for round-trip readability in stderr logs.
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Uniform(c) => write!(f, "uniform={c}"),
+            Self::Porfimer { t_half_h } => write!(f, "porfimer (t½={t_half_h} h)"),
+        }
     }
 }
 
@@ -188,6 +202,22 @@ mod tests {
         assert_eq!(p.concentration_at(1e9), 0.5);
         // Non-default value must not be silently treated as 1.0.
         assert_ne!(p.concentration_at(50.0), 1.0);
+    }
+
+    // -- Display --
+
+    #[test]
+    fn display_uniform() {
+        assert_eq!(format!("{}", Photosensitizer::Uniform(1.0)), "uniform=1");
+        assert_eq!(format!("{}", Photosensitizer::Uniform(0.5)), "uniform=0.5");
+    }
+
+    #[test]
+    fn display_porfimer() {
+        assert_eq!(
+            format!("{}", Photosensitizer::Porfimer { t_half_h: 504.0 }),
+            "porfimer (t½=504 h)"
+        );
     }
 
     #[test]
