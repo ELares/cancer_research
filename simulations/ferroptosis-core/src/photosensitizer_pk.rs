@@ -67,6 +67,12 @@ pub enum Photosensitizer {
     /// is calibrated to porfimer at peak; new drug variants set this
     /// field to their absolute phi_so2 divided by porfimer's (~0.65).
     /// Default `1.0` recovers previous physics.
+    ///
+    /// Caveat: tissue phi_so2 can diverge from solution phi_so2 due to
+    /// aggregation and microenvironment effects. See
+    /// `simulations/calibration/parameter_provenance.md` (the
+    /// "Photosensitizer pharmacokinetics" section) for the full
+    /// citation chain and the tissue-vs-solution discussion.
     Porfimer {
         /// Plasma terminal half-life in hours. Must be strictly positive.
         t_half_h: f64,
@@ -214,6 +220,33 @@ fn parse_f64_field(spec_form: &str, field_name: &str, raw: &str) -> Result<f64, 
         .map_err(|e| format!("{spec_form}: cannot parse {field_name}={raw:?}: {e}"))
 }
 
+/// Validation helper: field must be finite and strictly > 0. Used for
+/// `t_half_h` (a 0-half-life would mean infinite decay rate; `concentration_at`
+/// would divide by zero).
+fn check_finite_strict_positive(field: &str, value: f64) -> Result<(), String> {
+    if !value.is_finite() {
+        return Err(format!("Photosensitizer::{field} must be finite, got {value}"));
+    }
+    if value <= 0.0 {
+        return Err(format!("Photosensitizer::{field} must be > 0, got {value}"));
+    }
+    Ok(())
+}
+
+/// Validation helper: field must be finite and ≥ 0. Used for the optional
+/// `t_distribution_h` (zero is a sensible "no distribution phase" default)
+/// and `phi_so2_relative` (zero means "drug present but emits no ROS",
+/// a defensible thought-experiment use).
+fn check_finite_nonneg(field: &str, value: f64) -> Result<(), String> {
+    if !value.is_finite() {
+        return Err(format!("Photosensitizer::{field} must be finite, got {value}"));
+    }
+    if value < 0.0 {
+        return Err(format!("Photosensitizer::{field} must be >= 0, got {value}"));
+    }
+    Ok(())
+}
+
 impl Photosensitizer {
     /// Validate that the photosensitizer's parameters are physically
     /// reasonable. Returns `Ok(())` for valid configurations and a
@@ -246,36 +279,9 @@ impl Photosensitizer {
                 t_distribution_h,
                 phi_so2_relative,
             } => {
-                if !t_half_h.is_finite() {
-                    return Err(format!(
-                        "Photosensitizer::Porfimer.t_half_h must be finite, got {t_half_h}"
-                    ));
-                }
-                if *t_half_h <= 0.0 {
-                    return Err(format!(
-                        "Photosensitizer::Porfimer.t_half_h must be > 0, got {t_half_h}"
-                    ));
-                }
-                if !t_distribution_h.is_finite() {
-                    return Err(format!(
-                        "Photosensitizer::Porfimer.t_distribution_h must be finite, got {t_distribution_h}"
-                    ));
-                }
-                if *t_distribution_h < 0.0 {
-                    return Err(format!(
-                        "Photosensitizer::Porfimer.t_distribution_h must be >= 0, got {t_distribution_h}"
-                    ));
-                }
-                if !phi_so2_relative.is_finite() {
-                    return Err(format!(
-                        "Photosensitizer::Porfimer.phi_so2_relative must be finite, got {phi_so2_relative}"
-                    ));
-                }
-                if *phi_so2_relative < 0.0 {
-                    return Err(format!(
-                        "Photosensitizer::Porfimer.phi_so2_relative must be >= 0, got {phi_so2_relative}"
-                    ));
-                }
+                check_finite_strict_positive("Porfimer.t_half_h", *t_half_h)?;
+                check_finite_nonneg("Porfimer.t_distribution_h", *t_distribution_h)?;
+                check_finite_nonneg("Porfimer.phi_so2_relative", *phi_so2_relative)?;
                 Ok(())
             }
         }
@@ -993,8 +999,25 @@ mod tests {
     }
 
     #[test]
+    fn parse_porfimer_rejects_trailing_equals_with_no_value() {
+        // `porfimer=` is a different shape from `porfimer=,36` — there's
+        // no comma at all, so the value side is the single empty string.
+        // Should give a clear empty-value error rather than the cryptic
+        // f64::parse("") error or silently defaulting.
+        let err = "porfimer=".parse::<Photosensitizer>().unwrap_err();
+        assert!(err.contains("empty value"));
+        assert!(err.contains("t_half"));
+    }
+
+    #[test]
     fn display_round_trips_with_new_fields() {
-        // Round-trip property must hold for non-default new fields too.
+        // Round-trip property must hold for non-default new fields too,
+        // including extreme f64 values where Display switches to
+        // scientific notation (e.g. `0.0000001` → `0.0000001`,
+        // `1e-10` → `0.0000000001` or `1e-10` depending on rustc).
+        // FromStr accepts both decimal and scientific forms, so the
+        // contract holds either way — but pinning these cases catches
+        // regressions in either Display or parser.
         for ps in [
             Photosensitizer::Porfimer {
                 t_half_h: 504.0,
@@ -1010,6 +1033,13 @@ mod tests {
                 t_half_h: 504.0,
                 t_distribution_h: 0.0,
                 phi_so2_relative: 0.0, // boundary: zero-yield
+            },
+            // Extreme small / large values that may render in scientific
+            // notation. FromStr handles both `1e10` and `10000000000`.
+            Photosensitizer::Porfimer {
+                t_half_h: 1e10,
+                t_distribution_h: 1e-10,
+                phi_so2_relative: 1e-15,
             },
         ] {
             let rendered = format!("{ps}");

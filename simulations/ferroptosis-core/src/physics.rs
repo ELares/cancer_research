@@ -9,6 +9,12 @@ use crate::params::SpatialParams;
 /// PDT: Modified Beer-Lambert law for light in tissue, scaled by the
 /// per-photon ROS yield of the photosensitizer at the drug-light interval.
 ///
+/// **Validity precondition:** the `Photosensitizer` and
+/// `t_drug_light_interval_h` on `params` must pass
+/// [`Photosensitizer::validate`]. Invalid configs trigger `debug_assert!`
+/// in tests but are not bounded in release — see the bottom of this
+/// docstring for details. Untrusted-source callers should validate first.
+///
 /// I_eff(z, t_DLI) = I₀ × exp(-µ_eff × z) × Y_drug(t_DLI)
 ///
 /// where `Y_drug(t)` is `Photosensitizer::yield_at(t)` —
