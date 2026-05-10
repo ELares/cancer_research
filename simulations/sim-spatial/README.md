@@ -31,7 +31,7 @@ Runtime: several minutes (500x500 grid x 4 treatments x 180 steps, single-thread
 | `--seed` | 42 | Random seed (same seed = same tumor topology) |
 | `--output-dir` | `output/spatial` | Directory for output files |
 | `--n-steps` | 180 | Number of biochemistry timesteps per cell |
-| `--photosensitizer` | `uniform` | Photosensitizer PK model. Spec format: `uniform` (= `uniform=1.0`, default), `uniform=N` (constant fraction), `porfimer` (= `porfimer=504`, Bellnier 2006 t½ in hours), or `porfimer=N` (custom t½). Validated at parse time. |
+| `--photosensitizer` | `uniform=1` | Photosensitizer PK model. Spec format (case-insensitive): `uniform` (= `uniform=1`, the default), `uniform=N` (constant fraction), `porfimer` (= `porfimer=504`, Bellnier 2006 t½ in hours), or `porfimer=N` (custom t½). Parsed via `FromStr` and validated by clap at parse time; `Photosensitizer::Default` Display renders as `uniform=1`, which is what `--help` shows. |
 | `--dli-h` | 0.0 | Drug-light interval in hours from photosensitizer **post-distribution peak** to light delivery. **Not** the clinical DLI from injection — see `ferroptosis_core::photosensitizer_pk` for the distinction. |
 
 Biochemistry and physics parameters are hardcoded via `Params::default()` and `SpatialParams::default()`. See `simulations/calibration/parameter_provenance.md` for literature sources.
