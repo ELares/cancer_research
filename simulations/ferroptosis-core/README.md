@@ -33,7 +33,7 @@ Run the included example: `cargo run -p ferroptosis-core --example basic_usage`
 | `biochem` | Core simulation engine: `sim_cell` (full 180-step loop), `sim_cell_step` (single timestep for spatial interleaving) |
 | `stats` | Wilson confidence intervals, parallel Monte Carlo execution via rayon |
 | `physics` | Depth-dependent energy deposition: Beer-Lambert (PDT), acoustic attenuation (SDT), uniform (RSL3) |
-| `grid` | 2D tumor grid with heterogeneous architecture, neighbor iteration, iron diffusion |
+| `grid` | 2D `TumorGrid` (8-Moore, circular) and 3D `TumorGrid3D` (26-Moore, spherical) with heterogeneous architecture, neighbor iteration, iron diffusion. 3D analytics (radial-depth curves, volumetric heatmaps) land with the binary that consumes them (#194). |
 | `immune` | ICD/DAMP immune cascade: ferroptotic death quality drives dendritic cell activation and T cell priming |
 | `io` | JSON and CSV output helpers |
 | `drug_transport` | Krogh cylinder drug penetration model |
