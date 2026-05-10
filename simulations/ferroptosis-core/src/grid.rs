@@ -332,6 +332,17 @@ impl TumorGrid3D {
     /// - Outside tumor sphere: Stromal cells
     ///
     /// Deterministic from `seed`.
+    ///
+    /// **Geometry:** cell positions are lattice-centered (`r` etc. are
+    /// treated as continuous coords with no `+ 0.5` voxel offset), so
+    /// the cell at `(rows/2, cols/2, layers/2)` sits exactly at the
+    /// sphere center when dimensions are even. Same convention as
+    /// `TumorGrid::generate`.
+    ///
+    /// **Memory:** `GridCell` is ~150–170 B; a `100³` grid is ~170 MB,
+    /// `200³` is ~1.4 GB. Callers should size against available RAM
+    /// before invoking; `debug_assert!` guards against accidental
+    /// allocations above ~1 G cells (≈ 170 GB, almost certainly a typo).
     pub fn generate(
         rows: usize,
         cols: usize,
@@ -339,6 +350,16 @@ impl TumorGrid3D {
         cell_size_um: f64,
         seed: u64,
     ) -> Self {
+        // Memory guard — catches "rows = 1000" typos in tests and CI.
+        // Active only in debug builds; release callers are expected to
+        // size against their own hardware. 10^9 cells × 170 B ≈ 170 GB
+        // is well past any realistic spheroid sim and almost certainly
+        // an off-by-orders-of-magnitude error.
+        debug_assert!(
+            rows.saturating_mul(cols).saturating_mul(layers) <= 1_000_000_000,
+            "TumorGrid3D::generate: rows*cols*layers = {} exceeds 1e9 — likely a typo (use saturating mul to avoid wraparound)",
+            rows.saturating_mul(cols).saturating_mul(layers)
+        );
         let mut rng = StdRng::seed_from_u64(seed);
         let center_r = rows as f64 / 2.0;
         let center_c = cols as f64 / 2.0;
@@ -354,6 +375,12 @@ impl TumorGrid3D {
         // Without the cbrt, samples bias toward the center (analogous to
         // 2D where sqrt(rand) gives uniform-area; cbrt(rand) is 3D's
         // uniform-volume).
+        //
+        // Axis convention: `r` is the polar (vertical) axis, `(c, l)` form
+        // the azimuthal plane. So a cluster at φ = 0 sits on the r axis
+        // (highest row offset), and θ rotates within the (c, l) plane.
+        // Choice is arbitrary; documented here because the asymmetric
+        // r vs c/l usage is non-obvious from the math.
         let n_clusters = 10 + (rng.gen_range(0..11) as usize);
         let cluster_centers: Vec<(f64, f64, f64)> = (0..n_clusters)
             .map(|_| {
@@ -368,8 +395,15 @@ impl TumorGrid3D {
                 )
             })
             .collect();
-        let cluster_radius = 4.0; // cells; same as 2D — volume-equivalent
-                                  // retuning is a follow-up calibration
+        // TODO(#194): cluster_radius=4.0 cells gives ~268 cells per
+        // cluster in 3D (4/3·π·4³) vs ~50 in 2D (π·4²) — so persister
+        // clusters are ~5× larger relative to tumor volume than the
+        // 2D analog. A volume-equivalent retune (≈ cluster_radius =
+        // 4·(50/268)^(1/3) ≈ 2.4 cells, giving ~50 cells/cluster) keeps
+        // the 2D↔3D census proportions comparable. Left at 4.0 for v1
+        // to match the 2D code shape literally; sim-spatial-3d (#194)
+        // is the natural place to calibrate against experimental data.
+        let cluster_radius = 4.0;
 
         let mut cells = Vec::with_capacity(rows * cols * layers);
 
@@ -659,30 +693,50 @@ mod tests_3d {
         }
         assert_eq!(count, 26, "interior cell must have 26 neighbors");
 
-        g.diffuse_iron(2.0, 0.0308); // 3D-natural fraction per docstring
+        let iron_per_death = 2.0;
+        let neighbor_fraction = 0.0308; // 3D-natural fraction per docstring
+        let expected = iron_per_death * neighbor_fraction;
+        g.diffuse_iron(iron_per_death, neighbor_fraction);
 
         for &(nr, nc, nl) in &positions[..count] {
-            assert!(
-                g.get(nr, nc, nl).extra_iron > 0.0,
-                "neighbor ({nr},{nc},{nl}) should have received iron"
+            // Assert the *magnitude* — not just presence — so a bug that
+            // applied neighbor_fraction twice or swapped iron_per_death
+            // for a constant is caught. IEEE-exact: only one multiply, no
+            // libm-dependent ops, so strict equality is safe.
+            assert_eq!(
+                g.get(nr, nc, nl).extra_iron,
+                expected,
+                "neighbor ({nr},{nc},{nl}) extra_iron should equal iron_per_death × neighbor_fraction"
             );
         }
         assert!(!g.get(r, c, l).newly_dead, "newly_dead flag should be cleared after diffusion");
     }
 
-    /// Generate is deterministic from seed: same seed → same census.
+    /// Generate is deterministic from seed: same seed → same per-cell
+    /// assignment (not just same aggregate census).
+    ///
+    /// The original version only compared `census()` counts, which would
+    /// pass even if phenotype assignments were permuted across the cells
+    /// vec (e.g. a bug that swapped the order of cluster checks but kept
+    /// the same totals). This stronger version walks every cell and
+    /// compares `(phenotype, is_tumor)` pairwise — a true bit-level
+    /// determinism check on `generate`'s output.
     #[test]
     fn generate_is_deterministic() {
         let g1 = TumorGrid3D::generate(20, 20, 20, 20.0, 42);
         let g2 = TumorGrid3D::generate(20, 20, 20, 20.0, 42);
-        let c1 = g1.census();
-        let c2 = g2.census();
-        assert_eq!(c1.total_tumor, c2.total_tumor);
-        assert_eq!(c1.stromal, c2.stromal);
-        assert_eq!(c1.glycolytic, c2.glycolytic);
-        assert_eq!(c1.oxphos, c2.oxphos);
-        assert_eq!(c1.persister, c2.persister);
-        assert_eq!(c1.persister_nrf2, c2.persister_nrf2);
+
+        assert_eq!(g1.cells.len(), g2.cells.len());
+        for (i, (a, b)) in g1.cells.iter().zip(g2.cells.iter()).enumerate() {
+            assert_eq!(
+                a.phenotype, b.phenotype,
+                "phenotype divergence at flat index {i}"
+            );
+            assert_eq!(
+                a.is_tumor, b.is_tumor,
+                "is_tumor divergence at flat index {i}"
+            );
+        }
     }
 
     /// Spherical tumor: census has both tumor and stromal cells, and
@@ -729,17 +783,21 @@ mod tests_3d {
             nb.extra_iron = 0.0;
         }
 
-        g.diffuse_iron(2.0, 0.0308);
+        let iron_per_death = 2.0;
+        let neighbor_fraction = 0.0308;
+        let expected = iron_per_death * neighbor_fraction;
+        g.diffuse_iron(iron_per_death, neighbor_fraction);
 
-        // All 7 valid neighbors received iron; no out-of-bounds writes
-        // (would have panicked) and `newly_dead` was cleared.
-        let mut received = 0;
+        // All 7 valid neighbors received exactly the right magnitude
+        // (catches a "iterate ..26 unconditionally" bug — out-of-bounds
+        // would panic — AND a "wrong multiplier" bug).
         for &(nr, nc, nl) in &positions[..count] {
-            if g.get(nr, nc, nl).extra_iron > 0.0 {
-                received += 1;
-            }
+            assert_eq!(
+                g.get(nr, nc, nl).extra_iron,
+                expected,
+                "corner neighbor ({nr},{nc},{nl}) extra_iron should equal expected"
+            );
         }
-        assert_eq!(received, 7, "all 7 corner neighbors should receive iron");
         assert!(!g.get(r, c, l).newly_dead, "newly_dead should be cleared");
     }
 
