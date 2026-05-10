@@ -29,6 +29,8 @@
 //! clinical PK of porfimer sodium, Photochlor, and 5-ALA-induced PpIX
 //! in humans (PMID 16634075).
 
+use std::fmt;
+
 use serde::{Deserialize, Serialize};
 
 /// Photosensitizer pharmacokinetic model used to scale PDT light dose by
@@ -52,6 +54,25 @@ pub enum Photosensitizer {
 impl Default for Photosensitizer {
     fn default() -> Self {
         Self::Uniform(1.0)
+    }
+}
+
+impl fmt::Display for Photosensitizer {
+    /// Human-readable form that round-trips through the CLI spec parser
+    /// (`name[=value]`, lowercase variant name). A user can copy a
+    /// `Photosensitizer: ...` line from stderr and pass it back to
+    /// `--photosensitizer` verbatim.
+    ///
+    /// Note: relies on `f64`'s `Display` impl rendering whole numbers
+    /// without a decimal point (`504.0_f64` → `"504"`). This is
+    /// long-standing stable behavior but technically implementation-
+    /// defined; if it ever changes, both this output and the round-trip
+    /// tests will need updating.
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Uniform(c) => write!(f, "uniform={c}"),
+            Self::Porfimer { t_half_h } => write!(f, "porfimer={t_half_h}"),
+        }
     }
 }
 
@@ -188,6 +209,30 @@ mod tests {
         assert_eq!(p.concentration_at(1e9), 0.5);
         // Non-default value must not be silently treated as 1.0.
         assert_ne!(p.concentration_at(50.0), 1.0);
+    }
+
+    // -- Display --
+
+    // The Display assertions below rely on `f64`'s Display impl
+    // formatting whole numbers without a decimal point (e.g. `1.0_f64`
+    // renders as `"1"`). This is long-standing stable Rust behavior.
+
+    #[test]
+    fn display_uniform() {
+        assert_eq!(format!("{}", Photosensitizer::Uniform(1.0)), "uniform=1");
+        assert_eq!(format!("{}", Photosensitizer::Uniform(0.5)), "uniform=0.5");
+    }
+
+    #[test]
+    fn display_porfimer() {
+        assert_eq!(
+            format!("{}", Photosensitizer::Porfimer { t_half_h: 504.0 }),
+            "porfimer=504"
+        );
+        assert_eq!(
+            format!("{}", Photosensitizer::Porfimer { t_half_h: 336.5 }),
+            "porfimer=336.5"
+        );
     }
 
     #[test]
