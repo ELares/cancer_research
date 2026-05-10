@@ -4,9 +4,11 @@
 //! diffusion. The 2D model ([`TumorGrid`], 8-Moore neighbors, circular
 //! tumor) is the established default used by `sim-spatial` and `sim-tme`.
 //! The 3D model ([`TumorGrid3D`], 26-Moore neighbors, spherical tumor)
-//! was added as foundational infrastructure for the spheroid-validation
-//! series (#185–#197); analytics (`depth_kill_curve`, `death_heatmap`
-//! analogs) land with the binary that actually uses them (#194).
+//! provides foundational infrastructure for the spheroid-validation series
+//! (#185–#197). #185 (struct) and #186 (signed radial depth + paired 3D
+//! energy-physics dispatcher in [`crate::physics`]) are landed; downstream
+//! analytics (`depth_kill_curve` / `death_heatmap` analogs) and the
+//! sim-spatial-3d binary land with #194.
 
 use ndarray::Array2;
 use rand::prelude::*;
@@ -14,6 +16,15 @@ use serde::Serialize;
 
 use crate::cell::{gen_cell, Cell, Phenotype};
 use crate::biochem::CellState;
+
+/// Fraction of the smallest grid dimension used for the tumor sphere/circle
+/// radius (in lattice cells). Shared by [`TumorGrid3D::generate`] and
+/// [`TumorGrid3D::radial_depth_um`] so geometry stays in sync — changing
+/// this value moves both the generated tumor and the depth-from-surface
+/// reference together. (The 2D [`TumorGrid::generate`] uses the same
+/// numeric value inline; if it ever needs to vary independently we can
+/// split the constants.)
+const TUMOR_RADIUS_FRACTION: f64 = 0.45;
 
 /// A single cell in the spatial grid.
 #[derive(Clone, Debug, Serialize)]
@@ -325,7 +336,9 @@ impl TumorGrid3D {
     ///
     /// Layout:
     /// - Spherical tumor centered in `(rows/2, cols/2, layers/2)` with
-    ///   radius = `min(rows, cols, layers) * 0.45`
+    ///   radius = `min(rows, cols, layers) * TUMOR_RADIUS_FRACTION`
+    ///   (currently 0.45; same constant used by
+    ///   [`TumorGrid3D::radial_depth_um`])
     /// - Core (inner 60% of tumor radius): Glycolytic 80%, OXPHOS 15%, Persister 5%
     /// - Periphery (outer 40%): OXPHOS 70%, Glycolytic 20%, Persister 8%, PersisterNrf2 2%
     /// - 10–20 persister cluster seeds scattered uniformly by volume
@@ -368,7 +381,7 @@ impl TumorGrid3D {
         let center_r = rows as f64 / 2.0;
         let center_c = cols as f64 / 2.0;
         let center_l = layers as f64 / 2.0;
-        let tumor_radius = (rows.min(cols).min(layers) as f64) * 0.45;
+        let tumor_radius = (rows.min(cols).min(layers) as f64) * TUMOR_RADIUS_FRACTION;
         let core_radius = tumor_radius * 0.6;
 
         // Generate persister cluster centers uniformly distributed by
@@ -614,12 +627,24 @@ impl TumorGrid3D {
     ///
     /// **Geometry:** matches [`TumorGrid3D::generate`] — sphere center at
     /// `(rows/2, cols/2, layers/2)`, lattice-centered coords (no voxel
-    /// offset), and `tumor_radius = min(rows, cols, layers) × 0.45`.
+    /// offset), and `tumor_radius = min(rows, cols, layers) × TUMOR_RADIUS_FRACTION`
+    /// (both `generate` and this method share the same constant, so the
+    /// generated geometry and the depth-from-surface reference can't drift).
     ///
     /// **Intended use:** pair with [`crate::physics::local_ros_multiplier_3d`]
-    /// for spheroid PDT/SDT energy deposition — energy enters from the
-    /// (isotropic) sphere surface and attenuates inward, so penetration
-    /// depth maps to this signed radial coordinate clipped at zero.
+    /// for spheroid PDT/SDT energy deposition.
+    ///
+    /// **Physical caveat — first-order nearest-surface approximation.** This
+    /// returns the *radial* depth from the spheroid surface, which models
+    /// energy entering from the nearest surface point and attenuating along
+    /// a 1-D radial path. That is the standard first-order approximation
+    /// used in spheroid PDT/SDT models, but it is **not** the exact fluence
+    /// profile for isotropic surface illumination: a full solution would
+    /// integrate chord-length contributions from every surface point and
+    /// account for diffuse back-scatter buildup near the boundary (which
+    /// can push near-surface fluence above `I₀`). For uncalibrated v1
+    /// modelling this is fine; calibration against experimental depth-kill
+    /// curves lands with sim-spatial-3d (#194).
     ///
     /// **Not yet bounds-checked:** caller is expected to pass `(r, c, l)`
     /// within the grid (matching the no-bounds-check convention of
@@ -630,7 +655,8 @@ impl TumorGrid3D {
         let center_r = self.rows as f64 / 2.0;
         let center_c = self.cols as f64 / 2.0;
         let center_l = self.layers as f64 / 2.0;
-        let tumor_radius = (self.rows.min(self.cols).min(self.layers) as f64) * 0.45;
+        let tumor_radius =
+            (self.rows.min(self.cols).min(self.layers) as f64) * TUMOR_RADIUS_FRACTION;
         let dr = r as f64 - center_r;
         let dc = c as f64 - center_c;
         let dl = l as f64 - center_l;
@@ -957,6 +983,62 @@ mod tests_3d {
         let g2 = TumorGrid3D::generate(10, 10, 10, 20.0, 42);
         for &(r, c, l) in &[(0, 0, 0), (5, 5, 5), (9, 9, 9), (3, 7, 2)] {
             assert_eq!(g1.radial_depth_um(r, c, l), g2.radial_depth_um(r, c, l));
+        }
+    }
+
+    /// A cell sitting exactly on the spheroid boundary returns depth ≈ 0.
+    /// Defends the sign-convention contract: `depth = 0` at the surface,
+    /// positive inside, negative outside. Picks a grid where the
+    /// (r, c, l) offset from center hits an exact rational distance equal
+    /// to `tumor_radius_lattice`, so the assertion is precise.
+    ///
+    /// For a `(20, 20, 20)` grid: center = (10, 10, 10), tumor_radius
+    /// = 20 × TUMOR_RADIUS_FRACTION = 9.0 lattice units. Cell (10, 10, 19)
+    /// is 9.0 lattice units offset from center along the `l` axis, so
+    /// `depth = (9.0 - 9.0) × cell_size = 0.0` exactly (subtracting
+    /// equal f64s yields a true zero, no libm involved).
+    #[test]
+    fn radial_depth_at_sphere_surface_is_zero() {
+        let g = TumorGrid3D::generate(20, 20, 20, 20.0, 42);
+        let on_surface = g.radial_depth_um(10, 10, 19);
+        assert_eq!(on_surface, 0.0);
+    }
+
+    /// Guards against silent geometry drift: the generated tumor and the
+    /// reference sphere used by `radial_depth_um` must use the same radius.
+    /// If a future refactor changed one side without the other (e.g. tweaks
+    /// `generate` to use a different fraction inline), this test catches it.
+    ///
+    /// Walks every cell in a small grid and asserts:
+    /// - `is_tumor == true`  →  `radial_depth_um >= 0` (cell is at or
+    ///   inside the depth-reference sphere)
+    /// - `is_tumor == false` →  `radial_depth_um < 0`  (cell is outside)
+    ///
+    /// Holds exactly *because* both code paths reference
+    /// `TUMOR_RADIUS_FRACTION` — the test breaks the moment they diverge.
+    #[test]
+    fn radial_depth_sign_agrees_with_generated_is_tumor() {
+        let g = TumorGrid3D::generate(10, 10, 10, 20.0, 42);
+        for r in 0..g.rows {
+            for c in 0..g.cols {
+                for l in 0..g.layers {
+                    let depth = g.radial_depth_um(r, c, l);
+                    let is_tumor = g.get(r, c, l).is_tumor;
+                    if is_tumor {
+                        assert!(
+                            depth >= 0.0,
+                            "tumor cell ({r},{c},{l}) has negative depth {depth}; \
+                             generate/radial_depth_um drifted"
+                        );
+                    } else {
+                        assert!(
+                            depth < 0.0,
+                            "stromal cell ({r},{c},{l}) has non-negative depth {depth}; \
+                             generate/radial_depth_um drifted"
+                        );
+                    }
+                }
+            }
         }
     }
 }

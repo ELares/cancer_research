@@ -1,7 +1,22 @@
 //! Energy deposition models for PDT, SDT, and RSL3.
 //!
-//! Physics of how treatment energy attenuates with tissue depth,
-//! converting to local ROS dose for each cell in the spatial model.
+//! Physics of how treatment energy attenuates with tissue depth, converting
+//! to local ROS dose. Two dispatchers share the same per-treatment
+//! depth-attenuation functions: [`local_ros_multiplier`] (2D, row-based,
+//! planar surface illumination from row 0) and [`local_ros_multiplier_3d`]
+//! (3D, raw radial depth, spheroid surface illumination — pair with
+//! [`crate::grid::TumorGrid3D::radial_depth_um`]).
+//!
+//! **Physical scope.** The PDT path uses the diffusion-approximation form
+//! `µ_eff = sqrt(3·µ_a·(µ_a+µ_s'))` (Jacques 2013), conventionally labelled
+//! "modified Beer-Lambert" in the biomedical-optics literature. The SDT
+//! path uses the empirical `dB/cm/MHz` linear-attenuation form for soft
+//! tissue (Cobbold 2007). Both are first-order **plane-wave** models
+//! applied along a radial path in 3D; chord-length integration from the
+//! full spheroid surface, diffuse back-scatter buildup, and curvature
+//! refraction are **not** modelled. Adequate for first-order spheroid
+//! comparison; calibration against experimental depth-kill curves is the
+//! charter of sim-spatial-3d (#194).
 
 use crate::cell::Treatment;
 use crate::params::SpatialParams;
@@ -133,17 +148,34 @@ pub fn local_ros_multiplier(
 /// **Why the signature differs from the 2D version:** the 2D model lays
 /// energy onto a planar surface (row 0), so `local_ros_multiplier` takes
 /// `(row, cell_size)` and computes `z = row × cell_size` internally. The
-/// 3D model treats energy as entering isotropically through the spheroid
-/// surface, so per-cell depth is **not** a simple coordinate × size — it
-/// depends on geometry. Computing depth lives in `TumorGrid3D`; this
-/// function takes the already-derived depth so physics stays decoupled
-/// from grid representation.
+/// 3D model treats energy as entering through the spheroid surface, so
+/// per-cell depth is **not** a simple coordinate × size — it depends on
+/// geometry. Computing depth lives in `TumorGrid3D`; this function takes
+/// the already-derived depth so physics stays decoupled from grid
+/// representation.
+///
+/// **Physical caveat — different geometry from 2D, same depth function.**
+/// The 2D path models a planar tissue slab illuminated from one edge.
+/// This 3D path models a spheroid with energy entering at the nearest
+/// surface point along a 1-D radial path — the standard first-order
+/// approximation. It does **not** integrate chord-length contributions
+/// from the full spheroid surface (under isotropic illumination, every
+/// surface point contributes; this approximation only credits the
+/// nearest) and it ignores diffuse back-scatter buildup that can push
+/// near-surface fluence above `I₀`. Net effect: the model tends to
+/// over-estimate fluence at deep cells under truly isotropic
+/// illumination. Adequate for first-order spheroid comparison;
+/// calibration against experimental depth-kill curves lands with
+/// sim-spatial-3d (#194).
 ///
 /// **2D ≡ 3D at matched depth:** for any treatment and parameter set, if
 /// the 3D caller passes `depth = row × cell_size_um` (the same value the
 /// 2D path would compute internally), this function returns the same
-/// multiplier as `local_ros_multiplier(row, cell_size_um, ...)`. Locked
-/// down by `pdt_2d_3d_match_at_same_depth_*` tests below.
+/// multiplier as `local_ros_multiplier(row, cell_size_um, ...)`. This is
+/// a **mathematical** invariant on the dispatcher (same depth-function
+/// applied to same f64), not a claim of physical equivalence between the
+/// two geometries. Locked down by
+/// `local_ros_multiplier_2d_3d_match_at_same_depth` below.
 ///
 /// Returns a multiplier in `[0, ∞)`. For `Control`, always returns 0.
 pub fn local_ros_multiplier_3d(radial_depth_um: f64, tx: Treatment, params: &SpatialParams) -> f64 {
