@@ -34,6 +34,7 @@ Run the included example: `cargo run -p ferroptosis-core --example basic_usage`
 | `stats` | Wilson confidence intervals, parallel Monte Carlo execution via rayon |
 | `physics` | Depth-dependent energy deposition: Beer-Lambert (PDT), acoustic attenuation (SDT), uniform (RSL3). 2D row-based (`local_ros_multiplier`) and 3D radial-depth (`local_ros_multiplier_3d`) dispatchers share the same per-treatment depth functions (#186). |
 | `grid` | 2D `TumorGrid` (8-Moore, circular) and 3D `TumorGrid3D` (26-Moore, spherical) with heterogeneous architecture, neighbor iteration, iron diffusion. `TumorGrid3D::radial_depth_um` provides per-cell signed depth from the spheroid surface for energy physics (#185, #186). 3D analytics (radial-depth curves, volumetric heatmaps) and the consuming binary land with #194. |
+| `oxygen` | 3D radial O₂ gradients for spheroid tumors: `radial_o2_field` (per-cell `exp(-d/λ)` factor) and `radial_o2_zone_kill_rates` (normoxic / transition / hypoxic zone census). First-order Krogh approximation; pure functions for composable cycling (#187). |
 | `immune` | ICD/DAMP immune cascade: ferroptotic death quality drives dendritic cell activation and T cell priming |
 | `io` | JSON and CSV output helpers |
 | `drug_transport` | Krogh cylinder drug penetration model |
@@ -82,6 +83,26 @@ cell_size, ...) == local_ros_multiplier_3d(row × cell_size, ...)` holds
 bit-exact across all `Treatment` variants — the physical *geometries*
 differ (planar slab vs. spheroid + nearest-surface 1-D approximation),
 but the dispatcher math does not.
+
+**3D spheroid oxygen gradient (#187):**
+```rust
+use ferroptosis_core::oxygen::{radial_o2_field, radial_o2_zone_kill_rates};
+
+let g = TumorGrid3D::generate(40, 40, 40, 20.0, 42);
+let o2 = radial_o2_field(&g, 100.0);                 // Vec<f64>, length = g.cells.len()
+let (norm, trans, hyp) = radial_o2_zone_kill_rates(&g, 100.0);
+```
+Stromal cells (outside spheroid) get O₂ = 1.0 (well-oxygenated bulk
+tissue). Pure functions return values rather than mutating
+`cell.basal_ros`, so the consumer composes cycling by re-calling
+`radial_o2_field` per step with alternating λ (no `original_ros`
+snapshot needed). First-order Krogh approximation; the exact
+Krogh-Riley spheroidal solution involves `sinh` ratios — same
+approximation level as `sim-tme`'s 2D `apply_o2_gradient`. Note:
+pure-geometry 3D *hypoxic* fraction at matched R and λ is *smaller*
+than 2D (the cubic-vs-quadratic scaling dominates the normoxic shell,
+not the hypoxic core — the Vaupel 1989 observation that real 3D
+spheroids are more hypoxic reflects vasculature biology, not geometry).
 
 **Parameter contexts:**
 - `Params::default()` — 2D culture baseline
