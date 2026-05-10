@@ -57,7 +57,8 @@ struct Args {
     ///
     ///   --photosensitizer porfimer=504           t_half only (legacy)
     ///   --photosensitizer porfimer=504,36        t_half + t_dist
-    ///   --photosensitizer porfimer=504,0,0.65    t_half + phi (half-yield via 3-positional)
+    ///   --photosensitizer porfimer=504,0,0.5     t_half + phi (half-yield via 3-positional)
+    ///   --photosensitizer porfimer=504,0,0.65    porfimer absolute phi (≈ tissue baseline)
     ///   --photosensitizer "uniform=2"            enrichment hook (>1)
     ///
     /// Values >1.0 for `uniform` and `phi` are intentionally permitted

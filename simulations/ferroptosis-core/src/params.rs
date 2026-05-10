@@ -152,25 +152,30 @@ pub struct SpatialParams {
     /// Fraction of released iron reaching each neighbor cell.
     pub neighbor_iron_fraction: f64,
     /// Photosensitizer PK model. `Uniform(1.0)` (default) reproduces
-    /// pre-PK PDT physics exactly. `Porfimer { t_half_h }` enables
-    /// drug-light-interval-aware scaling of the PDT dose.
-    /// See `photosensitizer_pk` module.
+    /// pre-PK PDT physics exactly. `Porfimer { t_half_h, t_distribution_h,
+    /// phi_so2_relative }` enables drug-light-interval-aware scaling of
+    /// the PDT dose, with optional saturating distribution phase and
+    /// relative singlet-O₂ yield. `physics::pdt_intensity_at_depth`
+    /// composes via `Photosensitizer::yield_at`. See the
+    /// `photosensitizer_pk` module for the full kinetics + parser.
     #[serde(default)]
     pub photosensitizer: Photosensitizer,
-    /// Hours from photosensitizer **post-distribution peak** to light
-    /// delivery, passed directly to `photosensitizer.concentration_at(t_h)`.
+    /// Hours from administration to light delivery, passed to
+    /// `photosensitizer.yield_at(t_h)`.
     ///
-    /// This is NOT the standard clinical "drug-light interval" measured
-    /// from injection. The model's `t = 0` is post-distribution peak, so
-    /// clinical DLI ≈ distribution_phase + this field. For porfimer the
-    /// distribution phase is roughly 24–48 h (Bellnier 2006); for drugs
-    /// with shorter t½ (e.g., 5-ALA at ~24 h) ignoring the distribution
-    /// phase is a large error. Explicit distribution-phase modeling is a
-    /// follow-up — see the `photosensitizer_pk` module docstring.
+    /// Interpretation depends on `Porfimer.t_distribution_h`:
+    /// - With `t_distribution_h = 0` (default), this is interpreted as
+    ///   time from *post-distribution peak* — same semantics as the
+    ///   pre-#203 model.
+    /// - With `t_distribution_h > 0`, the model holds drug at peak for
+    ///   the first `t_distribution_h` hours after administration, then
+    ///   begins exponential decay. So this field can be the **clinical
+    ///   DLI from injection** directly (Bellnier 2006 reports porfimer
+    ///   redistribution over ~24–48 h; setting `t_distribution_h ≈ 36`
+    ///   approximates the absorption phase as a saturating step).
     ///
-    /// Default 0.0 (light delivered at peak) combined with the default
-    /// `Photosensitizer::Uniform(1.0)` reproduces pre-PK PDT physics
-    /// exactly.
+    /// Default 0.0 combined with the default `Photosensitizer::Uniform(1.0)`
+    /// reproduces pre-PK PDT physics exactly.
     #[serde(default)]
     pub t_drug_light_interval_h: f64,
 }

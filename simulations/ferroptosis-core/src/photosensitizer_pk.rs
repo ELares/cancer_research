@@ -1,17 +1,31 @@
 //! Photosensitizer plasma pharmacokinetics for PDT.
 //!
-//! Models the time-decaying concentration of a systemically administered
-//! photosensitizer between dosing and light delivery (the drug-light
-//! interval, DLI). Used by `physics::pdt_intensity_at_depth` to scale
-//! depth-attenuated light intensity by the fraction of drug still present
-//! when illumination occurs.
+//! Models the time-resolved concentration and per-photon ROS yield of a
+//! systemically administered photosensitizer between dosing and light
+//! delivery (the drug-light interval, DLI). `physics::pdt_intensity_at_depth`
+//! scales depth-attenuated light intensity by `Photosensitizer::yield_at`.
 //!
-//! v1 captures the *temporal* PK only — intra-drug C(t) decay between
-//! administration and illumination. It does NOT capture inter-drug
-//! ROS-yield differences (singlet-O2 quantum yield phi_so2), 5-ALA → PpIX
-//! intracellular accumulation, photobleaching during illumination, or
-//! formulation-dependent Vd / protein binding. Those are intentional
-//! follow-ups; see issue #200.
+//! Closed via #200 / #203:
+//! - Intra-drug temporal PK — single-exponential plasma decay
+//!   (`Photosensitizer::Porfimer.t_half_h`).
+//! - Saturating distribution-phase hold (`Porfimer.t_distribution_h`):
+//!   drug is held at peak for the first `t_distribution_h` hours then
+//!   begins exponential decay. Default `0.0` recovers the pre-#203
+//!   "light at peak" model bit-exactly. With `t_distribution_h > 0`,
+//!   `t_drug_light_interval_h` can be the **clinical DLI from injection**.
+//! - Inter-drug ROS-yield normalization (`Porfimer.phi_so2_relative`):
+//!   `yield_at(t)` returns `concentration_at(t) × phi_so2_relative`.
+//!   `Params::pdt_ros = 5.0` is calibrated to porfimer at peak (yield = 1.0);
+//!   future drug variants set this field to `absolute_phi_so2 / 0.65`
+//!   so the calibration carries through.
+//!
+//! Still out of scope (intentional, separate-issue follow-ups):
+//! - 5-ALA → PpIX intracellular accumulation (ferrochelatase-deficiency
+//!   biology, not just PK)
+//! - Photobleaching during illumination (separate temporal axis)
+//! - Two-phase rising-curve distribution (current is saturating-step
+//!   approximation per #203's design choice)
+//! - Formulation-dependent Vd / protein binding
 //!
 //! `t_half_h` represents *plasma* terminal half-life. Cellular
 //! concentration is assumed to track plasma proportionally — a reasonable
@@ -20,14 +34,17 @@
 //! ferrochelatase deficiency rather than decaying. ALA kinetics need a
 //! different variant.
 //!
-//! The model's `t = 0` represents *post-distribution peak*, not the moment
-//! of IV bolus. Porfimer distribution takes 1–2 days; users setting
-//! `t_drug_light_interval_h = 0` are modeling "light at peak," not
-//! "light at injection."
+//! With `t_distribution_h = 0` (default), `t = 0` represents
+//! *post-distribution peak*. With `t_distribution_h > 0`, `t = 0` is the
+//! moment of administration and the drug is held at peak for the first
+//! `t_distribution_h` hours of the model.
 //!
 //! Reference: Bellnier DA et al., Lasers Surg Med 38(5):439-444, 2006 —
 //! clinical PK of porfimer sodium, Photochlor, and 5-ALA-induced PpIX
 //! in humans (PMID 16634075).
+//! Reference: Wilson BC, Patterson MS, Phys Med Biol 53(9):R61-109, 2008 —
+//! porfimer absolute phi_so2 ≈ 0.65 in solution (community-anchored
+//! across PDT literature).
 
 use std::fmt;
 use std::str::FromStr;
