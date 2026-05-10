@@ -307,8 +307,10 @@ pub fn death_heatmap(grid: &TumorGrid) -> Array2<u8> {
 /// the binary that constructs them (#194 `sim-spatial-3d`).
 ///
 /// **Storage:** flat `Vec<GridCell>` indexed as
-/// `r * cols * layers + c * layers + l` for cache-friendly layer-major
-/// iteration. Same shape as `TumorGrid`'s `r * cols + c`.
+/// `r * cols * layers + c * layers + l` — row-major (C-order) with
+/// strides `(cols*layers, layers, 1)`. The `l` axis has stride 1, so
+/// `for r { for c { for l { ... } } }` is cache-friendly. Extends
+/// `TumorGrid`'s row-major `r * cols + c` to a third dimension.
 pub struct TumorGrid3D {
     pub cells: Vec<GridCell>,
     pub rows: usize,
@@ -698,6 +700,88 @@ mod tests_3d {
         assert!(g.get(10, 10, 10).is_tumor, "center cell should be tumor");
         // Corner is well outside (distance from center ≈ 17.3 > 9.0)
         assert!(!g.get(0, 0, 0).is_tumor, "corner cell should be stromal");
+    }
+
+    /// `diffuse_iron` correctly handles a corner cell (count=7, not 26).
+    /// Catches a hypothetical "iterate `&neighbors[..26]` unconditionally"
+    /// bug — the interior test alone wouldn't notice that, since at
+    /// interior cells count *is* 26. We override `is_tumor` on the corner
+    /// and its 7 neighbors so the diffusion path isn't gated by phenotype.
+    #[test]
+    fn diffuse_iron_distributes_to_only_7_corner_neighbors() {
+        let mut g = TumorGrid3D::generate(10, 10, 10, 20.0, 42);
+
+        let (r, c, l) = (0, 0, 0); // grid corner
+        // Force the corner to be a fresh tumor cell that just died.
+        let gc = g.get_mut(r, c, l);
+        gc.is_tumor = true;
+        gc.state.dead = true;
+        gc.newly_dead = true;
+        gc.extra_iron = 0.0;
+
+        // Record neighbor identity + force them to be alive tumor.
+        let (positions, count) = g.neighbors(r, c, l);
+        assert_eq!(count, 7, "corner should have 7 neighbors");
+        for &(nr, nc, nl) in &positions[..count] {
+            let nb = g.get_mut(nr, nc, nl);
+            nb.is_tumor = true;
+            nb.state.dead = false;
+            nb.extra_iron = 0.0;
+        }
+
+        g.diffuse_iron(2.0, 0.0308);
+
+        // All 7 valid neighbors received iron; no out-of-bounds writes
+        // (would have panicked) and `newly_dead` was cleared.
+        let mut received = 0;
+        for &(nr, nc, nl) in &positions[..count] {
+            if g.get(nr, nc, nl).extra_iron > 0.0 {
+                received += 1;
+            }
+        }
+        assert_eq!(received, 7, "all 7 corner neighbors should receive iron");
+        assert!(!g.get(r, c, l).newly_dead, "newly_dead should be cleared");
+    }
+
+    /// `layers = 1` collapses TumorGrid3D to a single-slab grid: index
+    /// math becomes `r * cols + c` (same as 2D), and neighbor counts
+    /// fall back to 8-Moore in the (r,c) plane since dl ∈ {0} only.
+    /// Locks down the useful "TumorGrid3D-as-2D-fallback" emergent
+    /// property — anything that breaks this is a regression in the
+    /// general index/neighbor formulas.
+    #[test]
+    fn layers_eq_1_degenerates_to_2d() {
+        let g = TumorGrid3D::generate(5, 5, 1, 20.0, 42);
+
+        // Index math: r * 5 * 1 + c * 1 + 0 == r * 5 + c
+        for r in 0..5 {
+            for c in 0..5 {
+                let flat = r * g.cols * g.layers + c * g.layers;
+                assert_eq!(flat, r * 5 + c, "layers=1 index should collapse to 2D");
+            }
+        }
+
+        // Interior cell at (2, 2, 0): 8 neighbors (Moore in (r,c) plane;
+        // dl ∈ {0} only since layers=1).
+        let (_, n_interior) = g.neighbors(2, 2, 0);
+        assert_eq!(
+            n_interior, 8,
+            "interior cell with layers=1 should have 8 Moore neighbors (2D fallback)"
+        );
+
+        // Corner at (0, 0, 0): 3 neighbors ({0,1}×{0,1} - self = 3).
+        let (_, n_corner) = g.neighbors(0, 0, 0);
+        assert_eq!(
+            n_corner, 3,
+            "corner with layers=1 should have 3 neighbors (2D-corner fallback)"
+        );
+
+        // Edge at (0, 2, 0): 5 neighbors ({0,1}×{1,2,3} - self = 5).
+        let (_, n_edge) = g.neighbors(0, 2, 0);
+        assert_eq!(
+            n_edge, 5,
+            "edge with layers=1 should have 5 neighbors (2D-edge fallback)"
+        );
     }
 
     /// Census on a fresh grid has no dead cells.
