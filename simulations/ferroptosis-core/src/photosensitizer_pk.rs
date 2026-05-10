@@ -58,13 +58,20 @@ impl Default for Photosensitizer {
 }
 
 impl fmt::Display for Photosensitizer {
-    /// Human-readable form. Mirrors the CLI spec parsed by
-    /// `sim-spatial`'s `--photosensitizer` flag (lowercase variant
-    /// name, optional `=N`) for round-trip readability in stderr logs.
+    /// Human-readable form that round-trips through the CLI spec parser
+    /// (`name[=value]`, lowercase variant name). A user can copy a
+    /// `Photosensitizer: ...` line from stderr and pass it back to
+    /// `--photosensitizer` verbatim.
+    ///
+    /// Note: relies on `f64`'s `Display` impl rendering whole numbers
+    /// without a decimal point (`504.0_f64` → `"504"`). This is
+    /// long-standing stable behavior but technically implementation-
+    /// defined; if it ever changes, both this output and the round-trip
+    /// tests will need updating.
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Uniform(c) => write!(f, "uniform={c}"),
-            Self::Porfimer { t_half_h } => write!(f, "porfimer (t½={t_half_h} h)"),
+            Self::Porfimer { t_half_h } => write!(f, "porfimer={t_half_h}"),
         }
     }
 }
@@ -206,6 +213,10 @@ mod tests {
 
     // -- Display --
 
+    // The Display assertions below rely on `f64`'s Display impl
+    // formatting whole numbers without a decimal point (e.g. `1.0_f64`
+    // renders as `"1"`). This is long-standing stable Rust behavior.
+
     #[test]
     fn display_uniform() {
         assert_eq!(format!("{}", Photosensitizer::Uniform(1.0)), "uniform=1");
@@ -216,7 +227,11 @@ mod tests {
     fn display_porfimer() {
         assert_eq!(
             format!("{}", Photosensitizer::Porfimer { t_half_h: 504.0 }),
-            "porfimer (t½=504 h)"
+            "porfimer=504"
+        );
+        assert_eq!(
+            format!("{}", Photosensitizer::Porfimer { t_half_h: 336.5 }),
+            "porfimer=336.5"
         );
     }
 

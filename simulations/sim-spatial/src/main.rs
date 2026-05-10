@@ -43,10 +43,12 @@ struct Args {
     #[arg(long, default_value_t = 180)]
     n_steps: u32,
 
-    /// Photosensitizer PK model for PDT light scaling. Spec format:
-    /// `uniform` (= `uniform=1.0`, the default), `uniform=N` (constant
-    /// fraction), `porfimer` (= `porfimer=504`, Bellnier 2006 t½ in hours),
-    /// or `porfimer=N` (custom t½ in hours).
+    /// Photosensitizer PK model for PDT light scaling. Spec format
+    /// (case-insensitive): `uniform` (= `uniform=1.0`, the default),
+    /// `uniform=N` (constant fraction; values >1.0 represent enrichment
+    /// rather than the typical [0, 1] drug-presence range, intentional
+    /// forward-compat hook), `porfimer` (= `porfimer=504`, Bellnier 2006
+    /// t½ in hours), or `porfimer=N` (custom t½ in hours).
     #[arg(long, default_value = "uniform")]
     photosensitizer: String,
 
@@ -484,12 +486,37 @@ mod tests {
 
     #[test]
     fn default_args_match_default_spatial_params() {
-        // The CLI default `--photosensitizer uniform --dli-h 0` must produce
-        // a Photosensitizer + DLI equal to SpatialParams::default(), so
-        // running with no flags is byte-identical to pre-CLI behavior.
-        let ps = parse_photosensitizer_spec("uniform").unwrap();
+        // Invokes clap with no user-supplied flags so the test catches
+        // accidental changes to the `default_value` attributes (e.g.
+        // someone bumping `--photosensitizer` default to `porfimer`).
+        // Without this, the parser-level invariant could pass while the
+        // clap defaults silently drifted from `SpatialParams::default()`.
+        let args = Args::parse_from(["sim-spatial"]);
+        let parsed_ps = parse_photosensitizer_spec(&args.photosensitizer).unwrap();
         let default_sp = SpatialParams::default();
-        assert_eq!(ps, default_sp.photosensitizer);
-        assert_eq!(0.0, default_sp.t_drug_light_interval_h);
+        assert_eq!(parsed_ps, default_sp.photosensitizer);
+        assert_eq!(args.dli_h, default_sp.t_drug_light_interval_h);
+        // Defensively also check the clap default string itself, since
+        // a renaming of the canonical "uniform" form would be visible
+        // in stderr but not in the parsed enum value.
+        assert_eq!(args.photosensitizer, "uniform");
+    }
+
+    #[test]
+    fn display_round_trips_through_parser() {
+        // Display's contract is round-trip parseability via
+        // `parse_photosensitizer_spec`. Verify both variants.
+        for ps in [
+            Photosensitizer::Uniform(1.0),
+            Photosensitizer::Uniform(0.5),
+            Photosensitizer::Porfimer { t_half_h: 504.0 },
+            Photosensitizer::Porfimer { t_half_h: 336.5 },
+        ] {
+            let rendered = format!("{ps}");
+            let reparsed = parse_photosensitizer_spec(&rendered).unwrap_or_else(|e| {
+                panic!("Display→parse round-trip failed for {ps:?} (rendered={rendered:?}): {e}")
+            });
+            assert_eq!(reparsed, ps, "round-trip mismatch via {rendered:?}");
+        }
     }
 }
