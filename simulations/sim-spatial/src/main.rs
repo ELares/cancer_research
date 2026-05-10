@@ -49,8 +49,12 @@ struct Args {
     /// rather than the typical [0, 1] drug-presence range, intentional
     /// forward-compat hook), `porfimer` (= `porfimer=504`, Bellnier 2006
     /// t½ in hours), or `porfimer=N` (custom t½ in hours).
-    #[arg(long, default_value = "uniform")]
-    photosensitizer: String,
+    ///
+    /// Parsed via `Photosensitizer`'s `FromStr` impl, so clap validates
+    /// the spec at flag-parse time and reports errors via clap's standard
+    /// formatter (no manual `eprintln! + exit(2)` dance in `main()`).
+    #[arg(long, default_value_t = Photosensitizer::default())]
+    photosensitizer: Photosensitizer,
 
     /// Drug-light interval in hours: time from photosensitizer
     /// post-distribution peak to light delivery. NOT the clinical DLI
@@ -176,13 +180,10 @@ fn run_spatial(
 fn main() {
     let args = Args::parse();
 
-    let photosensitizer = match Photosensitizer::from_cli_spec(&args.photosensitizer) {
-        Ok(ps) => ps,
-        Err(e) => {
-            eprintln!("error: --photosensitizer {:?}: {}", args.photosensitizer, e);
-            std::process::exit(2);
-        }
-    };
+    // `--photosensitizer` is parsed and validated by clap via the
+    // `Photosensitizer` `FromStr` impl, so by the time we reach here
+    // `args.photosensitizer` is a valid enum value. Only `--dli-h`
+    // (an `f64`) needs explicit validation — clap accepts NaN/inf/neg.
     if let Err(e) = validate_dli_h(args.dli_h) {
         eprintln!("error: --dli-h: {e}");
         std::process::exit(2);
@@ -198,12 +199,15 @@ fn main() {
     );
     eprintln!("Cell size: {} µm", args.cell_size);
     eprintln!("Seed: {}", args.seed);
-    eprintln!("Photosensitizer: {photosensitizer}, DLI: {} h\n", args.dli_h);
+    eprintln!(
+        "Photosensitizer: {}, DLI: {} h\n",
+        args.photosensitizer, args.dli_h
+    );
 
     let params = Params::default();
     let spatial_params = SpatialParams {
         cell_size_um: args.cell_size,
-        photosensitizer,
+        photosensitizer: args.photosensitizer,
         t_drug_light_interval_h: args.dli_h,
         ..Default::default()
     };
@@ -310,18 +314,14 @@ mod tests {
     /// Spec / DLI parsers and their edge-case rejection logic live in
     /// `ferroptosis_core::photosensitizer_pk`; their unit tests live with
     /// them. The remaining test here covers the only binary-specific
-    /// concern: that clap's `default_value` attributes still map to
+    /// concern: that clap's `default_value_t` attributes still map to
     /// `SpatialParams::default()`. Without this, the parser-level
     /// invariant could pass while the clap defaults silently drifted.
     #[test]
     fn default_args_match_default_spatial_params() {
         let args = Args::parse_from(["sim-spatial"]);
-        let parsed_ps = Photosensitizer::from_cli_spec(&args.photosensitizer).unwrap();
         let default_sp = SpatialParams::default();
-        assert_eq!(parsed_ps, default_sp.photosensitizer);
+        assert_eq!(args.photosensitizer, default_sp.photosensitizer);
         assert_eq!(args.dli_h, default_sp.t_drug_light_interval_h);
-        // Also pin the canonical CLI string so a rename would be visible
-        // in stderr but not just in the parsed enum value.
-        assert_eq!(args.photosensitizer, "uniform");
     }
 }
