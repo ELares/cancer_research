@@ -145,14 +145,22 @@ mod tests {
     }
 
     #[test]
-    fn porfimer_at_one_halflife_is_exactly_half() {
+    fn porfimer_at_one_halflife_is_half() {
         let p = Photosensitizer::Porfimer { t_half_h: 504.0 };
-        // exp(-ln(2)) is exactly 0.5 in IEEE 754 — strict equality.
-        assert_eq!(p.concentration_at(504.0), 0.5);
+        // `exp(-ln(2))` lands on 0.5 on most libm implementations but is
+        // not guaranteed bit-exact across platforms (intermediate rounding
+        // in `ln(2)/504 * 504` may not round-trip). Compare with a tight
+        // tolerance instead of strict equality.
+        let c = p.concentration_at(504.0);
+        assert!(
+            (c - 0.5).abs() < 1e-12,
+            "concentration_at(t_half_h) = {c}, expected ~0.5"
+        );
     }
 
     #[test]
     fn porfimer_at_zero_is_one() {
+        // `exp(0.0) == 1.0` is required by IEEE 754 — strict equality is safe here.
         let p = Photosensitizer::Porfimer { t_half_h: 504.0 };
         assert_eq!(p.concentration_at(0.0), 1.0);
     }
@@ -165,8 +173,21 @@ mod tests {
         let c2 = p.concentration_at(168.0);
         let c3 = p.concentration_at(504.0);
         assert!(c0 > c1 && c1 > c2 && c2 > c3);
+        // exp(0.0) == 1.0 exactly per IEEE 754; one-half-life value is
+        // libm-dependent so use epsilon comparison.
         assert_eq!(c0, 1.0);
-        assert_eq!(c3, 0.5);
+        assert!((c3 - 0.5).abs() < 1e-12);
+    }
+
+    #[test]
+    fn uniform_constant_at_all_times() {
+        // Uniform(c) returns c regardless of t_h, including c != 1.0.
+        let p = Photosensitizer::Uniform(0.5);
+        assert_eq!(p.concentration_at(0.0), 0.5);
+        assert_eq!(p.concentration_at(100.0), 0.5);
+        assert_eq!(p.concentration_at(1e9), 0.5);
+        // Non-default value must not be silently treated as 1.0.
+        assert_ne!(p.concentration_at(50.0), 1.0);
     }
 
     #[test]

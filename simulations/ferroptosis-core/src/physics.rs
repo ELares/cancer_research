@@ -31,11 +31,18 @@ use crate::params::SpatialParams;
 /// Ref: Bellnier DA et al., Lasers Surg Med 38(5):439-444, 2006 — clinical
 ///      photosensitizer PK (porfimer, Photochlor, 5-ALA-PpIX).
 ///
-/// Returns intensity multiplier in [0, 1] relative to surface, assuming
-/// the configured `Photosensitizer` and `t_drug_light_interval_h` pass
-/// [`Photosensitizer::validate`]. Invalid configurations trigger
-/// `debug_assert!` failures in test/debug builds and produce non-physical
-/// values in release.
+/// Returns a non-negative intensity multiplier relative to surface.
+///
+/// For valid `Photosensitizer::Uniform(c)` with `c ≤ 1.0` or any valid
+/// `Photosensitizer::Porfimer`, the value stays in `[0, 1]`. `Uniform(c)`
+/// with `c > 1.0` is intentionally permitted (forward-compat hook for
+/// drug-enrichment models) and can produce multipliers above 1.0.
+///
+/// Invalid configurations (NaN, negative, non-positive `t_half_h`) trigger
+/// `debug_assert!` failures in test/debug builds. In release builds those
+/// asserts are compiled out and outputs are not bounded — call
+/// [`Photosensitizer::validate`] explicitly when loading from untrusted
+/// sources.
 ///
 /// [`Photosensitizer::validate`]: crate::photosensitizer_pk::Photosensitizer::validate
 pub fn pdt_intensity_at_depth(z_um: f64, params: &SpatialParams) -> f64 {
@@ -158,7 +165,7 @@ mod tests {
     }
 
     #[test]
-    fn pdt_with_porfimer_at_one_halflife_is_exactly_half_of_default() {
+    fn pdt_with_porfimer_at_one_halflife_is_half_of_default() {
         use crate::photosensitizer_pk::Photosensitizer;
 
         let z_um = 1000.0; // arbitrary depth
@@ -172,9 +179,13 @@ mod tests {
         };
         let with_pk = pdt_intensity_at_depth(z_um, &pk_params);
 
-        // exp(-ln(2)) is exactly 0.5 in IEEE 754, and multiplying by 0.5
-        // is exact for any finite f64. Strict equality, not epsilon.
-        assert_eq!(with_pk, baseline * 0.5);
+        // `exp(-ln(2))` lands on 0.5 on most libms but is not guaranteed
+        // bit-exact across platforms; use a tight relative tolerance.
+        let expected = baseline * 0.5;
+        assert!(
+            (with_pk - expected).abs() < 1e-12,
+            "with_pk = {with_pk}, expected ~{expected}"
+        );
     }
 
     #[test]

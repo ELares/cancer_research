@@ -28,6 +28,7 @@ Run the included example: `cargo run -p ferroptosis-core --example basic_usage`
 | Module | Purpose |
 |--------|---------|
 | `cell` | Cell types, phenotypes (Glycolytic, OXPHOS, Persister, PersisterNrf2, Stromal), treatments, stochastic cell generation |
+| `photosensitizer_pk` | Photosensitizer plasma PK and drug-light-interval scaling for PDT |
 | `params` | All rate constants: `Params` (biochemistry), `SpatialParams` (physics), `ImmuneParams` (immune cascade), `RecoveryRates` |
 | `biochem` | Core simulation engine: `sim_cell` (full 180-step loop), `sim_cell_step` (single timestep for spatial interleaving) |
 | `stats` | Wilson confidence intervals, parallel Monte Carlo execution via rayon |
@@ -37,7 +38,6 @@ Run the included example: `cargo run -p ferroptosis-core --example basic_usage`
 | `io` | JSON and CSV output helpers |
 | `drug_transport` | Krogh cylinder drug penetration model |
 | `tumor_pk` | Two-compartment vascular/interstitial pharmacokinetics |
-| `photosensitizer_pk` | Photosensitizer plasma PK and drug-light-interval scaling for PDT |
 
 ## Key API
 

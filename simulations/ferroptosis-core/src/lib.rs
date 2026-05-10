@@ -19,6 +19,7 @@
 //! | Module | Purpose |
 //! |--------|---------|
 //! | [`cell`] | Phenotypes, treatments, stochastic cell generation |
+//! | [`photosensitizer_pk`] | Photosensitizer plasma PK and drug-light-interval scaling for PDT |
 //! | [`params`] | Rate constants for biochemistry, physics, immune cascade |
 //! | [`biochem`] | Core simulation engine |
 //! | [`stats`] | Wilson CIs, parallel Monte Carlo execution |
@@ -28,9 +29,13 @@
 //! | [`io`] | JSON and CSV output helpers |
 //! | [`drug_transport`] | Tissue-specific drug penetration (Krogh cylinder approximation) |
 //! | [`tumor_pk`] | Two-compartment vascular/interstitial pharmacokinetics |
-//! | [`photosensitizer_pk`] | Photosensitizer plasma PK and drug-light-interval scaling for PDT |
 
+// `photosensitizer_pk` is declared before `params` because `SpatialParams`
+// holds a `Photosensitizer`. Rust resolves all `mod` declarations together
+// so the order is not required by the compiler, but listing the dependency
+// first matches reading order.
 pub mod cell;
+pub mod photosensitizer_pk;
 pub mod params;
 pub mod biochem;
 pub mod stats;
@@ -40,4 +45,3 @@ pub mod immune;
 pub mod io;
 pub mod drug_transport;
 pub mod tumor_pk;
-pub mod photosensitizer_pk;
