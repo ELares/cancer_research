@@ -7,50 +7,57 @@ use crate::cell::Treatment;
 use crate::params::SpatialParams;
 
 /// PDT: Modified Beer-Lambert law for light in tissue, scaled by the
-/// fraction of photosensitizer present at the drug-light interval.
+/// per-photon ROS yield of the photosensitizer at the drug-light interval.
 ///
-/// I_eff(z, t_DLI) = I₀ × exp(-µ_eff × z) × C_drug(t_DLI)
+/// I_eff(z, t_DLI) = I₀ × exp(-µ_eff × z) × Y_drug(t_DLI)
+///
+/// where `Y_drug(t)` is `Photosensitizer::yield_at(t)` —
+/// `concentration_at(t) × phi_so2_relative` for `Porfimer`, or just
+/// `concentration_at(t)` for `Uniform`. The `phi_so2_relative` factor
+/// closes the inter-drug yield-comparison gap; `Params::pdt_ros` is
+/// calibrated to porfimer at peak (yield = 1.0), and other drug variants
+/// would set their `phi_so2_relative` to absolute_phi_so2 / porfimer's
+/// (~0.65) so the calibration carries through.
 ///
 /// µ_eff = sqrt(3 × µ_a × (µ_a + µ_s'))
 ///
 /// At 630nm red light: δ = 1/µ_eff ≈ 3.2mm
 /// At 660nm red light: δ ≈ 4-10mm
 ///
-/// The drug-presence multiplier `C_drug(t_DLI)` comes from
-/// `SpatialParams::photosensitizer.concentration_at(t_drug_light_interval_h)`.
 /// The default `Photosensitizer::Uniform(1.0)` with DLI=0 returns exactly
 /// 1.0, preserving pre-PK behavior bit-for-bit.
-///
-/// TODO(#200): inter-drug singlet-O₂ quantum yield (phi_so2) is NOT in
-/// this scalar — it is implicit in `Params::pdt_ros`. Inter-drug
-/// comparisons (porfimer vs Photochlor vs 5-ALA) need explicit phi_so2
-/// normalization. Spawn a follow-up issue.
 ///
 /// Ref: Jacques SL, "Optical properties of biological tissues: a review",
 ///      Phys Med Biol 58(11):R37-61, 2013
 /// Ref: Bellnier DA et al., Lasers Surg Med 38(5):439-444, 2006 — clinical
 ///      photosensitizer PK (porfimer, Photochlor, 5-ALA-PpIX).
+/// Ref: Wilson BC, Patterson MS, "The physics, biophysics and technology
+///      of photodynamic therapy", Phys Med Biol 53(9):R61-109, 2008 —
+///      porfimer absolute phi_so2 ≈ 0.65 in solution.
 ///
 /// Returns a non-negative intensity multiplier relative to surface.
 ///
 /// For valid `Photosensitizer::Uniform(c)` with `c ≤ 1.0` or any valid
-/// `Photosensitizer::Porfimer`, the value stays in `[0, 1]`. `Uniform(c)`
-/// with `c > 1.0` is intentionally permitted (forward-compat hook for
-/// drug-enrichment models) and can produce multipliers above 1.0.
+/// `Photosensitizer::Porfimer` with `phi_so2_relative ≤ 1`, the value
+/// stays in `[0, 1]`. `Uniform(c)` with `c > 1.0` and
+/// `phi_so2_relative > 1` are intentionally permitted (forward-compat
+/// hooks for enrichment / sensitizer-engineered variants) and can
+/// produce multipliers above 1.0.
 ///
-/// Invalid configurations (NaN, negative, non-positive `t_half_h`) trigger
-/// `debug_assert!` failures in test/debug builds. In release builds those
-/// asserts are compiled out and outputs are not bounded — call
+/// Invalid configurations (NaN, negative `phi_so2_relative` or
+/// `t_distribution_h`, non-positive `t_half_h`) trigger `debug_assert!`
+/// failures in test/debug builds. In release builds those asserts are
+/// compiled out and outputs are not bounded — call
 /// [`Photosensitizer::validate`] explicitly when loading from untrusted
 /// sources.
 ///
 /// [`Photosensitizer::validate`]: crate::photosensitizer_pk::Photosensitizer::validate
 pub fn pdt_intensity_at_depth(z_um: f64, params: &SpatialParams) -> f64 {
     let z_mm = z_um / 1000.0;
-    let drug_at_dli = params
+    let drug_yield = params
         .photosensitizer
-        .concentration_at(params.t_drug_light_interval_h);
-    params.pdt_i0 * (-params.pdt_mu_eff * z_mm).exp() * drug_at_dli
+        .yield_at(params.t_drug_light_interval_h);
+    params.pdt_i0 * (-params.pdt_mu_eff * z_mm).exp() * drug_yield
 }
 
 /// SDT: Ultrasound attenuation in soft tissue.
@@ -173,7 +180,7 @@ mod tests {
         let baseline = pdt_intensity_at_depth(z_um, &baseline_params);
 
         let pk_params = SpatialParams {
-            photosensitizer: Photosensitizer::Porfimer { t_half_h: 504.0 },
+            photosensitizer: Photosensitizer::Porfimer { t_half_h: 504.0, t_distribution_h: 0.0, phi_so2_relative: 1.0 },
             t_drug_light_interval_h: 504.0,
             ..Default::default()
         };

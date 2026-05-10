@@ -43,13 +43,45 @@ pub enum Photosensitizer {
     /// behavior). `Uniform(0.5)` asserts "drug constant at half-peak forever"
     /// — itself a PK assertion, not "no PK model."
     Uniform(f64),
-    /// Porfimer sodium (Photofrin). Single-exponential plasma decay.
-    /// Bellnier 2006 reports terminal t½ ~21 d (504 h) in humans, with
-    /// substantial infusion-protocol-dependent variability (~250–500+ h).
+    /// Porfimer sodium (Photofrin). Single-exponential plasma decay,
+    /// with optional pre-decay distribution phase and a relative
+    /// singlet-O₂ quantum-yield scalar.
+    ///
+    /// `t_distribution_h` models the absorption / redistribution rise:
+    /// drug is held at peak for the first `t_distribution_h` hours after
+    /// administration, then begins single-exponential decay with
+    /// `t_half_h`. Default `0.0` recovers the previous "light at peak"
+    /// behavior bit-exactly. Bellnier 2006 reports porfimer redistribution
+    /// over ~24-48 h; default 0 is preserved for backwards compatibility.
+    ///
+    /// `phi_so2_relative` scales the per-photon ROS yield relative to a
+    /// porfimer-equivalent baseline (`1.0` = porfimer). `Params::pdt_ros`
+    /// is calibrated to porfimer at peak; new drug variants set this
+    /// field to their absolute phi_so2 divided by porfimer's (~0.65).
+    /// Default `1.0` recovers previous physics.
     Porfimer {
         /// Plasma terminal half-life in hours. Must be strictly positive.
         t_half_h: f64,
+        /// Hours from administration during which drug is held at peak
+        /// before exponential decay begins. Models the absorption /
+        /// redistribution rise; default 0 (instant peak, no rise).
+        /// Must be finite and ≥ 0.
+        #[serde(default)]
+        t_distribution_h: f64,
+        /// Singlet-O₂ quantum yield relative to porfimer (1.0). Scales
+        /// `concentration_at` to give the per-photon ROS yield via
+        /// `Photosensitizer::yield_at`. Default 1.0 (porfimer baseline).
+        /// Must be finite and ≥ 0.
+        #[serde(default = "porfimer_phi_default")]
+        phi_so2_relative: f64,
     },
+}
+
+/// Serde default for `Porfimer::phi_so2_relative`. Returns 1.0 (the
+/// porfimer-equivalent baseline) so legacy JSON without this field
+/// deserializes to identity-preserving physics.
+fn porfimer_phi_default() -> f64 {
+    1.0
 }
 
 impl Default for Photosensitizer {
@@ -72,7 +104,17 @@ impl fmt::Display for Photosensitizer {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Uniform(c) => write!(f, "uniform={c}"),
-            Self::Porfimer { t_half_h } => write!(f, "porfimer={t_half_h}"),
+            Self::Porfimer {
+                t_half_h,
+                t_distribution_h,
+                phi_so2_relative,
+            } => {
+                // Always emit all three positional fields so Display
+                // round-trips unambiguously through `FromStr`. f64's
+                // whole-number rendering keeps it tidy in the common
+                // case (`porfimer=504,0,1`).
+                write!(f, "porfimer={t_half_h},{t_distribution_h},{phi_so2_relative}")
+            }
         }
     }
 }
@@ -84,13 +126,16 @@ impl FromStr for Photosensitizer {
     /// (case-insensitive on the variant name):
     /// - `uniform` → `Uniform(1.0)`
     /// - `uniform=N` → `Uniform(N)`
-    /// - `porfimer` → `Porfimer { t_half_h: 504.0 }` (Bellnier 2006 t½ in hours)
-    /// - `porfimer=N` → `Porfimer { t_half_h: N }`
+    /// - `porfimer` → `Porfimer { t_half_h: 504.0, t_distribution_h: 0.0, phi_so2_relative: 1.0 }`
+    /// - `porfimer=A` → `Porfimer { t_half_h: A, t_distribution_h: 0.0, phi_so2_relative: 1.0 }`
+    /// - `porfimer=A,B` → `Porfimer { t_half_h: A, t_distribution_h: B, phi_so2_relative: 1.0 }`
+    /// - `porfimer=A,B,C` → `Porfimer { t_half_h: A, t_distribution_h: B, phi_so2_relative: C }`
     ///
-    /// Errors on unknown variant, unparseable number, or any value that
-    /// fails [`Photosensitizer::validate`]. Round-trips with the
-    /// `Display` impl: `format!("{ps}").parse::<Photosensitizer>() ==
-    /// Ok(ps)` for every valid `Photosensitizer`.
+    /// Errors on unknown variant, unparseable number, empty positional
+    /// value (`porfimer=,B`), or any value that fails
+    /// [`Photosensitizer::validate`]. Round-trips with the `Display`
+    /// impl: `format!("{ps}").parse::<Photosensitizer>() == Ok(ps)`
+    /// for every valid `Photosensitizer`.
     ///
     /// Implementing `FromStr` (rather than a bespoke `from_cli_spec`)
     /// gives free clap integration via `#[arg(value_parser =
@@ -107,28 +152,58 @@ impl FromStr for Photosensitizer {
         // but allocates per call.
         let ps = if name.eq_ignore_ascii_case("uniform") {
             let c = match value {
-                Some(v) => v
-                    .parse::<f64>()
-                    .map_err(|e| format!("uniform=N: cannot parse N={v:?}: {e}"))?,
+                Some(v) => parse_f64_field("uniform=N", "N", v)?,
                 None => 1.0,
             };
             Self::Uniform(c)
         } else if name.eq_ignore_ascii_case("porfimer") {
-            let t_half_h = match value {
-                Some(v) => v
-                    .parse::<f64>()
-                    .map_err(|e| format!("porfimer=N: cannot parse N={v:?}: {e}"))?,
-                None => 504.0, // Bellnier 2006 terminal t½ in humans, hours.
-            };
-            Self::Porfimer { t_half_h }
+            let mut t_half_h = 504.0; // Bellnier 2006 terminal t½ in humans, hours.
+            let mut t_distribution_h = 0.0;
+            let mut phi_so2_relative = 1.0;
+            if let Some(v) = value {
+                let parts: Vec<&str> = v.split(',').map(str::trim).collect();
+                if parts.len() > 3 {
+                    return Err(format!(
+                        "porfimer=t_half[,t_dist[,phi]]: expected 1-3 comma-separated values, got {} in {v:?}",
+                        parts.len()
+                    ));
+                }
+                if let Some(p) = parts.first() {
+                    t_half_h = parse_f64_field("porfimer=t_half[,t_dist[,phi]]", "t_half", p)?;
+                }
+                if let Some(p) = parts.get(1) {
+                    t_distribution_h = parse_f64_field("porfimer=t_half[,t_dist[,phi]]", "t_dist", p)?;
+                }
+                if let Some(p) = parts.get(2) {
+                    phi_so2_relative = parse_f64_field("porfimer=t_half[,t_dist[,phi]]", "phi", p)?;
+                }
+            }
+            Self::Porfimer {
+                t_half_h,
+                t_distribution_h,
+                phi_so2_relative,
+            }
         } else {
             return Err(format!(
-                "unknown photosensitizer {name:?}; expected one of: uniform, uniform=N, porfimer, porfimer=N (case-insensitive)"
+                "unknown photosensitizer {name:?}; expected one of: uniform, uniform=N, porfimer, porfimer=t_half[,t_dist[,phi]] (case-insensitive)"
             ));
         };
         ps.validate()?;
         Ok(ps)
     }
+}
+
+/// Parse a single positional f64 field with a uniform error format,
+/// rejecting empty values explicitly so `porfimer=,36` gives a clear
+/// message rather than the cryptic `parse::<f64>("")` error.
+fn parse_f64_field(spec_form: &str, field_name: &str, raw: &str) -> Result<f64, String> {
+    if raw.is_empty() {
+        return Err(format!(
+            "{spec_form}: empty value for {field_name}"
+        ));
+    }
+    raw.parse::<f64>()
+        .map_err(|e| format!("{spec_form}: cannot parse {field_name}={raw:?}: {e}"))
 }
 
 impl Photosensitizer {
@@ -158,18 +233,42 @@ impl Photosensitizer {
                     Ok(())
                 }
             }
-            Self::Porfimer { t_half_h } => {
+            Self::Porfimer {
+                t_half_h,
+                t_distribution_h,
+                phi_so2_relative,
+            } => {
                 if !t_half_h.is_finite() {
-                    Err(format!(
+                    return Err(format!(
                         "Photosensitizer::Porfimer.t_half_h must be finite, got {t_half_h}"
-                    ))
-                } else if *t_half_h <= 0.0 {
-                    Err(format!(
-                        "Photosensitizer::Porfimer.t_half_h must be > 0, got {t_half_h}"
-                    ))
-                } else {
-                    Ok(())
+                    ));
                 }
+                if *t_half_h <= 0.0 {
+                    return Err(format!(
+                        "Photosensitizer::Porfimer.t_half_h must be > 0, got {t_half_h}"
+                    ));
+                }
+                if !t_distribution_h.is_finite() {
+                    return Err(format!(
+                        "Photosensitizer::Porfimer.t_distribution_h must be finite, got {t_distribution_h}"
+                    ));
+                }
+                if *t_distribution_h < 0.0 {
+                    return Err(format!(
+                        "Photosensitizer::Porfimer.t_distribution_h must be >= 0, got {t_distribution_h}"
+                    ));
+                }
+                if !phi_so2_relative.is_finite() {
+                    return Err(format!(
+                        "Photosensitizer::Porfimer.phi_so2_relative must be finite, got {phi_so2_relative}"
+                    ));
+                }
+                if *phi_so2_relative < 0.0 {
+                    return Err(format!(
+                        "Photosensitizer::Porfimer.phi_so2_relative must be >= 0, got {phi_so2_relative}"
+                    ));
+                }
+                Ok(())
             }
         }
     }
@@ -198,10 +297,47 @@ impl Photosensitizer {
         let t_h = t_h.max(0.0);
         match self {
             Self::Uniform(c) => *c,
-            Self::Porfimer { t_half_h } => {
+            Self::Porfimer {
+                t_half_h,
+                t_distribution_h,
+                ..
+            } => {
+                // Hold drug at peak during the absorption / redistribution
+                // phase, then begin exponential decay. With default
+                // `t_distribution_h = 0.0`, `(t - 0).max(0) == t.max(0)`
+                // and the math is bit-exact identical to the pre-#203
+                // single-exponential model.
+                let effective_t = (t_h - t_distribution_h).max(0.0);
                 let k = 2.0_f64.ln() / *t_half_h;
-                (-k * t_h).exp()
+                (-k * effective_t).exp()
             }
+        }
+    }
+
+    /// Per-photon ROS yield at time `t_h` post-administration: drug
+    /// concentration scaled by the variant's singlet-O₂ quantum yield
+    /// relative to porfimer.
+    ///
+    /// `Photosensitizer::Uniform` carries no quantum-yield model;
+    /// `yield_at == concentration_at` (preserves the no-PK identity).
+    ///
+    /// `Photosensitizer::Porfimer { phi_so2_relative, .. }` returns
+    /// `concentration_at(t_h) * phi_so2_relative`. The default
+    /// `phi_so2_relative = 1.0` (porfimer baseline) keeps physics
+    /// bit-exact identical to the pre-#203 model. New drug variants
+    /// (Photochlor, 5-ALA-PpIX) would set this to their absolute
+    /// phi_so2 divided by porfimer's (~0.65) so `Params::pdt_ros`'s
+    /// porfimer-equivalent calibration carries through correctly.
+    ///
+    /// `pdt_intensity_at_depth` calls this rather than
+    /// `concentration_at` so light × drug × yield composes correctly
+    /// for inter-drug comparisons.
+    pub fn yield_at(&self, t_h: f64) -> f64 {
+        match self {
+            Self::Uniform(_) => self.concentration_at(t_h),
+            Self::Porfimer {
+                phi_so2_relative, ..
+            } => self.concentration_at(t_h) * phi_so2_relative,
         }
     }
 }
@@ -242,7 +378,7 @@ mod tests {
 
     #[test]
     fn porfimer_at_one_halflife_is_half() {
-        let p = Photosensitizer::Porfimer { t_half_h: 504.0 };
+        let p = Photosensitizer::Porfimer { t_half_h: 504.0, t_distribution_h: 0.0, phi_so2_relative: 1.0 };
         // `exp(-ln(2))` lands on 0.5 on most libm implementations but is
         // not guaranteed bit-exact across platforms (intermediate rounding
         // in `ln(2)/504 * 504` may not round-trip). Compare with a tight
@@ -257,13 +393,13 @@ mod tests {
     #[test]
     fn porfimer_at_zero_is_one() {
         // `exp(0.0) == 1.0` is required by IEEE 754 — strict equality is safe here.
-        let p = Photosensitizer::Porfimer { t_half_h: 504.0 };
+        let p = Photosensitizer::Porfimer { t_half_h: 504.0, t_distribution_h: 0.0, phi_so2_relative: 1.0 };
         assert_eq!(p.concentration_at(0.0), 1.0);
     }
 
     #[test]
     fn porfimer_decays_monotonically() {
-        let p = Photosensitizer::Porfimer { t_half_h: 504.0 };
+        let p = Photosensitizer::Porfimer { t_half_h: 504.0, t_distribution_h: 0.0, phi_so2_relative: 1.0 };
         let c0 = p.concentration_at(0.0);
         let c1 = p.concentration_at(24.0);
         let c2 = p.concentration_at(168.0);
@@ -300,13 +436,29 @@ mod tests {
 
     #[test]
     fn display_porfimer() {
+        // Display always emits all three positional fields so the form
+        // round-trips unambiguously through FromStr.
         assert_eq!(
-            format!("{}", Photosensitizer::Porfimer { t_half_h: 504.0 }),
-            "porfimer=504"
+            format!(
+                "{}",
+                Photosensitizer::Porfimer {
+                    t_half_h: 504.0,
+                    t_distribution_h: 0.0,
+                    phi_so2_relative: 1.0
+                }
+            ),
+            "porfimer=504,0,1"
         );
         assert_eq!(
-            format!("{}", Photosensitizer::Porfimer { t_half_h: 336.5 }),
-            "porfimer=336.5"
+            format!(
+                "{}",
+                Photosensitizer::Porfimer {
+                    t_half_h: 336.5,
+                    t_distribution_h: 36.0,
+                    phi_so2_relative: 0.65
+                }
+            ),
+            "porfimer=336.5,36,0.65"
         );
     }
 
@@ -320,7 +472,7 @@ mod tests {
 
     #[test]
     fn serde_roundtrip_porfimer() {
-        let p = Photosensitizer::Porfimer { t_half_h: 504.0 };
+        let p = Photosensitizer::Porfimer { t_half_h: 504.0, t_distribution_h: 0.0, phi_so2_relative: 1.0 };
         let json = serde_json::to_string(&p).unwrap();
         let q: Photosensitizer = serde_json::from_str(&json).unwrap();
         assert_eq!(p, q);
@@ -350,27 +502,33 @@ mod tests {
 
     #[test]
     fn validate_porfimer_accepts_valid() {
-        assert!(Photosensitizer::Porfimer { t_half_h: 504.0 }
+        assert!(Photosensitizer::Porfimer { t_half_h: 504.0, t_distribution_h: 0.0, phi_so2_relative: 1.0 }
             .validate()
             .is_ok());
-        assert!(Photosensitizer::Porfimer { t_half_h: 0.001 }
+        assert!(Photosensitizer::Porfimer { t_half_h: 0.001, t_distribution_h: 0.0, phi_so2_relative: 1.0 }
             .validate()
             .is_ok());
     }
 
     #[test]
     fn validate_porfimer_rejects_invalid() {
-        assert!(Photosensitizer::Porfimer { t_half_h: 0.0 }
+        assert!(Photosensitizer::Porfimer { t_half_h: 0.0, t_distribution_h: 0.0, phi_so2_relative: 1.0 }
             .validate()
             .is_err());
-        assert!(Photosensitizer::Porfimer { t_half_h: -100.0 }
-            .validate()
-            .is_err());
-        assert!(Photosensitizer::Porfimer { t_half_h: f64::NAN }
+        assert!(Photosensitizer::Porfimer { t_half_h: -100.0, t_distribution_h: 0.0, phi_so2_relative: 1.0 }
             .validate()
             .is_err());
         assert!(Photosensitizer::Porfimer {
-            t_half_h: f64::INFINITY
+            t_half_h: f64::NAN,
+            t_distribution_h: 0.0,
+            phi_so2_relative: 1.0
+        }
+        .validate()
+        .is_err());
+        assert!(Photosensitizer::Porfimer {
+            t_half_h: f64::INFINITY,
+            t_distribution_h: 0.0,
+            phi_so2_relative: 1.0
         }
         .validate()
         .is_err());
@@ -380,7 +538,7 @@ mod tests {
     fn negative_dli_saturates_to_peak() {
         // Negative DLI is non-physical (illumination before drug peak);
         // saturate to t=0 to keep outputs in [0, 1] for valid params.
-        let p = Photosensitizer::Porfimer { t_half_h: 504.0 };
+        let p = Photosensitizer::Porfimer { t_half_h: 504.0, t_distribution_h: 0.0, phi_so2_relative: 1.0 };
         assert_eq!(p.concentration_at(-1.0), 1.0);
         assert_eq!(p.concentration_at(-1e6), 1.0);
         assert_eq!(p.concentration_at(f64::NEG_INFINITY), 1.0);
@@ -390,7 +548,7 @@ mod tests {
     fn nan_dli_saturates_to_peak() {
         // f64::max treats NaN as smaller than any value, so NaN.max(0.0)
         // returns 0.0 and concentration_at(NaN) is deterministic.
-        let p = Photosensitizer::Porfimer { t_half_h: 504.0 };
+        let p = Photosensitizer::Porfimer { t_half_h: 504.0, t_distribution_h: 0.0, phi_so2_relative: 1.0 };
         assert_eq!(p.concentration_at(f64::NAN), 1.0);
     }
 
@@ -416,7 +574,7 @@ mod tests {
     fn parse_porfimer_default_is_bellnier() {
         assert_eq!(
             "porfimer".parse::<Photosensitizer>().unwrap(),
-            Photosensitizer::Porfimer { t_half_h: 504.0 }
+            Photosensitizer::Porfimer { t_half_h: 504.0, t_distribution_h: 0.0, phi_so2_relative: 1.0 }
         );
     }
 
@@ -424,7 +582,7 @@ mod tests {
     fn parse_porfimer_with_value() {
         assert_eq!(
             "porfimer=336".parse::<Photosensitizer>().unwrap(),
-            Photosensitizer::Porfimer { t_half_h: 336.0 }
+            Photosensitizer::Porfimer { t_half_h: 336.0, t_distribution_h: 0.0, phi_so2_relative: 1.0 }
         );
     }
 
@@ -432,7 +590,7 @@ mod tests {
     fn parse_trims_whitespace() {
         assert_eq!(
             "  porfimer = 504  ".parse::<Photosensitizer>().unwrap(),
-            Photosensitizer::Porfimer { t_half_h: 504.0 }
+            Photosensitizer::Porfimer { t_half_h: 504.0, t_distribution_h: 0.0, phi_so2_relative: 1.0 }
         );
     }
 
@@ -444,11 +602,11 @@ mod tests {
         );
         assert_eq!(
             "PORFIMER=504".parse::<Photosensitizer>().unwrap(),
-            Photosensitizer::Porfimer { t_half_h: 504.0 }
+            Photosensitizer::Porfimer { t_half_h: 504.0, t_distribution_h: 0.0, phi_so2_relative: 1.0 }
         );
         assert_eq!(
             "PorFimEr".parse::<Photosensitizer>().unwrap(),
-            Photosensitizer::Porfimer { t_half_h: 504.0 }
+            Photosensitizer::Porfimer { t_half_h: 504.0, t_distribution_h: 0.0, phi_so2_relative: 1.0 }
         );
     }
 
@@ -463,7 +621,7 @@ mod tests {
     #[test]
     fn parse_unparseable_number_errors() {
         let err = "porfimer=abc".parse::<Photosensitizer>().unwrap_err();
-        assert!(err.contains("porfimer=N"));
+        assert!(err.contains("porfimer=t_half"));
         assert!(err.contains("abc"));
     }
 
@@ -501,8 +659,8 @@ mod tests {
             Photosensitizer::Uniform(0.0),
             Photosensitizer::Uniform(1.0),
             Photosensitizer::Uniform(0.5),
-            Photosensitizer::Porfimer { t_half_h: 504.0 },
-            Photosensitizer::Porfimer { t_half_h: 336.5 },
+            Photosensitizer::Porfimer { t_half_h: 504.0, t_distribution_h: 0.0, phi_so2_relative: 1.0 },
+            Photosensitizer::Porfimer { t_half_h: 336.5, t_distribution_h: 0.0, phi_so2_relative: 1.0 },
         ] {
             let rendered = format!("{ps}");
             let reparsed: Photosensitizer = rendered
@@ -544,5 +702,278 @@ mod tests {
         assert!(validate_dli_h(f64::NEG_INFINITY)
             .unwrap_err()
             .contains("finite"));
+    }
+
+    // -- distribution-phase (#203 A) --
+
+    #[test]
+    fn porfimer_holds_at_peak_during_distribution() {
+        // Drug is held at peak for `t_distribution_h` hours, then begins
+        // exponential decay. So at any time t < t_distribution_h, the
+        // concentration is exactly 1.0.
+        let p = Photosensitizer::Porfimer {
+            t_half_h: 504.0,
+            t_distribution_h: 36.0,
+            phi_so2_relative: 1.0,
+        };
+        assert_eq!(p.concentration_at(0.0), 1.0);
+        assert_eq!(p.concentration_at(12.0), 1.0);
+        assert_eq!(p.concentration_at(35.999), 1.0);
+        assert_eq!(p.concentration_at(36.0), 1.0); // boundary: effective_t = 0
+    }
+
+    #[test]
+    fn porfimer_decays_after_distribution_phase() {
+        // After t_distribution_h, decay measures from t = t_distribution_h,
+        // not from t = 0. So at t = t_distribution_h + t_half_h, drug is
+        // at half peak — same as the no-distribution case at t = t_half_h.
+        let with_dist = Photosensitizer::Porfimer {
+            t_half_h: 504.0,
+            t_distribution_h: 36.0,
+            phi_so2_relative: 1.0,
+        };
+        let without_dist = Photosensitizer::Porfimer {
+            t_half_h: 504.0,
+            t_distribution_h: 0.0,
+            phi_so2_relative: 1.0,
+        };
+        // exp(-ln(2)) is libm-dependent; use epsilon comparison.
+        let c_with = with_dist.concentration_at(36.0 + 504.0);
+        let c_without = without_dist.concentration_at(504.0);
+        assert!((c_with - 0.5).abs() < 1e-12);
+        assert!((c_without - 0.5).abs() < 1e-12);
+        assert_eq!(c_with, c_without); // both pinned to one half-life past their respective t=0
+    }
+
+    #[test]
+    fn porfimer_default_t_distribution_zero_preserves_legacy_math() {
+        // The whole point of `t_distribution_h: 0.0` as the default is
+        // bit-identical reproduction of the pre-#203 single-exponential
+        // model. Verify by replicating the EXACT operation order
+        // concentration_at uses: `k = ln(2) / t_half`, then `(-k * t).exp()`.
+        // (Computing `(-ln(2) * t / t_half).exp()` differs by 1 ULP — float
+        // arithmetic is non-associative; this is what got us a flaky test
+        // the first time.)
+        let p = Photosensitizer::Porfimer {
+            t_half_h: 504.0,
+            t_distribution_h: 0.0,
+            phi_so2_relative: 1.0,
+        };
+        let k = 2.0_f64.ln() / 504.0;
+        for t in [0.0, 1.0, 24.0, 168.0, 504.0, 1008.0] {
+            let expected = (-k * t).exp();
+            assert_eq!(
+                p.concentration_at(t),
+                expected,
+                "concentration_at({t}) drift vs legacy math"
+            );
+        }
+    }
+
+    // -- phi_so2 / yield_at (#203 B) --
+
+    #[test]
+    fn yield_at_scales_concentration_by_phi_for_porfimer() {
+        // yield_at(t) = concentration_at(t) * phi_so2_relative.
+        let half_phi = Photosensitizer::Porfimer {
+            t_half_h: 504.0,
+            t_distribution_h: 0.0,
+            phi_so2_relative: 0.5,
+        };
+        let unit_phi = Photosensitizer::Porfimer {
+            t_half_h: 504.0,
+            t_distribution_h: 0.0,
+            phi_so2_relative: 1.0,
+        };
+        for t in [0.0, 24.0, 168.0, 504.0] {
+            assert_eq!(
+                half_phi.yield_at(t),
+                unit_phi.yield_at(t) * 0.5,
+                "phi=0.5 should halve yield at t={t}"
+            );
+        }
+    }
+
+    #[test]
+    fn yield_at_uniform_matches_concentration_at() {
+        // Uniform carries no phi (it's the no-PK identity); yield_at
+        // delegates to concentration_at. This is what preserves the
+        // default-invocation byte-identical snapshot.
+        for c in [0.0, 0.5, 1.0, 2.0] {
+            let u = Photosensitizer::Uniform(c);
+            for t in [0.0, 24.0, 1e9] {
+                assert_eq!(u.yield_at(t), u.concentration_at(t));
+                assert_eq!(u.yield_at(t), c);
+            }
+        }
+    }
+
+    #[test]
+    fn default_porfimer_yield_equals_concentration() {
+        // Default Porfimer phi=1.0 means yield_at == concentration_at
+        // exactly — the IEEE invariant `x * 1.0 = x` for finite x.
+        // This is the byte-identical guarantee: anywhere physics calls
+        // yield_at instead of concentration_at, default-photosensitizer
+        // results don't change.
+        let p = Photosensitizer::Porfimer {
+            t_half_h: 504.0,
+            t_distribution_h: 0.0,
+            phi_so2_relative: 1.0,
+        };
+        for t in [0.0, 24.0, 168.0, 504.0, 1008.0] {
+            assert_eq!(p.yield_at(t), p.concentration_at(t));
+        }
+    }
+
+    // -- validate (new fields) --
+
+    #[test]
+    fn validate_porfimer_rejects_negative_t_distribution() {
+        let err = Photosensitizer::Porfimer {
+            t_half_h: 504.0,
+            t_distribution_h: -1.0,
+            phi_so2_relative: 1.0,
+        }
+        .validate()
+        .unwrap_err();
+        assert!(err.contains("t_distribution_h"));
+        assert!(err.contains(">= 0"));
+    }
+
+    #[test]
+    fn validate_porfimer_rejects_nan_t_distribution() {
+        let err = Photosensitizer::Porfimer {
+            t_half_h: 504.0,
+            t_distribution_h: f64::NAN,
+            phi_so2_relative: 1.0,
+        }
+        .validate()
+        .unwrap_err();
+        assert!(err.contains("t_distribution_h"));
+        assert!(err.contains("finite"));
+    }
+
+    #[test]
+    fn validate_porfimer_rejects_negative_phi() {
+        let err = Photosensitizer::Porfimer {
+            t_half_h: 504.0,
+            t_distribution_h: 0.0,
+            phi_so2_relative: -0.5,
+        }
+        .validate()
+        .unwrap_err();
+        assert!(err.contains("phi_so2_relative"));
+        assert!(err.contains(">= 0"));
+    }
+
+    #[test]
+    fn validate_porfimer_rejects_nan_phi() {
+        let err = Photosensitizer::Porfimer {
+            t_half_h: 504.0,
+            t_distribution_h: 0.0,
+            phi_so2_relative: f64::NAN,
+        }
+        .validate()
+        .unwrap_err();
+        assert!(err.contains("phi_so2_relative"));
+        assert!(err.contains("finite"));
+    }
+
+    #[test]
+    fn validate_porfimer_accepts_zero_phi_and_zero_distribution() {
+        // Edge: phi=0 means drug emits no ROS yield (thought-experiment
+        // / quenched-fluorophore use). t_dist=0 is the default. Both
+        // are valid even at the boundary.
+        assert!(Photosensitizer::Porfimer {
+            t_half_h: 504.0,
+            t_distribution_h: 0.0,
+            phi_so2_relative: 0.0,
+        }
+        .validate()
+        .is_ok());
+    }
+
+    // -- Parser: triple positional + legacy --
+
+    #[test]
+    fn parse_porfimer_triple_full() {
+        assert_eq!(
+            "porfimer=504,36,0.65".parse::<Photosensitizer>().unwrap(),
+            Photosensitizer::Porfimer {
+                t_half_h: 504.0,
+                t_distribution_h: 36.0,
+                phi_so2_relative: 0.65,
+            }
+        );
+    }
+
+    #[test]
+    fn parse_porfimer_double_defaults_phi() {
+        assert_eq!(
+            "porfimer=504,36".parse::<Photosensitizer>().unwrap(),
+            Photosensitizer::Porfimer {
+                t_half_h: 504.0,
+                t_distribution_h: 36.0,
+                phi_so2_relative: 1.0,
+            }
+        );
+    }
+
+    #[test]
+    fn parse_porfimer_single_legacy_form_defaults_new_fields() {
+        // Backwards compat: existing `porfimer=504` parses to defaults
+        // for the new fields, so legacy CLI invocations and serialized
+        // configs continue to work without modification.
+        assert_eq!(
+            "porfimer=504".parse::<Photosensitizer>().unwrap(),
+            Photosensitizer::Porfimer {
+                t_half_h: 504.0,
+                t_distribution_h: 0.0,
+                phi_so2_relative: 1.0,
+            }
+        );
+    }
+
+    #[test]
+    fn parse_porfimer_rejects_too_many_positional() {
+        let err = "porfimer=504,36,0.65,extra"
+            .parse::<Photosensitizer>()
+            .unwrap_err();
+        assert!(err.contains("expected 1-3"));
+    }
+
+    #[test]
+    fn parse_porfimer_rejects_empty_positional() {
+        let err = "porfimer=,36".parse::<Photosensitizer>().unwrap_err();
+        assert!(err.contains("empty value"));
+        assert!(err.contains("t_half"));
+    }
+
+    #[test]
+    fn display_round_trips_with_new_fields() {
+        // Round-trip property must hold for non-default new fields too.
+        for ps in [
+            Photosensitizer::Porfimer {
+                t_half_h: 504.0,
+                t_distribution_h: 36.0,
+                phi_so2_relative: 0.65,
+            },
+            Photosensitizer::Porfimer {
+                t_half_h: 250.0,
+                t_distribution_h: 24.0,
+                phi_so2_relative: 1.5, // > 1 enrichment hook
+            },
+            Photosensitizer::Porfimer {
+                t_half_h: 504.0,
+                t_distribution_h: 0.0,
+                phi_so2_relative: 0.0, // boundary: zero-yield
+            },
+        ] {
+            let rendered = format!("{ps}");
+            let reparsed: Photosensitizer = rendered
+                .parse()
+                .unwrap_or_else(|e| panic!("round-trip failed for {ps:?}: {e}"));
+            assert_eq!(reparsed, ps, "round-trip mismatch via {rendered:?}");
+        }
     }
 }

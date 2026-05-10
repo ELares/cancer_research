@@ -40,8 +40,8 @@ Every simulation parameter, its default value, source, and whether it is experim
 | `sdt_freq_mhz` | 1.0 | Typical SDT frequency | Grounded | Moderate — operating frequency |
 | `sdt_i0` | 1.0 | Relative units | N/A | Low — incident intensity normalization |
 | `neighbor_iron_fraction` | 0.1 | Mechanistic estimate (8-neighborhood) | Assumed | Low |
-| `photosensitizer` | `Uniform(1.0)` (default) | `Photosensitizer::Porfimer { t_half_h: 504.0 }` from Bellnier DA et al., Lasers Surg Med 2006 (PMID 16634075): porfimer terminal plasma t½ ≈ 21 d in humans; reported range ~250–500+ h depending on infusion protocol | Estimated (porfimer); N/A (`Uniform` default) | Low at DLI ≪ t½; scales linearly with DLI/t½ ratio |
-| `t_drug_light_interval_h` | 0.0 | Operational parameter. Hours from photosensitizer post-distribution peak to light, passed to `Photosensitizer::concentration_at`. **Not** the clinical DLI from injection — clinical DLI ≈ distribution_phase + this. Distribution phase is ~24–48 h for porfimer (Bellnier 2006); larger relative error for short-t½ drugs. | N/A | High — at DLI = 0 has no effect; at DLI ~ t½ halves PDT dose |
+| `photosensitizer` | `Uniform(1.0)` (default) | `Photosensitizer::Porfimer` carries `t_half_h` (504 h, Bellnier 2006), `t_distribution_h` (default 0 for backwards-compat; ~24-48 h literature-reported, Bellnier 2006), and `phi_so2_relative` (default 1.0 = porfimer baseline; absolute porfimer phi_so2 ≈ 0.65 in solution, Wilson & Patterson 2008, Phys Med Biol 53(9):R61-109). `Params::pdt_ros = 5.0` is calibrated to porfimer at peak (yield = 1.0); other drug variants set `phi_so2_relative` to absolute_phi_so2 / 0.65 so the calibration carries through. | Estimated (porfimer t½, t_dist); Grounded (porfimer absolute phi_so2); N/A (`Uniform` default) | Low at default values; scales linearly via `Photosensitizer::yield_at` |
+| `t_drug_light_interval_h` | 0.0 | Operational parameter. Hours from photosensitizer post-distribution peak to light, passed to `Photosensitizer::yield_at`. With `Porfimer::t_distribution_h > 0`, the model holds drug at peak for the first `t_distribution_h` hours then decays — so a clinical DLI from injection can be passed directly, and the math correctly returns peak concentration during the absorption phase. Earlier comments said "clinical DLI ≈ distribution_phase + this" — that caveat is obsolete now that distribution-phase is modeled explicitly. | N/A | High — at DLI < t_distribution_h has no effect; at DLI > t_distribution_h, drug decays from peak |
 
 ## Immune Cascade (`ImmuneParams`)
 
@@ -77,4 +77,14 @@ Every simulation parameter, its default value, source, and whether it is experim
 
 ## Photosensitizer pharmacokinetics: plasma vs. cellular
 
-`Photosensitizer::Porfimer { t_half_h }` represents *plasma* terminal half-life. Cellular concentration is assumed to track plasma proportionally — a reasonable approximation for porfimer (slow-distributing, weeks-scale t½, ~100% serum-protein bound, Vd ≈ plasma volume per Bellnier 2006) but explicitly wrong for 5-ALA/PpIX, which accumulates intracellularly via ferrochelatase deficiency rather than decaying. The current model captures *intra-drug temporal* PK only; it does not account for inter-drug singlet-O₂ quantum-yield differences (`phi_so2`), which are implicit in the calibrated `Params::pdt_ros`. Inter-drug ROS-yield comparisons require explicit `phi_so2` normalization — see issue #200 follow-ups.
+`Photosensitizer::Porfimer.t_half_h` represents *plasma* terminal half-life. Cellular concentration is assumed to track plasma proportionally — a reasonable approximation for porfimer (slow-distributing, weeks-scale t½, ~100% serum-protein bound, Vd ≈ plasma volume per Bellnier 2006) but explicitly wrong for 5-ALA/PpIX, which accumulates intracellularly via ferrochelatase deficiency rather than decaying. ALA kinetics will require a different variant.
+
+### Distribution-phase model (closed via #203)
+
+`Porfimer.t_distribution_h` holds drug at peak for the first N hours after administration, then begins single-exponential decay. Default `0.0` reproduces the pre-#203 "light at peak" model bit-exactly. Bellnier 2006 reports porfimer redistribution over ~24-48 h; setting `t_distribution_h` to the midpoint (~36 h) lets users pass clinical DLI from injection directly.
+
+### Inter-drug ROS-yield normalization (closed via #203)
+
+`Porfimer.phi_so2_relative` scales `concentration_at` to give the per-photon ROS yield via `Photosensitizer::yield_at`. The calibration anchor is **porfimer at peak = 1.0**; absolute porfimer phi_so2 ≈ 0.65 in solution per Wilson & Patterson 2008 (Phys Med Biol 53(9):R61-109). Other drug variants would set their `phi_so2_relative` to `absolute_phi_so2 / 0.65` so `Params::pdt_ros = 5.0` (calibrated to porfimer) carries through correctly. `physics::pdt_intensity_at_depth` calls `yield_at` rather than `concentration_at` so the new fields compose into the existing Beer-Lambert path automatically.
+
+Caveat: tissue phi_so2 values can be lower than solution values due to aggregation and microenvironment effects (Wilson & Patterson 2008 §5). The relative-to-porfimer convention encodes the calibration baseline in the type system but does not eliminate the underlying empirical uncertainty in absolute values.
