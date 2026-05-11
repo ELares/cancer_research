@@ -111,3 +111,74 @@ targets:
     parameters_affected:
       - sdt_alpha
       - sdt_freq_mhz
+
+  # =========================================================================
+  # 3D Spheroid Validation Targets (#196)
+  #
+  # These three targets are SELF-CONSISTENCY — they regression-guard the
+  # Q1–Q3 findings reported in `3d_validation_report.md`. They are not
+  # independent experimental validation. To upgrade any of these to
+  # `target_type: calibration`, add a `source_pmid` field and replace
+  # the heuristic `target_value` with the measured-from-literature value.
+  #
+  # All three depend on sim-tme-3d's `output/tme-3d/summary.json` having
+  # been refreshed (PR #219, v0.1.0 schema). Pre-measured values come from
+  # the canonical fixed-seed (SEED=42) production run at 60³ × 180 steps.
+  # =========================================================================
+
+  - id: 3d_rsl3_o2_collapse_ratio
+    target_type: self-consistency
+    description: "RSL3 at λ=120 µm: hypoxic-zone kill rate should be ≤ 50% of normoxic-zone kill rate (Q1 finding)"
+    source_description: "Q1 from 3d_validation_report.md. The O2-gradient model predicts that RSL3 (an O2-dependent ferroptosis inducer) loses efficacy in the deep hypoxic core. Sim-tme-3d's current run produces ratio ≈ 0.016 (98% collapse), far below the 0.5 self-consistency threshold. Upgrade to `calibration` when paired against pimonidazole-stained spheroid kill data (Vaupel 1989 cited in oxygen.rs)."
+    binary: sim-tme-3d
+    output_file: "tme-3d/summary.json"
+    extraction:
+      metric: "rsl3_o2_collapse_ratio"
+    target_comparator: "<"
+    target_value: 0.5
+    tolerance: 0.5
+    confidence: "medium"
+    note: "Self-consistency. The 0.5 threshold reserves a 30× margin against the observed ~0.016, so this catches catastrophic regressions (RSL3 working unchanged in hypoxia) without being noise-sensitive."
+    parameters_affected:
+      - o2_lambda_um
+      - basal_ros
+      - rsl3_gpx4_inhib
+
+  - id: 3d_immune_sdt_dominates
+    target_type: self-consistency
+    description: "At λ=120 immune-on: SDT immune-kills should be > 3× RSL3 immune-kills (Q2 finding — the manuscript-keystone 104:1 → 4:1 reduction in 3D)"
+    source_description: "Q2 from 3d_validation_report.md. The DAMP-density-driven immune coupling model predicts SDT (high kill density → high DAMP → high T-cell activation) outproduces RSL3 immune kills. Sim-tme-3d's current run produces ratio ≈ 4.03; sim-tme's 2D produces 104.2. The qualitative direction (SDT dominates) is the manuscript-keystone finding and should hold across dimensionality. Upgrade to `calibration` against published spheroid SDT-immune-priming data (Nguyen 2019 or equivalent — manuscript curator to identify)."
+    binary: sim-tme-3d
+    output_file: "tme-3d/summary.json"
+    extraction:
+      metric: "immune_sdt_rsl3_ratio"
+    target_comparator: ">"
+    target_value: 3.0
+    tolerance: 1.0
+    confidence: "medium"
+    note: "Self-consistency. Threshold 3.0 is below the observed ~4.0 with 25% margin. Catches a regression where the immune block silently no-ops or where DAMP diffusion drops below the kill-threshold."
+    parameters_affected:
+      - damp_diffusion_fraction
+      - damp_clearance_rate
+      - dc_activation_kd
+      - immune_kill_rate
+      - pd1_brake
+
+  - id: 3d_stromal_boundary_shielding
+    target_type: self-consistency
+    description: "At λ=120 immune-on RSL3: stromal-on boundary kill rate should be ≤ 70% of no-stromal boundary kill rate (Q3 finding — CAF shielding ≥ 30%)"
+    source_description: "Q3 from 3d_validation_report.md. CAF-mediated GSH/MUFA boost at the boundary reduces RSL3 efficacy at the spheroid edge. Sim-tme-3d's current run produces ratio ≈ 0.485 (51.5% shielding), nearly identical to 2D's 50.0% — surprising-but-consistent finding that per-cell shielding is geometry-independent. Upgrade to `calibration` against published CAF-coculture spheroid data (PMID 34373744 cited in stromal.rs)."
+    binary: sim-tme-3d
+    output_file: "tme-3d/summary.json"
+    extraction:
+      metric: "stromal_shielding_ratio"
+    target_comparator: "<"
+    target_value: 0.7
+    tolerance: 0.3
+    confidence: "medium"
+    note: "Self-consistency. Threshold 0.7 (i.e., ≥30% shielding) is well above observed ~0.485 (51.5% shielding). Catches regressions where stromal protection silently no-ops (gsh_boost or mufa_boost ineffective)."
+    parameters_affected:
+      - gsh_boost_per_step
+      - gsh_boost_cap
+      - mufa_boost_per_step
+      - mufa_boost_cap

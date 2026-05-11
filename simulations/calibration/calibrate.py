@@ -180,11 +180,141 @@ def extract_invivo_json(target: dict) -> float | None:
     return None
 
 
+def _find_3d_condition(
+    conditions: list,
+    *,
+    treatment: str,
+    o2_lambda_um: float | None = None,
+    immune_mode: str = "off",
+    stromal_mode: str | None = None,
+    ph_mode: str | None = None,
+) -> dict | None:
+    """Find one row in sim-tme-3d's `summary.json.conditions[]` array.
+
+    Filters mirror the JSON schema: treatment, optional o2_lambda_um
+    (None = uniform-O₂ baseline), immune_mode ("off"/"immune_on"/
+    "immune_anti_pd1"), optional stromal_mode ("stromal_on"/None), optional
+    ph_mode ("ph_on"/None). Returns None if no match.
+    """
+    for c in conditions:
+        if c.get("treatment") != treatment:
+            continue
+        if o2_lambda_um is None:
+            if c.get("o2_condition") != "uniform":
+                continue
+        else:
+            if c.get("o2_lambda_um") != o2_lambda_um:
+                continue
+        if c.get("immune_mode") != immune_mode:
+            continue
+        if c.get("stromal_mode") != stromal_mode:
+            continue
+        if c.get("ph_mode") != ph_mode:
+            continue
+        return c
+    return None
+
+
+def extract_tme_3d_json(target: dict) -> float | None:
+    """Extract a named 3D metric from sim-tme-3d's summary.json.
+
+    Supports several `metric` values, each a computed scalar derived from
+    one or more rows in the `conditions: [...]` array. Mirrors the pattern
+    in [`extract_invivo_json`] which computes a 2D/3D ratio across two
+    rows; here the metric is named because the row-filter logic is too
+    rich to encode in YAML.
+
+    Supported metrics:
+    - "rsl3_o2_collapse_ratio": hypoxic_kill_rate / normoxic_kill_rate
+      for RSL3 at o2_lambda_um=120, immune_off, no stromal/pH. Captures
+      the Q1 "RSL3 collapses in hypoxia" finding (#187 → #195). Lower =
+      stronger collapse.
+    - "immune_sdt_rsl3_ratio": SDT.immune_kills / RSL3.immune_kills at
+      o2_lambda_um=120, immune_on, no stromal/pH. Captures the Q2
+      "manuscript-keystone 104:1 in 2D vs ~4:1 in 3D" finding (#188).
+      Higher = SDT immune dominance.
+    - "stromal_shielding_ratio": stromal-on.adjacent_kill /
+      no-stromal.adjacent_kill for RSL3 at o2_lambda_um=120, immune_on,
+      ph=None. Captures the Q3 "boundary shielding" finding (#189).
+      Lower = stronger shielding.
+
+    All three rely on summary.json's schema produced by sim-tme-3d v0.1.0
+    (PR #219, merged in #4914ede8). If the schema changes, this extractor
+    needs to track it — `target["binary"] == "sim-tme-3d"` is the
+    contract.
+    """
+    path = _resolve_output_path(target)
+    if not path.exists():
+        return None
+
+    with open(path) as f:
+        data = json.load(f)
+    # sim-tme-3d wraps the conditions array in a parent object (unlike
+    # sim-tme's bare array). Be defensive against future schema drift.
+    conditions = data.get("conditions") if isinstance(data, dict) else data
+    if not isinstance(conditions, list):
+        return None
+
+    metric = target.get("extraction", {}).get("metric", "")
+
+    if metric == "rsl3_o2_collapse_ratio":
+        c = _find_3d_condition(
+            conditions, treatment="RSL3", o2_lambda_um=120.0, immune_mode="off"
+        )
+        if c is None:
+            return None
+        normoxic = c.get("normoxic_kill_rate", 0.0)
+        hypoxic = c.get("hypoxic_kill_rate", 0.0)
+        if normoxic <= 0.0:
+            return None
+        return hypoxic / normoxic
+
+    if metric == "immune_sdt_rsl3_ratio":
+        sdt = _find_3d_condition(
+            conditions, treatment="SDT", o2_lambda_um=120.0, immune_mode="immune_on"
+        )
+        rsl3 = _find_3d_condition(
+            conditions, treatment="RSL3", o2_lambda_um=120.0, immune_mode="immune_on"
+        )
+        if sdt is None or rsl3 is None:
+            return None
+        sdt_im = sdt.get("immune_kills")
+        rsl3_im = rsl3.get("immune_kills")
+        if sdt_im is None or rsl3_im is None or rsl3_im <= 0:
+            return None
+        return float(sdt_im) / float(rsl3_im)
+
+    if metric == "stromal_shielding_ratio":
+        stromal_on = _find_3d_condition(
+            conditions,
+            treatment="RSL3",
+            o2_lambda_um=120.0,
+            immune_mode="immune_on",
+            stromal_mode="stromal_on",
+        )
+        no_stromal = _find_3d_condition(
+            conditions,
+            treatment="RSL3",
+            o2_lambda_um=120.0,
+            immune_mode="immune_on",
+        )
+        if stromal_on is None or no_stromal is None:
+            return None
+        on_rate = stromal_on.get("stromal_adjacent_kill_rate")
+        off_rate = no_stromal.get("stromal_adjacent_kill_rate")
+        if on_rate is None or off_rate is None or off_rate <= 0:
+            return None
+        return on_rate / off_rate
+
+    return None
+
+
 EXTRACTORS = {
     "sim-original": extract_sim_original,
     "sim-spatial": extract_spatial_csv,
     "sim-window": extract_window_csv,
     "sim-invivo": extract_invivo_json,
+    "sim-tme-3d": extract_tme_3d_json,
 }
 
 
