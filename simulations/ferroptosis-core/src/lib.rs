@@ -28,7 +28,8 @@
 //! | [`oxygen`] | 3D radial oxygen gradients for spheroid tumors |
 //! | [`ph`] | 3D radial pH gradient + iron-release and ion-trapping modulation helpers |
 //! | [`stromal`] | 3D CAF-shielded boundary detection (26-Moore) + shielded kill rate |
-//! | [`immune`] | ICD/DAMP immune cascade model |
+//! | [`immune`] | ICD/DAMP immune cascade model (dimensionless, single-event) |
+//! | [`immune_3d`] | 3D spatial DAMP diffusion + per-cell immune activation/kill primitives |
 //! | [`io`] | JSON and CSV output helpers |
 //! | [`drug_transport`] | Tissue-specific drug penetration (Krogh cylinder approximation) |
 //! | [`tumor_pk`] | Two-compartment vascular/interstitial pharmacokinetics |
@@ -45,6 +46,7 @@ pub mod oxygen;
 pub mod ph;
 pub mod stromal;
 pub mod immune;
+pub mod immune_3d;
 pub mod io;
 pub mod drug_transport;
 pub mod tumor_pk;

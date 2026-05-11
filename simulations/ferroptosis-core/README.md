@@ -37,7 +37,8 @@ Run the included example: `cargo run -p ferroptosis-core --example basic_usage`
 | `oxygen` | 3D radial O₂ gradients for spheroid tumors: `radial_o2_field` (per-cell `exp(-d/λ)` factor) and `radial_o2_zone_kill_rates` (normoxic / transition / hypoxic zone census). First-order Krogh approximation; pure functions for composable cycling (#187). |
 | `ph` | 3D radial pH gradient for spheroid tumors: `radial_ph_field` (per-cell `pH(d) = ph_edge - delta·(1 - exp(-d/λ))`) plus pure-scalar helpers `iron_multiplier_from_ph` (ferritin destabilization) and `ion_trap_factor_from_ph` (linearized Henderson-Hasselbalch, weak-base drug bioavailability). Same form as sim-tme's 2D pH; pure functions for #195 sim-tme-3d (#190). |
 | `stromal` | 3D CAF-shielded boundary detection for spheroid tumors: `stromal_adjacency_mask` (Vec<bool> flagging tumor cells with any stromal 26-Moore neighbor) and `stromal_adjacent_kill_rate` (dead-rate among masked cells). 3D analog of sim-tme's 2D 8-Moore detection; surface-to-volume scaling means 3D shielding affects ~1.5× more cells than 2D at matched R (#189). |
-| `immune` | ICD/DAMP immune cascade: ferroptotic death quality drives dendritic cell activation and T cell priming |
+| `immune` | ICD/DAMP immune cascade (dimensionless, single-event): ferroptotic death quality drives dendritic cell activation and T cell priming |
+| `immune_3d` | 3D spatial immune coupling: `diffuse_damp_3d_step` (26-Moore DAMP diffusion + exponential clearance, scratch-buffer API) plus pure-scalar helpers `dc_activation` (Michaelis-Menten) and `immune_kill_probability` (with sim-tme's 0.99 cap). **Stability requirement**: `diffusion_fraction × 26 < 1` (use ≤ 0.038; sim-tme's 2D default 0.08 is UNSAFE — `assert!`-enforced). Composes with `immune` for downstream sim-tme-3d (#195). (#188) |
 | `io` | JSON and CSV output helpers |
 | `drug_transport` | Krogh cylinder drug penetration model |
 | `tumor_pk` | Two-compartment vascular/interstitial pharmacokinetics |
@@ -85,6 +86,25 @@ cell_size, ...) == local_ros_multiplier_3d(row × cell_size, ...)` holds
 bit-exact across all `Treatment` variants — the physical *geometries*
 differ (planar slab vs. spheroid + nearest-surface 1-D approximation),
 but the dispatcher math does not.
+
+**3D spatial immune coupling (#188):**
+```rust
+use ferroptosis_core::immune_3d::{diffuse_damp_3d_step, dc_activation, immune_kill_probability};
+
+let g = TumorGrid3D::generate(40, 40, 40, 20.0, 42);
+let n = g.cells.len();
+let mut damp_field = vec![0.0_f64; n];
+let mut scratch = vec![0.0_f64; n];  // allocate ONCE, reuse per step
+
+// Inject DAMP from a death event, then diffuse one step.
+damp_field[g.flat_index(20, 20, 20)] = 10.0;
+diffuse_damp_3d_step(&mut damp_field, &mut scratch, &g, 0.025, 0.03);  // 3D-safe fraction
+
+// Per-cell immune kill probability.
+let activation = dc_activation(damp_field[g.flat_index(20, 20, 21)], 50.0);
+let kill_prob = immune_kill_probability(activation, 0.02, 0.21);
+```
+**⚠️ Stability**: `diffusion_fraction × 26 < 1` is `assert!`-enforced (sim-tme's 2D default 0.08 is UNSAFE in 3D — 0.08 × 26 = 2.08 silently destroys mass). Use ≤ 0.038; suggested 0.025 to match 2D's per-step total. Composes with [`immune`] (dimensionless single-event cascade) for downstream sim-tme-3d (#195).
 
 **3D spheroid stromal shielding (#189):**
 ```rust
