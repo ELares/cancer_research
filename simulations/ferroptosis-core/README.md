@@ -35,6 +35,7 @@ Run the included example: `cargo run -p ferroptosis-core --example basic_usage`
 | `physics` | Depth-dependent energy deposition: Beer-Lambert (PDT), acoustic attenuation (SDT), uniform (RSL3). 2D row-based (`local_ros_multiplier`) and 3D radial-depth (`local_ros_multiplier_3d`) dispatchers share the same per-treatment depth functions (#186). |
 | `grid` | 2D `TumorGrid` (8-Moore, circular) and 3D `TumorGrid3D` (26-Moore, spherical) with heterogeneous architecture, neighbor iteration, iron diffusion. `TumorGrid3D::radial_depth_um` provides per-cell signed depth from the spheroid surface for energy physics (#185, #186). 3D analytics (radial-depth curves, volumetric heatmaps) and the consuming binary land with #194. |
 | `oxygen` | 3D radial O₂ gradients for spheroid tumors: `radial_o2_field` (per-cell `exp(-d/λ)` factor) and `radial_o2_zone_kill_rates` (normoxic / transition / hypoxic zone census). First-order Krogh approximation; pure functions for composable cycling (#187). |
+| `ph` | 3D radial pH gradient for spheroid tumors: `radial_ph_field` (per-cell `pH(d) = ph_edge - delta·(1 - exp(-d/λ))`) plus pure-scalar helpers `iron_multiplier_from_ph` (ferritin destabilization) and `ion_trap_factor_from_ph` (linearized Henderson-Hasselbalch, weak-base drug bioavailability). Same form as sim-tme's 2D pH; pure functions for #195 sim-tme-3d (#190). |
 | `immune` | ICD/DAMP immune cascade: ferroptotic death quality drives dendritic cell activation and T cell priming |
 | `io` | JSON and CSV output helpers |
 | `drug_transport` | Krogh cylinder drug penetration model |
@@ -83,6 +84,27 @@ cell_size, ...) == local_ros_multiplier_3d(row × cell_size, ...)` holds
 bit-exact across all `Treatment` variants — the physical *geometries*
 differ (planar slab vs. spheroid + nearest-surface 1-D approximation),
 but the dispatcher math does not.
+
+**3D spheroid pH gradient (#190):**
+```rust
+use ferroptosis_core::ph::{radial_ph_field, iron_multiplier_from_ph, ion_trap_factor_from_ph};
+
+let g = TumorGrid3D::generate(40, 40, 40, 20.0, 42);
+let (ph_edge, ph_core, lambda) = (7.4, 6.5, 120.0);
+let ph_field = radial_ph_field(&g, ph_edge, ph_core, lambda);
+
+for (i, &local_ph) in ph_field.iter().enumerate() {
+    let iron_mult = iron_multiplier_from_ph(local_ph, ph_edge, 1.5);   // 2.35× at core
+    let drug_factor = ion_trap_factor_from_ph(local_ph, ph_edge, 0.4); // 0.64 at core
+    // consumer applies: cell.iron *= iron_mult; effective_drug = base × drug_factor
+}
+```
+Stromal cells return `ph_edge` (well-perfused). Pure functions follow the
+oxygen-module pattern — consumer chooses mutation strategy. Same code shape
+as sim-tme's 2D `apply_ph_gradient`; cross-geometry test
+(`matched_lambda_2d_vs_3d_acidic_fraction`) shows pure-geometry 3D
+acidic-volume fraction is *smaller* than 2D at matched λ (same
+cubic-vs-quadratic effect as O₂).
 
 **3D spheroid oxygen gradient (#187):**
 ```rust
