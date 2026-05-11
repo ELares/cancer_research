@@ -79,14 +79,17 @@ pub fn stromal_adjacency_mask(grid: &TumorGrid3D) -> Vec<bool> {
     for r in 0..grid.rows {
         for c in 0..grid.cols {
             for l in 0..grid.layers {
-                let idx = r * grid.cols * grid.layers + c * grid.layers + l;
-                if !grid.cells[idx].is_tumor {
+                // Use `grid.get` for reads — delegates the flat-index
+                // formula to TumorGrid3D so a future stride change doesn't
+                // silently desync this module. `idx` is still needed for
+                // the mask write below.
+                if !grid.get(r, c, l).is_tumor {
                     continue;
                 }
+                let idx = r * grid.cols * grid.layers + c * grid.layers + l;
                 let (neighbors, count) = grid.neighbors(r, c, l);
                 for &(nr, nc, nl) in &neighbors[..count] {
-                    let nidx = nr * grid.cols * grid.layers + nc * grid.layers + nl;
-                    if !grid.cells[nidx].is_tumor {
+                    if !grid.get(nr, nc, nl).is_tumor {
                         mask[idx] = true;
                         break;
                     }
