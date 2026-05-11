@@ -87,12 +87,23 @@ The library primitives (`physics`, `oxygen`, `ph`, `stromal`, `immune_3d`) are e
 
 ## Manuscript-keystone questions (issue #195)
 
-After running both `sim-tme` and `sim-tme-3d` and generating the comparison table:
+After running both `sim-tme` and `sim-tme-3d` and generating the comparison table. Each bullet states the pre-run **hypothesis** from issue #195 and the **observed** result from the canonical 60³ × 180-step run (full details in `simulations/calibration/3d_validation_report.md`).
 
-1. **Does the hypoxia RSL3 collapse hold in 3D?** (Expected: yes, possibly stronger.) See `key_questions.txt` Q1.
-2. **Does the immune 104:1 ratio hold in 3D?** (Unknown — DAMP density may decrease in 3D volume.) See Q2.
-3. **Does stromal shielding have MORE impact in 3D?** (Expected: yes — ~1.5× boundary fraction per #189 cross-geometry test.) See Q3.
-4. **Does pH ion trapping produce similar RSL3 reduction in 3D?** (Expected: similar — same chemistry.) See Q4.
+1. **Does the hypoxia RSL3 collapse hold in 3D?**
+   - Hypothesis (#195): yes, possibly stronger.
+   - **Observed**: yes qualitatively (within-zone collapse 98.4% at λ=120). Like-for-like, **2D collapses more completely** on both metrics — within-zone 2D 0.0064 < 3D 0.016; overall 2D 0.028 < 3D 0.222. The "possibly stronger" hypothesis was wrong; 3D collapse is robust but smaller magnitude than 2D. See `key_questions.txt` Q1.
+
+2. **Does the immune 104:1 ratio hold in 3D?**
+   - Hypothesis (#195): unknown — DAMP density may decrease in 3D volume.
+   - **Observed**: direction holds, magnitude much smaller — SDT/RSL3 immune-kills = 4.0× in 3D vs 104.2× in 2D. The ~2× tumor-cell gap (82.5 k 3D vs 159 k 2D) is too small to fully explain the ~25× ratio gap; volumetric DAMP dilution and per-cell activation density also contribute. See Q2.
+
+3. **Does stromal shielding have MORE impact in 3D?**
+   - Hypothesis (#195): yes — ~1.5× boundary fraction per #189 cross-geometry test.
+   - **Observed**: no — per-cell shielding is essentially geometry-independent. Boundary shielding = 51.5% (3D) vs 50.0% (2D). The cubic-vs-quadratic scaling from #189 affects HOW MANY cells are shielded, not the per-cell magnitude. See Q3.
+
+4. **Does pH ion trapping produce similar RSL3 reduction in 3D?**
+   - Hypothesis (#195): similar — same chemistry.
+   - **Observed**: yes — 46.1% kill reduction in 3D vs 54.2% in 2D, within noise. See Q4.
 
 ## Follow-ups deferred to subsequent PRs
 
