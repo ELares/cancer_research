@@ -783,9 +783,7 @@ dependencies = [
 name = "sim-tme-3d"
 version = "0.1.0"
 dependencies = [
- "csv",
  "ferroptosis-core",
- "ndarray",
  "rand",
  "rand_distr",
  "rayon",
