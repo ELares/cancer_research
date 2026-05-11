@@ -300,10 +300,21 @@ fn run_one_condition(condition: &Condition) -> ConditionResult {
         ..Default::default()
     };
 
-    // Per-condition deterministic seed.
+    // Per-condition deterministic seed for the *runtime RNG* (per-cell ROS
+    // noise, immune-kill rolls, etc.). NOT used for grid generation — sim-tme
+    // uses the fixed `SEED` so every condition operates on the SAME tumor
+    // geometry (same cell phenotypes, same Persister cluster placements).
+    // Using a per-condition seed for the grid would mean each treatment is
+    // evaluated on a DIFFERENT tumor — combining treatment effects with
+    // grid-geometry noise. At 12k tumor cells with ~268 cells/cluster × 10-20
+    // random clusters, that noise is material relative to subtle effects
+    // like the immune ratio.
     let cond_seed = SEED.wrapping_add(hash_condition_name(&condition.name));
 
-    let mut grid = TumorGrid3D::generate(GRID_DIM, GRID_DIM, GRID_DIM, CELL_SIZE_UM, cond_seed);
+    // Grid uses fixed SEED — matches sim-tme/src/main.rs (line 921 and
+    // every other TumorGrid::generate call uses bare `SEED`). Same tumor
+    // geometry across all conditions ⇒ valid treatment-effect comparison.
+    let mut grid = TumorGrid3D::generate(GRID_DIM, GRID_DIM, GRID_DIM, CELL_SIZE_UM, SEED);
     let n_cells = grid.cells.len();
 
     // --- Apply O₂ gradient if requested (mutates cell.basal_ros) ---
@@ -573,8 +584,12 @@ fn run_one_condition(condition: &Condition) -> ConditionResult {
             Some(_) => "gradient".to_string(),
         },
         o2_lambda_um: condition.o2_lambda,
+        // Match sim-tme's JSON convention exactly (sim-tme uses "immune_on" /
+        // "immune_anti_pd1" / "off"). My earlier "on"/"off" prevented the
+        // comparison script from finding 2D immune conditions — caught in
+        // adversarial review.
         immune_mode: if condition.immune_on {
-            "on".to_string()
+            "immune_on".to_string()
         } else {
             "off".to_string()
         },

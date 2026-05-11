@@ -161,8 +161,10 @@ def answer_key_questions(rows_2d: list[dict], rows_3d: list[dict],
     lines.append("")
 
     # --- Q2: Immune 104:1 ratio (SDT immune kills vs RSL3 immune kills) ---
+    # sim-tme uses "immune_on" (not "on") for the immune_mode field; sim-tme-3d
+    # was updated to match. Look up both via "immune_on".
     def immune_kills(rows, tx):
-        c = find_condition(rows, tx, "gradient", "on", 120.0)
+        c = find_condition(rows, tx, "gradient", "immune_on", 120.0)
         return c.get("immune_kills") if c else None
 
     sdt_imm_2d = immune_kills(rows_2d, "SDT")
