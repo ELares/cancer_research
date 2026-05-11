@@ -72,9 +72,18 @@ use crate::grid::TumorGrid3D;
 ///   roundoff right at the boundary.
 ///
 /// **Validation.** `λ` must be finite and strictly positive. Invalid
-/// values trigger `debug_assert!` in tests; release builds will produce
-/// `NaN`/`Inf` for `λ ≤ 0` and silently clip `NaN` results to `0.0` via
-/// `f64::clamp`. Matches the validation posture of [`crate::physics`].
+/// values trigger `debug_assert!` in tests; release builds produce
+/// undefined values per the table below — callers loading `λ` from
+/// untrusted sources should validate at the boundary. Matches the
+/// validation posture of [`crate::physics`].
+///
+/// | `λ` value | Per-cell output (release) |
+/// |-----------|---------------------------|
+/// | finite, `> 0` | valid `[0, 1]` |
+/// | `0.0` | `0.0` (`exp(-∞)` then clamp) |
+/// | `< 0` | `1.0` (`exp(+depth/\|λ\|)` saturates, then clamp) |
+/// | `NaN` | `NaN` (`f64::clamp` propagates NaN, does not clip) |
+/// | `+∞` | `1.0` (`exp(-depth/∞) = 1.0`) |
 ///
 /// **Cost.** O(N) for N = `grid.cells.len()`. Each iteration calls
 /// [`TumorGrid3D::radial_depth_um`] which recomputes geometry constants
@@ -308,12 +317,15 @@ mod tests {
         );
     }
 
-    /// Distinct λs produce distinct fields. Confirms the cycling-pattern
-    /// support: a consumer calling `radial_o2_field(g, λ_high)` vs
-    /// `radial_o2_field(g, λ_low)` in alternating steps gets different
-    /// fields (square-wave cycling reduces to varying λ over time).
+    /// Two calls to `radial_o2_field` with distinct `λ` produce distinct
+    /// fields — sanity check that `λ` actually drives the math.
+    ///
+    /// **Not a cycling test** (the function is deterministic in λ, so
+    /// this trivially holds); see
+    /// [`o2_cycling_pattern_demonstrates_consumer_loop`] below for the
+    /// actual square-wave-cycling demonstration that exercises AC #2.
     #[test]
-    fn distinct_lambdas_produce_distinct_fields() {
+    fn field_varies_with_lambda() {
         let g = TumorGrid3D::generate(20, 20, 20, 20.0, 42);
         let normoxic = radial_o2_field(&g, 150.0);
         let hypoxic = radial_o2_field(&g, 50.0);
@@ -338,6 +350,58 @@ mod tests {
         assert!(
             n_diff > n_tumor / 2,
             "expected more than half of tumor cells to have different O2 at distinct λ: got {n_diff} differing of {n_tumor} tumor"
+        );
+    }
+
+    /// **Acceptance criterion #2** ("O₂ cycling works in 3D"):
+    /// demonstrates the consumer-side square-wave cycling pattern that
+    /// `sim-tme`'s 2D loop uses (`cycling_lambda(step, period, λ_low,
+    /// λ_high)`). Runs a short step loop, alternating `λ` between
+    /// normoxic and hypoxic per the square-wave schedule, and asserts:
+    /// - the field at a normoxic-phase step differs from the field at
+    ///   a hypoxic-phase step (cycling actually changes the field)
+    /// - the field at two normoxic-phase steps is identical (consumer
+    ///   can rely on the function's determinism in λ — no hidden state)
+    ///
+    /// This is the canonical pattern downstream consumers (#188, #191,
+    /// #197) should follow. The library function itself is dim-agnostic;
+    /// "cycling" is wholly a caller responsibility.
+    #[test]
+    fn o2_cycling_pattern_demonstrates_consumer_loop() {
+        let g = TumorGrid3D::generate(20, 20, 20, 20.0, 42);
+        let lambda_high = 150.0_f64; // normoxic phase
+        let lambda_low = 50.0_f64; // hypoxic phase
+        let period = 4u32; // first half normoxic, second half hypoxic
+
+        // Mirrors sim-tme's `cycling_lambda` helper (binary-local, not
+        // imported here — see sim-tme/src/main.rs:136-138 for the source).
+        let cycling_lambda = |step: u32| {
+            if (step % period) < period / 2 {
+                lambda_high
+            } else {
+                lambda_low
+            }
+        };
+
+        let mut fields = Vec::with_capacity(period as usize);
+        for step in 0..period {
+            fields.push(radial_o2_field(&g, cycling_lambda(step)));
+        }
+
+        // step 0 = normoxic, step 2 = hypoxic — must differ.
+        assert!(
+            fields[0] != fields[2],
+            "cycling: normoxic-phase field must differ from hypoxic-phase field"
+        );
+        // step 0 and step 1 both fall in the normoxic half — identical.
+        assert_eq!(
+            fields[0], fields[1],
+            "cycling: two normoxic-phase steps should produce identical fields (function is deterministic in λ)"
+        );
+        // step 2 and step 3 both fall in the hypoxic half — identical.
+        assert_eq!(
+            fields[2], fields[3],
+            "cycling: two hypoxic-phase steps should produce identical fields"
         );
     }
 
@@ -413,6 +477,12 @@ mod tests {
 
         // 2D: 40×40 grid. Replicate sim-tme's depth-from-edge math inline
         // (no library function to import — sim-tme keeps it binary-local).
+        //
+        // **Source of truth — keep in sync with `sim-tme/src/main.rs:836`
+        // (`zone_kill_rates`).** If that function changes thresholds or
+        // tumor-radius factor, this test silently goes stale. There is no
+        // automated guard. Touch both, or move the 2D math into the
+        // library, before changing either side.
         let g2 = TumorGrid::generate(40, 40, cell_size_um, 42);
         let (center_r2, center_c2) = (g2.rows as f64 / 2.0, g2.cols as f64 / 2.0);
         let tumor_radius_2 = (g2.rows.min(g2.cols) as f64) * 0.45;
