@@ -198,7 +198,16 @@ impl Default for SpatialParams {
     }
 }
 
-/// Immune cascade parameters for ICD modeling.
+/// Immune cascade parameters for ICD modeling. Used by sim-icd + sim-combo.
+///
+/// Models the full DC→T-cell cascade with separate `dc_maturation_rate`,
+/// `tcell_priming_rate`, `tcell_kill_rate` steps.
+///
+/// **See also [`SpatialImmuneConfig`]** for the spatial-DAMP-field variant
+/// used by sim-tme + sim-tme-3d (single absorbed `immune_kill_rate`
+/// plus `damp_diffusion_fraction` / `damp_clearance_rate`). Same biology,
+/// different math; both valid. If you add a field here, check whether
+/// the spatial variant needs the same change.
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct ImmuneParams {
     /// DAMP release proportional to LP at death.
@@ -244,6 +253,13 @@ impl Default for ImmuneParams {
 /// 0.025 (26-Moore neighbors, ≤ 1 / 26 stability bound enforced by
 /// `assert!` in `immune_3d::diffuse_damp_3d_step`). Use [`for_2d()`] or
 /// [`for_3d()`] to pick the right default.
+///
+/// **No `Default` impl on purpose**: callers MUST pick a geometry. Using
+/// the wrong default in 3D would panic at runtime via the diffuse-step
+/// stability `assert!`; making that a compile error via explicit
+/// constructors is preferable. Compare with [`StromalConfig`] /
+/// [`PhConfig`], which do impl `Default` because they're
+/// geometry-independent.
 #[derive(Clone, Copy, Debug)]
 pub struct SpatialImmuneConfig {
     /// DAMP released per unit LP at death.
