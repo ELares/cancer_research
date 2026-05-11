@@ -30,11 +30,14 @@
 //! Moore neighbors, that means **`diffusion_fraction < ≈ 0.038`**.
 //!
 //! Sim-tme's 2D default `0.08` is **unsafe in 3D** (0.08 × 26 = 2.08 > 1):
-//! the source cell loses more DAMP per step than it has, the defensive
-//! `.max(0.0)` clamp destroys mass, and the field silently produces
-//! nonsense. `debug_assert!` rejects unsafe values in tests; release
-//! builds silently mass-destroy. A consumer porting sim-tme's parameters
-//! verbatim would hit this immediately — hence the prominent warning.
+//! the source cell would lose more DAMP per step than it has, the
+//! defensive `.max(0.0)` clamp would destroy mass, and the field would
+//! silently produce nonsense. **A regular `assert!` (NOT
+//! `debug_assert!`) enforces the stability check in both debug and
+//! release** — the silent-failure mode is too pernicious for
+//! debug-only catching. A consumer porting sim-tme's parameters verbatim
+//! panics immediately with a clear stability message instead of
+//! silently corrupting the field.
 //!
 //! **Suggested 3D-safe value: 0.025**, which gives the same per-step
 //! total-diffusion fraction as 2D's `0.08 × 8 = 0.64` (compare to
@@ -105,9 +108,11 @@ const DIFFUSION_SOURCE_CUTOFF: f64 = 0.001;
 /// every cell decays by `(1 − clearance_rate)`).
 ///
 /// **Stability requirement** (see module doc): `diffusion_fraction ×
-/// MAX_3D_NEIGHBORS < 1.0`. `debug_assert!` catches the unsafe case in
-/// tests; release silently mass-destroys via the defensive `.max(0.0)`
-/// clamp. **Suggested 3D-safe value: `0.025`** (matches 2D's
+/// MAX_3D_NEIGHBORS < 1.0`. Enforced by a regular `assert!` that fires
+/// in **both debug and release** — the silent-failure mode of mass
+/// destruction via the defensive `.max(0.0)` clamp is too pernicious
+/// for debug-only catching. Per-call cost is one multiply + one compare
+/// (negligible). **Suggested 3D-safe value: `0.025`** (matches 2D's
 /// per-step total diffusion of ~64%).
 ///
 /// **Length contract**: `damp_field.len() == scratch.len() == grid.cells.len()`.
@@ -189,6 +194,11 @@ pub fn diffuse_damp_3d_step(
 
     // Apply spread + clearance.
     for i in 0..n {
+        // `.max(0.0)` is unreachable under the stability invariant
+        // (`fraction × 26 < 1` guarantees `share × count < local`, so
+        // `local + scratch[i] > 0` after diffusion). Kept as defensive
+        // safety net for two cases: (1) caller-mutated negative inputs,
+        // (2) future relaxation of the stability `assert!`. Cheap.
         damp_field[i] = (damp_field[i] + scratch[i]).max(0.0);
         damp_field[i] *= 1.0 - clearance_rate;
     }
@@ -263,9 +273,10 @@ mod tests {
     // diffuse_damp_3d_step tests
     // =============================
 
-    /// **v2 addition**: stability `debug_assert` rejects sim-tme's 2D
-    /// default (0.08), which is unsafe in 3D (0.08 × 26 = 2.08 > 1).
-    /// Critical bug-class guard.
+    /// **v2 addition**: stability `assert` (fires in BOTH debug and
+    /// release — silent-failure class) rejects sim-tme's 2D default
+    /// (0.08), which is unsafe in 3D (0.08 × 26 = 2.08 > 1). Critical
+    /// bug-class guard; per-call cost is one multiply + one compare.
     #[test]
     #[should_panic(expected = "diffusion_fraction × 26")]
     fn diffusion_fraction_stability_assertion() {
@@ -333,6 +344,42 @@ mod tests {
                 field[nidx]
             );
         }
+    }
+
+    /// A source on a grid FACE (one coordinate on boundary) has 17
+    /// neighbors. Verifies the in-between boundary case between corner
+    /// (7) and interior (26) — closes the reviewer's flagged coverage
+    /// gap on partial-boundary cells. Mass conservation still holds:
+    /// source loses `share × 17`, 17 neighbors gain `share` each.
+    #[test]
+    fn face_source_spreads_to_17_neighbors() {
+        let g = TumorGrid3D::generate(10, 10, 10, 20.0, 42);
+        let n = g.cells.len();
+        let mut field = vec![0.0; n];
+        let mut scratch = vec![0.0; n];
+
+        // Face cell: r=0 (boundary), c=5 (interior), l=5 (interior). Per
+        // grid::tests_3d::neighbor_counts_at_boundary_types this has 17.
+        let face = g.flat_index(0, 5, 5);
+        let source_value = 100.0_f64;
+        let fraction = 0.025_f64;
+        field[face] = source_value;
+
+        diffuse_damp_3d_step(&mut field, &mut scratch, &g, fraction, 0.0);
+
+        // Source retains 100 × (1 - 17 × 0.025) = 100 × 0.575 = 57.5
+        let expected_source = source_value * (1.0 - 17.0 * fraction);
+        assert!(
+            (field[face] - expected_source).abs() < 1e-9,
+            "face source should retain {expected_source}, got {}",
+            field[face]
+        );
+
+        let (_neighbors, count) = g.neighbors(0, 5, 5);
+        assert_eq!(
+            count, 17,
+            "face cell (one coord on boundary) should have exactly 17 Moore neighbors"
+        );
     }
 
     /// A source at the grid CORNER has only 7 neighbors. Source loses
