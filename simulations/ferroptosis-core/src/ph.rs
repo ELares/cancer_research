@@ -157,8 +157,18 @@ pub fn radial_ph_field(
 /// Matches sim-tme's unclamped 2D implementation; consumer responsible
 /// for valid `local_ph` (typically from [`radial_ph_field`] which is
 /// already clamped to `[ph_core, ph_edge]`).
+///
+/// **Sensitivity convention.** Must be `>= 0` (negative would invert the
+/// biology: ferritin would *stabilize* at low pH, contradicting Yu et al.
+/// 2017 and sim-tme's parameterization). `debug_assert` rejects negative
+/// values; release accepts any sign and silently inverts the multiplier
+/// curve.
 #[inline]
 pub fn iron_multiplier_from_ph(local_ph: f64, ph_edge: f64, sensitivity: f64) -> f64 {
+    debug_assert!(
+        sensitivity >= 0.0,
+        "iron_multiplier_from_ph: sensitivity must be >= 0 (negative inverts biology), got {sensitivity}"
+    );
     1.0 + sensitivity * (ph_edge - local_ph)
 }
 
@@ -180,8 +190,17 @@ pub fn iron_multiplier_from_ph(local_ph: f64, ph_edge: f64, sensitivity: f64) ->
 /// to tune it, the formula is exposed enough that you can implement your
 /// own version — but reconsider whether the linearized model is still
 /// valid in that range.
+///
+/// **Sensitivity convention.** Must be `>= 0` (negative would imply the
+/// drug is *more* bioavailable at low pH, contradicting Henderson-
+/// Hasselbalch for weak bases). `debug_assert` rejects negative values;
+/// release silently inverts the curve.
 #[inline]
 pub fn ion_trap_factor_from_ph(local_ph: f64, ph_edge: f64, sensitivity: f64) -> f64 {
+    debug_assert!(
+        sensitivity >= 0.0,
+        "ion_trap_factor_from_ph: sensitivity must be >= 0 (negative inverts biology), got {sensitivity}"
+    );
     let raw = 1.0 - sensitivity * (ph_edge - local_ph);
     raw.clamp(ION_TRAP_FLOOR, 1.0)
 }
@@ -384,8 +403,49 @@ mod tests {
     fn ion_trap_clamps_to_floor() {
         let f = ion_trap_factor_from_ph(6.5, 7.4, 2.0);
         assert_eq!(f, ION_TRAP_FLOOR, "extreme sens should clamp at floor");
-        // And the floor is 0.3 (sim-tme convention)
+        // Lock the floor to sim-tme's 0.3 convention as a contract assertion
+        // (defends against an accidental change to the private constant —
+        // public callers can rely on the floor being exactly 0.3).
         assert_eq!(ION_TRAP_FLOOR, 0.3);
+    }
+
+    /// Ion-trap factor clamps to the upper bound `1.0` when the raw
+    /// formula exceeds 1 (i.e., `local_ph > ph_edge` — alkalosis above
+    /// the reference, unusual but representable). Validates the upper
+    /// half of the `[0.3, 1.0]` clamp contract.
+    #[test]
+    fn ion_trap_clamps_to_upper_bound() {
+        // local_ph above ph_edge → ph_edge - local_ph < 0 → raw > 1.
+        // With sens=0.4, ph_edge=7.4, local_ph=8.4: raw = 1.0 - 0.4·(-1.0) = 1.4.
+        let f = ion_trap_factor_from_ph(8.4, 7.4, 0.4);
+        assert_eq!(f, 1.0, "raw > 1 should clamp to upper bound 1.0");
+    }
+
+    /// **Property test (reviewer ask)**: for every tumor cell in a
+    /// `radial_ph_field` output, `iron_multiplier_from_ph` with a
+    /// non-negative sensitivity must return `>= 1.0` (i.e., low pH
+    /// either keeps iron at baseline or releases more — never reduces
+    /// it). Locks the biology invariant that the docstring promises
+    /// only at the endpoints.
+    #[test]
+    fn iron_multiplier_is_at_least_one_for_field_inputs() {
+        let g = TumorGrid3D::generate(20, 20, 20, 20.0, 42);
+        let (ph_edge, ph_core) = (7.4, 6.5);
+        let ph_field = radial_ph_field(&g, ph_edge, ph_core, 120.0);
+        let sensitivity = 1.5;
+
+        for (i, gc) in g.cells.iter().enumerate() {
+            if !gc.is_tumor {
+                continue;
+            }
+            let m = iron_multiplier_from_ph(ph_field[i], ph_edge, sensitivity);
+            assert!(
+                m >= 1.0,
+                "iron multiplier should be >= 1.0 for tumor cell at flat idx {i}: \
+                 local_ph={}, multiplier={m}",
+                ph_field[i]
+            );
+        }
     }
 
     /// **Acceptance criterion #3** (issue #190; loose interpretation):
@@ -396,9 +456,10 @@ mod tests {
     ///
     /// Construction: matched 40×40 / 40³ grids, cell_size=20 µm →
     /// `tumor_radius_um = 360`. Defaults: ph_edge=7.4, ph_core=6.5, λ=120.
-    /// Threshold: pH < 6.8 (halfway between ph_core 6.5 and a typical
-    /// mild-acidity threshold 7.0; chosen to give non-empty acidic
-    /// regions in both geometries).
+    /// Threshold: pH < 6.8 — conventional cutoff for moderate tumor
+    /// acidosis (between the typical mild-acidity boundary ~7.0 and the
+    /// severe-core regime ~6.5). Chosen to give non-empty acidic regions
+    /// in both geometries at default λ.
     ///
     /// **Source of truth — keep in sync with `sim-tme/src/main.rs:520`
     /// (`apply_ph_gradient`).** Same DRY caveat as the O₂ cross-geometry
