@@ -499,16 +499,34 @@ impl TumorGrid3D {
         }
     }
 
+    /// Flat index into `cells` for `(r, c, l)`. Canonical source of
+    /// truth for the row-major (C-order) storage layout
+    /// `r·cols·layers + c·layers + l` with strides `(cols·layers, layers, 1)`.
+    ///
+    /// External modules ([`crate::stromal`] etc.) that need to write into
+    /// a `Vec<T>` of length `cells.len()` aligned with `cells` should use
+    /// this method rather than reimplementing the formula — same
+    /// silent-divergence concern as [`TUMOR_RADIUS_FRACTION`]. If the
+    /// storage layout ever changes (layer-major, padding, etc.), only
+    /// this one method needs updating.
+    ///
+    /// **Not bounds-checked** (matches `get`/`get_mut` convention).
+    #[inline]
+    pub fn flat_index(&self, r: usize, c: usize, l: usize) -> usize {
+        r * self.cols * self.layers + c * self.layers + l
+    }
+
     /// Access cell at (row, col, layer).
     #[inline]
     pub fn get(&self, r: usize, c: usize, l: usize) -> &GridCell {
-        &self.cells[r * self.cols * self.layers + c * self.layers + l]
+        &self.cells[self.flat_index(r, c, l)]
     }
 
     /// Mutable access to cell at (row, col, layer).
     #[inline]
     pub fn get_mut(&mut self, r: usize, c: usize, l: usize) -> &mut GridCell {
-        &mut self.cells[r * self.cols * self.layers + c * self.layers + l]
+        let idx = self.flat_index(r, c, l);
+        &mut self.cells[idx]
     }
 
     /// Return indices of 3D Moore neighborhood (26-neighbors) for cell
@@ -691,11 +709,16 @@ mod tests_3d {
             (4, 0, 10), // opposite corner
         ];
         for &(r, c, l) in probes {
-            let flat = r * g.cols * g.layers + c * g.layers + l;
+            let flat_manual = r * g.cols * g.layers + c * g.layers + l;
+            let flat_method = g.flat_index(r, c, l);
             assert_eq!(
-                &g.cells[flat] as *const _,
+                flat_manual, flat_method,
+                "flat_index({r},{c},{l}) diverged from inline formula"
+            );
+            assert_eq!(
+                &g.cells[flat_method] as *const _,
                 g.get(r, c, l) as *const _,
-                "(r={r}, c={c}, l={l}) → flat={flat} doesn't round-trip"
+                "(r={r}, c={c}, l={l}) → flat={flat_method} doesn't round-trip"
             );
         }
         // Total cell count matches.
