@@ -15,6 +15,7 @@ Rust workspace containing the ferroptosis biochemistry engine and simulation bin
 | [`sim-tissue-pk`](sim-tissue-pk/) | Tissue-specific drug penetration and efficacy across tissue types | Ch 8.2 | `output/tissue-pk/` |
 | [`sim-combo-mech`](sim-combo-mech/) | Mechanistic combination therapy with pathway-traced Bliss synergy | Ch 6.3 | `output/combo-mech/` |
 | [`sim-tme`](sim-tme/) | Tumor microenvironment: O2 gradients, immune, stromal, pH | Ch 7.1-7.5, Fig 14 | `output/tme/` |
+| [`sim-tme-3d`](sim-tme-3d/) | 3D spheroid TME simulation — capstone consumer of the 5-PR library stack (#185-#190); answers the manuscript's 2D-vs-3D dimensionality questions | — | `output/tme-3d/` |
 | [`sim-tumor-pk`](sim-tumor-pk/) | Two-compartment vascular/interstitial pharmacokinetics | Ch 8.2 | `output/tumor-pk/` |
 
 Each binary has its own README with parameters, output format, example commands, and instructions for reproducing specific manuscript claims.

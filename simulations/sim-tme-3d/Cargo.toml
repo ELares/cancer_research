@@ -1,0 +1,16 @@
+[package]
+name = "sim-tme-3d"
+version = "0.1.0"
+edition = "2021"
+description = "3D spheroid tumor microenvironment simulation — integrates O2/pH/stromal/immune-3d library primitives (#185-#190) into the manuscript-keystone 2D-vs-3D comparison binary (#195)"
+
+[dependencies]
+ferroptosis-core = { workspace = true }
+rand = { workspace = true }
+rand_distr = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+rayon = { workspace = true }
+# Note: csv and ndarray omitted — sim-tme has them but sim-tme-3d
+# emits JSON only and doesn't construct ndarrays. Re-add if a
+# future CSV-output or volumetric-ndarray feature lands.
