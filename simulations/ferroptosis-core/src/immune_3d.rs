@@ -83,6 +83,17 @@
 
 use crate::grid::TumorGrid3D;
 
+/// Minimum local-DAMP concentration above which a cell is eligible for
+/// immune-mediated kill. Cells with `local_damp < DAMP_KILL_THRESHOLD`
+/// are skipped — both as a performance optimization (don't roll RNG
+/// when activation × kill_rate would round to ~0 anyway) and as a
+/// floor against numerical noise in the diffused DAMP field.
+///
+/// Used by both sim-tme (2D) and sim-tme-3d (3D) so the kill-eligibility
+/// floor stays consistent across dimensionality. Previously hard-coded
+/// `0.01` in sim-tme:735 and as a binary-local const in sim-tme-3d.
+pub const DAMP_KILL_THRESHOLD: f64 = 0.01;
+
 /// Maximum Moore-neighbor count in 3D (3×3×3 cube − self).
 ///
 /// **Coupled to [`TumorGrid3D::neighbors`]**: if a future refactor of
