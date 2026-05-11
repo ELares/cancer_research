@@ -92,6 +92,12 @@ const DAMP_DIFFUSION_FRACTION_3D: f64 = 0.025;
 /// Step at which immune activity begins (matches sim-tme).
 const IMMUNE_START_STEP: u32 = 60;
 
+/// Iron diffusion neighbor fraction for 3D — scaled from sim-tme's 2D
+/// default `0.1` (which is per-Moore-8) to the per-Moore-26 equivalent:
+/// `0.1 × 8/26 ≈ 0.0308`. Without scaling, 2D's `0.1` would over-spread
+/// in 3D (10% × 26 = 260% per source-cell loss, vs 2D's 80%).
+const IRON_DIFFUSE_FRACTION_3D: f64 = 0.1 * 8.0 / 26.0;
+
 /// Minimum local DAMP concentration to consider for immune-kill rolls.
 /// Cells below this short-circuit the activation+kill path (matches
 /// sim-tme/src/main.rs:735's `if local_damp < 0.01 { continue; }`).
@@ -351,6 +357,13 @@ fn run_one_condition_with_config(condition: &Condition, run_cfg: RunConfig) -> C
     let params = Params::default();
     let spatial_params = SpatialParams {
         cell_size_um: CELL_SIZE_UM,
+        // SpatialParams::default()'s `neighbor_iron_fraction = 0.1` is
+        // 2D-tuned (per-Moore-8). Override here with the 3D-scaled value
+        // so the field is correct in the struct, not just at the inline
+        // call site (reviewer-flagged future-refactor footgun: if a
+        // future `local_ros_multiplier_3d` ever reads this field, the
+        // 2D value would silently propagate).
+        neighbor_iron_fraction: IRON_DIFFUSE_FRACTION_3D,
         ..Default::default()
     };
 
@@ -489,9 +502,23 @@ fn run_one_condition_with_config(condition: &Condition, run_cfg: RunConfig) -> C
                         if let Some(ds) = grid.cells[idx].state.death_step {
                             let grace_end = ds + params.post_death_steps;
                             if step == grace_end {
+                                // `lp_at_death` is misleadingly named — it's
+                                // actually "LP at the end of the post-death
+                                // grace period." Matches sim-tme's naming;
+                                // renaming would touch both binaries and is
+                                // deferred per the consolidated #195 cleanup
+                                // checklist.
                                 grid.cells[idx].lp_at_death = grid.cells[idx].state.lp;
-                                damp_field[idx] +=
-                                    grid.cells[idx].lp_at_death * immune_cfg.damp_per_lp;
+                                // DAMP release gated on `immune_on` —
+                                // without immune coupling, the damp_field
+                                // isn't read or aggregated, so writes here
+                                // would produce nonsense partial values
+                                // in serialized output (reviewer-flagged in
+                                // PR #219 third-pass).
+                                if condition.immune_on {
+                                    damp_field[idx] +=
+                                        grid.cells[idx].lp_at_death * immune_cfg.damp_per_lp;
+                                }
                             }
                             if step >= grace_end {
                                 continue;
@@ -545,12 +572,12 @@ fn run_one_condition_with_config(condition: &Condition, run_cfg: RunConfig) -> C
             }
         }
 
-        // Iron diffusion via TumorGrid3D
+        // Iron diffusion via TumorGrid3D. Now uses the value from
+        // `spatial_params.neighbor_iron_fraction` (single source of truth);
+        // the inline `0.031` is gone.
         grid.diffuse_iron(
             spatial_params.iron_release_per_death,
-            // 3D-natural neighbor fraction (per #185 grid rustdoc):
-            // 0.1 * 8/26 ≈ 0.031
-            0.031,
+            spatial_params.neighbor_iron_fraction,
         );
 
         // DAMP diffusion if immune is enabled
@@ -591,13 +618,27 @@ fn run_one_condition_with_config(condition: &Condition, run_cfg: RunConfig) -> C
                             );
                             if rng.gen::<f64>() < kill_prob {
                                 // Immune kills set `state.dead` but deliberately
-                                // do NOT set `death_step` or `newly_dead`. Two
-                                // intentional consequences: (1) no DAMP burst
-                                // at the post-death grace period — immune
-                                // (T-cell) kills are apoptotic, not ferroptotic,
-                                // so no LP buildup → no DAMP signal;
-                                // (2) no iron release to neighbors via
-                                // `diffuse_iron`. Matches sim-tme behavior.
+                                // do NOT set `death_step` or `newly_dead`.
+                                // **Modeling asymmetry**: ferroptosis-killed
+                                // cells with `Some(death_step)` fall through
+                                // to `sim_cell_step` for `post_death_steps`
+                                // more iterations (post-death LP overshoot
+                                // dynamics); immune-killed cells with
+                                // `None` death_step hit the `else { continue }`
+                                // branch and exit immediately. Three
+                                // intentional consequences:
+                                //   (1) immune-killed cells skip grace-period
+                                //       biochem — they're apoptotic, not
+                                //       ferroptotic (no LP buildup beyond
+                                //       moment of death);
+                                //   (2) no DAMP burst — T-cell perforin
+                                //       death doesn't release the DAMPs
+                                //       (calreticulin, HMGB1) that ferroptosis
+                                //       releases;
+                                //   (3) no iron release via `diffuse_iron`
+                                //       (no `newly_dead` flag).
+                                // This is a real modeling choice (consistent
+                                // with sim-tme/main.rs:749), not a side-effect.
                                 grid.cells[idx].state.dead = true;
                                 immune_kills += 1;
                             }
@@ -1072,6 +1113,39 @@ mod tests {
     fn norm_panics_on_nan_std() {
         let mut rng = StdRng::seed_from_u64(0);
         norm(&mut rng, 1.0, f64::NAN);
+    }
+
+    /// **Reviewer-flagged invariant**: par_iter must produce identical
+    /// results across runs. Per-condition closures are independent (each
+    /// allocates its own grid + DAMP/scratch buffers), so determinism
+    /// should hold — but an unverified invariant is one rayon refactor
+    /// away from silent drift. This test exercises the actual
+    /// `par_iter().map(run_one_condition)` path (smaller config for CI
+    /// debug speed) and compares the resulting JSON.
+    #[test]
+    fn rayon_run_is_deterministic() {
+        // Subset of 6 conditions (small enough for debug mode, large
+        // enough to exercise inter-thread scheduling).
+        let small_conditions: Vec<_> = generate_conditions().into_iter().take(6).collect();
+        let cfg = RunConfig::for_test();
+
+        let run = |conds: &[Condition]| -> Vec<ConditionResult> {
+            conds.par_iter()
+                .map(|c| run_one_condition_with_config(c, cfg))
+                .collect()
+        };
+
+        let r1 = run(&small_conditions);
+        let r2 = run(&small_conditions);
+
+        assert_eq!(r1.len(), r2.len());
+        for (a, b) in r1.iter().zip(r2.iter()) {
+            assert_eq!(a.treatment, b.treatment);
+            assert_eq!(a.total_dead, b.total_dead);
+            assert_eq!(a.overall_kill_rate, b.overall_kill_rate);
+            assert_eq!(a.peak_damp, b.peak_damp);
+            assert_eq!(a.total_damp, b.total_damp);
+        }
     }
 
     /// **Reviewer-flagged invariant**: the library functions
