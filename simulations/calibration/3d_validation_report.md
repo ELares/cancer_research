@@ -117,22 +117,33 @@ metric stays the same.
 
 ## How to re-run
 
+On a clean checkout, neither `simulations/output/tme/tme_summary.json`
+(2D) nor `simulations/output/tme-3d/summary.json` (3D) is tracked in
+git — only `simulations/output/.gitkeep` is. Step 2 (the comparison
+script) and step 3 (calibration of any sim-tme-derived target) both
+require running their producing binary first.
+
 ```bash
-# 1. Regenerate sim-tme-3d's output (from simulations/)
 cd simulations
+
+# 1. Generate 2D output (prerequisite for the comparison script)
+cargo run --release -p sim-tme
+
+# 2. Generate 3D output (prerequisite for the 3D calibration targets)
 cargo run --release -p sim-tme-3d
 
-# 2. (Optional) Refresh 2D + 3D comparison
+# 3. Refresh the 2D-vs-3D comparison artifacts (needs both #1 and #2)
 python3 ../scripts/generate_3d_comparison_table.py
 
-# 3. Run all calibration targets including the 3 new 3D ones
+# 4. Run all calibration targets including the 3 new 3D ones
 python3 calibration/calibrate.py --evaluate
 ```
 
-Production run takes ~17 seconds on 8 cores. After a refresh, all 3
-3D targets should show `PASS`; older simulation outputs will show
-`STALE` (informational — value within tolerance, file older than
-source code).
+If 2D outputs already exist (and you're only refreshing 3D), you can
+skip step 1. The 3D production run takes ~17 seconds on 8 cores. After
+a full refresh, all 3 3D targets should show `PASS`; older simulation
+outputs will show `STALE` (informational — value within tolerance,
+file older than source code).
 
 ## Acceptance criteria (#196)
 
