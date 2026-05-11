@@ -163,6 +163,22 @@ pub fn radial_ph_field(
 /// 2017 and sim-tme's parameterization). `debug_assert` rejects negative
 /// values; release accepts any sign and silently inverts the multiplier
 /// curve.
+///
+/// **Release behavior for invalid inputs** (no clamping anywhere in this
+/// helper, so propagation is straightforward):
+///
+/// | Bad input | Output |
+/// |-----------|--------|
+/// | `local_ph = NaN` | `NaN` (propagates through arithmetic; no clamp to catch it) |
+/// | `ph_edge = NaN` | `NaN` |
+/// | `sensitivity = NaN` | `NaN` |
+/// | `sensitivity = +∞`, `local_ph != ph_edge` | `±∞` (sign matches `ph_edge - local_ph`) |
+/// | `sensitivity = +∞`, `local_ph == ph_edge` | `NaN` (`∞ · 0 = NaN` in IEEE) |
+///
+/// Consumers passing `local_ph` from [`radial_ph_field`] (which is
+/// clamped to `[ph_core, ph_edge]`) and finite sane sensitivities won't
+/// hit any of these. The helpers are deliberately panic-free for
+/// composability inside hot loops.
 #[inline]
 pub fn iron_multiplier_from_ph(local_ph: f64, ph_edge: f64, sensitivity: f64) -> f64 {
     debug_assert!(
@@ -195,6 +211,21 @@ pub fn iron_multiplier_from_ph(local_ph: f64, ph_edge: f64, sensitivity: f64) ->
 /// drug is *more* bioavailable at low pH, contradicting Henderson-
 /// Hasselbalch for weak bases). `debug_assert` rejects negative values;
 /// release silently inverts the curve.
+///
+/// **Release behavior for invalid inputs**:
+///
+/// | Bad input | Output |
+/// |-----------|--------|
+/// | `local_ph = NaN` | `NaN` (clamp preserves NaN-self per IEEE) |
+/// | `ph_edge = NaN` | `NaN` (propagates through arithmetic into self, then clamp preserves) |
+/// | `sensitivity = NaN` | `NaN` |
+/// | `sensitivity = +∞` | clamped to `[ION_TRAP_FLOOR, 1.0]` (±∞ clamps to one of the bounds) |
+///
+/// Note the **asymmetry** with [`iron_multiplier_from_ph`]: the latter
+/// has no clamp, so `±∞`/`NaN` flow straight through. This helper's
+/// clamp bounds are constants (`ION_TRAP_FLOOR` and `1.0`), so unlike
+/// [`radial_ph_field`] there's no panic risk — but NaN still propagates
+/// through clamp's self-passthrough rule.
 #[inline]
 pub fn ion_trap_factor_from_ph(local_ph: f64, ph_edge: f64, sensitivity: f64) -> f64 {
     debug_assert!(
