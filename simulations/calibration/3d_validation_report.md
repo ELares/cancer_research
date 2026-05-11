@@ -140,8 +140,11 @@ python3 calibration/calibrate.py --evaluate
 ```
 
 If 2D outputs already exist (and you're only refreshing 3D), you can
-skip step 1. The 3D production run takes ~17 seconds on 8 cores. After
-a full refresh, all 3 3D targets should show `PASS`; older simulation
+skip step 1. Runtimes on 8 cores: the 2D `sim-tme` run takes 10-30
+minutes (500×500 grid, ~159 k cells, many conditions × 180 steps),
+the 3D `sim-tme-3d` run takes ~17 seconds (60³ grid, 24 conditions),
+and the comparison + calibration steps are sub-second. After a full
+refresh, all 3 3D targets should show `PASS`; older simulation
 outputs will show `STALE` (informational — value within tolerance,
 file older than source code).
 

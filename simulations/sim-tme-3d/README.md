@@ -41,13 +41,17 @@ cd simulations
 cargo run --release -p sim-tme-3d
 # → output/tme-3d/summary.json (24 conditions)
 
-# Generate the 2D vs 3D comparison
+# Generate the 2D vs 3D comparison. The comparison script reads BOTH
+# output/tme/tme_summary.json (sim-tme, 2D) and output/tme-3d/summary.json
+# (sim-tme-3d, 3D). Neither output is tracked in git — only .gitkeep is.
+# On a clean checkout, run sim-tme first (10-30 min, 500x500 grid):
+#   cargo run --release -p sim-tme
 python3 ../scripts/generate_3d_comparison_table.py
 # → output/tme-3d/comparison_2d_vs_3d.csv
 # → output/tme-3d/key_questions.txt
 ```
 
-The full 24-condition run takes ~15-30 seconds on 8 cores (rayon condition-level parallelism).
+The 3D 24-condition run takes ~15-30 seconds on 8 cores (rayon condition-level parallelism). The 2D prerequisite (`sim-tme`) is much heavier — 10-30 minutes on the same hardware.
 
 ## Condition matrix
 
