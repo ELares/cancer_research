@@ -23,8 +23,12 @@ TARGETS_FILE = SCRIPT_DIR / "targets.yaml"
 REPORT_FILE = SCRIPT_DIR / "calibration_report.md"
 
 # Source files whose modification should invalidate cached outputs.
+# `*/src/**/*.rs` catches every workspace crate's source — including the
+# binaries that produce the cached output files themselves (e.g.,
+# `sim-tme-3d/src/main.rs`). The previous narrower set missed binary-only
+# changes, leaving stale outputs invisibly PASSing.
 SOURCE_SENTINEL_GLOBS = [
-    "ferroptosis-core/src/**/*.rs",
+    "*/src/**/*.rs",
     "Cargo.lock",
 ]
 
@@ -219,10 +223,12 @@ def extract_tme_3d_json(target: dict) -> float | None:
     """Extract a named 3D metric from sim-tme-3d's summary.json.
 
     Supports several `metric` values, each a computed scalar derived from
-    one or more rows in the `conditions: [...]` array. Mirrors the pattern
-    in [`extract_invivo_json`] which computes a 2D/3D ratio across two
-    rows; here the metric is named because the row-filter logic is too
-    rich to encode in YAML.
+    one or more rows in the `conditions: [...]` array. Follows the
+    named-metric dispatch pattern of `extract_invivo_json`, but the
+    derived scalar may come from one row (single-row two-field ratio,
+    e.g. `rsl3_o2_collapse_ratio`) or from two rows (e.g.
+    `immune_sdt_rsl3_ratio`, `stromal_shielding_ratio`). Named because
+    the row-filter logic is too rich to encode in YAML.
 
     Supported metrics:
     - "rsl3_o2_collapse_ratio": hypoxic_kill_rate / normoxic_kill_rate
@@ -263,9 +269,13 @@ def extract_tme_3d_json(target: dict) -> float | None:
         )
         if c is None:
             return None
-        normoxic = c.get("normoxic_kill_rate", 0.0)
-        hypoxic = c.get("hypoxic_kill_rate", 0.0)
-        if normoxic <= 0.0:
+        normoxic = c.get("normoxic_kill_rate")
+        hypoxic = c.get("hypoxic_kill_rate")
+        # `c.get(key, 0.0)` only catches missing keys, not explicit null
+        # values. summary.json emits null on some Control rows, so an
+        # explicit `is None` guard is required to prevent TypeError on
+        # `None <= 0.0`. Matches the pattern in the other two metrics.
+        if normoxic is None or hypoxic is None or normoxic <= 0.0:
             return None
         return hypoxic / normoxic
 

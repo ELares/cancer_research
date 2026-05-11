@@ -373,9 +373,9 @@ fn run_one_condition_with_config(condition: &Condition, run_cfg: RunConfig) -> C
     // geometry (same cell phenotypes, same Persister cluster placements).
     // Using a per-condition seed for the grid would mean each treatment is
     // evaluated on a DIFFERENT tumor — combining treatment effects with
-    // grid-geometry noise. At 12k tumor cells with ~268 cells/cluster × 10-20
-    // random clusters, that noise is material relative to subtle effects
-    // like the immune ratio.
+    // grid-geometry noise. At ~82.5k tumor cells (60³ sphere × 0.45 radius
+    // fraction), with ~268 cells/cluster × 10-20 random clusters, that
+    // noise is material relative to subtle effects like the immune ratio.
     let cond_seed = SEED.wrapping_add(hash_condition_name(&condition.name));
 
     // Grid uses fixed SEED — matches sim-tme/src/main.rs (line 921 and

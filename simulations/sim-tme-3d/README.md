@@ -4,7 +4,7 @@
 
 ## What it does
 
-Runs a matrix of 24 conditions on a 60³ spheroid (~12k tumor cells, ~540 µm radius), integrating:
+Runs a matrix of 24 conditions on a 60³ spheroid (~82.5k tumor cells, ~540 µm radius), integrating:
 
 - **3D energy physics** (#186) via `physics::local_ros_multiplier_3d`
 - **3D radial O₂ gradient** (#187) via `oxygen::radial_o2_field`
@@ -20,7 +20,7 @@ Emits a JSON summary that the Python comparison script pairs with `sim-tme`'s ex
 |---|---|---|
 | Grid | 500 × 500 | 60³ |
 | Total cells | 250k | 216k |
-| Tumor cells | ~159k | ~12k |
+| Tumor cells | ~159k | ~82.5k |
 | Tumor radius | ~4500 µm | ~540 µm |
 | Tumor diameter | ~9 mm (large in-vivo) | ~1.1 mm (upper end of spheroids) |
 
