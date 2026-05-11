@@ -23,8 +23,9 @@
 //! | [`params`] | Rate constants for biochemistry, physics, immune cascade |
 //! | [`biochem`] | Core simulation engine |
 //! | [`stats`] | Wilson CIs, parallel Monte Carlo execution |
-//! | [`physics`] | Depth-dependent energy deposition (Beer-Lambert, acoustic) |
-//! | [`grid`] | 2D tumor grid with heterogeneous architecture |
+//! | [`physics`] | Depth-dependent energy deposition (Beer-Lambert, acoustic; 2D + 3D dispatchers) |
+//! | [`grid`] | 2D and 3D tumor grids with heterogeneous architecture |
+//! | [`oxygen`] | 3D radial oxygen gradients for spheroid tumors |
 //! | [`immune`] | ICD/DAMP immune cascade model |
 //! | [`io`] | JSON and CSV output helpers |
 //! | [`drug_transport`] | Tissue-specific drug penetration (Krogh cylinder approximation) |
@@ -38,6 +39,7 @@ pub mod biochem;
 pub mod stats;
 pub mod physics;
 pub mod grid;
+pub mod oxygen;
 pub mod immune;
 pub mod io;
 pub mod drug_transport;
