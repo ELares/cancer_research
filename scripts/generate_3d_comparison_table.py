@@ -5,10 +5,10 @@ Closes #195 AC: "Comparison table: 2D vs 3D for every TME feature."
 
 **Scale-mismatch caveat (load-bearing)**: sim-tme uses a 500x500 grid
 (tumor radius ~4500 um, ~159k tumor cells). sim-tme-3d uses a 60^3 grid
-(tumor radius ~540 um, ~12k tumor cells). The 8x linear scale difference
-means absolute kill counts are NOT directly comparable. This script
-reports RATIOS (e.g., RSL3 hypoxic kill / RSL3 normoxic kill) which are
-dimensionally meaningful at different scales.
+(tumor radius ~540 um, ~82.5k tumor cells). The ~2x cell-count gap (and
+~8x linear scale difference) means absolute kill counts are NOT directly
+comparable. This script reports RATIOS (e.g., RSL3 hypoxic kill / RSL3
+normoxic kill) which are dimensionally meaningful at different scales.
 
 Inputs:
 - output/tme/tme_summary.json       (sim-tme, 2D)
@@ -26,9 +26,30 @@ import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-SIM_TME_JSON = REPO_ROOT / "output" / "tme" / "tme_summary.json"
-SIM_TME_3D_JSON = REPO_ROOT / "output" / "tme-3d" / "summary.json"
-OUT_DIR = REPO_ROOT / "output" / "tme-3d"
+
+
+def _resolve_output(rel: str) -> Path:
+    """Resolve a relative output path, preferring `simulations/output/`.
+
+    Both `cd simulations && cargo run -p sim-tme-3d` (canonical) and a
+    repo-root cargo invocation can produce outputs. Calibration's
+    `_resolve_output_path` checks `simulations/output/` first; we mirror
+    that here so the two scripts stay coherent on a shared rerun flow.
+    Falls back to the repo-root `output/` location if the canonical one
+    is missing.
+    """
+    sim_local = REPO_ROOT / "simulations" / "output" / rel
+    if sim_local.exists():
+        return sim_local
+    return REPO_ROOT / "output" / rel
+
+
+SIM_TME_JSON = _resolve_output("tme/tme_summary.json")
+SIM_TME_3D_JSON = _resolve_output("tme-3d/summary.json")
+# Write comparison artifacts alongside the 3D input, so the rerun flow's
+# step 2 outputs land next to step 1's input — and the validation report's
+# `output/tme-3d/comparison_2d_vs_3d.csv` reference resolves cleanly.
+OUT_DIR = SIM_TME_3D_JSON.parent
 
 # Conditions we compare. Each maps a logical key to the lookup criteria
 # in both the 2D and 3D JSONs.
@@ -128,7 +149,7 @@ def answer_key_questions(rows_2d: list[dict], rows_3d: list[dict],
     lines.append("=" * 72)
     lines.append("")
     lines.append("Caveat: 2D uses 500x500 grid (radius ~4500um, ~159k tumor cells);")
-    lines.append("3D uses 60^3 grid (radius ~540um, ~12k tumor cells).")
+    lines.append("3D uses 60^3 grid (radius ~540um, ~82.5k tumor cells).")
     lines.append("Compare RATIOS not absolute counts.")
     lines.append("")
 
