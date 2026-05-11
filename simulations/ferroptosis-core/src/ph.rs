@@ -79,15 +79,27 @@ const ION_TRAP_FLOOR: f64 = 0.3;
 ///
 /// **Validation.** All parameters must be finite; `ph_edge > ph_core`
 /// (delta > 0); `lambda_ph_um > 0`. Invalid values trigger `debug_assert!`
-/// in tests. Release behavior for invalid inputs (per
-/// [`crate::oxygen::radial_o2_field`]'s established posture):
+/// in tests. **Release behavior is more complex than `oxygen.rs`'s** —
+/// the `clamp(ph_core, ph_edge)` step has an unconditional internal
+/// `assert!(min <= max)` (in `f64::clamp`) that runs *even in release*,
+/// so some classes of bad input panic instead of producing undefined
+/// values:
 ///
-/// | Bad input | Per-cell output (release) |
-/// |-----------|---------------------------|
-/// | `lambda = 0` | `ph_edge - delta·(1 - 0) = ph_core` (matches deep limit) |
-/// | `lambda < 0` | `ph_edge - delta·(1 - exp(+d/\|λ\|)) ` → very large negative, clamped to `ph_core` |
-/// | any `NaN` input | per-cell `NaN` (`f64::clamp` propagates NaN, does not clip) |
-/// | `ph_edge <= ph_core` | formula still runs, but pH ends up *above* ph_edge for non-zero depth; clamp routes to ph_edge for d > 0 |
+/// | Bad input | Per-cell behavior (release) |
+/// |-----------|------------------------------|
+/// | `λ = 0`, depth > 0 | `ph_core` (`exp(-∞) = 0`, formula collapses) |
+/// | `λ = 0`, depth = 0 (surface cells) | `NaN` (`0/0 → NaN`, propagates) |
+/// | `λ < 0` | `ph_edge` (`exp(+positive)` makes raw > `ph_edge`, clamp routes to `ph_edge` — NOT `ph_core`) |
+/// | `λ = +∞` | `ph_edge` (`exp(0) = 1`, raw = `ph_edge`) |
+/// | `λ = NaN` | per-cell `NaN` (NaN propagates through arithmetic into clamp's *self*; `f64::clamp` preserves NaN-self) |
+/// | `ph_edge = NaN` or `ph_core = NaN` | **PANIC** (`f64::clamp` panics when min or max is NaN, since `min <= max` returns false for NaN comparisons) |
+/// | `ph_edge < ph_core` | **PANIC** (`f64::clamp` panics on `min > max`) |
+/// | `ph_edge == ph_core` | constant `ph_edge` everywhere (delta = 0; no panic since `min <= max` holds) — but `debug_assert` rejects this in tests as a likely configuration bug |
+///
+/// In short: callers loading parameters from untrusted sources must
+/// validate at the boundary, particularly the `ph_edge > ph_core`
+/// invariant and finite-NaN-free `ph_edge`/`ph_core`. Otherwise a
+/// release run will panic on the first tumor-cell clamp.
 ///
 /// **Cost.** O(N). Per-cell calls `radial_depth_um` which recomputes
 /// geometry constants; same perf TODO as `radial_o2_field` (#194).
