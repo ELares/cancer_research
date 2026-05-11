@@ -256,12 +256,27 @@ pub fn dc_activation(local_damp: f64, kd: f64) -> f64 {
 ///
 /// | Bad input | Output |
 /// |-----------|--------|
-/// | any `NaN` argument | `NaN` (`f64::min` returns NaN if self is NaN) |
-/// | `activation < 0` or `effective_brake > 1` | negative; clamped only at upper bound |
+/// | any `NaN` argument | `NaN` (NaN-preserving cap; see implementation note) |
+/// | `activation < 0` or `effective_brake > 1` | negative; capped only at upper bound |
+///
+/// **Implementation note on the cap.** Cannot use `.min(0.99)`: Rust's
+/// `f64::min` treats NaN as the maximum (`NaN.min(0.99) = 0.99`), which
+/// would silently convert a NaN input into a near-certain kill
+/// probability. Using an explicit `if raw > 0.99` branch instead, which
+/// is NaN-preserving (`NaN > 0.99` is `false`, so the `else` branch
+/// returns `raw` = NaN). Caller-visible contract: NaN in → NaN out, so
+/// downstream `rng.gen() < NaN` correctly produces zero kills.
 #[inline]
 #[must_use = "the kill probability is the function's only output; ignoring it suggests a logic bug"]
 pub fn immune_kill_probability(activation: f64, kill_rate: f64, effective_brake: f64) -> f64 {
-    (activation * kill_rate * (1.0 - effective_brake)).min(0.99)
+    let raw = activation * kill_rate * (1.0 - effective_brake);
+    // NaN-preserving cap (cannot use raw.min(0.99) — f64::min treats
+    // NaN as max). See implementation note in the rustdoc.
+    if raw > 0.99 {
+        0.99
+    } else {
+        raw
+    }
 }
 
 #[cfg(test)]
@@ -610,6 +625,39 @@ mod tests {
                 assert_eq!(immune_kill_probability(activation, rate, 1.0), 0.0);
             }
         }
+    }
+
+    /// **Reviewer-flagged correctness regression guard**: NaN inputs
+    /// must propagate to NaN output, not silently cap at 0.99.
+    ///
+    /// Background: Rust's `f64::min` treats NaN as the maximum, so
+    /// `NaN.min(0.99) = 0.99` (not NaN). A naïve `(raw).min(0.99)` cap
+    /// would turn NaN inputs (e.g., from `dc_activation(0.0, 0.0) = 0/0
+    /// = NaN`) into a near-certain kill probability — silent
+    /// correctness bug. The implementation uses an explicit
+    /// `if raw > 0.99` branch instead (NaN comparisons return false, so
+    /// the `else` branch returns the NaN unchanged).
+    ///
+    /// This test locks down the NaN-propagation contract so a future
+    /// refactor back to `.min(0.99)` would fail loudly.
+    #[test]
+    fn immune_kill_propagates_nan() {
+        // Direct NaN injection on each argument.
+        assert!(immune_kill_probability(f64::NAN, 0.02, 0.21).is_nan());
+        assert!(immune_kill_probability(0.5, f64::NAN, 0.21).is_nan());
+        assert!(immune_kill_probability(0.5, 0.02, f64::NAN).is_nan());
+
+        // Realistic scenario: dc_activation(0, 0) = 0/0 = NaN propagating
+        // through the kill probability.
+        let bad_activation = dc_activation(0.0, 0.0);
+        assert!(bad_activation.is_nan(), "test precondition");
+        let kill_prob = immune_kill_probability(bad_activation, 0.02, 0.21);
+        assert!(
+            kill_prob.is_nan(),
+            "NaN from upstream should propagate to NaN kill probability, \
+             not silently cap at 0.99. Got {kill_prob} (a regression to `.min(0.99)` \
+             would yield 0.99 — a near-certain kill from invalid input)."
+        );
     }
 
     /// Default sim-tme numerical example: activation=0.5, rate=0.02,
