@@ -513,15 +513,18 @@ fn run_one_condition(condition: &Condition) -> ConditionResult {
         }
     }
 
-    // Late DAMP release for cells still in grace at end of sim
-    for idx in 0..n_cells {
-        if grid.cells[idx].is_tumor && grid.cells[idx].state.dead {
-            if let Some(ds) = grid.cells[idx].state.death_step {
-                let grace_end = ds + params.post_death_steps;
-                if grace_end >= N_STEPS {
-                    grid.cells[idx].lp_at_death = grid.cells[idx].state.lp;
-                    damp_field[idx] += grid.cells[idx].lp_at_death * immune_cfg.damp_per_lp;
-                }
+    // Late DAMP release for cells still in their post-death grace period at
+    // the end of the simulation. Iterate paired with damp_field by index to
+    // satisfy clippy::needless_range_loop while keeping the dual-Vec access.
+    for (idx, gc) in grid.cells.iter_mut().enumerate() {
+        if !(gc.is_tumor && gc.state.dead) {
+            continue;
+        }
+        if let Some(ds) = gc.state.death_step {
+            let grace_end = ds + params.post_death_steps;
+            if grace_end >= N_STEPS {
+                gc.lp_at_death = gc.state.lp;
+                damp_field[idx] += gc.lp_at_death * immune_cfg.damp_per_lp;
             }
         }
     }
