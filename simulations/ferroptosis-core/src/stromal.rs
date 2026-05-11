@@ -28,6 +28,14 @@
 //! helper). Consumers get the mask once and reuse it for boost
 //! application, kill-rate reporting, and visualization.
 //!
+//! **Canonical boost magnitudes** live in sim-tme's `StromalConfig`
+//! (`simulations/sim-tme/src/main.rs:406`): `gsh_boost_per_step = 0.06`,
+//! `gsh_boost_cap = 18.0`, `mufa_boost_per_step = 0.003`, `mufa_boost_cap
+//! = 0.25`. A 3D consumer (#195 sim-tme-3d, #197 cell-level biochem)
+//! should either re-export these values from sim-tme or lift `StromalConfig`
+//! into the library — both are explicit follow-up work, not in this PR's
+//! scope.
+//!
 //! Refs: PMID 34373744 (CAF metabolic reprogramming),
 //! PMID 31813804 (ACSL3-mediated oleic acid),
 //! PMID 30842648 (MUFA ferroptosis).
@@ -38,7 +46,9 @@
 //! use ferroptosis_core::grid::TumorGrid3D;
 //! use ferroptosis_core::stromal::{stromal_adjacency_mask, stromal_adjacent_kill_rate};
 //!
-//! let g = TumorGrid3D::generate(40, 40, 40, 20.0, 42);
+//! // 10³ grid is enough to demonstrate the API — 1k cells exercises
+//! // the same code paths as larger sims at 1/64th the doctest cost.
+//! let g = TumorGrid3D::generate(10, 10, 10, 20.0, 42);
 //! let mask = stromal_adjacency_mask(&g);
 //! assert_eq!(mask.len(), g.cells.len());
 //!
@@ -91,14 +101,14 @@ pub fn stromal_adjacency_mask(grid: &TumorGrid3D) -> Vec<bool> {
     for r in 0..grid.rows {
         for c in 0..grid.cols {
             for l in 0..grid.layers {
-                // Use `grid.get` for reads — delegates the flat-index
-                // formula to TumorGrid3D so a future stride change doesn't
-                // silently desync this module. `idx` is still needed for
-                // the mask write below.
+                // Use `grid.get` for reads and `grid.flat_index` for the
+                // mask-write index — both delegate the row-major layout
+                // formula to TumorGrid3D so a future stride change can't
+                // silently desync this module from `grid.cells`.
                 if !grid.get(r, c, l).is_tumor {
                     continue;
                 }
-                let idx = r * grid.cols * grid.layers + c * grid.layers + l;
+                let idx = grid.flat_index(r, c, l);
                 let (neighbors, count) = grid.neighbors(r, c, l);
                 for &(nr, nc, nl) in &neighbors[..count] {
                     if !grid.get(nr, nc, nl).is_tumor {
@@ -381,18 +391,21 @@ mod tests {
         // Theoretical ratio: 3D ~ 3/R, 2D ~ 2/R → 1.5× at matched R.
         // Empirically measured at this grid (40³, seed=42): 1.66× (lattice
         // quantization gives slightly more than continuum theory). Asserting
-        // `> 1.3×` leaves comfortable margin for seed variation while still
-        // catching a regression — a directional-only `frac_3d > frac_2d`
-        // assertion would silently pass with a tiny difference and miss a
-        // bug that cuts neighbor coverage in half (which would give ratio
-        // ≈ 0.5–0.8× — clearly < 1.3 but possibly > 1.0).
+        // **`1.3 < ratio < 1.8`** (bounded interval) is stronger than a
+        // directional `frac_3d > frac_2d` would be:
+        // - lower bound catches a regression that cuts neighbor coverage
+        //   (would give ratio ≈ 0.5–0.8× — clearly < 1.3 but possibly > 1.0)
+        // - upper bound catches a regression that double-counts cells or
+        //   misses the stromal filter (would inflate the 3D numerator)
+        // Both bounds give comfortable margin from the empirical 1.66×.
         let ratio = frac_3d / frac_2d;
         assert!(
-            ratio > 1.3,
-            "3D/2D boundary-fraction ratio ({ratio:.3}) should exceed 1.3 — \
+            ratio > 1.3 && ratio < 1.8,
+            "3D/2D boundary-fraction ratio ({ratio:.3}) should be in (1.3, 1.8) — \
              surface-to-volume scaling (3/R vs 2/R) predicts ≈ 1.5×, empirical at \
-             this grid is ≈ 1.66×. A ratio below 1.3 likely means the 26-neighbor \
-             sweep is undercounting. 2D frac={frac_2d:.4}, 3D frac={frac_3d:.4}"
+             this grid is ≈ 1.66×. Outside this interval likely means the 26-neighbor \
+             sweep is mis-coverage (under: < 1.3; over: > 1.8). \
+             2D frac={frac_2d:.4}, 3D frac={frac_3d:.4}"
         );
     }
 }
