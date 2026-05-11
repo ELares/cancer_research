@@ -50,7 +50,7 @@ use std::path::Path;
 
 use ferroptosis_core::biochem::{sim_cell_step, CellState};
 use ferroptosis_core::cell::Treatment;
-use ferroptosis_core::grid::TumorGrid3D;
+use ferroptosis_core::grid::{TumorGrid3D, TUMOR_RADIUS_FRACTION};
 use ferroptosis_core::immune_3d::{
     dc_activation, diffuse_damp_3d_step, immune_kill_probability,
 };
@@ -433,6 +433,12 @@ fn run_one_condition_with_config(condition: &Condition, run_cfg: RunConfig) -> C
     };
 
     // --- Treatment-specific ROS multiplier (3D version) ---
+    // PDT arm is intentionally kept for sim-tme parity (sim-tme/main.rs:573
+    // has the same pattern); `generate_conditions()` does not include PDT
+    // in the v1 matrix (deferred to follow-up — manuscript focuses on the
+    // RSL3-vs-SDT comparison, with PDT in a separate sim-spatial track).
+    // The arm is dead code in this binary today but lets a future caller
+    // pass `Treatment::PDT` without a match-exhaustiveness error.
     let base_ros = match condition.treatment {
         Treatment::SDT => params.sdt_ros,
         Treatment::PDT => params.pdt_ros,
@@ -877,7 +883,11 @@ fn generate_conditions() -> Vec<Condition> {
 // ============================================================
 
 fn main() {
-    let tumor_radius_um = (GRID_DIM as f64) * 0.45 * CELL_SIZE_UM;
+    // Use the library's TUMOR_RADIUS_FRACTION constant instead of the bare
+    // 0.45 literal — keeps `tumor_radius_um` in lockstep with whatever
+    // value `TumorGrid3D::generate` actually uses (reviewer-flagged drift
+    // hazard if the library ever tunes the fraction).
+    let tumor_radius_um = (GRID_DIM as f64) * TUMOR_RADIUS_FRACTION * CELL_SIZE_UM;
     eprintln!("=== sim-tme-3d: 3D Spheroid TME Simulation ===");
     eprintln!(
         "Grid: {0}³ ({1:.1} mm × {1:.1} mm × {1:.1} mm)",
@@ -996,10 +1006,14 @@ mod tests {
         assert_eq!(r.o2_condition, "uniform");
         assert_eq!(r.immune_mode, "off");
         assert!(r.total_tumor > 0, "expected some tumor cells in 10³ grid");
-        // Control has zero exo-ROS so kill rate should be very low (baseline only).
+        // Control has zero exo-ROS, no immune pressure, no pH stress. Production
+        // 60³ run gives ~0.15% baseline kill rate. Threshold tightened from
+        // <5% (too loose — would let a 10× baseline regression sail through)
+        // to <2% (still loose for safety margin given the small test grid;
+        // production-rate × 5 reasonable margin).
         assert!(
-            r.overall_kill_rate < 0.05,
-            "Control should have <5% kill rate, got {:.1}%",
+            r.overall_kill_rate < 0.02,
+            "Control should have <2% kill rate, got {:.1}%",
             r.overall_kill_rate * 100.0
         );
     }

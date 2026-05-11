@@ -24,7 +24,13 @@ use crate::biochem::CellState;
 /// reference together. (The 2D [`TumorGrid::generate`] uses the same
 /// numeric value inline; if it ever needs to vary independently we can
 /// split the constants.)
-const TUMOR_RADIUS_FRACTION: f64 = 0.45;
+///
+/// **Public**: downstream binaries (sim-tme-3d) compute
+/// `tumor_radius_um = grid_dim × TUMOR_RADIUS_FRACTION × cell_size_um`
+/// for output metadata; exporting the constant prevents the drift hazard
+/// of binaries hardcoding a stale `0.45` literal that diverges from the
+/// generated geometry.
+pub const TUMOR_RADIUS_FRACTION: f64 = 0.45;
 
 /// A single cell in the spatial grid.
 #[derive(Clone, Debug, Serialize)]

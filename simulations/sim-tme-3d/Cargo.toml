@@ -8,8 +8,9 @@ description = "3D spheroid tumor microenvironment simulation — integrates O2/p
 ferroptosis-core = { workspace = true }
 rand = { workspace = true }
 rand_distr = { workspace = true }
-ndarray = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
-csv = { workspace = true }
 rayon = { workspace = true }
+# Note: csv and ndarray omitted — sim-tme has them but sim-tme-3d
+# emits JSON only and doesn't construct ndarrays. Re-add if a
+# future CSV-output or volumetric-ndarray feature lands.

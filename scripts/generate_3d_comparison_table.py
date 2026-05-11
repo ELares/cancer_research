@@ -232,11 +232,13 @@ def answer_key_questions(rows_2d: list[dict], rows_3d: list[dict],
     # by O2/depth composition + immune effects away from the stromal
     # interface.
     #
-    # Both 2D and 3D stromal-on rows populate stromal_adjacent_kill_rate.
-    # sim-tme-3d also populates it for the no-stromal baseline (the
-    # adjacency mask is grid-geometry-dependent, not toggle-dependent).
-    # sim-tme does NOT — so for 2D the no-stromal baseline rate is None,
-    # and we fall back to overall_kill_rate with a caveat.
+    # Both 2D and 3D emit `stromal_adjacent_kill_rate` for BOTH stromal-on
+    # and matched no-stromal-baseline rows (the adjacency mask is
+    # grid-geometry-dependent, not toggle-dependent — sim-tme computes it
+    # for non-stromal rows too in its immune blocks). The overall_kill_rate
+    # fallback below is defensive code for the case where a future version
+    # of either binary drops the no-stromal adjacent rate; in current usage
+    # it doesn't fire.
     def stromal_adj(c):
         if c is None:
             return None
