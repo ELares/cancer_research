@@ -60,19 +60,31 @@ use crate::grid::TumorGrid3D;
 ///
 /// **Geometry note.** With `TumorGrid3D::generate`'s default
 /// `tumor_radius = 0.45 × min_dim`, the tumor never touches the grid
-/// edges, so this function correctly identifies the spheroid surface
-/// without false-positives from grid-boundary effects. For
-/// user-constructed grids where the tumor touches the bounding box,
-/// tumor cells at the grid edge would still pass the "stromal neighbor"
-/// check (the missing neighbors outside the grid don't count, but any
-/// in-grid stromal neighbor flags the cell). This is consistent with
-/// sim-tme's 2D semantics and rarely affects default usage.
+/// edges, so this function correctly identifies the spheroid surface.
+/// For user-constructed grids where the tumor *does* touch the bounding
+/// box, the **failure mode is a false negative, not a false positive**:
+/// a tumor cell at a grid face/edge/corner has only its in-grid
+/// neighbors checked (missing out-of-grid positions don't count as
+/// "stromal"), so a grid-edge tumor cell whose in-grid neighbors are
+/// all tumor will NOT be flagged, even though it geometrically sits at
+/// the spheroid surface. This is the same semantics as sim-tme's 2D
+/// implementation. Mitigation: keep `tumor_radius < min_dim / 2` so the
+/// spheroid stays interior to the bounding box.
 ///
 /// **Cost.** O(N × 26) for N = `grid.cells.len()`. Each cell costs a
 /// 26-neighbor sweep (stack-allocated via [`TumorGrid3D::neighbors`]).
-/// Negligible for hundreds of thousands of cells; same #194 hoisting
-/// opportunity flagged on `radial_o2_field` / `radial_ph_field` would
-/// apply if sim-spatial-3d's inner loop calls this per step.
+/// Negligible for hundreds of thousands of cells.
+///
+/// **Compute once and reuse** (perf hint for #194): the mask depends
+/// only on `is_tumor` topology, which is **invariant under standard
+/// simulation flow** — cells die but no cell ever changes from tumor
+/// to stromal or vice versa. So this function should be called *once*
+/// after `TumorGrid3D::generate` and the mask cached for the whole
+/// simulation, NOT recomputed per timestep. At 200³ the per-call cost
+/// is ~200M index ops; called per step over 180 steps that's 36B
+/// wasted ops. `#[must_use]` enforces the return-value-is-meaningful
+/// contract.
+#[must_use = "the boundary mask must be observed; calling for side-effects suggests a logic bug — compute once after `generate` and cache for the simulation"]
 pub fn stromal_adjacency_mask(grid: &TumorGrid3D) -> Vec<bool> {
     let n = grid.cells.len();
     let mut mask = vec![false; n];
@@ -115,6 +127,7 @@ pub fn stromal_adjacency_mask(grid: &TumorGrid3D) -> Vec<bool> {
 /// `assert!` (one usize comparison per call — negligible perf cost,
 /// clearer error message than the out-of-bounds index panic that would
 /// otherwise occur on the first iteration).
+#[must_use = "the kill rate is the function's only output; ignoring it suggests a logic bug"]
 pub fn stromal_adjacent_kill_rate(grid: &TumorGrid3D, mask: &[bool]) -> f64 {
     assert!(
         mask.len() == grid.cells.len(),
@@ -364,11 +377,22 @@ mod tests {
             boundary_2d > 0 && boundary_3d > 0,
             "test precondition: expected non-empty boundary regions; got 2D={boundary_2d}, 3D={boundary_3d}"
         );
+
+        // Theoretical ratio: 3D ~ 3/R, 2D ~ 2/R → 1.5× at matched R.
+        // Empirically measured at this grid (40³, seed=42): 1.66× (lattice
+        // quantization gives slightly more than continuum theory). Asserting
+        // `> 1.3×` leaves comfortable margin for seed variation while still
+        // catching a regression — a directional-only `frac_3d > frac_2d`
+        // assertion would silently pass with a tiny difference and miss a
+        // bug that cuts neighbor coverage in half (which would give ratio
+        // ≈ 0.5–0.8× — clearly < 1.3 but possibly > 1.0).
+        let ratio = frac_3d / frac_2d;
         assert!(
-            frac_3d > frac_2d,
-            "3D boundary fraction ({frac_3d:.4}) should exceed 2D ({frac_2d:.4}) at matched R \
-             — surface-to-volume scaling: 3D ~ 3/R, 2D ~ 2/R. Larger boundary fraction means \
-             CAF shielding has a bigger impact in 3D."
+            ratio > 1.3,
+            "3D/2D boundary-fraction ratio ({ratio:.3}) should exceed 1.3 — \
+             surface-to-volume scaling (3/R vs 2/R) predicts ≈ 1.5×, empirical at \
+             this grid is ≈ 1.66×. A ratio below 1.3 likely means the 26-neighbor \
+             sweep is undercounting. 2D frac={frac_2d:.4}, 3D frac={frac_3d:.4}"
         );
     }
 }
