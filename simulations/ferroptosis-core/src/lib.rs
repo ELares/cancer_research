@@ -27,6 +27,7 @@
 //! | [`grid`] | 2D and 3D tumor grids with heterogeneous architecture |
 //! | [`oxygen`] | 3D radial oxygen gradients for spheroid tumors |
 //! | [`ph`] | 3D radial pH gradient + iron-release and ion-trapping modulation helpers |
+//! | [`stromal`] | 3D CAF-shielded boundary detection (26-Moore) + shielded kill rate |
 //! | [`immune`] | ICD/DAMP immune cascade model |
 //! | [`io`] | JSON and CSV output helpers |
 //! | [`drug_transport`] | Tissue-specific drug penetration (Krogh cylinder approximation) |
@@ -42,6 +43,7 @@ pub mod physics;
 pub mod grid;
 pub mod oxygen;
 pub mod ph;
+pub mod stromal;
 pub mod immune;
 pub mod io;
 pub mod drug_transport;

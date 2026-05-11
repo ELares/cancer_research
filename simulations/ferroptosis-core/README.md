@@ -36,6 +36,7 @@ Run the included example: `cargo run -p ferroptosis-core --example basic_usage`
 | `grid` | 2D `TumorGrid` (8-Moore, circular) and 3D `TumorGrid3D` (26-Moore, spherical) with heterogeneous architecture, neighbor iteration, iron diffusion. `TumorGrid3D::radial_depth_um` provides per-cell signed depth from the spheroid surface for energy physics (#185, #186). 3D analytics (radial-depth curves, volumetric heatmaps) and the consuming binary land with #194. |
 | `oxygen` | 3D radial O₂ gradients for spheroid tumors: `radial_o2_field` (per-cell `exp(-d/λ)` factor) and `radial_o2_zone_kill_rates` (normoxic / transition / hypoxic zone census). First-order Krogh approximation; pure functions for composable cycling (#187). |
 | `ph` | 3D radial pH gradient for spheroid tumors: `radial_ph_field` (per-cell `pH(d) = ph_edge - delta·(1 - exp(-d/λ))`) plus pure-scalar helpers `iron_multiplier_from_ph` (ferritin destabilization) and `ion_trap_factor_from_ph` (linearized Henderson-Hasselbalch, weak-base drug bioavailability). Same form as sim-tme's 2D pH; pure functions for #195 sim-tme-3d (#190). |
+| `stromal` | 3D CAF-shielded boundary detection for spheroid tumors: `stromal_adjacency_mask` (Vec<bool> flagging tumor cells with any stromal 26-Moore neighbor) and `stromal_adjacent_kill_rate` (dead-rate among masked cells). 3D analog of sim-tme's 2D 8-Moore detection; surface-to-volume scaling means 3D shielding affects ~1.5× more cells than 2D at matched R (#189). |
 | `immune` | ICD/DAMP immune cascade: ferroptotic death quality drives dendritic cell activation and T cell priming |
 | `io` | JSON and CSV output helpers |
 | `drug_transport` | Krogh cylinder drug penetration model |
@@ -84,6 +85,20 @@ cell_size, ...) == local_ros_multiplier_3d(row × cell_size, ...)` holds
 bit-exact across all `Treatment` variants — the physical *geometries*
 differ (planar slab vs. spheroid + nearest-surface 1-D approximation),
 but the dispatcher math does not.
+
+**3D spheroid stromal shielding (#189):**
+```rust
+use ferroptosis_core::stromal::{stromal_adjacency_mask, stromal_adjacent_kill_rate};
+
+let g = TumorGrid3D::generate(40, 40, 40, 20.0, 42);
+let mask = stromal_adjacency_mask(&g);   // Vec<bool>, true = boundary tumor cell
+let rate = stromal_adjacent_kill_rate(&g, &mask);  // kill rate in shielded shell
+```
+3D analog of sim-tme's 2D 8-Moore boundary detection, using 26-Moore
+neighbors. The shielded shell is one cell deep; consumers apply CAF
+GSH/MUFA boosts to flagged cells (mutation stays consumer-side per the
+pure-functions pattern). Cross-geometry test confirms 3D boundary
+fraction > 2D at matched R (surface-to-volume scaling: 3/R vs 2/R).
 
 **3D spheroid pH gradient (#190):**
 ```rust

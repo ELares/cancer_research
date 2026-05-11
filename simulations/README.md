@@ -21,7 +21,7 @@ Each binary has its own README with parameters, output format, example commands,
 
 ## Shared library
 
-`ferroptosis-core` provides the biochemistry engine, cell types, physics models (Beer-Lambert PDT, acoustic SDT; 2D row-based and 3D radial-depth dispatchers, #186), spatial grid (2D `TumorGrid` and 3D `TumorGrid3D` with per-cell `radial_depth_um` for spheroid energy physics; downstream spheroid binary lands with #194), 3D radial O₂ gradients (`oxygen::radial_o2_field` + zone-census, #187), 3D radial pH gradient (`ph::radial_ph_field` + iron-release and ion-trapping helpers, #190), immune cascade, drug transport (Krogh penetration), tumor PK (two-compartment), and photosensitizer PK (single-exponential kinetics with optional saturating distribution phase + relative singlet-O₂ yield) used by all binaries. See [ferroptosis-core/README.md](ferroptosis-core/README.md).
+`ferroptosis-core` provides the biochemistry engine, cell types, physics models (Beer-Lambert PDT, acoustic SDT; 2D row-based and 3D radial-depth dispatchers, #186), spatial grid (2D `TumorGrid` and 3D `TumorGrid3D` with per-cell `radial_depth_um` for spheroid energy physics; downstream spheroid binary lands with #194), 3D radial O₂ gradients (`oxygen::radial_o2_field` + zone-census, #187), 3D radial pH gradient (`ph::radial_ph_field` + iron-release and ion-trapping helpers, #190), 3D CAF-shielded boundary detection (`stromal::stromal_adjacency_mask` + adjacent-kill-rate, #189), immune cascade, drug transport (Krogh penetration), tumor PK (two-compartment), and photosensitizer PK (single-exponential kinetics with optional saturating distribution phase + relative singlet-O₂ yield) used by all binaries. See [ferroptosis-core/README.md](ferroptosis-core/README.md).
 
 ## Quick start
 
