@@ -81,7 +81,22 @@
 use crate::grid::TumorGrid3D;
 
 /// Maximum Moore-neighbor count in 3D (3×3×3 cube − self).
+///
+/// **Coupled to [`TumorGrid3D::neighbors`]**: if a future refactor of
+/// `neighbors` changes the neighborhood radius (e.g. Moore-2 with 124
+/// neighbors), this constant must be updated together — otherwise the
+/// stability check in [`diffuse_damp_3d_step`] would silently
+/// under-estimate the per-step source loss and admit unstable
+/// `diffusion_fraction` values.
 const MAX_3D_NEIGHBORS: usize = 26;
+
+/// Source cells below this DAMP value skip spread + self-decrement
+/// (matches sim-tme's `if local < 0.001 { continue; }` at
+/// `sim-tme/src/main.rs:707`). The cutoff exists for performance: cells
+/// at this magnitude contribute negligibly to neighbors. Mass is exactly
+/// preserved for sub-threshold cells (they don't lose to anyone), so
+/// the field's long-run behavior is unchanged — just faster.
+const DIFFUSION_SOURCE_CUTOFF: f64 = 0.001;
 
 /// One step of DAMP diffusion + exponential clearance on a 3D spheroid
 /// grid. Mutates `damp_field` in place using `scratch` to avoid
@@ -101,6 +116,10 @@ const MAX_3D_NEIGHBORS: usize = 26;
 ///
 /// **Cost**: O(N × 26) for N = `grid.cells.len()`. Same per-call
 /// recompute concern as the rest of the 3D code; #194 hoisting applies.
+/// A source cell with DAMP below [`DIFFUSION_SOURCE_CUTOFF`] = 0.001
+/// skips both spread and self-decrement (matches sim-tme's 2D
+/// optimization; sub-threshold cells contribute negligibly and skipping
+/// them preserves their mass exactly).
 pub fn diffuse_damp_3d_step(
     damp_field: &mut [f64],
     scratch: &mut [f64],
@@ -151,7 +170,7 @@ pub fn diffuse_damp_3d_step(
             for l in 0..grid.layers {
                 let idx = grid.flat_index(r, c, l);
                 let local = damp_field[idx];
-                if local < 0.001 {
+                if local < DIFFUSION_SOURCE_CUTOFF {
                     continue;
                 }
                 let share = local * diffusion_fraction;
