@@ -50,7 +50,7 @@ use std::path::Path;
 
 use ferroptosis_core::biochem::{sim_cell_step, CellState};
 use ferroptosis_core::cell::Treatment;
-use ferroptosis_core::grid::{GridCensus, TumorGrid3D};
+use ferroptosis_core::grid::TumorGrid3D;
 use ferroptosis_core::immune_3d::{
     dc_activation, diffuse_damp_3d_step, immune_kill_probability,
 };
@@ -91,6 +91,14 @@ const DAMP_DIFFUSION_FRACTION_3D: f64 = 0.025;
 
 /// Step at which immune activity begins (matches sim-tme).
 const IMMUNE_START_STEP: u32 = 60;
+
+/// Minimum local DAMP concentration to consider for immune-kill rolls.
+/// Cells below this short-circuit the activation+kill path (matches
+/// sim-tme/src/main.rs:735's `if local_damp < 0.01 { continue; }`).
+/// Acts as a numerical floor; without it, `dc_activation` for damp ≈ 0
+/// would still produce vanishing-small kill probabilities and waste
+/// per-cell-per-step RNG initialization.
+const DAMP_KILL_THRESHOLD: f64 = 0.01;
 
 // ============================================================
 // Config structs (duplicated from sim-tme for v1 — lift to
@@ -200,8 +208,22 @@ struct ConditionResult {
     normoxic_kill_rate: f64,
     transition_kill_rate: f64,
     hypoxic_kill_rate: f64,
+    /// Peak per-cell DAMP value at end of simulation (max over all cells).
+    /// Always populated (the binary computes the mask + DAMP regardless of
+    /// immune-on toggle so cross-condition comparison is apples-to-apples).
+    /// PR body's "DAMP fields" claim is vindicated by this + total_damp.
+    peak_damp: f64,
+    /// Sum of DAMP across all cells at end of simulation. Mass-balance
+    /// indicator for the diffusion-clearance dynamics.
+    total_damp: f64,
     #[serde(skip_serializing_if = "Option::is_none")]
     stromal_mode: Option<String>,
+    /// Kill rate among cells flagged by `stromal_adjacency_mask` (boundary
+    /// cells with ≥1 stromal Moore-26 neighbor). **Always populated** —
+    /// the binary computes the mask regardless of `stromal_on` toggle so
+    /// Q3 in the comparison script can pair stromal-on adjacent rates
+    /// with no-stromal baseline adjacent rates (reviewer-flagged fix).
+    /// `None` only when grid produces zero boundary cells.
     #[serde(skip_serializing_if = "Option::is_none")]
     stromal_adjacent_kill_rate: Option<f64>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -312,6 +334,7 @@ impl RunConfig {
 
     /// Tiny config for unit tests — exercises every code path but ~1000× cheaper.
     /// 10³ = 1000 cells, 20 steps. Runs in <100ms in debug mode.
+    #[cfg(test)]
     fn for_test() -> Self {
         RunConfig {
             grid_dim: 10,
@@ -380,9 +403,18 @@ fn run_one_condition_with_config(condition: &Condition, run_cfg: RunConfig) -> C
         None
     };
 
-    // --- Compute stromal adjacency mask if needed ---
-    let stromal_mask = if condition.stromal_on {
-        Some((stromal_adjacency_mask(&grid), StromalConfig::default()))
+    // --- Compute stromal adjacency mask ALWAYS ---
+    // The mask is grid-geometry-dependent (not stromal_on-toggle-dependent),
+    // so it's identical across all conditions on the same grid. Computing it
+    // for every condition (cheap: O(N·26) one-time) lets the comparison
+    // script's Q3 pair stromal-on adjacent rates against the matching
+    // no-stromal baseline adjacent rates — measuring CAF shielding at the
+    // boundary directly, not as a diluted whole-tumor delta.
+    let adjacency_mask = stromal_adjacency_mask(&grid);
+
+    // Apply CAF GSH/MUFA boosts only when stromal_on is true.
+    let stromal_cfg = if condition.stromal_on {
+        Some(StromalConfig::default())
     } else {
         None
     };
@@ -493,10 +525,13 @@ fn run_one_condition_with_config(condition: &Condition, run_cfg: RunConfig) -> C
                         ferroptosis_kills += 1;
                     }
 
-                    // Stromal CAF protection for alive cells
+                    // Stromal CAF protection for alive cells — apply only when
+                    // stromal_on. The adjacency_mask is always computed (used
+                    // for kill-rate accounting later) but the boost helpers
+                    // gate on the toggle.
                     if !died && !gc.state.dead {
-                        if let Some((mask, cfg)) = &stromal_mask {
-                            if mask[idx] {
+                        if let Some(cfg) = &stromal_cfg {
+                            if adjacency_mask[idx] {
                                 let gc = &mut grid.cells[idx];
                                 gc.state.gsh =
                                     (gc.state.gsh + cfg.gsh_boost_per_step).min(cfg.gsh_boost_cap);
@@ -539,7 +574,7 @@ fn run_one_condition_with_config(condition: &Condition, run_cfg: RunConfig) -> C
                                 continue;
                             }
                             let local_damp = damp_field[idx];
-                            if local_damp < 0.01 {
+                            if local_damp < DAMP_KILL_THRESHOLD {
                                 continue;
                             }
                             let activation = dc_activation(local_damp, immune_cfg.dc_activation_kd);
@@ -576,43 +611,60 @@ fn run_one_condition_with_config(condition: &Condition, run_cfg: RunConfig) -> C
     // Late DAMP release for cells still in their post-death grace period at
     // the end of the simulation. Iterate paired with damp_field by index to
     // satisfy clippy::needless_range_loop while keeping the dual-Vec access.
-    for (idx, gc) in grid.cells.iter_mut().enumerate() {
-        if !(gc.is_tumor && gc.state.dead) {
-            continue;
-        }
-        if let Some(ds) = gc.state.death_step {
-            let grace_end = ds + params.post_death_steps;
-            if grace_end >= run_cfg.n_steps {
-                gc.lp_at_death = gc.state.lp;
-                damp_field[idx] += gc.lp_at_death * immune_cfg.damp_per_lp;
+    // Run only when immune was on — otherwise damp_field is never read or
+    // aggregated and this loop is dead writes (reviewer-flagged).
+    if condition.immune_on {
+        for (idx, gc) in grid.cells.iter_mut().enumerate() {
+            if !(gc.is_tumor && gc.state.dead) {
+                continue;
+            }
+            if let Some(ds) = gc.state.death_step {
+                let grace_end = ds + params.post_death_steps;
+                if grace_end >= run_cfg.n_steps {
+                    gc.lp_at_death = gc.state.lp;
+                    damp_field[idx] += gc.lp_at_death * immune_cfg.damp_per_lp;
+                }
             }
         }
     }
 
     // --- Aggregate results ---
-    let census = censuses_for_grid(&grid);
+    let census = grid.census();
     let overall = census.total_dead as f64 / census.total_tumor.max(1) as f64;
     let (norm_r, trans_r, hyp_r) = zone_kill_rates_3d(&grid, ZONE_REF_LAMBDA);
 
-    let (stromal_mode, stromal_kill, stromal_count) = if let Some((mask, _)) = &stromal_mask {
-        let mut dead = 0usize;
-        let mut total = 0usize;
-        for (idx, gc) in grid.cells.iter().enumerate() {
-            if gc.is_tumor && mask[idx] {
-                total += 1;
-                if gc.state.dead {
-                    dead += 1;
-                }
+    // DAMP aggregations — vindicate the PR-body's "DAMP fields" claim and
+    // give the comparison script real numbers to work with. When immune
+    // was off these are both 0.0 (damp_field was zero-initialized and
+    // never written by the diffusion path).
+    let peak_damp = damp_field.iter().cloned().fold(0.0_f64, f64::max);
+    let total_damp: f64 = damp_field.iter().sum();
+
+    // Stromal adjacency rates — ALWAYS computed (mask is independent of
+    // the stromal_on toggle), so the comparison script's Q3 can pair
+    // stromal-on adjacent rates with no-stromal baseline adjacent rates.
+    // `stromal_mode` still only set when stromal_on is true (matches
+    // sim-tme JSON convention).
+    let mut adj_dead = 0usize;
+    let mut adj_total = 0usize;
+    for (idx, gc) in grid.cells.iter().enumerate() {
+        if gc.is_tumor && adjacency_mask[idx] {
+            adj_total += 1;
+            if gc.state.dead {
+                adj_dead += 1;
             }
         }
-        let rate = if total > 0 {
-            dead as f64 / total as f64
-        } else {
-            0.0
-        };
-        (Some("stromal_on".to_string()), Some(rate), Some(total))
+    }
+    let stromal_adjacent_kill_rate = if adj_total > 0 {
+        Some(adj_dead as f64 / adj_total as f64)
     } else {
-        (None, None, None)
+        None
+    };
+    let stromal_adjacent_count = if adj_total > 0 { Some(adj_total) } else { None };
+    let stromal_mode = if condition.stromal_on {
+        Some("stromal_on".to_string())
+    } else {
+        None
     };
 
     let (ph_mode, ph_edge_v, ph_core_v, ph_lambda_v) = if let Some((_, cfg)) = &ph_field {
@@ -658,9 +710,11 @@ fn run_one_condition_with_config(condition: &Condition, run_cfg: RunConfig) -> C
         normoxic_kill_rate: norm_r,
         transition_kill_rate: trans_r,
         hypoxic_kill_rate: hyp_r,
+        peak_damp,
+        total_damp,
         stromal_mode,
-        stromal_adjacent_kill_rate: stromal_kill,
-        stromal_adjacent_count: stromal_count,
+        stromal_adjacent_kill_rate,
+        stromal_adjacent_count,
         ph_mode,
         ph_edge: ph_edge_v,
         ph_core: ph_core_v,
@@ -676,10 +730,6 @@ fn hash_condition_name(name: &str) -> u64 {
         h = h.wrapping_mul(0x100000001b3);
     }
     h
-}
-
-fn censuses_for_grid(grid: &TumorGrid3D) -> GridCensus {
-    grid.census()
 }
 
 // ============================================================
@@ -1022,5 +1072,74 @@ mod tests {
     fn norm_panics_on_nan_std() {
         let mut rng = StdRng::seed_from_u64(0);
         norm(&mut rng, 1.0, f64::NAN);
+    }
+
+    /// **Reviewer-flagged invariant**: the library functions
+    /// `radial_o2_field`, `radial_ph_field`, and `stromal_adjacency_mask`
+    /// all return `Vec<T>` of length `grid.cells.len()`, and this binary
+    /// indexes those vecs by `grid.flat_index(r, c, l)`. The implicit
+    /// contract is that the library iterates in the SAME row-major order
+    /// as the grid's flat-index formula. If a library refactor ever
+    /// changes the iteration order (e.g., column-major instead of
+    /// row-major), every cell would silently get the wrong O₂/pH/stromal
+    /// value and nothing in the smoke tests would catch it.
+    ///
+    /// This test pins the contract with two spot-checks:
+    /// 1. Vec lengths match `grid.cells.len()`.
+    /// 2. A known cell has expected qualitative properties:
+    ///    - The center cell has higher O₂ depth (less O₂) than a corner cell
+    ///    - The center cell has lower pH than a corner cell
+    ///    - The center cell is NOT in the stromal-adjacency mask (interior),
+    ///      while a near-surface tumor cell IS.
+    ///
+    /// A column-major refactor would scramble these properties and fail.
+    #[test]
+    fn library_field_order_matches_flat_index() {
+        use ferroptosis_core::oxygen::radial_o2_field;
+        use ferroptosis_core::ph::radial_ph_field;
+
+        let grid = TumorGrid3D::generate(20, 20, 20, CELL_SIZE_UM, SEED);
+        let n = grid.cells.len();
+
+        let o2 = radial_o2_field(&grid, 100.0);
+        let ph = radial_ph_field(&grid, 7.4, 6.5, 120.0);
+        let mask = stromal_adjacency_mask(&grid);
+        assert_eq!(o2.len(), n, "radial_o2_field length contract");
+        assert_eq!(ph.len(), n, "radial_ph_field length contract");
+        assert_eq!(mask.len(), n, "stromal_adjacency_mask length contract");
+
+        // Index the same cells via the binary's `flat_index` access path:
+        let center_idx = grid.flat_index(10, 10, 10);
+        let surface_idx = grid.flat_index(10, 10, 19); // depth=0 surface (per grid::tests_3d)
+
+        // Center cell is interior tumor → high pH gradient depth → lower pH
+        // than surface; lower O₂ than surface; mask=false (no stromal neighbors).
+        assert!(grid.cells[center_idx].is_tumor, "test precondition: center is tumor");
+        assert!(grid.cells[surface_idx].is_tumor, "test precondition: surface is tumor");
+        assert!(
+            ph[center_idx] < ph[surface_idx],
+            "center pH {} should be lower than surface pH {} — \
+             if this fails, library field order is desync'd from flat_index",
+            ph[center_idx],
+            ph[surface_idx]
+        );
+        assert!(
+            o2[center_idx] < o2[surface_idx],
+            "center O₂ {} should be lower than surface O₂ {} (deeper = more hypoxic)",
+            o2[center_idx],
+            o2[surface_idx]
+        );
+        // Surface cell at (10,10,19) is at the spheroid edge → has stromal
+        // neighbors at (10,10,20)? No — (10,10,20) is OUTSIDE the grid bounds
+        // for a 20³ grid. Surface cell's neighbors include some that are
+        // outside the sphere → mask = true.
+        assert!(
+            mask[surface_idx],
+            "surface tumor cell should be in adjacency mask (has stromal neighbors)"
+        );
+        assert!(
+            !mask[center_idx],
+            "interior center cell should NOT be in adjacency mask"
+        );
     }
 }

@@ -143,7 +143,10 @@ def answer_key_questions(rows_2d: list[dict], rows_3d: list[dict],
     base_3d = kill_rate(rows_3d, "RSL3", "uniform", None)
     hyp_3d = kill_rate(rows_3d, "RSL3", "gradient", 120.0)
     lines.append("Q1: Hypoxia RSL3 collapse — RSL3 kill: baseline vs O2-gradient")
-    if base_2d and hyp_2d and base_3d and hyp_3d:
+    # Use `is not None` checks: kill rates of 0.0 are legitimate (e.g.,
+    # Control or hypoxic cells with full O2-collapse) and would short-circuit
+    # a truthy `and` check, falsely reporting "incomplete data."
+    if all(v is not None for v in [base_2d, hyp_2d, base_3d, hyp_3d]) and base_2d > 0 and base_3d > 0:
         ratio_2d = hyp_2d / base_2d
         ratio_3d = hyp_3d / base_3d
         lines.append(
@@ -172,16 +175,21 @@ def answer_key_questions(rows_2d: list[dict], rows_3d: list[dict],
     sdt_imm_3d = immune_kills(rows_3d, "SDT")
     rsl3_imm_3d = immune_kills(rows_3d, "RSL3")
     lines.append("Q2: Immune SDT-vs-RSL3 ratio (the 104:1 manuscript claim)")
-    if sdt_imm_2d and rsl3_imm_2d and rsl3_imm_2d > 0:
+    # `is not None` checks, separate ratio-validity check on RSL3 > 0.
+    # Previous `if sdt_imm_2d and rsl3_imm_2d` short-circuited on legitimate
+    # zero-kill scenarios.
+    if (sdt_imm_2d is not None) and (rsl3_imm_2d is not None) and rsl3_imm_2d > 0:
         lines.append(f"  2D: SDT={sdt_imm_2d}, RSL3={rsl3_imm_2d} (ratio={sdt_imm_2d / rsl3_imm_2d:.1f}×)")
-    else:
+    elif sdt_imm_2d is None and rsl3_imm_2d is None:
         lines.append("  2D: (immune_on data missing)")
-    if sdt_imm_3d and rsl3_imm_3d and rsl3_imm_3d > 0:
-        lines.append(f"  3D: SDT={sdt_imm_3d}, RSL3={rsl3_imm_3d} (ratio={sdt_imm_3d / rsl3_imm_3d:.1f}×)")
-    elif sdt_imm_3d is not None and rsl3_imm_3d is not None:
-        lines.append(f"  3D: SDT={sdt_imm_3d}, RSL3={rsl3_imm_3d} (cannot compute ratio — RSL3=0)")
     else:
+        lines.append(f"  2D: SDT={sdt_imm_2d}, RSL3={rsl3_imm_2d} (cannot compute ratio — RSL3=0)")
+    if (sdt_imm_3d is not None) and (rsl3_imm_3d is not None) and rsl3_imm_3d > 0:
+        lines.append(f"  3D: SDT={sdt_imm_3d}, RSL3={rsl3_imm_3d} (ratio={sdt_imm_3d / rsl3_imm_3d:.1f}×)")
+    elif sdt_imm_3d is None and rsl3_imm_3d is None:
         lines.append("  3D: (immune_on data missing)")
+    else:
+        lines.append(f"  3D: SDT={sdt_imm_3d}, RSL3={rsl3_imm_3d} (cannot compute ratio — RSL3=0)")
     lines.append("")
 
     # --- Q3: Stromal shielding impact (kill reduction vs no-stromal baseline) ---
@@ -217,29 +225,59 @@ def answer_key_questions(rows_2d: list[dict], rows_3d: list[dict],
     s2d_off = stromal_off_baseline(rows_2d, "RSL3")
     s3d_on = stromal_on_row(rows_3d, "RSL3")
     s3d_off = stromal_off_baseline(rows_3d, "RSL3")
-    lines.append("Q3: Stromal shielding impact on RSL3 (kill reduction vs no-stromal at same immune+λ)")
-    if s2d_on and s2d_off and s3d_on and s3d_off:
-        off_2d = s2d_off["overall_kill_rate"]
-        on_2d = s2d_on["overall_kill_rate"]
-        off_3d = s3d_off["overall_kill_rate"]
-        on_3d = s3d_on["overall_kill_rate"]
-        red_2d = (1 - on_2d / off_2d) if off_2d > 0 else 0
-        red_3d = (1 - on_3d / off_3d) if off_3d > 0 else 0
+    lines.append("Q3: Stromal shielding at the boundary (adjacent-cell kill, stromal-on vs no-stromal)")
+    # Use `stromal_adjacent_kill_rate` (boundary-cell rate) NOT
+    # `overall_kill_rate` — reviewer-flagged correctness fix. The latter
+    # dilutes the boundary effect across the whole tumor and is dominated
+    # by O2/depth composition + immune effects away from the stromal
+    # interface.
+    #
+    # Both 2D and 3D stromal-on rows populate stromal_adjacent_kill_rate.
+    # sim-tme-3d also populates it for the no-stromal baseline (the
+    # adjacency mask is grid-geometry-dependent, not toggle-dependent).
+    # sim-tme does NOT — so for 2D the no-stromal baseline rate is None,
+    # and we fall back to overall_kill_rate with a caveat.
+    def stromal_adj(c):
+        if c is None:
+            return None
+        v = c.get("stromal_adjacent_kill_rate")
+        return v if v is not None else None
+
+    adj_2d_on = stromal_adj(s2d_on)
+    adj_2d_off = stromal_adj(s2d_off)   # likely None — sim-tme doesn't emit
+    adj_3d_on = stromal_adj(s3d_on)
+    adj_3d_off = stromal_adj(s3d_off)
+    if adj_3d_on is not None and adj_3d_off is not None:
+        red_3d = (1 - adj_3d_on / adj_3d_off) if adj_3d_off > 0 else 0
         lines.append(
-            f"  2D: no-stromal={off_2d:.4f}, stromal-on={on_2d:.4f} (reduction={red_2d * 100:+.1f}%)")
-        lines.append(
-            f"  3D: no-stromal={off_3d:.4f}, stromal-on={on_3d:.4f} (reduction={red_3d * 100:+.1f}%)")
-        if red_3d > red_2d:
-            lines.append("  → 3D shielding effect LARGER than 2D (per the surface-to-volume hypothesis).")
-        elif red_3d < red_2d:
-            lines.append("  → 3D shielding effect SMALLER than 2D.")
-        else:
-            lines.append("  → ratios essentially equal.")
+            f"  3D (boundary-cell kill): no-stromal={adj_3d_off:.4f}, stromal-on={adj_3d_on:.4f} "
+            f"(reduction={red_3d * 100:+.1f}%)")
     else:
-        missing = [f"{label}={'missing' if r is None else 'ok'}" for label, r in
-                   [("2D no-stromal baseline", s2d_off), ("2D stromal-on", s2d_on),
-                    ("3D no-stromal baseline", s3d_off), ("3D stromal-on", s3d_on)]]
-        lines.append(f"  (incomplete data — {', '.join(missing)})")
+        lines.append(
+            f"  3D: stromal_adjacent_kill_rate missing — no-stromal={adj_3d_off}, "
+            f"stromal-on={adj_3d_on}")
+    if adj_2d_on is not None and adj_2d_off is not None:
+        red_2d = (1 - adj_2d_on / adj_2d_off) if adj_2d_off > 0 else 0
+        lines.append(
+            f"  2D (boundary-cell kill): no-stromal={adj_2d_off:.4f}, stromal-on={adj_2d_on:.4f} "
+            f"(reduction={red_2d * 100:+.1f}%)")
+    elif adj_2d_on is not None and s2d_off:
+        # Fallback: sim-tme's no-stromal baseline doesn't emit adjacent rate,
+        # so report overall_kill_rate-based reduction for 2D side with caveat.
+        off_2d_o = s2d_off["overall_kill_rate"]
+        on_2d_o = s2d_on["overall_kill_rate"]
+        red_2d_overall = (1 - on_2d_o / off_2d_o) if off_2d_o > 0 else 0
+        lines.append(
+            f"  2D (whole-tumor fallback — sim-tme lacks no-stromal adjacent rate): "
+            f"no-stromal={off_2d_o:.4f}, stromal-on={on_2d_o:.4f} "
+            f"(reduction={red_2d_overall * 100:+.1f}%)")
+        lines.append(
+            "  CAVEAT: 2D and 3D are using DIFFERENT METRICS for this comparison "
+            "(3D boundary, 2D whole-tumor) — direct numeric comparison invalid. "
+            "Update sim-tme to emit stromal_adjacent_kill_rate for non-stromal "
+            "conditions to enable apples-to-apples comparison.")
+    else:
+        lines.append("  2D: stromal data incomplete")
     lines.append("")
 
     # --- Q4: pH ion trapping RSL3 reduction (matched immune context) ---
@@ -271,7 +309,8 @@ def answer_key_questions(rows_2d: list[dict], rows_3d: list[dict],
     no_ph_3d = ph_off_baseline(rows_3d, "RSL3")
     ph_3d = ph_on_row(rows_3d, "RSL3")
     lines.append("Q4: pH ion-trapping reduction for RSL3 (matched immune-on context)")
-    if no_ph_2d and ph_2d and no_ph_3d and ph_3d:
+    # `is not None` check — same truthiness fix as Q1/Q2.
+    if all(r is not None for r in [no_ph_2d, ph_2d, no_ph_3d, ph_3d]):
         no_2dk = no_ph_2d["overall_kill_rate"]
         ph_2dk = ph_2d["overall_kill_rate"]
         no_3dk = no_ph_3d["overall_kill_rate"]
