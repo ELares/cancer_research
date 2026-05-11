@@ -184,63 +184,109 @@ def answer_key_questions(rows_2d: list[dict], rows_3d: list[dict],
         lines.append("  3D: (immune_on data missing)")
     lines.append("")
 
-    # --- Q3: Stromal shielding impact (stromal_adjacent kill rate vs overall) ---
-    def stromal_data(rows, tx):
-        # Find the stromal-on condition.
+    # --- Q3: Stromal shielding impact (kill reduction vs no-stromal baseline) ---
+    # Reviewer-flagged correctness fix: previously this compared
+    # `overall_kill_rate - stromal_adjacent_kill_rate` within the same run,
+    # which measures O₂/depth composition not stromal shielding. The
+    # correct measurement is the kill-rate DIFFERENCE between a stromal-on
+    # condition and its matched no-stromal baseline at the same immune
+    # context.
+    #
+    # Both 2D and 3D stromal-on rows are emitted with `immune_mode ==
+    # "immune_on"` (sim-tme couples stromal with immune; sim-tme-3d was
+    # updated to match — PR #219). The matched no-stromal baseline is the
+    # `immune_<tx>` row (immune_on, no stromal, no pH) at the same λ.
+    def stromal_on_row(rows, tx):
         for c in rows:
             if (c.get("treatment") == tx
                     and c.get("stromal_mode") == "stromal_on"
+                    and c.get("immune_mode") == "immune_on"
+                    and c.get("ph_mode") in (None, "off")
                     and c.get("o2_lambda_um") == 120.0):
                 return c
         return None
 
-    s2d = stromal_data(rows_2d, "RSL3")
-    s3d = stromal_data(rows_3d, "RSL3")
-    lines.append("Q3: Stromal shielding impact on RSL3")
-    if s2d and s3d:
-        # The "impact" is: overall - stromal_adjacent (the shielded cells survive more)
-        overall_2d = s2d["overall_kill_rate"]
-        adj_2d = s2d.get("stromal_adjacent_kill_rate", 0)
-        overall_3d = s3d["overall_kill_rate"]
-        adj_3d = s3d.get("stromal_adjacent_kill_rate", 0)
-        impact_2d = (overall_2d - adj_2d) if adj_2d is not None else 0
-        impact_3d = (overall_3d - adj_3d) if adj_3d is not None else 0
+    def stromal_off_baseline(rows, tx):
+        """immune-on, no stromal, no pH, λ=120 — the matched no-shielding context."""
+        c = find_condition(rows, tx, "gradient", "immune_on", 120.0)
+        if c and c.get("stromal_mode") in (None, "off") and c.get("ph_mode") in (None, "off"):
+            return c
+        return None
+
+    s2d_on = stromal_on_row(rows_2d, "RSL3")
+    s2d_off = stromal_off_baseline(rows_2d, "RSL3")
+    s3d_on = stromal_on_row(rows_3d, "RSL3")
+    s3d_off = stromal_off_baseline(rows_3d, "RSL3")
+    lines.append("Q3: Stromal shielding impact on RSL3 (kill reduction vs no-stromal at same immune+λ)")
+    if s2d_on and s2d_off and s3d_on and s3d_off:
+        off_2d = s2d_off["overall_kill_rate"]
+        on_2d = s2d_on["overall_kill_rate"]
+        off_3d = s3d_off["overall_kill_rate"]
+        on_3d = s3d_on["overall_kill_rate"]
+        red_2d = (1 - on_2d / off_2d) if off_2d > 0 else 0
+        red_3d = (1 - on_3d / off_3d) if off_3d > 0 else 0
         lines.append(
-            f"  2D: overall_kill={overall_2d:.4f}, stromal_adjacent_kill={adj_2d:.4f}, gap={impact_2d:.4f}")
+            f"  2D: no-stromal={off_2d:.4f}, stromal-on={on_2d:.4f} (reduction={red_2d * 100:+.1f}%)")
         lines.append(
-            f"  3D: overall_kill={overall_3d:.4f}, stromal_adjacent_kill={adj_3d:.4f}, gap={impact_3d:.4f}")
-        lines.append(f"  → 3D boundary-fraction is larger (~3/R vs 2/R), so the SHIELDING fraction differs.")
+            f"  3D: no-stromal={off_3d:.4f}, stromal-on={on_3d:.4f} (reduction={red_3d * 100:+.1f}%)")
+        if red_3d > red_2d:
+            lines.append("  → 3D shielding effect LARGER than 2D (per the surface-to-volume hypothesis).")
+        elif red_3d < red_2d:
+            lines.append("  → 3D shielding effect SMALLER than 2D.")
+        else:
+            lines.append("  → ratios essentially equal.")
     else:
-        lines.append("  (incomplete data)")
+        missing = [f"{label}={'missing' if r is None else 'ok'}" for label, r in
+                   [("2D no-stromal baseline", s2d_off), ("2D stromal-on", s2d_on),
+                    ("3D no-stromal baseline", s3d_off), ("3D stromal-on", s3d_on)]]
+        lines.append(f"  (incomplete data — {', '.join(missing)})")
     lines.append("")
 
-    # --- Q4: pH ion trapping RSL3 reduction ---
-    def ph_data(rows, tx):
+    # --- Q4: pH ion trapping RSL3 reduction (matched immune context) ---
+    # Reviewer-flagged correctness fix: previously the no-pH baseline was
+    # `immune_mode == "off"` but the pH-on row was `immune_mode == "immune_on"`
+    # (sim-tme couples pH with immune; sim-tme-3d now matches). The
+    # comparison was changing BOTH pH and immune-mode, not isolating pH.
+    # Use immune_on for both sides — the matched no-pH baseline is the
+    # `immune_<tx>` row (immune_on, no stromal, no pH) at the same λ.
+    def ph_on_row(rows, tx):
         for c in rows:
             if (c.get("treatment") == tx
                     and c.get("ph_mode") == "ph_on"
+                    and c.get("immune_mode") == "immune_on"
+                    and c.get("stromal_mode") in (None, "off")
                     and c.get("o2_lambda_um") == 120.0):
                 return c
         return None
 
-    rsl3_no_ph_2d = find_condition(rows_2d, "RSL3", "gradient", "off", 120.0)
-    rsl3_ph_2d = ph_data(rows_2d, "RSL3")
-    rsl3_no_ph_3d = find_condition(rows_3d, "RSL3", "gradient", "off", 120.0)
-    rsl3_ph_3d = ph_data(rows_3d, "RSL3")
-    lines.append("Q4: pH ion-trapping reduction for RSL3 (kill with vs without pH)")
-    if rsl3_no_ph_2d and rsl3_ph_2d and rsl3_no_ph_3d and rsl3_ph_3d:
-        no_2d = rsl3_no_ph_2d["overall_kill_rate"]
-        ph_2d = rsl3_ph_2d["overall_kill_rate"]
-        no_3d = rsl3_no_ph_3d["overall_kill_rate"]
-        ph_3d = rsl3_ph_3d["overall_kill_rate"]
-        red_2d = (1 - ph_2d / no_2d) if no_2d > 0 else 0
-        red_3d = (1 - ph_3d / no_3d) if no_3d > 0 else 0
+    def ph_off_baseline(rows, tx):
+        """immune-on, no stromal, no pH — matched no-pH context."""
+        c = find_condition(rows, tx, "gradient", "immune_on", 120.0)
+        if c and c.get("stromal_mode") in (None, "off") and c.get("ph_mode") in (None, "off"):
+            return c
+        return None
+
+    no_ph_2d = ph_off_baseline(rows_2d, "RSL3")
+    ph_2d = ph_on_row(rows_2d, "RSL3")
+    no_ph_3d = ph_off_baseline(rows_3d, "RSL3")
+    ph_3d = ph_on_row(rows_3d, "RSL3")
+    lines.append("Q4: pH ion-trapping reduction for RSL3 (matched immune-on context)")
+    if no_ph_2d and ph_2d and no_ph_3d and ph_3d:
+        no_2dk = no_ph_2d["overall_kill_rate"]
+        ph_2dk = ph_2d["overall_kill_rate"]
+        no_3dk = no_ph_3d["overall_kill_rate"]
+        ph_3dk = ph_3d["overall_kill_rate"]
+        red_2d = (1 - ph_2dk / no_2dk) if no_2dk > 0 else 0
+        red_3d = (1 - ph_3dk / no_3dk) if no_3dk > 0 else 0
         lines.append(
-            f"  2D: no-pH={no_2d:.4f}, pH={ph_2d:.4f} (reduction={red_2d * 100:.1f}%)")
+            f"  2D: no-pH={no_2dk:.4f}, pH={ph_2dk:.4f} (reduction={red_2d * 100:+.1f}%)")
         lines.append(
-            f"  3D: no-pH={no_3d:.4f}, pH={ph_3d:.4f} (reduction={red_3d * 100:.1f}%)")
+            f"  3D: no-pH={no_3dk:.4f}, pH={ph_3dk:.4f} (reduction={red_3d * 100:+.1f}%)")
     else:
-        lines.append("  (incomplete data)")
+        missing = [f"{label}={'missing' if r is None else 'ok'}" for label, r in
+                   [("2D no-pH", no_ph_2d), ("2D pH-on", ph_2d),
+                    ("3D no-pH", no_ph_3d), ("3D pH-on", ph_3d)]]
+        lines.append(f"  (incomplete data — {', '.join(missing)})")
     lines.append("")
     lines.append("=" * 72)
 

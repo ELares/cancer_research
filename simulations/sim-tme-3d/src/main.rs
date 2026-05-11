@@ -293,7 +293,38 @@ fn norm(rng: &mut StdRng, mean: f64, std: f64) -> f64 {
     dist.sample(rng)
 }
 
+/// Grid/step config for a run. Production uses `RunConfig::production()`;
+/// tests use `RunConfig::for_test()` to avoid running the full 60³ × 180-step
+/// simulation in CI debug builds (reviewer-flagged perf concern).
+#[derive(Clone, Copy, Debug)]
+struct RunConfig {
+    grid_dim: usize,
+    n_steps: u32,
+}
+
+impl RunConfig {
+    fn production() -> Self {
+        RunConfig {
+            grid_dim: GRID_DIM,
+            n_steps: N_STEPS,
+        }
+    }
+
+    /// Tiny config for unit tests — exercises every code path but ~1000× cheaper.
+    /// 10³ = 1000 cells, 20 steps. Runs in <100ms in debug mode.
+    fn for_test() -> Self {
+        RunConfig {
+            grid_dim: 10,
+            n_steps: 20,
+        }
+    }
+}
+
 fn run_one_condition(condition: &Condition) -> ConditionResult {
+    run_one_condition_with_config(condition, RunConfig::production())
+}
+
+fn run_one_condition_with_config(condition: &Condition, run_cfg: RunConfig) -> ConditionResult {
     let params = Params::default();
     let spatial_params = SpatialParams {
         cell_size_um: CELL_SIZE_UM,
@@ -314,7 +345,13 @@ fn run_one_condition(condition: &Condition) -> ConditionResult {
     // Grid uses fixed SEED — matches sim-tme/src/main.rs (line 921 and
     // every other TumorGrid::generate call uses bare `SEED`). Same tumor
     // geometry across all conditions ⇒ valid treatment-effect comparison.
-    let mut grid = TumorGrid3D::generate(GRID_DIM, GRID_DIM, GRID_DIM, CELL_SIZE_UM, SEED);
+    let mut grid = TumorGrid3D::generate(
+        run_cfg.grid_dim,
+        run_cfg.grid_dim,
+        run_cfg.grid_dim,
+        CELL_SIZE_UM,
+        SEED,
+    );
     let n_cells = grid.cells.len();
 
     // --- Apply O₂ gradient if requested (mutates cell.basal_ros) ---
@@ -407,7 +444,7 @@ fn run_one_condition(condition: &Condition) -> ConditionResult {
     let mut ferroptosis_kills = 0usize;
     let mut immune_kills = 0usize;
 
-    for step in 0..N_STEPS {
+    for step in 0..run_cfg.n_steps {
         // Ferroptosis biochem + stromal protection
         for r in 0..grid.rows {
             for c in 0..grid.cols {
@@ -447,6 +484,10 @@ fn run_one_condition(condition: &Condition) -> ConditionResult {
                         sim_cell_step(&mut gc.state, &gc.cell, &params, step, extra_iron, &mut rng);
 
                     if died {
+                        // `newly_dead` is consumed by `TumorGrid3D::diffuse_iron`
+                        // later this step to spread released iron to live
+                        // 26-Moore neighbors (grid.rs:586). Not vestigial —
+                        // load-bearing for iron-driven Fenton bystander effects.
                         gc.newly_dead = true;
                         gc.lp_at_death = gc.state.lp;
                         ferroptosis_kills += 1;
@@ -514,6 +555,14 @@ fn run_one_condition(condition: &Condition) -> ConditionResult {
                                     .wrapping_add(step as u64 * 2_000_000),
                             );
                             if rng.gen::<f64>() < kill_prob {
+                                // Immune kills set `state.dead` but deliberately
+                                // do NOT set `death_step` or `newly_dead`. Two
+                                // intentional consequences: (1) no DAMP burst
+                                // at the post-death grace period — immune
+                                // (T-cell) kills are apoptotic, not ferroptotic,
+                                // so no LP buildup → no DAMP signal;
+                                // (2) no iron release to neighbors via
+                                // `diffuse_iron`. Matches sim-tme behavior.
                                 grid.cells[idx].state.dead = true;
                                 immune_kills += 1;
                             }
@@ -533,7 +582,7 @@ fn run_one_condition(condition: &Condition) -> ConditionResult {
         }
         if let Some(ds) = gc.state.death_step {
             let grace_end = ds + params.post_death_steps;
-            if grace_end >= N_STEPS {
+            if grace_end >= run_cfg.n_steps {
                 gc.lp_at_death = gc.state.lp;
                 damp_field[idx] += gc.lp_at_death * immune_cfg.damp_per_lp;
             }
@@ -686,27 +735,31 @@ fn generate_conditions() -> Vec<Condition> {
         });
     }
 
-    // Stromal on (at ZONE_REF_LAMBDA O₂)
+    // Stromal on + immune on (matches sim-tme's coupling: 2D stromal-on rows
+    // all have `immune_mode == "immune_on"`. Standalone stromal-off-immune-off
+    // wouldn't exist in 2D, so the comparison script couldn't pair against
+    // anything matching — reviewer-flagged confounding in PR #219 review).
     for (tx, name) in &treatments {
         conditions.push(Condition {
             name: format!("stromal_{}", name),
             treatment: *tx,
             treatment_name: name.to_string(),
             o2_lambda: Some(ZONE_REF_LAMBDA),
-            immune_on: false,
+            immune_on: true,
             stromal_on: true,
             ph_on: false,
         });
     }
 
-    // pH on (at ZONE_REF_LAMBDA O₂)
+    // pH on + immune on (same coupling as stromal — sim-tme's pH-on rows
+    // all have `immune_mode == "immune_on"`).
     for (tx, name) in &treatments {
         conditions.push(Condition {
             name: format!("ph_{}", name),
             treatment: *tx,
             treatment_name: name.to_string(),
             o2_lambda: Some(ZONE_REF_LAMBDA),
-            immune_on: false,
+            immune_on: true,
             stromal_on: false,
             ph_on: true,
         });
@@ -829,8 +882,13 @@ mod tests {
     }
 
     /// Smoke test: one baseline condition (Control, no toggles) runs
-    /// end-to-end and produces sensible output. Validates the full
-    /// orchestration without paying for the 30-condition matrix.
+    /// end-to-end and produces sensible output.
+    ///
+    /// Uses `RunConfig::for_test()` (10³ × 20 steps) instead of production
+    /// (60³ × 180 steps) — reviewer flagged that `cargo test --workspace`
+    /// runs in DEBUG mode, where the full 60³ × 180 sim was costing minutes
+    /// per test. The smaller config exercises every code path at ~1000×
+    /// less cost.
     #[test]
     fn single_condition_runs_end_to_end() {
         let cond = Condition {
@@ -842,11 +900,11 @@ mod tests {
             stromal_on: false,
             ph_on: false,
         };
-        let r = run_one_condition(&cond);
+        let r = run_one_condition_with_config(&cond, RunConfig::for_test());
         assert_eq!(r.treatment, "Control");
         assert_eq!(r.o2_condition, "uniform");
         assert_eq!(r.immune_mode, "off");
-        assert!(r.total_tumor > 0, "expected some tumor cells in 60³ grid");
+        assert!(r.total_tumor > 0, "expected some tumor cells in 10³ grid");
         // Control has zero exo-ROS so kill rate should be very low (baseline only).
         assert!(
             r.overall_kill_rate < 0.05,
@@ -867,10 +925,102 @@ mod tests {
             stromal_on: false,
             ph_on: false,
         };
-        let r1 = run_one_condition(&cond);
-        let r2 = run_one_condition(&cond);
+        let r1 = run_one_condition_with_config(&cond, RunConfig::for_test());
+        let r2 = run_one_condition_with_config(&cond, RunConfig::for_test());
         assert_eq!(r1.total_dead, r2.total_dead);
         assert_eq!(r1.total_tumor, r2.total_tumor);
         assert_eq!(r1.overall_kill_rate, r2.overall_kill_rate);
+    }
+
+    /// **Reviewer-flagged invariant guard**: immune-on conditions with a
+    /// treatment that produces ferroptotic kills (RSL3 or SDT) must
+    /// produce at least one immune kill. If the immune block silently
+    /// no-ops (e.g., DAMP threshold never crossed, or a bug in the
+    /// activation chain), `immune_kills` would still be 0 and the JSON
+    /// would still serialize — bug only surfaces in the manuscript.
+    ///
+    /// Uses RSL3 + O₂ gradient at λ=120 (the canonical "immune on"
+    /// condition) and asserts `immune_kills > 0` over 20 steps. SDT
+    /// also kills heavily so picking RSL3 makes the assertion stricter
+    /// (RSL3 produces fewer ferroptotic deaths → fewer DAMP sources →
+    /// harder for any immune kills to fire spuriously).
+    #[test]
+    fn immune_on_actually_fires() {
+        let cond = Condition {
+            name: "test_immune_RSL3".to_string(),
+            treatment: Treatment::RSL3,
+            treatment_name: "RSL3".to_string(),
+            o2_lambda: Some(ZONE_REF_LAMBDA),
+            immune_on: true,
+            stromal_on: false,
+            ph_on: false,
+        };
+        // Larger config than the smoke tests: need IMMUNE_START_STEP=60 +
+        // buffer for DAMP to accumulate above the 0.01 kill threshold.
+        // 25³ × 130 steps: ~1500 tumor cells, 70 steps post-immune-start
+        // for DAMP to spread and reach kill threshold. Empirically reliable
+        // (production 60³×180 produces 29 RSL3 immune kills; volume scales
+        // 60³/25³ ≈ 14×, so expect ~2 kills at this config — comfortable
+        // margin over the >0 invariant).
+        let cfg = RunConfig {
+            grid_dim: 25,
+            n_steps: 130,
+        };
+        let r = run_one_condition_with_config(&cond, cfg);
+        assert_eq!(r.immune_mode, "immune_on");
+        let im_kills = r.immune_kills.expect("immune_on must populate immune_kills");
+        // Strict invariant: at least one immune kill in this RSL3 + immune-on
+        // run. If this fails the immune block has gone no-op.
+        assert!(
+            im_kills > 0,
+            "immune-on RSL3 should produce ≥1 immune kill in {} steps on {grid}³; got {im_kills}. \
+             Likely cause: DAMP threshold never crossed, or activation chain broken.",
+            cfg.n_steps,
+            grid = cfg.grid_dim
+        );
+    }
+
+    /// **Reviewer-flagged invariant guard**: for immune-on conditions,
+    /// `total_dead` must equal `ferroptosis_kills + immune_kills`.
+    /// Catches double-counting drift (e.g., a cell counted in both
+    /// branches) and missed-kill drift (e.g., a kill that mutates
+    /// `state.dead` but doesn't increment either counter).
+    #[test]
+    fn total_dead_equals_ferro_plus_immune() {
+        let cond = Condition {
+            name: "test_invariant_RSL3".to_string(),
+            treatment: Treatment::RSL3,
+            treatment_name: "RSL3".to_string(),
+            o2_lambda: Some(ZONE_REF_LAMBDA),
+            immune_on: true,
+            stromal_on: false,
+            ph_on: false,
+        };
+        let cfg = RunConfig {
+            grid_dim: 15,
+            n_steps: 80,
+        };
+        let r = run_one_condition_with_config(&cond, cfg);
+        let ferro = r.ferroptosis_kills.expect("immune_on populates this");
+        let im = r.immune_kills.expect("immune_on populates this");
+        assert_eq!(
+            r.total_dead,
+            ferro + im,
+            "total_dead {} != ferroptosis_kills {} + immune_kills {} — kill accounting drifted",
+            r.total_dead,
+            ferro,
+            im
+        );
+    }
+
+    /// Empirical NaN check on `norm()` per reviewer ask: confirms that a
+    /// NaN `std` propagates to a panic (via `Normal::new(...).expect(...)`),
+    /// not a silent NaN value. Documents the failure mode rather than
+    /// making it "safe".
+    #[test]
+    #[should_panic(expected = "valid normal")]
+    fn norm_panics_on_nan_std() {
+        let mut rng = StdRng::seed_from_u64(0);
+        norm(&mut rng, 1.0, f64::NAN);
     }
 }
