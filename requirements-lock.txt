@@ -22,7 +22,7 @@ cycler==0.12.1
 feedparser==6.0.12
 fonttools==4.62.1
 graphviz==0.21
-idna==3.13
+idna==3.15
 iniconfig==2.3.0
 kiwisolver==1.5.0
 lxml==6.1.0
