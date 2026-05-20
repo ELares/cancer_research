@@ -36,17 +36,17 @@
 
 pub mod cell;
 // Listed before `params` because `SpatialParams` holds a `Photosensitizer`.
-pub mod photosensitizer_pk;
-pub mod params;
 pub mod biochem;
-pub mod stats;
-pub mod physics;
+pub mod drug_transport;
 pub mod grid;
-pub mod oxygen;
-pub mod ph;
-pub mod stromal;
 pub mod immune;
 pub mod immune_3d;
 pub mod io;
-pub mod drug_transport;
+pub mod oxygen;
+pub mod params;
+pub mod ph;
+pub mod photosensitizer_pk;
+pub mod physics;
+pub mod stats;
+pub mod stromal;
 pub mod tumor_pk;

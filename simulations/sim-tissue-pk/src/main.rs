@@ -15,8 +15,7 @@ use serde::Serialize;
 use ferroptosis_core::biochem::sim_cell;
 use ferroptosis_core::cell::{gen_cell, Phenotype, Treatment};
 use ferroptosis_core::drug_transport::{
-    self, concentration_profile, max_distance_um,
-    penetration_length_um, DrugParams, TissueParams,
+    self, concentration_profile, max_distance_um, penetration_length_um, DrugParams, TissueParams,
 };
 use ferroptosis_core::params::Params;
 use ferroptosis_core::stats::wilson_ci;
@@ -136,7 +135,10 @@ fn main() {
     let base_params = Params::default();
     let seed: u64 = 42;
 
-    let drugs: Vec<DrugParams> = vec![drug_transport::rsl3_like(), drug_transport::doxorubicin_transport_reference()];
+    let drugs: Vec<DrugParams> = vec![
+        drug_transport::rsl3_like(),
+        drug_transport::doxorubicin_transport_reference(),
+    ];
 
     let tissues: Vec<TissueParams> = vec![
         drug_transport::epithelial_well_vascularized(),
@@ -151,15 +153,14 @@ fn main() {
     let mut all_summaries: Vec<Summary> = Vec::new();
 
     for drug in &drugs {
-        eprintln!("Drug: {} (λ = {:.1} μm)", drug.name, penetration_length_um(drug));
+        eprintln!(
+            "Drug: {} (λ = {:.1} μm)",
+            drug.name,
+            penetration_length_um(drug)
+        );
         for tissue in &tissues {
-            let (results, summary) = run_tissue_drug(
-                drug,
-                tissue,
-                &base_params,
-                Phenotype::Persister,
-                seed,
-            );
+            let (results, summary) =
+                run_tissue_drug(drug, tissue, &base_params, Phenotype::Persister, seed);
 
             eprintln!(
                 "  {}: kill depth = {:.0} μm, vessel-wall death = {:.1}%, overall = {:.1}%",

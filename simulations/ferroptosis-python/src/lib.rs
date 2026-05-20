@@ -90,7 +90,10 @@ fn params_to_dict(py: Python<'_>, params: &Params) -> PyResult<Py<PyDict>> {
     dict.set_item("pdt_ros", params.pdt_ros)?;
     dict.set_item("rsl3_gpx4_inhib", params.rsl3_gpx4_inhib)?;
     dict.set_item("gsh_max", params.gsh_max)?;
-    dict.set_item("gpx4_nrf2_target_multiplier", params.gpx4_nrf2_target_multiplier)?;
+    dict.set_item(
+        "gpx4_nrf2_target_multiplier",
+        params.gpx4_nrf2_target_multiplier,
+    )?;
     dict.set_item("death_threshold", params.death_threshold)?;
     Ok(dict.into())
 }
@@ -110,13 +113,33 @@ fn validate_params(params: &Params) -> PyResult<()> {
         ("sdt_ros", params.sdt_ros, 0.0, 100.0),
         ("pdt_ros", params.pdt_ros, 0.0, 100.0),
         ("nrf2_gsh_rate", params.nrf2_gsh_rate, 0.0, 10.0),
-        ("gpx4_degradation_by_ros", params.gpx4_degradation_by_ros, 0.0, 1.0),
-        ("gpx4_nrf2_upregulation", params.gpx4_nrf2_upregulation, 0.0, 1.0),
-        ("gpx4_nrf2_target_multiplier", params.gpx4_nrf2_target_multiplier, 0.0, 100.0),
+        (
+            "gpx4_degradation_by_ros",
+            params.gpx4_degradation_by_ros,
+            0.0,
+            1.0,
+        ),
+        (
+            "gpx4_nrf2_upregulation",
+            params.gpx4_nrf2_upregulation,
+            0.0,
+            1.0,
+        ),
+        (
+            "gpx4_nrf2_target_multiplier",
+            params.gpx4_nrf2_target_multiplier,
+            0.0,
+            100.0,
+        ),
         ("scd_mufa_rate", params.scd_mufa_rate, 0.0, 1.0),
         ("scd_mufa_max", params.scd_mufa_max, 0.0, 1.0),
         ("scd_mufa_decay", params.scd_mufa_decay, 0.0, 1.0),
-        ("initial_mufa_protection", params.initial_mufa_protection, 0.0, 1.0),
+        (
+            "initial_mufa_protection",
+            params.initial_mufa_protection,
+            0.0,
+            1.0,
+        ),
     ];
     for (name, val, lo, hi) in checks {
         if *val < *lo || *val > *hi {

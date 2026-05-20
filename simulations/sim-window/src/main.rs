@@ -18,7 +18,10 @@ use ferroptosis_core::params::Params;
 use ferroptosis_core::stats::wilson_ci;
 
 #[derive(Parser)]
-#[command(name = "sim-window", about = "Ferroptosis vulnerability window dynamics")]
+#[command(
+    name = "sim-window",
+    about = "Ferroptosis vulnerability window dynamics"
+)]
 struct Args {
     /// Cells per condition.
     #[arg(long, default_value_t = 100_000)]
@@ -45,10 +48,9 @@ fn main() {
 
     // Timepoints: 0 to 28 days
     let timepoints_hours: Vec<f64> = vec![
-        0.0, 6.0, 12.0, 24.0, 48.0, 72.0,
-        168.0,   // 1 week
-        336.0,   // 2 weeks
-        672.0,   // 4 weeks
+        0.0, 6.0, 12.0, 24.0, 48.0, 72.0, 168.0, // 1 week
+        336.0, // 2 weeks
+        672.0, // 4 weeks
     ];
 
     let treatments = [
@@ -73,10 +75,14 @@ fn main() {
                 .into_par_iter()
                 .map(|i| {
                     let mut cell_rng = StdRng::seed_from_u64(
-                        args.seed.wrapping_add(i as u64 * 2).wrapping_add(hours as u64 * 1_000_000),
+                        args.seed
+                            .wrapping_add(i as u64 * 2)
+                            .wrapping_add(hours as u64 * 1_000_000),
                     );
                     let mut sim_rng = StdRng::seed_from_u64(
-                        args.seed.wrapping_add(i as u64 * 2 + 1).wrapping_add(hours as u64 * 1_000_000),
+                        args.seed
+                            .wrapping_add(i as u64 * 2 + 1)
+                            .wrapping_add(hours as u64 * 1_000_000),
                     );
                     let cell = gen_recovered_persister(days, &recovery, &mut cell_rng);
                     sim_cell(&cell, *tx, &params, &mut sim_rng)
@@ -139,8 +145,10 @@ fn main() {
             let outcomes: Vec<(bool, f64, f64, f64)> = (0..n)
                 .into_par_iter()
                 .map(|i| {
-                    let mut cell_rng = StdRng::seed_from_u64(args.seed.wrapping_add(i as u64 * 2 + 99999));
-                    let mut sim_rng = StdRng::seed_from_u64(args.seed.wrapping_add(i as u64 * 2 + 100000));
+                    let mut cell_rng =
+                        StdRng::seed_from_u64(args.seed.wrapping_add(i as u64 * 2 + 99999));
+                    let mut sim_rng =
+                        StdRng::seed_from_u64(args.seed.wrapping_add(i as u64 * 2 + 100000));
                     let cell = gen_recovered_persister(days, &r, &mut cell_rng);
                     sim_cell(&cell, Treatment::SDT, &params, &mut sim_rng)
                 })
@@ -149,7 +157,9 @@ fn main() {
             let rate = dead as f64 / n as f64;
             eprintln!(
                 "  {} t½ ×{:.1}: SDT death at 7d = {:.2}%",
-                rate_name, mult, rate * 100.0
+                rate_name,
+                mult,
+                rate * 100.0
             );
         }
     }

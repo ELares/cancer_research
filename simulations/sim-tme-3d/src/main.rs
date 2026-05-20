@@ -366,22 +366,24 @@ fn run_one_condition_with_config(condition: &Condition, run_cfg: RunConfig) -> C
         for c in 0..grid.cols {
             for l in 0..grid.layers {
                 let idx = grid.flat_index(r, c, l);
-                let exo_ros_peak = if matches!(
-                    condition.treatment,
-                    Treatment::Control | Treatment::RSL3
-                ) {
-                    0.0
-                } else {
-                    let depth_um = grid.radial_depth_um(r, c, l);
-                    let ros_multiplier =
-                        local_ros_multiplier_3d(depth_um, condition.treatment, &spatial_params);
-                    let mut rng = StdRng::seed_from_u64(cond_seed.wrapping_add(idx as u64));
-                    let peak = base_ros * ros_multiplier;
-                    norm(&mut rng, peak, peak * 0.2).max(0.0)
-                };
+                let exo_ros_peak =
+                    if matches!(condition.treatment, Treatment::Control | Treatment::RSL3) {
+                        0.0
+                    } else {
+                        let depth_um = grid.radial_depth_um(r, c, l);
+                        let ros_multiplier =
+                            local_ros_multiplier_3d(depth_um, condition.treatment, &spatial_params);
+                        let mut rng = StdRng::seed_from_u64(cond_seed.wrapping_add(idx as u64));
+                        let peak = base_ros * ros_multiplier;
+                        norm(&mut rng, peak, peak * 0.2).max(0.0)
+                    };
                 let gc = &mut grid.cells[idx];
-                gc.state =
-                    CellState::from_cell_with_ros(&gc.cell, condition.treatment, &params, exo_ros_peak);
+                gc.state = CellState::from_cell_with_ros(
+                    &gc.cell,
+                    condition.treatment,
+                    &params,
+                    exo_ros_peak,
+                );
                 gc.extra_iron = 0.0;
                 gc.newly_dead = false;
                 // Init to NaN so any code path that reads `lp_at_death`
@@ -402,8 +404,8 @@ fn run_one_condition_with_config(condition: &Condition, run_cfg: RunConfig) -> C
             let drug_factor =
                 ion_trap_factor_from_ph(local_ph, cfg.ph_edge, cfg.ion_trap_sensitivity);
             // Correct GPX4: from (1-inhib) to (1-inhib*drug_factor) — matches sim-tme:614
-            let correction = (1.0 - params.rsl3_gpx4_inhib * drug_factor)
-                / (1.0 - params.rsl3_gpx4_inhib);
+            let correction =
+                (1.0 - params.rsl3_gpx4_inhib * drug_factor) / (1.0 - params.rsl3_gpx4_inhib);
             grid.cells[idx].state.gpx4 *= correction;
         }
     }
@@ -831,7 +833,10 @@ fn main() {
         GRID_DIM as f64 * CELL_SIZE_UM / 1000.0
     );
     eprintln!("Tumor radius: {:.0} µm", tumor_radius_um);
-    eprintln!("O₂ λ sweep: {:?} µm (λ=150 skipped — 3λ > tumor radius)", O2_LAMBDAS);
+    eprintln!(
+        "O₂ λ sweep: {:?} µm (λ=150 skipped — 3λ > tumor radius)",
+        O2_LAMBDAS
+    );
     eprintln!(
         "DAMP diffusion fraction: {} (3D-safe; 2D's 0.08 would trigger immune_3d stability assert!)",
         DAMP_DIFFUSION_FRACTION_3D
@@ -848,7 +853,10 @@ fn main() {
     fs::create_dir_all(output_dir).expect("Failed to create output/tme-3d");
 
     let conditions = generate_conditions();
-    eprintln!("Running {} conditions in parallel via rayon...", conditions.len());
+    eprintln!(
+        "Running {} conditions in parallel via rayon...",
+        conditions.len()
+    );
 
     // Condition-level parallelism. Each run_one_condition allocates its own
     // grid + DAMP/scratch buffers; no shared mutable state.
@@ -1009,7 +1017,9 @@ mod tests {
         };
         let r = run_one_condition_with_config(&cond, cfg);
         assert_eq!(r.immune_mode, "immune_on");
-        let im_kills = r.immune_kills.expect("immune_on must populate immune_kills");
+        let im_kills = r
+            .immune_kills
+            .expect("immune_on must populate immune_kills");
         // Strict invariant: at least one immune kill in this RSL3 + immune-on
         // run. If this fails the immune block has gone no-op.
         assert!(
@@ -1080,7 +1090,8 @@ mod tests {
         let cfg = RunConfig::for_test();
 
         let run = |conds: &[Condition]| -> Vec<ConditionResult> {
-            conds.par_iter()
+            conds
+                .par_iter()
                 .map(|c| run_one_condition_with_config(c, cfg))
                 .collect()
         };
@@ -1138,8 +1149,14 @@ mod tests {
 
         // Center cell is interior tumor → high pH gradient depth → lower pH
         // than surface; lower O₂ than surface; mask=false (no stromal neighbors).
-        assert!(grid.cells[center_idx].is_tumor, "test precondition: center is tumor");
-        assert!(grid.cells[surface_idx].is_tumor, "test precondition: surface is tumor");
+        assert!(
+            grid.cells[center_idx].is_tumor,
+            "test precondition: center is tumor"
+        );
+        assert!(
+            grid.cells[surface_idx].is_tumor,
+            "test precondition: surface is tumor"
+        );
         assert!(
             ph[center_idx] < ph[surface_idx],
             "center pH {} should be lower than surface pH {} — \

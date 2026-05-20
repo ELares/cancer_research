@@ -189,9 +189,7 @@ pub enum PlasmaModel {
         k_el: f64,
     },
     /// Constant concentration (for 2D culture reference validation).
-    Constant {
-        concentration: f64,
-    },
+    Constant { concentration: f64 },
     /// External plasma time-course (e.g., PK-Sim export).
     /// Auto-normalized so peak = 1.0. Linear interpolation between points.
     /// Returns last concentration value at or past the last time point.
@@ -252,26 +250,41 @@ impl PlasmaModel {
             }
             let parts: Vec<&str> = line.split(',').collect();
             if parts.len() < 2 {
-                return Err(format!("Line {}: expected 'time,concentration', got '{}'", i + 1, line));
+                return Err(format!(
+                    "Line {}: expected 'time,concentration', got '{}'",
+                    i + 1,
+                    line
+                ));
             }
             // Skip header line
             let t: f64 = match parts[0].trim().parse() {
                 Ok(v) => v,
                 Err(_) => {
-                    if i == 0 { continue; } // likely header
+                    if i == 0 {
+                        continue;
+                    } // likely header
                     return Err(format!("Line {}: invalid time '{}'", i + 1, parts[0]));
                 }
             };
             let c: f64 = match parts[1].trim().parse() {
                 Ok(v) => v,
-                Err(_) => return Err(format!("Line {}: invalid concentration '{}'", i + 1, parts[1])),
+                Err(_) => {
+                    return Err(format!(
+                        "Line {}: invalid concentration '{}'",
+                        i + 1,
+                        parts[1]
+                    ))
+                }
             };
             time_min.push(t);
             conc_raw.push(c);
         }
 
         if time_min.len() < 2 {
-            return Err(format!("CSV must have at least 2 data points, got {}", time_min.len()));
+            return Err(format!(
+                "CSV must have at least 2 data points, got {}",
+                time_min.len()
+            ));
         }
 
         // Validate monotonically increasing time
@@ -279,7 +292,10 @@ impl PlasmaModel {
             if time_min[i] <= time_min[i - 1] {
                 return Err(format!(
                     "Time must be strictly increasing: t[{}]={} <= t[{}]={}",
-                    i, time_min[i], i - 1, time_min[i - 1]
+                    i,
+                    time_min[i],
+                    i - 1,
+                    time_min[i - 1]
                 ));
             }
         }
@@ -569,7 +585,13 @@ mod tests {
     #[test]
     fn concentrations_never_negative() {
         let plasma = rsl3_iv_bolus();
-        for tumor_fn in [breast_tumor, pancreatic_tumor, glioblastoma_tumor, melanoma_tumor, sarcoma_tumor] {
+        for tumor_fn in [
+            breast_tumor,
+            pancreatic_tumor,
+            glioblastoma_tumor,
+            melanoma_tumor,
+            sarcoma_tumor,
+        ] {
             let tumor = tumor_fn();
             let result = solve_tumor_pk(&plasma, &tumor, 180, 100);
             for (i, &c) in result.c_interstitial.iter().enumerate() {
@@ -591,7 +613,10 @@ mod tests {
         let peak100: f64 = r100.c_interstitial.iter().cloned().fold(0.0, f64::max);
         let peak200: f64 = r200.c_interstitial.iter().cloned().fold(0.0, f64::max);
         let diff = (peak100 - peak200).abs() / peak200;
-        assert!(diff < 0.01, "Convergence failed: {peak100} vs {peak200} ({diff:.4}%)");
+        assert!(
+            diff < 0.01,
+            "Convergence failed: {peak100} vs {peak200} ({diff:.4}%)"
+        );
     }
 
     #[test]
@@ -641,7 +666,10 @@ mod tests {
         let s100 = compute_spatial_temporal_schedule(&pk, 100.0, 224.0);
         let peak0: f64 = s0.iter().cloned().fold(0.0, f64::max);
         let peak100: f64 = s100.iter().cloned().fold(0.0, f64::max);
-        assert!(peak100 < peak0, "Concentration should decrease with distance");
+        assert!(
+            peak100 < peak0,
+            "Concentration should decrease with distance"
+        );
         let expected_ratio = (-100.0_f64 / 224.0).exp();
         let actual_ratio = peak100 / peak0;
         assert!(

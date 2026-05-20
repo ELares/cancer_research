@@ -17,17 +17,20 @@
 use std::path::PathBuf;
 
 use clap::Parser;
-use rayon::prelude::*;
 use rand::prelude::*;
+use rayon::prelude::*;
 use serde::Serialize;
 
-use ferroptosis_core::cell::{gen_cell, Phenotype, Treatment};
 use ferroptosis_core::biochem::sim_cell;
+use ferroptosis_core::cell::{gen_cell, Phenotype, Treatment};
 use ferroptosis_core::params::Params;
 use ferroptosis_core::stats::wilson_ci;
 
 #[derive(Parser)]
-#[command(name = "sim-invivo", about = "2D vs in-vivo ferroptosis with SCD1/MUFA lipid remodeling")]
+#[command(
+    name = "sim-invivo",
+    about = "2D vs in-vivo ferroptosis with SCD1/MUFA lipid remodeling"
+)]
 struct Args {
     /// Cells per condition for the main comparison.
     #[arg(long, default_value_t = 100_000)]
@@ -108,7 +111,12 @@ fn run_context(
 
             eprintln!(
                 "  [{:<12}] {:<20} + {:<8} → Death: {:7.3}% [{:.3}-{:.3}]",
-                context_name, pname, tname, rate * 100.0, ci_lo * 100.0, ci_hi * 100.0,
+                context_name,
+                pname,
+                tname,
+                rate * 100.0,
+                ci_lo * 100.0,
+                ci_hi * 100.0,
             );
 
             results.push(ComparisonResult {
@@ -171,26 +179,54 @@ fn main() {
     };
 
     eprintln!("--- Context: 2D (MUFA off, scd_mufa_rate=0) ---");
-    let results_2d = run_context("2d", &params_2d, &phenotypes, &treatments, args.n_cells, args.seed);
+    let results_2d = run_context(
+        "2d",
+        &params_2d,
+        &phenotypes,
+        &treatments,
+        args.n_cells,
+        args.seed,
+    );
 
-    eprintln!("--- Context: In-Vivo (MUFA on, rate={}, max={}) ---", params_invivo.scd_mufa_rate, params_invivo.scd_mufa_max);
-    let results_invivo = run_context("invivo", &params_invivo, &phenotypes, &treatments, args.n_cells, args.seed);
+    eprintln!(
+        "--- Context: In-Vivo (MUFA on, rate={}, max={}) ---",
+        params_invivo.scd_mufa_rate, params_invivo.scd_mufa_max
+    );
+    let results_invivo = run_context(
+        "invivo",
+        &params_invivo,
+        &phenotypes,
+        &treatments,
+        args.n_cells,
+        args.seed,
+    );
 
     eprintln!("--- Context: In-Vivo + SCD1i (MUFA off, scd_mufa_rate=0) ---");
-    let results_scd1i = run_context("invivo+scd1i", &params_scd1i, &phenotypes, &treatments, args.n_cells, args.seed);
+    let results_scd1i = run_context(
+        "invivo+scd1i",
+        &params_scd1i,
+        &phenotypes,
+        &treatments,
+        args.n_cells,
+        args.seed,
+    );
 
     // ============================================================
     // Part 2: Protection factor analysis
     // ============================================================
     eprintln!("=== Protection Factors (2D death rate / in-vivo death rate) ===\n");
-    eprintln!("  {:<20} {:<8} {:>10} {:>10} {:>10} {:>10}",
-             "Phenotype", "Tx", "2D %", "InVivo %", "SCD1i %", "Prot.Fac.");
+    eprintln!(
+        "  {:<20} {:<8} {:>10} {:>10} {:>10} {:>10}",
+        "Phenotype", "Tx", "2D %", "InVivo %", "SCD1i %", "Prot.Fac."
+    );
 
     for r2d in &results_2d {
-        let riv = results_invivo.iter()
+        let riv = results_invivo
+            .iter()
             .find(|r| r.phenotype == r2d.phenotype && r.treatment == r2d.treatment)
             .unwrap();
-        let rs = results_scd1i.iter()
+        let rs = results_scd1i
+            .iter()
             .find(|r| r.phenotype == r2d.phenotype && r.treatment == r2d.treatment)
             .unwrap();
 
@@ -202,9 +238,15 @@ fn main() {
             1.0
         };
 
-        eprintln!("  {:<20} {:<8} {:>9.2}% {:>9.2}% {:>9.2}% {:>10.2}×",
-                 r2d.phenotype, r2d.treatment,
-                 r2d.death_rate * 100.0, riv.death_rate * 100.0, rs.death_rate * 100.0, pf);
+        eprintln!(
+            "  {:<20} {:<8} {:>9.2}% {:>9.2}% {:>9.2}% {:>10.2}×",
+            r2d.phenotype,
+            r2d.treatment,
+            r2d.death_rate * 100.0,
+            riv.death_rate * 100.0,
+            rs.death_rate * 100.0,
+            pf
+        );
     }
 
     // ============================================================
@@ -212,26 +254,61 @@ fn main() {
     // ============================================================
     eprintln!("\n=== Key Biological Predictions ===\n");
 
-    let pers_rsl3_2d = results_2d.iter().find(|r| r.phenotype.contains("Persister (") && r.treatment == "RSL3").unwrap();
-    let pers_rsl3_iv = results_invivo.iter().find(|r| r.phenotype.contains("Persister (") && r.treatment == "RSL3").unwrap();
-    let pers_sdt_2d = results_2d.iter().find(|r| r.phenotype.contains("Persister (") && r.treatment == "SDT").unwrap();
-    let pers_sdt_iv = results_invivo.iter().find(|r| r.phenotype.contains("Persister (") && r.treatment == "SDT").unwrap();
-    let pers_rsl3_s = results_scd1i.iter().find(|r| r.phenotype.contains("Persister (") && r.treatment == "RSL3").unwrap();
+    let pers_rsl3_2d = results_2d
+        .iter()
+        .find(|r| r.phenotype.contains("Persister (") && r.treatment == "RSL3")
+        .unwrap();
+    let pers_rsl3_iv = results_invivo
+        .iter()
+        .find(|r| r.phenotype.contains("Persister (") && r.treatment == "RSL3")
+        .unwrap();
+    let pers_sdt_2d = results_2d
+        .iter()
+        .find(|r| r.phenotype.contains("Persister (") && r.treatment == "SDT")
+        .unwrap();
+    let pers_sdt_iv = results_invivo
+        .iter()
+        .find(|r| r.phenotype.contains("Persister (") && r.treatment == "SDT")
+        .unwrap();
+    let pers_rsl3_s = results_scd1i
+        .iter()
+        .find(|r| r.phenotype.contains("Persister (") && r.treatment == "RSL3")
+        .unwrap();
 
     let dixon_pred = pers_rsl3_iv.death_rate < pers_rsl3_2d.death_rate * 0.5;
-    eprintln!("  Dixon 2025 (RSL3 fails in vivo): 2D={:.1}% → InVivo={:.1}% — {}",
-             pers_rsl3_2d.death_rate * 100.0, pers_rsl3_iv.death_rate * 100.0,
-             if dixon_pred { "CONFIRMED" } else { "NOT CONFIRMED" });
+    eprintln!(
+        "  Dixon 2025 (RSL3 fails in vivo): 2D={:.1}% → InVivo={:.1}% — {}",
+        pers_rsl3_2d.death_rate * 100.0,
+        pers_rsl3_iv.death_rate * 100.0,
+        if dixon_pred {
+            "CONFIRMED"
+        } else {
+            "NOT CONFIRMED"
+        }
+    );
 
     let sdt_survives = pers_sdt_iv.death_rate > 0.50;
-    eprintln!("  SDT survives MUFA defense: InVivo={:.1}% — {}",
-             pers_sdt_iv.death_rate * 100.0,
-             if sdt_survives { "YES (>50% kill)" } else { "WEAKENED (<50% kill)" });
+    eprintln!(
+        "  SDT survives MUFA defense: InVivo={:.1}% — {}",
+        pers_sdt_iv.death_rate * 100.0,
+        if sdt_survives {
+            "YES (>50% kill)"
+        } else {
+            "WEAKENED (<50% kill)"
+        }
+    );
 
     let scd1i_resens = pers_rsl3_s.death_rate > pers_rsl3_iv.death_rate * 1.5;
-    eprintln!("  SCD1i resensitizes (Tesfay 2019): InVivo={:.1}% → SCD1i={:.1}% — {}",
-             pers_rsl3_iv.death_rate * 100.0, pers_rsl3_s.death_rate * 100.0,
-             if scd1i_resens { "CONFIRMED" } else { "NOT CONFIRMED" });
+    eprintln!(
+        "  SCD1i resensitizes (Tesfay 2019): InVivo={:.1}% → SCD1i={:.1}% — {}",
+        pers_rsl3_iv.death_rate * 100.0,
+        pers_rsl3_s.death_rate * 100.0,
+        if scd1i_resens {
+            "CONFIRMED"
+        } else {
+            "NOT CONFIRMED"
+        }
+    );
 
     // ============================================================
     // Part 4: MUFA parameter sweep (Persister × SDT and RSL3)
@@ -247,20 +324,15 @@ fn main() {
     let maxes = [0.20, 0.30, 0.40, 0.50, 0.60];
     let decay = params_invivo.scd_mufa_decay;
 
-    let sweep_treatments: [(Treatment, &str); 2] = [
-        (Treatment::SDT, "SDT"),
-        (Treatment::RSL3, "RSL3"),
-    ];
+    let sweep_treatments: [(Treatment, &str); 2] =
+        [(Treatment::SDT, "SDT"), (Treatment::RSL3, "RSL3")];
 
     let baseline_sdt = pers_sdt_2d.death_rate;
     let baseline_rsl3 = pers_rsl3_2d.death_rate;
 
     let mut sweep_results: Vec<SweepResult> = Vec::new();
 
-    let sweep_modes: [(&str, bool); 2] = [
-        ("onset (mufa=0)", false),
-        ("steady-state", true),
-    ];
+    let sweep_modes: [(&str, bool); 2] = [("onset (mufa=0)", false), ("steady-state", true)];
 
     for (mode_label, use_steady_state) in &sweep_modes {
         eprintln!("=== Sweep mode: {} ===\n", mode_label);
@@ -273,8 +345,23 @@ fn main() {
             };
 
             eprintln!("--- Persister + {} ({}) ---", sweep_tx_name, mode_label);
-            eprintln!("  {:>8} | {}", "rate\\max", maxes.iter().map(|m| format!("{:>8.2}", m)).collect::<Vec<_>>().join(" | "));
-            eprintln!("  ---------+-{}", maxes.iter().map(|_| "----------").collect::<Vec<_>>().join("-+-"));
+            eprintln!(
+                "  {:>8} | {}",
+                "rate\\max",
+                maxes
+                    .iter()
+                    .map(|m| format!("{:>8.2}", m))
+                    .collect::<Vec<_>>()
+                    .join(" | ")
+            );
+            eprintln!(
+                "  ---------+-{}",
+                maxes
+                    .iter()
+                    .map(|_| "----------")
+                    .collect::<Vec<_>>()
+                    .join("-+-")
+            );
 
             for &rate in &rates {
                 let mut row_strs = Vec::new();
@@ -295,8 +382,10 @@ fn main() {
                     let outcomes: Vec<(bool, f64, f64, f64)> = (0..n)
                         .into_par_iter()
                         .map(|i| {
-                            let mut cell_rng = StdRng::seed_from_u64(args.seed.wrapping_add(i as u64 * 2));
-                            let mut sim_rng = StdRng::seed_from_u64(args.seed.wrapping_add(i as u64 * 2 + 1));
+                            let mut cell_rng =
+                                StdRng::seed_from_u64(args.seed.wrapping_add(i as u64 * 2));
+                            let mut sim_rng =
+                                StdRng::seed_from_u64(args.seed.wrapping_add(i as u64 * 2 + 1));
                             let cell = gen_cell(Phenotype::Persister, &mut cell_rng);
                             sim_cell(&cell, *sweep_tx, &p, &mut sim_rng)
                         })
@@ -305,7 +394,11 @@ fn main() {
                     let dead = outcomes.iter().filter(|(d, _, _, _)| *d).count();
                     let dr = dead as f64 / n as f64;
                     let (ci_lo, ci_hi) = wilson_ci(n, dead);
-                    let pf = if dr > 0.0001 { baseline / dr } else { f64::INFINITY };
+                    let pf = if dr > 0.0001 {
+                        baseline / dr
+                    } else {
+                        f64::INFINITY
+                    };
 
                     row_strs.push(format!("{:>7.1}%", dr * 100.0));
                     sweep_results.push(SweepResult {

@@ -139,9 +139,7 @@ impl Default for RecoveryRates {
 /// Returns new parameter means (not a full Cell — caller generates stochastic cell from these).
 pub fn recovered_persister_means(days: f64, rates: &RecoveryRates) -> (f64, f64, f64, f64) {
     // Exponential recovery: fraction recovered = 1 - exp(-ln(2) * t / t_half)
-    let frac = |t_half: f64| -> f64 {
-        1.0 - (-(2.0_f64.ln()) * days / t_half).exp()
-    };
+    let frac = |t_half: f64| -> f64 { 1.0 - (-(2.0_f64.ln()) * days / t_half).exp() };
 
     // Persister baseline → Glycolytic normal targets
     let fsp1 = 0.15 + (1.0 - 0.15) * frac(rates.fsp1_half_recovery_days);

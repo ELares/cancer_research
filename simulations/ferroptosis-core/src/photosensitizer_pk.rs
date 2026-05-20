@@ -144,7 +144,10 @@ impl fmt::Display for Photosensitizer {
                 // round-trips unambiguously through `FromStr`. f64's
                 // whole-number rendering keeps it tidy in the common
                 // case (`porfimer=504,0,1`).
-                write!(f, "porfimer={t_half_h},{t_distribution_h},{phi_so2_relative}")
+                write!(
+                    f,
+                    "porfimer={t_half_h},{t_distribution_h},{phi_so2_relative}"
+                )
             }
         }
     }
@@ -203,7 +206,8 @@ impl FromStr for Photosensitizer {
                     t_half_h = parse_f64_field("porfimer=t_half[,t_dist[,phi]]", "t_half", p)?;
                 }
                 if let Some(p) = parts.get(1) {
-                    t_distribution_h = parse_f64_field("porfimer=t_half[,t_dist[,phi]]", "t_dist", p)?;
+                    t_distribution_h =
+                        parse_f64_field("porfimer=t_half[,t_dist[,phi]]", "t_dist", p)?;
                 }
                 if let Some(p) = parts.get(2) {
                     phi_so2_relative = parse_f64_field("porfimer=t_half[,t_dist[,phi]]", "phi", p)?;
@@ -229,9 +233,7 @@ impl FromStr for Photosensitizer {
 /// message rather than the cryptic `parse::<f64>("")` error.
 fn parse_f64_field(spec_form: &str, field_name: &str, raw: &str) -> Result<f64, String> {
     if raw.is_empty() {
-        return Err(format!(
-            "{spec_form}: empty value for {field_name}"
-        ));
+        return Err(format!("{spec_form}: empty value for {field_name}"));
     }
     raw.parse::<f64>()
         .map_err(|e| format!("{spec_form}: cannot parse {field_name}={raw:?}: {e}"))
@@ -242,7 +244,9 @@ fn parse_f64_field(spec_form: &str, field_name: &str, raw: &str) -> Result<f64, 
 /// would divide by zero).
 fn check_finite_strict_positive(field: &str, value: f64) -> Result<(), String> {
     if !value.is_finite() {
-        return Err(format!("Photosensitizer::{field} must be finite, got {value}"));
+        return Err(format!(
+            "Photosensitizer::{field} must be finite, got {value}"
+        ));
     }
     if value <= 0.0 {
         return Err(format!("Photosensitizer::{field} must be > 0, got {value}"));
@@ -256,10 +260,14 @@ fn check_finite_strict_positive(field: &str, value: f64) -> Result<(), String> {
 /// a defensible thought-experiment use).
 fn check_finite_nonneg(field: &str, value: f64) -> Result<(), String> {
     if !value.is_finite() {
-        return Err(format!("Photosensitizer::{field} must be finite, got {value}"));
+        return Err(format!(
+            "Photosensitizer::{field} must be finite, got {value}"
+        ));
     }
     if value < 0.0 {
-        return Err(format!("Photosensitizer::{field} must be >= 0, got {value}"));
+        return Err(format!(
+            "Photosensitizer::{field} must be >= 0, got {value}"
+        ));
     }
     Ok(())
 }
@@ -409,7 +417,11 @@ mod tests {
 
     #[test]
     fn porfimer_at_one_halflife_is_half() {
-        let p = Photosensitizer::Porfimer { t_half_h: 504.0, t_distribution_h: 0.0, phi_so2_relative: 1.0 };
+        let p = Photosensitizer::Porfimer {
+            t_half_h: 504.0,
+            t_distribution_h: 0.0,
+            phi_so2_relative: 1.0,
+        };
         // `exp(-ln(2))` lands on 0.5 on most libm implementations but is
         // not guaranteed bit-exact across platforms (intermediate rounding
         // in `ln(2)/504 * 504` may not round-trip). Compare with a tight
@@ -424,13 +436,21 @@ mod tests {
     #[test]
     fn porfimer_at_zero_is_one() {
         // `exp(0.0) == 1.0` is required by IEEE 754 — strict equality is safe here.
-        let p = Photosensitizer::Porfimer { t_half_h: 504.0, t_distribution_h: 0.0, phi_so2_relative: 1.0 };
+        let p = Photosensitizer::Porfimer {
+            t_half_h: 504.0,
+            t_distribution_h: 0.0,
+            phi_so2_relative: 1.0,
+        };
         assert_eq!(p.concentration_at(0.0), 1.0);
     }
 
     #[test]
     fn porfimer_decays_monotonically() {
-        let p = Photosensitizer::Porfimer { t_half_h: 504.0, t_distribution_h: 0.0, phi_so2_relative: 1.0 };
+        let p = Photosensitizer::Porfimer {
+            t_half_h: 504.0,
+            t_distribution_h: 0.0,
+            phi_so2_relative: 1.0,
+        };
         let c0 = p.concentration_at(0.0);
         let c1 = p.concentration_at(24.0);
         let c2 = p.concentration_at(168.0);
@@ -503,7 +523,11 @@ mod tests {
 
     #[test]
     fn serde_roundtrip_porfimer() {
-        let p = Photosensitizer::Porfimer { t_half_h: 504.0, t_distribution_h: 0.0, phi_so2_relative: 1.0 };
+        let p = Photosensitizer::Porfimer {
+            t_half_h: 504.0,
+            t_distribution_h: 0.0,
+            phi_so2_relative: 1.0,
+        };
         let json = serde_json::to_string(&p).unwrap();
         let q: Photosensitizer = serde_json::from_str(&json).unwrap();
         assert_eq!(p, q);
@@ -568,22 +592,38 @@ mod tests {
 
     #[test]
     fn validate_porfimer_accepts_valid() {
-        assert!(Photosensitizer::Porfimer { t_half_h: 504.0, t_distribution_h: 0.0, phi_so2_relative: 1.0 }
-            .validate()
-            .is_ok());
-        assert!(Photosensitizer::Porfimer { t_half_h: 0.001, t_distribution_h: 0.0, phi_so2_relative: 1.0 }
-            .validate()
-            .is_ok());
+        assert!(Photosensitizer::Porfimer {
+            t_half_h: 504.0,
+            t_distribution_h: 0.0,
+            phi_so2_relative: 1.0
+        }
+        .validate()
+        .is_ok());
+        assert!(Photosensitizer::Porfimer {
+            t_half_h: 0.001,
+            t_distribution_h: 0.0,
+            phi_so2_relative: 1.0
+        }
+        .validate()
+        .is_ok());
     }
 
     #[test]
     fn validate_porfimer_rejects_invalid() {
-        assert!(Photosensitizer::Porfimer { t_half_h: 0.0, t_distribution_h: 0.0, phi_so2_relative: 1.0 }
-            .validate()
-            .is_err());
-        assert!(Photosensitizer::Porfimer { t_half_h: -100.0, t_distribution_h: 0.0, phi_so2_relative: 1.0 }
-            .validate()
-            .is_err());
+        assert!(Photosensitizer::Porfimer {
+            t_half_h: 0.0,
+            t_distribution_h: 0.0,
+            phi_so2_relative: 1.0
+        }
+        .validate()
+        .is_err());
+        assert!(Photosensitizer::Porfimer {
+            t_half_h: -100.0,
+            t_distribution_h: 0.0,
+            phi_so2_relative: 1.0
+        }
+        .validate()
+        .is_err());
         assert!(Photosensitizer::Porfimer {
             t_half_h: f64::NAN,
             t_distribution_h: 0.0,
@@ -604,7 +644,11 @@ mod tests {
     fn negative_dli_saturates_to_peak() {
         // Negative DLI is non-physical (illumination before drug peak);
         // saturate to t=0 to keep outputs in [0, 1] for valid params.
-        let p = Photosensitizer::Porfimer { t_half_h: 504.0, t_distribution_h: 0.0, phi_so2_relative: 1.0 };
+        let p = Photosensitizer::Porfimer {
+            t_half_h: 504.0,
+            t_distribution_h: 0.0,
+            phi_so2_relative: 1.0,
+        };
         assert_eq!(p.concentration_at(-1.0), 1.0);
         assert_eq!(p.concentration_at(-1e6), 1.0);
         assert_eq!(p.concentration_at(f64::NEG_INFINITY), 1.0);
@@ -614,7 +658,11 @@ mod tests {
     fn nan_dli_saturates_to_peak() {
         // f64::max treats NaN as smaller than any value, so NaN.max(0.0)
         // returns 0.0 and concentration_at(NaN) is deterministic.
-        let p = Photosensitizer::Porfimer { t_half_h: 504.0, t_distribution_h: 0.0, phi_so2_relative: 1.0 };
+        let p = Photosensitizer::Porfimer {
+            t_half_h: 504.0,
+            t_distribution_h: 0.0,
+            phi_so2_relative: 1.0,
+        };
         assert_eq!(p.concentration_at(f64::NAN), 1.0);
     }
 
@@ -640,7 +688,11 @@ mod tests {
     fn parse_porfimer_default_is_bellnier() {
         assert_eq!(
             "porfimer".parse::<Photosensitizer>().unwrap(),
-            Photosensitizer::Porfimer { t_half_h: 504.0, t_distribution_h: 0.0, phi_so2_relative: 1.0 }
+            Photosensitizer::Porfimer {
+                t_half_h: 504.0,
+                t_distribution_h: 0.0,
+                phi_so2_relative: 1.0
+            }
         );
     }
 
@@ -648,7 +700,11 @@ mod tests {
     fn parse_porfimer_with_value() {
         assert_eq!(
             "porfimer=336".parse::<Photosensitizer>().unwrap(),
-            Photosensitizer::Porfimer { t_half_h: 336.0, t_distribution_h: 0.0, phi_so2_relative: 1.0 }
+            Photosensitizer::Porfimer {
+                t_half_h: 336.0,
+                t_distribution_h: 0.0,
+                phi_so2_relative: 1.0
+            }
         );
     }
 
@@ -656,7 +712,11 @@ mod tests {
     fn parse_trims_whitespace() {
         assert_eq!(
             "  porfimer = 504  ".parse::<Photosensitizer>().unwrap(),
-            Photosensitizer::Porfimer { t_half_h: 504.0, t_distribution_h: 0.0, phi_so2_relative: 1.0 }
+            Photosensitizer::Porfimer {
+                t_half_h: 504.0,
+                t_distribution_h: 0.0,
+                phi_so2_relative: 1.0
+            }
         );
     }
 
@@ -668,11 +728,19 @@ mod tests {
         );
         assert_eq!(
             "PORFIMER=504".parse::<Photosensitizer>().unwrap(),
-            Photosensitizer::Porfimer { t_half_h: 504.0, t_distribution_h: 0.0, phi_so2_relative: 1.0 }
+            Photosensitizer::Porfimer {
+                t_half_h: 504.0,
+                t_distribution_h: 0.0,
+                phi_so2_relative: 1.0
+            }
         );
         assert_eq!(
             "PorFimEr".parse::<Photosensitizer>().unwrap(),
-            Photosensitizer::Porfimer { t_half_h: 504.0, t_distribution_h: 0.0, phi_so2_relative: 1.0 }
+            Photosensitizer::Porfimer {
+                t_half_h: 504.0,
+                t_distribution_h: 0.0,
+                phi_so2_relative: 1.0
+            }
         );
     }
 
@@ -725,8 +793,16 @@ mod tests {
             Photosensitizer::Uniform(0.0),
             Photosensitizer::Uniform(1.0),
             Photosensitizer::Uniform(0.5),
-            Photosensitizer::Porfimer { t_half_h: 504.0, t_distribution_h: 0.0, phi_so2_relative: 1.0 },
-            Photosensitizer::Porfimer { t_half_h: 336.5, t_distribution_h: 0.0, phi_so2_relative: 1.0 },
+            Photosensitizer::Porfimer {
+                t_half_h: 504.0,
+                t_distribution_h: 0.0,
+                phi_so2_relative: 1.0,
+            },
+            Photosensitizer::Porfimer {
+                t_half_h: 336.5,
+                t_distribution_h: 0.0,
+                phi_so2_relative: 1.0,
+            },
         ] {
             let rendered = format!("{ps}");
             let reparsed: Photosensitizer = rendered
@@ -764,7 +840,9 @@ mod tests {
 
     #[test]
     fn validate_dli_h_rejects_infinity() {
-        assert!(validate_dli_h(f64::INFINITY).unwrap_err().contains("finite"));
+        assert!(validate_dli_h(f64::INFINITY)
+            .unwrap_err()
+            .contains("finite"));
         assert!(validate_dli_h(f64::NEG_INFINITY)
             .unwrap_err()
             .contains("finite"));

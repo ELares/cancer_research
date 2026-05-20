@@ -14,8 +14,8 @@ use ndarray::Array2;
 use rand::prelude::*;
 use serde::Serialize;
 
-use crate::cell::{gen_cell, Cell, Phenotype};
 use crate::biochem::CellState;
+use crate::cell::{gen_cell, Cell, Phenotype};
 
 /// Fraction of the smallest grid dimension used for the tumor sphere/circle
 /// radius (in lattice cells). Shared by [`TumorGrid3D::generate`] and
@@ -362,13 +362,7 @@ impl TumorGrid3D {
     /// `200³` is ~1.4 GB. Callers should size against available RAM
     /// before invoking; `debug_assert!` guards against accidental
     /// allocations above ~1 G cells (≈ 170 GB, almost certainly a typo).
-    pub fn generate(
-        rows: usize,
-        cols: usize,
-        layers: usize,
-        cell_size_um: f64,
-        seed: u64,
-    ) -> Self {
+    pub fn generate(rows: usize, cols: usize, layers: usize, cell_size_um: f64, seed: u64) -> Self {
         // Memory guard — catches "rows = 1000" typos in tests and CI.
         // Active only in debug builds; release callers are expected to
         // size against their own hardware. 10^9 cells × 170 B ≈ 170 GB
@@ -545,12 +539,7 @@ impl TumorGrid3D {
     /// - Face cell (one coordinate at the boundary): 17 (2·3·3 − 1)
     /// - Face-edge cell (two coordinates at boundary): 11 (2·2·3 − 1)
     /// - Corner cell (all three at boundary): 7 (2³ − 1)
-    pub fn neighbors(
-        &self,
-        r: usize,
-        c: usize,
-        l: usize,
-    ) -> ([(usize, usize, usize); 26], usize) {
+    pub fn neighbors(&self, r: usize, c: usize, l: usize) -> ([(usize, usize, usize); 26], usize) {
         let mut result = [(0usize, 0usize, 0usize); 26];
         let mut count = 0;
         for dr in [-1_i64, 0, 1] {
@@ -811,7 +800,10 @@ mod tests_3d {
                 "neighbor ({nr},{nc},{nl}) extra_iron should equal iron_per_death × neighbor_fraction"
             );
         }
-        assert!(!g.get(r, c, l).newly_dead, "newly_dead flag should be cleared after diffusion");
+        assert!(
+            !g.get(r, c, l).newly_dead,
+            "newly_dead flag should be cleared after diffusion"
+        );
     }
 
     /// Generate is deterministic from seed: same seed → same per-cell
@@ -868,7 +860,7 @@ mod tests_3d {
         let mut g = TumorGrid3D::generate(10, 10, 10, 20.0, 42);
 
         let (r, c, l) = (0, 0, 0); // grid corner
-        // Force the corner to be a fresh tumor cell that just died.
+                                   // Force the corner to be a fresh tumor cell that just died.
         let gc = g.get_mut(r, c, l);
         gc.is_tumor = true;
         gc.state.dead = true;
