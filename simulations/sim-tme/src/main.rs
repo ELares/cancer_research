@@ -41,12 +41,12 @@ use ferroptosis_core::cell::{norm, Treatment};
 use ferroptosis_core::grid::{death_heatmap, depth_kill_curve, TumorGrid};
 use ferroptosis_core::immune_spatial::{immune_kill_probability, DAMP_KILL_THRESHOLD};
 use ferroptosis_core::io::{write_depth_curves_csv, write_heatmap_csv, write_json};
-use ferroptosis_core::ph::{iron_multiplier_from_ph, radial_ph_field_2d};
-use ferroptosis_core::stromal::{stromal_adjacency_mask_2d, stromal_adjacent_kill_rate_2d};
 use ferroptosis_core::params::{
     Params, PhConfig, SpatialImmuneConfig, SpatialParams, StromalConfig,
 };
+use ferroptosis_core::ph::{iron_multiplier_from_ph, radial_ph_field_2d};
 use ferroptosis_core::physics::local_ros_multiplier;
+use ferroptosis_core::stromal::{stromal_adjacency_mask_2d, stromal_adjacent_kill_rate_2d};
 
 const GRID_SIZE: usize = 500;
 const CELL_SIZE_UM: f64 = 20.0;
@@ -102,9 +102,16 @@ fn apply_o2_gradient(grid: &mut TumorGrid, penetration_um: f64) -> Vec<(usize, u
 // ============================================================
 
 /// Precompute per-cell depth from tumor edge (micrometers) — non-tumor
-/// cells get 0.0. The depth math is lifted to
+/// cells get `0.0` (sentinel). The depth math is lifted to
 /// [`TumorGrid::radial_depth_um`] (#224 item 1a); this wrapper just
 /// applies sim-tme's `.max(0.0)` + non-tumor-zero convention.
+///
+/// **Sentinel note:** the `0.0` for non-tumor cells differs from the
+/// signed depth `radial_depth_um` returns for those positions (which
+/// is negative). Current consumers (`run_spatial_cycling`) gate on
+/// `is_tumor` before reading `depths[idx]`, so the sentinel is
+/// unobservable; a future consumer that iterates the full map should
+/// be aware the value is `0`, not the signed off-grid depth.
 fn compute_depth_map(grid: &TumorGrid) -> Vec<f64> {
     let cols = grid.cols;
     (0..grid.cells.len())
@@ -366,6 +373,13 @@ fn run_spatial_cycling(
 /// (#224 item 1b); this function is the binary-side orchestrator:
 /// it threads the library output through sim-tme's iron mutation and
 /// returns the (row, col, local_ph) heatmap consumers expect.
+///
+/// **Why the `is_tumor` gate on the iron mutation is retained even
+/// though `iron_multiplier_from_ph(ph_edge, ph_edge, _) == 1.0`:**
+/// the no-op identity holds for finite, well-behaved
+/// `iron_ph_sensitivity`, but a pathological `+∞` would make the
+/// multiplier `NaN` at non-tumor cells (`1.0 + ∞·0 = NaN`); the gate
+/// also documents the original behavior unambiguously.
 fn apply_ph_gradient(grid: &mut TumorGrid, cfg: &PhConfig) -> Vec<(usize, usize, f64)> {
     let cols = grid.cols;
     let ph_field = radial_ph_field_2d(grid, cfg.ph_edge, cfg.ph_core, cfg.lambda_ph_um);
@@ -695,13 +709,12 @@ struct ConditionResult {
 /// - Transition zone: between shell and hypoxic core
 /// - Hypoxic core: deeper than `3 * shell_depth_um` (O2 < 0.05)
 ///
+/// Depth math is sourced from [`TumorGrid::radial_depth_um`] (#224 item 1a)
+/// — the last call site in sim-tme that still inlined the `0.45` literal
+/// before this commit.
+///
 /// Returns (normoxic_rate, transition_rate, hypoxic_rate).
 fn zone_kill_rates(grid: &TumorGrid, shell_depth_um: f64) -> (f64, f64, f64) {
-    let center_r = grid.rows as f64 / 2.0;
-    let center_c = grid.cols as f64 / 2.0;
-    let tumor_radius = (grid.rows.min(grid.cols) as f64) * 0.45;
-    let cell_size = grid.cell_size_um;
-
     let deep_threshold_um = shell_depth_um * 3.0;
 
     let (mut norm_dead, mut norm_total) = (0usize, 0usize);
@@ -714,9 +727,7 @@ fn zone_kill_rates(grid: &TumorGrid, shell_depth_um: f64) -> (f64, f64, f64) {
             if !gc.is_tumor {
                 continue;
             }
-            let dist_from_center =
-                ((r as f64 - center_r).powi(2) + (c as f64 - center_c).powi(2)).sqrt();
-            let depth_from_edge_um = (tumor_radius - dist_from_center).max(0.0) * cell_size;
+            let depth_from_edge_um = grid.radial_depth_um(r, c).max(0.0);
 
             let (dead_count, total_count) = if depth_from_edge_um < shell_depth_um {
                 (&mut norm_dead, &mut norm_total)

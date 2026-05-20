@@ -9,7 +9,7 @@ Runs a matrix of 24 conditions on a 60³ spheroid (~82.5k tumor cells, ~540 µm 
 - **3D energy physics** (#186) via `physics::local_ros_multiplier_3d`
 - **3D radial O₂ gradient** (#187) via `oxygen::radial_o2_field`
 - **3D radial pH gradient** (#190) via `ph::radial_ph_field` + `iron_multiplier_from_ph` + `ion_trap_factor_from_ph`
-- **3D CAF-shielded boundary detection** (#189) via `stromal::stromal_adjacency_mask`
+- **3D CAF-shielded boundary detection** (#189) via `stromal::stromal_adjacency_mask_3d`
 - **3D spatial DAMP diffusion + activation** (#188) via `immune_spatial::diffuse_damp_3d_step` + `dc_activation` + `immune_kill_probability`
 
 Emits a JSON summary that the Python comparison script pairs with `sim-tme`'s existing 2D output to answer the four manuscript-keystone questions from issue #195.

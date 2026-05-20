@@ -189,6 +189,16 @@ impl TumorGrid {
     /// **Not bounds-checked:** matching [`get`](Self::get)'s contract,
     /// the caller is expected to pass `(r, c)` within the grid.
     /// Out-of-range indices give nonsense distances but won't panic.
+    /// Matches the 3D analog [`TumorGrid3D::radial_depth_um`]'s contract.
+    ///
+    /// **Perf note (mirrors 3D analog):** the three constants
+    /// `center_{r,c}` and `tumor_radius` depend only on grid
+    /// dimensions and are recomputed every call. `#[inline]` lets the
+    /// compiler hoist them at a single call site, but a per-cell
+    /// sweep over hundreds of thousands of cells should precompute
+    /// them once outside the loop (or store them on the struct) to
+    /// avoid `usize::min` + cast + multiply per cell. Cheap to
+    /// address when a consumer needs it.
     #[inline]
     pub fn radial_depth_um(&self, r: usize, c: usize) -> f64 {
         let center_r = self.rows as f64 / 2.0;
