@@ -70,7 +70,22 @@ Total: 24 conditions. Smaller than sim-tme's ~45 (no anti-PD-1, no O₂ cycling 
 
 `output/tme-3d/summary.json` — per-condition kill rates + metadata.
 
-Schema mirrors `sim-tme`'s `tme_summary.json` (with a `conditions: [...]` wrapper instead of a bare array) so the comparison script can read both.
+Schema mirrors `sim-tme`'s `tme_summary.json` (both wrapped in an envelope object since #224) so the comparison script can read both.
+
+### Schema versioning
+
+Both `output/tme/tme_summary.json` (sim-tme) and `output/tme-3d/summary.json` (this binary) emit a `schema_version: u32` field at the top level. **The current schema version is `1`.**
+
+```json
+{
+  "schema_version": 1,
+  "grid_dim": 60,
+  ...
+  "conditions": [ /* ConditionResult[] */ ]
+}
+```
+
+**Bump the version when the shape changes.** Adding optional fields under `conditions[]` is non-breaking and does not require a bump. Renaming or removing top-level keys, changing a field's semantics, or reshaping `conditions[]` does require a bump in both binaries together. The Python comparison script (`scripts/generate_3d_comparison_table.py`) asserts both files have the **same** `schema_version` equal to its `EXPECTED_SCHEMA_VERSION` constant — schema drift between the two binaries fails loudly there instead of silently producing `None`-filled rows.
 
 ## Tests
 

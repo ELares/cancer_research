@@ -64,16 +64,45 @@ COMPARISON_KEYS = [
 ]
 
 
+# Schema version expected in both `tme_summary.json` and `summary.json`.
+# Bumped together in #224 (item 2) so this script fails loudly on
+# cross-binary drift instead of silently using `None`s for missing fields.
+EXPECTED_SCHEMA_VERSION = 1
+
+
+def _check_schema_version(data: dict, source: str) -> None:
+    """Assert `data["schema_version"] == EXPECTED_SCHEMA_VERSION`.
+
+    Raises with a clear message naming `source` (binary / file) so a
+    schema drift between sim-tme and sim-tme-3d surfaces immediately.
+    """
+    if not isinstance(data, dict):
+        raise SystemExit(
+            f"ERROR: {source} is not a JSON object (schema_version envelope "
+            f"expected). Was the binary rebuilt against #224?"
+        )
+    v = data.get("schema_version")
+    if v != EXPECTED_SCHEMA_VERSION:
+        raise SystemExit(
+            f"ERROR: {source} schema_version={v!r}, expected "
+            f"{EXPECTED_SCHEMA_VERSION}. Bump the script or regenerate the "
+            f"output with a matching binary."
+        )
+
+
 def load_2d(path: Path) -> list[dict]:
-    """sim-tme writes a bare array of ConditionResult."""
+    """sim-tme writes `{schema_version, conditions: [...]}` (#224 item 2)."""
     with open(path) as f:
-        return json.load(f)
+        data = json.load(f)
+    _check_schema_version(data, f"sim-tme {path.name}")
+    return data["conditions"]
 
 
 def load_3d(path: Path) -> list[dict]:
-    """sim-tme-3d writes {grid_dim, ..., conditions: [...]}."""
+    """sim-tme-3d writes `{schema_version, grid_dim, ..., conditions: [...]}`."""
     with open(path) as f:
         data = json.load(f)
+    _check_schema_version(data, f"sim-tme-3d {path.name}")
     return data["conditions"]
 
 

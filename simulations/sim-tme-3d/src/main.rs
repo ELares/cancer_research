@@ -160,8 +160,16 @@ struct ConditionResult {
     ph_lambda_um: Option<f64>,
 }
 
+/// Schema version for `summary.json`. Bump when the output shape
+/// changes; `scripts/generate_3d_comparison_table.py` cross-checks
+/// this against `sim-tme/tme_summary.json`'s `schema_version` to catch
+/// schema drift across the two binaries (#224 item 2).
+const TME_3D_SCHEMA_VERSION: u32 = 1;
+
 #[derive(Clone, Debug, Serialize)]
 struct SimulationSummary {
+    /// Bumped when the shape of this JSON changes. Currently `1`.
+    schema_version: u32,
     grid_dim: usize,
     cell_size_um: f64,
     tumor_radius_um: f64,
@@ -878,6 +886,7 @@ fn main() {
         .collect();
 
     let summary = SimulationSummary {
+        schema_version: TME_3D_SCHEMA_VERSION,
         grid_dim: GRID_DIM,
         cell_size_um: CELL_SIZE_UM,
         tumor_radius_um,

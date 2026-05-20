@@ -1127,12 +1127,16 @@ def fig17_damp_heatmap():
             print(f"  {path} not found — run sim-tme first. Skipping.")
             return
 
-    # Read immune kill counts from tme_summary.json (avoid hardcoding)
+    # Read immune kill counts from tme_summary.json (avoid hardcoding).
+    # Since #224 item 2 the file is `{schema_version, conditions: [...]}`;
+    # tolerate the legacy bare-array form for forward compatibility with
+    # any pre-refactor outputs still on disk.
     summary_path = TME_DIR / "tme_summary.json"
     imm_kills_map = {}
     if summary_path.exists():
         summary = json.loads(summary_path.read_text())
-        for r in summary:
+        conditions = summary.get("conditions", summary) if isinstance(summary, dict) else summary
+        for r in conditions:
             if r.get("immune_mode") == "immune_on":
                 imm_kills_map[r["treatment"]] = r.get("immune_kills", 0)
 

@@ -621,6 +621,24 @@ fn run_spatial_with_immune(
 // Output types
 // ============================================================
 
+/// Schema version for `tme_summary.json`. Bump when the output shape
+/// changes; `scripts/generate_3d_comparison_table.py` cross-checks
+/// this against `sim-tme-3d/summary.json`'s `schema_version` to catch
+/// schema drift across the two binaries (#224 item 2).
+const TME_SCHEMA_VERSION: u32 = 1;
+
+/// Serialization-only view of `tme_summary.json`. Borrows the conditions
+/// slice to avoid moving `all_results` out from under downstream uses
+/// in the comparison-table block.
+#[derive(Serialize)]
+struct TmeSummary<'a> {
+    /// Bumped when the shape of this JSON changes. Currently `1`.
+    schema_version: u32,
+    /// Per-condition results (the historical contents of this file —
+    /// previously serialized as a bare array; envelope added in #224).
+    conditions: &'a [ConditionResult],
+}
+
 #[derive(Serialize)]
 struct ConditionResult {
     treatment: String,
@@ -1315,7 +1333,11 @@ fn main() {
     write_depth_curves_csv(&curves_path, &all_depth_curves).expect("Failed to write depth curves");
 
     let summary_path = output_dir.join("tme_summary.json");
-    write_json(&summary_path, &all_results).expect("Failed to write summary");
+    let summary = TmeSummary {
+        schema_version: TME_SCHEMA_VERSION,
+        conditions: &all_results,
+    };
+    write_json(&summary_path, &summary).expect("Failed to write summary");
 
     // --- Print comparison table ---
     eprintln!("\n=== Comparison Table ===\n");
