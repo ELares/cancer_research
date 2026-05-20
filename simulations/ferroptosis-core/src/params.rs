@@ -186,9 +186,9 @@ impl Default for SpatialParams {
             cell_size_um: 20.0,
             iron_diffusion_coeff: 281.0,
             iron_release_per_death: 2.0,
-            pdt_mu_eff: 0.31,       // 1/mm, δ ≈ 3.2mm at 630nm
+            pdt_mu_eff: 0.31, // 1/mm, δ ≈ 3.2mm at 630nm
             pdt_i0: 1.0,
-            sdt_alpha: 0.7,          // dB/cm/MHz (soft tissue)
+            sdt_alpha: 0.7, // dB/cm/MHz (soft tissue)
             sdt_freq_mhz: 1.0,
             sdt_i0: 1.0,
             neighbor_iron_fraction: 0.1,
@@ -413,7 +413,11 @@ mod tests {
         let p: SpatialParams = serde_json::from_str(legacy).unwrap();
         assert_eq!(p.photosensitizer, Photosensitizer::Uniform(1.0));
         assert_eq!(p.t_drug_light_interval_h, 0.0);
-        assert_eq!(p.photosensitizer.concentration_at(p.t_drug_light_interval_h), 1.0);
+        assert_eq!(
+            p.photosensitizer
+                .concentration_at(p.t_drug_light_interval_h),
+            1.0
+        );
     }
 
     /// `SpatialImmuneConfig::for_2d()` must reproduce the literal values
@@ -464,7 +468,10 @@ mod tests {
         assert_eq!(blocked.anti_pd1_efficacy, 0.8);
         // Everything else must match.
         assert_eq!(blocked.damp_per_lp, base.damp_per_lp);
-        assert_eq!(blocked.damp_diffusion_fraction, base.damp_diffusion_fraction);
+        assert_eq!(
+            blocked.damp_diffusion_fraction,
+            base.damp_diffusion_fraction
+        );
         assert_eq!(blocked.damp_clearance_rate, base.damp_clearance_rate);
         assert_eq!(blocked.dc_activation_kd, base.dc_activation_kd);
         assert_eq!(blocked.immune_kill_rate, base.immune_kill_rate);

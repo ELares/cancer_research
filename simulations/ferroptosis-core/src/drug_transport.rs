@@ -221,7 +221,10 @@ mod tests {
         let tissue = epithelial_well_vascularized();
         let c = concentration_at_distance(0.0, &drug, &tissue);
         let expected = drug.vessel_wall_conc * tissue.vascular_permeability;
-        assert!((c - expected).abs() < 1e-10, "At r=0: expected {expected}, got {c}");
+        assert!(
+            (c - expected).abs() < 1e-10,
+            "At r=0: expected {expected}, got {c}"
+        );
     }
 
     #[test]
@@ -230,7 +233,10 @@ mod tests {
         let tissue = epithelial_well_vascularized();
         let c_near = concentration_at_distance(10.0, &drug, &tissue);
         let c_far = concentration_at_distance(100.0, &drug, &tissue);
-        assert!(c_far < c_near, "Concentration should decrease with distance");
+        assert!(
+            c_far < c_near,
+            "Concentration should decrease with distance"
+        );
     }
 
     #[test]
@@ -238,7 +244,10 @@ mod tests {
         let drug = rsl3_like();
         let tissue = epithelial_well_vascularized();
         let c = concentration_at_distance(1000.0, &drug, &tissue);
-        assert!(c < 0.01, "Concentration at 1mm should be negligible, got {c}");
+        assert!(
+            c < 0.01,
+            "Concentration at 1mm should be negligible, got {c}"
+        );
     }
 
     #[test]
@@ -256,7 +265,10 @@ mod tests {
             ..drug1.clone()
         };
         let ratio = penetration_length_um(&drug2) / penetration_length_um(&drug1);
-        assert!((ratio - 2.0).abs() < 0.01, "λ should scale as √D: ratio={ratio}");
+        assert!(
+            (ratio - 2.0).abs() < 0.01,
+            "λ should scale as √D: ratio={ratio}"
+        );
     }
 
     #[test]
@@ -289,9 +301,15 @@ mod tests {
         let tissue = epithelial_well_vascularized();
         let profile = concentration_profile(&drug, &tissue, 50);
         assert_eq!(profile.len(), 50);
-        assert!((profile[0].0 - 0.0).abs() < 1e-10, "First point should be at r=0");
+        assert!(
+            (profile[0].0 - 0.0).abs() < 1e-10,
+            "First point should be at r=0"
+        );
         let r_max = max_distance_um(&tissue);
-        assert!((profile[49].0 - r_max).abs() < 1e-10, "Last point should be at r_max");
+        assert!(
+            (profile[49].0 - r_max).abs() < 1e-10,
+            "Last point should be at r_max"
+        );
     }
 
     #[test]
@@ -304,6 +322,9 @@ mod tests {
             name: "no-clearance",
         };
         let lambda = penetration_length_um(&drug);
-        assert!(lambda.is_infinite(), "Zero clearance should give infinite penetration");
+        assert!(
+            lambda.is_infinite(),
+            "Zero clearance should give infinite penetration"
+        );
     }
 }

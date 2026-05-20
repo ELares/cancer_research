@@ -265,24 +265,47 @@ fn main() {
 
     // Control (no drugs)
     let cr = run_condition(&[], &params, phenotype, N_CELLS, seed);
-    eprintln!("  Control: {:.1}% ({}/{})", cr.death_rate * 100.0, cr.n_dead, N_CELLS);
+    eprintln!(
+        "  Control: {:.1}% ({}/{})",
+        cr.death_rate * 100.0,
+        cr.n_dead,
+        N_CELLS
+    );
     single_rates.push(("Control".to_string(), cr.death_rate));
     single_results.push(SingleResult {
-        drug: "Control".to_string(), death_rate: cr.death_rate, ci_low: cr.ci_low,
-        ci_high: cr.ci_high, n_dead: cr.n_dead, n_cells: N_CELLS,
-        mean_gpx4_final: cr.pathway.mean_gpx4_final, mean_fsp1_final: cr.pathway.mean_fsp1_final,
-        mean_gsh_final: cr.pathway.mean_gsh_final, mean_lp_final: cr.pathway.mean_lp_final,
+        drug: "Control".to_string(),
+        death_rate: cr.death_rate,
+        ci_low: cr.ci_low,
+        ci_high: cr.ci_high,
+        n_dead: cr.n_dead,
+        n_cells: N_CELLS,
+        mean_gpx4_final: cr.pathway.mean_gpx4_final,
+        mean_fsp1_final: cr.pathway.mean_fsp1_final,
+        mean_gsh_final: cr.pathway.mean_gsh_final,
+        mean_lp_final: cr.pathway.mean_lp_final,
     });
 
     for drug in &drugs {
         let cr = run_condition(&[drug], &params, phenotype, N_CELLS, seed);
-        eprintln!("  {}: {:.1}% ({}/{})", drug.name, cr.death_rate * 100.0, cr.n_dead, N_CELLS);
+        eprintln!(
+            "  {}: {:.1}% ({}/{})",
+            drug.name,
+            cr.death_rate * 100.0,
+            cr.n_dead,
+            N_CELLS
+        );
         single_rates.push((drug.name.to_string(), cr.death_rate));
         single_results.push(SingleResult {
-            drug: drug.name.to_string(), death_rate: cr.death_rate, ci_low: cr.ci_low,
-            ci_high: cr.ci_high, n_dead: cr.n_dead, n_cells: N_CELLS,
-            mean_gpx4_final: cr.pathway.mean_gpx4_final, mean_fsp1_final: cr.pathway.mean_fsp1_final,
-            mean_gsh_final: cr.pathway.mean_gsh_final, mean_lp_final: cr.pathway.mean_lp_final,
+            drug: drug.name.to_string(),
+            death_rate: cr.death_rate,
+            ci_low: cr.ci_low,
+            ci_high: cr.ci_high,
+            n_dead: cr.n_dead,
+            n_cells: N_CELLS,
+            mean_gpx4_final: cr.pathway.mean_gpx4_final,
+            mean_fsp1_final: cr.pathway.mean_fsp1_final,
+            mean_gsh_final: cr.pathway.mean_gsh_final,
+            mean_lp_final: cr.pathway.mean_lp_final,
         });
     }
 
@@ -323,9 +346,12 @@ fn main() {
 
             eprintln!(
                 "{:<12} {:<12} {:>7.1}% {:>7.1}% {:>7.1}% {:>7.1}% {:>8.2}",
-                drug_a.name, drug_b.name,
-                rate_a * 100.0, rate_b * 100.0,
-                cr.death_rate * 100.0, bliss * 100.0,
+                drug_a.name,
+                drug_b.name,
+                rate_a * 100.0,
+                rate_b * 100.0,
+                cr.death_rate * 100.0,
+                bliss * 100.0,
                 synergy,
             );
 
@@ -391,8 +417,12 @@ fn main() {
         };
         eprintln!(
             "  {} + {}: synergy={:.2} ({}) — actual {:.1}% vs Bliss {:.1}%",
-            r.drug_a, r.drug_b, r.synergy_score, label,
-            r.rate_combo * 100.0, r.bliss_prediction * 100.0,
+            r.drug_a,
+            r.drug_b,
+            r.synergy_score,
+            label,
+            r.rate_combo * 100.0,
+            r.bliss_prediction * 100.0,
         );
     }
 

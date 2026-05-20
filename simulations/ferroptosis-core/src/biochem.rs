@@ -49,7 +49,12 @@ impl CellState {
 
     /// Initialize with a custom exogenous ROS peak (for spatial model where
     /// ROS dose depends on depth/position).
-    pub fn from_cell_with_ros(cell: &Cell, tx: Treatment, params: &Params, exo_ros_peak: f64) -> Self {
+    pub fn from_cell_with_ros(
+        cell: &Cell,
+        tx: Treatment,
+        params: &Params,
+        exo_ros_peak: f64,
+    ) -> Self {
         let mut gpx4 = cell.gpx4;
         if let Treatment::RSL3 = tx {
             gpx4 *= 1.0 - params.rsl3_gpx4_inhib;
@@ -154,7 +159,9 @@ pub fn sim_cell_step(
     let lp_generation = lp_direct + lp_propagation;
 
     // === REPAIR ===
-    let gpx4_repair = state.gpx4 * (state.gsh / (state.gsh + 1.0)) * params.gpx4_rate
+    let gpx4_repair = state.gpx4
+        * (state.gsh / (state.gsh + 1.0))
+        * params.gpx4_rate
         * (state.lp / (state.lp + 0.5));
     let fsp1_repair = state.fsp1 * params.fsp1_rate * (state.lp / (state.lp + 0.5));
     let total_repair = gpx4_repair + fsp1_repair;
@@ -300,7 +307,10 @@ mod tests {
         let mut sim_rng = StdRng::seed_from_u64(1);
         let (dead, lp, _, _) = sim_cell(&cell, Treatment::Control, &params, &mut sim_rng);
         assert!(!dead, "Glycolytic cell should survive Control");
-        assert!(lp < params.death_threshold, "LP should stay below threshold");
+        assert!(
+            lp < params.death_threshold,
+            "LP should stay below threshold"
+        );
     }
 
     #[test]
@@ -321,7 +331,11 @@ mod tests {
         let mut sim_rng = StdRng::seed_from_u64(1);
         let state = CellState::from_cell(&cell, Treatment::RSL3, &params, &mut sim_rng);
         let expected = cell.gpx4 * (1.0 - params.rsl3_gpx4_inhib);
-        assert!((state.gpx4 - expected).abs() < 1e-10, "RSL3 should reduce GPX4 by {}%", params.rsl3_gpx4_inhib * 100.0);
+        assert!(
+            (state.gpx4 - expected).abs() < 1e-10,
+            "RSL3 should reduce GPX4 by {}%",
+            params.rsl3_gpx4_inhib * 100.0
+        );
     }
 
     #[test]
@@ -336,11 +350,18 @@ mod tests {
             let mut rng = StdRng::seed_from_u64(i * 2);
             let cell = gen_cell(Phenotype::Persister, &mut rng);
             let mut sr = StdRng::seed_from_u64(i * 2 + 1);
-            if sim_cell(&cell, Treatment::RSL3, &params_2d, &mut sr).0 { deaths_2d += 1; }
+            if sim_cell(&cell, Treatment::RSL3, &params_2d, &mut sr).0 {
+                deaths_2d += 1;
+            }
             let mut sr = StdRng::seed_from_u64(i * 2 + 1);
-            if sim_cell(&cell, Treatment::RSL3, &params_vivo, &mut sr).0 { deaths_vivo += 1; }
+            if sim_cell(&cell, Treatment::RSL3, &params_vivo, &mut sr).0 {
+                deaths_vivo += 1;
+            }
         }
-        assert!(deaths_vivo < deaths_2d, "In-vivo MUFA should reduce RSL3 deaths: 2D={deaths_2d}, vivo={deaths_vivo}");
+        assert!(
+            deaths_vivo < deaths_2d,
+            "In-vivo MUFA should reduce RSL3 deaths: 2D={deaths_2d}, vivo={deaths_vivo}"
+        );
     }
 
     #[test]

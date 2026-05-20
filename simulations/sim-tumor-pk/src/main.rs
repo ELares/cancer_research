@@ -40,11 +40,7 @@ struct ScenarioResult {
     protection_factor: Option<f64>,
 }
 
-fn run_scenario(
-    conc_schedule: &[f64],
-    params: &Params,
-    seed: u64,
-) -> (usize, f64, f64, f64) {
+fn run_scenario(conc_schedule: &[f64], params: &Params, seed: u64) -> (usize, f64, f64, f64) {
     let results: Vec<PKCellResult> = (0..N_CELLS)
         .into_par_iter()
         .map(|i| {
@@ -52,7 +48,13 @@ fn run_scenario(
             let mut rng = rand::rngs::StdRng::seed_from_u64(cell_seed);
             let cell = gen_cell(Phenotype::Persister, &mut rng);
             // Use a different seed for sim vs gen_cell to avoid RNG correlation
-            sim_cell_with_pk(&cell, params, conc_schedule, RSL3_INACTIVATION_RATE, cell_seed.wrapping_add(500_000))
+            sim_cell_with_pk(
+                &cell,
+                params,
+                conc_schedule,
+                RSL3_INACTIVATION_RATE,
+                cell_seed.wrapping_add(500_000),
+            )
         })
         .collect();
 
@@ -97,8 +99,7 @@ fn main() {
     let ref_death_rate;
     {
         let conc_schedule: Vec<f64> = vec![1.0; N_STEPS];
-        let (n_dead, mean_lp, mean_gsh, mean_gpx4) =
-            run_scenario(&conc_schedule, &params, SEED);
+        let (n_dead, mean_lp, mean_gsh, mean_gpx4) = run_scenario(&conc_schedule, &params, SEED);
         let (ci_lo, ci_hi) = wilson_ci(N_CELLS, n_dead);
         ref_death_rate = n_dead as f64 / N_CELLS as f64;
 
@@ -131,9 +132,8 @@ fn main() {
     eprintln!();
 
     // --- Tumor-specific PK ---
-    let mut timecourse_rows: Vec<String> = vec![
-        "time_min,tumor_type,c_plasma,c_vascular,c_interstitial".to_string()
-    ];
+    let mut timecourse_rows: Vec<String> =
+        vec!["time_min,tumor_type,c_plasma,c_vascular,c_interstitial".to_string()];
 
     for (tumor_name, tumor_params) in &tumors {
         let pk_result = solve_tumor_pk(&plasma, tumor_params, N_STEPS, 100);
@@ -231,21 +231,24 @@ fn main() {
 
     // Tumor type ↔ tissue type mapping (explicit)
     let tumor_tissue_pairs: Vec<(&str, TumorPKParams, f64)> = vec![
-        ("Breast", breast_tumor(), 60.0),       // half of 120μm inter-vessel
+        ("Breast", breast_tumor(), 60.0), // half of 120μm inter-vessel
         ("Pancreatic", pancreatic_tumor(), 125.0), // half of 250μm
-        ("GBM", glioblastoma_tumor(), 75.0),    // half of 150μm
-        ("Melanoma", melanoma_tumor(), 60.0),    // well-vasc, similar to breast
-        ("Sarcoma", sarcoma_tumor(), 100.0),     // poorly-vasc, half of ~200μm
+        ("GBM", glioblastoma_tumor(), 75.0), // half of 150μm
+        ("Melanoma", melanoma_tumor(), 60.0), // well-vasc, similar to breast
+        ("Sarcoma", sarcoma_tumor(), 100.0), // poorly-vasc, half of ~200μm
     ];
 
     let radial_bins = [0.0, 25.0, 50.0, 75.0, 100.0, 125.0];
 
     eprintln!("\n=== Spatial × Temporal: C(r,t) Kill Rates ===");
-    eprintln!("λ_met = {:.0} μm (metabolism only, no uptake double-counting)", lambda_met);
+    eprintln!(
+        "λ_met = {:.0} μm (metabolism only, no uptake double-counting)",
+        lambda_met
+    );
     eprintln!("Key finding: temporal PK barrier (16-27×) dominates spatial decay (1.3-1.7×).\n");
 
     let mut crt_rows: Vec<String> = vec![
-        "tumor_type,distance_um,peak_conc,death_rate,ci_low,ci_high,n_cells,n_dead".to_string()
+        "tumor_type,distance_um,peak_conc,death_rate,ci_low,ci_high,n_cells,n_dead".to_string(),
     ];
 
     for (tumor_name, tumor_params, r_max) in &tumor_tissue_pairs {
@@ -259,8 +262,7 @@ fn main() {
             let schedule = compute_spatial_temporal_schedule(&pk_result, r, lambda_met);
             let peak: f64 = schedule.iter().cloned().fold(0.0, f64::max);
 
-            let (n_dead, _mean_lp, _mean_gsh, _mean_gpx4) =
-                run_scenario(&schedule, &params, SEED);
+            let (n_dead, _mean_lp, _mean_gsh, _mean_gpx4) = run_scenario(&schedule, &params, SEED);
             let (ci_lo, ci_hi) = wilson_ci(N_CELLS, n_dead);
             let death_rate = n_dead as f64 / N_CELLS as f64;
             let prot = if death_rate > 0.001 {
@@ -271,7 +273,10 @@ fn main() {
 
             eprintln!(
                 "    r={:>5.0}μm: peak_C={:.3}, death={:.1}%, prot={:.1}×",
-                r, peak, death_rate * 100.0, prot
+                r,
+                peak,
+                death_rate * 100.0,
+                prot
             );
 
             crt_rows.push(format!(

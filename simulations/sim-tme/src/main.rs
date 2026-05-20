@@ -38,10 +38,12 @@ use serde::Serialize;
 
 use ferroptosis_core::biochem::{sim_cell_step, CellState};
 use ferroptosis_core::cell::{norm, Treatment};
-use ferroptosis_core::grid::{depth_kill_curve, death_heatmap, TumorGrid};
+use ferroptosis_core::grid::{death_heatmap, depth_kill_curve, TumorGrid};
 use ferroptosis_core::immune_3d::{immune_kill_probability, DAMP_KILL_THRESHOLD};
 use ferroptosis_core::io::{write_depth_curves_csv, write_heatmap_csv, write_json};
-use ferroptosis_core::params::{Params, PhConfig, SpatialImmuneConfig, SpatialParams, StromalConfig};
+use ferroptosis_core::params::{
+    Params, PhConfig, SpatialImmuneConfig, SpatialParams, StromalConfig,
+};
 use ferroptosis_core::physics::local_ros_multiplier;
 
 const GRID_SIZE: usize = 500;
@@ -70,10 +72,7 @@ const ZONE_REF_LAMBDA: f64 = 120.0;
 ///
 /// Modifies `cell.basal_ros` in place: `basal_ros *= o2_factor`.
 /// Returns a Vec of (row, col, o2_factor) for heatmap generation.
-fn apply_o2_gradient(
-    grid: &mut TumorGrid,
-    penetration_um: f64,
-) -> Vec<(usize, usize, f64)> {
+fn apply_o2_gradient(grid: &mut TumorGrid, penetration_um: f64) -> Vec<(usize, usize, f64)> {
     let rows = grid.rows;
     let cols = grid.cols;
     let cell_size = grid.cell_size_um;
@@ -93,8 +92,7 @@ fn apply_o2_gradient(
 
             let dist_from_center =
                 ((r as f64 - center_r).powi(2) + (c as f64 - center_c).powi(2)).sqrt();
-            let depth_from_edge_um =
-                (tumor_radius - dist_from_center).max(0.0) * cell_size;
+            let depth_from_edge_um = (tumor_radius - dist_from_center).max(0.0) * cell_size;
 
             let o2_factor = (-depth_from_edge_um / penetration_um).exp().clamp(0.0, 1.0);
 
@@ -135,7 +133,11 @@ fn compute_depth_map(grid: &TumorGrid) -> Vec<f64> {
 /// Square-wave O2 cycling: λ alternates between low (hypoxic) and
 /// high (normoxic) on a fixed period. First half = normoxic, second half = hypoxic.
 fn cycling_lambda(step: u32, period: u32, lambda_low: f64, lambda_high: f64) -> f64 {
-    if (step % period) < period / 2 { lambda_high } else { lambda_low }
+    if (step % period) < period / 2 {
+        lambda_high
+    } else {
+        lambda_low
+    }
 }
 
 // ============================================================
@@ -193,7 +195,9 @@ fn run_spatial(
                 }
                 if grid.cells[idx].state.dead {
                     if let Some(ds) = grid.cells[idx].state.death_step {
-                        if step >= ds + params.post_death_steps { continue; }
+                        if step >= ds + params.post_death_steps {
+                            continue;
+                        }
                     } else {
                         continue;
                     }
@@ -209,14 +213,8 @@ fn run_spatial(
                 grid.cells[idx].extra_iron = 0.0;
 
                 let gc = &mut grid.cells[idx];
-                let died = sim_cell_step(
-                    &mut gc.state,
-                    &gc.cell,
-                    params,
-                    step,
-                    extra_iron,
-                    &mut rng,
-                );
+                let died =
+                    sim_cell_step(&mut gc.state, &gc.cell, params, step, extra_iron, &mut rng);
 
                 if died {
                     gc.newly_dead = true;
@@ -311,7 +309,9 @@ fn run_spatial_cycling(
                 }
                 if grid.cells[idx].state.dead {
                     if let Some(ds) = grid.cells[idx].state.death_step {
-                        if step >= ds + params.post_death_steps { continue; }
+                        if step >= ds + params.post_death_steps {
+                            continue;
+                        }
                     } else {
                         continue;
                     }
@@ -327,14 +327,8 @@ fn run_spatial_cycling(
                 grid.cells[idx].extra_iron = 0.0;
 
                 let gc = &mut grid.cells[idx];
-                let died = sim_cell_step(
-                    &mut gc.state,
-                    &gc.cell,
-                    params,
-                    step,
-                    extra_iron,
-                    &mut rng,
-                );
+                let died =
+                    sim_cell_step(&mut gc.state, &gc.cell, params, step, extra_iron, &mut rng);
 
                 if died {
                     gc.newly_dead = true;
@@ -405,7 +399,11 @@ fn stromal_adjacent_kill_rate(grid: &TumorGrid, mask: &[bool]) -> f64 {
             }
         }
     }
-    if total > 0 { dead as f64 / total as f64 } else { 0.0 }
+    if total > 0 {
+        dead as f64 / total as f64
+    } else {
+        0.0
+    }
 }
 
 // ============================================================
@@ -440,11 +438,10 @@ fn apply_ph_gradient(grid: &mut TumorGrid, cfg: &PhConfig) -> Vec<(usize, usize,
 
             let dist_from_center =
                 ((r as f64 - center_r).powi(2) + (c as f64 - center_c).powi(2)).sqrt();
-            let depth_from_edge_um =
-                (tumor_radius - dist_from_center).max(0.0) * cell_size;
+            let depth_from_edge_um = (tumor_radius - dist_from_center).max(0.0) * cell_size;
 
-            let local_ph = cfg.ph_edge
-                - ph_drop * (1.0 - (-depth_from_edge_um / cfg.lambda_ph_um).exp());
+            let local_ph =
+                cfg.ph_edge - ph_drop * (1.0 - (-depth_from_edge_um / cfg.lambda_ph_um).exp());
             let local_ph = local_ph.clamp(cfg.ph_core, cfg.ph_edge);
 
             // Iron modulation: ferritin destabilization at low pH
@@ -515,12 +512,11 @@ fn run_spatial_with_immune(
                 if !grid.cells[idx].is_tumor {
                     continue;
                 }
-                let drug_factor = (1.0
-                    - ph_cfg.ion_trap_sensitivity * (ph_cfg.ph_edge - local_ph))
+                let drug_factor = (1.0 - ph_cfg.ion_trap_sensitivity * (ph_cfg.ph_edge - local_ph))
                     .clamp(0.3, 1.0);
                 // Correct GPX4: from (1-inhib) to (1-inhib*drug_factor)
-                let correction = (1.0 - params.rsl3_gpx4_inhib * drug_factor)
-                    / (1.0 - params.rsl3_gpx4_inhib);
+                let correction =
+                    (1.0 - params.rsl3_gpx4_inhib * drug_factor) / (1.0 - params.rsl3_gpx4_inhib);
                 grid.cells[idx].state.gpx4 *= correction;
             }
         }
@@ -569,9 +565,8 @@ fn run_spatial_with_immune(
                 grid.cells[idx].extra_iron = 0.0;
 
                 let gc = &mut grid.cells[idx];
-                let died = sim_cell_step(
-                    &mut gc.state, &gc.cell, params, step, extra_iron, &mut rng,
-                );
+                let died =
+                    sim_cell_step(&mut gc.state, &gc.cell, params, step, extra_iron, &mut rng);
 
                 if died {
                     gc.newly_dead = true;
@@ -591,8 +586,8 @@ fn run_spatial_with_immune(
                     if let Some((mask, cfg)) = &stromal {
                         if mask[idx] {
                             let gc = &mut grid.cells[idx];
-                            gc.state.gsh = (gc.state.gsh + cfg.gsh_boost_per_step)
-                                .min(cfg.gsh_boost_cap);
+                            gc.state.gsh =
+                                (gc.state.gsh + cfg.gsh_boost_per_step).min(cfg.gsh_boost_cap);
                             gc.state.mufa_protection = (gc.state.mufa_protection
                                 + cfg.mufa_boost_per_step)
                                 .min(cfg.mufa_boost_cap);
@@ -788,7 +783,11 @@ fn zone_kill_rates(grid: &TumorGrid, shell_depth_um: f64) -> (f64, f64, f64) {
     }
 
     let rate = |d: usize, t: usize| if t > 0 { d as f64 / t as f64 } else { 0.0 };
-    (rate(norm_dead, norm_total), rate(trans_dead, trans_total), rate(hyp_dead, hyp_total))
+    (
+        rate(norm_dead, norm_total),
+        rate(trans_dead, trans_total),
+        rate(hyp_dead, hyp_total),
+    )
 }
 
 // ============================================================
@@ -799,7 +798,8 @@ fn main() {
     eprintln!("=== Tumor Microenvironment: Oxygen Gradients ===");
     eprintln!(
         "Grid: {}×{} ({:.1}mm × {:.1}mm)",
-        GRID_SIZE, GRID_SIZE,
+        GRID_SIZE,
+        GRID_SIZE,
         GRID_SIZE as f64 * CELL_SIZE_UM / 1000.0,
         GRID_SIZE as f64 * CELL_SIZE_UM / 1000.0,
     );
@@ -822,7 +822,11 @@ fn main() {
     fs::create_dir_all(output_dir).expect("Failed to create output directory");
 
     // Remove stale legacy files from previous naming convention (_immune.csv → _immune_run.csv)
-    for name in &["death_control_immune.csv", "death_rsl3_immune.csv", "death_sdt_immune.csv"] {
+    for name in &[
+        "death_control_immune.csv",
+        "death_rsl3_immune.csv",
+        "death_sdt_immune.csv",
+    ] {
         let p = output_dir.join(name);
         if p.exists() {
             let _ = fs::remove_file(&p);
@@ -837,15 +841,24 @@ fn main() {
     for (tx, tx_name) in &treatments {
         let mut grid = TumorGrid::generate(GRID_SIZE, GRID_SIZE, CELL_SIZE_UM, SEED);
         run_spatial(
-            &mut grid, *tx, &params, &spatial_params,
+            &mut grid,
+            *tx,
+            &params,
+            &spatial_params,
             SEED.wrapping_add((*tx as u64) * 10_000_000),
         );
 
         let census = grid.census();
         let overall = census.total_dead as f64 / census.total_tumor.max(1) as f64;
         let (norm_r, trans_r, hyp_r) = zone_kill_rates(&grid, ZONE_REF_LAMBDA);
-        eprintln!("  {}: overall={:.1}%, normoxic={:.1}%, transition={:.1}%, hypoxic={:.1}%",
-            tx_name, overall * 100.0, norm_r * 100.0, trans_r * 100.0, hyp_r * 100.0);
+        eprintln!(
+            "  {}: overall={:.1}%, normoxic={:.1}%, transition={:.1}%, hypoxic={:.1}%",
+            tx_name,
+            overall * 100.0,
+            norm_r * 100.0,
+            trans_r * 100.0,
+            hyp_r * 100.0
+        );
 
         all_results.push(ConditionResult {
             treatment: tx_name.to_string(),
@@ -892,15 +905,24 @@ fn main() {
             let o2_map = apply_o2_gradient(&mut grid, lambda);
 
             run_spatial(
-                &mut grid, *tx, &params, &spatial_params,
+                &mut grid,
+                *tx,
+                &params,
+                &spatial_params,
                 SEED.wrapping_add((*tx as u64) * 10_000_000),
             );
 
             let census = grid.census();
             let overall = census.total_dead as f64 / census.total_tumor.max(1) as f64;
             let (norm_r, trans_r, hyp_r) = zone_kill_rates(&grid, ZONE_REF_LAMBDA);
-            eprintln!("  {}: overall={:.1}%, normoxic={:.1}%, transition={:.1}%, hypoxic={:.1}%",
-                tx_name, overall * 100.0, norm_r * 100.0, trans_r * 100.0, hyp_r * 100.0);
+            eprintln!(
+                "  {}: overall={:.1}%, normoxic={:.1}%, transition={:.1}%, hypoxic={:.1}%",
+                tx_name,
+                overall * 100.0,
+                norm_r * 100.0,
+                trans_r * 100.0,
+                hyp_r * 100.0
+            );
 
             all_results.push(ConditionResult {
                 treatment: tx_name.to_string(),
@@ -934,7 +956,8 @@ fn main() {
             // Save heatmaps for the default lambda (120μm) only to avoid file bloat
             if (lambda - 120.0).abs() < 1.0 {
                 let death_hm = death_heatmap(&grid);
-                let path = output_dir.join(format!("death_{}_o2gradient.csv", tx_name.to_lowercase()));
+                let path =
+                    output_dir.join(format!("death_{}_o2gradient.csv", tx_name.to_lowercase()));
                 write_heatmap_csv(&path, &death_hm).expect("Failed to write heatmap");
 
                 // O2 heatmap
@@ -964,10 +987,16 @@ fn main() {
             let original_ros: Vec<f64> = grid.cells.iter().map(|gc| gc.cell.basal_ros).collect();
 
             run_spatial_cycling(
-                &mut grid, *tx, &params, &spatial_params,
+                &mut grid,
+                *tx,
+                &params,
+                &spatial_params,
                 SEED.wrapping_add((*tx as u64) * 10_000_000),
-                &depths, &original_ros,
-                cycle_period, lambda_low, lambda_high,
+                &depths,
+                &original_ros,
+                cycle_period,
+                lambda_low,
+                lambda_high,
             );
 
             let census = grid.census();
@@ -975,7 +1004,11 @@ fn main() {
             let (norm_r, trans_r, hyp_r) = zone_kill_rates(&grid, ZONE_REF_LAMBDA);
             eprintln!(
                 "  {}: overall={:.1}%, normoxic={:.1}%, transition={:.1}%, hypoxic={:.1}%",
-                tx_name, overall * 100.0, norm_r * 100.0, trans_r * 100.0, hyp_r * 100.0
+                tx_name,
+                overall * 100.0,
+                norm_r * 100.0,
+                trans_r * 100.0,
+                hyp_r * 100.0
             );
 
             all_results.push(ConditionResult {
@@ -1023,7 +1056,10 @@ fn main() {
     // --- Immune coupling (Feature B) at λ=120μm ---
     let immune_modes: Vec<(&str, SpatialImmuneConfig)> = vec![
         ("immune_on", SpatialImmuneConfig::for_2d()),
-        ("immune_anti_pd1", SpatialImmuneConfig::for_2d().with_anti_pd1()),
+        (
+            "immune_anti_pd1",
+            SpatialImmuneConfig::for_2d().with_anti_pd1(),
+        ),
     ];
 
     eprintln!("\n=== Spatial Immune Coupling (O2 gradient λ=120μm) ===");
@@ -1032,15 +1068,24 @@ fn main() {
     eprintln!("Immune model: resident T cell phase only (0-48h), not systemic.\n");
 
     for (immune_label, immune_cfg) in &immune_modes {
-        eprintln!("--- Immune mode: {} (brake={:.0}%) ---\n",
-            immune_label, immune_cfg.effective_brake() * 100.0);
+        eprintln!(
+            "--- Immune mode: {} (brake={:.0}%) ---\n",
+            immune_label,
+            immune_cfg.effective_brake() * 100.0
+        );
 
         for (tx, tx_name) in &treatments {
             let mut grid = TumorGrid::generate(GRID_SIZE, GRID_SIZE, CELL_SIZE_UM, SEED);
             apply_o2_gradient(&mut grid, 120.0);
 
             let (ferr_kills, imm_kills, final_damp) = run_spatial_with_immune(
-                &mut grid, *tx, &params, &spatial_params, immune_cfg, None, None,
+                &mut grid,
+                *tx,
+                &params,
+                &spatial_params,
+                immune_cfg,
+                None,
+                None,
                 SEED.wrapping_add((*tx as u64) * 10_000_000),
             );
 
@@ -1048,8 +1093,15 @@ fn main() {
             let overall = census.total_dead as f64 / census.total_tumor.max(1) as f64;
             let (norm_r, trans_r, hyp_r) = zone_kill_rates(&grid, ZONE_REF_LAMBDA);
             let adj_rate_baseline = stromal_adjacent_kill_rate(&grid, &stromal_mask);
-            eprintln!("  {}: overall={:.1}% (ferr={}, immune={}), hypoxic={:.1}%, stromal_adj={:.1}%",
-                tx_name, overall * 100.0, ferr_kills, imm_kills, hyp_r * 100.0, adj_rate_baseline * 100.0);
+            eprintln!(
+                "  {}: overall={:.1}% (ferr={}, immune={}), hypoxic={:.1}%, stromal_adj={:.1}%",
+                tx_name,
+                overall * 100.0,
+                ferr_kills,
+                imm_kills,
+                hyp_r * 100.0,
+                adj_rate_baseline * 100.0
+            );
 
             // Export DAMP and immune-kill heatmaps for the first immune mode only
             if *immune_label == "immune_on" {
@@ -1069,7 +1121,8 @@ fn main() {
                 // death heatmaps: 0=stromal, 1=dead tumor, 2=alive tumor; does NOT
                 // distinguish immune kills from ferroptotic kills)
                 let death_hm = death_heatmap(&grid);
-                let path = output_dir.join(format!("death_{}_immune_run.csv", tx_name.to_lowercase()));
+                let path =
+                    output_dir.join(format!("death_{}_immune_run.csv", tx_name.to_lowercase()));
                 write_heatmap_csv(&path, &death_hm).expect("Failed to write death heatmap");
             }
 
@@ -1109,30 +1162,47 @@ fn main() {
     let stromal_cfg = StromalConfig::default();
 
     eprintln!("\n=== Stromal Protection / CAF-Mediated Shielding (O2 gradient λ=120μm) ===");
-    eprintln!("Stromal-adjacent tumor cells: {} ({:.1}% of tumor)",
+    eprintln!(
+        "Stromal-adjacent tumor cells: {} ({:.1}% of tumor)",
         stromal_adj_count,
-        stromal_adj_count as f64 / mask_grid.census().total_tumor as f64 * 100.0);
-    eprintln!("CAF boost: GSH +{:.3}/step (cap {:.0}), MUFA +{:.4}/step (cap {:.2})",
-        stromal_cfg.gsh_boost_per_step, stromal_cfg.gsh_boost_cap,
-        stromal_cfg.mufa_boost_per_step, stromal_cfg.mufa_boost_cap);
+        stromal_adj_count as f64 / mask_grid.census().total_tumor as f64 * 100.0
+    );
+    eprintln!(
+        "CAF boost: GSH +{:.3}/step (cap {:.0}), MUFA +{:.4}/step (cap {:.2})",
+        stromal_cfg.gsh_boost_per_step,
+        stromal_cfg.gsh_boost_cap,
+        stromal_cfg.mufa_boost_per_step,
+        stromal_cfg.mufa_boost_cap
+    );
     eprintln!("All parameters ESTIMATED (no textbook coverage). Refs: PMID 34373744, 31813804.\n");
 
     let stromal_immune_modes: Vec<(&str, SpatialImmuneConfig)> = vec![
         ("immune_on", SpatialImmuneConfig::for_2d()),
-        ("immune_anti_pd1", SpatialImmuneConfig::for_2d().with_anti_pd1()),
+        (
+            "immune_anti_pd1",
+            SpatialImmuneConfig::for_2d().with_anti_pd1(),
+        ),
     ];
 
     for (immune_label, immune_cfg) in &stromal_immune_modes {
-        eprintln!("--- Stromal ON + {} (brake={:.0}%) ---\n",
-            immune_label, immune_cfg.effective_brake() * 100.0);
+        eprintln!(
+            "--- Stromal ON + {} (brake={:.0}%) ---\n",
+            immune_label,
+            immune_cfg.effective_brake() * 100.0
+        );
 
         for (tx, tx_name) in &treatments {
             let mut grid = TumorGrid::generate(GRID_SIZE, GRID_SIZE, CELL_SIZE_UM, SEED);
             apply_o2_gradient(&mut grid, 120.0);
 
             let (ferr_kills, imm_kills, _final_damp) = run_spatial_with_immune(
-                &mut grid, *tx, &params, &spatial_params, &immune_cfg,
-                Some((&stromal_mask, &stromal_cfg)), None,
+                &mut grid,
+                *tx,
+                &params,
+                &spatial_params,
+                &immune_cfg,
+                Some((&stromal_mask, &stromal_cfg)),
+                None,
                 SEED.wrapping_add((*tx as u64) * 10_000_000),
             );
 
@@ -1207,16 +1277,22 @@ fn main() {
     let immune_for_ph = SpatialImmuneConfig::for_2d();
 
     eprintln!("\n=== pH Gradient / Ion Trapping (O2 gradient λ=120μm, immune_on) ===");
-    eprintln!("pH range: {:.1} (edge) → {:.1} (core), λ_pH={:.0}μm",
-        ph_cfg.ph_edge, ph_cfg.ph_core, ph_cfg.lambda_ph_um);
-    eprintln!("Iron sensitivity: {:.1} (→ {:.2}× at pH {:.1})",
+    eprintln!(
+        "pH range: {:.1} (edge) → {:.1} (core), λ_pH={:.0}μm",
+        ph_cfg.ph_edge, ph_cfg.ph_core, ph_cfg.lambda_ph_um
+    );
+    eprintln!(
+        "Iron sensitivity: {:.1} (→ {:.2}× at pH {:.1})",
         ph_cfg.iron_ph_sensitivity,
         1.0 + ph_cfg.iron_ph_sensitivity * (ph_cfg.ph_edge - ph_cfg.ph_core),
-        ph_cfg.ph_core);
-    eprintln!("Ion trapping: {:.1} (→ {:.0}% drug loss at pH {:.1}, RSL3 only)",
+        ph_cfg.ph_core
+    );
+    eprintln!(
+        "Ion trapping: {:.1} (→ {:.0}% drug loss at pH {:.1}, RSL3 only)",
         ph_cfg.ion_trap_sensitivity,
         ph_cfg.ion_trap_sensitivity * (ph_cfg.ph_edge - ph_cfg.ph_core) * 100.0,
-        ph_cfg.ph_core);
+        ph_cfg.ph_core
+    );
     eprintln!("All parameters ESTIMATED. Henderson-Hasselbalch: Chemistry2e Sec.14.2.");
     eprintln!("Warburg effect, ferritin iron release: primary literature only.\n");
 
@@ -1226,8 +1302,13 @@ fn main() {
         let ph_map = apply_ph_gradient(&mut grid, &ph_cfg);
 
         let (ferr_kills, imm_kills, _final_damp) = run_spatial_with_immune(
-            &mut grid, *tx, &params, &spatial_params, &immune_for_ph,
-            None, Some((&ph_map, &ph_cfg)),
+            &mut grid,
+            *tx,
+            &params,
+            &spatial_params,
+            &immune_for_ph,
+            None,
+            Some((&ph_map, &ph_cfg)),
             SEED.wrapping_add((*tx as u64) * 10_000_000),
         );
 
@@ -1235,9 +1316,15 @@ fn main() {
         let overall = census.total_dead as f64 / census.total_tumor.max(1) as f64;
         let (norm_r, trans_r, hyp_r) = zone_kill_rates(&grid, ZONE_REF_LAMBDA);
         let adj_rate = stromal_adjacent_kill_rate(&grid, &stromal_mask);
-        eprintln!("  {}: overall={:.1}% (ferr={}, immune={}), normoxic={:.1}%, hypoxic={:.1}%",
-            tx_name, overall * 100.0, ferr_kills, imm_kills,
-            norm_r * 100.0, hyp_r * 100.0);
+        eprintln!(
+            "  {}: overall={:.1}% (ferr={}, immune={}), normoxic={:.1}%, hypoxic={:.1}%",
+            tx_name,
+            overall * 100.0,
+            ferr_kills,
+            imm_kills,
+            norm_r * 100.0,
+            hyp_r * 100.0
+        );
 
         // Export death heatmap
         let death_hm = death_heatmap(&grid);
@@ -1282,7 +1369,8 @@ fn main() {
         let mut ph_hm = ndarray::Array2::<u8>::zeros((GRID_SIZE, GRID_SIZE));
         for &(r, c, ph) in &ph_map_vis {
             // Map pH 6.5-7.4 to 0-255
-            let normed = ((ph - ph_cfg.ph_core) / (ph_cfg.ph_edge - ph_cfg.ph_core)).clamp(0.0, 1.0);
+            let normed =
+                ((ph - ph_cfg.ph_core) / (ph_cfg.ph_edge - ph_cfg.ph_core)).clamp(0.0, 1.0);
             ph_hm[[r, c]] = (normed * 255.0).round() as u8;
         }
         let path = output_dir.join("ph_field.csv");
@@ -1300,7 +1388,15 @@ fn main() {
     eprintln!("\n=== Comparison Table ===\n");
     eprintln!(
         "{:<10} {:<20} {:<18} {:<12} {:<8} {:>10} {:>10} {:>10} {:>10}",
-        "Treatment", "O2 Condition", "Immune", "Stromal", "pH", "Overall", "Normoxic", "Transit.", "Hypoxic"
+        "Treatment",
+        "O2 Condition",
+        "Immune",
+        "Stromal",
+        "pH",
+        "Overall",
+        "Normoxic",
+        "Transit.",
+        "Hypoxic"
     );
     eprintln!("{}", "-".repeat(120));
     for r in &all_results {
@@ -1308,7 +1404,11 @@ fn main() {
         let ph_label = r.ph_mode.as_deref().unwrap_or("off");
         eprintln!(
             "{:<10} {:<20} {:<18} {:<12} {:<8} {:>9.1}% {:>9.1}% {:>9.1}% {:>9.1}%",
-            r.treatment, r.o2_condition, r.immune_mode, stromal_label, ph_label,
+            r.treatment,
+            r.o2_condition,
+            r.immune_mode,
+            stromal_label,
+            ph_label,
             r.overall_kill_rate * 100.0,
             r.normoxic_kill_rate * 100.0,
             r.transition_kill_rate * 100.0,
@@ -1318,18 +1418,35 @@ fn main() {
 
     // --- Sensitivity check: is the SDT-vs-RSL3 differential robust? ---
     eprintln!("\n=== Sensitivity: SDT advantage over RSL3 in hypoxic zone ===\n");
-    eprintln!("{:<10} {:>15} {:>15} {:>15}", "λ (μm)", "RSL3 hypoxic", "SDT hypoxic", "SDT/RSL3 ratio");
+    eprintln!(
+        "{:<10} {:>15} {:>15} {:>15}",
+        "λ (μm)", "RSL3 hypoxic", "SDT hypoxic", "SDT/RSL3 ratio"
+    );
     eprintln!("{}", "-".repeat(57));
     for &lambda in O2_LAMBDAS {
         let cond = format!("gradient_{}um", lambda as u64);
-        let rsl3_hyp = all_results.iter()
+        let rsl3_hyp = all_results
+            .iter()
             .find(|r| r.treatment == "RSL3" && r.o2_condition == cond)
-            .map(|r| r.hypoxic_kill_rate).unwrap_or(0.0);
-        let sdt_hyp = all_results.iter()
+            .map(|r| r.hypoxic_kill_rate)
+            .unwrap_or(0.0);
+        let sdt_hyp = all_results
+            .iter()
             .find(|r| r.treatment == "SDT" && r.o2_condition == cond)
-            .map(|r| r.hypoxic_kill_rate).unwrap_or(0.0);
-        let ratio = if rsl3_hyp > 0.001 { sdt_hyp / rsl3_hyp } else { f64::INFINITY };
-        eprintln!("{:<10} {:>14.1}% {:>14.1}% {:>15.1}×", lambda, rsl3_hyp * 100.0, sdt_hyp * 100.0, ratio);
+            .map(|r| r.hypoxic_kill_rate)
+            .unwrap_or(0.0);
+        let ratio = if rsl3_hyp > 0.001 {
+            sdt_hyp / rsl3_hyp
+        } else {
+            f64::INFINITY
+        };
+        eprintln!(
+            "{:<10} {:>14.1}% {:>14.1}% {:>15.1}×",
+            lambda,
+            rsl3_hyp * 100.0,
+            sdt_hyp * 100.0,
+            ratio
+        );
     }
 
     eprintln!("\nZone definitions (fixed at λ_ref = {ZONE_REF_LAMBDA}μm): normoxic = within {ZONE_REF_LAMBDA}μm of edge, transition = {ZONE_REF_LAMBDA}-{}μm, hypoxic = deeper than {}μm.", ZONE_REF_LAMBDA * 3.0, ZONE_REF_LAMBDA * 3.0);

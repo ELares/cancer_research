@@ -14,7 +14,7 @@ use rand::prelude::*;
 
 use ferroptosis_core::biochem::{sim_cell_step, CellState};
 use ferroptosis_core::cell::{norm, Treatment};
-use ferroptosis_core::grid::{depth_kill_curve, death_heatmap, TumorGrid};
+use ferroptosis_core::grid::{death_heatmap, depth_kill_curve, TumorGrid};
 use ferroptosis_core::io::{write_depth_curves_csv, write_heatmap_csv, write_json};
 use ferroptosis_core::params::{Params, SpatialParams};
 use ferroptosis_core::photosensitizer_pk::{validate_dli_h, Photosensitizer};
@@ -79,7 +79,6 @@ struct Args {
     dli_h: f64,
 }
 
-
 fn run_spatial(
     grid: &mut TumorGrid,
     tx: Treatment,
@@ -129,7 +128,9 @@ fn run_spatial(
                 }
                 if grid.cells[idx].state.dead {
                     if let Some(ds) = grid.cells[idx].state.death_step {
-                        if step >= ds + params.post_death_steps { continue; }
+                        if step >= ds + params.post_death_steps {
+                            continue;
+                        }
                     } else {
                         continue;
                     }
@@ -147,14 +148,8 @@ fn run_spatial(
                 grid.cells[idx].extra_iron = 0.0;
 
                 let gc = &mut grid.cells[idx];
-                let died = sim_cell_step(
-                    &mut gc.state,
-                    &gc.cell,
-                    params,
-                    step,
-                    extra_iron,
-                    &mut rng,
-                );
+                let died =
+                    sim_cell_step(&mut gc.state, &gc.cell, params, step, extra_iron, &mut rng);
 
                 if died {
                     gc.newly_dead = true;
@@ -244,7 +239,8 @@ fn main() {
         eprintln!("--- Treatment: {} ---", tx_name);
 
         // Generate fresh grid for each treatment (same seed = same tumor)
-        let mut grid = TumorGrid::generate(args.grid_size, args.grid_size, args.cell_size, args.seed);
+        let mut grid =
+            TumorGrid::generate(args.grid_size, args.grid_size, args.cell_size, args.seed);
 
         let census_before = grid.census();
         eprintln!(
@@ -288,7 +284,9 @@ fn main() {
 
         // Save death heatmap
         let heatmap = death_heatmap(&grid);
-        let heatmap_path = args.output_dir.join(format!("spatial_death_{}.csv", tx_name.to_lowercase()));
+        let heatmap_path = args
+            .output_dir
+            .join(format!("spatial_death_{}.csv", tx_name.to_lowercase()));
         write_heatmap_csv(&heatmap_path, &heatmap).expect("Failed to write heatmap");
 
         // Compute depth-kill curve

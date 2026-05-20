@@ -42,12 +42,15 @@ pub fn write_depth_curves_csv(
 
 /// Write vulnerability window results as CSV.
 /// Format: timepoint_hours, treatment, death_rate, ci_low, ci_high
-pub fn write_window_csv(
-    path: &Path,
-    results: &[(f64, String, f64, f64, f64)],
-) -> io::Result<()> {
+pub fn write_window_csv(path: &Path, results: &[(f64, String, f64, f64, f64)]) -> io::Result<()> {
     let mut wtr = csv::Writer::from_path(path)?;
-    wtr.write_record(["timepoint_hours", "treatment", "death_rate", "ci_low", "ci_high"])?;
+    wtr.write_record([
+        "timepoint_hours",
+        "treatment",
+        "death_rate",
+        "ci_low",
+        "ci_high",
+    ])?;
     for (hours, tx, rate, ci_lo, ci_hi) in results {
         wtr.write_record(&[
             format!("{:.1}", hours),
@@ -63,7 +66,7 @@ pub fn write_window_csv(
 
 /// Write any Serialize value as pretty-printed JSON to a file.
 pub fn write_json<T: serde::Serialize>(path: &Path, data: &T) -> io::Result<()> {
-    let json = serde_json::to_string_pretty(data)
-        .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
+    let json =
+        serde_json::to_string_pretty(data).map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
     std::fs::write(path, json)
 }

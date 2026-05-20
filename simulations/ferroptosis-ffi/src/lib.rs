@@ -235,8 +235,13 @@ pub extern "C" fn ferro_gen_cell(phenotype: i32, rng: *mut FerroRng) -> FerroCel
     if rng.is_null() {
         // Return zeroed cell on null RNG (defensive)
         return FerroCell {
-            iron: 0.0, gsh: 0.0, gpx4: 0.0, fsp1: 0.0,
-            basal_ros: 0.0, lipid_unsat: 0.0, nrf2: 0.0,
+            iron: 0.0,
+            gsh: 0.0,
+            gpx4: 0.0,
+            fsp1: 0.0,
+            basal_ros: 0.0,
+            lipid_unsat: 0.0,
+            nrf2: 0.0,
         };
     }
     let rng_ref = unsafe { &mut *(rng as *mut StdRng) };
@@ -262,7 +267,10 @@ pub extern "C" fn ferro_sim_cell(
 ) -> FerroResult {
     if cell.is_null() || params.is_null() || rng.is_null() {
         return FerroResult {
-            dead: false, final_lp: 0.0, final_gsh: 0.0, final_gpx4: 0.0,
+            dead: false,
+            final_lp: 0.0,
+            final_gsh: 0.0,
+            final_gpx4: 0.0,
         };
     }
 

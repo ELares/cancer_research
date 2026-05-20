@@ -38,10 +38,7 @@ pub struct ImmuneResult {
 ///
 /// Ref: Krysko et al., Nat Rev Cancer 2012 (ICD markers)
 ///      Berezhnoy et al., PLoS Comput Biol 2020 (Boolean ICD model)
-pub fn calculate_damp_release(
-    dead_cell_lps: &[f64],
-    params: &ImmuneParams,
-) -> (f64, f64) {
+pub fn calculate_damp_release(dead_cell_lps: &[f64], params: &ImmuneParams) -> (f64, f64) {
     if dead_cell_lps.is_empty() {
         return (0.0, 0.0);
     }
@@ -73,7 +70,8 @@ pub fn immune_cascade(
     // DC activation: saturating response to DAMP *per dead cell* (quality of death).
     // Using per-cell average rather than total prevents the number of dead cells from
     // dominating the activation signal, allowing SDT vs RSL3 quality differences to show.
-    let dc_activation_fraction = damp_per_dead_cell / (damp_per_dead_cell + params.dc_activation_kd);
+    let dc_activation_fraction =
+        damp_per_dead_cell / (damp_per_dead_cell + params.dc_activation_kd);
 
     // Mature DCs: activation quality × maturation rate × number of antigen-presenting deaths
     let mature_dcs = dc_activation_fraction * params.dc_maturation_rate * n_dead as f64;

@@ -8,8 +8,7 @@ fn main() {
     // Ensure include directory exists
     std::fs::create_dir_all(crate_dir.join("include")).ok();
 
-    let config = cbindgen::Config::from_file(&config_path)
-        .unwrap_or_default();
+    let config = cbindgen::Config::from_file(&config_path).unwrap_or_default();
 
     let bindings = cbindgen::Builder::new()
         .with_crate(&crate_dir)

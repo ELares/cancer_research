@@ -1,11 +1,11 @@
 //! Statistics, results aggregation, and parallel execution.
 
-use rayon::prelude::*;
 use rand::prelude::*;
+use rayon::prelude::*;
 use serde::Serialize;
 
-use crate::cell::{gen_cell, Phenotype, Treatment};
 use crate::biochem::sim_cell;
+use crate::cell::{gen_cell, Phenotype, Treatment};
 use crate::params::Params;
 
 /// Aggregated result for one condition (phenotype × treatment).

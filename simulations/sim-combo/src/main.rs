@@ -78,11 +78,13 @@ fn main() {
                     .into_par_iter()
                     .map(|i| {
                         let mut cell_rng = StdRng::seed_from_u64(
-                            args.seed.wrapping_add(i as u64 * 2)
+                            args.seed
+                                .wrapping_add(i as u64 * 2)
                                 .wrapping_add(delay_days as u64 * 1_000_000),
                         );
                         let mut sim_rng = StdRng::seed_from_u64(
-                            args.seed.wrapping_add(i as u64 * 2 + 1)
+                            args.seed
+                                .wrapping_add(i as u64 * 2 + 1)
                                 .wrapping_add(delay_days as u64 * 1_000_000),
                         );
                         let cell = gen_recovered_persister(delay_days, &recovery, &mut cell_rng);
@@ -101,8 +103,10 @@ fn main() {
                 // Phase 3: immune cascade
                 // Scale dead_cell_lps to the biological population size (not simulation sample size)
                 // to avoid saturating the immune cascade with 50K entries against 1K tumor cells.
-                let ferroptosis_killed = (ferroptosis_kill_rate * initial_tumor_cells as f64).round() as usize;
-                let scaled_dead_lps: Vec<f64> = dead_cell_lps.iter()
+                let ferroptosis_killed =
+                    (ferroptosis_kill_rate * initial_tumor_cells as f64).round() as usize;
+                let scaled_dead_lps: Vec<f64> = dead_cell_lps
+                    .iter()
                     .take(ferroptosis_killed)
                     .copied()
                     .collect();
@@ -152,15 +156,13 @@ fn main() {
     }
 
     // Find optimal schedule
-    let best = all_results
-        .iter()
-        .min_by(|a, b| {
-            a["survival_fraction"]
-                .as_f64()
-                .unwrap()
-                .partial_cmp(&b["survival_fraction"].as_f64().unwrap())
-                .unwrap()
-        });
+    let best = all_results.iter().min_by(|a, b| {
+        a["survival_fraction"]
+            .as_f64()
+            .unwrap()
+            .partial_cmp(&b["survival_fraction"].as_f64().unwrap())
+            .unwrap()
+    });
 
     if let Some(best) = best {
         eprintln!("=== Optimal Schedule ===");
@@ -168,7 +170,11 @@ fn main() {
             "  {} at day {:.0} {}: {:.1}% survival ({} survivors / {})",
             best["treatment"],
             best["sdt_delay_days"].as_f64().unwrap(),
-            if best["with_anti_pd1"].as_bool().unwrap() { "+ anti-PD1" } else { "" },
+            if best["with_anti_pd1"].as_bool().unwrap() {
+                "+ anti-PD1"
+            } else {
+                ""
+            },
             best["survival_fraction"].as_f64().unwrap() * 100.0,
             best["survivors"],
             best["initial_tumor_cells"],

@@ -19,7 +19,10 @@ use ferroptosis_core::io::write_json;
 use ferroptosis_core::params::{ImmuneParams, Params};
 
 #[derive(Parser)]
-#[command(name = "sim-icd", about = "ICD-immune cascade comparison across treatments")]
+#[command(
+    name = "sim-icd",
+    about = "ICD-immune cascade comparison across treatments"
+)]
 struct Args {
     /// Cells per condition.
     #[arg(long, default_value_t = 100_000)]
@@ -71,7 +74,8 @@ fn main() {
                 .into_par_iter()
                 .map(|i| {
                     let mut cell_rng = StdRng::seed_from_u64(args.seed.wrapping_add(i as u64 * 2));
-                    let mut sim_rng = StdRng::seed_from_u64(args.seed.wrapping_add(i as u64 * 2 + 1));
+                    let mut sim_rng =
+                        StdRng::seed_from_u64(args.seed.wrapping_add(i as u64 * 2 + 1));
                     let cell = gen_cell(*pheno, &mut cell_rng);
                     sim_cell(&cell, *tx, &params, &mut sim_rng)
                 })
@@ -140,15 +144,19 @@ fn main() {
 
     eprintln!("=== Key Finding ===");
     // Compare SDT vs RSL3 DAMP per dead cell for persisters
-    let sdt_result = all_results.iter().find(|r| {
-        r["phenotype"] == "Persister" && r["treatment"] == "SDT"
-    });
-    let rsl3_result = all_results.iter().find(|r| {
-        r["phenotype"] == "Persister" && r["treatment"] == "RSL3"
-    });
+    let sdt_result = all_results
+        .iter()
+        .find(|r| r["phenotype"] == "Persister" && r["treatment"] == "SDT");
+    let rsl3_result = all_results
+        .iter()
+        .find(|r| r["phenotype"] == "Persister" && r["treatment"] == "RSL3");
     if let (Some(sdt), Some(rsl3)) = (sdt_result, rsl3_result) {
-        let sdt_damp = sdt["immune_no_pd1"]["damp_per_dead_cell"].as_f64().unwrap_or(0.0);
-        let rsl3_damp = rsl3["immune_no_pd1"]["damp_per_dead_cell"].as_f64().unwrap_or(0.0);
+        let sdt_damp = sdt["immune_no_pd1"]["damp_per_dead_cell"]
+            .as_f64()
+            .unwrap_or(0.0);
+        let rsl3_damp = rsl3["immune_no_pd1"]["damp_per_dead_cell"]
+            .as_f64()
+            .unwrap_or(0.0);
         if rsl3_damp > 0.0 {
             eprintln!(
                 "SDT produces {:.1}× more DAMP per dead cell than RSL3 ({:.1} vs {:.1})",
@@ -157,8 +165,12 @@ fn main() {
                 rsl3_damp,
             );
         }
-        let sdt_kills = sdt["immune_with_pd1"]["immune_kills"].as_f64().unwrap_or(0.0);
-        let rsl3_kills = rsl3["immune_with_pd1"]["immune_kills"].as_f64().unwrap_or(0.0);
+        let sdt_kills = sdt["immune_with_pd1"]["immune_kills"]
+            .as_f64()
+            .unwrap_or(0.0);
+        let rsl3_kills = rsl3["immune_with_pd1"]["immune_kills"]
+            .as_f64()
+            .unwrap_or(0.0);
         eprintln!(
             "SDT+anti-PD1 immune kills: {:.0} vs RSL3+anti-PD1: {:.0}",
             sdt_kills, rsl3_kills,

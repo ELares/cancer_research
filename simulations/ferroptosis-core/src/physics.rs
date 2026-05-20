@@ -308,7 +308,11 @@ mod tests {
         let baseline = pdt_intensity_at_depth(z_um, &baseline_params);
 
         let pk_params = SpatialParams {
-            photosensitizer: Photosensitizer::Porfimer { t_half_h: 504.0, t_distribution_h: 0.0, phi_so2_relative: 1.0 },
+            photosensitizer: Photosensitizer::Porfimer {
+                t_half_h: 504.0,
+                t_distribution_h: 0.0,
+                phi_so2_relative: 1.0,
+            },
             t_drug_light_interval_h: 504.0,
             ..Default::default()
         };
