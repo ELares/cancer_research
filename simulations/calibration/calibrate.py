@@ -210,11 +210,9 @@ def _find_3d_condition(
             if c.get("o2_condition") != "uniform":
                 continue
         else:
-            # Use math.isclose for the λ comparison so that future schemas
-            # emitting non-exact float sweeps (e.g., 119.5, 120.0, 120.5)
-            # don't silently miss matches due to float precision. Today's
-            # schema emits exact 120.0, so this is identical in practice
-            # but future-proofs the filter (issue #222 item 2).
+            # math.isclose so arithmetic-derived sweeps (e.g., values from
+            # linspace / division) don't silently miss due to float
+            # precision (#222 item 2).
             row_lambda = c.get("o2_lambda_um")
             if row_lambda is None:
                 continue
@@ -231,9 +229,7 @@ def _find_3d_condition(
     if not matches:
         return None
     if len(matches) > 1:
-        # Issue #222 item 3: today's 24-condition matrix has unique combos
-        # so this never fires, but a future inner re-sweep introducing
-        # duplicate rows would silently pick the first match. Surface it.
+        # Surface duplicate-row matches rather than silently first-wins (#222 item 3).
         indices = [idx for idx, _ in matches]
         warnings.warn(
             f"_find_3d_condition matched {len(matches)} rows "

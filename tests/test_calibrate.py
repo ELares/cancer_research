@@ -3,10 +3,16 @@ Unit tests for `simulations/calibration/calibrate.py`'s 3D extractor.
 
 Locks the row-filter invariants of `_find_3d_condition` and the
 named-metric dispatch of `extract_tme_3d_json`. Fixtures build minimal
-`summary.json`-shaped dicts in-memory (no on-disk dependency) so the
-tests pin the contract: if sim-tme-3d's `ConditionResult` schema drifts
-and the extractor silently returns `None`, these tests fail loudly
-instead.
+`summary.json`-shaped dicts in-memory (no on-disk dependency).
+
+**Scope of the schema-drift guard**: these tests catch *None-handling*
+and *row-filter* drift — i.e., a missing row, a wrong filter default,
+or a numeric value moving from non-None to None. They do NOT catch
+*renamed-key* drift, because both the extractor (`c.get(key)`) and the
+fixture (`_condition(...)`) refer to the same key name; renaming both
+in lockstep would still pass. A future PR could add a contract
+test against the live `sim-tme-3d/src/main.rs::ConditionResult` field
+list to close that gap.
 
 Covers issue #222 item 1.
 
@@ -130,12 +136,11 @@ def _target(metric, summary_path):
     }
 
 
-@pytest.fixture(autouse=True)
-def _patch_resolve(monkeypatch):
-    """Make `_resolve_output_path` honor an absolute path in output_file."""
-    def fake_resolve(target):
-        return Path(target["output_file"])
-    monkeypatch.setattr(calibrate, "_resolve_output_path", fake_resolve)
+# No `_resolve_output_path` monkeypatch needed: when `output_file` is an
+# absolute path, `Path("…") / "output" / "/abs/path"` collapses to the
+# absolute path under Python's Path semantics, and `candidate.exists()`
+# returns True in the real resolver. The tests therefore exercise the
+# real `_resolve_output_path` rather than a fake.
 
 
 # ============================================================
@@ -252,3 +257,117 @@ class TestDuplicateRowWarning:
         assert any("matched" in str(w.message) for w in caught), (
             f"expected duplicate-row warning, got: {[str(w.message) for w in caught]}"
         )
+
+
+# ============================================================
+# `_find_3d_condition` filter coverage that isn't reachable through
+# `extract_tme_3d_json` today (no supported metric passes
+# `ph_mode != None` or `o2_lambda_um=None`). Direct tests on
+# `_find_3d_condition` lock those branches independently.
+# ============================================================
+
+class TestFindConditionPhModeFilter:
+    def test_default_ph_mode_none_rejects_ph_on_row(self, summary_dict):
+        # A row with ph_mode="ph_on" must not match the default
+        # ph_mode=None filter, even if every other field aligns.
+        summary_dict["conditions"].append(_condition(
+            treatment="RSL3",
+            o2_condition="gradient",
+            o2_lambda_um=120.0,
+            immune_mode="immune_on",
+            ph_mode="ph_on",
+            immune_kills=999,
+        ))
+        # Filter for immune_on RSL3 with default ph_mode=None should pick
+        # the existing row (immune_kills=100), not the new ph_on row.
+        row = calibrate._find_3d_condition(
+            summary_dict["conditions"],
+            treatment="RSL3",
+            o2_lambda_um=120.0,
+            immune_mode="immune_on",
+        )
+        assert row is not None
+        assert row.get("immune_kills") == 100
+
+    def test_explicit_ph_mode_filter_matches_only_ph_on(self, summary_dict):
+        # Explicit ph_mode="ph_on" must reject the existing ph=None rows.
+        summary_dict["conditions"].append(_condition(
+            treatment="RSL3",
+            o2_condition="gradient",
+            o2_lambda_um=120.0,
+            immune_mode="immune_on",
+            ph_mode="ph_on",
+            immune_kills=999,
+        ))
+        row = calibrate._find_3d_condition(
+            summary_dict["conditions"],
+            treatment="RSL3",
+            o2_lambda_um=120.0,
+            immune_mode="immune_on",
+            ph_mode="ph_on",
+        )
+        assert row is not None
+        assert row.get("immune_kills") == 999
+
+
+class TestFindConditionUniformO2Baseline:
+    """`o2_lambda_um=None` is the uniform-O₂ baseline branch
+    (`calibrate.py` ~209). No supported metric in `extract_tme_3d_json`
+    reaches it today, but the branch exists and must work correctly
+    if a future metric passes `o2_lambda_um=None`."""
+
+    def test_uniform_filter_matches_uniform_row_only(self):
+        conditions = [
+            # Gradient row at λ=120 — must NOT match a uniform filter.
+            _condition(
+                treatment="RSL3",
+                o2_condition="gradient",
+                o2_lambda_um=120.0,
+                immune_mode="off",
+                normoxic_kill_rate=0.5,
+            ),
+            # Uniform-O₂ row — must match the uniform filter.
+            _condition(
+                treatment="RSL3",
+                o2_condition="uniform",
+                o2_lambda_um=None,
+                immune_mode="off",
+                normoxic_kill_rate=0.9,
+            ),
+        ]
+        row = calibrate._find_3d_condition(
+            conditions,
+            treatment="RSL3",
+            o2_lambda_um=None,
+            immune_mode="off",
+        )
+        assert row is not None
+        assert row.get("o2_condition") == "uniform"
+        assert row.get("normoxic_kill_rate") == 0.9
+
+
+# ============================================================
+# `extract_tme_3d_json` defensive branches: unknown metric, missing
+# file, non-list `conditions`. All three currently swallow the bad
+# input and return None — locking that contract here.
+# ============================================================
+
+class TestExtractTme3dDefensive:
+    def test_unknown_metric_returns_none(self, tmp_path, summary_dict):
+        path = _write_summary(tmp_path, summary_dict)
+        target = _target("not_a_real_metric_xyzzy", path)
+        assert calibrate.extract_tme_3d_json(target) is None
+
+    def test_missing_file_returns_none(self, tmp_path):
+        missing = tmp_path / "does_not_exist" / "summary.json"
+        target = _target("rsl3_o2_collapse_ratio", missing)
+        assert calibrate.extract_tme_3d_json(target) is None
+
+    def test_non_list_conditions_returns_none(self, tmp_path):
+        # Wrong shape: `conditions` is a string instead of a list.
+        out_dir = tmp_path / "tme-3d"
+        out_dir.mkdir()
+        summary_path = out_dir / "summary.json"
+        summary_path.write_text(json.dumps({"conditions": "should-be-a-list"}))
+        target = _target("rsl3_o2_collapse_ratio", summary_path)
+        assert calibrate.extract_tme_3d_json(target) is None
