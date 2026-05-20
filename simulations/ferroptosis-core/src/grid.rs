@@ -170,6 +170,36 @@ impl TumorGrid {
         &mut self.cells[r * self.cols + c]
     }
 
+    /// Signed radial depth from the disc surface in micrometers.
+    ///
+    /// `depth = (tumor_radius_lattice − distance_from_center) × cell_size_um`
+    ///
+    /// 2D analog of [`TumorGrid3D::radial_depth_um`]. **Positive inside
+    /// the disc, negative outside, zero at the surface.** No `.max(0.0)`
+    /// — clamping is a caller concern (sim-tme's `compute_depth_map`
+    /// applies it after this call).
+    ///
+    /// **Geometry:** matches [`TumorGrid::generate`] — disc center at
+    /// `(rows/2, cols/2)` (lattice-centered, no voxel offset),
+    /// `tumor_radius = min(rows, cols) × TUMOR_RADIUS_FRACTION`. Both
+    /// `generate` and this method share the same constant so the
+    /// generated geometry and the depth-from-surface reference can't
+    /// drift.
+    ///
+    /// **Not bounds-checked:** matching [`get`](Self::get)'s contract,
+    /// the caller is expected to pass `(r, c)` within the grid.
+    /// Out-of-range indices give nonsense distances but won't panic.
+    #[inline]
+    pub fn radial_depth_um(&self, r: usize, c: usize) -> f64 {
+        let center_r = self.rows as f64 / 2.0;
+        let center_c = self.cols as f64 / 2.0;
+        let tumor_radius = (self.rows.min(self.cols) as f64) * TUMOR_RADIUS_FRACTION;
+        let dr = r as f64 - center_r;
+        let dc = c as f64 - center_c;
+        let dist = (dr * dr + dc * dc).sqrt();
+        (tumor_radius - dist) * self.cell_size_um
+    }
+
     /// Return indices of Moore neighborhood (8-neighbors) for cell (r, c).
     /// Respects grid boundaries (no wrapping).
     /// Returns (array, count) — use `&result[..count]` to iterate.
@@ -1076,6 +1106,81 @@ mod tests_3d {
                         );
                     }
                 }
+            }
+        }
+    }
+
+    // ============================================================
+    // 2D radial_depth_um (TumorGrid). Mirrors the 3D coverage above so
+    // a refactor that diverges the 2D and 3D depth functions is caught
+    // here. Lifted from sim-tme's binary-local `compute_depth_map` and
+    // the inline copies in oxygen/ph cross-geometry tests (#224 item 1a).
+    // ============================================================
+
+    /// 2D analog of `radial_depth_at_center_is_max`. For a (20, 20) disc,
+    /// `tumor_radius = 20 × 0.45 = 9.0` lattice units. Cell (10, 10) is
+    /// at distance 0 from center, so `depth = 9.0 × cell_size`.
+    #[test]
+    fn radial_depth_2d_at_center_is_max() {
+        let g = TumorGrid::generate(20, 20, 20.0, 42);
+        let depth = g.radial_depth_um(10, 10);
+        assert_eq!(depth, 9.0 * 20.0);
+    }
+
+    /// Sign convention: depth is signed, with corners of the bounding
+    /// box outside the disc producing a negative value. Mirrors
+    /// `radial_depth_outside_sphere_is_negative` for 3D.
+    #[test]
+    fn radial_depth_2d_outside_disc_is_negative() {
+        let g = TumorGrid::generate(20, 20, 20.0, 42);
+        let corner = g.radial_depth_um(0, 0);
+        assert!(corner < 0.0, "corner should be outside disc, got {corner}");
+    }
+
+    /// 2D version of the `is_tumor` / sign agreement guard: every tumor
+    /// cell must have non-negative depth, every non-tumor cell must
+    /// have negative depth. Catches drift between `TumorGrid::generate`
+    /// and `radial_depth_um` (both reference `TUMOR_RADIUS_FRACTION`).
+    #[test]
+    fn radial_depth_2d_sign_agrees_with_generated_is_tumor() {
+        let g = TumorGrid::generate(40, 40, 20.0, 42);
+        for r in 0..g.rows {
+            for c in 0..g.cols {
+                let depth = g.radial_depth_um(r, c);
+                let is_tumor = g.get(r, c).is_tumor;
+                if is_tumor {
+                    assert!(
+                        depth >= 0.0,
+                        "tumor cell ({r},{c}) has negative depth {depth}; \
+                         generate/radial_depth_um drifted"
+                    );
+                } else {
+                    assert!(
+                        depth < 0.0,
+                        "stromal cell ({r},{c}) has non-negative depth {depth}; \
+                         generate/radial_depth_um drifted"
+                    );
+                }
+            }
+        }
+    }
+
+    /// Bit-identical to sim-tme's binary-local `compute_depth_map` math
+    /// after `.max(0.0)` clamp + non-tumor zero. Locks the lift so a
+    /// future refactor of either side can't diverge silently.
+    #[test]
+    fn radial_depth_2d_matches_sim_tme_compute_depth_map_formula() {
+        let g = TumorGrid::generate(40, 40, 20.0, 42);
+        let center_r = g.rows as f64 / 2.0;
+        let center_c = g.cols as f64 / 2.0;
+        let tumor_radius = (g.rows.min(g.cols) as f64) * TUMOR_RADIUS_FRACTION;
+        for r in 0..g.rows {
+            for c in 0..g.cols {
+                let dr = r as f64 - center_r;
+                let dc = c as f64 - center_c;
+                let dist = (dr * dr + dc * dc).sqrt();
+                let expected = (tumor_radius - dist) * g.cell_size_um;
+                assert_eq!(g.radial_depth_um(r, c), expected);
             }
         }
     }
