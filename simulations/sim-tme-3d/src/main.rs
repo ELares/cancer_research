@@ -5,8 +5,8 @@
 //! - 3D energy physics (#186) via `physics::local_ros_multiplier_3d`
 //! - 3D radial O₂ gradient (#187) via `oxygen::radial_o2_field`
 //! - 3D radial pH gradient (#190) via `ph::radial_ph_field` + helpers
-//! - 3D CAF-shielded boundary detection (#189) via `stromal::stromal_adjacency_mask`
-//! - 3D spatial DAMP diffusion + activation (#188) via `immune_3d::*`
+//! - 3D CAF-shielded boundary detection (#189) via `stromal::stromal_adjacency_mask_3d`
+//! - 3D spatial DAMP diffusion + activation (#188) via `immune_spatial::*`
 //!
 //! Produces a per-condition matrix of kill rates that the Python
 //! comparison script (`scripts/generate_3d_comparison_table.py`) pairs
@@ -41,8 +41,8 @@
 //!
 //! Sim-tme's 2D `damp_diffusion_fraction = 0.08` is **unsafe in 3D**
 //! (0.08 × 26 = 2.08 > 1, would mass-destroy). We use 0.025 (matches
-//! 2D's per-step total diffusion of ~64% — see `immune_3d` rustdoc).
-//! `immune_3d::diffuse_damp_3d_step` enforces the stability invariant
+//! 2D's per-step total diffusion of ~64% — see `immune_spatial` rustdoc).
+//! `immune_spatial::diffuse_damp_3d_step` enforces the stability invariant
 //! with `assert!` (release-mode panic).
 
 use std::fs;
@@ -51,7 +51,7 @@ use std::path::Path;
 use ferroptosis_core::biochem::{sim_cell_step, CellState};
 use ferroptosis_core::cell::Treatment;
 use ferroptosis_core::grid::{TumorGrid3D, TUMOR_RADIUS_FRACTION};
-use ferroptosis_core::immune_3d::{
+use ferroptosis_core::immune_spatial::{
     dc_activation, diffuse_damp_3d_step, immune_kill_probability, DAMP_KILL_THRESHOLD,
 };
 use ferroptosis_core::oxygen::radial_o2_field;
@@ -60,7 +60,7 @@ use ferroptosis_core::params::{
 };
 use ferroptosis_core::ph::{ion_trap_factor_from_ph, iron_multiplier_from_ph, radial_ph_field};
 use ferroptosis_core::physics::local_ros_multiplier_3d;
-use ferroptosis_core::stromal::stromal_adjacency_mask;
+use ferroptosis_core::stromal::stromal_adjacency_mask_3d;
 use rand::distributions::Distribution;
 use rand::prelude::*;
 use rand::rngs::StdRng;
@@ -140,7 +140,7 @@ struct ConditionResult {
     total_damp: f64,
     #[serde(skip_serializing_if = "Option::is_none")]
     stromal_mode: Option<String>,
-    /// Kill rate among cells flagged by `stromal_adjacency_mask` (boundary
+    /// Kill rate among cells flagged by `stromal_adjacency_mask_3d` (boundary
     /// cells with ≥1 stromal Moore-26 neighbor). **Always populated** —
     /// the binary computes the mask regardless of `stromal_on` toggle so
     /// Q3 in the comparison script can pair stromal-on adjacent rates
@@ -160,8 +160,16 @@ struct ConditionResult {
     ph_lambda_um: Option<f64>,
 }
 
+/// Schema version for `summary.json`. Bump when the output shape
+/// changes; `scripts/generate_3d_comparison_table.py` cross-checks
+/// this against `sim-tme/tme_summary.json`'s `schema_version` to catch
+/// schema drift across the two binaries (#224 item 2).
+const TME_3D_SCHEMA_VERSION: u32 = 1;
+
 #[derive(Clone, Debug, Serialize)]
 struct SimulationSummary {
+    /// Bumped when the shape of this JSON changes. Currently `1`.
+    schema_version: u32,
     grid_dim: usize,
     cell_size_um: f64,
     tumor_radius_um: f64,
@@ -339,7 +347,7 @@ fn run_one_condition_with_config(condition: &Condition, run_cfg: RunConfig) -> C
     // script's Q3 pair stromal-on adjacent rates against the matching
     // no-stromal baseline adjacent rates — measuring CAF shielding at the
     // boundary directly, not as a diluted whole-tumor delta.
-    let adjacency_mask = stromal_adjacency_mask(&grid);
+    let adjacency_mask = stromal_adjacency_mask_3d(&grid);
 
     // Apply CAF GSH/MUFA boosts only when stromal_on is true.
     let stromal_cfg = if condition.stromal_on {
@@ -838,7 +846,7 @@ fn main() {
         O2_LAMBDAS
     );
     eprintln!(
-        "DAMP diffusion fraction: {} (3D-safe; 2D's 0.08 would trigger immune_3d stability assert!)",
+        "DAMP diffusion fraction: {} (3D-safe; 2D's 0.08 would trigger immune_spatial stability assert!)",
         DAMP_DIFFUSION_FRACTION_3D
     );
     eprintln!();
@@ -878,6 +886,7 @@ fn main() {
         .collect();
 
     let summary = SimulationSummary {
+        schema_version: TME_3D_SCHEMA_VERSION,
         grid_dim: GRID_DIM,
         cell_size_um: CELL_SIZE_UM,
         tumor_radius_um,
@@ -1110,7 +1119,7 @@ mod tests {
     }
 
     /// **Reviewer-flagged invariant**: the library functions
-    /// `radial_o2_field`, `radial_ph_field`, and `stromal_adjacency_mask`
+    /// `radial_o2_field`, `radial_ph_field`, and `stromal_adjacency_mask_3d`
     /// all return `Vec<T>` of length `grid.cells.len()`, and this binary
     /// indexes those vecs by `grid.flat_index(r, c, l)`. The implicit
     /// contract is that the library iterates in the SAME row-major order
@@ -1138,10 +1147,10 @@ mod tests {
 
         let o2 = radial_o2_field(&grid, 100.0);
         let ph = radial_ph_field(&grid, 7.4, 6.5, 120.0);
-        let mask = stromal_adjacency_mask(&grid);
+        let mask = stromal_adjacency_mask_3d(&grid);
         assert_eq!(o2.len(), n, "radial_o2_field length contract");
         assert_eq!(ph.len(), n, "radial_ph_field length contract");
-        assert_eq!(mask.len(), n, "stromal_adjacency_mask length contract");
+        assert_eq!(mask.len(), n, "stromal_adjacency_mask_3d length contract");
 
         // Index the same cells via the binary's `flat_index` access path:
         let center_idx = grid.flat_index(10, 10, 10);

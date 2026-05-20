@@ -1,18 +1,29 @@
-//! 3D spatial immune coupling: DAMP diffusion + activation primitives.
+//! Spatial immune coupling: DAMP diffusion + activation primitives.
 //!
 //! Ferroptotic cell death releases damage-associated molecular patterns
 //! (DAMPs) — calreticulin, HMGB1, ATP — that diffuse through the
 //! extracellular space, activate nearby dendritic cells via TLR/RAGE
 //! signaling, and prime T-cell-mediated tumor killing. This module
-//! provides the 3D-spatial primitives that downstream consumers
-//! (#195 sim-tme-3d) compose into a full immune-step orchestrator.
+//! holds the spatial primitives that consumers (#195 sim-tme-3d, plus
+//! sim-tme via the dim-agnostic helpers) compose into a full
+//! immune-step orchestrator.
+//!
+//! **Module naming (renamed from `immune_3d` in #224).** The 3D-specific
+//! grid helpers ([`diffuse_damp_3d_step`]) live here, but so do the
+//! dimensionality-agnostic scalar helpers ([`dc_activation`],
+//! [`immune_kill_probability`]) and the cross-dimension
+//! [`DAMP_KILL_THRESHOLD`] constant — both 2D (sim-tme) and 3D
+//! (sim-tme-3d) consume the same scalars. Calling the module
+//! `immune_spatial` honestly covers both: the 3D-shaped grid helpers
+//! keep their `_3d` suffix on the function name, the scalar helpers
+//! work in either geometry.
 //!
 //! **Scope vs the existing [`crate::immune`] module.** That module is the
 //! *dimensionless* single-event ICD cascade (one death → one DAMP burst →
 //! one DC activation → one T-cell kill). This module is the *spatial*
-//! complement: how DAMPs diffuse across a 3D spheroid grid and how local
+//! complement: how DAMPs diffuse across a spheroid grid and how local
 //! DAMP concentration drives per-cell kill probability. The two compose;
-//! `immune` answers "what does one death contribute?" and `immune_3d`
+//! `immune` answers "what does one death contribute?" and `immune_spatial`
 //! answers "where does it spread and who does it affect?"
 //!
 //! **The 104:1 question (issue #188).** Sim-tme's 2D model finds SDT
@@ -56,7 +67,7 @@
 //!
 //! ```
 //! use ferroptosis_core::grid::TumorGrid3D;
-//! use ferroptosis_core::immune_3d::{diffuse_damp_3d_step, dc_activation, immune_kill_probability};
+//! use ferroptosis_core::immune_spatial::{diffuse_damp_3d_step, dc_activation, immune_kill_probability};
 //!
 //! let g = TumorGrid3D::generate(10, 10, 10, 20.0, 42);
 //! let n = g.cells.len();
@@ -90,13 +101,9 @@ use crate::grid::TumorGrid3D;
 /// floor against numerical noise in the diffused DAMP field.
 ///
 /// Used by both sim-tme (2D) and sim-tme-3d (3D) so the kill-eligibility
-/// floor stays consistent across dimensionality. Previously hard-coded
-/// `0.01` in sim-tme:735 and as a binary-local const in sim-tme-3d.
-///
-/// TODO(#224): this const is dimensionality-agnostic but lives in the
-/// `immune_3d` module because that's where it was introduced. Move to a
-/// shared `immune_common` (or rename `immune_3d` to `immune_spatial`)
-/// once the broader naming cleanup happens.
+/// floor stays consistent across dimensionality. The module name
+/// `immune_spatial` covers both geometries — see [`immune_kill_probability`]
+/// for the matching dimensionality-agnostic helper.
 pub const DAMP_KILL_THRESHOLD: f64 = 0.01;
 
 /// Maximum Moore-neighbor count in 3D (3×3×3 cube − self).
@@ -253,10 +260,10 @@ pub fn dc_activation(local_damp: f64, kd: f64) -> f64 {
 ///
 /// `probability = (activation × kill_rate × (1 − effective_brake)).min(0.99)`
 ///
-/// TODO(#224): dimensionality-agnostic (takes scalars, no grid), now
-/// imported by sim-tme (2D) as well as sim-tme-3d. Module name `immune_3d`
-/// is misleading; relocate alongside `DAMP_KILL_THRESHOLD` per the
-/// follow-up issue.
+/// Dimensionality-agnostic (pure scalar — no grid). Called by both
+/// sim-tme (2D) and sim-tme-3d (3D); lives in `immune_spatial` because
+/// that module owns the shared spatial-immune primitives across both
+/// geometries.
 ///
 /// The `.min(0.99)` cap matches sim-tme: even at full activation with no
 /// PD-1 brake, kills are never guaranteed (preserves stochasticity over

@@ -475,17 +475,11 @@ mod tests {
         let shell_depth_um = 100.0;
         let hypoxic_threshold_um = 3.0 * shell_depth_um;
 
-        // 2D: 40×40 grid. Replicate sim-tme's depth-from-edge math inline
-        // (no library function to import — sim-tme keeps it binary-local).
-        //
-        // **Source of truth — keep in sync with `sim-tme/src/main.rs:836`
-        // (`zone_kill_rates`).** If that function changes thresholds or
-        // tumor-radius factor, this test silently goes stale. There is no
-        // automated guard. Touch both, or move the 2D math into the
-        // library, before changing either side.
+        // 2D: 40×40 grid. Uses the lifted `TumorGrid::radial_depth_um`
+        // (#224 item 1a) — same depth-from-edge math sim-tme's
+        // `compute_depth_map` calls, sharing `TUMOR_RADIUS_FRACTION`,
+        // so this test can't drift from the binary.
         let g2 = TumorGrid::generate(40, 40, cell_size_um, 42);
-        let (center_r2, center_c2) = (g2.rows as f64 / 2.0, g2.cols as f64 / 2.0);
-        let tumor_radius_2 = (g2.rows.min(g2.cols) as f64) * 0.45;
         let (mut norm_2, mut hyp_2, mut total_2) = (0usize, 0usize, 0usize);
         for r in 0..g2.rows {
             for c in 0..g2.cols {
@@ -493,8 +487,7 @@ mod tests {
                 if !gc.is_tumor {
                     continue;
                 }
-                let dist = ((r as f64 - center_r2).powi(2) + (c as f64 - center_c2).powi(2)).sqrt();
-                let depth_um = (tumor_radius_2 - dist).max(0.0) * cell_size_um;
+                let depth_um = g2.radial_depth_um(r, c).max(0.0);
                 total_2 += 1;
                 if depth_um < shell_depth_um {
                     norm_2 += 1;

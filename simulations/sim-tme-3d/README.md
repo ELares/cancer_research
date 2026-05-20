@@ -9,8 +9,8 @@ Runs a matrix of 24 conditions on a 60³ spheroid (~82.5k tumor cells, ~540 µm 
 - **3D energy physics** (#186) via `physics::local_ros_multiplier_3d`
 - **3D radial O₂ gradient** (#187) via `oxygen::radial_o2_field`
 - **3D radial pH gradient** (#190) via `ph::radial_ph_field` + `iron_multiplier_from_ph` + `ion_trap_factor_from_ph`
-- **3D CAF-shielded boundary detection** (#189) via `stromal::stromal_adjacency_mask`
-- **3D spatial DAMP diffusion + activation** (#188) via `immune_3d::diffuse_damp_3d_step` + `dc_activation` + `immune_kill_probability`
+- **3D CAF-shielded boundary detection** (#189) via `stromal::stromal_adjacency_mask_3d`
+- **3D spatial DAMP diffusion + activation** (#188) via `immune_spatial::diffuse_damp_3d_step` + `dc_activation` + `immune_kill_probability`
 
 Emits a JSON summary that the Python comparison script pairs with `sim-tme`'s existing 2D output to answer the four manuscript-keystone questions from issue #195.
 
@@ -32,7 +32,7 @@ The 3D hypoxic-zone threshold is `3λ`. At λ=150 µm, the threshold is 450 µm 
 
 ## Why `damp_diffusion_fraction = 0.025` (NOT sim-tme's 0.08)
 
-Sim-tme's 2D default `0.08` is **unsafe in 3D**: with up to 26 Moore neighbors, `0.08 × 26 = 2.08 > 1` would mass-destroy the DAMP field. The library function `immune_3d::diffuse_damp_3d_step` enforces the stability invariant with `assert!` — release-mode panic if violated. We use `0.025` (matches 2D's per-step total diffusion of ~64%).
+Sim-tme's 2D default `0.08` is **unsafe in 3D**: with up to 26 Moore neighbors, `0.08 × 26 = 2.08 > 1` would mass-destroy the DAMP field. The library function `immune_spatial::diffuse_damp_3d_step` enforces the stability invariant with `assert!` — release-mode panic if violated. We use `0.025` (matches 2D's per-step total diffusion of ~64%).
 
 ## Usage
 
@@ -70,7 +70,22 @@ Total: 24 conditions. Smaller than sim-tme's ~45 (no anti-PD-1, no O₂ cycling 
 
 `output/tme-3d/summary.json` — per-condition kill rates + metadata.
 
-Schema mirrors `sim-tme`'s `tme_summary.json` (with a `conditions: [...]` wrapper instead of a bare array) so the comparison script can read both.
+Schema mirrors `sim-tme`'s `tme_summary.json` (both wrapped in an envelope object since #224) so the comparison script can read both.
+
+### Schema versioning
+
+Both `output/tme/tme_summary.json` (sim-tme) and `output/tme-3d/summary.json` (this binary) emit a `schema_version: u32` field at the top level. **The current schema version is `1`.**
+
+```json
+{
+  "schema_version": 1,
+  "grid_dim": 60,
+  ...
+  "conditions": [ /* ConditionResult[] */ ]
+}
+```
+
+**Bump the version when the shape changes.** Adding optional fields under `conditions[]` is non-breaking and does not require a bump. Renaming or removing top-level keys, changing a field's semantics, or reshaping `conditions[]` does require a bump in both binaries together. The Python comparison script (`scripts/generate_3d_comparison_table.py`) asserts both files have the **same** `schema_version` equal to its `EXPECTED_SCHEMA_VERSION` constant — schema drift between the two binaries fails loudly there instead of silently producing `None`-filled rows.
 
 ## Tests
 
@@ -83,7 +98,7 @@ Three smoke tests:
 2. `single_condition_runs_end_to_end` — full orchestration on baseline Control
 3. `same_seed_same_output` — determinism
 
-The library primitives (`physics`, `oxygen`, `ph`, `stromal`, `immune_3d`) are exhaustively tested in `ferroptosis-core`'s 160+ unit tests. This binary tests orchestration, not the math.
+The library primitives (`physics`, `oxygen`, `ph`, `stromal`, `immune_spatial`) are exhaustively tested in `ferroptosis-core`'s 160+ unit tests. This binary tests orchestration, not the math.
 
 ## Manuscript-keystone questions (issue #195)
 

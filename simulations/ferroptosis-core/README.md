@@ -36,9 +36,9 @@ Run the included example: `cargo run -p ferroptosis-core --example basic_usage`
 | `grid` | 2D `TumorGrid` (8-Moore, circular) and 3D `TumorGrid3D` (26-Moore, spherical) with heterogeneous architecture, neighbor iteration, iron diffusion. `TumorGrid3D::radial_depth_um` provides per-cell signed depth from the spheroid surface for energy physics (#185, #186). 3D analytics (radial-depth curves, volumetric heatmaps) and the consuming binary land with #194. |
 | `oxygen` | 3D radial O₂ gradients for spheroid tumors: `radial_o2_field` (per-cell `exp(-d/λ)` factor) and `radial_o2_zone_kill_rates` (normoxic / transition / hypoxic zone census). First-order Krogh approximation; pure functions for composable cycling (#187). |
 | `ph` | 3D radial pH gradient for spheroid tumors: `radial_ph_field` (per-cell `pH(d) = ph_edge - delta·(1 - exp(-d/λ))`) plus pure-scalar helpers `iron_multiplier_from_ph` (ferritin destabilization) and `ion_trap_factor_from_ph` (linearized Henderson-Hasselbalch, weak-base drug bioavailability). Same form as sim-tme's 2D pH; pure functions for #195 sim-tme-3d (#190). |
-| `stromal` | 3D CAF-shielded boundary detection for spheroid tumors: `stromal_adjacency_mask` (Vec<bool> flagging tumor cells with any stromal 26-Moore neighbor) and `stromal_adjacent_kill_rate` (dead-rate among masked cells). 3D analog of sim-tme's 2D 8-Moore detection; surface-to-volume scaling means 3D shielding affects ~1.5× more cells than 2D at matched R (#189). |
+| `stromal` | CAF-shielded boundary detection: `stromal_adjacency_mask_3d` / `stromal_adjacent_kill_rate_3d` (`TumorGrid3D`, 26-Moore neighbors) and `stromal_adjacency_mask_2d` / `stromal_adjacent_kill_rate_2d` (`TumorGrid`, 8-Moore). Surface-to-volume scaling means 3D shielding affects ~1.5× more cells than 2D at matched R (#189, lifted from sim-tme's binary-local 2D copy in #224). |
 | `immune` | ICD/DAMP immune cascade (dimensionless, single-event): ferroptotic death quality drives dendritic cell activation and T cell priming |
-| `immune_3d` | 3D spatial immune coupling: `diffuse_damp_3d_step` (26-Moore DAMP diffusion + exponential clearance, scratch-buffer API) plus pure-scalar helpers `dc_activation` (Michaelis-Menten) and `immune_kill_probability` (with sim-tme's 0.99 cap). **Stability requirement**: `diffusion_fraction × 26 < 1` (use ≤ 0.038; sim-tme's 2D default 0.08 is UNSAFE — `assert!`-enforced). Composes with `immune` for downstream sim-tme-3d (#195). (#188) |
+| `immune_spatial` | 3D spatial immune coupling: `diffuse_damp_3d_step` (26-Moore DAMP diffusion + exponential clearance, scratch-buffer API) plus pure-scalar helpers `dc_activation` (Michaelis-Menten) and `immune_kill_probability` (with sim-tme's 0.99 cap). **Stability requirement**: `diffusion_fraction × 26 < 1` (use ≤ 0.038; sim-tme's 2D default 0.08 is UNSAFE — `assert!`-enforced). Composes with `immune` for downstream sim-tme-3d (#195). (#188) |
 | `io` | JSON and CSV output helpers |
 | `drug_transport` | Krogh cylinder drug penetration model |
 | `tumor_pk` | Two-compartment vascular/interstitial pharmacokinetics |
@@ -89,7 +89,7 @@ but the dispatcher math does not.
 
 **3D spatial immune coupling (#188):**
 ```rust
-use ferroptosis_core::immune_3d::{diffuse_damp_3d_step, dc_activation, immune_kill_probability};
+use ferroptosis_core::immune_spatial::{diffuse_damp_3d_step, dc_activation, immune_kill_probability};
 
 let g = TumorGrid3D::generate(40, 40, 40, 20.0, 42);
 let n = g.cells.len();
@@ -108,12 +108,13 @@ let kill_prob = immune_kill_probability(activation, 0.02, 0.21);
 
 **3D spheroid stromal shielding (#189):**
 ```rust
-use ferroptosis_core::stromal::{stromal_adjacency_mask, stromal_adjacent_kill_rate};
+use ferroptosis_core::stromal::{stromal_adjacency_mask_3d, stromal_adjacent_kill_rate_3d};
 
 let g = TumorGrid3D::generate(40, 40, 40, 20.0, 42);
-let mask = stromal_adjacency_mask(&g);   // Vec<bool>, true = boundary tumor cell
-let rate = stromal_adjacent_kill_rate(&g, &mask);  // kill rate in shielded shell
+let mask = stromal_adjacency_mask_3d(&g);   // Vec<bool>, true = boundary tumor cell
+let rate = stromal_adjacent_kill_rate_3d(&g, &mask);  // kill rate in shielded shell
 ```
+The 2D analog (`stromal_adjacency_mask_2d` / `stromal_adjacent_kill_rate_2d`, used by sim-tme) lives in the same module.
 3D analog of sim-tme's 2D 8-Moore boundary detection, using 26-Moore
 neighbors. The shielded shell is one cell deep; consumers apply CAF
 GSH/MUFA boosts to flagged cells (mutation stays consumer-side per the

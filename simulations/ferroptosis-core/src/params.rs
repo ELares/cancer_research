@@ -252,7 +252,7 @@ impl Default for ImmuneParams {
 /// 2D uses 0.08 (8-Moore neighbors via `TumorGrid::neighbors`, stability
 /// bound `< 1 / 8 = 0.125`); 3D uses 0.025 (26-Moore neighbors, stability
 /// bound `< 1 / 26 ≈ 0.0385` enforced by `assert!` in
-/// `immune_3d::diffuse_damp_3d_step`). Use [`for_2d()`] or [`for_3d()`]
+/// `immune_spatial::diffuse_damp_3d_step`). Use [`for_2d()`] or [`for_3d()`]
 /// to pick the right default.
 ///
 /// **No `Default` impl on purpose**: callers MUST pick a geometry. Using
@@ -300,7 +300,7 @@ impl SpatialImmuneConfig {
     }
 
     /// 3D default (sim-tme-3d): `damp_diffusion_fraction = 0.025` for
-    /// 26-Moore (matches `immune_3d::diffuse_damp_3d_step`'s
+    /// 26-Moore (matches `immune_spatial::diffuse_damp_3d_step`'s
     /// `assert!(0.025 * 26.0 < 1.0)` stability invariant).
     pub fn for_3d() -> Self {
         SpatialImmuneConfig {
@@ -453,7 +453,7 @@ mod tests {
         assert_eq!(c.immune_kill_rate, 0.02);
         assert_eq!(c.pd1_brake, 0.7);
         assert_eq!(c.anti_pd1_efficacy, 0.0);
-        // Stability invariant matched by immune_3d::diffuse_damp_3d_step's
+        // Stability invariant matched by immune_spatial::diffuse_damp_3d_step's
         // `assert!`. If this ever fails, that diffusion step panics in
         // release mode — the test exists to catch the drift first.
         assert!(c.damp_diffusion_fraction * 26.0 < 1.0);

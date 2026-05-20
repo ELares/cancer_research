@@ -74,8 +74,15 @@ def _condition(
 
 @pytest.fixture
 def summary_dict():
-    """A summary.json-shaped dict with rows for all three Q1/Q2/Q3 metrics."""
+    """A summary.json-shaped dict with rows for all three Q1/Q2/Q3 metrics.
+
+    Includes `schema_version: 1` to match the envelope sim-tme-3d emits
+    since #224 item 2. The extractor doesn't read this field today, but
+    keeping the fixture faithful to the on-disk shape catches schema
+    drift if a future change starts asserting on it.
+    """
     return {
+        "schema_version": 1,
         "conditions": [
             # Row 0: RSL3, λ=120, immune_off — for rsl3_o2_collapse_ratio
             _condition(

@@ -9,7 +9,7 @@ validation** sits.
 
 | Layer | State |
 |-------|-------|
-| Library primitives (oxygen, ph, stromal, immune_3d, physics::*_3d) | Tested — 160 unit tests in ferroptosis-core |
+| Library primitives (oxygen, ph, stromal, immune_spatial, physics::*_3d) | Tested — 160 unit tests in ferroptosis-core |
 | Binary integration (sim-tme-3d) | Tested — 8 binary tests + 24 conditions × deterministic seeds |
 | Library↔binary contract | Tested — `library_field_order_matches_flat_index` invariant |
 | Self-consistency (regression-guards) | **This PR** — 3 targets in `targets.yaml` |

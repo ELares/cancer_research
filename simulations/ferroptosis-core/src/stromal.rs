@@ -44,16 +44,16 @@
 //!
 //! ```
 //! use ferroptosis_core::grid::TumorGrid3D;
-//! use ferroptosis_core::stromal::{stromal_adjacency_mask, stromal_adjacent_kill_rate};
+//! use ferroptosis_core::stromal::{stromal_adjacency_mask_3d, stromal_adjacent_kill_rate_3d};
 //!
 //! // 10³ grid is enough to demonstrate the API — 1k cells exercises
 //! // the same code paths as larger sims at 1/64th the doctest cost.
 //! let g = TumorGrid3D::generate(10, 10, 10, 20.0, 42);
-//! let mask = stromal_adjacency_mask(&g);
+//! let mask = stromal_adjacency_mask_3d(&g);
 //! assert_eq!(mask.len(), g.cells.len());
 //!
 //! // Fresh grid → no dead cells → kill rate is 0.0 even on shielded cells.
-//! let rate = stromal_adjacent_kill_rate(&g, &mask);
+//! let rate = stromal_adjacent_kill_rate_3d(&g, &mask);
 //! assert_eq!(rate, 0.0);
 //! ```
 
@@ -95,7 +95,7 @@ use crate::grid::TumorGrid3D;
 /// wasted ops. `#[must_use]` enforces the return-value-is-meaningful
 /// contract.
 #[must_use = "the boundary mask must be observed; calling for side-effects suggests a logic bug — compute once after `generate` and cache for the simulation"]
-pub fn stromal_adjacency_mask(grid: &TumorGrid3D) -> Vec<bool> {
+pub fn stromal_adjacency_mask_3d(grid: &TumorGrid3D) -> Vec<bool> {
     let n = grid.cells.len();
     let mut mask = vec![false; n];
     for r in 0..grid.rows {
@@ -122,6 +122,35 @@ pub fn stromal_adjacency_mask(grid: &TumorGrid3D) -> Vec<bool> {
     mask
 }
 
+/// 2D analog of [`stromal_adjacency_mask_3d`]: boolean mask flagging
+/// tumor cells with at least one stromal (non-tumor) 8-Moore neighbor.
+///
+/// Lifted from sim-tme's binary-local `stromal_adjacency_mask` (#224
+/// item 1c). Same semantics as the 3D version, just over
+/// [`crate::grid::TumorGrid`] with [`TumorGrid::neighbors`]'s
+/// 8-neighbor Moore neighborhood.
+#[must_use = "the boundary mask must be observed; calling for side-effects suggests a logic bug — compute once after `generate` and cache for the simulation"]
+pub fn stromal_adjacency_mask_2d(grid: &crate::grid::TumorGrid) -> Vec<bool> {
+    let n = grid.cells.len();
+    let mut mask = vec![false; n];
+    for r in 0..grid.rows {
+        for c in 0..grid.cols {
+            let idx = r * grid.cols + c;
+            if !grid.cells[idx].is_tumor {
+                continue;
+            }
+            let (neighbors, count) = grid.neighbors(r, c);
+            for &(nr, nc) in &neighbors[..count] {
+                if !grid.cells[nr * grid.cols + nc].is_tumor {
+                    mask[idx] = true;
+                    break;
+                }
+            }
+        }
+    }
+    mask
+}
+
 /// Dead-cell rate among CAF-shielded boundary tumor cells.
 ///
 /// Returns `dead_in_mask / total_in_mask`, or `0.0` if the mask flags no
@@ -132,23 +161,47 @@ pub fn stromal_adjacency_mask(grid: &TumorGrid3D) -> Vec<bool> {
 ///
 /// **Mask contract.** Must be in the same flat-index order as
 /// `grid.cells`, with `mask.len() == grid.cells.len()`. Typically
-/// produced by [`stromal_adjacency_mask`]. A length mismatch is a
+/// produced by [`stromal_adjacency_mask_3d`]. A length mismatch is a
 /// programming error and panics in **both debug and release** via
 /// `assert!` (one usize comparison per call — negligible perf cost,
 /// clearer error message than the out-of-bounds index panic that would
 /// otherwise occur on the first iteration).
 #[must_use = "the kill rate is the function's only output; ignoring it suggests a logic bug"]
-pub fn stromal_adjacent_kill_rate(grid: &TumorGrid3D, mask: &[bool]) -> f64 {
+pub fn stromal_adjacent_kill_rate_3d(grid: &TumorGrid3D, mask: &[bool]) -> f64 {
     assert!(
         mask.len() == grid.cells.len(),
-        "stromal_adjacent_kill_rate: mask length {} must equal grid.cells.len() {}",
+        "stromal_adjacent_kill_rate_3d: mask length {} must equal grid.cells.len() {}",
         mask.len(),
         grid.cells.len()
     );
+    kill_rate_over_mask(&grid.cells, mask)
+}
 
+/// 2D analog of [`stromal_adjacent_kill_rate_3d`].
+///
+/// Lifted from sim-tme's binary-local `stromal_adjacent_kill_rate`
+/// (#224 item 1c). The body is dim-agnostic — it just walks
+/// `grid.cells` — but the two grid types ([`TumorGrid`] and
+/// [`TumorGrid3D`]) don't share a trait yet, so the kill-rate
+/// computation is factored into a shared private helper.
+#[must_use = "the kill rate is the function's only output; ignoring it suggests a logic bug"]
+pub fn stromal_adjacent_kill_rate_2d(grid: &crate::grid::TumorGrid, mask: &[bool]) -> f64 {
+    assert!(
+        mask.len() == grid.cells.len(),
+        "stromal_adjacent_kill_rate_2d: mask length {} must equal grid.cells.len() {}",
+        mask.len(),
+        grid.cells.len()
+    );
+    kill_rate_over_mask(&grid.cells, mask)
+}
+
+/// Shared implementation: count `dead / total` over tumor cells flagged
+/// by `mask`. Both 2D and 3D kill-rate functions call this. Stays
+/// private — callers should use the typed wrappers.
+fn kill_rate_over_mask(cells: &[crate::grid::GridCell], mask: &[bool]) -> f64 {
     let mut total = 0usize;
     let mut dead = 0usize;
-    for (idx, gc) in grid.cells.iter().enumerate() {
+    for (idx, gc) in cells.iter().enumerate() {
         if gc.is_tumor && mask[idx] {
             total += 1;
             if gc.state.dead {
@@ -173,7 +226,7 @@ mod tests {
     #[test]
     fn mask_length_matches_grid() {
         let g = TumorGrid3D::generate(7, 5, 11, 20.0, 42);
-        let mask = stromal_adjacency_mask(&g);
+        let mask = stromal_adjacency_mask_3d(&g);
         assert_eq!(mask.len(), g.cells.len());
         assert_eq!(mask.len(), 7 * 5 * 11);
     }
@@ -183,7 +236,7 @@ mod tests {
     #[test]
     fn stromal_cells_never_in_mask() {
         let g = TumorGrid3D::generate(10, 10, 10, 20.0, 42);
-        let mask = stromal_adjacency_mask(&g);
+        let mask = stromal_adjacency_mask_3d(&g);
 
         let mut stromal_count = 0usize;
         for (i, gc) in g.cells.iter().enumerate() {
@@ -212,7 +265,7 @@ mod tests {
     #[test]
     fn deep_interior_tumor_cell_not_in_mask() {
         let g = TumorGrid3D::generate(20, 20, 20, 20.0, 42);
-        let mask = stromal_adjacency_mask(&g);
+        let mask = stromal_adjacency_mask_3d(&g);
         let flat_center = 10 * g.cols * g.layers + 10 * g.layers + 10;
         assert!(
             g.get(10, 10, 10).is_tumor,
@@ -234,7 +287,7 @@ mod tests {
     #[test]
     fn surface_tumor_cell_in_mask() {
         let g = TumorGrid3D::generate(20, 20, 20, 20.0, 42);
-        let mask = stromal_adjacency_mask(&g);
+        let mask = stromal_adjacency_mask_3d(&g);
         let flat_surface = 10 * g.cols * g.layers + 10 * g.layers + 19;
         assert!(
             g.get(10, 10, 19).is_tumor,
@@ -252,8 +305,8 @@ mod tests {
     fn mask_is_deterministic() {
         let g1 = TumorGrid3D::generate(15, 15, 15, 20.0, 42);
         let g2 = TumorGrid3D::generate(15, 15, 15, 20.0, 42);
-        let mask1 = stromal_adjacency_mask(&g1);
-        let mask2 = stromal_adjacency_mask(&g2);
+        let mask1 = stromal_adjacency_mask_3d(&g1);
+        let mask2 = stromal_adjacency_mask_3d(&g2);
         assert_eq!(mask1, mask2);
     }
 
@@ -262,13 +315,13 @@ mod tests {
     #[test]
     fn kill_rate_all_dead_returns_one() {
         let mut g = TumorGrid3D::generate(20, 20, 20, 20.0, 42);
-        let mask = stromal_adjacency_mask(&g);
+        let mask = stromal_adjacency_mask_3d(&g);
         for (i, gc) in g.cells.iter_mut().enumerate() {
             if gc.is_tumor && mask[i] {
                 gc.state.dead = true;
             }
         }
-        let rate = stromal_adjacent_kill_rate(&g, &mask);
+        let rate = stromal_adjacent_kill_rate_3d(&g, &mask);
         assert_eq!(rate, 1.0);
     }
 
@@ -276,8 +329,8 @@ mod tests {
     #[test]
     fn kill_rate_no_dead_returns_zero() {
         let g = TumorGrid3D::generate(20, 20, 20, 20.0, 42);
-        let mask = stromal_adjacency_mask(&g);
-        let rate = stromal_adjacent_kill_rate(&g, &mask);
+        let mask = stromal_adjacency_mask_3d(&g);
+        let rate = stromal_adjacent_kill_rate_3d(&g, &mask);
         assert_eq!(rate, 0.0);
     }
 
@@ -286,7 +339,7 @@ mod tests {
     fn kill_rate_empty_mask_returns_zero() {
         let g = TumorGrid3D::generate(20, 20, 20, 20.0, 42);
         let mask = vec![false; g.cells.len()];
-        let rate = stromal_adjacent_kill_rate(&g, &mask);
+        let rate = stromal_adjacent_kill_rate_3d(&g, &mask);
         assert_eq!(rate, 0.0);
     }
 
@@ -301,7 +354,7 @@ mod tests {
         let g = TumorGrid3D::generate(10, 10, 10, 20.0, 42);
         // Wrong length: half the expected size.
         let bad_mask = vec![false; g.cells.len() / 2];
-        let _ = stromal_adjacent_kill_rate(&g, &bad_mask);
+        let _ = stromal_adjacent_kill_rate_3d(&g, &bad_mask);
     }
 
     /// **v2 addition**: the `mask[i] && is_tumor` double-gate ensures
@@ -321,7 +374,7 @@ mod tests {
 
         // Hand-build a mask that flags ALL cells including the stromal one.
         let bad_mask = vec![true; g.cells.len()];
-        let rate = stromal_adjacent_kill_rate(&g, &bad_mask);
+        let rate = stromal_adjacent_kill_rate_3d(&g, &bad_mask);
 
         // The stromal cell's death must NOT contribute. The rate is
         // (tumor dead) / (tumor count) — both zero on a fresh grid.
@@ -345,40 +398,24 @@ mod tests {
     /// closer to 1.5×, not 2.7×. So we assert only the directional
     /// invariant: 3D fraction > 2D fraction.
     ///
-    /// **Source of truth — keep in sync with `sim-tme/src/main.rs:433`
-    /// (`stromal_adjacency_mask`).** This test inlines the 2D mask
-    /// construction; same DRY caveat as the O₂/pH cross-geometry tests.
-    /// No automated guard against drift.
+    /// Drift-proof: both arms now call library helpers
+    /// ([`stromal_adjacency_mask_2d`] and [`stromal_adjacency_mask_3d`],
+    /// #224 item 1c). sim-tme's binary also calls
+    /// `stromal_adjacency_mask_2d`, so the test can't go stale.
     #[test]
     fn matched_dims_3d_boundary_fraction_exceeds_2d() {
         let cell_size_um = 20.0;
 
-        // 2D: 40×40 grid → R = 18 lattice units. Replicate sim-tme's
-        // 8-Moore boundary detection inline.
+        // 2D: 40×40 grid → R = 18 lattice units via the lifted 2D mask.
         let g2 = TumorGrid::generate(40, 40, cell_size_um, 42);
-        let mut mask_2d = vec![false; g2.rows * g2.cols];
-        for r in 0..g2.rows {
-            for c in 0..g2.cols {
-                let idx = r * g2.cols + c;
-                if !g2.cells[idx].is_tumor {
-                    continue;
-                }
-                let (neighbors, count) = g2.neighbors(r, c);
-                for &(nr, nc) in &neighbors[..count] {
-                    if !g2.cells[nr * g2.cols + nc].is_tumor {
-                        mask_2d[idx] = true;
-                        break;
-                    }
-                }
-            }
-        }
+        let mask_2d = stromal_adjacency_mask_2d(&g2);
         let total_tumor_2d = g2.cells.iter().filter(|gc| gc.is_tumor).count();
         let boundary_2d = mask_2d.iter().filter(|&&b| b).count();
         let frac_2d = boundary_2d as f64 / total_tumor_2d as f64;
 
         // 3D: 40³ grid → R = 18 lattice units (matched).
         let g3 = TumorGrid3D::generate(40, 40, 40, cell_size_um, 42);
-        let mask_3d = stromal_adjacency_mask(&g3);
+        let mask_3d = stromal_adjacency_mask_3d(&g3);
         let total_tumor_3d = g3.cells.iter().filter(|gc| gc.is_tumor).count();
         let boundary_3d = mask_3d.iter().filter(|&&b| b).count();
         let frac_3d = boundary_3d as f64 / total_tumor_3d as f64;
@@ -407,5 +444,82 @@ mod tests {
              sweep is mis-coverage (under: < 1.3; over: > 1.8). \
              2D frac={frac_2d:.4}, 3D frac={frac_3d:.4}"
         );
+    }
+
+    // ============================================================
+    // 2D stromal_adjacency_mask_2d + stromal_adjacent_kill_rate_2d.
+    // Mirrors the 3D coverage above so a future refactor that diverges
+    // the two paths is caught here (#224 item 1c lift).
+    // ============================================================
+
+    /// 2D mask length equals total cell count, parallel to the 3D
+    /// `mask_length_matches_grid` test.
+    #[test]
+    fn mask_2d_length_matches_grid() {
+        let g = TumorGrid::generate(40, 40, 20.0, 42);
+        let mask = stromal_adjacency_mask_2d(&g);
+        assert_eq!(mask.len(), g.cells.len());
+    }
+
+    /// Stromal (non-tumor) cells are never flagged by the 2D mask —
+    /// the function early-continues on `!is_tumor`, same convention
+    /// as the 3D version.
+    #[test]
+    fn mask_2d_stromal_cells_never_in_mask() {
+        let g = TumorGrid::generate(40, 40, 20.0, 42);
+        let mask = stromal_adjacency_mask_2d(&g);
+        for (idx, gc) in g.cells.iter().enumerate() {
+            if !gc.is_tumor {
+                assert!(!mask[idx], "stromal cell {idx} should not be in mask");
+            }
+        }
+    }
+
+    /// Bit-identical to sim-tme's binary-local `stromal_adjacency_mask`
+    /// formula. Walks every cell asserting the lifted version matches
+    /// the inline reference. Locks the lift; future drift on either side
+    /// trips this test.
+    #[test]
+    fn mask_2d_matches_sim_tme_stromal_adjacency_mask_formula() {
+        let g = TumorGrid::generate(40, 40, 20.0, 42);
+        let mut expected = vec![false; g.cells.len()];
+        for r in 0..g.rows {
+            for c in 0..g.cols {
+                let idx = r * g.cols + c;
+                if !g.cells[idx].is_tumor {
+                    continue;
+                }
+                let (neighbors, count) = g.neighbors(r, c);
+                for &(nr, nc) in &neighbors[..count] {
+                    if !g.cells[nr * g.cols + nc].is_tumor {
+                        expected[idx] = true;
+                        break;
+                    }
+                }
+            }
+        }
+        let actual = stromal_adjacency_mask_2d(&g);
+        assert_eq!(actual, expected);
+    }
+
+    /// 2D kill rate over a fresh (no-death) grid is 0.0 — same
+    /// no-deaths sanity check as `kill_rate_no_dead_returns_zero`
+    /// for the 3D version.
+    #[test]
+    fn kill_rate_2d_no_dead_returns_zero() {
+        let g = TumorGrid::generate(40, 40, 20.0, 42);
+        let mask = stromal_adjacency_mask_2d(&g);
+        let rate = stromal_adjacent_kill_rate_2d(&g, &mask);
+        assert_eq!(rate, 0.0);
+    }
+
+    /// 2D kill rate panics on length mismatch (release-mode `assert!`).
+    /// Mirrors `kill_rate_validates_mask_length` for the 3D path.
+    #[test]
+    #[should_panic(expected = "mask length")]
+    fn kill_rate_2d_validates_mask_length() {
+        let g = TumorGrid::generate(20, 20, 20.0, 42);
+        let bad_mask = vec![false; 99];
+        let _ = stromal_adjacent_kill_rate_2d(&g, &bad_mask);
     }
 }
