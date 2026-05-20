@@ -83,6 +83,22 @@
 
 use crate::grid::TumorGrid3D;
 
+/// Minimum local-DAMP concentration above which a cell is eligible for
+/// immune-mediated kill. Cells with `local_damp < DAMP_KILL_THRESHOLD`
+/// are skipped — both as a performance optimization (don't roll RNG
+/// when activation × kill_rate would round to ~0 anyway) and as a
+/// floor against numerical noise in the diffused DAMP field.
+///
+/// Used by both sim-tme (2D) and sim-tme-3d (3D) so the kill-eligibility
+/// floor stays consistent across dimensionality. Previously hard-coded
+/// `0.01` in sim-tme:735 and as a binary-local const in sim-tme-3d.
+///
+/// TODO(#224): this const is dimensionality-agnostic but lives in the
+/// `immune_3d` module because that's where it was introduced. Move to a
+/// shared `immune_common` (or rename `immune_3d` to `immune_spatial`)
+/// once the broader naming cleanup happens.
+pub const DAMP_KILL_THRESHOLD: f64 = 0.01;
+
 /// Maximum Moore-neighbor count in 3D (3×3×3 cube − self).
 ///
 /// **Coupled to [`TumorGrid3D::neighbors`]**: if a future refactor of
@@ -236,6 +252,11 @@ pub fn dc_activation(local_damp: f64, kd: f64) -> f64 {
 /// Per-cell immune kill probability per step.
 ///
 /// `probability = (activation × kill_rate × (1 − effective_brake)).min(0.99)`
+///
+/// TODO(#224): dimensionality-agnostic (takes scalars, no grid), now
+/// imported by sim-tme (2D) as well as sim-tme-3d. Module name `immune_3d`
+/// is misleading; relocate alongside `DAMP_KILL_THRESHOLD` per the
+/// follow-up issue.
 ///
 /// The `.min(0.99)` cap matches sim-tme: even at full activation with no
 /// PD-1 brake, kills are never guaranteed (preserves stochasticity over

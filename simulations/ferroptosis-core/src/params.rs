@@ -198,7 +198,16 @@ impl Default for SpatialParams {
     }
 }
 
-/// Immune cascade parameters for ICD modeling.
+/// Immune cascade parameters for ICD modeling. Used by sim-icd + sim-combo.
+///
+/// Models the full DC→T-cell cascade with separate `dc_maturation_rate`,
+/// `tcell_priming_rate`, `tcell_kill_rate` steps.
+///
+/// **See also [`SpatialImmuneConfig`]** for the spatial-DAMP-field variant
+/// used by sim-tme + sim-tme-3d (single absorbed `immune_kill_rate`
+/// plus `damp_diffusion_fraction` / `damp_clearance_rate`). Same biology,
+/// different math; both valid. If you add a field here, check whether
+/// the spatial variant needs the same change.
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct ImmuneParams {
     /// DAMP release proportional to LP at death.
@@ -231,6 +240,156 @@ impl Default for ImmuneParams {
     }
 }
 
+/// Spatial immune-coupling params used by sim-tme (2D) and sim-tme-3d (3D).
+///
+/// Distinct from [`ImmuneParams`] — that struct models the full DC→T-cell
+/// cascade with separate maturation/priming/kill rates. This struct uses
+/// a single absorbed `immune_kill_rate` plus spatial fields
+/// (`damp_diffusion_fraction`, `damp_clearance_rate`) for the spatial
+/// DAMP-field model. Same biology, different math; both are valid.
+///
+/// **2D vs 3D split**: `damp_diffusion_fraction` differs by geometry.
+/// 2D uses 0.08 (8-Moore neighbors via `TumorGrid::neighbors`, stability
+/// bound `< 1 / 8 = 0.125`); 3D uses 0.025 (26-Moore neighbors, stability
+/// bound `< 1 / 26 ≈ 0.0385` enforced by `assert!` in
+/// `immune_3d::diffuse_damp_3d_step`). Use [`for_2d()`] or [`for_3d()`]
+/// to pick the right default.
+///
+/// **No `Default` impl on purpose**: callers MUST pick a geometry. Using
+/// the wrong default in 3D would panic at runtime via the diffuse-step
+/// stability `assert!`; making that a compile error via explicit
+/// constructors is preferable. Compare with [`StromalConfig`] /
+/// [`PhConfig`], which do impl `Default` because they're
+/// geometry-independent.
+#[derive(Clone, Copy, Debug)]
+pub struct SpatialImmuneConfig {
+    /// DAMP released per unit LP at death.
+    pub damp_per_lp: f64,
+    /// Fraction of DAMP shared with each Moore neighbor per step. The
+    /// total redistributed mass per source cell is `fraction * neighbor_count`
+    /// and must stay below 1 to keep the diffusion update mass-conserving.
+    /// 2D: 0.08 (×8 Moore = up to 0.64 redistributed; bound `< 1/8`).
+    /// 3D: 0.025 (×26 Moore = up to 0.65 redistributed; bound `< 1/26`).
+    pub damp_diffusion_fraction: f64,
+    /// Exponential decay per step (models immune clearance of DAMPs).
+    pub damp_clearance_rate: f64,
+    /// Michaelis-Menten Kd for DC activation by DAMP concentration.
+    pub dc_activation_kd: f64,
+    /// Per-step immune kill rate (absorbs DC maturation + T cell priming + kill).
+    pub immune_kill_rate: f64,
+    /// PD-1 brake: fraction of T-cell kill suppressed.
+    pub pd1_brake: f64,
+    /// Anti-PD-1 efficacy: fraction of PD-1 brake removed.
+    pub anti_pd1_efficacy: f64,
+}
+
+impl SpatialImmuneConfig {
+    /// 2D default (sim-tme): `damp_diffusion_fraction = 0.08`, safely
+    /// below the `1/8` stability bound for the 8-Moore neighborhood used
+    /// by `TumorGrid::neighbors`.
+    pub fn for_2d() -> Self {
+        SpatialImmuneConfig {
+            damp_per_lp: 1.0,
+            damp_diffusion_fraction: 0.08,
+            damp_clearance_rate: 0.03,
+            dc_activation_kd: 50.0,
+            immune_kill_rate: 0.02,
+            pd1_brake: 0.7,
+            anti_pd1_efficacy: 0.0,
+        }
+    }
+
+    /// 3D default (sim-tme-3d): `damp_diffusion_fraction = 0.025` for
+    /// 26-Moore (matches `immune_3d::diffuse_damp_3d_step`'s
+    /// `assert!(0.025 * 26.0 < 1.0)` stability invariant).
+    pub fn for_3d() -> Self {
+        SpatialImmuneConfig {
+            damp_per_lp: 1.0,
+            damp_diffusion_fraction: 0.025,
+            damp_clearance_rate: 0.03,
+            dc_activation_kd: 50.0,
+            immune_kill_rate: 0.02,
+            pd1_brake: 0.7,
+            anti_pd1_efficacy: 0.0,
+        }
+    }
+
+    /// Return a copy with anti-PD-1 blockade applied (efficacy 0.8).
+    pub fn with_anti_pd1(&self) -> Self {
+        SpatialImmuneConfig {
+            anti_pd1_efficacy: 0.8,
+            ..*self
+        }
+    }
+
+    /// Net PD-1 brake after anti-PD-1 modulation: `pd1_brake * (1 - anti_pd1_efficacy)`.
+    pub fn effective_brake(&self) -> f64 {
+        self.pd1_brake * (1.0 - self.anti_pd1_efficacy)
+    }
+}
+
+/// CAF-mediated stromal protection params used by sim-tme + sim-tme-3d.
+///
+/// All ESTIMATED. Refs: PMID 34373744 (CAF metabolic reprogramming),
+/// PMID 31813804 (ACSL3-mediated oleic acid), PMID 30842648 (MUFA
+/// ferroptosis). Geometry-independent — no 2D/3D split (per-cell
+/// shielding measured equal at 50.0% (2D) and 51.5% (3D) in the
+/// PR #221 validation report).
+#[derive(Clone, Copy, Debug)]
+pub struct StromalConfig {
+    /// Per-step GSH boost for stromal-adjacent tumor cells.
+    pub gsh_boost_per_step: f64,
+    /// Maximum GSH from CAF supply (1.5× normal gsh_max of 12.0).
+    pub gsh_boost_cap: f64,
+    /// Per-step MUFA boost from ACSL3-mediated oleic acid uptake.
+    pub mufa_boost_per_step: f64,
+    /// Maximum MUFA from CAF supply.
+    pub mufa_boost_cap: f64,
+}
+
+impl Default for StromalConfig {
+    fn default() -> Self {
+        StromalConfig {
+            gsh_boost_per_step: 0.06,
+            gsh_boost_cap: 18.0,
+            mufa_boost_per_step: 0.003,
+            mufa_boost_cap: 0.25,
+        }
+    }
+}
+
+/// Tumor acidic pH gradient params (Warburg effect lactic acid + ion-trapping).
+///
+/// Used by sim-tme + sim-tme-3d. Linearized Henderson-Hasselbalch over
+/// pH 6.5-7.4; valid only in that narrow window. Refs: Stubbs 2000,
+/// Gatenby & Gillies 2004 (tumor pH); Harrison & Arosio 1996 (ferritin
+/// iron release). Geometry-independent (same chemistry in 2D and 3D).
+#[derive(Clone, Copy, Debug)]
+pub struct PhConfig {
+    /// pH at tumor edge (well-perfused).
+    pub ph_edge: f64,
+    /// pH at deep tumor core (Warburg lactic acid).
+    pub ph_core: f64,
+    /// pH penetration length (μm); matches O2 reference λ.
+    pub lambda_ph_um: f64,
+    /// Iron-pH sensitivity: ferritin releases Fe²⁺ at low pH.
+    pub iron_ph_sensitivity: f64,
+    /// Ion trapping sensitivity for weak-base drugs (RSL3).
+    pub ion_trap_sensitivity: f64,
+}
+
+impl Default for PhConfig {
+    fn default() -> Self {
+        PhConfig {
+            ph_edge: 7.4,
+            ph_core: 6.5,
+            lambda_ph_um: 120.0,
+            iron_ph_sensitivity: 1.5,
+            ion_trap_sensitivity: 0.4,
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -255,5 +414,94 @@ mod tests {
         assert_eq!(p.photosensitizer, Photosensitizer::Uniform(1.0));
         assert_eq!(p.t_drug_light_interval_h, 0.0);
         assert_eq!(p.photosensitizer.concentration_at(p.t_drug_light_interval_h), 1.0);
+    }
+
+    /// `SpatialImmuneConfig::for_2d()` must reproduce the literal values
+    /// sim-tme used before the lift (#220). Regression-guards a silent
+    /// drift if anyone edits the constructor.
+    #[test]
+    fn spatial_immune_for_2d_matches_sim_tme_legacy_defaults() {
+        let c = SpatialImmuneConfig::for_2d();
+        assert_eq!(c.damp_per_lp, 1.0);
+        assert_eq!(c.damp_diffusion_fraction, 0.08);
+        assert_eq!(c.damp_clearance_rate, 0.03);
+        assert_eq!(c.dc_activation_kd, 50.0);
+        assert_eq!(c.immune_kill_rate, 0.02);
+        assert_eq!(c.pd1_brake, 0.7);
+        assert_eq!(c.anti_pd1_efficacy, 0.0);
+        // 2D stability invariant: sim-tme's DAMP diffusion calls
+        // `TumorGrid::neighbors` which returns up to 8 Moore neighbors.
+        // Each step subtracts `fraction * count` from the source cell, so
+        // `fraction * 8 < 1` is required to keep the update mass-conserving.
+        assert!(c.damp_diffusion_fraction * 8.0 < 1.0);
+    }
+
+    /// `SpatialImmuneConfig::for_3d()` must reproduce the literal values
+    /// sim-tme-3d used before the lift, in particular the 3D-safe
+    /// `damp_diffusion_fraction = 0.025` (×26 Moore < 1 stability bound).
+    #[test]
+    fn spatial_immune_for_3d_matches_sim_tme_3d_legacy_defaults() {
+        let c = SpatialImmuneConfig::for_3d();
+        assert_eq!(c.damp_per_lp, 1.0);
+        assert_eq!(c.damp_diffusion_fraction, 0.025);
+        assert_eq!(c.damp_clearance_rate, 0.03);
+        assert_eq!(c.dc_activation_kd, 50.0);
+        assert_eq!(c.immune_kill_rate, 0.02);
+        assert_eq!(c.pd1_brake, 0.7);
+        assert_eq!(c.anti_pd1_efficacy, 0.0);
+        // Stability invariant matched by immune_3d::diffuse_damp_3d_step's
+        // `assert!`. If this ever fails, that diffusion step panics in
+        // release mode — the test exists to catch the drift first.
+        assert!(c.damp_diffusion_fraction * 26.0 < 1.0);
+    }
+
+    /// `with_anti_pd1()` sets `anti_pd1_efficacy = 0.8` and leaves the
+    /// rest unchanged. Matches sim-tme's `ImmuneConfig::with_anti_pd1`.
+    #[test]
+    fn spatial_immune_with_anti_pd1_changes_only_efficacy() {
+        let base = SpatialImmuneConfig::for_2d();
+        let blocked = base.with_anti_pd1();
+        assert_eq!(blocked.anti_pd1_efficacy, 0.8);
+        // Everything else must match.
+        assert_eq!(blocked.damp_per_lp, base.damp_per_lp);
+        assert_eq!(blocked.damp_diffusion_fraction, base.damp_diffusion_fraction);
+        assert_eq!(blocked.damp_clearance_rate, base.damp_clearance_rate);
+        assert_eq!(blocked.dc_activation_kd, base.dc_activation_kd);
+        assert_eq!(blocked.immune_kill_rate, base.immune_kill_rate);
+        assert_eq!(blocked.pd1_brake, base.pd1_brake);
+    }
+
+    /// `effective_brake` = `pd1_brake * (1 - anti_pd1_efficacy)`. With
+    /// no anti-PD-1: full 0.7 brake. With anti-PD-1 (0.8 efficacy):
+    /// 0.7 × 0.2 = 0.14.
+    #[test]
+    fn spatial_immune_effective_brake_math() {
+        let base = SpatialImmuneConfig::for_2d();
+        assert!((base.effective_brake() - 0.7).abs() < 1e-12);
+        let blocked = base.with_anti_pd1();
+        assert!((blocked.effective_brake() - 0.14).abs() < 1e-12);
+    }
+
+    /// `StromalConfig::default()` reproduces the literal values that
+    /// sim-tme + sim-tme-3d used before the lift.
+    #[test]
+    fn stromal_default_matches_legacy() {
+        let c = StromalConfig::default();
+        assert_eq!(c.gsh_boost_per_step, 0.06);
+        assert_eq!(c.gsh_boost_cap, 18.0);
+        assert_eq!(c.mufa_boost_per_step, 0.003);
+        assert_eq!(c.mufa_boost_cap, 0.25);
+    }
+
+    /// `PhConfig::default()` reproduces the literal values that
+    /// sim-tme + sim-tme-3d used before the lift.
+    #[test]
+    fn ph_default_matches_legacy() {
+        let c = PhConfig::default();
+        assert_eq!(c.ph_edge, 7.4);
+        assert_eq!(c.ph_core, 6.5);
+        assert_eq!(c.lambda_ph_um, 120.0);
+        assert_eq!(c.iron_ph_sensitivity, 1.5);
+        assert_eq!(c.ion_trap_sensitivity, 0.4);
     }
 }

@@ -39,8 +39,9 @@ use serde::Serialize;
 use ferroptosis_core::biochem::{sim_cell_step, CellState};
 use ferroptosis_core::cell::{norm, Treatment};
 use ferroptosis_core::grid::{depth_kill_curve, death_heatmap, TumorGrid};
+use ferroptosis_core::immune_3d::{immune_kill_probability, DAMP_KILL_THRESHOLD};
 use ferroptosis_core::io::{write_depth_curves_csv, write_heatmap_csv, write_json};
-use ferroptosis_core::params::{Params, SpatialParams};
+use ferroptosis_core::params::{Params, PhConfig, SpatialImmuneConfig, SpatialParams, StromalConfig};
 use ferroptosis_core::physics::local_ros_multiplier;
 
 const GRID_SIZE: usize = 500;
@@ -174,7 +175,11 @@ fn run_spatial(
             gc.state = CellState::from_cell_with_ros(&gc.cell, tx, params, exo_ros_peak);
             gc.extra_iron = 0.0;
             gc.newly_dead = false;
-            gc.lp_at_death = 0.0;
+            // Init to NaN so any code path that reads `lp_at_death` before
+            // writing it (the grace-end write or the end-of-sim catch-all)
+            // produces NaN downstream — calibration will trip instead of
+            // silently using a stale value (#225 review).
+            gc.lp_at_death = f64::NAN;
         }
     }
 
@@ -279,7 +284,11 @@ fn run_spatial_cycling(
             gc.state = CellState::from_cell_with_ros(&gc.cell, tx, params, exo_ros_peak);
             gc.extra_iron = 0.0;
             gc.newly_dead = false;
-            gc.lp_at_death = 0.0;
+            // Init to NaN so any code path that reads `lp_at_death` before
+            // writing it (the grace-end write or the end-of-sim catch-all)
+            // produces NaN downstream — calibration will trip instead of
+            // silently using a stale value (#225 review).
+            gc.lp_at_death = f64::NAN;
         }
     }
 
@@ -347,86 +356,19 @@ fn run_spatial_cycling(
 // ============================================================
 // Spatial immune coupling (Feature B)
 // ============================================================
-
-/// Parameters for the spatial immune model.
-struct ImmuneConfig {
-    /// DAMP release per unit LP at death (from ImmuneParams default).
-    damp_per_lp: f64,
-    /// Fraction of DAMP shared with each Moore neighbor per step.
-    damp_diffusion_fraction: f64,
-    /// Exponential decay rate per step (models immune clearance of DAMPs).
-    damp_clearance_rate: f64,
-    /// Michaelis-Menten Kd for DC activation by DAMP concentration.
-    dc_activation_kd: f64,
-    /// Per-step immune kill rate (absorbs DC maturation + T cell priming + kill).
-    immune_kill_rate: f64,
-    /// PD-1 suppression fraction (0.0 = no brake, 1.0 = full suppression).
-    pd1_brake: f64,
-    /// Anti-PD-1 efficacy (fraction of brake removed).
-    anti_pd1_efficacy: f64,
-    // LP overshoot is now emergent from ferroptosis-core post-death dynamics
-    // (post_death_steps in Params). Option C multiplier removed (issue #85).
-}
-
-impl ImmuneConfig {
-    fn default_no_pd1() -> Self {
-        ImmuneConfig {
-            damp_per_lp: 1.0,
-            damp_diffusion_fraction: 0.08,
-            damp_clearance_rate: 0.03,
-            dc_activation_kd: 50.0,
-            immune_kill_rate: 0.02,
-            pd1_brake: 0.7,
-            anti_pd1_efficacy: 0.0,
-        }
-    }
-
-    fn with_anti_pd1(&self) -> Self {
-        ImmuneConfig {
-            anti_pd1_efficacy: 0.8,
-            ..*self
-        }
-    }
-
-    fn effective_brake(&self) -> f64 {
-        self.pd1_brake * (1.0 - self.anti_pd1_efficacy)
-    }
-}
+//
+// `SpatialImmuneConfig` lifted to `ferroptosis-core::params` (#220).
+// Use `SpatialImmuneConfig::for_2d()` for 2D defaults
+// (damp_diffusion_fraction = 0.08, < 1/8 stability bound for the
+// 8-Moore neighborhood returned by `TumorGrid::neighbors`).
 
 // ============================================================
 // Stromal protection (Feature C)
 // ============================================================
-
-/// Parameters for CAF-mediated protection of stromal-adjacent tumor cells.
-/// Biology: cancer-associated fibroblasts (CAFs) supply cysteine and oleic
-/// acid to adjacent tumor cells, boosting GSH antioxidant capacity and MUFA
-/// membrane protection. All parameters are ESTIMATED — no textbook coverage
-/// exists for CAF biology. Refs: PMID 34373744 (CAF metabolic reprogramming),
-/// PMID 31813804 (ACSL3-mediated oleic acid), PMID 30842648 (MUFA ferroptosis).
-struct StromalConfig {
-    /// Per-step GSH boost for stromal-adjacent tumor cells.
-    /// GGT1-mediated cysteine supply: CAFs cleave extracellular GSH, tumor
-    /// cells reimport cysteine via SLC7A11. ~2.5× endogenous NRF2 rate (0.025).
-    gsh_boost_per_step: f64,
-    /// Maximum GSH from CAF supply (1.5× normal gsh_max of 12.0).
-    gsh_boost_cap: f64,
-    /// Per-step MUFA boost from ACSL3-mediated oleic acid uptake.
-    /// ~30% of in-vivo SCD1 rate; CAF supply is supplementary.
-    mufa_boost_per_step: f64,
-    /// Maximum MUFA from CAF supply (50% of in-vivo SCD1 max).
-    mufa_boost_cap: f64,
-}
-
-impl StromalConfig {
-    fn default() -> Self {
-        StromalConfig {
-            gsh_boost_per_step: 0.06,
-            gsh_boost_cap: 18.0,
-            mufa_boost_per_step: 0.003,
-            mufa_boost_cap: 0.25,
-        }
-    }
-}
+//
+// `StromalConfig` lifted to `ferroptosis-core::params` (#220).
+// Geometry-independent (per-cell shielding is 50.0% in 2D, 51.5% in 3D
+// per PR #221's Q3 finding).
 
 /// Compute a boolean mask: true for tumor cells with at least one stromal
 /// (is_tumor=false) Moore neighbor. These cells receive CAF-mediated protection.
@@ -469,49 +411,9 @@ fn stromal_adjacent_kill_rate(grid: &TumorGrid, mask: &[bool]) -> f64 {
 // ============================================================
 // pH gradient and ion trapping (Feature D)
 // ============================================================
-
-/// Parameters for tumor acidic pH gradient.
-/// Biology: glycolytic tumors produce lactic acid (Warburg effect), lowering
-/// extracellular pH to 6.5-6.8 in the core. Two competing effects on ferroptosis:
-/// 1. Iron release: low pH destabilizes ferritin → more Fenton ROS (pro-ferroptosis)
-/// 2. Drug ion trapping: weak-base drugs protonated at low pH → less intracellular
-///    drug (anti-ferroptosis). Governed by Henderson-Hasselbalch (Chemistry2e Sec.14.2).
-///
-/// All parameters ESTIMATED. Tumor pH ranges from primary literature (Stubbs 2000,
-/// Gatenby & Gillies 2004). Ferritin iron release from Harrison & Arosio 1996.
-/// Warburg effect not covered in any reference textbook (Biology2e describes lactic
-/// acid fermentation only in anaerobic contexts). RSL3 pKa is not well-characterized
-/// (chloroacetamide, not a classic weak base) — ion_trap_sensitivity is the most
-/// uncertain parameter in this model.
-struct PhConfig {
-    /// pH at tumor edge (well-perfused, normal arterial blood).
-    ph_edge: f64,
-    /// pH at deep tumor core (Warburg effect lactic acid accumulation).
-    ph_core: f64,
-    /// pH penetration length (μm). Matches O2 reference λ; both are perfusion-limited.
-    lambda_ph_um: f64,
-    /// Iron-pH sensitivity: ferritin releases stored Fe²⁺ at low pH.
-    /// iron_multiplier = 1.0 + sensitivity * (ph_edge - local_ph).
-    /// At pH 6.5: 1.0 + 1.5 * 0.9 = 2.35× iron.
-    iron_ph_sensitivity: f64,
-    /// Ion trapping sensitivity for weak-base drugs (RSL3 only).
-    /// drug_factor = 1.0 - sensitivity * (ph_edge - local_ph), clamped [0.3, 1.0].
-    /// At pH 6.5: 1.0 - 0.4 * 0.9 = 0.64 (36% drug lost).
-    /// Linearized Henderson-Hasselbalch; valid over narrow pH 6.5-7.4 range.
-    ion_trap_sensitivity: f64,
-}
-
-impl PhConfig {
-    fn default() -> Self {
-        PhConfig {
-            ph_edge: 7.4,
-            ph_core: 6.5,
-            lambda_ph_um: 120.0,
-            iron_ph_sensitivity: 1.5,
-            ion_trap_sensitivity: 0.4,
-        }
-    }
-}
+//
+// `PhConfig` lifted to `ferroptosis-core::params` (#220).
+// Geometry-independent (same chemistry in 2D and 3D, see PR #221 Q4).
 
 /// Compute steady-state pH field and apply iron modulation.
 /// pH decreases inward: pH(d) = ph_edge - delta * (1 - exp(-d/λ)).
@@ -564,7 +466,7 @@ fn run_spatial_with_immune(
     tx: Treatment,
     params: &Params,
     spatial_params: &SpatialParams,
-    immune: &ImmuneConfig,
+    immune: &SpatialImmuneConfig,
     stromal: Option<(&[bool], &StromalConfig)>,
     ph: Option<(&[(usize, usize, f64)], &PhConfig)>,
     seed: u64,
@@ -595,7 +497,11 @@ fn run_spatial_with_immune(
             gc.state = CellState::from_cell_with_ros(&gc.cell, tx, params, exo_ros_peak);
             gc.extra_iron = 0.0;
             gc.newly_dead = false;
-            gc.lp_at_death = 0.0;
+            // Init to NaN so any code path that reads `lp_at_death` before
+            // writing it (the grace-end write or the end-of-sim catch-all)
+            // produces NaN downstream — calibration will trip instead of
+            // silently using a stale value (#225 review).
+            gc.lp_at_death = f64::NAN;
         }
     }
 
@@ -669,10 +575,14 @@ fn run_spatial_with_immune(
 
                 if died {
                     gc.newly_dead = true;
-                    gc.lp_at_death = gc.state.lp;
                     ferroptosis_kills += 1;
                     // DAMP release is deferred until the post-death grace
-                    // period ends (emergent LP overshoot, issue #85).
+                    // period ends (emergent LP overshoot, issue #85). At
+                    // that point `lp_at_death` is set to the grace-end LP
+                    // value just before being read for DAMP — see the
+                    // grace-end block above. The moment-of-death write
+                    // that used to live here was dead (always overwritten
+                    // before read); removed in #220.
                     // Iron diffusion still happens immediately via newly_dead.
                 }
 
@@ -732,13 +642,20 @@ fn run_spatial_with_immune(
                     }
 
                     let local_damp = damp_field[idx];
-                    if local_damp < 0.01 {
+                    if local_damp < DAMP_KILL_THRESHOLD {
                         continue;
                     }
 
+                    // NaN-preserving cap (lifted via #220). Previously inline as
+                    // `.min(0.99)`, which silently converted NaN inputs to 0.99
+                    // — a near-certain kill probability. `immune_kill_probability`
+                    // uses an explicit `if raw > 0.99` branch that preserves NaN.
                     let activation = local_damp / (local_damp + immune.dc_activation_kd);
-                    let kill_prob = (activation * immune.immune_kill_rate * (1.0 - effective_brake))
-                        .min(0.99);
+                    let kill_prob = immune_kill_probability(
+                        activation,
+                        immune.immune_kill_rate,
+                        effective_brake,
+                    );
 
                     let mut rng = StdRng::seed_from_u64(
                         seed.wrapping_add(900_000_000)
@@ -1104,9 +1021,9 @@ fn main() {
     let stromal_adj_count = stromal_mask.iter().filter(|&&b| b).count();
 
     // --- Immune coupling (Feature B) at λ=120μm ---
-    let immune_modes: Vec<(&str, ImmuneConfig)> = vec![
-        ("immune_on", ImmuneConfig::default_no_pd1()),
-        ("immune_anti_pd1", ImmuneConfig::default_no_pd1().with_anti_pd1()),
+    let immune_modes: Vec<(&str, SpatialImmuneConfig)> = vec![
+        ("immune_on", SpatialImmuneConfig::for_2d()),
+        ("immune_anti_pd1", SpatialImmuneConfig::for_2d().with_anti_pd1()),
     ];
 
     eprintln!("\n=== Spatial Immune Coupling (O2 gradient λ=120μm) ===");
@@ -1200,9 +1117,9 @@ fn main() {
         stromal_cfg.mufa_boost_per_step, stromal_cfg.mufa_boost_cap);
     eprintln!("All parameters ESTIMATED (no textbook coverage). Refs: PMID 34373744, 31813804.\n");
 
-    let stromal_immune_modes: Vec<(&str, ImmuneConfig)> = vec![
-        ("immune_on", ImmuneConfig::default_no_pd1()),
-        ("immune_anti_pd1", ImmuneConfig::default_no_pd1().with_anti_pd1()),
+    let stromal_immune_modes: Vec<(&str, SpatialImmuneConfig)> = vec![
+        ("immune_on", SpatialImmuneConfig::for_2d()),
+        ("immune_anti_pd1", SpatialImmuneConfig::for_2d().with_anti_pd1()),
     ];
 
     for (immune_label, immune_cfg) in &stromal_immune_modes {
@@ -1287,7 +1204,7 @@ fn main() {
 
     // --- pH gradient (Feature D) at λ=120μm with immune_on ---
     let ph_cfg = PhConfig::default();
-    let immune_for_ph = ImmuneConfig::default_no_pd1();
+    let immune_for_ph = SpatialImmuneConfig::for_2d();
 
     eprintln!("\n=== pH Gradient / Ion Trapping (O2 gradient λ=120μm, immune_on) ===");
     eprintln!("pH range: {:.1} (edge) → {:.1} (core), λ_pH={:.0}μm",

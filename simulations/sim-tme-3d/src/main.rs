@@ -52,10 +52,12 @@ use ferroptosis_core::biochem::{sim_cell_step, CellState};
 use ferroptosis_core::cell::Treatment;
 use ferroptosis_core::grid::{TumorGrid3D, TUMOR_RADIUS_FRACTION};
 use ferroptosis_core::immune_3d::{
-    dc_activation, diffuse_damp_3d_step, immune_kill_probability,
+    dc_activation, diffuse_damp_3d_step, immune_kill_probability, DAMP_KILL_THRESHOLD,
 };
 use ferroptosis_core::oxygen::radial_o2_field;
-use ferroptosis_core::params::{Params, SpatialParams};
+use ferroptosis_core::params::{
+    Params, PhConfig, SpatialImmuneConfig, SpatialParams, StromalConfig,
+};
 use ferroptosis_core::ph::{ion_trap_factor_from_ph, iron_multiplier_from_ph, radial_ph_field};
 use ferroptosis_core::physics::local_ros_multiplier_3d;
 use ferroptosis_core::stromal::stromal_adjacency_mask;
@@ -83,10 +85,12 @@ const O2_LAMBDAS: &[f64] = &[80.0, 100.0, 120.0];
 /// Zone-analysis reference λ — matches sim-tme.
 const ZONE_REF_LAMBDA: f64 = 120.0;
 
-/// DAMP diffusion fraction. **3D-safe value**: sim-tme's 2D default
-/// (0.08) is unsafe in 3D — `immune_3d::diffuse_damp_3d_step`'s
-/// stability `assert!` would panic. Use 0.025 to match 2D's per-step
-/// total diffusion (~64%).
+/// DAMP diffusion fraction for 3D, retained as a const for legacy code
+/// paths that emit the value into output metadata (see `RunMetadata` /
+/// `summary.json`). Identical to `SpatialImmuneConfig::for_3d()
+/// .damp_diffusion_fraction`. **Not** the source of truth for the
+/// runtime value — that's the library const propagated through
+/// `SpatialImmuneConfig`.
 const DAMP_DIFFUSION_FRACTION_3D: f64 = 0.025;
 
 /// Step at which immune activity begins (matches sim-tme).
@@ -98,97 +102,9 @@ const IMMUNE_START_STEP: u32 = 60;
 /// in 3D (10% × 26 = 260% per source-cell loss, vs 2D's 80%).
 const IRON_DIFFUSE_FRACTION_3D: f64 = 0.1 * 8.0 / 26.0;
 
-/// Minimum local DAMP concentration to consider for immune-kill rolls.
-/// Cells below this short-circuit the activation+kill path (matches
-/// sim-tme/src/main.rs:735's `if local_damp < 0.01 { continue; }`).
-/// Acts as a numerical floor; without it, `dc_activation` for damp ≈ 0
-/// would still produce vanishing-small kill probabilities and waste
-/// per-cell-per-step RNG initialization.
-const DAMP_KILL_THRESHOLD: f64 = 0.01;
-
-// ============================================================
-// Config structs (duplicated from sim-tme for v1 — lift to
-// ferroptosis-core::params is a follow-up cleanup PR per the
-// consolidated checklist on issue #195).
-// ============================================================
-
-/// Parameters for the spatial immune model. Mirror of
-/// `sim-tme::ImmuneConfig` — the duplication is documented technical
-/// debt; see issue #195 follow-up tracking.
-#[derive(Clone, Copy, Debug)]
-struct ImmuneConfig {
-    damp_per_lp: f64,
-    /// 3D-safe diffusion fraction (NOT sim-tme's 2D 0.08 — that
-    /// triggers the immune_3d stability `assert!`).
-    damp_diffusion_fraction: f64,
-    damp_clearance_rate: f64,
-    dc_activation_kd: f64,
-    immune_kill_rate: f64,
-    pd1_brake: f64,
-    anti_pd1_efficacy: f64,
-}
-
-impl ImmuneConfig {
-    fn default_no_pd1() -> Self {
-        ImmuneConfig {
-            damp_per_lp: 1.0,
-            damp_diffusion_fraction: DAMP_DIFFUSION_FRACTION_3D,
-            damp_clearance_rate: 0.03,
-            dc_activation_kd: 50.0,
-            immune_kill_rate: 0.02,
-            pd1_brake: 0.7,
-            anti_pd1_efficacy: 0.0,
-        }
-    }
-
-    fn effective_brake(&self) -> f64 {
-        self.pd1_brake * (1.0 - self.anti_pd1_efficacy)
-    }
-}
-
-/// CAF-mediated stromal protection params. Mirror of
-/// `sim-tme::StromalConfig`.
-#[derive(Clone, Copy, Debug)]
-struct StromalConfig {
-    gsh_boost_per_step: f64,
-    gsh_boost_cap: f64,
-    mufa_boost_per_step: f64,
-    mufa_boost_cap: f64,
-}
-
-impl StromalConfig {
-    fn default() -> Self {
-        StromalConfig {
-            gsh_boost_per_step: 0.06,
-            gsh_boost_cap: 18.0,
-            mufa_boost_per_step: 0.003,
-            mufa_boost_cap: 0.25,
-        }
-    }
-}
-
-/// pH gradient + iron / ion-trap sensitivity params. Mirror of
-/// `sim-tme::PhConfig`.
-#[derive(Clone, Copy, Debug)]
-struct PhConfig {
-    ph_edge: f64,
-    ph_core: f64,
-    lambda_ph_um: f64,
-    iron_ph_sensitivity: f64,
-    ion_trap_sensitivity: f64,
-}
-
-impl PhConfig {
-    fn default() -> Self {
-        PhConfig {
-            ph_edge: 7.4,
-            ph_core: 6.5,
-            lambda_ph_um: 120.0,
-            iron_ph_sensitivity: 1.5,
-            ion_trap_sensitivity: 0.4,
-        }
-    }
-}
+// `DAMP_KILL_THRESHOLD`, `SpatialImmuneConfig`, `StromalConfig`,
+// `PhConfig` are imported from `ferroptosis-core` (#220). Previously
+// these were binary-local copies duplicated with sim-tme.
 
 // ============================================================
 // Output records
@@ -468,7 +384,11 @@ fn run_one_condition_with_config(condition: &Condition, run_cfg: RunConfig) -> C
                     CellState::from_cell_with_ros(&gc.cell, condition.treatment, &params, exo_ros_peak);
                 gc.extra_iron = 0.0;
                 gc.newly_dead = false;
-                gc.lp_at_death = 0.0;
+                // Init to NaN so any code path that reads `lp_at_death`
+                // before writing it (grace-end write or end-of-sim
+                // catch-all) produces NaN downstream — calibration trips
+                // instead of silently using a stale value (#225 review).
+                gc.lp_at_death = f64::NAN;
             }
         }
     }
@@ -489,7 +409,7 @@ fn run_one_condition_with_config(condition: &Condition, run_cfg: RunConfig) -> C
     }
 
     // --- Main 180-step loop ---
-    let immune_cfg = ImmuneConfig::default_no_pd1();
+    let immune_cfg = SpatialImmuneConfig::for_3d();
     let mut damp_field = vec![0.0_f64; n_cells];
     let mut damp_scratch = vec![0.0_f64; n_cells];
     let mut ferroptosis_kills = 0usize;
@@ -554,8 +474,11 @@ fn run_one_condition_with_config(condition: &Condition, run_cfg: RunConfig) -> C
                         // 26-Moore neighbors (grid.rs:586). Not vestigial —
                         // load-bearing for iron-driven Fenton bystander effects.
                         gc.newly_dead = true;
-                        gc.lp_at_death = gc.state.lp;
                         ferroptosis_kills += 1;
+                        // `lp_at_death` is set later, at grace-end, just before
+                        // being read for the DAMP-field write. The moment-of-death
+                        // write that used to live here was dead (always overwritten
+                        // before read); removed in #220.
                     }
 
                     // Stromal CAF protection for alive cells — apply only when
@@ -883,6 +806,19 @@ fn generate_conditions() -> Vec<Condition> {
 // ============================================================
 
 fn main() {
+    // Guard against silent drift between this binary's metadata const and
+    // the library's runtime value: if a future PR tunes
+    // `SpatialImmuneConfig::for_3d().damp_diffusion_fraction` without also
+    // touching `DAMP_DIFFUSION_FRACTION_3D`, `summary.json` would report a
+    // stale value while the simulation actually used the new one. This
+    // debug_assert catches that in tests/dev runs without affecting release
+    // bit-identical output.
+    debug_assert_eq!(
+        DAMP_DIFFUSION_FRACTION_3D,
+        SpatialImmuneConfig::for_3d().damp_diffusion_fraction,
+        "DAMP_DIFFUSION_FRACTION_3D metadata const out of sync with SpatialImmuneConfig::for_3d()",
+    );
+
     // Use the library's TUMOR_RADIUS_FRACTION constant instead of the bare
     // 0.45 literal — keeps `tumor_radius_um` in lockstep with whatever
     // value `TumorGrid3D::generate` actually uses (reviewer-flagged drift
