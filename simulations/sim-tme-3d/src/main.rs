@@ -5,7 +5,7 @@
 //! - 3D energy physics (#186) via `physics::local_ros_multiplier_3d`
 //! - 3D radial O₂ gradient (#187) via `oxygen::radial_o2_field`
 //! - 3D radial pH gradient (#190) via `ph::radial_ph_field` + helpers
-//! - 3D CAF-shielded boundary detection (#189) via `stromal::stromal_adjacency_mask`
+//! - 3D CAF-shielded boundary detection (#189) via `stromal::stromal_adjacency_mask_3d`
 //! - 3D spatial DAMP diffusion + activation (#188) via `immune_spatial::*`
 //!
 //! Produces a per-condition matrix of kill rates that the Python
@@ -60,7 +60,7 @@ use ferroptosis_core::params::{
 };
 use ferroptosis_core::ph::{ion_trap_factor_from_ph, iron_multiplier_from_ph, radial_ph_field};
 use ferroptosis_core::physics::local_ros_multiplier_3d;
-use ferroptosis_core::stromal::stromal_adjacency_mask;
+use ferroptosis_core::stromal::stromal_adjacency_mask_3d;
 use rand::distributions::Distribution;
 use rand::prelude::*;
 use rand::rngs::StdRng;
@@ -140,7 +140,7 @@ struct ConditionResult {
     total_damp: f64,
     #[serde(skip_serializing_if = "Option::is_none")]
     stromal_mode: Option<String>,
-    /// Kill rate among cells flagged by `stromal_adjacency_mask` (boundary
+    /// Kill rate among cells flagged by `stromal_adjacency_mask_3d` (boundary
     /// cells with ≥1 stromal Moore-26 neighbor). **Always populated** —
     /// the binary computes the mask regardless of `stromal_on` toggle so
     /// Q3 in the comparison script can pair stromal-on adjacent rates
@@ -339,7 +339,7 @@ fn run_one_condition_with_config(condition: &Condition, run_cfg: RunConfig) -> C
     // script's Q3 pair stromal-on adjacent rates against the matching
     // no-stromal baseline adjacent rates — measuring CAF shielding at the
     // boundary directly, not as a diluted whole-tumor delta.
-    let adjacency_mask = stromal_adjacency_mask(&grid);
+    let adjacency_mask = stromal_adjacency_mask_3d(&grid);
 
     // Apply CAF GSH/MUFA boosts only when stromal_on is true.
     let stromal_cfg = if condition.stromal_on {
@@ -1110,7 +1110,7 @@ mod tests {
     }
 
     /// **Reviewer-flagged invariant**: the library functions
-    /// `radial_o2_field`, `radial_ph_field`, and `stromal_adjacency_mask`
+    /// `radial_o2_field`, `radial_ph_field`, and `stromal_adjacency_mask_3d`
     /// all return `Vec<T>` of length `grid.cells.len()`, and this binary
     /// indexes those vecs by `grid.flat_index(r, c, l)`. The implicit
     /// contract is that the library iterates in the SAME row-major order
@@ -1138,10 +1138,10 @@ mod tests {
 
         let o2 = radial_o2_field(&grid, 100.0);
         let ph = radial_ph_field(&grid, 7.4, 6.5, 120.0);
-        let mask = stromal_adjacency_mask(&grid);
+        let mask = stromal_adjacency_mask_3d(&grid);
         assert_eq!(o2.len(), n, "radial_o2_field length contract");
         assert_eq!(ph.len(), n, "radial_ph_field length contract");
-        assert_eq!(mask.len(), n, "stromal_adjacency_mask length contract");
+        assert_eq!(mask.len(), n, "stromal_adjacency_mask_3d length contract");
 
         // Index the same cells via the binary's `flat_index` access path:
         let center_idx = grid.flat_index(10, 10, 10);
