@@ -41,6 +41,8 @@ use ferroptosis_core::cell::{norm, Treatment};
 use ferroptosis_core::grid::{death_heatmap, depth_kill_curve, TumorGrid};
 use ferroptosis_core::immune_spatial::{immune_kill_probability, DAMP_KILL_THRESHOLD};
 use ferroptosis_core::io::{write_depth_curves_csv, write_heatmap_csv, write_json};
+use ferroptosis_core::ph::{iron_multiplier_from_ph, radial_ph_field_2d};
+use ferroptosis_core::stromal::{stromal_adjacency_mask_2d, stromal_adjacent_kill_rate_2d};
 use ferroptosis_core::params::{
     Params, PhConfig, SpatialImmuneConfig, SpatialParams, StromalConfig,
 };
@@ -70,33 +72,24 @@ const ZONE_REF_LAMBDA: f64 = 120.0;
 ///
 /// O2(d) = exp(-d / λ) where d = distance from tumor edge in μm.
 ///
-/// Modifies `cell.basal_ros` in place: `basal_ros *= o2_factor`.
+/// Modifies `cell.basal_ros` in place: `basal_ros *= o2_factor`. Depth
+/// math is sourced from [`TumorGrid::radial_depth_um`] (#224 item 1a).
 /// Returns a Vec of (row, col, o2_factor) for heatmap generation.
 fn apply_o2_gradient(grid: &mut TumorGrid, penetration_um: f64) -> Vec<(usize, usize, f64)> {
     let rows = grid.rows;
     let cols = grid.cols;
-    let cell_size = grid.cell_size_um;
-    let center_r = rows as f64 / 2.0;
-    let center_c = cols as f64 / 2.0;
-    let tumor_radius = (rows.min(cols) as f64) * 0.45;
-
     let mut o2_map = Vec::with_capacity(rows * cols);
 
     for r in 0..rows {
         for c in 0..cols {
-            let gc = grid.get_mut(r, c);
-            if !gc.is_tumor {
+            let idx = r * cols + c;
+            if !grid.cells[idx].is_tumor {
                 o2_map.push((r, c, 1.0));
                 continue;
             }
-
-            let dist_from_center =
-                ((r as f64 - center_r).powi(2) + (c as f64 - center_c).powi(2)).sqrt();
-            let depth_from_edge_um = (tumor_radius - dist_from_center).max(0.0) * cell_size;
-
+            let depth_from_edge_um = grid.radial_depth_um(r, c).max(0.0);
             let o2_factor = (-depth_from_edge_um / penetration_um).exp().clamp(0.0, 1.0);
-
-            gc.cell.basal_ros *= o2_factor;
+            grid.cells[idx].cell.basal_ros *= o2_factor;
             o2_map.push((r, c, o2_factor));
         }
     }
@@ -108,24 +101,19 @@ fn apply_o2_gradient(grid: &mut TumorGrid, penetration_um: f64) -> Vec<(usize, u
 // O2 cycling helpers
 // ============================================================
 
-/// Precompute per-cell depth from tumor edge (micrometers).
-/// Reuses the same geometry as `apply_o2_gradient`.
+/// Precompute per-cell depth from tumor edge (micrometers) — non-tumor
+/// cells get 0.0. The depth math is lifted to
+/// [`TumorGrid::radial_depth_um`] (#224 item 1a); this wrapper just
+/// applies sim-tme's `.max(0.0)` + non-tumor-zero convention.
 fn compute_depth_map(grid: &TumorGrid) -> Vec<f64> {
-    let rows = grid.rows;
     let cols = grid.cols;
-    let cell_size = grid.cell_size_um;
-    let center_r = rows as f64 / 2.0;
-    let center_c = cols as f64 / 2.0;
-    let tumor_radius = (rows.min(cols) as f64) * 0.45;
-
-    (0..rows * cols)
+    (0..grid.cells.len())
         .map(|idx| {
-            let (r, c) = (idx / cols, idx % cols);
             if !grid.cells[idx].is_tumor {
                 return 0.0;
             }
-            let dist = ((r as f64 - center_r).powi(2) + (c as f64 - center_c).powi(2)).sqrt();
-            (tumor_radius - dist).max(0.0) * cell_size
+            let (r, c) = (idx / cols, idx % cols);
+            grid.radial_depth_um(r, c).max(0.0)
         })
         .collect()
 }
@@ -361,50 +349,10 @@ fn run_spatial_cycling(
 // ============================================================
 //
 // `StromalConfig` lifted to `ferroptosis-core::params` (#220).
-// Geometry-independent (per-cell shielding is 50.0% in 2D, 51.5% in 3D
-// per PR #221's Q3 finding).
-
-/// Compute a boolean mask: true for tumor cells with at least one stromal
-/// (is_tumor=false) Moore neighbor. These cells receive CAF-mediated protection.
-fn stromal_adjacency_mask(grid: &TumorGrid) -> Vec<bool> {
-    let n = grid.rows * grid.cols;
-    let mut mask = vec![false; n];
-    for r in 0..grid.rows {
-        for c in 0..grid.cols {
-            let idx = r * grid.cols + c;
-            if !grid.cells[idx].is_tumor {
-                continue;
-            }
-            let (neighbors, count) = grid.neighbors(r, c);
-            for &(nr, nc) in &neighbors[..count] {
-                if !grid.cells[nr * grid.cols + nc].is_tumor {
-                    mask[idx] = true;
-                    break;
-                }
-            }
-        }
-    }
-    mask
-}
-
-/// Kill rate among stromal-adjacent tumor cells only.
-fn stromal_adjacent_kill_rate(grid: &TumorGrid, mask: &[bool]) -> f64 {
-    let mut total = 0usize;
-    let mut dead = 0usize;
-    for (idx, gc) in grid.cells.iter().enumerate() {
-        if gc.is_tumor && mask[idx] {
-            total += 1;
-            if gc.state.dead {
-                dead += 1;
-            }
-        }
-    }
-    if total > 0 {
-        dead as f64 / total as f64
-    } else {
-        0.0
-    }
-}
+// `stromal_adjacency_mask` + `stromal_adjacent_kill_rate` lifted to
+// `ferroptosis-core::stromal::{stromal_adjacency_mask_2d,
+// stromal_adjacent_kill_rate_2d}` (#224 item 1c). Call sites use the
+// library names directly.
 
 // ============================================================
 // pH gradient and ion trapping (Feature D)
@@ -413,45 +361,30 @@ fn stromal_adjacent_kill_rate(grid: &TumorGrid, mask: &[bool]) -> f64 {
 // `PhConfig` lifted to `ferroptosis-core::params` (#220).
 // Geometry-independent (same chemistry in 2D and 3D, see PR #221 Q4).
 
-/// Compute steady-state pH field and apply iron modulation.
-/// pH decreases inward: pH(d) = ph_edge - delta * (1 - exp(-d/λ)).
-/// Modifies cell.iron in place (ferritin destabilization at low pH).
-/// Returns Vec of (row, col, local_ph) for RSL3 GPX4 correction and heatmap.
+/// Compute steady-state pH field and apply iron modulation. pH math
+/// is lifted to [`radial_ph_field_2d`] + [`iron_multiplier_from_ph`]
+/// (#224 item 1b); this function is the binary-side orchestrator:
+/// it threads the library output through sim-tme's iron mutation and
+/// returns the (row, col, local_ph) heatmap consumers expect.
 fn apply_ph_gradient(grid: &mut TumorGrid, cfg: &PhConfig) -> Vec<(usize, usize, f64)> {
-    let rows = grid.rows;
     let cols = grid.cols;
-    let cell_size = grid.cell_size_um;
-    let center_r = rows as f64 / 2.0;
-    let center_c = cols as f64 / 2.0;
-    let tumor_radius = (rows.min(cols) as f64) * 0.45;
-    let ph_drop = cfg.ph_edge - cfg.ph_core;
+    let ph_field = radial_ph_field_2d(grid, cfg.ph_edge, cfg.ph_core, cfg.lambda_ph_um);
 
-    let mut ph_map = Vec::with_capacity(rows * cols);
-
-    for r in 0..rows {
-        for c in 0..cols {
-            let gc = grid.get_mut(r, c);
-            if !gc.is_tumor {
-                ph_map.push((r, c, cfg.ph_edge));
-                continue;
-            }
-
-            let dist_from_center =
-                ((r as f64 - center_r).powi(2) + (c as f64 - center_c).powi(2)).sqrt();
-            let depth_from_edge_um = (tumor_radius - dist_from_center).max(0.0) * cell_size;
-
-            let local_ph =
-                cfg.ph_edge - ph_drop * (1.0 - (-depth_from_edge_um / cfg.lambda_ph_um).exp());
-            let local_ph = local_ph.clamp(cfg.ph_core, cfg.ph_edge);
-
-            // Iron modulation: ferritin destabilization at low pH
-            let iron_multiplier = 1.0 + cfg.iron_ph_sensitivity * (cfg.ph_edge - local_ph);
-            gc.cell.iron *= iron_multiplier;
-
-            ph_map.push((r, c, local_ph));
+    let mut ph_map = Vec::with_capacity(grid.cells.len());
+    for (idx, &local_ph) in ph_field.iter().enumerate() {
+        let (r, c) = (idx / cols, idx % cols);
+        ph_map.push((r, c, local_ph));
+        // Iron modulation: ferritin destabilization at low pH. Library
+        // `iron_multiplier_from_ph` is `1.0 + sensitivity * (ph_edge - local_ph)`
+        // — at local_ph = ph_edge (non-tumor cells) it's exactly 1.0, so
+        // the multiply is a no-op there; the explicit is_tumor gate
+        // preserves the previous behavior (skip the write on non-tumor
+        // cells) without changing the numeric result.
+        if grid.cells[idx].is_tumor {
+            let mult = iron_multiplier_from_ph(local_ph, cfg.ph_edge, cfg.iron_ph_sensitivity);
+            grid.cells[idx].cell.iron *= mult;
         }
     }
-
     ph_map
 }
 
@@ -1050,7 +983,7 @@ fn main() {
     // --- Compute stromal adjacency mask (used by both Feature B and C) ---
     // Mask is grid-geometry-dependent, not treatment-dependent.
     let mask_grid = TumorGrid::generate(GRID_SIZE, GRID_SIZE, CELL_SIZE_UM, SEED);
-    let stromal_mask = stromal_adjacency_mask(&mask_grid);
+    let stromal_mask = stromal_adjacency_mask_2d(&mask_grid);
     let stromal_adj_count = stromal_mask.iter().filter(|&&b| b).count();
 
     // --- Immune coupling (Feature B) at λ=120μm ---
@@ -1092,7 +1025,7 @@ fn main() {
             let census = grid.census();
             let overall = census.total_dead as f64 / census.total_tumor.max(1) as f64;
             let (norm_r, trans_r, hyp_r) = zone_kill_rates(&grid, ZONE_REF_LAMBDA);
-            let adj_rate_baseline = stromal_adjacent_kill_rate(&grid, &stromal_mask);
+            let adj_rate_baseline = stromal_adjacent_kill_rate_2d(&grid, &stromal_mask);
             eprintln!(
                 "  {}: overall={:.1}% (ferr={}, immune={}), hypoxic={:.1}%, stromal_adj={:.1}%",
                 tx_name,
@@ -1209,7 +1142,7 @@ fn main() {
             let census = grid.census();
             let overall = census.total_dead as f64 / census.total_tumor.max(1) as f64;
             let (norm_r, trans_r, hyp_r) = zone_kill_rates(&grid, ZONE_REF_LAMBDA);
-            let adj_rate = stromal_adjacent_kill_rate(&grid, &stromal_mask);
+            let adj_rate = stromal_adjacent_kill_rate_2d(&grid, &stromal_mask);
             eprintln!("  {}: overall={:.1}% (ferr={}, immune={}), normoxic={:.1}%, hypoxic={:.1}%, stromal_adj={:.1}%",
                 tx_name, overall * 100.0, ferr_kills, imm_kills,
                 norm_r * 100.0, hyp_r * 100.0, adj_rate * 100.0);
@@ -1315,7 +1248,7 @@ fn main() {
         let census = grid.census();
         let overall = census.total_dead as f64 / census.total_tumor.max(1) as f64;
         let (norm_r, trans_r, hyp_r) = zone_kill_rates(&grid, ZONE_REF_LAMBDA);
-        let adj_rate = stromal_adjacent_kill_rate(&grid, &stromal_mask);
+        let adj_rate = stromal_adjacent_kill_rate_2d(&grid, &stromal_mask);
         eprintln!(
             "  {}: overall={:.1}% (ferr={}, immune={}), normoxic={:.1}%, hypoxic={:.1}%",
             tx_name,
