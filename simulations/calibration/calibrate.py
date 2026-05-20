@@ -12,7 +12,9 @@ Usage:
 import argparse
 import csv
 import json
+import math
 import sys
+import warnings
 from pathlib import Path
 
 import yaml
@@ -200,14 +202,23 @@ def _find_3d_condition(
     "immune_anti_pd1"), optional stromal_mode ("stromal_on"/None), optional
     ph_mode ("ph_on"/None). Returns None if no match.
     """
-    for c in conditions:
+    matches = []
+    for idx, c in enumerate(conditions):
         if c.get("treatment") != treatment:
             continue
         if o2_lambda_um is None:
             if c.get("o2_condition") != "uniform":
                 continue
         else:
-            if c.get("o2_lambda_um") != o2_lambda_um:
+            # Use math.isclose for the λ comparison so that future schemas
+            # emitting non-exact float sweeps (e.g., 119.5, 120.0, 120.5)
+            # don't silently miss matches due to float precision. Today's
+            # schema emits exact 120.0, so this is identical in practice
+            # but future-proofs the filter (issue #222 item 2).
+            row_lambda = c.get("o2_lambda_um")
+            if row_lambda is None:
+                continue
+            if not math.isclose(row_lambda, o2_lambda_um, abs_tol=1e-6):
                 continue
         if c.get("immune_mode") != immune_mode:
             continue
@@ -215,8 +226,24 @@ def _find_3d_condition(
             continue
         if c.get("ph_mode") != ph_mode:
             continue
-        return c
-    return None
+        matches.append((idx, c))
+
+    if not matches:
+        return None
+    if len(matches) > 1:
+        # Issue #222 item 3: today's 24-condition matrix has unique combos
+        # so this never fires, but a future inner re-sweep introducing
+        # duplicate rows would silently pick the first match. Surface it.
+        indices = [idx for idx, _ in matches]
+        warnings.warn(
+            f"_find_3d_condition matched {len(matches)} rows "
+            f"(indices {indices}) for treatment={treatment!r}, "
+            f"o2_lambda_um={o2_lambda_um}, immune_mode={immune_mode!r}, "
+            f"stromal_mode={stromal_mode!r}, ph_mode={ph_mode!r}; "
+            f"returning first match.",
+            stacklevel=2,
+        )
+    return matches[0][1]
 
 
 def extract_tme_3d_json(target: dict) -> float | None:
