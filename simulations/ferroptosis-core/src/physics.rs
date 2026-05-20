@@ -117,28 +117,10 @@ pub fn rsl3_concentration(_z_um: f64) -> f64 {
 }
 
 /// Compute the ROS dose multiplier for a cell at a given row in the grid.
-/// Energy is applied from the top (row 0 = tissue surface): per-cell depth
-/// is `z = row × cell_size_um`, which is then dispatched to the same
-/// depth-attenuation functions used by the 3D path
-/// ([`local_ros_multiplier_3d`]).
+/// Energy is applied from the top (row 0 = tissue surface).
 ///
-/// **2D ≡ 3D at matched depth:** for any treatment and parameter set, if
-/// the 3D caller passes `depth = row × cell_size_um` (the same value this
-/// function computes internally), [`local_ros_multiplier_3d`] returns the
-/// same multiplier. This is a **mathematical** invariant on the
-/// dispatcher (same depth-function applied to same f64), not a claim of
-/// physical equivalence between the two geometries. Locked down by
-/// `local_ros_multiplier_2d_3d_match_at_same_depth` below.
-///
-/// Returns a multiplier in `[0, ∞)` for `Treatment::RSL3`, `SDT`, and
-/// `PDT`; exactly `0.0` for `Treatment::Control`. For the PDT path, the
-/// underlying [`pdt_intensity_at_depth`] stays in `[0, 1]` for valid
-/// `Photosensitizer::Uniform(c)` with `c ≤ 1.0` or any valid
-/// `Photosensitizer::Porfimer` with `phi_so2_relative ≤ 1`;
-/// `Uniform(c)` with `c > 1.0` and `phi_so2_relative > 1` are
-/// intentionally permitted (forward-compat hooks for enrichment /
-/// sensitizer-engineered variants) and can produce multipliers above
-/// 1.0.
+/// Returns a multiplier in [0, 1] that scales the base exogenous ROS.
+/// For Control, always returns 0.
 pub fn local_ros_multiplier(
     row: usize,
     cell_size_um: f64,
