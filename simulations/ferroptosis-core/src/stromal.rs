@@ -398,33 +398,17 @@ mod tests {
     /// closer to 1.5×, not 2.7×. So we assert only the directional
     /// invariant: 3D fraction > 2D fraction.
     ///
-    /// **Source of truth — keep in sync with `sim-tme/src/main.rs:433`
-    /// (`stromal_adjacency_mask`).** This test inlines the 2D mask
-    /// construction; same DRY caveat as the O₂/pH cross-geometry tests.
-    /// No automated guard against drift.
+    /// Drift-proof: both arms now call library helpers
+    /// ([`stromal_adjacency_mask_2d`] and [`stromal_adjacency_mask_3d`],
+    /// #224 item 1c). sim-tme's binary also calls
+    /// `stromal_adjacency_mask_2d`, so the test can't go stale.
     #[test]
     fn matched_dims_3d_boundary_fraction_exceeds_2d() {
         let cell_size_um = 20.0;
 
-        // 2D: 40×40 grid → R = 18 lattice units. Replicate sim-tme's
-        // 8-Moore boundary detection inline.
+        // 2D: 40×40 grid → R = 18 lattice units via the lifted 2D mask.
         let g2 = TumorGrid::generate(40, 40, cell_size_um, 42);
-        let mut mask_2d = vec![false; g2.rows * g2.cols];
-        for r in 0..g2.rows {
-            for c in 0..g2.cols {
-                let idx = r * g2.cols + c;
-                if !g2.cells[idx].is_tumor {
-                    continue;
-                }
-                let (neighbors, count) = g2.neighbors(r, c);
-                for &(nr, nc) in &neighbors[..count] {
-                    if !g2.cells[nr * g2.cols + nc].is_tumor {
-                        mask_2d[idx] = true;
-                        break;
-                    }
-                }
-            }
-        }
+        let mask_2d = stromal_adjacency_mask_2d(&g2);
         let total_tumor_2d = g2.cells.iter().filter(|gc| gc.is_tumor).count();
         let boundary_2d = mask_2d.iter().filter(|&&b| b).count();
         let frac_2d = boundary_2d as f64 / total_tumor_2d as f64;

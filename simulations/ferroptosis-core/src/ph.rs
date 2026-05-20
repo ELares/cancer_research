@@ -548,10 +548,11 @@ mod tests {
     /// severe-core regime ~6.5). Chosen to give non-empty acidic regions
     /// in both geometries at default λ.
     ///
-    /// **Source of truth — keep in sync with `sim-tme/src/main.rs:520`
-    /// (`apply_ph_gradient`).** Same DRY caveat as the O₂ cross-geometry
-    /// test: this inlines sim-tme's 2D depth math; no automated guard
-    /// against drift.
+    /// Drift-proof: both the 2D and 3D arms call library helpers
+    /// ([`radial_ph_field_2d`] and [`radial_ph_field`], #224 item 1b)
+    /// that share the same `ph_at_depth` scalar primitive. sim-tme's
+    /// `apply_ph_gradient` also routes through `radial_ph_field_2d`,
+    /// so the test and the binary can't diverge.
     ///
     /// **Expected result** (same cubic-vs-quadratic geometry as #187):
     /// at matched R and λ, the 3D acidic-volume fraction is *smaller*
@@ -565,26 +566,20 @@ mod tests {
         let (ph_edge, ph_core, lambda) = (7.4, 6.5, 120.0);
         let acidic_threshold_ph = 6.8;
 
-        // 2D: 40×40 grid; inline sim-tme's depth-from-edge math.
+        // 2D: 40×40 grid via the lifted `radial_ph_field_2d`
+        // (#224 item 1b) — same first-order radial-decay formula as
+        // the 3D version, sharing `ph_at_depth` as the scalar primitive
+        // so a future tuning of the formula touches one place.
         let g2 = TumorGrid::generate(40, 40, cell_size_um, 42);
-        let (center_r2, center_c2) = (g2.rows as f64 / 2.0, g2.cols as f64 / 2.0);
-        let tumor_radius_2 = (g2.rows.min(g2.cols) as f64) * 0.45;
-        let delta = ph_edge - ph_core;
+        let ph_2d_field = radial_ph_field_2d(&g2, ph_edge, ph_core, lambda);
         let (mut acidic_2, mut total_2) = (0usize, 0usize);
-        for r in 0..g2.rows {
-            for c in 0..g2.cols {
-                let gc = g2.get(r, c);
-                if !gc.is_tumor {
-                    continue;
-                }
-                let dist = ((r as f64 - center_r2).powi(2) + (c as f64 - center_c2).powi(2)).sqrt();
-                let depth_um = (tumor_radius_2 - dist).max(0.0) * cell_size_um;
-                let ph_2d =
-                    (ph_edge - delta * (1.0 - (-depth_um / lambda).exp())).clamp(ph_core, ph_edge);
-                total_2 += 1;
-                if ph_2d < acidic_threshold_ph {
-                    acidic_2 += 1;
-                }
+        for (i, gc) in g2.cells.iter().enumerate() {
+            if !gc.is_tumor {
+                continue;
+            }
+            total_2 += 1;
+            if ph_2d_field[i] < acidic_threshold_ph {
+                acidic_2 += 1;
             }
         }
         let frac_2d = acidic_2 as f64 / total_2 as f64;
