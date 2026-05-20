@@ -175,7 +175,11 @@ fn run_spatial(
             gc.state = CellState::from_cell_with_ros(&gc.cell, tx, params, exo_ros_peak);
             gc.extra_iron = 0.0;
             gc.newly_dead = false;
-            gc.lp_at_death = 0.0;
+            // Init to NaN so any code path that reads `lp_at_death` before
+            // writing it (the grace-end write or the end-of-sim catch-all)
+            // produces NaN downstream — calibration will trip instead of
+            // silently using a stale value (#225 review).
+            gc.lp_at_death = f64::NAN;
         }
     }
 
@@ -280,7 +284,11 @@ fn run_spatial_cycling(
             gc.state = CellState::from_cell_with_ros(&gc.cell, tx, params, exo_ros_peak);
             gc.extra_iron = 0.0;
             gc.newly_dead = false;
-            gc.lp_at_death = 0.0;
+            // Init to NaN so any code path that reads `lp_at_death` before
+            // writing it (the grace-end write or the end-of-sim catch-all)
+            // produces NaN downstream — calibration will trip instead of
+            // silently using a stale value (#225 review).
+            gc.lp_at_death = f64::NAN;
         }
     }
 
@@ -351,7 +359,8 @@ fn run_spatial_cycling(
 //
 // `SpatialImmuneConfig` lifted to `ferroptosis-core::params` (#220).
 // Use `SpatialImmuneConfig::for_2d()` for 2D defaults
-// (damp_diffusion_fraction = 0.08, ×4 Moore stability).
+// (damp_diffusion_fraction = 0.08, < 1/8 stability bound for the
+// 8-Moore neighborhood returned by `TumorGrid::neighbors`).
 
 // ============================================================
 // Stromal protection (Feature C)
@@ -488,7 +497,11 @@ fn run_spatial_with_immune(
             gc.state = CellState::from_cell_with_ros(&gc.cell, tx, params, exo_ros_peak);
             gc.extra_iron = 0.0;
             gc.newly_dead = false;
-            gc.lp_at_death = 0.0;
+            // Init to NaN so any code path that reads `lp_at_death` before
+            // writing it (the grace-end write or the end-of-sim catch-all)
+            // produces NaN downstream — calibration will trip instead of
+            // silently using a stale value (#225 review).
+            gc.lp_at_death = f64::NAN;
         }
     }
 

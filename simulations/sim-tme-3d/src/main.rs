@@ -384,7 +384,11 @@ fn run_one_condition_with_config(condition: &Condition, run_cfg: RunConfig) -> C
                     CellState::from_cell_with_ros(&gc.cell, condition.treatment, &params, exo_ros_peak);
                 gc.extra_iron = 0.0;
                 gc.newly_dead = false;
-                gc.lp_at_death = 0.0;
+                // Init to NaN so any code path that reads `lp_at_death`
+                // before writing it (grace-end write or end-of-sim
+                // catch-all) produces NaN downstream — calibration trips
+                // instead of silently using a stale value (#225 review).
+                gc.lp_at_death = f64::NAN;
             }
         }
     }
@@ -802,6 +806,19 @@ fn generate_conditions() -> Vec<Condition> {
 // ============================================================
 
 fn main() {
+    // Guard against silent drift between this binary's metadata const and
+    // the library's runtime value: if a future PR tunes
+    // `SpatialImmuneConfig::for_3d().damp_diffusion_fraction` without also
+    // touching `DAMP_DIFFUSION_FRACTION_3D`, `summary.json` would report a
+    // stale value while the simulation actually used the new one. This
+    // debug_assert catches that in tests/dev runs without affecting release
+    // bit-identical output.
+    debug_assert_eq!(
+        DAMP_DIFFUSION_FRACTION_3D,
+        SpatialImmuneConfig::for_3d().damp_diffusion_fraction,
+        "DAMP_DIFFUSION_FRACTION_3D metadata const out of sync with SpatialImmuneConfig::for_3d()",
+    );
+
     // Use the library's TUMOR_RADIUS_FRACTION constant instead of the bare
     // 0.45 literal — keeps `tumor_radius_um` in lockstep with whatever
     // value `TumorGrid3D::generate` actually uses (reviewer-flagged drift

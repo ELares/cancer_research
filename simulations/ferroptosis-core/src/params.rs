@@ -249,10 +249,11 @@ impl Default for ImmuneParams {
 /// DAMP-field model. Same biology, different math; both are valid.
 ///
 /// **2D vs 3D split**: `damp_diffusion_fraction` differs by geometry.
-/// 2D uses 0.08 (4-Moore neighbors, ≤ 1 / 4 stability bound); 3D uses
-/// 0.025 (26-Moore neighbors, ≤ 1 / 26 stability bound enforced by
-/// `assert!` in `immune_3d::diffuse_damp_3d_step`). Use [`for_2d()`] or
-/// [`for_3d()`] to pick the right default.
+/// 2D uses 0.08 (8-Moore neighbors via `TumorGrid::neighbors`, stability
+/// bound `< 1 / 8 = 0.125`); 3D uses 0.025 (26-Moore neighbors, stability
+/// bound `< 1 / 26 ≈ 0.0385` enforced by `assert!` in
+/// `immune_3d::diffuse_damp_3d_step`). Use [`for_2d()`] or [`for_3d()`]
+/// to pick the right default.
 ///
 /// **No `Default` impl on purpose**: callers MUST pick a geometry. Using
 /// the wrong default in 3D would panic at runtime via the diffuse-step
@@ -264,8 +265,11 @@ impl Default for ImmuneParams {
 pub struct SpatialImmuneConfig {
     /// DAMP released per unit LP at death.
     pub damp_per_lp: f64,
-    /// Fraction of DAMP shared with each Moore neighbor per step.
-    /// 2D: 0.08 (×4 Moore = 0.32 redistributed). 3D: 0.025 (×26 Moore = 0.65).
+    /// Fraction of DAMP shared with each Moore neighbor per step. The
+    /// total redistributed mass per source cell is `fraction * neighbor_count`
+    /// and must stay below 1 to keep the diffusion update mass-conserving.
+    /// 2D: 0.08 (×8 Moore = up to 0.64 redistributed; bound `< 1/8`).
+    /// 3D: 0.025 (×26 Moore = up to 0.65 redistributed; bound `< 1/26`).
     pub damp_diffusion_fraction: f64,
     /// Exponential decay per step (models immune clearance of DAMPs).
     pub damp_clearance_rate: f64,
@@ -280,7 +284,9 @@ pub struct SpatialImmuneConfig {
 }
 
 impl SpatialImmuneConfig {
-    /// 2D default (sim-tme): `damp_diffusion_fraction = 0.08` for 4-Moore.
+    /// 2D default (sim-tme): `damp_diffusion_fraction = 0.08`, safely
+    /// below the `1/8` stability bound for the 8-Moore neighborhood used
+    /// by `TumorGrid::neighbors`.
     pub fn for_2d() -> Self {
         SpatialImmuneConfig {
             damp_per_lp: 1.0,
@@ -423,6 +429,11 @@ mod tests {
         assert_eq!(c.immune_kill_rate, 0.02);
         assert_eq!(c.pd1_brake, 0.7);
         assert_eq!(c.anti_pd1_efficacy, 0.0);
+        // 2D stability invariant: sim-tme's DAMP diffusion calls
+        // `TumorGrid::neighbors` which returns up to 8 Moore neighbors.
+        // Each step subtracts `fraction * count` from the source cell, so
+        // `fraction * 8 < 1` is required to keep the update mass-conserving.
+        assert!(c.damp_diffusion_fraction * 8.0 < 1.0);
     }
 
     /// `SpatialImmuneConfig::for_3d()` must reproduce the literal values
