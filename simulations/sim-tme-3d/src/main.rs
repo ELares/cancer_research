@@ -6,7 +6,7 @@
 //! - 3D radial O₂ gradient (#187) via `oxygen::radial_o2_field`
 //! - 3D radial pH gradient (#190) via `ph::radial_ph_field` + helpers
 //! - 3D CAF-shielded boundary detection (#189) via `stromal::stromal_adjacency_mask`
-//! - 3D spatial DAMP diffusion + activation (#188) via `immune_3d::*`
+//! - 3D spatial DAMP diffusion + activation (#188) via `immune_spatial::*`
 //!
 //! Produces a per-condition matrix of kill rates that the Python
 //! comparison script (`scripts/generate_3d_comparison_table.py`) pairs
@@ -41,8 +41,8 @@
 //!
 //! Sim-tme's 2D `damp_diffusion_fraction = 0.08` is **unsafe in 3D**
 //! (0.08 × 26 = 2.08 > 1, would mass-destroy). We use 0.025 (matches
-//! 2D's per-step total diffusion of ~64% — see `immune_3d` rustdoc).
-//! `immune_3d::diffuse_damp_3d_step` enforces the stability invariant
+//! 2D's per-step total diffusion of ~64% — see `immune_spatial` rustdoc).
+//! `immune_spatial::diffuse_damp_3d_step` enforces the stability invariant
 //! with `assert!` (release-mode panic).
 
 use std::fs;
@@ -51,7 +51,7 @@ use std::path::Path;
 use ferroptosis_core::biochem::{sim_cell_step, CellState};
 use ferroptosis_core::cell::Treatment;
 use ferroptosis_core::grid::{TumorGrid3D, TUMOR_RADIUS_FRACTION};
-use ferroptosis_core::immune_3d::{
+use ferroptosis_core::immune_spatial::{
     dc_activation, diffuse_damp_3d_step, immune_kill_probability, DAMP_KILL_THRESHOLD,
 };
 use ferroptosis_core::oxygen::radial_o2_field;
@@ -838,7 +838,7 @@ fn main() {
         O2_LAMBDAS
     );
     eprintln!(
-        "DAMP diffusion fraction: {} (3D-safe; 2D's 0.08 would trigger immune_3d stability assert!)",
+        "DAMP diffusion fraction: {} (3D-safe; 2D's 0.08 would trigger immune_spatial stability assert!)",
         DAMP_DIFFUSION_FRACTION_3D
     );
     eprintln!();

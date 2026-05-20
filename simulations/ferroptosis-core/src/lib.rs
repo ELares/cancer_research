@@ -29,7 +29,7 @@
 //! | [`ph`] | 3D radial pH gradient + iron-release and ion-trapping modulation helpers |
 //! | [`stromal`] | 3D CAF-shielded boundary detection (26-Moore) + shielded kill rate |
 //! | [`immune`] | ICD/DAMP immune cascade model (dimensionless, single-event) |
-//! | [`immune_3d`] | 3D spatial DAMP diffusion + per-cell immune activation/kill primitives |
+//! | [`immune_spatial`] | 3D spatial DAMP diffusion + per-cell immune activation/kill primitives |
 //! | [`io`] | JSON and CSV output helpers |
 //! | [`drug_transport`] | Tissue-specific drug penetration (Krogh cylinder approximation) |
 //! | [`tumor_pk`] | Two-compartment vascular/interstitial pharmacokinetics |
@@ -40,7 +40,7 @@ pub mod biochem;
 pub mod drug_transport;
 pub mod grid;
 pub mod immune;
-pub mod immune_3d;
+pub mod immune_spatial;
 pub mod io;
 pub mod oxygen;
 pub mod params;

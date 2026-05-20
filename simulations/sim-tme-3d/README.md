@@ -10,7 +10,7 @@ Runs a matrix of 24 conditions on a 60³ spheroid (~82.5k tumor cells, ~540 µm 
 - **3D radial O₂ gradient** (#187) via `oxygen::radial_o2_field`
 - **3D radial pH gradient** (#190) via `ph::radial_ph_field` + `iron_multiplier_from_ph` + `ion_trap_factor_from_ph`
 - **3D CAF-shielded boundary detection** (#189) via `stromal::stromal_adjacency_mask`
-- **3D spatial DAMP diffusion + activation** (#188) via `immune_3d::diffuse_damp_3d_step` + `dc_activation` + `immune_kill_probability`
+- **3D spatial DAMP diffusion + activation** (#188) via `immune_spatial::diffuse_damp_3d_step` + `dc_activation` + `immune_kill_probability`
 
 Emits a JSON summary that the Python comparison script pairs with `sim-tme`'s existing 2D output to answer the four manuscript-keystone questions from issue #195.
 
@@ -32,7 +32,7 @@ The 3D hypoxic-zone threshold is `3λ`. At λ=150 µm, the threshold is 450 µm 
 
 ## Why `damp_diffusion_fraction = 0.025` (NOT sim-tme's 0.08)
 
-Sim-tme's 2D default `0.08` is **unsafe in 3D**: with up to 26 Moore neighbors, `0.08 × 26 = 2.08 > 1` would mass-destroy the DAMP field. The library function `immune_3d::diffuse_damp_3d_step` enforces the stability invariant with `assert!` — release-mode panic if violated. We use `0.025` (matches 2D's per-step total diffusion of ~64%).
+Sim-tme's 2D default `0.08` is **unsafe in 3D**: with up to 26 Moore neighbors, `0.08 × 26 = 2.08 > 1` would mass-destroy the DAMP field. The library function `immune_spatial::diffuse_damp_3d_step` enforces the stability invariant with `assert!` — release-mode panic if violated. We use `0.025` (matches 2D's per-step total diffusion of ~64%).
 
 ## Usage
 
@@ -83,7 +83,7 @@ Three smoke tests:
 2. `single_condition_runs_end_to_end` — full orchestration on baseline Control
 3. `same_seed_same_output` — determinism
 
-The library primitives (`physics`, `oxygen`, `ph`, `stromal`, `immune_3d`) are exhaustively tested in `ferroptosis-core`'s 160+ unit tests. This binary tests orchestration, not the math.
+The library primitives (`physics`, `oxygen`, `ph`, `stromal`, `immune_spatial`) are exhaustively tested in `ferroptosis-core`'s 160+ unit tests. This binary tests orchestration, not the math.
 
 ## Manuscript-keystone questions (issue #195)
 

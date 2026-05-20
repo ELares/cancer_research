@@ -38,7 +38,7 @@ Run the included example: `cargo run -p ferroptosis-core --example basic_usage`
 | `ph` | 3D radial pH gradient for spheroid tumors: `radial_ph_field` (per-cell `pH(d) = ph_edge - delta·(1 - exp(-d/λ))`) plus pure-scalar helpers `iron_multiplier_from_ph` (ferritin destabilization) and `ion_trap_factor_from_ph` (linearized Henderson-Hasselbalch, weak-base drug bioavailability). Same form as sim-tme's 2D pH; pure functions for #195 sim-tme-3d (#190). |
 | `stromal` | 3D CAF-shielded boundary detection for spheroid tumors: `stromal_adjacency_mask` (Vec<bool> flagging tumor cells with any stromal 26-Moore neighbor) and `stromal_adjacent_kill_rate` (dead-rate among masked cells). 3D analog of sim-tme's 2D 8-Moore detection; surface-to-volume scaling means 3D shielding affects ~1.5× more cells than 2D at matched R (#189). |
 | `immune` | ICD/DAMP immune cascade (dimensionless, single-event): ferroptotic death quality drives dendritic cell activation and T cell priming |
-| `immune_3d` | 3D spatial immune coupling: `diffuse_damp_3d_step` (26-Moore DAMP diffusion + exponential clearance, scratch-buffer API) plus pure-scalar helpers `dc_activation` (Michaelis-Menten) and `immune_kill_probability` (with sim-tme's 0.99 cap). **Stability requirement**: `diffusion_fraction × 26 < 1` (use ≤ 0.038; sim-tme's 2D default 0.08 is UNSAFE — `assert!`-enforced). Composes with `immune` for downstream sim-tme-3d (#195). (#188) |
+| `immune_spatial` | 3D spatial immune coupling: `diffuse_damp_3d_step` (26-Moore DAMP diffusion + exponential clearance, scratch-buffer API) plus pure-scalar helpers `dc_activation` (Michaelis-Menten) and `immune_kill_probability` (with sim-tme's 0.99 cap). **Stability requirement**: `diffusion_fraction × 26 < 1` (use ≤ 0.038; sim-tme's 2D default 0.08 is UNSAFE — `assert!`-enforced). Composes with `immune` for downstream sim-tme-3d (#195). (#188) |
 | `io` | JSON and CSV output helpers |
 | `drug_transport` | Krogh cylinder drug penetration model |
 | `tumor_pk` | Two-compartment vascular/interstitial pharmacokinetics |
@@ -89,7 +89,7 @@ but the dispatcher math does not.
 
 **3D spatial immune coupling (#188):**
 ```rust
-use ferroptosis_core::immune_3d::{diffuse_damp_3d_step, dc_activation, immune_kill_probability};
+use ferroptosis_core::immune_spatial::{diffuse_damp_3d_step, dc_activation, immune_kill_probability};
 
 let g = TumorGrid3D::generate(40, 40, 40, 20.0, 42);
 let n = g.cells.len();

@@ -39,7 +39,7 @@ use serde::Serialize;
 use ferroptosis_core::biochem::{sim_cell_step, CellState};
 use ferroptosis_core::cell::{norm, Treatment};
 use ferroptosis_core::grid::{death_heatmap, depth_kill_curve, TumorGrid};
-use ferroptosis_core::immune_3d::{immune_kill_probability, DAMP_KILL_THRESHOLD};
+use ferroptosis_core::immune_spatial::{immune_kill_probability, DAMP_KILL_THRESHOLD};
 use ferroptosis_core::io::{write_depth_curves_csv, write_heatmap_csv, write_json};
 use ferroptosis_core::params::{
     Params, PhConfig, SpatialImmuneConfig, SpatialParams, StromalConfig,
