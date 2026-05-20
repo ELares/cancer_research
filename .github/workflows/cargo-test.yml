@@ -32,3 +32,21 @@ jobs:
       - name: Run tests and compile all binaries
         working-directory: simulations
         run: cargo test --workspace
+
+  fmt:
+    # Block PRs that introduce cargo fmt drift in the simulations
+    # workspace. Runs in parallel with `test`; rustfmt-only — no build
+    # cache needed.
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Install Rust toolchain with rustfmt
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+
+      - name: Check formatting
+        working-directory: simulations
+        run: cargo fmt --all --check
