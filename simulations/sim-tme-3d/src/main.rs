@@ -49,6 +49,7 @@ use std::fs;
 use std::path::Path;
 
 mod npy;
+mod snapshot;
 
 use ferroptosis_core::biochem::{sim_cell_step, CellState};
 use ferroptosis_core::cell::Treatment;
@@ -276,10 +277,14 @@ impl RunConfig {
 }
 
 fn run_one_condition(condition: &Condition) -> ConditionResult {
-    run_one_condition_with_config(condition, RunConfig::production())
+    run_one_condition_with_config(condition, RunConfig::production(), None)
 }
 
-fn run_one_condition_with_config(condition: &Condition, run_cfg: RunConfig) -> ConditionResult {
+fn run_one_condition_with_config(
+    condition: &Condition,
+    run_cfg: RunConfig,
+    mut snapshot: Option<&mut snapshot::SnapshotBuffers>,
+) -> ConditionResult {
     let params = Params::default();
     let spatial_params = SpatialParams {
         cell_size_um: CELL_SIZE_UM,
@@ -588,6 +593,14 @@ fn run_one_condition_with_config(condition: &Condition, run_cfg: RunConfig) -> C
                 }
             }
         }
+
+        // Per-step trajectory capture for `--snapshot` runs. No-op for the
+        // default 24-condition matrix path (snapshot is None there).
+        // Captured *after* all per-step work (biochem + DAMP + immune kill)
+        // so the snapshot reflects end-of-step state.
+        if let Some(buf) = snapshot.as_mut() {
+            buf.capture_step(&grid, &damp_field);
+        }
     }
 
     // Late DAMP release for cells still in their post-death grace period at
@@ -817,6 +830,71 @@ fn generate_conditions() -> Vec<Condition> {
 // Main
 // ============================================================
 
+/// Run a single condition with per-step trajectory capture, then write
+/// `trajectory_{dead,damp,lp}.npy` + `trajectory_meta.json` to
+/// `output_dir`. Used by the `--snapshot` CLI flag (#193).
+///
+/// Hard-coded to the RSL3 + immune + stromal + pH condition at λ=120
+/// — the most visually interesting cell of the matrix (ferroptosis
+/// kill front + immune kills at boundary + stromal shielding + pH
+/// iron release all visible). A future PR can make the condition
+/// CLI-selectable.
+fn run_snapshot(output_dir: &Path, tumor_radius_um: f64) {
+    let condition = Condition {
+        name: "snapshot_combined_RSL3".to_string(),
+        treatment: Treatment::RSL3,
+        treatment_name: "RSL3".to_string(),
+        o2_lambda: Some(ZONE_REF_LAMBDA),
+        immune_on: true,
+        stromal_on: true,
+        ph_on: true,
+    };
+
+    eprintln!(
+        "=== --snapshot: capturing trajectory for `{}` ({}³ × {} steps) ===",
+        condition.name, GRID_DIM, N_STEPS,
+    );
+
+    let run_cfg = RunConfig::production();
+    let mut buffers = snapshot::SnapshotBuffers::new(run_cfg.grid_dim, run_cfg.n_steps);
+    let result = run_one_condition_with_config(&condition, run_cfg, Some(&mut buffers));
+    eprintln!(
+        "  done — total_kill={:.1}%, immune_kills={}, captured {} steps",
+        result.overall_kill_rate * 100.0,
+        result.immune_kills.unwrap_or(0),
+        buffers.steps_captured(),
+    );
+
+    buffers
+        .write(output_dir)
+        .expect("Failed to write trajectory .npy files");
+
+    let meta = snapshot::TrajectoryMeta {
+        schema_version: snapshot::TRAJECTORY_SCHEMA_VERSION,
+        grid_dim: run_cfg.grid_dim,
+        cell_size_um: CELL_SIZE_UM,
+        tumor_radius_um,
+        n_steps: run_cfg.n_steps,
+        condition: snapshot::TrajectoryCondition {
+            treatment: "RSL3".to_string(),
+            o2_condition: "gradient".to_string(),
+            o2_lambda_um: Some(ZONE_REF_LAMBDA),
+            immune_mode: "immune_on".to_string(),
+            stromal_mode: Some("stromal_on".to_string()),
+            ph_mode: Some("ph_on".to_string()),
+        },
+    };
+    let meta_path = output_dir.join("trajectory_meta.json");
+    fs::write(&meta_path, serde_json::to_string_pretty(&meta).unwrap())
+        .expect("Failed to write trajectory_meta.json");
+
+    eprintln!(
+        "Wrote {} + trajectory_{{dead,damp,lp}}.npy",
+        meta_path.display()
+    );
+    eprintln!("Render with: python3 scripts/render_tme_3d_trajectory.py");
+}
+
 fn main() {
     // Guard against silent drift between this binary's metadata const and
     // the library's runtime value: if a future PR tunes
@@ -861,6 +939,16 @@ fn main() {
 
     let output_dir = Path::new("output/tme-3d");
     fs::create_dir_all(output_dir).expect("Failed to create output/tme-3d");
+
+    // `--snapshot` runs ONE visualization-focused condition (RSL3 with
+    // immune + stromal + pH on at λ=120) and captures per-step state
+    // for the Python animation. Default path (no flag) is unchanged:
+    // runs the full 24-condition matrix → summary.json. Bit-identical
+    // when the flag is absent (snapshot path doesn't touch the matrix).
+    if std::env::args().any(|a| a == "--snapshot") {
+        run_snapshot(output_dir, tumor_radius_um);
+        return;
+    }
 
     let conditions = generate_conditions();
     eprintln!(
@@ -956,7 +1044,7 @@ mod tests {
             stromal_on: false,
             ph_on: false,
         };
-        let r = run_one_condition_with_config(&cond, RunConfig::for_test());
+        let r = run_one_condition_with_config(&cond, RunConfig::for_test(), None);
         assert_eq!(r.treatment, "Control");
         assert_eq!(r.o2_condition, "uniform");
         assert_eq!(r.immune_mode, "off");
@@ -985,8 +1073,8 @@ mod tests {
             stromal_on: false,
             ph_on: false,
         };
-        let r1 = run_one_condition_with_config(&cond, RunConfig::for_test());
-        let r2 = run_one_condition_with_config(&cond, RunConfig::for_test());
+        let r1 = run_one_condition_with_config(&cond, RunConfig::for_test(), None);
+        let r2 = run_one_condition_with_config(&cond, RunConfig::for_test(), None);
         assert_eq!(r1.total_dead, r2.total_dead);
         assert_eq!(r1.total_tumor, r2.total_tumor);
         assert_eq!(r1.overall_kill_rate, r2.overall_kill_rate);
@@ -1026,7 +1114,7 @@ mod tests {
             grid_dim: 25,
             n_steps: 130,
         };
-        let r = run_one_condition_with_config(&cond, cfg);
+        let r = run_one_condition_with_config(&cond, cfg, None);
         assert_eq!(r.immune_mode, "immune_on");
         let im_kills = r
             .immune_kills
@@ -1062,7 +1150,7 @@ mod tests {
             grid_dim: 15,
             n_steps: 80,
         };
-        let r = run_one_condition_with_config(&cond, cfg);
+        let r = run_one_condition_with_config(&cond, cfg, None);
         let ferro = r.ferroptosis_kills.expect("immune_on populates this");
         let im = r.immune_kills.expect("immune_on populates this");
         assert_eq!(
@@ -1103,7 +1191,7 @@ mod tests {
         let run = |conds: &[Condition]| -> Vec<ConditionResult> {
             conds
                 .par_iter()
-                .map(|c| run_one_condition_with_config(c, cfg))
+                .map(|c| run_one_condition_with_config(c, cfg, None))
                 .collect()
         };
 
