@@ -109,20 +109,7 @@ pub fn radial_ph_field(
     ph_core: f64,
     lambda_ph_um: f64,
 ) -> Vec<f64> {
-    debug_assert!(
-        ph_edge.is_finite() && ph_core.is_finite() && lambda_ph_um.is_finite(),
-        "radial_ph_field: ph_edge, ph_core, lambda_ph_um must all be finite; got ph_edge={ph_edge}, ph_core={ph_core}, lambda_ph_um={lambda_ph_um}"
-    );
-    debug_assert!(
-        ph_edge > ph_core,
-        "radial_ph_field: ph_edge ({ph_edge}) must be strictly greater than ph_core ({ph_core}); equal or inverted values are likely a configuration bug"
-    );
-    debug_assert!(
-        lambda_ph_um > 0.0,
-        "radial_ph_field: lambda_ph_um must be > 0, got {lambda_ph_um}"
-    );
-
-    let delta = ph_edge - ph_core;
+    debug_assert_ph_inputs(ph_edge, ph_core, lambda_ph_um, "radial_ph_field");
 
     let mut out = Vec::with_capacity(grid.cells.len());
     for r in 0..grid.rows {
@@ -132,14 +119,83 @@ pub fn radial_ph_field(
                     ph_edge
                 } else {
                     let depth_um = grid.radial_depth_um(r, c, l).max(0.0);
-                    let raw = ph_edge - delta * (1.0 - (-depth_um / lambda_ph_um).exp());
-                    raw.clamp(ph_core, ph_edge)
+                    ph_at_depth(depth_um, ph_edge, ph_core, lambda_ph_um)
                 };
                 out.push(ph);
             }
         }
     }
     out
+}
+
+/// 2D analog of [`radial_ph_field`] — disc-shaped pH field over a
+/// [`TumorGrid`] using the same first-order radial-decay formula.
+///
+/// Lifted from the inline math in sim-tme's `apply_ph_gradient` and
+/// the cross-geometry library test in `ph::tests::matched_lambda_2d_vs_3d_acidic_fraction`
+/// (#224 item 1b). Returns `ph_edge` for non-tumor cells (same
+/// convention as the 3D version).
+///
+/// **Caveats:** same first-order single-source radial-decay
+/// approximation as the 3D variant — see `radial_ph_field`'s rustdoc
+/// for biological validity, calibration status (#190 → #194), and
+/// debug-assert validation of `ph_edge > ph_core`.
+pub fn radial_ph_field_2d(
+    grid: &crate::grid::TumorGrid,
+    ph_edge: f64,
+    ph_core: f64,
+    lambda_ph_um: f64,
+) -> Vec<f64> {
+    debug_assert_ph_inputs(ph_edge, ph_core, lambda_ph_um, "radial_ph_field_2d");
+
+    let mut out = Vec::with_capacity(grid.cells.len());
+    for r in 0..grid.rows {
+        for c in 0..grid.cols {
+            let ph = if !grid.get(r, c).is_tumor {
+                ph_edge
+            } else {
+                let depth_um = grid.radial_depth_um(r, c).max(0.0);
+                ph_at_depth(depth_um, ph_edge, ph_core, lambda_ph_um)
+            };
+            out.push(ph);
+        }
+    }
+    out
+}
+
+/// Scalar pH-at-depth formula (first-order radial decay + clamp).
+///
+/// `ph = ph_edge − (ph_edge − ph_core) · (1 − exp(−depth/λ))`,
+/// clamped to `[ph_core, ph_edge]`.
+///
+/// Dimensionality-agnostic primitive — both [`radial_ph_field`] (3D)
+/// and [`radial_ph_field_2d`] use it. Sim-tme's `apply_ph_gradient`
+/// calls it via the 2D field function after #224's lift.
+///
+/// **No tumor-cell check.** The caller decides whether to call this
+/// (tumor cells) or default to `ph_edge` (non-tumor cells). Matches
+/// the inline pattern in both wrappers.
+#[inline]
+pub fn ph_at_depth(depth_um: f64, ph_edge: f64, ph_core: f64, lambda_ph_um: f64) -> f64 {
+    let delta = ph_edge - ph_core;
+    let raw = ph_edge - delta * (1.0 - (-depth_um / lambda_ph_um).exp());
+    raw.clamp(ph_core, ph_edge)
+}
+
+#[inline]
+fn debug_assert_ph_inputs(ph_edge: f64, ph_core: f64, lambda_ph_um: f64, ctx: &'static str) {
+    debug_assert!(
+        ph_edge.is_finite() && ph_core.is_finite() && lambda_ph_um.is_finite(),
+        "{ctx}: ph_edge, ph_core, lambda_ph_um must all be finite; got ph_edge={ph_edge}, ph_core={ph_core}, lambda_ph_um={lambda_ph_um}"
+    );
+    debug_assert!(
+        ph_edge > ph_core,
+        "{ctx}: ph_edge ({ph_edge}) must be strictly greater than ph_core ({ph_core}); equal or inverted values are likely a configuration bug"
+    );
+    debug_assert!(
+        lambda_ph_um > 0.0,
+        "{ctx}: lambda_ph_um must be > 0, got {lambda_ph_um}"
+    );
 }
 
 /// Iron-release multiplier from local pH.
@@ -562,5 +618,62 @@ mod tests {
             "3D acidic-volume fraction ({frac_3d:.4}) should be SMALLER than 2D acidic-area \
              fraction ({frac_2d:.4}) at matched λ — pure-geometry consequence (see test docstring)"
         );
+    }
+
+    // ============================================================
+    // Scalar `ph_at_depth` + 2D field (#224 item 1b lift).
+    // ============================================================
+
+    /// `ph_at_depth` at `depth = 0` returns `ph_edge` exactly. Same
+    /// IEEE-exact rationale as the surface case for `radial_ph_field`:
+    /// `exp(-0/λ) = 1.0` exact, so `ph_edge - (ph_edge - ph_core) * 0 = ph_edge`.
+    #[test]
+    fn ph_at_depth_surface_is_edge() {
+        assert_eq!(ph_at_depth(0.0, 7.4, 6.5, 120.0), 7.4);
+    }
+
+    /// `ph_at_depth` clamps at `ph_core` for arbitrarily deep cells —
+    /// no overshoot below `ph_core` regardless of how far inside.
+    #[test]
+    fn ph_at_depth_deep_clamps_at_core() {
+        // At depth = 100×λ, exp(-100) ≈ 0 → raw → ph_edge - delta = ph_core.
+        let ph = ph_at_depth(100.0 * 120.0, 7.4, 6.5, 120.0);
+        assert!((ph - 6.5).abs() < 1e-9, "got {ph}");
+    }
+
+    /// `radial_ph_field_2d` length matches the 2D grid cell count and
+    /// non-tumor cells get `ph_edge`. Mirrors the 3D test contract.
+    #[test]
+    fn radial_ph_field_2d_length_and_non_tumor_default() {
+        let g = TumorGrid::generate(40, 40, 20.0, 42);
+        let ph = radial_ph_field_2d(&g, 7.4, 6.5, 120.0);
+        assert_eq!(ph.len(), g.cells.len());
+        for (i, gc) in g.cells.iter().enumerate() {
+            if !gc.is_tumor {
+                assert_eq!(ph[i], 7.4, "non-tumor cell {i} did not return ph_edge");
+            }
+        }
+    }
+
+    /// Bit-identical to sim-tme's binary-local `apply_ph_gradient` pH
+    /// formula (pre-clamp). Locks the lift; a future refactor of either
+    /// side can't diverge silently.
+    #[test]
+    fn radial_ph_field_2d_matches_sim_tme_apply_ph_gradient_formula() {
+        let g = TumorGrid::generate(40, 40, 20.0, 42);
+        let (ph_edge, ph_core, lambda) = (7.4, 6.5, 120.0);
+        let delta = ph_edge - ph_core;
+        let lib_field = radial_ph_field_2d(&g, ph_edge, ph_core, lambda);
+        for (idx, gc) in g.cells.iter().enumerate() {
+            let (r, c) = (idx / g.cols, idx % g.cols);
+            let expected = if !gc.is_tumor {
+                ph_edge
+            } else {
+                let depth_um = g.radial_depth_um(r, c).max(0.0);
+                let raw = ph_edge - delta * (1.0 - (-depth_um / lambda).exp());
+                raw.clamp(ph_core, ph_edge)
+            };
+            assert_eq!(lib_field[idx], expected, "cell ({r},{c})");
+        }
     }
 }
