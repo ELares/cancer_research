@@ -48,6 +48,8 @@
 use std::fs;
 use std::path::Path;
 
+mod npy;
+
 use ferroptosis_core::biochem::{sim_cell_step, CellState};
 use ferroptosis_core::cell::Treatment;
 use ferroptosis_core::grid::{TumorGrid3D, TUMOR_RADIUS_FRACTION};
