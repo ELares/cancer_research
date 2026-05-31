@@ -54,10 +54,11 @@ use serde::{Deserialize, Serialize};
 /// `Constant` is the default and the identity (always `1.0`). The other
 /// variants are time-varying. See the module docs for how each modality
 /// applies the factor.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize)]
 pub enum DoseSchedule {
     /// Constant full availability for the whole run: `factor_at ≡ 1.0`.
     /// The identity case — preserves byte-identical pre-#239 output.
+    #[default]
     Constant,
 
     /// Single bolus administered at `dose_step`: availability is `0.0`
@@ -77,6 +78,15 @@ pub enum DoseSchedule {
     /// contribution that has been administered by then — so overlapping
     /// doses accumulate (clinically realistic for short inter-dose
     /// intervals). Models a multi-dose protocol.
+    ///
+    /// Because contributions sum, `factor_at` can **exceed `peak`** when
+    /// doses overlap. How a consumer treats the overshoot is modality-
+    /// dependent and asymmetric by design: the RSL3 path clamps the factor
+    /// into `[0, 1]` (it's a drug *concentration*, and the validated
+    /// `sim_cell_with_pk` model is calibrated for `conc ≤ 1`), whereas the
+    /// SDT/PDT path does **not** clamp (exogenous ROS is additive across
+    /// overlapping pulses, so >1 is physically meaningful). Pick `peak` and
+    /// spacing with the consuming modality's clamp in mind.
     MultiDose {
         /// Steps at which doses are administered (need not be sorted).
         dose_steps: Vec<u32>,
@@ -107,12 +117,6 @@ pub enum DoseSchedule {
         /// Per-step availability factors (index = step).
         series: Vec<f64>,
     },
-}
-
-impl Default for DoseSchedule {
-    fn default() -> Self {
-        DoseSchedule::Constant
-    }
 }
 
 impl DoseSchedule {
@@ -163,9 +167,10 @@ impl DoseSchedule {
     }
 
     /// The discrete administration steps for the analytic shapes (for
-    /// metadata / visualization annotation). `Constant`/`Infusion`/`FromPk`
-    /// have no discrete dose events and return an empty Vec; `Infusion`
-    /// returns its `start` as a single "begins here" marker.
+    /// metadata / visualization annotation). `Constant` and `FromPk` have no
+    /// discrete dose events and return an empty Vec. `Bolus` returns its
+    /// single `dose_step`; `MultiDose` returns its `dose_steps` (sorted);
+    /// `Infusion` returns its `start` as a single "begins here" marker.
     #[must_use]
     pub fn dose_steps(&self) -> Vec<u32> {
         match self {

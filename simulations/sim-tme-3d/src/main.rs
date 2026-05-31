@@ -387,10 +387,14 @@ fn run_one_condition_with_config(
     // skipped and the run is byte-identical to the pre-#239 behavior.
     let schedule = &condition.dose_schedule;
     let dosed = !schedule.is_constant();
-    // For SDT/PDT under a non-constant schedule we rescale each cell's
-    // exogenous-ROS bolus per step, so we must retain the per-cell *base*
-    // peak (the init value). Empty on the Constant path (never read).
-    let mut base_exo: Vec<f64> = if dosed {
+    // `base_exo` is read ONLY by the SDT/PDT per-step rescale arm. Allocate
+    // (and init-write) it only when that arm can run — i.e. a non-constant
+    // schedule on an exogenous-ROS treatment. Empty (never indexed) on the
+    // Constant path AND on the RSL3 dosed path, which keeps the
+    // "empty ⇒ never read" invariant tight (review #7).
+    let dose_modulates_exo =
+        dosed && matches!(condition.treatment, Treatment::SDT | Treatment::PDT);
+    let mut base_exo: Vec<f64> = if dose_modulates_exo {
         vec![0.0; n_cells]
     } else {
         Vec::new()
@@ -412,7 +416,7 @@ fn run_one_condition_with_config(
                         let peak = base_ros * ros_multiplier;
                         norm(&mut rng, peak, peak * 0.2).max(0.0)
                     };
-                if dosed {
+                if dose_modulates_exo {
                     base_exo[idx] = exo_ros_peak;
                 }
                 let gc = &mut grid.cells[idx];
@@ -554,16 +558,32 @@ fn run_one_condition_with_config(
 
                     // Time-varying drug modulation (#239). Skipped entirely on
                     // the Constant default path (`dosed == false`), so output
-                    // is byte-identical there. Applied to LIVE cells only:
-                    // a cell's drug exposure freezes at its death step (dead
-                    // cells in the post-death grace period keep their last
-                    // value, matching `tumor_pk::sim_cell_with_pk`).
+                    // is byte-identical there. Applied to LIVE cells only —
+                    // once a cell is dead, this block no longer runs, so its
+                    // STORED drug state (gpx4 for RSL3, exo_ros_peak for
+                    // SDT/PDT) is frozen at its death-step value.
+                    //
+                    // Nuance for SDT/PDT: freezing the stored *peak* is not the
+                    // same as freezing the *effective* exo. The post-death
+                    // branch in `biochem::sim_cell_step` keeps multiplying the
+                    // frozen peak by `exo_decay_factor(step)`, so a dead cell's
+                    // residual exo continues to shrink (~0.5^(k/15)) across its
+                    // ≤5-step grace window — the same intrinsic decay baseline
+                    // dead cells see. This perturbs only post-death `lp` (hence
+                    // `lp_at_death`/`damp_field`) in the SDT multidose snapshot;
+                    // it does NOT affect death determination, summary.json, or
+                    // the RSL3 path. (RSL3 truly freezes: gpx4 is untouched once
+                    // dead, matching `tumor_pk::sim_cell_with_pk`.)
                     if dosed && !grid.cells[idx].state.dead {
                         match condition.treatment {
                             Treatment::RSL3 => {
                                 // Covalent GPX4 inactivation proportional to
                                 // drug availability = schedule × spatial pH
                                 // ion-trap factor. Mirrors sim_cell_with_pk:538.
+                                debug_assert!(
+                                    !rsl3_drug_avail.is_empty(),
+                                    "rsl3_drug_avail must be populated on the dosed RSL3 path"
+                                );
                                 let conc = (dose_factor * rsl3_drug_avail[idx]).clamp(0.0, 1.0);
                                 let st = &mut grid.cells[idx].state;
                                 st.gpx4 -= RSL3_INACTIVATION_RATE * conc * st.gpx4;
@@ -590,6 +610,10 @@ fn run_one_condition_with_config(
                                 // multiplies the envelope back in — the
                                 // amplified value never reaches any other
                                 // computation.
+                                debug_assert!(
+                                    !base_exo.is_empty(),
+                                    "base_exo must be populated on the dosed SDT/PDT path"
+                                );
                                 let decay = exo_decay_factor(step).max(1e-9);
                                 grid.cells[idx].state.exo_ros_peak =
                                     base_exo[idx] * dose_factor / decay;
@@ -1433,9 +1457,10 @@ mod tests {
 
     // Golden integer kill counts for the Constant-path regression guard
     // (`constant_path_golden_kill_counts`), captured from SDT + immune +
-    // stromal + pH at grid_dim=20, n_steps=80. Deterministic across
-    // platforms (seeded RNG + IEEE f64). Update ONLY after confirming a
-    // default-path change is intentional.
+    // stromal + pH at grid_dim=20, n_steps=80. Deterministic on a fixed
+    // platform/toolchain (seeded RNG + IEEE f64); may differ by an ULP-edge
+    // count on other libm/CPU builds — see the test's doc. Update ONLY after
+    // confirming a default-path change is intentional.
     const GOLDEN_TOTAL_TUMOR: usize = 3071;
     const GOLDEN_TOTAL_DEAD: usize = 2992;
     const GOLDEN_FERRO_KILLS: usize = 2990;
@@ -1751,14 +1776,22 @@ mod tests {
 
     /// **Byte-identity regression guard for the Constant default path.**
     /// Pins the exact integer kill counts of a representative Constant
-    /// condition (SDT + immune + stromal + pH) at a fixed small config.
-    /// Integer counts are deterministic across platforms (same f64 ops +
-    /// seeded RNG), so this catches ANY drift in the default (non-dosed)
-    /// path — the load-bearing "summary.json byte-identical" property — at
-    /// unit-test speed, without the full 60³×180 production run. If a future
-    /// refactor changes these numbers, the byte-identical claim is broken
-    /// and this fails loudly. (Companion to the production SHA-256 check
-    /// done manually in #239's PR.)
+    /// condition (SDT + immune + stromal + pH) at a fixed small config,
+    /// catching ANY drift in the default (non-dosed) path — the load-bearing
+    /// "summary.json byte-identical" property — at unit-test speed, without
+    /// the full 60³×180 production run.
+    ///
+    /// **Scope: deterministic on a fixed platform + toolchain.** The kill
+    /// counts are integers, but the death decision is a strict
+    /// `lp > threshold` on values flowing through `powf` and the Ziggurat
+    /// normal sampler, which are not bit-identical across libm/CPU
+    /// implementations — so a cell within an ULP of the threshold could flip
+    /// a count on a different platform. (This is a pre-existing
+    /// whole-simulation property, not introduced by #239.) This test is the
+    /// same-platform CI guard against accidental drift; the production
+    /// SHA-256 check (done manually in #239's PR) is the cross-build
+    /// authority. If these numbers change, the byte-identical claim is broken
+    /// — investigate before updating.
     #[test]
     fn constant_path_golden_kill_counts() {
         let cond = Condition {
@@ -1834,6 +1867,71 @@ mod tests {
             "kill rate must be a valid fraction, got {}",
             r1.overall_kill_rate
         );
+    }
+
+    /// End-to-end coverage for the `Infusion` variant (review #10): runs
+    /// RSL3 under a continuous infusion through the full per-step dosed
+    /// path and asserts it's deterministic and produces a valid fraction.
+    #[test]
+    fn dosed_rsl3_infusion_runs_and_is_deterministic() {
+        let cond = Condition {
+            name: "test_rsl3_infusion".to_string(),
+            treatment: Treatment::RSL3,
+            treatment_name: "RSL3".to_string(),
+            o2_lambda: Some(ZONE_REF_LAMBDA),
+            immune_on: true,
+            stromal_on: false,
+            ph_on: true,
+            dose_schedule: DoseSchedule::Infusion {
+                start: 2,
+                end: 28,
+                level: 1.0,
+            },
+        };
+        let cfg = RunConfig {
+            grid_dim: 20,
+            n_steps: 30,
+        };
+        let r1 = run_one_condition_with_config(&cond, cfg, None);
+        let r2 = run_one_condition_with_config(&cond, cfg, None);
+        assert_eq!(
+            r1.total_dead, r2.total_dead,
+            "Infusion run must be deterministic"
+        );
+        assert!(r1.total_tumor > 0);
+        assert!((0.0..=1.0).contains(&r1.overall_kill_rate));
+    }
+
+    /// End-to-end coverage for the `FromPk` variant (review #10): runs RSL3
+    /// driven by the tumor_pk-derived availability series through the full
+    /// per-step dosed path. Exercises the ODE-bridge → grid wiring beyond
+    /// the `factor_at`-level unit test.
+    #[test]
+    fn dosed_rsl3_frompk_runs_and_is_deterministic() {
+        let cfg = RunConfig {
+            grid_dim: 20,
+            n_steps: 30,
+        };
+        let cond = Condition {
+            name: "test_rsl3_frompk".to_string(),
+            treatment: Treatment::RSL3,
+            treatment_name: "RSL3".to_string(),
+            o2_lambda: Some(ZONE_REF_LAMBDA),
+            immune_on: true,
+            stromal_on: false,
+            ph_on: true,
+            dose_schedule: DoseSchedule::FromPk {
+                series: rsl3_pk_factor_series(cfg.n_steps),
+            },
+        };
+        let r1 = run_one_condition_with_config(&cond, cfg, None);
+        let r2 = run_one_condition_with_config(&cond, cfg, None);
+        assert_eq!(
+            r1.total_dead, r2.total_dead,
+            "FromPk run must be deterministic"
+        );
+        assert!(r1.total_tumor > 0);
+        assert!((0.0..=1.0).contains(&r1.overall_kill_rate));
     }
 
     /// The FromPk bridge series must be a valid normalized availability
