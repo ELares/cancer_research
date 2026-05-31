@@ -545,6 +545,13 @@ fn run_one_condition_with_config(
         // Reads of `base_exo` / `rsl3_drug_avail` / `adjacency_mask` are
         // shared-immutable by own index. Iron + DAMP diffusion stay serial
         // (cross-cell deps) and run after the rayon join (a per-step barrier).
+        //
+        // The `zip` below relies on `cells` and `damp_field` having equal
+        // length (both allocated `n_cells`); a shorter `damp_field` would
+        // silently TRUNCATE the loop and drop cells. They're allocated full
+        // size unconditionally above, but assert it so a future conditional
+        // allocation can't introduce a silent correctness bug (review #255).
+        debug_assert_eq!(grid.cells.len(), damp_field.len());
         let died_this_step: usize = grid
             .cells
             .par_iter_mut()
@@ -1305,13 +1312,23 @@ fn run_dose_sweep(output_dir: &Path) {
     eprintln!("Wrote {}", path.display());
 }
 
-/// Read a positive-integer env var, falling back to `default` if unset or
-/// unparseable. Used by `--bench` to override grid size / step count without
-/// touching the byte-identical-locked `GRID_DIM`/`N_STEPS` constants.
-fn bench_env(name: &str, default: usize) -> usize {
+/// Read a positive `usize` env var, falling back to `default` if unset or
+/// unparseable. Used by `--bench` to override grid size without touching the
+/// byte-identical-locked `GRID_DIM` constant.
+fn bench_env_usize(name: &str, default: usize) -> usize {
     std::env::var(name)
         .ok()
         .and_then(|v| v.parse::<usize>().ok())
+        .filter(|&n| n > 0)
+        .unwrap_or(default)
+}
+
+/// Read a positive `u32` env var (parsed directly into `u32` — values above
+/// `u32::MAX` are rejected, not silently truncated). For `BENCH_N_STEPS`.
+fn bench_env_u32(name: &str, default: u32) -> u32 {
+    std::env::var(name)
+        .ok()
+        .and_then(|v| v.parse::<u32>().ok())
         .filter(|&n| n > 0)
         .unwrap_or(default)
 }
@@ -1330,9 +1347,11 @@ fn bench_env(name: &str, default: usize) -> usize {
 /// within-condition cost — exactly the work the within-condition parallelism
 /// targets. Writes no output files; the default matrix path is untouched.
 fn run_bench() {
-    let grid_dim = bench_env("BENCH_GRID_DIM", GRID_DIM);
-    let n_steps = bench_env("BENCH_N_STEPS", N_STEPS as usize) as u32;
-    let n_cells = grid_dim.pow(3);
+    let grid_dim = bench_env_usize("BENCH_GRID_DIM", GRID_DIM);
+    let n_steps = bench_env_u32("BENCH_N_STEPS", N_STEPS);
+    // saturating_pow: a huge BENCH_GRID_DIM saturates rather than overflow-
+    // panicking in debug (the grid allocation would fail first anyway).
+    let n_cells = grid_dim.saturating_pow(3);
 
     eprintln!(
         "=== --bench: single combined-TME RSL3 condition, {grid_dim}³ = {n_cells} cells × {n_steps} steps ==="
@@ -1518,6 +1537,10 @@ mod tests {
     const GOLDEN_TOTAL_DEAD: usize = 2992;
     const GOLDEN_FERRO_KILLS: usize = 2990;
     const GOLDEN_IMMUNE_KILLS: usize = 2;
+    // Dosed-path golden (MultiDose SDT + immune + stromal + pH, 20³×80).
+    const GOLDEN_DOSED_TOTAL_DEAD: usize = 2660;
+    const GOLDEN_DOSED_FERRO_KILLS: usize = 2658;
+    const GOLDEN_DOSED_IMMUNE_KILLS: usize = 2;
 
     /// `--snapshot` (no `=NAME`) defaults to `combined`.
     #[test]
@@ -1881,6 +1904,55 @@ mod tests {
             r.immune_kills,
             Some(GOLDEN_IMMUNE_KILLS),
             "Constant-path immune_kills drifted"
+        );
+    }
+
+    /// **Golden guard for the DOSED parallel path** (review #255 substantive
+    /// point 2). `constant_path_golden_kill_counts` pins the Constant path;
+    /// this pins a MultiDose SDT + immune + stromal + pH condition, which
+    /// exercises the machinery the Constant golden does NOT: the per-step
+    /// SDT exo-envelope divide-out, the grace-end DAMP write, and the
+    /// immune-kill loop — all through the rayon-parallelized loops. Same
+    /// fixed-platform/toolchain caveat as the Constant golden (integer
+    /// counts; `powf`/Ziggurat aren't bit-identical across libm).
+    #[test]
+    fn dosed_path_golden_kill_counts() {
+        let cond = Condition {
+            name: "golden_multidose_SDT".to_string(),
+            treatment: Treatment::SDT,
+            treatment_name: "SDT".to_string(),
+            o2_lambda: Some(ZONE_REF_LAMBDA),
+            immune_on: true,
+            stromal_on: true,
+            ph_on: true,
+            dose_schedule: DoseSchedule::MultiDose {
+                dose_steps: vec![5, 30, 55],
+                peak: 1.0,
+                half_life_steps: 8.0,
+            },
+        };
+        let cfg = RunConfig {
+            grid_dim: 20,
+            n_steps: 80,
+        };
+        let r = run_one_condition_with_config(&cond, cfg, None);
+        assert_eq!(
+            r.total_tumor, GOLDEN_TOTAL_TUMOR,
+            "tumor-cell count drifted"
+        );
+        assert_eq!(
+            r.total_dead, GOLDEN_DOSED_TOTAL_DEAD,
+            "dosed-path total_dead drifted"
+        );
+        assert_eq!(
+            r.ferroptosis_kills,
+            Some(GOLDEN_DOSED_FERRO_KILLS),
+            "dosed-path ferroptosis_kills drifted"
+        );
+        assert_eq!(
+            r.immune_kills,
+            Some(GOLDEN_DOSED_IMMUNE_KILLS),
+            "dosed-path immune_kills drifted"
         );
     }
 
