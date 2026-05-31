@@ -191,6 +191,8 @@ Both **performance targets are met even serially** (100³ < 2 min, 200³ < 15 mi
 
 **Parallelism note:** the default matrix parallelizes across the 24 conditions (`par_iter`); the biochem + immune-kill loops parallelize *within* a condition (rayon, byte-identical via position-independent per-cell RNG). Iron + DAMP diffusion stay serial (cross-cell dependencies). A single large `--bench` run has no condition-level parallelism, so within-condition rayon is what makes it fast.
 
+The within-condition rayon is **nested** inside the condition-level `par_iter` on the default 24-condition matrix. Measured before/after, the **matrix wall-clock is unchanged** (~15 s on 10 cores, serial-within-condition vs parallel-within-condition, within run-to-run noise): the 24 conditions already saturate the pool, so the inner `par_iter_mut` adds no measurable overhead and finds no idle workers to exploit until the tail. The speedup applies to **single large-grid runs** (the #240 patient-scale direction), not the everyday 60³ matrix — which is the intended target.
+
 ## Manuscript-keystone questions (issue #195)
 
 After running both `sim-tme` and `sim-tme-3d` and generating the comparison table. Each bullet states the pre-run **hypothesis** from issue #195 and the **observed** result from the canonical 60³ × 180-step run (full details in `simulations/calibration/3d_validation_report.md`).
