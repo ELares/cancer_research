@@ -47,6 +47,7 @@
 
 use std::fs;
 use std::path::Path;
+use std::time::Instant;
 
 mod npy;
 mod snapshot;
@@ -1331,6 +1332,74 @@ fn run_dose_sweep(output_dir: &Path) {
     eprintln!("Wrote {}", path.display());
 }
 
+/// Read a positive-integer env var, falling back to `default` if unset or
+/// unparseable. Used by `--bench` to override grid size / step count without
+/// touching the byte-identical-locked `GRID_DIM`/`N_STEPS` constants.
+fn bench_env(name: &str, default: usize) -> usize {
+    std::env::var(name)
+        .ok()
+        .and_then(|v| v.parse::<usize>().ok())
+        .filter(|&n| n > 0)
+        .unwrap_or(default)
+}
+
+/// `--bench`: run ONE representative condition (the combined-TME RSL3 cell —
+/// immune + stromal + pH, the heaviest per-cell path) at a configurable grid
+/// size and print wall-clock timing. The performance/scalability harness for
+/// issue #192.
+///
+/// Grid size and step count come from env (`BENCH_GRID_DIM`, `BENCH_N_STEPS`;
+/// defaults 60/180) so a sweep is scriptable, e.g.
+/// `BENCH_GRID_DIM=200 BENCH_N_STEPS=180 cargo run --release -p sim-tme-3d -- --bench`.
+/// Capture peak RSS externally: `/usr/bin/time -v <that command>`.
+///
+/// Runs a SINGLE condition with no condition-level rayon, so it measures the
+/// within-condition cost — exactly the work the within-condition parallelism
+/// targets. Writes no output files; the default matrix path is untouched.
+fn run_bench() {
+    let grid_dim = bench_env("BENCH_GRID_DIM", GRID_DIM);
+    let n_steps = bench_env("BENCH_N_STEPS", N_STEPS as usize) as u32;
+    let n_cells = grid_dim.pow(3);
+
+    eprintln!(
+        "=== --bench: single combined-TME RSL3 condition, {grid_dim}³ = {n_cells} cells × {n_steps} steps ==="
+    );
+    eprintln!(
+        "(override via BENCH_GRID_DIM / BENCH_N_STEPS; wrap with `/usr/bin/time -v` for peak RSS)"
+    );
+
+    let condition = Condition {
+        name: "bench_combined_RSL3".to_string(),
+        treatment: Treatment::RSL3,
+        treatment_name: "RSL3".to_string(),
+        o2_lambda: Some(ZONE_REF_LAMBDA),
+        immune_on: true,
+        stromal_on: true,
+        ph_on: true,
+        dose_schedule: DoseSchedule::Constant,
+    };
+    let cfg = RunConfig { grid_dim, n_steps };
+
+    let t0 = Instant::now();
+    let r = run_one_condition_with_config(&condition, cfg, None);
+    let elapsed = t0.elapsed();
+
+    let secs = elapsed.as_secs_f64();
+    let cell_steps = (n_cells as f64) * (n_steps as f64);
+    eprintln!(
+        "  done in {secs:.2}s — total_kill={:.2}% (ferro={}, immune={})",
+        r.overall_kill_rate * 100.0,
+        r.ferroptosis_kills.unwrap_or(0),
+        r.immune_kills.unwrap_or(0),
+    );
+    // Machine-readable line for sweep collection (grep 'BENCH_RESULT').
+    eprintln!(
+        "BENCH_RESULT grid_dim={grid_dim} n_cells={n_cells} n_steps={n_steps} \
+         wall_s={secs:.3} cell_steps_per_s={:.3e}",
+        cell_steps / secs.max(1e-9)
+    );
+}
+
 fn main() {
     // Guard against silent drift between this binary's metadata const and
     // the library's runtime value: if a future PR tunes
@@ -1394,6 +1463,17 @@ fn main() {
     // summary.json (which stays byte-identical to the 24-condition matrix).
     if std::env::args().any(|a| a == "--dose-sweep") {
         run_dose_sweep(output_dir);
+        return;
+    }
+
+    // `--bench` runs ONE representative condition at a configurable grid size
+    // (env BENCH_GRID_DIM / BENCH_N_STEPS, defaults 60/180) and prints
+    // wall-clock timing — the performance/scalability harness for #192. It
+    // measures the WITHIN-condition cost (no condition-level rayon), which is
+    // exactly what the within-condition parallelism targets. Does NOT write
+    // summary.json; the default matrix path below is untouched (byte-identical).
+    if std::env::args().any(|a| a == "--bench") {
+        run_bench();
         return;
     }
 
