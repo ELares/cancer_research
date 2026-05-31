@@ -42,6 +42,7 @@ Run the included example: `cargo run -p ferroptosis-core --example basic_usage`
 | `io` | JSON and CSV output helpers |
 | `drug_transport` | Krogh cylinder drug penetration model |
 | `tumor_pk` | Two-compartment vascular/interstitial pharmacokinetics |
+| `dose_schedule` | Time-varying drug-administration schedules (Constant / Bolus / MultiDose / Infusion / FromPk); `factor_at(step)` per-step availability, identity-default for byte-identical steady-state (#239) |
 
 ## Key API
 
