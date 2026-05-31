@@ -89,6 +89,34 @@ The default 24-condition matrix path (no `--snapshot` flag) is **byte-identical*
 
 **Schema versioning**: `trajectory_meta.json` carries its own `schema_version: u32` (currently `1`), separate from `summary.json`'s schema. The Python renderer hard-asserts the version to fail loudly on drift.
 
+### Snapshot presets (`--snapshot=NAME`)
+
+| name | treatment | toggles | schedule |
+|---|---|---|---|
+| `combined` (default) | RSL3 | immune + stromal + pH | constant |
+| `bare` | RSL3 | none | constant |
+| `multidose` | SDT | immune | **4-dose multi-dose (#239)** |
+
+The `multidose` preset shows **death waves synced to each dose**: four SDT ROS pulses at steps 10/55/100/145, each triggering a ferroptotic death wave + DAMP bloom + immune response. The renderer draws a red frame border + `💉 DOSE` marker on each dose step.
+
+## Time-varying dosing (`--dose-sweep` + `DoseSchedule`, #239)
+
+By default the simulator models drug as present at **constant** strength for the whole run. `ferroptosis-core::dose_schedule::DoseSchedule` adds time-varying administration: `Constant` (the byte-identical default), `Bolus`, `MultiDose`, `Infusion`, and `FromPk` (driven by the two-compartment `tumor_pk` ODE).
+
+- **SDT/PDT**: the schedule scales the per-step exogenous-ROS bolus. The intrinsic single-bolus decay envelope inside `sim_cell_step` is divided out on the dosed path (`biochem::exo_decay_factor`), so the schedule is the sole availability envelope — otherwise later doses would be wrongly crushed by the from-t=0 decay.
+- **RSL3**: the schedule drives per-step covalent GPX4 inactivation (`gpx4 -= RSL3_INACTIVATION_RATE · availability · gpx4`, the validated `tumor_pk::sim_cell_with_pk` model) instead of the one-shot init knockdown. pH ion-trapping composes as a per-cell spatial availability multiplier.
+
+`--dose-sweep` runs RSL3 across all five protocols at a fixed combined-TME context and writes `dose_comparison.json`:
+
+```bash
+cargo run --release -p sim-tme-3d -- --dose-sweep
+# → output/tme-3d/dose_comparison.json  (one row per protocol, shared grid + RNG seed)
+```
+
+All protocols share the same tumor grid and runtime RNG seed, so kill-rate differences reflect the dosing protocol alone, not stochastic noise. On this machine the steady-state `constant` model kills ~10–60× more than any realistic time-varying protocol — a direct quantification of how much the "drug present at full strength forever" idealization overestimates efficacy. **Absolute magnitudes are uncalibrated v1** (`RSL3_INACTIVATION_RATE` was tuned for sustained `conc=1.0`); the informative signal is the cross-protocol ordering.
+
+**Bit-identical guarantee**: when every condition uses `DoseSchedule::Constant` (the entire default 24-condition matrix), the run is byte-identical to pre-#239 — `summary.json` SHA unchanged. The dose machinery is gated behind `DoseSchedule::is_constant()`; `--dose-sweep` writes a separate file and never touches `summary.json`.
+
 ## Condition matrix
 
 | Category | Conditions | Description |

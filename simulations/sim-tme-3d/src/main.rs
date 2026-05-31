@@ -51,7 +51,7 @@ use std::path::Path;
 mod npy;
 mod snapshot;
 
-use ferroptosis_core::biochem::{sim_cell_step, CellState};
+use ferroptosis_core::biochem::{exo_decay_factor, sim_cell_step, CellState};
 use ferroptosis_core::cell::Treatment;
 use ferroptosis_core::dose_schedule::DoseSchedule;
 use ferroptosis_core::grid::{TumorGrid3D, TUMOR_RADIUS_FRACTION};
@@ -570,10 +570,18 @@ fn run_one_condition_with_config(
                                 st.gpx4 = st.gpx4.max(0.0);
                             }
                             Treatment::SDT | Treatment::PDT => {
-                                // Scale the exogenous-ROS bolus by drug
-                                // availability this step. The intra-cell decay
-                                // envelope inside sim_cell_step composes on top.
-                                grid.cells[idx].state.exo_ros_peak = base_exo[idx] * dose_factor;
+                                // Set the exogenous-ROS bolus so the schedule
+                                // is the SOLE availability envelope. We divide
+                                // out sim_cell_step's intrinsic single-bolus
+                                // decay (`exo_decay_factor`, 1.0 for step<30)
+                                // because it would otherwise double-count decay
+                                // for later doses — ROS generated at dose N
+                                // should decay from dose N, not from t=0 (#239).
+                                // Net effective exo in sim_cell_step is then
+                                // exactly `base * dose_factor(step)`.
+                                let decay = exo_decay_factor(step).max(1e-9);
+                                grid.cells[idx].state.exo_ros_peak =
+                                    base_exo[idx] * dose_factor / decay;
                             }
                             Treatment::Control => {}
                         }
@@ -958,12 +966,21 @@ struct SnapshotPreset {
     name: &'static str,
     /// Short human-readable description for the eprintln banner.
     desc: &'static str,
+    /// Treatment modality for this preset.
+    treatment: Treatment,
+    /// Display name for `treatment` (avoids a Debug-format dependency).
+    treatment_name: &'static str,
     /// True if immune kills + DAMP coupling are on (immune_mode = "immune_on").
     immune_on: bool,
     /// True if stromal protection (CAF GSH/MUFA shielding) is on.
     stromal_on: bool,
     /// True if the pH gradient + iron release + ion-trap are on.
     ph_on: bool,
+    /// True if this preset uses the multi-dose schedule (#239) instead of
+    /// the steady-state `Constant` default. The concrete `DoseSchedule` is
+    /// built at runtime in `run_snapshot` (a `const` can't hold the
+    /// `MultiDose` Vec).
+    multidose: bool,
 }
 
 /// Visualization presets for `--snapshot=NAME`. Keep this list small —
@@ -972,18 +989,45 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
     SnapshotPreset {
         name: "combined",
         desc: "RSL3 + immune + stromal + pH (all TME protections active)",
+        treatment: Treatment::RSL3,
+        treatment_name: "RSL3",
         immune_on: true,
         stromal_on: true,
         ph_on: true,
+        multidose: false,
     },
     SnapshotPreset {
         name: "bare",
         desc: "RSL3, no immune / stromal / pH (the unprotected baseline)",
+        treatment: Treatment::RSL3,
+        treatment_name: "RSL3",
         immune_on: false,
         stromal_on: false,
         ph_on: false,
+        multidose: false,
+    },
+    SnapshotPreset {
+        name: "multidose",
+        desc: "SDT multi-dose (4 pulses) + immune — death waves sync to each dose (#239)",
+        treatment: Treatment::SDT,
+        treatment_name: "SDT",
+        immune_on: true,
+        stromal_on: false,
+        ph_on: false,
+        multidose: true,
     },
 ];
+
+/// The multi-dose schedule used by the `multidose` snapshot preset:
+/// four ROS pulses across the 180-step run. Sharp half-life (8 steps) so
+/// each pulse rises and fades distinctly, producing visible death waves.
+fn multidose_snapshot_schedule() -> DoseSchedule {
+    DoseSchedule::MultiDose {
+        dose_steps: vec![10, 55, 100, 145],
+        peak: 1.0,
+        half_life_steps: 8.0,
+    }
+}
 
 /// Look up a snapshot preset by name, or print available choices and exit.
 fn resolve_snapshot(name: &str) -> &'static SnapshotPreset {
@@ -1001,23 +1045,31 @@ fn resolve_snapshot(name: &str) -> &'static SnapshotPreset {
 
 /// Run a single condition with per-step trajectory capture, then write
 /// `trajectory_{dead,damp,lp}.npy` + `trajectory_meta.json` to
-/// `output_dir`. Driven by the `--snapshot[=NAME]` CLI flag (#193).
+/// `output_dir`. Driven by the `--snapshot[=NAME]` CLI flag (#193, #239).
 ///
-/// All snapshots use RSL3 at λ=120 µm; the toggles (immune / stromal /
-/// pH) vary by [`SnapshotPreset`]. Files are written under the same
-/// names regardless of preset — running a second time overwrites; rename
-/// manually if you want to keep multiple side by side.
+/// Treatment, TME toggles, and dose schedule vary by [`SnapshotPreset`].
+/// Files are written under the same names regardless of preset — running
+/// a second time overwrites; rename manually to keep several side by side.
 fn run_snapshot(output_dir: &Path, tumor_radius_um: f64, name: &str) {
     let preset = resolve_snapshot(name);
+    let dose_schedule = if preset.multidose {
+        multidose_snapshot_schedule()
+    } else {
+        DoseSchedule::Constant
+    };
+    // Administration steps for metadata / renderer dose markers (empty for
+    // the steady-state Constant presets).
+    let dose_steps = dose_schedule.dose_steps();
+
     let condition = Condition {
-        name: format!("snapshot_{}_RSL3", preset.name),
-        treatment: Treatment::RSL3,
-        treatment_name: "RSL3".to_string(),
+        name: format!("snapshot_{}_{}", preset.name, preset.treatment_name),
+        treatment: preset.treatment,
+        treatment_name: preset.treatment_name.to_string(),
         o2_lambda: Some(ZONE_REF_LAMBDA),
         immune_on: preset.immune_on,
         stromal_on: preset.stromal_on,
         ph_on: preset.ph_on,
-        dose_schedule: DoseSchedule::Constant,
+        dose_schedule,
     };
 
     eprintln!(
@@ -1046,8 +1098,9 @@ fn run_snapshot(output_dir: &Path, tumor_radius_um: f64, name: &str) {
         cell_size_um: CELL_SIZE_UM,
         tumor_radius_um,
         n_steps: run_cfg.n_steps,
+        dose_steps,
         condition: snapshot::TrajectoryCondition {
-            treatment: "RSL3".to_string(),
+            treatment: preset.treatment_name.to_string(),
             o2_condition: "gradient".to_string(),
             o2_lambda_um: Some(ZONE_REF_LAMBDA),
             immune_mode: if preset.immune_on { "immune_on" } else { "off" }.to_string(),

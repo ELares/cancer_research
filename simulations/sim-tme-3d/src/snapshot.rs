@@ -99,6 +99,10 @@ pub struct TrajectoryMeta {
     pub cell_size_um: f64,
     pub tumor_radius_um: f64,
     pub n_steps: u32,
+    /// Steps at which a drug dose is administered (#239). Empty for the
+    /// steady-state `Constant` presets. The Python renderer draws a marker
+    /// on these frames so the viewer can see death waves sync to doses.
+    pub dose_steps: Vec<u32>,
     pub condition: TrajectoryCondition,
 }
 

@@ -120,14 +120,28 @@ def _render(
     damp_max = max(float(damp.max()), 1e-6)
     lp_max = max(float(lp.max()), 1e-6)
 
+    # Dose-administration steps (#239). Empty for steady-state Constant
+    # presets; non-empty for multi-dose / bolus / infusion snapshots, where
+    # we annotate the frames so the viewer can see death waves sync to doses.
+    dose_steps = set(int(s) for s in meta.get("dose_steps", []))
+    # Highlight the dose frame plus a few following frames (the death wave
+    # lags the dose), so the marker is visible for a beat rather than 1 frame.
+    dose_window = set()
+    for d in dose_steps:
+        for k in range(d, d + 5):
+            dose_window.add(k)
+
     fig, axes = plt.subplots(1, 3, figsize=(13, 4.5), constrained_layout=True)
     cond = meta.get("condition", {})
+    dose_caption = (
+        f"   doses@{sorted(dose_steps)}" if dose_steps else "   (constant dosing)"
+    )
     fig.suptitle(
         f"sim-tme-3d  axial mid-slice  ({cond.get('treatment', '?')}, "
         f"immune={cond.get('immune_mode', '?')}, "
         f"stromal={cond.get('stromal_mode') or 'off'}, "
         f"ph={cond.get('ph_mode') or 'off'}, "
-        f"λ_O₂={cond.get('o2_lambda_um', '?')}µm)",
+        f"λ_O₂={cond.get('o2_lambda_um', '?')}µm){dose_caption}",
         fontsize=10,
     )
 
@@ -158,7 +172,22 @@ def _render(
         im_lp.set_data(lp[step, mid])
         # Count cumulative dead cells in this slice for a quantitative cue.
         n_dead_slice = int(dead[step, mid].sum())
-        step_text.set_text(f"step {step + 1:3d}/{n_steps}    dead-in-slice={n_dead_slice}")
+        # Mark dose frames so multi-dose death waves are visually attributable.
+        if step in dose_steps:
+            dose_marker = "  💉 DOSE"
+        elif step in dose_window:
+            dose_marker = "  💉 ···"
+        else:
+            dose_marker = ""
+        step_text.set_text(
+            f"step {step + 1:3d}/{n_steps}    dead-in-slice={n_dead_slice}{dose_marker}"
+        )
+        # Red frame border on the dose step itself — a hard-to-miss cue.
+        border_on = step in dose_steps
+        for ax in axes:
+            for spine in ax.spines.values():
+                spine.set_edgecolor("red" if border_on else "none")
+                spine.set_linewidth(3.0 if border_on else 0.0)
         return [im_dead, im_damp, im_lp, step_text]
 
     interval_ms = max(1, int(1000.0 / fps))
