@@ -174,16 +174,16 @@ BENCH_GRID_DIM=200 BENCH_N_STEPS=180 cargo run --release -p sim-tme-3d -- --benc
 # peak RSS: wrap with `/usr/bin/time -l` (macOS) or `/usr/bin/time -v` (Linux)
 ```
 
-**Measured** (rust 1.96.0, 10-core machine; `size_of::<GridCell>() = 144 B`):
+**All figures below are direct `--bench` wall-clock measurements at 180 steps** (no projections), rust 1.96.0, 10-core machine, `size_of::<GridCell>() = 144 B`. Serial figures are from the pre-parallelization commit (commit 1 of this PR); parallel figures from the within-condition rayon path (commit 2). Throughput columns are each path's own `cell_steps_per_s`. Peak RSS is process-wide, measured via `/usr/bin/time -l`.
 
-| Grid | Cells | Peak RSS | Serial 180-step | Parallel 180-step | Throughput |
-|---|---|---|---|---|---|
-| 50³  | 125 k  | 22 MB    | ~0.7 s   | ~0.4 s   | 3.3e7 cell·step/s |
-| 100³ | 1.0 M  | 163 MB   | ~24 s    | ~5.4 s   | 3.3e7 |
-| 150³ | 3.375 M | 546 MB  | ~82 s    | ~18 s    | 3.3e7 |
-| 200³ | 8.0 M  | **1.29 GB** | ~195 s (~3.2 min) | **42.7 s** (measured) | 3.4e7 |
+| Grid | Cells | Peak RSS | Serial 180-step | Parallel 180-step | Speedup | Parallel throughput |
+|---|---|---|---|---|---|---|
+| 50³  | 125 k   | 23 MB   | 3.7 s   | 1.0 s  | 3.8× | 2.3e7 cell·step/s |
+| 100³ | 1.0 M   | 164 MB  | 26.4 s  | 6.1 s  | 4.3× | 3.0e7 |
+| 150³ | 3.375 M | 546 MB  | 87.6 s  | 18.3 s | 4.8× | 3.3e7 |
+| 200³ | 8.0 M   | **1.29 GB** | 201.3 s (3.4 min) | **40.8 s** | 4.9× | 3.5e7 |
 
-(Serial figures are from the pre-parallelization commit; parallel from the within-condition rayon path.) Both **performance targets are met** — 100³ < 2 min and 200³ < 15 min — with the within-condition rayon parallelism (#192) giving a **~4.5× speedup** on 10 cores on top.
+Both **performance targets are met even serially** (100³ < 2 min, 200³ < 15 min); the within-condition rayon parallelism (#192) adds a **3.8×–4.9× speedup** on 10 cores (the ratio grows with grid size as the fixed per-step rayon-join overhead amortizes). Serial throughput is ~7e6 cell·step/s across sizes.
 
 **Memory verdict (feeds #240 patient-scale):** dense **200³ fits the 2 GB budget at 1.29 GB** with ~35% headroom — no sparse grid needed at this scale. Sparse/adaptive only become compelling at 300³+ (≈ 6 GB) or when running many large conditions concurrently; deferred to a follow-up issue.
 

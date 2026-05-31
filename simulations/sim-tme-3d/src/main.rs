@@ -23,7 +23,7 @@
 //! tumor). sim-tme-3d uses a **60³ grid** (tumor radius ≈ 540 µm —
 //! upper end of in-vitro spheroids) as the default for the 24-condition
 //! matrix. Larger single-condition grids are now feasible after the #192
-//! perf work: measured 200³ × 180 = ~43 s at ~1.29 GB on 10 cores (see
+//! perf work: measured 200³ × 180 ≈ 41 s at ~1.29 GB on 10 cores (see
 //! `--bench` + the "Performance & scalability" section of the README).
 //! Only 500³+ (≈ 18 GB dense) remains out of reach. The 60³ default is a
 //! deliberate matrix-throughput choice, not a ceiling.
