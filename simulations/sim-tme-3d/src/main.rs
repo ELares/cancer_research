@@ -1066,6 +1066,174 @@ fn run_snapshot(output_dir: &Path, tumor_radius_um: f64, name: &str) {
     eprintln!("Render with: python3 scripts/render_tme_3d_trajectory.py");
 }
 
+/// Schema version for `dose_comparison.json` (#239). Independent of
+/// `summary.json`'s schema.
+const DOSE_SWEEP_SCHEMA_VERSION: u32 = 1;
+
+/// One row of the dose-sweep comparison: RSL3 kill outcome under a single
+/// dosing protocol, all else equal.
+#[derive(Serialize)]
+struct DoseSweepEntry {
+    /// Short protocol label (constant / bolus / multidose / infusion / frompk).
+    schedule: String,
+    /// Human-readable protocol description.
+    description: String,
+    total_tumor: usize,
+    total_dead: usize,
+    overall_kill_rate: f64,
+    ferroptosis_kills: usize,
+    immune_kills: usize,
+}
+
+#[derive(Serialize)]
+struct DoseSweepResult {
+    schema_version: u32,
+    treatment: String,
+    /// The fixed biological context shared by every protocol.
+    context: String,
+    grid_dim: usize,
+    n_steps: u32,
+    /// One entry per dosing protocol, all sharing the same grid + RNG seed
+    /// so differences reflect the protocol alone, not stochastic noise.
+    schedules: Vec<DoseSweepEntry>,
+}
+
+/// Normalized RSL3 interstitial-concentration factor series from the
+/// two-compartment tumor PK ODE (#239 `DoseSchedule::FromPk` bridge).
+///
+/// Solves `tumor_pk::solve_tumor_pk` for an IV bolus into a breast-tumor
+/// compartment, then normalizes the interstitial timecourse to peak 1.0 so
+/// it reads as a drug-availability factor. This is what finally wires the
+/// (previously orphaned) PK ODE into the spatial grid, without coupling the
+/// grid to the solver — the grid just consumes the resulting `&[f64]`.
+fn rsl3_pk_factor_series(n_steps: u32) -> Vec<f64> {
+    use ferroptosis_core::tumor_pk::{breast_tumor, solve_tumor_pk, PlasmaModel};
+    // IV bolus, ~35-step plasma half-life (k_el = ln2 / 35 ≈ 0.0198 /min).
+    let plasma = PlasmaModel::IvBolus {
+        c0: 1.0,
+        k_el: 0.0198,
+    };
+    let tumor = breast_tumor();
+    let res = solve_tumor_pk(&plasma, &tumor, n_steps as usize, 10);
+    let max = res
+        .c_interstitial
+        .iter()
+        .cloned()
+        .fold(0.0_f64, f64::max)
+        .max(1e-9);
+    res.c_interstitial
+        .iter()
+        .map(|c| (c / max).clamp(0.0, 1.0))
+        .collect()
+}
+
+/// `--dose-sweep`: run RSL3 across all five dosing protocols at the
+/// combined-TME context (immune + stromal + pH, λ=120) and write
+/// `dose_comparison.json` (#239).
+///
+/// **Controlled comparison**: every protocol uses the SAME tumor grid
+/// (fixed `SEED`) and the SAME runtime RNG seed (all conditions share one
+/// name), so the only thing that varies between rows is the dosing
+/// schedule. Differences in kill rate therefore reflect the protocol, not
+/// stochastic noise.
+fn run_dose_sweep(output_dir: &Path) {
+    eprintln!(
+        "=== --dose-sweep: RSL3 across dosing protocols ({}³ × {} steps) ===",
+        GRID_DIM, N_STEPS
+    );
+
+    // (label, description, schedule). All run RSL3 + immune + stromal + pH.
+    let protocols: Vec<(&str, &str, DoseSchedule)> = vec![
+        (
+            "constant",
+            "Steady-state full availability (one-shot GPX4 knockdown)",
+            DoseSchedule::Constant,
+        ),
+        (
+            "bolus",
+            "Single bolus at step 10, 20-step half-life",
+            DoseSchedule::Bolus {
+                dose_step: 10,
+                peak: 1.0,
+                half_life_steps: 20.0,
+            },
+        ),
+        (
+            "multidose",
+            "4 doses at steps 10/55/100/145, 18-step half-life",
+            DoseSchedule::MultiDose {
+                dose_steps: vec![10, 55, 100, 145],
+                peak: 1.0,
+                half_life_steps: 18.0,
+            },
+        ),
+        (
+            "infusion",
+            "Continuous infusion, level 0.5, steps 10-170",
+            DoseSchedule::Infusion {
+                start: 10,
+                end: 170,
+                level: 0.5,
+            },
+        ),
+        (
+            "frompk",
+            "tumor_pk two-compartment IV-bolus interstitial curve (breast tumor)",
+            DoseSchedule::FromPk {
+                series: rsl3_pk_factor_series(N_STEPS),
+            },
+        ),
+    ];
+
+    let entries: Vec<DoseSweepEntry> = protocols
+        .par_iter()
+        .map(|(label, desc, sched)| {
+            let cond = Condition {
+                // Shared name → shared cond_seed → matched RNG across protocols.
+                name: "dosesweep_RSL3".to_string(),
+                treatment: Treatment::RSL3,
+                treatment_name: "RSL3".to_string(),
+                o2_lambda: Some(ZONE_REF_LAMBDA),
+                immune_on: true,
+                stromal_on: true,
+                ph_on: true,
+                dose_schedule: sched.clone(),
+            };
+            let r = run_one_condition(&cond);
+            eprintln!(
+                "  {label:<10} → kill={:.2}% (ferro={}, immune={})",
+                r.overall_kill_rate * 100.0,
+                r.ferroptosis_kills.unwrap_or(0),
+                r.immune_kills.unwrap_or(0),
+            );
+            DoseSweepEntry {
+                schedule: (*label).to_string(),
+                description: (*desc).to_string(),
+                total_tumor: r.total_tumor,
+                total_dead: r.total_dead,
+                overall_kill_rate: r.overall_kill_rate,
+                ferroptosis_kills: r.ferroptosis_kills.unwrap_or(0),
+                immune_kills: r.immune_kills.unwrap_or(0),
+            }
+        })
+        .collect();
+
+    let result = DoseSweepResult {
+        schema_version: DOSE_SWEEP_SCHEMA_VERSION,
+        treatment: "RSL3".to_string(),
+        context: "immune + stromal + pH at λ=120 µm; shared grid + RNG seed across protocols"
+            .to_string(),
+        grid_dim: GRID_DIM,
+        n_steps: N_STEPS,
+        schedules: entries,
+    };
+
+    let path = output_dir.join("dose_comparison.json");
+    fs::write(&path, serde_json::to_string_pretty(&result).unwrap())
+        .expect("Failed to write dose_comparison.json");
+    eprintln!("Wrote {}", path.display());
+}
+
 fn main() {
     // Guard against silent drift between this binary's metadata const and
     // the library's runtime value: if a future PR tunes
@@ -1119,6 +1287,16 @@ fn main() {
     // `--snapshot` defaults to `combined`.
     if let Some(name) = parse_snapshot_arg(std::env::args()) {
         run_snapshot(output_dir, tumor_radius_um, &name);
+        return;
+    }
+
+    // `--dose-sweep` runs RSL3 across all five dosing protocols (Constant /
+    // Bolus / MultiDose / Infusion / FromPk) at the combined-TME context and
+    // writes `dose_comparison.json` — the quantitative "does dosing protocol
+    // change efficacy?" answer (#239). Separate file; does NOT touch
+    // summary.json (which stays byte-identical to the 24-condition matrix).
+    if std::env::args().any(|a| a == "--dose-sweep") {
+        run_dose_sweep(output_dir);
         return;
     }
 
@@ -1523,6 +1701,24 @@ mod tests {
             (0.0..=1.0).contains(&r1.overall_kill_rate),
             "kill rate must be a valid fraction, got {}",
             r1.overall_kill_rate
+        );
+    }
+
+    /// The FromPk bridge series must be a valid normalized availability
+    /// factor: correct length, all values in [0, 1], and peak ≈ 1.0
+    /// (normalization target). Guards the `tumor_pk` → spatial-grid wiring.
+    #[test]
+    fn rsl3_pk_factor_series_is_normalized() {
+        let series = rsl3_pk_factor_series(180);
+        assert_eq!(series.len(), 180, "series length must match n_steps");
+        assert!(
+            series.iter().all(|&f| (0.0..=1.0).contains(&f)),
+            "all factors must be in [0, 1]"
+        );
+        let peak = series.iter().cloned().fold(0.0_f64, f64::max);
+        assert!(
+            (peak - 1.0).abs() < 1e-9,
+            "series must be normalized to peak 1.0, got {peak}"
         );
     }
 
