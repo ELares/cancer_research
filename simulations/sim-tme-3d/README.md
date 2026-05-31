@@ -164,6 +164,33 @@ Three smoke tests:
 
 The library primitives (`physics`, `oxygen`, `ph`, `stromal`, `immune_spatial`) are exhaustively tested in `ferroptosis-core`'s 160+ unit tests. This binary tests orchestration, not the math.
 
+## Performance & scalability (`--bench`, #192)
+
+`--bench` runs one representative condition (combined-TME RSL3) at a configurable grid size and prints wall-clock + throughput. Grid/steps come from env so a sweep is scriptable:
+
+```bash
+cd simulations
+BENCH_GRID_DIM=200 BENCH_N_STEPS=180 cargo run --release -p sim-tme-3d -- --bench
+# peak RSS: wrap with `/usr/bin/time -l` (macOS) or `/usr/bin/time -v` (Linux)
+```
+
+**Measured** (rust 1.96.0, 10-core machine; `size_of::<GridCell>() = 144 B`):
+
+| Grid | Cells | Peak RSS | Serial 180-step | Parallel 180-step | Throughput |
+|---|---|---|---|---|---|
+| 50³  | 125 k  | 22 MB    | ~0.7 s   | ~0.4 s   | 3.3e7 cell·step/s |
+| 100³ | 1.0 M  | 163 MB   | ~24 s    | ~5.4 s   | 3.3e7 |
+| 150³ | 3.375 M | 546 MB  | ~82 s    | ~18 s    | 3.3e7 |
+| 200³ | 8.0 M  | **1.29 GB** | ~195 s (~3.2 min) | **42.7 s** (measured) | 3.4e7 |
+
+(Serial figures are from the pre-parallelization commit; parallel from the within-condition rayon path.) Both **performance targets are met** — 100³ < 2 min and 200³ < 15 min — with the within-condition rayon parallelism (#192) giving a **~4.5× speedup** on 10 cores on top.
+
+**Memory verdict (feeds #240 patient-scale):** dense **200³ fits the 2 GB budget at 1.29 GB** with ~35% headroom — no sparse grid needed at this scale. Sparse/adaptive only become compelling at 300³+ (≈ 6 GB) or when running many large conditions concurrently; deferred to a follow-up issue.
+
+**Recommended grid size:** 60³ for the 24-condition matrix (throughput); up to 150³ comfortably for single high-resolution runs; 200³ feasible at ~1.29 GB / ~43 s. Do **not** run 200³ across many concurrent conditions (24 × 1.29 GB would OOM) — throttle with `RAYON_NUM_THREADS` if needed.
+
+**Parallelism note:** the default matrix parallelizes across the 24 conditions (`par_iter`); the biochem + immune-kill loops parallelize *within* a condition (rayon, byte-identical via position-independent per-cell RNG). Iron + DAMP diffusion stay serial (cross-cell dependencies). A single large `--bench` run has no condition-level parallelism, so within-condition rayon is what makes it fast.
+
 ## Manuscript-keystone questions (issue #195)
 
 After running both `sim-tme` and `sim-tme-3d` and generating the comparison table. Each bullet states the pre-run **hypothesis** from issue #195 and the **observed** result from the canonical 60³ × 180-step run (full details in `simulations/calibration/3d_validation_report.md`).
@@ -186,9 +213,9 @@ After running both `sim-tme` and `sim-tme-3d` and generating the comparison tabl
 
 ## Follow-ups deferred to subsequent PRs
 
-- **Lift `PhConfig` / `StromalConfig` / `ImmuneConfig` to `ferroptosis-core::params`** — currently duplicated from sim-tme. Per the consolidated cleanup checklist on issue #195.
+- ~~**Lift `PhConfig` / `StromalConfig` / `ImmuneConfig` to `ferroptosis-core::params`**~~ — **done** in #220/#224 (lifted as `PhConfig` / `StromalConfig` / `SpatialImmuneConfig`).
 - **O₂ cycling** (square-wave λ alternation) — sim-tme has it, sim-tme-3d skipped for v1 scope.
 - **Anti-PD-1 sweep** — included in sim-tme; skipped here for v1.
-- **3D volumetric visualization** — see #193.
-- **Larger grids** (80³+) — gated on #194 perf work.
+- **3D volumetric visualization** — partially done (#193/#238 axial-slice GIF); full volume render still open under #193.
+- ~~**Larger grids**~~ — **demonstrated feasible** in #192: up to 200³ at ~1.29 GB / ~43 s (see Performance & scalability above). The general `sim-spatial-3d` binary (#194) is separate.
 - **Empirical pimonidazole validation** — see #196.
