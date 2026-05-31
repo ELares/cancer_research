@@ -53,6 +53,42 @@ python3 ../scripts/generate_3d_comparison_table.py
 
 The 3D 24-condition run takes ~15-30 seconds on 8 cores (rayon condition-level parallelism). The 2D prerequisite (`sim-tme`) is much heavier — 10-30 minutes on the same hardware.
 
+## Trajectory snapshot (`--snapshot[=NAME]`, #193)
+
+For visualization, pass `--snapshot` to run **one** condition (RSL3 + immune_on + stromal_on + ph_on at λ=120 µm — the most visually rich cell of the matrix) with per-step state capture:
+
+**Presets** (`--snapshot=NAME`; bare `--snapshot` resolves to `combined`,
+so the original UX is preserved). An unknown name prints the list and
+exits 2; add a preset via a one-entry change to the `SNAPSHOTS` registry
+in `main.rs`. All presets are RSL3 at λ=120 µm; the toggles vary, and the
+output files use the same names regardless of preset (a rerun overwrites).
+
+| Name | Condition |
+|---|---|
+| `combined` (default) | RSL3 + immune_on + stromal_on + ph_on. All TME protections active, the most visually rich cell of the matrix. |
+| `bare` | RSL3 with none of the TME protections. The death front sweeps the spheroid more visibly (~3x higher kill rate than `combined`). |
+
+```bash
+cd simulations
+cargo run --release -p sim-tme-3d -- --snapshot          # = --snapshot=combined
+cargo run --release -p sim-tme-3d -- --snapshot=bare     # unprotected baseline (overwrites the files)
+# → output/tme-3d/trajectory_dead.npy   (180 × 60 × 60 × 60, u8)
+# → output/tme-3d/trajectory_damp.npy   (180 × 60 × 60 × 60, f32)
+# → output/tme-3d/trajectory_lp.npy     (180 × 60 × 60 × 60, f32)
+# → output/tme-3d/trajectory_meta.json  (schema + condition descriptor)
+
+# Render an animated axial mid-slice GIF (+ MP4 if ffmpeg available)
+python3 ../scripts/render_tme_3d_trajectory.py
+# → output/tme-3d/trajectory_axial.gif  (~4 MB, 180 frames @ 15 fps = 12s)
+# → output/tme-3d/trajectory_axial.mp4  (if ffmpeg on PATH)
+```
+
+The default 24-condition matrix path (no `--snapshot` flag) is **byte-identical** to before #193 — `summary.json` hash is unchanged. Only the snapshot path touches the new trajectory capture code.
+
+**On-disk size**: ~333 MB total (37 MB dead + 148 MB damp + 148 MB lp). `output/` is git-ignored; the trajectory is meant to be regenerated locally.
+
+**Schema versioning**: `trajectory_meta.json` carries its own `schema_version: u32` (currently `1`), separate from `summary.json`'s schema. The Python renderer hard-asserts the version to fail loudly on drift.
+
 ## Condition matrix
 
 | Category | Conditions | Description |

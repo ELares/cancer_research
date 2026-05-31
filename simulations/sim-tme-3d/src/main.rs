@@ -48,6 +48,9 @@
 use std::fs;
 use std::path::Path;
 
+mod npy;
+mod snapshot;
+
 use ferroptosis_core::biochem::{sim_cell_step, CellState};
 use ferroptosis_core::cell::Treatment;
 use ferroptosis_core::grid::{TumorGrid3D, TUMOR_RADIUS_FRACTION};
@@ -274,10 +277,14 @@ impl RunConfig {
 }
 
 fn run_one_condition(condition: &Condition) -> ConditionResult {
-    run_one_condition_with_config(condition, RunConfig::production())
+    run_one_condition_with_config(condition, RunConfig::production(), None)
 }
 
-fn run_one_condition_with_config(condition: &Condition, run_cfg: RunConfig) -> ConditionResult {
+fn run_one_condition_with_config(
+    condition: &Condition,
+    run_cfg: RunConfig,
+    mut snapshot: Option<&mut snapshot::SnapshotBuffers>,
+) -> ConditionResult {
     let params = Params::default();
     let spatial_params = SpatialParams {
         cell_size_um: CELL_SIZE_UM,
@@ -586,6 +593,14 @@ fn run_one_condition_with_config(condition: &Condition, run_cfg: RunConfig) -> C
                 }
             }
         }
+
+        // Per-step trajectory capture for `--snapshot` runs. No-op for the
+        // default 24-condition matrix path (snapshot is None there).
+        // Captured *after* all per-step work (biochem + DAMP + immune kill)
+        // so the snapshot reflects end-of-step state.
+        if let Some(buf) = snapshot.as_mut() {
+            buf.capture_step(&grid, &damp_field);
+        }
     }
 
     // Late DAMP release for cells still in their post-death grace period at
@@ -815,6 +830,137 @@ fn generate_conditions() -> Vec<Condition> {
 // Main
 // ============================================================
 
+/// Parse a `--snapshot[=NAME]` argument from the CLI args iterator.
+/// Returns `Some(name)` if the flag is present (defaults to
+/// `"combined"` if no `=NAME` suffix), `None` otherwise. Unknown
+/// preset names are validated downstream by [`resolve_snapshot`].
+fn parse_snapshot_arg<I: IntoIterator<Item = String>>(args: I) -> Option<String> {
+    for a in args {
+        if a == "--snapshot" {
+            return Some("combined".to_string());
+        }
+        if let Some(name) = a.strip_prefix("--snapshot=") {
+            return Some(name.to_string());
+        }
+    }
+    None
+}
+
+/// One entry in the `--snapshot=NAME` registry. Each entry pins a
+/// reproducible condition for visualization. Names are stable; adding
+/// a new variant doesn't change existing ones. See [`SNAPSHOTS`].
+struct SnapshotPreset {
+    /// CLI name (e.g. `combined`, `bare`). Used as `--snapshot=NAME`.
+    name: &'static str,
+    /// Short human-readable description for the eprintln banner.
+    desc: &'static str,
+    /// True if immune kills + DAMP coupling are on (immune_mode = "immune_on").
+    immune_on: bool,
+    /// True if stromal protection (CAF GSH/MUFA shielding) is on.
+    stromal_on: bool,
+    /// True if the pH gradient + iron release + ion-trap are on.
+    ph_on: bool,
+}
+
+/// Visualization presets for `--snapshot=NAME`. Keep this list small —
+/// each entry costs ~333 MB on disk when its trajectory is generated.
+const SNAPSHOTS: &[SnapshotPreset] = &[
+    SnapshotPreset {
+        name: "combined",
+        desc: "RSL3 + immune + stromal + pH (all TME protections active)",
+        immune_on: true,
+        stromal_on: true,
+        ph_on: true,
+    },
+    SnapshotPreset {
+        name: "bare",
+        desc: "RSL3, no immune / stromal / pH (the unprotected baseline)",
+        immune_on: false,
+        stromal_on: false,
+        ph_on: false,
+    },
+];
+
+/// Look up a snapshot preset by name, or print available choices and exit.
+fn resolve_snapshot(name: &str) -> &'static SnapshotPreset {
+    SNAPSHOTS
+        .iter()
+        .find(|s| s.name == name)
+        .unwrap_or_else(|| {
+            eprintln!("ERROR: unknown --snapshot name `{name}`. Available presets:");
+            for s in SNAPSHOTS {
+                eprintln!("  {:<10} — {}", s.name, s.desc);
+            }
+            std::process::exit(2);
+        })
+}
+
+/// Run a single condition with per-step trajectory capture, then write
+/// `trajectory_{dead,damp,lp}.npy` + `trajectory_meta.json` to
+/// `output_dir`. Driven by the `--snapshot[=NAME]` CLI flag (#193).
+///
+/// All snapshots use RSL3 at λ=120 µm; the toggles (immune / stromal /
+/// pH) vary by [`SnapshotPreset`]. Files are written under the same
+/// names regardless of preset — running a second time overwrites; rename
+/// manually if you want to keep multiple side by side.
+fn run_snapshot(output_dir: &Path, tumor_radius_um: f64, name: &str) {
+    let preset = resolve_snapshot(name);
+    let condition = Condition {
+        name: format!("snapshot_{}_RSL3", preset.name),
+        treatment: Treatment::RSL3,
+        treatment_name: "RSL3".to_string(),
+        o2_lambda: Some(ZONE_REF_LAMBDA),
+        immune_on: preset.immune_on,
+        stromal_on: preset.stromal_on,
+        ph_on: preset.ph_on,
+    };
+
+    eprintln!(
+        "=== --snapshot={}: {} ({}³ × {} steps) ===",
+        preset.name, preset.desc, GRID_DIM, N_STEPS,
+    );
+
+    let run_cfg = RunConfig::production();
+    let mut buffers = snapshot::SnapshotBuffers::new(run_cfg.grid_dim, run_cfg.n_steps);
+    let result = run_one_condition_with_config(&condition, run_cfg, Some(&mut buffers));
+    eprintln!(
+        "  done — total_kill={:.1}%, ferroptosis_kills={}, immune_kills={}, captured {} steps",
+        result.overall_kill_rate * 100.0,
+        result.ferroptosis_kills.unwrap_or(0),
+        result.immune_kills.unwrap_or(0),
+        buffers.steps_captured(),
+    );
+
+    buffers
+        .write(output_dir)
+        .expect("Failed to write trajectory .npy files");
+
+    let meta = snapshot::TrajectoryMeta {
+        schema_version: snapshot::TRAJECTORY_SCHEMA_VERSION,
+        grid_dim: run_cfg.grid_dim,
+        cell_size_um: CELL_SIZE_UM,
+        tumor_radius_um,
+        n_steps: run_cfg.n_steps,
+        condition: snapshot::TrajectoryCondition {
+            treatment: "RSL3".to_string(),
+            o2_condition: "gradient".to_string(),
+            o2_lambda_um: Some(ZONE_REF_LAMBDA),
+            immune_mode: if preset.immune_on { "immune_on" } else { "off" }.to_string(),
+            stromal_mode: preset.stromal_on.then(|| "stromal_on".to_string()),
+            ph_mode: preset.ph_on.then(|| "ph_on".to_string()),
+        },
+    };
+    let meta_path = output_dir.join("trajectory_meta.json");
+    fs::write(&meta_path, serde_json::to_string_pretty(&meta).unwrap())
+        .expect("Failed to write trajectory_meta.json");
+
+    eprintln!(
+        "Wrote {} + trajectory_{{dead,damp,lp}}.npy",
+        meta_path.display()
+    );
+    eprintln!("Render with: python3 scripts/render_tme_3d_trajectory.py");
+}
+
 fn main() {
     // Guard against silent drift between this binary's metadata const and
     // the library's runtime value: if a future PR tunes
@@ -859,6 +1005,17 @@ fn main() {
 
     let output_dir = Path::new("output/tme-3d");
     fs::create_dir_all(output_dir).expect("Failed to create output/tme-3d");
+
+    // `--snapshot[=NAME]` runs ONE visualization-focused condition with
+    // per-step state capture for the Python animation. Default path (no
+    // flag) is unchanged: runs the full 24-condition matrix →
+    // summary.json. Bit-identical when the flag is absent (snapshot path
+    // doesn't touch the matrix). Names listed in `SNAPSHOTS`; bare
+    // `--snapshot` defaults to `combined`.
+    if let Some(name) = parse_snapshot_arg(std::env::args()) {
+        run_snapshot(output_dir, tumor_radius_um, &name);
+        return;
+    }
 
     let conditions = generate_conditions();
     eprintln!(
@@ -918,6 +1075,39 @@ fn main() {
 mod tests {
     use super::*;
 
+    /// `--snapshot` (no `=NAME`) defaults to `combined`.
+    #[test]
+    fn parse_snapshot_arg_bare_defaults_to_combined() {
+        let args = vec!["sim-tme-3d".to_string(), "--snapshot".to_string()];
+        assert_eq!(parse_snapshot_arg(args), Some("combined".to_string()));
+    }
+
+    /// `--snapshot=bare` extracts the name after `=`.
+    #[test]
+    fn parse_snapshot_arg_equals_form_extracts_name() {
+        let args = vec!["sim-tme-3d".to_string(), "--snapshot=bare".to_string()];
+        assert_eq!(parse_snapshot_arg(args), Some("bare".to_string()));
+    }
+
+    /// Absent flag returns None (the default 24-condition matrix path).
+    #[test]
+    fn parse_snapshot_arg_absent_returns_none() {
+        let args = vec!["sim-tme-3d".to_string()];
+        assert_eq!(parse_snapshot_arg(args), None);
+    }
+
+    /// All `SNAPSHOTS` entries have unique names (used as the `=NAME`
+    /// match key downstream). A typo or copy-paste duplicate would
+    /// make `resolve_snapshot` ambiguous (first-match-wins).
+    #[test]
+    fn snapshot_preset_names_are_unique() {
+        let mut names: Vec<&str> = SNAPSHOTS.iter().map(|s| s.name).collect();
+        names.sort();
+        let original = names.len();
+        names.dedup();
+        assert_eq!(names.len(), original, "duplicate snapshot preset name");
+    }
+
     /// Smoke test: condition matrix is non-empty and well-formed.
     #[test]
     fn condition_matrix_is_non_empty() {
@@ -954,7 +1144,7 @@ mod tests {
             stromal_on: false,
             ph_on: false,
         };
-        let r = run_one_condition_with_config(&cond, RunConfig::for_test());
+        let r = run_one_condition_with_config(&cond, RunConfig::for_test(), None);
         assert_eq!(r.treatment, "Control");
         assert_eq!(r.o2_condition, "uniform");
         assert_eq!(r.immune_mode, "off");
@@ -983,8 +1173,8 @@ mod tests {
             stromal_on: false,
             ph_on: false,
         };
-        let r1 = run_one_condition_with_config(&cond, RunConfig::for_test());
-        let r2 = run_one_condition_with_config(&cond, RunConfig::for_test());
+        let r1 = run_one_condition_with_config(&cond, RunConfig::for_test(), None);
+        let r2 = run_one_condition_with_config(&cond, RunConfig::for_test(), None);
         assert_eq!(r1.total_dead, r2.total_dead);
         assert_eq!(r1.total_tumor, r2.total_tumor);
         assert_eq!(r1.overall_kill_rate, r2.overall_kill_rate);
@@ -1024,7 +1214,7 @@ mod tests {
             grid_dim: 25,
             n_steps: 130,
         };
-        let r = run_one_condition_with_config(&cond, cfg);
+        let r = run_one_condition_with_config(&cond, cfg, None);
         assert_eq!(r.immune_mode, "immune_on");
         let im_kills = r
             .immune_kills
@@ -1060,7 +1250,7 @@ mod tests {
             grid_dim: 15,
             n_steps: 80,
         };
-        let r = run_one_condition_with_config(&cond, cfg);
+        let r = run_one_condition_with_config(&cond, cfg, None);
         let ferro = r.ferroptosis_kills.expect("immune_on populates this");
         let im = r.immune_kills.expect("immune_on populates this");
         assert_eq!(
@@ -1101,7 +1291,7 @@ mod tests {
         let run = |conds: &[Condition]| -> Vec<ConditionResult> {
             conds
                 .par_iter()
-                .map(|c| run_one_condition_with_config(c, cfg))
+                .map(|c| run_one_condition_with_config(c, cfg, None))
                 .collect()
         };
 
