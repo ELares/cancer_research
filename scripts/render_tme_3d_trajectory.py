@@ -12,8 +12,8 @@ Writes:
     simulations/output/tme-3d/trajectory_axial.mp4  (if ffmpeg available)
 
 Visualization:
-    Three panels showing the axial mid-slice (l = layers/2) of the
-    spheroid at each step:
+    Three panels showing a central mid-plane slice (the row axis fixed
+    at rows/2) of the spheroid at each step:
       1. Dead-cell mask    (grayscale background + red dead cells)
       2. DAMP field        (inferno colormap, dynamic range)
       3. LP (lipid perox.) (viridis colormap, dynamic range)
@@ -108,8 +108,12 @@ def _render(
     skip_mp4: bool,
 ) -> list[Path]:
     """Build the FuncAnimation and save GIF (+ MP4 unless skip_mp4)."""
-    n_steps, layers, rows, cols = dead.shape
-    mid_l = layers // 2  # axial mid-slice
+    # The Rust grid is stored C-order as (row, col, layer), so np.load
+    # yields axes (step, row, col, layer). The spheroid is a centered,
+    # isotropic 60³ cube, so fixing any spatial axis at its midpoint
+    # gives an equivalent central cross-section through the core.
+    n_steps, n_rows, _n_cols, _n_layers = dead.shape
+    mid = n_rows // 2  # central mid-plane; the slice spans (col, layer)
 
     # Compute global color ranges so the animation has stable color scales
     # (otherwise each frame's vmin/vmax shifts and the animation flickers).
@@ -121,19 +125,19 @@ def _render(
     fig.suptitle(
         f"sim-tme-3d  axial mid-slice  ({cond.get('treatment', '?')}, "
         f"immune={cond.get('immune_mode', '?')}, "
-        f"stromal={cond.get('stromal_mode', 'off')}, "
-        f"ph={cond.get('ph_mode', 'off')}, "
+        f"stromal={cond.get('stromal_mode') or 'off'}, "
+        f"ph={cond.get('ph_mode') or 'off'}, "
         f"λ_O₂={cond.get('o2_lambda_um', '?')}µm)",
         fontsize=10,
     )
 
     dead_cmap = _make_dead_cmap()
-    im_dead = axes[0].imshow(dead[0, mid_l], cmap=dead_cmap, vmin=0, vmax=1, origin="lower")
+    im_dead = axes[0].imshow(dead[0, mid], cmap=dead_cmap, vmin=0, vmax=1, origin="lower")
     im_damp = axes[1].imshow(
-        damp[0, mid_l], cmap="inferno", vmin=0, vmax=damp_max, origin="lower"
+        damp[0, mid], cmap="inferno", vmin=0, vmax=damp_max, origin="lower"
     )
     im_lp = axes[2].imshow(
-        lp[0, mid_l], cmap="viridis", vmin=0, vmax=lp_max, origin="lower"
+        lp[0, mid], cmap="viridis", vmin=0, vmax=lp_max, origin="lower"
     )
 
     axes[0].set_title("Dead-cell mask")
@@ -149,11 +153,11 @@ def _render(
     step_text = fig.text(0.5, 0.02, "", ha="center", fontsize=9, family="monospace")
 
     def update(step: int):
-        im_dead.set_data(dead[step, mid_l])
-        im_damp.set_data(damp[step, mid_l])
-        im_lp.set_data(lp[step, mid_l])
+        im_dead.set_data(dead[step, mid])
+        im_damp.set_data(damp[step, mid])
+        im_lp.set_data(lp[step, mid])
         # Count cumulative dead cells in this slice for a quantitative cue.
-        n_dead_slice = int(dead[step, mid_l].sum())
+        n_dead_slice = int(dead[step, mid].sum())
         step_text.set_text(f"step {step + 1:3d}/{n_steps}    dead-in-slice={n_dead_slice}")
         return [im_dead, im_damp, im_lp, step_text]
 

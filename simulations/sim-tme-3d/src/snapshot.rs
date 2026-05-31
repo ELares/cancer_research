@@ -7,11 +7,15 @@
 //! by `scripts/render_tme_3d_trajectory.py` to produce an animated
 //! axial-slice GIF/MP4.
 //!
-//! Memory budget at 60³ × 180 steps:
-//! - `dead`: 27000 × 180 × 1 byte = 4.9 MB
-//! - `damp`: 27000 × 180 × 4 bytes = 19.4 MB (f64 source cast to f32)
-//! - `lp`:   27000 × 180 × 4 bytes = 19.4 MB (same)
-//! Total ≈ 44 MB held during the snapshot run, dropped at write time.
+//! Memory budget at 60³ × 180 steps (216 000 cells/step × 180 =
+//! 38.88 M elements per field):
+//!
+//! - `dead`: 38.88 M × 1 byte  ≈ 37 MB
+//! - `damp`: 38.88 M × 4 bytes ≈ 148 MB (f64 source cast to f32)
+//! - `lp`:   38.88 M × 4 bytes ≈ 148 MB (same)
+//!
+//! Total ≈ 333 MB held in RAM during the snapshot run, dropped at write
+//! time (matches the on-disk size — the `.npy` payloads are uncompressed).
 
 use std::path::Path;
 
