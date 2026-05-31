@@ -503,162 +503,141 @@ fn run_one_condition_with_config(
     let mut ferroptosis_kills = 0usize;
     let mut immune_kills = 0usize;
 
+    // Hoisted out of the per-cell hot loop (these invariants don't vary by
+    // cell or step): on the dosed path the relevant availability vec must be
+    // populated. Compiled out in release.
+    if dosed {
+        match condition.treatment {
+            Treatment::RSL3 => debug_assert!(
+                !rsl3_drug_avail.is_empty(),
+                "rsl3_drug_avail must be populated on the dosed RSL3 path"
+            ),
+            Treatment::SDT | Treatment::PDT => debug_assert!(
+                !base_exo.is_empty(),
+                "base_exo must be populated on the dosed SDT/PDT path"
+            ),
+            Treatment::Control => {}
+        }
+    }
+
     for step in 0..run_cfg.n_steps {
         // Drug availability for this step (#239). `1.0` on the Constant
         // default path (and the `dosed` guard below skips all modulation
         // there anyway, so it's never actually read for Constant).
         let dose_factor = if dosed { schedule.factor_at(step) } else { 1.0 };
 
-        // Ferroptosis biochem + stromal protection
-        for r in 0..grid.rows {
-            for c in 0..grid.cols {
-                for l in 0..grid.layers {
-                    let idx = grid.flat_index(r, c, l);
-                    if !grid.cells[idx].is_tumor {
-                        continue;
-                    }
-                    if grid.cells[idx].state.dead {
-                        if let Some(ds) = grid.cells[idx].state.death_step {
-                            let grace_end = ds + params.post_death_steps;
-                            if step == grace_end {
-                                // `lp_at_death` is misleadingly named — it's
-                                // actually "LP at the end of the post-death
-                                // grace period." Matches sim-tme's naming;
-                                // renaming would touch both binaries and is
-                                // deferred per the consolidated #195 cleanup
-                                // checklist.
-                                grid.cells[idx].lp_at_death = grid.cells[idx].state.lp;
-                                // DAMP release gated on `immune_on` —
-                                // without immune coupling, the damp_field
-                                // isn't read or aggregated, so writes here
-                                // would produce nonsense partial values
-                                // in serialized output (reviewer-flagged in
-                                // PR #219 third-pass).
-                                if condition.immune_on {
-                                    damp_field[idx] +=
-                                        grid.cells[idx].lp_at_death * immune_cfg.damp_per_lp;
-                                }
+        // Ferroptosis biochem + stromal protection.
+        //
+        // Parallelized over cells with rayon (#192). This is safe and
+        // BYTE-IDENTICAL to the old serial r/c/l triple loop because:
+        //   - `enumerate()` over the flat `cells` Vec yields the same `idx`
+        //     as `flat_index(r,c,l)` (row-major), so the per-cell RNG seed
+        //     `(cond_seed, idx, step)` is unchanged and position-independent;
+        //   - each cell reads/writes ONLY its own `GridCell` and its own
+        //     `damp_field[idx]` slot (paired via the zipped `par_iter_mut`);
+        //     `extra_iron` is read-then-zeroed per own cell (cross-cell iron
+        //     spread happens later in the serial `diffuse_iron` phase);
+        //   - `ferroptosis_kills` is an integer sum, associative+commutative,
+        //     so the reduction is order-independent.
+        // Reads of `base_exo` / `rsl3_drug_avail` / `adjacency_mask` are
+        // shared-immutable by own index. Iron + DAMP diffusion stay serial
+        // (cross-cell deps) and run after the rayon join (a per-step barrier).
+        let died_this_step: usize = grid
+            .cells
+            .par_iter_mut()
+            .zip(damp_field.par_iter_mut())
+            .enumerate()
+            .map(|(idx, (gc, damp_slot))| {
+                if !gc.is_tumor {
+                    return 0;
+                }
+                if gc.state.dead {
+                    if let Some(ds) = gc.state.death_step {
+                        let grace_end = ds + params.post_death_steps;
+                        if step == grace_end {
+                            // `lp_at_death` = "LP at end of post-death grace"
+                            // (misnamed; matches sim-tme — rename deferred to
+                            // the #195 cleanup checklist).
+                            gc.lp_at_death = gc.state.lp;
+                            // DAMP release gated on immune_on (else damp_field
+                            // is never read/aggregated — PR #219 third-pass).
+                            if condition.immune_on {
+                                *damp_slot += gc.lp_at_death * immune_cfg.damp_per_lp;
                             }
-                            if step >= grace_end {
-                                continue;
-                            }
-                        } else {
-                            continue;
                         }
-                    }
-
-                    let mut rng = StdRng::seed_from_u64(
-                        cond_seed
-                            .wrapping_add(500_000)
-                            .wrapping_add(idx as u64)
-                            .wrapping_add(step as u64 * 1_000_000),
-                    );
-
-                    let extra_iron = grid.cells[idx].extra_iron;
-                    grid.cells[idx].extra_iron = 0.0;
-
-                    // Time-varying drug modulation (#239). Skipped entirely on
-                    // the Constant default path (`dosed == false`), so output
-                    // is byte-identical there. Applied to LIVE cells only —
-                    // once a cell is dead, this block no longer runs, so its
-                    // STORED drug state (gpx4 for RSL3, exo_ros_peak for
-                    // SDT/PDT) is frozen at its death-step value.
-                    //
-                    // Nuance for SDT/PDT: freezing the stored *peak* is not the
-                    // same as freezing the *effective* exo. The post-death
-                    // branch in `biochem::sim_cell_step` keeps multiplying the
-                    // frozen peak by `exo_decay_factor(step)`, so a dead cell's
-                    // residual exo continues to shrink (~0.5^(k/15)) across its
-                    // ≤5-step grace window — the same intrinsic decay baseline
-                    // dead cells see. This perturbs only post-death `lp` (hence
-                    // `lp_at_death`/`damp_field`) in the SDT multidose snapshot;
-                    // it does NOT affect death determination, summary.json, or
-                    // the RSL3 path. (RSL3 truly freezes: gpx4 is untouched once
-                    // dead, matching `tumor_pk::sim_cell_with_pk`.)
-                    if dosed && !grid.cells[idx].state.dead {
-                        match condition.treatment {
-                            Treatment::RSL3 => {
-                                // Covalent GPX4 inactivation proportional to
-                                // drug availability = schedule × spatial pH
-                                // ion-trap factor. Mirrors sim_cell_with_pk:538.
-                                debug_assert!(
-                                    !rsl3_drug_avail.is_empty(),
-                                    "rsl3_drug_avail must be populated on the dosed RSL3 path"
-                                );
-                                let conc = (dose_factor * rsl3_drug_avail[idx]).clamp(0.0, 1.0);
-                                let st = &mut grid.cells[idx].state;
-                                st.gpx4 -= RSL3_INACTIVATION_RATE * conc * st.gpx4;
-                                st.gpx4 = st.gpx4.max(0.0);
-                            }
-                            Treatment::SDT | Treatment::PDT => {
-                                // Set the exogenous-ROS bolus so the schedule
-                                // is the SOLE availability envelope. We divide
-                                // out sim_cell_step's intrinsic single-bolus
-                                // decay (`exo_decay_factor`, 1.0 for step<30)
-                                // because it would otherwise double-count decay
-                                // for later doses — ROS generated at dose N
-                                // should decay from dose N, not from t=0 (#239).
-                                // Net effective exo in sim_cell_step is then
-                                // exactly `base * dose_factor(step)`.
-                                //
-                                // The `.max(1e-9)` only guards a 0/0; in
-                                // practice exo_decay_factor bottoms out near
-                                // ~1e-3 at step 179, so the stored exo_ros_peak
-                                // is amplified up to ~1000×. That's finite and
-                                // safe because `base * dose_factor` is itself
-                                // tiny that late in the run (the dose has
-                                // decayed), and sim_cell_step immediately
-                                // multiplies the envelope back in — the
-                                // amplified value never reaches any other
-                                // computation.
-                                debug_assert!(
-                                    !base_exo.is_empty(),
-                                    "base_exo must be populated on the dosed SDT/PDT path"
-                                );
-                                let decay = exo_decay_factor(step).max(1e-9);
-                                grid.cells[idx].state.exo_ros_peak =
-                                    base_exo[idx] * dose_factor / decay;
-                            }
-                            Treatment::Control => {}
+                        if step >= grace_end {
+                            return 0;
                         }
+                        // else: grace period — fall through to sim_cell_step
+                        // for post-death LP accumulation.
+                    } else {
+                        return 0;
                     }
+                }
 
-                    let gc = &mut grid.cells[idx];
-                    let died =
-                        sim_cell_step(&mut gc.state, &gc.cell, &params, step, extra_iron, &mut rng);
+                let mut rng = StdRng::seed_from_u64(
+                    cond_seed
+                        .wrapping_add(500_000)
+                        .wrapping_add(idx as u64)
+                        .wrapping_add(step as u64 * 1_000_000),
+                );
 
-                    if died {
-                        // `newly_dead` is consumed by `TumorGrid3D::diffuse_iron`
-                        // later this step to spread released iron to live
-                        // 26-Moore neighbors (grid.rs:586). Not vestigial —
-                        // load-bearing for iron-driven Fenton bystander effects.
-                        gc.newly_dead = true;
-                        ferroptosis_kills += 1;
-                        // `lp_at_death` is set later, at grace-end, just before
-                        // being read for the DAMP-field write. The moment-of-death
-                        // write that used to live here was dead (always overwritten
-                        // before read); removed in #220.
+                let extra_iron = gc.extra_iron;
+                gc.extra_iron = 0.0;
+
+                // Time-varying drug modulation (#239). Skipped on the Constant
+                // default path (`dosed == false`) → byte-identical there.
+                // Live cells only; a dead cell's stored drug state freezes at
+                // death (see the longer note removed from here — preserved in
+                // git history; the SDT post-death effective-exo nuance is
+                // documented on `biochem::exo_decay_factor`).
+                if dosed && !gc.state.dead {
+                    match condition.treatment {
+                        Treatment::RSL3 => {
+                            // Covalent GPX4 inactivation ∝ availability
+                            // (schedule × pH ion-trap). Mirrors sim_cell_with_pk.
+                            let conc = (dose_factor * rsl3_drug_avail[idx]).clamp(0.0, 1.0);
+                            gc.state.gpx4 -= RSL3_INACTIVATION_RATE * conc * gc.state.gpx4;
+                            gc.state.gpx4 = gc.state.gpx4.max(0.0);
+                        }
+                        Treatment::SDT | Treatment::PDT => {
+                            // Divide out sim_cell_step's intrinsic single-bolus
+                            // envelope so the schedule is the sole envelope
+                            // (#239). `.max(1e-9)` guards 0/0; the ~1000×
+                            // amplification at late steps is finite and never
+                            // escapes sim_cell_step's immediate re-multiply.
+                            let decay = exo_decay_factor(step).max(1e-9);
+                            gc.state.exo_ros_peak = base_exo[idx] * dose_factor / decay;
+                        }
+                        Treatment::Control => {}
                     }
+                }
 
-                    // Stromal CAF protection for alive cells — apply only when
-                    // stromal_on. The adjacency_mask is always computed (used
-                    // for kill-rate accounting later) but the boost helpers
-                    // gate on the toggle.
-                    if !died && !gc.state.dead {
-                        if let Some(cfg) = &stromal_cfg {
-                            if adjacency_mask[idx] {
-                                let gc = &mut grid.cells[idx];
-                                gc.state.gsh =
-                                    (gc.state.gsh + cfg.gsh_boost_per_step).min(cfg.gsh_boost_cap);
-                                gc.state.mufa_protection = (gc.state.mufa_protection
-                                    + cfg.mufa_boost_per_step)
-                                    .min(cfg.mufa_boost_cap);
-                            }
+                let died =
+                    sim_cell_step(&mut gc.state, &gc.cell, &params, step, extra_iron, &mut rng);
+                if died {
+                    // `newly_dead` is consumed by the later serial
+                    // `diffuse_iron` to spread released iron to live neighbors.
+                    gc.newly_dead = true;
+                }
+
+                // Stromal CAF protection for alive cells (stromal_on only).
+                if !died && !gc.state.dead {
+                    if let Some(cfg) = &stromal_cfg {
+                        if adjacency_mask[idx] {
+                            gc.state.gsh =
+                                (gc.state.gsh + cfg.gsh_boost_per_step).min(cfg.gsh_boost_cap);
+                            gc.state.mufa_protection = (gc.state.mufa_protection
+                                + cfg.mufa_boost_per_step)
+                                .min(cfg.mufa_boost_cap);
                         }
                     }
                 }
-            }
-        }
+
+                usize::from(died)
+            })
+            .sum();
+        ferroptosis_kills += died_this_step;
 
         // Iron diffusion via TumorGrid3D. Now uses the value from
         // `spatial_params.neighbor_iron_fraction` (single source of truth);
@@ -678,61 +657,52 @@ fn run_one_condition_with_config(
                 immune_cfg.damp_clearance_rate,
             );
 
-            // Immune kill (after delay)
+            // Immune kill (after delay). Parallelized over cells with rayon
+            // (#192) — byte-identical to the old serial triple loop: each cell
+            // reads its own `damp_field[idx]` (immutable here; DAMP diffusion
+            // already done) and writes only its own `state.dead`; the per-cell
+            // RNG seed `(cond_seed, idx, step)` is position-independent; and
+            // `immune_kills` is an order-independent integer sum.
             if step >= IMMUNE_START_STEP {
                 let effective_brake = immune_cfg.effective_brake();
-                for r in 0..grid.rows {
-                    for c in 0..grid.cols {
-                        for l in 0..grid.layers {
-                            let idx = grid.flat_index(r, c, l);
-                            if grid.cells[idx].state.dead || !grid.cells[idx].is_tumor {
-                                continue;
-                            }
-                            let local_damp = damp_field[idx];
-                            if local_damp < DAMP_KILL_THRESHOLD {
-                                continue;
-                            }
-                            let activation = dc_activation(local_damp, immune_cfg.dc_activation_kd);
-                            let kill_prob = immune_kill_probability(
-                                activation,
-                                immune_cfg.immune_kill_rate,
-                                effective_brake,
-                            );
-                            let mut rng = StdRng::seed_from_u64(
-                                cond_seed
-                                    .wrapping_add(900_000_000)
-                                    .wrapping_add(idx as u64)
-                                    .wrapping_add(step as u64 * 2_000_000),
-                            );
-                            if rng.gen::<f64>() < kill_prob {
-                                // Immune kills set `state.dead` but deliberately
-                                // do NOT set `death_step` or `newly_dead`.
-                                // **Modeling asymmetry**: ferroptosis-killed
-                                // cells with `Some(death_step)` fall through
-                                // to `sim_cell_step` for `post_death_steps`
-                                // more iterations (post-death LP overshoot
-                                // dynamics); immune-killed cells with
-                                // `None` death_step hit the `else { continue }`
-                                // branch and exit immediately. Three
-                                // intentional consequences:
-                                //   (1) immune-killed cells skip grace-period
-                                //       biochem — they're apoptotic, not
-                                //       ferroptotic (no LP buildup beyond
-                                //       moment of death);
-                                //   (2) no DAMP burst — T-cell perforin
-                                //       death doesn't release the DAMPs
-                                //       (calreticulin, HMGB1) that ferroptosis
-                                //       releases;
-                                //   (3) no iron release via `diffuse_iron`
-                                //       (no `newly_dead` flag).
-                                // This is a real modeling choice (consistent
-                                // with sim-tme/main.rs:749), not a side-effect.
-                                grid.cells[idx].state.dead = true;
-                                immune_kills += 1;
-                            }
+                let killed_this_step: usize = grid
+                    .cells
+                    .par_iter_mut()
+                    .enumerate()
+                    .map(|(idx, gc)| {
+                        if gc.state.dead || !gc.is_tumor {
+                            return 0;
                         }
-                    }
-                }
+                        let local_damp = damp_field[idx];
+                        if local_damp < DAMP_KILL_THRESHOLD {
+                            return 0;
+                        }
+                        let activation = dc_activation(local_damp, immune_cfg.dc_activation_kd);
+                        let kill_prob = immune_kill_probability(
+                            activation,
+                            immune_cfg.immune_kill_rate,
+                            effective_brake,
+                        );
+                        let mut rng = StdRng::seed_from_u64(
+                            cond_seed
+                                .wrapping_add(900_000_000)
+                                .wrapping_add(idx as u64)
+                                .wrapping_add(step as u64 * 2_000_000),
+                        );
+                        if rng.gen::<f64>() < kill_prob {
+                            // Immune kills set `state.dead` but deliberately
+                            // NOT `death_step`/`newly_dead`: immune-killed cells
+                            // are apoptotic (no post-death LP grace, no DAMP
+                            // burst, no iron release) — a modeling choice
+                            // consistent with sim-tme, not a side-effect.
+                            gc.state.dead = true;
+                            1
+                        } else {
+                            0
+                        }
+                    })
+                    .sum();
+                immune_kills += killed_this_step;
             }
         }
 
