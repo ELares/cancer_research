@@ -49,15 +49,43 @@ impl CellState {
 
     /// Initialize with a custom exogenous ROS peak (for spatial model where
     /// ROS dose depends on depth/position).
+    ///
+    /// Applies RSL3's one-shot GPX4 knockdown at init (the steady-state
+    /// model: drug is present from t=0 and immediately inhibits GPX4). This
+    /// is the historical behavior; callers using a time-varying
+    /// [`crate::dose_schedule::DoseSchedule`] for RSL3 should instead use
+    /// [`from_cell_with_ros_opts`](Self::from_cell_with_ros_opts) with
+    /// `apply_rsl3_init = false` and apply per-step inactivation themselves.
     pub fn from_cell_with_ros(
         cell: &Cell,
         tx: Treatment,
         params: &Params,
         exo_ros_peak: f64,
     ) -> Self {
+        Self::from_cell_with_ros_opts(cell, tx, params, exo_ros_peak, true)
+    }
+
+    /// Like [`from_cell_with_ros`](Self::from_cell_with_ros) but with
+    /// explicit control over the RSL3 one-shot init knockdown.
+    ///
+    /// `apply_rsl3_init = true` reproduces `from_cell_with_ros` exactly
+    /// (byte-identical). `apply_rsl3_init = false` skips the
+    /// `gpx4 *= 1 - rsl3_gpx4_inhib` step so a time-varying dose schedule
+    /// can drive GPX4 inactivation per step instead of one-shot at t=0
+    /// (the `tumor_pk::sim_cell_with_pk` model, #239). Has no effect for
+    /// non-RSL3 treatments.
+    pub fn from_cell_with_ros_opts(
+        cell: &Cell,
+        tx: Treatment,
+        params: &Params,
+        exo_ros_peak: f64,
+        apply_rsl3_init: bool,
+    ) -> Self {
         let mut gpx4 = cell.gpx4;
-        if let Treatment::RSL3 = tx {
-            gpx4 *= 1.0 - params.rsl3_gpx4_inhib;
+        if apply_rsl3_init {
+            if let Treatment::RSL3 = tx {
+                gpx4 *= 1.0 - params.rsl3_gpx4_inhib;
+            }
         }
         CellState {
             gsh: cell.gsh,
@@ -89,6 +117,36 @@ fn update_mufa_protection(current: f64, params: &Params) -> f64 {
     (current + growth - decay).clamp(0.0, params.scd_mufa_max.max(0.0))
 }
 
+/// Deterministic exogenous-ROS decay envelope for the post-bolus phase.
+///
+/// Models singlet-oxygen / exogenous-ROS decay after a single treatment
+/// bolus: `1.0` for `step < 30` (the pre-decay plateau, where
+/// [`sim_cell_step`] instead applies multiplicative noise), then
+/// `0.5^((step-30)/15)` — a 15-step half-life decay.
+///
+/// Exposed so a time-varying [`crate::dose_schedule::DoseSchedule`]
+/// consumer can **divide it out**: for multi-dose SDT/PDT the schedule's
+/// own per-dose rise+decay is the availability envelope, and this
+/// single-bolus envelope (keyed to run start) would otherwise
+/// double-count decay for later doses (#239).
+///
+/// **Contract (load-bearing):** [`sim_cell_step`] applies *exactly* this
+/// factor to `exo_ros_peak` for `step >= 30`, and the dosed SDT/PDT path
+/// in `sim-tme-3d` divides *exactly* this factor back out. Both the
+/// producer (here, via `sim_cell_step`) and the consumer (the binary)
+/// must call this one function so they cannot drift. **Do not inline the
+/// `0.5^((step-30)/15)` formula at either site** — if the envelope shape
+/// ever changes, both ends must change together, which only happens if
+/// they share this function.
+#[inline]
+pub fn exo_decay_factor(step: u32) -> f64 {
+    if step < 30 {
+        1.0
+    } else {
+        0.5_f64.powf((step - 30) as f64 / 15.0)
+    }
+}
+
 /// Execute a single timestep of the ferroptosis biochemistry.
 ///
 /// Returns `true` if the cell died this step.
@@ -114,7 +172,7 @@ pub fn sim_cell_step(
                 let exo = if step < 30 {
                     state.exo_ros_peak * norm(rng, 1.0, 0.1).max(0.0)
                 } else {
-                    state.exo_ros_peak * 0.5_f64.powf((step - 30) as f64 / 15.0)
+                    state.exo_ros_peak * exo_decay_factor(step)
                 };
                 let total_ros = cell.basal_ros + exo + fenton;
                 let effective_unsat = cell.lipid_unsat; // no MUFA protection
@@ -132,7 +190,7 @@ pub fn sim_cell_step(
     let exo = if step < 30 {
         state.exo_ros_peak * norm(rng, 1.0, 0.1).max(0.0)
     } else {
-        state.exo_ros_peak * 0.5_f64.powf((step - 30) as f64 / 15.0)
+        state.exo_ros_peak * exo_decay_factor(step)
     };
     let total_ros = cell.basal_ros + exo + fenton;
 
@@ -227,7 +285,7 @@ pub fn sim_cell(
         let exo = if step < 30 {
             exo_ros_peak * norm(rng, 1.0, 0.1).max(0.0)
         } else {
-            exo_ros_peak * 0.5_f64.powf((step - 30) as f64 / 15.0)
+            exo_ros_peak * exo_decay_factor(step)
         };
         let total_ros = cell.basal_ros + exo + fenton;
 
@@ -298,6 +356,23 @@ mod tests {
     use super::*;
     use crate::cell::{gen_cell, Phenotype};
     use rand::SeedableRng;
+
+    #[test]
+    fn exo_decay_factor_matches_envelope_formula() {
+        // Plateau: 1.0 for every step < 30.
+        for step in [0u32, 1, 15, 29] {
+            assert_eq!(exo_decay_factor(step), 1.0, "plateau must be 1.0");
+        }
+        // At the decay onset (step 30): exactly 1.0 (0.5^0).
+        assert_eq!(exo_decay_factor(30), 1.0);
+        // One half-life (15 steps) later: exactly 0.5.
+        assert!((exo_decay_factor(45) - 0.5).abs() < 1e-12);
+        // Two half-lives later: 0.25.
+        assert!((exo_decay_factor(60) - 0.25).abs() < 1e-12);
+        // Matches the raw formula it replaced, for an arbitrary later step.
+        let raw = 0.5_f64.powf((123 - 30) as f64 / 15.0);
+        assert_eq!(exo_decay_factor(123), raw);
+    }
 
     #[test]
     fn control_does_not_kill_glycolytic() {

@@ -498,6 +498,9 @@ pub struct PKCellResult {
 }
 
 /// GPX4 inactivation rate for RSL3-like covalent GPX4 inhibitors.
+/// `pub` so spatial binaries (sim-tme-3d) can import it directly when
+/// driving RSL3 via a time-varying `dose_schedule::DoseSchedule` (#239),
+/// reusing the same constant `sim_cell_with_pk` is calibrated against.
 /// Calibrated directly in Rust (10K Persister cells, constant conc=1.0):
 /// k_inact=0.015 gives ~41% death rate, matching sim_cell RSL3+Persister
 /// death rate (~42.5%). Internal state (LP, GSH, GPX4) differs.
