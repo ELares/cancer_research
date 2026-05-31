@@ -49,15 +49,43 @@ impl CellState {
 
     /// Initialize with a custom exogenous ROS peak (for spatial model where
     /// ROS dose depends on depth/position).
+    ///
+    /// Applies RSL3's one-shot GPX4 knockdown at init (the steady-state
+    /// model: drug is present from t=0 and immediately inhibits GPX4). This
+    /// is the historical behavior; callers using a time-varying
+    /// [`crate::dose_schedule::DoseSchedule`] for RSL3 should instead use
+    /// [`from_cell_with_ros_opts`](Self::from_cell_with_ros_opts) with
+    /// `apply_rsl3_init = false` and apply per-step inactivation themselves.
     pub fn from_cell_with_ros(
         cell: &Cell,
         tx: Treatment,
         params: &Params,
         exo_ros_peak: f64,
     ) -> Self {
+        Self::from_cell_with_ros_opts(cell, tx, params, exo_ros_peak, true)
+    }
+
+    /// Like [`from_cell_with_ros`](Self::from_cell_with_ros) but with
+    /// explicit control over the RSL3 one-shot init knockdown.
+    ///
+    /// `apply_rsl3_init = true` reproduces `from_cell_with_ros` exactly
+    /// (byte-identical). `apply_rsl3_init = false` skips the
+    /// `gpx4 *= 1 - rsl3_gpx4_inhib` step so a time-varying dose schedule
+    /// can drive GPX4 inactivation per step instead of one-shot at t=0
+    /// (the `tumor_pk::sim_cell_with_pk` model, #239). Has no effect for
+    /// non-RSL3 treatments.
+    pub fn from_cell_with_ros_opts(
+        cell: &Cell,
+        tx: Treatment,
+        params: &Params,
+        exo_ros_peak: f64,
+        apply_rsl3_init: bool,
+    ) -> Self {
         let mut gpx4 = cell.gpx4;
-        if let Treatment::RSL3 = tx {
-            gpx4 *= 1.0 - params.rsl3_gpx4_inhib;
+        if apply_rsl3_init {
+            if let Treatment::RSL3 = tx {
+                gpx4 *= 1.0 - params.rsl3_gpx4_inhib;
+            }
         }
         CellState {
             gsh: cell.gsh,

@@ -33,10 +33,12 @@
 //! | [`io`] | JSON and CSV output helpers |
 //! | [`drug_transport`] | Tissue-specific drug penetration (Krogh cylinder approximation) |
 //! | [`tumor_pk`] | Two-compartment vascular/interstitial pharmacokinetics |
+//! | [`dose_schedule`] | Time-varying drug-administration schedules (bolus / multi-dose / infusion / PK-driven) |
 
 pub mod cell;
 // Listed before `params` because `SpatialParams` holds a `Photosensitizer`.
 pub mod biochem;
+pub mod dose_schedule;
 pub mod drug_transport;
 pub mod grid;
 pub mod immune;
