@@ -1431,6 +1431,16 @@ fn main() {
 mod tests {
     use super::*;
 
+    // Golden integer kill counts for the Constant-path regression guard
+    // (`constant_path_golden_kill_counts`), captured from SDT + immune +
+    // stromal + pH at grid_dim=20, n_steps=80. Deterministic across
+    // platforms (seeded RNG + IEEE f64). Update ONLY after confirming a
+    // default-path change is intentional.
+    const GOLDEN_TOTAL_TUMOR: usize = 3071;
+    const GOLDEN_TOTAL_DEAD: usize = 2992;
+    const GOLDEN_FERRO_KILLS: usize = 2990;
+    const GOLDEN_IMMUNE_KILLS: usize = 2;
+
     /// `--snapshot` (no `=NAME`) defaults to `combined`.
     #[test]
     fn parse_snapshot_arg_bare_defaults_to_combined() {
@@ -1736,6 +1746,55 @@ mod tests {
              fewer than the Constant one-shot: bolus={}, constant={}",
             bolus.total_dead,
             constant.total_dead
+        );
+    }
+
+    /// **Byte-identity regression guard for the Constant default path.**
+    /// Pins the exact integer kill counts of a representative Constant
+    /// condition (SDT + immune + stromal + pH) at a fixed small config.
+    /// Integer counts are deterministic across platforms (same f64 ops +
+    /// seeded RNG), so this catches ANY drift in the default (non-dosed)
+    /// path — the load-bearing "summary.json byte-identical" property — at
+    /// unit-test speed, without the full 60³×180 production run. If a future
+    /// refactor changes these numbers, the byte-identical claim is broken
+    /// and this fails loudly. (Companion to the production SHA-256 check
+    /// done manually in #239's PR.)
+    #[test]
+    fn constant_path_golden_kill_counts() {
+        let cond = Condition {
+            name: "golden_constant_SDT".to_string(),
+            treatment: Treatment::SDT,
+            treatment_name: "SDT".to_string(),
+            o2_lambda: Some(ZONE_REF_LAMBDA),
+            immune_on: true,
+            stromal_on: true,
+            ph_on: true,
+            dose_schedule: DoseSchedule::Constant,
+        };
+        let cfg = RunConfig {
+            grid_dim: 20,
+            n_steps: 80,
+        };
+        let r = run_one_condition_with_config(&cond, cfg, None);
+        // Golden values captured from the Constant path. A change here means
+        // the default-path numerics drifted — investigate before updating.
+        assert_eq!(
+            r.total_tumor, GOLDEN_TOTAL_TUMOR,
+            "tumor-cell count drifted"
+        );
+        assert_eq!(
+            r.total_dead, GOLDEN_TOTAL_DEAD,
+            "Constant-path total_dead drifted"
+        );
+        assert_eq!(
+            r.ferroptosis_kills,
+            Some(GOLDEN_FERRO_KILLS),
+            "Constant-path ferroptosis_kills drifted"
+        );
+        assert_eq!(
+            r.immune_kills,
+            Some(GOLDEN_IMMUNE_KILLS),
+            "Constant-path immune_kills drifted"
         );
     }
 
