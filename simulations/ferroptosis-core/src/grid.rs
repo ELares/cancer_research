@@ -359,9 +359,11 @@ pub fn death_heatmap(grid: &TumorGrid) -> Array2<u8> {
 /// bit-for-bit. The two types share `GridCell` and `GridCensus`; any
 /// common abstraction can land as a trait when patterns emerge.
 ///
-/// **Memory:** `GridCell` is ~150–170 B; 100³ ≈ 170 MB, 200³ ≈ 1.4 GB.
-/// Tests use ≤ 20³ (≈ 1.4 MB). Realistic 3D simulation grids land with
-/// the binary that constructs them (#194 `sim-spatial-3d`).
+/// **Memory (measured, #192):** `size_of::<GridCell>() = 144 B`. Peak
+/// process RSS for a sim-tme-3d run: 100³ ≈ 163 MB, 150³ ≈ 546 MB,
+/// 200³ ≈ 1.29 GB (dense — fits the 2 GB budget with headroom). Tests
+/// use ≤ 20³. See sim-tme-3d's `--bench` + the README "Performance &
+/// scalability" section.
 ///
 /// **Storage:** flat `Vec<GridCell>` indexed as
 /// `r * cols * layers + c * layers + l` — row-major (C-order) with
@@ -398,14 +400,15 @@ impl TumorGrid3D {
     /// sphere center when dimensions are even. Same convention as
     /// `TumorGrid::generate`.
     ///
-    /// **Memory:** `GridCell` is ~150–170 B; a `100³` grid is ~170 MB,
-    /// `200³` is ~1.4 GB. Callers should size against available RAM
-    /// before invoking; `debug_assert!` guards against accidental
-    /// allocations above ~1 G cells (≈ 170 GB, almost certainly a typo).
+    /// **Memory (measured, #192):** `size_of::<GridCell>() = 144 B`; a
+    /// `100³` grid run peaks ≈ 163 MB RSS, `200³` ≈ 1.29 GB (dense, under
+    /// the 2 GB budget). Callers should size against available RAM before
+    /// invoking; `debug_assert!` guards against accidental allocations
+    /// above ~1 G cells (≈ 144 GB, almost certainly a typo).
     pub fn generate(rows: usize, cols: usize, layers: usize, cell_size_um: f64, seed: u64) -> Self {
         // Memory guard — catches "rows = 1000" typos in tests and CI.
         // Active only in debug builds; release callers are expected to
-        // size against their own hardware. 10^9 cells × 170 B ≈ 170 GB
+        // size against their own hardware. 10^9 cells × 144 B ≈ 144 GB
         // is well past any realistic spheroid sim and almost certainly
         // an off-by-orders-of-magnitude error.
         //
