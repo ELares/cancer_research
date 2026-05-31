@@ -579,6 +579,17 @@ fn run_one_condition_with_config(
                                 // should decay from dose N, not from t=0 (#239).
                                 // Net effective exo in sim_cell_step is then
                                 // exactly `base * dose_factor(step)`.
+                                //
+                                // The `.max(1e-9)` only guards a 0/0; in
+                                // practice exo_decay_factor bottoms out near
+                                // ~1e-3 at step 179, so the stored exo_ros_peak
+                                // is amplified up to ~1000×. That's finite and
+                                // safe because `base * dose_factor` is itself
+                                // tiny that late in the run (the dose has
+                                // decayed), and sim_cell_step immediately
+                                // multiplies the envelope back in — the
+                                // amplified value never reaches any other
+                                // computation.
                                 let decay = exo_decay_factor(step).max(1e-9);
                                 grid.cells[idx].state.exo_ros_peak =
                                     base_exo[idx] * dose_factor / decay;
@@ -1021,6 +1032,9 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
 /// The multi-dose schedule used by the `multidose` snapshot preset:
 /// four ROS pulses across the 180-step run. Sharp half-life (8 steps) so
 /// each pulse rises and fades distinctly, producing visible death waves.
+///
+/// These parameters are **illustrative** — chosen for visual clarity of
+/// the death-wave dynamics, NOT calibrated to a clinical SDT protocol.
 fn multidose_snapshot_schedule() -> DoseSchedule {
     DoseSchedule::MultiDose {
         dose_steps: vec![10, 55, 100, 145],
@@ -1196,6 +1210,12 @@ fn run_dose_sweep(output_dir: &Path) {
     );
 
     // (label, description, schedule). All run RSL3 + immune + stromal + pH.
+    //
+    // The half-life / peak / level numbers below are ILLUSTRATIVE v1 values,
+    // not calibrated to clinical protocols (RSL3_INACTIVATION_RATE itself was
+    // tuned for sustained conc=1.0). The informative output is the
+    // cross-protocol ORDERING of kill rates, not the absolute magnitudes —
+    // dose_comparison.json's `context` field and the README record this.
     let protocols: Vec<(&str, &str, DoseSchedule)> = vec![
         (
             "constant",

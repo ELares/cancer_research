@@ -129,6 +129,15 @@ fn update_mufa_protection(current: f64, params: &Params) -> f64 {
 /// own per-dose rise+decay is the availability envelope, and this
 /// single-bolus envelope (keyed to run start) would otherwise
 /// double-count decay for later doses (#239).
+///
+/// **Contract (load-bearing):** [`sim_cell_step`] applies *exactly* this
+/// factor to `exo_ros_peak` for `step >= 30`, and the dosed SDT/PDT path
+/// in `sim-tme-3d` divides *exactly* this factor back out. Both the
+/// producer (here, via `sim_cell_step`) and the consumer (the binary)
+/// must call this one function so they cannot drift. **Do not inline the
+/// `0.5^((step-30)/15)` formula at either site** — if the envelope shape
+/// ever changes, both ends must change together, which only happens if
+/// they share this function.
 #[inline]
 pub fn exo_decay_factor(step: u32) -> f64 {
     if step < 30 {

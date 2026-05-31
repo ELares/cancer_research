@@ -31,6 +31,21 @@
 //! The factor is dimensionless drug *availability* in `[0, ∞)`. For the
 //! analytic shapes it is normalized so a single full-strength dose peaks at
 //! `peak` (typically `1.0`).
+//!
+//! ## Scope / future evolution (TODO #240)
+//!
+//! `factor_at(step)` is a single **global, time-only** scalar: at each step
+//! every cell sees the same availability. That is correct for #239's
+//! uniform-distribution premise, but it does **not** model spatial drug
+//! heterogeneity — radial penetration gradients, vessel-distance occlusion,
+//! interstitial-pressure exclusion. The patient-scale / vasculature work
+//! (#240, #191) will need per-cell availability that varies in space as well
+//! as time. When that lands, the likely shape is a split: keep this type as
+//! the **temporal** schedule (rename toward `DoseTiming`) and introduce a
+//! separate **spatial** `DrugAvailability(cell) -> f64` that composes with
+//! it multiplicatively. The cell-type-efficacy (#241) and immune
+//! dose-response (#243) work will probably ride on that same split. Capturing
+//! the boundary here so the eventual refactor is planned, not a surprise.
 
 use serde::{Deserialize, Serialize};
 
