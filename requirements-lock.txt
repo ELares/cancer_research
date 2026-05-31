@@ -38,7 +38,7 @@ pytest==9.0.3
 python-dateutil==2.9.0.post0
 python-dotenv==1.2.2
 PyYAML==6.0.3
-requests==2.34.1
+requests==2.34.2
 scipy==1.17.1
 sgmllib3k==1.0.0
 six==1.17.0
