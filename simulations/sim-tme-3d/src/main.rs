@@ -53,6 +53,7 @@ mod snapshot;
 
 use ferroptosis_core::biochem::{sim_cell_step, CellState};
 use ferroptosis_core::cell::Treatment;
+use ferroptosis_core::dose_schedule::DoseSchedule;
 use ferroptosis_core::grid::{TumorGrid3D, TUMOR_RADIUS_FRACTION};
 use ferroptosis_core::immune_spatial::{
     dc_activation, diffuse_damp_3d_step, immune_kill_probability, DAMP_KILL_THRESHOLD,
@@ -64,6 +65,7 @@ use ferroptosis_core::params::{
 use ferroptosis_core::ph::{ion_trap_factor_from_ph, iron_multiplier_from_ph, radial_ph_field};
 use ferroptosis_core::physics::local_ros_multiplier_3d;
 use ferroptosis_core::stromal::stromal_adjacency_mask_3d;
+use ferroptosis_core::tumor_pk::RSL3_INACTIVATION_RATE;
 use rand::distributions::Distribution;
 use rand::prelude::*;
 use rand::rngs::StdRng;
@@ -198,6 +200,10 @@ struct Condition {
     immune_on: bool,
     stromal_on: bool,
     ph_on: bool,
+    /// Drug-administration schedule over time (#239). `Constant` (the
+    /// default) reproduces the historical steady-state behavior exactly;
+    /// non-constant schedules drive per-step drug modulation.
+    dose_schedule: DoseSchedule,
 }
 
 // ============================================================
@@ -376,6 +382,20 @@ fn run_one_condition_with_config(
         Treatment::RSL3 | Treatment::Control => 0.0,
     };
 
+    // Time-varying dose schedule (#239). `dosed == false` for the default
+    // `Constant` schedule, in which case EVERY dose-related branch below is
+    // skipped and the run is byte-identical to the pre-#239 behavior.
+    let schedule = &condition.dose_schedule;
+    let dosed = !schedule.is_constant();
+    // For SDT/PDT under a non-constant schedule we rescale each cell's
+    // exogenous-ROS bolus per step, so we must retain the per-cell *base*
+    // peak (the init value). Empty on the Constant path (never read).
+    let mut base_exo: Vec<f64> = if dosed {
+        vec![0.0; n_cells]
+    } else {
+        Vec::new()
+    };
+
     // Initialize cell states with per-cell ROS peak
     for r in 0..grid.rows {
         for c in 0..grid.cols {
@@ -392,13 +412,32 @@ fn run_one_condition_with_config(
                         let peak = base_ros * ros_multiplier;
                         norm(&mut rng, peak, peak * 0.2).max(0.0)
                     };
+                if dosed {
+                    base_exo[idx] = exo_ros_peak;
+                }
                 let gc = &mut grid.cells[idx];
-                gc.state = CellState::from_cell_with_ros(
-                    &gc.cell,
-                    condition.treatment,
-                    &params,
-                    exo_ros_peak,
-                );
+                // For RSL3 under a non-constant schedule, skip the one-shot
+                // init GPX4 knockdown — the schedule drives per-step covalent
+                // inactivation instead (the `tumor_pk::sim_cell_with_pk`
+                // model). Every other case keeps the historical one-shot
+                // init via `from_cell_with_ros` (= `..._opts(.., true)`),
+                // preserving byte-identical output on the default path.
+                gc.state = if dosed && condition.treatment == Treatment::RSL3 {
+                    CellState::from_cell_with_ros_opts(
+                        &gc.cell,
+                        condition.treatment,
+                        &params,
+                        exo_ros_peak,
+                        false,
+                    )
+                } else {
+                    CellState::from_cell_with_ros(
+                        &gc.cell,
+                        condition.treatment,
+                        &params,
+                        exo_ros_peak,
+                    )
+                };
                 gc.extra_iron = 0.0;
                 gc.newly_dead = false;
                 // Init to NaN so any code path that reads `lp_at_death`
@@ -410,20 +449,47 @@ fn run_one_condition_with_config(
         }
     }
 
-    // pH-dependent RSL3 ion trapping correction (consumer-side, same pattern as sim-tme)
-    if let (Some((ph_map, cfg)), Treatment::RSL3) = (&ph_field, condition.treatment) {
-        for (idx, &local_ph) in ph_map.iter().enumerate() {
-            if !grid.cells[idx].is_tumor {
-                continue;
+    // pH-dependent RSL3 ion trapping correction (consumer-side, same pattern
+    // as sim-tme). This is the CONSTANT-schedule path: it corrects the
+    // one-shot init knockdown for spatial drug availability. For a non-constant
+    // schedule the init knockdown was skipped, so this correction would have
+    // nothing to correct — instead the per-cell availability is folded into
+    // the per-step inactivation via `rsl3_drug_avail` below.
+    if !dosed {
+        if let (Some((ph_map, cfg)), Treatment::RSL3) = (&ph_field, condition.treatment) {
+            for (idx, &local_ph) in ph_map.iter().enumerate() {
+                if !grid.cells[idx].is_tumor {
+                    continue;
+                }
+                let drug_factor =
+                    ion_trap_factor_from_ph(local_ph, cfg.ph_edge, cfg.ion_trap_sensitivity);
+                // Correct GPX4: from (1-inhib) to (1-inhib*drug_factor) — matches sim-tme:614
+                let correction =
+                    (1.0 - params.rsl3_gpx4_inhib * drug_factor) / (1.0 - params.rsl3_gpx4_inhib);
+                grid.cells[idx].state.gpx4 *= correction;
             }
-            let drug_factor =
-                ion_trap_factor_from_ph(local_ph, cfg.ph_edge, cfg.ion_trap_sensitivity);
-            // Correct GPX4: from (1-inhib) to (1-inhib*drug_factor) — matches sim-tme:614
-            let correction =
-                (1.0 - params.rsl3_gpx4_inhib * drug_factor) / (1.0 - params.rsl3_gpx4_inhib);
-            grid.cells[idx].state.gpx4 *= correction;
         }
     }
+
+    // Per-cell spatial drug-availability multiplier for the DOSED RSL3 path
+    // (#239): pH ion-trapping reduces effective drug in acidic regions. The
+    // value is composed multiplicatively with the schedule's `factor_at(step)`
+    // in the per-step inactivation below. `1.0` everywhere when pH is off;
+    // empty (never indexed) on the Constant path or for non-RSL3 treatments.
+    let rsl3_drug_avail: Vec<f64> = if dosed && condition.treatment == Treatment::RSL3 {
+        let mut avail = vec![1.0_f64; n_cells];
+        if let Some((ph_map, cfg)) = &ph_field {
+            for (idx, &local_ph) in ph_map.iter().enumerate() {
+                if grid.cells[idx].is_tumor {
+                    avail[idx] =
+                        ion_trap_factor_from_ph(local_ph, cfg.ph_edge, cfg.ion_trap_sensitivity);
+                }
+            }
+        }
+        avail
+    } else {
+        Vec::new()
+    };
 
     // --- Main 180-step loop ---
     let immune_cfg = SpatialImmuneConfig::for_3d();
@@ -433,6 +499,11 @@ fn run_one_condition_with_config(
     let mut immune_kills = 0usize;
 
     for step in 0..run_cfg.n_steps {
+        // Drug availability for this step (#239). `1.0` on the Constant
+        // default path (and the `dosed` guard below skips all modulation
+        // there anyway, so it's never actually read for Constant).
+        let dose_factor = if dosed { schedule.factor_at(step) } else { 1.0 };
+
         // Ferroptosis biochem + stromal protection
         for r in 0..grid.rows {
             for c in 0..grid.cols {
@@ -480,6 +551,33 @@ fn run_one_condition_with_config(
 
                     let extra_iron = grid.cells[idx].extra_iron;
                     grid.cells[idx].extra_iron = 0.0;
+
+                    // Time-varying drug modulation (#239). Skipped entirely on
+                    // the Constant default path (`dosed == false`), so output
+                    // is byte-identical there. Applied to LIVE cells only:
+                    // a cell's drug exposure freezes at its death step (dead
+                    // cells in the post-death grace period keep their last
+                    // value, matching `tumor_pk::sim_cell_with_pk`).
+                    if dosed && !grid.cells[idx].state.dead {
+                        match condition.treatment {
+                            Treatment::RSL3 => {
+                                // Covalent GPX4 inactivation proportional to
+                                // drug availability = schedule × spatial pH
+                                // ion-trap factor. Mirrors sim_cell_with_pk:538.
+                                let conc = (dose_factor * rsl3_drug_avail[idx]).clamp(0.0, 1.0);
+                                let st = &mut grid.cells[idx].state;
+                                st.gpx4 -= RSL3_INACTIVATION_RATE * conc * st.gpx4;
+                                st.gpx4 = st.gpx4.max(0.0);
+                            }
+                            Treatment::SDT | Treatment::PDT => {
+                                // Scale the exogenous-ROS bolus by drug
+                                // availability this step. The intra-cell decay
+                                // envelope inside sim_cell_step composes on top.
+                                grid.cells[idx].state.exo_ros_peak = base_exo[idx] * dose_factor;
+                            }
+                            Treatment::Control => {}
+                        }
+                    }
 
                     let gc = &mut grid.cells[idx];
                     let died =
@@ -749,6 +847,7 @@ fn generate_conditions() -> Vec<Condition> {
             immune_on: false,
             stromal_on: false,
             ph_on: false,
+            dose_schedule: DoseSchedule::Constant,
         });
     }
 
@@ -763,6 +862,7 @@ fn generate_conditions() -> Vec<Condition> {
                 immune_on: false,
                 stromal_on: false,
                 ph_on: false,
+                dose_schedule: DoseSchedule::Constant,
             });
         }
     }
@@ -777,6 +877,7 @@ fn generate_conditions() -> Vec<Condition> {
             immune_on: true,
             stromal_on: false,
             ph_on: false,
+            dose_schedule: DoseSchedule::Constant,
         });
     }
 
@@ -793,6 +894,7 @@ fn generate_conditions() -> Vec<Condition> {
             immune_on: true,
             stromal_on: true,
             ph_on: false,
+            dose_schedule: DoseSchedule::Constant,
         });
     }
 
@@ -807,6 +909,7 @@ fn generate_conditions() -> Vec<Condition> {
             immune_on: true,
             stromal_on: false,
             ph_on: true,
+            dose_schedule: DoseSchedule::Constant,
         });
     }
 
@@ -820,6 +923,7 @@ fn generate_conditions() -> Vec<Condition> {
             immune_on: true,
             stromal_on: true,
             ph_on: true,
+            dose_schedule: DoseSchedule::Constant,
         });
     }
 
@@ -913,6 +1017,7 @@ fn run_snapshot(output_dir: &Path, tumor_radius_um: f64, name: &str) {
         immune_on: preset.immune_on,
         stromal_on: preset.stromal_on,
         ph_on: preset.ph_on,
+        dose_schedule: DoseSchedule::Constant,
     };
 
     eprintln!(
@@ -1143,6 +1248,7 @@ mod tests {
             immune_on: false,
             stromal_on: false,
             ph_on: false,
+            dose_schedule: DoseSchedule::Constant,
         };
         let r = run_one_condition_with_config(&cond, RunConfig::for_test(), None);
         assert_eq!(r.treatment, "Control");
@@ -1172,6 +1278,7 @@ mod tests {
             immune_on: false,
             stromal_on: false,
             ph_on: false,
+            dose_schedule: DoseSchedule::Constant,
         };
         let r1 = run_one_condition_with_config(&cond, RunConfig::for_test(), None);
         let r2 = run_one_condition_with_config(&cond, RunConfig::for_test(), None);
@@ -1202,6 +1309,7 @@ mod tests {
             immune_on: true,
             stromal_on: false,
             ph_on: false,
+            dose_schedule: DoseSchedule::Constant,
         };
         // Larger config than the smoke tests: need IMMUNE_START_STEP=60 +
         // buffer for DAMP to accumulate above the 0.01 kill threshold.
@@ -1245,6 +1353,7 @@ mod tests {
             immune_on: true,
             stromal_on: false,
             ph_on: false,
+            dose_schedule: DoseSchedule::Constant,
         };
         let cfg = RunConfig {
             grid_dim: 15,
@@ -1260,6 +1369,160 @@ mod tests {
             r.total_dead,
             ferro,
             im
+        );
+    }
+
+    // ============================================================
+    // Time-varying dose schedule (#239)
+    // ============================================================
+
+    /// A zero-availability schedule (a bolus scheduled past the end of the
+    /// run, so `factor_at ≡ 0`) must suppress SDT kills relative to the
+    /// Constant full-availability default — proving the SDT exo-ROS rescale
+    /// path is actually wired in.
+    #[test]
+    fn dosed_zero_availability_schedule_suppresses_sdt_kills() {
+        let cfg = RunConfig {
+            grid_dim: 20,
+            n_steps: 60,
+        };
+        let constant = run_one_condition_with_config(
+            &Condition {
+                name: "test_sdt_constant".to_string(),
+                treatment: Treatment::SDT,
+                treatment_name: "SDT".to_string(),
+                o2_lambda: Some(ZONE_REF_LAMBDA),
+                immune_on: false,
+                stromal_on: false,
+                ph_on: false,
+                dose_schedule: DoseSchedule::Constant,
+            },
+            cfg,
+            None,
+        );
+        let zero = run_one_condition_with_config(
+            &Condition {
+                name: "test_sdt_zero_drug".to_string(),
+                treatment: Treatment::SDT,
+                treatment_name: "SDT".to_string(),
+                o2_lambda: Some(ZONE_REF_LAMBDA),
+                immune_on: false,
+                stromal_on: false,
+                ph_on: false,
+                // Dose never arrives within the run → factor_at ≡ 0 → no SDT ROS.
+                dose_schedule: DoseSchedule::Bolus {
+                    dose_step: 9999,
+                    peak: 1.0,
+                    half_life_steps: 10.0,
+                },
+            },
+            cfg,
+            None,
+        );
+        assert!(
+            constant.total_dead > 0,
+            "Constant SDT should kill cells at 20³×60; got {}",
+            constant.total_dead
+        );
+        assert!(
+            zero.total_dead < constant.total_dead,
+            "zero-availability schedule must suppress SDT kills: zero={}, constant={}",
+            zero.total_dead,
+            constant.total_dead
+        );
+    }
+
+    /// A gentle single-bolus RSL3 schedule (continuous covalent inactivation)
+    /// must kill fewer cells than the Constant one-shot 92% GPX4 knockdown —
+    /// proving the RSL3 dosed path is live and the no-init-knockdown +
+    /// per-step inactivation mechanism differs from the steady-state default.
+    #[test]
+    fn dosed_rsl3_bolus_kills_less_than_constant_oneshot() {
+        let cfg = RunConfig {
+            grid_dim: 20,
+            n_steps: 60,
+        };
+        let constant = run_one_condition_with_config(
+            &Condition {
+                name: "test_rsl3_constant".to_string(),
+                treatment: Treatment::RSL3,
+                treatment_name: "RSL3".to_string(),
+                o2_lambda: Some(ZONE_REF_LAMBDA),
+                immune_on: false,
+                stromal_on: false,
+                ph_on: false,
+                dose_schedule: DoseSchedule::Constant,
+            },
+            cfg,
+            None,
+        );
+        let bolus = run_one_condition_with_config(
+            &Condition {
+                name: "test_rsl3_bolus".to_string(),
+                treatment: Treatment::RSL3,
+                treatment_name: "RSL3".to_string(),
+                o2_lambda: Some(ZONE_REF_LAMBDA),
+                immune_on: false,
+                stromal_on: false,
+                ph_on: false,
+                dose_schedule: DoseSchedule::Bolus {
+                    dose_step: 2,
+                    peak: 1.0,
+                    half_life_steps: 8.0,
+                },
+            },
+            cfg,
+            None,
+        );
+        assert!(
+            constant.total_dead > 0,
+            "Constant RSL3 (one-shot 92% knockdown) should kill cells; got {}",
+            constant.total_dead
+        );
+        assert!(
+            bolus.total_dead < constant.total_dead,
+            "a single decaying RSL3 bolus (gentle continuous inactivation) must kill \
+             fewer than the Constant one-shot: bolus={}, constant={}",
+            bolus.total_dead,
+            constant.total_dead
+        );
+    }
+
+    /// The full dosed stack (RSL3 + immune + stromal + pH + MultiDose) must
+    /// run end-to-end without panicking and be deterministic across runs.
+    /// Exercises `rsl3_drug_avail` indexing (pH on), the no-knockdown init,
+    /// per-step inactivation, and the immune/stromal interactions together.
+    #[test]
+    fn dosed_rsl3_full_stack_runs_and_is_deterministic() {
+        let cond = Condition {
+            name: "test_rsl3_multidose_full".to_string(),
+            treatment: Treatment::RSL3,
+            treatment_name: "RSL3".to_string(),
+            o2_lambda: Some(ZONE_REF_LAMBDA),
+            immune_on: true,
+            stromal_on: true,
+            ph_on: true,
+            dose_schedule: DoseSchedule::MultiDose {
+                dose_steps: vec![2, 10, 18],
+                peak: 1.0,
+                half_life_steps: 6.0,
+            },
+        };
+        let cfg = RunConfig {
+            grid_dim: 20,
+            n_steps: 30,
+        };
+        let r1 = run_one_condition_with_config(&cond, cfg, None);
+        let r2 = run_one_condition_with_config(&cond, cfg, None);
+        assert_eq!(
+            r1.total_dead, r2.total_dead,
+            "dosed full-stack run must be deterministic"
+        );
+        assert!(r1.total_tumor > 0, "expected tumor cells");
+        assert!(
+            (0.0..=1.0).contains(&r1.overall_kill_rate),
+            "kill rate must be a valid fraction, got {}",
+            r1.overall_kill_rate
         );
     }
 
