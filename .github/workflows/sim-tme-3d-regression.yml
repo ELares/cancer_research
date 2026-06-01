@@ -1,0 +1,54 @@
+name: sim-tme-3d Production Regression
+
+# Full-scale byte-identity regression for sim-tme-3d's default 24-condition
+# matrix summary.json (#253). This is the production-scale companion to the
+# fast `constant_path_golden_kill_counts` unit test (which guards per-PR
+# drift at a small 20^3 x 80 config in `cargo test`).
+#
+# Deliberately OFF the per-PR path: the full 60^3 x 180 release run + build
+# is too heavy to gate every PR, and the unit-level golden already covers
+# per-PR drift. This runs on a weekly schedule and on demand.
+#
+# A scale-dependent refactor could pass the small-config golden yet still
+# perturb the full production output; this job catches exactly that.
+
+on:
+  workflow_dispatch: {}
+  schedule:
+    - cron: '0 9 * * 1' # Weekly Monday 9am UTC
+
+permissions:
+  contents: read
+
+jobs:
+  production-byte-identity:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Install pinned Rust toolchain
+        # MUST match simulations/rust-toolchain.toml (currently 1.96.0).
+        # The expected SHA is toolchain-specific (powf / Ziggurat are not
+        # bit-identical across libm); @stable would silently drift it.
+        # Bumping the workspace pin requires bumping this version too.
+        uses: dtolnay/rust-toolchain@1.96.0
+
+      - name: Cache Cargo registry and build
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: simulations
+
+      - name: Run production sim-tme-3d (default 24-condition matrix)
+        working-directory: simulations
+        run: cargo run --release -p sim-tme-3d
+
+      - name: Show actual summary.json SHA-256 (for the log / drift triage)
+        working-directory: simulations
+        run: sha256sum output/tme-3d/summary.json
+
+      - name: Assert byte-identity against checked-in expected hash
+        working-directory: simulations
+        # Fails loudly on any drift. On an INTENTIONAL change, regenerate
+        # the hash per the instructions in expected_summary.sha256.
+        run: sha256sum -c sim-tme-3d/expected_summary.sha256

@@ -164,6 +164,15 @@ Three smoke tests:
 
 The library primitives (`physics`, `oxygen`, `ph`, `stromal`, `immune_spatial`) are exhaustively tested in `ferroptosis-core`'s 160+ unit tests. This binary tests orchestration, not the math.
 
+### Production byte-identity regression (#253)
+
+Two layers guard the load-bearing invariant that the #239 multi-dose work relies on (default matrix = all `DoseSchedule::Constant` = byte-identical `summary.json`):
+
+1. **Per-PR (fast):** `constant_path_golden_kill_counts` pins integer kill counts at a small 20³ × 80 config, so a structural regression fails in ordinary `cargo test`.
+2. **Off-PR (full scale):** the `.github/workflows/sim-tme-3d-regression.yml` job runs the real 60³ × 180 matrix and asserts `output/tme-3d/summary.json`'s SHA-256 against the checked-in `expected_summary.sha256`. It runs weekly and on `workflow_dispatch` (not per-PR: the release run + build is too heavy to gate every PR, and a scale-dependent change could pass the small golden yet perturb the full output).
+
+The expected hash is **toolchain-specific** (pinned 1.96.0; confirmed identical on 1.92.0). When an *intentional* output change lands, regenerate it per the instructions inside `expected_summary.sha256`.
+
 ## Performance & scalability (`--bench`, #192)
 
 `--bench` runs one representative condition (combined-TME RSL3) at a configurable grid size and prints wall-clock + throughput. Grid/steps come from env so a sweep is scriptable:
@@ -218,6 +227,6 @@ After running both `sim-tme` and `sim-tme-3d` and generating the comparison tabl
 - ~~**Lift `PhConfig` / `StromalConfig` / `ImmuneConfig` to `ferroptosis-core::params`**~~ — **done** in #220/#224 (lifted as `PhConfig` / `StromalConfig` / `SpatialImmuneConfig`).
 - **O₂ cycling** (square-wave λ alternation) — sim-tme has it, sim-tme-3d skipped for v1 scope.
 - **Anti-PD-1 sweep** — included in sim-tme; skipped here for v1.
-- **3D volumetric visualization** — partially done (#193/#238 axial-slice GIF); full volume render still open under #193.
-- ~~**Larger grids**~~ — **demonstrated feasible** in #192: up to 200³ at ~1.29 GB / ~43 s (see Performance & scalability above). The general `sim-spatial-3d` binary (#194) is separate.
+- **3D volumetric visualization** — delivered in #193/#238 (axial-slice GIF/MP4 renderer + `.npy` volumetric trajectory arrays + 2D-vs-3D comparison table). #193 closed as substantially delivered; a ParaView-grade VTK/HDF5 export remains optional polish if a manuscript figure ever needs it.
+- ~~**Larger grids**~~ — **demonstrated feasible** in #192: up to 200³ at ~1.29 GB / ~43 s (see Performance & scalability above). A standalone `sim-spatial-3d` binary (#194) was closed as superseded: `--snapshot=bare` already provides the unprotected depth-physics baseline.
 - **Empirical pimonidazole validation** — see #196.
