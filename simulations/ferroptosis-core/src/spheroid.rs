@@ -35,7 +35,11 @@ pub struct SpheroidConfig {
     /// At/above this (and below `glycolytic_frac`), cells are OXPHOS; below it,
     /// the Persister-like core.
     pub oxphos_frac: f64,
-    /// Position-dependent MUFA protection at the surface (high) and core (low).
+    /// Per-cell MUFA carrying **cap** at the surface (high) and core (low) —
+    /// the `cell.mufa_cap` `update_mufa_protection` saturates toward, so the
+    /// position-dependent MUFA is durable (#270), not a transient initial
+    /// condition that converges to the uniform M_ss. The same radial value also
+    /// seeds the initial `state.mufa_protection`.
     pub mufa_surface: f64,
     pub mufa_core: f64,
     /// Initial-GSH multiplier at the core (cysteine-limited; < 1). Surface = 1.
@@ -49,14 +53,15 @@ impl SpheroidConfig {
     /// outer third glycolytic, middle third OXPHOS, inner third persister-like;
     /// MUFA 0.25→0.05 surface→core; core GSH ×0.5; core iron ×1.6.
     ///
-    /// **`mufa_surface` is capped at `Params::spheroid`'s `scd_mufa_max`
-    /// (0.25)** — a higher value would be silently clamped on step 1 by
-    /// `update_mufa_protection`, and the per-cell MUFA relaxes toward the
-    /// uniform M_ss (≈0.20) over the run, so it shapes the early killing window
-    /// rather than persisting (a fully durable position-dependent MUFA would
-    /// need a per-cell `scd_mufa_max`; #197 review). Only `iron_core_factor`
-    /// (a static `cell.iron` scale) is a fully durable axis; `gsh_core_factor`
-    /// sets the *initial* GSH, which then evolves under NRF2 resynthesis.
+    /// MUFA is now a **durable** position-dependent axis (#270): `mufa_surface`
+    /// / `mufa_core` are the per-cell MUFA carrying caps (`cell.mufa_cap`), so
+    /// `update_mufa_protection` relaxes each cell toward a steady state that
+    /// scales with its cap instead of every cell converging to the global
+    /// uniform M_ss. (Previously these set only the *initial* `state.mufa_protection`,
+    /// which relaxed back — the #197-review transience caveat, resolved here.)
+    /// `iron_core_factor` (a static `cell.iron` scale) is likewise durable;
+    /// `gsh_core_factor` sets the *initial* GSH, which then evolves under NRF2
+    /// resynthesis. Values remain placeholders pending calibration.
     ///
     /// **Zone geometry caveat**: the thresholds are *radial* fractions, so by
     /// volume (∝ r³) the persister core (`frac < 0.33`) is only ~4% and the
@@ -67,7 +72,8 @@ impl SpheroidConfig {
         SpheroidConfig {
             glycolytic_frac: 0.66,
             oxphos_frac: 0.33,
-            // ≤ Params::spheroid().scd_mufa_max (0.25) — see note above.
+            // Per-cell MUFA caps (#270): rim saturates near the global cap,
+            // core saturates lower → durable rim-vs-core MUFA spread.
             mufa_surface: 0.25,
             mufa_core: 0.05,
             gsh_core_factor: 0.5,
@@ -111,7 +117,10 @@ fn lerp_core_surface(core: f64, surface: f64, frac: f64) -> f64 {
     core + (surface - core) * frac.clamp(0.0, 1.0)
 }
 
-/// Position-dependent MUFA protection: high at the surface, low at the core.
+/// Position-dependent MUFA level: high at the surface, low at the core. Used
+/// for **both** the per-cell MUFA cap (`cell.mufa_cap`, set in
+/// [`apply_radial_cells_3d`] so the value is durable, #270) and the consumer's
+/// initial `state.mufa_protection`.
 pub fn radial_mufa_protection(frac: f64, cfg: &SpheroidConfig) -> f64 {
     lerp_core_surface(cfg.mufa_core, cfg.mufa_surface, frac)
 }
@@ -128,10 +137,14 @@ pub fn radial_iron_factor(frac: f64, cfg: &SpheroidConfig) -> f64 {
 
 /// Re-assign every tumor cell radially: re-generate it with its
 /// radial-position phenotype (per-cell independent RNG), then scale `cell.gsh`
-/// (core-low) and `cell.iron` (core-high) by the radial gradients. Non-tumor
-/// (stromal) cells are left untouched. Deterministic given `(grid dims, cfg,
-/// seed)`. Does **not** set the per-cell MUFA — that is a `CellState` value the
-/// consumer applies after state init via [`radial_mufa_protection`].
+/// (core-low) and `cell.iron` (core-high) by the radial gradients and set the
+/// per-cell `cell.mufa_cap` (rim-high, core-low; #270) so the position-dependent
+/// MUFA is **durable** — the MUFA steady state scales with this cap rather than
+/// every cell converging to the global uniform M_ss. Non-tumor (stromal) cells
+/// are left untouched. Deterministic given `(grid dims, cfg, seed)`. The
+/// consumer still sets the *initial* `state.mufa_protection` after state init
+/// via [`radial_mufa_protection`] (the same radial value the cap uses), so the
+/// cell both starts at and relaxes toward its position-dependent level.
 pub fn apply_radial_cells_3d(grid: &mut TumorGrid3D, cfg: &SpheroidConfig, seed: u64) {
     for idx in 0..grid.cells.len() {
         if !grid.cells[idx].is_tumor {
@@ -143,6 +156,7 @@ pub fn apply_radial_cells_3d(grid: &mut TumorGrid3D, cfg: &SpheroidConfig, seed:
         let mut cell = gen_cell(pheno, &mut rng);
         cell.gsh *= radial_gsh_factor(frac, cfg);
         cell.iron *= radial_iron_factor(frac, cfg);
+        cell.mufa_cap = Some(radial_mufa_protection(frac, cfg));
         grid.cells[idx].cell = cell;
         grid.cells[idx].phenotype = pheno;
     }
@@ -211,6 +225,46 @@ mod tests {
         for gc in &a.cells {
             if !gc.is_tumor {
                 assert_eq!(gc.phenotype, Phenotype::Stromal);
+            }
+        }
+    }
+
+    /// #270 wiring: `apply_radial_cells_3d` sets the per-cell MUFA cap radially
+    /// (core-low, rim-high) and leaves stromal cells uncapped (`None`), so the
+    /// durable-MUFA mechanism gets a per-cell cap to act on.
+    #[test]
+    fn apply_sets_radial_mufa_cap_core_below_rim() {
+        let mut g = TumorGrid3D::generate(40, 40, 40, 20.0, 42);
+        apply_radial_cells_3d(&mut g, &cfg(), 7);
+
+        // A core tumor cell and a near-surface tumor cell along +row from center.
+        let center = g.flat_index(20, 20, 20);
+        let mut surface = center;
+        for r in 20..40 {
+            let i = g.flat_index(r, 20, 20);
+            if g.cells[i].is_tumor {
+                surface = i;
+            }
+        }
+        let core_cap = g.cells[center]
+            .cell
+            .mufa_cap
+            .expect("core tumor cell is capped");
+        let rim_cap = g.cells[surface]
+            .cell
+            .mufa_cap
+            .expect("rim tumor cell is capped");
+        assert!(
+            core_cap < rim_cap,
+            "core MUFA cap should be below rim: core={core_cap}, rim={rim_cap}"
+        );
+        // Caps lie within the configured [core, surface] band.
+        let c = cfg();
+        assert!(core_cap >= c.mufa_core - 1e-9 && rim_cap <= c.mufa_surface + 1e-9);
+        // Stromal (non-tumor) cells are left uncapped.
+        for gc in &g.cells {
+            if !gc.is_tumor {
+                assert!(gc.cell.mufa_cap.is_none(), "stroma stays uncapped");
             }
         }
     }

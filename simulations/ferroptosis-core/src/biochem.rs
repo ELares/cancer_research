@@ -122,11 +122,16 @@ impl CellState {
 ///
 /// The rate is context-dependent: zero in 2D culture (Params::default),
 /// non-zero in in-vivo-like conditions (Params::invivo).
+/// `mufa_max` is the MUFA carrying capacity: the per-cell `cell.mufa_cap` when
+/// set (the spheroid's radial cap, #270), else the global `params.scd_mufa_max`.
+/// The logistic growth saturates at — and the value is clamped to — `mufa_max`,
+/// so a per-cell cap yields a per-cell steady state (durable position-dependent
+/// MUFA). `cell.mufa_cap = None` ⇒ `params.scd_mufa_max` ⇒ byte-identical.
 #[inline]
-fn update_mufa_protection(current: f64, params: &Params) -> f64 {
-    let growth = params.scd_mufa_rate * (1.0 - current / (params.scd_mufa_max + 1e-9));
+fn update_mufa_protection(current: f64, mufa_max: f64, params: &Params) -> f64 {
+    let growth = params.scd_mufa_rate * (1.0 - current / (mufa_max + 1e-9));
     let decay = params.scd_mufa_decay * current;
-    (current + growth - decay).clamp(0.0, params.scd_mufa_max.max(0.0))
+    (current + growth - decay).clamp(0.0, mufa_max.max(0.0))
 }
 
 /// Deterministic exogenous-ROS decay envelope for the post-bolus phase.
@@ -218,7 +223,11 @@ pub fn sim_cell_step(
 
     // === LIPID PEROXIDATION ===
     let unscav = (total_ros - scavenged).max(0.0);
-    state.mufa_protection = update_mufa_protection(state.mufa_protection, params);
+    state.mufa_protection = update_mufa_protection(
+        state.mufa_protection,
+        cell.mufa_cap.unwrap_or(params.scd_mufa_max),
+        params,
+    );
 
     let effective_unsat = (cell.lipid_unsat * (1.0 - state.mufa_protection)).max(0.05);
     let lp_direct = unscav * effective_unsat * params.lp_rate;
@@ -327,7 +336,11 @@ pub fn sim_cell(
 
         // === LIPID PEROXIDATION ===
         let unscav = (total_ros - scavenged).max(0.0);
-        mufa_protection = update_mufa_protection(mufa_protection, params);
+        mufa_protection = update_mufa_protection(
+            mufa_protection,
+            cell.mufa_cap.unwrap_or(params.scd_mufa_max),
+            params,
+        );
         let effective_unsat = (cell.lipid_unsat * (1.0 - mufa_protection)).max(0.05);
         let lp_direct = unscav * effective_unsat * params.lp_rate;
         let antioxidant_quench = gpx4 * (gsh / (gsh + 0.5)) + fsp1;
@@ -461,5 +474,82 @@ mod tests {
         let dead = sim_cell_step(&mut state, &cell, &params, 0, 0.0, &mut sim_rng);
         assert!(!dead, "One step should not kill a healthy glycolytic cell");
         assert!(state.lp < 1.0, "LP should be near zero after one step");
+    }
+
+    /// #270: a per-cell MUFA cap yields a per-cell durable steady state.
+    /// Two MUFA levels start at the SAME low value and relax under
+    /// `Params::spheroid()`: one toward a low per-cell cap (the spheroid core),
+    /// one toward the global cap (`None` fallback = the OLD uniform behavior).
+    /// The capped one stays low; the uncapped one climbs to the uniform M_ss —
+    /// so the position-dependent MUFA persists instead of converging.
+    #[test]
+    fn per_cell_mufa_cap_gives_durable_per_cell_steady_state() {
+        let params = Params::spheroid();
+        let core_cap = 0.05; // a core cell's per-cell cap
+        let global_cap = params.scd_mufa_max; // 0.25 — what `None` falls back to
+        let (mut core, mut uncapped) = (0.05_f64, 0.05_f64); // same low start
+        for _ in 0..300 {
+            core = update_mufa_protection(core, core_cap, &params);
+            uncapped = update_mufa_protection(uncapped, global_cap, &params);
+        }
+        // Core saturates near M_ss(0.05) ≈ 0.048; uncapped climbs to M_ss(0.25) ≈ 0.20.
+        assert!(
+            core < 0.08,
+            "core MUFA stays low at its per-cell cap: {core}"
+        );
+        assert!(
+            uncapped > 0.15,
+            "uncapped (global) MUFA rises to the uniform M_ss: {uncapped}"
+        );
+        assert!(
+            uncapped > 2.0 * core,
+            "per-cell cap keeps a durable rim-vs-core spread: uncapped={uncapped}, core={core}"
+        );
+        // Each stays within its own cap (clamp invariant).
+        assert!(core <= core_cap + 1e-9 && uncapped <= global_cap + 1e-9);
+    }
+
+    /// #270 wiring: `sim_cell_step` itself must read `cell.mufa_cap` (not just
+    /// the `update_mufa_protection` helper). Routes two otherwise-identical
+    /// cells through the full step — one with a low per-cell cap, one uncapped
+    /// (`None` ⇒ global) — from the same low MUFA start under `Params::spheroid()`
+    /// and Control (the cell stays alive so MUFA relaxes cleanly). The capped
+    /// cell's late MUFA must stay below the uncapped one; this fails if the
+    /// `sim_cell_step` call site ever stops threading the per-cell cap.
+    #[test]
+    fn sim_cell_step_reads_per_cell_mufa_cap() {
+        let params = Params::spheroid();
+        let mut gen_rng = StdRng::seed_from_u64(11);
+        let base = gen_cell(Phenotype::Glycolytic, &mut gen_rng);
+
+        let run = |mufa_cap: Option<f64>| -> f64 {
+            let mut cell = base.clone();
+            cell.mufa_cap = mufa_cap;
+            let mut init_rng = StdRng::seed_from_u64(5);
+            let mut state = CellState::from_cell(
+                &cell,
+                crate::cell::Treatment::Control,
+                &params,
+                &mut init_rng,
+            );
+            state.mufa_protection = 0.05; // same low start for both
+            let mut step_rng = StdRng::seed_from_u64(77);
+            for step in 0..150 {
+                sim_cell_step(&mut state, &cell, &params, step, 0.0, &mut step_rng);
+            }
+            state.mufa_protection
+        };
+
+        let capped = run(Some(0.05)); // a core cell's low cap
+        let uncapped = run(None); // global cap (0.25) — the old uniform target
+        assert!(
+            capped < uncapped,
+            "sim_cell_step must honor the per-cell cap: capped={capped}, uncapped={uncapped}"
+        );
+        assert!(capped < 0.08, "capped cell stays MUFA-poor late: {capped}");
+        assert!(
+            uncapped > 0.15,
+            "uncapped cell climbs to the global M_ss: {uncapped}"
+        );
     }
 }
