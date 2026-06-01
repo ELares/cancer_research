@@ -62,7 +62,7 @@ use ferroptosis_core::dose_schedule::DoseSchedule;
 use ferroptosis_core::grid::{TumorGrid3D, TUMOR_RADIUS_FRACTION};
 use ferroptosis_core::immune_spatial::{
     dc_activation, diffuse_damp_3d_step, exhaustion_factor, immune_kill_probability,
-    DAMP_KILL_THRESHOLD,
+    suppressor_kill_multiplier, suppressor_source_mask_3d, SuppressorConfig, DAMP_KILL_THRESHOLD,
 };
 use ferroptosis_core::oxygen::radial_o2_field;
 use ferroptosis_core::params::{
@@ -109,6 +109,10 @@ const VESSEL_SEED: u64 = 0x7e55_e142;
 /// Independent seed for radial spheroid cell re-generation (#197). Distinct
 /// from the others so radial re-gen never touches the matrix RNG streams.
 const SPHEROID_SEED: u64 = 0x5ade_0142;
+/// Independent seed for heuristic Treg/MDSC suppressor-source placement (#264).
+/// Distinct from the others so suppressor seeding never touches the matrix or
+/// other realism-layer RNG streams.
+const SUPPRESSOR_SEED: u64 = 0x5099_2e64;
 /// O2-supply factor below which a cell counts as hypoxic for
 /// `vascular_hypoxic_fraction` reporting (#191). `exp(-d/λ) < 0.1` is ~2.3 λ
 /// from the nearest vessel.
@@ -219,6 +223,15 @@ struct ConditionResult {
     /// path.
     #[serde(skip_serializing_if = "Option::is_none")]
     scale_interpretation: Option<String>,
+    /// Number of Treg/MDSC suppressor-source (niche) cells (#264 Phase 2).
+    /// `None` (field omitted) unless the suppressor field is enabled —
+    /// byte-identical default path.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    suppressor_source_count: Option<usize>,
+    /// Peak suppressor-field concentration reached over the run (#264). `None`
+    /// (field omitted) unless the suppressor field is enabled.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    suppressor_peak: Option<f64>,
 }
 
 /// Per-subclone kill statistics for one condition (#242). Lets the analysis
@@ -368,6 +381,9 @@ struct Overrides {
     vasculature: Option<VasculatureConfig>,
     spheroid: Option<SpheroidConfig>,
     slab: Option<SlabConfig>,
+    /// Treg/MDSC immunosuppressor field (#264 Phase 2). `None` / disabled ⇒
+    /// the suppressor multiplier is identity ⇒ byte-identical.
+    suppressor: Option<SuppressorConfig>,
 }
 
 /// Thin wrapper running a condition with NO overrides (all realism layers
@@ -396,6 +412,9 @@ fn run_one_condition_full(
     let vasculature_cfg = overrides.vasculature;
     let spheroid_cfg = overrides.spheroid;
     let slab_cfg = overrides.slab;
+    // Treg/MDSC suppressor (#264 Phase 2). `None`/disabled ⇒ no source mask,
+    // no field, identity multiplier ⇒ byte-identical.
+    let suppressor_cfg = overrides.suppressor.filter(|c| !c.is_disabled());
     // Slab and spheroid are mutually-exclusive geometries (#240 review): slab
     // builds an all-tumor block and slab supply wins, but spheroid would run
     // `Params::spheroid()` + radial phenotype re-assignment keyed on a spheroid
@@ -488,6 +507,11 @@ fn run_one_condition_full(
     // or no λ) → the edge-distance `radial_o2_field` path runs → byte-identical.
     let vessels: Option<Vec<(f64, f64, f64)>> =
         vasculature_cfg.map(|cfg| place_vessels_3d(&grid, &cfg, VESSEL_SEED));
+    // Treg/MDSC suppressor source mask (#264 Phase 2): perivascular niches when
+    // vessels are present, else heuristic patches (independent SUPPRESSOR_SEED).
+    // `None` ⇒ suppressor off ⇒ byte-identical.
+    let suppressor_sources: Option<Vec<bool>> = suppressor_cfg
+        .map(|cfg| suppressor_source_mask_3d(&grid, &cfg, vessels.as_deref(), SUPPRESSOR_SEED));
     // Unified per-cell O2/drug **supply field**: either the slab depth gradient
     // (#240) or the vessel proximity field (#191) — mutually-exclusive O2-source
     // overrides. Both replace the edge-distance O2 proxy and scale drug
@@ -798,6 +822,27 @@ fn run_one_condition_full(
         Vec::new()
     };
 
+    // Treg/MDSC suppressor field (#264 Phase 2). A second diffusing field,
+    // replenished at the source cells each step, that scales immune kill DOWN
+    // locally. Allocated only when suppressor is on; `None` ⇒ never touched and
+    // `suppressor_kill_multiplier(_, 0)` would be identity, so byte-identical.
+    let suppressor_on = suppressor_sources.is_some();
+    let suppression_strength = suppressor_cfg.map_or(0.0, |c| c.suppression_strength);
+    let mut suppressor_field: Vec<f64> = if suppressor_on {
+        vec![0.0_f64; n_cells]
+    } else {
+        Vec::new()
+    };
+    let mut suppressor_scratch: Vec<f64> = if suppressor_on {
+        vec![0.0_f64; n_cells]
+    } else {
+        Vec::new()
+    };
+    // The rich kill path handles either realism layer (each factor is identity
+    // when its layer is off); the default allocation-free path runs only when
+    // BOTH are off, staying byte-identical to pre-#243.
+    let realism_kill_path = exhaustion_on || suppressor_on;
+
     // Hoisted out of the per-cell hot loop (these invariants don't vary by
     // cell or step): on the dosed path the relevant availability vec must be
     // populated. Compiled out in release.
@@ -1029,6 +1074,25 @@ fn run_one_condition_full(
                 immune_cfg.damp_clearance_rate,
             );
 
+            // Treg/MDSC suppressor field (#264 Phase 2): replenish at the source
+            // (niche) cells, then diffuse + clear (same scratch-buffer step as
+            // DAMP). Off ⇒ skipped ⇒ byte-identical.
+            if let (Some(scfg), Some(sources)) = (&suppressor_cfg, &suppressor_sources) {
+                for (idx, &is_src) in sources.iter().enumerate() {
+                    if is_src {
+                        suppressor_field[idx] =
+                            (suppressor_field[idx] + scfg.replenish_rate).min(1.0);
+                    }
+                }
+                diffuse_damp_3d_step(
+                    &mut suppressor_field,
+                    &mut suppressor_scratch,
+                    &grid,
+                    scfg.diffusion_fraction,
+                    scfg.clearance_rate,
+                );
+            }
+
             // Immune kill (after delay). Parallelized over cells with rayon
             // (#192) — byte-identical to the old serial triple loop: each cell
             // reads its own `damp_field[idx]` (immutable here; DAMP diffusion
@@ -1043,7 +1107,7 @@ fn run_one_condition_full(
                 // honoring the #192/#253 zero-cost discipline. The exhaustion
                 // path instead `filter_map`-collects the killed flat indices so
                 // their neighborhoods can be scattered into `cumulative_kills`.
-                if exhaustion_on {
+                if realism_kill_path {
                     let killed: Vec<usize> = grid
                         .cells
                         .par_iter_mut()
@@ -1057,17 +1121,30 @@ fn run_one_condition_full(
                                 return None;
                             }
                             let activation = dc_activation(local_damp, immune_cfg.dc_activation_kd);
-                            // Prior local immune kills suppress this cell's kill
-                            // probability (T-cell exhaustion, #243).
-                            let exh = exhaustion_factor(
-                                cumulative_kills[idx],
-                                immune_cfg.exhaustion_rate,
-                            );
+                            // Two opposing local modulators, each identity when
+                            // its layer is off (its backing vec is empty then, so
+                            // the `_on` guard avoids an out-of-bounds index):
+                            // T-cell exhaustion (#243) and Treg/MDSC suppression
+                            // (#264) both scale the kill probability DOWN.
+                            let exh = if exhaustion_on {
+                                exhaustion_factor(cumulative_kills[idx], immune_cfg.exhaustion_rate)
+                            } else {
+                                1.0
+                            };
+                            let supp = if suppressor_on {
+                                suppressor_kill_multiplier(
+                                    suppressor_field[idx],
+                                    suppression_strength,
+                                )
+                            } else {
+                                1.0
+                            };
                             let kill_prob = immune_kill_probability(
                                 activation,
                                 immune_cfg.immune_kill_rate,
                                 effective_brake,
-                            ) * exh;
+                            ) * exh
+                                * supp;
                             let mut rng = StdRng::seed_from_u64(
                                 cond_seed
                                     .wrapping_add(900_000_000)
@@ -1087,12 +1164,15 @@ fn run_one_condition_full(
                     // Scatter exhaustion into the Moore-26 neighborhood of each
                     // cell killed this step (serial — runs after the par_iter
                     // join; integer adds commute, so order-independent and
-                    // deterministic regardless of `collect` order).
-                    for &k in &killed {
-                        let (r, c, l) = grid.coords(k);
-                        let (nbrs, n) = grid.neighbors(r, c, l);
-                        for &(nr, nc, nl) in &nbrs[..n] {
-                            cumulative_kills[grid.flat_index(nr, nc, nl)] += 1;
+                    // deterministic regardless of `collect` order). Only when
+                    // exhaustion is on (suppressor-only runs leave it empty).
+                    if exhaustion_on {
+                        for &k in &killed {
+                            let (r, c, l) = grid.coords(k);
+                            let (nbrs, n) = grid.neighbors(r, c, l);
+                            for &(nr, nc, nl) in &nbrs[..n] {
+                                cumulative_kills[grid.flat_index(nr, nc, nl)] += 1;
+                            }
                         }
                     }
                 } else {
@@ -1277,6 +1357,15 @@ fn run_one_condition_full(
     // Patient-scale slab interpretation (#240). `Some` only in slab mode.
     let scale_interpretation_str = slab_cfg.map(|cfg| scale_interpretation(&grid, &cfg));
 
+    // Treg/MDSC suppressor reporting (#264). `Some` only when suppressor is on.
+    // The field replenishes every step and reaches a quasi-steady state, so the
+    // end-of-run peak is representative.
+    let suppressor_source_count = suppressor_sources
+        .as_ref()
+        .map(|s| s.iter().filter(|&&v| v).count());
+    let suppressor_peak =
+        suppressor_on.then(|| suppressor_field.iter().cloned().fold(0.0_f64, f64::max));
+
     ConditionResult {
         treatment: condition.treatment_name.clone(),
         o2_condition: match condition.o2_lambda {
@@ -1322,6 +1411,8 @@ fn run_one_condition_full(
         subclone_kills,
         vascular_hypoxic_fraction,
         scale_interpretation: scale_interpretation_str,
+        suppressor_source_count,
+        suppressor_peak,
     }
 }
 
@@ -1502,6 +1593,9 @@ struct SnapshotPreset {
     /// the depth gradient is visible directly in the z-axis (layer) mid-slice
     /// of the dead/DAMP/LP panels.
     slab: bool,
+    /// True if the Treg/MDSC suppressor field (#264) is enabled. Writes a
+    /// static `suppressor.npy` (u8) source-niche mask for the renderer panel.
+    suppressor: bool,
 }
 
 /// Visualization presets for `--snapshot=NAME`. Keep this list small —
@@ -1521,6 +1615,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         vasculature: false,
         spheroid: false,
         slab: false,
+        suppressor: false,
     },
     SnapshotPreset {
         name: "bare",
@@ -1536,6 +1631,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         vasculature: false,
         spheroid: false,
         slab: false,
+        suppressor: false,
     },
     SnapshotPreset {
         name: "multidose",
@@ -1551,6 +1647,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         vasculature: false,
         spheroid: false,
         slab: false,
+        suppressor: false,
     },
     SnapshotPreset {
         // SDT here visualizes the persister-fraction OVERLAY (the MUFA axis +
@@ -1570,6 +1667,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         vasculature: false,
         spheroid: false,
         slab: false,
+        suppressor: false,
     },
     SnapshotPreset {
         name: "clonal",
@@ -1585,6 +1683,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         vasculature: false,
         spheroid: false,
         slab: false,
+        suppressor: false,
     },
     SnapshotPreset {
         // RSL3 (hypoxia-sensitive) + explicit internal vessels: near-vessel
@@ -1605,6 +1704,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         vasculature: true,
         spheroid: false,
         slab: false,
+        suppressor: false,
     },
     SnapshotPreset {
         // SDT + radial spheroid biology: the phenotype panel shows the
@@ -1623,6 +1723,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         vasculature: false,
         spheroid: true,
         slab: false,
+        suppressor: false,
     },
     SnapshotPreset {
         // SDT on a patient-scale slab at the SURFACE (+z face = vessel, depth
@@ -1646,6 +1747,27 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         vasculature: false,
         spheroid: false,
         slab: true,
+        suppressor: false,
+    },
+    SnapshotPreset {
+        // SDT + immune + Treg/MDSC suppressor (#264 Phase 2). Heuristic niche
+        // patches (no vasculature in this preset) locally dampen immune kill:
+        // the static `suppressor.npy` mask shows the niches, and the dead panel
+        // shows immune killing suppressed in their neighborhoods.
+        name: "suppressor",
+        desc: "SDT + immune + Treg/MDSC suppressor field (#264) — niches locally dampen immune kill",
+        treatment: Treatment::SDT,
+        treatment_name: "SDT",
+        immune_on: true,
+        stromal_on: false,
+        ph_on: false,
+        multidose: false,
+        persister: false,
+        clonal: false,
+        vasculature: false,
+        spheroid: false,
+        slab: false,
+        suppressor: true,
     },
 ];
 
@@ -1735,6 +1857,7 @@ fn run_snapshot(output_dir: &Path, tumor_radius_um: f64, name: &str) {
     // across the block in the z-axis mid-slice (no extra static overlay; the
     // death front in the dead/DAMP/LP panels IS the visualization).
     let slab_cfg = preset.slab.then(SlabConfig::surface);
+    let suppressor_cfg = preset.suppressor.then(SuppressorConfig::enabled);
     // Static viz overlays, recomputed from the same SEED + per-layer seed the
     // run uses internally, so they match the perturbations actually applied.
     // `None` unless the matching preset is active.
@@ -1768,6 +1891,14 @@ fn run_snapshot(output_dir: &Path, tumor_radius_um: f64, name: &str) {
             .map(|gc| phenotype_to_u8(gc.phenotype))
             .collect::<Vec<u8>>()
     });
+    // Suppressor-source niche mask (#264): recompute the same mask the run uses
+    // (heuristic here — this preset has no vasculature). 1 = Treg/MDSC source.
+    let suppressor_mask = suppressor_cfg.map(|cfg| {
+        suppressor_source_mask_3d(&snapshot_grid, &cfg, None, SUPPRESSOR_SEED)
+            .iter()
+            .map(|&s| u8::from(s))
+            .collect::<Vec<u8>>()
+    });
     let mut buffers =
         snapshot::SnapshotBuffers::new(run_cfg.grid_dim, run_cfg.n_steps, preset.persister);
     let result = run_one_condition_full(
@@ -1780,6 +1911,7 @@ fn run_snapshot(output_dir: &Path, tumor_radius_um: f64, name: &str) {
             vasculature: vasculature_cfg,
             spheroid: spheroid_cfg,
             slab: slab_cfg,
+            suppressor: suppressor_cfg,
             ..Default::default()
         },
     );
@@ -1823,6 +1955,14 @@ fn run_snapshot(output_dir: &Path, tumor_radius_um: f64, name: &str) {
             .expect("Failed to write phenotype.npy");
     }
 
+    // Static Treg/MDSC suppressor-source mask (#264), same static 3D layout.
+    // Only when the preset is suppressor. 1 = niche source cell, 0 = not.
+    if let Some(mask) = &suppressor_mask {
+        let shape = [run_cfg.grid_dim, run_cfg.grid_dim, run_cfg.grid_dim];
+        npy::write_u8_array(output_dir.join("suppressor.npy"), &shape, mask)
+            .expect("Failed to write suppressor.npy");
+    }
+
     let meta = snapshot::TrajectoryMeta {
         schema_version: snapshot::TRAJECTORY_SCHEMA_VERSION,
         grid_dim: run_cfg.grid_dim,
@@ -1844,7 +1984,7 @@ fn run_snapshot(output_dir: &Path, tumor_radius_um: f64, name: &str) {
         .expect("Failed to write trajectory_meta.json");
 
     eprintln!(
-        "Wrote {} + trajectory_{{dead,damp,lp{}}}.npy{}{}{}",
+        "Wrote {} + trajectory_{{dead,damp,lp{}}}.npy{}{}{}{}",
         meta_path.display(),
         if preset.persister { ",persister" } else { "" },
         if preset.clonal { " + subclone.npy" } else { "" },
@@ -1855,6 +1995,11 @@ fn run_snapshot(output_dir: &Path, tumor_radius_um: f64, name: &str) {
         },
         if preset.spheroid {
             " + phenotype.npy"
+        } else {
+            ""
+        },
+        if preset.suppressor {
+            " + suppressor.npy"
         } else {
             ""
         },
@@ -3204,6 +3349,89 @@ mod tests {
         // iron that couples to neighbors. So sparing immune kills shifts a few
         // deaths into the ferroptosis tally; that cross-coupling is expected,
         // not a bug, which is why this asserts on immune kills specifically.
+    }
+
+    // ===== Treg/MDSC suppressor field (#264 Phase 2) =====
+
+    /// Headline #264 Phase 2 result: under anti-PD-1, **depleting Tregs**
+    /// (turning the suppressor field off) recovers immune kills that the
+    /// suppressor was damping — i.e. anti-PD-1 alone (Tregs present) is less
+    /// effective than anti-PD-1 + Treg depletion (Tauriello 2018). Both arms
+    /// share the SAME anti-PD-1 immune config + dense kill regime and differ
+    /// ONLY in whether the suppressor field is present. (Defaults stay
+    /// byte-identical — the disabled/None path is the matrix path.)
+    #[test]
+    fn treg_depletion_improves_anti_pd1_kills() {
+        let cfg = RunConfig {
+            grid_dim: 30,
+            n_steps: 130,
+        };
+        let cond = Condition {
+            name: "suppressor_demo".to_string(),
+            treatment: Treatment::SDT,
+            treatment_name: "SDT".to_string(),
+            o2_lambda: Some(ZONE_REF_LAMBDA),
+            immune_on: true,
+            stromal_on: false,
+            ph_on: false,
+            dose_schedule: DoseSchedule::Constant,
+        };
+        // Anti-PD-1 immune config, dense regime (so there are enough immune
+        // kills for the suppressor to measurably damp). Both arms share it.
+        let immune = SpatialImmuneConfig {
+            immune_kill_rate: 0.5,
+            anti_pd1_efficacy: 0.5,
+            ..SpatialImmuneConfig::for_3d()
+        };
+        // Tregs present: anti-PD-1 + suppressor on.
+        let with_tregs = run_one_condition_full(
+            &cond,
+            cfg,
+            None,
+            Overrides {
+                immune: Some(immune),
+                suppressor: Some(SuppressorConfig::enabled()),
+                ..Default::default()
+            },
+        );
+        // Treg-depleted: anti-PD-1 alone (suppressor off).
+        let depleted = run_one_condition_full(
+            &cond,
+            cfg,
+            None,
+            Overrides {
+                immune: Some(immune),
+                ..Default::default()
+            },
+        );
+        let with_im = with_tregs
+            .immune_kills
+            .expect("immune_on populates immune_kills");
+        let dep_im = depleted
+            .immune_kills
+            .expect("immune_on populates immune_kills");
+        assert!(
+            dep_im >= 50,
+            "Treg-depleted baseline must produce enough immune kills to be \
+             informative; got {dep_im}"
+        );
+        // Treg depletion materially recovers immune kills the suppressor damped.
+        let recovery = (dep_im - with_im) as f64 / dep_im as f64;
+        assert!(
+            with_im < dep_im && recovery > 0.1,
+            "Treg depletion must materially raise anti-PD-1 immune kills (>10%): \
+             with_tregs={with_im}, depleted={dep_im}, recovery={:.1}%",
+            recovery * 100.0
+        );
+        // The suppressor run reports its niche census.
+        assert!(
+            with_tregs.suppressor_source_count.unwrap_or(0) > 0,
+            "suppressor run reports a non-empty niche source count"
+        );
+        assert!(
+            depleted.suppressor_source_count.is_none(),
+            "Treg-depleted run omits the suppressor census"
+        );
     }
 
     // ===== Clonal heterogeneity (#242) =====
