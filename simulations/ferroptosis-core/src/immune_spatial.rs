@@ -307,6 +307,33 @@ pub fn immune_kill_probability(activation: f64, kill_rate: f64, effective_brake:
     }
 }
 
+/// T-cell exhaustion multiplier (#243, Phase 1).
+///
+/// Sustained cytotoxic activity in a region drives resident T cells toward a
+/// dysfunctional ("exhausted") state that lowers their per-encounter kill
+/// probability (Wherry, Nat Immunol 2011; Snell et al., Cell 2018). Modeled
+/// as hyperbolic decay in the number of immune kills accumulated in the
+/// cell's Moore neighborhood:
+///
+/// ```text
+/// factor = 1 / (1 + exhaustion_rate · cumulative_kills)
+/// ```
+///
+/// A consumer multiplies this into [`immune_kill_probability`]. Returns
+/// exactly `1.0` (no suppression) when `exhaustion_rate == 0.0` OR
+/// `cumulative_kills == 0`, so the default config (`exhaustion_rate = 0.0`)
+/// is a no-op and the consumer's output stays byte-identical. Monotonically
+/// non-increasing in both arguments, bounded in `(0, 1]`.
+#[inline]
+#[must_use]
+pub fn exhaustion_factor(cumulative_kills: u32, exhaustion_rate: f64) -> f64 {
+    debug_assert!(
+        exhaustion_rate >= 0.0,
+        "exhaustion_rate must be >= 0; a negative rate pushes the factor above 1 or negative"
+    );
+    1.0 / (1.0 + exhaustion_rate * cumulative_kills as f64)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -704,5 +731,39 @@ mod tests {
             "expected ≈ {expected}, got {prob}"
         );
         assert!(prob < 0.99, "should not be capped at this activation");
+    }
+
+    // =============================
+    // exhaustion_factor tests (#243)
+    // =============================
+
+    #[test]
+    fn exhaustion_is_identity_at_zero_rate() {
+        // rate 0 => no suppression for any cumulative count (byte-identity).
+        for cum in [0u32, 1, 10, 1000] {
+            assert_eq!(exhaustion_factor(cum, 0.0), 1.0);
+        }
+    }
+
+    #[test]
+    fn exhaustion_is_identity_at_zero_cumulative() {
+        assert_eq!(exhaustion_factor(0, 0.5), 1.0);
+    }
+
+    #[test]
+    fn exhaustion_decreases_with_cumulative_kills() {
+        let rate = 0.1;
+        let f1 = exhaustion_factor(1, rate);
+        let f10 = exhaustion_factor(10, rate);
+        assert!(f1 < 1.0 && f10 < f1);
+        // Bounded in (0, 1].
+        assert!(f10 > 0.0);
+        // Exact hyperbolic value: 1/(1 + 0.1*10) = 0.5.
+        assert!((exhaustion_factor(10, 0.1) - 0.5).abs() < 1e-12);
+    }
+
+    #[test]
+    fn exhaustion_decreases_with_rate() {
+        assert!(exhaustion_factor(5, 0.2) < exhaustion_factor(5, 0.05));
     }
 }

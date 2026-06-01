@@ -561,6 +561,17 @@ impl TumorGrid3D {
         r * self.cols * self.layers + c * self.layers + l
     }
 
+    /// Inverse of [`flat_index`](Self::flat_index): map a flat cell index
+    /// back to `(row, col, layer)`. Row-major layout, so this and
+    /// `flat_index` must change together. Not bounds-checked.
+    #[inline]
+    pub fn coords(&self, idx: usize) -> (usize, usize, usize) {
+        let l = idx % self.layers;
+        let c = (idx / self.layers) % self.cols;
+        let r = idx / (self.cols * self.layers);
+        (r, c, l)
+    }
+
     /// Access cell at (row, col, layer).
     #[inline]
     pub fn get(&self, r: usize, c: usize, l: usize) -> &GridCell {
@@ -1197,6 +1208,21 @@ mod tests_3d {
                 let expected = (tumor_radius - dist) * g.cell_size_um;
                 assert_eq!(g.radial_depth_um(r, c), expected);
             }
+        }
+    }
+
+    #[test]
+    fn coords_3d_roundtrips_with_flat_index() {
+        // Non-cubic dims to catch axis-order bugs (rows≠cols≠layers).
+        let g = TumorGrid3D::generate(7, 5, 9, 20.0, 42);
+        for idx in 0..g.cells.len() {
+            let (r, c, l) = g.coords(idx);
+            assert!(r < g.rows && c < g.cols && l < g.layers);
+            assert_eq!(
+                g.flat_index(r, c, l),
+                idx,
+                "coords/flat_index must be inverses"
+            );
         }
     }
 }

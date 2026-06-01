@@ -131,6 +131,15 @@ Cells that survive a ferroptosis inducer can enter an epigenetic **drug-tolerant
 
 Parameters in `PersisterConfig::enabled()` are **plausible placeholders pending calibration** (the literature gives qualitative direction, not step-level rates).
 
+## T-cell exhaustion (#243, Phase 1)
+
+The spatial immune model (`immune_spatial`, #188) is a 0–48 h resident T-cell cascade with a single PD-1 brake. Phase 1 of #243 adds **T-cell exhaustion**: sustained killing in a region drives local T cells toward dysfunction, lowering their per-encounter kill probability (Wherry, Nat Immunol 2011; Snell et al., Cell 2018).
+
+- **Model.** A per-cell `cumulative_kills` field counts immune kills accumulated in each cell's Moore-26 neighborhood; the kill probability is scaled by `ferroptosis_core::immune_spatial::exhaustion_factor` = `1 / (1 + exhaustion_rate · cumulative_kills)`.
+- **Off by default.** `SpatialImmuneConfig::for_3d()` sets `exhaustion_rate = 0.0`, so `exhaustion_factor ≡ 1.0` and the `cumulative_kills` field is never allocated — `summary.json` is byte-identical (golden tests + the #253 production-SHA guard pass). The scatter that updates neighborhoods runs only when the rate is > 0.
+- **Effect.** With exhaustion on, total immune kills decline as killing clusters (the "cold tumor" emergence). The `exhaustion_reduces_immune_kills` test shows a dense SDT + immune run dropping ≈20% (174 → 139) when exhaustion is enabled, all else equal. Note this also shifts a few deaths into the ferroptosis tally (a cell spared an apoptotic immune kill can die ferroptotically and release iron), so only the immune-kill count is asserted.
+- **Scope.** Phase 1 only. Later phases (Treg/MDSC suppressor field, multi-checkpoint axis, DC subsets) stay separate per #243. `exhaustion_rate` is an uncalibrated placeholder.
+
 ## Condition matrix
 
 | Category | Conditions | Description |
