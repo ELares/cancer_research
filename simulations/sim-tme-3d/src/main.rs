@@ -57,6 +57,7 @@ mod snapshot;
 
 use ferroptosis_core::biochem::{exo_decay_factor, sim_cell_step, CellState};
 use ferroptosis_core::cell::Treatment;
+use ferroptosis_core::clonal::{assign_subclones_3d, ClonalConfig, SubclonePerturbation};
 use ferroptosis_core::dose_schedule::DoseSchedule;
 use ferroptosis_core::grid::{TumorGrid3D, TUMOR_RADIUS_FRACTION};
 use ferroptosis_core::immune_spatial::{
@@ -87,6 +88,11 @@ const GRID_DIM: usize = 60;
 const CELL_SIZE_UM: f64 = 20.0;
 const N_STEPS: u32 = 180;
 const SEED: u64 = 42;
+/// Independent seed for clonal subclone assignment (#242). Distinct from
+/// `SEED` so Voronoi seed-point sampling never advances the grid-generation
+/// RNG stream — the cell grid stays byte-identical whether or not subclones
+/// are assigned.
+const SUBCLONE_SEED: u64 = 0x5c10_4e42;
 
 /// O₂ penetration sweep — 3λ must comfortably fit inside the
 /// tumor_radius (60·0.45·20 = 540 µm). Skips λ=150 (3·150=450 →
@@ -175,6 +181,22 @@ struct ConditionResult {
     /// stays byte-identical to pre-#241 (guarded by #253).
     #[serde(skip_serializing_if = "Option::is_none")]
     persister_mean: Option<f64>,
+    /// Per-subclone kill breakdown (#242). `None` (field omitted) unless the
+    /// clonal model is enabled, so the default matrix summary.json stays
+    /// byte-identical. One entry per subclone, ordered by id.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    subclone_kills: Option<Vec<SubcloneKillStat>>,
+}
+
+/// Per-subclone kill statistics for one condition (#242). Lets the analysis
+/// see how subclonal heterogeneity splits efficacy — the between-subclone
+/// kill-rate spread that often exceeds the between-treatment spread.
+#[derive(Clone, Debug, Serialize)]
+struct SubcloneKillStat {
+    subclone_id: u8,
+    total_tumor: usize,
+    total_dead: usize,
+    kill_rate: f64,
 }
 
 /// Schema version for `summary.json`. Bump when the output shape
@@ -298,30 +320,43 @@ fn run_one_condition(condition: &Condition) -> ConditionResult {
     run_one_condition_with_config(condition, RunConfig::production(), None)
 }
 
-/// Thin wrapper running a condition with the persister model OFF. The matrix,
-/// dose-sweep, and every test use this 3-arg form, so they stay byte-identical
-/// to pre-#241. `run_snapshot` calls [`run_one_condition_full`] directly to
-/// opt the `persister` preset into the model.
+/// Optional realism-layer overrides for a single condition run. `Default` is
+/// all-`None` — the byte-identical matrix path — and each field opts one layer
+/// in: persister cells (#241), an immune-config override incl. T-cell
+/// exhaustion (#243), and clonal heterogeneity (#242). Bundled into a struct
+/// so the run signature stays readable as layers accrue, and so a call site
+/// names exactly the layer it enables (`Overrides { clonal: Some(..),
+/// ..Default::default() }`).
+#[derive(Default)]
+struct Overrides {
+    persister: Option<PersisterConfig>,
+    immune: Option<SpatialImmuneConfig>,
+    clonal: Option<ClonalConfig>,
+}
+
+/// Thin wrapper running a condition with NO overrides (all realism layers
+/// off). The matrix, dose-sweep, and every test use this 3-arg form, so they
+/// stay byte-identical. `run_snapshot`/tests call [`run_one_condition_full`]
+/// directly with a populated [`Overrides`] to opt a layer in.
 fn run_one_condition_with_config(
     condition: &Condition,
     run_cfg: RunConfig,
     snapshot: Option<&mut snapshot::SnapshotBuffers>,
 ) -> ConditionResult {
-    run_one_condition_full(condition, run_cfg, snapshot, None, None)
+    run_one_condition_full(condition, run_cfg, snapshot, Overrides::default())
 }
 
 fn run_one_condition_full(
     condition: &Condition,
     run_cfg: RunConfig,
     mut snapshot: Option<&mut snapshot::SnapshotBuffers>,
-    // Persister-cell model (#241). `None` (the default matrix path) keeps the
-    // whole persister code path inert, so summary.json is byte-identical.
-    persister_cfg: Option<PersisterConfig>,
-    // Immune-config override (#243). `None` uses `SpatialImmuneConfig::for_3d()`
-    // (exhaustion_rate = 0 ⇒ byte-identical). `Some(cfg)` with a nonzero
-    // exhaustion_rate turns on T-cell exhaustion.
-    immune_override: Option<SpatialImmuneConfig>,
+    overrides: Overrides,
 ) -> ConditionResult {
+    // Destructure the optional realism layers. All-`None` (the matrix path)
+    // keeps every layer inert → summary.json byte-identical (guarded by #253).
+    let persister_cfg = overrides.persister;
+    let immune_override = overrides.immune;
+    let clonal_cfg = overrides.clonal;
     let params = Params::default();
     let spatial_params = SpatialParams {
         cell_size_um: CELL_SIZE_UM,
@@ -357,6 +392,14 @@ fn run_one_condition_full(
         SEED,
     );
     let n_cells = grid.cells.len();
+
+    // Clonal heterogeneity (#242): assign each cell to a subclone via Voronoi,
+    // using an INDEPENDENT seed so generate's RNG stream (and the cell grid)
+    // is unchanged. `None` on the matrix path → no assignment, no perturbation
+    // → byte-identical.
+    let subclone_ids: Option<Vec<u8>> = clonal_cfg
+        .as_ref()
+        .map(|c| assign_subclones_3d(&grid, c.k(), SUBCLONE_SEED));
 
     // --- Apply O₂ gradient if requested (mutates cell.basal_ros) ---
     if let Some(lambda) = condition.o2_lambda {
@@ -481,6 +524,35 @@ fn run_one_condition_full(
                 // instead of silently using a stale value (#225 review).
                 gc.lp_at_death = f64::NAN;
             }
+        }
+    }
+
+    // Per-subclone parameter perturbations (#242), gated on clonal. RNG-neutral
+    // one-time setup mutations (like the O2/pH gradients). Identity
+    // perturbations (k=1 / single_identity) are no-ops → byte-identical.
+    //
+    // Durability of each axis (all read every step in sim_cell_step):
+    //  - iron_mul → cell.iron (static): fully durable.
+    //  - lipid_unsat_mul → cell.lipid_unsat (static): fully durable. This is
+    //    the MUFA axis; perturbing state.mufa_protection instead would be
+    //    overwritten on step 1 by update_mufa_protection under default params
+    //    (scd_mufa_max == 0), so it must scale the static PUFA field (#265 rev).
+    //  - gpx4_mul → state.gpx4 (initial): shapes the early autocatalytic
+    //    window strongly, but state.gpx4 relaxes toward the NRF2 setpoint
+    //    (~0.008/step), so a "GPX4-low" identity is transient over 180 steps.
+    //    A fully durable GPX4 axis would also scale the static cell.nrf2
+    //    setpoint — deferred to the calibration pass. Composes multiplicatively
+    //    with the pH ion-trap correction below (order immaterial).
+    if let (Some(ids), Some(cfg)) = (&subclone_ids, &clonal_cfg) {
+        for (idx, gc) in grid.cells.iter_mut().enumerate() {
+            if !gc.is_tumor {
+                continue;
+            }
+            // ids[idx] is 1..=k for tumor cells (0 only for stroma, skipped).
+            let p = &cfg.perturbations[(ids[idx] - 1) as usize];
+            gc.cell.iron *= p.iron_mul;
+            gc.cell.lipid_unsat *= p.lipid_unsat_mul;
+            gc.state.gpx4 *= p.gpx4_mul;
         }
     }
 
@@ -984,6 +1056,36 @@ fn run_one_condition_full(
         }
     });
 
+    // Per-subclone kill breakdown (#242). `Some` only when clonal is enabled
+    // (subclone_ids present), so `None` omits the field → byte-identical.
+    let subclone_kills = subclone_ids.as_ref().map(|ids| {
+        let k = clonal_cfg.as_ref().map_or(0, |c| c.k());
+        // Index 0 unused (stroma); 1..=k are the subclones.
+        let mut totals = vec![0usize; k + 1];
+        let mut deads = vec![0usize; k + 1];
+        for (idx, gc) in grid.cells.iter().enumerate() {
+            if gc.is_tumor {
+                let s = ids[idx] as usize;
+                totals[s] += 1;
+                if gc.state.dead {
+                    deads[s] += 1;
+                }
+            }
+        }
+        (1..=k)
+            .map(|s| SubcloneKillStat {
+                subclone_id: s as u8,
+                total_tumor: totals[s],
+                total_dead: deads[s],
+                kill_rate: if totals[s] > 0 {
+                    deads[s] as f64 / totals[s] as f64
+                } else {
+                    0.0
+                },
+            })
+            .collect::<Vec<_>>()
+    });
+
     ConditionResult {
         treatment: condition.treatment_name.clone(),
         o2_condition: match condition.o2_lambda {
@@ -1026,6 +1128,7 @@ fn run_one_condition_full(
         ph_core: ph_core_v,
         ph_lambda_um: ph_lambda_v,
         persister_mean,
+        subclone_kills,
     }
 }
 
@@ -1190,6 +1293,10 @@ struct SnapshotPreset {
     /// True if the drug-tolerant persister model (#241) is enabled. Adds a
     /// `trajectory_persister.npy` overlay and emits `persister_mean`.
     persister: bool,
+    /// True if clonal heterogeneity (#242) is enabled. Writes a static
+    /// `subclone.npy` (u8, no time axis) for the renderer's subclone panel and
+    /// emits per-subclone kill stats.
+    clonal: bool,
 }
 
 /// Visualization presets for `--snapshot=NAME`. Keep this list small —
@@ -1205,6 +1312,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         ph_on: true,
         multidose: false,
         persister: false,
+        clonal: false,
     },
     SnapshotPreset {
         name: "bare",
@@ -1216,6 +1324,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         ph_on: false,
         multidose: false,
         persister: false,
+        clonal: false,
     },
     SnapshotPreset {
         name: "multidose",
@@ -1227,6 +1336,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         ph_on: false,
         multidose: true,
         persister: false,
+        clonal: false,
     },
     SnapshotPreset {
         // SDT here visualizes the persister-fraction OVERLAY (the MUFA axis +
@@ -1242,6 +1352,19 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         ph_on: false,
         multidose: true,
         persister: true,
+        clonal: false,
+    },
+    SnapshotPreset {
+        name: "clonal",
+        desc: "SDT multi-dose + immune + clonal (4 subclones) — static subclone-id overlay (#242)",
+        treatment: Treatment::SDT,
+        treatment_name: "SDT",
+        immune_on: true,
+        stromal_on: false,
+        ph_on: false,
+        multidose: true,
+        persister: false,
+        clonal: true,
     },
 ];
 
@@ -1308,24 +1431,55 @@ fn run_snapshot(output_dir: &Path, tumor_radius_um: f64, name: &str) {
     );
 
     let run_cfg = RunConfig::production();
-    // Enable the persister model (#241) for presets that opt in.
-    let persister_cfg = preset.persister.then(PersisterConfig::enabled);
+    // Enable the realism layers a preset opts into (#241 persister, #242 clonal).
+    let clonal_cfg = preset.clonal.then(ClonalConfig::literature_4);
+    // Subclone-id map for the static viz overlay (#242). Recomputed from the
+    // same SEED + SUBCLONE_SEED the run uses internally, so it matches exactly.
+    // `None` unless the preset is clonal.
+    let subclone_ids = clonal_cfg.as_ref().map(|c| {
+        let g = TumorGrid3D::generate(
+            run_cfg.grid_dim,
+            run_cfg.grid_dim,
+            run_cfg.grid_dim,
+            CELL_SIZE_UM,
+            SEED,
+        );
+        assign_subclones_3d(&g, c.k(), SUBCLONE_SEED)
+    });
     let mut buffers =
         snapshot::SnapshotBuffers::new(run_cfg.grid_dim, run_cfg.n_steps, preset.persister);
-    let result =
-        run_one_condition_full(&condition, run_cfg, Some(&mut buffers), persister_cfg, None);
+    let result = run_one_condition_full(
+        &condition,
+        run_cfg,
+        Some(&mut buffers),
+        Overrides {
+            persister: preset.persister.then(PersisterConfig::enabled),
+            clonal: clonal_cfg,
+            ..Default::default()
+        },
+    );
     eprintln!(
-        "  done — total_kill={:.1}%, ferroptosis_kills={}, immune_kills={}, persister_mean={:.3}, captured {} steps",
+        "  done — total_kill={:.1}%, ferroptosis_kills={}, immune_kills={}, persister_mean={:.3}, subclones={}, captured {} steps",
         result.overall_kill_rate * 100.0,
         result.ferroptosis_kills.unwrap_or(0),
         result.immune_kills.unwrap_or(0),
         result.persister_mean.unwrap_or(0.0),
+        result.subclone_kills.as_ref().map_or(0, |v| v.len()),
         buffers.steps_captured(),
     );
 
     buffers
         .write(output_dir)
         .expect("Failed to write trajectory .npy files");
+
+    // Static subclone-id map (#242). Single 3D frame (no time axis), shape
+    // (rows, cols, layers) to match the trajectory arrays' spatial axes so the
+    // renderer can take the same mid-slice. Only when the preset is clonal.
+    if let Some(ids) = &subclone_ids {
+        let shape = [run_cfg.grid_dim, run_cfg.grid_dim, run_cfg.grid_dim];
+        npy::write_u8_array(output_dir.join("subclone.npy"), &shape, ids)
+            .expect("Failed to write subclone.npy");
+    }
 
     let meta = snapshot::TrajectoryMeta {
         schema_version: snapshot::TRAJECTORY_SCHEMA_VERSION,
@@ -1348,9 +1502,10 @@ fn run_snapshot(output_dir: &Path, tumor_radius_um: f64, name: &str) {
         .expect("Failed to write trajectory_meta.json");
 
     eprintln!(
-        "Wrote {} + trajectory_{{dead,damp,lp{}}}.npy",
+        "Wrote {} + trajectory_{{dead,damp,lp{}}}.npy{}",
         meta_path.display(),
         if preset.persister { ",persister" } else { "" },
+        if preset.clonal { " + subclone.npy" } else { "" },
     );
     eprintln!("Render with: python3 scripts/render_tme_3d_trajectory.py");
 }
@@ -2437,7 +2592,7 @@ mod tests {
             dose_schedule: DoseSchedule::Constant,
         };
         let wrapped = run_one_condition_with_config(&cond, cfg, None);
-        let explicit_none = run_one_condition_full(&cond, cfg, None, None, None);
+        let explicit_none = run_one_condition_full(&cond, cfg, None, Overrides::default());
         assert_eq!(wrapped.total_dead, explicit_none.total_dead);
         assert_eq!(
             wrapped.persister_mean, None,
@@ -2449,8 +2604,15 @@ mod tests {
         );
         // An identity PersisterConfig runs the (gated) block but every helper
         // is a no-op, so kills are unchanged.
-        let identity =
-            run_one_condition_full(&cond, cfg, None, Some(PersisterConfig::default()), None);
+        let identity = run_one_condition_full(
+            &cond,
+            cfg,
+            None,
+            Overrides {
+                persister: Some(PersisterConfig::default()),
+                ..Default::default()
+            },
+        );
         assert_eq!(
             identity.total_dead, wrapped.total_dead,
             "identity PersisterConfig must not change kills"
@@ -2499,7 +2661,15 @@ mod tests {
             },
         };
         let off = run_one_condition_with_config(&cond, cfg, None);
-        let on = run_one_condition_full(&cond, cfg, None, Some(PersisterConfig::enabled()), None);
+        let on = run_one_condition_full(
+            &cond,
+            cfg,
+            None,
+            Overrides {
+                persister: Some(PersisterConfig::enabled()),
+                ..Default::default()
+            },
+        );
         // Strong precondition: if a grid/timing change drops the baseline kill
         // count near zero, there is no headroom to demonstrate the effect and
         // the test would pass/fail for the wrong reason. Fail loudly instead.
@@ -2566,8 +2736,10 @@ mod tests {
             &sustained,
             cfg,
             None,
-            Some(PersisterConfig::enabled()),
-            None,
+            Overrides {
+                persister: Some(PersisterConfig::enabled()),
+                ..Default::default()
+            },
         )
         .persister_mean
         .unwrap();
@@ -2575,8 +2747,10 @@ mod tests {
             &early_window,
             cfg,
             None,
-            Some(PersisterConfig::enabled()),
-            None,
+            Overrides {
+                persister: Some(PersisterConfig::enabled()),
+                ..Default::default()
+            },
         )
         .persister_mean
         .unwrap();
@@ -2636,8 +2810,24 @@ mod tests {
             exhaustion_rate: 2.0,
             ..base
         };
-        let off = run_one_condition_full(&cond, cfg, None, None, Some(base));
-        let on = run_one_condition_full(&cond, cfg, None, None, Some(exhausted));
+        let off = run_one_condition_full(
+            &cond,
+            cfg,
+            None,
+            Overrides {
+                immune: Some(base),
+                ..Default::default()
+            },
+        );
+        let on = run_one_condition_full(
+            &cond,
+            cfg,
+            None,
+            Overrides {
+                immune: Some(exhausted),
+                ..Default::default()
+            },
+        );
         let off_im = off.immune_kills.expect("immune_on populates immune_kills");
         let on_im = on.immune_kills.expect("immune_on populates immune_kills");
         assert!(
@@ -2660,5 +2850,169 @@ mod tests {
         // iron that couples to neighbors. So sparing immune kills shifts a few
         // deaths into the ferroptosis tally; that cross-coupling is expected,
         // not a bug, which is why this asserts on immune kills specifically.
+    }
+
+    // ===== Clonal heterogeneity (#242) =====
+
+    /// K=1 with the identity perturbation must reproduce the no-clonal run
+    /// exactly: subclone assignment uses an independent RNG (grid unchanged)
+    /// and the perturbation is a no-op. Per-PR complement to the #253
+    /// production-SHA guard.
+    #[test]
+    fn clonal_k1_identity_is_byte_identical() {
+        let cfg = RunConfig {
+            grid_dim: 20,
+            n_steps: 80,
+        };
+        let cond = Condition {
+            name: "clonal_k1".to_string(),
+            treatment: Treatment::RSL3,
+            treatment_name: "RSL3".to_string(),
+            o2_lambda: None,
+            immune_on: false,
+            stromal_on: false,
+            ph_on: false,
+            dose_schedule: DoseSchedule::Constant,
+        };
+        let baseline = run_one_condition_with_config(&cond, cfg, None);
+        let k1 = run_one_condition_full(
+            &cond,
+            cfg,
+            None,
+            Overrides {
+                clonal: Some(ClonalConfig::single_identity()),
+                ..Default::default()
+            },
+        );
+        assert_eq!(
+            k1.total_dead, baseline.total_dead,
+            "K=1 identity must not change kills"
+        );
+        assert!(
+            baseline.subclone_kills.is_none(),
+            "no-clonal run omits subclone_kills"
+        );
+        let sk = k1
+            .subclone_kills
+            .expect("clonal run reports subclone_kills");
+        assert_eq!(sk.len(), 1, "K=1 ⇒ one subclone entry");
+        assert_eq!(
+            sk[0].total_dead, k1.total_dead,
+            "the single subclone holds all kills"
+        );
+    }
+
+    /// With a 4-subclone literature table, the most-vulnerable subclone (1:
+    /// iron-loaded, GPX4-low) must die at a higher rate than the most-resistant
+    /// (4: GPX4-high, MUFA-enriched) — the intratumoral-heterogeneity effect.
+    /// Uses RSL3 + uniform O₂ so subclonal GPX4/iron differences drive the kill.
+    #[test]
+    fn clonal_subclones_differ_in_kill_rate() {
+        let cfg = RunConfig {
+            grid_dim: 24,
+            n_steps: 80,
+        };
+        let cond = Condition {
+            name: "clonal_4".to_string(),
+            treatment: Treatment::RSL3,
+            treatment_name: "RSL3".to_string(),
+            o2_lambda: None,
+            immune_on: false,
+            stromal_on: false,
+            ph_on: false,
+            dose_schedule: DoseSchedule::Constant,
+        };
+        let r = run_one_condition_full(
+            &cond,
+            cfg,
+            None,
+            Overrides {
+                clonal: Some(ClonalConfig::literature_4()),
+                ..Default::default()
+            },
+        );
+        let sk = r.subclone_kills.expect("clonal run reports subclone_kills");
+        assert_eq!(sk.len(), 4, "literature_4 ⇒ four subclone entries");
+        // Entries are ordered by id; ids 1..=4 span vulnerable→resistant.
+        assert_eq!(sk[0].subclone_id, 1);
+        assert_eq!(sk[3].subclone_id, 4);
+        assert!(
+            sk[0].kill_rate > sk[3].kill_rate,
+            "vulnerable subclone 1 must out-die resistant subclone 4: \
+             s1={:.3}, s4={:.3}",
+            sk[0].kill_rate,
+            sk[3].kill_rate
+        );
+        // Per-subclone tallies partition the tumor.
+        let total_dead: usize = sk.iter().map(|s| s.total_dead).sum();
+        let total_tumor: usize = sk.iter().map(|s| s.total_tumor).sum();
+        assert_eq!(
+            total_dead, r.total_dead,
+            "subclone dead counts must sum to total_dead"
+        );
+        assert_eq!(
+            total_tumor, r.total_tumor,
+            "subclone tumor counts must sum to total_tumor"
+        );
+    }
+
+    /// Locks the MUFA/`lipid_unsat` axis in CI (#265 review): two K=1 configs
+    /// differing ONLY in `lipid_unsat_mul` must produce different kill counts.
+    /// The MUFA-enriched clone (lower oxidizable PUFA) dies less. Guards against
+    /// the axis silently going inert again (e.g. if it were moved back onto the
+    /// homeostatically-reset `state.mufa_protection`).
+    #[test]
+    fn clonal_lipid_unsat_axis_reduces_kills() {
+        let cfg = RunConfig {
+            grid_dim: 24,
+            n_steps: 80,
+        };
+        let cond = Condition {
+            name: "lipid_axis".to_string(),
+            treatment: Treatment::RSL3,
+            treatment_name: "RSL3".to_string(),
+            o2_lambda: None,
+            immune_on: false,
+            stromal_on: false,
+            ph_on: false,
+            dose_schedule: DoseSchedule::Constant,
+        };
+        // K=1, perturbing ONLY lipid_unsat (iron/gpx4 held at identity).
+        let only_lipid = |lipid_unsat_mul: f64| ClonalConfig {
+            perturbations: vec![SubclonePerturbation {
+                iron_mul: 1.0,
+                gpx4_mul: 1.0,
+                lipid_unsat_mul,
+            }],
+        };
+        let baseline = run_one_condition_full(
+            &cond,
+            cfg,
+            None,
+            Overrides {
+                clonal: Some(only_lipid(1.0)),
+                ..Default::default()
+            },
+        );
+        let mufa_enriched = run_one_condition_full(
+            &cond,
+            cfg,
+            None,
+            Overrides {
+                clonal: Some(only_lipid(0.5)),
+                ..Default::default()
+            },
+        );
+        assert!(
+            baseline.total_dead > 0,
+            "baseline must kill some cells; got {}",
+            baseline.total_dead
+        );
+        assert!(
+            mufa_enriched.total_dead < baseline.total_dead,
+            "MUFA-enriched (lower lipid_unsat) must reduce kills: enriched={}, baseline={}",
+            mufa_enriched.total_dead,
+            baseline.total_dead
+        );
     }
 }

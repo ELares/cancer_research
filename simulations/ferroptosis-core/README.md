@@ -44,6 +44,7 @@ Run the included example: `cargo run -p ferroptosis-core --example basic_usage`
 | `tumor_pk` | Two-compartment vascular/interstitial pharmacokinetics |
 | `dose_schedule` | Time-varying drug-administration schedules (Constant / Bolus / MultiDose / Infusion / FromPk); `factor_at(step)` per-step availability, identity-default for byte-identical steady-state (#239) |
 | `persister` | Drug-tolerant persister cells (#241): pure helpers (`acquire` / `revert` / `gpx4_inactivation_multiplier` / `mufa_boost_increment`) + `PersisterConfig` (identity-default ⇒ no-op). Cells acquire epigenetic ferroptosis tolerance under drug exposure and revert after clearance; consumer owns `CellState::persister_fraction` |
+| `clonal` | Clonal heterogeneity (#242): `assign_subclones_3d` (Voronoi subclone map via an INDEPENDENT RNG, so `TumorGrid3D::generate`'s stream is untouched) + `ClonalConfig` / `SubclonePerturbation` (per-subclone `iron_mul` / `gpx4_mul` / `lipid_unsat_mul` the consumer applies as RNG-neutral setup mutations; `lipid_unsat_mul` is the MUFA-enrichment axis, scaling the static `Cell` PUFA field so it persists across steps). `single_identity()` (K=1) ⇒ byte-identical; `literature_4()` spans the mesenchymal⇄epithelial vulnerability axis |
 
 ## Key API
 

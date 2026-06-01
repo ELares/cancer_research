@@ -36,6 +36,7 @@
 //! | [`dose_schedule`] | Time-varying drug-administration schedules (bolus / multi-dose / infusion / PK-driven) |
 
 pub mod cell;
+pub mod clonal;
 // Listed before `params` because `SpatialParams` holds a `Photosensitizer`.
 pub mod biochem;
 pub mod dose_schedule;
