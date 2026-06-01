@@ -1,0 +1,26 @@
+# Expected SHA-256 of sim-tme-3d's default 24-condition matrix summary.json.
+#
+# This pins the byte-identity invariant that the #239 multi-dose PK work
+# leans on: when every condition uses DoseSchedule::Constant (the entire
+# default matrix), summary.json must be byte-for-byte identical to its
+# pre-#239 output. The fast `constant_path_golden_kill_counts` unit test
+# guards per-PR drift at a small 20^3 x 80 config; this file guards the
+# FULL 60^3 x 180 production output via the (off-PR) sim-tme-3d-regression
+# workflow.
+#
+# TOOLCHAIN-SPECIFIC: this hash is only stable on the pinned channel in
+# simulations/rust-toolchain.toml (currently 1.96.0). powf / Ziggurat are
+# not bit-identical across libm versions. Confirmed identical on 1.92.0
+# and 1.96.0, so it is stable in practice for the pinned channel.
+#
+# Regenerate ONLY when an INTENTIONAL output change lands (and say why in
+# the PR):
+#   cd simulations
+#   rustup run 1.96.0 cargo run --release -p sim-tme-3d
+#   sha256sum output/tme-3d/summary.json   # paste the hash below
+#
+# Verify (what CI does), from the simulations/ directory:
+#   sha256sum -c sim-tme-3d/expected_summary.sha256
+#
+# (Lines beginning with '#' are ignored by `sha256sum -c`.)
+1cf8866312c100bfb453718dfd68e0b492d2e199485e75e8f622657cd390ff71  output/tme-3d/summary.json
