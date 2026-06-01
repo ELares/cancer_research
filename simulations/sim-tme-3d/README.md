@@ -26,6 +26,8 @@ Emits a JSON summary that the Python comparison script pairs with `sim-tme`'s ex
 
 3D fundamentally can't match 2D's biological scale at any feasible grid size (500³ = 125M cells × ~170B ≈ 21 GB). **Compare via RATIOS, not absolute counts.** The Python comparison script does this automatically.
 
+The spheroid is also still **in-vitro** scale (~1.1 mm), where most cells are within drug/O2 penetration depth. [Patient-scale slab mode (#240)](#patient-scale-slab-240) addresses the *other* end of the scale gap — a slab at depth in a 5 mm+ virtual tumor, where penetration collapses and efficacy drops sharply — so the same engine can report numbers at both the spheroid and the patient scale.
+
 ## Why λ sweep is `[80, 100, 120]` (skip 150)
 
 The 3D hypoxic-zone threshold is `3λ`. At λ=150 µm, the threshold is 450 µm — but the 60³ grid's tumor radius is only 540 µm. The hypoxic zone would be ≤ 1 cell — statistically meaningless. The three smaller λs give meaningful hypoxic shells.
@@ -100,6 +102,9 @@ The default 24-condition matrix path (no `--snapshot` flag) is **byte-identical*
 | `clonal` | SDT | immune + **clonal 4-subclone (#242)** | multi-dose |
 | `vasculature` | RSL3 | **explicit vessels (#191)** | constant |
 | `spheroid` | SDT | immune + **radial biochem (#197)** | constant |
+| `slab` | SDT | immune + **patient-scale slab (#240)** | constant |
+
+The `slab` preset visualizes the **depth-graded supply** of a patient-scale slab: a surface slab (+z face = vessel) where the top layers are well-perfused and die while the deeper layers go drug/O2-deprived and survive. The depth axis is the layer (z) axis, which the renderer's mid-slice spans — so the death front in the existing dead/DAMP/LP panels *is* the visualization (no extra static overlay). See [Patient-scale slab](#patient-scale-slab-240) below.
 
 The `multidose` preset shows **death waves synced to each dose**: four SDT ROS pulses at steps 10/55/100/145, each triggering a ferroptotic death wave + DAMP bloom + immune response. The renderer draws a red frame border + `💉 DOSE` marker on each dose step.
 
@@ -172,6 +177,18 @@ Beyond the *environmental* fields (O2 #187, pH #190, vessels #191), the ferropto
 - **Comparison (AC).** `radial_spheroid_changes_kills_vs_random` shows the radial structure materially changes the kill outcome vs the random-phenotype grid (answering "does radial structure change the kill rate, or just redistribute deaths?" — it changes it). `spheroid_params_differ_from_default` pins `Params::spheroid()` between 2D (M_ss 0) and in-vivo (0.40).
 - **Visualization.** `--snapshot=spheroid` writes a static `phenotype.npy` (u8) and the renderer adds a discrete phenotype panel (stroma + glycolytic/OXPHOS/persister zones).
 - The GSH and iron gradients are the issue's "optional v1" items, included here. Cell-cell-contact (E-cadherin/Merlin) and glucose/glutamine/lactate gradients remain out of scope; gradient strengths are placeholders pending calibration.
+
+## Patient-scale slab (#240)
+
+The spheroid is ~540 µm radius — **in-vitro** scale, where drug/O2 penetration (Krogh ~150 µm) reaches most cells. Real patient tumors are **5–50 mm**, where penetration drops catastrophically with depth and the bulk of the tumor is essentially drug-deprived. The `slab` mode models a chunk of such a tumor at a configurable depth, so the efficacy numbers reflect the patient-scale penetration limit rather than the optimistic spheroid scale.
+
+- **Geometry.** Opt-in via `Overrides.slab`. `TumorGrid3D::generate_slab` builds an **all-tumor block** (no sphere carve, no stroma — a slab of bulk tumor), and `ferroptosis_core::slab::slab_supply_field` gives each cell a **planar** depth-graded supply: the **+z face** (top layer) is vessel-proximal at `depth_offset_mm`, and supply decays `exp(-depth/λ)` going **−z** (deeper into the tumor). This is the 1-D analog of `oxygen::radial_o2_field`, and like the vasculature field it is a **unified supply factor** — it replaces the O2 factor (× `cell.basal_ros`) AND scales drug delivery on every path (exo dose at init, RSL3 constant knockdown correction, dosed `rsl3_drug_avail`). `SlabConfig::patient_deep()` places the +z face at 4 mm in a 10 mm virtual tumor (the slab spans ~4.0–5.2 mm at production grid size, essentially fully deprived); `SlabConfig::surface()` places it at 0 mm (the shallow, vessel-fed control). Slab and `spheroid` are mutually-exclusive geometries (a `debug_assert` rejects setting both).
+- **Boundary conditions.** +z = vessel (the supply maximum, immune-accessible via the existing DAMP cascade). −z = continuing tumor, modeled as a **no-flux / reflective** face — already satisfied because the iron/DAMP diffusion uses bounded (no-wrap) neighbors, so there is no flux across any grid face. The depth gradient (high at +z, ~0 at −z) supplies the directionality; the reflective −z boundary holds because the planar supply replaces the field rather than diffusing it. (`minus_z_face_is_reflective_no_wraparound` verifies the no-wrap directly.)
+- **Off by default / byte-identical.** The matrix passes no slab config, so it runs the spheroid grid + edge-distance/vessel O2 unchanged (golden + #253 production-SHA guard hold). The slab grid and planar supply are both gated on the opt-in.
+- **Reporting.** A slab run adds a `scale_interpretation` string to its `ConditionResult` (e.g. *"slab spanning depth 4.0–5.2 mm of a 10 mm virtual tumor (1.2 mm thick)"*), omitted on non-slab runs — so the output says plainly what physical scale it represents. A `debug_assert` keeps the reported span within its own virtual tumor.
+- **Comparison (AC).** `patient_scale_slab_kills_far_less_than_spheroid` shows a 4 mm-deep slab kills **<20%** of what the in-vitro spheroid does under the same SDT treatment — the penetration collapse the spheroid scale misses. `shallow_slab_outkills_deep_slab` (SDT) and `slab_supply_scales_rsl3_kills` (RSL3) confirm the depth-dependence on both the exo-ROS and the RSL3 drug paths.
+- **⚠️ Magnitude is uncalibrated.** Like the spheroid gradients, the slab uses a first-order Krogh `exp(-depth/λ)` with a placeholder λ (~150 µm). The "<20% / near-zero kill at depth" result is **illustrative of the in-vitro-vs-patient scale gap, not a validated efficacy number** — the real depth-collapse magnitude depends on tissue-specific penetration, vascular density, and drug pharmacokinetics that this v1 does not calibrate. Treat it as "deep tumor ≫ harder to treat", not as a quantitative prediction.
+- **Visualization.** `--snapshot=slab` (SDT + immune on a **surface** slab) renders the depth-graded death front directly in the dead/DAMP/LP panels: the renderer's mid-slice fixes the row axis and spans `(col, layer)`, so the layer (depth) axis is shown — top (+z, well-perfused) dies, bottom (−z, deprived) survives. No extra static overlay file. A deep `patient_deep()` slab would kill ~nothing (a less illustrative GIF), so the surface slab is the preset; the depth comparison lives in the tests.
 
 ## Dimensionality-dependent assumptions (#197 AC)
 
