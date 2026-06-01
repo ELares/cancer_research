@@ -104,6 +104,7 @@ The default 24-condition matrix path (no `--snapshot` flag) is **byte-identical*
 | `spheroid` | SDT | immune + **radial biochem (#197)** | constant |
 | `slab` | SDT | immune + **patient-scale slab (#240)** | constant |
 | `suppressor` | SDT | immune + **Treg/MDSC suppressor (#264)** | constant |
+| `checkpoint` | SDT | immune + **dual PD-1/CTLA-4 blockade (#264)** | constant |
 
 The `slab` preset visualizes the **depth-graded supply** of a patient-scale slab: a surface slab (+z face = vessel) where the top layers are well-perfused and die while the deeper layers go drug/O2-deprived and survive. The depth axis is the layer (z) axis, which the renderer's mid-slice spans — so the death front in the existing dead/DAMP/LP panels *is* the visualization (no extra static overlay). See [Patient-scale slab](#patient-scale-slab-240) below.
 
@@ -158,7 +159,17 @@ Where exhaustion is intrinsic T-cell dysfunction, **immunosuppression** is extri
 - **Off by default / byte-identical.** The matrix passes no suppressor config; `SuppressorConfig::disabled()` (`suppression_strength = 0`) makes the multiplier `≡ 1.0` and the field is never allocated. `summary.json` SHA unchanged (golden + #253 guard hold). `summary.json` gains `suppressor_source_count` + `suppressor_peak` only when enabled.
 - **Validation (AC).** `treg_depletion_improves_anti_pd1_kills` runs anti-PD-1 with the suppressor on (Tregs present) vs off (Treg-depleted), all else equal: depletion materially recovers immune kills (>10%) — i.e. anti-PD-1 alone is less effective than anti-PD-1 + Treg depletion (Tauriello 2018).
 - **Visualization.** `--snapshot=suppressor` (SDT + immune + suppressor) writes a static `suppressor.npy` (u8) source-niche mask; the renderer adds a "Treg/MDSC niches" panel. Read alongside the dead panel: immune killing is locally damped in/around the niches.
-- **Uncalibrated.** `suppression_strength`, `replenish_rate`, `niche_radius_um`, and `n_sources` are placeholders pending calibration (companion to #266/#270 calibration items). Phases 3 (multi-checkpoint) + 4 (DC subsets) of #264 remain open.
+- **Uncalibrated.** `suppression_strength`, `replenish_rate`, `niche_radius_um`, and `n_sources` are placeholders pending calibration (companion to #266/#270 calibration items). Phase 4 (DC subsets) of #264 remains open.
+
+## Multi-checkpoint immune brake (#264, Phase 3)
+
+The base immune model has a single PD-1 brake (`pd1_brake`, lifted by `anti_pd1_efficacy`). Phase 3 generalizes it to a **panel** of independent checkpoints — PD-1, CTLA-4, LAG-3, TIM-3 — each separately drug-modulated, to model **combination immunotherapy** (anti-PD-1 + anti-CTLA-4; Sharma & Allison, Cell 2015).
+
+- **Model.** Opt-in via `Overrides.checkpoints` (`CheckpointPanel`). Each `Checkpoint { brake, drug_efficacy }` is an **independent** brake on the kill; the combined brake fed to `immune_kill_probability` is `1 − Π(1 − brakeᵢ·(1−drug_efficacyᵢ))`. A panel with only PD-1 active reduces **exactly** to the single-PD-1 `SpatialImmuneConfig::effective_brake` (`pd1_brake·(1−anti_pd1)`), so the panel is a strict generalization. `CheckpointPanel` is `Copy`; constructors `pd1_only` / `pd1_ctla4_tumor` + builders `with_anti_pd1` / `with_anti_ctla4` / `…lag3` / `…tim3`.
+- **Off by default / byte-identical.** The matrix passes no panel, so the consumer uses `immune_cfg.effective_brake()` (single PD-1) unchanged. `summary.json` SHA holds (golden + #253 guards); it gains `checkpoint_brake` only when a panel is supplied.
+- **Validation (AC).** `dual_checkpoint_blockade_outkills_anti_pd1_alone`: on a PD-1 + CTLA-4 tumor, anti-PD-1 alone leaves CTLA-4 braking, so adding anti-CTLA-4 materially raises immune kills (>10%) — the combination-immunotherapy result.
+- **Visualization.** `--snapshot=checkpoint` runs SDT + immune with **dual** PD-1/CTLA-4 blockade (combined brake low ⇒ aggressive immune killing). No new render panel — the brake is a uniform scalar, so the enhanced death front shows directly in the existing dead/DAMP panels (contrast the single-PD-1 `combined`/`multidose` presets).
+- **Uncalibrated.** Per-checkpoint `brake` and `drug_efficacy` are placeholders pending calibration. Phase 4 (DC subsets) of #264 remains open.
 
 ## Clonal heterogeneity (#242)
 
