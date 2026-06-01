@@ -215,14 +215,17 @@ def _render(
     # Optional subclone panel (#242): STATIC (no time axis) — the Voronoi
     # subclone map is fixed for the run. 0 = stroma (grey); 1..K = distinct
     # discrete colors so the patch structure is legible.
+    im_sub = None
     if show_subclone:
         k = int(subclone.max())
         sub_colors = [(0.92, 0.92, 0.92, 1.0)] + [
             plt.get_cmap("tab10")(i % 10) for i in range(k)
         ]
         sub_cmap = ListedColormap(sub_colors)
-        axes[sub_idx].imshow(
-            subclone[mid], cmap=sub_cmap, vmin=0, vmax=k, origin="lower"
+        # vmax = k + 1 so each integer id 0..k maps to one whole color band;
+        # tick at each band center for a discrete id legend.
+        im_sub = axes[sub_idx].imshow(
+            subclone[mid], cmap=sub_cmap, vmin=0, vmax=k + 1, origin="lower"
         )
         axes[sub_idx].set_title(f"Subclone id (K={k})")
 
@@ -234,6 +237,13 @@ def _render(
     fig.colorbar(im_lp, ax=axes[2], fraction=0.045, pad=0.04)
     if show_persister:
         fig.colorbar(im_pers, ax=axes[pers_idx], fraction=0.045, pad=0.04)
+    if show_subclone:
+        # Discrete legend: a tick per id, centered in its color band.
+        # 0 = stroma; 1..K = subclones.
+        k = int(subclone.max())
+        cbar = fig.colorbar(im_sub, ax=axes[sub_idx], fraction=0.045, pad=0.04)
+        cbar.set_ticks([i + 0.5 for i in range(k + 1)])
+        cbar.set_ticklabels(["stroma"] + [str(i) for i in range(1, k + 1)])
 
     step_text = fig.text(0.5, 0.02, "", ha="center", fontsize=9, family="monospace")
 

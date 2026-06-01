@@ -57,7 +57,7 @@ mod snapshot;
 
 use ferroptosis_core::biochem::{exo_decay_factor, sim_cell_step, CellState};
 use ferroptosis_core::cell::Treatment;
-use ferroptosis_core::clonal::{assign_subclones_3d, ClonalConfig};
+use ferroptosis_core::clonal::{assign_subclones_3d, ClonalConfig, SubclonePerturbation};
 use ferroptosis_core::dose_schedule::DoseSchedule;
 use ferroptosis_core::grid::{TumorGrid3D, TUMOR_RADIUS_FRACTION};
 use ferroptosis_core::immune_spatial::{
@@ -528,11 +528,21 @@ fn run_one_condition_full(
     }
 
     // Per-subclone parameter perturbations (#242), gated on clonal. RNG-neutral
-    // one-time setup mutations (like the O2/pH gradients): iron on the cell,
-    // GPX4 reserve + MUFA on the freshly-initialized state. Identity
-    // perturbations (k=1 / single_identity) are no-ops → byte-identical. The
-    // GPX4 scaling composes multiplicatively with the pH ion-trap correction
-    // below (both are state.gpx4 multipliers), so order is immaterial.
+    // one-time setup mutations (like the O2/pH gradients). Identity
+    // perturbations (k=1 / single_identity) are no-ops → byte-identical.
+    //
+    // Durability of each axis (all read every step in sim_cell_step):
+    //  - iron_mul → cell.iron (static): fully durable.
+    //  - lipid_unsat_mul → cell.lipid_unsat (static): fully durable. This is
+    //    the MUFA axis; perturbing state.mufa_protection instead would be
+    //    overwritten on step 1 by update_mufa_protection under default params
+    //    (scd_mufa_max == 0), so it must scale the static PUFA field (#265 rev).
+    //  - gpx4_mul → state.gpx4 (initial): shapes the early autocatalytic
+    //    window strongly, but state.gpx4 relaxes toward the NRF2 setpoint
+    //    (~0.008/step), so a "GPX4-low" identity is transient over 180 steps.
+    //    A fully durable GPX4 axis would also scale the static cell.nrf2
+    //    setpoint — deferred to the calibration pass. Composes multiplicatively
+    //    with the pH ion-trap correction below (order immaterial).
     if let (Some(ids), Some(cfg)) = (&subclone_ids, &clonal_cfg) {
         for (idx, gc) in grid.cells.iter_mut().enumerate() {
             if !gc.is_tumor {
@@ -541,10 +551,8 @@ fn run_one_condition_full(
             // ids[idx] is 1..=k for tumor cells (0 only for stroma, skipped).
             let p = &cfg.perturbations[(ids[idx] - 1) as usize];
             gc.cell.iron *= p.iron_mul;
+            gc.cell.lipid_unsat *= p.lipid_unsat_mul;
             gc.state.gpx4 *= p.gpx4_mul;
-            // mufa_protection is used as (1 - m) with a 0.05 floor downstream,
-            // so cap at 0.95 to keep effective_unsat sane.
-            gc.state.mufa_protection = (gc.state.mufa_protection + p.mufa_add).clamp(0.0, 0.95);
         }
     }
 
@@ -2945,6 +2953,66 @@ mod tests {
         assert_eq!(
             total_tumor, r.total_tumor,
             "subclone tumor counts must sum to total_tumor"
+        );
+    }
+
+    /// Locks the MUFA/`lipid_unsat` axis in CI (#265 review): two K=1 configs
+    /// differing ONLY in `lipid_unsat_mul` must produce different kill counts.
+    /// The MUFA-enriched clone (lower oxidizable PUFA) dies less. Guards against
+    /// the axis silently going inert again (e.g. if it were moved back onto the
+    /// homeostatically-reset `state.mufa_protection`).
+    #[test]
+    fn clonal_lipid_unsat_axis_reduces_kills() {
+        let cfg = RunConfig {
+            grid_dim: 24,
+            n_steps: 80,
+        };
+        let cond = Condition {
+            name: "lipid_axis".to_string(),
+            treatment: Treatment::RSL3,
+            treatment_name: "RSL3".to_string(),
+            o2_lambda: None,
+            immune_on: false,
+            stromal_on: false,
+            ph_on: false,
+            dose_schedule: DoseSchedule::Constant,
+        };
+        // K=1, perturbing ONLY lipid_unsat (iron/gpx4 held at identity).
+        let only_lipid = |lipid_unsat_mul: f64| ClonalConfig {
+            perturbations: vec![SubclonePerturbation {
+                iron_mul: 1.0,
+                gpx4_mul: 1.0,
+                lipid_unsat_mul,
+            }],
+        };
+        let baseline = run_one_condition_full(
+            &cond,
+            cfg,
+            None,
+            Overrides {
+                clonal: Some(only_lipid(1.0)),
+                ..Default::default()
+            },
+        );
+        let mufa_enriched = run_one_condition_full(
+            &cond,
+            cfg,
+            None,
+            Overrides {
+                clonal: Some(only_lipid(0.5)),
+                ..Default::default()
+            },
+        );
+        assert!(
+            baseline.total_dead > 0,
+            "baseline must kill some cells; got {}",
+            baseline.total_dead
+        );
+        assert!(
+            mufa_enriched.total_dead < baseline.total_dead,
+            "MUFA-enriched (lower lipid_unsat) must reduce kills: enriched={}, baseline={}",
+            mufa_enriched.total_dead,
+            baseline.total_dead
         );
     }
 }

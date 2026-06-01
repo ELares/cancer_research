@@ -32,24 +32,28 @@ pub struct SubclonePerturbation {
     pub iron_mul: f64,
     /// Multiplier on the GPX4 reserve (<1 ⇒ less repair ⇒ more vulnerable).
     pub gpx4_mul: f64,
-    /// Additive MUFA membrane protection (>0 ⇒ less oxidizable PUFA ⇒ more
-    /// resistant). Consumer clamps the resulting protection to a sane range.
-    pub mufa_add: f64,
+    /// Multiplier on oxidizable-PUFA content `cell.lipid_unsat` — the MUFA
+    /// membrane-remodeling axis (<1 ⇒ MUFA-enriched ⇒ less peroxidizable lipid
+    /// ⇒ more resistant). Scales a **static** `Cell` field so the effect is
+    /// durable across steps; perturbing the homeostatically-reset
+    /// `state.mufa_protection` instead would be silently overwritten on step 1
+    /// under the default params (where `scd_mufa_max == 0`).
+    pub lipid_unsat_mul: f64,
 }
 
 impl SubclonePerturbation {
-    /// The no-op perturbation: iron ×1, GPX4 ×1, MUFA +0.
+    /// The no-op perturbation: iron ×1, GPX4 ×1, lipid_unsat ×1.
     pub fn identity() -> Self {
         SubclonePerturbation {
             iron_mul: 1.0,
             gpx4_mul: 1.0,
-            mufa_add: 0.0,
+            lipid_unsat_mul: 1.0,
         }
     }
 
     /// True when applying this perturbation changes nothing.
     pub fn is_identity(&self) -> bool {
-        self.iron_mul == 1.0 && self.gpx4_mul == 1.0 && self.mufa_add == 0.0
+        self.iron_mul == 1.0 && self.gpx4_mul == 1.0 && self.lipid_unsat_mul == 1.0
     }
 }
 
@@ -80,29 +84,29 @@ impl ClonalConfig {
     /// - 1 high-mesenchymal (ZEB1+): iron-loaded, GPX4-low ⇒ most vulnerable.
     /// - 2 intermediate-mesenchymal: mildly vulnerable.
     /// - 3 intermediate-epithelial: mildly resistant (MUFA-enriched).
-    /// - 4 epithelial: GPX4-high, MUFA-enriched ⇒ most resistant.
+    /// - 4 epithelial: GPX4-high, MUFA-enriched (low PUFA) ⇒ most resistant.
     pub fn literature_4() -> Self {
         ClonalConfig {
             perturbations: vec![
                 SubclonePerturbation {
                     iron_mul: 1.5,
                     gpx4_mul: 0.6,
-                    mufa_add: 0.0,
+                    lipid_unsat_mul: 1.0,
                 },
                 SubclonePerturbation {
                     iron_mul: 1.2,
                     gpx4_mul: 0.85,
-                    mufa_add: 0.0,
+                    lipid_unsat_mul: 1.0,
                 },
                 SubclonePerturbation {
                     iron_mul: 0.9,
                     gpx4_mul: 1.1,
-                    mufa_add: 0.1,
+                    lipid_unsat_mul: 0.9,
                 },
                 SubclonePerturbation {
                     iron_mul: 0.7,
                     gpx4_mul: 1.3,
-                    mufa_add: 0.2,
+                    lipid_unsat_mul: 0.8,
                 },
             ],
         }
@@ -189,10 +193,15 @@ mod tests {
         let c = ClonalConfig::literature_4();
         assert_eq!(c.k(), 4);
         assert!(!c.is_identity());
-        // Subclone 1 is more vulnerable than subclone 4 on every axis.
+        // Subclone 1 is more vulnerable than subclone 4 on every axis: more
+        // iron, less GPX4, and more oxidizable PUFA (higher lipid_unsat).
         let v = c.perturbations[0];
         let r = c.perturbations[3];
-        assert!(v.iron_mul > r.iron_mul && v.gpx4_mul < r.gpx4_mul && v.mufa_add < r.mufa_add);
+        assert!(
+            v.iron_mul > r.iron_mul
+                && v.gpx4_mul < r.gpx4_mul
+                && v.lipid_unsat_mul > r.lipid_unsat_mul
+        );
     }
 
     #[test]
