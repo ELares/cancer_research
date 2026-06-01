@@ -29,35 +29,47 @@ use crate::grid::TumorGrid3D;
 /// half-distance / O2 diffusion length in tumor tissue.
 pub const KROGH_LAMBDA_UM: f64 = 150.0;
 
+/// Diameter (mm) of the virtual patient-scale tumor the slab is embedded in.
+/// 10 mm is a representative tumor at presentation (real tumors span 5–50 mm)
+/// and comfortably contains the deep slab at production grid sizes, so the
+/// `scale_interpretation` string never reports a slab extending past its own
+/// tumor (see the `debug_assert` in [`scale_interpretation`]).
+pub const VIRTUAL_TUMOR_MM: f64 = 10.0;
+
 /// Slab placement within a virtual large tumor.
 #[derive(Clone, Copy, Debug)]
 pub struct SlabConfig {
     /// Depth (mm) of the slab's +z (vessel-proximal) face from the supply
-    /// source. The slab spans `[depth_offset_mm, depth_offset_mm + slab_mm]`.
+    /// source. The slab spans `[depth_offset_mm, depth_offset_mm + slab_mm]`,
+    /// which must stay within `virtual_tumor_mm`.
     pub depth_offset_mm: f64,
-    /// Diameter (mm) of the virtual tumor this slab is embedded in — used only
-    /// for the human-readable scale-interpretation string.
+    /// Diameter (mm) of the virtual tumor this slab is embedded in — used for
+    /// the human-readable scale-interpretation string and as the upper bound
+    /// the slab span is checked against.
     pub virtual_tumor_mm: f64,
 }
 
 impl SlabConfig {
-    /// A deep slab in a 5 mm virtual tumor: +z face at 4 mm, so the slab spans
-    /// ~4.0–5.2 mm — essentially fully drug/O2-deprived (the patient-scale
-    /// penetration collapse the spheroid scale misses).
-    pub fn patient_5mm() -> Self {
+    /// A deep slab in a 10 mm patient-scale tumor: +z face at 4 mm, so the
+    /// slab spans ~4.0–5.2 mm at the production grid size — essentially fully
+    /// drug/O2-deprived (the patient-scale penetration collapse the spheroid
+    /// scale misses). The 10 mm virtual tumor contains the slab with margin.
+    pub fn patient_deep() -> Self {
         SlabConfig {
             depth_offset_mm: 4.0,
-            virtual_tumor_mm: 5.0,
+            virtual_tumor_mm: VIRTUAL_TUMOR_MM,
         }
     }
 
     /// A shallow slab: +z face at the surface (0 mm), so the +z face is a
     /// well-perfused vessel and supply decays across the slab — the
-    /// in-vitro-spheroid-equivalent control for the depth comparison.
+    /// in-vitro-spheroid-equivalent control for the depth comparison. Same
+    /// virtual tumor as [`patient_deep`](Self::patient_deep) so the two are an
+    /// apples-to-apples depth comparison.
     pub fn surface() -> Self {
         SlabConfig {
             depth_offset_mm: 0.0,
-            virtual_tumor_mm: 5.0,
+            virtual_tumor_mm: VIRTUAL_TUMOR_MM,
         }
     }
 }
@@ -91,9 +103,16 @@ pub fn slab_supply_field(grid: &TumorGrid3D, depth_offset_um: f64, lambda_um: f6
 
 /// Human-readable interpretation of what depth/scale a slab run represents,
 /// for the output JSON (#240 AC). e.g. "slab spanning depth 4.0–5.2 mm of a
-/// 5 mm virtual tumor (1.2 mm thick)".
+/// 10 mm virtual tumor (1.2 mm thick)".
 pub fn scale_interpretation(grid: &TumorGrid3D, cfg: &SlabConfig) -> String {
     let slab_mm = grid.layers as f64 * grid.cell_size_um / 1000.0;
+    debug_assert!(
+        cfg.depth_offset_mm + slab_mm <= cfg.virtual_tumor_mm,
+        "slab span {:.1}–{:.1} mm exceeds its {:.1} mm virtual tumor — bump virtual_tumor_mm or reduce depth_offset_mm",
+        cfg.depth_offset_mm,
+        cfg.depth_offset_mm + slab_mm,
+        cfg.virtual_tumor_mm,
+    );
     format!(
         "slab spanning depth {:.1}–{:.1} mm of a {:.0} mm virtual tumor ({:.1} mm thick)",
         cfg.depth_offset_mm,
@@ -154,11 +173,54 @@ mod tests {
     #[test]
     fn scale_interpretation_reports_depth_span() {
         let g = grid(); // 20 layers × 20 µm = 0.4 mm thick
-        let s = scale_interpretation(&g, &SlabConfig::patient_5mm());
+        let s = scale_interpretation(&g, &SlabConfig::patient_deep());
         assert!(s.contains("4.0"), "mentions the offset depth: {s}");
         assert!(
-            s.contains("5 mm virtual tumor"),
+            s.contains("10 mm virtual tumor"),
             "mentions the virtual size: {s}"
         );
+    }
+
+    /// At the production grid size (60 layers × 20 µm = 1.2 mm) the deep slab
+    /// spans 4.0–5.2 mm, which must still fit inside its 10 mm virtual tumor —
+    /// the `scale_interpretation` debug_assert (review #1) holds, so the
+    /// reported string never describes a slab poking out of its own tumor.
+    #[test]
+    fn deep_slab_fits_within_its_virtual_tumor_at_production_size() {
+        let g = TumorGrid3D::generate_slab(60, 60, 60, 20.0, 42);
+        let cfg = SlabConfig::patient_deep();
+        let slab_mm = g.layers as f64 * g.cell_size_um / 1000.0;
+        assert!(
+            cfg.depth_offset_mm + slab_mm <= cfg.virtual_tumor_mm,
+            "span {:.1} mm must fit in {:.1} mm tumor",
+            cfg.depth_offset_mm + slab_mm,
+            cfg.virtual_tumor_mm
+        );
+        // The string must not contradict itself; this would panic on the
+        // debug_assert if the span exceeded the tumor.
+        let _ = scale_interpretation(&g, &cfg);
+    }
+
+    /// Reflective / no-flux −z boundary (#240 scope): the slab's deep face
+    /// (`l = 0`) must not exchange iron/DAMP with the +z vessel face
+    /// (`l = layers-1`). The 26-Moore neighborhood is bounded (no wrap), so a
+    /// cell at `l = 0` has NO neighbor at `l = layers-1` — i.e. there is no
+    /// flux across the −z face. Verified directly here rather than only argued.
+    #[test]
+    fn minus_z_face_is_reflective_no_wraparound() {
+        let g = grid(); // 20³
+        let top = g.layers - 1;
+        // A −z face cell and a +z face cell.
+        for &(r, c) in &[(0usize, 0usize), (10, 10), (19, 19)] {
+            let (neigh, count) = g.neighbors(r, c, 0);
+            assert!(
+                neigh[..count].iter().all(|&(_, _, nl)| nl != top),
+                "(-z) cell at l=0 must have no neighbor at the +z face l={top}"
+            );
+            assert!(
+                neigh[..count].iter().all(|&(_, _, nl)| nl <= 1),
+                "(-z) cell neighbors stay within l ∈ {{0, 1}} (no wrap)"
+            );
+        }
     }
 }

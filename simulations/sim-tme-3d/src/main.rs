@@ -213,9 +213,10 @@ struct ConditionResult {
     #[serde(skip_serializing_if = "Option::is_none")]
     vascular_hypoxic_fraction: Option<f64>,
     /// Patient-scale slab interpretation (#240): which depth/scale of a virtual
-    /// large tumor this run represents (e.g. "slab spanning depth 4.0–4.4 mm of
-    /// a 5 mm virtual tumor"). `None` (field omitted) unless slab mode is on —
-    /// byte-identical default path.
+    /// large tumor this run represents (e.g. "slab spanning depth 4.0–5.2 mm of
+    /// a 10 mm virtual tumor (1.2 mm thick)" at the production grid size).
+    /// `None` (field omitted) unless slab mode is on — byte-identical default
+    /// path.
     #[serde(skip_serializing_if = "Option::is_none")]
     scale_interpretation: Option<String>,
 }
@@ -395,6 +396,17 @@ fn run_one_condition_full(
     let vasculature_cfg = overrides.vasculature;
     let spheroid_cfg = overrides.spheroid;
     let slab_cfg = overrides.slab;
+    // Slab and spheroid are mutually-exclusive geometries (#240 review): slab
+    // builds an all-tumor block and slab supply wins, but spheroid would run
+    // `Params::spheroid()` + radial phenotype re-assignment keyed on a spheroid
+    // center that an all-tumor cube does not have — an incoherent mix. No
+    // preset/path sets both; guard it so a future caller can't combine them by
+    // accident. (Slab vs vasculature is fine: slab supply simply takes
+    // precedence, documented at `supply_field`.)
+    debug_assert!(
+        !(slab_cfg.is_some() && spheroid_cfg.is_some()),
+        "slab and spheroid overrides are mutually exclusive (incompatible geometries)"
+    );
     // 3D spheroid context (#197): partially-active MUFA so position-dependent
     // per-cell MUFA persists. `None` (matrix path) ⇒ `Params::default()` ⇒
     // byte-identical.
@@ -483,8 +495,10 @@ fn run_one_condition_full(
     // `radial_o2_field` path runs ⇒ byte-identical.
     let supply_field: Option<Vec<f64>> = if let Some(cfg) = &slab_cfg {
         // Slab: planar depth gradient from the +z vessel face. Uses the
-        // condition's λ if set, else the Krogh default (the gradient is
-        // intrinsic to depth, independent of the radial-O2 condition flag).
+        // condition's λ when set (e.g. the `--snapshot=slab` preset's
+        // ZONE_REF_LAMBDA = 120 µm), and only falls back to the Krogh default
+        // (150 µm) for a condition that left λ unset. The gradient is intrinsic
+        // to depth, independent of the radial-O2 condition flag.
         let lambda = condition.o2_lambda.unwrap_or(KROGH_LAMBDA_UM);
         Some(slab_supply_field(
             &grid,
@@ -1613,7 +1627,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         // drug/O2-deprived and survive — the depth-dependent penetration the
         // in-vitro spheroid scale misses (#240). The death front in the z-axis
         // mid-slice IS the visualization (no extra static overlay needed). A
-        // deep `patient_5mm()` slab would kill ~nothing, so the surface slab is
+        // deep `patient_deep()` slab would kill ~nothing, so the surface slab is
         // the illustrative choice; the depth comparison lives in the tests.
         name: "slab",
         desc: "SDT on a patient-scale surface slab (#240) — depth-graded supply; +z dies, −z survives",
@@ -3507,7 +3521,7 @@ mod tests {
             cfg,
             None,
             Overrides {
-                slab: Some(SlabConfig::patient_5mm()),
+                slab: Some(SlabConfig::patient_deep()),
                 ..Default::default()
             },
         );
@@ -3570,10 +3584,53 @@ mod tests {
             .total_dead
         };
         let shallow = run(SlabConfig::surface());
-        let deep = run(SlabConfig::patient_5mm());
+        let deep = run(SlabConfig::patient_deep());
         assert!(
             shallow > deep,
             "surface slab should out-kill the deep slab: shallow={shallow}, deep={deep}"
+        );
+    }
+
+    /// Slab drug-coupling under RSL3 (#240 review #5). The SDT depth tests
+    /// exercise the exo-ROS drug branch; RSL3 routes through the *other* two
+    /// supply-scaled drug paths — the constant-knockdown GPX4 correction
+    /// `(1 - inhib·supply)/(1 - inhib)` and the `rsl3_drug_avail *= supply`
+    /// scaling. A surface vs deep RSL3 comparison pins that those RSL3-specific
+    /// branches honor the slab supply field independently of the vessel path.
+    #[test]
+    fn slab_supply_scales_rsl3_kills() {
+        let cfg = RunConfig {
+            grid_dim: 24,
+            n_steps: 80,
+        };
+        let cond = Condition {
+            name: "slab_rsl3".to_string(),
+            treatment: Treatment::RSL3,
+            treatment_name: "RSL3".to_string(),
+            o2_lambda: Some(ZONE_REF_LAMBDA),
+            immune_on: false,
+            stromal_on: false,
+            ph_on: false,
+            dose_schedule: DoseSchedule::Constant,
+        };
+        let run = |slab: SlabConfig| {
+            run_one_condition_full(
+                &cond,
+                cfg,
+                None,
+                Overrides {
+                    slab: Some(slab),
+                    ..Default::default()
+                },
+            )
+            .total_dead
+        };
+        let shallow = run(SlabConfig::surface());
+        let deep = run(SlabConfig::patient_deep());
+        assert!(
+            shallow > deep,
+            "RSL3 surface slab should out-kill the deep slab (drug/O2 supply \
+             scaling on the RSL3 path): shallow={shallow}, deep={deep}"
         );
     }
 }
