@@ -60,7 +60,8 @@ use ferroptosis_core::cell::Treatment;
 use ferroptosis_core::dose_schedule::DoseSchedule;
 use ferroptosis_core::grid::{TumorGrid3D, TUMOR_RADIUS_FRACTION};
 use ferroptosis_core::immune_spatial::{
-    dc_activation, diffuse_damp_3d_step, immune_kill_probability, DAMP_KILL_THRESHOLD,
+    dc_activation, diffuse_damp_3d_step, exhaustion_factor, immune_kill_probability,
+    DAMP_KILL_THRESHOLD,
 };
 use ferroptosis_core::oxygen::radial_o2_field;
 use ferroptosis_core::params::{
@@ -306,7 +307,7 @@ fn run_one_condition_with_config(
     run_cfg: RunConfig,
     snapshot: Option<&mut snapshot::SnapshotBuffers>,
 ) -> ConditionResult {
-    run_one_condition_full(condition, run_cfg, snapshot, None)
+    run_one_condition_full(condition, run_cfg, snapshot, None, None)
 }
 
 fn run_one_condition_full(
@@ -316,6 +317,10 @@ fn run_one_condition_full(
     // Persister-cell model (#241). `None` (the default matrix path) keeps the
     // whole persister code path inert, so summary.json is byte-identical.
     persister_cfg: Option<PersisterConfig>,
+    // Immune-config override (#243). `None` uses `SpatialImmuneConfig::for_3d()`
+    // (exhaustion_rate = 0 ⇒ byte-identical). `Some(cfg)` with a nonzero
+    // exhaustion_rate turns on T-cell exhaustion.
+    immune_override: Option<SpatialImmuneConfig>,
 ) -> ConditionResult {
     let params = Params::default();
     let spatial_params = SpatialParams {
@@ -522,11 +527,23 @@ fn run_one_condition_full(
     };
 
     // --- Main 180-step loop ---
-    let immune_cfg = SpatialImmuneConfig::for_3d();
+    let immune_cfg = immune_override.unwrap_or_else(SpatialImmuneConfig::for_3d);
     let mut damp_field = vec![0.0_f64; n_cells];
     let mut damp_scratch = vec![0.0_f64; n_cells];
     let mut ferroptosis_kills = 0usize;
     let mut immune_kills = 0usize;
+
+    // T-cell exhaustion (#243). `cumulative_kills[idx]` counts immune kills
+    // accumulated in idx's Moore-26 neighborhood; it suppresses that cell's
+    // future kill probability via `exhaustion_factor`. Allocated only when
+    // exhaustion is enabled (rate > 0) — the default path never touches it,
+    // and `exhaustion_factor(_, 0.0) == 1.0` keeps output byte-identical.
+    let exhaustion_on = immune_cfg.exhaustion_rate > 0.0;
+    let mut cumulative_kills: Vec<u32> = if exhaustion_on {
+        vec![0u32; n_cells]
+    } else {
+        Vec::new()
+    };
 
     // Hoisted out of the per-cell hot loop (these invariants don't vary by
     // cell or step): on the dosed path the relevant availability vec must be
@@ -767,24 +784,39 @@ fn run_one_condition_full(
             // `immune_kills` is an order-independent integer sum.
             if step >= IMMUNE_START_STEP {
                 let effective_brake = immune_cfg.effective_brake();
-                let killed_this_step: usize = grid
+                // `filter_map`+`collect` (vs the old `map`+`sum`) yields the
+                // flat indices killed THIS step so exhaustion can be scattered
+                // to their neighborhoods below. The kill DECISION is unchanged
+                // (same kill_prob, same per-cell RNG, same comparison), so the
+                // set of dead cells — and thus summary.json — is byte-identical
+                // on the default path (`exhaustion_on == false` ⇒ `exh == 1.0`,
+                // and `cumulative_kills` is never indexed).
+                let killed: Vec<usize> = grid
                     .cells
                     .par_iter_mut()
                     .enumerate()
-                    .map(|(idx, gc)| {
+                    .filter_map(|(idx, gc)| {
                         if gc.state.dead || !gc.is_tumor {
-                            return 0;
+                            return None;
                         }
                         let local_damp = damp_field[idx];
                         if local_damp < DAMP_KILL_THRESHOLD {
-                            return 0;
+                            return None;
                         }
                         let activation = dc_activation(local_damp, immune_cfg.dc_activation_kd);
+                        // T-cell exhaustion (#243): prior local immune kills
+                        // suppress this cell's kill probability. Exactly 1.0 on
+                        // the default path (rate 0 / disabled) → byte-identical.
+                        let exh = if exhaustion_on {
+                            exhaustion_factor(cumulative_kills[idx], immune_cfg.exhaustion_rate)
+                        } else {
+                            1.0
+                        };
                         let kill_prob = immune_kill_probability(
                             activation,
                             immune_cfg.immune_kill_rate,
                             effective_brake,
-                        );
+                        ) * exh;
                         let mut rng = StdRng::seed_from_u64(
                             cond_seed
                                 .wrapping_add(900_000_000)
@@ -798,13 +830,27 @@ fn run_one_condition_full(
                             // burst, no iron release) — a modeling choice
                             // consistent with sim-tme, not a side-effect.
                             gc.state.dead = true;
-                            1
+                            Some(idx)
                         } else {
-                            0
+                            None
                         }
                     })
-                    .sum();
-                immune_kills += killed_this_step;
+                    .collect();
+                immune_kills += killed.len();
+
+                // Scatter exhaustion into the Moore-26 neighborhood of each
+                // cell killed this step (serial — runs after the par_iter join;
+                // integer adds commute, so order-independent and deterministic).
+                // Only when enabled, so the default path never runs this.
+                if exhaustion_on {
+                    for &k in &killed {
+                        let (r, c, l) = grid.coords(k);
+                        let (nbrs, n) = grid.neighbors(r, c, l);
+                        for &(nr, nc, nl) in &nbrs[..n] {
+                            cumulative_kills[grid.flat_index(nr, nc, nl)] += 1;
+                        }
+                    }
+                }
             }
         }
 
@@ -1233,7 +1279,8 @@ fn run_snapshot(output_dir: &Path, tumor_radius_um: f64, name: &str) {
     let persister_cfg = preset.persister.then(PersisterConfig::enabled);
     let mut buffers =
         snapshot::SnapshotBuffers::new(run_cfg.grid_dim, run_cfg.n_steps, preset.persister);
-    let result = run_one_condition_full(&condition, run_cfg, Some(&mut buffers), persister_cfg);
+    let result =
+        run_one_condition_full(&condition, run_cfg, Some(&mut buffers), persister_cfg, None);
     eprintln!(
         "  done — total_kill={:.1}%, ferroptosis_kills={}, immune_kills={}, persister_mean={:.3}, captured {} steps",
         result.overall_kill_rate * 100.0,
@@ -2357,7 +2404,7 @@ mod tests {
             dose_schedule: DoseSchedule::Constant,
         };
         let wrapped = run_one_condition_with_config(&cond, cfg, None);
-        let explicit_none = run_one_condition_full(&cond, cfg, None, None);
+        let explicit_none = run_one_condition_full(&cond, cfg, None, None, None);
         assert_eq!(wrapped.total_dead, explicit_none.total_dead);
         assert_eq!(
             wrapped.persister_mean, None,
@@ -2369,7 +2416,8 @@ mod tests {
         );
         // An identity PersisterConfig runs the (gated) block but every helper
         // is a no-op, so kills are unchanged.
-        let identity = run_one_condition_full(&cond, cfg, None, Some(PersisterConfig::default()));
+        let identity =
+            run_one_condition_full(&cond, cfg, None, Some(PersisterConfig::default()), None);
         assert_eq!(
             identity.total_dead, wrapped.total_dead,
             "identity PersisterConfig must not change kills"
@@ -2418,7 +2466,7 @@ mod tests {
             },
         };
         let off = run_one_condition_with_config(&cond, cfg, None);
-        let on = run_one_condition_full(&cond, cfg, None, Some(PersisterConfig::enabled()));
+        let on = run_one_condition_full(&cond, cfg, None, Some(PersisterConfig::enabled()), None);
         // Strong precondition: if a grid/timing change drops the baseline kill
         // count near zero, there is no headroom to demonstrate the effect and
         // the test would pass/fail for the wrong reason. Fail loudly instead.
@@ -2481,14 +2529,24 @@ mod tests {
         };
         let sustained = mk("sustained", 120); // drug present every step → only acquire
         let early_window = mk("early_window", 60); // drug-free steps 60..119 → revert fires
-        let pm_sustained =
-            run_one_condition_full(&sustained, cfg, None, Some(PersisterConfig::enabled()))
-                .persister_mean
-                .unwrap();
-        let pm_early =
-            run_one_condition_full(&early_window, cfg, None, Some(PersisterConfig::enabled()))
-                .persister_mean
-                .unwrap();
+        let pm_sustained = run_one_condition_full(
+            &sustained,
+            cfg,
+            None,
+            Some(PersisterConfig::enabled()),
+            None,
+        )
+        .persister_mean
+        .unwrap();
+        let pm_early = run_one_condition_full(
+            &early_window,
+            cfg,
+            None,
+            Some(PersisterConfig::enabled()),
+            None,
+        )
+        .persister_mean
+        .unwrap();
         // 60 steps of exponential reversion (rate 0.01/step → ×0.55 over 60)
         // leave the early-window mean materially below the sustained mean.
         assert!(
@@ -2500,5 +2558,74 @@ mod tests {
             "persister fraction must materially revert after dosing stops: \
              early-window mean={pm_early:.3} should be well below sustained mean={pm_sustained:.3}"
         );
+    }
+
+    // ===== T-cell exhaustion (#243, Phase 1) =====
+
+    /// Headline #243 result: enabling T-cell exhaustion suppresses the TOTAL
+    /// immune kills relative to the no-exhaustion baseline. Sustained killing
+    /// in a region drives local T cells toward dysfunction
+    /// (`1/(1+rate·cumulative_neighborhood_kills)`), so later kills there get
+    /// progressively rarer — the "cold tumor" emergence (Wherry 2011; Snell
+    /// 2018). Uses SDT + immune (SDT's dense ferroptotic death builds the
+    /// DAMP field that drives immune killing); the off run is the byte-identical
+    /// `for_3d()` config, the on run overrides only `exhaustion_rate`.
+    #[test]
+    fn exhaustion_reduces_immune_kills() {
+        // 30³ × 130: immune kills only fire after IMMUNE_START_STEP=60 once
+        // DAMP crosses threshold, so a large grid + long run is needed for a
+        // baseline kill count with headroom to show suppression.
+        let cfg = RunConfig {
+            grid_dim: 30,
+            n_steps: 130,
+        };
+        let cond = Condition {
+            name: "exhaustion_demo".to_string(),
+            treatment: Treatment::SDT,
+            treatment_name: "SDT".to_string(),
+            o2_lambda: Some(ZONE_REF_LAMBDA),
+            immune_on: true,
+            stromal_on: false,
+            ph_on: false,
+            dose_schedule: DoseSchedule::Constant,
+        };
+        // Dense-killing regime: exhaustion only bites when kills CLUSTER (so
+        // a cell's neighborhood has prior kills before its own check). At the
+        // default immune_kill_rate (0.02) kills are too sparse to overlap, so
+        // both runs share a boosted rate and differ ONLY in exhaustion_rate —
+        // a fair A/B isolating the exhaustion effect. (Defaults stay
+        // byte-identical; that path is covered by the golden + #253 tests.)
+        let base = SpatialImmuneConfig {
+            immune_kill_rate: 0.5,
+            ..SpatialImmuneConfig::for_3d()
+        };
+        let exhausted = SpatialImmuneConfig {
+            exhaustion_rate: 2.0,
+            ..base
+        };
+        let off = run_one_condition_full(&cond, cfg, None, None, Some(base));
+        let on = run_one_condition_full(&cond, cfg, None, None, Some(exhausted));
+        let off_im = off.immune_kills.expect("immune_on populates immune_kills");
+        let on_im = on.immune_kills.expect("immune_on populates immune_kills");
+        assert!(
+            off_im >= 50,
+            "baseline must produce enough clustered immune kills for the test \
+             to be informative; got {off_im} (adjust grid/steps/rate if the model changed)"
+        );
+        // Material reduction, not an off-by-one fluke. Observed ≈20%
+        // (off=174, on=139) at the time of writing.
+        let reduction = (off_im - on_im) as f64 / off_im as f64;
+        assert!(
+            on_im < off_im && reduction > 0.1,
+            "T-cell exhaustion must materially suppress immune kills (>10%): \
+             on={on_im}, off={off_im}, reduction={:.1}%",
+            reduction * 100.0
+        );
+        // NOTE: ferroptosis kills are NOT held fixed. Exhaustion only gates the
+        // immune-kill loop directly, but a cell spared an (apoptotic) immune
+        // kill can instead die ferroptotically later — and that death releases
+        // iron that couples to neighbors. So sparing immune kills shifts a few
+        // deaths into the ferroptosis tally; that cross-coupling is expected,
+        // not a bug, which is why this asserts on immune kills specifically.
     }
 }

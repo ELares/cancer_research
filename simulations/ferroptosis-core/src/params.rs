@@ -281,6 +281,13 @@ pub struct SpatialImmuneConfig {
     pub pd1_brake: f64,
     /// Anti-PD-1 efficacy: fraction of PD-1 brake removed.
     pub anti_pd1_efficacy: f64,
+    /// T-cell exhaustion rate (#243, Phase 1): cumulative immune kills in a
+    /// cell's Moore neighborhood suppress its further kill probability by
+    /// `1/(1 + exhaustion_rate · cumulative)` (see
+    /// [`crate::immune_spatial::exhaustion_factor`]). `0.0` (the default for
+    /// both `for_2d`/`for_3d`) disables exhaustion, keeping output
+    /// byte-identical to the pre-#243 single-PD-1-brake model.
+    pub exhaustion_rate: f64,
 }
 
 impl SpatialImmuneConfig {
@@ -296,6 +303,7 @@ impl SpatialImmuneConfig {
             immune_kill_rate: 0.02,
             pd1_brake: 0.7,
             anti_pd1_efficacy: 0.0,
+            exhaustion_rate: 0.0,
         }
     }
 
@@ -311,6 +319,7 @@ impl SpatialImmuneConfig {
             immune_kill_rate: 0.02,
             pd1_brake: 0.7,
             anti_pd1_efficacy: 0.0,
+            exhaustion_rate: 0.0,
         }
     }
 
