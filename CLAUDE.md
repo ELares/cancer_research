@@ -88,31 +88,31 @@ The repo exists to compare therapeutic mechanisms, evidence depth, resistant-sta
 ## Key Files
 
 ```text
-README.md                                 repo-level framing and entry points
-article/drafts/v1.{md,tex,pdf}            manuscript drafts
-analysis/evidence-coverage-audit.md       evidence-tier coverage and guardrails
-analysis/taxonomy-rerun-notes.md          taxonomy/query caveats after reruns
-analysis/pathway-target-audit.md          pathway-target coverage
-analysis/landmark-corpus-gaps.md          known missing papers that distort claims
-corpus/INDEX.jsonl                        master index
-scripts/                                  Python pipeline
-simulations/                              Rust simulation work
-simulations/ferroptosis-python/           Python bindings (PyO3)
-simulations/ferroptosis-ffi/              C FFI bindings (PhysiCell integration)
-tags/                                     precomputed tag indexes
-article/book-outline.md                   frozen book outline and chapter contracts
-article/AUTHORING.md                      writing rules and heading conventions
-news/                                     news source scaffolding (issue #99)
-PROVENANCE.yaml                           content provenance and redistribution rights
-CONTRIBUTING.md                           contributor setup, testing, and PR guide
-CITATION.cff                              citation metadata (renders GitHub "Cite" button)
-requirements-lock.txt                     pinned Python dependency versions
-FIGURES.yaml                              figure-to-script traceability index (23 figures)
-.github/workflows/python-test.yml         Python CI (Linux PR/push, macOS weekly)
-.github/workflows/cargo-test.yml          Rust CI (cargo test + cargo fmt --check gate)
+README.md                                    repo-level framing and entry points
+article/drafts/v1.{md,tex,pdf}               manuscript drafts
+analysis/evidence-coverage-audit.md          evidence-tier coverage and guardrails
+analysis/taxonomy-rerun-notes.md             taxonomy/query caveats after reruns
+analysis/pathway-target-audit.md             pathway-target coverage
+analysis/landmark-corpus-gaps.md             known missing papers that distort claims
+corpus/INDEX.jsonl                           master index
+scripts/                                     Python pipeline
+simulations/                                 Rust simulation work
+simulations/ferroptosis-python/              Python bindings (PyO3)
+simulations/ferroptosis-ffi/                 C FFI bindings (PhysiCell integration)
+tags/                                        precomputed tag indexes
+article/book-outline.md                      frozen book outline and chapter contracts
+article/AUTHORING.md                         writing rules and heading conventions
+news/                                        news source scaffolding (issue #99)
+PROVENANCE.yaml                              content provenance and redistribution rights
+CONTRIBUTING.md                              contributor setup, testing, and PR guide
+CITATION.cff                                 citation metadata (renders GitHub "Cite" button)
+requirements-lock.txt                        pinned Python dependency versions
+FIGURES.yaml                                 figure-to-script traceability index (23 figures)
+.github/workflows/python-test.yml            Python CI (Linux PR/push, macOS weekly)
+.github/workflows/cargo-test.yml             Rust CI (cargo test + cargo fmt --check gate)
 .github/workflows/sim-tme-3d-regression.yml  sim-tme-3d production byte-identity regression (weekly + manual)
-.zenodo.json                              Zenodo deposit metadata template
-scripts/generate_release_manifest.py      SHA256 manifest + filtered archive builder
+.zenodo.json                                 Zenodo deposit metadata template
+scripts/generate_release_manifest.py         SHA256 manifest + filtered archive builder
 ```
 
 ## Search Conventions
