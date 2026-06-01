@@ -508,4 +508,48 @@ mod tests {
         // Each stays within its own cap (clamp invariant).
         assert!(core <= core_cap + 1e-9 && uncapped <= global_cap + 1e-9);
     }
+
+    /// #270 wiring: `sim_cell_step` itself must read `cell.mufa_cap` (not just
+    /// the `update_mufa_protection` helper). Routes two otherwise-identical
+    /// cells through the full step — one with a low per-cell cap, one uncapped
+    /// (`None` ⇒ global) — from the same low MUFA start under `Params::spheroid()`
+    /// and Control (the cell stays alive so MUFA relaxes cleanly). The capped
+    /// cell's late MUFA must stay below the uncapped one; this fails if the
+    /// `sim_cell_step` call site ever stops threading the per-cell cap.
+    #[test]
+    fn sim_cell_step_reads_per_cell_mufa_cap() {
+        let params = Params::spheroid();
+        let mut gen_rng = StdRng::seed_from_u64(11);
+        let base = gen_cell(Phenotype::Glycolytic, &mut gen_rng);
+
+        let run = |mufa_cap: Option<f64>| -> f64 {
+            let mut cell = base.clone();
+            cell.mufa_cap = mufa_cap;
+            let mut init_rng = StdRng::seed_from_u64(5);
+            let mut state = CellState::from_cell(
+                &cell,
+                crate::cell::Treatment::Control,
+                &params,
+                &mut init_rng,
+            );
+            state.mufa_protection = 0.05; // same low start for both
+            let mut step_rng = StdRng::seed_from_u64(77);
+            for step in 0..150 {
+                sim_cell_step(&mut state, &cell, &params, step, 0.0, &mut step_rng);
+            }
+            state.mufa_protection
+        };
+
+        let capped = run(Some(0.05)); // a core cell's low cap
+        let uncapped = run(None); // global cap (0.25) — the old uniform target
+        assert!(
+            capped < uncapped,
+            "sim_cell_step must honor the per-cell cap: capped={capped}, uncapped={uncapped}"
+        );
+        assert!(capped < 0.08, "capped cell stays MUFA-poor late: {capped}");
+        assert!(
+            uncapped > 0.15,
+            "uncapped cell climbs to the global M_ss: {uncapped}"
+        );
+    }
 }

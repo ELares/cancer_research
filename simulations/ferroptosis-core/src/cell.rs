@@ -42,6 +42,12 @@ pub struct Cell {
     /// `update_mufa_protection` relaxes toward a steady state that scales with
     /// this cap, instead of every cell converging to the single uniform M_ss.
     /// `None` (the default) keeps every non-spheroid path byte-identical.
+    ///
+    /// When `Some`, this is the effective cap — it **replaces** (and may exceed)
+    /// the global `Params::scd_mufa_max`, since `update_mufa_protection` clamps
+    /// to the per-cell value. The old global 0.25 ceiling on `SpheroidConfig`'s
+    /// MUFA values therefore no longer applies; a config can now set a
+    /// supra-global per-cell cap deliberately.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mufa_cap: Option<f64>,
 }
