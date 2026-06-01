@@ -20,6 +20,8 @@
 //! `oxygen`/`ph` gradients). A `k = 1` identity config is therefore a no-op
 //! and byte-identical to having no clonal model.
 
+use crate::biochem::CellState;
+use crate::cell::Cell;
 use crate::grid::{TumorGrid3D, TUMOR_RADIUS_FRACTION};
 use rand::prelude::*;
 
@@ -65,6 +67,28 @@ impl SubclonePerturbation {
     pub fn is_identity(&self) -> bool {
         self.iron_mul == 1.0 && self.gpx4_mul == 1.0 && self.lipid_unsat_mul == 1.0
     }
+
+    /// Apply this perturbation to a tumor cell + its **already-initialized**
+    /// state, as one RNG-neutral setup mutation (the `oxygen`/`ph` consumer
+    /// pattern). Scales, in order:
+    /// - `cell.iron` ← `iron_mul` (static ⇒ durable)
+    /// - `cell.lipid_unsat` ← `lipid_unsat_mul` (static ⇒ durable; MUFA axis)
+    /// - `state.gpx4` ← `gpx4_mul` (the **initial** reserve)
+    /// - `cell.nrf2` ← `gpx4_mul` (the **static setpoint** GPX4 relaxes toward,
+    ///   #266 — this is what makes the antioxidant axis durable instead of an
+    ///   early-window transient; it also scales GSH resynthesis, see the
+    ///   [`gpx4_mul`](Self::gpx4_mul) field doc).
+    ///
+    /// [`identity`](Self::identity) is a no-op (all multipliers 1.0), so a K=1
+    /// identity config leaves the cell byte-identical. Lives here (rather than
+    /// inline in the consumer) so the full set of scaled fields — including the
+    /// durable `nrf2` axis — is unit-testable.
+    pub fn apply(&self, cell: &mut Cell, state: &mut CellState) {
+        cell.iron *= self.iron_mul;
+        cell.lipid_unsat *= self.lipid_unsat_mul;
+        state.gpx4 *= self.gpx4_mul; // initial reserve
+        cell.nrf2 *= self.gpx4_mul; // durable setpoint (#266) — also scales GSH resynthesis
+    }
 }
 
 /// Clonal-heterogeneity configuration: one [`SubclonePerturbation`] per
@@ -97,6 +121,16 @@ impl ClonalConfig {
     /// - 2 intermediate-mesenchymal: mildly vulnerable.
     /// - 3 intermediate-epithelial: mildly resistant (MUFA-enriched).
     /// - 4 epithelial: antioxidant-high, MUFA-enriched (low PUFA) ⇒ most resistant.
+    ///
+    /// **Re-check pending (#266 calibration).** These multipliers were chosen
+    /// for qualitative direction under the *old transient* GPX4 axis. The
+    /// durable axis amplifies their effect at the resistant end — a `gpx4_mul`
+    /// > 1 now raises both the GPX4 setpoint *and* GSH resynthesis for the whole
+    /// run (compounding on phenotypes that already start NRF2-high, e.g.
+    /// `PersisterNrf2`), so the effective between-subclone spread is wider than
+    /// when these values were picked. Treat the current spread as illustrative,
+    /// not intentional, until calibrated against drug-screen kill-rate spreads
+    /// (Conrad 2018; Viswanathan 2017) — tracked as item 2 of #266.
     pub fn literature_4() -> Self {
         ClonalConfig {
             perturbations: vec![
@@ -330,5 +364,55 @@ mod tests {
             gap_durable > 2.0 * gap_transient,
             "durable differentiation should dwarf the transient one: gap_durable={gap_durable}, gap_transient={gap_transient}"
         );
+    }
+
+    /// `apply` scales every axis the consumer relies on — crucially including
+    /// the durable `cell.nrf2` setpoint (#266). This pins the exact field set so
+    /// dropping the `nrf2` scaling (the durability fix) fails a fast unit test,
+    /// which a sim-level kill comparison can't catch (the initial-gpx4 knock
+    /// alone already produces a kill differential). Identity must be a no-op.
+    #[test]
+    fn apply_scales_all_axes_including_durable_nrf2() {
+        use crate::biochem::CellState;
+        use crate::cell::{gen_cell, Phenotype, Treatment};
+        use crate::params::Params;
+        use rand::prelude::*;
+
+        let params = Params::default();
+        let mut rng = StdRng::seed_from_u64(3);
+        let mut cell = gen_cell(Phenotype::Glycolytic, &mut rng);
+        let mut state = CellState::from_cell(&cell, Treatment::Control, &params, &mut rng);
+        let (iron0, lipid0, nrf20, gpx40) = (cell.iron, cell.lipid_unsat, cell.nrf2, state.gpx4);
+
+        let p = SubclonePerturbation {
+            iron_mul: 2.0,
+            gpx4_mul: 0.5,
+            lipid_unsat_mul: 0.25,
+        };
+        p.apply(&mut cell, &mut state);
+
+        assert!((cell.iron - iron0 * 2.0).abs() < 1e-12, "iron scaled");
+        assert!(
+            (cell.lipid_unsat - lipid0 * 0.25).abs() < 1e-12,
+            "lipid_unsat scaled"
+        );
+        assert!(
+            (state.gpx4 - gpx40 * 0.5).abs() < 1e-12,
+            "initial gpx4 reserve scaled"
+        );
+        // The #266 durable axis: nrf2 (setpoint) scaled by gpx4_mul.
+        assert!(
+            (cell.nrf2 - nrf20 * 0.5).abs() < 1e-12,
+            "durable nrf2 setpoint scaled by gpx4_mul (#266)"
+        );
+
+        // Identity is a no-op.
+        let mut c2 = gen_cell(Phenotype::Glycolytic, &mut rng);
+        let mut s2 = CellState::from_cell(&c2, Treatment::Control, &params, &mut rng);
+        let (i2, n2, g2) = (c2.iron, c2.nrf2, s2.gpx4);
+        SubclonePerturbation::identity().apply(&mut c2, &mut s2);
+        assert_eq!(c2.iron, i2);
+        assert_eq!(c2.nrf2, n2);
+        assert_eq!(s2.gpx4, g2);
     }
 }

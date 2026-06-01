@@ -702,11 +702,11 @@ fn run_one_condition_full(
                 continue;
             }
             // ids[idx] is 1..=k for tumor cells (0 only for stroma, skipped).
+            // `apply` scales iron + lipid_unsat (static), the initial gpx4
+            // reserve, AND the durable cell.nrf2 setpoint (#266); unit-tested
+            // in ferroptosis-core::clonal.
             let p = &cfg.perturbations[(ids[idx] - 1) as usize];
-            gc.cell.iron *= p.iron_mul;
-            gc.cell.lipid_unsat *= p.lipid_unsat_mul;
-            gc.state.gpx4 *= p.gpx4_mul; // initial reserve
-            gc.cell.nrf2 *= p.gpx4_mul; // durable setpoint (#266) — also scales GSH resynthesis
+            p.apply(&mut gc.cell, &mut gc.state);
         }
     }
 
