@@ -544,6 +544,70 @@ impl TumorGrid3D {
         }
     }
 
+    /// Generate an all-tumor **slab** block (#240, Option A): every cell is
+    /// tumor (no spheroid surface, no stromal border), representing a chunk of
+    /// bulk tumor at some depth in a larger virtual tumor. Phenotypes follow
+    /// the bulk "core" mix (glycolytic-dominant, no spatial clusters / radial
+    /// structure). The consumer (sim-tme-3d slab mode) layers a planar
+    /// depth-graded O2/drug supply on top to represent the slab's depth.
+    ///
+    /// Distinct from [`generate`](Self::generate) (which carves a sphere); only
+    /// reached in the opt-in slab mode, so the default matrix is unaffected.
+    pub fn generate_slab(
+        rows: usize,
+        cols: usize,
+        layers: usize,
+        cell_size_um: f64,
+        seed: u64,
+    ) -> Self {
+        let total_cells = rows.saturating_mul(cols).saturating_mul(layers);
+        debug_assert!(
+            total_cells <= 1_000_000_000,
+            "TumorGrid3D::generate_slab: rows*cols*layers = {total_cells} exceeds 1e9 — likely a typo"
+        );
+        let mut rng = StdRng::seed_from_u64(seed);
+        let mut cells = Vec::with_capacity(total_cells);
+        for _ in 0..total_cells {
+            // Bulk-tumor phenotype mix (the `generate` core distribution).
+            let roll: f64 = rng.gen();
+            let phenotype = if roll < 0.80 {
+                Phenotype::Glycolytic
+            } else if roll < 0.95 {
+                Phenotype::OXPHOS
+            } else {
+                Phenotype::Persister
+            };
+            let cell = gen_cell(phenotype, &mut rng);
+            let state = CellState {
+                gsh: cell.gsh,
+                gpx4: cell.gpx4,
+                fsp1: cell.fsp1,
+                mufa_protection: 0.0,
+                lp: 0.0,
+                dead: false,
+                death_step: None,
+                exo_ros_peak: 0.0,
+                persister_fraction: 0.0,
+            };
+            cells.push(GridCell {
+                cell,
+                phenotype,
+                state,
+                is_tumor: true,
+                extra_iron: 0.0,
+                lp_at_death: 0.0,
+                newly_dead: false,
+            });
+        }
+        TumorGrid3D {
+            cells,
+            rows,
+            cols,
+            layers,
+            cell_size_um,
+        }
+    }
+
     /// Flat index into `cells` for `(r, c, l)`. Canonical source of
     /// truth for the row-major (C-order) storage layout
     /// `r·cols·layers + c·layers + l` with strides `(cols·layers, layers, 1)`.

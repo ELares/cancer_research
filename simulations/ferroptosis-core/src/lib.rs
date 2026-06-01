@@ -34,6 +34,11 @@
 //! | [`drug_transport`] | Tissue-specific drug penetration (Krogh cylinder approximation) |
 //! | [`tumor_pk`] | Two-compartment vascular/interstitial pharmacokinetics |
 //! | [`dose_schedule`] | Time-varying drug-administration schedules (bolus / multi-dose / infusion / PK-driven) |
+//! | [`persister`] | Drug-tolerant persister cells (epigenetic ferroptosis tolerance, acquire/revert) |
+//! | [`clonal`] | Voronoi subclone patches with per-subclone iron/GPX4/MUFA perturbations |
+//! | [`vasculature`] | Explicit 3D vessel network + per-cell distance-decayed O2/drug supply |
+//! | [`spheroid`] | 3D spheroid radial biology (rim/mid/core phenotypes + GSH/iron/MUFA gradients) |
+//! | [`slab`] | Patient-scale slab geometry: all-tumor block + planar depth-graded O2/drug supply |
 
 pub mod cell;
 pub mod clonal;
@@ -51,6 +56,7 @@ pub mod persister;
 pub mod ph;
 pub mod photosensitizer_pk;
 pub mod physics;
+pub mod slab;
 pub mod spheroid;
 pub mod stats;
 pub mod stromal;
