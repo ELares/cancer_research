@@ -36,6 +36,14 @@ pub struct Cell {
     /// Drives GSH synthesis (via GCL/GSS), GPX4 expression.
     /// (Dodson et al., Free Radic Biol Med 2019)
     pub nrf2: f64,
+    /// Per-cell MUFA carrying capacity (#270). `None` ⇒ the global
+    /// `Params::scd_mufa_max`. The spheroid model sets this radially (rim-high,
+    /// core-low) so position-dependent MUFA is **durable**:
+    /// `update_mufa_protection` relaxes toward a steady state that scales with
+    /// this cap, instead of every cell converging to the single uniform M_ss.
+    /// `None` (the default) keeps every non-spheroid path byte-identical.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mufa_cap: Option<f64>,
 }
 
 /// Treatment modalities.
@@ -70,6 +78,7 @@ pub fn gen_cell(pheno: Phenotype, rng: &mut StdRng) -> Cell {
             basal_ros: norm(rng, 0.2, 0.05).max(0.05),
             lipid_unsat: norm(rng, 1.0, 0.12).max(0.5),
             nrf2: norm(rng, 1.0, 0.12).max(0.4),
+            mufa_cap: None,
         },
         Phenotype::OXPHOS => Cell {
             iron: norm(rng, 2.8, 0.6).max(0.8),
@@ -79,6 +88,7 @@ pub fn gen_cell(pheno: Phenotype, rng: &mut StdRng) -> Cell {
             basal_ros: norm(rng, 0.5, 0.12).max(0.1),
             lipid_unsat: norm(rng, 1.6, 0.2).max(0.7),
             nrf2: norm(rng, 1.2, 0.15).max(0.5),
+            mufa_cap: None,
         },
         Phenotype::Persister => Cell {
             iron: norm(rng, 1.5, 0.3).max(0.5),
@@ -88,6 +98,7 @@ pub fn gen_cell(pheno: Phenotype, rng: &mut StdRng) -> Cell {
             basal_ros: norm(rng, 0.25, 0.06).max(0.05),
             lipid_unsat: norm(rng, 1.4, 0.15).max(0.6),
             nrf2: norm(rng, 0.7, 0.15).max(0.2),
+            mufa_cap: None,
         },
         Phenotype::PersisterNrf2 => Cell {
             iron: norm(rng, 2.8, 0.6).max(0.8),
@@ -97,6 +108,7 @@ pub fn gen_cell(pheno: Phenotype, rng: &mut StdRng) -> Cell {
             basal_ros: norm(rng, 0.5, 0.12).max(0.1),
             lipid_unsat: norm(rng, 1.6, 0.2).max(0.7),
             nrf2: norm(rng, 3.0, 0.4).max(1.5),
+            mufa_cap: None,
         },
         Phenotype::Stromal => Cell {
             iron: norm(rng, 0.3, 0.08).max(0.1),
@@ -106,6 +118,7 @@ pub fn gen_cell(pheno: Phenotype, rng: &mut StdRng) -> Cell {
             basal_ros: norm(rng, 0.1, 0.03).max(0.02),
             lipid_unsat: norm(rng, 0.6, 0.1).max(0.3),
             nrf2: norm(rng, 1.0, 0.12).max(0.4),
+            mufa_cap: None,
         },
     }
 }
@@ -161,5 +174,6 @@ pub fn gen_recovered_persister(days: f64, rates: &RecoveryRates, rng: &mut StdRn
         basal_ros: norm(rng, 0.25, 0.06).max(0.05),
         lipid_unsat: norm(rng, 1.4, 0.15).max(0.6),
         nrf2: norm(rng, nrf2_mean, 0.15).max(0.2),
+        mufa_cap: None,
     }
 }

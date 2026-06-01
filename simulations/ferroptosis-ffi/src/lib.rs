@@ -100,6 +100,7 @@ fn ferro_cell_to_cell(fc: &FerroCell) -> Cell {
         basal_ros: fc.basal_ros,
         lipid_unsat: fc.lipid_unsat,
         nrf2: fc.nrf2,
+        mufa_cap: None,
     }
 }
 
