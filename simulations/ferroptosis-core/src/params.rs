@@ -390,6 +390,75 @@ impl Default for PhConfig {
     }
 }
 
+/// Drug-tolerant persister-cell parameters (#241).
+///
+/// Cells acquire an epigenetic ferroptosis-tolerant state under drug exposure
+/// and revert once the drug clears. Consumed by [`crate::persister`] (pure
+/// helpers; the consumer owns `CellState::persister_fraction` and applies the
+/// effects). [`Default`] is the **identity element** (all rates zero ⇒ every
+/// helper is a no-op ⇒ byte-identical to having no persister model), matching
+/// the off-by-default discipline of `DoseSchedule` / `Photosensitizer`.
+///
+/// Values in [`PersisterConfig::enabled`] are plausible placeholders pending
+/// calibration (the literature gives qualitative direction, not step-level
+/// rates): Hangauer 2017 (persister ⇄ GPX4 dependence), Tsoi 2018 (MUFA lipid
+/// rewiring), Viswanathan 2017 (mesenchymal ⇄ ferroptosis axis / reversion).
+#[derive(Clone, Copy, Debug)]
+pub struct PersisterConfig {
+    /// Logistic acquisition rate per step under full drug exposure.
+    pub acquisition_rate: f64,
+    /// Exponential reversion rate per step when the drug is absent.
+    pub reversion_rate: f64,
+    /// Ceiling on `persister_fraction` (no cell becomes fully invulnerable).
+    pub max_fraction: f64,
+    /// Fraction of per-step GPX4 inactivation a full persister resists (0..1).
+    pub gpx4_resistance: f64,
+    /// Per-step additive MUFA protection at full persistence (same shape as
+    /// `StromalConfig::mufa_boost_per_step`).
+    pub mufa_boost_per_step: f64,
+    /// Cap on persister-driven `CellState::mufa_protection`.
+    pub mufa_boost_cap: f64,
+}
+
+impl Default for PersisterConfig {
+    /// Identity: no acquisition, no reversion, no effect. A run with this
+    /// config is byte-identical to one with no persister model.
+    fn default() -> Self {
+        PersisterConfig {
+            acquisition_rate: 0.0,
+            reversion_rate: 0.0,
+            max_fraction: 0.0,
+            gpx4_resistance: 0.0,
+            mufa_boost_per_step: 0.0,
+            mufa_boost_cap: 0.0,
+        }
+    }
+}
+
+impl PersisterConfig {
+    /// Plausible (placeholder, pending calibration) values that produce an
+    /// observable persister effect when the model is switched on.
+    pub fn enabled() -> Self {
+        PersisterConfig {
+            acquisition_rate: 0.02,
+            reversion_rate: 0.01,
+            max_fraction: 0.8,
+            gpx4_resistance: 0.5,
+            mufa_boost_per_step: 0.004,
+            mufa_boost_cap: 0.6,
+        }
+    }
+
+    /// True when this config has no effect (every rate zero). Lets consumers
+    /// gate the persister code path so default output stays byte-identical.
+    pub fn is_identity(&self) -> bool {
+        self.acquisition_rate == 0.0
+            && self.reversion_rate == 0.0
+            && self.gpx4_resistance == 0.0
+            && self.mufa_boost_per_step == 0.0
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

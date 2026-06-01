@@ -64,8 +64,9 @@ use ferroptosis_core::immune_spatial::{
 };
 use ferroptosis_core::oxygen::radial_o2_field;
 use ferroptosis_core::params::{
-    Params, PhConfig, SpatialImmuneConfig, SpatialParams, StromalConfig,
+    Params, PersisterConfig, PhConfig, SpatialImmuneConfig, SpatialParams, StromalConfig,
 };
+use ferroptosis_core::persister;
 use ferroptosis_core::ph::{ion_trap_factor_from_ph, iron_multiplier_from_ph, radial_ph_field};
 use ferroptosis_core::physics::local_ros_multiplier_3d;
 use ferroptosis_core::stromal::stromal_adjacency_mask_3d;
@@ -167,6 +168,12 @@ struct ConditionResult {
     ph_core: Option<f64>,
     #[serde(skip_serializing_if = "Option::is_none")]
     ph_lambda_um: Option<f64>,
+    /// Mean drug-tolerant persister fraction across surviving tumor cells at
+    /// end of simulation (#241). `None` (field omitted) unless the persister
+    /// model is enabled, so the default 24-condition matrix summary.json
+    /// stays byte-identical to pre-#241 (guarded by #253).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    persister_mean: Option<f64>,
 }
 
 /// Schema version for `summary.json`. Bump when the output shape
@@ -290,10 +297,25 @@ fn run_one_condition(condition: &Condition) -> ConditionResult {
     run_one_condition_with_config(condition, RunConfig::production(), None)
 }
 
+/// Thin wrapper running a condition with the persister model OFF. The matrix,
+/// dose-sweep, and every test use this 3-arg form, so they stay byte-identical
+/// to pre-#241. `run_snapshot` calls [`run_one_condition_full`] directly to
+/// opt the `persister` preset into the model.
 fn run_one_condition_with_config(
     condition: &Condition,
     run_cfg: RunConfig,
+    snapshot: Option<&mut snapshot::SnapshotBuffers>,
+) -> ConditionResult {
+    run_one_condition_full(condition, run_cfg, snapshot, None)
+}
+
+fn run_one_condition_full(
+    condition: &Condition,
+    run_cfg: RunConfig,
     mut snapshot: Option<&mut snapshot::SnapshotBuffers>,
+    // Persister-cell model (#241). `None` (the default matrix path) keeps the
+    // whole persister code path inert, so summary.json is byte-identical.
+    persister_cfg: Option<PersisterConfig>,
 ) -> ConditionResult {
     let params = Params::default();
     let spatial_params = SpatialParams {
@@ -607,7 +629,16 @@ fn run_one_condition_with_config(
                             // Covalent GPX4 inactivation ∝ availability
                             // (schedule × pH ion-trap). Mirrors sim_cell_with_pk.
                             let conc = (dose_factor * rsl3_drug_avail[idx]).clamp(0.0, 1.0);
-                            gc.state.gpx4 -= RSL3_INACTIVATION_RATE * conc * gc.state.gpx4;
+                            // Persisters resist the covalent knockdown (#241).
+                            // `1.0` when persister off → byte-identical.
+                            let presist = persister_cfg.as_ref().map_or(1.0, |c| {
+                                persister::gpx4_inactivation_multiplier(
+                                    gc.state.persister_fraction,
+                                    c,
+                                )
+                            });
+                            gc.state.gpx4 -=
+                                RSL3_INACTIVATION_RATE * conc * presist * gc.state.gpx4;
                             gc.state.gpx4 = gc.state.gpx4.max(0.0);
                         }
                         Treatment::SDT | Treatment::PDT => {
@@ -641,6 +672,51 @@ fn run_one_condition_with_config(
                                 + cfg.mufa_boost_per_step)
                                 .min(cfg.mufa_boost_cap);
                         }
+                    }
+                }
+
+                // Persister-cell dynamics (#241). Gated on the model being
+                // enabled (`Some`); `None` on the default matrix path so this
+                // whole block is skipped → byte-identical. Applies to cells
+                // still alive after this step's biochem.
+                if let Some(pcfg) = persister_cfg.as_ref() {
+                    if !gc.state.dead {
+                        let frac = gc.state.persister_fraction;
+                        // MUFA membrane remodeling (lipid-rewiring axis):
+                        // additive per step like CAF supply, scaled by the
+                        // current persister fraction, capped. `.max(m)` so it
+                        // never pulls existing protection down.
+                        let inc = persister::mufa_boost_increment(frac, pcfg);
+                        let m = gc.state.mufa_protection;
+                        gc.state.mufa_protection = (m + inc).min(pcfg.mufa_boost_cap.max(m));
+                        // Acquire under drug exposure this step, else revert.
+                        // `rsl3_drug_avail[idx]` is indexed only on the
+                        // `dosed && RSL3` path, where the pre-loop
+                        // `debug_assert!(!rsl3_drug_avail.is_empty())` already
+                        // guarantees it is populated (same invariant the RSL3
+                        // inactivation branch above relies on).
+                        let drug_intensity = match condition.treatment {
+                            Treatment::Control => 0.0,
+                            Treatment::RSL3 => {
+                                if dosed {
+                                    (dose_factor * rsl3_drug_avail[idx]).clamp(0.0, 1.0)
+                                } else {
+                                    1.0
+                                }
+                            }
+                            Treatment::SDT | Treatment::PDT => {
+                                if dosed {
+                                    dose_factor
+                                } else {
+                                    1.0
+                                }
+                            }
+                        };
+                        gc.state.persister_fraction = if drug_intensity > 0.0 {
+                            persister::acquire(frac, drug_intensity, pcfg)
+                        } else {
+                            persister::revert(frac, pcfg)
+                        };
                     }
                 }
 
@@ -795,6 +871,24 @@ fn run_one_condition_with_config(
         (None, None, None, None)
     };
 
+    // Mean persister fraction over surviving tumor cells (#241). `Some` only
+    // when the model is enabled — `None` omits the field (skip_serializing_if)
+    // so the default-matrix summary.json is byte-identical to pre-#241.
+    let persister_mean = persister_cfg.map(|_| {
+        let (sum, n) = grid.cells.iter().fold((0.0_f64, 0usize), |(s, n), gc| {
+            if gc.is_tumor && !gc.state.dead {
+                (s + gc.state.persister_fraction, n + 1)
+            } else {
+                (s, n)
+            }
+        });
+        if n > 0 {
+            sum / n as f64
+        } else {
+            0.0
+        }
+    });
+
     ConditionResult {
         treatment: condition.treatment_name.clone(),
         o2_condition: match condition.o2_lambda {
@@ -836,6 +930,7 @@ fn run_one_condition_with_config(
         ph_edge: ph_edge_v,
         ph_core: ph_core_v,
         ph_lambda_um: ph_lambda_v,
+        persister_mean,
     }
 }
 
@@ -997,6 +1092,9 @@ struct SnapshotPreset {
     /// built at runtime in `run_snapshot` (a `const` can't hold the
     /// `MultiDose` Vec).
     multidose: bool,
+    /// True if the drug-tolerant persister model (#241) is enabled. Adds a
+    /// `trajectory_persister.npy` overlay and emits `persister_mean`.
+    persister: bool,
 }
 
 /// Visualization presets for `--snapshot=NAME`. Keep this list small —
@@ -1011,6 +1109,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         stromal_on: true,
         ph_on: true,
         multidose: false,
+        persister: false,
     },
     SnapshotPreset {
         name: "bare",
@@ -1021,6 +1120,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         stromal_on: false,
         ph_on: false,
         multidose: false,
+        persister: false,
     },
     SnapshotPreset {
         name: "multidose",
@@ -1031,6 +1131,22 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         stromal_on: false,
         ph_on: false,
         multidose: true,
+        persister: false,
+    },
+    SnapshotPreset {
+        // SDT here visualizes the persister-fraction OVERLAY (the MUFA axis +
+        // acquire/revert dynamics). SDT has no covalent GPX4 step, so the
+        // GPX4-resistance kill-reduction does NOT apply here — that effect is
+        // RSL3-specific (demonstrated by `persister_reduces_multidose_kills`).
+        name: "persister",
+        desc: "SDT multi-dose + immune — persister-fraction OVERLAY (accumulation/reversion; the RSL3 kill-drop is in the test suite) (#241)",
+        treatment: Treatment::SDT,
+        treatment_name: "SDT",
+        immune_on: true,
+        stromal_on: false,
+        ph_on: false,
+        multidose: true,
+        persister: true,
     },
 ];
 
@@ -1097,13 +1213,17 @@ fn run_snapshot(output_dir: &Path, tumor_radius_um: f64, name: &str) {
     );
 
     let run_cfg = RunConfig::production();
-    let mut buffers = snapshot::SnapshotBuffers::new(run_cfg.grid_dim, run_cfg.n_steps);
-    let result = run_one_condition_with_config(&condition, run_cfg, Some(&mut buffers));
+    // Enable the persister model (#241) for presets that opt in.
+    let persister_cfg = preset.persister.then(PersisterConfig::enabled);
+    let mut buffers =
+        snapshot::SnapshotBuffers::new(run_cfg.grid_dim, run_cfg.n_steps, preset.persister);
+    let result = run_one_condition_full(&condition, run_cfg, Some(&mut buffers), persister_cfg);
     eprintln!(
-        "  done — total_kill={:.1}%, ferroptosis_kills={}, immune_kills={}, captured {} steps",
+        "  done — total_kill={:.1}%, ferroptosis_kills={}, immune_kills={}, persister_mean={:.3}, captured {} steps",
         result.overall_kill_rate * 100.0,
         result.ferroptosis_kills.unwrap_or(0),
         result.immune_kills.unwrap_or(0),
+        result.persister_mean.unwrap_or(0.0),
         buffers.steps_captured(),
     );
 
@@ -1132,8 +1252,9 @@ fn run_snapshot(output_dir: &Path, tumor_radius_um: f64, name: &str) {
         .expect("Failed to write trajectory_meta.json");
 
     eprintln!(
-        "Wrote {} + trajectory_{{dead,damp,lp}}.npy",
-        meta_path.display()
+        "Wrote {} + trajectory_{{dead,damp,lp{}}}.npy",
+        meta_path.display(),
+        if preset.persister { ",persister" } else { "" },
     );
     eprintln!("Render with: python3 scripts/render_tme_3d_trajectory.py");
 }
@@ -2194,6 +2315,163 @@ mod tests {
         assert!(
             !mask[center_idx],
             "interior center cell should NOT be in adjacency mask"
+        );
+    }
+
+    // ===== Persister-cell model (#241) =====
+
+    /// Persister model OFF (and the identity config) must be inert: the same
+    /// kills as the un-modeled path, and `persister_mean` omitted when off.
+    /// This is the per-PR side of the byte-identity guarantee (the production
+    /// SHA guard is #253).
+    #[test]
+    fn persister_off_is_inert_and_unreported() {
+        let cfg = RunConfig {
+            grid_dim: 20,
+            n_steps: 60,
+        };
+        let cond = Condition {
+            name: "persister_off".to_string(),
+            treatment: Treatment::RSL3,
+            treatment_name: "RSL3".to_string(),
+            o2_lambda: Some(ZONE_REF_LAMBDA),
+            immune_on: false,
+            stromal_on: false,
+            ph_on: false,
+            dose_schedule: DoseSchedule::Constant,
+        };
+        let wrapped = run_one_condition_with_config(&cond, cfg, None);
+        let explicit_none = run_one_condition_full(&cond, cfg, None, None);
+        assert_eq!(wrapped.total_dead, explicit_none.total_dead);
+        assert_eq!(
+            wrapped.persister_mean, None,
+            "off path must omit persister_mean"
+        );
+        assert_eq!(
+            explicit_none.persister_mean, None,
+            "explicit-None path must also omit persister_mean"
+        );
+        // An identity PersisterConfig runs the (gated) block but every helper
+        // is a no-op, so kills are unchanged.
+        let identity = run_one_condition_full(&cond, cfg, None, Some(PersisterConfig::default()));
+        assert_eq!(
+            identity.total_dead, wrapped.total_dead,
+            "identity PersisterConfig must not change kills"
+        );
+    }
+
+    /// Headline #241 result: under a repeated-dose RSL3 schedule, enabling the
+    /// persister model leaves materially MORE cells alive than the
+    /// no-persister baseline. Acquired tolerance resists each dose's covalent
+    /// GPX4 knockdown (gpx4_inactivation_multiplier), so kill efficiency
+    /// declines across cycles — the Hangauer et al. 2017 persister effect.
+    /// RSL3 (not SDT) is used because the GPX4-resistance axis is RSL3's
+    /// covalent mechanism; the other TME protections are off so the delta is
+    /// purely the persister effect. Observed at the time of writing:
+    /// off=79, on=27 (≈66% reduction).
+    #[test]
+    fn persister_reduces_multidose_kills() {
+        // 120 steps: the dosed RSL3 per-step inactivation is gradual (no
+        // one-shot init knockdown), so cumulative GPX4 loss only crosses the
+        // lethal threshold after ~100 steps at this grid. Shorter runs kill
+        // zero, leaving nothing to attenuate.
+        let cfg = RunConfig {
+            grid_dim: 20,
+            n_steps: 120,
+        };
+        let cond = Condition {
+            name: "persister_multidose".to_string(),
+            treatment: Treatment::RSL3,
+            treatment_name: "RSL3".to_string(),
+            // Uniform oxygenation: the hypoxia gradient collapses RSL3 kill
+            // (manuscript finding 3.7%→0.1%), which would leave no baseline
+            // headroom to demonstrate the persister reduction.
+            o2_lambda: None,
+            immune_on: false,
+            stromal_on: false,
+            ph_on: false,
+            // Repeated RSL3 dosing across the run, dense enough (every 4 steps,
+            // overlapping half-lives) that effective availability stays near
+            // saturation — sparse pulses barely dent GPX4. As persistence
+            // accrues it attenuates each dose's covalent knockdown
+            // (gpx4_inactivation_multiplier), so fewer cells die than baseline.
+            dose_schedule: DoseSchedule::MultiDose {
+                dose_steps: (0..120).step_by(4).collect(),
+                peak: 1.0,
+                half_life_steps: 10.0,
+            },
+        };
+        let off = run_one_condition_with_config(&cond, cfg, None);
+        let on = run_one_condition_full(&cond, cfg, None, Some(PersisterConfig::enabled()));
+        // Strong precondition: if a grid/timing change drops the baseline kill
+        // count near zero, there is no headroom to demonstrate the effect and
+        // the test would pass/fail for the wrong reason. Fail loudly instead.
+        assert!(
+            off.total_dead >= 20,
+            "baseline RSL3 must kill a meaningful number of cells for this test \
+             to be informative; got {}. Adjust the schedule/grid/steps.",
+            off.total_dead
+        );
+        // Material reduction, not a 1-cell rounding artifact. Observed ≈66%.
+        let reduction = (off.total_dead - on.total_dead) as f64 / off.total_dead as f64;
+        assert!(
+            on.total_dead < off.total_dead && reduction > 0.2,
+            "persister tolerance must materially reduce kills (>20%): \
+             on={}, off={}, reduction={:.1}%",
+            on.total_dead,
+            off.total_dead,
+            reduction * 100.0
+        );
+        let pm = on
+            .persister_mean
+            .expect("persister_mean must be reported when the model is enabled");
+        let max_frac = PersisterConfig::enabled().max_fraction;
+        assert!(
+            pm > 0.0 && pm <= max_frac,
+            "persister_mean must be in (0, max_fraction={max_frac}]; got {pm}"
+        );
+    }
+
+    /// Reversion (#241): once dosing stops, the epigenetic persister mark
+    /// decays. A run whose doses end at the halfway point must leave a LOWER
+    /// mean persister fraction in survivors than one dosed across the whole
+    /// run — the back half is drug-free, so `revert` dominates. Guards the
+    /// integration of the reversion path (the helper is unit-tested in
+    /// `ferroptosis-core::persister`).
+    #[test]
+    fn persister_reverts_after_dosing_stops() {
+        let cfg = RunConfig {
+            grid_dim: 20,
+            n_steps: 120,
+        };
+        let mk = |name: &str, dose_steps: Vec<u32>| Condition {
+            name: name.to_string(),
+            treatment: Treatment::RSL3,
+            treatment_name: "RSL3".to_string(),
+            o2_lambda: None,
+            immune_on: false,
+            stromal_on: false,
+            ph_on: false,
+            dose_schedule: DoseSchedule::MultiDose {
+                dose_steps,
+                peak: 1.0,
+                half_life_steps: 10.0,
+            },
+        };
+        let sustained = mk("sustained", (0..120).step_by(4).collect());
+        let early_only = mk("early_only", (0..60).step_by(4).collect());
+        let pm_sustained =
+            run_one_condition_full(&sustained, cfg, None, Some(PersisterConfig::enabled()))
+                .persister_mean
+                .unwrap();
+        let pm_early =
+            run_one_condition_full(&early_only, cfg, None, Some(PersisterConfig::enabled()))
+                .persister_mean
+                .unwrap();
+        assert!(
+            pm_early < pm_sustained,
+            "persister fraction must revert when dosing stops: \
+             early-only mean={pm_early:.3} should be < sustained mean={pm_sustained:.3}"
         );
     }
 }

@@ -136,6 +136,7 @@ impl TumorGrid {
                     dead: false,
                     death_step: None,
                     exo_ros_peak: 0.0,
+                    persister_fraction: 0.0,
                 };
 
                 cells.push(GridCell {
@@ -519,6 +520,7 @@ impl TumorGrid3D {
                         dead: false,
                         death_step: None,
                         exo_ros_peak: 0.0,
+                        persister_fraction: 0.0,
                     };
                     cells.push(GridCell {
                         cell,

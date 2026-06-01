@@ -127,6 +127,7 @@ fn apply_effects(
         dead: false,
         death_step: None,
         exo_ros_peak: exo_ros_total,
+        persister_fraction: 0.0,
     };
 
     (modified_cell, state)
