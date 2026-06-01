@@ -602,9 +602,18 @@ fn run_one_condition_full(
 
     // Position-dependent MUFA (#197): peripheral cells reach higher membrane
     // MUFA than the nutrient-deprived core. Set on the freshly-initialized
-    // state; persists across steps because `Params::spheroid()`'s SCD1 is
-    // partially active (`scd_mufa_max > 0`). Gated on spheroid ⇒ the default
-    // path never runs this ⇒ byte-identical.
+    // state. Gated on spheroid ⇒ the default path never runs this ⇒
+    // byte-identical.
+    //
+    // Durability (axis ranking, like the clonal comment): this MUFA value is
+    // an INITIAL condition that relaxes toward `Params::spheroid`'s uniform
+    // M_ss (≈0.20) each step via `update_mufa_protection` (and is capped at
+    // `scd_mufa_max` = 0.25, which `SpheroidConfig::literature` respects). So
+    // it shapes the early autocatalytic/killing window strongly but is not
+    // durable to late steps. A fully durable position-dependent MUFA needs a
+    // per-cell `scd_mufa_max` (Params is global) — deferred to calibration.
+    // Of the radial axes only `iron` (static `cell.iron`) is fully durable;
+    // `gsh` is likewise an initial condition (evolves under NRF2 resynthesis).
     if let Some(cfg) = &spheroid_cfg {
         for idx in 0..grid.cells.len() {
             if grid.cells[idx].is_tumor {

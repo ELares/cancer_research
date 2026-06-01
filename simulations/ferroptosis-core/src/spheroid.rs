@@ -47,12 +47,28 @@ pub struct SpheroidConfig {
 impl SpheroidConfig {
     /// Literature-informed defaults (placeholders pending calibration):
     /// outer third glycolytic, middle third OXPHOS, inner third persister-like;
-    /// MUFA 0.35→0.05 surface→core; core GSH ×0.5; core iron ×1.6.
+    /// MUFA 0.25→0.05 surface→core; core GSH ×0.5; core iron ×1.6.
+    ///
+    /// **`mufa_surface` is capped at `Params::spheroid`'s `scd_mufa_max`
+    /// (0.25)** — a higher value would be silently clamped on step 1 by
+    /// `update_mufa_protection`, and the per-cell MUFA relaxes toward the
+    /// uniform M_ss (≈0.20) over the run, so it shapes the early killing window
+    /// rather than persisting (a fully durable position-dependent MUFA would
+    /// need a per-cell `scd_mufa_max`; #197 review). Only `iron_core_factor`
+    /// (a static `cell.iron` scale) is a fully durable axis; `gsh_core_factor`
+    /// sets the *initial* GSH, which then evolves under NRF2 resynthesis.
+    ///
+    /// **Zone geometry caveat**: the thresholds are *radial* fractions, so by
+    /// volume (∝ r³) the persister core (`frac < 0.33`) is only ~4% and the
+    /// glycolytic rim (`frac ≥ 0.66`) ~71%. Real spheroids have a thin
+    /// proliferating rim and a larger quiescent/hypoxic core; tilting the core
+    /// larger (raising `oxphos_frac`) is a calibration follow-up.
     pub fn literature() -> Self {
         SpheroidConfig {
             glycolytic_frac: 0.66,
             oxphos_frac: 0.33,
-            mufa_surface: 0.35,
+            // ≤ Params::spheroid().scd_mufa_max (0.25) — see note above.
+            mufa_surface: 0.25,
             mufa_core: 0.05,
             gsh_core_factor: 0.5,
             iron_core_factor: 1.6,
