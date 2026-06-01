@@ -51,6 +51,7 @@ pub mod persister;
 pub mod ph;
 pub mod photosensitizer_pk;
 pub mod physics;
+pub mod spheroid;
 pub mod stats;
 pub mod stromal;
 pub mod tumor_pk;

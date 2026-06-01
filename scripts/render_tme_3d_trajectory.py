@@ -51,16 +51,17 @@ def _load_trajectory(
     "np.ndarray | None",
     "np.ndarray | None",
     "np.ndarray | None",
+    "np.ndarray | None",
     dict,
 ]:
     """Load the trajectory arrays + metadata; assert schema version.
 
-    Returns (dead, damp, lp, persister, subclone, vessel_supply, meta).
-    `persister` (#241), `subclone` (#242), and `vessel_supply` (#191) are
-    optional overlays, present only when the run used the corresponding model
-    (`--snapshot=persister` / `=clonal` / `=vasculature`); `None` otherwise.
-    Raises SystemExit on missing required files or schema mismatch with a
-    clear, actionable message.
+    Returns (dead, damp, lp, persister, subclone, vessel_supply, phenotype,
+    meta). `persister` (#241), `subclone` (#242), `vessel_supply` (#191), and
+    `phenotype` (#197) are optional overlays, present only when the run used the
+    corresponding model (`--snapshot=persister` / `=clonal` / `=vasculature` /
+    `=spheroid`); `None` otherwise. Raises SystemExit on missing required files
+    or schema mismatch with a clear, actionable message.
     """
     required = [
         "trajectory_dead.npy",
@@ -139,7 +140,19 @@ def _load_trajectory(
                 f"match a trajectory frame {dead.shape[1:]}."
             )
 
-    return dead, damp, lp, persister, subclone, vessel_supply, meta
+    # Optional static radial phenotype map (#197). One 3D frame (u8: 0=stroma,
+    # 1..=4 tumor phenotypes), present only for the `--snapshot=spheroid` preset.
+    phenotype = None
+    phenotype_path = traj_dir / "phenotype.npy"
+    if phenotype_path.exists():
+        phenotype = np.load(phenotype_path)
+        if phenotype.ndim != 3 or phenotype.shape != dead.shape[1:]:
+            raise SystemExit(
+                f"ERROR: phenotype.npy shape {phenotype.shape} does not match a "
+                f"trajectory frame {dead.shape[1:]}."
+            )
+
+    return dead, damp, lp, persister, subclone, vessel_supply, phenotype, meta
 
 
 def _make_dead_cmap() -> ListedColormap:
@@ -158,6 +171,7 @@ def _render(
     persister: "np.ndarray | None",
     subclone: "np.ndarray | None",
     vessel_supply: "np.ndarray | None",
+    phenotype: "np.ndarray | None",
     meta: dict,
     out_dir: Path,
     fps: int,
@@ -178,11 +192,17 @@ def _render(
     show_persister = persister is not None
     show_subclone = subclone is not None
     show_vessel = vessel_supply is not None
+    show_phenotype = phenotype is not None
     # Panel indices: 0..2 are dead/damp/lp; the optional panels follow in order.
     pers_idx = 3 if show_persister else None
     sub_idx = (3 + int(show_persister)) if show_subclone else None
     vasc_idx = (
         (3 + int(show_persister) + int(show_subclone)) if show_vessel else None
+    )
+    pheno_idx = (
+        (3 + int(show_persister) + int(show_subclone) + int(show_vessel))
+        if show_phenotype
+        else None
     )
 
     # Dose-administration steps (#239). Empty for steady-state Constant
@@ -196,7 +216,13 @@ def _render(
         for k in range(d, d + 5):
             dose_window.add(k)
 
-    n_panels = 3 + int(show_persister) + int(show_subclone) + int(show_vessel)
+    n_panels = (
+        3
+        + int(show_persister)
+        + int(show_subclone)
+        + int(show_vessel)
+        + int(show_phenotype)
+    )
     fig, axes = plt.subplots(
         1, n_panels, figsize=(4.3 * n_panels, 4.5), constrained_layout=True
     )
@@ -263,6 +289,22 @@ def _render(
         )
         axes[vasc_idx].set_title("Vessel O₂ supply")
 
+    # Optional phenotype panel (#197): STATIC radial phenotype map. 0 = stroma
+    # (grey); 1..=4 = tumor phenotypes (glycolytic rim → persister core), each a
+    # discrete color so the radial zones are legible.
+    im_pheno = None
+    pheno_labels = ["stroma", "glyc", "OXPHOS", "pers", "persNrf2"]
+    if show_phenotype:
+        n_ph = 5  # 0..4
+        ph_colors = [(0.92, 0.92, 0.92, 1.0)] + [
+            plt.get_cmap("Set1")(i % 9) for i in range(n_ph - 1)
+        ]
+        ph_cmap = ListedColormap(ph_colors)
+        im_pheno = axes[pheno_idx].imshow(
+            phenotype[mid], cmap=ph_cmap, vmin=0, vmax=n_ph, origin="lower"
+        )
+        axes[pheno_idx].set_title("Phenotype")
+
     for ax in axes:
         ax.set_xticks([])
         ax.set_yticks([])
@@ -280,6 +322,11 @@ def _render(
         cbar.set_ticklabels(["stroma"] + [str(i) for i in range(1, k + 1)])
     if show_vessel:
         fig.colorbar(im_vasc, ax=axes[vasc_idx], fraction=0.045, pad=0.04)
+    if show_phenotype:
+        # Discrete legend: stroma + the four tumor phenotypes.
+        cbar = fig.colorbar(im_pheno, ax=axes[pheno_idx], fraction=0.045, pad=0.04)
+        cbar.set_ticks([i + 0.5 for i in range(len(pheno_labels))])
+        cbar.set_ticklabels(pheno_labels)
 
     step_text = fig.text(0.5, 0.02, "", ha="center", fontsize=9, family="monospace")
 
@@ -360,7 +407,7 @@ def main() -> int:
     )
     args = parser.parse_args()
 
-    dead, damp, lp, persister, subclone, vessel_supply, meta = _load_trajectory(
+    dead, damp, lp, persister, subclone, vessel_supply, phenotype, meta = _load_trajectory(
         args.traj_dir
     )
     written = _render(
@@ -370,6 +417,7 @@ def main() -> int:
         persister,
         subclone,
         vessel_supply,
+        phenotype,
         meta,
         args.traj_dir,
         fps=args.fps,
