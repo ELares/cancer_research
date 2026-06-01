@@ -97,6 +97,7 @@ The default 24-condition matrix path (no `--snapshot` flag) is **byte-identical*
 | `bare` | RSL3 | none | constant |
 | `multidose` | SDT | immune | **4-dose multi-dose (#239)** |
 | `persister` | SDT | immune + **persister (#241)** | multi-dose |
+| `clonal` | SDT | immune + **clonal 4-subclone (#242)** | multi-dose |
 
 The `multidose` preset shows **death waves synced to each dose**: four SDT ROS pulses at steps 10/55/100/145, each triggering a ferroptotic death wave + DAMP bloom + immune response. The renderer draws a red frame border + `💉 DOSE` marker on each dose step.
 
@@ -139,6 +140,16 @@ The spatial immune model (`immune_spatial`, #188) is a 0–48 h resident T-cell 
 - **Off by default.** `SpatialImmuneConfig::for_3d()` sets `exhaustion_rate = 0.0`, so `exhaustion_factor ≡ 1.0` and the `cumulative_kills` field is never allocated — `summary.json` is byte-identical (golden tests + the #253 production-SHA guard pass). The scatter that updates neighborhoods runs only when the rate is > 0.
 - **Effect.** With exhaustion on, total immune kills decline as killing clusters (the "cold tumor" emergence). The `exhaustion_reduces_immune_kills` test shows a dense SDT + immune run dropping ≈20% (174 → 139) when exhaustion is enabled, all else equal. Note this also shifts a few deaths into the ferroptosis tally (a cell spared an apoptotic immune kill can die ferroptotically and release iron), so only the immune-kill count is asserted.
 - **Scope.** Phase 1 only. Later phases (Treg/MDSC suppressor field, multi-checkpoint axis, DC subsets) stay separate per #243. `exhaustion_rate` is an uncalibrated placeholder.
+
+## Clonal heterogeneity (#242)
+
+Real tumors are genetic mosaics: 4–8+ subclones with measurably different ferroptosis vulnerabilities coexist in spatial patches, and the between-subclone variance often exceeds the between-treatment variance in real drug screens (Marusyk 2014; Conrad 2018; Heindl 2019).
+
+- **Model.** `ferroptosis_core::clonal::assign_subclones_3d` partitions tumor cells into K Voronoi patches (seed points placed by an **independent** RNG, so `TumorGrid3D::generate`'s stream — and the cell grid — is untouched). Each subclone carries a `SubclonePerturbation` (iron ×, GPX4 ×, MUFA +) applied as RNG-neutral setup mutations, like the O2/pH gradients. `ClonalConfig::literature_4()` spans the mesenchymal⇄epithelial axis (subclone 1 iron-loaded/GPX4-low = vulnerable … subclone 4 GPX4-high/MUFA-enriched = resistant).
+- **Off by default / byte-identical.** The matrix passes no clonal config; `ClonalConfig::single_identity()` (K=1, identity perturbation) is a no-op. The `clonal_k1_identity_is_byte_identical` test + the #253 production-SHA guard hold.
+- **Reporting.** When enabled, `summary.json` gains a `subclone_kills` array (per-subclone `total_tumor` / `total_dead` / `kill_rate`); omitted otherwise. `clonal_subclones_differ_in_kill_rate` confirms the vulnerable subclone out-dies the resistant one under RSL3.
+- **Visualization.** `--snapshot=clonal` writes a static `subclone.npy` (u8, no time axis) and the renderer adds a discrete-colored subclone-id panel alongside the death/DAMP/LP animation.
+- Perturbation values are **placeholders pending calibration**. Clonal evolution (subclone selection over time) and inter-tumor heterogeneity are out of scope.
 
 ## Condition matrix
 

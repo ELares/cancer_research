@@ -44,14 +44,16 @@ EXPECTED_SCHEMA_VERSION = 1
 
 def _load_trajectory(
     traj_dir: Path,
-) -> tuple[np.ndarray, np.ndarray, np.ndarray, "np.ndarray | None", dict]:
+) -> tuple[
+    np.ndarray, np.ndarray, np.ndarray, "np.ndarray | None", "np.ndarray | None", dict
+]:
     """Load the trajectory arrays + metadata; assert schema version.
 
-    Returns (dead, damp, lp, persister, meta). `persister` is the optional
-    drug-tolerant persister-fraction field (#241), present only when the run
-    used the persister model (e.g. `--snapshot=persister`); `None` otherwise.
-    Raises SystemExit on missing required files or schema mismatch with a
-    clear, actionable message.
+    Returns (dead, damp, lp, persister, subclone, meta). `persister` (#241) and
+    `subclone` (#242) are optional overlays, present only when the run used the
+    corresponding model (`--snapshot=persister` / `--snapshot=clonal`); `None`
+    otherwise. Raises SystemExit on missing required files or schema mismatch
+    with a clear, actionable message.
     """
     required = [
         "trajectory_dead.npy",
@@ -105,7 +107,20 @@ def _load_trajectory(
                 f"not match the other fields {dead.shape}."
             )
 
-    return dead, damp, lp, persister, meta
+    # Optional static subclone-id map (#242). One 3D frame (no time axis),
+    # matching a trajectory frame's spatial axes. Present only for the
+    # `--snapshot=clonal` preset.
+    subclone = None
+    subclone_path = traj_dir / "subclone.npy"
+    if subclone_path.exists():
+        subclone = np.load(subclone_path)
+        if subclone.ndim != 3 or subclone.shape != dead.shape[1:]:
+            raise SystemExit(
+                f"ERROR: subclone.npy shape {subclone.shape} does not match a "
+                f"trajectory frame {dead.shape[1:]}."
+            )
+
+    return dead, damp, lp, persister, subclone, meta
 
 
 def _make_dead_cmap() -> ListedColormap:
@@ -122,6 +137,7 @@ def _render(
     damp: np.ndarray,
     lp: np.ndarray,
     persister: "np.ndarray | None",
+    subclone: "np.ndarray | None",
     meta: dict,
     out_dir: Path,
     fps: int,
@@ -140,6 +156,10 @@ def _render(
     damp_max = max(float(damp.max()), 1e-6)
     lp_max = max(float(lp.max()), 1e-6)
     show_persister = persister is not None
+    show_subclone = subclone is not None
+    # Panel indices: 0..2 are dead/damp/lp; the two optional panels follow.
+    pers_idx = 3 if show_persister else None
+    sub_idx = (3 + int(show_persister)) if show_subclone else None
 
     # Dose-administration steps (#239). Empty for steady-state Constant
     # presets; non-empty for multi-dose / bolus / infusion snapshots, where
@@ -152,7 +172,7 @@ def _render(
         for k in range(d, d + 5):
             dose_window.add(k)
 
-    n_panels = 4 if show_persister else 3
+    n_panels = 3 + int(show_persister) + int(show_subclone)
     fig, axes = plt.subplots(
         1, n_panels, figsize=(4.3 * n_panels, 4.5), constrained_layout=True
     )
@@ -182,15 +202,29 @@ def _render(
     axes[1].set_title(f"DAMP field (max={damp_max:.2f})")
     axes[2].set_title(f"LP field (max={lp_max:.2f})")
 
-    # Optional 4th panel: drug-tolerant persister fraction (#241), fixed
+    # Optional persister panel: drug-tolerant persister fraction (#241), fixed
     # 0..1 scale (it is a fraction) so the build-up of tolerance over the
     # run is read directly off the colorbar.
     im_pers = None
     if show_persister:
-        im_pers = axes[3].imshow(
+        im_pers = axes[pers_idx].imshow(
             persister[0, mid], cmap="magma", vmin=0.0, vmax=1.0, origin="lower"
         )
-        axes[3].set_title("Persister fraction")
+        axes[pers_idx].set_title("Persister fraction")
+
+    # Optional subclone panel (#242): STATIC (no time axis) — the Voronoi
+    # subclone map is fixed for the run. 0 = stroma (grey); 1..K = distinct
+    # discrete colors so the patch structure is legible.
+    if show_subclone:
+        k = int(subclone.max())
+        sub_colors = [(0.92, 0.92, 0.92, 1.0)] + [
+            plt.get_cmap("tab10")(i % 10) for i in range(k)
+        ]
+        sub_cmap = ListedColormap(sub_colors)
+        axes[sub_idx].imshow(
+            subclone[mid], cmap=sub_cmap, vmin=0, vmax=k, origin="lower"
+        )
+        axes[sub_idx].set_title(f"Subclone id (K={k})")
 
     for ax in axes:
         ax.set_xticks([])
@@ -199,7 +233,7 @@ def _render(
     fig.colorbar(im_damp, ax=axes[1], fraction=0.045, pad=0.04)
     fig.colorbar(im_lp, ax=axes[2], fraction=0.045, pad=0.04)
     if show_persister:
-        fig.colorbar(im_pers, ax=axes[3], fraction=0.045, pad=0.04)
+        fig.colorbar(im_pers, ax=axes[pers_idx], fraction=0.045, pad=0.04)
 
     step_text = fig.text(0.5, 0.02, "", ha="center", fontsize=9, family="monospace")
 
@@ -280,12 +314,13 @@ def main() -> int:
     )
     args = parser.parse_args()
 
-    dead, damp, lp, persister, meta = _load_trajectory(args.traj_dir)
+    dead, damp, lp, persister, subclone, meta = _load_trajectory(args.traj_dir)
     written = _render(
         dead,
         damp,
         lp,
         persister,
+        subclone,
         meta,
         args.traj_dir,
         fps=args.fps,
