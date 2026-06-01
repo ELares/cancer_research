@@ -327,6 +327,10 @@ pub fn immune_kill_probability(activation: f64, kill_rate: f64, effective_brake:
 #[inline]
 #[must_use]
 pub fn exhaustion_factor(cumulative_kills: u32, exhaustion_rate: f64) -> f64 {
+    debug_assert!(
+        exhaustion_rate >= 0.0,
+        "exhaustion_rate must be >= 0; a negative rate pushes the factor above 1 or negative"
+    );
     1.0 / (1.0 + exhaustion_rate * cumulative_kills as f64)
 }
 

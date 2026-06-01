@@ -287,6 +287,10 @@ pub struct SpatialImmuneConfig {
     /// [`crate::immune_spatial::exhaustion_factor`]). `0.0` (the default for
     /// both `for_2d`/`for_3d`) disables exhaustion, keeping output
     /// byte-identical to the pre-#243 single-PD-1-brake model.
+    ///
+    /// **3D-only in Phase 1**: currently consumed only by `sim-tme-3d`. A 2D
+    /// (`sim-tme`) caller that sets this > 0 would silently get no effect
+    /// until the 2D immune loop is wired up in a later phase.
     pub exhaustion_rate: f64,
 }
 

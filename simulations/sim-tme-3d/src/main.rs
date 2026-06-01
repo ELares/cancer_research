@@ -784,65 +784,57 @@ fn run_one_condition_full(
             // `immune_kills` is an order-independent integer sum.
             if step >= IMMUNE_START_STEP {
                 let effective_brake = immune_cfg.effective_brake();
-                // `filter_map`+`collect` (vs the old `map`+`sum`) yields the
-                // flat indices killed THIS step so exhaustion can be scattered
-                // to their neighborhoods below. The kill DECISION is unchanged
-                // (same kill_prob, same per-cell RNG, same comparison), so the
-                // set of dead cells — and thus summary.json — is byte-identical
-                // on the default path (`exhaustion_on == false` ⇒ `exh == 1.0`,
-                // and `cumulative_kills` is never indexed).
-                let killed: Vec<usize> = grid
-                    .cells
-                    .par_iter_mut()
-                    .enumerate()
-                    .filter_map(|(idx, gc)| {
-                        if gc.state.dead || !gc.is_tumor {
-                            return None;
-                        }
-                        let local_damp = damp_field[idx];
-                        if local_damp < DAMP_KILL_THRESHOLD {
-                            return None;
-                        }
-                        let activation = dc_activation(local_damp, immune_cfg.dc_activation_kd);
-                        // T-cell exhaustion (#243): prior local immune kills
-                        // suppress this cell's kill probability. Exactly 1.0 on
-                        // the default path (rate 0 / disabled) → byte-identical.
-                        let exh = if exhaustion_on {
-                            exhaustion_factor(cumulative_kills[idx], immune_cfg.exhaustion_rate)
-                        } else {
-                            1.0
-                        };
-                        let kill_prob = immune_kill_probability(
-                            activation,
-                            immune_cfg.immune_kill_rate,
-                            effective_brake,
-                        ) * exh;
-                        let mut rng = StdRng::seed_from_u64(
-                            cond_seed
-                                .wrapping_add(900_000_000)
-                                .wrapping_add(idx as u64)
-                                .wrapping_add(step as u64 * 2_000_000),
-                        );
-                        if rng.gen::<f64>() < kill_prob {
-                            // Immune kills set `state.dead` but deliberately
-                            // NOT `death_step`/`newly_dead`: immune-killed cells
-                            // are apoptotic (no post-death LP grace, no DAMP
-                            // burst, no iron release) — a modeling choice
-                            // consistent with sim-tme, not a side-effect.
-                            gc.state.dead = true;
-                            Some(idx)
-                        } else {
-                            None
-                        }
-                    })
-                    .collect();
-                immune_kills += killed.len();
-
-                // Scatter exhaustion into the Moore-26 neighborhood of each
-                // cell killed this step (serial — runs after the par_iter join;
-                // integer adds commute, so order-independent and deterministic).
-                // Only when enabled, so the default path never runs this.
+                // Two paths so the default matrix stays exactly the pre-#243
+                // loop (allocation-free `map().sum()`, no exhaustion term) —
+                // not just byte-identical output but the same hot-path code,
+                // honoring the #192/#253 zero-cost discipline. The exhaustion
+                // path instead `filter_map`-collects the killed flat indices so
+                // their neighborhoods can be scattered into `cumulative_kills`.
                 if exhaustion_on {
+                    let killed: Vec<usize> = grid
+                        .cells
+                        .par_iter_mut()
+                        .enumerate()
+                        .filter_map(|(idx, gc)| {
+                            if gc.state.dead || !gc.is_tumor {
+                                return None;
+                            }
+                            let local_damp = damp_field[idx];
+                            if local_damp < DAMP_KILL_THRESHOLD {
+                                return None;
+                            }
+                            let activation = dc_activation(local_damp, immune_cfg.dc_activation_kd);
+                            // Prior local immune kills suppress this cell's kill
+                            // probability (T-cell exhaustion, #243).
+                            let exh = exhaustion_factor(
+                                cumulative_kills[idx],
+                                immune_cfg.exhaustion_rate,
+                            );
+                            let kill_prob = immune_kill_probability(
+                                activation,
+                                immune_cfg.immune_kill_rate,
+                                effective_brake,
+                            ) * exh;
+                            let mut rng = StdRng::seed_from_u64(
+                                cond_seed
+                                    .wrapping_add(900_000_000)
+                                    .wrapping_add(idx as u64)
+                                    .wrapping_add(step as u64 * 2_000_000),
+                            );
+                            if rng.gen::<f64>() < kill_prob {
+                                gc.state.dead = true;
+                                Some(idx)
+                            } else {
+                                None
+                            }
+                        })
+                        .collect();
+                    immune_kills += killed.len();
+
+                    // Scatter exhaustion into the Moore-26 neighborhood of each
+                    // cell killed this step (serial — runs after the par_iter
+                    // join; integer adds commute, so order-independent and
+                    // deterministic regardless of `collect` order).
                     for &k in &killed {
                         let (r, c, l) = grid.coords(k);
                         let (nbrs, n) = grid.neighbors(r, c, l);
@@ -850,6 +842,47 @@ fn run_one_condition_full(
                             cumulative_kills[grid.flat_index(nr, nc, nl)] += 1;
                         }
                     }
+                } else {
+                    // DEFAULT path — identical to pre-#243: allocation-free,
+                    // no exhaustion term, byte-identical output.
+                    let killed_this_step: usize = grid
+                        .cells
+                        .par_iter_mut()
+                        .enumerate()
+                        .map(|(idx, gc)| {
+                            if gc.state.dead || !gc.is_tumor {
+                                return 0;
+                            }
+                            let local_damp = damp_field[idx];
+                            if local_damp < DAMP_KILL_THRESHOLD {
+                                return 0;
+                            }
+                            let activation = dc_activation(local_damp, immune_cfg.dc_activation_kd);
+                            let kill_prob = immune_kill_probability(
+                                activation,
+                                immune_cfg.immune_kill_rate,
+                                effective_brake,
+                            );
+                            let mut rng = StdRng::seed_from_u64(
+                                cond_seed
+                                    .wrapping_add(900_000_000)
+                                    .wrapping_add(idx as u64)
+                                    .wrapping_add(step as u64 * 2_000_000),
+                            );
+                            if rng.gen::<f64>() < kill_prob {
+                                // Immune kills set `state.dead` but deliberately
+                                // NOT `death_step`/`newly_dead`: immune-killed
+                                // cells are apoptotic (no post-death LP grace,
+                                // no DAMP burst, no iron release) — a modeling
+                                // choice consistent with sim-tme.
+                                gc.state.dead = true;
+                                1
+                            } else {
+                                0
+                            }
+                        })
+                        .sum();
+                    immune_kills += killed_this_step;
                 }
             }
         }
