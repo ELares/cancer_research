@@ -100,6 +100,10 @@ const SUBCLONE_SEED: u64 = 0x5c10_4e42;
 /// `SUBCLONE_SEED` so vessel sampling never advances the grid-generation or
 /// subclone RNG streams.
 const VESSEL_SEED: u64 = 0x7e55_e142;
+/// O2-supply factor below which a cell counts as hypoxic for
+/// `vascular_hypoxic_fraction` reporting (#191). `exp(-d/λ) < 0.1` is ~2.3 λ
+/// from the nearest vessel.
+const VASCULAR_HYPOXIC_THRESHOLD: f64 = 0.1;
 
 /// O₂ penetration sweep — 3λ must comfortably fit inside the
 /// tumor_radius (60·0.45·20 = 540 µm). Skips λ=150 (3·150=450 →
@@ -516,8 +520,9 @@ fn run_one_condition_full(
         for c in 0..grid.cols {
             for l in 0..grid.layers {
                 let idx = grid.flat_index(r, c, l);
-                let exo_ros_peak =
-                    if matches!(condition.treatment, Treatment::Control | Treatment::RSL3) {
+                let exo_ros_peak = {
+                    let raw = if matches!(condition.treatment, Treatment::Control | Treatment::RSL3)
+                    {
                         0.0
                     } else {
                         let depth_um = grid.radial_depth_um(r, c, l);
@@ -527,10 +532,13 @@ fn run_one_condition_full(
                         let peak = base_ros * ros_multiplier;
                         norm(&mut rng, peak, peak * 0.2).max(0.0)
                     };
+                    // Vessel-delivered sonosensitizer/photosensitizer (#191):
+                    // the exo-ROS dose scales by vessel proximity on EVERY path
+                    // (constant + dosed). ×1.0 when off → byte-identical.
+                    raw * vessel_supply.as_ref().map_or(1.0, |s| s[idx])
+                };
                 if dose_modulates_exo {
-                    // Vessel-delivered drug (#191): the sonosensitizer dose
-                    // also scales by vessel proximity. ×1.0 when off.
-                    base_exo[idx] = exo_ros_peak * vessel_supply.as_ref().map_or(1.0, |s| s[idx]);
+                    base_exo[idx] = exo_ros_peak;
                 }
                 let gc = &mut grid.cells[idx];
                 // For RSL3 under a non-constant schedule, skip the one-shot
@@ -613,6 +621,24 @@ fn run_one_condition_full(
                 let correction =
                     (1.0 - params.rsl3_gpx4_inhib * drug_factor) / (1.0 - params.rsl3_gpx4_inhib);
                 grid.cells[idx].state.gpx4 *= correction;
+            }
+        }
+    }
+
+    // Vessel-delivered RSL3 correction (#191), CONSTANT-schedule path. Mirrors
+    // the pH ion-trap correction above: cells far from a vessel see less drug,
+    // so their one-shot GPX4 knockdown is weaker. Corrects (1-inhib) →
+    // (1-inhib*supply). The dosed path instead folds vessel supply into
+    // `rsl3_drug_avail` below. `None` ⇒ skipped ⇒ byte-identical. Composes
+    // multiplicatively with the pH correction (order immaterial).
+    if !dosed {
+        if let (Some(supply), Treatment::RSL3) = (&vessel_supply, condition.treatment) {
+            let inhib = params.rsl3_gpx4_inhib;
+            for (idx, gc) in grid.cells.iter_mut().enumerate() {
+                if gc.is_tumor {
+                    let correction = (1.0 - inhib * supply[idx]) / (1.0 - inhib);
+                    gc.state.gpx4 *= correction;
+                }
             }
         }
     }
@@ -1138,7 +1164,7 @@ fn run_one_condition_full(
     // (vessel_supply present) → `None` omits the field → byte-identical.
     let vascular_hypoxic_fraction = vessel_supply
         .as_ref()
-        .map(|s| hypoxic_fraction(&grid, s, 0.1));
+        .map(|s| hypoxic_fraction(&grid, s, VASCULAR_HYPOXIC_THRESHOLD));
 
     ConditionResult {
         treatment: condition.treatment_name.clone(),

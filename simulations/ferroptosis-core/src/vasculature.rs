@@ -54,10 +54,11 @@ impl VasculatureConfig {
     }
 }
 
-/// Place vessel seed points uniformly in the tumor sphere. The count is derived
-/// from the tumor volume and the target inter-vessel spacing
-/// (`n ≈ tumor_volume / inter_vessel³`, floored at 1). Returns positions in
-/// **lattice (cell) coordinates**. Deterministic given `(grid dims, cfg, seed)`.
+/// Place vessel seed points uniformly in the tumor sphere. The count is an
+/// approximation from the tumor volume and target inter-vessel spacing
+/// (`n ≈ tumor_volume / inter_vessel³`, assuming cubic packing, floored at 1).
+/// Returns positions in **lattice (cell) coordinates**. Deterministic given
+/// `(grid dims, cfg, seed)`.
 ///
 /// Uses an **independent** `StdRng(seed)` so it never advances the RNG used by
 /// [`TumorGrid3D::generate`], preserving byte-identity of the cell grid.
@@ -110,6 +111,12 @@ pub fn place_vessels_3d(
 /// cells clamped to `[0, 1]`. Supplies both O2 (× `basal_ros`) and drug.
 ///
 /// Distances are computed in lattice units and scaled by `grid.cell_size_um`.
+///
+/// **Cost**: brute-force nearest-vessel, `O(tumor_cells × vessels)`. Cheap at
+/// the 60³ matrix scale (~16M evals, one-time setup) but grows with tumor
+/// volume (vessel count ∝ volume), so at patient scale (#240, e.g. a
+/// well-vascularized 200³ ≈ 34B evals) it needs a spatial index (uniform grid
+/// / kd-tree) for nearest-vessel. Deferred until #240 makes it bite.
 ///
 /// # Panics
 /// If `vessels` is empty (no source ⇒ undefined supply); callers pass the
