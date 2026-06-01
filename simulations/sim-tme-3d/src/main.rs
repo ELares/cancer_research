@@ -111,7 +111,10 @@ const VESSEL_SEED: u64 = 0x7e55_e142;
 const SPHEROID_SEED: u64 = 0x5ade_0142;
 /// Independent seed for heuristic Treg/MDSC suppressor-source placement (#264).
 /// Distinct from the others so suppressor seeding never touches the matrix or
-/// other realism-layer RNG streams.
+/// other realism-layer RNG streams. A FIXED constant (not per-condition), so
+/// every suppressor-on condition in a run shares the same niche layout — the
+/// intent for an A/B (e.g. Treg-present vs Treg-depleted = the same patient,
+/// same niches, differing only in whether the field is applied).
 const SUPPRESSOR_SEED: u64 = 0x5099_2e64;
 /// O2-supply factor below which a cell counts as hypoxic for
 /// `vascular_hypoxic_fraction` reporting (#191). `exp(-d/λ) < 0.1` is ~2.3 λ
@@ -224,12 +227,13 @@ struct ConditionResult {
     #[serde(skip_serializing_if = "Option::is_none")]
     scale_interpretation: Option<String>,
     /// Number of Treg/MDSC suppressor-source (niche) cells (#264 Phase 2).
-    /// `None` (field omitted) unless the suppressor field is enabled —
-    /// byte-identical default path.
+    /// `None` (field omitted) unless the suppressor field is **active** (config
+    /// supplied AND `immune_on`) — byte-identical default path.
     #[serde(skip_serializing_if = "Option::is_none")]
     suppressor_source_count: Option<usize>,
-    /// Peak suppressor-field concentration reached over the run (#264). `None`
-    /// (field omitted) unless the suppressor field is enabled.
+    /// End-of-run suppressor-field max (#264) — representative of the run-time
+    /// peak since the field replenishes every step to a quasi-steady state.
+    /// `None` (field omitted) unless the suppressor field is active.
     #[serde(skip_serializing_if = "Option::is_none")]
     suppressor_peak: Option<f64>,
 }
@@ -826,7 +830,11 @@ fn run_one_condition_full(
     // replenished at the source cells each step, that scales immune kill DOWN
     // locally. Allocated only when suppressor is on; `None` ⇒ never touched and
     // `suppressor_kill_multiplier(_, 0)` would be identity, so byte-identical.
-    let suppressor_on = suppressor_sources.is_some();
+    // Gated on `immune_on`: the field only evolves and only matters inside the
+    // immune kill loop (#264 review #2), so an immune-off run neither allocates
+    // it nor reports its metrics — the suppressor is meaningless without an
+    // immune response to suppress.
+    let suppressor_on = suppressor_sources.is_some() && condition.immune_on;
     let suppression_strength = suppressor_cfg.map_or(0.0, |c| c.suppression_strength);
     let mut suppressor_field: Vec<f64> = if suppressor_on {
         vec![0.0_f64; n_cells]
@@ -1357,12 +1365,15 @@ fn run_one_condition_full(
     // Patient-scale slab interpretation (#240). `Some` only in slab mode.
     let scale_interpretation_str = slab_cfg.map(|cfg| scale_interpretation(&grid, &cfg));
 
-    // Treg/MDSC suppressor reporting (#264). `Some` only when suppressor is on.
+    // Treg/MDSC suppressor reporting (#264). `Some` only when the suppressor was
+    // active (sources present AND immune_on, so the field actually evolved).
     // The field replenishes every step and reaches a quasi-steady state, so the
-    // end-of-run peak is representative.
-    let suppressor_source_count = suppressor_sources
-        .as_ref()
-        .map(|s| s.iter().filter(|&&v| v).count());
+    // end-of-run field max is representative of the run-time peak.
+    let suppressor_source_count = suppressor_on.then(|| {
+        suppressor_sources
+            .as_ref()
+            .map_or(0, |s| s.iter().filter(|&&v| v).count())
+    });
     let suppressor_peak =
         suppressor_on.then(|| suppressor_field.iter().cloned().fold(0.0_f64, f64::max));
 
@@ -3431,6 +3442,64 @@ mod tests {
         assert!(
             depleted.suppressor_source_count.is_none(),
             "Treg-depleted run omits the suppressor census"
+        );
+    }
+
+    /// #264 review #1: exercise the **perivascular** seeding branch end-to-end
+    /// (suppressor + vasculature together — `vessels` is `Some`, so the niches
+    /// are placed at perivascular positions rather than heuristic patches). The
+    /// validation test above uses heuristic seeding (no vessels); this confirms
+    /// the perivascular path runs through a full simulation and is deterministic.
+    #[test]
+    fn suppressor_perivascular_runs_with_vasculature() {
+        let cfg = RunConfig {
+            grid_dim: 24,
+            n_steps: 90,
+        };
+        let cond = Condition {
+            name: "supp_perivascular".to_string(),
+            treatment: Treatment::SDT,
+            treatment_name: "SDT".to_string(),
+            // Vasculature needs o2_lambda to build the supply field + vessels.
+            o2_lambda: Some(ZONE_REF_LAMBDA),
+            immune_on: true,
+            stromal_on: false,
+            ph_on: false,
+            dose_schedule: DoseSchedule::Constant,
+        };
+        let immune = SpatialImmuneConfig {
+            immune_kill_rate: 0.5,
+            ..SpatialImmuneConfig::for_3d()
+        };
+        let run = || {
+            run_one_condition_full(
+                &cond,
+                cfg,
+                None,
+                Overrides {
+                    immune: Some(immune),
+                    vasculature: Some(VasculatureConfig::well_vascularized()),
+                    suppressor: Some(SuppressorConfig::enabled()),
+                    ..Default::default()
+                },
+            )
+        };
+        let a = run();
+        let b = run();
+        // Perivascular niches were placed (the vessels-as-seed-points branch).
+        assert!(
+            a.suppressor_source_count.unwrap_or(0) > 0,
+            "perivascular seeding marks niche cells near vessels"
+        );
+        // Deterministic across runs (independent fixed seeds throughout).
+        assert_eq!(
+            a.total_dead, b.total_dead,
+            "perivascular run is deterministic"
+        );
+        assert_eq!(a.suppressor_source_count, b.suppressor_source_count);
+        assert!(
+            a.immune_kills.unwrap_or(0) > 0,
+            "immune kills still fire under perivascular suppression"
         );
     }
 
