@@ -33,11 +33,11 @@ The repo exists to compare therapeutic mechanisms, evidence depth, resistant-sta
 - pathway-target and resistant-state analysis
 - diagnostic-to-therapy chain extraction (6 chains, 129 articles mapped)
 - tissue-of-origin analysis layer (5 tissue categories, 62% coverage)
-- simulation work: ferroptosis biochemistry, drug penetration, calibration, photosensitizer PK (drug-light-interval scaling, saturating distribution phase, relative singlet-O₂ yield, FromStr-based clap CLI integration in sim-spatial), 3D spheroid scaffolding (TumorGrid3D #185, signed radial depth + 3D energy-physics dispatcher #186, 3D radial O₂ gradient + zone-census #187, 3D radial pH gradient + iron/ion-trap helpers #190, 3D CAF-shielded boundary detection #189, 3D spatial immune coupling + DAMP diffusion #188) for the #185–#197 spheroid-validation series; sim-tme-3d TME capstone (#195); 2D-math lift + `immune_3d`→`immune_spatial` rename + JSON schema_version (#220/#224); 3D trajectory snapshots + animated axial-slice GIF renderer (#193/#238); time-varying multi-dose pharmacokinetics (`dose_schedule` module — Constant/Bolus/MultiDose/Infusion/FromPk — wired into sim-tme-3d via `--dose-sweep` + the `--snapshot=multidose` preset, with the orphaned `tumor_pk` ODE finally bridged in via `FromPk`, #239)
+- simulation work: ferroptosis biochemistry, drug penetration, calibration, photosensitizer PK (drug-light-interval scaling, saturating distribution phase, relative singlet-O₂ yield, FromStr-based clap CLI integration in sim-spatial), 3D spheroid scaffolding (TumorGrid3D #185, signed radial depth + 3D energy-physics dispatcher #186, 3D radial O₂ gradient + zone-census #187, 3D radial pH gradient + iron/ion-trap helpers #190, 3D CAF-shielded boundary detection #189, 3D spatial immune coupling + DAMP diffusion #188) for the #185–#197 spheroid-validation series; sim-tme-3d TME capstone (#195); 2D-math lift + `immune_3d`→`immune_spatial` rename + JSON schema_version (#220/#224); 3D trajectory snapshots + animated axial-slice GIF renderer (#193/#238); time-varying multi-dose pharmacokinetics (`dose_schedule` module — Constant/Bolus/MultiDose/Infusion/FromPk — wired into sim-tme-3d via `--dose-sweep` + the `--snapshot=multidose` preset, with the orphaned `tumor_pk` ODE finally bridged in via `FromPk`, #239); 3D performance and scalability work (`--bench` harness + within-condition rayon parallelism, byte-identical via position-independent per-cell RNG, 3.8x to 4.9x speedup on single large grids, dense 200³ measured at ~1.29 GB so sparse storage deferred to #254, #192); full-production byte-identity regression CI guarding sim-tme-3d's default-matrix `summary.json` SHA (#253)
 - ferroptosis-core library packaging for external use
 - news source authentication pipeline (fetch, extract claims, verify, score, index)
 - broader strategy review of alternative therapies and biological bottlenecks
-- operational maturity: Phase 2 complete — CI (#126), figure traceability (#127), archival release tooling (#131)
+- operational maturity: Phase 2 complete — CI (#126), figure traceability (#127), archival release tooling (#131); workspace `cargo fmt --check` gate added to Rust CI (#209/#236); off-PR sim-tme-3d production byte-identity regression workflow (#253)
 - manuscript integrity: Phase 3 complete — immune coupling confidence (#130), structural uncertainty qualifiers (#137), PRISMA corpus flow diagram (#135), retrieval bias subsection (#140)
 - sensitivity analyses: weight-sensitivity (#128), taxonomy-sensitivity (#133), PRCC global sensitivity (#134), and O2 cycling (#138) complete — pre-registered, run, results in manuscript
 - test expansion (#139) complete — 19 invariant/integration tests added (schema, weight monotonicity, tagging correctness)
@@ -62,6 +62,8 @@ The repo exists to compare therapeutic mechanisms, evidence depth, resistant-sta
 - pinned Python environment (requirements-lock.txt, 32 packages) and Rust toolchain (rust-toolchain.toml, 1.96.0)
 - contributor guide (CONTRIBUTING.md), citation metadata (CITATION.cff), and pytest in tracked dependencies
 - Python CI workflow (.github/workflows/python-test.yml): Linux on PR/push, macOS weekly
+- Rust CI workflow (.github/workflows/cargo-test.yml): `cargo test --workspace` + `cargo fmt --all --check` gate on PR/push (fmt pinned to the 1.96.0 toolchain, #209/#236)
+- sim-tme-3d production regression workflow (.github/workflows/sim-tme-3d-regression.yml): weekly + on-demand full 60³×180 run asserting `summary.json`'s SHA-256 against a checked-in hash on the pinned 1.96.0 toolchain (#253)
 - figure traceability index (FIGURES.yaml) mapping all 23 figures to generators, inputs, and types
 - archival release tooling (.zenodo.json metadata template, scripts/generate_release_manifest.py for SHA256 manifest + filtered archive)
 
@@ -107,6 +109,8 @@ CITATION.cff                              citation metadata (renders GitHub "Cit
 requirements-lock.txt                     pinned Python dependency versions
 FIGURES.yaml                              figure-to-script traceability index (23 figures)
 .github/workflows/python-test.yml         Python CI (Linux PR/push, macOS weekly)
+.github/workflows/cargo-test.yml          Rust CI (cargo test + cargo fmt --check gate)
+.github/workflows/sim-tme-3d-regression.yml  sim-tme-3d production byte-identity regression (weekly + manual)
 .zenodo.json                              Zenodo deposit metadata template
 scripts/generate_release_manifest.py      SHA256 manifest + filtered archive builder
 ```

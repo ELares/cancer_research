@@ -35,6 +35,14 @@ jobs:
     # Cold --release build + the heavy 60^3 x 180 run; cap it so a wedge
     # fails fast instead of squatting a runner toward the 6-hour default.
     timeout-minutes: 60
+    env:
+      # Resilience against transient crates.io download flakes on this
+      # unattended weekly job (the first dispatch hit `curl failed: [16]
+      # Error in the HTTP2 framing layer` and false-reds look like drift).
+      # More network retries; disabling HTTP/2 multiplexing is the
+      # documented mitigation for that specific framing error.
+      CARGO_NET_RETRY: '10'
+      CARGO_HTTP_MULTIPLEXING: 'false'
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
