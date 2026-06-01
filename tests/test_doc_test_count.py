@@ -12,6 +12,10 @@ binding tests need the compiled `ferroptosis_core` extension, which the Python
 CI does NOT build — so they are accounted for as a constant and only re-counted
 when the extension happens to be importable (never flakes when it isn't).
 
+Those two locations are the *only* counted scope, and that scope is **enforced**:
+a Python test file added anywhere else fails this test loudly (rather than being
+silently uncounted by both the docs and this guard) — see the scope assertion.
+
 To update after intentionally adding/removing Python tests:
   python -m pytest tests/ --collect-only -q                       # → EXPECTED_TESTS_DIR
   python -m pytest simulations/ferroptosis-python/test_bindings.py --collect-only -q  # → EXPECTED_BINDINGS
@@ -19,6 +23,7 @@ then set the constants below AND the "NNN Python tests" number in CLAUDE.md and
 README.md (EXPECTED_TESTS_DIR + EXPECTED_BINDINGS).
 """
 
+import os
 import re
 import subprocess
 import sys
@@ -59,6 +64,35 @@ def _collect_count(target: Path) -> "int | None":
     return int(match.group(1))
 
 
+# Build/VCS/cache dirs pruned from the repo-wide test-file scan (skip the big
+# ones — `target/`, `.git/` — both for speed and to avoid vendored test files).
+_PRUNE_DIRS = {
+    "__pycache__",
+    ".git",
+    ".pytest_cache",
+    "target",
+    "build",
+    "dist",
+    "node_modules",
+    ".venv",
+    "venv",
+    "site-packages",
+}
+
+
+def _all_python_test_files() -> "list[Path]":
+    """Every `test_*.py` / `*_test.py` under the repo, pruning build/VCS/cache
+    dirs. Used to enforce that the counted scope (`tests/` + the one bindings
+    file) is exhaustive — a test added in a new location must not slip the count."""
+    found: "list[Path]" = []
+    for dirpath, dirnames, filenames in os.walk(REPO_ROOT):
+        dirnames[:] = [d for d in dirnames if d not in _PRUNE_DIRS]
+        for fn in filenames:
+            if fn.endswith(".py") and (fn.startswith("test_") or fn.endswith("_test.py")):
+                found.append(Path(dirpath) / fn)
+    return found
+
+
 def test_documented_python_test_count_matches_collection():
     # 1. tests/ must collect exactly the documented non-binding count.
     tests_n = _collect_count(REPO_ROOT / "tests")
@@ -79,14 +113,27 @@ def test_documented_python_test_count_matches_collection():
             f"{EXPECTED_TESTS_DIR + bindings_n} in CLAUDE.md + README.md."
         )
 
-    # 3. Both docs must advertise the total (tests/ + bindings).
+    # 3. Both docs must advertise the total (tests/ + bindings) — at EVERY
+    #    "NNN Python tests" occurrence, not just the first.
     for doc_path, label in DOC_FILES:
         text = doc_path.read_text(encoding="utf-8")
-        documented = _DOC_COUNT_RE.search(text)
-        assert documented is not None, f"{label}: no 'NNN Python tests' string found"
-        documented_n = int(documented.group(1))
-        assert documented_n == EXPECTED_TOTAL, (
-            f"{label} says {documented_n} Python tests, but the collected total is "
-            f"{EXPECTED_TOTAL} ({EXPECTED_TESTS_DIR} in tests/ + {EXPECTED_BINDINGS} bindings). "
-            f"Update that doc line to {EXPECTED_TOTAL}."
+        found = _DOC_COUNT_RE.findall(text)
+        assert found, f"{label}: no 'NNN Python tests' string found"
+        for documented_n in map(int, found):
+            assert documented_n == EXPECTED_TOTAL, (
+                f"{label} says {documented_n} Python tests, but the collected total is "
+                f"{EXPECTED_TOTAL} ({EXPECTED_TESTS_DIR} in tests/ + {EXPECTED_BINDINGS} bindings). "
+                f"Update that doc line to {EXPECTED_TOTAL}."
+            )
+
+    # 4. The counted scope must be exhaustive: no Python test file outside
+    #    `tests/` or the one bindings file (else it would be silently uncounted
+    #    by both the docs and this guard). A new test location fails loudly here.
+    tests_dir = REPO_ROOT / "tests"
+    for path in _all_python_test_files():
+        in_scope = path == BINDINGS_FILE or tests_dir in path.parents
+        assert in_scope, (
+            f"Python test file outside the counted scope: {path.relative_to(REPO_ROOT)}. "
+            f"This guard counts only tests/ + {BINDINGS_FILE.relative_to(REPO_ROOT)} — "
+            f"extend tests/test_doc_test_count.py (and the docs) to include the new location."
         )
