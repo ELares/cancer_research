@@ -15,14 +15,26 @@ name: sim-tme-3d Production Regression
 on:
   workflow_dispatch: {}
   schedule:
-    - cron: '0 9 * * 1' # Weekly Monday 9am UTC
+    # Weekly Monday 09:17 UTC. Staggered off minute 0 to avoid GitHub's
+    # documented top-of-hour high-load window, where scheduled runs can be
+    # delayed or silently dropped (matters at weekly cadence).
+    - cron: '17 9 * * 1'
 
 permissions:
   contents: read
 
+# Serialize an ad-hoc workflow_dispatch against the cron run (each run is
+# read-only and regenerates its own output, so queue rather than cancel).
+concurrency:
+  group: sim-tme-3d-regression
+  cancel-in-progress: false
+
 jobs:
   production-byte-identity:
     runs-on: ubuntu-latest
+    # Cold --release build + the heavy 60^3 x 180 run; cap it so a wedge
+    # fails fast instead of squatting a runner toward the 6-hour default.
+    timeout-minutes: 60
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
@@ -52,3 +64,13 @@ jobs:
         # Fails loudly on any drift. On an INTENTIONAL change, regenerate
         # the hash per the instructions in expected_summary.sha256.
         run: sha256sum -c sim-tme-3d/expected_summary.sha256
+
+      - name: Upload divergent summary.json on drift
+        # Only when the assert above failed: a bare SHA is weak triage, so
+        # keep the actual file that drifted for diffing against a known-good.
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sim-tme-3d-summary-drift
+          path: simulations/output/tme-3d/summary.json
+          if-no-files-found: warn
