@@ -92,7 +92,8 @@
 //! }
 //! ```
 
-use crate::grid::TumorGrid3D;
+use crate::grid::{TumorGrid3D, TUMOR_RADIUS_FRACTION};
+use rand::prelude::*;
 
 /// Minimum local-DAMP concentration above which a cell is eligible for
 /// immune-mediated kill. Cells with `local_damp < DAMP_KILL_THRESHOLD`
@@ -332,6 +333,150 @@ pub fn exhaustion_factor(cumulative_kills: u32, exhaustion_rate: f64) -> f64 {
         "exhaustion_rate must be >= 0; a negative rate pushes the factor above 1 or negative"
     );
     1.0 / (1.0 + exhaustion_rate * cumulative_kills as f64)
+}
+
+// =====================================================================
+// Treg / MDSC immunosuppressor field (#264, immune realism Phase 2)
+// =====================================================================
+
+/// Configuration for the Treg/MDSC immunosuppressor field (#264 Phase 2): a
+/// second diffusing field that locally scales immune kill probability DOWN,
+/// opposing the DAMP→kill effect. Sources (Treg/MDSC niches) replenish the
+/// field each step; it diffuses and clears like the DAMP field.
+///
+/// **Off by default**: [`disabled`](Self::disabled) (`suppression_strength = 0`)
+/// makes [`suppressor_kill_multiplier`] return `1.0`, so a consumer that does
+/// not opt in stays byte-identical. The diffusion/clearance reuse
+/// [`diffuse_damp_3d_step`], so `diffusion_fraction` is bound by the same
+/// `× 26 < 1` stability requirement.
+#[derive(Clone, Copy, Debug)]
+pub struct SuppressorConfig {
+    /// Strength of local kill suppression: `kill ×= 1/(1 + strength · field)`.
+    /// `0.0` ⇒ no suppression (identity / byte-identical).
+    pub suppression_strength: f64,
+    /// Per-step suppressor released at each source (Treg/MDSC) cell, before
+    /// diffusion. The field is clamped to `[0, 1]`.
+    pub replenish_rate: f64,
+    /// Fraction of suppressor shared with each Moore-26 neighbor per step
+    /// (reuses [`diffuse_damp_3d_step`]; must satisfy `× 26 < 1`).
+    pub diffusion_fraction: f64,
+    /// Exponential clearance per step (Treg/MDSC turnover + drainage).
+    pub clearance_rate: f64,
+    /// Radius (µm) around each seed point within which tumor cells are marked
+    /// as suppressor sources (the niche size).
+    pub niche_radius_um: f64,
+    /// Number of heuristic source seed points when no vessel positions are
+    /// supplied. Ignored in perivascular mode (vessels are the seed points).
+    pub n_sources: usize,
+}
+
+impl SuppressorConfig {
+    /// Disabled: `suppression_strength = 0` ⇒ [`suppressor_kill_multiplier`]
+    /// is the identity, so the consumer's output is byte-identical.
+    pub fn disabled() -> Self {
+        SuppressorConfig {
+            suppression_strength: 0.0,
+            replenish_rate: 0.0,
+            diffusion_fraction: 0.025,
+            clearance_rate: 0.03,
+            niche_radius_um: 60.0,
+            n_sources: 8,
+        }
+    }
+
+    /// Literature-informed enabled config (placeholders pending calibration):
+    /// moderate suppression, perivascular niches ~60 µm, slow turnover. Refs:
+    /// Tauriello et al., Nature 2018 (TGFβ–Treg exclusion axis).
+    pub fn enabled() -> Self {
+        SuppressorConfig {
+            suppression_strength: 6.0,
+            replenish_rate: 0.15,
+            diffusion_fraction: 0.025,
+            clearance_rate: 0.03,
+            niche_radius_um: 60.0,
+            n_sources: 8,
+        }
+    }
+
+    /// True when this config has no effect (no suppression).
+    pub fn is_disabled(&self) -> bool {
+        self.suppression_strength == 0.0
+    }
+}
+
+/// Local immune-kill multiplier from the suppressor field: `1/(1 + strength · s)`
+/// (mirrors [`exhaustion_factor`]'s form). Returns exactly `1.0` (no
+/// suppression) when `suppression_strength == 0.0` OR `local_suppressor == 0.0`,
+/// so the disabled config is a no-op and the consumer stays byte-identical.
+/// Monotonically non-increasing in both arguments, bounded in `(0, 1]`.
+#[inline]
+#[must_use]
+pub fn suppressor_kill_multiplier(local_suppressor: f64, suppression_strength: f64) -> f64 {
+    debug_assert!(
+        suppression_strength >= 0.0 && local_suppressor >= 0.0,
+        "suppressor inputs must be >= 0; got strength={suppression_strength}, local={local_suppressor}"
+    );
+    1.0 / (1.0 + suppression_strength * local_suppressor)
+}
+
+/// Per-cell boolean mask of Treg/MDSC suppressor **source** cells (#264).
+///
+/// Seed points are **perivascular** when `vessels` is supplied (Tregs cluster
+/// at perivascular niches — Tauriello 2018), reusing the vessel lattice
+/// positions; otherwise `cfg.n_sources` **heuristic** points are sampled
+/// uniformly in the tumor sphere via an **independent** `StdRng(seed)` (so the
+/// cell grid's RNG stream is untouched). A tumor cell is a source iff it lies
+/// within `cfg.niche_radius_um` of any seed point. Non-tumor cells are never
+/// sources. Deterministic given `(grid dims, cfg, vessels, seed)`.
+pub fn suppressor_source_mask_3d(
+    grid: &TumorGrid3D,
+    cfg: &SuppressorConfig,
+    vessels: Option<&[(f64, f64, f64)]>,
+    seed: u64,
+) -> Vec<bool> {
+    // Seed points in lattice (cell) coordinates — same convention as
+    // `vasculature::place_vessels_3d`.
+    let seed_points: Vec<(f64, f64, f64)> = match vessels {
+        Some(v) if !v.is_empty() => v.to_vec(),
+        _ => {
+            let mut rng = StdRng::seed_from_u64(seed);
+            let center = (
+                grid.rows as f64 / 2.0,
+                grid.cols as f64 / 2.0,
+                grid.layers as f64 / 2.0,
+            );
+            let tumor_radius =
+                (grid.rows.min(grid.cols).min(grid.layers) as f64) * TUMOR_RADIUS_FRACTION;
+            (0..cfg.n_sources.max(1))
+                .map(|_| {
+                    // Uniform-in-sphere (cbrt radial), matching place_vessels_3d.
+                    let dist = rng.gen::<f64>().cbrt() * tumor_radius * 0.95;
+                    let theta = rng.gen::<f64>() * std::f64::consts::TAU;
+                    let cos_phi = 2.0 * rng.gen::<f64>() - 1.0;
+                    let sin_phi = (1.0 - cos_phi * cos_phi).sqrt();
+                    (
+                        center.0 + dist * cos_phi,
+                        center.1 + dist * sin_phi * theta.cos(),
+                        center.2 + dist * sin_phi * theta.sin(),
+                    )
+                })
+                .collect()
+        }
+    };
+    // Niche radius in lattice units, squared (compare in cell coordinates).
+    let niche_cells2 = (cfg.niche_radius_um / grid.cell_size_um).powi(2);
+    (0..grid.cells.len())
+        .map(|idx| {
+            if !grid.cells[idx].is_tumor {
+                return false;
+            }
+            let (r, c, l) = grid.coords(idx);
+            let (rf, cf, lf) = (r as f64, c as f64, l as f64);
+            seed_points.iter().any(|&(sr, sc, sl)| {
+                (rf - sr).powi(2) + (cf - sc).powi(2) + (lf - sl).powi(2) <= niche_cells2
+            })
+        })
+        .collect()
 }
 
 #[cfg(test)]
@@ -765,5 +910,69 @@ mod tests {
     #[test]
     fn exhaustion_decreases_with_rate() {
         assert!(exhaustion_factor(5, 0.2) < exhaustion_factor(5, 0.05));
+    }
+
+    // ===== Suppressor field (#264 Phase 2) =====
+
+    #[test]
+    fn suppressor_multiplier_identity_when_disabled() {
+        // strength 0 ⇒ identity regardless of field.
+        assert_eq!(suppressor_kill_multiplier(0.9, 0.0), 1.0);
+        // field 0 ⇒ identity regardless of strength.
+        assert_eq!(suppressor_kill_multiplier(0.0, 6.0), 1.0);
+        // both > 0 ⇒ suppression < 1, monotonic in each argument.
+        assert!(suppressor_kill_multiplier(0.5, 6.0) < 1.0);
+        assert!(suppressor_kill_multiplier(0.8, 6.0) < suppressor_kill_multiplier(0.2, 6.0));
+        assert!(suppressor_kill_multiplier(0.5, 10.0) < suppressor_kill_multiplier(0.5, 2.0));
+        // bounded in (0, 1].
+        assert!(suppressor_kill_multiplier(1.0, 6.0) > 0.0);
+    }
+
+    #[test]
+    fn suppressor_sources_heuristic_are_tumor_only_and_deterministic() {
+        let g = TumorGrid3D::generate(30, 30, 30, 20.0, 42);
+        let cfg = SuppressorConfig::enabled();
+        let a = suppressor_source_mask_3d(&g, &cfg, None, 123);
+        let b = suppressor_source_mask_3d(&g, &cfg, None, 123);
+        assert_eq!(a, b, "deterministic given the same seed");
+        let n_sources = a.iter().filter(|&&s| s).count();
+        assert!(n_sources > 0, "heuristic seeding marks some sources");
+        // Only tumor cells are ever sources.
+        for (idx, &is_src) in a.iter().enumerate() {
+            if is_src {
+                assert!(g.cells[idx].is_tumor, "a source must be a tumor cell");
+            }
+        }
+        // A different seed gives a different layout (sources move).
+        let c = suppressor_source_mask_3d(&g, &cfg, None, 999);
+        assert_ne!(a, c, "different seed ⇒ different niches");
+    }
+
+    #[test]
+    fn suppressor_sources_perivascular_cluster_near_vessels() {
+        let g = TumorGrid3D::generate(30, 30, 30, 20.0, 42);
+        let cfg = SuppressorConfig::enabled();
+        // One vessel at the center ⇒ sources are the central niche only.
+        let vessels = vec![(15.0, 15.0, 15.0)];
+        let mask = suppressor_source_mask_3d(&g, &cfg, Some(&vessels), 0);
+        let niche_cells = cfg.niche_radius_um / g.cell_size_um; // 60/20 = 3 cells
+        for (idx, &is_src) in mask.iter().enumerate() {
+            if is_src {
+                let (r, c, l) = g.coords(idx);
+                let d = (((r as f64 - 15.0).powi(2)
+                    + (c as f64 - 15.0).powi(2)
+                    + (l as f64 - 15.0).powi(2))
+                .sqrt())
+                .round();
+                assert!(
+                    d <= niche_cells + 1.0,
+                    "perivascular source at lattice dist {d} exceeds niche {niche_cells}"
+                );
+            }
+        }
+        assert!(
+            mask.iter().any(|&s| s),
+            "the central vessel seeds a non-empty niche"
+        );
     }
 }

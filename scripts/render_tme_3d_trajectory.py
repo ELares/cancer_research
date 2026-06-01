@@ -152,7 +152,30 @@ def _load_trajectory(
                 f"trajectory frame {dead.shape[1:]}."
             )
 
-    return dead, damp, lp, persister, subclone, vessel_supply, phenotype, meta
+    # Optional static suppressor-source mask (#264). One 3D frame (u8: 1=Treg/
+    # MDSC niche source, 0=not), present only for the `--snapshot=suppressor`
+    # preset.
+    suppressor = None
+    suppressor_path = traj_dir / "suppressor.npy"
+    if suppressor_path.exists():
+        suppressor = np.load(suppressor_path)
+        if suppressor.ndim != 3 or suppressor.shape != dead.shape[1:]:
+            raise SystemExit(
+                f"ERROR: suppressor.npy shape {suppressor.shape} does not match a "
+                f"trajectory frame {dead.shape[1:]}."
+            )
+
+    return (
+        dead,
+        damp,
+        lp,
+        persister,
+        subclone,
+        vessel_supply,
+        phenotype,
+        suppressor,
+        meta,
+    )
 
 
 def _make_dead_cmap() -> ListedColormap:
@@ -172,6 +195,7 @@ def _render(
     subclone: "np.ndarray | None",
     vessel_supply: "np.ndarray | None",
     phenotype: "np.ndarray | None",
+    suppressor: "np.ndarray | None",
     meta: dict,
     out_dir: Path,
     fps: int,
@@ -193,6 +217,7 @@ def _render(
     show_subclone = subclone is not None
     show_vessel = vessel_supply is not None
     show_phenotype = phenotype is not None
+    show_suppressor = suppressor is not None
     # Panel indices: 0..2 are dead/damp/lp; the optional panels follow in order.
     pers_idx = 3 if show_persister else None
     sub_idx = (3 + int(show_persister)) if show_subclone else None
@@ -202,6 +227,17 @@ def _render(
     pheno_idx = (
         (3 + int(show_persister) + int(show_subclone) + int(show_vessel))
         if show_phenotype
+        else None
+    )
+    supp_idx = (
+        (
+            3
+            + int(show_persister)
+            + int(show_subclone)
+            + int(show_vessel)
+            + int(show_phenotype)
+        )
+        if show_suppressor
         else None
     )
 
@@ -222,6 +258,7 @@ def _render(
         + int(show_subclone)
         + int(show_vessel)
         + int(show_phenotype)
+        + int(show_suppressor)
     )
     fig, axes = plt.subplots(
         1, n_panels, figsize=(4.3 * n_panels, 4.5), constrained_layout=True
@@ -305,6 +342,19 @@ def _render(
         )
         axes[pheno_idx].set_title("Phenotype")
 
+    # Optional suppressor panel (#264): STATIC Treg/MDSC source-niche mask
+    # (0 = not a source, grey; 1 = niche source, purple). Read alongside the
+    # dead panel: immune killing is locally dampened in/around the niches.
+    im_supp = None
+    if show_suppressor:
+        supp_cmap = ListedColormap(
+            [(0.92, 0.92, 0.92, 1.0), (0.42, 0.18, 0.60, 1.0)]
+        )
+        im_supp = axes[supp_idx].imshow(
+            suppressor[mid], cmap=supp_cmap, vmin=0, vmax=2, origin="lower"
+        )
+        axes[supp_idx].set_title("Treg/MDSC niches")
+
     for ax in axes:
         ax.set_xticks([])
         ax.set_yticks([])
@@ -327,6 +377,11 @@ def _render(
         cbar = fig.colorbar(im_pheno, ax=axes[pheno_idx], fraction=0.045, pad=0.04)
         cbar.set_ticks([i + 0.5 for i in range(len(pheno_labels))])
         cbar.set_ticklabels(pheno_labels)
+    if show_suppressor:
+        # Discrete legend: not-a-source vs Treg/MDSC niche source.
+        cbar = fig.colorbar(im_supp, ax=axes[supp_idx], fraction=0.045, pad=0.04)
+        cbar.set_ticks([0.5, 1.5])
+        cbar.set_ticklabels(["—", "niche"])
 
     step_text = fig.text(0.5, 0.02, "", ha="center", fontsize=9, family="monospace")
 
@@ -407,9 +462,17 @@ def main() -> int:
     )
     args = parser.parse_args()
 
-    dead, damp, lp, persister, subclone, vessel_supply, phenotype, meta = _load_trajectory(
-        args.traj_dir
-    )
+    (
+        dead,
+        damp,
+        lp,
+        persister,
+        subclone,
+        vessel_supply,
+        phenotype,
+        suppressor,
+        meta,
+    ) = _load_trajectory(args.traj_dir)
     written = _render(
         dead,
         damp,
@@ -418,6 +481,7 @@ def main() -> int:
         subclone,
         vessel_supply,
         phenotype,
+        suppressor,
         meta,
         args.traj_dir,
         fps=args.fps,

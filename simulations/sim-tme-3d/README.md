@@ -103,6 +103,7 @@ The default 24-condition matrix path (no `--snapshot` flag) is **byte-identical*
 | `vasculature` | RSL3 | **explicit vessels (#191)** | constant |
 | `spheroid` | SDT | immune + **radial biochem (#197)** | constant |
 | `slab` | SDT | immune + **patient-scale slab (#240)** | constant |
+| `suppressor` | SDT | immune + **Treg/MDSC suppressor (#264)** | constant |
 
 The `slab` preset visualizes the **depth-graded supply** of a patient-scale slab: a surface slab (+z face = vessel) where the top layers are well-perfused and die while the deeper layers go drug/O2-deprived and survive. The depth axis is the layer (z) axis, which the renderer's mid-slice spans — so the death front in the existing dead/DAMP/LP panels *is* the visualization (no extra static overlay). See [Patient-scale slab](#patient-scale-slab-240) below.
 
@@ -146,7 +147,18 @@ The spatial immune model (`immune_spatial`, #188) is a 0–48 h resident T-cell 
 - **Model.** A per-cell `cumulative_kills` field counts immune kills accumulated in each cell's Moore-26 neighborhood; the kill probability is scaled by `ferroptosis_core::immune_spatial::exhaustion_factor` = `1 / (1 + exhaustion_rate · cumulative_kills)`.
 - **Off by default.** `SpatialImmuneConfig::for_3d()` sets `exhaustion_rate = 0.0`, so `exhaustion_factor ≡ 1.0` and the `cumulative_kills` field is never allocated — `summary.json` is byte-identical (golden tests + the #253 production-SHA guard pass). The scatter that updates neighborhoods runs only when the rate is > 0.
 - **Effect.** With exhaustion on, total immune kills decline as killing clusters (the "cold tumor" emergence). The `exhaustion_reduces_immune_kills` test shows a dense SDT + immune run dropping ≈20% (174 → 139) when exhaustion is enabled, all else equal. Note this also shifts a few deaths into the ferroptosis tally (a cell spared an apoptotic immune kill can die ferroptotically and release iron), so only the immune-kill count is asserted.
-- **Scope.** Phase 1 only. Later phases (Treg/MDSC suppressor field, multi-checkpoint axis, DC subsets) stay separate per #243. `exhaustion_rate` is an uncalibrated placeholder.
+- **Scope.** Phase 1 only. Later phases (Treg/MDSC suppressor field, multi-checkpoint axis, DC subsets) stay separate per #243/#264. `exhaustion_rate` is an uncalibrated placeholder.
+
+## Treg/MDSC suppressor field (#264, Phase 2)
+
+Where exhaustion is intrinsic T-cell dysfunction, **immunosuppression** is extrinsic: regulatory T cells (Tregs) and myeloid-derived suppressor cells (MDSCs) cluster in niches and locally shut down T-cell killing (Tauriello et al., Nature 2018, TGFβ–Treg axis). Phase 2 adds a second diffusing field that opposes the DAMP→kill effect.
+
+- **Model.** Opt-in via `Overrides.suppressor` (`SuppressorConfig`). `ferroptosis_core::immune_spatial::suppressor_source_mask_3d` marks **source** (niche) cells — **perivascular** (within `niche_radius_um` of a vessel) when vasculature (#191) is active, else **heuristic** patches around random seed points (an INDEPENDENT `SUPPRESSOR_SEED`, so the cell grid is untouched). Each step the binary replenishes the suppressor field at the source cells, then diffuses + clears it via the same `diffuse_damp_3d_step` as DAMP. The local kill probability is scaled by `suppressor_kill_multiplier` = `1/(1 + suppression_strength · field)` — the mirror of `exhaustion_factor`, opposing the kill instead of the activation.
+- **Two opposing modulators.** The immune kill loop now applies BOTH `exhaustion_factor` (#243) and the suppressor multiplier (#264), each the identity when its layer is off. The default allocation-free kill path runs only when BOTH are off, so it stays byte-identical.
+- **Off by default / byte-identical.** The matrix passes no suppressor config; `SuppressorConfig::disabled()` (`suppression_strength = 0`) makes the multiplier `≡ 1.0` and the field is never allocated. `summary.json` SHA unchanged (golden + #253 guard hold). `summary.json` gains `suppressor_source_count` + `suppressor_peak` only when enabled.
+- **Validation (AC).** `treg_depletion_improves_anti_pd1_kills` runs anti-PD-1 with the suppressor on (Tregs present) vs off (Treg-depleted), all else equal: depletion materially recovers immune kills (>10%) — i.e. anti-PD-1 alone is less effective than anti-PD-1 + Treg depletion (Tauriello 2018).
+- **Visualization.** `--snapshot=suppressor` (SDT + immune + suppressor) writes a static `suppressor.npy` (u8) source-niche mask; the renderer adds a "Treg/MDSC niches" panel. Read alongside the dead panel: immune killing is locally damped in/around the niches.
+- **Uncalibrated.** `suppression_strength`, `replenish_rate`, `niche_radius_um`, and `n_sources` are placeholders pending calibration (companion to #266/#270 calibration items). Phases 3 (multi-checkpoint) + 4 (DC subsets) of #264 remain open.
 
 ## Clonal heterogeneity (#242)
 
