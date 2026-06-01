@@ -30,7 +30,17 @@ use rand::prelude::*;
 pub struct SubclonePerturbation {
     /// Multiplier on labile iron (>1 ⇒ more Fenton ROS ⇒ more vulnerable).
     pub iron_mul: f64,
-    /// Multiplier on the GPX4 reserve (<1 ⇒ less repair ⇒ more vulnerable).
+    /// Multiplier on antioxidant/GPX4 capacity (<1 ⇒ less repair ⇒ more
+    /// vulnerable). The consumer scales **both** the initial `state.gpx4`
+    /// reserve **and** the static `cell.nrf2` setpoint that GPX4 relaxes toward
+    /// (`gpx4_target = nrf2 · gpx4_nrf2_target_multiplier`), so the axis is
+    /// **durable** across the run rather than an early-window transient that
+    /// relaxes back to the shared NRF2 setpoint (#266; the GPX4-transience
+    /// finding from the #265 review). Because `cell.nrf2` is the master
+    /// antioxidant regulator it also drives GSH resynthesis, so this axis is
+    /// deliberately "general antioxidant capacity" (NRF2-low subclone), not
+    /// GPX4-reserve in isolation — biologically coherent for a subclone
+    /// identity.
     pub gpx4_mul: f64,
     /// Multiplier on oxidizable-PUFA content `cell.lipid_unsat` — the MUFA
     /// membrane-remodeling axis (<1 ⇒ MUFA-enriched ⇒ less peroxidizable lipid
@@ -80,11 +90,13 @@ impl ClonalConfig {
     }
 
     /// Literature-informed 4-subclone table (placeholders pending calibration).
-    /// Spans the mesenchymal⇄epithelial ferroptosis-vulnerability axis:
-    /// - 1 high-mesenchymal (ZEB1+): iron-loaded, GPX4-low ⇒ most vulnerable.
+    /// Spans the mesenchymal⇄epithelial ferroptosis-vulnerability axis. With the
+    /// durable `gpx4_mul` (#266), the GPX4/antioxidant ordering below now holds
+    /// for the whole run, not just the early window:
+    /// - 1 high-mesenchymal (ZEB1+): iron-loaded, antioxidant-low ⇒ most vulnerable.
     /// - 2 intermediate-mesenchymal: mildly vulnerable.
     /// - 3 intermediate-epithelial: mildly resistant (MUFA-enriched).
-    /// - 4 epithelial: GPX4-high, MUFA-enriched (low PUFA) ⇒ most resistant.
+    /// - 4 epithelial: antioxidant-high, MUFA-enriched (low PUFA) ⇒ most resistant.
     pub fn literature_4() -> Self {
         ClonalConfig {
             perturbations: vec![
@@ -243,5 +255,80 @@ mod tests {
     fn k_zero_panics() {
         let g = TumorGrid3D::generate(10, 10, 10, 20.0, 42);
         let _ = assign_subclones_3d(&g, 0, 7);
+    }
+
+    /// #266 durable GPX4 axis: the consumer scales BOTH the initial
+    /// `state.gpx4` reserve and the static `cell.nrf2` setpoint. This test pins
+    /// the durability the fix is for — that the GPX4/antioxidant difference
+    /// persists late in the run rather than relaxing back to the shared NRF2
+    /// setpoint.
+    ///
+    /// Three variants of the same baseline cell, run to step 160 under Control
+    /// (no treatment ⇒ the cell stays healthy and `gpx4` relaxes cleanly toward
+    /// `nrf2 · gpx4_nrf2_target_multiplier`):
+    /// - **identity**: no perturbation.
+    /// - **transient** (the OLD behavior): scale only the initial `state.gpx4`.
+    /// - **durable** (#266): scale the initial `state.gpx4` AND `cell.nrf2`.
+    ///
+    /// The transient knock relaxes back UP toward identity's setpoint, while the
+    /// durable knock holds a lower setpoint — so the durable axis keeps a much
+    /// larger late-run differentiation.
+    #[test]
+    fn gpx4_axis_persists_late_only_when_nrf2_is_scaled() {
+        use crate::biochem::{sim_cell_step, CellState};
+        use crate::cell::{gen_cell, Phenotype, Treatment};
+        use crate::params::Params;
+        use rand::prelude::*;
+
+        let params = Params::default();
+        let mul = 0.5; // a "GPX4-low / antioxidant-low" subclone
+        let steps = 160;
+
+        // One baseline cell, cloned so the only difference is the perturbation.
+        let mut gen_rng = StdRng::seed_from_u64(1);
+        let base = gen_cell(Phenotype::OXPHOS, &mut gen_rng);
+
+        // Run a variant to step `steps`, returning the late-run gpx4. Each run
+        // uses the SAME step-RNG seed so the only difference is the scaling.
+        let run = |scale_gpx4_init: bool, scale_nrf2: bool| -> f64 {
+            let mut cell = base.clone();
+            if scale_nrf2 {
+                cell.nrf2 *= mul; // durable setpoint (#266)
+            }
+            let mut init_rng = StdRng::seed_from_u64(7);
+            let mut state = CellState::from_cell(&cell, Treatment::Control, &params, &mut init_rng);
+            if scale_gpx4_init {
+                state.gpx4 *= mul; // initial reserve (transient on its own)
+            }
+            let mut step_rng = StdRng::seed_from_u64(99);
+            for step in 0..steps {
+                sim_cell_step(&mut state, &cell, &params, step, 0.0, &mut step_rng);
+            }
+            state.gpx4
+        };
+
+        let identity = run(false, false);
+        let transient = run(true, false); // old behavior: initial-only
+        let durable = run(true, true); // #266: initial + nrf2 setpoint
+
+        // The durable knock holds a meaningfully lower late-run gpx4 (its
+        // setpoint is halved), well below the identity cell.
+        assert!(
+            durable < 0.75 * identity,
+            "durable axis should stay well below identity late: durable={durable}, identity={identity}"
+        );
+        // The transient knock relaxed back UP, ending above the durable one.
+        assert!(
+            transient > durable,
+            "transient (initial-only) knock should relax back above the durable one: transient={transient}, durable={durable}"
+        );
+        // Quantitatively: the durable axis maintains a far larger late-run
+        // differentiation from identity than the transient one does.
+        let gap_durable = identity - durable;
+        let gap_transient = identity - transient;
+        assert!(
+            gap_durable > 2.0 * gap_transient,
+            "durable differentiation should dwarf the transient one: gap_durable={gap_durable}, gap_transient={gap_transient}"
+        );
     }
 }

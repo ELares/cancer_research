@@ -687,12 +687,15 @@ fn run_one_condition_full(
     //    the MUFA axis; perturbing state.mufa_protection instead would be
     //    overwritten on step 1 by update_mufa_protection under default params
     //    (scd_mufa_max == 0), so it must scale the static PUFA field (#265 rev).
-    //  - gpx4_mul → state.gpx4 (initial): shapes the early autocatalytic
-    //    window strongly, but state.gpx4 relaxes toward the NRF2 setpoint
-    //    (~0.008/step), so a "GPX4-low" identity is transient over 180 steps.
-    //    A fully durable GPX4 axis would also scale the static cell.nrf2
-    //    setpoint — deferred to the calibration pass. Composes multiplicatively
-    //    with the pH ion-trap correction below (order immaterial).
+    //  - gpx4_mul → state.gpx4 (initial) AND cell.nrf2 (static setpoint): now
+    //    DURABLE (#266). Scaling only the initial state.gpx4 shaped the early
+    //    autocatalytic window but relaxed back toward the shared NRF2 setpoint
+    //    (gpx4_target = nrf2·gpx4_nrf2_target_multiplier, ~0.008/step), so a
+    //    "GPX4-low" identity was transient over 180 steps. Also scaling the
+    //    static cell.nrf2 setpoint keeps the axis differentiated for the whole
+    //    run. cell.nrf2 also drives GSH resynthesis, so this axis is "general
+    //    antioxidant capacity" (deliberate; NRF2 is the master regulator).
+    //    Composes multiplicatively with the pH ion-trap correction below.
     if let (Some(ids), Some(cfg)) = (&subclone_ids, &clonal_cfg) {
         for (idx, gc) in grid.cells.iter_mut().enumerate() {
             if !gc.is_tumor {
@@ -702,7 +705,8 @@ fn run_one_condition_full(
             let p = &cfg.perturbations[(ids[idx] - 1) as usize];
             gc.cell.iron *= p.iron_mul;
             gc.cell.lipid_unsat *= p.lipid_unsat_mul;
-            gc.state.gpx4 *= p.gpx4_mul;
+            gc.state.gpx4 *= p.gpx4_mul; // initial reserve
+            gc.cell.nrf2 *= p.gpx4_mul; // durable setpoint (#266) — also scales GSH resynthesis
         }
     }
 
