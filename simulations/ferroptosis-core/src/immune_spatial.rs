@@ -479,6 +479,127 @@ pub fn suppressor_source_mask_3d(
         .collect()
 }
 
+// =====================================================================
+// Multi-checkpoint immune brake (#264, immune realism Phase 3)
+// =====================================================================
+
+/// One immune-checkpoint axis (PD-1, CTLA-4, LAG-3, or TIM-3), modeled as an
+/// independent brake on T-cell killing that its inhibitor drug can lift.
+#[derive(Clone, Copy, Debug)]
+pub struct Checkpoint {
+    /// Intrinsic brake strength ∈ [0, 1] — the fraction of kill this checkpoint
+    /// suppresses when fully engaged and not drug-blocked. `0.0` ⇒ inactive.
+    pub brake: f64,
+    /// Fraction of this checkpoint's brake removed by its inhibitor drug
+    /// ∈ [0, 1] (e.g. `anti_pd1_efficacy` for PD-1). `0.0` ⇒ no drug.
+    pub drug_efficacy: f64,
+}
+
+impl Checkpoint {
+    /// An inactive axis (no brake, no drug) — contributes nothing.
+    pub fn inactive() -> Self {
+        Checkpoint {
+            brake: 0.0,
+            drug_efficacy: 0.0,
+        }
+    }
+
+    /// Residual brake after drug blockade: `brake · (1 − drug_efficacy)`.
+    #[inline]
+    pub fn residual(&self) -> f64 {
+        self.brake * (1.0 - self.drug_efficacy)
+    }
+}
+
+/// A panel of immune checkpoints (#264 Phase 3): PD-1, CTLA-4, LAG-3, TIM-3,
+/// generalizing the single PD-1 brake. Each axis is an **independent** brake on
+/// the kill, so the combined brake is `1 − Π(1 − residualᵢ)` — and a panel with
+/// only PD-1 active reduces *exactly* to the single-PD-1 model
+/// (`SpatialImmuneConfig::effective_brake`), so a consumer that doesn't opt into
+/// the panel stays byte-identical. Models anti-PD-1 + anti-CTLA-4 combinations
+/// (Sharma & Allison, Cell 2015). `Copy`, so `Overrides` stays `Copy`-friendly.
+#[derive(Clone, Copy, Debug)]
+pub struct CheckpointPanel {
+    pub pd1: Checkpoint,
+    pub ctla4: Checkpoint,
+    pub lag3: Checkpoint,
+    pub tim3: Checkpoint,
+}
+
+impl CheckpointPanel {
+    /// PD-1 only (CTLA-4/LAG-3/TIM-3 inactive). `combined_brake` then equals the
+    /// single-PD-1 `pd1_brake · (1 − anti_pd1)` — the byte-identical baseline.
+    pub fn pd1_only(pd1_brake: f64, anti_pd1: f64) -> Self {
+        CheckpointPanel {
+            pd1: Checkpoint {
+                brake: pd1_brake,
+                drug_efficacy: anti_pd1,
+            },
+            ctla4: Checkpoint::inactive(),
+            lag3: Checkpoint::inactive(),
+            tim3: Checkpoint::inactive(),
+        }
+    }
+
+    /// A tumor expressing both PD-1 and CTLA-4 brakes, no drug yet — the
+    /// substrate for the anti-PD-1 vs anti-PD-1+anti-CTLA-4 comparison. Apply
+    /// drugs with [`with_anti_pd1`](Self::with_anti_pd1) /
+    /// [`with_anti_ctla4`](Self::with_anti_ctla4). Placeholders pending
+    /// calibration.
+    pub fn pd1_ctla4_tumor() -> Self {
+        CheckpointPanel {
+            pd1: Checkpoint {
+                brake: 0.7,
+                drug_efficacy: 0.0,
+            },
+            ctla4: Checkpoint {
+                brake: 0.5,
+                drug_efficacy: 0.0,
+            },
+            lag3: Checkpoint::inactive(),
+            tim3: Checkpoint::inactive(),
+        }
+    }
+
+    /// Set the anti-PD-1 drug efficacy (fraction of the PD-1 brake removed).
+    pub fn with_anti_pd1(mut self, efficacy: f64) -> Self {
+        self.pd1.drug_efficacy = efficacy;
+        self
+    }
+
+    /// Set the anti-CTLA-4 drug efficacy.
+    pub fn with_anti_ctla4(mut self, efficacy: f64) -> Self {
+        self.ctla4.drug_efficacy = efficacy;
+        self
+    }
+
+    /// Set the anti-LAG-3 drug efficacy.
+    pub fn with_anti_lag3(mut self, efficacy: f64) -> Self {
+        self.lag3.drug_efficacy = efficacy;
+        self
+    }
+
+    /// Set the anti-TIM-3 drug efficacy.
+    pub fn with_anti_tim3(mut self, efficacy: f64) -> Self {
+        self.tim3.drug_efficacy = efficacy;
+        self
+    }
+
+    /// Combined brake from all axes acting independently:
+    /// `1 − Π(1 − brakeᵢ·(1−drug_efficacyᵢ))`, in `[0, 1]`. Feeds
+    /// [`immune_kill_probability`] in place of the single-PD-1
+    /// `effective_brake`. Inactive axes (brake 0) contribute a factor of 1.
+    #[inline]
+    #[must_use]
+    pub fn combined_brake(&self) -> f64 {
+        let pass: f64 = [self.pd1, self.ctla4, self.lag3, self.tim3]
+            .iter()
+            .map(|c| 1.0 - c.residual())
+            .product();
+        1.0 - pass
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -974,5 +1095,69 @@ mod tests {
             mask.iter().any(|&s| s),
             "the central vessel seeds a non-empty niche"
         );
+    }
+
+    // ===== Multi-checkpoint brake (#264 Phase 3) =====
+
+    #[test]
+    fn pd1_only_panel_matches_the_single_pd1_brake() {
+        // A PD-1-only panel must reproduce `effective_brake = pd1·(1−anti_pd1)`
+        // exactly — the byte-identity equivalence to the single-brake model.
+        assert!((CheckpointPanel::pd1_only(0.7, 0.0).combined_brake() - 0.7).abs() < 1e-12);
+        let blocked = CheckpointPanel::pd1_only(0.7, 0.8).combined_brake();
+        assert!((blocked - 0.7 * 0.2).abs() < 1e-12, "got {blocked}");
+        // Inactive extra axes never change the brake.
+        assert_eq!(
+            CheckpointPanel::pd1_only(0.5, 0.3).combined_brake(),
+            CheckpointPanel {
+                lag3: Checkpoint::inactive(),
+                tim3: Checkpoint::inactive(),
+                ..CheckpointPanel::pd1_only(0.5, 0.3)
+            }
+            .combined_brake()
+        );
+    }
+
+    #[test]
+    fn dual_blockade_lowers_brake_below_anti_pd1_alone() {
+        // A PD-1 + CTLA-4 tumor: anti-PD-1 alone leaves CTLA-4 braking, so the
+        // combined brake stays high; adding anti-CTLA-4 lifts both → lower brake
+        // → more killing (the combination-immunotherapy result, Sharma & Allison
+        // 2015). Lower brake ⇒ higher kill in `immune_kill_probability`.
+        let mono = CheckpointPanel::pd1_ctla4_tumor()
+            .with_anti_pd1(0.8)
+            .combined_brake();
+        let combo = CheckpointPanel::pd1_ctla4_tumor()
+            .with_anti_pd1(0.8)
+            .with_anti_ctla4(0.8)
+            .combined_brake();
+        let untreated = CheckpointPanel::pd1_ctla4_tumor().combined_brake();
+        assert!(
+            combo < mono && mono < untreated,
+            "dual blockade < anti-PD-1 alone < untreated: combo={combo}, mono={mono}, untreated={untreated}"
+        );
+        // All brakes bounded in [0, 1].
+        for b in [combo, mono, untreated] {
+            assert!((0.0..=1.0).contains(&b), "brake {b} out of [0,1]");
+        }
+    }
+
+    #[test]
+    fn combined_brake_is_one_minus_product_of_passes() {
+        // Two equal independent brakes of 0.5 combine to 1 − (0.5·0.5) = 0.75,
+        // NOT 1.0 — independent brakes compose multiplicatively on the pass.
+        let p = CheckpointPanel {
+            pd1: Checkpoint {
+                brake: 0.5,
+                drug_efficacy: 0.0,
+            },
+            ctla4: Checkpoint {
+                brake: 0.5,
+                drug_efficacy: 0.0,
+            },
+            lag3: Checkpoint::inactive(),
+            tim3: Checkpoint::inactive(),
+        };
+        assert!((p.combined_brake() - 0.75).abs() < 1e-12);
     }
 }

@@ -62,7 +62,8 @@ use ferroptosis_core::dose_schedule::DoseSchedule;
 use ferroptosis_core::grid::{TumorGrid3D, TUMOR_RADIUS_FRACTION};
 use ferroptosis_core::immune_spatial::{
     dc_activation, diffuse_damp_3d_step, exhaustion_factor, immune_kill_probability,
-    suppressor_kill_multiplier, suppressor_source_mask_3d, SuppressorConfig, DAMP_KILL_THRESHOLD,
+    suppressor_kill_multiplier, suppressor_source_mask_3d, CheckpointPanel, SuppressorConfig,
+    DAMP_KILL_THRESHOLD,
 };
 use ferroptosis_core::oxygen::radial_o2_field;
 use ferroptosis_core::params::{
@@ -236,6 +237,11 @@ struct ConditionResult {
     /// `None` (field omitted) unless the suppressor field is active.
     #[serde(skip_serializing_if = "Option::is_none")]
     suppressor_peak: Option<f64>,
+    /// Combined multi-checkpoint brake (#264 Phase 3): `1 − Π(1 − residualᵢ)`
+    /// over the PD-1/CTLA-4/LAG-3/TIM-3 panel. `None` (field omitted) unless a
+    /// checkpoint panel override is supplied — the single-PD-1 path leaves it off.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    checkpoint_brake: Option<f64>,
 }
 
 /// Per-subclone kill statistics for one condition (#242). Lets the analysis
@@ -388,6 +394,10 @@ struct Overrides {
     /// Treg/MDSC immunosuppressor field (#264 Phase 2). `None` / disabled ⇒
     /// the suppressor multiplier is identity ⇒ byte-identical.
     suppressor: Option<SuppressorConfig>,
+    /// Multi-checkpoint immune brake panel (#264 Phase 3). `None` ⇒ the single
+    /// PD-1 `effective_brake` is used (byte-identical); `Some` replaces it with
+    /// the combined PD-1/CTLA-4/LAG-3/TIM-3 brake.
+    checkpoints: Option<CheckpointPanel>,
 }
 
 /// Thin wrapper running a condition with NO overrides (all realism layers
@@ -419,6 +429,9 @@ fn run_one_condition_full(
     // Treg/MDSC suppressor (#264 Phase 2). `None`/disabled ⇒ no source mask,
     // no field, identity multiplier ⇒ byte-identical.
     let suppressor_cfg = overrides.suppressor.filter(|c| !c.is_disabled());
+    // Multi-checkpoint brake (#264 Phase 3). `None` ⇒ the single PD-1
+    // `effective_brake` (byte-identical); `Some` ⇒ the combined panel brake.
+    let checkpoint_panel = overrides.checkpoints;
     // Slab and spheroid are mutually-exclusive geometries (#240 review): slab
     // builds an all-tumor block and slab supply wins, but spheroid would run
     // `Params::spheroid()` + radial phenotype re-assignment keyed on a spheroid
@@ -1108,7 +1121,11 @@ fn run_one_condition_full(
             // RNG seed `(cond_seed, idx, step)` is position-independent; and
             // `immune_kills` is an order-independent integer sum.
             if step >= IMMUNE_START_STEP {
-                let effective_brake = immune_cfg.effective_brake();
+                // Multi-checkpoint panel (#264 Phase 3) replaces the single PD-1
+                // brake when set; `None` ⇒ the single-PD-1 `effective_brake`
+                // (byte-identical). A uniform scalar, hoisted out of the hot loop.
+                let effective_brake =
+                    checkpoint_panel.map_or(immune_cfg.effective_brake(), |p| p.combined_brake());
                 // Two paths so the default matrix stays exactly the pre-#243
                 // loop (allocation-free `map().sum()`, no exhaustion term) —
                 // not just byte-identical output but the same hot-path code,
@@ -1376,6 +1393,9 @@ fn run_one_condition_full(
     });
     let suppressor_peak =
         suppressor_on.then(|| suppressor_field.iter().cloned().fold(0.0_f64, f64::max));
+    // Multi-checkpoint combined brake (#264 Phase 3). `Some` only when a panel
+    // override is supplied; the single-PD-1 path omits it.
+    let checkpoint_brake = checkpoint_panel.map(|p| p.combined_brake());
 
     ConditionResult {
         treatment: condition.treatment_name.clone(),
@@ -1424,6 +1444,7 @@ fn run_one_condition_full(
         scale_interpretation: scale_interpretation_str,
         suppressor_source_count,
         suppressor_peak,
+        checkpoint_brake,
     }
 }
 
@@ -1607,6 +1628,10 @@ struct SnapshotPreset {
     /// True if the Treg/MDSC suppressor field (#264) is enabled. Writes a
     /// static `suppressor.npy` (u8) source-niche mask for the renderer panel.
     suppressor: bool,
+    /// True if the multi-checkpoint dual blockade (#264 Phase 3) is enabled
+    /// (anti-PD-1 + anti-CTLA-4). No new overlay — the enhanced immune killing
+    /// shows directly in the dead/DAMP panels.
+    checkpoints: bool,
 }
 
 /// Visualization presets for `--snapshot=NAME`. Keep this list small —
@@ -1627,6 +1652,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         spheroid: false,
         slab: false,
         suppressor: false,
+        checkpoints: false,
     },
     SnapshotPreset {
         name: "bare",
@@ -1643,6 +1669,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         spheroid: false,
         slab: false,
         suppressor: false,
+        checkpoints: false,
     },
     SnapshotPreset {
         name: "multidose",
@@ -1659,6 +1686,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         spheroid: false,
         slab: false,
         suppressor: false,
+        checkpoints: false,
     },
     SnapshotPreset {
         // SDT here visualizes the persister-fraction OVERLAY (the MUFA axis +
@@ -1679,6 +1707,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         spheroid: false,
         slab: false,
         suppressor: false,
+        checkpoints: false,
     },
     SnapshotPreset {
         name: "clonal",
@@ -1695,6 +1724,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         spheroid: false,
         slab: false,
         suppressor: false,
+        checkpoints: false,
     },
     SnapshotPreset {
         // RSL3 (hypoxia-sensitive) + explicit internal vessels: near-vessel
@@ -1716,6 +1746,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         spheroid: false,
         slab: false,
         suppressor: false,
+        checkpoints: false,
     },
     SnapshotPreset {
         // SDT + radial spheroid biology: the phenotype panel shows the
@@ -1735,6 +1766,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         spheroid: true,
         slab: false,
         suppressor: false,
+        checkpoints: false,
     },
     SnapshotPreset {
         // SDT on a patient-scale slab at the SURFACE (+z face = vessel, depth
@@ -1759,6 +1791,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         spheroid: false,
         slab: true,
         suppressor: false,
+        checkpoints: false,
     },
     SnapshotPreset {
         // SDT + immune + Treg/MDSC suppressor (#264 Phase 2). Heuristic niche
@@ -1779,6 +1812,29 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         spheroid: false,
         slab: false,
         suppressor: true,
+        checkpoints: false,
+    },
+    SnapshotPreset {
+        // SDT + immune + dual checkpoint blockade (#264 Phase 3): a PD-1 +
+        // CTLA-4 tumor with BOTH inhibitors applied, so the combined brake is
+        // low and immune killing is aggressive. No new overlay — the enhanced
+        // death front shows directly in the dead/DAMP panels (contrast with the
+        // `multidose`/`combined` presets' single-PD-1 brake).
+        name: "checkpoint",
+        desc: "SDT + immune + dual checkpoint blockade (#264) — anti-PD-1 + anti-CTLA-4 lifts both brakes",
+        treatment: Treatment::SDT,
+        treatment_name: "SDT",
+        immune_on: true,
+        stromal_on: false,
+        ph_on: false,
+        multidose: false,
+        persister: false,
+        clonal: false,
+        vasculature: false,
+        spheroid: false,
+        slab: false,
+        suppressor: false,
+        checkpoints: true,
     },
 ];
 
@@ -1869,6 +1925,13 @@ fn run_snapshot(output_dir: &Path, tumor_radius_um: f64, name: &str) {
     // death front in the dead/DAMP/LP panels IS the visualization).
     let slab_cfg = preset.slab.then(SlabConfig::surface);
     let suppressor_cfg = preset.suppressor.then(SuppressorConfig::enabled);
+    // Dual checkpoint blockade (#264 Phase 3): a PD-1 + CTLA-4 tumor with both
+    // inhibitors applied (combined brake low ⇒ aggressive immune killing).
+    let checkpoint_cfg = preset.checkpoints.then(|| {
+        CheckpointPanel::pd1_ctla4_tumor()
+            .with_anti_pd1(0.8)
+            .with_anti_ctla4(0.8)
+    });
     // Static viz overlays, recomputed from the same SEED + per-layer seed the
     // run uses internally, so they match the perturbations actually applied.
     // `None` unless the matching preset is active.
@@ -1923,6 +1986,7 @@ fn run_snapshot(output_dir: &Path, tumor_radius_um: f64, name: &str) {
             spheroid: spheroid_cfg,
             slab: slab_cfg,
             suppressor: suppressor_cfg,
+            checkpoints: checkpoint_cfg,
             ..Default::default()
         },
     );
@@ -3500,6 +3564,79 @@ mod tests {
         assert!(
             a.immune_kills.unwrap_or(0) > 0,
             "immune kills still fire under perivascular suppression"
+        );
+    }
+
+    // ===== Multi-checkpoint brake (#264 Phase 3) =====
+
+    /// Headline #264 Phase 3 result: on a PD-1 + CTLA-4 tumor, **dual blockade**
+    /// (anti-PD-1 + anti-CTLA-4) out-kills anti-PD-1 **alone** — anti-PD-1 leaves
+    /// CTLA-4 braking, so lifting both raises immune killing (the combination-
+    /// immunotherapy result, Sharma & Allison 2015). Both arms share the SAME
+    /// dense immune config + checkpoint panel and differ ONLY in whether
+    /// anti-CTLA-4 is applied. (Defaults stay byte-identical — no panel ⇒ the
+    /// single-PD-1 `effective_brake`.)
+    #[test]
+    fn dual_checkpoint_blockade_outkills_anti_pd1_alone() {
+        let cfg = RunConfig {
+            grid_dim: 30,
+            n_steps: 130,
+        };
+        let cond = Condition {
+            name: "checkpoint_demo".to_string(),
+            treatment: Treatment::SDT,
+            treatment_name: "SDT".to_string(),
+            o2_lambda: Some(ZONE_REF_LAMBDA),
+            immune_on: true,
+            stromal_on: false,
+            ph_on: false,
+            dose_schedule: DoseSchedule::Constant,
+        };
+        // Dense regime so there are enough immune kills for the brake difference
+        // to register. The panel REPLACES the single PD-1 brake, so the immune
+        // config's pd1_brake/anti_pd1 are unused here.
+        let immune = SpatialImmuneConfig {
+            immune_kill_rate: 0.5,
+            ..SpatialImmuneConfig::for_3d()
+        };
+        let tumor = CheckpointPanel::pd1_ctla4_tumor();
+        let run = |panel: CheckpointPanel| {
+            run_one_condition_full(
+                &cond,
+                cfg,
+                None,
+                Overrides {
+                    immune: Some(immune),
+                    checkpoints: Some(panel),
+                    ..Default::default()
+                },
+            )
+        };
+        let mono = run(tumor.with_anti_pd1(0.8)); // CTLA-4 still braking
+        let combo = run(tumor.with_anti_pd1(0.8).with_anti_ctla4(0.8)); // both lifted
+        let mono_im = mono.immune_kills.expect("immune_on populates immune_kills");
+        let combo_im = combo
+            .immune_kills
+            .expect("immune_on populates immune_kills");
+        assert!(
+            mono_im >= 50,
+            "anti-PD-1 monotherapy must produce enough immune kills to be \
+             informative; got {mono_im}"
+        );
+        // Dual blockade materially out-kills the monotherapy.
+        let gain = (combo_im - mono_im) as f64 / mono_im as f64;
+        assert!(
+            combo_im > mono_im && gain > 0.1,
+            "dual checkpoint blockade must materially out-kill anti-PD-1 alone (>10%): \
+             mono={mono_im}, combo={combo_im}, gain={:.1}%",
+            gain * 100.0
+        );
+        // The combo's combined brake is the lower of the two (reported).
+        assert!(
+            combo.checkpoint_brake.unwrap() < mono.checkpoint_brake.unwrap(),
+            "combo brake {:?} should be below mono brake {:?}",
+            combo.checkpoint_brake,
+            mono.checkpoint_brake
         );
     }
 
