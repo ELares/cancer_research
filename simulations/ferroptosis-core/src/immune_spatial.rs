@@ -507,6 +507,16 @@ impl Checkpoint {
     /// Residual brake after drug blockade: `brake · (1 − drug_efficacy)`.
     #[inline]
     pub fn residual(&self) -> f64 {
+        // Out-of-range inputs push `combined_brake` outside [0,1], which makes
+        // `immune_kill_probability`'s `1 − effective_brake` negative or > 1 and
+        // silently produces nonsense kill probabilities (no panic). Guard like
+        // `exhaustion_factor` / `suppressor_kill_multiplier` do.
+        debug_assert!(
+            (0.0..=1.0).contains(&self.brake) && (0.0..=1.0).contains(&self.drug_efficacy),
+            "checkpoint brake and drug_efficacy must be in [0, 1]; got brake={}, drug_efficacy={}",
+            self.brake,
+            self.drug_efficacy
+        );
         self.brake * (1.0 - self.drug_efficacy)
     }
 }
@@ -518,6 +528,11 @@ impl Checkpoint {
 /// (`SpatialImmuneConfig::effective_brake`), so a consumer that doesn't opt into
 /// the panel stays byte-identical. Models anti-PD-1 + anti-CTLA-4 combinations
 /// (Sharma & Allison, Cell 2015). `Copy`, so `Overrides` stays `Copy`-friendly.
+///
+/// **When a consumer supplies a panel, it fully replaces** the single-brake
+/// `SpatialImmuneConfig::{pd1_brake, anti_pd1_efficacy}` — set the PD-1 axis
+/// here (`pd1_only` / `pd1_ctla4_tumor` + `with_anti_pd1`) rather than on the
+/// immune config, whose brake fields are then ignored.
 #[derive(Clone, Copy, Debug)]
 pub struct CheckpointPanel {
     pub pd1: Checkpoint,
@@ -589,6 +604,12 @@ impl CheckpointPanel {
     /// `1 − Π(1 − brakeᵢ·(1−drug_efficacyᵢ))`, in `[0, 1]`. Feeds
     /// [`immune_kill_probability`] in place of the single-PD-1
     /// `effective_brake`. Inactive axes (brake 0) contribute a factor of 1.
+    ///
+    /// **Assumes independence** between checkpoints (no shared/redundant
+    /// signaling), so the multiplicative composition is an *upper bound* on the
+    /// true combined brake — real checkpoints partially overlap, which would
+    /// make dual blockade slightly less additive than modeled. An uncalibrated
+    /// first-order choice; treat the combined magnitude qualitatively.
     #[inline]
     #[must_use]
     pub fn combined_brake(&self) -> f64 {
