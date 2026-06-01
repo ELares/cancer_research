@@ -54,3 +54,4 @@ pub mod physics;
 pub mod stats;
 pub mod stromal;
 pub mod tumor_pk;
+pub mod vasculature;

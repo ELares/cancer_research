@@ -45,15 +45,22 @@ EXPECTED_SCHEMA_VERSION = 1
 def _load_trajectory(
     traj_dir: Path,
 ) -> tuple[
-    np.ndarray, np.ndarray, np.ndarray, "np.ndarray | None", "np.ndarray | None", dict
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+    "np.ndarray | None",
+    "np.ndarray | None",
+    "np.ndarray | None",
+    dict,
 ]:
     """Load the trajectory arrays + metadata; assert schema version.
 
-    Returns (dead, damp, lp, persister, subclone, meta). `persister` (#241) and
-    `subclone` (#242) are optional overlays, present only when the run used the
-    corresponding model (`--snapshot=persister` / `--snapshot=clonal`); `None`
-    otherwise. Raises SystemExit on missing required files or schema mismatch
-    with a clear, actionable message.
+    Returns (dead, damp, lp, persister, subclone, vessel_supply, meta).
+    `persister` (#241), `subclone` (#242), and `vessel_supply` (#191) are
+    optional overlays, present only when the run used the corresponding model
+    (`--snapshot=persister` / `=clonal` / `=vasculature`); `None` otherwise.
+    Raises SystemExit on missing required files or schema mismatch with a
+    clear, actionable message.
     """
     required = [
         "trajectory_dead.npy",
@@ -120,7 +127,19 @@ def _load_trajectory(
                 f"trajectory frame {dead.shape[1:]}."
             )
 
-    return dead, damp, lp, persister, subclone, meta
+    # Optional static vessel O2-supply map (#191). One 3D frame, present only
+    # for the `--snapshot=vasculature` preset.
+    vessel_supply = None
+    vessel_path = traj_dir / "vessel_supply.npy"
+    if vessel_path.exists():
+        vessel_supply = np.load(vessel_path)
+        if vessel_supply.ndim != 3 or vessel_supply.shape != dead.shape[1:]:
+            raise SystemExit(
+                f"ERROR: vessel_supply.npy shape {vessel_supply.shape} does not "
+                f"match a trajectory frame {dead.shape[1:]}."
+            )
+
+    return dead, damp, lp, persister, subclone, vessel_supply, meta
 
 
 def _make_dead_cmap() -> ListedColormap:
@@ -138,6 +157,7 @@ def _render(
     lp: np.ndarray,
     persister: "np.ndarray | None",
     subclone: "np.ndarray | None",
+    vessel_supply: "np.ndarray | None",
     meta: dict,
     out_dir: Path,
     fps: int,
@@ -157,9 +177,13 @@ def _render(
     lp_max = max(float(lp.max()), 1e-6)
     show_persister = persister is not None
     show_subclone = subclone is not None
-    # Panel indices: 0..2 are dead/damp/lp; the two optional panels follow.
+    show_vessel = vessel_supply is not None
+    # Panel indices: 0..2 are dead/damp/lp; the optional panels follow in order.
     pers_idx = 3 if show_persister else None
     sub_idx = (3 + int(show_persister)) if show_subclone else None
+    vasc_idx = (
+        (3 + int(show_persister) + int(show_subclone)) if show_vessel else None
+    )
 
     # Dose-administration steps (#239). Empty for steady-state Constant
     # presets; non-empty for multi-dose / bolus / infusion snapshots, where
@@ -172,7 +196,7 @@ def _render(
         for k in range(d, d + 5):
             dose_window.add(k)
 
-    n_panels = 3 + int(show_persister) + int(show_subclone)
+    n_panels = 3 + int(show_persister) + int(show_subclone) + int(show_vessel)
     fig, axes = plt.subplots(
         1, n_panels, figsize=(4.3 * n_panels, 4.5), constrained_layout=True
     )
@@ -229,6 +253,16 @@ def _render(
         )
         axes[sub_idx].set_title(f"Subclone id (K={k})")
 
+    # Optional vessel-supply panel (#191): STATIC O2-supply field
+    # `exp(-dist_to_nearest_vessel/λ)`, fixed 0..1 scale. Patchy bright spots
+    # mark vessel neighborhoods; dark gaps are hypoxic inter-vessel regions.
+    im_vasc = None
+    if show_vessel:
+        im_vasc = axes[vasc_idx].imshow(
+            vessel_supply[mid], cmap="cividis", vmin=0.0, vmax=1.0, origin="lower"
+        )
+        axes[vasc_idx].set_title("Vessel O₂ supply")
+
     for ax in axes:
         ax.set_xticks([])
         ax.set_yticks([])
@@ -244,6 +278,8 @@ def _render(
         cbar = fig.colorbar(im_sub, ax=axes[sub_idx], fraction=0.045, pad=0.04)
         cbar.set_ticks([i + 0.5 for i in range(k + 1)])
         cbar.set_ticklabels(["stroma"] + [str(i) for i in range(1, k + 1)])
+    if show_vessel:
+        fig.colorbar(im_vasc, ax=axes[vasc_idx], fraction=0.045, pad=0.04)
 
     step_text = fig.text(0.5, 0.02, "", ha="center", fontsize=9, family="monospace")
 
@@ -324,13 +360,16 @@ def main() -> int:
     )
     args = parser.parse_args()
 
-    dead, damp, lp, persister, subclone, meta = _load_trajectory(args.traj_dir)
+    dead, damp, lp, persister, subclone, vessel_supply, meta = _load_trajectory(
+        args.traj_dir
+    )
     written = _render(
         dead,
         damp,
         lp,
         persister,
         subclone,
+        vessel_supply,
         meta,
         args.traj_dir,
         fps=args.fps,

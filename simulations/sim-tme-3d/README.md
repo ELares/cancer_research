@@ -98,6 +98,7 @@ The default 24-condition matrix path (no `--snapshot` flag) is **byte-identical*
 | `multidose` | SDT | immune | **4-dose multi-dose (#239)** |
 | `persister` | SDT | immune + **persister (#241)** | multi-dose |
 | `clonal` | SDT | immune + **clonal 4-subclone (#242)** | multi-dose |
+| `vasculature` | RSL3 | **explicit vessels (#191)** | constant |
 
 The `multidose` preset shows **death waves synced to each dose**: four SDT ROS pulses at steps 10/55/100/145, each triggering a ferroptotic death wave + DAMP bloom + immune response. The renderer draws a red frame border + `💉 DOSE` marker on each dose step.
 
@@ -150,6 +151,16 @@ Real tumors are genetic mosaics: 4–8+ subclones with measurably different ferr
 - **Reporting.** When enabled, `summary.json` gains a `subclone_kills` array (per-subclone `total_tumor` / `total_dead` / `kill_rate`); omitted otherwise. `clonal_subclones_differ_in_kill_rate` confirms the vulnerable subclone out-dies the resistant one under RSL3.
 - **Visualization.** `--snapshot=clonal` writes a static `subclone.npy` (u8, no time axis) and the renderer adds a discrete-colored subclone-id panel alongside the death/DAMP/LP animation.
 - Perturbation values are **placeholders pending calibration**. Clonal evolution (subclone selection over time) and inter-tumor heterogeneity are out of scope.
+
+## Explicit vasculature (#191)
+
+The 2D sims and the default 3D `oxygen::radial_o2_field` use "distance from the tumor edge" as a vasculature proxy: the spheroid surface is the only O2/drug source, so supply decays smoothly inward. Real 3D tumors carry **internal** vessels, so oxygenation is patchy — well-supplied near a vessel, hypoxic in the inter-vessel gaps (Option A of #191).
+
+- **Model.** `ferroptosis_core::vasculature::place_vessels_3d` scatters random internal vessel seed points (count from the target inter-vessel spacing; **independent** RNG ⇒ the cell grid is untouched), and `vessel_supply_field` gives each cell `exp(-dist_to_nearest_vessel / λ)`. This is a **unified per-cell supply factor**: it **replaces** the edge-distance O2 factor (× `cell.basal_ros`) AND scales drug delivery on every path — the SDT/PDT exo dose at init (constant + dosed), the RSL3 constant one-shot knockdown (a post-init correction mirroring the pH ion-trap one), and the dosed RSL3 `rsl3_drug_avail`. So the `--snapshot=vasculature` RSL3 run exercises both axes. `VasculatureConfig::well_vascularized()` / `poorly_vascularized()` set the vessel density.
+- **Off by default / byte-identical.** The matrix passes no vasculature config, so the edge-distance `radial_o2_field` path runs unchanged (golden + #253 production-SHA guard hold).
+- **Comparison (AC).** The library test `vessel_field_oxygenates_the_core_unlike_the_edge_proxy` shows internal vessels reach the deep core (which the edge proxy leaves uniformly hypoxic); the sim test `vasculature_oxygenates_core_and_changes_rsl3_kills` shows the vessel field materially changes RSL3 kills (direction is config-dependent — a sparse internal vessel set covers the surface shell less uniformly than the edge proxy). `summary.json` reports `vascular_hypoxic_fraction` when enabled.
+- **Visualization.** `--snapshot=vasculature` (RSL3 + vessels) writes a static `vessel_supply.npy` and the renderer adds a cividis O2-supply panel — bright vessel neighborhoods, dark hypoxic gaps.
+- Vessel placement is random (Option A); a fractal-branching tree or imported micro-CT networks (Options B/C) are out of scope. Inter-vessel spacings are literature-ranged placeholders.
 
 ## Condition matrix
 

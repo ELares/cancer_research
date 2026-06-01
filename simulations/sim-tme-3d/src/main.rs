@@ -57,7 +57,7 @@ mod snapshot;
 
 use ferroptosis_core::biochem::{exo_decay_factor, sim_cell_step, CellState};
 use ferroptosis_core::cell::Treatment;
-use ferroptosis_core::clonal::{assign_subclones_3d, ClonalConfig, SubclonePerturbation};
+use ferroptosis_core::clonal::{assign_subclones_3d, ClonalConfig};
 use ferroptosis_core::dose_schedule::DoseSchedule;
 use ferroptosis_core::grid::{TumorGrid3D, TUMOR_RADIUS_FRACTION};
 use ferroptosis_core::immune_spatial::{
@@ -73,6 +73,9 @@ use ferroptosis_core::ph::{ion_trap_factor_from_ph, iron_multiplier_from_ph, rad
 use ferroptosis_core::physics::local_ros_multiplier_3d;
 use ferroptosis_core::stromal::stromal_adjacency_mask_3d;
 use ferroptosis_core::tumor_pk::RSL3_INACTIVATION_RATE;
+use ferroptosis_core::vasculature::{
+    hypoxic_fraction, place_vessels_3d, vessel_supply_field, VasculatureConfig,
+};
 use rand::distributions::Distribution;
 use rand::prelude::*;
 use rand::rngs::StdRng;
@@ -93,6 +96,14 @@ const SEED: u64 = 42;
 /// RNG stream — the cell grid stays byte-identical whether or not subclones
 /// are assigned.
 const SUBCLONE_SEED: u64 = 0x5c10_4e42;
+/// Independent seed for vessel placement (#191). Distinct from `SEED` /
+/// `SUBCLONE_SEED` so vessel sampling never advances the grid-generation or
+/// subclone RNG streams.
+const VESSEL_SEED: u64 = 0x7e55_e142;
+/// O2-supply factor below which a cell counts as hypoxic for
+/// `vascular_hypoxic_fraction` reporting (#191). `exp(-d/λ) < 0.1` is ~2.3 λ
+/// from the nearest vessel.
+const VASCULAR_HYPOXIC_THRESHOLD: f64 = 0.1;
 
 /// O₂ penetration sweep — 3λ must comfortably fit inside the
 /// tumor_radius (60·0.45·20 = 540 µm). Skips λ=150 (3·150=450 →
@@ -186,6 +197,12 @@ struct ConditionResult {
     /// byte-identical. One entry per subclone, ordered by id.
     #[serde(skip_serializing_if = "Option::is_none")]
     subclone_kills: Option<Vec<SubcloneKillStat>>,
+    /// Hypoxic fraction (tumor cells with O2 supply < 0.1) under the explicit
+    /// vessel field (#191). `None` (field omitted) unless vasculature is
+    /// enabled; lets the analysis compare irregular-vessel oxygenation against
+    /// the smooth edge-distance baseline. Byte-identical default path.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    vascular_hypoxic_fraction: Option<f64>,
 }
 
 /// Per-subclone kill statistics for one condition (#242). Lets the analysis
@@ -332,6 +349,7 @@ struct Overrides {
     persister: Option<PersisterConfig>,
     immune: Option<SpatialImmuneConfig>,
     clonal: Option<ClonalConfig>,
+    vasculature: Option<VasculatureConfig>,
 }
 
 /// Thin wrapper running a condition with NO overrides (all realism layers
@@ -357,6 +375,7 @@ fn run_one_condition_full(
     let persister_cfg = overrides.persister;
     let immune_override = overrides.immune;
     let clonal_cfg = overrides.clonal;
+    let vasculature_cfg = overrides.vasculature;
     let params = Params::default();
     let spatial_params = SpatialParams {
         cell_size_um: CELL_SIZE_UM,
@@ -401,12 +420,34 @@ fn run_one_condition_full(
         .as_ref()
         .map(|c| assign_subclones_3d(&grid, c.k(), SUBCLONE_SEED));
 
+    // Explicit vasculature (#191): place internal vessel seed points (own seed
+    // → generate's RNG untouched), then build the per-cell supply factor
+    // `exp(-dist_to_nearest_vessel / λ)`. This REPLACES the edge-distance O2
+    // proxy and also supplies drug. `None` on the matrix path (no vasculature
+    // or no λ) → the edge-distance `radial_o2_field` path runs → byte-identical.
+    let vessels: Option<Vec<(f64, f64, f64)>> =
+        vasculature_cfg.map(|cfg| place_vessels_3d(&grid, &cfg, VESSEL_SEED));
+    let vessel_supply: Option<Vec<f64>> = match (vessels.as_ref(), condition.o2_lambda) {
+        (Some(v), Some(lambda)) => Some(vessel_supply_field(&grid, v, lambda)),
+        _ => None,
+    };
+
     // --- Apply O₂ gradient if requested (mutates cell.basal_ros) ---
     if let Some(lambda) = condition.o2_lambda {
-        let o2_factors = radial_o2_field(&grid, lambda);
-        for (idx, &factor) in o2_factors.iter().enumerate() {
-            if grid.cells[idx].is_tumor {
-                grid.cells[idx].cell.basal_ros *= factor;
+        if let Some(supply) = &vessel_supply {
+            // Explicit-vessel O2: supply = exp(-dist_to_nearest_vessel/λ).
+            for (idx, &factor) in supply.iter().enumerate() {
+                if grid.cells[idx].is_tumor {
+                    grid.cells[idx].cell.basal_ros *= factor;
+                }
+            }
+        } else {
+            // Edge-distance proxy (default).
+            let o2_factors = radial_o2_field(&grid, lambda);
+            for (idx, &factor) in o2_factors.iter().enumerate() {
+                if grid.cells[idx].is_tumor {
+                    grid.cells[idx].cell.basal_ros *= factor;
+                }
             }
         }
     }
@@ -479,8 +520,9 @@ fn run_one_condition_full(
         for c in 0..grid.cols {
             for l in 0..grid.layers {
                 let idx = grid.flat_index(r, c, l);
-                let exo_ros_peak =
-                    if matches!(condition.treatment, Treatment::Control | Treatment::RSL3) {
+                let exo_ros_peak = {
+                    let raw = if matches!(condition.treatment, Treatment::Control | Treatment::RSL3)
+                    {
                         0.0
                     } else {
                         let depth_um = grid.radial_depth_um(r, c, l);
@@ -490,6 +532,11 @@ fn run_one_condition_full(
                         let peak = base_ros * ros_multiplier;
                         norm(&mut rng, peak, peak * 0.2).max(0.0)
                     };
+                    // Vessel-delivered sonosensitizer/photosensitizer (#191):
+                    // the exo-ROS dose scales by vessel proximity on EVERY path
+                    // (constant + dosed). ×1.0 when off → byte-identical.
+                    raw * vessel_supply.as_ref().map_or(1.0, |s| s[idx])
+                };
                 if dose_modulates_exo {
                     base_exo[idx] = exo_ros_peak;
                 }
@@ -578,6 +625,24 @@ fn run_one_condition_full(
         }
     }
 
+    // Vessel-delivered RSL3 correction (#191), CONSTANT-schedule path. Mirrors
+    // the pH ion-trap correction above: cells far from a vessel see less drug,
+    // so their one-shot GPX4 knockdown is weaker. Corrects (1-inhib) →
+    // (1-inhib*supply). The dosed path instead folds vessel supply into
+    // `rsl3_drug_avail` below. `None` ⇒ skipped ⇒ byte-identical. Composes
+    // multiplicatively with the pH correction (order immaterial).
+    if !dosed {
+        if let (Some(supply), Treatment::RSL3) = (&vessel_supply, condition.treatment) {
+            let inhib = params.rsl3_gpx4_inhib;
+            for (idx, gc) in grid.cells.iter_mut().enumerate() {
+                if gc.is_tumor {
+                    let correction = (1.0 - inhib * supply[idx]) / (1.0 - inhib);
+                    gc.state.gpx4 *= correction;
+                }
+            }
+        }
+    }
+
     // Per-cell spatial drug-availability multiplier for the DOSED RSL3 path
     // (#239): pH ion-trapping reduces effective drug in acidic regions. The
     // value is composed multiplicatively with the schedule's `factor_at(step)`
@@ -590,6 +655,15 @@ fn run_one_condition_full(
                 if grid.cells[idx].is_tumor {
                     avail[idx] =
                         ion_trap_factor_from_ph(local_ph, cfg.ph_edge, cfg.ion_trap_sensitivity);
+                }
+            }
+        }
+        // Vessel-delivered drug (#191): scale availability by vessel proximity
+        // (cells far from a vessel see less drug). `None` ⇒ unchanged.
+        if let Some(supply) = &vessel_supply {
+            for (idx, gc) in grid.cells.iter().enumerate() {
+                if gc.is_tumor {
+                    avail[idx] *= supply[idx];
                 }
             }
         }
@@ -1086,6 +1160,12 @@ fn run_one_condition_full(
             .collect::<Vec<_>>()
     });
 
+    // Vessel-field hypoxic fraction (#191). `Some` only when vasculature is on
+    // (vessel_supply present) → `None` omits the field → byte-identical.
+    let vascular_hypoxic_fraction = vessel_supply
+        .as_ref()
+        .map(|s| hypoxic_fraction(&grid, s, VASCULAR_HYPOXIC_THRESHOLD));
+
     ConditionResult {
         treatment: condition.treatment_name.clone(),
         o2_condition: match condition.o2_lambda {
@@ -1129,6 +1209,7 @@ fn run_one_condition_full(
         ph_lambda_um: ph_lambda_v,
         persister_mean,
         subclone_kills,
+        vascular_hypoxic_fraction,
     }
 }
 
@@ -1297,6 +1378,10 @@ struct SnapshotPreset {
     /// `subclone.npy` (u8, no time axis) for the renderer's subclone panel and
     /// emits per-subclone kill stats.
     clonal: bool,
+    /// True if the explicit vessel model (#191) is enabled. Writes a static
+    /// `vessel_supply.npy` (f32, no time axis) for the renderer's O2-supply
+    /// panel and emits `vascular_hypoxic_fraction`.
+    vasculature: bool,
 }
 
 /// Visualization presets for `--snapshot=NAME`. Keep this list small —
@@ -1313,6 +1398,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         multidose: false,
         persister: false,
         clonal: false,
+        vasculature: false,
     },
     SnapshotPreset {
         name: "bare",
@@ -1325,6 +1411,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         multidose: false,
         persister: false,
         clonal: false,
+        vasculature: false,
     },
     SnapshotPreset {
         name: "multidose",
@@ -1337,6 +1424,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         multidose: true,
         persister: false,
         clonal: false,
+        vasculature: false,
     },
     SnapshotPreset {
         // SDT here visualizes the persister-fraction OVERLAY (the MUFA axis +
@@ -1353,6 +1441,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         multidose: true,
         persister: true,
         clonal: false,
+        vasculature: false,
     },
     SnapshotPreset {
         name: "clonal",
@@ -1365,6 +1454,25 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         multidose: true,
         persister: false,
         clonal: true,
+        vasculature: false,
+    },
+    SnapshotPreset {
+        // RSL3 (hypoxia-sensitive) + explicit internal vessels: near-vessel
+        // cells stay oxygenated and die; cells in the inter-vessel gaps go
+        // hypoxic and survive — the irregular, non-radial kill pattern the
+        // edge-distance proxy can't produce. immune/stromal/pH off to isolate
+        // the O2→kill effect.
+        name: "vasculature",
+        desc: "RSL3 + explicit vessels (#191) — patchy O2 from internal vessels drives heterogeneous kill",
+        treatment: Treatment::RSL3,
+        treatment_name: "RSL3",
+        immune_on: false,
+        stromal_on: false,
+        ph_on: false,
+        multidose: false,
+        persister: false,
+        clonal: false,
+        vasculature: true,
     },
 ];
 
@@ -1431,20 +1539,28 @@ fn run_snapshot(output_dir: &Path, tumor_radius_um: f64, name: &str) {
     );
 
     let run_cfg = RunConfig::production();
-    // Enable the realism layers a preset opts into (#241 persister, #242 clonal).
+    // Enable the realism layers a preset opts into (#241 persister, #242
+    // clonal, #191 vasculature).
     let clonal_cfg = preset.clonal.then(ClonalConfig::literature_4);
-    // Subclone-id map for the static viz overlay (#242). Recomputed from the
-    // same SEED + SUBCLONE_SEED the run uses internally, so it matches exactly.
-    // `None` unless the preset is clonal.
-    let subclone_ids = clonal_cfg.as_ref().map(|c| {
-        let g = TumorGrid3D::generate(
-            run_cfg.grid_dim,
-            run_cfg.grid_dim,
-            run_cfg.grid_dim,
-            CELL_SIZE_UM,
-            SEED,
-        );
-        assign_subclones_3d(&g, c.k(), SUBCLONE_SEED)
+    let vasculature_cfg = preset
+        .vasculature
+        .then(VasculatureConfig::well_vascularized);
+    // Static viz overlays, recomputed from the same SEED + per-layer seed the
+    // run uses internally, so they match the perturbations actually applied.
+    // `None` unless the matching preset is active.
+    let snapshot_grid = TumorGrid3D::generate(
+        run_cfg.grid_dim,
+        run_cfg.grid_dim,
+        run_cfg.grid_dim,
+        CELL_SIZE_UM,
+        SEED,
+    );
+    let subclone_ids = clonal_cfg
+        .as_ref()
+        .map(|c| assign_subclones_3d(&snapshot_grid, c.k(), SUBCLONE_SEED));
+    let vessel_supply = vasculature_cfg.map(|cfg| {
+        let vessels = place_vessels_3d(&snapshot_grid, &cfg, VESSEL_SEED);
+        vessel_supply_field(&snapshot_grid, &vessels, ZONE_REF_LAMBDA)
     });
     let mut buffers =
         snapshot::SnapshotBuffers::new(run_cfg.grid_dim, run_cfg.n_steps, preset.persister);
@@ -1455,6 +1571,7 @@ fn run_snapshot(output_dir: &Path, tumor_radius_um: f64, name: &str) {
         Overrides {
             persister: preset.persister.then(PersisterConfig::enabled),
             clonal: clonal_cfg,
+            vasculature: vasculature_cfg,
             ..Default::default()
         },
     );
@@ -1481,6 +1598,15 @@ fn run_snapshot(output_dir: &Path, tumor_radius_um: f64, name: &str) {
             .expect("Failed to write subclone.npy");
     }
 
+    // Static vessel O2-supply map (#191), same static 3D layout. Only when the
+    // preset is vasculature.
+    if let Some(supply) = &vessel_supply {
+        let shape = [run_cfg.grid_dim, run_cfg.grid_dim, run_cfg.grid_dim];
+        let supply_f32: Vec<f32> = supply.iter().map(|&v| v as f32).collect();
+        npy::write_f32_array(output_dir.join("vessel_supply.npy"), &shape, &supply_f32)
+            .expect("Failed to write vessel_supply.npy");
+    }
+
     let meta = snapshot::TrajectoryMeta {
         schema_version: snapshot::TRAJECTORY_SCHEMA_VERSION,
         grid_dim: run_cfg.grid_dim,
@@ -1502,10 +1628,15 @@ fn run_snapshot(output_dir: &Path, tumor_radius_um: f64, name: &str) {
         .expect("Failed to write trajectory_meta.json");
 
     eprintln!(
-        "Wrote {} + trajectory_{{dead,damp,lp{}}}.npy{}",
+        "Wrote {} + trajectory_{{dead,damp,lp{}}}.npy{}{}",
         meta_path.display(),
         if preset.persister { ",persister" } else { "" },
         if preset.clonal { " + subclone.npy" } else { "" },
+        if preset.vasculature {
+            " + vessel_supply.npy"
+        } else {
+            ""
+        },
     );
     eprintln!("Render with: python3 scripts/render_tme_3d_trajectory.py");
 }
@@ -1898,6 +2029,8 @@ fn main() {
 #[cfg(test)]
 mod tests {
     use super::*;
+    // Test-only: used by the clonal lipid-axis test.
+    use ferroptosis_core::clonal::SubclonePerturbation;
 
     // Golden integer kill counts for the Constant-path regression guard
     // (`constant_path_golden_kill_counts`), captured from SDT + immune +
@@ -3013,6 +3146,64 @@ mod tests {
             "MUFA-enriched (lower lipid_unsat) must reduce kills: enriched={}, baseline={}",
             mufa_enriched.total_dead,
             baseline.total_dead
+        );
+    }
+
+    // ===== Explicit vasculature (#191) =====
+
+    /// The #191 comparison at the simulation level: explicit internal vessels
+    /// produce a different, irregular (non-radial) O₂ field than the
+    /// edge-distance proxy, which materially changes the RSL3 kill outcome.
+    /// (Direction is config-dependent: the edge proxy oxygenates the entire
+    /// surface shell uniformly, whereas a sparse internal vessel set covers it
+    /// irregularly — here the well-vascularized preset kills fewer, not more.)
+    /// vasculature must report `vascular_hypoxic_fraction`; the edge default
+    /// omits it.
+    #[test]
+    fn vasculature_oxygenates_core_and_changes_rsl3_kills() {
+        let cfg = RunConfig {
+            grid_dim: 24,
+            n_steps: 80,
+        };
+        let cond = Condition {
+            name: "vasc_rsl3".to_string(),
+            treatment: Treatment::RSL3,
+            treatment_name: "RSL3".to_string(),
+            o2_lambda: Some(ZONE_REF_LAMBDA),
+            immune_on: false,
+            stromal_on: false,
+            ph_on: false,
+            dose_schedule: DoseSchedule::Constant,
+        };
+        let edge = run_one_condition_with_config(&cond, cfg, None);
+        let vasc = run_one_condition_full(
+            &cond,
+            cfg,
+            None,
+            Overrides {
+                vasculature: Some(VasculatureConfig::well_vascularized()),
+                ..Default::default()
+            },
+        );
+        assert!(
+            edge.vascular_hypoxic_fraction.is_none(),
+            "edge-distance default must omit vascular_hypoxic_fraction"
+        );
+        assert!(
+            vasc.vascular_hypoxic_fraction.is_some(),
+            "vasculature run must report vascular_hypoxic_fraction"
+        );
+        // The vessel field changes the oxygenation pattern, so the kill
+        // outcome must shift materially (>20%) vs the edge-distance proxy.
+        assert!(edge.total_dead > 0, "edge baseline must kill some cells");
+        let rel = (edge.total_dead as f64 - vasc.total_dead as f64).abs() / edge.total_dead as f64;
+        assert!(
+            rel > 0.2,
+            "explicit vessels must materially change RSL3 kills vs the edge proxy \
+             (>20%): vasc={}, edge={}, rel={:.2}",
+            vasc.total_dead,
+            edge.total_dead,
+            rel
         );
     }
 }
