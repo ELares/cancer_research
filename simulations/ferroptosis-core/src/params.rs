@@ -449,8 +449,16 @@ impl PersisterConfig {
         }
     }
 
-    /// True when this config has no effect (every rate zero). Lets consumers
-    /// gate the persister code path so default output stays byte-identical.
+    /// True when this config has no effect (every rate zero). Available for a
+    /// consumer that holds a `PersisterConfig` directly and wants to skip the
+    /// persister path; note `sim-tme-3d` instead gates on
+    /// `Option<PersisterConfig>` (`None` vs `Some`) and `persister::acquire`
+    /// short-circuits on `acquisition_rate == 0.0`. Omits `max_fraction` /
+    /// `mufa_boost_cap` (caps are inert when all rates are zero). Since the
+    /// fields are `pub` and the rate/cap pairing is not enforced, a hand-built
+    /// `{ acquisition_rate: 0.0, max_fraction: 0.8 }` silently disables
+    /// acquisition (the short-circuit fires) — a safe direction, but use
+    /// `default()` / `enabled()` rather than partial literals.
     pub fn is_identity(&self) -> bool {
         self.acquisition_rate == 0.0
             && self.reversion_rate == 0.0

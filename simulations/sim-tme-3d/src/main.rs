@@ -628,8 +628,15 @@ fn run_one_condition_full(
                         Treatment::RSL3 => {
                             // Covalent GPX4 inactivation ∝ availability
                             // (schedule × pH ion-trap). Mirrors sim_cell_with_pk.
+                            // NOTE: the persister block below recomputes this
+                            // same `dose_factor * rsl3_drug_avail[idx]` as its
+                            // `drug_intensity`; keep the two in sync if edited.
                             let conc = (dose_factor * rsl3_drug_avail[idx]).clamp(0.0, 1.0);
                             // Persisters resist the covalent knockdown (#241).
+                            // Reads `persister_fraction` as of the PREVIOUS step
+                            // (the persister block writes it *after* this); this
+                            // one-step explicit-Euler lag is intentional —
+                            // reordering it would change the dosed-path output.
                             // `1.0` when persister off → byte-identical.
                             let presist = persister_cfg.as_ref().map_or(1.0, |c| {
                                 persister::gpx4_inactivation_multiplier(
@@ -690,11 +697,20 @@ fn run_one_condition_full(
                         let m = gc.state.mufa_protection;
                         gc.state.mufa_protection = (m + inc).min(pcfg.mufa_boost_cap.max(m));
                         // Acquire under drug exposure this step, else revert.
+                        // This is a hard either-or on `drug_intensity > 0`, so
+                        // under sustained dosing (`Constant`, or a `MultiDose`
+                        // whose decaying tails never reach 0) the fraction is
+                        // monotonic — reversion only fires in a truly drug-free
+                        // window (an `Infusion` gap, pre-dose `Bolus`, or an
+                        // explicit-zero `FromPk`). A competing-rate model would
+                        // give a sub-cap equilibrium; deferred with the other
+                        // placeholder-calibration simplifications.
+                        //
                         // `rsl3_drug_avail[idx]` is indexed only on the
-                        // `dosed && RSL3` path, where the pre-loop
-                        // `debug_assert!(!rsl3_drug_avail.is_empty())` already
-                        // guarantees it is populated (same invariant the RSL3
-                        // inactivation branch above relies on).
+                        // `dosed && RSL3` path; it is always populated there by
+                        // the RSL3-treatment branch that allocates it (the same
+                        // invariant the GPX4 inactivation above relies on — the
+                        // pre-loop `debug_assert` only documents it in debug).
                         let drug_intensity = match condition.treatment {
                             Treatment::Control => 0.0,
                             Treatment::RSL3 => {
@@ -2432,19 +2448,22 @@ mod tests {
         );
     }
 
-    /// Reversion (#241): once dosing stops, the epigenetic persister mark
-    /// decays. A run whose doses end at the halfway point must leave a LOWER
-    /// mean persister fraction in survivors than one dosed across the whole
-    /// run — the back half is drug-free, so `revert` dominates. Guards the
-    /// integration of the reversion path (the helper is unit-tested in
-    /// `ferroptosis-core::persister`).
+    /// Reversion (#241): once dosing truly stops, the epigenetic persister
+    /// mark decays. This exercises the `revert` branch in the per-step loop
+    /// (not just `acquire`), which requires `drug_intensity == 0.0`. A
+    /// `MultiDose` schedule cannot do that — its `factor_at` is a sum of
+    /// exponentially-decaying bolus tails that is strictly positive at every
+    /// step after the first dose, so `acquire` would fire every step and
+    /// `revert` would never run (review finding). `Infusion` returns a literal
+    /// `0.0` outside its window, so the `early_window` run takes `revert` for
+    /// the entire drug-free back half and ends well below the `sustained` run.
     #[test]
     fn persister_reverts_after_dosing_stops() {
         let cfg = RunConfig {
             grid_dim: 20,
             n_steps: 120,
         };
-        let mk = |name: &str, dose_steps: Vec<u32>| Condition {
+        let mk = |name: &str, end: u32| Condition {
             name: name.to_string(),
             treatment: Treatment::RSL3,
             treatment_name: "RSL3".to_string(),
@@ -2452,26 +2471,34 @@ mod tests {
             immune_on: false,
             stromal_on: false,
             ph_on: false,
-            dose_schedule: DoseSchedule::MultiDose {
-                dose_steps,
-                peak: 1.0,
-                half_life_steps: 10.0,
+            // Infusion: factor_at == level inside [start, end), literal 0.0
+            // outside. The 0.0 forces the `revert` branch after `end`.
+            dose_schedule: DoseSchedule::Infusion {
+                start: 0,
+                end,
+                level: 1.0,
             },
         };
-        let sustained = mk("sustained", (0..120).step_by(4).collect());
-        let early_only = mk("early_only", (0..60).step_by(4).collect());
+        let sustained = mk("sustained", 120); // drug present every step → only acquire
+        let early_window = mk("early_window", 60); // drug-free steps 60..119 → revert fires
         let pm_sustained =
             run_one_condition_full(&sustained, cfg, None, Some(PersisterConfig::enabled()))
                 .persister_mean
                 .unwrap();
         let pm_early =
-            run_one_condition_full(&early_only, cfg, None, Some(PersisterConfig::enabled()))
+            run_one_condition_full(&early_window, cfg, None, Some(PersisterConfig::enabled()))
                 .persister_mean
                 .unwrap();
+        // 60 steps of exponential reversion (rate 0.01/step → ×0.55 over 60)
+        // leave the early-window mean materially below the sustained mean.
         assert!(
-            pm_early < pm_sustained,
-            "persister fraction must revert when dosing stops: \
-             early-only mean={pm_early:.3} should be < sustained mean={pm_sustained:.3}"
+            pm_sustained > 0.0 && pm_early >= 0.0,
+            "both runs should acquire some persistence: sustained={pm_sustained:.3}, early={pm_early:.3}"
+        );
+        assert!(
+            pm_early < pm_sustained * 0.85,
+            "persister fraction must materially revert after dosing stops: \
+             early-window mean={pm_early:.3} should be well below sustained mean={pm_sustained:.3}"
         );
     }
 }

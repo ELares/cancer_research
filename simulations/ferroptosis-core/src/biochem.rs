@@ -25,6 +25,10 @@ pub struct CellState {
     /// byte-identical), so it is `0.0` for every code path that does not
     /// opt into the persister model. A consumer mutates it via
     /// [`crate::persister`] helpers around the step call.
+    ///
+    /// `#[serde(default)]` so older `CellState` JSON (written before #241)
+    /// still deserializes, defaulting to `0.0` (the inert value).
+    #[serde(default)]
     pub persister_fraction: f64,
 }
 
