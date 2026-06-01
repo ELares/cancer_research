@@ -46,6 +46,7 @@ pub mod immune_spatial;
 pub mod io;
 pub mod oxygen;
 pub mod params;
+pub mod persister;
 pub mod ph;
 pub mod photosensitizer_pk;
 pub mod physics;

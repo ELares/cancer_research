@@ -35,18 +35,27 @@ pub struct SnapshotBuffers {
     pub dead: Vec<u8>,
     pub damp: Vec<f32>,
     pub lp: Vec<f32>,
+    /// Per-cell drug-tolerant persister fraction (#241). `Some` only when the
+    /// persister model is enabled for this run, so non-persister snapshots
+    /// avoid the extra ~148 MB and don't emit a misleading all-zero file.
+    pub persister: Option<Vec<f32>>,
     grid_dim: usize,
     steps_captured: u32,
 }
 
 impl SnapshotBuffers {
-    pub fn new(grid_dim: usize, n_steps: u32) -> Self {
+    pub fn new(grid_dim: usize, n_steps: u32, capture_persister: bool) -> Self {
         let n_cells = grid_dim.pow(3);
         let total = n_cells * n_steps as usize;
         Self {
             dead: Vec::with_capacity(total),
             damp: Vec::with_capacity(total),
             lp: Vec::with_capacity(total),
+            persister: if capture_persister {
+                Some(Vec::with_capacity(total))
+            } else {
+                None
+            },
             grid_dim,
             steps_captured: 0,
         }
@@ -65,12 +74,17 @@ impl SnapshotBuffers {
             self.dead.push(u8::from(gc.state.dead));
             self.damp.push(damp_field[idx] as f32);
             self.lp.push(gc.state.lp as f32);
+            if let Some(p) = self.persister.as_mut() {
+                p.push(gc.state.persister_fraction as f32);
+            }
         }
         self.steps_captured += 1;
     }
 
-    /// Write the three trajectory `.npy` files to `output_dir`.
+    /// Write the trajectory `.npy` files to `output_dir`.
     /// Shape on disk: `(steps_captured, grid_dim, grid_dim, grid_dim)`.
+    /// `trajectory_persister.npy` is written only when the persister model
+    /// was enabled for this run.
     pub fn write(&self, output_dir: &Path) -> std::io::Result<()> {
         let shape = [
             self.steps_captured as usize,
@@ -81,6 +95,9 @@ impl SnapshotBuffers {
         npy::write_u8_array(output_dir.join("trajectory_dead.npy"), &shape, &self.dead)?;
         npy::write_f32_array(output_dir.join("trajectory_damp.npy"), &shape, &self.damp)?;
         npy::write_f32_array(output_dir.join("trajectory_lp.npy"), &shape, &self.lp)?;
+        if let Some(p) = &self.persister {
+            npy::write_f32_array(output_dir.join("trajectory_persister.npy"), &shape, p)?;
+        }
         Ok(())
     }
 

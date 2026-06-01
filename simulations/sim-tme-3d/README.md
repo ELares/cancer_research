@@ -96,8 +96,11 @@ The default 24-condition matrix path (no `--snapshot` flag) is **byte-identical*
 | `combined` (default) | RSL3 | immune + stromal + pH | constant |
 | `bare` | RSL3 | none | constant |
 | `multidose` | SDT | immune | **4-dose multi-dose (#239)** |
+| `persister` | SDT | immune + **persister (#241)** | multi-dose |
 
 The `multidose` preset shows **death waves synced to each dose**: four SDT ROS pulses at steps 10/55/100/145, each triggering a ferroptotic death wave + DAMP bloom + immune response. The renderer draws a red frame border + `💉 DOSE` marker on each dose step.
+
+The `persister` preset adds the drug-tolerant persister model (#241) and a **4th render panel** colouring each cell by its `persister_fraction` (0..1): tolerance accumulates in survivors across the death waves and reverts between doses. It writes an extra `trajectory_persister.npy` (f32), and `summary.json`-equivalent runs report `persister_mean`. Only this preset emits the persister file, so the other presets render the original three panels unchanged.
 
 ## Time-varying dosing (`--dose-sweep` + `DoseSchedule`, #239)
 
@@ -116,6 +119,17 @@ cargo run --release -p sim-tme-3d -- --dose-sweep
 All protocols share the same tumor grid and runtime RNG seed, so kill-rate differences reflect the dosing protocol alone, not stochastic noise. On this machine the steady-state `constant` model kills ~10–60× more than any realistic time-varying protocol — a direct quantification of how much the "drug present at full strength forever" idealization overestimates efficacy. **Absolute magnitudes are uncalibrated v1** (`RSL3_INACTIVATION_RATE` was tuned for sustained `conc=1.0`); the informative signal is the cross-protocol ordering.
 
 **Bit-identical guarantee**: when every condition uses `DoseSchedule::Constant` (the entire default 24-condition matrix), the run is byte-identical to pre-#239 — `summary.json` SHA unchanged. The dose machinery is gated behind `DoseSchedule::is_constant()`; `--dose-sweep` writes a separate file and never touches `summary.json`.
+
+## Drug-tolerant persister cells (#241)
+
+Cells that survive a ferroptosis inducer can enter an epigenetic **drug-tolerant persister** state (Hangauer 2017, Tsoi 2018): they resist the covalent GPX4 knockdown and enrich protective MUFA membrane lipids, then revert once the drug clears. The model lives in `ferroptosis-core::persister` (pure helpers) + `PersisterConfig`; this binary wires it into the per-step loop.
+
+- **Off by default.** The matrix path passes no config, so the persister code path is inert and `summary.json` stays byte-identical (guarded by the #253 production SHA check + the `persister_off_is_inert_and_unreported` unit test). `persister_mean` is omitted from `summary.json` unless the model is on.
+- **Two axes.** Under drug exposure each surviving cell's `persister_fraction` grows logistically toward a cap; it (a) attenuates the per-step RSL3 GPX4 inactivation (`gpx4_inactivation_multiplier`) and (b) adds MUFA protection (`mufa_boost_increment`). Between doses it reverts exponentially.
+- **Observable decline.** `persister_reduces_multidose_kills` exercises a repeated-dose RSL3 run (uniform O₂, 20³ × 120): enabling the model cuts kills from 79 to 27 as survivors acquire tolerance — the Hangauer 2017 multi-cycle effect.
+- **Visualization.** `--snapshot=persister` (SDT multi-dose + immune + persister) writes `trajectory_persister.npy` and the renderer adds a 4th panel colouring each cell by `persister_fraction` (0..1); a representative run reached `persister_mean ≈ 0.49` in survivors.
+
+Parameters in `PersisterConfig::enabled()` are **plausible placeholders pending calibration** (the literature gives qualitative direction, not step-level rates).
 
 ## Condition matrix
 

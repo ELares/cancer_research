@@ -43,6 +43,7 @@ Run the included example: `cargo run -p ferroptosis-core --example basic_usage`
 | `drug_transport` | Krogh cylinder drug penetration model |
 | `tumor_pk` | Two-compartment vascular/interstitial pharmacokinetics |
 | `dose_schedule` | Time-varying drug-administration schedules (Constant / Bolus / MultiDose / Infusion / FromPk); `factor_at(step)` per-step availability, identity-default for byte-identical steady-state (#239) |
+| `persister` | Drug-tolerant persister cells (#241): pure helpers (`acquire` / `revert` / `gpx4_inactivation_multiplier` / `mufa_boost_increment`) + `PersisterConfig` (identity-default ⇒ no-op). Cells acquire epigenetic ferroptosis tolerance under drug exposure and revert after clearance; consumer owns `CellState::persister_fraction` |
 
 ## Key API
 
@@ -162,6 +163,24 @@ pure-geometry 3D *hypoxic* fraction at matched R and λ is *smaller*
 than 2D (the cubic-vs-quadratic scaling dominates the normoxic shell,
 not the hypoxic core — the Vaupel 1989 observation that real 3D
 spheroids are more hypoxic reflects vasculature biology, not geometry).
+
+**Drug-tolerant persister cells (#241):**
+```rust
+use ferroptosis_core::params::PersisterConfig;
+use ferroptosis_core::persister::{acquire, revert, gpx4_inactivation_multiplier, mufa_boost_increment};
+
+let cfg = PersisterConfig::enabled();        // ::default() is the identity no-op
+let mut frac = 0.0;
+frac = acquire(frac, drug_intensity, &cfg);  // logistic growth under exposure
+frac = revert(frac, &cfg);                   // exponential decay when drug clears
+let resist = gpx4_inactivation_multiplier(frac, &cfg); // ∈ [1-gpx4_resistance, 1]
+let mufa_inc = mufa_boost_increment(frac, &cfg);       // per-step MUFA protection
+```
+Pure functions (consumer owns `CellState::persister_fraction` and applies the
+effects, like `oxygen` / `ph` / `stromal`). `PersisterConfig::default()` is the
+identity element (every helper a no-op), so an off run is byte-identical to no
+model at all. Refs: Hangauer 2017 (persister ⇄ GPX4 dependence), Tsoi 2018
+(MUFA lipid rewiring), Viswanathan 2017 (mesenchymal ⇄ ferroptosis / reversion).
 
 **Parameter contexts:**
 - `Params::default()` — 2D culture baseline

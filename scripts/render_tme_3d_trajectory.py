@@ -42,11 +42,16 @@ TRAJ_DIR = REPO_ROOT / "simulations" / "output" / "tme-3d"
 EXPECTED_SCHEMA_VERSION = 1
 
 
-def _load_trajectory(traj_dir: Path) -> tuple[np.ndarray, np.ndarray, np.ndarray, dict]:
-    """Load the three trajectory arrays + metadata; assert schema version.
+def _load_trajectory(
+    traj_dir: Path,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, "np.ndarray | None", dict]:
+    """Load the trajectory arrays + metadata; assert schema version.
 
-    Returns (dead, damp, lp, meta). Raises SystemExit on missing files
-    or schema mismatch with a clear, actionable message.
+    Returns (dead, damp, lp, persister, meta). `persister` is the optional
+    drug-tolerant persister-fraction field (#241), present only when the run
+    used the persister model (e.g. `--snapshot=persister`); `None` otherwise.
+    Raises SystemExit on missing required files or schema mismatch with a
+    clear, actionable message.
     """
     required = [
         "trajectory_dead.npy",
@@ -86,7 +91,21 @@ def _load_trajectory(traj_dir: Path) -> tuple[np.ndarray, np.ndarray, np.ndarray
             f"ERROR: trajectory arrays disagree on shape: "
             f"dead={dead.shape}, damp={damp.shape}, lp={lp.shape}."
         )
-    return dead, damp, lp, meta
+
+    # Optional persister-fraction overlay (#241). Only written when the run
+    # enabled the persister model (e.g. `--snapshot=persister`); a plain
+    # snapshot has no such file and renders the original three panels.
+    persister = None
+    persister_path = traj_dir / "trajectory_persister.npy"
+    if persister_path.exists():
+        persister = np.load(persister_path)
+        if persister.ndim != 4 or persister.shape != dead.shape:
+            raise SystemExit(
+                f"ERROR: trajectory_persister.npy shape {persister.shape} does "
+                f"not match the other fields {dead.shape}."
+            )
+
+    return dead, damp, lp, persister, meta
 
 
 def _make_dead_cmap() -> ListedColormap:
@@ -102,6 +121,7 @@ def _render(
     dead: np.ndarray,
     damp: np.ndarray,
     lp: np.ndarray,
+    persister: "np.ndarray | None",
     meta: dict,
     out_dir: Path,
     fps: int,
@@ -119,6 +139,7 @@ def _render(
     # (otherwise each frame's vmin/vmax shifts and the animation flickers).
     damp_max = max(float(damp.max()), 1e-6)
     lp_max = max(float(lp.max()), 1e-6)
+    show_persister = persister is not None
 
     # Dose-administration steps (#239). Empty for steady-state Constant
     # presets; non-empty for multi-dose / bolus / infusion snapshots, where
@@ -131,7 +152,10 @@ def _render(
         for k in range(d, d + 5):
             dose_window.add(k)
 
-    fig, axes = plt.subplots(1, 3, figsize=(13, 4.5), constrained_layout=True)
+    n_panels = 4 if show_persister else 3
+    fig, axes = plt.subplots(
+        1, n_panels, figsize=(4.3 * n_panels, 4.5), constrained_layout=True
+    )
     cond = meta.get("condition", {})
     dose_caption = (
         f"   doses@{sorted(dose_steps)}" if dose_steps else "   (constant dosing)"
@@ -157,12 +181,25 @@ def _render(
     axes[0].set_title("Dead-cell mask")
     axes[1].set_title(f"DAMP field (max={damp_max:.2f})")
     axes[2].set_title(f"LP field (max={lp_max:.2f})")
+
+    # Optional 4th panel: drug-tolerant persister fraction (#241), fixed
+    # 0..1 scale (it is a fraction) so the build-up of tolerance over the
+    # run is read directly off the colorbar.
+    im_pers = None
+    if show_persister:
+        im_pers = axes[3].imshow(
+            persister[0, mid], cmap="magma", vmin=0.0, vmax=1.0, origin="lower"
+        )
+        axes[3].set_title("Persister fraction")
+
     for ax in axes:
         ax.set_xticks([])
         ax.set_yticks([])
 
     fig.colorbar(im_damp, ax=axes[1], fraction=0.045, pad=0.04)
     fig.colorbar(im_lp, ax=axes[2], fraction=0.045, pad=0.04)
+    if show_persister:
+        fig.colorbar(im_pers, ax=axes[3], fraction=0.045, pad=0.04)
 
     step_text = fig.text(0.5, 0.02, "", ha="center", fontsize=9, family="monospace")
 
@@ -170,6 +207,8 @@ def _render(
         im_dead.set_data(dead[step, mid])
         im_damp.set_data(damp[step, mid])
         im_lp.set_data(lp[step, mid])
+        if im_pers is not None:
+            im_pers.set_data(persister[step, mid])
         # Count cumulative dead cells in this slice for a quantitative cue.
         n_dead_slice = int(dead[step, mid].sum())
         # Mark dose frames so multi-dose death waves are visually attributable.
@@ -188,7 +227,10 @@ def _render(
             for spine in ax.spines.values():
                 spine.set_edgecolor("red" if border_on else "none")
                 spine.set_linewidth(3.0 if border_on else 0.0)
-        return [im_dead, im_damp, im_lp, step_text]
+        artists = [im_dead, im_damp, im_lp, step_text]
+        if im_pers is not None:
+            artists.append(im_pers)
+        return artists
 
     interval_ms = max(1, int(1000.0 / fps))
     anim = animation.FuncAnimation(
@@ -238,9 +280,16 @@ def main() -> int:
     )
     args = parser.parse_args()
 
-    dead, damp, lp, meta = _load_trajectory(args.traj_dir)
+    dead, damp, lp, persister, meta = _load_trajectory(args.traj_dir)
     written = _render(
-        dead, damp, lp, meta, args.traj_dir, fps=args.fps, skip_mp4=args.no_mp4
+        dead,
+        damp,
+        lp,
+        persister,
+        meta,
+        args.traj_dir,
+        fps=args.fps,
+        skip_mp4=args.no_mp4,
     )
     print(f"\nDone. Wrote {len(written)} file(s):")
     for p in written:

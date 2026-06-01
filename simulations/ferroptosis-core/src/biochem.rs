@@ -20,6 +20,16 @@ pub struct CellState {
     pub dead: bool,
     pub death_step: Option<u32>,
     pub exo_ros_peak: f64,
+    /// Drug-tolerant persister fraction ∈ [0, 1] (#241). Consumer-owned:
+    /// `sim_cell_step` never reads or writes it (the core engine stays
+    /// byte-identical), so it is `0.0` for every code path that does not
+    /// opt into the persister model. A consumer mutates it via
+    /// [`crate::persister`] helpers around the step call.
+    ///
+    /// `#[serde(default)]` so older `CellState` JSON (written before #241)
+    /// still deserializes, defaulting to `0.0` (the inert value).
+    #[serde(default)]
+    pub persister_fraction: f64,
 }
 
 impl CellState {
@@ -44,6 +54,7 @@ impl CellState {
             dead: false,
             death_step: None,
             exo_ros_peak,
+            persister_fraction: 0.0,
         }
     }
 
@@ -96,6 +107,7 @@ impl CellState {
             dead: false,
             death_step: None,
             exo_ros_peak,
+            persister_fraction: 0.0,
         }
     }
 }
