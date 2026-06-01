@@ -125,6 +125,27 @@ impl Params {
             ..Params::default()
         }
     }
+
+    /// 3D spheroid context (#197): intermediate between `default` (2D culture,
+    /// no MUFA) and `invivo` (full SCD1-driven MUFA, M_ss = 0.40). Spheroid
+    /// cells have *partially* active MUFA remodeling, so the consumer's
+    /// position-dependent per-cell MUFA (peripheral high, core low) survives
+    /// the per-step `update_mufa_protection` homeostasis instead of being reset
+    /// to 0 (the #265 footgun — possible only because `scd_mufa_max > 0` here).
+    /// Half the in-vivo rate/cap ⇒ M_ss ≈ 0.20.
+    pub fn spheroid() -> Self {
+        let rate = 0.005;
+        let max = 0.25;
+        let decay = 0.005;
+        let steady_state = rate * max / (rate + decay * max);
+        Params {
+            scd_mufa_rate: rate,
+            scd_mufa_max: max,
+            scd_mufa_decay: decay,
+            initial_mufa_protection: steady_state,
+            ..Params::default()
+        }
+    }
 }
 
 /// Spatial model parameters for energy deposition and diffusion.

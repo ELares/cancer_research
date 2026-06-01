@@ -99,6 +99,7 @@ The default 24-condition matrix path (no `--snapshot` flag) is **byte-identical*
 | `persister` | SDT | immune + **persister (#241)** | multi-dose |
 | `clonal` | SDT | immune + **clonal 4-subclone (#242)** | multi-dose |
 | `vasculature` | RSL3 | **explicit vessels (#191)** | constant |
+| `spheroid` | SDT | immune + **radial biochem (#197)** | constant |
 
 The `multidose` preset shows **death waves synced to each dose**: four SDT ROS pulses at steps 10/55/100/145, each triggering a ferroptotic death wave + DAMP bloom + immune response. The renderer draws a red frame border + `💉 DOSE` marker on each dose step.
 
@@ -161,6 +162,24 @@ The 2D sims and the default 3D `oxygen::radial_o2_field` use "distance from the 
 - **Comparison (AC).** The library test `vessel_field_oxygenates_the_core_unlike_the_edge_proxy` shows internal vessels reach the deep core (which the edge proxy leaves uniformly hypoxic); the sim test `vasculature_oxygenates_core_and_changes_rsl3_kills` shows the vessel field materially changes RSL3 kills (direction is config-dependent — a sparse internal vessel set covers the surface shell less uniformly than the edge proxy). `summary.json` reports `vascular_hypoxic_fraction` when enabled.
 - **Visualization.** `--snapshot=vasculature` (RSL3 + vessels) writes a static `vessel_supply.npy` and the renderer adds a cividis O2-supply panel — bright vessel neighborhoods, dark hypoxic gaps.
 - Vessel placement is random (Option A); a fractal-branching tree or imported micro-CT networks (Options B/C) are out of scope. Inter-vessel spacings are literature-ranged placeholders.
+
+## 3D spheroid radial biochemistry (#197)
+
+Beyond the *environmental* fields (O2 #187, pH #190, vessels #191), the ferroptosis cascade itself is position-dependent in a spheroid: the phenotype distribution is radially structured, and MUFA/GSH/iron vary with distance from the nutrient supply.
+
+- **Model.** Opt-in via `Overrides.spheroid`. Runs under `Params::spheroid()` (MUFA partially active). `ferroptosis_core::spheroid::apply_radial_cells_3d` **re-generates** each tumor cell with its radial-position phenotype — **glycolytic rim / OXPHOS mid / persister-like core** — using an **independent** RNG (so `generate`'s stream is untouched), then applies the GSH (core-low, cysteine-limited) and iron (core-high, HIF-driven import) gradients to the cell. Position-dependent MUFA (peripheral high, core low) is set on the initialized `CellState` and persists because spheroid SCD1 is partially active (the #265 lesson — a 2D-params MUFA write would be reset on step 1).
+- **Off by default / byte-identical.** The matrix passes no spheroid config, so it runs `Params::default()` on the random grid — unchanged (golden + #253 production-SHA guard hold). The radial re-gen and `Params::spheroid()` switch are both gated on the opt-in.
+- **Comparison (AC).** `radial_spheroid_changes_kills_vs_random` shows the radial structure materially changes the kill outcome vs the random-phenotype grid (answering "does radial structure change the kill rate, or just redistribute deaths?" — it changes it). `spheroid_params_differ_from_default` pins `Params::spheroid()` between 2D (M_ss 0) and in-vivo (0.40).
+- **Visualization.** `--snapshot=spheroid` writes a static `phenotype.npy` (u8) and the renderer adds a discrete phenotype panel (stroma + glycolytic/OXPHOS/persister zones).
+- The GSH and iron gradients are the issue's "optional v1" items, included here. Cell-cell-contact (E-cadherin/Merlin) and glucose/glutamine/lactate gradients remain out of scope; gradient strengths are placeholders pending calibration.
+
+## Dimensionality-dependent assumptions (#197 AC)
+
+Which modeling choices are 2D-vs-3D-specific, surfaced for honesty:
+- **Radial phenotype structure** only exists in 3D spheroid mode; the 2D/default model assigns phenotypes by a coarse core/periphery split with random rolls.
+- **MUFA**: 2D culture (`Params::default`) has none; the spheroid context has partial, position-graded MUFA; full in-vivo has uniform M_ss = 0.40.
+- **O2 source**: 2D/default uses the edge-distance proxy (surface = only source); 3D can use explicit internal vessels (#191). The "hypoxia collapses RSL3" magnitude differs between the two (see #191).
+- These are model *contexts*, not calibrated transitions; the spheroid parameters are placeholders.
 
 ## Condition matrix
 

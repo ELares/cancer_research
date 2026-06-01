@@ -56,7 +56,7 @@ mod npy;
 mod snapshot;
 
 use ferroptosis_core::biochem::{exo_decay_factor, sim_cell_step, CellState};
-use ferroptosis_core::cell::Treatment;
+use ferroptosis_core::cell::{Phenotype, Treatment};
 use ferroptosis_core::clonal::{assign_subclones_3d, ClonalConfig};
 use ferroptosis_core::dose_schedule::DoseSchedule;
 use ferroptosis_core::grid::{TumorGrid3D, TUMOR_RADIUS_FRACTION};
@@ -71,6 +71,9 @@ use ferroptosis_core::params::{
 use ferroptosis_core::persister;
 use ferroptosis_core::ph::{ion_trap_factor_from_ph, iron_multiplier_from_ph, radial_ph_field};
 use ferroptosis_core::physics::local_ros_multiplier_3d;
+use ferroptosis_core::spheroid::{
+    apply_radial_cells_3d, radial_fraction_3d, radial_mufa_protection, SpheroidConfig,
+};
 use ferroptosis_core::stromal::stromal_adjacency_mask_3d;
 use ferroptosis_core::tumor_pk::RSL3_INACTIVATION_RATE;
 use ferroptosis_core::vasculature::{
@@ -100,6 +103,9 @@ const SUBCLONE_SEED: u64 = 0x5c10_4e42;
 /// `SUBCLONE_SEED` so vessel sampling never advances the grid-generation or
 /// subclone RNG streams.
 const VESSEL_SEED: u64 = 0x7e55_e142;
+/// Independent seed for radial spheroid cell re-generation (#197). Distinct
+/// from the others so radial re-gen never touches the matrix RNG streams.
+const SPHEROID_SEED: u64 = 0x5ade_0142;
 /// O2-supply factor below which a cell counts as hypoxic for
 /// `vascular_hypoxic_fraction` reporting (#191). `exp(-d/λ) < 0.1` is ~2.3 λ
 /// from the nearest vessel.
@@ -350,6 +356,7 @@ struct Overrides {
     immune: Option<SpatialImmuneConfig>,
     clonal: Option<ClonalConfig>,
     vasculature: Option<VasculatureConfig>,
+    spheroid: Option<SpheroidConfig>,
 }
 
 /// Thin wrapper running a condition with NO overrides (all realism layers
@@ -376,7 +383,15 @@ fn run_one_condition_full(
     let immune_override = overrides.immune;
     let clonal_cfg = overrides.clonal;
     let vasculature_cfg = overrides.vasculature;
-    let params = Params::default();
+    let spheroid_cfg = overrides.spheroid;
+    // 3D spheroid context (#197): partially-active MUFA so position-dependent
+    // per-cell MUFA persists. `None` (matrix path) ⇒ `Params::default()` ⇒
+    // byte-identical.
+    let params = if spheroid_cfg.is_some() {
+        Params::spheroid()
+    } else {
+        Params::default()
+    };
     let spatial_params = SpatialParams {
         cell_size_um: CELL_SIZE_UM,
         // SpatialParams::default()'s `neighbor_iron_fraction = 0.1` is
@@ -411,6 +426,17 @@ fn run_one_condition_full(
         SEED,
     );
     let n_cells = grid.cells.len();
+
+    // 3D spheroid radial cell biology (#197): re-assign tumor cells radially
+    // (glycolytic rim / OXPHOS mid / persister core) + GSH(core-low) /
+    // iron(core-high) gradients, via an INDEPENDENT RNG so generate's stream is
+    // untouched. `None` (matrix path) ⇒ the random grid is left as-is ⇒
+    // byte-identical. Runs FIRST (it rewrites cells); later layers (O2/pH/
+    // subclone/vessel) then perturb the radially-assigned cells. Position-
+    // dependent MUFA is applied after CellState init below.
+    if let Some(cfg) = &spheroid_cfg {
+        apply_radial_cells_3d(&mut grid, cfg, SPHEROID_SEED);
+    }
 
     // Clonal heterogeneity (#242): assign each cell to a subclone via Voronoi,
     // using an INDEPENDENT seed so generate's RNG stream (and the cell grid)
@@ -570,6 +596,20 @@ fn run_one_condition_full(
                 // catch-all) produces NaN downstream — calibration trips
                 // instead of silently using a stale value (#225 review).
                 gc.lp_at_death = f64::NAN;
+            }
+        }
+    }
+
+    // Position-dependent MUFA (#197): peripheral cells reach higher membrane
+    // MUFA than the nutrient-deprived core. Set on the freshly-initialized
+    // state; persists across steps because `Params::spheroid()`'s SCD1 is
+    // partially active (`scd_mufa_max > 0`). Gated on spheroid ⇒ the default
+    // path never runs this ⇒ byte-identical.
+    if let Some(cfg) = &spheroid_cfg {
+        for idx in 0..grid.cells.len() {
+            if grid.cells[idx].is_tumor {
+                let frac = radial_fraction_3d(&grid, idx);
+                grid.cells[idx].state.mufa_protection = radial_mufa_protection(frac, cfg);
             }
         }
     }
@@ -1382,6 +1422,10 @@ struct SnapshotPreset {
     /// `vessel_supply.npy` (f32, no time axis) for the renderer's O2-supply
     /// panel and emits `vascular_hypoxic_fraction`.
     vasculature: bool,
+    /// True if the 3D spheroid radial biology (#197) is enabled (radial
+    /// phenotypes + GSH/iron/MUFA gradients, `Params::spheroid()`). Writes a
+    /// static `phenotype.npy` (u8) for the renderer's phenotype panel.
+    spheroid: bool,
 }
 
 /// Visualization presets for `--snapshot=NAME`. Keep this list small —
@@ -1399,6 +1443,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         persister: false,
         clonal: false,
         vasculature: false,
+        spheroid: false,
     },
     SnapshotPreset {
         name: "bare",
@@ -1412,6 +1457,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         persister: false,
         clonal: false,
         vasculature: false,
+        spheroid: false,
     },
     SnapshotPreset {
         name: "multidose",
@@ -1425,6 +1471,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         persister: false,
         clonal: false,
         vasculature: false,
+        spheroid: false,
     },
     SnapshotPreset {
         // SDT here visualizes the persister-fraction OVERLAY (the MUFA axis +
@@ -1442,6 +1489,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         persister: true,
         clonal: false,
         vasculature: false,
+        spheroid: false,
     },
     SnapshotPreset {
         name: "clonal",
@@ -1455,6 +1503,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         persister: false,
         clonal: true,
         vasculature: false,
+        spheroid: false,
     },
     SnapshotPreset {
         // RSL3 (hypoxia-sensitive) + explicit internal vessels: near-vessel
@@ -1473,6 +1522,24 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         persister: false,
         clonal: false,
         vasculature: true,
+        spheroid: false,
+    },
+    SnapshotPreset {
+        // SDT + radial spheroid biology: the phenotype panel shows the
+        // glycolytic rim / OXPHOS mid / persister core structure, and the
+        // GSH/iron/MUFA gradients shape where SDT kills.
+        name: "spheroid",
+        desc: "SDT + 3D spheroid radial biochemistry (#197) — radial phenotype + GSH/iron/MUFA gradients",
+        treatment: Treatment::SDT,
+        treatment_name: "SDT",
+        immune_on: true,
+        stromal_on: false,
+        ph_on: false,
+        multidose: false,
+        persister: false,
+        clonal: false,
+        vasculature: false,
+        spheroid: true,
     },
 ];
 
@@ -1508,6 +1575,18 @@ fn resolve_snapshot(name: &str) -> &'static SnapshotPreset {
 /// `trajectory_{dead,damp,lp}.npy` + `trajectory_meta.json` to
 /// `output_dir`. Driven by the `--snapshot[=NAME]` CLI flag (#193, #239).
 ///
+/// Map a `Phenotype` to a small int for the static phenotype-map overlay
+/// (#197): `0` = stroma, `1..=4` = tumor phenotypes (rim→core ordering).
+fn phenotype_to_u8(p: Phenotype) -> u8 {
+    match p {
+        Phenotype::Stromal => 0,
+        Phenotype::Glycolytic => 1,
+        Phenotype::OXPHOS => 2,
+        Phenotype::Persister => 3,
+        Phenotype::PersisterNrf2 => 4,
+    }
+}
+
 /// Treatment, TME toggles, and dose schedule vary by [`SnapshotPreset`].
 /// Files are written under the same names regardless of preset — running
 /// a second time overwrites; rename manually to keep several side by side.
@@ -1545,6 +1624,7 @@ fn run_snapshot(output_dir: &Path, tumor_radius_um: f64, name: &str) {
     let vasculature_cfg = preset
         .vasculature
         .then(VasculatureConfig::well_vascularized);
+    let spheroid_cfg = preset.spheroid.then(SpheroidConfig::literature);
     // Static viz overlays, recomputed from the same SEED + per-layer seed the
     // run uses internally, so they match the perturbations actually applied.
     // `None` unless the matching preset is active.
@@ -1562,6 +1642,22 @@ fn run_snapshot(output_dir: &Path, tumor_radius_um: f64, name: &str) {
         let vessels = place_vessels_3d(&snapshot_grid, &cfg, VESSEL_SEED);
         vessel_supply_field(&snapshot_grid, &vessels, ZONE_REF_LAMBDA)
     });
+    // Radial phenotype map (#197): re-run the same radial assignment, then map
+    // each cell's Phenotype to a small int (0 = stroma, 1..=4 = tumor types).
+    let phenotype_map = spheroid_cfg.map(|cfg| {
+        let mut g = TumorGrid3D::generate(
+            run_cfg.grid_dim,
+            run_cfg.grid_dim,
+            run_cfg.grid_dim,
+            CELL_SIZE_UM,
+            SEED,
+        );
+        apply_radial_cells_3d(&mut g, &cfg, SPHEROID_SEED);
+        g.cells
+            .iter()
+            .map(|gc| phenotype_to_u8(gc.phenotype))
+            .collect::<Vec<u8>>()
+    });
     let mut buffers =
         snapshot::SnapshotBuffers::new(run_cfg.grid_dim, run_cfg.n_steps, preset.persister);
     let result = run_one_condition_full(
@@ -1572,6 +1668,7 @@ fn run_snapshot(output_dir: &Path, tumor_radius_um: f64, name: &str) {
             persister: preset.persister.then(PersisterConfig::enabled),
             clonal: clonal_cfg,
             vasculature: vasculature_cfg,
+            spheroid: spheroid_cfg,
             ..Default::default()
         },
     );
@@ -1607,6 +1704,14 @@ fn run_snapshot(output_dir: &Path, tumor_radius_um: f64, name: &str) {
             .expect("Failed to write vessel_supply.npy");
     }
 
+    // Static radial phenotype map (#197), same static 3D layout. Only when the
+    // preset is spheroid. 0 = stroma; 1..=4 = tumor phenotypes.
+    if let Some(ph) = &phenotype_map {
+        let shape = [run_cfg.grid_dim, run_cfg.grid_dim, run_cfg.grid_dim];
+        npy::write_u8_array(output_dir.join("phenotype.npy"), &shape, ph)
+            .expect("Failed to write phenotype.npy");
+    }
+
     let meta = snapshot::TrajectoryMeta {
         schema_version: snapshot::TRAJECTORY_SCHEMA_VERSION,
         grid_dim: run_cfg.grid_dim,
@@ -1628,12 +1733,17 @@ fn run_snapshot(output_dir: &Path, tumor_radius_um: f64, name: &str) {
         .expect("Failed to write trajectory_meta.json");
 
     eprintln!(
-        "Wrote {} + trajectory_{{dead,damp,lp{}}}.npy{}{}",
+        "Wrote {} + trajectory_{{dead,damp,lp{}}}.npy{}{}{}",
         meta_path.display(),
         if preset.persister { ",persister" } else { "" },
         if preset.clonal { " + subclone.npy" } else { "" },
         if preset.vasculature {
             " + vessel_supply.npy"
+        } else {
+            ""
+        },
+        if preset.spheroid {
+            " + phenotype.npy"
         } else {
             ""
         },
@@ -3204,6 +3314,72 @@ mod tests {
             vasc.total_dead,
             edge.total_dead,
             rel
+        );
+    }
+
+    // ===== 3D spheroid radial biochemistry (#197) =====
+
+    /// AC comparison: a radial spheroid (glycolytic rim / OXPHOS mid /
+    /// persister core + GSH/iron/MUFA gradients, run under Params::spheroid())
+    /// produces a materially different kill outcome than the default
+    /// random-phenotype grid — answering "does radial structure change the
+    /// kill rate, or just redistribute where cells die?" with: it changes it.
+    #[test]
+    fn radial_spheroid_changes_kills_vs_random() {
+        let cfg = RunConfig {
+            grid_dim: 24,
+            n_steps: 80,
+        };
+        let cond = Condition {
+            name: "spheroid_cmp".to_string(),
+            treatment: Treatment::SDT,
+            treatment_name: "SDT".to_string(),
+            o2_lambda: Some(ZONE_REF_LAMBDA),
+            immune_on: false,
+            stromal_on: false,
+            ph_on: false,
+            dose_schedule: DoseSchedule::Constant,
+        };
+        let random = run_one_condition_with_config(&cond, cfg, None);
+        let radial = run_one_condition_full(
+            &cond,
+            cfg,
+            None,
+            Overrides {
+                spheroid: Some(SpheroidConfig::literature()),
+                ..Default::default()
+            },
+        );
+        assert!(
+            random.total_dead > 0,
+            "random baseline must kill some cells"
+        );
+        let rel =
+            (random.total_dead as f64 - radial.total_dead as f64).abs() / random.total_dead as f64;
+        assert!(
+            rel > 0.1,
+            "radial spheroid structure must materially change kills (>10%) vs random: \
+             radial={}, random={}, rel={:.2}",
+            radial.total_dead,
+            random.total_dead,
+            rel
+        );
+    }
+
+    /// Spheroid mode is byte-identical-safe when off: the default (no spheroid
+    /// override) path is unchanged. Also confirms `Params::spheroid` differs
+    /// from `Params::default` (so the mode actually does something).
+    #[test]
+    fn spheroid_params_differ_from_default() {
+        use ferroptosis_core::params::Params;
+        let d = Params::default();
+        let s = Params::spheroid();
+        assert_eq!(d.scd_mufa_max, 0.0, "2D default has no MUFA cap");
+        assert!(s.scd_mufa_max > 0.0, "spheroid has partial MUFA");
+        assert!(
+            s.initial_mufa_protection > 0.0 && s.initial_mufa_protection < 0.4,
+            "spheroid M_ss is between 2D (0) and in-vivo (0.40); got {}",
+            s.initial_mufa_protection
         );
     }
 }
