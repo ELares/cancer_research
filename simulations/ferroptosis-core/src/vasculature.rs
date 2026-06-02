@@ -54,6 +54,23 @@ impl VasculatureConfig {
     }
 }
 
+/// Vessel count from tumor volume and target spacing (`n ≈ volume / spacing³`,
+/// cubic packing, floored at 1). Shared by [`place_vessels_3d`] (sphere) and
+/// [`place_vessels_in_slab_3d`] (box) so the two placements agree on density.
+fn derive_vessel_count(grid: &TumorGrid3D, cfg: &VasculatureConfig) -> usize {
+    debug_assert!(
+        cfg.inter_vessel_um.is_finite() && cfg.inter_vessel_um > 0.0,
+        "inter_vessel_um must be finite and positive, got {}",
+        cfg.inter_vessel_um
+    );
+    let cell_um3 = grid.cell_size_um.powi(3);
+    let n_tumor = grid.cells.iter().filter(|gc| gc.is_tumor).count();
+    let tumor_volume_um3 = n_tumor as f64 * cell_um3;
+    (tumor_volume_um3 / cfg.inter_vessel_um.powi(3))
+        .round()
+        .max(1.0) as usize
+}
+
 /// Place vessel seed points uniformly in the tumor sphere. The count is an
 /// approximation from the tumor volume and target inter-vessel spacing
 /// (`n ≈ tumor_volume / inter_vessel³`, assuming cubic packing, floored at 1).
@@ -67,17 +84,7 @@ pub fn place_vessels_3d(
     cfg: &VasculatureConfig,
     seed: u64,
 ) -> Vec<(f64, f64, f64)> {
-    debug_assert!(
-        cfg.inter_vessel_um.is_finite() && cfg.inter_vessel_um > 0.0,
-        "inter_vessel_um must be finite and positive, got {}",
-        cfg.inter_vessel_um
-    );
-    let cell_um3 = grid.cell_size_um.powi(3);
-    let n_tumor = grid.cells.iter().filter(|gc| gc.is_tumor).count();
-    let tumor_volume_um3 = n_tumor as f64 * cell_um3;
-    let n_vessels = (tumor_volume_um3 / cfg.inter_vessel_um.powi(3))
-        .round()
-        .max(1.0) as usize;
+    let n_vessels = derive_vessel_count(grid, cfg);
 
     let mut rng = StdRng::seed_from_u64(seed);
     let center = (
@@ -99,6 +106,37 @@ pub fn place_vessels_3d(
                 center.0 + dist * cos_phi,
                 center.1 + dist * sin_phi * theta.cos(),
                 center.2 + dist * sin_phi * theta.sin(),
+            )
+        })
+        .collect()
+}
+
+/// Place vessel seed points uniformly across the **whole grid box**
+/// (uniform-in-box), rather than the central tumor sphere of
+/// [`place_vessels_3d`]. For a patient-scale slab (#240, an all-tumor block,
+/// not a sphere) vessels should pervade the entire block so deep tissue
+/// *throughout* — not just a central pocket — can have focal well-perfused
+/// regions (#272 slab+vasculature coupling). Count matches `place_vessels_3d`
+/// (same volume/spacing rule) so the two agree on density; only the spatial
+/// distribution differs (box vs sphere).
+///
+/// Returns positions in **lattice (cell) coordinates**. Deterministic given
+/// `(grid dims, cfg, seed)`, with an **independent** `StdRng(seed)` so it never
+/// advances the grid-generation RNG (byte-identity preserved).
+pub fn place_vessels_in_slab_3d(
+    grid: &TumorGrid3D,
+    cfg: &VasculatureConfig,
+    seed: u64,
+) -> Vec<(f64, f64, f64)> {
+    let n_vessels = derive_vessel_count(grid, cfg);
+
+    let mut rng = StdRng::seed_from_u64(seed);
+    (0..n_vessels)
+        .map(|_| {
+            (
+                rng.gen::<f64>() * grid.rows as f64,
+                rng.gen::<f64>() * grid.cols as f64,
+                rng.gen::<f64>() * grid.layers as f64,
             )
         })
         .collect()
@@ -199,6 +237,49 @@ mod tests {
             a.len(),
             sparse.len()
         );
+    }
+
+    #[test]
+    fn slab_placement_is_deterministic_and_fills_the_box() {
+        // #272: slab-uniform placement spreads vessels across the WHOLE box,
+        // unlike the sphere placement which confines them to the central
+        // ~0.4-radius sphere. Same count (same volume/spacing rule), but some
+        // vessels land outside that sphere — the property the coupling needs so
+        // deep tissue throughout the slab gets perfused, not just the center.
+        let g = grid();
+        let cfg = VasculatureConfig::well_vascularized();
+        let a = place_vessels_in_slab_3d(&g, &cfg, 7);
+        let b = place_vessels_in_slab_3d(&g, &cfg, 7);
+        assert_eq!(a, b, "slab placement must be deterministic");
+        // Density agrees with the sphere placement (shared count rule).
+        assert_eq!(a.len(), place_vessels_3d(&g, &cfg, 7).len());
+
+        let center = (
+            g.rows as f64 / 2.0,
+            g.cols as f64 / 2.0,
+            g.layers as f64 / 2.0,
+        );
+        let sphere_r = (g.rows.min(g.cols).min(g.layers) as f64) * TUMOR_RADIUS_FRACTION * 0.95;
+        let outside = a
+            .iter()
+            .filter(|&&(r, c, l)| {
+                let d = ((r - center.0).powi(2) + (c - center.1).powi(2) + (l - center.2).powi(2))
+                    .sqrt();
+                d > sphere_r
+            })
+            .count();
+        assert!(
+            outside > 0,
+            "slab-uniform placement should reach beyond the central sphere (r={sphere_r:.1}); \
+             {outside}/{} vessels outside",
+            a.len()
+        );
+        // All vessels stay within the box.
+        for &(r, c, l) in &a {
+            assert!(r >= 0.0 && r <= g.rows as f64, "row {r} out of box");
+            assert!(c >= 0.0 && c <= g.cols as f64, "col {c} out of box");
+            assert!(l >= 0.0 && l <= g.layers as f64, "layer {l} out of box");
+        }
     }
 
     #[test]
