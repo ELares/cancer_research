@@ -191,6 +191,8 @@ figs = {
     '18': ('fig21_ph_ion_trapping', 'pH-driven ion trapping: acidic tumor core protonates and traps drug molecules, reducing RSL3 kills by 53\\%. SDT is pH-independent (no drug to trap).'),
     '19': ('fig22_decision_flowchart', 'Decision framework: which modality for which clinical context, based on tumor localizability, depth, ferroptosis-prone residual state, and immunocompetence.'),
     '20': ('fig23_prisma_flow', 'PRISMA-inspired corpus construction flow. 10,414 unique PubMed records across 19 mechanism queries; 4,830 full-text articles indexed (803 journals, 2001--2026), 5,584 abstract-only records retained separately. No manual screening or exclusion criteria were applied; this is an automated keyword-driven pipeline, not a formal systematic review.'),
+    '21': ('fig24_hypoxia_killcurve', 'Hypoxia kill-collapse (2D model). (a) RSL3 kill collapses from 3.7\\% (normoxic) to ${\\sim}0.1\\%$ (hypoxic) while SDT holds 91.9\\%${\\to}$87.8\\%; (b) the gradient result is flat across O$_2$ penetration length $\\lambda$=80--150$\\mu$m. \\textbf{SDT is modeled as O$_2$-independent, an optimistic upper bound} --- SDT\'s own O$_2$-dependence is contested (Section 7.1), so the direction is more robust than the magnitude of the gap.'),
+    '22': ('fig25_bliss_synergy', 'Dual-pathway depletion synergy. (a) RSL3+FSP1i kills 84.1\\%, far above the 42.2\\% Bliss-independent prediction (1.99$\\times$ synergy); (b) pairwise synergy scores (SDT pairs excluded for a 100\\% single-agent ceiling). Drug potencies are estimates; the directional finding (dual-pathway $>$ single) held across the $\\pm$50\\% sensitivity sweep (Section 5).'),
 }
 def repl_figure(match):
     num = match.group(1)

@@ -38,6 +38,11 @@ INDEX_FILE = PROJECT_ROOT / "corpus" / "INDEX.jsonl"
 FIG_DIR = PROJECT_ROOT / "article" / "figures"
 FIG_DIR.mkdir(parents=True, exist_ok=True)
 
+# 2D TME (sim-tme) and combination-mechanism (sim-combo-mech) outputs. Both are
+# gitignored; regenerate with `cargo run --release -p sim-tme` / `-p sim-combo-mech`.
+TME_SUMMARY = PROJECT_ROOT / "simulations" / "output" / "tme" / "tme_summary.json"
+COMBO_SUMMARY = PROJECT_ROOT / "simulations" / "output" / "combo-mech" / "combo_summary.json"
+
 plt.rcParams.update({
     'font.size': 11,
     'font.family': 'serif',
@@ -1185,6 +1190,132 @@ def fig17_damp_heatmap():
 # Main
 # ============================================================
 
+def fig24_hypoxia_killcurve():
+    """Figure 21: RSL3 vs SDT kill, normoxic vs hypoxic, and robustness across O2 penetration length (2D sim-tme)."""
+    print("Figure 21 (fig24): Hypoxia kill-collapse (RSL3 vs SDT)...")
+    if not TME_SUMMARY.exists():
+        print(f"  {TME_SUMMARY} not found — run `cargo run --release -p sim-tme` first. Skipping.")
+        return
+    data = json.loads(TME_SUMMARY.read_text())
+    conds = data["conditions"] if isinstance(data, dict) and "conditions" in data else data
+    base = [c for c in conds if c.get("immune_mode") == "off"]
+
+    def kill(treatment, o2):
+        for c in base:
+            if c["treatment"] == treatment and c.get("o2_condition") == o2:
+                return c["overall_kill_rate"] * 100
+        return None
+
+    lambdas = [80, 100, 120, 150]
+    rsl3_grad = [kill("RSL3", f"gradient_{l}um") for l in lambdas]
+    sdt_grad = [kill("SDT", f"gradient_{l}um") for l in lambdas]
+    rsl3_norm, sdt_norm = kill("RSL3", "uniform"), kill("SDT", "uniform")
+    if None in rsl3_grad + sdt_grad + [rsl3_norm, sdt_norm]:
+        print("  Missing conditions in tme_summary.json — skipping")
+        return
+
+    fig, (axA, axB) = plt.subplots(1, 2, figsize=(11, 4.5))
+
+    rsl3_hyp, sdt_hyp = float(np.mean(rsl3_grad)), float(np.mean(sdt_grad))
+    groups = ["RSL3\n(GPX4 inhibitor)", "SDT\n(exogenous ROS)"]
+    x = np.arange(len(groups))
+    w = 0.36
+    axA.bar(x - w / 2, [rsl3_norm, sdt_norm], w, label="Normoxic (uniform O$_2$)", color="#4C72B0")
+    axA.bar(x + w / 2, [rsl3_hyp, sdt_hyp], w, label="Hypoxic (O$_2$ gradient)", color="#C44E52")
+    for xi, (n, h) in enumerate([(rsl3_norm, rsl3_hyp), (sdt_norm, sdt_hyp)]):
+        axA.text(xi - w / 2, n + 1.5, f"{n:.1f}%", ha="center", fontsize=9)
+        axA.text(xi + w / 2, h + 1.5, f"{h:.1f}%", ha="center", fontsize=9)
+    axA.set_xticks(x)
+    axA.set_xticklabels(groups)
+    axA.set_ylabel("Overall tumor kill (%)")
+    axA.set_ylim(0, 105)
+    axA.set_title("(a) Kill collapse under hypoxia")
+    axA.legend(fontsize=8, loc="upper left")
+    axA.annotate(f"{rsl3_norm:.1f}% $\\to$ {rsl3_hyp:.1f}%\n(~{rsl3_norm / max(rsl3_hyp, 0.01):.0f}$\\times$ collapse)",
+                 xy=(0, rsl3_hyp), xytext=(0.55, 55), fontsize=8, color="#C44E52", ha="center")
+
+    axB.plot(lambdas, sdt_grad, "o-", color="#C44E52", label="SDT (hypoxic)")
+    axB.plot(lambdas, rsl3_grad, "s-", color="#4C72B0", label="RSL3 (hypoxic)")
+    axB.axhline(sdt_norm, ls="--", color="#C44E52", alpha=0.4, lw=1, label="SDT normoxic")
+    axB.axhline(rsl3_norm, ls="--", color="#4C72B0", alpha=0.4, lw=1, label="RSL3 normoxic")
+    axB.set_xlabel("O$_2$ penetration length $\\lambda$ ($\\mu$m)")
+    axB.set_ylabel("Overall tumor kill (%)")
+    axB.set_ylim(-3, 100)
+    axB.set_xticks(lambdas)
+    axB.set_title("(b) Robust across penetration length")
+    axB.legend(fontsize=8, loc="center right")
+
+    fig.suptitle("Hypoxia collapses pharmacologic ferroptosis but not exogenous ROS (2D model)", fontsize=12, y=1.02)
+    fig.text(0.5, -0.06,
+             "2D sim-tme, immune off. SDT is modeled as O$_2$-independent — an optimistic upper bound; "
+             "SDT's own O$_2$-dependence is contested (see manuscript §7.1).",
+             ha="center", fontsize=7.5, style="italic", color="gray")
+    fig.savefig(FIG_DIR / "fig24_hypoxia_killcurve.pdf", bbox_inches="tight")
+    fig.savefig(FIG_DIR / "fig24_hypoxia_killcurve.png", bbox_inches="tight")
+    plt.close()
+    print(f"  RSL3 {rsl3_norm:.1f}%->{rsl3_hyp:.2f}%, SDT {sdt_norm:.1f}%->{sdt_hyp:.1f}%")
+
+
+def fig25_bliss_synergy():
+    """Figure 22: Bliss synergy of dual-pathway depletion — RSL3+FSP1i observed vs expected, plus pairwise scores."""
+    print("Figure 22 (fig25): Bliss synergy (dual-pathway depletion)...")
+    if not COMBO_SUMMARY.exists():
+        print(f"  {COMBO_SUMMARY} not found — run `cargo run --release -p sim-combo-mech` first. Skipping.")
+        return
+    data = json.loads(COMBO_SUMMARY.read_text())
+    combos = data["combinations"] if isinstance(data, dict) and "combinations" in data else data
+
+    def find(a, b):
+        for c in combos:
+            if {c["drug_a"], c["drug_b"]} == {a, b}:
+                return c
+        return None
+
+    rf = find("RSL3", "FSP1i")
+    if rf is None:
+        print("  RSL3+FSP1i combination not found — skipping")
+        return
+
+    fig, (axA, axB) = plt.subplots(1, 2, figsize=(11, 4.5))
+
+    labels = ["RSL3\nalone", "FSP1i\nalone", "Bliss\nexpected", "Observed\ncombination"]
+    vals = [rf["rate_a"] * 100, rf["rate_b"] * 100, rf["bliss_prediction"] * 100, rf["rate_combo"] * 100]
+    colors = ["#4C72B0", "#55A868", "#999999", "#C44E52"]
+    bars = axA.bar(labels, vals, color=colors)
+    for bar, v in zip(bars, vals):
+        axA.text(bar.get_x() + bar.get_width() / 2, v + 1.5, f"{v:.1f}%", ha="center", fontsize=9)
+    axA.set_ylabel("Persister kill (%)")
+    axA.set_ylim(0, 100)
+    axA.set_title("(a) RSL3 + FSP1i: dual-pathway synergy")
+    axA.annotate(f"{rf['synergy_score']:.2f}$\\times$ synergy", xy=(3, vals[3]), xytext=(1.9, 93),
+                 fontsize=10, fontweight="bold", color="#C44E52",
+                 arrowprops=dict(arrowstyle="->", color="#C44E52"))
+
+    meaningful = [(c, c["synergy_score"]) for c in combos if "SDT" not in (c["drug_a"], c["drug_b"])]
+    meaningful.sort(key=lambda t: t[1], reverse=True)
+    names = [f"{c['drug_a']}+{c['drug_b']}" for c, _ in meaningful]
+    scores = [s for _, s in meaningful]
+    cols = ["#C44E52" if n == "RSL3+FSP1i" else "#4C72B0" for n in names]
+    axB.barh(names[::-1], scores[::-1], color=cols[::-1])
+    axB.axvline(1.0, ls="--", color="gray", lw=1, label="additive (1.0$\\times$)")
+    for i, s in enumerate(scores[::-1]):
+        axB.text(s + 0.02, i, f"{s:.2f}$\\times$", va="center", fontsize=8)
+    axB.set_xlabel("Bliss synergy score (observed / expected)")
+    axB.set_xlim(0, max(scores) * 1.25)
+    axB.set_title("(b) Pairwise synergy (SDT pairs excluded: ceiling)")
+    axB.legend(fontsize=8, loc="lower right")
+
+    fig.suptitle("Dual-pathway (GPX4 + FSP1) depletion is synergistic", fontsize=12, y=1.02)
+    fig.text(0.5, -0.04,
+             "1,000 persister cells/condition, 2D culture params. Drug potencies are estimates; the "
+             "directional finding (dual-pathway > single) held across the ±50% sensitivity sweep (§5).",
+             ha="center", fontsize=7.5, style="italic", color="gray")
+    fig.savefig(FIG_DIR / "fig25_bliss_synergy.pdf", bbox_inches="tight")
+    fig.savefig(FIG_DIR / "fig25_bliss_synergy.png", bbox_inches="tight")
+    plt.close()
+    print(f"  RSL3+FSP1i: {rf['rate_combo'] * 100:.1f}% obs vs {rf['bliss_prediction'] * 100:.1f}% expected = {rf['synergy_score']:.2f}x")
+
+
 def main():
     print("Loading corpus...")
     articles = load_corpus()
@@ -1217,6 +1348,10 @@ def main():
     fig15_designed_combinations(index)
     fig16_weighted_evidence(index)
     fig17_damp_heatmap()
+
+    # Tier-1 quantitative simulation figures (#285): manuscript figures 21, 22.
+    fig24_hypoxia_killcurve()
+    fig25_bliss_synergy()
 
     print(f"\nAll figures saved to {FIG_DIR}/")
     print("Files:")
