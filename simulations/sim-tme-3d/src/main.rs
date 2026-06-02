@@ -57,7 +57,7 @@ mod snapshot;
 
 use ferroptosis_core::biochem::{exo_decay_factor, sim_cell_step, CellState};
 use ferroptosis_core::cell::{Phenotype, Treatment};
-use ferroptosis_core::clonal::{assign_subclones_3d, ClonalConfig};
+use ferroptosis_core::clonal::{assign_subclones_3d, repopulate_dead_sites_3d, ClonalConfig};
 use ferroptosis_core::dose_schedule::DoseSchedule;
 use ferroptosis_core::grid::{TumorGrid3D, TUMOR_RADIUS_FRACTION};
 use ferroptosis_core::immune_spatial::{
@@ -250,6 +250,10 @@ struct ConditionResult {
 #[derive(Clone, Debug, Serialize)]
 struct SubcloneKillStat {
     subclone_id: u8,
+    /// Tumor cells assigned to this subclone at the start (before any clonal
+    /// expansion). Equals `total_tumor` when repopulation is off (#266 item 3);
+    /// the gap `total_tumor − initial_tumor` is the subclone's net expansion.
+    initial_tumor: usize,
     total_tumor: usize,
     total_dead: usize,
     kill_rate: f64,
@@ -513,9 +517,27 @@ fn run_one_condition_full(
     // using an INDEPENDENT seed so generate's RNG stream (and the cell grid)
     // is unchanged. `None` on the matrix path → no assignment, no perturbation
     // → byte-identical.
-    let subclone_ids: Option<Vec<u8>> = clonal_cfg
+    // `mut` because spatial clonal expansion (#266 item 3) rewrites a revived
+    // dead site's subclone id over the run; static (repopulation off) leaves it
+    // untouched.
+    let mut subclone_ids: Option<Vec<u8>> = clonal_cfg
         .as_ref()
         .map(|c| assign_subclones_3d(&grid, c.k(), SUBCLONE_SEED));
+    // Initial per-subclone tumor-cell census (at assignment, all living), so
+    // the summary can show the composition shift under expansion. `None` unless
+    // clonal is on. Index 0 = stroma (unused); 1..=k are the subclones.
+    let initial_subclone_totals: Option<Vec<usize>> = subclone_ids
+        .as_ref()
+        .zip(clonal_cfg.as_ref())
+        .map(|(ids, c)| {
+            let mut totals = vec![0usize; c.k() + 1];
+            for (idx, gc) in grid.cells.iter().enumerate() {
+                if gc.is_tumor {
+                    totals[ids[idx] as usize] += 1;
+                }
+            }
+            totals
+        });
 
     // Explicit vasculature (#191): place internal vessel seed points (own seed
     // → generate's RNG untouched), then build the per-cell supply factor
@@ -1246,10 +1268,29 @@ fn run_one_condition_full(
             }
         }
 
+        // Spatial clonal expansion (#266 item 3): after all deaths this step,
+        // repopulate dead tumor sites from living Moore-neighbors so resistant
+        // subclones (more survivors ⇒ more donors) grow their territory. Gated
+        // on clonal + repopulation_rate > 0 ⇒ off-by-default byte-identical. The
+        // per-site RNG derives from `cond_seed` (per-step), distinct from the
+        // setup seeds, so it never perturbs the assignment/placement streams.
+        if let (Some(ids), Some(ccfg)) = (subclone_ids.as_mut(), &clonal_cfg) {
+            if ccfg.repopulation_rate > 0.0 {
+                repopulate_dead_sites_3d(
+                    &mut grid,
+                    ids,
+                    ccfg,
+                    &params,
+                    cond_seed.wrapping_add(700_000_000),
+                    step,
+                );
+            }
+        }
+
         // Per-step trajectory capture for `--snapshot` runs. No-op for the
         // default 24-condition matrix path (snapshot is None there).
-        // Captured *after* all per-step work (biochem + DAMP + immune kill)
-        // so the snapshot reflects end-of-step state.
+        // Captured *after* all per-step work (biochem + DAMP + immune kill +
+        // any clonal repopulation) so the snapshot reflects end-of-step state.
         if let Some(buf) = snapshot.as_mut() {
             buf.capture_step(&grid, &damp_field);
         }
@@ -1362,6 +1403,7 @@ fn run_one_condition_full(
         (1..=k)
             .map(|s| SubcloneKillStat {
                 subclone_id: s as u8,
+                initial_tumor: initial_subclone_totals.as_ref().map_or(totals[s], |t| t[s]),
                 total_tumor: totals[s],
                 total_dead: deads[s],
                 kill_rate: if totals[s] > 0 {
@@ -3769,6 +3811,78 @@ mod tests {
             total_tumor, r.total_tumor,
             "subclone tumor counts must sum to total_tumor"
         );
+        // Without repopulation, the composition is static: final == initial.
+        for s in &sk {
+            assert_eq!(
+                s.total_tumor, s.initial_tumor,
+                "static clonal: subclone {} territory unchanged",
+                s.subclone_id
+            );
+        }
+    }
+
+    /// #266 item 3: with spatial clonal **expansion** on, the resistant subclone
+    /// gains territory relative to the vulnerable one — its share of living
+    /// tumor cells rises from the initial assignment to the end of the run, as
+    /// dead vulnerable sites are repopulated by surviving (mostly resistant)
+    /// neighbors. Off-by-default leaves the composition static (asserted above).
+    #[test]
+    fn clonal_expansion_shifts_territory_toward_resistant() {
+        let cfg = RunConfig {
+            grid_dim: 24,
+            n_steps: 120,
+        };
+        let cond = Condition {
+            name: "clonal_evolve".to_string(),
+            treatment: Treatment::RSL3,
+            treatment_name: "RSL3".to_string(),
+            o2_lambda: None, // uniform O2 ⇒ a strong baseline kill to drive turnover
+            immune_on: false,
+            stromal_on: false,
+            ph_on: false,
+            dose_schedule: DoseSchedule::Constant,
+        };
+        let r = run_one_condition_full(
+            &cond,
+            cfg,
+            None,
+            Overrides {
+                clonal: Some(ClonalConfig::literature_4().with_repopulation(0.3)),
+                ..Default::default()
+            },
+        );
+        let sk = r.subclone_kills.expect("clonal run reports subclone_kills");
+        let vuln = &sk[0]; // id 1: most vulnerable
+        let resist = &sk[3]; // id 4: most resistant
+                             // Territory shift: the resistant subclone's site count grows over the
+                             // run while the vulnerable one's shrinks, as dead vulnerable sites are
+                             // repopulated by surviving (mostly resistant) boundary neighbors.
+        assert!(
+            resist.total_tumor > resist.initial_tumor,
+            "resistant subclone must expand: {} → {}",
+            resist.initial_tumor,
+            resist.total_tumor
+        );
+        assert!(
+            vuln.total_tumor < vuln.initial_tumor,
+            "vulnerable subclone must shrink: {} → {}",
+            vuln.initial_tumor,
+            vuln.total_tumor
+        );
+        // Deterministic.
+        let r2 = run_one_condition_full(
+            &cond,
+            cfg,
+            None,
+            Overrides {
+                clonal: Some(ClonalConfig::literature_4().with_repopulation(0.3)),
+                ..Default::default()
+            },
+        );
+        assert_eq!(
+            r.total_dead, r2.total_dead,
+            "expansion run is deterministic"
+        );
     }
 
     /// Locks the MUFA/`lipid_unsat` axis in CI (#265 review): two K=1 configs
@@ -3799,6 +3913,7 @@ mod tests {
                 gpx4_mul: 1.0,
                 lipid_unsat_mul,
             }],
+            repopulation_rate: 0.0,
         };
         let baseline = run_one_condition_full(
             &cond,

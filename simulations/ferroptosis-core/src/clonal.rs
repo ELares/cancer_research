@@ -21,8 +21,9 @@
 //! and byte-identical to having no clonal model.
 
 use crate::biochem::CellState;
-use crate::cell::Cell;
-use crate::grid::{TumorGrid3D, TUMOR_RADIUS_FRACTION};
+use crate::cell::{gen_cell, Cell, Treatment};
+use crate::grid::{GridCell, TumorGrid3D, TUMOR_RADIUS_FRACTION};
+use crate::params::Params;
 use rand::prelude::*;
 
 /// Per-subclone perturbation of the baseline ferroptosis parameters, applied
@@ -96,6 +97,13 @@ impl SubclonePerturbation {
 #[derive(Clone, Debug)]
 pub struct ClonalConfig {
     pub perturbations: Vec<SubclonePerturbation>,
+    /// Per-step probability that a dead tumor site is repopulated by a living
+    /// Moore-neighbor's subclone — spatial **clonal expansion** (#266 item 3).
+    /// Resistant subclones, having more living neighbors, win more vacated
+    /// sites and grow their territory. `0.0` (the default for every
+    /// constructor) ⇒ no repopulation ⇒ the static-map behavior, byte-identical.
+    /// Set via [`with_repopulation`](Self::with_repopulation).
+    pub repopulation_rate: f64,
 }
 
 impl ClonalConfig {
@@ -110,7 +118,15 @@ impl ClonalConfig {
     pub fn single_identity() -> Self {
         ClonalConfig {
             perturbations: vec![SubclonePerturbation::identity()],
+            repopulation_rate: 0.0,
         }
+    }
+
+    /// Builder: enable spatial clonal expansion at the given per-step
+    /// repopulation probability (#266 item 3). `0.0` leaves it off.
+    pub fn with_repopulation(mut self, rate: f64) -> Self {
+        self.repopulation_rate = rate;
+        self
     }
 
     /// Literature-informed 4-subclone table (placeholders pending calibration).
@@ -155,6 +171,7 @@ impl ClonalConfig {
                     lipid_unsat_mul: 0.8,
                 },
             ],
+            repopulation_rate: 0.0,
         }
     }
 
@@ -222,6 +239,93 @@ pub fn assign_subclones_3d(grid: &TumorGrid3D, k: usize, seed: u64) -> Vec<u8> {
             (best + 1) as u8
         })
         .collect()
+}
+
+/// Spatial clonal **expansion** (#266 item 3): repopulate dead tumor sites from
+/// living Moore-26 neighbors, so resistant subclones (which have more living
+/// neighbors) grow their territory over the run. The revived site becomes a
+/// fresh living cell of a randomly-chosen living neighbor's subclone (its
+/// phenotype + that subclone's [`SubclonePerturbation`]), and `subclone_ids` is
+/// updated so the expansion shows in the per-subclone census.
+///
+/// **Deterministic + order-independent**: a start-of-pass living snapshot is
+/// taken first, all repopulations are decided against it, then applied — so a
+/// site revived this pass cannot itself seed another this step. Each dead site
+/// uses a per-site RNG mixed from `(seed, idx, step)`; pass a condition-derived
+/// `seed` (like the immune-kill RNG) so it never touches the setup-seed streams.
+///
+/// No-op (returns 0, mutates nothing) when `cfg.repopulation_rate <= 0.0`, so a
+/// consumer that doesn't opt in keeps the static-map behavior, byte-identical.
+/// Returns the number of sites repopulated this step.
+pub fn repopulate_dead_sites_3d(
+    grid: &mut TumorGrid3D,
+    subclone_ids: &mut [u8],
+    cfg: &ClonalConfig,
+    params: &Params,
+    seed: u64,
+    step: u32,
+) -> usize {
+    if cfg.repopulation_rate <= 0.0 {
+        return 0;
+    }
+    let n = grid.cells.len();
+    // Phase 1: snapshot living tumor sites (start of pass).
+    let living: Vec<bool> = (0..n)
+        .map(|i| grid.cells[i].is_tumor && !grid.cells[i].state.dead)
+        .collect();
+    // Phase 2: decide + build each repopulation against the snapshot.
+    let mut repop: Vec<(usize, u8, GridCell)> = Vec::new();
+    for idx in 0..n {
+        // Only DEAD tumor sites are candidates for repopulation.
+        if !grid.cells[idx].is_tumor || living[idx] {
+            continue;
+        }
+        let mut rng = StdRng::seed_from_u64(
+            seed ^ (idx as u64).wrapping_mul(0x9E37_79B9_7F4A_7C15)
+                ^ (step as u64).wrapping_mul(0x8000_0000_0000_01B3),
+        );
+        if rng.gen::<f64>() >= cfg.repopulation_rate {
+            continue;
+        }
+        // Living tumor Moore-26 neighbors (from the snapshot).
+        let (r, c, l) = grid.coords(idx);
+        let (nbrs, cnt) = grid.neighbors(r, c, l);
+        let donors: Vec<usize> = nbrs[..cnt]
+            .iter()
+            .map(|&(nr, nc, nl)| grid.flat_index(nr, nc, nl))
+            .filter(|&ni| living[ni])
+            .collect();
+        if donors.is_empty() {
+            continue; // isolated dead site — nothing to repopulate from
+        }
+        let donor = donors[rng.gen_range(0..donors.len())];
+        let donor_id = subclone_ids[donor];
+        let pheno = grid.cells[donor].phenotype;
+        // A fresh living daughter cell of the donor subclone.
+        let mut cell = gen_cell(pheno, &mut rng);
+        let mut state = CellState::from_cell(&cell, Treatment::Control, params, &mut rng);
+        cfg.perturbations[(donor_id - 1) as usize].apply(&mut cell, &mut state);
+        repop.push((
+            idx,
+            donor_id,
+            GridCell {
+                cell,
+                phenotype: pheno,
+                state,
+                is_tumor: true,
+                extra_iron: 0.0,
+                lp_at_death: 0.0,
+                newly_dead: false,
+            },
+        ));
+    }
+    // Phase 3: apply.
+    let count = repop.len();
+    for (idx, id, gc) in repop {
+        grid.cells[idx] = gc;
+        subclone_ids[idx] = id;
+    }
+    count
 }
 
 #[cfg(test)]
@@ -414,5 +518,66 @@ mod tests {
         assert_eq!(c2.iron, i2);
         assert_eq!(c2.nrf2, n2);
         assert_eq!(s2.gpx4, g2);
+    }
+
+    // ===== Spatial clonal expansion / repopulation (#266 item 3) =====
+
+    fn killed_plane(seed: u64) -> (TumorGrid3D, Vec<u8>, Vec<usize>) {
+        let mut g = TumorGrid3D::generate(20, 20, 20, 20.0, 42);
+        let ids = assign_subclones_3d(&g, 4, 7);
+        // Kill the central r=10 plane of tumor cells (living neighbors remain
+        // at r=9/11), leaving dead sites with donors to repopulate from.
+        let mut killed = Vec::new();
+        for idx in 0..g.cells.len() {
+            let (r, _, _) = g.coords(idx);
+            if r == 10 && g.cells[idx].is_tumor {
+                g.cells[idx].state.dead = true;
+                killed.push(idx);
+            }
+        }
+        let _ = seed;
+        (g, ids, killed)
+    }
+
+    #[test]
+    fn repopulate_is_noop_when_rate_zero() {
+        let (mut g, mut ids, killed) = killed_plane(0);
+        let ids_before = ids.clone();
+        let cfg = ClonalConfig::literature_4(); // repopulation_rate = 0
+        let n = repopulate_dead_sites_3d(&mut g, &mut ids, &cfg, &Params::default(), 1, 0);
+        assert_eq!(n, 0, "no repopulation when rate is 0");
+        assert_eq!(ids, ids_before, "subclone map unchanged");
+        assert!(
+            killed.iter().all(|&i| g.cells[i].state.dead),
+            "dead sites stay dead"
+        );
+    }
+
+    #[test]
+    fn repopulate_revives_dead_sites_and_is_deterministic() {
+        let cfg = ClonalConfig::literature_4().with_repopulation(1.0);
+        let (mut g, mut ids, killed) = killed_plane(0);
+        assert!(!killed.is_empty(), "the killed plane is non-empty");
+        let n = repopulate_dead_sites_3d(&mut g, &mut ids, &cfg, &Params::default(), 5, 0);
+        assert!(
+            n > 0,
+            "rate 1.0 repopulates dead sites that have living neighbors"
+        );
+        // Revived sites are alive again with a valid subclone id (1..=4).
+        let revived = killed.iter().filter(|&&i| !g.cells[i].state.dead).count();
+        assert_eq!(revived, n, "revived count matches the return value");
+        for &i in &killed {
+            if !g.cells[i].state.dead {
+                assert!(
+                    (1..=4).contains(&ids[i]),
+                    "revived site inherits a subclone"
+                );
+            }
+        }
+        // Deterministic: same seeds ⇒ identical decisions.
+        let (mut g2, mut ids2, _) = killed_plane(0);
+        let n2 = repopulate_dead_sites_3d(&mut g2, &mut ids2, &cfg, &Params::default(), 5, 0);
+        assert_eq!(n, n2, "deterministic repopulation count");
+        assert_eq!(ids, ids2, "deterministic subclone map after repopulation");
     }
 }
