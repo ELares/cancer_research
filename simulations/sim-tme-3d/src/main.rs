@@ -3278,7 +3278,9 @@ mod tests {
              to be informative; got {}. Adjust the schedule/grid/steps.",
             off.total_dead
         );
-        // Material reduction, not a 1-cell rounding artifact. Observed ≈66%.
+        // Material reduction, not a 1-cell rounding artifact. Observed ≈55%
+        // (off=80, on=36) under the #262 competing-rate model — smaller than the
+        // pre-#262 acquire-only ≈66% because reversion now also operates.
         let reduction = (off.total_dead - on.total_dead) as f64 / off.total_dead as f64;
         assert!(
             on.total_dead < off.total_dead && reduction > 0.2,

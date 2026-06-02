@@ -96,9 +96,9 @@ pub fn revert(fraction: f64, cfg: &PersisterConfig) -> f64 {
 /// equilibrium** (where acquisition balances reversion) rather than ratcheting
 /// monotonically to the cap — the biologically faithful behavior (Hangauer 2017;
 /// Tsoi 2018). With `drug = 0` it reduces to pure reversion; with the identity
-/// config (`acquisition_rate == 0`) it is a no-op, so a consumer that does not
-/// opt in stays byte-identical. `drug_intensity` is clamped to `[0, 1]`; the
-/// result to `[0, max_fraction]`.
+/// config (all rates zero) it is a no-op, so a consumer that does not opt in
+/// stays byte-identical. `drug_intensity` is clamped to `[0, 1]`; the result to
+/// `[0, max_fraction]`.
 ///
 /// This is the per-step integrator the consumer applies; [`acquire`] / [`revert`]
 /// remain the individual rate terms (useful in isolation / for inspection).
@@ -108,9 +108,12 @@ pub fn step(fraction: f64, drug_intensity: f64, cfg: &PersisterConfig) -> f64 {
         (0.0..=1.0).contains(&cfg.reversion_rate),
         "reversion_rate must be in [0, 1]"
     );
-    // Identity config (acquisition_rate == 0, which by the config invariant
-    // pairs with max_fraction == 0) ⇒ no-op ⇒ byte-identical.
-    if cfg.acquisition_rate == 0.0 {
+    // Short-circuit only the *fully identity* config (all rates zero) ⇒ no-op ⇒
+    // byte-identical. Guarding on `is_identity()` rather than just
+    // `acquisition_rate == 0` keeps reversion live for a hypothetical
+    // acquisition-off-but-reversion-on config (drug permanently withdrawn),
+    // which should still decay rather than freeze (#262 review).
+    if cfg.is_identity() {
         return fraction;
     }
     let drug = drug_intensity.clamp(0.0, 1.0);
@@ -278,5 +281,26 @@ mod tests {
             cfg.max_fraction
         );
         assert!((f - f_star).abs() < 1e-3, "f={f}, analytic f*={f_star}");
+    }
+
+    /// #262 review: acquisition off but reversion on (NOT the identity config —
+    /// e.g. drug permanently withdrawn) must still revert, not freeze. The
+    /// short-circuit guards on `is_identity()`, so this config takes the full
+    /// update and decays.
+    #[test]
+    fn step_reverts_when_acquisition_off_but_reversion_on() {
+        let cfg = PersisterConfig {
+            acquisition_rate: 0.0,
+            reversion_rate: 0.1,
+            max_fraction: 0.8,
+            ..PersisterConfig::enabled()
+        };
+        assert!(!cfg.is_identity(), "rev>0 ⇒ not the identity config");
+        // pure reversion: 0.5·(1−0.1) = 0.45, regardless of drug level.
+        let next = step(0.5, 1.0, &cfg);
+        assert!(
+            (next - 0.45).abs() < 1e-12,
+            "should revert toward 0: got {next}"
+        );
     }
 }
