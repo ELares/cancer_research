@@ -43,7 +43,7 @@ Run the included example: `cargo run -p ferroptosis-core --example basic_usage`
 | `drug_transport` | Krogh cylinder drug penetration model |
 | `tumor_pk` | Two-compartment vascular/interstitial pharmacokinetics |
 | `dose_schedule` | Time-varying drug-administration schedules (Constant / Bolus / MultiDose / Infusion / FromPk); `factor_at(step)` per-step availability, identity-default for byte-identical steady-state (#239) |
-| `persister` | Drug-tolerant persister cells (#241): pure helpers (`acquire` / `revert` / `gpx4_inactivation_multiplier` / `mufa_boost_increment`) + `PersisterConfig` (identity-default ⇒ no-op). Cells acquire epigenetic ferroptosis tolerance under drug exposure and revert after clearance; consumer owns `CellState::persister_fraction` |
+| `persister` | Drug-tolerant persister cells (#241): pure helpers (`step` competing-rate per-step update / `acquire` / `revert` / `gpx4_inactivation_multiplier` / `mufa_boost_increment`) + `PersisterConfig` (identity-default ⇒ no-op). Cells acquire epigenetic ferroptosis tolerance under drug exposure and revert after clearance; the consumer applies `step` (#262 — acquisition + reversion act simultaneously, so sustained sub-saturating drug reaches a sub-cap equilibrium rather than ratcheting to the cap). Consumer owns `CellState::persister_fraction` |
 | `spheroid` | 3D spheroid radial cell biology (#197): `apply_radial_cells_3d` (re-assigns tumor cells radially — glycolytic rim / OXPHOS mid / persister core — via an INDEPENDENT RNG, with core-low GSH + core-high iron gradients, and a per-cell **MUFA cap** rim-high/core-low so position-dependent MUFA is durable, #270) + `radial_phenotype` / `radial_mufa_protection` / `radial_fraction_3d` + `SpheroidConfig`. Pairs with `Params::spheroid()` (partial-MUFA context). Opt-in ⇒ default random grid byte-identical |
 | `vasculature` | Explicit 3D vessel network (#191): `place_vessels_3d` (random internal vessel seeds via an INDEPENDENT RNG; count from inter-vessel spacing) + `vessel_supply_field` (per-cell `exp(-dist_to_nearest_vessel/λ)`, a drop-in alternative to `oxygen::radial_o2_field` supplying both O2 and drug) + `hypoxic_fraction`. `VasculatureConfig::well_vascularized()` / `poorly_vascularized()`. Replaces the edge-distance proxy with patchy, non-radial oxygenation |
 | `clonal` | Clonal heterogeneity (#242): `assign_subclones_3d` (Voronoi subclone map via an INDEPENDENT RNG, so `TumorGrid3D::generate`'s stream is untouched) + `ClonalConfig` / `SubclonePerturbation` (per-subclone `iron_mul` / `gpx4_mul` / `lipid_unsat_mul` the consumer applies as RNG-neutral setup mutations; `lipid_unsat_mul` is the MUFA-enrichment axis, scaling the static `Cell` PUFA field so it persists across steps; `gpx4_mul` is the **durable** antioxidant axis (#266) — the consumer scales both the initial `state.gpx4` and the static `cell.nrf2` setpoint, so a low-antioxidant subclone stays differentiated for the whole run rather than relaxing back). `single_identity()` (K=1) ⇒ byte-identical; `literature_4()` spans the mesenchymal⇄epithelial vulnerability axis |
@@ -171,12 +171,13 @@ spheroids are more hypoxic reflects vasculature biology, not geometry).
 **Drug-tolerant persister cells (#241):**
 ```rust
 use ferroptosis_core::params::PersisterConfig;
-use ferroptosis_core::persister::{acquire, revert, gpx4_inactivation_multiplier, mufa_boost_increment};
+use ferroptosis_core::persister::{step, gpx4_inactivation_multiplier, mufa_boost_increment};
 
 let cfg = PersisterConfig::enabled();        // ::default() is the identity no-op
 let mut frac = 0.0;
-frac = acquire(frac, drug_intensity, &cfg);  // logistic growth under exposure
-frac = revert(frac, &cfg);                   // exponential decay when drug clears
+// Competing-rate update (#262): acquisition + reversion both act each step, so
+// sustained sub-saturating drug settles at a sub-cap equilibrium.
+frac = step(frac, drug_intensity, &cfg);
 let resist = gpx4_inactivation_multiplier(frac, &cfg); // ∈ [1-gpx4_resistance, 1]
 let mufa_inc = mufa_boost_increment(frac, &cfg);       // per-step MUFA protection
 ```

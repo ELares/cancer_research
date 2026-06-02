@@ -1064,11 +1064,12 @@ fn run_one_condition_full(
                                 }
                             }
                         };
-                        gc.state.persister_fraction = if drug_intensity > 0.0 {
-                            persister::acquire(frac, drug_intensity, pcfg)
-                        } else {
-                            persister::revert(frac, pcfg)
-                        };
+                        // Competing-rate update (#262): acquisition and
+                        // reversion both act each step (not an either-or keyed
+                        // on drug == 0), so sustained sub-saturating drug
+                        // reaches a sub-cap equilibrium rather than ratcheting
+                        // monotonically to the cap.
+                        gc.state.persister_fraction = persister::step(frac, drug_intensity, pcfg);
                     }
                 }
 
@@ -3277,7 +3278,9 @@ mod tests {
              to be informative; got {}. Adjust the schedule/grid/steps.",
             off.total_dead
         );
-        // Material reduction, not a 1-cell rounding artifact. Observed ≈66%.
+        // Material reduction, not a 1-cell rounding artifact. Observed ≈55%
+        // (off=80, on=36) under the #262 competing-rate model — smaller than the
+        // pre-#262 acquire-only ≈66% because reversion now also operates.
         let reduction = (off.total_dead - on.total_dead) as f64 / off.total_dead as f64;
         assert!(
             on.total_dead < off.total_dead && reduction > 0.2,

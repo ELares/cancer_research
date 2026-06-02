@@ -34,10 +34,19 @@
 //! persister fraction, so the core engine stays byte-identical; a consumer
 //! (e.g. sim-tme-3d) composes the helpers around the step call.
 //!
+//! ## Per-step update
+//!
+//! The consumer applies [`step`] each step — a **competing-rate** integrator
+//! where acquisition (drug-driven) and reversion both act simultaneously, so
+//! sustained sub-saturating drug reaches a sub-cap equilibrium rather than
+//! ratcheting monotonically to the cap (#262). [`acquire`] and [`revert`] remain
+//! the individual rate terms (the acquisition increment and the reversion
+//! decay) for use in isolation.
+//!
 //! ## Identity default
 //!
 //! [`PersisterConfig::default`] is the identity element (every rate is zero),
-//! so all four helpers are no-ops (`acquire`/`revert` return the input,
+//! so all helpers are no-ops (`step`/`acquire`/`revert` return the input,
 //! multipliers return `1.0`, the increment returns `0.0`). A run with the
 //! identity config is therefore byte-identical to one with no persister model
 //! at all. [`PersisterConfig::enabled`] supplies plausible (placeholder,
@@ -75,6 +84,42 @@ pub fn revert(fraction: f64, cfg: &PersisterConfig) -> f64 {
         "reversion_rate must be in [0, 1]; a value > 1 inverts the decay sign"
     );
     (fraction * (1.0 - cfg.reversion_rate)).max(0.0)
+}
+
+/// One **competing-rate** per-step update of `fraction` (#262): acquisition and
+/// reversion act **simultaneously**, not as an either-or keyed on whether the
+/// drug is exactly zero. Per step:
+///
+/// `frac += acquisition_rate · drug · (max_fraction − frac)  −  reversion_rate · frac`
+///
+/// so under sustained sub-saturating drug the fraction relaxes to a **sub-cap
+/// equilibrium** (where acquisition balances reversion) rather than ratcheting
+/// monotonically to the cap — the biologically faithful behavior (Hangauer 2017;
+/// Tsoi 2018). With `drug = 0` it reduces to pure reversion; with the identity
+/// config (all rates zero) it is a no-op, so a consumer that does not opt in
+/// stays byte-identical. `drug_intensity` is clamped to `[0, 1]`; the result to
+/// `[0, max_fraction]`.
+///
+/// This is the per-step integrator the consumer applies; [`acquire`] / [`revert`]
+/// remain the individual rate terms (useful in isolation / for inspection).
+pub fn step(fraction: f64, drug_intensity: f64, cfg: &PersisterConfig) -> f64 {
+    debug_assert!(cfg.acquisition_rate >= 0.0, "acquisition_rate must be >= 0");
+    debug_assert!(
+        (0.0..=1.0).contains(&cfg.reversion_rate),
+        "reversion_rate must be in [0, 1]"
+    );
+    // Short-circuit only the *fully identity* config (all rates zero) ⇒ no-op ⇒
+    // byte-identical. Guarding on `is_identity()` rather than just
+    // `acquisition_rate == 0` keeps reversion live for a hypothetical
+    // acquisition-off-but-reversion-on config (drug permanently withdrawn),
+    // which should still decay rather than freeze (#262 review).
+    if cfg.is_identity() {
+        return fraction;
+    }
+    let drug = drug_intensity.clamp(0.0, 1.0);
+    let acquisition = cfg.acquisition_rate * drug * (cfg.max_fraction - fraction).max(0.0);
+    let reversion = cfg.reversion_rate * fraction;
+    (fraction + acquisition - reversion).clamp(0.0, cfg.max_fraction)
 }
 
 /// Multiplier applied to the per-step GPX4-inactivation drug effect: a
@@ -168,5 +213,94 @@ mod tests {
         assert_eq!(mufa_boost_increment(0.0, &cfg), 0.0);
         assert!(mufa_boost_increment(0.5, &cfg) > 0.0);
         assert!(mufa_boost_increment(1.0, &cfg) > mufa_boost_increment(0.5, &cfg));
+    }
+
+    // ===== Competing-rate step (#262) =====
+
+    #[test]
+    fn step_identity_config_is_a_noop() {
+        let id = PersisterConfig::default();
+        assert_eq!(step(0.3, 1.0, &id), 0.3);
+        assert_eq!(step(0.3, 0.0, &id), 0.3);
+    }
+
+    #[test]
+    fn step_zero_drug_is_pure_reversion() {
+        let cfg = enabled();
+        let mut f = 0.8;
+        for _ in 0..10_000 {
+            f = step(f, 0.0, &cfg);
+        }
+        assert!(f < 1e-6, "no drug ⇒ reverts to zero; got {f}");
+    }
+
+    /// AC #4: under sustained **sub-saturating** drug, acquisition and reversion
+    /// balance at a sub-cap equilibrium, instead of ratcheting monotonically to
+    /// the cap the way the old either-or `acquire` did.
+    #[test]
+    fn step_reaches_sub_cap_equilibrium_under_sustained_subsaturating_drug() {
+        let cfg = enabled();
+        let drug = 0.3; // sub-saturating
+        let mut f = 0.0;
+        for _ in 0..10_000 {
+            f = step(f, drug, &cfg);
+        }
+        // Converged strictly between 0 and the cap.
+        assert!(f > 0.0, "acquisition fires under drug");
+        assert!(
+            f < cfg.max_fraction - 1e-6,
+            "competing reversion holds it below the cap: f={f}, max={}",
+            cfg.max_fraction
+        );
+        // Fixed point: another step barely moves it.
+        assert!(
+            (step(f, drug, &cfg) - f).abs() < 1e-9,
+            "equilibrium is a fixed point"
+        );
+        // Matches the analytic equilibrium acq·drug·max / (rev + acq·drug).
+        let a = cfg.acquisition_rate * drug;
+        let f_star = a * cfg.max_fraction / (cfg.reversion_rate + a);
+        assert!((f - f_star).abs() < 1e-3, "f={f}, analytic f*={f_star}");
+    }
+
+    /// The competing-rate signature vs the old `acquire`: reversion holds the
+    /// fraction **below the cap even at saturating drug** (the old monotonic
+    /// `acquire` reached the cap).
+    #[test]
+    fn step_equilibrium_stays_below_cap_even_at_full_drug() {
+        let cfg = enabled();
+        let mut f = 0.0;
+        for _ in 0..10_000 {
+            f = step(f, 1.0, &cfg);
+        }
+        let f_star =
+            cfg.acquisition_rate * cfg.max_fraction / (cfg.reversion_rate + cfg.acquisition_rate);
+        assert!(
+            f < cfg.max_fraction,
+            "reversion keeps it below the cap even at full drug: f={f}, max={}",
+            cfg.max_fraction
+        );
+        assert!((f - f_star).abs() < 1e-3, "f={f}, analytic f*={f_star}");
+    }
+
+    /// #262 review: acquisition off but reversion on (NOT the identity config —
+    /// e.g. drug permanently withdrawn) must still revert, not freeze. The
+    /// short-circuit guards on `is_identity()`, so this config takes the full
+    /// update and decays.
+    #[test]
+    fn step_reverts_when_acquisition_off_but_reversion_on() {
+        let cfg = PersisterConfig {
+            acquisition_rate: 0.0,
+            reversion_rate: 0.1,
+            max_fraction: 0.8,
+            ..PersisterConfig::enabled()
+        };
+        assert!(!cfg.is_identity(), "rev>0 ⇒ not the identity config");
+        // pure reversion: 0.5·(1−0.1) = 0.45, regardless of drug level.
+        let next = step(0.5, 1.0, &cfg);
+        assert!(
+            (next - 0.45).abs() < 1e-12,
+            "should revert toward 0: got {next}"
+        );
     }
 }
