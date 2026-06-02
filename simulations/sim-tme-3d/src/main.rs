@@ -4191,12 +4191,30 @@ mod tests {
             random.total_dead > 0,
             "random baseline must kill some cells"
         );
+        // The radial spheroid is net more SDT-resistant than the default
+        // (random) phenotype split: its larger, volume-correct hypoxic/persister
+        // core (#270 — core is now ~0.39 of volume, was ~0.04) kills fewer cells.
+        // Deterministic (seeded), so the ~9.7% gap is stable; assert a material
+        // change with margin. (Threshold was 10%, tuned to the pre-#270 inverted
+        // config; the volume-correct config gives radial≈4601 vs random≈5093.)
+        // NOTE: the < direction couples to the current net balance of the core's
+        // MIXED mechanism (persister phenotype = resistant; low GSH + high iron =
+        // vulnerable; hypoxic = resistant to O2-dependent ferroptosis). A future
+        // gradient-strength calibration could flip the net, in which case revisit
+        // this direction assertion (the magnitude/material-change check stands).
+        assert!(
+            radial.total_dead < random.total_dead,
+            "volume-correct spheroid (larger hypoxic core) should kill fewer than random: \
+             radial={}, random={}",
+            radial.total_dead,
+            random.total_dead
+        );
         let rel =
             (random.total_dead as f64 - radial.total_dead as f64).abs() / random.total_dead as f64;
         assert!(
-            rel > 0.1,
-            "radial spheroid structure must materially change kills (>10%) vs random: \
-             radial={}, random={}, rel={:.2}",
+            rel > 0.05,
+            "radial spheroid structure must materially change kills (>5%) vs random: \
+             radial={}, random={}, rel={:.3}",
             radial.total_dead,
             random.total_dead,
             rel

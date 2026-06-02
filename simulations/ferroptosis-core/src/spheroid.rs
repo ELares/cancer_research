@@ -26,14 +26,19 @@ use crate::cell::{gen_cell, Phenotype};
 use crate::grid::{TumorGrid3D, TUMOR_RADIUS_FRACTION};
 use rand::prelude::*;
 
-/// Radial structure + gradient strengths for a spheroid. Fractions are of the
-/// tumor radius (0 = center/core, 1 = surface).
+/// Radial structure + gradient strengths for a spheroid. The phenotype-zone
+/// thresholds are **cumulative-VOLUME fractions** (0 = center, 1 = whole
+/// tumor); the gradient endpoints below are still keyed on radial position
+/// (0 = center/core, 1 = surface), since diffusion gradients are radial.
 #[derive(Clone, Copy, Debug)]
 pub struct SpheroidConfig {
-    /// At/above this radial fraction, cells are Glycolytic (the rim).
+    /// Cells whose cumulative volume fraction (frac³) is at/above this are
+    /// Glycolytic (the proliferating rim). So the rim occupies the outer
+    /// `1 − glycolytic_frac` of the tumor *volume*.
     pub glycolytic_frac: f64,
-    /// At/above this (and below `glycolytic_frac`), cells are OXPHOS; below it,
-    /// the Persister-like core.
+    /// Cumulative volume fraction at/above which (and below `glycolytic_frac`)
+    /// cells are OXPHOS; below it, the Persister-like core. So the core
+    /// occupies the inner `oxphos_frac` of the tumor *volume*.
     pub oxphos_frac: f64,
     /// Per-cell MUFA carrying **cap** at the surface (high) and core (low) —
     /// the `cell.mufa_cap` `update_mufa_protection` saturates toward, so the
@@ -49,9 +54,11 @@ pub struct SpheroidConfig {
 }
 
 impl SpheroidConfig {
-    /// Literature-informed defaults (placeholders pending calibration):
-    /// outer third glycolytic, middle third OXPHOS, inner third persister-like;
-    /// MUFA 0.25→0.05 surface→core; core GSH ×0.5; core iron ×1.6.
+    /// Literature-informed defaults: by VOLUME, a thin glycolytic rim (~27%), an
+    /// OXPHOS intermediate zone (~34%), and a large persister-like core (~39%) —
+    /// the Browning-2021 limiting structure (see the zone-geometry note below).
+    /// Biochemical gradients are placeholders pending calibration: MUFA 0.25→0.05
+    /// surface→core; core GSH ×0.5; core iron ×1.6.
     ///
     /// MUFA is now a **durable** position-dependent axis (#270): `mufa_surface`
     /// / `mufa_core` are the per-cell MUFA carrying caps (`cell.mufa_cap`), so
@@ -63,15 +70,28 @@ impl SpheroidConfig {
     /// `gsh_core_factor` sets the *initial* GSH, which then evolves under NRF2
     /// resynthesis. Values remain placeholders pending calibration.
     ///
-    /// **Zone geometry caveat**: the thresholds are *radial* fractions, so by
-    /// volume (∝ r³) the persister core (`frac < 0.33`) is only ~4% and the
-    /// glycolytic rim (`frac ≥ 0.66`) ~71%. Real spheroids have a thin
-    /// proliferating rim and a larger quiescent/hypoxic core; tilting the core
-    /// larger (raising `oxphos_frac`) is a calibration follow-up.
+    /// **Zone geometry (#270): volume-based, literature-grounded.** The
+    /// thresholds are cumulative-VOLUME fractions, and the defaults come from
+    /// the limiting spheroid structure measured by Browning et al. (eLife 2021,
+    /// DOI 10.7554/eLife.73020): a necrotic core at ~73% of the outer radius and
+    /// a proliferative/inhibited boundary at ~90% (a thin ~35 µm rim). Converting
+    /// those radial boundaries to volume fractions (∝ r³): the persister-like
+    /// core is the inner 0.73³ ≈ 0.39 of the tumor *volume* (`oxphos_frac`), and
+    /// the glycolytic rim is the outer 1 − 0.90³ ≈ 0.27 (`glycolytic_frac` = 0.73).
+    /// This fixes the previous inversion (radial thresholds gave a ~4 %-volume
+    /// core and a ~71 %-volume rim). The *radial structure* is now grounded; the
+    /// per-zone *biochemical* gradients (MUFA/GSH/iron) remain placeholders
+    /// pending histology calibration. Two scoping caveats: (1) these are the
+    /// *limiting* (large-spheroid) proportions applied size-independently — real
+    /// zone fractions shrink with spheroid diameter (small spheroids have little
+    /// or no necrotic core), so a size-aware variant is a future refinement; and
+    /// (2) the gradient *strengths* below are still uncalibrated.
     pub fn literature() -> Self {
         SpheroidConfig {
-            glycolytic_frac: 0.66,
-            oxphos_frac: 0.33,
+            // Volume fractions: rim begins at 0.90³≈0.73 of volume; core is the
+            // inner 0.73³≈0.39 (Browning 2021 eLife limiting structure).
+            glycolytic_frac: 0.73,
+            oxphos_frac: 0.39,
             // Per-cell MUFA caps (#270): rim saturates near the global cap,
             // core saturates lower → durable rim-vs-core MUFA spread.
             mufa_surface: 0.25,
@@ -102,10 +122,23 @@ pub fn radial_fraction_3d(grid: &TumorGrid3D, idx: usize) -> f64 {
 
 /// Phenotype for a cell at radial fraction `frac`: glycolytic rim → OXPHOS mid
 /// → persister-like core.
+///
+/// The thresholds are **cumulative-VOLUME fractions** (#270), not raw radial
+/// fractions. A cell at radial fraction `frac` sits at cumulative volume
+/// fraction `frac³` measured from the center (volume of a sphere ∝ r³), so we
+/// compare `frac³` against the volume-fraction thresholds. This makes the zone
+/// *volumes* match the config (the previous radial-fraction thresholds gave an
+/// inverted distribution — a ~4 %-volume core and a ~71 %-volume rim).
+///
+/// `frac³` is the *continuous*-sphere volume fraction; the discrete lattice
+/// cell-*count* within a given radius only approximates it (most loosely in the
+/// small core, where few cells exist), so the realized count fractions sit near,
+/// not exactly at, the configured volume fractions.
 pub fn radial_phenotype(frac: f64, cfg: &SpheroidConfig) -> Phenotype {
-    if frac >= cfg.glycolytic_frac {
+    let vol_frac = frac.clamp(0.0, 1.0).powi(3);
+    if vol_frac >= cfg.glycolytic_frac {
         Phenotype::Glycolytic
-    } else if frac >= cfg.oxphos_frac {
+    } else if vol_frac >= cfg.oxphos_frac {
         Phenotype::OXPHOS
     } else {
         Phenotype::Persister
@@ -171,11 +204,33 @@ mod tests {
     }
 
     #[test]
-    fn phenotype_zones_run_rim_to_core() {
+    fn phenotype_zones_are_volume_based_rim_to_core() {
         let c = cfg();
-        assert_eq!(radial_phenotype(0.95, &c), Phenotype::Glycolytic); // rim
-        assert_eq!(radial_phenotype(0.5, &c), Phenotype::OXPHOS); // mid
-        assert_eq!(radial_phenotype(0.1, &c), Phenotype::Persister); // core
+        // Thresholds are cumulative-VOLUME fractions (#270): a cell at radial
+        // fraction r sits at volume fraction r³. With the Browning-2021 limiting
+        // structure (core 0.73 of radius → 0.39 of volume; rim begins 0.90 of
+        // radius → 0.73 of volume), the core spans radius up to ~0.73R.
+        assert_eq!(radial_phenotype(0.95, &c), Phenotype::Glycolytic); // r=0.95 → vol 0.86 ≥ 0.73: rim
+        assert_eq!(radial_phenotype(0.80, &c), Phenotype::OXPHOS); // r=0.80 → vol 0.51: mid
+        assert_eq!(radial_phenotype(0.50, &c), Phenotype::Persister); // r=0.50 → vol 0.125 < 0.39: core (was OXPHOS pre-#270)
+        assert_eq!(radial_phenotype(0.10, &c), Phenotype::Persister); // deep core
+                                                                      // The radial zone boundaries are the cube-roots of the volume thresholds.
+        let core_radius = c.oxphos_frac.cbrt();
+        let rim_radius = c.glycolytic_frac.cbrt();
+        assert!(
+            (core_radius - 0.73).abs() < 0.02,
+            "core radius ~0.73R, got {core_radius}"
+        );
+        assert!(
+            (rim_radius - 0.90).abs() < 0.02,
+            "rim begins ~0.90R, got {rim_radius}"
+        );
+        // The core is now a substantial volume fraction (the bug was ~4%).
+        assert!(
+            c.oxphos_frac > 0.30,
+            "persister core should be a substantial volume fraction, got {}",
+            c.oxphos_frac
+        );
     }
 
     #[test]
