@@ -246,7 +246,8 @@ figures:
     note: >
       Quantitative companion to the conceptual Fig 15 cross-section. RSL3 vs SDT
       kill, normoxic vs hypoxic, + robustness across O2 penetration length lambda.
-      Input is gitignored; regenerate with `cargo run --release -p sim-tme`.
+      Input is gitignored; regenerate with `cargo run --release -p sim-tme`
+      (deterministic — seeded RNG, SEED=42 — so the figure reproduces exactly).
 
   - manuscript_figure: 22
     filename: fig25_bliss_synergy
@@ -259,7 +260,8 @@ figures:
     status: manuscript
     note: >
       RSL3+FSP1i observed vs Bliss-expected (1.99x) + pairwise synergy scores.
-      Input is gitignored; regenerate with `cargo run --release -p sim-combo-mech`.
+      Input is gitignored; regenerate with `cargo run --release -p sim-combo-mech`
+      (deterministic — per-cell seeded RNG — so the figure reproduces exactly).
 
   # ── Supplementary / orphan figures ─────────────────────────────
 
