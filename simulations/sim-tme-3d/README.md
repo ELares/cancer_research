@@ -103,6 +103,7 @@ The default 24-condition matrix path (no `--snapshot` flag) is **byte-identical*
 | `vasculature` | RSL3 | **explicit vessels (#191)** | constant |
 | `spheroid` | SDT | immune + **radial biochem (#197)** | constant |
 | `slab` | SDT | immune + **patient-scale slab (#240)** | constant |
+| `slab-vessels` | SDT | immune + **slab + internal vessels (#272)** | constant |
 | `suppressor` | SDT | immune + **Treg/MDSC suppressor (#264)** | constant |
 | `checkpoint` | SDT | immune + **dual PD-1/CTLA-4 blockade (#264)** | constant |
 | `combined-realism` | SDT | immune + **persister + clonal + suppressor + checkpoints (#278)** | multi-dose |
@@ -223,6 +224,16 @@ The spheroid is ~540 µm radius — **in-vitro** scale, where drug/O2 penetratio
 - **Comparison (AC).** `patient_scale_slab_kills_far_less_than_spheroid` shows a 4 mm-deep slab kills **<20%** of what the in-vitro spheroid does under the same SDT treatment — the penetration collapse the spheroid scale misses. `shallow_slab_outkills_deep_slab` (SDT) and `slab_supply_scales_rsl3_kills` (RSL3) confirm the depth-dependence on both the exo-ROS and the RSL3 drug paths.
 - **⚠️ Magnitude is uncalibrated.** Like the spheroid gradients, the slab uses a first-order Krogh `exp(-depth/λ)` with a placeholder λ (~150 µm). The "<20% / near-zero kill at depth" result is **illustrative of the in-vitro-vs-patient scale gap, not a validated efficacy number** — the real depth-collapse magnitude depends on tissue-specific penetration, vascular density, and drug pharmacokinetics that this v1 does not calibrate. Treat it as "deep tumor ≫ harder to treat", not as a quantitative prediction.
 - **Visualization.** `--snapshot=slab` (SDT + immune on a **surface** slab) renders the depth-graded death front directly in the dead/DAMP/LP panels: the renderer's mid-slice fixes the row axis and spans `(col, layer)`, so the layer (depth) axis is shown — top (+z, well-perfused) dies, bottom (−z, deprived) survives. No extra static overlay file. A deep `patient_deep()` slab would kill ~nothing (a less illustrative GIF), so the surface slab is the preset; the depth comparison lives in the tests.
+
+### Internal vessels in a slab (#272 coupling)
+
+A planar +z source is a strong simplification: a real deep tumor isn't fed only from one face, it carries **internal** vessels. Setting `Overrides.slab` **and** `Overrides.vasculature` together couples the two (previously slab supply simply won; now they combine):
+
+- **Slab-uniform vessel placement.** A slab is an all-tumor block, not a central sphere, so `ferroptosis_core::vasculature::place_vessels_in_slab_3d` scatters vessels **uniform-in-box** (vs `place_vessels_3d`'s central-sphere sampling) at the same density. Vessels pervade the whole slab, so deep tissue *throughout* — not just a central pocket — can be perfused. Independent `VESSEL_SEED`, byte-identity preserved.
+- **Combined supply (element-wise MAX).** Each cell's unified supply = `max(planar_depth_supply, nearest_vessel_supply)` — it draws O2/drug from whichever source (the +z face or the nearest internal vessel) is stronger, bounded in `[0,1]`. So a deep cell next to a vessel gets a **focal well-perfused pocket** instead of monotonic depth collapse.
+- **Direction of effect (drug delivery, not "rescue").** Supply here scales drug/O2 **delivery**, so well-perfused ⇒ *more* drug ⇒ *more* death. Internal vessels therefore **raise** deep killing: the drug reaches focal pockets that the drug-starved bulk escapes. The takeaway is that a patient-scale slab is **less therapy-resistant at depth** than the planar-only model (#240) implies — wherever real vasculature reaches. `slab_internal_vessels_increase_deep_killing` (RSL3, `patient_deep` slab) asserts vessels increase total kills vs the planar-only slab, deterministically.
+- **Visualization.** `--snapshot=slab-vessels` writes `vessel_supply.npy` recomputed on a **slab grid** (matching the run) so the O2-supply panel shows the combined planar-plus-focal-pockets field. Off by default / byte-identical (gated on both overrides; no matrix or other preset sets both).
+- **⚠️ Same calibration caveat.** Both the depth λ and the inter-vessel spacing are uncalibrated placeholders — this shows the *mechanism* (internal vasculature relieves depth collapse), not a quantitative depth-kill curve. Vessel placement is random-uniform, not a real fractal/micro-CT network (a #268 follow-up).
 
 ## Dimensionality-dependent assumptions (#197 AC)
 

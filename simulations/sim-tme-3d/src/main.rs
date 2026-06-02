@@ -81,7 +81,8 @@ use ferroptosis_core::spheroid::{
 use ferroptosis_core::stromal::stromal_adjacency_mask_3d;
 use ferroptosis_core::tumor_pk::RSL3_INACTIVATION_RATE;
 use ferroptosis_core::vasculature::{
-    hypoxic_fraction, place_vessels_3d, vessel_supply_field, VasculatureConfig,
+    hypoxic_fraction, place_vessels_3d, place_vessels_in_slab_3d, vessel_supply_field,
+    VasculatureConfig,
 };
 use rand::distributions::Distribution;
 use rand::prelude::*;
@@ -426,6 +427,22 @@ fn run_one_condition_with_config(
     run_one_condition_full(condition, run_cfg, snapshot, Overrides::default())
 }
 
+/// Combine two per-cell supply fields by **element-wise max** (#272 slab +
+/// vasculature coupling): each cell draws O2/drug from whichever source — the
+/// planar depth gradient (#240) or the nearest internal vessel (#191) — is
+/// stronger. Both inputs are in `[0,1]`, so the result is too. Used by both the
+/// run path and the `--snapshot` overlay so they stay in lockstep.
+fn combine_supply_max(planar: &[f64], vessel: &[f64]) -> Vec<f64> {
+    debug_assert_eq!(
+        planar.len(),
+        vessel.len(),
+        "combine_supply_max: field lengths differ ({} vs {})",
+        planar.len(),
+        vessel.len()
+    );
+    planar.iter().zip(vessel).map(|(&p, &q)| p.max(q)).collect()
+}
+
 fn run_one_condition_full(
     condition: &Condition,
     run_cfg: RunConfig,
@@ -451,8 +468,9 @@ fn run_one_condition_full(
     // `Params::spheroid()` + radial phenotype re-assignment keyed on a spheroid
     // center that an all-tumor cube does not have — an incoherent mix. No
     // preset/path sets both; guard it so a future caller can't combine them by
-    // accident. (Slab vs vasculature is fine: slab supply simply takes
-    // precedence, documented at `supply_field`.)
+    // accident. (Slab + vasculature, by contrast, COMPOSE since #272: the planar
+    // depth gradient and the vessel proximity field combine by element-wise max
+    // — see `supply_field` below.)
     debug_assert!(
         !(slab_cfg.is_some() && spheroid_cfg.is_some()),
         "slab and spheroid overrides are mutually exclusive (incompatible geometries)"
@@ -554,35 +572,56 @@ fn run_one_condition_full(
     // `exp(-dist_to_nearest_vessel / λ)`. This REPLACES the edge-distance O2
     // proxy and also supplies drug. `None` on the matrix path (no vasculature
     // or no λ) → the edge-distance `radial_o2_field` path runs → byte-identical.
-    let vessels: Option<Vec<(f64, f64, f64)>> =
-        vasculature_cfg.map(|cfg| place_vessels_3d(&grid, &cfg, VESSEL_SEED));
+    let vessels: Option<Vec<(f64, f64, f64)>> = vasculature_cfg.map(|cfg| {
+        if slab_cfg.is_some() {
+            // Slab (#240) is an all-tumor block, not a central sphere — scatter
+            // vessels across the whole block (#272 coupling) so deep tissue
+            // throughout, not just a central pocket, gets perfused.
+            place_vessels_in_slab_3d(&grid, &cfg, VESSEL_SEED)
+        } else {
+            place_vessels_3d(&grid, &cfg, VESSEL_SEED)
+        }
+    });
     // Treg/MDSC suppressor source mask (#264 Phase 2): perivascular niches when
     // vessels are present, else heuristic patches (independent SUPPRESSOR_SEED).
     // `None` ⇒ suppressor off ⇒ byte-identical.
     let suppressor_sources: Option<Vec<bool>> = suppressor_cfg
         .map(|cfg| suppressor_source_mask_3d(&grid, &cfg, vessels.as_deref(), SUPPRESSOR_SEED));
-    // Unified per-cell O2/drug **supply field**: either the slab depth gradient
-    // (#240) or the vessel proximity field (#191) — mutually-exclusive O2-source
-    // overrides. Both replace the edge-distance O2 proxy and scale drug
-    // delivery downstream. `None` on the matrix path ⇒ the edge-distance
-    // `radial_o2_field` path runs ⇒ byte-identical.
-    let supply_field: Option<Vec<f64>> = if let Some(cfg) = &slab_cfg {
-        // Slab: planar depth gradient from the +z vessel face. Uses the
-        // condition's λ when set (e.g. the `--snapshot=slab` preset's
-        // ZONE_REF_LAMBDA = 120 µm), and only falls back to the Krogh default
-        // (150 µm) for a condition that left λ unset. The gradient is intrinsic
-        // to depth, independent of the radial-O2 condition flag.
-        let lambda = condition.o2_lambda.unwrap_or(KROGH_LAMBDA_UM);
-        Some(slab_supply_field(
-            &grid,
-            cfg.depth_offset_mm * 1000.0,
-            lambda,
-        ))
-    } else {
-        match (vessels.as_ref(), condition.o2_lambda) {
+    // Unified per-cell O2/drug **supply field**: the slab depth gradient (#240),
+    // the vessel proximity field (#191), or — when both are set — their
+    // element-wise combination (#272 coupling). All replace the edge-distance O2
+    // proxy and scale drug delivery downstream. `None` on the matrix path ⇒ the
+    // edge-distance `radial_o2_field` path runs ⇒ byte-identical.
+    let supply_field: Option<Vec<f64>> = match (&slab_cfg, vessels.as_ref()) {
+        (Some(cfg), Some(v)) => {
+            // Slab + internal vessels (#272): combine the planar depth gradient
+            // (#240) with per-vessel proximity (#191) by element-wise MAX — each
+            // cell draws O2 from whichever source is stronger (the +z face or
+            // the nearest internal vessel), so a deep slab cell next to a vessel
+            // gets a focal well-perfused pocket instead of monotonic depth
+            // collapse. Bounded in [0,1] (both factors are). λ as below.
+            let lambda = condition.o2_lambda.unwrap_or(KROGH_LAMBDA_UM);
+            let planar = slab_supply_field(&grid, cfg.depth_offset_mm * 1000.0, lambda);
+            let vessel = vessel_supply_field(&grid, v, lambda);
+            Some(combine_supply_max(&planar, &vessel))
+        }
+        (Some(cfg), None) => {
+            // Slab only: planar depth gradient from the +z vessel face. Uses the
+            // condition's λ when set (e.g. the `--snapshot=slab` preset's
+            // ZONE_REF_LAMBDA = 120 µm), and only falls back to the Krogh
+            // default (150 µm) for a condition that left λ unset. The gradient
+            // is intrinsic to depth, independent of the radial-O2 condition flag.
+            let lambda = condition.o2_lambda.unwrap_or(KROGH_LAMBDA_UM);
+            Some(slab_supply_field(
+                &grid,
+                cfg.depth_offset_mm * 1000.0,
+                lambda,
+            ))
+        }
+        (None, _) => match (vessels.as_ref(), condition.o2_lambda) {
             (Some(v), Some(lambda)) => Some(vessel_supply_field(&grid, v, lambda)),
             _ => None,
-        }
+        },
     };
 
     // --- Apply O₂ gradient (mutates cell.basal_ros) ---
@@ -1847,6 +1886,31 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         checkpoints: false,
     },
     SnapshotPreset {
+        // Slab + internal vessels (#272 coupling). vessel_supply.npy (on a slab
+        // grid) shows the combined planar-MAX-vessel field: focal well-perfused
+        // pockets at depth around internal vessels, against the otherwise
+        // monotonic depth collapse. Because supply scales drug/O2 DELIVERY, the
+        // dead/LP panels show extra killing localized to those pockets — the
+        // therapy reaches deep tissue near a vessel that the drug-starved bulk
+        // escapes. So internal vasculature makes a patient-scale slab LESS
+        // therapy-resistant at depth than the planar-only model (#240) implies.
+        name: "slab-vessels",
+        desc: "SDT on a patient-scale slab with internal vessels (#272) — drug reaches focal deep pockets",
+        treatment: Treatment::SDT,
+        treatment_name: "SDT",
+        immune_on: true,
+        stromal_on: false,
+        ph_on: false,
+        multidose: false,
+        persister: false,
+        clonal: false,
+        vasculature: true,
+        spheroid: false,
+        slab: true,
+        suppressor: false,
+        checkpoints: false,
+    },
+    SnapshotPreset {
         // SDT + immune + Treg/MDSC suppressor (#264 Phase 2). Heuristic niche
         // patches (no vasculature in this preset) locally dampen immune kill:
         // the static `suppressor.npy` mask shows the niches, and the dead panel
@@ -2023,8 +2087,26 @@ fn run_snapshot(output_dir: &Path, tumor_radius_um: f64, name: &str) {
         .as_ref()
         .map(|c| assign_subclones_3d(&snapshot_grid, c.k(), SUBCLONE_SEED));
     let vessel_supply = vasculature_cfg.map(|cfg| {
-        let vessels = place_vessels_3d(&snapshot_grid, &cfg, VESSEL_SEED);
-        vessel_supply_field(&snapshot_grid, &vessels, ZONE_REF_LAMBDA)
+        if let Some(scfg) = slab_cfg {
+            // Slab + vessels (#272): the overlay must match the run, which uses
+            // a slab grid, slab-uniform vessels, and the combined planar-MAX-
+            // vessel field. Regenerate on a slab grid so the panel shows the
+            // focal well-perfused pockets the run actually applies.
+            let g = TumorGrid3D::generate_slab(
+                run_cfg.grid_dim,
+                run_cfg.grid_dim,
+                run_cfg.grid_dim,
+                CELL_SIZE_UM,
+                SEED,
+            );
+            let vessels = place_vessels_in_slab_3d(&g, &cfg, VESSEL_SEED);
+            let vessel = vessel_supply_field(&g, &vessels, ZONE_REF_LAMBDA);
+            let planar = slab_supply_field(&g, scfg.depth_offset_mm * 1000.0, ZONE_REF_LAMBDA);
+            combine_supply_max(&planar, &vessel)
+        } else {
+            let vessels = place_vessels_3d(&snapshot_grid, &cfg, VESSEL_SEED);
+            vessel_supply_field(&snapshot_grid, &vessels, ZONE_REF_LAMBDA)
+        }
     });
     // Radial phenotype map (#197): re-run the same radial assignment, then map
     // each cell's Phenotype to a small int (0 = stroma, 1..=4 = tumor types).
@@ -4280,6 +4362,81 @@ mod tests {
             "RSL3 surface slab should out-kill the deep slab (drug/O2 supply \
              scaling on the RSL3 path): shallow={shallow}, deep={deep}"
         );
+    }
+
+    #[test]
+    fn slab_internal_vessels_increase_deep_killing() {
+        // #272 coupling: a DEEP slab is drug/O2-starved, so the planar-only
+        // model kills little (depth collapse, #240). Adding an internal vessel
+        // network (combined planar-MAX-vessel supply) delivers drug/O2 to focal
+        // deep pockets, so total kills RISE vs the planar-only slab. (Supply
+        // scales DELIVERY here, so well-perfused ⇒ more drug ⇒ more death — the
+        // vessels make deep tissue LESS therapy-resistant, not "rescued".)
+        let cfg = RunConfig {
+            grid_dim: 24,
+            n_steps: 80,
+        };
+        let cond = Condition {
+            name: "slab_vessels_rsl3".to_string(),
+            treatment: Treatment::RSL3,
+            treatment_name: "RSL3".to_string(),
+            o2_lambda: Some(ZONE_REF_LAMBDA),
+            immune_on: false,
+            stromal_on: false,
+            ph_on: false,
+            dose_schedule: DoseSchedule::Constant,
+        };
+        let run = |vasc: Option<VasculatureConfig>| {
+            run_one_condition_full(
+                &cond,
+                cfg,
+                None,
+                Overrides {
+                    slab: Some(SlabConfig::patient_deep()),
+                    vasculature: vasc,
+                    ..Default::default()
+                },
+            )
+            .total_dead
+        };
+        let planar_only = run(None);
+        let with_vessels = run(Some(VasculatureConfig::well_vascularized()));
+        let with_vessels_again = run(Some(VasculatureConfig::well_vascularized()));
+        assert_eq!(
+            with_vessels, with_vessels_again,
+            "slab+vasculature must be deterministic"
+        );
+        assert!(
+            with_vessels > planar_only,
+            "internal vessels should deliver drug to deep pockets and raise kills \
+             on a deep slab: planar_only={planar_only}, with_vessels={with_vessels}"
+        );
+    }
+
+    #[test]
+    fn combine_supply_max_takes_elementwise_max() {
+        // #272: directly pin the field invariant the slab+vessel run/overlay use
+        // — the combined supply is the element-wise max of the planar and vessel
+        // fields, never below either source, and bounded in [0,1] when both
+        // inputs are. (Fast; no full sim run needed.)
+        let planar = [0.0, 0.2, 0.9, 0.5, 1.0];
+        let vessel = [0.1, 0.8, 0.3, 0.5, 0.0];
+        let combined = combine_supply_max(&planar, &vessel);
+        assert_eq!(combined, vec![0.1, 0.8, 0.9, 0.5, 1.0]);
+        for i in 0..planar.len() {
+            assert!(
+                combined[i] >= planar[i] && combined[i] >= vessel[i],
+                "combined[{i}]={} below a source (planar={}, vessel={})",
+                combined[i],
+                planar[i],
+                vessel[i]
+            );
+            assert!(
+                (0.0..=1.0).contains(&combined[i]),
+                "combined[{i}]={} out of [0,1]",
+                combined[i]
+            );
+        }
     }
 
     // ===== Cross-layer composition (#278) =====
