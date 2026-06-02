@@ -255,7 +255,17 @@ struct SubcloneKillStat {
     /// the gap `total_tumor − initial_tumor` is the subclone's net expansion.
     initial_tumor: usize,
     total_tumor: usize,
+    /// End-of-run dead count. **With repopulation off this is the cells killed;
+    /// with spatial expansion on (#266 item 3) it is the *currently*-dead count**
+    /// — a site that died and was repopulated counts as alive here (its death is
+    /// still tallied in the run-level `ferroptosis_kills`/`immune_kills`, which
+    /// therefore count death *events* and can exceed the population). Read
+    /// `total_tumor − initial_tumor` for expansion, not `kill_rate`, under
+    /// repopulation.
     total_dead: usize,
+    /// `total_dead / total_tumor` — see [`total_dead`](Self::total_dead): this
+    /// is "fraction ever killed" only with repopulation off; with expansion on
+    /// it is the end-state "fraction currently dead" and reads low.
     kill_rate: f64,
 }
 
@@ -3882,6 +3892,64 @@ mod tests {
         assert_eq!(
             r.total_dead, r2.total_dead,
             "expansion run is deterministic"
+        );
+    }
+
+    /// #281 review: clonal expansion (repopulation on) composes with another
+    /// realism layer (Treg/MDSC suppressor) — both run together, the run is
+    /// deterministic, each layer reports its metric, and the resistant subclone
+    /// still expands. Confirms repopulation (which only revives grid sites +
+    /// rewrites subclone ids) doesn't break a layer it co-runs with.
+    #[test]
+    fn clonal_expansion_composes_with_suppressor() {
+        let cfg = RunConfig {
+            grid_dim: 24,
+            n_steps: 120,
+        };
+        let cond = Condition {
+            name: "evolve_suppress".to_string(),
+            treatment: Treatment::SDT,
+            treatment_name: "SDT".to_string(),
+            o2_lambda: Some(ZONE_REF_LAMBDA),
+            immune_on: true,
+            stromal_on: false,
+            ph_on: false,
+            dose_schedule: DoseSchedule::Constant,
+        };
+        let immune = SpatialImmuneConfig {
+            immune_kill_rate: 0.5,
+            ..SpatialImmuneConfig::for_3d()
+        };
+        let run = || {
+            run_one_condition_full(
+                &cond,
+                cfg,
+                None,
+                Overrides {
+                    immune: Some(immune),
+                    clonal: Some(ClonalConfig::literature_4().with_repopulation(0.3)),
+                    suppressor: Some(SuppressorConfig::enabled()),
+                    ..Default::default()
+                },
+            )
+        };
+        let a = run();
+        let b = run();
+        assert_eq!(
+            a.total_dead, b.total_dead,
+            "composed evolution run is deterministic"
+        );
+        // Both layers report coherent metrics under composition.
+        let sk = a.subclone_kills.expect("clonal reports subclone_kills");
+        assert!(
+            sk[3].total_tumor > sk[3].initial_tumor,
+            "resistant subclone still expands under suppressor composition: {} → {}",
+            sk[3].initial_tumor,
+            sk[3].total_tumor
+        );
+        assert!(
+            a.suppressor_source_count.unwrap_or(0) > 0,
+            "suppressor still reports its niche census alongside expansion"
         );
     }
 
