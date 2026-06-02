@@ -45,7 +45,7 @@ machine-checked authorities remain:
 |-------|-----------|--------|--------------------------------|
 | Core ferroptosis biochemistry | `biochem`, `params` | **Partially anchored** | Mix of literature-grounded and estimated rate constants (see `parameter_provenance.md` `Grounded?` column). Directionally robust: ±50% sensitivity held in 22/22 conditions (manuscript §5, Chapter sensitivity analysis). Magnitudes are estimates. |
 | GPX4 recovery kinetics | `params` / `RecoveryRates` | **Calibrated** | `targets.yaml: gpx4_recovery_rate` — consensus from multiple ferroptosis studies. |
-| MUFA / PUFA protection | `biochem` | **Calibrated (composite)** | `targets.yaml: mufa_protection_factor` (18.6×) — model-derived composite of Dixon/Park (2025) + Tesfay 2019 (PMID 31292161). Not a single measurement. |
+| MUFA / PUFA protection | `biochem` | **Calibrated (composite)** | `targets.yaml: mufa_protection_factor` (18.6×) — model-derived composite of Dixon/Park (unpublished 2025 submission, no PMID) + Tesfay 2019 (PMID 31270077, SCD1 protects ovarian cancer from ferroptosis). Not a single measurement. |
 | Persister FSP1/HDAC suppression | `biochem` | **Calibrated** | `targets.yaml: fsp1_hdac_persister` — Higuchi et al., Science Advances 2026 (PMID 41481741). |
 | PDT optical attenuation | `physics`, `oxygen` | **Self-consistency only** | `targets.yaml: pdt_depth_attenuation` verifies the hard-coded `pdt_mu_eff` reproduces Jacques 2013 optics — checks the code, not biology. |
 | SDT acoustic attenuation | `physics` | **Self-consistency only** | `targets.yaml: sdt_depth_attenuation` verifies `sdt_alpha` vs Cobbold 2007. |

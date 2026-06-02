@@ -31,7 +31,7 @@ citations, precision fixes, and a figure roadmap.
 | Persister cells acquire FSP1/HDAC/OXPHOS-ROS-dependent ferroptosis vulnerability (our §6.2/§6.3/§7.1 anchor) | Higuchi M et al., *Sci Adv* 2026 — citation verified exact; also shows mito-ROS is *required* for persister ferroptosis (mitoTEMPO rescues), independently supporting our §7.1 no-O2→no-trigger mechanism | PMID 41481741 | High |
 | Hypoxia confers ferroptosis resistance by suppressing mitochondrial ROS (PDAC, in vivo) — supports the §7.1 RSL3-collapse mechanism | Hubbi ME … Dang CV, *Mol Cell* 2026 | PMID 41932308 | High — **added to §7.1** |
 | Ferroptosis as a cancer target; RSL3 inactivates GPX4 → lipid-ROS | Zhou Q et al. *STTT* 2024 (PMID 38453898); Sui X et al. *Front Pharmacol* 2018 (PMID 30524291) | — | High |
-| FSP1 is a parallel GPX4-independent axis; GPX4+FSP1 co-inhibition synergizes | Bersuker (PMID 31634900) + Doll (PMID 31634899), *Nature* 2019; gastric GPX4/FSP1 synergy PMID 39273151 | — | High |
+| FSP1 is a parallel GPX4-independent axis; GPX4+FSP1 co-inhibition synergizes | Bersuker (PMID 31634900) + Doll (PMID 31634899), *Nature* 2019; Tamura et al. *Int J Mol Sci* 2024 PMID 39273151 (a prognostic/target study that also reports in-vitro RSL3+iFSP1 synergistic, ferroptosis-inhibitor-blockable cell death in gastric lines) | — | High |
 | SDT/PDT induce ferroptosis + ICD markers | Theranostics 2021 (PMID 33408790, SDT-ferroptosis in hypoxic tumors); PDT-ICD PMID 31602649 | — | High (induction) |
 
 ## External literature — what CONTRADICTS / COMPLICATES us (verified)
@@ -43,9 +43,9 @@ Ranked by how damaging, most first. These drove the manuscript revisions.
    exists to *deliver oxygen* to overcome hypoxic SDT failure; the SDT mechanism
    itself is "not fully elucidated" (Dong HQ et al., *World J Clin Cases* 2023,
    **PMID 37621595**). Decisively, the **leading clinical SDT agent (SONALA-001,
-   5-ALA→protoporphyrin IX) is a Type II, oxygen-dependent sensitizer** (*Sci
-   Transl Med* 2026, **DOI 10.1126/scitranslmed.ads5813**, NCT04559685) — not the
-   Type I O2-independent mechanism we model. → **Reframed §7.1 caveat (now the
+   5-ALA→protoporphyrin IX) is a Type II, oxygen-dependent sensitizer** (Sanai N
+   et al., *Sci Transl Med* 2025, **PMID 41296829**, DOI 10.1126/scitranslmed.ads5813,
+   NCT04559685) — not the Type I O2-independent mechanism we model. → **Reframed §7.1 caveat (now the
    chapter's headline caveat), §7.5, §8.4, §10.1.**
 2. **DAMP *balance*, not quantity, governs immunogenicity** (Hayashi K et al.,
    *Nat Commun* 2020, **PMID 33288764**): gemcitabine releases abundant
