@@ -427,6 +427,22 @@ fn run_one_condition_with_config(
     run_one_condition_full(condition, run_cfg, snapshot, Overrides::default())
 }
 
+/// Combine two per-cell supply fields by **element-wise max** (#272 slab +
+/// vasculature coupling): each cell draws O2/drug from whichever source — the
+/// planar depth gradient (#240) or the nearest internal vessel (#191) — is
+/// stronger. Both inputs are in `[0,1]`, so the result is too. Used by both the
+/// run path and the `--snapshot` overlay so they stay in lockstep.
+fn combine_supply_max(planar: &[f64], vessel: &[f64]) -> Vec<f64> {
+    debug_assert_eq!(
+        planar.len(),
+        vessel.len(),
+        "combine_supply_max: field lengths differ ({} vs {})",
+        planar.len(),
+        vessel.len()
+    );
+    planar.iter().zip(vessel).map(|(&p, &q)| p.max(q)).collect()
+}
+
 fn run_one_condition_full(
     condition: &Condition,
     run_cfg: RunConfig,
@@ -452,8 +468,9 @@ fn run_one_condition_full(
     // `Params::spheroid()` + radial phenotype re-assignment keyed on a spheroid
     // center that an all-tumor cube does not have — an incoherent mix. No
     // preset/path sets both; guard it so a future caller can't combine them by
-    // accident. (Slab vs vasculature is fine: slab supply simply takes
-    // precedence, documented at `supply_field`.)
+    // accident. (Slab + vasculature, by contrast, COMPOSE since #272: the planar
+    // depth gradient and the vessel proximity field combine by element-wise max
+    // — see `supply_field` below.)
     debug_assert!(
         !(slab_cfg.is_some() && spheroid_cfg.is_some()),
         "slab and spheroid overrides are mutually exclusive (incompatible geometries)"
@@ -586,13 +603,7 @@ fn run_one_condition_full(
             let lambda = condition.o2_lambda.unwrap_or(KROGH_LAMBDA_UM);
             let planar = slab_supply_field(&grid, cfg.depth_offset_mm * 1000.0, lambda);
             let vessel = vessel_supply_field(&grid, v, lambda);
-            Some(
-                planar
-                    .iter()
-                    .zip(&vessel)
-                    .map(|(&p, &q)| p.max(q))
-                    .collect(),
-            )
+            Some(combine_supply_max(&planar, &vessel))
         }
         (Some(cfg), None) => {
             // Slab only: planar depth gradient from the +z vessel face. Uses the
@@ -2091,11 +2102,7 @@ fn run_snapshot(output_dir: &Path, tumor_radius_um: f64, name: &str) {
             let vessels = place_vessels_in_slab_3d(&g, &cfg, VESSEL_SEED);
             let vessel = vessel_supply_field(&g, &vessels, ZONE_REF_LAMBDA);
             let planar = slab_supply_field(&g, scfg.depth_offset_mm * 1000.0, ZONE_REF_LAMBDA);
-            planar
-                .iter()
-                .zip(&vessel)
-                .map(|(&p, &q)| p.max(q))
-                .collect::<Vec<f64>>()
+            combine_supply_max(&planar, &vessel)
         } else {
             let vessels = place_vessels_3d(&snapshot_grid, &cfg, VESSEL_SEED);
             vessel_supply_field(&snapshot_grid, &vessels, ZONE_REF_LAMBDA)
@@ -4404,6 +4411,32 @@ mod tests {
             "internal vessels should deliver drug to deep pockets and raise kills \
              on a deep slab: planar_only={planar_only}, with_vessels={with_vessels}"
         );
+    }
+
+    #[test]
+    fn combine_supply_max_takes_elementwise_max() {
+        // #272: directly pin the field invariant the slab+vessel run/overlay use
+        // — the combined supply is the element-wise max of the planar and vessel
+        // fields, never below either source, and bounded in [0,1] when both
+        // inputs are. (Fast; no full sim run needed.)
+        let planar = [0.0, 0.2, 0.9, 0.5, 1.0];
+        let vessel = [0.1, 0.8, 0.3, 0.5, 0.0];
+        let combined = combine_supply_max(&planar, &vessel);
+        assert_eq!(combined, vec![0.1, 0.8, 0.9, 0.5, 1.0]);
+        for i in 0..planar.len() {
+            assert!(
+                combined[i] >= planar[i] && combined[i] >= vessel[i],
+                "combined[{i}]={} below a source (planar={}, vessel={})",
+                combined[i],
+                planar[i],
+                vessel[i]
+            );
+            assert!(
+                (0.0..=1.0).contains(&combined[i]),
+                "combined[{i}]={} out of [0,1]",
+                combined[i]
+            );
+        }
     }
 
     // ===== Cross-layer composition (#278) =====

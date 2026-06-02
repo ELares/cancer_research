@@ -128,6 +128,16 @@ pub fn place_vessels_in_slab_3d(
     cfg: &VasculatureConfig,
     seed: u64,
 ) -> Vec<(f64, f64, f64)> {
+    // Precondition: an all-tumor grid (`TumorGrid3D::generate_slab`). Uniform-in-
+    // box sampling over the whole grid only places vessels in tumor space when
+    // every cell IS tumor; on a sphere grid (with stroma) it would scatter
+    // vessels into non-tumor space while `derive_vessel_count` sizes the count
+    // from the tumor volume, under-vascularizing the actual tumor. Use
+    // `place_vessels_3d` for sphere grids. (cheap O(cells) check, debug-only.)
+    debug_assert!(
+        grid.cells.iter().all(|gc| gc.is_tumor),
+        "place_vessels_in_slab_3d expects an all-tumor (slab) grid; use place_vessels_3d for sphere grids"
+    );
     let n_vessels = derive_vessel_count(grid, cfg);
 
     let mut rng = StdRng::seed_from_u64(seed);
@@ -154,7 +164,11 @@ pub fn place_vessels_in_slab_3d(
 /// the 60³ matrix scale (~16M evals, one-time setup) but grows with tumor
 /// volume (vessel count ∝ volume), so at patient scale (#240, e.g. a
 /// well-vascularized 200³ ≈ 34B evals) it needs a spatial index (uniform grid
-/// / kd-tree) for nearest-vessel. Deferred until #240 makes it bite.
+/// / kd-tree) for nearest-vessel. Deferred until #240 makes it bite. A **slab**
+/// (#272, all-tumor block fed by [`place_vessels_in_slab_3d`]) is the worst case
+/// for this: every cell is tumor (vs ~30% inside a sphere grid) AND the
+/// box-volume vessel count is higher, so a slab runs ~3×+ the sphere figure
+/// above — i.e. the slab coupling is what makes the #268 spatial index urgent.
 ///
 /// # Panics
 /// If `vessels` is empty (no source ⇒ undefined supply); callers pass the
@@ -246,7 +260,9 @@ mod tests {
         // ~0.4-radius sphere. Same count (same volume/spacing rule), but some
         // vessels land outside that sphere — the property the coupling needs so
         // deep tissue throughout the slab gets perfused, not just the center.
-        let g = grid();
+        // Uses an all-tumor SLAB grid (the function's precondition); the central
+        // sphere it's compared against is `place_vessels_3d`'s confinement.
+        let g = TumorGrid3D::generate_slab(40, 40, 40, 20.0, 42);
         let cfg = VasculatureConfig::well_vascularized();
         let a = place_vessels_in_slab_3d(&g, &cfg, 7);
         let b = place_vessels_in_slab_3d(&g, &cfg, 7);
