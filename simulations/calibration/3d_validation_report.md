@@ -73,7 +73,7 @@ values for upgrades:
 | Target | Citation already in code | What's needed to upgrade |
 |--------|--------------------------|--------------------------|
 | `3d_rsl3_o2_collapse_ratio` | Vaupel, *Cancer Res* 1989 (`oxygen.rs` module doc) | Measured RSL3 kill rate in pimonidazole-positive (hypoxic, < 1.3% O₂) vs negative spheroid layers |
-| `3d_immune_sdt_dominates` | Direction literature-anchored (#288): Wiernicki 2022 PMID 35760796, Wang 2021 PMID 34669472, Luo 2022 PMID 35568916, Foglietta 2024 PMID 38232641, Rauf 2025 PMID 41296731 | No shared-denominator measurement exists, so the *exact* ratio stays uncalibratable; the *direction + single-digit magnitude* are grounded. (The prior "Nguyen 2019" candidate was a phantom citation — removed; see `CALIBRATION_STATUS.md`.) |
+| `3d_immune_sdt_dominates` | Direction literature-anchored (#288): Wiernicki 2022 PMID 35760796, Wang 2021 PMID 34669472, Luo 2022 PMID 35568916, Foglietta 2024 PMID 38232641 | No shared-denominator measurement exists, so the *exact* ratio stays uncalibratable; the *direction* is grounded. The 2D-vs-3D magnitude gap (104:1 → ~4:1) is explained model-internally by the saturating Michaelis-Menten DAMP→activation under dense 2D kill vs 3D volumetric dilution. (The prior "Nguyen 2019" candidate was a phantom citation — removed; see `CALIBRATION_STATUS.md`.) |
 | `3d_stromal_boundary_shielding` | PMID 34373744 (`stromal.rs` module doc — CAF metabolic reprogramming) | Measured RSL3 IC50 shift in CAF-coculture spheroids vs RSL3-only |
 
 Adding the missing `source_pmid` + measured value to the target's YAML
