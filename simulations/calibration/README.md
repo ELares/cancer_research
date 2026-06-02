@@ -6,10 +6,12 @@ This directory contains calibration infrastructure for the ferroptosis simulatio
 
 | File | Purpose |
 |------|---------|
+| `CALIBRATION_STATUS.md` | **Start here** — one-table honest accounting of every layer's calibration tier (calibrated / partially anchored / self-consistency / uncalibrated) + the calibration roadmap |
 | `targets.yaml` | Calibration targets linking simulation observables to published data |
 | `calibrate.py` | Evaluation script that compares simulation outputs to targets |
 | `calibration_report.md` | Generated report (latest evaluation results) |
-| `parameter_provenance.md` | Provenance document for all ~30 simulation parameters |
+| `parameter_provenance.md` | Provenance document for the ~30 **core**-engine parameters (+ RSL3 PK, persister, photosensitizer PK) |
+| `3d_validation_report.md` | What the `sim-tme-3d` Q1–Q4 self-consistency checks produce, plus 2D-vs-3D magnitude differences |
 
 ## Quick start
 
