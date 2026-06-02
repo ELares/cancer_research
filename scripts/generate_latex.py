@@ -110,6 +110,11 @@ body_tex = re.sub(r'^\[\^\w+\]:\s*.+$', '', body_tex, flags=re.MULTILINE)
 # Remove markdown horizontal rules, which are invalid in LaTeX body text.
 body_tex = re.sub(r'^\s*---\s*$', '', body_tex, flags=re.MULTILINE)
 
+# Collapse the runs of blank lines left behind when footnote-definition lines
+# and horizontal rules are stripped above (cosmetic; LaTeX already treats any
+# blank-line run as a single paragraph break, so this changes no output).
+body_tex = re.sub(r'\n{3,}', '\n\n', body_tex)
+
 # Replace markdown tables with LaTeX tables
 # Find pipe-delimited tables and replace
 def replace_table(text, marker, caption, label, headers, rows):
