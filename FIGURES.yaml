@@ -5,7 +5,7 @@
 # to the figs dict in scripts/generate_latex.py.
 #
 # Fields:
-#   manuscript_figure: number in the compiled manuscript (1-20), or null
+#   manuscript_figure: number in the compiled manuscript (1-22), or null
 #   filename: basename without extension (both PDF and PNG exist)
 #   generator:
 #     script: path relative to repo root (or null for orphans)
@@ -20,7 +20,7 @@
 # validates that this file stays in sync with disk.
 
 figures:
-  # ── Manuscript figures (1-20) ──────────────────────────────────
+  # ── Manuscript figures (1-22) ──────────────────────────────────
 
   - manuscript_figure: 1
     filename: fig5_publication_trends
@@ -233,6 +233,35 @@ figures:
     type: conceptual
     status: manuscript
     note: Requires graphviz (dot) binary installed.
+
+  - manuscript_figure: 21
+    filename: fig24_hypoxia_killcurve
+    generator:
+      script: scripts/generate_figures.py
+      function: fig24_hypoxia_killcurve
+    inputs:
+      - simulations/output/tme/tme_summary.json
+    type: simulation
+    status: manuscript
+    note: >
+      Quantitative companion to the conceptual Fig 15 cross-section. RSL3 vs SDT
+      kill, normoxic vs hypoxic, + robustness across O2 penetration length lambda.
+      Input is gitignored; regenerate with `cargo run --release -p sim-tme`
+      (deterministic — seeded RNG, SEED=42 — so the figure reproduces exactly).
+
+  - manuscript_figure: 22
+    filename: fig25_bliss_synergy
+    generator:
+      script: scripts/generate_figures.py
+      function: fig25_bliss_synergy
+    inputs:
+      - simulations/output/combo-mech/combo_summary.json
+    type: simulation
+    status: manuscript
+    note: >
+      RSL3+FSP1i observed vs Bliss-expected (1.99x) + pairwise synergy scores.
+      Input is gitignored; regenerate with `cargo run --release -p sim-combo-mech`
+      (deterministic — per-cell seeded RNG — so the figure reproduces exactly).
 
   # ── Supplementary / orphan figures ─────────────────────────────
 

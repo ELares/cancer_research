@@ -25,7 +25,7 @@ If you have expertise in oncology, biochemistry, ferroptosis, immunology, comput
 - **11 Rust simulation binaries** modeling ferroptosis biochemistry: single-cell Monte Carlo, spatial tumors with PDT/SDT depth physics (2D row-based and 3D radial-depth dispatchers; sim-tme-3d is the 3D-spheroid capstone consuming the full TME library stack) + photosensitizer PK (drug-light-interval scaling, saturating distribution phase, relative singlet-O₂ yield), drug penetration, drug combinations, tumor microenvironment (oxygen gradients, spatial immune zones, DAMP-mediated T cell activation), vulnerability windows, ICD immune cascades, tumor PK
 - **ferroptosis-core library** (MIT, with Python bindings) — embeddable ferroptosis biochemistry engine; module list and current unit-test count in [`simulations/ferroptosis-core/README.md`](simulations/ferroptosis-core/README.md)
 - **Calibration infrastructure** linking simulation parameters to published experimental data
-- **112-page book-format manuscript** with 11 chapters, 3 appendices, and 20 figures (~36,700 words), cross-referenced against all analysis outputs
+- **Book-format manuscript (~117 pp)** with 11 chapters, 3 appendices, and 22 figures (~36,700 words), cross-referenced against all analysis outputs
 
 Everything is organised so you can re-run the pipeline, challenge the conclusions, or extend the work in directions we haven't thought of yet.
 
@@ -46,7 +46,7 @@ These are computational predictions with documented assumptions and caveats, not
 | Directory | What you'll find |
 |-----------|-----------------|
 | `analysis/` | 15+ analysis outputs: evidence tiers, tissue-of-origin, diagnostic-therapy matching, combination audits, gap analysis |
-| `article/drafts/` | Manuscript (v1.md + v1.tex) with 20 figures |
+| `article/drafts/` | Manuscript (v1.md + v1.tex) with 22 figures |
 | `scripts/` | Python pipeline: tagging, indexing, analysis, figure generation, LaTeX generation, news authentication pipeline |
 | `simulations/` | [11 Rust binaries](simulations/README.md) (each with its own README) + [ferroptosis-core library](simulations/ferroptosis-core/) + [Python bindings](simulations/ferroptosis-python/) + [calibration](simulations/calibration/) |
 | `corpus/` | Full-text articles by PubMed ID + INDEX.jsonl |

@@ -711,6 +711,13 @@ The question behind drug combination design is straightforward: if the cell has 
 
 Running pairwise combinations of four interventions (RSL3/GPX4 inhibitor, SDT/exogenous ROS, FSP1 inhibitor, HDAC inhibitor/basal ROS upregulation) on 1,000 persister cells per condition and comparing against Bliss-independent predictions reveals three synergistic pairs. RSL3 + FSP1i is the strongest (Bliss synergy score 1.99): single-agent RSL3 kills 40\% and FSP1i kills 3.7\%, but the combination kills 84.1\% --- nearly double the 42.2\% Bliss prediction. The pathway traces show why: with both GPX4 and FSP1 depleted, mean lipid peroxidation reaches 8.7 (near the 10.0 death threshold), whereas RSL3 alone only drives LP to 4.5 because intact FSP1 partially compensates. RSL3 + HDACi (1.25x) and FSP1i + HDACi (1.21x) are also synergistic. SDT combinations are merely additive because SDT alone already kills 100\% of persisters (ceiling effect). Drug potency parameters (FSP1i 85\% inhibition, HDACi 2x ROS) are estimates --- exact synergy scores depend on these assumptions, but the directional finding (dual-pathway depletion > single-pathway) is robust to parameter variation.
 
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\textwidth]{../figures/fig25_bliss_synergy.pdf}
+\caption{Dual-pathway depletion synergy. (a) RSL3+FSP1i kills 84.1\%, far above the 42.2\% Bliss-independent prediction (1.99$\times$ synergy); (b) pairwise synergy scores (SDT pairs excluded for a 100\% single-agent ceiling). Drug potencies are estimates; the directional finding (dual-pathway $>$ single) held across the $\pm$50\% sensitivity sweep (Section 5).}
+\label{fig:fig25_bliss_synergy}
+\end{figure}
+
 \textbf{What this means.} The 1.99$\times$ Bliss synergy is not about the specific drug pair RSL3 + FSP1i. It is about the principle: ferroptosis has two parallel repair pathways, and disabling both is mechanistically more effective than disabling either alone. Any drug combination that simultaneously depletes GPX4-dependent and GPX4-independent repair should produce synergy, regardless of the specific molecules used. This generalizes the prediction beyond the compounds in the simulation --- it identifies a strategy (dual-pathway depletion) rather than endorsing a specific regimen. The practical implication for drug development: screen combination strategies by their pathway coverage, not just by their individual potency.
 
 \textbf{How to test this prediction.} Treat persister-enriched cancer cells with a GPX4 inhibitor (RSL3 or ML162) and an FSP1 inhibitor (iFSP1 or DHODH inhibitor brequinar) across a dose matrix. Compute the combination index using Chou-Talalay analysis or compare against Bliss independence predictions. Measure lipid peroxidation (C11-BODIPY) to confirm the mechanistic pathway.
@@ -742,6 +749,13 @@ This finding has two implications. First, it quantifies a specific mechanism by 
 \includegraphics[width=\textwidth]{../figures/fig18_hypoxia_crosssection.pdf}
 \caption{Hypoxia cross-section: O$_2$ gradient from blood vessel (left) into tumor core (right). RSL3 efficacy collapses as basal ROS disappears; SDT maintains efficacy via exogenous ROS delivery.}
 \label{fig:fig18_hypoxia_crosssection}
+\end{figure}
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\textwidth]{../figures/fig24_hypoxia_killcurve.pdf}
+\caption{Hypoxia kill-collapse (2D model). (a) RSL3 kill collapses from 3.7\% (normoxic) to ${\sim}0.1\%$ (hypoxic) while SDT holds 91.9\%${\to}$87.8\%; (b) the gradient result is flat across O$_2$ penetration length $\lambda$=80--150$\mu$m. \textbf{SDT is modeled as O$_2$-independent, an optimistic upper bound} --- SDT's own O$_2$-dependence is contested (Section 7.1), so the direction is more robust than the magnitude of the gap.}
+\label{fig:fig24_hypoxia_killcurve}
 \end{figure}
 
 \textbf{How to test this prediction.} Compare RSL3 and SDT efficacy in normoxic (21\% O2) versus hypoxic (1\% O2) conditions using a hypoxia chamber or 3D tumor spheroids with verified hypoxic cores (pimonidazole staining).
