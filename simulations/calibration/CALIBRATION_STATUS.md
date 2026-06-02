@@ -51,7 +51,7 @@ machine-checked authorities remain:
 | SDT acoustic attenuation | `physics` | **Self-consistency only** | `targets.yaml: sdt_depth_attenuation` verifies `sdt_alpha` vs Cobbold 2007. |
 | RSL3 pharmacokinetics | `tumor_pk` | **Uncalibrated (illustrative)** | "Order-of-magnitude estimates, not clinical measurements" (`parameter_provenance.md`). |
 | Photosensitizer PK | `photosensitizer_pk` | **Partially anchored** | Distribution-phase + inter-drug ROS-yield normalization closed via #203 with literature scaling; absolute cellular PK still estimated. |
-| Immune ICD/DAMP cascade (2D) | `immune` | **Uncalibrated (illustrative)** | DAMP diffusion, T-cell kill rates estimated. The 104:1 SDT:RSL3 ratio (manuscript §7.2) is explicitly "a theoretical ceiling … not a quantitative prediction." |
+| Immune ICD/DAMP cascade (2D) | `immune` | **Uncalibrated (illustrative); direction literature-anchored (#288)** | DAMP diffusion, T-cell kill rates estimated. The 104:1 SDT:RSL3 ratio (manuscript §7.2) is "a theoretical ceiling … not a quantitative prediction." Per #288, the *direction* (SDT ≫ RSL3 immune priming) is supported by verified literature (Wiernicki 35760796; Wang 34669472; Luo 35568916; Foglietta 38232641); the 2D 104:1 over-extrapolates because the model's saturating Michaelis-Menten DAMP→activation (Kd=50) is driven deep into saturation by the dense 2D kill field, while 3D volumetric dilution keeps it sub-saturating (~4:1, more consistent with the literature). The exact ratio stays uncalibratable. |
 
 ## 3D realism layers (`sim-tme-3d` track)
 
@@ -81,9 +81,27 @@ the 3D model's own predictions, not measured values. `3d_validation_report.md`
 records that, like-for-like, the 2D engine produces a **larger** immune ratio
 than 3D (104:1 vs **4:1**) and a slightly more complete hypoxia collapse — i.e.
 the 3D numbers are not "stronger," and the immune ratio in particular is
-sensitive to grid size / volumetric DAMP dilution. Each target's
-`source_description` names the published dataset that would upgrade it from
-self-consistency to calibration.
+sensitive to grid size / volumetric DAMP dilution.
+
+**Immune target — direction now literature-anchored (#288).** A #288 literature
+review (every PMID verified against PubMed) established that the SDT:RSL3 immune
+ratio's *exact value* cannot be calibrated — no published study runs SDT and an
+RSL3-only arm against a shared immune readout, and the previously-named
+"Nguyen 2019" source was a **phantom citation** (no such applicable study exists;
+removed from `targets.yaml`). But the *direction* (ratio > 1) and *single-digit
+magnitude-class* ARE supported by verified primary literature: the
+RSL3/GPX4-inhibitor denominator is non- to weakly-immunogenic (Wiernicki 2022
+PMID 35760796, 0% vaccination protection; with the genuine caveat that early
+ferroptosis can be immunogenic — Efimova 2020 PMID 33188036), SDT drives
+DC maturation + CD8 infiltration over controls (Wang 2021 PMID 34669472;
+Luo 2022 PMID 35568916; pancreatic-spheroid SDT-ICD Foglietta 2024 PMID 38232641;
+the precise fold-changes are figure-level, not abstract-level). The 2D 104:1
+over-extrapolates for a model-internal reason: the immune layer's saturating
+Michaelis-Menten DAMP→activation (Kd=50) is driven deep into saturation by the
+dense 2D kill field, whereas 3D volumetric DAMP dilution keeps it sub-saturating
+(the more literature-consistent ~4:1). So `3d_immune_sdt_dominates`
+stays self-consistency for its *value* but is now literature-anchored for its
+*direction and magnitude bound*.
 
 ## Calibration roadmap (priority order)
 
@@ -91,11 +109,13 @@ Calibration is **data-gated**: each item needs an independent measurement the
 repo does not currently hold. Listed by leverage (how much it would change a
 load-bearing claim) × tractability (how obtainable the data is):
 
-1. **Immune coupling (2D + 3D).** The SDT:RSL3 ICD ratio is the manuscript's
-   keystone simulation finding *and* the most volatile (104:1 → 4:1 across
-   dimensionality). Highest leverage. Needs published spheroid SDT-immune-priming
-   data (DAMP-density vs T-cell-infiltrate) — `3d_immune_sdt_dominates`'s
-   `source_description` flags Nguyen 2019 or equivalent for a curator to pin.
+1. **Immune coupling (2D + 3D).** ~~Needs a published SDT-immune-priming dataset.~~
+   **DONE as far as the literature allows (#288):** the direction + magnitude-class
+   are now literature-anchored (see the immune-target note above). What remains
+   genuinely data-blocked is a *precise* calibrated value, which requires a study
+   running SDT and RSL3 against a **shared** immune readout — none exists. The
+   honest residual is that the exact ratio (3D ~4:1) is uncalibratable, not that
+   the claim is ungrounded; the keystone direction is supported.
 2. **Persister kinetics.** Direction is well-supported; only the rates are
    guessed. A single Hangauer-style multi-cycle screen would fit
    acquisition/reversion/`max_fraction`. Tractable, well-scoped.

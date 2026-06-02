@@ -147,7 +147,7 @@ targets:
   - id: 3d_immune_sdt_dominates
     target_type: self-consistency
     description: "At λ=120 immune-on: SDT immune-kills should be > 3× RSL3 immune-kills (Q2 finding — the manuscript-keystone 104:1 → 4:1 reduction in 3D)"
-    source_description: "Q2 from 3d_validation_report.md. The DAMP-density-driven immune coupling model predicts SDT (high kill density → high DAMP → high T-cell activation) outproduces RSL3 immune kills. Sim-tme-3d's current run produces ratio ≈ 4.03; sim-tme's 2D produces 104.2. The qualitative direction (SDT dominates) is the manuscript-keystone finding and should hold across dimensionality. Upgrade to `calibration` against published spheroid SDT-immune-priming data (Nguyen 2019 or equivalent — manuscript curator to identify)."
+    source_description: "Q2 from 3d_validation_report.md. The DAMP-density-driven immune coupling model predicts SDT (dense kill → high DAMP → high DC/T-cell activation) outproduces RSL3 immune kills. Sim-tme-3d produces ratio ≈ 4.0; sim-tme's 2D produces 104.2. LITERATURE ASSESSMENT (#288, every PMID verified against PubMed): a direct shared-denominator measurement of this ratio does NOT exist, and the previously-named 'Nguyen 2019' reference is not a real applicable study (it was a phantom citation — removed). The exact ratio is therefore not extractable and this stays self-consistency. BUT its DIRECTION and single-digit MAGNITUDE-CLASS are now literature-anchored: the RSL3/GPX4-inhibitor denominator is non- to weakly-immunogenic (Wiernicki 2022 PMID 35760796 — 0% vaccination protection; genuine caveat: EARLY ferroptosis CAN be immunogenic, Efimova 2020 PMID 33188036, so the denominator is timing-dependent, not uniformly zero), while SDT drives DC maturation + CD8 infiltration + antitumor immunity over controls (Wang 2021 PMID 34669472; Luo 2022 PMID 35568916; pancreatic-spheroid SDT-ICD: Foglietta 2024 PMID 38232641; the precise fold-changes are figure-level, not abstract-level). The 2D 104:1 over-extrapolates for a model-internal reason: the immune layer's saturating Michaelis-Menten DAMP->activation (Kd=50) is driven deep into saturation by the dense 2D kill field, whereas 3D volumetric DAMP dilution keeps it sub-saturating, giving the more realistic ~4:1. Net: direction calibrated to literature; exact magnitude not. See CALIBRATION_STATUS.md."
     binary: sim-tme-3d
     output_file: "tme-3d/summary.json"
     extraction:
@@ -156,7 +156,7 @@ targets:
     target_value: 3.0
     tolerance: 1.0
     confidence: "medium"
-    note: "Self-consistency. Threshold 3.0 is below the observed ~4.0 with 25% margin. Catches a regression where the immune block silently no-ops or where DAMP diffusion drops below the kill-threshold."
+    note: "Self-consistency for the VALUE (threshold 3.0 is below the observed ~4.0 with 25% margin; catches a regression where the immune block silently no-ops or DAMP diffusion drops below the kill-threshold). The DIRECTION (ratio > 1, SDT dominates) and single-digit magnitude-class are literature-anchored (#288); a precise calibrated value is not available because no published study runs SDT and an RSL3-only arm against a shared immune readout."
     parameters_affected:
       - damp_diffusion_fraction
       - damp_clearance_rate
