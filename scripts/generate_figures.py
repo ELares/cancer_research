@@ -1325,6 +1325,10 @@ def fig26_vulnerability_window():
         return
     data = json.loads(WINDOW_JSON.read_text())
     days = sorted(set(r["timepoint_days"] for r in data))
+    present = {(r["treatment"], r["timepoint_days"]) for r in data}
+    if not all((tx, d) in present for tx in ("RSL3", "SDT") for d in days):
+        print("  incomplete window data (missing treatment/timepoint) — skipping")
+        return
 
     def series(tx, key):
         m = {r["timepoint_days"]: r for r in data if r["treatment"] == tx}
@@ -1375,8 +1379,9 @@ def fig26_vulnerability_window():
 
     fig.suptitle("The ferroptosis-sensitive window: days for RSL3, weeks for SDT", fontsize=12, y=1.02)
     fig.text(0.5, -0.04,
-             "100,000 cells/condition. Defense-recovery half-times (GPX4 3 d, FSP1 7 d, NRF2 5 d, GSH 1 d) are "
-             "literature-estimated, so window durations are approximate until experimentally validated.",
+             "100,000 cells/condition; x-axis shows sampled timepoints (not linear in time). Defense-recovery "
+             "half-times (GPX4 3 d, FSP1 7 d, NRF2 5 d, GSH 1 d) are literature-estimated, so window durations "
+             "are approximate until experimentally validated.",
              ha="center", fontsize=7.5, style="italic", color="gray")
     fig.savefig(FIG_DIR / "fig26_vulnerability_window.pdf", bbox_inches="tight")
     fig.savefig(FIG_DIR / "fig26_vulnerability_window.png", bbox_inches="tight")
