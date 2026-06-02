@@ -697,6 +697,13 @@ A critical question for clinical translation is timing: how long after chemother
 
 \textbf{The RSL3 vulnerability window closes within 3 days} as GPX4 is re-expressed. By one week, RSL3 is completely ineffective (<0.01\%). \textbf{The SDT window remains open for at least 4 weeks} (99.5\% kill at day 28), because the exogenous ROS burst overwhelms even partially recovered antioxidant defenses. This differential has direct clinical implications: pharmacologic ferroptosis inducers require intervention within days of chemotherapy, while physical modalities offer a much wider scheduling window. These window estimates depend on the literature-derived half-life parameters and should be treated as approximate until experimentally validated.
 
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\textwidth]{../figures/fig26_vulnerability_window.pdf}
+\caption{The ferroptosis-sensitive treatment window. (a) After chemotherapy, RSL3 kill collapses from 42.4\% to 1.4\% by day 3 and to ${\sim}0$ by day 7 as GPX4 is re-expressed, while SDT holds ${\sim}100\%{\to}99.5\%$ through day 28; (b) the RSL3 collapse tracks mean GPX4 recovery (twin axis). Defense-recovery half-times (GPX4 3 d, FSP1 7 d, NRF2 5 d, GSH 1 d) are literature-estimated, so the window durations are approximate (medium confidence) until experimentally validated.}
+\label{fig:fig26_vulnerability_window}
+\end{figure}
+
 \textbf{What this means.} If the model is correct, the logistics of treatment timing become a critical variable --- not just for efficacy, but for determining which modality class is even feasible. A GPX4 inhibitor administered one week after chemotherapy would arrive to find a population of cells that has already re-expressed its primary defense. A physical ROS modality administered at the same timepoint would still find cells whose antioxidant reserves, while partially recovered, remain overwhelmed by the exogenous ROS dose. This converts a biological question (how long are cells vulnerable?) into a practical scheduling question (how quickly can the follow-up treatment be delivered?).
 
 \textbf{How to test this prediction.} After drug withdrawal from a persister-inducing therapy (e.g., osimertinib withdrawal from EGFR-mutant lung cancer cells), measure GPX4, FSP1, NRF2, and GSH levels at serial timepoints (0h, 6h, 1d, 3d, 1wk, 2wk, 4wk). At each timepoint, assess ferroptosis sensitivity by treating matched samples with RSL3 and measuring cell death.
