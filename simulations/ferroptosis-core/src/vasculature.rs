@@ -161,6 +161,13 @@ pub fn place_vessels_in_slab_3d(
 /// same finite set is order-independent), keeping [`vessel_supply_field`]
 /// byte-identical while cutting it from `O(cells × vessels)` to roughly
 /// `O(cells)` with a bounded per-query neighborhood.
+///
+/// Assumes a **physical** inter-vessel spacing (≳ cell size): the bin edge is
+/// floored at 1 lattice unit, so a non-physical sub-cell spacing
+/// (`inter_vessel_um < cell_size_um`) degenerates to per-cell bins — `nb` grows
+/// to the grid dims and `bins` holds ~`dims³` (mostly empty) vectors. Correct,
+/// but memory-heavy in that regime; real vasculature spacing (~100–500 µm vs a
+/// ~20 µm cell) keeps `bin` at several cells and `nb³` small.
 struct VesselIndex {
     /// Bin edge length in lattice units.
     bin: f64,
@@ -171,6 +178,13 @@ struct VesselIndex {
 }
 
 impl VesselIndex {
+    /// Bin index of a lattice coordinate along one axis, clamped to `[0, n-1]`.
+    /// Returned as `isize` so the query can offset it by shell deltas; `build`
+    /// casts to `usize`. Shared so bin assignment and querying can't drift.
+    fn bin_index(coord: f64, bin: f64, n: usize) -> isize {
+        ((coord / bin).floor() as isize).clamp(0, n as isize - 1)
+    }
+
     fn build(grid: &TumorGrid3D, vessels: &[(f64, f64, f64)]) -> Self {
         // Target ≈1 vessel/bin: bin volume ≈ total_cells / n_vessels, so the
         // edge ≈ cbrt(that). Clamp to ≥1 lattice unit. Keeps the typical query
@@ -183,10 +197,10 @@ impl VesselIndex {
             ((grid.layers as f64 / bin).ceil() as usize).max(1),
         );
         let mut bins = vec![Vec::new(); nb.0 * nb.1 * nb.2];
-        let bin_of =
-            |x: f64, n: usize| ((x / bin).floor() as isize).clamp(0, n as isize - 1) as usize;
         for &v in vessels {
-            let (br, bc, bl) = (bin_of(v.0, nb.0), bin_of(v.1, nb.1), bin_of(v.2, nb.2));
+            let br = Self::bin_index(v.0, bin, nb.0) as usize;
+            let bc = Self::bin_index(v.1, bin, nb.1) as usize;
+            let bl = Self::bin_index(v.2, bin, nb.2) as usize;
             bins[(br * nb.1 + bc) * nb.2 + bl].push(v);
         }
         VesselIndex { bin, nb, bins }
@@ -197,9 +211,9 @@ impl VesselIndex {
     fn nearest_d2(&self, r: usize, c: usize, l: usize) -> f64 {
         let (rf, cf, lf) = (r as f64, c as f64, l as f64);
         let cb = (
-            ((rf / self.bin).floor() as isize).clamp(0, self.nb.0 as isize - 1),
-            ((cf / self.bin).floor() as isize).clamp(0, self.nb.1 as isize - 1),
-            ((lf / self.bin).floor() as isize).clamp(0, self.nb.2 as isize - 1),
+            Self::bin_index(rf, self.bin, self.nb.0),
+            Self::bin_index(cf, self.bin, self.nb.1),
+            Self::bin_index(lf, self.bin, self.nb.2),
         );
         // Largest shell needed to reach every bin from this cell's bin.
         let r_max = (cb.0.max(self.nb.0 as isize - 1 - cb.0))
@@ -209,6 +223,12 @@ impl VesselIndex {
         let mut shell = 0isize;
         while shell <= r_max {
             // Bins at Chebyshev distance == shell (the not-yet-searched ring).
+            // This rescans the full (2·shell+1)³ index box and `continue`s the
+            // interior, so reaching shell R is O(R⁴) index iterations (most
+            // skipped). Negligible at the ≈1-vessel/bin sizing — the early-stop
+            // below almost always fires by R≤2 — so a boundary-only enumeration
+            // isn't worth the complexity unless a pathologically sparse grid
+            // ever profiles hot.
             for dr in -shell..=shell {
                 for dc in -shell..=shell {
                     for dl in -shell..=shell {
