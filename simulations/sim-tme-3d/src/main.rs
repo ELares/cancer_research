@@ -1064,11 +1064,12 @@ fn run_one_condition_full(
                                 }
                             }
                         };
-                        gc.state.persister_fraction = if drug_intensity > 0.0 {
-                            persister::acquire(frac, drug_intensity, pcfg)
-                        } else {
-                            persister::revert(frac, pcfg)
-                        };
+                        // Competing-rate update (#262): acquisition and
+                        // reversion both act each step (not an either-or keyed
+                        // on drug == 0), so sustained sub-saturating drug
+                        // reaches a sub-cap equilibrium rather than ratcheting
+                        // monotonically to the cap.
+                        gc.state.persister_fraction = persister::step(frac, drug_intensity, pcfg);
                     }
                 }
 

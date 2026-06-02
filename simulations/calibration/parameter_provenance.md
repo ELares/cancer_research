@@ -75,6 +75,26 @@ Every simulation parameter, its default value, source, and whether it is experim
 
 `tumor_pk::TumorPKParams` and the Krogh penetration model in `drug_transport` use RSL3-like parameters (e.g., plasma t½ ≈ 30 min, `k_uptake_bulk`, `km_uptake`) that are **order-of-magnitude estimates from chemical-probe literature, not clinical measurements.** RSL3 has no published clinical PK profile — it is widely cited as a research probe with poor pharmacokinetics, not a development candidate (e.g., review in Yang et al., Nature 2023, on ferroptosis therapeutics). Sensitivity of manuscript claims to these values is bounded by the protection-factor range reported in Chapter 8.2 (4.8×–27×) — qualitative conclusions about tumor-PK barriers are robust, but absolute kill rates should be read as approximate. A future issue should anchor PK parameters either to a clinically published ferroptosis inducer (e.g., IKE) or to a non-RSL3 reference compound.
 
+## Drug-tolerant persister kinetics (`PersisterConfig`): known uncalibrated
+
+The persister model (#241) acquires/loses an epigenetic drug-tolerant fraction per cell. As of #262 the per-step update is a **competing-rate** integrator (both rates always active):
+
+`frac += acquisition_rate · drug · (max_fraction − frac) − reversion_rate · frac`
+
+so under sustained sub-saturating drug the fraction relaxes to the equilibrium `f* = acq·drug·max / (rev + acq·drug)` (below the cap; e.g. at the `enabled()` defaults a drug intensity of 0.3 settles at `f* = 0.30`, and even saturating drug settles at `0.53 < 0.80`), rather than ratcheting monotonically to `max_fraction`.
+
+| Parameter | `enabled()` | Source | Grounded? | Target / regeneration |
+|-----------|-------------|--------|-----------|-----------------------|
+| `acquisition_rate` | 0.02 / step | Hangauer et al., Nature 2017 (drug-tolerant persisters arise over days–weeks of drug) | Assumed (qualitative direction only) | Fit to a persister-fraction-vs-time-under-drug curve |
+| `reversion_rate` | 0.01 / step | Hangauer 2017 (tolerance is reversible on drug withdrawal) | Assumed | Fit jointly with `acquisition_rate` to the on-drug equilibrium + off-drug decay rate |
+| `max_fraction` | 0.80 | Mechanistic cap | Assumed | The plateau of the fraction-surviving-vs-dose-cycles curve |
+| `gpx4_resistance` | (enabled) | Hangauer 2017 (persisters are GPX4-dependent; the RSL3-specific resistance axis) | Assumed | Fit to the persister-vs-parental RSL3 IC50 shift |
+| `mufa_boost_per_step` | (enabled) | Tsoi et al., Cancer Cell 2018 (dedifferentiated/MUFA-enriched state) | Assumed | Fit to the MUFA/PUFA lipidomic shift in the tolerant state |
+
+**Calibration target.** A Hangauer-style multi-cycle drug screen gives fraction-surviving vs. number of dose cycles; fitting `acquisition_rate` / `reversion_rate` / `max_fraction` to that curve (plus the off-drug reversion half-time) would replace the current step-level placeholders. No step-level rates are published — the literature gives direction (persisters exist, are GPX4-dependent, are reversible), not kinetics — so these stay **Assumed** until such a fit lands. Treat the persister-fraction magnitudes as illustrative; the directional claims (sustained drug builds a tolerant sub-population that resists RSL3 and reverts off-drug) are robust to the exact rates.
+
+The SDT/PDT resistance of persisters currently comes only through the (weak) MUFA axis; whether to add an explicit reduced-lipid-peroxide-vulnerability term to the exo-ROS path is deferred (#262 out-of-scope note).
+
 ## Photosensitizer pharmacokinetics: plasma vs. cellular
 
 `Photosensitizer::Porfimer.t_half_h` represents *plasma* terminal half-life. Cellular concentration is assumed to track plasma proportionally — a reasonable approximation for porfimer (slow-distributing, weeks-scale t½, ~100% serum-protein bound, Vd ≈ plasma volume per Bellnier 2006) but explicitly wrong for 5-ALA/PpIX, which accumulates intracellularly via ferrochelatase deficiency rather than decaying. ALA kinetics will require a different variant.
