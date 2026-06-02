@@ -153,7 +153,9 @@ impl Params {
 pub struct SpatialParams {
     /// Cell diameter in micrometers.
     pub cell_size_um: f64,
-    /// Iron diffusion coefficient in tissue (µm²/s). Ref: D_eff ≈ 281 µm²/s
+    /// Iron diffusion coefficient in tissue (µm²/s). Estimate: free aqueous
+    /// Fe²⁺ ≈ 700 µm²/s, scaled ~2.5× down for tissue tortuosity ⇒ ≈ 281 µm²/s.
+    /// (Not a directly cited measurement; see parameter_provenance.md.)
     pub iron_diffusion_coeff: f64,
     /// Labile iron released per dead cell (µM equivalent).
     pub iron_release_per_death: f64,
