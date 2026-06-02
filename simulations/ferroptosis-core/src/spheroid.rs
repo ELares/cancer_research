@@ -81,7 +81,11 @@ impl SpheroidConfig {
     /// This fixes the previous inversion (radial thresholds gave a ~4 %-volume
     /// core and a ~71 %-volume rim). The *radial structure* is now grounded; the
     /// per-zone *biochemical* gradients (MUFA/GSH/iron) remain placeholders
-    /// pending histology calibration.
+    /// pending histology calibration. Two scoping caveats: (1) these are the
+    /// *limiting* (large-spheroid) proportions applied size-independently — real
+    /// zone fractions shrink with spheroid diameter (small spheroids have little
+    /// or no necrotic core), so a size-aware variant is a future refinement; and
+    /// (2) the gradient *strengths* below are still uncalibrated.
     pub fn literature() -> Self {
         SpheroidConfig {
             // Volume fractions: rim begins at 0.90³≈0.73 of volume; core is the
@@ -125,6 +129,11 @@ pub fn radial_fraction_3d(grid: &TumorGrid3D, idx: usize) -> f64 {
 /// compare `frac³` against the volume-fraction thresholds. This makes the zone
 /// *volumes* match the config (the previous radial-fraction thresholds gave an
 /// inverted distribution — a ~4 %-volume core and a ~71 %-volume rim).
+///
+/// `frac³` is the *continuous*-sphere volume fraction; the discrete lattice
+/// cell-*count* within a given radius only approximates it (most loosely in the
+/// small core, where few cells exist), so the realized count fractions sit near,
+/// not exactly at, the configured volume fractions.
 pub fn radial_phenotype(frac: f64, cfg: &SpheroidConfig) -> Phenotype {
     let vol_frac = frac.clamp(0.0, 1.0).powi(3);
     if vol_frac >= cfg.glycolytic_frac {

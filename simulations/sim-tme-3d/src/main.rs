@@ -4197,6 +4197,11 @@ mod tests {
         // Deterministic (seeded), so the ~9.7% gap is stable; assert a material
         // change with margin. (Threshold was 10%, tuned to the pre-#270 inverted
         // config; the volume-correct config gives radial≈4601 vs random≈5093.)
+        // NOTE: the < direction couples to the current net balance of the core's
+        // MIXED mechanism (persister phenotype = resistant; low GSH + high iron =
+        // vulnerable; hypoxic = resistant to O2-dependent ferroptosis). A future
+        // gradient-strength calibration could flip the net, in which case revisit
+        // this direction assertion (the magnitude/material-change check stands).
         assert!(
             radial.total_dead < random.total_dead,
             "volume-correct spheroid (larger hypoxic core) should kill fewer than random: \
