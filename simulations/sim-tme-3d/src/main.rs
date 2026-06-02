@@ -4105,6 +4105,8 @@ mod tests {
     /// loudly here instead.
     #[test]
     fn realism_layer_seeds_are_pairwise_distinct() {
+        // NOTE: when a new realism layer adds its own seed constant, add it
+        // here too — this list is the (manual) registry of layer RNG seeds.
         let seeds = [
             ("SEED", SEED),
             ("SUBCLONE_SEED", SUBCLONE_SEED),
@@ -4125,9 +4127,11 @@ mod tests {
 
     /// Three independent realism layers enabled together — clonal subclones
     /// (#242) × Treg/MDSC suppressor (#264 P2) × multi-checkpoint brake (#264
-    /// P3), all under immune — must compose: the run is deterministic and each
+    /// P3), all under immune — must compose: the run is deterministic, each
     /// layer reports a coherent metric (no field/seed collision silently
-    /// dropping one). Directional sanity: some killing still happens.
+    /// dropping one), and — the directional cross-check — the checkpoint layer's
+    /// modulation still *flows through* under composition (dual blockade
+    /// out-kills anti-PD-1 alone even with clonal + suppressor also active).
     #[test]
     fn clonal_suppressor_checkpoints_compose() {
         let cfg = RunConfig {
@@ -4148,7 +4152,8 @@ mod tests {
             immune_kill_rate: 0.5,
             ..SpatialImmuneConfig::for_3d()
         };
-        let run = || {
+        // Same clonal + suppressor composition; the checkpoint panel varies.
+        let run = |panel: CheckpointPanel| {
             run_one_condition_full(
                 &cond,
                 cfg,
@@ -4157,14 +4162,15 @@ mod tests {
                     immune: Some(immune),
                     clonal: Some(ClonalConfig::literature_4()),
                     suppressor: Some(SuppressorConfig::enabled()),
-                    checkpoints: Some(CheckpointPanel::pd1_ctla4_tumor().with_anti_pd1(0.8)),
+                    checkpoints: Some(panel),
                     ..Default::default()
                 },
             )
         };
-        let a = run();
-        let b = run();
-        // Deterministic across runs (no nondeterministic cross-layer coupling).
+        let tumor = CheckpointPanel::pd1_ctla4_tumor();
+        let a = run(tumor.with_anti_pd1(0.8)); // anti-PD-1 alone (CTLA-4 braking)
+        let b = run(tumor.with_anti_pd1(0.8)); // repeat for determinism
+                                               // Deterministic across runs (no nondeterministic cross-layer coupling).
         assert_eq!(a.total_dead, b.total_dead, "composed run is deterministic");
         assert_eq!(a.ferroptosis_kills, b.ferroptosis_kills);
         assert_eq!(a.immune_kills, b.immune_kills);
@@ -4179,8 +4185,25 @@ mod tests {
             "suppressor niches present under composition"
         );
         assert!(a.checkpoint_brake.is_some(), "checkpoint brake reported");
-        assert!(a.immune_kills.is_some(), "immune ran");
+        let a_immune = a.immune_kills.expect("immune_on populates immune_kills");
+        assert!(
+            a_immune > 0,
+            "immune killing actually fires under composition (not just reported); got {a_immune}"
+        );
         assert!(a.total_dead > 0, "composition still kills some cells");
+        // Directional cross-check: the checkpoint layer composes correctly —
+        // dual blockade lifts CTLA-4 too, so it out-kills anti-PD-1 alone EVEN
+        // with clonal + suppressor also active (the #264 P3 effect survives
+        // composition rather than being masked by the other layers).
+        let combo = run(tumor.with_anti_pd1(0.8).with_anti_ctla4(0.8));
+        let combo_immune = combo
+            .immune_kills
+            .expect("immune_on populates immune_kills");
+        assert!(
+            combo_immune > a_immune,
+            "dual blockade must out-kill anti-PD-1 alone under composition: \
+             combo={combo_immune}, mono={a_immune}"
+        );
     }
 
     /// Two grid-level layers enabled together — spheroid radial re-gen (#197,
