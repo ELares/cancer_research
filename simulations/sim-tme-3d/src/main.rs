@@ -1836,6 +1836,30 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         suppressor: false,
         checkpoints: true,
     },
+    SnapshotPreset {
+        // Kitchen-sink composition (#278): several realism layers at once —
+        // persister (#241) + clonal subclones (#242) + Treg/MDSC suppressor
+        // (#264 P2) + dual checkpoint blockade (#264 P3), SDT multi-dose +
+        // immune. Writes the persister + subclone + suppressor overlays
+        // together (all geometry/seed-only, so they match the run). Excludes
+        // vasculature/spheroid/slab: those re-grid or change the O2 source,
+        // which would desync the static overlays from the actual run.
+        name: "combined-realism",
+        desc: "SDT multidose + immune + persister + clonal + suppressor + checkpoints (#278) — composed realism layers",
+        treatment: Treatment::SDT,
+        treatment_name: "SDT",
+        immune_on: true,
+        stromal_on: false,
+        ph_on: false,
+        multidose: true,
+        persister: true,
+        clonal: true,
+        vasculature: false,
+        spheroid: false,
+        slab: false,
+        suppressor: true,
+        checkpoints: true,
+    },
 ];
 
 /// The multi-dose schedule used by the `multidose` snapshot preset:
@@ -4070,5 +4094,160 @@ mod tests {
             "RSL3 surface slab should out-kill the deep slab (drug/O2 supply \
              scaling on the RSL3 path): shallow={shallow}, deep={deep}"
         );
+    }
+
+    // ===== Cross-layer composition (#278) =====
+
+    /// The realism layers each seed an INDEPENDENT RNG with a distinct constant
+    /// so they never correlate or perturb `generate`'s stream. A future layer
+    /// reusing a constant would silently couple two layers' stochastic
+    /// structure — assert the constants are pairwise distinct so that fails
+    /// loudly here instead.
+    #[test]
+    fn realism_layer_seeds_are_pairwise_distinct() {
+        // NOTE: when a new realism layer adds its own seed constant, add it
+        // here too — this list is the (manual) registry of layer RNG seeds.
+        let seeds = [
+            ("SEED", SEED),
+            ("SUBCLONE_SEED", SUBCLONE_SEED),
+            ("VESSEL_SEED", VESSEL_SEED),
+            ("SPHEROID_SEED", SPHEROID_SEED),
+            ("SUPPRESSOR_SEED", SUPPRESSOR_SEED),
+        ];
+        for i in 0..seeds.len() {
+            for j in (i + 1)..seeds.len() {
+                assert_ne!(
+                    seeds[i].1, seeds[j].1,
+                    "realism-layer RNG seeds must be pairwise distinct: {} and {} collide",
+                    seeds[i].0, seeds[j].0
+                );
+            }
+        }
+    }
+
+    /// Three independent realism layers enabled together — clonal subclones
+    /// (#242) × Treg/MDSC suppressor (#264 P2) × multi-checkpoint brake (#264
+    /// P3), all under immune — must compose: the run is deterministic, each
+    /// layer reports a coherent metric (no field/seed collision silently
+    /// dropping one), and — the directional cross-check — the checkpoint layer's
+    /// modulation still *flows through* under composition (dual blockade
+    /// out-kills anti-PD-1 alone even with clonal + suppressor also active).
+    #[test]
+    fn clonal_suppressor_checkpoints_compose() {
+        let cfg = RunConfig {
+            grid_dim: 24,
+            n_steps: 100,
+        };
+        let cond = Condition {
+            name: "compose_csc".to_string(),
+            treatment: Treatment::SDT,
+            treatment_name: "SDT".to_string(),
+            o2_lambda: Some(ZONE_REF_LAMBDA),
+            immune_on: true,
+            stromal_on: false,
+            ph_on: false,
+            dose_schedule: DoseSchedule::Constant,
+        };
+        let immune = SpatialImmuneConfig {
+            immune_kill_rate: 0.5,
+            ..SpatialImmuneConfig::for_3d()
+        };
+        // Same clonal + suppressor composition; the checkpoint panel varies.
+        let run = |panel: CheckpointPanel| {
+            run_one_condition_full(
+                &cond,
+                cfg,
+                None,
+                Overrides {
+                    immune: Some(immune),
+                    clonal: Some(ClonalConfig::literature_4()),
+                    suppressor: Some(SuppressorConfig::enabled()),
+                    checkpoints: Some(panel),
+                    ..Default::default()
+                },
+            )
+        };
+        let tumor = CheckpointPanel::pd1_ctla4_tumor();
+        let a = run(tumor.with_anti_pd1(0.8)); // anti-PD-1 alone (CTLA-4 braking)
+        let b = run(tumor.with_anti_pd1(0.8)); // repeat for determinism
+                                               // Deterministic across runs (no nondeterministic cross-layer coupling).
+        assert_eq!(a.total_dead, b.total_dead, "composed run is deterministic");
+        assert_eq!(a.ferroptosis_kills, b.ferroptosis_kills);
+        assert_eq!(a.immune_kills, b.immune_kills);
+        // Each layer reports a coherent metric (none silently dropped).
+        assert_eq!(
+            a.subclone_kills.as_ref().map_or(0, |v| v.len()),
+            4,
+            "clonal reports all 4 subclones"
+        );
+        assert!(
+            a.suppressor_source_count.unwrap_or(0) > 0,
+            "suppressor niches present under composition"
+        );
+        assert!(a.checkpoint_brake.is_some(), "checkpoint brake reported");
+        let a_immune = a.immune_kills.expect("immune_on populates immune_kills");
+        assert!(
+            a_immune > 0,
+            "immune killing actually fires under composition (not just reported); got {a_immune}"
+        );
+        assert!(a.total_dead > 0, "composition still kills some cells");
+        // Directional cross-check: the checkpoint layer composes correctly —
+        // dual blockade lifts CTLA-4 too, so it out-kills anti-PD-1 alone EVEN
+        // with clonal + suppressor also active (the #264 P3 effect survives
+        // composition rather than being masked by the other layers).
+        let combo = run(tumor.with_anti_pd1(0.8).with_anti_ctla4(0.8));
+        let combo_immune = combo
+            .immune_kills
+            .expect("immune_on populates immune_kills");
+        assert!(
+            combo_immune > a_immune,
+            "dual blockade must out-kill anti-PD-1 alone under composition: \
+             combo={combo_immune}, mono={a_immune}"
+        );
+    }
+
+    /// Two grid-level layers enabled together — spheroid radial re-gen (#197,
+    /// its own RNG + `Params::spheroid`) × explicit vasculature (#191, vessel
+    /// supply replacing the edge-distance O2) — must compose deterministically
+    /// (the supply field is built from the radially-regenerated grid).
+    #[test]
+    fn spheroid_vasculature_compose() {
+        let cfg = RunConfig {
+            grid_dim: 24,
+            n_steps: 90,
+        };
+        let cond = Condition {
+            name: "compose_sv".to_string(),
+            treatment: Treatment::SDT,
+            treatment_name: "SDT".to_string(),
+            o2_lambda: Some(ZONE_REF_LAMBDA),
+            immune_on: false,
+            stromal_on: false,
+            ph_on: false,
+            dose_schedule: DoseSchedule::Constant,
+        };
+        let run = || {
+            run_one_condition_full(
+                &cond,
+                cfg,
+                None,
+                Overrides {
+                    spheroid: Some(SpheroidConfig::literature()),
+                    vasculature: Some(VasculatureConfig::well_vascularized()),
+                    ..Default::default()
+                },
+            )
+        };
+        let a = run();
+        let b = run();
+        assert_eq!(
+            a.total_dead, b.total_dead,
+            "spheroid+vasculature composition is deterministic"
+        );
+        assert!(
+            a.vascular_hypoxic_fraction.is_some(),
+            "vasculature reports its hypoxic fraction under composition"
+        );
+        assert!(a.total_dead > 0, "composition still kills some cells");
     }
 }

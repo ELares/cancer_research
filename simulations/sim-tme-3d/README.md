@@ -105,6 +105,7 @@ The default 24-condition matrix path (no `--snapshot` flag) is **byte-identical*
 | `slab` | SDT | immune + **patient-scale slab (#240)** | constant |
 | `suppressor` | SDT | immune + **Treg/MDSC suppressor (#264)** | constant |
 | `checkpoint` | SDT | immune + **dual PD-1/CTLA-4 blockade (#264)** | constant |
+| `combined-realism` | SDT | immune + **persister + clonal + suppressor + checkpoints (#278)** | multi-dose |
 
 The `slab` preset visualizes the **depth-graded supply** of a patient-scale slab: a surface slab (+z face = vessel) where the top layers are well-perfused and die while the deeper layers go drug/O2-deprived and survive. The depth axis is the layer (z) axis, which the renderer's mid-slice spans — so the death front in the existing dead/DAMP/LP panels *is* the visualization (no extra static overlay). See [Patient-scale slab](#patient-scale-slab-240) below.
 
@@ -170,6 +171,15 @@ The base immune model has a single PD-1 brake (`pd1_brake`, lifted by `anti_pd1_
 - **Validation (AC).** `dual_checkpoint_blockade_outkills_anti_pd1_alone`: on a PD-1 + CTLA-4 tumor, anti-PD-1 alone leaves CTLA-4 braking, so adding anti-CTLA-4 materially raises immune kills (>10%) — the combination-immunotherapy result.
 - **Visualization.** `--snapshot=checkpoint` runs SDT + immune with **dual** PD-1/CTLA-4 blockade (combined brake low ⇒ aggressive immune killing). No new render panel — the brake is a uniform scalar, so the enhanced death front shows directly in the existing dead/DAMP panels (contrast the single-PD-1 `combined`/`multidose` presets).
 - **Uncalibrated.** Per-checkpoint `brake` and `drug_efficacy` are placeholders pending calibration. Phase 4 (DC subsets) of #264 remains open.
+
+## Cross-layer composition (#278)
+
+Each realism layer above is gated, byte-identical when off, independently tested, and seeded from its own RNG constant. #278 verifies they **compose**:
+
+- **Pairwise-distinct seeds.** `realism_layer_seeds_are_pairwise_distinct` asserts `SEED` / `SUBCLONE_SEED` / `VESSEL_SEED` / `SPHEROID_SEED` / `SUPPRESSOR_SEED` never collide — a future layer reusing a constant (which would silently correlate two layers' stochastic structure) fails loudly.
+- **Multi-layer integration tests.** `clonal_suppressor_checkpoints_compose` (clonal × suppressor × multi-checkpoint, under immune) asserts the composed run is deterministic and each layer reports a coherent metric (no field/seed collision drops one); `spheroid_vasculature_compose` does the same for the two grid-level layers (radial re-gen × vessel supply).
+- **Kitchen-sink snapshot.** `--snapshot=combined-realism` enables persister + clonal + suppressor + checkpoints together (SDT multi-dose + immune) and renders all three overlays (persister fraction + subclone id + Treg/MDSC niches) alongside the dead/DAMP/LP panels. (Vasculature/spheroid/slab are excluded from this preset: they re-grid or replace the O2 source, which would desync the static overlays from the run.)
+- The all-off default matrix stays byte-identical (the #253 SHA + golden guards), unaffected by the layers merely being available.
 
 ## Clonal heterogeneity (#242)
 
