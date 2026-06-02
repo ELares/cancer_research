@@ -32,7 +32,7 @@ Every simulation parameter, its default value, source, and whether it is experim
 | Parameter | Default | Source | Grounded? | Sensitivity |
 |-----------|---------|--------|-----------|-------------|
 | `cell_size_um` | 20.0 | Typical tumor cell diameter | Grounded | Low — grid resolution |
-| `iron_diffusion_coeff` | 281.0 µm²/s | Jacques SL, Phys Med Biol 2013 | Grounded | Low — bystander iron diffusion |
+| `iron_diffusion_coeff` | 281.0 µm²/s | Estimate (tortuosity-reduced tissue value; free aqueous Fe²⁺ ≈ 700 µm²/s, scaled ~2.5× down for tissue). **Not** from Jacques 2013 — that optics reference applies to `pdt_mu_eff`, and was previously mis-attributed here | Assumed | Low — bystander iron diffusion |
 | `iron_release_per_death` | 2.0 µM | Mechanistic estimate | Assumed | Low — iron released per dead cell |
 | `pdt_mu_eff` | 0.31 /mm | Jacques SL, Phys Med Biol 2013 (630nm red light) | **Grounded** | **Critical** — PDT penetration depth (δ ≈ 3.2mm) |
 | `pdt_i0` | 1.0 | Relative units | N/A | Low — incident fluence normalization |
@@ -66,9 +66,9 @@ Every simulation parameter, its default value, source, and whether it is experim
 
 ## Summary
 
-- **Grounded** (value derived from specific published measurement): `gsh_max`, `pdt_mu_eff`, `sdt_alpha`, `cell_size_um`, `iron_diffusion_coeff`, `scd_mufa_rate`, `scd_mufa_max`
+- **Grounded** (value derived from specific published measurement): `gsh_max`, `pdt_mu_eff`, `sdt_alpha`, `cell_size_um`, `scd_mufa_rate`, `scd_mufa_max`
 - **Estimated** (informed by literature ranges but not directly calibrated): most biochemistry rates
-- **Assumed** (mechanistic placeholder with no direct data): `gsh_km`, `gpx4_degradation_by_ros`, `gpx4_nrf2_upregulation`, `death_threshold`, immune cascade parameters
+- **Assumed** (mechanistic placeholder with no direct data): `gsh_km`, `gpx4_degradation_by_ros`, `gpx4_nrf2_upregulation`, `death_threshold`, `iron_diffusion_coeff` (tortuosity-reduced estimate; previously mis-cited to Jacques 2013), immune cascade parameters
 - **Derived** (calculated from other parameters): `initial_mufa_protection`
 
 ## RSL3 pharmacokinetics: known uncalibrated
