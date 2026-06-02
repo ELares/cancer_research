@@ -5,7 +5,7 @@
 # to the figs dict in scripts/generate_latex.py.
 #
 # Fields:
-#   manuscript_figure: number in the compiled manuscript (1-22), or null
+#   manuscript_figure: number in the compiled manuscript (1-23), or null
 #   filename: basename without extension (both PDF and PNG exist)
 #   generator:
 #     script: path relative to repo root (or null for orphans)
@@ -20,7 +20,7 @@
 # validates that this file stays in sync with disk.
 
 figures:
-  # ── Manuscript figures (1-22) ──────────────────────────────────
+  # ── Manuscript figures (1-23) ──────────────────────────────────
 
   - manuscript_figure: 1
     filename: fig5_publication_trends
@@ -262,6 +262,23 @@ figures:
       RSL3+FSP1i observed vs Bliss-expected (1.99x) + pairwise synergy scores.
       Input is gitignored; regenerate with `cargo run --release -p sim-combo-mech`
       (deterministic — per-cell seeded RNG — so the figure reproduces exactly).
+
+  - manuscript_figure: 23
+    filename: fig26_vulnerability_window
+    generator:
+      script: scripts/generate_figures.py
+      function: fig26_vulnerability_window
+    inputs:
+      - simulations/output/window/vulnerability_window.json
+    type: simulation
+    status: manuscript
+    note: >
+      Treatment-timing window: RSL3 kill collapses 42.4%->1.4% by day 3 (GPX4
+      re-expression) and to ~0 by day 7, while SDT holds ~100%->99.5% through
+      day 28. Panel (b) shows the GPX4-recovery mechanism. Recovery half-times
+      are literature-estimated (medium confidence). Input is gitignored;
+      regenerate with `cargo run --release -p sim-window` (deterministic —
+      seeded RNG — so the figure reproduces exactly).
 
   # ── Supplementary / orphan figures ─────────────────────────────
 

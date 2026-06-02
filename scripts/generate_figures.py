@@ -42,6 +42,7 @@ FIG_DIR.mkdir(parents=True, exist_ok=True)
 # gitignored; regenerate with `cargo run --release -p sim-tme` / `-p sim-combo-mech`.
 TME_SUMMARY = PROJECT_ROOT / "simulations" / "output" / "tme" / "tme_summary.json"
 COMBO_SUMMARY = PROJECT_ROOT / "simulations" / "output" / "combo-mech" / "combo_summary.json"
+WINDOW_JSON = PROJECT_ROOT / "simulations" / "output" / "window" / "vulnerability_window.json"
 
 plt.rcParams.update({
     'font.size': 11,
@@ -1316,6 +1317,78 @@ def fig25_bliss_synergy():
     print(f"  RSL3+FSP1i: {rf['rate_combo'] * 100:.1f}% obs vs {rf['bliss_prediction'] * 100:.1f}% expected = {rf['synergy_score']:.2f}x")
 
 
+def fig26_vulnerability_window():
+    """Figure 23: ferroptosis-sensitive window — RSL3 closes by ~day 3 (GPX4 recovery), SDT stays open ~4 weeks."""
+    print("Figure 23 (fig26): Vulnerability window (RSL3 vs SDT timing)...")
+    if not WINDOW_JSON.exists():
+        print(f"  {WINDOW_JSON} not found — run `cargo run --release -p sim-window` first. Skipping.")
+        return
+    data = json.loads(WINDOW_JSON.read_text())
+    days = sorted(set(r["timepoint_days"] for r in data))
+    present = {(r["treatment"], r["timepoint_days"]) for r in data}
+    if not all((tx, d) in present for tx in ("RSL3", "SDT") for d in days):
+        print("  incomplete window data (missing treatment/timepoint) — skipping")
+        return
+
+    def series(tx, key):
+        m = {r["timepoint_days"]: r for r in data if r["treatment"] == tx}
+        return [m[d][key] for d in days]
+
+    x = np.arange(len(days))  # even spacing; label with actual day values
+    labels = [f"{d:g}" for d in days]
+    rsl3 = [v * 100 for v in series("RSL3", "death_rate")]
+    sdt = [v * 100 for v in series("SDT", "death_rate")]
+    rsl3_lo, rsl3_hi = [v * 100 for v in series("RSL3", "ci_low")], [v * 100 for v in series("RSL3", "ci_high")]
+    sdt_lo, sdt_hi = [v * 100 for v in series("SDT", "ci_low")], [v * 100 for v in series("SDT", "ci_high")]
+    gpx4_rsl3 = series("RSL3", "mean_gpx4")
+    win_end = max(i for i, d in enumerate(days) if d <= 3.0)
+
+    fig, (axA, axB) = plt.subplots(1, 2, figsize=(11, 4.5))
+
+    axA.plot(x, sdt, "o-", color="#C44E52", label="SDT (exogenous ROS)")
+    axA.fill_between(x, sdt_lo, sdt_hi, color="#C44E52", alpha=0.15)
+    axA.plot(x, rsl3, "s-", color="#4C72B0", label="RSL3 (GPX4 inhibitor)")
+    axA.fill_between(x, rsl3_lo, rsl3_hi, color="#4C72B0", alpha=0.15)
+    axA.axvspan(-0.3, win_end, color="#4C72B0", alpha=0.07)
+    axA.text(win_end / 2.0, 55, "RSL3 window\nopen", ha="center", fontsize=8, color="#4C72B0")
+    axA.set_xticks(x)
+    axA.set_xticklabels(labels)
+    axA.set_xlabel("Time post-chemotherapy (days)")
+    axA.set_ylabel("Persister kill (%)")
+    axA.set_ylim(-3, 107)
+    axA.set_title("(a) Treatment window: RSL3 closes, SDT stays open")
+    axA.legend(fontsize=8, loc="center right")
+    axA.annotate("closes ~day 3", xy=(win_end, rsl3[win_end]), xytext=(win_end + 0.4, 24),
+                 fontsize=8, color="#4C72B0", arrowprops=dict(arrowstyle="->", color="#4C72B0"))
+
+    axB.plot(x, rsl3, "s-", color="#4C72B0", label="RSL3 kill (%)")
+    axB.set_xticks(x)
+    axB.set_xticklabels(labels)
+    axB.set_xlabel("Time post-chemotherapy (days)")
+    axB.set_ylabel("RSL3 kill (%)", color="#4C72B0")
+    axB.set_ylim(-3, 50)
+    axB.tick_params(axis="y", labelcolor="#4C72B0")
+    axB2 = axB.twinx()
+    axB2.plot(x, gpx4_rsl3, "^--", color="#55A868", label="mean GPX4 (recovered fraction)")
+    axB2.set_ylabel("Mean GPX4 (recovered fraction)", color="#55A868")
+    axB2.tick_params(axis="y", labelcolor="#55A868")
+    axB.set_title("(b) Why: GPX4 re-expression closes the window")
+    lA, llA = axB.get_legend_handles_labels()
+    lB, llB = axB2.get_legend_handles_labels()
+    axB.legend(lA + lB, llA + llB, fontsize=8, loc="center right")
+
+    fig.suptitle("The ferroptosis-sensitive window: days for RSL3, weeks for SDT", fontsize=12, y=1.02)
+    fig.text(0.5, -0.04,
+             "100,000 cells/condition; x-axis shows sampled timepoints (not linear in time). Defense-recovery "
+             "half-times (GPX4 3 d, FSP1 7 d, NRF2 5 d, GSH 1 d) are literature-estimated, so window durations "
+             "are approximate until experimentally validated.",
+             ha="center", fontsize=7.5, style="italic", color="gray")
+    fig.savefig(FIG_DIR / "fig26_vulnerability_window.pdf", bbox_inches="tight")
+    fig.savefig(FIG_DIR / "fig26_vulnerability_window.png", bbox_inches="tight")
+    plt.close()
+    print(f"  RSL3 {rsl3[0]:.1f}%@0d -> {rsl3[win_end]:.1f}%@3d -> {rsl3[-1]:.2f}%@28d; SDT {sdt[-1]:.1f}%@28d")
+
+
 def main():
     print("Loading corpus...")
     articles = load_corpus()
@@ -1352,6 +1425,8 @@ def main():
     # Tier-1 quantitative simulation figures (#285): manuscript figures 21, 22.
     fig24_hypoxia_killcurve()
     fig25_bliss_synergy()
+    # Tier-2 (#285): manuscript figure 23 — treatment-timing window.
+    fig26_vulnerability_window()
 
     print(f"\nAll figures saved to {FIG_DIR}/")
     print("Files:")
