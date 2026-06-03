@@ -183,3 +183,100 @@ pub fn gen_recovered_persister(days: f64, rates: &RecoveryRates, rng: &mut StdRn
         mufa_cap: None,
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // The post-chemo persister-recovery means/cell generator drives sim-combo
+    // and sim-window's vulnerability-window result but had no coverage (#295).
+    // This is a separate formula from persister.rs's competing-rate step. Pin
+    // the exponential-recovery endpoints, the half-time midpoint, monotonicity,
+    // and the stochastic generator's determinism + floors.
+
+    #[test]
+    fn means_at_day_zero_are_persister_baseline() {
+        let (fsp1, gpx4, nrf2, gsh) = recovered_persister_means(0.0, &RecoveryRates::default());
+        assert!((fsp1 - 0.15).abs() < 1e-12, "fsp1={fsp1}");
+        assert!((gpx4 - 0.7).abs() < 1e-12, "gpx4={gpx4}");
+        assert!((nrf2 - 0.7).abs() < 1e-12, "nrf2={nrf2}");
+        assert!((gsh - 4.8).abs() < 1e-12, "gsh={gsh}");
+    }
+
+    #[test]
+    fn means_converge_to_normal_targets() {
+        let (fsp1, gpx4, nrf2, gsh) = recovered_persister_means(1.0e6, &RecoveryRates::default());
+        assert!((fsp1 - 1.0).abs() < 1e-6, "fsp1={fsp1}");
+        assert!((gpx4 - 1.0).abs() < 1e-6, "gpx4={gpx4}");
+        assert!((nrf2 - 1.0).abs() < 1e-6, "nrf2={nrf2}");
+        assert!((gsh - 5.0).abs() < 1e-6, "gsh={gsh}");
+    }
+
+    #[test]
+    fn gpx4_is_halfway_recovered_at_its_half_time() {
+        // At days == t_half the recovered fraction is exactly 0.5, so
+        // gpx4 = 0.7 + (1.0 - 0.7)·0.5 = 0.85, independent of the other rates.
+        let rates = RecoveryRates::default();
+        let (_, gpx4, _, _) = recovered_persister_means(rates.gpx4_half_recovery_days, &rates);
+        assert!(
+            (gpx4 - 0.85).abs() < 1e-9,
+            "gpx4 at t_half = {gpx4}, expected 0.85"
+        );
+    }
+
+    #[test]
+    fn means_are_monotonic_in_time() {
+        let r = RecoveryRates::default();
+        let (f0, g0, n0, s0) = recovered_persister_means(0.0, &r);
+        let (f1, g1, n1, s1) = recovered_persister_means(1.0, &r);
+        let (f10, g10, n10, s10) = recovered_persister_means(10.0, &r);
+        assert!(f0 < f1 && f1 < f10, "fsp1 not increasing: {f0},{f1},{f10}");
+        assert!(g0 < g1 && g1 < g10, "gpx4 not increasing: {g0},{g1},{g10}");
+        assert!(n0 < n1 && n1 < n10, "nrf2 not increasing: {n0},{n1},{n10}");
+        assert!(s0 < s1 && s1 < s10, "gsh not increasing: {s0},{s1},{s10}");
+    }
+
+    #[test]
+    fn gen_recovered_persister_is_deterministic() {
+        let r = RecoveryRates::default();
+        let a = gen_recovered_persister(2.0, &r, &mut StdRng::seed_from_u64(7));
+        let b = gen_recovered_persister(2.0, &r, &mut StdRng::seed_from_u64(7));
+        // Same seed ⇒ identical draws on every field.
+        assert_eq!(a.iron, b.iron);
+        assert_eq!(a.gsh, b.gsh);
+        assert_eq!(a.gpx4, b.gpx4);
+        assert_eq!(a.fsp1, b.fsp1);
+        assert_eq!(a.nrf2, b.nrf2);
+        assert_eq!(a.basal_ros, b.basal_ros);
+        assert_eq!(a.lipid_unsat, b.lipid_unsat);
+    }
+
+    #[test]
+    fn gen_recovered_persister_respects_floors_and_caps() {
+        // Sweep many seeds: the `.max(..)` floors must never be violated, and a
+        // recovered persister carries no per-cell MUFA cap.
+        let r = RecoveryRates::default();
+        for seed in 0..200u64 {
+            let c = gen_recovered_persister(1.0, &r, &mut StdRng::seed_from_u64(seed));
+            assert!(c.iron >= 0.5, "iron {} < 0.5 (seed {seed})", c.iron);
+            assert!(c.gsh >= 1.8, "gsh {} < 1.8 (seed {seed})", c.gsh);
+            assert!(c.gpx4 >= 0.15, "gpx4 {} < 0.15 (seed {seed})", c.gpx4);
+            assert!(c.fsp1 >= 0.01, "fsp1 {} < 0.01 (seed {seed})", c.fsp1);
+            assert!(
+                c.basal_ros >= 0.05,
+                "basal_ros {} < 0.05 (seed {seed})",
+                c.basal_ros
+            );
+            assert!(
+                c.lipid_unsat >= 0.6,
+                "lipid_unsat {} < 0.6 (seed {seed})",
+                c.lipid_unsat
+            );
+            assert!(c.nrf2 >= 0.2, "nrf2 {} < 0.2 (seed {seed})", c.nrf2);
+            assert!(
+                c.mufa_cap.is_none(),
+                "recovered persister should carry no MUFA cap"
+            );
+        }
+    }
+}
