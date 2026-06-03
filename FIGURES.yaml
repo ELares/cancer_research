@@ -5,7 +5,7 @@
 # to the figs dict in scripts/generate_latex.py.
 #
 # Fields:
-#   manuscript_figure: number in the compiled manuscript (1-23), or null
+#   manuscript_figure: number in the compiled manuscript (1-24), or null
 #   filename: basename without extension (both PDF and PNG exist)
 #   generator:
 #     script: path relative to repo root (or null for orphans)
@@ -20,7 +20,7 @@
 # validates that this file stays in sync with disk.
 
 figures:
-  # ── Manuscript figures (1-23) ──────────────────────────────────
+  # ── Manuscript figures (1-24) ──────────────────────────────────
 
   - manuscript_figure: 1
     filename: fig5_publication_trends

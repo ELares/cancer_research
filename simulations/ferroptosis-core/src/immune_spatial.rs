@@ -118,8 +118,8 @@ pub const DAMP_KILL_THRESHOLD: f64 = 0.01;
 const MAX_3D_NEIGHBORS: usize = 26;
 
 /// Source cells below this DAMP value skip spread + self-decrement
-/// (matches sim-tme's `if local < 0.001 { continue; }` at
-/// `sim-tme/src/main.rs:707`). The cutoff exists for performance: cells
+/// (matches sim-tme's `if local < 0.001 { continue; }` sub-threshold cutoff in
+/// its DAMP-diffusion step). The cutoff exists for performance: cells
 /// at this magnitude contribute negligibly to neighbors. Mass is exactly
 /// preserved for sub-threshold cells (they don't lose to anyone), so
 /// the field's long-run behavior is unchanged — just faster.

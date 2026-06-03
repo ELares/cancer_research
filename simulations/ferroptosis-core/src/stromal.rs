@@ -7,10 +7,10 @@
 //! effect is **single-cell-deep** — only tumor cells with at least one
 //! stromal Moore neighbor are CAF-shielded.
 //!
-//! In 2D, sim-tme uses 8-Moore neighbors (`sim-tme/main.rs:431-452`); the
-//! shielded shell is an annular boundary one cell thick. In 3D, we use
-//! 26-Moore neighbors via [`TumorGrid3D::neighbors`]; the shielded shell
-//! is a spherical surface one cell thick.
+//! In 2D the boundary uses 8-Moore neighbors (via [`stromal_adjacency_mask_2d`]
+//! in this module); the shielded shell is an annular boundary one cell thick.
+//! In 3D, we use 26-Moore neighbors via [`TumorGrid3D::neighbors`]; the
+//! shielded shell is a spherical surface one cell thick.
 //!
 //! **Surface-to-volume scaling.** The boundary fraction is roughly
 //! `2 × t/R` in 2D (perimeter/area ~ 2/R for thickness t=1) and `3 × t/R`
@@ -28,13 +28,12 @@
 //! helper). Consumers get the mask once and reuse it for boost
 //! application, kill-rate reporting, and visualization.
 //!
-//! **Canonical boost magnitudes** live in sim-tme's `StromalConfig`
-//! (`simulations/sim-tme/src/main.rs:406`): `gsh_boost_per_step = 0.06`,
-//! `gsh_boost_cap = 18.0`, `mufa_boost_per_step = 0.003`, `mufa_boost_cap
-//! = 0.25`. A 3D consumer (#195 sim-tme-3d, #197 cell-level biochem)
-//! should either re-export these values from sim-tme or lift `StromalConfig`
-//! into the library — both are explicit follow-up work, not in this PR's
-//! scope.
+//! **Canonical boost magnitudes** now live in this crate's
+//! [`crate::params::StromalConfig`] (#220/#224 lifted the config out of
+//! sim-tme): `gsh_boost_per_step = 0.06`, `gsh_boost_cap = 18.0`,
+//! `mufa_boost_per_step = 0.003`, `mufa_boost_cap = 0.25` (its `Default`).
+//! Both the 2D (sim-tme) and 3D (sim-tme-3d) consumers import it from here, so
+//! the two paths share one source of truth for the magnitudes.
 //!
 //! Refs: PMID 34373744 (CAF metabolic reprogramming),
 //! PMID 31813804 (ACSL3-mediated oleic acid),

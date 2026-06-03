@@ -374,7 +374,7 @@ mod tests {
         let period = 4u32; // first half normoxic, second half hypoxic
 
         // Mirrors sim-tme's `cycling_lambda` helper (binary-local, not
-        // imported here — see sim-tme/src/main.rs:136-138 for the source).
+        // imported here; same square-wave O2-cycling definition).
         let cycling_lambda = |step: u32| {
             if (step % period) < period / 2 {
                 lambda_high
