@@ -1511,6 +1511,119 @@ def fig8_simulation_by_treatment():
         print("  (no tumor cells in one or more depth curves)")
 
 
+def fig27_resistance_asymmetry():
+    """Manuscript Figure 24 (flagship, #285): the resistance-mechanism asymmetry.
+    A 2x2 panel — under each TME resistance mechanism (hypoxia / stromal / pH /
+    immune) pharmacologic RSL3 collapses while physical SDT holds. Every panel is
+    captioned with its confidence tier so the contested hypoxia leg is not
+    entrenched. Calibrated 2D (sim-tme). Reads all values from tme_summary.json."""
+    print("Figure 24 (fig27): Resistance-mechanism asymmetry (flagship)...")
+    if not TME_SUMMARY.exists():
+        print(f"  {TME_SUMMARY} not found — run `cargo run --release -p sim-tme` first. Skipping.")
+        return
+    data = json.loads(TME_SUMMARY.read_text())
+    conds = data["conditions"] if isinstance(data, dict) and "conditions" in data else data
+
+    def find(treatment, **kw):
+        for c in conds:
+            if c["treatment"] == treatment and all(c.get(k) == v for k, v in kw.items()):
+                return c
+        return None
+
+    G = "gradient_120um"
+    RSL3_C, SDT_C, GHOST = "#4C72B0", "#C44E52", "#C9C9C9"
+
+    # Each mechanism: (baseline condition, stressed condition) per treatment, and
+    # the metric where that mechanism's RSL3-vs-SDT asymmetry is observable.
+    #  - Hypoxia: OVERALL kill, normoxic(uniform) -> hypoxic(gradient), immune off.
+    #  - Stromal/pH: OXYGENATED-RIM kill (normoxic_kill_rate) at the gradient
+    #    baseline, because in the hypoxic core RSL3 is already floored (~0.1%), so
+    #    the rim is where CAF/pH suppression of RSL3 is actually observable.
+    #  - Immune: immune-kill COUNT (its own axis), not a %.
+    hyp = {t: (find(t, o2_condition="uniform", immune_mode="off"),
+               find(t, o2_condition=G, immune_mode="off", stromal_mode=None, ph_mode=None))
+           for t in ("RSL3", "SDT")}
+    strm = {t: (find(t, o2_condition=G, immune_mode="immune_on", stromal_mode="off"),
+                find(t, o2_condition=G, immune_mode="immune_on", stromal_mode="stromal_on"))
+            for t in ("RSL3", "SDT")}
+    phh = {t: (find(t, o2_condition=G, immune_mode="immune_on", stromal_mode="off"),
+               find(t, o2_condition=G, immune_mode="immune_on", ph_mode="ph_on"))
+           for t in ("RSL3", "SDT")}
+    imm = {t: find(t, o2_condition=G, immune_mode="immune_on", stromal_mode="off")
+           for t in ("RSL3", "SDT")}
+
+    need = ([hyp[t][i] for t in ("RSL3", "SDT") for i in (0, 1)]
+            + [strm[t][i] for t in ("RSL3", "SDT") for i in (0, 1)]
+            + [phh[t][1] for t in ("RSL3", "SDT")]
+            + [imm[t] for t in ("RSL3", "SDT")])
+    if any(x is None for x in need):
+        print("  missing conditions in tme_summary.json — skipping")
+        return
+
+    fig, ((axH, axS), (axP, axI)) = plt.subplots(2, 2, figsize=(11, 8.5))
+
+    def killbars(ax, pair, metric, title, base_lab, stress_lab):
+        """Grouped off/on bars for RSL3 and SDT, kill % on a shared 0-100 axis."""
+        base = {t: pair[t][0][metric] * 100 for t in ("RSL3", "SDT")}
+        strs = {t: pair[t][1][metric] * 100 for t in ("RSL3", "SDT")}
+        x = np.arange(2)
+        w = 0.36
+        ax.bar(x - w / 2, [base["RSL3"], base["SDT"]], w, color=GHOST, label=base_lab)
+        ax.bar(x + w / 2, [strs["RSL3"], strs["SDT"]], w, color=[RSL3_C, SDT_C], label=stress_lab)
+        for xi, t in enumerate(("RSL3", "SDT")):
+            ax.text(xi - w / 2, base[t] + 2, f"{base[t]:.1f}", ha="center", fontsize=8, color="#666")
+            ax.text(xi + w / 2, strs[t] + 2, f"{strs[t]:.1f}", ha="center", fontsize=8)
+        ax.set_xticks(x)
+        ax.set_xticklabels(["RSL3\n(pharmacologic)", "SDT\n(physical)"])
+        ax.set_ylim(0, 108)
+        ax.set_title(title, fontsize=10.5)
+        ax.legend(fontsize=7, loc="center left")
+        return base, strs
+
+    bH, sH = killbars(axH, hyp, "overall_kill_rate",
+                      "(a) Hypoxia  [directional; SDT O$_2$-independence contested]",
+                      "normoxic", "hypoxic")
+    axH.set_ylabel("Overall tumor kill (%)")
+    bS, sS = killbars(axS, strm, "normoxic_kill_rate",
+                      "(b) Stromal / CAF  [uncalibrated]", "no CAF", "CAF")
+    axS.set_ylabel("Oxygenated-rim kill (%)")
+    bP, sP = killbars(axP, phh, "normoxic_kill_rate",
+                      "(c) Acidic pH  [low confidence; RSL3 pKa most uncertain]", "neutral", "acidic")
+    axP.set_ylabel("Oxygenated-rim kill (%)")
+
+    # Panel (d): immune-kill COUNT (different metric -> own log axis), with ratio.
+    ik = {t: max(int(imm[t]["immune_kills"] or 0), 0) for t in ("RSL3", "SDT")}
+    bars = axI.bar(["RSL3\n(pharmacologic)", "SDT\n(physical)"],
+                   [max(ik["RSL3"], 1), max(ik["SDT"], 1)], width=0.55, color=[RSL3_C, SDT_C])
+    axI.set_yscale("log")
+    axI.set_ylim(0.7, max(ik["SDT"], 10) * 3)
+    axI.set_ylabel("Immune (ICD) kills [log]")
+    for b, t in zip(bars, ("RSL3", "SDT")):
+        axI.text(b.get_x() + b.get_width() / 2, max(ik[t], 1) * 1.15, f"{ik[t]}", ha="center", fontsize=9)
+    ratio = ik["SDT"] / max(ik["RSL3"], 1)
+    axI.set_title("(d) Immune / ICD coupling  [directional; 2D ceiling]", fontsize=10.5)
+    axI.annotate(f"{ratio:.0f}:1 in 2D\n(~4:1 in 3D)", xy=(1, max(ik["SDT"], 1)),
+                 xytext=(0.35, max(ik["SDT"], 1) * 0.9), fontsize=9, fontweight="bold",
+                 color="#C44E52", ha="center")
+
+    fig.suptitle("Resistance-mechanism asymmetry: RSL3 (pharmacologic) collapses, SDT (physical) holds (2D model)",
+                 fontsize=13, y=0.99)
+    fig.text(0.5, -0.02,
+             "2D sim-tme. Hypoxia uses overall kill (normoxic vs hypoxic); stromal and pH use OXYGENATED-RIM kill "
+             "because in the hypoxic core RSL3 is already floored (~0.1%), so the rim is where CAF/pH suppression of "
+             "RSL3 is observable; immune uses ICD kill count. Confidence tiers differ per panel (titles): the hypoxia "
+             "leg is the most contested (SDT modeled O$_2$-independent, an optimistic upper bound, Section 7.1); the "
+             "immune 2D ratio over-extrapolates (~4:1 under 3D volumetric dilution). Magnitudes rest on uncalibrated "
+             "biochemistry; the cross-modality direction is the result, not the numbers.",
+             ha="center", fontsize=7.5, style="italic", color="gray", wrap=True)
+    fig.tight_layout(rect=[0, 0.02, 1, 0.97])
+    fig.savefig(FIG_DIR / "fig27_resistance_asymmetry.pdf", bbox_inches="tight")
+    fig.savefig(FIG_DIR / "fig27_resistance_asymmetry.png", bbox_inches="tight")
+    plt.close()
+    print(f"  hypoxia RSL3 {bH['RSL3']:.1f}->{sH['RSL3']:.1f}% / SDT {bH['SDT']:.1f}->{sH['SDT']:.1f}%; "
+          f"immune RSL3 {ik['RSL3']} vs SDT {ik['SDT']} ({ratio:.0f}:1)")
+
+
 def main():
     print("Loading corpus...")
     articles = load_corpus()
@@ -1551,6 +1664,8 @@ def main():
     fig25_bliss_synergy()
     # Tier-2 (#285): manuscript figure 23 — treatment-timing window.
     fig26_vulnerability_window()
+    # Flagship (#285): manuscript figure 24 — 2x2 resistance-mechanism asymmetry.
+    fig27_resistance_asymmetry()
 
     print(f"\nAll figures saved to {FIG_DIR}/")
     print("Files:")
