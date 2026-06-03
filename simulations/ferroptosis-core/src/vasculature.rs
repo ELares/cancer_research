@@ -28,6 +28,23 @@
 use crate::grid::{TumorGrid3D, TUMOR_RADIUS_FRACTION};
 use rand::prelude::*;
 
+/// How vessel positions are laid out.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
+pub enum VesselTopology {
+    /// Uniform-random seed points in the tumor volume (the original #191 model).
+    #[default]
+    Random,
+    /// Fractal-branching vascular tree (#268): trunks enter from the periphery
+    /// and bifurcate inward with high, tumor-like variability — a hierarchical
+    /// but chaotic network with dead ends and perfusion gaps, unlike the smooth
+    /// coverage of uniform-random points. Motivated by the well-documented
+    /// fractal/irregular architecture of tumor vasculature (Baish & Jain,
+    /// *Cancer Res* 2000, PMID 10919633): tumor vessels are disorganized, with
+    /// high variability in segment length and branching angle and a higher,
+    /// space-filling fractal dimension (~1.89) than normal vasculature (~1.70).
+    Fractal,
+}
+
 /// Vessel-network configuration. `inter_vessel_um` is the target mean spacing
 /// between vessel seed points; the vessel count is derived from it and the
 /// tumor volume in [`place_vessels_3d`]. The Krogh decay length λ is supplied
@@ -36,6 +53,8 @@ use rand::prelude::*;
 pub struct VasculatureConfig {
     /// Target mean inter-vessel spacing (µm). Smaller ⇒ denser ⇒ better-oxygenated.
     pub inter_vessel_um: f64,
+    /// Layout: uniform-random (default) or fractal-branching tree (#268).
+    pub topology: VesselTopology,
 }
 
 impl VasculatureConfig {
@@ -43,6 +62,7 @@ impl VasculatureConfig {
     pub fn well_vascularized() -> Self {
         VasculatureConfig {
             inter_vessel_um: 150.0,
+            topology: VesselTopology::Random,
         }
     }
 
@@ -50,7 +70,14 @@ impl VasculatureConfig {
     pub fn poorly_vascularized() -> Self {
         VasculatureConfig {
             inter_vessel_um: 400.0,
+            topology: VesselTopology::Random,
         }
+    }
+
+    /// Switch this config to the fractal-branching topology (#268).
+    pub fn with_fractal(mut self) -> Self {
+        self.topology = VesselTopology::Fractal;
+        self
     }
 }
 
@@ -150,6 +177,140 @@ pub fn place_vessels_in_slab_3d(
             )
         })
         .collect()
+}
+
+/// Place vessels as a **fractal-branching tree** (#268): trunks enter from the
+/// tumor periphery and bifurcate inward (breadth-first), returning sampled points
+/// along the branches (lattice coordinates) for [`vessel_supply_field`]. Unlike
+/// the uniform-random [`place_vessels_3d`], this produces a hierarchical-but-
+/// chaotic network — points cluster along branches with avascular gaps and dead
+/// ends between them — matching the documented irregular/fractal architecture of
+/// tumor vasculature (see [`VesselTopology::Fractal`]; Baish & Jain 2000). The
+/// total point count is capped at the same `inter_vessel_um` density target as
+/// the random model, so the two are density-comparable. Breadth-first growth +
+/// the cap keep the multi-trunk network balanced.
+///
+/// Uses an **independent** `StdRng(seed)`, so it never advances
+/// [`TumorGrid3D::generate`]'s stream — byte-identity preserved. Deterministic
+/// given `(grid dims, cfg, seed)`. Tuning constants (branch angle, length ratio,
+/// dead-end rate) are not calibrated; they encode the *qualitative* tumor-vessel
+/// chaos (high angle/length variability), a #268 follow-up to ground against
+/// micro-CT morphometry.
+pub fn place_vessels_fractal_3d(
+    grid: &TumorGrid3D,
+    cfg: &VasculatureConfig,
+    seed: u64,
+) -> Vec<(f64, f64, f64)> {
+    use std::collections::VecDeque;
+    use std::f64::consts::TAU;
+
+    let target = derive_vessel_count(grid, cfg);
+    let mut rng = StdRng::seed_from_u64(seed);
+    let center = (
+        grid.rows as f64 / 2.0,
+        grid.cols as f64 / 2.0,
+        grid.layers as f64 / 2.0,
+    );
+    let radius = (grid.rows.min(grid.cols).min(grid.layers) as f64) * TUMOR_RADIUS_FRACTION;
+
+    // Tumor vasculature is disorganized — high variability in branch angle and
+    // length (Baish & Jain 2000). Base bifurcation ~35° with large jitter;
+    // branch length shrinks ~0.8/generation; ~12% of branches dead-end early
+    // (perfusion gaps). Trunk count scales with the density target.
+    let n_trunks = ((target as f64 / 30.0).round() as usize).clamp(2, 64);
+    const STEP: f64 = 1.0; // point spacing along a branch (cells)
+    const BASE_ANGLE: f64 = 0.61; // ~35°
+    const LENGTH_RATIO: f64 = 0.80;
+    const MIN_LEN: f64 = 3.0;
+    const MAX_DEPTH: u32 = 14;
+    const DEAD_END_PROB: f64 = 0.12;
+
+    let norm = |v: (f64, f64, f64)| -> (f64, f64, f64) {
+        let n = (v.0 * v.0 + v.1 * v.1 + v.2 * v.2).sqrt().max(1e-9);
+        (v.0 / n, v.1 / n, v.2 / n)
+    };
+    let inside = |p: (f64, f64, f64)| -> bool {
+        let (dx, dy, dz) = (p.0 - center.0, p.1 - center.1, p.2 - center.2);
+        (dx * dx + dy * dy + dz * dz).sqrt() <= radius
+    };
+    // A random unit vector perpendicular to `d` (Gram-Schmidt + random roll).
+    let perp = |d: (f64, f64, f64), rng: &mut StdRng| -> (f64, f64, f64) {
+        let a = if d.0.abs() < 0.9 {
+            (1.0, 0.0, 0.0)
+        } else {
+            (0.0, 1.0, 0.0)
+        };
+        let adot = a.0 * d.0 + a.1 * d.1 + a.2 * d.2;
+        let u = norm((a.0 - adot * d.0, a.1 - adot * d.1, a.2 - adot * d.2));
+        let w = (
+            d.1 * u.2 - d.2 * u.1,
+            d.2 * u.0 - d.0 * u.2,
+            d.0 * u.1 - d.1 * u.0,
+        );
+        let roll = rng.gen::<f64>() * TAU;
+        (
+            u.0 * roll.cos() + w.0 * roll.sin(),
+            u.1 * roll.cos() + w.1 * roll.sin(),
+            u.2 * roll.cos() + w.2 * roll.sin(),
+        )
+    };
+
+    // Trunk roots on the surface (0.95R), each pointing inward.
+    let mut queue: VecDeque<((f64, f64, f64), (f64, f64, f64), f64, u32)> = VecDeque::new();
+    for _ in 0..n_trunks {
+        let theta = rng.gen::<f64>() * TAU;
+        let cos_phi = 2.0 * rng.gen::<f64>() - 1.0;
+        let sin_phi = (1.0 - cos_phi * cos_phi).sqrt();
+        let outward = (cos_phi, sin_phi * theta.cos(), sin_phi * theta.sin());
+        let root = (
+            center.0 + outward.0 * radius * 0.95,
+            center.1 + outward.1 * radius * 0.95,
+            center.2 + outward.2 * radius * 0.95,
+        );
+        queue.push_back((root, (-outward.0, -outward.1, -outward.2), radius * 0.5, 0));
+    }
+
+    let mut points: Vec<(f64, f64, f64)> = Vec::with_capacity(target);
+    while let Some((start, dir, length, depth)) = queue.pop_front() {
+        let dir = norm(dir);
+        let n_steps = (length / STEP).round().max(1.0) as usize;
+        let mut p = start;
+        for _ in 0..n_steps {
+            let np = (p.0 + dir.0 * STEP, p.1 + dir.1 * STEP, p.2 + dir.2 * STEP);
+            if !inside(np) {
+                break;
+            }
+            points.push(np);
+            p = np;
+            if points.len() >= target {
+                break; // exact density cap, mid-segment
+            }
+        }
+        if points.len() >= target {
+            break; // density cap (BFS ⇒ the network stays balanced when capped)
+        }
+        // Stop branching: short segment, depth cap, or a random dead end.
+        if length < MIN_LEN || depth >= MAX_DEPTH || rng.gen::<f64>() < DEAD_END_PROB {
+            continue;
+        }
+        let child_len = length * LENGTH_RATIO * (0.8 + 0.4 * rng.gen::<f64>());
+        for sign in [1.0_f64, -1.0] {
+            let axis = perp(dir, &mut rng);
+            let ang = BASE_ANGLE * (0.4 + 1.2 * rng.gen::<f64>()); // high variability
+            let child = norm((
+                dir.0 * ang.cos() + sign * axis.0 * ang.sin(),
+                dir.1 * ang.cos() + sign * axis.1 * ang.sin(),
+                dir.2 * ang.cos() + sign * axis.2 * ang.sin(),
+            ));
+            queue.push_back((p, child, child_len, depth + 1));
+        }
+    }
+
+    // vessel_supply_field requires ≥1 vessel; a degenerate tiny grid could yield none.
+    if points.is_empty() {
+        points.push(center);
+    }
+    points
 }
 
 /// Uniform-grid spatial index over vessel positions for **exact** nearest-vessel
@@ -387,6 +548,38 @@ mod tests {
     }
 
     #[test]
+    fn fractal_placement_is_deterministic_and_gappier_than_random() {
+        let g = grid();
+        let cfg = VasculatureConfig::well_vascularized().with_fractal();
+        let a = place_vessels_fractal_3d(&g, &cfg, 7);
+        let b = place_vessels_fractal_3d(&g, &cfg, 7);
+        assert_eq!(a, b, "fractal placement must be deterministic");
+        assert!(!a.is_empty());
+        // Capped at the same density target as the random model.
+        let target = derive_vessel_count(&g, &cfg);
+        assert!(
+            a.len() <= target + 1 && a.len() as f64 >= 0.5 * target as f64,
+            "fractal count {} should be near (and not exceed) the target {}",
+            a.len(),
+            target
+        );
+        // The KEY structural property: a fractal network clusters points along
+        // branches, leaving avascular GAPS, so at matched density it leaves MORE
+        // tumor cells hypoxic than uniform-random placement (perfusion holes).
+        let lambda = 100.0;
+        let random = place_vessels_3d(&g, &VasculatureConfig::well_vascularized(), 7);
+        let hyp_fractal = hypoxic_fraction(&g, &vessel_supply_field(&g, &a, lambda), 0.2);
+        let hyp_random = hypoxic_fraction(&g, &vessel_supply_field(&g, &random, lambda), 0.2);
+        assert!(
+            hyp_fractal > hyp_random,
+            "fractal network should leave more avascular gaps than random: \
+             fractal hypoxic={hyp_fractal:.3} (n={}), random hypoxic={hyp_random:.3} (n={})",
+            a.len(),
+            random.len()
+        );
+    }
+
+    #[test]
     fn slab_placement_is_deterministic_and_fills_the_box() {
         // #272: slab-uniform placement spreads vessels across the WHOLE box,
         // unlike the sphere placement which confines them to the central
@@ -468,6 +661,7 @@ mod tests {
         for (dims, spacing, seed, slab) in cases {
             let cfg = VasculatureConfig {
                 inter_vessel_um: spacing,
+                topology: VesselTopology::Random,
             };
             let (g, vessels) = if slab {
                 let g = TumorGrid3D::generate_slab(dims, dims, dims, 20.0, seed);
