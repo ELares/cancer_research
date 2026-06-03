@@ -152,6 +152,10 @@ def test_fig23_fixture_matches_live():
             None,
         )
         assert match is not None, f"live missing {r['treatment']} @ {r['timepoint_days']}"
-        assert r["death_rate"] == match["death_rate"], (
-            f"window fixture STALE vs live sim at {r['treatment']} day {r['timepoint_days']}"
-        )
+        # death_rate drives panel (a); mean_gpx4 drives panel (b)'s twin axis
+        # (the "RSL3 collapse tracks GPX4 recovery" mechanism), so guard both.
+        for field in ("death_rate", "mean_gpx4"):
+            assert r[field] == match[field], (
+                f"window fixture STALE vs live sim on {field} at "
+                f"{r['treatment']} day {r['timepoint_days']}"
+            )
