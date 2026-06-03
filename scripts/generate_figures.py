@@ -1453,23 +1453,39 @@ def fig8_simulation_by_treatment():
             ha="center", arrowprops=dict(arrowstyle="->", color="#C44E52"))
 
     # Panel (b): the penetration physics that drives panel (a), computed from the
-    # model's own equations and default constants (ferroptosis-core/src/physics.rs):
+    # model's OWN equations and default constants (ferroptosis-core/src/physics.rs
+    # + params.rs SpatialParams::default):
     #   PDT  I(z) = I0 * exp(-mu_eff * z_mm),  mu_eff = 0.31 /mm  (delta ~ 3.2 mm, 630 nm)
     #   SDT  I(z) = I0 * 10^(-alpha * f * z_cm / 10),  alpha = 0.7 dB/cm/MHz, f = 1 MHz
     #   RSL3 uniform = 1.0 (systemic drug; no depth attenuation)
+    #
+    # DRIFT GUARD: these constants are hardcoded here (a Python re-implementation
+    # of the Rust physics), and this panel assumes the DEFAULT sim-spatial flags
+    # (`--dli-h 0`, `Photosensitizer::Uniform(1.0)`) so the PDT drug-yield is 1.0
+    # and panel (b) equals the sim's per-cell multiplier that produced panel (a).
+    # If params.rs retunes these defaults, or the CSV is regenerated with a
+    # non-default `--photosensitizer`/`--dli-h`, the two panels desync. The values
+    # are pinned against params.rs by tests/test_depth_kill_physics_constants.py;
+    # update BOTH if you change them, and regenerate the CSV with default flags.
+    PDT_MU_EFF_PER_MM = 0.31  # params.rs SpatialParams::default().pdt_mu_eff
+    SDT_ALPHA_DB_CM_MHZ = 0.7  # params.rs SpatialParams::default().sdt_alpha
+    SDT_FREQ_MHZ = 1.0  # params.rs SpatialParams::default().sdt_freq_mhz
     z_mm = np.linspace(0.0, 10.0, 200)
-    pdt_I = np.exp(-0.31 * z_mm)
-    sdt_I = 10.0 ** (-(0.7 * 1.0 * (z_mm / 10.0)) / 10.0)
+    pdt_I = np.exp(-PDT_MU_EFF_PER_MM * z_mm)
+    sdt_I = 10.0 ** (-(SDT_ALPHA_DB_CM_MHZ * SDT_FREQ_MHZ * (z_mm / 10.0)) / 10.0)
     rsl3_I = np.ones_like(z_mm)
     axB.plot(z_mm, sdt_I * 100, "-", color="#4C72B0", lw=2,
              label="SDT acoustic ($\\alpha$=0.7 dB/cm/MHz)")
     axB.plot(z_mm, pdt_I * 100, "-", color="#C44E52", lw=2,
              label="PDT light ($\\mu_{\\mathrm{eff}}$=0.31/mm, $\\delta{\\approx}$3.2 mm)")
-    axB.plot(z_mm, rsl3_I * 100, "--", color="#55A868", lw=2,
-             label="RSL3 uniform (depth-independent)")
+    # RSL3 dotted (not solid like the attenuating modalities) to flag that this is
+    # DRUG AVAILABILITY, not kill: it is flat at 100% here yet flat near zero in
+    # panel (a) — a biochemical, not a penetration, limit.
+    axB.plot(z_mm, rsl3_I * 100, ":", color="#55A868", lw=2.5,
+             label="RSL3 availability (uniform; kills little, see a)")
     axB.axhline(50, ls=":", color="gray", lw=0.8)
     axB.set_xlabel("Depth from irradiated surface (mm)")
-    axB.set_ylabel("Relative energy / availability (% of surface)")
+    axB.set_ylabel("Relative energy / drug availability (% of surface)")
     axB.set_ylim(0, 105)
     axB.set_title("(b) Why: penetration physics")
     axB.legend(fontsize=7.5, loc="upper right")
@@ -1487,8 +1503,12 @@ def fig8_simulation_by_treatment():
     fig.savefig(FIG_DIR / "fig8_simulation_by_treatment.pdf", bbox_inches="tight")
     fig.savefig(FIG_DIR / "fig8_simulation_by_treatment.png", bbox_inches="tight")
     plt.close()
-    sx, sy = series["SDT"]
-    print(f"  PDT {py[0]:.0f}%->{py[-1]:.0f}% over {px[-1]:.0f} mm; SDT {sy[0]:.0f}%->{sy[-1]:.0f}%; depth bins={len(px)}")
+    _, sy = series["SDT"]
+    if py and sy:
+        print(f"  PDT {py[0]:.0f}%->{py[-1]:.0f}% over {px[-1]:.0f} mm; "
+              f"SDT {sy[0]:.0f}%->{sy[-1]:.0f}%; depth bins={len(px)}")
+    else:
+        print("  (no tumor cells in one or more depth curves)")
 
 
 def main():
