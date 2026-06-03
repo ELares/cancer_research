@@ -178,7 +178,7 @@ figs = {
     '5': ('fig3_literature_disconnect', 'Literature disconnect between communities.'),
     '6': ('fig6_sdt_chain_evidence', 'SDT ferroptosis-ICD chain evidence.'),
     '7': ('fig7_monte_carlo_simulation', 'Monte Carlo simulation (1M cells/condition).'),
-    '8': ('fig8_simulation_by_treatment', 'Spatial tumor simulation: depth-kill curves and 2D death heatmaps.'),
+    '8': ('fig8_simulation_by_treatment', 'Depth-kill curves: tissue penetration sets modality reach (2D model). (a) Observed tumor kill versus depth across 1 cm of tissue: SDT (ultrasound) stays near 95 to 100\\% throughout, PDT (light) collapses from ${\\sim}93\\%$ at the surface to ${\\sim}0\\%$ by 10 mm (Beer-Lambert attenuation), and RSL3 (systemic drug) is a flat, near-zero baseline at every depth. (b) The driving physics from the model\'s own equations: PDT light decays as $\\exp(-\\mu_{\\mathrm{eff}} z)$ with $\\mu_{\\mathrm{eff}}{=}0.31$/mm ($\\delta{\\approx}3.2$ mm), SDT acoustic as $10^{-\\alpha f z/10}$ with $\\alpha{=}0.7$ dB/cm/MHz at 1 MHz, RSL3 uniform at 100\\%. RSL3 reaches every depth yet kills little, a biochemical limit, not a penetration one. The depth profiles follow well-measured physics (high confidence); absolute kill \\% rests on uncalibrated biochemistry, so the profile shape is the result, not the magnitudes. \\textbf{SDT is modeled as O$_2$-independent, an optimistic upper bound} (Section 7.1).'),
     '9': ('fig13_gold_set_eval', 'Evidence tagger performance: gold-set evaluation (100-article stratified sample).'),
     '10': ('fig9_evidence_tiers', 'Evidence tier composition by mechanism.'),
     '11': ('fig14_tissue_mechanism_heatmap', 'Tissue-of-origin $\\times$ mechanism article counts (coverage: 62\\%).'),

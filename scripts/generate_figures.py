@@ -43,6 +43,9 @@ FIG_DIR.mkdir(parents=True, exist_ok=True)
 TME_SUMMARY = PROJECT_ROOT / "simulations" / "output" / "tme" / "tme_summary.json"
 COMBO_SUMMARY = PROJECT_ROOT / "simulations" / "output" / "combo-mech" / "combo_summary.json"
 WINDOW_JSON = PROJECT_ROOT / "simulations" / "output" / "window" / "vulnerability_window.json"
+# Depth-kill curves (sim-spatial, 2D). Gitignored; regenerate with
+# `cargo run --release -p sim-spatial`.
+SPATIAL_CURVES = PROJECT_ROOT / "simulations" / "output" / "spatial" / "depth_kill_curves.csv"
 
 plt.rcParams.update({
     'font.size': 11,
@@ -1389,6 +1392,125 @@ def fig26_vulnerability_window():
     print(f"  RSL3 {rsl3[0]:.1f}%@0d -> {rsl3[win_end]:.1f}%@3d -> {rsl3[-1]:.2f}%@28d; SDT {sdt[-1]:.1f}%@28d")
 
 
+def fig8_simulation_by_treatment():
+    """Manuscript Figure 8 (Tier-1, #285): depth-kill curves. PDT (light, Beer-Lambert)
+    collapses with depth; SDT (ultrasound, acoustic) penetrates to centimeters; RSL3
+    (systemic drug) is a depth-independent uniform baseline whose limit is biochemical,
+    not penetration. Calibrated 2D physics (sim-spatial). Replaces the prior
+    externally-post-processed Figure 8 with a tracked, reproducible generator."""
+    print("Figure 8 (fig8_simulation_by_treatment): Depth-kill curves (PDT vs SDT vs RSL3)...")
+    if not SPATIAL_CURVES.exists():
+        print(f"  {SPATIAL_CURVES} not found — run `cargo run --release -p sim-spatial` first. Skipping.")
+        return
+    rows = defaultdict(list)
+    with open(SPATIAL_CURVES) as f:
+        for r in csv.DictReader(f):
+            rows[r["treatment"]].append((float(r["depth_um"]), float(r["death_rate"]), int(r["n_cells"])))
+    if not all(t in rows for t in ("PDT", "SDT", "RSL3")):
+        print("  missing PDT/SDT/RSL3 in depth_kill_curves.csv — skipping")
+        return
+
+    # Pool the 20-µm rows into coarser depth bins, weighting each row by its
+    # tumor-cell count, so the spheroid's sparse poles (few cells/row) do not
+    # add noise to the curve. Pooled rate = sum(dead) / sum(total) per bin.
+    BIN_UM = 250.0
+
+    def binned(tx):
+        agg = defaultdict(lambda: [0.0, 0])  # bin_center_um -> [dead_weighted, n]
+        for d, rate, n in rows[tx]:
+            if n <= 0:
+                continue
+            b = int(d // BIN_UM) * BIN_UM + BIN_UM / 2.0
+            agg[b][0] += rate * n
+            agg[b][1] += n
+        xs = sorted(agg)
+        return ([x / 1000.0 for x in xs], [agg[x][0] / agg[x][1] * 100.0 for x in xs])
+
+    fig, (axA, axB) = plt.subplots(1, 2, figsize=(11, 4.5))
+
+    style = {
+        "PDT": ("#C44E52", "o-", "PDT (light, Beer-Lambert)"),
+        "SDT": ("#4C72B0", "s-", "SDT (ultrasound, acoustic)"),
+        "RSL3": ("#55A868", "^-", "RSL3 (systemic drug, uniform)"),
+    }
+    series = {}
+    for tx in ("SDT", "PDT", "RSL3"):
+        x, y = binned(tx)
+        series[tx] = (x, y)
+        col, ls, lab = style[tx]
+        axA.plot(x, y, ls, color=col, label=lab, markersize=4, lw=1.8)
+    axA.set_xlabel("Depth from irradiated surface (mm)")
+    axA.set_ylabel("Tumor kill (%)")
+    axA.set_ylim(-4, 106)
+    axA.set_title("(a) Observed kill vs depth (2D sim)")
+    axA.legend(fontsize=8, loc="center right")
+    # PDT collapse annotation (shallow vs deep observed kill).
+    px, py = series["PDT"]
+    if py:
+        axA.annotate(
+            f"PDT: {py[0]:.0f}% at surface,\n{py[-1]:.0f}% at {px[-1]:.0f} mm",
+            xy=(px[-1], py[-1]), xytext=(px[-1] * 0.45, 60), fontsize=8, color="#C44E52",
+            ha="center", arrowprops=dict(arrowstyle="->", color="#C44E52"))
+
+    # Panel (b): the penetration physics that drives panel (a), computed from the
+    # model's OWN equations and default constants (ferroptosis-core/src/physics.rs
+    # + params.rs SpatialParams::default):
+    #   PDT  I(z) = I0 * exp(-mu_eff * z_mm),  mu_eff = 0.31 /mm  (delta ~ 3.2 mm, 630 nm)
+    #   SDT  I(z) = I0 * 10^(-alpha * f * z_cm / 10),  alpha = 0.7 dB/cm/MHz, f = 1 MHz
+    #   RSL3 uniform = 1.0 (systemic drug; no depth attenuation)
+    #
+    # DRIFT GUARD: these constants are hardcoded here (a Python re-implementation
+    # of the Rust physics), and this panel assumes the DEFAULT sim-spatial flags
+    # (`--dli-h 0`, `Photosensitizer::Uniform(1.0)`) so the PDT drug-yield is 1.0
+    # and panel (b) equals the sim's per-cell multiplier that produced panel (a).
+    # If params.rs retunes these defaults, or the CSV is regenerated with a
+    # non-default `--photosensitizer`/`--dli-h`, the two panels desync. The values
+    # are pinned against params.rs by tests/test_depth_kill_physics_constants.py;
+    # update BOTH if you change them, and regenerate the CSV with default flags.
+    PDT_MU_EFF_PER_MM = 0.31  # params.rs SpatialParams::default().pdt_mu_eff
+    SDT_ALPHA_DB_CM_MHZ = 0.7  # params.rs SpatialParams::default().sdt_alpha
+    SDT_FREQ_MHZ = 1.0  # params.rs SpatialParams::default().sdt_freq_mhz
+    z_mm = np.linspace(0.0, 10.0, 200)
+    pdt_I = np.exp(-PDT_MU_EFF_PER_MM * z_mm)
+    sdt_I = 10.0 ** (-(SDT_ALPHA_DB_CM_MHZ * SDT_FREQ_MHZ * (z_mm / 10.0)) / 10.0)
+    rsl3_I = np.ones_like(z_mm)
+    axB.plot(z_mm, sdt_I * 100, "-", color="#4C72B0", lw=2,
+             label="SDT acoustic ($\\alpha$=0.7 dB/cm/MHz)")
+    axB.plot(z_mm, pdt_I * 100, "-", color="#C44E52", lw=2,
+             label="PDT light ($\\mu_{\\mathrm{eff}}$=0.31/mm, $\\delta{\\approx}$3.2 mm)")
+    # RSL3 dotted (not solid like the attenuating modalities) to flag that this is
+    # DRUG AVAILABILITY, not kill: it is flat at 100% here yet flat near zero in
+    # panel (a) — a biochemical, not a penetration, limit.
+    axB.plot(z_mm, rsl3_I * 100, ":", color="#55A868", lw=2.5,
+             label="RSL3 availability (uniform; kills little, see a)")
+    axB.axhline(50, ls=":", color="gray", lw=0.8)
+    axB.set_xlabel("Depth from irradiated surface (mm)")
+    axB.set_ylabel("Relative energy / drug availability (% of surface)")
+    axB.set_ylim(0, 105)
+    axB.set_title("(b) Why: penetration physics")
+    axB.legend(fontsize=7.5, loc="upper right")
+
+    fig.suptitle(
+        "Penetration sets modality reach: light is millimeters, ultrasound is centimeters (2D model)",
+        fontsize=12, y=1.02)
+    fig.text(0.5, -0.05,
+             "2D sim-spatial, 1 cm tissue. Depth profiles follow well-measured physics (Beer-Lambert optics, "
+             "acoustic attenuation; high confidence). RSL3 reaches every depth but kills little, a biochemical "
+             "limit, not a penetration one. Absolute kill % rests on uncalibrated biochemistry, so read the "
+             "profile shape, not the magnitudes. SDT is modeled as O$_2$-independent, an optimistic upper bound "
+             "(Section 7.1).",
+             ha="center", fontsize=7.5, style="italic", color="gray")
+    fig.savefig(FIG_DIR / "fig8_simulation_by_treatment.pdf", bbox_inches="tight")
+    fig.savefig(FIG_DIR / "fig8_simulation_by_treatment.png", bbox_inches="tight")
+    plt.close()
+    _, sy = series["SDT"]
+    if py and sy:
+        print(f"  PDT {py[0]:.0f}%->{py[-1]:.0f}% over {px[-1]:.0f} mm; "
+              f"SDT {sy[0]:.0f}%->{sy[-1]:.0f}%; depth bins={len(px)}")
+    else:
+        print("  (no tumor cells in one or more depth curves)")
+
+
 def main():
     print("Loading corpus...")
     articles = load_corpus()
@@ -1405,11 +1527,13 @@ def main():
     fig5_publication_trends(articles)
     fig6_sdt_chain_evidence(articles)
 
-    # Note: fig7 (Monte Carlo simulation) and fig8 (spatial depth-kill curves)
-    # are generated by the Rust simulation binaries (sim-original, sim-spatial),
-    # not by this Python script. Run them separately:
+    # fig8 (spatial depth-kill curves) is generated here from sim-spatial's
+    # depth_kill_curves.csv (run `cargo run --release -p sim-spatial` first).
+    fig8_simulation_by_treatment()
+
+    # Note: fig7 (Monte Carlo simulation) is still generated by the Rust binary
+    # (sim-original), not this script. Run it separately:
     #   cargo run --release -p sim-original   -> fig7_monte_carlo_simulation
-    #   cargo run --release -p sim-spatial    -> fig8_simulation_by_treatment
 
     fig9_evidence_tiers(index)
     fig10_invivo_comparison()
