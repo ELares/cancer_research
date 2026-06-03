@@ -36,17 +36,23 @@ jobs:
       - name: Verify C-FFI ABI (PhysiCell integration boundary)
         # `cargo test` exercises the Rust side but never links the extern "C"
         # surface from C, so the documented PhysiCell integration point was
-        # unverified per-PR (#295 item 4). Build the cdylib (build.rs also
-        # regenerates the cbindgen header, so a header/Rust drift fails here),
-        # compile the C harness against it, and gate on its exit code (the
-        # harness returns non-zero on a NULL handle or an out-of-range kill
-        # rate). `cc` ships with ubuntu-latest's build-essential.
+        # unverified per-PR (#295 item 4). Build the cdylib, then compile the C
+        # harness against it and gate on its exit code (the harness returns
+        # non-zero on a NULL handle or an out-of-range kill rate). A Rust ABI
+        # change that breaks the C consumer surfaces as a cc compile/link error.
+        #
+        # build.rs regenerates the cbindgen header in place on every build, so
+        # the `git diff --exit-code` guards the COMMITTED header against drift:
+        # if a Rust ABI change left the tracked ferroptosis.h stale, the build
+        # rewrites it and this fails (regenerate + commit the header to fix).
+        # `cc` ships with ubuntu-latest's build-essential.
         working-directory: simulations
         run: |
           cargo build --release -p ferroptosis-ffi
-          cc -o /tmp/test_ffi ferroptosis-ffi/tests/test_ffi.c \
-            -L target/release -lferroptosis_ffi -lm
-          LD_LIBRARY_PATH=target/release /tmp/test_ffi
+          git diff --exit-code -- ferroptosis-ffi/include/ferroptosis.h
+          cc -o "$RUNNER_TEMP/test_ffi" ferroptosis-ffi/tests/test_ffi.c \
+            -L target/release -lferroptosis_ffi
+          LD_LIBRARY_PATH=target/release "$RUNNER_TEMP/test_ffi"
 
   fmt:
     # Block PRs that introduce cargo fmt drift in the simulations
