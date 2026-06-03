@@ -42,6 +42,7 @@
 
 pub mod cell;
 pub mod clonal;
+pub mod contact;
 // Listed before `params` because `SpatialParams` holds a `Photosensitizer`.
 pub mod biochem;
 pub mod dose_schedule;

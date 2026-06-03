@@ -58,6 +58,7 @@ mod snapshot;
 use ferroptosis_core::biochem::{exo_decay_factor, sim_cell_step, CellState};
 use ferroptosis_core::cell::{Phenotype, Treatment};
 use ferroptosis_core::clonal::{assign_subclones_3d, repopulate_dead_sites_3d, ClonalConfig};
+use ferroptosis_core::contact::{apply_contact_resistance_3d, ContactConfig};
 use ferroptosis_core::dose_schedule::DoseSchedule;
 use ferroptosis_core::grid::{TumorGrid3D, TUMOR_RADIUS_FRACTION};
 use ferroptosis_core::immune_spatial::{
@@ -413,6 +414,9 @@ struct Overrides {
     /// PD-1 `effective_brake` is used (byte-identical); `Some` replaces it with
     /// the combined PD-1/CTLA-4/LAG-3/TIM-3 brake.
     checkpoints: Option<CheckpointPanel>,
+    /// Cell-cell contact-mediated ferroptosis resistance (#270). `None` /
+    /// identity ⇒ no per-cell lipid/iron modulation ⇒ byte-identical.
+    contact: Option<ContactConfig>,
 }
 
 /// Thin wrapper running a condition with NO overrides (all realism layers
@@ -457,6 +461,7 @@ fn run_one_condition_full(
     let vasculature_cfg = overrides.vasculature;
     let spheroid_cfg = overrides.spheroid;
     let slab_cfg = overrides.slab;
+    let contact_cfg = overrides.contact;
     // Treg/MDSC suppressor (#264 Phase 2). `None`/disabled ⇒ no source mask,
     // no field, identity multiplier ⇒ byte-identical.
     let suppressor_cfg = overrides.suppressor.filter(|c| !c.is_disabled());
@@ -474,6 +479,16 @@ fn run_one_condition_full(
     debug_assert!(
         !(slab_cfg.is_some() && spheroid_cfg.is_some()),
         "slab and spheroid overrides are mutually exclusive (incompatible geometries)"
+    );
+    // Contact resistance (#270) assumes a centred sphere/spheroid: its fixed-26
+    // contact denominator treats domain-boundary cells as low-contact (true for
+    // a spheroid, whose tumor never touches the box face; WRONG for an all-tumor
+    // slab, whose outer shell IS tumor at the box face and would be mis-scored as
+    // a "surface"). Guard the combination rather than silently mis-score a slab.
+    debug_assert!(
+        !(slab_cfg.is_some() && contact_cfg.is_some()),
+        "slab and contact overrides are mutually exclusive (the fixed-26 contact \
+         denominator mis-scores a slab's domain-boundary shell as low-contact)"
     );
     // 3D spheroid context (#197): partially-active MUFA so position-dependent
     // per-cell MUFA persists. `None` (matrix path) ⇒ `Params::default()` ⇒
@@ -825,6 +840,16 @@ fn run_one_condition_full(
             let p = &cfg.perturbations[(ids[idx] - 1) as usize];
             p.apply(&mut gc.cell, &mut gc.state);
         }
+    }
+
+    // Cell-cell contact resistance (#270): dense / highly-contacting tumor cells
+    // resist ferroptosis (E-cadherin → Merlin/NF2 → YAP inhibition → ACSL4/TFRC
+    // down; Wu 2019, PMID 31341276). Scales the durable lipid_unsat (PUFA) and
+    // iron axes down with each cell's tumor-neighbour fraction. Geometric (no
+    // RNG), off-by-default identity ⇒ byte-identical. Runs after clonal so the
+    // two multiplicative per-cell axes compose.
+    if let Some(cfg) = &contact_cfg {
+        apply_contact_resistance_3d(&mut grid, cfg);
     }
 
     // pH-dependent RSL3 ion trapping correction (consumer-side, same pattern
@@ -4231,6 +4256,62 @@ mod tests {
     /// produces a materially different kill outcome than the default
     /// random-phenotype grid — answering "does radial structure change the
     /// kill rate, or just redistribute where cells die?" with: it changes it.
+    #[test]
+    fn contact_resistance_reduces_rsl3_kills() {
+        // #270: cell-cell contact resistance (E-cadherin/Merlin/NF2-YAP, Wu
+        // 2019) scales down the durable PUFA + iron axes for densely-contacted
+        // cells, so a pharmacologic ferroptosis inducer (RSL3, which depends on
+        // endogenous PUFA/iron) kills far fewer cells with the layer on. The
+        // baseline run (no overrides) is the byte-identical matrix path.
+        let cfg = RunConfig {
+            grid_dim: 24,
+            n_steps: 80,
+        };
+        let cond = Condition {
+            name: "contact_rsl3".to_string(),
+            treatment: Treatment::RSL3,
+            treatment_name: "RSL3".to_string(),
+            o2_lambda: Some(ZONE_REF_LAMBDA),
+            immune_on: false,
+            stromal_on: false,
+            ph_on: false,
+            dose_schedule: DoseSchedule::Constant,
+        };
+        let baseline = run_one_condition_with_config(&cond, cfg, None);
+        let run_contact = || {
+            run_one_condition_full(
+                &cond,
+                cfg,
+                None,
+                Overrides {
+                    contact: Some(ContactConfig::literature()),
+                    ..Default::default()
+                },
+            )
+        };
+        let contact = run_contact();
+        assert!(
+            baseline.total_dead > 0,
+            "RSL3 baseline must kill some cells"
+        );
+        assert!(
+            contact.total_dead < baseline.total_dead,
+            "contact resistance should reduce RSL3 kills: baseline={}, contact={}",
+            baseline.total_dead,
+            contact.total_dead
+        );
+        // The effect is large (RSL3 depends entirely on endogenous PUFA/iron):
+        // well under half the baseline kills survive the contact brake.
+        assert!(
+            (contact.total_dead as f64) < 0.5 * baseline.total_dead as f64,
+            "contact should at least halve RSL3 kills: baseline={}, contact={}",
+            baseline.total_dead,
+            contact.total_dead
+        );
+        // Deterministic (geometric, no RNG).
+        assert_eq!(contact.total_dead, run_contact().total_dead);
+    }
+
     #[test]
     fn radial_spheroid_changes_kills_vs_random() {
         let cfg = RunConfig {
