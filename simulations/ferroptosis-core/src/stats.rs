@@ -93,13 +93,34 @@ mod tests {
 
     #[test]
     fn interval_is_clamped_to_unit() {
-        // All-dead and none-dead must not escape [0, 1].
+        // All-dead and none-dead must not escape [0, 1]. The `.max(0.0)` clamp
+        // genuinely fires at k=0 (the unclamped lower bound is tiny negative
+        // fp-noise); the `.min(1.0)` clamp is defensive (the Wilson upper bound
+        // is exactly 1.0 at k=n, never overshooting for valid inputs).
         let (lo0, hi0) = wilson_ci(10, 0);
         assert!(lo0 >= 0.0 && hi0 <= 1.0, "k=0: ({lo0}, {hi0})");
         assert_eq!(lo0, 0.0, "k=0 lower bound clamps to 0");
         let (lo1, hi1) = wilson_ci(10, 10);
         assert!(lo1 >= 0.0 && hi1 <= 1.0, "k=n: ({lo1}, {hi1})");
         assert_eq!(hi1, 1.0, "k=n upper bound clamps to 1");
+    }
+
+    #[test]
+    fn invariants_hold_across_input_grid() {
+        // Broad sweep: for every (n, k), the interval must satisfy
+        // 0 <= lo <= p <= hi <= 1. A sign error, swapped bound, or bad clamp
+        // that the point-cases miss would surface somewhere in the grid.
+        for n in [1usize, 2, 5, 17, 100, 999, 5000] {
+            for k in 0..=n {
+                let p = k as f64 / n as f64;
+                let (lo, hi) = wilson_ci(n, k);
+                assert!(0.0 <= lo, "n={n} k={k}: lo {lo} < 0");
+                assert!(lo <= p + 1e-12, "n={n} k={k}: lo {lo} > p {p}");
+                assert!(p <= hi + 1e-12, "n={n} k={k}: p {p} > hi {hi}");
+                assert!(hi <= 1.0, "n={n} k={k}: hi {hi} > 1");
+                assert!(lo <= hi, "n={n} k={k}: lo {lo} > hi {hi}");
+            }
+        }
     }
 
     #[test]

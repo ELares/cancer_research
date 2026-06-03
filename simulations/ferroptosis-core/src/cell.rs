@@ -253,30 +253,103 @@ mod tests {
 
     #[test]
     fn gen_recovered_persister_respects_floors_and_caps() {
-        // Sweep many seeds: the `.max(..)` floors must never be violated, and a
-        // recovered persister carries no per-cell MUFA cap.
+        // Sweep many seeds at the days where floors are most reachable (day 0
+        // and day 1): the `.max(..)` floors must never be violated, and a
+        // recovered persister carries no per-cell MUFA cap. NOTE: only the
+        // basal_ros (0.05) and fsp1 (0.01) floors actually bind for some seed
+        // here — the iron/gsh/gpx4/lipid_unsat/nrf2 means sit several sigma
+        // above their floors at every recovery time, so those clamps are
+        // defensive. The stronger guard that the generator USES the recovery
+        // means correctly is `gen_recovered_persister_means_track_formula`.
         let r = RecoveryRates::default();
-        for seed in 0..200u64 {
-            let c = gen_recovered_persister(1.0, &r, &mut StdRng::seed_from_u64(seed));
-            assert!(c.iron >= 0.5, "iron {} < 0.5 (seed {seed})", c.iron);
-            assert!(c.gsh >= 1.8, "gsh {} < 1.8 (seed {seed})", c.gsh);
-            assert!(c.gpx4 >= 0.15, "gpx4 {} < 0.15 (seed {seed})", c.gpx4);
-            assert!(c.fsp1 >= 0.01, "fsp1 {} < 0.01 (seed {seed})", c.fsp1);
-            assert!(
-                c.basal_ros >= 0.05,
-                "basal_ros {} < 0.05 (seed {seed})",
-                c.basal_ros
-            );
-            assert!(
-                c.lipid_unsat >= 0.6,
-                "lipid_unsat {} < 0.6 (seed {seed})",
-                c.lipid_unsat
-            );
-            assert!(c.nrf2 >= 0.2, "nrf2 {} < 0.2 (seed {seed})", c.nrf2);
-            assert!(
-                c.mufa_cap.is_none(),
-                "recovered persister should carry no MUFA cap"
-            );
+        for &days in &[0.0, 1.0] {
+            for seed in 0..300u64 {
+                let c = gen_recovered_persister(days, &r, &mut StdRng::seed_from_u64(seed));
+                assert!(c.iron >= 0.5, "iron {} < 0.5 (seed {seed})", c.iron);
+                assert!(c.gsh >= 1.8, "gsh {} < 1.8 (seed {seed})", c.gsh);
+                assert!(c.gpx4 >= 0.15, "gpx4 {} < 0.15 (seed {seed})", c.gpx4);
+                assert!(c.fsp1 >= 0.01, "fsp1 {} < 0.01 (seed {seed})", c.fsp1);
+                assert!(
+                    c.basal_ros >= 0.05,
+                    "basal_ros {} < 0.05 (seed {seed})",
+                    c.basal_ros
+                );
+                assert!(
+                    c.lipid_unsat >= 0.6,
+                    "lipid_unsat {} < 0.6 (seed {seed})",
+                    c.lipid_unsat
+                );
+                assert!(c.nrf2 >= 0.2, "nrf2 {} < 0.2 (seed {seed})", c.nrf2);
+                assert!(
+                    c.mufa_cap.is_none(),
+                    "recovered persister should carry no MUFA cap"
+                );
+            }
         }
+    }
+
+    #[test]
+    fn gen_recovered_persister_means_track_formula() {
+        // The load-bearing guard: the generator must actually DRAW from
+        // recovered_persister_means(days) — a regression that swapped fields,
+        // ignored the means, or used a wrong target would pass the floor sweep
+        // but fail here. At day 5 every mean sits far above its floor, so the
+        // `.max()` truncation introduces no bias and the sample means converge
+        // to the formula. Also checks the days-independent fields (iron 1.5,
+        // basal_ros 0.25, lipid_unsat 1.4).
+        let r = RecoveryRates::default();
+        let days = 5.0;
+        let (fsp1_m, gpx4_m, nrf2_m, gsh_m) = recovered_persister_means(days, &r);
+        let n = 4000;
+        let (mut s_iron, mut s_gsh, mut s_gpx4, mut s_fsp1) = (0.0, 0.0, 0.0, 0.0);
+        let (mut s_basal, mut s_lipid, mut s_nrf2) = (0.0, 0.0, 0.0);
+        for seed in 0..n as u64 {
+            let c = gen_recovered_persister(days, &r, &mut StdRng::seed_from_u64(seed));
+            s_iron += c.iron;
+            s_gsh += c.gsh;
+            s_gpx4 += c.gpx4;
+            s_fsp1 += c.fsp1;
+            s_basal += c.basal_ros;
+            s_lipid += c.lipid_unsat;
+            s_nrf2 += c.nrf2;
+        }
+        let nf = n as f64;
+        // Recovery-driven fields track recovered_persister_means(days).
+        assert!(
+            (s_gpx4 / nf - gpx4_m).abs() < 0.03,
+            "gpx4 mean {} vs {gpx4_m}",
+            s_gpx4 / nf
+        );
+        assert!(
+            (s_fsp1 / nf - fsp1_m).abs() < 0.03,
+            "fsp1 mean {} vs {fsp1_m}",
+            s_fsp1 / nf
+        );
+        assert!(
+            (s_nrf2 / nf - nrf2_m).abs() < 0.03,
+            "nrf2 mean {} vs {nrf2_m}",
+            s_nrf2 / nf
+        );
+        assert!(
+            (s_gsh / nf - gsh_m).abs() < 0.05,
+            "gsh mean {} vs {gsh_m}",
+            s_gsh / nf
+        );
+        // Days-independent fields track their fixed sampling means.
+        assert!(
+            (s_iron / nf - 1.5).abs() < 0.03,
+            "iron mean {}",
+            s_iron / nf
+        );
+        assert!(
+            (s_basal / nf - 0.25).abs() < 0.03,
+            "basal_ros mean {}",
+            s_basal / nf
+        );
+        assert!(
+            (s_lipid / nf - 1.4).abs() < 0.03,
+            "lipid_unsat mean {}",
+            s_lipid / nf
+        );
     }
 }
