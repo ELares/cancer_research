@@ -103,3 +103,86 @@ pub fn immune_cascade(
         with_anti_pd1,
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // The 2D ICD cascade drives sim-icd and sim-combo but had no coverage
+    // (#295), while its 3D successor `immune_spatial` is well-tested. These pin
+    // the DAMP arithmetic and the cascade's qualitative invariants.
+
+    #[test]
+    fn damp_release_empty_is_zero() {
+        let p = ImmuneParams::default();
+        assert_eq!(calculate_damp_release(&[], &p), (0.0, 0.0));
+    }
+
+    #[test]
+    fn damp_release_total_and_per_cell() {
+        // total = Σ lp·damp_per_lp; per_cell = total / n. Default damp_per_lp = 1.0.
+        let p = ImmuneParams::default();
+        let (total, per_cell) = calculate_damp_release(&[2.0, 4.0], &p);
+        assert!((total - 6.0 * p.damp_per_lp).abs() < 1e-12, "total={total}");
+        assert!(
+            (per_cell - 3.0 * p.damp_per_lp).abs() < 1e-12,
+            "per_cell={per_cell}"
+        );
+    }
+
+    #[test]
+    fn empty_cascade_produces_no_kills() {
+        let p = ImmuneParams::default();
+        let r = immune_cascade(&[], 1000, &p, false);
+        assert_eq!(r.total_damps, 0.0);
+        assert_eq!(r.n_dead_cells, 0);
+        assert_eq!(r.immune_kills, 0.0);
+    }
+
+    #[test]
+    fn activation_tracks_per_cell_quality_not_count() {
+        // The model's central claim: DC activation responds to DAMP-PER-DEATH
+        // (kill quality), so a few high-LP deaths out-activate many low-LP
+        // deaths. This is the SDT-vs-RSL3 asymmetry the 2D cascade encodes.
+        let p = ImmuneParams::default();
+        let few_high = immune_cascade(&[10.0], 10_000, &p, false); // 1 cell, high LP
+        let many_low = immune_cascade(&vec![1.0; 50], 10_000, &p, false); // 50 cells, low LP
+        assert!(
+            few_high.dc_activation_fraction > many_low.dc_activation_fraction,
+            "quality should beat quantity: {} !> {}",
+            few_high.dc_activation_fraction,
+            many_low.dc_activation_fraction
+        );
+    }
+
+    #[test]
+    fn anti_pd1_increases_killing() {
+        // Removing part of the PD-1 brake raises kill efficiency; with ample
+        // remaining tumor (uncapped), anti-PD-1 must yield more immune kills.
+        let p = ImmuneParams::default();
+        let lps = vec![5.0; 20];
+        let base = immune_cascade(&lps, 1_000_000, &p, false);
+        let treated = immune_cascade(&lps, 1_000_000, &p, true);
+        assert!(
+            treated.immune_kills > base.immune_kills,
+            "anti-PD-1 {} should exceed baseline {}",
+            treated.immune_kills,
+            base.immune_kills
+        );
+    }
+
+    #[test]
+    fn immune_kills_capped_at_remaining_tumor() {
+        let p = ImmuneParams::default();
+        // total_tumor == n_dead ⇒ zero alive remaining ⇒ no immune kills possible.
+        let r = immune_cascade(&[8.0; 30], 30, &p, true);
+        assert_eq!(r.immune_kills, 0.0, "no alive cells left to kill");
+        // And in general immune_kills never exceeds remaining.
+        let r2 = immune_cascade(&[8.0; 30], 35, &p, true);
+        assert!(
+            r2.immune_kills <= 5.0 + 1e-9,
+            "kills {} > remaining 5",
+            r2.immune_kills
+        );
+    }
+}
