@@ -682,8 +682,8 @@ fn run_one_condition_full(
     };
 
     // --- Treatment-specific ROS multiplier (3D version) ---
-    // PDT arm is intentionally kept for sim-tme parity (sim-tme/main.rs:573
-    // has the same pattern); `generate_conditions()` does not include PDT
+    // PDT arm is intentionally kept for sim-tme parity (sim-tme has the same
+    // treatment-ROS-multiplier pattern); `generate_conditions()` does not include PDT
     // in the v1 matrix (deferred to follow-up — manuscript focuses on the
     // RSL3-vs-SDT comparison, with PDT in a separate sim-spatial track).
     // The arm is dead code in this binary today but lets a future caller
@@ -1109,8 +1109,9 @@ fn run_one_condition_full(
                         let m = gc.state.mufa_protection;
                         gc.state.mufa_protection = (m + inc).min(pcfg.mufa_boost_cap.max(m));
                         // Per-step drug intensity drives the competing-rate
-                        // persister update below (#262). See that call's comment
-                        // for the acquisition/reversion equilibrium semantics.
+                        // persister update below (the `persister::step` call,
+                        // #262); see its comment for the acquisition/reversion
+                        // equilibrium semantics.
                         //
                         // `rsl3_drug_avail[idx]` is indexed only on the
                         // `dosed && RSL3` path; it is always populated there by

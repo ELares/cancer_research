@@ -7,10 +7,10 @@
 //! effect is **single-cell-deep** — only tumor cells with at least one
 //! stromal Moore neighbor are CAF-shielded.
 //!
-//! In 2D, sim-tme uses 8-Moore neighbors (`sim-tme/main.rs:431-452`); the
-//! shielded shell is an annular boundary one cell thick. In 3D, we use
-//! 26-Moore neighbors via [`TumorGrid3D::neighbors`]; the shielded shell
-//! is a spherical surface one cell thick.
+//! In 2D the boundary uses 8-Moore neighbors (via [`stromal_adjacency_mask_2d`]
+//! in this module); the shielded shell is an annular boundary one cell thick.
+//! In 3D, we use 26-Moore neighbors via [`TumorGrid3D::neighbors`]; the
+//! shielded shell is a spherical surface one cell thick.
 //!
 //! **Surface-to-volume scaling.** The boundary fraction is roughly
 //! `2 × t/R` in 2D (perimeter/area ~ 2/R for thickness t=1) and `3 × t/R`
