@@ -1,0 +1,12 @@
+{
+ "_comment": "Fig 22 (fig25_bliss_synergy) RSL3+FSP1i entry from combo_summary.json. Committed drift guard; regenerate: cargo run --release -p sim-combo-mech.",
+ "rsl3_fsp1i": {
+  "drug_a": "RSL3",
+  "drug_b": "FSP1i",
+  "rate_a": 0.4,
+  "rate_b": 0.037,
+  "rate_combo": 0.841,
+  "bliss_prediction": 0.4222,
+  "synergy_score": 1.99194694457603
+ }
+}

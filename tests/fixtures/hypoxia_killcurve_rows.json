@@ -1,0 +1,65 @@
+{
+ "_comment": "Fig 21 (fig24_hypoxia_killcurve) rows from tme_summary.json (immune off): uniform + gradient_{80,100,120,150}um for RSL3/SDT. Committed so tests/test_quantitative_figure_data.py guards the caption numbers in CI (live JSON gitignored). Regenerate: cargo run --release -p sim-tme, refresh this + caption.",
+ "conditions": [
+  {
+   "treatment": "RSL3",
+   "o2_condition": "uniform",
+   "immune_mode": "off",
+   "overall_kill_rate": 0.03658989014858551
+  },
+  {
+   "treatment": "RSL3",
+   "o2_condition": "gradient_80um",
+   "immune_mode": "off",
+   "overall_kill_rate": 0.0007545603742619456
+  },
+  {
+   "treatment": "RSL3",
+   "o2_condition": "gradient_100um",
+   "immune_mode": "off",
+   "overall_kill_rate": 0.0009180484553520338
+  },
+  {
+   "treatment": "RSL3",
+   "o2_condition": "gradient_120um",
+   "immune_mode": "off",
+   "overall_kill_rate": 0.0010249445083724761
+  },
+  {
+   "treatment": "RSL3",
+   "o2_condition": "gradient_150um",
+   "immune_mode": "off",
+   "overall_kill_rate": 0.0012387366144133607
+  },
+  {
+   "treatment": "SDT",
+   "o2_condition": "uniform",
+   "immune_mode": "off",
+   "overall_kill_rate": 0.9194821200631316
+  },
+  {
+   "treatment": "SDT",
+   "o2_condition": "gradient_80um",
+   "immune_mode": "off",
+   "overall_kill_rate": 0.877547427263524
+  },
+  {
+   "treatment": "SDT",
+   "o2_condition": "gradient_100um",
+   "immune_mode": "off",
+   "overall_kill_rate": 0.8778932674350607
+  },
+  {
+   "treatment": "SDT",
+   "o2_condition": "gradient_120um",
+   "immune_mode": "off",
+   "overall_kill_rate": 0.8781699395722901
+  },
+  {
+   "treatment": "SDT",
+   "o2_condition": "gradient_150um",
+   "immune_mode": "off",
+   "overall_kill_rate": 0.8785283557500645
+  }
+ ]
+}
