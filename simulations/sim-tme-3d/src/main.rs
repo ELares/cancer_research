@@ -81,8 +81,8 @@ use ferroptosis_core::spheroid::{
 use ferroptosis_core::stromal::stromal_adjacency_mask_3d;
 use ferroptosis_core::tumor_pk::RSL3_INACTIVATION_RATE;
 use ferroptosis_core::vasculature::{
-    hypoxic_fraction, place_vessels_3d, place_vessels_in_slab_3d, vessel_supply_field,
-    VasculatureConfig,
+    hypoxic_fraction, place_vessels_3d, place_vessels_fractal_3d, place_vessels_in_slab_3d,
+    vessel_supply_field, VasculatureConfig, VesselTopology,
 };
 use rand::distributions::Distribution;
 use rand::prelude::*;
@@ -579,7 +579,12 @@ fn run_one_condition_full(
             // throughout, not just a central pocket, gets perfused.
             place_vessels_in_slab_3d(&grid, &cfg, VESSEL_SEED)
         } else {
-            place_vessels_3d(&grid, &cfg, VESSEL_SEED)
+            // Sphere/spheroid grid: random points (#191) or a fractal-branching
+            // tree (#268), per the config's topology.
+            match cfg.topology {
+                VesselTopology::Fractal => place_vessels_fractal_3d(&grid, &cfg, VESSEL_SEED),
+                VesselTopology::Random => place_vessels_3d(&grid, &cfg, VESSEL_SEED),
+            }
         }
     });
     // Treg/MDSC suppressor source mask (#264 Phase 2): perivascular niches when
@@ -4151,6 +4156,76 @@ mod tests {
             vasc.total_dead,
             edge.total_dead,
             rel
+        );
+    }
+
+    #[test]
+    fn fractal_vasculature_is_hypoxier_than_random() {
+        // #268: a fractal-branching vessel tree clusters along branches with
+        // avascular gaps, so at near-equal POINT COUNT it leaves a HIGHER
+        // vascular hypoxic fraction than uniform-random placement. Validates the
+        // topology dispatch end-to-end through sim-tme-3d.
+        let cfg = RunConfig {
+            grid_dim: 24,
+            n_steps: 80,
+        };
+        // COUNT-PARITY GUARD: reconstruct the exact grid the run builds and check
+        // both placers yield ~the same number of vessel points. Without this, a
+        // higher hypoxic fraction could be a "fractal is just sparser" artifact
+        // rather than a clustering (topology) effect.
+        {
+            let g =
+                TumorGrid3D::generate(cfg.grid_dim, cfg.grid_dim, cfg.grid_dim, CELL_SIZE_UM, SEED);
+            let vcfg = VasculatureConfig::well_vascularized();
+            let n_random = place_vessels_3d(&g, &vcfg, VESSEL_SEED).len();
+            let n_fractal = place_vessels_fractal_3d(&g, &vcfg.with_fractal(), VESSEL_SEED).len();
+            assert!(
+                n_fractal as f64 >= 0.9 * n_random as f64 && n_fractal <= n_random + 1,
+                "fractal count {n_fractal} must be within 10% of random count {n_random} \
+                 so the hypoxic comparison is count-controlled, not a sparsity artifact"
+            );
+        }
+        let cond = Condition {
+            name: "fractal_rsl3".to_string(),
+            treatment: Treatment::RSL3,
+            treatment_name: "RSL3".to_string(),
+            o2_lambda: Some(ZONE_REF_LAMBDA),
+            immune_on: false,
+            stromal_on: false,
+            ph_on: false,
+            dose_schedule: DoseSchedule::Constant,
+        };
+        let run = |topo| {
+            run_one_condition_full(
+                &cond,
+                cfg,
+                None,
+                Overrides {
+                    vasculature: Some(VasculatureConfig {
+                        topology: topo,
+                        ..VasculatureConfig::well_vascularized()
+                    }),
+                    ..Default::default()
+                },
+            )
+        };
+        let random = run(VesselTopology::Random);
+        let fractal = run(VesselTopology::Fractal);
+        let fractal_again = run(VesselTopology::Fractal);
+        assert_eq!(
+            fractal.total_dead, fractal_again.total_dead,
+            "fractal vasculature must be deterministic"
+        );
+        let hyp_random = random
+            .vascular_hypoxic_fraction
+            .expect("random reports hypoxic fraction");
+        let hyp_fractal = fractal
+            .vascular_hypoxic_fraction
+            .expect("fractal reports hypoxic fraction");
+        assert!(
+            hyp_fractal > hyp_random,
+            "fractal network should be hypoxier (more avascular gaps) than random: \
+             fractal={hyp_fractal:.3}, random={hyp_random:.3}"
         );
     }
 
