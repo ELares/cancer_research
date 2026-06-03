@@ -289,6 +289,32 @@ figures:
       regenerate with `cargo run --release -p sim-window` (deterministic —
       seeded RNG — so the figure reproduces exactly).
 
+  - manuscript_figure: 24
+    filename: fig27_resistance_asymmetry
+    generator:
+      script: scripts/generate_figures.py
+      function: fig27_resistance_asymmetry
+    inputs:
+      - simulations/output/tme/tme_summary.json
+    type: simulation
+    status: manuscript
+    note: >
+      Flagship 2x2 (#285): the resistance-mechanism asymmetry. Under each TME
+      mechanism (hypoxia / stromal / pH / immune), pharmacologic RSL3 collapses
+      while physical SDT holds. Each panel uses the SAME metric its manuscript
+      section reports, so figure and prose agree: hypoxia = overall kill
+      (§7.1, RSL3 3.7->0.1%, SDT 91.9->87.8%); stromal = kill among CAF-adjacent
+      boundary cells (§7.3, RSL3 3.0->1.5%, SDT 96.1->91.2%); pH = ferroptosis
+      kills, an immune-free counter (§7.4, RSL3 163->77, SDT 139640->140693);
+      immune = ICD kill count (§7.2, 104:1 in 2D). Panel (a) is immune-off;
+      panels (b)-(d) share the gradient-O2 + immune-on baseline the sim runs
+      those mechanisms under. Each panel is captioned with its confidence tier so
+      the contested hypoxia leg is not entrenched (SDT modeled O2-independent, an
+      optimistic upper bound; the 2D immune ratio over-extrapolates to ~4:1 in
+      3D). All values read from tme_summary.json. Pinned by
+      tests/test_flagship_figure_data.py. Input is gitignored; regenerate with
+      `cargo run --release -p sim-tme`, then `python scripts/generate_figures.py`.
+
   # ── Supplementary / orphan figures ─────────────────────────────
 
   - manuscript_figure: null
