@@ -3,14 +3,15 @@
  *
  * Compile and run:
  *   cargo build --release -p ferroptosis-ffi
- *   cc -o test_ffi tests/test_ffi.c -L ../target/release -lferroptosis_ffi -lm
+ *   cc -o test_ffi tests/test_ffi.c -L ../target/release -lferroptosis_ffi
  *   DYLD_LIBRARY_PATH=../target/release ./test_ffi     # macOS
  *   LD_LIBRARY_PATH=../target/release ./test_ffi        # Linux
+ *
+ * Run automatically per-PR by .github/workflows/cargo-test.yml (the `test` job).
  */
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
 #include "../include/ferroptosis.h"
 
 int main(void) {
