@@ -4162,13 +4162,29 @@ mod tests {
     #[test]
     fn fractal_vasculature_is_hypoxier_than_random() {
         // #268: a fractal-branching vessel tree clusters along branches with
-        // avascular gaps, so at the same density target it leaves a HIGHER
+        // avascular gaps, so at near-equal POINT COUNT it leaves a HIGHER
         // vascular hypoxic fraction than uniform-random placement. Validates the
         // topology dispatch end-to-end through sim-tme-3d.
         let cfg = RunConfig {
             grid_dim: 24,
             n_steps: 80,
         };
+        // COUNT-PARITY GUARD: reconstruct the exact grid the run builds and check
+        // both placers yield ~the same number of vessel points. Without this, a
+        // higher hypoxic fraction could be a "fractal is just sparser" artifact
+        // rather than a clustering (topology) effect.
+        {
+            let g =
+                TumorGrid3D::generate(cfg.grid_dim, cfg.grid_dim, cfg.grid_dim, CELL_SIZE_UM, SEED);
+            let vcfg = VasculatureConfig::well_vascularized();
+            let n_random = place_vessels_3d(&g, &vcfg, VESSEL_SEED).len();
+            let n_fractal = place_vessels_fractal_3d(&g, &vcfg.with_fractal(), VESSEL_SEED).len();
+            assert!(
+                n_fractal as f64 >= 0.9 * n_random as f64 && n_fractal <= n_random + 1,
+                "fractal count {n_fractal} must be within 10% of random count {n_random} \
+                 so the hypoxic comparison is count-controlled, not a sparsity artifact"
+            );
+        }
         let cond = Condition {
             name: "fractal_rsl3".to_string(),
             treatment: Treatment::RSL3,

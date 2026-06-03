@@ -42,6 +42,10 @@ pub enum VesselTopology {
     /// *Cancer Res* 2000, PMID 10919633): tumor vessels are disorganized, with
     /// high variability in segment length and branching angle and a higher,
     /// space-filling fractal dimension (~1.89) than normal vasculature (~1.70).
+    ///
+    /// Note: only the central-sphere / spheroid placement path honors this; the
+    /// patient-scale slab path ([`place_vessels_in_slab_3d`], #240/#272) always
+    /// uses uniform-in-box placement and ignores `topology`.
     Fractal,
 }
 
@@ -75,6 +79,10 @@ impl VasculatureConfig {
     }
 
     /// Switch this config to the fractal-branching topology (#268).
+    ///
+    /// Footgun: this is a no-op for slab geometry — [`place_vessels_in_slab_3d`]
+    /// (#240/#272) always scatters vessels uniform-in-box regardless of
+    /// `topology`. Only the central-sphere / spheroid path branches on it.
     pub fn with_fractal(mut self) -> Self {
         self.topology = VesselTopology::Fractal;
         self
@@ -186,9 +194,15 @@ pub fn place_vessels_in_slab_3d(
 /// chaotic network — points cluster along branches with avascular gaps and dead
 /// ends between them — matching the documented irregular/fractal architecture of
 /// tumor vasculature (see [`VesselTopology::Fractal`]; Baish & Jain 2000). The
-/// total point count is capped at the same `inter_vessel_um` density target as
-/// the random model, so the two are density-comparable. Breadth-first growth +
-/// the cap keep the multi-trunk network balanced.
+/// total point count is capped at the same `inter_vessel_um` target as
+/// [`place_vessels_3d`] — but note this matches the raw vessel-point COUNT, NOT
+/// effective spatial coverage. Because these points are 1-cell-spaced along a
+/// few branches (rather than spread through the volume), the fractal network
+/// covers far less unique territory at equal count, which is exactly why it
+/// leaves more avascular tissue. So the higher hypoxic fraction vs random is a
+/// clustering-coverage effect, not a controlled "same density, different
+/// topology" result — read it qualitatively. Breadth-first growth + the cap
+/// keep the multi-trunk network balanced.
 ///
 /// Uses an **independent** `StdRng(seed)`, so it never advances
 /// [`TumorGrid3D::generate`]'s stream — byte-identity preserved. Deterministic
@@ -216,7 +230,10 @@ pub fn place_vessels_fractal_3d(
     // Tumor vasculature is disorganized — high variability in branch angle and
     // length (Baish & Jain 2000). Base bifurcation ~35° with large jitter;
     // branch length shrinks ~0.8/generation; ~12% of branches dead-end early
-    // (perfusion gaps). Trunk count scales with the density target.
+    // (perfusion gaps). Trunk count scales with the point-count target at
+    // ~1 feeding trunk per 30 vessel-points, clamped to [2, 64] — uncalibrated,
+    // chosen so small grids still get ≥2 entry points and patient-scale grids a
+    // realistic handful of feeding trunks rather than hundreds.
     let n_trunks = ((target as f64 / 30.0).round() as usize).clamp(2, 64);
     const STEP: f64 = 1.0; // point spacing along a branch (cells)
     const BASE_ANGLE: f64 = 0.61; // ~35°
@@ -294,8 +311,14 @@ pub fn place_vessels_fractal_3d(
             continue;
         }
         let child_len = length * LENGTH_RATIO * (0.8 + 0.4 * rng.gen::<f64>());
+        // One bifurcation PLANE per branch point (a single shared perpendicular
+        // `axis`), with the two daughters placed on OPPOSITE sides of the parent
+        // via `sign` — a genuine Y-split. Each daughter keeps its own angle
+        // jitter so the split stays tumor-irregular rather than perfectly
+        // symmetric. (Re-rolling `axis` per daughter would make `sign` inert,
+        // collapsing the Y into two independent random forward branches.)
+        let axis = perp(dir, &mut rng);
         for sign in [1.0_f64, -1.0] {
-            let axis = perp(dir, &mut rng);
             let ang = BASE_ANGLE * (0.4 + 1.2 * rng.gen::<f64>()); // high variability
             let child = norm((
                 dir.0 * ang.cos() + sign * axis.0 * ang.sin(),
@@ -555,19 +578,27 @@ mod tests {
         let b = place_vessels_fractal_3d(&g, &cfg, 7);
         assert_eq!(a, b, "fractal placement must be deterministic");
         assert!(!a.is_empty());
-        // Capped at the same density target as the random model.
         let target = derive_vessel_count(&g, &cfg);
+        let random = place_vessels_3d(&g, &VasculatureConfig::well_vascularized(), 7);
+        // COUNT-PARITY GUARD: the fractal tree must fill to essentially the same
+        // point count as the random placer (which returns exactly `target`).
+        // This is the load-bearing invariant for the "gappier" claim below — if
+        // the fractal network were merely SPARSER, a higher hypoxic fraction
+        // would be a count artifact, not a topology (clustering) effect. A loose
+        // bound (e.g. 0.5×) would let that confound slip through silently.
         assert!(
-            a.len() <= target + 1 && a.len() as f64 >= 0.5 * target as f64,
-            "fractal count {} should be near (and not exceed) the target {}",
+            a.len() <= target + 1 && a.len() as f64 >= 0.9 * random.len() as f64,
+            "fractal count {} must be within 10% of random count {} (target {}) \
+             so the hypoxic comparison stays count-controlled",
             a.len(),
+            random.len(),
             target
         );
-        // The KEY structural property: a fractal network clusters points along
-        // branches, leaving avascular GAPS, so at matched density it leaves MORE
-        // tumor cells hypoxic than uniform-random placement (perfusion holes).
+        // The KEY structural property: at (near-)equal point count, a fractal
+        // network clusters its points along a few branches, leaving avascular
+        // GAPS, so it leaves MORE tumor cells hypoxic than uniform-random
+        // placement spread through the volume (perfusion holes from clustering).
         let lambda = 100.0;
-        let random = place_vessels_3d(&g, &VasculatureConfig::well_vascularized(), 7);
         let hyp_fractal = hypoxic_fraction(&g, &vessel_supply_field(&g, &a, lambda), 0.2);
         let hyp_random = hypoxic_fraction(&g, &vessel_supply_field(&g, &random, lambda), 0.2);
         assert!(
