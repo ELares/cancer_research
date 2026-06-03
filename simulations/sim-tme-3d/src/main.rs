@@ -480,6 +480,16 @@ fn run_one_condition_full(
         !(slab_cfg.is_some() && spheroid_cfg.is_some()),
         "slab and spheroid overrides are mutually exclusive (incompatible geometries)"
     );
+    // Contact resistance (#270) assumes a centred sphere/spheroid: its fixed-26
+    // contact denominator treats domain-boundary cells as low-contact (true for
+    // a spheroid, whose tumor never touches the box face; WRONG for an all-tumor
+    // slab, whose outer shell IS tumor at the box face and would be mis-scored as
+    // a "surface"). Guard the combination rather than silently mis-score a slab.
+    debug_assert!(
+        !(slab_cfg.is_some() && contact_cfg.is_some()),
+        "slab and contact overrides are mutually exclusive (the fixed-26 contact \
+         denominator mis-scores a slab's domain-boundary shell as low-contact)"
+    );
     // 3D spheroid context (#197): partially-active MUFA so position-dependent
     // per-cell MUFA persists. `None` (matrix path) ⇒ `Params::default()` ⇒
     // byte-identical.

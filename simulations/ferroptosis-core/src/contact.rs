@@ -27,6 +27,20 @@
 //! ferroptosis-threshold modulation: less peroxidizable substrate + less Fenton
 //! iron ⇒ a denser cell needs more ROS to tip into death.
 //!
+//! ## Magnitude (read the DIRECTION, not the number)
+//!
+//! Only the *direction* (dense contact ⇒ resistance) is a result. The kill-rate
+//! magnitude is **threshold-proximity-sensitive**: `lipid_unsat` enters both the
+//! LP-seeding and the autocatalytic-propagation terms, so a modest PUFA cut has
+//! a super-linear effect on whether a cell crosses `death_threshold` — at the
+//! sim-tme-3d 24³ RSL3 config, kills scale steeply with `lipid_strength`
+//! (0.05 ≈ ½ baseline, 0.4 ≈ 0). Different dose/grid settings would give a
+//! different number. The two axes are also **far from co-equal**: under RSL3 the
+//! effect is almost entirely the `lipid_unsat`/ACSL4 axis; the `iron`/TFRC axis
+//! is a minor contributor (a 20 % iron cut barely moves total ROS, since Fenton
+//! is one additive term and exogenous ROS is 0 for RSL3). Iron would matter more
+//! in Fenton-dominated / iron-loaded conditions. All magnitudes are uncalibrated.
+//!
 //! ## Discipline
 //!
 //! Purely **geometric** — it reads `is_tumor` (set by grid generation) and uses
