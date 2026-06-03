@@ -28,13 +28,12 @@
 //! helper). Consumers get the mask once and reuse it for boost
 //! application, kill-rate reporting, and visualization.
 //!
-//! **Canonical boost magnitudes** live in sim-tme's `StromalConfig`
-//! (`simulations/sim-tme/src/main.rs:406`): `gsh_boost_per_step = 0.06`,
-//! `gsh_boost_cap = 18.0`, `mufa_boost_per_step = 0.003`, `mufa_boost_cap
-//! = 0.25`. A 3D consumer (#195 sim-tme-3d, #197 cell-level biochem)
-//! should either re-export these values from sim-tme or lift `StromalConfig`
-//! into the library — both are explicit follow-up work, not in this PR's
-//! scope.
+//! **Canonical boost magnitudes** now live in this crate's
+//! [`crate::params::StromalConfig`] (#220/#224 lifted the config out of
+//! sim-tme): `gsh_boost_per_step = 0.06`, `gsh_boost_cap = 18.0`,
+//! `mufa_boost_per_step = 0.003`, `mufa_boost_cap = 0.25` (its `Default`).
+//! Both the 2D (sim-tme) and 3D (sim-tme-3d) consumers import it from here, so
+//! the two paths share one source of truth for the magnitudes.
 //!
 //! Refs: PMID 34373744 (CAF metabolic reprogramming),
 //! PMID 31813804 (ACSL3-mediated oleic acid),

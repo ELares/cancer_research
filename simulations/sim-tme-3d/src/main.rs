@@ -776,15 +776,15 @@ fn run_one_condition_full(
     // state. Gated on spheroid ⇒ the default path never runs this ⇒
     // byte-identical.
     //
-    // Durability (axis ranking, like the clonal comment): this MUFA value is
-    // an INITIAL condition that relaxes toward `Params::spheroid`'s uniform
-    // M_ss (≈0.20) each step via `update_mufa_protection` (and is capped at
-    // `scd_mufa_max` = 0.25, which `SpheroidConfig::literature` respects). So
-    // it shapes the early autocatalytic/killing window strongly but is not
-    // durable to late steps. A fully durable position-dependent MUFA needs a
-    // per-cell `scd_mufa_max` (Params is global) — deferred to calibration.
-    // Of the radial axes only `iron` (static `cell.iron`) is fully durable;
-    // `gsh` is likewise an initial condition (evolves under NRF2 resynthesis).
+    // Durability: #270 made this axis durable. `apply_radial_cells_3d` (above)
+    // sets a per-cell `cell.mufa_cap` (rim-high, core-low), and
+    // `update_mufa_protection` saturates each cell toward ITS OWN cap rather
+    // than the uniform `Params::spheroid` M_ss, so the rim-vs-core MUFA spread
+    // persists for the whole run instead of relaxing away. This block seeds the
+    // matching INITIAL `state.mufa_protection`; the durable carrying capacity is
+    // the per-cell cap (`scd_mufa_max` = 0.25 is only the fallback when no
+    // per-cell cap is set). `iron` (static `cell.iron`) is likewise fully
+    // durable; `gsh` remains an initial condition (evolves under NRF2 resynthesis).
     if let Some(cfg) = &spheroid_cfg {
         for idx in 0..grid.cells.len() {
             if grid.cells[idx].is_tumor {
@@ -1108,15 +1108,9 @@ fn run_one_condition_full(
                         let inc = persister::mufa_boost_increment(frac, pcfg);
                         let m = gc.state.mufa_protection;
                         gc.state.mufa_protection = (m + inc).min(pcfg.mufa_boost_cap.max(m));
-                        // Acquire under drug exposure this step, else revert.
-                        // This is a hard either-or on `drug_intensity > 0`, so
-                        // under sustained dosing (`Constant`, or a `MultiDose`
-                        // whose decaying tails never reach 0) the fraction is
-                        // monotonic — reversion only fires in a truly drug-free
-                        // window (an `Infusion` gap, pre-dose `Bolus`, or an
-                        // explicit-zero `FromPk`). A competing-rate model would
-                        // give a sub-cap equilibrium; deferred with the other
-                        // placeholder-calibration simplifications.
+                        // Per-step drug intensity drives the competing-rate
+                        // persister update below (#262). See that call's comment
+                        // for the acquisition/reversion equilibrium semantics.
                         //
                         // `rsl3_drug_avail[idx]` is indexed only on the
                         // `dosed && RSL3` path; it is always populated there by
