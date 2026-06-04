@@ -696,10 +696,11 @@ impl TumorGrid3D {
     /// `neighbor_fraction = 0.1` against 8 Moore neighbors, so up to 80%
     /// of released iron is distributed. In 3D with 26 Moore neighbors,
     /// the same `0.1` would distribute up to 260% — non-physical. The
-    /// natural 3D analog is `0.1 * 8 / 26 ≈ 0.0308`, but the actual
-    /// calibration is left to the caller (sim-tme-3d uses
-    /// `IRON_DIFFUSE_FRACTION_3D`; #194 was closed as superseded) and a
-    /// calibrated value is data-gated (see `simulations/calibration/CALIBRATION_STATUS.md`).
+    /// natural 3D analog is `0.1 * 8 / 26 ≈ 0.0308`, but the actual value is
+    /// left to the caller (sim-tme-3d uses `IRON_DIFFUSE_FRACTION_3D`; #194 was
+    /// closed as superseded). It is uncalibrated; see
+    /// `simulations/calibration/CALIBRATION_STATUS.md` for the per-layer
+    /// calibration-tier framework.
     pub fn diffuse_iron(&mut self, iron_per_death: f64, neighbor_fraction: f64) {
         // Hoist dimensions so the closures don't try to capture `&mut self`.
         let (rows, cols, layers) = (self.rows, self.cols, self.layers);
@@ -789,8 +790,8 @@ impl TumorGrid3D {
     ///
     /// **Perf note (#289):** the four dimension-only constants (`center_{r,c,l}`,
     /// `tumor_radius`) used to be recomputed on every call. A per-cell sweep
-    /// (the `oxygen`/`ph` radial fields over ~10⁵–10⁶ cells) now hoists them
-    /// once via [`RadialDepthGeom`], which this method delegates to — so the
+    /// (the `oxygen`/`ph` radial fields over ~10⁵ to 10⁶ cells) now hoists them
+    /// once via [`RadialDepthGeom`], which this method delegates to, so the
     /// geometry math lives in exactly one place and the hoisted field loops
     /// stay bit-for-bit identical to calling this per cell. (Re-homed from the
     /// now-closed #194; was previously deferred to sim-spatial-3d.)
@@ -808,7 +809,7 @@ impl TumorGrid3D {
 ///
 /// **Byte-identity:** [`depth_um`] performs the exact same operations, in the
 /// same order, as [`TumorGrid3D::radial_depth_um`] (which delegates here), so
-/// hoisting it changes timing only, never a single output bit — the
+/// hoisting it changes timing only, never a single output bit. The
 /// `summary.json` matrix is unaffected.
 #[derive(Clone, Copy, Debug)]
 pub(crate) struct RadialDepthGeom {
@@ -833,7 +834,7 @@ impl RadialDepthGeom {
         }
     }
 
-    /// Radial depth (µm, positive inside) of cell `(r, c, l)` — the per-cell
+    /// Radial depth (µm, positive inside) of cell `(r, c, l)`: the per-cell
     /// arithmetic only. Identical float ops/order to
     /// [`TumorGrid3D::radial_depth_um`].
     #[inline]
