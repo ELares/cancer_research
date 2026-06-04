@@ -11,8 +11,8 @@ The scan covered ten axes (ferroptosis biology, sonodynamic/photodynamic therapy
 immunotherapy and immunogenic cell death, computational oncology methods, drug PK and
 transport, persisters and resistance evolution, under covered modalities and taxonomy,
 calibration and validation, corpus and evidence methodology, and scientific contribution
-strategy). It produced the issue backlog indexed at the end of this document (#330 to
-#354).
+strategy). It produced the issue backlog indexed at the end of this document (issues #330
+through #354).
 
 ## A note on fact grounding
 
@@ -128,7 +128,7 @@ prediction, global sensitivity (Sobol) and identifiability analysis, and uncerta
 propagation (Bayesian/ABC) so that claims are reported as intervals. The existing
 univariate PRCC work (#134, closed) is a good foundation to extend. Issues: #330 (GDSC/
 DepMap/PRISM calibration), #331 (Sobol and identifiability), #332 (Bayesian/ABC intervals),
-#333 (multi size spheroid validation against Browning, eLife 2021, PMID 34842141).
+and #333 (multi size spheroid validation against Browning, eLife 2021, PMID 34842141).
 
 ### Corpus and evidence methodology
 
@@ -184,8 +184,8 @@ plan), #354 (interactive dashboard).
 **Validation and calibration (keystone):** #330, #331, #332, #333.
 **Drug PK and transport:** #334, #335.
 **Model biology gaps:** #336 (oxygen dependent SDT), #337 (immunosuppressive ferroptosis),
-#338 (DHODH/GCH1), #339 (lipid remodeling escape), #340 (dynamic iron/ferritinophagy),
-#341 (senescence/SASP), #342 (persister entry and locking).
+then #338 (DHODH/GCH1), #339 (lipid remodeling escape), #340 (dynamic iron/ferritinophagy),
+plus #341 (senescence/SASP) and #342 (persister entry and locking).
 **Spatial and numerical methods:** #343 (reaction diffusion fields), #344 (ODE cross
 validation).
 **Corpus and evidence:** #345 (landmark recovery), #346 (recall), #347 (taxonomy
