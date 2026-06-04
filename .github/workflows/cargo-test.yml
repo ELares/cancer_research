@@ -69,7 +69,7 @@ jobs:
         # honor the pin and would otherwise auto-download the pinned
         # channel *without* rustfmt, breaking the gate (PR #236 review).
         # Bumping the workspace pin requires bumping this version too.
-        uses: dtolnay/rust-toolchain@1.96.0
+        uses: dtolnay/rust-toolchain@1.100.0
         with:
           components: rustfmt
 

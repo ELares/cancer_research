@@ -52,7 +52,7 @@ jobs:
         # The expected SHA is toolchain-specific (powf / Ziggurat are not
         # bit-identical across libm); @stable would silently drift it.
         # Bumping the workspace pin requires bumping this version too.
-        uses: dtolnay/rust-toolchain@1.96.0
+        uses: dtolnay/rust-toolchain@1.100.0
 
       - name: Cache Cargo registry and build
         uses: Swatinem/rust-cache@v2
