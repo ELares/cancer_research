@@ -60,8 +60,30 @@ pub struct TissueParams {
     /// junctions (BBB), elevated interstitial fluid pressure, etc.
     pub vascular_permeability: f64,
 
+    /// ECM-mediated diffusion-barrier tortuosity (#315). A dense, assembled
+    /// extracellular matrix (desmoplastic stroma) impedes interstitial drug
+    /// diffusion, lowering the effective diffusion coefficient and so the
+    /// penetration length: `λ_eff = λ / sqrt(tortuosity)`. `1.0` ⇒ no barrier
+    /// (identity), so the default tissues stay byte-identical to the pre-#315
+    /// model; `> 1.0` models an ECM-dense / desmoplastic tissue (e.g.
+    /// pancreatic) where drug penetrates less. The magnitude is an UNCALIBRATED
+    /// placeholder encoding the documented direction (denser ECM ⇒ shorter
+    /// penetration); calibrate vs ECM-density-resolved interstitial-diffusivity
+    /// measurements. Refs: Netti et al., Cancer Res 2000 (PMID 10811131, ECM
+    /// assembly governs interstitial transport); Provenzano et al., Cancer Cell
+    /// 2012 (PMID 22439937, stromal ablation removes physical drug barriers).
+    #[serde(default = "default_ecm_tortuosity")]
+    pub ecm_tortuosity: f64,
+
     /// Human-readable name for output.
     pub name: &'static str,
+}
+
+/// Default ECM tortuosity (1.0 = no barrier / identity). A free function so
+/// `#[serde(default)]` fills the field when deserializing pre-#315
+/// `TissueParams` that lack it.
+fn default_ecm_tortuosity() -> f64 {
+    1.0
 }
 
 /// Characteristic penetration length (μm).
@@ -88,9 +110,12 @@ pub fn penetration_length_um(drug: &DrugParams) -> f64 {
 /// when the vessel radius is much smaller than the tissue radius (typically
 /// R_vessel ≈ 5-10μm vs R_tissue ≈ 50-150μm).
 ///
-/// `C(r) = C_vessel × permeability × exp(-r / λ)`
+/// `C(r) = C_vessel × permeability × exp(-r / λ_eff)`, where the ECM tortuosity
+/// shortens the penetration length: `λ_eff = λ / sqrt(tissue.ecm_tortuosity)`
+/// (#315). With the default `ecm_tortuosity = 1.0`, `λ_eff = λ` and this is
+/// byte-identical to the pre-#315 model.
 pub fn concentration_at_distance(r_um: f64, drug: &DrugParams, tissue: &TissueParams) -> f64 {
-    let lambda = penetration_length_um(drug);
+    let lambda = penetration_length_um(drug) / tissue.ecm_tortuosity.sqrt();
     let c0 = drug.vessel_wall_conc * tissue.vascular_permeability;
     (c0 * (-r_um / lambda).exp()).min(1.0)
 }
@@ -180,6 +205,7 @@ pub fn epithelial_well_vascularized() -> TissueParams {
     TissueParams {
         inter_vessel_distance_um: 120.0,
         vascular_permeability: 0.8,
+        ecm_tortuosity: 1.0,
         name: "Epithelial (well-vascularized)",
     }
 }
@@ -193,6 +219,10 @@ pub fn epithelial_poorly_vascularized() -> TissueParams {
     TissueParams {
         inter_vessel_distance_um: 250.0,
         vascular_permeability: 0.4,
+        // Kept at identity (1.0) for byte-identity; pancreatic desmoplasia is
+        // the natural candidate for tortuosity > 1 once ECM-density data exists
+        // (Olive 2009; Provenzano 2012, PMID 22439937).
+        ecm_tortuosity: 1.0,
         name: "Epithelial (poorly-vascularized)",
     }
 }
@@ -207,6 +237,7 @@ pub fn neuroectodermal_cns() -> TissueParams {
     TissueParams {
         inter_vessel_distance_um: 150.0,
         vascular_permeability: 0.15,
+        ecm_tortuosity: 1.0,
         name: "Neuroectodermal (CNS/BBB)",
     }
 }
@@ -325,6 +356,40 @@ mod tests {
         assert!(
             lambda.is_infinite(),
             "Zero clearance should give infinite penetration"
+        );
+    }
+
+    #[test]
+    fn ecm_tortuosity_shortens_penetration() {
+        let drug = rsl3_like();
+        let base = epithelial_well_vascularized(); // ecm_tortuosity = 1.0
+                                                   // Identity: an explicit tortuosity of 1.0 is byte-identical to the base.
+        let id = TissueParams {
+            ecm_tortuosity: 1.0,
+            ..epithelial_well_vascularized()
+        };
+        assert_eq!(
+            concentration_at_distance(60.0, &drug, &base),
+            concentration_at_distance(60.0, &drug, &id),
+            "ecm_tortuosity = 1.0 must be the identity"
+        );
+        // Denser ECM (tortuosity > 1) shortens the effective penetration length,
+        // so less drug reaches a cell at depth (the documented direction).
+        let dense = TissueParams {
+            ecm_tortuosity: 4.0,
+            ..epithelial_well_vascularized()
+        };
+        let c_base = concentration_at_distance(60.0, &drug, &base);
+        let c_dense = concentration_at_distance(60.0, &drug, &dense);
+        assert!(
+            c_dense < c_base,
+            "ECM tortuosity must reduce drug at depth: base={c_base:.4}, dense={c_dense:.4}"
+        );
+        // Tortuosity only affects the decay, not the vessel-wall (r=0) value.
+        assert_eq!(
+            concentration_at_distance(0.0, &drug, &base),
+            concentration_at_distance(0.0, &drug, &dense),
+            "tortuosity must not change the vessel-wall concentration (r=0)"
         );
     }
 }
