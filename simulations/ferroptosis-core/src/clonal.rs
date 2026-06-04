@@ -254,9 +254,17 @@ pub fn assign_subclones_3d(grid: &TumorGrid3D, k: usize, seed: u64) -> Vec<u8> {
 /// uses a per-site RNG mixed from `(seed, idx, step)`; pass a condition-derived
 /// `seed` (like the immune-kill RNG) so it never touches the setup-seed streams.
 ///
-/// No-op (returns 0, mutates nothing) when `cfg.repopulation_rate <= 0.0`, so a
-/// consumer that doesn't opt in keeps the static-map behavior, byte-identical.
-/// Returns the number of sites repopulated this step.
+/// No-op (returns an empty `Vec`, mutates nothing) when `cfg.repopulation_rate
+/// <= 0.0`, so a consumer that doesn't opt in keeps the static-map behavior,
+/// byte-identical.
+///
+/// Returns the **indices of the sites repopulated** this step (its length is the
+/// repopulation count). A revived site is a fresh, full-strength cell, so a
+/// consumer running a geometric per-cell setup layer (e.g. contact resistance,
+/// #270/#302) must re-apply it to these indices — otherwise a dense revived site
+/// comes back un-reduced and becomes the most ferroptosis-sensitive cell in its
+/// cluster, the opposite of the modeled biology. See
+/// [`apply_contact_resistance_at_3d`](crate::contact::apply_contact_resistance_at_3d).
 pub fn repopulate_dead_sites_3d(
     grid: &mut TumorGrid3D,
     subclone_ids: &mut [u8],
@@ -264,9 +272,9 @@ pub fn repopulate_dead_sites_3d(
     params: &Params,
     seed: u64,
     step: u32,
-) -> usize {
+) -> Vec<usize> {
     if cfg.repopulation_rate <= 0.0 {
-        return 0;
+        return Vec::new();
     }
     let n = grid.cells.len();
     // Phase 1: snapshot living tumor sites (start of pass).
@@ -319,13 +327,14 @@ pub fn repopulate_dead_sites_3d(
             },
         ));
     }
-    // Phase 3: apply.
-    let count = repop.len();
+    // Phase 3: apply. Collect the revived indices first (the caller re-applies
+    // any geometric per-cell setup layer — e.g. contact resistance — to them).
+    let revived: Vec<usize> = repop.iter().map(|&(idx, _, _)| idx).collect();
     for (idx, id, gc) in repop {
         grid.cells[idx] = gc;
         subclone_ids[idx] = id;
     }
-    count
+    revived
 }
 
 #[cfg(test)]
@@ -545,7 +554,7 @@ mod tests {
         let ids_before = ids.clone();
         let cfg = ClonalConfig::literature_4(); // repopulation_rate = 0
         let n = repopulate_dead_sites_3d(&mut g, &mut ids, &cfg, &Params::default(), 1, 0);
-        assert_eq!(n, 0, "no repopulation when rate is 0");
+        assert!(n.is_empty(), "no repopulation when rate is 0");
         assert_eq!(ids, ids_before, "subclone map unchanged");
         assert!(
             killed.iter().all(|&i| g.cells[i].state.dead),
@@ -560,12 +569,23 @@ mod tests {
         assert!(!killed.is_empty(), "the killed plane is non-empty");
         let n = repopulate_dead_sites_3d(&mut g, &mut ids, &cfg, &Params::default(), 5, 0);
         assert!(
-            n > 0,
+            !n.is_empty(),
             "rate 1.0 repopulates dead sites that have living neighbors"
         );
         // Revived sites are alive again with a valid subclone id (1..=4).
         let revived = killed.iter().filter(|&&i| !g.cells[i].state.dead).count();
-        assert_eq!(revived, n, "revived count matches the return value");
+        assert_eq!(
+            revived,
+            n.len(),
+            "revived count matches the returned indices"
+        );
+        // The returned indices are exactly the sites that came back alive.
+        for &i in &n {
+            assert!(
+                !g.cells[i].state.dead,
+                "returned index {i} must be a revived (living) site"
+            );
+        }
         for &i in &killed {
             if !g.cells[i].state.dead {
                 assert!(
@@ -577,7 +597,72 @@ mod tests {
         // Deterministic: same seeds ⇒ identical decisions.
         let (mut g2, mut ids2, _) = killed_plane(0);
         let n2 = repopulate_dead_sites_3d(&mut g2, &mut ids2, &cfg, &Params::default(), 5, 0);
-        assert_eq!(n, n2, "deterministic repopulation count");
+        assert_eq!(n, n2, "deterministic repopulation indices");
         assert_eq!(ids, ids2, "deterministic subclone map after repopulation");
+    }
+
+    #[test]
+    fn repopulated_cell_gets_contact_resistance_reapplied() {
+        // #302: clonal spatial expansion revives a dead site with a fresh,
+        // full-strength cell. With the contact layer on, the consumer must
+        // re-apply contact resistance to the revived cell (using the returned
+        // indices) so a dense interior site resists like its setup-reduced
+        // neighbours, instead of coming back as the MOST ferroptosis-sensitive
+        // cell in the cluster. Contact fractions are is_tumor-geometric (death
+        // and repopulation never change them), so the re-application reproduces
+        // the setup-time reduction exactly.
+        use crate::contact::{apply_contact_resistance_at_3d, contact_fraction_3d, ContactConfig};
+        let cfg = ClonalConfig::literature_4().with_repopulation(1.0);
+        let ccfg = ContactConfig::literature();
+
+        // Two identical killed grids, repopulated identically (deterministic).
+        let (mut g_full, mut ids_full, _) = killed_plane(0);
+        let (mut g_contact, mut ids_contact, _) = killed_plane(0);
+        let revived =
+            repopulate_dead_sites_3d(&mut g_full, &mut ids_full, &cfg, &Params::default(), 5, 0);
+        let revived2 = repopulate_dead_sites_3d(
+            &mut g_contact,
+            &mut ids_contact,
+            &cfg,
+            &Params::default(),
+            5,
+            0,
+        );
+        assert_eq!(revived, revived2, "deterministic revived set across grids");
+        assert!(!revived.is_empty(), "some interior sites were revived");
+
+        // Re-apply contact to the revived cells in ONE grid (as sim-tme-3d does).
+        for &idx in &revived {
+            apply_contact_resistance_at_3d(&mut g_contact, idx, &ccfg);
+        }
+
+        // Each revived dense cell is now strictly LESS peroxidizable than the
+        // same un-reduced revived cell, and by exactly the geometric amount.
+        let mut any_reduced = false;
+        for &idx in &revived {
+            let frac = contact_fraction_3d(&g_full, idx);
+            if frac > 0.0 {
+                let base_lipid = g_full.cells[idx].cell.lipid_unsat;
+                let base_iron = g_full.cells[idx].cell.iron;
+                assert!(
+                    g_contact.cells[idx].cell.lipid_unsat < base_lipid,
+                    "revived dense cell must have contact-reduced PUFA (idx={idx}, frac={frac})"
+                );
+                assert!(
+                    g_contact.cells[idx].cell.iron < base_iron,
+                    "revived dense cell must have contact-reduced iron (idx={idx}, frac={frac})"
+                );
+                let exp_lipid = base_lipid * (1.0 - ccfg.lipid_strength * frac);
+                assert!(
+                    (g_contact.cells[idx].cell.lipid_unsat - exp_lipid).abs() < 1e-12,
+                    "reduction must equal the setup-time geometric value"
+                );
+                any_reduced = true;
+            }
+        }
+        assert!(
+            any_reduced,
+            "at least one revived interior cell has nonzero contact"
+        );
     }
 }

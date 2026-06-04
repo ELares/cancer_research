@@ -111,6 +111,34 @@ pub fn contact_fraction_3d(grid: &TumorGrid3D, idx: usize) -> f64 {
     tumor as f64 / MAX_NEIGHBORS_3D
 }
 
+/// Apply contact resistance to the SINGLE cell at `idx`, scaling its durable
+/// `lipid_unsat` / `iron` down by its tumor-neighbour contact fraction. No-op
+/// for the identity config or a non-tumor cell.
+///
+/// Use this when a cell is **created mid-run** so it gets the same durable
+/// reduction its setup-time neighbours did. The motivating case is clonal
+/// spatial expansion: [`repopulate_dead_sites_3d`](crate::clonal::repopulate_dead_sites_3d)
+/// revives a dead site with a fresh, full-strength cell, and without this
+/// re-application a dense interior site would come back as the MOST
+/// ferroptosis-sensitive cell in its cluster (full PUFA/iron next to
+/// contact-reduced neighbours) — the opposite of the modeled biology (#302).
+/// The contact fraction is purely geometric (reads `is_tumor`, which neither
+/// cell death nor repopulation changes), so a revived interior site gets
+/// exactly the reduction it had at setup.
+///
+/// **Not idempotent**: like the bulk pass it mutates in place, so calling it
+/// twice on one cell compounds the reduction. Call it once, on freshly-created
+/// cells only.
+pub fn apply_contact_resistance_at_3d(grid: &mut TumorGrid3D, idx: usize, cfg: &ContactConfig) {
+    if cfg.is_identity() || !grid.cells[idx].is_tumor {
+        return;
+    }
+    let frac = contact_fraction_3d(grid, idx);
+    let cell = &mut grid.cells[idx].cell;
+    cell.lipid_unsat *= (1.0 - cfg.lipid_strength * frac).max(0.0);
+    cell.iron *= (1.0 - cfg.iron_strength * frac).max(0.0);
+}
+
 /// Apply contact-mediated resistance to every tumor cell (#270): scale the
 /// durable `lipid_unsat` and `iron` axes down in proportion to contact fraction.
 /// No-op when `cfg.is_identity()`. RNG-free and geometric, so byte-identity of
@@ -119,18 +147,12 @@ pub fn apply_contact_resistance_3d(grid: &mut TumorGrid3D, cfg: &ContactConfig) 
     if cfg.is_identity() {
         return;
     }
-    // `contact_fraction_3d` reads `is_tumor`, which this function never mutates
-    // (only `iron`/`lipid_unsat`), so computing each fraction inside the same
-    // pass is order-independent.
+    // `contact_fraction_3d` reads `is_tumor`, which the per-cell apply never
+    // mutates (only `iron`/`lipid_unsat`), so applying each fraction inside the
+    // same pass is order-independent.
     let n = grid.cells.len();
     for idx in 0..n {
-        if !grid.cells[idx].is_tumor {
-            continue;
-        }
-        let frac = contact_fraction_3d(grid, idx);
-        let cell = &mut grid.cells[idx].cell;
-        cell.lipid_unsat *= (1.0 - cfg.lipid_strength * frac).max(0.0);
-        cell.iron *= (1.0 - cfg.iron_strength * frac).max(0.0);
+        apply_contact_resistance_at_3d(grid, idx, cfg);
     }
 }
 
