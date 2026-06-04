@@ -84,7 +84,8 @@ metric stays the same.
 
 - **Single grid size**. All current targets use 60³ (tumor radius
   540 µm). Real spheroids span 100 µm–5 mm; multi-size sweeps require
-  #194's perf work + memory budget reasoning. The single grid was
+  large-grid perf work (sparse/adaptive 3D, tracked in #254; the #194
+  sim-spatial-3d binary was closed as superseded by sim-tme-3d). The single grid was
   deliberately chosen at the smaller end of biologically meaningful
   spheroids; literature comparisons should weight smaller-spheroid
   measurements more heavily.
@@ -97,8 +98,9 @@ metric stays the same.
   dilution (sphere vs disc) and differing per-cell activation
   density likely also contribute. A multi-grid sweep would
   quantify how much of the ratio shift survives at matched in-vivo
-  scale. Issue #194 (sim-spatial-3d perf) is prerequisite to
-  running 80³+ at this depth of sweep.
+  scale. Large-grid perf (sparse/adaptive 3D, #254) is prerequisite to
+  running 80³+ at this depth of sweep (#194/sim-spatial-3d was closed as
+  superseded by sim-tme-3d).
 - **No anti-PD-1 condition in 3D yet**. sim-tme has it; sim-tme-3d
   v0.1.0 skipped it. The Q2 "104:1 vs 4:1" framing should hold at
   anti-PD-1 too, but isn't verified. Documented as a follow-up in

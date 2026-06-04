@@ -183,4 +183,15 @@ mod tests {
         assert!((lo - 0.4038).abs() < 1e-3, "lo={lo}");
         assert!((hi - 0.5962).abs() < 1e-3, "hi={hi}");
     }
+
+    /// Audit follow-up: `wilson_ci`'s `k <= n` `debug_assert` documents a
+    /// debug-mode panic contract, but no test exercised it. Feeding k > n must
+    /// panic in debug builds. Gated to debug builds, where the assert lives (it
+    /// is compiled out under `--release`, so it would not panic there).
+    #[test]
+    #[cfg(debug_assertions)]
+    #[should_panic(expected = "wilson_ci")]
+    fn wilson_ci_panics_when_k_exceeds_n() {
+        let _ = wilson_ci(5, 9);
+    }
 }
