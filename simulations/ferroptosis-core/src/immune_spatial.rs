@@ -667,6 +667,9 @@ impl DcSubsetConfig {
     /// dominant cDC2 prime anti-tumor CD8 killing far less well. Refs: Broz et
     /// al., Cancer Cell 2014 (PMID 25446897). The fractions/efficiencies are
     /// UNCALIBRATED; only the direction (cDC1-poor => weaker priming) is claimed.
+    /// Note: `cdc1_efficiency` is held at 1.0 here, so this shipped default
+    /// exercises only the `cdc1_fraction` and `cdc2_efficiency` knobs (the cDC1
+    /// efficacy knob exists for callers modeling impaired cDC1 cross-presentation).
     pub fn literature() -> Self {
         DcSubsetConfig {
             cdc1_fraction: 0.1,
@@ -686,6 +689,13 @@ impl DcSubsetConfig {
 
     /// True when the mix has no effect (priming efficiency exactly `1.0`), so the
     /// consumer stays byte-identical.
+    ///
+    /// The exact `== 1.0` compare is **intentional**: only `balanced()` (and the
+    /// degenerate all-cDC1-at-full-efficiency case) reaches exactly 1.0, and that
+    /// is the only identity config the matrix/snapshot path constructs. Do NOT
+    /// relax this to an epsilon compare: a near-1.0 placeholder must route through
+    /// the realism kill path (where its sub-1.0 scalar is applied), not slip onto
+    /// the default byte-identical path.
     pub fn is_identity(&self) -> bool {
         self.priming_efficiency() == 1.0
     }

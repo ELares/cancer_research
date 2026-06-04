@@ -4101,10 +4101,13 @@ mod tests {
         );
         // Deterministic (the priming scalar is uniform, no extra RNG).
         assert_eq!(poor_im, run_cdc1_poor().immune_kills.unwrap());
-        // NB: ferroptosis kills are NOT held fixed; immune-killed cells release
-        // DAMP + iron that feed back into neighbours' ferroptosis, so shifting the
-        // immune kills shifts the ferroptosis/immune split. The DC-subset layer's
-        // direct effect is on the immune kill path (asserted above).
+        // NB: ferroptosis kills are NOT held fixed. DC subsets only gate the
+        // immune-kill loop directly (immune kills are apoptotic: no DAMP/iron
+        // release), but a cell spared an immune kill can instead die
+        // ferroptotically later, and THAT death releases iron that couples to
+        // neighbors. So reducing immune kills shifts a few deaths into the
+        // ferroptosis tally; that cross-coupling is expected, which is why this
+        // asserts on immune kills specifically.
     }
 
     /// #264: lock the `--snapshot=dc-subsets` preset -> Overrides wiring.
