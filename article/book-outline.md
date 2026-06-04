@@ -1,6 +1,6 @@
 # Book Outline
 
-**Working title:** Mapping Cancer Therapy Mechanisms, Evidence Gaps, and Resistant-State Hypotheses
+**Working title:** Cancer Therapy Mechanisms and Evidence: A Cross-Literature Synthesis
 
 **Target:** ~50,000 words (current: ~39,400). 5 Parts, 11 chapters, 3 appendices.
 
