@@ -3,6 +3,12 @@
 **Last updated**: 2026-03-29
 **Phase**: Article draft v1 complete (6 review rounds). Corpus expanded with Semantic Scholar.
 
+> **Historical snapshot.** This is a point-in-time status note. Some figures
+> below (e.g. the corpus-stats table) reflect an earlier 8,220-record snapshot;
+> the corpus has since been split into 4,830 full-text records plus a 5,584
+> abstract-only archive (~10,414 total). For the authoritative current state see
+> `README.md`, `CLAUDE.md`, and `analysis/evidence-coverage-audit.md`.
+
 ---
 
 ## What Has Been Done

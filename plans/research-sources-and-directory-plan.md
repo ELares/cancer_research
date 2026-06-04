@@ -1,6 +1,11 @@
 # Research Sources & Directory Structure Plan
 
-## Part 1: Journal Sources (62 Journals)
+> **Historical planning document.** This captures the original sourcing and
+> directory plan. The repository as built differs in places (e.g. the fetch
+> script is `scripts/fetch_articles.py`, not the planned `fetch_pubmed.py`). For
+> the current state see `README.md`, `CLAUDE.md`, and `scripts/`.
+
+## Part 1: Journal Sources (64 Journals)
 
 ### Tier 1 — Dedicated Cancer/Oncology Journals
 
