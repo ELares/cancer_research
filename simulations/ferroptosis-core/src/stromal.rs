@@ -84,7 +84,7 @@ use crate::grid::TumorGrid3D;
 /// 26-neighbor sweep (stack-allocated via [`TumorGrid3D::neighbors`]).
 /// Negligible for hundreds of thousands of cells.
 ///
-/// **Compute once and reuse** (perf hint for #194): the mask depends
+/// **Compute once and reuse** (perf hint): the mask depends
 /// only on `is_tumor` topology, which is **invariant under standard
 /// simulation flow** — cells die but no cell ever changes from tumor
 /// to stromal or vice versa. So this function should be called *once*

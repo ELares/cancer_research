@@ -15,8 +15,9 @@
 //! applied along a radial path in 3D; chord-length integration from the
 //! full spheroid surface, diffuse back-scatter buildup, and curvature
 //! refraction are **not** modelled. Adequate for first-order spheroid
-//! comparison; calibration against experimental depth-kill curves is the
-//! charter of sim-spatial-3d (#194).
+//! comparison; calibration against experimental depth-kill curves is
+//! data-gated, tracked in `simulations/calibration/CALIBRATION_STATUS.md`
+//! (#194 / sim-spatial-3d was closed as superseded by sim-tme-3d).
 
 use crate::cell::Treatment;
 use crate::params::SpatialParams;
@@ -183,8 +184,8 @@ pub fn local_ros_multiplier(
 /// near-surface fluence above `I₀`. Net effect: the model tends to
 /// over-estimate fluence at deep cells under truly isotropic
 /// illumination. Adequate for first-order spheroid comparison;
-/// calibration against experimental depth-kill curves lands with
-/// sim-spatial-3d (#194).
+/// calibration against experimental depth-kill curves is data-gated (see
+/// `simulations/calibration/CALIBRATION_STATUS.md`; #194 closed as superseded).
 ///
 /// **2D ≡ 3D at matched depth:** for any treatment and parameter set, if
 /// the 3D caller passes `depth = row × cell_size_um` (the same value the

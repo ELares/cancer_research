@@ -6,9 +6,10 @@
 //! The 3D model ([`TumorGrid3D`], 26-Moore neighbors, spherical tumor)
 //! provides foundational infrastructure for the spheroid-validation series
 //! (#185–#197). #185 (struct) and #186 (signed radial depth + paired 3D
-//! energy-physics dispatcher in [`crate::physics`]) are landed; downstream
-//! analytics (`depth_kill_curve` / `death_heatmap` analogs) and the
-//! sim-spatial-3d binary land with #194.
+//! energy-physics dispatcher in [`crate::physics`]) are landed; the consuming
+//! binary is `sim-tme-3d` (#195), which carries the downstream analytics
+//! (volumetric heatmaps, zone census). The standalone sim-spatial-3d (#194)
+//! was closed as superseded.
 
 use ndarray::Array2;
 use rand::prelude::*;
@@ -696,8 +697,9 @@ impl TumorGrid3D {
     /// of released iron is distributed. In 3D with 26 Moore neighbors,
     /// the same `0.1` would distribute up to 260% — non-physical. The
     /// natural 3D analog is `0.1 * 8 / 26 ≈ 0.0308`, but the actual
-    /// calibration is left to the caller (sim-spatial-3d, #194) so they
-    /// can choose based on their experimental targets.
+    /// calibration is left to the caller (sim-tme-3d uses
+    /// `IRON_DIFFUSE_FRACTION_3D`; #194 was closed as superseded) and a
+    /// calibrated value is data-gated (see `simulations/calibration/CALIBRATION_STATUS.md`).
     pub fn diffuse_iron(&mut self, iron_per_death: f64, neighbor_fraction: f64) {
         // Hoist dimensions so the closures don't try to capture `&mut self`.
         let (rows, cols, layers) = (self.rows, self.cols, self.layers);
@@ -777,32 +779,70 @@ impl TumorGrid3D {
     /// account for diffuse back-scatter buildup near the boundary (which
     /// can push near-surface fluence above `I₀`). For uncalibrated v1
     /// modelling this is fine; calibration against experimental depth-kill
-    /// curves lands with sim-spatial-3d (#194).
+    /// curves is data-gated (see `simulations/calibration/CALIBRATION_STATUS.md`;
+    /// #194 was closed as superseded by sim-tme-3d).
     ///
     /// **Not yet bounds-checked:** caller is expected to pass `(r, c, l)`
     /// within the grid (matching the no-bounds-check convention of
     /// [`get`](Self::get) and [`get_mut`](Self::get_mut)). Out-of-range
     /// indices give nonsense distances but won't panic.
     ///
-    /// **Perf note (#194):** the four constants `center_{r,c,l}` and
-    /// `tumor_radius` depend only on grid dimensions and are recomputed
-    /// every call. `#[inline]` lets the compiler hoist them at a single
-    /// call site, but a per-cell sweep over ~10⁵–10⁶ cells in
-    /// sim-spatial-3d should precompute them once outside the loop (or
-    /// store them on the struct) to avoid `usize::min` + cast + multiply
-    /// per cell. Cheap to address when the consumer lands.
+    /// **Perf note (#289):** the four dimension-only constants (`center_{r,c,l}`,
+    /// `tumor_radius`) used to be recomputed on every call. A per-cell sweep
+    /// (the `oxygen`/`ph` radial fields over ~10⁵–10⁶ cells) now hoists them
+    /// once via [`RadialDepthGeom`], which this method delegates to — so the
+    /// geometry math lives in exactly one place and the hoisted field loops
+    /// stay bit-for-bit identical to calling this per cell. (Re-homed from the
+    /// now-closed #194; was previously deferred to sim-spatial-3d.)
     #[inline]
     pub fn radial_depth_um(&self, r: usize, c: usize, l: usize) -> f64 {
-        let center_r = self.rows as f64 / 2.0;
-        let center_c = self.cols as f64 / 2.0;
-        let center_l = self.layers as f64 / 2.0;
-        let tumor_radius =
-            (self.rows.min(self.cols).min(self.layers) as f64) * TUMOR_RADIUS_FRACTION;
-        let dr = r as f64 - center_r;
-        let dc = c as f64 - center_c;
-        let dl = l as f64 - center_l;
+        RadialDepthGeom::new(self).depth_um(r, c, l)
+    }
+}
+
+/// Hoisted geometry for the 3D radial-depth field (#289). The four
+/// dimension-only constants (`center_{r,c,l}`, `tumor_radius`) plus
+/// `cell_size_um` are computed **once** in [`new`](Self::new); [`depth_um`]
+/// then does only the per-cell arithmetic. A per-cell sweep builds this once
+/// outside the loop instead of recomputing the constants every call.
+///
+/// **Byte-identity:** [`depth_um`] performs the exact same operations, in the
+/// same order, as [`TumorGrid3D::radial_depth_um`] (which delegates here), so
+/// hoisting it changes timing only, never a single output bit — the
+/// `summary.json` matrix is unaffected.
+#[derive(Clone, Copy, Debug)]
+pub(crate) struct RadialDepthGeom {
+    center_r: f64,
+    center_c: f64,
+    center_l: f64,
+    tumor_radius: f64,
+    cell_size_um: f64,
+}
+
+impl RadialDepthGeom {
+    /// Compute the dimension-only geometry constants once for `grid`.
+    #[inline]
+    pub(crate) fn new(grid: &TumorGrid3D) -> Self {
+        RadialDepthGeom {
+            center_r: grid.rows as f64 / 2.0,
+            center_c: grid.cols as f64 / 2.0,
+            center_l: grid.layers as f64 / 2.0,
+            tumor_radius: (grid.rows.min(grid.cols).min(grid.layers) as f64)
+                * TUMOR_RADIUS_FRACTION,
+            cell_size_um: grid.cell_size_um,
+        }
+    }
+
+    /// Radial depth (µm, positive inside) of cell `(r, c, l)` — the per-cell
+    /// arithmetic only. Identical float ops/order to
+    /// [`TumorGrid3D::radial_depth_um`].
+    #[inline]
+    pub(crate) fn depth_um(&self, r: usize, c: usize, l: usize) -> f64 {
+        let dr = r as f64 - self.center_r;
+        let dc = c as f64 - self.center_c;
+        let dl = l as f64 - self.center_l;
         let dist = (dr * dr + dc * dc + dl * dl).sqrt();
-        (tumor_radius - dist) * self.cell_size_um
+        (self.tumor_radius - dist) * self.cell_size_um
     }
 }
 

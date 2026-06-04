@@ -57,7 +57,7 @@
 //! assert!(o2_normoxic.iter().zip(o2_hypoxic.iter()).any(|(a, b)| a != b));
 //! ```
 
-use crate::grid::TumorGrid3D;
+use crate::grid::{RadialDepthGeom, TumorGrid3D};
 
 /// Per-cell O₂ factor on a 3D spheroidal grid.
 ///
@@ -85,20 +85,19 @@ use crate::grid::TumorGrid3D;
 /// | `NaN` | `NaN` (`f64::clamp` propagates NaN, does not clip) |
 /// | `+∞` | `1.0` (`exp(-depth/∞) = 1.0`) |
 ///
-/// **Cost.** O(N) for N = `grid.cells.len()`. Each iteration calls
-/// [`TumorGrid3D::radial_depth_um`] which recomputes geometry constants
-/// (`center_{r,c,l}`, `tumor_radius`) per call — see that method's perf
-/// note tagged for #194. The same hoisting applies here: sim-spatial-3d's
-/// inner loop (#194) should hoist the constants once and inline the
-/// depth math rather than call `radial_o2_field` per step on full grids.
-/// Cost is negligible for hundreds of thousands of cells (tens of
-/// microseconds) and worth addressing only at the binary's inner loop.
+/// **Cost.** O(N) for N = `grid.cells.len()`. The dimension-only depth
+/// geometry (`center_{r,c,l}`, `tumor_radius`) is hoisted once via
+/// [`RadialDepthGeom`] (#289) instead of being recomputed per cell; the
+/// per-cell `depth_um` is bit-identical to [`TumorGrid3D::radial_depth_um`].
 pub fn radial_o2_field(grid: &TumorGrid3D, lambda_um: f64) -> Vec<f64> {
     debug_assert!(
         lambda_um.is_finite() && lambda_um > 0.0,
         "radial_o2_field: lambda_um must be finite and positive, got {lambda_um}"
     );
 
+    // Hoist the dimension-only depth geometry once (#289); per-cell
+    // `geom.depth_um` is bit-identical to `grid.radial_depth_um`.
+    let geom = RadialDepthGeom::new(grid);
     let mut out = Vec::with_capacity(grid.cells.len());
     for r in 0..grid.rows {
         for c in 0..grid.cols {
@@ -106,7 +105,7 @@ pub fn radial_o2_field(grid: &TumorGrid3D, lambda_um: f64) -> Vec<f64> {
                 let factor = if !grid.get(r, c, l).is_tumor {
                     1.0
                 } else {
-                    let depth_um = grid.radial_depth_um(r, c, l).max(0.0);
+                    let depth_um = geom.depth_um(r, c, l).max(0.0);
                     (-depth_um / lambda_um).exp().clamp(0.0, 1.0)
                 };
                 out.push(factor);
@@ -187,6 +186,32 @@ pub fn radial_o2_zone_kill_rates(grid: &TumorGrid3D, shell_depth_um: f64) -> (f6
 mod tests {
     use super::*;
     use crate::grid::TumorGrid;
+
+    /// #289: the hoisted-geometry field must be bit-for-bit identical to a
+    /// per-cell baseline that uses the canonical `TumorGrid3D::radial_depth_um`.
+    /// Locks the contract that hoisting `RadialDepthGeom` out of the loop is a
+    /// timing-only change (so the `summary.json` matrix is unaffected).
+    #[test]
+    fn radial_o2_field_matches_per_cell_depth_baseline() {
+        let g = TumorGrid3D::generate(20, 20, 20, 20.0, 42);
+        let lambda = 100.0;
+        let hoisted = radial_o2_field(&g, lambda);
+        let mut baseline = Vec::with_capacity(g.cells.len());
+        for r in 0..g.rows {
+            for c in 0..g.cols {
+                for l in 0..g.layers {
+                    let factor = if !g.get(r, c, l).is_tumor {
+                        1.0
+                    } else {
+                        let depth_um = g.radial_depth_um(r, c, l).max(0.0);
+                        (-depth_um / lambda).exp().clamp(0.0, 1.0)
+                    };
+                    baseline.push(factor);
+                }
+            }
+        }
+        assert_eq!(hoisted, baseline, "hoisted O2 field must be bit-identical");
+    }
 
     /// Output length matches grid cell count. Guards against any future
     /// refactor that diverges the iteration order or skips cells.
