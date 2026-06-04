@@ -51,6 +51,7 @@ pub mod grid;
 pub mod immune;
 pub mod immune_spatial;
 pub mod io;
+pub mod nutrient;
 pub mod oxygen;
 pub mod params;
 pub mod persister;

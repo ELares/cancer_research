@@ -108,6 +108,7 @@ The default 24-condition matrix path (no `--snapshot` flag) is **byte-identical*
 | `checkpoint` | SDT | immune + **dual PD-1/CTLA-4 blockade (#264)** | constant |
 | `combined-realism` | SDT | immune + **persister + clonal + suppressor + checkpoints (#278)** | multi-dose |
 | `contact` | RSL3 | **cell-cell contact resistance (#270)** | constant |
+| `nutrient` | SDT | immune + **radial nutrient gradient (#270)** | constant |
 
 The `slab` preset visualizes the **depth-graded supply** of a patient-scale slab: a surface slab (+z face = vessel) where the top layers are well-perfused and die while the deeper layers go drug/O2-deprived and survive. The depth axis is the layer (z) axis, which the renderer's mid-slice spans — so the death front in the existing dead/DAMP/LP panels *is* the visualization (no extra static overlay). See [Patient-scale slab](#patient-scale-slab-240) below.
 
