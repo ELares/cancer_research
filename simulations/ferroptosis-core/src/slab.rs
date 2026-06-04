@@ -115,7 +115,7 @@ pub fn slab_supply_field(grid: &TumorGrid3D, depth_offset_um: f64, lambda_um: f6
 
 /// Depth-graded phenotype zones for a slab (#272). `generate_slab` assigns a
 /// flat bulk mix (no spatial structure); a real chunk of tumor at depth is
-/// layered — vessel-proximal cells are proliferating, chronically supply-starved
+/// layered: vessel-proximal cells are proliferating, chronically supply-starved
 /// deep cells are quiescent/persister-like. Unlike the spheroid's geometric
 /// (volume-fraction) zones, the slab models an *absolute* depth, so its
 /// phenotype tracks the **planar supply** `exp(-depth/λ)` that already shapes
@@ -123,11 +123,11 @@ pub fn slab_supply_field(grid: &TumorGrid3D, depth_offset_um: f64, lambda_um: f6
 #[derive(Clone, Copy, Debug)]
 pub struct SlabPhenotypeConfig {
     /// Supply (∈ [0, 1]) at/above which a cell is Glycolytic (well-perfused,
-    /// proliferating) — the vessel-proximal +z layers.
+    /// proliferating), the vessel-proximal +z layers.
     pub glycolytic_supply: f64,
     /// Supply at/above which (and below `glycolytic_supply`) a cell is OXPHOS
     /// (quiescent intermediate); below it, Persister-like (chronically
-    /// supply-deprived, drug-tolerant) — the deep −z layers.
+    /// supply-deprived, drug-tolerant), the deep (−z) layers.
     pub oxphos_supply: f64,
 }
 
@@ -169,23 +169,23 @@ pub fn depth_phenotype(supply: f64, cfg: &SlabPhenotypeConfig) -> Phenotype {
 
 /// Re-assign every (tumor) slab cell's phenotype by its layer's planar supply
 /// `exp(-depth/λ)` (#272): the vessel-proximal +z layers become
-/// proliferating/glycolytic, the chronically supply-deprived deep −z layers
-/// become persister-like — the depth-axis analog of the spheroid's rim→core
+/// proliferating/glycolytic, the chronically supply-deprived deep (−z) layers
+/// become persister-like, the depth-axis analog of the spheroid's rim→core
 /// structure ([`crate::spheroid::apply_radial_cells_3d`]).
 ///
 /// Like the spheroid re-assignment, each cell is re-generated from its OWN
 /// per-cell `StdRng` seeded from `seed`, so `generate_slab`'s RNG stream is
-/// untouched — a consumer that doesn't opt in keeps the flat bulk mix and stays
+/// untouched, so a consumer that doesn't opt in keeps the flat bulk mix and stays
 /// byte-identical. `depth_offset_um` / `lambda_um` MUST match the values the
 /// consumer passes to [`slab_supply_field`], so the phenotype gradient and the
 /// O2/drug supply gradient are coherent. Deterministic given
 /// `(grid dims, depth_offset, lambda, cfg, seed)`.
 ///
 /// Two scoping notes (documented in CALIBRATION_STATUS): (1) the supply used
-/// here is the **planar depth** gradient only — internal vessels (#272
+/// here is the **planar depth** gradient only; internal vessels (#272
 /// coupling) raise the *delivered* supply dynamically downstream but do not
 /// reshape the chronic phenotype here, a future refinement; (2) only the
-/// phenotype is depth-graded — the per-cell biochemical draw is `gen_cell`'s
+/// phenotype is depth-graded; the per-cell biochemical draw is `gen_cell`'s
 /// phenotype default, since the supply field already deprives deep cells of
 /// O2/drug dynamically (no separate static GSH/iron gradient as in the
 /// spheroid).
@@ -329,7 +329,7 @@ mod tests {
     #[test]
     fn deep_slab_is_uniformly_persister() {
         // A 4 mm-deep slab: even the +z face supply is exp(-4000/150) ≈ 3e-12,
-        // far below oxphos_supply (0.15), so every layer is persister-like — the
+        // far below oxphos_supply (0.15), so every layer is persister-like, the
         // intended behavior for a chunk drug/O2 essentially never reach.
         let cfg = SlabPhenotypeConfig::literature();
         let mut g = grid();

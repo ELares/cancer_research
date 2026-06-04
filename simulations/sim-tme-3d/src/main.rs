@@ -123,6 +123,12 @@ const SPHEROID_SEED: u64 = 0x5ade_0142;
 /// intent for an A/B (e.g. Treg-present vs Treg-depleted = the same patient,
 /// same niches, differing only in whether the field is applied).
 const SUPPRESSOR_SEED: u64 = 0x5099_2e64;
+/// Independent seed for the depth-graded slab phenotype re-generation (#272).
+/// Distinct from the others so slab depth re-gen never touches the matrix RNG
+/// streams. Slab and spheroid are mutually-exclusive geometries, so this layer
+/// and `SPHEROID_SEED` never coexist in one run; a dedicated constant keeps the
+/// invariant explicit and future-proof if that exclusion is ever relaxed.
+const SLAB_PHENOTYPE_SEED: u64 = 0x51ab_0142;
 /// O2-supply factor below which a cell counts as hypoxic for
 /// `vascular_hypoxic_fraction` reporting (#191). `exp(-d/λ) < 0.1` is ~2.3 λ
 /// from the nearest vessel.
@@ -576,14 +582,14 @@ fn run_one_condition_full(
 
     // Depth-graded slab phenotype (#272): re-assign the slab's flat bulk mix so
     // vessel-proximal +z layers are proliferating/glycolytic and chronically
-    // supply-starved deep −z layers are persister-like — the depth-axis analog
-    // of the spheroid's rim→core structure. Uses the SAME λ + depth offset the
-    // supply field uses below, so phenotype and O2/drug gradients are coherent.
-    // Independent per-cell RNG ⇒ generate_slab's stream is untouched; gated on
-    // slab mode + an explicit `slab_phenotype` override ⇒ the matrix (no slab)
-    // stays byte-identical. Runs after spheroid (mutually-exclusive geometries,
-    // guarded above) and before vessel/subclone layers, which then perturb the
-    // depth-assigned cells.
+    // supply-starved deep (−z) layers are persister-like, the depth-axis analog
+    // of the spheroid's rim-to-core structure. Uses the SAME lambda and depth
+    // offset the supply field uses below, so phenotype and O2/drug gradients are
+    // coherent. Independent per-cell RNG, so generate_slab's stream is untouched;
+    // gated on slab mode plus an explicit `slab_phenotype` override, so the
+    // matrix (no slab) stays byte-identical. Runs after spheroid (mutually
+    // exclusive geometries, guarded above) and before the vessel/subclone
+    // layers, which then perturb the depth-assigned cells.
     if let (Some(slab), Some(pheno)) = (&slab_cfg, &slab_phenotype_cfg) {
         let lambda = condition.o2_lambda.unwrap_or(KROGH_LAMBDA_UM);
         apply_depth_graded_cells_3d(
@@ -591,7 +597,7 @@ fn run_one_condition_full(
             slab.depth_offset_mm * 1000.0,
             lambda,
             pheno,
-            SPHEROID_SEED,
+            SLAB_PHENOTYPE_SEED,
         );
     }
 
@@ -5006,8 +5012,8 @@ mod tests {
         }
     }
 
-    /// #272 depth-graded slab phenotype wiring: (1) it is gated on slab mode —
-    /// a `slab_phenotype` override with NO slab grid is inert (so it can never
+    /// #272 depth-graded slab phenotype wiring: (1) it is gated on slab mode, so
+    /// a `slab_phenotype` override with NO slab grid is inert (it can never
     /// perturb the spheroid matrix); (2) turning it on actually changes the run
     /// (the depth-layered rim→core phenotype mix is a different tumor than the
     /// flat bulk mix); (3) it stays deterministic. The per-layer phenotype
@@ -5092,6 +5098,7 @@ mod tests {
             ("VESSEL_SEED", VESSEL_SEED),
             ("SPHEROID_SEED", SPHEROID_SEED),
             ("SUPPRESSOR_SEED", SUPPRESSOR_SEED),
+            ("SLAB_PHENOTYPE_SEED", SLAB_PHENOTYPE_SEED),
         ];
         for i in 0..seeds.len() {
             for j in (i + 1)..seeds.len() {
