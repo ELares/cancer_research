@@ -622,6 +622,75 @@ impl CheckpointPanel {
     }
 }
 
+/// Dendritic-cell subset composition (#264 Phase 4).
+///
+/// The anti-tumor efficacy of the DAMP -> T-cell priming step depends on WHICH
+/// DC subset takes up the DAMPs. **cDC1** (Batf3-dependent, cross-presenting)
+/// are the rare but critical drivers of anti-tumor CD8 immunity, whereas
+/// **cDC2** skew toward Th17/CD4 help and are far less effective at priming
+/// tumor killing. A cDC1-poor tumor therefore converts the same DAMP signal
+/// into LESS immune kill (Broz et al., Cancer Cell 2014, PMID 25446897: rare
+/// activating cDC1 are critical for T-cell immunity).
+///
+/// The layer collapses to one uniform anti-tumor **priming-efficiency** scalar
+/// ([`priming_efficiency`](Self::priming_efficiency)) that a consumer multiplies
+/// into the immune kill probability (the `dc_activation` x
+/// `immune_kill_probability` product). [`balanced`](Self::balanced) gives
+/// efficiency `1.0` (identity, byte-identical); a cDC1-poor
+/// [`literature`](Self::literature) config gives efficiency `< 1.0` (reduced
+/// immune kill). The subset fractions/efficiencies are UNCALIBRATED placeholders;
+/// the direction (cDC1-poor => weaker anti-tumor priming) is the claim, not the
+/// number.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct DcSubsetConfig {
+    /// Fraction of tumor DCs that are cDC1 (cross-presenting); the rest are cDC2.
+    pub cdc1_fraction: f64,
+    /// Anti-tumor priming efficiency contributed by cDC1 (cross-presentation).
+    pub cdc1_efficiency: f64,
+    /// Anti-tumor priming efficiency contributed by cDC2 (Th17-skewing, weaker).
+    pub cdc2_efficiency: f64,
+}
+
+impl DcSubsetConfig {
+    /// Identity: both subsets fully effective => priming efficiency `1.0` =>
+    /// the consumer's multiplier is exactly `1.0` => byte-identical.
+    pub fn balanced() -> Self {
+        DcSubsetConfig {
+            cdc1_fraction: 1.0,
+            cdc1_efficiency: 1.0,
+            cdc2_efficiency: 1.0,
+        }
+    }
+
+    /// Literature-informed cDC1-poor tumor (placeholders pending calibration):
+    /// cDC1 are rare (~10% of tumor DCs) and cross-present efficiently, while the
+    /// dominant cDC2 prime anti-tumor CD8 killing far less well. Refs: Broz et
+    /// al., Cancer Cell 2014 (PMID 25446897). The fractions/efficiencies are
+    /// UNCALIBRATED; only the direction (cDC1-poor => weaker priming) is claimed.
+    pub fn literature() -> Self {
+        DcSubsetConfig {
+            cdc1_fraction: 0.1,
+            cdc1_efficiency: 1.0,
+            cdc2_efficiency: 0.3,
+        }
+    }
+
+    /// Uniform anti-tumor priming-efficiency scalar (a subset-weighted average):
+    /// `cdc1_fraction · cdc1_efficiency + (1 − cdc1_fraction) · cdc2_efficiency`.
+    /// A consumer multiplies this into the immune kill probability.
+    #[must_use]
+    pub fn priming_efficiency(&self) -> f64 {
+        self.cdc1_fraction * self.cdc1_efficiency
+            + (1.0 - self.cdc1_fraction) * self.cdc2_efficiency
+    }
+
+    /// True when the mix has no effect (priming efficiency exactly `1.0`), so the
+    /// consumer stays byte-identical.
+    pub fn is_identity(&self) -> bool {
+        self.priming_efficiency() == 1.0
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1181,5 +1250,37 @@ mod tests {
             tim3: Checkpoint::inactive(),
         };
         assert!((p.combined_brake() - 0.75).abs() < 1e-12);
+    }
+
+    #[test]
+    fn dc_subsets_balanced_is_identity() {
+        let b = DcSubsetConfig::balanced();
+        assert!(b.is_identity());
+        assert!((b.priming_efficiency() - 1.0).abs() < 1e-12);
+        // A cDC1-poor literature mix is NOT identity and primes < 1.0.
+        let lit = DcSubsetConfig::literature();
+        assert!(!lit.is_identity());
+        assert!(lit.priming_efficiency() < 1.0);
+        assert!(lit.priming_efficiency() > 0.0);
+    }
+
+    #[test]
+    fn dc_subsets_priming_is_the_subset_weighted_average() {
+        // 0.1·1.0 + 0.9·0.3 = 0.37 (the literature cDC1-poor default).
+        let lit = DcSubsetConfig::literature();
+        assert!((lit.priming_efficiency() - 0.37).abs() < 1e-12);
+        // More cDC1 (the effective subset) ⇒ higher priming efficiency.
+        let cdc1_rich = DcSubsetConfig {
+            cdc1_fraction: 0.8,
+            ..DcSubsetConfig::literature()
+        };
+        assert!(cdc1_rich.priming_efficiency() > lit.priming_efficiency());
+        // All-cDC1 with full efficiency is the identity (efficiency 1.0).
+        let all_cdc1 = DcSubsetConfig {
+            cdc1_fraction: 1.0,
+            ..DcSubsetConfig::literature()
+        };
+        assert!((all_cdc1.priming_efficiency() - 1.0).abs() < 1e-12);
+        assert!(all_cdc1.is_identity());
     }
 }
