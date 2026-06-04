@@ -65,8 +65,8 @@ use ferroptosis_core::dose_schedule::DoseSchedule;
 use ferroptosis_core::grid::{TumorGrid3D, TUMOR_RADIUS_FRACTION};
 use ferroptosis_core::immune_spatial::{
     dc_activation, diffuse_damp_3d_step, exhaustion_factor, immune_kill_probability,
-    suppressor_kill_multiplier, suppressor_source_mask_3d, CheckpointPanel, SuppressorConfig,
-    DAMP_KILL_THRESHOLD,
+    suppressor_kill_multiplier, suppressor_source_mask_3d, CheckpointPanel, DcSubsetConfig,
+    SuppressorConfig, DAMP_KILL_THRESHOLD,
 };
 use ferroptosis_core::nutrient::{apply_nutrient_stress_3d, NutrientConfig};
 use ferroptosis_core::oxygen::radial_o2_field;
@@ -423,6 +423,9 @@ struct Overrides {
     /// Radial nutrient gradient (#270 item 3b). `None` / identity ⇒ no
     /// antioxidant-setpoint modulation ⇒ byte-identical.
     nutrient: Option<NutrientConfig>,
+    /// Dendritic-cell subset mix (#264 Phase 4). `None` / balanced ⇒ priming
+    /// efficiency 1.0 ⇒ no immune-kill modulation ⇒ byte-identical.
+    dc_subsets: Option<DcSubsetConfig>,
 }
 
 /// Thin wrapper running a condition with NO overrides (all realism layers
@@ -469,6 +472,7 @@ fn run_one_condition_full(
     let slab_cfg = overrides.slab;
     let contact_cfg = overrides.contact;
     let nutrient_cfg = overrides.nutrient;
+    let dc_subsets_cfg = overrides.dc_subsets;
     // Treg/MDSC suppressor (#264 Phase 2). `None`/disabled ⇒ no source mask,
     // no field, identity multiplier ⇒ byte-identical.
     let suppressor_cfg = overrides.suppressor.filter(|c| !c.is_disabled());
@@ -976,10 +980,21 @@ fn run_one_condition_full(
     } else {
         Vec::new()
     };
-    // The rich kill path handles either realism layer (each factor is identity
-    // when its layer is off); the default allocation-free path runs only when
-    // BOTH are off, staying byte-identical to pre-#243.
-    let realism_kill_path = exhaustion_on || suppressor_on;
+    // DC subset mix (#264 Phase 4): a cDC1-poor tumor primes anti-tumor killing
+    // less efficiently, so DAMP -> kill is scaled by a uniform priming-efficiency
+    // scalar. Gated on `immune_on` (it only modulates the immune kill loop) and
+    // on a non-identity mix; `None`/balanced ⇒ `dc_priming = 1.0` ⇒ byte-identical.
+    let dc_subsets_on = condition.immune_on && dc_subsets_cfg.is_some_and(|c| !c.is_identity());
+    let dc_priming = if dc_subsets_on {
+        dc_subsets_cfg.map_or(1.0, |c| c.priming_efficiency())
+    } else {
+        1.0
+    };
+
+    // The rich kill path handles any realism layer (each factor is identity when
+    // its layer is off); the default allocation-free path runs only when ALL are
+    // off, staying byte-identical to pre-#243.
+    let realism_kill_path = exhaustion_on || suppressor_on || dc_subsets_on;
 
     // Hoisted out of the per-cell hot loop (these invariants don't vary by
     // cell or step): on the dosed path the relevant availability vec must be
@@ -1277,12 +1292,16 @@ fn run_one_condition_full(
                             } else {
                                 1.0
                             };
+                            // `dc_priming` is a uniform scalar (the cDC1/cDC2
+                            // mix, #264 Phase 4): 1.0 when off, < 1.0 for a
+                            // cDC1-poor tumor that primes killing less efficiently.
                             let kill_prob = immune_kill_probability(
                                 activation,
                                 immune_cfg.immune_kill_rate,
                                 effective_brake,
                             ) * exh
-                                * supp;
+                                * supp
+                                * dc_priming;
                             let mut rng = StdRng::seed_from_u64(
                                 cond_seed
                                     .wrapping_add(900_000_000)
@@ -1788,6 +1807,10 @@ struct SnapshotPreset {
     /// static overlay; the nutrient-starved core's reduced antioxidant capacity
     /// shows as more core killing in the dead/LP panels.
     nutrient: bool,
+    /// True if the cDC1/cDC2 dendritic-cell subset mix (#264 Phase 4) is enabled.
+    /// A cDC1-poor tumor primes anti-tumor killing less efficiently; no extra
+    /// overlay, the reduced immune killing shows in the dead/DAMP panels.
+    dc_subsets: bool,
 }
 
 /// Visualization presets for `--snapshot=NAME`. Keep this list small —
@@ -1811,6 +1834,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         checkpoints: false,
         contact: false,
         nutrient: false,
+        dc_subsets: false,
     },
     SnapshotPreset {
         name: "bare",
@@ -1830,6 +1854,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         checkpoints: false,
         contact: false,
         nutrient: false,
+        dc_subsets: false,
     },
     SnapshotPreset {
         name: "multidose",
@@ -1849,6 +1874,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         checkpoints: false,
         contact: false,
         nutrient: false,
+        dc_subsets: false,
     },
     SnapshotPreset {
         // SDT here visualizes the persister-fraction OVERLAY (the MUFA axis +
@@ -1872,6 +1898,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         checkpoints: false,
         contact: false,
         nutrient: false,
+        dc_subsets: false,
     },
     SnapshotPreset {
         name: "clonal",
@@ -1891,6 +1918,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         checkpoints: false,
         contact: false,
         nutrient: false,
+        dc_subsets: false,
     },
     SnapshotPreset {
         // RSL3 (hypoxia-sensitive) + explicit internal vessels: near-vessel
@@ -1915,6 +1943,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         checkpoints: false,
         contact: false,
         nutrient: false,
+        dc_subsets: false,
     },
     SnapshotPreset {
         // SDT + radial spheroid biology: the phenotype panel shows the
@@ -1937,6 +1966,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         checkpoints: false,
         contact: false,
         nutrient: false,
+        dc_subsets: false,
     },
     SnapshotPreset {
         // SDT on a patient-scale slab at the SURFACE (+z face = vessel, depth
@@ -1964,6 +1994,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         checkpoints: false,
         contact: false,
         nutrient: false,
+        dc_subsets: false,
     },
     SnapshotPreset {
         // Slab + internal vessels (#272 coupling). vessel_supply.npy (on a slab
@@ -1991,6 +2022,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         checkpoints: false,
         contact: false,
         nutrient: false,
+        dc_subsets: false,
     },
     SnapshotPreset {
         // SDT + immune + Treg/MDSC suppressor (#264 Phase 2). Heuristic niche
@@ -2014,6 +2046,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         checkpoints: false,
         contact: false,
         nutrient: false,
+        dc_subsets: false,
     },
     SnapshotPreset {
         // SDT + immune + dual checkpoint blockade (#264 Phase 3): a PD-1 +
@@ -2038,6 +2071,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         checkpoints: true,
         contact: false,
         nutrient: false,
+        dc_subsets: false,
     },
     SnapshotPreset {
         // Kitchen-sink composition (#278): several realism layers at once —
@@ -2064,6 +2098,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         checkpoints: true,
         contact: false,
         nutrient: false,
+        dc_subsets: false,
     },
     SnapshotPreset {
         // RSL3 + cell-cell contact resistance (#270): dense interior cells
@@ -2089,6 +2124,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         checkpoints: false,
         contact: true,
         nutrient: false,
+        dc_subsets: false,
     },
     SnapshotPreset {
         // SDT + radial nutrient gradient (#270 item 3b): the nutrient-starved
@@ -2113,6 +2149,32 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         checkpoints: false,
         contact: false,
         nutrient: true,
+        dc_subsets: false,
+    },
+    SnapshotPreset {
+        // SDT + cDC1/cDC2 dendritic-cell subset mix (#264 Phase 4): a cDC1-poor
+        // tumor (the literature default) primes anti-tumor CD8 killing less
+        // efficiently, so the same DAMP signal yields LESS immune killing. No
+        // extra static overlay; the reduced death front in the dead/DAMP panels
+        // (vs the immune-on baseline) IS the visualization.
+        name: "dc-subsets",
+        desc: "SDT + cDC1/cDC2 DC subset mix (#264): cDC1-poor tumor primes killing less efficiently",
+        treatment: Treatment::SDT,
+        treatment_name: "SDT",
+        immune_on: true,
+        stromal_on: false,
+        ph_on: false,
+        multidose: false,
+        persister: false,
+        clonal: false,
+        vasculature: false,
+        spheroid: false,
+        slab: false,
+        suppressor: false,
+        checkpoints: false,
+        contact: false,
+        nutrient: false,
+        dc_subsets: true,
     },
 ];
 
@@ -2216,6 +2278,7 @@ fn run_snapshot(output_dir: &Path, tumor_radius_um: f64, name: &str) {
     // dead/LP panels show the radial survival gradient.
     let contact_cfg = preset.contact.then(ContactConfig::literature);
     let nutrient_cfg = preset.nutrient.then(NutrientConfig::literature);
+    let dc_subsets_cfg = preset.dc_subsets.then(DcSubsetConfig::literature);
     // Static viz overlays, recomputed from the same SEED + per-layer seed the
     // run uses internally, so they match the perturbations actually applied.
     // `None` unless the matching preset is active.
@@ -2291,6 +2354,7 @@ fn run_snapshot(output_dir: &Path, tumor_radius_um: f64, name: &str) {
             checkpoints: checkpoint_cfg,
             contact: contact_cfg,
             nutrient: nutrient_cfg,
+            dc_subsets: dc_subsets_cfg,
             ..Default::default()
         },
     );
@@ -3966,6 +4030,95 @@ mod tests {
             "combo brake {:?} should be below mono brake {:?}",
             combo.checkpoint_brake,
             mono.checkpoint_brake
+        );
+    }
+
+    /// #264 Phase 4: a cDC1-poor tumor (the literature DC-subset mix) primes
+    /// anti-tumor CD8 killing less efficiently than a balanced/cDC1-rich one, so
+    /// it produces FEWER immune kills under the same DAMP signal. A/B with the DC
+    /// subset mix as the only difference; deterministic.
+    #[test]
+    fn cdc1_poor_dc_subsets_reduce_immune_kills() {
+        let cfg = RunConfig {
+            grid_dim: 30,
+            n_steps: 130,
+        };
+        let cond = Condition {
+            name: "dc_subset_demo".to_string(),
+            treatment: Treatment::SDT,
+            treatment_name: "SDT".to_string(),
+            o2_lambda: Some(ZONE_REF_LAMBDA),
+            immune_on: true,
+            stromal_on: false,
+            ph_on: false,
+            dose_schedule: DoseSchedule::Constant,
+        };
+        // Dense regime (boosted kill rate, PD-1 brake lifted) so there are enough
+        // immune kills for the priming-efficiency difference to register.
+        let immune = SpatialImmuneConfig {
+            immune_kill_rate: 0.5,
+            anti_pd1_efficacy: 1.0,
+            ..SpatialImmuneConfig::for_3d()
+        };
+        // Baseline: no DC-subset layer (full priming). cDC1-poor: the literature
+        // mix (priming efficiency 0.37).
+        let baseline = run_one_condition_full(
+            &cond,
+            cfg,
+            None,
+            Overrides {
+                immune: Some(immune),
+                ..Default::default()
+            },
+        );
+        let run_cdc1_poor = || {
+            run_one_condition_full(
+                &cond,
+                cfg,
+                None,
+                Overrides {
+                    immune: Some(immune),
+                    dc_subsets: Some(DcSubsetConfig::literature()),
+                    ..Default::default()
+                },
+            )
+        };
+        let cdc1_poor = run_cdc1_poor();
+        let base_im = baseline
+            .immune_kills
+            .expect("immune_on populates immune_kills");
+        let poor_im = cdc1_poor
+            .immune_kills
+            .expect("immune_on populates immune_kills");
+        assert!(
+            base_im >= 50,
+            "baseline must produce enough immune kills to be informative; got {base_im}"
+        );
+        assert!(
+            poor_im < base_im,
+            "a cDC1-poor tumor must prime fewer immune kills than the balanced \
+             baseline: baseline={base_im}, cDC1-poor={poor_im}"
+        );
+        // Deterministic (the priming scalar is uniform, no extra RNG).
+        assert_eq!(poor_im, run_cdc1_poor().immune_kills.unwrap());
+        // NB: ferroptosis kills are NOT held fixed. DC subsets only gate the
+        // immune-kill loop directly (immune kills are apoptotic: no DAMP/iron
+        // release), but a cell spared an immune kill can instead die
+        // ferroptotically later, and THAT death releases iron that couples to
+        // neighbors. So reducing immune kills shifts a few deaths into the
+        // ferroptosis tally; that cross-coupling is expected, which is why this
+        // asserts on immune kills specifically.
+    }
+
+    /// #264: lock the `--snapshot=dc-subsets` preset -> Overrides wiring.
+    #[test]
+    fn dc_subsets_snapshot_preset_is_wired() {
+        let p = resolve_snapshot("dc-subsets");
+        assert_eq!(p.name, "dc-subsets");
+        assert!(p.dc_subsets, "the dc-subsets preset must enable the layer");
+        assert!(
+            p.immune_on,
+            "DC subsets only matter with the immune response on"
         );
     }
 
