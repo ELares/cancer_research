@@ -39,6 +39,8 @@
 //! | [`vasculature`] | Explicit 3D vessel network + per-cell distance-decayed O2/drug supply |
 //! | [`spheroid`] | 3D spheroid radial biology (rim/mid/core phenotypes + GSH/iron/MUFA gradients) |
 //! | [`slab`] | Patient-scale slab geometry: all-tumor block + planar depth-graded O2/drug supply |
+//! | [`contact`] | Cell-cell contact-mediated ferroptosis resistance (E-cadherin/NF2-YAP; dense cells lower PUFA/iron) |
+//! | [`nutrient`] | Radial nutrient gradient (glucose/glutamine) scaling the antioxidant setpoint toward the starved core |
 
 pub mod cell;
 pub mod clonal;
