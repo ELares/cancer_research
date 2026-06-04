@@ -68,6 +68,7 @@ use ferroptosis_core::immune_spatial::{
     suppressor_kill_multiplier, suppressor_source_mask_3d, CheckpointPanel, SuppressorConfig,
     DAMP_KILL_THRESHOLD,
 };
+use ferroptosis_core::nutrient::{apply_nutrient_stress_3d, NutrientConfig};
 use ferroptosis_core::oxygen::radial_o2_field;
 use ferroptosis_core::params::{
     Params, PersisterConfig, PhConfig, SpatialImmuneConfig, SpatialParams, StromalConfig,
@@ -419,6 +420,9 @@ struct Overrides {
     /// Cell-cell contact-mediated ferroptosis resistance (#270). `None` /
     /// identity ⇒ no per-cell lipid/iron modulation ⇒ byte-identical.
     contact: Option<ContactConfig>,
+    /// Radial nutrient gradient (#270 item 3b). `None` / identity ⇒ no
+    /// antioxidant-setpoint modulation ⇒ byte-identical.
+    nutrient: Option<NutrientConfig>,
 }
 
 /// Thin wrapper running a condition with NO overrides (all realism layers
@@ -464,6 +468,7 @@ fn run_one_condition_full(
     let spheroid_cfg = overrides.spheroid;
     let slab_cfg = overrides.slab;
     let contact_cfg = overrides.contact;
+    let nutrient_cfg = overrides.nutrient;
     // Treg/MDSC suppressor (#264 Phase 2). `None`/disabled ⇒ no source mask,
     // no field, identity multiplier ⇒ byte-identical.
     let suppressor_cfg = overrides.suppressor.filter(|c| !c.is_disabled());
@@ -852,6 +857,15 @@ fn run_one_condition_full(
     // two multiplicative per-cell axes compose.
     if let Some(cfg) = &contact_cfg {
         apply_contact_resistance_3d(&mut grid, cfg);
+    }
+
+    // Radial nutrient gradient (#270 item 3b): the nutrient-starved core has
+    // less glucose-derived NADPH to regenerate GSH, so its durable antioxidant
+    // setpoint (cell.nrf2) is scaled down toward the centre. Geometric (radial
+    // depth, no RNG), off-by-default identity ⇒ byte-identical. Runs after
+    // contact so the nrf2 axis composes independently of the lipid/iron axes.
+    if let Some(cfg) = &nutrient_cfg {
+        apply_nutrient_stress_3d(&mut grid, cfg);
     }
 
     // pH-dependent RSL3 ion trapping correction (consumer-side, same pattern
@@ -1770,6 +1784,10 @@ struct SnapshotPreset {
     /// overlay — the contact-driven radial survival gradient (dense interior
     /// resists, sparse surface dies) shows directly in the dead/LP panels.
     contact: bool,
+    /// True if the radial nutrient gradient (#270 item 3b) is enabled. No extra
+    /// static overlay; the nutrient-starved core's reduced antioxidant capacity
+    /// shows as more core killing in the dead/LP panels.
+    nutrient: bool,
 }
 
 /// Visualization presets for `--snapshot=NAME`. Keep this list small —
@@ -1792,6 +1810,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         suppressor: false,
         checkpoints: false,
         contact: false,
+        nutrient: false,
     },
     SnapshotPreset {
         name: "bare",
@@ -1810,6 +1829,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         suppressor: false,
         checkpoints: false,
         contact: false,
+        nutrient: false,
     },
     SnapshotPreset {
         name: "multidose",
@@ -1828,6 +1848,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         suppressor: false,
         checkpoints: false,
         contact: false,
+        nutrient: false,
     },
     SnapshotPreset {
         // SDT here visualizes the persister-fraction OVERLAY (the MUFA axis +
@@ -1850,6 +1871,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         suppressor: false,
         checkpoints: false,
         contact: false,
+        nutrient: false,
     },
     SnapshotPreset {
         name: "clonal",
@@ -1868,6 +1890,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         suppressor: false,
         checkpoints: false,
         contact: false,
+        nutrient: false,
     },
     SnapshotPreset {
         // RSL3 (hypoxia-sensitive) + explicit internal vessels: near-vessel
@@ -1891,6 +1914,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         suppressor: false,
         checkpoints: false,
         contact: false,
+        nutrient: false,
     },
     SnapshotPreset {
         // SDT + radial spheroid biology: the phenotype panel shows the
@@ -1912,6 +1936,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         suppressor: false,
         checkpoints: false,
         contact: false,
+        nutrient: false,
     },
     SnapshotPreset {
         // SDT on a patient-scale slab at the SURFACE (+z face = vessel, depth
@@ -1938,6 +1963,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         suppressor: false,
         checkpoints: false,
         contact: false,
+        nutrient: false,
     },
     SnapshotPreset {
         // Slab + internal vessels (#272 coupling). vessel_supply.npy (on a slab
@@ -1964,6 +1990,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         suppressor: false,
         checkpoints: false,
         contact: false,
+        nutrient: false,
     },
     SnapshotPreset {
         // SDT + immune + Treg/MDSC suppressor (#264 Phase 2). Heuristic niche
@@ -1986,6 +2013,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         suppressor: true,
         checkpoints: false,
         contact: false,
+        nutrient: false,
     },
     SnapshotPreset {
         // SDT + immune + dual checkpoint blockade (#264 Phase 3): a PD-1 +
@@ -2009,6 +2037,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         suppressor: false,
         checkpoints: true,
         contact: false,
+        nutrient: false,
     },
     SnapshotPreset {
         // Kitchen-sink composition (#278): several realism layers at once —
@@ -2034,6 +2063,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         suppressor: true,
         checkpoints: true,
         contact: false,
+        nutrient: false,
     },
     SnapshotPreset {
         // RSL3 + cell-cell contact resistance (#270): dense interior cells
@@ -2058,6 +2088,31 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         suppressor: false,
         checkpoints: false,
         contact: true,
+        nutrient: false,
+    },
+    SnapshotPreset {
+        // SDT + radial nutrient gradient (#270 item 3b): the nutrient-starved
+        // core loses glucose-derived NADPH for GSH/GPX4 regeneration, so its
+        // durable antioxidant setpoint drops and the core kills MORE under SDT.
+        // No extra static overlay; the shifted death front in the dead/LP
+        // panels IS the visualization. Runs on the centred sphere.
+        name: "nutrient",
+        desc: "SDT + radial nutrient gradient (#270): starved core loses antioxidant capacity",
+        treatment: Treatment::SDT,
+        treatment_name: "SDT",
+        immune_on: true,
+        stromal_on: false,
+        ph_on: false,
+        multidose: false,
+        persister: false,
+        clonal: false,
+        vasculature: false,
+        spheroid: false,
+        slab: false,
+        suppressor: false,
+        checkpoints: false,
+        contact: false,
+        nutrient: true,
     },
 ];
 
@@ -2160,6 +2215,7 @@ fn run_snapshot(output_dir: &Path, tumor_radius_um: f64, name: &str) {
     // face), so dense interior cells resist and the sparse surface dies — the
     // dead/LP panels show the radial survival gradient.
     let contact_cfg = preset.contact.then(ContactConfig::literature);
+    let nutrient_cfg = preset.nutrient.then(NutrientConfig::literature);
     // Static viz overlays, recomputed from the same SEED + per-layer seed the
     // run uses internally, so they match the perturbations actually applied.
     // `None` unless the matching preset is active.
@@ -2234,6 +2290,7 @@ fn run_snapshot(output_dir: &Path, tumor_radius_um: f64, name: &str) {
             suppressor: suppressor_cfg,
             checkpoints: checkpoint_cfg,
             contact: contact_cfg,
+            nutrient: nutrient_cfg,
             ..Default::default()
         },
     );
@@ -4396,6 +4453,74 @@ mod tests {
         );
         // Deterministic (geometric, no RNG).
         assert_eq!(contact.total_dead, run_contact().total_dead);
+    }
+
+    /// #270 item 3b: the radial nutrient gradient lowers the durable antioxidant
+    /// setpoint (cell.nrf2) toward the nutrient-starved core, so the core has
+    /// less GSH/GPX4 regeneration and an antioxidant-sensitive inducer (RSL3)
+    /// kills MORE cells with the layer on. Deterministic (geometric, no RNG).
+    #[test]
+    fn nutrient_gradient_increases_rsl3_kills() {
+        let cfg = RunConfig {
+            grid_dim: 24,
+            n_steps: 80,
+        };
+        let cond = Condition {
+            name: "nutrient_rsl3".to_string(),
+            treatment: Treatment::RSL3,
+            treatment_name: "RSL3".to_string(),
+            o2_lambda: Some(ZONE_REF_LAMBDA),
+            immune_on: false,
+            stromal_on: false,
+            ph_on: false,
+            dose_schedule: DoseSchedule::Constant,
+        };
+        let baseline = run_one_condition_with_config(&cond, cfg, None);
+        let run_nutrient = || {
+            run_one_condition_full(
+                &cond,
+                cfg,
+                None,
+                Overrides {
+                    nutrient: Some(NutrientConfig::literature()),
+                    ..Default::default()
+                },
+            )
+        };
+        let nutrient = run_nutrient();
+        assert!(
+            baseline.total_dead > 0,
+            "RSL3 baseline must kill some cells"
+        );
+        assert!(
+            nutrient.total_dead > baseline.total_dead,
+            "nutrient deprivation (lower core antioxidant capacity) must raise RSL3 \
+             kills: baseline={}, nutrient={}",
+            baseline.total_dead,
+            nutrient.total_dead
+        );
+        assert_eq!(
+            nutrient.total_dead,
+            run_nutrient().total_dead,
+            "nutrient layer is deterministic"
+        );
+    }
+
+    /// #270: lock the `--snapshot=nutrient` preset -> Overrides wiring without
+    /// the full render. The preset enables nutrient and leaves the geometry
+    /// layers off (it runs on the centred sphere).
+    #[test]
+    fn nutrient_snapshot_preset_is_wired() {
+        let p = resolve_snapshot("nutrient");
+        assert_eq!(p.name, "nutrient");
+        assert!(
+            p.nutrient,
+            "the nutrient preset must enable the nutrient layer"
+        );
+        assert!(
+            !p.slab && !p.spheroid && !p.contact,
+            "nutrient runs on the plain centred sphere"
+        );
     }
 
     #[test]
