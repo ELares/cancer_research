@@ -143,8 +143,9 @@ const DIFFUSION_SOURCE_CUTOFF: f64 = 0.001;
 /// Validated with `assert!` (matches stromal pattern — programming-
 /// contract bug deserves a clear release-mode panic).
 ///
-/// **Cost**: O(N × 26) for N = `grid.cells.len()`. Same per-call
-/// recompute concern as the rest of the 3D code; #194 hoisting applies.
+/// **Cost**: O(N × 26) for N = `grid.cells.len()`. A per-step full-grid
+/// sweep; the same hoist-constants-once pattern as the `oxygen`/`ph` radial
+/// fields (landed in #289) applies if this ever needs tightening.
 /// A source cell with DAMP below [`DIFFUSION_SOURCE_CUTOFF`] = 0.001
 /// skips both spread and self-decrement (matches sim-tme's 2D
 /// optimization; sub-threshold cells contribute negligibly and skipping

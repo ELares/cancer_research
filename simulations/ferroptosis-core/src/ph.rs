@@ -53,7 +53,7 @@
 //! }
 //! ```
 
-use crate::grid::TumorGrid3D;
+use crate::grid::{RadialDepthGeom, TumorGrid3D};
 
 /// Lower-bound clamp on the ion-trap drug-availability factor. Matches
 /// the hardcoded `[0.3, 1.0]` floor in sim-tme's `apply_ph_gradient`
@@ -101,8 +101,9 @@ const ION_TRAP_FLOOR: f64 = 0.3;
 /// invariant and finite-NaN-free `ph_edge`/`ph_core`. Otherwise a
 /// release run will panic on the first tumor-cell clamp.
 ///
-/// **Cost.** O(N). Per-cell calls `radial_depth_um` which recomputes
-/// geometry constants; same perf TODO as `radial_o2_field` (#194).
+/// **Cost.** O(N). The dimension-only depth geometry is hoisted once via
+/// [`RadialDepthGeom`] (#289), bit-identical to per-cell `radial_depth_um`;
+/// same pattern as `radial_o2_field`.
 pub fn radial_ph_field(
     grid: &TumorGrid3D,
     ph_edge: f64,
@@ -111,6 +112,9 @@ pub fn radial_ph_field(
 ) -> Vec<f64> {
     debug_assert_ph_inputs(ph_edge, ph_core, lambda_ph_um, "radial_ph_field");
 
+    // Hoist the dimension-only depth geometry once (#289); per-cell
+    // `geom.depth_um` is bit-identical to `grid.radial_depth_um`.
+    let geom = RadialDepthGeom::new(grid);
     let mut out = Vec::with_capacity(grid.cells.len());
     for r in 0..grid.rows {
         for c in 0..grid.cols {
@@ -118,7 +122,7 @@ pub fn radial_ph_field(
                 let ph = if !grid.get(r, c, l).is_tumor {
                     ph_edge
                 } else {
-                    let depth_um = grid.radial_depth_um(r, c, l).max(0.0);
+                    let depth_um = geom.depth_um(r, c, l).max(0.0);
                     ph_at_depth(depth_um, ph_edge, ph_core, lambda_ph_um)
                 };
                 out.push(ph);
@@ -138,7 +142,8 @@ pub fn radial_ph_field(
 ///
 /// **Caveats:** same first-order single-source radial-decay
 /// approximation as the 3D variant — see `radial_ph_field`'s rustdoc
-/// for biological validity, calibration status (#190 → #194), and
+/// for biological validity, calibration status (#190; tracked in
+/// `simulations/calibration/CALIBRATION_STATUS.md` since #194 closed), and
 /// debug-assert validation of `ph_edge > ph_core`.
 pub fn radial_ph_field_2d(
     grid: &crate::grid::TumorGrid,
@@ -296,6 +301,31 @@ pub fn ion_trap_factor_from_ph(local_ph: f64, ph_edge: f64, sensitivity: f64) ->
 mod tests {
     use super::*;
     use crate::grid::TumorGrid;
+
+    /// #289: the hoisted-geometry pH field must be bit-for-bit identical to a
+    /// per-cell baseline that uses the canonical `TumorGrid3D::radial_depth_um`,
+    /// so hoisting `RadialDepthGeom` is a timing-only change.
+    #[test]
+    fn radial_ph_field_matches_per_cell_depth_baseline() {
+        let g = TumorGrid3D::generate(20, 20, 20, 20.0, 42);
+        let (ph_edge, ph_core, lambda) = (7.4, 6.5, 120.0);
+        let hoisted = radial_ph_field(&g, ph_edge, ph_core, lambda);
+        let mut baseline = Vec::with_capacity(g.cells.len());
+        for r in 0..g.rows {
+            for c in 0..g.cols {
+                for l in 0..g.layers {
+                    let ph = if !g.get(r, c, l).is_tumor {
+                        ph_edge
+                    } else {
+                        let depth_um = g.radial_depth_um(r, c, l).max(0.0);
+                        ph_at_depth(depth_um, ph_edge, ph_core, lambda)
+                    };
+                    baseline.push(ph);
+                }
+            }
+        }
+        assert_eq!(hoisted, baseline, "hoisted pH field must be bit-identical");
+    }
 
     /// Output length matches grid cell count.
     #[test]
