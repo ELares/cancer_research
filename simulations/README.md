@@ -1,13 +1,13 @@
 # Simulations
 
-Rust workspace containing the ferroptosis biochemistry engine and simulation binaries.
+Rust workspace for multi-scale cancer-therapy simulation: a mechanistic claim-testing engine spanning single-cell ferroptosis biochemistry, 2D/3D tumor microenvironment (oxygen gradients, immune coupling, stromal protection, vasculature, clonal heterogeneity), drug penetration, drug combinations, and tumor pharmacokinetics. Ferroptosis and PDT/SDT are the worked case studies; the infrastructure generalizes to testing claims about other modalities.
 
 ## Binaries
 
 | Binary | Purpose | Manuscript | Key output |
 |--------|---------|------------|------------|
 | [`sim-original`](sim-original/) | Monte Carlo single-cell ferroptosis (1M cells x 16 conditions) | Ch 5, Fig 7 | `simulation_results.json` |
-| [`sim-spatial`](sim-spatial/) | 2D tumor grid with PDT/SDT energy physics and bystander iron diffusion | Ch 6.1, Fig 8 | `output/spatial/` |
+| [`sim-spatial`](sim-spatial/) | 2D tumor grid comparing ferroptosis (RSL3) vs PDT/SDT kill under depth, oxygen, stromal, and pH gradients; bystander iron diffusion | Ch 6.1, Fig 8 | `output/spatial/` |
 | [`sim-window`](sim-window/) | Ferroptosis vulnerability window dynamics post-chemotherapy | Ch 6.2 | `output/window/` |
 | [`sim-icd`](sim-icd/) | ICD-immune cascade comparison across treatment modalities | Ch 7.2 | `output/icd/` |
 | [`sim-combo`](sim-combo/) | Combination therapy optimizer (SDT timing x anti-PD1 timing) | Ch 6.2 + 7.2 | `output/combo/` |

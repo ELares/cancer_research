@@ -20,9 +20,9 @@ If you have expertise in oncology, biochemistry, ferroptosis, immunology, comput
 
 ## What's here
 
-- **4,830 full-text cancer research articles** across 19 mechanisms, 22 cancer types, 803 journals (2001-2026)
+- **4,830 full-text cancer research articles** across 19 mechanisms, 22 cancer types, 803 journals (2001-2026); the corpus skews toward immunotherapy (the single most-studied mechanism, ~1,685 articles), with physical and pharmacologic ferroptosis approaches a smaller, more preclinical slice
 - **Python pipeline** for corpus fetching, tagging (7 tag layers), indexing, analysis, and figure generation
-- **11 Rust simulation binaries** modeling ferroptosis biochemistry: single-cell Monte Carlo, spatial tumors with PDT/SDT depth physics (2D row-based and 3D radial-depth dispatchers; sim-tme-3d is the 3D-spheroid capstone consuming the full TME library stack) + photosensitizer PK (drug-light-interval scaling, saturating distribution phase, relative singlet-O₂ yield), drug penetration, drug combinations, tumor microenvironment (oxygen gradients, spatial immune zones, DAMP-mediated T cell activation), vulnerability windows, ICD immune cascades, tumor PK
+- **11 Rust simulation binaries**, a mechanistic claim-testing engine for cancer therapies: single-cell and spatial Monte Carlo, drug penetration across tissue types, drug combinations, tumor microenvironment (oxygen gradients, spatial immune zones, DAMP-mediated T-cell activation, stromal shielding, vasculature, clonal heterogeneity), vulnerability windows, ICD immune cascades, and tumor PK. Worked implementations include ferroptosis/RSL3 biochemistry and PDT/SDT depth physics (2D row-based and 3D radial-depth dispatchers; sim-tme-3d is the 3D-spheroid capstone consuming the full TME library stack) plus photosensitizer PK (drug-light-interval scaling, saturating distribution phase, relative singlet-O₂ yield)
 - **ferroptosis-core library** (MIT, with Python bindings) — embeddable ferroptosis biochemistry engine; module list and current unit-test count in [`simulations/ferroptosis-core/README.md`](simulations/ferroptosis-core/README.md)
 - **Calibration infrastructure** linking simulation parameters to published experimental data
 - **Book-format manuscript (~115 pp)** with 11 chapters, 3 appendices, and 24 figures (~39,400 words), cross-referenced against all analysis outputs
@@ -31,13 +31,15 @@ Everything is organised so you can re-run the pipeline, challenge the conclusion
 
 ## What we found
 
-Three simulation findings that, if validated experimentally, would have translational implications:
+This work is first a **consolidation of the cancer-therapy literature**: mapping where research is concentrated, where apparent gaps are artifacts of search design rather than biology, and which mechanistic ideas can be compared on shared axes (evidence depth, resistant-state relevance, delivery constraints, tissue access). Immunotherapy dominates the corpus, and the analysis is deliberately honest about coverage limits (the evidence tagger has 96% precision but only 55% recall, so absence claims are provisional).
 
-1. **RSL3 + FSP1 inhibitor produces 1.99× Bliss synergy** through dual-pathway depletion — depleting both GPX4 and FSP1 repair pathways simultaneously drops antioxidant defense below the autocatalytic lipid peroxidation threshold.
+On top of that landscape, the simulations act as a **claim-testing engine**: we take specific mechanistic claims and try to validate or disprove them with reproducible, fact-grounded models. Three results that, if validated experimentally, would have translational implications:
 
-2. **The tumor microenvironment selectively favors physical over pharmacologic ferroptosis inducers through four mechanisms.** Hypoxia collapses RSL3 kill from 3.7% to 0.1%; SDT maintains 87.8%. Stromal shielding halves RSL3's peripheral kill (3.0% to 1.5%); SDT barely affected. Acidic pH halves RSL3 ferroptosis kills (163→77, ion trapping dominates over iron release); SDT gains slightly (+0.8%). SDT's dense kill field generates a model-predicted 104× more immune kills than RSL3 (medium confidence). Three resistance mechanisms (hypoxia, stromal, pH) and one amplification effect (immune coupling) all favor physical modalities.
+1. **Combination synergy (ferroptosis case study).** Dual inhibition of GPX4 and FSP1 produces 1.99× Bliss synergy, because depleting both parallel repair pathways drops antioxidant defense below the autocatalytic lipid-peroxidation threshold. A general lesson about combining parallel-pathway blocks, tested in the RSL3 system.
 
-3. **Tissue-specific drug penetration creates a substantial in-vitro-to-in-vivo gap.** RSL3-like drug kill drops from 40% (2D culture) to 12.1% (well-vascularized) to 2.6% (poorly-vascularized) to 1.8% (CNS/BBB) — even at the blood vessel wall.
+2. **Microenvironment barriers affect drug-based and physical approaches differently.** Under simulated hypoxia, stromal shielding, and acidic pH, pharmacologic ferroptosis (RSL3) kill collapses (hypoxia 3.7% to 0.1%; stromal 3.0% to 1.5%; pH 163 to 77) while light- and ultrasound-delivered ROS (PDT/SDT) are less affected. This is one worked comparison of how mechanistically distinct modalities meet different barrier landscapes; it is directional, not a verdict. The hypoxia leg is the least certain (SDT's own oxygen-dependence is contested), and the immune-coupling amplification (a model-predicted 104× more immune kills, medium confidence) shrinks to roughly 4:1 in 3D.
+
+3. **In-vitro-to-in-vivo penetration gap (applies to any systemic drug).** Tissue-specific delivery drops a RSL3-like drug from 40% (2D culture) to 12.1% (well-vascularized) to 2.6% (poorly-vascularized) to 1.8% (CNS/BBB), even at the blood vessel wall.
 
 These are computational predictions with documented assumptions and caveats, not clinical claims. All parameters are documented with literature sources and confidence ratings. See the [manuscript](article/drafts/v1.md) for full context.
 
