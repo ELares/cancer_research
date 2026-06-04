@@ -22,7 +22,9 @@
 //! Opt-in ⇒ a consumer that doesn't request slab mode keeps the spheroid and
 //! stays byte-identical.
 
+use crate::cell::{gen_cell, Phenotype};
 use crate::grid::TumorGrid3D;
+use rand::prelude::*;
 
 /// Krogh-style default O2/drug penetration length (µm) for the slab when the
 /// condition doesn't specify one. ~150 µm is the canonical inter-capillary
@@ -74,31 +76,138 @@ impl SlabConfig {
     }
 }
 
+/// Per-**layer** planar depth-graded supply: a `Vec<f64>` of length
+/// `grid.layers` where entry `l` is `exp(-depth/λ)`, depth =
+/// `depth_offset_um + (layers-1 - l)·cell_size_um` (the +z face `l = layers-1`
+/// is shallowest, `l = 0` deepest), clamped to `[0, 1]`. Supply varies only
+/// with depth, so this is the compact form: [`slab_supply_field`] broadcasts it
+/// across `(row, col)` and [`apply_depth_graded_cells_3d`] thresholds on it, so
+/// both share one source of truth for the depth formula.
+pub fn layer_supply(grid: &TumorGrid3D, depth_offset_um: f64, lambda_um: f64) -> Vec<f64> {
+    debug_assert!(
+        depth_offset_um >= 0.0 && lambda_um.is_finite() && lambda_um > 0.0,
+        "layer_supply: depth_offset_um >= 0 and lambda_um finite > 0; got {depth_offset_um}, {lambda_um}"
+    );
+    let cell_size = grid.cell_size_um;
+    let top = grid.layers.saturating_sub(1);
+    (0..grid.layers)
+        .map(|l| {
+            let depth_um = depth_offset_um + (top - l) as f64 * cell_size;
+            (-depth_um / lambda_um).exp().clamp(0.0, 1.0)
+        })
+        .collect()
+}
+
 /// Per-cell planar depth-graded supply for a slab: `exp(-depth/λ)` where the
 /// depth of layer `l` is `depth_offset_um + (layers-1 - l)·cell_size_um`
 /// (the +z face `l = layers-1` is shallowest, `l = 0` deepest). Uniform across
 /// `(row, col)`. Returns a `Vec<f64>` of length `grid.cells.len()`, clamped to
 /// `[0, 1]`. Drop-in for `oxygen::radial_o2_field`; supplies O2 and drug.
 pub fn slab_supply_field(grid: &TumorGrid3D, depth_offset_um: f64, lambda_um: f64) -> Vec<f64> {
-    debug_assert!(
-        depth_offset_um >= 0.0 && lambda_um.is_finite() && lambda_um > 0.0,
-        "slab_supply_field: depth_offset_um >= 0 and lambda_um finite > 0; got {depth_offset_um}, {lambda_um}"
-    );
-    let cell_size = grid.cell_size_um;
-    let top = grid.layers.saturating_sub(1);
-    // Precompute per-layer supply (it varies only with l), then broadcast.
-    let per_layer: Vec<f64> = (0..grid.layers)
-        .map(|l| {
-            let depth_um = depth_offset_um + (top - l) as f64 * cell_size;
-            (-depth_um / lambda_um).exp().clamp(0.0, 1.0)
-        })
-        .collect();
+    let per_layer = layer_supply(grid, depth_offset_um, lambda_um);
     (0..grid.cells.len())
         .map(|idx| {
             let (_, _, l) = grid.coords(idx);
             per_layer[l]
         })
         .collect()
+}
+
+/// Depth-graded phenotype zones for a slab (#272). `generate_slab` assigns a
+/// flat bulk mix (no spatial structure); a real chunk of tumor at depth is
+/// layered: vessel-proximal cells are proliferating, chronically supply-starved
+/// deep cells are quiescent/persister-like. Unlike the spheroid's geometric
+/// (volume-fraction) zones, the slab models an *absolute* depth, so its
+/// phenotype tracks the **planar supply** `exp(-depth/λ)` that already shapes
+/// its O2/drug field. Thresholds are on that supply value (∈ [0, 1]).
+#[derive(Clone, Copy, Debug)]
+pub struct SlabPhenotypeConfig {
+    /// Supply (∈ [0, 1]) at/above which a cell is Glycolytic (well-perfused,
+    /// proliferating), the vessel-proximal +z layers.
+    pub glycolytic_supply: f64,
+    /// Supply at/above which (and below `glycolytic_supply`) a cell is OXPHOS
+    /// (quiescent intermediate); below it, Persister-like (chronically
+    /// supply-deprived, drug-tolerant), the deep (−z) layers.
+    pub oxphos_supply: f64,
+}
+
+impl SlabPhenotypeConfig {
+    /// Heuristic placeholder thresholds: a proliferating glycolytic zone where
+    /// relative supply ≥ 0.5, a quiescent OXPHOS intermediate down to 0.15, and
+    /// a persister-like core below that. UNLIKE the spheroid's
+    /// literature-grounded zone *volumes* (Browning 2021), these supply
+    /// cut-points are uncalibrated (see the CALIBRATION_STATUS slab row): the
+    /// result is the DIRECTION (deep, supply-starved tissue is enriched for
+    /// tolerant phenotypes), not the exact layer counts. The realized zone
+    /// thicknesses depend on λ and the slab's `depth_offset_mm`: a
+    /// [`SlabConfig::patient_deep`] slab whose every layer sits below 0.15
+    /// supply is uniformly persister-like, which is the intended behavior for a
+    /// 4 mm-deep chunk (drug/O2 essentially never reach it).
+    pub fn literature() -> Self {
+        SlabPhenotypeConfig {
+            glycolytic_supply: 0.5,
+            oxphos_supply: 0.15,
+        }
+    }
+}
+
+/// Phenotype for a slab cell at planar supply `supply` (∈ [0, 1], the
+/// `slab_supply_field` / [`layer_supply`] value): glycolytic (well-perfused) →
+/// OXPHOS (intermediate) → persister-like (chronically deprived). Monotone in
+/// supply, so a deeper (lower-supply) cell is never assigned a *more*
+/// proliferative phenotype than a shallower one.
+pub fn depth_phenotype(supply: f64, cfg: &SlabPhenotypeConfig) -> Phenotype {
+    let s = supply.clamp(0.0, 1.0);
+    if s >= cfg.glycolytic_supply {
+        Phenotype::Glycolytic
+    } else if s >= cfg.oxphos_supply {
+        Phenotype::OXPHOS
+    } else {
+        Phenotype::Persister
+    }
+}
+
+/// Re-assign every (tumor) slab cell's phenotype by its layer's planar supply
+/// `exp(-depth/λ)` (#272): the vessel-proximal +z layers become
+/// proliferating/glycolytic, the chronically supply-deprived deep (−z) layers
+/// become persister-like, the depth-axis analog of the spheroid's rim→core
+/// structure ([`crate::spheroid::apply_radial_cells_3d`]).
+///
+/// Like the spheroid re-assignment, each cell is re-generated from its OWN
+/// per-cell `StdRng` seeded from `seed`, so `generate_slab`'s RNG stream is
+/// untouched, so a consumer that doesn't opt in keeps the flat bulk mix and stays
+/// byte-identical. `depth_offset_um` / `lambda_um` MUST match the values the
+/// consumer passes to [`slab_supply_field`], so the phenotype gradient and the
+/// O2/drug supply gradient are coherent. Deterministic given
+/// `(grid dims, depth_offset, lambda, cfg, seed)`.
+///
+/// Two scoping notes (documented in CALIBRATION_STATUS): (1) the supply used
+/// here is the **planar depth** gradient only; internal vessels (#272
+/// coupling) raise the *delivered* supply dynamically downstream but do not
+/// reshape the chronic phenotype here, a future refinement; (2) only the
+/// phenotype is depth-graded; the per-cell biochemical draw is `gen_cell`'s
+/// phenotype default, since the supply field already deprives deep cells of
+/// O2/drug dynamically (no separate static GSH/iron gradient as in the
+/// spheroid).
+pub fn apply_depth_graded_cells_3d(
+    grid: &mut TumorGrid3D,
+    depth_offset_um: f64,
+    lambda_um: f64,
+    cfg: &SlabPhenotypeConfig,
+    seed: u64,
+) {
+    let per_layer = layer_supply(grid, depth_offset_um, lambda_um);
+    for idx in 0..grid.cells.len() {
+        if !grid.cells[idx].is_tumor {
+            continue;
+        }
+        let (_, _, l) = grid.coords(idx);
+        let pheno = depth_phenotype(per_layer[l], cfg);
+        let mut rng = StdRng::seed_from_u64(seed.wrapping_add(idx as u64));
+        let cell = gen_cell(pheno, &mut rng);
+        grid.cells[idx].cell = cell;
+        grid.cells[idx].phenotype = pheno;
+    }
 }
 
 /// Human-readable interpretation of what depth/scale a slab run represents,
@@ -137,6 +246,97 @@ mod tests {
         assert!(
             g.cells.iter().all(|c| c.is_tumor),
             "every slab cell is tumor"
+        );
+    }
+
+    #[test]
+    fn layer_supply_matches_broadcast_field() {
+        // The refactor invariant: slab_supply_field broadcasts layer_supply, so
+        // every cell's field value equals its layer's per-layer supply. Guards
+        // against the two formulas silently diverging.
+        let g = grid();
+        let per_layer = layer_supply(&g, 0.0, KROGH_LAMBDA_UM);
+        let field = slab_supply_field(&g, 0.0, KROGH_LAMBDA_UM);
+        assert_eq!(per_layer.len(), g.layers);
+        for idx in 0..g.cells.len() {
+            let (_, _, l) = g.coords(idx);
+            assert_eq!(field[idx], per_layer[l]);
+        }
+    }
+
+    #[test]
+    fn depth_phenotype_thresholds_and_monotone() {
+        let c = SlabPhenotypeConfig::literature();
+        // Well-perfused → glycolytic; intermediate → OXPHOS; starved → persister.
+        assert_eq!(depth_phenotype(1.0, &c), Phenotype::Glycolytic);
+        assert_eq!(depth_phenotype(0.5, &c), Phenotype::Glycolytic); // boundary is inclusive
+        assert_eq!(depth_phenotype(0.3, &c), Phenotype::OXPHOS);
+        assert_eq!(depth_phenotype(0.15, &c), Phenotype::OXPHOS); // boundary is inclusive
+        assert_eq!(depth_phenotype(0.05, &c), Phenotype::Persister);
+        assert_eq!(depth_phenotype(0.0, &c), Phenotype::Persister);
+        // Monotone in supply: a more-deprived (lower-supply) cell is never more
+        // proliferative than a better-supplied one. Rank Glycolytic > OXPHOS >
+        // Persister and check the assigned rank is non-decreasing in supply.
+        let rank = |p: Phenotype| match p {
+            Phenotype::Glycolytic => 2,
+            Phenotype::OXPHOS => 1,
+            _ => 0,
+        };
+        let mut prev = -1i32;
+        for i in 0..=100 {
+            let s = i as f64 / 100.0;
+            let r = rank(depth_phenotype(s, &c));
+            assert!(r >= prev, "rank dropped as supply rose at s={s}");
+            prev = r;
+        }
+        // Out-of-range supply is clamped, not panicking.
+        assert_eq!(depth_phenotype(2.0, &c), Phenotype::Glycolytic);
+        assert_eq!(depth_phenotype(-1.0, &c), Phenotype::Persister);
+    }
+
+    #[test]
+    fn depth_grading_is_deterministic_and_layered() {
+        let cfg = SlabPhenotypeConfig::literature();
+        let mut a = grid();
+        let mut b = grid();
+        // Surface slab (offset 0): top (+z) well-perfused, bottom (−z) deprived.
+        apply_depth_graded_cells_3d(&mut a, 0.0, KROGH_LAMBDA_UM, &cfg, 7);
+        apply_depth_graded_cells_3d(&mut b, 0.0, KROGH_LAMBDA_UM, &cfg, 7);
+        // Deterministic: same (grid, depth, λ, cfg, seed) → identical phenotypes
+        // AND identical cell draws.
+        let ph_a: Vec<_> = a.cells.iter().map(|gc| gc.phenotype).collect();
+        let ph_b: Vec<_> = b.cells.iter().map(|gc| gc.phenotype).collect();
+        assert_eq!(ph_a, ph_b);
+        assert_eq!(a.cells[0].cell.gpx4, b.cells[0].cell.gpx4);
+        // Still all-tumor, every cell re-assigned (slab has no stroma).
+        assert!(a.cells.iter().all(|c| c.is_tumor));
+        // +z face is glycolytic (supply 1.0); deep −z face is persister.
+        let top = a.flat_index(10, 10, a.layers - 1);
+        let bottom = a.flat_index(10, 10, 0);
+        assert_eq!(a.cells[top].phenotype, Phenotype::Glycolytic);
+        assert_eq!(a.cells[bottom].phenotype, Phenotype::Persister);
+        // A whole +z layer is uniform (supply is constant within a layer).
+        let l = a.layers - 1;
+        let p0 = a.cells[a.flat_index(0, 0, l)].phenotype;
+        assert!(a
+            .cells
+            .iter()
+            .enumerate()
+            .filter(|(idx, _)| a.coords(*idx).2 == l)
+            .all(|(_, gc)| gc.phenotype == p0));
+    }
+
+    #[test]
+    fn deep_slab_is_uniformly_persister() {
+        // A 4 mm-deep slab: even the +z face supply is exp(-4000/150) ≈ 3e-12,
+        // far below oxphos_supply (0.15), so every layer is persister-like, the
+        // intended behavior for a chunk drug/O2 essentially never reach.
+        let cfg = SlabPhenotypeConfig::literature();
+        let mut g = grid();
+        apply_depth_graded_cells_3d(&mut g, 4000.0, KROGH_LAMBDA_UM, &cfg, 7);
+        assert!(
+            g.cells.iter().all(|c| c.phenotype == Phenotype::Persister),
+            "a 4 mm-deep slab is uniformly persister-like"
         );
     }
 

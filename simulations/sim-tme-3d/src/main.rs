@@ -77,7 +77,8 @@ use ferroptosis_core::persister;
 use ferroptosis_core::ph::{ion_trap_factor_from_ph, iron_multiplier_from_ph, radial_ph_field};
 use ferroptosis_core::physics::local_ros_multiplier_3d;
 use ferroptosis_core::slab::{
-    scale_interpretation, slab_supply_field, SlabConfig, KROGH_LAMBDA_UM,
+    apply_depth_graded_cells_3d, scale_interpretation, slab_supply_field, SlabConfig,
+    SlabPhenotypeConfig, KROGH_LAMBDA_UM,
 };
 use ferroptosis_core::spheroid::{
     apply_radial_cells_3d, radial_fraction_3d, radial_mufa_protection, SpheroidConfig,
@@ -122,6 +123,12 @@ const SPHEROID_SEED: u64 = 0x5ade_0142;
 /// intent for an A/B (e.g. Treg-present vs Treg-depleted = the same patient,
 /// same niches, differing only in whether the field is applied).
 const SUPPRESSOR_SEED: u64 = 0x5099_2e64;
+/// Independent seed for the depth-graded slab phenotype re-generation (#272).
+/// Distinct from the others so slab depth re-gen never touches the matrix RNG
+/// streams. Slab and spheroid are mutually-exclusive geometries, so this layer
+/// and `SPHEROID_SEED` never coexist in one run; a dedicated constant keeps the
+/// invariant explicit and future-proof if that exclusion is ever relaxed.
+const SLAB_PHENOTYPE_SEED: u64 = 0x51ab_0142;
 /// O2-supply factor below which a cell counts as hypoxic for
 /// `vascular_hypoxic_fraction` reporting (#191). `exp(-d/λ) < 0.1` is ~2.3 λ
 /// from the nearest vessel.
@@ -410,6 +417,10 @@ struct Overrides {
     vasculature: Option<VasculatureConfig>,
     spheroid: Option<SpheroidConfig>,
     slab: Option<SlabConfig>,
+    /// Depth-graded slab phenotype (#272). `None` ⇒ the slab keeps `generate_slab`'s
+    /// flat bulk phenotype mix. Only applied when `slab` is also `Some` (it needs the
+    /// slab grid + depth offset); ignored otherwise. Off in the matrix ⇒ byte-identical.
+    slab_phenotype: Option<SlabPhenotypeConfig>,
     /// Treg/MDSC immunosuppressor field (#264 Phase 2). `None` / disabled ⇒
     /// the suppressor multiplier is identity ⇒ byte-identical.
     suppressor: Option<SuppressorConfig>,
@@ -470,6 +481,8 @@ fn run_one_condition_full(
     let vasculature_cfg = overrides.vasculature;
     let spheroid_cfg = overrides.spheroid;
     let slab_cfg = overrides.slab;
+    // Depth-graded slab phenotype (#272): only meaningful with a slab grid.
+    let slab_phenotype_cfg = overrides.slab_phenotype.filter(|_| slab_cfg.is_some());
     let contact_cfg = overrides.contact;
     let nutrient_cfg = overrides.nutrient;
     let dc_subsets_cfg = overrides.dc_subsets;
@@ -565,6 +578,27 @@ fn run_one_condition_full(
     // dependent MUFA is applied after CellState init below.
     if let Some(cfg) = &spheroid_cfg {
         apply_radial_cells_3d(&mut grid, cfg, SPHEROID_SEED);
+    }
+
+    // Depth-graded slab phenotype (#272): re-assign the slab's flat bulk mix so
+    // vessel-proximal +z layers are proliferating/glycolytic and chronically
+    // supply-starved deep (−z) layers are persister-like, the depth-axis analog
+    // of the spheroid's rim-to-core structure. Uses the SAME lambda and depth
+    // offset the supply field uses below, so phenotype and O2/drug gradients are
+    // coherent. Independent per-cell RNG, so generate_slab's stream is untouched;
+    // gated on slab mode plus an explicit `slab_phenotype` override, so the
+    // matrix (no slab) stays byte-identical. Runs after spheroid (mutually
+    // exclusive geometries, guarded above) and before the vessel/subclone
+    // layers, which then perturb the depth-assigned cells.
+    if let (Some(slab), Some(pheno)) = (&slab_cfg, &slab_phenotype_cfg) {
+        let lambda = condition.o2_lambda.unwrap_or(KROGH_LAMBDA_UM);
+        apply_depth_graded_cells_3d(
+            &mut grid,
+            slab.depth_offset_mm * 1000.0,
+            lambda,
+            pheno,
+            SLAB_PHENOTYPE_SEED,
+        );
     }
 
     // Clonal heterogeneity (#242): assign each cell to a subclone via Voronoi,
@@ -2264,6 +2298,11 @@ fn run_snapshot(output_dir: &Path, tumor_radius_um: f64, name: &str) {
     // across the block in the z-axis mid-slice (no extra static overlay; the
     // death front in the dead/DAMP/LP panels IS the visualization).
     let slab_cfg = preset.slab.then(SlabConfig::surface);
+    // Depth-graded slab phenotype (#272): the surface slab gets a layered
+    // rim→core phenotype gradient (proliferating +z, persister-like deep −z)
+    // matching its depth-graded supply, so the dead/LP panels show both the
+    // supply-driven death front AND the intrinsic deep-cell tolerance.
+    let slab_phenotype_cfg = preset.slab.then(SlabPhenotypeConfig::literature);
     let suppressor_cfg = preset.suppressor.then(SuppressorConfig::enabled);
     // Dual checkpoint blockade (#264 Phase 3): a PD-1 + CTLA-4 tumor with both
     // inhibitors applied (combined brake low ⇒ aggressive immune killing).
@@ -2350,6 +2389,7 @@ fn run_snapshot(output_dir: &Path, tumor_radius_um: f64, name: &str) {
             vasculature: vasculature_cfg,
             spheroid: spheroid_cfg,
             slab: slab_cfg,
+            slab_phenotype: slab_phenotype_cfg,
             suppressor: suppressor_cfg,
             checkpoints: checkpoint_cfg,
             contact: contact_cfg,
@@ -4972,6 +5012,75 @@ mod tests {
         }
     }
 
+    /// #272 depth-graded slab phenotype wiring: (1) it is gated on slab mode, so
+    /// a `slab_phenotype` override with NO slab grid is inert (it can never
+    /// perturb the spheroid matrix); (2) turning it on actually changes the run
+    /// (the depth-layered rim→core phenotype mix is a different tumor than the
+    /// flat bulk mix); (3) it stays deterministic. The per-layer phenotype
+    /// assignment itself is pinned in the `slab` module's unit tests.
+    #[test]
+    fn depth_graded_slab_phenotype_is_gated_and_deterministic() {
+        let cfg = RunConfig {
+            grid_dim: 24,
+            n_steps: 80,
+        };
+        let cond = Condition {
+            name: "slab_pheno".to_string(),
+            treatment: Treatment::SDT,
+            treatment_name: "SDT".to_string(),
+            o2_lambda: Some(ZONE_REF_LAMBDA),
+            immune_on: false,
+            stromal_on: false,
+            ph_on: false,
+            dose_schedule: DoseSchedule::Constant,
+        };
+        // (1) slab_phenotype WITHOUT a slab grid is inert: identical to a bare
+        // run, so it can never change the (no-slab) production matrix.
+        let bare = run_one_condition_full(&cond, cfg, None, Overrides::default());
+        let pheno_no_slab = run_one_condition_full(
+            &cond,
+            cfg,
+            None,
+            Overrides {
+                slab_phenotype: Some(SlabPhenotypeConfig::literature()),
+                ..Default::default()
+            },
+        );
+        assert_eq!(
+            bare.total_dead, pheno_no_slab.total_dead,
+            "slab_phenotype with no slab grid must be inert"
+        );
+        assert_eq!(bare.overall_kill_rate, pheno_no_slab.overall_kill_rate);
+
+        // (2) + (3): on a surface slab, depth grading changes the outcome vs the
+        // flat bulk mix, and both forms are deterministic.
+        let run = |pheno: Option<SlabPhenotypeConfig>| {
+            run_one_condition_full(
+                &cond,
+                cfg,
+                None,
+                Overrides {
+                    slab: Some(SlabConfig::surface()),
+                    slab_phenotype: pheno,
+                    ..Default::default()
+                },
+            )
+            .total_dead
+        };
+        let flat = run(None);
+        let graded = run(Some(SlabPhenotypeConfig::literature()));
+        let graded_again = run(Some(SlabPhenotypeConfig::literature()));
+        assert_eq!(
+            graded, graded_again,
+            "depth-graded slab must be deterministic"
+        );
+        assert_ne!(
+            flat, graded,
+            "depth grading should change the slab outcome vs the flat bulk mix: \
+             flat={flat}, graded={graded}"
+        );
+    }
+
     // ===== Cross-layer composition (#278) =====
 
     /// The realism layers each seed an INDEPENDENT RNG with a distinct constant
@@ -4989,6 +5098,7 @@ mod tests {
             ("VESSEL_SEED", VESSEL_SEED),
             ("SPHEROID_SEED", SPHEROID_SEED),
             ("SUPPRESSOR_SEED", SUPPRESSOR_SEED),
+            ("SLAB_PHENOTYPE_SEED", SLAB_PHENOTYPE_SEED),
         ];
         for i in 0..seeds.len() {
             for j in (i + 1)..seeds.len() {
