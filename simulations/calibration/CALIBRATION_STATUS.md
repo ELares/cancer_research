@@ -75,6 +75,7 @@ rows than the "more than a dozen" realism-layer count above.
 | 3D radial spheroid biochem | #197, #270 | `spheroid` | **Zone geometry literature-grounded (#270); biochem gradients uncalibrated** | Zone *volumes* now match the Browning 2021 (eLife, DOI 10.7554/eLife.73020) limiting structure (necrotic core 0.73 of radius → 0.39 of volume; rim begins 0.90 of radius), fixing the prior radial-threshold inversion (core ~4% → ~39% of volume). The per-zone MUFA/GSH/iron gradient *strengths* remain placeholders — calibrate vs spatially-resolved spheroid metabolomics / phenotype staining. |
 | Patient-scale slab | #240 | `slab` | **Uncalibrated (illustrative)** | Krogh λ ~150 µm placeholder; the "<20 % kill at 4 mm depth" is *illustrative of the scale gap*, not a validated efficacy number. Calibrate vs depth-resolved kill in thick tissue / patient PK. |
 | Slab + vasculature coupling | #272 | `slab`+`vasculature` | **Uncalibrated (illustrative)** | Inherits the slab λ and vessel placeholders; combine rule (element-wise max) is a first-order Krogh approximation. |
+| Depth-graded slab phenotype | #272 | `slab` | **Uncalibrated (illustrative); structure literature-motivated** | `apply_depth_graded_cells_3d` re-assigns the slab's flat bulk mix to a layered rim→core gradient (proliferating/glycolytic at the vessel-proximal +z face, persister-like in the chronically supply-starved deep −z layers) — the depth-axis analog of the spheroid's radial zones (#197). Thresholds are on the planar supply `exp(-depth/λ)` (NOT geometric volume fractions like the spheroid, because the slab models an *absolute* depth: a `patient_deep()` 4 mm slab is uniformly persister-like, which is correct). `SlabPhenotypeConfig::literature()` cut-points (`glycolytic_supply` 0.5 / `oxphos_supply` 0.15) are placeholder magnitudes encoding the documented direction (deep, supply-starved tissue is enriched for tolerant phenotypes), not fit to data — read the direction, not the layer counts. Scope: (1) phenotype tracks the planar depth gradient only — internal vessels (#272 coupling) raise *delivered* drug dynamically downstream but do not reshape the chronic phenotype, a future refinement; (2) only the phenotype is depth-graded (no separate static GSH/iron gradient as in the spheroid, since the supply field already deprives deep cells dynamically). Off-by-default (the matrix never enters slab mode) ⇒ byte-identical. Calibrate vs depth-resolved phenotype/marker histology (Ki-67 proliferative rim, hypoxia/quiescence markers at depth). |
 | 3D radial pH gradient | #190 | `ph` | **Uncalibrated (illustrative)** | The `ph_on` sim-tme-3d toggle: edge/core pH (7.4 → ~6.5) plus the iron-release and drug ion-trap sensitivities are placeholders. The manuscript's "53% pH-driven RSL3 reduction" (§7.4) rests on `ion_trap_sensitivity`, flagged there as the model's most uncertain parameter (RSL3 is a chloroacetamide with an uncharacterized pKa). Calibrate vs intracellular-RSL3-vs-pH measurement. |
 | Stromal / CAF shielding | #189 | `stromal` | **Self-consistency only** | `targets.yaml: 3d_stromal_boundary_shielding`. The CAF GSH/MUFA boost reduces boundary RSL3 kill; sim-tme-3d produces ~51.5% shielding (ratio ≈ 0.485), nearly identical to 2D's 50%. The boost rates have no textbook CAF-biology source (estimates), and the target is a self-consistency check, not independent data. Upgrade to **Calibrated** vs CAF-coculture spheroid data (PMID 34373744, cited in `stromal.rs`). |
 | Clonal heterogeneity + spatial expansion | #242, #266 | `clonal` | **Uncalibrated (illustrative)** | Per-subclone iron/GPX4/MUFA perturbations and `repopulation_rate` are placeholders. Calibrate vs single-cell resistance-marker distributions + lineage-tracing growth rates. |
@@ -139,7 +140,16 @@ load-bearing claim) × tractability (how obtainable the data is):
    patient-scale depth-collapse story.
 4. **Slab depth-collapse magnitude.** The "<20 % at depth" number drives the
    in-vitro-vs-patient narrative; depth-resolved kill in thick tissue would make
-   it quantitative rather than illustrative.
+   it quantitative rather than illustrative. Remaining `slab` refinements tracked
+   under #240/#272 (all data-gated or opportunistic, none blocking): the
+   depth-collapse calibration above; the depth-graded slab phenotype's supply
+   cut-points (validate vs depth-resolved proliferation/quiescence histology); a
+   *multi-face* supply (the current planar gradient is single-face +z; a real
+   tumor chunk is perfused from several boundaries); and folding the hard-coded
+   `VIRTUAL_TUMOR_MM` / `depth_offset_mm` placement constants into a derived
+   geometry once a patient-scale tumor model is available. The slab+vasculature
+   coupling (#272) and depth-graded phenotype (#272) have shipped; the rest are
+   left until the matching data exists rather than guessed.
 5. **Spheroid radial gradients, clonal perturbations, suppressor/checkpoint/
    exhaustion rates.** Lower individual leverage (each is one knob in a
    composite); calibrate opportunistically as spatially-resolved or longitudinal
