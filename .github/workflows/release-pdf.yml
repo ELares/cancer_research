@@ -59,22 +59,26 @@ jobs:
       - name: Generate release tag
         id: tag
         run: |
+          DATE="$(date -u +%Y-%m-%d)"
           TAG="v$(date -u +%Y.%m.%d)-$(echo ${GITHUB_SHA} | cut -c1-7)"
           echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
-          echo "date=$(date -u +%Y-%m-%d)" >> "$GITHUB_OUTPUT"
+          echo "date=${DATE}" >> "$GITHUB_OUTPUT"
+
+      - name: Name the released PDF manuscript.{date}.pdf
+        run: cp article/drafts/v1.pdf "article/drafts/manuscript.${{ steps.tag.outputs.date }}.pdf"
 
       - name: Create Release
         uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ steps.tag.outputs.tag }}
-          name: "Article PDF — ${{ steps.tag.outputs.date }}"
+          name: "Manuscript PDF — ${{ steps.tag.outputs.date }}"
           body: |
-            Compiled PDF of *Beyond Pharmacologic Ferroptosis Inducers: Physical ROS Modalities for Drug-Tolerant Persister Cells*.
+            Compiled PDF of *Cancer Therapy Mechanisms and Evidence: A Cross-Literature Synthesis* — an evidence-led consolidation of the cancer-therapy literature (4,830 full-text articles across 19 mechanisms and 22 cancer types) paired with multi-scale simulations that test specific mechanistic claims.
 
-            Built from commit ${{ github.sha }}.
+            Released as `manuscript.${{ steps.tag.outputs.date }}.pdf`, built from commit ${{ github.sha }}.
 
             **Changes in this release:**
             ${{ github.event.head_commit.message }}
-          files: article/drafts/v1.pdf
+          files: article/drafts/manuscript.${{ steps.tag.outputs.date }}.pdf
           draft: false
           prerelease: false

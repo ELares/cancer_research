@@ -1,7 +1,7 @@
 {
-  "title": "Cancer Research: Cross-Literature Analysis and Ferroptosis Simulation",
+  "title": "Cancer Therapy Mechanisms and Evidence: A Cross-Literature Synthesis",
   "upload_type": "dataset",
-  "description": "Open-source cancer research combining cross-literature analysis of 4,830 research articles with Monte Carlo biochemical simulations of ferroptosis sensitivity. Content classes and rights: (1) Code — Python pipeline, Rust simulation engine, tests: MIT licensed. (2) Manuscript and analysis — authored by the depositor, released under the repo MIT license. (3) Corpus metadata — INDEX.jsonl contains bibliographic metadata (PMIDs, mechanisms, cancer types, evidence tiers); factual metadata is not copyrightable. (4) Corpus abstracts — 5,584 abstract-only records; abstracts are non-copyrightable factual summaries (Feist v. Rural, 1991). Excluded from this deposit: full-text corpus articles (61 of 4,830 have unconfirmed OA status), reference textbooks (Git LFS, CC BY 4.0 but 1.6 GB), and news articles (fair use, not a redistributable license). See PROVENANCE.yaml for full asset licensing details.",
+  "description": "Open-source cancer research consolidating the cancer-therapy literature into a single evidence-led synthesis: a cross-literature analysis of 4,830 full-text research articles across 19 therapeutic mechanisms and 22 cancer types (immunotherapy dominant), paired with multi-scale computational simulations used to validate or disprove specific mechanistic claims (ferroptosis biochemistry, immune coupling, stromal shielding, drug penetration, and tumor-microenvironment effects). Ferroptosis, photodynamic and sonodynamic therapy are among the mechanisms tested, not the focus. Content classes and rights: (1) Code — Python pipeline, Rust simulation engine, tests: MIT licensed. (2) Manuscript and analysis — authored by the depositor, released under the repo MIT license. (3) Corpus metadata — INDEX.jsonl contains bibliographic metadata (PMIDs, mechanisms, cancer types, evidence tiers); factual metadata is not copyrightable. (4) Corpus abstracts — 5,584 abstract-only records; abstracts are non-copyrightable factual summaries (Feist v. Rural, 1991). Excluded from this deposit: full-text corpus articles (61 of 4,830 have unconfirmed OA status), reference textbooks (Git LFS, CC BY 4.0 but 1.6 GB), and news articles (fair use, not a redistributable license). See PROVENANCE.yaml for full asset licensing details.",
   "creators": [
     {
       "name": "Lares, Ezequiel",
@@ -11,11 +11,13 @@
   "license_note": "Mixed-rights deposit. Select license at Zenodo upload time after reviewing: MIT for code (LICENSE), non-copyrightable for abstracts/metadata (Feist v. Rural), author-owned manuscript. See PROVENANCE.yaml.",
   "keywords": [
     "cancer research",
-    "ferroptosis",
-    "Monte Carlo simulation",
+    "cancer therapy",
     "cross-literature analysis",
-    "drug-tolerant persister cells",
+    "evidence synthesis",
+    "immunotherapy",
     "tumor microenvironment",
+    "computational simulation",
+    "ferroptosis",
     "sonodynamic therapy",
     "open science"
   ],
