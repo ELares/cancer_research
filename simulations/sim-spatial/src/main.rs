@@ -113,7 +113,7 @@ fn run_spatial(
             gc.state = CellState::from_cell_with_ros(&gc.cell, tx, params, exo_ros_peak);
             gc.extra_iron = 0.0;
             gc.newly_dead = false;
-            gc.lp_at_death = 0.0;
+            gc.lp_at_grace_end = 0.0;
         }
     }
 
@@ -153,11 +153,11 @@ fn run_spatial(
 
                 if died {
                     gc.newly_dead = true;
-                    gc.lp_at_death = gc.state.lp;
+                    gc.lp_at_grace_end = gc.state.lp;
                 }
-                // Update lp_at_death during grace period
+                // Update lp_at_grace_end during grace period
                 if gc.state.dead {
-                    gc.lp_at_death = gc.state.lp;
+                    gc.lp_at_grace_end = gc.state.lp;
                 }
             }
         }

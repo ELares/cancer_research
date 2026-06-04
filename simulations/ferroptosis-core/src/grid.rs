@@ -42,8 +42,11 @@ pub struct GridCell {
     pub is_tumor: bool,
     /// Extra iron from neighbor deaths, accumulated between timesteps.
     pub extra_iron: f64,
-    /// LP at death (for DAMP calculation).
-    pub lp_at_death: f64,
+    /// LP captured at the end of the post-death grace period (for DAMP
+    /// calculation). The value is read `post_death_steps` after a cell dies,
+    /// not at the instant of death, so it is named for the grace-end (renamed
+    /// from the misleading `lp_at_death` in #314).
+    pub lp_at_grace_end: f64,
     /// Whether this cell just died this step (for diffusion).
     pub newly_dead: bool,
 }
@@ -146,7 +149,7 @@ impl TumorGrid {
                     state,
                     is_tumor,
                     extra_iron: 0.0,
-                    lp_at_death: 0.0,
+                    lp_at_grace_end: 0.0,
                     newly_dead: false,
                 });
             }
@@ -529,7 +532,7 @@ impl TumorGrid3D {
                         state,
                         is_tumor,
                         extra_iron: 0.0,
-                        lp_at_death: 0.0,
+                        lp_at_grace_end: 0.0,
                         newly_dead: false,
                     });
                 }
@@ -596,7 +599,7 @@ impl TumorGrid3D {
                 state,
                 is_tumor: true,
                 extra_iron: 0.0,
-                lp_at_death: 0.0,
+                lp_at_grace_end: 0.0,
                 newly_dead: false,
             });
         }

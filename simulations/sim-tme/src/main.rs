@@ -172,11 +172,11 @@ fn run_spatial(
             gc.state = CellState::from_cell_with_ros(&gc.cell, tx, params, exo_ros_peak);
             gc.extra_iron = 0.0;
             gc.newly_dead = false;
-            // Init to NaN so any code path that reads `lp_at_death` before
+            // Init to NaN so any code path that reads `lp_at_grace_end` before
             // writing it (the grace-end write or the end-of-sim catch-all)
             // produces NaN downstream — calibration will trip instead of
             // silently using a stale value (#225 review).
-            gc.lp_at_death = f64::NAN;
+            gc.lp_at_grace_end = f64::NAN;
         }
     }
 
@@ -213,11 +213,11 @@ fn run_spatial(
 
                 if died {
                     gc.newly_dead = true;
-                    gc.lp_at_death = gc.state.lp;
+                    gc.lp_at_grace_end = gc.state.lp;
                 }
-                // Update lp_at_death during grace period
+                // Update lp_at_grace_end during grace period
                 if gc.state.dead {
-                    gc.lp_at_death = gc.state.lp;
+                    gc.lp_at_grace_end = gc.state.lp;
                 }
             }
         }
@@ -277,11 +277,11 @@ fn run_spatial_cycling(
             gc.state = CellState::from_cell_with_ros(&gc.cell, tx, params, exo_ros_peak);
             gc.extra_iron = 0.0;
             gc.newly_dead = false;
-            // Init to NaN so any code path that reads `lp_at_death` before
+            // Init to NaN so any code path that reads `lp_at_grace_end` before
             // writing it (the grace-end write or the end-of-sim catch-all)
             // produces NaN downstream — calibration will trip instead of
             // silently using a stale value (#225 review).
-            gc.lp_at_death = f64::NAN;
+            gc.lp_at_grace_end = f64::NAN;
         }
     }
 
@@ -327,10 +327,10 @@ fn run_spatial_cycling(
 
                 if died {
                     gc.newly_dead = true;
-                    gc.lp_at_death = gc.state.lp;
+                    gc.lp_at_grace_end = gc.state.lp;
                 }
                 if gc.state.dead {
-                    gc.lp_at_death = gc.state.lp;
+                    gc.lp_at_grace_end = gc.state.lp;
                 }
             }
         }
@@ -441,11 +441,11 @@ fn run_spatial_with_immune(
             gc.state = CellState::from_cell_with_ros(&gc.cell, tx, params, exo_ros_peak);
             gc.extra_iron = 0.0;
             gc.newly_dead = false;
-            // Init to NaN so any code path that reads `lp_at_death` before
+            // Init to NaN so any code path that reads `lp_at_grace_end` before
             // writing it (the grace-end write or the end-of-sim catch-all)
             // produces NaN downstream — calibration will trip instead of
             // silently using a stale value (#225 review).
-            gc.lp_at_death = f64::NAN;
+            gc.lp_at_grace_end = f64::NAN;
         }
     }
 
@@ -490,8 +490,8 @@ fn run_spatial_with_immune(
                         let grace_end = ds + params.post_death_steps;
                         if step == grace_end {
                             // Grace period just ended: release DAMP with accumulated LP
-                            grid.cells[idx].lp_at_death = grid.cells[idx].state.lp;
-                            damp_field[idx] += grid.cells[idx].lp_at_death * immune.damp_per_lp;
+                            grid.cells[idx].lp_at_grace_end = grid.cells[idx].state.lp;
+                            damp_field[idx] += grid.cells[idx].lp_at_grace_end * immune.damp_per_lp;
                         }
                         if step >= grace_end {
                             continue; // fully dead
@@ -520,7 +520,7 @@ fn run_spatial_with_immune(
                     ferroptosis_kills += 1;
                     // DAMP release is deferred until the post-death grace
                     // period ends (emergent LP overshoot, issue #85). At
-                    // that point `lp_at_death` is set to the grace-end LP
+                    // that point `lp_at_grace_end` is set to the grace-end LP
                     // value just before being read for DAMP — see the
                     // grace-end block above. The moment-of-death write
                     // that used to live here was dead (always overwritten
@@ -621,8 +621,8 @@ fn run_spatial_with_immune(
                 let grace_end = ds + params.post_death_steps;
                 if grace_end >= N_STEPS {
                     // Grace period wasn't completed in the loop — release DAMP now
-                    grid.cells[idx].lp_at_death = grid.cells[idx].state.lp;
-                    damp_field[idx] += grid.cells[idx].lp_at_death * immune.damp_per_lp;
+                    grid.cells[idx].lp_at_grace_end = grid.cells[idx].state.lp;
+                    damp_field[idx] += grid.cells[idx].lp_at_grace_end * immune.damp_per_lp;
                 }
             }
         }
