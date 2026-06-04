@@ -34,7 +34,7 @@ The script checks whether simulation output files are older than the Rust source
 
 ## How it works
 
-1. `targets.yaml` defines 5 calibration targets, each specifying:
+1. `targets.yaml` defines 8 targets (3 calibration + 5 self-consistency), each specifying:
    - Which simulation binary and output file to read
    - How to extract the observable (phenotype, treatment, depth, timepoint)
    - The target value and acceptable tolerance
