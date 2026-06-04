@@ -115,6 +115,35 @@ pub fn radial_o2_field(grid: &TumorGrid3D, lambda_um: f64) -> Vec<f64> {
     out
 }
 
+/// Oxygen-dependence scaling factor for exogenous (SDT/PDT) ROS yield (#336).
+///
+/// SDT and PDT generate ROS via a sono/photosensitizer. The dominant clinical
+/// mechanism is Type II (singlet oxygen via energy transfer), which is
+/// **oxygen-dependent**: the lead clinical sonodynamic agent SONALA-001 (5-ALA
+/// derived protoporphyrin IX, activated by MR-guided focused ultrasound) is
+/// Type II, and its first-in-human recurrent-high-grade-glioma trial reported
+/// only modest cell death (Sanai et al., Science Translational Medicine 2025,
+/// DOI 10.1126/scitranslmed.ads5813). The default model treats the exogenous
+/// ROS burst as O2-independent, an optimistic upper bound (manuscript §7.1);
+/// this helper lets a consumer make a configurable fraction of it O2-dependent
+/// so the contested hypoxia leg can be re-examined.
+///
+/// `o2_supply` is the local relative O2 availability (the same factor that
+/// scales `cell.basal_ros`). `dependence` is the O2-dependent fraction of the
+/// exogenous ROS yield (the "Type II fraction"): `0.0` = fully O2-independent
+/// (the historical default, returns `1.0`, byte-identical), `1.0` = fully
+/// O2-dependent (Type II, scales linearly with O2).
+///
+/// Returns `(1 − dependence) + dependence·o2_supply`, clamped to `[0, 1]`. At
+/// `dependence = 0` the exogenous ROS is unaffected by hypoxia (the SDT hypoxia
+/// advantage is maximal); raising it shrinks that advantage toward the
+/// pharmacologic case.
+pub fn o2_dependent_exo_factor(o2_supply: f64, dependence: f64) -> f64 {
+    let d = dependence.clamp(0.0, 1.0);
+    let s = o2_supply.clamp(0.0, 1.0);
+    (1.0 - d + d * s).clamp(0.0, 1.0)
+}
+
 /// Dead-cell rate for each of three O₂-defined concentric shells.
 ///
 /// Zone semantics (matches `sim-tme`'s 2D
@@ -186,6 +215,31 @@ pub fn radial_o2_zone_kill_rates(grid: &TumorGrid3D, shell_depth_um: f64) -> (f6
 mod tests {
     use super::*;
     use crate::grid::TumorGrid;
+
+    /// #336: the exo-ROS O2-dependence factor is identity at dependence 0 (the
+    /// historical, byte-identical default) and scales linearly with O2 at
+    /// dependence 1 (fully Type II / O2-dependent), monotone decreasing in
+    /// dependence under hypoxia, and clamped on out-of-range inputs.
+    #[test]
+    fn o2_dependent_exo_factor_identity_at_zero_and_scales_at_one() {
+        // dependence = 0 (default): always 1.0 regardless of O2 (no hypoxia effect).
+        assert_eq!(o2_dependent_exo_factor(0.05, 0.0), 1.0);
+        assert_eq!(o2_dependent_exo_factor(1.0, 0.0), 1.0);
+        // dependence = 1 (fully Type II): factor equals the O2 supply.
+        assert_eq!(o2_dependent_exo_factor(0.05, 1.0), 0.05);
+        assert_eq!(o2_dependent_exo_factor(1.0, 1.0), 1.0);
+        // Monotone decreasing in dependence at fixed low O2.
+        let hyp = 0.1;
+        assert!(o2_dependent_exo_factor(hyp, 0.5) < o2_dependent_exo_factor(hyp, 0.0));
+        assert!(o2_dependent_exo_factor(hyp, 1.0) < o2_dependent_exo_factor(hyp, 0.5));
+        // Out-of-range inputs are clamped, never panicking.
+        assert_eq!(o2_dependent_exo_factor(2.0, 1.0), 1.0);
+        assert_eq!(o2_dependent_exo_factor(-1.0, 1.0), 0.0);
+        assert_eq!(
+            o2_dependent_exo_factor(0.5, 2.0),
+            o2_dependent_exo_factor(0.5, 1.0)
+        );
+    }
 
     /// #289: the hoisted-geometry field must be bit-for-bit identical to a
     /// per-cell baseline that uses the canonical `TumorGrid3D::radial_depth_um`.
