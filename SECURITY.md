@@ -5,7 +5,7 @@
 | Component | Version | Supported |
 |-----------|---------|-----------|
 | Python pipeline (scripts/) | latest main | ✅ |
-| ferroptosis-core (Rust) | 0.2.0 | ✅ |
+| ferroptosis-core (Rust) | 0.32.0 | ✅ |
 | ferroptosis-python bindings | 0.1.0 | ✅ |
 | Manuscript & analysis | latest main | ✅ |
 

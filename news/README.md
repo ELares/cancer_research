@@ -25,6 +25,6 @@ news/
     └── tier3/
 ```
 
-## Pipeline (Issue #99)
+## Pipeline (Issue #99, implemented)
 
-Automated article fetching, claim extraction, verification, and scoring is tracked in issue #99. The criteria document (this issue, #98) defines the rules; the pipeline automates them.
+Automated article fetching, claim extraction, verification, and scoring is implemented in `scripts/` (`fetch_news.py`, `extract_claims.py`, `verify_news_claims.py`, `score_news.py`, `build_news_index.py`); issue #99 is closed. The criteria document (#98) defines the rules; the pipeline automates them.
