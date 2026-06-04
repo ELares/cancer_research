@@ -77,7 +77,7 @@ jobs:
         # Only when the assert above failed: a bare SHA is weak triage, so
         # keep the actual file that drifted for diffing against a known-good.
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: sim-tme-3d-summary-drift
           path: simulations/output/tme-3d/summary.json
