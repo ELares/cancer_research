@@ -2768,6 +2768,29 @@ mod tests {
         assert_eq!(names.len(), original, "duplicate snapshot preset name");
     }
 
+    /// #302: lock the `--snapshot=contact` preset → `Overrides` wiring without
+    /// running the full (~333 MB) render. Resolves the preset and asserts it
+    /// turns contact ON and leaves the geometry layers OFF — contact is
+    /// mutually-exclusive with slab, and must run on the centred sphere (no
+    /// spheroid re-grid) where the fixed-26 contact denominator is correct.
+    #[test]
+    fn contact_snapshot_preset_is_wired() {
+        let p = resolve_snapshot("contact");
+        assert_eq!(p.name, "contact");
+        assert!(
+            p.contact,
+            "the contact preset must enable the contact layer"
+        );
+        assert!(
+            !p.slab && !p.spheroid && !p.clonal && !p.vasculature,
+            "contact runs on the plain centred sphere (no conflicting geometry layer)"
+        );
+        assert!(
+            matches!(p.treatment, Treatment::RSL3),
+            "contact is shown under RSL3"
+        );
+    }
+
     /// Smoke test: condition matrix is non-empty and well-formed.
     #[test]
     fn condition_matrix_is_non_empty() {

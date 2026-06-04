@@ -66,8 +66,7 @@ pub fn write_window_csv(path: &Path, results: &[(f64, String, f64, f64, f64)]) -
 
 /// Write any Serialize value as pretty-printed JSON to a file.
 pub fn write_json<T: serde::Serialize>(path: &Path, data: &T) -> io::Result<()> {
-    let json =
-        serde_json::to_string_pretty(data).map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
+    let json = serde_json::to_string_pretty(data).map_err(io::Error::other)?;
     std::fs::write(path, json)
 }
 
