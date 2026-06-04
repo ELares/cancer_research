@@ -1056,8 +1056,8 @@ fn run_one_condition_full(
                         let grace_end = ds + params.post_death_steps;
                         if step == grace_end {
                             // `lp_at_death` = "LP at end of post-death grace"
-                            // (misnamed; matches sim-tme — rename deferred to
-                            // the #195 cleanup checklist).
+                            // (misnamed; matches sim-tme; rename tracked in
+                            // #314, re-homed from the closed #195 checklist).
                             gc.lp_at_death = gc.state.lp;
                             // DAMP release gated on immune_on (else damp_field
                             // is never read/aggregated — PR #219 third-pass).

@@ -457,14 +457,14 @@ impl TumorGrid3D {
                 )
             })
             .collect();
-        // TODO(#194): cluster_radius=4.0 cells gives ~268 cells per
-        // cluster in 3D (4/3·π·4³) vs ~50 in 2D (π·4²) — so persister
-        // clusters are ~5× larger relative to tumor volume than the
-        // 2D analog. A volume-equivalent retune (≈ cluster_radius =
-        // 4·(50/268)^(1/3) ≈ 2.4 cells, giving ~50 cells/cluster) keeps
-        // the 2D↔3D census proportions comparable. Left at 4.0 for v1
-        // to match the 2D code shape literally; sim-spatial-3d (#194)
-        // is the natural place to calibrate against experimental data.
+        // cluster_radius=4.0 cells gives ~268 cells per cluster in 3D
+        // (4/3·π·4³) vs ~50 in 2D (π·4²), so persister clusters are ~5x
+        // larger relative to tumor volume than the 2D analog. A
+        // volume-equivalent retune (cluster_radius ~= 4·(50/268)^(1/3) ~= 2.4,
+        // giving ~50 cells/cluster) would keep the 2D/3D census proportions
+        // comparable. Left at 4.0 for v1 to match the 2D code shape literally;
+        // the retune is a deliberate matrix change tracked in #311 (#194 /
+        // sim-spatial-3d was closed as superseded by sim-tme-3d).
         let cluster_radius = 4.0;
 
         let mut cells = Vec::with_capacity(rows * cols * layers);

@@ -288,7 +288,7 @@ Both `output/tme/tme_summary.json` (sim-tme) and `output/tme-3d/summary.json` (t
 cargo test --release -p sim-tme-3d
 ```
 
-Three smoke tests:
+Representative smoke tests (the full `cargo test -p sim-tme-3d` suite is much larger, with per-layer identity, byte-identity golden, and A/B integration tests):
 1. `condition_matrix_is_non_empty` — matrix sanity
 2. `single_condition_runs_end_to_end` — full orchestration on baseline Control
 3. `same_seed_same_output` — determinism
