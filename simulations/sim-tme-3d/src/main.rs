@@ -58,7 +58,9 @@ mod snapshot;
 use ferroptosis_core::biochem::{exo_decay_factor, sim_cell_step, CellState};
 use ferroptosis_core::cell::{Phenotype, Treatment};
 use ferroptosis_core::clonal::{assign_subclones_3d, repopulate_dead_sites_3d, ClonalConfig};
-use ferroptosis_core::contact::{apply_contact_resistance_3d, ContactConfig};
+use ferroptosis_core::contact::{
+    apply_contact_resistance_3d, apply_contact_resistance_at_3d, ContactConfig,
+};
 use ferroptosis_core::dose_schedule::DoseSchedule;
 use ferroptosis_core::grid::{TumorGrid3D, TUMOR_RADIUS_FRACTION};
 use ferroptosis_core::immune_spatial::{
@@ -1350,7 +1352,7 @@ fn run_one_condition_full(
         // setup seeds, so it never perturbs the assignment/placement streams.
         if let (Some(ids), Some(ccfg)) = (subclone_ids.as_mut(), &clonal_cfg) {
             if ccfg.repopulation_rate > 0.0 {
-                repopulate_dead_sites_3d(
+                let revived = repopulate_dead_sites_3d(
                     &mut grid,
                     ids,
                     ccfg,
@@ -1358,6 +1360,21 @@ fn run_one_condition_full(
                     cond_seed.wrapping_add(700_000_000),
                     step,
                 );
+                // #302: a revived dead site is a fresh, full-strength cell. If
+                // the contact layer is on, re-apply its geometric resistance to
+                // each revived cell so a dense interior site resists like its
+                // neighbours (reduced at setup), instead of coming back as the
+                // MOST ferroptosis-sensitive cell in the cluster — the opposite
+                // of the modeled biology. Contact fractions are is_tumor-
+                // geometric (death/repopulation never change them), so this
+                // reproduces the setup-time reduction exactly. (clonal+contact
+                // is otherwise unguarded, unlike slab+contact, because the two
+                // are meant to compose.)
+                if let Some(contact) = &contact_cfg {
+                    for idx in revived {
+                        apply_contact_resistance_at_3d(&mut grid, idx, contact);
+                    }
+                }
             }
         }
 
@@ -1749,6 +1766,10 @@ struct SnapshotPreset {
     /// (anti-PD-1 + anti-CTLA-4). No new overlay — the enhanced immune killing
     /// shows directly in the dead/DAMP panels.
     checkpoints: bool,
+    /// True if cell-cell contact resistance (#270) is enabled. No extra static
+    /// overlay — the contact-driven radial survival gradient (dense interior
+    /// resists, sparse surface dies) shows directly in the dead/LP panels.
+    contact: bool,
 }
 
 /// Visualization presets for `--snapshot=NAME`. Keep this list small —
@@ -1770,6 +1791,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         slab: false,
         suppressor: false,
         checkpoints: false,
+        contact: false,
     },
     SnapshotPreset {
         name: "bare",
@@ -1787,6 +1809,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         slab: false,
         suppressor: false,
         checkpoints: false,
+        contact: false,
     },
     SnapshotPreset {
         name: "multidose",
@@ -1804,6 +1827,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         slab: false,
         suppressor: false,
         checkpoints: false,
+        contact: false,
     },
     SnapshotPreset {
         // SDT here visualizes the persister-fraction OVERLAY (the MUFA axis +
@@ -1825,6 +1849,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         slab: false,
         suppressor: false,
         checkpoints: false,
+        contact: false,
     },
     SnapshotPreset {
         name: "clonal",
@@ -1842,6 +1867,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         slab: false,
         suppressor: false,
         checkpoints: false,
+        contact: false,
     },
     SnapshotPreset {
         // RSL3 (hypoxia-sensitive) + explicit internal vessels: near-vessel
@@ -1864,6 +1890,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         slab: false,
         suppressor: false,
         checkpoints: false,
+        contact: false,
     },
     SnapshotPreset {
         // SDT + radial spheroid biology: the phenotype panel shows the
@@ -1884,6 +1911,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         slab: false,
         suppressor: false,
         checkpoints: false,
+        contact: false,
     },
     SnapshotPreset {
         // SDT on a patient-scale slab at the SURFACE (+z face = vessel, depth
@@ -1909,6 +1937,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         slab: true,
         suppressor: false,
         checkpoints: false,
+        contact: false,
     },
     SnapshotPreset {
         // Slab + internal vessels (#272 coupling). vessel_supply.npy (on a slab
@@ -1934,6 +1963,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         slab: true,
         suppressor: false,
         checkpoints: false,
+        contact: false,
     },
     SnapshotPreset {
         // SDT + immune + Treg/MDSC suppressor (#264 Phase 2). Heuristic niche
@@ -1955,6 +1985,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         slab: false,
         suppressor: true,
         checkpoints: false,
+        contact: false,
     },
     SnapshotPreset {
         // SDT + immune + dual checkpoint blockade (#264 Phase 3): a PD-1 +
@@ -1977,6 +2008,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         slab: false,
         suppressor: false,
         checkpoints: true,
+        contact: false,
     },
     SnapshotPreset {
         // Kitchen-sink composition (#278): several realism layers at once —
@@ -2001,6 +2033,31 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         slab: false,
         suppressor: true,
         checkpoints: true,
+        contact: false,
+    },
+    SnapshotPreset {
+        // RSL3 + cell-cell contact resistance (#270): dense interior cells
+        // (E-cadherin/NF2-YAP → ACSL4/TFRC down) resist PUFA/iron-dependent
+        // RSL3, while the sparse surface shell stays sensitive. No extra static
+        // overlay — the radial survival gradient in the dead/LP panels IS the
+        // visualization. Runs on the centred sphere (no spheroid/slab) where the
+        // fixed-26 contact denominator is correct.
+        name: "contact",
+        desc: "RSL3 + cell-cell contact resistance (#270) — dense interior resists, sparse surface dies",
+        treatment: Treatment::RSL3,
+        treatment_name: "RSL3",
+        immune_on: false,
+        stromal_on: false,
+        ph_on: false,
+        multidose: false,
+        persister: false,
+        clonal: false,
+        vasculature: false,
+        spheroid: false,
+        slab: false,
+        suppressor: false,
+        checkpoints: false,
+        contact: true,
     },
 ];
 
@@ -2098,6 +2155,11 @@ fn run_snapshot(output_dir: &Path, tumor_radius_um: f64, name: &str) {
             .with_anti_pd1(0.8)
             .with_anti_ctla4(0.8)
     });
+    // Cell-cell contact resistance (#270): on the centred snapshot sphere the
+    // fixed-26 contact denominator is correct (tumor never touches the box
+    // face), so dense interior cells resist and the sparse surface dies — the
+    // dead/LP panels show the radial survival gradient.
+    let contact_cfg = preset.contact.then(ContactConfig::literature);
     // Static viz overlays, recomputed from the same SEED + per-layer seed the
     // run uses internally, so they match the perturbations actually applied.
     // `None` unless the matching preset is active.
@@ -2171,6 +2233,7 @@ fn run_snapshot(output_dir: &Path, tumor_radius_um: f64, name: &str) {
             slab: slab_cfg,
             suppressor: suppressor_cfg,
             checkpoints: checkpoint_cfg,
+            contact: contact_cfg,
             ..Default::default()
         },
     );
@@ -2703,6 +2766,29 @@ mod tests {
         let original = names.len();
         names.dedup();
         assert_eq!(names.len(), original, "duplicate snapshot preset name");
+    }
+
+    /// #302: lock the `--snapshot=contact` preset → `Overrides` wiring without
+    /// running the full (~333 MB) render. Resolves the preset and asserts it
+    /// turns contact ON and leaves the geometry layers OFF — contact is
+    /// mutually-exclusive with slab, and must run on the centred sphere (no
+    /// spheroid re-grid) where the fixed-26 contact denominator is correct.
+    #[test]
+    fn contact_snapshot_preset_is_wired() {
+        let p = resolve_snapshot("contact");
+        assert_eq!(p.name, "contact");
+        assert!(
+            p.contact,
+            "the contact preset must enable the contact layer"
+        );
+        assert!(
+            !p.slab && !p.spheroid && !p.clonal && !p.vasculature,
+            "contact runs on the plain centred sphere (no conflicting geometry layer)"
+        );
+        assert!(
+            matches!(p.treatment, Treatment::RSL3),
+            "contact is shown under RSL3"
+        );
     }
 
     /// Smoke test: condition matrix is non-empty and well-formed.
@@ -4761,5 +4847,133 @@ mod tests {
             "vasculature reports its hypoxic fraction under composition"
         );
         assert!(a.total_dead > 0, "composition still kills some cells");
+    }
+
+    // ===== Contact-layer composition + guards (#302) =====
+
+    /// #302: contact + spheroid is the *intended, correct* pairing — the
+    /// fixed-26 contact denominator is right for a centred spheroid whose tumor
+    /// never touches the box face. Adding contact on top of the spheroid reduces
+    /// RSL3 kills further, and the composition is deterministic.
+    #[test]
+    fn contact_composes_with_spheroid() {
+        let cfg = RunConfig {
+            grid_dim: 24,
+            n_steps: 80,
+        };
+        let cond = Condition {
+            name: "compose_cs".to_string(),
+            treatment: Treatment::RSL3,
+            treatment_name: "RSL3".to_string(),
+            o2_lambda: Some(ZONE_REF_LAMBDA),
+            immune_on: false,
+            stromal_on: false,
+            ph_on: false,
+            dose_schedule: DoseSchedule::Constant,
+        };
+        let spheroid_only = run_one_condition_full(
+            &cond,
+            cfg,
+            None,
+            Overrides {
+                spheroid: Some(SpheroidConfig::literature()),
+                ..Default::default()
+            },
+        );
+        let run_both = || {
+            run_one_condition_full(
+                &cond,
+                cfg,
+                None,
+                Overrides {
+                    spheroid: Some(SpheroidConfig::literature()),
+                    contact: Some(ContactConfig::literature()),
+                    ..Default::default()
+                },
+            )
+        };
+        let both = run_both();
+        assert!(
+            spheroid_only.total_dead > 0,
+            "spheroid baseline must kill some cells"
+        );
+        assert!(
+            both.total_dead < spheroid_only.total_dead,
+            "contact must reduce RSL3 kills under a spheroid: spheroid={}, both={}",
+            spheroid_only.total_dead,
+            both.total_dead
+        );
+        assert_eq!(
+            both.total_dead,
+            run_both().total_dead,
+            "spheroid+contact composition is deterministic"
+        );
+    }
+
+    /// #302: slab + contact is mutually exclusive — the fixed-26 contact
+    /// denominator mis-scores a slab's domain-boundary shell as low-contact. The
+    /// guard is a `debug_assert!`; this `#[should_panic]` locks it (gated to
+    /// debug builds, where the assert lives, so a `--release` run does not
+    /// spuriously fail).
+    #[test]
+    #[cfg(debug_assertions)]
+    #[should_panic(expected = "mutually exclusive")]
+    fn slab_plus_contact_panics() {
+        let cfg = RunConfig {
+            grid_dim: 12,
+            n_steps: 1,
+        };
+        let cond = Condition {
+            name: "slab_contact_guard".to_string(),
+            treatment: Treatment::RSL3,
+            treatment_name: "RSL3".to_string(),
+            o2_lambda: Some(ZONE_REF_LAMBDA),
+            immune_on: false,
+            stromal_on: false,
+            ph_on: false,
+            dose_schedule: DoseSchedule::Constant,
+        };
+        let _ = run_one_condition_full(
+            &cond,
+            cfg,
+            None,
+            Overrides {
+                slab: Some(SlabConfig::surface()),
+                contact: Some(ContactConfig::literature()),
+                ..Default::default()
+            },
+        );
+    }
+
+    /// #302: slab + spheroid is mutually exclusive (incompatible geometries —
+    /// the spheroid's radial phenotype keys on a center an all-tumor block lacks).
+    #[test]
+    #[cfg(debug_assertions)]
+    #[should_panic(expected = "mutually exclusive")]
+    fn slab_plus_spheroid_panics() {
+        let cfg = RunConfig {
+            grid_dim: 12,
+            n_steps: 1,
+        };
+        let cond = Condition {
+            name: "slab_spheroid_guard".to_string(),
+            treatment: Treatment::RSL3,
+            treatment_name: "RSL3".to_string(),
+            o2_lambda: Some(ZONE_REF_LAMBDA),
+            immune_on: false,
+            stromal_on: false,
+            ph_on: false,
+            dose_schedule: DoseSchedule::Constant,
+        };
+        let _ = run_one_condition_full(
+            &cond,
+            cfg,
+            None,
+            Overrides {
+                slab: Some(SlabConfig::surface()),
+                spheroid: Some(SpheroidConfig::literature()),
+                ..Default::default()
+            },
+        );
     }
 }

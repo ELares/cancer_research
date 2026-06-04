@@ -107,12 +107,15 @@ The default 24-condition matrix path (no `--snapshot` flag) is **byte-identical*
 | `suppressor` | SDT | immune + **Treg/MDSC suppressor (#264)** | constant |
 | `checkpoint` | SDT | immune + **dual PD-1/CTLA-4 blockade (#264)** | constant |
 | `combined-realism` | SDT | immune + **persister + clonal + suppressor + checkpoints (#278)** | multi-dose |
+| `contact` | RSL3 | **cell-cell contact resistance (#270)** | constant |
 
 The `slab` preset visualizes the **depth-graded supply** of a patient-scale slab: a surface slab (+z face = vessel) where the top layers are well-perfused and die while the deeper layers go drug/O2-deprived and survive. The depth axis is the layer (z) axis, which the renderer's mid-slice spans — so the death front in the existing dead/DAMP/LP panels *is* the visualization (no extra static overlay). See [Patient-scale slab](#patient-scale-slab-240) below.
 
 The `multidose` preset shows **death waves synced to each dose**: four SDT ROS pulses at steps 10/55/100/145, each triggering a ferroptotic death wave + DAMP bloom + immune response. The renderer draws a red frame border + `💉 DOSE` marker on each dose step.
 
 The `persister` preset adds the drug-tolerant persister model (#241) and a **4th render panel** colouring each cell by its `persister_fraction` (0..1): tolerance accumulates in survivors across the death waves and reverts between doses. It writes an extra `trajectory_persister.npy` (f32), and `summary.json`-equivalent runs report `persister_mean`. Only this preset emits the persister file, so the other presets render the original three panels unchanged.
+
+The `contact` preset (#270) shows **cell-cell contact resistance** under RSL3: dense interior cells (E-cadherin/NF2-YAP → ACSL4/TFRC down) keep their PUFA/iron low and survive, while the sparse surface shell stays sensitive and dies. Like `slab`, it needs no extra static overlay — the radial survival gradient in the dead/LP panels *is* the visualization. It runs on the centred sphere (no spheroid/slab), where the fixed-26 contact denominator is correct.
 
 ## Time-varying dosing (`--dose-sweep` + `DoseSchedule`, #239)
 
