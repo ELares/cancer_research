@@ -1,5 +1,12 @@
 # Ferroptosis Simulation Suite v2 — Implementation Plan
 
+> **Historical planning document.** This plan is now substantially implemented:
+> the Cargo workspace, the `ferroptosis-core` library, and the simulation
+> binaries described below as "planned" have shipped (and the library has grown
+> well beyond the originally-listed modules). For the current suite see
+> `simulations/README.md`, `simulations/ferroptosis-core/README.md`, and the
+> simulation section of `CLAUDE.md`.
+
 ## Context
 
 The article makes five claims that the current single-cell Monte Carlo simulation cannot validate:

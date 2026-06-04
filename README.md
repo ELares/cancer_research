@@ -25,7 +25,7 @@ If you have expertise in oncology, biochemistry, ferroptosis, immunology, comput
 - **11 Rust simulation binaries** modeling ferroptosis biochemistry: single-cell Monte Carlo, spatial tumors with PDT/SDT depth physics (2D row-based and 3D radial-depth dispatchers; sim-tme-3d is the 3D-spheroid capstone consuming the full TME library stack) + photosensitizer PK (drug-light-interval scaling, saturating distribution phase, relative singlet-O₂ yield), drug penetration, drug combinations, tumor microenvironment (oxygen gradients, spatial immune zones, DAMP-mediated T cell activation), vulnerability windows, ICD immune cascades, tumor PK
 - **ferroptosis-core library** (MIT, with Python bindings) — embeddable ferroptosis biochemistry engine; module list and current unit-test count in [`simulations/ferroptosis-core/README.md`](simulations/ferroptosis-core/README.md)
 - **Calibration infrastructure** linking simulation parameters to published experimental data
-- **Book-format manuscript (~115 pp)** with 11 chapters, 3 appendices, and 24 figures (~36,700 words), cross-referenced against all analysis outputs
+- **Book-format manuscript (~115 pp)** with 11 chapters, 3 appendices, and 24 figures (~39,400 words), cross-referenced against all analysis outputs
 
 Everything is organised so you can re-run the pipeline, challenge the conclusions, or extend the work in directions we haven't thought of yet.
 

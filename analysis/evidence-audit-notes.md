@@ -4,8 +4,8 @@ This note documents the main interpretation risk in the current corpus-wide evid
 
 ## Current state
 
-- The manuscript reports evidence-level coverage of 1,779 / 4,830 full-text articles.
-- That is about 36.8% coverage.
+- The manuscript reports evidence-level coverage of 2,038 / 4,830 full-text articles.
+- That is about 42.2% coverage.
 - Any claim of "no Phase II/III evidence" should therefore be interpreted as "not detected in the current keyword-derived evidence layer" unless it has been externally verified.
 
 ## Why this matters

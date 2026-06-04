@@ -30,10 +30,10 @@ Runtime: ~30-60 seconds (parallelized via rayon, 100K cells x 36 conditions + se
 | `--output-dir` | `output/window` | Directory for output files |
 
 Recovery half-lives are hardcoded in `RecoveryRates::default()`:
-- FSP1 half-recovery: days
-- GPX4 half-recovery: days
-- NRF2 half-recovery: days
-- GSH half-recovery: days
+- FSP1 half-recovery: 7 days
+- GPX4 half-recovery: 3 days
+- NRF2 half-recovery: 5 days
+- GSH half-recovery: 1 day
 
 ## Output format
 

@@ -17,7 +17,7 @@ abstract: >
   ferroptosis sensitivity across cell phenotypes, drug combinations,
   and tumor microenvironment features. Includes a reusable Rust
   simulation engine (ferroptosis-core) with Python bindings, a news
-  source authentication pipeline, and a 112-page book-format manuscript.
+  source authentication pipeline, and a ~115-page book-format manuscript.
 keywords:
   - cancer research
   - ferroptosis
