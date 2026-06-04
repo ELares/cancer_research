@@ -322,7 +322,7 @@ pub fn repopulate_dead_sites_3d(
                 state,
                 is_tumor: true,
                 extra_iron: 0.0,
-                lp_at_death: 0.0,
+                lp_at_grace_end: 0.0,
                 newly_dead: false,
             },
         ));

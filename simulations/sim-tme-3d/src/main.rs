@@ -788,11 +788,11 @@ fn run_one_condition_full(
                 };
                 gc.extra_iron = 0.0;
                 gc.newly_dead = false;
-                // Init to NaN so any code path that reads `lp_at_death`
+                // Init to NaN so any code path that reads `lp_at_grace_end`
                 // before writing it (grace-end write or end-of-sim
                 // catch-all) produces NaN downstream — calibration trips
                 // instead of silently using a stale value (#225 review).
-                gc.lp_at_death = f64::NAN;
+                gc.lp_at_grace_end = f64::NAN;
             }
         }
     }
@@ -1055,14 +1055,14 @@ fn run_one_condition_full(
                     if let Some(ds) = gc.state.death_step {
                         let grace_end = ds + params.post_death_steps;
                         if step == grace_end {
-                            // `lp_at_death` = "LP at end of post-death grace"
-                            // (misnamed; matches sim-tme; rename tracked in
-                            // #314, re-homed from the closed #195 checklist).
-                            gc.lp_at_death = gc.state.lp;
+                            // `lp_at_grace_end` captures LP at the end of the
+                            // post-death grace period (renamed from the
+                            // misleading `lp_at_death` in #314).
+                            gc.lp_at_grace_end = gc.state.lp;
                             // DAMP release gated on immune_on (else damp_field
                             // is never read/aggregated — PR #219 third-pass).
                             if condition.immune_on {
-                                *damp_slot += gc.lp_at_death * immune_cfg.damp_per_lp;
+                                *damp_slot += gc.lp_at_grace_end * immune_cfg.damp_per_lp;
                             }
                         }
                         if step >= grace_end {
@@ -1433,8 +1433,8 @@ fn run_one_condition_full(
             if let Some(ds) = gc.state.death_step {
                 let grace_end = ds + params.post_death_steps;
                 if grace_end >= run_cfg.n_steps {
-                    gc.lp_at_death = gc.state.lp;
-                    damp_field[idx] += gc.lp_at_death * immune_cfg.damp_per_lp;
+                    gc.lp_at_grace_end = gc.state.lp;
+                    damp_field[idx] += gc.lp_at_grace_end * immune_cfg.damp_per_lp;
                 }
             }
         }
