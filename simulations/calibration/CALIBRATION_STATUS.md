@@ -3,8 +3,9 @@
 This is the **single place** that states, for every simulation layer in the
 suite, whether its parameters are calibrated to independent data, partially
 anchored, only self-consistent, or uncalibrated placeholders. It exists because
-the suite grew fast (the `sim-tme-3d` 3D track added ~15 "realism layers" on top
-of the original 2D/single-cell engine), and the calibration caveats for those
+the suite grew fast (the `sim-tme-3d` 3D track added more than a dozen "realism
+layers" on top of the original 2D/single-cell engine), and the calibration
+caveats for those
 layers were scattered across module doc-comments, two READMEs, and
 `3d_validation_report.md`. A reader deserves one table, not a scavenger hunt.
 
@@ -59,6 +60,12 @@ machine-checked authorities remain:
 All off-by-default and byte-identical when off. Each was built to model a
 *mechanism*; none has been fit to independent data. Where a parameter has a
 literature anchor for its **structure** (e.g. vessel spacing), it is noted.
+Two rows below are **not** biology realism layers and are listed only for
+accounting completeness: the **vessel spatial index** (#268) is a pure
+performance optimization with no parameters, and **`dose_schedule`** (#239) is a
+second-wave PK module the 3D track merely consumes (manuscript §11.2 groups it
+with the second wave, not the realism layers). So the table carries a few more
+rows than the "more than a dozen" realism-layer count above.
 
 | Layer | Issue | Module | Status | What would calibrate it |
 |-------|-------|--------|--------|-------------------------|
@@ -69,7 +76,7 @@ literature anchor for its **structure** (e.g. vessel spacing), it is noted.
 | Patient-scale slab | #240 | `slab` | **Uncalibrated (illustrative)** | Krogh λ ~150 µm placeholder; the "<20 % kill at 4 mm depth" is *illustrative of the scale gap*, not a validated efficacy number. Calibrate vs depth-resolved kill in thick tissue / patient PK. |
 | Slab + vasculature coupling | #272 | `slab`+`vasculature` | **Uncalibrated (illustrative)** | Inherits the slab λ and vessel placeholders; combine rule (element-wise max) is a first-order Krogh approximation. |
 | 3D radial pH gradient | #190 | `ph` | **Uncalibrated (illustrative)** | The `ph_on` sim-tme-3d toggle: edge/core pH (7.4 → ~6.5) plus the iron-release and drug ion-trap sensitivities are placeholders. The manuscript's "53% pH-driven RSL3 reduction" (§7.4) rests on `ion_trap_sensitivity`, flagged there as the model's most uncertain parameter (RSL3 is a chloroacetamide with an uncharacterized pKa). Calibrate vs intracellular-RSL3-vs-pH measurement. |
-| Stromal / CAF shielding | #189 | `stromal` | **Self-consistency only** | `targets.yaml: 3d_stromal_boundary_shielding` — the CAF GSH/MUFA boost reduces boundary RSL3 kill; sim-tme-3d produces ~51.5% shielding (ratio ≈ 0.485), nearly identical to 2D's 50%. The boost rates have no textbook CAF-biology source (estimates), and the target is a self-consistency check, not independent data. Upgrade to **Calibrated** vs CAF-coculture spheroid data (PMID 34373744, cited in `stromal.rs`). |
+| Stromal / CAF shielding | #189 | `stromal` | **Self-consistency only** | `targets.yaml: 3d_stromal_boundary_shielding`. The CAF GSH/MUFA boost reduces boundary RSL3 kill; sim-tme-3d produces ~51.5% shielding (ratio ≈ 0.485), nearly identical to 2D's 50%. The boost rates have no textbook CAF-biology source (estimates), and the target is a self-consistency check, not independent data. Upgrade to **Calibrated** vs CAF-coculture spheroid data (PMID 34373744, cited in `stromal.rs`). |
 | Clonal heterogeneity + spatial expansion | #242, #266 | `clonal` | **Uncalibrated (illustrative)** | Per-subclone iron/GPX4/MUFA perturbations and `repopulation_rate` are placeholders. Calibrate vs single-cell resistance-marker distributions + lineage-tracing growth rates. |
 | Cell-cell contact resistance | #270 | `contact` | **Uncalibrated (illustrative); mechanism literature-anchored** | The mechanism (dense contact ⇒ E-cadherin/Merlin/NF2 ⇒ YAP inhibition ⇒ ACSL4/TFRC down ⇒ ferroptosis resistance) is established (Wu 2019, PMID 31341276). The `ContactConfig::literature()` strengths (`lipid_strength` 0.4 / `iron_strength` 0.2, applied as `1 − strength·contact_fraction` on the durable PUFA/iron axes) are placeholder magnitudes encoding the documented direction, not fit to data. The resulting kill-rate change is **threshold-proximity-sensitive** (PUFA enters LP seeding AND autocatalytic propagation, so it scales steeply — read the direction, not the number), and the effect is **almost entirely the lipid/ACSL4 axis**; the iron/TFRC axis is near-inert under RSL3 (small additive Fenton term) and would matter more in Fenton-dominated conditions. Calibrate vs density-resolved ferroptosis-sensitivity assays (sparse vs confluent; NF2/YAP knockdown). Geometric (sphere/spheroid only — mutually-exclusive with the slab geometry); off-by-default ⇒ byte-identical. |
 | Drug-tolerant persisters | #241, #262 | `persister` | **Uncalibrated (illustrative)** | Acquisition/reversion rates are step-level placeholders (no published step-level kinetics). Target: Hangauer-style multi-cycle drug screen (fraction-surviving vs cycles) + off-drug reversion half-time — see `parameter_provenance.md`. |
