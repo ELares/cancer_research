@@ -126,6 +126,10 @@ fn ferro_params_to_params(fp: &FerroParams) -> Params {
         lp_propagation: fp.lp_propagation,
         gpx4_rate: fp.gpx4_rate,
         fsp1_rate: fp.fsp1_rate,
+        // GPX4-independent suppressors (#338) are off by default and not part of
+        // the C ABI (FerroParams is unchanged), so they map to 0.0 here.
+        dhodh_rate: 0.0,
+        gch1_rate: 0.0,
         scd_mufa_rate: fp.scd_mufa_rate,
         scd_mufa_max: fp.scd_mufa_max,
         initial_mufa_protection: fp.initial_mufa_protection,

@@ -231,8 +231,11 @@ pub fn sim_cell_step(
 
     let effective_unsat = (cell.lipid_unsat * (1.0 - state.mufa_protection)).max(0.05);
     let lp_direct = unscav * effective_unsat * params.lp_rate;
-    // AUTOCATALYTIC PROPAGATION — GSH-gated bistable switch
-    let antioxidant_quench = state.gpx4 * (state.gsh / (state.gsh + 0.5)) + state.fsp1;
+    // AUTOCATALYTIC PROPAGATION — GSH-gated bistable switch.
+    // GCH1/BH4 (#338) adds GPX4-independent radical-trapping quench capacity
+    // (`gch1_rate`, 0.0 by default ⇒ byte-identical).
+    let antioxidant_quench =
+        state.gpx4 * (state.gsh / (state.gsh + 0.5)) + state.fsp1 + params.gch1_rate;
     let propagation_rate = params.lp_propagation / (1.0 + antioxidant_quench * 5.0);
     let lp_propagation = state.lp * effective_unsat * propagation_rate;
     let lp_generation = lp_direct + lp_propagation;
@@ -243,7 +246,10 @@ pub fn sim_cell_step(
         * params.gpx4_rate
         * (state.lp / (state.lp + 0.5));
     let fsp1_repair = state.fsp1 * params.fsp1_rate * (state.lp / (state.lp + 0.5));
-    let total_repair = gpx4_repair + fsp1_repair;
+    // DHODH (#338): GPX4-independent CoQ10 reduction, an extra repair term in
+    // parallel to FSP1 (`dhodh_rate`, 0.0 by default ⇒ byte-identical).
+    let dhodh_repair = params.dhodh_rate * (state.lp / (state.lp + 0.5));
+    let total_repair = gpx4_repair + fsp1_repair + dhodh_repair;
 
     state.lp = (state.lp + lp_generation - total_repair).max(0.0);
 
@@ -343,7 +349,8 @@ pub fn sim_cell(
         );
         let effective_unsat = (cell.lipid_unsat * (1.0 - mufa_protection)).max(0.05);
         let lp_direct = unscav * effective_unsat * params.lp_rate;
-        let antioxidant_quench = gpx4 * (gsh / (gsh + 0.5)) + fsp1;
+        // GCH1/BH4 (#338) adds GPX4-independent quench (`gch1_rate`, 0.0 default).
+        let antioxidant_quench = gpx4 * (gsh / (gsh + 0.5)) + fsp1 + params.gch1_rate;
         let propagation_rate = params.lp_propagation / (1.0 + antioxidant_quench * 5.0);
         let lp_propagation = lp * effective_unsat * propagation_rate;
         let lp_generation = lp_direct + lp_propagation;
@@ -351,7 +358,9 @@ pub fn sim_cell(
         // === REPAIR ===
         let gpx4_repair = gpx4 * (gsh / (gsh + 1.0)) * params.gpx4_rate * (lp / (lp + 0.5));
         let fsp1_repair = fsp1 * params.fsp1_rate * (lp / (lp + 0.5));
-        let total_repair = gpx4_repair + fsp1_repair;
+        // DHODH (#338): GPX4-independent repair in parallel to FSP1 (0.0 default).
+        let dhodh_repair = params.dhodh_rate * (lp / (lp + 0.5));
+        let total_repair = gpx4_repair + fsp1_repair + dhodh_repair;
 
         lp = (lp + lp_generation - total_repair).max(0.0);
 
@@ -381,6 +390,55 @@ mod tests {
     use super::*;
     use crate::cell::{gen_cell, Phenotype};
     use rand::SeedableRng;
+
+    /// #338: DHODH and GCH1/BH4 are GPX4-independent ferroptosis suppressors. Under
+    /// RSL3 (GPX4 inhibited), activating either backup must reduce lipid
+    /// peroxidation accumulation (the model previously had only the FSP1 backup,
+    /// so it overstated RSL3 monotherapy kill). Inhibiting the backup (rate back
+    /// to 0) restores kill, which is the GPX4i+DHODHi combination logic. The
+    /// default rates (0.0) reproduce the historical behaviour (matrix
+    /// byte-identity is guarded by the golden tests); this asserts the DIRECTION.
+    #[test]
+    fn dhodh_and_gch1_backups_reduce_rsl3_lipid_peroxidation() {
+        // Run one Glycolytic cell under RSL3 to a fixed horizon and report the
+        // peak LP reached (deterministic given the seed). A higher backup rate
+        // must lower the LP the cell reaches.
+        fn peak_lp(dhodh: f64, gch1: f64) -> f64 {
+            let p = Params {
+                dhodh_rate: dhodh,
+                gch1_rate: gch1,
+                ..Params::default()
+            };
+            // A modest basal ROS so RSL3 (GPX4 inhibition) can drive LP without
+            // a hypoxic collapse.
+            let mut gen_rng = StdRng::seed_from_u64(42);
+            let cell = gen_cell(Phenotype::Glycolytic, &mut gen_rng);
+            let mut rng = StdRng::seed_from_u64(7);
+            let mut state = CellState::from_cell(&cell, Treatment::RSL3, &p, &mut rng);
+            let mut peak = 0.0_f64;
+            for step in 0..180 {
+                let died = sim_cell_step(&mut state, &cell, &p, step, 0.0, &mut rng);
+                peak = peak.max(state.lp);
+                if died {
+                    break;
+                }
+            }
+            peak
+        }
+        let baseline = peak_lp(0.0, 0.0);
+        let with_dhodh = peak_lp(2.0, 0.0);
+        let with_gch1 = peak_lp(0.0, 5.0);
+        assert!(
+            with_dhodh < baseline,
+            "DHODH backup should lower peak LP under RSL3: dhodh={with_dhodh} vs baseline={baseline}"
+        );
+        assert!(
+            with_gch1 < baseline,
+            "GCH1/BH4 backup should lower peak LP under RSL3: gch1={with_gch1} vs baseline={baseline}"
+        );
+        // Determinism.
+        assert_eq!(with_dhodh, peak_lp(2.0, 0.0));
+    }
 
     #[test]
     fn exo_decay_factor_matches_envelope_formula() {
