@@ -78,7 +78,7 @@ use ferroptosis_core::params::{
 use ferroptosis_core::persister;
 use ferroptosis_core::ph::{ion_trap_factor_from_ph, iron_multiplier_from_ph, radial_ph_field};
 use ferroptosis_core::phenotype_mufa::{
-    apply_phenotype_mufa_rate_at_3d, apply_phenotype_mufa_rates_3d, PhenotypeMufaConfig,
+    apply_phenotype_mufa_3d, apply_phenotype_mufa_at_3d, PhenotypeMufaConfig,
 };
 use ferroptosis_core::physics::local_ros_multiplier_3d;
 use ferroptosis_core::senescence::{
@@ -1044,16 +1044,19 @@ fn run_one_condition_full(
         apply_nutrient_stress_3d(&mut grid, cfg);
     }
 
-    // Phenotype-specific SCD1/MUFA accumulation rates (#363): scale each tumor
-    // cell's MUFA build-up RATE by a per-phenotype multiplier (a drug-tolerant
-    // persister remodels lipids toward MUFA at a different rate than a glycolytic
-    // rim cell). Reads gc.phenotype (geometric, no RNG); base rate is the run's
-    // global scd_mufa_rate. Off-by-default identity is filtered out above, so the
-    // default path sets no per-cell mufa_rate ⇒ byte-identical. Runs after the
-    // phenotype-reassigning layers (spheroid) so each cell's CURRENT phenotype
-    // drives its rate. Inert in the matrix (scd_mufa_rate = 0 there).
+    // Phenotype-specific SCD1/MUFA dynamics (#363 rate + #390 cap): scale each
+    // tumor cell's MUFA build-up RATE and carrying CAP by per-phenotype
+    // multipliers (a drug-tolerant persister remodels lipids toward MUFA at a
+    // different rate, and to a different steady state, than a glycolytic rim
+    // cell). Reads gc.phenotype (geometric, no RNG); base rate/cap are the run's
+    // global scd_mufa_rate / scd_mufa_max. Off-by-default identity is filtered out
+    // above, so the default path sets no per-cell mufa_rate/mufa_cap ⇒
+    // byte-identical. Runs AFTER the phenotype-reassigning + radial-cap layers
+    // (spheroid) so each cell's CURRENT phenotype drives its rate and the cap
+    // multiplier COMPOSES with the spheroid's radial cap. Inert in the matrix
+    // (scd_mufa_rate = 0 there).
     if let Some(cfg) = &phenotype_mufa_cfg {
-        apply_phenotype_mufa_rates_3d(&mut grid, params.scd_mufa_rate, cfg);
+        apply_phenotype_mufa_3d(&mut grid, params.scd_mufa_rate, params.scd_mufa_max, cfg);
     }
 
     // Therapy-induced senescence (#341): mark a `fraction` of tumor cells
@@ -1693,7 +1696,13 @@ fn run_one_condition_full(
                 // layer is on.
                 if let Some(pm) = &phenotype_mufa_cfg {
                     for &idx in &revived {
-                        apply_phenotype_mufa_rate_at_3d(&mut grid, idx, params.scd_mufa_rate, pm);
+                        apply_phenotype_mufa_at_3d(
+                            &mut grid,
+                            idx,
+                            params.scd_mufa_rate,
+                            params.scd_mufa_max,
+                            pm,
+                        );
                     }
                 }
                 // #341: a revived dead site is a NEW cell grown from a living
@@ -5904,11 +5913,11 @@ mod tests {
         // A non-identity config runs and is deterministic (geometric per-cell
         // setup, no RNG), so the layer is reachable without breaking determinism.
         let nonident = PhenotypeMufaConfig {
-            glycolytic: 1.0,
             oxphos: 1.5,
             persister: 2.0,
             persister_nrf2: 2.0,
-            stromal: 1.0,
+            persister_cap: 1.5,
+            ..PhenotypeMufaConfig::identity()
         };
         assert_eq!(
             run(Some(nonident)),

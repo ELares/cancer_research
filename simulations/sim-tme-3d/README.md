@@ -111,7 +111,7 @@ The default 24-condition matrix path (no `--snapshot` flag) is **byte-identical*
 | `nutrient` | SDT | immune + **radial nutrient gradient (#270)** | constant |
 | `dc-subsets` | SDT | immune + **cDC1/cDC2 DC subset mix (#264 P4)** | constant |
 | `senescence` | SDT | immune + **therapy-induced senescence + SASP (#341)** | constant |
-| `phenotype-mufa` | RSL3 | spheroid + **phenotype-specific SCD1/MUFA rates (#363)** | constant |
+| `phenotype-mufa` | RSL3 | spheroid + **phenotype-specific SCD1/MUFA rates + caps (#363 rate + #390 cap)** | constant |
 | `sdt-o2dep` | SDT | **O2-dependent exo-ROS (#358/#380)** — hypoxic-core SDT survival front | constant |
 | `ferritinophagy` | RSL3 | **NCOA4-ferritinophagy + hypoxia-iron (#365/#381)** — iron-amplified ferroptosis front | constant |
 
