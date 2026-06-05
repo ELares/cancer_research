@@ -3852,6 +3852,16 @@ mod tests {
             explicit_none.persister_mean, None,
             "explicit-None path must also omit persister_mean"
         );
+        // The #342 locked-pool metric is likewise omitted when persister is off
+        // (pins the skip_serializing_if guard behind the matrix byte-identity).
+        assert_eq!(
+            wrapped.persister_locked_mean, None,
+            "off path must omit persister_locked_mean"
+        );
+        assert_eq!(
+            explicit_none.persister_locked_mean, None,
+            "explicit-None path must also omit persister_locked_mean"
+        );
         // An identity PersisterConfig runs the (gated) block but every helper
         // is a no-op, so kills are unchanged.
         let identity = run_one_condition_full(
