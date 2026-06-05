@@ -69,7 +69,7 @@ use ferroptosis_core::immune_spatial::{
     SuppressorConfig, DAMP_KILL_THRESHOLD,
 };
 use ferroptosis_core::nutrient::{apply_nutrient_stress_3d, NutrientConfig};
-use ferroptosis_core::oxygen::radial_o2_field;
+use ferroptosis_core::oxygen::{o2_dependent_exo_factor, radial_o2_field};
 use ferroptosis_core::params::{
     Params, PersisterConfig, PhConfig, SpatialImmuneConfig, SpatialParams, StromalConfig,
 };
@@ -437,6 +437,13 @@ struct Overrides {
     /// Dendritic-cell subset mix (#264 Phase 4). `None` / balanced ⇒ priming
     /// efficiency 1.0 ⇒ no immune-kill modulation ⇒ byte-identical.
     dc_subsets: Option<DcSubsetConfig>,
+    /// Oxygen-dependent SDT/PDT exo-ROS yield (#336): the "Type II fraction" of
+    /// the exogenous ROS that scales with local O2. `0.0` (default) ⇒ fully
+    /// O2-independent (the historical optimistic upper bound) ⇒ the exo-ROS
+    /// factor is exactly 1.0 ⇒ byte-identical. `1.0` ⇒ fully Type II /
+    /// O2-dependent, so SDT loses efficacy in hypoxic zones like the clinical
+    /// SONALA-001 agent (manuscript §7.1).
+    sdt_o2_dependence: f64,
 }
 
 /// Thin wrapper running a condition with NO overrides (all realism layers
@@ -486,6 +493,9 @@ fn run_one_condition_full(
     let contact_cfg = overrides.contact;
     let nutrient_cfg = overrides.nutrient;
     let dc_subsets_cfg = overrides.dc_subsets;
+    // Oxygen-dependent SDT/PDT exo-ROS (#336). `0.0` (default/matrix) ⇒ the
+    // exo-ROS O2 factor is exactly 1.0 ⇒ byte-identical.
+    let sdt_o2_dependence = overrides.sdt_o2_dependence;
     // Treg/MDSC suppressor (#264 Phase 2). `None`/disabled ⇒ no source mask,
     // no field, identity multiplier ⇒ byte-identical.
     let suppressor_cfg = overrides.suppressor.filter(|c| !c.is_disabled());
@@ -690,6 +700,13 @@ fn run_one_condition_full(
     };
 
     // --- Apply O₂ gradient (mutates cell.basal_ros) ---
+    // Per-cell O2 supply factor captured for the O2-dependent exo-ROS scaling
+    // (#336): whichever O2 representation scales basal_ros (the supply field or
+    // the edge-distance radial O2) is the same availability that gates a Type II
+    // sonosensitizer's ROS yield. 1.0 (full O2) for stroma and when no O2 model
+    // is active. Read ONLY through `o2_dependent_exo_factor`, which returns 1.0
+    // when `sdt_o2_dependence == 0` ⇒ the matrix path is byte-identical.
+    let mut o2_supply_for_exo: Vec<f64> = vec![1.0; n_cells];
     if let Some(supply) = &supply_field {
         // Slab depth gradient (#240) or explicit vessels (#191). Applies
         // regardless of the radial-O2 condition flag (the supply IS the O2
@@ -697,6 +714,7 @@ fn run_one_condition_full(
         for (idx, &factor) in supply.iter().enumerate() {
             if grid.cells[idx].is_tumor {
                 grid.cells[idx].cell.basal_ros *= factor;
+                o2_supply_for_exo[idx] = factor;
             }
         }
     } else if let Some(lambda) = condition.o2_lambda {
@@ -705,6 +723,7 @@ fn run_one_condition_full(
         for (idx, &factor) in o2_factors.iter().enumerate() {
             if grid.cells[idx].is_tumor {
                 grid.cells[idx].cell.basal_ros *= factor;
+                o2_supply_for_exo[idx] = factor;
             }
         }
     }
@@ -792,7 +811,12 @@ fn run_one_condition_full(
                     // Vessel-delivered sonosensitizer/photosensitizer (#191):
                     // the exo-ROS dose scales by vessel proximity on EVERY path
                     // (constant + dosed). ×1.0 when off → byte-identical.
+                    // Oxygen-dependent ROS yield (#336): a Type II sonosensitizer
+                    // generates O2-dependent singlet oxygen, so the exo-ROS is
+                    // scaled by local O2 availability. ×1.0 when
+                    // sdt_o2_dependence == 0 → byte-identical.
                     raw * supply_field.as_ref().map_or(1.0, |s| s[idx])
+                        * o2_dependent_exo_factor(o2_supply_for_exo[idx], sdt_o2_dependence)
                 };
                 if dose_modulates_exo {
                     base_exo[idx] = exo_ros_peak;
@@ -5010,6 +5034,56 @@ mod tests {
                 combined[i]
             );
         }
+    }
+
+    /// #336 oxygen-dependent SDT: under an edge-distance O2 gradient (a hypoxic
+    /// spheroid core), an O2-dependent (Type II) SDT (`sdt_o2_dependence = 1.0`)
+    /// kills fewer cells than the default O2-independent SDT
+    /// (`sdt_o2_dependence = 0.0`), because the exogenous ROS yield collapses in
+    /// the hypoxic core like a clinical Type II sonosensitizer. The default
+    /// (0.0) reproduces the historical behavior (the matrix byte-identity is
+    /// guarded separately by the golden tests); this asserts the new knob has
+    /// the predicted DIRECTION and is deterministic.
+    #[test]
+    fn o2_dependent_sdt_reduces_hypoxic_kill() {
+        let cfg = RunConfig {
+            grid_dim: 24,
+            n_steps: 80,
+        };
+        let cond = Condition {
+            name: "sdt_o2dep".to_string(),
+            treatment: Treatment::SDT,
+            treatment_name: "SDT".to_string(),
+            o2_lambda: Some(ZONE_REF_LAMBDA), // edge-distance hypoxia gradient on
+            immune_on: false,
+            stromal_on: false,
+            ph_on: false,
+            dose_schedule: DoseSchedule::Constant,
+        };
+        let run = |dep: f64| {
+            run_one_condition_full(
+                &cond,
+                cfg,
+                None,
+                Overrides {
+                    sdt_o2_dependence: dep,
+                    ..Default::default()
+                },
+            )
+            .total_dead
+        };
+        let o2_independent = run(0.0); // default / historical (optimistic SDT)
+        let o2_dependent = run(1.0); // fully Type II / O2-dependent
+        let o2_dependent_again = run(1.0);
+        assert_eq!(
+            o2_dependent, o2_dependent_again,
+            "O2-dependent SDT must be deterministic"
+        );
+        assert!(
+            o2_dependent < o2_independent,
+            "Type II (O2-dependent) SDT should kill fewer under hypoxia than the \
+             O2-independent default: dep1={o2_dependent}, dep0={o2_independent}"
+        );
     }
 
     /// #272 depth-graded slab phenotype wiring: (1) it is gated on slab mode, so
