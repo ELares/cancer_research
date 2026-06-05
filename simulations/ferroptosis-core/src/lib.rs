@@ -60,6 +60,7 @@ pub mod persister;
 pub mod ph;
 pub mod photosensitizer_pk;
 pub mod physics;
+pub mod senescence;
 pub mod slab;
 pub mod spheroid;
 pub mod stats;
