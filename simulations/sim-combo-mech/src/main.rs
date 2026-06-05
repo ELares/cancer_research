@@ -128,6 +128,9 @@ fn apply_effects(
         death_step: None,
         exo_ros_peak: exo_ros_total,
         persister_fraction: 0.0,
+        persister_reversible: 0.0,
+        persister_locked: 0.0,
+        persister_cum_exposure: 0.0,
     };
 
     (modified_cell, state)

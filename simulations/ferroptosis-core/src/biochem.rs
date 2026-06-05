@@ -30,6 +30,21 @@ pub struct CellState {
     /// still deserializes, defaulting to `0.0` (the inert value).
     #[serde(default)]
     pub persister_fraction: f64,
+    /// Reversible/locked persister sub-pools + the sustained-exposure tracker
+    /// for the epigenetic-locking model (#342). Consumer-owned exactly like
+    /// `persister_fraction`: `sim_cell_step` never touches them, and a consumer
+    /// evolves them via [`crate::persister::step_with_locking`], caching their
+    /// [`crate::persister::PersisterState::total`] back into `persister_fraction`
+    /// so the existing biochem couplings keep reading one scalar. All `0.0` (the
+    /// inert value) for every path that does not opt into locking, so the
+    /// production matrix stays byte-identical. `#[serde(default)]` so pre-#342
+    /// `CellState` JSON still deserializes.
+    #[serde(default)]
+    pub persister_reversible: f64,
+    #[serde(default)]
+    pub persister_locked: f64,
+    #[serde(default)]
+    pub persister_cum_exposure: f64,
 }
 
 impl CellState {
@@ -59,6 +74,9 @@ impl CellState {
             death_step: None,
             exo_ros_peak,
             persister_fraction: 0.0,
+            persister_reversible: 0.0,
+            persister_locked: 0.0,
+            persister_cum_exposure: 0.0,
         }
     }
 
@@ -116,6 +134,9 @@ impl CellState {
             death_step: None,
             exo_ros_peak,
             persister_fraction: 0.0,
+            persister_reversible: 0.0,
+            persister_locked: 0.0,
+            persister_cum_exposure: 0.0,
         }
     }
 }

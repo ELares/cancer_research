@@ -141,6 +141,9 @@ impl TumorGrid {
                     death_step: None,
                     exo_ros_peak: 0.0,
                     persister_fraction: 0.0,
+                    persister_reversible: 0.0,
+                    persister_locked: 0.0,
+                    persister_cum_exposure: 0.0,
                 };
 
                 cells.push(GridCell {
@@ -525,6 +528,9 @@ impl TumorGrid3D {
                         death_step: None,
                         exo_ros_peak: 0.0,
                         persister_fraction: 0.0,
+                        persister_reversible: 0.0,
+                        persister_locked: 0.0,
+                        persister_cum_exposure: 0.0,
                     };
                     cells.push(GridCell {
                         cell,
@@ -592,6 +598,9 @@ impl TumorGrid3D {
                 death_step: None,
                 exo_ros_peak: 0.0,
                 persister_fraction: 0.0,
+                persister_reversible: 0.0,
+                persister_locked: 0.0,
+                persister_cum_exposure: 0.0,
             };
             cells.push(GridCell {
                 cell,

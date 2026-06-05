@@ -228,6 +228,15 @@ struct ConditionResult {
     /// stays byte-identical to pre-#241 (guarded by #253).
     #[serde(skip_serializing_if = "Option::is_none")]
     persister_mean: Option<f64>,
+    /// Mean LOCKED (irreversible) persister fraction across surviving tumor
+    /// cells at end of simulation (#342). The epigenetically-locked sub-pool of
+    /// `persister_mean` that does NOT revert after drug withdrawal: `> 0` only
+    /// under sustained (continuous) exposure with a lock-enabled config, `0`
+    /// under intermittent dosing or the default `lock_rate == 0`. `None` (field
+    /// omitted) unless the persister model is enabled, so the default matrix
+    /// summary.json stays byte-identical.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    persister_locked_mean: Option<f64>,
     /// Per-subclone kill breakdown (#242). `None` (field omitted) unless the
     /// clonal model is enabled, so the default matrix summary.json stays
     /// byte-identical. One entry per subclone, ordered by id.
@@ -1303,12 +1312,28 @@ fn run_one_condition_full(
                                 }
                             }
                         };
-                        // Competing-rate update (#262): acquisition and
-                        // reversion both act each step (not an either-or keyed
-                        // on drug == 0), so sustained sub-saturating drug
-                        // reaches a sub-cap equilibrium rather than ratcheting
-                        // monotonically to the cap.
-                        gc.state.persister_fraction = persister::step(frac, drug_intensity, pcfg);
+                        // Competing-rate update (#262) with reversible-to-
+                        // irreversible epigenetic locking (#342). Reconstruct the
+                        // persister state stored on the cell (reversible + locked
+                        // pools + the sustained-exposure tracker), advance it one
+                        // step, and cache its total() back into
+                        // `persister_fraction` so the GPX4/MUFA couplings + the
+                        // mean/snapshot keep reading one scalar. With
+                        // `lock_rate == 0` (the default, including enabled())
+                        // `step_with_locking` reduces EXACTLY to `step` on the
+                        // reversible pool and total() == the old reversible value,
+                        // so persister_fraction tracks the pre-#342 sequence and
+                        // the matrix/golden runs stay byte-identical.
+                        let pstate = persister::PersisterState {
+                            reversible: gc.state.persister_reversible,
+                            locked: gc.state.persister_locked,
+                            cumulative_exposure: gc.state.persister_cum_exposure,
+                        };
+                        let pstate = persister::step_with_locking(pstate, drug_intensity, pcfg);
+                        gc.state.persister_reversible = pstate.reversible;
+                        gc.state.persister_locked = pstate.locked;
+                        gc.state.persister_cum_exposure = pstate.cumulative_exposure;
+                        gc.state.persister_fraction = pstate.total(pcfg);
                     }
                 }
 
@@ -1661,6 +1686,25 @@ fn run_one_condition_full(
             0.0
         }
     });
+    // Mean LOCKED (irreversible) persister fraction (#342). Same surviving-tumor
+    // denominator as `persister_mean`; reads the locked sub-pool stored on each
+    // cell. `0` whenever `lock_rate == 0` (the default / `enabled()`), so a
+    // lock-off persister run reports `Some(0.0)` and the matrix (persister off)
+    // omits it entirely (byte-identical).
+    let persister_locked_mean = persister_cfg.map(|_| {
+        let (sum, n) = grid.cells.iter().fold((0.0_f64, 0usize), |(s, n), gc| {
+            if gc.is_tumor && !gc.state.dead {
+                (s + gc.state.persister_locked, n + 1)
+            } else {
+                (s, n)
+            }
+        });
+        if n > 0 {
+            sum / n as f64
+        } else {
+            0.0
+        }
+    });
 
     // Per-subclone kill breakdown (#242). `Some` only when clonal is enabled
     // (subclone_ids present), so `None` omits the field → byte-identical.
@@ -1781,6 +1825,7 @@ fn run_one_condition_full(
         ph_core: ph_core_v,
         ph_lambda_um: ph_lambda_v,
         persister_mean,
+        persister_locked_mean,
         subclone_kills,
         vascular_hypoxic_fraction,
         scale_interpretation: scale_interpretation_str,
@@ -3971,6 +4016,105 @@ mod tests {
             pm_early < pm_sustained * 0.85,
             "persister fraction must materially revert after dosing stops: \
              early-window mean={pm_early:.3} should be well below sustained mean={pm_sustained:.3}"
+        );
+    }
+
+    /// #342: the reversible-to-irreversible epigenetic-locking transition is
+    /// dose-schedule dependent, and this exercises its spatial sim-tme-3d wiring
+    /// (`step_with_locking` per cell; the library dynamics are unit-tested in
+    /// ferroptosis-core::persister). Under SUSTAINED (continuous) drug the
+    /// per-cell sustained-exposure EMA crosses `lock_threshold` and a fraction of
+    /// the persister pool ratchets into the non-reverting `locked` sub-pool;
+    /// under INTERMITTENT dosing the EMA decays in the drug-off gaps and never
+    /// crosses, so nothing locks.
+    #[test]
+    fn continuous_dosing_locks_persisters_but_intermittent_does_not() {
+        let cfg = RunConfig {
+            grid_dim: 20,
+            n_steps: 160,
+        };
+        // Lock-enabled config: under continuous drug=1.0 the EMA steady state is
+        // 1.0/exposure_decay = 10 (> lock_threshold 5); under the ~25%-duty
+        // intermittent schedule the EMA settles well below 5.
+        let lock_cfg = PersisterConfig {
+            lock_rate: 0.1,
+            lock_threshold: 5.0,
+            exposure_decay: 0.1,
+            ..PersisterConfig::enabled()
+        };
+        let base = |name: &str, schedule: DoseSchedule| Condition {
+            name: name.to_string(),
+            treatment: Treatment::RSL3,
+            treatment_name: "RSL3".to_string(),
+            o2_lambda: None,
+            immune_on: false,
+            stromal_on: false,
+            ph_on: false,
+            dose_schedule: schedule,
+        };
+        let run = |cond: &Condition, pcfg: PersisterConfig| {
+            run_one_condition_full(
+                cond,
+                cfg,
+                None,
+                Overrides {
+                    persister: Some(pcfg),
+                    ..Default::default()
+                },
+            )
+        };
+        // Continuous: drug = 1.0 every step (Infusion spanning the whole run).
+        let continuous = base(
+            "continuous_lock",
+            DoseSchedule::Infusion {
+                start: 0,
+                end: cfg.n_steps,
+                level: 1.0,
+            },
+        );
+        // Intermittent: short sharp pulses every 8 steps (low duty, EMA stays low).
+        let intermittent = base(
+            "intermittent_lock",
+            DoseSchedule::MultiDose {
+                dose_steps: (0..cfg.n_steps).step_by(8).collect(),
+                peak: 1.0,
+                half_life_steps: 1.0,
+            },
+        );
+        let cont_locked = run(&continuous, lock_cfg)
+            .persister_locked_mean
+            .expect("persister on reports a locked mean");
+        let interm_locked = run(&intermittent, lock_cfg)
+            .persister_locked_mean
+            .expect("persister on reports a locked mean");
+        // Continuous dosing locks a non-negligible irreversible pool.
+        assert!(
+            cont_locked > 0.01,
+            "sustained dosing must lock a fraction of persisters: locked_mean={cont_locked:.4}"
+        );
+        // Intermittent dosing keeps the exposure EMA below threshold ⇒ no locking.
+        assert!(
+            interm_locked < 1e-4,
+            "intermittent dosing must NOT lock (EMA stays below threshold): \
+             locked_mean={interm_locked:.4}"
+        );
+        assert!(
+            cont_locked > interm_locked,
+            "continuous locks more than intermittent: {cont_locked:.4} vs {interm_locked:.4}"
+        );
+        // Off-by-default: with lock_rate=0 (enabled()), even continuous dosing
+        // locks nothing, so the layer stays byte-identical to the pre-#342
+        // persister (the locked sub-pool is exactly 0).
+        assert_eq!(
+            run(&continuous, PersisterConfig::enabled()).persister_locked_mean,
+            Some(0.0),
+            "lock_rate=0 must lock nothing even under continuous dosing"
+        );
+        // Deterministic.
+        assert_eq!(
+            cont_locked,
+            run(&continuous, lock_cfg).persister_locked_mean.unwrap(),
+            "locking is deterministic"
         );
     }
 
