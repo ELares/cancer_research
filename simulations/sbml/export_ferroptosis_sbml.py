@@ -123,9 +123,12 @@ model ferroptosis_core_single_cell
   lp_repair := GPX4*(GSH/(GSH+1))*gpx4_rate*(LP/(LP+0.5)) + fsp1*fsp1_rate*(LP/(LP+0.5));
 
   // === ODEs (rate rules; dt=1 step deltas as continuous rates) ===
+  // GPX4 ROS-degradation is gated behind total_ros > 1 in the engine
+  // (biochem.rs: `if total_ros > 1.0`); max(0, total_ros - 1) reproduces that
+  // ReLU gate so the export matches the engine faithfully.
   LP' = lp_gen - lp_repair;
   GSH' = -scavenged * 0.5 + nrf2 * nrf2_gsh_rate * deficit;
-  GPX4' = -gpx4_degradation_by_ros * (total_ros - 1) + gpx4_nrf2_upregulation * (gpx4_nrf2_target - GPX4);
+  GPX4' = -gpx4_degradation_by_ros * max(0, total_ros - 1) + gpx4_nrf2_upregulation * (gpx4_nrf2_target - GPX4);
 end
 """
 
@@ -178,7 +181,7 @@ def main():
     for k, (name, s, r) in enumerate(
         [("LP (lipid peroxide)", lp_s, lp_r), ("GSH", gsh_s, gsh_r), ("GPX4", gpx4_s, gpx4_r)]
     ):
-        ax[k].plot(t_r, r, color="#3b6ea5", lw=2.5, label="ferroptosis-core engine (Euler dt=1)")
+        ax[k].plot(t_r, r, color="#3b6ea5", lw=2.5, label="engine ODE (Euler reference, dt=1)")
         ax[k].plot(t_s, s, color="#b5651d", lw=1.4, ls="--", label="exported SBML (roadrunner)")
         ax[k].set_xlabel("step")
         ax[k].set_ylabel(name)

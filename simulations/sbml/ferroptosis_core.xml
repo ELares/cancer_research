@@ -87,9 +87,13 @@
                 <ci> gpx4_degradation_by_ros </ci>
               </apply>
               <apply>
-                <minus/>
-                <ci> total_ros </ci>
-                <cn type="integer"> 1 </cn>
+                <max/>
+                <cn type="integer"> 0 </cn>
+                <apply>
+                  <minus/>
+                  <ci> total_ros </ci>
+                  <cn type="integer"> 1 </cn>
+                </apply>
               </apply>
             </apply>
             <apply>

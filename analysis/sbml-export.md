@@ -23,7 +23,7 @@ parameters with **RSL3** (a direct GPX4 inhibitor) applied at t=0:
   term) plus GPX4/FSP1 repair; and GPX4 dynamic regulation (ROS degradation +
   NRF2 upregulation).
 - **Parameters** carry the 2D default values; provenance is in
-  `parameter_provenance.md`.
+  `simulations/calibration/parameter_provenance.md`.
 
 ## What is NOT exported (and why)
 
@@ -55,15 +55,18 @@ Result (RSL3 on an OXPHOS-mean cell), final state:
 
 | | LP | GSH | GPX4 |
 |---|---|---|---|
-| exported SBML (roadrunner, continuous) | 0.195 | 0.523 | 1.019 |
+| exported SBML (roadrunner, continuous) | 0.211 | 0.523 | 0.935 |
 | engine ODE (Euler dt=1 reference) | 0.210 | 0.525 | 0.936 |
 | ferroptosis-core engine (stochastic mean, n=4000) | 0.462 | 0.592 | 0.935 |
 
-- **The exported SBML reproduces the intended ODE.** GSH tracks the engine
-  essentially exactly (the curves overlap in the figure); LP and GPX4 track the
-  same dynamics with small continuous-vs-discrete-Euler differences (SBML vs the
-  Euler reference is ~7% on final LP). This is the round-trip integrity check: a
-  third-party SBML simulator reproduces the engine's deterministic dynamics.
+- **The exported SBML reproduces the intended ODE.** All three state variables
+  track the deterministic engine closely: GSH and GPX4 are essentially exact
+  (the curves overlap in the figure), and the SBML-vs-Euler-reference final-LP
+  difference is ~0.3%. This is the round-trip integrity check: a third-party
+  SBML simulator reproduces the engine's deterministic dynamics. (The GPX4
+  ROS-degradation term is gated behind `total_ros > 1` in the engine; the SBML
+  reproduces that with `max(0, total_ros - 1)`, so the two GPX4 trajectories
+  match.)
 - **The deterministic mean-field under-estimates the stochastic mean LP**
   (0.21 vs 0.46). This is expected and honest: because the autocatalytic
   propagation is a nonlinear bistable switch, the per-cell parameter variation
