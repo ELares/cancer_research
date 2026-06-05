@@ -49,7 +49,11 @@ impl CellState {
             gsh: cell.gsh,
             gpx4,
             fsp1: cell.fsp1,
-            mufa_protection: params.initial_mufa_protection,
+            // #339: an acute/naive start (Some) overrides the established
+            // steady-state start; None ⇒ initial_mufa_protection ⇒ byte-identical.
+            mufa_protection: params
+                .mufa_acute_start
+                .unwrap_or(params.initial_mufa_protection),
             lp: 0.0,
             dead: false,
             death_step: None,
@@ -102,7 +106,11 @@ impl CellState {
             gsh: cell.gsh,
             gpx4,
             fsp1: cell.fsp1,
-            mufa_protection: params.initial_mufa_protection,
+            // #339: an acute/naive start (Some) overrides the established
+            // steady-state start; None ⇒ initial_mufa_protection ⇒ byte-identical.
+            mufa_protection: params
+                .mufa_acute_start
+                .unwrap_or(params.initial_mufa_protection),
             lp: 0.0,
             dead: false,
             death_step: None,
@@ -291,7 +299,10 @@ pub fn sim_cell(
     let mut gpx4 = cell.gpx4;
     let fsp1 = cell.fsp1;
     let mut death_step: Option<u32> = None;
-    let mut mufa_protection = params.initial_mufa_protection;
+    // #339: acute/naive MUFA start override; None ⇒ byte-identical.
+    let mut mufa_protection = params
+        .mufa_acute_start
+        .unwrap_or(params.initial_mufa_protection);
     let mut lp: f64 = 0.0;
 
     // Treatment: exogenous ROS
@@ -438,6 +449,69 @@ mod tests {
         );
         // Determinism.
         assert_eq!(with_dhodh, peak_lp(2.0, 0.0));
+    }
+
+    /// #339: break the MUFA steady-state assumption for ACUTE dosing.
+    /// `invivo()` starts cells at M_ss (the established-tumor assumption that
+    /// the ~48-72h SCD1/MUFA enrichment is already complete). An acute/naive
+    /// start (`mufa_acute_start = Some(0.0)`) begins below M_ss and accumulates
+    /// over the run, so the cell is LESS protected early and peroxidizes MORE
+    /// under RSL3. `None` reproduces `invivo()` byte-for-byte.
+    #[test]
+    fn acute_naive_mufa_start_breaks_steady_state_for_acute_dosing() {
+        // Peak LP and the MUFA level at step 20 over a 180-step RSL3 run.
+        fn peak_lp_and_mufa20(acute_start: Option<f64>) -> (f64, f64) {
+            let p = Params {
+                mufa_acute_start: acute_start,
+                ..Params::invivo()
+            };
+            let mut gen_rng = StdRng::seed_from_u64(42);
+            let cell = gen_cell(Phenotype::OXPHOS, &mut gen_rng);
+            let mut rng = StdRng::seed_from_u64(7);
+            let mut state = CellState::from_cell(&cell, Treatment::RSL3, &p, &mut rng);
+            let mut peak = 0.0_f64;
+            let mut mufa20 = state.mufa_protection;
+            for step in 0..180 {
+                sim_cell_step(&mut state, &cell, &p, step, 0.0, &mut rng);
+                if step <= 20 {
+                    mufa20 = state.mufa_protection;
+                }
+                peak = peak.max(state.lp);
+            }
+            (peak, mufa20)
+        }
+        let (est_peak, est_mufa20) = peak_lp_and_mufa20(None); // established (M_ss start)
+        let (acu_peak, acu_mufa20) = peak_lp_and_mufa20(Some(0.0)); // acute (naive start)
+
+        // The acute cell is less MUFA-protected early...
+        assert!(
+            acu_mufa20 < est_mufa20,
+            "acute MUFA at step 20 should be below established: acute={acu_mufa20} vs est={est_mufa20}"
+        );
+        // ...and therefore peroxidizes more under RSL3 (and it actually does
+        // peroxidize, so the comparison is meaningful, not 0-vs-0).
+        assert!(acu_peak > 0.0, "RSL3 should drive lipid peroxidation");
+        assert!(
+            acu_peak > est_peak,
+            "acute (naive-MUFA) cell should peroxidize more under RSL3: acute={acu_peak} vs est={est_peak}"
+        );
+
+        // Byte-identity: a None override must reproduce invivo() exactly.
+        let run_sim = |p: &Params| {
+            let mut gen_rng = StdRng::seed_from_u64(42);
+            let cell = gen_cell(Phenotype::OXPHOS, &mut gen_rng);
+            let mut rng = StdRng::seed_from_u64(7);
+            sim_cell(&cell, Treatment::RSL3, p, &mut rng)
+        };
+        let base = run_sim(&Params::invivo());
+        let none_override = run_sim(&Params {
+            mufa_acute_start: None,
+            ..Params::invivo()
+        });
+        assert_eq!(
+            base, none_override,
+            "None override must reproduce invivo() byte-for-byte"
+        );
     }
 
     #[test]

@@ -50,6 +50,22 @@ pub struct Params {
     /// SCD1-driven remodeling has already reached steady state, so cells
     /// begin with pre-accumulated membrane MUFA. Zero in 2D culture.
     pub initial_mufa_protection: f64,
+    /// Acute-dosing MUFA-kinetics override (#339). `invivo()` starts cells at
+    /// the established steady state (`initial_mufa_protection` = M_ss), which
+    /// assumes the ~48-72h SCD1/MUFA enrichment is already complete. A freshly
+    /// dosed ("acute") tumor has not built that up yet, so this overstates
+    /// early ferroptosis resistance. When `Some(x)`, the cell instead STARTS at
+    /// the naive value `x` (e.g. 0.0) and accumulates MUFA over the run via the
+    /// existing logistic `update_mufa_protection`, breaking the steady-state
+    /// assumption for acute treatment. `None` (default) keeps the existing
+    /// `initial_mufa_protection` start, so the matrix is byte-identical. The
+    /// accumulation RATE is the existing `scd_mufa_rate` (uncalibrated against
+    /// the literature 48-72h timescale; the acute-vs-established DIRECTION is
+    /// the result, not a precise hours figure). The starting value is not
+    /// clamped here, but `update_mufa_protection` clamps to `[0, mufa_max]` on
+    /// step 1 before any consumer reads it, so an out-of-range `x` self-corrects.
+    #[serde(default)]
+    pub mufa_acute_start: Option<f64>,
     /// MUFA decay rate from natural phospholipid turnover. When SCD1 is
     /// active, accumulation outpaces decay and protection reaches steady
     /// state. When SCD1 is inhibited (rate=0), decay gradually depletes
@@ -101,6 +117,7 @@ impl Default for Params {
             scd_mufa_rate: 0.0,
             scd_mufa_max: 0.0,
             initial_mufa_protection: 0.0,
+            mufa_acute_start: None,
             scd_mufa_decay: 0.0,
             gpx4_degradation_by_ros: 0.002,
             gpx4_nrf2_upregulation: 0.008,
