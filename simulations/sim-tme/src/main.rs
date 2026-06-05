@@ -250,6 +250,7 @@ fn run_spatial(
 /// `depths` and `original_ros` are precomputed from the grid before
 /// any O2 modification. Each step, basal_ros is recomputed using the
 /// cycling lambda for the current phase.
+#[allow(clippy::too_many_arguments)]
 fn run_spatial_cycling(
     grid: &mut TumorGrid,
     tx: Treatment,
@@ -261,6 +262,10 @@ fn run_spatial_cycling(
     period: u32,
     lambda_low: f64,
     lambda_high: f64,
+    // #358: O2-dependent SDT/PDT exo-ROS knob. The exo envelope is set once at
+    // init, so it is attenuated by the normoxic-phase (λ_high) O2 supply; `0.0`
+    // (default) ⇒ factor 1.0 ⇒ byte-identical.
+    sdt_o2_dependence: f64,
 ) {
     let base_ros = match tx {
         Treatment::SDT => params.sdt_ros,
@@ -276,17 +281,21 @@ fn run_spatial_cycling(
     for r in 0..rows {
         let ros_multiplier = local_ros_multiplier(r, cell_size, tx, spatial_params);
         for c in 0..cols {
+            let idx = r * cols + c;
+            // Initial (normoxic-phase, λ_high) O2 supply at this depth: drives the
+            // basal_ros init below and (#358) the O2-dependent exo-ROS attenuation.
+            let o2_factor = (-depths[idx] / lambda_high).exp().clamp(0.0, 1.0);
             let exo_ros_peak = if tx == Treatment::Control || tx == Treatment::RSL3 {
                 0.0
             } else {
                 let mut rng = StdRng::seed_from_u64(seed.wrapping_add((r * cols + c) as u64));
                 let peak = base_ros * ros_multiplier;
-                norm(&mut rng, peak, peak * 0.2).max(0.0)
+                let sampled = norm(&mut rng, peak, peak * 0.2).max(0.0);
+                // `factor == 1.0` when off ⇒ byte-identical.
+                sampled * o2_dependent_exo_factor(o2_factor, sdt_o2_dependence)
             };
 
-            let idx = r * cols + c;
             // Set initial basal_ros from the normoxic phase
-            let o2_factor = (-depths[idx] / lambda_high).exp().clamp(0.0, 1.0);
             grid.cells[idx].cell.basal_ros = original_ros[idx] * o2_factor;
 
             let gc = grid.get_mut(r, c);
@@ -421,6 +430,7 @@ fn apply_ph_gradient(grid: &mut TumorGrid, cfg: &PhConfig) -> Vec<(usize, usize,
 /// Run spatial sim WITH immune coupling: DAMP diffusion + immune kill.
 /// Optionally applies CAF-mediated stromal protection and pH ion trapping.
 /// Returns (ferroptosis_kills, immune_kills, final_damp_field).
+#[allow(clippy::too_many_arguments)]
 fn run_spatial_with_immune(
     grid: &mut TumorGrid,
     tx: Treatment,
@@ -430,6 +440,11 @@ fn run_spatial_with_immune(
     stromal: Option<(&[bool], &StromalConfig)>,
     ph: Option<(&[(usize, usize, f64)], &PhConfig)>,
     seed: u64,
+    // #358: same O2-dependent SDT/PDT exo-ROS knob as `run_spatial`, so the
+    // immune-on gradient rows stay consistent with the immune-off ones under
+    // `--sdt-o2-dependence`. `None` / `0.0` ⇒ factor 1.0 ⇒ byte-identical.
+    o2_supply: Option<&[f64]>,
+    sdt_o2_dependence: f64,
 ) -> (usize, usize, Vec<f64>) {
     let base_ros = match tx {
         Treatment::SDT => params.sdt_ros,
@@ -451,7 +466,13 @@ fn run_spatial_with_immune(
             } else {
                 let mut rng = StdRng::seed_from_u64(seed.wrapping_add((r * cols + c) as u64));
                 let peak = base_ros * ros_multiplier;
-                norm(&mut rng, peak, peak * 0.2).max(0.0)
+                let sampled = norm(&mut rng, peak, peak * 0.2).max(0.0);
+                // #358: O2-dependent (Type II) attenuation, identical to
+                // `run_spatial`. `factor == 1.0` when off ⇒ byte-identical.
+                let idx = r * cols + c;
+                let factor =
+                    o2_supply.map_or(1.0, |s| o2_dependent_exo_factor(s[idx], sdt_o2_dependence));
+                sampled * factor
             };
             let gc = grid.get_mut(r, c);
             gc.state = CellState::from_cell_with_ros(&gc.cell, tx, params, exo_ros_peak);
@@ -792,13 +813,18 @@ fn main() {
 
     // #358: opt-in O2-dependent (Type II) SDT/PDT exo-ROS. `--sdt-o2-dependence
     // <f>` (default `0.0`) makes a fraction of the exogenous ROS yield scale with
-    // local O2 in the gradient conditions, so SDT loses efficacy in the hypoxic
-    // core (the contested §7.1 leg). `0.0` reproduces the pre-#358 output exactly
-    // (the committed `tme_summary.json` / figure fixture), so the default matrix
-    // stays byte-identical; run with `--sdt-o2-dependence 1.0` to compute the
+    // local O2 in ALL gradient + O2-cycling conditions (immune-off, immune-on,
+    // anti-PD-1, stromal, pH, and cycling; the uniform baseline has no gradient
+    // so it is unaffected), so SDT loses efficacy in the hypoxic core (the
+    // contested §7.1 leg). `0.0` reproduces the pre-#358 output exactly (the
+    // committed `tme_summary.json` / figure fixture), so the default matrix stays
+    // byte-identical; run with `--sdt-o2-dependence 1.0` to compute the
     // O2-dependent bound reported alongside the O2-independent one in §7.1.
     let cli_args: Vec<String> = std::env::args().collect();
-    let sdt_o2_dependence: f64 = cli_args
+    let o2dep_token_present = cli_args
+        .iter()
+        .any(|a| a == "--sdt-o2-dependence" || a.starts_with("--sdt-o2-dependence="));
+    let o2dep_parsed: Option<f64> = cli_args
         .windows(2)
         .find(|w| w[0] == "--sdt-o2-dependence")
         .and_then(|w| w[1].parse::<f64>().ok())
@@ -807,7 +833,17 @@ fn main() {
                 .iter()
                 .find_map(|a| a.strip_prefix("--sdt-o2-dependence="))
                 .and_then(|v| v.parse::<f64>().ok())
-        })
+        });
+    // Reject non-finite (NaN/inf would survive `clamp` and propagate into the
+    // exo-ROS factor); warn if the flag was given but unusable.
+    if o2dep_token_present && o2dep_parsed.map_or(true, |v| !v.is_finite()) {
+        eprintln!(
+            "WARNING: --sdt-o2-dependence present but value missing/unparseable/non-finite; \
+             falling back to 0.0 (O2-independent, byte-identical default)."
+        );
+    }
+    let sdt_o2_dependence: f64 = o2dep_parsed
+        .filter(|v| v.is_finite())
         .unwrap_or(0.0)
         .clamp(0.0, 1.0);
     if sdt_o2_dependence > 0.0 {
@@ -1013,6 +1049,7 @@ fn main() {
                 cycle_period,
                 lambda_low,
                 lambda_high,
+                sdt_o2_dependence,
             );
 
             let census = grid.census();
@@ -1092,7 +1129,13 @@ fn main() {
 
         for (tx, tx_name) in &treatments {
             let mut grid = TumorGrid::generate(GRID_SIZE, GRID_SIZE, CELL_SIZE_UM, SEED);
-            apply_o2_gradient(&mut grid, 120.0);
+            // #358: capture the per-cell O2 supply so the immune-on gradient
+            // SDT exo-ROS gets the same O2-dependent attenuation as the
+            // immune-off gradient conditions (consistent under the flag).
+            let o2_supply: Vec<f64> = apply_o2_gradient(&mut grid, 120.0)
+                .iter()
+                .map(|&(_, _, f)| f)
+                .collect();
 
             let (ferr_kills, imm_kills, final_damp) = run_spatial_with_immune(
                 &mut grid,
@@ -1103,6 +1146,8 @@ fn main() {
                 None,
                 None,
                 SEED.wrapping_add((*tx as u64) * 10_000_000),
+                Some(&o2_supply),
+                sdt_o2_dependence,
             );
 
             let census = grid.census();
@@ -1209,7 +1254,11 @@ fn main() {
 
         for (tx, tx_name) in &treatments {
             let mut grid = TumorGrid::generate(GRID_SIZE, GRID_SIZE, CELL_SIZE_UM, SEED);
-            apply_o2_gradient(&mut grid, 120.0);
+            // #358: capture O2 supply for the consistent O2-dependent SDT path.
+            let o2_supply: Vec<f64> = apply_o2_gradient(&mut grid, 120.0)
+                .iter()
+                .map(|&(_, _, f)| f)
+                .collect();
 
             let (ferr_kills, imm_kills, _final_damp) = run_spatial_with_immune(
                 &mut grid,
@@ -1220,6 +1269,8 @@ fn main() {
                 Some((&stromal_mask, &stromal_cfg)),
                 None,
                 SEED.wrapping_add((*tx as u64) * 10_000_000),
+                Some(&o2_supply),
+                sdt_o2_dependence,
             );
 
             let census = grid.census();
@@ -1314,7 +1365,11 @@ fn main() {
 
     for (tx, tx_name) in &treatments {
         let mut grid = TumorGrid::generate(GRID_SIZE, GRID_SIZE, CELL_SIZE_UM, SEED);
-        apply_o2_gradient(&mut grid, 120.0);
+        // #358: capture O2 supply for the consistent O2-dependent SDT path.
+        let o2_supply: Vec<f64> = apply_o2_gradient(&mut grid, 120.0)
+            .iter()
+            .map(|&(_, _, f)| f)
+            .collect();
         let ph_map = apply_ph_gradient(&mut grid, &ph_cfg);
 
         let (ferr_kills, imm_kills, _final_damp) = run_spatial_with_immune(
@@ -1326,6 +1381,8 @@ fn main() {
             None,
             Some((&ph_map, &ph_cfg)),
             SEED.wrapping_add((*tx as u64) * 10_000_000),
+            Some(&o2_supply),
+            sdt_o2_dependence,
         );
 
         let census = grid.census();
