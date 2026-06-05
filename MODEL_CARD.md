@@ -1,12 +1,13 @@
 # Model Card: ferroptosis-core / sim-tme-3d
 
-A one-page, intended-use and limitations summary for the simulation suite in
+A concise intended-use and limitations summary for the simulation suite in
 this repository. It consolidates the per-layer accounting in
 [`simulations/calibration/CALIBRATION_STATUS.md`](simulations/calibration/CALIBRATION_STATUS.md)
 and the manuscript honesty section (`article/drafts/v1.md` Section 8.4) into the
 structured "model card" format used in computational biology, with an explicit
 assumptions/scope checklist (ARRIVE-style for the in-silico experiments,
-TRIPOD-style for any predictive framing).
+TRIPOD-style for any predictive framing, adapting the TRIPOD-AI checklist even
+though this is a mechanistic model, not an AI predictor).
 
 If you read only one thing: **this suite is broad but mostly uncalibrated. It is
 mechanistic scaffolding that shows the shape of an effect (direction,
@@ -80,7 +81,7 @@ A single-cell ferroptosis ODE engine (`biochem`): `total_ros = basal_ros + exoge
 - [x] **Objective stated** per experiment (manuscript Chapters 6-7; each has a falsification criterion in Chapter 9).
 - [x] **Model + parameters documented**: `parameter_provenance.md` (per-parameter, with `Grounded?` column) and source code (authoritative for defaults).
 - [x] **Randomization / seeds**: fixed, documented seeds; runs reproducible.
-- [x] **Replication / reproducibility**: pinned Rust toolchain (`rust-toolchain.toml`, 1.96.0) and Python lockfile; CI re-runs the suite and a production byte-identity SHA.
+- [x] **Replication / reproducibility**: pinned Rust toolchain (`simulations/rust-toolchain.toml`, 1.96.0) and Python lockfile; CI re-runs the suite and a production byte-identity SHA.
 - [x] **No silent truncation**: off-by-default layers are identity (byte-identical) until explicitly enabled.
 
 ### 6.3 Predictive-claim reporting (TRIPOD-style, where the work is framed predictively)
@@ -143,7 +144,7 @@ broad mechanism coverage as therapeutic depth.
 ## 10. How to cite and reproduce
 
 - Citation metadata: `CITATION.cff`. Provenance/redistribution: `PROVENANCE.yaml`.
-- Reproduce: pinned `rust-toolchain.toml` (1.96.0) + `requirements-lock.txt`; `cargo test --workspace` and the Python pipeline are re-run in CI.
+- Reproduce: pinned `simulations/rust-toolchain.toml` (1.96.0) + `requirements-lock.txt`; `cargo test --workspace` and the Python pipeline are re-run in CI.
 - Figure traceability: `FIGURES.yaml`. Per-layer calibration: `CALIBRATION_STATUS.md`. Manuscript: `article/drafts/v1.{md,tex,pdf}` (the honesty section is 8.4).
 
 ## 11. Maintenance
