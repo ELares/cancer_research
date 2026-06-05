@@ -168,6 +168,42 @@ pub fn hypoxia_iron_factor(o2_supply: f64, sensitivity: f64) -> f64 {
     1.0 + sens * (1.0 - s)
 }
 
+/// O2-dependent Fenton H₂O₂-substrate factor (#383).
+///
+/// The Fenton reaction (Fe²⁺ + H₂O₂ → Fe³⁺ + OH· + OH⁻) consumes H₂O₂, whose
+/// principal intracellular source is superoxide dismutation (O₂·⁻ → SOD → H₂O₂);
+/// superoxide is itself the one-electron reduction product of molecular O₂
+/// (the Haber-Weiss chain, Kehrer, Toxicology 2000, PMID 10963860). A genuinely
+/// anoxic core therefore depletes the H₂O₂ substrate and suppresses Fenton-driven
+/// •OH **even where labile iron is abundant** — and ferroptotic lipid
+/// peroxidation itself requires molecular O₂ (Stockwell et al., Cell 2017,
+/// PMID 28985560).
+///
+/// The model's Fenton term (`biochem`: `iron · fenton_rate`) is O2-INDEPENDENT,
+/// so when the #340/#365 hypoxia-iron coupling raises labile iron most where O2
+/// is lowest, the model wrongly predicts RSL3 *rescues* the anoxic core
+/// (manuscript §7.1, flagged a model artifact). This helper lets a consumer make
+/// a configurable fraction of the Fenton flux O2-dependent. Because `cell.iron`
+/// feeds ONLY the Fenton term, a consumer applies it by scaling `cell.iron`,
+/// where it composes multiplicatively with [`hypoxia_iron_factor`]: hypoxia
+/// raises the iron but lowers the H₂O₂ substrate, so the NET deep-core Fenton
+/// can fall instead of rise.
+///
+/// `o2_supply` is the local relative O2 availability (the same factor that scales
+/// `cell.basal_ros`). `dependence` is the O2-dependent fraction of the Fenton
+/// flux (the share needing fresh O2-derived H₂O₂). Returns
+/// `(1 − dependence) + dependence·o2_supply`, clamped to `[0, 1]` (the same
+/// linear form as [`o2_dependent_exo_factor`], a conceptually independent O2
+/// coupling): `dependence = 0` (default) returns exactly `1.0` ⇒ the Fenton term
+/// is unchanged ⇒ byte-identical (the historical O2-independent model);
+/// `dependence = 1` makes the Fenton flux fully O2-gated, so it vanishes at
+/// anoxia (`o2_supply = 0`).
+pub fn fenton_o2_factor(o2_supply: f64, dependence: f64) -> f64 {
+    let d = dependence.clamp(0.0, 1.0);
+    let s = o2_supply.clamp(0.0, 1.0);
+    (1.0 - d + d * s).clamp(0.0, 1.0)
+}
+
 /// Dead-cell rate for each of three O₂-defined concentric shells.
 ///
 /// Zone semantics (matches `sim-tme`'s 2D
@@ -279,6 +315,38 @@ mod tests {
         // Out-of-range inputs are clamped/floored, never panicking.
         assert_eq!(hypoxia_iron_factor(2.0, 0.5), 1.0);
         assert_eq!(hypoxia_iron_factor(0.5, -1.0), 1.0);
+    }
+
+    #[test]
+    fn fenton_o2_factor_identity_at_zero_and_gates_fenton_at_anoxia() {
+        // dependence = 0 (default): always 1.0 ⇒ the Fenton term is unchanged
+        // (byte-identical), regardless of O2.
+        for o2 in [0.0, 0.05, 0.5, 1.0] {
+            assert_eq!(fenton_o2_factor(o2, 0.0), 1.0);
+        }
+        // dependence = 1 (fully O2-gated): factor equals the O2 supply, so the
+        // anoxic core (o2_supply -> 0) loses its H2O2 substrate ⇒ Fenton -> 0.
+        assert_eq!(fenton_o2_factor(0.0, 1.0), 0.0);
+        assert_eq!(fenton_o2_factor(0.05, 1.0), 0.05);
+        assert_eq!(fenton_o2_factor(1.0, 1.0), 1.0);
+        // Monotone DECREASING in dependence at fixed low O2 (more O2-gating ⇒
+        // less Fenton in hypoxia) — the counterweight to hypoxia_iron_factor's rise.
+        let hyp = 0.1;
+        assert!(fenton_o2_factor(hyp, 0.5) < fenton_o2_factor(hyp, 0.0));
+        assert!(fenton_o2_factor(hyp, 1.0) < fenton_o2_factor(hyp, 0.5));
+        // The net hypoxia effect can flip sign: with iron raised but H2O2 gated,
+        // the product (effective Fenton flux) can fall below the normoxic baseline.
+        let net_hypoxic = hypoxia_iron_factor(0.1, 0.5) * fenton_o2_factor(0.1, 1.0);
+        let net_normoxic = hypoxia_iron_factor(1.0, 0.5) * fenton_o2_factor(1.0, 1.0);
+        assert!(
+            net_hypoxic < net_normoxic,
+            "O2-gated Fenton should make the deep anoxic core a NET LOSS of \
+             effective Fenton flux despite the iron rise: {net_hypoxic} vs {net_normoxic}"
+        );
+        // Out-of-range inputs are clamped, never panicking.
+        assert_eq!(fenton_o2_factor(2.0, 1.0), 1.0);
+        assert_eq!(fenton_o2_factor(-1.0, 1.0), 0.0);
+        assert_eq!(fenton_o2_factor(0.5, 2.0), fenton_o2_factor(0.5, 1.0));
     }
 
     /// #289: the hoisted-geometry field must be bit-for-bit identical to a

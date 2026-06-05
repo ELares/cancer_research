@@ -69,7 +69,9 @@ use ferroptosis_core::immune_spatial::{
     CheckpointPanel, DcSubsetConfig, SuppressorConfig, DAMP_KILL_THRESHOLD,
 };
 use ferroptosis_core::nutrient::{apply_nutrient_stress_3d, NutrientConfig};
-use ferroptosis_core::oxygen::{hypoxia_iron_factor, o2_dependent_exo_factor, radial_o2_field};
+use ferroptosis_core::oxygen::{
+    fenton_o2_factor, hypoxia_iron_factor, o2_dependent_exo_factor, radial_o2_field,
+};
 use ferroptosis_core::params::{
     Params, PersisterConfig, PhConfig, SpatialImmuneConfig, SpatialParams, StromalConfig,
 };
@@ -480,6 +482,16 @@ struct Overrides {
     /// O2-dependent, so SDT loses efficacy in hypoxic zones like the clinical
     /// SONALA-001 agent (manuscript §7.1).
     sdt_o2_dependence: f64,
+    /// O2-dependent Fenton H₂O₂ substrate (#383): `oxygen::fenton_o2_factor`
+    /// scales each tumor cell's `iron` (its only consumer is the Fenton term)
+    /// DOWN where local O2 is low, since the Fenton reaction needs O2-derived
+    /// H₂O₂ (superoxide → SOD → H₂O₂). This is the counterweight to
+    /// `hypoxia_iron_sensitivity` (#365): hypoxia raises the iron but lowers the
+    /// H₂O₂ substrate, so the NET deep-core Fenton can fall instead of rise,
+    /// correcting the §7.1 model artifact where the O2-independent Fenton let
+    /// hypoxia-iron "rescue" the anoxic core. `0.0` (default) ⇒ factor exactly
+    /// 1.0 ⇒ `iron` unchanged ⇒ byte-identical; `1.0` ⇒ fully O2-gated Fenton.
+    fenton_o2_dependence: f64,
 }
 
 /// Thin wrapper running a condition with NO overrides (all realism layers
@@ -540,6 +552,9 @@ fn run_one_condition_full(
     // Oxygen-dependent SDT/PDT exo-ROS (#336). `0.0` (default/matrix) ⇒ the
     // exo-ROS O2 factor is exactly 1.0 ⇒ byte-identical.
     let sdt_o2_dependence = overrides.sdt_o2_dependence;
+    // Oxygen-dependent Fenton H2O2 substrate (#383). `0.0` (default/matrix) ⇒
+    // `fenton_o2_factor` returns 1.0 ⇒ `cell.iron` unchanged ⇒ byte-identical.
+    let fenton_o2_dependence = overrides.fenton_o2_dependence;
     // Treg/MDSC suppressor (#264 Phase 2). `None`/disabled ⇒ no source mask,
     // no field, identity multiplier ⇒ byte-identical.
     let suppressor_cfg = overrides.suppressor.filter(|c| !c.is_disabled());
@@ -790,6 +805,24 @@ fn run_one_condition_full(
             if gc.is_tumor {
                 gc.cell.iron *=
                     hypoxia_iron_factor(o2_supply_for_exo[idx], hypoxia_iron_sensitivity);
+            }
+        }
+    }
+
+    // --- O2-dependent Fenton H2O2 substrate (#383) ---
+    // The Fenton reaction (Fe2+ + H2O2 -> Fe3+ + OH·) needs H2O2, whose source
+    // is O2 (superoxide -> SOD -> H2O2, the Haber-Weiss chain). The model's
+    // Fenton term is O2-INDEPENDENT, so the #365 hypoxia-iron rise lets the model
+    // wrongly "rescue" the anoxic core (§7.1 artifact). Couple the effective
+    // Fenton flux to local O2 by scaling `cell.iron` (its ONLY consumer is the
+    // Fenton term) DOWN where O2 is low. Composes multiplicatively with the #365
+    // hypoxia-iron scaling above (order immaterial): hypoxia raises the iron but
+    // gates the H2O2 substrate, so the NET deep-core Fenton can fall. `dependence
+    // == 0` (matrix path) ⇒ factor 1.0 ⇒ `cell.iron` unchanged ⇒ byte-identical.
+    if fenton_o2_dependence > 0.0 {
+        for (idx, gc) in grid.cells.iter_mut().enumerate() {
+            if gc.is_tumor {
+                gc.cell.iron *= fenton_o2_factor(o2_supply_for_exo[idx], fenton_o2_dependence);
             }
         }
     }
@@ -4240,6 +4273,100 @@ mod tests {
         );
         // Deterministic (the iron scaling is a one-time geometric setup mutation).
         assert_eq!(both.overall_kill_rate, run(2.0, 2.0).overall_kill_rate);
+    }
+
+    /// #383: O2-coupling the Fenton H2O2 substrate REVERSES the #365 deep-core
+    /// "rescue" artifact. With hypoxia-iron ON (the §7.1 artifact regime, where
+    /// the O2-independent Fenton lets the iron boost kill the anoxic core),
+    /// turning on `fenton_o2_dependence` scales the effective Fenton flux DOWN
+    /// where O2 is low — so the deep hypoxic core is protected again, the
+    /// biologically correct behavior (a real anoxic core loses its
+    /// superoxide/SOD-derived H2O2). `fenton_o2_dependence = 0` reproduces the
+    /// #365 run exactly (byte-identical). Same §7.1 headline config as the #365
+    /// test (grid 60, λ=50 µm, 180 steps, iron knobs at 2.0) for direct
+    /// comparability.
+    #[test]
+    fn o2_dependent_fenton_protects_the_anoxic_core_under_hypoxia_iron() {
+        let cfg = RunConfig {
+            grid_dim: 60,
+            n_steps: 180,
+        };
+        let cond = Condition {
+            name: "rsl3_o2_fenton".to_string(),
+            treatment: Treatment::RSL3,
+            treatment_name: "RSL3".to_string(),
+            o2_lambda: Some(50.0),
+            immune_on: false,
+            stromal_on: false,
+            ph_on: false,
+            dose_schedule: DoseSchedule::Constant,
+        };
+        // All runs share the #365 hypoxia-iron regime (the artifact); only the
+        // new #383 Fenton-O2 dependence knob varies.
+        let run = |fenton_o2: f64| {
+            run_one_condition_full(
+                &cond,
+                cfg,
+                None,
+                Overrides {
+                    ferritinophagy_release: 2.0,
+                    hypoxia_iron_sensitivity: 2.0,
+                    fenton_o2_dependence: fenton_o2,
+                    ..Default::default()
+                },
+            )
+        };
+        // Byte-identity: fenton_o2_dependence=0 reproduces the #365 hypoxia-iron
+        // run exactly (the factor is 1.0 ⇒ `cell.iron` untouched).
+        let artifact = run(0.0);
+        let artifact_ref = run_one_condition_full(
+            &cond,
+            cfg,
+            None,
+            Overrides {
+                ferritinophagy_release: 2.0,
+                hypoxia_iron_sensitivity: 2.0,
+                ..Default::default()
+            },
+        );
+        assert_eq!(
+            artifact.overall_kill_rate, artifact_ref.overall_kill_rate,
+            "fenton_o2_dependence=0 must be byte-identical to the #365 run"
+        );
+        assert_eq!(
+            artifact.hypoxic_kill_rate, artifact_ref.hypoxic_kill_rate,
+            "fenton_o2_dependence=0 must be byte-identical in the hypoxic zone too"
+        );
+        // The artifact regime DOES rescue the deep core (precondition: the thing
+        // we are correcting actually happens here).
+        assert!(
+            artifact.hypoxic_kill_rate > 0.005,
+            "precondition: the #365 hypoxia-iron regime should rescue the deep core \
+             (hypoxic_kill_rate={:.4}) so there is an artifact to reverse",
+            artifact.hypoxic_kill_rate
+        );
+        // Fully O2-gated Fenton (dependence=1.0): the anoxic core loses its H2O2
+        // substrate, so the deep-core rescue is REVERSED — hypoxic kill drops back
+        // down toward the un-rescued baseline.
+        let o2_gated = run(1.0);
+        assert!(
+            o2_gated.hypoxic_kill_rate < artifact.hypoxic_kill_rate,
+            "O2-gated Fenton must protect the anoxic core relative to the artifact: \
+             artifact={:.4}, o2_gated={:.4}",
+            artifact.hypoxic_kill_rate,
+            o2_gated.hypoxic_kill_rate
+        );
+        // The protection should be substantial in the deep core (the H2O2
+        // substrate is nearly gone where O2 ≈ 0), recovering most of the artifact.
+        assert!(
+            o2_gated.hypoxic_kill_rate < artifact.hypoxic_kill_rate * 0.5,
+            "O2-gated Fenton should recover most of the deep-core rescue: \
+             artifact={:.4}, o2_gated={:.4}",
+            artifact.hypoxic_kill_rate,
+            o2_gated.hypoxic_kill_rate
+        );
+        // Deterministic (the iron scaling is a one-time geometric setup mutation).
+        assert_eq!(o2_gated.hypoxic_kill_rate, run(1.0).hypoxic_kill_rate);
     }
 
     // ===== T-cell exhaustion (#243, Phase 1) =====
