@@ -2166,6 +2166,17 @@ struct SnapshotPreset {
     /// rate's effect is on the MUFA timecourse, not the kill count (the spheroid
     /// is cap-limited), so this preset's value is making the layer CLI-reachable.
     phenotype_mufa: bool,
+    /// O2-dependent (Type II) SDT exo-ROS fraction (#358/#380). `0.0` in every
+    /// matrix-adjacent preset (O2-independent, byte-identical); `1.0` in the
+    /// `sdt-o2dep` preset makes SDT fully O2-gated, so the deep hypoxic core
+    /// SURVIVES — the dead/LP panels show the hypoxic-core SDT survival front.
+    sdt_o2_dependence: f64,
+    /// True if the NCOA4-ferritinophagy + hypoxia-iron coupling (#365/#381) is
+    /// enabled (`ferritinophagy_release` + `hypoxia_iron_sensitivity`). `false`
+    /// in every existing preset (byte-identical); `true` in the `ferritinophagy`
+    /// preset, so RSL3 on a hypoxic sphere shows the iron-amplified ferroptosis
+    /// front (more kill where the boosted Fenton iron meets residual ROS).
+    ferritinophagy: bool,
 }
 
 /// Visualization presets for `--snapshot=NAME`. Keep this list small —
@@ -2192,6 +2203,8 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         dc_subsets: false,
         senescence: false,
         phenotype_mufa: false,
+        sdt_o2_dependence: 0.0,
+        ferritinophagy: false,
     },
     SnapshotPreset {
         name: "bare",
@@ -2214,6 +2227,8 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         dc_subsets: false,
         senescence: false,
         phenotype_mufa: false,
+        sdt_o2_dependence: 0.0,
+        ferritinophagy: false,
     },
     SnapshotPreset {
         name: "multidose",
@@ -2236,6 +2251,8 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         dc_subsets: false,
         senescence: false,
         phenotype_mufa: false,
+        sdt_o2_dependence: 0.0,
+        ferritinophagy: false,
     },
     SnapshotPreset {
         // SDT here visualizes the persister-fraction OVERLAY (the MUFA axis +
@@ -2262,6 +2279,8 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         dc_subsets: false,
         senescence: false,
         phenotype_mufa: false,
+        sdt_o2_dependence: 0.0,
+        ferritinophagy: false,
     },
     SnapshotPreset {
         name: "clonal",
@@ -2284,6 +2303,8 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         dc_subsets: false,
         senescence: false,
         phenotype_mufa: false,
+        sdt_o2_dependence: 0.0,
+        ferritinophagy: false,
     },
     SnapshotPreset {
         // RSL3 (hypoxia-sensitive) + explicit internal vessels: near-vessel
@@ -2311,6 +2332,8 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         dc_subsets: false,
         senescence: false,
         phenotype_mufa: false,
+        sdt_o2_dependence: 0.0,
+        ferritinophagy: false,
     },
     SnapshotPreset {
         // SDT + radial spheroid biology: the phenotype panel shows the
@@ -2336,6 +2359,8 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         dc_subsets: false,
         senescence: false,
         phenotype_mufa: false,
+        sdt_o2_dependence: 0.0,
+        ferritinophagy: false,
     },
     SnapshotPreset {
         // SDT on a patient-scale slab at the SURFACE (+z face = vessel, depth
@@ -2366,6 +2391,8 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         dc_subsets: false,
         senescence: false,
         phenotype_mufa: false,
+        sdt_o2_dependence: 0.0,
+        ferritinophagy: false,
     },
     SnapshotPreset {
         // Slab + internal vessels (#272 coupling). vessel_supply.npy (on a slab
@@ -2396,6 +2423,8 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         dc_subsets: false,
         senescence: false,
         phenotype_mufa: false,
+        sdt_o2_dependence: 0.0,
+        ferritinophagy: false,
     },
     SnapshotPreset {
         // SDT + immune + Treg/MDSC suppressor (#264 Phase 2). Heuristic niche
@@ -2422,6 +2451,8 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         dc_subsets: false,
         senescence: false,
         phenotype_mufa: false,
+        sdt_o2_dependence: 0.0,
+        ferritinophagy: false,
     },
     SnapshotPreset {
         // SDT + immune + dual checkpoint blockade (#264 Phase 3): a PD-1 +
@@ -2449,6 +2480,8 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         dc_subsets: false,
         senescence: false,
         phenotype_mufa: false,
+        sdt_o2_dependence: 0.0,
+        ferritinophagy: false,
     },
     SnapshotPreset {
         // Kitchen-sink composition (#278): several realism layers at once —
@@ -2478,6 +2511,8 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         dc_subsets: false,
         senescence: false,
         phenotype_mufa: false,
+        sdt_o2_dependence: 0.0,
+        ferritinophagy: false,
     },
     SnapshotPreset {
         // RSL3 + cell-cell contact resistance (#270): dense interior cells
@@ -2506,6 +2541,8 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         dc_subsets: false,
         senescence: false,
         phenotype_mufa: false,
+        sdt_o2_dependence: 0.0,
+        ferritinophagy: false,
     },
     SnapshotPreset {
         // SDT + radial nutrient gradient (#270 item 3b): the nutrient-starved
@@ -2533,6 +2570,8 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         dc_subsets: false,
         senescence: false,
         phenotype_mufa: false,
+        sdt_o2_dependence: 0.0,
+        ferritinophagy: false,
     },
     SnapshotPreset {
         // SDT + cDC1/cDC2 dendritic-cell subset mix (#264 Phase 4): a cDC1-poor
@@ -2560,6 +2599,8 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         dc_subsets: true,
         senescence: false,
         phenotype_mufa: false,
+        sdt_o2_dependence: 0.0,
+        ferritinophagy: false,
     },
     SnapshotPreset {
         // SDT + therapy-induced senescence (#341): a fraction of tumor cells
@@ -2593,6 +2634,8 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         dc_subsets: false,
         senescence: true,
         phenotype_mufa: false,
+        sdt_o2_dependence: 0.0,
+        ferritinophagy: false,
     },
     SnapshotPreset {
         // RSL3 + 3D spheroid (#197) + phenotype-specific SCD1/MUFA rates (#363):
@@ -2622,6 +2665,69 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         dc_subsets: false,
         senescence: false,
         phenotype_mufa: true,
+        sdt_o2_dependence: 0.0,
+        ferritinophagy: false,
+    },
+    SnapshotPreset {
+        // SDT on a hypoxic sphere (the base edge-distance radial-O2 gradient, not
+        // the spheroid biology layer) with the exo-ROS made fully O2-dependent
+        // (#358/#380, sdt_o2_dependence=1.0): the Type II singlet-oxygen yield
+        // scales with local O2, so SDT kills the oxygenated rim but the deep
+        // hypoxic core SURVIVES. The dead/LP panels show that hypoxic-core SDT
+        // survival front (the §7.1 contested-leg lower bound made visible).
+        name: "sdt-o2dep",
+        desc: "SDT + O2-dependent exo-ROS (#358): hypoxic-core SDT survival front",
+        treatment: Treatment::SDT,
+        treatment_name: "SDT",
+        immune_on: false,
+        stromal_on: false,
+        ph_on: false,
+        multidose: false,
+        persister: false,
+        clonal: false,
+        vasculature: false,
+        spheroid: false,
+        slab: false,
+        suppressor: false,
+        checkpoints: false,
+        contact: false,
+        nutrient: false,
+        dc_subsets: false,
+        senescence: false,
+        phenotype_mufa: false,
+        sdt_o2_dependence: 1.0,
+        ferritinophagy: false,
+    },
+    SnapshotPreset {
+        // RSL3 on a hypoxic sphere with the NCOA4-ferritinophagy + hypoxia-iron
+        // coupling on (#365/#381): HIF/TfR1 raise the labile-iron pool where O2
+        // is low while ferritinophagy releases stored iron over the run, so the
+        // boosted Fenton iron amplifies RSL3 ferroptosis. The dead/LP panels show
+        // the iron-amplified ferroptosis front (cf. the §7.1 hypoxia-iron leg; the
+        // deep-core rise is the flagged O2-independent-Fenton artifact, corrected
+        // by the off-by-default #383 fenton_o2_dependence not enabled here).
+        name: "ferritinophagy",
+        desc: "RSL3 + NCOA4-ferritinophagy + hypoxia-iron (#365): iron-amplified ferroptosis front",
+        treatment: Treatment::RSL3,
+        treatment_name: "RSL3",
+        immune_on: false,
+        stromal_on: false,
+        ph_on: false,
+        multidose: false,
+        persister: false,
+        clonal: false,
+        vasculature: false,
+        spheroid: false,
+        slab: false,
+        suppressor: false,
+        checkpoints: false,
+        contact: false,
+        nutrient: false,
+        dc_subsets: false,
+        senescence: false,
+        phenotype_mufa: false,
+        sdt_o2_dependence: 0.0,
+        ferritinophagy: true,
     },
 ];
 
@@ -2815,6 +2921,13 @@ fn run_snapshot(output_dir: &Path, tumor_radius_um: f64, name: &str) {
             dc_subsets: dc_subsets_cfg,
             senescence: senescence_cfg,
             phenotype_mufa: preset.phenotype_mufa.then(PhenotypeMufaConfig::literature),
+            // #380: O2-dependent SDT exo-ROS (0.0 for every other preset ⇒ the
+            // exo-ROS is O2-independent, unchanged).
+            sdt_o2_dependence: preset.sdt_o2_dependence,
+            // #381: NCOA4-ferritinophagy + hypoxia-iron coupling. The §7.1 headline
+            // knob values (both 2.0); 0.0 ⇒ inert for every other preset.
+            ferritinophagy_release: if preset.ferritinophagy { 2.0 } else { 0.0 },
+            hypoxia_iron_sensitivity: if preset.ferritinophagy { 2.0 } else { 0.0 },
             ..Default::default()
         },
     );
@@ -5894,6 +6007,54 @@ mod tests {
             p.phenotype_mufa && !PhenotypeMufaConfig::literature().is_identity(),
             "the preset's literature() config must be non-identity so it is applied"
         );
+    }
+
+    /// #380: lock the `--snapshot=sdt-o2dep` preset -> Overrides wiring. The
+    /// preset runs SDT with the exo-ROS made fully O2-dependent (`sdt_o2_dependence
+    /// = 1.0`), so the hypoxic core survives. Every OTHER preset must keep
+    /// `sdt_o2_dependence = 0.0` (the byte-identical O2-independent default).
+    #[test]
+    fn sdt_o2dep_snapshot_preset_is_wired() {
+        let p = resolve_snapshot("sdt-o2dep");
+        assert_eq!(p.name, "sdt-o2dep");
+        assert_eq!(p.treatment, Treatment::SDT, "sdt-o2dep must run SDT");
+        assert_eq!(
+            p.sdt_o2_dependence, 1.0,
+            "sdt-o2dep must make the exo-ROS fully O2-dependent"
+        );
+        // Off-by-default invariant: only this preset sets a non-zero dependence.
+        for q in SNAPSHOTS {
+            if q.name != "sdt-o2dep" {
+                assert_eq!(
+                    q.sdt_o2_dependence, 0.0,
+                    "preset {} must keep sdt_o2_dependence=0.0 (byte-identical)",
+                    q.name
+                );
+            }
+        }
+    }
+
+    /// #381: lock the `--snapshot=ferritinophagy` preset -> Overrides wiring. The
+    /// preset runs RSL3 with the NCOA4-ferritinophagy + hypoxia-iron coupling on.
+    /// Every OTHER preset must keep `ferritinophagy = false` (byte-identical).
+    #[test]
+    fn ferritinophagy_snapshot_preset_is_wired() {
+        let p = resolve_snapshot("ferritinophagy");
+        assert_eq!(p.name, "ferritinophagy");
+        assert_eq!(p.treatment, Treatment::RSL3, "ferritinophagy must run RSL3");
+        assert!(
+            p.ferritinophagy,
+            "the ferritinophagy preset must enable the dynamic-iron coupling"
+        );
+        for q in SNAPSHOTS {
+            if q.name != "ferritinophagy" {
+                assert!(
+                    !q.ferritinophagy,
+                    "preset {} must keep ferritinophagy=false (byte-identical)",
+                    q.name
+                );
+            }
+        }
     }
 
     #[test]

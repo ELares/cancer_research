@@ -110,6 +110,10 @@ The default 24-condition matrix path (no `--snapshot` flag) is **byte-identical*
 | `contact` | RSL3 | **cell-cell contact resistance (#270)** | constant |
 | `nutrient` | SDT | immune + **radial nutrient gradient (#270)** | constant |
 | `dc-subsets` | SDT | immune + **cDC1/cDC2 DC subset mix (#264 P4)** | constant |
+| `senescence` | SDT | immune + **therapy-induced senescence + SASP (#341)** | constant |
+| `phenotype-mufa` | RSL3 | spheroid + **phenotype-specific SCD1/MUFA rates (#363)** | constant |
+| `sdt-o2dep` | SDT | **O2-dependent exo-ROS (#358/#380)** — hypoxic-core SDT survival front | constant |
+| `ferritinophagy` | RSL3 | **NCOA4-ferritinophagy + hypoxia-iron (#365/#381)** — iron-amplified ferroptosis front | constant |
 
 The `slab` preset visualizes the **depth-graded supply** of a patient-scale slab: a surface slab (+z face = vessel) where the top layers are well-perfused and die while the deeper layers go drug/O2-deprived and survive. The depth axis is the layer (z) axis, which the renderer's mid-slice spans — so the death front in the existing dead/DAMP/LP panels *is* the visualization (no extra static overlay). See [Patient-scale slab](#patient-scale-slab-240) below.
 
