@@ -236,7 +236,7 @@ mod tests {
     /// applied therapy defeats, which is exactly the contested biology.
     #[test]
     fn senescence_program_expresses_both_senolytic_and_resistant_directions() {
-        let peak_lp = |cfg: &SenescenceConfig| -> f64 {
+        let final_lp = |cfg: &SenescenceConfig| -> f64 {
             let mut gen_rng = StdRng::seed_from_u64(42);
             let mut cell = gen_cell(Phenotype::OXPHOS, &mut gen_rng);
             apply_senescence_to_cell(&mut cell, cfg);
@@ -244,7 +244,7 @@ mod tests {
             let (_dead, lp, _, _) = sim_cell(&cell, Treatment::RSL3, &Params::default(), &mut rng);
             lp
         };
-        let base = peak_lp(&SenescenceConfig::default());
+        let base = final_lp(&SenescenceConfig::default());
         // Iron-dominant (high labile Fe2+, GPX4 crutch removed by RSL3, no backup
         // boost) ⇒ senolytic: MORE peroxidation.
         let senolytic = SenescenceConfig {
@@ -264,15 +264,15 @@ mod tests {
             fsp1_mul: 1.5,
         };
         assert!(
-            peak_lp(&senolytic) > base,
+            final_lp(&senolytic) > base,
             "iron-dominant senescent state should be a senolytic target under RSL3: \
              senolytic={} vs base={base}",
-            peak_lp(&senolytic)
+            final_lp(&senolytic)
         );
         assert!(
-            peak_lp(&resistant) < base,
+            final_lp(&resistant) < base,
             "defense-dominant senescent state should resist RSL3: resistant={} vs base={base}",
-            peak_lp(&resistant)
+            final_lp(&resistant)
         );
     }
 }
