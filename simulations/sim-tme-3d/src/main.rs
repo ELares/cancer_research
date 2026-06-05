@@ -77,6 +77,7 @@ use ferroptosis_core::params::{
 };
 use ferroptosis_core::persister;
 use ferroptosis_core::ph::{ion_trap_factor_from_ph, iron_multiplier_from_ph, radial_ph_field};
+use ferroptosis_core::phenotype_mufa::{apply_phenotype_mufa_rates_3d, PhenotypeMufaConfig};
 use ferroptosis_core::physics::local_ros_multiplier_3d;
 use ferroptosis_core::senescence::{
     apply_senescence_program_3d, sasp_immune_multiplier, SenescenceConfig,
@@ -458,6 +459,12 @@ struct Overrides {
     /// Radial nutrient gradient (#270 item 3b). `None` / identity ⇒ no
     /// antioxidant-setpoint modulation ⇒ byte-identical.
     nutrient: Option<NutrientConfig>,
+    /// Phenotype-specific SCD1/MUFA accumulation rates (#363). `None` / identity
+    /// ⇒ no per-cell `mufa_rate` is set (cells use the global `scd_mufa_rate`) ⇒
+    /// byte-identical. Only meaningful in a MUFA-active context (e.g. the
+    /// spheroid preset / an invivo Params); the matrix uses `scd_mufa_rate = 0`,
+    /// so even a non-identity config is inert there.
+    phenotype_mufa: Option<PhenotypeMufaConfig>,
     /// Dendritic-cell subset mix (#264 Phase 4). `None` / balanced ⇒ priming
     /// efficiency 1.0 ⇒ no immune-kill modulation ⇒ byte-identical.
     dc_subsets: Option<DcSubsetConfig>,
@@ -540,6 +547,9 @@ fn run_one_condition_full(
     let slab_phenotype_cfg = overrides.slab_phenotype.filter(|_| slab_cfg.is_some());
     let contact_cfg = overrides.contact;
     let nutrient_cfg = overrides.nutrient;
+    // Phenotype-specific MUFA rates (#363). Skip identity entirely so the default
+    // path sets no per-cell `mufa_rate` ⇒ byte-identical.
+    let phenotype_mufa_cfg = overrides.phenotype_mufa.filter(|c| !c.is_identity());
     let dc_subsets_cfg = overrides.dc_subsets;
     // Therapy-induced senescence (#341). `None`/identity ⇒ no cells marked, no
     // perturbation, no SASP coupling ⇒ byte-identical.
@@ -1030,6 +1040,18 @@ fn run_one_condition_full(
     // contact so the nrf2 axis composes independently of the lipid/iron axes.
     if let Some(cfg) = &nutrient_cfg {
         apply_nutrient_stress_3d(&mut grid, cfg);
+    }
+
+    // Phenotype-specific SCD1/MUFA accumulation rates (#363): scale each tumor
+    // cell's MUFA build-up RATE by a per-phenotype multiplier (a drug-tolerant
+    // persister remodels lipids toward MUFA at a different rate than a glycolytic
+    // rim cell). Reads gc.phenotype (geometric, no RNG); base rate is the run's
+    // global scd_mufa_rate. Off-by-default identity is filtered out above, so the
+    // default path sets no per-cell mufa_rate ⇒ byte-identical. Runs after the
+    // phenotype-reassigning layers (spheroid) so each cell's CURRENT phenotype
+    // drives its rate. Inert in the matrix (scd_mufa_rate = 0 there).
+    if let Some(cfg) = &phenotype_mufa_cfg {
+        apply_phenotype_mufa_rates_3d(&mut grid, params.scd_mufa_rate, cfg);
     }
 
     // Therapy-induced senescence (#341): mark a `fraction` of tumor cells
@@ -5638,6 +5660,82 @@ mod tests {
         );
         // Deterministic (geometric, no RNG).
         assert_eq!(contact.total_dead, run_contact().total_dead);
+    }
+
+    /// #363: phenotype-specific MUFA accumulation rates are wired into sim-tme-3d
+    /// OFF-BY-DEFAULT. In the spheroid context (`Params::spheroid()`, MUFA active):
+    /// an IDENTITY config is filtered out (is_identity) and reproduces the
+    /// spheroid baseline byte-for-byte (the production-meaningful guarantee), and
+    /// `None` likewise. A non-identity config runs deterministically. The RATE's
+    /// effect on the MUFA timecourse is proven at the library level
+    /// (`ferroptosis_core::biochem` `sim_cell_step_reads_per_cell_mufa_rate`,
+    /// which directly measures `mufa_protection` divergence — the right readout).
+    /// We deliberately do NOT assert a kill-COUNT delta here: the spheroid's
+    /// bistable switch + cysteine-limited core cap make the kill count insensitive
+    /// to the MUFA rate in this regime (the cells that die are not MUFA-rescuable
+    /// and the survivors are not MUFA-dependent), so a count assertion would be
+    /// fragile and misleading. Byte-identity + determinism is what matters for the
+    /// production matrix.
+    #[test]
+    fn phenotype_mufa_off_by_default_byte_identical_in_spheroid() {
+        let cfg = RunConfig {
+            grid_dim: 24,
+            n_steps: 80,
+        };
+        let cond = Condition {
+            name: "phenotype_mufa_rsl3".to_string(),
+            treatment: Treatment::RSL3,
+            treatment_name: "RSL3".to_string(),
+            o2_lambda: Some(ZONE_REF_LAMBDA),
+            immune_on: false,
+            stromal_on: false,
+            ph_on: false,
+            dose_schedule: DoseSchedule::Constant,
+        };
+        let spheroid_only = || Overrides {
+            spheroid: Some(SpheroidConfig::literature()),
+            ..Default::default()
+        };
+        let run = |pm: Option<PhenotypeMufaConfig>| {
+            run_one_condition_full(
+                &cond,
+                cfg,
+                None,
+                Overrides {
+                    phenotype_mufa: pm,
+                    ..spheroid_only()
+                },
+            )
+            .total_dead
+        };
+        let baseline = run_one_condition_full(&cond, cfg, None, spheroid_only()).total_dead;
+        assert!(baseline > 0, "spheroid RSL3 baseline must kill some cells");
+        // Off-by-default: None AND an identity config (filtered out) both
+        // reproduce the spheroid baseline byte-for-byte.
+        assert_eq!(
+            run(None),
+            baseline,
+            "None phenotype_mufa must equal baseline"
+        );
+        assert_eq!(
+            run(Some(PhenotypeMufaConfig::identity())),
+            baseline,
+            "identity phenotype_mufa must be byte-identical to the spheroid baseline (gate filters it)"
+        );
+        // A non-identity config runs and is deterministic (geometric per-cell
+        // setup, no RNG), so the layer is reachable without breaking determinism.
+        let nonident = PhenotypeMufaConfig {
+            glycolytic: 1.0,
+            oxphos: 1.5,
+            persister: 2.0,
+            persister_nrf2: 2.0,
+            stromal: 1.0,
+        };
+        assert_eq!(
+            run(Some(nonident)),
+            run(Some(nonident)),
+            "a non-identity phenotype_mufa run must be deterministic"
+        );
     }
 
     /// #270 item 3b: the radial nutrient gradient lowers the durable antioxidant

@@ -50,6 +50,20 @@ pub struct Cell {
     /// supra-global per-cell cap deliberately.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mufa_cap: Option<f64>,
+    /// Per-cell SCD1/MUFA accumulation RATE (#363). `None` ⇒ the global
+    /// `Params::scd_mufa_rate`. SCD1/MUFA enrichment kinetics differ by
+    /// phenotype (e.g. a drug-tolerant persister remodels lipids toward MUFA at a
+    /// different rate than a proliferating glycolytic cell), so a consumer can set
+    /// this per-phenotype via [`crate::params::PhenotypeMufaConfig`] to give the
+    /// acute-versus-established MUFA build-up (`mufa_acute_start`, #339) a
+    /// phenotype-specific time constant instead of one shared `scd_mufa_rate`.
+    ///
+    /// `None` (the default) keeps every path byte-identical (the call sites fall
+    /// back to `params.scd_mufa_rate`, exactly as before). Independent of
+    /// [`Cell::mufa_cap`]: the rate controls how fast MUFA protection accumulates,
+    /// the cap controls the steady state it saturates toward.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mufa_rate: Option<f64>,
 }
 
 /// Treatment modalities.
@@ -85,6 +99,7 @@ pub fn gen_cell(pheno: Phenotype, rng: &mut StdRng) -> Cell {
             lipid_unsat: norm(rng, 1.0, 0.12).max(0.5),
             nrf2: norm(rng, 1.0, 0.12).max(0.4),
             mufa_cap: None,
+            mufa_rate: None,
         },
         Phenotype::OXPHOS => Cell {
             iron: norm(rng, 2.8, 0.6).max(0.8),
@@ -95,6 +110,7 @@ pub fn gen_cell(pheno: Phenotype, rng: &mut StdRng) -> Cell {
             lipid_unsat: norm(rng, 1.6, 0.2).max(0.7),
             nrf2: norm(rng, 1.2, 0.15).max(0.5),
             mufa_cap: None,
+            mufa_rate: None,
         },
         Phenotype::Persister => Cell {
             iron: norm(rng, 1.5, 0.3).max(0.5),
@@ -105,6 +121,7 @@ pub fn gen_cell(pheno: Phenotype, rng: &mut StdRng) -> Cell {
             lipid_unsat: norm(rng, 1.4, 0.15).max(0.6),
             nrf2: norm(rng, 0.7, 0.15).max(0.2),
             mufa_cap: None,
+            mufa_rate: None,
         },
         Phenotype::PersisterNrf2 => Cell {
             iron: norm(rng, 2.8, 0.6).max(0.8),
@@ -115,6 +132,7 @@ pub fn gen_cell(pheno: Phenotype, rng: &mut StdRng) -> Cell {
             lipid_unsat: norm(rng, 1.6, 0.2).max(0.7),
             nrf2: norm(rng, 3.0, 0.4).max(1.5),
             mufa_cap: None,
+            mufa_rate: None,
         },
         Phenotype::Stromal => Cell {
             iron: norm(rng, 0.3, 0.08).max(0.1),
@@ -125,6 +143,7 @@ pub fn gen_cell(pheno: Phenotype, rng: &mut StdRng) -> Cell {
             lipid_unsat: norm(rng, 0.6, 0.1).max(0.3),
             nrf2: norm(rng, 1.0, 0.12).max(0.4),
             mufa_cap: None,
+            mufa_rate: None,
         },
     }
 }
@@ -181,6 +200,7 @@ pub fn gen_recovered_persister(days: f64, rates: &RecoveryRates, rng: &mut StdRn
         lipid_unsat: norm(rng, 1.4, 0.15).max(0.6),
         nrf2: norm(rng, nrf2_mean, 0.15).max(0.2),
         mufa_cap: None,
+        mufa_rate: None,
     }
 }
 

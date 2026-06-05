@@ -156,9 +156,15 @@ impl CellState {
 /// The logistic growth saturates at — and the value is clamped to — `mufa_max`,
 /// so a per-cell cap yields a per-cell steady state (durable position-dependent
 /// MUFA). `cell.mufa_cap = None` ⇒ `params.scd_mufa_max` ⇒ byte-identical.
+///
+/// `rate` is the per-cell SCD1/MUFA accumulation rate: the per-cell
+/// `cell.mufa_rate` when set (a phenotype-specific rate, #363), else the global
+/// `params.scd_mufa_rate`. It scales how fast MUFA protection accumulates toward
+/// `mufa_max` (the cap sets the steady state, the rate sets the time constant).
+/// `cell.mufa_rate = None` ⇒ `params.scd_mufa_rate` ⇒ byte-identical.
 #[inline]
-fn update_mufa_protection(current: f64, mufa_max: f64, params: &Params) -> f64 {
-    let growth = params.scd_mufa_rate * (1.0 - current / (mufa_max + 1e-9));
+fn update_mufa_protection(current: f64, mufa_max: f64, rate: f64, params: &Params) -> f64 {
+    let growth = rate * (1.0 - current / (mufa_max + 1e-9));
     let decay = params.scd_mufa_decay * current;
     (current + growth - decay).clamp(0.0, mufa_max.max(0.0))
 }
@@ -328,6 +334,7 @@ pub fn sim_cell_step(
     state.mufa_protection = update_mufa_protection(
         state.mufa_protection,
         cell.mufa_cap.unwrap_or(params.scd_mufa_max),
+        cell.mufa_rate.unwrap_or(params.scd_mufa_rate),
         params,
     );
 
@@ -455,6 +462,7 @@ pub fn sim_cell(
         mufa_protection = update_mufa_protection(
             mufa_protection,
             cell.mufa_cap.unwrap_or(params.scd_mufa_max),
+            cell.mufa_rate.unwrap_or(params.scd_mufa_rate),
             params,
         );
         let effective_unsat = (ether_augmented_pufa(cell.lipid_unsat, params)
@@ -832,8 +840,8 @@ mod tests {
         let global_cap = params.scd_mufa_max; // 0.25 — what `None` falls back to
         let (mut core, mut uncapped) = (0.05_f64, 0.05_f64); // same low start
         for _ in 0..300 {
-            core = update_mufa_protection(core, core_cap, &params);
-            uncapped = update_mufa_protection(uncapped, global_cap, &params);
+            core = update_mufa_protection(core, core_cap, params.scd_mufa_rate, &params);
+            uncapped = update_mufa_protection(uncapped, global_cap, params.scd_mufa_rate, &params);
         }
         // Core saturates near M_ss(0.05) ≈ 0.048; uncapped climbs to M_ss(0.25) ≈ 0.20.
         assert!(
@@ -893,6 +901,58 @@ mod tests {
         assert!(
             uncapped > 0.15,
             "uncapped cell climbs to the global M_ss: {uncapped}"
+        );
+    }
+
+    /// #363 wiring: `sim_cell_step` must read the per-cell `cell.mufa_rate`, so
+    /// phenotype-specific SCD1/MUFA accumulation RATES actually diverge. Three
+    /// otherwise-identical cells from the same naive MUFA start under
+    /// `Params::spheroid()` + Control (alive, so MUFA accumulates cleanly), with a
+    /// deliberately NON-binding per-cell cap so the cap does not mask the rate
+    /// effect: (a) `None` ⇒ the global `scd_mufa_rate`, (b) `Some(global)` which
+    /// must be byte-identical to (a), and (c) a FAST rate which must build more
+    /// MUFA protection by the same step. This is the #363 acceptance ("two
+    /// phenotypes diverge in MUFA build-up under the same dosing") at the engine
+    /// level, and it guards the `None`-is-byte-identical default.
+    #[test]
+    fn sim_cell_step_reads_per_cell_mufa_rate() {
+        let params = Params::spheroid();
+        let mut gen_rng = StdRng::seed_from_u64(11);
+        let base = gen_cell(Phenotype::Glycolytic, &mut gen_rng);
+
+        let run = |mufa_rate: Option<f64>| -> f64 {
+            let mut cell = base.clone();
+            cell.mufa_rate = mufa_rate;
+            cell.mufa_cap = Some(1.0); // non-binding cap: isolate the RATE effect
+            let mut init_rng = StdRng::seed_from_u64(5);
+            let mut state = CellState::from_cell(
+                &cell,
+                crate::cell::Treatment::Control,
+                &params,
+                &mut init_rng,
+            );
+            state.mufa_protection = 0.0; // same naive start for all runs
+            let mut step_rng = StdRng::seed_from_u64(77);
+            for step in 0..40 {
+                sim_cell_step(&mut state, &cell, &params, step, 0.0, &mut step_rng);
+            }
+            state.mufa_protection
+        };
+
+        let global = run(None); // global scd_mufa_rate (the default path)
+        let global_explicit = run(Some(params.scd_mufa_rate)); // == global, exactly
+        let fast = run(Some(params.scd_mufa_rate * 3.0)); // a faster phenotype
+
+        // `None` falls back to the global rate EXACTLY (the byte-identical default).
+        assert_eq!(
+            global, global_explicit,
+            "mufa_rate=None must reproduce the global scd_mufa_rate bit-for-bit"
+        );
+        // A faster per-cell rate builds more MUFA protection by the same step —
+        // the two phenotypes diverge in MUFA build-up under identical dosing.
+        assert!(
+            fast > global,
+            "a faster per-cell mufa_rate must accumulate more MUFA: fast={fast}, global={global}"
         );
     }
 }
