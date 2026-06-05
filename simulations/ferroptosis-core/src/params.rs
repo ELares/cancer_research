@@ -562,10 +562,13 @@ pub struct PersisterConfig {
     /// Cap on persister-driven `CellState::mufa_protection`.
     pub mufa_boost_cap: f64,
     /// Reversible-to-irreversible (epigenetic) locking rate (#342). Beyond a
-    /// threshold of SUSTAINED drug exposure (~10-14 days continuous in several
-    /// systems), persistence becomes epigenetically locked / effectively
-    /// irreversible (FSP1/HDAC-mediated suppression of alternative defenses,
-    /// PMID 41481741). Per step, once `cumulative_exposure >= lock_threshold`,
+    /// threshold of SUSTAINED drug exposure, persistence becomes epigenetically
+    /// locked / effectively irreversible: the FSP1/HDAC-mediated suppression of
+    /// alternative defenses that makes persistence durable is documented by PMID
+    /// 41481741. The sustained-exposure timescale (on the order of days to weeks
+    /// of continuous dosing in some reports) is illustrative context only, NOT
+    /// from that source and NOT mapped to the dimensionless EMA `lock_threshold`
+    /// used here. Per step, once `cumulative_exposure >= lock_threshold`,
     /// a fraction `lock_rate` of the reversible persister pool is moved into the
     /// locked pool, which does NOT revert (see
     /// [`crate::persister::step_with_locking`]). `0.0` (default) disables
