@@ -65,8 +65,9 @@ use ferroptosis_core::dose_schedule::DoseSchedule;
 use ferroptosis_core::grid::{TumorGrid3D, TUMOR_RADIUS_FRACTION};
 use ferroptosis_core::immune_spatial::{
     dc_activation, diffuse_damp_3d_step, exhaustion_factor, ferroptotic_immunosuppression,
-    immune_kill_probability, suppressor_kill_multiplier, suppressor_source_mask_3d,
-    CheckpointPanel, DcSubsetConfig, SuppressorConfig, DAMP_KILL_THRESHOLD,
+    immune_kill_probability, sasp_field_kill_multiplier, suppressor_kill_multiplier,
+    suppressor_source_mask_3d, CheckpointPanel, DcSubsetConfig, SuppressorConfig,
+    DAMP_KILL_THRESHOLD,
 };
 use ferroptosis_core::nutrient::{apply_nutrient_stress_3d, NutrientConfig};
 use ferroptosis_core::oxygen::{
@@ -170,6 +171,17 @@ const IMMUNE_START_STEP: u32 = 60;
 /// `0.1 × 8/26 ≈ 0.0308`. Without scaling, 2D's `0.1` would over-spread
 /// in 3D (10% × 26 = 260% per source-cell loss, vs 2D's 80%).
 const IRON_DIFFUSE_FRACTION_3D: f64 = 0.1 * 8.0 / 26.0;
+
+/// Diffusing SASP field (#376) transport constants, mirroring the Treg/MDSC
+/// suppressor field's enabled() defaults (`SuppressorConfig::enabled`): per-step
+/// replenishment at each senescent source cell, a 3D-safe diffusion fraction
+/// (< 1/26 for stability), and a clearance rate. These set the field's
+/// quasi-steady spatial scale; the single tunable knob is the signed
+/// `SenescenceConfig::sasp_field_strength` (which absorbs the absolute
+/// magnitude), so these are fixed UNCALIBRATED placeholders, not config surface.
+const SASP_FIELD_REPLENISH_RATE: f64 = 0.15;
+const SASP_FIELD_DIFFUSION_FRACTION: f64 = 0.025;
+const SASP_FIELD_CLEARANCE_RATE: f64 = 0.03;
 
 // `DAMP_KILL_THRESHOLD`, `SpatialImmuneConfig`, `StromalConfig`,
 // `PhConfig` are imported from `ferroptosis-core` (#220). Previously
@@ -1211,11 +1223,39 @@ fn run_one_condition_full(
     let sasp_immune_mult = senescence_cfg.map_or(1.0, |c| c.sasp_immune_mult);
     let sasp_on = condition.immune_on && senescence_mask.is_some() && sasp_immune_mult != 1.0;
 
+    // Diffusing SASP field (#376): the paracrine/bystander extension of the
+    // cell-autonomous SASP coupling above. Senescent cells are sources; the field
+    // diffuses with `diffuse_damp_3d_step` (same operator as the DAMP and
+    // suppressor fields) and then scales EVERY exposed cell's immune-kill
+    // probability via `sasp_field_kill_multiplier` — including adjacent
+    // NON-senescent tumor cells, the neighbor coupling #341 could not express.
+    // `strength` is signed: `> 0` immunosuppressive (lowers neighbor kill), `< 0`
+    // surveillance (raises it). Gated on `immune_on`, a populated senescence mask,
+    // AND a non-zero strength; otherwise the field is never allocated and the
+    // multiplier is identity, so the run stays byte-identical.
+    let sasp_field_strength = senescence_cfg.map_or(0.0, |c| c.sasp_field_strength);
+    let sasp_field_on =
+        condition.immune_on && senescence_mask.is_some() && sasp_field_strength != 0.0;
+    let mut sasp_field: Vec<f64> = if sasp_field_on {
+        vec![0.0_f64; n_cells]
+    } else {
+        Vec::new()
+    };
+    let mut sasp_field_scratch: Vec<f64> = if sasp_field_on {
+        vec![0.0_f64; n_cells]
+    } else {
+        Vec::new()
+    };
+
     // The rich kill path handles any realism layer (each factor is identity when
     // its layer is off); the default allocation-free path runs only when ALL are
     // off, staying byte-identical to pre-#243.
-    let realism_kill_path =
-        exhaustion_on || suppressor_on || dc_subsets_on || ferro_immuno_on || sasp_on;
+    let realism_kill_path = exhaustion_on
+        || suppressor_on
+        || dc_subsets_on
+        || ferro_immuno_on
+        || sasp_on
+        || sasp_field_on;
 
     // Hoisted out of the per-cell hot loop (these invariants don't vary by
     // cell or step): on the dosed path the relevant availability vec must be
@@ -1503,6 +1543,31 @@ fn run_one_condition_full(
                 );
             }
 
+            // Diffusing SASP field (#376): replenish at the senescent source
+            // cells (the senescence mask), then diffuse + clear with the same
+            // operator. The field then modulates EVERY exposed cell's kill in the
+            // loop below (neighbor/bystander coupling). Off ⇒ skipped ⇒
+            // byte-identical. Uses the current mask: a cell cleared from the mask
+            // by clonal repopulation simply stops seeding new SASP (already-
+            // diffused field clears at `SASP_FIELD_CLEARANCE_RATE`).
+            if sasp_field_on {
+                if let Some(mask) = &senescence_mask {
+                    for (idx, &is_sen) in mask.iter().enumerate() {
+                        if is_sen {
+                            sasp_field[idx] =
+                                (sasp_field[idx] + SASP_FIELD_REPLENISH_RATE).min(1.0);
+                        }
+                    }
+                    diffuse_damp_3d_step(
+                        &mut sasp_field,
+                        &mut sasp_field_scratch,
+                        &grid,
+                        SASP_FIELD_DIFFUSION_FRACTION,
+                        SASP_FIELD_CLEARANCE_RATE,
+                    );
+                }
+            }
+
             // Immune kill (after delay). Parallelized over cells with rayon
             // (#192) — byte-identical to the old serial triple loop: each cell
             // reads its own `damp_field[idx]` (immutable here; DAMP diffusion
@@ -1580,6 +1645,18 @@ fn run_one_condition_full(
                             } else {
                                 1.0
                             };
+                            // Diffusing SASP field (#376): the PARACRINE arm,
+                            // signed and reaching EVERY exposed cell (not just
+                            // senescent ones) — `> 0` strength lowers a neighbor's
+                            // kill (immunosuppressive), `< 0` raises it
+                            // (surveillance); 1.0 for field 0 and layer-off. The
+                            // `sasp_field_on` guard keeps the empty backing vec
+                            // out of the index on the default path.
+                            let sasp_field_mult = if sasp_field_on {
+                                sasp_field_kill_multiplier(sasp_field[idx], sasp_field_strength)
+                            } else {
+                                1.0
+                            };
                             // `dc_priming` is a uniform scalar (the cDC1/cDC2
                             // mix, #264 Phase 4): 1.0 when off, < 1.0 for a
                             // cDC1-poor tumor that primes killing less efficiently.
@@ -1591,7 +1668,8 @@ fn run_one_condition_full(
                                 * supp
                                 * dc_priming
                                 * ferro_supp
-                                * sasp;
+                                * sasp
+                                * sasp_field_mult;
                             let mut rng = StdRng::seed_from_u64(
                                 cond_seed
                                     .wrapping_add(900_000_000)
@@ -5263,6 +5341,7 @@ mod tests {
             nrf2_mul: 1.0,
             fsp1_mul: 1.0,
             sasp_immune_mult: mult,
+            sasp_field_strength: 0.0,
         };
         let run = |sen: Option<SenescenceConfig>| {
             run_one_condition_full(
@@ -5311,6 +5390,96 @@ mod tests {
             run(Some(sasp_only(1.0))),
             base_im,
             "sasp_immune_mult=1.0 (identity) must reproduce the no-senescence baseline"
+        );
+    }
+
+    /// #376 (diffusing SASP FIELD): unlike #341's cell-autonomous multiplier, the
+    /// field is PARACRINE — it reaches non-senescent NEIGHBORS. Using a
+    /// FIELD-only config (all four biochem axes `1.0` AND `sasp_immune_mult` `1.0`,
+    /// only `sasp_field_strength` varies) isolates the field: the grid biochem and
+    /// the cell-autonomous coupling are byte-identical across arms, so the only
+    /// thing that can move the aggregate immune kills is the diffusing field acting
+    /// on cells in the neighborhood (senescent AND non-senescent). The
+    /// immunosuppressive arm (`> 0`) LOWERS net kills below baseline; the
+    /// surveillance arm (`< 0`) RAISES them; and the two straddle the baseline.
+    /// Deterministic; `sasp_field_strength=0.0` is identity ⇒ reproduces the
+    /// no-senescence baseline EXACTLY (the production-matrix byte-identity).
+    #[test]
+    fn sasp_field_is_bidirectional_paracrine_and_identity_is_baseline() {
+        let cfg = RunConfig {
+            grid_dim: 30,
+            n_steps: 130,
+        };
+        let cond = Condition {
+            name: "sasp_field_demo".to_string(),
+            treatment: Treatment::SDT,
+            treatment_name: "SDT".to_string(),
+            o2_lambda: Some(ZONE_REF_LAMBDA),
+            immune_on: true,
+            stromal_on: false,
+            ph_on: false,
+            dose_schedule: DoseSchedule::Constant,
+        };
+        let immune = SpatialImmuneConfig {
+            immune_kill_rate: 0.5,
+            anti_pd1_efficacy: 1.0,
+            ..SpatialImmuneConfig::for_3d()
+        };
+        // FIELD-only: 40% senescent, NO biochem perturbation AND no cell-autonomous
+        // SASP coupling (`sasp_immune_mult` 1.0); only the diffusing field varies.
+        let field_only = |strength: f64| SenescenceConfig {
+            fraction: 0.4,
+            iron_mul: 1.0,
+            gpx4_mul: 1.0,
+            nrf2_mul: 1.0,
+            fsp1_mul: 1.0,
+            sasp_immune_mult: 1.0,
+            sasp_field_strength: strength,
+        };
+        let run = |sen: Option<SenescenceConfig>| {
+            run_one_condition_full(
+                &cond,
+                cfg,
+                None,
+                Overrides {
+                    immune: Some(immune),
+                    senescence: sen,
+                    ..Default::default()
+                },
+            )
+            .immune_kills
+            .expect("immune_on populates immune_kills")
+        };
+        let base_im = run(None);
+        let surveillance_im = run(Some(field_only(-0.6))); // surveillance: raises kill
+        let immunosuppress_im = run(Some(field_only(0.6))); // immunosuppressive: lowers
+        assert!(
+            base_im >= 50,
+            "baseline must produce enough immune kills to be informative; got {base_im}"
+        );
+        assert!(
+            immunosuppress_im < base_im,
+            "immunosuppressive SASP field (strength>0) must reduce net immune kills \
+             (including non-senescent neighbors): baseline={base_im}, suppressed={immunosuppress_im}"
+        );
+        assert!(
+            surveillance_im > base_im,
+            "surveillance SASP field (strength<0) must raise net immune kills: \
+             baseline={base_im}, surveillance={surveillance_im}"
+        );
+        assert!(
+            surveillance_im > immunosuppress_im,
+            "the SASP field is bidirectional: surveillance={surveillance_im} must outkill \
+             immunosuppression={immunosuppress_im}"
+        );
+        // Deterministic (the field + multiplier are pure functions of the fixed mask).
+        assert_eq!(immunosuppress_im, run(Some(field_only(0.6))));
+        // Identity: strength=0.0 with identity biochem + cell-autonomous coupling is
+        // filtered to None ⇒ the no-senescence baseline EXACTLY (byte-identity).
+        assert_eq!(
+            run(Some(field_only(0.0))),
+            base_im,
+            "sasp_field_strength=0.0 (identity) must reproduce the no-senescence baseline"
         );
     }
 
@@ -5400,6 +5569,7 @@ mod tests {
             nrf2_mul: 1.0,
             fsp1_mul: 1.0,
             sasp_immune_mult: 1.0,
+            sasp_field_strength: 0.0,
         };
         let run = |repop: f64| {
             run_one_condition_full(

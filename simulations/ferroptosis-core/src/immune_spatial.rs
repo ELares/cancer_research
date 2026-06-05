@@ -454,6 +454,49 @@ pub fn ferroptotic_immunosuppression(local_damp: f64, strength: f64) -> f64 {
     1.0 / (1.0 + strength.max(0.0) * local_damp)
 }
 
+/// Local immune-kill multiplier from the diffusing **SASP field** (#376).
+///
+/// The senescence SASP is a SECRETED, paracrine signal, so unlike the
+/// cell-autonomous [`crate::senescence::sasp_immune_multiplier`] (#341, which
+/// only scales a senescent cell's OWN kill probability) this modulates EVERY
+/// cell exposed to the field — including adjacent NON-senescent tumor cells the
+/// secretome protects or sensitizes. The consumer (sim-tme-3d) seeds the field
+/// at the senescent cells (the senescence mask), diffuses it with
+/// [`diffuse_damp_3d_step`], then applies this multiplier at each cell.
+///
+/// `strength` is SIGNED to carry the SASP's documented bidirectionality, the
+/// same axis dependence as [`crate::senescence::SenescenceConfig::sasp_immune_mult`]:
+/// - `strength > 0` ⇒ the immunosuppressive arm: `1/(1 + strength · field)`
+///   LOWERS the local immune-kill probability (IL-1RA protecting neighboring
+///   tumor cells, recruitment of surveillance-antagonizing myeloid cells — Di
+///   Mitri 2014 PMID 25156255; Eggert 2016 PMID 27728804). Mirrors
+///   [`suppressor_kill_multiplier`] / [`ferroptotic_immunosuppression`].
+/// - `strength < 0` ⇒ the surveillance arm: `1 + (-strength) · field` RAISES it
+///   (CD4 T-cell / monocyte recruitment to the senescent niche — Kang 2011 PMID
+///   22080947).
+/// - `strength == 0.0` (default) OR `field == 0.0` ⇒ exactly `1.0` ⇒ the consumer
+///   stays byte-identical.
+///
+/// Bounded in `(0, ∞)` (immunosuppressive arm in `(0, 1]`; surveillance arm in
+/// `[1, ∞)`). The magnitude is an UNCALIBRATED placeholder; the bidirectional
+/// structure and the neighbor/bystander reach (vs the #341 cell-autonomous
+/// multiplier) are the result.
+#[inline]
+#[must_use]
+pub fn sasp_field_kill_multiplier(local_sasp: f64, strength: f64) -> f64 {
+    debug_assert!(
+        local_sasp >= 0.0 && local_sasp.is_finite() && strength.is_finite(),
+        "sasp_field inputs must be finite and field >= 0; got field={local_sasp}, strength={strength}"
+    );
+    if strength == 0.0 || local_sasp == 0.0 {
+        1.0
+    } else if strength > 0.0 {
+        1.0 / (1.0 + strength * local_sasp)
+    } else {
+        1.0 + (-strength) * local_sasp
+    }
+}
+
 /// Per-cell boolean mask of Treg/MDSC suppressor **source** cells (#264).
 ///
 /// Seed points are **perivascular** when `vessels` is supplied (Tregs cluster
@@ -1206,6 +1249,85 @@ mod tests {
         assert!((ferroptotic_immunosuppression(10.0, 0.1) - 0.5).abs() < 1e-12);
         // bounded in (0, 1].
         assert!(ferroptotic_immunosuppression(1.0e9, 1.0) > 0.0);
+    }
+
+    #[test]
+    fn sasp_field_multiplier_is_signed_and_identity_at_zero() {
+        // strength 0 ⇒ identity regardless of field (byte-identical).
+        for field in [0.0, 1.0, 50.0, 1000.0] {
+            assert_eq!(sasp_field_kill_multiplier(field, 0.0), 1.0);
+        }
+        // field 0 ⇒ identity regardless of strength (a cell out of SASP reach is
+        // never affected, so an enabled-but-empty field stays byte-identical).
+        for strength in [-2.0, -0.5, 0.5, 2.0] {
+            assert_eq!(sasp_field_kill_multiplier(0.0, strength), 1.0);
+        }
+        // Immunosuppressive arm (strength > 0): lowers kill, hyperbolic, in (0,1).
+        assert!(sasp_field_kill_multiplier(10.0, 0.1) < 1.0);
+        assert!((sasp_field_kill_multiplier(10.0, 0.1) - 0.5).abs() < 1e-12); // 1/(1+1)
+        assert!(
+            sasp_field_kill_multiplier(20.0, 0.1) < sasp_field_kill_multiplier(10.0, 0.1),
+            "monotone decreasing in field on the suppressive arm"
+        );
+        assert!(sasp_field_kill_multiplier(1.0e9, 1.0) > 0.0, "bounded > 0");
+        // Surveillance arm (strength < 0): raises kill, linear, >= 1.
+        assert!(sasp_field_kill_multiplier(10.0, -0.1) > 1.0);
+        assert!((sasp_field_kill_multiplier(10.0, -0.1) - 2.0).abs() < 1e-12); // 1 + 0.1*10
+        assert!(
+            sasp_field_kill_multiplier(20.0, -0.1) > sasp_field_kill_multiplier(10.0, -0.1),
+            "monotone increasing in field on the surveillance arm"
+        );
+        // The two arms straddle 1.0 at the same |strength|·field.
+        assert!(
+            sasp_field_kill_multiplier(10.0, 0.1) < 1.0
+                && sasp_field_kill_multiplier(10.0, -0.1) > 1.0
+        );
+    }
+
+    /// #376: the SASP field reaches a NON-senescent NEIGHBOR. One senescent
+    /// source cell seeds the field; after the exact diffusion operator the
+    /// consumer (sim-tme-3d) uses, an adjacent non-senescent cell sees a positive
+    /// field, so its `sasp_field_kill_multiplier` shifts off 1.0 — the bystander
+    /// coupling the cell-autonomous #341 multiplier could not express. The
+    /// immunosuppressive arm LOWERS the neighbor's kill, the surveillance arm
+    /// RAISES it.
+    #[test]
+    fn sasp_field_shifts_a_non_senescent_neighbor_kill() {
+        let g = TumorGrid3D::generate(10, 10, 10, 20.0, 42);
+        let n = g.cells.len();
+        let mut field = vec![0.0; n];
+        let mut scratch = vec![0.0; n];
+
+        // One senescent SOURCE cell at an interior site; a Moore neighbor of it
+        // is NON-senescent (it is never a source).
+        let src = g.flat_index(5, 5, 5);
+        let nbr = g.flat_index(5, 5, 6); // face-adjacent, distinct cell
+
+        // Seed + diffuse a few steps exactly as the consumer does.
+        let replenish = 0.15_f64;
+        for _ in 0..5 {
+            field[src] = (field[src] + replenish).min(1.0);
+            diffuse_damp_3d_step(&mut field, &mut scratch, &g, 0.025, 0.03);
+        }
+
+        // The signal reached the non-senescent neighbor.
+        assert!(
+            field[nbr] > 0.0,
+            "SASP field should diffuse to the non-senescent neighbor; got {}",
+            field[nbr]
+        );
+
+        // Its kill multiplier shifts off 1.0, signed by the arm.
+        let suppress = sasp_field_kill_multiplier(field[nbr], 0.5);
+        let surveil = sasp_field_kill_multiplier(field[nbr], -0.5);
+        assert!(
+            suppress < 1.0,
+            "immunosuppressive SASP should LOWER a neighbor's kill; got {suppress}"
+        );
+        assert!(
+            surveil > 1.0,
+            "surveillance SASP should RAISE a neighbor's kill; got {surveil}"
+        );
     }
 
     #[test]

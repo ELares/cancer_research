@@ -141,6 +141,18 @@ pub struct SenescenceConfig {
     /// single-cell biochem perturbation (it is consumed by the spatial immune
     /// loop), so [`apply_senescence_to_cell`] does not touch it.
     pub sasp_immune_mult: f64,
+    /// SASP **field** strength (#376): the paracrine/bystander extension of
+    /// `sasp_immune_mult`. Where `sasp_immune_mult` is cell-autonomous (it only
+    /// scales a senescent cell's OWN kill probability), the SASP is a secreted,
+    /// diffusing signal, so the consumer (sim-tme-3d) seeds a SASP field at the
+    /// senescent cells, diffuses it, and applies
+    /// [`crate::immune_spatial::sasp_field_kill_multiplier`] to EVERY cell in the
+    /// neighborhood — including adjacent NON-senescent tumor cells. `strength` is
+    /// SIGNED: `> 0` ⇒ the immunosuppressive arm (lowers neighbor kill, IL-1RA /
+    /// myeloid recruitment, Di Mitri 2014 PMID 25156255; Eggert 2016 PMID
+    /// 27728804); `< 0` ⇒ the surveillance arm (raises neighbor kill, CD4/monocyte
+    /// recruitment, Kang 2011 PMID 22080947). `0.0` ⇒ no field ⇒ byte-identical.
+    pub sasp_field_strength: f64,
 }
 
 impl Default for SenescenceConfig {
@@ -153,6 +165,7 @@ impl Default for SenescenceConfig {
             nrf2_mul: 1.0,
             fsp1_mul: 1.0,
             sasp_immune_mult: 1.0,
+            sasp_field_strength: 0.0,
         }
     }
 }
@@ -185,21 +198,30 @@ impl SenescenceConfig {
             // here both resist cell-intrinsic ferroptosis AND evade immune
             // clearance, the durable "escape route" the issue describes.
             sasp_immune_mult: 0.8,
+            // Paracrine immunosuppressive SASP field (#376): a positive strength
+            // lowers the immune-kill probability of NEIGHBORING cells (including
+            // non-senescent tumor cells the IL-1RA secretome protects), the
+            // established-tumor arm. Same sign rationale as `sasp_immune_mult`,
+            // but reaching beyond the source cell. UNCALIBRATED placeholder.
+            sasp_field_strength: 0.5,
         }
     }
 
     /// True when the config applies no effect at all: no cells are marked
-    /// (`fraction == 0`) or every axis is identity, including the SASP→immune
-    /// multiplier. With `fraction > 0` and `sasp_immune_mult != 1.0` the config
-    /// is NOT identity even when the four biochem multipliers are `1.0`, because
-    /// it still couples the marked cells to the immune layer.
+    /// (`fraction == 0`) or every axis is identity, including both the
+    /// cell-autonomous SASP→immune multiplier and the paracrine SASP field
+    /// strength. With `fraction > 0` and either `sasp_immune_mult != 1.0` or
+    /// `sasp_field_strength != 0.0` the config is NOT identity even when the four
+    /// biochem multipliers are `1.0`, because it still couples the marked cells
+    /// (and, for the field, their neighbors) to the immune layer.
     pub fn is_identity(&self) -> bool {
         self.fraction == 0.0
             || (self.iron_mul == 1.0
                 && self.gpx4_mul == 1.0
                 && self.nrf2_mul == 1.0
                 && self.fsp1_mul == 1.0
-                && self.sasp_immune_mult == 1.0)
+                && self.sasp_immune_mult == 1.0
+                && self.sasp_field_strength == 0.0)
     }
 }
 
@@ -340,6 +362,7 @@ mod tests {
             nrf2_mul: 1.0,
             fsp1_mul: 1.0,
             sasp_immune_mult: 1.0,
+            sasp_field_strength: 0.0,
         };
         // Defense-dominant (iron compartmentalized ⇒ not raised, antioxidant
         // capacity up) ⇒ resist: LESS peroxidation.
@@ -350,6 +373,7 @@ mod tests {
             nrf2_mul: 1.5,
             fsp1_mul: 1.5,
             sasp_immune_mult: 1.0,
+            sasp_field_strength: 0.0,
         };
         assert!(
             final_lp(&senolytic) > base,
@@ -397,6 +421,7 @@ mod tests {
             nrf2_mul: 1.0,
             fsp1_mul: 1.0,
             sasp_immune_mult: 1.3,
+            sasp_field_strength: 0.0,
         };
         assert!(!cfg.is_identity(), "SASP-only config has an immune effect");
         let mut g = grid();
