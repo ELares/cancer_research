@@ -99,6 +99,7 @@ analysis/landmark-corpus-gaps.md             known missing papers that distort c
 analysis/manuscript-scientific-review.md     external+internal scientific review: verified support/contradiction, math check, reframe rationale, figure roadmap
 analysis/research-roadmap-2026.md            deep web-grounded gap analysis + prioritized issue backlog (#330-#354): validation/calibration, model-biology gaps, corpus, contribution strategy
 simulations/calibration/CALIBRATION_STATUS.md per-layer calibration tiers + roadmap (the honest sim accounting)
+MODEL_CARD.md                                model card: intended use, out-of-scope, assumptions/scope checklist, per-layer calibration/validation status (consolidates CALIBRATION_STATUS for external readers; #352)
 corpus/INDEX.jsonl                           master index
 scripts/                                     Python pipeline
 simulations/                                 Rust simulation work
