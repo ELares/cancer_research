@@ -95,7 +95,8 @@ article/drafts/v1.{md,tex,pdf}               manuscript drafts
 analysis/evidence-coverage-audit.md          evidence-tier coverage and guardrails
 analysis/taxonomy-rerun-notes.md             taxonomy/query caveats after reruns
 analysis/pathway-target-audit.md             pathway-target coverage
-analysis/landmark-corpus-gaps.md             known missing papers that distort claims
+analysis/landmark-corpus-gaps.md             known missing papers that distort claims (VISION recovered #345)
+scripts/landmark_coverage.py                  landmark-coverage guardrail + recovery (#345): per-mechanism membership check + fetch-and-add-as-abstract for absent field-definers
 analysis/manuscript-scientific-review.md     external+internal scientific review: verified support/contradiction, math check, reframe rationale, figure roadmap
 analysis/research-roadmap-2026.md            deep web-grounded gap analysis + prioritized issue backlog (#330-#354): validation/calibration, model-biology gaps, corpus, contribution strategy
 analysis/contribution-plan-2026.md           contribution plan (#353): venue split (corpus vs simulation), preregistration draft of the falsifiable predictions, collaborator experiment brief
