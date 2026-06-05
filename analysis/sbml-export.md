@@ -35,7 +35,7 @@ suite are deliberately out of scope for the SBML export:
 | Per-step stochastic noise (`norm(...)` on Fenton/exo/LP) | SBML is the deterministic mean-field; the noise mean is 1.0/0.0, so the SBML is the expectation. The full stochastic engine stays in Rust. |
 | The death threshold + post-death LP accumulation | A discrete event/cutoff, not part of the continuous repair-vs-generation ODE. |
 | Per-cell parameter sampling (`gen_cell`) | The SBML is one representative (OXPHOS-mean) cell; population variation lives in the Monte Carlo engine. |
-| MUFA / ether-lipid / dynamic-iron / persister / senescence / etc. realism layers | Off-by-default, uncalibrated; they would each add species/parameters and are tracked separately. The export is the calibrated-status core, not the scaffolding. |
+| MUFA / ether-lipid / dynamic-iron / persister / senescence / etc. realism layers | Off-by-default; they would each add species/parameters and are tracked separately. The export is the single-cell engine core, not the additional realism scaffolding. |
 | SDT/PDT time-varying exogenous-ROS envelope | RSL3 (exo = 0) gives an autonomous ODE; the SDT/PDT bolus + decay envelope is time-dependent and would need an SBML event/assignment per dose. |
 | All 2D/3D spatial fields (oxygen, pH, immune, vasculature, ...) | The SBML is a single well-mixed cell; spatial coupling is a separate modeling layer. |
 
