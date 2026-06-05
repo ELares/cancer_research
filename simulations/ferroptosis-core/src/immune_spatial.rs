@@ -420,6 +420,40 @@ pub fn suppressor_kill_multiplier(local_suppressor: f64, suppression_strength: f
     1.0 / (1.0 + suppression_strength * local_suppressor)
 }
 
+/// Local immune-kill multiplier from the IMMUNOSUPPRESSIVE arm of ferroptosis
+/// (#337): `1/(1 + strength · local_damp)` (mirrors [`suppressor_kill_multiplier`]
+/// and [`exhaustion_factor`]).
+///
+/// The model otherwise treats ferroptotic ICD as net pro-immune (DAMP ->
+/// `dc_activation` -> CD8 kill). But ferroptotic cells also co-release factors
+/// that BLUNT dendritic-cell maturation and CD8 priming: extracellular GPX4
+/// binding DC ZP3 (Liu et al., Cell 2026, PMID 41494530), oxidized lipids and
+/// PGE2 (Kim et al., Nature 2022, PMID 36385526), so ferroptotic cells impede
+/// DC-mediated anti-tumor immunity (Wiernicki et al., Nat Commun 2022, PMID
+/// 35760796; review Tang et al., Immunol Rev 2024, PMID 37424139). Keying the
+/// suppression on the SAME `local_damp` ferroptotic-death signal that drives
+/// `dc_activation` means the two arms compose: at low death density the
+/// pro-immune `activation` term dominates, but as density rises `activation`
+/// saturates while this multiplier keeps falling, so the NET immune effect can
+/// flip from pro- to anti-tumor.
+///
+/// Returns exactly `1.0` when `strength == 0.0` (the default) OR
+/// `local_damp == 0.0`, so the consumer stays byte-identical. Monotonically
+/// non-increasing in both arguments, bounded in `(0, 1]`. The direction is
+/// timing-dependent (a small early-ferroptotic fraction can be immunogenic,
+/// Efimova 2020 PMID 33188036), so this should dominate only at sustained/high
+/// death density; the magnitude is an uncalibrated placeholder, the sign is the
+/// result.
+#[inline]
+#[must_use]
+pub fn ferroptotic_immunosuppression(local_damp: f64, strength: f64) -> f64 {
+    debug_assert!(
+        strength >= 0.0 && local_damp >= 0.0,
+        "ferroptotic immunosuppression inputs must be >= 0; got strength={strength}, local_damp={local_damp}"
+    );
+    1.0 / (1.0 + strength.max(0.0) * local_damp)
+}
+
 /// Per-cell boolean mask of Treg/MDSC suppressor **source** cells (#264).
 ///
 /// Seed points are **perivascular** when `vessels` is supplied (Tregs cluster
@@ -1148,6 +1182,30 @@ mod tests {
         assert!(suppressor_kill_multiplier(0.5, 10.0) < suppressor_kill_multiplier(0.5, 2.0));
         // bounded in (0, 1].
         assert!(suppressor_kill_multiplier(1.0, 6.0) > 0.0);
+    }
+
+    // ===== Immunosuppressive ferroptosis (#337) =====
+
+    #[test]
+    fn ferroptotic_immunosuppression_identity_at_zero_and_suppresses() {
+        // strength 0 ⇒ identity regardless of local DAMP (byte-identical).
+        for damp in [0.0, 1.0, 50.0, 1000.0] {
+            assert_eq!(ferroptotic_immunosuppression(damp, 0.0), 1.0);
+        }
+        // local DAMP 0 ⇒ identity regardless of strength.
+        assert_eq!(ferroptotic_immunosuppression(0.0, 0.5), 1.0);
+        // both > 0 ⇒ suppression < 1, monotone decreasing in each argument.
+        assert!(ferroptotic_immunosuppression(10.0, 0.1) < 1.0);
+        assert!(
+            ferroptotic_immunosuppression(20.0, 0.1) < ferroptotic_immunosuppression(10.0, 0.1)
+        );
+        assert!(
+            ferroptotic_immunosuppression(10.0, 0.2) < ferroptotic_immunosuppression(10.0, 0.1)
+        );
+        // Exact hyperbolic value: 1/(1 + 0.1*10) = 0.5.
+        assert!((ferroptotic_immunosuppression(10.0, 0.1) - 0.5).abs() < 1e-12);
+        // bounded in (0, 1].
+        assert!(ferroptotic_immunosuppression(1.0e9, 1.0) > 0.0);
     }
 
     #[test]

@@ -64,9 +64,9 @@ use ferroptosis_core::contact::{
 use ferroptosis_core::dose_schedule::DoseSchedule;
 use ferroptosis_core::grid::{TumorGrid3D, TUMOR_RADIUS_FRACTION};
 use ferroptosis_core::immune_spatial::{
-    dc_activation, diffuse_damp_3d_step, exhaustion_factor, immune_kill_probability,
-    suppressor_kill_multiplier, suppressor_source_mask_3d, CheckpointPanel, DcSubsetConfig,
-    SuppressorConfig, DAMP_KILL_THRESHOLD,
+    dc_activation, diffuse_damp_3d_step, exhaustion_factor, ferroptotic_immunosuppression,
+    immune_kill_probability, suppressor_kill_multiplier, suppressor_source_mask_3d,
+    CheckpointPanel, DcSubsetConfig, SuppressorConfig, DAMP_KILL_THRESHOLD,
 };
 use ferroptosis_core::nutrient::{apply_nutrient_stress_3d, NutrientConfig};
 use ferroptosis_core::oxygen::{o2_dependent_exo_factor, radial_o2_field};
@@ -1049,10 +1049,19 @@ fn run_one_condition_full(
         1.0
     };
 
+    // Immunosuppressive ferroptosis (#337): a per-cell kill multiplier keyed on
+    // the local ferroptotic-death/DAMP signal that scales immune kill DOWN as
+    // death density rises (extracellular GPX4 / oxidized-lipid DC suppression),
+    // so the net immune effect of dense ferroptotic kill can flip sign. Gated on
+    // `immune_on` (it only modulates the immune kill loop); strength 0.0 ⇒
+    // `ferroptotic_immunosuppression(_, 0) == 1.0` ⇒ byte-identical.
+    let ferro_immuno_strength = immune_cfg.ferro_immunosuppression_strength;
+    let ferro_immuno_on = condition.immune_on && ferro_immuno_strength > 0.0;
+
     // The rich kill path handles any realism layer (each factor is identity when
     // its layer is off); the default allocation-free path runs only when ALL are
     // off, staying byte-identical to pre-#243.
-    let realism_kill_path = exhaustion_on || suppressor_on || dc_subsets_on;
+    let realism_kill_path = exhaustion_on || suppressor_on || dc_subsets_on || ferro_immuno_on;
 
     // Hoisted out of the per-cell hot loop (these invariants don't vary by
     // cell or step): on the dosed path the relevant availability vec must be
@@ -1350,6 +1359,14 @@ fn run_one_condition_full(
                             } else {
                                 1.0
                             };
+                            // Immunosuppressive ferroptosis (#337): the same
+                            // local DAMP that drives `activation` also scales
+                            // kill DOWN via the suppressive arm; 1.0 when off.
+                            let ferro_supp = if ferro_immuno_on {
+                                ferroptotic_immunosuppression(local_damp, ferro_immuno_strength)
+                            } else {
+                                1.0
+                            };
                             // `dc_priming` is a uniform scalar (the cDC1/cDC2
                             // mix, #264 Phase 4): 1.0 when off, < 1.0 for a
                             // cDC1-poor tumor that primes killing less efficiently.
@@ -1359,7 +1376,8 @@ fn run_one_condition_full(
                                 effective_brake,
                             ) * exh
                                 * supp
-                                * dc_priming;
+                                * dc_priming
+                                * ferro_supp;
                             let mut rng = StdRng::seed_from_u64(
                                 cond_seed
                                     .wrapping_add(900_000_000)
@@ -4172,6 +4190,89 @@ mod tests {
         // neighbors. So reducing immune kills shifts a few deaths into the
         // ferroptosis tally; that cross-coupling is expected, which is why this
         // asserts on immune kills specifically.
+    }
+
+    /// #337: the immunosuppressive arm of ferroptosis (extracellular GPX4 /
+    /// oxidized-lipid DC suppression) scales immune kill DOWN as the local
+    /// ferroptotic-death/DAMP signal rises, so enabling it produces FEWER net
+    /// immune kills than the pro-immune-only baseline. A/B with the suppression
+    /// strength as the only difference; deterministic. strength=0 reproduces the
+    /// baseline exactly (byte-identical layer-off).
+    #[test]
+    fn immunosuppressive_ferroptosis_reduces_immune_kills() {
+        let cfg = RunConfig {
+            grid_dim: 30,
+            n_steps: 130,
+        };
+        let cond = Condition {
+            name: "ferro_immunosuppression_demo".to_string(),
+            treatment: Treatment::SDT,
+            treatment_name: "SDT".to_string(),
+            o2_lambda: Some(ZONE_REF_LAMBDA),
+            immune_on: true,
+            stromal_on: false,
+            ph_on: false,
+            dose_schedule: DoseSchedule::Constant,
+        };
+        // Dense regime (boosted kill rate, PD-1 brake lifted) so there are enough
+        // immune kills for the suppression to register.
+        let base_immune = SpatialImmuneConfig {
+            immune_kill_rate: 0.5,
+            anti_pd1_efficacy: 1.0,
+            ..SpatialImmuneConfig::for_3d()
+        };
+        let run = |im: SpatialImmuneConfig| {
+            run_one_condition_full(
+                &cond,
+                cfg,
+                None,
+                Overrides {
+                    immune: Some(im),
+                    ..Default::default()
+                },
+            )
+        };
+        let baseline = run(base_immune);
+        let suppressed = run(SpatialImmuneConfig {
+            ferro_immunosuppression_strength: 0.05,
+            ..base_immune
+        });
+        let base_im = baseline
+            .immune_kills
+            .expect("immune_on populates immune_kills");
+        let supp_im = suppressed
+            .immune_kills
+            .expect("immune_on populates immune_kills");
+        assert!(
+            base_im >= 50,
+            "baseline must produce enough immune kills to be informative; got {base_im}"
+        );
+        assert!(
+            supp_im < base_im,
+            "immunosuppressive ferroptosis must reduce net immune kills: \
+             baseline={base_im}, suppressed={supp_im}"
+        );
+        // Deterministic (the multiplier is a pure function of local DAMP).
+        assert_eq!(
+            supp_im,
+            run(SpatialImmuneConfig {
+                ferro_immunosuppression_strength: 0.05,
+                ..base_immune
+            })
+            .immune_kills
+            .unwrap()
+        );
+        // strength = 0 reproduces the baseline exactly (the layer-off invariant
+        // behind the production-matrix byte-identity).
+        let zero = run(SpatialImmuneConfig {
+            ferro_immunosuppression_strength: 0.0,
+            ..base_immune
+        });
+        assert_eq!(
+            zero.immune_kills.unwrap(),
+            base_im,
+            "ferro_immunosuppression_strength=0 must reproduce the baseline immune kills"
+        );
     }
 
     /// #264: lock the `--snapshot=dc-subsets` preset -> Overrides wiring.
