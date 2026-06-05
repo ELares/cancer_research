@@ -58,6 +58,7 @@ pub mod oxygen;
 pub mod params;
 pub mod persister;
 pub mod ph;
+pub mod phenotype_mufa;
 pub mod photosensitizer_pk;
 pub mod physics;
 pub mod senescence;

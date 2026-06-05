@@ -77,6 +77,9 @@ use ferroptosis_core::params::{
 };
 use ferroptosis_core::persister;
 use ferroptosis_core::ph::{ion_trap_factor_from_ph, iron_multiplier_from_ph, radial_ph_field};
+use ferroptosis_core::phenotype_mufa::{
+    apply_phenotype_mufa_rate_at_3d, apply_phenotype_mufa_rates_3d, PhenotypeMufaConfig,
+};
 use ferroptosis_core::physics::local_ros_multiplier_3d;
 use ferroptosis_core::senescence::{
     apply_senescence_program_3d, sasp_immune_multiplier, SenescenceConfig,
@@ -458,6 +461,12 @@ struct Overrides {
     /// Radial nutrient gradient (#270 item 3b). `None` / identity ⇒ no
     /// antioxidant-setpoint modulation ⇒ byte-identical.
     nutrient: Option<NutrientConfig>,
+    /// Phenotype-specific SCD1/MUFA accumulation rates (#363). `None` / identity
+    /// ⇒ no per-cell `mufa_rate` is set (cells use the global `scd_mufa_rate`) ⇒
+    /// byte-identical. Only meaningful in a MUFA-active context (e.g. the
+    /// spheroid preset / an invivo Params); the matrix uses `scd_mufa_rate = 0`,
+    /// so even a non-identity config is inert there.
+    phenotype_mufa: Option<PhenotypeMufaConfig>,
     /// Dendritic-cell subset mix (#264 Phase 4). `None` / balanced ⇒ priming
     /// efficiency 1.0 ⇒ no immune-kill modulation ⇒ byte-identical.
     dc_subsets: Option<DcSubsetConfig>,
@@ -540,6 +549,9 @@ fn run_one_condition_full(
     let slab_phenotype_cfg = overrides.slab_phenotype.filter(|_| slab_cfg.is_some());
     let contact_cfg = overrides.contact;
     let nutrient_cfg = overrides.nutrient;
+    // Phenotype-specific MUFA rates (#363). Skip identity entirely so the default
+    // path sets no per-cell `mufa_rate` ⇒ byte-identical.
+    let phenotype_mufa_cfg = overrides.phenotype_mufa.filter(|c| !c.is_identity());
     let dc_subsets_cfg = overrides.dc_subsets;
     // Therapy-induced senescence (#341). `None`/identity ⇒ no cells marked, no
     // perturbation, no SASP coupling ⇒ byte-identical.
@@ -1030,6 +1042,18 @@ fn run_one_condition_full(
     // contact so the nrf2 axis composes independently of the lipid/iron axes.
     if let Some(cfg) = &nutrient_cfg {
         apply_nutrient_stress_3d(&mut grid, cfg);
+    }
+
+    // Phenotype-specific SCD1/MUFA accumulation rates (#363): scale each tumor
+    // cell's MUFA build-up RATE by a per-phenotype multiplier (a drug-tolerant
+    // persister remodels lipids toward MUFA at a different rate than a glycolytic
+    // rim cell). Reads gc.phenotype (geometric, no RNG); base rate is the run's
+    // global scd_mufa_rate. Off-by-default identity is filtered out above, so the
+    // default path sets no per-cell mufa_rate ⇒ byte-identical. Runs after the
+    // phenotype-reassigning layers (spheroid) so each cell's CURRENT phenotype
+    // drives its rate. Inert in the matrix (scd_mufa_rate = 0 there).
+    if let Some(cfg) = &phenotype_mufa_cfg {
+        apply_phenotype_mufa_rates_3d(&mut grid, params.scd_mufa_rate, cfg);
     }
 
     // Therapy-induced senescence (#341): mark a `fraction` of tumor cells
@@ -1661,6 +1685,17 @@ fn run_one_condition_full(
                         apply_contact_resistance_at_3d(&mut grid, idx, contact);
                     }
                 }
+                // #363: a revived cell is fresh (gen_cell sets mufa_rate=None ⇒
+                // the global rate). If the phenotype-MUFA layer is on, re-derive
+                // the revived cell's per-phenotype rate from its CURRENT phenotype
+                // so clonal repopulation stays coherent with #363 (same rationale
+                // as the #302 contact re-application above). No-op unless the
+                // layer is on.
+                if let Some(pm) = &phenotype_mufa_cfg {
+                    for &idx in &revived {
+                        apply_phenotype_mufa_rate_at_3d(&mut grid, idx, params.scd_mufa_rate, pm);
+                    }
+                }
                 // #341: a revived dead site is a NEW cell grown from a living
                 // neighbour, not the resurrection of the senescent cell that died
                 // there, and its biochem was reset to a fresh cell. Clear its
@@ -2124,6 +2159,13 @@ struct SnapshotPreset {
     /// (resistant or senolytic per the axis mix) plus the SASP immune coupling
     /// show directly in the dead/LP panels vs the immune-on baseline.
     senescence: bool,
+    /// True if phenotype-specific SCD1/MUFA accumulation rates (#363) are enabled
+    /// (`PhenotypeMufaConfig::literature()`). Runs in the spheroid context (the
+    /// only MUFA-active path), so the spheroid `phenotype.npy` panel already shows
+    /// which radial phenotype gets which rate; no extra static overlay. NOTE: the
+    /// rate's effect is on the MUFA timecourse, not the kill count (the spheroid
+    /// is cap-limited), so this preset's value is making the layer CLI-reachable.
+    phenotype_mufa: bool,
 }
 
 /// Visualization presets for `--snapshot=NAME`. Keep this list small —
@@ -2149,6 +2191,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         nutrient: false,
         dc_subsets: false,
         senescence: false,
+        phenotype_mufa: false,
     },
     SnapshotPreset {
         name: "bare",
@@ -2170,6 +2213,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         nutrient: false,
         dc_subsets: false,
         senescence: false,
+        phenotype_mufa: false,
     },
     SnapshotPreset {
         name: "multidose",
@@ -2191,6 +2235,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         nutrient: false,
         dc_subsets: false,
         senescence: false,
+        phenotype_mufa: false,
     },
     SnapshotPreset {
         // SDT here visualizes the persister-fraction OVERLAY (the MUFA axis +
@@ -2216,6 +2261,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         nutrient: false,
         dc_subsets: false,
         senescence: false,
+        phenotype_mufa: false,
     },
     SnapshotPreset {
         name: "clonal",
@@ -2237,6 +2283,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         nutrient: false,
         dc_subsets: false,
         senescence: false,
+        phenotype_mufa: false,
     },
     SnapshotPreset {
         // RSL3 (hypoxia-sensitive) + explicit internal vessels: near-vessel
@@ -2263,6 +2310,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         nutrient: false,
         dc_subsets: false,
         senescence: false,
+        phenotype_mufa: false,
     },
     SnapshotPreset {
         // SDT + radial spheroid biology: the phenotype panel shows the
@@ -2287,6 +2335,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         nutrient: false,
         dc_subsets: false,
         senescence: false,
+        phenotype_mufa: false,
     },
     SnapshotPreset {
         // SDT on a patient-scale slab at the SURFACE (+z face = vessel, depth
@@ -2316,6 +2365,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         nutrient: false,
         dc_subsets: false,
         senescence: false,
+        phenotype_mufa: false,
     },
     SnapshotPreset {
         // Slab + internal vessels (#272 coupling). vessel_supply.npy (on a slab
@@ -2345,6 +2395,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         nutrient: false,
         dc_subsets: false,
         senescence: false,
+        phenotype_mufa: false,
     },
     SnapshotPreset {
         // SDT + immune + Treg/MDSC suppressor (#264 Phase 2). Heuristic niche
@@ -2370,6 +2421,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         nutrient: false,
         dc_subsets: false,
         senescence: false,
+        phenotype_mufa: false,
     },
     SnapshotPreset {
         // SDT + immune + dual checkpoint blockade (#264 Phase 3): a PD-1 +
@@ -2396,6 +2448,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         nutrient: false,
         dc_subsets: false,
         senescence: false,
+        phenotype_mufa: false,
     },
     SnapshotPreset {
         // Kitchen-sink composition (#278): several realism layers at once —
@@ -2424,6 +2477,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         nutrient: false,
         dc_subsets: false,
         senescence: false,
+        phenotype_mufa: false,
     },
     SnapshotPreset {
         // RSL3 + cell-cell contact resistance (#270): dense interior cells
@@ -2451,6 +2505,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         nutrient: false,
         dc_subsets: false,
         senescence: false,
+        phenotype_mufa: false,
     },
     SnapshotPreset {
         // SDT + radial nutrient gradient (#270 item 3b): the nutrient-starved
@@ -2477,6 +2532,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         nutrient: true,
         dc_subsets: false,
         senescence: false,
+        phenotype_mufa: false,
     },
     SnapshotPreset {
         // SDT + cDC1/cDC2 dendritic-cell subset mix (#264 Phase 4): a cDC1-poor
@@ -2503,6 +2559,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         nutrient: false,
         dc_subsets: true,
         senescence: false,
+        phenotype_mufa: false,
     },
     SnapshotPreset {
         // SDT + therapy-induced senescence (#341): a fraction of tumor cells
@@ -2535,6 +2592,36 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         nutrient: false,
         dc_subsets: false,
         senescence: true,
+        phenotype_mufa: false,
+    },
+    SnapshotPreset {
+        // RSL3 + 3D spheroid (#197) + phenotype-specific SCD1/MUFA rates (#363):
+        // each radial phenotype (glycolytic rim / OXPHOS mid / persister core)
+        // builds MUFA protection at its own rate. Runs in the spheroid context
+        // (the only MUFA-active path); the spheroid phenotype.npy panel shows
+        // which phenotype gets which rate. NOTE: the rate's effect is on the MUFA
+        // timecourse, not the kill count (the spheroid is cap-limited), so this
+        // preset exists to make the layer CLI-reachable, not to show a kill shift.
+        name: "phenotype-mufa",
+        desc: "RSL3 + spheroid + phenotype-specific SCD1/MUFA rates (#363) — per-phenotype MUFA build-up",
+        treatment: Treatment::RSL3,
+        treatment_name: "RSL3",
+        immune_on: false,
+        stromal_on: false,
+        ph_on: false,
+        multidose: false,
+        persister: false,
+        clonal: false,
+        vasculature: false,
+        spheroid: true,
+        slab: false,
+        suppressor: false,
+        checkpoints: false,
+        contact: false,
+        nutrient: false,
+        dc_subsets: false,
+        senescence: false,
+        phenotype_mufa: true,
     },
 ];
 
@@ -2727,6 +2814,7 @@ fn run_snapshot(output_dir: &Path, tumor_radius_um: f64, name: &str) {
             nutrient: nutrient_cfg,
             dc_subsets: dc_subsets_cfg,
             senescence: senescence_cfg,
+            phenotype_mufa: preset.phenotype_mufa.then(PhenotypeMufaConfig::literature),
             ..Default::default()
         },
     );
@@ -5640,6 +5728,82 @@ mod tests {
         assert_eq!(contact.total_dead, run_contact().total_dead);
     }
 
+    /// #363: phenotype-specific MUFA accumulation rates are wired into sim-tme-3d
+    /// OFF-BY-DEFAULT. In the spheroid context (`Params::spheroid()`, MUFA active):
+    /// an IDENTITY config is filtered out (is_identity) and reproduces the
+    /// spheroid baseline byte-for-byte (the production-meaningful guarantee), and
+    /// `None` likewise. A non-identity config runs deterministically. The RATE's
+    /// effect on the MUFA timecourse is proven at the library level
+    /// (`ferroptosis_core::biochem` `sim_cell_step_reads_per_cell_mufa_rate`,
+    /// which directly measures `mufa_protection` divergence — the right readout).
+    /// We deliberately do NOT assert a kill-COUNT delta here: the spheroid's
+    /// bistable switch + cysteine-limited core cap make the kill count insensitive
+    /// to the MUFA rate in this regime (the cells that die are not MUFA-rescuable
+    /// and the survivors are not MUFA-dependent), so a count assertion would be
+    /// fragile and misleading. Byte-identity + determinism is what matters for the
+    /// production matrix.
+    #[test]
+    fn phenotype_mufa_off_by_default_byte_identical_in_spheroid() {
+        let cfg = RunConfig {
+            grid_dim: 24,
+            n_steps: 80,
+        };
+        let cond = Condition {
+            name: "phenotype_mufa_rsl3".to_string(),
+            treatment: Treatment::RSL3,
+            treatment_name: "RSL3".to_string(),
+            o2_lambda: Some(ZONE_REF_LAMBDA),
+            immune_on: false,
+            stromal_on: false,
+            ph_on: false,
+            dose_schedule: DoseSchedule::Constant,
+        };
+        let spheroid_only = || Overrides {
+            spheroid: Some(SpheroidConfig::literature()),
+            ..Default::default()
+        };
+        let run = |pm: Option<PhenotypeMufaConfig>| {
+            run_one_condition_full(
+                &cond,
+                cfg,
+                None,
+                Overrides {
+                    phenotype_mufa: pm,
+                    ..spheroid_only()
+                },
+            )
+            .total_dead
+        };
+        let baseline = run_one_condition_full(&cond, cfg, None, spheroid_only()).total_dead;
+        assert!(baseline > 0, "spheroid RSL3 baseline must kill some cells");
+        // Off-by-default: None AND an identity config (filtered out) both
+        // reproduce the spheroid baseline byte-for-byte.
+        assert_eq!(
+            run(None),
+            baseline,
+            "None phenotype_mufa must equal baseline"
+        );
+        assert_eq!(
+            run(Some(PhenotypeMufaConfig::identity())),
+            baseline,
+            "identity phenotype_mufa must be byte-identical to the spheroid baseline (gate filters it)"
+        );
+        // A non-identity config runs and is deterministic (geometric per-cell
+        // setup, no RNG), so the layer is reachable without breaking determinism.
+        let nonident = PhenotypeMufaConfig {
+            glycolytic: 1.0,
+            oxphos: 1.5,
+            persister: 2.0,
+            persister_nrf2: 2.0,
+            stromal: 1.0,
+        };
+        assert_eq!(
+            run(Some(nonident)),
+            run(Some(nonident)),
+            "a non-identity phenotype_mufa run must be deterministic"
+        );
+    }
+
     /// #270 item 3b: the radial nutrient gradient lowers the durable antioxidant
     /// setpoint (cell.nrf2) toward the nutrient-starved core, so the core has
     /// less GSH/GPX4 regeneration and an antioxidant-sensitive inducer (RSL3)
@@ -5705,6 +5869,30 @@ mod tests {
         assert!(
             !p.slab && !p.spheroid && !p.contact,
             "nutrient runs on the plain centred sphere"
+        );
+    }
+
+    /// #363: lock the `--snapshot=phenotype-mufa` preset -> Overrides wiring. The
+    /// preset enables the phenotype-MUFA layer AND the spheroid context (the only
+    /// MUFA-active path, so the rate is non-inert), and resolves to a non-identity
+    /// `PhenotypeMufaConfig` that the run will actually apply.
+    #[test]
+    fn phenotype_mufa_snapshot_preset_is_wired() {
+        let p = resolve_snapshot("phenotype-mufa");
+        assert_eq!(p.name, "phenotype-mufa");
+        assert!(
+            p.phenotype_mufa,
+            "the phenotype-mufa preset must enable the phenotype-MUFA layer"
+        );
+        assert!(
+            p.spheroid,
+            "phenotype-mufa must run in the spheroid context (the only MUFA-active path)"
+        );
+        // The preset must map to a non-identity config (else the gate filters it
+        // out and the layer is silently inert).
+        assert!(
+            p.phenotype_mufa && !PhenotypeMufaConfig::literature().is_identity(),
+            "the preset's literature() config must be non-identity so it is applied"
         );
     }
 
