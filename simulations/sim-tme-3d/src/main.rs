@@ -261,9 +261,10 @@ struct ConditionResult {
     /// checkpoint panel override is supplied — the single-PD-1 path leaves it off.
     #[serde(skip_serializing_if = "Option::is_none")]
     checkpoint_brake: Option<f64>,
-    /// Fraction of tumor cells driven into the therapy-induced-senescence
-    /// program (#341), end-of-run. `None` (field omitted) unless the senescence
-    /// layer is enabled — byte-identical default path.
+    /// Fraction of tumor cells still in the therapy-induced-senescence program
+    /// (#341) at end-of-run (clonal repopulation, if on, clears revived sites
+    /// from the senescent set). `None` (field omitted) unless the senescence
+    /// layer is enabled, so the default path stays byte-identical.
     #[serde(skip_serializing_if = "Option::is_none")]
     senescent_fraction: Option<f64>,
 }
@@ -956,7 +957,7 @@ fn run_one_condition_full(
     // `senescent_fraction` report. Runs after nutrient so its per-cell axes
     // compose with the earlier durable layers. Off-by-default identity ⇒
     // byte-identical (the mask is all-false / unused and `apply_*` is a no-op).
-    let senescence_mask: Option<Vec<bool>> = senescence_cfg
+    let mut senescence_mask: Option<Vec<bool>> = senescence_cfg
         .as_ref()
         .map(|cfg| apply_senescence_program_3d(&mut grid, cfg, SENESCENCE_SEED));
 
@@ -1088,17 +1089,18 @@ fn run_one_condition_full(
     let ferro_immuno_strength = immune_cfg.ferro_immunosuppression_strength;
     let ferro_immuno_on = condition.immune_on && ferro_immuno_strength > 0.0;
 
-    // Therapy-induced-senescence SASP→immune coupling (#341): a signed per-cell
-    // multiplier on a senescent cell's immune-kill probability — `> 1` is
-    // anti-tumor senescence immune surveillance (Kang 2011 PMID 22080947), `< 1`
-    // is immunosuppressive SASP that blunts clearance (Di Mitri 2014 PMID
+    // Therapy-induced-senescence SASP to immune coupling (#341): a signed
+    // per-cell multiplier on a senescent cell's immune-kill probability. `> 1`
+    // is anti-tumor senescence immune surveillance (Kang 2011 PMID 22080947),
+    // `< 1` is immunosuppressive SASP that blunts clearance (Di Mitri 2014 PMID
     // 25156255). Gated on `immune_on` (it only modulates the immune kill loop),
     // a populated senescence mask, AND a non-identity multiplier; senescence-off
-    // or `mult == 1.0` ⇒ no coupling ⇒ byte-identical. The slice is empty (never
-    // indexed) unless `sasp_on`.
+    // or `mult == 1.0` means no coupling, byte-identical. The mask slice is
+    // re-derived per step inside the kill block (not hoisted here) so clonal
+    // repopulation can clear revived sites from the mask between steps without a
+    // long-lived immutable borrow conflicting with that mutation.
     let sasp_immune_mult = senescence_cfg.map_or(1.0, |c| c.sasp_immune_mult);
     let sasp_on = condition.immune_on && senescence_mask.is_some() && sasp_immune_mult != 1.0;
-    let senescence_mask_slice: &[bool] = senescence_mask.as_deref().unwrap_or(&[]);
 
     // The rich kill path handles any realism layer (each factor is identity when
     // its layer is off); the default allocation-free path runs only when ALL are
@@ -1371,6 +1373,16 @@ fn run_one_condition_full(
                 // path instead `filter_map`-collects the killed flat indices so
                 // their neighborhoods can be scattered into `cumulative_kills`.
                 if realism_kill_path {
+                    // SASP mask slice, re-derived each step so a borrow does not
+                    // outlive this block (clonal repopulation clears revived bits
+                    // from `senescence_mask` later this step). Empty (never
+                    // indexed) unless `sasp_on`; `sasp_on` guarantees length
+                    // `n_cells`, so the `[idx]` below is in bounds.
+                    let senescence_mask_slice: &[bool] = senescence_mask.as_deref().unwrap_or(&[]);
+                    debug_assert!(
+                        !sasp_on || senescence_mask_slice.len() == n_cells,
+                        "sasp_on implies a full-length senescence mask"
+                    );
                     let killed: Vec<usize> = grid
                         .cells
                         .par_iter_mut()
@@ -1410,10 +1422,10 @@ fn run_one_condition_full(
                             } else {
                                 1.0
                             };
-                            // SASP→immune coupling (#341): for a senescent cell,
-                            // a signed multiplier on its immune-kill probability
-                            // (surveillance > 1 / immunosuppression < 1); 1.0 for
-                            // non-senescent cells and when the layer is off.
+                            // SASP to immune coupling (#341): for a senescent
+                            // cell, a signed multiplier on its immune-kill
+                            // probability (surveillance > 1, immunosuppression
+                            // < 1); 1.0 for non-senescent cells and layer-off.
                             let sasp = if sasp_on {
                                 sasp_immune_multiplier(senescence_mask_slice[idx], sasp_immune_mult)
                             } else {
@@ -1533,8 +1545,21 @@ fn run_one_condition_full(
                 // is otherwise unguarded, unlike slab+contact, because the two
                 // are meant to compose.)
                 if let Some(contact) = &contact_cfg {
-                    for idx in revived {
+                    for &idx in &revived {
                         apply_contact_resistance_at_3d(&mut grid, idx, contact);
+                    }
+                }
+                // #341: a revived dead site is a NEW cell grown from a living
+                // neighbour, not the resurrection of the senescent cell that died
+                // there, and its biochem was reset to a fresh cell. Clear its
+                // senescence-mask bit so the SASP immune coupling and the
+                // `senescent_fraction` report stop counting it as senescent (the
+                // analogue of the #302 contact re-application: keep the senescence
+                // layer coherent with clonal repopulation instead of leaving a
+                // stale mask). No-op unless senescence is also on.
+                if let Some(mask) = senescence_mask.as_mut() {
+                    for &idx in &revived {
+                        mask[idx] = false;
                     }
                 }
             }
@@ -1692,10 +1717,12 @@ fn run_one_condition_full(
     // Multi-checkpoint combined brake (#264 Phase 3). `Some` only when a panel
     // override is supplied; the single-PD-1 path omits it.
     let checkpoint_brake = checkpoint_panel.map(|p| p.combined_brake());
-    // Senescent fraction (#341): fraction of tumor cells marked by the
-    // senescence program. `Some` only when senescence is enabled (mask present),
-    // so `None` omits the field ⇒ byte-identical default path. The marking is a
-    // one-time assignment, so this is the fraction of the initial tumor cells.
+    // Senescent fraction (#341): fraction of tumor cells still flagged
+    // senescent at end-of-run. `Some` only when senescence is enabled (mask
+    // present), so `None` omits the field and the default path stays
+    // byte-identical. Marking is a one-time setup assignment, but clonal
+    // repopulation (if on) clears revived sites from the mask, so this reflects
+    // the end-of-run senescent set rather than the initial one.
     let senescent_fraction = senescence_mask.as_ref().map(|mask| {
         let (count, total) = grid
             .cells
@@ -1961,8 +1988,8 @@ struct SnapshotPreset {
     /// overlay, the reduced immune killing shows in the dead/DAMP panels.
     dc_subsets: bool,
     /// True if the therapy-induced-senescence program (#341) is enabled. No
-    /// extra static overlay — the senescent cells' shifted ferroptosis response
-    /// (resistant or senolytic per the axis mix) plus the SASP→immune coupling
+    /// extra static overlay; the senescent cells' shifted ferroptosis response
+    /// (resistant or senolytic per the axis mix) plus the SASP immune coupling
     /// show directly in the dead/LP panels vs the immune-on baseline.
     senescence: bool,
 }
@@ -2350,12 +2377,13 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         // enter the senescence program (raised iron + antioxidant/GPX4 defenses)
         // AND couple to the immune layer via SASP. With the literature() config
         // the defense axis dominates the raised iron (net ferroptosis-resistant)
-        // while the SASP multiplier > 1 makes those same cells MORE visible to
-        // immune surveillance (Kang 2011) — a coherent "resist cell-intrinsic
-        // ferroptosis yet get cleared by immune surveillance" picture. The net
-        // sign is axis/therapy-dependent (the module test drives both); no extra
-        // static overlay, the shifted dead/LP front vs the immune-on baseline IS
-        // the visualization. Runs on the centred sphere.
+        // while the SASP multiplier < 1 (immunosuppressive, the established-tumor
+        // arm, Di Mitri 2014 / Eggert 2016) ALSO lowers their immune clearance,
+        // so these cells both resist cell-intrinsic ferroptosis and evade the
+        // immune layer, the durable escape route. The net sign is axis/therapy/
+        // stage-dependent (the module test drives both); no extra static overlay,
+        // the shifted dead/LP front vs the immune-on baseline IS the
+        // visualization. Runs on the centred sphere.
         name: "senescence",
         desc: "SDT + therapy-induced senescence (#341): ferroptosis resist/senolytic + SASP immune coupling",
         treatment: Treatment::SDT,
@@ -2485,8 +2513,9 @@ fn run_snapshot(output_dir: &Path, tumor_radius_um: f64, name: &str) {
     let nutrient_cfg = preset.nutrient.then(NutrientConfig::literature);
     let dc_subsets_cfg = preset.dc_subsets.then(DcSubsetConfig::literature);
     // Therapy-induced senescence (#341): the literature() config (defense-
-    // dominant ⇒ net ferroptosis-resistant under the trigger, SASP surveillance
-    // multiplier > 1 ⇒ raised immune clearance of the same cells).
+    // dominant ⇒ net ferroptosis-resistant under the trigger, plus an
+    // immunosuppressive SASP multiplier < 1 ⇒ lowered immune clearance of the
+    // same cells, the established-tumor escape arm).
     let senescence_cfg = preset.senescence.then(SenescenceConfig::literature);
     // Static viz overlays, recomputed from the same SEED + per-layer seed the
     // run uses internally, so they match the perturbations actually applied.
@@ -4559,6 +4588,79 @@ mod tests {
         assert!(
             (0.1..0.35).contains(&frac),
             "literature fraction ~0.2 of tumor cells marked; got {frac}"
+        );
+    }
+
+    /// #341 review: senescence must compose coherently with clonal repopulation.
+    /// A repopulated dead site is a NEW cell grown from a living neighbour, so it
+    /// is no longer the senescent cell that died there; its mask bit is cleared
+    /// (the analogue of the #302 contact re-application). Therefore enabling
+    /// repopulation can only LOWER the end-of-run senescent fraction (clearing
+    /// revived sites never adds senescent cells), and with a senolytic config
+    /// (senescent cells die under RSL3 and get repopulated) it strictly lowers
+    /// it. immune_on=false here so the SASP arm is inert and this isolates the
+    /// mask-clear coherence.
+    #[test]
+    fn senescence_composes_with_clonal_repopulation() {
+        let cfg = RunConfig {
+            grid_dim: 24,
+            n_steps: 120,
+        };
+        let cond = Condition {
+            name: "sen_clonal".to_string(),
+            treatment: Treatment::RSL3, // strong kill to drive turnover + repopulation
+            treatment_name: "RSL3".to_string(),
+            o2_lambda: None,
+            immune_on: false,
+            stromal_on: false,
+            ph_on: false,
+            dose_schedule: DoseSchedule::Constant,
+        };
+        // Iron-dominant (senolytic) senescence: senescent cells peroxidize MORE
+        // under RSL3, so they die and get repopulated, exercising the mask-clear.
+        let sen = SenescenceConfig {
+            fraction: 0.5,
+            iron_mul: 3.0,
+            gpx4_mul: 1.0,
+            nrf2_mul: 1.0,
+            fsp1_mul: 1.0,
+            sasp_immune_mult: 1.0,
+        };
+        let run = |repop: f64| {
+            run_one_condition_full(
+                &cond,
+                cfg,
+                None,
+                Overrides {
+                    senescence: Some(sen),
+                    clonal: Some(ClonalConfig::literature_4().with_repopulation(repop)),
+                    ..Default::default()
+                },
+            )
+            .senescent_fraction
+            .expect("senescence on ⇒ senescent_fraction reported")
+        };
+        let f_repop = run(0.3);
+        let f_norepop = run(0.0);
+        // Invariant: clearing revived sites can only lower (or hold) the fraction.
+        assert!(
+            f_repop <= f_norepop + 1e-12,
+            "repopulation clears revived senescent sites, so the end-of-run \
+             senescent fraction must not exceed the no-repopulation run: \
+             repop={f_repop}, norepop={f_norepop}"
+        );
+        // Observable: the senolytic config kills+repopulates some senescent sites,
+        // so the composition is not a silent no-op.
+        assert!(
+            f_repop < f_norepop,
+            "senolytic senescence + repopulation should strictly lower the \
+             senescent fraction: repop={f_repop}, norepop={f_norepop}"
+        );
+        // Deterministic.
+        assert_eq!(
+            f_repop,
+            run(0.3),
+            "senescence x clonal-repopulation composition is deterministic"
         );
     }
 

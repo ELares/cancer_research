@@ -62,20 +62,48 @@
 //! multiplier on the senescent cell's immune-kill probability rather than a
 //! one-way term:
 //!   - **Anti-tumor (`> 1`): senescence immune surveillance.** SASP makes
-//!     senescent (pre)malignant cells visible to NK/CD4 clearance, limiting
-//!     tumor development (Kang et al., Nature 2011, PMID 22080947).
+//!     senescent (pre)malignant cells visible to CD4 T-cell and monocyte/
+//!     macrophage clearance, limiting tumor development (Kang et al., Nature
+//!     2011, PMID 22080947).
 //!   - **Pro-tumor (`< 1`): immunosuppressive SASP.** The same secretome can
 //!     recruit Gr-1⁺/myeloid cells that antagonize senescence surveillance and
 //!     blunt clearance (Di Mitri et al., Nature 2014, PMID 25156255), and the
-//!     net senescence-associated immune response is context-dependent — it can
+//!     net senescence-associated immune response is context-dependent: it can
 //!     drive surveillance OR progression (Eggert et al., Cancer Cell 2016, PMID
 //!     27728804).
 //!
-//! `sasp_immune_mult == 1.0` (default) ⇒ no immune coupling ⇒ byte-identical.
-//! The coupling is applied by the spatial consumer (sim-tme-3d) to cells in the
-//! returned senescence mask; the helper [`sasp_immune_multiplier`] encapsulates
-//! the per-cell factor so the direction lives in one tested place. Magnitudes
-//! are UNCALIBRATED placeholders; the bidirectional structure is the result.
+//! ### Stage matters, so the `literature()` default leans immunosuppressive
+//!
+//! Kang 2011 (the `> 1` surveillance arm) is a PRE-MALIGNANT-stage finding:
+//! senescent hepatocytes cleared before a tumor forms. This module instead
+//! models THERAPY-INDUCED senescence in an already-established, already-treated
+//! tumor, and for that stage Eggert 2016 reports the same secretome flips
+//! PRO-tumor (it blocks myeloid maturation and suppresses NK cells regionally).
+//! So [`SenescenceConfig::literature`] defaults the SASP arm to `< 1`
+//! (immunosuppressive), the better-grounded sign for the established-tumor
+//! context the module simulates and the "escape route" framing the issue uses;
+//! the `> 1` surveillance arm remains available for the pre-malignant case. The
+//! sign is genuinely stage-dependent, so the model reproduces the contest rather
+//! than hard-coding one direction.
+//!
+//! ### Known simplification: SASP is paracrine, the model is cell-autonomous
+//!
+//! Biologically the SASP is a SECRETED, paracrine signal: it recruits and
+//! reprograms immune cells in the NEIGHBORHOOD and, for the immunosuppressive
+//! arm, protects adjacent non-senescent tumor cells (the Di Mitri 2014 IL-1RA
+//! mechanism). This model collapses that to a CELL-AUTONOMOUS multiplier on the
+//! senescent cell's OWN immune-kill probability (a senescence-immune-surveillance
+//! / immune-evasion visibility term), so neighbor/bystander effects are NOT
+//! represented. The infrastructure for a diffusing SASP field already exists
+//! (DAMP diffusion, the Treg/MDSC suppressor field), so a spatial SASP-field
+//! coupling is a documented follow-up, not a claim of completeness here.
+//!
+//! `sasp_immune_mult == 1.0` (default for `SenescenceConfig::default`) ⇒ no
+//! immune coupling ⇒ byte-identical. The coupling is applied by the spatial
+//! consumer (sim-tme-3d) to cells in the returned senescence mask; the helper
+//! [`sasp_immune_multiplier`] encapsulates the per-cell factor so the direction
+//! lives in one tested place. Magnitudes are UNCALIBRATED placeholders; the
+//! bidirectional structure (and its stage dependence) is the result.
 
 use crate::cell::Cell;
 use crate::grid::TumorGrid3D;
@@ -147,12 +175,16 @@ impl SenescenceConfig {
             gpx4_mul: 1.3,
             nrf2_mul: 1.3,
             fsp1_mul: 1.3,
-            // Anti-tumor senescence immune surveillance (Kang 2011 PMID 22080947):
-            // the literature default leans on the better-established surveillance
-            // arm, so senescent cells (which here resist cell-intrinsic
-            // ferroptosis) are still cleared faster by the immune layer. Set < 1
-            // for the immunosuppressive-SASP arm (Di Mitri 2014 PMID 25156255).
-            sasp_immune_mult: 1.2,
+            // Immunosuppressive SASP (Di Mitri 2014 PMID 25156255; Eggert 2016
+            // PMID 27728804): this module models therapy-induced senescence in an
+            // ESTABLISHED tumor, the stage where the senescence secretome flips
+            // pro-tumor and blunts immune clearance, so the default leans `< 1`.
+            // The `> 1` surveillance arm (Kang 2011 PMID 22080947) is the
+            // pre-malignant-stage case; see the module-level "Stage matters" note.
+            // Combined with the resistant biochem axes above, the senescent cells
+            // here both resist cell-intrinsic ferroptosis AND evade immune
+            // clearance, the durable "escape route" the issue describes.
+            sasp_immune_mult: 0.8,
         }
     }
 
