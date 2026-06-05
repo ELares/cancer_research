@@ -98,6 +98,7 @@ analysis/pathway-target-audit.md             pathway-target coverage
 analysis/landmark-corpus-gaps.md             known missing papers that distort claims (VISION recovered #345)
 scripts/landmark_coverage.py                  landmark-coverage guardrail + recovery (#345): per-mechanism membership check + fetch-and-add-as-abstract for absent field-definers
 scripts/taxonomy_coverage.py                   expanded-taxonomy coverage (#347): 25-mechanism PubMed + local coverage report; cuproptosis/disulfidptosis added to config (scaffold; frozen 19-mechanism results untouched)
+scripts/oa_bias_analysis.py                    open-access/journal bias on mechanism rankings (#348): per-mechanism OA-rate table + full-text-vs-abstract-only ranking sensitivity; regenerates §3.3.1's hand-derived shifts (immunotherapy 34.4→28.7% share, physical class 14.7→22.4%, bioelectric rank 14→3) into analysis/oa-bias-report.md
 analysis/manuscript-scientific-review.md     external+internal scientific review: verified support/contradiction, math check, reframe rationale, figure roadmap
 analysis/research-roadmap-2026.md            deep web-grounded gap analysis + prioritized issue backlog (#330-#354): validation/calibration, model-biology gaps, corpus, contribution strategy
 analysis/contribution-plan-2026.md           contribution plan (#353): venue split (corpus vs simulation), preregistration draft of the falsifiable predictions, collaborator experiment brief
