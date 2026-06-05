@@ -4169,24 +4169,28 @@ mod tests {
     /// iron import (#340) into the spatial model RAISES the Fenton-iron
     /// contribution to RSL3 ferroptosis, qualifying the §7.1 "hypoxia uniformly
     /// protects RSL3" framing. Both knobs `0.0` ⇒ byte-identical to the
-    /// no-override run; with them on, RSL3 kill rises wherever O2-derived ROS is
-    /// still available (the overall and oxygenated-rim metrics). Whether the
-    /// DEEP hypoxic core itself is rescued is residual-ROS-dependent (it rises at
-    /// λ=80, where some O2 remains, but not in a more anoxic core, because the
-    /// model's deep-hypoxia bottleneck is the loss of basal ROS, Fenton's H2O2
-    /// source, not iron); §7.1 reports that nuance. This test asserts the robust
-    /// overall/rim direction.
+    /// no-override run. With them on, RSL3 kill rises several-fold, and the rise
+    /// reaches the DEEP hypoxic core too, not only the oxygenated rim. That
+    /// deep-core rescue is a MODEL ARTIFACT (flagged in §7.1): the model's Fenton
+    /// ROS term is O2-independent (`iron × fenton_rate`, added to total ROS
+    /// independently of basal ROS; the model modulates only `basal_ros`, NOT the
+    /// Fenton rate), so the iron boost, largest where O2 is lowest, raises core
+    /// Fenton ROS regardless of anoxia. A real anoxic core would also lose its
+    /// superoxide/SOD-derived H2O2 substrate, which the model does not couple to
+    /// O2, so the model OVERSTATES the deep-core rescue; the robust result is the
+    /// direction, not the deep-core magnitude. This pins the §7.1 headline config
+    /// (grid 60, λ=50 µm, 180 steps, both knobs at 2.0).
     #[test]
-    fn hypoxia_iron_raises_rsl3_kill_where_ros_is_available() {
+    fn hypoxia_iron_raises_rsl3_kill_including_the_deep_core() {
         let cfg = RunConfig {
-            grid_dim: 50,
-            n_steps: 100,
+            grid_dim: 60,
+            n_steps: 180,
         };
         let cond = Condition {
             name: "rsl3_dyn_iron".to_string(),
             treatment: Treatment::RSL3,
             treatment_name: "RSL3".to_string(),
-            o2_lambda: Some(70.0),
+            o2_lambda: Some(50.0),
             immune_on: false,
             stromal_on: false,
             ph_on: false,
@@ -4211,27 +4215,31 @@ mod tests {
             base.overall_kill_rate, plain.overall_kill_rate,
             "ferritinophagy_release=0 + hypoxia_iron_sensitivity=0 must be byte-identical"
         );
-        let both = run(2.0, 3.0);
+        let both = run(2.0, 2.0); // the §7.1 headline knob values
         assert!(
             base.overall_kill_rate > 0.0,
             "RSL3 must produce some baseline kill to amplify; got {}",
             base.overall_kill_rate
         );
+        // Overall kill rises several-fold (the §7.1 headline ~0.5% → ~2.9%).
         assert!(
-            both.overall_kill_rate > base.overall_kill_rate * 2.0,
+            both.overall_kill_rate > base.overall_kill_rate * 3.0,
             "dynamic iron must materially raise overall RSL3 kill: base={:.4}, both={:.4}",
             base.overall_kill_rate,
             both.overall_kill_rate
         );
+        // The DEEP hypoxic-zone kill rises from ~0 (the §7.1 headline 0% → ~1.3%):
+        // the model's O2-independent Fenton means the iron boost rescues the core
+        // (a model artifact, since a real anoxic core would lose its H2O2 source).
         assert!(
-            both.normoxic_kill_rate > base.normoxic_kill_rate,
-            "the oxygenated rim, where Fenton ROS is available, must kill more: \
+            both.hypoxic_kill_rate > base.hypoxic_kill_rate + 0.005,
+            "the deep hypoxic core is rescued in the model (O2-independent Fenton): \
              base={:.4}, both={:.4}",
-            base.normoxic_kill_rate,
-            both.normoxic_kill_rate
+            base.hypoxic_kill_rate,
+            both.hypoxic_kill_rate
         );
         // Deterministic (the iron scaling is a one-time geometric setup mutation).
-        assert_eq!(both.overall_kill_rate, run(2.0, 3.0).overall_kill_rate);
+        assert_eq!(both.overall_kill_rate, run(2.0, 2.0).overall_kill_rate);
     }
 
     // ===== T-cell exhaustion (#243, Phase 1) =====
