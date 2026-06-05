@@ -819,6 +819,9 @@ fn run_one_condition_full(
     // hypoxia-iron scaling above (order immaterial): hypoxia raises the iron but
     // gates the H2O2 substrate, so the NET deep-core Fenton can fall. `dependence
     // == 0` (matrix path) ⇒ factor 1.0 ⇒ `cell.iron` unchanged ⇒ byte-identical.
+    // NOTE: this gates the STATIC `cell.iron` pool once at setup; the per-step
+    // neighbor-death-diffused pool (`extra_iron`) is gated by the SAME factor
+    // inside the per-step loop below, so the WHOLE Fenton substrate is O2-coupled.
     if fenton_o2_dependence > 0.0 {
         for (idx, gc) in grid.cells.iter_mut().enumerate() {
             if gc.is_tumor {
@@ -1275,6 +1278,20 @@ fn run_one_condition_full(
 
                 let extra_iron = gc.extra_iron;
                 gc.extra_iron = 0.0;
+                // O2-gate the neighbor-death-diffused iron too (#383). The Fenton
+                // flux is `(cell.iron + extra_iron) · …`; the static `cell.iron`
+                // pool was already gated once at setup, but `extra_iron` (iron
+                // released from neighbor deaths via `diffuse_iron`) is a per-step
+                // pool, so gate it by the SAME local-O2 factor each step to keep
+                // the WHOLE Fenton substrate O2-coupled in hypoxia (otherwise the
+                // diffused pool would be a residual O2-independent Fenton source
+                // in the anoxic core). `fenton_o2_dependence == 0` (default) skips
+                // this branch entirely ⇒ `extra_iron` untouched ⇒ byte-identical.
+                let extra_iron = if fenton_o2_dependence > 0.0 {
+                    extra_iron * fenton_o2_factor(o2_supply_for_exo[idx], fenton_o2_dependence)
+                } else {
+                    extra_iron
+                };
 
                 // Time-varying drug modulation (#239). Skipped on the Constant
                 // default path (`dosed == false`) → byte-identical there.
@@ -4365,8 +4382,86 @@ mod tests {
             artifact.hypoxic_kill_rate,
             o2_gated.hypoxic_kill_rate
         );
-        // Deterministic (the iron scaling is a one-time geometric setup mutation).
+        // RIM-vs-CORE DIFFERENTIAL — the actual scientific content of the gate
+        // (the manuscript §7.1 claim that the iron rise can still raise kill in
+        // the oxygenated rim/mid-zone where some H2O2 remains, while the anoxic
+        // core is starved). The O2 gate must suppress the hypoxic core's kill
+        // FRACTIONALLY more than the oxygenated rim's, because the rim keeps its
+        // O2-derived H2O2 (o2_supply ≈ 1 ⇒ factor ≈ 1) while the core loses it
+        // (o2_supply ≈ 0 ⇒ factor ≈ 0). `frac` is the fractional reduction;
+        // a zero baseline (no kill to reduce) maps to 0 so the comparison is safe.
+        let frac = |before: f64, after: f64| {
+            if before > 0.0 {
+                (before - after) / before
+            } else {
+                0.0
+            }
+        };
+        let core_frac = frac(artifact.hypoxic_kill_rate, o2_gated.hypoxic_kill_rate);
+        let rim_frac = frac(artifact.normoxic_kill_rate, o2_gated.normoxic_kill_rate);
+        assert!(
+            core_frac > rim_frac,
+            "the O2 gate must suppress the anoxic core MORE than the oxygenated rim: \
+             core_frac={core_frac:.4}, rim_frac={rim_frac:.4} \
+             (rim {:.4}->{:.4}, core {:.4}->{:.4})",
+            artifact.normoxic_kill_rate,
+            o2_gated.normoxic_kill_rate,
+            artifact.hypoxic_kill_rate,
+            o2_gated.hypoxic_kill_rate
+        );
+        // Deterministic (the iron scaling is a one-time geometric setup mutation
+        // for the static pool, plus a per-step factor on the diffused pool).
         assert_eq!(o2_gated.hypoxic_kill_rate, run(1.0).hypoxic_kill_rate);
+    }
+
+    /// #383 (review): with the #365 hypoxia-iron regime OFF, the O2-dependent
+    /// Fenton gate is well-behaved on its own — it can only REDUCE or hold the
+    /// kill (it scales the Fenton iron substrate DOWN in hypoxic zones, never up),
+    /// and `fenton_o2_dependence = 0` is byte-identical to the no-override run.
+    /// A fast 30³ × 90 RSL3 config (no dynamic-iron knobs) isolates the gate.
+    #[test]
+    fn fenton_o2_gate_only_reduces_kill_and_is_identity_at_zero() {
+        let cfg = RunConfig {
+            grid_dim: 30,
+            n_steps: 90,
+        };
+        let cond = Condition {
+            name: "rsl3_fenton_o2_only".to_string(),
+            treatment: Treatment::RSL3,
+            treatment_name: "RSL3".to_string(),
+            o2_lambda: Some(ZONE_REF_LAMBDA),
+            immune_on: false,
+            stromal_on: false,
+            ph_on: false,
+            dose_schedule: DoseSchedule::Constant,
+        };
+        let run = |fenton_o2: f64| {
+            run_one_condition_full(
+                &cond,
+                cfg,
+                None,
+                Overrides {
+                    fenton_o2_dependence: fenton_o2,
+                    ..Default::default()
+                },
+            )
+        };
+        // Identity: gate off reproduces the no-override run exactly.
+        let off = run(0.0);
+        let plain = run_one_condition_with_config(&cond, cfg, None);
+        assert_eq!(
+            off.overall_kill_rate, plain.overall_kill_rate,
+            "fenton_o2_dependence=0 must be byte-identical with no other knobs"
+        );
+        // Monotone: gating the Fenton substrate down can only reduce or hold kill,
+        // never raise it (even with no compensating hypoxia-iron rise).
+        let gated = run(1.0);
+        assert!(
+            gated.overall_kill_rate <= off.overall_kill_rate + 1e-12,
+            "the O2-Fenton gate must not raise kill on its own: off={:.4}, gated={:.4}",
+            off.overall_kill_rate,
+            gated.overall_kill_rate
+        );
     }
 
     // ===== T-cell exhaustion (#243, Phase 1) =====

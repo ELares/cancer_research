@@ -176,18 +176,21 @@ pub fn hypoxia_iron_factor(o2_supply: f64, sensitivity: f64) -> f64 {
 /// (the Haber-Weiss chain, Kehrer, Toxicology 2000, PMID 10963860). A genuinely
 /// anoxic core therefore depletes the H₂O₂ substrate and suppresses Fenton-driven
 /// •OH **even where labile iron is abundant** — and ferroptotic lipid
-/// peroxidation itself requires molecular O₂ (Stockwell et al., Cell 2017,
-/// PMID 28985560).
+/// peroxidation is itself an oxygen-consuming lipid-radical chain (reviewed in
+/// Stockwell et al., Cell 2017, PMID 28985560), so molecular O₂ gates both the
+/// Fenton substrate and the downstream peroxidation.
 ///
 /// The model's Fenton term (`biochem`: `iron · fenton_rate`) is O2-INDEPENDENT,
 /// so when the #340/#365 hypoxia-iron coupling raises labile iron most where O2
 /// is lowest, the model wrongly predicts RSL3 *rescues* the anoxic core
 /// (manuscript §7.1, flagged a model artifact). This helper lets a consumer make
-/// a configurable fraction of the Fenton flux O2-dependent. Because `cell.iron`
-/// feeds ONLY the Fenton term, a consumer applies it by scaling `cell.iron`,
-/// where it composes multiplicatively with [`hypoxia_iron_factor`]: hypoxia
-/// raises the iron but lowers the H₂O₂ substrate, so the NET deep-core Fenton
-/// can fall instead of rise.
+/// a configurable fraction of the Fenton flux O2-dependent. Because the Fenton
+/// substrate is iron-derived, a consumer applies it by scaling each iron pool the
+/// Fenton term consumes (in `sim-tme-3d`, both the static `cell.iron` at setup
+/// and the per-step neighbor-death-diffused `extra_iron`), where it composes
+/// multiplicatively with [`hypoxia_iron_factor`]: hypoxia raises the iron but
+/// lowers the H₂O₂ substrate, so the NET deep-core Fenton can fall instead of
+/// rise.
 ///
 /// `o2_supply` is the local relative O2 availability (the same factor that scales
 /// `cell.basal_ros`). `dependence` is the O2-dependent fraction of the Fenton
