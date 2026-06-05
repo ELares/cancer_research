@@ -18,12 +18,13 @@
 //! survive — so this module exposes the per-phenotype rate as a configurable knob
 //! rather than baking in one sign.
 //!
-//! [`PhenotypeMufaConfig`] is a small per-phenotype multiplier on the global
-//! `scd_mufa_rate`. [`apply_phenotype_mufa_rates_3d`] writes the resulting
-//! per-cell rate to [`crate::cell::Cell::mufa_rate`]. The default
-//! [`PhenotypeMufaConfig::identity`] (all multipliers `1.0`) leaves every cell at
-//! the global rate, so a consumer that opts out keeps the production matrix
-//! byte-identical. [`PhenotypeMufaConfig::literature`] is an UNCALIBRATED,
+//! [`PhenotypeMufaConfig`] holds per-phenotype multipliers on the global
+//! `scd_mufa_rate` (RATE) and, separately (#390), on the effective `mufa_cap`
+//! (CAP / steady state). [`apply_phenotype_mufa_3d`] writes the resulting per-cell
+//! rate to [`crate::cell::Cell::mufa_rate`] and scales the per-cell
+//! [`crate::cell::Cell::mufa_cap`]. The default [`PhenotypeMufaConfig::identity`]
+//! (all multipliers `1.0` on both axes) leaves every cell at the global rate and
+//! cap, so a consumer that opts out keeps the production matrix byte-identical. [`PhenotypeMufaConfig::literature`] is an UNCALIBRATED,
 //! direction-anchored placeholder, not a fitted result; calibrate against
 //! time-resolved per-phenotype MUFA lipidomics.
 
@@ -90,7 +91,11 @@ impl PhenotypeMufaConfig {
     /// persisters are also GPX4-dependent/ferroptosis-vulnerable (Hangauer 2017
     /// PMID 29088702). The
     /// magnitudes are illustrative; calibrate against time-resolved per-phenotype
-    /// MUFA lipidomics before reading any number from a run that uses this.
+    /// MUFA lipidomics before reading any number from a run that uses this. It
+    /// also sets per-phenotype CAP multipliers (#390): `oxphos_cap = 1.1`,
+    /// `persister_cap = persister_nrf2_cap = 1.3`, a hypothesis that the
+    /// lipid-remodeled persister state saturates at a HIGHER MUFA steady state,
+    /// EVEN MORE uncertain than the rate direction and likewise a placeholder.
     pub fn literature() -> Self {
         Self {
             glycolytic: 1.0,
