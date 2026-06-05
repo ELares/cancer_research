@@ -590,6 +590,18 @@ pub struct PersisterConfig {
     /// `lock_rate > 0` (else the tracker grows unbounded and any nonzero average
     /// dose eventually locks). Inert when `lock_rate == 0`.
     pub exposure_decay: f64,
+    /// Non-drug stress-niche entry rate (#377). The classic drug-tolerant-
+    /// persister biology has a second, NON-DRUG entry route: hypoxic /
+    /// nutrient-poor drug-sanctuary microenvironments drive cells into a
+    /// slow-cycling, drug-tolerant persister state independent of drug exposure
+    /// (hypoxia-induced drug tolerance; quiescent perivascular/hypoxic niches).
+    /// This term is DECOUPLED from `drug_intensity`: a consumer applies
+    /// [`crate::persister::stress_entry`] with a local stress signal (e.g.
+    /// `1 - o2_supply`), which raises the REVERSIBLE pool only (a stress-niche
+    /// persister reverts when the niche resolves) and does NOT feed the locking
+    /// EMA or the drug-driven resistance. `0.0` (default) ⇒ no stress entry ⇒
+    /// byte-identical. Uncalibrated placeholder; direction is the result.
+    pub stress_entry_rate: f64,
 }
 
 impl Default for PersisterConfig {
@@ -606,6 +618,7 @@ impl Default for PersisterConfig {
             lock_rate: 0.0,
             lock_threshold: 0.0,
             exposure_decay: 0.0,
+            stress_entry_rate: 0.0,
         }
     }
 }
@@ -626,6 +639,9 @@ impl PersisterConfig {
             lock_rate: 0.0,
             lock_threshold: 0.0,
             exposure_decay: 0.0,
+            // Stress-niche entry off even in `enabled()`: a distinct opt-in
+            // (#377), so the existing persister snapshot/tests stay byte-identical.
+            stress_entry_rate: 0.0,
         }
     }
 
@@ -652,6 +668,11 @@ impl PersisterConfig {
             && self.reversion_rate == 0.0
             && self.gpx4_resistance == 0.0
             && self.mufa_boost_per_step == 0.0
+            // #377: a stress-entry-only config (all drug rates zero,
+            // stress_entry_rate > 0) DOES raise the reversible pool from a stress
+            // niche, so it is NOT identity — include it so a consumer that gates
+            // the persister path on is_identity() still runs the stress entry.
+            && self.stress_entry_rate == 0.0
     }
 }
 
