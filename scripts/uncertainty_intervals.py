@@ -58,7 +58,13 @@ def _fc():
 
 REPORT = REPO / "analysis" / "uncertainty-intervals-report.md"
 
-N_CELLS = 2000  # cells per sim_batch (Monte Carlo) evaluation
+N_CELLS = 2000  # cells per sim_batch (Monte Carlo) evaluation INSIDE each prior
+# draw. The interval is dominated by the parameter spread, so a modest n per draw
+# keeps the 2000-draw ensemble affordable; the small per-draw MC noise is tiny vs
+# that spread.
+POINT_N_CELLS = 1_000_000  # the `point` column is the precise default-parameter
+# death rate at the manuscript's Figure 7 sample size (n=1M cells/condition), so
+# the point estimates reproduce the frozen Figure 7 values to MC precision.
 SIM_SEED = 42  # fixed across samples so the death rate is a deterministic function
 # of the parameters (the per-cell RNG is reproducible), isolating the PARAMETER
 # uncertainty from sim_batch Monte Carlo noise.
@@ -67,10 +73,13 @@ RNG_SEED = 20250605
 
 # The phenotype x treatment cells whose death rates underlie the manuscript's
 # single-cell headline comparisons (Figure 7 / §5: Persister vs Glycolytic, RSL3
-# vs SDT). OXPHOS is the RSL3-resistant counterpoint.
+# vs SDT). OXPHOS is the RSL3-resistant counterpoint; PersisterNrf2 is the
+# NRF2-rescued persister the manuscript flags as its primary RSL3-resistance risk.
 CONDITIONS = [
     ("Persister", "RSL3"),
     ("Persister", "SDT"),
+    ("PersisterNrf2", "RSL3"),
+    ("PersisterNrf2", "SDT"),
     ("Glycolytic", "RSL3"),
     ("Glycolytic", "SDT"),
     ("OXPHOS", "RSL3"),
@@ -102,9 +111,18 @@ def prior_predictive_intervals(eval_fn, lows, highs, n_samples, rng_seed, quanti
     k = lows.shape[0]
     rng = np.random.default_rng(rng_seed)
     draws = lows + rng.random((n_samples, k)) * (highs - lows)
-    out = np.atleast_2d(eval_fn(draws))
-    if out.shape[0] == n_samples:  # eval returned (n_samples, n_outputs)
-        out = out.T  # -> (n_outputs, n_samples)
+    # Contract: eval_fn returns either (n_samples,) for a single output or
+    # (n_samples, n_outputs) for several — the FIRST axis is always the samples.
+    # Normalize to (n_outputs, n_samples) unambiguously (no shape heuristic, so it
+    # is correct even when n_samples == n_outputs).
+    raw = np.asarray(eval_fn(draws), float)
+    if raw.ndim == 1:
+        raw = raw[:, None]
+    assert raw.shape[0] == n_samples, (
+        f"eval_fn must return shape (n_samples, ...) with n_samples={n_samples}; "
+        f"got {raw.shape}"
+    )
+    out = raw.T  # -> (n_outputs, n_samples)
     qs = np.quantile(out, quantiles, axis=1).T  # (n_outputs, len(quantiles))
     mean = out.mean(axis=1, keepdims=True)
     std = out.std(axis=1, keepdims=True)
@@ -128,11 +146,13 @@ def evaluate(sample_rows):
 
 
 def point_estimates():
-    """The default-parameter death rate for each condition (the manuscript's
-    point-estimate operating point), for side-by-side comparison with the
-    interval."""
+    """The default-parameter death rate for each condition at the manuscript's
+    Figure 7 sample size (`POINT_N_CELLS` = 1M), for side-by-side comparison with
+    the prior-predictive interval. At n=1M these reproduce the frozen Figure 7
+    point estimates to MC precision (Persister x RSL3 = 42.5%, Glycolytic x SDT =
+    87.2%)."""
     return [
-        _fc().sim_batch(pheno, treat, n=N_CELLS, seed=SIM_SEED)["death_rate"]
+        _fc().sim_batch(pheno, treat, n=POINT_N_CELLS, seed=SIM_SEED)["death_rate"]
         for (pheno, treat) in CONDITIONS
     ]
 
@@ -184,9 +204,12 @@ def write_report(stats, points):
     )
     lines.append("## Death-rate intervals\n")
     lines.append(
-        "`point` = default-parameter death rate (the manuscript's operating point); "
-        "`median`, `2.5%`, `97.5%` = percentiles of the prior-predictive "
-        "distribution; `width` = 97.5% - 2.5% (the size of the credible interval).\n"
+        f"`point` = default-parameter death rate at the manuscript's Figure 7 sample "
+        f"size (n={POINT_N_CELLS:,}), so it reproduces the frozen Figure 7 point "
+        f"estimates (Persister x RSL3 = 42.5%, Glycolytic x SDT = 87.2%); `median`, "
+        f"`2.5%`, `97.5%` = percentiles of the prior-predictive distribution (each "
+        f"draw at n={N_CELLS}, where the parameter spread dominates the small "
+        f"per-draw MC noise); `width` = 97.5% - 2.5% (the credible-interval size).\n"
     )
     lines.append("| Phenotype | Treatment | point | median | 2.5% | 97.5% | width |")
     lines.append("|---|---|--:|--:|--:|--:|--:|")
@@ -210,11 +233,12 @@ def write_report(stats, points):
         "the manuscript's RSL3 point estimates are the LEAST constrained and most "
         "order-of-magnitude. The Glycolytic x RSL3 floor (~0% across the entire "
         "prior) is the robust exception, and OXPHOS x RSL3 stays low-but-wide.\n"
-        "- **SDT death is near-ceiling only for the high-basal-ROS phenotypes.** "
-        "Persister and OXPHOS x SDT sit near 1 across the prior (a genuine ceiling), "
-        "but the Glycolytic x SDT interval is WIDE because the lower end of the "
-        "`sdt_ros` prior does not overwhelm glycolytic defenses, so even an SDT "
-        "advantage is not uniformly parameter-robust.\n"
+        "- **SDT death is a tight ceiling only for Persister.** Persister x SDT sits "
+        ">98% across the entire prior (a genuine ceiling); OXPHOS x SDT stays high but "
+        "with a wider lower tail (2.5th percentile ~68%), and the Glycolytic x SDT "
+        "interval is WIDE because the lower end of the `sdt_ros` prior does not "
+        "overwhelm glycolytic defenses, so even an SDT advantage is not uniformly "
+        "parameter-robust.\n"
         "- Because several intervals are wide and OVERLAP, the qualitative ordering "
         "the manuscript leans on (Persister vs Glycolytic, SDT vs RSL3) should be "
         "read against interval OVERLAP, not point estimates alone.\n"
