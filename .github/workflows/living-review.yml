@@ -1,0 +1,70 @@
+name: Living Review (PRISMA-LSR)
+
+# Living-review incremental corpus update (#349). Re-runs the committed mechanism
+# queries against PubMed for the trailing window, diffs against the FROZEN corpus,
+# and uploads a dated incremental index + delta changelog as an artifact. It does
+# NOT commit anything, so the frozen manuscript corpus and `main` stay clean.
+
+on:
+  schedule:
+    - cron: '0 9 1 * *'  # 09:00 UTC on the 1st of each month
+  workflow_dispatch:
+    inputs:
+      since:
+        description: 'Publication-date lower bound (YYYY-MM-DD). Default: ~5 weeks back.'
+        required: false
+        default: ''
+      max:
+        description: 'Max PMIDs per query'
+        required: false
+        default: '200'
+
+permissions:
+  contents: read
+
+jobs:
+  living-review:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          lfs: false
+          fetch-depth: 1
+
+      - name: Install Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install -r requirements-lock.txt
+
+      - name: Resolve trailing window
+        id: window
+        run: |
+          SINCE="${{ github.event.inputs.since }}"
+          if [ -z "$SINCE" ]; then
+            SINCE=$(date -u -d '35 days ago' +%Y-%m-%d)
+          fi
+          echo "since=$SINCE" >> "$GITHUB_OUTPUT"
+          echo "Living-review window since $SINCE"
+
+      - name: Run living-review update
+        env:
+          # The NCBI API key (if configured as a secret) raises the PubMed rate
+          # limit; the script works without it at the lower anonymous rate.
+          NCBI_API_KEY: ${{ secrets.NCBI_API_KEY }}
+        run: |
+          python scripts/living_review_update.py \
+            --since "${{ steps.window.outputs.since }}" \
+            --max "${{ github.event.inputs.max || '200' }}"
+
+      - name: Upload incremental index + delta changelog
+        uses: actions/upload-artifact@v4
+        with:
+          name: living-review-${{ steps.window.outputs.since }}
+          path: |
+            corpus/living/20*/
+            analysis/living-review/
+          if-no-files-found: warn
