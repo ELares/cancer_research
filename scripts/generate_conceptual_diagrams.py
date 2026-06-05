@@ -386,7 +386,7 @@ def fig23_prisma_flow():
              "Coverage through March 2026",
              **blue)
     dot.node("identified",
-             "Records Identified\nn = 10,414 unique PMIDs",
+             "Records Identified\nn = 10,415 unique PMIDs",
              **blue)
 
     # Branch: full-text (green) vs abstract-only (orange)
@@ -396,7 +396,7 @@ def fig23_prisma_flow():
              "Full Text Obtained\nn = 4,830\n803 journals, 2001\u20132026",
              **green_box)
     dot.node("abstract",
-             "Full Text Unavailable\nAbstract-Only Archive\nn = 5,584\n"
+             "Full Text Unavailable\nAbstract-Only Archive\nn = 5,585\n"
              "(retained separately;\nnot used for quantitative results)",
              **orange_box)
 
