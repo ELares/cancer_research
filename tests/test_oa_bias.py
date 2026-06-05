@@ -53,6 +53,20 @@ def test_immunotherapy_is_number_one_in_both_rankings():
     assert ab.most_common(1)[0][0] == "immunotherapy"
 
 
+def test_no_pmid_overlap():
+    """The combined-count analysis (Total = full-text + abstract) is valid only
+    if the two corpora are disjoint. Guard that invariant against corpus drift
+    (e.g. an abstract-only PMID promoted to full text without removing the
+    abstract would silently double-count it)."""
+    ft_pmids = {r["pmid"] for r in _FT if r["pmid"]}
+    ab_pmids = {r["pmid"] for r in _AB if r["pmid"]}
+    overlap = ft_pmids & ab_pmids
+    assert not overlap, (
+        f"{len(overlap)} PMIDs are in BOTH corpora, breaking the combined-count "
+        f"disjointness assumption: {sorted(overlap)[:5]}"
+    )
+
+
 def test_physical_modalities_are_oa_suppressed():
     """A representative physical modality ranks far higher among abstracts than
     in the OA-biased full-text corpus."""

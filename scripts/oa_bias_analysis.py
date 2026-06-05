@@ -49,6 +49,7 @@ def load_fulltext():
         r = json.loads(line)
         out.append(
             {
+                "pmid": str(r.get("pmid") or "").strip(),
                 "mechanisms": r.get("mechanisms") or [],
                 "is_oa": bool(r.get("is_oa")),
                 "journal": (r.get("journal") or "").strip(),
@@ -76,8 +77,11 @@ def load_abstracts():
         fm = _frontmatter(f)
         if not fm:
             continue
+        # PMID from frontmatter, falling back to the filename stem.
+        pmid = str(fm.get("pmid") or f.stem).strip()
         out.append(
             {
+                "pmid": pmid,
                 "mechanisms": fm.get("mechanisms") or [],
                 "is_oa": bool(fm.get("is_oa")),
                 "journal": (fm.get("journal") or "").strip(),
@@ -87,12 +91,22 @@ def load_abstracts():
 
 
 def spearman(rank_a, rank_b, keys):
-    """Spearman rho between two rank dicts over shared keys (no scipy dep)."""
+    """Spearman rho between two rank dicts over shared keys (no scipy dep).
+
+    The input ranks may span a LARGER universe than the shared keys (e.g.
+    `ft_rank` is 1..23 with gaps where a mechanism has no abstract counterpart),
+    and the no-ties `1 - 6Σd²/(n(n²-1))` shortcut is only exact when both inputs
+    are contiguous 1..n permutations of the SAME items. So re-rank each input over
+    only the shared keys first (the ranks are unique, so no tie correction is
+    needed). This matches scipy's `spearmanr` over the same shared set.
+    """
     ks = [k for k in keys if k in rank_a and k in rank_b]
     n = len(ks)
     if n < 2:
         return float("nan")
-    d2 = sum((rank_a[k] - rank_b[k]) ** 2 for k in ks)
+    ra = {k: i + 1 for i, k in enumerate(sorted(ks, key=lambda k: rank_a[k]))}
+    rb = {k: i + 1 for i, k in enumerate(sorted(ks, key=lambda k: rank_b[k]))}
+    d2 = sum((ra[k] - rb[k]) ** 2 for k in ks)
     return 1.0 - 6.0 * d2 / (n * (n * n - 1))
 
 
@@ -105,6 +119,20 @@ def ranks(counter):
 def main():
     ft = load_fulltext()
     ab = load_abstracts()
+
+    # The combined-count analysis (Total = FT + Abs) is only valid if the two
+    # corpora are disjoint. Enforce that invariant rather than narrate it: a
+    # future corpus update that promotes an abstract-only PMID to full text
+    # without removing the abstract would silently double-count it.
+    ft_pmids = {r["pmid"] for r in ft if r["pmid"]}
+    ab_pmids = {r["pmid"] for r in ab if r["pmid"]}
+    overlap = ft_pmids & ab_pmids
+    if overlap:
+        raise SystemExit(
+            f"DISJOINTNESS VIOLATED: {len(overlap)} PMIDs are in BOTH the full-text "
+            f"and abstract-only corpora, so combined counts would double-count them. "
+            f"Examples: {sorted(overlap)[:5]}. The Total column assumes zero overlap."
+        )
 
     ft_count = collections.Counter()
     ab_count = collections.Counter()
@@ -182,10 +210,11 @@ def main():
         "uninformative. The real bias is what the full-text corpus OMITS.",
         "",
         f"The disjoint **abstract-only archive** (`corpus/abstracts/by-pmid/`, "
-        f"{n_ab} records, **{100*ab_oa_records/n_ab:.1f}% OA**, zero PMID overlap "
-        "with the full-text set) carries that omitted, mostly-non-OA literature. "
-        "Comparing the two re-derives the mechanism ranking on a far less "
-        "OA-biased basis.",
+        f"{n_ab} records, **{100*ab_oa_records/n_ab:.1f}% OA**, {len(overlap)} PMID "
+        "overlap with the full-text set, computed and enforced by this script so a "
+        "future corpus change cannot silently break the combined-count assumption) "
+        "carries that omitted, mostly-non-OA literature. Comparing the two "
+        "re-derives the mechanism ranking on a far less OA-biased basis.",
         "",
         "## Per-mechanism OA-bias table",
         "",
@@ -204,12 +233,18 @@ def main():
     ]
     for m in sorted(mechs, key=lambda x: -total[x]):
         oa_pct = 100 * total_oa[m] / total[m] if total[m] else 0
-        d_abs = ft_rank.get(m, len(mechs) + 1) - ab_rank.get(m, len(mechs) + 1)
+        # FT→Abs Δ is undefined when a mechanism has no abstract counterpart
+        # (its abstract rank prints `-`); render `-` rather than a sentinel delta.
+        d_abs = (
+            f"{ft_rank[m] - ab_rank[m]:+d}"
+            if m in ft_rank and m in ab_rank
+            else "-"
+        )
         d_tot = ft_rank.get(m, len(mechs) + 1) - total_rank[m]
         lines.append(
             f"| {m} | {ft_count[m]} | {ab_count[m]} | {total[m]} | {oa_pct:.0f}% | "
             f"{ft_rank.get(m, '-')} | {ab_rank.get(m, '-')} | {total_rank[m]} | "
-            f"{d_abs:+d} | {d_tot:+d} | {'yes' if m in PHYSICAL else ''} |"
+            f"{d_abs} | {d_tot:+d} | {'yes' if m in PHYSICAL else ''} |"
         )
 
     lines += [
