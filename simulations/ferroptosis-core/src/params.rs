@@ -4,6 +4,12 @@ use serde::{Deserialize, Serialize};
 
 use crate::photosensitizer_pk::Photosensitizer;
 
+/// Default ramp time constant (steps) for NCOA4-ferritinophagy iron release
+/// (#340). Inert while `ferritinophagy_release == 0.0`.
+fn default_ferritinophagy_tau() -> f64 {
+    30.0
+}
+
 /// Core biochemistry parameters. Identical to v3 simulation defaults.
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Params {
@@ -95,6 +101,25 @@ pub struct Params {
     /// (default) ⇒ byte-identical; uncalibrated, direction-anchored.
     #[serde(default)]
     pub mboat_mufa_boost: f64,
+    /// NCOA4-ferritinophagy labile-iron release (#340). The static-iron model
+    /// holds `cell.iron` fixed; in reality NCOA4-mediated autophagy of ferritin
+    /// releases stored iron into the labile pool over time, feeding Fenton
+    /// chemistry (Mancias et al., Nature 2014, PMID 24695223; Hou et al.,
+    /// Autophagy 2016, PMID 27245739). This is the asymptotic fractional
+    /// increase in labile iron the release builds toward over the run; the
+    /// Fenton iron is scaled by a time-dependent factor (see
+    /// `biochem::ferritinophagy_iron_factor`) that ramps from `1.0` toward
+    /// `1 + ferritinophagy_release`. `0.0` (default) ⇒ factor is exactly `1.0`
+    /// for every step ⇒ byte-identical; uncalibrated, direction-anchored
+    /// (more ferritinophagy ⇒ more labile iron ⇒ more ferroptosis).
+    #[serde(default)]
+    pub ferritinophagy_release: f64,
+    /// Ramp time constant (in steps) for the NCOA4-ferritinophagy iron release
+    /// (#340). Inert when `ferritinophagy_release == 0.0` (the factor is then a
+    /// constant `1.0`), so the default keeps the matrix byte-identical. A
+    /// smaller value releases iron faster.
+    #[serde(default = "default_ferritinophagy_tau")]
+    pub ferritinophagy_tau: f64,
 
     // === GPX4 Dynamic Regulation ===
     pub gpx4_degradation_by_ros: f64,
@@ -145,6 +170,8 @@ impl Default for Params {
             scd_mufa_decay: 0.0,
             ether_pufa_fraction: 0.0,
             mboat_mufa_boost: 0.0,
+            ferritinophagy_release: 0.0,
+            ferritinophagy_tau: default_ferritinophagy_tau(),
             gpx4_degradation_by_ros: 0.002,
             gpx4_nrf2_upregulation: 0.008,
             sdt_ros: 5.0,

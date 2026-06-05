@@ -144,6 +144,30 @@ pub fn o2_dependent_exo_factor(o2_supply: f64, dependence: f64) -> f64 {
     (1.0 - d + d * s).clamp(0.0, 1.0)
 }
 
+/// Hypoxia amplification of NCOA4-ferritinophagy iron release (#340).
+///
+/// Hypoxia shifts iron handling: HIF stabilization raises transferrin-receptor
+/// (TfR1) expression and iron import, so the labile iron pool can rise in
+/// low-O2 zones, which *increases* ferroptosis vulnerability there. This
+/// qualifies the model's "hypoxia uniformly protects RSL3" framing (manuscript
+/// §7.1): the hypoxia disadvantage for SDT (less O2 for exogenous ROS, see
+/// [`o2_dependent_exo_factor`]) can be partly offset for the Fenton/iron leg.
+///
+/// `o2_supply` is the local relative O2 availability (the same field that
+/// scales `cell.basal_ros`). `sensitivity` is how strongly hypoxia raises iron
+/// release: `0.0` (default for any consumer) returns `1.0` (no hypoxia-iron
+/// coupling, byte-identical); a positive value scales the ferritinophagy iron
+/// release up as O2 falls.
+///
+/// Returns `1 + sensitivity·(1 − o2_supply)` (sensitivity floored at `0`,
+/// `o2_supply` clamped to `[0, 1]`): `1.0` in well-oxygenated tissue
+/// (`o2_supply = 1`), rising toward `1 + sensitivity` in anoxia.
+pub fn hypoxia_iron_factor(o2_supply: f64, sensitivity: f64) -> f64 {
+    let sens = sensitivity.max(0.0);
+    let s = o2_supply.clamp(0.0, 1.0);
+    1.0 + sens * (1.0 - s)
+}
+
 /// Dead-cell rate for each of three O₂-defined concentric shells.
 ///
 /// Zone semantics (matches `sim-tme`'s 2D
@@ -239,6 +263,22 @@ mod tests {
             o2_dependent_exo_factor(0.5, 2.0),
             o2_dependent_exo_factor(0.5, 1.0)
         );
+    }
+
+    #[test]
+    fn hypoxia_iron_factor_identity_at_zero_and_rises_in_hypoxia() {
+        // sensitivity = 0 (default): always 1.0, no hypoxia-iron coupling.
+        for o2 in [0.0, 0.3, 1.0] {
+            assert_eq!(hypoxia_iron_factor(o2, 0.0), 1.0);
+        }
+        // sensitivity > 0: 1.0 at full O2, rising toward 1 + sensitivity in anoxia.
+        assert_eq!(hypoxia_iron_factor(1.0, 0.5), 1.0);
+        assert!((hypoxia_iron_factor(0.0, 0.5) - 1.5).abs() < 1e-12);
+        // Monotone increasing as O2 falls.
+        assert!(hypoxia_iron_factor(0.2, 0.5) > hypoxia_iron_factor(0.8, 0.5));
+        // Out-of-range inputs are clamped/floored, never panicking.
+        assert_eq!(hypoxia_iron_factor(2.0, 0.5), 1.0);
+        assert_eq!(hypoxia_iron_factor(0.5, -1.0), 1.0);
     }
 
     /// #289: the hoisted-geometry field must be bit-for-bit identical to a
