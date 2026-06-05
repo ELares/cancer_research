@@ -190,6 +190,30 @@ fn total_mufa_protection(dynamic: f64, params: &Params) -> f64 {
     dynamic + params.mboat_mufa_boost.max(0.0)
 }
 
+/// NCOA4-ferritinophagy labile-iron release factor (#340).
+///
+/// The static-iron model holds `cell.iron` fixed. In reality NCOA4-mediated
+/// autophagy of ferritin (ferritinophagy) releases stored iron into the labile
+/// pool over time, feeding Fenton chemistry (Mancias et al., Nature 2014, PMID
+/// 24695223; Hou et al., Autophagy 2016, PMID 27245739). This scales the Fenton
+/// iron by a time-dependent factor that ramps from `1.0` (step 0) toward
+/// `1 + ferritinophagy_release` with time constant `ferritinophagy_tau` steps,
+/// representing the gradual rise in labile iron as ferritinophagy proceeds.
+///
+/// `ferritinophagy_release = 0.0` (default) returns exactly `1.0` for every step
+/// (a fast path, so `iron * factor == iron` bit-for-bit), keeping the production
+/// matrix byte-identical. The release is floored at `0` (ferritinophagy adds
+/// labile iron, it does not remove it).
+#[inline]
+pub fn ferritinophagy_iron_factor(step: u32, params: &Params) -> f64 {
+    let release = params.ferritinophagy_release.max(0.0);
+    if release == 0.0 {
+        return 1.0;
+    }
+    let tau = params.ferritinophagy_tau.max(1e-9);
+    1.0 + release * (1.0 - (-(step as f64) / tau).exp())
+}
+
 /// Deterministic exogenous-ROS decay envelope for the post-bolus phase.
 ///
 /// Models singlet-oxygen / exogenous-ROS decay after a single treatment
@@ -240,7 +264,8 @@ pub fn sim_cell_step(
         // No repair (cell defenses have failed), only ROS → LP.
         if let Some(ds) = state.death_step {
             if step < ds + params.post_death_steps {
-                let effective_iron = cell.iron + extra_iron;
+                let effective_iron =
+                    (cell.iron + extra_iron) * ferritinophagy_iron_factor(step, params);
                 let fenton = effective_iron * params.fenton_rate * norm(rng, 1.0, 0.08).max(0.0);
                 let exo = if step < 30 {
                     state.exo_ros_peak * norm(rng, 1.0, 0.1).max(0.0)
@@ -258,7 +283,7 @@ pub fn sim_cell_step(
     }
 
     // === ROS SOURCES ===
-    let effective_iron = cell.iron + extra_iron;
+    let effective_iron = (cell.iron + extra_iron) * ferritinophagy_iron_factor(step, params);
     let fenton = effective_iron * params.fenton_rate * norm(rng, 1.0, 0.08).max(0.0);
     let exo = if step < 30 {
         state.exo_ros_peak * norm(rng, 1.0, 0.1).max(0.0)
@@ -369,7 +394,10 @@ pub fn sim_cell(
 
     for step in 0..180_u32 {
         // === ROS SOURCES (used by both alive and post-death paths) ===
-        let fenton = cell.iron * params.fenton_rate * norm(rng, 1.0, 0.08).max(0.0);
+        let fenton = cell.iron
+            * ferritinophagy_iron_factor(step, params)
+            * params.fenton_rate
+            * norm(rng, 1.0, 0.08).max(0.0);
         let exo = if step < 30 {
             exo_ros_peak * norm(rng, 1.0, 0.1).max(0.0)
         } else {
@@ -628,6 +656,52 @@ mod tests {
         );
         // Determinism.
         assert_eq!(base, peak_lp(0.0));
+    }
+
+    /// #340: NCOA4-ferritinophagy releases stored iron into the labile pool over
+    /// the run, so enabling it INCREASES peak lipid peroxidation under RSL3 (more
+    /// Fenton). `release = 0.0` returns factor 1.0 at every step (byte-identical).
+    #[test]
+    fn ferritinophagy_iron_release_increases_peroxidation_under_rsl3() {
+        fn peak_lp(release: f64) -> f64 {
+            let p = Params {
+                ferritinophagy_release: release,
+                ..Params::default()
+            };
+            let mut gen_rng = StdRng::seed_from_u64(42);
+            let cell = gen_cell(Phenotype::OXPHOS, &mut gen_rng);
+            let mut rng = StdRng::seed_from_u64(7);
+            let mut state = CellState::from_cell(&cell, Treatment::RSL3, &p, &mut rng);
+            let mut peak = 0.0_f64;
+            for step in 0..180 {
+                sim_cell_step(&mut state, &cell, &p, step, 0.0, &mut rng);
+                peak = peak.max(state.lp);
+            }
+            peak
+        }
+        let base = peak_lp(0.0); // static iron
+        let with_ferritinophagy = peak_lp(1.0); // labile iron up to ~2x late in run
+        assert!(base > 0.0, "RSL3 should drive lipid peroxidation");
+        assert!(
+            with_ferritinophagy > base,
+            "ferritinophagy iron release should raise peak LP under RSL3: ferr={with_ferritinophagy} vs base={base}"
+        );
+        // Determinism.
+        assert_eq!(base, peak_lp(0.0));
+
+        // release = 0 ⇒ factor is exactly 1.0 at every step (byte-identical).
+        let p0 = Params::default();
+        for step in [0u32, 1, 30, 90, 179] {
+            assert_eq!(ferritinophagy_iron_factor(step, &p0), 1.0);
+        }
+        // release > 0 ⇒ starts at exactly 1.0 (step 0) and rises monotonically.
+        let pr = Params {
+            ferritinophagy_release: 1.0,
+            ..Params::default()
+        };
+        assert_eq!(ferritinophagy_iron_factor(0, &pr), 1.0);
+        assert!(ferritinophagy_iron_factor(30, &pr) > ferritinophagy_iron_factor(0, &pr));
+        assert!(ferritinophagy_iron_factor(179, &pr) > ferritinophagy_iron_factor(30, &pr));
     }
 
     #[test]
