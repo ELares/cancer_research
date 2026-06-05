@@ -61,7 +61,9 @@ pub struct Params {
     /// `initial_mufa_protection` start, so the matrix is byte-identical. The
     /// accumulation RATE is the existing `scd_mufa_rate` (uncalibrated against
     /// the literature 48-72h timescale; the acute-vs-established DIRECTION is
-    /// the result, not a precise hours figure).
+    /// the result, not a precise hours figure). The starting value is not
+    /// clamped here, but `update_mufa_protection` clamps to `[0, mufa_max]` on
+    /// step 1 before any consumer reads it, so an out-of-range `x` self-corrects.
     #[serde(default)]
     pub mufa_acute_start: Option<f64>,
     /// MUFA decay rate from natural phospholipid turnover. When SCD1 is
