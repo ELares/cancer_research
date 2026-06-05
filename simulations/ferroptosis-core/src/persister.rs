@@ -122,6 +122,94 @@ pub fn step(fraction: f64, drug_intensity: f64, cfg: &PersisterConfig) -> f64 {
     (fraction + acquisition - reversion).clamp(0.0, cfg.max_fraction)
 }
 
+/// Per-cell persister state with the irreversible (epigenetically locked)
+/// sub-population split out (#342).
+///
+/// The base model treats all persistence as freely reversible. In reality,
+/// beyond a threshold of SUSTAINED drug exposure persistence becomes
+/// epigenetically locked and effectively irreversible (FSP1/HDAC-mediated
+/// suppression of alternative defenses, Sci Adv 2026 PMID 41481741). This
+/// splits the pool: `reversible` relaxes toward 0 after drug clearance (as
+/// before), while `locked` does not revert once acquired.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct PersisterState {
+    /// Reversible persister fraction (relaxes toward 0 after drug clearance).
+    pub reversible: f64,
+    /// Locked persister fraction: acquired under sustained exposure, does NOT
+    /// revert.
+    pub locked: f64,
+    /// Sustained-exposure tracker (an EMA of drug, see
+    /// [`PersisterConfig::exposure_decay`]) that gates locking.
+    pub cumulative_exposure: f64,
+}
+
+impl PersisterState {
+    /// The empty state (no persistence, no exposure history).
+    pub const ZERO: Self = PersisterState {
+        reversible: 0.0,
+        locked: 0.0,
+        cumulative_exposure: 0.0,
+    };
+
+    /// Total persister fraction the consumer applies to the biochem effects
+    /// (reversible + locked), clamped to the config ceiling `max_fraction`.
+    /// With locking off, `locked == 0`, so this is just the reversible fraction.
+    pub fn total(&self, cfg: &PersisterConfig) -> f64 {
+        (self.reversible + self.locked).clamp(0.0, cfg.max_fraction.max(0.0))
+    }
+}
+
+/// One per-step update of the [`PersisterState`] with reversible-to-irreversible
+/// locking (#342).
+///
+/// The `reversible` pool evolves by the existing competing-rate [`step`]. The
+/// `cumulative_exposure` tracker is updated as an exponential moving average,
+/// `cumulative·(1 - exposure_decay) + drug`, whose steady state is
+/// `avg_drug / exposure_decay`; once it crosses `cfg.lock_threshold`, a fraction
+/// `cfg.lock_rate` of the reversible pool is moved into the non-reverting
+/// `locked` pool each step. Because the tracker decays during drug-off windows,
+/// only SUSTAINED (continuous) exposure crosses the threshold; intermittent
+/// dosing settles below it and never locks.
+///
+/// With `cfg.lock_rate == 0.0` (the default) this reduces EXACTLY to [`step`] on
+/// the reversible pool with `locked` and `cumulative_exposure` left untouched,
+/// so a consumer that has not opted into locking stays byte-identical.
+pub fn step_with_locking(
+    state: PersisterState,
+    drug_intensity: f64,
+    cfg: &PersisterConfig,
+) -> PersisterState {
+    // Reversible pool: the existing competing-rate update.
+    let reversible = step(state.reversible, drug_intensity, cfg);
+    // Locking off ⇒ behave exactly like `step` (locked + tracker untouched).
+    if cfg.lock_rate == 0.0 {
+        return PersisterState {
+            reversible,
+            locked: state.locked,
+            cumulative_exposure: state.cumulative_exposure,
+        };
+    }
+    let drug = drug_intensity.clamp(0.0, 1.0);
+    let decay = cfg.exposure_decay.clamp(0.0, 1.0);
+    // Sustained-exposure EMA: rises under drug, decays in drug-off windows.
+    let cumulative_exposure = state.cumulative_exposure * (1.0 - decay) + drug;
+    // Above threshold, ratchet reversible -> locked (irreversible).
+    let (reversible, locked) = if cumulative_exposure >= cfg.lock_threshold {
+        let lock_amount = (cfg.lock_rate.max(0.0) * reversible).min(reversible);
+        (
+            (reversible - lock_amount).max(0.0),
+            (state.locked + lock_amount).clamp(0.0, cfg.max_fraction.max(0.0)),
+        )
+    } else {
+        (reversible, state.locked)
+    };
+    PersisterState {
+        reversible,
+        locked,
+        cumulative_exposure,
+    }
+}
+
 /// Multiplier applied to the per-step GPX4-inactivation drug effect: a
 /// persister resists covalent GPX4 knockdown. Returns `1.0` at `fraction == 0`
 /// or identity config (no attenuation) and `1 - gpx4_resistance` at full
@@ -302,5 +390,82 @@ mod tests {
             (next - 0.45).abs() < 1e-12,
             "should revert toward 0: got {next}"
         );
+    }
+
+    // ===== Reversible-to-irreversible locking (#342) =====
+
+    /// With `lock_rate == 0` (the default), `step_with_locking` reduces EXACTLY
+    /// to `step` on the reversible pool, with `locked` and the exposure tracker
+    /// left untouched. This is the byte-identity invariant a consumer relies on.
+    #[test]
+    fn step_with_locking_matches_step_when_locking_off() {
+        let cfg = PersisterConfig::enabled(); // lock_rate defaults to 0.0
+        let mut s = PersisterState::ZERO;
+        let mut f = 0.0_f64;
+        for t in 0..200 {
+            let drug = if t < 100 { 0.7 } else { 0.0 };
+            s = step_with_locking(s, drug, &cfg);
+            f = step(f, drug, &cfg);
+            assert_eq!(s.reversible, f, "reversible must track plain step exactly");
+            assert_eq!(s.locked, 0.0, "no locking when lock_rate=0");
+            assert_eq!(
+                s.cumulative_exposure, 0.0,
+                "tracker untouched when locking off"
+            );
+        }
+        assert_eq!(s.total(&cfg), f);
+    }
+
+    /// #342: sustained CONTINUOUS dosing crosses the lock threshold and leaves
+    /// an irreversible (locked) persister fraction that survives drug
+    /// withdrawal, whereas INTERMITTENT dosing keeps the sustained-exposure EMA
+    /// below the threshold, never locks, and reverts toward zero after washout.
+    #[test]
+    fn continuous_dosing_locks_persisters_but_intermittent_does_not() {
+        // EMA steady state = avg_drug / exposure_decay: continuous ⇒ 1/0.1 = 10
+        // (> 5), intermittent at 25% duty ⇒ 0.25/0.1 = 2.5 (< 5). So 5.0 sits
+        // between them and only continuous dosing locks.
+        let cfg = PersisterConfig {
+            lock_rate: 0.1,
+            lock_threshold: 5.0,
+            exposure_decay: 0.1,
+            ..PersisterConfig::enabled()
+        };
+        let run = |schedule: &dyn Fn(usize) -> f64| -> PersisterState {
+            let mut s = PersisterState::ZERO;
+            for t in 0..160 {
+                s = step_with_locking(s, schedule(t), &cfg);
+            }
+            // Long washout (drug fully withdrawn).
+            for _ in 0..160 {
+                s = step_with_locking(s, 0.0, &cfg);
+            }
+            s
+        };
+        let continuous = run(&|_| 1.0);
+        let intermittent = run(&|t| if t % 4 == 0 { 1.0 } else { 0.0 }); // 25% duty
+
+        // Continuous: a locked fraction persists through washout.
+        assert!(
+            continuous.locked > 0.01,
+            "continuous dosing should lock persisters: {continuous:?}"
+        );
+        assert!(
+            continuous.total(&cfg) > 0.01,
+            "the locked fraction survives drug withdrawal: {continuous:?}"
+        );
+        // Intermittent: never crosses the threshold ⇒ no locking; reverts away.
+        assert!(
+            intermittent.locked < 1e-9,
+            "intermittent dosing must not lock: {intermittent:?}"
+        );
+        assert!(
+            intermittent.total(&cfg) < continuous.total(&cfg),
+            "intermittent reverts further than continuous: int={:?} cont={:?}",
+            intermittent,
+            continuous
+        );
+        // Determinism.
+        assert_eq!(continuous, run(&|_| 1.0));
     }
 }
