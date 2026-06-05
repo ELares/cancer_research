@@ -156,8 +156,12 @@ fn update_mufa_protection(current: f64, mufa_max: f64, params: &Params) -> f64 {
 /// that ether-PUFA PROMOTES ferroptosis and its LOSS is the escape.
 ///
 /// `ether_pufa_fraction` is the ether-PUFA pool as a fraction of the base PUFA
-/// substrate, so the peroxidizable PUFA term is scaled by `1 + fraction`.
-/// `0.0` (default) ⇒ ×1.0 ⇒ byte-identical (FAR1/AGPS-null is the `0` limit).
+/// substrate (domain `>= 0`), so the peroxidizable PUFA term is scaled by
+/// `1 + max(fraction, 0)`. `0.0` (default) ⇒ ×1.0 ⇒ byte-identical (FAR1/AGPS-
+/// null is the `0` limit). The `max(_, 0)` floor keeps an out-of-contract
+/// negative fraction from shrinking the substrate (the two post-death
+/// `effective_unsat` sites have no `.max(0.05)` floor of their own); it is a
+/// no-op for the documented `>= 0` domain, so the default stays byte-identical.
 ///
 /// The plasmalogen / TMEM189 (PEDS1) vinyl-ether sub-step is deliberately NOT
 /// folded in: its sign is genuinely contested (protective via a FAR1
@@ -167,7 +171,7 @@ fn update_mufa_protection(current: f64, mufa_max: f64, params: &Params) -> f64 {
 /// fixed direction would overstate certainty.
 #[inline]
 fn ether_augmented_pufa(lipid_unsat: f64, params: &Params) -> f64 {
-    lipid_unsat * (1.0 + params.ether_pufa_fraction)
+    lipid_unsat * (1.0 + params.ether_pufa_fraction.max(0.0))
 }
 
 /// Deterministic exogenous-ROS decay envelope for the post-bolus phase.
