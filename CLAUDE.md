@@ -45,7 +45,7 @@ The repo exists to compare therapeutic mechanisms, evidence depth, resistant-sta
 ## Current Repo State
 
 - local full-text corpus: 4,830 records
-- abstract-only archive: 5,584 records
+- abstract-only archive: 5,585 records
 - mechanism taxonomy, evidence tiers, pathway-targets, biology-process tags, and resistant-state scaffolding are all active
 - evidence tagging is improved but still incomplete (gold-set measured)
 - tissue-of-origin and weighted-evidence layers are active

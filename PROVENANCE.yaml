@@ -96,7 +96,7 @@ corpus:
       OA status (OpenAlex has ~5% error rate) and downgrade confirmed
       non-OA articles to abstract-only storage.
   abstract_archive:
-    count: 5584
+    count: 5585
     note: >
       Abstract-only records in corpus/abstracts/by-pmid/. Bibliographic
       metadata and abstracts are generally not copyrightable under US law
