@@ -2669,7 +2669,8 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         ferritinophagy: false,
     },
     SnapshotPreset {
-        // SDT on a hypoxic spheroid with the exo-ROS made fully O2-dependent
+        // SDT on a hypoxic sphere (the base edge-distance radial-O2 gradient, not
+        // the spheroid biology layer) with the exo-ROS made fully O2-dependent
         // (#358/#380, sdt_o2_dependence=1.0): the Type II singlet-oxygen yield
         // scales with local O2, so SDT kills the oxygenated rim but the deep
         // hypoxic core SURVIVES. The dead/LP panels show that hypoxic-core SDT
