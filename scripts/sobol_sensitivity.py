@@ -27,6 +27,7 @@ and an identifiability block appended to `simulations/calibration/parameter_prov
 Reproducible: fixed numpy + simulation seeds; reads only the committed binding.
 """
 
+import json
 import sys
 from pathlib import Path
 
@@ -63,29 +64,29 @@ SIM_SEED = 42  # fixed across evaluations so the kill rate is a deterministic
 N_BASE = 2048  # Saltelli base sample size; total evals = N_BASE * (k + 2)
 RNG_SEED = 12345
 
-# The biochemical rate constants to screen, with multiplicative ranges around the
-# 2D default. (scd_mufa_max is 0 in the 2D default context, so MUFA enrichment is
-# inactive here and is excluded; it is exercised by the in-vivo/spheroid contexts,
-# noted in the report.)
-PARAMS = [
-    ("lp_propagation", 0.5, 1.5),  # autocatalytic LP propagation rate
-    ("fenton_rate", 0.5, 1.5),  # iron-driven Fenton ROS
-    ("gsh_scav_efficiency", 0.5, 1.5),  # GSH peroxide scavenging
-    ("gsh_km", 0.5, 1.5),  # GSH Michaelis-Menten constant
-    ("gpx4_rate", 0.5, 1.5),  # GPX4 repair rate
-    ("fsp1_rate", 0.5, 1.5),  # FSP1 GPX4-independent backup
-    ("death_threshold", 0.5, 1.5),  # LP level that triggers death
-    ("gpx4_degradation_by_ros", 0.5, 1.5),  # ROS-driven GPX4 loss
-]
+# Screen the SAME biochemical rate constants the univariate PRCC (#134) used, over
+# the SAME absolute parameter ranges (loaded from analysis/prcc-results.json), so
+# this Sobol is an apples-to-apples variance-based EXTENSION of the PRCC rather than
+# a re-scoped subset. Using the PRCC's published ranges also keeps every parameter
+# inside its physically valid domain (e.g. rsl3_gpx4_inhib stays in [0.8, 0.99] ⊂
+# [0,1]; a symmetric ±50% multiplicative sweep would have pushed it out of range).
+# sdt_ros is the one PRCC parameter excluded: it is the SDT exogenous-ROS dose and
+# is inert for the RSL3 kill observable screened here (the PRCC itself found
+# sdt_ros dominates SDT but is irrelevant under RSL3).
+_PRCC_RANGES = json.loads(
+    (REPO / "analysis" / "prcc-results.json").read_text()
+)["metadata"]["parameter_ranges"]
+EXCLUDED = {"sdt_ros"}
+PARAMS = [(name, lo, hi) for name, (lo, hi) in _PRCC_RANGES.items() if name not in EXCLUDED]
 
 
-def evaluate(sample_rows, defaults):
-    """Death rate for each parameter row (override the binding's params via kwargs)."""
+def evaluate(sample_rows):
+    """Death rate for each parameter row. Rows hold ABSOLUTE parameter values
+    sampled over the PRCC ranges, applied as `sim_batch` kwarg overrides."""
     names = [p[0] for p in PARAMS]
     out = np.empty(len(sample_rows))
     for i, row in enumerate(sample_rows):
-        overrides = {n: float(defaults[n] * row[j]) for j, n in enumerate(names)}
-        # death_threshold default is ~10, range is multiplicative too (5..15).
+        overrides = {n: float(row[j]) for j, n in enumerate(names)}
         res = _fc().sim_batch(PHENOTYPE, TREATMENT, n=N_CELLS, seed=SIM_SEED, **overrides)
         out[i] = res["death_rate"]
     return out
@@ -123,18 +124,15 @@ def sobol_indices(eval_fn, lows, highs, n_base, rng_seed):
     return s1, st, var, float(np.mean(np.concatenate([yA, yB])))
 
 
-def saltelli_indices(defaults, n_base=N_BASE):
-    """Sobol indices of the ferroptosis kill rate over the biochemical params."""
+def saltelli_indices(n_base=N_BASE):
+    """Sobol indices of the ferroptosis kill rate over the PRCC biochemical params."""
     lows = np.array([p[1] for p in PARAMS])
     highs = np.array([p[2] for p in PARAMS])
-    return sobol_indices(
-        lambda rows: evaluate(rows, defaults), lows, highs, n_base, RNG_SEED
-    )
+    return sobol_indices(evaluate, lows, highs, n_base, RNG_SEED)
 
 
 def main():
-    defaults = _fc().default_params()
-    s1, st, var, ymean = saltelli_indices(defaults)
+    s1, st, var, ymean = saltelli_indices()
     names = [p[0] for p in PARAMS]
 
     order = np.argsort(-st)
@@ -151,11 +149,22 @@ def main():
         f"**Observable:** single-cell ferroptosis death rate (`sim_batch`, "
         f"{PHENOTYPE} + {TREATMENT}, n={N_CELLS}, seed={SIM_SEED}), the death switch "
         "the spatial headline results build on. Evaluated at the mid-range "
-        f"operating point (baseline kill ~{ymean:.2f}), where the bistable switch is "
-        "most sensitive. Saltelli base N="
-        f"{N_BASE} ({N_BASE * (len(PARAMS) + 2)} model evaluations); parameters "
-        "swept multiplicatively over [0.5, 1.5] of their 2D defaults; output "
+        f"operating point (mean kill across the design ~{ymean:.2f}; default-"
+        "parameter baseline ~0.40), where the bistable switch is most sensitive "
+        "(the OXPHOS-RSL3 floor and most SDT points sit near 0 or 1, compressing "
+        "their variance). Saltelli base N="
+        f"{N_BASE} ({N_BASE * (len(PARAMS) + 2)} model evaluations); output "
         f"variance over the design = {var:.4f}.",
+        "",
+        f"**Screened set ({len(PARAMS)} parameters):** the SAME biochemical rate "
+        "constants as the univariate PRCC (#134), over the SAME absolute ranges "
+        "(`analysis/prcc-results.json`), so this is an apples-to-apples variance-"
+        "based extension of the PRCC rather than a re-scoped subset. The only PRCC "
+        "parameter excluded is `sdt_ros` (the SDT exogenous-ROS dose, inert for "
+        "this RSL3 observable, as the PRCC itself found). Using the PRCC's "
+        "published ranges keeps every parameter inside its physical domain (e.g. "
+        "`rsl3_gpx4_inhib` in [0.8, 0.99]); a symmetric ±50% multiplicative sweep "
+        "would have pushed it out of [0, 1].",
         "",
         "## Sobol indices",
         "",
@@ -183,11 +192,13 @@ def main():
         "",
         "## What drives the ferroptosis switch",
         "",
-        f"- **`{top}` dominates** (highest total effect, ST={st[order[0]]:.3f}), "
-        f"with `{names[order[1]]}` second (ST={st[order[1]]:.3f}). Together they "
-        f"account for ~{100*float(np.clip(s1[order[0]]+s1[order[1]],0,1)):.0f}% of "
-        "the kill-rate variance; every other biochemical rate constant is a minor "
-        "contributor at this operating point.",
+        f"- **`{top}` dominates** (ST={st[order[0]]:.3f}), then `{names[order[1]]}` "
+        f"(ST={st[order[1]]:.3f}) and `{names[order[2]]}` (ST={st[order[2]]:.3f}); "
+        f"these top three account for ~{100*float(np.clip(s1[order[0]]+s1[order[1]]+s1[order[2]],0,1)):.0f}% "
+        "of the kill-rate variance as first-order effects. This **confirms the "
+        "univariate PRCC ranking** (which ranked lp_propagation, gpx4_rate, lp_rate "
+        "as its top three for Persister × RSL3): the same parameters dominate under "
+        "a variance-based analysis, in the same order.",
         "",
         f"- **Interactions are modest: ΣS1 ≈ {sum_s1:.2f}**, so first-order effects "
         f"explain about {100*min(sum_s1,1):.0f}% of the output variance and only "
@@ -220,9 +231,15 @@ def main():
         "depletion). The flags scope to what the calibration targets actually "
         "measure.",
         "",
-        "- `scd_mufa_max` (MUFA setpoint) is 0 in the 2D default context, so MUFA "
-        "enrichment is inactive here and was excluded; it is exercised by the "
-        "in-vivo / spheroid contexts and should be screened there separately.",
+        "- Scope: this screens the shared upstream single-cell kill switch (the "
+        "Persister × RSL3 death rate), not the three spatial headline outputs the "
+        "#331 issue also names (Bliss synergy, hypoxia collapse, immune ratio) "
+        "directly. The biochemical rate constants in scope feed all three through "
+        "this switch, so the driver/identifiability verdict carries to them; a "
+        "per-headline-output Sobol (which would also screen the spatial, immune, "
+        "and combination parameters) is left as follow-up. `sdt_ros` is excluded as "
+        "an SDT-only parameter; `scd_mufa_max` (MUFA, inactive in the 2D context) "
+        "is, like for the PRCC, not in the screened set.",
         "",
     ]
     REPORT.write_text("\n".join(lines) + "\n")
@@ -234,11 +251,14 @@ def main():
         "## Practical identifiability from the kill observable (#331)",
         "",
         f"Sobol total-effect screening at the {PHENOTYPE}+{TREATMENT} operating "
-        "point (see `analysis/sobol-sensitivity-report.md`) ranks how much the "
-        "single-cell kill rate constrains each biochemical rate constant. "
-        "Parameters the kill rate is insensitive to (total-effect ST < "
-        f"{ID_THRESHOLD}) are NOT constrainable from kill-rate calibration and are "
-        "marked here so they are not read as data-fitted:",
+        "point (see `analysis/sobol-sensitivity-report.md`) over the PRCC's "
+        f"biochemical rate constants ({len(PARAMS)} parameters, the PRCC's 11 minus "
+        "the SDT-only `sdt_ros`) ranks how much the single-cell kill rate "
+        "constrains each. Parameters the kill rate is insensitive to (total-effect "
+        f"ST < {ID_THRESHOLD}) are NOT constrainable from kill-rate calibration and "
+        "are marked here so they are not read as data-fitted (scope: kill-rate "
+        "observable only; a parameter flagged non-identifiable here may be "
+        "constrainable from an LP-timecourse or GSH-depletion observable):",
         "",
         "| Parameter | ST | constrainable from kill rate? |",
         "|---|--:|:--:|",

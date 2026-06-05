@@ -63,8 +63,7 @@ def test_lp_propagation_drives_the_ferroptosis_switch():
     Python CI does not build it; the estimator math is covered by the Ishigami
     test, which needs no binding)."""
     pytest.importorskip("ferroptosis_core")
-    defaults = sob._fc().default_params()
-    s1, st, _, _ = sob.saltelli_indices(defaults, n_base=256)
+    s1, st, _, _ = sob.saltelli_indices(n_base=256)
     names = [p[0] for p in sob.PARAMS]
     rank = {n: st[i] for i, n in enumerate(names)}
     top = max(rank, key=rank.get)
