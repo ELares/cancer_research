@@ -561,6 +561,32 @@ pub struct PersisterConfig {
     pub mufa_boost_per_step: f64,
     /// Cap on persister-driven `CellState::mufa_protection`.
     pub mufa_boost_cap: f64,
+    /// Reversible-to-irreversible (epigenetic) locking rate (#342). Beyond a
+    /// threshold of SUSTAINED drug exposure (~10-14 days continuous in several
+    /// systems), persistence becomes epigenetically locked / effectively
+    /// irreversible (FSP1/HDAC-mediated suppression of alternative defenses,
+    /// PMID 41481741). Per step, once `cumulative_exposure >= lock_threshold`,
+    /// a fraction `lock_rate` of the reversible persister pool is moved into the
+    /// locked pool, which does NOT revert (see
+    /// [`crate::persister::step_with_locking`]). `0.0` (default) disables
+    /// locking, so [`step_with_locking`](crate::persister::step_with_locking)
+    /// reduces exactly to [`step`](crate::persister::step) and a consumer stays
+    /// byte-identical. Uncalibrated placeholder.
+    pub lock_rate: f64,
+    /// Sustained-exposure threshold that triggers locking (#342). Compared to
+    /// the `cumulative_exposure` EMA whose steady state is `avg_drug /
+    /// exposure_decay`, so a threshold between the intermittent- and continuous-
+    /// dosing steady states makes only CONTINUOUS dosing lock. Inert when
+    /// `lock_rate == 0`.
+    pub lock_threshold: f64,
+    /// Decay of the sustained-exposure tracker per step (#342): the tracker is
+    /// `cumulative_exposure = cumulative_exposure·(1 - exposure_decay) + drug`,
+    /// an exponential moving average of drug exposure. A positive value makes
+    /// drug-off windows decay the tracker, so intermittent dosing never reaches
+    /// `lock_threshold` while continuous dosing does. Should be `> 0` when
+    /// `lock_rate > 0` (else the tracker grows unbounded and any nonzero average
+    /// dose eventually locks). Inert when `lock_rate == 0`.
+    pub exposure_decay: f64,
 }
 
 impl Default for PersisterConfig {
@@ -574,6 +600,9 @@ impl Default for PersisterConfig {
             gpx4_resistance: 0.0,
             mufa_boost_per_step: 0.0,
             mufa_boost_cap: 0.0,
+            lock_rate: 0.0,
+            lock_threshold: 0.0,
+            exposure_decay: 0.0,
         }
     }
 }
@@ -589,6 +618,11 @@ impl PersisterConfig {
             gpx4_resistance: 0.5,
             mufa_boost_per_step: 0.004,
             mufa_boost_cap: 0.6,
+            // Locking off even in `enabled()`: it is a distinct opt-in (#342),
+            // so the existing persister snapshot/tests stay byte-identical.
+            lock_rate: 0.0,
+            lock_threshold: 0.0,
+            exposure_decay: 0.0,
         }
     }
 
@@ -602,6 +636,14 @@ impl PersisterConfig {
     /// `{ acquisition_rate: 0.0, max_fraction: 0.8 }` silently disables
     /// acquisition (the short-circuit fires) — a safe direction, but use
     /// `default()` / `enabled()` rather than partial literals.
+    ///
+    /// Intentionally ignores the locking fields (#342): a locking-only config
+    /// (`lock_rate > 0` with all other rates zero) reports `is_identity() ==
+    /// true`. That is safe because with acquisition off there is no reversible
+    /// pool for locking to ratchet, so the locking path is a no-op anyway; but a
+    /// consumer that gates the locking path on `is_identity()` should gate on
+    /// `lock_rate` directly instead. `step_with_locking` does NOT use
+    /// `is_identity()`; it gates on `lock_rate == 0.0`.
     pub fn is_identity(&self) -> bool {
         self.acquisition_rate == 0.0
             && self.reversion_rate == 0.0
