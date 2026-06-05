@@ -402,6 +402,24 @@ pub struct SpatialImmuneConfig {
     /// (`sim-tme`) caller that sets this > 0 would silently get no effect
     /// until the 2D immune loop is wired up in a later phase.
     pub exhaustion_rate: f64,
+    /// Immunosuppressive-ferroptosis strength (#337). The model treats
+    /// ferroptotic ICD as net pro-immune (DAMP -> DC -> CD8 kill), but in vivo
+    /// ferroptosis is frequently net IMMUNOSUPPRESSIVE: dying cells co-release
+    /// DC-suppressing factors (extracellular GPX4 binding DC ZP3, Liu et al.
+    /// Cell 2026 PMID 41494530; oxidized lipids / PGE2, Kim et al. Nature 2022
+    /// PMID 36385526) that blunt DC maturation and CD8 priming (Wiernicki et al.
+    /// Nat Commun 2022 PMID 35760796). Modeled as a per-cell kill multiplier
+    /// `1/(1 + strength · local_damp)` keyed on the SAME local ferroptotic-death
+    /// /DAMP signal that drives pro-immune `dc_activation`, so as ferroptotic-
+    /// death density rises the suppressive arm grows and the NET immune effect
+    /// can flip from pro- to anti-tumor (see
+    /// [`crate::immune_spatial::ferroptotic_immunosuppression`]). `0.0` (the
+    /// default for `for_2d`/`for_3d`) disables it, byte-identical. The direction
+    /// is timing-dependent: a small early-ferroptotic fraction can be
+    /// immunogenic (Efimova 2020 PMID 33188036), so this term should dominate
+    /// only at sustained/high death density; magnitude is an uncalibrated
+    /// placeholder, the sign is the result. 3D-only (consumed by `sim-tme-3d`).
+    pub ferro_immunosuppression_strength: f64,
 }
 
 impl SpatialImmuneConfig {
@@ -418,6 +436,7 @@ impl SpatialImmuneConfig {
             pd1_brake: 0.7,
             anti_pd1_efficacy: 0.0,
             exhaustion_rate: 0.0,
+            ferro_immunosuppression_strength: 0.0,
         }
     }
 
@@ -434,6 +453,7 @@ impl SpatialImmuneConfig {
             pd1_brake: 0.7,
             anti_pd1_efficacy: 0.0,
             exhaustion_rate: 0.0,
+            ferro_immunosuppression_strength: 0.0,
         }
     }
 
