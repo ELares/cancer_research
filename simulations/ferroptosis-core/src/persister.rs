@@ -218,6 +218,45 @@ pub fn step_with_locking(
     }
 }
 
+/// Non-drug stress-niche persister entry (#377): raise the persister fraction in
+/// a hypoxic / nutrient-poor drug-sanctuary niche, DECOUPLED from drug exposure.
+///
+/// The classic drug-tolerant-persister biology has a second, non-drug entry
+/// route: hypoxic / nutrient-poor microenvironments drive cells into a
+/// slow-cycling, drug-tolerant persister state independent of drug (e.g. the
+/// HIF1α-driven slow-cycling chemoresistant phenotype, Cuesta-Borràs et al.,
+/// Cell Rep 2023, PMID 37537841). `stress` ∈ [0, 1] is the local stress signal
+/// (e.g. `1 - o2_supply`, the hypoxia deficit). The direction is the result; the
+/// rate is an uncalibrated placeholder.
+///
+/// The increment goes into the REVERSIBLE pool only — a stress-niche persister
+/// reverts when the niche resolves (via the next [`step_with_locking`]'s
+/// reversion, *provided* `reversion_rate > 0`, as in [`PersisterConfig::enabled`];
+/// it can still be locked later by SUSTAINED DRUG, never by stress) — so this
+/// does NOT feed the locking EMA (#342) or the drug-driven resistance: **stress
+/// drives ENTRY, drug drives durability**. Logistic, so it saturates at
+/// `cfg.max_fraction`:
+///
+/// `reversible += stress_entry_rate · stress · (max_fraction − reversible)`
+///
+/// `cfg.stress_entry_rate == 0.0` (the default) ⇒ no-op ⇒ byte-identical. Apply
+/// it AFTER [`step_with_locking`] each step (the drug update first, then the
+/// stress entry).
+pub fn stress_entry(
+    mut state: PersisterState,
+    stress: f64,
+    cfg: &PersisterConfig,
+) -> PersisterState {
+    if cfg.stress_entry_rate == 0.0 {
+        return state;
+    }
+    let s = stress.clamp(0.0, 1.0);
+    let headroom = (cfg.max_fraction - state.reversible).max(0.0);
+    state.reversible =
+        (state.reversible + cfg.stress_entry_rate * s * headroom).clamp(0.0, cfg.max_fraction);
+    state
+}
+
 /// Multiplier applied to the per-step GPX4-inactivation drug effect: a
 /// persister resists covalent GPX4 knockdown. Returns `1.0` at `fraction == 0`
 /// or identity config (no attenuation) and `1 - gpx4_resistance` at full
@@ -255,6 +294,57 @@ mod tests {
     #[test]
     fn enabled_config_is_not_identity() {
         assert!(!enabled().is_identity());
+    }
+
+    #[test]
+    fn stress_entry_is_noop_by_default_and_raises_reversible_under_stress() {
+        // Off-by-default (`enabled()` keeps stress_entry_rate = 0): a no-op, so a
+        // consumer that has not opted in is byte-identical.
+        let off = enabled();
+        assert_eq!(off.stress_entry_rate, 0.0);
+        let s0 = PersisterState::ZERO;
+        assert_eq!(stress_entry(s0, 0.9, &off), s0);
+
+        // A stress-entry-only config (all drug rates zero, stress_entry on) is NOT
+        // identity, and a HIGH-stress niche drives more reversible persister entry
+        // than a LOW-stress one at the same (zero) drug.
+        let cfg = PersisterConfig {
+            stress_entry_rate: 0.05,
+            max_fraction: 0.8,
+            ..PersisterConfig::default()
+        };
+        assert!(
+            !cfg.is_identity(),
+            "a stress-entry-only config has an effect"
+        );
+        let run = |stress: f64| {
+            let mut st = PersisterState::ZERO;
+            for _ in 0..50 {
+                // Drug-driven step first (zero drug here ⇒ no drug acquisition),
+                // then the non-drug stress entry — the documented ordering.
+                st = step_with_locking(st, 0.0, &cfg);
+                st = stress_entry(st, stress, &cfg);
+            }
+            st
+        };
+        let hypoxic = run(0.9); // deep niche: 1 - o2_supply ≈ 0.9
+        let normoxic = run(0.1); // rim: 1 - o2_supply ≈ 0.1
+        assert!(
+            hypoxic.reversible > normoxic.reversible,
+            "stress entry must raise persister fraction more in the hypoxic niche: \
+             hypoxic={}, normoxic={}",
+            hypoxic.reversible,
+            normoxic.reversible
+        );
+        // Stress entry feeds the REVERSIBLE pool only — it never touches the
+        // locking EMA or the locked pool (stress drives entry, drug drives durability).
+        assert_eq!(hypoxic.locked, 0.0);
+        assert_eq!(hypoxic.cumulative_exposure, 0.0);
+        // Saturates at the cap, never exceeds it.
+        let saturated =
+            (0..100_000).fold(PersisterState::ZERO, |st, _| stress_entry(st, 1.0, &cfg));
+        assert!(saturated.reversible <= cfg.max_fraction + 1e-12);
+        assert!(saturated.reversible > 0.79);
     }
 
     #[test]

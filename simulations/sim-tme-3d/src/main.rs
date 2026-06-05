@@ -1444,6 +1444,16 @@ fn run_one_condition_full(
                             cumulative_exposure: gc.state.persister_cum_exposure,
                         };
                         let pstate = persister::step_with_locking(pstate, drug_intensity, pcfg);
+                        // #377: non-drug stress-niche entry. Hypoxic / nutrient-poor
+                        // drug-sanctuary zones drive persister entry INDEPENDENT of
+                        // drug; the stress signal is the local hypoxia deficit
+                        // (1 - o2_supply), the same per-cell O2 field that gates the
+                        // SDT exo-ROS (#336) and the Fenton substrate (#383). Applied
+                        // AFTER the drug step, it raises only the reversible pool (not
+                        // the locking EMA / resistance). `stress_entry_rate == 0`
+                        // (default) ⇒ no-op ⇒ byte-identical.
+                        let stress = (1.0 - o2_supply_for_exo[idx]).clamp(0.0, 1.0);
+                        let pstate = persister::stress_entry(pstate, stress, pcfg);
                         gc.state.persister_reversible = pstate.reversible;
                         gc.state.persister_locked = pstate.locked;
                         gc.state.persister_cum_exposure = pstate.cumulative_exposure;
@@ -4330,6 +4340,71 @@ mod tests {
     /// dose-schedule dependent, and this exercises its spatial sim-tme-3d wiring
     /// (`step_with_locking` per cell; the library dynamics are unit-tested in
     /// ferroptosis-core::persister). Under SUSTAINED (continuous) drug the
+    /// #377: non-drug stress-niche persister entry. Under Control (ZERO drug) on
+    /// an O2-gradient grid (which has a hypoxic core), enabling the stress-entry
+    /// term raises the OVERALL `persister_mean` above the stress-off baseline,
+    /// which stays exactly 0 (no drug ⇒ no drug-driven entry). The rise is
+    /// stress-driven and concentrated where `1 - o2_supply` is large (the hypoxic
+    /// core), but this test asserts on the overall mean, not a zone-resolved
+    /// split; the explicit hypoxic-vs-normoxic comparison (stress 0.9 vs 0.1) is
+    /// the library test `stress_entry_is_noop_by_default_and_raises_reversible_under_stress`.
+    /// This isolates the NON-DRUG entry route the issue adds. `stress_entry_rate
+    /// = 0` is the byte-identical default (the production matrix never enters the
+    /// persister path anyway, persister = None).
+    #[test]
+    fn stress_niche_drives_nondrug_persister_entry() {
+        let rcfg = RunConfig {
+            grid_dim: 24,
+            n_steps: 120,
+        };
+        let cond = Condition {
+            name: "stress_persister".to_string(),
+            treatment: Treatment::Control, // ZERO drug: isolates non-drug stress entry
+            treatment_name: "Control".to_string(),
+            o2_lambda: Some(ZONE_REF_LAMBDA), // O2 gradient ⇒ a hypoxic core
+            immune_on: false,
+            stromal_on: false,
+            ph_on: false,
+            dose_schedule: DoseSchedule::Constant,
+        };
+        let run = |pcfg: PersisterConfig| {
+            run_one_condition_full(
+                &cond,
+                rcfg,
+                None,
+                Overrides {
+                    persister: Some(pcfg),
+                    ..Default::default()
+                },
+            )
+            .persister_mean
+            .unwrap_or(0.0)
+        };
+        let off = PersisterConfig::enabled(); // stress_entry_rate = 0
+        let on = PersisterConfig {
+            stress_entry_rate: 0.05,
+            ..PersisterConfig::enabled()
+        };
+        let pm_off = run(off);
+        let pm_on = run(on);
+        // No drug + stress off ⇒ persister fraction stays exactly 0.
+        assert_eq!(
+            pm_off, 0.0,
+            "no-drug, stress-off persister fraction must be 0; got {pm_off}"
+        );
+        // Stress entry drives non-drug persister entry in the hypoxic zones.
+        assert!(
+            pm_on > pm_off,
+            "stress entry must raise the non-drug persister fraction: on={pm_on}, off={pm_off}"
+        );
+        assert!(
+            pm_on > 0.001,
+            "stress-driven persister fraction should be observable: {pm_on}"
+        );
+        // Deterministic (the stress signal is the geometric O2 field).
+        assert_eq!(pm_on, run(on));
+    }
+
     /// per-cell sustained-exposure EMA crosses `lock_threshold` and a fraction of
     /// the persister pool ratchets into the non-reverting `locked` sub-pool;
     /// under INTERMITTENT dosing the EMA decays in the drug-off gaps and never
