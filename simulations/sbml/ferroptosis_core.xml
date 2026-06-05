@@ -1,0 +1,262 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created by libAntimony version v3.1.3 with libSBML version 5.21.1. -->
+<sbml xmlns="http://www.sbml.org/sbml/level3/version2/core" level="3" version="2">
+  <model metaid="ferroptosis_core_single_cell" id="ferroptosis_core_single_cell">
+    <listOfCompartments>
+      <compartment sboTerm="SBO:0000410" id="default_compartment" spatialDimensions="3" size="1" constant="true"/>
+    </listOfCompartments>
+    <listOfSpecies>
+      <species id="LP" compartment="default_compartment" initialConcentration="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
+      <species id="GSH" compartment="default_compartment" initialConcentration="4" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
+      <species id="GPX4" compartment="default_compartment" initialConcentration="0.08" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
+    </listOfSpecies>
+    <listOfParameters>
+      <parameter id="total_ros" value="0.556" constant="true"/>
+      <parameter id="eff_unsat" value="1.6" constant="true"/>
+      <parameter id="fsp1" value="1" constant="true"/>
+      <parameter id="nrf2" value="1.2" constant="true"/>
+      <parameter id="gsh_km" value="2" constant="true"/>
+      <parameter id="gsh_scav_efficiency" value="0.5" constant="true"/>
+      <parameter id="nrf2_gsh_rate" value="0.025" constant="true"/>
+      <parameter id="gsh_max" value="12" constant="true"/>
+      <parameter id="lp_rate" value="0.06" constant="true"/>
+      <parameter id="lp_propagation" value="0.1" constant="true"/>
+      <parameter id="gpx4_rate" value="0.3" constant="true"/>
+      <parameter id="fsp1_rate" value="0.08" constant="true"/>
+      <parameter id="gpx4_degradation_by_ros" value="0.002" constant="true"/>
+      <parameter id="gpx4_nrf2_upregulation" value="0.008" constant="true"/>
+      <parameter id="gpx4_nrf2_target" constant="true"/>
+      <parameter id="scavenged" constant="false"/>
+      <parameter id="deficit" constant="false"/>
+      <parameter id="unscav" constant="false"/>
+      <parameter id="quench" constant="false"/>
+      <parameter id="prop_rate" constant="false"/>
+      <parameter id="lp_gen" constant="false"/>
+      <parameter id="lp_repair" constant="false"/>
+    </listOfParameters>
+    <listOfInitialAssignments>
+      <initialAssignment symbol="gpx4_nrf2_target">
+        <math xmlns="http://www.w3.org/1998/Math/MathML">
+          <apply>
+            <times/>
+            <ci> nrf2 </ci>
+            <cn type="integer"> 1 </cn>
+          </apply>
+        </math>
+      </initialAssignment>
+    </listOfInitialAssignments>
+    <listOfRules>
+      <rateRule variable="LP">
+        <math xmlns="http://www.w3.org/1998/Math/MathML">
+          <apply>
+            <minus/>
+            <ci> lp_gen </ci>
+            <ci> lp_repair </ci>
+          </apply>
+        </math>
+      </rateRule>
+      <rateRule variable="GSH">
+        <math xmlns="http://www.w3.org/1998/Math/MathML">
+          <apply>
+            <plus/>
+            <apply>
+              <times/>
+              <apply>
+                <minus/>
+                <ci> scavenged </ci>
+              </apply>
+              <cn> 0.5 </cn>
+            </apply>
+            <apply>
+              <times/>
+              <ci> nrf2 </ci>
+              <ci> nrf2_gsh_rate </ci>
+              <ci> deficit </ci>
+            </apply>
+          </apply>
+        </math>
+      </rateRule>
+      <rateRule variable="GPX4">
+        <math xmlns="http://www.w3.org/1998/Math/MathML">
+          <apply>
+            <plus/>
+            <apply>
+              <times/>
+              <apply>
+                <minus/>
+                <ci> gpx4_degradation_by_ros </ci>
+              </apply>
+              <apply>
+                <max/>
+                <cn type="integer"> 0 </cn>
+                <apply>
+                  <minus/>
+                  <ci> total_ros </ci>
+                  <cn type="integer"> 1 </cn>
+                </apply>
+              </apply>
+            </apply>
+            <apply>
+              <times/>
+              <ci> gpx4_nrf2_upregulation </ci>
+              <apply>
+                <minus/>
+                <ci> gpx4_nrf2_target </ci>
+                <ci> GPX4 </ci>
+              </apply>
+            </apply>
+          </apply>
+        </math>
+      </rateRule>
+      <assignmentRule variable="scavenged">
+        <math xmlns="http://www.w3.org/1998/Math/MathML">
+          <apply>
+            <times/>
+            <ci> total_ros </ci>
+            <ci> gsh_scav_efficiency </ci>
+            <apply>
+              <divide/>
+              <ci> GSH </ci>
+              <apply>
+                <plus/>
+                <ci> GSH </ci>
+                <ci> gsh_km </ci>
+              </apply>
+            </apply>
+          </apply>
+        </math>
+      </assignmentRule>
+      <assignmentRule variable="deficit">
+        <math xmlns="http://www.w3.org/1998/Math/MathML">
+          <apply>
+            <max/>
+            <cn type="integer"> 0 </cn>
+            <apply>
+              <divide/>
+              <apply>
+                <minus/>
+                <ci> gsh_max </ci>
+                <ci> GSH </ci>
+              </apply>
+              <ci> gsh_max </ci>
+            </apply>
+          </apply>
+        </math>
+      </assignmentRule>
+      <assignmentRule variable="unscav">
+        <math xmlns="http://www.w3.org/1998/Math/MathML">
+          <apply>
+            <max/>
+            <cn type="integer"> 0 </cn>
+            <apply>
+              <minus/>
+              <ci> total_ros </ci>
+              <ci> scavenged </ci>
+            </apply>
+          </apply>
+        </math>
+      </assignmentRule>
+      <assignmentRule variable="quench">
+        <math xmlns="http://www.w3.org/1998/Math/MathML">
+          <apply>
+            <plus/>
+            <apply>
+              <times/>
+              <ci> GPX4 </ci>
+              <apply>
+                <divide/>
+                <ci> GSH </ci>
+                <apply>
+                  <plus/>
+                  <ci> GSH </ci>
+                  <cn> 0.5 </cn>
+                </apply>
+              </apply>
+            </apply>
+            <ci> fsp1 </ci>
+          </apply>
+        </math>
+      </assignmentRule>
+      <assignmentRule variable="prop_rate">
+        <math xmlns="http://www.w3.org/1998/Math/MathML">
+          <apply>
+            <divide/>
+            <ci> lp_propagation </ci>
+            <apply>
+              <plus/>
+              <cn type="integer"> 1 </cn>
+              <apply>
+                <times/>
+                <ci> quench </ci>
+                <cn type="integer"> 5 </cn>
+              </apply>
+            </apply>
+          </apply>
+        </math>
+      </assignmentRule>
+      <assignmentRule variable="lp_gen">
+        <math xmlns="http://www.w3.org/1998/Math/MathML">
+          <apply>
+            <plus/>
+            <apply>
+              <times/>
+              <ci> unscav </ci>
+              <ci> eff_unsat </ci>
+              <ci> lp_rate </ci>
+            </apply>
+            <apply>
+              <times/>
+              <ci> LP </ci>
+              <ci> eff_unsat </ci>
+              <ci> prop_rate </ci>
+            </apply>
+          </apply>
+        </math>
+      </assignmentRule>
+      <assignmentRule variable="lp_repair">
+        <math xmlns="http://www.w3.org/1998/Math/MathML">
+          <apply>
+            <plus/>
+            <apply>
+              <times/>
+              <ci> GPX4 </ci>
+              <apply>
+                <divide/>
+                <ci> GSH </ci>
+                <apply>
+                  <plus/>
+                  <ci> GSH </ci>
+                  <cn type="integer"> 1 </cn>
+                </apply>
+              </apply>
+              <ci> gpx4_rate </ci>
+              <apply>
+                <divide/>
+                <ci> LP </ci>
+                <apply>
+                  <plus/>
+                  <ci> LP </ci>
+                  <cn> 0.5 </cn>
+                </apply>
+              </apply>
+            </apply>
+            <apply>
+              <times/>
+              <ci> fsp1 </ci>
+              <ci> fsp1_rate </ci>
+              <apply>
+                <divide/>
+                <ci> LP </ci>
+                <apply>
+                  <plus/>
+                  <ci> LP </ci>
+                  <cn> 0.5 </cn>
+                </apply>
+              </apply>
+            </apply>
+          </apply>
+        </math>
+      </assignmentRule>
+    </listOfRules>
+  </model>
+</sbml>
