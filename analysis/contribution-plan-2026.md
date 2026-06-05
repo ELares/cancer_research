@@ -78,7 +78,8 @@ falsifiable predictions, with their pre-stated falsification criteria, BEFORE
 fitting any layer to external data. Each is a *directional* prediction; the
 preregistration locks in the direction and the rough magnitude so that a later
 calibration cannot quietly move the goalposts. Sources are the manuscript's
-Chapter 9 prediction/falsification pairs.
+prediction/falsification pairs (the boxes live in Chapters 6 and 7; Chapter 9
+organizes them into the falsification roadmap).
 
 | # | Prediction (directional) | Pre-stated falsification |
 |---|---|---|
@@ -102,8 +103,10 @@ successes.
 The cheapest wet-lab experiments that would validate or falsify the headline
 predictions. Ordered by cost/accessibility. Each lists the model's prediction,
 the measurement, and the falsifying outcome, so a collaborator can run one in
-isolation. (These map to the manuscript Chapter 9 "How to test this prediction"
-boxes.)
+isolation. (These map to the manuscript's "How to test this prediction" boxes in
+Chapters 6 and 7.) The brief covers P1 and P3 through P7; P2's depth-penetration
+leg is folded into E1's confocal depth-sectioning (and is the standalone spheroid
+proposal in manuscript Section 6.1), so it has no separate experiment here.
 
 ### E1. Spheroid RSL3 vs SDT kill at measured hypoxia (tests P4, the keystone)
 
