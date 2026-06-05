@@ -404,9 +404,11 @@ mod tests {
         // peak LP reached (deterministic given the seed). A higher backup rate
         // must lower the LP the cell reaches.
         fn peak_lp(dhodh: f64, gch1: f64) -> f64 {
-            let mut p = Params::default();
-            p.dhodh_rate = dhodh;
-            p.gch1_rate = gch1;
+            let p = Params {
+                dhodh_rate: dhodh,
+                gch1_rate: gch1,
+                ..Params::default()
+            };
             // A modest basal ROS so RSL3 (GPX4 inhibition) can drive LP without
             // a hypoxic collapse.
             let mut gen_rng = StdRng::seed_from_u64(42);
