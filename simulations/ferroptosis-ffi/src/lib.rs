@@ -133,6 +133,9 @@ fn ferro_params_to_params(fp: &FerroParams) -> Params {
         scd_mufa_rate: fp.scd_mufa_rate,
         scd_mufa_max: fp.scd_mufa_max,
         initial_mufa_protection: fp.initial_mufa_protection,
+        // Acute-MUFA kinetics (#339) is off by default and not part of the C
+        // ABI (FerroParams is unchanged), so it maps to None here.
+        mufa_acute_start: None,
         scd_mufa_decay: fp.scd_mufa_decay,
         gpx4_degradation_by_ros: fp.gpx4_degradation_by_ros,
         gpx4_nrf2_upregulation: fp.gpx4_nrf2_upregulation,
