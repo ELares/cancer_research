@@ -223,14 +223,19 @@ pub fn step_with_locking(
 ///
 /// The classic drug-tolerant-persister biology has a second, non-drug entry
 /// route: hypoxic / nutrient-poor microenvironments drive cells into a
-/// slow-cycling, drug-tolerant persister state independent of drug. `stress` ∈
-/// [0, 1] is the local stress signal (e.g. `1 - o2_supply`, the hypoxia deficit).
+/// slow-cycling, drug-tolerant persister state independent of drug (e.g. the
+/// HIF1α-driven slow-cycling chemoresistant phenotype, Cuesta-Borràs et al.,
+/// Cell Rep 2023, PMID 37537841). `stress` ∈ [0, 1] is the local stress signal
+/// (e.g. `1 - o2_supply`, the hypoxia deficit). The direction is the result; the
+/// rate is an uncalibrated placeholder.
 ///
 /// The increment goes into the REVERSIBLE pool only — a stress-niche persister
 /// reverts when the niche resolves (via the next [`step_with_locking`]'s
-/// reversion) — so this does NOT feed the locking EMA (#342) or the drug-driven
-/// resistance: **stress drives ENTRY, drug drives durability**. Logistic, so it
-/// saturates at `cfg.max_fraction`:
+/// reversion, *provided* `reversion_rate > 0`, as in [`PersisterConfig::enabled`];
+/// it can still be locked later by SUSTAINED DRUG, never by stress) — so this
+/// does NOT feed the locking EMA (#342) or the drug-driven resistance: **stress
+/// drives ENTRY, drug drives durability**. Logistic, so it saturates at
+/// `cfg.max_fraction`:
 ///
 /// `reversible += stress_entry_rate · stress · (max_fraction − reversible)`
 ///

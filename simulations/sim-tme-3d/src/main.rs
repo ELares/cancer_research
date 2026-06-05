@@ -4341,12 +4341,16 @@ mod tests {
     /// (`step_with_locking` per cell; the library dynamics are unit-tested in
     /// ferroptosis-core::persister). Under SUSTAINED (continuous) drug the
     /// #377: non-drug stress-niche persister entry. Under Control (ZERO drug) on
-    /// an O2-gradient grid, enabling the stress-entry term raises the persister
-    /// fraction (driven by the hypoxic zones, where `1 - o2_supply` is large)
-    /// above the stress-off baseline, which stays exactly 0 (no drug ⇒ no
-    /// drug-driven entry). This isolates the NON-DRUG entry route the issue adds.
-    /// `stress_entry_rate = 0` is the byte-identical default (the production matrix
-    /// never enters the persister path anyway, persister = None).
+    /// an O2-gradient grid (which has a hypoxic core), enabling the stress-entry
+    /// term raises the OVERALL `persister_mean` above the stress-off baseline,
+    /// which stays exactly 0 (no drug ⇒ no drug-driven entry). The rise is
+    /// stress-driven and concentrated where `1 - o2_supply` is large (the hypoxic
+    /// core), but this test asserts on the overall mean, not a zone-resolved
+    /// split; the explicit hypoxic-vs-normoxic comparison (stress 0.9 vs 0.1) is
+    /// the library test `stress_entry_is_noop_by_default_and_raises_reversible_under_stress`.
+    /// This isolates the NON-DRUG entry route the issue adds. `stress_entry_rate
+    /// = 0` is the byte-identical default (the production matrix never enters the
+    /// persister path anyway, persister = None).
     #[test]
     fn stress_niche_drives_nondrug_persister_entry() {
         let rcfg = RunConfig {

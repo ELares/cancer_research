@@ -594,7 +594,9 @@ pub struct PersisterConfig {
     /// persister biology has a second, NON-DRUG entry route: hypoxic /
     /// nutrient-poor drug-sanctuary microenvironments drive cells into a
     /// slow-cycling, drug-tolerant persister state independent of drug exposure
-    /// (hypoxia-induced drug tolerance; quiescent perivascular/hypoxic niches).
+    /// (hypoxia-induced drug tolerance, e.g. the HIF1α-driven slow-cycling
+    /// chemoresistant phenotype, Cuesta-Borràs et al. Cell Rep 2023 PMID 37537841;
+    /// quiescent perivascular/hypoxic niches).
     /// This term is DECOUPLED from `drug_intensity`: a consumer applies
     /// [`crate::persister::stress_entry`] with a local stress signal (e.g.
     /// `1 - o2_supply`), which raises the REVERSIBLE pool only (a stress-niche
