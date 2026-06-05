@@ -34,7 +34,22 @@ import numpy as np
 
 REPO = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO / "simulations" / "ferroptosis-python"))
-import ferroptosis_core as fc  # noqa: E402
+
+# The compiled `ferroptosis_core` extension is imported LAZILY so the pure-numpy
+# estimator (`sobol_indices`) and its Ishigami validation can run without it (the
+# Python CI does not build the extension). Only the model-specific functions need
+# it; they call `_fc()`.
+_FC = None
+
+
+def _fc():
+    global _FC
+    if _FC is None:
+        import ferroptosis_core
+
+        _FC = ferroptosis_core
+    return _FC
+
 
 REPORT = REPO / "analysis" / "sobol-sensitivity-report.md"
 PROVENANCE = REPO / "simulations" / "calibration" / "parameter_provenance.md"
@@ -71,7 +86,7 @@ def evaluate(sample_rows, defaults):
     for i, row in enumerate(sample_rows):
         overrides = {n: float(defaults[n] * row[j]) for j, n in enumerate(names)}
         # death_threshold default is ~10, range is multiplicative too (5..15).
-        res = fc.sim_batch(PHENOTYPE, TREATMENT, n=N_CELLS, seed=SIM_SEED, **overrides)
+        res = _fc().sim_batch(PHENOTYPE, TREATMENT, n=N_CELLS, seed=SIM_SEED, **overrides)
         out[i] = res["death_rate"]
     return out
 
@@ -118,7 +133,7 @@ def saltelli_indices(defaults, n_base=N_BASE):
 
 
 def main():
-    defaults = fc.default_params()
+    defaults = _fc().default_params()
     s1, st, var, ymean = saltelli_indices(defaults)
     names = [p[0] for p in PARAMS]
 

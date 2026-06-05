@@ -10,6 +10,7 @@ import importlib.util
 from pathlib import Path
 
 import numpy as np
+import pytest
 
 REPO = Path(__file__).resolve().parent.parent
 SPEC = importlib.util.spec_from_file_location(
@@ -57,8 +58,12 @@ def test_estimator_invariants():
 
 def test_lp_propagation_drives_the_ferroptosis_switch():
     """Small binding-based run: the autocatalytic propagation rate dominates the
-    kill switch, and the ROS-driven GPX4 degradation is kill-rate-insensitive."""
-    defaults = sob.fc.default_params()
+    kill switch, and the ROS-driven GPX4 degradation is kill-rate-insensitive.
+    Skipped where the compiled `ferroptosis_core` extension is not built (the
+    Python CI does not build it; the estimator math is covered by the Ishigami
+    test, which needs no binding)."""
+    pytest.importorskip("ferroptosis_core")
+    defaults = sob._fc().default_params()
     s1, st, _, _ = sob.saltelli_indices(defaults, n_base=256)
     names = [p[0] for p in sob.PARAMS]
     rank = {n: st[i] for i, n in enumerate(names)}
