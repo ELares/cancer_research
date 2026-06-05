@@ -71,6 +71,19 @@ pub struct Params {
     /// state. When SCD1 is inhibited (rate=0), decay gradually depletes
     /// existing membrane MUFA. Membrane lipid half-life ~24-48h.
     pub scd_mufa_decay: f64,
+    /// Ether-linked PUFA pool as a fraction of the base PUFA substrate (#339).
+    /// Polyunsaturated ether phospholipids (ether-PUFA-PE, made via FAR1/AGPS +
+    /// the peroxisomal ether-lipid pathway) are an extra pool of oxidizable
+    /// membrane lipid that PROMOTES ferroptosis (Zou 2020 Nature PMID 32939090;
+    /// Cui 2021 Cell Death Differ PMID 33731874). The peroxidizable PUFA term is
+    /// scaled by `1 + ether_pufa_fraction`, so enabling it raises lipid-peroxide
+    /// accumulation; the `0` limit is the FAR1/AGPS-null escape (ether-lipid
+    /// loss confers resistance). `0.0` (default) ⇒ ×1.0 ⇒ byte-identical;
+    /// uncalibrated, direction-anchored. The plasmalogen/TMEM189 vinyl-ether
+    /// sub-step is deliberately not modeled (contested sign; see
+    /// `ether_augmented_pufa`).
+    #[serde(default)]
+    pub ether_pufa_fraction: f64,
 
     // === GPX4 Dynamic Regulation ===
     pub gpx4_degradation_by_ros: f64,
@@ -119,6 +132,7 @@ impl Default for Params {
             initial_mufa_protection: 0.0,
             mufa_acute_start: None,
             scd_mufa_decay: 0.0,
+            ether_pufa_fraction: 0.0,
             gpx4_degradation_by_ros: 0.002,
             gpx4_nrf2_upregulation: 0.008,
             sdt_ros: 5.0,
