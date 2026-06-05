@@ -69,7 +69,7 @@ use ferroptosis_core::immune_spatial::{
     CheckpointPanel, DcSubsetConfig, SuppressorConfig, DAMP_KILL_THRESHOLD,
 };
 use ferroptosis_core::nutrient::{apply_nutrient_stress_3d, NutrientConfig};
-use ferroptosis_core::oxygen::{o2_dependent_exo_factor, radial_o2_field};
+use ferroptosis_core::oxygen::{hypoxia_iron_factor, o2_dependent_exo_factor, radial_o2_field};
 use ferroptosis_core::params::{
     Params, PersisterConfig, PhConfig, SpatialImmuneConfig, SpatialParams, StromalConfig,
 };
@@ -463,6 +463,16 @@ struct Overrides {
     /// == 0`) ⇒ no senescent cells, no per-cell perturbation, no SASP→immune
     /// coupling ⇒ byte-identical.
     senescence: Option<SenescenceConfig>,
+    /// NCOA4-ferritinophagy labile-iron release (#365): the time-dependent
+    /// `biochem::ferritinophagy_iron_factor` ramp, consumed inside `sim_cell_step`
+    /// via `Params.ferritinophagy_release`. `0.0` (default) ⇒ factor exactly 1.0
+    /// every step ⇒ byte-identical.
+    ferritinophagy_release: f64,
+    /// Hypoxia-driven iron-import sensitivity (#365): `oxygen::hypoxia_iron_factor`
+    /// scales each tumor cell's static `iron` UP where local O2 is low (HIF/TfR1),
+    /// so the Fenton substrate rises in hypoxic zones even as the O2-dependent SDT
+    /// yield (#336) falls. `0.0` (default) ⇒ factor 1.0 ⇒ byte-identical.
+    hypoxia_iron_sensitivity: f64,
     /// Oxygen-dependent SDT/PDT exo-ROS yield (#336): the "Type II fraction" of
     /// the exogenous ROS that scales with local O2. `0.0` (default) ⇒ fully
     /// O2-independent (the historical optimistic upper bound) ⇒ the exo-ROS
@@ -522,6 +532,11 @@ fn run_one_condition_full(
     // Therapy-induced senescence (#341). `None`/identity ⇒ no cells marked, no
     // perturbation, no SASP coupling ⇒ byte-identical.
     let senescence_cfg = overrides.senescence.filter(|c| !c.is_identity());
+    // Dynamic-iron knobs (#365). Both `0.0` (matrix path) ⇒ inert ⇒ byte-identical:
+    // `ferritinophagy_release` ⇒ `ferritinophagy_iron_factor` returns 1.0 every
+    // step; `hypoxia_iron_sensitivity` ⇒ `hypoxia_iron_factor` returns 1.0.
+    let ferritinophagy_release = overrides.ferritinophagy_release;
+    let hypoxia_iron_sensitivity = overrides.hypoxia_iron_sensitivity;
     // Oxygen-dependent SDT/PDT exo-ROS (#336). `0.0` (default/matrix) ⇒ the
     // exo-ROS O2 factor is exactly 1.0 ⇒ byte-identical.
     let sdt_o2_dependence = overrides.sdt_o2_dependence;
@@ -556,11 +571,15 @@ fn run_one_condition_full(
     // 3D spheroid context (#197): partially-active MUFA so position-dependent
     // per-cell MUFA persists. `None` (matrix path) ⇒ `Params::default()` ⇒
     // byte-identical.
-    let params = if spheroid_cfg.is_some() {
+    let mut params = if spheroid_cfg.is_some() {
         Params::spheroid()
     } else {
         Params::default()
     };
+    // #365: NCOA4-ferritinophagy labile-iron release ramp. `0.0` (matrix) ⇒
+    // `ferritinophagy_iron_factor` is exactly 1.0 for every step ⇒ byte-identical;
+    // `ferritinophagy_tau` keeps its default. Consumed inside `sim_cell_step`.
+    params.ferritinophagy_release = ferritinophagy_release;
     let spatial_params = SpatialParams {
         cell_size_um: CELL_SIZE_UM,
         // SpatialParams::default()'s `neighbor_iron_fraction = 0.1` is
@@ -753,6 +772,24 @@ fn run_one_condition_full(
             if grid.cells[idx].is_tumor {
                 grid.cells[idx].cell.basal_ros *= factor;
                 o2_supply_for_exo[idx] = factor;
+            }
+        }
+    }
+
+    // --- Hypoxia-driven iron import (#365) ---
+    // HIF/TfR1 raise the labile-iron pool where O2 is low, so scale each tumor
+    // cell's static `iron` UP by `hypoxia_iron_factor(local_o2, sensitivity)`
+    // using the same per-cell O2 supply that gates the SDT exo-ROS (#336). This
+    // is the spatial counterweight to the O2-dependent SDT collapse: hypoxia can
+    // RAISE the Fenton iron substrate even as it lowers the Type II exo-ROS yield,
+    // qualifying the §7.1 "hypoxia uniformly protects RSL3" framing. `sensitivity
+    // == 0` (matrix path) ⇒ factor 1.0 ⇒ `cell.iron` unchanged ⇒ byte-identical.
+    // Composes multiplicatively with the pH iron-release below (order immaterial).
+    if hypoxia_iron_sensitivity > 0.0 {
+        for (idx, gc) in grid.cells.iter_mut().enumerate() {
+            if gc.is_tumor {
+                gc.cell.iron *=
+                    hypoxia_iron_factor(o2_supply_for_exo[idx], hypoxia_iron_sensitivity);
             }
         }
     }
@@ -4126,6 +4163,83 @@ mod tests {
             run(&continuous, lock_cfg).persister_locked_mean.unwrap(),
             "locking is deterministic"
         );
+    }
+
+    /// #365: wiring the NCOA4-ferritinophagy ramp (#338/#340) + hypoxia-driven
+    /// iron import (#340) into the spatial model RAISES the Fenton-iron
+    /// contribution to RSL3 ferroptosis, qualifying the §7.1 "hypoxia uniformly
+    /// protects RSL3" framing. Both knobs `0.0` ⇒ byte-identical to the
+    /// no-override run. With them on, RSL3 kill rises several-fold, and the rise
+    /// reaches the DEEP hypoxic core too, not only the oxygenated rim. That
+    /// deep-core rescue is a MODEL ARTIFACT (flagged in §7.1): the model's Fenton
+    /// ROS term is O2-independent (`iron × fenton_rate`, added to total ROS
+    /// independently of basal ROS; the model modulates only `basal_ros`, NOT the
+    /// Fenton rate), so the iron boost, largest where O2 is lowest, raises core
+    /// Fenton ROS regardless of anoxia. A real anoxic core would also lose its
+    /// superoxide/SOD-derived H2O2 substrate, which the model does not couple to
+    /// O2, so the model OVERSTATES the deep-core rescue; the robust result is the
+    /// direction, not the deep-core magnitude. This pins the §7.1 headline config
+    /// (grid 60, λ=50 µm, 180 steps, both knobs at 2.0).
+    #[test]
+    fn hypoxia_iron_raises_rsl3_kill_including_the_deep_core() {
+        let cfg = RunConfig {
+            grid_dim: 60,
+            n_steps: 180,
+        };
+        let cond = Condition {
+            name: "rsl3_dyn_iron".to_string(),
+            treatment: Treatment::RSL3,
+            treatment_name: "RSL3".to_string(),
+            o2_lambda: Some(50.0),
+            immune_on: false,
+            stromal_on: false,
+            ph_on: false,
+            dose_schedule: DoseSchedule::Constant,
+        };
+        let run = |fer: f64, hyp: f64| {
+            run_one_condition_full(
+                &cond,
+                cfg,
+                None,
+                Overrides {
+                    ferritinophagy_release: fer,
+                    hypoxia_iron_sensitivity: hyp,
+                    ..Default::default()
+                },
+            )
+        };
+        let base = run(0.0, 0.0);
+        // Knob-off identity: both 0.0 reproduces the no-override run exactly.
+        let plain = run_one_condition_with_config(&cond, cfg, None);
+        assert_eq!(
+            base.overall_kill_rate, plain.overall_kill_rate,
+            "ferritinophagy_release=0 + hypoxia_iron_sensitivity=0 must be byte-identical"
+        );
+        let both = run(2.0, 2.0); // the §7.1 headline knob values
+        assert!(
+            base.overall_kill_rate > 0.0,
+            "RSL3 must produce some baseline kill to amplify; got {}",
+            base.overall_kill_rate
+        );
+        // Overall kill rises several-fold (the §7.1 headline ~0.5% → ~2.9%).
+        assert!(
+            both.overall_kill_rate > base.overall_kill_rate * 3.0,
+            "dynamic iron must materially raise overall RSL3 kill: base={:.4}, both={:.4}",
+            base.overall_kill_rate,
+            both.overall_kill_rate
+        );
+        // The DEEP hypoxic-zone kill rises from ~0 (the §7.1 headline 0% → ~1.3%):
+        // the model's O2-independent Fenton means the iron boost rescues the core
+        // (a model artifact, since a real anoxic core would lose its H2O2 source).
+        assert!(
+            both.hypoxic_kill_rate > base.hypoxic_kill_rate + 0.005,
+            "the deep hypoxic core is rescued in the model (O2-independent Fenton): \
+             base={:.4}, both={:.4}",
+            base.hypoxic_kill_rate,
+            both.hypoxic_kill_rate
+        );
+        // Deterministic (the iron scaling is a one-time geometric setup mutation).
+        assert_eq!(both.overall_kill_rate, run(2.0, 2.0).overall_kill_rate);
     }
 
     // ===== T-cell exhaustion (#243, Phase 1) =====
