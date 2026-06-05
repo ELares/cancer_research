@@ -76,6 +76,9 @@ use ferroptosis_core::params::{
 use ferroptosis_core::persister;
 use ferroptosis_core::ph::{ion_trap_factor_from_ph, iron_multiplier_from_ph, radial_ph_field};
 use ferroptosis_core::physics::local_ros_multiplier_3d;
+use ferroptosis_core::senescence::{
+    apply_senescence_program_3d, sasp_immune_multiplier, SenescenceConfig,
+};
 use ferroptosis_core::slab::{
     apply_depth_graded_cells_3d, scale_interpretation, slab_supply_field, SlabConfig,
     SlabPhenotypeConfig, KROGH_LAMBDA_UM,
@@ -129,6 +132,10 @@ const SUPPRESSOR_SEED: u64 = 0x5099_2e64;
 /// and `SPHEROID_SEED` never coexist in one run; a dedicated constant keeps the
 /// invariant explicit and future-proof if that exclusion is ever relaxed.
 const SLAB_PHENOTYPE_SEED: u64 = 0x51ab_0142;
+/// Independent seed for therapy-induced-senescence cell marking (#341).
+/// Distinct from the others so senescence marking never touches the matrix or
+/// other realism-layer RNG streams.
+const SENESCENCE_SEED: u64 = 0x5e4e_0341;
 /// O2-supply factor below which a cell counts as hypoxic for
 /// `vascular_hypoxic_fraction` reporting (#191). `exp(-d/λ) < 0.1` is ~2.3 λ
 /// from the nearest vessel.
@@ -254,6 +261,11 @@ struct ConditionResult {
     /// checkpoint panel override is supplied — the single-PD-1 path leaves it off.
     #[serde(skip_serializing_if = "Option::is_none")]
     checkpoint_brake: Option<f64>,
+    /// Fraction of tumor cells driven into the therapy-induced-senescence
+    /// program (#341), end-of-run. `None` (field omitted) unless the senescence
+    /// layer is enabled — byte-identical default path.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    senescent_fraction: Option<f64>,
 }
 
 /// Per-subclone kill statistics for one condition (#242). Lets the analysis
@@ -437,6 +449,10 @@ struct Overrides {
     /// Dendritic-cell subset mix (#264 Phase 4). `None` / balanced ⇒ priming
     /// efficiency 1.0 ⇒ no immune-kill modulation ⇒ byte-identical.
     dc_subsets: Option<DcSubsetConfig>,
+    /// Therapy-induced senescence program (#341). `None` / identity (`fraction
+    /// == 0`) ⇒ no senescent cells, no per-cell perturbation, no SASP→immune
+    /// coupling ⇒ byte-identical.
+    senescence: Option<SenescenceConfig>,
     /// Oxygen-dependent SDT/PDT exo-ROS yield (#336): the "Type II fraction" of
     /// the exogenous ROS that scales with local O2. `0.0` (default) ⇒ fully
     /// O2-independent (the historical optimistic upper bound) ⇒ the exo-ROS
@@ -493,6 +509,9 @@ fn run_one_condition_full(
     let contact_cfg = overrides.contact;
     let nutrient_cfg = overrides.nutrient;
     let dc_subsets_cfg = overrides.dc_subsets;
+    // Therapy-induced senescence (#341). `None`/identity ⇒ no cells marked, no
+    // perturbation, no SASP coupling ⇒ byte-identical.
+    let senescence_cfg = overrides.senescence.filter(|c| !c.is_identity());
     // Oxygen-dependent SDT/PDT exo-ROS (#336). `0.0` (default/matrix) ⇒ the
     // exo-ROS O2 factor is exactly 1.0 ⇒ byte-identical.
     let sdt_o2_dependence = overrides.sdt_o2_dependence;
@@ -930,6 +949,17 @@ fn run_one_condition_full(
         apply_nutrient_stress_3d(&mut grid, cfg);
     }
 
+    // Therapy-induced senescence (#341): mark a `fraction` of tumor cells
+    // senescent (independent RNG, matrix-untouched) and apply the multi-axis
+    // biochem perturbation (iron + gpx4 + nrf2 + fsp1). The returned per-cell
+    // mask drives both the SASP→immune coupling in the kill loop and the
+    // `senescent_fraction` report. Runs after nutrient so its per-cell axes
+    // compose with the earlier durable layers. Off-by-default identity ⇒
+    // byte-identical (the mask is all-false / unused and `apply_*` is a no-op).
+    let senescence_mask: Option<Vec<bool>> = senescence_cfg
+        .as_ref()
+        .map(|cfg| apply_senescence_program_3d(&mut grid, cfg, SENESCENCE_SEED));
+
     // pH-dependent RSL3 ion trapping correction (consumer-side, same pattern
     // as sim-tme). This is the CONSTANT-schedule path: it corrects the
     // one-shot init knockdown for spatial drug availability. For a non-constant
@@ -1058,10 +1088,23 @@ fn run_one_condition_full(
     let ferro_immuno_strength = immune_cfg.ferro_immunosuppression_strength;
     let ferro_immuno_on = condition.immune_on && ferro_immuno_strength > 0.0;
 
+    // Therapy-induced-senescence SASP→immune coupling (#341): a signed per-cell
+    // multiplier on a senescent cell's immune-kill probability — `> 1` is
+    // anti-tumor senescence immune surveillance (Kang 2011 PMID 22080947), `< 1`
+    // is immunosuppressive SASP that blunts clearance (Di Mitri 2014 PMID
+    // 25156255). Gated on `immune_on` (it only modulates the immune kill loop),
+    // a populated senescence mask, AND a non-identity multiplier; senescence-off
+    // or `mult == 1.0` ⇒ no coupling ⇒ byte-identical. The slice is empty (never
+    // indexed) unless `sasp_on`.
+    let sasp_immune_mult = senescence_cfg.map_or(1.0, |c| c.sasp_immune_mult);
+    let sasp_on = condition.immune_on && senescence_mask.is_some() && sasp_immune_mult != 1.0;
+    let senescence_mask_slice: &[bool] = senescence_mask.as_deref().unwrap_or(&[]);
+
     // The rich kill path handles any realism layer (each factor is identity when
     // its layer is off); the default allocation-free path runs only when ALL are
     // off, staying byte-identical to pre-#243.
-    let realism_kill_path = exhaustion_on || suppressor_on || dc_subsets_on || ferro_immuno_on;
+    let realism_kill_path =
+        exhaustion_on || suppressor_on || dc_subsets_on || ferro_immuno_on || sasp_on;
 
     // Hoisted out of the per-cell hot loop (these invariants don't vary by
     // cell or step): on the dosed path the relevant availability vec must be
@@ -1367,6 +1410,15 @@ fn run_one_condition_full(
                             } else {
                                 1.0
                             };
+                            // SASP→immune coupling (#341): for a senescent cell,
+                            // a signed multiplier on its immune-kill probability
+                            // (surveillance > 1 / immunosuppression < 1); 1.0 for
+                            // non-senescent cells and when the layer is off.
+                            let sasp = if sasp_on {
+                                sasp_immune_multiplier(senescence_mask_slice[idx], sasp_immune_mult)
+                            } else {
+                                1.0
+                            };
                             // `dc_priming` is a uniform scalar (the cDC1/cDC2
                             // mix, #264 Phase 4): 1.0 when off, < 1.0 for a
                             // cDC1-poor tumor that primes killing less efficiently.
@@ -1377,7 +1429,8 @@ fn run_one_condition_full(
                             ) * exh
                                 * supp
                                 * dc_priming
-                                * ferro_supp;
+                                * ferro_supp
+                                * sasp;
                             let mut rng = StdRng::seed_from_u64(
                                 cond_seed
                                     .wrapping_add(900_000_000)
@@ -1639,6 +1692,25 @@ fn run_one_condition_full(
     // Multi-checkpoint combined brake (#264 Phase 3). `Some` only when a panel
     // override is supplied; the single-PD-1 path omits it.
     let checkpoint_brake = checkpoint_panel.map(|p| p.combined_brake());
+    // Senescent fraction (#341): fraction of tumor cells marked by the
+    // senescence program. `Some` only when senescence is enabled (mask present),
+    // so `None` omits the field ⇒ byte-identical default path. The marking is a
+    // one-time assignment, so this is the fraction of the initial tumor cells.
+    let senescent_fraction = senescence_mask.as_ref().map(|mask| {
+        let (count, total) = grid
+            .cells
+            .iter()
+            .zip(mask.iter())
+            .filter(|(gc, _)| gc.is_tumor)
+            .fold((0usize, 0usize), |(c, t), (_, &is_sen)| {
+                (c + usize::from(is_sen), t + 1)
+            });
+        if total > 0 {
+            count as f64 / total as f64
+        } else {
+            0.0
+        }
+    });
 
     ConditionResult {
         treatment: condition.treatment_name.clone(),
@@ -1688,6 +1760,7 @@ fn run_one_condition_full(
         suppressor_source_count,
         suppressor_peak,
         checkpoint_brake,
+        senescent_fraction,
     }
 }
 
@@ -1887,6 +1960,11 @@ struct SnapshotPreset {
     /// A cDC1-poor tumor primes anti-tumor killing less efficiently; no extra
     /// overlay, the reduced immune killing shows in the dead/DAMP panels.
     dc_subsets: bool,
+    /// True if the therapy-induced-senescence program (#341) is enabled. No
+    /// extra static overlay — the senescent cells' shifted ferroptosis response
+    /// (resistant or senolytic per the axis mix) plus the SASP→immune coupling
+    /// show directly in the dead/LP panels vs the immune-on baseline.
+    senescence: bool,
 }
 
 /// Visualization presets for `--snapshot=NAME`. Keep this list small —
@@ -1911,6 +1989,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         contact: false,
         nutrient: false,
         dc_subsets: false,
+        senescence: false,
     },
     SnapshotPreset {
         name: "bare",
@@ -1931,6 +2010,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         contact: false,
         nutrient: false,
         dc_subsets: false,
+        senescence: false,
     },
     SnapshotPreset {
         name: "multidose",
@@ -1951,6 +2031,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         contact: false,
         nutrient: false,
         dc_subsets: false,
+        senescence: false,
     },
     SnapshotPreset {
         // SDT here visualizes the persister-fraction OVERLAY (the MUFA axis +
@@ -1975,6 +2056,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         contact: false,
         nutrient: false,
         dc_subsets: false,
+        senescence: false,
     },
     SnapshotPreset {
         name: "clonal",
@@ -1995,6 +2077,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         contact: false,
         nutrient: false,
         dc_subsets: false,
+        senescence: false,
     },
     SnapshotPreset {
         // RSL3 (hypoxia-sensitive) + explicit internal vessels: near-vessel
@@ -2020,6 +2103,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         contact: false,
         nutrient: false,
         dc_subsets: false,
+        senescence: false,
     },
     SnapshotPreset {
         // SDT + radial spheroid biology: the phenotype panel shows the
@@ -2043,6 +2127,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         contact: false,
         nutrient: false,
         dc_subsets: false,
+        senescence: false,
     },
     SnapshotPreset {
         // SDT on a patient-scale slab at the SURFACE (+z face = vessel, depth
@@ -2071,6 +2156,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         contact: false,
         nutrient: false,
         dc_subsets: false,
+        senescence: false,
     },
     SnapshotPreset {
         // Slab + internal vessels (#272 coupling). vessel_supply.npy (on a slab
@@ -2099,6 +2185,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         contact: false,
         nutrient: false,
         dc_subsets: false,
+        senescence: false,
     },
     SnapshotPreset {
         // SDT + immune + Treg/MDSC suppressor (#264 Phase 2). Heuristic niche
@@ -2123,6 +2210,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         contact: false,
         nutrient: false,
         dc_subsets: false,
+        senescence: false,
     },
     SnapshotPreset {
         // SDT + immune + dual checkpoint blockade (#264 Phase 3): a PD-1 +
@@ -2148,6 +2236,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         contact: false,
         nutrient: false,
         dc_subsets: false,
+        senescence: false,
     },
     SnapshotPreset {
         // Kitchen-sink composition (#278): several realism layers at once —
@@ -2175,6 +2264,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         contact: false,
         nutrient: false,
         dc_subsets: false,
+        senescence: false,
     },
     SnapshotPreset {
         // RSL3 + cell-cell contact resistance (#270): dense interior cells
@@ -2201,6 +2291,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         contact: true,
         nutrient: false,
         dc_subsets: false,
+        senescence: false,
     },
     SnapshotPreset {
         // SDT + radial nutrient gradient (#270 item 3b): the nutrient-starved
@@ -2226,6 +2317,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         contact: false,
         nutrient: true,
         dc_subsets: false,
+        senescence: false,
     },
     SnapshotPreset {
         // SDT + cDC1/cDC2 dendritic-cell subset mix (#264 Phase 4): a cDC1-poor
@@ -2251,6 +2343,38 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         contact: false,
         nutrient: false,
         dc_subsets: true,
+        senescence: false,
+    },
+    SnapshotPreset {
+        // SDT + therapy-induced senescence (#341): a fraction of tumor cells
+        // enter the senescence program (raised iron + antioxidant/GPX4 defenses)
+        // AND couple to the immune layer via SASP. With the literature() config
+        // the defense axis dominates the raised iron (net ferroptosis-resistant)
+        // while the SASP multiplier > 1 makes those same cells MORE visible to
+        // immune surveillance (Kang 2011) — a coherent "resist cell-intrinsic
+        // ferroptosis yet get cleared by immune surveillance" picture. The net
+        // sign is axis/therapy-dependent (the module test drives both); no extra
+        // static overlay, the shifted dead/LP front vs the immune-on baseline IS
+        // the visualization. Runs on the centred sphere.
+        name: "senescence",
+        desc: "SDT + therapy-induced senescence (#341): ferroptosis resist/senolytic + SASP immune coupling",
+        treatment: Treatment::SDT,
+        treatment_name: "SDT",
+        immune_on: true,
+        stromal_on: false,
+        ph_on: false,
+        multidose: false,
+        persister: false,
+        clonal: false,
+        vasculature: false,
+        spheroid: false,
+        slab: false,
+        suppressor: false,
+        checkpoints: false,
+        contact: false,
+        nutrient: false,
+        dc_subsets: false,
+        senescence: true,
     },
 ];
 
@@ -2360,6 +2484,10 @@ fn run_snapshot(output_dir: &Path, tumor_radius_um: f64, name: &str) {
     let contact_cfg = preset.contact.then(ContactConfig::literature);
     let nutrient_cfg = preset.nutrient.then(NutrientConfig::literature);
     let dc_subsets_cfg = preset.dc_subsets.then(DcSubsetConfig::literature);
+    // Therapy-induced senescence (#341): the literature() config (defense-
+    // dominant ⇒ net ferroptosis-resistant under the trigger, SASP surveillance
+    // multiplier > 1 ⇒ raised immune clearance of the same cells).
+    let senescence_cfg = preset.senescence.then(SenescenceConfig::literature);
     // Static viz overlays, recomputed from the same SEED + per-layer seed the
     // run uses internally, so they match the perturbations actually applied.
     // `None` unless the matching preset is active.
@@ -2437,6 +2565,7 @@ fn run_snapshot(output_dir: &Path, tumor_radius_um: f64, name: &str) {
             contact: contact_cfg,
             nutrient: nutrient_cfg,
             dc_subsets: dc_subsets_cfg,
+            senescence: senescence_cfg,
             ..Default::default()
         },
     );
@@ -4284,6 +4413,152 @@ mod tests {
         assert!(
             p.immune_on,
             "DC subsets only matter with the immune response on"
+        );
+    }
+
+    /// #341 (SASP→immune coupling): the senescence-associated secretory phenotype
+    /// couples senescent cells to the immune layer with a SIGNED multiplier, so
+    /// the layer is genuinely bidirectional. Using a SASP-ONLY config (all four
+    /// biochem axes `1.0`, only `sasp_immune_mult` varies) isolates the immune
+    /// coupling: the grid biochem and the non-senescent cells are byte-identical
+    /// across arms, so the same senescent subset is killed MORE under surveillance
+    /// (`> 1`, Kang 2011) and LESS under immunosuppressive SASP (`< 1`, Di Mitri
+    /// 2014). Deterministic; `sasp_immune_mult=1.0` is identity ⇒ reproduces the
+    /// no-senescence baseline exactly (the byte-identity invariant).
+    #[test]
+    fn sasp_immune_coupling_is_bidirectional_and_identity_is_baseline() {
+        let cfg = RunConfig {
+            grid_dim: 30,
+            n_steps: 130,
+        };
+        let cond = Condition {
+            name: "sasp_demo".to_string(),
+            treatment: Treatment::SDT,
+            treatment_name: "SDT".to_string(),
+            o2_lambda: Some(ZONE_REF_LAMBDA),
+            immune_on: true,
+            stromal_on: false,
+            ph_on: false,
+            dose_schedule: DoseSchedule::Constant,
+        };
+        // Dense regime (boosted kill rate, PD-1 brake lifted) so there are enough
+        // immune kills for the SASP multiplier to register.
+        let immune = SpatialImmuneConfig {
+            immune_kill_rate: 0.5,
+            anti_pd1_efficacy: 1.0,
+            ..SpatialImmuneConfig::for_3d()
+        };
+        // A SASP-only senescence config: 40% of tumor cells marked, NO biochem
+        // perturbation (all muls 1.0), only the immune coupling varies. This keeps
+        // the grid byte-identical across arms so the immune-kill delta is purely
+        // the SASP multiplier.
+        let sasp_only = |mult: f64| SenescenceConfig {
+            fraction: 0.4,
+            iron_mul: 1.0,
+            gpx4_mul: 1.0,
+            nrf2_mul: 1.0,
+            fsp1_mul: 1.0,
+            sasp_immune_mult: mult,
+        };
+        let run = |sen: Option<SenescenceConfig>| {
+            run_one_condition_full(
+                &cond,
+                cfg,
+                None,
+                Overrides {
+                    immune: Some(immune),
+                    senescence: sen,
+                    ..Default::default()
+                },
+            )
+            .immune_kills
+            .expect("immune_on populates immune_kills")
+        };
+        let base_im = run(None);
+        let surveillance_im = run(Some(sasp_only(1.6))); // anti-tumor surveillance
+        let immunosuppress_im = run(Some(sasp_only(0.25))); // immunosuppressive SASP
+        assert!(
+            base_im >= 50,
+            "baseline must produce enough immune kills to be informative; got {base_im}"
+        );
+        // Immunosuppressive SASP reduces net immune kills below baseline.
+        assert!(
+            immunosuppress_im < base_im,
+            "immunosuppressive SASP (mult<1) must reduce immune kills: \
+             baseline={base_im}, immunosuppressed={immunosuppress_im}"
+        );
+        // Surveillance does not reduce kills (raises or saturates) ...
+        assert!(
+            surveillance_im >= base_im,
+            "surveillance SASP (mult>1) must not reduce immune kills: \
+             baseline={base_im}, surveillance={surveillance_im}"
+        );
+        // ... and the bidirectional spread is real: surveillance > immunosuppression.
+        assert!(
+            surveillance_im > immunosuppress_im,
+            "SASP is bidirectional: surveillance={surveillance_im} must outkill \
+             immunosuppression={immunosuppress_im}"
+        );
+        // Deterministic (the multiplier is a pure function of the fixed mask).
+        assert_eq!(immunosuppress_im, run(Some(sasp_only(0.25))));
+        // Identity: mult=1.0 with identity biochem is filtered to None ⇒ the
+        // no-senescence baseline EXACTLY (the byte-identity invariant in miniature).
+        assert_eq!(
+            run(Some(sasp_only(1.0))),
+            base_im,
+            "sasp_immune_mult=1.0 (identity) must reproduce the no-senescence baseline"
+        );
+    }
+
+    /// #341: lock the `--snapshot=senescence` preset -> Overrides wiring, and
+    /// that enabling it emits a `senescent_fraction` metric while the immune
+    /// response (needed for the SASP coupling) is on.
+    #[test]
+    fn senescence_snapshot_preset_is_wired() {
+        let p = resolve_snapshot("senescence");
+        assert_eq!(p.name, "senescence");
+        assert!(p.senescence, "the senescence preset must enable the layer");
+        assert!(
+            p.immune_on,
+            "senescence SASP coupling only matters with the immune response on"
+        );
+        // The literature config is non-identity (it marks cells + couples SASP).
+        assert!(!SenescenceConfig::literature().is_identity());
+        // Enabling the layer emits the senescent_fraction metric (~0.2 marked).
+        let cfg = RunConfig {
+            grid_dim: 20,
+            n_steps: 60,
+        };
+        let cond = Condition {
+            name: "sen_metric".to_string(),
+            treatment: Treatment::SDT,
+            treatment_name: "SDT".to_string(),
+            o2_lambda: Some(ZONE_REF_LAMBDA),
+            immune_on: true,
+            stromal_on: false,
+            ph_on: false,
+            dose_schedule: DoseSchedule::Constant,
+        };
+        let baseline = run_one_condition_with_config(&cond, cfg, None);
+        assert!(
+            baseline.senescent_fraction.is_none(),
+            "senescence off ⇒ the metric field is omitted"
+        );
+        let on = run_one_condition_full(
+            &cond,
+            cfg,
+            None,
+            Overrides {
+                senescence: Some(SenescenceConfig::literature()),
+                ..Default::default()
+            },
+        );
+        let frac = on
+            .senescent_fraction
+            .expect("senescence on ⇒ senescent_fraction reported");
+        assert!(
+            (0.1..0.35).contains(&frac),
+            "literature fraction ~0.2 of tumor cells marked; got {frac}"
         );
     }
 
