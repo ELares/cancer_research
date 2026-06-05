@@ -142,6 +142,38 @@ fn update_mufa_protection(current: f64, mufa_max: f64, params: &Params) -> f64 {
     (current + growth - decay).clamp(0.0, mufa_max.max(0.0))
 }
 
+/// Ether-linked PUFA augmentation of the peroxidizable lipid substrate (#339).
+///
+/// Polyunsaturated ether phospholipids (ether-PUFA-PE) are an additional pool
+/// of peroxidation-vulnerable membrane lipid whose synthesis (FAR1/AGPS, then
+/// the peroxisomal ether-lipid pathway) PROMOTES ferroptosis: more ether-PUFA
+/// substrate means more lipid-peroxide accumulation (Zou et al., Nature 2020,
+/// PMID 32939090; Cui et al., Cell Death Differ 2021, PMID 33731874).
+/// Conversely, FAR1/AGPS loss (or the in-vivo downregulation Zou 2020
+/// documents) shrinks this pool and confers ferroptosis RESISTANCE, which is
+/// the modeled escape route. NOTE this is the opposite sign to the loose
+/// "shift to ether-PE = escape" framing: the robust literature direction is
+/// that ether-PUFA PROMOTES ferroptosis and its LOSS is the escape.
+///
+/// `ether_pufa_fraction` is the ether-PUFA pool as a fraction of the base PUFA
+/// substrate (domain `>= 0`), so the peroxidizable PUFA term is scaled by
+/// `1 + max(fraction, 0)`. `0.0` (default) ⇒ ×1.0 ⇒ byte-identical (FAR1/AGPS-
+/// null is the `0` limit). The `max(_, 0)` floor keeps an out-of-contract
+/// negative fraction from shrinking the substrate (the two post-death
+/// `effective_unsat` sites have no `.max(0.05)` floor of their own); it is a
+/// no-op for the documented `>= 0` domain, so the default stays byte-identical.
+///
+/// The plasmalogen / TMEM189 (PEDS1) vinyl-ether sub-step is deliberately NOT
+/// folded in: its sign is genuinely contested (protective via a FAR1
+/// degradation feedback in Cui 2021 and as a radical sink in Zoeller 1999,
+/// PMID 10051451; dispensable for the pro-ferroptotic effect in Zou 2020;
+/// sensitizing-on-loss in C. elegans, Perez 2022, PMID 36178986), so baking a
+/// fixed direction would overstate certainty.
+#[inline]
+fn ether_augmented_pufa(lipid_unsat: f64, params: &Params) -> f64 {
+    lipid_unsat * (1.0 + params.ether_pufa_fraction.max(0.0))
+}
+
 /// Deterministic exogenous-ROS decay envelope for the post-bolus phase.
 ///
 /// Models singlet-oxygen / exogenous-ROS decay after a single treatment
@@ -200,7 +232,7 @@ pub fn sim_cell_step(
                     state.exo_ros_peak * exo_decay_factor(step)
                 };
                 let total_ros = cell.basal_ros + exo + fenton;
-                let effective_unsat = cell.lipid_unsat; // no MUFA protection
+                let effective_unsat = ether_augmented_pufa(cell.lipid_unsat, params); // no MUFA protection
                 let lp_direct = total_ros * effective_unsat * params.lp_rate;
                 let lp_propagation = state.lp * effective_unsat * params.lp_propagation;
                 state.lp += lp_direct + lp_propagation;
@@ -237,7 +269,8 @@ pub fn sim_cell_step(
         params,
     );
 
-    let effective_unsat = (cell.lipid_unsat * (1.0 - state.mufa_protection)).max(0.05);
+    let effective_unsat =
+        (ether_augmented_pufa(cell.lipid_unsat, params) * (1.0 - state.mufa_protection)).max(0.05);
     let lp_direct = unscav * effective_unsat * params.lp_rate;
     // AUTOCATALYTIC PROPAGATION — GSH-gated bistable switch.
     // GCH1/BH4 (#338) adds GPX4-independent radical-trapping quench capacity
@@ -334,7 +367,7 @@ pub fn sim_cell(
             if step >= death_step.unwrap() + params.post_death_steps {
                 break;
             }
-            let effective_unsat = cell.lipid_unsat;
+            let effective_unsat = ether_augmented_pufa(cell.lipid_unsat, params);
             let lp_direct = total_ros * effective_unsat * params.lp_rate;
             let lp_prop = lp * effective_unsat * params.lp_propagation;
             lp += lp_direct + lp_prop;
@@ -358,7 +391,8 @@ pub fn sim_cell(
             cell.mufa_cap.unwrap_or(params.scd_mufa_max),
             params,
         );
-        let effective_unsat = (cell.lipid_unsat * (1.0 - mufa_protection)).max(0.05);
+        let effective_unsat =
+            (ether_augmented_pufa(cell.lipid_unsat, params) * (1.0 - mufa_protection)).max(0.05);
         let lp_direct = unscav * effective_unsat * params.lp_rate;
         // GCH1/BH4 (#338) adds GPX4-independent quench (`gch1_rate`, 0.0 default).
         let antioxidant_quench = gpx4 * (gsh / (gsh + 0.5)) + fsp1 + params.gch1_rate;
@@ -512,6 +546,38 @@ mod tests {
             base, none_override,
             "None override must reproduce invivo() byte-for-byte"
         );
+    }
+
+    /// #339 PR 2: the ether-PUFA pool is extra peroxidizable substrate, so
+    /// enabling it INCREASES lipid peroxidation under RSL3 (Zou 2020 / Cui
+    /// 2021). The `0.0` limit (FAR1/AGPS-null escape) is the base model.
+    #[test]
+    fn ether_pufa_pool_increases_peroxidation_under_rsl3() {
+        fn peak_lp(ether_fraction: f64) -> f64 {
+            let p = Params {
+                ether_pufa_fraction: ether_fraction,
+                ..Params::default()
+            };
+            let mut gen_rng = StdRng::seed_from_u64(42);
+            let cell = gen_cell(Phenotype::OXPHOS, &mut gen_rng);
+            let mut rng = StdRng::seed_from_u64(7);
+            let mut state = CellState::from_cell(&cell, Treatment::RSL3, &p, &mut rng);
+            let mut peak = 0.0_f64;
+            for step in 0..180 {
+                sim_cell_step(&mut state, &cell, &p, step, 0.0, &mut rng);
+                peak = peak.max(state.lp);
+            }
+            peak
+        }
+        let base = peak_lp(0.0); // FAR1/AGPS-null escape (no ether pool)
+        let with_ether = peak_lp(0.5); // +50% ether-PUFA substrate
+        assert!(base > 0.0, "RSL3 should drive lipid peroxidation");
+        assert!(
+            with_ether > base,
+            "ether-PUFA pool should raise peak LP under RSL3: ether={with_ether} vs base={base}"
+        );
+        // Determinism.
+        assert_eq!(base, peak_lp(0.0));
     }
 
     #[test]
