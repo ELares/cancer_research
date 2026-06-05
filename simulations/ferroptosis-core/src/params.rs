@@ -84,6 +84,17 @@ pub struct Params {
     /// `ether_augmented_pufa`).
     #[serde(default)]
     pub ether_pufa_fraction: f64,
+    /// MBOAT1/2 hormone-regulated MUFA-enrichment boost (#339). MBOAT1
+    /// (estrogen-receptor-regulated) and MBOAT2 (androgen-receptor-regulated)
+    /// remodel phospholipids toward MUFA-PE and suppress ferroptosis
+    /// independently of GPX4 (Liang et al., Cell 2023, PMID 37267948). Modeled
+    /// as a constant additive MUFA protection layered onto the dynamic SCD1
+    /// `mufa_protection` at the peroxidation sites (see `total_mufa_protection`),
+    /// so a higher value (e.g. an AR-driven MBOAT2-high tumor) lowers
+    /// ferroptosis. Floored at `0` (enrichment is protective-only). `0.0`
+    /// (default) ⇒ byte-identical; uncalibrated, direction-anchored.
+    #[serde(default)]
+    pub mboat_mufa_boost: f64,
 
     // === GPX4 Dynamic Regulation ===
     pub gpx4_degradation_by_ros: f64,
@@ -133,6 +144,7 @@ impl Default for Params {
             mufa_acute_start: None,
             scd_mufa_decay: 0.0,
             ether_pufa_fraction: 0.0,
+            mboat_mufa_boost: 0.0,
             gpx4_degradation_by_ros: 0.002,
             gpx4_nrf2_upregulation: 0.008,
             sdt_ros: 5.0,

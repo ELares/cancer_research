@@ -140,6 +140,9 @@ fn ferro_params_to_params(fp: &FerroParams) -> Params {
         // Ether-lipid axis (#339) is off by default and not part of the C ABI,
         // so it maps to 0.0 here.
         ether_pufa_fraction: 0.0,
+        // MBOAT1/2 MUFA-enrichment boost (#339) is off by default and not part
+        // of the C ABI, so it maps to 0.0 here.
+        mboat_mufa_boost: 0.0,
         gpx4_degradation_by_ros: fp.gpx4_degradation_by_ros,
         gpx4_nrf2_upregulation: fp.gpx4_nrf2_upregulation,
         sdt_ros: fp.sdt_ros,

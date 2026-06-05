@@ -174,6 +174,22 @@ fn ether_augmented_pufa(lipid_unsat: f64, params: &Params) -> f64 {
     lipid_unsat * (1.0 + params.ether_pufa_fraction.max(0.0))
 }
 
+/// Total MUFA-style ferroptosis protection at a peroxidation site: the dynamic
+/// SCD1-driven `mufa_protection` plus the constant MBOAT1/2 hormone-regulated
+/// MUFA enrichment (#339). MBOAT1 (ER-regulated) and MBOAT2 (AR-regulated)
+/// remodel phospholipids toward MUFA-PE and suppress ferroptosis independently
+/// of GPX4 (Liang et al., Cell 2023, PMID 37267948), so they act as a second,
+/// constitutive MUFA-enrichment source layered onto the SCD1 dynamics. The
+/// boost is floored at `0` because MBOAT is an enrichment (protective-only)
+/// source. `mboat_mufa_boost = 0.0` (default) ⇒ unchanged ⇒ byte-identical.
+/// The result can exceed the SCD1 cap; the consuming `(1 - protection)` term is
+/// floored by the existing `.max(0.05)` substrate minimum, so full protection
+/// leaves a small residual peroxidizable pool rather than going negative.
+#[inline]
+fn total_mufa_protection(dynamic: f64, params: &Params) -> f64 {
+    dynamic + params.mboat_mufa_boost.max(0.0)
+}
+
 /// Deterministic exogenous-ROS decay envelope for the post-bolus phase.
 ///
 /// Models singlet-oxygen / exogenous-ROS decay after a single treatment
@@ -269,8 +285,9 @@ pub fn sim_cell_step(
         params,
     );
 
-    let effective_unsat =
-        (ether_augmented_pufa(cell.lipid_unsat, params) * (1.0 - state.mufa_protection)).max(0.05);
+    let effective_unsat = (ether_augmented_pufa(cell.lipid_unsat, params)
+        * (1.0 - total_mufa_protection(state.mufa_protection, params)))
+    .max(0.05);
     let lp_direct = unscav * effective_unsat * params.lp_rate;
     // AUTOCATALYTIC PROPAGATION — GSH-gated bistable switch.
     // GCH1/BH4 (#338) adds GPX4-independent radical-trapping quench capacity
@@ -391,8 +408,9 @@ pub fn sim_cell(
             cell.mufa_cap.unwrap_or(params.scd_mufa_max),
             params,
         );
-        let effective_unsat =
-            (ether_augmented_pufa(cell.lipid_unsat, params) * (1.0 - mufa_protection)).max(0.05);
+        let effective_unsat = (ether_augmented_pufa(cell.lipid_unsat, params)
+            * (1.0 - total_mufa_protection(mufa_protection, params)))
+        .max(0.05);
         let lp_direct = unscav * effective_unsat * params.lp_rate;
         // GCH1/BH4 (#338) adds GPX4-independent quench (`gch1_rate`, 0.0 default).
         let antioxidant_quench = gpx4 * (gsh / (gsh + 0.5)) + fsp1 + params.gch1_rate;
@@ -575,6 +593,38 @@ mod tests {
         assert!(
             with_ether > base,
             "ether-PUFA pool should raise peak LP under RSL3: ether={with_ether} vs base={base}"
+        );
+        // Determinism.
+        assert_eq!(base, peak_lp(0.0));
+    }
+
+    /// #339 PR 3: the MBOAT1/2 hormone-regulated MUFA enrichment is a
+    /// constitutive, GPX4-independent protective term, so enabling it REDUCES
+    /// lipid peroxidation under RSL3 (Liang 2023). `0.0` is byte-identical.
+    #[test]
+    fn mboat_mufa_boost_reduces_peroxidation_under_rsl3() {
+        fn peak_lp(mboat: f64) -> f64 {
+            let p = Params {
+                mboat_mufa_boost: mboat,
+                ..Params::default()
+            };
+            let mut gen_rng = StdRng::seed_from_u64(42);
+            let cell = gen_cell(Phenotype::OXPHOS, &mut gen_rng);
+            let mut rng = StdRng::seed_from_u64(7);
+            let mut state = CellState::from_cell(&cell, Treatment::RSL3, &p, &mut rng);
+            let mut peak = 0.0_f64;
+            for step in 0..180 {
+                sim_cell_step(&mut state, &cell, &p, step, 0.0, &mut rng);
+                peak = peak.max(state.lp);
+            }
+            peak
+        }
+        let base = peak_lp(0.0); // no MBOAT enrichment
+        let with_mboat = peak_lp(0.3); // +0.3 constant MUFA protection
+        assert!(base > 0.0, "RSL3 should drive lipid peroxidation");
+        assert!(
+            with_mboat < base,
+            "MBOAT1/2 MUFA enrichment should lower peak LP under RSL3: mboat={with_mboat} vs base={base}"
         );
         // Determinism.
         assert_eq!(base, peak_lp(0.0));
