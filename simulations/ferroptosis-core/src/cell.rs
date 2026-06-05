@@ -54,7 +54,7 @@ pub struct Cell {
     /// `Params::scd_mufa_rate`. SCD1/MUFA enrichment kinetics differ by
     /// phenotype (e.g. a drug-tolerant persister remodels lipids toward MUFA at a
     /// different rate than a proliferating glycolytic cell), so a consumer can set
-    /// this per-phenotype via [`crate::params::PhenotypeMufaConfig`] to give the
+    /// this per-phenotype via [`crate::phenotype_mufa::PhenotypeMufaConfig`] to give the
     /// acute-versus-established MUFA build-up (`mufa_acute_start`, #339) a
     /// phenotype-specific time constant instead of one shared `scd_mufa_rate`.
     ///

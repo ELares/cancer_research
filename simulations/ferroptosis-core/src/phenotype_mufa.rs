@@ -5,16 +5,18 @@
 //! `scd_mufa_rate` for the accumulation dynamics, so the acute-versus-established
 //! MUFA build-up has the same time constant for every cell.
 //!
-//! SCD1 (stearoyl-CoA desaturase) drives the monounsaturated-fatty-acid
-//! enrichment that confers a ferroptosis-resistant cell state (Magtanong et al.,
-//! Cell Chem Biol 2019, PMID 30686757), and that enrichment is plausibly
-//! phenotype-dependent: a drug-tolerant persister remodels its lipidome under
-//! drug pressure differently than a proliferating glycolytic cell. The DIRECTION
-//! is genuinely uncertain — drug-tolerant persisters are simultaneously
-//! **GPX4-dependent / ferroptosis-vulnerable** (Hangauer et al., Nature 2017,
-//! PMID 29088702) AND can lean on lipid remodeling (SCD1/MUFA) to survive — so
-//! this module exposes the per-phenotype rate as a configurable knob rather than
-//! baking in one sign.
+//! Monounsaturated-fatty-acid (MUFA) enrichment confers a ferroptosis-resistant
+//! cell state (Magtanong et al., Cell Chem Biol 2019, PMID 30686757; ACSL3-
+//! dependent), and SCD1 (stearoyl-CoA desaturase 1) is the desaturase that
+//! synthesizes that endogenous MUFA pool and itself protects cells from
+//! ferroptosis (Tesfay et al., Cancer Res 2019, PMID 31270077). That enrichment
+//! is plausibly phenotype-dependent: a drug-tolerant persister remodels its
+//! lipidome under drug pressure differently than a proliferating glycolytic cell.
+//! The DIRECTION is genuinely uncertain — drug-tolerant persisters are
+//! simultaneously **GPX4-dependent / ferroptosis-vulnerable** (Hangauer et al.,
+//! Nature 2017, PMID 29088702) AND can lean on lipid remodeling (SCD1/MUFA) to
+//! survive — so this module exposes the per-phenotype rate as a configurable knob
+//! rather than baking in one sign.
 //!
 //! [`PhenotypeMufaConfig`] is a small per-phenotype multiplier on the global
 //! `scd_mufa_rate`. [`apply_phenotype_mufa_rates_3d`] writes the resulting
@@ -62,9 +64,11 @@ impl PhenotypeMufaConfig {
     /// UNCALIBRATED, direction-anchored PLACEHOLDER (not a fitted result). Encodes
     /// ONE plausible hypothesis: drug-tolerant persister and OXPHOS-leaning cells
     /// build SCD1/MUFA protection somewhat FASTER than proliferating glycolytic
-    /// cells (a lipid-remodeling survival response; Magtanong 2019 PMID 30686757),
-    /// while acknowledging the opposing pull that persisters are also
-    /// GPX4-dependent/ferroptosis-vulnerable (Hangauer 2017 PMID 29088702). The
+    /// cells (a lipid-remodeling survival response; SCD1 protects from ferroptosis,
+    /// Tesfay 2019 PMID 31270077, and MUFA enrichment confers resistance,
+    /// Magtanong 2019 PMID 30686757), while acknowledging the opposing pull that
+    /// persisters are also GPX4-dependent/ferroptosis-vulnerable (Hangauer 2017
+    /// PMID 29088702). The
     /// magnitudes are illustrative; calibrate against time-resolved per-phenotype
     /// MUFA lipidomics before reading any number from a run that uses this.
     pub fn literature() -> Self {
@@ -121,10 +125,29 @@ pub fn apply_phenotype_mufa_rates_3d(
     base_rate: f64,
     config: &PhenotypeMufaConfig,
 ) {
-    for gc in grid.cells.iter_mut() {
-        if gc.is_tumor {
-            gc.cell.mufa_rate = Some(base_rate * config.rate_multiplier(gc.phenotype));
-        }
+    for idx in 0..grid.cells.len() {
+        apply_phenotype_mufa_rate_at_3d(grid, idx, base_rate, config);
+    }
+}
+
+/// Re-apply the per-cell phenotype MUFA rate to a SINGLE cell index, from that
+/// cell's CURRENT phenotype. No-op if the index is not a tumor cell.
+///
+/// Used after clonal repopulation (#266) revives a dead site as a fresh cell:
+/// `gen_cell` resets `mufa_rate` to `None` (⇒ the global rate), so a revived cell
+/// would otherwise lose its phenotype-specific rate. Re-deriving it from the
+/// revived cell's phenotype keeps `clonal(repopulation)` + `phenotype_mufa`
+/// coherent — the analogue of [`crate::contact::apply_contact_resistance_at_3d`]
+/// (#302).
+pub fn apply_phenotype_mufa_rate_at_3d(
+    grid: &mut TumorGrid3D,
+    idx: usize,
+    base_rate: f64,
+    config: &PhenotypeMufaConfig,
+) {
+    let gc = &mut grid.cells[idx];
+    if gc.is_tumor {
+        gc.cell.mufa_rate = Some(base_rate * config.rate_multiplier(gc.phenotype));
     }
 }
 
@@ -189,5 +212,31 @@ mod tests {
             }
         }
         assert!(saw_tumor, "test grid should contain tumor cells");
+    }
+
+    #[test]
+    fn at_helper_reapplies_rate_to_a_reset_cell() {
+        // Coherence with clonal repopulation (#266/#302): a revived dead site is a
+        // fresh `gen_cell` with `mufa_rate = None` (⇒ the global rate). The
+        // per-index re-apply must re-derive the per-phenotype rate from the
+        // revived cell's CURRENT phenotype, mirroring the contact re-application.
+        let mut grid = TumorGrid3D::generate(11, 11, 11, 20.0, 42);
+        let cfg = PhenotypeMufaConfig::literature();
+        let base = 0.02;
+        apply_phenotype_mufa_rates_3d(&mut grid, base, &cfg);
+        let idx = grid
+            .cells
+            .iter()
+            .position(|gc| gc.is_tumor)
+            .expect("test grid should contain a tumor cell");
+        // Simulate the revival reset.
+        grid.cells[idx].cell.mufa_rate = None;
+        apply_phenotype_mufa_rate_at_3d(&mut grid, idx, base, &cfg);
+        let gc = &grid.cells[idx];
+        assert_eq!(
+            gc.cell.mufa_rate,
+            Some(base * cfg.rate_multiplier(gc.phenotype)),
+            "the at-helper must re-derive the per-phenotype rate for a reset (revived) cell"
+        );
     }
 }
