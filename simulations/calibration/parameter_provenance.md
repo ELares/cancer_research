@@ -108,3 +108,21 @@ The SDT/PDT resistance of persisters currently comes only through the (weak) MUF
 `Porfimer.phi_so2_relative` scales `concentration_at` to give the per-photon ROS yield via `Photosensitizer::yield_at`. The calibration anchor is **porfimer at peak = 1.0**; absolute porfimer phi_so2 in solution is consensus-cited as ≈ 0.65 across PDT literature reviews (e.g., Wilson & Patterson 2008, Phys Med Biol 53(9):R61–109), with primary measurements varying by formulation and solvent (Spikes & Bommer 1991 and earlier work; the value is a community-anchored constant rather than a single primary citation). Other drug variants would set their `phi_so2_relative` to `absolute_phi_so2 / 0.65` so `Params::pdt_ros = 5.0` (calibrated to porfimer) carries through correctly. `physics::pdt_intensity_at_depth` calls `yield_at` rather than `concentration_at` so the new fields compose into the existing Beer-Lambert path automatically.
 
 Caveat: tissue phi_so2 values can be lower than solution values due to aggregation and microenvironment effects (Wilson & Patterson 2008 §5). The relative-to-porfimer convention encodes the calibration baseline in the type system but does not eliminate the underlying empirical uncertainty in absolute values.
+
+## External ODE/QSP models for cross-validation (#344)
+
+The biochem ODEs were cross-validated *qualitatively* against independent
+published ferroptosis dynamical-systems models (same kind of system, same kind
+of behavior). The shared, structurally-required behavior is a bistable
+GSH/GPX4-threshold recover-or-collapse switch driven by Fenton positive feedback;
+ferroptosis-core reproduces it (a bimodal single-cell lipid-peroxide distribution
+at the tipping dose plus a sharp population dose-response threshold). See
+`analysis/ode-cross-validation.md` and `cross_validate_odes.py`. All PMIDs
+verified via NCBI esummary.
+
+| Model | PMID | Role in cross-validation |
+|---|---|---|
+| Co et al., *Nature* 2024, "Emergence of large-scale cell death through ferroptotic trigger waves" | 38987590 | Canonical monostable -> bistable bifurcation as antioxidant defense falls; the unstable-threshold separatrix our bimodal LP distribution reproduces. |
+| Seidel et al., *Front Cell Dev Biol* 2026, "A feedback loop between cell proliferation and ROS regulates ferroptosis sensitivity" | 41960191 | Minimal 2-ODE with two stable states + threshold death; the most directly comparable continuous model (peer-reviewed version of bioRxiv 2025.09.15.676259, no PMID). |
+| Konstorum et al., *J Theor Biol* 2020, "Systems biology of ferroptosis: A modeling approach" | 32114023 | Discrete logical model; structural anchor for GPX4-as-critical-brake on LOOH (qualitative, not a trajectory comparator). |
+| Pannala et al., *Free Radic Res* 2014, "A mechanistic mathematical model for the catalytic action of glutathione peroxidase" | 24456207 | Enzyme-kinetic GPX reference for the functional form of the GPX4/GSH repair term (saturating in GSH). |
