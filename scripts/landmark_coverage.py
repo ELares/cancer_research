@@ -49,11 +49,11 @@ LANDMARKS = [
     dict(pmid="40448572", mechanism="ttfields", cancer="pancreatic",
          evidence="phase3-clinical", note="PANOVA-3: TTFields + gem/nab-paclitaxel (JCO 2025)"),
     dict(pmid="33016924", mechanism="mRNA-vaccine", cancer="gastrointestinal",
-         evidence="phase1-2-clinical", note="mRNA neoantigen vaccine, GI cancers (JCI 2020)"),
+         evidence="phase2-clinical", note="mRNA neoantigen vaccine, GI cancers (JCI 2020)"),
     dict(pmid="36027916", mechanism="mRNA-vaccine", cancer="lung",
-         evidence="phase1-2-clinical", note="NEO-PV-01 + chemo + anti-PD-1, NSCLC (Cancer Cell 2022)"),
+         evidence="phase2-clinical", note="NEO-PV-01 + chemo + anti-PD-1, NSCLC (Cancer Cell 2022)"),
     dict(pmid="35970920", mechanism="mRNA-vaccine", cancer="solid-tumor",
-         evidence="phase1-2-clinical", note="ChAd/samRNA individualized neoantigen vaccine (Nat Med 2022)"),
+         evidence="phase2-clinical", note="ChAd/samRNA individualized neoantigen vaccine (Nat Med 2022)"),
 ]
 
 
@@ -76,7 +76,10 @@ def fetch_pubmed(pmid):
     if art is None:
         raise RuntimeError(f"PMID {pmid} not found at efetch")
     title = (art.findtext(".//ArticleTitle") or "").strip()
-    abstract = " ".join((t.text or "").strip() for t in art.findall(".//Abstract/AbstractText")).strip()
+    # itertext() (not .text) so structured abstracts with inline formula elements
+    # (e.g. <sup>177</sup>Lu) are captured in full, not truncated at the first child.
+    abstract = " ".join("".join(t.itertext()).strip()
+                        for t in art.findall(".//Abstract/AbstractText")).strip()
     journal = art.findtext(".//Journal/Title") or ""
     year = art.findtext(".//JournalIssue/PubDate/Year") or ""
     month = art.findtext(".//JournalIssue/PubDate/Month") or ""
@@ -133,7 +136,10 @@ def write_abstract_record(entry):
     fm.append(f"- {entry['cancer']}")
     fm.append(f"evidence_level: {entry['evidence']}")
     fm.append(f"icite_rcr: {ic['rcr'] if ic['rcr'] is not None else 'null'}")
-    fm.append(f"cited_by_count: {ic['citations'] if ic['citations'] is not None else 'null'}")
+    # iCite citation count goes in icite_citation_count (matching existing records);
+    # cited_by_count is the OpenAlex field, which this offline recovery does not query.
+    fm.append(f"icite_citation_count: {ic['citations'] if ic['citations'] is not None else 'null'}")
+    fm.append("cited_by_count: null")
     fm.append(f"icite_is_clinical: {str(bool(ic['is_clinical'])).lower() if ic['is_clinical'] is not None else 'null'}")
     fm.append("source: landmark-recovery (#345)")
     body = pm["abstract"] or "(no abstract available from PubMed)"
