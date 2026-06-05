@@ -151,8 +151,15 @@ def main():
         "frozen index, so adding the mechanisms makes the taxonomy current without altering "
         "the frozen 19-mechanism results.",
     ]
-    REPORT.write_text("\n".join(lines) + "\n")
-    print(f"wrote {REPORT}")
+    # Only write the committed report when the PubMed column is real. A default
+    # offline run (no --pubmed) would fill every PubMed cell with n/a and silently
+    # clobber the checked-in report's verified counts, so in that mode we print the
+    # coverage to stdout and leave the file untouched.
+    if args.pubmed:
+        REPORT.write_text("\n".join(lines) + "\n")
+        print(f"wrote {REPORT}")
+    else:
+        print(f"offline mode: {REPORT} left unchanged (re-run with --pubmed to refresh it)")
 
 
 if __name__ == "__main__":
