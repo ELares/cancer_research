@@ -22,6 +22,21 @@ pub struct Params {
     // === Repair ===
     pub gpx4_rate: f64,
     pub fsp1_rate: f64,
+    /// DHODH (dihydroorotate dehydrogenase) GPX4-independent ferroptosis
+    /// suppressor (#338): a mitochondrial CoQ10/ubiquinol axis that reduces
+    /// lipid radicals in parallel to FSP1 (Mao et al., Nature 2021). Modeled as
+    /// an additional GPX4-independent repair rate. `0.0` (default) means off,
+    /// keeping the matrix byte-identical; uncalibrated, direction-anchored.
+    /// Inhibiting it (rate back to 0) is the DHODHi combination strategy.
+    #[serde(default)]
+    pub dhodh_rate: f64,
+    /// GCH1/BH4 (tetrahydrobiopterin) GPX4-independent radical-trapping
+    /// antioxidant (#338): a lipid-radical quench capacity that gates the
+    /// autocatalytic propagation switch in parallel to GPX4/FSP1 (Kraft 2020;
+    /// Soula 2020). `0.0` (default) means off, byte-identical; uncalibrated,
+    /// direction-anchored.
+    #[serde(default)]
+    pub gch1_rate: f64,
     /// SCD1-driven MUFA lipid-remodeling rate. In 3D culture and in vivo,
     /// SCD1 (regulated by SREBP1/mTORC1, not NRF2) converts SFA→MUFA,
     /// displacing PUFAs from membranes and reducing ferroptosis susceptibility.
@@ -81,6 +96,8 @@ impl Default for Params {
             lp_propagation: 0.10,
             gpx4_rate: 0.30,
             fsp1_rate: 0.08,
+            dhodh_rate: 0.0,
+            gch1_rate: 0.0,
             scd_mufa_rate: 0.0,
             scd_mufa_max: 0.0,
             initial_mufa_protection: 0.0,
