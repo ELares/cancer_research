@@ -293,6 +293,14 @@ struct ConditionResult {
     /// layer is enabled, so the default path stays byte-identical.
     #[serde(skip_serializing_if = "Option::is_none")]
     senescent_fraction: Option<f64>,
+    /// Immune kills among NON-senescent tumor cells (#376). Populated only when
+    /// the diffusing SASP field is active (a senescence mask AND `immune_on` AND
+    /// non-zero `sasp_field_strength`); `None` (field omitted) otherwise, so the
+    /// default matrix summary.json stays byte-identical. Lets a strength>0 vs
+    /// strength<0 A/B attribute an immune-kill shift to the BYSTANDER (neighbor)
+    /// population, discharging #376's neighbor-coupling acceptance criterion.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    nonsenescent_immune_kills: Option<usize>,
 }
 
 /// Per-subclone kill statistics for one condition (#242). Lets the analysis
@@ -1157,6 +1165,12 @@ fn run_one_condition_full(
     let mut damp_scratch = vec![0.0_f64; n_cells];
     let mut ferroptosis_kills = 0usize;
     let mut immune_kills = 0usize;
+    // Immune kills among NON-senescent tumor cells specifically (#376). Tracked
+    // only when the diffusing SASP field is active, so a strength>0 (suppressive)
+    // vs strength<0 (surveillance) A/B can attribute a shift to the BYSTANDER
+    // population — proving the paracrine field reaches non-senescent neighbors,
+    // not just self-acting on the senescent sources. `None`/0 otherwise.
+    let mut nonsenescent_immune_kills = 0usize;
 
     // T-cell exhaustion (#243). `cumulative_kills[idx]` counts immune kills
     // accumulated in idx's Moore-26 neighborhood; it suppresses that cell's
@@ -1686,6 +1700,17 @@ fn run_one_condition_full(
                         .collect();
                     immune_kills += killed.len();
 
+                    // Bystander accounting (#376): count this step's immune kills
+                    // that landed on NON-senescent tumor cells. Only when the SASP
+                    // field is on; `sasp_field_on` ⇒ `senescence_mask.is_some()` ⇒
+                    // `senescence_mask_slice` is full-length, so the index is safe.
+                    if sasp_field_on {
+                        nonsenescent_immune_kills += killed
+                            .iter()
+                            .filter(|&&k| !senescence_mask_slice[k])
+                            .count();
+                    }
+
                     // Scatter exhaustion into the Moore-26 neighborhood of each
                     // cell killed this step (serial — runs after the par_iter
                     // join; integer adds commute, so order-independent and
@@ -2052,6 +2077,11 @@ fn run_one_condition_full(
         suppressor_peak,
         checkpoint_brake,
         senescent_fraction,
+        nonsenescent_immune_kills: if sasp_field_on {
+            Some(nonsenescent_immune_kills)
+        } else {
+            None
+        },
     }
 }
 
@@ -5396,12 +5426,21 @@ mod tests {
     /// #376 (diffusing SASP FIELD): unlike #341's cell-autonomous multiplier, the
     /// field is PARACRINE — it reaches non-senescent NEIGHBORS. Using a
     /// FIELD-only config (all four biochem axes `1.0` AND `sasp_immune_mult` `1.0`,
-    /// only `sasp_field_strength` varies) isolates the field: the grid biochem and
-    /// the cell-autonomous coupling are byte-identical across arms, so the only
-    /// thing that can move the aggregate immune kills is the diffusing field acting
-    /// on cells in the neighborhood (senescent AND non-senescent). The
-    /// immunosuppressive arm (`> 0`) LOWERS net kills below baseline; the
-    /// surveillance arm (`< 0`) RAISES them; and the two straddle the baseline.
+    /// only `sasp_field_strength` varies) isolates the field from the biochem and
+    /// the cell-autonomous coupling, which stay byte-identical across arms.
+    ///
+    /// Two levels of assertion:
+    /// 1. AGGREGATE: the immunosuppressive arm (`> 0`) LOWERS net kills below
+    ///    baseline, the surveillance arm (`< 0`) RAISES them, and the two straddle
+    ///    the baseline.
+    /// 2. BYSTANDER (the #376 acceptance criterion): the per-run
+    ///    `nonsenescent_immune_kills` metric — immune kills landing on
+    ///    NON-senescent tumor cells specifically — shifts with the field sign
+    ///    (surveillance > immunosuppressive). Because the biochem and mask are
+    ///    identical across the two field arms, that shift is provably attributable
+    ///    to the diffusing field reaching the non-senescent bystander population,
+    ///    not just self-acting on the senescent sources.
+    ///
     /// Deterministic; `sasp_field_strength=0.0` is identity ⇒ reproduces the
     /// no-senescence baseline EXACTLY (the production-matrix byte-identity).
     #[test]
@@ -5436,7 +5475,7 @@ mod tests {
             sasp_immune_mult: 1.0,
             sasp_field_strength: strength,
         };
-        let run = |sen: Option<SenescenceConfig>| {
+        let run_full = |sen: Option<SenescenceConfig>| {
             run_one_condition_full(
                 &cond,
                 cfg,
@@ -5447,20 +5486,26 @@ mod tests {
                     ..Default::default()
                 },
             )
-            .immune_kills
-            .expect("immune_on populates immune_kills")
         };
-        let base_im = run(None);
-        let surveillance_im = run(Some(field_only(-0.6))); // surveillance: raises kill
-        let immunosuppress_im = run(Some(field_only(0.6))); // immunosuppressive: lowers
+        let im = |sen: Option<SenescenceConfig>| {
+            run_full(sen)
+                .immune_kills
+                .expect("immune_on populates immune_kills")
+        };
+        let base_im = im(None);
+        let surveillance = run_full(Some(field_only(-0.6))); // surveillance: raises kill
+        let immunosuppress = run_full(Some(field_only(0.6))); // immunosuppressive: lowers
+        let surveillance_im = surveillance.immune_kills.unwrap();
+        let immunosuppress_im = immunosuppress.immune_kills.unwrap();
         assert!(
             base_im >= 50,
             "baseline must produce enough immune kills to be informative; got {base_im}"
         );
+        // ---- Level 1: aggregate immune-kill shift, bidirectional. ----
         assert!(
             immunosuppress_im < base_im,
-            "immunosuppressive SASP field (strength>0) must reduce net immune kills \
-             (including non-senescent neighbors): baseline={base_im}, suppressed={immunosuppress_im}"
+            "immunosuppressive SASP field (strength>0) must reduce net immune kills: \
+             baseline={base_im}, suppressed={immunosuppress_im}"
         );
         assert!(
             surveillance_im > base_im,
@@ -5472,12 +5517,35 @@ mod tests {
             "the SASP field is bidirectional: surveillance={surveillance_im} must outkill \
              immunosuppression={immunosuppress_im}"
         );
+        // ---- Level 2: the BYSTANDER (non-senescent neighbor) effect (#376). ----
+        // The field arms populate `nonsenescent_immune_kills`; the baseline (no
+        // field) leaves it `None` (so the production matrix summary.json omits it).
+        assert!(
+            run_full(None).nonsenescent_immune_kills.is_none(),
+            "the no-field baseline must NOT populate nonsenescent_immune_kills"
+        );
+        let surveillance_bystander = surveillance
+            .nonsenescent_immune_kills
+            .expect("the field arm populates nonsenescent_immune_kills");
+        let immunosuppress_bystander = immunosuppress
+            .nonsenescent_immune_kills
+            .expect("the field arm populates nonsenescent_immune_kills");
+        // Kills on NON-senescent cells shift with the field sign — only possible
+        // if the diffusing field reaches the bystander population (the biochem and
+        // mask are identical across the two field arms).
+        assert!(
+            surveillance_bystander > immunosuppress_bystander,
+            "the SASP field must reach NON-senescent neighbors: surveillance \
+             non-senescent kills={surveillance_bystander} must exceed immunosuppressive \
+             non-senescent kills={immunosuppress_bystander}"
+        );
+        // ---- Determinism + identity. ----
         // Deterministic (the field + multiplier are pure functions of the fixed mask).
-        assert_eq!(immunosuppress_im, run(Some(field_only(0.6))));
+        assert_eq!(immunosuppress_im, im(Some(field_only(0.6))));
         // Identity: strength=0.0 with identity biochem + cell-autonomous coupling is
         // filtered to None ⇒ the no-senescence baseline EXACTLY (byte-identity).
         assert_eq!(
-            run(Some(field_only(0.0))),
+            im(Some(field_only(0.0))),
             base_im,
             "sasp_field_strength=0.0 (identity) must reproduce the no-senescence baseline"
         );

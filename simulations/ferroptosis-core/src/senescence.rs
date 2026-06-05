@@ -201,8 +201,11 @@ impl SenescenceConfig {
             // Paracrine immunosuppressive SASP field (#376): a positive strength
             // lowers the immune-kill probability of NEIGHBORING cells (including
             // non-senescent tumor cells the IL-1RA secretome protects), the
-            // established-tumor arm. Same sign rationale as `sasp_immune_mult`,
-            // but reaching beyond the source cell. UNCALIBRATED placeholder.
+            // established-tumor arm. Same biological axis (immunosuppressive vs
+            // surveillance) as `sasp_immune_mult`, reaching beyond the source cell;
+            // note the NUMERIC sign convention differs — an additive strength
+            // centered on 0 (`> 0` suppressive) here vs a multiplier centered on 1
+            // (`< 1` suppressive) for `sasp_immune_mult`. UNCALIBRATED placeholder.
             sasp_field_strength: 0.5,
         }
     }
