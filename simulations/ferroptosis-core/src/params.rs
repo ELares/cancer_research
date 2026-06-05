@@ -636,6 +636,14 @@ impl PersisterConfig {
     /// `{ acquisition_rate: 0.0, max_fraction: 0.8 }` silently disables
     /// acquisition (the short-circuit fires) — a safe direction, but use
     /// `default()` / `enabled()` rather than partial literals.
+    ///
+    /// Intentionally ignores the locking fields (#342): a locking-only config
+    /// (`lock_rate > 0` with all other rates zero) reports `is_identity() ==
+    /// true`. That is safe because with acquisition off there is no reversible
+    /// pool for locking to ratchet, so the locking path is a no-op anyway; but a
+    /// consumer that gates the locking path on `is_identity()` should gate on
+    /// `lock_rate` directly instead. `step_with_locking` does NOT use
+    /// `is_identity()`; it gates on `lock_rate == 0.0`.
     pub fn is_identity(&self) -> bool {
         self.acquisition_rate == 0.0
             && self.reversion_rate == 0.0

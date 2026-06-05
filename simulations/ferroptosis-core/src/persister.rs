@@ -154,6 +154,14 @@ impl PersisterState {
     /// Total persister fraction the consumer applies to the biochem effects
     /// (reversible + locked), clamped to the config ceiling `max_fraction`.
     /// With locking off, `locked == 0`, so this is just the reversible fraction.
+    ///
+    /// NOTE the `max_fraction` cap is enforced here, at the point of use, NOT
+    /// jointly on the two pools: `reversible` and `locked` are each clamped to
+    /// `max_fraction` individually, so under sustained acquisition + active
+    /// locking the internal sum can transiently exceed `max_fraction` (up to
+    /// 2×). This `total()` clamp is what bounds the value the biochem effects
+    /// actually see, so the consumer should always read the pool through
+    /// `total()` rather than summing the fields directly.
     pub fn total(&self, cfg: &PersisterConfig) -> f64 {
         (self.reversible + self.locked).clamp(0.0, cfg.max_fraction.max(0.0))
     }
