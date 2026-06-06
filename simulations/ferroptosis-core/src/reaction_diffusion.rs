@@ -42,9 +42,16 @@
 //! Gauss-Seidel with successive over-relaxation (SOR) in fixed linear-index
 //! sweep order, so the result is fully deterministic.
 //!
-//! **Validation.** [`analytical_1d_slab`] is the closed-form 1-D solution
-//! (Thomlinson & Gray 1955; the Krogh/diffusion-limited slab), used by the unit
-//! tests as the published-model benchmark that the solver must reproduce.
+//! **Verification.** [`analytical_1d_slab`] is the standard closed-form 1-D
+//! steady-state reaction-diffusion slab solution (the diffusion-limited-distance
+//! lineage after Thomlinson & Gray 1955). The unit tests use it as an *analytical
+//! self-consistency check*: that the SOR discretization converges to the exact
+//! solution of the same continuous equation it discretizes (max abs error < 0.01).
+//! This is numerical verification, not a cross-check against an independent model.
+//! The genuine external benchmark the issue asks for (the proxy-vs-RD field/kill
+//! comparison, and a PhysiCell / published-PDE cross-check) plus the
+//! where-the-proxy-is-adequate documentation are the remaining #343 acceptance
+//! criteria, delivered in the sim-tme-3d wiring PR (PR 2).
 //!
 //! This is an *opt-in alternative* supply field: nothing in the production
 //! matrix calls it, so adding the module is byte-identical.
@@ -232,14 +239,25 @@ pub fn reaction_diffusion_solve(
 /// Drop-in alternative to [`crate::vasculature::vessel_supply_field`]: the
 /// steady-state reaction-diffusion supply factor for every voxel, with
 /// non-tumor voxels overridden to `1.0` (matching the proxy's contract that
-/// only tumor cells carry a sub-unity supply). Use [`reaction_diffusion_solve`]
-/// when you need the raw stromal field or the convergence diagnostics.
+/// only tumor cells carry a sub-unity supply).
+///
+/// **Convergence:** this wrapper discards the [`RdSolution`] diagnostics, so if
+/// the solver hits `cfg.max_iters` before `cfg.tol` it silently returns the
+/// partially-relaxed field (a debug build will trip the `debug_assert` below).
+/// Call [`reaction_diffusion_solve`] directly when you need the raw stromal
+/// field or must check `converged` in a release build.
 pub fn reaction_diffusion_supply_field(
     grid: &TumorGrid3D,
     vessels: &[(f64, f64, f64)],
     cfg: &ReactionDiffusionConfig,
 ) -> Vec<f64> {
     let sol = reaction_diffusion_solve(grid, vessels, cfg);
+    debug_assert!(
+        sol.converged,
+        "reaction_diffusion_supply_field: solver did not converge in {} iters (residual {:e}); raise cfg.max_iters or relax cfg.tol",
+        sol.iters,
+        sol.residual
+    );
     grid.cells
         .iter()
         .zip(sol.field)
@@ -247,10 +265,12 @@ pub fn reaction_diffusion_supply_field(
         .collect()
 }
 
-/// Closed-form 1-D steady-state reaction-diffusion concentration (the
-/// published-model benchmark; Thomlinson & Gray 1955, the diffusion-limited
-/// slab / Krogh model). Source `c = 1` at `x = 0`, no-flux at `x = width_um`,
-/// uniform consumption with diffusion length `λ`:
+/// The standard closed-form 1-D steady-state reaction-diffusion concentration,
+/// used as the analytical self-consistency check the solver must reproduce (the
+/// diffusion-limited-distance lineage after Thomlinson & Gray 1955; the cosh
+/// form itself is the generic textbook solution of `D c'' − k c = 0`, not from
+/// that paper). Source `c = 1` at `x = 0`, no-flux at `x = width_um`, uniform
+/// consumption with diffusion length `λ`:
 ///
 /// ```text
 ///   c(x) = cosh((W − x) / λ) / cosh(W / λ)
@@ -258,9 +278,21 @@ pub fn reaction_diffusion_supply_field(
 ///
 /// For `W ≫ λ` this reduces to `exp(-x/λ)` (the exponential proxy), confirming
 /// the proxy is exactly the single-isolated-source limit of the RD field.
+///
+/// Evaluated in the algebraically-identical subtracted-exponent form
+/// `(e^{-x/λ} + e^{-(2W−x)/λ}) / (1 + e^{-2W/λ})`, whose exponents are all ≤ 0
+/// for `0 ≤ x ≤ W`, so it never overflows (the direct `cosh(W/λ)` form returns
+/// `inf/inf = NaN` once `W/λ ≳ 710`, e.g. a tiny `λ`).
 pub fn analytical_1d_slab(x_um: f64, width_um: f64, diffusion_length_um: f64) -> f64 {
     let lam = diffusion_length_um;
-    (((width_um - x_um) / lam).cosh() / (width_um / lam).cosh()).clamp(0.0, 1.0)
+    debug_assert!(
+        lam.is_finite() && lam > 0.0,
+        "analytical_1d_slab: diffusion_length_um must be finite and positive, got {lam}"
+    );
+    let a = (-x_um / lam).exp();
+    let b = (-(2.0 * width_um - x_um) / lam).exp();
+    let denom = 1.0 + (-2.0 * width_um / lam).exp();
+    ((a + b) / denom).clamp(0.0, 1.0)
 }
 
 #[cfg(test)]
@@ -291,10 +323,26 @@ mod tests {
     }
 
     #[test]
+    fn analytical_1d_slab_is_finite_for_tiny_diffusion_length() {
+        // Regression: the direct cosh(W/λ) form overflows to inf for W/λ ≳ 710
+        // and returns inf/inf = NaN; the subtracted-exponent form must instead
+        // give the physically-correct decayed-to-~0 value away from the source.
+        let v = analytical_1d_slab(10.0, 1000.0, 0.5); // W/λ = 2000
+        assert!(
+            v.is_finite() && (0.0..=1.0e-6).contains(&v),
+            "tiny-λ off-source value {v}"
+        );
+        // At the source the field is pinned to 1 regardless of λ.
+        assert!((analytical_1d_slab(0.0, 1000.0, 0.5) - 1.0).abs() < 1e-12);
+    }
+
+    #[test]
     fn solver_reproduces_1d_analytical_slab() {
-        // Published-model benchmark: the converged solver must match the
-        // closed-form cosh profile. Finite-volume no-flux puts the reflective
-        // face half a cell beyond the last node, so W = (rows-1)·h + 0.5·h.
+        // Analytical self-consistency check: the converged solver must match the
+        // closed-form cosh profile (the discretization converges to the exact
+        // solution of its own continuous equation). Finite-volume no-flux puts
+        // the reflective face half a cell beyond the last node, so
+        // W = (rows-1)·h + 0.5·h.
         let rows = 40;
         let h = 10.0;
         let lam = 80.0; // 8 cells
