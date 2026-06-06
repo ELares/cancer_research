@@ -98,6 +98,10 @@ def cvt(t):
     t = t.replace('—', '---')
     t = t.replace('≥', '$\\geq$')
     t = t.replace('≤', '$\\leq$')
+    t = t.replace('≳', '$\\gtrsim$')
+    t = t.replace('≲', '$\\lesssim$')
+    t = t.replace('≫', '$\\gg$')
+    t = t.replace('≪', '$\\ll$')
     t = t.replace('≈', '$\\approx$')
     t = t.replace('µ', '$\\mu$')
     t = t.replace('μ', '$\\mu$')      # U+03BC (Greek mu) — distinct from U+00B5 (micro sign)
@@ -122,6 +126,8 @@ def repl_footnote(m):
     text = text.replace('&', '\\&').replace('%', '\\%').replace('#', '\\#')
     # Handle Unicode that pdflatex can't render directly
     text = text.replace('≤', '$\\leq$').replace('≥', '$\\geq$')
+    text = text.replace('≲', '$\\lesssim$').replace('≳', '$\\gtrsim$')
+    text = text.replace('≫', '$\\gg$').replace('≪', '$\\ll$')
     text = text.replace('×', '$\\times$')
     text = text.replace('\u2009', ' ')  # thin space → regular space
     text = text.replace('—', '---').replace('–', '--')
