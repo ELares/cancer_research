@@ -25,12 +25,16 @@ of the cost. It is a screening, not a variance decomposition; we report it as su
   the kill-collapse asymmetry the headline reports. Each `sim-tme` run is far
   costlier than `sim-combo-mech`, so use a smaller `--trajectories` for it.
 
-The **immune-ratio** headline is still deferred: raw `immune_kills` is CONFOUNDED
-(SDT kills almost the whole tumor by ferroptosis first, leaving few cells for the
-immune layer, so the raw ratio runs OPPOSITE to the headline's DAMP-amplification
-framing). A faithful observable keys on the DAMP / ferroptotic-death density,
-which the 2D `sim-tme` summary does not yet expose. See the report's "Deferred"
-section; tracked under #331.
+The **immune-ratio** headline is still deferred, but NOT because the raw ratio is
+misleading in direction: at the canonical condition the raw `immune_kills` MATCHES
+the headline (SDT >> RSL3, ~104:1 at the default gradient-120 immune-on, the
+Figure-17 result). The subtlety is for a SENSITIVITY screen: `immune_kills` is
+confounded by POOL DEPLETION (SDT ferroptotically clears most of the tumor first,
+so a parameter that raises SDT's ferroptosis shrinks the residual pool the immune
+layer acts on, lowering the immune-kill COUNT even as per-cell amplification
+rises). A faithful sensitivity observable controls for the pool (e.g. the
+de-confounded rate `immune_kills / non-ferroptotic-cells`). See the report's
+"Deferred" section; tracked under #331.
 
 Self-contained (no SALib): the Morris estimator is ~40 lines and is validated on
 an analytic linear+interaction function in `tests/test_headline_sensitivity.py`.
@@ -336,14 +340,19 @@ def write_report(sections, levels, total_evals):
         lines += [
             "## Deferred: the immune-ratio headline",
             "",
-            "Raw `immune_kills` is CONFOUNDED as a sensitivity observable: SDT kills "
-            "almost the whole tumor by ferroptosis first, leaving few cells for the "
-            "immune layer, so the raw SDT:RSL3 immune-kill ratio runs OPPOSITE to the "
-            "headline's dense-DAMP-amplification framing. A faithful observable keys on "
-            "the DAMP / ferroptotic-death density that drives immune amplification, "
-            "which the 2D `sim-tme` summary does not yet expose (the 3D suite does). "
-            "Adding that metric + screening it is the remaining #331 increment, "
-            "deferred rather than screen a misleading observable.",
+            "The raw `immune_kills` ratio at the canonical condition MATCHES the "
+            "headline direction: SDT >> RSL3 (~104:1 at the default gradient-120, "
+            "immune-on; the Figure-17 result), because SDT's dense ferroptotic death "
+            "builds a large DAMP field that amplifies immune killing far more than "
+            "RSL3's sparse death. The deferral is a SENSITIVITY-observable subtlety, "
+            "not a direction problem: `immune_kills` is confounded by POOL DEPLETION "
+            "(SDT ferroptotically clears most of the tumor first, so a parameter that "
+            "raises SDT's ferroptosis shrinks the residual pool the immune layer acts "
+            "on, which can lower the immune-kill COUNT even as per-cell amplification "
+            "rises). A faithful sensitivity observable controls for the pool, e.g. the "
+            "de-confounded rate `immune_kills / (total_tumor - ferroptosis_kills)` "
+            "(which at baseline gives an even sharper SDT:RSL3 asymmetry, ~850:1). "
+            "Building that screen is the remaining #331 increment.",
             "",
             "Tracked under #331 (which stays open for the immune headline).",
         ]
