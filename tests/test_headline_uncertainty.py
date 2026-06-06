@@ -88,5 +88,29 @@ def test_partition_all_undefined_yields_empty():
     assert finite.size == 0 and n_undefined == 2 and n_failed == 1
 
 
+def test_partition_tme_drops_nan_per_observable_and_counts_failures():
+    """sim-tme partitioning: a run dict with a non-finite observable is dropped
+    from THAT observable's array (independently), and None is a run failure.
+    Guards the same NaN-poisons-percentile contract as the Bliss path, per
+    observable, without the costly binary."""
+    results = [
+        {"hypoxia": 0.9, "immune": 0.04},
+        {"hypoxia": float("nan"), "immune": 0.05},  # hypoxia dropped, immune kept
+        None,  # run failure
+        {"hypoxia": 0.8, "immune": float("inf")},  # immune dropped, hypoxia kept
+        {"hypoxia": 0.7, "immune": 0.03},
+    ]
+    hyp, imm, n_failed = hu._partition_tme(results)
+    assert n_failed == 1
+    assert sorted(hyp.tolist()) == [0.7, 0.8, 0.9]  # the NaN-hypoxia row dropped
+    assert sorted(imm.tolist()) == [0.03, 0.04, 0.05]  # the inf-immune row dropped
+    assert np.all(np.isfinite(hyp)) and np.all(np.isfinite(imm))
+
+
+def test_partition_tme_all_failed_yields_empty():
+    hyp, imm, n_failed = hu._partition_tme([None, None])
+    assert hyp.size == 0 and imm.size == 0 and n_failed == 2
+
+
 if __name__ == "__main__":
     sys.exit(pytest.main([__file__, "-v"]))
