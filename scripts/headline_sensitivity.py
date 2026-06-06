@@ -37,8 +37,10 @@ an analytic linear+interaction function in `tests/test_headline_sensitivity.py`.
 Deterministic given the seed. Writes `analysis/headline-sensitivity-report.md`.
 
 Usage:
-    python3 scripts/headline_sensitivity.py [--trajectories 10] [--levels 4]
-            [--workers 4] [--smoke] [--binary PATH]
+    python3 scripts/headline_sensitivity.py [--headline {bliss,hypoxia,both}]
+            [--trajectories 100] [--tme-trajectories 6] [--levels 4]
+            [--workers 4] [--smoke]
+    (run with no args reproduces the committed analysis/headline-sensitivity-report.md)
 """
 
 import argparse
@@ -192,7 +194,7 @@ def run_hypoxia_gap(params_row, binary):
 
 
 def make_eval(run_fn, binary, workers):
-    """Parallel evaluator: map `run_fn(row, binary)` over the Saltelli design rows."""
+    """Parallel evaluator: map `run_fn(row, binary)` over the Morris design rows."""
 
     def eval_fn(scaled_rows):
         with ThreadPoolExecutor(max_workers=workers) as ex:
@@ -357,9 +359,10 @@ def main():
     ap.add_argument(
         "--tme-trajectories",
         type=int,
-        default=10,
+        default=6,
         help="trajectories for the sim-tme (hypoxia) headline; far fewer than --trajectories "
-        "because each sim-tme run is orders of magnitude slower than sim-combo-mech",
+        "because each sim-tme run is orders of magnitude slower than sim-combo-mech. The "
+        "default (6) is the value the committed report was generated with.",
     )
     ap.add_argument("--smoke", action="store_true", help="tiny run (2 trajectories each) for a wiring check")
     ap.add_argument(
