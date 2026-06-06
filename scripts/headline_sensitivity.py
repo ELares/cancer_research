@@ -183,10 +183,27 @@ HYPOXIA_GRADIENT = "gradient_120um"
 
 
 def _tme_row(conditions, tx, mode):
-    for r in conditions:
-        if r["treatment"] == tx and r["o2_condition"] == HYPOXIA_GRADIENT and r["immune_mode"] == mode:
-            return r
-    raise RuntimeError(f"no {tx}/{HYPOXIA_GRADIENT}/{mode} row in tme_summary.json")
+    """The CANONICAL (no-stromal, no-pH) row for (treatment, reference gradient,
+    immune_mode). Several rows can share those three keys (stromal-on and pH-on
+    variants of the same immune condition), so we additionally require the baseline
+    stromal_mode (off/absent) and no pH overlay, and assert a UNIQUE match — a
+    structure change then fails loudly rather than silently binding the observable
+    to a stromal- or pH-modulated condition via JSON ordering."""
+    matches = [
+        r
+        for r in conditions
+        if r["treatment"] == tx
+        and r["o2_condition"] == HYPOXIA_GRADIENT
+        and r["immune_mode"] == mode
+        and r.get("stromal_mode") in (None, "off")
+        and r.get("ph_mode") in (None, "off")
+    ]
+    if len(matches) != 1:
+        raise RuntimeError(
+            f"expected exactly 1 canonical {tx}/{HYPOXIA_GRADIENT}/{mode} row "
+            f"(baseline stromal, no pH), found {len(matches)}"
+        )
+    return matches[0]
 
 
 def run_sim_tme_observables(params_row, binary):
@@ -399,24 +416,19 @@ def write_report(sections, levels, total_evals):
         lines += sec_lines
     if not any(label == "immune" for _, label in sections):
         lines += [
-            "## Deferred: the immune-ratio headline",
+            "## Note: the immune headline (not screened in this partial run)",
             "",
-            "The raw `immune_kills` ratio at the canonical condition MATCHES the "
-            "headline direction: SDT >> RSL3 (~104:1 at the default gradient-120, "
-            "immune-on, matching the manuscript's immune-coupling figure), because "
-            "SDT's dense ferroptotic death "
-            "builds a large DAMP field that amplifies immune killing far more than "
-            "RSL3's sparse death. The deferral is a SENSITIVITY-observable subtlety, "
-            "not a direction problem: `immune_kills` is confounded by POOL DEPLETION "
-            "(SDT ferroptotically clears most of the tumor first, so a parameter that "
-            "raises SDT's ferroptosis shrinks the residual pool the immune layer acts "
-            "on, which can lower the immune-kill COUNT even as per-cell amplification "
-            "rises). A faithful sensitivity observable controls for the pool, e.g. the "
-            "de-confounded rate `immune_kills / (total_tumor - ferroptosis_kills)` "
-            "(which at baseline gives an even sharper SDT:RSL3 asymmetry, ~850:1). "
-            "Building that screen is the remaining #331 increment.",
-            "",
-            "Tracked under #331 (which stays open for the immune headline).",
+            "The immune-amplification headline IS screened by the default `both` / "
+            "`sim-tme` run (it shares the sim-tme runs with the hypoxia headline), so "
+            "the committed report includes its section. This note appears only when "
+            "the immune headline was NOT requested (e.g. `--headline bliss`); re-run "
+            "without `--headline bliss` to include it. The observable is SDT's "
+            "pool-de-confounded immune kill rate "
+            "`immune_kills / (total_tumor - ferroptosis_kills)`: the raw immune ratio "
+            "matches the headline (SDT >> RSL3, ~104:1) but is confounded for a "
+            "sensitivity screen by pool depletion (SDT ferroptotically clears most "
+            "cells first), and de-confounding isolates the amplification per available "
+            "cell (bounded in [0, 1]).",
         ]
     REPORT.write_text("\n".join(lines) + "\n")
 
