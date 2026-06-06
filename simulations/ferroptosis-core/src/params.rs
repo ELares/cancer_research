@@ -678,9 +678,170 @@ impl PersisterConfig {
     }
 }
 
+// ============================================================
+// Biochem parameter overrides (#331)
+// ============================================================
+//
+// One name->field mapping, shared by the Python binding (`sim_batch`/`sim_cell`)
+// AND the simulation binaries (sim-tme / sim-combo-mech), so global-sensitivity
+// / calibration drivers can perturb the SAME biochemical rate constants on every
+// code path without a per-consumer copy of the match arm. An EMPTY override set
+// is a no-op, which is what keeps the default (un-driven) runs byte-identical.
+
+/// Apply `(name, value)` biochem-parameter overrides onto `params`, in place.
+/// The single source of truth for the override-name -> field mapping. Returns
+/// `Err(unknown_name)` on the first unrecognized parameter so the caller can
+/// report it. An empty iterator is a no-op.
+///
+/// The covered set is the biochemical rate constants the Python binding exposes
+/// and the PRCC / Sobol sensitivity work (#134/#331) screens; structural toggles
+/// and the spatial-layer configs are deliberately NOT here (they are separate
+/// `*Config` structs).
+pub fn apply_param_overrides<I, S>(params: &mut Params, overrides: I) -> Result<(), String>
+where
+    I: IntoIterator<Item = (S, f64)>,
+    S: AsRef<str>,
+{
+    for (key, val) in overrides {
+        match key.as_ref() {
+            "fenton_rate" => params.fenton_rate = val,
+            "gsh_scav_efficiency" => params.gsh_scav_efficiency = val,
+            "gsh_km" => params.gsh_km = val,
+            "nrf2_gsh_rate" => params.nrf2_gsh_rate = val,
+            "lp_rate" => params.lp_rate = val,
+            "lp_propagation" => params.lp_propagation = val,
+            "gpx4_rate" => params.gpx4_rate = val,
+            "fsp1_rate" => params.fsp1_rate = val,
+            "scd_mufa_rate" => params.scd_mufa_rate = val,
+            "scd_mufa_max" => params.scd_mufa_max = val,
+            "initial_mufa_protection" => params.initial_mufa_protection = val,
+            "scd_mufa_decay" => params.scd_mufa_decay = val,
+            "gpx4_degradation_by_ros" => params.gpx4_degradation_by_ros = val,
+            "gpx4_nrf2_upregulation" => params.gpx4_nrf2_upregulation = val,
+            "sdt_ros" => params.sdt_ros = val,
+            "pdt_ros" => params.pdt_ros = val,
+            "rsl3_gpx4_inhib" => params.rsl3_gpx4_inhib = val,
+            "gsh_max" => params.gsh_max = val,
+            "gpx4_nrf2_target_multiplier" => params.gpx4_nrf2_target_multiplier = val,
+            "death_threshold" => params.death_threshold = val,
+            other => return Err(other.to_string()),
+        }
+    }
+    Ok(())
+}
+
+/// Parse a JSON object `{"param_name": value, ...}` into override pairs (sorted
+/// by name for determinism; a JSON object cannot carry duplicate keys, and
+/// `apply_param_overrides` applies each once, so order does not affect the
+/// result). Used by the binaries to read a driver-supplied override set.
+pub fn parse_param_overrides_json(s: &str) -> Result<Vec<(String, f64)>, String> {
+    let map: std::collections::BTreeMap<String, f64> =
+        serde_json::from_str(s).map_err(|e| format!("invalid override JSON: {e}"))?;
+    Ok(map.into_iter().collect())
+}
+
+/// Pure core of [`param_overrides_from_env`] (no process-env access, so it is
+/// unit-testable without env-var races). `None`/blank ⇒ no overrides. A value
+/// starting with `{` is treated as an inline JSON object; otherwise it is a path
+/// to a JSON file.
+pub fn overrides_from_env_value(value: Option<&str>) -> Result<Vec<(String, f64)>, String> {
+    match value {
+        None => Ok(Vec::new()),
+        Some(s) if s.trim().is_empty() => Ok(Vec::new()),
+        Some(s) => {
+            let t = s.trim();
+            let json = if t.starts_with('{') {
+                t.to_string()
+            } else {
+                std::fs::read_to_string(t)
+                    .map_err(|e| format!("FERRO_PARAM_OVERRIDES path '{t}': {e}"))?
+            };
+            parse_param_overrides_json(&json)
+        }
+    }
+}
+
+/// Read biochem overrides from the `FERRO_PARAM_OVERRIDES` env var, which holds
+/// EITHER an inline JSON object (`{"lp_rate":0.05}`) OR a path to such a JSON
+/// file. Unset/blank ⇒ `Ok(vec![])` (the no-op, byte-identical default path a
+/// binary takes when no driver is perturbing it).
+pub fn param_overrides_from_env() -> Result<Vec<(String, f64)>, String> {
+    overrides_from_env_value(std::env::var("FERRO_PARAM_OVERRIDES").ok().as_deref())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn empty_overrides_are_a_no_op() {
+        // The byte-identity guarantee for the default (un-driven) binary path:
+        // applying no overrides leaves Params bit-for-bit unchanged.
+        let mut p = Params::default();
+        let before = serde_json::to_string(&p).unwrap();
+        apply_param_overrides(&mut p, Vec::<(String, f64)>::new()).unwrap();
+        // Compare the serialized form (Params has no PartialEq; the JSON form is
+        // also the surface the binaries' byte-identity is judged on).
+        assert_eq!(serde_json::to_string(&p).unwrap(), before);
+        // And the env reader returns nothing when the var is unset/blank.
+        assert!(overrides_from_env_value(None).unwrap().is_empty());
+        assert!(overrides_from_env_value(Some("   ")).unwrap().is_empty());
+    }
+
+    #[test]
+    fn apply_param_overrides_sets_named_fields_and_rejects_unknown() {
+        let mut p = Params::default();
+        apply_param_overrides(
+            &mut p,
+            [
+                ("lp_propagation".to_string(), 0.123),
+                ("gpx4_rate".to_string(), 0.456),
+                ("death_threshold".to_string(), 9.0),
+            ],
+        )
+        .unwrap();
+        assert_eq!(p.lp_propagation, 0.123);
+        assert_eq!(p.gpx4_rate, 0.456);
+        assert_eq!(p.death_threshold, 9.0);
+        // Every PRCC-screened name resolves (no typo in the mapping).
+        let prcc = [
+            "fenton_rate",
+            "gsh_scav_efficiency",
+            "lp_rate",
+            "lp_propagation",
+            "gpx4_rate",
+            "fsp1_rate",
+            "nrf2_gsh_rate",
+            "gpx4_degradation_by_ros",
+            "death_threshold",
+            "sdt_ros",
+            "rsl3_gpx4_inhib",
+        ];
+        for name in prcc {
+            apply_param_overrides(&mut Params::default(), [(name, 1.0)]).unwrap();
+        }
+        // Unknown name is reported, not silently ignored.
+        let err =
+            apply_param_overrides(&mut Params::default(), [("not_a_param", 1.0)]).unwrap_err();
+        assert_eq!(err, "not_a_param");
+    }
+
+    #[test]
+    fn overrides_from_inline_json_value_round_trip() {
+        let pairs = overrides_from_env_value(Some(r#"{"lp_rate": 0.05, "sdt_ros": 7.5}"#)).unwrap();
+        // BTreeMap-sorted, so deterministic order: lp_rate before sdt_ros.
+        assert_eq!(
+            pairs,
+            vec![("lp_rate".to_string(), 0.05), ("sdt_ros".to_string(), 7.5)]
+        );
+        // Applying the parsed pairs sets the fields.
+        let mut p = Params::default();
+        apply_param_overrides(&mut p, pairs).unwrap();
+        assert_eq!(p.lp_rate, 0.05);
+        assert_eq!(p.sdt_ros, 7.5);
+        // Malformed JSON is an error, not a panic.
+        assert!(overrides_from_env_value(Some("{not json")).is_err());
+    }
 
     /// SpatialParams JSON written before the photosensitizer/DLI fields
     /// existed must still deserialize, with new fields filled by serde
