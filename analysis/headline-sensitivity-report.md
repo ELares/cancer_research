@@ -52,8 +52,22 @@ Observable: the SDT-minus-RSL3 hypoxic-zone kill GAP at the reference O2 gradien
 
 **Caveat (the contested leg).** SDT is modeled here as O2-INDEPENDENT, the optimistic upper bound (Section 7.1). So this screen attributes the gap to `sdt_ros` *given that assumption*; under the off-by-default O2-dependent SDT mode (#336/#358) the SDT hypoxic kill would itself collapse, and that O2 dependence is a separate knob not in this PRCC rate-constant set. The result is therefore: *among the biochemical rate constants*, only the SDT dose matters for the (O2-independent) hypoxia gap.
 
-## Deferred: the immune-ratio headline
+## Headline: immune amplification (SDT vs RSL3) — `sim-tme`
 
-The raw `immune_kills` ratio at the canonical condition MATCHES the headline direction: SDT >> RSL3 (~104:1 at the default gradient-120, immune-on, matching the manuscript's immune-coupling figure), because SDT's dense ferroptotic death builds a large DAMP field that amplifies immune killing far more than RSL3's sparse death. The deferral is a SENSITIVITY-observable subtlety, not a direction problem: `immune_kills` is confounded by POOL DEPLETION (SDT ferroptotically clears most of the tumor first, so a parameter that raises SDT's ferroptosis shrinks the residual pool the immune layer acts on, which can lower the immune-kill COUNT even as per-cell amplification rises). A faithful sensitivity observable controls for the pool, e.g. the de-confounded rate `immune_kills / (total_tumor - ferroptosis_kills)` (which at baseline gives an even sharper SDT:RSL3 asymmetry, ~850:1). Building that screen is the remaining #331 increment.
+Observable: SDT's POOL-DE-CONFOUNDED immune kill rate, `immune_kills / (total_tumor - ferroptosis_kills)` at the reference gradient (`gradient_120um`, immune on) from `tme_summary.json`. The raw immune-kill ratio matches the headline (SDT >> RSL3, ~104:1) but is confounded for a sensitivity screen by pool depletion (SDT ferroptotically clears most of the tumor first); dividing by the non-ferroptotic pool isolates the DAMP-driven amplification PER available cell and is bounded in [0, 1] (immune kills are a subset of that pool, so it cannot blow up). Computed from the SAME sim-tme runs as the hypoxia headline (Morris r=6, 72 runs).
 
-Tracked under #331 (which stays open for the immune headline).
+| rank | parameter | mu* | sigma | sigma/mu* |
+|------|-----------|-----|-------|-----------|
+| 1 | `lp_propagation` | 0.0996 | 0.1125 | 1.13 |
+| 2 | `lp_rate` | 0.0570 | 0.0816 | 1.43 |
+| 3 | `sdt_ros` | 0.0487 | 0.0352 | 0.72 |
+| 4 | `death_threshold` | 0.0392 | 0.0146 | 0.37 |
+| 5 | `gsh_scav_efficiency` | 0.0356 | 0.0297 | 0.83 |
+| 6 | `gpx4_rate` | 0.0297 | 0.0209 | 0.70 |
+| 7 | `fsp1_rate` | 0.0279 | 0.0347 | 1.24 |
+| 8 | `gpx4_degradation_by_ros` | 0.0208 | 0.0317 | 1.52 |
+| 9 | `nrf2_gsh_rate` | 0.0171 | 0.0210 | 1.23 |
+| 10 | `fenton_rate` | 0.0018 | 0.0017 | 0.94 |
+| 11 | `rsl3_gpx4_inhib` | 0.0000 | 0.0000 | nan |
+
+**Top drivers:** `lp_propagation`, `lp_rate`, `sdt_ros`. The LP-cascade constants (`lp_propagation`, `lp_rate`) lead, with `sdt_ros` close behind. The de-confounded amplification rides on the SAME ferroptosis death-switch the single-cell Sobol and the hypoxia screen rank, because the DAMP that primes immune killing IS the ferroptotic-death density, and that density is set by how readily cells tip into ferroptosis (the LP cascade) more than by the SDT dose alone. So the immune amplification is NOT a structurally independent axis: it is governed by the death-switch biochemistry (plus the SDT dose), not by a separate immune mechanism. Note the CONTRAST with the hypoxia gap, where `sdt_ros` led: SDT's hypoxic SURVIVAL is dose-driven, but its per-cell immune AMPLIFICATION is death-density-driven. The immune-coupling parameters themselves (DAMP diffusion, DC activation, immune kill rate) are NOT in this PRCC biochemical set, so this screen says which BIOCHEMICAL constants move the amplification, not how the immune coupling is tuned. `rsl3_gpx4_inhib` is a structural zero (the SDT immune-on observable never invokes RSL3's GPX4 inhibition).

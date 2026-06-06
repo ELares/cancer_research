@@ -18,31 +18,28 @@ effect) and `sigma` (interaction / nonlinearity indicator). It answers "which
 parameters, and which show interactions" — the issue's question — at a fraction
 of the cost. It is a screening, not a variance decomposition; we report it as such.
 
-**Covered headlines:**
+**Covered headlines (all three):**
 - **Bliss synergy** (RSL3 + FSP1i 1.99x from `sim-combo-mech`): a clean scalar,
   cheap to evaluate (~seconds/run).
-- **Hypoxia kill-collapse** (SDT-minus-RSL3 hypoxic-zone kill GAP from `sim-tme`):
-  the kill-collapse asymmetry the headline reports. Each `sim-tme` run is far
-  costlier than `sim-combo-mech`, so use a smaller `--trajectories` for it.
+- **Hypoxia kill-collapse** (SDT-minus-RSL3 hypoxic-zone kill GAP from `sim-tme`).
+- **Immune amplification** (SDT's POOL-DE-CONFOUNDED immune kill rate
+  `immune_kills / (total_tumor - ferroptosis_kills)` from `sim-tme`). The raw
+  immune-kill ratio matches the headline (SDT >> RSL3, ~104:1) but is confounded
+  for a sensitivity screen by pool depletion (SDT ferroptotically clears most of
+  the tumor first); de-confounding by the non-ferroptotic pool isolates the
+  DAMP-driven amplification per available cell and is bounded in [0, 1].
 
-The **immune-ratio** headline is still deferred, but NOT because the raw ratio is
-misleading in direction: at the canonical condition the raw `immune_kills` MATCHES
-the headline (SDT >> RSL3, ~104:1 at the default gradient-120 immune-on, matching
-the manuscript's immune-coupling figure). The subtlety is for a SENSITIVITY
-screen: `immune_kills` is
-confounded by POOL DEPLETION (SDT ferroptotically clears most of the tumor first,
-so a parameter that raises SDT's ferroptosis shrinks the residual pool the immune
-layer acts on, lowering the immune-kill COUNT even as per-cell amplification
-rises). A faithful sensitivity observable controls for the pool (e.g. the
-de-confounded rate `immune_kills / non-ferroptotic-cells`). See the report's
-"Deferred" section; tracked under #331.
+The two `sim-tme` headlines (hypoxia + immune) are screened from ONE shared set of
+sim-tme runs (a single run yields both observables), so the immune headline adds
+no extra cost. Each `sim-tme` run is far costlier than `sim-combo-mech`, so the
+`sim-tme` headlines use a smaller `--tme-trajectories`.
 
 Self-contained (no SALib): the Morris estimator is ~40 lines and is validated on
 an analytic linear+interaction function in `tests/test_headline_sensitivity.py`.
 Deterministic given the seed. Writes `analysis/headline-sensitivity-report.md`.
 
 Usage:
-    python3 scripts/headline_sensitivity.py [--headline {bliss,hypoxia,both}]
+    python3 scripts/headline_sensitivity.py [--headline {bliss,sim-tme,both}]
             [--trajectories 100] [--tme-trajectories 6] [--levels 4]
             [--workers 4] [--smoke]
     (run with no args reproduces the committed analysis/headline-sensitivity-report.md)
@@ -105,31 +102,47 @@ def elementary_effects(traj_points, traj_values):
     return ee
 
 
-def morris_indices(eval_fn, lows, highs, n_traj, levels, rng_seed):
-    """Run a Morris screening of `eval_fn` (maps an `(m, k)` unit-cube array to
-    `(m,)` outputs) over `[lows, highs]`. Returns `(mu_star, sigma, names_order)`
-    where `mu_star[i] = mean(|EE_i|)` and `sigma[i] = std(EE_i)` over trajectories."""
+def _design(lows, highs, n_traj, levels, rng_seed):
+    """Build the Morris design: the unit-cube trajectory points and the same
+    points scaled to `[lows, highs]`. Returns `(all_unit, scaled, k)`."""
     lows = np.asarray(lows, float)
     highs = np.asarray(highs, float)
     k = len(lows)
     delta = levels / (2.0 * (levels - 1.0))  # standard Morris step
     rng = np.random.default_rng(rng_seed)
-
     trajectories = [morris_trajectory(k, levels, delta, rng) for _ in range(n_traj)]
     all_unit = np.vstack(trajectories)  # (n_traj*(k+1), k)
     scaled = lows + all_unit * (highs - lows)
-    values = np.asarray(eval_fn(scaled), float)
+    return all_unit, scaled, k
 
-    ee_rows = []
+
+def _indices_from_values(all_unit, values, n_traj, k):
+    """`(mu_star, sigma)` from the design points + their scalar outputs."""
+    values = np.asarray(values, float)
     step = k + 1
-    for t in range(n_traj):
-        pts = all_unit[t * step : (t + 1) * step]
-        vals = values[t * step : (t + 1) * step]
-        ee_rows.append(elementary_effects(pts, vals))
+    ee_rows = [
+        elementary_effects(all_unit[t * step : (t + 1) * step], values[t * step : (t + 1) * step])
+        for t in range(n_traj)
+    ]
     ee = np.array(ee_rows)  # (n_traj, k)
-    mu_star = np.nanmean(np.abs(ee), axis=0)
-    sigma = np.nanstd(ee, axis=0)
-    return mu_star, sigma
+    return np.nanmean(np.abs(ee), axis=0), np.nanstd(ee, axis=0)
+
+
+def morris_indices(eval_fn, lows, highs, n_traj, levels, rng_seed):
+    """Morris screening of `eval_fn` (maps an `(m, k)` unit-cube array to `(m,)`
+    outputs) over `[lows, highs]`. Returns `(mu_star, sigma)`."""
+    all_unit, scaled, k = _design(lows, highs, n_traj, levels, rng_seed)
+    return _indices_from_values(all_unit, eval_fn(scaled), n_traj, k)
+
+
+def morris_indices_multi(eval_multi_fn, lows, highs, n_traj, levels, rng_seed, keys):
+    """Morris screening of a MULTI-output model: `eval_multi_fn` maps the `(m, k)`
+    design to a list of `m` dicts (one expensive run per design point yields ALL
+    `keys`). Returns `{key: (mu_star, sigma)}`. This is what lets the two sim-tme
+    headlines (hypoxia, immune) share one set of sim-tme runs."""
+    all_unit, scaled, k = _design(lows, highs, n_traj, levels, rng_seed)
+    rows = eval_multi_fn(scaled)
+    return {key: _indices_from_values(all_unit, [r[key] for r in rows], n_traj, k) for key in keys}
 
 
 # ----------------------------------------------------------------------------
@@ -169,11 +182,25 @@ def run_bliss(params_row, binary):
 HYPOXIA_GRADIENT = "gradient_120um"
 
 
-def run_hypoxia_gap(params_row, binary):
-    """SDT-minus-RSL3 hypoxic-zone kill GAP at the reference gradient, from
-    sim-tme's tme_summary.json (the immune-off conditions: the hypoxia headline is
-    the O2-only comparison). The gap is the kill-collapse asymmetry the headline
-    reports (SDT holds, RSL3 collapses)."""
+def _tme_row(conditions, tx, mode):
+    for r in conditions:
+        if r["treatment"] == tx and r["o2_condition"] == HYPOXIA_GRADIENT and r["immune_mode"] == mode:
+            return r
+    raise RuntimeError(f"no {tx}/{HYPOXIA_GRADIENT}/{mode} row in tme_summary.json")
+
+
+def run_sim_tme_observables(params_row, binary):
+    """Run sim-tme ONCE and extract BOTH sim-tme headline observables from its
+    `tme_summary.json` (so the hypoxia and immune screens share these costly runs):
+
+    - `hypoxia`: the SDT-minus-RSL3 hypoxic-zone kill GAP (immune off) — the
+      kill-collapse asymmetry (SDT holds, RSL3 collapses).
+    - `immune`: SDT's POOL-DE-CONFOUNDED immune kill rate (immune on),
+      `immune_kills / (total_tumor - ferroptosis_kills)`. This controls for the
+      pool the immune layer can act on (SDT ferroptotically clears most cells
+      first), so it isolates the DAMP-driven amplification rather than the
+      pool size. It is naturally bounded in [0, 1] (immune kills are a subset of
+      the non-ferroptotic cells), so it does not blow up under perturbation."""
     with tempfile.TemporaryDirectory(prefix="ferro_morris_tme_") as workdir:
         overrides = {n: float(v) for n, v in zip(PARAM_NAMES, params_row)}
         env = dict(os.environ, FERRO_PARAM_OVERRIDES=json.dumps(overrides))
@@ -185,17 +212,14 @@ def run_hypoxia_gap(params_row, binary):
         summary = Path(workdir) / "output" / "tme" / "tme_summary.json"
         conditions = json.loads(summary.read_text())["conditions"]
 
-        def hyp(tx):
-            for r in conditions:
-                if (
-                    r["treatment"] == tx
-                    and r["o2_condition"] == HYPOXIA_GRADIENT
-                    and r["immune_mode"] == "off"
-                ):
-                    return r["hypoxic_kill_rate"]
-            raise RuntimeError(f"no {tx}/{HYPOXIA_GRADIENT}/off row in tme_summary.json")
-
-        return hyp("SDT") - hyp("RSL3")
+        hypoxia = (
+            _tme_row(conditions, "SDT", "off")["hypoxic_kill_rate"]
+            - _tme_row(conditions, "RSL3", "off")["hypoxic_kill_rate"]
+        )
+        sdt = _tme_row(conditions, "SDT", "immune_on")
+        pool = max(sdt["total_tumor"] - (sdt["ferroptosis_kills"] or 0), 1)
+        immune = (sdt["immune_kills"] or 0) / pool
+        return {"hypoxia": hypoxia, "immune": immune}
 
 
 def make_eval(run_fn, binary, workers):
@@ -307,6 +331,42 @@ def hypoxia_section(mu_star, sigma, n_traj, n_evals):
     ], order
 
 
+def immune_section(mu_star, sigma, n_traj, n_evals):
+    order, table = _index_table(mu_star, sigma)
+    top = ", ".join(f"`{PARAM_NAMES[i]}`" for i in order[:3])
+    return [
+        "## Headline: immune amplification (SDT vs RSL3) — `sim-tme`",
+        "",
+        "Observable: SDT's POOL-DE-CONFOUNDED immune kill rate, "
+        "`immune_kills / (total_tumor - ferroptosis_kills)` at the reference gradient "
+        f"(`{HYPOXIA_GRADIENT}`, immune on) from `tme_summary.json`. The raw "
+        "immune-kill ratio matches the headline (SDT >> RSL3, ~104:1) but is confounded "
+        "for a sensitivity screen by pool depletion (SDT ferroptotically clears most "
+        "of the tumor first); dividing by the non-ferroptotic pool isolates the "
+        "DAMP-driven amplification PER available cell and is bounded in [0, 1] (immune "
+        "kills are a subset of that pool, so it cannot blow up). Computed from the SAME "
+        f"sim-tme runs as the hypoxia headline (Morris r={n_traj}, {n_evals} runs).",
+        "",
+        *table,
+        "",
+        f"**Top drivers:** {top}. The LP-cascade constants (`lp_propagation`, `lp_rate`) "
+        "lead, with `sdt_ros` close behind. The de-confounded amplification rides on the "
+        "SAME ferroptosis death-switch the single-cell Sobol and the hypoxia screen rank, "
+        "because the DAMP that primes immune killing IS the ferroptotic-death density, and "
+        "that density is set by how readily cells tip into ferroptosis (the LP cascade) "
+        "more than by the SDT dose alone. So the immune amplification is NOT a structurally "
+        "independent axis: it is governed by the death-switch biochemistry (plus the SDT "
+        "dose), not by a separate immune mechanism. Note the CONTRAST with the hypoxia gap, "
+        "where `sdt_ros` led: SDT's hypoxic SURVIVAL is dose-driven, but its per-cell immune "
+        "AMPLIFICATION is death-density-driven. The immune-coupling parameters themselves "
+        "(DAMP diffusion, DC activation, immune kill rate) are NOT in this PRCC biochemical "
+        "set, so this screen says which BIOCHEMICAL constants move the amplification, not "
+        "how the immune coupling is tuned. `rsl3_gpx4_inhib` is a structural zero (the SDT "
+        "immune-on observable never invokes RSL3's GPX4 inhibition).",
+        "",
+    ], order
+
+
 def write_report(sections, levels, total_evals):
     """Assemble the multi-headline report from `(lines, label)` sections."""
     lines = [
@@ -378,38 +438,50 @@ def main():
     ap.add_argument("--smoke", action="store_true", help="tiny run (2 trajectories each) for a wiring check")
     ap.add_argument(
         "--headline",
-        choices=["bliss", "hypoxia", "both"],
+        choices=["bliss", "sim-tme", "both"],
         default="both",
-        help="which headline(s) to screen (sim-tme is much slower than sim-combo-mech)",
+        help="which headline(s): bliss (sim-combo-mech), sim-tme (hypoxia + immune, "
+        "which SHARE one set of sim-tme runs), or both",
     )
     args = ap.parse_args()
     bliss_r = 2 if args.smoke else args.trajectories
     tme_r = 2 if args.smoke else args.tme_trajectories
 
-    # Per-headline: (run_fn, binary_name, section_fn, label, n_traj).
-    specs = []
-    if args.headline in ("bliss", "both"):
-        specs.append((run_bliss, "sim-combo-mech", bliss_section, "bliss", bliss_r))
-    if args.headline in ("hypoxia", "both"):
-        specs.append((run_hypoxia_gap, "sim-tme", hypoxia_section, "hypoxia", tme_r))
+    def _bin(name):
+        b = _default_binary(name)
+        if b is None:
+            sys.exit(f"{name} binary not found. Build it: (cd simulations && cargo build --release -p {name})")
+        return b
 
     sections = []
     total_evals = 0
-    for run_fn, bin_name, section_fn, label, n_traj in specs:
-        binary = _default_binary(bin_name)
-        if binary is None:
-            sys.exit(
-                f"{bin_name} binary not found. Build it first:\n"
-                f"  (cd simulations && cargo build --release -p {bin_name})"
-            )
-        n_evals = n_traj * (len(PARAM_NAMES) + 1)
+
+    if args.headline in ("bliss", "both"):
+        n_evals = bliss_r * (len(PARAM_NAMES) + 1)
         total_evals += n_evals
-        print(f"[{label}] Morris: r={n_traj}, k={len(PARAM_NAMES)} -> {n_evals} runs of {bin_name}")
-        eval_fn = make_eval(run_fn, binary, args.workers)
-        mu_star, sigma = morris_indices(eval_fn, LOWS, HIGHS, n_traj, args.levels, args.seed)
-        sec_lines, order = section_fn(mu_star, sigma, n_traj, n_evals)
-        sections.append((sec_lines, label))
-        print(f"[{label}] top-3:", ", ".join(PARAM_NAMES[i] for i in order[:3]))
+        print(f"[bliss] Morris: r={bliss_r}, k={len(PARAM_NAMES)} -> {n_evals} runs of sim-combo-mech")
+        mu_star, sigma = morris_indices(
+            make_eval(run_bliss, _bin("sim-combo-mech"), args.workers),
+            LOWS, HIGHS, bliss_r, args.levels, args.seed,
+        )
+        sec, order = bliss_section(mu_star, sigma, bliss_r, n_evals)
+        sections.append((sec, "bliss"))
+        print("[bliss] top-3:", ", ".join(PARAM_NAMES[i] for i in order[:3]))
+
+    if args.headline in ("sim-tme", "both"):
+        # ONE set of sim-tme runs yields BOTH the hypoxia and immune observables.
+        n_evals = tme_r * (len(PARAM_NAMES) + 1)
+        total_evals += n_evals
+        print(f"[sim-tme] Morris: r={tme_r}, k={len(PARAM_NAMES)} -> {n_evals} runs of sim-tme (hypoxia + immune)")
+        res = morris_indices_multi(
+            make_eval(run_sim_tme_observables, _bin("sim-tme"), args.workers),
+            LOWS, HIGHS, tme_r, args.levels, args.seed, keys=["hypoxia", "immune"],
+        )
+        for key, section_fn in (("hypoxia", hypoxia_section), ("immune", immune_section)):
+            mu_star, sigma = res[key]
+            sec, order = section_fn(mu_star, sigma, tme_r, n_evals)
+            sections.append((sec, key))
+            print(f"[{key}] top-3:", ", ".join(PARAM_NAMES[i] for i in order[:3]))
 
     write_report(sections, args.levels, total_evals)
     print(f"Wrote {REPORT.relative_to(REPO)}")

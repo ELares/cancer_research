@@ -77,6 +77,32 @@ def test_morris_recovers_known_sensitivity_ranking():
     assert sigma[3] > sigma[1], "interaction-only x3 should out-sigma the linear x1"
 
 
+def test_morris_indices_multi_separates_outputs_from_shared_runs():
+    # morris_indices_multi runs the design ONCE (the eval returns a dict per point)
+    # and computes per-output indices — this is what lets the hypoxia and immune
+    # sim-tme headlines share one set of runs. Two outputs with disjoint drivers:
+    #   a = 5*x0            -> driver x0
+    #   b = 3*x1 + 2*x1*x3  -> driver x1 (with x3 interaction -> sigma)
+    call_count = {"n": 0}
+
+    def eval_multi(rows):
+        call_count["n"] += 1  # must be invoked exactly once (shared runs)
+        x = np.asarray(rows)
+        return [{"a": 5 * r[0], "b": 3 * r[1] + 2 * r[1] * r[3]} for r in x]
+
+    res = hs.morris_indices_multi(
+        eval_multi, np.zeros(4), np.ones(4), n_traj=50, levels=4, rng_seed=7, keys=["a", "b"]
+    )
+    assert call_count["n"] == 1, "the expensive model must be evaluated only once"
+    a_mu, _ = res["a"]
+    b_mu, b_sig = res["b"]
+    assert int(np.argmax(a_mu)) == 0, "output a is driven by x0"
+    assert a_mu[1] < 0.1 and a_mu[2] < 0.1, "x1, x2 inert for output a"
+    assert int(np.argmax(b_mu)) == 1, "output b is driven by x1"
+    assert b_mu[0] < 0.1, "x0 inert for output b"
+    assert b_sig[1] > 0.1, "x1's interaction with x3 shows up as sigma for output b"
+
+
 def test_default_binary_lookup_is_none_when_absent(tmp_path, monkeypatch):
     # _default_binary returns None when neither release nor debug binary exists,
     # so main() can print a build hint rather than crash.
