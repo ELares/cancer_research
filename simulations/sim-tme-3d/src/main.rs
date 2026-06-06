@@ -3085,9 +3085,12 @@ fn run_snapshot(output_dir: &Path, tumor_radius_um: f64, name: &str) {
         let n = snapshot_grid.cells.len();
         let mut field = vec![0.0_f64; n];
         let mut scratch = vec![0.0_f64; n];
-        // Diffuse over the run's immune window so the overlay matches the field
-        // the kill loop actually sees at end-of-run.
-        for _ in IMMUNE_START_STEP..run_cfg.n_steps {
+        // Match the run EXACTLY: in run_one_condition_full the SASP seed+diffuse
+        // lives inside `if condition.immune_on`, which runs every step (it is the
+        // immune KILL loop that is gated on `step >= IMMUNE_START_STEP`, not the
+        // field update), so the field diffuses for the full run. Iterate the same
+        // `0..n_steps` so the overlay reproduces the end-of-run field.
+        for _ in 0..run_cfg.n_steps {
             for (idx, &is_sen) in mask.iter().enumerate() {
                 if is_sen {
                     field[idx] = (field[idx] + SASP_FIELD_REPLENISH_RATE).min(1.0);
