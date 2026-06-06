@@ -9,6 +9,7 @@ Usage:
 """
 
 import argparse
+import os
 import re
 import sys
 from pathlib import Path
@@ -39,6 +40,64 @@ EVIDENCE_PUBTYPE_MARKERS = {
     "phase1-clinical": ("clinical trial, phase i", "clinical trial, phase 1", "clinical trial, phase i/ii"),
     "clinical-other": ("clinical trial", "controlled clinical trial", "observational study", "case reports"),
 }
+
+# --- MeSH-descriptor evidence fallback (#346) ---
+# The keyword/pub_type passes in `match_evidence_level` leave ~45% of
+# evidence-bearing gold articles undetected (recall 55%), concentrated in the
+# preclinical and clinical-other levels. The fix is a *controlled-vocabulary*
+# fallback: exact set-membership of an article's MeSH descriptors against small,
+# precision-safe LEAF descriptor families, applied ONLY when every existing pass
+# returns "". This is deliberately NOT MeSH-tree ancestor/subtree expansion —
+# the descriptor strings are already in the free-text `text`, so ancestor
+# expansion would be a near no-op and would re-introduce broad, leaky terms.
+#
+# Precision is the binding constraint (the keyword tagger is 96% precision):
+# - descriptors are narrow leaves chosen because they encode an evidence DESIGN,
+#   not merely a clinical CONTEXT/population (bare "Humans"/age-groups are
+#   deliberately excluded — they over-tag context-clinical papers);
+# - the clinical-other branch is additionally gated against opinion pub-types
+#   (editorial/comment/letter) so a commentary that merely cites a cohort is
+#   not promoted to evidence;
+# - "theoretical" gets NO MeSH descriptor on purpose: the candidate descriptors
+#   (Transcriptome / Gene Expression Profiling / genomic databases) co-occur
+#   with clinical or animal MeSH ~40% of the time corpus-wide, so keying
+#   theoretical on them would regress precision. That residue is left for the
+#   deferred embedding/semantic leg (#346 follow-up).
+#
+# Off by default: enabled only when FERRO_MESH_EXPANSION=1, so the production
+# corpus run and every existing tag stay byte-identical until deliberately
+# promoted. The unrecoverable floor is the ~19.5% of records with empty
+# mesh_terms plus descriptors that are present but non-discriminative.
+EVIDENCE_MESH_MARKERS = {
+    "preclinical-invivo": frozenset({
+        "Animals", "Mice", "Rats", "Dogs", "Swine", "Sus scrofa", "Rabbits",
+        "Mice, Inbred C57BL", "Mice, Nude", "Mice, Transgenic", "Mice, Inbred BALB C",
+        "Mice, SCID", "Mice, Knockout", "Rats, Sprague-Dawley", "Rats, Wistar",
+        "Rats, Nude", "Chlorocebus aethiops", "Zebrafish", "Dog Diseases",
+        "Disease Models, Animal", "Xenograft Model Antitumor Assays", "Heterografts",
+    }),
+    "preclinical-invitro": frozenset({
+        "Cell Line, Tumor", "Tumor Cells, Cultured", "Cells, Cultured",
+        "HeLa Cells", "HEK293 Cells", "Vero Cells", "MCF-7 Cells",
+        "Spheroids, Cellular", "Cell Culture Techniques", "Tumor Stem Cell Assay",
+    }),
+    # Deliberately narrow study-design descriptors only (no bare "Humans"/age-groups).
+    "clinical-other": frozenset({
+        "Retrospective Studies", "Prospective Studies", "Cohort Studies",
+        "Longitudinal Studies", "Case-Control Studies", "Registries",
+    }),
+    # "theoretical": intentionally absent — see the module comment above.
+}
+
+# Opinion/non-evidence pub-types (normalized, lowercase) that veto the
+# clinical-other MeSH branch: a commentary citing a cohort is not itself evidence.
+EVIDENCE_MESH_OPINION_PUBTYPES = frozenset({
+    "editorial", "comment", "letter", "news", "newspaper article",
+    "biography", "interview", "published erratum",
+})
+
+# Master switch: off by default ⇒ byte-identical to the pre-#346 tagger.
+EVIDENCE_USE_MESH_FALLBACK = os.getenv("FERRO_MESH_EXPANSION", "0") == "1"
 
 MRNA_VACCINE_PLATFORM_TERMS = (
     "mrna vaccine", "mrna vaccines", "mrna cancer vaccine",
@@ -281,6 +340,33 @@ def match_mechanisms(text: str, title_text: str) -> list[str]:
     return sorted(matched)
 
 
+def match_evidence_mesh(fm: dict) -> str:
+    """MeSH-descriptor evidence fallback (#346): infer an evidence level from an
+    article's controlled-vocabulary MeSH descriptors via exact set-membership.
+
+    Precision-safe and conflict-ordered: an organism descriptor (in vivo) beats a
+    cell-culture descriptor (in vitro) beats a study-design descriptor
+    (clinical-other), because a paper carrying both animal and cell-line MeSH is
+    an in-vivo study that also did in-vitro work. The clinical-other branch is
+    vetoed by opinion pub-types (a commentary citing a cohort is not evidence).
+    Returns "" when the article has no MeSH terms (the unrecoverable floor) or no
+    discriminative descriptor. Pure; no I/O. Only consulted by
+    ``match_evidence_level`` when the pub_type + keyword passes find nothing.
+    """
+    mesh = set(fm.get("mesh_terms") or [])
+    if not mesh:
+        return ""
+    if mesh & EVIDENCE_MESH_MARKERS["preclinical-invivo"]:
+        return "preclinical-invivo"
+    if mesh & EVIDENCE_MESH_MARKERS["preclinical-invitro"]:
+        return "preclinical-invitro"
+    if mesh & EVIDENCE_MESH_MARKERS["clinical-other"]:
+        pub_types = {normalize_text(p) for p in fm.get("pub_types", [])}
+        if not (pub_types & EVIDENCE_MESH_OPINION_PUBTYPES):
+            return "clinical-other"
+    return ""
+
+
 def match_evidence_level(fm: dict, text: str) -> str:
     """Match text against evidence level keywords, return best match.
 
@@ -319,6 +405,11 @@ def match_evidence_level(fm: dict, text: str) -> str:
             else:
                 if kw_lower in text:
                     return level
+    # MeSH-descriptor fallback (#346), off by default ⇒ byte-identical baseline.
+    # Reached only when every pub_type + keyword pass above returned nothing, and
+    # after the review/protocol guard, so it never re-tags a review/editorial.
+    if EVIDENCE_USE_MESH_FALLBACK:
+        return match_evidence_mesh(fm)
     return ""
 
 
