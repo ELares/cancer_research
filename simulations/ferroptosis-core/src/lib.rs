@@ -41,6 +41,7 @@
 //! | [`slab`] | Patient-scale slab geometry: all-tumor block + planar depth-graded O2/drug supply |
 //! | [`contact`] | Cell-cell contact-mediated ferroptosis resistance (E-cadherin/NF2-YAP; dense cells lower PUFA/iron) |
 //! | [`nutrient`] | Radial nutrient gradient (glucose/glutamine) scaling the antioxidant setpoint toward the starved core |
+//! | [`reaction_diffusion`] | Steady-state reaction-diffusion O2/drug supply (vessel sources + consumption) vs the exponential proxy |
 
 pub mod cell;
 pub mod clonal;
@@ -61,6 +62,7 @@ pub mod ph;
 pub mod phenotype_mufa;
 pub mod photosensitizer_pk;
 pub mod physics;
+pub mod reaction_diffusion;
 pub mod senescence;
 pub mod slab;
 pub mod spheroid;
