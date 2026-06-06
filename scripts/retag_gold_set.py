@@ -124,8 +124,15 @@ def compute_metrics():
         mesh_hit = sum(1 for pr, g in zip(mesh, gold) if g == level and pr == level)
         per_level[level] = {"gold": gold_n, "baseline": base_hit, "mesh": mesh_hit}
 
+    # Count gold PMIDs whose corpus record actually resolved, so the CI guard can
+    # assert the offline-corpus dependency directly rather than relying on the
+    # recall floor to incidentally catch only large corpus loss (a missing record
+    # is silently a miss in `_predict`).
+    records_found = sum(1 for p in pmids if (PMID_DIR / f"{p}.md").exists())
+
     return {
         "n": len(rows),
+        "records_found": records_found,
         "baseline": _binary(base, gold),
         "mesh": _binary(mesh, gold),
         "per_level": per_level,

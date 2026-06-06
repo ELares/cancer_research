@@ -8,11 +8,14 @@ fallback (flag ON) on the gold set via the SAME `compute_metrics` the report use
 and fails loudly if precision falls into the danger zone or the recall gain
 evaporates — so a leaky descriptor change cannot land silently.
 
-Thresholds are deliberately robust, not point-pinned: the gold set is 100 rows,
-so one FP is a ~1.6-2 point precision swing and pinning to the measured 95.2%
-would false-fail on a benign 1-FP change. precision >= 0.93 still catches the
-real failure mode (a leaky descriptor dropping precision toward the high-80s);
-recall >= 0.62 ensures the layer still materially beats the ~55% keyword baseline.
+Thresholds are deliberately robust, not point-pinned: the gold set is small (87
+positives / 13 negatives), so one FP is a ~1.5-2 point precision swing and
+pinning to the measured 95.2% would false-fail on a benign 1-FP change.
+precision >= 0.93 resolves a >=2-net-new-FP regression on this 13-negative set
+(at the measured fp=3, +2 FP -> 0.922 fails); a single-FP leak is below the set's
+resolution, so this guard catches a broad/leaky descriptor change, not a subtle
+one-article leak. recall >= 0.62 ensures the layer still materially beats the
+~55% keyword baseline. (A larger, independent gold set would sharpen both floors.)
 
 Run: pytest tests/test_mesh_gold_regression.py -v
 """
@@ -36,9 +39,15 @@ def test_mesh_fallback_holds_precision_and_lifts_recall():
     m = compute_metrics()
     base, mesh = m["baseline"], m["mesh"]
 
-    # The harness must actually find the gold rows (guards against a moved CSV /
-    # missing corpus records silently zeroing the measurement).
+    # The harness must actually find the gold rows in the CSV...
     assert m["n"] >= 90, f"expected ~100 gold rows, got {m['n']}"
+    # ...AND resolve their corpus records: a missing record is silently a miss in
+    # _predict, so assert corpus presence directly rather than relying on the
+    # recall floor to incidentally catch only large corpus loss.
+    assert m["records_found"] >= 90, (
+        f"only {m['records_found']}/{m['n']} gold PMIDs resolved to a corpus record — "
+        f"the offline corpus is incomplete; the measurement would be silently understated."
+    )
     assert base["tp"] > 0 and mesh["tp"] > 0, "no positives detected — measurement is broken"
 
     assert mesh["precision"] >= PRECISION_FLOOR, (
