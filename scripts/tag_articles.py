@@ -55,9 +55,10 @@ EVIDENCE_PUBTYPE_MARKERS = {
 # - descriptors are narrow leaves chosen because they encode an evidence DESIGN,
 #   not merely a clinical CONTEXT/population (bare "Humans"/age-groups are
 #   deliberately excluded — they over-tag context-clinical papers);
-# - the clinical-other branch is additionally gated against opinion pub-types
-#   (editorial/comment/letter) so a commentary that merely cites a cohort is
-#   not promoted to evidence;
+# - opinion pub-types (editorial/comment/letter/news) veto ALL branches: a
+#   commentary is never primary evidence whatever topical MeSH it carries (an
+#   editorial about an animal study still carries "Animals"), and the upstream
+#   review/protocol guard does not catch these pub-types;
 # - "theoretical" gets NO MeSH descriptor on purpose: the candidate descriptors
 #   (Transcriptome / Gene Expression Profiling / genomic databases) co-occur
 #   with clinical or animal MeSH ~40% of the time corpus-wide, so keying
@@ -347,23 +348,28 @@ def match_evidence_mesh(fm: dict) -> str:
     Precision-safe and conflict-ordered: an organism descriptor (in vivo) beats a
     cell-culture descriptor (in vitro) beats a study-design descriptor
     (clinical-other), because a paper carrying both animal and cell-line MeSH is
-    an in-vivo study that also did in-vitro work. The clinical-other branch is
-    vetoed by opinion pub-types (a commentary citing a cohort is not evidence).
-    Returns "" when the article has no MeSH terms (the unrecoverable floor) or no
-    discriminative descriptor. Pure; no I/O. Only consulted by
+    an in-vivo study that also did in-vitro work. An opinion pub-type
+    (editorial/comment/letter/news) vetoes ALL branches up front: a commentary is
+    never primary evidence regardless of which topical MeSH it carries (an
+    editorial about an animal study still carries "Animals"), and the upstream
+    review/protocol guard does not catch these pub-types. Returns "" when the
+    article has no MeSH terms (the unrecoverable floor), is an opinion piece, or
+    has no discriminative descriptor. Pure; no I/O. Only consulted by
     ``match_evidence_level`` when the pub_type + keyword passes find nothing.
     """
     mesh = set(fm.get("mesh_terms") or [])
     if not mesh:
+        return ""
+    # Opinion pieces are never primary evidence, whatever MeSH they carry.
+    pub_types = {normalize_text(p) for p in fm.get("pub_types", [])}
+    if pub_types & EVIDENCE_MESH_OPINION_PUBTYPES:
         return ""
     if mesh & EVIDENCE_MESH_MARKERS["preclinical-invivo"]:
         return "preclinical-invivo"
     if mesh & EVIDENCE_MESH_MARKERS["preclinical-invitro"]:
         return "preclinical-invitro"
     if mesh & EVIDENCE_MESH_MARKERS["clinical-other"]:
-        pub_types = {normalize_text(p) for p in fm.get("pub_types", [])}
-        if not (pub_types & EVIDENCE_MESH_OPINION_PUBTYPES):
-            return "clinical-other"
+        return "clinical-other"
     return ""
 
 

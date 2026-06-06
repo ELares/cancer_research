@@ -60,6 +60,18 @@ class TestMatchEvidenceMesh:
         assert match_evidence_mesh(_fm(["Prospective Studies"], ["Editorial"])) == ""
         assert match_evidence_mesh(_fm(["Retrospective Studies"], ["Comment"])) == ""
 
+    def test_opinion_pubtype_vetoes_preclinical_branches(self):
+        """The opinion veto gates ALL branches, not just clinical-other: an
+        editorial/letter/news carrying topical organism or cell-line MeSH (e.g.
+        an editorial ABOUT an animal study still carries "Animals") is never
+        promoted to a preclinical level. Regression for the review finding that
+        the veto originally only guarded the clinical-other branch."""
+        from tag_articles import match_evidence_mesh
+        assert match_evidence_mesh(_fm(["Animals", "Mice"], ["Editorial"])) == ""
+        assert match_evidence_mesh(_fm(["Cell Line, Tumor"], ["Letter"])) == ""
+        assert match_evidence_mesh(_fm(["MCF-7 Cells"], ["News"])) == ""
+        assert match_evidence_mesh(_fm(["Animals"], ["Comment"])) == ""
+
     def test_empty_mesh_returns_empty_floor(self):
         from tag_articles import match_evidence_mesh
         assert match_evidence_mesh(_fm([])) == ""
@@ -121,6 +133,44 @@ class TestEvidenceLevelFallbackWiring:
         text = f"this study used {invitro_kw.lower()} extensively"
         # Keyword pass resolves invitro; the MeSH invivo fallback must not override.
         assert tag_articles.match_evidence_level(fm, text) == "preclinical-invitro"
+
+
+class TestDescriptorFormatAnchoredToCorpus:
+    """Guard against descriptor-string drift: the synthetic tests above feed the
+    exact literal strings the marker sets contain, so they prove the membership
+    LOGIC but not that the descriptors match how the corpus actually stores
+    mesh_terms (e.g. 'Disease Models, Animal' with the comma, 'MCF-7 Cells' with
+    the hyphen). A typo would never fire on a real article yet pass every
+    synthetic test. This anchors each marker family to the real corpus."""
+
+    def test_each_marker_family_has_real_corpus_coverage(self):
+        import re
+        from tag_articles import EVIDENCE_MESH_MARKERS
+
+        pmid_dir = REPO_ROOT / "corpus" / "by-pmid"
+        files = sorted(pmid_dir.glob("*.md"))
+        assert files, "corpus/by-pmid is empty; cannot anchor descriptor format"
+
+        # Union of all mesh descriptors across the corpus (cheap regex extraction
+        # of the `- Descriptor` lines inside the mesh_terms block, not full YAML).
+        corpus_descriptors: set[str] = set()
+        block_re = re.compile(r"^mesh_terms:\s*\n((?:[ \t]*-[ \t].*\n)+)", re.MULTILINE)
+        item_re = re.compile(r"^[ \t]*-[ \t]+(.*\S)\s*$", re.MULTILINE)
+        for f in files:
+            text = f.read_text(encoding="utf-8")
+            m = block_re.search(text)
+            if m:
+                for item in item_re.findall(m.group(1)):
+                    corpus_descriptors.add(item.strip().strip('"').strip("'"))
+
+        assert corpus_descriptors, "no mesh_terms parsed from the corpus"
+        for level, markers in EVIDENCE_MESH_MARKERS.items():
+            hits = markers & corpus_descriptors
+            assert hits, (
+                f"EVIDENCE_MESH_MARKERS[{level!r}] has NO descriptor present in the "
+                f"corpus — a likely typo/format drift (e.g. missing comma). "
+                f"None of {sorted(markers)} were found in corpus mesh_terms."
+            )
 
 
 if __name__ == "__main__":
