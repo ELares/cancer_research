@@ -112,5 +112,36 @@ def test_partition_tme_all_failed_yields_empty():
     assert hyp.size == 0 and imm.size == 0 and n_failed == 2
 
 
+def test_partition_penetration_drops_nan_per_tissue_and_counts_failures():
+    """Penetration partitioning: per-tissue non-finite death rates are dropped
+    from THAT tissue's array independently; None is a run failure. Same NaN
+    contract as the other headlines, across the three tissue scenarios, without
+    the binary."""
+    k0, k1, k2 = (k for k, _ in hu.PENETRATION_TISSUES)
+    results = [
+        {k0: 0.12, k1: 0.03, k2: 0.02},
+        {k0: float("nan"), k1: 0.04, k2: 0.03},  # k0 dropped, k1/k2 kept
+        None,  # run failure
+        {k0: 0.20, k1: 0.05, k2: float("inf")},  # k2 dropped, k0/k1 kept
+    ]
+    per_tissue, n_failed = hu._partition_penetration(results)
+    assert n_failed == 1
+    assert sorted(per_tissue[k0].tolist()) == [0.12, 0.20]
+    assert sorted(per_tissue[k1].tolist()) == [0.03, 0.04, 0.05]
+    assert sorted(per_tissue[k2].tolist()) == [0.02, 0.03]
+    for k in (k0, k1, k2):
+        assert np.all(np.isfinite(per_tissue[k]))
+
+
+def test_partition_penetration_missing_key_treated_as_nan():
+    """A result dict missing a tissue key must not KeyError; that tissue's value
+    is treated as non-finite (dropped) for that draw."""
+    k0, k1, k2 = (k for k, _ in hu.PENETRATION_TISSUES)
+    per_tissue, n_failed = hu._partition_penetration([{k0: 0.1, k1: 0.2}])  # k2 absent
+    assert n_failed == 0
+    assert per_tissue[k0].tolist() == [0.1]
+    assert per_tissue[k2].size == 0  # missing key -> dropped, no crash
+
+
 if __name__ == "__main__":
     sys.exit(pytest.main([__file__, "-v"]))

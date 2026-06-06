@@ -17,7 +17,7 @@ use ferroptosis_core::cell::{gen_cell, Phenotype, Treatment};
 use ferroptosis_core::drug_transport::{
     self, concentration_profile, max_distance_um, penetration_length_um, DrugParams, TissueParams,
 };
-use ferroptosis_core::params::Params;
+use ferroptosis_core::params::{apply_param_overrides, param_overrides_from_env, Params};
 use ferroptosis_core::stats::wilson_ci;
 
 const N_RADIAL_BINS: usize = 50;
@@ -132,7 +132,30 @@ fn main() {
     eprintln!("NOTE: All drugs use the RSL3/GPX4-inhibition pathway. Differences");
     eprintln!("      reflect transport profiles only, not distinct pharmacology.\n");
 
-    let base_params = Params::default();
+    // Biochem parameter overrides (#331, mirroring sim-tme / sim-combo-mech): a
+    // prior-predictive / sensitivity driver can perturb the biochemical rate
+    // constants via the `FERRO_PARAM_OVERRIDES` env var (inline JSON or a file
+    // path) WITHOUT recompiling. Unset ⇒ no overrides ⇒ byte-identical to the
+    // historical run (the penetration figure data is unchanged).
+    let mut base_params = Params::default();
+    match param_overrides_from_env() {
+        Ok(overrides) => {
+            if !overrides.is_empty() {
+                eprintln!(
+                    "Applying {} biochem override(s) from FERRO_PARAM_OVERRIDES",
+                    overrides.len()
+                );
+            }
+            if let Err(name) = apply_param_overrides(&mut base_params, overrides) {
+                eprintln!("error: FERRO_PARAM_OVERRIDES contains unknown parameter '{name}'");
+                std::process::exit(2);
+            }
+        }
+        Err(e) => {
+            eprintln!("error: {e}");
+            std::process::exit(2);
+        }
+    }
     let seed: u64 = 42;
 
     let drugs: Vec<DrugParams> = vec![
