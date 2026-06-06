@@ -258,6 +258,53 @@ def extract_tme_observables(conditions):
     return {"hypoxia": hypoxia, "immune": immune}
 
 
+# Tissue keys for the penetration headline, matched against the sim-tissue-pk
+# tissue names by substring (the names carry parenthetical descriptors).
+PENETRATION_TISSUES = (
+    ("well_vascularized", "well-vascular"),
+    ("poorly_vascularized", "poorly-vascular"),
+    ("cns_bbb", "CNS/BBB"),
+)
+
+
+def run_tissue_pk_observables(params_row, binary):
+    """Run sim-tissue-pk ONCE and extract the RSL3-like vessel-wall death rate
+    for each of the three tissue scenarios — the manuscript's penetration
+    headline (40% 2D -> 12.1% / 2.6% / 1.8% at the vessel wall). The transport
+    parameters are held at their fixed (uncalibrated) per-tissue presets; the
+    biochem rate constants are the perturbed ones (the kill at each radial bin is
+    `sim_cell` under RSL3 with GPX4-inhibition scaled by the local concentration),
+    so this propagates the SAME 11-PRCC prior as the other headlines through the
+    transport->kill conversion. Returns `{tissue_key: vessel_wall_death_rate}`."""
+    with tempfile.TemporaryDirectory(prefix="ferro_pp_tissue_pk_") as workdir:
+        overrides = {n: float(v) for n, v in zip(PARAM_NAMES, params_row)}
+        env = dict(os.environ, FERRO_PARAM_OVERRIDES=json.dumps(overrides))
+        proc = subprocess.run(
+            [str(binary)], cwd=workdir, env=env, capture_output=True, text=True
+        )
+        if proc.returncode != 0:
+            raise RuntimeError(f"sim-tissue-pk failed ({proc.returncode}): {proc.stderr[-400:]}")
+        summary = Path(workdir) / "output" / "tissue-pk" / "tissue_pk_summary.json"
+        return extract_tissue_pk_observables(json.loads(summary.read_text()))
+
+
+def extract_tissue_pk_observables(summaries):
+    """Per-tissue RSL3-like vessel-wall death rate from a tissue_pk_summary.json
+    list. Shared by the override path and the no-override default path so they
+    never drift. Raises if a tissue scenario is missing (a structure change then
+    fails loudly rather than silently dropping a tissue)."""
+    rsl3 = [s for s in summaries if s["drug"].startswith("RSL3")]
+    out = {}
+    for key, needle in PENETRATION_TISSUES:
+        match = [s for s in rsl3 if needle.lower() in s["tissue"].lower()]
+        if len(match) != 1:
+            raise RuntimeError(
+                f"expected exactly 1 RSL3 tissue matching {needle!r}, found {len(match)}"
+            )
+        out[key] = match[0]["vessel_wall_death_rate"]
+    return out
+
+
 def make_eval(run_fn, binary, workers):
     """Parallel evaluator: map `run_fn(row, binary)` over the Morris design rows."""
 

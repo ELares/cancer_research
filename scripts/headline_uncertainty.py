@@ -17,6 +17,12 @@ families:
   and SDT's pool-de-confounded immune kill rate. `sim-tme` costs ~4 min/run, so
   this uses a smaller default ensemble (100 draws) and the 2.5/97.5 TAILS are
   read cautiously (median + spread, not the exact bounds).
+- `--headline penetration`: the tissue-specific vessel-wall RSL3 kill across three
+  tissue scenarios (the manuscript's 40% in 2D -> 12.1% / 2.6% / 1.8%) from
+  `sim-tissue-pk` (~4 s/run). The biochem prior is applied at each tissue's FIXED,
+  uncalibrated transport preset, so the per-tissue marginals overlap; the robust
+  result is the WITHIN-DRAW ordering (well >= poorly >= CNS), reported as a
+  per-draw preservation fraction.
 
 It reuses the binary-invocation + parameter-range machinery from
 `headline_sensitivity.py` (`run_bliss`, `run_sim_tme_observables`, `PARAM_NAMES`,
@@ -26,16 +32,20 @@ observables are identical to the Morris sensitivity screen.
 This is PRIOR-PREDICTIVE (forward) uncertainty over UNIFORM priors, NOT a
 data-conditioned Bayesian/ABC posterior — turning the priors into a posterior
 needs the external GDSC/DepMap drug-response data (#330). It captures PARAMETER
-uncertainty only, not STRUCTURAL uncertainty. The penetration headline
-(`drug_transport` Krogh) is the remaining deferred extension.
+uncertainty only, not STRUCTURAL uncertainty. With penetration now implemented,
+all four headline families are covered; the remaining extensions are the
+data-conditioned ABC posterior (blocked on #330) and sweeping the transport
+parameters' own (currently undocumented) ranges.
 
 Usage:
     python scripts/headline_uncertainty.py [--headline bliss] [--samples 300] [--workers 8]
     python scripts/headline_uncertainty.py --headline sim-tme [--tme-samples 100] [--workers 8]
+    python scripts/headline_uncertainty.py --headline penetration [--pen-samples 300] [--workers 8]
 
 Deterministic given the sample count + the fixed seed. Writes
-analysis/headline-uncertainty-report.md (bliss) or
-analysis/headline-uncertainty-tme-report.md (sim-tme).
+analysis/headline-uncertainty-report.md (bliss),
+analysis/headline-uncertainty-tme-report.md (sim-tme), or
+analysis/headline-uncertainty-penetration-report.md (penetration).
 """
 
 import argparse
@@ -56,20 +66,26 @@ from headline_sensitivity import (  # noqa: E402  (path insert above)
     HIGHS,
     LOWS,
     PARAM_NAMES,
+    PENETRATION_TISSUES,
     _default_binary,
+    extract_tissue_pk_observables,
     extract_tme_observables,
     read_bliss_synergy,
     run_bliss,
     run_sim_tme_observables,
+    run_tissue_pk_observables,
 )
 
 REPORT = REPO / "analysis" / "headline-uncertainty-report.md"
 TME_REPORT = REPO / "analysis" / "headline-uncertainty-tme-report.md"
+PEN_REPORT = REPO / "analysis" / "headline-uncertainty-penetration-report.md"
 SEED = 332  # deterministic prior draws (issue number; fixed for reproducibility)
 DEFAULT_SAMPLES = 300
 # sim-tme is far costlier than sim-combo-mech (~4 min/run single-threaded), so its
 # prior-predictive sample is much smaller; the wider-tail caveat is documented.
 DEFAULT_TME_SAMPLES = 100
+# sim-tissue-pk is cheap (~4 s/run), so the penetration headline gets a full sample.
+DEFAULT_PEN_SAMPLES = 300
 
 
 def sample_prior(n_samples, seed=SEED):
@@ -236,11 +252,160 @@ def write_tme_report(hyp_stats, imm_stats, default_obs, n_failed, n_samples):
     lines.append(
         "Completes the spatial-headline prior-predictive started with the Bliss synergy "
         "(`analysis/headline-uncertainty-report.md`); the single-cell kill-switch intervals "
-        "are in `analysis/uncertainty-intervals-report.md`. The data-conditioned posterior "
-        "(ABC) for all of these is blocked on #330. The penetration headline (`drug_transport` "
-        "Krogh) is a pure-Python ensemble, a remaining smaller extension.\n"
+        "are in `analysis/uncertainty-intervals-report.md`; the penetration headline is in "
+        "`analysis/headline-uncertainty-penetration-report.md` (`--headline penetration`, "
+        "runs sim-tissue-pk). The data-conditioned posterior (ABC) for all of these is "
+        "blocked on #330.\n"
     )
     TME_REPORT.write_text("\n".join(lines), encoding="utf-8")
+
+
+# ----------------------------------------------------------------------------
+# Penetration headline (per-tissue vessel-wall RSL3 kill, sim-tissue-pk)
+# ----------------------------------------------------------------------------
+def prior_predictive_penetration(n_samples, workers, binary):
+    """Run sim-tissue-pk under each prior draw and collect the RSL3-like
+    vessel-wall death rate for each of the three tissue scenarios via
+    `headline_sensitivity.run_tissue_pk_observables`. Returns
+    `({tissue_key: finite_array}, n_failed)`. The transport params are held at
+    their fixed (uncalibrated) per-tissue presets; the perturbed 11 PRCC biochem
+    rates drive the kill conversion, so this is the SAME prior as the other
+    headlines applied at each tissue's fixed transport scenario."""
+    draws = sample_prior(n_samples)
+
+    def _one(row):
+        try:
+            return run_tissue_pk_observables(row, binary)  # {tissue_key: dr}
+        except Exception:
+            return None
+
+    with ThreadPoolExecutor(max_workers=workers) as ex:  # subprocess releases the GIL
+        results = list(ex.map(_one, draws))
+    per_tissue, n_failed = _partition_penetration(results)
+    ordering = _ordering_preserved_fraction(results)
+    return per_tissue, n_failed, ordering
+
+
+def _partition_penetration(results):
+    """Split per-tissue penetration outcomes into ({tissue_key: finite_array},
+    n_failed). Each element of `results` is a `{tissue_key: death_rate}` dict or
+    `None` (run failure). Per-tissue non-finite values are dropped defensively
+    (the Bliss-review NaN lesson). Pure, so unit-tested without the binary."""
+    keys = [k for k, _ in PENETRATION_TISSUES]
+    n_failed = sum(1 for r in results if r is None)
+    per_tissue = {
+        k: np.array(
+            [r[k] for r in results if r is not None and np.isfinite(r.get(k, float("nan")))],
+            dtype=float,
+        )
+        for k in keys
+    }
+    return per_tissue, n_failed
+
+
+def _ordering_preserved_fraction(results):
+    """The WITHIN-DRAW paired test the overlapping marginal intervals cannot show:
+    the fraction of draws (those with all three finite) whose vessel-wall kill is
+    monotone in vascularization, well >= poorly >= CNS. Each draw applies the SAME
+    biochem override to all three tissues at decreasing vessel-wall concentration
+    (0.8 / 0.4 / 0.15), so the across-tissue ordering is the robust property even
+    though the marginal intervals overlap (the biochem prior, not the tissue,
+    dominates the per-tissue spread). Returns (fraction, n_valid_draws). Pure;
+    unit-tested without the binary."""
+    keys = [k for k, _ in PENETRATION_TISSUES]  # (well, poorly, cns) order
+    n_valid = n_mono = 0
+    for r in results:
+        if r is None or not all(np.isfinite(r.get(k, float("nan"))) for k in keys):
+            continue
+        n_valid += 1
+        w, p, c = (r[keys[0]], r[keys[1]], r[keys[2]])
+        if w >= p >= c:
+            n_mono += 1
+    return ((n_mono / n_valid) if n_valid else float("nan"), n_valid)
+
+
+def _default_penetration(binary):
+    """The unperturbed per-tissue vessel-wall death rates (no FERRO_PARAM_OVERRIDES)
+    — the manuscript point estimates (12.1% / 2.6% / 1.8%) the intervals bracket."""
+    with tempfile.TemporaryDirectory(prefix="ferro_pp_pen_default_") as workdir:
+        env = dict(os.environ)
+        env.pop("FERRO_PARAM_OVERRIDES", None)
+        proc = subprocess.run([str(binary)], cwd=workdir, env=env, capture_output=True, text=True)
+        if proc.returncode != 0:
+            raise RuntimeError(f"default sim-tissue-pk failed: {proc.stderr[-300:]}")
+        summary = Path(workdir) / "output" / "tissue-pk" / "tissue_pk_summary.json"
+        return extract_tissue_pk_observables(json.loads(summary.read_text()))
+
+
+_TISSUE_LABELS = {
+    "well_vascularized": "Well-vascularized epithelial",
+    "poorly_vascularized": "Poorly-vascularized (pancreatic)",
+    "cns_bbb": "Neuroectodermal (CNS / BBB)",
+}
+
+
+def write_penetration_report(per_tissue_stats, default_obs, n_failed, ordering, n_samples):
+    ordering_frac, ordering_n = ordering
+    lines = []
+    lines.append("# Prior-predictive uncertainty: drug-penetration headline (#332)\n")
+    lines.append(
+        "Generated by `scripts/headline_uncertainty.py --headline penetration`. Propagates "
+        "the same joint UNIFORM prior over the 11 PRCC rate constants through the "
+        "tissue-specific vessel-wall RSL3 kill (`sim-tissue-pk`, the manuscript's "
+        "40% in 2D culture dropping to 12.1% / 2.6% / 1.8% at the vessel wall across three "
+        "tissue scenarios). Each radial-bin kill is `sim_cell` under RSL3 with GPX4 "
+        "inhibition scaled by the local Krogh concentration, so the 11 biochem rates drive "
+        "the kill while the transport params (penetration length, vascular permeability, "
+        "ECM tortuosity) are held at their FIXED, uncalibrated per-tissue presets.\n"
+    )
+    lines.append("## Method\n")
+    lines.append(
+        f"- {n_samples} Monte-Carlo draws from the joint uniform prior (seed {SEED}, "
+        f"deterministic)"
+        + (f"; {n_failed} draws dropped (sim-tissue-pk run failure)" if n_failed else "")
+        + ".\n"
+        "- The per-tissue interval here is the BIOCHEM-rate uncertainty at each tissue's "
+        "FIXED transport scenario; the transport parameters themselves are uncalibrated "
+        "placeholders whose own ranges are undocumented, so they are NOT swept.\n"
+        "- **Read the ordering, not the marginals.** The per-tissue 95% intervals below "
+        "overlap almost completely because the biochem prior (not the tissue) dominates the "
+        "spread — so the marginals alone do NOT establish the across-tissue gradient. The "
+        "robust claim is a WITHIN-DRAW paired comparison: each draw applies the SAME biochem "
+        "override to all three tissues at decreasing vessel-wall concentration (0.8 / 0.4 / "
+        "0.15), a shared monotone dose-response, so the across-tissue ORDERING is preserved "
+        f"per draw in **{ordering_frac:.1%} of the {ordering_n} valid draws** "
+        "(well-vascularized >= poorly-vascularized >= CNS/BBB). The penetration-gradient "
+        "DIRECTION is therefore parameter-robust; the absolute per-tissue magnitudes are "
+        "not.\n"
+        "- **Prior-predictive (forward) uncertainty over UNIFORM priors — NOT a "
+        "data-conditioned posterior** (blocked on the #330 GDSC data); PARAMETER, not "
+        "STRUCTURAL, uncertainty.\n"
+    )
+    lines.append("## Vessel-wall RSL3 death rate, by tissue\n")
+    lines.append("| tissue | default point | median | 95% prior-predictive interval | full range |")
+    lines.append("|---|---|---|---|---|")
+    for key, _ in PENETRATION_TISSUES:
+        s = per_tissue_stats[key]
+        lines.append(
+            f"| {_TISSUE_LABELS[key]} | {default_obs[key]:.3f} | {s['median']:.3f} | "
+            f"[{s['p2_5']:.3f}, {s['p97_5']:.3f}] | [{s['min']:.3f}, {s['max']:.3f}] |"
+        )
+    lines.append("")
+    lines.append(
+        f"Per-draw ordering preserved (well >= poorly >= CNS): "
+        f"**{ordering_frac:.1%}** of {ordering_n} valid draws.\n"
+    )
+    lines.append("## Scope\n")
+    lines.append(
+        "Completes the prior-predictive propagation of #332's headline claims over the 11 "
+        "PRCC biochem rate constants (single-cell kill switch, Bliss synergy, the two "
+        "sim-tme headlines, and now penetration). The remaining piece is the "
+        "data-conditioned ABC posterior, blocked on the external GDSC/DepMap/PRISM "
+        "drug-response data (#330); turning these uniform priors into a posterior, and "
+        "sweeping the transport parameters' own (currently undocumented) ranges, are the "
+        "open extensions.\n"
+    )
+    PEN_REPORT.write_text("\n".join(lines), encoding="utf-8")
 
 
 def write_report(stats, default_synergy, n_failed, n_undefined, n_samples):
@@ -348,25 +513,57 @@ def _run_tme(args):
     print(f"wrote {TME_REPORT.relative_to(REPO)}")
 
 
+def _run_penetration(args):
+    binary = _default_binary("sim-tissue-pk")
+    if binary is None:
+        raise SystemExit(
+            "sim-tissue-pk binary not found; build it: "
+            "cd simulations && cargo build --release -p sim-tissue-pk"
+        )
+    n = args.pen_samples
+    default_obs = _default_penetration(binary)
+    per_tissue, n_failed, ordering = prior_predictive_penetration(n, args.workers, binary)
+    if any(per_tissue[k].size == 0 for k, _ in PENETRATION_TISSUES):
+        raise SystemExit("a tissue scenario produced no usable draw; nothing to report")
+    per_tissue_stats = {k: _pctiles(per_tissue[k]) for k, _ in PENETRATION_TISSUES}
+    write_penetration_report(per_tissue_stats, default_obs, n_failed, ordering, n)
+    ordering_frac, ordering_n = ordering
+    print(f"penetration prior-predictive (n={n}, {n_failed} failed):")
+    for key, _ in PENETRATION_TISSUES:
+        s = per_tissue_stats[key]
+        print(
+            f"  {key:20s}: default={default_obs[key]:.3f}  median={s['median']:.3f}  "
+            f"95% CI=[{s['p2_5']:.3f}, {s['p97_5']:.3f}]"
+        )
+    print(f"  ordering (well>=poorly>=CNS) preserved in {ordering_frac:.1%} of {ordering_n} draws")
+    print(f"wrote {PEN_REPORT.relative_to(REPO)}")
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument(
         "--headline",
-        choices=["bliss", "sim-tme"],
+        choices=["bliss", "sim-tme", "penetration"],
         default="bliss",
-        help="bliss = RSL3+FSP1i synergy (fast); sim-tme = hypoxia gap + immune rate (~4 min/run)",
+        help="bliss = RSL3+FSP1i synergy (fast); sim-tme = hypoxia gap + immune rate "
+        "(~4 min/run); penetration = per-tissue vessel-wall RSL3 kill (sim-tissue-pk, ~4 s/run)",
     )
     ap.add_argument("--samples", type=int, default=DEFAULT_SAMPLES, help="Bliss prior draws")
     ap.add_argument(
         "--tme-samples", type=int, default=DEFAULT_TME_SAMPLES, help="sim-tme prior draws (costly)"
+    )
+    ap.add_argument(
+        "--pen-samples", type=int, default=DEFAULT_PEN_SAMPLES, help="penetration prior draws"
     )
     ap.add_argument("--workers", type=int, default=min(8, (os.cpu_count() or 4)))
     args = ap.parse_args()
 
     if args.headline == "bliss":
         _run_bliss(args)
-    else:
+    elif args.headline == "sim-tme":
         _run_tme(args)
+    else:
+        _run_penetration(args)
 
 
 def _default_bliss(binary):
