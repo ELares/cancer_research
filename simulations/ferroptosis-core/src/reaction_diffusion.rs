@@ -24,9 +24,19 @@
 //!
 //! The single physical length is the **diffusion-consumption length**
 //! `λ = sqrt(D / k)`. Setting `λ` equal to the exponential proxy's `lambda_um`
-//! makes the two apples-to-apples: a *single isolated* planar source reproduces
-//! `exp(-dist / λ)`, so any divergence between the RD field and the proxy is
-//! exactly the multi-vessel / consumption effect the proxy cannot represent.
+//! equalizes the decay *length* but not the source *geometry*: the proxy is the
+//! 1-D *planar* single-source solution, while a real 3-D *point* vessel's field
+//! is the Yukawa form `~ exp(-r/λ)/r`, which falls off faster. So a *single
+//! isolated planar* source reproduces `exp(-dist/λ)` exactly, but a single
+//! isolated *point* vessel already diverges from the proxy (the geometry term),
+//! before any multi-vessel superposition or extra consumption. Note `λ = sqrt(D/k)`
+//! already bakes straight-line-path consumption into the proxy's decay, so for a
+//! single source consumption is *not* a separate omitted effect; the proxy-vs-RD
+//! divergence is dominated by 3-D source geometry, with multi-vessel
+//! superposition + cumulative consumption as second-order terms. See
+//! `analysis/reaction-diffusion-benchmark.md` for the decomposition and the
+//! λ-regime dependence (depletion when `λ ≲` vessel spacing, enrichment when
+//! `λ ≫` it).
 //!
 //! **Discretization.** Uniform 6-point (von Neumann) stencil with spacing
 //! `h = cell_size_um`. The interior balance `D ∇²c − k c = 0` discretizes to

@@ -6245,6 +6245,42 @@ mod tests {
         let dim = 36;
         let lambda = ZONE_REF_LAMBDA;
         let grid = TumorGrid3D::generate(dim, dim, dim, CELL_SIZE_UM, SEED);
+
+        // Single isolated 3-D point source on an all-tumor cube: isolates the
+        // SOURCE-GEOMETRY term (planar proxy exp(-d/λ) vs a 3-D point source's
+        // Yukawa exp(-r/λ)/r) with zero superposition and zero extra
+        // consumption. The near-source gap here is most of the whole-tumor
+        // overestimate, i.e. the dominant driver is geometry, not multi-vessel
+        // effects. (Used by analysis/reaction-diffusion-benchmark.md.)
+        {
+            let mut cube = TumorGrid3D::generate(21, 21, 21, CELL_SIZE_UM, SEED);
+            for c in cube.cells.iter_mut() {
+                c.is_tumor = true;
+            }
+            let center = vec![(10.0, 10.0, 10.0)];
+            let p = vessel_supply_field(&cube, &center, lambda);
+            let r = reaction_diffusion_supply_field(
+                &cube,
+                &center,
+                &ReactionDiffusionConfig::new(lambda),
+            );
+            let nb = cube.flat_index(11, 10, 10); // first neighbor, 1 cell from source
+            eprintln!(
+                "[RD-benchmark] single point source (all-tumor cube): first-neighbour proxy={:.3} RD={:.3} (Δ={:.3})",
+                p[nb],
+                r[nb],
+                r[nb] - p[nb],
+            );
+            // Geometry alone (one vessel) already drops the near-source field
+            // well below the proxy — the bulk of the whole-tumor overestimate.
+            assert!(
+                p[nb] - r[nb] > 0.3,
+                "single-source geometry gap should be large: proxy={:.3} RD={:.3}",
+                p[nb],
+                r[nb]
+            );
+        }
+
         let compare = |vcfg: &VasculatureConfig, label: &str| -> (f64, f64, f64) {
             let vessels = place_vessels_3d(&grid, vcfg, VESSEL_SEED);
             let proxy = vessel_supply_field(&grid, &vessels, lambda);
@@ -6411,6 +6447,29 @@ mod tests {
         assert!(
             rd_no_vessels.vascular_hypoxic_fraction.is_none(),
             "no vasculature ⇒ no vascular hypoxic fraction"
+        );
+    }
+
+    /// The `reaction-diffusion` snapshot preset is name-keyed in `run_snapshot`
+    /// (`preset.name == "reaction-diffusion"`) and the RD field only has vessel
+    /// Dirichlet sources because the preset also sets `vasculature: true`. Lock
+    /// both invariants so a rename or a `vasculature` flip can't silently fall
+    /// back to the exp proxy and emit the wrong field (same guard the other
+    /// name-keyed presets carry).
+    #[test]
+    fn reaction_diffusion_snapshot_preset_is_wired() {
+        let p = resolve_snapshot("reaction-diffusion");
+        assert_eq!(
+            p.name, "reaction-diffusion",
+            "the name-key in run_snapshot matches on this exact string"
+        );
+        assert!(
+            p.vasculature,
+            "the reaction-diffusion preset must enable vasculature so the RD solver has vessel sources"
+        );
+        assert!(
+            matches!(p.treatment, Treatment::RSL3),
+            "the preset demonstrates RSL3 (hypoxia-sensitive) on the RD supply field"
         );
     }
 
