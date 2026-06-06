@@ -49,6 +49,7 @@ from headline_sensitivity import (  # noqa: E402  (path insert above)
     LOWS,
     PARAM_NAMES,
     _default_binary,
+    read_bliss_synergy,
     run_bliss,
 )
 
@@ -65,20 +66,41 @@ def sample_prior(n_samples, seed=SEED):
 
 
 def prior_predictive_bliss(n_samples, workers, binary):
-    """Run sim-combo-mech under each prior draw; return the synergy_score array
-    (failed runs dropped, with the count reported by the caller)."""
+    """Run sim-combo-mech under each prior draw and partition the outcomes into
+    three categories, returning (finite_synergy_array, n_failed, n_undefined):
+
+    - finite synergy: a defined `synergy_score`, summarized into the interval;
+    - n_undefined: the binary ran (exit 0) but emitted a NON-FINITE synergy.
+      sim-combo-mech writes NaN when the Bliss baseline `<= 0.001`, i.e. both
+      single agents kill ~0% (a ferroptosis-resistant corner of the prior), so
+      the synergy RATIO is mathematically undefined. These must be dropped from
+      the percentiles (a single NaN poisons `np.percentile`) and counted
+      separately rather than silently passed through as "successes";
+    - n_failed: the subprocess itself errored.
+    """
     draws = sample_prior(n_samples)
 
     def _one(row):
         try:
-            return run_bliss(row, binary)
+            return run_bliss(row, binary)  # may be a finite float or NaN
         except Exception:
-            return None
+            return None  # subprocess / parse failure
 
     with ThreadPoolExecutor(max_workers=workers) as ex:  # subprocess releases the GIL
         results = list(ex.map(_one, draws))
-    values = np.array([v for v in results if v is not None], dtype=float)
-    return values, len(results) - len(values)
+    return _partition(results)
+
+
+def _partition(results):
+    """Split run outcomes into (finite_synergy_array, n_failed, n_undefined):
+    `None` = subprocess/parse failure; a non-finite float (NaN/inf) = undefined
+    Bliss (binary ran but the ratio is undefined); a finite float = a valid
+    synergy. Pure, so the NaN-dropping contract is unit-tested without the
+    binary — the bug this guards is a single NaN poisoning every percentile."""
+    finite = [v for v in results if v is not None and np.isfinite(v)]
+    n_failed = sum(1 for v in results if v is None)
+    n_undefined = sum(1 for v in results if v is not None and not np.isfinite(v))
+    return np.array(finite, dtype=float), n_failed, n_undefined
 
 
 def _pctiles(values):
@@ -93,7 +115,7 @@ def _pctiles(values):
     }
 
 
-def write_report(stats, default_synergy, n_failed, n_samples):
+def write_report(stats, default_synergy, n_failed, n_undefined, n_samples):
     lines = []
     lines.append("# Prior-predictive uncertainty: Bliss synergy headline (#332)\n")
     lines.append(
@@ -108,9 +130,14 @@ def write_report(stats, default_synergy, n_failed, n_samples):
     lines.append("## Method\n")
     lines.append(
         f"- {n_samples} Monte-Carlo draws from the joint uniform prior (seed {SEED}, "
-        f"deterministic); {stats['n']} succeeded"
-        + (f", {n_failed} dropped (binary failure)" if n_failed else "")
-        + ".\n"
+        f"deterministic); {stats['n']} yielded a defined synergy and form the interval, "
+        f"{n_undefined} undefined-Bliss (dropped), {n_failed} binary failures (dropped).\n"
+        "- **Undefined-Bliss draws** are a ferroptosis-resistant corner of the prior where "
+        "BOTH single agents kill ~0%, so the Bliss baseline is ~0 and the synergy ratio "
+        "(death / Bliss) is mathematically undefined; sim-combo-mech emits NaN there "
+        "(`bliss <= 0.001`). These are dropped from the percentiles (one NaN would poison "
+        "`np.percentile`) and counted separately rather than passed through as successes — "
+        "their existence is itself an honest note on the headline's robustness.\n"
         "- **Prior-predictive (forward) uncertainty over UNIFORM priors — NOT a "
         "data-conditioned Bayesian/ABC posterior.** Turning the priors into a posterior "
         "needs the external GDSC/DepMap/PRISM drug-response data (#330). Captures "
@@ -159,42 +186,34 @@ def main():
             "cd simulations && cargo build --release -p sim-combo-mech"
         )
 
-    # Default point estimate: run with an all-default (mid-range is NOT default;
-    # the headline 1.99x is the no-override run). run_bliss requires a params row,
-    # so read the default by running the binary with no overrides via a sentinel:
-    # we approximate the default with the binary's own unperturbed output by
-    # passing the *current* default params — simplest is to run with no override
-    # env, which run_bliss does not do, so we compute it directly here.
+    # Default point estimate: the no-override (FERRO_PARAM_OVERRIDES-unset) run,
+    # i.e. the manuscript ~1.99x the interval brackets.
     default_synergy = _default_bliss(binary)
 
-    values, n_failed = prior_predictive_bliss(args.samples, args.workers, binary)
+    values, n_failed, n_undefined = prior_predictive_bliss(args.samples, args.workers, binary)
     if values.size == 0:
-        raise SystemExit("all sim-combo-mech runs failed; nothing to report")
+        raise SystemExit("no draw produced a defined synergy; nothing to report")
     stats = _pctiles(values)
-    write_report(stats, default_synergy, n_failed, args.samples)
+    write_report(stats, default_synergy, n_failed, n_undefined, args.samples)
     print(
         f"Bliss prior-predictive: default={default_synergy:.3f}  "
         f"median={stats['median']:.3f}  95% CI=[{stats['p2_5']:.3f}, {stats['p97_5']:.3f}]  "
-        f"(n={stats['n']}, {n_failed} failed)"
+        f"(n={stats['n']}, {n_undefined} undefined-Bliss, {n_failed} failed)"
     )
     print(f"wrote {REPORT.relative_to(REPO)}")
 
 
 def _default_bliss(binary):
     """The unperturbed Bliss synergy (no FERRO_PARAM_OVERRIDES) — the manuscript
-    point estimate the interval brackets."""
+    point estimate the interval brackets. Reuses the shared CSV reader so the
+    no-override path and run_bliss's override path never drift."""
     with tempfile.TemporaryDirectory(prefix="ferro_pp_default_") as workdir:
         env = dict(os.environ)
         env.pop("FERRO_PARAM_OVERRIDES", None)  # ensure a clean default run
         proc = subprocess.run([str(binary)], cwd=workdir, env=env, capture_output=True, text=True)
         if proc.returncode != 0:
             raise RuntimeError(f"default sim-combo-mech failed: {proc.stderr[-300:]}")
-        csv_path = Path(workdir) / "output" / "combo-mech" / "combo_synergy.csv"
-        with csv_path.open() as fh:
-            for row in csv.DictReader(fh):
-                if {row["drug_a"], row["drug_b"]} == {"RSL3", "FSP1i"}:
-                    return float(row["synergy_score"])
-    raise RuntimeError("RSL3+FSP1i row not found in default combo_synergy.csv")
+        return read_bliss_synergy(workdir)
 
 
 if __name__ == "__main__":

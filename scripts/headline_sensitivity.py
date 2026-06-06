@@ -158,6 +158,22 @@ def _default_binary(name="sim-combo-mech"):
     return None
 
 
+def read_bliss_synergy(workdir):
+    """Read the RSL3 + FSP1i `synergy_score` from a completed sim-combo-mech run
+    in `workdir`. Shared by the override path (`run_bliss`) and the no-override
+    default path (`headline_uncertainty._default_bliss`) so they never drift.
+
+    Returns `float(...)`, which may be NaN: sim-combo-mech emits NaN when the
+    Bliss baseline `<= 0.001` (both single agents kill ~0%, an undefined ratio);
+    callers must decide how to treat a non-finite value."""
+    csv_path = Path(workdir) / "output" / "combo-mech" / "combo_synergy.csv"
+    with csv_path.open() as fh:
+        for row in csv.DictReader(fh):
+            if {row["drug_a"], row["drug_b"]} == {"RSL3", "FSP1i"}:
+                return float(row["synergy_score"])
+    raise RuntimeError("RSL3+FSP1i row not found in combo_synergy.csv")
+
+
 def run_bliss(params_row, binary):
     """RSL3 + FSP1i `synergy_score` from sim-combo-mech (the ~1.99x Bliss headline)."""
     with tempfile.TemporaryDirectory(prefix="ferro_morris_") as workdir:
@@ -168,12 +184,7 @@ def run_bliss(params_row, binary):
         )
         if proc.returncode != 0:
             raise RuntimeError(f"sim-combo-mech failed ({proc.returncode}): {proc.stderr[-400:]}")
-        csv_path = Path(workdir) / "output" / "combo-mech" / "combo_synergy.csv"
-        with csv_path.open() as fh:
-            for row in csv.DictReader(fh):
-                if {row["drug_a"], row["drug_b"]} == {"RSL3", "FSP1i"}:
-                    return float(row["synergy_score"])
-    raise RuntimeError("RSL3+FSP1i row not found in combo_synergy.csv")
+        return read_bliss_synergy(workdir)
 
 
 # Reference O2 gradient for the hypoxia headline (lambda = 120 um, the lambda the

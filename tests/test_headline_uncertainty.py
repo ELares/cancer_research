@@ -67,5 +67,26 @@ def test_pctiles_monotone_interval():
     assert s["min"] <= s["p2_5"] <= s["median"] <= s["p97_5"] <= s["max"]
 
 
+def test_partition_drops_nan_and_failures():
+    """Regression for the blocker: a NaN synergy (sim-combo-mech emits NaN when
+    Bliss <= 0.001, i.e. both single agents ~0%) must be dropped as
+    undefined-Bliss, not pass through into np.percentile (where one NaN poisons
+    every quantile). Subprocess failures (None) are a distinct category."""
+    results = [1.0, float("nan"), None, 2.0, float("inf"), 1.5, None]
+    finite, n_failed, n_undefined = hu._partition(results)
+    assert sorted(finite.tolist()) == [1.0, 1.5, 2.0]
+    assert n_failed == 2  # the two None
+    assert n_undefined == 2  # nan + inf
+    # The surviving array is all-finite, so the summary is never poisoned.
+    assert np.all(np.isfinite(finite))
+    s = hu._pctiles(finite)
+    assert np.isfinite(s["median"]) and np.isfinite(s["p2_5"]) and np.isfinite(s["p97_5"])
+
+
+def test_partition_all_undefined_yields_empty():
+    finite, n_failed, n_undefined = hu._partition([float("nan"), float("nan"), None])
+    assert finite.size == 0 and n_undefined == 2 and n_failed == 1
+
+
 if __name__ == "__main__":
     sys.exit(pytest.main([__file__, "-v"]))
