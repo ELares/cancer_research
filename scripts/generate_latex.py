@@ -34,6 +34,34 @@ body = md[body_start.start():ref_match.start()].strip()
 # Remove footnote definition lines from the body (they'll become \footnote{} inline)
 body = re.sub(r'^\[\^\w+\]:\s*.+$', '', body, flags=re.MULTILINE)
 
+# Greek letters → LaTeX math commands. pdflatex with inputenc=utf8 does NOT map
+# bare Greek code points to glyphs (unlike accented Latin / ± / curly quotes,
+# which it does), so an unmapped Greek letter is a hard `! LaTeX Error: Unicode
+# character ...` that makes pdflatex exit non-zero and breaks the release-pdf
+# build even though a PDF is produced. Mapping every Greek letter with a distinct
+# LaTeX command lets the prose (and citation footnotes) use them freely. Capital
+# letters whose glyph is identical to a Latin capital (Α, Β, Ε, ...) have no
+# \Command and are intentionally omitted; use the Latin letter for those.
+_GREEK_TO_LATEX = (
+    ('α', 'alpha'), ('β', 'beta'), ('γ', 'gamma'), ('δ', 'delta'),
+    ('ε', 'epsilon'), ('ζ', 'zeta'), ('η', 'eta'), ('θ', 'theta'),
+    ('ι', 'iota'), ('κ', 'kappa'), ('λ', 'lambda'), ('ν', 'nu'),
+    ('ξ', 'xi'), ('π', 'pi'), ('ρ', 'rho'), ('σ', 'sigma'),
+    ('τ', 'tau'), ('φ', 'phi'), ('χ', 'chi'), ('ψ', 'psi'), ('ω', 'omega'),
+    ('Γ', 'Gamma'), ('Δ', 'Delta'), ('Θ', 'Theta'), ('Λ', 'Lambda'),
+    ('Ξ', 'Xi'), ('Π', 'Pi'), ('Σ', 'Sigma'), ('Υ', 'Upsilon'),
+    ('Φ', 'Phi'), ('Ψ', 'Psi'), ('Ω', 'Omega'),
+)
+
+
+def map_greek(t):
+    """Replace bare Greek code points with `$\\command$`. `μ` (U+03BC) is handled
+    separately by the caller (it shares a command with the micro sign U+00B5)."""
+    for greek, cmd in _GREEK_TO_LATEX:
+        t = t.replace(greek, f'$\\{cmd}$')
+    return t
+
+
 # Markdown → LaTeX
 def cvt(t):
     # Book-structure headings (report document class)
@@ -71,11 +99,9 @@ def cvt(t):
     t = t.replace('≥', '$\\geq$')
     t = t.replace('≤', '$\\leq$')
     t = t.replace('≈', '$\\approx$')
-    t = t.replace('δ', '$\\delta$')
-    t = t.replace('α', '$\\alpha$')
     t = t.replace('µ', '$\\mu$')
     t = t.replace('μ', '$\\mu$')      # U+03BC (Greek mu) — distinct from U+00B5 (micro sign)
-    t = t.replace('λ', '$\\lambda$')
+    t = map_greek(t)                  # all remaining Greek letters (incl. Σ, Π, Δ, ...)
     t = re.sub(r'√\(([^)]+)\)', r'$\\sqrt{\1}$', t)  # √(x) → $\sqrt{x}$
     t = t.replace('√', '$\\sqrt{}$')                    # bare √ fallback
     t = t.replace('²', '$^2$')
@@ -100,6 +126,8 @@ def repl_footnote(m):
     text = text.replace('\u2009', ' ')  # thin space → regular space
     text = text.replace('—', '---').replace('–', '--')
     text = text.replace('→', '$\\rightarrow$')
+    text = text.replace('µ', '$\\mu$').replace('μ', '$\\mu$')
+    text = map_greek(text)  # Greek in citation titles/authors (same hard-error class as the body)
     # Accented chars: keep as-is (fontenc T1 handles common Latin accents)
     return f'\\footnote{{{text}}}'
 

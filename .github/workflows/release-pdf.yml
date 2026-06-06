@@ -44,17 +44,61 @@ jobs:
       - name: Compile PDF (pdflatex, 2-pass)
         working-directory: article/drafts
         run: |
+          # Start from a clean slate so a pass that aborts WITHOUT rewriting can
+          # never leave a stale PDF/log for the verify step to bless.
+          rm -f v1.pdf v1.log
+          # pdflatex exits NON-ZERO on RECOVERABLE errors (e.g. a missing glyph
+          # for an unmapped Unicode char) even when it emits a complete PDF. Pass
+          # 1 is allowed to fail (cross-refs aren't resolved yet); the SECOND pass
+          # is the gate. We capture its exit code and tolerate a non-zero exit
+          # ONLY when the sole issue is the known recoverable Unicode-character
+          # class. Any OTHER non-zero exit — a fatal LaTeX error, or an OOM/timeout
+          # kill that aborts pass 2 and would otherwise leave a stale pass-1 PDF —
+          # fails the build loudly rather than releasing a stale/broken artifact.
+          pdflatex -interaction=nonstopmode v1.tex || true
+          set +e
           pdflatex -interaction=nonstopmode v1.tex
-          pdflatex -interaction=nonstopmode v1.tex
+          RC=$?
+          set -e
+          if [ "$RC" -ne 0 ]; then
+            if [ -f v1.log ] && grep -q "Unicode character" v1.log; then
+              echo "::warning::pdflatex pass 2 exited ${RC} but only with recoverable Unicode-character errors (an unmapped glyph in scripts/generate_latex.py); tolerating and continuing to the verify gate."
+            else
+              echo "ERROR: pdflatex pass 2 exited ${RC} with no recoverable-Unicode marker — treating as a real failure (fatal error or aborted run)."
+              tail -n 40 v1.log 2>/dev/null || true
+              exit 1
+            fi
+          fi
 
       - name: Verify PDF was generated
+        working-directory: article/drafts
         run: |
-          if [ ! -f article/drafts/v1.pdf ]; then
+          if [ ! -f v1.pdf ]; then
             echo "ERROR: PDF not generated"
             exit 1
           fi
-          echo "PDF size: $(du -h article/drafts/v1.pdf | cut -f1)"
-          echo "PDF pages: $(pdfinfo article/drafts/v1.pdf 2>/dev/null | grep Pages || echo 'unknown')"
+          # A fatal/emergency LaTeX error truncates or omits the PDF — catch it
+          # even though we tolerated pdflatex's exit code above.
+          if grep -qE "Emergency stop|Fatal error occurred|No pages of output" v1.log; then
+            echo "ERROR: pdflatex hit a fatal error:"
+            grep -nE "Emergency stop|Fatal error occurred|No pages of output" v1.log || true
+            exit 1
+          fi
+          # Sanity floor: the full manuscript PDF is ~1.7 MB / ~120 pages. A fatal
+          # abort yields a far smaller (or absent) file. Gate on size (no extra dep).
+          BYTES=$(wc -c < v1.pdf)
+          echo "PDF size: $(du -h v1.pdf | cut -f1) (${BYTES} bytes)"
+          echo "PDF pages: $(pdfinfo v1.pdf 2>/dev/null | grep Pages || echo 'unknown (pdfinfo unavailable)')"
+          if [ "${BYTES}" -lt 500000 ]; then
+            echo "ERROR: PDF is only ${BYTES} bytes (< 500 KB) — likely a truncated/failed build"
+            exit 1
+          fi
+          # Surface any recovered Unicode errors so they get fixed even though they
+          # no longer block the release (generate_latex.py map_greek should prevent them).
+          if grep -q "Unicode character" v1.log; then
+            echo "::warning::pdflatex recovered from Unicode-character errors (a glyph is unmapped in scripts/generate_latex.py):"
+            grep -n "Unicode character" v1.log | head -20 || true
+          fi
 
       - name: Generate release tag
         id: tag
