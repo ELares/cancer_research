@@ -143,5 +143,29 @@ def test_partition_penetration_missing_key_treated_as_nan():
     assert per_tissue[k2].size == 0  # missing key -> dropped, no crash
 
 
+def test_ordering_preserved_fraction_is_within_draw_paired():
+    """The per-draw ordering test (well >= poorly >= CNS) must count ONLY draws
+    with all three finite, and detect a per-draw inversion that overlapping
+    marginals would hide."""
+    k0, k1, k2 = (k for k, _ in hu.PENETRATION_TISSUES)
+    results = [
+        {k0: 0.9, k1: 0.4, k2: 0.1},  # ordered
+        {k0: 0.2, k1: 0.5, k2: 0.1},  # INVERTED (poorly > well) -> not counted
+        {k0: 0.3, k1: 0.3, k2: 0.3},  # ties ok (>=)
+        None,  # failure -> excluded from valid
+        {k0: float("nan"), k1: 0.2, k2: 0.1},  # incomplete -> excluded from valid
+    ]
+    frac, n_valid = hu._ordering_preserved_fraction(results)
+    assert n_valid == 3  # the two ordered/tie draws + the inverted one
+    assert abs(frac - 2 / 3) < 1e-9  # 2 of 3 valid draws monotone
+
+
+def test_ordering_preserved_fraction_empty_is_nan():
+    import math
+
+    frac, n_valid = hu._ordering_preserved_fraction([None, None])
+    assert n_valid == 0 and math.isnan(frac)
+
+
 if __name__ == "__main__":
     sys.exit(pytest.main([__file__, "-v"]))
