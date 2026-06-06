@@ -15,7 +15,7 @@ use serde::Serialize;
 
 use ferroptosis_core::biochem::{sim_cell_step, CellState};
 use ferroptosis_core::cell::{gen_cell, norm, Cell, Phenotype};
-use ferroptosis_core::params::Params;
+use ferroptosis_core::params::{apply_param_overrides, param_overrides_from_env, Params};
 use ferroptosis_core::stats::wilson_ci;
 
 const N_CELLS: usize = 1000;
@@ -256,7 +256,29 @@ fn main() {
     eprintln!("Context: 2D culture (default params)");
     eprintln!("NOTE: Drug potency parameters are estimated, not calibrated.\n");
 
-    let params = Params::default();
+    // Biochem parameter overrides (#331): perturb rate constants via the
+    // `FERRO_PARAM_OVERRIDES` env var (inline JSON or file path) without
+    // recompiling, for global-sensitivity / calibration of the Bliss-synergy
+    // headline. Unset ⇒ byte-identical to the historical run.
+    let mut params = Params::default();
+    match param_overrides_from_env() {
+        Ok(overrides) => {
+            if !overrides.is_empty() {
+                eprintln!(
+                    "Applying {} biochem override(s) from FERRO_PARAM_OVERRIDES",
+                    overrides.len()
+                );
+            }
+            if let Err(name) = apply_param_overrides(&mut params, overrides) {
+                eprintln!("error: FERRO_PARAM_OVERRIDES contains unknown parameter '{name}'");
+                std::process::exit(2);
+            }
+        }
+        Err(e) => {
+            eprintln!("error: {e}");
+            std::process::exit(2);
+        }
+    }
     let seed: u64 = 42;
     let phenotype = Phenotype::Persister;
 

@@ -153,37 +153,18 @@ fn validate_params(params: &Params) -> PyResult<()> {
 }
 
 fn apply_overrides(params: &mut Params, overrides: &HashMap<String, f64>) -> PyResult<()> {
-    for (key, val) in overrides {
-        match key.as_str() {
-            "fenton_rate" => params.fenton_rate = *val,
-            "gsh_scav_efficiency" => params.gsh_scav_efficiency = *val,
-            "gsh_km" => params.gsh_km = *val,
-            "nrf2_gsh_rate" => params.nrf2_gsh_rate = *val,
-            "lp_rate" => params.lp_rate = *val,
-            "lp_propagation" => params.lp_propagation = *val,
-            "gpx4_rate" => params.gpx4_rate = *val,
-            "fsp1_rate" => params.fsp1_rate = *val,
-            "scd_mufa_rate" => params.scd_mufa_rate = *val,
-            "scd_mufa_max" => params.scd_mufa_max = *val,
-            "initial_mufa_protection" => params.initial_mufa_protection = *val,
-            "scd_mufa_decay" => params.scd_mufa_decay = *val,
-            "gpx4_degradation_by_ros" => params.gpx4_degradation_by_ros = *val,
-            "gpx4_nrf2_upregulation" => params.gpx4_nrf2_upregulation = *val,
-            "sdt_ros" => params.sdt_ros = *val,
-            "pdt_ros" => params.pdt_ros = *val,
-            "rsl3_gpx4_inhib" => params.rsl3_gpx4_inhib = *val,
-            "gsh_max" => params.gsh_max = *val,
-            "gpx4_nrf2_target_multiplier" => params.gpx4_nrf2_target_multiplier = *val,
-            "death_threshold" => params.death_threshold = *val,
-            _ => {
-                return Err(PyValueError::new_err(format!(
-                    "Unknown parameter '{}'. Use default_params() to see valid names.",
-                    key
-                )));
-            }
-        }
-    }
-    Ok(())
+    // Delegate to the single name->field mapping in ferroptosis-core (#331) so
+    // the binding and the simulation binaries override the SAME parameters.
+    ::ferroptosis_core::params::apply_param_overrides(
+        params,
+        overrides.iter().map(|(k, v)| (k.as_str(), *v)),
+    )
+    .map_err(|name| {
+        PyValueError::new_err(format!(
+            "Unknown parameter '{}'. Use default_params() to see valid names.",
+            name
+        ))
+    })
 }
 
 // ============================================================

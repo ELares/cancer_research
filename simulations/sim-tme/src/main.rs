@@ -43,7 +43,8 @@ use ferroptosis_core::immune_spatial::{immune_kill_probability, DAMP_KILL_THRESH
 use ferroptosis_core::io::{write_depth_curves_csv, write_heatmap_csv, write_json};
 use ferroptosis_core::oxygen::o2_dependent_exo_factor;
 use ferroptosis_core::params::{
-    Params, PhConfig, SpatialImmuneConfig, SpatialParams, StromalConfig,
+    apply_param_overrides, param_overrides_from_env, Params, PhConfig, SpatialImmuneConfig,
+    SpatialParams, StromalConfig,
 };
 use ferroptosis_core::ph::{iron_multiplier_from_ph, radial_ph_field_2d};
 use ferroptosis_core::physics::local_ros_multiplier;
@@ -805,7 +806,29 @@ fn main() {
     eprintln!("O2 penetration sweep: {:?} μm", O2_LAMBDAS);
     eprintln!("Caveats: O2 modulates basal_ros only (not Fenton/SDT); steady-state field\n");
 
-    let params = Params::default();
+    // Biochem parameter overrides (#331): a global-sensitivity / calibration
+    // driver can perturb the biochemical rate constants via the
+    // `FERRO_PARAM_OVERRIDES` env var (inline JSON or a file path) WITHOUT
+    // recompiling. Unset ⇒ no overrides ⇒ byte-identical to the historical run.
+    let mut params = Params::default();
+    match param_overrides_from_env() {
+        Ok(overrides) => {
+            if !overrides.is_empty() {
+                eprintln!(
+                    "Applying {} biochem override(s) from FERRO_PARAM_OVERRIDES",
+                    overrides.len()
+                );
+            }
+            if let Err(name) = apply_param_overrides(&mut params, overrides) {
+                eprintln!("error: FERRO_PARAM_OVERRIDES contains unknown parameter '{name}'");
+                std::process::exit(2);
+            }
+        }
+        Err(e) => {
+            eprintln!("error: {e}");
+            std::process::exit(2);
+        }
+    }
     let spatial_params = SpatialParams {
         cell_size_um: CELL_SIZE_UM,
         ..Default::default()
