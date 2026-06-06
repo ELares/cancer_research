@@ -1,0 +1,109 @@
+# Curated MeSH-descriptor -> mechanism reference map for the non-circular
+# mechanism-recall measurement (#412). HANDWRITTEN (separate from the scoring
+# code in scripts/mechanism_recall.py, per the repo's generated-vs-handwritten
+# split). Each descriptor is a precision-first LEAF: an article carrying it is,
+# with high precision, genuinely about that mechanism rather than merely
+# co-occurring with it. Counts in the notes are verified against
+# corpus/by-pmid/*.md mesh_terms (4830 records, ~80.5% with non-empty MeSH).
+#
+# How it is used: scripts/mechanism_recall.py classifies each descriptor as
+# `independent` or `leaky` at runtime (leaky = the descriptor string contains one
+# of the mechanism's own MECHANISM_KEYWORDS, so MeSH would tautologically trigger
+# the keyword tagger). The HEADLINE recall is computed from the INDEPENDENT
+# descriptors only; leaky descriptors are reported separately as near-tautological.
+# This is a controlled-vocabulary CONCORDANCE check (MeSH is an independent,
+# expert-assigned label), NOT manual ground truth.
+
+# Measurable mechanisms: each has >= 1 discriminative leaf descriptor with a
+# usable corpus pool. `descriptors` are candidate MeSH descriptor strings (exact
+# PubMed casing). `note` records provenance / the discriminativeness rationale.
+mechanisms:
+  immunotherapy:
+    descriptors: ["Immune Checkpoint Inhibitors", "B7-H1 Antigen", "CTLA-4 Antigen"]
+    note: >
+      Checkpoint immunotherapy. Bare "Immunotherapy" (n~1011) is the umbrella term
+      and is EXCLUDED as non-discriminative; "Immunotherapy, Adoptive" is routed to
+      car-t. Keyed on the checkpoint-inhibitor leaf (n~348).
+  car-t:
+    descriptors: ["Receptors, Chimeric Antigen", "Immunotherapy, Adoptive"]
+    note: >
+      "Receptors, Chimeric Antigen" (n~248) is the exact CAR leaf (independent of
+      the "chimeric antigen receptor" keyword by word order). "Immunotherapy,
+      Adoptive" (n~299) sits on ~87% of CAR-T papers, routed here not to immunotherapy.
+  oncolytic-virus:
+    descriptors: ["Oncolytic Virotherapy", "Oncolytic Viruses"]
+    note: Exact oncolytic-virus leaves (n~242/228). Likely classified leaky (string overlap).
+  crispr:
+    descriptors: ["CRISPR-Cas Systems", "Gene Editing"]
+    note: Exact gene-editing leaves (n~149/108).
+  nanoparticle:
+    descriptors: ["Nanoparticles", "Nanoparticle Drug Delivery System", "Nanomedicine"]
+    note: Nanoparticle/nanomedicine leaves (n~261/58).
+  synthetic-lethality:
+    descriptors: ["Synthetic Lethal Mutations", "Poly(ADP-ribose) Polymerase Inhibitors"]
+    note: PARP-inhibitor + synthetic-lethal leaves.
+  antibody-drug-conjugate:
+    descriptors: ["Immunoconjugates"]
+    note: Single ADC parent leaf (n~197); independent of the "antibody-drug conjugate" keyword.
+  bispecific-antibody:
+    descriptors: ["Antibodies, Bispecific"]
+    note: Exact bispecific leaf (n~209). Scaffold mechanism (not in frozen-19 results).
+  electrochemical-therapy:
+    descriptors: ["Electroporation", "Electrochemotherapy", "Irreversible Electroporation Therapy"]
+    note: Electroporation/electrochemotherapy leaves (Electroporation somewhat broad).
+  sonodynamic:
+    descriptors: ["Ultrasonic Therapy"]
+    note: Shared with general ultrasound therapy; lower discriminativeness.
+  hifu:
+    descriptors: ["High-Intensity Focused Ultrasound Ablation"]
+    note: Exact HIFU leaf (n~60).
+  epigenetic:
+    descriptors:
+      ["Histone Deacetylase Inhibitors", "Azacitidine", "Decitabine", "Vorinostat", "DNA Methylation"]
+    note: >
+      Therapy leaves only. Broad "Epigenesis, Genetic" is general biology (inflates
+      the pool, depresses apparent recall) and is EXCLUDED. The lone INDEPENDENT
+      leaf is "DNA Methylation", so the measured recall (~55%) is genuinely the
+      LOWEST of the headline set for two compounding reasons: (a) a real gap in
+      keyword coverage (the field says "epigenetic modifications/regulation",
+      "EZH2 inhibitor", "BET inhibitor" which the keyword set does not yet carry),
+      and (b) "DNA Methylation" also tags basic methylation BIOLOGY that is not
+      epigenetic THERAPY, so part of the gap is reference-scope breadth, not a miss.
+      Kept (not dropped) because the keyword-coverage half is an actionable finding.
+  microbiome:
+    descriptors: ["Fecal Microbiota Transplantation"]
+    note: >
+      Clean therapy leaf (n~47). Broad "Microbiota"/"Gastrointestinal Microbiome"
+      are population/context descriptors and are EXCLUDED.
+  frequency-therapy:
+    descriptors: ["Radiofrequency Ablation"]
+    note: >
+      Clean leaf (n~19). Broad "Electromagnetic Fields"/"Magnetic Field Therapy" are
+      context descriptors and are EXCLUDED.
+  metabolic-targeting:
+    descriptors: ["Warburg Effect, Oncologic", "Glycolysis"]
+    note: Warburg leaf is specific but tiny (n~6); Glycolysis broader. Low-confidence.
+  phagocytosis-checkpoint:
+    descriptors: ["CD47 Antigen"]
+    note: Exact leaf but tiny pool (n~18). Scaffold mechanism.
+  mrna-vaccine:
+    descriptors: ["mRNA Vaccines"]
+    note: >
+      PROXY-CONFOUNDED: the "mRNA Vaccines" pool is inflated by COVID-19
+      mRNA-vaccine-in-cancer-patient papers that the tagger CORRECTLY rejects
+      (match_mrna_vaccine exclusion logic), so the recall number here UNDERSTATES
+      the tagger and is reported but flagged not-interpretable-as-tagger-recall.
+    proxy_confounded: true
+
+# NOT MeSH-measurable: no discriminative descriptor (term too new, only over-broad
+# context descriptors, taxonomy-bucket-confounded, or the pool is empty/tiny).
+# Reported with the reason; NEVER as 0% recall.
+unmeasurable:
+  ttfields: "No TTFields-specific MeSH descriptor (only over-broad Electric Stimulation Therapy); ~38% of its tagger-positives also have empty MeSH."
+  cold-atmospheric-plasma: "No descriptor ('Plasma Gases' n~2); ~100% of its tagger-positives have empty MeSH."
+  bioelectric: "Only cell-physiology descriptors (Membrane Potentials / Ion Channels), not the cancer-therapy thesis; pool thin and confounded."
+  electrolysis: "Bucket-confounded: ~18/19 of its MeSH-pool carry 'Electrochemotherapy', which the tagger buckets as electrochemical-therapy (a taxonomy-boundary artifact, not a recall miss)."
+  radioligand-therapy: "Descriptors ('Radioimmunotherapy'/'Radiopharmaceuticals') bleed to immunotherapy/ADC; tiny pool (n~18). Scaffold."
+  targeted-protein-degradation: "Only the broad housekeeping 'Proteolysis'; no PROTAC descriptor; tiny pool (n~11). Scaffold."
+  cuproptosis: "No cuproptosis MeSH term (only 'Copper', the ion, n~6); 0 frozen-index tags. Scaffold."
+  disulfidptosis: "Descriptor exists but n=1; 0 frozen-index tags. Scaffold."

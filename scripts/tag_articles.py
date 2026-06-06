@@ -177,15 +177,27 @@ def has_cancer_context(text: str) -> bool:
     return any(term in text for term in GENERIC_CANCER_TERMS)
 
 
-def get_searchable_text(fm: dict, body: str, include_full_text: bool = False) -> str:
-    """Combine title, abstract, metadata, and optionally full text into searchable text."""
-    parts = [
-        fm.get("title", ""),
-        " ".join(fm.get("mesh_terms", [])),
-        " ".join(fm.get("diseases_annotated", [])),
-        " ".join(fm.get("genes", [])),
-        " ".join(fm.get("drugs", [])),
-    ]
+def get_searchable_text(
+    fm: dict, body: str, include_full_text: bool = False, include_metadata: bool = True
+) -> str:
+    """Combine title, abstract, metadata, and optionally full text into searchable text.
+
+    `include_metadata=True` (the default, used by the production tagger) folds the
+    curated MeSH terms + disease/gene/drug annotations into the matched text.
+    `include_metadata=False` builds the text from ONLY the title + abstract,
+    EXCLUDING `mesh_terms` — needed by the #412 mechanism-recall measurement so the
+    MeSH descriptors can serve as an INDEPENDENT reference label (if MeSH were folded
+    back into the matched text, recall against a MeSH-derived label would be
+    circular). The default path is unchanged, so production tagging is byte-identical.
+    """
+    parts = [fm.get("title", "")]
+    if include_metadata:
+        parts += [
+            " ".join(fm.get("mesh_terms", [])),
+            " ".join(fm.get("diseases_annotated", [])),
+            " ".join(fm.get("genes", [])),
+            " ".join(fm.get("drugs", [])),
+        ]
 
     # Extract abstract from body (between ## Abstract and next ##)
     abstract_match = re.search(r"## Abstract\n\n?(.*?)(?=\n## |\Z)", body, re.DOTALL)

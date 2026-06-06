@@ -1,0 +1,291 @@
+{
+  "aggregates": {
+    "macro_recall_leakage_free": 0.8748450792591719,
+    "n_measurable_mechanisms": 9,
+    "total_independent_pool": 1366,
+    "volume_weighted_recall_leakage_free": 0.8997071742313324
+  },
+  "leaky_only": {
+    "crispr": {
+      "canon": "crispr",
+      "independent_descriptors": [],
+      "leaky_descriptors": [
+        "CRISPR-Cas Systems",
+        "Gene Editing"
+      ],
+      "n_independent": 0,
+      "n_leaky": 168,
+      "note": "Exact gene-editing leaves (n~149/108).",
+      "proxy_confounded": false,
+      "reason": "independent-descriptor pool n=0 < N_MIN=30 (all discriminative descriptors are keyword-tautological)",
+      "recall_leakage_free": null,
+      "recall_leaky_near_tautological": 0.9523809523809523,
+      "recall_production_index": null
+    },
+    "frequency-therapy": {
+      "canon": "frequency-therapy",
+      "independent_descriptors": [],
+      "leaky_descriptors": [
+        "Radiofrequency Ablation"
+      ],
+      "n_independent": 0,
+      "n_leaky": 19,
+      "note": "Clean leaf (n~19). Broad \"Electromagnetic Fields\"/\"Magnetic Field Therapy\" are context descriptors and are EXCLUDED.",
+      "proxy_confounded": false,
+      "reason": "independent-descriptor pool n=0 < N_MIN=30 (all discriminative descriptors are keyword-tautological)",
+      "recall_leakage_free": null,
+      "recall_leaky_near_tautological": 0.8947368421052632,
+      "recall_production_index": null
+    },
+    "hifu": {
+      "canon": "hifu",
+      "independent_descriptors": [],
+      "leaky_descriptors": [
+        "High-Intensity Focused Ultrasound Ablation"
+      ],
+      "n_independent": 0,
+      "n_leaky": 47,
+      "note": "Exact HIFU leaf (n~60).",
+      "proxy_confounded": false,
+      "reason": "independent-descriptor pool n=0 < N_MIN=30 (all discriminative descriptors are keyword-tautological)",
+      "recall_leakage_free": null,
+      "recall_leaky_near_tautological": 0.8085106382978723,
+      "recall_production_index": null
+    },
+    "microbiome": {
+      "canon": "microbiome",
+      "independent_descriptors": [],
+      "leaky_descriptors": [
+        "Fecal Microbiota Transplantation"
+      ],
+      "n_independent": 0,
+      "n_leaky": 47,
+      "note": "Clean therapy leaf (n~47). Broad \"Microbiota\"/\"Gastrointestinal Microbiome\" are population/context descriptors and are EXCLUDED.",
+      "proxy_confounded": false,
+      "reason": "independent-descriptor pool n=0 < N_MIN=30 (all discriminative descriptors are keyword-tautological)",
+      "recall_leakage_free": null,
+      "recall_leaky_near_tautological": 0.851063829787234,
+      "recall_production_index": null
+    },
+    "mrna-vaccine": {
+      "canon": "mRNA-vaccine",
+      "independent_descriptors": [],
+      "leaky_descriptors": [
+        "mRNA Vaccines"
+      ],
+      "n_independent": 0,
+      "n_leaky": 126,
+      "note": "PROXY-CONFOUNDED: the \"mRNA Vaccines\" pool is inflated by COVID-19 mRNA-vaccine-in-cancer-patient papers that the tagger CORRECTLY rejects (match_mrna_vaccine exclusion logic), so the recall number here UNDERSTATES the tagger and is reported but flagged not-interpretable-as-tagger-recall.",
+      "proxy_confounded": true,
+      "reason": "independent-descriptor pool n=0 < N_MIN=30 (all discriminative descriptors are keyword-tautological)",
+      "recall_leakage_free": null,
+      "recall_leaky_near_tautological": 0.4444444444444444,
+      "recall_production_index": null
+    },
+    "nanoparticle": {
+      "canon": "nanoparticle",
+      "independent_descriptors": [],
+      "leaky_descriptors": [
+        "Nanoparticles",
+        "Nanoparticle Drug Delivery System",
+        "Nanomedicine"
+      ],
+      "n_independent": 0,
+      "n_leaky": 306,
+      "note": "Nanoparticle/nanomedicine leaves (n~261/58).",
+      "proxy_confounded": false,
+      "reason": "independent-descriptor pool n=0 < N_MIN=30 (all discriminative descriptors are keyword-tautological)",
+      "recall_leakage_free": null,
+      "recall_leaky_near_tautological": 0.8496732026143791,
+      "recall_production_index": null
+    },
+    "oncolytic-virus": {
+      "canon": "oncolytic-virus",
+      "independent_descriptors": [],
+      "leaky_descriptors": [
+        "Oncolytic Virotherapy",
+        "Oncolytic Viruses"
+      ],
+      "n_independent": 0,
+      "n_leaky": 271,
+      "note": "Exact oncolytic-virus leaves (n~242/228). Likely classified leaky (string overlap).",
+      "proxy_confounded": false,
+      "reason": "independent-descriptor pool n=0 < N_MIN=30 (all discriminative descriptors are keyword-tautological)",
+      "recall_leakage_free": null,
+      "recall_leaky_near_tautological": 0.9114391143911439,
+      "recall_production_index": null
+    },
+    "phagocytosis-checkpoint": {
+      "canon": "phagocytosis-checkpoint",
+      "independent_descriptors": [],
+      "leaky_descriptors": [
+        "CD47 Antigen"
+      ],
+      "n_independent": 0,
+      "n_leaky": 18,
+      "note": "Exact leaf but tiny pool (n~18). Scaffold mechanism.",
+      "proxy_confounded": false,
+      "reason": "independent-descriptor pool n=0 < N_MIN=30 (all discriminative descriptors are keyword-tautological)",
+      "recall_leakage_free": null,
+      "recall_leaky_near_tautological": 0.9444444444444444,
+      "recall_production_index": null
+    }
+  },
+  "measurable": {
+    "antibody-drug-conjugate": {
+      "canon": "antibody-drug-conjugate",
+      "independent_descriptors": [
+        "Immunoconjugates"
+      ],
+      "leaky_descriptors": [],
+      "n_independent": 197,
+      "n_leaky": 0,
+      "note": "Single ADC parent leaf (n~197); independent of the \"antibody-drug conjugate\" keyword.",
+      "proxy_confounded": false,
+      "recall_leakage_free": 0.9746192893401016,
+      "recall_leaky_near_tautological": null,
+      "recall_production_index": 0.9746192893401016
+    },
+    "bispecific-antibody": {
+      "canon": "bispecific-antibody",
+      "independent_descriptors": [
+        "Antibodies, Bispecific"
+      ],
+      "leaky_descriptors": [],
+      "n_independent": 209,
+      "n_leaky": 0,
+      "note": "Exact bispecific leaf (n~209). Scaffold mechanism (not in frozen-19 results).",
+      "proxy_confounded": false,
+      "recall_leakage_free": 0.861244019138756,
+      "recall_leaky_near_tautological": null,
+      "recall_production_index": 0.8660287081339713
+    },
+    "car-t": {
+      "canon": "car-t",
+      "independent_descriptors": [
+        "Receptors, Chimeric Antigen",
+        "Immunotherapy, Adoptive"
+      ],
+      "leaky_descriptors": [],
+      "n_independent": 331,
+      "n_leaky": 0,
+      "note": "\"Receptors, Chimeric Antigen\" (n~248) is the exact CAR leaf (independent of the \"chimeric antigen receptor\" keyword by word order). \"Immunotherapy, Adoptive\" (n~299) sits on ~87% of CAR-T papers, routed here not to immunotherapy.",
+      "proxy_confounded": false,
+      "recall_leakage_free": 0.9063444108761329,
+      "recall_leaky_near_tautological": null,
+      "recall_production_index": 0.918429003021148
+    },
+    "electrochemical-therapy": {
+      "canon": "electrochemical-therapy",
+      "independent_descriptors": [
+        "Electroporation",
+        "Electrochemotherapy"
+      ],
+      "leaky_descriptors": [
+        "Irreversible Electroporation Therapy"
+      ],
+      "n_independent": 142,
+      "n_leaky": 3,
+      "note": "Electroporation/electrochemotherapy leaves (Electroporation somewhat broad).",
+      "proxy_confounded": false,
+      "recall_leakage_free": 0.9366197183098591,
+      "recall_leaky_near_tautological": 1.0,
+      "recall_production_index": 0.9507042253521126
+    },
+    "epigenetic": {
+      "canon": "epigenetic",
+      "independent_descriptors": [
+        "DNA Methylation"
+      ],
+      "leaky_descriptors": [
+        "Histone Deacetylase Inhibitors",
+        "Azacitidine",
+        "Decitabine",
+        "Vorinostat"
+      ],
+      "n_independent": 53,
+      "n_leaky": 36,
+      "note": "Therapy leaves only. Broad \"Epigenesis, Genetic\" is general biology (inflates the pool, depresses apparent recall) and is EXCLUDED. The lone INDEPENDENT leaf is \"DNA Methylation\", so the measured recall (~55%) is genuinely the LOWEST of the headline set for two compounding reasons: (a) a real gap in keyword coverage (the field says \"epigenetic modifications/regulation\", \"EZH2 inhibitor\", \"BET inhibitor\" which the keyword set does not yet carry), and (b) \"DNA Methylation\" also tags basic methylation BIOLOGY that is not epigenetic THERAPY, so part of the gap is reference-scope breadth, not a miss. Kept (not dropped) because the keyword-coverage half is an actionable finding.",
+      "proxy_confounded": false,
+      "recall_leakage_free": 0.5471698113207547,
+      "recall_leaky_near_tautological": 0.9722222222222222,
+      "recall_production_index": 0.5471698113207547
+    },
+    "immunotherapy": {
+      "canon": "immunotherapy",
+      "independent_descriptors": [
+        "B7-H1 Antigen",
+        "CTLA-4 Antigen"
+      ],
+      "leaky_descriptors": [
+        "Immune Checkpoint Inhibitors"
+      ],
+      "n_independent": 157,
+      "n_leaky": 348,
+      "note": "Checkpoint immunotherapy. Bare \"Immunotherapy\" (n~1011) is the umbrella term and is EXCLUDED as non-discriminative; \"Immunotherapy, Adoptive\" is routed to car-t. Keyed on the checkpoint-inhibitor leaf (n~348).",
+      "proxy_confounded": false,
+      "recall_leakage_free": 0.89171974522293,
+      "recall_leaky_near_tautological": 0.9770114942528736,
+      "recall_production_index": 0.9235668789808917
+    },
+    "metabolic-targeting": {
+      "canon": "metabolic-targeting",
+      "independent_descriptors": [
+        "Glycolysis"
+      ],
+      "leaky_descriptors": [
+        "Warburg Effect, Oncologic"
+      ],
+      "n_independent": 42,
+      "n_leaky": 6,
+      "note": "Warburg leaf is specific but tiny (n~6); Glycolysis broader. Low-confidence.",
+      "proxy_confounded": false,
+      "recall_leakage_free": 0.9285714285714286,
+      "recall_leaky_near_tautological": 1.0,
+      "recall_production_index": 0.9285714285714286
+    },
+    "sonodynamic": {
+      "canon": "sonodynamic",
+      "independent_descriptors": [
+        "Ultrasonic Therapy"
+      ],
+      "leaky_descriptors": [],
+      "n_independent": 99,
+      "n_leaky": 0,
+      "note": "Shared with general ultrasound therapy; lower discriminativeness.",
+      "proxy_confounded": false,
+      "recall_leakage_free": 0.8787878787878788,
+      "recall_leaky_near_tautological": null,
+      "recall_production_index": 0.8787878787878788
+    },
+    "synthetic-lethality": {
+      "canon": "synthetic-lethality",
+      "independent_descriptors": [
+        "Poly(ADP-ribose) Polymerase Inhibitors"
+      ],
+      "leaky_descriptors": [
+        "Synthetic Lethal Mutations"
+      ],
+      "n_independent": 136,
+      "n_leaky": 134,
+      "note": "PARP-inhibitor + synthetic-lethal leaves.",
+      "proxy_confounded": false,
+      "recall_leakage_free": 0.9485294117647058,
+      "recall_leaky_near_tautological": 0.9626865671641791,
+      "recall_production_index": 0.9632352941176471
+    }
+  },
+  "n_min": 30,
+  "n_records_scanned": 4830,
+  "n_records_with_mesh": 3889,
+  "unmeasurable": {
+    "bioelectric": "Only cell-physiology descriptors (Membrane Potentials / Ion Channels), not the cancer-therapy thesis; pool thin and confounded.",
+    "cold-atmospheric-plasma": "No descriptor ('Plasma Gases' n~2); ~100% of its tagger-positives have empty MeSH.",
+    "cuproptosis": "No cuproptosis MeSH term (only 'Copper', the ion, n~6); 0 frozen-index tags. Scaffold.",
+    "disulfidptosis": "Descriptor exists but n=1; 0 frozen-index tags. Scaffold.",
+    "electrolysis": "Bucket-confounded: ~18/19 of its MeSH-pool carry 'Electrochemotherapy', which the tagger buckets as electrochemical-therapy (a taxonomy-boundary artifact, not a recall miss).",
+    "radioligand-therapy": "Descriptors ('Radioimmunotherapy'/'Radiopharmaceuticals') bleed to immunotherapy/ADC; tiny pool (n~18). Scaffold.",
+    "targeted-protein-degradation": "Only the broad housekeeping 'Proteolysis'; no PROTAC descriptor; tiny pool (n~11). Scaffold.",
+    "ttfields": "No TTFields-specific MeSH descriptor (only over-broad Electric Stimulation Therapy); ~38% of its tagger-positives also have empty MeSH."
+  }
+}
