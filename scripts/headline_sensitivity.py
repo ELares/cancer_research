@@ -27,8 +27,9 @@ of the cost. It is a screening, not a variance decomposition; we report it as su
 
 The **immune-ratio** headline is still deferred, but NOT because the raw ratio is
 misleading in direction: at the canonical condition the raw `immune_kills` MATCHES
-the headline (SDT >> RSL3, ~104:1 at the default gradient-120 immune-on, the
-Figure-17 result). The subtlety is for a SENSITIVITY screen: `immune_kills` is
+the headline (SDT >> RSL3, ~104:1 at the default gradient-120 immune-on, matching
+the manuscript's immune-coupling figure). The subtlety is for a SENSITIVITY
+screen: `immune_kills` is
 confounded by POOL DEPLETION (SDT ferroptotically clears most of the tumor first,
 so a parameter that raises SDT's ferroptosis shrinks the residual pool the immune
 layer acts on, lowering the immune-kill COUNT even as per-cell amplification
@@ -342,7 +343,8 @@ def write_report(sections, levels, total_evals):
             "",
             "The raw `immune_kills` ratio at the canonical condition MATCHES the "
             "headline direction: SDT >> RSL3 (~104:1 at the default gradient-120, "
-            "immune-on; the Figure-17 result), because SDT's dense ferroptotic death "
+            "immune-on, matching the manuscript's immune-coupling figure), because "
+            "SDT's dense ferroptotic death "
             "builds a large DAMP field that amplifies immune killing far more than "
             "RSL3's sparse death. The deferral is a SENSITIVITY-observable subtlety, "
             "not a direction problem: `immune_kills` is confounded by POOL DEPLETION "
