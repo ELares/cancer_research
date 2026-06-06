@@ -82,6 +82,9 @@ use ferroptosis_core::phenotype_mufa::{
     apply_phenotype_mufa_3d, apply_phenotype_mufa_at_3d, PhenotypeMufaConfig,
 };
 use ferroptosis_core::physics::local_ros_multiplier_3d;
+use ferroptosis_core::reaction_diffusion::{
+    reaction_diffusion_supply_field, ReactionDiffusionConfig,
+};
 use ferroptosis_core::senescence::{
     apply_senescence_program_3d, sasp_immune_multiplier, SenescenceConfig,
 };
@@ -521,6 +524,17 @@ struct Overrides {
     /// hypoxia-iron "rescue" the anoxic core. `0.0` (default) ⇒ factor exactly
     /// 1.0 ⇒ `iron` unchanged ⇒ byte-identical; `1.0` ⇒ fully O2-gated Fenton.
     fenton_o2_dependence: f64,
+    /// Reaction-diffusion supply field (#343 PR 2): when `true` AND explicit
+    /// vasculature is on, the per-cell O2/drug supply is solved as the
+    /// steady-state reaction-diffusion field (`reaction_diffusion_supply_field`,
+    /// vessel Dirichlet sources + tumor consumption + diffusion) instead of the
+    /// monotonic `exp(-dist_to_nearest_vessel/λ)` proxy. Same λ, so the two are
+    /// apples-to-apples; the RD field has the non-monotonic inter-vessel pockets
+    /// the proxy averages away. `false` (default) ⇒ the proxy runs ⇒ the
+    /// vasculature path is unchanged; and the whole branch is gated on
+    /// vasculature being on (off the matrix), so the production matrix is
+    /// byte-identical either way.
+    reaction_diffusion: bool,
 }
 
 /// Thin wrapper running a condition with NO overrides (all realism layers
@@ -549,6 +563,25 @@ fn combine_supply_max(planar: &[f64], vessel: &[f64]) -> Vec<f64> {
         vessel.len()
     );
     planar.iter().zip(vessel).map(|(&p, &q)| p.max(q)).collect()
+}
+
+/// Per-cell vessel supply factor, either the monotonic nearest-vessel proxy
+/// `exp(-dist/λ)` (#191) or — when `reaction_diffusion` is on (#343 PR 2) — the
+/// steady-state reaction-diffusion field solved over the same vessels at the
+/// same λ. Single source of truth for the run path and the `--snapshot` overlay
+/// so they stay in lockstep. `reaction_diffusion == false` (default) ⇒ the proxy
+/// ⇒ the vasculature path is unchanged.
+fn vessel_or_rd_supply(
+    grid: &TumorGrid3D,
+    vessels: &[(f64, f64, f64)],
+    lambda: f64,
+    reaction_diffusion: bool,
+) -> Vec<f64> {
+    if reaction_diffusion {
+        reaction_diffusion_supply_field(grid, vessels, &ReactionDiffusionConfig::new(lambda))
+    } else {
+        vessel_supply_field(grid, vessels, lambda)
+    }
 }
 
 fn run_one_condition_full(
@@ -587,6 +620,10 @@ fn run_one_condition_full(
     // Oxygen-dependent Fenton H2O2 substrate (#383). `0.0` (default/matrix) ⇒
     // `fenton_o2_factor` returns 1.0 ⇒ `cell.iron` unchanged ⇒ byte-identical.
     let fenton_o2_dependence = overrides.fenton_o2_dependence;
+    // Reaction-diffusion supply (#343 PR 2). `false` (default/matrix) ⇒ the
+    // monotonic `vessel_supply_field` proxy runs; only meaningful with explicit
+    // vasculature on (off the matrix), so byte-identical either way.
+    let reaction_diffusion = overrides.reaction_diffusion;
     // Treg/MDSC suppressor (#264 Phase 2). `None`/disabled ⇒ no source mask,
     // no field, identity multiplier ⇒ byte-identical.
     let suppressor_cfg = overrides.suppressor.filter(|c| !c.is_disabled());
@@ -772,7 +809,7 @@ fn run_one_condition_full(
             // collapse. Bounded in [0,1] (both factors are). λ as below.
             let lambda = condition.o2_lambda.unwrap_or(KROGH_LAMBDA_UM);
             let planar = slab_supply_field(&grid, cfg.depth_offset_mm * 1000.0, lambda);
-            let vessel = vessel_supply_field(&grid, v, lambda);
+            let vessel = vessel_or_rd_supply(&grid, v, lambda, reaction_diffusion);
             Some(combine_supply_max(&planar, &vessel))
         }
         (Some(cfg), None) => {
@@ -789,7 +826,9 @@ fn run_one_condition_full(
             ))
         }
         (None, _) => match (vessels.as_ref(), condition.o2_lambda) {
-            (Some(v), Some(lambda)) => Some(vessel_supply_field(&grid, v, lambda)),
+            (Some(v), Some(lambda)) => {
+                Some(vessel_or_rd_supply(&grid, v, lambda, reaction_diffusion))
+            }
             _ => None,
         },
     };
@@ -2463,6 +2502,37 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         ferritinophagy: false,
     },
     SnapshotPreset {
+        // RSL3 + explicit vessels, but the per-cell O2/drug supply is the
+        // steady-state REACTION-DIFFUSION field (#343 PR 2) instead of the
+        // monotonic nearest-vessel proxy. Same vessels, same λ — the
+        // vessel_supply.npy panel shows the non-monotonic inter-vessel pockets
+        // (well-supplied between several vessels, starved in avascular gaps)
+        // that the proxy averages away. The RD path is name-keyed in
+        // run_snapshot (like sasp-field), so vasculature stays `true` here.
+        name: "reaction-diffusion",
+        desc: "RSL3 + explicit vessels with the reaction-diffusion supply field (#343) — non-monotonic O2 the exp proxy misses",
+        treatment: Treatment::RSL3,
+        treatment_name: "RSL3",
+        immune_on: false,
+        stromal_on: false,
+        ph_on: false,
+        multidose: false,
+        persister: false,
+        clonal: false,
+        vasculature: true,
+        spheroid: false,
+        slab: false,
+        suppressor: false,
+        checkpoints: false,
+        contact: false,
+        nutrient: false,
+        dc_subsets: false,
+        senescence: false,
+        phenotype_mufa: false,
+        sdt_o2_dependence: 0.0,
+        ferritinophagy: false,
+    },
+    SnapshotPreset {
         // SDT + radial spheroid biology: the phenotype panel shows the
         // glycolytic rim / OXPHOS mid / persister core structure, and the
         // GSH/iron/MUFA gradients shape where SDT kills.
@@ -2970,6 +3040,11 @@ fn run_snapshot(output_dir: &Path, tumor_radius_um: f64, name: &str) {
     let vasculature_cfg = preset
         .vasculature
         .then(VasculatureConfig::well_vascularized);
+    // Reaction-diffusion supply (#343 PR 2): name-keyed like `sasp-field`, so no
+    // per-preset struct field. The preset also sets `vasculature: true`, so the
+    // vessels exist as the RD sources. `false` for every other preset ⇒ the
+    // proxy runs ⇒ unchanged.
+    let reaction_diffusion = preset.name == "reaction-diffusion";
     let spheroid_cfg = preset.spheroid.then(SpheroidConfig::literature);
     // Patient-scale slab (#240): surface slab so the supply gradient is visible
     // across the block in the z-axis mid-slice (no extra static overlay; the
@@ -3027,12 +3102,18 @@ fn run_snapshot(output_dir: &Path, tumor_radius_um: f64, name: &str) {
                 SEED,
             );
             let vessels = place_vessels_in_slab_3d(&g, &cfg, VESSEL_SEED);
-            let vessel = vessel_supply_field(&g, &vessels, ZONE_REF_LAMBDA);
+            // Match the run path: RD field when reaction_diffusion is on (#343).
+            let vessel = vessel_or_rd_supply(&g, &vessels, ZONE_REF_LAMBDA, reaction_diffusion);
             let planar = slab_supply_field(&g, scfg.depth_offset_mm * 1000.0, ZONE_REF_LAMBDA);
             combine_supply_max(&planar, &vessel)
         } else {
             let vessels = place_vessels_3d(&snapshot_grid, &cfg, VESSEL_SEED);
-            vessel_supply_field(&snapshot_grid, &vessels, ZONE_REF_LAMBDA)
+            vessel_or_rd_supply(
+                &snapshot_grid,
+                &vessels,
+                ZONE_REF_LAMBDA,
+                reaction_diffusion,
+            )
         }
     });
     // Radial phenotype map (#197): re-run the same radial assignment, then map
@@ -3133,6 +3214,9 @@ fn run_snapshot(output_dir: &Path, tumor_radius_um: f64, name: &str) {
             // knob values (both 2.0); 0.0 ⇒ inert for every other preset.
             ferritinophagy_release: if preset.ferritinophagy { 2.0 } else { 0.0 },
             hypoxia_iron_sensitivity: if preset.ferritinophagy { 2.0 } else { 0.0 },
+            // #343 PR 2: reaction-diffusion supply for the `reaction-diffusion`
+            // preset (name-keyed above); `false` for every other preset.
+            reaction_diffusion,
             ..Default::default()
         },
     );
@@ -6142,6 +6226,250 @@ mod tests {
             vasc.total_dead,
             edge.total_dead,
             rel
+        );
+    }
+
+    /// #343 PR 2: the reaction-diffusion supply field differs from the
+    /// monotonic nearest-vessel proxy on the SAME vessel network at the SAME λ
+    /// (the genuine multi-vessel/consumption effect), is deterministic, and
+    /// shifts the RSL3 kill outcome — while staying coherent (both fields in
+    /// [0,1]). Also prints the proxy-vs-RD field divergence stats used by
+    /// analysis/reaction-diffusion-benchmark.md (regenerate with
+    /// `cargo test -p sim-tme-3d reaction_diffusion_supply_differs -- --nocapture`).
+    #[test]
+    fn reaction_diffusion_supply_differs_from_the_proxy_but_is_coherent() {
+        // Field-level proxy-vs-RD comparison over the tumor cells of a generated
+        // sphere, on the SAME vessels at the SAME λ. Returns
+        // (n_vessels, mean_abs, max_abs, enriched%, depleted%, hyp_proxy, hyp_rd)
+        // and prints the line consumed by analysis/reaction-diffusion-benchmark.md.
+        let dim = 36;
+        let lambda = ZONE_REF_LAMBDA;
+        let grid = TumorGrid3D::generate(dim, dim, dim, CELL_SIZE_UM, SEED);
+
+        // Single isolated 3-D point source on an all-tumor cube: isolates the
+        // SOURCE-GEOMETRY term (planar proxy exp(-d/λ) vs a 3-D point source's
+        // Yukawa exp(-r/λ)/r) with zero superposition and zero extra
+        // consumption. The near-source gap here is most of the whole-tumor
+        // overestimate, i.e. the dominant driver is geometry, not multi-vessel
+        // effects. (Used by analysis/reaction-diffusion-benchmark.md.)
+        {
+            let mut cube = TumorGrid3D::generate(21, 21, 21, CELL_SIZE_UM, SEED);
+            for c in cube.cells.iter_mut() {
+                c.is_tumor = true;
+            }
+            let center = vec![(10.0, 10.0, 10.0)];
+            let p = vessel_supply_field(&cube, &center, lambda);
+            let r = reaction_diffusion_supply_field(
+                &cube,
+                &center,
+                &ReactionDiffusionConfig::new(lambda),
+            );
+            let nb = cube.flat_index(11, 10, 10); // first neighbor, 1 cell from source
+            eprintln!(
+                "[RD-benchmark] single point source (all-tumor cube): first-neighbour proxy={:.3} RD={:.3} (Δ={:.3})",
+                p[nb],
+                r[nb],
+                r[nb] - p[nb],
+            );
+            // Geometry alone (one vessel) already drops the near-source field
+            // well below the proxy — the bulk of the whole-tumor overestimate.
+            assert!(
+                p[nb] - r[nb] > 0.3,
+                "single-source geometry gap should be large: proxy={:.3} RD={:.3}",
+                p[nb],
+                r[nb]
+            );
+        }
+
+        let compare = |vcfg: &VasculatureConfig, label: &str| -> (f64, f64, f64) {
+            let vessels = place_vessels_3d(&grid, vcfg, VESSEL_SEED);
+            let proxy = vessel_supply_field(&grid, &vessels, lambda);
+            let rd = reaction_diffusion_supply_field(
+                &grid,
+                &vessels,
+                &ReactionDiffusionConfig::new(lambda),
+            );
+            // Determinism (no RNG, fixed SOR sweep order).
+            let rd2 = reaction_diffusion_supply_field(
+                &grid,
+                &vessels,
+                &ReactionDiffusionConfig::new(lambda),
+            );
+            assert_eq!(rd, rd2, "RD supply must be deterministic");
+            let eps = 1e-3;
+            let (mut sum_abs, mut max_abs, mut n, mut enriched, mut depleted) =
+                (0.0, 0.0_f64, 0usize, 0usize, 0usize);
+            let (mut hyp_proxy, mut hyp_rd) = (0usize, 0usize);
+            for (idx, cell) in grid.cells.iter().enumerate() {
+                if !cell.is_tumor {
+                    continue;
+                }
+                n += 1;
+                let d = rd[idx] - proxy[idx];
+                sum_abs += d.abs();
+                max_abs = max_abs.max(d.abs());
+                if d > eps {
+                    enriched += 1;
+                } else if d < -eps {
+                    depleted += 1;
+                }
+                assert!((0.0..=1.0).contains(&proxy[idx]) && (0.0..=1.0).contains(&rd[idx]));
+                if proxy[idx] < 0.1 {
+                    hyp_proxy += 1;
+                }
+                if rd[idx] < 0.1 {
+                    hyp_rd += 1;
+                }
+            }
+            let mean_abs = sum_abs / n as f64;
+            let (hp, hr) = (hyp_proxy as f64 / n as f64, hyp_rd as f64 / n as f64);
+            eprintln!(
+                "[RD-benchmark] {label}: dim={dim} vessels={} λ={lambda} tumor_cells={n}\n  \
+                 mean|RD−proxy|={mean_abs:.4} max|RD−proxy|={max_abs:.4}\n  \
+                 enriched(RD>proxy)={:.1}% depleted(RD<proxy)={:.1}%\n  \
+                 hypoxic_fraction(<0.1): proxy={hp:.3} RD={hr:.3}",
+                vessels.len(),
+                100.0 * enriched as f64 / n as f64,
+                100.0 * depleted as f64 / n as f64,
+            );
+            (mean_abs, hp, hr)
+        };
+        let (mean_sparse, hp_sparse, hr_sparse) =
+            compare(&VasculatureConfig::poorly_vascularized(), "sparse");
+        let (mean_dense, _, _) = compare(&VasculatureConfig::well_vascularized(), "dense");
+        // The two fields genuinely differ (not the same model under a rename).
+        assert!(
+            mean_sparse > 0.01 && mean_dense > 0.01,
+            "RD and proxy should differ materially: sparse={mean_sparse:.4}, dense={mean_dense:.4}"
+        );
+        // In a sparse 3D network the proxy is OPTIMISTIC: it ignores cumulative
+        // consumption + 3D geometric spreading, so it under-reports hypoxia. RD
+        // predicts a strictly higher hypoxic fraction (the "where the proxy is
+        // misleading" result).
+        assert!(
+            hr_sparse > hp_sparse,
+            "RD should report more hypoxia than the proxy in a sparse 3D network: \
+             proxy={hp_sparse:.3}, RD={hr_sparse:.3}"
+        );
+
+        // End-to-end: through the full sim the supply difference shifts kills.
+        // Sparse vessels, so the RD field's extra hypoxia (the proxy is
+        // optimistic) translates into materially fewer hypoxia-sensitive RSL3
+        // kills than the proxy predicts.
+        let cfg = RunConfig {
+            grid_dim: 30,
+            n_steps: 120,
+        };
+        let cond = Condition {
+            name: "rd_rsl3".to_string(),
+            treatment: Treatment::RSL3,
+            treatment_name: "RSL3".to_string(),
+            o2_lambda: Some(ZONE_REF_LAMBDA),
+            immune_on: false,
+            stromal_on: false,
+            ph_on: false,
+            dose_schedule: DoseSchedule::Constant,
+        };
+        let run = |rd_on| {
+            run_one_condition_full(
+                &cond,
+                cfg,
+                None,
+                Overrides {
+                    vasculature: Some(VasculatureConfig::poorly_vascularized()),
+                    reaction_diffusion: rd_on,
+                    ..Default::default()
+                },
+            )
+        };
+        let proxy_run = run(false);
+        let rd_run = run(true);
+        assert!(
+            proxy_run.vascular_hypoxic_fraction.is_some()
+                && rd_run.vascular_hypoxic_fraction.is_some(),
+            "both supply models report a vascular hypoxic fraction"
+        );
+        let (hyp_proxy, hyp_rd) = (
+            proxy_run.vascular_hypoxic_fraction.unwrap(),
+            rd_run.vascular_hypoxic_fraction.unwrap(),
+        );
+        eprintln!(
+            "[RD-benchmark] end-to-end RSL3 (dim=30, sparse): proxy total_dead={} hyp={hyp_proxy:.3} | RD total_dead={} hyp={hyp_rd:.3}",
+            proxy_run.total_dead, rd_run.total_dead,
+        );
+        // The supply model carries all the way through to the emitted vascular
+        // hypoxic fraction: RD reports materially more hypoxia than the
+        // optimistic proxy. (The downstream RSL3 kill COUNT is a threshold-damped
+        // readout — both are ~0 on a sparse, mostly-hypoxic tumor — so the
+        // hypoxic fraction, not the kill count, is the sensitive end-to-end
+        // signal.)
+        assert!(
+            hyp_rd > hyp_proxy + 0.05,
+            "RD must report materially more hypoxia end-to-end than the proxy: \
+             proxy={hyp_proxy:.3}, rd={hyp_rd:.3}"
+        );
+    }
+
+    /// The reaction-diffusion flag is gated on explicit vasculature: with no
+    /// vessels it is inert, so a run with `reaction_diffusion: true` and no
+    /// vasculature is identical to the default. (This is why enabling the flag
+    /// keeps the production matrix — which has no vasculature — byte-identical.)
+    #[test]
+    fn reaction_diffusion_flag_is_inert_without_vasculature() {
+        let cfg = RunConfig {
+            grid_dim: 16,
+            n_steps: 40,
+        };
+        let cond = Condition {
+            name: "rd_gate".to_string(),
+            treatment: Treatment::RSL3,
+            treatment_name: "RSL3".to_string(),
+            o2_lambda: Some(ZONE_REF_LAMBDA),
+            immune_on: false,
+            stromal_on: false,
+            ph_on: false,
+            dose_schedule: DoseSchedule::Constant,
+        };
+        let base = run_one_condition_with_config(&cond, cfg, None);
+        let rd_no_vessels = run_one_condition_full(
+            &cond,
+            cfg,
+            None,
+            Overrides {
+                reaction_diffusion: true,
+                ..Default::default()
+            },
+        );
+        assert_eq!(
+            base.total_dead, rd_no_vessels.total_dead,
+            "reaction_diffusion must be inert without vasculature (gating ⇒ byte-identical)"
+        );
+        assert!(
+            rd_no_vessels.vascular_hypoxic_fraction.is_none(),
+            "no vasculature ⇒ no vascular hypoxic fraction"
+        );
+    }
+
+    /// The `reaction-diffusion` snapshot preset is name-keyed in `run_snapshot`
+    /// (`preset.name == "reaction-diffusion"`) and the RD field only has vessel
+    /// Dirichlet sources because the preset also sets `vasculature: true`. Lock
+    /// both invariants so a rename or a `vasculature` flip can't silently fall
+    /// back to the exp proxy and emit the wrong field (same guard the other
+    /// name-keyed presets carry).
+    #[test]
+    fn reaction_diffusion_snapshot_preset_is_wired() {
+        let p = resolve_snapshot("reaction-diffusion");
+        assert_eq!(
+            p.name, "reaction-diffusion",
+            "the name-key in run_snapshot matches on this exact string"
+        );
+        assert!(
+            p.vasculature,
+            "the reaction-diffusion preset must enable vasculature so the RD solver has vessel sources"
+        );
+        assert!(
+            matches!(p.treatment, Treatment::RSL3),
+            "the preset demonstrates RSL3 (hypoxia-sensitive) on the RD supply field"
         );
     }
 
