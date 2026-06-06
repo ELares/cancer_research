@@ -57,11 +57,12 @@ def _load_trajectory(
     """Load the trajectory arrays + metadata; assert schema version.
 
     Returns (dead, damp, lp, persister, subclone, vessel_supply, phenotype,
-    meta). `persister` (#241), `subclone` (#242), `vessel_supply` (#191), and
-    `phenotype` (#197) are optional overlays, present only when the run used the
-    corresponding model (`--snapshot=persister` / `=clonal` / `=vasculature` /
-    `=spheroid`); `None` otherwise. Raises SystemExit on missing required files
-    or schema mismatch with a clear, actionable message.
+    suppressor, sasp_field, meta). `persister` (#241), `subclone` (#242),
+    `vessel_supply` (#191), `phenotype` (#197), `suppressor` (#264), and
+    `sasp_field` (#376/#398) are optional overlays, present only when the run used
+    the corresponding model (`--snapshot=persister` / `=clonal` / `=vasculature` /
+    `=spheroid` / `=suppressor` / `=sasp-field`); `None` otherwise. Raises
+    SystemExit on missing required files or schema mismatch with a clear message.
     """
     required = [
         "trajectory_dead.npy",
@@ -165,6 +166,19 @@ def _load_trajectory(
                 f"trajectory frame {dead.shape[1:]}."
             )
 
+    # Optional static diffusing-SASP-field overlay (#376/#398). One 3D frame
+    # (f32: the quasi-steady SASP field, seeded at senescent cells and diffused),
+    # present only for the `--snapshot=sasp-field` preset.
+    sasp_field = None
+    sasp_path = traj_dir / "sasp_field.npy"
+    if sasp_path.exists():
+        sasp_field = np.load(sasp_path)
+        if sasp_field.ndim != 3 or sasp_field.shape != dead.shape[1:]:
+            raise SystemExit(
+                f"ERROR: sasp_field.npy shape {sasp_field.shape} does not match a "
+                f"trajectory frame {dead.shape[1:]}."
+            )
+
     return (
         dead,
         damp,
@@ -174,6 +188,7 @@ def _load_trajectory(
         vessel_supply,
         phenotype,
         suppressor,
+        sasp_field,
         meta,
     )
 
@@ -196,6 +211,7 @@ def _render(
     vessel_supply: "np.ndarray | None",
     phenotype: "np.ndarray | None",
     suppressor: "np.ndarray | None",
+    sasp_field: "np.ndarray | None",
     meta: dict,
     out_dir: Path,
     fps: int,
@@ -240,6 +256,21 @@ def _render(
         if show_suppressor
         else None
     )
+    # SASP field appended LAST (after every existing optional panel), so the
+    # indices above are unchanged for all other presets (#398).
+    show_sasp = sasp_field is not None
+    sasp_idx = (
+        (
+            3
+            + int(show_persister)
+            + int(show_subclone)
+            + int(show_vessel)
+            + int(show_phenotype)
+            + int(show_suppressor)
+        )
+        if show_sasp
+        else None
+    )
 
     # Dose-administration steps (#239). Empty for steady-state Constant
     # presets; non-empty for multi-dose / bolus / infusion snapshots, where
@@ -259,6 +290,7 @@ def _render(
         + int(show_vessel)
         + int(show_phenotype)
         + int(show_suppressor)
+        + int(show_sasp)
     )
     fig, axes = plt.subplots(
         1, n_panels, figsize=(4.3 * n_panels, 4.5), constrained_layout=True
@@ -355,6 +387,18 @@ def _render(
         )
         axes[supp_idx].set_title("Treg/MDSC niches")
 
+    # Optional SASP-field panel (#376/#398): STATIC quasi-steady diffusing SASP
+    # field. Bright at senescent-cell sources, fading into the neighbourhood — the
+    # paracrine source-to-neighbour gradient that modulates immune killing of
+    # NON-senescent neighbours. Read alongside the dead panel.
+    im_sasp = None
+    if show_sasp:
+        sasp_max = max(float(sasp_field.max()), 1e-6)
+        im_sasp = axes[sasp_idx].imshow(
+            sasp_field[mid], cmap="magma", vmin=0.0, vmax=sasp_max, origin="lower"
+        )
+        axes[sasp_idx].set_title("SASP field")
+
     for ax in axes:
         ax.set_xticks([])
         ax.set_yticks([])
@@ -382,6 +426,8 @@ def _render(
         cbar = fig.colorbar(im_supp, ax=axes[supp_idx], fraction=0.045, pad=0.04)
         cbar.set_ticks([0.5, 1.5])
         cbar.set_ticklabels(["—", "niche"])
+    if show_sasp:
+        fig.colorbar(im_sasp, ax=axes[sasp_idx], fraction=0.045, pad=0.04)
 
     step_text = fig.text(0.5, 0.02, "", ha="center", fontsize=9, family="monospace")
 
@@ -471,6 +517,7 @@ def main() -> int:
         vessel_supply,
         phenotype,
         suppressor,
+        sasp_field,
         meta,
     ) = _load_trajectory(args.traj_dir)
     written = _render(
@@ -482,6 +529,7 @@ def main() -> int:
         vessel_supply,
         phenotype,
         suppressor,
+        sasp_field,
         meta,
         args.traj_dir,
         fps=args.fps,

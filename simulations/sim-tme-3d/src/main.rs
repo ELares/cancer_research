@@ -2765,6 +2765,37 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         ferritinophagy: false,
     },
     SnapshotPreset {
+        // Like `senescence`, but adds the diffusing-SASP-field overlay (#376/#398):
+        // writes a static `sasp_field.npy` (f32) of the quasi-steady SASP field
+        // (seeded at the senescent cells, diffused with the same operator/constants
+        // the run uses), so the renderer can show the paracrine source-to-neighbour
+        // gradient that reaches non-senescent cells. The overlay is keyed off the
+        // preset NAME in run_snapshot (no new struct field), and the run is the
+        // identical senescence/SASP config, so the production matrix is untouched.
+        name: "sasp-field",
+        desc: "SDT + senescence with the diffusing SASP field overlay (#376/#398): paracrine immune coupling",
+        treatment: Treatment::SDT,
+        treatment_name: "SDT",
+        immune_on: true,
+        stromal_on: false,
+        ph_on: false,
+        multidose: false,
+        persister: false,
+        clonal: false,
+        vasculature: false,
+        spheroid: false,
+        slab: false,
+        suppressor: false,
+        checkpoints: false,
+        contact: false,
+        nutrient: false,
+        dc_subsets: false,
+        senescence: true,
+        phenotype_mufa: false,
+        sdt_o2_dependence: 0.0,
+        ferritinophagy: false,
+    },
+    SnapshotPreset {
         // RSL3 + 3D spheroid (#197) + phenotype-specific SCD1/MUFA rates (#363):
         // each radial phenotype (glycolytic rim / OXPHOS mid / persister core)
         // builds MUFA protection at its own rate. Runs in the spheroid context
@@ -3028,6 +3059,50 @@ fn run_snapshot(output_dir: &Path, tumor_radius_um: f64, name: &str) {
             .map(|&s| u8::from(s))
             .collect::<Vec<u8>>()
     });
+    // Diffusing SASP-field overlay (#376/#398), only for the `sasp-field` preset.
+    // Reconstructs the quasi-steady SASP field deterministically from the same
+    // senescence mask, diffusion operator, and constants the run uses (seed at the
+    // senescent cells, diffuse over the immune window), so the renderer can show
+    // the paracrine source-to-neighbour gradient. Computed on an identical
+    // freshly-generated throwaway grid (apply_senescence_program_3d mutates and
+    // TumorGrid3D is not Clone), so the run grid is untouched.
+    let sasp_field_overlay: Option<Vec<f32>> = (preset.name == "sasp-field").then(|| {
+        // Regenerate an identical throwaway grid (same args + SENESCENCE_SEED as
+        // the run) so the mask matches the run's exactly; apply_senescence_program_3d
+        // mutates, and TumorGrid3D is not Clone, so we do NOT touch snapshot_grid.
+        let mut grid_clone = TumorGrid3D::generate(
+            run_cfg.grid_dim,
+            run_cfg.grid_dim,
+            run_cfg.grid_dim,
+            CELL_SIZE_UM,
+            SEED,
+        );
+        let mask = apply_senescence_program_3d(
+            &mut grid_clone,
+            &SenescenceConfig::literature(),
+            SENESCENCE_SEED,
+        );
+        let n = snapshot_grid.cells.len();
+        let mut field = vec![0.0_f64; n];
+        let mut scratch = vec![0.0_f64; n];
+        // Diffuse over the run's immune window so the overlay matches the field
+        // the kill loop actually sees at end-of-run.
+        for _ in IMMUNE_START_STEP..run_cfg.n_steps {
+            for (idx, &is_sen) in mask.iter().enumerate() {
+                if is_sen {
+                    field[idx] = (field[idx] + SASP_FIELD_REPLENISH_RATE).min(1.0);
+                }
+            }
+            diffuse_damp_3d_step(
+                &mut field,
+                &mut scratch,
+                &snapshot_grid,
+                SASP_FIELD_DIFFUSION_FRACTION,
+                SASP_FIELD_CLEARANCE_RATE,
+            );
+        }
+        field.iter().map(|&v| v as f32).collect()
+    });
     let mut buffers =
         snapshot::SnapshotBuffers::new(run_cfg.grid_dim, run_cfg.n_steps, preset.persister);
     let result = run_one_condition_full(
@@ -3106,6 +3181,14 @@ fn run_snapshot(output_dir: &Path, tumor_radius_um: f64, name: &str) {
             .expect("Failed to write suppressor.npy");
     }
 
+    // Static diffusing-SASP-field overlay (#376/#398), f32 quasi-steady field.
+    // Only when the preset is sasp-field.
+    if let Some(field) = &sasp_field_overlay {
+        let shape = [run_cfg.grid_dim, run_cfg.grid_dim, run_cfg.grid_dim];
+        npy::write_f32_array(output_dir.join("sasp_field.npy"), &shape, field)
+            .expect("Failed to write sasp_field.npy");
+    }
+
     let meta = snapshot::TrajectoryMeta {
         schema_version: snapshot::TRAJECTORY_SCHEMA_VERSION,
         grid_dim: run_cfg.grid_dim,
@@ -3147,6 +3230,9 @@ fn run_snapshot(output_dir: &Path, tumor_radius_um: f64, name: &str) {
             ""
         },
     );
+    if sasp_field_overlay.is_some() {
+        eprintln!("  + sasp_field.npy (diffusing SASP field, #376/#398)");
+    }
     eprintln!("Render with: python3 scripts/render_tme_3d_trajectory.py");
 }
 
@@ -5600,6 +5686,32 @@ mod tests {
         assert!(
             (0.1..0.35).contains(&frac),
             "literature fraction ~0.2 of tumor cells marked; got {frac}"
+        );
+    }
+
+    /// #398: lock the `--snapshot=sasp-field` preset wiring. It is the senescence
+    /// preset plus the diffusing-SASP-field overlay (a static `sasp_field.npy`):
+    /// `resolve_snapshot` must find it, it enables the senescence + immune layers,
+    /// and `literature()` carries a non-zero `sasp_field_strength` so the run (and
+    /// the overlay) actually exercise the diffusing field rather than just the mask.
+    #[test]
+    fn sasp_field_snapshot_preset_is_wired() {
+        let p = resolve_snapshot("sasp-field");
+        assert_eq!(p.name, "sasp-field");
+        assert!(
+            p.senescence,
+            "the sasp-field preset must enable the senescence layer (the SASP source)"
+        );
+        assert!(
+            p.immune_on,
+            "the SASP field only couples with the immune response on"
+        );
+        // The preset's run config is SenescenceConfig::literature(); it must carry a
+        // non-zero SASP field strength, else the field is inert and the overlay flat.
+        assert!(
+            SenescenceConfig::literature().sasp_field_strength != 0.0,
+            "the sasp-field preset's literature() config must have a non-zero \
+             SASP field strength, otherwise the overlay would be uniformly zero"
         );
     }
 
