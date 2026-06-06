@@ -239,15 +239,23 @@ def run_sim_tme_observables(params_row, binary):
             raise RuntimeError(f"sim-tme failed ({proc.returncode}): {proc.stderr[-400:]}")
         summary = Path(workdir) / "output" / "tme" / "tme_summary.json"
         conditions = json.loads(summary.read_text())["conditions"]
+        return extract_tme_observables(conditions)
 
-        hypoxia = (
-            _tme_row(conditions, "SDT", "off")["hypoxic_kill_rate"]
-            - _tme_row(conditions, "RSL3", "off")["hypoxic_kill_rate"]
-        )
-        sdt = _tme_row(conditions, "SDT", "immune_on")
-        pool = max(sdt["total_tumor"] - (sdt["ferroptosis_kills"] or 0), 1)
-        immune = (sdt["immune_kills"] or 0) / pool
-        return {"hypoxia": hypoxia, "immune": immune}
+
+def extract_tme_observables(conditions):
+    """Compute the two sim-tme headline observables from a `tme_summary.json`
+    `conditions` list. Shared by the override path (`run_sim_tme_observables`)
+    and the no-override default path (`headline_uncertainty._default_tme`) so they
+    never drift. `immune` floors the de-confounding pool at 1 to avoid div-by-zero
+    (it is naturally bounded [0,1])."""
+    hypoxia = (
+        _tme_row(conditions, "SDT", "off")["hypoxic_kill_rate"]
+        - _tme_row(conditions, "RSL3", "off")["hypoxic_kill_rate"]
+    )
+    sdt = _tme_row(conditions, "SDT", "immune_on")
+    pool = max(sdt["total_tumor"] - (sdt["ferroptosis_kills"] or 0), 1)
+    immune = (sdt["immune_kills"] or 0) / pool
+    return {"hypoxia": hypoxia, "immune": immune}
 
 
 def make_eval(run_fn, binary, workers):

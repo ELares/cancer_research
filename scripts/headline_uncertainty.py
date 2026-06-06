@@ -30,7 +30,6 @@ analysis/headline-uncertainty-report.md.
 """
 
 import argparse
-import csv
 import json
 import os
 import subprocess
@@ -49,6 +48,7 @@ from headline_sensitivity import (  # noqa: E402  (path insert above)
     LOWS,
     PARAM_NAMES,
     _default_binary,
+    extract_tme_observables,
     read_bliss_synergy,
     run_bliss,
     run_sim_tme_observables,
@@ -175,15 +175,7 @@ def _default_tme(binary):
             raise RuntimeError(f"default sim-tme failed: {proc.stderr[-300:]}")
         summary = Path(workdir) / "output" / "tme" / "tme_summary.json"
         conditions = json.loads(summary.read_text())["conditions"]
-        from headline_sensitivity import _tme_row
-
-        hypoxia = (
-            _tme_row(conditions, "SDT", "off")["hypoxic_kill_rate"]
-            - _tme_row(conditions, "RSL3", "off")["hypoxic_kill_rate"]
-        )
-        sdt = _tme_row(conditions, "SDT", "immune_on")
-        pool = max(sdt["total_tumor"] - (sdt["ferroptosis_kills"] or 0), 1)
-        return {"hypoxia": hypoxia, "immune": (sdt["immune_kills"] or 0) / pool}
+        return extract_tme_observables(conditions)
 
 
 def write_tme_report(hyp_stats, imm_stats, default_obs, n_failed, n_samples):
