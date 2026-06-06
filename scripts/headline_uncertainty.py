@@ -1,32 +1,41 @@
 #!/usr/bin/env python3
-"""Prior-predictive uncertainty interval for the Bliss-synergy headline (#332).
+"""Prior-predictive uncertainty intervals for the Bliss and sim-tme headlines (#332).
 
 `scripts/uncertainty_intervals.py` reports prior-predictive credible intervals for
 the SINGLE-CELL kill switch (via `sim_batch`). Its docstring names the tractable
 follow-up: propagate the SAME uniform priors through the SPATIAL/COMBO headline
-outputs that the simulation BINARIES produce. This script does that for the
-cheapest such headline — the RSL3 + FSP1i Bliss synergy from `sim-combo-mech`
-(the manuscript's ~1.99x) — by Monte-Carlo sampling the joint uniform prior over
-the same 11 PRCC rate constants and running the binary under the
-`FERRO_PARAM_OVERRIDES` hook (#331) for each draw.
+outputs that the simulation BINARIES produce. This script does that, sampling the
+joint uniform prior over the same 11 PRCC rate constants and running a binary
+under the `FERRO_PARAM_OVERRIDES` hook (#331) for each draw, for two headline
+families:
+
+- `--headline bliss` (default): the RSL3 + FSP1i Bliss synergy from
+  `sim-combo-mech` (the manuscript's ~1.99x). Cheap (~seconds/run), so a full
+  Monte-Carlo is feasible (default 300 draws).
+- `--headline sim-tme`: the two spatial `sim-tme` headlines extracted from one
+  run per draw — the hypoxia kill-collapse GAP (SDT minus RSL3 hypoxic-zone kill)
+  and SDT's pool-de-confounded immune kill rate. `sim-tme` costs ~4 min/run, so
+  this uses a smaller default ensemble (100 draws) and the 2.5/97.5 TAILS are
+  read cautiously (median + spread, not the exact bounds).
 
 It reuses the binary-invocation + parameter-range machinery from
-`headline_sensitivity.py` (`run_bliss`, `PARAM_NAMES`, `LOWS`, `HIGHS`,
-`_default_binary`) so the prior, the override mapping, and the observable are
-identical to the Morris sensitivity screen.
+`headline_sensitivity.py` (`run_bliss`, `run_sim_tme_observables`, `PARAM_NAMES`,
+`LOWS`, `HIGHS`, `_default_binary`) so the priors, override mapping, and
+observables are identical to the Morris sensitivity screen.
 
 This is PRIOR-PREDICTIVE (forward) uncertainty over UNIFORM priors, NOT a
 data-conditioned Bayesian/ABC posterior — turning the priors into a posterior
 needs the external GDSC/DepMap drug-response data (#330). It captures PARAMETER
-uncertainty only, not STRUCTURAL uncertainty. The costlier sim-tme headlines
-(hypoxia collapse, immune ratio) are the next extension; Bliss is first because
-`sim-combo-mech` is the cheapest binary (a full Monte-Carlo is feasible).
+uncertainty only, not STRUCTURAL uncertainty. The penetration headline
+(`drug_transport` Krogh) is the remaining deferred extension.
 
 Usage:
-    python scripts/headline_uncertainty.py [--samples 300] [--workers 8]
+    python scripts/headline_uncertainty.py [--headline bliss] [--samples 300] [--workers 8]
+    python scripts/headline_uncertainty.py --headline sim-tme [--tme-samples 100] [--workers 8]
 
-Deterministic given --samples + the fixed seed. Writes
-analysis/headline-uncertainty-report.md.
+Deterministic given the sample count + the fixed seed. Writes
+analysis/headline-uncertainty-report.md (bliss) or
+analysis/headline-uncertainty-tme-report.md (sim-tme).
 """
 
 import argparse
