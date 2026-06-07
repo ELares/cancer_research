@@ -1,0 +1,6 @@
+drug,system,measurement,value_low_um,value_high_um,exponential_form,source,source_pmid,note
+doxorubicin,in-vivo tumor (16C/EMT6/PC-3 xenograft),half_distance,40,50,yes,Primeau 2005 Clin Cancer Res,16361566,doxorubicin fluorescence vs distance from CD31+ vessels; exponential decay; hypoxia onset 90-140 um
+doxorubicin,in-vivo tumor,half_distance,25,75,yes,Tannock 2002 Clin Cancer Res,11895922,time-dependent half-distance (10 min to 24 h); exponential decline with distance from vessel
+doxorubicin,solid-tumor review range,penetration_depth,40,80,yes,Minchinton & Tannock 2006 Nat Rev Cancer,16862189,review consensus penetration range for small-molecule chemotherapeutics; the range the Rust self-consistency test cites
+cisplatin,3D colorectal tumor mimic (MALDI-MSI),qualitative_surface_limited,,,no,Liu 2016 Sci Rep (platinum chemical imaging),27924831,platinum is surface-limited (reaches only outer cell layers); a poorly-penetrating contrast, not an exponential-lambda anchor
+paclitaxel,multicellular layer (DLD-1 MCL ~150 um),qualitative_slow,,,no,Tannock-lab MCL study,,paclitaxel penetrates only the top ~20% even at 72 h (PMC3583577); a slow/limited-penetration contrast case

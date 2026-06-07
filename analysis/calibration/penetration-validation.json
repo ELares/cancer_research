@@ -1,0 +1,85 @@
+{
+  "model": {
+    "RSL3-like": {
+      "lambda_um": 100.0,
+      "half_distance_um": 69.3
+    },
+    "Doxorubicin-transport": {
+      "lambda_um": 50.0,
+      "half_distance_um": 34.7
+    }
+  },
+  "drift_guard": {
+    "RSL3-like": {
+      "rust_lambda_um": 100.0
+    },
+    "Doxorubicin-transport": {
+      "rust_lambda_um": 50.0
+    }
+  },
+  "exponential_form_supported": true,
+  "doxorubicin_half_distance_within_a_measured_range": true,
+  "doxorubicin_comparisons": [
+    {
+      "source": "Primeau 2005 Clin Cancer Res",
+      "pmid": "16361566",
+      "system": "in-vivo tumor (16C/EMT6/PC-3 xenograft)",
+      "measured_range_um": [
+        40.0,
+        50.0
+      ],
+      "model_half_distance_um": 34.7,
+      "within_measured_range": false,
+      "rel_gap_to_nearest_edge": -0.134,
+      "reports_exponential_form": true
+    },
+    {
+      "source": "Tannock 2002 Clin Cancer Res",
+      "pmid": "11895922",
+      "system": "in-vivo tumor",
+      "measured_range_um": [
+        25.0,
+        75.0
+      ],
+      "model_half_distance_um": 34.7,
+      "within_measured_range": true,
+      "rel_gap_to_nearest_edge": 0.0,
+      "reports_exponential_form": true
+    },
+    {
+      "source": "Minchinton & Tannock 2006 Nat Rev Cancer",
+      "pmid": "16862189",
+      "system": "solid-tumor review range",
+      "measured_range_um": [
+        40.0,
+        80.0
+      ],
+      "model_half_distance_um": 34.7,
+      "within_measured_range": false,
+      "rel_gap_to_nearest_edge": -0.134,
+      "reports_exponential_form": true
+    }
+  ],
+  "rsl3_penetration_validated": false,
+  "rsl3_note": "No ferroptosis inducer (erastin/RSL3/ML/IKE) has published spatial penetration data; the RSL3-like lambda=100 um is an unvalidated extrapolation from the small-molecule transport class.",
+  "binding_site_barrier_modeled": false,
+  "binding_site_barrier_note": "The model has no binding-site barrier: uptake is LINEAR (folded into lambda) so penetration depth is dose-INDEPENDENT. A true binding-site barrier is saturable (dose-dependent depth) and needs a Michaelis-Menten uptake term the model lacks. Adding it is a separate future model EXTENSION (a new mechanism), not a refinement of this linear model; documented as a gap, not validated.",
+  "qualitative_contrasts": [
+    {
+      "drug": "cisplatin",
+      "system": "3D colorectal tumor mimic (MALDI-MSI)",
+      "measurement": "qualitative_surface_limited",
+      "source": "Liu 2016 Sci Rep (platinum chemical imaging)",
+      "pmid": "27924831",
+      "note": "platinum is surface-limited (reaches only outer cell layers); a poorly-penetrating contrast"
+    },
+    {
+      "drug": "paclitaxel",
+      "system": "multicellular layer (DLD-1 MCL ~150 um)",
+      "measurement": "qualitative_slow",
+      "source": "Tannock-lab MCL study",
+      "pmid": "",
+      "note": "paclitaxel penetrates only the top ~20% even at 72 h (PMC3583577); a slow/limited-penetration contrast case"
+    }
+  ]
+}
