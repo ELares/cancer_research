@@ -117,11 +117,12 @@ uncalibrated layers feed the manuscript's quantitative claims.
 - **Sensitivity / robustness:** the headline qualitative result (Persister > Glycolytic vulnerability under SDT) held under +/-50% perturbation on 11 rate constants (22/22 conditions); weight-, taxonomy-, and PRCC global sensitivity analyses were pre-registered and run.
 - **Physics self-consistency:** PDT optical attenuation and SDT acoustic penetration reproduce published tissue optics/acoustics constants.
 - **Determinism / regression:** golden kill-count tests and a full-production `summary.json` SHA gate in CI.
+- **In-vitro kill-switch calibration (#330):** the single-cell RSL3 kill switch is fit to CTRPv2 GPX4-inhibitor median dose-response (fit on ML162 RMSE 0.05, held-out validated on ML210 RMSE 0.07; the default in-vivo-tuned switch is ~11x worse, far too RSL3-resistant for in-vitro data). This anchors the single-cell switch to an independent in-vitro dataset with held-out comparison; it does NOT calibrate the in-vivo / spatial layers (see `analysis/calibration/kill-switch-calibration.md`).
 - **Corpus evidence tagger (separate from the simulation):** gold-set evaluation measured **46% exact / 96% precision / 55% recall**. The low recall is why corpus absence claims are reported as provisional ("not detected in the local keyword-derived analysis"), NOT as definitive.
 
 ### 7.3 What has NOT been validated
 
-- No layer is validated against an independent in-vitro or in-vivo ferroptosis dataset with held-out comparison.
+- Only the single-cell RSL3 kill switch is anchored to an independent dataset with held-out comparison (in-vitro CTRPv2 GPX4 inhibitors, #330). The in-vivo, spatial, and 3D-realism layers are NOT validated against any independent ferroptosis dataset.
 - No clinical / patient-outcome validation of any kind.
 - The 3D self-consistency targets check the model against itself, not against measurements.
 
