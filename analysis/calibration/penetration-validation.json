@@ -63,7 +63,8 @@
   "rsl3_penetration_validated": false,
   "rsl3_note": "No ferroptosis inducer (erastin/RSL3/ML/IKE) has published spatial penetration data; the RSL3-like lambda=100 um is an unvalidated extrapolation from the small-molecule transport class.",
   "binding_site_barrier_modeled": false,
-  "binding_site_barrier_note": "The model has no binding-site barrier: uptake is LINEAR (folded into lambda) so penetration depth is dose-INDEPENDENT. A true binding-site barrier is saturable (dose-dependent depth) and needs a Michaelis-Menten uptake term the model lacks. Adding it is a separate future model EXTENSION (a new mechanism), not a refinement of this linear model; documented as a gap, not validated.",
+  "binding_site_barrier_note": "The model has no binding-site barrier: uptake is LINEAR (folded into lambda) so penetration depth is dose-INDEPENDENT. A true binding-site barrier is saturable (dose-dependent depth). A data-availability review concluded this mechanism is NOT warranted for the small molecules this model targets and is deliberately NOT added: the strong dose-dependent barrier is an ANTIBODY phenomenon (Fujimori 1990, Saga 1995, Thurber/Wittrup 2008 penetration~sqrt(dose)), it is physically WEAK for small molecules (a deep binding sink barely saturates at achievable doses, El-Kareh/Secomb), and NO extractable small-molecule dose-resolved penetration-depth data exists to validate it. #335 binding-site clause resolved by evidence, not by building it.",
+  "binding_site_barrier_decision": "not_added_not_warranted_for_small_molecules",
   "qualitative_contrasts": [
     {
       "drug": "cisplatin",
