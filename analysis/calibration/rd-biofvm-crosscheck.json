@@ -1,0 +1,45 @@
+{
+  "grid": {
+    "n": 41,
+    "h_um": 20.0,
+    "lambda_um": 100.0
+  },
+  "single_source_dt_sweep": [
+    {
+      "shape_log_pearson_r": 0.99971,
+      "rust_decay_length_um": 55.1,
+      "biofvm_decay_length_um": 55.2,
+      "median_ratio_rust_over_biofvm": 2.823,
+      "dt": 0.02,
+      "nsteps": 3000
+    },
+    {
+      "shape_log_pearson_r": 0.99998,
+      "rust_decay_length_um": 55.1,
+      "biofvm_decay_length_um": 55.1,
+      "median_ratio_rust_over_biofvm": 1.417,
+      "dt": 0.005,
+      "nsteps": 12000
+    },
+    {
+      "shape_log_pearson_r": 1.0,
+      "rust_decay_length_um": 55.1,
+      "biofvm_decay_length_um": 55.1,
+      "median_ratio_rust_over_biofvm": 1.08,
+      "dt": 0.001,
+      "nsteps": 60000
+    }
+  ],
+  "two_source": {
+    "shape_log_pearson_r": 1.0,
+    "rust_decay_length_um": 59.0,
+    "biofvm_decay_length_um": 59.0,
+    "median_ratio_rust_over_biofvm": 1.08,
+    "dt": 0.001
+  },
+  "summary": {
+    "shape_agrees": true,
+    "decay_length_matches": true,
+    "ratio_converges_to_one_as_dt_falls": 1.08
+  }
+}
