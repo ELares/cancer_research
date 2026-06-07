@@ -119,11 +119,26 @@ news:
 
 calibration_data:
   description: >
-    Public drug-response data used to calibrate the ferroptosis-core kill switch
-    (#330). Fetched by scripts/fetch_calibration_data.py. Only a small filtered
-    DERIVATIVE (ferroptosis-inducer 4-parameter dose-response fits) is committed;
-    the full raw download is NOT redistributed in this repo.
+    Public datasets used to calibrate / validate the ferroptosis-core simulation
+    suite (#330 kill switch, #333 spheroid structure). Fetched by
+    scripts/fetch_calibration_data.py and scripts/validate_spheroid_structure.py.
+    Only small DERIVATIVES (dose-response fits; size-binned structure summary) are
+    committed; the full raw downloads are NOT redistributed in this repo.
   assets:
+    - name: "Browning 2021 spheroid confocal structure (derived summary)"
+      file: "analysis/calibration/spheroid-structure-validation.json"
+      source: "Browning et al. 2021 eLife, Data/AllConfocalData.csv"
+      url: "https://github.com/ap-browning/Spheroids (raw master/Data/AllConfocalData.csv); Zenodo 10.5281/zenodo.5121093"
+      primary_refs:
+        - "Browning et al. 2021 eLife, PMID 34842141, DOI 10.7554/eLife.73020"
+      license: "Open (eLife CC BY 4.0 article + public author data repository)"
+      redistributable: true
+      attribution: "Spheroid confocal structure data, Browning et al. 2021 (ap-browning/Spheroids)"
+      note: >
+        Committed file is a size-binned summary (phi/eta boundary fractions vs outer
+        radius) derived from the 994-spheroid confocal dataset, used to validate the
+        spheroid module's fixed zone thresholds (#333). The raw CSV is not committed;
+        regenerate with scripts/validate_spheroid_structure.py.
     - name: "CTRPv2 ferroptosis-inducer dose-response (derived)"
       file: "analysis/calibration/ctrpv2_ferroptosis_curves.csv"
       source: "CTRPv2 (Cancer Therapeutics Response Portal v2), via DepMap-redistributed 'Harmonized CTD^2 25Q2'"

@@ -1,0 +1,74 @@
+{
+  "source": "Browning et al. 2021 eLife (PMID 34842141), Data/AllConfocalData.csv",
+  "data_repo": "github.com/ap-browning/Spheroids",
+  "n_spheroids": 994,
+  "cell_lines": [
+    "793b",
+    "983b"
+  ],
+  "r_um_min": 144.2,
+  "r_um_max": 406.7,
+  "model_rim_boundary": 0.9004,
+  "model_core_boundary": 0.7306,
+  "match_tolerance": 0.15,
+  "size_bins": [
+    {
+      "r_lo_um": 0,
+      "r_hi_um": 200,
+      "n": 124,
+      "phi_median": 0.142,
+      "phi_q1": 0.0,
+      "phi_q3": 0.234,
+      "eta_median": 0.0,
+      "eta_q1": 0.0,
+      "eta_q3": 0.0,
+      "frac_with_necrotic_core": 0.008,
+      "model_phi_abs_err": 0.759,
+      "model_eta_abs_err": 0.731
+    },
+    {
+      "r_lo_um": 200,
+      "r_hi_um": 300,
+      "n": 398,
+      "phi_median": 0.591,
+      "phi_q1": 0.311,
+      "phi_q3": 0.768,
+      "eta_median": 0.0,
+      "eta_q1": 0.0,
+      "eta_q3": 0.329,
+      "frac_with_necrotic_core": 0.447,
+      "model_phi_abs_err": 0.309,
+      "model_eta_abs_err": 0.731
+    },
+    {
+      "r_lo_um": 300,
+      "r_hi_um": 400,
+      "n": 471,
+      "phi_median": 0.867,
+      "phi_q1": 0.829,
+      "phi_q3": 0.894,
+      "eta_median": 0.626,
+      "eta_q1": 0.525,
+      "eta_q3": 0.716,
+      "frac_with_necrotic_core": 0.998,
+      "model_phi_abs_err": 0.033,
+      "model_eta_abs_err": 0.104
+    },
+    {
+      "r_lo_um": 400,
+      "r_hi_um": null,
+      "n": 1,
+      "phi_median": 0.898,
+      "phi_q1": 0.898,
+      "phi_q3": 0.898,
+      "eta_median": 0.763,
+      "eta_q1": 0.763,
+      "eta_q3": 0.763,
+      "frac_with_necrotic_core": 1.0,
+      "model_phi_abs_err": 0.002,
+      "model_eta_abs_err": 0.032
+    }
+  ],
+  "valid_radius_um_min": 300,
+  "valid_diameter_um_min": 600
+}
