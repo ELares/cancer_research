@@ -18,7 +18,11 @@ fn main() {
     let mut vessels: Vec<(f64, f64, f64)> = Vec::new();
     let mut i = 4;
     while i + 2 < a.len() {
-        vessels.push((a[i].parse().unwrap(), a[i + 1].parse().unwrap(), a[i + 2].parse().unwrap()));
+        vessels.push((
+            a[i].parse().unwrap(),
+            a[i + 1].parse().unwrap(),
+            a[i + 2].parse().unwrap(),
+        ));
         i += 3;
     }
 
