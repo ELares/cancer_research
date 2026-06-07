@@ -49,12 +49,32 @@ depth versus the deeper in-vivo datasets.
 No ferroptosis inducer (erastin/RSL3/ML/IKE) has published spatial penetration data; the RSL3-like lambda=100 um is an unvalidated extrapolation from the small-molecule transport class. So the validation above transfers to the model's RSL3 penetration only
 by analogy of molecular weight and transport class, not by direct measurement.
 
-### The binding-site barrier is not a model feature
-The model has no binding-site barrier: uptake is LINEAR (folded into lambda) so penetration depth is dose-INDEPENDENT. A true binding-site barrier is saturable (dose-dependent depth) and needs a Michaelis-Menten uptake term the model lacks. Adding it is a separate future model EXTENSION (a new mechanism), not a refinement of this linear model; documented as a gap, not validated. Issue #335 asks to validate the binding-site barrier;
-the honest finding is that the current model cannot, because it does not implement one.
-Adding a saturable (dose-dependent) Michaelis-Menten uptake term and validating it
-against the Tannock dose-dependent penetration data is a separate future model
-extension (a new mechanism), not a refinement of this linear model.
+### The binding-site barrier: deliberately not added (resolved by evidence)
+The model has no binding-site barrier: uptake is LINEAR (folded into lambda) so penetration depth is dose-INDEPENDENT. A true binding-site barrier is saturable (dose-dependent depth). A data-availability review concluded this mechanism is NOT warranted for the small molecules this model targets and is deliberately NOT added: the strong dose-dependent barrier is an ANTIBODY phenomenon (Fujimori 1990, Saga 1995, Thurber/Wittrup 2008 penetration~sqrt(dose)), it is physically WEAK for small molecules (a deep binding sink barely saturates at achievable doses, El-Kareh/Secomb), and NO extractable small-molecule dose-resolved penetration-depth data exists to validate it. #335 binding-site clause resolved by evidence, not by building it.
+
+Issue #335 asks to validate the binding-site barrier. The honest, evidence-led
+finding from a data-availability review is that this mechanism is NOT warranted for
+the small molecules this model targets, so it is deliberately NOT added rather than
+introduced as unvalidatable complexity:
+
+1. The strong dose-dependent binding-site barrier is fundamentally an ANTIBODY
+   phenomenon. It was discovered with antibodies (Fujimori and Weinstein 1990,
+   PMID 2362198), the canonical dose-titration that shows penetration depth rising
+   with dose is an antibody study (Saga 1995, PMID 7568060), and the closed-form
+   signature (penetration distance scaling as the square root of dose) is derived
+   for antibodies (Thurber and Wittrup 2008, PMID 18541331).
+2. For small molecules the effect is physically WEAK: a deep, slowly-saturating
+   binding sink barely saturates at achievable doses, so a saturable-uptake tumor-cord
+   model predicts little dose-through deepening for doxorubicin (El-Kareh and Secomb).
+3. There is NO extractable small-molecule dose-resolved penetration-depth dataset to
+   validate such a term against (dose-dependence is asserted only qualitatively, e.g.
+   gemcitabine in multicellular layers, with no numeric depth-vs-dose profiles).
+
+So the binding-site clause of #335 is resolved by evidence (not warranted and not
+validatable for this drug class), not by adding a mechanism the data cannot support.
+Should this model ever be extended to antibodies or ADCs, a saturable Michaelis-Menten
+uptake term validated against the antibody dose-titration data above would be the
+appropriate addition.
 
 ### Spheroid-specific data and slow-penetrator contrasts
 The cleanest exponential penetration data is in-vivo tumor (drug vs distance-from-vessel),
@@ -75,8 +95,9 @@ model's applicability rather than calibrate its lambda.
 
 The Krogh exponential penetration FORM is validated against measured in-vivo data, and
 the doxorubicin penetration LENGTH is the right order of magnitude (conservative end of
-the measured spread). The ferroptosis-inducer penetration length and the dose-dependent
-binding-site barrier remain unvalidated, the former for lack of any ferroptosis-inducer
-penetration data and the latter because the model does not implement that mechanism. The
-penetration-gradient comparisons in the manuscript stay directional, not calibrated
-magnitudes.
+the measured spread). The ferroptosis-inducer penetration length remains unvalidated for
+lack of any ferroptosis-inducer penetration data, and the dose-dependent binding-site
+barrier is deliberately NOT added because it is an antibody phenomenon, physically weak
+for the small molecules this model targets, and unvalidatable for this drug class from
+public data. The penetration-gradient comparisons in the manuscript stay directional,
+not calibrated magnitudes.
