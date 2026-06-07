@@ -1,0 +1,81 @@
+{
+  "n": 270,
+  "model": "allenai-specter",
+  "headline_k": 5,
+  "baseline": {
+    "tp": 48,
+    "fp": 82,
+    "fn": 39,
+    "recall": 0.5517241379310345,
+    "precision": 0.36923076923076925
+  },
+  "mesh": {
+    "tp": 59,
+    "fp": 108,
+    "fn": 28,
+    "recall": 0.6781609195402298,
+    "precision": 0.3532934131736527
+  },
+  "mesh_plus_embedding": {
+    "tp": 78,
+    "fp": 118,
+    "fn": 9,
+    "recall": 0.896551724137931,
+    "precision": 0.3979591836734694
+  },
+  "embedding_only": {
+    "tp": 49,
+    "fp": 25,
+    "fn": 38,
+    "recall": 0.5632183908045977,
+    "precision": 0.6621621621621622
+  },
+  "residue_total": 28,
+  "residue_recovered": 19,
+  "k_sweep": {
+    "3": {
+      "mesh_plus_emb": {
+        "tp": 78,
+        "fp": 118,
+        "fn": 9,
+        "recall": 0.896551724137931,
+        "precision": 0.3979591836734694
+      },
+      "residue_total": 28,
+      "residue_recovered": 19
+    },
+    "5": {
+      "mesh_plus_emb": {
+        "tp": 78,
+        "fp": 118,
+        "fn": 9,
+        "recall": 0.896551724137931,
+        "precision": 0.3979591836734694
+      },
+      "residue_total": 28,
+      "residue_recovered": 19
+    },
+    "9": {
+      "mesh_plus_emb": {
+        "tp": 79,
+        "fp": 116,
+        "fn": 8,
+        "recall": 0.9080459770114943,
+        "precision": 0.40512820512820513
+      },
+      "residue_total": 28,
+      "residue_recovered": 20
+    },
+    "15": {
+      "mesh_plus_emb": {
+        "tp": 74,
+        "fp": 116,
+        "fn": 13,
+        "recall": 0.8505747126436781,
+        "precision": 0.3894736842105263
+      },
+      "residue_total": 28,
+      "residue_recovered": 15
+    }
+  }
+}
