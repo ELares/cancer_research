@@ -39,8 +39,86 @@ DATA_URL = "https://raw.githubusercontent.com/ap-browning/Spheroids/master/Data/
 
 # Model fixed thresholds (radius fractions) from spheroid::SpheroidConfig::literature():
 # rim begins at glycolytic_frac^(1/3); core boundary at oxphos_frac^(1/3).
-MODEL_RIM_BOUNDARY = 0.73 ** (1.0 / 3.0)   # ~0.9004  (phi analog: proliferating-rim inner edge)
-MODEL_CORE_BOUNDARY = 0.39 ** (1.0 / 3.0)  # ~0.7306  (eta analog: necrotic/persister-core outer edge)
+GLYCOLYTIC_FRAC = 0.73   # base (limiting) rim volume threshold
+OXPHOS_FRAC = 0.39       # base (limiting) core volume threshold
+MODEL_RIM_BOUNDARY = GLYCOLYTIC_FRAC ** (1.0 / 3.0)   # ~0.9004  (phi analog: proliferating-rim inner edge)
+MODEL_CORE_BOUNDARY = OXPHOS_FRAC ** (1.0 / 3.0)      # ~0.7306  (eta analog: necrotic/persister-core outer edge)
+
+# Size-aware zone thresholds (#333), mirroring spheroid::SizeAwareZones::literature()
+# in ferroptosis-core (the drift-guard `size_aware_rust_constants` ties these to the
+# Rust source). Each base threshold ramps 0 -> base over [onset, full] µm, so a small
+# spheroid is all-proliferating with no core and a large one reduces to the fixed
+# (validated) limiting structure. Rim thins before the core necroses.
+SIZE_AWARE = {"rim_onset_um": 200.0, "rim_full_um": 370.0, "core_onset_um": 280.0, "core_full_um": 400.0}
+RUST_SPHEROID_SRC = REPO_ROOT / "simulations" / "ferroptosis-core" / "src" / "spheroid.rs"
+
+
+def _ramp(r_um, onset, full):
+    if full <= onset:
+        return 1.0
+    return max(0.0, min(1.0, (r_um - onset) / (full - onset)))
+
+
+def size_aware_boundaries(r_um, sa=SIZE_AWARE):
+    """Size-aware (phi, eta) radius-fraction boundaries at spheroid radius `r_um`,
+    matching the Rust `SizeAwareZones::effective_fracs` then cube-rooting back to
+    radius fractions (phi = glycolytic_frac**(1/3), eta = oxphos_frac**(1/3))."""
+    glyc = GLYCOLYTIC_FRAC * _ramp(r_um, sa["rim_onset_um"], sa["rim_full_um"])
+    oxph = OXPHOS_FRAC * _ramp(r_um, sa["core_onset_um"], sa["core_full_um"])
+    return glyc ** (1.0 / 3.0), oxph ** (1.0 / 3.0)
+
+
+def _bin_repr_r(b):
+    """Representative radius (µm) for a size bin: midpoint, or r_lo+30 for the open bin."""
+    lo, hi = b["r_lo_um"], b["r_hi_um"]
+    return (lo + hi) / 2.0 if hi else lo + 30.0
+
+
+def evaluate_size_aware(bins, sa=SIZE_AWARE):
+    """Per-bin fixed-vs-size-aware boundary abs errors (vs the bin median phi/eta).
+    Works on freshly-summarized bins or the committed JSON bins, so CI can test it
+    against the committed summary with no network. Returns a list + a small rollup."""
+    per_bin = []
+    for b in bins:
+        r = _bin_repr_r(b)
+        phi_pred, eta_pred = size_aware_boundaries(r, sa)
+        per_bin.append({
+            "r_lo_um": b["r_lo_um"], "r_hi_um": b["r_hi_um"], "repr_r_um": round(r, 1),
+            "phi_median": b["phi_median"], "eta_median": b["eta_median"],
+            "fixed_phi_abs_err": round(abs(MODEL_RIM_BOUNDARY - b["phi_median"]), 3),
+            "fixed_eta_abs_err": round(abs(MODEL_CORE_BOUNDARY - b["eta_median"]), 3),
+            "size_aware_phi_abs_err": round(abs(phi_pred - b["phi_median"]), 3),
+            "size_aware_eta_abs_err": round(abs(eta_pred - b["eta_median"]), 3),
+        })
+    fixed_mean = (sum(x["fixed_phi_abs_err"] + x["fixed_eta_abs_err"] for x in per_bin)
+                  / (2 * len(per_bin))) if per_bin else 0.0
+    sa_mean = (sum(x["size_aware_phi_abs_err"] + x["size_aware_eta_abs_err"] for x in per_bin)
+               / (2 * len(per_bin))) if per_bin else 0.0
+    return {
+        "params_um": sa,
+        "per_bin": per_bin,
+        "fixed_mean_abs_err": round(fixed_mean, 3),
+        "size_aware_mean_abs_err": round(sa_mean, 3),
+        "improves": sa_mean < fixed_mean,
+    }
+
+
+def size_aware_rust_constants(src_path=RUST_SPHEROID_SRC):
+    """Parse spheroid::SizeAwareZones::literature() from the Rust source so the
+    Python SIZE_AWARE constants cannot silently diverge from the model (drift-guard)."""
+    import re
+    src = src_path.read_text(encoding="utf-8")
+    m = re.search(r"fn\s+literature\(\)\s*->\s*Self\s*\{\s*SizeAwareZones\s*\{(.*?)\}", src, re.DOTALL)
+    if not m:
+        raise ValueError("could not find SizeAwareZones::literature() in spheroid.rs")
+    body = m.group(1)
+    out = {}
+    for key in ("rim_onset_um", "rim_full_um", "core_onset_um", "core_full_um"):
+        fm = re.search(re.escape(key) + r"\s*:\s*([0-9.]+)", body)
+        if not fm:
+            raise ValueError(f"could not parse {key} from SizeAwareZones::literature()")
+        out[key] = float(fm.group(1))
+    return out
 
 # Size bins (outer radius µm). The last open bin catches the few largest.
 SIZE_BINS = ((0, 200), (200, 300), (300, 400), (400, 10000))
@@ -116,6 +194,7 @@ def run(args):
     rows = fetch_rows(raw_csv=args.raw_csv)
     summary = summarize(rows)
     valid_lo = valid_size_range(summary)
+    size_aware = evaluate_size_aware(summary)
     result = {
         "source": "Browning et al. 2021 eLife (PMID 34842141), Data/AllConfocalData.csv",
         "data_repo": "github.com/ap-browning/Spheroids",
@@ -129,6 +208,7 @@ def run(args):
         "size_bins": summary,
         "valid_radius_um_min": valid_lo,
         "valid_diameter_um_min": (None if valid_lo is None else 2 * valid_lo),
+        "size_aware_refinement": size_aware,
     }
     OUT_JSON.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
     write_report(result)
@@ -138,6 +218,8 @@ def run(args):
         print(f"  R {b['r_lo_um']}-{hi}: n={b['n']} phi={b['phi_median']} eta={b['eta_median']} "
               f"core_present={b['frac_with_necrotic_core']}")
     print(f"valid size range: R >= {valid_lo} µm (diameter >= {result['valid_diameter_um_min']} µm)")
+    print(f"size-aware (#333) mean abs err {size_aware['size_aware_mean_abs_err']} vs fixed "
+          f"{size_aware['fixed_mean_abs_err']} (improves: {size_aware['improves']})")
     print(f"wrote {OUT_JSON.relative_to(REPO_ROOT)} + {OUT_MD.relative_to(REPO_ROOT)}")
     return result
 
@@ -194,6 +276,34 @@ def write_report(r):
         "  proliferates) and thins toward the model's 0.90 only as the spheroid grows.",
         "- The necrotic core emerges near R ~ 300 µm (diameter ~ 600 µm), consistent with",
         "  an O2 diffusion length of ~150-200 µm.",
+        "",
+        "## Size-aware zone thresholds (#333 refinement)",
+        "",
+        "`spheroid::SizeAwareZones` (opt-in; the fixed path is unchanged and byte-identical)",
+        "ramps each zone threshold from 0 (a small, all-proliferating spheroid with no core)",
+        "up to the fixed limiting fraction, reducing exactly to the fixed thresholds at large",
+        f"radius. Parameters (first-order fits to the bin medians, weakly constrained by four",
+        f"bins): rim onset {SIZE_AWARE['rim_onset_um']:.0f}-{SIZE_AWARE['rim_full_um']:.0f} µm, "
+        f"core onset {SIZE_AWARE['core_onset_um']:.0f}-{SIZE_AWARE['core_full_um']:.0f} µm.",
+        "",
+        "| R bin (µm) | fixed phi err | size-aware phi err | fixed eta err | size-aware eta err |",
+        "|---|---:|---:|---:|---:|",
+    ]
+    for x in r["size_aware_refinement"]["per_bin"]:
+        hi = x["r_hi_um"] if x["r_hi_um"] else "+"
+        lines.append(
+            f"| {x['r_lo_um']}-{hi} | {x['fixed_phi_abs_err']} | {x['size_aware_phi_abs_err']} | "
+            f"{x['fixed_eta_abs_err']} | {x['size_aware_eta_abs_err']} |"
+        )
+    sar = r["size_aware_refinement"]
+    lines += [
+        "",
+        f"Mean boundary abs error drops from **{sar['fixed_mean_abs_err']}** (fixed) to "
+        f"**{sar['size_aware_mean_abs_err']}** (size-aware), concentrated in the small-spheroid",
+        "bins (R < 300 µm) where the fixed model wrongly places a large necrotic core; the",
+        "large-R bins are unchanged (the size-aware model reduces to the fixed one there). The",
+        "parameters are uncalibrated first-order fits to four bins, so read the corrected",
+        "DIRECTION (small spheroids are mostly proliferating with no core), not the exact radii.",
         "",
         "## Scope of what this constrains",
         "",

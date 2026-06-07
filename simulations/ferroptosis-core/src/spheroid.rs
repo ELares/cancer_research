@@ -84,8 +84,11 @@ impl SpheroidConfig {
     /// pending histology calibration. Two scoping caveats: (1) these are the
     /// *limiting* (large-spheroid) proportions applied size-independently — real
     /// zone fractions shrink with spheroid diameter (small spheroids have little
-    /// or no necrotic core), so a size-aware variant is a future refinement; and
-    /// (2) the gradient *strengths* below are still uncalibrated.
+    /// or no necrotic core). [`SizeAwareZones`] (#333) now provides the size-aware
+    /// variant that ramps both zone thresholds from zero (small, all-proliferating,
+    /// no core) up to these limiting fractions, reducing to this fixed structure at
+    /// large radius; the fixed path here is unchanged (byte-identical). (2) the
+    /// gradient *strengths* below are still uncalibrated.
     pub fn literature() -> Self {
         SpheroidConfig {
             // Volume fractions: rim begins at 0.90³≈0.73 of volume; core is the
@@ -100,6 +103,79 @@ impl SpheroidConfig {
             iron_core_factor: 1.6,
         }
     }
+}
+
+/// Size-aware zone thresholds (#333): make the persister-core and glycolytic-rim
+/// volume thresholds depend on the absolute spheroid radius, instead of applying
+/// the limiting (large-spheroid) proportions size-independently.
+///
+/// The #333 structure validation found the fixed thresholds match the Browning
+/// 2021 confocal data only for radius ≳ 300 µm; below that, real spheroids are
+/// mostly proliferating with little or no necrotic core (the fixed model
+/// over-predicts the core: median necrotic-boundary error ~0.73 for R < 300 µm).
+/// This ramps each base threshold from 0 (a small, all-proliferating spheroid with
+/// NO persister core) up to its base value, reducing EXACTLY to the fixed
+/// [`SpheroidConfig`] thresholds at large radius (so the validated large-spheroid
+/// structure is preserved). The rim begins thinning before the core necroses, so
+/// the rim ramp has an earlier onset than the core ramp.
+///
+/// Parameters are first-order fits to the Browning 2021 size-binned medians (the
+/// committed `analysis/calibration/spheroid-structure-validation.json`), and are
+/// weakly constrained (four size bins, the largest with n=1). The radii (µm) below
+/// are the onset (zone begins to appear) and full (reaches the limiting structure)
+/// radii for each boundary. Opt-in: nothing constructs this by default, so the
+/// matrix and the fixed spheroid path stay byte-identical.
+#[derive(Clone, Copy, Debug)]
+pub struct SizeAwareZones {
+    /// Radius (µm) at which the glycolytic rim begins thinning toward its limiting
+    /// (thin) fraction. Below it the whole spheroid is proliferating rim.
+    pub rim_onset_um: f64,
+    /// Radius (µm) at which the rim reaches its limiting fraction.
+    pub rim_full_um: f64,
+    /// Radius (µm) at which a persister/necrotic core first appears.
+    pub core_onset_um: f64,
+    /// Radius (µm) at which the core reaches its limiting fraction.
+    pub core_full_um: f64,
+}
+
+impl SizeAwareZones {
+    /// First-order fit to the Browning 2021 size-binned structure: the rim begins
+    /// thinning near R ≈ 200 µm and saturates by ≈ 370 µm; the necrotic core
+    /// appears near R ≈ 280 µm (where ~half of spheroids have a core) and saturates
+    /// by ≈ 400 µm. These reproduce the bin medians markedly better than the fixed
+    /// thresholds for R < 300 µm (necrotic core ~0 instead of 0.73) while matching
+    /// them for R ≳ 350 µm; they are weakly constrained (four bins) placeholders.
+    pub fn literature() -> Self {
+        SizeAwareZones {
+            rim_onset_um: 200.0,
+            rim_full_um: 370.0,
+            core_onset_um: 280.0,
+            core_full_um: 400.0,
+        }
+    }
+
+    /// Size-adjusted `(glycolytic_frac, oxphos_frac)` for a spheroid of radius
+    /// `r_um`, scaling the base config's limiting thresholds by a 0→1 onset→full
+    /// ramp per boundary. At `r_um ≤ onset` the zone is absent (frac 0); at
+    /// `r_um ≥ full` it equals the base (limiting) value, so this reduces exactly
+    /// to the fixed thresholds for large spheroids.
+    pub fn effective_fracs(&self, base: &SpheroidConfig, r_um: f64) -> (f64, f64) {
+        let ramp = |onset: f64, full: f64| -> f64 {
+            if full <= onset {
+                return 1.0;
+            }
+            ((r_um - onset) / (full - onset)).clamp(0.0, 1.0)
+        };
+        let glycolytic_frac = base.glycolytic_frac * ramp(self.rim_onset_um, self.rim_full_um);
+        let oxphos_frac = base.oxphos_frac * ramp(self.core_onset_um, self.core_full_um);
+        (glycolytic_frac, oxphos_frac)
+    }
+}
+
+/// Spheroid radius in µm for a grid, mirroring [`radial_fraction_3d`]'s geometry:
+/// `min(dims) × TUMOR_RADIUS_FRACTION` cells, times the physical cell size.
+pub fn tumor_radius_um(grid: &TumorGrid3D, cell_um: f64) -> f64 {
+    (grid.rows.min(grid.cols).min(grid.layers) as f64) * TUMOR_RADIUS_FRACTION * cell_um
 }
 
 /// Radial fraction of a cell: `0.0` at the spheroid center, `1.0` at the
@@ -195,6 +271,31 @@ pub fn apply_radial_cells_3d(grid: &mut TumorGrid3D, cfg: &SpheroidConfig, seed:
     }
 }
 
+/// Size-aware variant of [`apply_radial_cells_3d`] (#333): derive the grid's
+/// spheroid radius (`cell_um` µm per cell) and scale the zone thresholds via
+/// `size_aware`, so a small spheroid is mostly proliferating with no persister
+/// core and a large one reproduces the fixed limiting structure. The biochemical
+/// gradients (MUFA/GSH/iron) are radial-position based and so are size-independent,
+/// so this just builds a size-adjusted [`SpheroidConfig`] and reuses the fixed
+/// apply path; at a radius `≥` the full radii it is identical to
+/// `apply_radial_cells_3d(grid, base_cfg, seed)`.
+pub fn apply_radial_cells_sized_3d(
+    grid: &mut TumorGrid3D,
+    base_cfg: &SpheroidConfig,
+    size_aware: &SizeAwareZones,
+    cell_um: f64,
+    seed: u64,
+) {
+    let r_um = tumor_radius_um(grid, cell_um);
+    let (glycolytic_frac, oxphos_frac) = size_aware.effective_fracs(base_cfg, r_um);
+    let eff = SpheroidConfig {
+        glycolytic_frac,
+        oxphos_frac,
+        ..*base_cfg
+    };
+    apply_radial_cells_3d(grid, &eff, seed);
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -282,6 +383,62 @@ mod tests {
                 assert_eq!(gc.phenotype, Phenotype::Stromal);
             }
         }
+    }
+
+    #[test]
+    fn size_aware_fracs_ramp_from_zero_to_the_fixed_limit() {
+        let base = cfg();
+        let sa = SizeAwareZones::literature();
+        // Small spheroid (below both onsets): no core, no thinned rim → both 0.
+        let (g_small, o_small) = sa.effective_fracs(&base, 150.0);
+        assert_eq!((g_small, o_small), (0.0, 0.0));
+        // Large spheroid (above both full radii): reduces EXACTLY to the fixed
+        // limiting thresholds, so the validated large-R structure is preserved.
+        let (g_big, o_big) = sa.effective_fracs(&base, 600.0);
+        assert!((g_big - base.glycolytic_frac).abs() < 1e-12);
+        assert!((o_big - base.oxphos_frac).abs() < 1e-12);
+        // Monotone non-decreasing in radius; the core appears no earlier than the
+        // rim begins thinning (rim onset < core onset).
+        let (g_mid, o_mid) = sa.effective_fracs(&base, 330.0);
+        assert!(g_mid > 0.0 && g_mid <= base.glycolytic_frac);
+        assert!(o_mid >= 0.0 && o_mid < base.oxphos_frac);
+        assert!(sa.rim_onset_um < sa.core_onset_um);
+    }
+
+    #[test]
+    fn size_aware_small_spheroid_has_no_persister_core_large_matches_fixed() {
+        // Small spheroid: 16³ grid at 20 µm/cell → R ≈ 16·0.45·20 = 144 µm, below
+        // the core onset, so it should be all-proliferating with NO persister core.
+        let mut small = TumorGrid3D::generate(16, 16, 16, 20.0, 42);
+        apply_radial_cells_sized_3d(&mut small, &cfg(), &SizeAwareZones::literature(), 20.0, 7);
+        let persisters = small
+            .cells
+            .iter()
+            .filter(|gc| gc.is_tumor && gc.phenotype == Phenotype::Persister)
+            .count();
+        assert_eq!(
+            persisters, 0,
+            "small spheroid should have no persister core"
+        );
+
+        // Large spheroid: 60³ → R ≈ 540 µm, above both full radii, so the size-aware
+        // apply is byte-identical to the fixed apply (effective fracs == base).
+        let mut sized = TumorGrid3D::generate(60, 60, 60, 20.0, 42);
+        let mut fixed = TumorGrid3D::generate(60, 60, 60, 20.0, 42);
+        apply_radial_cells_sized_3d(&mut sized, &cfg(), &SizeAwareZones::literature(), 20.0, 7);
+        apply_radial_cells_3d(&mut fixed, &cfg(), 7);
+        let p_sized: Vec<_> = sized.cells.iter().map(|gc| gc.phenotype).collect();
+        let p_fixed: Vec<_> = fixed.cells.iter().map(|gc| gc.phenotype).collect();
+        assert_eq!(p_sized, p_fixed, "large spheroid: size-aware == fixed");
+        // And the large spheroid DOES have a persister core (sanity).
+        assert!(p_sized.iter().any(|&p| p == Phenotype::Persister));
+    }
+
+    #[test]
+    fn tumor_radius_um_matches_generation_geometry() {
+        let g = TumorGrid3D::generate(60, 60, 60, 20.0, 42);
+        // 60 · TUMOR_RADIUS_FRACTION(0.45) · 20 µm = 540 µm (the sim-tme-3d radius).
+        assert!((tumor_radius_um(&g, 20.0) - 540.0).abs() < 1e-9);
     }
 
     /// #270 wiring: `apply_radial_cells_3d` sets the per-cell MUFA cap radially

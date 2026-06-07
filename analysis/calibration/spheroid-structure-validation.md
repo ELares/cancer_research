@@ -43,6 +43,27 @@ Below that size the model is wrong in a specific, quantified way:
 - The necrotic core emerges near R ~ 300 µm (diameter ~ 600 µm), consistent with
   an O2 diffusion length of ~150-200 µm.
 
+## Size-aware zone thresholds (#333 refinement)
+
+`spheroid::SizeAwareZones` (opt-in; the fixed path is unchanged and byte-identical)
+ramps each zone threshold from 0 (a small, all-proliferating spheroid with no core)
+up to the fixed limiting fraction, reducing exactly to the fixed thresholds at large
+radius. Parameters (first-order fits to the bin medians, weakly constrained by four
+bins): rim onset 200-370 µm, core onset 280-400 µm.
+
+| R bin (µm) | fixed phi err | size-aware phi err | fixed eta err | size-aware eta err |
+|---|---:|---:|---:|---:|
+| 0-200 | 0.758 | 0.142 | 0.731 | 0.0 |
+| 200-300 | 0.309 | 0.008 | 0.731 | 0.0 |
+| 300-400 | 0.033 | 0.003 | 0.105 | 0.016 |
+| 400-+ | 0.002 | 0.002 | 0.032 | 0.032 |
+
+Mean boundary abs error drops from **0.338** (fixed) to **0.025** (size-aware), concentrated in the small-spheroid
+bins (R < 300 µm) where the fixed model wrongly places a large necrotic core; the
+large-R bins are unchanged (the size-aware model reduces to the fixed one there). The
+parameters are uncalibrated first-order fits to four bins, so read the corrected
+DIRECTION (small spheroids are mostly proliferating with no core), not the exact radii.
+
 ## Scope of what this constrains
 
 - This validates the zone **geometry** (where the boundaries sit vs size). It does

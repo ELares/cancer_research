@@ -89,3 +89,48 @@ def test_valid_range_is_large_spheroids_only():
     r = json.loads(VAL_JSON.read_text())
     # the fixed limiting-structure thresholds should only validate for larger spheroids
     assert r["valid_radius_um_min"] >= 250
+
+
+# --------------------------------------------------------------------------
+# Size-aware refinement (#333)
+# --------------------------------------------------------------------------
+
+
+def test_size_aware_boundaries_ramp_from_zero_to_fixed_limit():
+    # Small spheroid: below both onsets -> no core, no thinned rim (both 0).
+    phi_s, eta_s = vss.size_aware_boundaries(150.0)
+    assert phi_s == 0.0 and eta_s == 0.0
+    # Large spheroid: above both full radii -> reduces exactly to the fixed limits.
+    phi_l, eta_l = vss.size_aware_boundaries(600.0)
+    assert phi_l == pytest.approx(vss.MODEL_RIM_BOUNDARY, abs=1e-9)
+    assert eta_l == pytest.approx(vss.MODEL_CORE_BOUNDARY, abs=1e-9)
+
+
+def test_size_aware_reduces_small_spheroid_error_on_committed_bins():
+    r = json.loads(VAL_JSON.read_text())
+    sa = vss.evaluate_size_aware(r["size_bins"])
+    # Overall the size-aware model fits the bin medians better than the fixed one.
+    assert sa["improves"] is True
+    assert sa["size_aware_mean_abs_err"] < sa["fixed_mean_abs_err"]
+    per_bin = {x["r_lo_um"]: x for x in sa["per_bin"]}
+    # The gain is concentrated in the small bins (the core over-prediction the
+    # fixed model makes); the large bin is essentially unchanged (reduces to fixed).
+    small = per_bin[0]
+    assert small["size_aware_eta_abs_err"] < small["fixed_eta_abs_err"]
+    assert small["size_aware_phi_abs_err"] < small["fixed_phi_abs_err"]
+    big = per_bin[300]
+    assert big["size_aware_eta_abs_err"] == pytest.approx(big["fixed_eta_abs_err"], abs=0.12)
+
+
+def test_committed_result_has_size_aware_refinement():
+    r = json.loads(VAL_JSON.read_text())
+    sa = r["size_aware_refinement"]
+    assert sa["improves"] is True
+    assert sa["size_aware_mean_abs_err"] < sa["fixed_mean_abs_err"]
+
+
+def test_size_aware_params_match_rust_constants():
+    """Drift guard: the Python SIZE_AWARE ramp params must equal the Rust
+    spheroid::SizeAwareZones::literature() values."""
+    rust = vss.size_aware_rust_constants()
+    assert rust == vss.SIZE_AWARE
