@@ -116,3 +116,27 @@ news:
     Individual article redistribution rights depend on each source's
     terms of use. ScienceDaily content summarizes published research
     and is typically available for non-commercial educational use.
+
+calibration_data:
+  description: >
+    Public drug-response data used to calibrate the ferroptosis-core kill switch
+    (#330). Fetched by scripts/fetch_calibration_data.py. Only a small filtered
+    DERIVATIVE (ferroptosis-inducer 4-parameter dose-response fits) is committed;
+    the full raw download is NOT redistributed in this repo.
+  assets:
+    - name: "CTRPv2 ferroptosis-inducer dose-response (derived)"
+      file: "analysis/calibration/ctrpv2_ferroptosis_curves.csv"
+      source: "CTRPv2 (Cancer Therapeutics Response Portal v2), via DepMap-redistributed 'Harmonized CTD^2 25Q2'"
+      upstream_file: "CTRPResponseCurves.csv (md5 36115a26e2cabab33906793ba04c47f8)"
+      url: "https://depmap.org/portal/api/download/files"
+      primary_refs:
+        - "Seashore-Ludlow et al. 2015 Cancer Discov, PMID 26181016"
+        - "Rees et al. 2016 Nat Chem Biol, PMID 26656090"
+      license: "CC BY 4.0 (DepMap redistribution); underlying CTRPv2/CTD2 data is publicly released by the Broad Institute"
+      redistributable: true
+      attribution: "CTRPv2 (Broad Institute CTD^2), redistributed via DepMap"
+      note: >
+        Committed file is a filtered derivative (5 ferroptosis inducers, 3,021
+        per-cell-line logistic fits) of the public CTRPv2 release. The raw 45 MB
+        CTRPResponseCurves.csv is not committed; regenerate with
+        scripts/fetch_calibration_data.py. Used as the #330 calibration target.
