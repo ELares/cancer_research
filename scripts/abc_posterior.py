@@ -63,6 +63,7 @@ INVIVO_PRCC = {"lp_propagation": (0.05, 0.2), "lp_rate": (0.03, 0.12)}
 
 N_DRAWS = 2000
 ACCEPT_FRAC = 0.02   # keep the closest 2% -> ABC posterior
+HELDOUT_TOL = 0.05   # viability tolerance for the TOLERANT held-out coverage count
 RNG_SEED = 12345
 SIM_N = 2000
 SIM_SEED = 42
@@ -134,10 +135,19 @@ def run(args):
         "post_pred_q2_5": [round(float(v), 4) for v in np.percentile(pp, 2.5, axis=0)],
         "post_pred_q97_5": [round(float(v), 4) for v in np.percentile(pp, 97.5, axis=0)],
     }
-    covered = sum(
-        1 for k in range(len(doses))
-        if pp_band["post_pred_q2_5"][k] - 0.05 <= emp_heldout[k] <= pp_band["post_pred_q97_5"][k] + 0.05
-    )
+    def _coverage(tol):
+        return sum(
+            1 for k in range(len(doses))
+            if pp_band["post_pred_q2_5"][k] - tol <= emp_heldout[k] <= pp_band["post_pred_q97_5"][k] + tol
+        )
+
+    # STRICT (inside the 95% band) and TOLERANT (within HELDOUT_TOL viability). The
+    # tolerance is not cosmetic: the CTRPv2 curves are cell-line MEDIANS while the
+    # model is single-cell, and the RMSE summary statistic discards curve shape, so a
+    # small viability offset is expected. Both are reported so the strict number is
+    # never hidden behind the tolerant one.
+    covered_strict = _coverage(0.0)
+    covered_tol = _coverage(HELDOUT_TOL)
 
     result = {
         "n_draws": args.n_draws,
@@ -150,14 +160,17 @@ def run(args):
         "posterior": post,
         "invivo_prior_disjunction": disjoint,
         "posterior_predictive_heldout": pp_band,
-        "heldout_coverage": f"{covered}/{len(doses)}",
+        "heldout_tolerance": HELDOUT_TOL,
+        "heldout_coverage_strict": f"{covered_strict}/{len(doses)}",
+        "heldout_coverage_tolerant": f"{covered_tol}/{len(doses)}",
     }
     OUT_JSON.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
     write_report(result)
     print(f"accepted {n_accept}/{args.n_draws} (eps RMSE={result['epsilon_rmse']})")
     for name in names:
         print(f"  {name}: {post[name]['q2_5']} .. {post[name]['median']} .. {post[name]['q97_5']}")
-    print(f"held-out coverage: {result['heldout_coverage']}")
+    print(f"held-out coverage: strict {result['heldout_coverage_strict']}, "
+          f"within {HELDOUT_TOL} {result['heldout_coverage_tolerant']}")
     print(f"wrote {OUT_MD.relative_to(REPO_ROOT)} + {OUT_JSON.relative_to(REPO_ROOT)}")
     return result
 
@@ -223,9 +236,15 @@ def write_report(r):
         "",
         "## Posterior-predictive check on held-out " + r["heldout_compound"],
         "",
-        f"Coverage: empirical {r['heldout_compound']} median falls within the 95%",
-        f"posterior-predictive band (with a 0.05 viability tolerance) at",
-        f"**{r['heldout_coverage']}** dose points.",
+        f"Coverage of the empirical {r['heldout_compound']} median by the 95%",
+        f"posterior-predictive band: **{r['heldout_coverage_strict']}** strictly inside the",
+        f"band, **{r['heldout_coverage_tolerant']}** within a {r['heldout_tolerance']} viability",
+        "tolerance. Both are reported because the tolerance is doing real work: the CTRPv2",
+        "curves are cell-line MEDIANS and the model is single-cell, and the RMSE summary",
+        "statistic discards curve shape, so a small viability offset is expected. The honest",
+        "reading is that the posterior-predictive band is in the right place (tolerant",
+        "coverage high) but not tight enough to bracket every point strictly, consistent with",
+        "the single-cell-vs-median-curve mismatch and the limited 7-point summary statistic.",
         "",
         "| dose (µM) | " + " | ".join(str(d) for d in pp["dose_um"]) + " |",
         "|---|" + "---|" * len(pp["dose_um"]),

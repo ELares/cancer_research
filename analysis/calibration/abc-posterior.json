@@ -112,5 +112,7 @@
       0.1374
     ]
   },
-  "heldout_coverage": "7/7"
+  "heldout_tolerance": 0.05,
+  "heldout_coverage_strict": "3/7",
+  "heldout_coverage_tolerant": "7/7"
 }

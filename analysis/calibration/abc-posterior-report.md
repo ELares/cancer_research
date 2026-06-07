@@ -44,9 +44,15 @@ stronger than the in-vivo plausible ranges allow. So:
 
 ## Posterior-predictive check on held-out ML210
 
-Coverage: empirical ML210 median falls within the 95%
-posterior-predictive band (with a 0.05 viability tolerance) at
-**7/7** dose points.
+Coverage of the empirical ML210 median by the 95%
+posterior-predictive band: **3/7** strictly inside the
+band, **7/7** within a 0.05 viability
+tolerance. Both are reported because the tolerance is doing real work: the CTRPv2
+curves are cell-line MEDIANS and the model is single-cell, and the RMSE summary
+statistic discards curve shape, so a small viability offset is expected. The honest
+reading is that the posterior-predictive band is in the right place (tolerant
+coverage high) but not tight enough to bracket every point strictly, consistent with
+the single-cell-vs-median-curve mismatch and the limited 7-point summary statistic.
 
 | dose (µM) | 0.01 | 0.03 | 0.1 | 0.3 | 1.0 | 3.0 | 10.0 |
 |---|---|---|---|---|---|---|---|
