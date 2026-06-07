@@ -6,9 +6,9 @@ switch, which until now has been honest-but-uncalibrated scaffolding (see
 the model fit + held-out validation is the follow-up leg (scope at the bottom).
 
 Generated artifacts (regenerate with `python3 scripts/fetch_calibration_data.py`):
-- `analysis/calibration/ctrpv2_ferroptosis_curves.csv` — per-cell-line 4-parameter
+- `analysis/calibration/ctrpv2_ferroptosis_curves.csv`: per-cell-line 4-parameter
   logistic fits (committed; 3,021 curves).
-- `analysis/calibration/ctrpv2_ferroptosis_summary.json` — per-compound summary +
+- `analysis/calibration/ctrpv2_ferroptosis_summary.json`: per-compound summary plus
   provenance (committed).
 
 ## Source and provenance
@@ -47,19 +47,19 @@ range (lower = more potent).
 
 | compound | n cell lines | median EC50 (µM) | EC50 IQR (µM) | median kill ceiling | median AUC |
 |---|---:|---:|---:|---:|---:|
-| ML210 | 762 | 0.53 | 0.11 – 1.58 | 0.89 | 0.69 |
-| ML162 | 795 | 0.75 | 0.12 – 1.84 | 0.98 | 0.64 |
-| erastin | 795 | 4.65 | 2.72 – 11.6 | 0.78 | 0.85 |
-| CIL56 | 380 | 0.66 | 0.23 – 1.28 | 0.98 | 0.90 |
-| CIL55 | 289 | 7.23 | 4.30 – 10.1 | 0.93 | 0.97 |
+| ML210 | 762 | 0.53 | 0.11 to 1.58 | 0.89 | 0.69 |
+| ML162 | 795 | 0.75 | 0.12 to 1.84 | 0.98 | 0.64 |
+| erastin | 795 | 4.65 | 2.72 to 11.61 | 0.78 | 0.85 |
+| CIL56 | 380 | 0.66 | 0.23 to 1.28 | 0.98 | 0.90 |
+| CIL55 | 289 | 7.23 | 4.30 to 10.1 | 0.93 | 0.97 |
 
 What the GPX4-inhibitor target (ML162/ML210) tells the model:
-1. **Potency**: median EC50 ~0.5–0.75 µM for direct GPX4 inhibition.
+1. **Potency**: median EC50 ~0.5 to 0.75 µM for direct GPX4 inhibition.
 2. **Kill ceiling**: GPX4 inhibition is near-complete at saturating dose for the
    median line (ML162 ~98%, ML210 ~89%), i.e. most cell lines are killable by
    GPX4i but a residual-viable fraction remains, and that fraction varies.
 3. **Heterogeneity**: EC50 spans roughly an order of magnitude across cell lines
-   (IQR ~0.1–1.8 µM, with a non-responder tail of very high fitted EC50). This is
+   (IQR ~0.1 to 1.8 µM, with a non-responder tail of very high fitted EC50). This is
    the real-world analog of the model's phenotype/parameter heterogeneity, and is
    the most useful signal: the model should reproduce a *distribution* of
    sensitivities, not a single number.
