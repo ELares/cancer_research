@@ -1,0 +1,10 @@
+# Optional UI dependencies for the interactive dashboard (#354), scripts/dashboard.py.
+# These are NOT part of the offline/pinned core (requirements-lock.txt) and are NOT
+# used by CI; install them only to run the dashboard locally:
+#     pip install -r requirements-dashboard.txt
+#     streamlit run scripts/dashboard.py
+# The corpus tab needs only the committed corpus/INDEX.jsonl. The simulation sweep
+# additionally needs the compiled ferroptosis_core extension (see
+# simulations/ferroptosis-python/); without it that tab degrades to read-only.
+streamlit>=1.40
+pandas>=2.0

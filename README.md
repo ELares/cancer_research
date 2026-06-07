@@ -55,7 +55,7 @@ These are computational predictions with documented assumptions and caveats, not
 | `corpus/` | Full-text articles by PubMed ID + INDEX.jsonl |
 | `tags/` | Precomputed tag indexes (mechanism, cancer type, tissue, evidence level, diagnostic-therapy) |
 | `news/` | News source scaffolding: fetched articles, extracted claims, verification results, credibility scores |
-| `tests/` | 260 Python tests (pipeline smoke + figure traceability + manuscript-inventory drift guard + depth-kill physics-constant guard + flagship-figure data guard + quantitative-figure drift guards (Figs 21/22/23) + invariant/integration + calibrate-extractor + MeSH evidence-fallback + gold-set precision-floor regression (#346) + Bliss/sim-tme/penetration prior-predictive intervals + ABC posterior (#332) + non-circular mechanism-recall (#412) + CTRPv2 calibration target + in-vitro kill-switch fit (#330) + spheroid structure validation (#333) + embedding evidence leg (#411) + RD-vs-BioFVM cross-check (#408) + ferroptosis-python bindings) |
+| `tests/` | 266 Python tests (pipeline smoke + figure traceability + manuscript-inventory drift guard + depth-kill physics-constant guard + flagship-figure data guard + quantitative-figure drift guards (Figs 21/22/23) + invariant/integration + calibrate-extractor + MeSH evidence-fallback + gold-set precision-floor regression (#346) + Bliss/sim-tme/penetration prior-predictive intervals + ABC posterior (#332) + non-circular mechanism-recall (#412) + CTRPv2 calibration target + in-vitro kill-switch fit (#330) + spheroid structure validation (#333) + embedding evidence leg (#411) + RD-vs-BioFVM cross-check (#408) + dashboard data layer (#354) + ferroptosis-python bindings) |
 
 Start with the files in `analysis/` if you want to see what we've concluded so far—and where we're still uncertain.
 
@@ -94,6 +94,19 @@ pip install maturin
 maturin develop -m ferroptosis-python/Cargo.toml --release
 python -c "import ferroptosis_core as fc; print(fc.sim_batch('Persister', 'RSL3', n=1000, seed=42))"
 ```
+
+For the interactive dashboard (corpus exploration + a single-cell parameter sweep):
+
+```bash
+pip install -r requirements-dashboard.txt   # optional UI deps (streamlit, pandas); not in the pinned core
+streamlit run scripts/dashboard.py
+```
+
+The Corpus tab (filters, mechanism/cancer/evidence views, the mechanism x cancer
+matrix) needs only the committed `corpus/INDEX.jsonl`. The Simulation-sweep tab runs
+a live `ferroptosis_core.sim_batch` sweep when the bindings above are built, and
+otherwise degrades to the committed prior-predictive intervals. Self-hosting: behind
+auth, `streamlit run scripts/dashboard.py --server.address 0.0.0.0 --server.port 8501`.
 
 ## Philosophy
 
