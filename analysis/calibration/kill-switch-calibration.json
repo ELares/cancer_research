@@ -1,0 +1,81 @@
+{
+  "fit_compound": "ML162",
+  "heldout_compound": "ML210",
+  "cross_mechanism_compound": "ERASTIN",
+  "phenotype": "Glycolytic",
+  "dose_grid_um": [
+    0.01,
+    0.03,
+    0.1,
+    0.3,
+    1.0,
+    3.0,
+    10.0
+  ],
+  "calibrated_params": {
+    "lp_propagation": 0.7,
+    "lp_rate": 0.4,
+    "k_um": 0.25
+  },
+  "grid_evals": 288,
+  "fit_rmse": 0.0504,
+  "heldout_rmse": 0.0689,
+  "cross_mechanism_rmse": 0.4164,
+  "default_uncalibrated_rmse": 0.5666,
+  "curves": {
+    "empirical_fit": [
+      1.0089,
+      1.0058,
+      0.9795,
+      0.831,
+      0.3412,
+      0.0702,
+      0.0411
+    ],
+    "model_fit": [
+      0.9738,
+      0.969,
+      0.946,
+      0.8165,
+      0.3838,
+      0.1627,
+      0.1
+    ],
+    "empirical_heldout": [
+      0.9953,
+      0.9848,
+      0.9559,
+      0.8582,
+      0.5357,
+      0.2326,
+      0.1523
+    ],
+    "model_heldout": [
+      0.9738,
+      0.969,
+      0.946,
+      0.8165,
+      0.3838,
+      0.1627,
+      0.1
+    ],
+    "empirical_cross": [
+      1.0099,
+      1.0095,
+      1.0078,
+      1.0035,
+      0.9923,
+      0.9506,
+      0.5254
+    ],
+    "default_uncalibrated_model": [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
+    ]
+  }
+}
