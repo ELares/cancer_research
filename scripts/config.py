@@ -151,6 +151,13 @@ MECHANISM_KEYWORDS = {
         "epigenetic therapy", "dna methylation cancer", "hdac inhibitor",
         "histone deacetylase", "epigenetic reprogramming", "dnmt inhibitor",
         "azacitidine", "decitabine", "vorinostat", "romidepsin",
+        # #418: precision-first additions closing a measured keyword-coverage gap
+        # (epigenetic recall 54.7% -> 69.8% on the #412 MeSH-concordance headline).
+        # All carry "epigenetic" or a specific epigenetic-drug/enzyme marker, so
+        # FP risk is low; bare "ezh2"/"bet"/"bromodomain" were rejected (gene
+        # symbols that over-match non-therapy biology, ~zero headline recall gain).
+        "epigenetic regulation", "epigenetic modification", "ezh2 inhibitor",
+        "enhancer of zeste", "dnmt",
     ],
     "microbiome": [
         "microbiome cancer", "gut microbiota cancer", "fecal microbiota",

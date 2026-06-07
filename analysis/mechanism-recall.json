@@ -1,9 +1,9 @@
 {
   "aggregates": {
-    "macro_recall_leakage_free": 0.8748450792591719,
+    "macro_recall_leakage_free": 0.8916165677287735,
     "n_measurable_mechanisms": 9,
     "total_independent_pool": 1366,
-    "volume_weighted_recall_leakage_free": 0.8997071742313324
+    "volume_weighted_recall_leakage_free": 0.9055636896046853
   },
   "leaky_only": {
     "crispr": {
@@ -205,10 +205,10 @@
       ],
       "n_independent": 53,
       "n_leaky": 36,
-      "note": "Therapy leaves only. Broad \"Epigenesis, Genetic\" is general biology (inflates the pool, depresses apparent recall) and is EXCLUDED. The lone INDEPENDENT leaf is \"DNA Methylation\", so the measured recall (~55%) is genuinely the LOWEST of the headline set for two compounding reasons: (a) a real gap in keyword coverage (the field says \"epigenetic modifications/regulation\", \"EZH2 inhibitor\", \"BET inhibitor\" which the keyword set does not yet carry), and (b) \"DNA Methylation\" also tags basic methylation BIOLOGY that is not epigenetic THERAPY, so part of the gap is reference-scope breadth, not a miss. Kept (not dropped) because the keyword-coverage half is an actionable finding.",
+      "note": "Therapy leaves only. Broad \"Epigenesis, Genetic\" is general biology (inflates the pool, depresses apparent recall) and is EXCLUDED. The lone INDEPENDENT leaf is \"DNA Methylation\". Recall here started as the LOWEST of the headline set (~55%) for two reasons: (a) a real gap in keyword coverage, and (b) \"DNA Methylation\" also tags basic methylation BIOLOGY that is not epigenetic THERAPY (reference-scope breadth, not a miss). #418 closed the (a) half by adding precision-first keywords (\"epigenetic regulation/modification\", \"ezh2 inhibitor\", \"enhancer of zeste\", \"dnmt\"), lifting recall to ~70%; the residual gap is the (b) descriptor-breadth half. Note the frozen INDEX.jsonl is intentionally NOT re-tagged, so the live-tagger gain shows in the leakage-free column, not the production (frozen-snapshot) column.",
       "proxy_confounded": false,
-      "recall_leakage_free": 0.5471698113207547,
-      "recall_leaky_near_tautological": 0.9722222222222222,
+      "recall_leakage_free": 0.6981132075471698,
+      "recall_leaky_near_tautological": 1.0,
       "recall_production_index": 0.5471698113207547
     },
     "immunotherapy": {

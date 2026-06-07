@@ -33,12 +33,16 @@ Records with non-empty MeSH (eligible as a reference): 3,889
 ## Headline (non-circular, independent descriptors only)
 
 - Measurable mechanisms (independent pool >= 30): **9**
-- Volume-weighted recall: **90.0%** (over 1,366 independent-descriptor records)
-- Macro (per-mechanism mean) recall: **87.5%**
+- Volume-weighted recall: **90.6%** (over 1,366 independent-descriptor records)
+- Macro (per-mechanism mean) recall: **89.2%**
 
-`recall (leakage-free)` is the headline: the tagger re-run with MeSH excluded.
-`recall (production)` mirrors the shipped tagger (frozen `INDEX.jsonl`, which did
-see MeSH) over the same pool, as an upper reference.
+`recall (leakage-free)` is the headline: the live tagger re-run with MeSH excluded.
+`recall (production)` reflects the frozen `INDEX.jsonl` snapshot (its keywords, with
+MeSH folded in) over the same pool. It usually exceeds the leakage-free column, but it
+can LAG it where the live keyword set was improved without regenerating the frozen
+corpus, which is deliberately the case for epigenetic after #418 (69.8% live vs 54.7%
+in the frozen snapshot): the manuscript's frozen 19-mechanism counts are intentionally
+not re-tagged, so the gain shows in the live measurement, not the frozen INDEX.
 
 | Mechanism | Independent descriptor(s) | N | recall (leakage-free) | recall (production) |
 |---|---|---:|---:|---:|
@@ -46,7 +50,7 @@ see MeSH) over the same pool, as an upper reference.
 | bispecific-antibody | Antibodies, Bispecific | 209 | 86.1% | 86.6% |
 | car-t | Receptors, Chimeric Antigen, Immunotherapy, Adoptive | 331 | 90.6% | 91.8% |
 | electrochemical-therapy | Electroporation, Electrochemotherapy | 142 | 93.7% | 95.1% |
-| epigenetic | DNA Methylation | 53 | 54.7% | 54.7% |
+| epigenetic | DNA Methylation | 53 | 69.8% | 54.7% |
 | immunotherapy | B7-H1 Antigen, CTLA-4 Antigen | 157 | 89.2% | 92.4% |
 | metabolic-targeting | Glycolysis | 42 | 92.9% | 92.9% |
 | sonodynamic | Ultrasonic Therapy | 99 | 87.9% | 87.9% |
@@ -58,7 +62,7 @@ see MeSH) over the same pool, as an upper reference.
 - **bispecific-antibody**: Exact bispecific leaf (n~209). Scaffold mechanism (not in frozen-19 results).
 - **car-t**: "Receptors, Chimeric Antigen" (n~248) is the exact CAR leaf (independent of the "chimeric antigen receptor" keyword by word order). "Immunotherapy, Adoptive" (n~299) sits on ~87% of CAR-T papers, routed here not to immunotherapy.
 - **electrochemical-therapy**: Electroporation/electrochemotherapy leaves (Electroporation somewhat broad).
-- **epigenetic**: Therapy leaves only. Broad "Epigenesis, Genetic" is general biology (inflates the pool, depresses apparent recall) and is EXCLUDED. The lone INDEPENDENT leaf is "DNA Methylation", so the measured recall (~55%) is genuinely the LOWEST of the headline set for two compounding reasons: (a) a real gap in keyword coverage (the field says "epigenetic modifications/regulation", "EZH2 inhibitor", "BET inhibitor" which the keyword set does not yet carry), and (b) "DNA Methylation" also tags basic methylation BIOLOGY that is not epigenetic THERAPY, so part of the gap is reference-scope breadth, not a miss. Kept (not dropped) because the keyword-coverage half is an actionable finding.
+- **epigenetic**: Therapy leaves only. Broad "Epigenesis, Genetic" is general biology (inflates the pool, depresses apparent recall) and is EXCLUDED. The lone INDEPENDENT leaf is "DNA Methylation". Recall here started as the LOWEST of the headline set (~55%) for two reasons: (a) a real gap in keyword coverage, and (b) "DNA Methylation" also tags basic methylation BIOLOGY that is not epigenetic THERAPY (reference-scope breadth, not a miss). #418 closed the (a) half by adding precision-first keywords ("epigenetic regulation/modification", "ezh2 inhibitor", "enhancer of zeste", "dnmt"), lifting recall to ~70%; the residual gap is the (b) descriptor-breadth half. Note the frozen INDEX.jsonl is intentionally NOT re-tagged, so the live-tagger gain shows in the leakage-free column, not the production (frozen-snapshot) column.
 - **immunotherapy**: Checkpoint immunotherapy. Bare "Immunotherapy" (n~1011) is the umbrella term and is EXCLUDED as non-discriminative; "Immunotherapy, Adoptive" is routed to car-t. Keyed on the checkpoint-inhibitor leaf (n~348).
 - **metabolic-targeting**: Warburg leaf is specific but tiny (n~6); Glycolysis broader. Low-confidence.
 - **sonodynamic**: Shared with general ultrasound therapy; lower discriminativeness.
