@@ -1,0 +1,118 @@
+{
+  "n_draws": 2000,
+  "n_accepted": 40,
+  "accept_frac": 0.02,
+  "epsilon_rmse": 0.1042,
+  "fit_compound": "ML162",
+  "heldout_compound": "ML210",
+  "priors": {
+    "lp_propagation": [
+      0.05,
+      1.0
+    ],
+    "lp_rate": [
+      0.03,
+      1.0
+    ],
+    "k_um": [
+      0.1,
+      4.0
+    ],
+    "gpx4_rate": [
+      0.15,
+      0.6
+    ]
+  },
+  "posterior": {
+    "lp_propagation": {
+      "q2_5": 0.3789,
+      "median": 0.7916,
+      "q97_5": 0.9538
+    },
+    "lp_rate": {
+      "q2_5": 0.2804,
+      "median": 0.6498,
+      "q97_5": 0.9453
+    },
+    "k_um": {
+      "q2_5": 0.1131,
+      "median": 0.3673,
+      "q97_5": 0.7908
+    },
+    "gpx4_rate": {
+      "q2_5": 0.2999,
+      "median": 0.432,
+      "q97_5": 0.5783
+    }
+  },
+  "invivo_prior_disjunction": {
+    "lp_propagation": {
+      "invivo_prcc_range": [
+        0.05,
+        0.2
+      ],
+      "posterior_median": 0.7916,
+      "posterior_q2_5": 0.3789,
+      "posterior_above_invivo_range": true
+    },
+    "lp_rate": {
+      "invivo_prcc_range": [
+        0.03,
+        0.12
+      ],
+      "posterior_median": 0.6498,
+      "posterior_q2_5": 0.2804,
+      "posterior_above_invivo_range": true
+    }
+  },
+  "posterior_predictive_heldout": {
+    "dose_um": [
+      0.01,
+      0.03,
+      0.1,
+      0.3,
+      1.0,
+      3.0,
+      10.0
+    ],
+    "empirical_heldout": [
+      0.9953,
+      0.9848,
+      0.9559,
+      0.8582,
+      0.5357,
+      0.2326,
+      0.1523
+    ],
+    "post_pred_median": [
+      0.955,
+      0.9492,
+      0.9235,
+      0.8263,
+      0.4045,
+      0.114,
+      0.045
+    ],
+    "post_pred_q2_5": [
+      0.8874,
+      0.88,
+      0.8554,
+      0.6514,
+      0.2087,
+      0.0372,
+      0.0108
+    ],
+    "post_pred_q97_5": [
+      0.9872,
+      0.9847,
+      0.9796,
+      0.9116,
+      0.5656,
+      0.221,
+      0.1374
+    ]
+  },
+  "heldout_tolerance": 0.05,
+  "heldout_coverage_strict": "3/7",
+  "heldout_coverage_tolerant": "7/7"
+}
