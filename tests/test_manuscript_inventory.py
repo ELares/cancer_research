@@ -23,6 +23,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 MANUSCRIPT = REPO_ROOT / "article" / "drafts" / "v1.md"
 CORE_CARGO = REPO_ROOT / "simulations" / "ferroptosis-core" / "Cargo.toml"
 SIM_DIR = REPO_ROOT / "simulations"
+MODEL_CARD = REPO_ROOT / "MODEL_CARD.md"
 
 
 def _manuscript_text() -> str:
@@ -56,6 +57,22 @@ def test_manuscript_version_matches_cargo():
             f"Manuscript states ferroptosis-core version {v}, but "
             f"simulations/ferroptosis-core/Cargo.toml is {actual}. "
             f"Update Appendix A (and CLAUDE.md) when the crate version changes."
+        )
+
+
+def test_model_card_version_matches_cargo():
+    """MODEL_CARD.md's stated ferroptosis-core version must match Cargo.toml.
+    Guards the drift that left it at 0.49.0 while the crate moved on (#333 review);
+    MODEL_CARD has its own version line that no other test covered."""
+    text = MODEL_CARD.read_text(encoding="utf-8")
+    stated = re.findall(r"ferroptosis-core (\d+\.\d+\.\d+)", text)
+    assert stated, "No 'ferroptosis-core X.Y.Z' string found in MODEL_CARD.md"
+    actual = _core_version()
+    for v in stated:
+        assert v == actual, (
+            f"MODEL_CARD.md states ferroptosis-core {v}, but "
+            f"simulations/ferroptosis-core/Cargo.toml is {actual}. "
+            f"Update MODEL_CARD.md when the crate version changes."
         )
 
 
