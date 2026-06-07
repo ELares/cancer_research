@@ -1,0 +1,26 @@
+drug,species,population,route,dose,dose_unit,compartment,parameter,value,unit,source_pmid,note
+IKE,mouse,NCG SUDHL6 xenograft,IP,50,mg/kg,plasma,Tmax,1.35,h,30799221,distribution study (paired plasma+tumor) Fig3A/Table S2
+IKE,mouse,NCG SUDHL6 xenograft,IP,50,mg/kg,plasma,Cmax,5185,ng/mL,30799221,distribution study (paired plasma+tumor)
+IKE,mouse,NCG SUDHL6 xenograft,IP,50,mg/kg,plasma,thalf,1.83,h,30799221,distribution study (paired plasma+tumor)
+IKE,mouse,NCG SUDHL6 xenograft,IP,50,mg/kg,plasma,AUC,10926,ng*h/mL,30799221,distribution study (paired plasma+tumor)
+IKE,mouse,NCG SUDHL6 xenograft,IP,50,mg/kg,tumor,Tmax,3.30,h,30799221,distribution study (paired plasma+tumor)
+IKE,mouse,NCG SUDHL6 xenograft,IP,50,mg/kg,tumor,Cmax,2516,ng/mL,30799221,distribution study (paired plasma+tumor)
+IKE,mouse,NCG SUDHL6 xenograft,IP,50,mg/kg,tumor,thalf,3.50,h,30799221,distribution study (paired plasma+tumor)
+IKE,mouse,NCG SUDHL6 xenograft,IP,50,mg/kg,tumor,AUC,9857,ng*h/mL,30799221,distribution study (paired plasma+tumor)
+IKE,mouse,NOD/SCID,IP,50,mg/kg,plasma,Tmax,0.31,h,30799221,route comparison study (different cohort)
+IKE,mouse,NOD/SCID,IP,50,mg/kg,plasma,Cmax,19515,ng/mL,30799221,route comparison study (different cohort)
+IKE,mouse,NOD/SCID,IP,50,mg/kg,plasma,thalf,1.82,h,30799221,route comparison study (different cohort)
+IKE,mouse,NOD/SCID,IP,50,mg/kg,plasma,AUC,53898,ng*h/mL,30799221,route comparison study (different cohort)
+IKE,mouse,NOD/SCID,IV,50,mg/kg,plasma,Tmax,0.0,h,30799221,route comparison study; IV reference for absolute F
+IKE,mouse,NOD/SCID,IV,50,mg/kg,plasma,Cmax,11384,ng/mL,30799221,route comparison study; IV reference for absolute F
+IKE,mouse,NOD/SCID,IV,50,mg/kg,plasma,thalf,1.31,h,30799221,route comparison study; IV reference for absolute F
+IKE,mouse,NOD/SCID,IV,50,mg/kg,plasma,AUC,16983,ng*h/mL,30799221,route comparison study; IV reference for absolute F
+IKE,mouse,NOD/SCID,PO,50,mg/kg,plasma,Tmax,0.72,h,30799221,route comparison study; oral
+IKE,mouse,NOD/SCID,PO,50,mg/kg,plasma,Cmax,5203,ng/mL,30799221,route comparison study; oral
+IKE,mouse,NOD/SCID,PO,50,mg/kg,plasma,thalf,0.96,h,30799221,route comparison study; oral
+IKE,mouse,NOD/SCID,PO,50,mg/kg,plasma,AUC,5723,ng*h/mL,30799221,route comparison study; oral
+sorafenib,human,solid-tumor popPK,PO,400,mg,central,CL_F,8.13,L/h,21392074,Jain 2011 popPK; one-compartment + transit absorption + enterohepatic recycling
+sorafenib,human,solid-tumor popPK,PO,400,mg,central,V_F,213,L,21392074,Jain 2011 popPK (apparent volume; 80 kg reference)
+sorafenib,human,solid-tumor popPK,PO,400,mg,central,MTT,1.98,h,21392074,Jain 2011 popPK; mean absorption transit time
+sorafenib,human,solid-tumor popPK,PO,400,mg,central,k_EHC,0.857,1/h,21392074,Jain 2011 popPK; enterohepatic recycling rate
+sorafenib,human,solid-tumor popPK,PO,400,mg,central,F_ent,0.498,fraction,21392074,Jain 2011 popPK; fraction entering enterohepatic recycling
