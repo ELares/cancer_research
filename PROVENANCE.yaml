@@ -172,3 +172,21 @@ calibration_data:
         not digitized curves or raw downloads. Used as the #334 tumor-PK anchoring
         target (see calibration-targets-pk.md). The per-timepoint IKE curve lives in
         the cited open-access supplement; only the summary metrics are committed.
+    - name: "Drug-penetration measured metrics (transcribed summary)"
+      file: "analysis/calibration/penetration_measured_data.csv"
+      source: "Published penetration tables: Primeau 2005 + Tannock 2002 (doxorubicin half-distances) + Minchinton & Tannock 2006 review range"
+      url: "https://pubmed.ncbi.nlm.nih.gov/16361566/ (Primeau 2005); https://pubmed.ncbi.nlm.nih.gov/11895922/ (Tannock 2002); https://pubmed.ncbi.nlm.nih.gov/16862189/ (Minchinton 2006)"
+      primary_refs:
+        - "Primeau et al. 2005 Clin Cancer Res, PMID 16361566, DOI 10.1158/1078-0432.CCR-05-1664"
+        - "Tannock et al. 2002 Clin Cancer Res, PMID 11895922"
+        - "Minchinton & Tannock 2006 Nat Rev Cancer, PMID 16862189, DOI 10.1038/nrc1893"
+      license: "Published summary metrics (facts/data, not creative expression); cited to source"
+      redistributable: true
+      attribution: "Doxorubicin penetration metrics (Primeau 2005; Tannock 2002; Minchinton & Tannock 2006)"
+      note: >
+        Committed file holds transcribed published penetration summary metrics
+        (doxorubicin half-distances / penetration-depth ranges in microns, exponential-
+        form flags, plus qualitative slow/surface-limited contrasts for platinum and
+        paclitaxel), NOT digitized curve points. Used as the #335 Krogh-penetration
+        validation target (see penetration-validation.md). No raw image digitization is
+        committed; the validation uses the reported summary half-distances.
