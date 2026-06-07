@@ -100,7 +100,26 @@ def test_calibration_beats_default_and_generalizes():
     assert r["fit_rmse"] < 0.15
     assert r["default_uncalibrated_rmse"] > 0.4
     assert r["default_uncalibrated_rmse"] > 3 * r["fit_rmse"]
-    # held-out (same GPX4i mechanism) generalizes: comparable to the fit error
+    # held-out (same GPX4i mechanism) is comparable to the fit error: not degenerate / overfit
     assert r["heldout_rmse"] < 3 * r["fit_rmse"]
     # cross-mechanism (erastin) is worse than the same-mechanism held-out (as expected)
     assert r["cross_mechanism_rmse"] > r["heldout_rmse"]
+
+
+def test_heldout_middose_shape_mismatch_is_documented():
+    """The held-out generalization is NOT perfect: ML210 is systematically less
+    sensitive than ML162 at mid-dose, so the kill-rate fit leaves a real residual
+    there (the documented honest limit). This pins that residual so it cannot be
+    silently overstated as a clean generalization or silently drift away."""
+    r = json.loads(CALIB_JSON.read_text())
+    c = r["curves"]
+    fit_resid = [abs(m - e) for m, e in zip(c["model_fit"], c["empirical_fit"])]
+    heldout_resid = [abs(m - e) for m, e in zip(c["model_heldout"], c["empirical_heldout"])]
+    # the fit compound is reproduced well point-wise
+    assert max(fit_resid) < 0.12
+    # the held-out compound has a real mid-dose shape mismatch (documented limitation)
+    assert 0.10 < max(heldout_resid) < 0.25
+    assert max(heldout_resid) > max(fit_resid)  # held-out is fit less well, as expected
+    # and that worst held-out residual sits at a mid-dose, not the asymptotes
+    worst = heldout_resid.index(max(heldout_resid))
+    assert r["dose_grid_um"][0] < r["dose_grid_um"][worst] < r["dose_grid_um"][-1]

@@ -22,9 +22,16 @@ The default (in-vivo-tuned) kill switch is far too RSL3-resistant for in-vitro
 cell-line data (its Glycolytic RSL3 death is ~0 even at saturating dose, so its
 viability stays ~1 across the dose range). Turning up the lipid-peroxidation
 cascade (the top PRCC/Sobol kill-rate drivers) reproduces the in-vitro
-GPX4-inhibitor dose-response, and the SAME fitted parameters predict the held-out
-GPX4 inhibitor at comparable error, i.e. the calibration generalizes across GPX4
-inhibitors rather than overfitting one compound.
+GPX4-inhibitor dose-response. The SAME fitted parameters predict the held-out
+GPX4 inhibitor at comparable error (held-out RMSE only ~1.4x the fit RMSE),
+which confirms the fit is not degenerate / overfit to one compound. It is NOT a
+claim that the model captures why the two GPX4 inhibitors differ: ML210 is
+systematically ~50% less sensitive than ML162 at the 1 to 3 uM mid-dose, and the
+single-phenotype kill-rate fit reproduces the overall dose-response magnitude but
+not that compound-specific difference in steepness, so the underlying mechanism is
+only partially resolved by kill-rate calibration alone. That residual
+between-compound shape difference is the largest part of the held-out error and is
+the honest limit of this fit.
 
 ## Fit (ML162)
 
