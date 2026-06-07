@@ -12,16 +12,18 @@ evidence-bearing when its nearest neighbours (title+abstract similarity) are
 predominantly evidence-bearing. It contributes BINARY detection (not a level),
 combined as `keyword OR MeSH OR embedding`.
 
-## Which gold set, and reading the precision
+## Which gold set, and how to read the precision (READ FIRST)
 
-Evaluated on the **v2** gold set (270 records, 32% positive / 183
-negatives), NOT the v1 manuscript set (87% positive, only 13 negatives). v1 is too
-imbalanced to measure a high-recall detection leg's precision (a majority-vote k-NN
-degenerates to always-positive on it). The RECALL figures match the documented v1
-numbers (the 87 positives are shared), so the lift is directly comparable; the
-absolute PRECISION here (~37%) is far below the manuscript's v1 96% because v2
-includes deliberately hard negatives. What #411 cares about is the recall LIFT and
-the precision DIRECTION (it does not drop), not the absolute precision level.
+**The absolute precision numbers below are NOT the manuscript's 96%, and are not a
+regression.** They are measured on the balanced **v2** gold set (270 records, 32%
+positive / 183 negatives), which has deliberately hard negatives, whereas the
+manuscript's 96% is the v1 set (87% positive, only 13 easy negatives). v2 is used
+*because* v1 is too imbalanced to measure a high-recall detection leg's precision (a
+majority-vote k-NN degenerates to always-positive on v1). Read the recall LIFT and
+the precision DIRECTION, not the absolute precision level. The RECALL figures match
+the documented v1 numbers exactly (the 87 positives are shared), so the lift is
+directly comparable; the absolute precision is a different (harder) denominator and
+says nothing about the production tagger's precision.
 
 ## Binary evidence-detection (v2 gold set, n = 270)
 
@@ -34,11 +36,11 @@ the precision DIRECTION (it does not drop), not the absolute precision level.
 
 The semantic leg recovers **19 of the 28** MeSH-residual
 false-negatives (gold-positive records the keyword+MeSH legs miss), lifting recall
-from 67.8% to 89.7%. Precision goes 35.3% ->
-39.8%: it does NOT drop, because the k-NN's own precision exceeds the
-keyword baseline's, so the recovered records are mostly real. (Absolute precision is
-low here only because v2 has hard negatives, see the note above; the embedding leg's
-contribution is to add recall without costing precision.)
+from 67.8% to 89.7%. Precision RISES 4.5% (35.3% -> 39.8%),
+it does not drop: the embedding leg's own precision (see the embedding-only row, well
+above the keyword baseline) means the recovered records are mostly real, so adding it
+pulls combined precision UP while adding recall. (The absolute level is low only
+because of v2's hard negatives, per the note above.)
 
 ## k sweep (transparency; k is a hyperparameter)
 
