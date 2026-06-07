@@ -120,10 +120,11 @@ news:
 calibration_data:
   description: >
     Public datasets used to calibrate / validate the ferroptosis-core simulation
-    suite (#330 kill switch, #333 spheroid structure). Fetched by
-    scripts/fetch_calibration_data.py and scripts/validate_spheroid_structure.py.
-    Only small DERIVATIVES (dose-response fits; size-binned structure summary) are
-    committed; the full raw downloads are NOT redistributed in this repo.
+    suite (#330 kill switch, #333 spheroid structure, #334 tumor-PK). Fetched by
+    scripts/fetch_calibration_data.py and scripts/validate_spheroid_structure.py;
+    the #334 PK targets are transcribed published table values (no raw download).
+    Only small DERIVATIVES (dose-response fits; size-binned structure summary; PK
+    summary metrics) are committed; the full raw downloads are NOT redistributed.
   assets:
     - name: "Browning 2021 spheroid confocal structure (derived summary)"
       file: "analysis/calibration/spheroid-structure-validation.json"
@@ -155,3 +156,19 @@ calibration_data:
         per-cell-line logistic fits) of the public CTRPv2 release. The raw 45 MB
         CTRPResponseCurves.csv is not committed; regenerate with
         scripts/fetch_calibration_data.py. Used as the #330 calibration target.
+    - name: "Ferroptosis-inducer pharmacokinetics (transcribed summary)"
+      file: "analysis/calibration/pk_measured_data.csv"
+      source: "Published PK tables: IKE (Zhang 2019, Cell Chem Biol) + sorafenib popPK (Jain 2011, Br J Clin Pharmacol)"
+      url: "https://pubmed.ncbi.nlm.nih.gov/30799221/ (IKE, PMC6525071); https://pubmed.ncbi.nlm.nih.gov/21392074/ (sorafenib, PMC3162659)"
+      primary_refs:
+        - "Zhang et al. 2019 Cell Chem Biol, PMID 30799221, DOI 10.1016/j.chembiol.2019.01.008"
+        - "Jain et al. 2011 Br J Clin Pharmacol, PMID 21392074, DOI 10.1111/j.1365-2125.2011.03963.x"
+      license: "Published summary parameters (facts/data, not creative expression); cited to source"
+      redistributable: true
+      attribution: "IKE PK (Zhang et al. 2019); sorafenib popPK (Jain et al. 2011)"
+      note: >
+        Committed file holds transcribed published summary PK metrics (NCA Tmax/Cmax/
+        terminal-t1/2/AUC for IKE plasma+tumor; popPK CL/V/transit/EHC for sorafenib),
+        not digitized curves or raw downloads. Used as the #334 tumor-PK anchoring
+        target (see calibration-targets-pk.md). The per-timepoint IKE curve lives in
+        the cited open-access supplement; only the summary metrics are committed.
