@@ -7,4 +7,4 @@
 # additionally needs the compiled ferroptosis_core extension (see
 # simulations/ferroptosis-python/); without it that tab degrades to read-only.
 streamlit>=1.40
-pandas>=2.0
+pandas>=3.0.3
