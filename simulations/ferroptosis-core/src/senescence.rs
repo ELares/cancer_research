@@ -301,14 +301,15 @@ pub fn apply_senescence_program_3d(
 /// byte-identical unless a consumer opts into a CDK4/6i-priming combination, and at
 /// `priming_days == 0` the induced fraction is `0` (an identity `SenescenceConfig`).
 ///
-/// Kinetics are UNCALIBRATED placeholders. The only literature anchor is the broad
-/// ~14 to 21 day senescence-establishment timescale (ACS Nano 2025 senescence-primed
-/// ferroptosis; Aging and Disease 2025, DOI 10.14336/AD.2025.0141, targeting
-/// ferroptosis to clear senescent cells). Induction is a saturating exponential
-/// toward `f_max` with time constant `tau_induction_days`; recovery is an
-/// exponential decay with time constant `tau_recovery_days`. The DIRECTION (priming
-/// raises the senolytic fraction; the window closes on resolution) is the result,
-/// not the day-precise magnitudes.
+/// Kinetics are UNCALIBRATED placeholders. The only grounding is the broadly-reported
+/// ~14 to 21 day (one-to-three-week) timescale over which therapy-induced senescence
+/// is established; CDK4/6i-primed-then-ferroptosis is an active recent direction in
+/// the senescence-ferroptosis literature, but the specific induction/recovery time
+/// constants here are NOT fit to any dataset. Induction is a saturating exponential
+/// toward `f_max` with time constant `tau_induction_days`; recovery is an exponential
+/// decay with time constant `tau_recovery_days`. The DIRECTION (priming raises the
+/// senolytic fraction; the window closes on resolution) is the result, not the
+/// day-precise magnitudes.
 #[derive(Clone, Copy, Debug)]
 pub struct Cdk46PrimingConfig {
     /// Saturating senescent fraction reached under sustained CDK4/6i exposure.
@@ -321,9 +322,12 @@ pub struct Cdk46PrimingConfig {
 }
 
 impl Cdk46PrimingConfig {
-    /// Placeholder kinetics grounded only in the ~1 to 3 week senescence timescale
-    /// (uncalibrated): a majority-but-not-complete senescent fraction at saturation,
-    /// a ~1 week induction constant, and a ~1.5 week recovery constant.
+    /// Placeholder kinetics grounded only in the broadly-reported ~1 to 3 week
+    /// senescence-establishment timescale (uncalibrated): a majority-but-not-complete
+    /// senescent fraction at saturation, a ~1 week induction constant, and a ~1.5 week
+    /// recovery constant. These specific values are ILLUSTRATIVE; only the direction
+    /// (induction then recovery) is the result, the tests assert direction, not the
+    /// day numbers.
     pub fn literature() -> Self {
         Cdk46PrimingConfig {
             f_max: 0.6,
