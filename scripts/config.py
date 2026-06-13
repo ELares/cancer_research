@@ -529,6 +529,77 @@ DIAGNOSTIC_THERAPY_KEYWORDS = {
             "oncolytic vaccinia", "oncolytic reovirus",
         ],
     },
+    # --- Expansion: the most clinically-deployed targeted-therapy chains (#441).
+    # These four cover the dominant predictive biomarker -> targeted-drug pairings
+    # (HER2, BRCA, EGFR, KRAS-G12C). Keyword lists are precision-first; gene tokens
+    # (her2/brca/egfr/kras) are 4 chars so the matcher applies word-boundary
+    # matching, avoiding partial-word false positives.
+    "her2-testing-to-trastuzumab": {
+        "diagnostic": [
+            "her2 ihc", "her2 immunohistochemistry", "her2 fish",
+            "her2 testing", "her2 amplification testing", "her2 ish",
+            "her2 in situ hybridization",
+        ],
+        "feature": [
+            "her2-positive", "her2 positive", "her2 overexpression",
+            "her2-amplified", "her2 amplified", "erbb2 amplification",
+            "erbb2-amplified",
+        ],
+        "intervention": [
+            "trastuzumab", "herceptin", "pertuzumab", "perjeta",
+            "trastuzumab deruxtecan", "trastuzumab emtansine",
+            "ado-trastuzumab", "t-dm1", "kadcyla", "enhertu",
+            "trastuzumab biosimilar",
+        ],
+    },
+    "brca-mutation-to-parp-inhibitor": {
+        "diagnostic": [
+            "brca testing", "brca1/2 testing", "brca mutation testing",
+            "germline brca", "brca sequencing", "brca screening",
+            "hrd testing", "homologous recombination deficiency",
+        ],
+        "feature": [
+            "brca mutation", "brca-mutant", "brca-mutated", "brca1 mutation",
+            "brca2 mutation", "brca1/2 mutation", "germline brca mutation",
+            "hrd-positive", "homologous recombination deficient",
+        ],
+        "intervention": [
+            "olaparib", "lynparza", "niraparib", "zejula", "rucaparib",
+            "rubraca", "talazoparib", "talzenna", "parp inhibitor",
+            "parp inhibition",
+        ],
+    },
+    "egfr-mutation-to-egfr-inhibitor": {
+        "diagnostic": [
+            "egfr mutation testing", "egfr testing", "egfr mutation analysis",
+            "egfr sequencing", "egfr mutation screening",
+        ],
+        "feature": [
+            "egfr mutation", "egfr-mutant", "egfr-mutated",
+            "egfr-activating mutation", "egfr sensitizing mutation",
+            "egfr exon 19 deletion", "exon 19 deletion", "egfr l858r",
+            "egfr t790m",
+        ],
+        "intervention": [
+            "erlotinib", "tarceva", "gefitinib", "iressa", "afatinib",
+            "gilotrif", "osimertinib", "tagrisso", "dacomitinib",
+            "egfr tki", "egfr tyrosine kinase inhibitor",
+        ],
+    },
+    "kras-g12c-mutation-to-sotorasib": {
+        "diagnostic": [
+            "kras g12c testing", "kras testing", "kras mutation testing",
+            "kras sequencing", "kras mutation analysis",
+        ],
+        "feature": [
+            "kras g12c", "kras-g12c", "kras g12c mutation",
+            "kras g12c-mutant", "g12c mutation",
+        ],
+        "intervention": [
+            "sotorasib", "lumakras", "amg 510", "adagrasib", "krazati",
+            "mrtx849", "kras g12c inhibitor", "kras inhibitor",
+        ],
+    },
 }
 
 DIAGNOSTIC_THERAPY_ORDER = [
@@ -538,6 +609,10 @@ DIAGNOSTIC_THERAPY_ORDER = [
     "tmb-msi-to-immunotherapy",
     "neoantigen-profiling-to-mrna-vaccine",
     "oncolytic-susceptibility-to-virotherapy",
+    "her2-testing-to-trastuzumab",
+    "brca-mutation-to-parp-inhibitor",
+    "egfr-mutation-to-egfr-inhibitor",
+    "kras-g12c-mutation-to-sotorasib",
 ]
 
 EVIDENCE_LEVEL_KEYWORDS = {

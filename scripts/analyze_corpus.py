@@ -661,20 +661,69 @@ def build_sarcoma_subtype_audit(entries: list[dict]) -> str:
     return "\n".join(lines)
 
 
-def build_diagnostic_therapy_audit(entries: list[dict]) -> str:
-    """Audit of diagnostic-to-therapy matching chains."""
+def recompute_diagnostic_therapy_links() -> dict[str, list[str]]:
+    """Recompute each article's diagnostic-therapy chain membership from the FROZEN
+    corpus text using the CURRENT ``config.DIAGNOSTIC_THERAPY_KEYWORDS``.
+
+    The frozen ``corpus/INDEX.jsonl`` stores a ``diagnostic_therapy_links`` field
+    computed at freeze time (the original 6 chains). Expanding the chain set (#441)
+    must NOT re-run the full tagger over the corpus, because that would also apply
+    unrelated post-freeze config drift (e.g. the #418 epigenetic keywords) and shift
+    the frozen 19-mechanism counts. So instead of mutating the index, the
+    diagnostic-therapy audit is recomputed on demand from the frozen ``by-pmid``
+    text, the same "frozen corpus, living analysis" pattern the living-review uses.
+    This reads only ``corpus/by-pmid/*.md`` (read-only) and never writes the index.
+    Returns ``{pmid: sorted([chain_id, ...])}``.
+    """
+    # Lazy import: tag_articles depends only on config (no cycle with analyze_corpus).
+    from tag_articles import (
+        PMID_DIR,
+        get_searchable_text,
+        load_article,
+        match_diagnostic_therapy_links,
+    )
+
+    links: dict[str, list[str]] = {}
+    for filepath in sorted(Path(PMID_DIR).glob("*.md")):
+        fm, body = load_article(filepath)
+        if not fm:
+            continue
+        pmid = str(fm.get("pmid", filepath.stem))
+        links[pmid] = sorted(match_diagnostic_therapy_links(get_searchable_text(fm, body)))
+    return links
+
+
+def build_diagnostic_therapy_audit(
+    entries: list[dict], links_by_pmid: dict[str, list[str]] | None = None
+) -> str:
+    """Audit of diagnostic-to-therapy matching chains.
+
+    Chain membership is RECOMPUTED from the frozen corpus text (current config) via
+    :func:`recompute_diagnostic_therapy_links`, not read from the frozen index's
+    stored ``diagnostic_therapy_links`` field, so the audit reflects the current
+    (expanded) chain set without re-freezing the corpus. ``entries`` still supplies
+    the per-article metadata (cancer types, evidence level, citations, title).
+    For the 6 original chains the recompute reproduces the stored field exactly
+    (validated), so their numbers are unchanged. Pass ``links_by_pmid`` to reuse a
+    precomputed map (the standalone ``scripts/diagnostic_therapy_audit.py`` does this).
+    """
+    if links_by_pmid is None:
+        links_by_pmid = recompute_diagnostic_therapy_links()
+
     lines = ["# Diagnostic-to-Therapy Matching Audit\n"]
     lines.append(
         "First-pass extraction of diagnostic → targetable feature → intervention chains. "
-        "Matching requires the intervention link plus at least one of (diagnostic, feature).\n"
+        "Matching requires the intervention link plus at least one of (diagnostic, feature). "
+        "Chain membership is recomputed from the frozen corpus text using the current chain "
+        "set, so the index itself is never mutated (#441).\n"
     )
 
     chain_entries = defaultdict(list)
     for e in entries:
-        for chain_id in e.get("diagnostic_therapy_links", []):
+        for chain_id in links_by_pmid.get(str(e.get("pmid")), []):
             chain_entries[chain_id].append(e)
 
-    total_with_links = sum(1 for e in entries if e.get("diagnostic_therapy_links"))
+    total_with_links = sum(1 for e in entries if links_by_pmid.get(str(e.get("pmid"))))
     lines.append(f"- Articles with at least one diagnostic-therapy link: **{total_with_links}** / {len(entries)}")
     lines.append(f"- Chains evaluated: {len(DIAGNOSTIC_THERAPY_ORDER)}")
     lines.append("")
@@ -728,8 +777,17 @@ def build_diagnostic_therapy_audit(entries: list[dict]) -> str:
 
     lines.append("\n## Interpretation\n")
     lines.append(
-        "- This is a first-pass pilot covering 6 diagnostic-therapy chains across 4 modalities "
-        "(radioligands, checkpoint selection, mRNA vaccines, oncolytic viruses)."
+        f"- This pilot covers {len(DIAGNOSTIC_THERAPY_ORDER)} diagnostic-therapy chains: the "
+        "original 4-modality set (radioligands, checkpoint selection, mRNA vaccines, oncolytic "
+        "viruses) plus the four most clinically-deployed predictive-biomarker-to-targeted-drug "
+        "chains added in #441 (HER2-to-trastuzumab, BRCA-to-PARP-inhibitor, EGFR-to-EGFR-inhibitor, "
+        "KRAS-G12C-to-sotorasib)."
+    )
+    lines.append(
+        "- Counts reflect this mechanism-keyword-built corpus, not a general-oncology corpus, so "
+        "the targeted-therapy chains read far lower than their true clinical literature volume "
+        "(EGFR and KRAS-G12C in particular), and a chain returning zero means the corpus lacks "
+        "those papers, not that the chain is unimportant."
     )
     lines.append(
         "- The matching rule (intervention required + at least one other link) is conservative; "

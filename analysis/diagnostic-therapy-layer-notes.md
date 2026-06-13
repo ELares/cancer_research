@@ -16,7 +16,13 @@ Each chain has three keyword groups:
 
 A paper must mention the **intervention** keyword PLUS at least one of (**diagnostic** or **feature**). This is more conservative than 2-of-3 and prevents false positives from papers that discuss only a diagnostic imaging technique or only a biomarker without connecting it to a therapy choice.
 
-## Current Coverage (6 chains, 4 modalities)
+## Current Coverage (10 chains, 5 modalities)
+
+The four targeted-therapy chains were added in #441. Chain membership is recomputed
+on the fly from the frozen corpus text using the current chain set (see
+`scripts/diagnostic_therapy_audit.py`), so the chain list can grow without mutating
+the frozen `corpus/INDEX.jsonl` or any other corpus number. The article counts below
+are recomputed, not the frozen stored field.
 
 | Chain | Modality | Articles |
 |-------|----------|----------|
@@ -26,6 +32,17 @@ A paper must mention the **intervention** keyword PLUS at least one of (**diagno
 | tmb-msi-to-immunotherapy | Checkpoint selection | 33 |
 | neoantigen-profiling-to-mrna-vaccine | mRNA vaccine | 79 |
 | oncolytic-susceptibility-to-virotherapy | Oncolytic virus | 1 |
+| her2-testing-to-trastuzumab | Targeted therapy | 28 |
+| brca-mutation-to-parp-inhibitor | Targeted therapy | 71 |
+| egfr-mutation-to-egfr-inhibitor | Targeted therapy | 12 |
+| kras-g12c-mutation-to-sotorasib | Targeted therapy | 0 |
+
+Total: 240 articles with at least one link (up from 129 across the original six).
+The targeted-therapy counts read low because the corpus is mechanism-keyword-built
+around ferroptosis and alternative therapies, not general oncology: EGFR recovers a
+dozen of the thousands of EGFR-targeted-therapy papers in the wider literature, and
+KRAS-G12C returns zero, meaning the corpus lacks those emerging-targeted-therapy
+papers, not that the chain is unimportant.
 
 ## What This Layer Can Do
 
