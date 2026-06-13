@@ -97,6 +97,19 @@ class TestConfigConsistency:
             assert "diagnostic" in chain, f"{chain_id} missing 'diagnostic'"
             assert "feature" in chain, f"{chain_id} missing 'feature'"
             assert "intervention" in chain, f"{chain_id} missing 'intervention'"
+            for field in ("diagnostic", "feature", "intervention"):
+                assert chain[field], f"{chain_id} has an empty '{field}' keyword list"
+
+    def test_diagnostic_therapy_expansion_chains_present(self):
+        # The four targeted-therapy chains added in #441 must be registered.
+        from config import DIAGNOSTIC_THERAPY_ORDER
+        for chain_id in (
+            "her2-testing-to-trastuzumab",
+            "brca-mutation-to-parp-inhibitor",
+            "egfr-mutation-to-egfr-inhibitor",
+            "kras-g12c-mutation-to-sotorasib",
+        ):
+            assert chain_id in DIAGNOSTIC_THERAPY_ORDER, f"#441 chain missing: {chain_id}"
 
 
 # ============================================================
@@ -127,6 +140,45 @@ class TestCorpusIndex:
         # At least some entries should have the new field
         with_links = [e for e in index_entries if e.get("diagnostic_therapy_links")]
         assert len(with_links) > 50, f"Expected 50+ entries with diagnostic_therapy_links, got {len(with_links)}"
+
+    def test_diagnostic_therapy_recompute_reproduces_frozen_field(self, index_entries):
+        """#441 zero-mutation invariant: the on-the-fly recompute (over the frozen
+        by-pmid text, current config) must reproduce the stored INDEX
+        diagnostic_therapy_links EXACTLY for the 6 chains present at freeze time, and
+        the 4 new chains (#441) must add links without touching the frozen index."""
+        by_pmid = REPO_ROOT / "corpus" / "by-pmid"
+        if not by_pmid.exists():
+            pytest.skip("corpus/by-pmid not found")
+        from analyze_corpus import recompute_diagnostic_therapy_links
+
+        FROZEN = {
+            "psma-imaging-to-radioligand",
+            "sstr-imaging-to-prrt",
+            "pdl1-ihc-to-checkpoint",
+            "tmb-msi-to-immunotherapy",
+            "neoantigen-profiling-to-mrna-vaccine",
+            "oncolytic-susceptibility-to-virotherapy",
+        }
+        links = recompute_diagnostic_therapy_links()
+        # (a) The recompute restricted to the frozen chains reproduces the stored
+        #     field exactly for every record (the safety property that lets the
+        #     audit expand without re-freezing / mutating the corpus).
+        mismatches = 0
+        new_total = 0
+        for e in index_entries:
+            pmid = str(e.get("pmid"))
+            recomputed = links.get(pmid, [])
+            stored = sorted(e.get("diagnostic_therapy_links") or [])
+            if sorted(c for c in recomputed if c in FROZEN) != stored:
+                mismatches += 1
+            if any(c not in FROZEN for c in recomputed):
+                new_total += 1
+        assert mismatches == 0, (
+            f"recompute diverges from the frozen diagnostic_therapy_links for "
+            f"{mismatches} record(s); the corpus or config has drifted"
+        )
+        # (b) The four new chains actually match articles (they are not dead config).
+        assert new_total > 50, f"expected the #441 chains to add links; got {new_total}"
 
     def test_index_has_tissue_categories(self, index_entries):
         with_tissue = [e for e in index_entries if e.get("tissue_categories")]

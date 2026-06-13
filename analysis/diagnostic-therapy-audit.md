@@ -1,9 +1,9 @@
 # Diagnostic-to-Therapy Matching Audit
 
-First-pass extraction of diagnostic → targetable feature → intervention chains. Matching requires the intervention link plus at least one of (diagnostic, feature).
+First-pass extraction of diagnostic → targetable feature → intervention chains. Matching requires the intervention link plus at least one of (diagnostic, feature). Chain membership is recomputed from the frozen corpus text using the current chain set, so the index itself is never mutated (#441).
 
-- Articles with at least one diagnostic-therapy link: **129** / 4830
-- Chains evaluated: 6
+- Articles with at least one diagnostic-therapy link: **240** / 4830
+- Chains evaluated: 10
 
 ## Chain Counts
 
@@ -15,6 +15,10 @@ First-pass extraction of diagnostic → targetable feature → intervention chai
 | **tmb-msi-to-immunotherapy** | 33 | colorectal (15), lung (4), melanoma (3) | preclinical-invivo (5), clinical-other (4), phase2-clinical (2) |
 | **neoantigen-profiling-to-mrna-vaccine** | 79 | melanoma (18), pancreatic (16), lung (8) | preclinical-invivo (12), phase1-clinical (6), preclinical-invitro (5) |
 | **oncolytic-susceptibility-to-virotherapy** | 1 | melanoma (1) | preclinical-invivo (1) |
+| **her2-testing-to-trastuzumab** | 28 | breast (20), gastric (4), lung (2) | clinical-other (5), preclinical-invivo (4), phase2-clinical (3) |
+| **brca-mutation-to-parp-inhibitor** | 71 | ovarian (30), breast (29), pancreatic (5) | preclinical-invivo (16), preclinical-invitro (10), clinical-other (2) |
+| **egfr-mutation-to-egfr-inhibitor** | 12 | lung (12) | preclinical-invivo (4), clinical-other (4), phase1-clinical (1) |
+| **kras-g12c-mutation-to-sotorasib** | 0 | . | . |
 
 ## Example Papers
 
@@ -57,8 +61,33 @@ First-pass extraction of diagnostic → targetable feature → intervention chai
 
 - **PMID 34205379** (2021, 13 cites) — preclinical-invivo — crispr, oncolytic-virus — *Nectin-1 Expression Correlates with the Susceptibility of Malignant Melanoma to Oncolytic Herpes Simplex Virus In Vitro *
 
+### her2-testing-to-trastuzumab
+
+*Diagnostic:* her2 ihc, her2 immunohistochemistry, her2 fish | *Feature:* her2-positive, her2 positive, her2 overexpression | *Intervention:* trastuzumab, herceptin, pertuzumab
+
+- **PMID 37801674** (2023, 111 cites) — phase2-clinical — antibody-drug-conjugate — *Patritumab Deruxtecan (HER3-DXd), a Human Epidermal Growth Factor Receptor 3-Directed Antibody-Drug Conjugate, in Patien*
+- **PMID 31451760** (2019, 82 cites) — preclinical-invitro — antibody-drug-conjugate, crispr — *CRISPR-Cas9 screens identify regulators of antibody-drug conjugate toxicity.*
+- **PMID 38398191** (2024, 40 cites) — unclassified — antibody-drug-conjugate — *Next-Generation HER2-Targeted Antibody-Drug Conjugates in Breast Cancer.*
+
+### brca-mutation-to-parp-inhibitor
+
+*Diagnostic:* brca testing, brca1/2 testing, brca mutation testing | *Feature:* brca mutation, brca-mutant, brca-mutated | *Intervention:* olaparib, lynparza, niraparib
+
+- **PMID 36082969** (2023, 446 cites) — phase3-clinical — synthetic-lethality — *Overall Survival With Maintenance Olaparib at a 7-Year Follow-Up in Patients With Newly Diagnosed Advanced Ovarian Cance*
+- **PMID 29533782** (2018, 298 cites) — preclinical-invivo — synthetic-lethality — *BRD4 Inhibition Is Synthetic Lethal with PARP Inhibitors through the Induction of Homologous Recombination Deficiency.*
+- **PMID 32122376** (2020, 244 cites) — unclassified — synthetic-lethality — *PARP inhibitors in pancreatic cancer: molecular mechanisms and clinical applications.*
+
+### egfr-mutation-to-egfr-inhibitor
+
+*Diagnostic:* egfr mutation testing, egfr testing, egfr mutation analysis | *Feature:* egfr mutation, egfr-mutant, egfr-mutated | *Intervention:* erlotinib, tarceva, gefitinib
+
+- **PMID 21856766** (2011, 414 cites) — unclassified — untagged — *Disease flare after tyrosine kinase inhibitor discontinuation in patients with EGFR-mutant lung cancer and acquired resi*
+- **PMID 34548332** (2022, 68 cites) — preclinical-invivo — antibody-drug-conjugate — *EGFR Inhibition Enhances the Cellular Uptake and Antitumor-Activity of the HER3 Antibody-Drug Conjugate HER3-DXd.*
+- **PMID 37057110** (2023, 24 cites) — preclinical-invivo — untagged — *CKAP4 is a potential exosomal biomarker and therapeutic target for lung cancer.*
+
 ## Interpretation
 
-- This is a first-pass pilot covering 6 diagnostic-therapy chains across 4 modalities (radioligands, checkpoint selection, mRNA vaccines, oncolytic viruses).
+- This pilot covers 10 diagnostic-therapy chains: the original 4-modality set (radioligands, checkpoint selection, mRNA vaccines, oncolytic viruses) plus the four most clinically-deployed predictive-biomarker-to-targeted-drug chains added in #441 (HER2-to-trastuzumab, BRCA-to-PARP-inhibitor, EGFR-to-EGFR-inhibitor, KRAS-G12C-to-sotorasib).
+- Counts reflect this mechanism-keyword-built corpus, not a general-oncology corpus, so the targeted-therapy chains read far lower than their true clinical literature volume (EGFR and KRAS-G12C in particular), and a chain returning zero means the corpus lacks those papers, not that the chain is unimportant.
 - The matching rule (intervention required + at least one other link) is conservative; papers that discuss only a diagnostic or only a therapy without the chain are excluded.
 - Chain counts depend on keyword coverage and should not be read as exhaustive. Papers using non-standard terminology for diagnostics or interventions may be missed.
