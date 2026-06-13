@@ -1,0 +1,44 @@
+{
+  "source": "sim-tme-3d --spheroid-size-sweep (committed analysis/calibration/spheroid_kill_vs_size.csv)",
+  "treatment": "RSL3 (pharmacologic; immune/stromal/pH off to isolate the pharmacologic kill)",
+  "o2_lambda_um": 120.0,
+  "supply_gradient_direction": {
+    "fixed_threshold_kills_by_radius_um": {
+      "144": 0.036106,
+      "216": 0.016169,
+      "288": 0.008298,
+      "432": 0.00308,
+      "540": 0.001854
+    },
+    "monotone_decreasing_with_size": true,
+    "fold_drop_small_to_large": 19.5,
+    "radius_range_um": [
+      144.0,
+      540.0
+    ],
+    "cytotoxic_measured_fold_range": [
+      1.8,
+      22.0
+    ],
+    "fold_in_measured_range": true,
+    "verdict": "bigger-spheroids-resist-more direction reproduced and fold-drop in the measured cytotoxic range (DIRECTION + order of magnitude validated; magnitude uncalibrated)"
+  },
+  "persister_targeting_prediction": {
+    "size_aware_kills_by_radius_um": {
+      "144": 0.0,
+      "216": 0.0,
+      "288": 0.000638,
+      "432": 0.00289,
+      "540": 0.001927
+    },
+    "small_spheroids_resist": true,
+    "vulnerability_emerges_with_core": true,
+    "prediction": "RSL3 preferentially kills the persister phenotype, and the size-aware persister core only emerges above ~280 \u00b5m, so small all-proliferating spheroids RESIST RSL3 (no persister target) and vulnerability emerges with the core, the OPPOSITE size-direction to generic cytotoxics. Falsifiable; untestable without ferroptosis-inducer size-kill data."
+  },
+  "cytotoxic_comparator_sources": [
+    "West 1989 Br J Cancer (WiDr spheroids, PDT): ~1.8x/2.5x/22x less sensitive at 100/250/500 \u00b5m",
+    "Eilenberger 2021 Adv Sci (A549, doxorubicin/cisplatin): 2.3 to 6.9x IC50 increase large vs small",
+    "Demuynck 2020 PMID 32183000 (3DELTA, ML-162 ferroptosis): ~50% to ~30% kill small to large (2-point)"
+  ],
+  "scope": "Kill MAGNITUDE uncalibrated (in-vivo-resistant switch + placeholder gradients). The cytotoxic data validates the supply-gradient DIRECTION only (wrong drug class for a persister-targeting inducer). The persister-targeting prediction is falsifiable but data-blocked. STRUCTURE was validated separately (#333 structure leg + size-aware)."
+}
