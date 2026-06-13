@@ -63,6 +63,7 @@ use ferroptosis_core::contact::{
 };
 use ferroptosis_core::dose_schedule::DoseSchedule;
 use ferroptosis_core::grid::{TumorGrid3D, TUMOR_RADIUS_FRACTION};
+use ferroptosis_core::ifngamma::{system_xc_retention, IFNGammaConfig};
 use ferroptosis_core::immune_spatial::{
     dc_activation, diffuse_damp_3d_step, exhaustion_factor, ferroptotic_immunosuppression,
     immune_kill_probability, sasp_field_kill_multiplier, suppressor_kill_multiplier,
@@ -474,6 +475,13 @@ struct Overrides {
     /// are correctly mostly-proliferating with no necrotic core. Only meaningful
     /// when `spheroid` is also `Some` (it adjusts that config); ignored otherwise.
     spheroid_size_aware: Option<SizeAwareZones>,
+    /// IFN-gamma -> System Xc- ferroptosis-sensitization coupling (#443). `None` /
+    /// `disabled()` ⇒ no coupling ⇒ byte-identical. When set AND `immune_on`, an
+    /// IFN-gamma field is seeded from the local DAMP (immune-active proxy), diffused,
+    /// and used to scale each tumor cell's GSH DOWN (System Xc- downregulation),
+    /// sensitizing to ferroptosis (Wang 2019 PMID 31043744). Gated on immune_on (off
+    /// the matrix), so the production matrix is byte-identical.
+    ifngamma: Option<IFNGammaConfig>,
     slab: Option<SlabConfig>,
     /// Depth-graded slab phenotype (#272). `None` ⇒ the slab keeps `generate_slab`'s
     /// flat bulk phenotype mix. Only applied when `slab` is also `Some` (it needs the
@@ -609,6 +617,12 @@ fn run_one_condition_full(
     let spheroid_size_aware = overrides
         .spheroid_size_aware
         .filter(|_| spheroid_cfg.is_some());
+    // IFN-gamma -> System Xc- coupling (#443): only meaningful with immune activity
+    // (the field is seeded from DAMP). `disabled()` ⇒ skipped ⇒ byte-identical.
+    let ifngamma_cfg = overrides
+        .ifngamma
+        .filter(|c| !c.is_disabled() && condition.immune_on);
+    let ifngamma_ic50 = ifngamma_cfg.map_or(f64::INFINITY, |c| c.system_xc_ic50);
     let slab_cfg = overrides.slab;
     // Depth-graded slab phenotype (#272): only meaningful with a slab grid.
     let slab_phenotype_cfg = overrides.slab_phenotype.filter(|_| slab_cfg.is_some());
@@ -1220,6 +1234,19 @@ fn run_one_condition_full(
     let immune_cfg = immune_override.unwrap_or_else(SpatialImmuneConfig::for_3d);
     let mut damp_field = vec![0.0_f64; n_cells];
     let mut damp_scratch = vec![0.0_f64; n_cells];
+    // IFN-gamma field (#443): allocated only when the coupling is on, else empty so
+    // the per-cell application is skipped and the run stays byte-identical.
+    let ifngamma_on = ifngamma_cfg.is_some();
+    let mut ifngamma_field: Vec<f64> = if ifngamma_on {
+        vec![0.0_f64; n_cells]
+    } else {
+        Vec::new()
+    };
+    let mut ifngamma_scratch: Vec<f64> = if ifngamma_on {
+        vec![0.0_f64; n_cells]
+    } else {
+        Vec::new()
+    };
     let mut ferroptosis_kills = 0usize;
     let mut immune_kills = 0usize;
     // Immune kills among NON-senescent tumor cells specifically (#376). Tracked
@@ -1496,6 +1523,16 @@ fn run_one_condition_full(
                     }
                 }
 
+                // IFN-gamma -> System Xc- downregulation (#443): scale the GSH pool
+                // DOWN by the local IFN-gamma retention factor (cystine starvation),
+                // sensitizing to ferroptosis (Wang 2019 PMID 31043744). The IFN-gamma
+                // field reflects the previous step's diffused immune signal. Gated on
+                // `ifngamma_on`; the field is empty (never indexed) when off, so the
+                // matrix is byte-identical.
+                if ifngamma_on && !died && !gc.state.dead {
+                    gc.state.gsh *= system_xc_retention(ifngamma_field[idx], ifngamma_ic50);
+                }
+
                 // Persister-cell dynamics (#241). Gated on the model being
                 // enabled (`Some`); `None` on the default matrix path so this
                 // whole block is skipped → byte-identical. Applies to cells
@@ -1637,6 +1674,27 @@ fn run_one_condition_full(
                         SASP_FIELD_CLEARANCE_RATE,
                     );
                 }
+            }
+
+            // IFN-gamma field (#443): seed from the local DAMP at immune-active
+            // (DAMP-positive) positions, coupling IFN-gamma secretion to where the
+            // T-cell response is concentrated, then diffuse + clear with the same
+            // operator. The field suppresses GSH (System Xc- downregulation) in the
+            // next step's biochem loop. Off ⇒ skipped ⇒ byte-identical.
+            if let Some(cfg) = &ifngamma_cfg {
+                for idx in 0..n_cells {
+                    if damp_field[idx] > DAMP_KILL_THRESHOLD {
+                        ifngamma_field[idx] =
+                            (ifngamma_field[idx] + cfg.per_damp * damp_field[idx]).min(1.0);
+                    }
+                }
+                diffuse_damp_3d_step(
+                    &mut ifngamma_field,
+                    &mut ifngamma_scratch,
+                    &grid,
+                    cfg.diffusion_fraction,
+                    cfg.clearance_rate,
+                );
             }
 
             // Immune kill (after delay). Parallelized over cells with rayon
@@ -7344,6 +7402,62 @@ mod tests {
                 );
             }
         }
+    }
+
+    /// #443 A/B: the IFN-gamma -> System Xc- coupling sensitizes to ferroptosis.
+    /// With immune on, an RSL3 grid run with the coupling ON kills at least as many
+    /// tumor cells as the coupling-OFF baseline. IFN-gamma (seeded from the local
+    /// DAMP of the immune response) suppresses GSH, so it can only RAISE ferroptosis,
+    /// never protect; this confirms the immune-activation -> ferroptosis-sensitization
+    /// link is wired and flows the right direction. Magnitude uncalibrated.
+    #[test]
+    fn ifngamma_couples_immune_activation_to_ferroptosis_sensitization() {
+        let cfg = RunConfig {
+            grid_dim: 24,
+            n_steps: 120,
+        };
+        let cond = Condition {
+            name: "ifngamma_ab".to_string(),
+            treatment: Treatment::RSL3,
+            treatment_name: "RSL3".to_string(),
+            o2_lambda: Some(ZONE_REF_LAMBDA),
+            immune_on: true,
+            stromal_on: false,
+            ph_on: false,
+            dose_schedule: DoseSchedule::Constant,
+        };
+        let immune = SpatialImmuneConfig {
+            immune_kill_rate: 0.5,
+            ..SpatialImmuneConfig::for_3d()
+        };
+        let run = |ifn: Option<IFNGammaConfig>| {
+            run_one_condition_full(
+                &cond,
+                cfg,
+                None,
+                Overrides {
+                    immune: Some(immune),
+                    ifngamma: ifn,
+                    ..Default::default()
+                },
+            )
+        };
+        let baseline = run(None);
+        let coupled = run(Some(IFNGammaConfig::literature()));
+        // IFN-gamma seeded from the immune DAMP field suppresses GSH, so it can only
+        // RAISE ferroptosis, never protect. Both runs are deterministic (identical
+        // seeds; only the IFN-gamma field differs), so the delta is reproducible: at
+        // this config the coupling roughly doubles kill (~0.076 -> ~0.154, delta
+        // ~0.078). The 0.05 floor is well below that measured delta yet far above 0,
+        // so it stays green on the real effect while still failing if the field
+        // accumulation is attenuated (e.g. a halved per_damp / diffusion) or not
+        // wired at all — a trivially-satisfied `>=` would catch neither.
+        assert!(
+            coupled.overall_kill_rate > baseline.overall_kill_rate + 0.05,
+            "IFN-gamma coupling must measurably raise kill (expected delta ~0.078): coupled={} baseline={}",
+            coupled.overall_kill_rate,
+            baseline.overall_kill_rate
+        );
     }
 
     /// Three independent realism layers enabled together — clonal subclones

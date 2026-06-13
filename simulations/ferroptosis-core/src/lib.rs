@@ -51,6 +51,7 @@ pub mod biochem;
 pub mod dose_schedule;
 pub mod drug_transport;
 pub mod grid;
+pub mod ifngamma;
 pub mod immune;
 pub mod immune_spatial;
 pub mod io;
