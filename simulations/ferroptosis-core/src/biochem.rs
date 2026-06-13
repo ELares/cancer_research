@@ -198,7 +198,10 @@ fn update_mufa_protection(current: f64, mufa_max: f64, rate: f64, params: &Param
 /// fixed direction would overstate certainty.
 #[inline]
 fn ether_augmented_pufa(lipid_unsat: f64, params: &Params) -> f64 {
-    lipid_unsat * (1.0 + params.ether_pufa_fraction.max(0.0))
+    // The ether-lipid pool (#339) and the MCFA→ACSL4/CD36 PUFA-incorporation
+    // boost (#446) both ADD oxidizable PUFA, so they augment the substrate
+    // additively. Both `0.0` by default ⇒ ×1.0 ⇒ byte-identical.
+    lipid_unsat * (1.0 + params.ether_pufa_fraction.max(0.0) + params.mcfa_pufa_boost.max(0.0))
 }
 
 /// Total MUFA-style ferroptosis protection at a peroxidation site: the dynamic
@@ -302,7 +305,13 @@ pub fn sim_cell_step(
                 let total_ros = cell.basal_ros + exo + fenton;
                 let effective_unsat = ether_augmented_pufa(cell.lipid_unsat, params); // no MUFA protection
                 let lp_direct = total_ros * effective_unsat * params.lp_rate;
-                let lp_propagation = state.lp * effective_unsat * params.lp_propagation;
+                // ALOX enzymatic capacity (#446) gates propagation in death too:
+                // the lipoxygenase machinery is what oxidizes the membrane PUFA,
+                // independent of the (already-failed) antioxidant defenses, so the
+                // same `1 + alox_propagation_boost` multiplier applies here as in
+                // life. `0.0` default ⇒ ×1.0 ⇒ byte-identical.
+                let alox_mul = (1.0 + params.alox_propagation_boost).max(0.0);
+                let lp_propagation = state.lp * effective_unsat * params.lp_propagation * alox_mul;
                 state.lp += lp_direct + lp_propagation;
             }
         }
@@ -348,7 +357,12 @@ pub fn sim_cell_step(
     let antioxidant_quench =
         state.gpx4 * (state.gsh / (state.gsh + 0.5)) + state.fsp1 + params.gch1_rate;
     let propagation_rate = params.lp_propagation / (1.0 + antioxidant_quench * 5.0);
-    let lp_propagation = state.lp * effective_unsat * propagation_rate;
+    // ALOX isoform-specific enzymatic-oxidation capacity (#446): scale the
+    // propagation rate by `1 + alox_propagation_boost` (clamped >= 0), so an
+    // ALOX-high tumor propagates faster and an ALOX-null one (boost -1) has no
+    // enzymatic propagation. `0.0` default ⇒ ×1.0 ⇒ byte-identical.
+    let alox_mul = (1.0 + params.alox_propagation_boost).max(0.0);
+    let lp_propagation = state.lp * effective_unsat * propagation_rate * alox_mul;
     let lp_generation = lp_direct + lp_propagation;
 
     // === REPAIR ===
@@ -442,7 +456,10 @@ pub fn sim_cell(
             }
             let effective_unsat = ether_augmented_pufa(cell.lipid_unsat, params);
             let lp_direct = total_ros * effective_unsat * params.lp_rate;
-            let lp_prop = lp * effective_unsat * params.lp_propagation;
+            // ALOX enzymatic capacity gates post-death propagation too (#446);
+            // `0.0` default ⇒ ×1.0 ⇒ byte-identical.
+            let alox_mul = (1.0 + params.alox_propagation_boost).max(0.0);
+            let lp_prop = lp * effective_unsat * params.lp_propagation * alox_mul;
             lp += lp_direct + lp_prop;
             continue;
         }
@@ -472,7 +489,11 @@ pub fn sim_cell(
         // GCH1/BH4 (#338) adds GPX4-independent quench (`gch1_rate`, 0.0 default).
         let antioxidant_quench = gpx4 * (gsh / (gsh + 0.5)) + fsp1 + params.gch1_rate;
         let propagation_rate = params.lp_propagation / (1.0 + antioxidant_quench * 5.0);
-        let lp_propagation = lp * effective_unsat * propagation_rate;
+        // ALOX isoform enzymatic-oxidation capacity (#446): same `1 + boost`
+        // multiplier as the spatial `sim_cell_step` path. `0.0` default ⇒ ×1.0 ⇒
+        // byte-identical.
+        let alox_mul = (1.0 + params.alox_propagation_boost).max(0.0);
+        let lp_propagation = lp * effective_unsat * propagation_rate * alox_mul;
         let lp_generation = lp_direct + lp_propagation;
 
         // === REPAIR ===
@@ -953,6 +974,55 @@ mod tests {
         assert!(
             fast > global,
             "a faster per-cell mufa_rate must accumulate more MUFA: fast={fast}, global={global}"
+        );
+    }
+
+    /// #446: `sim_cell_step` must respect both ALOX boosts. Isolates the
+    /// propagation/substrate multipliers from the bistable switch by taking a
+    /// SINGLE step from a fixed mid-LP state with the defenses zeroed (so repair
+    /// and antioxidant quench are ~0 and the autocatalytic propagation term
+    /// dominates). A positive `alox_propagation_boost` (faster enzymatic
+    /// propagation) and a positive `mcfa_pufa_boost` (more oxidizable PUFA) each
+    /// raise the post-step LP; `0.0` (the defaults) is the byte-identical
+    /// baseline. The RNG seed is identical across runs, so the only difference is
+    /// the boost.
+    #[test]
+    fn sim_cell_step_respects_alox_and_mcfa_boosts() {
+        let mut gen_rng = StdRng::seed_from_u64(13);
+        let mut cell = gen_cell(Phenotype::Glycolytic, &mut gen_rng);
+        cell.lipid_unsat = 2.0;
+
+        let step_once = |alox_boost: f64, mcfa_boost: f64| -> f64 {
+            let mut params = Params::default();
+            params.alox_propagation_boost = alox_boost;
+            params.mcfa_pufa_boost = mcfa_boost;
+            let mut init_rng = StdRng::seed_from_u64(7);
+            let mut state = CellState::from_cell(
+                &cell,
+                crate::cell::Treatment::Control,
+                &params,
+                &mut init_rng,
+            );
+            // Zero defenses + seed a mid LP so the propagation term dominates.
+            state.gsh = 0.0;
+            state.gpx4 = 0.0;
+            state.fsp1 = 0.0;
+            state.lp = 3.0;
+            let mut step_rng = StdRng::seed_from_u64(0); // identical noise draw
+            sim_cell_step(&mut state, &cell, &params, 0, 0.0, &mut step_rng);
+            state.lp
+        };
+
+        let baseline = step_once(0.0, 0.0);
+        let alox_high = step_once(0.5, 0.0);
+        let mcfa_high = step_once(0.0, 0.5);
+        assert!(
+            alox_high > baseline,
+            "ALOX propagation boost must raise post-step LP: alox_high={alox_high}, baseline={baseline}"
+        );
+        assert!(
+            mcfa_high > baseline,
+            "MCFA PUFA boost must raise post-step LP: mcfa_high={mcfa_high}, baseline={baseline}"
         );
     }
 }

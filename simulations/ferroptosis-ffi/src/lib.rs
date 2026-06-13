@@ -133,6 +133,11 @@ fn ferro_params_to_params(fp: &FerroParams) -> Params {
         // the C ABI (FerroParams is unchanged), so they map to 0.0 here.
         dhodh_rate: 0.0,
         gch1_rate: 0.0,
+        // ALOX isoform-specific propagation boost + MCFA→ACSL4 PUFA boost (#446)
+        // are off by default and not part of the C ABI (FerroParams is
+        // unchanged), so they map to 0.0 here ⇒ byte-identical.
+        alox_propagation_boost: 0.0,
+        mcfa_pufa_boost: 0.0,
         scd_mufa_rate: fp.scd_mufa_rate,
         scd_mufa_max: fp.scd_mufa_max,
         initial_mufa_protection: fp.initial_mufa_protection,
