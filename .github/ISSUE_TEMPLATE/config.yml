@@ -1,0 +1,11 @@
+# Issue template chooser configuration.
+# Blank issues stay enabled so a contributor is never forced into a template for
+# something that does not fit one.
+blank_issues_enabled: true
+contact_links:
+  - name: Read the contributor guide first
+    url: https://github.com/ELares/cancer_research/blob/main/CONTRIBUTING.md
+    about: Setup, testing, and how to open a pull request.
+  - name: Ask a question or share an idea (Discussions)
+    url: https://github.com/ELares/cancer_research/discussions
+    about: For open-ended questions, ideas, and conversations that are not yet a concrete issue. Maintainers can enable Discussions in repo settings to activate this link.
