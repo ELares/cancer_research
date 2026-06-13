@@ -95,6 +95,17 @@ so under sustained sub-saturating drug the fraction relaxes to the equilibrium `
 
 The SDT/PDT resistance of persisters currently comes only through the (weak) MUFA axis; whether to add an explicit reduced-lipid-peroxide-vulnerability term to the exo-ROS path is deferred (#262 out-of-scope note).
 
+## ALOX isoform peroxidation + MCFA sensitization (`alox::AloxConfig` → `Params.alox_propagation_boost`, `Params.mcfa_pufa_boost`): known uncalibrated
+
+The core engine drives lipid peroxidation through one generic `lp_propagation`, implicitly assuming an average enzymatic-oxidation capacity. `AloxConfig` (#446) lets a consumer perturb that around the implicit baseline using an arachidonate-lipoxygenase isoform activity/expression mix and an MCFA level, collapsed to two **off-by-default additive boosts** written onto `Params`. Both default to `0.0` ⇒ ×1.0 ⇒ byte-identical (the production matrix never sets them; the FFI defaults them so the C ABI is unchanged).
+
+| Parameter | Default | `literature()` | Source | Grounded? | Sensitivity |
+|-----------|---------|----------------|--------|-----------|-------------|
+| `alox_propagation_boost` | 0.0 | +0.355 (ALOX15-high) | ALOX15 is the canonical ferroptosis-driving isoform; ALOX12/ALOX5 contribute at isoform-specific rates (lipoxygenase-driven ferroptosis, PNAS 2016 PMID 27506793; Yang & Stockwell) | Assumed (direction only) | High — multiplies the autocatalytic propagation rate `1+boost` (clamped ≥0; `-1` = ALOX-null, no enzymatic propagation) |
+| `mcfa_pufa_boost` | 0.0 | +0.25 (moderate MCFA) | MCFA → ACSL4/CD36 upregulation → more oxidizable PUFA incorporation (Sci Rep 2024 s41598-024-55050-4; MCFA ferroptosis sensitization PMC11901882) | Assumed (direction only) | Moderate — added to the oxidizable-PUFA augmentation alongside the ether-lipid pool |
+
+**Calibration target.** Isoform Kcat/Km vary ~10-fold and are not fit here; the `literature()` activity weights/expression fractions and the MCFA saturation strength are placeholders, so only the DIRECTIONS are claimed (ALOX-high ⇒ more ferroptosis; MCFA ⇒ more ferroptosis; ALOX-null ⇒ resistant). Fitting would need ALOX-isoform-stratified expression (TCGA/RNA-seq) paired with isoform-knockdown and MCFA-exposure ferroptosis dose-response; absolute MCFA kinetics are deferred to the experimental E-series. Per-cell stochastic ALOX heterogeneity (per-phenotype sampling like iron/gsh) is a deferred refinement — this models a per-condition ALOX phenotype.
+
 ## Photosensitizer pharmacokinetics: plasma vs. cellular
 
 `Photosensitizer::Porfimer.t_half_h` represents *plasma* terminal half-life. Cellular concentration is assumed to track plasma proportionally — a reasonable approximation for porfimer (slow-distributing, weeks-scale t½, ~100% serum-protein bound, Vd ≈ plasma volume per Bellnier 2006) but explicitly wrong for 5-ALA/PpIX, which accumulates intracellularly via ferrochelatase deficiency rather than decaying. ALA kinetics will require a different variant.

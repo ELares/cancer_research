@@ -55,6 +55,7 @@ use std::time::Instant;
 mod npy;
 mod snapshot;
 
+use ferroptosis_core::alox::AloxConfig;
 use ferroptosis_core::biochem::{exo_decay_factor, sim_cell_step, CellState};
 use ferroptosis_core::cell::{Phenotype, Treatment};
 use ferroptosis_core::clonal::{assign_subclones_3d, repopulate_dead_sites_3d, ClonalConfig};
@@ -482,6 +483,13 @@ struct Overrides {
     /// sensitizing to ferroptosis (Wang 2019 PMID 31043744). Gated on immune_on (off
     /// the matrix), so the production matrix is byte-identical.
     ifngamma: Option<IFNGammaConfig>,
+    /// ALOX isoform-specific peroxidation rate + MCFA→ACSL4 PUFA sensitization
+    /// (#446). `None` / `identity()` ⇒ both boosts `0` ⇒ byte-identical. When set,
+    /// the config's `lp_propagation_boost()` and `mcfa_pufa_boost()` are written
+    /// onto `params` before the run (ALOX-high ⇒ faster propagation; MCFA ⇒ more
+    /// oxidizable PUFA; both raise ferroptosis). Cell-intrinsic, so not gated on
+    /// immune; off the production matrix so the matrix is byte-identical.
+    alox: Option<AloxConfig>,
     slab: Option<SlabConfig>,
     /// Depth-graded slab phenotype (#272). `None` ⇒ the slab keeps `generate_slab`'s
     /// flat bulk phenotype mix. Only applied when `slab` is also `Some` (it needs the
@@ -695,6 +703,14 @@ fn run_one_condition_full(
     // `ferritinophagy_iron_factor` is exactly 1.0 for every step ⇒ byte-identical;
     // `ferritinophagy_tau` keeps its default. Consumed inside `sim_cell_step`.
     params.ferritinophagy_release = ferritinophagy_release;
+    // ALOX isoform-specific propagation + MCFA→ACSL4 PUFA sensitization (#446).
+    // `None` / `identity()` ⇒ both boosts `0.0` (the Params defaults) ⇒
+    // byte-identical. Cell-intrinsic, applied uniformly per condition (per-cell
+    // stochastic ALOX heterogeneity is a deferred refinement).
+    if let Some(cfg) = overrides.alox.filter(|c| !c.is_identity()) {
+        params.alox_propagation_boost = cfg.lp_propagation_boost();
+        params.mcfa_pufa_boost = cfg.mcfa_pufa_boost();
+    }
     let spatial_params = SpatialParams {
         cell_size_um: CELL_SIZE_UM,
         // SpatialParams::default()'s `neighbor_iron_fraction = 0.1` is
@@ -2457,6 +2473,11 @@ struct SnapshotPreset {
     /// shows directly as more kill in the high-immune-activity zones of the
     /// dead/LP panels vs the immune-on baseline.
     ifngamma: bool,
+    /// True if the ALOX isoform-specific peroxidation + MCFA sensitization (#446)
+    /// is enabled (`AloxConfig::literature()`: ALOX15-high + MCFA). No extra
+    /// static overlay; the faster enzymatic propagation + extra oxidizable PUFA
+    /// show as more kill in the dead/LP panels vs the baseline.
+    alox: bool,
 }
 
 /// Visualization presets for `--snapshot=NAME`. Keep this list small —
@@ -2486,6 +2507,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         sdt_o2_dependence: 0.0,
         ferritinophagy: false,
         ifngamma: false,
+        alox: false,
     },
     SnapshotPreset {
         name: "bare",
@@ -2511,6 +2533,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         sdt_o2_dependence: 0.0,
         ferritinophagy: false,
         ifngamma: false,
+        alox: false,
     },
     SnapshotPreset {
         name: "multidose",
@@ -2536,6 +2559,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         sdt_o2_dependence: 0.0,
         ferritinophagy: false,
         ifngamma: false,
+        alox: false,
     },
     SnapshotPreset {
         // SDT here visualizes the persister-fraction OVERLAY (the MUFA axis +
@@ -2565,6 +2589,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         sdt_o2_dependence: 0.0,
         ferritinophagy: false,
         ifngamma: false,
+        alox: false,
     },
     SnapshotPreset {
         name: "clonal",
@@ -2590,6 +2615,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         sdt_o2_dependence: 0.0,
         ferritinophagy: false,
         ifngamma: false,
+        alox: false,
     },
     SnapshotPreset {
         // RSL3 (hypoxia-sensitive) + explicit internal vessels: near-vessel
@@ -2620,6 +2646,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         sdt_o2_dependence: 0.0,
         ferritinophagy: false,
         ifngamma: false,
+        alox: false,
     },
     SnapshotPreset {
         // RSL3 + explicit vessels, but the per-cell O2/drug supply is the
@@ -2652,6 +2679,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         sdt_o2_dependence: 0.0,
         ferritinophagy: false,
         ifngamma: false,
+        alox: false,
     },
     SnapshotPreset {
         // SDT + radial spheroid biology: the phenotype panel shows the
@@ -2680,6 +2708,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         sdt_o2_dependence: 0.0,
         ferritinophagy: false,
         ifngamma: false,
+        alox: false,
     },
     SnapshotPreset {
         // SDT on a patient-scale slab at the SURFACE (+z face = vessel, depth
@@ -2713,6 +2742,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         sdt_o2_dependence: 0.0,
         ferritinophagy: false,
         ifngamma: false,
+        alox: false,
     },
     SnapshotPreset {
         // Slab + internal vessels (#272 coupling). vessel_supply.npy (on a slab
@@ -2746,6 +2776,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         sdt_o2_dependence: 0.0,
         ferritinophagy: false,
         ifngamma: false,
+        alox: false,
     },
     SnapshotPreset {
         // SDT + immune + Treg/MDSC suppressor (#264 Phase 2). Heuristic niche
@@ -2775,6 +2806,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         sdt_o2_dependence: 0.0,
         ferritinophagy: false,
         ifngamma: false,
+        alox: false,
     },
     SnapshotPreset {
         // SDT + immune + dual checkpoint blockade (#264 Phase 3): a PD-1 +
@@ -2805,6 +2837,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         sdt_o2_dependence: 0.0,
         ferritinophagy: false,
         ifngamma: false,
+        alox: false,
     },
     SnapshotPreset {
         // Kitchen-sink composition (#278): several realism layers at once —
@@ -2837,6 +2870,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         sdt_o2_dependence: 0.0,
         ferritinophagy: false,
         ifngamma: false,
+        alox: false,
     },
     SnapshotPreset {
         // RSL3 + cell-cell contact resistance (#270): dense interior cells
@@ -2868,6 +2902,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         sdt_o2_dependence: 0.0,
         ferritinophagy: false,
         ifngamma: false,
+        alox: false,
     },
     SnapshotPreset {
         // SDT + radial nutrient gradient (#270 item 3b): the nutrient-starved
@@ -2898,6 +2933,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         sdt_o2_dependence: 0.0,
         ferritinophagy: false,
         ifngamma: false,
+        alox: false,
     },
     SnapshotPreset {
         // SDT + cDC1/cDC2 dendritic-cell subset mix (#264 Phase 4): a cDC1-poor
@@ -2928,6 +2964,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         sdt_o2_dependence: 0.0,
         ferritinophagy: false,
         ifngamma: false,
+        alox: false,
     },
     SnapshotPreset {
         // SDT + therapy-induced senescence (#341): a fraction of tumor cells
@@ -2964,6 +3001,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         sdt_o2_dependence: 0.0,
         ferritinophagy: false,
         ifngamma: false,
+        alox: false,
     },
     SnapshotPreset {
         // Like `senescence`, but adds the diffusing-SASP-field overlay (#376/#398):
@@ -2996,6 +3034,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         sdt_o2_dependence: 0.0,
         ferritinophagy: false,
         ifngamma: false,
+        alox: false,
     },
     SnapshotPreset {
         // RSL3 + 3D spheroid (#197) + phenotype-specific SCD1/MUFA rates (#363):
@@ -3028,6 +3067,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         sdt_o2_dependence: 0.0,
         ferritinophagy: false,
         ifngamma: false,
+        alox: false,
     },
     SnapshotPreset {
         // SDT on a hypoxic sphere (the base edge-distance radial-O2 gradient, not
@@ -3059,6 +3099,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         sdt_o2_dependence: 1.0,
         ferritinophagy: false,
         ifngamma: false,
+        alox: false,
     },
     SnapshotPreset {
         // RSL3 on a hypoxic sphere with the NCOA4-ferritinophagy + hypoxia-iron
@@ -3091,6 +3132,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         sdt_o2_dependence: 0.0,
         ferritinophagy: true,
         ifngamma: false,
+        alox: false,
     },
     SnapshotPreset {
         // RSL3 + immune with the IFN-γ → System Xc⁻ + ACSL4 coupling on (#443):
@@ -3124,6 +3166,39 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         sdt_o2_dependence: 0.0,
         ferritinophagy: false,
         ifngamma: true,
+        alox: false,
+    },
+    SnapshotPreset {
+        // RSL3 on a sphere with an ALOX15-high, MCFA-exposed phenotype (#446):
+        // the lipoxygenase isoform mix raises the enzymatic peroxidation rate and
+        // MCFA→ACSL4/CD36 raises the oxidizable-PUFA pool, so RSL3 kills MORE than
+        // the balanced-ALOX baseline — a lipid-machinery sensitization axis
+        // distinct from the GPX4/GSH/FSP1 defenses. No extra overlay; the faster
+        // death front shows in the dead/LP panels.
+        name: "alox",
+        desc: "RSL3 + ALOX15-high/MCFA (#446): lipoxygenase + PUFA-incorporation ferroptosis sensitization",
+        treatment: Treatment::RSL3,
+        treatment_name: "RSL3",
+        immune_on: false,
+        stromal_on: false,
+        ph_on: false,
+        multidose: false,
+        persister: false,
+        clonal: false,
+        vasculature: false,
+        spheroid: false,
+        slab: false,
+        suppressor: false,
+        checkpoints: false,
+        contact: false,
+        nutrient: false,
+        dc_subsets: false,
+        senescence: false,
+        phenotype_mufa: false,
+        sdt_o2_dependence: 0.0,
+        ferritinophagy: false,
+        ifngamma: false,
+        alox: true,
     },
 ];
 
@@ -3389,6 +3464,10 @@ fn run_snapshot(output_dir: &Path, tumor_radius_um: f64, name: &str) {
             // Gated on immune_on inside run_one_condition_full; `None` for every
             // other preset ⇒ no coupling.
             ifngamma: preset.ifngamma.then(IFNGammaConfig::literature),
+            // #446: ALOX isoform-specific peroxidation + MCFA sensitization
+            // (ALOX15-high + MCFA via literature()). `None` for every other
+            // preset ⇒ both boosts 0 ⇒ unchanged.
+            alox: preset.alox.then(AloxConfig::literature),
             ..Default::default()
         },
     );
@@ -7626,6 +7705,70 @@ mod tests {
         assert!(matches!(p.treatment, Treatment::RSL3));
         // literature() turns both arms on (non-disabled).
         assert!(!IFNGammaConfig::literature().is_disabled());
+    }
+
+    /// #446 A/B: the ALOX isoform-specific peroxidation + MCFA sensitization
+    /// raises ferroptosis. An ALOX15-high, MCFA-exposed tumor (the `literature()`
+    /// config: positive propagation boost + positive PUFA boost) kills MORE under
+    /// RSL3 than the balanced-ALOX baseline, confirming the lipid-machinery
+    /// sensitization axis is wired and flows the right direction (distinct from
+    /// the GPX4/GSH/FSP1 defenses). Magnitude uncalibrated.
+    #[test]
+    fn alox_high_mcfa_raises_ferroptosis() {
+        let cfg = RunConfig {
+            grid_dim: 24,
+            n_steps: 120,
+        };
+        let cond = Condition {
+            name: "alox_ab".to_string(),
+            treatment: Treatment::RSL3,
+            treatment_name: "RSL3".to_string(),
+            o2_lambda: Some(ZONE_REF_LAMBDA),
+            immune_on: false,
+            stromal_on: false,
+            ph_on: false,
+            dose_schedule: DoseSchedule::Constant,
+        };
+        let run = |alox: Option<AloxConfig>| {
+            run_one_condition_full(
+                &cond,
+                cfg,
+                None,
+                Overrides {
+                    alox,
+                    ..Default::default()
+                },
+            )
+        };
+        let baseline = run(None);
+        let alox_high = run(Some(AloxConfig::literature()));
+        // ALOX15-high + MCFA can only RAISE peroxidation ⇒ more kill, never less.
+        assert!(
+            alox_high.overall_kill_rate > baseline.overall_kill_rate,
+            "ALOX-high + MCFA must raise kill: alox_high={} baseline={}",
+            alox_high.overall_kill_rate,
+            baseline.overall_kill_rate
+        );
+        // Identity config is a no-op (byte-identical to baseline).
+        let identity = run(Some(AloxConfig::identity()));
+        assert_eq!(
+            identity.overall_kill_rate, baseline.overall_kill_rate,
+            "identity AloxConfig must be a no-op"
+        );
+    }
+
+    /// #446: the `--snapshot=alox` preset is wired (RSL3 with the ALOX15-high +
+    /// MCFA sensitization config).
+    #[test]
+    fn alox_snapshot_preset_is_wired() {
+        let p = resolve_snapshot("alox");
+        assert_eq!(p.name, "alox");
+        assert!(p.alox, "the alox preset must enable the layer");
+        assert!(matches!(p.treatment, Treatment::RSL3));
+        // literature() is non-identity (both boosts positive).
+        let lit = AloxConfig::literature();
+        assert!(!lit.is_identity());
+        assert!(lit.lp_propagation_boost() > 0.0 && lit.mcfa_pufa_boost() > 0.0);
     }
 
     /// Three independent realism layers enabled together — clonal subclones

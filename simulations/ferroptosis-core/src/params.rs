@@ -120,6 +120,26 @@ pub struct Params {
     /// smaller value releases iron faster.
     #[serde(default = "default_ferritinophagy_tau")]
     pub ferritinophagy_tau: f64,
+    /// ALOX (lipoxygenase) isoform-specific propagation boost (#446). The
+    /// autocatalytic lipid-peroxidation propagation rate is multiplied by
+    /// `1 + alox_propagation_boost` (clamped `>= 0`), so an ALOX15/12/5-high
+    /// tumor peroxidizes faster (`> 0` ⇒ more ferroptosis) and an ALOX-poor
+    /// tumor peroxidizes slower (`< 0`, down to `-1` ⇒ the ALOX-null limit, no
+    /// enzymatic propagation), independent of the GPX4/GSH/FSP1 defenses
+    /// (lipoxygenase-driven ferroptosis, PNAS 2016 PMID 27506793). A consumer
+    /// computes this from an isoform mix via [`crate::alox::AloxConfig`].
+    /// `0.0` (default) ⇒ ×1.0 ⇒ byte-identical; uncalibrated, direction-anchored.
+    #[serde(default)]
+    pub alox_propagation_boost: f64,
+    /// MCFA (medium-chain fatty acid) → ACSL4/CD36 PUFA-incorporation boost
+    /// (#446). Added to the oxidizable-PUFA augmentation alongside the
+    /// ether-lipid pool (see `biochem::ether_augmented_pufa`), so MCFA exposure
+    /// raises the peroxidizable substrate and thus ferroptosis susceptibility
+    /// (Sci Rep 2024 s41598-024-55050-4; MCFA ferroptosis sensitization
+    /// PMC11901882). Computed from [`crate::alox::AloxConfig`]. `0.0` (default)
+    /// ⇒ ×1.0 ⇒ byte-identical; uncalibrated, direction-anchored.
+    #[serde(default)]
+    pub mcfa_pufa_boost: f64,
 
     // === GPX4 Dynamic Regulation ===
     pub gpx4_degradation_by_ros: f64,
@@ -172,6 +192,8 @@ impl Default for Params {
             mboat_mufa_boost: 0.0,
             ferritinophagy_release: 0.0,
             ferritinophagy_tau: default_ferritinophagy_tau(),
+            alox_propagation_boost: 0.0,
+            mcfa_pufa_boost: 0.0,
             gpx4_degradation_by_ros: 0.002,
             gpx4_nrf2_upregulation: 0.008,
             sdt_ros: 5.0,

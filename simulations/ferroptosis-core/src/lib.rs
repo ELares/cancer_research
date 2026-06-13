@@ -42,7 +42,9 @@
 //! | [`contact`] | Cell-cell contact-mediated ferroptosis resistance (E-cadherin/NF2-YAP; dense cells lower PUFA/iron) |
 //! | [`nutrient`] | Radial nutrient gradient (glucose/glutamine) scaling the antioxidant setpoint toward the starved core |
 //! | [`reaction_diffusion`] | Steady-state reaction-diffusion O2/drug supply (vessel sources + consumption) vs the exponential proxy |
+//! | [`alox`] | ALOX lipoxygenase-isoform-specific peroxidation rate + MCFA→ACSL4 PUFA sensitization (off-by-default boosts) |
 
+pub mod alox;
 pub mod cell;
 pub mod clonal;
 pub mod contact;
