@@ -63,7 +63,7 @@ use ferroptosis_core::contact::{
 };
 use ferroptosis_core::dose_schedule::DoseSchedule;
 use ferroptosis_core::grid::{TumorGrid3D, TUMOR_RADIUS_FRACTION};
-use ferroptosis_core::ifngamma::{system_xc_retention, IFNGammaConfig};
+use ferroptosis_core::ifngamma::{acsl4_upregulation, system_xc_retention, IFNGammaConfig};
 use ferroptosis_core::immune_spatial::{
     dc_activation, diffuse_damp_3d_step, exhaustion_factor, ferroptotic_immunosuppression,
     immune_kill_probability, sasp_field_kill_multiplier, suppressor_kill_multiplier,
@@ -623,6 +623,11 @@ fn run_one_condition_full(
         .ifngamma
         .filter(|c| !c.is_disabled() && condition.immune_on);
     let ifngamma_ic50 = ifngamma_cfg.map_or(f64::INFINITY, |c| c.system_xc_ic50);
+    // ACSL4 arm (#443 follow-up): only active when the strength is > 0 (the GSH /
+    // System Xc- arm can run alone). `0.0` ⇒ the boost factor is always 1.0 ⇒ no
+    // lipid_unsat change ⇒ byte-identical even when the field is non-zero.
+    let ifngamma_acsl4_strength = ifngamma_cfg.map_or(0.0, |c| c.acsl4_strength);
+    let ifngamma_acsl4_on = ifngamma_acsl4_strength > 0.0;
     let slab_cfg = overrides.slab;
     // Depth-graded slab phenotype (#272): only meaningful with a slab grid.
     let slab_phenotype_cfg = overrides.slab_phenotype.filter(|_| slab_cfg.is_some());
@@ -1502,8 +1507,33 @@ fn run_one_condition_full(
                     }
                 }
 
+                // IFN-gamma -> ACSL4 arm (#443 follow-up): transiently raise THIS
+                // cell's PUFA / lipid unsaturation for THIS step by the local
+                // IFN-gamma boost (more ACSL4 -> more oxidizable substrate -> more
+                // ferroptosis; Wang 2019 PMID 31043744). Applied as a
+                // save/multiply/restore around sim_cell_step, NOT a durable mutation:
+                // lipid_unsat is a static per-cell parameter, so a persistent
+                // per-step multiply would compound geometrically over the run
+                // (unlike the regenerating GSH pool the System Xc- arm scales). The
+                // transient form also composes cleanly with the contact/clonal
+                // layers that set lipid_unsat. Off (acsl4_strength == 0, ifngamma
+                // disabled, or dead cell) ⇒ boost is exactly 1.0 ⇒ no mutation ⇒
+                // byte-identical. acsl4_upregulation(0, s) == 1.0 exactly, so cells
+                // outside the IFN-gamma field are also untouched.
+                let acsl4_boost = if ifngamma_acsl4_on && !gc.state.dead {
+                    acsl4_upregulation(ifngamma_field[idx], ifngamma_acsl4_strength)
+                } else {
+                    1.0
+                };
+                let saved_unsat = gc.cell.lipid_unsat;
+                if acsl4_boost != 1.0 {
+                    gc.cell.lipid_unsat *= acsl4_boost;
+                }
                 let died =
                     sim_cell_step(&mut gc.state, &gc.cell, &params, step, extra_iron, &mut rng);
+                if acsl4_boost != 1.0 {
+                    gc.cell.lipid_unsat = saved_unsat;
+                }
                 if died {
                     // `newly_dead` is consumed by the later serial
                     // `diffuse_iron` to spread released iron to live neighbors.
@@ -2419,6 +2449,14 @@ struct SnapshotPreset {
     /// preset, so RSL3 on a hypoxic sphere shows the iron-amplified ferroptosis
     /// front (more kill where the boosted Fenton iron meets residual ROS).
     ferritinophagy: bool,
+    /// True if the IFN-γ → System Xc⁻ + ACSL4 ferroptosis-sensitization coupling
+    /// (#443) is enabled (`IFNGammaConfig::literature()`, both arms). No extra
+    /// static overlay: the IFN-γ field seeds from the run's evolving DAMP signal
+    /// (deaths during the run, not a static mask), so it is not reconstructable
+    /// the way the `sasp-field` overlay is — the immune-primed sensitization
+    /// shows directly as more kill in the high-immune-activity zones of the
+    /// dead/LP panels vs the immune-on baseline.
+    ifngamma: bool,
 }
 
 /// Visualization presets for `--snapshot=NAME`. Keep this list small —
@@ -2447,6 +2485,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         phenotype_mufa: false,
         sdt_o2_dependence: 0.0,
         ferritinophagy: false,
+        ifngamma: false,
     },
     SnapshotPreset {
         name: "bare",
@@ -2471,6 +2510,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         phenotype_mufa: false,
         sdt_o2_dependence: 0.0,
         ferritinophagy: false,
+        ifngamma: false,
     },
     SnapshotPreset {
         name: "multidose",
@@ -2495,6 +2535,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         phenotype_mufa: false,
         sdt_o2_dependence: 0.0,
         ferritinophagy: false,
+        ifngamma: false,
     },
     SnapshotPreset {
         // SDT here visualizes the persister-fraction OVERLAY (the MUFA axis +
@@ -2523,6 +2564,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         phenotype_mufa: false,
         sdt_o2_dependence: 0.0,
         ferritinophagy: false,
+        ifngamma: false,
     },
     SnapshotPreset {
         name: "clonal",
@@ -2547,6 +2589,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         phenotype_mufa: false,
         sdt_o2_dependence: 0.0,
         ferritinophagy: false,
+        ifngamma: false,
     },
     SnapshotPreset {
         // RSL3 (hypoxia-sensitive) + explicit internal vessels: near-vessel
@@ -2576,6 +2619,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         phenotype_mufa: false,
         sdt_o2_dependence: 0.0,
         ferritinophagy: false,
+        ifngamma: false,
     },
     SnapshotPreset {
         // RSL3 + explicit vessels, but the per-cell O2/drug supply is the
@@ -2607,6 +2651,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         phenotype_mufa: false,
         sdt_o2_dependence: 0.0,
         ferritinophagy: false,
+        ifngamma: false,
     },
     SnapshotPreset {
         // SDT + radial spheroid biology: the phenotype panel shows the
@@ -2634,6 +2679,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         phenotype_mufa: false,
         sdt_o2_dependence: 0.0,
         ferritinophagy: false,
+        ifngamma: false,
     },
     SnapshotPreset {
         // SDT on a patient-scale slab at the SURFACE (+z face = vessel, depth
@@ -2666,6 +2712,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         phenotype_mufa: false,
         sdt_o2_dependence: 0.0,
         ferritinophagy: false,
+        ifngamma: false,
     },
     SnapshotPreset {
         // Slab + internal vessels (#272 coupling). vessel_supply.npy (on a slab
@@ -2698,6 +2745,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         phenotype_mufa: false,
         sdt_o2_dependence: 0.0,
         ferritinophagy: false,
+        ifngamma: false,
     },
     SnapshotPreset {
         // SDT + immune + Treg/MDSC suppressor (#264 Phase 2). Heuristic niche
@@ -2726,6 +2774,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         phenotype_mufa: false,
         sdt_o2_dependence: 0.0,
         ferritinophagy: false,
+        ifngamma: false,
     },
     SnapshotPreset {
         // SDT + immune + dual checkpoint blockade (#264 Phase 3): a PD-1 +
@@ -2755,6 +2804,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         phenotype_mufa: false,
         sdt_o2_dependence: 0.0,
         ferritinophagy: false,
+        ifngamma: false,
     },
     SnapshotPreset {
         // Kitchen-sink composition (#278): several realism layers at once —
@@ -2786,6 +2836,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         phenotype_mufa: false,
         sdt_o2_dependence: 0.0,
         ferritinophagy: false,
+        ifngamma: false,
     },
     SnapshotPreset {
         // RSL3 + cell-cell contact resistance (#270): dense interior cells
@@ -2816,6 +2867,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         phenotype_mufa: false,
         sdt_o2_dependence: 0.0,
         ferritinophagy: false,
+        ifngamma: false,
     },
     SnapshotPreset {
         // SDT + radial nutrient gradient (#270 item 3b): the nutrient-starved
@@ -2845,6 +2897,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         phenotype_mufa: false,
         sdt_o2_dependence: 0.0,
         ferritinophagy: false,
+        ifngamma: false,
     },
     SnapshotPreset {
         // SDT + cDC1/cDC2 dendritic-cell subset mix (#264 Phase 4): a cDC1-poor
@@ -2874,6 +2927,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         phenotype_mufa: false,
         sdt_o2_dependence: 0.0,
         ferritinophagy: false,
+        ifngamma: false,
     },
     SnapshotPreset {
         // SDT + therapy-induced senescence (#341): a fraction of tumor cells
@@ -2909,6 +2963,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         phenotype_mufa: false,
         sdt_o2_dependence: 0.0,
         ferritinophagy: false,
+        ifngamma: false,
     },
     SnapshotPreset {
         // Like `senescence`, but adds the diffusing-SASP-field overlay (#376/#398):
@@ -2940,6 +2995,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         phenotype_mufa: false,
         sdt_o2_dependence: 0.0,
         ferritinophagy: false,
+        ifngamma: false,
     },
     SnapshotPreset {
         // RSL3 + 3D spheroid (#197) + phenotype-specific SCD1/MUFA rates (#363):
@@ -2971,6 +3027,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         phenotype_mufa: true,
         sdt_o2_dependence: 0.0,
         ferritinophagy: false,
+        ifngamma: false,
     },
     SnapshotPreset {
         // SDT on a hypoxic sphere (the base edge-distance radial-O2 gradient, not
@@ -3001,6 +3058,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         phenotype_mufa: false,
         sdt_o2_dependence: 1.0,
         ferritinophagy: false,
+        ifngamma: false,
     },
     SnapshotPreset {
         // RSL3 on a hypoxic sphere with the NCOA4-ferritinophagy + hypoxia-iron
@@ -3032,6 +3090,40 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         phenotype_mufa: false,
         sdt_o2_dependence: 0.0,
         ferritinophagy: true,
+        ifngamma: false,
+    },
+    SnapshotPreset {
+        // RSL3 + immune with the IFN-γ → System Xc⁻ + ACSL4 coupling on (#443):
+        // ferroptotic deaths release DAMPs → CD8 priming → an IFN-γ field that
+        // diffuses back onto nearby tumor cells, suppressing System Xc⁻ (GSH down)
+        // and raising ACSL4 (PUFA up), so the cells re-sensitize to ferroptosis.
+        // The dead/LP panels show MORE kill in the high-immune-activity zones than
+        // the immune-on baseline (the molecular return arm of the immune-
+        // amplification loop, Wang 2019 PMID 31043744). RSL3 (not SDT) so the
+        // sensitization is read against a pure-ferroptosis death front.
+        name: "ifngamma",
+        desc: "RSL3 + immune + IFN-γ→System Xc⁻/ACSL4 coupling (#443): immune-primed ferroptosis sensitization",
+        treatment: Treatment::RSL3,
+        treatment_name: "RSL3",
+        immune_on: true,
+        stromal_on: false,
+        ph_on: false,
+        multidose: false,
+        persister: false,
+        clonal: false,
+        vasculature: false,
+        spheroid: false,
+        slab: false,
+        suppressor: false,
+        checkpoints: false,
+        contact: false,
+        nutrient: false,
+        dc_subsets: false,
+        senescence: false,
+        phenotype_mufa: false,
+        sdt_o2_dependence: 0.0,
+        ferritinophagy: false,
+        ifngamma: true,
     },
 ];
 
@@ -3293,6 +3385,10 @@ fn run_snapshot(output_dir: &Path, tumor_radius_um: f64, name: &str) {
             // #343 PR 2: reaction-diffusion supply for the `reaction-diffusion`
             // preset (name-keyed above); `false` for every other preset.
             reaction_diffusion,
+            // #443: IFN-γ → System Xc⁻ + ACSL4 coupling (both arms via literature()).
+            // Gated on immune_on inside run_one_condition_full; `None` for every
+            // other preset ⇒ no coupling.
+            ifngamma: preset.ifngamma.then(IFNGammaConfig::literature),
             ..Default::default()
         },
     );
@@ -7458,6 +7554,78 @@ mod tests {
             coupled.overall_kill_rate,
             baseline.overall_kill_rate
         );
+    }
+
+    /// #443 follow-up: the ACSL4 arm ALONE (System Xc⁻ arm switched off via an
+    /// infinite IC50, so `system_xc_retention == 1.0`) still raises ferroptosis.
+    /// This isolates the lipid arm — the IFN-gamma field seeds (per_damp > 0),
+    /// diffuses, and transiently boosts each exposed cell's PUFA / lipid_unsat,
+    /// which is the only active effect here — confirming the ACSL4 wiring flows
+    /// the right direction independent of the GSH arm. Magnitude uncalibrated.
+    #[test]
+    fn ifngamma_acsl4_arm_alone_raises_ferroptosis() {
+        let cfg = RunConfig {
+            grid_dim: 24,
+            n_steps: 120,
+        };
+        let cond = Condition {
+            name: "ifngamma_acsl4_ab".to_string(),
+            treatment: Treatment::RSL3,
+            treatment_name: "RSL3".to_string(),
+            o2_lambda: Some(ZONE_REF_LAMBDA),
+            immune_on: true,
+            stromal_on: false,
+            ph_on: false,
+            dose_schedule: DoseSchedule::Constant,
+        };
+        let immune = SpatialImmuneConfig {
+            immune_kill_rate: 0.5,
+            ..SpatialImmuneConfig::for_3d()
+        };
+        let run = |ifn: Option<IFNGammaConfig>| {
+            run_one_condition_full(
+                &cond,
+                cfg,
+                None,
+                Overrides {
+                    immune: Some(immune),
+                    ifngamma: ifn,
+                    ..Default::default()
+                },
+            )
+        };
+        let baseline = run(None);
+        // ACSL4 ONLY: infinite IC50 ⇒ GSH retention is exactly 1.0 (System Xc⁻ arm
+        // off), so the lipid_unsat boost is the sole sensitizer. per_damp > 0 so the
+        // field still seeds from the immune DAMP.
+        let acsl4_only = IFNGammaConfig {
+            system_xc_ic50: f64::INFINITY,
+            ..IFNGammaConfig::literature()
+        };
+        assert!(!acsl4_only.is_disabled(), "ACSL4-only config is active");
+        let coupled = run(Some(acsl4_only));
+        assert!(
+            coupled.overall_kill_rate > baseline.overall_kill_rate,
+            "ACSL4 arm alone must raise kill: coupled={} baseline={}",
+            coupled.overall_kill_rate,
+            baseline.overall_kill_rate
+        );
+    }
+
+    /// #443 follow-up: the `--snapshot=ifngamma` preset is wired (enables both
+    /// coupling arms under an immune RSL3 run).
+    #[test]
+    fn ifngamma_snapshot_preset_is_wired() {
+        let p = resolve_snapshot("ifngamma");
+        assert_eq!(p.name, "ifngamma");
+        assert!(p.ifngamma, "the ifngamma preset must enable the coupling");
+        assert!(
+            p.immune_on,
+            "the IFN-gamma field seeds from the immune DAMP signal, so immune must be on"
+        );
+        assert!(matches!(p.treatment, Treatment::RSL3));
+        // literature() turns both arms on (non-disabled).
+        assert!(!IFNGammaConfig::literature().is_disabled());
     }
 
     /// Three independent realism layers enabled together — clonal subclones
