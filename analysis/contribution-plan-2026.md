@@ -73,6 +73,11 @@ judge the sim as if it claimed calibrated predictions, which it does not.
 
 ## Part 2: Preregistration draft (register BEFORE calibration)
 
+> The registrable, time-stampable version of the predictions and experiment briefs
+> below now lives in the top-level [`PREREGISTRATION.md`](../PREREGISTRATION.md)
+> (#440). Once the OSF registration is filed, its DOI and public URL go in that
+> file's registration-status block. This Part 2 remains the working source.
+
 Register these on a preregistration platform (e.g. OSF) as the model's standing,
 falsifiable predictions, with their pre-stated falsification criteria, BEFORE
 fitting any layer to external data. Each is a *directional* prediction; the
