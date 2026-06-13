@@ -14,7 +14,7 @@
 # If installation fails on a different platform, regenerate
 # the lockfile on your platform using the commands above.
 
-beautifulsoup4==4.14.3
+beautifulsoup4==4.15.0
 certifi==2026.5.20
 charset-normalizer==3.4.7
 contourpy==1.3.3
