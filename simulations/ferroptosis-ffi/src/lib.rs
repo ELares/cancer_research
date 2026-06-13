@@ -138,6 +138,9 @@ fn ferro_params_to_params(fp: &FerroParams) -> Params {
         // unchanged), so they map to 0.0 here ⇒ byte-identical.
         alox_propagation_boost: 0.0,
         mcfa_pufa_boost: 0.0,
+        // ACSL4-status biomarker PUFA boost (#444) is off by default and not part
+        // of the C ABI (FerroParams unchanged), so it maps to 0.0 here ⇒ byte-identical.
+        acsl4_status_boost: 0.0,
         scd_mufa_rate: fp.scd_mufa_rate,
         scd_mufa_max: fp.scd_mufa_max,
         initial_mufa_protection: fp.initial_mufa_protection,

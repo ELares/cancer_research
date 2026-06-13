@@ -55,6 +55,7 @@ use std::time::Instant;
 mod npy;
 mod snapshot;
 
+use ferroptosis_core::acsl4::{pufa_boost_from_status, ACSL4_NEGATIVE};
 use ferroptosis_core::alox::AloxConfig;
 use ferroptosis_core::biochem::{exo_decay_factor, sim_cell_step, CellState};
 use ferroptosis_core::cell::{Phenotype, Treatment};
@@ -490,6 +491,13 @@ struct Overrides {
     /// oxidizable PUFA; both raise ferroptosis). Cell-intrinsic, so not gated on
     /// immune; off the production matrix so the matrix is byte-identical.
     alox: Option<AloxConfig>,
+    /// ACSL4-status biomarker (#444): the tumor's relative ACSL4 expression
+    /// (`1.0` = wild-type baseline). `None` ⇒ no change ⇒ byte-identical. When set,
+    /// `acsl4::pufa_boost_from_status(status)` is written onto
+    /// `params.acsl4_status_boost`: `< 1` (ACSL4-low/negative) collapses the
+    /// oxidizable-PUFA substrate ⇒ ferroptosis-refractory, `> 1` (ACSL4-high) ⇒
+    /// sensitive. Off the production matrix so the matrix is byte-identical.
+    acsl4_status: Option<f64>,
     slab: Option<SlabConfig>,
     /// Depth-graded slab phenotype (#272). `None` ⇒ the slab keeps `generate_slab`'s
     /// flat bulk phenotype mix. Only applied when `slab` is also `Some` (it needs the
@@ -710,6 +718,12 @@ fn run_one_condition_full(
     if let Some(cfg) = overrides.alox.filter(|c| !c.is_identity()) {
         params.alox_propagation_boost = cfg.lp_propagation_boost();
         params.mcfa_pufa_boost = cfg.mcfa_pufa_boost();
+    }
+    // ACSL4-status biomarker stratification (#444): the tumor's ACSL4 expression
+    // status sets its oxidizable-PUFA baseline. `None` (matrix path) ⇒ boost stays
+    // 0.0 ⇒ byte-identical. Cell-intrinsic, applied uniformly per condition.
+    if let Some(status) = overrides.acsl4_status {
+        params.acsl4_status_boost = pufa_boost_from_status(status);
     }
     let spatial_params = SpatialParams {
         cell_size_um: CELL_SIZE_UM,
@@ -2478,6 +2492,12 @@ struct SnapshotPreset {
     /// static overlay; the faster enzymatic propagation + extra oxidizable PUFA
     /// show as more kill in the dead/LP panels vs the baseline.
     alox: bool,
+    /// True if the ACSL4-negative biomarker stratification (#444) is enabled
+    /// (acsl4_status = ACSL4_NEGATIVE). The collapsed PUFA substrate makes the
+    /// tumor ferroptosis-REFRACTORY, so RSL3 kills LESS than the (ACSL4-normal)
+    /// baseline — the dead/LP panels show the survival of an ACSL4-negative tumor
+    /// (HCC/AML-like) under the same RSL3 dose. No extra static overlay.
+    acsl4_negative: bool,
 }
 
 /// Visualization presets for `--snapshot=NAME`. Keep this list small —
@@ -2508,6 +2528,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         ferritinophagy: false,
         ifngamma: false,
         alox: false,
+        acsl4_negative: false,
     },
     SnapshotPreset {
         name: "bare",
@@ -2534,6 +2555,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         ferritinophagy: false,
         ifngamma: false,
         alox: false,
+        acsl4_negative: false,
     },
     SnapshotPreset {
         name: "multidose",
@@ -2560,6 +2582,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         ferritinophagy: false,
         ifngamma: false,
         alox: false,
+        acsl4_negative: false,
     },
     SnapshotPreset {
         // SDT here visualizes the persister-fraction OVERLAY (the MUFA axis +
@@ -2590,6 +2613,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         ferritinophagy: false,
         ifngamma: false,
         alox: false,
+        acsl4_negative: false,
     },
     SnapshotPreset {
         name: "clonal",
@@ -2616,6 +2640,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         ferritinophagy: false,
         ifngamma: false,
         alox: false,
+        acsl4_negative: false,
     },
     SnapshotPreset {
         // RSL3 (hypoxia-sensitive) + explicit internal vessels: near-vessel
@@ -2647,6 +2672,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         ferritinophagy: false,
         ifngamma: false,
         alox: false,
+        acsl4_negative: false,
     },
     SnapshotPreset {
         // RSL3 + explicit vessels, but the per-cell O2/drug supply is the
@@ -2680,6 +2706,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         ferritinophagy: false,
         ifngamma: false,
         alox: false,
+        acsl4_negative: false,
     },
     SnapshotPreset {
         // SDT + radial spheroid biology: the phenotype panel shows the
@@ -2709,6 +2736,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         ferritinophagy: false,
         ifngamma: false,
         alox: false,
+        acsl4_negative: false,
     },
     SnapshotPreset {
         // SDT on a patient-scale slab at the SURFACE (+z face = vessel, depth
@@ -2743,6 +2771,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         ferritinophagy: false,
         ifngamma: false,
         alox: false,
+        acsl4_negative: false,
     },
     SnapshotPreset {
         // Slab + internal vessels (#272 coupling). vessel_supply.npy (on a slab
@@ -2777,6 +2806,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         ferritinophagy: false,
         ifngamma: false,
         alox: false,
+        acsl4_negative: false,
     },
     SnapshotPreset {
         // SDT + immune + Treg/MDSC suppressor (#264 Phase 2). Heuristic niche
@@ -2807,6 +2837,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         ferritinophagy: false,
         ifngamma: false,
         alox: false,
+        acsl4_negative: false,
     },
     SnapshotPreset {
         // SDT + immune + dual checkpoint blockade (#264 Phase 3): a PD-1 +
@@ -2838,6 +2869,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         ferritinophagy: false,
         ifngamma: false,
         alox: false,
+        acsl4_negative: false,
     },
     SnapshotPreset {
         // Kitchen-sink composition (#278): several realism layers at once —
@@ -2871,6 +2903,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         ferritinophagy: false,
         ifngamma: false,
         alox: false,
+        acsl4_negative: false,
     },
     SnapshotPreset {
         // RSL3 + cell-cell contact resistance (#270): dense interior cells
@@ -2903,6 +2936,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         ferritinophagy: false,
         ifngamma: false,
         alox: false,
+        acsl4_negative: false,
     },
     SnapshotPreset {
         // SDT + radial nutrient gradient (#270 item 3b): the nutrient-starved
@@ -2934,6 +2968,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         ferritinophagy: false,
         ifngamma: false,
         alox: false,
+        acsl4_negative: false,
     },
     SnapshotPreset {
         // SDT + cDC1/cDC2 dendritic-cell subset mix (#264 Phase 4): a cDC1-poor
@@ -2965,6 +3000,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         ferritinophagy: false,
         ifngamma: false,
         alox: false,
+        acsl4_negative: false,
     },
     SnapshotPreset {
         // SDT + therapy-induced senescence (#341): a fraction of tumor cells
@@ -3002,6 +3038,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         ferritinophagy: false,
         ifngamma: false,
         alox: false,
+        acsl4_negative: false,
     },
     SnapshotPreset {
         // Like `senescence`, but adds the diffusing-SASP-field overlay (#376/#398):
@@ -3035,6 +3072,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         ferritinophagy: false,
         ifngamma: false,
         alox: false,
+        acsl4_negative: false,
     },
     SnapshotPreset {
         // RSL3 + 3D spheroid (#197) + phenotype-specific SCD1/MUFA rates (#363):
@@ -3068,6 +3106,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         ferritinophagy: false,
         ifngamma: false,
         alox: false,
+        acsl4_negative: false,
     },
     SnapshotPreset {
         // SDT on a hypoxic sphere (the base edge-distance radial-O2 gradient, not
@@ -3100,6 +3139,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         ferritinophagy: false,
         ifngamma: false,
         alox: false,
+        acsl4_negative: false,
     },
     SnapshotPreset {
         // RSL3 on a hypoxic sphere with the NCOA4-ferritinophagy + hypoxia-iron
@@ -3133,6 +3173,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         ferritinophagy: true,
         ifngamma: false,
         alox: false,
+        acsl4_negative: false,
     },
     SnapshotPreset {
         // RSL3 + immune with the IFN-γ → System Xc⁻ + ACSL4 coupling on (#443):
@@ -3167,6 +3208,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         ferritinophagy: false,
         ifngamma: true,
         alox: false,
+        acsl4_negative: false,
     },
     SnapshotPreset {
         // RSL3 on a sphere with an ALOX15-high, MCFA-exposed phenotype (#446):
@@ -3199,6 +3241,42 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         ferritinophagy: false,
         ifngamma: false,
         alox: true,
+        acsl4_negative: false,
+    },
+    SnapshotPreset {
+        // RSL3 on an ACSL4-NEGATIVE tumor (#444): with ACSL4 absent the membrane
+        // cannot incorporate the PUFA ferroptosis requires, so the oxidizable
+        // substrate collapses and the tumor is intrinsically REFRACTORY to RSL3
+        // (an escape distinct from the GPX4/GSH/FSP1 defenses; e.g. some HCC/AML
+        // subtypes, Doll 2017 PMID 27842070). The dead/LP panels show MUCH LESS
+        // kill than an ACSL4-normal tumor under the same RSL3 dose — the
+        // patient-stratification headline (ACSL4-high respond, ACSL4-negative do
+        // not). No extra overlay.
+        name: "acsl4-negative",
+        desc: "RSL3 on an ACSL4-negative tumor (#444): collapsed PUFA substrate ⇒ ferroptosis-refractory",
+        treatment: Treatment::RSL3,
+        treatment_name: "RSL3",
+        immune_on: false,
+        stromal_on: false,
+        ph_on: false,
+        multidose: false,
+        persister: false,
+        clonal: false,
+        vasculature: false,
+        spheroid: false,
+        slab: false,
+        suppressor: false,
+        checkpoints: false,
+        contact: false,
+        nutrient: false,
+        dc_subsets: false,
+        senescence: false,
+        phenotype_mufa: false,
+        sdt_o2_dependence: 0.0,
+        ferritinophagy: false,
+        ifngamma: false,
+        alox: false,
+        acsl4_negative: true,
     },
 ];
 
@@ -3468,6 +3546,10 @@ fn run_snapshot(output_dir: &Path, tumor_radius_um: f64, name: &str) {
             // (ALOX15-high + MCFA via literature()). `None` for every other
             // preset ⇒ both boosts 0 ⇒ unchanged.
             alox: preset.alox.then(AloxConfig::literature),
+            // #444: ACSL4-negative biomarker stratification. `None` for every other
+            // preset ⇒ no change; the acsl4-negative preset sets the null status so
+            // the PUFA substrate collapses and the tumor resists RSL3.
+            acsl4_status: preset.acsl4_negative.then_some(ACSL4_NEGATIVE),
             ..Default::default()
         },
     );
@@ -7769,6 +7851,72 @@ mod tests {
         let lit = AloxConfig::literature();
         assert!(!lit.is_identity());
         assert!(lit.lp_propagation_boost() > 0.0 && lit.mcfa_pufa_boost() > 0.0);
+    }
+
+    /// #444 A/B: ACSL4 status stratifies ferroptosis sensitivity. Under the SAME
+    /// RSL3 dose, an ACSL4-HIGH tumor kills MORE and an ACSL4-NEGATIVE tumor kills
+    /// LESS than the ACSL4-normal baseline — the patient-stratification headline
+    /// (ACSL4-high respond, ACSL4-negative are refractory via collapsed PUFA, a
+    /// mechanism distinct from GPX4/GSH/FSP1; Doll 2017 PMID 27842070). Magnitude
+    /// uncalibrated; the ordering is the result.
+    #[test]
+    fn acsl4_status_stratifies_ferroptosis_sensitivity() {
+        let cfg = RunConfig {
+            grid_dim: 24,
+            n_steps: 120,
+        };
+        let cond = Condition {
+            name: "acsl4_ab".to_string(),
+            treatment: Treatment::RSL3,
+            treatment_name: "RSL3".to_string(),
+            o2_lambda: Some(ZONE_REF_LAMBDA),
+            immune_on: false,
+            stromal_on: false,
+            ph_on: false,
+            dose_schedule: DoseSchedule::Constant,
+        };
+        let run = |status: Option<f64>| {
+            run_one_condition_full(
+                &cond,
+                cfg,
+                None,
+                Overrides {
+                    acsl4_status: status,
+                    ..Default::default()
+                },
+            )
+        };
+        let normal = run(None); // ACSL4-normal = the byte-identical baseline
+        let high = run(Some(ferroptosis_core::acsl4::ACSL4_HIGH));
+        let negative = run(Some(ACSL4_NEGATIVE));
+        // ACSL4-high out-kills normal; ACSL4-negative is refractory (kills less).
+        assert!(
+            high.overall_kill_rate > normal.overall_kill_rate,
+            "ACSL4-high must raise kill: high={} normal={}",
+            high.overall_kill_rate,
+            normal.overall_kill_rate
+        );
+        assert!(
+            negative.overall_kill_rate < normal.overall_kill_rate,
+            "ACSL4-negative must lower kill (refractory): negative={} normal={}",
+            negative.overall_kill_rate,
+            normal.overall_kill_rate
+        );
+    }
+
+    /// #444: the `--snapshot=acsl4-negative` preset is wired (RSL3 on an
+    /// ACSL4-negative, ferroptosis-refractory tumor).
+    #[test]
+    fn acsl4_negative_snapshot_preset_is_wired() {
+        let p = resolve_snapshot("acsl4-negative");
+        assert_eq!(p.name, "acsl4-negative");
+        assert!(
+            p.acsl4_negative,
+            "the preset must enable ACSL4-negative status"
+        );
+        assert!(matches!(p.treatment, Treatment::RSL3));
+        // ACSL4-negative maps to the null-floor boost (-1, collapsed PUFA).
+        assert_eq!(pufa_boost_from_status(ACSL4_NEGATIVE), -1.0);
     }
 
     /// Three independent realism layers enabled together — clonal subclones
