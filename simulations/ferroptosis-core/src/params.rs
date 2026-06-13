@@ -140,6 +140,19 @@ pub struct Params {
     /// ⇒ ×1.0 ⇒ byte-identical; uncalibrated, direction-anchored.
     #[serde(default)]
     pub mcfa_pufa_boost: f64,
+    /// ACSL4-status biomarker PUFA-incorporation boost (#444). ACSL4 ligates the
+    /// PUFA that ferroptosis requires into membranes, so a tumor's ACSL4
+    /// expression status sets its oxidizable-PUFA baseline: this additive boost
+    /// (computed from a status scalar via `crate::acsl4::pufa_boost_from_status`,
+    /// `status - 1` clamped at `-1`) is folded into the oxidizable-PUFA
+    /// augmentation (`biochem::ether_augmented_pufa`). `0.0` (default, wild-type
+    /// ACSL4) ⇒ ×1.0 ⇒ byte-identical; `-1` is the ACSL4-negative null floor
+    /// (PUFA substrate collapses ⇒ ferroptosis-refractory through a mechanism
+    /// distinct from GPX4/GSH/FSP1, e.g. some HCC/AML subtypes); `> 0` is
+    /// ACSL4-high (more PUFA ⇒ sensitive). Doll et al., Nat Chem Biol 2017
+    /// (PMID 27842070). Uncalibrated linear placeholder; direction-anchored.
+    #[serde(default)]
+    pub acsl4_status_boost: f64,
 
     // === GPX4 Dynamic Regulation ===
     pub gpx4_degradation_by_ros: f64,
@@ -194,6 +207,7 @@ impl Default for Params {
             ferritinophagy_tau: default_ferritinophagy_tau(),
             alox_propagation_boost: 0.0,
             mcfa_pufa_boost: 0.0,
+            acsl4_status_boost: 0.0,
             gpx4_degradation_by_ros: 0.002,
             gpx4_nrf2_upregulation: 0.008,
             sdt_ros: 5.0,

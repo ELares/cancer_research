@@ -106,6 +106,19 @@ The core engine drives lipid peroxidation through one generic `lp_propagation`, 
 
 **Calibration target.** Isoform Kcat/Km vary ~10-fold and are not fit here; the `literature()` activity weights/expression fractions and the MCFA saturation strength are placeholders, so only the DIRECTIONS are claimed (ALOX-high ⇒ more ferroptosis; MCFA ⇒ more ferroptosis; ALOX-null ⇒ resistant). Fitting would need ALOX-isoform-stratified expression (TCGA/RNA-seq) paired with isoform-knockdown and MCFA-exposure ferroptosis dose-response; absolute MCFA kinetics are deferred to the experimental E-series. Per-cell stochastic ALOX heterogeneity (per-phenotype sampling like iron/gsh) is a deferred refinement — this models a per-condition ALOX phenotype.
 
+## ACSL4-status biomarker stratification (`acsl4` -> `Params.acsl4_status_boost`): known uncalibrated / validation data-gated
+
+ACSL4 ligates the polyunsaturated fatty acids ferroptosis requires into membrane phospholipids, so a tumor's ACSL4 expression status sets its oxidizable-PUFA baseline and is the single most discriminating pro-ferroptotic lipid-metabolism gene (Doll et al., Nat Chem Biol 2017, PMID 27842070, ACSL4 dictates ferroptosis sensitivity; Yang et al., PNAS 2016, PMID 27506793). `acsl4::pufa_boost_from_status(status)` maps a relative status (`1.0` = wild-type) to an **off-by-default** additive boost on `Params.acsl4_status_boost`, folded into the oxidizable-PUFA augmentation (`biochem::ether_augmented_pufa`). Default `0.0` => x1.0 => byte-identical; FFI defaults it so the C ABI is unchanged.
+
+| Status | `acsl4_status_boost` | Meaning | Source | Grounded? |
+|--------|----------------------|---------|--------|-----------|
+| ACSL4-negative (0.0) | -1.0 (null floor) | PUFA substrate collapses => ferroptosis-REFRACTORY (e.g. some HCC/AML) | Doll 2017 PMID 27842070 | Assumed (direction only) |
+| ACSL4-low (0.5) | -0.5 | partially resistant | Doll 2017 | Assumed |
+| ACSL4-normal (1.0) | 0.0 | model baseline (byte-identical) | - | N/A |
+| ACSL4-high (1.5) | +0.5 | more oxidizable PUFA => sensitive (e.g. lung, ER+ breast, cervical) | Doll 2017 | Assumed (placeholder magnitude) |
+
+**Calibration target (DATA-GATED).** The status->boost mapping is an uncalibrated linear placeholder; only the DIRECTION (ACSL4-high => sensitive; ACSL4-negative => refractory) is claimed. Two validation legs the issue (#444) proposes are deliberately NOT executed because the repo does not carry the data: (1) per-cancer-type ACSL4 expression/deletion prevalence across the 22 cancer types (TCGA / cBioPortal / GEO), and (2) a cell-line meta-analysis pairing ACSL4 status with ferroptosis-inducer dose-response (CTRPv2 / GDSC / DepMap + primary literature) to fit the status->IC50-shift magnitude. Both are flagged as collaborator/data tasks rather than fabricated. The model-side stratification (the kill-ordering A/B + the falsifiable prediction that ACSL4-high cancers respond to ferroptosis inducers while ACSL4-negative do not) is the deliverable as far as public data allows.
+
 ## Photosensitizer pharmacokinetics: plasma vs. cellular
 
 `Photosensitizer::Porfimer.t_half_h` represents *plasma* terminal half-life. Cellular concentration is assumed to track plasma proportionally — a reasonable approximation for porfimer (slow-distributing, weeks-scale t½, ~100% serum-protein bound, Vd ≈ plasma volume per Bellnier 2006) but explicitly wrong for 5-ALA/PpIX, which accumulates intracellularly via ferrochelatase deficiency rather than decaying. ALA kinetics will require a different variant.

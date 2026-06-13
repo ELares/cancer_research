@@ -43,7 +43,9 @@
 //! | [`nutrient`] | Radial nutrient gradient (glucose/glutamine) scaling the antioxidant setpoint toward the starved core |
 //! | [`reaction_diffusion`] | Steady-state reaction-diffusion O2/drug supply (vessel sources + consumption) vs the exponential proxy |
 //! | [`alox`] | ALOX lipoxygenase-isoform-specific peroxidation rate + MCFA→ACSL4 PUFA sensitization (off-by-default boosts) |
+//! | [`acsl4`] | ACSL4-status biomarker stratification: tumor-intrinsic PUFA-incorporation gate (ACSL4-negative ⇒ ferroptosis-refractory) |
 
+pub mod acsl4;
 pub mod alox;
 pub mod cell;
 pub mod clonal;

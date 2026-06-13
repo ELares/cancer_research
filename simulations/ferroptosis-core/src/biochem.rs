@@ -198,10 +198,19 @@ fn update_mufa_protection(current: f64, mufa_max: f64, rate: f64, params: &Param
 /// fixed direction would overstate certainty.
 #[inline]
 fn ether_augmented_pufa(lipid_unsat: f64, params: &Params) -> f64 {
-    // The ether-lipid pool (#339) and the MCFA→ACSL4/CD36 PUFA-incorporation
-    // boost (#446) both ADD oxidizable PUFA, so they augment the substrate
-    // additively. Both `0.0` by default ⇒ ×1.0 ⇒ byte-identical.
-    lipid_unsat * (1.0 + params.ether_pufa_fraction.max(0.0) + params.mcfa_pufa_boost.max(0.0))
+    // The ether-lipid pool (#339), the MCFA→ACSL4/CD36 boost (#446), and the
+    // tumor-intrinsic ACSL4-status boost (#444) all set the oxidizable-PUFA level,
+    // so they augment the substrate additively. The ether/MCFA boosts are
+    // protective-only floored at 0; the ACSL4-status boost is SIGNED (it reaches
+    // `-1` for ACSL4-negative tumors, collapsing the PUFA substrate ⇒
+    // ferroptosis-refractory), so it is added raw and the whole augmentation is
+    // floored at 0. All boosts `0.0` by default ⇒ ×1.0 ⇒ byte-identical.
+    lipid_unsat
+        * (1.0
+            + params.ether_pufa_fraction.max(0.0)
+            + params.mcfa_pufa_boost.max(0.0)
+            + params.acsl4_status_boost)
+            .max(0.0)
 }
 
 /// Total MUFA-style ferroptosis protection at a peroxidation site: the dynamic
