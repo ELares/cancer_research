@@ -280,6 +280,107 @@ pub fn apply_senescence_program_3d(
     mask
 }
 
+// ============================================================
+// CDK4/6-inhibitor-primed senescence -> ferroptosis combination (#447)
+// ============================================================
+
+/// CDK4/6-inhibitor priming kinetics: a senescence-INDUCING pre-treatment
+/// (palbociclib / ribociclib) raises the senescent fraction over a multi-day
+/// induction, and after withdrawal the senescent fraction RESOLVES over a recovery
+/// window. This produces the time-dependent [`SenescenceConfig::fraction`] for a
+/// CDK4/6i-primed-then-ferroptosis-challenged combination. The senescent cells it
+/// produces are senolytic under DIRECT GPX4 inhibition (the model RSL3) via the
+/// existing iron-dominant senescence program (D'Ambrosio/Gil 2026, PMID 42032311;
+/// see [`cdk46_primed_senolytic_config`]), so the #447 falsifiable predictions
+/// follow directly: (a) longer CDK4/6i priming raises the senolytic-vulnerable
+/// fraction, so a primed population peroxidizes MORE under RSL3 than an unprimed
+/// one; and (b) the vulnerability window CLOSES as senescence resolves after
+/// withdrawal.
+///
+/// Off-by-default: nothing in the production matrix constructs this, so it is
+/// byte-identical unless a consumer opts into a CDK4/6i-priming combination, and at
+/// `priming_days == 0` the induced fraction is `0` (an identity `SenescenceConfig`).
+///
+/// Kinetics are UNCALIBRATED placeholders. The only grounding is the broadly-reported
+/// ~14 to 21 day (one-to-three-week) timescale over which therapy-induced senescence
+/// is established; CDK4/6i-primed-then-ferroptosis is an active recent direction in
+/// the senescence-ferroptosis literature, but the specific induction/recovery time
+/// constants here are NOT fit to any dataset. Induction is a saturating exponential
+/// toward `f_max` with time constant `tau_induction_days`; recovery is an exponential
+/// decay with time constant `tau_recovery_days`. The DIRECTION (priming raises the
+/// senolytic fraction; the window closes on resolution) is the result, not the
+/// day-precise magnitudes.
+#[derive(Clone, Copy, Debug)]
+pub struct Cdk46PrimingConfig {
+    /// Saturating senescent fraction reached under sustained CDK4/6i exposure.
+    pub f_max: f64,
+    /// Induction time constant (days): fraction rises as `1 - exp(-t/tau)`.
+    pub tau_induction_days: f64,
+    /// Recovery time constant (days) after withdrawal: the induced fraction decays
+    /// as `exp(-t/tau)`, closing the ferroptosis-vulnerability window.
+    pub tau_recovery_days: f64,
+}
+
+impl Cdk46PrimingConfig {
+    /// Placeholder kinetics grounded only in the broadly-reported ~1 to 3 week
+    /// senescence-establishment timescale (uncalibrated): a majority-but-not-complete
+    /// senescent fraction at saturation, a ~1 week induction constant, and a ~1.5 week
+    /// recovery constant. These specific values are ILLUSTRATIVE; only the direction
+    /// (induction then recovery) is the result, the tests assert direction, not the
+    /// day numbers.
+    pub fn literature() -> Self {
+        Cdk46PrimingConfig {
+            f_max: 0.6,
+            tau_induction_days: 7.0,
+            tau_recovery_days: 10.0,
+        }
+    }
+}
+
+/// Senescent fraction after `priming_days` of CDK4/6i exposure followed by
+/// `post_withdrawal_days` of recovery. Induction saturates toward `f_max`; recovery
+/// then decays the induced fraction. Clamped to `[0, 1]`. With
+/// `post_withdrawal_days == 0` this is the end-of-priming fraction (the PEAK
+/// senolytic window, i.e. challenge immediately after priming); positive values
+/// model the closing window when ferroptosis is challenged later.
+pub fn senescent_fraction_after_priming(
+    priming_days: f64,
+    post_withdrawal_days: f64,
+    cfg: &Cdk46PrimingConfig,
+) -> f64 {
+    let p = priming_days.max(0.0);
+    let r = post_withdrawal_days.max(0.0);
+    let induced = cfg.f_max * (1.0 - (-p / cfg.tau_induction_days.max(1e-9)).exp());
+    let after_recovery = induced * (-r / cfg.tau_recovery_days.max(1e-9)).exp();
+    after_recovery.clamp(0.0, 1.0)
+}
+
+/// Build a SENOLYTIC CDK4/6i-primed [`SenescenceConfig`]: the priming kinetics set
+/// the senescent `fraction`, and the biochem axes are iron-dominant with the
+/// defenses left at `1` so the primed senescent cells are MORE ferroptosis-sensitive
+/// under direct GPX4 inhibition (the D'Ambrosio/Gil 2026 senolytic axis), the #447
+/// prediction. This is deliberately distinct from [`SenescenceConfig::literature`],
+/// whose raised-defense net is RESISTANT to upstream triggers; the combination
+/// strategy targets the senescent cells with a GPX4 inhibitor, the node at which
+/// they are vulnerable. SASP-immune coupling is left identity (this models the
+/// cell-intrinsic combination, not the immune arm). `priming_days == 0` ⇒ fraction
+/// `0` ⇒ an identity config (byte-identical).
+pub fn cdk46_primed_senolytic_config(
+    priming_days: f64,
+    post_withdrawal_days: f64,
+    cfg: &Cdk46PrimingConfig,
+) -> SenescenceConfig {
+    SenescenceConfig {
+        fraction: senescent_fraction_after_priming(priming_days, post_withdrawal_days, cfg),
+        iron_mul: 2.5,
+        gpx4_mul: 1.0,
+        nrf2_mul: 1.0,
+        fsp1_mul: 1.0,
+        sasp_immune_mult: 1.0,
+        sasp_field_strength: 0.0,
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -441,5 +542,110 @@ mod tests {
             assert_eq!(a.cell.nrf2, b.cell.nrf2);
             assert_eq!(a.cell.fsp1, b.cell.fsp1);
         }
+    }
+
+    // ---- CDK4/6-inhibitor-primed senescence -> ferroptosis (#447) ----
+
+    #[test]
+    fn cdk46_induction_saturates_and_is_zero_without_priming() {
+        let cfg = Cdk46PrimingConfig::literature();
+        // No priming -> no senescence -> an identity SenescenceConfig (byte-identical).
+        assert_eq!(senescent_fraction_after_priming(0.0, 0.0, &cfg), 0.0);
+        assert!(cdk46_primed_senolytic_config(0.0, 0.0, &cfg).is_identity());
+        // Monotone increasing in priming duration, saturating toward f_max.
+        let f1 = senescent_fraction_after_priming(3.0, 0.0, &cfg);
+        let f2 = senescent_fraction_after_priming(7.0, 0.0, &cfg);
+        let f3 = senescent_fraction_after_priming(28.0, 0.0, &cfg);
+        assert!(
+            0.0 < f1 && f1 < f2 && f2 < f3,
+            "induction is monotone: {f1} {f2} {f3}"
+        );
+        assert!(
+            f3 <= cfg.f_max && f3 > 0.9 * cfg.f_max,
+            "saturates toward f_max: {f3} vs {}",
+            cfg.f_max
+        );
+    }
+
+    #[test]
+    fn cdk46_recovery_closes_the_vulnerability_window() {
+        let cfg = Cdk46PrimingConfig::literature();
+        // Fixed priming, then increasing post-withdrawal recovery: the senescent
+        // fraction decays toward 0, i.e. the ferroptosis-vulnerability window closes.
+        let peak = senescent_fraction_after_priming(14.0, 0.0, &cfg);
+        let mid = senescent_fraction_after_priming(14.0, 7.0, &cfg);
+        let late = senescent_fraction_after_priming(14.0, 30.0, &cfg);
+        assert!(
+            peak > mid && mid > late,
+            "window closes on resolution: {peak} {mid} {late}"
+        );
+        assert!(
+            late < 0.1 * peak,
+            "fraction nearly resolved by 30 days: {late} vs peak {peak}"
+        );
+    }
+
+    #[test]
+    fn cdk46_primed_config_is_iron_dominant_senolytic() {
+        let cfg = Cdk46PrimingConfig::literature();
+        let primed = cdk46_primed_senolytic_config(14.0, 0.0, &cfg);
+        // Iron-dominant (>1) with defenses left at 1 -> senolytic under RSL3, the
+        // distinct combination node (vs the resistant-net `literature()` default).
+        assert!(primed.iron_mul > 1.0 && primed.gpx4_mul == 1.0 && primed.nrf2_mul == 1.0);
+        assert!(primed.fraction > 0.0 && !primed.is_identity());
+    }
+
+    #[test]
+    fn cdk46_longer_priming_marks_more_senescent_cells() {
+        // Longer CDK4/6i priming -> larger senolytic-vulnerable population; the
+        // window then closes after withdrawal. Ties the kinetics to the population
+        // the existing senolytic-under-RSL3 program (above) acts on.
+        let cfg = Cdk46PrimingConfig::literature();
+        let count = |priming: f64, recovery: f64| -> usize {
+            let mut g = grid();
+            apply_senescence_program_3d(
+                &mut g,
+                &cdk46_primed_senolytic_config(priming, recovery, &cfg),
+                42,
+            )
+            .iter()
+            .filter(|&&s| s)
+            .count()
+        };
+        let short_p = count(3.0, 0.0);
+        let long_p = count(21.0, 0.0);
+        let resolved = count(21.0, 30.0);
+        assert!(
+            long_p > short_p,
+            "longer priming marks more senescent cells: {long_p} > {short_p}"
+        );
+        assert!(
+            resolved < long_p,
+            "recovery shrinks the senescent population: {resolved} < {long_p}"
+        );
+    }
+
+    #[test]
+    fn cdk46_primed_senescent_cell_peroxidizes_more_under_rsl3() {
+        // The #447 prediction at the cell level: a CDK4/6i-primed senescent cell
+        // (iron-dominant) is a SENOLYTIC ferroptosis target, peroxidizing MORE under
+        // RSL3 than an unprimed cell (mirrors the existing senolytic test, applied to
+        // the cdk46-primed config; the senolytic direction is what longer priming
+        // recruits more of).
+        let final_lp = |cfg: &SenescenceConfig| -> f64 {
+            let mut gen_rng = StdRng::seed_from_u64(42);
+            let mut cell = gen_cell(Phenotype::OXPHOS, &mut gen_rng);
+            apply_senescence_to_cell(&mut cell, cfg);
+            let mut rng = StdRng::seed_from_u64(7);
+            let (_dead, lp, _, _) = sim_cell(&cell, Treatment::RSL3, &Params::default(), &mut rng);
+            lp
+        };
+        let base = final_lp(&SenescenceConfig::default());
+        let primed = cdk46_primed_senolytic_config(14.0, 0.0, &Cdk46PrimingConfig::literature());
+        assert!(
+            final_lp(&primed) > base,
+            "CDK4/6i-primed senescent cell should be a senolytic RSL3 target: primed={} vs base={base}",
+            final_lp(&primed)
+        );
     }
 }
