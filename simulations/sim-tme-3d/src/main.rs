@@ -93,7 +93,8 @@ use ferroptosis_core::slab::{
     SlabPhenotypeConfig, KROGH_LAMBDA_UM,
 };
 use ferroptosis_core::spheroid::{
-    apply_radial_cells_3d, radial_fraction_3d, radial_mufa_protection, SpheroidConfig,
+    apply_radial_cells_3d, apply_radial_cells_sized_3d, radial_fraction_3d, radial_mufa_protection,
+    SizeAwareZones, SpheroidConfig,
 };
 use ferroptosis_core::stromal::stromal_adjacency_mask_3d;
 use ferroptosis_core::tumor_pk::RSL3_INACTIVATION_RATE;
@@ -466,6 +467,13 @@ struct Overrides {
     clonal: Option<ClonalConfig>,
     vasculature: Option<VasculatureConfig>,
     spheroid: Option<SpheroidConfig>,
+    /// Size-aware spheroid zone thresholds (#333). `None` ⇒ the fixed
+    /// `SpheroidConfig` thresholds are used (the validated large-spheroid limiting
+    /// structure), so this is byte-identical to the pre-#333 spheroid path. `Some`
+    /// ramps the zone thresholds with the grid's spheroid radius so small spheroids
+    /// are correctly mostly-proliferating with no necrotic core. Only meaningful
+    /// when `spheroid` is also `Some` (it adjusts that config); ignored otherwise.
+    spheroid_size_aware: Option<SizeAwareZones>,
     slab: Option<SlabConfig>,
     /// Depth-graded slab phenotype (#272). `None` ⇒ the slab keeps `generate_slab`'s
     /// flat bulk phenotype mix. Only applied when `slab` is also `Some` (it needs the
@@ -597,6 +605,10 @@ fn run_one_condition_full(
     let clonal_cfg = overrides.clonal;
     let vasculature_cfg = overrides.vasculature;
     let spheroid_cfg = overrides.spheroid;
+    // Size-aware spheroid zone thresholds (#333): only meaningful with a spheroid.
+    let spheroid_size_aware = overrides
+        .spheroid_size_aware
+        .filter(|_| spheroid_cfg.is_some());
     let slab_cfg = overrides.slab;
     // Depth-graded slab phenotype (#272): only meaningful with a slab grid.
     let slab_phenotype_cfg = overrides.slab_phenotype.filter(|_| slab_cfg.is_some());
@@ -719,7 +731,13 @@ fn run_one_condition_full(
     // subclone/vessel) then perturb the radially-assigned cells. Position-
     // dependent MUFA is applied after CellState init below.
     if let Some(cfg) = &spheroid_cfg {
-        apply_radial_cells_3d(&mut grid, cfg, SPHEROID_SEED);
+        // #333: size-aware thresholds (ramp the zones with the spheroid radius) when
+        // opted in, else the fixed limiting-structure thresholds (byte-identical).
+        if let Some(size_aware) = &spheroid_size_aware {
+            apply_radial_cells_sized_3d(&mut grid, cfg, size_aware, CELL_SIZE_UM, SPHEROID_SEED);
+        } else {
+            apply_radial_cells_3d(&mut grid, cfg, SPHEROID_SEED);
+        }
     }
 
     // Depth-graded slab phenotype (#272): re-assign the slab's flat bulk mix so
@@ -3577,6 +3595,59 @@ fn run_bench() {
     );
 }
 
+/// `--spheroid-size-sweep`: RSL3 kill vs spheroid SIZE, fixed vs size-aware zone
+/// thresholds (#333 kill leg). Runs the spheroid context with the pharmacologic
+/// RSL3 modality (the penetration/O2/core-limited modality that matches the
+/// measured cytotoxic size-resistance direction; immune/stromal/pH off to isolate
+/// it) across a range of grid sizes, twice each: fixed thresholds and the
+/// size-aware thresholds (#333). Emits one machine-readable `SPHEROID_SIZE_SWEEP`
+/// line per (size, mode) to stdout for `scripts/validate_spheroid_kill.py`, which
+/// validates the bigger-spheroids-resist-more DIRECTION against published cytotoxic
+/// size-resistance fold-ratios. Does NOT write summary.json (matrix untouched,
+/// byte-identical). The O₂ λ is fixed (ZONE_REF_LAMBDA) so a larger spheroid has a
+/// proportionally more hypoxic, less-penetrated core — the physical size-dependence.
+fn run_spheroid_size_sweep() {
+    let n_steps = bench_env_u32("BENCH_N_STEPS", N_STEPS);
+    let dims: [usize; 5] = [16, 24, 32, 48, 60];
+    eprintln!(
+        "=== --spheroid-size-sweep: RSL3 kill vs spheroid size, fixed vs size-aware zones (#333), {n_steps} steps ==="
+    );
+    for &grid_dim in &dims {
+        let r_um = (grid_dim as f64) * TUMOR_RADIUS_FRACTION * CELL_SIZE_UM;
+        let cfg = RunConfig { grid_dim, n_steps };
+        for size_aware in [false, true] {
+            let condition = Condition {
+                name: format!(
+                    "spheroid_RSL3_d{grid_dim}_{}",
+                    if size_aware { "sizeaware" } else { "fixed" }
+                ),
+                treatment: Treatment::RSL3,
+                treatment_name: "RSL3".to_string(),
+                o2_lambda: Some(ZONE_REF_LAMBDA),
+                immune_on: false,
+                stromal_on: false,
+                ph_on: false,
+                dose_schedule: DoseSchedule::Constant,
+            };
+            let overrides = Overrides {
+                spheroid: Some(SpheroidConfig::literature()),
+                spheroid_size_aware: if size_aware {
+                    Some(SizeAwareZones::literature())
+                } else {
+                    None
+                },
+                ..Default::default()
+            };
+            let r = run_one_condition_full(&condition, cfg, None, overrides);
+            println!(
+                "SPHEROID_SIZE_SWEEP grid_dim={grid_dim} radius_um={r_um:.1} size_aware={size_aware} \
+                 kill_rate={:.6} total_tumor={} total_dead={}",
+                r.overall_kill_rate, r.total_tumor, r.total_dead
+            );
+        }
+    }
+}
+
 fn main() {
     // Guard against silent drift between this binary's metadata const and
     // the library's runtime value: if a future PR tunes
@@ -3651,6 +3722,14 @@ fn main() {
     // summary.json; the default matrix path below is untouched (byte-identical).
     if std::env::args().any(|a| a == "--bench") {
         run_bench();
+        return;
+    }
+
+    // `--spheroid-size-sweep` runs RSL3 across a range of spheroid sizes, fixed vs
+    // size-aware zone thresholds (#333 kill leg), emitting SPHEROID_SIZE_SWEEP lines.
+    // Does NOT write summary.json; the default matrix path below is byte-identical.
+    if std::env::args().any(|a| a == "--spheroid-size-sweep") {
+        run_spheroid_size_sweep();
         return;
     }
 
