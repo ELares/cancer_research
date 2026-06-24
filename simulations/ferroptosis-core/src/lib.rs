@@ -78,5 +78,6 @@ pub mod slab;
 pub mod spheroid;
 pub mod stats;
 pub mod stromal;
+pub mod trigger_wave;
 pub mod tumor_pk;
 pub mod vasculature;
