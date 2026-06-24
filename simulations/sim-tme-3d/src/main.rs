@@ -1621,8 +1621,34 @@ fn run_one_condition_full(
                 if acsl4_boost != 1.0 {
                     gc.cell.lipid_unsat *= acsl4_boost;
                 }
+                // Persister OXPHOS-ROS suppression (#470): a drug-tolerant
+                // persister downregulates OXPHOS (a main mitochondrial-ROS
+                // source), so a GPX4 inhibitor has less peroxidizable-substrate
+                // flux to act on and kills it less; an HDAC inhibitor re-raises
+                // the ROS and restores the kill (PMID 40909720). Applied as a
+                // transient save/multiply/restore of THIS cell's basal ROS for
+                // THIS step (NOT durable: basal_ros is a static per-cell
+                // parameter while persister_fraction evolves per step, so a
+                // persistent multiply would compound). Reads persister_fraction
+                // as of the PREVIOUS step, like the GPX4-resistance coupling
+                // above. 1.0 when persister off OR oxphos_ros_suppression == 0
+                // (incl. the default `enabled()` persister) ⇒ no mutation ⇒
+                // byte-identical.
+                let oxphos_mult = persister_cfg
+                    .as_ref()
+                    .filter(|_| !gc.state.dead)
+                    .map_or(1.0, |c| {
+                        persister::oxphos_ros_multiplier(gc.state.persister_fraction, c)
+                    });
+                let saved_basal_ros = gc.cell.basal_ros;
+                if oxphos_mult != 1.0 {
+                    gc.cell.basal_ros *= oxphos_mult;
+                }
                 let died =
                     sim_cell_step(&mut gc.state, &gc.cell, &params, step, extra_iron, &mut rng);
+                if oxphos_mult != 1.0 {
+                    gc.cell.basal_ros = saved_basal_ros;
+                }
                 if acsl4_boost != 1.0 {
                     gc.cell.lipid_unsat = saved_unsat;
                 }
@@ -2498,6 +2524,12 @@ struct SnapshotPreset {
     /// True if the drug-tolerant persister model (#241) is enabled. Adds a
     /// `trajectory_persister.npy` overlay and emits `persister_mean`.
     persister: bool,
+    /// True if the persister OXPHOS-ROS suppression axis (#470) is enabled on
+    /// top of the persister model: a persister's basal/mitochondrial ROS is
+    /// scaled down so a GPX4 inhibitor kills it less. Requires `persister` to
+    /// also be true (it modulates the persister fraction). No extra overlay; the
+    /// effect shows in the reduced RSL3 kill of the persister population.
+    persister_oxphos: bool,
     /// True if clonal heterogeneity (#242) is enabled. Writes a static
     /// `subclone.npy` (u8, no time axis) for the renderer's subclone panel and
     /// emits per-subclone kill stats.
@@ -2612,6 +2644,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         ph_on: true,
         multidose: false,
         persister: false,
+        persister_oxphos: false,
         clonal: false,
         vasculature: false,
         spheroid: false,
@@ -2643,6 +2676,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         ph_on: false,
         multidose: false,
         persister: false,
+        persister_oxphos: false,
         clonal: false,
         vasculature: false,
         spheroid: false,
@@ -2674,6 +2708,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         ph_on: false,
         multidose: true,
         persister: false,
+        persister_oxphos: false,
         clonal: false,
         vasculature: false,
         spheroid: false,
@@ -2709,6 +2744,46 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         ph_on: false,
         multidose: true,
         persister: true,
+        persister_oxphos: false,
+        clonal: false,
+        vasculature: false,
+        spheroid: false,
+        slab: false,
+        suppressor: false,
+        checkpoints: false,
+        contact: false,
+        nutrient: false,
+        dc_subsets: false,
+        dc_ferroptosis: false,
+        senescence: false,
+        phenotype_mufa: false,
+        sdt_o2_dependence: 0.0,
+        ferritinophagy: false,
+        ifngamma: false,
+        alox: false,
+        acsl4_negative: false,
+        escrt: false,
+        por: false,
+        dhc7: false,
+    },
+    SnapshotPreset {
+        // RSL3 (covalent GPX4 inhibitor) on a persister population WITH the
+        // OXPHOS-ROS suppression axis (#470): the persisters downregulate OXPHOS,
+        // lowering the basal/mitochondrial ROS the GPX4 inhibitor needs, so RSL3
+        // kills them LESS than the persister-without-OXPHOS baseline (an HDAC
+        // inhibitor would re-raise the ROS, PMID 40909720). RSL3 (not SDT) so the
+        // ROS-supply kill-reduction is on the covalent-knockdown path it actually
+        // governs. No extra overlay; the reduced RSL3 death front IS the result.
+        name: "persister-oxphos",
+        desc: "RSL3 + persister with OXPHOS-ROS suppression (#470): OXPHOS-low persisters resist RSL3, HDACi reverses",
+        treatment: Treatment::RSL3,
+        treatment_name: "RSL3",
+        immune_on: false,
+        stromal_on: false,
+        ph_on: false,
+        multidose: true,
+        persister: true,
+        persister_oxphos: true,
         clonal: false,
         vasculature: false,
         spheroid: false,
@@ -2740,6 +2815,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         ph_on: false,
         multidose: true,
         persister: false,
+        persister_oxphos: false,
         clonal: true,
         vasculature: false,
         spheroid: false,
@@ -2776,6 +2852,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         ph_on: false,
         multidose: false,
         persister: false,
+        persister_oxphos: false,
         clonal: false,
         vasculature: true,
         spheroid: false,
@@ -2814,6 +2891,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         ph_on: false,
         multidose: false,
         persister: false,
+        persister_oxphos: false,
         clonal: false,
         vasculature: true,
         spheroid: false,
@@ -2848,6 +2926,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         ph_on: false,
         multidose: false,
         persister: false,
+        persister_oxphos: false,
         clonal: false,
         vasculature: false,
         spheroid: true,
@@ -2887,6 +2966,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         ph_on: false,
         multidose: false,
         persister: false,
+        persister_oxphos: false,
         clonal: false,
         vasculature: false,
         spheroid: false,
@@ -2926,6 +3006,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         ph_on: false,
         multidose: false,
         persister: false,
+        persister_oxphos: false,
         clonal: false,
         vasculature: true,
         spheroid: false,
@@ -2961,6 +3042,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         ph_on: false,
         multidose: false,
         persister: false,
+        persister_oxphos: false,
         clonal: false,
         vasculature: false,
         spheroid: false,
@@ -2997,6 +3079,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         ph_on: false,
         multidose: false,
         persister: false,
+        persister_oxphos: false,
         clonal: false,
         vasculature: false,
         spheroid: false,
@@ -3035,6 +3118,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         ph_on: false,
         multidose: true,
         persister: true,
+        persister_oxphos: false,
         clonal: true,
         vasculature: false,
         spheroid: false,
@@ -3072,6 +3156,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         ph_on: false,
         multidose: false,
         persister: false,
+        persister_oxphos: false,
         clonal: false,
         vasculature: false,
         spheroid: false,
@@ -3108,6 +3193,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         ph_on: false,
         multidose: false,
         persister: false,
+        persister_oxphos: false,
         clonal: false,
         vasculature: false,
         spheroid: false,
@@ -3144,6 +3230,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         ph_on: false,
         multidose: false,
         persister: false,
+        persister_oxphos: false,
         clonal: false,
         vasculature: false,
         spheroid: false,
@@ -3181,6 +3268,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         ph_on: false,
         multidose: false,
         persister: false,
+        persister_oxphos: false,
         clonal: false,
         vasculature: false,
         spheroid: false,
@@ -3223,6 +3311,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         ph_on: false,
         multidose: false,
         persister: false,
+        persister_oxphos: false,
         clonal: false,
         vasculature: false,
         spheroid: false,
@@ -3261,6 +3350,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         ph_on: false,
         multidose: false,
         persister: false,
+        persister_oxphos: false,
         clonal: false,
         vasculature: false,
         spheroid: false,
@@ -3299,6 +3389,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         ph_on: false,
         multidose: false,
         persister: false,
+        persister_oxphos: false,
         clonal: false,
         vasculature: false,
         spheroid: true,
@@ -3336,6 +3427,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         ph_on: false,
         multidose: false,
         persister: false,
+        persister_oxphos: false,
         clonal: false,
         vasculature: false,
         spheroid: false,
@@ -3374,6 +3466,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         ph_on: false,
         multidose: false,
         persister: false,
+        persister_oxphos: false,
         clonal: false,
         vasculature: false,
         spheroid: false,
@@ -3413,6 +3506,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         ph_on: false,
         multidose: false,
         persister: false,
+        persister_oxphos: false,
         clonal: false,
         vasculature: false,
         spheroid: false,
@@ -3450,6 +3544,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         ph_on: false,
         multidose: false,
         persister: false,
+        persister_oxphos: false,
         clonal: false,
         vasculature: false,
         spheroid: false,
@@ -3489,6 +3584,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         ph_on: false,
         multidose: false,
         persister: false,
+        persister_oxphos: false,
         clonal: false,
         vasculature: false,
         spheroid: false,
@@ -3526,6 +3622,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         ph_on: false,
         multidose: false,
         persister: false,
+        persister_oxphos: false,
         clonal: false,
         vasculature: false,
         spheroid: false,
@@ -3563,6 +3660,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         ph_on: false,
         multidose: false,
         persister: false,
+        persister_oxphos: false,
         clonal: false,
         vasculature: false,
         spheroid: false,
@@ -3600,6 +3698,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         ph_on: false,
         multidose: false,
         persister: false,
+        persister_oxphos: false,
         clonal: false,
         vasculature: false,
         spheroid: false,
@@ -3637,6 +3736,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         ph_on: false,
         multidose: false,
         persister: false,
+        persister_oxphos: false,
         clonal: false,
         vasculature: false,
         spheroid: false,
@@ -3894,12 +3994,23 @@ fn run_snapshot(output_dir: &Path, tumor_radius_um: f64, name: &str) {
     });
     let mut buffers =
         snapshot::SnapshotBuffers::new(run_cfg.grid_dim, run_cfg.n_steps, preset.persister);
+    // Persister model (#241); the OXPHOS-ROS suppression axis (#470) is layered
+    // on only when the preset requests it (`persister-oxphos`), at a placeholder
+    // suppression so OXPHOS-low persisters resist RSL3. `persister == false` ⇒
+    // `None` ⇒ no persister path ⇒ byte-identical.
+    let persister_cfg = preset.persister.then(|| {
+        let mut c = PersisterConfig::enabled();
+        if preset.persister_oxphos {
+            c.oxphos_ros_suppression = 0.7;
+        }
+        c
+    });
     let result = run_one_condition_full(
         &condition,
         run_cfg,
         Some(&mut buffers),
         Overrides {
-            persister: preset.persister.then(PersisterConfig::enabled),
+            persister: persister_cfg,
             clonal: clonal_cfg,
             vasculature: vasculature_cfg,
             spheroid: spheroid_cfg,
@@ -5334,6 +5445,106 @@ mod tests {
         assert!(
             pm > 0.0 && pm <= max_frac,
             "persister_mean must be in (0, max_fraction={max_frac}]; got {pm}"
+        );
+    }
+
+    /// #470: the persister OXPHOS-ROS suppression axis. Drug-tolerant persisters
+    /// downregulate OXPHOS, lowering the basal/mitochondrial ROS a GPX4 inhibitor
+    /// needs, so RSL3 kills them LESS than the persister-without-OXPHOS baseline;
+    /// an HDAC inhibitor re-raises the ROS and restores the kill (PMID 40909720).
+    /// A/B with the OXPHOS-suppression config as the only difference. Both the
+    /// HDAC-fully-rescued case and the suppression=0 case reproduce the persister
+    /// baseline EXACTLY (the byte-identity invariant: `enabled()` keeps the axis
+    /// off, so existing persister runs are unaffected). Same RSL3 multi-dose
+    /// regime as `persister_reduces_multidose_kills`.
+    #[test]
+    fn persister_oxphos_suppression_reduces_rsl3_kill_and_hdac_restores() {
+        let cfg = RunConfig {
+            grid_dim: 20,
+            n_steps: 120,
+        };
+        let cond = Condition {
+            name: "persister_oxphos".to_string(),
+            treatment: Treatment::RSL3,
+            treatment_name: "RSL3".to_string(),
+            o2_lambda: None,
+            immune_on: false,
+            stromal_on: false,
+            ph_on: false,
+            dose_schedule: DoseSchedule::MultiDose {
+                dose_steps: (0..120).step_by(4).collect(),
+                peak: 1.0,
+                half_life_steps: 10.0,
+            },
+        };
+        let run = |p: PersisterConfig| {
+            run_one_condition_full(
+                &cond,
+                cfg,
+                None,
+                Overrides {
+                    persister: Some(p),
+                    ..Default::default()
+                },
+            )
+            .total_dead
+        };
+        // Persister baseline (OXPHOS axis off, the existing #241 behavior).
+        let baseline = run(PersisterConfig::enabled());
+        assert!(
+            baseline >= 20,
+            "baseline RSL3 must kill a meaningful number of cells for this test \
+             to be informative; got {baseline}"
+        );
+        // OXPHOS-low persisters: lower basal ROS ⇒ fewer RSL3 kills.
+        let suppressed = run(PersisterConfig {
+            oxphos_ros_suppression: 0.7,
+            ..PersisterConfig::enabled()
+        });
+        assert!(
+            suppressed < baseline,
+            "OXPHOS-ROS suppression must reduce RSL3 kills of persisters: \
+             baseline={baseline}, suppressed={suppressed}"
+        );
+        // Full HDAC inhibitor reverses the suppression (multiplier back to 1.0)
+        // ⇒ reproduces the persister baseline EXACTLY.
+        let hdac_rescued = run(PersisterConfig {
+            oxphos_ros_suppression: 0.7,
+            hdac_inhibitor: 1.0,
+            ..PersisterConfig::enabled()
+        });
+        assert_eq!(
+            hdac_rescued, baseline,
+            "a full HDAC inhibitor must restore RSL3 kill to the persister baseline"
+        );
+        // suppression = 0 is the layer-off identity behind the matrix byte-identity.
+        let zero = run(PersisterConfig {
+            oxphos_ros_suppression: 0.0,
+            ..PersisterConfig::enabled()
+        });
+        assert_eq!(
+            zero, baseline,
+            "oxphos_ros_suppression=0 must reproduce the persister baseline kills"
+        );
+    }
+
+    /// #470: lock the `--snapshot=persister-oxphos` preset -> Overrides wiring.
+    #[test]
+    fn persister_oxphos_snapshot_preset_is_wired() {
+        let p = resolve_snapshot("persister-oxphos");
+        assert_eq!(p.name, "persister-oxphos");
+        assert!(
+            p.persister_oxphos,
+            "the persister-oxphos preset must enable the OXPHOS-ROS axis"
+        );
+        assert!(
+            p.persister,
+            "OXPHOS-ROS suppression requires the persister model to also be on"
+        );
+        assert_eq!(
+            p.treatment,
+            Treatment::RSL3,
+            "persister-oxphos uses RSL3 (the covalent-knockdown path the ROS supply governs)"
         );
     }
 
