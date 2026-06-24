@@ -151,6 +151,11 @@ fn ferro_params_to_params(fp: &FerroParams) -> Params {
         // 7-DHC sterol radical-trapping pool (#467) is off by default and not part
         // of the C ABI (FerroParams unchanged), so it maps to 0.0 here ⇒ byte-identical.
         dhc7_radical_trap: 0.0,
+        // Vitamin K / VKORC1L1 radical-trapping defense + warfarin inhibition (#483)
+        // are off by default and not part of the C ABI (FerroParams unchanged), so
+        // they map to 0.0 here ⇒ byte-identical.
+        vitk_radical_trap: 0.0,
+        warfarin_vkor_inhibition: 0.0,
         scd_mufa_rate: fp.scd_mufa_rate,
         scd_mufa_max: fp.scd_mufa_max,
         initial_mufa_protection: fp.initial_mufa_protection,

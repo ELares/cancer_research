@@ -515,6 +515,14 @@ struct Overrides {
     /// LOWERS the propagation rate ⇒ ferroptosis resistance (a DHCR7-low tumor with
     /// a high 7-DHC pool). `None` ⇒ `0.0` ⇒ byte-identical. Off the production matrix.
     dhc7: Option<f64>,
+    /// Vitamin K / VKORC1L1 radical-trapping defense + warfarin (#483):
+    /// `Some((trap, warfarin))` sets `params.vitk_radical_trap` and
+    /// `params.warfarin_vkor_inhibition`. The VKORC1L1 trap is a sixth
+    /// GPX4-independent quench that LOWERS the propagation rate ⇒ ferroptosis
+    /// resistance; warfarin (in `[0,1]`) inhibits VKORC1L1, collapsing the trap
+    /// and DRIVING ferroptosis. `None` ⇒ both `0.0` ⇒ byte-identical. Off the
+    /// production matrix.
+    vitk: Option<(f64, f64)>,
     slab: Option<SlabConfig>,
     /// Depth-graded slab phenotype (#272). `None` ⇒ the slab keeps `generate_slab`'s
     /// flat bulk phenotype mix. Only applied when `slab` is also `Some` (it needs the
@@ -763,6 +771,13 @@ fn run_one_condition_full(
     // quench and lowers propagation ⇒ ferroptosis resistance.
     if let Some(pool) = overrides.dhc7 {
         params.dhc7_radical_trap = pool;
+    }
+    // Vitamin K / VKORC1L1 radical-trapping defense + warfarin (#483): `None`
+    // (matrix path) ⇒ both 0.0 ⇒ byte-identical. A high trap (a VKORC1L1-high,
+    // p53-competent tumor) resists ferroptosis; warfarin inhibition collapses it.
+    if let Some((trap, warfarin)) = overrides.vitk {
+        params.vitk_radical_trap = trap;
+        params.warfarin_vkor_inhibition = warfarin;
     }
     let spatial_params = SpatialParams {
         cell_size_um: CELL_SIZE_UM,
@@ -2629,6 +2644,12 @@ struct SnapshotPreset {
     /// the propagation rate, so RSL3 kills LESS than the baseline (ferroptosis
     /// resistance). No overlay; the reduced death front shows in the dead/LP panels.
     dhc7: bool,
+    /// True if the vitamin-K / VKORC1L1 radical-trapping defense (#483) is enabled
+    /// (a VKORC1L1-high, p53-competent tumor). The extra GPX4-independent quench
+    /// lowers the propagation rate, so RSL3 kills LESS than the baseline
+    /// (ferroptosis resistance); a warfarin inhibitor reverses it (shown in the
+    /// A/B test). No overlay; the reduced death front shows in the dead/LP panels.
+    vitk: bool,
 }
 
 /// Visualization presets for `--snapshot=NAME`. Keep this list small —
@@ -2665,6 +2686,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         escrt: false,
         por: false,
         dhc7: false,
+        vitk: false,
     },
     SnapshotPreset {
         name: "bare",
@@ -2697,6 +2719,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         escrt: false,
         por: false,
         dhc7: false,
+        vitk: false,
     },
     SnapshotPreset {
         name: "multidose",
@@ -2729,6 +2752,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         escrt: false,
         por: false,
         dhc7: false,
+        vitk: false,
     },
     SnapshotPreset {
         // SDT here visualizes the persister-fraction OVERLAY (the MUFA axis +
@@ -2765,6 +2789,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         escrt: false,
         por: false,
         dhc7: false,
+        vitk: false,
     },
     SnapshotPreset {
         // RSL3 (covalent GPX4 inhibitor) on a persister population WITH the
@@ -2804,6 +2829,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         escrt: false,
         por: false,
         dhc7: false,
+        vitk: false,
     },
     SnapshotPreset {
         name: "clonal",
@@ -2836,6 +2862,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         escrt: false,
         por: false,
         dhc7: false,
+        vitk: false,
     },
     SnapshotPreset {
         // RSL3 (hypoxia-sensitive) + explicit internal vessels: near-vessel
@@ -2873,6 +2900,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         escrt: false,
         por: false,
         dhc7: false,
+        vitk: false,
     },
     SnapshotPreset {
         // RSL3 + explicit vessels, but the per-cell O2/drug supply is the
@@ -2912,6 +2940,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         escrt: false,
         por: false,
         dhc7: false,
+        vitk: false,
     },
     SnapshotPreset {
         // SDT + radial spheroid biology: the phenotype panel shows the
@@ -2947,6 +2976,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         escrt: false,
         por: false,
         dhc7: false,
+        vitk: false,
     },
     SnapshotPreset {
         // SDT on a patient-scale slab at the SURFACE (+z face = vessel, depth
@@ -2987,6 +3017,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         escrt: false,
         por: false,
         dhc7: false,
+        vitk: false,
     },
     SnapshotPreset {
         // Slab + internal vessels (#272 coupling). vessel_supply.npy (on a slab
@@ -3027,6 +3058,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         escrt: false,
         por: false,
         dhc7: false,
+        vitk: false,
     },
     SnapshotPreset {
         // SDT + immune + Treg/MDSC suppressor (#264 Phase 2). Heuristic niche
@@ -3063,6 +3095,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         escrt: false,
         por: false,
         dhc7: false,
+        vitk: false,
     },
     SnapshotPreset {
         // SDT + immune + dual checkpoint blockade (#264 Phase 3): a PD-1 +
@@ -3100,6 +3133,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         escrt: false,
         por: false,
         dhc7: false,
+        vitk: false,
     },
     SnapshotPreset {
         // Kitchen-sink composition (#278): several realism layers at once —
@@ -3139,6 +3173,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         escrt: false,
         por: false,
         dhc7: false,
+        vitk: false,
     },
     SnapshotPreset {
         // RSL3 + cell-cell contact resistance (#270): dense interior cells
@@ -3177,6 +3212,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         escrt: false,
         por: false,
         dhc7: false,
+        vitk: false,
     },
     SnapshotPreset {
         // SDT + radial nutrient gradient (#270 item 3b): the nutrient-starved
@@ -3214,6 +3250,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         escrt: false,
         por: false,
         dhc7: false,
+        vitk: false,
     },
     SnapshotPreset {
         // SDT + cDC1/cDC2 dendritic-cell subset mix (#264 Phase 4): a cDC1-poor
@@ -3251,6 +3288,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         escrt: false,
         por: false,
         dhc7: false,
+        vitk: false,
     },
     SnapshotPreset {
         // SDT + DC ferroptosis susceptibility (#469): the strong ferroptotic
@@ -3289,6 +3327,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         escrt: false,
         por: false,
         dhc7: false,
+        vitk: false,
     },
     SnapshotPreset {
         // SDT + therapy-induced senescence (#341): a fraction of tumor cells
@@ -3332,6 +3371,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         escrt: false,
         por: false,
         dhc7: false,
+        vitk: false,
     },
     SnapshotPreset {
         // Like `senescence`, but adds the diffusing-SASP-field overlay (#376/#398):
@@ -3371,6 +3411,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         escrt: false,
         por: false,
         dhc7: false,
+        vitk: false,
     },
     SnapshotPreset {
         // RSL3 + 3D spheroid (#197) + phenotype-specific SCD1/MUFA rates (#363):
@@ -3410,6 +3451,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         escrt: false,
         por: false,
         dhc7: false,
+        vitk: false,
     },
     SnapshotPreset {
         // SDT on a hypoxic sphere (the base edge-distance radial-O2 gradient, not
@@ -3448,6 +3490,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         escrt: false,
         por: false,
         dhc7: false,
+        vitk: false,
     },
     SnapshotPreset {
         // RSL3 on a hypoxic sphere with the NCOA4-ferritinophagy + hypoxia-iron
@@ -3487,6 +3530,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         escrt: false,
         por: false,
         dhc7: false,
+        vitk: false,
     },
     SnapshotPreset {
         // RSL3 + immune with the IFN-γ → System Xc⁻ + ACSL4 coupling on (#443):
@@ -3527,6 +3571,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         escrt: false,
         por: false,
         dhc7: false,
+        vitk: false,
     },
     SnapshotPreset {
         // RSL3 on a sphere with an ALOX15-high, MCFA-exposed phenotype (#446):
@@ -3565,6 +3610,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         escrt: false,
         por: false,
         dhc7: false,
+        vitk: false,
     },
     SnapshotPreset {
         // RSL3 on an ACSL4-NEGATIVE tumor (#444): with ACSL4 absent the membrane
@@ -3605,6 +3651,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         escrt: false,
         por: false,
         dhc7: false,
+        vitk: false,
     },
     SnapshotPreset {
         // RSL3 on a tumor with a high ESCRT-III membrane-repair capacity (#465).
@@ -3643,6 +3690,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         escrt: true,
         por: false,
         dhc7: false,
+        vitk: false,
     },
     SnapshotPreset {
         // RSL3 on a tumor with a high POR/CYB5R1 enzymatic O2-coupled H2O2 source
@@ -3681,6 +3729,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         escrt: false,
         por: true,
         dhc7: false,
+        vitk: false,
     },
     SnapshotPreset {
         // RSL3 on a DHCR7-low tumor with a high 7-DHC sterol radical-trapping pool
@@ -3719,6 +3768,50 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         escrt: false,
         por: false,
         dhc7: true,
+        vitk: false,
+    },
+    SnapshotPreset {
+        // RSL3 on a VKORC1L1-high, p53-competent tumor with a vitamin-K
+        // radical-trapping defense (#483). VKORC1L1 reduces vitamin K to a
+        // radical-trapping antioxidant that quenches the autocatalytic
+        // peroxidation chain INDEPENDENT of GPX4/GSH, so the extra quench makes
+        // RSL3 kill LESS than the baseline (ferroptosis resistance); the FDA
+        // anticoagulant warfarin inhibits VKORC1L1 and reverses it, restoring the
+        // kill (Yang et al. Cell Metab 2023 PMID 37467745; the warfarin reversal
+        // is exercised by the warfarin_reverses_vkorc1l1_resistance A/B test).
+        // This preset shows the DEFENDED (no-warfarin) state; the dead/LP panels
+        // show the reduced death front. No overlay.
+        name: "vkorc1l1",
+        desc: "RSL3 + VKORC1L1 vitamin-K radical trap (#483): p53-competent ferroptosis resistance (warfarin reverses)",
+        treatment: Treatment::RSL3,
+        treatment_name: "RSL3",
+        immune_on: false,
+        stromal_on: false,
+        ph_on: false,
+        multidose: false,
+        persister: false,
+        persister_oxphos: false,
+        clonal: false,
+        vasculature: false,
+        spheroid: false,
+        slab: false,
+        suppressor: false,
+        checkpoints: false,
+        contact: false,
+        nutrient: false,
+        dc_subsets: false,
+        dc_ferroptosis: false,
+        senescence: false,
+        phenotype_mufa: false,
+        sdt_o2_dependence: 0.0,
+        ferritinophagy: false,
+        ifngamma: false,
+        alox: false,
+        acsl4_negative: false,
+        escrt: false,
+        por: false,
+        dhc7: false,
+        vitk: true,
     },
     SnapshotPreset {
         // SDT with a Type-I-heavy sonosensitizer (#468): sdt_o2_dependence = 0.3
@@ -3757,6 +3850,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         escrt: false,
         por: false,
         dhc7: false,
+        vitk: false,
     },
 ];
 
@@ -4055,6 +4149,7 @@ fn run_snapshot(output_dir: &Path, tumor_radius_um: f64, name: &str) {
             // #467: 7-DHC sterol radical-trapping pool for the `dhc7` preset (a
             // DHCR7-low resistant tumor); `None` for every other preset.
             dhc7: preset.dhc7.then_some(0.5),
+            vitk: preset.vitk.then_some((1.0, 0.0)),
             ..Default::default()
         },
     );
@@ -8786,6 +8881,69 @@ mod tests {
         let p = resolve_snapshot("dhc7");
         assert_eq!(p.name, "dhc7");
         assert!(p.dhc7, "the dhc7 preset must enable the 7-DHC radical trap");
+        assert!(matches!(p.treatment, Treatment::RSL3));
+    }
+
+    /// #483 A/B: the vitamin-K / VKORC1L1 radical-trapping defense reduces RSL3
+    /// kill (a sixth GPX4-independent quench, so a VKORC1L1-high p53-competent
+    /// tumor resists), and warfarin (which inhibits VKORC1L1) REVERSES it,
+    /// restoring the kill toward the unprotected baseline (Yang et al. Cell Metab
+    /// 2023 PMID 37467745). Magnitude uncalibrated; the direction is the result.
+    #[test]
+    fn warfarin_reverses_vkorc1l1_resistance() {
+        let cfg = RunConfig {
+            grid_dim: 24,
+            n_steps: 120,
+        };
+        let cond = Condition {
+            name: "vitk_ab".to_string(),
+            treatment: Treatment::RSL3,
+            treatment_name: "RSL3".to_string(),
+            o2_lambda: Some(ZONE_REF_LAMBDA),
+            immune_on: false,
+            stromal_on: false,
+            ph_on: false,
+            dose_schedule: DoseSchedule::Constant,
+        };
+        let run = |vitk: Option<(f64, f64)>| {
+            run_one_condition_full(
+                &cond,
+                cfg,
+                None,
+                Overrides {
+                    vitk,
+                    ..Default::default()
+                },
+            )
+            .overall_kill_rate
+        };
+        let baseline = run(None);
+        // VKORC1L1-defended, no warfarin: resists RSL3 (fewer kills).
+        let defended = run(Some((1.0, 0.0)));
+        assert!(
+            defended < baseline,
+            "VKORC1L1 vitamin-K trap must lower RSL3 kill: defended={defended} baseline={baseline}"
+        );
+        // Full warfarin inhibition collapses the trap, restoring the baseline kill
+        // EXACTLY (effective trap 0). This is the druggable, repurposing-relevant
+        // result: warfarin re-sensitizes a VKORC1L1-defended tumor to ferroptosis.
+        let warfarin = run(Some((1.0, 1.0)));
+        assert_eq!(
+            warfarin, baseline,
+            "full warfarin inhibition must restore the unprotected RSL3 kill"
+        );
+    }
+
+    /// #483: the `--snapshot=vkorc1l1` preset is wired (RSL3 on a VKORC1L1-defended
+    /// tumor, the no-warfarin resistant state).
+    #[test]
+    fn vkorc1l1_snapshot_preset_is_wired() {
+        let p = resolve_snapshot("vkorc1l1");
+        assert_eq!(p.name, "vkorc1l1");
+        assert!(
+            p.vitk,
+            "the vkorc1l1 preset must enable the VKORC1L1 radical trap"
+        );
         assert!(matches!(p.treatment, Treatment::RSL3));
     }
 

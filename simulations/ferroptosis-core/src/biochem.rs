@@ -379,10 +379,14 @@ pub fn sim_cell_step(
     // (`gch1_rate`, 0.0 by default ⇒ byte-identical).
     // 7-DHC (#467) adds a sterol radical-trapping quench in parallel to GCH1/BH4
     // (`dhc7_radical_trap`, 0.0 by default ⇒ byte-identical).
+    // Vitamin K / VKORC1L1 (#483) adds a sixth GPX4-independent radical-trapping
+    // quench, reduced by warfarin (`effective_vitk_radical_trap`, 0.0 default ⇒
+    // byte-identical).
     let antioxidant_quench = state.gpx4 * (state.gsh / (state.gsh + 0.5))
         + state.fsp1
         + params.gch1_rate
-        + params.dhc7_radical_trap.max(0.0);
+        + params.dhc7_radical_trap.max(0.0)
+        + params.effective_vitk_radical_trap();
     let propagation_rate = params.lp_propagation / (1.0 + antioxidant_quench * 5.0);
     // ALOX isoform-specific enzymatic-oxidation capacity (#446): scale the
     // propagation rate by `1 + alox_propagation_boost` (clamped >= 0), so an
@@ -538,10 +542,13 @@ pub fn sim_cell(
         // GCH1/BH4 (#338) adds GPX4-independent quench (`gch1_rate`, 0.0 default).
         // 7-DHC (#467) adds a sterol radical-trapping quench (`dhc7_radical_trap`,
         // 0.0 default ⇒ byte-identical).
+        // Vitamin K / VKORC1L1 (#483) adds a sixth radical-trapping quench,
+        // reduced by warfarin (`effective_vitk_radical_trap`, 0.0 default).
         let antioxidant_quench = gpx4 * (gsh / (gsh + 0.5))
             + fsp1
             + params.gch1_rate
-            + params.dhc7_radical_trap.max(0.0);
+            + params.dhc7_radical_trap.max(0.0)
+            + params.effective_vitk_radical_trap();
         let propagation_rate = params.lp_propagation / (1.0 + antioxidant_quench * 5.0);
         // ALOX isoform enzymatic-oxidation capacity (#446): same `1 + boost`
         // multiplier as the spatial `sim_cell_step` path. `0.0` default ⇒ ×1.0 ⇒
@@ -1216,5 +1223,53 @@ mod tests {
             dhc7_high < baseline,
             "7-DHC radical trap must lower post-step LP (resistance): dhc7_high={dhc7_high}, baseline={baseline}"
         );
+    }
+
+    #[test]
+    fn sim_cell_step_respects_vitk_radical_trap_and_warfarin() {
+        // #483: the vitamin-K / VKORC1L1 radical-trapping pool adds a sixth
+        // GPX4-independent quench, LOWERING the propagation rate, so a positive
+        // `vitk_radical_trap` reduces post-step LP (resistance); warfarin
+        // inhibition removes that protection (raising LP back toward baseline).
+        // `0.0` (default) is the byte-identical baseline.
+        let mut gen_rng = StdRng::seed_from_u64(41);
+        let cell = gen_cell(Phenotype::Glycolytic, &mut gen_rng);
+
+        let step_once = |vitk: f64, warfarin: f64| -> f64 {
+            let mut params = Params::default();
+            params.vitk_radical_trap = vitk;
+            params.warfarin_vkor_inhibition = warfarin;
+            let mut init_rng = StdRng::seed_from_u64(6);
+            let mut state = CellState::from_cell(
+                &cell,
+                crate::cell::Treatment::Control,
+                &params,
+                &mut init_rng,
+            );
+            state.gpx4 = 0.1;
+            state.fsp1 = 0.1;
+            state.lp = 5.0;
+            let mut step_rng = StdRng::seed_from_u64(0);
+            sim_cell_step(&mut state, &cell, &params, 0, 0.0, &mut step_rng);
+            state.lp
+        };
+
+        let baseline = step_once(0.0, 0.0);
+        let vitk_high = step_once(2.0, 0.0);
+        assert!(
+            vitk_high < baseline,
+            "VKORC1L1 radical trap must lower post-step LP (resistance): vitk_high={vitk_high}, baseline={baseline}"
+        );
+        // Full warfarin inhibition collapses the trap -> reproduces the baseline
+        // exactly (drives ferroptosis back to the unprotected level).
+        let warfarin_full = step_once(2.0, 1.0);
+        assert_eq!(
+            warfarin_full, baseline,
+            "full warfarin inhibition must restore the unprotected LP (effective trap 0)"
+        );
+        // Partial inhibition is intermediate (more LP than fully protected, less
+        // than fully inhibited).
+        let warfarin_half = step_once(2.0, 0.5);
+        assert!(vitk_high < warfarin_half && warfarin_half < baseline);
     }
 }
