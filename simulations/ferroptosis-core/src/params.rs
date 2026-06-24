@@ -153,6 +153,21 @@ pub struct Params {
     /// (PMID 27842070). Uncalibrated linear placeholder; direction-anchored.
     #[serde(default)]
     pub acsl4_status_boost: f64,
+    /// ESCRT-III membrane-repair rescue rate (#465): the per-step probability that
+    /// a cell whose lipid peroxide has crossed `death_threshold` is resealed by
+    /// ESCRT-III and survives that step (instead of dying), as long as repair
+    /// budget remains. Acts on the death-EXECUTION step, not the lipid substrate
+    /// (Dai et al., BBRC 2020, PMID 31761326: CHMP5/CHMP6 membrane repair blocks
+    /// ferroptosis; knockdown sensitizes). The RNG roll is drawn only when this is
+    /// `> 0`, so `0.0` (default) ⇒ the brake never fires ⇒ byte-identical.
+    #[serde(default)]
+    pub escrt_repair_rate: f64,
+    /// ESCRT-III finite per-cell repair CAPACITY (#465): the number of rescue
+    /// events available before the machinery is exhausted (tracked per cell on
+    /// `CellState::escrt_budget_used`). A larger budget means a longer death delay
+    /// / more resistance. `0.0` (default) ⇒ no rescues possible ⇒ byte-identical.
+    #[serde(default)]
+    pub escrt_repair_budget: f64,
 
     // === GPX4 Dynamic Regulation ===
     pub gpx4_degradation_by_ros: f64,
@@ -208,6 +223,8 @@ impl Default for Params {
             alox_propagation_boost: 0.0,
             mcfa_pufa_boost: 0.0,
             acsl4_status_boost: 0.0,
+            escrt_repair_rate: 0.0,
+            escrt_repair_budget: 0.0,
             gpx4_degradation_by_ros: 0.002,
             gpx4_nrf2_upregulation: 0.008,
             sdt_ros: 5.0,

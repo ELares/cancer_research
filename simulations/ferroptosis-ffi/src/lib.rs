@@ -141,6 +141,10 @@ fn ferro_params_to_params(fp: &FerroParams) -> Params {
         // ACSL4-status biomarker PUFA boost (#444) is off by default and not part
         // of the C ABI (FerroParams unchanged), so it maps to 0.0 here ⇒ byte-identical.
         acsl4_status_boost: 0.0,
+        // ESCRT-III membrane-repair brake (#465) is off by default and not part of
+        // the C ABI (FerroParams unchanged), so both map to 0.0 here ⇒ byte-identical.
+        escrt_repair_rate: 0.0,
+        escrt_repair_budget: 0.0,
         scd_mufa_rate: fp.scd_mufa_rate,
         scd_mufa_max: fp.scd_mufa_max,
         initial_mufa_protection: fp.initial_mufa_protection,

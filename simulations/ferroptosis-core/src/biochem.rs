@@ -45,6 +45,14 @@ pub struct CellState {
     pub persister_locked: f64,
     #[serde(default)]
     pub persister_cum_exposure: f64,
+    /// ESCRT-III membrane-repair budget consumed so far (#465). Read/written ONLY
+    /// inside the death-threshold-crossing brake, and only when
+    /// `Params::escrt_repair_rate > 0.0`; on the default path (`escrt_repair_rate
+    /// == 0.0`) the brake is never entered, so this field is never touched and the
+    /// engine stays byte-identical. `#[serde(default)]` (`0.0`) so pre-#465
+    /// `CellState` JSON still deserializes.
+    #[serde(default)]
+    pub escrt_budget_used: f64,
 }
 
 impl CellState {
@@ -77,6 +85,7 @@ impl CellState {
             persister_reversible: 0.0,
             persister_locked: 0.0,
             persister_cum_exposure: 0.0,
+            escrt_budget_used: 0.0,
         }
     }
 
@@ -137,6 +146,7 @@ impl CellState {
             persister_reversible: 0.0,
             persister_locked: 0.0,
             persister_cum_exposure: 0.0,
+            escrt_budget_used: 0.0,
         }
     }
 }
@@ -399,8 +409,25 @@ pub fn sim_cell_step(
     state.lp += norm(rng, 0.0, 0.003);
     state.lp = state.lp.max(0.0);
 
-    // Death check
+    // Death check. ESCRT-III membrane repair (#465) can rescue a cell that has
+    // crossed the threshold, for a finite per-cell budget. The RNG roll is drawn
+    // ONLY when `escrt_repair_rate > 0` and budget remains (the `escrt_can_attempt`
+    // short-circuit), so the default path (`escrt_repair_rate == 0.0`) makes no
+    // extra draw and stays byte-identical.
     if state.lp > params.death_threshold {
+        if crate::repair::escrt_can_attempt(
+            params.escrt_repair_rate,
+            state.escrt_budget_used,
+            params.escrt_repair_budget,
+        ) && crate::repair::escrt_rescue(params.escrt_repair_rate, rng.gen::<f64>())
+        {
+            // Resealed: consume one repair event and survive this step. The cell's
+            // defenses still run next step, so ESCRT buys time for GSH/GPX4 to
+            // recover under transient stress while sustained GPX4 inhibition still
+            // kills once the budget is spent (a finite delay).
+            state.escrt_budget_used += 1.0;
+            return false;
+        }
         state.dead = true;
         state.death_step = Some(step);
         return true;
@@ -425,6 +452,9 @@ pub fn sim_cell(
     let mut gpx4 = cell.gpx4;
     let fsp1 = cell.fsp1;
     let mut death_step: Option<u32> = None;
+    // ESCRT-III repair budget consumed so far (#465); only touched when
+    // `escrt_repair_rate > 0`, so the default path is byte-identical.
+    let mut escrt_budget_used = 0.0_f64;
     // #339: acute/naive MUFA start override; None ⇒ byte-identical.
     let mut mufa_protection = params
         .mufa_acute_start
@@ -526,9 +556,23 @@ pub fn sim_cell(
         lp += norm(rng, 0.0, 0.003);
         lp = lp.max(0.0);
 
-        // Death check
+        // Death check. ESCRT-III repair (#465) can rescue across a finite budget,
+        // only while the cell is still alive (death_step not yet set). The RNG roll
+        // is drawn ONLY when `escrt_repair_rate > 0` (the `escrt_can_attempt`
+        // short-circuit), so the default path is byte-identical.
         if lp > params.death_threshold {
-            death_step = Some(step);
+            if death_step.is_none()
+                && crate::repair::escrt_can_attempt(
+                    params.escrt_repair_rate,
+                    escrt_budget_used,
+                    params.escrt_repair_budget,
+                )
+                && crate::repair::escrt_rescue(params.escrt_repair_rate, rng.gen::<f64>())
+            {
+                escrt_budget_used += 1.0;
+            } else {
+                death_step = Some(step);
+            }
         }
     }
 
@@ -1033,5 +1077,56 @@ mod tests {
             mcfa_high > baseline,
             "MCFA PUFA boost must raise post-step LP: mcfa_high={mcfa_high}, baseline={baseline}"
         );
+    }
+
+    #[test]
+    fn escrt_repair_brakes_death_execution() {
+        // #465: an over-threshold cell dies by default, but ESCRT membrane repair
+        // (rate > 0, budget remaining) reseals it and it survives the step; with no
+        // budget the rescue cannot fire. Deterministic single-step A/B.
+        let mut gen_rng = StdRng::seed_from_u64(21);
+        let cell = gen_cell(Phenotype::Glycolytic, &mut gen_rng);
+
+        let step_once = |escrt_rate: f64, escrt_budget: f64| -> (bool, f64) {
+            let mut params = Params::default();
+            params.escrt_repair_rate = escrt_rate;
+            params.escrt_repair_budget = escrt_budget;
+            let mut init_rng = StdRng::seed_from_u64(3);
+            let mut state = CellState::from_cell(
+                &cell,
+                crate::cell::Treatment::Control,
+                &params,
+                &mut init_rng,
+            );
+            // Defenses off + LP already over the death threshold ⇒ this step's death
+            // check fires.
+            state.gsh = 0.0;
+            state.gpx4 = 0.0;
+            state.fsp1 = 0.0;
+            state.lp = params.death_threshold + 0.5;
+            let mut step_rng = StdRng::seed_from_u64(0);
+            let died = sim_cell_step(&mut state, &cell, &params, 0, 0.0, &mut step_rng);
+            (died, state.escrt_budget_used)
+        };
+
+        // Default (off): the over-threshold cell dies, no budget touched.
+        let (died_off, used_off) = step_once(0.0, 0.0);
+        assert!(died_off, "without ESCRT the over-threshold cell must die");
+        assert_eq!(
+            used_off, 0.0,
+            "default path must not touch the repair budget"
+        );
+
+        // On (rate 1.0, budget available): resealed this step, one repair consumed.
+        let (died_on, used_on) = step_once(1.0, 5.0);
+        assert!(
+            !died_on,
+            "with ESCRT (rate 1, budget) the cell must be rescued"
+        );
+        assert_eq!(used_on, 1.0, "exactly one repair event consumed");
+
+        // Enabled but zero budget ⇒ no rescue ⇒ death proceeds.
+        let (died_spent, _) = step_once(1.0, 0.0);
+        assert!(died_spent, "ESCRT with zero budget cannot rescue");
     }
 }
