@@ -183,6 +183,22 @@ pub struct Params {
     /// C ABI is unchanged.
     #[serde(default)]
     pub por_h2o2_rate: f64,
+    /// 7-DHC sterol radical-trapping antioxidant pool (#467). 7-dehydrocholesterol
+    /// (7-DHC), a distal cholesterol-biosynthesis intermediate, is a potent
+    /// endogenous membrane-resident radical-trapping antioxidant that shields
+    /// PUFA from peroxyl-radical autoxidation (like membrane vitamin E), gating the
+    /// autocatalytic peroxidation chain (Freitas et al. / Li et al., Nature 2024,
+    /// "7-dehydrocholesterol dictates ferroptosis sensitivity," PMID 38297130,
+    /// DOI 10.1038/s41586-023-06983-9). It is added to the GPX4-independent
+    /// radical-trapping quench term (alongside `gch1_rate`/FSP1), so a higher pool
+    /// raises the quench and LOWERS the propagation rate ⇒ ferroptosis RESISTANCE.
+    /// DHCR7 consumes 7-DHC, so DHCR7-loss raises this pool (resistance, the modeled
+    /// escape) and EBP/SC5D-low lowers it (sensitization). This is a sterol-pathway
+    /// radical-trapping defense distinct from GPX4/GSH/FSP1/DHODH and from the
+    /// iron/MUFA axes. `0.0` (default) ⇒ no added quench ⇒ byte-identical; FFI
+    /// defaults it to 0.0 so the C ABI is unchanged.
+    #[serde(default)]
+    pub dhc7_radical_trap: f64,
 
     // === GPX4 Dynamic Regulation ===
     pub gpx4_degradation_by_ros: f64,
@@ -241,6 +257,7 @@ impl Default for Params {
             escrt_repair_rate: 0.0,
             escrt_repair_budget: 0.0,
             por_h2o2_rate: 0.0,
+            dhc7_radical_trap: 0.0,
             gpx4_degradation_by_ros: 0.002,
             gpx4_nrf2_upregulation: 0.008,
             sdt_ros: 5.0,

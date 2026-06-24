@@ -148,6 +148,9 @@ fn ferro_params_to_params(fp: &FerroParams) -> Params {
         // POR/CYB5R1 enzymatic H2O2 source (#466) is off by default and not part of
         // the C ABI (FerroParams unchanged), so it maps to 0.0 here ⇒ byte-identical.
         por_h2o2_rate: 0.0,
+        // 7-DHC sterol radical-trapping pool (#467) is off by default and not part
+        // of the C ABI (FerroParams unchanged), so it maps to 0.0 here ⇒ byte-identical.
+        dhc7_radical_trap: 0.0,
         scd_mufa_rate: fp.scd_mufa_rate,
         scd_mufa_max: fp.scd_mufa_max,
         initial_mufa_protection: fp.initial_mufa_protection,

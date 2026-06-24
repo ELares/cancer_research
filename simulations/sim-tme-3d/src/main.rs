@@ -510,6 +510,11 @@ struct Overrides {
     /// in the hypoxic core (tying the Fenton-feeding oxidant to O2). `None` ⇒ no
     /// injection ⇒ byte-identical. Off the production matrix.
     por: Option<(f64, f64)>,
+    /// 7-DHC sterol radical-trapping defense (#467): `Some(pool)` sets
+    /// `params.dhc7_radical_trap`, a GPX4-independent radical-trapping quench that
+    /// LOWERS the propagation rate ⇒ ferroptosis resistance (a DHCR7-low tumor with
+    /// a high 7-DHC pool). `None` ⇒ `0.0` ⇒ byte-identical. Off the production matrix.
+    dhc7: Option<f64>,
     slab: Option<SlabConfig>,
     /// Depth-graded slab phenotype (#272). `None` ⇒ the slab keeps `generate_slab`'s
     /// flat bulk phenotype mix. Only applied when `slab` is also `Some` (it needs the
@@ -743,6 +748,12 @@ fn run_one_condition_full(
     if let Some((rate, budget)) = overrides.escrt {
         params.escrt_repair_rate = rate;
         params.escrt_repair_budget = budget;
+    }
+    // 7-DHC sterol radical-trapping defense (#467): `None` (matrix path) ⇒ 0.0 ⇒
+    // byte-identical. A high pool (DHCR7-low tumor) raises the GPX4-independent
+    // quench and lowers propagation ⇒ ferroptosis resistance.
+    if let Some(pool) = overrides.dhc7 {
+        params.dhc7_radical_trap = pool;
     }
     let spatial_params = SpatialParams {
         cell_size_um: CELL_SIZE_UM,
@@ -2545,6 +2556,11 @@ struct SnapshotPreset {
     /// O2-coupling keeps it from amplifying the deep-core artifact). No overlay; the
     /// rim-weighted extra death shows in the dead/LP panels.
     por: bool,
+    /// True if the 7-DHC sterol radical-trapping defense (#467) is enabled (a high
+    /// 7-DHC pool, i.e. a DHCR7-low tumor). The extra GPX4-independent quench lowers
+    /// the propagation rate, so RSL3 kills LESS than the baseline (ferroptosis
+    /// resistance). No overlay; the reduced death front shows in the dead/LP panels.
+    dhc7: bool,
 }
 
 /// Visualization presets for `--snapshot=NAME`. Keep this list small —
@@ -2578,6 +2594,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         acsl4_negative: false,
         escrt: false,
         por: false,
+        dhc7: false,
     },
     SnapshotPreset {
         name: "bare",
@@ -2607,6 +2624,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         acsl4_negative: false,
         escrt: false,
         por: false,
+        dhc7: false,
     },
     SnapshotPreset {
         name: "multidose",
@@ -2636,6 +2654,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         acsl4_negative: false,
         escrt: false,
         por: false,
+        dhc7: false,
     },
     SnapshotPreset {
         // SDT here visualizes the persister-fraction OVERLAY (the MUFA axis +
@@ -2669,6 +2688,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         acsl4_negative: false,
         escrt: false,
         por: false,
+        dhc7: false,
     },
     SnapshotPreset {
         name: "clonal",
@@ -2698,6 +2718,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         acsl4_negative: false,
         escrt: false,
         por: false,
+        dhc7: false,
     },
     SnapshotPreset {
         // RSL3 (hypoxia-sensitive) + explicit internal vessels: near-vessel
@@ -2732,6 +2753,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         acsl4_negative: false,
         escrt: false,
         por: false,
+        dhc7: false,
     },
     SnapshotPreset {
         // RSL3 + explicit vessels, but the per-cell O2/drug supply is the
@@ -2768,6 +2790,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         acsl4_negative: false,
         escrt: false,
         por: false,
+        dhc7: false,
     },
     SnapshotPreset {
         // SDT + radial spheroid biology: the phenotype panel shows the
@@ -2800,6 +2823,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         acsl4_negative: false,
         escrt: false,
         por: false,
+        dhc7: false,
     },
     SnapshotPreset {
         // SDT on a patient-scale slab at the SURFACE (+z face = vessel, depth
@@ -2837,6 +2861,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         acsl4_negative: false,
         escrt: false,
         por: false,
+        dhc7: false,
     },
     SnapshotPreset {
         // Slab + internal vessels (#272 coupling). vessel_supply.npy (on a slab
@@ -2874,6 +2899,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         acsl4_negative: false,
         escrt: false,
         por: false,
+        dhc7: false,
     },
     SnapshotPreset {
         // SDT + immune + Treg/MDSC suppressor (#264 Phase 2). Heuristic niche
@@ -2907,6 +2933,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         acsl4_negative: false,
         escrt: false,
         por: false,
+        dhc7: false,
     },
     SnapshotPreset {
         // SDT + immune + dual checkpoint blockade (#264 Phase 3): a PD-1 +
@@ -2941,6 +2968,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         acsl4_negative: false,
         escrt: false,
         por: false,
+        dhc7: false,
     },
     SnapshotPreset {
         // Kitchen-sink composition (#278): several realism layers at once —
@@ -2977,6 +3005,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         acsl4_negative: false,
         escrt: false,
         por: false,
+        dhc7: false,
     },
     SnapshotPreset {
         // RSL3 + cell-cell contact resistance (#270): dense interior cells
@@ -3012,6 +3041,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         acsl4_negative: false,
         escrt: false,
         por: false,
+        dhc7: false,
     },
     SnapshotPreset {
         // SDT + radial nutrient gradient (#270 item 3b): the nutrient-starved
@@ -3046,6 +3076,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         acsl4_negative: false,
         escrt: false,
         por: false,
+        dhc7: false,
     },
     SnapshotPreset {
         // SDT + cDC1/cDC2 dendritic-cell subset mix (#264 Phase 4): a cDC1-poor
@@ -3080,6 +3111,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         acsl4_negative: false,
         escrt: false,
         por: false,
+        dhc7: false,
     },
     SnapshotPreset {
         // SDT + therapy-induced senescence (#341): a fraction of tumor cells
@@ -3120,6 +3152,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         acsl4_negative: false,
         escrt: false,
         por: false,
+        dhc7: false,
     },
     SnapshotPreset {
         // Like `senescence`, but adds the diffusing-SASP-field overlay (#376/#398):
@@ -3156,6 +3189,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         acsl4_negative: false,
         escrt: false,
         por: false,
+        dhc7: false,
     },
     SnapshotPreset {
         // RSL3 + 3D spheroid (#197) + phenotype-specific SCD1/MUFA rates (#363):
@@ -3192,6 +3226,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         acsl4_negative: false,
         escrt: false,
         por: false,
+        dhc7: false,
     },
     SnapshotPreset {
         // SDT on a hypoxic sphere (the base edge-distance radial-O2 gradient, not
@@ -3227,6 +3262,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         acsl4_negative: false,
         escrt: false,
         por: false,
+        dhc7: false,
     },
     SnapshotPreset {
         // RSL3 on a hypoxic sphere with the NCOA4-ferritinophagy + hypoxia-iron
@@ -3263,6 +3299,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         acsl4_negative: false,
         escrt: false,
         por: false,
+        dhc7: false,
     },
     SnapshotPreset {
         // RSL3 + immune with the IFN-γ → System Xc⁻ + ACSL4 coupling on (#443):
@@ -3300,6 +3337,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         acsl4_negative: false,
         escrt: false,
         por: false,
+        dhc7: false,
     },
     SnapshotPreset {
         // RSL3 on a sphere with an ALOX15-high, MCFA-exposed phenotype (#446):
@@ -3335,6 +3373,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         acsl4_negative: false,
         escrt: false,
         por: false,
+        dhc7: false,
     },
     SnapshotPreset {
         // RSL3 on an ACSL4-NEGATIVE tumor (#444): with ACSL4 absent the membrane
@@ -3372,6 +3411,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         acsl4_negative: true,
         escrt: false,
         por: false,
+        dhc7: false,
     },
     SnapshotPreset {
         // RSL3 on a tumor with a high ESCRT-III membrane-repair capacity (#465).
@@ -3407,6 +3447,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         acsl4_negative: false,
         escrt: true,
         por: false,
+        dhc7: false,
     },
     SnapshotPreset {
         // RSL3 on a tumor with a high POR/CYB5R1 enzymatic O2-coupled H2O2 source
@@ -3442,6 +3483,43 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         acsl4_negative: false,
         escrt: false,
         por: true,
+        dhc7: false,
+    },
+    SnapshotPreset {
+        // RSL3 on a DHCR7-low tumor with a high 7-DHC sterol radical-trapping pool
+        // (#467). 7-DHC is a membrane radical-trapping antioxidant that gates the
+        // autocatalytic peroxidation chain, so the extra GPX4-independent quench
+        // makes RSL3 kill LESS than the baseline (ferroptosis resistance; the
+        // DHCR7-loss escape, Freitas/Li Nature 2024 PMID 38297130). The dead/LP
+        // panels show the reduced death front. No overlay.
+        name: "dhc7",
+        desc: "RSL3 + 7-DHC sterol radical trap (#467): DHCR7-low ferroptosis resistance",
+        treatment: Treatment::RSL3,
+        treatment_name: "RSL3",
+        immune_on: false,
+        stromal_on: false,
+        ph_on: false,
+        multidose: false,
+        persister: false,
+        clonal: false,
+        vasculature: false,
+        spheroid: false,
+        slab: false,
+        suppressor: false,
+        checkpoints: false,
+        contact: false,
+        nutrient: false,
+        dc_subsets: false,
+        senescence: false,
+        phenotype_mufa: false,
+        sdt_o2_dependence: 0.0,
+        ferritinophagy: false,
+        ifngamma: false,
+        alox: false,
+        acsl4_negative: false,
+        escrt: false,
+        por: false,
+        dhc7: true,
     },
 ];
 
@@ -3721,6 +3799,9 @@ fn run_snapshot(output_dir: &Path, tumor_radius_um: f64, name: &str) {
             // #466: POR/CYB5R1 enzymatic O2-coupled H2O2 source (rate 0.4, fully
             // O2-dependent so it is rim-weighted) for the `por` preset.
             por: preset.por.then_some((0.4, 1.0)),
+            // #467: 7-DHC sterol radical-trapping pool for the `dhc7` preset (a
+            // DHCR7-low resistant tumor); `None` for every other preset.
+            dhc7: preset.dhc7.then_some(0.5),
             ..Default::default()
         },
     );
@@ -8194,6 +8275,57 @@ mod tests {
         let p = resolve_snapshot("por");
         assert_eq!(p.name, "por");
         assert!(p.por, "the por preset must enable the POR H2O2 source");
+        assert!(matches!(p.treatment, Treatment::RSL3));
+    }
+
+    /// #467 A/B: the 7-DHC sterol radical-trapping defense reduces RSL3 kill. A high
+    /// 7-DHC pool (DHCR7-low tumor) adds GPX4-independent radical-trapping quench,
+    /// lowering the propagation rate, so an RSL3 run with 7-DHC on kills LESS than
+    /// the baseline (ferroptosis resistance; Freitas/Li Nature 2024 PMID 38297130).
+    /// Magnitude uncalibrated; the direction is the result.
+    #[test]
+    fn dhc7_radical_trap_reduces_rsl3_kill() {
+        let cfg = RunConfig {
+            grid_dim: 24,
+            n_steps: 120,
+        };
+        let cond = Condition {
+            name: "dhc7_ab".to_string(),
+            treatment: Treatment::RSL3,
+            treatment_name: "RSL3".to_string(),
+            o2_lambda: Some(ZONE_REF_LAMBDA),
+            immune_on: false,
+            stromal_on: false,
+            ph_on: false,
+            dose_schedule: DoseSchedule::Constant,
+        };
+        let run = |dhc7: Option<f64>| {
+            run_one_condition_full(
+                &cond,
+                cfg,
+                None,
+                Overrides {
+                    dhc7,
+                    ..Default::default()
+                },
+            )
+        };
+        let baseline = run(None);
+        let dhc7_high = run(Some(1.0));
+        assert!(
+            dhc7_high.overall_kill_rate < baseline.overall_kill_rate,
+            "7-DHC radical trap must lower kill: dhc7_high={} baseline={}",
+            dhc7_high.overall_kill_rate,
+            baseline.overall_kill_rate
+        );
+    }
+
+    /// #467: the `--snapshot=dhc7` preset is wired (RSL3 on a DHCR7-low resistant tumor).
+    #[test]
+    fn dhc7_snapshot_preset_is_wired() {
+        let p = resolve_snapshot("dhc7");
+        assert_eq!(p.name, "dhc7");
+        assert!(p.dhc7, "the dhc7 preset must enable the 7-DHC radical trap");
         assert!(matches!(p.treatment, Treatment::RSL3));
     }
 
