@@ -273,6 +273,33 @@ pub fn mufa_boost_increment(fraction: f64, cfg: &PersisterConfig) -> f64 {
     (cfg.mufa_boost_per_step * fraction).max(0.0)
 }
 
+/// Multiplier on a persister cell's basal / mitochondrial ROS (#470).
+///
+/// Drug-tolerant persisters survive GPX4 inhibition partly by DOWNREGULATING
+/// oxidative phosphorylation, a main source of the mitochondrial ROS /
+/// peroxidizable-substrate flux a GPX4 inhibitor (RSL3) acts on, so they have
+/// less to peroxidize and resist; HDAC inhibitors re-raise OXPHOS / ROS and
+/// restore the kill (PMID 40909720). The consumer multiplies this into the
+/// cell's basal ROS:
+///
+/// ```text
+/// multiplier = 1 - oxphos_ros_suppression · fraction · (1 - hdac_inhibitor)
+/// ```
+///
+/// - `oxphos_ros_suppression = 0` (the default, and in `enabled()`) ⇒ exactly
+///   `1.0` (identity / byte-identical), independent of `fraction`.
+/// - a full persister (`fraction = 1`) with no HDAC inhibitor keeps
+///   `1 - oxphos_ros_suppression` of its basal ROS (lower ⇒ less ferroptosis).
+/// - `hdac_inhibitor = 1` ⇒ exactly `1.0` (the rescue fully restores ROS).
+///
+/// `hdac_inhibitor` is clamped to `[0, 1]` and the result is floored at `0.0`
+/// (ROS cannot go negative), so the multiplier stays in `[0, 1]`.
+#[must_use]
+pub fn oxphos_ros_multiplier(fraction: f64, cfg: &PersisterConfig) -> f64 {
+    let hdac = cfg.hdac_inhibitor.clamp(0.0, 1.0);
+    (1.0 - cfg.oxphos_ros_suppression * fraction * (1.0 - hdac)).clamp(0.0, 1.0)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -289,6 +316,39 @@ mod tests {
         assert_eq!(revert(0.3, &id), 0.3);
         assert_eq!(gpx4_inactivation_multiplier(0.3, &id), 1.0);
         assert_eq!(mufa_boost_increment(0.3, &id), 0.0);
+        // #470: OXPHOS-ROS suppression off in the identity config ⇒ multiplier
+        // exactly 1.0 for any persister fraction ⇒ byte-identical.
+        assert_eq!(oxphos_ros_multiplier(0.0, &id), 1.0);
+        assert_eq!(oxphos_ros_multiplier(1.0, &id), 1.0);
+    }
+
+    /// #470: OXPHOS-ROS suppression lowers a persister's basal ROS (so RSL3
+    /// kills it less), and an HDAC inhibitor reverses that, restoring the ROS.
+    /// `enabled()` keeps it off (multiplier 1.0) so existing persister runs are
+    /// byte-identical; only an explicit `oxphos_ros_suppression > 0` engages it.
+    #[test]
+    fn oxphos_ros_suppression_lowers_ros_and_hdac_restores_it() {
+        // enabled() keeps the axis off ⇒ identity at any fraction.
+        assert_eq!(oxphos_ros_multiplier(1.0, &enabled()), 1.0);
+        // Suppressing config: a full persister keeps 1 - suppression of its ROS.
+        let mut cfg = enabled();
+        cfg.oxphos_ros_suppression = 0.6;
+        assert!((oxphos_ros_multiplier(1.0, &cfg) - 0.4).abs() < 1e-12);
+        // Scales with the persister fraction (no suppression at fraction 0).
+        assert_eq!(oxphos_ros_multiplier(0.0, &cfg), 1.0);
+        assert!(oxphos_ros_multiplier(0.5, &cfg) > oxphos_ros_multiplier(1.0, &cfg));
+        // HDAC inhibitor reverses it: full inhibitor restores ROS to 1.0.
+        cfg.hdac_inhibitor = 1.0;
+        assert_eq!(oxphos_ros_multiplier(1.0, &cfg), 1.0);
+        // Partial inhibitor: effective suppression is suppression·(1 - hdac).
+        cfg.hdac_inhibitor = 0.5;
+        assert!((oxphos_ros_multiplier(1.0, &cfg) - 0.7).abs() < 1e-12);
+        // Clamps: hdac > 1 behaves as 1 (full rescue); result floored at 0.
+        cfg.hdac_inhibitor = 2.0;
+        assert_eq!(oxphos_ros_multiplier(1.0, &cfg), 1.0);
+        let mut strong = enabled();
+        strong.oxphos_ros_suppression = 5.0;
+        assert_eq!(oxphos_ros_multiplier(1.0, &strong), 0.0);
     }
 
     #[test]

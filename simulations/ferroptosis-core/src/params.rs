@@ -690,6 +690,30 @@ pub struct PersisterConfig {
     /// EMA or the drug-driven resistance. `0.0` (default) ⇒ no stress entry ⇒
     /// byte-identical. Uncalibrated placeholder; direction is the result.
     pub stress_entry_rate: f64,
+    /// OXPHOS-ROS suppression at full persistence (#470). A distinct, MITOCHONDRIAL
+    /// escape axis: drug-tolerant persisters survive GPX4 inhibition partly by
+    /// DOWNREGULATING oxidative phosphorylation, a main source of the
+    /// mitochondrial ROS / peroxidizable-substrate flux GPX4 inhibitors act on,
+    /// so RSL3 has less to work with and kills persisters less ("FSP1 and histone
+    /// deacetylases suppress cancer persister cell ferroptosis", PMID 40909720;
+    /// the OXPHOS-suppression / mitochondrial-ROS-supply leg of persister
+    /// ferroptosis tolerance, distinct from the existing `gpx4_resistance` and
+    /// MUFA axes). A consumer scales a persister cell's basal / mitochondrial ROS
+    /// DOWN by [`crate::persister::oxphos_ros_multiplier`], which interpolates
+    /// from `1.0` at no persistence to `1 - oxphos_ros_suppression` at full
+    /// persistence. `0.0` (default, AND in `enabled()`) ⇒ multiplier `1.0` ⇒
+    /// byte-identical (the existing persister snapshot/tests are unaffected).
+    /// Uncalibrated placeholder; only the direction (OXPHOS-low persister ⇒ less
+    /// RSL3 kill) is claimed.
+    pub oxphos_ros_suppression: f64,
+    /// HDAC-inhibitor rescue of OXPHOS-ROS (#470), in `[0, 1]`. HDAC inhibitors
+    /// re-raise OXPHOS / mitochondrial ROS in persisters and synergize with GPX4
+    /// inhibition to kill them (PMID 40909720), so this knob REVERSES
+    /// `oxphos_ros_suppression`: the effective suppression a persister keeps is
+    /// `oxphos_ros_suppression · (1 - hdac_inhibitor)`, so `hdac_inhibitor = 1`
+    /// fully restores the ROS (and the kill) while `0` leaves the suppression
+    /// intact. Inert when `oxphos_ros_suppression == 0`. Uncalibrated placeholder.
+    pub hdac_inhibitor: f64,
 }
 
 impl Default for PersisterConfig {
@@ -707,6 +731,8 @@ impl Default for PersisterConfig {
             lock_threshold: 0.0,
             exposure_decay: 0.0,
             stress_entry_rate: 0.0,
+            oxphos_ros_suppression: 0.0,
+            hdac_inhibitor: 0.0,
         }
     }
 }
@@ -730,6 +756,11 @@ impl PersisterConfig {
             // Stress-niche entry off even in `enabled()`: a distinct opt-in
             // (#377), so the existing persister snapshot/tests stay byte-identical.
             stress_entry_rate: 0.0,
+            // OXPHOS-ROS suppression + HDAC rescue off even in `enabled()`: a
+            // distinct opt-in (#470), so the existing persister snapshot/tests
+            // stay byte-identical.
+            oxphos_ros_suppression: 0.0,
+            hdac_inhibitor: 0.0,
         }
     }
 
@@ -758,9 +789,14 @@ impl PersisterConfig {
             && self.mufa_boost_per_step == 0.0
             // #377: a stress-entry-only config (all drug rates zero,
             // stress_entry_rate > 0) DOES raise the reversible pool from a stress
-            // niche, so it is NOT identity — include it so a consumer that gates
+            // niche, so it is NOT identity. Include it so a consumer that gates
             // the persister path on is_identity() still runs the stress entry.
             && self.stress_entry_rate == 0.0
+            // #470: a config with OXPHOS-ROS suppression set is NOT identity
+            // (it scales a persister's basal ROS), mirroring the #377 precedent.
+            // hdac_inhibitor alone is inert (it only modulates the suppression),
+            // so only oxphos_ros_suppression participates in the contract.
+            && self.oxphos_ros_suppression == 0.0
     }
 }
 
