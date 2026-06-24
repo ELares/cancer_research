@@ -37,12 +37,16 @@ All tests must pass before submitting a PR.
 - **Rust**: Follow existing patterns. Use `cargo fmt` and `cargo clippy` before committing.
 - **Manuscript** (`article/drafts/v1.md`): Follow the conventions in `article/AUTHORING.md` — heading levels, citation formats, narrative inflation guardrails.
 
+## Opening an Issue
+
+Issue templates live in `.github/ISSUE_TEMPLATE/`: bug report, corpus or literature contribution, simulation extension proposal, and manuscript correction. They encode the project's conventions (for example, that new simulation layers stay off by default and byte-identical), so following the matching template makes a proposal easier to act on. Blank issues are still allowed for anything that does not fit a template.
+
 ## Submitting Changes
 
 1. **Fork and branch** from `main`
 2. **Make focused changes** — one issue per PR where possible
 3. **Run tests** (both Python and Rust)
-4. **Describe your changes** in the PR body — what changed, why, and what was tested
+4. **Describe your changes** in the PR body. The pull-request template (`.github/PULL_REQUEST_TEMPLATE.md`) has a checklist covering tests, the off-by-default byte-identical rule for simulation changes, and verifiable citations for claims
 5. **Link to the relevant issue** if one exists
 
 ## Dependency Management
