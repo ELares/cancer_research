@@ -141,6 +141,11 @@ fn ferro_params_to_params(fp: &FerroParams) -> Params {
         // ACSL4-status biomarker PUFA boost (#444) is off by default and not part
         // of the C ABI (FerroParams unchanged), so it maps to 0.0 here ⇒ byte-identical.
         acsl4_status_boost: 0.0,
+        // Dietary-PUFA supply + lipid-droplet/DGAT buffer (#486) are off by default
+        // and not part of the C ABI (FerroParams unchanged), so both map to 0.0 ⇒
+        // byte-identical.
+        dietary_pufa_supply: 0.0,
+        lipid_droplet_buffer: 0.0,
         // ESCRT-III membrane-repair brake (#465) is off by default and not part of
         // the C ABI (FerroParams unchanged), so both map to 0.0 here ⇒ byte-identical.
         escrt_repair_rate: 0.0,
