@@ -74,7 +74,7 @@ use ferroptosis_core::immune_spatial::{
 };
 use ferroptosis_core::nutrient::{apply_nutrient_stress_3d, NutrientConfig};
 use ferroptosis_core::oxygen::{
-    fenton_o2_factor, hypoxia_iron_factor, o2_dependent_exo_factor, radial_o2_field,
+    fenton_o2_factor, hypoxia_iron_factor, o2_dependent_exo_factor, por_o2_factor, radial_o2_field,
 };
 use ferroptosis_core::params::{
     Params, PersisterConfig, PhConfig, SpatialImmuneConfig, SpatialParams, StromalConfig,
@@ -504,6 +504,12 @@ struct Overrides {
     /// budget (more repair ⇒ slower execution ⇒ more resistance). `None` ⇒ both
     /// `0.0` ⇒ the brake never fires ⇒ byte-identical. Off the production matrix.
     escrt: Option<(f64, f64)>,
+    /// POR/CYB5R1 enzymatic O2-coupled H2O2 source (#466): `Some((rate, o2_dep))`
+    /// injects an enzymatic H2O2 oxidant into each tumor cell's `basal_ros`,
+    /// scaled per cell by `por_o2_factor(local_o2, o2_dep)` so POR makes less H2O2
+    /// in the hypoxic core (tying the Fenton-feeding oxidant to O2). `None` ⇒ no
+    /// injection ⇒ byte-identical. Off the production matrix.
+    por: Option<(f64, f64)>,
     slab: Option<SlabConfig>,
     /// Depth-graded slab phenotype (#272). `None` ⇒ the slab keeps `generate_slab`'s
     /// flat bulk phenotype mix. Only applied when `slab` is also `Some` (it needs the
@@ -977,6 +983,22 @@ fn run_one_condition_full(
         for (idx, gc) in grid.cells.iter_mut().enumerate() {
             if gc.is_tumor {
                 gc.cell.iron *= fenton_o2_factor(o2_supply_for_exo[idx], fenton_o2_dependence);
+            }
+        }
+    }
+
+    // --- POR/CYB5R1 enzymatic O2-coupled H2O2 source (#466) ---
+    // POR/CYB5R1 transfer electrons from NAD(P)H to O2 to make H2O2 (the Fenton
+    // substrate), so inject an enzymatic oxidant into each tumor cell's `basal_ros`
+    // (which feeds `total_ros`), scaled per cell by `por_o2_factor(local_o2, dep)`
+    // using the same per-cell O2 supply as the SDT exo-ROS / hypoxia-iron legs. The
+    // O2-coupling means POR makes less H2O2 in the hypoxic core, so unlike a uniform
+    // oxidant it does NOT amplify the deep-core artifact. `None` (matrix path) ⇒ no
+    // injection ⇒ byte-identical.
+    if let Some((por_rate, por_o2_dep)) = overrides.por {
+        for (idx, gc) in grid.cells.iter_mut().enumerate() {
+            if gc.is_tumor {
+                gc.cell.basal_ros += por_rate * por_o2_factor(o2_supply_for_exo[idx], por_o2_dep);
             }
         }
     }
@@ -2517,6 +2539,12 @@ struct SnapshotPreset {
     /// (membrane repair delays death execution). No extra static overlay; the
     /// reduced/slower death front shows in the dead/LP panels vs the baseline.
     escrt: bool,
+    /// True if the POR/CYB5R1 enzymatic O2-coupled H2O2 source (#466) is enabled.
+    /// Injects an O2-scaled enzymatic oxidant into each tumor cell's basal ROS, so
+    /// RSL3 kills MORE in the oxygenated rim and LESS in the hypoxic core (the
+    /// O2-coupling keeps it from amplifying the deep-core artifact). No overlay; the
+    /// rim-weighted extra death shows in the dead/LP panels.
+    por: bool,
 }
 
 /// Visualization presets for `--snapshot=NAME`. Keep this list small —
@@ -2549,6 +2577,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         alox: false,
         acsl4_negative: false,
         escrt: false,
+        por: false,
     },
     SnapshotPreset {
         name: "bare",
@@ -2577,6 +2606,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         alox: false,
         acsl4_negative: false,
         escrt: false,
+        por: false,
     },
     SnapshotPreset {
         name: "multidose",
@@ -2605,6 +2635,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         alox: false,
         acsl4_negative: false,
         escrt: false,
+        por: false,
     },
     SnapshotPreset {
         // SDT here visualizes the persister-fraction OVERLAY (the MUFA axis +
@@ -2637,6 +2668,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         alox: false,
         acsl4_negative: false,
         escrt: false,
+        por: false,
     },
     SnapshotPreset {
         name: "clonal",
@@ -2665,6 +2697,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         alox: false,
         acsl4_negative: false,
         escrt: false,
+        por: false,
     },
     SnapshotPreset {
         // RSL3 (hypoxia-sensitive) + explicit internal vessels: near-vessel
@@ -2698,6 +2731,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         alox: false,
         acsl4_negative: false,
         escrt: false,
+        por: false,
     },
     SnapshotPreset {
         // RSL3 + explicit vessels, but the per-cell O2/drug supply is the
@@ -2733,6 +2767,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         alox: false,
         acsl4_negative: false,
         escrt: false,
+        por: false,
     },
     SnapshotPreset {
         // SDT + radial spheroid biology: the phenotype panel shows the
@@ -2764,6 +2799,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         alox: false,
         acsl4_negative: false,
         escrt: false,
+        por: false,
     },
     SnapshotPreset {
         // SDT on a patient-scale slab at the SURFACE (+z face = vessel, depth
@@ -2800,6 +2836,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         alox: false,
         acsl4_negative: false,
         escrt: false,
+        por: false,
     },
     SnapshotPreset {
         // Slab + internal vessels (#272 coupling). vessel_supply.npy (on a slab
@@ -2836,6 +2873,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         alox: false,
         acsl4_negative: false,
         escrt: false,
+        por: false,
     },
     SnapshotPreset {
         // SDT + immune + Treg/MDSC suppressor (#264 Phase 2). Heuristic niche
@@ -2868,6 +2906,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         alox: false,
         acsl4_negative: false,
         escrt: false,
+        por: false,
     },
     SnapshotPreset {
         // SDT + immune + dual checkpoint blockade (#264 Phase 3): a PD-1 +
@@ -2901,6 +2940,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         alox: false,
         acsl4_negative: false,
         escrt: false,
+        por: false,
     },
     SnapshotPreset {
         // Kitchen-sink composition (#278): several realism layers at once —
@@ -2936,6 +2976,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         alox: false,
         acsl4_negative: false,
         escrt: false,
+        por: false,
     },
     SnapshotPreset {
         // RSL3 + cell-cell contact resistance (#270): dense interior cells
@@ -2970,6 +3011,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         alox: false,
         acsl4_negative: false,
         escrt: false,
+        por: false,
     },
     SnapshotPreset {
         // SDT + radial nutrient gradient (#270 item 3b): the nutrient-starved
@@ -3003,6 +3045,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         alox: false,
         acsl4_negative: false,
         escrt: false,
+        por: false,
     },
     SnapshotPreset {
         // SDT + cDC1/cDC2 dendritic-cell subset mix (#264 Phase 4): a cDC1-poor
@@ -3036,6 +3079,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         alox: false,
         acsl4_negative: false,
         escrt: false,
+        por: false,
     },
     SnapshotPreset {
         // SDT + therapy-induced senescence (#341): a fraction of tumor cells
@@ -3075,6 +3119,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         alox: false,
         acsl4_negative: false,
         escrt: false,
+        por: false,
     },
     SnapshotPreset {
         // Like `senescence`, but adds the diffusing-SASP-field overlay (#376/#398):
@@ -3110,6 +3155,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         alox: false,
         acsl4_negative: false,
         escrt: false,
+        por: false,
     },
     SnapshotPreset {
         // RSL3 + 3D spheroid (#197) + phenotype-specific SCD1/MUFA rates (#363):
@@ -3145,6 +3191,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         alox: false,
         acsl4_negative: false,
         escrt: false,
+        por: false,
     },
     SnapshotPreset {
         // SDT on a hypoxic sphere (the base edge-distance radial-O2 gradient, not
@@ -3179,6 +3226,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         alox: false,
         acsl4_negative: false,
         escrt: false,
+        por: false,
     },
     SnapshotPreset {
         // RSL3 on a hypoxic sphere with the NCOA4-ferritinophagy + hypoxia-iron
@@ -3214,6 +3262,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         alox: false,
         acsl4_negative: false,
         escrt: false,
+        por: false,
     },
     SnapshotPreset {
         // RSL3 + immune with the IFN-γ → System Xc⁻ + ACSL4 coupling on (#443):
@@ -3250,6 +3299,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         alox: false,
         acsl4_negative: false,
         escrt: false,
+        por: false,
     },
     SnapshotPreset {
         // RSL3 on a sphere with an ALOX15-high, MCFA-exposed phenotype (#446):
@@ -3284,6 +3334,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         alox: true,
         acsl4_negative: false,
         escrt: false,
+        por: false,
     },
     SnapshotPreset {
         // RSL3 on an ACSL4-NEGATIVE tumor (#444): with ACSL4 absent the membrane
@@ -3320,6 +3371,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         alox: false,
         acsl4_negative: true,
         escrt: false,
+        por: false,
     },
     SnapshotPreset {
         // RSL3 on a tumor with a high ESCRT-III membrane-repair capacity (#465).
@@ -3354,6 +3406,42 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         alox: false,
         acsl4_negative: false,
         escrt: true,
+        por: false,
+    },
+    SnapshotPreset {
+        // RSL3 on a tumor with a high POR/CYB5R1 enzymatic O2-coupled H2O2 source
+        // (#466). POR transfers electrons from NAD(P)H to O2 to make H2O2 (the
+        // Fenton substrate), so the extra oxidant raises RSL3 ferroptosis kill,
+        // concentrated in the OXYGENATED rim because the O2-coupling makes POR make
+        // little H2O2 in the hypoxic core (Yan 2021 PMID 33860083). The dead/LP
+        // panels show the rim-weighted extra death front. No overlay.
+        name: "por",
+        desc: "RSL3 + POR/CYB5R1 O2-coupled H2O2 source (#466): rim-weighted enzymatic ferroptosis boost",
+        treatment: Treatment::RSL3,
+        treatment_name: "RSL3",
+        immune_on: false,
+        stromal_on: false,
+        ph_on: false,
+        multidose: false,
+        persister: false,
+        clonal: false,
+        vasculature: false,
+        spheroid: false,
+        slab: false,
+        suppressor: false,
+        checkpoints: false,
+        contact: false,
+        nutrient: false,
+        dc_subsets: false,
+        senescence: false,
+        phenotype_mufa: false,
+        sdt_o2_dependence: 0.0,
+        ferritinophagy: false,
+        ifngamma: false,
+        alox: false,
+        acsl4_negative: false,
+        escrt: false,
+        por: true,
     },
 ];
 
@@ -3630,6 +3718,9 @@ fn run_snapshot(output_dir: &Path, tumor_radius_um: f64, name: &str) {
             // #465: ESCRT-III membrane repair (high rate + ample budget) for the
             // `escrt` preset; `None` for every other preset ⇒ no brake.
             escrt: preset.escrt.then_some((0.6, 8.0)),
+            // #466: POR/CYB5R1 enzymatic O2-coupled H2O2 source (rate 0.4, fully
+            // O2-dependent so it is rim-weighted) for the `por` preset.
+            por: preset.por.then_some((0.4, 1.0)),
             ..Default::default()
         },
     );
@@ -8051,6 +8142,58 @@ mod tests {
         let p = resolve_snapshot("escrt");
         assert_eq!(p.name, "escrt");
         assert!(p.escrt, "the escrt preset must enable the repair brake");
+        assert!(matches!(p.treatment, Treatment::RSL3));
+    }
+
+    /// #466 A/B: the POR/CYB5R1 enzymatic H2O2 source raises RSL3 kill. Injecting
+    /// an enzymatic oxidant into each tumor cell's basal ROS feeds the Fenton/ROS
+    /// pool, so an RSL3 run with POR on kills MORE than the no-POR baseline (more
+    /// H2O2 ⇒ more ferroptosis; Yan 2021 PMID 33860083). O2-independent here
+    /// (o2_dep = 0) to isolate the oxidant magnitude. Direction is the result.
+    #[test]
+    fn por_h2o2_raises_rsl3_kill() {
+        let cfg = RunConfig {
+            grid_dim: 24,
+            n_steps: 120,
+        };
+        let cond = Condition {
+            name: "por_ab".to_string(),
+            treatment: Treatment::RSL3,
+            treatment_name: "RSL3".to_string(),
+            o2_lambda: Some(ZONE_REF_LAMBDA),
+            immune_on: false,
+            stromal_on: false,
+            ph_on: false,
+            dose_schedule: DoseSchedule::Constant,
+        };
+        let run = |por: Option<(f64, f64)>| {
+            run_one_condition_full(
+                &cond,
+                cfg,
+                None,
+                Overrides {
+                    por,
+                    ..Default::default()
+                },
+            )
+        };
+        let baseline = run(None);
+        let por_high = run(Some((0.6, 0.0))); // O2-independent to isolate magnitude
+        assert!(
+            por_high.overall_kill_rate > baseline.overall_kill_rate,
+            "POR H2O2 must raise kill: por_high={} baseline={}",
+            por_high.overall_kill_rate,
+            baseline.overall_kill_rate
+        );
+    }
+
+    /// #466: the `--snapshot=por` preset is wired (RSL3 with the O2-coupled POR
+    /// H2O2 source enabled).
+    #[test]
+    fn por_snapshot_preset_is_wired() {
+        let p = resolve_snapshot("por");
+        assert_eq!(p.name, "por");
+        assert!(p.por, "the por preset must enable the POR H2O2 source");
         assert!(matches!(p.treatment, Treatment::RSL3));
     }
 

@@ -144,6 +144,21 @@ pub fn o2_dependent_exo_factor(o2_supply: f64, dependence: f64) -> f64 {
     (1.0 - d + d * s).clamp(0.0, 1.0)
 }
 
+/// O2-dependence of the POR/CYB5R1 enzymatic H2O2 yield (#466): `(1 - dep) + dep *
+/// o2_supply`, in `[0, 1]`. POR/CYB5R1 transfer electrons from NAD(P)H to O2 to
+/// make H2O2, so the yield falls where O2 is low. `dependence = 0` ⇒ `1.0` (O2-
+/// independent); `dependence = 1` ⇒ scales linearly with `o2_supply` (no O2, no
+/// H2O2). Same functional form as [`o2_dependent_exo_factor`] but a conceptually
+/// independent axis (the SDT exo-ROS yield vs the POR enzymatic oxidant source); a
+/// consumer multiplies the POR H2O2 contribution by this so POR makes less H2O2 in
+/// the hypoxic core (tying the Fenton-feeding oxidant to O2, which helps the
+/// deep-core artifact). `dependence = 0` ⇒ factor `1.0` ⇒ no scaling.
+pub fn por_o2_factor(o2_supply: f64, dependence: f64) -> f64 {
+    let d = dependence.clamp(0.0, 1.0);
+    let s = o2_supply.clamp(0.0, 1.0);
+    (1.0 - d + d * s).clamp(0.0, 1.0)
+}
+
 /// Hypoxia amplification of NCOA4-ferritinophagy iron release (#340).
 ///
 /// Hypoxia shifts iron handling: HIF stabilization raises transferrin-receptor
@@ -302,6 +317,22 @@ mod tests {
             o2_dependent_exo_factor(0.5, 2.0),
             o2_dependent_exo_factor(0.5, 1.0)
         );
+    }
+
+    #[test]
+    fn por_o2_factor_identity_at_zero_and_scales_with_o2() {
+        // dependence = 0 (default): always 1.0 (O2-independent POR yield).
+        assert_eq!(por_o2_factor(0.05, 0.0), 1.0);
+        assert_eq!(por_o2_factor(1.0, 0.0), 1.0);
+        // dependence = 1: the POR H2O2 yield equals the O2 supply (none in anoxia).
+        assert_eq!(por_o2_factor(0.05, 1.0), 0.05);
+        assert_eq!(por_o2_factor(1.0, 1.0), 1.0);
+        // More O2-dependence ⇒ less POR yield in a hypoxic zone (the deep-core fix).
+        let hyp = 0.1;
+        assert!(por_o2_factor(hyp, 1.0) < por_o2_factor(hyp, 0.0));
+        // Clamped, never panics.
+        assert_eq!(por_o2_factor(2.0, 1.0), 1.0);
+        assert_eq!(por_o2_factor(-1.0, 1.0), 0.0);
     }
 
     #[test]
