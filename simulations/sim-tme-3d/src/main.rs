@@ -67,10 +67,10 @@ use ferroptosis_core::dose_schedule::DoseSchedule;
 use ferroptosis_core::grid::{TumorGrid3D, TUMOR_RADIUS_FRACTION};
 use ferroptosis_core::ifngamma::{acsl4_upregulation, system_xc_retention, IFNGammaConfig};
 use ferroptosis_core::immune_spatial::{
-    dc_activation, diffuse_damp_3d_step, exhaustion_factor, ferroptotic_immunosuppression,
-    immune_kill_probability, sasp_field_kill_multiplier, suppressor_kill_multiplier,
-    suppressor_source_mask_3d, CheckpointPanel, DcSubsetConfig, SuppressorConfig,
-    DAMP_KILL_THRESHOLD,
+    dc_activation, dc_ferroptosis_survival, diffuse_damp_3d_step, exhaustion_factor,
+    ferroptotic_immunosuppression, immune_kill_probability, sasp_field_kill_multiplier,
+    suppressor_kill_multiplier, suppressor_source_mask_3d, CheckpointPanel, DcFerroptosisConfig,
+    DcSubsetConfig, SuppressorConfig, DAMP_KILL_THRESHOLD,
 };
 use ferroptosis_core::nutrient::{apply_nutrient_stress_3d, NutrientConfig};
 use ferroptosis_core::oxygen::{
@@ -542,6 +542,12 @@ struct Overrides {
     /// Dendritic-cell subset mix (#264 Phase 4). `None` / balanced ⇒ priming
     /// efficiency 1.0 ⇒ no immune-kill modulation ⇒ byte-identical.
     dc_subsets: Option<DcSubsetConfig>,
+    /// DC / effector-cell ferroptosis susceptibility (#469). `None` / identity
+    /// (`susceptibility == 0`) ⇒ DC-survival multiplier 1.0 ⇒ byte-identical.
+    /// A ferroptotic TME (high local lipid-ROS / DAMP) kills the effector DCs
+    /// themselves, lowering priming, with PD-L1 / checkpoint state protecting
+    /// them (PMID 39423128).
+    dc_ferroptosis: Option<DcFerroptosisConfig>,
     /// Therapy-induced senescence program (#341). `None` / identity (`fraction
     /// == 0`) ⇒ no senescent cells, no per-cell perturbation, no SASP→immune
     /// coupling ⇒ byte-identical.
@@ -670,6 +676,9 @@ fn run_one_condition_full(
     // path sets no per-cell `mufa_rate` ⇒ byte-identical.
     let phenotype_mufa_cfg = overrides.phenotype_mufa.filter(|c| !c.is_identity());
     let dc_subsets_cfg = overrides.dc_subsets;
+    // DC ferroptosis susceptibility (#469). `None`/identity (`susceptibility ==
+    // 0`) ⇒ DC-survival multiplier 1.0 ⇒ byte-identical.
+    let dc_ferroptosis_cfg = overrides.dc_ferroptosis.filter(|c| !c.is_identity());
     // Therapy-induced senescence (#341). `None`/identity ⇒ no cells marked, no
     // perturbation, no SASP coupling ⇒ byte-identical.
     let senescence_cfg = overrides.senescence.filter(|c| !c.is_identity());
@@ -1374,6 +1383,12 @@ fn run_one_condition_full(
     // scalar. Gated on `immune_on` (it only modulates the immune kill loop) and
     // on a non-identity mix; `None`/balanced ⇒ `dc_priming = 1.0` ⇒ byte-identical.
     let dc_subsets_on = condition.immune_on && dc_subsets_cfg.is_some_and(|c| !c.is_identity());
+    // DC ferroptosis susceptibility (#469): gated on `immune_on` (it modulates
+    // only the immune kill loop) and on a non-identity config. `dc_ferroptosis_cfg`
+    // is already identity-filtered above, so `is_some()` is the enable test.
+    let dc_ferroptosis_on = condition.immune_on && dc_ferroptosis_cfg.is_some();
+    let (dc_ferro_susceptibility, dc_ferro_pdl1) =
+        dc_ferroptosis_cfg.map_or((0.0, 1.0), |c| (c.susceptibility, c.pdl1_protection));
     let dc_priming = if dc_subsets_on {
         dc_subsets_cfg.map_or(1.0, |c| c.priming_efficiency())
     } else {
@@ -1432,6 +1447,7 @@ fn run_one_condition_full(
     let realism_kill_path = exhaustion_on
         || suppressor_on
         || dc_subsets_on
+        || dc_ferroptosis_on
         || ferro_immuno_on
         || sasp_on
         || sasp_field_on;
@@ -1892,6 +1908,20 @@ fn run_one_condition_full(
                             } else {
                                 1.0
                             };
+                            // DC ferroptosis susceptibility (#469): the SAME
+                            // local DAMP/lipid-ROS that drives `activation` also
+                            // kills the effector DCs themselves, scaling the kill
+                            // probability DOWN (lower priming); PD-L1 protection
+                            // restores it. 1.0 when off (identity).
+                            let dc_ferro = if dc_ferroptosis_on {
+                                dc_ferroptosis_survival(
+                                    local_damp,
+                                    dc_ferro_susceptibility,
+                                    dc_ferro_pdl1,
+                                )
+                            } else {
+                                1.0
+                            };
                             // `dc_priming` is a uniform scalar (the cDC1/cDC2
                             // mix, #264 Phase 4): 1.0 when off, < 1.0 for a
                             // cDC1-poor tumor that primes killing less efficiently.
@@ -1902,6 +1932,7 @@ fn run_one_condition_full(
                             ) * exh
                                 * supp
                                 * dc_priming
+                                * dc_ferro
                                 * ferro_supp
                                 * sasp
                                 * sasp_field_mult;
@@ -2502,6 +2533,11 @@ struct SnapshotPreset {
     /// A cDC1-poor tumor primes anti-tumor killing less efficiently; no extra
     /// overlay, the reduced immune killing shows in the dead/DAMP panels.
     dc_subsets: bool,
+    /// True if DC ferroptosis susceptibility (#469) is enabled: a ferroptotic
+    /// TME kills the effector DCs themselves (PD-L1-gated), lowering immune
+    /// amplification. No extra static overlay; the effect shows in the immune
+    /// kill counts (run with the immune layer on).
+    dc_ferroptosis: bool,
     /// True if the therapy-induced-senescence program (#341) is enabled. No
     /// extra static overlay; the senescent cells' shifted ferroptosis response
     /// (resistant or senolytic per the axis mix) plus the SASP immune coupling
@@ -2585,6 +2621,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         contact: false,
         nutrient: false,
         dc_subsets: false,
+        dc_ferroptosis: false,
         senescence: false,
         phenotype_mufa: false,
         sdt_o2_dependence: 0.0,
@@ -2615,6 +2652,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         contact: false,
         nutrient: false,
         dc_subsets: false,
+        dc_ferroptosis: false,
         senescence: false,
         phenotype_mufa: false,
         sdt_o2_dependence: 0.0,
@@ -2645,6 +2683,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         contact: false,
         nutrient: false,
         dc_subsets: false,
+        dc_ferroptosis: false,
         senescence: false,
         phenotype_mufa: false,
         sdt_o2_dependence: 0.0,
@@ -2679,6 +2718,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         contact: false,
         nutrient: false,
         dc_subsets: false,
+        dc_ferroptosis: false,
         senescence: false,
         phenotype_mufa: false,
         sdt_o2_dependence: 0.0,
@@ -2709,6 +2749,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         contact: false,
         nutrient: false,
         dc_subsets: false,
+        dc_ferroptosis: false,
         senescence: false,
         phenotype_mufa: false,
         sdt_o2_dependence: 0.0,
@@ -2744,6 +2785,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         contact: false,
         nutrient: false,
         dc_subsets: false,
+        dc_ferroptosis: false,
         senescence: false,
         phenotype_mufa: false,
         sdt_o2_dependence: 0.0,
@@ -2781,6 +2823,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         contact: false,
         nutrient: false,
         dc_subsets: false,
+        dc_ferroptosis: false,
         senescence: false,
         phenotype_mufa: false,
         sdt_o2_dependence: 0.0,
@@ -2814,6 +2857,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         contact: false,
         nutrient: false,
         dc_subsets: false,
+        dc_ferroptosis: false,
         senescence: false,
         phenotype_mufa: false,
         sdt_o2_dependence: 0.0,
@@ -2852,6 +2896,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         contact: false,
         nutrient: false,
         dc_subsets: false,
+        dc_ferroptosis: false,
         senescence: false,
         phenotype_mufa: false,
         sdt_o2_dependence: 0.0,
@@ -2890,6 +2935,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         contact: false,
         nutrient: false,
         dc_subsets: false,
+        dc_ferroptosis: false,
         senescence: false,
         phenotype_mufa: false,
         sdt_o2_dependence: 0.0,
@@ -2924,6 +2970,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         contact: false,
         nutrient: false,
         dc_subsets: false,
+        dc_ferroptosis: false,
         senescence: false,
         phenotype_mufa: false,
         sdt_o2_dependence: 0.0,
@@ -2959,6 +3006,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         contact: false,
         nutrient: false,
         dc_subsets: false,
+        dc_ferroptosis: false,
         senescence: false,
         phenotype_mufa: false,
         sdt_o2_dependence: 0.0,
@@ -2996,6 +3044,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         contact: false,
         nutrient: false,
         dc_subsets: false,
+        dc_ferroptosis: false,
         senescence: false,
         phenotype_mufa: false,
         sdt_o2_dependence: 0.0,
@@ -3032,6 +3081,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         contact: true,
         nutrient: false,
         dc_subsets: false,
+        dc_ferroptosis: false,
         senescence: false,
         phenotype_mufa: false,
         sdt_o2_dependence: 0.0,
@@ -3067,6 +3117,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         contact: false,
         nutrient: true,
         dc_subsets: false,
+        dc_ferroptosis: false,
         senescence: false,
         phenotype_mufa: false,
         sdt_o2_dependence: 0.0,
@@ -3102,6 +3153,44 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         contact: false,
         nutrient: false,
         dc_subsets: true,
+        dc_ferroptosis: false,
+        senescence: false,
+        phenotype_mufa: false,
+        sdt_o2_dependence: 0.0,
+        ferritinophagy: false,
+        ifngamma: false,
+        alox: false,
+        acsl4_negative: false,
+        escrt: false,
+        por: false,
+        dhc7: false,
+    },
+    SnapshotPreset {
+        // SDT + DC ferroptosis susceptibility (#469): the strong ferroptotic
+        // DAMP/lipid-ROS signal that drives DC activation ALSO kills the
+        // effector DCs themselves (PD-L1-low, the literature() config), lowering
+        // priming, so a ferroptosis-inducing TME suppresses its own immune
+        // amplification (PMID 39423128). No extra static overlay; the reduced
+        // immune death front (vs the immune-on baseline) IS the visualization.
+        name: "dc-ferroptosis",
+        desc: "SDT + DC ferroptosis susceptibility (#469): a ferroptotic TME kills PD-L1-low effector DCs, lowering amplification",
+        treatment: Treatment::SDT,
+        treatment_name: "SDT",
+        immune_on: true,
+        stromal_on: false,
+        ph_on: false,
+        multidose: false,
+        persister: false,
+        clonal: false,
+        vasculature: false,
+        spheroid: false,
+        slab: false,
+        suppressor: false,
+        checkpoints: false,
+        contact: false,
+        nutrient: false,
+        dc_subsets: false,
+        dc_ferroptosis: true,
         senescence: false,
         phenotype_mufa: false,
         sdt_o2_dependence: 0.0,
@@ -3143,6 +3232,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         contact: false,
         nutrient: false,
         dc_subsets: false,
+        dc_ferroptosis: false,
         senescence: true,
         phenotype_mufa: false,
         sdt_o2_dependence: 0.0,
@@ -3180,6 +3270,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         contact: false,
         nutrient: false,
         dc_subsets: false,
+        dc_ferroptosis: false,
         senescence: true,
         phenotype_mufa: false,
         sdt_o2_dependence: 0.0,
@@ -3217,6 +3308,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         contact: false,
         nutrient: false,
         dc_subsets: false,
+        dc_ferroptosis: false,
         senescence: false,
         phenotype_mufa: true,
         sdt_o2_dependence: 0.0,
@@ -3253,6 +3345,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         contact: false,
         nutrient: false,
         dc_subsets: false,
+        dc_ferroptosis: false,
         senescence: false,
         phenotype_mufa: false,
         sdt_o2_dependence: 1.0,
@@ -3290,6 +3383,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         contact: false,
         nutrient: false,
         dc_subsets: false,
+        dc_ferroptosis: false,
         senescence: false,
         phenotype_mufa: false,
         sdt_o2_dependence: 0.0,
@@ -3328,6 +3422,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         contact: false,
         nutrient: false,
         dc_subsets: false,
+        dc_ferroptosis: false,
         senescence: false,
         phenotype_mufa: false,
         sdt_o2_dependence: 0.0,
@@ -3364,6 +3459,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         contact: false,
         nutrient: false,
         dc_subsets: false,
+        dc_ferroptosis: false,
         senescence: false,
         phenotype_mufa: false,
         sdt_o2_dependence: 0.0,
@@ -3402,6 +3498,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         contact: false,
         nutrient: false,
         dc_subsets: false,
+        dc_ferroptosis: false,
         senescence: false,
         phenotype_mufa: false,
         sdt_o2_dependence: 0.0,
@@ -3438,6 +3535,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         contact: false,
         nutrient: false,
         dc_subsets: false,
+        dc_ferroptosis: false,
         senescence: false,
         phenotype_mufa: false,
         sdt_o2_dependence: 0.0,
@@ -3474,6 +3572,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         contact: false,
         nutrient: false,
         dc_subsets: false,
+        dc_ferroptosis: false,
         senescence: false,
         phenotype_mufa: false,
         sdt_o2_dependence: 0.0,
@@ -3510,6 +3609,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         contact: false,
         nutrient: false,
         dc_subsets: false,
+        dc_ferroptosis: false,
         senescence: false,
         phenotype_mufa: false,
         sdt_o2_dependence: 0.0,
@@ -3546,6 +3646,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         contact: false,
         nutrient: false,
         dc_subsets: false,
+        dc_ferroptosis: false,
         senescence: false,
         phenotype_mufa: false,
         sdt_o2_dependence: 0.3,
@@ -3670,6 +3771,10 @@ fn run_snapshot(output_dir: &Path, tumor_radius_um: f64, name: &str) {
     let contact_cfg = preset.contact.then(ContactConfig::literature);
     let nutrient_cfg = preset.nutrient.then(NutrientConfig::literature);
     let dc_subsets_cfg = preset.dc_subsets.then(DcSubsetConfig::literature);
+    // DC ferroptosis susceptibility (#469): the literature() config is a
+    // PD-L1-low, ferroptosis-vulnerable DC population; `None` when the preset
+    // does not request it ⇒ byte-identical.
+    let dc_ferroptosis_cfg = preset.dc_ferroptosis.then(DcFerroptosisConfig::literature);
     // Therapy-induced senescence (#341): the literature() config (defense-
     // dominant ⇒ net ferroptosis-resistant under the trigger, plus an
     // immunosuppressive SASP multiplier < 1 ⇒ lowered immune clearance of the
@@ -3805,6 +3910,7 @@ fn run_snapshot(output_dir: &Path, tumor_radius_um: f64, name: &str) {
             contact: contact_cfg,
             nutrient: nutrient_cfg,
             dc_subsets: dc_subsets_cfg,
+            dc_ferroptosis: dc_ferroptosis_cfg,
             senescence: senescence_cfg,
             phenotype_mufa: preset.phenotype_mufa.then(PhenotypeMufaConfig::literature),
             // #380: O2-dependent SDT exo-ROS (0.0 for every other preset ⇒ the
@@ -6180,6 +6286,110 @@ mod tests {
         assert!(
             p.immune_on,
             "DC subsets only matter with the immune response on"
+        );
+    }
+
+    /// #469: DC / effector-cell ferroptosis susceptibility. A ferroptotic TME
+    /// (the SAME local DAMP/lipid-ROS that drives DC activation) kills the
+    /// effector DCs themselves, lowering immune amplification, and PD-L1 /
+    /// checkpoint protection blocks that, restoring the baseline. A/B with the
+    /// DC-ferroptosis config as the only difference; deterministic. The fully
+    /// PD-L1-protected case and the susceptibility=0 case both reproduce the
+    /// baseline exactly (the byte-identity invariant behind the production
+    /// matrix). Anchor: Yao et al., Cell Reports 2024, PMID 39423128.
+    #[test]
+    fn dc_ferroptosis_reduces_immune_kills_and_pdl1_protects() {
+        let cfg = RunConfig {
+            grid_dim: 30,
+            n_steps: 130,
+        };
+        let cond = Condition {
+            name: "dc_ferroptosis_demo".to_string(),
+            treatment: Treatment::SDT,
+            treatment_name: "SDT".to_string(),
+            o2_lambda: Some(ZONE_REF_LAMBDA),
+            immune_on: true,
+            stromal_on: false,
+            ph_on: false,
+            dose_schedule: DoseSchedule::Constant,
+        };
+        // Dense regime (boosted kill rate, PD-1 brake lifted) so there are
+        // enough immune kills for the DC-ferroptosis reduction to register.
+        let base_immune = SpatialImmuneConfig {
+            immune_kill_rate: 0.5,
+            anti_pd1_efficacy: 1.0,
+            ..SpatialImmuneConfig::for_3d()
+        };
+        let run = |dc: Option<DcFerroptosisConfig>| {
+            run_one_condition_full(
+                &cond,
+                cfg,
+                None,
+                Overrides {
+                    immune: Some(base_immune),
+                    dc_ferroptosis: dc,
+                    ..Default::default()
+                },
+            )
+            .immune_kills
+            .expect("immune_on populates immune_kills")
+        };
+        let baseline = run(None);
+        // PD-L1-low, ferroptosis-vulnerable DCs ⇒ fewer net immune kills.
+        let vulnerable = run(Some(DcFerroptosisConfig {
+            susceptibility: 1.0,
+            pdl1_protection: 0.0,
+        }));
+        assert!(
+            baseline >= 50,
+            "baseline must produce enough immune kills to be informative; got {baseline}"
+        );
+        assert!(
+            vulnerable < baseline,
+            "DC ferroptosis must reduce net immune kills: baseline={baseline}, vulnerable={vulnerable}"
+        );
+        // Deterministic (the survival multiplier is a pure function of local DAMP).
+        assert_eq!(
+            vulnerable,
+            run(Some(DcFerroptosisConfig {
+                susceptibility: 1.0,
+                pdl1_protection: 0.0,
+            }))
+        );
+        // Full PD-L1 protection ⇒ survival 1.0 ⇒ reproduces the baseline exactly
+        // (DCs immune to ferroptosis regardless of the ferroptotic TME).
+        assert_eq!(
+            run(Some(DcFerroptosisConfig {
+                susceptibility: 1.0,
+                pdl1_protection: 1.0,
+            })),
+            baseline,
+            "full PD-L1 protection must restore the baseline immune kills"
+        );
+        // susceptibility = 0 is the layer-off identity behind the matrix
+        // byte-identity.
+        assert_eq!(
+            run(Some(DcFerroptosisConfig {
+                susceptibility: 0.0,
+                pdl1_protection: 0.0,
+            })),
+            baseline,
+            "susceptibility=0 must reproduce the baseline immune kills"
+        );
+    }
+
+    /// #469: lock the `--snapshot=dc-ferroptosis` preset -> Overrides wiring.
+    #[test]
+    fn dc_ferroptosis_snapshot_preset_is_wired() {
+        let p = resolve_snapshot("dc-ferroptosis");
+        assert_eq!(p.name, "dc-ferroptosis");
+        assert!(
+            p.dc_ferroptosis,
+            "the dc-ferroptosis preset must enable the layer"
+        );
+        assert!(
+            p.immune_on,
+            "DC ferroptosis only matters with the immune response on"
         );
     }
 
