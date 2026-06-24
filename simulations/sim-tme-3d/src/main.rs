@@ -523,6 +523,12 @@ struct Overrides {
     /// and DRIVING ferroptosis. `None` ⇒ both `0.0` ⇒ byte-identical. Off the
     /// production matrix.
     vitk: Option<(f64, f64)>,
+    /// PROM2 / MVB-exosome labile-iron efflux (#484): `Some(efflux)` sets
+    /// `params.prom2_iron_efflux`, draining the Fenton iron pool over the run
+    /// (the OPPOSITE sign to ferritinophagy #340), so a PROM2-high tumor exports
+    /// iron under RSL3 and RESISTS. `None` ⇒ `0.0` ⇒ byte-identical. Off the
+    /// production matrix.
+    prom2: Option<f64>,
     slab: Option<SlabConfig>,
     /// Depth-graded slab phenotype (#272). `None` ⇒ the slab keeps `generate_slab`'s
     /// flat bulk phenotype mix. Only applied when `slab` is also `Some` (it needs the
@@ -778,6 +784,12 @@ fn run_one_condition_full(
     if let Some((trap, warfarin)) = overrides.vitk {
         params.vitk_radical_trap = trap;
         params.warfarin_vkor_inhibition = warfarin;
+    }
+    // PROM2 / MVB-exosome labile-iron efflux (#484): `None` (matrix path) ⇒ 0.0 ⇒
+    // byte-identical. A high efflux (a PROM2-high tumor) drains the Fenton iron
+    // pool over the run, so RSL3 kills LESS (ferroptosis resistance).
+    if let Some(efflux) = overrides.prom2 {
+        params.prom2_iron_efflux = efflux;
     }
     let spatial_params = SpatialParams {
         cell_size_um: CELL_SIZE_UM,
@@ -2650,6 +2662,11 @@ struct SnapshotPreset {
     /// (ferroptosis resistance); a warfarin inhibitor reverses it (shown in the
     /// A/B test). No overlay; the reduced death front shows in the dead/LP panels.
     vitk: bool,
+    /// True if PROM2 / MVB-exosome labile-iron efflux (#484) is enabled (a
+    /// PROM2-high tumor that exports labile iron, starving the Fenton reaction).
+    /// RSL3 kills LESS than the baseline (ferroptosis resistance). No overlay; the
+    /// reduced death front shows in the dead/LP panels.
+    prom2: bool,
 }
 
 /// Visualization presets for `--snapshot=NAME`. Keep this list small —
@@ -2687,6 +2704,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         por: false,
         dhc7: false,
         vitk: false,
+        prom2: false,
     },
     SnapshotPreset {
         name: "bare",
@@ -2720,6 +2738,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         por: false,
         dhc7: false,
         vitk: false,
+        prom2: false,
     },
     SnapshotPreset {
         name: "multidose",
@@ -2753,6 +2772,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         por: false,
         dhc7: false,
         vitk: false,
+        prom2: false,
     },
     SnapshotPreset {
         // SDT here visualizes the persister-fraction OVERLAY (the MUFA axis +
@@ -2790,6 +2810,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         por: false,
         dhc7: false,
         vitk: false,
+        prom2: false,
     },
     SnapshotPreset {
         // RSL3 (covalent GPX4 inhibitor) on a persister population WITH the
@@ -2830,6 +2851,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         por: false,
         dhc7: false,
         vitk: false,
+        prom2: false,
     },
     SnapshotPreset {
         name: "clonal",
@@ -2863,6 +2885,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         por: false,
         dhc7: false,
         vitk: false,
+        prom2: false,
     },
     SnapshotPreset {
         // RSL3 (hypoxia-sensitive) + explicit internal vessels: near-vessel
@@ -2901,6 +2924,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         por: false,
         dhc7: false,
         vitk: false,
+        prom2: false,
     },
     SnapshotPreset {
         // RSL3 + explicit vessels, but the per-cell O2/drug supply is the
@@ -2941,6 +2965,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         por: false,
         dhc7: false,
         vitk: false,
+        prom2: false,
     },
     SnapshotPreset {
         // SDT + radial spheroid biology: the phenotype panel shows the
@@ -2977,6 +3002,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         por: false,
         dhc7: false,
         vitk: false,
+        prom2: false,
     },
     SnapshotPreset {
         // SDT on a patient-scale slab at the SURFACE (+z face = vessel, depth
@@ -3018,6 +3044,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         por: false,
         dhc7: false,
         vitk: false,
+        prom2: false,
     },
     SnapshotPreset {
         // Slab + internal vessels (#272 coupling). vessel_supply.npy (on a slab
@@ -3059,6 +3086,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         por: false,
         dhc7: false,
         vitk: false,
+        prom2: false,
     },
     SnapshotPreset {
         // SDT + immune + Treg/MDSC suppressor (#264 Phase 2). Heuristic niche
@@ -3096,6 +3124,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         por: false,
         dhc7: false,
         vitk: false,
+        prom2: false,
     },
     SnapshotPreset {
         // SDT + immune + dual checkpoint blockade (#264 Phase 3): a PD-1 +
@@ -3134,6 +3163,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         por: false,
         dhc7: false,
         vitk: false,
+        prom2: false,
     },
     SnapshotPreset {
         // Kitchen-sink composition (#278): several realism layers at once —
@@ -3174,6 +3204,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         por: false,
         dhc7: false,
         vitk: false,
+        prom2: false,
     },
     SnapshotPreset {
         // RSL3 + cell-cell contact resistance (#270): dense interior cells
@@ -3213,6 +3244,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         por: false,
         dhc7: false,
         vitk: false,
+        prom2: false,
     },
     SnapshotPreset {
         // SDT + radial nutrient gradient (#270 item 3b): the nutrient-starved
@@ -3251,6 +3283,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         por: false,
         dhc7: false,
         vitk: false,
+        prom2: false,
     },
     SnapshotPreset {
         // SDT + cDC1/cDC2 dendritic-cell subset mix (#264 Phase 4): a cDC1-poor
@@ -3289,6 +3322,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         por: false,
         dhc7: false,
         vitk: false,
+        prom2: false,
     },
     SnapshotPreset {
         // SDT + DC ferroptosis susceptibility (#469): the strong ferroptotic
@@ -3328,6 +3362,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         por: false,
         dhc7: false,
         vitk: false,
+        prom2: false,
     },
     SnapshotPreset {
         // SDT + therapy-induced senescence (#341): a fraction of tumor cells
@@ -3372,6 +3407,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         por: false,
         dhc7: false,
         vitk: false,
+        prom2: false,
     },
     SnapshotPreset {
         // Like `senescence`, but adds the diffusing-SASP-field overlay (#376/#398):
@@ -3412,6 +3448,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         por: false,
         dhc7: false,
         vitk: false,
+        prom2: false,
     },
     SnapshotPreset {
         // RSL3 + 3D spheroid (#197) + phenotype-specific SCD1/MUFA rates (#363):
@@ -3452,6 +3489,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         por: false,
         dhc7: false,
         vitk: false,
+        prom2: false,
     },
     SnapshotPreset {
         // SDT on a hypoxic sphere (the base edge-distance radial-O2 gradient, not
@@ -3491,6 +3529,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         por: false,
         dhc7: false,
         vitk: false,
+        prom2: false,
     },
     SnapshotPreset {
         // RSL3 on a hypoxic sphere with the NCOA4-ferritinophagy + hypoxia-iron
@@ -3531,6 +3570,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         por: false,
         dhc7: false,
         vitk: false,
+        prom2: false,
     },
     SnapshotPreset {
         // RSL3 + immune with the IFN-γ → System Xc⁻ + ACSL4 coupling on (#443):
@@ -3572,6 +3612,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         por: false,
         dhc7: false,
         vitk: false,
+        prom2: false,
     },
     SnapshotPreset {
         // RSL3 on a sphere with an ALOX15-high, MCFA-exposed phenotype (#446):
@@ -3611,6 +3652,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         por: false,
         dhc7: false,
         vitk: false,
+        prom2: false,
     },
     SnapshotPreset {
         // RSL3 on an ACSL4-NEGATIVE tumor (#444): with ACSL4 absent the membrane
@@ -3652,6 +3694,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         por: false,
         dhc7: false,
         vitk: false,
+        prom2: false,
     },
     SnapshotPreset {
         // RSL3 on a tumor with a high ESCRT-III membrane-repair capacity (#465).
@@ -3691,6 +3734,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         por: false,
         dhc7: false,
         vitk: false,
+        prom2: false,
     },
     SnapshotPreset {
         // RSL3 on a tumor with a high POR/CYB5R1 enzymatic O2-coupled H2O2 source
@@ -3730,6 +3774,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         por: true,
         dhc7: false,
         vitk: false,
+        prom2: false,
     },
     SnapshotPreset {
         // RSL3 on a DHCR7-low tumor with a high 7-DHC sterol radical-trapping pool
@@ -3769,6 +3814,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         por: false,
         dhc7: true,
         vitk: false,
+        prom2: false,
     },
     SnapshotPreset {
         // RSL3 on a VKORC1L1-high, p53-competent tumor with a vitamin-K
@@ -3812,6 +3858,48 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         por: false,
         dhc7: false,
         vitk: true,
+        prom2: false,
+    },
+    SnapshotPreset {
+        // RSL3 on a PROM2-high tumor with MVB-exosome labile-iron efflux (#484).
+        // Pro-ferroptotic stress induces Prominin-2, which exports ferritin-bound
+        // iron in secreted exosomes, DEPLETING the labile iron pool and starving
+        // the Fenton reaction (the OPPOSITE sign to ferritinophagy #340), so RSL3
+        // kills LESS than the baseline (ferroptosis resistance; the EMT/metastatic
+        // escape, Brown et al. Dev Cell 2019 PMID 31761539). The dead/LP panels
+        // show the reduced death front. No overlay.
+        name: "prom2",
+        desc: "RSL3 + PROM2 iron efflux (#484): MVB-exosome iron export starves Fenton, ferroptosis resistance",
+        treatment: Treatment::RSL3,
+        treatment_name: "RSL3",
+        immune_on: false,
+        stromal_on: false,
+        ph_on: false,
+        multidose: false,
+        persister: false,
+        persister_oxphos: false,
+        clonal: false,
+        vasculature: false,
+        spheroid: false,
+        slab: false,
+        suppressor: false,
+        checkpoints: false,
+        contact: false,
+        nutrient: false,
+        dc_subsets: false,
+        dc_ferroptosis: false,
+        senescence: false,
+        phenotype_mufa: false,
+        sdt_o2_dependence: 0.0,
+        ferritinophagy: false,
+        ifngamma: false,
+        alox: false,
+        acsl4_negative: false,
+        escrt: false,
+        por: false,
+        dhc7: false,
+        vitk: false,
+        prom2: true,
     },
     SnapshotPreset {
         // SDT with a Type-I-heavy sonosensitizer (#468): sdt_o2_dependence = 0.3
@@ -3851,6 +3939,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         por: false,
         dhc7: false,
         vitk: false,
+        prom2: false,
     },
 ];
 
@@ -4150,6 +4239,7 @@ fn run_snapshot(output_dir: &Path, tumor_radius_um: f64, name: &str) {
             // DHCR7-low resistant tumor); `None` for every other preset.
             dhc7: preset.dhc7.then_some(0.5),
             vitk: preset.vitk.then_some((1.0, 0.0)),
+            prom2: preset.prom2.then_some(0.8),
             ..Default::default()
         },
     );
@@ -8944,6 +9034,60 @@ mod tests {
             p.vitk,
             "the vkorc1l1 preset must enable the VKORC1L1 radical trap"
         );
+        assert!(matches!(p.treatment, Treatment::RSL3));
+    }
+
+    /// #484 A/B: PROM2 / MVB-exosome labile-iron efflux reduces RSL3 kill. A
+    /// PROM2-high tumor exports ferritin-bound iron in secreted exosomes,
+    /// depleting the labile iron pool and starving the Fenton reaction (the
+    /// OPPOSITE sign to ferritinophagy), so an RSL3 run with PROM2 efflux on kills
+    /// LESS than the baseline (ferroptosis resistance; Brown et al. Dev Cell 2019
+    /// PMID 31761539). Magnitude uncalibrated; the direction is the result.
+    #[test]
+    fn prom2_iron_efflux_reduces_rsl3_kill() {
+        let cfg = RunConfig {
+            grid_dim: 24,
+            n_steps: 120,
+        };
+        let cond = Condition {
+            name: "prom2_ab".to_string(),
+            treatment: Treatment::RSL3,
+            treatment_name: "RSL3".to_string(),
+            o2_lambda: Some(ZONE_REF_LAMBDA),
+            immune_on: false,
+            stromal_on: false,
+            ph_on: false,
+            dose_schedule: DoseSchedule::Constant,
+        };
+        let run = |prom2: Option<f64>| {
+            run_one_condition_full(
+                &cond,
+                cfg,
+                None,
+                Overrides {
+                    prom2,
+                    ..Default::default()
+                },
+            )
+            .overall_kill_rate
+        };
+        let baseline = run(None);
+        let prom2_high = run(Some(0.8));
+        assert!(
+            prom2_high < baseline,
+            "PROM2 iron efflux must lower RSL3 kill: prom2_high={prom2_high} baseline={baseline}"
+        );
+        // efflux = 0 reproduces the baseline exactly (the byte-identity invariant).
+        assert_eq!(run(Some(0.0)), baseline);
+    }
+
+    /// #484: the `--snapshot=prom2` preset is wired (RSL3 on a PROM2-high
+    /// iron-exporting resistant tumor).
+    #[test]
+    fn prom2_snapshot_preset_is_wired() {
+        let p = resolve_snapshot("prom2");
+        assert_eq!(p.name, "prom2");
+        assert!(p.prom2, "the prom2 preset must enable PROM2 iron efflux");
         assert!(matches!(p.treatment, Treatment::RSL3));
     }
 

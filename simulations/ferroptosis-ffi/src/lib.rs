@@ -173,6 +173,9 @@ fn ferro_params_to_params(fp: &FerroParams) -> Params {
         // part of the C ABI: release 0.0 ⇒ static iron, tau matches the Default.
         ferritinophagy_release: 0.0,
         ferritinophagy_tau: 30.0,
+        // PROM2/MVB-exosome labile-iron efflux (#484) is off by default and not
+        // part of the C ABI: efflux 0.0 ⇒ factor 1.0 ⇒ byte-identical.
+        prom2_iron_efflux: 0.0,
         gpx4_degradation_by_ros: fp.gpx4_degradation_by_ros,
         gpx4_nrf2_upregulation: fp.gpx4_nrf2_upregulation,
         sdt_ros: fp.sdt_ros,
