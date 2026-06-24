@@ -1,0 +1,37 @@
+{
+  "source": "cBioPortal REST API, TCGA PanCancer Atlas (_tcga_pan_can_atlas_2018)",
+  "endpoint": "https://www.cbioportal.org/api",
+  "genes": {
+    "ACSL4": 2182,
+    "GPX4": 2879,
+    "SLC7A11": 23657
+  },
+  "low_z_threshold": -1.0,
+  "verylow_z_threshold": -2.0,
+  "n_cancer_types": 32,
+  "acsl4_frac_low_median_across_types": 0.1436,
+  "acsl4_frac_low_min_max": [
+    0.1077,
+    0.1879
+  ],
+  "validation": {
+    "n_cancer_types_ranked": 32,
+    "lowest_5_acsl4_rsem": [
+      "uvm",
+      "prad",
+      "brca",
+      "thym",
+      "ucs"
+    ],
+    "highest_5_acsl4_rsem": [
+      "meso",
+      "esca",
+      "pcpg",
+      "acc",
+      "lihc"
+    ],
+    "lihc_hcc_rank_percentile": 1.0,
+    "laml_aml_rank_percentile": 0.806,
+    "note": "Lower percentile = lower raw ACSL4 RSEM (more refractory-leaning). Cross-study RSEM medians carry batch effects, so this ranking is qualitative; the Doll-2017 claim is that HCC/AML are constitutively ACSL4-low."
+  }
+}

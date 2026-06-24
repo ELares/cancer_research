@@ -65,6 +65,29 @@ pub fn pufa_boost_from_status(status: f64) -> f64 {
     (status.max(0.0) - 1.0).max(-1.0)
 }
 
+/// Map a within-cohort ACSL4 mRNA z-score to the ACSL4 [`status`](pufa_boost_from_status)
+/// scalar: `max(0, 1 + z/2)`. This is the calibrated bridge from real expression
+/// data to the model input (#462), anchored to cBioPortal TCGA PanCancer Atlas
+/// per-cancer-type ACSL4 z-score distributions
+/// (`analysis/calibration/acsl4-prevalence-calibration.md`). The shipped status
+/// constants are exactly the integer-z points of this bridge, which is why they
+/// were well chosen as placeholders and are now interpretable as z-scores:
+///   - `z = +1` ⇒ [`ACSL4_HIGH`] (1.5)
+///   - `z =  0` ⇒ [`ACSL4_NORMAL`] (1.0, the wild-type baseline)
+///   - `z = -1` ⇒ [`ACSL4_LOW`] (0.5)
+///   - `z = -2` ⇒ [`ACSL4_NEGATIVE`] (0.0, the PUFA-collapse floor)
+///
+/// A consumer that has a patient's ACSL4 mRNA z-score can feed
+/// `pufa_boost_from_status(status_from_zscore(z))` to stratify that tumor. The
+/// per-cancer-type fraction of tumors with `z < -1` (about 11 to 19% in TCGA,
+/// median 14%) is the committed population prior for how many tumors fall in the
+/// low-ACSL4 (refractory-leaning) tail. The slope (`/2`) is the placeholder that
+/// reproduces the existing constants; only the within-cohort z interpretation is
+/// data-anchored, not the absolute status→ferroptosis magnitude.
+pub fn status_from_zscore(z: f64) -> f64 {
+    (1.0 + z / 2.0).max(0.0)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -101,5 +124,22 @@ mod tests {
         assert_eq!(pufa_boost_from_status(0.0), -1.0);
         // A very high ACSL4 keeps rising (no upper clamp; the engine consumes it).
         assert!(pufa_boost_from_status(3.0) > pufa_boost_from_status(2.0));
+    }
+
+    #[test]
+    fn zscore_bridge_hits_the_status_constants() {
+        // The calibrated z-score bridge (#462) reproduces the shipped status
+        // constants exactly at integer z, so a real cBioPortal ACSL4 z-score maps
+        // onto the existing NEGATIVE/LOW/NORMAL/HIGH scale.
+        assert_eq!(status_from_zscore(1.0), ACSL4_HIGH);
+        assert_eq!(status_from_zscore(0.0), ACSL4_NORMAL);
+        assert_eq!(status_from_zscore(-1.0), ACSL4_LOW);
+        assert_eq!(status_from_zscore(-2.0), ACSL4_NEGATIVE);
+        // Floors at 0 below z = -2 (cannot go below the ACSL4-null collapse).
+        assert_eq!(status_from_zscore(-5.0), 0.0);
+        // Monotone increasing in z.
+        assert!(status_from_zscore(2.0) > status_from_zscore(1.0));
+        // Composing with the boost: a z = -2 tumor collapses the PUFA term (boost -1).
+        assert_eq!(pufa_boost_from_status(status_from_zscore(-2.0)), -1.0);
     }
 }
