@@ -63,6 +63,7 @@ use ferroptosis_core::clonal::{assign_subclones_3d, repopulate_dead_sites_3d, Cl
 use ferroptosis_core::contact::{
     apply_contact_resistance_3d, apply_contact_resistance_at_3d, ContactConfig,
 };
+use ferroptosis_core::copper::CopperConfig;
 use ferroptosis_core::dose_schedule::DoseSchedule;
 use ferroptosis_core::grid::{TumorGrid3D, TUMOR_RADIUS_FRACTION};
 use ferroptosis_core::ifngamma::{acsl4_upregulation, system_xc_retention, IFNGammaConfig};
@@ -484,6 +485,11 @@ struct Overrides {
     /// sensitizing to ferroptosis (Wang 2019 PMID 31043744). Gated on immune_on (off
     /// the matrix), so the production matrix is byte-identical.
     ifngamma: Option<IFNGammaConfig>,
+    /// Copper-ionophore / cuproptosis crosstalk (#485): `Some(cfg)` overloads
+    /// intracellular copper, depleting the GSH and GPX4 pools each step (so
+    /// RSL3/SDT kills more), with `atp7b_efflux` protecting. `None` / disabled ⇒
+    /// retention 1.0 ⇒ byte-identical. Off the production matrix.
+    copper: Option<CopperConfig>,
     /// ALOX isoform-specific peroxidation rate + MCFA→ACSL4 PUFA sensitization
     /// (#446). `None` / `identity()` ⇒ both boosts `0` ⇒ byte-identical. When set,
     /// the config's `lp_propagation_boost()` and `mcfa_pufa_boost()` are written
@@ -676,6 +682,14 @@ fn run_one_condition_full(
         .ifngamma
         .filter(|c| !c.is_disabled() && condition.immune_on);
     let ifngamma_ic50 = ifngamma_cfg.map_or(f64::INFINITY, |c| c.system_xc_ic50);
+    // Copper-ionophore / cuproptosis crosstalk (#485): a non-identity config
+    // depletes GSH/GPX4 each step. `None`/disabled ⇒ retention 1.0 ⇒
+    // byte-identical. The retention multipliers are constant per condition, so
+    // hoist them out of the per-cell hot loop.
+    let copper_cfg = overrides.copper.filter(|c| !c.is_disabled());
+    let copper_on = copper_cfg.is_some();
+    let copper_gsh_ret = copper_cfg.map_or(1.0, |c| ferroptosis_core::copper::gsh_retention(&c));
+    let copper_gpx4_ret = copper_cfg.map_or(1.0, |c| ferroptosis_core::copper::gpx4_retention(&c));
     // ACSL4 arm (#443 follow-up): only active when the strength is > 0 (the GSH /
     // System Xc- arm can run alone). `0.0` ⇒ the boost factor is always 1.0 ⇒ no
     // lipid_unsat change ⇒ byte-identical even when the field is non-zero.
@@ -1708,6 +1722,18 @@ fn run_one_condition_full(
                     gc.state.gsh *= system_xc_retention(ifngamma_field[idx], ifngamma_ic50);
                 }
 
+                // Copper-ionophore / cuproptosis crosstalk (#485): a copper
+                // ionophore (elesclomol/disulfiram) overloads intracellular
+                // copper, depleting the GSH and GPX4 pools each step (copper binds
+                // GSH + drives GPX4 degradation), so RSL3/SDT kills MORE; ATP7B
+                // efflux exports copper and protects. Uniform (no field). Gated on
+                // `copper_on` (a non-identity config); 1.0 retention when off ⇒
+                // byte-identical.
+                if copper_on && !died && !gc.state.dead {
+                    gc.state.gsh *= copper_gsh_ret;
+                    gc.state.gpx4 *= copper_gpx4_ret;
+                }
+
                 // Persister-cell dynamics (#241). Gated on the model being
                 // enabled (`Some`); `None` on the default matrix path so this
                 // whole block is skipped → byte-identical. Applies to cells
@@ -2667,6 +2693,11 @@ struct SnapshotPreset {
     /// RSL3 kills LESS than the baseline (ferroptosis resistance). No overlay; the
     /// reduced death front shows in the dead/LP panels.
     prom2: bool,
+    /// True if copper-ionophore / cuproptosis crosstalk (#485) is enabled (an
+    /// elesclomol-like ionophore in an ATP7B-low tumor): intracellular copper
+    /// overload depletes GSH + GPX4 each step, so RSL3 kills MORE than the
+    /// baseline. No overlay; the increased death front shows in the dead/LP panels.
+    copper: bool,
 }
 
 /// Visualization presets for `--snapshot=NAME`. Keep this list small —
@@ -2705,6 +2736,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         dhc7: false,
         vitk: false,
         prom2: false,
+        copper: false,
     },
     SnapshotPreset {
         name: "bare",
@@ -2739,6 +2771,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         dhc7: false,
         vitk: false,
         prom2: false,
+        copper: false,
     },
     SnapshotPreset {
         name: "multidose",
@@ -2773,6 +2806,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         dhc7: false,
         vitk: false,
         prom2: false,
+        copper: false,
     },
     SnapshotPreset {
         // SDT here visualizes the persister-fraction OVERLAY (the MUFA axis +
@@ -2811,6 +2845,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         dhc7: false,
         vitk: false,
         prom2: false,
+        copper: false,
     },
     SnapshotPreset {
         // RSL3 (covalent GPX4 inhibitor) on a persister population WITH the
@@ -2852,6 +2887,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         dhc7: false,
         vitk: false,
         prom2: false,
+        copper: false,
     },
     SnapshotPreset {
         name: "clonal",
@@ -2886,6 +2922,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         dhc7: false,
         vitk: false,
         prom2: false,
+        copper: false,
     },
     SnapshotPreset {
         // RSL3 (hypoxia-sensitive) + explicit internal vessels: near-vessel
@@ -2925,6 +2962,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         dhc7: false,
         vitk: false,
         prom2: false,
+        copper: false,
     },
     SnapshotPreset {
         // RSL3 + explicit vessels, but the per-cell O2/drug supply is the
@@ -2966,6 +3004,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         dhc7: false,
         vitk: false,
         prom2: false,
+        copper: false,
     },
     SnapshotPreset {
         // SDT + radial spheroid biology: the phenotype panel shows the
@@ -3003,6 +3042,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         dhc7: false,
         vitk: false,
         prom2: false,
+        copper: false,
     },
     SnapshotPreset {
         // SDT on a patient-scale slab at the SURFACE (+z face = vessel, depth
@@ -3045,6 +3085,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         dhc7: false,
         vitk: false,
         prom2: false,
+        copper: false,
     },
     SnapshotPreset {
         // Slab + internal vessels (#272 coupling). vessel_supply.npy (on a slab
@@ -3087,6 +3128,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         dhc7: false,
         vitk: false,
         prom2: false,
+        copper: false,
     },
     SnapshotPreset {
         // SDT + immune + Treg/MDSC suppressor (#264 Phase 2). Heuristic niche
@@ -3125,6 +3167,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         dhc7: false,
         vitk: false,
         prom2: false,
+        copper: false,
     },
     SnapshotPreset {
         // SDT + immune + dual checkpoint blockade (#264 Phase 3): a PD-1 +
@@ -3164,6 +3207,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         dhc7: false,
         vitk: false,
         prom2: false,
+        copper: false,
     },
     SnapshotPreset {
         // Kitchen-sink composition (#278): several realism layers at once —
@@ -3205,6 +3249,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         dhc7: false,
         vitk: false,
         prom2: false,
+        copper: false,
     },
     SnapshotPreset {
         // RSL3 + cell-cell contact resistance (#270): dense interior cells
@@ -3245,6 +3290,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         dhc7: false,
         vitk: false,
         prom2: false,
+        copper: false,
     },
     SnapshotPreset {
         // SDT + radial nutrient gradient (#270 item 3b): the nutrient-starved
@@ -3284,6 +3330,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         dhc7: false,
         vitk: false,
         prom2: false,
+        copper: false,
     },
     SnapshotPreset {
         // SDT + cDC1/cDC2 dendritic-cell subset mix (#264 Phase 4): a cDC1-poor
@@ -3323,6 +3370,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         dhc7: false,
         vitk: false,
         prom2: false,
+        copper: false,
     },
     SnapshotPreset {
         // SDT + DC ferroptosis susceptibility (#469): the strong ferroptotic
@@ -3363,6 +3411,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         dhc7: false,
         vitk: false,
         prom2: false,
+        copper: false,
     },
     SnapshotPreset {
         // SDT + therapy-induced senescence (#341): a fraction of tumor cells
@@ -3408,6 +3457,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         dhc7: false,
         vitk: false,
         prom2: false,
+        copper: false,
     },
     SnapshotPreset {
         // Like `senescence`, but adds the diffusing-SASP-field overlay (#376/#398):
@@ -3449,6 +3499,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         dhc7: false,
         vitk: false,
         prom2: false,
+        copper: false,
     },
     SnapshotPreset {
         // RSL3 + 3D spheroid (#197) + phenotype-specific SCD1/MUFA rates (#363):
@@ -3490,6 +3541,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         dhc7: false,
         vitk: false,
         prom2: false,
+        copper: false,
     },
     SnapshotPreset {
         // SDT on a hypoxic sphere (the base edge-distance radial-O2 gradient, not
@@ -3530,6 +3582,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         dhc7: false,
         vitk: false,
         prom2: false,
+        copper: false,
     },
     SnapshotPreset {
         // RSL3 on a hypoxic sphere with the NCOA4-ferritinophagy + hypoxia-iron
@@ -3571,6 +3624,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         dhc7: false,
         vitk: false,
         prom2: false,
+        copper: false,
     },
     SnapshotPreset {
         // RSL3 + immune with the IFN-γ → System Xc⁻ + ACSL4 coupling on (#443):
@@ -3613,6 +3667,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         dhc7: false,
         vitk: false,
         prom2: false,
+        copper: false,
     },
     SnapshotPreset {
         // RSL3 on a sphere with an ALOX15-high, MCFA-exposed phenotype (#446):
@@ -3653,6 +3708,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         dhc7: false,
         vitk: false,
         prom2: false,
+        copper: false,
     },
     SnapshotPreset {
         // RSL3 on an ACSL4-NEGATIVE tumor (#444): with ACSL4 absent the membrane
@@ -3695,6 +3751,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         dhc7: false,
         vitk: false,
         prom2: false,
+        copper: false,
     },
     SnapshotPreset {
         // RSL3 on a tumor with a high ESCRT-III membrane-repair capacity (#465).
@@ -3735,6 +3792,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         dhc7: false,
         vitk: false,
         prom2: false,
+        copper: false,
     },
     SnapshotPreset {
         // RSL3 on a tumor with a high POR/CYB5R1 enzymatic O2-coupled H2O2 source
@@ -3775,6 +3833,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         dhc7: false,
         vitk: false,
         prom2: false,
+        copper: false,
     },
     SnapshotPreset {
         // RSL3 on a DHCR7-low tumor with a high 7-DHC sterol radical-trapping pool
@@ -3815,6 +3874,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         dhc7: true,
         vitk: false,
         prom2: false,
+        copper: false,
     },
     SnapshotPreset {
         // RSL3 on a VKORC1L1-high, p53-competent tumor with a vitamin-K
@@ -3859,6 +3919,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         dhc7: false,
         vitk: true,
         prom2: false,
+        copper: false,
     },
     SnapshotPreset {
         // RSL3 on a PROM2-high tumor with MVB-exosome labile-iron efflux (#484).
@@ -3900,6 +3961,49 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         dhc7: false,
         vitk: false,
         prom2: true,
+        copper: false,
+    },
+    SnapshotPreset {
+        // RSL3 + a copper ionophore (elesclomol/disulfiram) on an ATP7B-low tumor
+        // (#485). Copper overload depletes GSH (copper binds glutathione) and
+        // drives GPX4 degradation each step, simultaneously enabling ferroptosis
+        // and cuproptosis, so RSL3 kills MORE than the baseline (the FIN +
+        // ionophore synergy, Gao et al. Mol Oncol 2021 PMID 34390123, elesclomol degrades ATP7A); an
+        // ATP7B-efflux-competent tumor would resist (the A/B test). The dead/LP
+        // panels show the increased death front. No overlay.
+        name: "copper",
+        desc: "RSL3 + copper ionophore (#485): elesclomol depletes GSH/GPX4 (cuproptosis crosstalk), raises kill",
+        treatment: Treatment::RSL3,
+        treatment_name: "RSL3",
+        immune_on: false,
+        stromal_on: false,
+        ph_on: false,
+        multidose: false,
+        persister: false,
+        persister_oxphos: false,
+        clonal: false,
+        vasculature: false,
+        spheroid: false,
+        slab: false,
+        suppressor: false,
+        checkpoints: false,
+        contact: false,
+        nutrient: false,
+        dc_subsets: false,
+        dc_ferroptosis: false,
+        senescence: false,
+        phenotype_mufa: false,
+        sdt_o2_dependence: 0.0,
+        ferritinophagy: false,
+        ifngamma: false,
+        alox: false,
+        acsl4_negative: false,
+        escrt: false,
+        por: false,
+        dhc7: false,
+        vitk: false,
+        prom2: false,
+        copper: true,
     },
     SnapshotPreset {
         // SDT with a Type-I-heavy sonosensitizer (#468): sdt_o2_dependence = 0.3
@@ -3940,6 +4044,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         dhc7: false,
         vitk: false,
         prom2: false,
+        copper: false,
     },
 ];
 
@@ -4240,6 +4345,7 @@ fn run_snapshot(output_dir: &Path, tumor_radius_um: f64, name: &str) {
             dhc7: preset.dhc7.then_some(0.5),
             vitk: preset.vitk.then_some((1.0, 0.0)),
             prom2: preset.prom2.then_some(0.8),
+            copper: preset.copper.then(CopperConfig::literature),
             ..Default::default()
         },
     );
@@ -9088,6 +9194,75 @@ mod tests {
         let p = resolve_snapshot("prom2");
         assert_eq!(p.name, "prom2");
         assert!(p.prom2, "the prom2 preset must enable PROM2 iron efflux");
+        assert!(matches!(p.treatment, Treatment::RSL3));
+    }
+
+    /// #485 A/B: a copper ionophore (elesclomol/disulfiram) depletes GSH + GPX4
+    /// each step (copper overload), so an RSL3 run with copper on kills MORE than
+    /// the baseline (ferroptosis-cuproptosis crosstalk; Gao et al. Cell Death Dis
+    /// 2021 PMID 34390123), and an ATP7B-efflux-competent tumor RESISTS (efflux
+    /// exports copper, restoring toward the baseline). Magnitude uncalibrated; the
+    /// direction is the result.
+    #[test]
+    fn copper_ionophore_raises_rsl3_kill_and_atp7b_efflux_protects() {
+        let cfg = RunConfig {
+            grid_dim: 24,
+            n_steps: 120,
+        };
+        let cond = Condition {
+            name: "copper_ab".to_string(),
+            treatment: Treatment::RSL3,
+            treatment_name: "RSL3".to_string(),
+            o2_lambda: Some(ZONE_REF_LAMBDA),
+            immune_on: false,
+            stromal_on: false,
+            ph_on: false,
+            dose_schedule: DoseSchedule::Constant,
+        };
+        let run = |copper: Option<CopperConfig>| {
+            run_one_condition_full(
+                &cond,
+                cfg,
+                None,
+                Overrides {
+                    copper,
+                    ..Default::default()
+                },
+            )
+            .overall_kill_rate
+        };
+        let baseline = run(None);
+        // Copper ionophore in an ATP7B-low tumor: GSH/GPX4 depleted ⇒ more kill.
+        let copper = run(Some(CopperConfig::literature()));
+        assert!(
+            copper > baseline,
+            "copper ionophore must raise RSL3 kill: copper={copper} baseline={baseline}"
+        );
+        // ATP7B-efflux-competent tumor: copper exported ⇒ resists, fewer kills
+        // than the efflux-low ionophore arm.
+        let with_efflux = run(Some(CopperConfig {
+            atp7b_efflux: 1.0,
+            ..CopperConfig::literature()
+        }));
+        assert!(
+            with_efflux < copper,
+            "ATP7B efflux must protect: with_efflux={with_efflux} copper={copper}"
+        );
+        // Full efflux reduces to the baseline exactly (retention 1.0 on both pools).
+        assert_eq!(with_efflux, baseline);
+        // disabled() reproduces the baseline exactly (the byte-identity invariant).
+        assert_eq!(run(Some(CopperConfig::disabled())), baseline);
+    }
+
+    /// #485: the `--snapshot=copper` preset is wired (RSL3 + a copper ionophore).
+    #[test]
+    fn copper_snapshot_preset_is_wired() {
+        let p = resolve_snapshot("copper");
+        assert_eq!(p.name, "copper");
+        assert!(
+            p.copper,
+            "the copper preset must enable copper-ionophore crosstalk"
+        );
         assert!(matches!(p.treatment, Treatment::RSL3));
     }
 
