@@ -263,6 +263,32 @@ pub fn ferritinophagy_iron_factor(step: u32, params: &Params) -> f64 {
     1.0 + release * (1.0 - (-(step as f64) / tau).exp())
 }
 
+/// PROM2 / MVB-exosome labile-iron EFFLUX factor (#484).
+///
+/// Pro-ferroptotic stress induces Prominin-2 (PROM2), which packages
+/// ferritin-bound iron into multivesicular bodies secreted as exosomes,
+/// DEPLETING the labile iron pool and starving the Fenton reaction (Brown et
+/// al., Dev Cell 2019, PMID 31761539; PROM2-overexpression drives EMT/metastatic
+/// ferroptosis resistance, Paris et al., Clin Transl Med 2024). The OPPOSITE
+/// sign to ferritinophagy (#340): the Fenton iron is scaled DOWN by a factor
+/// that ramps from `1.0` (step 0) toward `1 - prom2_iron_efflux` with the shared
+/// dynamic-iron time constant `ferritinophagy_tau`, so a PROM2-high cell exports
+/// labile iron over the run and resists ferroptosis.
+///
+/// `prom2_iron_efflux = 0.0` (default) returns exactly `1.0` for every step (a
+/// fast path, so `iron * factor == iron` bit-for-bit), keeping the production
+/// matrix byte-identical. The efflux is clamped to `[0, 1]` (a cell cannot
+/// export more than all of its labile iron).
+#[inline]
+pub fn prom2_iron_factor(step: u32, params: &Params) -> f64 {
+    let efflux = params.prom2_iron_efflux.clamp(0.0, 1.0);
+    if efflux == 0.0 {
+        return 1.0;
+    }
+    let tau = params.ferritinophagy_tau.max(1e-9);
+    1.0 - efflux * (1.0 - (-(step as f64) / tau).exp())
+}
+
 /// Deterministic exogenous-ROS decay envelope for the post-bolus phase.
 ///
 /// Models singlet-oxygen / exogenous-ROS decay after a single treatment
@@ -313,8 +339,9 @@ pub fn sim_cell_step(
         // No repair (cell defenses have failed), only ROS → LP.
         if let Some(ds) = state.death_step {
             if step < ds + params.post_death_steps {
-                let effective_iron =
-                    (cell.iron + extra_iron) * ferritinophagy_iron_factor(step, params);
+                let effective_iron = (cell.iron + extra_iron)
+                    * ferritinophagy_iron_factor(step, params)
+                    * prom2_iron_factor(step, params);
                 let fenton = effective_iron * params.fenton_rate * norm(rng, 1.0, 0.08).max(0.0);
                 let exo = if step < 30 {
                     state.exo_ros_peak * norm(rng, 1.0, 0.1).max(0.0)
@@ -340,7 +367,9 @@ pub fn sim_cell_step(
     }
 
     // === ROS SOURCES ===
-    let effective_iron = (cell.iron + extra_iron) * ferritinophagy_iron_factor(step, params);
+    let effective_iron = (cell.iron + extra_iron)
+        * ferritinophagy_iron_factor(step, params)
+        * prom2_iron_factor(step, params);
     let fenton = effective_iron * params.fenton_rate * norm(rng, 1.0, 0.08).max(0.0);
     let exo = if step < 30 {
         state.exo_ros_peak * norm(rng, 1.0, 0.1).max(0.0)
@@ -489,6 +518,7 @@ pub fn sim_cell(
         // === ROS SOURCES (used by both alive and post-death paths) ===
         let fenton = cell.iron
             * ferritinophagy_iron_factor(step, params)
+            * prom2_iron_factor(step, params)
             * params.fenton_rate
             * norm(rng, 1.0, 0.08).max(0.0);
         let exo = if step < 30 {
@@ -827,6 +857,75 @@ mod tests {
         assert_eq!(ferritinophagy_iron_factor(0, &pr), 1.0);
         assert!(ferritinophagy_iron_factor(30, &pr) > ferritinophagy_iron_factor(0, &pr));
         assert!(ferritinophagy_iron_factor(179, &pr) > ferritinophagy_iron_factor(30, &pr));
+    }
+
+    #[test]
+    fn prom2_iron_factor_drains_iron_and_default_is_identity() {
+        // #484: efflux = 0 ⇒ factor exactly 1.0 at every step (byte-identical).
+        let p0 = Params::default();
+        for step in [0u32, 1, 30, 90, 179] {
+            assert_eq!(prom2_iron_factor(step, &p0), 1.0);
+        }
+        // efflux > 0 ⇒ starts at exactly 1.0 (step 0) and DECREASES monotonically
+        // toward 1 - efflux (the OPPOSITE sign to ferritinophagy), staying in (0,1].
+        let pe = Params {
+            prom2_iron_efflux: 0.6,
+            ..Params::default()
+        };
+        assert_eq!(prom2_iron_factor(0, &pe), 1.0);
+        assert!(prom2_iron_factor(30, &pe) < prom2_iron_factor(0, &pe));
+        assert!(prom2_iron_factor(179, &pe) < prom2_iron_factor(30, &pe));
+        let late = prom2_iron_factor(179, &pe);
+        assert!(
+            late > 0.0 && late < 1.0,
+            "factor stays in (0,1); got {late}"
+        );
+        // Asymptote: late factor approaches 1 - efflux = 0.4 from above.
+        assert!(
+            late >= 0.4 && late < 0.5,
+            "late factor near 1 - efflux; got {late}"
+        );
+        // efflux clamps to [0,1]: a >1 efflux behaves as full export (factor -> 0).
+        let pfull = Params {
+            prom2_iron_efflux: 2.0,
+            ..Params::default()
+        };
+        assert!(prom2_iron_factor(179, &pfull) < 0.1);
+    }
+
+    #[test]
+    fn prom2_iron_efflux_lowers_rsl3_peak_lp() {
+        // #484: PROM2 iron efflux drains the Fenton pool, so a PROM2-high cell
+        // peroxidizes LESS under RSL3 (resistance), the opposite of ferritinophagy.
+        let mut gen_rng = StdRng::seed_from_u64(41);
+        let cell = gen_cell(Phenotype::Glycolytic, &mut gen_rng);
+        let peak_lp = |efflux: f64| -> f64 {
+            let mut params = Params::default();
+            params.fenton_rate = 0.5;
+            params.prom2_iron_efflux = efflux;
+            let mut init_rng = StdRng::seed_from_u64(6);
+            let mut state =
+                CellState::from_cell(&cell, crate::cell::Treatment::RSL3, &params, &mut init_rng);
+            let mut peak = 0.0_f64;
+            let mut step_rng = StdRng::seed_from_u64(0);
+            for step in 0..180u32 {
+                sim_cell_step(&mut state, &cell, &params, step, 0.0, &mut step_rng);
+                peak = peak.max(state.lp);
+                if state.dead {
+                    break;
+                }
+            }
+            peak
+        };
+        let base = peak_lp(0.0);
+        let with_prom2 = peak_lp(0.8);
+        assert!(base > 0.0, "RSL3 should drive lipid peroxidation");
+        assert!(
+            with_prom2 < base,
+            "PROM2 iron efflux should LOWER peak LP under RSL3 (resistance): prom2={with_prom2} vs base={base}"
+        );
+        // Determinism + efflux=0 reproduces the baseline exactly.
+        assert_eq!(base, peak_lp(0.0));
     }
 
     #[test]

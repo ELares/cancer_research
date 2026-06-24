@@ -120,6 +120,20 @@ pub struct Params {
     /// smaller value releases iron faster.
     #[serde(default = "default_ferritinophagy_tau")]
     pub ferritinophagy_tau: f64,
+    /// PROM2 / MVB-exosome labile-iron EFFLUX (#484), in `[0, 1]`. Pro-ferroptotic
+    /// stress induces Prominin-2, which packages ferritin-bound iron into
+    /// multivesicular bodies secreted as exosomes, DEPLETING the labile iron pool
+    /// and starving the Fenton reaction (Brown et al., Dev Cell 2019, PMID
+    /// 31761539). The OPPOSITE sign to `ferritinophagy_release`: the Fenton iron
+    /// is scaled by a time-dependent factor (see `biochem::prom2_iron_factor`)
+    /// that ramps from `1.0` toward `1 - prom2_iron_efflux` with the shared
+    /// `ferritinophagy_tau` time constant, so a PROM2-high cell exports iron over
+    /// the run and RESISTS ferroptosis. `0.0` (default) ⇒ factor is exactly `1.0`
+    /// for every step ⇒ byte-identical; uncalibrated, direction-anchored (more
+    /// PROM2 efflux ⇒ less labile iron ⇒ less ferroptosis). FFI defaults it to
+    /// 0.0 so the C ABI is unchanged.
+    #[serde(default)]
+    pub prom2_iron_efflux: f64,
     /// ALOX (lipoxygenase) isoform-specific propagation boost (#446). The
     /// autocatalytic lipid-peroxidation propagation rate is multiplied by
     /// `1 + alox_propagation_boost` (clamped `>= 0`), so an ALOX15/12/5-high
@@ -276,6 +290,7 @@ impl Default for Params {
             mboat_mufa_boost: 0.0,
             ferritinophagy_release: 0.0,
             ferritinophagy_tau: default_ferritinophagy_tau(),
+            prom2_iron_efflux: 0.0,
             alox_propagation_boost: 0.0,
             mcfa_pufa_boost: 0.0,
             acsl4_status_boost: 0.0,
