@@ -778,6 +778,108 @@ impl DcSubsetConfig {
     }
 }
 
+/// DC / effector-cell ferroptosis susceptibility (#469).
+///
+/// The immune layer otherwise treats dendritic cells only as an undying DAMP
+/// source plus a fixed priming-efficiency scalar ([`DcSubsetConfig`], #264
+/// Phase 4). But a ferroptosis-inducing tumor microenvironment can kill the
+/// effector cells THEMSELVES: loss of PD-L1 on tumor-associated DCs
+/// downregulates System Xc- (SLC7A11), raises their own lipid peroxidation,
+/// and drives the DCs into ferroptosis, lowering T-cell priming (Yao et al.,
+/// Cell Reports 2024, PMID 39423128, PD-L1 protects tumor-associated DCs from
+/// ferroptosis). So a TME that is more ferroptotic (higher local lipid-ROS /
+/// DAMP) can SUPPRESS its own immune amplification, an effect that grows where
+/// DC PD-L1 / checkpoint protection is low.
+///
+/// This is distinct from the #337 secreted-factor immunosuppression
+/// ([`ferroptotic_immunosuppression`], where dying tumor cells release
+/// DC-suppressing factors): here the effector cells are directly
+/// ferroptosis-KILLED, gated by their own checkpoint-state protection.
+///
+/// Modeled as a per-cell DC-survival multiplier on the immune kill probability
+/// (see [`dc_ferroptosis_survival`]), keyed on the SAME local lipid-ROS / DAMP
+/// signal that drives pro-immune [`dc_activation`]. `susceptibility == 0.0`
+/// (the default) makes the multiplier exactly `1.0`, byte-identical to the
+/// pre-#469 model.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct DcFerroptosisConfig {
+    /// How strongly the local lipid-ROS / DAMP signal drives effector DCs into
+    /// ferroptosis (lowering priming). `0.0` disables the layer (survival
+    /// multiplier `1.0`, byte-identical). Larger ⇒ DCs die faster in a
+    /// ferroptotic TME ⇒ less immune amplification. Uncalibrated; only the
+    /// direction is claimed.
+    pub susceptibility: f64,
+    /// PD-L1 / checkpoint-state protection of the DCs, in `[0, 1]`. `1.0` =
+    /// high DC PD-L1 ⇒ DCs fully protected from ferroptosis (survival `1.0`
+    /// regardless of ROS); `0.0` = PD-L1 loss ⇒ DCs maximally vulnerable. Note
+    /// the therapeutic tension this encodes: anti-PD-L1 blockade that strips
+    /// this protection can paradoxically sensitize DCs to a ferroptotic TME
+    /// (PMID 39423128), so a checkpoint inhibitor would LOWER this knob.
+    pub pdl1_protection: f64,
+}
+
+impl DcFerroptosisConfig {
+    /// Identity: no DC ferroptosis ⇒ survival multiplier exactly `1.0` ⇒
+    /// byte-identical. `pdl1_protection` is irrelevant when susceptibility is 0.
+    pub fn disabled() -> Self {
+        DcFerroptosisConfig {
+            susceptibility: 0.0,
+            pdl1_protection: 1.0,
+        }
+    }
+
+    /// Literature-informed placeholder (#469): a ferroptotic TME with PD-L1-LOW
+    /// DCs that are vulnerable to ferroptosis, lowering priming. The
+    /// susceptibility magnitude is UNCALIBRATED; only the direction (low DC
+    /// PD-L1 + high local lipid-ROS ⇒ DC ferroptosis ⇒ weaker amplification)
+    /// is claimed (Yao et al., Cell Reports 2024, PMID 39423128).
+    pub fn literature() -> Self {
+        DcFerroptosisConfig {
+            susceptibility: 1.0,
+            pdl1_protection: 0.1,
+        }
+    }
+
+    /// True when the layer has no effect (`susceptibility == 0.0`), so the
+    /// consumer stays byte-identical. The exact `== 0.0` compare is
+    /// intentional, matching the [`DcSubsetConfig::is_identity`] discipline:
+    /// any non-zero placeholder must route through the realism kill path.
+    pub fn is_identity(&self) -> bool {
+        self.susceptibility == 0.0
+    }
+}
+
+/// DC-survival multiplier under a ferroptotic TME (#469).
+///
+/// Returns a value in `(0, 1]` that the consumer multiplies into the immune
+/// kill probability (it scales the DC-dependent priming term DOWN as effector
+/// DCs are themselves killed by ferroptosis):
+///
+/// ```text
+/// survival = 1 / (1 + susceptibility · local_lipid_ros · (1 − pdl1_protection))
+/// ```
+///
+/// - `susceptibility = 0` ⇒ exactly `1.0` (identity / byte-identical),
+///   independent of the other arguments.
+/// - high `local_lipid_ros` with low `pdl1_protection` ⇒ small survival (DCs
+///   die, priming collapses).
+/// - `pdl1_protection = 1` (high DC PD-L1) ⇒ exactly `1.0` (DCs fully
+///   protected from ferroptosis regardless of ROS), per PMID 39423128.
+///
+/// `pdl1_protection` is clamped to `[0, 1]`; a negative `local_lipid_ros` is
+/// floored at 0 so the denominator never drops below 1 (the multiplier stays
+/// in `(0, 1]`).
+#[must_use]
+pub fn dc_ferroptosis_survival(
+    local_lipid_ros: f64,
+    susceptibility: f64,
+    pdl1_protection: f64,
+) -> f64 {
+    let protection = pdl1_protection.clamp(0.0, 1.0);
+    let drive = susceptibility * local_lipid_ros.max(0.0) * (1.0 - protection);
+    1.0 / (1.0 + drive.max(0.0))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1472,5 +1574,59 @@ mod tests {
         };
         assert!((all_cdc1.priming_efficiency() - 1.0).abs() < 1e-12);
         assert!(all_cdc1.is_identity());
+    }
+
+    // =============================
+    // DcFerroptosisConfig / dc_ferroptosis_survival tests (#469)
+    // =============================
+
+    /// `susceptibility = 0` ⇒ survival multiplier exactly `1.0` for ANY
+    /// lipid-ROS and protection ⇒ byte-identical. The disabled config is the
+    /// identity, regardless of the (irrelevant) `pdl1_protection`.
+    #[test]
+    fn dc_ferroptosis_disabled_is_identity() {
+        let cfg = DcFerroptosisConfig::disabled();
+        assert!(cfg.is_identity());
+        for &ros in &[0.0, 0.5, 5.0, 100.0] {
+            for &prot in &[0.0, 0.5, 1.0] {
+                assert_eq!(dc_ferroptosis_survival(ros, cfg.susceptibility, prot), 1.0);
+            }
+        }
+        // A non-zero susceptibility is NOT the identity (must route through the
+        // realism kill path).
+        assert!(!DcFerroptosisConfig::literature().is_identity());
+    }
+
+    /// Higher local lipid-ROS lowers DC survival (more DC ferroptosis ⇒ weaker
+    /// priming), and PD-L1 protection RAISES it back toward 1.0.
+    #[test]
+    fn dc_ferroptosis_survival_falls_with_ros_and_rises_with_pdl1() {
+        // Vulnerable DCs (PD-L1 low): survival strictly decreases as ROS rises.
+        let s_lo = dc_ferroptosis_survival(0.5, 2.0, 0.0);
+        let s_hi = dc_ferroptosis_survival(5.0, 2.0, 0.0);
+        assert!(s_hi < s_lo && s_lo < 1.0 && s_hi > 0.0);
+        // At the SAME ROS, more PD-L1 protection ⇒ higher survival.
+        let unprotected = dc_ferroptosis_survival(5.0, 2.0, 0.0);
+        let protected = dc_ferroptosis_survival(5.0, 2.0, 0.9);
+        assert!(protected > unprotected);
+        // Full PD-L1 protection ⇒ exactly 1.0 (DCs immune to ferroptosis).
+        assert_eq!(dc_ferroptosis_survival(100.0, 2.0, 1.0), 1.0);
+        // Closed form check: 1/(1 + 2·5·(1−0)) = 1/11.
+        assert!((dc_ferroptosis_survival(5.0, 2.0, 0.0) - 1.0 / 11.0).abs() < 1e-12);
+    }
+
+    /// Guards: `pdl1_protection` is clamped to `[0,1]` and a negative ROS is
+    /// floored, so the multiplier always stays in `(0, 1]`.
+    #[test]
+    fn dc_ferroptosis_survival_is_bounded() {
+        // protection > 1 clamps to 1 (full protection ⇒ 1.0).
+        assert_eq!(dc_ferroptosis_survival(10.0, 3.0, 2.0), 1.0);
+        // protection < 0 clamps to 0 (no extra amplification of the drive).
+        assert_eq!(
+            dc_ferroptosis_survival(10.0, 3.0, -1.0),
+            dc_ferroptosis_survival(10.0, 3.0, 0.0)
+        );
+        // Negative ROS floored ⇒ no death ⇒ 1.0.
+        assert_eq!(dc_ferroptosis_survival(-5.0, 3.0, 0.0), 1.0);
     }
 }
