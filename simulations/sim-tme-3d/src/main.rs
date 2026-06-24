@@ -3521,6 +3521,42 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         por: false,
         dhc7: true,
     },
+    SnapshotPreset {
+        // SDT with a Type-I-heavy sonosensitizer (#468): sdt_o2_dependence = 0.3
+        // means 70% Type I (oxygen-INDEPENDENT, hydroxyl/superoxide radicals) + 30%
+        // Type II (oxygen-dependent singlet oxygen), so the exo-ROS yield retains
+        // ~70% in the anoxic core where the pure Type II `sdt-o2dep` preset (dep =
+        // 1.0) collapses. This is the hypoxia-tolerant SDT radical arm: the dead/LP
+        // panels keep killing into the hypoxic core, the complement of `sdt-o2dep`.
+        name: "sdt-typei",
+        desc: "SDT + Type-I-heavy sonosensitizer (#468): O2-independent radical arm retains hypoxic-core kill",
+        treatment: Treatment::SDT,
+        treatment_name: "SDT",
+        immune_on: false,
+        stromal_on: false,
+        ph_on: false,
+        multidose: false,
+        persister: false,
+        clonal: false,
+        vasculature: false,
+        spheroid: false,
+        slab: false,
+        suppressor: false,
+        checkpoints: false,
+        contact: false,
+        nutrient: false,
+        dc_subsets: false,
+        senescence: false,
+        phenotype_mufa: false,
+        sdt_o2_dependence: 0.3,
+        ferritinophagy: false,
+        ifngamma: false,
+        alox: false,
+        acsl4_negative: false,
+        escrt: false,
+        por: false,
+        dhc7: false,
+    },
 ];
 
 /// The multi-dose schedule used by the `multidose` snapshot preset:
@@ -7433,9 +7469,12 @@ mod tests {
             p.sdt_o2_dependence, 1.0,
             "sdt-o2dep must make the exo-ROS fully O2-dependent"
         );
-        // Off-by-default invariant: only this preset sets a non-zero dependence.
+        // Off-by-default invariant: only the two intentional SDT-O2 presets
+        // (sdt-o2dep = Type II / dep 1.0, and sdt-typei = Type-I-heavy / dep 0.3,
+        // #468) set a non-zero dependence; every other preset keeps 0.0 so the
+        // matrix stays byte-identical.
         for q in SNAPSHOTS {
-            if q.name != "sdt-o2dep" {
+            if q.name != "sdt-o2dep" && q.name != "sdt-typei" {
                 assert_eq!(
                     q.sdt_o2_dependence, 0.0,
                     "preset {} must keep sdt_o2_dependence=0.0 (byte-identical)",
@@ -8327,6 +8366,64 @@ mod tests {
         assert_eq!(p.name, "dhc7");
         assert!(p.dhc7, "the dhc7 preset must enable the 7-DHC radical trap");
         assert!(matches!(p.treatment, Treatment::RSL3));
+    }
+
+    /// #468: the model already expresses a Type-I (oxygen-INDEPENDENT) SDT radical
+    /// arm through the #336 `sdt_o2_dependence` knob (the Type II fraction), no
+    /// separate parameter needed. A Type-I-heavy sonosensitizer (dependence 0.3, so
+    /// 70% Type I) retains MORE hypoxic-core SDT kill than a pure Type II agent
+    /// (dependence 1.0, which collapses in the anoxic core). Demonstrated in a
+    /// hypoxic config (small o2_lambda ⇒ a real hypoxic shell).
+    #[test]
+    fn type_i_sdt_retains_hypoxic_kill_where_type_ii_collapses() {
+        let cfg = RunConfig {
+            grid_dim: 60,
+            n_steps: 180,
+        };
+        let cond = Condition {
+            name: "sdt_typei".to_string(),
+            treatment: Treatment::SDT,
+            treatment_name: "SDT".to_string(),
+            o2_lambda: Some(50.0), // steep gradient ⇒ a hypoxic core (§7.1 config)
+            immune_on: false,
+            stromal_on: false,
+            ph_on: false,
+            dose_schedule: DoseSchedule::Constant,
+        };
+        let run = |dep: f64| {
+            run_one_condition_full(
+                &cond,
+                cfg,
+                None,
+                Overrides {
+                    sdt_o2_dependence: dep,
+                    ..Default::default()
+                },
+            )
+        };
+        let type_ii = run(1.0); // fully O2-dependent ⇒ collapses in the hypoxic core
+        let type_i_heavy = run(0.3); // 70% Type I (O2-independent) ⇒ retains hypoxic kill
+                                     // At this config Type-I-heavy retains ~43% hypoxic kill while pure Type II
+                                     // collapses to exactly 0 in the anoxic core.
+        assert!(
+            type_i_heavy.hypoxic_kill_rate > type_ii.hypoxic_kill_rate,
+            "Type-I-heavy SDT must retain more hypoxic kill than pure Type II: \
+             type_i={} type_ii={}",
+            type_i_heavy.hypoxic_kill_rate,
+            type_ii.hypoxic_kill_rate
+        );
+    }
+
+    /// #468: the `--snapshot=sdt-typei` preset is wired (SDT, Type-I-heavy
+    /// dependence 0.3), the hypoxia-tolerant complement of `sdt-o2dep` (dep 1.0).
+    #[test]
+    fn sdt_typei_snapshot_preset_is_wired() {
+        let p = resolve_snapshot("sdt-typei");
+        assert_eq!(p.name, "sdt-typei");
+        assert!(matches!(p.treatment, Treatment::SDT));
+        assert_eq!(p.sdt_o2_dependence, 0.3);
+        // The complement: sdt-o2dep is the pure Type II (dep 1.0) collapse preset.
+        assert_eq!(resolve_snapshot("sdt-o2dep").sdt_o2_dependence, 1.0);
     }
 
     /// Three independent realism layers enabled together — clonal subclones
