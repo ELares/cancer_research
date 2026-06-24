@@ -321,7 +321,9 @@ pub fn sim_cell_step(
                 } else {
                     state.exo_ros_peak * exo_decay_factor(step)
                 };
-                let total_ros = cell.basal_ros + exo + fenton;
+                // POR/CYB5R1 enzymatic NAD(P)H/O2-driven H2O2 (#466): an extra oxidant
+                // source feeding the ROS pool. `0.0` default ⇒ unchanged ⇒ byte-identical.
+                let total_ros = cell.basal_ros + exo + fenton + params.por_h2o2_rate.max(0.0);
                 let effective_unsat = ether_augmented_pufa(cell.lipid_unsat, params); // no MUFA protection
                 let lp_direct = total_ros * effective_unsat * params.lp_rate;
                 // ALOX enzymatic capacity (#446) gates propagation in death too:
@@ -345,7 +347,9 @@ pub fn sim_cell_step(
     } else {
         state.exo_ros_peak * exo_decay_factor(step)
     };
-    let total_ros = cell.basal_ros + exo + fenton;
+    // POR/CYB5R1 enzymatic NAD(P)H/O2-driven H2O2 (#466): an extra oxidant source
+    // feeding the ROS pool. `0.0` default ⇒ unchanged ⇒ byte-identical.
+    let total_ros = cell.basal_ros + exo + fenton + params.por_h2o2_rate.max(0.0);
 
     // === GSH SCAVENGING (Michaelis-Menten, NO artificial cap) ===
     let gsh_fraction = state.gsh / (state.gsh + params.gsh_km);
@@ -484,7 +488,9 @@ pub fn sim_cell(
         } else {
             exo_ros_peak * exo_decay_factor(step)
         };
-        let total_ros = cell.basal_ros + exo + fenton;
+        // POR/CYB5R1 enzymatic NAD(P)H/O2-driven H2O2 (#466): an extra oxidant
+        // source feeding the ROS pool. `0.0` default ⇒ unchanged ⇒ byte-identical.
+        let total_ros = cell.basal_ros + exo + fenton + params.por_h2o2_rate.max(0.0);
 
         if death_step.is_some() {
             // Post-death: LP-only accumulation (no GSH, no repair, no GPX4).
@@ -1128,5 +1134,40 @@ mod tests {
         // Enabled but zero budget ⇒ no rescue ⇒ death proceeds.
         let (died_spent, _) = step_once(1.0, 0.0);
         assert!(died_spent, "ESCRT with zero budget cannot rescue");
+    }
+
+    #[test]
+    fn sim_cell_step_respects_por_h2o2_rate() {
+        // #466: the POR/CYB5R1 enzymatic H2O2 source raises the oxidant pool, so a
+        // positive `por_h2o2_rate` raises post-step LP. `0.0` (default) is the
+        // byte-identical baseline. Identical seeds, so only the rate differs.
+        let mut gen_rng = StdRng::seed_from_u64(31);
+        let cell = gen_cell(Phenotype::Glycolytic, &mut gen_rng);
+
+        let step_once = |por: f64| -> f64 {
+            let mut params = Params::default();
+            params.por_h2o2_rate = por;
+            let mut init_rng = StdRng::seed_from_u64(9);
+            let mut state = CellState::from_cell(
+                &cell,
+                crate::cell::Treatment::Control,
+                &params,
+                &mut init_rng,
+            );
+            state.gsh = 0.0; // remove scavenging so the extra oxidant reaches LP
+            state.gpx4 = 0.0;
+            state.fsp1 = 0.0;
+            state.lp = 1.0;
+            let mut step_rng = StdRng::seed_from_u64(0);
+            sim_cell_step(&mut state, &cell, &params, 0, 0.0, &mut step_rng);
+            state.lp
+        };
+
+        let baseline = step_once(0.0);
+        let por_high = step_once(2.0);
+        assert!(
+            por_high > baseline,
+            "POR H2O2 source must raise post-step LP: por_high={por_high}, baseline={baseline}"
+        );
     }
 }

@@ -130,6 +130,17 @@ A genuinely new category (#465): every other parameter modulates the redox/lipid
 
 **Calibration target.** Only the DIRECTION (more ESCRT repair => slower execution => more resistance; CHMP5/CHMP6 loss => sensitization) is claimed; the rate and budget are placeholders. Fitting would need CHMP5/CHMP6-knockdown vs wild-type ferroptosis-sensitivity dose-response plus membrane-resealing kinetics (Ca2+ imaging / annexin-V time-courses) to set the per-step rescue probability and the finite repair capacity.
 
+## POR/CYB5R1 enzymatic O2-coupled H2O2 source (`Params.por_h2o2_rate` + `oxygen::por_o2_factor`): known uncalibrated
+
+POR (cytochrome P450 reductase) and CYB5R1 transfer electrons from NAD(P)H to O2 to generate H2O2, the Fenton substrate (#466), an enzymatic O2/NADPH-dependent oxidant source distinct from the static `basal_ros` (Yan et al., 2021, PMID 33860083; Zou et al., Nat Chem Biol 2020). **Off-by-default**; `por_h2o2_rate = 0.0` adds nothing to `total_ros` => byte-identical. The spatial consumer O2-couples it per cell via `por_o2_factor`. Not in the C ABI (FFI defaults it to 0.0).
+
+| Parameter | Default | Source | Grounded? | Sensitivity |
+|-----------|---------|--------|-----------|-------------|
+| `por_h2o2_rate` | 0.0 | Enzymatic H2O2 flux added to the ROS pool; Yan 2021 PMID 33860083 (direction only) | Assumed (direction only) | High when on (raises total ROS feeding lipid peroxidation) |
+| `por_o2_factor` dependence | 0.0 (off) / 1.0 (the `por` preset) | O2-coupling of the POR H2O2 yield (POR needs O2); same form as the SDT O2-dependence | Assumed (direction only) | Spatial: gates how rim-weighted vs uniform the POR boost is |
+
+**Calibration target.** Only the DIRECTION (more POR/CYB5R1 => more H2O2 => more ferroptosis; the yield falls with O2) is claimed; the rate + O2-dependence are placeholders. Fitting would need POR/CYB5R1-knockdown vs overexpression ferroptosis-sensitivity dose-response plus a measured H2O2-flux-vs-O2 curve to set the enzymatic rate and the O2-coupling constant.
+
 ## Photosensitizer pharmacokinetics: plasma vs. cellular
 
 `Photosensitizer::Porfimer.t_half_h` represents *plasma* terminal half-life. Cellular concentration is assumed to track plasma proportionally — a reasonable approximation for porfimer (slow-distributing, weeks-scale t½, ~100% serum-protein bound, Vd ≈ plasma volume per Bellnier 2006) but explicitly wrong for 5-ALA/PpIX, which accumulates intracellularly via ferrochelatase deficiency rather than decaying. ALA kinetics will require a different variant.

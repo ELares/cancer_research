@@ -168,6 +168,21 @@ pub struct Params {
     /// / more resistance. `0.0` (default) ⇒ no rescues possible ⇒ byte-identical.
     #[serde(default)]
     pub escrt_repair_budget: f64,
+    /// POR/CYB5R1 enzymatic NAD(P)H/O2-driven H2O2 source (#466). POR (cytochrome
+    /// P450 reductase) and CYB5R1 transfer electrons from NAD(P)H to O2 to generate
+    /// H2O2, the Fenton substrate that drives lipid peroxidation, an enzymatic,
+    /// O2- and NADPH-dependent oxidant source distinct from the static `basal_ros`
+    /// input and parallel to the ALOX enzymatic-propagation leg (Yan et al., 2021,
+    /// PMID 33860083: POR/CYB5R1 catalyze lipid peroxidation to execute ferroptosis;
+    /// Zou et al., Nat Chem Biol 2020). This rate is added to `total_ros` (more POR
+    /// ⇒ more H2O2 ⇒ more Fenton-driven ROS ⇒ more ferroptosis). The single-cell
+    /// term is uniform; the spatial consumer (sim-tme-3d) O2-couples it per cell via
+    /// `oxygen::por_o2_factor`, which ties the H2O2 yield to local O2 and so helps
+    /// correct the deep-core artifact (POR makes less H2O2 where O2 is low). `0.0`
+    /// (default) ⇒ no added oxidant ⇒ byte-identical; FFI defaults it to 0.0 so the
+    /// C ABI is unchanged.
+    #[serde(default)]
+    pub por_h2o2_rate: f64,
 
     // === GPX4 Dynamic Regulation ===
     pub gpx4_degradation_by_ros: f64,
@@ -225,6 +240,7 @@ impl Default for Params {
             acsl4_status_boost: 0.0,
             escrt_repair_rate: 0.0,
             escrt_repair_budget: 0.0,
+            por_h2o2_rate: 0.0,
             gpx4_degradation_by_ros: 0.002,
             gpx4_nrf2_upregulation: 0.008,
             sdt_ros: 5.0,
