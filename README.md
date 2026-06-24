@@ -119,9 +119,12 @@ We'd rather publish a longer, clearer document that a graduate student can follo
 This project is most useful when it's questioned, expanded, and corrected. You don't need to be a cancer researcher—curiosity and a willingness to look at the evidence are enough.
 
 - Read [CONTRIBUTING.md](CONTRIBUTING.md) for setup, testing, and PR guidelines
-- Open an issue with a question, a counter-example, or a missing paper
+- Open an issue with a question, a counter-example, or a missing paper. Issue templates (bug, corpus/literature contribution, simulation extension, manuscript correction) are in [.github/ISSUE_TEMPLATE/](.github/ISSUE_TEMPLATE/)
 - Submit a pull request that improves the code, the corpus, or the manuscript
+- See [CONTRIBUTORS.md](CONTRIBUTORS.md) for how contributions are recognized
 - Fork the repo and go in a completely new direction—MIT license means you're free to do that
+
+The model's falsifiable predictions and the experiments that would confirm or refute them are registered in [PREREGISTRATION.md](PREREGISTRATION.md), so the predictions are locked in before the calibration work that tests them.
 
 We're not trying to steer everyone toward one answer. The goal is to build a shared space where good ideas can emerge.
 
