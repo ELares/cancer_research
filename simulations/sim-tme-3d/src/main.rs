@@ -535,6 +535,12 @@ struct Overrides {
     /// iron under RSL3 and RESISTS. `None` ⇒ `0.0` ⇒ byte-identical. Off the
     /// production matrix.
     prom2: Option<f64>,
+    /// Dietary-PUFA supply + lipid-droplet/DGAT buffer (#486): `Some((supply,
+    /// buffer))` sets `params.dietary_pufa_supply` and `params.lipid_droplet_buffer`.
+    /// Exogenous PUFA above the saturable DGAT buffer raises ferroptosis; DGAT
+    /// inhibition (a smaller buffer) makes it emerge sooner. `None` ⇒ both 0.0 ⇒
+    /// byte-identical. Off the production matrix.
+    dietary_pufa: Option<(f64, f64)>,
     slab: Option<SlabConfig>,
     /// Depth-graded slab phenotype (#272). `None` ⇒ the slab keeps `generate_slab`'s
     /// flat bulk phenotype mix. Only applied when `slab` is also `Some` (it needs the
@@ -804,6 +810,14 @@ fn run_one_condition_full(
     // pool over the run, so RSL3 kills LESS (ferroptosis resistance).
     if let Some(efflux) = overrides.prom2 {
         params.prom2_iron_efflux = efflux;
+    }
+    // Dietary-PUFA / DGAT buffer (#486): `None` (matrix path) ⇒ both 0.0 ⇒
+    // byte-identical. Exogenous PUFA above the saturable lipid-droplet buffer
+    // adds oxidizable substrate (more ferroptosis); DGAT inhibition lowers the
+    // buffer so it emerges sooner.
+    if let Some((supply, buffer)) = overrides.dietary_pufa {
+        params.dietary_pufa_supply = supply;
+        params.lipid_droplet_buffer = buffer;
     }
     let spatial_params = SpatialParams {
         cell_size_um: CELL_SIZE_UM,
@@ -2698,6 +2712,11 @@ struct SnapshotPreset {
     /// overload depletes GSH + GPX4 each step, so RSL3 kills MORE than the
     /// baseline. No overlay; the increased death front shows in the dead/LP panels.
     copper: bool,
+    /// True if dietary-PUFA / DGAT lipid-droplet buffering (#486) is enabled
+    /// (exogenous PUFA above the saturable buffer, with DGAT inhibition). Adds
+    /// oxidizable substrate, so RSL3 kills MORE than the baseline. No overlay; the
+    /// increased death front shows in the dead/LP panels.
+    dietary_pufa: bool,
 }
 
 /// Visualization presets for `--snapshot=NAME`. Keep this list small —
@@ -2737,6 +2756,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         vitk: false,
         prom2: false,
         copper: false,
+        dietary_pufa: false,
     },
     SnapshotPreset {
         name: "bare",
@@ -2772,6 +2792,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         vitk: false,
         prom2: false,
         copper: false,
+        dietary_pufa: false,
     },
     SnapshotPreset {
         name: "multidose",
@@ -2807,6 +2828,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         vitk: false,
         prom2: false,
         copper: false,
+        dietary_pufa: false,
     },
     SnapshotPreset {
         // SDT here visualizes the persister-fraction OVERLAY (the MUFA axis +
@@ -2846,6 +2868,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         vitk: false,
         prom2: false,
         copper: false,
+        dietary_pufa: false,
     },
     SnapshotPreset {
         // RSL3 (covalent GPX4 inhibitor) on a persister population WITH the
@@ -2888,6 +2911,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         vitk: false,
         prom2: false,
         copper: false,
+        dietary_pufa: false,
     },
     SnapshotPreset {
         name: "clonal",
@@ -2923,6 +2947,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         vitk: false,
         prom2: false,
         copper: false,
+        dietary_pufa: false,
     },
     SnapshotPreset {
         // RSL3 (hypoxia-sensitive) + explicit internal vessels: near-vessel
@@ -2963,6 +2988,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         vitk: false,
         prom2: false,
         copper: false,
+        dietary_pufa: false,
     },
     SnapshotPreset {
         // RSL3 + explicit vessels, but the per-cell O2/drug supply is the
@@ -3005,6 +3031,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         vitk: false,
         prom2: false,
         copper: false,
+        dietary_pufa: false,
     },
     SnapshotPreset {
         // SDT + radial spheroid biology: the phenotype panel shows the
@@ -3043,6 +3070,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         vitk: false,
         prom2: false,
         copper: false,
+        dietary_pufa: false,
     },
     SnapshotPreset {
         // SDT on a patient-scale slab at the SURFACE (+z face = vessel, depth
@@ -3086,6 +3114,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         vitk: false,
         prom2: false,
         copper: false,
+        dietary_pufa: false,
     },
     SnapshotPreset {
         // Slab + internal vessels (#272 coupling). vessel_supply.npy (on a slab
@@ -3129,6 +3158,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         vitk: false,
         prom2: false,
         copper: false,
+        dietary_pufa: false,
     },
     SnapshotPreset {
         // SDT + immune + Treg/MDSC suppressor (#264 Phase 2). Heuristic niche
@@ -3168,6 +3198,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         vitk: false,
         prom2: false,
         copper: false,
+        dietary_pufa: false,
     },
     SnapshotPreset {
         // SDT + immune + dual checkpoint blockade (#264 Phase 3): a PD-1 +
@@ -3208,6 +3239,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         vitk: false,
         prom2: false,
         copper: false,
+        dietary_pufa: false,
     },
     SnapshotPreset {
         // Kitchen-sink composition (#278): several realism layers at once —
@@ -3250,6 +3282,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         vitk: false,
         prom2: false,
         copper: false,
+        dietary_pufa: false,
     },
     SnapshotPreset {
         // RSL3 + cell-cell contact resistance (#270): dense interior cells
@@ -3291,6 +3324,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         vitk: false,
         prom2: false,
         copper: false,
+        dietary_pufa: false,
     },
     SnapshotPreset {
         // SDT + radial nutrient gradient (#270 item 3b): the nutrient-starved
@@ -3331,6 +3365,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         vitk: false,
         prom2: false,
         copper: false,
+        dietary_pufa: false,
     },
     SnapshotPreset {
         // SDT + cDC1/cDC2 dendritic-cell subset mix (#264 Phase 4): a cDC1-poor
@@ -3371,6 +3406,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         vitk: false,
         prom2: false,
         copper: false,
+        dietary_pufa: false,
     },
     SnapshotPreset {
         // SDT + DC ferroptosis susceptibility (#469): the strong ferroptotic
@@ -3412,6 +3448,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         vitk: false,
         prom2: false,
         copper: false,
+        dietary_pufa: false,
     },
     SnapshotPreset {
         // SDT + therapy-induced senescence (#341): a fraction of tumor cells
@@ -3458,6 +3495,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         vitk: false,
         prom2: false,
         copper: false,
+        dietary_pufa: false,
     },
     SnapshotPreset {
         // Like `senescence`, but adds the diffusing-SASP-field overlay (#376/#398):
@@ -3500,6 +3538,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         vitk: false,
         prom2: false,
         copper: false,
+        dietary_pufa: false,
     },
     SnapshotPreset {
         // RSL3 + 3D spheroid (#197) + phenotype-specific SCD1/MUFA rates (#363):
@@ -3542,6 +3581,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         vitk: false,
         prom2: false,
         copper: false,
+        dietary_pufa: false,
     },
     SnapshotPreset {
         // SDT on a hypoxic sphere (the base edge-distance radial-O2 gradient, not
@@ -3583,6 +3623,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         vitk: false,
         prom2: false,
         copper: false,
+        dietary_pufa: false,
     },
     SnapshotPreset {
         // RSL3 on a hypoxic sphere with the NCOA4-ferritinophagy + hypoxia-iron
@@ -3625,6 +3666,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         vitk: false,
         prom2: false,
         copper: false,
+        dietary_pufa: false,
     },
     SnapshotPreset {
         // RSL3 + immune with the IFN-γ → System Xc⁻ + ACSL4 coupling on (#443):
@@ -3668,6 +3710,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         vitk: false,
         prom2: false,
         copper: false,
+        dietary_pufa: false,
     },
     SnapshotPreset {
         // RSL3 on a sphere with an ALOX15-high, MCFA-exposed phenotype (#446):
@@ -3709,6 +3752,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         vitk: false,
         prom2: false,
         copper: false,
+        dietary_pufa: false,
     },
     SnapshotPreset {
         // RSL3 on an ACSL4-NEGATIVE tumor (#444): with ACSL4 absent the membrane
@@ -3752,6 +3796,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         vitk: false,
         prom2: false,
         copper: false,
+        dietary_pufa: false,
     },
     SnapshotPreset {
         // RSL3 on a tumor with a high ESCRT-III membrane-repair capacity (#465).
@@ -3793,6 +3838,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         vitk: false,
         prom2: false,
         copper: false,
+        dietary_pufa: false,
     },
     SnapshotPreset {
         // RSL3 on a tumor with a high POR/CYB5R1 enzymatic O2-coupled H2O2 source
@@ -3834,6 +3880,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         vitk: false,
         prom2: false,
         copper: false,
+        dietary_pufa: false,
     },
     SnapshotPreset {
         // RSL3 on a DHCR7-low tumor with a high 7-DHC sterol radical-trapping pool
@@ -3875,6 +3922,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         vitk: false,
         prom2: false,
         copper: false,
+        dietary_pufa: false,
     },
     SnapshotPreset {
         // RSL3 on a VKORC1L1-high, p53-competent tumor with a vitamin-K
@@ -3920,6 +3968,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         vitk: true,
         prom2: false,
         copper: false,
+        dietary_pufa: false,
     },
     SnapshotPreset {
         // RSL3 on a PROM2-high tumor with MVB-exosome labile-iron efflux (#484).
@@ -3962,6 +4011,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         vitk: false,
         prom2: true,
         copper: false,
+        dietary_pufa: false,
     },
     SnapshotPreset {
         // RSL3 + a copper ionophore (elesclomol/disulfiram) on an ATP7B-low tumor
@@ -4004,6 +4054,51 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         vitk: false,
         prom2: false,
         copper: true,
+        dietary_pufa: false,
+    },
+    SnapshotPreset {
+        // RSL3 + dietary-PUFA load with DGAT inhibition on an acidic tumor (#486).
+        // Exogenous polyunsaturated fatty acids add oxidizable substrate once the
+        // saturable lipid-droplet (DGAT) storage sink is exceeded, so RSL3 kills
+        // MORE than the baseline; the effect is potentiated by tumor acidosis
+        // (ph_on, so the existing pH layer lowers defenses in acidic zones and
+        // composes with the added substrate, the Dierge et al. Cell Metab 2021
+        // PMID 34118189 mechanism). The dead/LP panels show the increased death
+        // front. No overlay.
+        name: "dietary-pufa",
+        desc: "RSL3 + dietary PUFA over the DGAT buffer on an acidic tumor (#486): more oxidizable substrate, more kill",
+        treatment: Treatment::RSL3,
+        treatment_name: "RSL3",
+        immune_on: false,
+        stromal_on: false,
+        ph_on: true,
+        multidose: false,
+        persister: false,
+        persister_oxphos: false,
+        clonal: false,
+        vasculature: false,
+        spheroid: false,
+        slab: false,
+        suppressor: false,
+        checkpoints: false,
+        contact: false,
+        nutrient: false,
+        dc_subsets: false,
+        dc_ferroptosis: false,
+        senescence: false,
+        phenotype_mufa: false,
+        sdt_o2_dependence: 0.0,
+        ferritinophagy: false,
+        ifngamma: false,
+        alox: false,
+        acsl4_negative: false,
+        escrt: false,
+        por: false,
+        dhc7: false,
+        vitk: false,
+        prom2: false,
+        copper: false,
+        dietary_pufa: true,
     },
     SnapshotPreset {
         // SDT with a Type-I-heavy sonosensitizer (#468): sdt_o2_dependence = 0.3
@@ -4045,6 +4140,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         vitk: false,
         prom2: false,
         copper: false,
+        dietary_pufa: false,
     },
 ];
 
@@ -4346,6 +4442,7 @@ fn run_snapshot(output_dir: &Path, tumor_radius_um: f64, name: &str) {
             vitk: preset.vitk.then_some((1.0, 0.0)),
             prom2: preset.prom2.then_some(0.8),
             copper: preset.copper.then(CopperConfig::literature),
+            dietary_pufa: preset.dietary_pufa.then_some((0.6, 0.2)),
             ..Default::default()
         },
     );
@@ -9262,6 +9359,73 @@ mod tests {
         assert!(
             p.copper,
             "the copper preset must enable copper-ionophore crosstalk"
+        );
+        assert!(matches!(p.treatment, Treatment::RSL3));
+    }
+
+    /// #486 A/B: dietary PUFA above the saturable lipid-droplet (DGAT) buffer adds
+    /// oxidizable substrate, so an RSL3 run with dietary PUFA over the buffer kills
+    /// MORE than the baseline; an equal-or-larger buffer (no DGAT inhibition) stores
+    /// the PUFA and reproduces the baseline (Dierge et al. Cell Metab 2021 PMID
+    /// 34118189). Magnitude uncalibrated; the direction is the result.
+    #[test]
+    fn dietary_pufa_above_dgat_buffer_raises_rsl3_kill() {
+        let cfg = RunConfig {
+            grid_dim: 24,
+            n_steps: 120,
+        };
+        let cond = Condition {
+            name: "dietary_pufa_ab".to_string(),
+            treatment: Treatment::RSL3,
+            treatment_name: "RSL3".to_string(),
+            o2_lambda: Some(ZONE_REF_LAMBDA),
+            immune_on: false,
+            stromal_on: false,
+            ph_on: false,
+            dose_schedule: DoseSchedule::Constant,
+        };
+        let run = |dietary: Option<(f64, f64)>| {
+            run_one_condition_full(
+                &cond,
+                cfg,
+                None,
+                Overrides {
+                    dietary_pufa: dietary,
+                    ..Default::default()
+                },
+            )
+            .overall_kill_rate
+        };
+        let baseline = run(None);
+        // Dietary PUFA fully buffered (supply == buffer) => no excess => baseline.
+        assert_eq!(
+            run(Some((0.5, 0.5))),
+            baseline,
+            "dietary PUFA at or below the DGAT buffer must reproduce the baseline"
+        );
+        // Dietary PUFA over the buffer (DGAT-inhibited) => more kill.
+        let excess = run(Some((0.6, 0.2)));
+        assert!(
+            excess > baseline,
+            "dietary PUFA above the DGAT buffer must raise RSL3 kill: excess={excess} baseline={baseline}"
+        );
+        // disabled (both 0.0) reproduces the baseline exactly (byte-identity).
+        assert_eq!(run(Some((0.0, 0.0))), baseline);
+    }
+
+    /// #486: the `--snapshot=dietary-pufa` preset is wired (RSL3 + dietary PUFA over
+    /// the DGAT buffer on an acidic tumor).
+    #[test]
+    fn dietary_pufa_snapshot_preset_is_wired() {
+        let p = resolve_snapshot("dietary-pufa");
+        assert_eq!(p.name, "dietary-pufa");
+        assert!(
+            p.dietary_pufa,
+            "the dietary-pufa preset must enable the dietary-PUFA layer"
+        );
+        assert!(
+            p.ph_on,
+            "dietary-pufa runs on an acidic tumor (the pH layer potentiates it)"
         );
         assert!(matches!(p.treatment, Treatment::RSL3));
     }

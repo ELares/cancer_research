@@ -215,11 +215,22 @@ fn ether_augmented_pufa(lipid_unsat: f64, params: &Params) -> f64 {
     // `-1` for ACSL4-negative tumors, collapsing the PUFA substrate ⇒
     // ferroptosis-refractory), so it is added raw and the whole augmentation is
     // floored at 0. All boosts `0.0` by default ⇒ ×1.0 ⇒ byte-identical.
+    //
+    // Dietary-PUFA / lipid-droplet (DGAT) buffer (#486): exogenous polyunsaturated
+    // fatty acids add oxidizable substrate, but only AFTER the saturable
+    // triglyceride-storage sink (the lipid droplet, filled by DGAT) is exceeded;
+    // cytotoxicity emerges once storage saturates, and DGAT inhibition (a smaller
+    // buffer) makes it emerge sooner (Dierge et al., Cell Metab 2021, PMID
+    // 34118189). So the effective dietary-PUFA contribution is the supply MINUS
+    // the buffer, floored at 0. Both `0.0` by default ⇒ no excess ⇒ byte-identical.
+    let dietary_pufa_excess =
+        (params.dietary_pufa_supply - params.lipid_droplet_buffer.max(0.0)).max(0.0);
     lipid_unsat
         * (1.0
             + params.ether_pufa_fraction.max(0.0)
             + params.mcfa_pufa_boost.max(0.0)
-            + params.acsl4_status_boost)
+            + params.acsl4_status_boost
+            + dietary_pufa_excess)
             .max(0.0)
 }
 
@@ -1197,6 +1208,62 @@ mod tests {
         assert!(
             mcfa_high > baseline,
             "MCFA PUFA boost must raise post-step LP: mcfa_high={mcfa_high}, baseline={baseline}"
+        );
+    }
+
+    #[test]
+    fn sim_cell_step_respects_dietary_pufa_dgat_buffer() {
+        // #486: exogenous dietary PUFA adds oxidizable substrate, but ONLY after
+        // the saturable lipid-droplet (DGAT) buffer is exceeded; DGAT inhibition
+        // (a smaller buffer) makes the cytotoxicity emerge sooner. `0.0` defaults
+        // are the byte-identical baseline.
+        let mut gen_rng = StdRng::seed_from_u64(13);
+        let mut cell = gen_cell(Phenotype::Glycolytic, &mut gen_rng);
+        cell.lipid_unsat = 2.0;
+
+        let step_once = |supply: f64, buffer: f64| -> f64 {
+            let mut params = Params::default();
+            params.dietary_pufa_supply = supply;
+            params.lipid_droplet_buffer = buffer;
+            let mut init_rng = StdRng::seed_from_u64(7);
+            let mut state = CellState::from_cell(
+                &cell,
+                crate::cell::Treatment::Control,
+                &params,
+                &mut init_rng,
+            );
+            state.gsh = 0.0;
+            state.gpx4 = 0.0;
+            state.fsp1 = 0.0;
+            state.lp = 3.0;
+            let mut step_rng = StdRng::seed_from_u64(0);
+            sim_cell_step(&mut state, &cell, &params, 0, 0.0, &mut step_rng);
+            state.lp
+        };
+
+        let baseline = step_once(0.0, 0.0);
+        // Dietary PUFA fully absorbed by an equal-or-larger buffer ⇒ NO effect
+        // (still the baseline): the droplet stores it before it can peroxidize.
+        let buffered = step_once(0.5, 0.5);
+        assert_eq!(
+            buffered, baseline,
+            "dietary PUFA below the lipid-droplet buffer must not raise LP (stored): \
+             buffered={buffered}, baseline={baseline}"
+        );
+        // Dietary PUFA exceeding the buffer ⇒ MORE peroxidation.
+        let excess = step_once(0.5, 0.0);
+        assert!(
+            excess > baseline,
+            "dietary PUFA above the buffer must raise post-step LP: excess={excess}, baseline={baseline}"
+        );
+        // DGAT inhibition (smaller buffer) at the SAME supply ⇒ more peroxidation
+        // (the cytotoxicity emerges sooner).
+        let dgat_inhibited = step_once(0.6, 0.2);
+        let dgat_intact = step_once(0.6, 0.5);
+        assert!(
+            dgat_inhibited > dgat_intact,
+            "DGAT inhibition (smaller buffer) must raise LP at fixed supply: \
+             inhibited={dgat_inhibited}, intact={dgat_intact}"
         );
     }
 

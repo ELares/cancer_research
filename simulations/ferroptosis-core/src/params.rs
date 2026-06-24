@@ -167,6 +167,28 @@ pub struct Params {
     /// (PMID 27842070). Uncalibrated linear placeholder; direction-anchored.
     #[serde(default)]
     pub acsl4_status_boost: f64,
+    /// Exogenous dietary-PUFA supply (#486): a double-bond-weighted oxidizable
+    /// substrate added on top of the membrane PUFA. Exogenous n-3/n-6 PUFAs
+    /// sensitize to ferroptosis in proportion to double-bond count, BUT only
+    /// once the saturable lipid-droplet (triglyceride) storage sink below is
+    /// exceeded (Dierge et al., Cell Metab 2021, PMID 34118189). The effective
+    /// contribution folded into `biochem::ether_augmented_pufa` is
+    /// `(dietary_pufa_supply - lipid_droplet_buffer).max(0)`. `0.0` (default) ⇒
+    /// no contribution ⇒ byte-identical. FFI defaults it to 0.0 so the C ABI is
+    /// unchanged. Uncalibrated placeholder; the direction (more dietary PUFA ⇒
+    /// more ferroptosis, above the buffer) is the result.
+    #[serde(default)]
+    pub dietary_pufa_supply: f64,
+    /// Lipid-droplet / DGAT triglyceride-storage buffer (#486): the saturable
+    /// sink that must fill before `dietary_pufa_supply` raises peroxidation
+    /// (esterifying exogenous PUFA into stored triglycerides is protective until
+    /// storage saturates). DGAT inhibition LOWERS this buffer, so dietary-PUFA
+    /// cytotoxicity emerges sooner (the DGATi synergy, Dierge 2021 PMID
+    /// 34118189). Floored at 0. `0.0` (default) ⇒ the dietary-PUFA excess is the
+    /// full supply (no buffering), but with `dietary_pufa_supply = 0.0` the net
+    /// is still 0 ⇒ byte-identical. FFI defaults it to 0.0; not in the C ABI.
+    #[serde(default)]
+    pub lipid_droplet_buffer: f64,
     /// ESCRT-III membrane-repair rescue rate (#465): the per-step probability that
     /// a cell whose lipid peroxide has crossed `death_threshold` is resealed by
     /// ESCRT-III and survives that step (instead of dying), as long as repair
@@ -294,6 +316,8 @@ impl Default for Params {
             alox_propagation_boost: 0.0,
             mcfa_pufa_boost: 0.0,
             acsl4_status_boost: 0.0,
+            dietary_pufa_supply: 0.0,
+            lipid_droplet_buffer: 0.0,
             escrt_repair_rate: 0.0,
             escrt_repair_budget: 0.0,
             por_h2o2_rate: 0.0,
