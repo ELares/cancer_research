@@ -200,6 +200,31 @@ pub struct Params {
     #[serde(default)]
     pub dhc7_radical_trap: f64,
 
+    /// Vitamin K / VKORC1L1 radical-trapping defense (#483), a SIXTH
+    /// GPX4-independent ferroptosis-suppressor axis alongside `gch1_rate` (BH4),
+    /// `dhc7_radical_trap` (7-DHC), and FSP1 (CoQ). VKORC1L1 reduces vitamin K to
+    /// a radical-trapping antioxidant (vitamin K hydroquinone) that quenches
+    /// phospholipid peroxyl radicals INDEPENDENT of GSH/GPX4; VKORC1L1 is a p53
+    /// transcriptional target (Yang et al., Cell Metab 2023, PMID 37467745;
+    /// mechanism origin Mishima et al., Nature 2022, PMID 35922516). Added to the
+    /// `antioxidant_quench` pool, so a higher trap LOWERS the propagation rate ⇒
+    /// ferroptosis RESISTANCE. The effective trap is reduced by
+    /// `warfarin_vkor_inhibition` (the druggable knob below), via
+    /// [`Params::effective_vitk_radical_trap`]. `0.0` (default) ⇒ no added quench
+    /// ⇒ byte-identical; FFI defaults it to 0.0 so the C ABI is unchanged.
+    #[serde(default)]
+    pub vitk_radical_trap: f64,
+    /// Warfarin inhibition of VKORC1L1 (#483), in `[0, 1]`. The FDA anticoagulant
+    /// warfarin inhibits VKOR/VKORC1L1, collapsing the vitamin-K radical-trap and
+    /// thereby DRIVING ferroptosis (a repurposable, p53-status-gated axis; Yang
+    /// et al. 2023 PMID 37467745 showed warfarin suppresses tumors via this
+    /// mechanism in immunocompetent mice). Scales the effective trap DOWN:
+    /// `effective = vitk_radical_trap * (1 - warfarin_vkor_inhibition)`, so `1.0`
+    /// fully removes the VKORC1L1 protection. Inert when `vitk_radical_trap == 0`.
+    /// `0.0` (default) ⇒ no inhibition ⇒ byte-identical; not in the C ABI.
+    #[serde(default)]
+    pub warfarin_vkor_inhibition: f64,
+
     // === GPX4 Dynamic Regulation ===
     pub gpx4_degradation_by_ros: f64,
     pub gpx4_nrf2_upregulation: f64,
@@ -258,6 +283,8 @@ impl Default for Params {
             escrt_repair_budget: 0.0,
             por_h2o2_rate: 0.0,
             dhc7_radical_trap: 0.0,
+            vitk_radical_trap: 0.0,
+            warfarin_vkor_inhibition: 0.0,
             gpx4_degradation_by_ros: 0.002,
             gpx4_nrf2_upregulation: 0.008,
             sdt_ros: 5.0,
@@ -272,6 +299,16 @@ impl Default for Params {
 }
 
 impl Params {
+    /// Effective vitamin-K / VKORC1L1 radical-trapping quench (#483) after
+    /// warfarin inhibition: `vitk_radical_trap * (1 - warfarin_vkor_inhibition)`,
+    /// with `warfarin_vkor_inhibition` clamped to `[0, 1]` and the result floored
+    /// at `0`. `0.0` when `vitk_radical_trap == 0` (the default) ⇒ the
+    /// `antioxidant_quench` is unchanged ⇒ byte-identical.
+    #[must_use]
+    pub fn effective_vitk_radical_trap(&self) -> f64 {
+        (self.vitk_radical_trap * (1.0 - self.warfarin_vkor_inhibition.clamp(0.0, 1.0))).max(0.0)
+    }
+
     /// In-vivo / 3D culture parameters with SCD1-driven MUFA protection enabled.
     ///
     /// Cells start at the accumulation–decay steady state (M_ss ≈ 0.40),
