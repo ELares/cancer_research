@@ -1,0 +1,4 @@
+condition,front_speed_um_per_min,implied_iron_fold,source
+baseline,5.52,1.00,Co 2024 Nature PMID 38987590 (mean of LPO 5.83 + ROS 5.46; reported 5.52 +/- 0.09)
+iron_chelation_DFO,2.33,0.18,Co 2024 Nature PMID 38987590 (deferoxamine slows the front)
+iron_loaded,9.40,2.90,Co 2024 Nature PMID 38987590 (iron supplementation accelerates the front)

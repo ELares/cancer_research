@@ -1,0 +1,43 @@
+{
+  "measured": {
+    "baseline": {
+      "condition": "baseline",
+      "front_speed_um_per_min": 5.52,
+      "implied_iron_fold": 1.0,
+      "source": "Co 2024 Nature PMID 38987590 (mean of LPO 5.83 + ROS 5.46; reported 5.52 +/- 0.09)"
+    },
+    "iron_chelation_DFO": {
+      "condition": "iron_chelation_DFO",
+      "front_speed_um_per_min": 2.33,
+      "implied_iron_fold": 0.18,
+      "source": "Co 2024 Nature PMID 38987590 (deferoxamine slows the front)"
+    },
+    "iron_loaded": {
+      "condition": "iron_loaded",
+      "front_speed_um_per_min": 9.4,
+      "implied_iron_fold": 2.9,
+      "source": "Co 2024 Nature PMID 38987590 (iron supplementation accelerates the front)"
+    }
+  },
+  "model_analytical": {
+    "baseline": 5.522,
+    "iron_chelation_DFO": 2.343,
+    "iron_loaded": 9.403,
+    "gpx4_defended_0.15": 2.209
+  },
+  "model_numeric_baseline": 5.429,
+  "checks": {
+    "iron_dose_ordering_dfo<control<loaded": true,
+    "baseline_near_5.52": true,
+    "dfo_near_2.33": true,
+    "loaded_near_9.40": true,
+    "numeric_matches_analytical_within_6pct": true,
+    "gpx4_defense_slows_front": true
+  },
+  "all_passed": true,
+  "drift_guard": {
+    "diffusion_um2_per_min": 30.0,
+    "base_reaction_rate": 8.13,
+    "ignition_threshold": 0.25
+  }
+}
