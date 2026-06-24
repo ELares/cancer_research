@@ -377,8 +377,12 @@ pub fn sim_cell_step(
     // AUTOCATALYTIC PROPAGATION — GSH-gated bistable switch.
     // GCH1/BH4 (#338) adds GPX4-independent radical-trapping quench capacity
     // (`gch1_rate`, 0.0 by default ⇒ byte-identical).
-    let antioxidant_quench =
-        state.gpx4 * (state.gsh / (state.gsh + 0.5)) + state.fsp1 + params.gch1_rate;
+    // 7-DHC (#467) adds a sterol radical-trapping quench in parallel to GCH1/BH4
+    // (`dhc7_radical_trap`, 0.0 by default ⇒ byte-identical).
+    let antioxidant_quench = state.gpx4 * (state.gsh / (state.gsh + 0.5))
+        + state.fsp1
+        + params.gch1_rate
+        + params.dhc7_radical_trap.max(0.0);
     let propagation_rate = params.lp_propagation / (1.0 + antioxidant_quench * 5.0);
     // ALOX isoform-specific enzymatic-oxidation capacity (#446): scale the
     // propagation rate by `1 + alox_propagation_boost` (clamped >= 0), so an
@@ -532,7 +536,12 @@ pub fn sim_cell(
         .max(0.05);
         let lp_direct = unscav * effective_unsat * params.lp_rate;
         // GCH1/BH4 (#338) adds GPX4-independent quench (`gch1_rate`, 0.0 default).
-        let antioxidant_quench = gpx4 * (gsh / (gsh + 0.5)) + fsp1 + params.gch1_rate;
+        // 7-DHC (#467) adds a sterol radical-trapping quench (`dhc7_radical_trap`,
+        // 0.0 default ⇒ byte-identical).
+        let antioxidant_quench = gpx4 * (gsh / (gsh + 0.5))
+            + fsp1
+            + params.gch1_rate
+            + params.dhc7_radical_trap.max(0.0);
         let propagation_rate = params.lp_propagation / (1.0 + antioxidant_quench * 5.0);
         // ALOX isoform enzymatic-oxidation capacity (#446): same `1 + boost`
         // multiplier as the spatial `sim_cell_step` path. `0.0` default ⇒ ×1.0 ⇒
@@ -1168,6 +1177,44 @@ mod tests {
         assert!(
             por_high > baseline,
             "POR H2O2 source must raise post-step LP: por_high={por_high}, baseline={baseline}"
+        );
+    }
+
+    #[test]
+    fn sim_cell_step_respects_dhc7_radical_trap() {
+        // #467: the 7-DHC sterol radical-trapping pool adds GPX4-independent quench,
+        // LOWERING the propagation rate, so a positive `dhc7_radical_trap` reduces
+        // post-step LP (resistance). `0.0` (default) is the byte-identical baseline.
+        // Seed a mid LP so the propagation (quench-gated) term carries the effect;
+        // keep GPX4/GSH/FSP1 modest so the 7-DHC quench is the dominant change.
+        let mut gen_rng = StdRng::seed_from_u64(41);
+        let cell = gen_cell(Phenotype::Glycolytic, &mut gen_rng);
+
+        let step_once = |dhc7: f64| -> f64 {
+            let mut params = Params::default();
+            params.dhc7_radical_trap = dhc7;
+            let mut init_rng = StdRng::seed_from_u64(6);
+            let mut state = CellState::from_cell(
+                &cell,
+                crate::cell::Treatment::Control,
+                &params,
+                &mut init_rng,
+            );
+            // Low (but nonzero) defenses so the dhc7 quench dominates the propagation
+            // gate; seed a mid LP so propagation acts.
+            state.gpx4 = 0.1;
+            state.fsp1 = 0.1;
+            state.lp = 5.0;
+            let mut step_rng = StdRng::seed_from_u64(0);
+            sim_cell_step(&mut state, &cell, &params, 0, 0.0, &mut step_rng);
+            state.lp
+        };
+
+        let baseline = step_once(0.0);
+        let dhc7_high = step_once(2.0);
+        assert!(
+            dhc7_high < baseline,
+            "7-DHC radical trap must lower post-step LP (resistance): dhc7_high={dhc7_high}, baseline={baseline}"
         );
     }
 }

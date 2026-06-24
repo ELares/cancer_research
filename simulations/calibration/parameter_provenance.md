@@ -141,6 +141,16 @@ POR (cytochrome P450 reductase) and CYB5R1 transfer electrons from NAD(P)H to O2
 
 **Calibration target.** Only the DIRECTION (more POR/CYB5R1 => more H2O2 => more ferroptosis; the yield falls with O2) is claimed; the rate + O2-dependence are placeholders. Fitting would need POR/CYB5R1-knockdown vs overexpression ferroptosis-sensitivity dose-response plus a measured H2O2-flux-vs-O2 curve to set the enzymatic rate and the O2-coupling constant.
 
+## 7-DHC/DHCR7 sterol radical-trapping defense (`Params.dhc7_radical_trap`): known uncalibrated
+
+7-dehydrocholesterol (7-DHC) is a membrane radical-trapping antioxidant that shields PUFA from peroxyl-radical autoxidation (#467), gating the autocatalytic propagation chain (Freitas/Li et al., Nature 2024, PMID 38297130). It is added to the GPX4-independent radical-trapping quench term (alongside `gch1_rate`/FSP1), so a higher pool lowers the propagation rate => resistance. **Off-by-default**; `dhc7_radical_trap = 0.0` adds nothing to the quench => byte-identical. Not in the C ABI (FFI defaults it to 0.0).
+
+| Parameter | Default | Source | Grounded? | Sensitivity |
+|-----------|---------|--------|-----------|-------------|
+| `dhc7_radical_trap` | 0.0 | 7-DHC radical-trapping pool added to the antioxidant quench; Freitas/Li Nature 2024 PMID 38297130 (direction only) | Assumed (direction only) | Moderate-high when on (gates the propagation rate like GCH1/BH4) |
+
+**Calibration target.** Only the DIRECTION (more 7-DHC => more radical trapping => less ferroptosis; DHCR7-loss => resistance, the modeled escape) is claimed; the pool magnitude is a placeholder. Fitting would need DHCR7-knockout vs wild-type (or EBP/SC5D-modulated) ferroptosis-sensitivity dose-response plus a measured 7-DHC-pool-vs-RSL3-IC50 relationship to set the radical-trapping magnitude.
+
 ## Photosensitizer pharmacokinetics: plasma vs. cellular
 
 `Photosensitizer::Porfimer.t_half_h` represents *plasma* terminal half-life. Cellular concentration is assumed to track plasma proportionally — a reasonable approximation for porfimer (slow-distributing, weeks-scale t½, ~100% serum-protein bound, Vd ≈ plasma volume per Bellnier 2006) but explicitly wrong for 5-ALA/PpIX, which accumulates intracellularly via ferrochelatase deficiency rather than decaying. ALA kinetics will require a different variant.
