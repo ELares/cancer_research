@@ -498,6 +498,12 @@ struct Overrides {
     /// oxidizable-PUFA substrate ⇒ ferroptosis-refractory, `> 1` (ACSL4-high) ⇒
     /// sensitive. Off the production matrix so the matrix is byte-identical.
     acsl4_status: Option<f64>,
+    /// ESCRT-III membrane-repair brake on death execution (#465): `Some((rate,
+    /// budget))` sets `params.escrt_repair_rate`/`escrt_repair_budget` so a cell
+    /// whose LP crosses the death threshold can be resealed for a finite per-cell
+    /// budget (more repair ⇒ slower execution ⇒ more resistance). `None` ⇒ both
+    /// `0.0` ⇒ the brake never fires ⇒ byte-identical. Off the production matrix.
+    escrt: Option<(f64, f64)>,
     slab: Option<SlabConfig>,
     /// Depth-graded slab phenotype (#272). `None` ⇒ the slab keeps `generate_slab`'s
     /// flat bulk phenotype mix. Only applied when `slab` is also `Some` (it needs the
@@ -724,6 +730,13 @@ fn run_one_condition_full(
     // 0.0 ⇒ byte-identical. Cell-intrinsic, applied uniformly per condition.
     if let Some(status) = overrides.acsl4_status {
         params.acsl4_status_boost = pufa_boost_from_status(status);
+    }
+    // ESCRT-III membrane-repair brake (#465): `None` (matrix path) ⇒ both 0.0 ⇒
+    // byte-identical. When set, a cell crossing the death threshold can be resealed
+    // for a finite budget, delaying execution (more repair ⇒ more resistance).
+    if let Some((rate, budget)) = overrides.escrt {
+        params.escrt_repair_rate = rate;
+        params.escrt_repair_budget = budget;
     }
     let spatial_params = SpatialParams {
         cell_size_um: CELL_SIZE_UM,
@@ -2498,6 +2511,12 @@ struct SnapshotPreset {
     /// baseline — the dead/LP panels show the survival of an ACSL4-negative tumor
     /// (HCC/AML-like) under the same RSL3 dose. No extra static overlay.
     acsl4_negative: bool,
+    /// True if the ESCRT-III membrane-repair brake (#465) is enabled (a high
+    /// repair rate + ample budget). A cell whose LP crosses the death threshold is
+    /// resealed for a finite budget, so RSL3 kills LESS / later than the baseline
+    /// (membrane repair delays death execution). No extra static overlay; the
+    /// reduced/slower death front shows in the dead/LP panels vs the baseline.
+    escrt: bool,
 }
 
 /// Visualization presets for `--snapshot=NAME`. Keep this list small —
@@ -2529,6 +2548,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         ifngamma: false,
         alox: false,
         acsl4_negative: false,
+        escrt: false,
     },
     SnapshotPreset {
         name: "bare",
@@ -2556,6 +2576,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         ifngamma: false,
         alox: false,
         acsl4_negative: false,
+        escrt: false,
     },
     SnapshotPreset {
         name: "multidose",
@@ -2583,6 +2604,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         ifngamma: false,
         alox: false,
         acsl4_negative: false,
+        escrt: false,
     },
     SnapshotPreset {
         // SDT here visualizes the persister-fraction OVERLAY (the MUFA axis +
@@ -2614,6 +2636,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         ifngamma: false,
         alox: false,
         acsl4_negative: false,
+        escrt: false,
     },
     SnapshotPreset {
         name: "clonal",
@@ -2641,6 +2664,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         ifngamma: false,
         alox: false,
         acsl4_negative: false,
+        escrt: false,
     },
     SnapshotPreset {
         // RSL3 (hypoxia-sensitive) + explicit internal vessels: near-vessel
@@ -2673,6 +2697,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         ifngamma: false,
         alox: false,
         acsl4_negative: false,
+        escrt: false,
     },
     SnapshotPreset {
         // RSL3 + explicit vessels, but the per-cell O2/drug supply is the
@@ -2707,6 +2732,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         ifngamma: false,
         alox: false,
         acsl4_negative: false,
+        escrt: false,
     },
     SnapshotPreset {
         // SDT + radial spheroid biology: the phenotype panel shows the
@@ -2737,6 +2763,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         ifngamma: false,
         alox: false,
         acsl4_negative: false,
+        escrt: false,
     },
     SnapshotPreset {
         // SDT on a patient-scale slab at the SURFACE (+z face = vessel, depth
@@ -2772,6 +2799,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         ifngamma: false,
         alox: false,
         acsl4_negative: false,
+        escrt: false,
     },
     SnapshotPreset {
         // Slab + internal vessels (#272 coupling). vessel_supply.npy (on a slab
@@ -2807,6 +2835,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         ifngamma: false,
         alox: false,
         acsl4_negative: false,
+        escrt: false,
     },
     SnapshotPreset {
         // SDT + immune + Treg/MDSC suppressor (#264 Phase 2). Heuristic niche
@@ -2838,6 +2867,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         ifngamma: false,
         alox: false,
         acsl4_negative: false,
+        escrt: false,
     },
     SnapshotPreset {
         // SDT + immune + dual checkpoint blockade (#264 Phase 3): a PD-1 +
@@ -2870,6 +2900,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         ifngamma: false,
         alox: false,
         acsl4_negative: false,
+        escrt: false,
     },
     SnapshotPreset {
         // Kitchen-sink composition (#278): several realism layers at once —
@@ -2904,6 +2935,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         ifngamma: false,
         alox: false,
         acsl4_negative: false,
+        escrt: false,
     },
     SnapshotPreset {
         // RSL3 + cell-cell contact resistance (#270): dense interior cells
@@ -2937,6 +2969,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         ifngamma: false,
         alox: false,
         acsl4_negative: false,
+        escrt: false,
     },
     SnapshotPreset {
         // SDT + radial nutrient gradient (#270 item 3b): the nutrient-starved
@@ -2969,6 +3002,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         ifngamma: false,
         alox: false,
         acsl4_negative: false,
+        escrt: false,
     },
     SnapshotPreset {
         // SDT + cDC1/cDC2 dendritic-cell subset mix (#264 Phase 4): a cDC1-poor
@@ -3001,6 +3035,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         ifngamma: false,
         alox: false,
         acsl4_negative: false,
+        escrt: false,
     },
     SnapshotPreset {
         // SDT + therapy-induced senescence (#341): a fraction of tumor cells
@@ -3039,6 +3074,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         ifngamma: false,
         alox: false,
         acsl4_negative: false,
+        escrt: false,
     },
     SnapshotPreset {
         // Like `senescence`, but adds the diffusing-SASP-field overlay (#376/#398):
@@ -3073,6 +3109,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         ifngamma: false,
         alox: false,
         acsl4_negative: false,
+        escrt: false,
     },
     SnapshotPreset {
         // RSL3 + 3D spheroid (#197) + phenotype-specific SCD1/MUFA rates (#363):
@@ -3107,6 +3144,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         ifngamma: false,
         alox: false,
         acsl4_negative: false,
+        escrt: false,
     },
     SnapshotPreset {
         // SDT on a hypoxic sphere (the base edge-distance radial-O2 gradient, not
@@ -3140,6 +3178,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         ifngamma: false,
         alox: false,
         acsl4_negative: false,
+        escrt: false,
     },
     SnapshotPreset {
         // RSL3 on a hypoxic sphere with the NCOA4-ferritinophagy + hypoxia-iron
@@ -3174,6 +3213,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         ifngamma: false,
         alox: false,
         acsl4_negative: false,
+        escrt: false,
     },
     SnapshotPreset {
         // RSL3 + immune with the IFN-γ → System Xc⁻ + ACSL4 coupling on (#443):
@@ -3209,6 +3249,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         ifngamma: true,
         alox: false,
         acsl4_negative: false,
+        escrt: false,
     },
     SnapshotPreset {
         // RSL3 on a sphere with an ALOX15-high, MCFA-exposed phenotype (#446):
@@ -3242,6 +3283,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         ifngamma: false,
         alox: true,
         acsl4_negative: false,
+        escrt: false,
     },
     SnapshotPreset {
         // RSL3 on an ACSL4-NEGATIVE tumor (#444): with ACSL4 absent the membrane
@@ -3277,6 +3319,41 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         ifngamma: false,
         alox: false,
         acsl4_negative: true,
+        escrt: false,
+    },
+    SnapshotPreset {
+        // RSL3 on a tumor with a high ESCRT-III membrane-repair capacity (#465).
+        // Cells whose lipid peroxide crosses the death threshold are resealed for a
+        // finite per-cell budget, so death execution is delayed and RSL3 kills LESS
+        // / later than the no-repair baseline (membrane repair, not a redox/lipid
+        // defense, is the resistance mechanism here; Dai 2020 PMID 31761326). The
+        // dead/LP panels show the slower, reduced death front. No extra overlay.
+        name: "escrt",
+        desc: "RSL3 + ESCRT-III membrane repair (#465): death-execution brake delays/blocks ferroptosis",
+        treatment: Treatment::RSL3,
+        treatment_name: "RSL3",
+        immune_on: false,
+        stromal_on: false,
+        ph_on: false,
+        multidose: false,
+        persister: false,
+        clonal: false,
+        vasculature: false,
+        spheroid: false,
+        slab: false,
+        suppressor: false,
+        checkpoints: false,
+        contact: false,
+        nutrient: false,
+        dc_subsets: false,
+        senescence: false,
+        phenotype_mufa: false,
+        sdt_o2_dependence: 0.0,
+        ferritinophagy: false,
+        ifngamma: false,
+        alox: false,
+        acsl4_negative: false,
+        escrt: true,
     },
 ];
 
@@ -3550,6 +3627,9 @@ fn run_snapshot(output_dir: &Path, tumor_radius_um: f64, name: &str) {
             // preset ⇒ no change; the acsl4-negative preset sets the null status so
             // the PUFA substrate collapses and the tumor resists RSL3.
             acsl4_status: preset.acsl4_negative.then_some(ACSL4_NEGATIVE),
+            // #465: ESCRT-III membrane repair (high rate + ample budget) for the
+            // `escrt` preset; `None` for every other preset ⇒ no brake.
+            escrt: preset.escrt.then_some((0.6, 8.0)),
             ..Default::default()
         },
     );
@@ -7917,6 +7997,61 @@ mod tests {
         assert!(matches!(p.treatment, Treatment::RSL3));
         // ACSL4-negative maps to the null-floor boost (-1, collapsed PUFA).
         assert_eq!(pufa_boost_from_status(ACSL4_NEGATIVE), -1.0);
+    }
+
+    /// #465 A/B: the ESCRT-III membrane-repair brake reduces RSL3 kill. A cell
+    /// whose lipid peroxide crosses the death threshold can be resealed for a
+    /// finite per-cell budget, delaying/blocking death execution, so an ESCRT-high
+    /// tumor kills LESS than the no-repair baseline under the same RSL3 dose. The
+    /// resistance mechanism is membrane repair, not a redox/lipid defense (Dai 2020
+    /// PMID 31761326). Magnitude uncalibrated; the direction is the result.
+    #[test]
+    fn escrt_repair_reduces_rsl3_kill() {
+        let cfg = RunConfig {
+            grid_dim: 24,
+            n_steps: 120,
+        };
+        let cond = Condition {
+            name: "escrt_ab".to_string(),
+            treatment: Treatment::RSL3,
+            treatment_name: "RSL3".to_string(),
+            o2_lambda: Some(ZONE_REF_LAMBDA),
+            immune_on: false,
+            stromal_on: false,
+            ph_on: false,
+            dose_schedule: DoseSchedule::Constant,
+        };
+        let run = |escrt: Option<(f64, f64)>| {
+            run_one_condition_full(
+                &cond,
+                cfg,
+                None,
+                Overrides {
+                    escrt,
+                    ..Default::default()
+                },
+            )
+        };
+        let baseline = run(None);
+        // High repair rate + ample budget ⇒ many cells are resealed past the death
+        // threshold for the run, so fewer die.
+        let escrt_high = run(Some((0.8, 50.0)));
+        assert!(
+            escrt_high.overall_kill_rate < baseline.overall_kill_rate,
+            "ESCRT repair must lower kill: escrt_high={} baseline={}",
+            escrt_high.overall_kill_rate,
+            baseline.overall_kill_rate
+        );
+    }
+
+    /// #465: the `--snapshot=escrt` preset is wired (RSL3 with the membrane-repair
+    /// brake enabled at a non-zero rate + budget).
+    #[test]
+    fn escrt_snapshot_preset_is_wired() {
+        let p = resolve_snapshot("escrt");
+        assert_eq!(p.name, "escrt");
+        assert!(p.escrt, "the escrt preset must enable the repair brake");
+        assert!(matches!(p.treatment, Treatment::RSL3));
     }
 
     /// Three independent realism layers enabled together — clonal subclones

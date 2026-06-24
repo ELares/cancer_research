@@ -144,6 +144,7 @@ impl TumorGrid {
                     persister_reversible: 0.0,
                     persister_locked: 0.0,
                     persister_cum_exposure: 0.0,
+                    escrt_budget_used: 0.0,
                 };
 
                 cells.push(GridCell {
@@ -531,6 +532,7 @@ impl TumorGrid3D {
                         persister_reversible: 0.0,
                         persister_locked: 0.0,
                         persister_cum_exposure: 0.0,
+                        escrt_budget_used: 0.0,
                     };
                     cells.push(GridCell {
                         cell,
@@ -601,6 +603,7 @@ impl TumorGrid3D {
                 persister_reversible: 0.0,
                 persister_locked: 0.0,
                 persister_cum_exposure: 0.0,
+                escrt_budget_used: 0.0,
             };
             cells.push(GridCell {
                 cell,

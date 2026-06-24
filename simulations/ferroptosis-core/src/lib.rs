@@ -44,6 +44,10 @@
 //! | [`reaction_diffusion`] | Steady-state reaction-diffusion O2/drug supply (vessel sources + consumption) vs the exponential proxy |
 //! | [`alox`] | ALOX lipoxygenase-isoform-specific peroxidation rate + MCFA→ACSL4 PUFA sensitization (off-by-default boosts) |
 //! | [`acsl4`] | ACSL4-status biomarker stratification: tumor-intrinsic PUFA-incorporation gate (ACSL4-negative ⇒ ferroptosis-refractory) |
+//! | [`ifngamma`] | IFN-γ → System Xc⁻ + ACSL4 ferroptosis-sensitization coupling (the immune-amplification return arm) |
+//! | [`phenotype_mufa`] | Per-phenotype SCD1/MUFA accumulation rate + carrying-capacity multipliers |
+//! | [`senescence`] | Therapy-induced-senescence ferroptosis program + SASP→immune coupling + CDK4/6-primed combination |
+//! | [`repair`] | ESCRT-III membrane-repair brake on death EXECUTION (finite per-cell rescue budget delays death; off-by-default) |
 
 pub mod acsl4;
 pub mod alox;
@@ -68,6 +72,7 @@ pub mod phenotype_mufa;
 pub mod photosensitizer_pk;
 pub mod physics;
 pub mod reaction_diffusion;
+pub mod repair;
 pub mod senescence;
 pub mod slab;
 pub mod spheroid;
