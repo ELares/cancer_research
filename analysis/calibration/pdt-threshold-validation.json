@@ -1,0 +1,19 @@
+{
+  "source": "Zhu et al. 2015, In-vivo singlet oxygen threshold doses for PDT (PMID 25927018, PMC4410434)",
+  "measured_threshold_mm": {
+    "Photofrin": 0.56,
+    "BPD": 0.72,
+    "mTHPC": 0.4
+  },
+  "measured_threshold_mean_mm": 0.56,
+  "measured_max_over_min_ratio": 1.8,
+  "measured_coefficient_of_variation": 0.233,
+  "measured_is_photosensitizer_independent": true,
+  "model_sdt_ros": 5.0,
+  "model_pdt_ros": 5.0,
+  "model_death_threshold": 10.0,
+  "model_uses_single_source_independent_threshold": true,
+  "validation": "PASS: the model uses one death_threshold with sdt_ros == pdt_ros (a single source-independent kill threshold), and the measured reacted-singlet-oxygen necrosis threshold is photosensitizer-independent within a factor of 1.8 (~0.5 mM), so the design choice is supported.",
+  "o2_dependence_note": "The model's oxygen::o2_dependent_exo_factor (#336) is LINEAR in O2; Zhu's macroscopic singlet-oxygen model makes the quantum yield a saturating (Michaelis-type) function of [O2]. The linear form is a first-order approximation; the precise oxygen-quenching constant is in the full text (not the abstract) and is flagged here, not fabricated.",
+  "scope": "Validates the FORM (single source-independent kill threshold) + order of magnitude, NOT a unit-rigorous calibration of the dimensionless death_threshold."
+}
