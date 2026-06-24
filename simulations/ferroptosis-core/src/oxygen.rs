@@ -138,6 +138,21 @@ pub fn radial_o2_field(grid: &TumorGrid3D, lambda_um: f64) -> Vec<f64> {
 /// `dependence = 0` the exogenous ROS is unaffected by hypoxia (the SDT hypoxia
 /// advantage is maximal); raising it shrinks that advantage toward the
 /// pharmacologic case.
+///
+/// ## Type I vs Type II decomposition (#468)
+///
+/// This single parameter already expresses both sonodynamic ROS-generation
+/// pathways, so no separate "Type I fraction" knob is needed. The `(1 −
+/// dependence)` constant term is exactly the **Type I (oxygen-INDEPENDENT) arm**
+/// (sonosensitizers that make hydroxyl radical from water and superoxide by
+/// electron transfer, which still kill under hypoxia), and the `dependence ·
+/// o2_supply` term is the **Type II (oxygen-DEPENDENT, singlet-oxygen) arm** (the
+/// PpIX / SONALA-001 pathway). So a sonosensitizer that is, say, 70% Type I /
+/// 30% Type II is `dependence = 0.3`: in the anoxic core (`o2_supply → 0`) it
+/// still retains 70% of its yield, a hypoxia-tolerant radical arm, whereas a pure
+/// Type II agent (`dependence = 1`) collapses to zero. This is the model side of
+/// the contested §7.1 hypoxia leg: the SDT hypoxia advantage is real for a
+/// Type-I-heavy agent and absent for a pure Type II one.
 pub fn o2_dependent_exo_factor(o2_supply: f64, dependence: f64) -> f64 {
     let d = dependence.clamp(0.0, 1.0);
     let s = o2_supply.clamp(0.0, 1.0);
