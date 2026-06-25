@@ -108,6 +108,13 @@ fn validate_params(params: &Params) -> PyResult<()> {
         ("gpx4_rate", params.gpx4_rate, 0.0, 10.0),
         ("fsp1_rate", params.fsp1_rate, 0.0, 10.0),
         ("rsl3_gpx4_inhib", params.rsl3_gpx4_inhib, 0.0, 1.0),
+        ("erastin_xc_inhib", params.erastin_xc_inhib, 0.0, 1.0),
+        (
+            "transsulfuration_floor",
+            params.transsulfuration_floor,
+            0.0,
+            1.0,
+        ),
         ("gsh_max", params.gsh_max, 0.0, 100.0),
         ("death_threshold", params.death_threshold, 0.0, 1000.0),
         ("sdt_ros", params.sdt_ros, 0.0, 100.0),

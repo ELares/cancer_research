@@ -14,6 +14,7 @@ trigger-wave validator (which is pure-Python) as a computed cross-check.
 
 Anchors guarded:
 - CTRPv2 GPX4-inhibitor kill-switch fit (#330): ML162 fit RMSE, ML210 held-out RMSE.
+- CTRPv2 System Xc-/erastin fit (#502): erastin fit RMSE + mechanism specificity.
 - Tumor-PK partition vs IKE (#334): tissue:plasma Kp.
 - Ferroptotic trigger-wave speed vs Co 2024 (#482): baseline 5.52 um/min.
 - Krogh drug-penetration lengths vs measured (#335).
@@ -50,6 +51,24 @@ def test_kill_switch_fit_and_heldout_rmse_hold(_=None):
         f"calibration no longer separates from the default: "
         f"fit={d['fit_rmse']} default={d['default_uncalibrated_rmse']}"
     )
+
+
+def test_erastin_system_xc_fit_holds():
+    """#502: the core's second data-anchored inducer mechanism (System Xc-/erastin)
+    must stay fit to the CTRPv2 erastin curve, and erastin must still RAISE death
+    monotonically (a broken mechanism would zero the increment). The erastin curve
+    is flat-then-steep so the fit is a PARTIAL anchor (RMSE ~0.10, looser than the
+    GPX4i leg), reflected in the tolerance."""
+    d = _load("erastin-calibration.json")
+    assert d["compound"] == "ERASTIN"
+    assert d["fit_rmse"] <= 0.12, f"erastin fit RMSE drifted: {d['fit_rmse']}"
+    # Erastin must drive a substantial dose-dependent kill via System Xc- (the
+    # mechanism works), well above the cascade's Control baseline.
+    assert d["erastin_increment_top_dose"] >= 0.3, (
+        f"erastin top-dose kill increment collapsed: {d['erastin_increment_top_dose']}"
+    )
+    for k in ("lp_propagation", "lp_rate", "k_erastin", "hill"):
+        assert k in d["calibrated_params"], f"missing calibrated param {k}"
 
 
 def test_tumor_pk_partition_holds():
@@ -106,6 +125,7 @@ def test_all_anchored_artifacts_present():
     otherwise silently pass on a missing leg)."""
     for name in (
         "kill-switch-calibration.json",
+        "erastin-calibration.json",
         "pk-calibration.json",
         "trigger-wave-validation.json",
         "penetration-validation.json",
