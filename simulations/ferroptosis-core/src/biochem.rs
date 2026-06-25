@@ -397,9 +397,11 @@ pub fn sim_cell_step(
     state.gsh -= scavenged * 0.5;
     state.gsh = state.gsh.max(0.0);
 
-    // === NRF2-DRIVEN GSH RESYNTHESIS ===
+    // === NRF2-DRIVEN GSH RESYNTHESIS (System Xc-/SLC7A11 cystine import, #502) ===
+    // NRF2 upregulates SLC7A11, so this resynthesis IS the cystine-import supply.
+    // `xc_cystine_factor()` is 1.0 by default (no erastin) => byte-identical.
     let deficit_fraction = ((params.gsh_max - state.gsh) / params.gsh_max).max(0.0);
-    state.gsh += cell.nrf2 * params.nrf2_gsh_rate * deficit_fraction;
+    state.gsh += cell.nrf2 * params.nrf2_gsh_rate * deficit_fraction * params.xc_cystine_factor();
 
     // === LIPID PEROXIDATION ===
     let unscav = (total_ros - scavenged).max(0.0);
@@ -564,9 +566,11 @@ pub fn sim_cell(
         gsh -= scavenged * 0.5;
         gsh = gsh.max(0.0);
 
-        // === NRF2-DRIVEN GSH RESYNTHESIS ===
+        // === NRF2-DRIVEN GSH RESYNTHESIS (System Xc-/SLC7A11 cystine import, #502) ===
+        // NRF2 upregulates SLC7A11, so this resynthesis IS the cystine-import supply.
+        // `xc_cystine_factor()` is 1.0 by default (no erastin) => byte-identical.
         let deficit_fraction = ((params.gsh_max - gsh) / params.gsh_max).max(0.0);
-        gsh += cell.nrf2 * params.nrf2_gsh_rate * deficit_fraction;
+        gsh += cell.nrf2 * params.nrf2_gsh_rate * deficit_fraction * params.xc_cystine_factor();
 
         // === LIPID PEROXIDATION ===
         let unscav = (total_ros - scavenged).max(0.0);
@@ -1264,6 +1268,52 @@ mod tests {
             dgat_inhibited > dgat_intact,
             "DGAT inhibition (smaller buffer) must raise LP at fixed supply: \
              inhibited={dgat_inhibited}, intact={dgat_intact}"
+        );
+    }
+
+    #[test]
+    fn sim_cell_step_erastin_inhibits_xc_gsh_resynthesis() {
+        // #502: the NRF2-driven GSH resynthesis IS the System Xc-/SLC7A11 cystine
+        // supply. Erastin inhibits it, so a GSH-deficit cell resynthesizes LESS
+        // under erastin; a transsulfuration floor restores part of it; and
+        // erastin=0 reproduces the byte-identical baseline (factor 1.0).
+        let mut gen_rng = StdRng::seed_from_u64(13);
+        let cell = gen_cell(Phenotype::Glycolytic, &mut gen_rng);
+        assert!(cell.nrf2 > 0.0, "test needs a resynthesis driver");
+
+        let step_gsh = |erastin: f64, floor: f64| -> f64 {
+            let mut params = Params::default();
+            params.erastin_xc_inhib = erastin;
+            params.transsulfuration_floor = floor;
+            let mut init_rng = StdRng::seed_from_u64(7);
+            let mut state = CellState::from_cell(
+                &cell,
+                crate::cell::Treatment::Control,
+                &params,
+                &mut init_rng,
+            );
+            // A GSH deficit (below gsh_max) so resynthesis is active, low LP so the
+            // cell survives the single step. Scavenging is identical across arms
+            // (same total_ros, same starting GSH), so the only difference is the
+            // resynthesis term scaled by the cystine factor.
+            state.gsh = 2.0;
+            state.lp = 0.0;
+            let mut step_rng = StdRng::seed_from_u64(0);
+            sim_cell_step(&mut state, &cell, &params, 0, 0.0, &mut step_rng);
+            state.gsh
+        };
+
+        let baseline = step_gsh(0.0, 0.0);
+        let full_block = step_gsh(1.0, 0.0);
+        let with_transsulf = step_gsh(1.0, 0.5);
+        assert!(
+            full_block < baseline,
+            "full erastin block must lower GSH resynthesis: full_block={full_block}, baseline={baseline}"
+        );
+        assert!(
+            with_transsulf > full_block && with_transsulf < baseline,
+            "transsulfuration floor restores PART of the resynthesis: \
+             with_transsulf={with_transsulf}, full_block={full_block}, baseline={baseline}"
         );
     }
 

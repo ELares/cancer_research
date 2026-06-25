@@ -187,6 +187,10 @@ fn ferro_params_to_params(fp: &FerroParams) -> Params {
         pdt_ros: fp.pdt_ros,
         rsl3_gpx4_inhib: fp.rsl3_gpx4_inhib,
         gsh_max: fp.gsh_max,
+        // System Xc-/cystine import (#502): erastin is not in the C ABI, so
+        // default both to 0.0 (no erastin) ⇒ the C header is unchanged.
+        erastin_xc_inhib: 0.0,
+        transsulfuration_floor: 0.0,
         gpx4_nrf2_target_multiplier: fp.gpx4_nrf2_target_multiplier,
         death_threshold: fp.death_threshold,
         post_death_steps: fp.post_death_steps,

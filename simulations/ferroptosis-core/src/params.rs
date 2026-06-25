@@ -274,6 +274,41 @@ pub struct Params {
     /// Maximum intracellular GSH (mM). Ref: ~10-12 mM in healthy cells.
     pub gsh_max: f64,
 
+    // === System Xc- / cystine import (#502) ===
+    //
+    // The NRF2-driven GSH resynthesis term in `biochem` (`nrf2 * nrf2_gsh_rate *
+    // deficit`) IS the System Xc-/SLC7A11 cystine-import supply: NRF2
+    // transcriptionally upregulates SLC7A11, cystine is imported, reduced to
+    // cysteine, and condensed into GSH. This is the most therapeutically
+    // important UPSTREAM ferroptosis node, so unlike the off-by-default distal
+    // realism layers it lives in the CORE engine (the GSH resynthesis is always
+    // active in every run). `erastin_xc_inhib` is its first-class drug input,
+    // peer to `rsl3_gpx4_inhib`, and `transsulfuration_floor` is the minimal
+    // GPX4-independent cysteine backup. Both default to a no-op so the default
+    // run (no erastin) is byte-identical and the cystine factor is exactly 1.0.
+    //
+    /// Fractional inhibition of System Xc- cystine import by erastin (or
+    /// imidazole-ketone-erastin / sulfasalazine), in `[0, 1]`. `0.0` (default,
+    /// no erastin) ⇒ full cystine import ⇒ byte-identical; `1.0` ⇒ complete
+    /// blockade. Erastin starves the cell of cystine, so GSH resynthesis falls,
+    /// the existing GSH pool depletes under basal ROS scavenging, and ferroptosis
+    /// follows (Dixon 2012 PMID 22632970; Yang/Stockwell 2014 PMID 24439385). The
+    /// calibrated dose -> inhibition map is fit against CTRPv2 erastin in
+    /// `scripts/calibrate_erastin.py`. Not in the C ABI.
+    #[serde(default)]
+    pub erastin_xc_inhib: f64,
+
+    /// Fraction of cystine-import-driven GSH resynthesis that survives a FULL
+    /// System Xc- block, via the transsulfuration pathway (methionine ->
+    /// homocysteine -> cysteine, independent of SLC7A11), in `[0, 1]`. A
+    /// transsulfuration-high tumor (e.g. high CBS/CTH) retains cysteine supply
+    /// and resists erastin (Zhu 2019 PMID 30971826 cystathionine; Hayano 2016
+    /// PMID 26794443 CARS/transsulfuration modulates erastin sensitivity). `0.0`
+    /// (default) ⇒ a full block zeroes resynthesis (strongest erastin effect);
+    /// only consulted when `erastin_xc_inhib > 0`, so byte-identical at default.
+    #[serde(default)]
+    pub transsulfuration_floor: f64,
+
     // === GPX4 Target ===
     /// Multiplier for NRF2-driven GPX4 target level. GPX4_target = nrf2 * this value.
     pub gpx4_nrf2_target_multiplier: f64,
@@ -330,6 +365,8 @@ impl Default for Params {
             pdt_ros: 5.0,
             rsl3_gpx4_inhib: 0.92,
             gsh_max: 12.0,
+            erastin_xc_inhib: 0.0,
+            transsulfuration_floor: 0.0,
             gpx4_nrf2_target_multiplier: 1.0,
             death_threshold: 10.0,
             post_death_steps: 5,
@@ -346,6 +383,19 @@ impl Params {
     #[must_use]
     pub fn effective_vitk_radical_trap(&self) -> f64 {
         (self.vitk_radical_trap * (1.0 - self.warfarin_vkor_inhibition.clamp(0.0, 1.0))).max(0.0)
+    }
+
+    /// System Xc- cystine-availability factor scaling the NRF2-driven GSH
+    /// resynthesis (#502). `1 - erastin_xc_inhib * (1 - transsulfuration_floor)`,
+    /// with both inputs clamped to `[0, 1]` and the result clamped to `[0, 1]`.
+    /// `1.0` at `erastin_xc_inhib == 0` (the default, no erastin) ⇒ GSH
+    /// resynthesis is unchanged ⇒ byte-identical. Erastin lowers it toward the
+    /// transsulfuration floor, starving cystine and so depleting GSH.
+    #[must_use]
+    pub fn xc_cystine_factor(&self) -> f64 {
+        let inhib = self.erastin_xc_inhib.clamp(0.0, 1.0);
+        let floor = self.transsulfuration_floor.clamp(0.0, 1.0);
+        (1.0 - inhib * (1.0 - floor)).clamp(0.0, 1.0)
     }
 
     /// In-vivo / 3D culture parameters with SCD1-driven MUFA protection enabled.
@@ -919,6 +969,8 @@ where
             "sdt_ros" => params.sdt_ros = val,
             "pdt_ros" => params.pdt_ros = val,
             "rsl3_gpx4_inhib" => params.rsl3_gpx4_inhib = val,
+            "erastin_xc_inhib" => params.erastin_xc_inhib = val,
+            "transsulfuration_floor" => params.transsulfuration_floor = val,
             "gsh_max" => params.gsh_max = val,
             "gpx4_nrf2_target_multiplier" => params.gpx4_nrf2_target_multiplier = val,
             "death_threshold" => params.death_threshold = val,
@@ -1157,5 +1209,39 @@ mod tests {
         assert_eq!(c.lambda_ph_um, 120.0);
         assert_eq!(c.iron_ph_sensitivity, 1.5);
         assert_eq!(c.ion_trap_sensitivity, 0.4);
+    }
+
+    #[test]
+    fn xc_cystine_factor_default_is_one_and_responds_to_erastin() {
+        // #502: default (no erastin) ⇒ factor 1.0 ⇒ byte-identical GSH resynthesis.
+        let mut p = Params::default();
+        assert_eq!(p.erastin_xc_inhib, 0.0);
+        assert_eq!(p.transsulfuration_floor, 0.0);
+        assert_eq!(p.xc_cystine_factor(), 1.0);
+        // Full block, no transsulfuration backup ⇒ resynthesis zeroed.
+        p.erastin_xc_inhib = 1.0;
+        assert_eq!(p.xc_cystine_factor(), 0.0);
+        // Transsulfuration floor restores that fraction under a full block.
+        p.transsulfuration_floor = 0.3;
+        assert!((p.xc_cystine_factor() - 0.3).abs() < 1e-12);
+        // Partial block, no floor ⇒ linear.
+        p.erastin_xc_inhib = 0.5;
+        p.transsulfuration_floor = 0.0;
+        assert!((p.xc_cystine_factor() - 0.5).abs() < 1e-12);
+        // Out-of-range inputs are clamped, never producing a negative factor.
+        p.erastin_xc_inhib = 2.0;
+        assert_eq!(p.xc_cystine_factor(), 0.0);
+    }
+
+    #[test]
+    fn erastin_xc_inhib_is_overridable() {
+        let mut p = Params::default();
+        apply_param_overrides(
+            &mut p,
+            [("erastin_xc_inhib", 0.7), ("transsulfuration_floor", 0.2)],
+        )
+        .unwrap();
+        assert_eq!(p.erastin_xc_inhib, 0.7);
+        assert_eq!(p.transsulfuration_floor, 0.2);
     }
 }

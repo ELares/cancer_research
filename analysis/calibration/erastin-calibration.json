@@ -1,0 +1,59 @@
+{
+  "compound": "ERASTIN",
+  "phenotype": "Glycolytic",
+  "dose_grid_um": [
+    0.1,
+    0.3,
+    1.0,
+    3.0,
+    10.0,
+    30.0,
+    100.0
+  ],
+  "calibrated_params": {
+    "lp_propagation": 1.0,
+    "lp_rate": 0.4,
+    "k_erastin": 6.0,
+    "hill": 6.0
+  },
+  "grid_evals": 1050,
+  "fit_rmse": 0.1003,
+  "shared_switch": {
+    "lp_propagation": 0.7,
+    "lp_rate": 0.4,
+    "k_erastin": 3.0,
+    "hill": 6.0,
+    "rmse": 0.1716
+  },
+  "control_baseline_death_at_fitted_cascade": 0.0865,
+  "erastin_increment_top_dose": 0.4217,
+  "curves": {
+    "empirical": [
+      1.0078,
+      1.0035,
+      0.9923,
+      0.9506,
+      0.5254,
+      0.4267,
+      0.2884
+    ],
+    "model_fit": [
+      0.9135,
+      0.9135,
+      0.9135,
+      0.9113,
+      0.5292,
+      0.492,
+      0.4918
+    ],
+    "model_shared_switch": [
+      0.9758,
+      0.9758,
+      0.9758,
+      0.9123,
+      0.6545,
+      0.6545,
+      0.6545
+    ]
+  }
+}
