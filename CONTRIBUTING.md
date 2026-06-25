@@ -49,6 +49,28 @@ Issue templates live in `.github/ISSUE_TEMPLATE/`: bug report, corpus or literat
 4. **Describe your changes** in the PR body. The pull-request template (`.github/PULL_REQUEST_TEMPLATE.md`) has a checklist covering tests, the off-by-default byte-identical rule for simulation changes, and verifiable citations for claims
 5. **Link to the relevant issue** if one exists
 
+## Simulation layer policy (calibrate-or-cut, #501)
+
+The simulation suite grew broad fast: most layers are off-by-default,
+uncalibrated, and direction-only. To stop breadth from outrunning depth, a new
+off-by-default biochem or tumor-microenvironment axis is **not** mergeable on the
+"off-by-default byte-identical" rule alone. In the same PR it must also carry:
+
+1. **A named calibration target.** A specific assay, dataset, or measured
+   quantity that would fit or falsify the layer. "The direction is the result" is
+   acceptable for the magnitude, but the PR must say what data would calibrate it.
+2. **A row in `simulations/calibration/CALIBRATION_STATUS.md`** stating the
+   layer's tier, its used-in-any-reported-number status (expected: N for an
+   off-by-default layer), and that calibration target.
+
+Off-by-default byte-identical remains necessary (it keeps the production matrix
+and the manuscript numbers safe), but it is no longer sufficient. Prefer
+calibrating or improving an existing layer over adding a new one; a model that
+does a few things with data behind them is more credible than one that does many
+with none. A layer that has no calibration path and is used in no claim is a
+retire-candidate, not a default keep. See the "Calibrate-or-cut policy and
+accounting" section of `CALIBRATION_STATUS.md` for the standing accounting.
+
 ## Dependency Management
 
 When adding a Python dependency:

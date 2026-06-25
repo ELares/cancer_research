@@ -40,6 +40,46 @@ machine-checked authorities remain:
 | **Self-consistency only** | A regression-guard that the model reproduces its *own* hard-coded physics; not an independent calibration. |
 | **Uncalibrated (illustrative)** | Placeholder parameters chosen for plausible behavior. The mechanism/direction is the claim; the magnitude is not. |
 
+## Calibrate-or-cut policy and accounting (#501)
+
+The 2026 fresh-eyes review named the central risk plainly: a large suite where
+most layers are off-by-default, uncalibrated, and direction-only is a parameter
+zoo, and the "off-by-default + byte-identical" discipline removed the friction
+that normally forces calibration, so breadth kept outrunning depth. This section
+is the standing accounting and the policy that stops that drift.
+
+**Tier counts (this document):** 6 Calibrated, 9 Partially anchored, 37
+Uncalibrated (illustrative). The uncalibrated set dominates by count.
+
+**Used-in-any-reported-number: NO, for every off-by-default layer.** This is the
+load-bearing invariant. Not one of the off-by-default realism layers feeds any
+number reported in the manuscript: the manuscript's quantitative claims come
+from the 2D / single-cell core engine, and the default 24-condition `sim-tme-3d`
+matrix is byte-identical with every layer off (the SHA gate, #253). So the
+correct reading of any uncalibrated row below is "a reachable, opt-in,
+direction-only capability," never "a layer behind a reported result." The
+machine-checked guard for the legs that ARE behind reported numbers is the
+calibration-regression gate (`tests/test_calibration_regression.py`, #499).
+
+**Default disposition is KEEP-and-calibrate, not retire.** Every Uncalibrated
+row below carries a concrete "what would calibrate it" target in its Notes
+column (a named assay or dataset). A layer with a target is kept as an opt-in
+capability and calibrated when that data arrives; it is not deleted. A layer is
+a **retire-candidate** only if it has NO calibration path AND is used in no
+claim; none of the current layers meet both conditions (each has a target), so
+there are no immediate cuts, but the criterion is now explicit so a future
+path-less layer cannot accrete silently.
+
+**Layer-freeze policy (the friction restored).** No new off-by-default biochem
+or TME axis lands without, in the same PR: (1) a named calibration target (a
+specific assay, dataset, or measured quantity that would fit or falsify it), and
+(2) a one-line entry in this table stating its tier, its used-in-paper status
+(expected: N), and that target. "Off-by-default byte-identical" is necessary but
+no longer sufficient for merge. The policy is codified in `CONTRIBUTING.md`
+("Simulation layer policy"). The goal is subtraction-friendly: a model that does
+five things with data behind them is more scientific than one that does forty
+with none.
+
 ## Core engine and 2D spatial work
 
 | Layer | Module(s) | Status | Notes / what would calibrate it |
