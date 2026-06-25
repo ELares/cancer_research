@@ -15,6 +15,7 @@ trigger-wave validator (which is pure-Python) as a computed cross-check.
 Anchors guarded:
 - CTRPv2 GPX4-inhibitor kill-switch fit (#330): ML162 fit RMSE, ML210 held-out RMSE.
 - CTRPv2 System Xc-/erastin fit (#502): erastin fit RMSE + mechanism specificity.
+- Joint multi-inducer in-vitro posterior (#500): in-vivo disjunction + held-out coverage.
 - Tumor-PK partition vs IKE (#334): tissue:plasma Kp.
 - Ferroptotic trigger-wave speed vs Co 2024 (#482): baseline 5.52 um/min.
 - Krogh drug-penetration lengths vs measured (#335).
@@ -69,6 +70,24 @@ def test_erastin_system_xc_fit_holds():
     )
     for k in ("lp_propagation", "lp_rate", "k_erastin", "hill"):
         assert k in d["calibrated_params"], f"missing calibrated param {k}"
+
+
+def test_joint_posterior_disjunction_and_heldout_hold():
+    """#500: the joint multi-inducer (RSL3 + erastin) in-vitro posterior must stay
+    DISJOINT from the in-vivo priors (the load-bearing finding: in-vitro data cannot
+    condition the in-vivo/spatial headlines, so they remain prior-predictive), and
+    still generalize to the held-out inducer."""
+    d = _load("joint-posterior.json")
+    disj = d["disjunction_with_invivo_priors"]
+    assert disj["lp_propagation"]["entire_95pct_posterior_above_invivo_max"] is True
+    assert disj["lp_rate"]["entire_95pct_posterior_above_invivo_max"] is True
+    # A real posterior: credible intervals are ordered for every parameter.
+    for name, v in d["posterior"].items():
+        assert v["q2_5"] <= v["median"] <= v["q97_5"], f"posterior interval inverted: {name}"
+    # Held-out generalization to the unseen GPX4 inhibitor (ML210, never in the fit).
+    cov = d["heldout_posterior_predictive"]["coverage_inside_95pct_band"]
+    num, den = (int(x) for x in cov.split("/"))
+    assert den == 7 and num >= 4, f"held-out coverage regressed: {cov}"
 
 
 def test_tumor_pk_partition_holds():
@@ -126,6 +145,7 @@ def test_all_anchored_artifacts_present():
     for name in (
         "kill-switch-calibration.json",
         "erastin-calibration.json",
+        "joint-posterior.json",
         "pk-calibration.json",
         "trigger-wave-validation.json",
         "penetration-validation.json",

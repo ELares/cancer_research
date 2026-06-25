@@ -1,0 +1,181 @@
+{
+  "n_draws": 1500,
+  "n_accepted": 30,
+  "accept_frac": 0.02,
+  "epsilon_joint_distance": 0.35,
+  "inducer_panel": {
+    "fit": [
+      "ML162",
+      "ERASTIN"
+    ],
+    "heldout": "ML210"
+  },
+  "posterior": {
+    "lp_propagation": {
+      "q2_5": 0.3979,
+      "median": 0.7823,
+      "q97_5": 0.9867,
+      "posterior_width_frac_of_prior": 0.62
+    },
+    "lp_rate": {
+      "q2_5": 0.3857,
+      "median": 0.7133,
+      "q97_5": 0.9835,
+      "posterior_width_frac_of_prior": 0.616
+    },
+    "gpx4_rate": {
+      "q2_5": 0.271,
+      "median": 0.4071,
+      "q97_5": 0.5772,
+      "posterior_width_frac_of_prior": 0.68
+    },
+    "gsh_scav_efficiency": {
+      "q2_5": 0.3347,
+      "median": 0.5183,
+      "q97_5": 0.7328,
+      "posterior_width_frac_of_prior": 0.569
+    },
+    "k_um": {
+      "q2_5": 0.1592,
+      "median": 0.547,
+      "q97_5": 1.9425,
+      "posterior_width_frac_of_prior": 0.457
+    },
+    "k_erastin": {
+      "q2_5": 4.4311,
+      "median": 17.0835,
+      "q97_5": 42.6216,
+      "posterior_width_frac_of_prior": 0.813
+    },
+    "hill": {
+      "q2_5": 1.3678,
+      "median": 3.5805,
+      "q97_5": 5.8794,
+      "posterior_width_frac_of_prior": 0.902
+    }
+  },
+  "unconstrained_params": [
+    "lp_propagation",
+    "lp_rate",
+    "gpx4_rate",
+    "k_erastin",
+    "hill"
+  ],
+  "disjunction_with_invivo_priors": {
+    "lp_propagation": {
+      "invivo_prcc_range": [
+        0.05,
+        0.2
+      ],
+      "posterior_q2_5": 0.3979,
+      "posterior_median": 0.7823,
+      "entire_95pct_posterior_above_invivo_max": true
+    },
+    "lp_rate": {
+      "invivo_prcc_range": [
+        0.03,
+        0.12
+      ],
+      "posterior_q2_5": 0.3857,
+      "posterior_median": 0.7133,
+      "entire_95pct_posterior_above_invivo_max": true
+    }
+  },
+  "heldout_posterior_predictive": {
+    "compound": "ML210",
+    "coverage_inside_95pct_band": "5/7",
+    "median_pp_rmse": 0.1124,
+    "band_q2_5": [
+      0.8027,
+      0.7955,
+      0.7702,
+      0.6695,
+      0.2521,
+      0.0484,
+      0.0103
+    ],
+    "band_median": [
+      0.896,
+      0.8915,
+      0.8633,
+      0.7883,
+      0.498,
+      0.1593,
+      0.0425
+    ],
+    "band_q97_5": [
+      0.9807,
+      0.9786,
+      0.9676,
+      0.8949,
+      0.7631,
+      0.3528,
+      0.167
+    ],
+    "empirical": [
+      0.9953,
+      0.9848,
+      0.9559,
+      0.8582,
+      0.5357,
+      0.2326,
+      0.1523
+    ]
+  },
+  "curves": {
+    "rsl3_doses_um": [
+      0.01,
+      0.03,
+      0.1,
+      0.3,
+      1.0,
+      3.0,
+      10.0
+    ],
+    "erastin_doses_um": [
+      0.1,
+      0.3,
+      1.0,
+      3.0,
+      10.0,
+      30.0,
+      100.0
+    ],
+    "empirical_rsl3_ml162": [
+      1.0089,
+      1.0058,
+      0.9795,
+      0.831,
+      0.3412,
+      0.0702,
+      0.0411
+    ],
+    "empirical_erastin": [
+      1.0078,
+      1.0035,
+      0.9923,
+      0.9506,
+      0.5254,
+      0.4267,
+      0.2884
+    ],
+    "posterior_median_rsl3": [
+      0.896,
+      0.8915,
+      0.8633,
+      0.7883,
+      0.498,
+      0.1593,
+      0.0425
+    ],
+    "posterior_median_erastin": [
+      0.8982,
+      0.897,
+      0.8927,
+      0.8882,
+      0.843,
+      0.62,
+      0.4482
+    ]
+  }
+}
