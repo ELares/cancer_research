@@ -1,0 +1,170 @@
+{
+  "degrees_of_freedom": 11,
+  "swept_parameters": [
+    "fenton_rate",
+    "gsh_scav_efficiency",
+    "lp_rate",
+    "lp_propagation",
+    "gpx4_rate",
+    "fsp1_rate",
+    "nrf2_gsh_rate",
+    "gpx4_degradation_by_ros",
+    "death_threshold",
+    "sdt_ros",
+    "rsl3_gpx4_inhib"
+  ],
+  "parameter_ranges": {
+    "fenton_rate": [
+      0.01,
+      0.04
+    ],
+    "gsh_scav_efficiency": [
+      0.25,
+      1.0
+    ],
+    "lp_rate": [
+      0.03,
+      0.12
+    ],
+    "lp_propagation": [
+      0.05,
+      0.2
+    ],
+    "gpx4_rate": [
+      0.15,
+      0.6
+    ],
+    "fsp1_rate": [
+      0.04,
+      0.16
+    ],
+    "nrf2_gsh_rate": [
+      0.0125,
+      0.05
+    ],
+    "gpx4_degradation_by_ros": [
+      0.001,
+      0.004
+    ],
+    "death_threshold": [
+      5.0,
+      20.0
+    ],
+    "sdt_ros": [
+      2.5,
+      10.0
+    ],
+    "rsl3_gpx4_inhib": [
+      0.8,
+      0.99
+    ]
+  },
+  "single_cell_sobol": {
+    "dominant_ST": {
+      "lp_propagation": 0.504,
+      "gpx4_rate": 0.285,
+      "lp_rate": 0.177
+    },
+    "non_identifiable_count": 6,
+    "non_identifiable": [
+      "gsh_scav_efficiency",
+      "nrf2_gsh_rate",
+      "fsp1_rate",
+      "fenton_rate",
+      "death_threshold",
+      "gpx4_degradation_by_ros"
+    ],
+    "note": "6 of 11 swept parameters are practically non-identifiable from the kill rate (ST < 0.05)"
+  },
+  "data_constrained_in_production": 0,
+  "data_constrained_note": "The production simulation matrix uses fixed in-vivo defaults; the only data-conditioned fit is the in-vitro single-cell switch (#330), whose posterior is DISJOINT from the in-vivo/spatial regime that carries the headlines. So zero of the headline outputs are conditioned on data.",
+  "headlines": [
+    {
+      "key": "single_cell_kill_rate",
+      "observable": "single-cell death rate (e.g. Persister x RSL3), the Figure 7 numbers",
+      "drivers": [
+        "lp_propagation",
+        "gpx4_rate",
+        "lp_rate"
+      ],
+      "non_identifiable_params": [
+        "gsh_scav_efficiency",
+        "nrf2_gsh_rate",
+        "fsp1_rate",
+        "fenton_rate",
+        "death_threshold",
+        "gpx4_degradation_by_ros"
+      ],
+      "prior_predictive": "Persister x RSL3 point 42.5%, but 95% prior-predictive [1.6%, 99.7%] (width 98.1%); PersisterNrf2 x RSL3 point 0.0%, interval [0.0%, 37.8%]",
+      "data_conditioned": "in-vitro only (ABC posterior); the in-vivo priors that produce the Figure 7 numbers are DISJOINT from the in-vitro data, so this headline cannot be conditioned on the data we hold",
+      "verdict": "directional_only",
+      "rationale": "the point estimate is essentially uninformative under the documented parameter uncertainty (the interval nearly spans [0,1]); the robust claim is that the differential between phenotypes exists, not its magnitude",
+      "source": "sobol-sensitivity-report.md (#331); uncertainty-intervals-report.md (#332); abc-posterior-report.md (#332)"
+    },
+    {
+      "key": "bliss_synergy",
+      "observable": "RSL3 + FSP1i Bliss synergy_score (the ~1.99x)",
+      "drivers": [
+        "lp_propagation",
+        "gsh_scav_efficiency",
+        "gpx4_rate"
+      ],
+      "non_identifiable_params": [
+        "sdt_ros (structural zero, no SDT in the pair)",
+        "rsl3_gpx4_inhib (structural zero, fixed DrugEffect)"
+      ],
+      "prior_predictive": "point ~1.99x, 95% prior-predictive ~[1.0x, 5.2x], median ~1.35x; strongly interaction-laden (Morris sigma > mu* for every active parameter)",
+      "data_conditioned": "no (prior-predictive; the combo fit is not data-conditioned)",
+      "verdict": "direction_robust_magnitude_not",
+      "rationale": "the supra-additive DIRECTION holds at the lower bound (interval stays >= 1.0x), so dual-pathway depletion beating single-pathway is defensible; the 1.99x magnitude is not",
+      "source": "headline-sensitivity-report.md (#331); headline-uncertainty-report.md (#332)"
+    },
+    {
+      "key": "hypoxia_kill_collapse",
+      "observable": "SDT-minus-RSL3 hypoxic-zone kill gap (the kill-collapse asymmetry)",
+      "drivers": [
+        "sdt_ros",
+        "lp_propagation",
+        "lp_rate",
+        "gsh_scav_efficiency"
+      ],
+      "non_identifiable_params": [],
+      "prior_predictive": "gap stays POSITIVE across its 95% interval ~[0.16, 1.00] (median 0.96, point 0.87) under the O2-independent assumption",
+      "data_conditioned": "no (prior-predictive); additionally ASSUMPTION-bracketed: the magnitude collapses from ~87.8% to ~0% under full SDT O2-dependence (#336/#358), which the lead clinical agent SONALA-001 occupies",
+      "verdict": "direction_robust_magnitude_not",
+      "rationale": "the asymmetry SIGN is parameter-robust, but the magnitude is both wide (interval) and assumption-dependent (the contested SDT O2-dependence), so it is an assumption restated quantitatively, not a calibrated prediction",
+      "source": "headline-sensitivity-report.md (#331); headline-uncertainty-tme-report.md (#332); manuscript Section 7.1"
+    },
+    {
+      "key": "penetration_gap",
+      "observable": "per-tissue vessel-wall RSL3 kill (the 40% -> 1.8% behind the BBB)",
+      "drivers": [
+        "lp_propagation",
+        "lp_rate",
+        "gpx4_rate"
+      ],
+      "non_identifiable_params": [],
+      "prior_predictive": "very wide per-tissue intervals (e.g. well-vascularized median 0.23 ~[0.00, 0.93]; CNS/BBB median 0.04 ~[0.00, 0.77]) because the bistable switch dominates; BUT the within-draw across-tissue ORDERING (well >= poorly >= CNS) held in 300/300 draws",
+      "data_conditioned": "no (prior-predictive; transport params at fixed uncalibrated presets, their own ranges not swept)",
+      "verdict": "direction_robust_magnitude_not",
+      "rationale": "the penetration-gradient ordering is parameter-robust (per-draw, not inferred from the overlapping marginals); the absolute per-tissue magnitudes are not point-estimable",
+      "source": "headline-uncertainty-penetration-report.md (#332)"
+    },
+    {
+      "key": "immune_amplification_ratio",
+      "observable": "SDT:RSL3 immune-kill ratio (the 104:1)",
+      "drivers": [
+        "lp_propagation",
+        "lp_rate",
+        "sdt_ros"
+      ],
+      "non_identifiable_params": [],
+      "prior_predictive": "the 104:1 (2D, near DAMP saturation) falls to ~4:1 in 3D geometry; SDT de-confounded immune rate ~[0.009, 0.171], robustly low-but-positive",
+      "data_conditioned": "no; geometry-dependent (the 2D-vs-3D shrink is a structural, not parametric, effect)",
+      "verdict": "directional_only",
+      "rationale": "the ratio is presented as a directional ceiling, not a number: it changes ~25x with geometry alone, which a parametric analysis cannot capture, so only the direction (SDT >> RSL3 immune priming) is claimed",
+      "source": "headline-sensitivity-report.md (#331); CALIBRATION_STATUS.md immune row"
+    }
+  ],
+  "overall": "No headline output is fully point-estimable. The single-cell kill rate and the immune ratio are directional-only; the Bliss synergy, the hypoxia asymmetry, and the penetration gap are direction-robust but magnitude-uncalibrated. With 11 free rate constants, 6 non-identifiable from the kill rate, and 0 of the headlines data-conditioned in the production regime, the honest reading of every reported magnitude is order-of-magnitude / directional, exactly as the manuscript labels them."
+}
