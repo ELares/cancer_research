@@ -132,7 +132,7 @@ and #333 (multi size spheroid validation against Browning, eLife 2021, PMID 3484
 
 ### Corpus and evidence methodology
 
-The keyword tagger is 96% precision but only 55% recall, so absence claims are provisional
+The keyword tagger is 96% binary evidence-presence precision but only 55% recall, so absence claims are provisional
 and rare mechanisms are under counted. MeSH hierarchical expansion and embedding based
 semantic retrieval are the standard upgrades; both can be re measured on the existing 100
 article gold set. The open access fraction of the full text corpus is about 98.7%, which

@@ -20,6 +20,10 @@
 # Novel targeted mechanisms
 # Newer expansion queries intentionally use narrower date windows so the first
 # pass does not overwhelm the historically broader 19-mechanism corpus.
+# NOTE (#510): this date-window asymmetry plus the per-query 500-record fetch cap
+# (fetch_articles.py max_results) means cross-mechanism volume counts are a
+# within-fetch comparison, not a field census. Disclosed in the manuscript
+# Section 3.3.1 "Query-design bias".
 "CRISPR"[All Fields] AND cancer AND therapy AND 2020:2026[dp]
 "CAR-T"[All Fields] AND cancer AND 2020:2026[dp]
 "antibody-drug conjugate"[All Fields] AND cancer AND 2023:2026[dp]

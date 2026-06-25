@@ -66,7 +66,7 @@
 
 ## Chapter 4: Evidence Quality and Gaps (~5,000 words)
 
-**Scope:** Evidence maturity scoring, weighted evidence methodology, gold-set evaluation (46% exact, 96% precision, 55% recall), tissue-of-origin layer, diagnostic-therapy matching, evidence coverage caveats, known corpus gaps, and interpretive framing of what the corpus supports about specific modalities. This chapter bridges the corpus analysis (Part II) and simulation work (Part III).
+**Scope:** Evidence maturity scoring, weighted evidence methodology, gold-set evaluation (46% exact, 96% binary evidence-presence precision, 55% recall), tissue-of-origin layer, diagnostic-therapy matching, evidence coverage caveats, known corpus gaps, and interpretive framing of what the corpus supports about specific modalities. This chapter bridges the corpus analysis (Part II) and simulation work (Part III).
 
 **Non-scope:** Does not present simulation results. Does not make claims about which therapies are "best" — only which have deeper or shallower evidence bases and what the corpus evidence supports conditionally.
 

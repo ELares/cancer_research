@@ -1166,6 +1166,20 @@ def build_evidence_tiers(entries: list[dict]) -> str:
         f"and should not be read as equivalent to phase-labeled trial maturity. "
         f"Absence claims remain provisional.\n"
     )
+    lines.append(
+        "**Per-tier precision caveat (#508).** The headline gold-set figure (96% precision) is "
+        "BINARY evidence-PRESENCE precision (whether a record carries any phase/clinical evidence at "
+        "all), NOT the per-tier or per-mechanism precision the maturity rankings below rest on, which "
+        "is small-n and weaker. The keyword tagger produces catchable mechanism false-positives. Two "
+        "manually verified examples appear in the tables below: PMID 37824808 (ibrutinib, a BTK "
+        "inhibitor for chronic lymphocytic leukemia) is listed under bispecific-antibody Phase III "
+        "but is not a bispecific antibody; PMID 35732350 (COVID-19 vaccine antibody and T-cell "
+        "responses in patients receiving anticancer therapy) is listed under immunotherapy Phase III "
+        "but is a vaccine-serology study, not a cancer-immunotherapy trial. A small number of the "
+        "per-mechanism Phase III/II counts therefore include such false-positives, so the tier counts "
+        "should be read as approximate rather than exact. The frozen corpus auto-tags are left as-is "
+        "(this is a documented disclosure, not a silent recount).\n"
+    )
 
     mechanisms = sorted(MECHANISM_KEYWORDS.keys())
     evidence_order = ["phase3-clinical", "phase2-clinical", "phase1-clinical", "clinical-other",
