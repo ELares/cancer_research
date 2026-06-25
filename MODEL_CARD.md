@@ -61,7 +61,7 @@ Do **NOT** use this model for, or cite it as evidence of, any of the following:
 ## 4. Inputs and outputs
 
 - **Inputs:** cell phenotype parameters (`Cell`: iron, GSH, GPX4, FSP1, basal ROS, lipid unsaturation, NRF2), biochemistry rate constants (`Params`), a treatment (Control / RSL3 / SDT / PDT), and optional spatial / microenvironment configs (oxygen, pH, stromal, immune, drug-transport, and the off-by-default realism layers). A fixed RNG seed makes every run deterministic and reproducible.
-- **Outputs:** per-cell death / final lipid-peroxide / GSH / GPX4 state; aggregate kill rates; spatial fields (DAMP, O2, supply); and a `summary.json` for `sim-tme-3d`. The default 24-condition `sim-tme-3d` matrix is byte-identical run to run (SHA-guarded in CI), so off-by-default layers cannot silently perturb the headline output.
+- **Outputs:** per-cell death / final lipid-peroxide / GSH / GPX4 state; aggregate kill rates; spatial fields (DAMP, O2, supply); and a `summary.json` for `sim-tme-3d`. The default 24-condition `sim-tme-3d` matrix is byte-identical run to run (SHA-guarded in CI), so off-by-default layers cannot silently perturb the headline output. That SHA gate is a CONTAINMENT invariant (it proves the software did not change the default matrix); it is NOT scientific validation. The legs actually anchored to independent published data are guarded separately by a calibration-regression gate (#499, `tests/test_calibration_regression.py`) that fails if any calibrated leg drifts off its held-out metric (the in-vitro kill-switch ML210 held-out RMSE, the tumor-PK partition, the measured trigger-wave speed, the penetration lengths, the spheroid zone geometry, the PDT threshold).
 
 ## 5. Architecture (brief)
 
