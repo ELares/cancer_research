@@ -33,19 +33,43 @@ source. This file is the registrable, time-stampable version.
 Each prediction is **directional**: it states the sign of an effect, not a
 calibrated magnitude, because most of the simulation layers are uncalibrated
 mechanistic scaffolding (see `simulations/calibration/CALIBRATION_STATUS.md` and
-`MODEL_CARD.md`). The falsification column states the outcome that would kill the
-prediction.
+`MODEL_CARD.md`). Each prediction below states (a) a quantitative model output and (b) a
+pre-stated numeric falsification threshold, the outcome that would kill it. The
+claims stay directional (the sign of an effect), but the model output and the
+threshold are now numeric so a result can be scored against them without
+re-interpretation.
 
-| # | Prediction (directional) | Pre-stated falsification |
-|---|--------------------------|--------------------------|
-| P1 | GPX4 plus FSP1 dual inhibition is synergistic (Bliss greater than 1, the model gives about 1.99x) in persister-enriched cells. | Combination index greater than 0.8 (additive or antagonistic), or CI greater than 1.0. |
-| P2 | Physical-ROS modalities (PDT and SDT) are less penetration-limited with depth than systemic RSL3 in spheroids of at least 500 um radius. | All three modalities show similar depth-dependent kill profiles. |
-| P3 | The post-withdrawal ferroptosis-vulnerability window closes on a days timescale, with defenses recovering sequentially (FSP1 and GSH first). | Defenses recover simultaneously, or recovery is hours not days (the window is too narrow to exploit). |
-| P4 | SDT retains more efficacy than RSL3 under hypoxia (direction only; magnitude explicitly contested). | RSL3 and SDT show similar hypoxic efficacy loss (this kills the ROS-source-asymmetry assumption). This is the model's least-certain leg; the off-by-default O2-dependent SDT mode and dynamic-iron hypoxia coupling exist precisely so the reverse can be modeled. |
-| P5 | Dense ferroptotic kill produces more immunogenic-cell-death signal per cell than sparse kill (direction; the 104:1 ratio is a 2D ceiling that falls to about 4:1 in 3D and can flip sign under the immunosuppressive-ferroptosis arm). | DAMP release is proportional to dead-cell count regardless of geometry or quality. |
-| P6 | CAF coculture protects RSL3 more than SDT (stromal GSH and MUFA supply blunts pharmacologic but not exogenous ROS). | CAFs protect both equally, or neither. |
-| P7 | RSL3 efficacy drops at acidic pH (6.5 versus 7.4) via ion trapping (most-uncertain parameter: RSL3 pKa). | RSL3 efficacy is pH-independent (this invalidates the pH-resistance leg). |
-| P8 | A persister-targeting ferroptosis inducer (RSL3) has the OPPOSITE size-dependence to generic cytotoxics: small, all-proliferating spheroids resist it (no persister target) and vulnerability emerges as the persister core appears (around 280 um radius), whereas generic cytotoxics kill smaller spheroids better. There are two competing size-effects, the supply gradient (bigger resists more) versus the persister-targeting (bigger has more target), so the net direction depends on the inducer's phenotype specificity. (#333; `analysis/calibration/spheroid-kill-vs-size.md`.) | A ferroptosis inducer shows the SAME monotone bigger-resists-more size-dependence as generic cytotoxics (no persister-targeting inversion at small size), or its kill is size-independent. |
+**P1. GPX4 plus FSP1 dual inhibition is synergistic in FSP1-low persister-enriched cells.**
+- *Quantitative model output:* Bliss excess about 1.99x (95% prior-predictive interval about 1.0x to 5.2x; the supra-additive direction is robust at the lower bound, the magnitude is not).
+- *Falsification threshold:* Chou-Talalay combination index greater than 0.8 at the matched-effect dose ratio (additive or antagonistic), or measured combined kill at or below the Bliss-independence prediction within assay error.
+
+**P2. Physical-ROS modalities (PDT and SDT) are less depth-limited than systemic RSL3 in spheroids of at least 500 um radius.**
+- *Quantitative model output:* at the spheroid core RSL3 kill falls toward zero while SDT retains most of its rim kill, so the RSL3 core-to-rim kill ratio is far below the SDT core-to-rim ratio (the same penetration asymmetry behind the 40 percent to 1.8 percent RSL3-like penetration headline).
+- *Falsification threshold:* the core-to-rim kill ratio for RSL3 is within 1.5x of the SDT core-to-rim ratio (no differential depth penetration), or all three modalities' depth-kill half-distances agree within 25 percent.
+
+**P3. The post-withdrawal ferroptosis-vulnerability window closes on a days timescale, with defenses recovering sequentially (FSP1 and GSH first, GPX4 and NRF2 later).**
+- *Quantitative model output:* matched RSL3-sensitivity returns toward baseline over roughly 3 to 7 days, with FSP1 and GSH recovering before GPX4 and NRF2.
+- *Falsification threshold:* matched RSL3-sensitivity returns to baseline within 24 hours (the window is too narrow to exploit), or all four defenses recover within the same timepoint (no sequential order).
+
+**P4. SDT retains more efficacy than RSL3 under hypoxia (direction only; magnitude explicitly contested).**
+- *Quantitative model output:* in the hypoxic zone RSL3 kill collapses to near zero while SDT kill is 86.6 percent under the O2-independent upper bound and falls to near zero only under the O2-dependent lower bound, so the modeled SDT-to-RSL3 hypoxic-kill ratio is at least 1 and bracketed wide (Section 7.1).
+- *Falsification threshold:* the SDT hypoxic-kill loss (normoxic minus hypoxic) is greater than or equal to the RSL3 hypoxic-kill loss, i.e. the SDT-to-RSL3 hypoxic-kill ratio is at or below 1.0 (SDT collapses as much as or more than RSL3, killing the ROS-source-asymmetry assumption). This is the model's least-certain leg; the off-by-default O2-dependent SDT mode and dynamic-iron hypoxia coupling exist precisely so the reverse can be modeled.
+
+**P5. Dense ferroptotic kill produces more immunogenic-cell-death signal per dead cell than sparse kill.**
+- *Quantitative model output:* the dense-to-sparse DAMP-per-cell (or DC-maturation-per-cell) ratio is about 4:1 in 3D (down from the 2D 104:1 ceiling; it can fall below 1 under the immunosuppressive-ferroptosis arm at high death density).
+- *Falsification threshold:* DAMP release and DC maturation per dead cell agree within 1.5x between dense (SDT or 3D) and sparse (RSL3) kill (signal proportional to dead-cell count regardless of geometry or kill quality).
+
+**P6. CAF coculture protects RSL3 more than SDT.**
+- *Quantitative model output:* CAFs raise the RSL3 IC50 fold-shift above the SDT IC50 fold-shift (boundary-cell kill: RSL3 halves, 3.0 percent to 1.5 percent, while SDT barely moves, 96.1 percent to 91.2 percent).
+- *Falsification threshold:* the RSL3 and SDT IC50 fold-shifts with CAFs agree within 1.5x (equal shielding), or neither shifts more than 1.2x (no metabolic-cooperation effect).
+
+**P7. RSL3 efficacy drops at acidic pH (6.5 versus 7.4) via ion trapping.**
+- *Quantitative model output:* ferroptosis kills fall about 53 percent at pH 6.5 versus 7.4 (163 to 77 in the immune-free counter) while SDT is unaffected, i.e. the RSL3 IC50 rises with acidity.
+- *Falsification threshold:* RSL3 efficacy (or IC50) agrees within 1.2x between pH 6.5 and 7.4 (pH-independent; RSL3 chloroacetamide chemistry does not behave as a classic weak base, invalidating the pH-resistance leg).
+
+**P8. A persister-targeting ferroptosis inducer (RSL3) has the OPPOSITE size-dependence to generic cytotoxics.**
+- *Quantitative model output:* with size-aware zone thresholds, RSL3 kill is near zero below about 280 um radius and rises as the persister core appears (a non-monotone profile), whereas generic cytotoxics fall monotonically with size (the model's fixed-threshold supply-gradient leg gives RSL3 kill 3.6 percent to 0.19 percent over 144 to 540 um). The net direction depends on the inducer's phenotype specificity (#333; `analysis/calibration/spheroid-kill-vs-size.md`).
+- *Falsification threshold:* a ferroptosis inducer shows the same monotone bigger-resists-more profile as generic cytotoxics (no persister-targeting inversion below about 280 um radius), or its kill is size-independent.
 
 ### Honesty clause
 
