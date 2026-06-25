@@ -32,7 +32,7 @@ Everything is organised so you can re-run the pipeline, challenge the conclusion
 
 ## What we found
 
-This work is first a **consolidation of the cancer-therapy literature**: mapping where research is concentrated, where apparent gaps are artifacts of search design rather than biology, and which mechanistic ideas can be compared on shared axes (evidence depth, resistant-state relevance, delivery constraints, tissue access). Immunotherapy dominates the corpus, and the analysis is deliberately honest about coverage limits (the evidence tagger has 96% precision but only 55% recall, so absence claims are provisional; an off-by-default MeSH-descriptor fallback lifts that recall to ~68% at ~95% precision but is not yet applied to the production corpus).
+This work is first a **consolidation of the cancer-therapy literature**: mapping where research is concentrated, where apparent gaps are artifacts of search design rather than biology, and which mechanistic ideas can be compared on shared axes (evidence depth, resistant-state relevance, delivery constraints, tissue access). Immunotherapy dominates the corpus, and the analysis is deliberately honest about coverage limits (the evidence tagger has 96% binary evidence-presence precision but only 55% recall, so absence claims are provisional; an off-by-default MeSH-descriptor fallback lifts that recall to ~68% at ~95% precision but is not yet applied to the production corpus).
 
 On top of that landscape, the simulations act as a **claim-testing engine**: we take specific mechanistic claims and try to validate or disprove them with reproducible, fact-grounded models. Three results that, if validated experimentally, would have translational implications:
 

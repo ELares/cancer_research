@@ -28,7 +28,7 @@ The repo exists to compare therapeutic mechanisms, evidence depth, resistant-sta
 
 - manuscript drafting and revision (Parts I–V substantially complete: ~115 pages, 11 chapters + 3 appendices)
 - corpus fetching, enrichment, tagging, and indexing
-- evidence-tier audits and coverage caveats (gold-set evaluation: 46% exact, 96% precision, 55% recall on the production keyword tagger; an off-by-default MeSH-descriptor fallback (#346, `FERRO_MESH_EXPANSION=1`) lifts gold-set evidence-detection recall to 67.8% at 95.2% precision, see `analysis/evidence-gold-mesh-eval.md` — not applied to the production corpus, so the 55% figure remains the corpus reality)
+- evidence-tier audits and coverage caveats (gold-set evaluation: 46% exact, 96% binary evidence-presence precision, 55% recall on the production keyword tagger; an off-by-default MeSH-descriptor fallback (#346, `FERRO_MESH_EXPANSION=1`) lifts gold-set evidence-detection recall to 67.8% at 95.2% precision, see `analysis/evidence-gold-mesh-eval.md` — not applied to the production corpus, so the 55% figure remains the corpus reality)
 - taxonomy and search refinement
 - pathway-target and resistant-state analysis
 - diagnostic-to-therapy chain extraction (10 chains, 240 articles mapped; #441 added HER2/BRCA/EGFR/KRAS-G12C targeted-therapy chains, recomputed from frozen text so INDEX stays frozen)
