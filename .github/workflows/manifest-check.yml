@@ -1,0 +1,44 @@
+name: Manifest Freshness
+
+# Guards MANIFEST.sha256 (the release-integrity / provenance manifest tied to the
+# Zenodo DOI) against silent drift, the same way cargo-test.yml guards the
+# generated ferroptosis.h header: regenerate in CI and fail if the committed file
+# no longer matches the tree. Without this gate the manifest re-rots immediately
+# (it had drifted by 277 entries — see #522).
+#
+# No path filter: the manifest hashes every in-scope tracked file (scripts,
+# analysis, article, simulations, tags, corpus/INDEX.jsonl, ...), so a PR that
+# changes any of them must regenerate it. To fix a failure:
+#   python3 scripts/generate_release_manifest.py && git add MANIFEST.sha256
+# The generator is stdlib-only and deterministic, so no dependencies are needed.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  manifest:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          lfs: false
+          fetch-depth: 1
+
+      - name: Install Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Regenerate and verify MANIFEST.sha256 is current
+        run: |
+          python3 scripts/generate_release_manifest.py
+          if ! git diff --exit-code -- MANIFEST.sha256; then
+            echo "::error file=MANIFEST.sha256::MANIFEST.sha256 is stale. Run: python3 scripts/generate_release_manifest.py && git add MANIFEST.sha256"
+            exit 1
+          fi
