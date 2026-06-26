@@ -67,7 +67,7 @@ representative of the agent actually in trials. Issue: #336 (oxygen dependent SD
 
 ### Immunotherapy and immunogenic cell death
 
-Immunotherapy dominates the corpus (about 1,685 of 4,830 full text articles), yet our
+Immunotherapy dominates the corpus (about 2,297 of 4,830 full text articles), yet our
 immune model under represents it, and specifically models only the pro immune side of
 ferroptosis. Recent in vivo evidence shows ferroptosis is frequently net immunosuppressive:
 ferroptotic cancer cells impede dendritic cell mediated anti tumor immunity (Wiernicki,

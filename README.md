@@ -20,7 +20,7 @@ If you have expertise in oncology, biochemistry, ferroptosis, immunology, comput
 
 ## What's here
 
-- **4,830 full-text cancer research articles** across 19 mechanisms, 22 cancer types, 803 journals (2001-2026); the corpus skews toward immunotherapy (the single most-studied mechanism, ~1,685 articles), with physical and pharmacologic ferroptosis approaches a smaller, more preclinical slice
+- **4,830 full-text cancer research articles** across 19 mechanisms, 22 cancer types, 803 journals (2001-2026); the corpus skews toward immunotherapy (the single most-studied mechanism, ~2,297 articles), with physical and pharmacologic ferroptosis approaches a smaller, more preclinical slice
 - **Python pipeline** for corpus fetching, tagging (7 tag layers), indexing, analysis, and figure generation
 - **11 Rust simulation binaries**, a mechanistic claim-testing engine for cancer therapies: single-cell and spatial Monte Carlo, drug penetration across tissue types, drug combinations, tumor microenvironment (oxygen gradients, spatial immune zones, DAMP-mediated T-cell activation, stromal shielding, vasculature, clonal heterogeneity), vulnerability windows, ICD immune cascades, and tumor PK. Worked implementations include ferroptosis/RSL3 biochemistry and PDT/SDT depth physics (2D row-based and 3D radial-depth dispatchers; sim-tme-3d is the 3D-spheroid capstone consuming the full TME library stack) plus photosensitizer PK (drug-light-interval scaling, saturating distribution phase, relative singlet-O₂ yield)
 - **ferroptosis-core library** (MIT, with Python bindings) — embeddable ferroptosis biochemistry engine; module list and current unit-test count in [`simulations/ferroptosis-core/README.md`](simulations/ferroptosis-core/README.md)
