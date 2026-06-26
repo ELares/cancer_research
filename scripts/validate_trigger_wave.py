@@ -198,6 +198,17 @@ def validate() -> dict:
     # GPX4-defense direction (no matched dataset): higher threshold => slower.
     m_defended = model_speed(1.0, gpx4_defense=0.15)
 
+    # CIRCULARITY NOTE: `implied_iron_fold` in the measured CSV is back-solved from
+    # the measured speed via the inverse of c ~ sqrt(iron), i.e. iron = (speed/base)^2.
+    # Feeding it back through model_speed therefore reproduces the measured DFO/loaded
+    # speeds BY CONSTRUCTION. The dfo_/loaded_/ordering checks below are back-solve
+    # CONSISTENCY checks, NOT an independent test of the iron-dose response SHAPE
+    # (that needs independently measured labile-iron levels, which Co 2024 does not
+    # report). The non-circular legs are: the baseline one-point D*k calibration, the
+    # numeric/analytic self-consistency, and the GPX4-defense direction. The meaningful
+    # iron-dose claim is weaker: the back-solved folds (~0.18/1.0/2.9) are biologically
+    # plausible. See "Honest scope" in the report and `iron_dose_shape_independently_
+    # validated` below.
     ordering_ok = m_dfo < m_base < m_loaded
     baseline_ok = abs(m_base - base) < 0.6
     dfo_ok = abs(m_dfo - dfo) < 0.6
@@ -215,13 +226,18 @@ def validate() -> dict:
         },
         "model_numeric_baseline": round(m_base_numeric, 3),
         "checks": {
-            "iron_dose_ordering_dfo<control<loaded": ordering_ok,
             "baseline_near_5.52": baseline_ok,
-            "dfo_near_2.33": dfo_ok,
-            "loaded_near_9.40": loaded_ok,
             "numeric_matches_analytical_within_6pct": numeric_ok,
             "gpx4_defense_slows_front": gpx4_ok,
+            # back-solve consistency (tautological — see CIRCULARITY NOTE above):
+            "iron_dose_ordering_reproduced_by_backsolve": ordering_ok,
+            "dfo_speed_reproduced_by_backsolve": dfo_ok,
+            "loaded_speed_reproduced_by_backsolve": loaded_ok,
         },
+        # The iron-dose RESPONSE SHAPE (c ~ sqrt(iron)) is NOT independently validated:
+        # the iron folds are inverted from the speeds, so the fit is circular. Only the
+        # plausibility of the back-solved folds is a (weak) external check.
+        "iron_dose_shape_independently_validated": False,
         "all_passed": all(
             [ordering_ok, baseline_ok, dfo_ok, loaded_ok, numeric_ok, gpx4_ok]
         ),
@@ -254,25 +270,47 @@ front.
 | baseline | {r['measured']['baseline']['front_speed_um_per_min']} | {r['model_analytical']['baseline']} | {r['measured']['baseline']['implied_iron_fold']} |
 | iron loaded | {r['measured']['iron_loaded']['front_speed_um_per_min']} | {r['model_analytical']['iron_loaded']} | {r['measured']['iron_loaded']['implied_iron_fold']} |
 
+The **Implied iron fold** column is back-solved from the measured speed (not
+measured independently), so the Model column matching the Measured column for DFO
+and iron-loaded is arithmetic, not validation — see Honest scope.
+
 Numeric solve (baseline): {r['model_numeric_baseline']} um/min (agrees with the
 closed form, the cross-language self-consistency check).
 
-Checks: iron-dose ordering DFO<control<loaded = {c['iron_dose_ordering_dfo<control<loaded']};
-baseline near 5.52 = {c['baseline_near_5.52']}; DFO near 2.33 = {c['dfo_near_2.33']};
-loaded near 9.40 = {c['loaded_near_9.40']}; numeric == analytical (<6%) =
+Genuine (non-circular) checks: baseline one-point calibration near 5.52 =
+{c['baseline_near_5.52']}; numeric == analytical (<6%) =
 {c['numeric_matches_analytical_within_6pct']}; GPX4 defense slows the front =
-{c['gpx4_defense_slows_front']}. **All passed: {r['all_passed']}.**
+{c['gpx4_defense_slows_front']}.
+
+Back-solve consistency checks (**tautological** — the per-condition iron folds are
+inverted from the measured speeds, so the model reproduces them by construction):
+iron-dose ordering reproduced = {c['iron_dose_ordering_reproduced_by_backsolve']};
+DFO speed reproduced = {c['dfo_speed_reproduced_by_backsolve']}; loaded speed
+reproduced = {c['loaded_speed_reproduced_by_backsolve']}.
+
+Iron-dose response SHAPE independently validated:
+**{r['iron_dose_shape_independently_validated']}**. **All checks passed:
+{r['all_passed']}** (a green here means the calibration + self-consistency hold AND
+the back-solve is arithmetically consistent — it is NOT evidence that the iron-dose
+shape was tested against independent data).
 
 ## Honest scope
 
 - The baseline `D`/`base_reaction_rate` are **tuned** so the baseline lands at
   5.52 um/min (a one-point calibration of the product `D*k`), so the baseline
   match is a calibration, not a prediction.
-- The **predicted** result is the iron-dose RESPONSE SHAPE `c ~ sqrt(iron)`: the
-  measured 2.33 / 5.52 / 9.40 um/min imply iron fold-changes of ~0.18 / 1.0 /
-  2.9, which are biologically plausible (DFO strips most labile iron; FAC loading
-  multiplies it a few-fold). So the measured iron-tuning is **consistent with a
-  Fenton-iron-driven bistable front**.
+- The iron-dose check is **circular, not a prediction**: the per-condition iron
+  folds are not measured but **back-solved** from the speeds via
+  `iron = (speed/baseline)^2`, so feeding them through `c ~ sqrt(iron)` reproduces
+  the 2.33 / 9.40 um/min **by construction**. The response SHAPE `c ~ sqrt(iron)`
+  is therefore **not independently validated** here
+  (`iron_dose_shape_independently_validated = false`). The only non-vacuous
+  iron-dose statement is the **plausibility** of those back-solved folds
+  (~0.18 / 1.0 / 2.9): they fall in a biologically reasonable range (DFO strips
+  most labile iron; FAC loading multiplies it a few-fold), **consistent with — but
+  not proof of —** a Fenton-iron-driven bistable front. Independently validating
+  the shape needs measured labile-iron levels per condition, which Co 2024 does
+  not report.
 - The GPX4-defense leg (front slows/halts as the ignition threshold rises toward
   0.5) is a **direction-only** prediction with no matched quantitative dataset
   here.

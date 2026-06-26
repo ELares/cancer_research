@@ -29,7 +29,7 @@ PMID 21392074).
 
 Before fitting, an exact arithmetic check on the IKE plasma NCA: a 1-compartment
 first-order-absorption curve has a hard lower bound on its total exposure per peak,
-`AUC/Cmax >= e * Tmax` (the floor is reached in the instantaneous-absorption limit).
+`AUC/Cmax >= e * Tmax` (the floor is reached in the equal-rate ka->ke limit, not the instantaneous-absorption limit).
 For IKE the measured ratio is **2.107 h**, which is
 **43% below** the floor `e * Tmax = 3.67 h`.
 That is impossible for any single compartment, so IKE has a fast distribution phase

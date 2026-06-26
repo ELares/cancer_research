@@ -174,10 +174,12 @@ def ka_from_tmax(tmax, ke):
 
 def one_cmt_auc_over_cmax_floor(tmax):
     """Minimum achievable AUC/Cmax for ANY 1-compartment first-order-absorption curve
-    at a fixed Tmax. Feasibility requires Tmax < 1/ke, and AUC/Cmax decreases as
-    absorption speeds up, reaching the closed-form floor `e * Tmax` at the
-    instantaneous-absorption (bolus) limit. A measured AUC/Cmax below this floor is
-    proof that the disposition is multi-compartment (a fast distribution phase)."""
+    at a fixed Tmax. Feasibility requires Tmax < 1/ke. The normalized exposure
+    AUC/(Cmax*Tmax) is minimized at `e` in the equal-rate limit (the absorption rate
+    constant ka approaching the elimination rate constant ke) and grows without bound
+    as ka -> inf (the instantaneous-absorption/bolus limit), so AUC/Cmax >= `e * Tmax`
+    with equality reached as ka -> ke. A measured AUC/Cmax below this floor is proof
+    that the disposition is multi-compartment (a fast distribution phase)."""
     return math.e * tmax
 
 
@@ -406,7 +408,7 @@ PMID 21392074).
 
 Before fitting, an exact arithmetic check on the IKE plasma NCA: a 1-compartment
 first-order-absorption curve has a hard lower bound on its total exposure per peak,
-`AUC/Cmax >= e * Tmax` (the floor is reached in the instantaneous-absorption limit).
+`AUC/Cmax >= e * Tmax` (the floor is reached in the equal-rate ka->ke limit, not the instantaneous-absorption limit).
 For IKE the measured ratio is **{mc['plasma_auc_over_cmax_h']} h**, which is
 **{mc['shortfall_fraction']:.0%} below** the floor `e * Tmax = {mc['one_cmt_floor_e_tmax_h']} h`.
 That is impossible for any single compartment, so IKE has a fast distribution phase
