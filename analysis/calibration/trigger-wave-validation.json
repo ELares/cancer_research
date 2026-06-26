@@ -27,13 +27,14 @@
   },
   "model_numeric_baseline": 5.429,
   "checks": {
-    "iron_dose_ordering_dfo<control<loaded": true,
     "baseline_near_5.52": true,
-    "dfo_near_2.33": true,
-    "loaded_near_9.40": true,
     "numeric_matches_analytical_within_6pct": true,
-    "gpx4_defense_slows_front": true
+    "gpx4_defense_slows_front": true,
+    "iron_dose_ordering_reproduced_by_backsolve": true,
+    "dfo_speed_reproduced_by_backsolve": true,
+    "loaded_speed_reproduced_by_backsolve": true
   },
+  "iron_dose_shape_independently_validated": false,
   "all_passed": true,
   "drift_guard": {
     "diffusion_um2_per_min": 30.0,
