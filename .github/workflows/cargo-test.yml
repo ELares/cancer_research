@@ -54,6 +54,30 @@ jobs:
             -L target/release -lferroptosis_ffi
           LD_LIBRARY_PATH=target/release "$RUNNER_TEMP/test_ffi"
 
+  build-macos:
+    # Guard the documented first build step on Apple Silicon. The Ubuntu `test`
+    # job links the `ferroptosis-python` cdylib fine and so never caught #521,
+    # where `cargo build --release` failed on macOS because the pyo3
+    # extension-module crate needs `-undefined dynamic_lookup` (now supplied by
+    # simulations/.cargo/config.toml). `macos-latest` is Apple Silicon — the
+    # exact platform that failed. Build-only (the `test` job runs the suite).
+    runs-on: macos-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Cargo registry and build
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: simulations
+
+      - name: Build the full workspace (Apple Silicon link path)
+        working-directory: simulations
+        run: cargo build --release --workspace
+
   fmt:
     # Block PRs that introduce cargo fmt drift in the simulations
     # workspace. Runs in parallel with `test`; rustfmt-only — no build

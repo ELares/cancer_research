@@ -1,0 +1,21 @@
+# Apple Silicon / macOS link configuration for the workspace.
+#
+# `ferroptosis-python` is a default workspace member built as a `cdylib` with
+# pyo3's `extension-module` feature. On macOS that feature deliberately does NOT
+# link libpython — the CPython symbols (e.g. `_PyModule_Create2`) are expected to
+# be resolved at load time by the interpreter that imports the module. A plain
+# `cargo build` does not tell the linker that, so on macOS the documented first
+# build step (`cd simulations && cargo build --release`) fails with:
+#
+#     ld: symbol(s) not found for architecture arm64  (__Py_TrueStruct, ...)
+#     error: could not compile `ferroptosis-python`
+#
+# `maturin` passes these flags automatically; a bare `cargo build` does not.
+# Supplying `-undefined dynamic_lookup` here makes the whole workspace build with
+# `cargo build` on macOS, matching the Linux behavior CI already exercises.
+# Linux/Windows targets are unaffected (no override below). See issue #521.
+[target.aarch64-apple-darwin]
+rustflags = ["-C", "link-arg=-undefined", "-C", "link-arg=dynamic_lookup"]
+
+[target.x86_64-apple-darwin]
+rustflags = ["-C", "link-arg=-undefined", "-C", "link-arg=dynamic_lookup"]
