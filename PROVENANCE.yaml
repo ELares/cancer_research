@@ -89,12 +89,25 @@ corpus:
   non_open_access:
     count: 61
     note: >
-      61 articles have full text stored but are NOT confirmed as Open
-      Access. These may be copyrighted by their publishers. Redistribution
-      of full-text copyrighted articles without publisher permission may
-      violate copyright. Follow-up action: verify each article's actual
-      OA status (OpenAlex has ~5% error rate) and downgrade confirmed
-      non-OA articles to abstract-only storage.
+      61 articles are flagged is_oa=false by OpenAlex but had full text stored.
+      The pending follow-up is now DONE (#526): each PMCID was checked against the
+      authoritative NCBI PMC Open Access subset service (oa.fcgi), since a PMCID
+      alone does not imply redistribution rights. Result: 27 are in the OA subset
+      (genuinely redistributable; OpenAlex's is_oa=false was wrong — its ~5% error
+      rate) and were KEPT with full text; 34 are NOT in the OA subset (publisher
+      copyright) and had their `## Full Text` STRIPPED IN PLACE (abstract + metadata
+      retained, a removal notice added) by scripts/strip_non_oa_fulltext.py. The
+      records stay in corpus/by-pmid/ so the frozen full-text count (4,830) is
+      unchanged, but no copyrighted body is redistributed. See
+      analysis/non-oa-fulltext-audit.{md,csv}. Re-run: `--audit` (network) then
+      `--apply` (offline). Caveat: those 34 are now abstract-only in place, so a
+      future re-run of any body-reading analysis would see slightly less text for
+      them (the diagnostic-therapy chain recompute is unaffected — verified, no
+      stripped record was a chain member).
+    audited_2026_06_26:
+      checked: 61
+      in_oa_subset_kept: 27
+      not_in_subset_stripped: 34
   abstract_archive:
     count: 5585
     note: >
