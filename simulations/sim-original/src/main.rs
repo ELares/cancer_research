@@ -260,9 +260,12 @@ fn main() {
         holds_count as f64 / total_tests as f64 * 100.0
     );
 
-    // Save
+    // Emit results as JSON on stdout. Redirect to a file when you want one, per
+    // the README: `cargo run --release -p sim-original > simulation_results.json`.
+    // (Previously this also did an unconditional `fs::write("simulation_results.json")`
+    // to the CWD, which dirtied the git-tracked simulations/simulation_results.json
+    // on every plain `cargo run` — #530.)
     let json = serde_json::to_string_pretty(&results).unwrap();
-    std::fs::write("simulation_results.json", &json).unwrap();
     println!("{}", json);
-    eprintln!("\nSaved to simulation_results.json");
+    eprintln!("\nResults written to stdout (redirect with `> simulation_results.json`).");
 }
