@@ -185,3 +185,11 @@ supplementary table. The book's narrative chapters become background.
 
 Venue choice and submission are human actions (the issue assigns them to the
 author). This document is the draftable artifact the issue asks for.
+
+**Skeletons delivered (#523).** The two paper scaffolds built from this outline now
+live at [`article/paper-a/paper-a-scoping-map.md`](../article/paper-a/paper-a-scoping-map.md)
+and [`article/paper-b/paper-b-ferroptosis-engine.md`](../article/paper-b/paper-b-ferroptosis-engine.md)
+— each leads with its defended claim, carries a draft abstract stub, a
+section-by-section skeleton with source pointers into `v1.md` and the analysis
+outputs, and a provisional (changeable) venue + length target. Filling the section
+bodies and choosing the final venues remain the author's steps.
