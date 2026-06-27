@@ -90,8 +90,14 @@ def compute_prcc(inputs, output):
     results = []
     for i in range(p):
         prcc = -R_inv[i, p] / math.sqrt(R_inv[i, i] * R_inv[p, p])
-        # t-test for significance (df = n - 2 - p)
-        df = n - 2 - p
+        # t-test for significance. A partial correlation that controls for the
+        # OTHER (p-1) parameters has df = n - 2 - (p-1) = n - 1 - p (Marino,
+        # Hogue, Ray & Kirschner 2008). The previous n - 2 - p double-counted the
+        # parameter of interest among the controlled set. The effect is one df, so
+        # p-values shift negligibly at this n (no significance verdict flips); the
+        # committed prcc-results.json p-values refresh on the next extension-backed
+        # run and nothing downstream reads them (callers read the swept ranges).
+        df = n - 1 - p
         if abs(prcc) < 1.0 and df > 0:
             t_stat = abs(prcc) * math.sqrt(df / (1.0 - prcc * prcc))
             # Normal approximation for df > 1000
