@@ -270,27 +270,31 @@ fn sim_batch(
     }
     validate_params(&params)?;
 
-    // Parallel fold/reduce — O(1) memory per thread, no Vec<> allocation.
+    // Compute per-cell outcomes in parallel (deterministic per-cell RNG), then
+    // reduce in a FIXED index order. Float addition is not associative, so the
+    // previous rayon fold/reduce made mean_lp/gsh/gpx4 depend on thread scheduling
+    // — not bit-reproducible despite the public seed-for-reproducibility contract
+    // (#531). rayon `collect()` preserves index order, so summing the collected Vec
+    // is deterministic; n_dead was already order-independent. The O(1)-memory fold
+    // is traded for an O(n) buffer (the means are not figure-critical and this
+    // keeps a fixed seed bitwise reproducible).
     // `detach` is the PyO3 0.28 replacement for the removed `allow_threads`.
-    let (n_dead, sum_lp, sum_gsh, sum_gpx4) = py.detach(|| {
+    let outcomes: Vec<(bool, f64, f64, f64)> = py.detach(|| {
         (0..n)
             .into_par_iter()
-            .fold(
-                || (0usize, 0.0f64, 0.0f64, 0.0f64),
-                |(dead, lp, gsh, gpx4), i| {
-                    let cell_seed = seed.wrapping_add((i as u64) * 2);
-                    let mut cell_rng = StdRng::seed_from_u64(cell_seed);
-                    let cell = gen_cell(pheno, &mut cell_rng);
-                    let mut sim_rng = StdRng::seed_from_u64(cell_seed.wrapping_add(1));
-                    let (d, l, g, p) = rust_sim_cell(&cell, tx, &params, &mut sim_rng);
-                    (dead + d as usize, lp + l, gsh + g, gpx4 + p)
-                },
-            )
-            .reduce(
-                || (0, 0.0, 0.0, 0.0),
-                |(d1, l1, g1, p1), (d2, l2, g2, p2)| (d1 + d2, l1 + l2, g1 + g2, p1 + p2),
-            )
+            .map(|i| {
+                let cell_seed = seed.wrapping_add((i as u64) * 2);
+                let mut cell_rng = StdRng::seed_from_u64(cell_seed);
+                let cell = gen_cell(pheno, &mut cell_rng);
+                let mut sim_rng = StdRng::seed_from_u64(cell_seed.wrapping_add(1));
+                rust_sim_cell(&cell, tx, &params, &mut sim_rng)
+            })
+            .collect()
     });
+    let n_dead = outcomes.iter().filter(|(d, ..)| *d).count();
+    let sum_lp = outcomes.iter().map(|(_, l, _, _)| l).sum::<f64>();
+    let sum_gsh = outcomes.iter().map(|(_, _, g, _)| g).sum::<f64>();
+    let sum_gpx4 = outcomes.iter().map(|(_, _, _, p)| p).sum::<f64>();
 
     let nf = n as f64;
     let death_rate = n_dead as f64 / nf;
