@@ -479,8 +479,82 @@ def build_mechanism_matrix(entries: list[dict]) -> str:
     pairs.sort(key=lambda x: -x[2])
 
     lines.append("### Top 20 Mechanism-Cancer Pairs (by article count)\n")
+    lines.append(
+        "_Raw counts track the marginals: a large mechanism × a large cancer-type "
+        "co-occurs often by chance alone. For genuine concentration see the "
+        "enrichment table below, which divides out the expected count._\n"
+    )
     for m, c, count in pairs[:20]:
         lines.append(f"- **{m} × {c}**: {count} articles")
+
+    # --- Enrichment over a null model (hypergeometric over-representation + BH-FDR) ---
+    # Ranking cells by raw count just re-surfaces the marginals. To find genuine
+    # over-representation, test each cell against independence: treat the matrix
+    # population (articles carrying >=1 mechanism AND >=1 cancer) as N, mechanism-m
+    # membership as the "success" label, and cancer-c membership as the sample, then
+    # compute the hypergeometric survival P(X >= observed). Articles are multi-label,
+    # so a single chi-square over the whole table is invalid; the per-cell 2x2
+    # hypergeometric is well-defined. Control the false-discovery rate across all
+    # tested cells with Benjamini-Hochberg.
+    from scipy.stats import hypergeom
+
+    pop = [e for e in entries if e.get("mechanisms") and e.get("cancer_types")]
+    n_pop = len(pop)
+    n_m = {m: sum(1 for e in pop if m in e.get("mechanisms", [])) for m in mechanisms}
+    n_c = {c: sum(1 for e in pop if c in e.get("cancer_types", [])) for c in cancer_types}
+
+    enriched = []
+    if n_pop > 0:
+        for m in mechanisms:
+            for c in cancer_types:
+                a = matrix[m][c]
+                if a == 0 or n_m[m] == 0 or n_c[c] == 0:
+                    continue
+                expected = n_m[m] * n_c[c] / n_pop
+                pval = float(hypergeom.sf(a - 1, n_pop, n_m[m], n_c[c]))
+                enriched.append(
+                    {"m": m, "c": c, "obs": a, "exp": expected,
+                     "fold": a / expected if expected else float("inf"), "p": pval}
+                )
+        # Benjamini-Hochberg step-up across all tested cells.
+        enriched.sort(key=lambda x: x["p"])
+        k_tested = len(enriched)
+        for rank, e in enumerate(enriched, start=1):
+            e["q"] = min(1.0, e["p"] * k_tested / rank)
+        q_running = 1.0
+        for e in reversed(enriched):  # enforce monotone non-decreasing q (BH)
+            q_running = min(q_running, e["q"])
+            e["q"] = q_running
+
+    sig = sorted(
+        (e for e in enriched if e["q"] < 0.05 and e["fold"] > 1.0),
+        key=lambda x: -x["fold"],
+    )
+
+    lines.append(
+        "\n### Enriched Mechanism-Cancer Pairs (hypergeometric over-representation, BH-FDR < 0.05)\n"
+    )
+    lines.append(
+        f"Observed vs expected-under-independence co-occurrence over the {n_pop} "
+        "articles that carry both a mechanism and a cancer-type tag, ranked by "
+        "enrichment (fold = observed / expected) rather than raw count. P-values are "
+        f"per-cell hypergeometric survival P(X >= obs); q is Benjamini-Hochberg across "
+        f"all {len(enriched)} tested cells. This is descriptive over-representation in "
+        "the open-access keyword-tagged corpus, not a claim about underlying research "
+        "effort (see the open-access / retrieval caveats elsewhere in the analysis).\n"
+    )
+    lines.append("| Mechanism × Cancer | Observed | Expected | Fold | q (BH-FDR) |")
+    lines.append("|---|---|---|---|---|")
+    for e in sig[:20]:
+        lines.append(
+            f"| **{e['m']} × {e['c']}** | {e['obs']} | {e['exp']:.1f} | "
+            f"{e['fold']:.1f}× | {e['q']:.1e} |"
+        )
+    lines.append(
+        f"\n{len(sig)} of {len(enriched)} tested mechanism×cancer cells are enriched at "
+        "BH-FDR < 0.05. Cells observed *below* their independence expectation "
+        "(depletions) are computed by the same test but not listed here."
+    )
 
     # Broad-spectrum mechanisms
     lines.append("\n### Broad-Spectrum Mechanisms (spanning most cancer types)\n")
