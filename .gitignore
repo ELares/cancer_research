@@ -32,3 +32,6 @@ analysis/provenance.jsonl
 # The committed corpus/living/README.md documents the frozen-vs-living split.
 corpus/living/20*/
 analysis/living-review/
+
+# Local-only outputs (e.g. named collaborator seed list, #541) — never committed
+local/
