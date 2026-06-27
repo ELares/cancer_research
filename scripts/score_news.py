@@ -7,6 +7,7 @@ Usage:
 """
 
 import argparse
+import json
 import sys
 from datetime import date, datetime
 from pathlib import Path
@@ -50,6 +51,25 @@ def _months_since(date_str: str | None) -> float | None:
     return delta.days / 30.44  # average days per month
 
 
+_CORPUS_PMIDS: set[str] | None = None
+
+
+def _corpus_pmids() -> set[str]:
+    """Lazy-load the set of PMIDs in the local corpus (cached). Used by the
+    cross-citation term to reward news claims anchored to a paper we actually
+    hold (#532)."""
+    global _CORPUS_PMIDS
+    if _CORPUS_PMIDS is None:
+        _CORPUS_PMIDS = set()
+        if INDEX_FILE.exists():
+            for line in INDEX_FILE.read_text(encoding="utf-8").splitlines():
+                try:
+                    _CORPUS_PMIDS.add(str(json.loads(line)["pmid"]))
+                except (json.JSONDecodeError, KeyError):
+                    continue
+    return _CORPUS_PMIDS
+
+
 def compute_score(fm: dict) -> float:
     """Compute a 0-100 credibility score from article frontmatter.
 
@@ -57,7 +77,8 @@ def compute_score(fm: dict) -> float:
         40 % -- verified-claim ratio (among FACTUAL claims)
         30 % -- author credentialing
         20 % -- recency
-        10 % -- cross-citation (deferred; always 0.0 in v1)
+        10 % -- cross-citation: fraction of the article's linked claims that cite
+                a PMID present in our corpus (#532; was a hard-coded 0.0 stub)
 
     The final score is multiplied by a tier weight:
         tier 1 -> 1.0, tier 2 -> 0.8, tier 3 -> 0.6, other -> 0.3
@@ -100,8 +121,17 @@ def compute_score(fm: dict) -> float:
     else:
         recency = 0.2
 
-    # --- Cross-citation (deferred for v1) ---
-    cross_citation: float = 0.0
+    # --- Cross-citation: fraction of linked claims anchored to a corpus paper (#532) ---
+    linked_claims = [c for c in claims if c.get("linked_pmids")]
+    if linked_claims:
+        corpus = _corpus_pmids()
+        anchored = sum(
+            1 for c in linked_claims
+            if any(str(p) in corpus for p in c.get("linked_pmids", []))
+        )
+        cross_citation: float = anchored / len(linked_claims)
+    else:
+        cross_citation = 0.0  # no linked PMIDs -> no cross-citation signal
 
     score = tier_weight * (
         40 * verified_ratio

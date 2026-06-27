@@ -46,7 +46,7 @@ claims:
   - '40203774'
   - '39957237'
 review_status: pending
-credibility_score: 55.2
+credibility_score: 63.2
 ---
 
 95% of people carry this virus and scientists may have just found how to stop it

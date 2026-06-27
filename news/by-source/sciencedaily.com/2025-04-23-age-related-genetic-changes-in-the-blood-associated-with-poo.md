@@ -52,7 +52,7 @@ claims:
   - '40070819'
   - '40129986'
 review_status: pending
-credibility_score: 41.3
+credibility_score: 44.5
 ---
 
 Age-related genetic changes in the blood associated with poor cancer prognosis
