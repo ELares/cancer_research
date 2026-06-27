@@ -46,6 +46,10 @@ REPORT = REPO / "analysis" / "landmark-coverage-report.md"
 LANDMARKS = [
     dict(pmid="34161051", mechanism="radioligand-therapy", cancer="prostate",
          evidence="phase3-clinical", note="VISION: 177Lu-PSMA-617 for mCRPC (NEJM 2021)"),
+    dict(pmid="28076709", mechanism="radioligand-therapy", cancer="neuroendocrine",
+         evidence="phase3-clinical", note="NETTER-1: 177Lu-DOTATATE for midgut NET (NEJM 2017) "
+         "— the SSTR/neuroendocrine radioligand pivotal, complementing the PSMA/prostate "
+         "VISION landmark so the registry covers both deployed radioligand targets (#536)"),
     dict(pmid="40448572", mechanism="ttfields", cancer="pancreatic",
          evidence="phase3-clinical", note="PANOVA-3: TTFields + gem/nab-paclitaxel (JCO 2025)"),
     dict(pmid="33016924", mechanism="mRNA-vaccine", cancer="gastrointestinal",

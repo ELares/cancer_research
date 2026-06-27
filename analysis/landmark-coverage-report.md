@@ -11,7 +11,8 @@ ABSTRACT-ONLY and do NOT change the frozen full-text quantitative results.
 | mRNA-vaccine | 36027916 | abstract-only | NEO-PV-01 + chemo + anti-PD-1, NSCLC (Cancer Cell 2022) |
 | mRNA-vaccine | 35970920 | abstract-only | ChAd/samRNA individualized neoantigen vaccine (Nat Med 2022) |
 | radioligand-therapy | 34161051 | abstract-only | VISION: 177Lu-PSMA-617 for mCRPC (NEJM 2021) |
+| radioligand-therapy | 28076709 | abstract-only | NETTER-1: 177Lu-DOTATATE for midgut NET (NEJM 2017) — the SSTR/neuroendocrine radioligand pivotal, complementing the PSMA/prostate VISION landmark so the registry covers both deployed radioligand targets (#536) |
 | ttfields | 40448572 | abstract-only | PANOVA-3: TTFields + gem/nab-paclitaxel (JCO 2025) |
 
-**5 landmarks tracked; 0 still MISSING.**
+**6 landmarks tracked; 0 still MISSING.**
 Run `python3 scripts/landmark_coverage.py --recover-missing` to fetch absent ones.

@@ -74,7 +74,7 @@ targets:
   - id: invivo_mufa_protection_factor
     target_type: calibration
     description: "In-vivo MUFA provides substantial protection against RSL3 for persisters"
-    source_description: "Composite model target derived from two independent lines of evidence. Dixon/Park (unpublished 2025 Cancer Research submission) showed 40-60% PUFA displacement by MUFA in 3D/in-vivo contexts. Tesfay et al., Cancer Res 2019 (PMID 31270077) showed ~3-5x ferroptosis resensitization upon SCD1 inhibition. The 18.6x protection factor is a model-derived composite, not a single published measurement."
+    source_description: "Composite model target anchored on PUBLISHED evidence for the SCD1/MUFA ferroptosis-protection axis (the prior unpublished/no-PMID Dixon-Park reference and its unsourced 40-60% PUFA-displacement figure were removed, #537). Tesfay et al., Cancer Res 2019 (PMID 31270077) showed ~3-5x ferroptosis resensitization upon SCD1 inhibition; Sen et al., Cancer Res 2025 (PMID 40198901, 'SCD1 Inhibition Blocks the AKT-NRF2-SLC7A11 Pathway to Induce Lipid Metabolism Remodeling') independently supports SCD1-driven lipid remodeling sensitizing to ferroptosis. The 18.6x protection factor is a model-derived composite, NOT a single published measurement: the DIRECTION (MUFA enrichment protects persisters from RSL3) is anchored, the magnitude is not."
     binary: sim-invivo
     output_file: "invivo/invivo_comparison.json"
     extraction:
