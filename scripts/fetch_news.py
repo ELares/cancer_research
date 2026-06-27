@@ -445,6 +445,23 @@ def fetch_rss_entries(feed_url: str, limit: int | None = None) -> list[dict]:
 # CLI
 # ---------------------------------------------------------------------------
 
+_CANCER_RE = re.compile(
+    r"cancer|tumou?r|oncolog|carcinom|melanoma|leukem|lymphoma|metasta|"
+    r"chemotherap|ferroptos|glioma|glioblast|sarcoma|neoplas|malignan|"
+    r"adenocarcinoma|mesotheliom|myeloma|immunotherap|checkpoint inhibitor",
+    re.IGNORECASE,
+)
+
+
+def is_cancer_relevant(title: str, body: str) -> bool:
+    """True if the article is about cancer/oncology (#534). This is a CANCER-research
+    news index, but the source RSS feeds also carry general-health items (heart
+    disease, weight loss, a volcano); those should not be scored/indexed as if they
+    were on-topic. Conservative: a single cancer/oncology mention anywhere in the
+    title or body is enough to keep it."""
+    return bool(_CANCER_RE.search(f"{title}\n{body}"))
+
+
 def process_url(url: str, rss_date: str = "") -> Path | None:
     """End-to-end: fetch, extract, classify, store a single URL.
 
@@ -480,6 +497,13 @@ def process_url(url: str, rss_date: str = "") -> Path | None:
 
     # Strip common boilerplate from body text
     body_text = _strip_boilerplate(body_text)
+
+    # Cancer-relevance gate (#534): the source feeds also carry general-health items
+    # (heart disease, weight loss, a volcano); drop anything that never mentions
+    # cancer/oncology so it is not scored and indexed as if it were on-topic.
+    if not is_cancer_relevant(title, body_text):
+        print(f"  excluded (not cancer-relevant): {title[:60]}")
+        return None
 
     content_hash = compute_content_hash(body_text, url=url)
 

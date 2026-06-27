@@ -75,7 +75,7 @@ claims:
   verification_source: null
   linked_pmids: []
 review_status: pending
-credibility_score: 36.0
+credibility_score: 31.2
 ---
 
 AI-human task-sharing could cut mammography screening costs by up to 30%

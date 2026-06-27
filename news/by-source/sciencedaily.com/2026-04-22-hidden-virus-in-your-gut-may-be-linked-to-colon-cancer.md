@@ -25,7 +25,7 @@ claims:
   - '38375030'
   - '35472554'
 review_status: pending
-credibility_score: 55.2
+credibility_score: 63.2
 ---
 
 Hidden virus in your gut may be linked to colon cancer
