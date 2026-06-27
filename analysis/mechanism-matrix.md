@@ -10,6 +10,8 @@ Cross-tabulation of article counts by therapeutic mechanism and cancer type.
 | **car-t** | 3 | 32 | 2 | 14 | 1 | 11 | 33 | 6 | 6 | 44 | 17 | 26 | 53 | 17 | 2 | 25 | 13 | 15 | 21 | 6 | 7 | 1 | 355 |
 | **cold-atmospheric-plasma** | . | . | . | . | . | . | 1 | . | . | . | . | . | . | . | . | . | . | . | 1 | . | . | . | 2 |
 | **crispr** | 4 | 25 | 3 | 21 | 1 | 2 | 10 | 5 | 4 | 16 | 9 | 29 | 14 | 18 | . | 5 | 5 | 12 | 12 | 5 | 1 | . | 201 |
+| **cuproptosis** | . | . | . | . | . | . | . | . | . | . | . | . | . | . | . | . | . | . | . | . | . | . | 0 |
+| **disulfidptosis** | . | . | . | . | . | . | . | . | . | . | . | . | . | . | . | . | . | . | . | . | . | . | 0 |
 | **electrochemical-therapy** | 1 | 7 | 1 | 7 | . | . | 5 | 1 | 2 | . | 31 | 5 | 1 | 6 | . | . | . | . | 61 | 30 | 2 | . | 160 |
 | **electrolysis** | . | 1 | . | 1 | . | . | . | . | . | . | . | . | . | . | . | . | . | . | 1 | . | . | . | 3 |
 | **epigenetic** | 3 | 20 | 2 | 18 | 1 | . | 8 | 5 | 1 | 17 | 4 | 14 | 12 | 9 | 2 | 1 | 1 | 6 | 8 | 4 | 5 | . | 141 |
@@ -33,6 +35,8 @@ Cross-tabulation of article counts by therapeutic mechanism and cancer type.
 
 ### Top 20 Mechanism-Cancer Pairs (by article count)
 
+_Raw counts track the marginals: a large mechanism × a large cancer-type co-occurs often by chance alone. For genuine concentration see the enrichment table below, which divides out the expected count._
+
 - **immunotherapy × lung**: 250 articles
 - **immunotherapy × melanoma**: 207 articles
 - **ttfields × glioblastoma**: 204 articles
@@ -53,6 +57,35 @@ Cross-tabulation of article counts by therapeutic mechanism and cancer type.
 - **immunotherapy × kidney**: 53 articles
 - **oncolytic-virus × melanoma**: 51 articles
 - **antibody-drug-conjugate × lung**: 50 articles
+
+### Enriched Mechanism-Cancer Pairs (hypergeometric over-representation, BH-FDR < 0.05)
+
+Observed vs expected-under-independence co-occurrence over the 2715 articles that carry both a mechanism and a cancer-type tag, ranked by enrichment (fold = observed / expected) rather than raw count. P-values are per-cell hypergeometric survival P(X >= obs); q is Benjamini-Hochberg across all 350 tested cells. This is descriptive over-representation in the open-access keyword-tagged corpus, not a claim about underlying research effort (see the open-access / retrieval caveats elsewhere in the analysis).
+
+| Mechanism × Cancer | Observed | Expected | Fold | q (BH-FDR) |
+|---|---|---|---|---|
+| **hifu × prostate** | 29 | 3.4 | 8.6× | 4.6e-20 |
+| **radioligand-therapy × prostate** | 4 | 0.6 | 7.1× | 1.5e-02 |
+| **ttfields × mesothelioma** | 23 | 3.6 | 6.5× | 2.1e-13 |
+| **ttfields × glioblastoma** | 204 | 33.2 | 6.1× | 5.1e-158 |
+| **bispecific-antibody × myeloma** | 22 | 3.9 | 5.6× | 1.3e-10 |
+| **car-t × lymphoma** | 53 | 9.7 | 5.4× | 9.6e-27 |
+| **car-t × leukemia** | 44 | 8.3 | 5.3× | 2.1e-21 |
+| **car-t × neuroblastoma** | 13 | 2.5 | 5.1× | 4.9e-06 |
+| **car-t × myeloma** | 25 | 5.2 | 4.8× | 8.0e-11 |
+| **synthetic-lethality × ovarian** | 73 | 15.5 | 4.7× | 1.2e-32 |
+| **frequency-therapy × liver** | 18 | 4.4 | 4.1× | 1.6e-06 |
+| **electrochemical-therapy × pancreatic** | 61 | 14.9 | 4.1× | 2.4e-23 |
+| **epigenetic × leukemia** | 17 | 4.4 | 3.9× | 1.5e-05 |
+| **electrochemical-therapy × prostate** | 30 | 8.4 | 3.6× | 5.4e-09 |
+| **antibody-drug-conjugate × bladder** | 19 | 5.6 | 3.4× | 1.5e-05 |
+| **microbiome × colorectal** | 18 | 5.9 | 3.1× | 1.3e-04 |
+| **bispecific-antibody × lymphoma** | 22 | 7.4 | 3.0× | 3.1e-05 |
+| **bispecific-antibody × cervical** | 8 | 2.8 | 2.9× | 4.5e-02 |
+| **crispr × leukemia** | 16 | 5.7 | 2.8× | 1.5e-03 |
+| **microbiome × melanoma** | 16 | 6.0 | 2.7× | 2.1e-03 |
+
+44 of 350 tested mechanism×cancer cells are enriched at BH-FDR < 0.05. Cells observed *below* their independence expectation (depletions) are computed by the same test but not listed here.
 
 ### Broad-Spectrum Mechanisms (spanning most cancer types)
 
