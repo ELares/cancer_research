@@ -95,7 +95,7 @@ claims:
   - '38375030'
   - '33129040'
 review_status: pending
-credibility_score: 45.1
+credibility_score: 49.9
 ---
 
 Shocking brain cancer breakthrough: Electric fields supercharge immune assault

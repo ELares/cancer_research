@@ -37,10 +37,17 @@ Records sharing a near-identical title (a guard, not a remover — both records 
 
 ## Other same-title collisions (review individually)
 
+**Corrigendum: Establishment of tumor treating fields combined with mild hyperthermia as nov**
+
 | PMID | Journal | Year | OA status | Kind |
 |---|---|---|---|---|
 | 38487722 | Frontiers in oncology | 2024 | gold | published |
 | 35433483 | Frontiers in oncology | 2022 | gold | published |
+
+**Regarding: 'High-intensity-focused ultrasound in the treatment of primary prostate cancer:**
+
+| PMID | Journal | Year | OA status | Kind |
+|---|---|---|---|---|
 | 19997112 | British journal of cancer | 2009 | hybrid | published |
 | 19997110 | British journal of cancer | 2009 | hybrid | published |
 
