@@ -10,7 +10,7 @@ the full-text corpus EXCLUDES the non-OA literature, which is distributed
 DIFFERENTLY across mechanisms.
 
 This script quantifies that distortion using the disjoint ABSTRACT-ONLY archive
-(`corpus/abstracts/by-pmid/`, 5,585 records, ~29% OA, ZERO PMID overlap with the
+(`corpus/abstracts/by-pmid/`, 5,586 records, ~29% OA, ZERO PMID overlap with the
 full-text set), which carries the non-OA literature the full-text corpus misses.
 It reports, per mechanism: the full-text count (OA-biased), the abstract-only
 count, the combined count, the true combined OA rate, and the ranking SHIFT

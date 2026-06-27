@@ -36,7 +36,7 @@ Runtime: ~2-5 minutes (parallelized via rayon, 100K cells main + 50K cells per s
 
 In-vivo MUFA parameters are hardcoded via `Params::invivo()`:
 - `scd_mufa_rate = 0.01` -- SCD1 enzyme activity (MUFA synthesis rate per step)
-- `scd_mufa_max = 0.50` -- maximum MUFA membrane fraction (40-60% range per Dixon/Park 2025)
+- `scd_mufa_max = 0.50` -- maximum MUFA membrane fraction (an UNCALIBRATED model cap; the 40-60% range it was set from has no verifiable published source — the SCD1/MUFA *direction* is anchored on Tesfay 2019 PMID 31270077, the cap magnitude is not, #537)
 - `scd_mufa_decay = 0.005` -- natural phospholipid turnover (half-life ~24-48h)
 - `initial_mufa_protection = 0.40` -- steady-state MUFA level (cells start pre-accumulated: M_ss = rate*max / (rate + decay*max) = 0.40)
 

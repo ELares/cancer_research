@@ -79,7 +79,11 @@ def fetch_pubmed(pmid):
     art = ET.fromstring(xml).find(".//PubmedArticle")
     if art is None:
         raise RuntimeError(f"PMID {pmid} not found at efetch")
-    title = (art.findtext(".//ArticleTitle") or "").strip()
+    # itertext() (not findtext) so titles with inline markup (e.g. the
+    # <sup>177</sup>Lu in NETTER-1) are captured in full, not truncated at the
+    # first child element.
+    _title_el = art.find(".//ArticleTitle")
+    title = "".join(_title_el.itertext()).strip() if _title_el is not None else ""
     # itertext() (not .text) so structured abstracts with inline formula elements
     # (e.g. <sup>177</sup>Lu) are captured in full, not truncated at the first child.
     abstract = " ".join("".join(t.itertext()).strip()

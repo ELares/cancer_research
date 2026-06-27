@@ -35,6 +35,8 @@ Multi-tag papers contribute to every mechanism they are tagged with, so scores a
 | **targeted-protein-degradation** | 14.8 | 7 | 7/7 (100.0%) | 2.11 |
 | **electrolysis** | 11.0 | 5 | 5/11 (45.5%) | 2.20 |
 | **cold-atmospheric-plasma** | 2.7 | 1 | 1/1 (100.0%) | 2.75 |
+| **cuproptosis** | 0.0 | 0 | n/a | 0.00 |
+| **disulfidptosis** | 0.0 | 0 | n/a | 0.00 |
 
 ## Top Weighted Studies By Mechanism
 

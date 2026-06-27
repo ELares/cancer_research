@@ -47,10 +47,12 @@ pub struct Params {
     /// SCD1 (regulated by SREBP1/mTORC1, not NRF2) converts SFA→MUFA,
     /// displacing PUFAs from membranes and reducing ferroptosis susceptibility.
     /// Zero in 2D culture (default); non-zero in in-vivo contexts.
-    /// (Dixon/Park, Cancer Res 2025; Tesfay et al., Cancer Res 2019)
+    /// Direction anchored on Tesfay et al., Cancer Res 2019 (PMID 31270077);
+    /// rate magnitude uncalibrated.
     pub scd_mufa_rate: f64,
     /// Maximum fraction of PUFA vulnerability suppressed by MUFA enrichment.
-    /// Literature range: 0.40–0.60 (40–60% PUFA displacement in 3D/in vivo).
+    /// UNCALIBRATED cap: the 0.40–0.60 range it was set from has no verifiable
+    /// published source (#537); the direction is anchored, the magnitude is not.
     pub scd_mufa_max: f64,
     /// Starting MUFA protection level. In established 3D/in-vivo tumors,
     /// SCD1-driven remodeling has already reached steady state, so cells
@@ -405,9 +407,10 @@ impl Params {
     /// maintains protection while `scd_mufa_decay` models natural phospholipid
     /// turnover. When SCD1 is inhibited (rate=0), existing MUFA decays.
     ///
-    /// `scd_mufa_max: 0.50` caps PUFA displacement, consistent with
-    /// Dixon/Park 2025 lipidomics (40–60% range) and Tesfay 2019 showing
-    /// ~3–5× ferroptosis resensitization upon SCD1 inhibition.
+    /// `scd_mufa_max: 0.50` caps PUFA displacement. Tesfay 2019 (PMID 31270077)
+    /// anchors the DIRECTION (~3–5× ferroptosis resensitization upon SCD1
+    /// inhibition); the 0.50 cap magnitude is uncalibrated and has no verifiable
+    /// source (the prior unpublished/no-PMID 40–60% figure was removed, #537).
     pub fn invivo() -> Self {
         // Steady state with decay: rate*(1-M/max) = decay*M
         // → M_ss = rate*max / (rate + decay*max) = 0.01*0.5 / (0.01 + 0.005*0.5) = 0.40

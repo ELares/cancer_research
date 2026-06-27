@@ -14,6 +14,8 @@ Evidence tags are currently populated for 2038/4830 full-text records (42.2%). R
 | **car-t** | Phase II | 0 | 1 | 10 | 5 | 92 | 27 | 1 | 474 |
 | **cold-atmospheric-plasma** | Preclinical (in vivo) | 0 | 0 | 0 | 0 | 1 | 0 | 0 | 3 |
 | **crispr** | Phase I | 0 | 0 | 2 | 0 | 108 | 34 | 0 | 331 |
+| **cuproptosis** | Not classified | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| **disulfidptosis** | Not classified | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
 | **electrochemical-therapy** | Phase III RCT | 3 | 2 | 0 | 30 | 39 | 15 | 1 | 185 |
 | **electrolysis** | Clinical (non-phase) | 0 | 0 | 0 | 1 | 3 | 1 | 0 | 11 |
 | **epigenetic** | Phase III RCT | 1 | 10 | 3 | 3 | 38 | 29 | 1 | 183 |

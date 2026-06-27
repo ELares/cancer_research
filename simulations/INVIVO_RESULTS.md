@@ -2,7 +2,7 @@
 
 ## What this simulation tests
 
-Dixon/Park (Cancer Research, 2025) showed that GPX4 inhibition kills cancer cells in 2D culture but fails in vivo because SCD1-driven MUFA enrichment displaces PUFAs from membranes, reducing ferroptosis susceptibility. This simulation tests whether that finding changes the conclusions about physical ROS modalities (modeled here as a shared exogenous ROS burst — SDT and PDT use identical parameters in this binary).
+SCD1-driven MUFA enrichment displaces PUFAs from membranes, reducing ferroptosis susceptibility in vivo (Tesfay et al., Cancer Res 2019, PMID 31270077; Magtanong et al., Cell Chem Biol 2019, PMID 30686757) — so GPX4 inhibition can kill in 2D culture yet be blunted in vivo. (An earlier draft attributed this to a "Dixon/Park 2025" source that has no verifiable PMID; that citation was removed, #537. The magnitude of the modeled protection, 18.6x, exceeds the ~3-5x published resensitization and is an uncalibrated model output.) This simulation tests whether that effect changes the conclusions about physical ROS modalities (modeled here as a shared exogenous ROS burst — SDT and PDT use identical parameters in this binary).
 
 ## Model
 

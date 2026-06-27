@@ -156,8 +156,8 @@ impl CellState {
 /// SCD1 (the enzyme converting SFA→MUFA) is regulated by SREBP1/mTORC1,
 /// NOT by NRF2. In 3D culture and in vivo, SCD1 is constitutively active
 /// and enriches membranes with MUFAs that displace PUFAs, reducing
-/// ferroptosis susceptibility (Dixon/Park, Cancer Research 2025;
-/// Magtanong et al., Cell Chem Biol 2019; Tesfay et al., Cancer Res 2019).
+/// ferroptosis susceptibility (Magtanong et al., Cell Chem Biol 2019,
+/// PMID 30686757; Tesfay et al., Cancer Res 2019, PMID 31270077).
 ///
 /// The rate is context-dependent: zero in 2D culture (Params::default),
 /// non-zero in in-vivo-like conditions (Params::invivo).

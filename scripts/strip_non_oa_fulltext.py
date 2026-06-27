@@ -43,7 +43,12 @@ AUDIT_CSV = REPO_ROOT / "analysis" / "non-oa-fulltext-audit.csv"
 AUDIT_MD = REPO_ROOT / "analysis" / "non-oa-fulltext-audit.md"
 OA_URL = "https://www.ncbi.nlm.nih.gov/pmc/utils/oa/oa.fcgi?id="
 
-FULLTEXT_HEADING = re.compile(r"\n##\s+Full[ -]?Text\b.*", re.IGNORECASE | re.DOTALL)
+# Non-greedy + stop at the next "## " heading (or EOF) so only the Full Text
+# section is removed, never a trailing section (e.g. a `## Source` footer) — the
+# NOTICE promises the rest of the record is retained.
+FULLTEXT_HEADING = re.compile(
+    r"\n##\s+Full[ -]?Text\b.*?(?=\n##\s|\Z)", re.IGNORECASE | re.DOTALL
+)
 NOTICE = (
     "\n## Full Text\n\n"
     "> **Full text removed (#526, redistribution audit).** This article is not in "

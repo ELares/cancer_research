@@ -86,7 +86,7 @@ targets:
     target_value: 18.6
     tolerance: 5.0
     confidence: "low"
-    note: "Model-derived composite from two papers, not a single published measurement. Tesfay 2019 (PMID 31270077) provides the SCD1 resensitization direction; Dixon/Park 2025 provides the PUFA displacement range. The exact 18.6x factor emerges from the model's steady-state MUFA calculation."
+    note: "Model-derived, NOT a published measurement. Tesfay 2019 (PMID 31270077) provides the SCD1-resensitization DIRECTION (~3-5x published); the 0.50 MUFA cap and the resulting 18.6x are uncalibrated model parameters whose magnitude EXCEEDS the published resensitization and has no verifiable source (the prior unpublished/no-PMID Dixon-Park 40-60% PUFA-displacement figure was removed, #537). Only the direction is anchored."
     parameters_affected:
       - scd_mufa_rate
       - scd_mufa_max

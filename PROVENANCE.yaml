@@ -109,7 +109,7 @@ corpus:
       in_oa_subset_kept: 27
       not_in_subset_stripped: 34
   abstract_archive:
-    count: 5585
+    count: 5586
     note: >
       Abstract-only records in corpus/abstracts/by-pmid/. Bibliographic
       metadata and abstracts are generally not copyrightable under US law

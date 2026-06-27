@@ -40,7 +40,7 @@ def test_fulltext_is_overwhelmingly_oa():
 
 def test_abstract_archive_is_mostly_non_oa():
     ab = _AB
-    assert len(ab) > 5000, "abstract-only archive should be the ~5,585-record set"
+    assert len(ab) > 5000, "abstract-only archive should be the ~5,586-record set"
     oa_rate = sum(1 for r in ab if r["is_oa"]) / len(ab)
     # The whole point: the abstract archive carries the non-OA literature.
     assert oa_rate < 0.5, f"abstract archive should be mostly non-OA; got {oa_rate:.3f}"

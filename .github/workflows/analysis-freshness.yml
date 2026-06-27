@@ -1,0 +1,59 @@
+name: Analysis Freshness
+
+# Guards the committed analysis/ outputs against silent drift from their inputs
+# (#525/#540 second-pass review): two PRs changed inputs to analyze_corpus.py
+# (an INDEX year-backfill, the mechanism-matrix FDR addition) but re-committed
+# only one of the ~15 derived artifacts, so the committed set went internally
+# inconsistent and nothing caught it. This regenerates the derived artifacts and
+# fails if any committed one is stale — the analysis analogue of the ferroptosis.h
+# and MANIFEST drift gates.
+#
+# provenance.jsonl is gitignored (a timestamped append log), so `git diff` ignores
+# it; the tracked analysis artifacts are deterministic.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'corpus/INDEX.jsonl'
+      - 'scripts/analyze_corpus.py'
+      - 'scripts/oa_bias_analysis.py'
+      - 'scripts/config.py'
+      - '.github/workflows/analysis-freshness.yml'
+  pull_request:
+    paths:
+      - 'corpus/INDEX.jsonl'
+      - 'scripts/analyze_corpus.py'
+      - 'scripts/oa_bias_analysis.py'
+      - 'scripts/config.py'
+      - '.github/workflows/analysis-freshness.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  analysis-freshness:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          lfs: false
+          fetch-depth: 1
+
+      - name: Install Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install -r requirements-lock.txt
+
+      - name: Regenerate derived analysis artifacts and verify they are current
+        run: |
+          python3 scripts/analyze_corpus.py
+          python3 scripts/oa_bias_analysis.py
+          if ! git diff --exit-code -- analysis/; then
+            echo "::error::Committed analysis/ outputs are stale. Run: python3 scripts/analyze_corpus.py && python3 scripts/oa_bias_analysis.py && git add analysis/"
+            exit 1
+          fi
