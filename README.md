@@ -108,6 +108,15 @@ a live `ferroptosis_core.sim_batch` sweep when the bindings above are built, and
 otherwise degrades to the committed prior-predictive intervals. Self-hosting: behind
 auth, `streamlit run scripts/dashboard.py --server.address 0.0.0.0 --server.port 8501`.
 
+**Live demo:** because the Corpus tab runs on the committed `corpus/INDEX.jsonl`
+alone (no Rust build, no extra data), the dashboard can be deployed for free on
+Streamlit Community Cloud by pointing it at `scripts/dashboard.py`. _(Hosted-demo
+URL: TODO — paste the public link here once deployed.)_
+
+**New here / not a specialist?** Start with the one-page plain-language explainer:
+[`docs/EXPLAINER.md`](docs/EXPLAINER.md) — what ferroptosis is, what the three
+headline results mean, and the "directional, not clinical" caveat, in everyday terms.
+
 ## Philosophy
 
 **The work is more important than the paper.** We don't optimize for journal word limits or publication formats. If a finding needs context, we give context. If a decision needs explaining, we explain it. Every result in this repo includes the reasoning chain that produced it — what we assumed, what we measured, what we're uncertain about, and why we believe the finding signals value despite those uncertainties.
