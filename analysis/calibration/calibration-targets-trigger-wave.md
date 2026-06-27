@@ -48,9 +48,12 @@ The `trigger_wave` module (a 1-D bistable Nagumo reaction-diffusion front,
 - **baseline speed** lands at the measured 5.52 um/min (a one-point calibration
   of the diffusion-rate product `D*k`);
 - the **iron-dose response shape** `c ~ sqrt(iron)` reproduces the measured
-  2.33 / 5.52 / 9.40 um/min at iron fold-changes ~0.18 / 1.0 / 2.9 (biologically
-  plausible: DFO strips most labile iron, FAC loading multiplies it a few-fold),
-  the predicted (not fit) result;
+  2.33 / 5.52 / 9.40 um/min at iron fold-changes ~0.18 / 1.0 / 2.9 — but those
+  folds are BACK-SOLVED from the speeds (iron = (speed/baseline)²), so the model
+  reproduces them BY CONSTRUCTION (a back-solve consistency check, NOT an
+  independent test of the shape; `iron_dose_shape_independently_validated=false`,
+  #528). The only non-circular claim is that the inferred folds are biologically
+  plausible (DFO strips most labile iron, FAC loading multiplies it a few-fold);
 - the numerical solve agrees with the closed form (cross-language self-check);
 - GPX4 defense slows/halts the front (direction-only, no matched dataset here).
 
@@ -62,8 +65,10 @@ Python constants against the Rust `trigger_wave.rs` `baseline()`.
 
 - `D` is absorbed into the one-point `D*k` fit; a first-principles calibration
   would fix `D` from a measured lipid-radical diffusion coefficient (not done).
-- The robust contributions are the spatial-front CAPABILITY and the iron-dose
-  SHAPE agreement, not the absolute diffusion coefficient.
+- The robust contribution is the spatial-front CAPABILITY plus the baseline
+  one-point `D*k` calibration; the iron-dose SHAPE "agreement" is a back-solve
+  consistency check (the folds are inferred from the speeds), not independent
+  validation of the shape.
 - The figshare microscopy frames are not re-analysed here; we use the paper's
   published summary speeds as the target (consistent with the other calibration
   legs that anchor to published summary statistics).

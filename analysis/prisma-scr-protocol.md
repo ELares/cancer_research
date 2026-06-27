@@ -67,7 +67,7 @@ research absence?
 | --- | --- |
 | **Include** | Record returned by one of the 19 mechanism-specific PubMed queries AND addressing at least one of the 19 mechanisms in a cancer-treatment or cancer-biology context. |
 | **Full-text subset** | Of included records, those with locally resolvable OA full text form the 4,830-record quantitative corpus. |
-| **Abstract-only archive** | Included records without resolvable full text (5,585) are retained separately and used only for the open-access sensitivity check, never for full-text-derived statistics. |
+| **Abstract-only archive** | Included records without resolvable full text (5,586) are retained separately and used only for the open-access sensitivity check, never for full-text-derived statistics. |
 | **Exclude** | No additional manual inclusion/exclusion beyond the query constraints. Records not returned by the queries are out of scope by construction. |
 | **Languages** | English-biased (PubMed query + OA-resolution), a documented limitation. |
 | **Publication types** | Original research, trial reports, reviews, systematic reviews, narrative reviews, and some case series are all retained; review-like articles are left unclassified for evidence tier rather than forced into one. |
@@ -136,7 +136,7 @@ Identification
         |
 Full-text resolution
   OA full text locally resolvable ......................... 4,830 (46.4%)
-  Abstract-only (retained in separate archive) ............ 5,585 (53.6%)
+  Abstract-only (retained in separate archive) ............ 5,586 (53.6%)
         |
 Charting (full-text subset)
   Evidence-tier tagged .................................... 2,038 (42.2% of 4,830)

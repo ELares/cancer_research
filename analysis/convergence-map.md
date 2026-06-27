@@ -85,6 +85,8 @@ Pairs with zero or very few articles — potential research opportunities.
 
 - antibody-drug-conjugate + bioelectric: **ZERO** articles
 - antibody-drug-conjugate + cold-atmospheric-plasma: **ZERO** articles
+- antibody-drug-conjugate + cuproptosis: **ZERO** articles
+- antibody-drug-conjugate + disulfidptosis: **ZERO** articles
 - antibody-drug-conjugate + electrochemical-therapy: **ZERO** articles
 - antibody-drug-conjugate + electrolysis: **ZERO** articles
 - antibody-drug-conjugate + frequency-therapy: **ZERO** articles
@@ -96,6 +98,8 @@ Pairs with zero or very few articles — potential research opportunities.
 - antibody-drug-conjugate + ttfields: **ZERO** articles
 - bioelectric + bispecific-antibody: **ZERO** articles
 - bioelectric + cold-atmospheric-plasma: **ZERO** articles
+- bioelectric + cuproptosis: **ZERO** articles
+- bioelectric + disulfidptosis: **ZERO** articles
 - bioelectric + frequency-therapy: **ZERO** articles
 - bioelectric + hifu: **ZERO** articles
 - bioelectric + mRNA-vaccine: **ZERO** articles
@@ -103,13 +107,9 @@ Pairs with zero or very few articles — potential research opportunities.
 - bioelectric + phagocytosis-checkpoint: **ZERO** articles
 - bioelectric + radioligand-therapy: **ZERO** articles
 - bispecific-antibody + cold-atmospheric-plasma: **ZERO** articles
+- bispecific-antibody + cuproptosis: **ZERO** articles
+- bispecific-antibody + disulfidptosis: **ZERO** articles
 - bispecific-antibody + electrochemical-therapy: **ZERO** articles
 - bispecific-antibody + electrolysis: **ZERO** articles
 - bispecific-antibody + frequency-therapy: **ZERO** articles
 - bispecific-antibody + hifu: **ZERO** articles
-- bispecific-antibody + metabolic-targeting: **ZERO** articles
-- bispecific-antibody + microbiome: **ZERO** articles
-- bispecific-antibody + sonodynamic: **ZERO** articles
-- bispecific-antibody + synthetic-lethality: **ZERO** articles
-- bispecific-antibody + targeted-protein-degradation: **ZERO** articles
-- bispecific-antibody + ttfields: **ZERO** articles

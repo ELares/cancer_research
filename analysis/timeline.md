@@ -218,9 +218,9 @@ Major milestones chronologically, based on highest-impact articles per year per 
 - 2018:    98 articles █
 - 2019:   106 articles ██
 - 2020:   257 articles █████
-- 2021:   380 articles ███████
+- 2021:   381 articles ███████
 - 2022:   591 articles ███████████
-- 2023:   784 articles ███████████████
+- 2023:   785 articles ███████████████
 - 2024:   906 articles ██████████████████
 - 2025:  1167 articles ███████████████████████
 - 2026:   204 articles ████

@@ -14,8 +14,8 @@ Every simulation parameter, its default value, source, and whether it is experim
 | `lp_propagation` | 0.10 | Porter et al., Chem Rev 2005 (lipid cascade kinetics) | Estimated | **Critical** — autocatalytic bistable switch gate |
 | `gpx4_rate` | 0.30 | Ursini et al., Free Radic Biol Med 1995 | Estimated | Moderate — GPX4 repair efficiency |
 | `fsp1_rate` | 0.08 | Bersuker et al., Nature 2019; Mao et al., Nature 2021 | Estimated | **Critical** — FSP1/DHODH CoQ10 pathway; persister phenotype has 0.15 mean |
-| `scd_mufa_rate` | 0.0 (2D) / 0.01 (in vivo) | Dixon/Park, Cancer Res 2025; Tesfay et al., Cancer Res 2019 | Grounded | **Critical** — in-vivo MUFA accumulation; steady-state derived |
-| `scd_mufa_max` | 0.0 (2D) / 0.50 (in vivo) | Dixon/Park 2025 lipidomics (40-60% range) | Grounded | **Critical** — maximum PUFA displacement fraction |
+| `scd_mufa_rate` | 0.0 (2D) / 0.01 (in vivo) | Tesfay et al., Cancer Res 2019 (PMID 31270077) — DIRECTION only | Direction-anchored; rate uncalibrated | **Critical** — in-vivo MUFA accumulation; steady-state derived |
+| `scd_mufa_max` | 0.0 (2D) / 0.50 (in vivo) | none — the 0.50 cap / 40-60% range has no verifiable source (#537) | Uncalibrated (illustrative) | **Critical** — maximum PUFA displacement fraction |
 | `initial_mufa_protection` | 0.0 (2D) / 0.40 (in vivo) | Derived: M_ss = rate×max/(rate+decay×max) | Derived | **Critical** — pre-accumulated MUFA in established tumors |
 | `scd_mufa_decay` | 0.0 (2D) / 0.005 (in vivo) | Membrane lipid half-life ~24-48h | Estimated | Moderate — natural phospholipid turnover |
 | `gpx4_degradation_by_ros` | 0.002 | Mechanistic assumption | Assumed | Low — GPX4 protein degradation under oxidative stress |
