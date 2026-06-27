@@ -86,6 +86,12 @@ When adding a Python dependency:
 
 ## Where to Start
 
+**New here?** Read the one-page [plain-language explainer](docs/EXPLAINER.md) first,
+then pick up a [**good first issue**](https://github.com/ELares/cancer_research/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)
+— these are small, self-contained tasks (deploy the dashboard demo, add a unit test,
+extend the landmark registry, review a flagged duplicate) that don't need deep domain
+expertise. The categories below are the broader on-ramps:
+
 - **Corpus contributions**: Submit a PR adding a missing landmark paper (see `analysis/landmark-corpus-gaps.md` for known gaps)
 - **Simulation extensions**: See Chapter 8.4 in the manuscript for structural limitations that could become new simulation features
 - **Manuscript corrections**: If you find a factual error, unclear wording, or missing caveat, open an issue or submit a PR
