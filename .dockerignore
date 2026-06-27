@@ -1,0 +1,10 @@
+# Keep the build context small + reproducible.
+# .git IS kept: scripts/generate_release_manifest.py needs `git ls-files`.
+books/                       # 1.6 GB LFS reference PDFs, not needed to reproduce
+simulations/target/          # Rust build artifacts (rebuilt in the image)
+local/                       # local-only outputs (e.g. collaborator seed list)
+**/__pycache__/
+*.pyc
+.venv/
+venv/
+release.tar.gz
