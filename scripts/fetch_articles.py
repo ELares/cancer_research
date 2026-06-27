@@ -154,6 +154,14 @@ def parse_pubmed_xml(elem) -> dict | None:
                 m = _text(pub_date.find("Month"))
                 if y:
                     year = int(y)
+                else:
+                    # Fallback: PubDate may carry a MedlineDate range (e.g.
+                    # "2023 Mar-Apr 01" or "2021-2022") instead of a <Year>
+                    # element, which previously left year=None (#540).
+                    md = _text(pub_date.find("MedlineDate")) or ""
+                    ym = re.search(r"\b(\d{4})\b", md)
+                    if ym:
+                        year = int(ym.group(1))
                 if m:
                     month = _month_to_int(m)
 
