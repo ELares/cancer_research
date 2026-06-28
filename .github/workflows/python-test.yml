@@ -8,6 +8,13 @@ on:
       - 'tests/**'
       - 'corpus/INDEX.jsonl'
       - 'analysis/**'
+      # Python calibration tests (tests/test_calibrate*.py) import + exercise
+      # scripts under simulations/calibration/ (calibrate.py, cross_validate_odes.py)
+      # and read its data (targets.yaml). #564 tightens cargo-test so it no longer
+      # fires on those Python/data edits — trigger python-test on them instead so
+      # the calibration suite still gets a per-PR signal (closes the coverage gap
+      # the #564 issue assumed python-test already covered):
+      - 'simulations/calibration/**'
       - 'requirements*.txt'
       - '.github/workflows/python-test.yml'
   pull_request:
@@ -16,6 +23,13 @@ on:
       - 'tests/**'
       - 'corpus/INDEX.jsonl'
       - 'analysis/**'
+      # Python calibration tests (tests/test_calibrate*.py) import + exercise
+      # scripts under simulations/calibration/ (calibrate.py, cross_validate_odes.py)
+      # and read its data (targets.yaml). #564 tightens cargo-test so it no longer
+      # fires on those Python/data edits — trigger python-test on them instead so
+      # the calibration suite still gets a per-PR signal (closes the coverage gap
+      # the #564 issue assumed python-test already covered):
+      - 'simulations/calibration/**'
       - 'requirements*.txt'
       - '.github/workflows/python-test.yml'
   schedule:
