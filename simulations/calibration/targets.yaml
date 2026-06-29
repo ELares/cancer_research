@@ -15,10 +15,10 @@
 
 targets:
   - id: persister_rsl3_death_rate
-    target_type: calibration
+    target_type: self-consistency
     description: "Persister (FSP1-low) cell death rate under RSL3 in 2D culture"
     source_pmid: "41481741"
-    source_description: "Higuchi et al., Science Advances 2026 — FSP1 and HDACs suppress persister ferroptosis"
+    source_description: "Higuchi et al., Science Advances 2026 — FSP1 and HDACs suppress persister ferroptosis. DIRECTION-anchored only: Higuchi supports that FSP1/HDAC suppression makes persisters RSL3-tolerant, but does NOT report a 42.5% death-rate figure. The 0.425 target equals the model's own Figure-7 output (residual ~0.0002), so this is a SELF-CONSISTENCY check (the binary reproduces its configured persister behaviour), not an independent calibration."
     binary: sim-original
     output_file: "simulation_results.json"
     extraction:
@@ -29,7 +29,7 @@ targets:
     target_value: 0.425
     tolerance: 0.10
     confidence: "medium"
-    note: "Dose-response data extrapolated from IC50 curves; exact match depends on assumed RSL3 concentration"
+    note: "RELABELED self-consistency (audit #588 follow-up): the 0.425 value is the model's own persister-RSL3 output, not a published measurement (Higuchi anchors only the direction). The earlier 'extrapolated from IC50 curves' framing overstated the data link."
     parameters_affected:
       - fsp1_rate
       - rsl3_gpx4_inhib
@@ -54,9 +54,9 @@ targets:
       - pdt_mu_eff
 
   - id: rsl3_window_closure_72h
-    target_type: calibration
+    target_type: self-consistency
     description: "RSL3 death rate drops below 10% by 72 hours post-treatment"
-    source_description: "GPX4 transcriptional recovery kinetics — consensus from multiple ferroptosis studies"
+    source_description: "GPX4 transcriptional recovery kinetics — consensus DIRECTION from multiple ferroptosis studies, with NO PMID and NO single time-course measurement. The <10% threshold verifies the model's own `gpx4_half_recovery_days` (marked Estimated in parameter_provenance.md), so this is a self-consistency check, not an independent calibration."
     binary: sim-window
     output_file: "window/vulnerability_window.csv"
     extraction:
@@ -72,7 +72,7 @@ targets:
       - gpx4_half_recovery_days
 
   - id: invivo_mufa_protection_factor
-    target_type: calibration
+    target_type: self-consistency
     description: "In-vivo MUFA provides substantial protection against RSL3 for persisters"
     source_description: "Composite model target anchored on PUBLISHED evidence for the SCD1/MUFA ferroptosis-protection axis (the prior unpublished/no-PMID Dixon-Park reference and its unsourced 40-60% PUFA-displacement figure were removed, #537). Tesfay et al., Cancer Res 2019 (PMID 31270077) showed ~3-5x ferroptosis resensitization upon SCD1 inhibition; Sen et al., Cancer Res 2025 (PMID 40198901, 'SCD1 Inhibition Blocks the AKT-NRF2-SLC7A11 Pathway to Induce Lipid Metabolism Remodeling') independently supports SCD1-driven lipid remodeling sensitizing to ferroptosis. The 18.6x protection factor is a model-derived composite, NOT a single published measurement: the DIRECTION (MUFA enrichment protects persisters from RSL3) is anchored, the magnitude is not."
     binary: sim-invivo
