@@ -108,10 +108,15 @@ a live `ferroptosis_core.sim_batch` sweep when the bindings above are built, and
 otherwise degrades to the committed prior-predictive intervals. Self-hosting: behind
 auth, `streamlit run scripts/dashboard.py --server.address 0.0.0.0 --server.port 8501`.
 
-**Live demo:** because the Corpus tab runs on the committed `corpus/INDEX.jsonl`
-alone (no Rust build, no extra data), the dashboard can be deployed for free on
-Streamlit Community Cloud by pointing it at `scripts/dashboard.py`. _(Hosted-demo
-URL: TODO — paste the public link here once deployed.)_
+**Live demo: https://elares.github.io/cancer_research/** — the Corpus tab runs
+entirely in your browser via [stlite](https://github.com/whitphx/stlite) (Streamlit
+compiled to WebAssembly/Pyodide): it executes `scripts/dashboard.py` on the committed
+`corpus/INDEX.jsonl` client-side, with **no server and no install** (first load ~20-40 s
+while Pyodide + pandas download, then cached). The Simulation-sweep tab shows its
+committed read-only fallback in-browser (the compiled `ferroptosis_core` extension is
+not available under Pyodide). The page is `docs/index.html`, served by GitHub Pages;
+alternatively the app deploys 1-click on Streamlit Community Cloud by pointing it at
+`scripts/dashboard.py`.
 
 **New here / not a specialist?** Start with the one-page plain-language explainer:
 [`docs/EXPLAINER.md`](docs/EXPLAINER.md) — what ferroptosis is, what the three
