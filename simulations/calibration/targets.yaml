@@ -167,7 +167,7 @@ targets:
   - id: 3d_stromal_boundary_shielding
     target_type: self-consistency
     description: "At λ=120 immune-on RSL3: stromal-on boundary kill rate should be ≤ 70% of no-stromal boundary kill rate (Q3 finding — CAF shielding ≥ 30%)"
-    source_description: "Q3 from 3d_validation_report.md. CAF-mediated GSH/MUFA boost at the boundary reduces RSL3 efficacy at the spheroid edge. Sim-tme-3d's current run produces ratio ≈ 0.485 (51.5% shielding), nearly identical to 2D's 50.0% — surprising-but-consistent finding that per-cell shielding is geometry-independent. Upgrade to `calibration` against published CAF-coculture spheroid data (PMID 34373744 cited in stromal.rs)."
+    source_description: "Q3 from 3d_validation_report.md. CAF-mediated GSH/MUFA boost at the boundary reduces RSL3 efficacy at the spheroid edge. Sim-tme-3d's current run produces ratio ≈ 0.471 (52.9% shielding; #578-reseed value), nearly identical to 2D's 50.0% — surprising-but-consistent finding that per-cell shielding is geometry-independent. Upgrade to `calibration` against published CAF-coculture spheroid data (PMID 34373744 cited in stromal.rs)."
     binary: sim-tme-3d
     output_file: "tme-3d/summary.json"
     extraction:
@@ -176,7 +176,7 @@ targets:
     target_value: 0.7
     tolerance: 0.3
     confidence: "medium"
-    note: "Self-consistency. Threshold 0.7 (i.e., ≥30% shielding) is well above observed ~0.485 (51.5% shielding). Catches regressions where stromal protection silently no-ops (gsh_boost or mufa_boost ineffective)."
+    note: "Self-consistency. Threshold 0.7 (i.e., ≥30% shielding) is well above observed ~0.471 (52.9% shielding; #578-reseed value, was ~0.485/51.5%). Catches regressions where stromal protection silently no-ops (gsh_boost or mufa_boost ineffective)."
     parameters_affected:
       - gsh_boost_per_step
       - gsh_boost_cap

@@ -691,8 +691,8 @@ impl SpatialImmuneConfig {
 /// All ESTIMATED. Refs: PMID 34373744 (CAF metabolic reprogramming),
 /// PMID 31813804 (ACSL3-mediated oleic acid), PMID 30842648 (MUFA
 /// ferroptosis). Geometry-independent — no 2D/3D split (per-cell
-/// shielding measured equal at 50.0% (2D) and 51.5% (3D) in the
-/// PR #221 validation report).
+/// shielding measured ~equal at 50.0% (2D) and 52.9% (3D, #578-reseed
+/// value; was 51.5%) in the validation report).
 #[derive(Clone, Copy, Debug)]
 pub struct StromalConfig {
     /// Per-step GSH boost for stromal-adjacent tumor cells.

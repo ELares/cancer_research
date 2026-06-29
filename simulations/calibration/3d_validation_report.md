@@ -5,17 +5,18 @@ infrastructure (sim-tme-3d, landed in PR #219) is validated, what it
 currently predicts, and where the gap to **independent experimental
 validation** sits.
 
-> **#578 re-baseline note.** The Q1–Q4 numbers below were generated before the
-> #578 per-cell RNG seed change (additive stride → SplitMix64 hash mix). That
-> change reshuffles every per-cell stochastic draw, so these 3D self-consistency
-> values move at the per-cell RNG-noise level. Re-checked against the
-> #578-re-baselined `summary.json`: **Q1 (within-zone collapse 0.016) and Q2
-> (SDT/RSL3 immune ratio 4.0) are unchanged at the stated precision**
-> (0.00033/0.02020 = 0.0163; 111/28 = 3.96); Q3/Q4 may differ only in the last
-> digit. Every self-consistency threshold (0.5, 3.0, 0.7) keeps its margin and
-> every verdict is unchanged — consistent with the dim-60 matrix being far below
-> the old aliasing regime, so #578 is a pure RNG reshuffle, not a behavioral
-> change.
+> **#578 re-baseline note (numbers refreshed in #583).** The Q1–Q4 values below
+> were regenerated from the #578-re-baselined run (per-cell seed: additive stride
+> → SplitMix64 hash mix), which reshuffles every per-cell stochastic draw at the
+> RNG-noise level. The shift is small and changes no verdict and no
+> self-consistency threshold: Q1 within-zone collapse 0.016 and Q2 SDT/RSL3 ratio
+> 4.0 are unchanged at stated precision; Q1 overall moved 0.222→0.220, Q3 boundary
+> shielding 51.5%→52.9%, Q4 pH reduction 46.1%→46.4% (all comfortably inside the
+> thresholds' margin). Consistent with the dim-60 matrix being far below the old
+> aliasing regime, so #578 is a pure RNG reshuffle, not a behavioral change.
+> (The earlier interim note here claimed Q3/Q4 differed "only in the last digit";
+> the exact regeneration shows Q3 moved ~1.4 points — still noise-level and
+> threshold-safe, but corrected here for accuracy.)
 
 ## Status as of merge
 
@@ -42,10 +43,10 @@ python3 ../scripts/generate_3d_comparison_table.py
 
 | Q | Question (issue #195) | sim-tme-3d finding | sim-tme (2D) reference |
 |---|------------------------|---------------------|-------------------------|
-| Q1 | Does the hypoxia RSL3 collapse hold in 3D? | **Yes — within-zone collapse is 98.4% (`hypoxic_kill / normoxic_kill = 0.016` at λ=120).** Like-for-like, 2D within-zone is `0.0064` (99.4%); 2D overall is `0.028` (97.2%); 3D overall is `0.222` (77.8%). **2D collapses more completely on both metrics** — the previous "even stronger" framing compared 3D within-zone to 2D overall and was wrong. The qualitative finding (RSL3 fails in hypoxia) is robust in 3D; the magnitude is somewhat smaller than 2D, plausibly because the hypoxic core is a different volumetric fraction in spheres vs discs. | within-zone 0.0064 / overall 0.028 |
+| Q1 | Does the hypoxia RSL3 collapse hold in 3D? | **Yes — within-zone collapse is 98.4% (`hypoxic_kill / normoxic_kill = 0.016` at λ=120).** Like-for-like, 2D within-zone is `0.0064` (99.4%); 2D overall is `0.028` (97.2%); 3D overall is `0.220` (78.0%). **2D collapses more completely on both metrics** — the previous "even stronger" framing compared 3D within-zone to 2D overall and was wrong. The qualitative finding (RSL3 fails in hypoxia) is robust in 3D; the magnitude is somewhat smaller than 2D, plausibly because the hypoxic core is a different volumetric fraction in spheres vs discs. | within-zone 0.0064 / overall 0.028 |
 | Q2 | Does the immune 104:1 ratio hold in 3D? | **Direction holds, magnitude smaller.** SDT/RSL3 immune-kills = **4.0** in 3D vs **104.2** in 2D. | 104.2 |
-| Q3 | Does stromal shielding have MORE impact in 3D? | **No — per-cell shielding is geometry-independent.** Boundary shielding = 51.5% (3D) vs 50.0% (2D). The cubic-vs-quadratic scaling from #189 affects HOW MANY cells are shielded, not the per-cell effect. | 50.0% |
-| Q4 | Does pH ion trapping reduce RSL3 kill similarly in 3D? | **Yes.** 46.1% kill reduction in 3D vs 54.2% in 2D — within noise. | 54.2% |
+| Q3 | Does stromal shielding have MORE impact in 3D? | **No — per-cell shielding is geometry-independent.** Boundary shielding = 52.9% (3D) vs 50.0% (2D). The cubic-vs-quadratic scaling from #189 affects HOW MANY cells are shielded, not the per-cell effect. | 50.0% |
+| Q4 | Does pH ion trapping reduce RSL3 kill similarly in 3D? | **Yes.** 46.4% kill reduction in 3D vs 54.2% in 2D — within noise. | 54.2% |
 
 The full table including pH and Control conditions is in
 `output/tme-3d/comparison_2d_vs_3d.csv`; the narrative summary is in
@@ -69,7 +70,7 @@ Three regression-guards land with this PR:
 All three are **self-consistency** — they regression-guard the model's
 own predictions, not independent experimental values. The threshold
 (0.5, 3.0, 0.7) reserves a margin against current measured values
-(0.016, 4.0, 0.485) so noise doesn't cause spurious failures, while
+(0.016, 4.0, 0.471) so noise doesn't cause spurious failures, while
 still catching catastrophic regressions.
 
 Each target's `note` field documents the upgrade-to-`calibration` path:
