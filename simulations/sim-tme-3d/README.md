@@ -343,7 +343,7 @@ After running both `sim-tme` and `sim-tme-3d` and generating the comparison tabl
 
 1. **Does the hypoxia RSL3 collapse hold in 3D?**
    - Hypothesis (#195): yes, possibly stronger.
-   - **Observed**: yes qualitatively (within-zone collapse 98.4% at λ=120). Like-for-like, **2D collapses more completely** on both metrics — within-zone 2D 0.0064 < 3D 0.016; overall 2D 0.028 < 3D 0.222. The "possibly stronger" hypothesis was wrong; 3D collapse is robust but smaller magnitude than 2D. See `key_questions.txt` Q1.
+   - **Observed**: yes qualitatively (within-zone collapse 98.4% at λ=120). Like-for-like, **2D collapses more completely** on both metrics — within-zone 2D 0.0064 < 3D 0.016; overall 2D 0.028 < 3D 0.220. The "possibly stronger" hypothesis was wrong; 3D collapse is robust but smaller magnitude than 2D. See `key_questions.txt` Q1.
 
 2. **Does the immune 104:1 ratio hold in 3D?**
    - Hypothesis (#195): unknown — DAMP density may decrease in 3D volume.
@@ -351,11 +351,11 @@ After running both `sim-tme` and `sim-tme-3d` and generating the comparison tabl
 
 3. **Does stromal shielding have MORE impact in 3D?**
    - Hypothesis (#195): yes — ~1.5× boundary fraction per #189 cross-geometry test.
-   - **Observed**: no — per-cell shielding is essentially geometry-independent. Boundary shielding = 51.5% (3D) vs 50.0% (2D). The cubic-vs-quadratic scaling from #189 affects HOW MANY cells are shielded, not the per-cell magnitude. See Q3.
+   - **Observed**: no — per-cell shielding is essentially geometry-independent. Boundary shielding = 52.9% (3D) vs 50.0% (2D). The cubic-vs-quadratic scaling from #189 affects HOW MANY cells are shielded, not the per-cell magnitude. See Q3.
 
 4. **Does pH ion trapping produce similar RSL3 reduction in 3D?**
    - Hypothesis (#195): similar — same chemistry.
-   - **Observed**: yes — 46.1% kill reduction in 3D vs 54.2% in 2D, within noise. See Q4.
+   - **Observed**: yes — 46.4% kill reduction in 3D vs 54.2% in 2D, within noise. See Q4.
 
 ## Follow-ups deferred to subsequent PRs
 
