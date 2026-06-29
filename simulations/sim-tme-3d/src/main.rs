@@ -5308,7 +5308,8 @@ mod tests {
         // 25³ × 130 steps: ~1500 tumor cells, 70 steps post-immune-start
         // for DAMP to spread and reach kill threshold. Empirically reliable
         // (production 60³×180 produces 29 RSL3 immune kills; volume scales
-        // 60³/25³ ≈ 14×, so expect ~2 kills at this config — comfortable
+        // 60³/25³ ≈ 14×; measured ~8 kills at this config (the older "~2"
+        // estimate was stale) — the >=3 floor below leaves comfortable margin
         // margin over the >0 invariant).
         let cfg = RunConfig {
             grid_dim: 25,
@@ -5322,8 +5323,8 @@ mod tests {
         // Strict invariant: at least one immune kill in this RSL3 + immune-on
         // run. If this fails the immune block has gone no-op.
         assert!(
-            im_kills > 0,
-            "immune-on RSL3 should produce ≥1 immune kill in {} steps on {grid}³; got {im_kills}. \
+            im_kills >= 3,
+            "immune-on RSL3 should produce >=3 immune kills in {} steps on {grid}³; got {im_kills}. \
              Likely cause: DAMP threshold never crossed, or activation chain broken.",
             cfg.n_steps,
             grid = cfg.grid_dim
@@ -5948,8 +5949,10 @@ mod tests {
             off.total_dead
         );
         // Material reduction, not a 1-cell rounding artifact. Observed ≈55%
-        // (off=80, on=36) under the #262 competing-rate model — smaller than the
-        // pre-#262 acquire-only ≈66% because reversion now also operates.
+        // reduction under the #262 competing-rate model — smaller than the
+        // pre-#262 acquire-only ≈66% because reversion now also operates. Exact
+        // kill counts are per-cell-RNG-sensitive, so the assertion below pins the
+        // reduction FRACTION (>0.2), not specific integers (#586).
         let reduction = (off.total_dead - on.total_dead) as f64 / off.total_dead as f64;
         assert!(
             on.total_dead < off.total_dead && reduction > 0.2,
@@ -6618,8 +6621,9 @@ mod tests {
             "baseline must produce enough clustered immune kills for the test \
              to be informative; got {off_im} (adjust grid/steps/rate if the model changed)"
         );
-        // Material reduction, not an off-by-one fluke. Observed ≈20%
-        // (off=174, on=139) at the time of writing.
+        // Material reduction, not an off-by-one fluke. Observed ≈20% reduction;
+        // exact counts are per-cell-RNG-sensitive, so the assertion below pins the
+        // reduction FRACTION (>0.1), not specific integers (#586).
         let reduction = (off_im - on_im) as f64 / off_im as f64;
         assert!(
             on_im < off_im && reduction > 0.1,
@@ -8344,7 +8348,7 @@ mod tests {
             "RSL3 baseline must kill some cells"
         );
         assert!(
-            nutrient.total_dead > baseline.total_dead,
+            nutrient.total_dead >= baseline.total_dead + 10,
             "nutrient deprivation (lower core antioxidant capacity) must raise RSL3 \
              kills: baseline={}, nutrient={}",
             baseline.total_dead,
@@ -9198,8 +9202,8 @@ mod tests {
         // threshold for the run, so fewer die.
         let escrt_high = run(Some((0.8, 50.0)));
         assert!(
-            escrt_high.overall_kill_rate < baseline.overall_kill_rate,
-            "ESCRT repair must lower kill: escrt_high={} baseline={}",
+            baseline.overall_kill_rate - escrt_high.overall_kill_rate > 0.001,
+            "ESCRT repair must lower kill by a clear margin (>0.001): escrt_high={} baseline={}",
             escrt_high.overall_kill_rate,
             baseline.overall_kill_rate
         );
@@ -9691,8 +9695,8 @@ mod tests {
         assert!(a.checkpoint_brake.is_some(), "checkpoint brake reported");
         let a_immune = a.immune_kills.expect("immune_on populates immune_kills");
         assert!(
-            a_immune > 0,
-            "immune killing actually fires under composition (not just reported); got {a_immune}"
+            a_immune >= 20,
+            "immune killing fires under composition with a clear margin (not just reported); got {a_immune}"
         );
         assert!(a.total_dead > 0, "composition still kills some cells");
         // Directional cross-check: the checkpoint layer composes correctly —
