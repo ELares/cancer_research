@@ -22,6 +22,12 @@ on:
       - 'simulations/**/*.c'
       - 'simulations/**/*.h'
       - 'simulations/ferroptosis-ffi/cbindgen.toml'
+      # #550: the bindings-macos job builds ferroptosis-python via maturin and
+      # runs test_bindings.py, so its packaging config + binding tests are also
+      # cargo CI inputs (the crate's *.rs / Cargo.toml + ferroptosis-core are
+      # already matched above):
+      - 'simulations/ferroptosis-python/pyproject.toml'
+      - 'simulations/ferroptosis-python/test_bindings.py'
       - '.github/workflows/cargo-test.yml'
   pull_request:
     paths:
@@ -43,6 +49,12 @@ on:
       - 'simulations/**/*.c'
       - 'simulations/**/*.h'
       - 'simulations/ferroptosis-ffi/cbindgen.toml'
+      # #550: the bindings-macos job builds ferroptosis-python via maturin and
+      # runs test_bindings.py, so its packaging config + binding tests are also
+      # cargo CI inputs (the crate's *.rs / Cargo.toml + ferroptosis-core are
+      # already matched above):
+      - 'simulations/ferroptosis-python/pyproject.toml'
+      - 'simulations/ferroptosis-python/test_bindings.py'
       - '.github/workflows/cargo-test.yml'
 
 permissions:
@@ -144,6 +156,50 @@ jobs:
       - name: Build the full workspace (Apple Silicon link path)
         working-directory: simulations
         run: cargo build --release --workspace
+
+  bindings-macos:
+    # #550: build the ferroptosis-python pyo3 bindings via maturin (the actual
+    # Python packaging path) on Apple Silicon AND run the binding tests. The
+    # build-macos job only does `cargo build` — it links the cdylib but never
+    # exercises maturin's wheel build + the extension-module import, the half of
+    # the #521 macOS pyo3 link surface that cargo never reaches (interpreter
+    # link, wheel tags, module naming). This builds the wheel with maturin and
+    # runs test_bindings.py against the installed module, so a macOS-specific
+    # maturin/pyo3 regression fails the PR — mirroring how `test` builds AND runs
+    # the C-FFI harness rather than only compiling it.
+    runs-on: macos-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Cache Cargo registry and build
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: simulations
+
+      - name: Build bindings with maturin and run the binding tests
+        working-directory: simulations/ferroptosis-python
+        # maturin develop must run inside a virtualenv; it builds the wheel and
+        # installs `ferroptosis_core` editable into it, then test_bindings.py
+        # (stdlib-only, self-contained __main__ runner) imports and exercises it.
+        run: |
+          python -m venv "$RUNNER_TEMP/bindings-venv"
+          source "$RUNNER_TEMP/bindings-venv/bin/activate"
+          # Pin maturin to the pyproject build-system range; `maturin develop`
+          # (the CLI) does NOT read build-system.requires, so without this an
+          # unpinned `--upgrade` could pull a future 2.x and silently break the
+          # job — against the repo's pinned-deps convention (#550 review).
+          python -m pip install --upgrade pip "maturin>=1.7,<2.0"
+          maturin develop --release
+          python test_bindings.py
 
   fmt:
     # Block PRs that introduce cargo fmt drift in the simulations
