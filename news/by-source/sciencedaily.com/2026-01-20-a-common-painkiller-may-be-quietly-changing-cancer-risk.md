@@ -31,6 +31,7 @@ claims:
   linked_pmids: []
 review_status: pending
 credibility_score: 23.2
+scored_at: '2026-06-29'
 ---
 
 A common painkiller may be quietly changing cancer risk

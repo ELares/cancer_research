@@ -72,6 +72,7 @@ claims:
   linked_pmids: []
 review_status: pending
 credibility_score: 39.2
+scored_at: '2026-06-29'
 ---
 
 Scientists discover how to wipe out breast cancerâs hidden cells

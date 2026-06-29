@@ -36,6 +36,7 @@ claims:
   linked_pmids: []
 review_status: pending
 credibility_score: 36.0
+scored_at: '2026-06-29'
 ---
 
 Rogue DNA rings may be the secret spark driving deadly brain cancer

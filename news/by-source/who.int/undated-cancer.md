@@ -63,6 +63,7 @@ claims:
   linked_pmids: []
 review_status: pending
 credibility_score: 59.0
+scored_at: '2026-06-29'
 ---
 
 Cancer is a leading cause of death worldwide, accounting for nearly 10 million deaths in 2020, or nearly one in six deaths.

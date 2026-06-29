@@ -46,6 +46,7 @@ claims:
   - '26449559'
 review_status: pending
 credibility_score: 28.5
+scored_at: '2026-06-29'
 ---
 
 New genetic test can diagnose brain tumors in as little as two hours

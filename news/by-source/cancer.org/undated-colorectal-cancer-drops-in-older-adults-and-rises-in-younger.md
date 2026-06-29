@@ -12,6 +12,7 @@ claims: []
 review_status: pending
 credibility_score: 42.6
 author: Written by:Sandy McDowellEditorial Director, Digital Research Content
+scored_at: '2026-06-29'
 ---
 
 Arabic (اللغة العربية)

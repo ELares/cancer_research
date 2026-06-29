@@ -54,6 +54,7 @@ claims:
   linked_pmids: []
 review_status: pending
 credibility_score: 36.0
+scored_at: '2026-06-29'
 ---
 
 Wildfire smoke could kill 70,000 Americans a year by 2050

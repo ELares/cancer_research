@@ -35,6 +35,7 @@ claims:
   linked_pmids: []
 review_status: pending
 credibility_score: 47.2
+scored_at: '2026-06-29'
 ---
 
 Estrogen-related receptors could be key to treating metabolic and muscular disorders

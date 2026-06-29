@@ -20,6 +20,7 @@ claims:
   linked_pmids: []
 review_status: pending
 credibility_score: 55.2
+scored_at: '2026-06-29'
 ---
 
 A Trojan horse cancer therapy shows stunning results

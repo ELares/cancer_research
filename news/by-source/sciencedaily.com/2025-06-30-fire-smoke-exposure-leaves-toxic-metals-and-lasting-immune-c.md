@@ -42,6 +42,7 @@ claims:
   linked_pmids: []
 review_status: pending
 credibility_score: 52.0
+scored_at: '2026-06-29'
 ---
 
 Fire smoke exposure leaves toxic metals and lasting immune changes

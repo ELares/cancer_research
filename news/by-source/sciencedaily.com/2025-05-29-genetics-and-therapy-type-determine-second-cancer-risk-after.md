@@ -59,6 +59,7 @@ claims:
   - '42019719'
 review_status: pending
 credibility_score: 39.2
+scored_at: '2026-06-29'
 ---
 
 Genetics and therapy type determine second cancer risk after childhood treatment

@@ -11,6 +11,7 @@ paywall: false
 claims: []
 review_status: pending
 credibility_score: 47.2
+scored_at: '2026-06-29'
 ---
 
 Study shows how new antibody therapy works against ovarian cancer

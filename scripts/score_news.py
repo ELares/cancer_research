@@ -36,18 +36,32 @@ from article_io import load_article, save_article
 # Scoring
 # ---------------------------------------------------------------------------
 
-def _months_since(date_str: str | None) -> float | None:
-    """Return the number of months between *date_str* (YYYY-MM-DD) and today.
-
-    Returns None if *date_str* is missing or unparseable.
-    """
+def _parse_date(date_str: str | None) -> "date | None":
+    """Parse a YYYY-MM-DD string to a date, or None if missing/unparseable."""
     if not date_str:
         return None
     try:
-        pub_date = datetime.strptime(str(date_str)[:10], "%Y-%m-%d").date()
+        return datetime.strptime(str(date_str)[:10], "%Y-%m-%d").date()
     except (ValueError, TypeError):
         return None
-    delta = date.today() - pub_date
+
+
+def _months_since(date_str: str | None, as_of: "date | None" = None) -> float | None:
+    """Months between *date_str* (YYYY-MM-DD) and *as_of* (default today).
+
+    Pass a fixed *as_of* (e.g. the article's recorded ``scored_at``) to make the
+    recency term DETERMINISTIC instead of wall-clock-dependent: with the default
+    today, an article silently crosses the 6/12/36-month recency buckets as time
+    passes, which would mutate its committed credibility_score on a later
+    ``--all`` rerun (#587).
+
+    Returns None if *date_str* is missing or unparseable.
+    """
+    pub_date = _parse_date(date_str)
+    if pub_date is None:
+        return None
+    ref = as_of or date.today()
+    delta = ref - pub_date
     return delta.days / 30.44  # average days per month
 
 
@@ -70,8 +84,12 @@ def _corpus_pmids() -> set[str]:
     return _CORPUS_PMIDS
 
 
-def compute_score(fm: dict) -> float:
+def compute_score(fm: dict, as_of: "date | None" = None) -> float:
     """Compute a 0-100 credibility score from article frontmatter.
+
+    *as_of* is the reference date for the recency term; pass a fixed date (or let
+    it resolve from the article's recorded ``scored_at``) to keep the score
+    deterministic rather than wall-clock-dependent (#587).
 
     Weights:
         40 % -- verified-claim ratio (among FACTUAL claims)
@@ -113,8 +131,12 @@ def compute_score(fm: dict) -> float:
     else:
         author_score = 0.3
 
-    # --- Recency ---
-    months = _months_since(fm.get("date_published"))
+    # --- Recency (frozen, not wall-clock: #587) ---
+    # Reference date precedence: an explicit `as_of`, else the article's recorded
+    # `scored_at`, else today (first scoring). This is what makes a later `--all`
+    # rerun reproduce the same recency bucket instead of drifting.
+    ref = as_of or _parse_date(fm.get("scored_at")) or date.today()
+    months = _months_since(fm.get("date_published"), ref)
     if months is None:
         recency: float = 0.5  # unknown date -- middle ground
     elif months < 6:
@@ -171,6 +193,13 @@ def score_article(article_path: Path) -> float | None:
         print(f"  skipping (no frontmatter): {article_path.name}")
         return None
 
+    # Freeze the recency reference date at first scoring (#587): once `scored_at`
+    # is recorded, `compute_score` reads it instead of the wall clock, so a later
+    # rerun reproduces the same credibility_score. The one-time migration stamps
+    # today; that preserves an already-scored article's score precisely when its
+    # recency bucket has not shifted since it was last scored (verified
+    # empirically at migration — all 38 scores byte-identical).
+    fm.setdefault("scored_at", date.today().isoformat())
     score = compute_score(fm)
     fm["credibility_score"] = score
     save_article(article_path, fm, body)

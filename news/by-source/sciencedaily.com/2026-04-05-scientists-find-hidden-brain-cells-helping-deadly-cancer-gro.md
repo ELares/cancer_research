@@ -11,6 +11,7 @@ paywall: false
 claims: []
 review_status: pending
 credibility_score: 55.2
+scored_at: '2026-06-29'
 ---
 
 Scientists find hidden brain cells helping deadly cancer grow

@@ -62,6 +62,7 @@ claims:
   - '42020743'
 review_status: pending
 credibility_score: 39.2
+scored_at: '2026-06-29'
 ---
 
 New blood test could catch pancreatic cancer before itâs too late

@@ -24,6 +24,7 @@ claims:
   - '39537963'
 review_status: pending
 credibility_score: 63.2
+scored_at: '2026-06-29'
 ---
 
 Scientists discover why this deadly lung cancer keeps coming back
