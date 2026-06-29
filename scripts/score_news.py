@@ -88,7 +88,11 @@ def compute_score(fm: dict) -> float:
     tier_weight: float = {1: 1.0, 2: 0.8, 3: 0.6}.get(tier, 0.3)
 
     # --- Verified-claim ratio ---
-    claims = fm.get("claims", [])
+    # `or []` (not a default arg): a present-but-null `claims:` field returns
+    # None, which would crash both this comprehension and the cross-citation
+    # one below; one hand-edited / extraction-skipped article must not kill the
+    # whole `--all` batch.
+    claims = fm.get("claims") or []
     factual_claims = [c for c in claims if c.get("category") == "FACTUAL"]
     if factual_claims:
         # Both "verified" and "self-referencing" count as verified for scoring.

@@ -94,6 +94,11 @@ def analyze(rows):
 
     # --- Fixed thresholds: supply-gradient direction ---
     fixed_kills = [r["kill_rate"] for r in fixed]
+    if not fixed_kills:
+        raise SystemExit(
+            "ERROR: no fixed-threshold rows in the sweep CSV; run "
+            "`sim-tme-3d --spheroid-size-sweep` and rebuild the CSV first."
+        )
     fixed_decreasing = _is_monotone_decreasing(fixed_kills)
     # fold-drop smallest->largest spheroid (guard against zero)
     fold = (fixed_kills[0] / fixed_kills[-1]) if fixed_kills[-1] > 0 else float("inf")

@@ -44,6 +44,7 @@ Usage:
 """
 
 import argparse
+import http.client
 import json
 import sys
 import time
@@ -164,7 +165,18 @@ def fetch_icite(pmid):
         d = json.loads(_get(f"https://icite.od.nih.gov/api/pubs?pmids={pmid}"))["data"][0]
         return dict(rcr=d.get("relative_citation_ratio"), citations=d.get("citation_count"),
                     is_clinical=d.get("is_clinical"))
-    except Exception:
+    except (OSError, http.client.HTTPException, KeyError, IndexError, ValueError) as e:
+        # iCite metrics are optional (a fresh PMID may have none yet, or the API
+        # may be transiently down); degrade to nulls but name the cause rather
+        # than swallowing every exception silently. The tuple is deliberately
+        # broad on the network side: a timeout/reset during getresponse()/.read()
+        # raises TimeoutError/ConnectionResetError/IncompleteRead, which are NOT
+        # urllib.error.URLError subclasses -- OSError covers URLError + the socket
+        # errors, http.client.HTTPException covers IncompleteRead/RemoteDisconnected,
+        # and (KeyError, IndexError, ValueError) cover the ["data"][0] access +
+        # JSON decode. Genuine code bugs (AttributeError/NameError/TypeError) still
+        # propagate rather than being silently nulled. (#588 review fix.)
+        print(f"  (iCite metrics unavailable for {pmid}: {type(e).__name__})", file=sys.stderr)
         return dict(rcr=None, citations=None, is_clinical=None)
 
 
@@ -205,7 +217,7 @@ def write_abstract_record(entry):
     body = pm["abstract"] or "(no abstract available from PubMed)"
     text = "---\n" + "\n".join(fm) + "\n---\n\n" + body + "\n"
     ABSTRACT_DIR.mkdir(parents=True, exist_ok=True)
-    (ABSTRACT_DIR / f"{pmid}.md").write_text(text)
+    (ABSTRACT_DIR / f"{pmid}.md").write_text(text, encoding="utf-8")
     return pm["title"]
 
 
@@ -247,7 +259,7 @@ def main():
     n_missing = sum(1 for _, c in rows if c == "MISSING")
     lines += ["", f"**{len(rows)} landmarks tracked; {n_missing} still MISSING.**",
               "Run `python3 scripts/landmark_coverage.py --recover-missing` to fetch absent ones."]
-    REPORT.write_text("\n".join(lines) + "\n")
+    REPORT.write_text("\n".join(lines) + "\n", encoding="utf-8")
     print(f"wrote {REPORT}")
     for e, c in rows:
         print(f"  {c:14s} {e['pmid']}  {e['mechanism']}")

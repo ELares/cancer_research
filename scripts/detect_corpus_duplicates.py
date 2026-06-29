@@ -68,7 +68,7 @@ def verdict_for(group) -> str:
 
 
 def main():
-    recs = [json.loads(line) for line in INDEX.read_text(encoding="utf-8").splitlines()]
+    recs = [json.loads(line) for line in INDEX.read_text(encoding="utf-8").splitlines() if line.strip()]
     by_title = defaultdict(list)
     for r in recs:
         key = norm_title(r.get("title"))
