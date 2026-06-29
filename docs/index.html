@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Cancer-research corpus dashboard — live demo</title>
+  <meta name="description" content="In-browser (stlite/Pyodide) demo of the corpus-exploration dashboard for ELares/cancer_research. The Corpus tab runs entirely client-side on the committed corpus/INDEX.jsonl — no server, no install." />
+  <!--
+    Live demo for issue #565. This runs scripts/dashboard.py ENTIRELY IN THE
+    BROWSER via stlite (Streamlit compiled to WebAssembly/Pyodide) — no Streamlit
+    Cloud account and no backend server. GitHub Pages just serves this static
+    page; the Python, the dashboard code, and the 3.35 MB corpus index are all
+    fetched from `main` (raw.githubusercontent, CORS-enabled) and executed in the
+    visitor's browser.
+
+    The "Corpus" tab is fully interactive (filters, mechanism/evidence/year
+    charts, the mechanism x cancer matrix, the article table). The "Simulation
+    sweep" tab shows a read-only notice pointing to the committed prior-predictive
+    intervals, because the compiled `ferroptosis_core` extension is not available
+    in the browser (dashboard.py imports it lazily and handles its absence — see
+    scripts/dashboard.py).
+
+    First load downloads Pyodide + pandas/matplotlib wheels (~tens of MB) and the
+    corpus, so give it 30-60 s on first visit; it caches afterward.
+  -->
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/@stlite/mountable@0.67.0/build/stlite.css"
+  />
+  <style>
+    html, body { margin: 0; padding: 0; height: 100%; }
+    #stlite-root { height: 100vh; }
+    #boot {
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      padding: 1.5rem 2rem; color: #333;
+    }
+    #boot h1 { font-size: 1.15rem; margin: 0 0 .4rem; }
+    #boot p { margin: .25rem 0; color: #555; font-size: .9rem; }
+    #boot code { background: #f3f3f3; padding: .1rem .3rem; border-radius: 3px; }
+  </style>
+</head>
+<body>
+  <div id="boot">
+    <h1>Loading the cancer-research corpus dashboard…</h1>
+    <p>Booting Python (Pyodide) + pandas in your browser via stlite, then fetching
+       the corpus index (<code>corpus/INDEX.jsonl</code>, 4,830 records). First load
+       can take 30-60&nbsp;s; it caches afterward.</p>
+    <p>Nothing is installed and no server runs — the Corpus tab executes entirely
+       client-side. Source: <code>ELares/cancer_research</code> · issue #565.</p>
+  </div>
+  <div id="stlite-root"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@stlite/mountable@0.67.0/build/stlite.js"></script>
+  <script>
+    const RAW = "https://raw.githubusercontent.com/ELares/cancer_research/main";
+    stlite.mount(
+      {
+        // pandas + matplotlib (the mechanism x cancer matrix uses
+        // DataFrame.style.background_gradient, which needs matplotlib).
+        requirements: ["pandas", "matplotlib"],
+        entrypoint: "scripts/dashboard.py",
+        // Mirror the repo layout so dashboard.py / dashboard_data.py resolve
+        // `REPO_ROOT/corpus/INDEX.jsonl` (parents[1]) the same way they do locally.
+        files: {
+          "scripts/dashboard.py": { url: `${RAW}/scripts/dashboard.py` },
+          "scripts/dashboard_data.py": { url: `${RAW}/scripts/dashboard_data.py` },
+          "corpus/INDEX.jsonl": { url: `${RAW}/corpus/INDEX.jsonl` },
+        },
+      },
+      document.getElementById("stlite-root"),
+    );
+    // Remove the boot placeholder once Streamlit paints (best-effort).
+    const _boot = document.getElementById("boot");
+    const _obs = new MutationObserver(() => {
+      if (document.querySelector("#stlite-root .stApp")) {
+        if (_boot) _boot.style.display = "none";
+        _obs.disconnect();
+      }
+    });
+    _obs.observe(document.getElementById("stlite-root"), { childList: true, subtree: true });
+  </script>
+</body>
+</html>
