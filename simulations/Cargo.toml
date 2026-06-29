@@ -27,3 +27,14 @@ ndarray = "0.16"
 csv = "1.3"
 clap = { version = "4", features = ["derive"] }
 ferroptosis-core = { path = "ferroptosis-core" }
+
+# #549: the test suite is dominated by sim-tme-3d's compute-heavy 60^3 x 180
+# spatial integration tests, which run ~190x slower UNOPTIMIZED (the `cargo test`
+# default is opt-level 0). Raising the test profile to opt-level 3 makes those
+# tests run in seconds instead of ~25 min, WITHOUT dropping the safety checks:
+# `debug-assertions` and `overflow-checks` stay ON (test-profile defaults, only
+# `opt-level` is overridden here), so sim-tme-3d's `debug_assert!` invariant
+# checks still fire — unlike a blanket `--release`. Costs slightly more compile
+# time (cached by rust-cache in CI). The released binaries are unaffected.
+[profile.test]
+opt-level = 3
