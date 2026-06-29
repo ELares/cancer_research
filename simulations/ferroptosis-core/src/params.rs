@@ -824,7 +824,7 @@ pub struct PersisterConfig {
     /// DOWNREGULATING oxidative phosphorylation, a main source of the
     /// mitochondrial ROS / peroxidizable-substrate flux GPX4 inhibitors act on,
     /// so RSL3 has less to work with and kills persisters less ("FSP1 and histone
-    /// deacetylases suppress cancer persister cell ferroptosis", PMID 40909720;
+    /// deacetylases suppress cancer persister cell ferroptosis", PMID 41481741;
     /// the OXPHOS-suppression / mitochondrial-ROS-supply leg of persister
     /// ferroptosis tolerance, distinct from the existing `gpx4_resistance` and
     /// MUFA axes). A consumer scales a persister cell's basal / mitochondrial ROS
@@ -837,7 +837,7 @@ pub struct PersisterConfig {
     pub oxphos_ros_suppression: f64,
     /// HDAC-inhibitor rescue of OXPHOS-ROS (#470), in `[0, 1]`. HDAC inhibitors
     /// re-raise OXPHOS / mitochondrial ROS in persisters and synergize with GPX4
-    /// inhibition to kill them (PMID 40909720), so this knob REVERSES
+    /// inhibition to kill them (PMID 41481741), so this knob REVERSES
     /// `oxphos_ros_suppression`: the effective suppression a persister keeps is
     /// `oxphos_ros_suppression · (1 - hdac_inhibitor)`, so `hdac_inhibitor = 1`
     /// fully restores the ROS (and the kill) while `0` leaves the suppression

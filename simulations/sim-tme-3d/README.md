@@ -297,7 +297,7 @@ Representative smoke tests (the full `cargo test -p sim-tme-3d` suite is much la
 2. `single_condition_runs_end_to_end` — full orchestration on baseline Control
 3. `same_seed_same_output` — determinism
 
-The library primitives (`physics`, `oxygen`, `ph`, `stromal`, `immune_spatial`) are exhaustively tested in `ferroptosis-core`'s 160+ unit tests. This binary tests orchestration, not the math.
+The library primitives (`physics`, `oxygen`, `ph`, `stromal`, `immune_spatial`) are exhaustively tested in `ferroptosis-core`'s 370+ unit tests. This binary tests orchestration, not the math.
 
 ### Production byte-identity regression (#253)
 
