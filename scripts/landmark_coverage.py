@@ -22,6 +22,22 @@ full-text quantitative results in the manuscript (which analyze the 4,830
 full-text records); they fix the *coverage guardrail* so absence claims are not
 corpus artifacts. See `analysis/landmark-corpus-gaps.md`.
 
+Accounting: recovered records are OUT-OF-BAND BY PROVENANCE from the PRISMA
+systematic search. By the scoping protocol (`analysis/prisma-scr-protocol.md`),
+the systematic-search totals (10,415 screened -> 4,830 full-text + 5,586
+abstract-only) count only records returned by the 19 mechanism queries; landmark
+field-definers are curated by hand, NOT returned by those queries. They are
+written to `corpus/abstracts/by-pmid/`, so `oa_bias_analysis.py` (which globs that
+directory) DOES count them in the live archive total -- but they never touch the
+4,830 full-text quantitative corpus, and the §3.3.1 open-access CONCLUSIONS are
+unaffected: regenerating `analysis/oa-bias-report.md` after recovery moves only
+the raw abstract counts (the archive total and a few mechanism tallies) by the
+handful of added records, while every rounded mechanism SHARE and RANK --
+including the manuscript-cited 34.4->28.7% / 14.7->22.4% shifts and the
+bioelectric 14->3 reordering -- is identical. The manuscript's frozen PRISMA
+figure (5,586 abstract-only) is the archive snapshot at manuscript-freeze time
+(which folded in the first two recoveries, VISION + NETTER-1).
+
 Usage:
   python3 scripts/landmark_coverage.py                 # report only
   python3 scripts/landmark_coverage.py --recover-missing  # also fetch+write missing
@@ -58,6 +74,42 @@ LANDMARKS = [
          evidence="phase2-clinical", note="NEO-PV-01 + chemo + anti-PD-1, NSCLC (Cancer Cell 2022)"),
     dict(pmid="35970920", mechanism="mRNA-vaccine", cancer="solid-tumor",
          evidence="phase2-clinical", note="ChAd/samRNA individualized neoantigen vaccine (Nat Med 2022)"),
+    # CAR-T pivotals (#568): the two field-defining registrational single-arm
+    # phase-2 trials behind the first FDA CAR-T approvals. car-t is well
+    # represented in the corpus (474 records), so unlike radioligand these do
+    # not fix a maturity-distortion — they make the registry's field-definer
+    # coverage explicit for the headline cell-therapy mechanism.
+    dict(pmid="29226797", mechanism="car-t", cancer="lymphoma",
+         evidence="phase2-clinical", note="ZUMA-1: axicabtagene ciloleucel (axi-cel) for refractory "
+         "large B-cell lymphoma (NEJM 2017) — the pivotal single-arm phase-2 behind the first DLBCL "
+         "CAR-T approval (#568)"),
+    dict(pmid="29385370", mechanism="car-t", cancer="leukemia",
+         evidence="phase2-clinical", note="ELIANA: tisagenlecleucel for relapsed/refractory pediatric "
+         "and young-adult B-cell ALL (NEJM 2018) — the pivotal single-arm phase-2 behind the first "
+         "CAR-T approval of any kind (#568)"),
+    # ADC pivotals (#568): the trastuzumab-deruxtecan HER2 randomised phase-3s
+    # that redefined the antibody-drug-conjugate class (incl. the HER2-low
+    # expansion that created a new treatable population).
+    dict(pmid="35320644", mechanism="antibody-drug-conjugate", cancer="breast",
+         evidence="phase3-clinical", note="DESTINY-Breast03: trastuzumab deruxtecan (T-DXd) vs T-DM1 in "
+         "HER2-positive metastatic breast cancer (NEJM 2022) — head-to-head ADC superiority (#568)"),
+    dict(pmid="35665782", mechanism="antibody-drug-conjugate", cancer="breast",
+         evidence="phase3-clinical", note="DESTINY-Breast04: trastuzumab deruxtecan in previously "
+         "treated HER2-LOW metastatic breast cancer (NEJM 2022) — established HER2-low as a new ADC "
+         "target population (#568)"),
+    # Checkpoint-immunotherapy landmarks (#568): three of the trials that defined
+    # the modern checkpoint era (melanoma anti-PD-1 and dual blockade, plus the
+    # chemo-IO combination that became first-line NSCLC). immunotherapy is the
+    # largest corpus mechanism (2,297 records); these anchor its field-definers.
+    dict(pmid="25891173", mechanism="immunotherapy", cancer="melanoma",
+         evidence="phase3-clinical", note="KEYNOTE-006: pembrolizumab vs ipilimumab in advanced "
+         "melanoma (NEJM 2015) — anti-PD-1 superiority over the prior anti-CTLA-4 standard (#568)"),
+    dict(pmid="26027431", mechanism="immunotherapy", cancer="melanoma",
+         evidence="phase3-clinical", note="CheckMate-067: nivolumab + ipilimumab or monotherapy in "
+         "untreated melanoma (NEJM 2015) — the dual-checkpoint-blockade landmark (#568)"),
+    dict(pmid="29658856", mechanism="immunotherapy", cancer="lung",
+         evidence="phase3-clinical", note="KEYNOTE-189: pembrolizumab + chemotherapy in metastatic "
+         "nonsquamous NSCLC (NEJM 2018) — established first-line chemo-immunotherapy (#568)"),
 ]
 
 
@@ -184,6 +236,10 @@ def main():
              "field-defining papers absent from the local corpus so mechanism-level",
              "absence claims are not corpus artifacts. Recovered records are",
              "ABSTRACT-ONLY and do NOT change the frozen full-text quantitative results.",
+             "They are out-of-band BY PROVENANCE (curated by hand, not returned by the",
+             "19 mechanism queries). They are stored in `corpus/abstracts/by-pmid/`, so",
+             "the §3.3.1 OA-bias tally counts them in the live archive total, but they",
+             "move only raw counts -- every rounded mechanism share and rank is identical.",
              "", "| Mechanism | PMID | Coverage | Landmark |", "|---|---|---|---|"]
     for mech in sorted(by_mech):
         for e, c in by_mech[mech]:
