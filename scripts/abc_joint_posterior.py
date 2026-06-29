@@ -39,7 +39,11 @@ PRIOR-predictive (the existing headline_uncertainty intervals). The manuscript
 switch magnitudes therefore carry the in-vitro joint posterior intervals where the
 claim is in-vitro, and stay prior-predictive where the claim is in-vivo/spatial,
 and this script states which is which. Conditioning the in-vivo headlines needs an
-in-vivo ferroptosis dataset that does not exist publicly.
+in-vivo ferroptosis dataset that maps onto these dimensionless headline parameters,
+which does not exist publicly: the in-vivo ferroptosis readouts that DO exist (the
+IKE PK course used for tumor-PK calibration, Zhang 2019 PMID 30799221; in-vivo
+SCD1/MUFA, Sen 2025 PMID 40198901; public tumor-growth-inhibition series) measure
+different observables that do not condition the five headlines.
 
 Run (needs the compiled `ferroptosis_core` extension; not run in CI):
   python3 scripts/abc_joint_posterior.py
@@ -339,8 +343,11 @@ spatial/headline prior-predictive intervals. The consequence is unchanged from
   penetration gap, immune ratio) **cannot** be conditioned on in-vitro data and
   stay **prior-predictive** (the existing `headline_uncertainty.py` /
   `uncertainty_intervals.py` intervals, `analysis/identifiability-report.md`).
-  Conditioning them needs an in-vivo ferroptosis dataset that does not exist
-  publicly.
+  Conditioning them needs an in-vivo ferroptosis dataset that maps onto these
+  dimensionless headline parameters — one that does not exist publicly (the in-vivo
+  ferroptosis readouts that DO exist, e.g. the IKE PK course used for tumor-PK
+  calibration [Zhang 2019] and in-vivo SCD1/MUFA [Sen 2025], measure different
+  observables that do not condition the headlines).
 
 This is the posterior #500 asked for (a real multi-inducer posterior with
 held-out generalization), reported with exactly the scope the data supports.

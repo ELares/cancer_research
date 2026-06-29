@@ -177,7 +177,10 @@ ledger is `simulations/calibration/CALIBRATION_STATUS.md`.
   combination headlines that P1, P2, P4, P5, P6, and P7 rest on. An ABC analysis
   (#332) shows the in-vivo priors and the in-vitro posterior are disjoint, so the
   in-vivo and spatial headlines cannot be conditioned on the available in-vitro
-  data and stay prior-predictive until an in-vivo ferroptosis dataset exists.
+  data and stay prior-predictive until an in-vivo ferroptosis dataset that maps onto
+  these headline parameters exists (the in-vivo ferroptosis readouts that DO exist —
+  e.g. IKE pharmacokinetics and in-vivo SCD1/MUFA data — measure different
+  observables that do not condition the headlines).
 
 As calibration data arrives, the plan is to report calibrated-versus-preregistered
 for each prediction, failures included.
