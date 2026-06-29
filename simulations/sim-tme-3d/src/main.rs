@@ -150,58 +150,56 @@ const SLAB_PHENOTYPE_SEED: u64 = 0x51ab_0142;
 /// Distinct from the others so senescence marking never touches the matrix or
 /// other realism-layer RNG streams.
 const SENESCENCE_SEED: u64 = 0x5e4e_0341;
-/// Per-step strides of the two per-cell RNG seed streams. A per-cell seed is
-/// `cond_seed + offset + idx + step*STRIDE` (see the `sim_cell_step` biochem call
-/// site and the immune-kill call sites), so within a stream the seed is injective
-/// across steps only while `idx` (which ranges over `n_cells`) stays below the
-/// stride: cell `STRIDE` at step `s` otherwise reuses cell 0 at step `s+1`'s seed.
-/// (#539)
-const BIOCHEM_SEED_STRIDE: u64 = 1_000_000;
-const IMMUNE_SEED_STRIDE: u64 = 2_000_000;
-/// Largest `n_cells` for which BOTH per-cell seed streams stay collision-free,
-/// bounded by the smaller (biochem) stride: 1e6 cells, i.e. `dim ≤ 100`. Above
-/// this the streams alias across steps. The production matrix runs at dim 60
-/// (216 000 cells), far below this, and `--bench` (BENCH_GRID_DIM ≥ 101) is the
-/// only path that exceeds it, so this is a LATENT foot-gun for large/bench grids,
-/// not a live defect: determinism is preserved either way, so the #253
-/// byte-identity SHA gate is blind to it. A real fix (a position+step-independent
-/// seed scheme) changes the matrix bytes and so needs a maintainer-approved #253
-/// re-baseline; `warn_if_seed_aliasing` only makes a future large-grid run fail
-/// loudly instead of silently aliasing. (#539)
-const SEED_COLLISION_FREE_MAX_CELLS: u64 = BIOCHEM_SEED_STRIDE;
-// Compile-time invariant: the biochem stream is the binding (smaller-stride)
-// constraint, so it aliases first and bounds the collision-free max (#539).
-const _: () = assert!(BIOCHEM_SEED_STRIDE < IMMUNE_SEED_STRIDE);
+/// Per-cell, per-step RNG seed mix (#578, replacing the #539 additive-stride
+/// scheme). The old per-cell seed was `cond_seed + offset + idx + step*STRIDE`
+/// (biochem stride 1e6, immune 2e6): injective across steps only while `idx`
+/// (0..`n_cells`) stayed below the stride, so above ~1e6 cells (dim > 100) it
+/// ALIASED — cell `STRIDE` at step `s` reused cell 0 at step `s+1`'s seed,
+/// repeating per-cell stochastic draws. `cell_seed` instead runs
+/// `(cond_seed, idx, step)` through a SplitMix64 avalanche with a per-stream
+/// `salt`, so distinct `(idx, step)` map to well-distributed distinct seeds at
+/// ANY grid size: there is no stride and hence no collision regime. The only
+/// residual is the negligible birthday-bound hash collision (~n²/2⁶⁴: ~4e-5 over
+/// a full dim-127×180 run, vs the old GUARANTEED structural aliasing above dim
+/// 100). The two streams are separated by `salt` (replacing the old 500_000 /
+/// 900_000_000 additive offsets). The production matrix is dim 60, far below the
+/// old aliasing regime, so this is a pure RNG-stream reshuffle at production
+/// size — no behavioral change — but it DOES change every per-cell draw and so
+/// the `summary.json` bytes, which is why landing it required the explicit,
+/// maintainer-approved #253 byte-identity re-baseline (see
+/// `simulations/sim-tme-3d/expected_summary.sha256`).
+const BIOCHEM_SEED_SALT: u64 = 0xB107_0CDE_0000_0539;
+const IMMUNE_SEED_SALT: u64 = 0x111A_0E5E_0000_0539;
+// The two stream salts must differ so the biochem and immune per-cell streams
+// never coincide for the same (cond_seed, idx, step).
+const _: () = assert!(BIOCHEM_SEED_SALT != IMMUNE_SEED_SALT);
 
-/// Whether both per-cell seed streams stay collision-free at this grid size: the
-/// per-step seed `… + idx + step*STRIDE` is injective across steps only while
-/// `n_cells ≤ STRIDE` (so the max `idx` stays below the stride). Bounded by the
-/// smaller biochem stride. (#539)
-fn seed_collision_free(n_cells: u64) -> bool {
-    n_cells <= SEED_COLLISION_FREE_MAX_CELLS
+/// SplitMix64 finalizer (Steele, Lea & Flood 2014, "Fast Splittable
+/// Pseudorandom Number Generators"): a fast, full-avalanche integer hash. Used
+/// to mix the seed components in `cell_seed`.
+#[inline]
+fn splitmix64(mut z: u64) -> u64 {
+    z = z.wrapping_add(0x9E37_79B9_7F4A_7C15);
+    z = (z ^ (z >> 30)).wrapping_mul(0xBF58_476D_1CE4_E5B9);
+    z = (z ^ (z >> 27)).wrapping_mul(0x94D0_49BB_1331_11EB);
+    z ^ (z >> 31)
 }
 
-/// Per-condition guard (#539): if the grid is large enough that the per-cell biochem /
-/// immune RNG seed streams alias across steps, warn loudly (and `debug_assert!` in
-/// debug builds) so a future large-grid production run cannot silently reuse
-/// per-cell stochastic draws. A latent foot-gun only — the production matrix
-/// (dim 60) and every shipped condition are far below the threshold.
-fn warn_if_seed_aliasing(n_cells: usize) {
-    if !seed_collision_free(n_cells as u64) {
-        eprintln!(
-            "WARNING (#539): sim-tme-3d grid has {n_cells} cells (> \
-             {SEED_COLLISION_FREE_MAX_CELLS} seed-collision-free max); the per-cell biochem/\
-             immune RNG seed streams (strides {BIOCHEM_SEED_STRIDE}/{IMMUNE_SEED_STRIDE}) alias \
-             across steps. Determinism is preserved, but per-cell stochastic draws repeat across \
-             steps — do NOT trust large-grid stochastic output until the seed scheme is re-based \
-             (which requires a #253 byte-identity SHA re-baseline)."
-        );
-        debug_assert!(
-            false,
-            "sim-tme-3d seed-stream aliasing at {n_cells} cells (> \
-             {SEED_COLLISION_FREE_MAX_CELLS} collision-free max); see #539"
-        );
-    }
+/// Per-cell, per-step RNG seed (#578): a position+step-independent hash mix of
+/// `(cond_seed, idx, step)` with a per-stream `salt`. Distinct `(idx, step)`
+/// pairs avalanche to distinct, well-distributed seeds regardless of grid size,
+/// so there is no stride and no collision regime (proven by
+/// `cell_seed_is_collision_free_at_large_grid_578`). Deterministic: a pure
+/// function of its inputs on the pinned toolchain, so the rayon-parallel loops
+/// stay byte-identical to a serial run.
+#[inline]
+fn cell_seed(cond_seed: u64, idx: usize, step: usize, salt: u64) -> u64 {
+    splitmix64(
+        cond_seed
+            ^ salt
+            ^ splitmix64(idx as u64).rotate_left(17)
+            ^ splitmix64(step as u64).rotate_left(43),
+    )
 }
 /// O2-supply factor below which a cell counts as hypoxic for
 /// `vascular_hypoxic_fraction` reporting (#191). `exp(-d/λ) < 0.1` is ~2.3 λ
@@ -918,10 +916,9 @@ fn run_one_condition_full(
         )
     };
     let n_cells = grid.cells.len();
-    // #539: fail loudly if this grid is large enough to alias the per-cell RNG
-    // seed streams (latent foot-gun above dim 100 / ~1e6 cells; no-op for the
-    // dim-60 production matrix and every shipped condition).
-    warn_if_seed_aliasing(n_cells);
+    // #578: the per-cell RNG seed is now a position+step-independent hash mix
+    // (`cell_seed`), so there is no stride and no large-grid aliasing regime —
+    // the #539 `warn_if_seed_aliasing` guard is no longer needed at any size.
 
     // 3D spheroid radial cell biology (#197): re-assign tumor cells radially
     // (glycolytic rim / OXPHOS mid / persister core) + GSH(core-low) /
@@ -1593,7 +1590,8 @@ fn run_one_condition_full(
         // BYTE-IDENTICAL to the old serial r/c/l triple loop because:
         //   - `enumerate()` over the flat `cells` Vec yields the same `idx`
         //     as `flat_index(r,c,l)` (row-major), so the per-cell RNG seed
-        //     `(cond_seed, idx, step)` is unchanged and position-independent;
+        //     `cell_seed(cond_seed, idx, step, salt)` is unchanged and
+        //     position-independent (#578);
         //   - each cell reads/writes ONLY its own `GridCell` and its own
         //     `damp_field[idx]` slot (paired via the zipped `par_iter_mut`);
         //     `extra_iron` is read-then-zeroed per own cell (cross-cell iron
@@ -1643,12 +1641,12 @@ fn run_one_condition_full(
                     }
                 }
 
-                let mut rng = StdRng::seed_from_u64(
-                    cond_seed
-                        .wrapping_add(500_000)
-                        .wrapping_add(idx as u64)
-                        .wrapping_add(step as u64 * BIOCHEM_SEED_STRIDE),
-                );
+                let mut rng = StdRng::seed_from_u64(cell_seed(
+                    cond_seed,
+                    idx,
+                    step as usize,
+                    BIOCHEM_SEED_SALT,
+                ));
 
                 let extra_iron = gc.extra_iron;
                 gc.extra_iron = 0.0;
@@ -1973,8 +1971,9 @@ fn run_one_condition_full(
             // (#192) — byte-identical to the old serial triple loop: each cell
             // reads its own `damp_field[idx]` (immutable here; DAMP diffusion
             // already done) and writes only its own `state.dead`; the per-cell
-            // RNG seed `(cond_seed, idx, step)` is position-independent; and
-            // `immune_kills` is an order-independent integer sum.
+            // RNG seed `cell_seed(cond_seed, idx, step, salt)` is
+            // position-independent (#578); and `immune_kills` is an
+            // order-independent integer sum.
             if step >= IMMUNE_START_STEP {
                 // Multi-checkpoint panel (#264 Phase 3) replaces the single PD-1
                 // brake when set; `None` ⇒ the single-PD-1 `effective_brake`
@@ -2086,12 +2085,12 @@ fn run_one_condition_full(
                                 * ferro_supp
                                 * sasp
                                 * sasp_field_mult;
-                            let mut rng = StdRng::seed_from_u64(
-                                cond_seed
-                                    .wrapping_add(900_000_000)
-                                    .wrapping_add(idx as u64)
-                                    .wrapping_add(step as u64 * IMMUNE_SEED_STRIDE),
-                            );
+                            let mut rng = StdRng::seed_from_u64(cell_seed(
+                                cond_seed,
+                                idx,
+                                step as usize,
+                                IMMUNE_SEED_SALT,
+                            ));
                             if rng.gen::<f64>() < kill_prob {
                                 gc.state.dead = true;
                                 Some(idx)
@@ -2148,12 +2147,12 @@ fn run_one_condition_full(
                                 immune_cfg.immune_kill_rate,
                                 effective_brake,
                             );
-                            let mut rng = StdRng::seed_from_u64(
-                                cond_seed
-                                    .wrapping_add(900_000_000)
-                                    .wrapping_add(idx as u64)
-                                    .wrapping_add(step as u64 * IMMUNE_SEED_STRIDE),
-                            );
+                            let mut rng = StdRng::seed_from_u64(cell_seed(
+                                cond_seed,
+                                idx,
+                                step as usize,
+                                IMMUNE_SEED_SALT,
+                            ));
                             if rng.gen::<f64>() < kill_prob {
                                 // Immune kills set `state.dead` but deliberately
                                 // NOT `death_step`/`newly_dead`: immune-killed
@@ -5058,38 +5057,73 @@ mod tests {
     // Test-only: used by the clonal lipid-axis test.
     use ferroptosis_core::clonal::SubclonePerturbation;
 
-    /// #539: the per-cell RNG seed within a stream is `base + idx + step*STRIDE`,
-    /// which is injective across steps only while `idx` (0..n_cells) stays below
-    /// the stride. Pin the collision-free boundary, the aliasing onset, and the
-    /// `seed_collision_free` guard threshold so a future change to the seed scheme
-    /// or the stride can't silently reintroduce the large-grid aliasing.
+    /// #578: the per-cell RNG seed is now the position+step-independent hash mix
+    /// `cell_seed(cond_seed, idx, step, salt)`, with NO stride and hence no
+    /// collision regime at any grid size. This replaces the #539 invariant
+    /// (which pinned the old `base + idx + step*STRIDE` aliasing onset). It
+    /// proves: (1) the exact old-aliasing pattern is gone (cell `STRIDE` at
+    /// step `s` no longer reuses cell 0 at step `s+1`); (2) full intra-step
+    /// uniqueness across a dim=127 grid (2_048_383 cells > the old 1e6 onset);
+    /// (3) the biochem and immune streams are salt-separated.
     #[test]
-    fn seed_streams_collision_free_below_stride_and_alias_above_539() {
-        let stride = BIOCHEM_SEED_STRIDE;
-        let base = 0xDEAD_BEEF_u64;
-        let seed = |idx: u64, step: u64| {
-            base.wrapping_add(idx)
-                .wrapping_add(step.wrapping_mul(stride))
-        };
-        // Boundary: the last cell of step 0 (idx = stride-1) does NOT collide with
-        // the first cell of step 1 — the stream is injective when n_cells == stride.
-        assert_ne!(seed(stride - 1, 0), seed(0, 1));
-        // One cell past the stride aliases: cell `stride` at step 0 reuses cell 0
-        // at step 1's seed — the exact foot-gun #539 describes.
-        assert_eq!(seed(stride, 0), seed(0, 1));
+    fn cell_seed_is_collision_free_at_large_grid_578() {
+        use std::collections::HashSet;
+        let cond_seed = 0xDEAD_BEEF_u64;
 
-        // The guard threshold matches the math: dim 100 (1e6 cells) is the safe
-        // ceiling; dim 101 (1_030_301 cells) is the onset of aliasing — exactly the
-        // "dim > ~100" the issue reports.
-        assert!(seed_collision_free(100_u64.pow(3))); // 1_000_000 == max  -> safe
-        assert!(!seed_collision_free(101_u64.pow(3))); // 1_030_301 > max  -> aliasing
-        assert_eq!(SEED_COLLISION_FREE_MAX_CELLS, BIOCHEM_SEED_STRIDE);
+        // (1) The exact #539 foot-gun is gone. Under the old additive scheme,
+        // cell `stride` at step 0 collided with cell 0 at step 1 (and the last
+        // cell of step 0, `stride-1`, did not). The hash mix breaks BOTH that
+        // structural collision and the wider sweep of cross-step pairs that the
+        // old stride aliased.
+        let old_stride = 1_000_000usize; // the retired BIOCHEM stride
+        assert_ne!(
+            cell_seed(cond_seed, old_stride, 0, BIOCHEM_SEED_SALT),
+            cell_seed(cond_seed, 0, 1, BIOCHEM_SEED_SALT),
+            "the exact #539 aliasing pair must no longer collide"
+        );
+        // A spread of (idx, step) pairs that the old scheme would have aliased
+        // (idx straddling the stride boundary, several steps) are all distinct.
+        let mut seen = HashSet::new();
+        for step in 0..256usize {
+            for &idx in &[
+                0usize,
+                1,
+                old_stride - 1,
+                old_stride,
+                old_stride + 1,
+                2_000_000,
+            ] {
+                assert!(
+                    seen.insert(cell_seed(cond_seed, idx, step, BIOCHEM_SEED_SALT)),
+                    "cross-(idx,step) collision at idx={idx} step={step}"
+                );
+            }
+        }
 
-        // The production matrix (dim 60, 216 000 cells) is comfortably collision-free.
-        assert!(seed_collision_free((GRID_DIM as u64).pow(3)));
-        // (The immune stream strides wider, so it aliases only at a larger grid than
-        // the binding biochem stream; that biochem-binds-first invariant is enforced
-        // at compile time by the `const _: () = assert!(...)` near the stride consts.)
+        // (2) Full intra-step uniqueness across a dim=127 grid: every cell index
+        // in 0..127^3 (= 2_048_383, well past the old 1e6 aliasing onset) maps to
+        // a distinct seed at a fixed step. The old scheme was trivially unique
+        // intra-step; the point here is that the hash mix stays unique at a grid
+        // size where the old scheme aliased ACROSS steps, with no stride at all.
+        let dim = 127u64;
+        let n_cells = (dim * dim * dim) as usize;
+        let mut intra = HashSet::with_capacity(n_cells);
+        for idx in 0..n_cells {
+            intra.insert(cell_seed(cond_seed, idx, 7, BIOCHEM_SEED_SALT));
+        }
+        assert_eq!(
+            intra.len(),
+            n_cells,
+            "dim=127 intra-step seeds must be fully distinct (no collision regime)"
+        );
+
+        // (3) The two streams are salt-separated: the same (cond_seed, idx, step)
+        // yields different biochem vs immune seeds, so the streams never coincide.
+        assert_ne!(
+            cell_seed(cond_seed, 5, 5, BIOCHEM_SEED_SALT),
+            cell_seed(cond_seed, 5, 5, IMMUNE_SEED_SALT),
+            "biochem and immune streams must be salt-separated"
+        );
     }
 
     // Golden integer kill counts for the Constant-path regression guard
@@ -5098,14 +5132,22 @@ mod tests {
     // platform/toolchain (seeded RNG + IEEE f64); may differ by an ULP-edge
     // count on other libm/CPU builds — see the test's doc. Update ONLY after
     // confirming a default-path change is intentional.
+    //
+    // RE-BASELINED in #578: the per-cell RNG seed changed from the additive
+    // `cond_seed+offset+idx+step*STRIDE` scheme to the `cell_seed` SplitMix64
+    // hash mix, which reshuffles every per-cell draw. At this 20³ config (and
+    // the dim-60 matrix) both schemes are collision-free, so the shift is pure
+    // RNG noise, not a behavioral change: total_tumor is unchanged and the kill
+    // counts move only by a handful of cells (Constant dead 2992->2988, ferro
+    // 2990->2986; dosed dead 2660->2668, ferro 2658->2662, immune 2->6).
     const GOLDEN_TOTAL_TUMOR: usize = 3071;
-    const GOLDEN_TOTAL_DEAD: usize = 2992;
-    const GOLDEN_FERRO_KILLS: usize = 2990;
+    const GOLDEN_TOTAL_DEAD: usize = 2988;
+    const GOLDEN_FERRO_KILLS: usize = 2986;
     const GOLDEN_IMMUNE_KILLS: usize = 2;
     // Dosed-path golden (MultiDose SDT + immune + stromal + pH, 20³×80).
-    const GOLDEN_DOSED_TOTAL_DEAD: usize = 2660;
-    const GOLDEN_DOSED_FERRO_KILLS: usize = 2658;
-    const GOLDEN_DOSED_IMMUNE_KILLS: usize = 2;
+    const GOLDEN_DOSED_TOTAL_DEAD: usize = 2668;
+    const GOLDEN_DOSED_FERRO_KILLS: usize = 2662;
+    const GOLDEN_DOSED_IMMUNE_KILLS: usize = 6;
 
     /// `--snapshot` (no `=NAME`) defaults to `combined`.
     #[test]
@@ -8636,9 +8678,17 @@ mod tests {
         // deep pockets, so total kills RISE vs the planar-only slab. (Supply
         // scales DELIVERY here, so well-perfused ⇒ more drug ⇒ more death — the
         // vessels make deep tissue LESS therapy-resistant, not "rescued".)
+        //
+        // #578: n_steps raised 80 -> 320. At 80 steps this test rode on a single
+        // borderline near-vessel kill (planar=0, vessels=1), so the #578 seed
+        // reshuffle moved that one cell and broke the assertion (0 vs 0) without
+        // any change in physics. 320 steps lets the focal near-vessel pockets
+        // accumulate a robust margin (planar=0, vessels=21), so the DIRECTION is
+        // demonstrated RNG-insensitively rather than on noise. This asserts an
+        // inequality (not a byte-golden), so it stays valid across libm/platforms.
         let cfg = RunConfig {
             grid_dim: 24,
-            n_steps: 80,
+            n_steps: 320,
         };
         let cond = Condition {
             name: "slab_vessels_rsl3".to_string(),

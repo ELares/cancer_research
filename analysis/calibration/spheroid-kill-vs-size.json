@@ -4,14 +4,14 @@
   "o2_lambda_um": 120.0,
   "supply_gradient_direction": {
     "fixed_threshold_kills_by_radius_um": {
-      "144": 0.036106,
-      "216": 0.016169,
-      "288": 0.008298,
-      "432": 0.00308,
+      "144": 0.037395,
+      "216": 0.016359,
+      "288": 0.008857,
+      "432": 0.002914,
       "540": 0.001854
     },
     "monotone_decreasing_with_size": true,
-    "fold_drop_small_to_large": 19.5,
+    "fold_drop_small_to_large": 20.2,
     "radius_range_um": [
       144.0,
       540.0
@@ -27,9 +27,9 @@
     "size_aware_kills_by_radius_um": {
       "144": 0.0,
       "216": 0.0,
-      "288": 0.000638,
-      "432": 0.00289,
-      "540": 0.001927
+      "288": 0.000718,
+      "432": 0.002867,
+      "540": 0.001975
     },
     "small_spheroids_resist": true,
     "vulnerability_emerges_with_core": true,

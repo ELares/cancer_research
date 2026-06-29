@@ -23,4 +23,23 @@
 #   sha256sum -c sim-tme-3d/expected_summary.sha256
 #
 # (Lines beginning with '#' are ignored by `sha256sum -c`.)
-1cf8866312c100bfb453718dfd68e0b492d2e199485e75e8f622657cd390ff71  output/tme-3d/summary.json
+#
+# RE-BASELINED in #578 (INTENTIONAL — this is the maintainer-approved
+# re-baseline the #253 gate is designed to require for a deliberate output
+# change). The per-cell RNG seed changed from the #539 additive-stride scheme
+# (`cond_seed + offset + idx + step*STRIDE`, which aliased above ~1e6 cells)
+# to the position+step-independent `cell_seed` SplitMix64 hash mix, removing
+# the large-grid collision regime. This reshuffles every per-cell RNG draw, so
+# the summary.json bytes change BY DESIGN. At the dim-60 production matrix the
+# old scheme was ALREADY collision-free, so this is a pure RNG-stream reshuffle,
+# NOT a behavioral change: the headline DIRECTIONS are unchanged (verified
+# old-vs-new — overall_kill_rate moves <0.1% on the headline uniform conditions
+# (Control 0.000%, RSL3 0.069%, SDT 0.005%); the largest overall_kill_rate shift
+# is 1.46% on a low-magnitude RSL3-gradient cell. Near-zero fields (e.g.
+# transition_kill_rate, ~0.0006) move more in RELATIVE terms but only by a
+# handful of cells in absolute count. Hypoxia asymmetry SDT>>RSL3>Control and
+# every gradient/immune ordering preserved). Prior hash: 1cf8866312c100bfb453718dfd68e0b492d2e199485e75e8f622657cd390ff71.
+# The hash below was generated on the pinned 1.96.0 toolchain; the prior baseline
+# was byte-identical on macOS/aarch64 and the CI ubuntu/x86_64 regression, and
+# the sim-tme-3d-regression run dispatched on this PR confirms the new value.
+973d9443bd05851721d53d9a15e53dc828517bba4bf307eb1c4f0b1f60d27289  output/tme-3d/summary.json

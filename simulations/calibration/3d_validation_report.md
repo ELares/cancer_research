@@ -5,6 +5,18 @@ infrastructure (sim-tme-3d, landed in PR #219) is validated, what it
 currently predicts, and where the gap to **independent experimental
 validation** sits.
 
+> **#578 re-baseline note.** The Q1–Q4 numbers below were generated before the
+> #578 per-cell RNG seed change (additive stride → SplitMix64 hash mix). That
+> change reshuffles every per-cell stochastic draw, so these 3D self-consistency
+> values move at the per-cell RNG-noise level. Re-checked against the
+> #578-re-baselined `summary.json`: **Q1 (within-zone collapse 0.016) and Q2
+> (SDT/RSL3 immune ratio 4.0) are unchanged at the stated precision**
+> (0.00033/0.02020 = 0.0163; 111/28 = 3.96); Q3/Q4 may differ only in the last
+> digit. Every self-consistency threshold (0.5, 3.0, 0.7) keeps its margin and
+> every verdict is unchanged — consistent with the dim-60 matrix being far below
+> the old aliasing regime, so #578 is a pure RNG reshuffle, not a behavioral
+> change.
+
 ## Status as of merge
 
 | Layer | State |

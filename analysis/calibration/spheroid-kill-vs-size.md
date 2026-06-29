@@ -17,11 +17,11 @@ phenotype mix, so size-dependence comes only from the O₂/drug supply gradient.
 
 | radius (µm) | 144 | 216 | 288 | 432 | 540 |
 |---|---|---|---|---|---|
-| RSL3 kill | 3.61% | 1.62% | 0.83% | 0.31% | 0.19% |
+| RSL3 kill | 3.74% | 1.64% | 0.89% | 0.29% | 0.19% |
 
 - Monotone-decreasing with size: **True**.
 - Fold-drop smallest→largest (144→540 µm):
-  **19.5x**, within the measured cytotoxic size-resistance
+  **20.2x**, within the measured cytotoxic size-resistance
   range [1.8, 22.0] (in range: **True**).
 
 This reproduces the universal bigger-spheroids-resist-more direction (generic
@@ -32,7 +32,7 @@ uncalibrated.
 
 | radius (µm) | 144 | 216 | 288 | 432 | 540 |
 |---|---|---|---|---|---|
-| RSL3 kill | 0.00% | 0.00% | 0.06% | 0.29% | 0.19% |
+| RSL3 kill | 0.00% | 0.00% | 0.07% | 0.29% | 0.20% |
 
 - Small spheroids (R < 280 µm) resist RSL3 (≈0 kill): **True**.
 - Vulnerability emerges as the persister core appears: **True**.
