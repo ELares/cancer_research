@@ -1735,7 +1735,7 @@ fn run_one_condition_full(
                 // persister downregulates OXPHOS (a main mitochondrial-ROS
                 // source), so a GPX4 inhibitor has less peroxidizable-substrate
                 // flux to act on and kills it less; an HDAC inhibitor re-raises
-                // the ROS and restores the kill (PMID 40909720). Applied as a
+                // the ROS and restores the kill (PMID 41481741). Applied as a
                 // transient save/multiply/restore of THIS cell's basal ROS for
                 // THIS step (NOT durable: basal_ros is a static per-cell
                 // parameter while persister_fraction evolves per step, so a
@@ -2931,7 +2931,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         // OXPHOS-ROS suppression axis (#470): the persisters downregulate OXPHOS,
         // lowering the basal/mitochondrial ROS the GPX4 inhibitor needs, so RSL3
         // kills them LESS than the persister-without-OXPHOS baseline (an HDAC
-        // inhibitor would re-raise the ROS, PMID 40909720). RSL3 (not SDT) so the
+        // inhibitor would re-raise the ROS, PMID 41481741). RSL3 (not SDT) so the
         // ROS-supply kill-reduction is on the covalent-knockdown path it actually
         // governs. No extra overlay; the reduced RSL3 death front IS the result.
         name: "persister-oxphos",
@@ -5972,7 +5972,7 @@ mod tests {
     /// #470: the persister OXPHOS-ROS suppression axis. Drug-tolerant persisters
     /// downregulate OXPHOS, lowering the basal/mitochondrial ROS a GPX4 inhibitor
     /// needs, so RSL3 kills them LESS than the persister-without-OXPHOS baseline;
-    /// an HDAC inhibitor re-raises the ROS and restores the kill (PMID 40909720).
+    /// an HDAC inhibitor re-raises the ROS and restores the kill (PMID 41481741).
     /// A/B with the OXPHOS-suppression config as the only difference. Both the
     /// HDAC-fully-rescued case and the suppression=0 case reproduce the persister
     /// baseline EXACTLY (the byte-identity invariant: `enabled()` keeps the axis

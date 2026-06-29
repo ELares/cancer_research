@@ -32,20 +32,21 @@
 //! analytic shapes it is normalized so a single full-strength dose peaks at
 //! `peak` (typically `1.0`).
 //!
-//! ## Scope / future evolution (TODO #240)
+//! ## Scope / status (was TODO #240; the spatial side has since shipped)
 //!
 //! `factor_at(step)` is a single **global, time-only** scalar: at each step
 //! every cell sees the same availability. That is correct for #239's
-//! uniform-distribution premise, but it does **not** model spatial drug
-//! heterogeneity — radial penetration gradients, vessel-distance occlusion,
-//! interstitial-pressure exclusion. The patient-scale / vasculature work
-//! (#240, #191) will need per-cell availability that varies in space as well
-//! as time. When that lands, the likely shape is a split: keep this type as
-//! the **temporal** schedule (rename toward `DoseTiming`) and introduce a
-//! separate **spatial** `DrugAvailability(cell) -> f64` that composes with
-//! it multiplicatively. The cell-type-efficacy (#241) and immune
-//! dose-response (#243) work will probably ride on that same split. Capturing
-//! the boundary here so the eventual refactor is planned, not a surprise.
+//! uniform-distribution premise, and it remains the **temporal** schedule by
+//! design. Spatial drug heterogeneity — radial penetration gradients,
+//! vessel-distance occlusion, depth-graded supply — is now modeled SEPARATELY
+//! by the per-cell supply fields that landed in #191
+//! (`vasculature::vessel_supply_field`) and #240 (`slab::slab_supply_field`):
+//! the consumer (`sim-tme-3d`) multiplies this temporal `factor_at(step)` by
+//! the per-cell spatial supply when delivering drug. That IS the
+//! temporal×spatial split this note once anticipated — realized at the
+//! consumer rather than by renaming this type to `DoseTiming` plus a separate
+//! `DrugAvailability`, so no refactor of this module is pending; it stays the
+//! time-only schedule by design.
 
 use serde::{Deserialize, Serialize};
 

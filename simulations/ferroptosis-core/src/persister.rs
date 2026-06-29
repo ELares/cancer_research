@@ -279,7 +279,7 @@ pub fn mufa_boost_increment(fraction: f64, cfg: &PersisterConfig) -> f64 {
 /// oxidative phosphorylation, a main source of the mitochondrial ROS /
 /// peroxidizable-substrate flux a GPX4 inhibitor (RSL3) acts on, so they have
 /// less to peroxidize and resist; HDAC inhibitors re-raise OXPHOS / ROS and
-/// restore the kill (PMID 40909720). The consumer multiplies this into the
+/// restore the kill (PMID 41481741). The consumer multiplies this into the
 /// cell's basal ROS:
 ///
 /// ```text
