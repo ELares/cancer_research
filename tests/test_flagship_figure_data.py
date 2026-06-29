@@ -128,7 +128,11 @@ def test_immune_caption_numbers_and_ratio():
     sdt = _rows(conds, "SDT")["imm"]["immune_kills"]
     assert rsl3 == 5
     assert sdt == 521
-    assert round(sdt / max(rsl3, 1)) == 104
+    # The ~104:1 headline as a band rather than `round(...) == 104` (a tautology
+    # of the exact 5/521 goldens above — 521/5 = 104.2 always rounds to 104). The
+    # exact goldens still gate this, so on a 2D fixture re-baseline update them and
+    # this band together; the band documents the intended ~104:1 claim explicitly.
+    assert 100 <= sdt / max(rsl3, 1) <= 108
 
 
 def test_ph_panel_metric_is_immune_free():
