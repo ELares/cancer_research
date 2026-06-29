@@ -58,8 +58,11 @@ spatial/headline prior-predictive intervals. The consequence is unchanged from
   penetration gap, immune ratio) **cannot** be conditioned on in-vitro data and
   stay **prior-predictive** (the existing `headline_uncertainty.py` /
   `uncertainty_intervals.py` intervals, `analysis/identifiability-report.md`).
-  Conditioning them needs an in-vivo ferroptosis dataset that does not exist
-  publicly.
+  Conditioning them needs an in-vivo ferroptosis dataset that maps onto these
+  dimensionless headline parameters — one that does not exist publicly (the in-vivo
+  ferroptosis readouts that DO exist, e.g. the IKE PK course used for tumor-PK
+  calibration [Zhang 2019] and in-vivo SCD1/MUFA [Sen 2025], measure different
+  observables that do not condition the headlines).
 
 This is the posterior #500 asked for (a real multi-inducer posterior with
 held-out generalization), reported with exactly the scope the data supports.
