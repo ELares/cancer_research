@@ -4,11 +4,45 @@ on:
   push:
     branches: [main]
     paths:
-      - 'simulations/**'
+      # Build-affecting inputs only — a data/doc-only edit under simulations/
+      # (targets.yaml, *.md, summary/results *.json, expected_summary.sha256)
+      # has no effect on `cargo test --workspace` yet used to trigger the full
+      # ~25-min suite (#564). Rust sources (incl. build.rs) + crate manifests:
+      - 'simulations/**/*.rs'
+      - 'simulations/Cargo.toml'
+      - 'simulations/**/Cargo.toml'
+      - 'simulations/Cargo.lock'
+      # Toolchain + link config (the #521 macOS pyo3 link wall lives here):
+      - 'simulations/rust-toolchain.toml'
+      - 'simulations/.cargo/**'
+      # C-FFI ABI-verify inputs: the `test` job compiles ferroptosis-ffi/tests/
+      # test_ffi.c against the cdylib and git-diff-guards the cbindgen-generated
+      # ferroptosis.h, so the C harness, the committed header, and the cbindgen
+      # config are all cargo-test inputs:
+      - 'simulations/**/*.c'
+      - 'simulations/**/*.h'
+      - 'simulations/ferroptosis-ffi/cbindgen.toml'
       - '.github/workflows/cargo-test.yml'
   pull_request:
     paths:
-      - 'simulations/**'
+      # Build-affecting inputs only — a data/doc-only edit under simulations/
+      # (targets.yaml, *.md, summary/results *.json, expected_summary.sha256)
+      # has no effect on `cargo test --workspace` yet used to trigger the full
+      # ~25-min suite (#564). Rust sources (incl. build.rs) + crate manifests:
+      - 'simulations/**/*.rs'
+      - 'simulations/Cargo.toml'
+      - 'simulations/**/Cargo.toml'
+      - 'simulations/Cargo.lock'
+      # Toolchain + link config (the #521 macOS pyo3 link wall lives here):
+      - 'simulations/rust-toolchain.toml'
+      - 'simulations/.cargo/**'
+      # C-FFI ABI-verify inputs: the `test` job compiles ferroptosis-ffi/tests/
+      # test_ffi.c against the cdylib and git-diff-guards the cbindgen-generated
+      # ferroptosis.h, so the C harness, the committed header, and the cbindgen
+      # config are all cargo-test inputs:
+      - 'simulations/**/*.c'
+      - 'simulations/**/*.h'
+      - 'simulations/ferroptosis-ffi/cbindgen.toml'
       - '.github/workflows/cargo-test.yml'
 
 permissions:
