@@ -87,10 +87,23 @@ def test_main_writes_preprint_twin_and_other_collision_sections(tmp_path, monkey
 
     assert "1 preprint/published twin groups, 1 other same-title groups." in out
     assert "## Preprint/published twins" in report
-    assert "## Other same-title collisions (review individually)" in report
+    assert "## Other same-title collisions (reviewed individually, #567)" in report
     assert "| 1001 | bioRxiv | 2024 | green | preprint |" in report
     assert "| 1002 | Cancer Discovery | 2025 | gold | published |" in report
     assert "| 2001 | Journal A | 2021 | bronze | published |" in report
     assert "| 2002 | Journal B | 2022 | hybrid | published |" in report
     assert "short title" not in report
+    # the synthetic "other" group has no hand-verified verdict -> flagged for review (#567)
+    assert "not yet reviewed" in report
+
+
+def test_verdict_for_known_and_unreviewed_groups():
+    # known same-title group -> the hand-verified verdict (order-independent: frozenset)
+    known = dcd.verdict_for([{"pmid": "35433483"}, {"pmid": "38487722"}])
+    assert "two distinct corrigenda" in known and "Published Erratum" in known
+    # int vs str PMIDs reconcile, and the letters group resolves too
+    letters = dcd.verdict_for([{"pmid": 19997112}, {"pmid": 19997110}])
+    assert "two independent letters" in letters
+    # an unknown group is flagged not-yet-reviewed rather than presumed benign
+    assert "not yet reviewed" in dcd.verdict_for([{"pmid": "111"}, {"pmid": "222"}])
 

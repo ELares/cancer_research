@@ -24,9 +24,46 @@ REPORT = REPO_ROOT / "analysis" / "corpus-duplicate-audit.md"
 
 PREPRINT_RE = re.compile(r"biorxiv|medrxiv|arxiv|research square|preprints?\b|ssrn", re.I)
 
+# Hand-verified verdicts for "other" same-title collisions (#567), keyed by the
+# frozenset of the group's PMIDs (as strings). Each was checked against NCBI
+# E-utilities (publication type + authors + DOI), not assumed — see the audit.
+# Groups not in this map render as "not yet reviewed" so a future collision is
+# flagged rather than silently presumed benign.
+VERDICTS = {
+    frozenset({"38487722", "35433483"}): (
+        "**Not a content duplicate — two distinct corrigenda.** Both records are PubMed "
+        "type *Published Erratum* (corrigenda) to the same original article (tumor "
+        "treating fields + mild hyperthermia for pancreatic cancer), same authors "
+        "(Bai, Pfeifer, Gross, De La Torre) but different DOIs "
+        "(10.3389/fonc.2022.889215 and 10.3389/fonc.2024.1343421), published two years "
+        "apart. The shared title is the corrigendum-inherits-original-title convention. "
+        "Both are non-research item types, so they do not inflate the #348 OA "
+        "research-article bias analysis. Keep both (the #535 guard-not-remover policy)."
+    ),
+    frozenset({"19997112", "19997110"}): (
+        "**Not duplicates — two independent letters to the editor.** Both records are "
+        "PubMed type *Comment / Letter* responding to the same source article "
+        "(\"High-intensity-focused ultrasound ... the first UK series\"), but by "
+        "different authors (Eggener, Gonzalgo & Yossepowitch vs. Clark) with different "
+        "DOIs (10.1038/sj.bjc.6605455 and 10.1038/sj.bjc.6605453) — distinct "
+        "correspondence sharing a 'Regarding:' title. Non-research item types, so no "
+        "OA-bias inflation. Keep both."
+    ),
+}
+
 
 def norm_title(t: str) -> str:
     return re.sub(r"[^a-z0-9]", "", (t or "").lower())
+
+
+def verdict_for(group) -> str:
+    """Return the hand-verified verdict for a same-title group, or a not-reviewed
+    placeholder so a newly-appearing collision is visibly flagged (#567)."""
+    return VERDICTS.get(
+        frozenset(str(r.get("pmid")) for r in group),
+        "_Verdict: not yet reviewed — check the publication types/DOIs on NCBI and add "
+        "an entry to `VERDICTS` in `scripts/detect_corpus_duplicates.py`._",
+    )
 
 
 def main():
@@ -73,13 +110,21 @@ def main():
         lines += [fmt_row(r) for r in g]
         lines.append("")
     if other:
-        lines += ["## Other same-title collisions (review individually)", ""]
+        lines += [
+            "## Other same-title collisions (reviewed individually, #567)",
+            "",
+            "Each group below carries a hand-verified verdict (publication type / authors "
+            "/ DOI checked on NCBI). These are kept per the guard-not-remover policy.",
+            "",
+        ]
         for g in sorted(other, key=lambda g: norm_title(g[0].get("title"))):
             lines.append(f"**{(g[0].get('title') or '')[:90]}**")
             lines.append("")
             lines.append("| PMID | Journal | Year | OA status | Kind |")
             lines.append("|---|---|---|---|---|")
             lines += [fmt_row(r) for r in g]
+            lines.append("")
+            lines.append(verdict_for(g))
             lines.append("")
 
     REPORT.write_text("\n".join(lines) + "\n", encoding="utf-8")
