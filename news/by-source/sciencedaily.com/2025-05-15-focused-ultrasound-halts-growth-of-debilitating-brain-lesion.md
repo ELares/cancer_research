@@ -48,7 +48,7 @@ claims:
   - '40422537'
   - '40207236'
 review_status: pending
-credibility_score: 51.2
+credibility_score: 55.2
 ---
 
 Focused ultrasound halts growth of debilitating brain lesions

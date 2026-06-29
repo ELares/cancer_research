@@ -119,7 +119,7 @@ claims:
   verification_source: null
   linked_pmids: []
 review_status: pending
-credibility_score: 43.2
+credibility_score: 48.0
 ---
 
 Doctors just found a way to slow one of the deadliest prostate cancers

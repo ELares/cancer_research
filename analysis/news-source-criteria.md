@@ -138,7 +138,9 @@ score = tier_weight × (40 × verified_ratio + 30 × author_score + 20 × recenc
 | `verified_ratio` | 0-1 | verified_claims / total_factual_claims (if total_factual_claims = 0, use 1.0) |
 | `author_score` | 0-1 | 1.0 if named + credentialed, 0.7 if named only, 0.3 if anonymous |
 | `recency` | 0-1 | 1.0 if <6 months old, 0.8 if <1 year, 0.5 if <3 years, 0.2 if older |
-| `cross_citation` | 0-1 | 1.0 if 3+ other trusted sources report same finding, 0.5 if 1-2, 0.0 if unique |
+| `cross_citation` | 0-1 | `min(1, distinct_corpus_pmids / 3)` — the count of DISTINCT corpus PMIDs the article's claims cite, full credit at ≥3 (see note below) |
+
+**Note on `cross_citation` (implementation vs. intent)**: Conceptually this term asks *"is the finding corroborated beyond this one article?"* The pipeline does not track external multi-outlet reporting, so it **proxies** corroboration by how many distinct papers in our own corpus the article's claims link to (`scripts/score_news.py:compute_score`). `#532` first implemented the corpus-PMID term; `#571` re-anchored it from the *fraction of claims anchored to the corpus* to the *count of distinct corpus PMIDs cited* (full credit at ≥3), because the fraction was largely redundant with `verified_ratio` (a corpus-verified claim has its `linked_pmids` set to corpus PMIDs by construction, so it always anchored). The worked examples below (e.g. "widely cited by NCI/IARC", "Reuters, Endpoints, FiercePharma") illustrate the *conceptual* corroboration rubric this term approximates; the number the code actually emits is the distinct-corpus-PMID proxy above.
 
 **Edge case — zero factual claims**: Some articles (especially Tier 3 expert commentary) are entirely interpretive or speculative with no verifiable factual assertions. When `total_factual_claims = 0`, set `verified_ratio = 1.0` — an article with no factual claims has no factual risk. The score then depends on `author_score`, `recency`, and `cross_citation`. This is the correct behavior: pure commentary should be evaluated on author credibility and recency, not penalized for lacking facts to verify.
 

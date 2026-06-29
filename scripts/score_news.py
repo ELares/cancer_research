@@ -77,8 +77,9 @@ def compute_score(fm: dict) -> float:
         40 % -- verified-claim ratio (among FACTUAL claims)
         30 % -- author credentialing
         20 % -- recency
-        10 % -- cross-citation: fraction of the article's linked claims that cite
-                a PMID present in our corpus (#532; was a hard-coded 0.0 stub)
+        10 % -- cross-citation: count of DISTINCT corpus PMIDs the article's claims
+                cite, full credit at >= 3 (#532; was a 0.0 stub; re-anchored off
+                the verified-ratio-redundant anchored-fraction in #571)
 
     The final score is multiplied by a tier weight:
         tier 1 -> 1.0, tier 2 -> 0.8, tier 3 -> 0.6, other -> 0.3
@@ -121,17 +122,26 @@ def compute_score(fm: dict) -> float:
     else:
         recency = 0.2
 
-    # --- Cross-citation: fraction of linked claims anchored to a corpus paper (#532) ---
-    linked_claims = [c for c in claims if c.get("linked_pmids")]
-    if linked_claims:
-        corpus = _corpus_pmids()
-        anchored = sum(
-            1 for c in linked_claims
-            if any(str(p) in corpus for p in c.get("linked_pmids", []))
-        )
-        cross_citation: float = anchored / len(linked_claims)
-    else:
-        cross_citation = 0.0  # no linked PMIDs -> no cross-citation signal
+    # --- Cross-citation: BREADTH of corpus grounding (#532, re-anchored #571) ---
+    # The earlier version (fraction of linked claims anchored to the corpus) was
+    # largely redundant with the verified-ratio term: verify_news_claims sets a
+    # corpus-verified claim's linked_pmids TO corpus PMIDs, so those claims always
+    # scored 1.0. Measure instead the number of DISTINCT corpus papers the article
+    # cites across all its claims — independent of per-claim verification: an
+    # article grounded in several different corpus papers scores higher than one
+    # that re-cites the same paper. Full credit at >= 3 distinct corpus papers.
+    # Caveat (honesty): verify_news_claims links each corpus-verified claim to up
+    # to 5 of its title-matched corpus_hits, so a single strongly-matched claim can
+    # already supply >= 3 distinct PMIDs and saturate this term. It therefore
+    # rewards corpus-citation breadth but is not a pure "distinct claims" measure;
+    # it is a 10% heuristic, and the de-duplication is what removes the old
+    # verified_ratio overlap (#571).
+    corpus = _corpus_pmids()
+    distinct_corpus = {
+        str(p) for c in claims for p in (c.get("linked_pmids") or [])
+        if str(p) in corpus
+    }
+    cross_citation: float = min(1.0, len(distinct_corpus) / 3.0)
 
     score = tier_weight * (
         40 * verified_ratio

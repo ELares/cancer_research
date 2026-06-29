@@ -73,11 +73,14 @@ def main():
         lines += [fmt_row(r) for r in g]
         lines.append("")
     if other:
-        lines += ["## Other same-title collisions (review individually)", "",
-                  "| PMID | Journal | Year | OA status | Kind |", "|---|---|---|---|---|"]
+        lines += ["## Other same-title collisions (review individually)", ""]
         for g in sorted(other, key=lambda g: norm_title(g[0].get("title"))):
+            lines.append(f"**{(g[0].get('title') or '')[:90]}**")
+            lines.append("")
+            lines.append("| PMID | Journal | Year | OA status | Kind |")
+            lines.append("|---|---|---|---|---|")
             lines += [fmt_row(r) for r in g]
-        lines.append("")
+            lines.append("")
 
     REPORT.write_text("\n".join(lines) + "\n", encoding="utf-8")
     print(f"{len(preprint_twins)} preprint/published twin groups, {len(other)} other "
