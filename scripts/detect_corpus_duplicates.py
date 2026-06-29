@@ -31,20 +31,21 @@ PREPRINT_RE = re.compile(r"biorxiv|medrxiv|arxiv|research square|preprints?\b|ss
 # flagged rather than silently presumed benign.
 VERDICTS = {
     frozenset({"38487722", "35433483"}): (
-        "**Not a content duplicate — two distinct corrigenda.** Both records are PubMed "
-        "type *Published Erratum* (corrigenda) to the same original article (tumor "
-        "treating fields + mild hyperthermia for pancreatic cancer), same authors "
-        "(Bai, Pfeifer, Gross, De La Torre) but different DOIs "
-        "(10.3389/fonc.2022.889215 and 10.3389/fonc.2024.1343421), published two years "
-        "apart. The shared title is the corrigendum-inherits-original-title convention. "
+        "**Not a duplicate corpus record — two distinct corrigenda.** Both records are "
+        "PubMed type *Published Erratum*, each an `Erratum for` the same original article "
+        "(PMID 34804927, tumor treating fields + mild hyperthermia for pancreatic cancer), "
+        "sharing one identical 8-author list (Bai, Pfeifer, Gross, De La Torre, …) but with "
+        "different DOIs (10.3389/fonc.2022.889215 and 10.3389/fonc.2024.1343421), volumes, "
+        "and dates two years apart — so they are two separate erratum records, not the same "
+        "record twice. The shared title is the corrigendum-inherits-original-title convention. "
         "Both are non-research item types, so they do not inflate the #348 OA "
         "research-article bias analysis. Keep both (the #535 guard-not-remover policy)."
     ),
     frozenset({"19997112", "19997110"}): (
         "**Not duplicates — two independent letters to the editor.** Both records are "
-        "PubMed type *Comment / Letter* responding to the same source article "
-        "(\"High-intensity-focused ultrasound ... the first UK series\"), but by "
-        "different authors (Eggener, Gonzalgo & Yossepowitch vs. Clark) with different "
+        "PubMed type *Comment / Letter*, each a `Comment on` the same source article "
+        "(PMID 19513068, \"High-intensity-focused ultrasound ... the first UK series\"), but "
+        "by different authors (Eggener, Gonzalgo & Yossepowitch vs. Clark) with different "
         "DOIs (10.1038/sj.bjc.6605455 and 10.1038/sj.bjc.6605453) — distinct "
         "correspondence sharing a 'Regarding:' title. Non-research item types, so no "
         "OA-bias inflation. Keep both."
