@@ -42,7 +42,7 @@ PHYSICAL = {
 def load_fulltext():
     """Full-text records: pmid, mechanisms, is_oa, journal."""
     out = []
-    for line in INDEX.read_text().splitlines():
+    for line in INDEX.read_text(encoding="utf-8").splitlines():
         line = line.strip()
         if not line:
             continue
@@ -294,7 +294,7 @@ def main():
         "research volume.",
         "",
     ]
-    REPORT.write_text("\n".join(lines) + "\n")
+    REPORT.write_text("\n".join(lines) + "\n", encoding="utf-8")
     print(f"wrote {REPORT}")
     print(f"full-text {n_ft} ({100*ft_oa_records/n_ft:.1f}% OA), "
           f"abstract {n_ab} ({100*ab_oa_records/n_ab:.1f}% OA)")
