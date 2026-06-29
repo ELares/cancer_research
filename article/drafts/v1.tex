@@ -595,7 +595,7 @@ Persister + NRF2 & 0.00\% & 0.05\% & 99.5\% & 99.5\% \\
 \end{table}
 \textbf{Key findings from the simulation}:
 
-1. \textbf{RSL3 selectively kills persisters (42.5\%) while sparing glycolytic cells (0\%)}, consistent with experimental findings (PMID:41481741). The model correctly reproduces the published biology: FSP1 downregulation leaves GPX4 as the sole lipid repair pathway, and its pharmacologic inhibition is lethal.
+1. \textbf{RSL3 selectively kills persisters (42.5\%, a model output at the Figure 7 million-cell point) while sparing glycolytic cells (0\%)}. The \textit{direction} --- FSP1-downregulated persisters sensitized to GPX4 inhibition while glycolytic cells resist --- is consistent with Higuchi et al. (PMID:41481741), who show that FSP1 and histone deacetylases \textit{suppress} persister-cell ferroptosis (they are protective brakes, so inhibiting them --- or the persister's own FSP1 downregulation --- sensitizes the cells); the model reproduces that \textit{mechanism} (with FSP1 down, GPX4 is the sole lipid-repair pathway, so its pharmacologic inhibition is lethal), not a specific published kill fraction. The 42.5\% is the model's own number, not a measured value.
 
 2. \textbf{SDT/PDT kills all cell types at high rates (87-100\%)} because the exogenous ROS burst overwhelms GSH defense regardless of phenotype. This is an important finding: \textbf{physical ROS modalities are not inherently selective for persisters}. Their advantage over RSL3 is not selectivity but spatial confinement (focused ultrasound/light limits damage to the tumor volume). Any ICD advantage remains a biological hypothesis, not a result established by this model.
 
