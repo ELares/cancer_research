@@ -150,6 +150,59 @@ const SLAB_PHENOTYPE_SEED: u64 = 0x51ab_0142;
 /// Distinct from the others so senescence marking never touches the matrix or
 /// other realism-layer RNG streams.
 const SENESCENCE_SEED: u64 = 0x5e4e_0341;
+/// Per-step strides of the two per-cell RNG seed streams. A per-cell seed is
+/// `cond_seed + offset + idx + step*STRIDE` (see the `sim_cell_step` biochem call
+/// site and the immune-kill call sites), so within a stream the seed is injective
+/// across steps only while `idx` (which ranges over `n_cells`) stays below the
+/// stride: cell `STRIDE` at step `s` otherwise reuses cell 0 at step `s+1`'s seed.
+/// (#539)
+const BIOCHEM_SEED_STRIDE: u64 = 1_000_000;
+const IMMUNE_SEED_STRIDE: u64 = 2_000_000;
+/// Largest `n_cells` for which BOTH per-cell seed streams stay collision-free,
+/// bounded by the smaller (biochem) stride: 1e6 cells, i.e. `dim ≤ 100`. Above
+/// this the streams alias across steps. The production matrix runs at dim 60
+/// (216 000 cells), far below this, and `--bench` (BENCH_GRID_DIM ≥ 101) is the
+/// only path that exceeds it, so this is a LATENT foot-gun for large/bench grids,
+/// not a live defect: determinism is preserved either way, so the #253
+/// byte-identity SHA gate is blind to it. A real fix (a position+step-independent
+/// seed scheme) changes the matrix bytes and so needs a maintainer-approved #253
+/// re-baseline; `warn_if_seed_aliasing` only makes a future large-grid run fail
+/// loudly instead of silently aliasing. (#539)
+const SEED_COLLISION_FREE_MAX_CELLS: u64 = BIOCHEM_SEED_STRIDE;
+// Compile-time invariant: the biochem stream is the binding (smaller-stride)
+// constraint, so it aliases first and bounds the collision-free max (#539).
+const _: () = assert!(BIOCHEM_SEED_STRIDE < IMMUNE_SEED_STRIDE);
+
+/// Whether both per-cell seed streams stay collision-free at this grid size: the
+/// per-step seed `… + idx + step*STRIDE` is injective across steps only while
+/// `n_cells ≤ STRIDE` (so the max `idx` stays below the stride). Bounded by the
+/// smaller biochem stride. (#539)
+fn seed_collision_free(n_cells: u64) -> bool {
+    n_cells <= SEED_COLLISION_FREE_MAX_CELLS
+}
+
+/// Per-condition guard (#539): if the grid is large enough that the per-cell biochem /
+/// immune RNG seed streams alias across steps, warn loudly (and `debug_assert!` in
+/// debug builds) so a future large-grid production run cannot silently reuse
+/// per-cell stochastic draws. A latent foot-gun only — the production matrix
+/// (dim 60) and every shipped condition are far below the threshold.
+fn warn_if_seed_aliasing(n_cells: usize) {
+    if !seed_collision_free(n_cells as u64) {
+        eprintln!(
+            "WARNING (#539): sim-tme-3d grid has {n_cells} cells (> \
+             {SEED_COLLISION_FREE_MAX_CELLS} seed-collision-free max); the per-cell biochem/\
+             immune RNG seed streams (strides {BIOCHEM_SEED_STRIDE}/{IMMUNE_SEED_STRIDE}) alias \
+             across steps. Determinism is preserved, but per-cell stochastic draws repeat across \
+             steps — do NOT trust large-grid stochastic output until the seed scheme is re-based \
+             (which requires a #253 byte-identity SHA re-baseline)."
+        );
+        debug_assert!(
+            false,
+            "sim-tme-3d seed-stream aliasing at {n_cells} cells (> \
+             {SEED_COLLISION_FREE_MAX_CELLS} collision-free max); see #539"
+        );
+    }
+}
 /// O2-supply factor below which a cell counts as hypoxic for
 /// `vascular_hypoxic_fraction` reporting (#191). `exp(-d/λ) < 0.1` is ~2.3 λ
 /// from the nearest vessel.
@@ -865,6 +918,10 @@ fn run_one_condition_full(
         )
     };
     let n_cells = grid.cells.len();
+    // #539: fail loudly if this grid is large enough to alias the per-cell RNG
+    // seed streams (latent foot-gun above dim 100 / ~1e6 cells; no-op for the
+    // dim-60 production matrix and every shipped condition).
+    warn_if_seed_aliasing(n_cells);
 
     // 3D spheroid radial cell biology (#197): re-assign tumor cells radially
     // (glycolytic rim / OXPHOS mid / persister core) + GSH(core-low) /
@@ -1590,7 +1647,7 @@ fn run_one_condition_full(
                     cond_seed
                         .wrapping_add(500_000)
                         .wrapping_add(idx as u64)
-                        .wrapping_add(step as u64 * 1_000_000),
+                        .wrapping_add(step as u64 * BIOCHEM_SEED_STRIDE),
                 );
 
                 let extra_iron = gc.extra_iron;
@@ -2033,7 +2090,7 @@ fn run_one_condition_full(
                                 cond_seed
                                     .wrapping_add(900_000_000)
                                     .wrapping_add(idx as u64)
-                                    .wrapping_add(step as u64 * 2_000_000),
+                                    .wrapping_add(step as u64 * IMMUNE_SEED_STRIDE),
                             );
                             if rng.gen::<f64>() < kill_prob {
                                 gc.state.dead = true;
@@ -2095,7 +2152,7 @@ fn run_one_condition_full(
                                 cond_seed
                                     .wrapping_add(900_000_000)
                                     .wrapping_add(idx as u64)
-                                    .wrapping_add(step as u64 * 2_000_000),
+                                    .wrapping_add(step as u64 * IMMUNE_SEED_STRIDE),
                             );
                             if rng.gen::<f64>() < kill_prob {
                                 // Immune kills set `state.dead` but deliberately
@@ -5000,6 +5057,40 @@ mod tests {
     use super::*;
     // Test-only: used by the clonal lipid-axis test.
     use ferroptosis_core::clonal::SubclonePerturbation;
+
+    /// #539: the per-cell RNG seed within a stream is `base + idx + step*STRIDE`,
+    /// which is injective across steps only while `idx` (0..n_cells) stays below
+    /// the stride. Pin the collision-free boundary, the aliasing onset, and the
+    /// `seed_collision_free` guard threshold so a future change to the seed scheme
+    /// or the stride can't silently reintroduce the large-grid aliasing.
+    #[test]
+    fn seed_streams_collision_free_below_stride_and_alias_above_539() {
+        let stride = BIOCHEM_SEED_STRIDE;
+        let base = 0xDEAD_BEEF_u64;
+        let seed = |idx: u64, step: u64| {
+            base.wrapping_add(idx)
+                .wrapping_add(step.wrapping_mul(stride))
+        };
+        // Boundary: the last cell of step 0 (idx = stride-1) does NOT collide with
+        // the first cell of step 1 — the stream is injective when n_cells == stride.
+        assert_ne!(seed(stride - 1, 0), seed(0, 1));
+        // One cell past the stride aliases: cell `stride` at step 0 reuses cell 0
+        // at step 1's seed — the exact foot-gun #539 describes.
+        assert_eq!(seed(stride, 0), seed(0, 1));
+
+        // The guard threshold matches the math: dim 100 (1e6 cells) is the safe
+        // ceiling; dim 101 (1_030_301 cells) is the onset of aliasing — exactly the
+        // "dim > ~100" the issue reports.
+        assert!(seed_collision_free(100_u64.pow(3))); // 1_000_000 == max  -> safe
+        assert!(!seed_collision_free(101_u64.pow(3))); // 1_030_301 > max  -> aliasing
+        assert_eq!(SEED_COLLISION_FREE_MAX_CELLS, BIOCHEM_SEED_STRIDE);
+
+        // The production matrix (dim 60, 216 000 cells) is comfortably collision-free.
+        assert!(seed_collision_free((GRID_DIM as u64).pow(3)));
+        // (The immune stream strides wider, so it aliases only at a larger grid than
+        // the binding biochem stream; that biochem-binds-first invariant is enforced
+        // at compile time by the `const _: () = assert!(...)` near the stride consts.)
+    }
 
     // Golden integer kill counts for the Constant-path regression guard
     // (`constant_path_golden_kill_counts`), captured from SDT + immune +
