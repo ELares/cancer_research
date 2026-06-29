@@ -111,10 +111,11 @@ auth, `streamlit run scripts/dashboard.py --server.address 0.0.0.0 --server.port
 **Live demo: https://elares.github.io/cancer_research/** — the Corpus tab runs
 entirely in your browser via [stlite](https://github.com/whitphx/stlite) (Streamlit
 compiled to WebAssembly/Pyodide): it executes `scripts/dashboard.py` on the committed
-`corpus/INDEX.jsonl` client-side, with **no server and no install** (first load ~20-40 s
-while Pyodide + pandas download, then cached). The Simulation-sweep tab shows its
-committed read-only fallback in-browser (the compiled `ferroptosis_core` extension is
-not available under Pyodide). The page is `docs/index.html`, served by GitHub Pages;
+`corpus/INDEX.jsonl` client-side, with **no server and no install** (first load ~30-60 s
+while Pyodide + pandas + matplotlib download, then cached). The Simulation-sweep tab
+shows a read-only notice pointing to the committed prior-predictive intervals (the
+compiled `ferroptosis_core` extension is not available under Pyodide). The page is
+`docs/index.html`, served by GitHub Pages;
 alternatively the app deploys 1-click on Streamlit Community Cloud by pointing it at
 `scripts/dashboard.py`.
 

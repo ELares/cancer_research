@@ -76,7 +76,11 @@ def corpus_tab(records):
         df = pd.DataFrame(0, index=mechs, columns=cancers)
         for (m, c), n in matrix.items():
             df.loc[m, c] = n
-        st.dataframe(df.style.background_gradient(cmap="Blues"), width="stretch")
+        # use_container_width (not width="stretch") for cross-version compatibility:
+        # the stlite/Pyodide demo (#565) bundles Streamlit 1.39, where the string
+        # `width` API does not exist; use_container_width works 1.39->current
+        # (deprecation-warned, not an error, in the newest pinned local Streamlit).
+        st.dataframe(df.style.background_gradient(cmap="Blues"), use_container_width=True)
 
     st.markdown(f"**Articles** ({len(filt):,})")
     cols = ["pmid", "year", "title", "journal", "mechanisms", "cancer_types", "evidence_level", "cited_by_count"]
@@ -84,7 +88,7 @@ def corpus_tab(records):
     for lc in ("mechanisms", "cancer_types"):
         if lc in table:
             table[lc] = table[lc].apply(lambda v: ", ".join(v) if isinstance(v, list) else v)
-    st.dataframe(table, width="stretch", height=400)
+    st.dataframe(table, use_container_width=True, height=400)
 
 
 def _load_json(rel):

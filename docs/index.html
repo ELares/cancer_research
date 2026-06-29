@@ -15,12 +15,13 @@
 
     The "Corpus" tab is fully interactive (filters, mechanism/evidence/year
     charts, the mechanism x cancer matrix, the article table). The "Simulation
-    sweep" tab degrades to its committed read-only fallback, because the compiled
-    `ferroptosis_core` extension is not available in the browser (dashboard.py
-    imports it lazily and handles its absence — see scripts/dashboard.py).
+    sweep" tab shows a read-only notice pointing to the committed prior-predictive
+    intervals, because the compiled `ferroptosis_core` extension is not available
+    in the browser (dashboard.py imports it lazily and handles its absence — see
+    scripts/dashboard.py).
 
     First load downloads Pyodide + pandas/matplotlib wheels (~tens of MB) and the
-    corpus, so give it 20-40 s on first visit; it caches afterward.
+    corpus, so give it 30-60 s on first visit; it caches afterward.
   -->
   <link
     rel="stylesheet"
@@ -43,7 +44,7 @@
     <h1>Loading the cancer-research corpus dashboard…</h1>
     <p>Booting Python (Pyodide) + pandas in your browser via stlite, then fetching
        the corpus index (<code>corpus/INDEX.jsonl</code>, 4,830 records). First load
-       can take 20-40&nbsp;s; it caches afterward.</p>
+       can take 30-60&nbsp;s; it caches afterward.</p>
     <p>Nothing is installed and no server runs — the Corpus tab executes entirely
        client-side. Source: <code>ELares/cancer_research</code> · issue #565.</p>
   </div>
