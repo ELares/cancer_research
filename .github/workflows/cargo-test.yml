@@ -63,9 +63,16 @@ jobs:
         with:
           workspaces: simulations
 
-      - name: Run tests and compile all binaries
+      - name: Run tests (workspace minus the slow sim-tme-3d suite)
+        # #549: sim-tme-3d's heavy 3D spatial A/B integration tests dominate the
+        # Rust suite (~16 min of the serial ~25). They run in the parallel
+        # `test-sim-tme-3d` job below, so the workspace test no longer waits on
+        # them serially — wall-clock drops from the sum toward ~max(this job,
+        # sim-tme-3d). `--exclude` skips only sim-tme-3d's own test targets;
+        # every other crate (including ferroptosis-core, which sim-tme-3d depends
+        # on, and which is recompiled but whose tests run only here) still runs.
         working-directory: simulations
-        run: cargo test --workspace
+        run: cargo test --workspace --exclude sim-tme-3d
 
       - name: Verify C-FFI ABI (PhysiCell integration boundary)
         # `cargo test` exercises the Rust side but never links the extern "C"
@@ -87,6 +94,32 @@ jobs:
           cc -o "$RUNNER_TEMP/test_ffi" ferroptosis-ffi/tests/test_ffi.c \
             -L target/release -lferroptosis_ffi
           LD_LIBRARY_PATH=target/release "$RUNNER_TEMP/test_ffi"
+
+  test-sim-tme-3d:
+    # #549: the slow half of the Rust suite, partitioned out of `test` so it runs
+    # in parallel rather than serially. sim-tme-3d carries the heavy 3D spatial
+    # A/B integration tests (full-grid runs) — ~16 min on their own — so isolating
+    # them cuts the Rust-CI wall-clock from the serial ~25 min toward the
+    # sim-tme-3d floor. Same ubuntu-latest + @stable toolchain + workspace cache
+    # as `test` (rust-cache keys per-job, so the two caches don't collide). This
+    # runs sim-tme-3d's unit + integration + doc tests; `test` runs everything
+    # else via `--exclude sim-tme-3d`, so together they cover the full workspace.
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Cargo registry and build
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: simulations
+
+      - name: Run the sim-tme-3d test suite
+        working-directory: simulations
+        run: cargo test -p sim-tme-3d
 
   build-macos:
     # Guard the documented first build step on Apple Silicon. The Ubuntu `test`
