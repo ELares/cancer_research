@@ -87,6 +87,7 @@ claims:
   linked_pmids: []
 review_status: pending
 credibility_score: 15.2
+scored_at: '2026-06-29'
 ---
 
 New approach to treating aggressive breast cancers shows significant improvement in survival

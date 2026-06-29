@@ -90,6 +90,7 @@ claims:
   linked_pmids: []
 review_status: pending
 credibility_score: 41.5
+scored_at: '2026-06-29'
 ---
 
 A smarter way to screen for breast cancer is emerging

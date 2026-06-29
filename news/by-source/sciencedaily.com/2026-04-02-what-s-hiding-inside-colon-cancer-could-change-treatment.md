@@ -53,6 +53,7 @@ claims:
   linked_pmids: []
 review_status: pending
 credibility_score: 55.2
+scored_at: '2026-06-29'
 ---
 
 Whatâs hiding inside colon cancer could change treatment

@@ -12,6 +12,7 @@ Run: pytest tests/test_pipeline_smoke.py -v
 import importlib
 import json
 import sys
+from datetime import date
 from pathlib import Path
 
 import pytest
@@ -318,7 +319,11 @@ class TestNewsPipeline:
             "author": "Test Author",
             "date_published": "2026-04-01",
         }
-        score = compute_score(fm)
+        # Fixed `as_of` (#587): without it the recency term is computed against
+        # the wall clock, so this assertion would silently slip below 85 once
+        # real-world time passes the 12-month bucket boundary for a 2026-04-01
+        # article — a latent suite time-bomb. 2026-06-01 keeps it ~2 months (recency 1.0).
+        score = compute_score(fm, as_of=date(2026, 6, 1))
         # tier_weight=1.0, verified_ratio=1.0, author=1.0, recency=1.0, cross=0.0
         # 1.0 * (40 + 30 + 20 + 0) = 90
         assert 85 <= score <= 95
@@ -332,7 +337,7 @@ class TestNewsPipeline:
             "author": "Expert",
             "date_published": "2026-04-01",
         }
-        score = compute_score(fm)
+        score = compute_score(fm, as_of=date(2026, 6, 1))  # fixed as_of (#587)
         assert score > 0  # Should not be zero — verified_ratio defaults to 1.0
 
     def test_slugify(self):

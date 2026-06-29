@@ -45,6 +45,7 @@ claims:
   linked_pmids: []
 review_status: pending
 credibility_score: 23.2
+scored_at: '2026-06-29'
 ---
 
 Eating more fruits and vegetables tied to unexpected lung cancer risk

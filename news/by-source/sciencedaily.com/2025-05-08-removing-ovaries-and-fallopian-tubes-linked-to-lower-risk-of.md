@@ -56,6 +56,7 @@ claims:
   - '41951978'
 review_status: pending
 credibility_score: 31.2
+scored_at: '2026-06-29'
 ---
 
 Removing ovaries and fallopian tubes linked to lower risk of early death among breast cancer patients with BRCA cancer genes

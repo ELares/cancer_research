@@ -25,6 +25,7 @@ claims:
   - '42003393'
 review_status: pending
 credibility_score: 47.2
+scored_at: '2026-06-29'
 ---
 
 Blocking a surprising master regulator of immunity eradicates liver tumors in mice

@@ -76,6 +76,7 @@ claims:
   linked_pmids: []
 review_status: pending
 credibility_score: 47.2
+scored_at: '2026-06-29'
 ---
 
 Why colorectal cancer breaks the immune systemâs rules

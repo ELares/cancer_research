@@ -37,6 +37,7 @@ claims:
   - '42020921'
 review_status: pending
 credibility_score: 47.2
+scored_at: '2026-06-29'
 ---
 
 Unusual carbon build-up found in lungs of COPD patients
