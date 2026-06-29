@@ -42,6 +42,22 @@ fn main() {
     eprintln!("=== Vulnerability Window Simulation ===");
     eprintln!("Cells per condition: {}", args.n_cells);
     eprintln!("Seed: {}\n", args.seed);
+    // #585 seed-aliasing guard: the per-cell seed `seed + i*2 + hours*1e6` strides
+    // the CONDITION (timepoint) index. The committed timepoints have a 6-hour
+    // minimum gap, so the smallest cross-condition stride is 6e6 and this binary's
+    // TRUE onset is `2*(i-i') = 6e6`, i.e. n_cells > 3,000,000. The 500_000 bound
+    // below is a uniform CONSERVATIVE floor shared with the other binaries (it warns
+    // well before any real collision here), not sim-window's own derived onset.
+    // n_cells is a CLI arg, so warn rather than silently correlate timepoints. The
+    // real fix (the sim-tme-3d SplitMix64 hash mix, #578) is tracked in #585.
+    if args.n_cells as u64 >= 500_000 {
+        eprintln!(
+            "WARNING (#585): n_cells={} (>= 500k) → adjacent timepoints share per-cell \
+             RNG streams (cross-condition aliasing). Determinism holds, but do NOT trust \
+             large-n_cells output until the SplitMix64 seed (#578) is ported.",
+            args.n_cells,
+        );
+    }
 
     let params = Params::default();
     let recovery = RecoveryRates::default();
