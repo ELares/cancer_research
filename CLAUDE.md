@@ -45,7 +45,7 @@ The repo exists to compare therapeutic mechanisms, evidence depth, resistant-sta
 ## Current Repo State
 
 - local full-text corpus: 4,830 records
-- abstract-only archive: 5,586 records
+- abstract-only archive: 5,593 files in `corpus/abstracts/by-pmid/` = 5,584 systematic-search records + 9 out-of-band landmark-recovery field-definers (`scripts/landmark_coverage.py` registry: VISION, NETTER-1, + the #568 CAR-T/ADC/checkpoint pivotals). The manuscript's frozen PRISMA snapshot reports 5,586 abstract-only — the archive size at manuscript-freeze time, which had already folded in the first two recoveries (VISION + NETTER-1); the live archive grows past that snapshot as field-definers are added
 - mechanism taxonomy, evidence tiers, pathway-targets, biology-process tags, and resistant-state scaffolding are all active
 - evidence tagging is improved but still incomplete (gold-set measured); MECHANISM tagging recall is separately measured non-circularly vs MeSH (#412): 90.6% volume-weighted / 89.2% macro over 9 mechanisms with an independent MeSH leaf (after #418 closed the epigenetic keyword gap, 54.7%→69.8%), with the device/regulated-cell-death/very-recent modalities flagged not-MeSH-measurable (analysis/mechanism-recall-report.md)
 - tissue-of-origin and weighted-evidence layers are active
