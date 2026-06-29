@@ -55,6 +55,26 @@ const CELL_SIZE_UM: f64 = 20.0;
 const N_STEPS: u32 = 180;
 const SEED: u64 = 42;
 
+/// Largest grid (`n_cells = GRID_SIZE²`) for which the per-cell additive RNG seed
+/// streams stay collision-free (#585). The per-cell seed is
+/// `seed + offset + idx + step*stride` (biochem stride 1e6, immune 2e6) alongside
+/// the init stream `seed + idx`; the FIRST aliasing onset is the init stream
+/// colliding with the biochem step-0 stream once `idx` reaches 500_000 (grid >
+/// 707). The production GRID_SIZE=500 (250 000 cells) is far below it, so the
+/// reported numbers are uncorrupted — but this is the same latent foot-gun #578
+/// fixed in sim-tme-3d (SplitMix64 hash mix). The compile-time assert below makes
+/// a future GRID_SIZE bump past the threshold fail at BUILD time instead of
+/// silently aliasing per-cell draws. The real fix (porting the hash mix) changes
+/// this engine's output and so needs a maintainer-approved 2D manuscript
+/// re-baseline; that is tracked in #585.
+const SEED_ALIAS_FREE_MAX_CELLS: u64 = 500_000;
+const _: () = assert!(
+    (GRID_SIZE as u64) * (GRID_SIZE as u64) < SEED_ALIAS_FREE_MAX_CELLS,
+    "GRID_SIZE too large: the additive per-cell RNG seed streams alias above ~500k \
+     cells (#585) — keep GRID_SIZE < 708, or port the sim-tme-3d SplitMix64 seed \
+     (#578) and re-baseline the 2D manuscript outputs."
+);
+
 /// O2 penetration lengths to sweep (μm).
 /// Literature range: 100-150μm (Vaupel, Cancer Res 1989).
 const O2_LAMBDAS: &[f64] = &[80.0, 100.0, 120.0, 150.0];

@@ -20,6 +20,12 @@ use rayon::prelude::*;
 use serde::Serialize;
 
 const N_CELLS: usize = 10_000;
+// #585 seed-aliasing guard: the per-cell gen vs sim RNG streams are 500_000 apart,
+// so they alias only above ~500k cells. N_CELLS=10_000 is 50x below that (the run
+// uses this const, not the CLI arg), so the output is uncorrupted; the assert makes
+// a future bump fail at BUILD time. The real fix (porting the sim-tme-3d SplitMix64
+// hash mix, #578) is tracked in #585.
+const _: () = assert!((N_CELLS as u64) < 500_000);
 const SEED: u64 = 42;
 const N_STEPS: usize = 180;
 

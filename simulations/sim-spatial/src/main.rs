@@ -190,6 +190,25 @@ fn run_spatial(
 fn main() {
     let args = Args::parse();
 
+    // #585 seed-aliasing guard. The per-cell RNG seed is the additive
+    // `seed + offset + idx + step*1e6` scheme (plus the init stream `seed + idx`);
+    // its first aliasing onset is the init stream colliding with the biochem
+    // step-0 stream once `idx` reaches 500_000 — i.e. `n_cells = grid_size² >
+    // 500_000` (grid_size > 707). Unlike sim-tme's compile-time const, `grid_size`
+    // is a CLI argument, so a user can drive it into the aliasing regime; warn
+    // loudly rather than silently produce per-cell draws that repeat across steps.
+    // The real fix (the sim-tme-3d SplitMix64 hash mix, #578) is tracked in #585.
+    if (args.grid_size as u64) * (args.grid_size as u64) >= 500_000 {
+        eprintln!(
+            "WARNING (#585): grid_size={} → {} cells (> 500k seed-collision-free max); \
+             the per-cell additive RNG seed streams alias, so per-cell stochastic draws \
+             repeat across steps. Determinism holds, but do NOT trust large-grid \
+             stochastic output until the SplitMix64 seed (#578) is ported.",
+            args.grid_size,
+            (args.grid_size as u64) * (args.grid_size as u64),
+        );
+    }
+
     // `--photosensitizer` is parsed and validated by clap via the
     // `Photosensitizer` `FromStr` impl, so by the time we reach here
     // `args.photosensitizer` is a valid enum value. Only `--dli-h`
