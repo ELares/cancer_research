@@ -1,6 +1,13 @@
 # Calibration Report
 
-Comparison of current simulation outputs against published calibration targets.
+Comparison of current simulation outputs against the calibration + self-consistency targets in targets.yaml (see each row's target_type).
+
+> Note: regenerated snapshot. The `target_type` of `persister_rsl3_death_rate`,
+> `rsl3_window_closure_72h`, and `invivo_mufa_protection_factor` was corrected
+> from `calibration` to `self-consistency` (#588 audit follow-up) — their target
+> values equal the model's own output / a direction-only anchor, not independent
+> measurements. PASS/STALE status is unaffected (it compares observed vs target,
+> independent of the type label); re-run `calibrate.py` to refresh the table.
 
 **Results: 5 PASS, 3 STALE out of 8 targets.**
 

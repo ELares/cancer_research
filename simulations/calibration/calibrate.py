@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """
-Evaluate simulation parameters against published calibration targets.
+Evaluate simulation parameters against the calibration + self-consistency targets
+in targets.yaml (each row's `target_type` distinguishes independently-measured
+calibration targets from self-consistency checks of the model's own assumptions).
 
 Reads existing simulation output files (no recompilation needed) and
 compares them to the target values defined in targets.yaml.
@@ -401,7 +403,8 @@ def evaluate_target(target: dict) -> dict:
 def generate_report(results: list[dict]) -> str:
     """Generate markdown calibration report."""
     lines = ["# Calibration Report\n"]
-    lines.append("Comparison of current simulation outputs against published calibration targets.\n")
+    lines.append("Comparison of current simulation outputs against the calibration + "
+                 "self-consistency targets in targets.yaml (see each row's target_type).\n")
 
     passed = sum(1 for r in results if r["status"] == "PASS")
     stale = sum(1 for r in results if r["status"] == "STALE")
