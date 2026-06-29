@@ -169,6 +169,9 @@ const IMMUNE_SEED_STRIDE: u64 = 2_000_000;
 /// re-baseline; `warn_if_seed_aliasing` only makes a future large-grid run fail
 /// loudly instead of silently aliasing. (#539)
 const SEED_COLLISION_FREE_MAX_CELLS: u64 = BIOCHEM_SEED_STRIDE;
+// Compile-time invariant: the biochem stream is the binding (smaller-stride)
+// constraint, so it aliases first and bounds the collision-free max (#539).
+const _: () = assert!(BIOCHEM_SEED_STRIDE < IMMUNE_SEED_STRIDE);
 
 /// Whether both per-cell seed streams stay collision-free at this grid size: the
 /// per-step seed `… + idx + step*STRIDE` is injective across steps only while
@@ -178,7 +181,7 @@ fn seed_collision_free(n_cells: u64) -> bool {
     n_cells <= SEED_COLLISION_FREE_MAX_CELLS
 }
 
-/// One-time guard (#539): if the grid is large enough that the per-cell biochem /
+/// Per-condition guard (#539): if the grid is large enough that the per-cell biochem /
 /// immune RNG seed streams alias across steps, warn loudly (and `debug_assert!` in
 /// debug builds) so a future large-grid production run cannot silently reuse
 /// per-cell stochastic draws. A latent foot-gun only — the production matrix
@@ -5084,9 +5087,9 @@ mod tests {
 
         // The production matrix (dim 60, 216 000 cells) is comfortably collision-free.
         assert!(seed_collision_free((GRID_DIM as u64).pow(3)));
-        // The immune stream strides wider, so it aliases only at a larger grid than
-        // the binding biochem stream (biochem is the collision-free bound).
-        assert!(IMMUNE_SEED_STRIDE > BIOCHEM_SEED_STRIDE);
+        // (The immune stream strides wider, so it aliases only at a larger grid than
+        // the binding biochem stream; that biochem-binds-first invariant is enforced
+        // at compile time by the `const _: () = assert!(...)` near the stride consts.)
     }
 
     // Golden integer kill counts for the Constant-path regression guard
