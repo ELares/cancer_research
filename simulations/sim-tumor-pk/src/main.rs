@@ -20,14 +20,36 @@ use rayon::prelude::*;
 use serde::Serialize;
 
 const N_CELLS: usize = 10_000;
-// #585 seed-aliasing guard: the per-cell gen vs sim RNG streams are 500_000 apart,
-// so they alias only above ~500k cells. N_CELLS=10_000 is 50x below that (the run
-// uses this const, not the CLI arg), so the output is uncorrupted; the assert makes
-// a future bump fail at BUILD time. The real fix (porting the sim-tme-3d SplitMix64
-// hash mix, #578) is tracked in #585.
-const _: () = assert!((N_CELLS as u64) < 500_000);
 const SEED: u64 = 42;
 const N_STEPS: usize = 180;
+
+// #585: SplitMix64 per-cell seed hash mix, ported verbatim from sim-tme-3d (#578),
+// replacing the additive `seed + i + 1_000_000` (gen) / `+ 500_000` (sim) scheme
+// whose two per-cell streams were only a fixed 500k apart, aliasing above ~500k
+// cells. `cell_seed` fully decorrelates the (cond, cell, stream) triple; the gen vs
+// sim streams are now separated by SALT, not a fixed offset. All scenarios share
+// cond_seed = SEED (as before — scenarios differ by conc_schedule, not seed).
+const PK_GEN_SALT: u64 = 0x70C0_6E11_0000_0585;
+const PK_SIM_SALT: u64 = 0x70C0_5111_0000_0585;
+const _: () = assert!(PK_GEN_SALT != PK_SIM_SALT);
+
+#[inline]
+fn splitmix64(mut z: u64) -> u64 {
+    z = z.wrapping_add(0x9E37_79B9_7F4A_7C15);
+    z = (z ^ (z >> 30)).wrapping_mul(0xBF58_476D_1CE4_E5B9);
+    z = (z ^ (z >> 27)).wrapping_mul(0x94D0_49BB_1331_11EB);
+    z ^ (z >> 31)
+}
+
+#[inline]
+fn cell_seed(cond_seed: u64, idx: usize, step: usize, salt: u64) -> u64 {
+    splitmix64(
+        cond_seed
+            ^ salt
+            ^ splitmix64(idx as u64).rotate_left(17)
+            ^ splitmix64(step as u64).rotate_left(43),
+    )
+}
 
 #[derive(Serialize)]
 struct ScenarioResult {
@@ -50,16 +72,16 @@ fn run_scenario(conc_schedule: &[f64], params: &Params, seed: u64) -> (usize, f6
     let results: Vec<PKCellResult> = (0..N_CELLS)
         .into_par_iter()
         .map(|i| {
-            let cell_seed = seed.wrapping_add(i as u64).wrapping_add(1_000_000);
-            let mut rng = rand::rngs::StdRng::seed_from_u64(cell_seed);
+            let mut rng = rand::rngs::StdRng::seed_from_u64(cell_seed(seed, i, 0, PK_GEN_SALT));
             let cell = gen_cell(Phenotype::Persister, &mut rng);
-            // Use a different seed for sim vs gen_cell to avoid RNG correlation
+            // #585: separate the sim stream from gen_cell's by SALT (was a fixed
+            // +500_000 offset) to avoid RNG correlation.
             sim_cell_with_pk(
                 &cell,
                 params,
                 conc_schedule,
                 RSL3_INACTIVATION_RATE,
-                cell_seed.wrapping_add(500_000),
+                cell_seed(seed, i, 0, PK_SIM_SALT),
             )
         })
         .collect();
@@ -298,4 +320,27 @@ fn main() {
     fs::write(&crt_path, crt_rows.join("\n")).expect("Failed to write C(r,t) results");
 
     eprintln!("Outputs saved to {}/", output_dir.display());
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::collections::HashSet;
+
+    #[test]
+    fn cell_seed_has_no_additive_aliasing_585() {
+        // The retired additive scheme kept the gen vs sim per-cell streams only a
+        // fixed 500k apart, so they aliased above ~500k cells. The hash mix has no
+        // such regime: across the old danger zone every per-cell seed is distinct,
+        // and the gen vs sim streams never coincide (salt separation, not a +500k
+        // offset).
+        let cond = SEED;
+        let probe = [0usize, 1, 499_999, 500_000, 500_001, 1_000_000];
+        let mut seen = HashSet::new();
+        for &i in &probe {
+            assert!(seen.insert(cell_seed(cond, i, 0, PK_GEN_SALT)));
+            assert!(seen.insert(cell_seed(cond, i, 0, PK_SIM_SALT)));
+        }
+        assert_eq!(seen.len(), probe.len() * 2);
+    }
 }

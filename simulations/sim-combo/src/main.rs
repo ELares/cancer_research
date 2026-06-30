@@ -36,25 +36,43 @@ struct Args {
     output_dir: PathBuf,
 }
 
+// #585: SplitMix64 per-cell seed hash mix, ported verbatim from sim-tme-3d (#578),
+// replacing the additive `seed + i*2(+1) + delay_days*1e6` scheme whose per-cell
+// streams aliased across adjacent delay conditions once `2*(i-i') = 1e6` (n_cells >
+// 500k). `cell_seed` fully decorrelates the (condition, cell, stream) triple, so
+// there is no aliasing regime at ANY n_cells, and the two interleaved streams
+// (cell-gen vs sim) are now separated by SALT instead of a `+1` offset. cond_seed
+// still encodes ONLY delay_days (not tx / with_pd1) to preserve the deliberate
+// paired design: at a fixed delay every treatment reuses the same cells + the same
+// noise, a controlled comparison.
+const COMBO_CELL_SALT: u64 = 0xC0B0_CE11_0000_0585;
+const COMBO_SIM_SALT: u64 = 0xC0B0_5111_0000_0585;
+const _: () = assert!(COMBO_CELL_SALT != COMBO_SIM_SALT);
+
+#[inline]
+fn splitmix64(mut z: u64) -> u64 {
+    z = z.wrapping_add(0x9E37_79B9_7F4A_7C15);
+    z = (z ^ (z >> 30)).wrapping_mul(0xBF58_476D_1CE4_E5B9);
+    z = (z ^ (z >> 27)).wrapping_mul(0x94D0_49BB_1331_11EB);
+    z ^ (z >> 31)
+}
+
+#[inline]
+fn cell_seed(cond_seed: u64, idx: usize, step: usize, salt: u64) -> u64 {
+    splitmix64(
+        cond_seed
+            ^ salt
+            ^ splitmix64(idx as u64).rotate_left(17)
+            ^ splitmix64(step as u64).rotate_left(43),
+    )
+}
+
 fn main() {
     let args = Args::parse();
 
     eprintln!("=== Combination Therapy Optimizer ===");
     eprintln!("Cells per condition: {}", args.n_cells);
     eprintln!("Seed: {}\n", args.seed);
-    // #585 seed-aliasing guard: the per-cell seed `seed + i*2 + delay_days*1e6`
-    // strides the CONDITION index, so adjacent delay conditions alias once
-    // `2*(i-i') = 1e6`, i.e. n_cells > 500_000. Default 50k is 10x below it, but
-    // n_cells is a CLI arg; warn rather than silently correlate conditions. The
-    // real fix (the sim-tme-3d SplitMix64 hash mix, #578) is tracked in #585.
-    if args.n_cells as u64 >= 500_000 {
-        eprintln!(
-            "WARNING (#585): n_cells={} (>= 500k) → adjacent delay conditions share \
-             per-cell RNG streams (cross-condition aliasing). Determinism holds, but do \
-             NOT trust large-n_cells output until the SplitMix64 seed (#578) is ported.",
-            args.n_cells,
-        );
-    }
 
     let params = Params::default();
     let recovery = RecoveryRates::default();
@@ -85,21 +103,20 @@ fn main() {
         for (tx, tx_name) in &treatments {
             for &with_pd1 in &anti_pd1_options {
                 let n = args.n_cells;
+                // #585: per-condition base seed (delay only — see the seed-helper
+                // note above; the hash mix removes the old cross-condition aliasing).
+                let cond_seed = args
+                    .seed
+                    .wrapping_add((delay_days as u64).wrapping_mul(1_000_000));
 
                 // Phase 2: simulate ferroptosis on recovered persisters
                 let outcomes: Vec<(bool, f64, f64, f64)> = (0..n)
                     .into_par_iter()
                     .map(|i| {
-                        let mut cell_rng = StdRng::seed_from_u64(
-                            args.seed
-                                .wrapping_add(i as u64 * 2)
-                                .wrapping_add(delay_days as u64 * 1_000_000),
-                        );
-                        let mut sim_rng = StdRng::seed_from_u64(
-                            args.seed
-                                .wrapping_add(i as u64 * 2 + 1)
-                                .wrapping_add(delay_days as u64 * 1_000_000),
-                        );
+                        let mut cell_rng =
+                            StdRng::seed_from_u64(cell_seed(cond_seed, i, 0, COMBO_CELL_SALT));
+                        let mut sim_rng =
+                            StdRng::seed_from_u64(cell_seed(cond_seed, i, 0, COMBO_SIM_SALT));
                         let cell = gen_recovered_persister(delay_days, &recovery, &mut cell_rng);
                         sim_cell(&cell, *tx, &params, &mut sim_rng)
                     })
@@ -199,4 +216,27 @@ fn main() {
     write_json(&json_path, &all_results).expect("Failed to write JSON");
 
     eprintln!("\n=== Output saved to {} ===", args.output_dir.display());
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::collections::HashSet;
+
+    #[test]
+    fn cell_seed_has_no_additive_aliasing_585() {
+        // The retired additive scheme aliased adjacent delay conditions once
+        // `2*(i-i')` hit the 1e6 stride (n_cells > 500k). The hash mix has no such
+        // regime: probe the old danger zone — seeds at and across the 500k onset
+        // are all distinct, and the two interleaved streams never coincide (salt
+        // separation replaces the old `+1` offset).
+        let cond = 0xDEAD_BEEF_u64;
+        let probe = [0usize, 1, 499_999, 500_000, 500_001, 1_000_000];
+        let mut seen = HashSet::new();
+        for &i in &probe {
+            assert!(seen.insert(cell_seed(cond, i, 0, COMBO_CELL_SALT)));
+            assert!(seen.insert(cell_seed(cond, i, 0, COMBO_SIM_SALT)));
+        }
+        assert_eq!(seen.len(), probe.len() * 2);
+    }
 }
