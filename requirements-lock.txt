@@ -1,18 +1,8 @@
-# Pinned dependency versions for reproducibility.
-# Generated from a clean venv install of requirements.txt.
+# Transitional compatibility export for non-uv workflows.
+# The canonical top-level Python dependency metadata now lives in
+# `pyproject.toml`; once `uv.lock` has been refreshed, regenerate this file with:
 #
-# Platform: macOS (Darwin 25.2.0)
-# Python: 3.11.12
-# Generated: 2026-04-23
-#
-# To regenerate:
-#   python3 -m venv /tmp/lock-env
-#   /tmp/lock-env/bin/pip install -r requirements.txt
-#   /tmp/lock-env/bin/pip freeze > requirements-lock.txt
-#   rm -rf /tmp/lock-env
-#
-# If installation fails on a different platform, regenerate
-# the lockfile on your platform using the commands above.
+#   make export-python
 
 beautifulsoup4==4.15.0
 certifi==2026.6.17

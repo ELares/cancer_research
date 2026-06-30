@@ -6,12 +6,13 @@ research tool: explore the corpus (filters, mechanism/cancer/evidence views, the
 mechanism x cancer matrix) and run a single-cell ferroptosis parameter sweep.
 
 Run:
-    pip install -r requirements-dashboard.txt
+    uv sync --frozen --group dashboard
     streamlit run scripts/dashboard.py
 
 All aggregation logic lives in `scripts/dashboard_data.py` (stdlib-only, unit-
-tested in CI). Streamlit + pandas are UI-only, optional dependencies (NOT in
-requirements-lock.txt). The simulation sweep needs the compiled `ferroptosis_core`
+tested in CI). Streamlit + pandas are UI-only, optional dependencies (exported
+to `requirements-dashboard.txt` for compatibility, but managed canonically via
+`pyproject.toml`/`uv.lock`). The simulation sweep needs the compiled `ferroptosis_core`
 extension; if it is not importable the tab degrades to the committed
 prior-predictive intervals (read-only), per the issue's "committed outputs first,
 live runs optional".

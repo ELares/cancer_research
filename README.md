@@ -64,13 +64,22 @@ Start with the files in `analysis/` if you want to see what we've concluded so f
 See [CONTRIBUTING.md](CONTRIBUTING.md) for full setup instructions, or the quick version:
 
 ```bash
-pip install -r requirements.txt          # or requirements-lock.txt for exact versions
+uv lock                                 # write uv.lock from pyproject.toml
+uv sync --frozen                        # core + default dev dependencies from uv.lock
 cp .env.example .env
 
-python scripts/tag_articles.py
-python scripts/build_index.py
-python scripts/analyze_corpus.py
-python scripts/generate_figures.py
+uv run python scripts/tag_articles.py
+uv run python scripts/build_index.py
+uv run python scripts/analyze_corpus.py
+uv run python scripts/generate_figures.py
+```
+
+If you want the reproducible outer shell as well, use Nix first and then sync:
+
+```bash
+nix develop
+uv lock
+uv sync --frozen
 ```
 
 For the simulations (see [simulations/README.md](simulations/README.md) for all 11 binaries):
@@ -90,7 +99,7 @@ For the Python bindings:
 
 ```bash
 cd simulations
-pip install maturin
+uv tool install maturin              # or: pip install maturin
 maturin develop -m ferroptosis-python/Cargo.toml --release
 python -c "import ferroptosis_core as fc; print(fc.sim_batch('Persister', 'RSL3', n=1000, seed=42))"
 ```
@@ -98,7 +107,8 @@ python -c "import ferroptosis_core as fc; print(fc.sim_batch('Persister', 'RSL3'
 For the interactive dashboard (corpus exploration + a single-cell parameter sweep):
 
 ```bash
-pip install -r requirements-dashboard.txt   # optional UI deps (streamlit, pandas); not in the pinned core
+uv lock
+uv sync --frozen --group dashboard          # optional UI deps
 streamlit run scripts/dashboard.py
 ```
 
@@ -122,6 +132,19 @@ alternatively the app deploys 1-click on Streamlit Community Cloud by pointing i
 **New here / not a specialist?** Start with the one-page plain-language explainer:
 [`docs/EXPLAINER.md`](docs/EXPLAINER.md) — what ferroptosis is, what the three
 headline results mean, and the "directional, not clinical" caveat, in everyday terms.
+
+## Environment management
+
+Top-level Python dependencies are now managed through [`pyproject.toml`](pyproject.toml)
+and `uv.lock`. `uv` is the Python dependency manager of record; generate or
+refresh the lockfile with `uv lock`, then install with `uv sync --frozen`. The
+legacy `requirements*.txt` files remain as transitional compatibility exports for
+non-uv consumers.
+
+Nix is optional. If you already use Nix, [`flake.nix`](flake.nix) provides a
+reproducible shell with Python, `uv`, the Rust toolchain, Graphviz, Git LFS, and
+LaTeX. If you do not use Nix, the normal `uv` + `cargo` workflow remains fully
+supported.
 
 ## Philosophy
 

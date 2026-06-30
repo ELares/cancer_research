@@ -15,6 +15,8 @@ on:
       # the calibration suite still gets a per-PR signal (closes the coverage gap
       # the #564 issue assumed python-test already covered):
       - 'simulations/calibration/**'
+      - 'pyproject.toml'
+      - 'uv.lock'
       - 'requirements*.txt'
       - '.github/workflows/python-test.yml'
   pull_request:
@@ -30,6 +32,8 @@ on:
       # the calibration suite still gets a per-PR signal (closes the coverage gap
       # the #564 issue assumed python-test already covered):
       - 'simulations/calibration/**'
+      - 'pyproject.toml'
+      - 'uv.lock'
       - 'requirements*.txt'
       - '.github/workflows/python-test.yml'
   schedule:
@@ -54,11 +58,17 @@ jobs:
         with:
           python-version: '3.12'
 
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Resolve lockfile
+        run: uv lock
+
       - name: Install dependencies
-        run: pip install -r requirements-lock.txt
+        run: uv sync --frozen --no-install-project
 
       - name: Run smoke tests
-        run: python -m pytest tests/ -v --tb=short
+        run: uv run pytest tests/ -v --tb=short
 
   test-macos:
     if: github.event_name == 'schedule'
@@ -75,8 +85,14 @@ jobs:
         with:
           python-version: '3.12'
 
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Resolve lockfile
+        run: uv lock
+
       - name: Install dependencies
-        run: pip install -r requirements-lock.txt
+        run: uv sync --frozen --no-install-project
 
       - name: Run smoke tests
-        run: python -m pytest tests/ -v --tb=short
+        run: uv run pytest tests/ -v --tb=short

@@ -15,8 +15,7 @@ numpy only, so the offline/pinned-deps CI contract is preserved (sentence-
 transformers / torch are never added to requirements-lock.txt).
 
 Run (in a venv with sentence-transformers installed):
-    pip install sentence-transformers
-    python scripts/embed_gold_set.py
+    uv run --with sentence-transformers python scripts/embed_gold_set.py
 Model: allenai-specter (768-d, designed to embed scientific title+abstract for
 document similarity).
 """
@@ -63,7 +62,8 @@ def main() -> int:
     except ImportError:
         raise SystemExit(
             "sentence-transformers is required for the RECOMPUTE step only "
-            "(not for CI / the offline eval). `pip install sentence-transformers` in a venv."
+            "(not for CI / the offline eval). Run `uv run --with sentence-transformers "
+            "python scripts/embed_gold_set.py`."
         )
     pmids, texts = gold_texts()
     print(f"embedding {len(pmids)} gold records with {MODEL_NAME} ...")

@@ -4,18 +4,32 @@ Thank you for your interest in contributing to this cancer research project. All
 
 ## Prerequisites
 
-- **Python 3.10+** with pip
+- **Python 3.12+** with [uv](https://docs.astral.sh/uv/) (recommended) or pip
 - **Rust 1.56+** (install via [rustup.rs](https://rustup.rs/); the repo pins the tested version in `simulations/rust-toolchain.toml`)
 - **LaTeX** (pdflatex + bibtex) for manuscript compilation
 - **Git LFS** for the `books/` directory
+- **Optional:** Nix, if you want the reproducible outer dev shell in `flake.nix`
 
 ## Setup
 
 ```bash
 git clone https://github.com/ELares/cancer_research.git
 cd cancer_research
-pip install -r requirements.txt          # or requirements-lock.txt for exact versions
+uv lock
+uv sync --frozen
 cd simulations && cargo build --release   # build all simulation binaries
+cd ..
+```
+
+With Nix:
+
+```bash
+git clone https://github.com/ELares/cancer_research.git
+cd cancer_research
+nix develop
+uv lock
+uv sync --frozen
+cd simulations && cargo build --release
 cd ..
 ```
 
@@ -23,7 +37,7 @@ cd ..
 
 ```bash
 # Python pipeline, news, figure traceability, invariant, and integration tests (351 tests)
-python3 -m pytest tests/ -q
+uv run pytest tests/ -q
 
 # Rust simulation tests (full workspace unit + integration suite)
 cd simulations && cargo test --workspace
@@ -74,15 +88,36 @@ accounting" section of `CALIBRATION_STATUS.md` for the standing accounting.
 ## Dependency Management
 
 When adding a Python dependency:
-1. Add it to `requirements.txt` with a minimum version (`>=X.Y.Z`)
-2. Regenerate the lockfile:
+1. Add it to `pyproject.toml`
+2. Refresh the lockfile:
    ```bash
-   python3 -m venv /tmp/lock-env
-   /tmp/lock-env/bin/pip install -r requirements.txt
-   /tmp/lock-env/bin/pip freeze > requirements-lock.txt
-   rm -rf /tmp/lock-env
+   uv lock
    ```
-3. Commit both `requirements.txt` and `requirements-lock.txt`
+3. Regenerate the compatibility exports:
+   ```bash
+   make export-python
+   ```
+4. Commit `pyproject.toml`, `uv.lock`, and any regenerated compatibility files
+
+The top-level Python source of truth is `pyproject.toml` + `uv.lock`. The
+committed `requirements-lock.txt` and `requirements-dashboard.txt` are
+transitional compatibility exports for non-uv consumers and automation that has
+not migrated yet. `requirements.txt` remains as a short-term bridge file for
+older setups, but new dependency edits should start in `pyproject.toml`.
+
+## Maintainer Notes
+
+- Sync the default environment with `uv sync --frozen`
+- Generate or refresh the lockfile with `uv lock`
+- Add dashboard dependencies with `uv sync --frozen --group dashboard`
+- Regenerate compatibility exports with `make export-python`
+- Verify the main workflows with `make test` and `make reproduce`
+- Verify the Docker path still matches the lockfile with `docker build -t cancer-research .`
+
+The nested [`simulations/ferroptosis-python/pyproject.toml`](simulations/ferroptosis-python/pyproject.toml)
+is intentionally separate. It remains the packaging source of truth for the
+distributable `ferroptosis-core` wheel and should not be merged into the
+top-level app environment.
 
 ## Where to Start
 

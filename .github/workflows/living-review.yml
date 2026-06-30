@@ -37,8 +37,14 @@ jobs:
         with:
           python-version: '3.12'
 
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Resolve lockfile
+        run: uv lock
+
       - name: Install dependencies
-        run: pip install -r requirements-lock.txt
+        run: uv sync --frozen --no-install-project
 
       - name: Resolve trailing window
         id: window
@@ -56,7 +62,7 @@ jobs:
           # limit; the script works without it at the lower anonymous rate.
           NCBI_API_KEY: ${{ secrets.NCBI_API_KEY }}
         run: |
-          python scripts/living_review_update.py \
+          uv run python scripts/living_review_update.py \
             --since "${{ steps.window.outputs.since }}" \
             --max "${{ github.event.inputs.max || '200' }}"
 
