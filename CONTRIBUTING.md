@@ -4,7 +4,7 @@ Thank you for your interest in contributing to this cancer research project. All
 
 ## Prerequisites
 
-- **Python 3.10+** with pip
+- **Python 3.12+** with `uv`
 - **Rust 1.56+** (install via [rustup.rs](https://rustup.rs/); the repo pins the tested version in `simulations/rust-toolchain.toml`)
 - **LaTeX** (pdflatex + bibtex) for manuscript compilation
 - **Git LFS** for the `books/` directory
@@ -14,7 +14,7 @@ Thank you for your interest in contributing to this cancer research project. All
 ```bash
 git clone https://github.com/ELares/cancer_research.git
 cd cancer_research
-pip install -r requirements.txt          # or requirements-lock.txt for exact versions
+uv sync --locked --group test
 cd simulations && cargo build --release   # build all simulation binaries
 cd ..
 ```
@@ -23,7 +23,7 @@ cd ..
 
 ```bash
 # Python pipeline, news, figure traceability, invariant, and integration tests (351 tests)
-python3 -m pytest tests/ -q
+uv run python -m pytest tests/ -q
 
 # Rust simulation tests (full workspace unit + integration suite)
 cd simulations && cargo test --workspace
@@ -74,15 +74,16 @@ accounting" section of `CALIBRATION_STATUS.md` for the standing accounting.
 ## Dependency Management
 
 When adding a Python dependency:
-1. Add it to `requirements.txt` with a minimum version (`>=X.Y.Z`)
-2. Regenerate the lockfile:
+1. Add it to the root `pyproject.toml` with the right scope:
+   - `project.dependencies` for the core pipeline
+   - `dependency-groups.test` for test-only packages
+   - `project.optional-dependencies.dashboard` for optional UI packages
+2. Regenerate the reviewed lockfile and pip compatibility exports:
    ```bash
-   python3 -m venv /tmp/lock-env
-   /tmp/lock-env/bin/pip install -r requirements.txt
-   /tmp/lock-env/bin/pip freeze > requirements-lock.txt
-   rm -rf /tmp/lock-env
+   uv lock
+   make export-python
    ```
-3. Commit both `requirements.txt` and `requirements-lock.txt`
+3. Commit `pyproject.toml`, `uv.lock`, and any regenerated export files
 
 ## Where to Start
 

@@ -1,0 +1,33 @@
+name: Setup Python environment
+description: Install uv and sync the repo's locked Python environment
+
+inputs:
+  python-version:
+    description: Python version to install before syncing the environment
+    required: false
+    default: '3.12'
+  uv-version:
+    description: uv version to install
+    required: false
+    default: '0.11.26'
+  sync-args:
+    description: Extra arguments forwarded to `uv sync --locked`
+    required: false
+    default: ''
+
+runs:
+  using: composite
+  steps:
+    - name: Install Python
+      uses: actions/setup-python@v6
+      with:
+        python-version: ${{ inputs.python-version }}
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39
+      with:
+        version: ${{ inputs.uv-version }}
+
+    - name: Sync locked environment
+      shell: bash
+      run: uv sync --locked ${{ inputs.sync-args }}

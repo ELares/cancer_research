@@ -32,13 +32,10 @@ jobs:
           lfs: false
           fetch-depth: 1
 
-      - name: Install Python
-        uses: actions/setup-python@v6
+      - name: Setup locked Python environment
+        uses: ./.github/actions/setup-python-env
         with:
           python-version: '3.12'
-
-      - name: Install dependencies
-        run: pip install -r requirements-lock.txt
 
       - name: Resolve trailing window
         id: window
@@ -55,10 +52,11 @@ jobs:
           # The NCBI API key (if configured as a secret) raises the PubMed rate
           # limit; the script works without it at the lower anonymous rate.
           NCBI_API_KEY: ${{ secrets.NCBI_API_KEY }}
+          MAX_RESULTS: ${{ github.event.inputs.max || '200' }}
         run: |
-          python scripts/living_review_update.py \
+          uv run python scripts/living_review_update.py \
             --since "${{ steps.window.outputs.since }}" \
-            --max "${{ github.event.inputs.max || '200' }}"
+            --max "$MAX_RESULTS"
 
       - name: Upload incremental index + delta changelog
         uses: actions/upload-artifact@v7

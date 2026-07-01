@@ -64,13 +64,13 @@ Start with the files in `analysis/` if you want to see what we've concluded so f
 See [CONTRIBUTING.md](CONTRIBUTING.md) for full setup instructions, or the quick version:
 
 ```bash
-pip install -r requirements.txt          # or requirements-lock.txt for exact versions
+uv sync --locked --group test
 cp .env.example .env
 
-python scripts/tag_articles.py
-python scripts/build_index.py
-python scripts/analyze_corpus.py
-python scripts/generate_figures.py
+uv run python scripts/tag_articles.py
+uv run python scripts/build_index.py
+uv run python scripts/analyze_corpus.py
+uv run python scripts/generate_figures.py
 ```
 
 For the simulations (see [simulations/README.md](simulations/README.md) for all 11 binaries):
@@ -98,8 +98,8 @@ python -c "import ferroptosis_core as fc; print(fc.sim_batch('Persister', 'RSL3'
 For the interactive dashboard (corpus exploration + a single-cell parameter sweep):
 
 ```bash
-pip install -r requirements-dashboard.txt   # optional UI deps (streamlit, pandas); not in the pinned core
-streamlit run scripts/dashboard.py
+uv sync --locked --extra dashboard
+uv run streamlit run scripts/dashboard.py
 ```
 
 The Corpus tab (filters, mechanism/cancer/evidence views, the mechanism x cancer
@@ -118,6 +118,13 @@ compiled `ferroptosis_core` extension is not available under Pyodide). The page 
 `docs/index.html`, served by GitHub Pages;
 alternatively the app deploys 1-click on Streamlit Community Cloud by pointing it at
 `scripts/dashboard.py`.
+
+If you need a pip-only environment, the repo still exports compatibility lockfiles:
+
+```bash
+pip install -r requirements-lock.txt
+pip install -r requirements-dashboard.txt
+```
 
 **New here / not a specialist?** Start with the one-page plain-language explainer:
 [`docs/EXPLAINER.md`](docs/EXPLAINER.md) — what ferroptosis is, what the three

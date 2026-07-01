@@ -15,17 +15,27 @@ on:
   push:
     branches: [main]
     paths:
+      - 'pyproject.toml'
+      - 'uv.lock'
+      - 'requirements-lock.txt'
+      - 'requirements-dashboard.txt'
       - 'corpus/INDEX.jsonl'
       - 'scripts/analyze_corpus.py'
       - 'scripts/oa_bias_analysis.py'
       - 'scripts/config.py'
+      - '.github/actions/setup-python-env/action.yml'
       - '.github/workflows/analysis-freshness.yml'
   pull_request:
     paths:
+      - 'pyproject.toml'
+      - 'uv.lock'
+      - 'requirements-lock.txt'
+      - 'requirements-dashboard.txt'
       - 'corpus/INDEX.jsonl'
       - 'scripts/analyze_corpus.py'
       - 'scripts/oa_bias_analysis.py'
       - 'scripts/config.py'
+      - '.github/actions/setup-python-env/action.yml'
       - '.github/workflows/analysis-freshness.yml'
 
 permissions:
@@ -41,19 +51,16 @@ jobs:
           lfs: false
           fetch-depth: 1
 
-      - name: Install Python
-        uses: actions/setup-python@v6
+      - name: Setup locked Python environment
+        uses: ./.github/actions/setup-python-env
         with:
           python-version: '3.12'
 
-      - name: Install dependencies
-        run: pip install -r requirements-lock.txt
-
       - name: Regenerate derived analysis artifacts and verify they are current
         run: |
-          python3 scripts/analyze_corpus.py
-          python3 scripts/oa_bias_analysis.py
+          uv run python scripts/analyze_corpus.py
+          uv run python scripts/oa_bias_analysis.py
           if ! git diff --exit-code -- analysis/; then
-            echo "::error::Committed analysis/ outputs are stale. Run: python3 scripts/analyze_corpus.py && python3 scripts/oa_bias_analysis.py && git add analysis/"
+            echo "::error::Committed analysis/ outputs are stale. Run: uv run python scripts/analyze_corpus.py && uv run python scripts/oa_bias_analysis.py && git add analysis/"
             exit 1
           fi
