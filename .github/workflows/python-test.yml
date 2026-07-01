@@ -4,6 +4,10 @@ on:
   push:
     branches: [main]
     paths:
+      - 'pyproject.toml'
+      - 'uv.lock'
+      - 'requirements-lock.txt'
+      - 'requirements-dashboard.txt'
       - 'scripts/**'
       - 'tests/**'
       - 'corpus/INDEX.jsonl'
@@ -15,10 +19,14 @@ on:
       # the calibration suite still gets a per-PR signal (closes the coverage gap
       # the #564 issue assumed python-test already covered):
       - 'simulations/calibration/**'
-      - 'requirements*.txt'
+      - '.github/actions/setup-python-env/action.yml'
       - '.github/workflows/python-test.yml'
   pull_request:
     paths:
+      - 'pyproject.toml'
+      - 'uv.lock'
+      - 'requirements-lock.txt'
+      - 'requirements-dashboard.txt'
       - 'scripts/**'
       - 'tests/**'
       - 'corpus/INDEX.jsonl'
@@ -30,7 +38,7 @@ on:
       # the calibration suite still gets a per-PR signal (closes the coverage gap
       # the #564 issue assumed python-test already covered):
       - 'simulations/calibration/**'
-      - 'requirements*.txt'
+      - '.github/actions/setup-python-env/action.yml'
       - '.github/workflows/python-test.yml'
   schedule:
     - cron: '0 8 * * 1'  # Weekly Monday 8am UTC (macOS only)
@@ -49,16 +57,14 @@ jobs:
           lfs: false
           fetch-depth: 1
 
-      - name: Install Python
-        uses: actions/setup-python@v6
+      - name: Setup locked Python environment
+        uses: ./.github/actions/setup-python-env
         with:
           python-version: '3.12'
-
-      - name: Install dependencies
-        run: pip install -r requirements-lock.txt
+          sync-args: --group test
 
       - name: Run smoke tests
-        run: python -m pytest tests/ -v --tb=short
+        run: uv run python -m pytest tests/ -v --tb=short
 
   test-macos:
     if: github.event_name == 'schedule'
@@ -70,13 +76,11 @@ jobs:
           lfs: false
           fetch-depth: 1
 
-      - name: Install Python
-        uses: actions/setup-python@v6
+      - name: Setup locked Python environment
+        uses: ./.github/actions/setup-python-env
         with:
           python-version: '3.12'
-
-      - name: Install dependencies
-        run: pip install -r requirements-lock.txt
+          sync-args: --group test
 
       - name: Run smoke tests
-        run: python -m pytest tests/ -v --tb=short
+        run: uv run python -m pytest tests/ -v --tb=short

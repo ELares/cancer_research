@@ -6,6 +6,7 @@ import hashlib
 import json
 import platform
 import subprocess
+import tomllib
 from datetime import datetime, timezone
 from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
@@ -15,28 +16,33 @@ from config import INDEX_FILE, PMID_DIR, PROJECT_ROOT
 ANALYSIS_DIR = PROJECT_ROOT / "analysis"
 PROVENANCE_LOG = ANALYSIS_DIR / "provenance.jsonl"
 QUERY_FILE = PROJECT_ROOT / "scripts" / "queries.txt"
-REQUIREMENTS_FILE = PROJECT_ROOT / "requirements.txt"
+PYPROJECT_FILE = PROJECT_ROOT / "pyproject.toml"
 
 
-def _parse_requirements_packages() -> list[str]:
-    """Extract package names from requirements.txt, falling back to a static list."""
-    if not REQUIREMENTS_FILE.exists():
+def _dependency_name(spec: str) -> str:
+    """Return the distribution name from a PEP 508 dependency string."""
+    name = spec.split(";", 1)[0].strip()
+    for sep in ("===", ">=", "<=", "==", "~=", "!=", "<", ">"):
+        if sep in name:
+            name = name.split(sep, 1)[0].strip()
+    return name.split("[", 1)[0].strip()
+
+
+def _parse_project_packages() -> list[str]:
+    """Extract core package names from pyproject.toml, falling back to a static list."""
+    if not PYPROJECT_FILE.exists():
         return ["PyYAML", "python-dotenv", "requests", "tqdm", "matplotlib", "numpy", "scipy"]
-    packages = []
-    for line in REQUIREMENTS_FILE.read_text(encoding="utf-8").splitlines():
-        line = line.strip()
-        if not line or line.startswith("#"):
-            continue
-        # Strip version specifiers (>=, ==, ~=, etc.)
-        name = line.split(">=")[0].split("==")[0].split("~=")[0].split("<=")[0].split("!=")[0].split("[")[0].strip()
-        if name:
-            packages.append(name)
-    return packages
+    try:
+        project = tomllib.loads(PYPROJECT_FILE.read_text(encoding="utf-8")).get("project", {})
+    except tomllib.TOMLDecodeError:
+        return ["PyYAML", "python-dotenv", "requests", "tqdm", "matplotlib", "numpy", "scipy"]
+    packages = [_dependency_name(spec) for spec in project.get("dependencies", [])]
+    return [name for name in packages if name]
 
 
 def _safe_package_versions() -> dict[str, str]:
     versions: dict[str, str] = {}
-    for package in _parse_requirements_packages():
+    for package in _parse_project_packages():
         try:
             versions[package] = version(package)
         except PackageNotFoundError:

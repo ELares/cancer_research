@@ -25,9 +25,12 @@ RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | \
 WORKDIR /work
 COPY . .
 
-# Pinned Python dependencies (+ maturin for the optional PyO3 bindings build).
-RUN pip install --no-cache-dir -r requirements-lock.txt && \
-    pip install --no-cache-dir maturin
+# Pinned environment tooling. uv installs the committed lockfile as-is; it does
+# not re-resolve here. maturin stays available for optional local bindings work.
+RUN pip install --no-cache-dir uv==0.11.26 maturin==1.14.1 && \
+    uv sync --locked --group test
+
+ENV PATH=/work/.venv/bin:$PATH
 
 # Pre-build the Rust workspace so `make reproduce` does not pay the cold build.
 RUN cd simulations && cargo build --release --workspace
