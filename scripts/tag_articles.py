@@ -16,11 +16,14 @@ from pathlib import Path
 
 from tqdm import tqdm
 
+import evidence_sections
 from article_io import load_article, save_article
 from config import (
     BIOLOGY_PROCESS_KEYWORDS, CANCER_SUBTYPE_KEYWORDS, CANCER_SUBTYPE_ORDER, CANCER_TYPE_KEYWORDS,
     DIAGNOSTIC_THERAPY_KEYWORDS, DIAGNOSTIC_THERAPY_ORDER,
-    EVIDENCE_LEVEL_KEYWORDS, MECHANISM_KEYWORDS,
+    EVIDENCE_LEVEL_KEYWORDS, EVIDENCE_LEVEL_KEYWORDS_V2_EXTRA,
+    EVIDENCE_PUBTYPE_MARKERS_V2_EXTRA, INVIVO_REAGENT_ANTIPATTERNS, REVIEW_TITLE_PATTERNS,
+    MECHANISM_KEYWORDS,
     PATHWAY_TARGET_KEYWORDS, PMID_DIR, RADIOLIGAND_TARGET_KEYWORDS, TAGS_DIR, RESISTANT_STATE_RULES,
     TISSUE_CATEGORY_ORDER,
     derive_sarcoma_subtypes, derive_tissue_categories,
@@ -99,6 +102,18 @@ EVIDENCE_MESH_OPINION_PUBTYPES = frozenset({
 
 # Master switch: off by default ⇒ byte-identical to the pre-#346 tagger.
 EVIDENCE_USE_MESH_FALLBACK = os.getenv("FERRO_MESH_EXPANSION", "0") == "1"
+
+# --- v2 evidence tagger (#TAGGER-V2) ---
+# Enables, together: section-scoped full text, the expanded evidence
+# vocabularies, the in-vivo reagent guard, the title-shape review guard, and the
+# theoretical-dominance rule. Off by default, so the frozen corpus and every
+# manuscript number stay byte-identical until the layer is deliberately
+# promoted (same contract as the #346 MeSH fallback).
+# `FERRO_EVIDENCE_V2=1` also implies the MeSH fallback, which the gold-set
+# ablation shows is strictly additive with the rest of the stack.
+EVIDENCE_USE_V2 = os.getenv("FERRO_EVIDENCE_V2", "0") == "1"
+if EVIDENCE_USE_V2:
+    EVIDENCE_USE_MESH_FALLBACK = True
 
 MRNA_VACCINE_PLATFORM_TERMS = (
     "mrna vaccine", "mrna vaccines", "mrna cancer vaccine",
@@ -205,6 +220,12 @@ def get_searchable_text(
         parts.append(abstract_match.group(1))
     if include_full_text:
         parts.append(body)
+    elif EVIDENCE_USE_V2 and include_metadata:
+        # v2: add the SELF sections of the full text (Methods/Results/...), which
+        # is where a study states its OWN design. Introduction/Discussion are
+        # deliberately excluded -- they cite OTHER studies, and reading them is
+        # what drops precision from 96% to 89% when full text is enabled whole.
+        parts.append(evidence_sections.self_text(body))
 
     return normalize_text(" ".join(parts))
 
@@ -385,6 +406,133 @@ def match_evidence_mesh(fm: dict) -> str:
     return ""
 
 
+def _kw_present(text: str, kw: str) -> bool:
+    """Shared keyword test: word-boundary for short terms, substring otherwise."""
+    k = kw.lower()
+    if len(k) <= 4:
+        return bool(re.search(r"\b" + re.escape(k) + r"\b", text))
+    return k in text
+
+
+def _count_hits(text: str, keywords) -> int:
+    """Number of DISTINCT keywords from `keywords` present in `text`."""
+    return sum(1 for kw in keywords if _kw_present(text, kw))
+
+
+def _v2_keywords(level: str) -> list:
+    """v1 keywords for `level` plus the v2 additions."""
+    return list(EVIDENCE_LEVEL_KEYWORDS.get(level, [])) + list(
+        EVIDENCE_LEVEL_KEYWORDS_V2_EXTRA.get(level, [])
+    )
+
+
+def _invivo_hits(text: str) -> int:
+    """In-vivo keyword hits, discounting REAGENT/CELL-LINE contexts.
+
+    Bare "murine"/"animal model" match reagent and cell-line prose ("murine
+    Lewis lung carcinoma cell line LL/2"), which is the largest single source
+    of preclinical-invitro -> preclinical-invivo confusion on the gold set. A
+    hit is discounted when every occurrence of that keyword sits inside an
+    antipattern window.
+    """
+    hits = 0
+    for kw in _v2_keywords("preclinical-invivo"):
+        k = kw.lower()
+        if not _kw_present(text, k):
+            continue
+        # Does this keyword occur at least once OUTSIDE a reagent context?
+        genuine = False
+        start = 0
+        while True:
+            i = text.find(k, start)
+            if i < 0:
+                break
+            window = text[max(0, i - 60): i + 60]
+            if not any(ap in window for ap in INVIVO_REAGENT_ANTIPATTERNS):
+                genuine = True
+                break
+            start = i + max(1, len(k))
+        if genuine:
+            hits += 1
+    return hits
+
+
+_REVIEW_TITLE_RE = [re.compile(p) for p in REVIEW_TITLE_PATTERNS]
+
+
+def looks_like_review_v2(fm: dict) -> bool:
+    """Title-shape review detector for records PubMed labels only 'Journal Article'.
+
+    8 of the 13 v1 gold none-applicable records carry no review publication
+    type, and reviews are the largest precision leak once full text is read.
+    """
+    title = normalize_text(fm.get("title", "") or "")
+    return any(rx.search(title) for rx in _REVIEW_TITLE_RE)
+
+
+def match_evidence_level_v2(fm: dict, text: str) -> str:
+    """Evidence-tier decision for the v2 tagger (#TAGGER-V2).
+
+    Differences from v1, each traceable to a measured gold-set error cluster:
+      1. review guard also fires on title shape (guidelines/overviews that
+         PubMed types only as 'Journal Article');
+      2. extra NLM publication types establish patient-level evidence;
+      3. in-vivo hits discount reagent/cell-line contexts;
+      4. a DOMINANCE rule lets `theoretical` win over an incidental wet-lab
+         noun. v1 puts theoretical last in a first-match-wins order, so a
+         public-cohort bioinformatics paper that merely names a cell line is
+         tagged preclinical-invitro. Requiring the computational signal to
+         dominate a weak wet-lab signal fixes that without overriding the
+         guideline rule that real wet-lab work outranks in-silico work.
+    """
+    if is_review_like(fm) or is_protocol_like(fm) or looks_like_review_v2(fm):
+        return ""
+
+    pub_types = [normalize_text(p) for p in fm.get("pub_types", [])]
+
+    # Opinion pub-types are never primary evidence, whatever topical language
+    # they carry. #346 already established this veto for the MeSH branch ("a
+    # commentary is never primary evidence"); v2 applies it to the whole
+    # decision, because an editorial that discusses a phase III trial otherwise
+    # inherits that trial's tier. Measured: editorials/comments/letters are the
+    # largest single none-applicable leak once full text is read.
+    if any(p in EVIDENCE_MESH_OPINION_PUBTYPES for p in pub_types):
+        return ""
+    for level in ["phase3-clinical", "phase2-clinical", "phase1-clinical"]:
+        if any(marker in pub_types for marker in EVIDENCE_PUBTYPE_MARKERS[level]):
+            return level
+    clinical_markers = tuple(EVIDENCE_PUBTYPE_MARKERS["clinical-other"]) + tuple(
+        EVIDENCE_PUBTYPE_MARKERS_V2_EXTRA.get("clinical-other", ())
+    )
+    if any(marker in pub_types for marker in clinical_markers):
+        return "clinical-other"
+
+    invivo = _invivo_hits(text)
+    invitro = _count_hits(text, _v2_keywords("preclinical-invitro"))
+    theoretical = _count_hits(text, _v2_keywords("theoretical"))
+    clinical = _count_hits(text, _v2_keywords("clinical-other"))
+
+    # A strongly computational paper whose only wet-lab signal is an incidental
+    # noun is theoretical, not preclinical.
+    if theoretical >= 3 and invivo == 0 and invitro <= 1:
+        return "theoretical"
+
+    if clinical:
+        return "clinical-other"
+    for level in ["phase3-clinical", "phase2-clinical", "phase1-clinical"]:
+        if any(_kw_present(text, kw) for kw in EVIDENCE_LEVEL_KEYWORDS[level]):
+            return level
+    if invivo:
+        return "preclinical-invivo"
+    if invitro:
+        return "preclinical-invitro"
+    if theoretical:
+        return "theoretical"
+    if EVIDENCE_USE_MESH_FALLBACK:
+        return match_evidence_mesh(fm)
+    return ""
+
+
 def match_evidence_level(fm: dict, text: str) -> str:
     """Match text against evidence level keywords, return best match.
 
@@ -393,7 +541,13 @@ def match_evidence_level(fm: dict, text: str) -> str:
     For text-only inference, strong retrospective/real-world patient-study language
     is allowed to resolve to ``clinical-other`` before generic phase mentions so
     landmark real-world cohorts are not over-promoted into phase-labeled buckets.
+
+    ``FERRO_EVIDENCE_V2=1`` routes to the v2 decision instead; off by default so
+    the frozen corpus stays byte-identical (same contract as #346).
     """
+    if EVIDENCE_USE_V2:
+        return match_evidence_level_v2(fm, text)
+
     if is_review_like(fm) or is_protocol_like(fm):
         return ""
 

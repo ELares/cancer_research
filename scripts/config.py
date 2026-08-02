@@ -637,6 +637,145 @@ EVIDENCE_LEVEL_KEYWORDS = {
     "theoretical": ["computational model", "mathematical model", "simulation", "theoretical framework", "in silico"],
 }
 
+# --- Evidence keyword ADDITIONS for the v2 tagger (#TAGGER-V2) --------------
+#
+# Applied ONLY when FERRO_EVIDENCE_V2=1, exactly like the #346 MeSH fallback,
+# so the frozen corpus and every manuscript number stay byte-identical until
+# the layer is deliberately promoted.
+#
+# Derived from the v1 gold-set error taxonomy, not invented:
+#
+# * `theoretical` scored 5% recall (1 of 20) with ZERO keyword hits on 12 of
+#   12 inspected misses. The five shipped terms describe *mechanistic*
+#   modelling; the actual dominant genre in this corpus is public-cohort
+#   bioinformatics -- "Identification of Tumor Antigens and Immune Subtypes in
+#   Lung Adenocarcinoma", "Integrative analysis of immune and microbial
+#   subtypes", "Multi-seed searching algorithm for codon optimization". None
+#   of those say "simulation" or "in silico". The additions below cover the
+#   public-cohort mining, signature-construction, docking, and device-dosimetry
+#   genres.
+#
+# * `preclinical-invivo` over-fires because bare "murine" and "animal model"
+#   match REAGENT and CELL-LINE prose. Measured example: PMID 39557959 (gold
+#   preclinical-invitro) was promoted by "murine lewis lung carcinoma cell line
+#   ll/2". The fix is not a keyword addition but a context guard --
+#   INVIVO_REAGENT_ANTIPATTERNS below -- plus experiment-anchored phrases that
+#   only appear when an animal was actually treated.
+#
+# * `clinical-other` misses records whose only clinical signal is a PubMed
+#   publication type ("Randomized Controlled Trial") that the shipped
+#   EVIDENCE_PUBTYPE_MARKERS never mapped.
+EVIDENCE_LEVEL_KEYWORDS_V2_EXTRA = {
+    "theoretical": [
+        # public-cohort / bioinformatics mining
+        "bioinformatic", "bioinformatics analysis", "integrative analysis",
+        "the cancer genome atlas", "tcga", "gene expression omnibus", "geo database",
+        "cbioportal", "gepia", "ualcan", "timer2", "depmap",
+        "public dataset", "publicly available dataset", "public database",
+        "rna-seq data were downloaded", "downloaded from tcga",
+        # signature / subtype construction
+        "prognostic signature", "gene signature", "risk score model", "risk signature",
+        "consensus clustering", "unsupervised clustering", "molecular subtypes",
+        "immune subtypes", "wgcna", "weighted gene co-expression",
+        "lasso cox", "univariate cox", "multivariate cox", "nomogram",
+        "differentially expressed genes", "deg analysis",
+        "gene set enrichment analysis", "gsea", "ssgsea", "cibersort", "estimate algorithm",
+        "pathway enrichment", "go enrichment", "kegg enrichment", "functional enrichment",
+        "protein-protein interaction network", "ppi network",
+        # structure / docking / dynamics
+        "molecular docking", "molecular dynamics", "virtual screening",
+        "pharmacophore", "qsar", "binding free energy", "homology modeling",
+        # modelling and ML
+        "machine learning model", "deep learning model", "random forest model",
+        "neural network model", "predictive model", "prediction model",
+        "monte carlo", "agent-based model", "finite element", "finite-element",
+        "ordinary differential equation", "pharmacokinetic model", "pbpk",
+        "network pharmacology", "systems biology model", "flux balance analysis",
+        "dosimetry simulation", "computational fluid dynamics", "numerical simulation",
+        "codon optimization", "epitope prediction", "immunoinformatic",
+        "mendelian randomization", "in-silico",
+    ],
+    "preclinical-invitro": [
+        "cell viability assay", "mtt assay", "cck-8", "colony formation assay",
+        "flow cytometric analysis", "western blot", "transwell",
+        "ic50", "half-maximal inhibitory concentration",
+        "organoid", "spheroid culture", "co-culture", "seeded in", "seeded at",
+        "cells were cultured", "cells were treated", "cells were incubated",
+        "dmem", "rpmi-1640", "fetal bovine serum",
+    ],
+    # Only PATIENT-ANCHORED phrases survive here. Terms measured on the v1 gold
+    # set and dropped for firing more on preclinical than clinical records:
+    #   'we treated'                 7 false / 1 true  -- "we treated cells with..."
+    #   'institutional review board' 7 false / 5 true  -- animal + tissue-donor protocols carry one
+    #   'informed consent was obtained' 5 false / 1 true -- tissue donors, not treated patients
+    #   'were recruited'             2 false / 1 true
+    #   'consecutive patients', 'progression-free survival was', 'overall survival was',
+    #   'chart review', 'medical records', 'ethics committee approved' -- no measured gain
+    "clinical-other": [
+        "patients were enrolled", "patients were treated", "patients underwent",
+        "we enrolled", "median follow-up",
+    ],
+    "preclinical-invivo": [
+        "tumor-bearing", "tumour-bearing", "were inoculated", "were implanted",
+        "subcutaneously injected", "injected subcutaneously", "orthotopic",
+        "nude mice", "athymic", "nod scid", "c57bl/6 mice", "balb/c mice",
+        "tumor volume was measured", "tumour volume was measured",
+        "mice were randomly", "mice were treated", "mice received",
+        "patient-derived xenograft", "syngeneic model",
+    ],
+}
+
+# Phrases that make an in-vivo keyword a REAGENT/CELL-LINE mention rather than
+# an animal experiment. If an in-vivo hit occurs only inside one of these
+# contexts, it does not count. Measured on the v1 gold set: this is the single
+# largest source of preclinical-invitro -> preclinical-invivo confusion.
+INVIVO_REAGENT_ANTIPATTERNS = [
+    "murine cell line", "mouse cell line", "murine-derived cell", "mouse-derived cell",
+    "murine lewis lung", "murine breast cancer cell", "murine melanoma cell",
+    "murine colon carcinoma cell", "murine glioma cell",
+    "mouse anti-", "mouse monoclonal", "mouse polyclonal", "murine antibody",
+    "anti-mouse", "goat anti-mouse", "rabbit anti-mouse",
+    "mouse igg", "murine igg",
+    "mouse embryonic fibroblast", "murine embryonic",
+    "mouse serum albumin", "murine serum",
+]
+
+# PubMed publication types that establish patient-level evidence but were not
+# in EVIDENCE_PUBTYPE_MARKERS. NLM assigns these by expert indexing, so they
+# are high-precision. Measured miss: PMID 33093457 carries
+# 'Randomized Controlled Trial' and was tagged as no-evidence.
+EVIDENCE_PUBTYPE_MARKERS_V2_EXTRA = {
+    "clinical-other": (
+        "randomized controlled trial",
+        "pragmatic clinical trial",
+        "equivalence trial",
+        "multicenter study",
+        "comparative study",
+        "evaluation study",
+        "validation study",
+        "clinical study",
+    ),
+}
+
+# Title shapes that mark a narrative review / guideline / commentary even when
+# PubMed's pub_types say only 'Journal Article'. Measured: 8 of 13 v1 gold
+# none-applicable records carry no review pub_type, and reviews are the largest
+# precision leak once full text is enabled.
+REVIEW_TITLE_PATTERNS = [
+    r"\ba review\b", r"\breview of\b", r"\bsystematic review\b", r"\bnarrative review\b",
+    r"\bscoping review\b", r"\bmeta-analysis\b", r"\bmetaanalysis\b",
+    r"\bconsensus (guideline|statement|recommendation)", r"\bguidelines? for\b",
+    r"^management (consensus )?guidelines", r"\bpractice guideline\b",
+    r"\bcurrent (usage|status|state|landscape|perspectives?|understanding|advances)\b",
+    r"\brecent (advances|progress|developments?)\b",
+    r"\badvances in\b", r"\bprogress in\b", r"\bperspectives? on\b",
+    r"\ban overview\b", r"\boverview of\b", r"\bstate of the art\b",
+    r"\bwhat we know\b", r"\bfuture directions?\b",
+    r"\bemerging (role|strategies|therapies|trends)\b",
+    r"\bcomprehensive review\b", r"\bliterature review\b",
+    r"\bopportunities and challenges\b", r"\bchallenges and opportunities\b",
+]
+
 # --- News Source Tiers ---
 # See analysis/news-source-criteria.md for full framework documentation.
 #
