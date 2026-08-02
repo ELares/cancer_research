@@ -85,6 +85,31 @@ discussion". v2 implements that rule mechanically.
    not override the guideline rule that real wet-lab work outranks in-silico
    work.
 
+### Known defect NOT fixed here: structured metadata is scanned as prose
+
+`get_searchable_text()` folds MeSH descriptors and PubTator gene/drug/disease
+strings into the same free-text blob the keyword matcher scans. That conflates
+"an NLM indexer assigned this descriptor" with "the authors ran this
+experiment". Verified:
+
+```python
+fm = {"title": "x", "mesh_terms": ["Xenograft Model Antitumor Assays", "Animals", "Mice"], ...}
+get_searchable_text(fm, "## Abstract\n\nA purely computational study.\n")
+# -> 'x xenograft model antitumor assays animals mice a purely computational study.'
+# -> match_evidence_level(...) == 'preclinical-invivo'
+```
+
+8.2% of corpus records carry an in-vivo keyword inside their MeSH string alone.
+The descriptor is real information, but it belongs in the structured
+`match_evidence_mesh()` branch, where set-membership against curated leaf
+descriptors is the intended use, not in the prose channel.
+
+A metadata-free evidence channel (`get_evidence_text`) was implemented and
+measured. On its own it did not change the headline, and combined with the
+anchored-predicate work below it made things worse, so neither shipped. The
+defect is recorded here because it is real and independently confirmed, and it
+should be fixed alongside a redesign of the decision rather than bolted on.
+
 ### Changes that were tried and rejected
 
 Six `clinical-other` phrases were added and then removed after measurement,
@@ -100,6 +125,24 @@ because they fired more on preclinical than clinical records:
 `we treated` matches "we treated cells with ..."; animal protocols and
 tissue-donor consent statements carry IRB and consent language. Keeping them
 cost 13 records to `preclinical-invivo -> clinical-other` confusion.
+
+**Anchored branch predicates were implemented and measured, then reverted.**
+The idea is sound in principle: require a subject-verb predicate ("mice *were
+injected*") rather than a bare noun, add a species veto so a canine feasibility
+study is not clinical, and add a secondary-data override so a paper mining TCGA
+is `theoretical`. Implemented in full and measured:
+
+| set | committed v2 | with anchored predicates |
+|---|---|---|
+| HELDOUT | 2.52x | 2.44x |
+| CONSENSUS | **1.95x** | **1.54x** |
+| DEV | 1.46x | 1.35x |
+
+Binary F1 improved slightly (0.971 -> 0.978) but exact-label accuracy fell on
+all three sets, so it was reverted. The likely cause is that the human-experiment
+anchor fires broadly enough to steal records from the preclinical branches; the
+next attempt should gate it on sentence-level attribution rather than a regex
+over the whole SELF text. Recorded so the approach is not re-tried blind.
 
 A "no Methods section implies review" rule was also tried and rejected: measured
 on the v1 gold set it is only 26% precise as a lone `none-applicable` predictor
