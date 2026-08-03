@@ -160,21 +160,60 @@ def test_resolve_accepts_symbol_or_identifier():
     assert ag.resolve(idx, "not-a-gene") is None
 
 
-def test_fsp1_symbol_collision_is_reproduced_not_silently_fixed():
-    """The hazard that motivated scripts/atlas_entity_audit.py.
+@pytest.fixture
+def blocked(monkeypatch):
+    """Pin the blocklist so these tests do not depend on the committed scan."""
+    monkeypatch.setattr(ag, "_AMBIG", ({"fsp1", "er"}, {
+        "er": {"id": "2099", "symbol": "ESR1", "why": "oncology sense"}}))
 
-    PubTator3 maps `FSP1` and `ferroptosis suppressor protein 1` to gene 51062,
-    which NCBI calls ATL1 (atlastin GTPase 1). The real FSP1 is 84883 (AIFM2).
-    The resolver deliberately reports what the data says rather than patching
-    it, so downstream code that queries by SYMBOL gets the wrong gene and the
-    audit is what catches it. If this test ever fails because resolution
-    changed, re-run scripts/atlas_entity_audit.py before trusting any result.
+
+def test_fsp1_symbol_collision_refuses_rather_than_guessing(blocked):
+    """The hazard that motivated scripts/atlas_ambiguity.py.
+
+    PubTator3 maps `FSP1` to gene 51062, which NCBI calls ATL1 (atlastin
+    GTPase 1); the ferroptosis suppressor is 84883 (AIFM2). But `FSP1` is a
+    real alias of BOTH, and of S100A4 -- so there is no single right answer to
+    patch in, and a blanket remap to AIFM2 would corrupt the S100A4 papers that
+    are the majority. resolve() therefore returns None instead of a
+    plausible-looking wrong gene, and the per-paper answer comes from
+    scripts/atlas_disambiguate.py.
     """
     idx = _idx()
-    assert ag.resolve(idx, "FSP1") == "51062"
-    assert idx["canon"]["51062"] == "ATL1"
+    assert ag.resolve(idx, "FSP1") is None
+    assert ag.resolve(idx, "fsp1") is None, "the block is case-insensitive"
+    assert "sense collision" in ag.resolve_reason(idx, "FSP1")
+    # unambiguous symbols are untouched
     assert ag.resolve(idx, "AIFM2") == "84883"
-    assert ag.resolve(idx, "FSP1") != ag.resolve(idx, "AIFM2")
+    assert ag.resolve(idx, "GPX4") == "2879"
+
+
+def test_blocklist_is_checked_before_the_canon_shortcut(blocked):
+    """Regression: PubTator's canonical NAME for gene 51062 is itself "FSP1".
+
+    resolve() short-circuits when a name is a key of `canon`, so a blocked
+    symbol that is also a canon key resolved straight through the block. The
+    blocklist must be consulted first.
+    """
+    idx = _idx()
+    idx["canon"]["FSP1"] = "FSP1"  # the collision that let it through
+    assert ag.resolve(idx, "FSP1") is None
+
+
+def test_domain_sense_is_opt_in_never_silent(blocked):
+    """A curated cancer-domain sense must never apply itself."""
+    idx = _idx()
+    idx["alias"]["er"] = "2069"  # majority vote: EREG
+    assert ag.resolve(idx, "ER") is None, "silent by default is the bug"
+    assert ag.resolve(idx, "ER", allow_domain_sense=True) == "2099", "ESR1 when asked"
+    assert ag.resolve(idx, "FSP1", allow_domain_sense=True) is None, \
+        "FSP1 has no defensible domain default -- it is genuinely per-paper"
+
+
+def test_resolve_majority_reports_the_vote_the_blocklist_refuses(blocked):
+    """The entity audit's job is to REPORT the vote, so it bypasses the block."""
+    idx = _idx()
+    assert ag.resolve_majority(idx, "FSP1") == "51062"
+    assert ag.resolve(idx, "FSP1") is None
 
 
 def test_support_is_order_independent():
@@ -324,3 +363,74 @@ def test_downstream_filters_read_both_census_streams():
         src = (REPO_ROOT / "scripts" / mod).read_text(encoding="utf-8")
         assert "records_unindexed" in src, \
             f"{mod} must include the recovered census stream in its PMID filter"
+
+
+# --- FSP1 sense disambiguation (#ATLAS-AMBIG) ------------------------------
+
+import atlas_disambiguate as ad  # noqa: E402
+
+
+def test_gold_label_needs_exactly_one_declared_sense():
+    """A paper naming two senses is not usable as ground truth."""
+    assert ad.gold_label("we studied ferroptosis suppressor protein 1 (fsp1)") == "AIFM2"
+    assert ad.gold_label("fibroblast-specific protein 1 marks caf") == "S100A4"
+    assert ad.gold_label("atlastin gtpase mutations cause spastic paraplegia") == "ATL1"
+    assert ad.gold_label("fsp1 was measured") is None, "no declaration"
+    assert ad.gold_label(
+        "fsp1 (ferroptosis suppressor protein 1) and s100a4 both rose") is None, \
+        "two senses declared -> unusable, not a coin flip"
+
+
+def test_classifier_cannot_read_the_phrase_that_defines_the_gold_label():
+    """The load-bearing anti-leakage guard.
+
+    The gold label IS the presence of an expansion phrase. If the classifier
+    may read that phrase it scores ~100% and measures nothing. Masking must
+    remove it, so a text carrying ONLY the declaration and no independent cue
+    is an abstention rather than a free correct answer.
+    """
+    pred, _score, why = ad.classify("ferroptosis suppressor protein 1 was studied")
+    assert pred is None, f"leaked the label through the declaration ({why})"
+
+    # the same text plus a genuine, independent cue now decides
+    pred, _score, _ = ad.classify(
+        "ferroptosis suppressor protein 1 was studied; gpx4 and erastin too")
+    assert pred == "AIFM2"
+
+
+def test_masking_does_not_delete_independent_evidence():
+    """Masking must remove the label phrase, not the whole vocabulary."""
+    pred, _s, _w = ad.classify("s100a4 drives invasion and migration in fibroblast rich stroma")
+    assert pred == "S100A4", "cues outside the masked phrase must survive"
+
+
+def test_classifier_abstains_on_a_tie_rather_than_guessing():
+    # 2 cues each: gpx4 + erastin against fibroblast + metasta
+    pred, score, why = ad.classify("gpx4 and erastin in fibroblast and metastasis")
+    assert score["AIFM2"] == score["S100A4"] == 2, "fixture must actually tie"
+    assert pred is None and why == "tie between senses"
+    # an uneven contest still decides
+    pred, _s, _w = ad.classify("gpx4 and erastin and rsl3 in fibroblast tissue")
+    assert pred == "AIFM2"
+
+
+def test_ambiguity_scan_separates_species_from_sense():
+    """The decomposition that keeps the headline honest.
+
+    Undecomposed, 28.3% of mentions sit on a contested surface form. Most are
+    human/mouse orthologs of the SAME gene, which a literature map may merge
+    safely. Reporting the raw figure as an error rate overstates the damage
+    roughly sevenfold, so the two populations must never be pooled.
+    """
+    import json
+    raw = json.loads((REPO_ROOT / "analysis" / "atlas-ambiguity.json").read_text())
+    species = {r["surface"] for r in raw["species_ambiguity"]}
+    sense = {r["surface"] for r in raw["sense_collision"]}
+    assert not (species & sense), "a form cannot be both"
+    assert "gapdh" in species, "human/mouse GAPDH is species ambiguity, not a collision"
+    assert "fsp1" in sense, "FSP1 is a genuine sense collision"
+    assert "fsp1" in raw["blocklist"]
+    # FSP1 ranks ~2181st by mention volume, so a pure top-N scan would miss it
+    assert "fsp1" not in {r["surface"] for r in
+                          sorted(raw["sense_collision"],
+                                 key=lambda r: -r["total"])[:25]}

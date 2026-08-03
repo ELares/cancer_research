@@ -36,7 +36,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from atlas_baseline import atlas_root  # noqa: E402
-from atlas_graph import load_index, resolve  # noqa: E402
+from atlas_graph import load_index, resolve_majority  # noqa: E402
 from config import PROJECT_ROOT  # noqa: E402
 
 OUT = PROJECT_ROOT / "analysis" / "atlas-entity-audit.md"
@@ -82,7 +82,9 @@ def main() -> None:
     symbols = args.symbols or SYMBOLS
 
     idx = load_index(atlas_root())
-    assigned = {s: resolve(idx, s) for s in symbols}
+    # resolve_majority, not resolve: this audit's job is to REPORT what the
+    # majority vote does, including where the blocklist now refuses it.
+    assigned = {s: resolve_majority(idx, s) for s in symbols}
     gene_ids = sorted({v for v in assigned.values() if v and str(v).isdigit()})
     print(f"resolving {len(gene_ids)} identifiers against NCBI ...", flush=True)
     ncbi = ncbi_gene(gene_ids)

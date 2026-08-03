@@ -48,6 +48,11 @@ from atlas_baseline import atlas_root  # noqa: E402
 
 MIN_MENTIONS = 3  # a surface form must appear this often to enter the alias map
 
+# Sense collisions measured by scripts/atlas_ambiguity.py. resolve() refuses to
+# guess on these rather than returning a plausible-looking wrong gene.
+AMBIGUITY_JSON = Path(__file__).resolve().parents[1] / "analysis" / "atlas-ambiguity.json"
+_AMBIG = None
+
 # Per-pair PMIDs are sampled, not truncated. The first version kept
 # `sorted(v)[:50]` over PMID STRINGS, which is a lexicographic (first-digit)
 # order, so the retained PMIDs were systematically the oldest -- and
@@ -152,12 +157,82 @@ def load_index(root: Path) -> dict:
         return pickle.load(fh)
 
 
-def resolve(idx: dict, name: str):
-    """Surface form -> identifier, or the identifier itself if given directly."""
+def _ambiguity():
+    """The committed sense-collision blocklist, loaded once. Empty if absent."""
+    global _AMBIG
+    if _AMBIG is None:
+        try:
+            with open(AMBIGUITY_JSON) as fh:
+                d = json.load(fh)
+            _AMBIG = (set(d.get("blocklist", [])), d.get("domain_sense", {}))
+        except (OSError, ValueError):
+            _AMBIG = (set(), {})
+    return _AMBIG
+
+
+def resolve(idx: dict, name: str, allow_domain_sense: bool = False):
+    """Surface form -> identifier, or the identifier itself if given directly.
+
+    Returns None for a symbol that `atlas_ambiguity.py` measured as a genuine
+    SENSE collision (different genes, not merely different species). The alias
+    map resolves those by majority vote, which returns one identifier with no
+    signal that anything was discarded -- so `ER` silently becomes epiregulin
+    rather than the estrogen receptor, and `FSP1` becomes a spastic-paraplegia
+    gene. Failing loudly is the whole point; call `resolve_reason` for the
+    explanation, or pass allow_domain_sense=True to accept the curated
+    cancer-domain sense where one is defensible.
+    """
+    n = name.strip()
+    key = n.lower()
+    blocked, domain = _ambiguity()
+    # Checked BEFORE the canon shortcut: PubTator's canonical name for gene
+    # 51062 is itself the string "FSP1", so a blocked symbol can also be a
+    # canon key and would otherwise resolve straight through the block.
+    if key in blocked:
+        if allow_domain_sense and key in domain:
+            return domain[key]["id"]
+        return None
+    if n in idx["canon"]:
+        return n
+    return idx["alias"].get(key)
+
+
+def resolve_majority(idx: dict, name: str):
+    """The raw majority-vote identifier, blocklist ignored.
+
+    For callers whose job is to REPORT what the vote does -- the entity audit --
+    rather than to rely on it. Analysis code should use resolve().
+    """
     n = name.strip()
     if n in idx["canon"]:
         return n
     return idx["alias"].get(n.lower())
+
+
+def resolve_reason(idx: dict, name: str) -> str:
+    """Why resolve() returned None, in words a caller can print."""
+    key = name.strip().lower()
+    blocked, domain = _ambiguity()
+    if key in blocked:
+        majority = idx["alias"].get(key)
+        # Name the identifier, not just PubTator's label for it: the label for
+        # gene 51062 is the string "FSP1", so "returns FSP1" reads as agreement
+        # when it is in fact the collision.
+        got = (f"{idx['canon'].get(majority, majority)} (NCBI Gene {majority})"
+               if majority else "nothing")
+        msg = (f"`{name}` is a measured sense collision: the majority vote "
+               f"returns {got}, which may not be the sense you mean "
+               f"(analysis/atlas-ambiguity.md).")
+        if key in domain:
+            d = domain[key]
+            msg += (f" The cancer-domain sense is {d['symbol']} ({d['id']}): "
+                    f"{d['why']} Pass allow_domain_sense=True to accept it.")
+        else:
+            msg += " No domain default is defensible; disambiguate per paper."
+        return msg
+    if not idx["alias"].get(key):
+        return f"`{name}` is not in the alias map (needs >= {MIN_MENTIONS} mentions)."
+    return ""
 
 
 def support(idx: dict, a: str, b: str):
