@@ -8413,6 +8413,62 @@
    "parsed": true,
    "records": "pubmed26n1202.jsonl.gz",
    "total": 30000
+  },
+  "pubmed26n1203.xml.gz": {
+   "cancer": 2148,
+   "no_mesh": 15389,
+   "parsed": true,
+   "records": "pubmed26n1203.jsonl.gz",
+   "total": 30000
+  },
+  "pubmed26n1204.xml.gz": {
+   "cancer": 2881,
+   "no_mesh": 11603,
+   "parsed": true,
+   "records": "pubmed26n1204.jsonl.gz",
+   "total": 30000
+  },
+  "pubmed26n1205.xml.gz": {
+   "cancer": 2564,
+   "no_mesh": 12763,
+   "parsed": true,
+   "records": "pubmed26n1205.jsonl.gz",
+   "total": 30000
+  },
+  "pubmed26n1206.xml.gz": {
+   "cancer": 2696,
+   "no_mesh": 11746,
+   "parsed": true,
+   "records": "pubmed26n1206.jsonl.gz",
+   "total": 30000
+  },
+  "pubmed26n1207.xml.gz": {
+   "cancer": 2346,
+   "no_mesh": 15030,
+   "parsed": true,
+   "records": "pubmed26n1207.jsonl.gz",
+   "total": 30000
+  },
+  "pubmed26n1208.xml.gz": {
+   "cancer": 3070,
+   "no_mesh": 10911,
+   "parsed": true,
+   "records": "pubmed26n1208.jsonl.gz",
+   "total": 30000
+  },
+  "pubmed26n1209.xml.gz": {
+   "cancer": 2730,
+   "no_mesh": 11774,
+   "parsed": true,
+   "records": "pubmed26n1209.jsonl.gz",
+   "total": 30000
+  },
+  "pubmed26n1210.xml.gz": {
+   "cancer": 2784,
+   "no_mesh": 10907,
+   "parsed": true,
+   "records": "pubmed26n1210.jsonl.gz",
+   "total": 30000
   }
  },
  "source": "https://ftp.ncbi.nlm.nih.gov/pubmed/baseline/"

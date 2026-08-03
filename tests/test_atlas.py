@@ -230,3 +230,97 @@ def test_valence_conflict_detects_treats_and_causes():
     assert len(valence) == 1
     assert valence[0]["treat"] == 20 and valence[0]["cause"] == 11
     assert valence[0]["weaker"] == 11
+
+
+# --------------------------------------------------------------------------
+# Regression guards for defects found by adversarial review.
+# Each of these shipped, so each gets a test.
+# --------------------------------------------------------------------------
+
+def test_pmid_sample_is_uniform_not_a_lexicographic_prefix():
+    """PMIDs must be SAMPLED, not truncated by string order.
+
+    The first version stored `sorted(v)[:50]` over PMID strings, which is a
+    first-digit order, so the retained PMIDs were systematically the oldest.
+    atlas_emergence then computed 'share of support since 2021' on a sample
+    built to exclude recent papers: median true recent-share 26.6% read as 0.0%.
+    """
+    import random
+    import atlas_graph as ag
+
+    # 500 PMIDs spanning old (7-digit) and new (8-digit, 4xxxxxxx = recent)
+    old = [str(1_000_000 + i) for i in range(250)]
+    new = [str(40_000_000 + i) for i in range(250)]
+    universe = old + new
+
+    rng = random.Random(ag._RESERVOIR_SEED)
+    res, seen = [], set()
+    for pmid in universe:
+        seen.add(pmid)
+        n = len(seen)
+        if len(res) < ag.PMID_SAMPLE:
+            res.append(pmid)
+        else:
+            j = rng.randrange(n)
+            if j < ag.PMID_SAMPLE:
+                res[j] = pmid
+
+    recent = sum(1 for p in res if int(p) >= 40_000_000)
+    assert len(res) == ag.PMID_SAMPLE
+    # a uniform sample of a 50/50 population should be nowhere near all-old.
+    # The broken lexicographic prefix would give exactly 0 recent.
+    assert recent > 0, "reservoir sample retained no recent PMIDs — prefix bias is back"
+    assert 0.2 < recent / len(res) < 0.8, (
+        f"sample is not representative: {recent}/{len(res)} recent, expected ~50%")
+
+
+def test_graph_index_records_true_support_size():
+    """A share computed from a sample needs the real denominator."""
+    import atlas_graph as ag
+    idx = {
+        "alias": {}, "canon": {"a": "A", "b": "B"},
+        "edges": {("a", "b"): {"associate": 900}},
+        "pmids": {("a", "b"): ["101", "102"]},
+        "n_pmids": {("a", "b"): 873},
+    }
+    r = ag.support(idx, "a", "b")
+    assert r["n_articles"] == 873, "true support size must survive sampling"
+    assert len(r["pmids"]) == 2, "the sample is separate from the true count"
+
+
+def test_seed_replication_by_seed_keys_survive_a_json_round_trip():
+    """The ratio section read `by_seed` with str() while it was built with int
+    keys, so every lookup returned None and the report crashed with a TypeError
+    before it was written. Keys must be str at creation, which is also what a
+    JSON round trip produces."""
+    import json
+    import seed_replication as sr
+
+    src = Path(sr.__file__).read_text(encoding="utf-8")
+    assert "by_seed = {str(s_): v for s_, v in pairs}" in src, \
+        "by_seed must be built with STRING keys"
+    # and a round trip must not change the key type
+    d = {"by_seed": {str(42): 1.0, str(43): 2.0}}
+    assert set(json.loads(json.dumps(d))["by_seed"]) == {"42", "43"}
+
+
+def test_discovery_null_uses_the_same_neighbour_set_as_the_observation():
+    """Bridges were counted over non-hub neighbours only, while the seed's FULL
+    degree was passed as K, inflating the expectation and understating every
+    enrichment by the hub fraction."""
+    import atlas_discovery as ad
+
+    src = Path(ad.__file__).read_text(encoding="utf-8")
+    assert "usable_nb = {b for b in a_nb if degrees.get(b, 0) <= cutoff}" in src
+    assert "deg_a = len(usable_nb)" in src, \
+        "K must be the usable-neighbour count, not the full degree"
+
+
+def test_downstream_filters_read_both_census_streams():
+    """The text-recovered stream was built to reach recent literature and then
+    excluded from every downstream layer, because the filters globbed
+    `records/` only."""
+    for mod in ("atlas_relations.py", "atlas_fulltext.py"):
+        src = (REPO_ROOT / "scripts" / mod).read_text(encoding="utf-8")
+        assert "records_unindexed" in src, \
+            f"{mod} must include the recovered census stream in its PMID filter"
