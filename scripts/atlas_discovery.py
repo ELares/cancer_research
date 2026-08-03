@@ -68,6 +68,24 @@ Every output is a HYPOTHESIS, and the base rate for these is poor. Specifically:
 
 Treat the output as a ranked reading list. Nothing here is a finding.
 
+MEASURED: THE RANKING DOES NOT BEAT POPULARITY
+----------------------------------------------
+The corrections above are the module's answer to "don't just rediscover that
+TP53 is famous". `scripts/atlas_discovery_eval.py` tested that claim with a time
+split -- build the graph as it stood before year Y, rank, and check which pairs
+the literature went on to assert -- and it does not hold.
+
+Over 200 seeds at precision@20, ranking these same candidates by raw popularity
+scores 17.2% against this module's 12.3%. The gap is paired-bootstrap decided
+(-0.99 hits of 20, 95% CI [-1.27, -0.71]) and reproduces at split years 2015,
+2018 and 2021. So the bridge counting, hub filter and hypergeometric tail order
+candidates measurably WORSE than asking which of them is already well studied.
+
+What survives is the candidate SET: both rankings beat random by roughly 6x, so
+restricting attention to 2-hop bridged entities is genuinely informative. This is
+a good candidate generator and a bad ranker. Read the output as a
+popularity-weighted reading list, and see `analysis/atlas-discovery-eval.md`.
+
 Usage:
     python scripts/atlas_discovery.py --seed GPX4
     python scripts/atlas_discovery.py --seed 2879 --top 30

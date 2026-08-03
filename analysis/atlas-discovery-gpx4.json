@@ -2,11 +2,11 @@
  "meta": {
   "seed": "2879",
   "seed_name": "GPX4",
-  "degree": 803,
+  "degree": 804,
   "hub_cutoff": 928,
-  "candidates": 9089,
-  "validated": 6,
-  "documented": 6,
+  "candidates": 9091,
+  "validated": 15,
+  "documented": 15,
   "documented_share": 1.0
  },
  "rows": [
@@ -15,18 +15,18 @@
    "c_name": "ERK",
    "bridges": 410,
    "deg_c": 6499,
-   "expected": 41.35324648568123,
-   "p": 1.0913524641295875e-302,
-   "enrichment": 9.9145782941604,
+   "expected": 41.40474492464223,
+   "p": 2.1191601978555223e-302,
+   "enrichment": 9.902246729117913,
    "via": [
     "NSC59984",
     "MMEL1",
     "L-685,458",
     "CLDND1",
     "GTF2E2",
-    "APMAP"
+    "Agrimonolide"
    ],
-   "q": 9.91930254647382e-299,
+   "q": 1.926528535870455e-298,
    "comentions": 77
   },
   {
@@ -34,9 +34,9 @@
    "c_name": "caspase-3",
    "bridges": 383,
    "deg_c": 5675,
-   "expected": 36.11012060413002,
-   "p": 3.6804582608323376e-290,
-   "enrichment": 10.60644477482568,
+   "expected": 36.155089621071646,
+   "p": 6.732897542886216e-290,
+   "enrichment": 10.593252679334606,
    "via": [
     "SNX30",
     "CLDND1",
@@ -45,7 +45,7 @@
     "rhamnazin",
     "Agrimonolide"
    ],
-   "q": 1.6725842566352558e-286,
+   "q": 3.0604385781189295e-286,
    "comentions": 236
   },
   {
@@ -53,9 +53,9 @@
    "c_name": "cyclin D1",
    "bridges": 329,
    "deg_c": 4646,
-   "expected": 29.562576269037542,
-   "p": 3.4147255973241713e-250,
-   "enrichment": 11.128935347376311,
+   "expected": 29.599391432510817,
+   "p": 5.5815252747312904e-250,
+   "enrichment": 11.115093387989026,
    "via": [
     "FGF6",
     "L-685,458",
@@ -64,7 +64,7 @@
     "Roquin",
     "PTPRG-AS1"
    ],
-   "q": 1.0345480318026465e-246,
+   "q": 1.691388209086072e-246,
    "comentions": 23
   },
   {
@@ -72,47 +72,28 @@
    "c_name": "MMP-9",
    "bridges": 276,
    "deg_c": 4021,
-   "expected": 25.585690739948337,
-   "p": 6.535030453264648e-202,
-   "enrichment": 10.78727960895213,
+   "expected": 25.61755336851614,
+   "p": 9.655018195043572e-202,
+   "enrichment": 10.773862594513135,
    "via": [
     "SCRN1",
     "eriocitrin",
     "isoginkgetin",
-    "SENP5",
     "Monotropein",
+    "SENP5",
     "valtrate"
    ],
-   "q": 1.4849222947430596e-198,
+   "q": 2.1943442602785276e-198,
    "comentions": 18
-  },
-  {
-   "c": "2099",
-   "c_name": "estrogen receptor",
-   "bridges": 266,
-   "deg_c": 4044,
-   "expected": 25.732040127418816,
-   "p": 4.355051289374712e-189,
-   "enrichment": 10.33730705699325,
-   "via": [
-    "giredestrant",
-    "ACADSB",
-    "GDC-0810",
-    "DNAJC12",
-    "TMEM147",
-    "Gigantol"
-   ],
-   "q": 7.91661223382535e-186,
-   "comentions": 49
   },
   {
    "c": "5595",
    "c_name": "ERK1",
    "bridges": 249,
    "deg_c": 3354,
-   "expected": 21.34155850330433,
-   "p": 1.338578660963473e-188,
-   "enrichment": 11.667376586459097,
+   "expected": 21.368135786621025,
+   "p": 1.8913182302993873e-188,
+   "enrichment": 11.652864924038127,
    "via": [
     "CLDND1",
     "Agrimonolide",
@@ -121,8 +102,468 @@
     "falcarindiol",
     "TSPAN15"
    ],
-   "q": 2.0277235749161678e-185,
+   "q": 3.438794806330346e-185,
    "comentions": 36
+  },
+  {
+   "c": "2099",
+   "c_name": "estrogen receptor",
+   "bridges": 265,
+   "deg_c": 4043,
+   "expected": 25.757714068368752,
+   "p": 9.414368356704247e-188,
+   "enrichment": 10.288180049542051,
+   "via": [
+    "giredestrant",
+    "ACADSB",
+    "GDC-0810",
+    "DNAJC12",
+    "TMEM147",
+    "Gigantol"
+   ],
+   "q": 1.4264337121799718e-184,
+   "comentions": 49
+  },
+  {
+   "c": "MESH:D002534",
+   "c_name": "hypoxic",
+   "bridges": 223,
+   "deg_c": 2620,
+   "expected": 16.69186516426568,
+   "p": 2.7274905834710123e-180,
+   "enrichment": 13.359801184915119,
+   "via": [
+    "Bi2O3",
+    "NFS1",
+    "TRIM7",
+    "TRIM15",
+    "CLEC-2",
+    "SETD5"
+   ],
+   "q": 3.5422309849049963e-177,
+   "comentions": 156
+  },
+  {
+   "c": "4313",
+   "c_name": "MMP-2",
+   "bridges": 239,
+   "deg_c": 3491,
+   "expected": 22.240954690248657,
+   "p": 4.513350871604902e-172,
+   "enrichment": 10.745941589674088,
+   "via": [
+    "SCRN1",
+    "eriocitrin",
+    "valtrate",
+    "MSRB1",
+    "hinokiflavone",
+    "Arnicolide D"
+   ],
+   "q": 5.1288590967200203e-169,
+   "comentions": 6
+  },
+  {
+   "c": "842",
+   "c_name": "caspase-9",
+   "bridges": 215,
+   "deg_c": 2617,
+   "expected": 16.672752341558503,
+   "p": 3.962050181891754e-170,
+   "enrichment": 12.895291406931715,
+   "via": [
+    "FGF6",
+    "phillygenin",
+    "leonurine",
+    "Breviscapine",
+    "FSP1",
+    "Methyl protodioscin"
+   ],
+   "q": 4.00211091150866e-167,
+   "comentions": 26
+  },
+  {
+   "c": "142",
+   "c_name": "PARP",
+   "bridges": 222,
+   "deg_c": 2980,
+   "expected": 18.985403889126612,
+   "p": 8.42977199403717e-167,
+   "enrichment": 11.693193428829009,
+   "via": [
+    "BRD4770",
+    "valtrate",
+    "NMNAT",
+    "Gigantol",
+    "Breviscapine",
+    "Arnicolide D"
+   ],
+   "q": 7.663505719779191e-164,
+   "comentions": 52
+  },
+  {
+   "c": "6615",
+   "c_name": "Snail",
+   "bridges": 203,
+   "deg_c": 2375,
+   "expected": 15.130984643179765,
+   "p": 1.739220392785969e-163,
+   "enrichment": 13.416179104477612,
+   "via": [
+    "dihydroisotanshinone I",
+    "eriocitrin",
+    "Longikaurin A",
+    "MSRB1",
+    "DPP7",
+    "beta-eudesmol"
+   ],
+   "q": 1.437386599165204e-160,
+   "comentions": 11
+  },
+  {
+   "c": "MESH:D000255",
+   "c_name": "ATP",
+   "bridges": 229,
+   "deg_c": 3422,
+   "expected": 21.801359767983644,
+   "p": 4.176062300021373e-162,
+   "enrichment": 10.503931976586966,
+   "via": [
+    "Sanggenon C",
+    "perillaldehyde",
+    "DPP7",
+    "hinokiflavone",
+    "beta-eudesmol",
+    "tiliroside"
+   ],
+   "q": 3.1637151974578587e-159,
+   "comentions": 207
+  },
+  {
+   "c": "598",
+   "c_name": "Bcl-xL",
+   "bridges": 194,
+   "deg_c": 2132,
+   "expected": 13.582846003898636,
+   "p": 4.721109179450576e-161,
+   "enrichment": 14.28272101033295,
+   "via": [
+    "FSP1",
+    "Methyl protodioscin",
+    "solasonine",
+    "heteronemin",
+    "psoralidin",
+    "ferric ammonium citrate"
+   ],
+   "q": 3.3015079654142453e-158,
+   "comentions": 19
+  },
+  {
+   "c": "2064",
+   "c_name": "HER2",
+   "bridges": 239,
+   "deg_c": 4130,
+   "expected": 26.31198592687681,
+   "p": 2.482859201141982e-155,
+   "enrichment": 9.083312854613133,
+   "via": [
+    "bavachin",
+    "oral disorders",
+    "KYNU",
+    "mollugin",
+    "KLF14",
+    "KLF11"
+   ],
+   "q": 1.6122623569701254e-152,
+   "comentions": 24
+  },
+  {
+   "c": "5970",
+   "c_name": "p65",
+   "bridges": 191,
+   "deg_c": 2215,
+   "expected": 14.11163409879713,
+   "p": 5.24401349288203e-154,
+   "enrichment": 13.534931437620026,
+   "via": [
+    "Roquin",
+    "USP31",
+    "TAB3",
+    "beta-eudesmol",
+    "mollugin",
+    "macelignan"
+   ],
+   "q": 3.178221777586036e-151,
+   "comentions": 73
+  },
+  {
+   "c": "841",
+   "c_name": "caspase-8",
+   "bridges": 181,
+   "deg_c": 2010,
+   "expected": 12.805591213806874,
+   "p": 6.579306594264111e-149,
+   "enrichment": 14.134450879928716,
+   "via": [
+    "leonurine",
+    "valtrate",
+    "Bi2O3",
+    "SPTBN2",
+    "Methyl protodioscin",
+    "bufotalin"
+   ],
+   "q": 3.7382797655284395e-146
+  },
+  {
+   "c": "1026",
+   "c_name": "p21",
+   "bridges": 194,
+   "deg_c": 2662,
+   "expected": 16.95944468216612,
+   "p": 1.1282536312649735e-142,
+   "enrichment": 11.439053791897015,
+   "via": [
+    "PAX8-AS1",
+    "DETA",
+    "UBAP2L",
+    "BCCIP",
+    "liproxstatin-1",
+    "STK38"
+   ],
+   "q": 6.033502212841102e-140
+  },
+  {
+   "c": "MESH:D000077143",
+   "c_name": "docetaxel",
+   "bridges": 200,
+   "deg_c": 3433,
+   "expected": 21.871440117909952,
+   "p": 1.0273635817728631e-128,
+   "enrichment": 9.144345270443587,
+   "via": [
+    "ACSS3",
+    "fatostatin",
+    "USP3",
+    "SHARPIN",
+    "CaO2",
+    "daphnetin"
+   ],
+   "q": 5.1887568454983883e-126
+  },
+  {
+   "c": "1000",
+   "c_name": "N-cadherin",
+   "bridges": 165,
+   "deg_c": 2070,
+   "expected": 13.187847667950363,
+   "p": 1.4057496265335722e-126,
+   "enrichment": 12.511518494484102,
+   "via": [
+    "eriocitrin",
+    "Longikaurin A",
+    "Monotropein",
+    "dictamnine",
+    "MSRB1",
+    "SGK2"
+   ],
+   "q": 6.726142028850898e-124
+  },
+  {
+   "c": "MESH:D001932",
+   "c_name": "brain tumors",
+   "bridges": 211,
+   "deg_c": 4100,
+   "expected": 26.120857699805068,
+   "p": 1.245942702575533e-125,
+   "enrichment": 8.077835820895523,
+   "via": [
+    "AGuIX",
+    "KLF14",
+    "PNK",
+    "STYK1",
+    "ALKBH3",
+    "CIRBP"
+   ],
+   "q": 5.663432554557085e-123
+  },
+  {
+   "c": "MESH:D002471",
+   "c_name": "tumorigenic",
+   "bridges": 184,
+   "deg_c": 2960,
+   "expected": 18.85798507107878,
+   "p": 1.0511984820956813e-122,
+   "enrichment": 9.757139975796694,
+   "via": [
+    "YY2",
+    "GPD2",
+    "BCCIP",
+    "NSUN5",
+    "ALOX15B",
+    "ALOX12"
+   ],
+   "q": 4.55068828606278e-120
+  },
+  {
+   "c": "1019",
+   "c_name": "CDK4",
+   "bridges": 159,
+   "deg_c": 1975,
+   "expected": 12.582608282223173,
+   "p": 1.853931359770704e-122,
+   "enrichment": 12.636489703381825,
+   "via": [
+    "SELENOK",
+    "Monotropein",
+    "SPTBN2",
+    "METTL7B",
+    "SRSF9",
+    "SNHG4"
+   ],
+   "q": 7.660949996216123e-120
+  },
+  {
+   "c": "960",
+   "c_name": "CD44",
+   "bridges": 165,
+   "deg_c": 2280,
+   "expected": 14.525745257452575,
+   "p": 7.576906881989395e-120,
+   "enrichment": 11.359141791044776,
+   "via": [
+    "bavachin",
+    "HNF1A-AS1",
+    "KYNU",
+    "SETD5",
+    "solasodine",
+    "ARID3A"
+   ],
+   "q": 2.9948548027898078e-117
+  },
+  {
+   "c": "MESH:D000069286",
+   "c_name": "bortezomib",
+   "bridges": 172,
+   "deg_c": 2641,
+   "expected": 16.8256549232159,
+   "p": 1.3395974954157571e-117,
+   "enrichment": 10.222484698808117,
+   "via": [
+    "GCL",
+    "acevaltrate",
+    "falcarindiol",
+    "liproxstatin-1",
+    "NFE2L1",
+    "ferric ammonium citrate"
+   ],
+   "q": 5.07428367951027e-115
+  },
+  {
+   "c": "MESH:D010100",
+   "c_name": "oxygen",
+   "bridges": 164,
+   "deg_c": 2345,
+   "expected": 14.93985641610802,
+   "p": 9.71341884355432e-117,
+   "enrichment": 10.977347802565001,
+   "via": [
+    "K2FeO4",
+    "Sappanone A",
+    "SNAPIN",
+    "LYPLA2",
+    "MTCH1",
+    "PROM2"
+   ],
+   "q": 3.532187628270093e-114
+  },
+  {
+   "c": "MESH:D011230",
+   "c_name": "carcinogenic",
+   "bridges": 193,
+   "deg_c": 3677,
+   "expected": 23.425949698093472,
+   "p": 1.035916841974613e-115,
+   "enrichment": 8.23872681736815,
+   "via": [
+    "ACSS3",
+    "APS",
+    "ELK4",
+    "eriodictyol",
+    "beta-carboline",
+    "trigonelline"
+   ],
+   "q": 3.622123080919694e-113
+  },
+  {
+   "c": "MESH:D061325",
+   "c_name": "breast",
+   "bridges": 195,
+   "deg_c": 4055,
+   "expected": 25.834165359197453,
+   "p": 4.056627540681126e-110,
+   "enrichment": 7.548143990282864,
+   "via": [
+    "HNF1A-AS1",
+    "DUOX1",
+    "TBX5",
+    "ClpP",
+    "COX11",
+    "RAB13"
+   ],
+   "q": 1.365881517493782e-107
+  },
+  {
+   "c": "5243",
+   "c_name": "P-glycoprotein",
+   "bridges": 163,
+   "deg_c": 2573,
+   "expected": 16.392430941853277,
+   "p": 2.702331948709407e-109,
+   "enrichment": 9.943613645723966,
+   "via": [
+    "macelignan",
+    "Sinularin",
+    "RRS1",
+    "sclareol",
+    "FENDRR",
+    "caryophyllene oxide"
+   ],
+   "q": 8.773892766327579e-107
+  },
+  {
+   "c": "MESH:D055752",
+   "c_name": "small cell lung cancer",
+   "bridges": 177,
+   "deg_c": 3211,
+   "expected": 20.457091237579043,
+   "p": 4.5895623694985485e-109,
+   "enrichment": 8.652256469133622,
+   "via": [
+    "SNORA71A",
+    "RCC2",
+    "sclareol",
+    "GSS",
+    "ginkgetin",
+    "HIN-1"
+   ],
+   "q": 1.438748672452114e-106
+  },
+  {
+   "c": "MESH:D000092182",
+   "c_name": "metastatic disease",
+   "bridges": 187,
+   "deg_c": 3703,
+   "expected": 23.59159416155565,
+   "p": 5.714090608484965e-109,
+   "enrichment": 7.926552089673157,
+   "via": [
+    "PROM2",
+    "CPEB1",
+    "atractylenolide II",
+    "CST1",
+    "TRIM22",
+    "HNRNPM"
+   ],
+   "q": 1.7315599240578936e-106
   }
  ]
 }

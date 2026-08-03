@@ -657,3 +657,60 @@ def test_pmid_sample_is_stable_against_unrelated_pairs(tmp_path, monkeypatch):
     assert len(a["pmids"][key]) == ag.PMID_SAMPLE
     assert a["pmids"][key] == b["pmids"][key], \
         "an unrelated pair processed earlier changed this pair's sample"
+
+
+# --- does the discovery layer predict anything? (#ATLAS-LBD-EVAL) -----------
+
+def test_discovery_eval_compares_against_popularity_not_just_random():
+    """The comparison that makes the evaluation worth anything.
+
+    Almost any ranking beats random on a clustered co-occurrence graph, so
+    'beats random' is not evidence the ABC machinery works. The load-bearing
+    baseline is ranking the SAME candidates by popularity.
+    """
+    import json
+    raw = json.loads(
+        (REPO_ROOT / "analysis" / "atlas-discovery-eval.json").read_text())
+    head = raw["headline"]
+    assert set(head["precision"]) == {"abc", "popularity", "random"}
+    # identical candidate set, so the three must make the same number of predictions
+    assert head["predictions"]["abc"] == head["predictions"]["popularity"] \
+        == head["predictions"]["random"], \
+        "the rankings must differ only in order, never in the candidate set"
+    assert head["precision"]["random"] < head["precision"]["popularity"], \
+        "beating random is the floor, not the result"
+
+
+def test_discovery_ranking_underperformance_is_recorded_not_buried():
+    """A negative result about this repo's own layer must stay visible.
+
+    atlas_discovery.py claims to correct for popularity. Measured, it does not,
+    and its docstring has to say so -- otherwise the next reader trusts the
+    claim over the measurement.
+    """
+    import json
+    raw = json.loads(
+        (REPO_ROOT / "analysis" / "atlas-discovery-eval.json").read_text())
+    head = raw["headline"]
+    assert head["precision"]["abc"] < head["precision"]["popularity"]
+    assert head["paired"]["decided"], "the paired interval must exclude zero"
+
+    src = (REPO_ROOT / "scripts" / "atlas_discovery.py").read_text()
+    assert "DOES NOT BEAT POPULARITY" in src, \
+        "the module must carry its own measured negative result"
+    assert "atlas-discovery-eval.md" in src
+
+
+def test_discovery_eval_result_holds_across_split_years():
+    """One split year could be an artifact; three agreeing is a result."""
+    import json
+    raw = json.loads(
+        (REPO_ROOT / "analysis" / "atlas-discovery-eval.json").read_text())
+    runs = [raw["headline"]] + raw["robustness"]
+    assert len(runs) >= 3, "robustness needs more than one split"
+    years = {r["split_year"] for r in runs}
+    assert len(years) == len(runs), "split years must be distinct"
+    for r in runs:
+        assert r["precision"]["abc"] < r["precision"]["popularity"], \
+            f"split {r['split_year']} disagrees; re-read before trusting the verdict"
+        assert r["paired"]["ci95"][1] < 0, f"split {r['split_year']} CI includes zero"

@@ -7,8 +7,8 @@ been discussed together, so the A-C link exists implicitly in the literature
 and nobody has stated it. Swanson's own cases -- fish oil and Raynaud's (1986),
 magnesium and migraine (1988) -- were later supported experimentally.
 
-Seed **GPX4** (`2879`) has 803 direct partners.
-9,089 indirectly-linked entities were found with at least
+Seed **GPX4** (`2879`) has 804 direct partners.
+9,091 indirectly-linked entities were found with at least
 3 bridges, after discarding bridge nodes above degree
 928 (the 99.5% percentile) as uninformative.
 
@@ -34,16 +34,40 @@ Candidates below degree 15 are dropped as untestable.
 
 | candidate | bridges | expected | enrichment | q | PubMed co-mentions | via |
 |---|---|---|---|---|---|---|
-| ERK | 410 | 41.4 | 9.9x | 9.9e-299 | **77** | NSC59984, MMEL1, L-685,458, CLDND1 |
-| caspase-3 | 383 | 36.1 | 10.6x | 1.7e-286 | **236** | SNX30, CLDND1, vulpinic acid, acevaltrate |
-| cyclin D1 | 329 | 29.6 | 11.1x | 1.0e-246 | **23** | FGF6, L-685,458, acevaltrate, GTF2E2 |
-| MMP-9 | 276 | 25.6 | 10.8x | 1.5e-198 | **18** | SCRN1, eriocitrin, isoginkgetin, SENP5 |
-| estrogen receptor | 266 | 25.7 | 10.3x | 7.9e-186 | **49** | giredestrant, ACADSB, GDC-0810, DNAJC12 |
-| ERK1 | 249 | 21.3 | 11.7x | 2.0e-185 | **36** | CLDND1, Agrimonolide, APMAP, SGK2 |
+| ERK | 410 | 41.4 | 9.9x | 1.9e-298 | **77** | NSC59984, MMEL1, L-685,458, CLDND1 |
+| caspase-3 | 383 | 36.2 | 10.6x | 3.1e-286 | **236** | SNX30, CLDND1, vulpinic acid, acevaltrate |
+| cyclin D1 | 329 | 29.6 | 11.1x | 1.7e-246 | **23** | FGF6, L-685,458, acevaltrate, GTF2E2 |
+| MMP-9 | 276 | 25.6 | 10.8x | 2.2e-198 | **18** | SCRN1, eriocitrin, isoginkgetin, Monotropein |
+| ERK1 | 249 | 21.4 | 11.7x | 3.4e-185 | **36** | CLDND1, Agrimonolide, APMAP, SGK2 |
+| estrogen receptor | 265 | 25.8 | 10.3x | 1.4e-184 | **49** | giredestrant, ACADSB, GDC-0810, DNAJC12 |
+| hypoxic | 223 | 16.7 | 13.4x | 3.5e-177 | **156** | Bi2O3, NFS1, TRIM7, TRIM15 |
+| MMP-2 | 239 | 22.2 | 10.7x | 5.1e-169 | **6** | SCRN1, eriocitrin, valtrate, MSRB1 |
+| caspase-9 | 215 | 16.7 | 12.9x | 4.0e-167 | **26** | FGF6, phillygenin, leonurine, Breviscapine |
+| PARP | 222 | 19.0 | 11.7x | 7.7e-164 | **52** | BRD4770, valtrate, NMNAT, Gigantol |
+| Snail | 203 | 15.1 | 13.4x | 1.4e-160 | **11** | dihydroisotanshinone I, eriocitrin, Longikaurin A, MSRB1 |
+| ATP | 229 | 21.8 | 10.5x | 3.2e-159 | **207** | Sanggenon C, perillaldehyde, DPP7, hinokiflavone |
+| Bcl-xL | 194 | 13.6 | 14.3x | 3.3e-158 | **19** | FSP1, Methyl protodioscin, solasonine, heteronemin |
+| HER2 | 239 | 26.3 | 9.1x | 1.6e-152 | **24** | bavachin, oral disorders, KYNU, mollugin |
+| p65 | 191 | 14.1 | 13.5x | 3.2e-151 | **73** | Roquin, USP31, TAB3, beta-eudesmol |
+| caspase-8 | 181 | 12.8 | 14.1x | 3.7e-146 | - | leonurine, valtrate, Bi2O3, SPTBN2 |
+| p21 | 194 | 17.0 | 11.4x | 6.0e-140 | - | PAX8-AS1, DETA, UBAP2L, BCCIP |
+| docetaxel | 200 | 21.9 | 9.1x | 5.2e-126 | - | ACSS3, fatostatin, USP3, SHARPIN |
+| N-cadherin | 165 | 13.2 | 12.5x | 6.7e-124 | - | eriocitrin, Longikaurin A, Monotropein, dictamnine |
+| brain tumors | 211 | 26.1 | 8.1x | 5.7e-123 | - | AGuIX, KLF14, PNK, STYK1 |
+| tumorigenic | 184 | 18.9 | 9.8x | 4.6e-120 | - | YY2, GPD2, BCCIP, NSUN5 |
+| CDK4 | 159 | 12.6 | 12.6x | 7.7e-120 | - | SELENOK, Monotropein, SPTBN2, METTL7B |
+| CD44 | 165 | 14.5 | 11.4x | 3.0e-117 | - | bavachin, HNF1A-AS1, KYNU, SETD5 |
+| bortezomib | 172 | 16.8 | 10.2x | 5.1e-115 | - | GCL, acevaltrate, falcarindiol, liproxstatin-1 |
+| oxygen | 164 | 14.9 | 11.0x | 3.5e-114 | - | K2FeO4, Sappanone A, SNAPIN, LYPLA2 |
+| carcinogenic | 193 | 23.4 | 8.2x | 3.6e-113 | - | ACSS3, APS, ELK4, eriodictyol |
+| breast | 195 | 25.8 | 7.5x | 1.4e-107 | - | HNF1A-AS1, DUOX1, TBX5, ClpP |
+| P-glycoprotein | 163 | 16.4 | 9.9x | 8.8e-107 | - | macelignan, Sinularin, RRS1, sclareol |
+| small cell lung cancer | 177 | 20.5 | 8.7x | 1.4e-106 | - | SNORA71A, RCC2, sclareol, GSS |
+| metastatic disease | 187 | 23.6 | 7.9x | 1.7e-106 | - | PROM2, CPEB1, atractylenolide II, CST1 |
 
 ## Validation: does the ABC premise hold?
 
-Of the top 6 candidates checked against PubMed, **6 (100%) are ALREADY co-mentioned** in published abstracts.
+Of the top 15 candidates checked against PubMed, **15 (100%) are ALREADY co-mentioned** in published abstracts.
 
 > **This seed produces no usable discoveries.** The ABC premise is that A
 > and C have never been discussed together. Here that premise is false for
