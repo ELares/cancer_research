@@ -575,3 +575,43 @@ def test_declared_requires_exactly_one_sense():
     assert ads.declared("er was measured", probes) is None, "no declaration"
     assert ads.declared("estrogen receptor and endoplasmic reticulum stress",
                         probes) is None, "two senses declared -> not usable"
+
+
+def test_impact_report_never_presents_containment_as_an_error_rate():
+    """The measurement mistake this report exists to avoid.
+
+    50.8% of relation rows touch a contested identifier. That is CONTAINMENT --
+    ESR1 is contested because `ER` is ambiguous, but most ESR1 edges come from
+    papers that wrote 'estrogen receptor' in full. The figure that bounds the
+    damage is 1.35%, roughly 38x smaller. Reporting the first alone would
+    overstate the damage by that factor, so both must appear.
+    """
+    import json
+    raw = json.loads(
+        (REPO_ROOT / "analysis" / "atlas-ambiguity-impact.json").read_text())
+    rows = raw["relation_rows"]
+    containment = raw["relation_rows_touching_contested_id"] / rows
+    at_risk = raw["relation_rows_resting_on_at_risk"] / rows
+    assert at_risk < containment, "the bound must be tighter than containment"
+    assert at_risk < 0.05, "if this ever approaches containment, re-read the scan"
+
+    text = (REPO_ROOT / "analysis" / "atlas-ambiguity-impact.md").read_text()
+    assert f"{100*containment:.1f}%" in text and f"{100*at_risk:.2f}%" in text, \
+        "both numbers must be stated; neither may be reported alone"
+
+    # the three assignment classes must partition the total
+    assert (raw["assignments_unaffected"] + raw["assignments_corroborated"]
+            + raw["assignments_at_risk"]) == raw["assignments_total"]
+
+
+def test_corroboration_requires_an_unambiguous_route():
+    """An assignment is only at risk when nothing else supports it."""
+    import json
+    raw = json.loads(
+        (REPO_ROOT / "analysis" / "atlas-ambiguity-impact.json").read_text())
+    # a paper writing both `ER` and "estrogen receptor" is corroborated, not at risk
+    assert raw["assignments_corroborated"] > 0
+    assert raw["assignments_at_risk"] > 0
+    # the vast majority of contested-identifier assignments never touch an
+    # ambiguous form at all, which is exactly why containment misleads
+    assert raw["assignments_unaffected"] > 10 * raw["assignments_at_risk"]
