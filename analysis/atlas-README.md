@@ -262,6 +262,39 @@ tract (TOPAZ-1).
 > recently named, because a technique made it measurable, or because a field is
 > faddish. The year range is shown so a reader can tell those apart.
 
+### Discovery, and its measured hit rate — `atlas_discovery.py`, `atlas_discovery_eval.py`
+
+Swanson ABC: if A relates to B and B to C, but A and C have never been discussed
+together, the A–C link is a hypothesis the literature implies and nobody has
+stated. This is the analysis the census was built for, and a 4,830-article corpus
+cannot do it — discovery needs both literatures present at once, and the whole
+point is that they do not cite each other.
+
+**It has now been measured, and the ranking fails.** A time split rebuilds the
+graph as it stood before year Y, ranks the absent candidates, and counts a hit
+when the literature first asserts that pair in Y or later. The comparison that
+matters is not against random — almost anything beats random on a clustered
+co-occurrence graph — but against ranking the *same candidates* by popularity:
+
+| ranking | precision@20 |
+|---|---|
+| ABC (shipped) | 12.3% |
+| popularity | **17.2%** |
+| random | 3.0% |
+
+Paired bootstrap: −0.99 hits of 20, 95% CI [−1.27, −0.71], behind on 97 of 200
+seeds, and it reproduces at split years 2015, 2018 and 2021.
+
+> **A good candidate generator and a bad ranker.** Both rankings beat random by
+> ~6×, so restricting attention to 2-hop bridged entities is genuinely
+> informative; the ordering within that set is what fails. `atlas_discovery.py`
+> claimed to correct for popularity — measured against what the literature went
+> on to say, it does not, and its docstring now says so.
+>
+> Nor is popularity a *good* ranking. On a graph where well-studied entities keep
+> accruing edges, predicting that a famous gene gains another relation is easy and
+> not very useful.
+
 ## Two traps that have already bitten
 
 Both produced plausible-looking wrong answers, which is why they are written down.
