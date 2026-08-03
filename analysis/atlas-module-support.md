@@ -23,7 +23,7 @@ Counts are not truth. About half of all relations carry the weakest predicate,
 `associate`, which is nearer co-mention than knowledge, and the extractor scores
 ~79.6 F1 on BioRED. A high count means the field discusses the pair.
 
-## Result: 9/20 claims have corpus support
+## Result: 10/20 claims have corpus support
 
 > **The denominator is hand-made.** These 20 are author-written claims with
 > author-chosen proxy entity pairs, covering 19 of roughly 30 library modules
@@ -38,12 +38,12 @@ Counts are not truth. About half of all relations carry the weakest predicate,
 | erastin | `erastin` - `SLC7A11` | 29 | - | negative_correlate 18, associate 7, positive_correlate 4 | no | **yes** (+4/-18, bal 0.22) |
 | contact | `CDH1` - `YAP1` | 19 | **308** | associate 12, negative_correlate 4, positive_correlate 3 | no | **yes** (+3/-4, bal 0.75) |
 | ifngamma | `IFNG` - `SLC7A11` | 8 | **42** | negative_correlate 8 | yes | no |
+| fsp1 | `AIFM2` - `GPX4` | 6 | **249** | associate 4, positive_correlate 2 | no | no |
 | dc_ferroptosis | `CD274` - `SLC7A11` | 6 | **147** | positive_correlate 4, negative_correlate 2 | yes | **yes** (+4/-2, bal 0.50) |
 | ifngamma | `IFNG` - `SLC3A2` | 3 | **26** | negative_correlate 3 | yes | no |
 | acsl4 | `ACSL4` - `GPX4` | 3 | **2,056** | associate 2, negative_correlate 1 | no | no |
 | dhodh | `DHODH` - `GPX4` | 1 | **114** | negative_correlate 1 | no | no |
 | alox | `ALOX15` - `ACSL4` | 1 | **137** | associate 1 | no | no |
-| fsp1 | `AIFM2` - `GPX4` | 0 | **249** | - | - | no |
 | gch1 | `GCH1` - `GPX4` | 0 | **173** | - | - | no |
 | prom2 | `PROM2` - `FTH1` | 0 | **5** | - | - | no |
 | vitk | `VKORC1L1` - `GPX4` | 0 | **8** | - | - | no |
@@ -76,11 +76,10 @@ is wrong -- it says the module docs should state which side they took.
 
 ## Reading
 
-* **9 of 20** module claims are corroborated by at least one
+* **10 of 20** module claims are corroborated by at least one
   other cancer article in the graph, so they are not single-paper assertions.
-* **11** resolved to real entities but have NO asserted relation in the abstract-level graph:
+* **10** resolved to real entities but have NO asserted relation in the abstract-level graph:
 
-  * `fsp1`: AIFM2 - GPX4 — FSP1/AIFM2 is the GPX4-independent parallel defence  _(but **249** full-text co-mentions)_
   * `gch1`: GCH1 - GPX4 — GCH1/BH4 is a GPX4-independent radical-trapping defence  _(but **173** full-text co-mentions)_
   * `prom2`: PROM2 - FTH1 — PROM2 exports ferritin-bound iron, draining the labile pool  _(but **5** full-text co-mentions)_
   * `vitk`: VKORC1L1 - GPX4 — VKORC1L1 reduces vitamin K to a GPX4-independent radical trap  _(but **8** full-text co-mentions)_
@@ -92,11 +91,21 @@ is wrong -- it says the module docs should state which side they took.
   * `ether_lipid`: FAR1 - AGPS — FAR1/AGPS make the ether-PUFA pool that promotes ferroptosis  _(but **5** full-text co-mentions)_
   * `hdac_persister`: HDAC1 - AIFM2 — HDACs and FSP1 together suppress persister-cell ferroptosis
 
-  **10 of those 11 ARE discussed in full text.** A zero in
-  the relation column is an abstract-level extraction failure, not evidence
-  against the mechanism. The clearest case is `fsp1` (AIFM2-GPX4), the
-  parallel pathway behind the manuscript's headline Bliss-synergy claim:
-  zero asserted relations, but the pair is co-mentioned in full text.
+  **9 of those 10 ARE discussed in full text.** A zero in
+  the relation column is therefore not evidence against the mechanism.
+  It has two distinct causes, and they were once conflated here:
+
+  1. **Abstract-level extraction sparsity.** PubTator's relations come from
+     abstracts, so a mechanism established in a Results section may never
+     be asserted in an extractable sentence.
+  2. **Entity-resolution collisions.** The relation WAS extracted and then
+     filed under the wrong gene. `fsp1` (AIFM2-GPX4) is the measured case:
+     it read zero not because nobody asserts GPX4-FSP1, but because every
+     such relation in the census was filed under ATL1, a spastic-paraplegia
+     gene sharing the `FSP1` alias. See `analysis/atlas-disambiguation.md`;
+     the corrections are applied at index build, so this column now counts
+     them. An earlier version of this report attributed that zero entirely
+     to cause 1, which was wrong.
 
 ## Detail
 
@@ -135,6 +144,15 @@ IFN-gamma represses System Xc- (SLC7A11), starving cystine
 * predicates: `negative_correlate` 8
 * module cites PMID 31043744 — **present in the graph**
 * example PMIDs: 31043744, 31554642, 34318944, 35322867, 35579155, 37939375, 40436350, 40963899
+
+### `fsp1` — AIFM2 / GPX4
+
+FSP1/AIFM2 is the GPX4-independent parallel defence
+
+* 6 asserting relations
+* predicates: `associate` 4, `positive_correlate` 2
+* module cites PMID 31634899 — not among the sampled supporting PMIDs
+* example PMIDs: 36576648, 37380771, 39477303, 40015539, 40914768, 41481741
 
 ### `dc_ferroptosis` — PD-L1 / SLC7A11
 

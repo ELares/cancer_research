@@ -176,19 +176,57 @@ measurement would be circular.
 
 The payoff lands on this project's own headline. GPX4+AIFM2 co-mention papers go
 **98 → 257**, and typed GPX4↔AIFM2 relations go **0 → 6** — there were none at
-all, because every one had been filed under atlastin.
+all, because every one had been filed under atlastin. The corrections are
+applied when the index is built, so `atlas_module_support` moved from **9 of 20**
+corroborated module claims to **10 of 20**.
+
+### Are the curated senses right? — `atlas_domain_sense.py`
+
+`DOMAIN_SENSE` says which sense the literature means for five high-volume
+collisions. Those entries were written from domain knowledge, so this checks them
+against the corpus by counting papers that declare a sense in their own words.
+
+All five hold: `ER`→ESR1 at 98.7% of 451 declaring papers (epiregulin declared
+**zero** times), `COX-2`→PTGS2 541/541, `PSA`→KLK3 528/528, `p62`→SQSTM1 97.4%,
+`p21`→CDKN1A 89.6%. **The majority vote is wrong in four of the five** — not
+noisy, but wrong in a consistent direction, picking the sense the cancer
+literature never means.
+
+One curated claim *was* wrong: the `psa` note asserted the vote returns NPEPPS
+when it returns KLK3, and the committed scan already said so. It has been
+corrected, and a test now requires every curated sense to be measured.
+
+This also reframes FSP1 as the **unusual** case rather than the typical one. Its
+senses are genuinely balanced (110 AIFM2 against 132 S100A4), which is why it
+needs a per-paper decision while these five need only a default.
+
+### How much to discount — `atlas_ambiguity_impact.py`
+
+The question a reader actually has. The obvious answer is wrong by ~40×: 50.8% of
+relation rows touch a contested identifier, which measures **containment**, not
+error — most ESR1 edges come from papers that wrote "estrogen receptor" in full.
+
+The measurement that means something asks whether an ambiguous form was the
+*only* route to an assignment. **1.35% of relation rows** rest on one, and that
+is an upper bound since the vote is sometimes right.
+
+> **The practical lesson is an asymmetry.** Diffuse damage is ~1%, below the
+> extractor's own ~79.6 F1 error, and should not change any aggregate conclusion.
+> Damage to a query about one specific ambiguous entity can approach **100%** —
+> GPX4–FSP1 had zero correct typed relations. Small in aggregate, total in the
+> particular.
 
 ### Module support — `atlas_module_support.py` → `atlas-module-support.md`
 
 Each `ferroptosis-core` realism layer was added on the strength of one or two
 papers. This asks how many *distinct* cancer articles assert the same entity
-relation, and whether the module's own cited PMID is among them. **9 of 20
+relation, and whether the module's own cited PMID is among them. **10 of 20
 corroborated** — `SLC7A11–GPX4` 31 articles, `erastin–SLC7A11` 29, `IFNG–SLC7A11`
 8 with the cited PMID present, and six others resting on 1–19.
 
 > **The denominator is hand-made.** Those 20 are author-written claims with
 > author-chosen proxy entity pairs, covering 19 of roughly 30 library modules.
-> "9 of 20" is therefore a statement about that curated list, not a survey of
+> "10 of 20" is therefore a statement about that curated list, not a survey of
 > the library, and a different choice of proxy pairs would give a different
 > fraction.
 
