@@ -294,6 +294,15 @@ tract (TOPAZ-1).
 > Emergence is not importance. A relation can be new because the entity was only
 > recently named, because a technique made it measurable, or because a field is
 > faddish. The year range is shown so a reader can tell those apart.
+>
+> **Measured accuracy** (`atlas_emergence_error.py`). The share comes from the
+> 60-PMID sample, so for well-supported pairs it is an estimate that a threshold
+> turns into a yes/no. Against the exact share from every dated asserting paper:
+> 89.4% of pairs carry no more papers than the sample holds and are exact; on the
+> 10.6% genuinely estimated, median share error 0.017 and the decision is 86.4%
+> precise at 93.2% recall; across all examined pairs, **99.0% precision, 99.6%
+> recall**. Error grows with support (0.013 at 61–120 papers, 0.035 above 2,000),
+> so do not read one pair's share as exact when hundreds of papers sit behind it.
 
 ### Discovery, and its measured hit rate — `atlas_discovery.py`, `atlas_discovery_eval.py`
 

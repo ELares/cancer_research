@@ -856,3 +856,46 @@ def test_contradictions_module_carries_the_measured_caveat():
     src = (REPO_ROOT / "scripts" / "atlas_contradictions.py").read_text()
     assert "1.45x" in src and "115,024" in src, \
         "the contradiction module must state both measured failure modes"
+
+
+# --- how wrong is the sampled emergence estimate? (#ATLAS-EMERG-ERR) -------
+
+def test_emergence_error_separates_estimated_pairs_from_exact_ones():
+    """Pooling the two would flatter the estimator.
+
+    Most pairs carry no more asserting papers than the sample holds, so their
+    share is exact and the estimator does no estimating. Only the remainder can
+    be wrong, and that is the population the error must be quoted on.
+    """
+    import json
+    raw = json.loads(
+        (REPO_ROOT / "analysis" / "atlas-emergence-error.json").read_text())
+    assert raw["pairs_exact"] + raw["pairs_estimated"] == raw["pairs_examined"]
+    assert raw["pairs_exact"] > raw["pairs_estimated"], \
+        "if most pairs became estimated, the headline needs re-deriving"
+    # the honest number is quoted on the estimated subset, and it is worse
+    assert (raw["confusion_estimated"]["precision"]
+            < raw["confusion_all"]["precision"]), \
+        "the estimated-only precision must be the stricter figure"
+
+
+def test_emergence_sampling_error_grows_with_support():
+    """Sampling error should rise as the sample covers less of the population.
+
+    If it did not, the error would not be sampling error and the explanation in
+    the report would be wrong.
+    """
+    import json
+    raw = json.loads(
+        (REPO_ROOT / "analysis" / "atlas-emergence-error.json").read_text())
+    bands = raw["error_by_band"]
+    order = [b for b in ("61-120", "121-500", "501-2000", "2000+") if b in bands]
+    meds = [bands[b]["median"] for b in order]
+    assert len(meds) >= 3
+    assert meds[0] < meds[-1], f"error did not grow with support: {list(zip(order, meds))}"
+
+
+def test_emergence_module_states_its_measured_accuracy():
+    src = (REPO_ROOT / "scripts" / "atlas_emergence.py").read_text()
+    assert "MEASURED ACCURACY" in src
+    assert "atlas_emergence_error.py" in src

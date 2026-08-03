@@ -29,6 +29,24 @@ The PMID list per pair is capped when the index is built, so `recent_share` is
 computed on a bounded sample of each pair's support, not all of it. Pairs with
 very large support are therefore estimated, and the cap is reported.
 
+MEASURED ACCURACY
+-----------------
+The recent share is computed from the index's 60-PMID sample, not from every
+asserting paper, so for well-supported pairs it is an ESTIMATE and the >=80%
+rule turns that estimate into a yes or no. `scripts/atlas_emergence_error.py`
+compares it against the exact share computed from every dated asserting paper:
+
+  * 89.4% of examined pairs carry no more papers than the sample holds, so their
+    share is exact rather than estimated;
+  * on the 10.6% genuinely estimated, median absolute error in the share is
+    0.017 and the threshold decision is 86.4% precise at 93.2% recall;
+  * across every examined pair, precision 99.0% and recall 99.6% -- the figure a
+    reader of this report is actually getting.
+
+Error grows with support, as sampling error should (median 0.013 at 61-120
+asserting papers, 0.035 above 2,000). So do not read a single pair's share as
+exact when that pair has hundreds of papers behind it.
+
 Usage:
     python scripts/atlas_emergence.py
     python scripts/atlas_emergence.py --since 2021 --min-papers 8 --top 40
