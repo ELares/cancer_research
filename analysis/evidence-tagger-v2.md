@@ -19,12 +19,21 @@ python scripts/evaluate_evidence_v2.py     # writes analysis/evidence-v2-eval.md
 | CONSENSUS (both annotators agree) | 77 | 51.9% | **75.3%** | **1.95x** |
 | DEV (v1 human labels, tuned on) | 100 | 46.0% | 63.0% | 1.46x |
 
-Binary evidence-detection F1 rises from 0.705 to 0.966 on the held-out set,
-with precision holding at 96.0% (v1: 100%) and recall rising from 54.4% to 97.3%.
+Binary evidence-detection F1 rises from 0.705 to 0.966 on the held-out set, as
+recall rises from 54.4% to 97.3%. Precision **falls 4 points, 100.0% to 96.0%** --
+a real cost, not a wash, and the trade is what the F1 gain is bought with.
 
 The conservative claim is the CONSENSUS row: **error halved, 1.95x**. The
 HELDOUT row is the generalization test but shares a methodological bias with its
 labels (see caveats).
+
+**One caveat belongs with that choice, not below it.** The 77 CONSENSUS records
+are a SUBSET of the 100 DEV records the v2 keyword lists were tuned on. So
+CONSENSUS is conservative in its LABELS -- both annotators had to agree -- but it
+is not held out, and it inherits whatever tuning was fitted to those 100 records.
+The only genuinely unseen measurement is HELDOUT. Neither row is both
+independently-labelled and unseen; that measurement does not exist yet and would
+need a second annotator on records outside the development set.
 
 ## What was wrong
 

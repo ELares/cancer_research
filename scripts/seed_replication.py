@@ -138,7 +138,9 @@ def main() -> None:
     for (k, m), pairs in sorted(samples.items(), key=lambda kv: (kv[0][0], kv[0][1])):
         if len(pairs) < 2:
             continue
-        by_seed = {s_: v for s_, v in pairs}
+        # str keys: JSON turns int keys into strings on the round trip, so the
+        # in-memory dict must match what a reader of the JSON sees.
+        by_seed = {str(s_): v for s_, v in pairs}
         vals = [v for _s, v in pairs]
         med = statistics.median(vals)
         lo, hi = boot_ci(vals)
@@ -162,7 +164,8 @@ def main() -> None:
         "The engine had a hard-coded seed and no replicate loop, so every number it",
         "contributes was a single draw reported as a point estimate. Where an interval",
         "below spans a comparison, that comparison is not resolved by one run.", "",
-        f"## Metrics whose spread exceeds 25% of the median ({len(volatile)})", "",
+        f"## Metrics whose spread exceeds 25% of the median "
+        f"({len(volatile)} found; the {min(len(volatile), 25)} widest shown)", "",
     ]
     if volatile:
         L += ["| treatment | O2 | immune | block | metric | seed 42 | median | 95% CI | min-max |",

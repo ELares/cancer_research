@@ -38,6 +38,7 @@ import collections
 import gzip
 import json
 import pickle
+import random
 import sys
 from pathlib import Path
 
@@ -46,6 +47,17 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from atlas_baseline import atlas_root  # noqa: E402
 
 MIN_MENTIONS = 3  # a surface form must appear this often to enter the alias map
+
+# Per-pair PMIDs are sampled, not truncated. The first version kept
+# `sorted(v)[:50]` over PMID STRINGS, which is a lexicographic (first-digit)
+# order, so the retained PMIDs were systematically the oldest -- and
+# atlas_emergence.py then computed 'share of support since 2021' on a sample
+# built to exclude recent papers. Measured on the affected pairs, median true
+# recent share 26.6% collapsed to 0.0% as stored. A uniform reservoir sample is
+# unbiased, and `n_pmids` records the TRUE support size so any share computed
+# from the sample has a real denominator.
+PMID_SAMPLE = 60
+_RESERVOIR_SEED = 20260803
 
 
 def paths(root: Path):
@@ -91,7 +103,9 @@ def build_index(root: Path) -> dict:
 
     print("  reading relations ...", flush=True)
     edges: dict[tuple, collections.Counter] = collections.defaultdict(collections.Counter)
-    pmids: dict[tuple, set] = collections.defaultdict(set)
+    sample: dict[tuple, list] = collections.defaultdict(list)
+    seen_pmids: dict[tuple, set] = collections.defaultdict(set)
+    rng = random.Random(_RESERVOIR_SEED)
     with gzip.open(p["relations"], "rt", encoding="utf-8", errors="ignore") as fh:
         for line in fh:
             parts = line.rstrip("\n").split("\t")
@@ -102,12 +116,26 @@ def build_index(root: Path) -> dict:
             idb = b.split("|", 1)[-1]
             key = tuple(sorted((ida, idb)))
             edges[key][rel] += 1
-            if len(pmids[key]) < 200:  # cap: enough to cite, bounded memory
-                pmids[key].add(pmid)
+            # one pair can assert several predicates from the same paper; count
+            # each PMID once so `n_pmids` is a distinct-article support size
+            seen = seen_pmids[key]
+            if pmid in seen:
+                continue
+            seen.add(pmid)
+            # Algorithm R: uniform reservoir over the DISTINCT PMIDs
+            res = sample[key]
+            n = len(seen)
+            if len(res) < PMID_SAMPLE:
+                res.append(pmid)
+            else:
+                j = rng.randrange(n)
+                if j < PMID_SAMPLE:
+                    res[j] = pmid
 
     idx = {"alias": alias_res, "canon": canon_res,
            "edges": {k: dict(v) for k, v in edges.items()},
-           "pmids": {k: sorted(v)[:50] for k, v in pmids.items()}}
+           "pmids": {k: sorted(v, key=int) for k, v in sample.items()},
+           "n_pmids": {k: len(v) for k, v in seen_pmids.items()}}
     p["index"].parent.mkdir(parents=True, exist_ok=True)
     with open(p["index"], "wb") as fh:
         pickle.dump(idx, fh, protocol=5)
@@ -141,6 +169,9 @@ def support(idx: dict, a: str, b: str):
             "b": idb, "b_name": idx["canon"].get(idb, idb),
             "predicates": idx["edges"].get(key, {}),
             "total": sum(idx["edges"].get(key, {}).values()),
+            # distinct articles asserting ANY relation for this pair
+            "n_articles": idx.get("n_pmids", {}).get(key, 0),
+            # a UNIFORM SAMPLE of those articles, not a prefix
             "pmids": idx["pmids"].get(key, [])}
 
 

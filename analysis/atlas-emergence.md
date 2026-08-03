@@ -8,7 +8,7 @@ concentrated since **2021** are emerging claims; pairs spread across
 decades are settled background. A 4,830-article sample cannot tell these apart --
 it has neither the volume nor the time depth.
 
-Scanned 163,940 pairs with at least 6 dated asserting papers. **4,567** have ≥80% of their support in the recent window.
+Scanned 163,940 pairs with at least 6 dated asserting papers. **4,690** have ≥80% of their support in the recent window.
 
 ## Limits
 
@@ -25,28 +25,22 @@ with very large support are estimated.
 
 | pair | sampled papers | years | recent share | predicates |
 |---|---|---|---|---|
-| almonertinib — non-small cell lung cancer | 50 | 2021-2025 | 100% | treat 54 |
-| 68Ga-FAPI — FDG | 50 | 2021-2024 | 100% | compare 61, associate 1, interact 1 |
-| relatlimab — nivolumab | 50 | 2021-2025 | 100% | cotreat 58, compare 6 |
-| lenvatinib — bevacizumab | 50 | 2021-2025 | 100% | compare 32, cotreat 32 |
-| relatlimab — melanoma | 50 | 2021-2025 | 100% | treat 61 |
-| enfortumab vedotin — pembrolizumab | 50 | 2021-2024 | 100% | cotreat 107, compare 6, negative_correlate 4 |
-| durvalumab — biliary tract cancer | 50 | 2021-2025 | 100% | treat 58 |
-| durvalumab — gemcitabine | 50 | 2022-2025 | 100% | cotreat 64, associate 1, positive_correlate 1 |
-| belzutifan — von Hippel-Lindau disease | 49 | 2021-2026 | 100% | treat 47, associate 2 |
-| EGFR — mobocertinib | 43 | 2021-2025 | 100% | negative_correlate 40, associate 3, positive_correlate 1 |
-| STING — manganese | 39 | 2021-2026 | 100% | positive_correlate 37, associate 3 |
-| LAG3 — relatlimab | 38 | 2021-2025 | 100% | negative_correlate 32, associate 6, positive_correlate 2 |
-| glofitamab — diffuse large B-cell lymphoma | 37 | 2021-2025 | 100% | treat 35, associate 3 |
-| lazertinib — amivantamab | 37 | 2022-2026 | 100% | cotreat 37 |
+| 68Ga-FAPI — FDG | 60 | 2021-2025 | 100% | compare 61, associate 1, interact 1 |
+| relatlimab — nivolumab | 60 | 2021-2026 | 100% | cotreat 58, compare 6 |
+| lenvatinib — bevacizumab | 60 | 2021-2026 | 100% | compare 32, cotreat 32 |
+| AKT — PI3K | 60 | 2021-2026 | 100% | associate 632, positive_correlate 11, negative_correlate 6 |
+| enfortumab vedotin — pembrolizumab | 60 | 2021-2026 | 100% | cotreat 107, compare 6, negative_correlate 4 |
+| efgartigimod — myasthenia gravis | 60 | 2021-2026 | 100% | treat 117, cause 1 |
+| durvalumab — gemcitabine | 60 | 2022-2026 | 100% | cotreat 64, associate 1, positive_correlate 1 |
+| OH — H2O2 | 60 | 2024-2026 | 100% | positive_correlate 29, associate 18, compare 14 |
 
 ## For contrast: the most settled relations
 
 | pair | sampled papers | years | median year | predicates |
 |---|---|---|---|---|
 | urethane — leukaemia | 7 | 1946-1988 | 1947 | cause 3, treat 3, associate 1 |
-| leukemia — urethane | 50 | 1947-1961 | 1948 | treat 34, associate 16, cause 5 |
 | stilbamidine — multiple myeloma | 17 | 1947-1951 | 1948 | treat 9, associate 8 |
+| leukemia — urethane | 55 | 1947-1973 | 1949 | treat 34, associate 16, cause 5 |
 | urethane — CML | 14 | 1947-1951 | 1949 | treat 10, associate 4 |
 | carbamate — leukemia | 7 | 1948-1987 | 1949 | treat 7 |
 | breast cancer — testosterone propionate | 25 | 1946-2014 | 1950 | treat 21, associate 3, cause 1 |

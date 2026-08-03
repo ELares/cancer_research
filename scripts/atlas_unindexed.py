@@ -8,8 +8,8 @@ is the right definition -- a controlled vocabulary maintained by NLM indexers,
 not a keyword list -- but it can only classify articles that HAVE been indexed,
 and indexing lags publication.
 
-Measured across the baseline, the unindexed share climbs monotonically with
-recency:
+Measured across the baseline, the unindexed share trends sharply upward with
+recency (not monotonically -- individual files fluctuate):
 
     file 0001 (1975)   0.0% unindexed
     file 0409          5.2%

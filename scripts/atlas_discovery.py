@@ -130,12 +130,16 @@ def discover(idx: dict, adj: dict, seed_id: str, top: int = 30):
     a_nb = adj.get(seed_id, set())
     if not a_nb:
         return None, []
-    deg_a = len(a_nb)
+
+    # The null must use the SAME neighbour set the observed overlap is counted
+    # over. Counting bridges only over non-hub neighbours while passing the
+    # seed's FULL degree as K inflates the expectation and understates every
+    # enrichment by the hub fraction.
+    usable_nb = {b for b in a_nb if degrees.get(b, 0) <= cutoff}
+    deg_a = len(usable_nb)
 
     bridges = collections.defaultdict(set)
-    for b in a_nb:
-        if degrees.get(b, 0) > cutoff:      # hub bridge: no information
-            continue
+    for b in usable_nb:
         for c in adj.get(b, ()):
             if c == seed_id or c in a_nb:   # already known, not a discovery
                 continue

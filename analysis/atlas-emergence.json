@@ -1,33 +1,12 @@
 [
  {
-  "a": "almonertinib",
-  "b": "non-small cell lung cancer",
-  "n_sampled": 50,
-  "median_year": 2024,
-  "min_year": 2021,
-  "max_year": 2025,
-  "recent": 50,
-  "recent_share": 1.0,
-  "total_relations": 54,
-  "predicates": {
-   "treat": 54
-  },
-  "pmids": [
-   "33548986",
-   "33656275",
-   "33962566",
-   "34219533",
-   "34911833"
-  ]
- },
- {
   "a": "68Ga-FAPI",
   "b": "FDG",
-  "n_sampled": 50,
-  "median_year": 2022,
+  "n_sampled": 60,
+  "median_year": 2023,
   "min_year": 2021,
-  "max_year": 2024,
-  "recent": 50,
+  "max_year": 2025,
+  "recent": 60,
   "recent_share": 1.0,
   "total_relations": 63,
   "predicates": {
@@ -46,11 +25,11 @@
  {
   "a": "relatlimab",
   "b": "nivolumab",
-  "n_sampled": 50,
+  "n_sampled": 60,
   "median_year": 2024,
   "min_year": 2021,
-  "max_year": 2025,
-  "recent": 50,
+  "max_year": 2026,
+  "recent": 60,
   "recent_share": 1.0,
   "total_relations": 64,
   "predicates": {
@@ -68,11 +47,11 @@
  {
   "a": "lenvatinib",
   "b": "bevacizumab",
-  "n_sampled": 50,
-  "median_year": 2023,
+  "n_sampled": 60,
+  "median_year": 2024,
   "min_year": 2021,
-  "max_year": 2025,
-  "recent": 50,
+  "max_year": 2026,
+  "recent": 60,
   "recent_share": 1.0,
   "total_relations": 64,
   "predicates": {
@@ -80,21 +59,135 @@
    "cotreat": 32
   },
   "pmids": [
-   "33638735",
    "34678902",
    "34719212",
    "35210014",
-   "35220233"
+   "35220233",
+   "35493395"
+  ]
+ },
+ {
+  "a": "AKT",
+  "b": "PI3K",
+  "n_sampled": 60,
+  "median_year": 2025,
+  "min_year": 2021,
+  "max_year": 2026,
+  "recent": 60,
+  "recent_share": 1.0,
+  "total_relations": 650,
+  "predicates": {
+   "associate": 632,
+   "positive_correlate": 11,
+   "negative_correlate": 6
+  },
+  "pmids": [
+   "33540491",
+   "39212097",
+   "40136677",
+   "40147679",
+   "40158667"
+  ]
+ },
+ {
+  "a": "enfortumab vedotin",
+  "b": "pembrolizumab",
+  "n_sampled": 60,
+  "median_year": 2024,
+  "min_year": 2021,
+  "max_year": 2026,
+  "recent": 60,
+  "recent_share": 1.0,
+  "total_relations": 119,
+  "predicates": {
+   "cotreat": 107,
+   "compare": 6,
+   "negative_correlate": 4
+  },
+  "pmids": [
+   "32589063",
+   "33239713",
+   "34028134",
+   "35043748",
+   "35355328"
+  ]
+ },
+ {
+  "a": "efgartigimod",
+  "b": "myasthenia gravis",
+  "n_sampled": 60,
+  "median_year": 2025,
+  "min_year": 2021,
+  "max_year": 2026,
+  "recent": 60,
+  "recent_share": 1.0,
+  "total_relations": 118,
+  "predicates": {
+   "treat": 117,
+   "cause": 1
+  },
+  "pmids": [
+   "34146511",
+   "34821184",
+   "34949112",
+   "35349079",
+   "35639288"
+  ]
+ },
+ {
+  "a": "durvalumab",
+  "b": "gemcitabine",
+  "n_sampled": 60,
+  "median_year": 2025,
+  "min_year": 2022,
+  "max_year": 2026,
+  "recent": 60,
+  "recent_share": 1.0,
+  "total_relations": 66,
+  "predicates": {
+   "cotreat": 64,
+   "associate": 1,
+   "positive_correlate": 1
+  },
+  "pmids": [
+   "36028483",
+   "36150578",
+   "36257911",
+   "36463640",
+   "36950960"
+  ]
+ },
+ {
+  "a": "OH",
+  "b": "H2O2",
+  "n_sampled": 60,
+  "median_year": 2025,
+  "min_year": 2024,
+  "max_year": 2026,
+  "recent": 60,
+  "recent_share": 1.0,
+  "total_relations": 67,
+  "predicates": {
+   "positive_correlate": 29,
+   "associate": 18,
+   "compare": 14
+  },
+  "pmids": [
+   "38658965",
+   "38688027",
+   "38699808",
+   "38722972",
+   "38855985"
   ]
  },
  {
   "a": "relatlimab",
   "b": "melanoma",
-  "n_sampled": 50,
-  "median_year": 2023,
+  "n_sampled": 59,
+  "median_year": 2024,
   "min_year": 2021,
   "max_year": 2025,
-  "recent": 50,
+  "recent": 59,
   "recent_share": 1.0,
   "total_relations": 61,
   "predicates": {
@@ -109,36 +202,13 @@
   ]
  },
  {
-  "a": "enfortumab vedotin",
-  "b": "pembrolizumab",
-  "n_sampled": 50,
-  "median_year": 2024,
-  "min_year": 2021,
-  "max_year": 2024,
-  "recent": 50,
-  "recent_share": 1.0,
-  "total_relations": 119,
-  "predicates": {
-   "cotreat": 107,
-   "compare": 6,
-   "negative_correlate": 4
-  },
-  "pmids": [
-   "32589063",
-   "33239713",
-   "34008425",
-   "34028134",
-   "35043748"
-  ]
- },
- {
   "a": "durvalumab",
   "b": "biliary tract cancer",
-  "n_sampled": 50,
+  "n_sampled": 58,
   "median_year": 2024,
   "min_year": 2021,
-  "max_year": 2025,
-  "recent": 50,
+  "max_year": 2026,
+  "recent": 58,
   "recent_share": 1.0,
   "total_relations": 58,
   "predicates": {
@@ -153,26 +223,24 @@
   ]
  },
  {
-  "a": "durvalumab",
-  "b": "gemcitabine",
-  "n_sampled": 50,
+  "a": "almonertinib",
+  "b": "non-small cell lung cancer",
+  "n_sampled": 54,
   "median_year": 2024,
-  "min_year": 2022,
-  "max_year": 2025,
-  "recent": 50,
+  "min_year": 2021,
+  "max_year": 2026,
+  "recent": 54,
   "recent_share": 1.0,
-  "total_relations": 66,
+  "total_relations": 54,
   "predicates": {
-   "cotreat": 64,
-   "associate": 1,
-   "positive_correlate": 1
+   "treat": 54
   },
   "pmids": [
-   "36028483",
-   "36150578",
-   "36257911",
-   "36463640",
-   "36950960"
+   "33548986",
+   "33656275",
+   "33962566",
+   "34219533",
+   "34911833"
   ]
  },
  {
@@ -21615,69 +21683,6 @@
    "36923311",
    "38240703",
    "39884129"
-  ]
- },
- {
-  "a": "fluzoparib",
-  "b": "tumor",
-  "n_sampled": 6,
-  "median_year": 2022,
-  "min_year": 2021,
-  "max_year": 2024,
-  "recent": 6,
-  "recent_share": 1.0,
-  "total_relations": 6,
-  "predicates": {
-   "treat": 6
-  },
-  "pmids": [
-   "34118019",
-   "34389457",
-   "35112382",
-   "35304807",
-   "37166499"
-  ]
- },
- {
-  "a": "azoxymethane",
-  "b": "dying",
-  "n_sampled": 6,
-  "median_year": 2022,
-  "min_year": 2021,
-  "max_year": 2024,
-  "recent": 6,
-  "recent_share": 1.0,
-  "total_relations": 6,
-  "predicates": {
-   "cause": 6
-  },
-  "pmids": [
-   "34119183",
-   "34684488",
-   "34914638",
-   "36077084",
-   "38004214"
-  ]
- },
- {
-  "a": "avelumab",
-  "b": "rash",
-  "n_sampled": 6,
-  "median_year": 2022,
-  "min_year": 2021,
-  "max_year": 2025,
-  "recent": 6,
-  "recent_share": 1.0,
-  "total_relations": 7,
-  "predicates": {
-   "cause": 7
-  },
-  "pmids": [
-   "34143970",
-   "34477818",
-   "36279618",
-   "36952231",
-   "39354179"
   ]
  }
 ]

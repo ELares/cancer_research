@@ -24,9 +24,14 @@ is itself a finding — see *Coverage* below.
 
 ## What is in the atlas
 
+> **The sizes below are from the C04-only build.** The adjacent-descriptor
+> extension described under *Census* was added afterwards and its re-ingest is
+> still running, so these counts do NOT yet include the ~8% the extension adds.
+> Do not quote them as the size of the extended census.
+
 | layer | size | built by |
 |---|---|---|
-| MeSH-indexed cancer articles | 4,203,236 | `atlas_baseline.py` |
+| MeSH-indexed cancer articles | 4,203,236 **(C04-only build)** | `atlas_baseline.py` |
 | recovered, not yet MeSH-indexed | 783,271 | `atlas_unindexed.py` |
 | open-access full texts (on external storage) | 520,143 | `atlas_fulltext.py` |
 | typed, normalized relations | 7,951,325 over 1,603,105 PMIDs | `atlas_relations.py` |
@@ -54,9 +59,10 @@ endpoint) **union** nine adjacent experimental-context descriptors.
 ### Recovery — `atlas_unindexed.py`
 
 MeSH indexing lags publication, and the lag is not uniform: the un-indexed share
-climbs monotonically with recency, from 0.0% in 1975-era baseline files to
-**37.6%** in the most recent. A pure MeSH census therefore loses exactly the
-recent literature.
+trends sharply upward with recency -- 0.0% in 1975-era baseline files, 5.2% by
+file 409, 18.4% by file 817, 37.6% by file 959 -- though not monotonically, since
+individual files fluctuate. A pure MeSH census therefore loses
+disproportionately much of the recent literature.
 
 > **Load-bearing caveat.** These are **text-matched**, not MeSH-indexed, and live
 > in a separate stream tagged `source: "text-match"`. The matcher's accuracy is
@@ -67,8 +73,9 @@ recent literature.
 ### Coverage — `atlas_coverage.py` → `atlas-coverage.md`
 
 Supplies the denominator every manuscript ratio was missing. The frozen corpus
-holds **0.086%** of the census. **20.9%** of the census has a PMC id, which is
-the ceiling on any full-text claim — against the frozen corpus's 98.7%
+holds **0.086%** of the census. **20.9%** of the census has a PMC identifier, which upper-bounds any
+full-text claim (a PMC id is necessary but not sufficient for the text to be in
+the redistributable open-access subset -- the actual pull retrieved fewer) — against the frozen corpus's 98.7%
 open-access, which is not what the literature looks like.
 
 It also measures the frozen corpus against the census, and the result cuts both
