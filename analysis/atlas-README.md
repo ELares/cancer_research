@@ -24,14 +24,9 @@ is itself a finding — see *Coverage* below.
 
 ## What is in the atlas
 
-> **The sizes below are from the C04-only build.** The adjacent-descriptor
-> extension described under *Census* was added afterwards and its re-ingest is
-> still running, so these counts do NOT yet include the ~8% the extension adds.
-> Do not quote them as the size of the extended census.
-
 | layer | size | built by |
 |---|---|---|
-| MeSH-indexed cancer articles | 4,203,236 **(C04-only build)** | `atlas_baseline.py` |
+| MeSH-indexed cancer articles | **4,403,994** (4,203,236 C04 + 200,758 adjacent) | `atlas_baseline.py` |
 | recovered, not yet MeSH-indexed | 783,271 | `atlas_unindexed.py` |
 | open-access full texts (on external storage) | 520,143 | `atlas_fulltext.py` |
 | typed, normalized relations | 7,951,325 over 1,603,105 PMIDs | `atlas_relations.py` |

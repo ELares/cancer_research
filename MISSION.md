@@ -76,10 +76,13 @@ been marketing.
 
 ## How the work is ordered
 
-1. **Acquire the census.** *Done, and it holds.* The first pass took 4,203,236
+1. **Acquire the census.** *Done, and it holds.* The C04 pass took 4,203,236
    cancer articles from 39,994,988 scanned — 98.3% of what PubMed itself reports
    for `neoplasms[mh]`, so the local MeSH filter reproduces NLM's tree
-   explosion. Alongside it: **783,271** articles recovered that MeSH has not
+   explosion. Extending the definition beyond C04 adds **200,758 more (+4.8%),
+   for 4,403,994**, and the extension is verified by the case that motivated it:
+   both founding FSP1 papers are now in the census, matched on `Cell Line,
+   Tumor`, `Ferroptosis` and `Gene Expression Regulation, Neoplastic`. Alongside it: **783,271** articles recovered that MeSH has not
    indexed yet (the un-indexed share climbs to 37.6% in the most recent baseline
    files), **520,143** open-access full texts on external storage, and
    **7,951,325** typed relations over 1,603,105 PMIDs.
