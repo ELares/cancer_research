@@ -67,8 +67,24 @@ def run_seed(seed: int) -> list:
         shutil.rmtree(tmp, ignore_errors=True)
 
 
-def key(c: dict) -> tuple:
-    return (c["treatment"], c["o2_condition"], c.get("immune_mode", ""))
+def keyed(conds: list) -> dict:
+    """Map each condition row to a key that is STABLE ACROSS SEEDS and UNIQUE.
+
+    (treatment, o2_condition, immune_mode) is NOT unique: the matrix runs the
+    same triple in several blocks (immune coupling, stromal, pH), so three
+    distinct RSL3/gradient_120um/immune_on rows collide under it and pooling
+    them fabricates spread that is really between-condition difference. The
+    matrix order is deterministic, so an occurrence ordinal disambiguates and
+    still lines the same row up across seeds.
+    """
+    seen: dict = {}
+    out: dict = {}
+    for i, c in enumerate(conds):
+        base = (c["treatment"], c["o2_condition"], c.get("immune_mode", ""))
+        n = seen.get(base, 0)
+        seen[base] = n + 1
+        out[(*base, n)] = (i, c)
+    return out
 
 
 def boot_ci(vals, n_boot=4000, lo=2.5, hi=97.5, rng=None):
@@ -109,14 +125,14 @@ def main() -> None:
     # gather per-condition, per-metric samples
     samples = {}
     for seed, conds in runs.items():
-        for c in conds:
+        for k, (_i, c) in keyed(conds).items():
             for m in METRICS:
                 v = c.get(m)
                 if v is None:
                     continue
-                samples.setdefault((key(c), m), []).append(float(v))
+                samples.setdefault((k, m), []).append(float(v))
 
-    baseline = {key(c): c for c in runs.get(args.start, [])}
+    baseline = {k: c for k, (_i, c) in keyed(runs.get(args.start, [])).items()}
 
     rows = []
     for (k, m), vals in sorted(samples.items(), key=lambda kv: (kv[0][0], kv[0][1])):
@@ -126,7 +142,7 @@ def main() -> None:
         lo, hi = boot_ci(vals)
         base = baseline.get(k, {}).get(m)
         spread = (max(vals) - min(vals))
-        rows.append(dict(treatment=k[0], o2=k[1], immune=k[2], metric=m,
+        rows.append(dict(treatment=k[0], o2=k[1], immune=k[2], block=k[3], metric=m,
                          n=len(vals), seed42=base, median=med, lo=lo, hi=hi,
                          min=min(vals), max=max(vals),
                          rel_spread=(spread / med if med else 0.0)))
@@ -147,23 +163,24 @@ def main() -> None:
         f"## Metrics whose spread exceeds 25% of the median ({len(volatile)})", "",
     ]
     if volatile:
-        L += ["| treatment | O2 | immune | metric | seed 42 | median | 95% CI | min-max |",
-              "|---|---|---|---|---|---|---|---|"]
+        L += ["| treatment | O2 | immune | block | metric | seed 42 | median | 95% CI | min-max |",
+              "|---|---|---|---|---|---|---|---|---|"]
         for r in sorted(volatile, key=lambda r: -r["rel_spread"])[:25]:
             b = f"{r['seed42']:.4g}" if r["seed42"] is not None else "-"
-            L.append(f"| {r['treatment']} | {r['o2']} | {r['immune']} | `{r['metric']}` | "
-                     f"{b} | {r['median']:.4g} | {r['lo']:.4g}-{r['hi']:.4g} | "
+            L.append(f"| {r['treatment']} | {r['o2']} | {r['immune']} | {r['block']} | "
+                     f"`{r['metric']}` | {b} | {r['median']:.4g} | {r['lo']:.4g}-{r['hi']:.4g} | "
                      f"{r['min']:.4g}-{r['max']:.4g} |")
     else:
         L.append("None. Every metric is stable across seeds at this sample size.")
 
     L += ["", "## Full table", "",
-          "| treatment | O2 | immune | metric | n | seed 42 | median | 95% CI |",
-          "|---|---|---|---|---|---|---|---|"]
+          "| treatment | O2 | immune | block | metric | n | seed 42 | median | 95% CI |",
+          "|---|---|---|---|---|---|---|---|---|"]
     for r in rows:
         b = f"{r['seed42']:.4g}" if r["seed42"] is not None else "-"
-        L.append(f"| {r['treatment']} | {r['o2']} | {r['immune']} | `{r['metric']}` | "
-                 f"{r['n']} | {b} | {r['median']:.4g} | {r['lo']:.4g}-{r['hi']:.4g} |")
+        L.append(f"| {r['treatment']} | {r['o2']} | {r['immune']} | {r['block']} | "
+                 f"`{r['metric']}` | {r['n']} | {b} | {r['median']:.4g} | "
+                 f"{r['lo']:.4g}-{r['hi']:.4g} |")
 
     L += ["", "## How to read this", "",
           "The interval is a percentile bootstrap on the MEDIAN across seeds. It captures",
