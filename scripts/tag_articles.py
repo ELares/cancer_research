@@ -214,20 +214,56 @@ def get_searchable_text(
             " ".join(fm.get("drugs", [])),
         ]
 
-    # Extract abstract from body (between ## Abstract and next ##)
-    abstract_match = re.search(r"## Abstract\n\n?(.*?)(?=\n## |\Z)", body, re.DOTALL)
-    if abstract_match:
-        parts.append(abstract_match.group(1))
+    parts.append(extract_abstract(body))
     if include_full_text:
         parts.append(body)
-    elif EVIDENCE_USE_V2 and include_metadata:
-        # v2: add the SELF sections of the full text (Methods/Results/...), which
-        # is where a study states its OWN design. Introduction/Discussion are
-        # deliberately excluded -- they cite OTHER studies, and reading them is
-        # what drops precision from 96% to 89% when full text is enabled whole.
-        parts.append(evidence_sections.self_text(body))
 
     return normalize_text(" ".join(parts))
+
+
+def extract_abstract(body: str) -> str:
+    """The '## Abstract' section of an article body, or '' when absent."""
+    match = re.search(r"## Abstract\n\n?(.*?)(?=\n## |\Z)", body, re.DOTALL)
+    return match.group(1) if match else ""
+
+
+def get_evidence_text(fm: dict, body: str) -> str:
+    """Prose channel for the evidence-tier decision (#TAGGER-V2).
+
+    Two things separate this from `get_searchable_text`, and both are
+    deliberate:
+
+    1. SCOPE. The SELF sections of the full text (Methods/Results) belong to the
+       EVIDENCE decision only. Folding them into `get_searchable_text` gave the
+       mechanism, cancer-type and pathway taggers full text as a side effect of
+       an evidence flag: measured, 14.3% of records changed their MECHANISM tags
+       when `FERRO_EVIDENCE_V2=1`. An evidence flag must not move the mechanism
+       taxonomy the manuscript's counts are built on.
+
+    2. CHANNEL PURITY. Structured metadata (MeSH descriptors, PubTator
+       gene/drug/disease strings) is excluded. Those are controlled-vocabulary
+       labels, not authorial prose, and substring-matching them conflates "an
+       NLM indexer assigned this descriptor" with "the authors ran this
+       experiment". MeSH still reaches the decision, but through
+       `match_evidence_mesh()`, where exact set-membership against curated leaf
+       descriptors is the intended and precision-measured use (#346).
+
+    The resulting precedence is the correct one: PROSE DECIDES, and structured
+    metadata fills silence rather than overriding evidence the authors wrote
+    themselves. Measured effect of the channel split alone: 4 of 4,830 corpus
+    predictions change (0.1%), and on the gold sets 1 record is fixed and none
+    broken -- a small, strictly-positive correctness fix, not an accuracy lever.
+
+    With the flag off this returns `get_searchable_text` unchanged, so the
+    frozen corpus is untouched.
+    """
+    if not EVIDENCE_USE_V2:
+        return get_searchable_text(fm, body)
+    return normalize_text(" ".join([
+        fm.get("title", "") or "",
+        extract_abstract(body),
+        evidence_sections.self_text(body),
+    ]))
 
 
 def match_keywords(text: str, keyword_dict: dict) -> list[str]:
@@ -665,7 +701,7 @@ def main():
             abstract_subtypes=abstract_subtypes,
         )
         tissue_categories = derive_tissue_categories(cancer_types)
-        evidence = match_evidence_level(fm, text)
+        evidence = match_evidence_level(fm, get_evidence_text(fm, body))
         resistant_states = match_resistant_states(text)
         radioligand_targets = match_radioligand_targets(pathway_text, mechanisms)
         diagnostic_therapy_links = match_diagnostic_therapy_links(text)

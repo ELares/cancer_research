@@ -118,7 +118,7 @@ def test_flag_off_is_byte_identical_to_frozen_corpus():
         if not path.exists():
             continue
         fm, body = load_article(path)
-        got = tag_articles.match_evidence_level(fm, tag_articles.get_searchable_text(fm, body))
+        got = tag_articles.match_evidence_level(fm, tag_articles.get_evidence_text(fm, body))
         checked += 1
         if (got or "") != (row.get("evidence_level", "") or ""):
             diffs += 1
@@ -155,7 +155,8 @@ def _score(gold, use_v2):
             if not path.exists():
                 continue
             fm, body = load_article(path)
-            got = tag_articles.match_evidence_level(fm, tag_articles.get_searchable_text(fm, body))
+            # Production path: the evidence decision reads its own prose channel.
+            got = tag_articles.match_evidence_level(fm, tag_articles.get_evidence_text(fm, body))
             n += 1
             if (got or "none-applicable") == want:
                 exact += 1
@@ -204,6 +205,116 @@ def test_opinion_pubtypes_are_never_primary_evidence():
         assert tag_articles.match_evidence_level(fm, text) == ""
     finally:
         tag_articles.EVIDENCE_USE_V2 = prev
+
+
+# --------------------------------------------------------------------------
+# Channel separation: the evidence flag must not move any other tagger, and
+# structured metadata must not be matched as prose.
+# --------------------------------------------------------------------------
+
+@pytest.mark.skipif(not PMID_DIR.exists(), reason="corpus absent")
+def test_evidence_flag_does_not_change_other_taggers():
+    """An evidence-tagger flag must not move the mechanism taxonomy.
+
+    Regression guard. When the v2 SELF-section text was folded into
+    `get_searchable_text`, the mechanism/cancer/pathway taggers silently got
+    full text as a side effect: 14.3% of records changed their MECHANISM tags
+    with `FERRO_EVIDENCE_V2=1`. Those tags carry the manuscript's headline
+    counts, so this must stay at zero.
+    """
+    import tag_articles
+    from article_io import load_article
+    from config import CANCER_TYPE_KEYWORDS, MECHANISM_KEYWORDS, PATHWAY_TARGET_KEYWORDS
+
+    files = sorted(PMID_DIR.glob("*.md"))[:200]
+    if len(files) < 50:
+        pytest.skip("corpus too small")
+
+    def tags(text, table):
+        return {k for k, kws in table.items()
+                if any(tag_articles.text_matches_keyword(text, kw) for kw in kws)}
+
+    def snapshot():
+        out = {}
+        for path in files:
+            fm, body = load_article(path)
+            text = tag_articles.get_searchable_text(fm, body)
+            out[path.name] = (tags(text, MECHANISM_KEYWORDS),
+                              tags(text, CANCER_TYPE_KEYWORDS),
+                              tags(text, PATHWAY_TARGET_KEYWORDS))
+        return out
+
+    prev = tag_articles.EVIDENCE_USE_V2
+    try:
+        tag_articles.EVIDENCE_USE_V2 = False
+        base = snapshot()
+        tag_articles.EVIDENCE_USE_V2 = True
+        with_v2 = snapshot()
+    finally:
+        tag_articles.EVIDENCE_USE_V2 = prev
+
+    changed = [k for k in base if base[k] != with_v2[k]]
+    assert not changed, (
+        f"{len(changed)}/{len(files)} records changed mechanism/cancer/pathway tags when the "
+        f"evidence flag was set; the evidence channel has leaked back into get_searchable_text")
+
+
+def test_evidence_channel_excludes_structured_metadata():
+    """MeSH descriptors and PubTator strings are labels, not authorial prose."""
+    import tag_articles
+
+    fm = {"title": "T", "mesh_terms": ["Xenograft Model Antitumor Assays"],
+          "genes": ["GPX4"], "drugs": ["erastin"], "diseases_annotated": ["glioblastoma"]}
+    body = "## Abstract\n\nabstract text.\n"
+
+    prev = tag_articles.EVIDENCE_USE_V2
+    try:
+        tag_articles.EVIDENCE_USE_V2 = True
+        channel = tag_articles.get_evidence_text(fm, body)
+        assert "abstract text" in channel
+        for leaked in ("xenograft", "gpx4", "erastin", "glioblastoma"):
+            assert leaked not in channel, f"{leaked!r} leaked into the evidence prose channel"
+        # ...but the general channel still carries them, unchanged.
+        assert "xenograft" in tag_articles.get_searchable_text(fm, body)
+    finally:
+        tag_articles.EVIDENCE_USE_V2 = prev
+
+
+def test_prose_decides_and_mesh_only_fills_silence():
+    """Precedence: authorial prose outranks a controlled-vocabulary descriptor,
+    but the #346 structured fallback still fires when prose says nothing."""
+    import tag_articles
+
+    fm = {"title": "A study of tumour biology",
+          "mesh_terms": ["Xenograft Model Antitumor Assays", "Animals", "Mice"],
+          "genes": [], "drugs": [], "diseases_annotated": [],
+          "pub_types": ["Journal Article"]}
+
+    prev_v2 = tag_articles.EVIDENCE_USE_V2
+    prev_mesh = tag_articles.EVIDENCE_USE_MESH_FALLBACK
+    try:
+        tag_articles.EVIDENCE_USE_V2 = True
+        tag_articles.EVIDENCE_USE_MESH_FALLBACK = True
+
+        # Prose asserts a computational study; MeSH says in-vivo. Prose wins.
+        computational = ("## Abstract\n\nWe performed molecular docking.\n\n"
+                         "## Full Text\n\nMethods\n\nMolecular docking, network pharmacology "
+                         "and gene set enrichment analysis were performed on TCGA data.\n\n")
+        assert tag_articles.match_evidence_level(
+            fm, tag_articles.get_evidence_text(fm, computational)) == "theoretical"
+
+        # Prose is silent: the curated MeSH fallback is the intended channel.
+        silent = "## Abstract\n\nResults are described.\n\n"
+        assert tag_articles.match_evidence_level(
+            fm, tag_articles.get_evidence_text(fm, silent)) == "preclinical-invivo"
+
+        # Silent prose and no MeSH: nothing to say.
+        bare = dict(fm, mesh_terms=[])
+        assert tag_articles.match_evidence_level(
+            bare, tag_articles.get_evidence_text(bare, silent)) == ""
+    finally:
+        tag_articles.EVIDENCE_USE_V2 = prev_v2
+        tag_articles.EVIDENCE_USE_MESH_FALLBACK = prev_mesh
 
 
 @pytest.mark.skipif(not PMID_DIR.exists(), reason="corpus absent")

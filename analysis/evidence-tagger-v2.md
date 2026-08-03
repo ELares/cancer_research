@@ -15,7 +15,7 @@ python scripts/evaluate_evidence_v2.py     # writes analysis/evidence-v2-eval.md
 
 | evaluation set | n | v1 exact | v2 exact | error reduction |
 |---|---|---|---|---|
-| HELDOUT (never inspected during development) | 170 | 51.2% | **80.6%** | **2.52x** |
+| HELDOUT (never inspected during development) | 170 | 51.2% | **81.2%** | **2.59x** |
 | CONSENSUS (both annotators agree) | 77 | 51.9% | **75.3%** | **1.95x** |
 | DEV (v1 human labels, tuned on) | 100 | 46.0% | 63.0% | 1.46x |
 
@@ -44,7 +44,7 @@ The project's own labeling guideline already states the correct rule: take the
 tier from the article's primary research, "not in cited references or background
 discussion". v2 implements that rule mechanically.
 
-## The five changes, each traced to a measured error cluster
+## The six changes, each traced to a measured error cluster
 
 1. **Section-scoped full text** (`scripts/evidence_sections.py`). The
    `## Full Text` blob is split into sections and each is classified SELF
@@ -85,30 +85,62 @@ discussion". v2 implements that rule mechanically.
    not override the guideline rule that real wet-lab work outranks in-silico
    work.
 
-### Known defect NOT fixed here: structured metadata is scanned as prose
+## Channel separation (6): the evidence decision gets its own prose channel
+
+`get_evidence_text()` builds the evidence channel as title + abstract + SELF
+sections, and nothing else. This fixed two distinct defects.
+
+### 6a. An evidence flag was silently moving the mechanism taxonomy
+
+The first cut of v2 appended SELF-section text inside `get_searchable_text()`,
+which every tagger calls. So turning on an *evidence* flag also gave the
+mechanism, cancer-type and pathway taggers full text. Measured: **14.3% of
+records (86 of 600) changed their MECHANISM tags** with `FERRO_EVIDENCE_V2=1`,
+adding immunotherapy to 19, epigenetic to 14, CRISPR to 13.
+
+Those tags carry the manuscript's headline counts. This was the more serious of
+the two defects and it was self-inflicted. Fixed by giving the evidence decision
+its own channel and restoring `get_searchable_text()` to its v1 behaviour;
+pinned at zero by
+`test_evidence_flag_does_not_change_other_taggers`.
+
+### 6b. Structured metadata was being matched as prose
 
 `get_searchable_text()` folds MeSH descriptors and PubTator gene/drug/disease
-strings into the same free-text blob the keyword matcher scans. That conflates
-"an NLM indexer assigned this descriptor" with "the authors ran this
-experiment". Verified:
+strings into the same blob the keyword matcher scans, which conflates "an NLM
+indexer assigned this descriptor" with "the authors ran this experiment".
 
-```python
-fm = {"title": "x", "mesh_terms": ["Xenograft Model Antitumor Assays", "Animals", "Mice"], ...}
-get_searchable_text(fm, "## Abstract\n\nA purely computational study.\n")
-# -> 'x xenograft model antitumor assays animals mice a purely computational study.'
-# -> match_evidence_level(...) == 'preclinical-invivo'
-```
+The correct precedence is **prose decides; structured metadata fills silence**.
+MeSH still reaches the decision, through `match_evidence_mesh()`, where exact
+set-membership against curated leaf descriptors is the intended and
+precision-measured use (#346). Pinned by
+`test_prose_decides_and_mesh_only_fills_silence`:
 
-8.2% of corpus records carry an in-vivo keyword inside their MeSH string alone.
-The descriptor is real information, but it belongs in the structured
-`match_evidence_mesh()` branch, where set-membership against curated leaf
-descriptors is the intended use, not in the prose channel.
+| situation | verdict |
+|---|---|
+| prose asserts a docking/TCGA study, MeSH says `Xenograft Model Antitumor Assays` | `theoretical` (prose wins) |
+| prose silent, MeSH says in-vivo | `preclinical-invivo` (fallback fires) |
+| prose silent, no MeSH | `""` |
 
-A metadata-free evidence channel (`get_evidence_text`) was implemented and
-measured. On its own it did not change the headline, and combined with the
-anchored-predicate work below it made things worse, so neither shipped. The
-defect is recorded here because it is real and independently confirmed, and it
-should be fixed alongside a redesign of the decision rather than bolted on.
+**Measured impact, stated honestly.** An earlier draft of this document cited
+"8.2% of corpus records carry an in-vivo keyword inside their MeSH string" in a
+way that implied 8.2% impact. That statistic counts records where the descriptor
+*contains* the keyword, not records where it *changes the answer*, and the two
+are very different because the prose usually says the same thing (a paper
+indexed `Mice` almost always writes "mice" in its Methods). The actual effect of
+the channel split alone:
+
+- **4 of 4,830 corpus predictions change (0.1%)**;
+- on the 347 gold records, **1 fixed, 0 broken** (a `theoretical` paper that a
+  MeSH descriptor had pushed to `preclinical-invitro`);
+- held-out error reduction 2.52x -> 2.59x.
+
+So this is a correctness fix with a small measured effect, not an accuracy
+lever. It is worth keeping because the precedence it establishes is right and
+because the failure mode gets worse as the prose channel improves. A previous
+revision of this file also asserted the metadata-free channel "on its own did
+not change the headline" without having run that isolation; the numbers above
+are the isolation, run afterwards.
 
 ### Changes that were tried and rejected
 

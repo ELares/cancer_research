@@ -51,9 +51,9 @@ n = 170. The generalization test.
 | config | exact-label | 95% CI | coarse | precision | recall | binary F1 |
 |---|---|---|---|---|---|---|
 | v1 baseline | 51.2% | [43.7%, 58.6%] | 59.4% | 100.0% | 54.4% | 0.705 |
-| v2 | 80.6% | [74.0%, 85.8%] | 90.0% | 96.0% | 97.3% | 0.966 |
+| v2 | 81.2% | [74.6%, 86.3%] | 90.0% | 96.0% | 97.3% | 0.966 |
 
-- exact-label error **48.8% -> 19.4%** (**2.52x** reduction)
+- exact-label error **48.8% -> 18.8%** (**2.59x** reduction)
 - binary F1 0.705 -> 0.966
 
 | tier | n | recall v1 | recall v2 |
@@ -62,7 +62,7 @@ n = 170. The generalization test.
 | clinical-other | 19 | 31.6% | 68.4% |
 | preclinical-invivo | 86 | 52.3% | 94.2% |
 | preclinical-invitro | 29 | 41.4% | 65.5% |
-| theoretical | 11 | 0.0% | 54.5% |
+| theoretical | 11 | 0.0% | 63.6% |
 | none-applicable | 23 | 100.0% | 73.9% |
 
 Remaining v2 errors (gold -> predicted):
@@ -70,11 +70,11 @@ Remaining v2 errors (gold -> predicted):
 - 10 x `preclinical-invitro` -> `preclinical-invivo`
 - 4 x `none-applicable` -> `preclinical-invivo`
 - 3 x `clinical-other` -> `none-applicable`
-- 2 x `theoretical` -> `preclinical-invitro`
 - 2 x `preclinical-invivo` -> `phase1-clinical`
 - 2 x `theoretical` -> `preclinical-invivo`
 - 2 x `none-applicable` -> `theoretical`
 - 2 x `preclinical-invivo` -> `phase3-clinical`
+- 2 x `clinical-other` -> `theoretical`
 
 ## CONSENSUS (human and independent relabel agree)
 
