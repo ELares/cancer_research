@@ -80,11 +80,17 @@ def list_packages() -> list[tuple[str, str]]:
 
 
 def load_pmcid_map(root: Path) -> dict:
-    """PMCID -> PMID for every cancer article in the census that has one."""
-    rec_dir = root / "records"
-    files = sorted(rec_dir.glob("*.jsonl.gz"))
+    """PMCID -> PMID for every cancer article in EITHER census stream.
+
+    Reads `records/` (MeSH-indexed) and `records_unindexed/` (text-recovered).
+    Reading only the first silently excluded all 783,271 recovered articles,
+    which is exactly the recent literature the recovery layer exists to reach.
+    """
+    files = []
+    for d in ("records", "records_unindexed"):
+        files += sorted((root / d).glob("*.jsonl.gz"))
     if not files:
-        raise SystemExit(f"no census under {rec_dir}; run scripts/atlas_baseline.py first")
+        raise SystemExit(f"no census under {root}; run scripts/atlas_baseline.py first")
     m = {}
     for f in files:
         with gzip.open(f, "rt", encoding="utf-8") as fh:

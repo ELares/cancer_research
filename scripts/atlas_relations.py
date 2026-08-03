@@ -64,19 +64,41 @@ SOURCES = {
 }
 
 
-def load_cancer_pmids(root: Path) -> set:
-    """The census PMID set, as ints (~150 MB at full scale, vs ~400 MB as str)."""
-    rec_dir = root / "records"
-    files = sorted(rec_dir.glob("*.jsonl.gz"))
-    if not files:
-        raise SystemExit(f"no census records under {rec_dir}; run scripts/atlas_baseline.py first")
+def load_cancer_pmids(root: Path, include_recovered: bool = True) -> set:
+    """The census PMID set, as ints (~150 MB at full scale, vs ~400 MB as str).
+
+    Reads BOTH census streams. `records/` is the MeSH-indexed census;
+    `records_unindexed/` is the text-recovered layer that exists precisely
+    because MeSH indexing lags publication and the un-indexed share reaches
+    ~37% in the most recent baseline files. Filtering against `records/` alone
+    silently excluded all 783,271 recovered articles from the relation and
+    full-text layers -- so the layer built to recover the recent literature was
+    never actually used downstream.
+
+    The recovered stream is text-matched at 75.7% precision, so including it
+    trades ~24% false-positive articles for coverage of the newest work. That is
+    the right trade for a filter (a false-positive PMID contributes relations
+    that simply are not about cancer, rather than corrupting a statistic), but
+    `--indexed-only` is available where precision matters more.
+    """
+    dirs = ["records"] + (["records_unindexed"] if include_recovered else [])
     pmids = set()
-    for f in files:
-        with gzip.open(f, "rt", encoding="utf-8") as fh:
-            for line in fh:
-                p = json.loads(line).get("pmid", "")
-                if p.isdigit():
-                    pmids.add(int(p))
+    found_any = False
+    for d in dirs:
+        files = sorted((root / d).glob("*.jsonl.gz"))
+        if not files:
+            continue
+        found_any = True
+        before = len(pmids)
+        for f in files:
+            with gzip.open(f, "rt", encoding="utf-8") as fh:
+                for line in fh:
+                    p = json.loads(line).get("pmid", "")
+                    if p.isdigit():
+                        pmids.add(int(p))
+        print(f"  {d}: +{len(pmids) - before:,} PMIDs", flush=True)
+    if not found_any:
+        raise SystemExit(f"no census records under {root}; run scripts/atlas_baseline.py first")
     return pmids
 
 
@@ -143,11 +165,14 @@ def main() -> None:
                     help="stop after N input lines (smoke test)")
     ap.add_argument("--keep-raw", action="store_true",
                     help="keep the downloaded bulk file (default: delete after filtering)")
+    ap.add_argument("--indexed-only", action="store_true",
+                    help="filter against the MeSH-indexed census only, excluding the "
+                         "text-recovered stream (higher precision, loses recent work)")
     args = ap.parse_args()
 
     root = atlas_root()
     print("loading census PMIDs ...", flush=True)
-    pmids = load_cancer_pmids(root)
+    pmids = load_cancer_pmids(root, include_recovered=not args.indexed_only)
     print(f"cancer PMIDs in census: {len(pmids):,}")
 
     raw = root / "raw"

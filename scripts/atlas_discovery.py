@@ -29,7 +29,14 @@ in oncology every time.
 
 Two corrections are applied:
 
-  * a HYPERGEOMETRIC TAIL TEST, not a ratio. The first attempt scored
+  * a HYPERGEOMETRIC TAIL STATISTIC used for RANKING, not as a calibrated
+    significance test. Its null -- that C's neighbours are a uniform random draw
+    from all nodes -- is false for every candidate in a real biological graph,
+    which is heavily clustered. So the tail probabilities are astronomically
+    small (1e-238) and measure how wrong the null is, not how surprising the
+    overlap is. They are NOT p-values in any usable sense, the q column is not
+    an FDR guarantee, and the numbers are reported only because they order the
+    candidates. See the calibration note the report emits. The first attempt scored
     observed/expected under a degree-preserving null, and it was degenerate: for
     an entity of degree 2 the expectation is near zero, so every obscure node
     saturated at the same maximal "lift" and the ranking filled with
@@ -229,9 +236,15 @@ def main() -> None:
         "Raw bridge counts rank by popularity -- TP53 bridges to everything. A ratio",
         "score fails at the other end: for a degree-2 entity the expectation is near",
         "zero, so every obscurity saturates at the same maximal value. The ranking is",
-        "therefore the **hypergeometric tail probability** of sharing at least the",
-        "observed number of neighbours given both degrees, Benjamini-Hochberg corrected",
-        "across all candidates. Sharing 2 of 2 is unremarkable; sharing 40 of 200 is not.", "",
+        "therefore the **hypergeometric tail statistic** of sharing at least the observed",
+        "number of neighbours given both degrees. Sharing 2 of 2 is unremarkable; sharing",
+        "410 of 6,499 is not.", "",
+        "> **These are not p-values, and `q` is not an FDR guarantee.** The null -- that a",
+        "> candidate's neighbours are a uniform random draw from all nodes -- is false for",
+        "> every entity in a real biological graph, which is heavily clustered. That is why",
+        "> the values reach 1e-238: they measure how wrong the null is, not how surprising",
+        "> the overlap is. They are reported ONLY because they order candidates better than",
+        "> raw counts or a ratio. Any absolute reading of them is meaningless.", "",
         f"Candidates below degree {MIN_CANDIDATE_DEGREE} are dropped as untestable.", "",
         "## Candidates", "",
         "| candidate | bridges | expected | enrichment | q | PubMed co-mentions | via |",

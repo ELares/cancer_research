@@ -7,7 +7,7 @@ been discussed together, so the A-C link exists implicitly in the literature
 and nobody has stated it. Swanson's own cases -- fish oil and Raynaud's (1986),
 magnesium and migraine (1988) -- were later supported experimentally.
 
-Seed **GPX4** (`2879`) has 1,065 direct partners.
+Seed **GPX4** (`2879`) has 803 direct partners.
 9,089 indirectly-linked entities were found with at least
 3 bridges, after discarding bridge nodes above degree
 928 (the 99.5% percentile) as uninformative.
@@ -17,9 +17,16 @@ Seed **GPX4** (`2879`) has 1,065 direct partners.
 Raw bridge counts rank by popularity -- TP53 bridges to everything. A ratio
 score fails at the other end: for a degree-2 entity the expectation is near
 zero, so every obscurity saturates at the same maximal value. The ranking is
-therefore the **hypergeometric tail probability** of sharing at least the
-observed number of neighbours given both degrees, Benjamini-Hochberg corrected
-across all candidates. Sharing 2 of 2 is unremarkable; sharing 40 of 200 is not.
+therefore the **hypergeometric tail statistic** of sharing at least the observed
+number of neighbours given both degrees. Sharing 2 of 2 is unremarkable; sharing
+410 of 6,499 is not.
+
+> **These are not p-values, and `q` is not an FDR guarantee.** The null -- that a
+> candidate's neighbours are a uniform random draw from all nodes -- is false for
+> every entity in a real biological graph, which is heavily clustered. That is why
+> the values reach 1e-238: they measure how wrong the null is, not how surprising
+> the overlap is. They are reported ONLY because they order candidates better than
+> raw counts or a ratio. Any absolute reading of them is meaningless.
 
 Candidates below degree 15 are dropped as untestable.
 
@@ -27,22 +34,16 @@ Candidates below degree 15 are dropped as untestable.
 
 | candidate | bridges | expected | enrichment | q | PubMed co-mentions | via |
 |---|---|---|---|---|---|---|
-| ERK | 410 | 54.8 | 7.5x | 7.8e-238 | **77** | NSC59984, MMEL1, L-685,458, CLDND1 |
-| caspase-3 | 383 | 47.9 | 8.0x | 1.1e-230 | **236** | SNX30, vulpinic acid, CLDND1, acevaltrate |
-| cyclin D1 | 329 | 39.2 | 8.4x | 8.7e-201 | **23** | FGF6, L-685,458, acevaltrate, GTF2E2 |
-| MMP-9 | 276 | 33.9 | 8.1x | 8.8e-162 | **18** | SCRN1, eriocitrin, isoginkgetin, Monotropein |
-| ERK1 | 249 | 28.3 | 8.8x | 1.3e-152 | **36** | CLDND1, APMAP, Agrimonolide, SGK2 |
-| estrogen receptor | 266 | 34.1 | 7.8x | 6.7e-151 | **49** | giredestrant, ACADSB, GDC-0810, DNAJC12 |
-| hypoxic | 223 | 22.1 | 10.1x | 3.4e-148 | **156** | Bi2O3, NFS1, TRIM7, TRIM15 |
-| caspase-9 | 215 | 22.1 | 9.7x | 2.2e-139 | **26** | FGF6, phillygenin, leonurine, Breviscapine |
-| MMP-2 | 239 | 29.5 | 8.1x | 2.8e-138 | **6** | SCRN1, eriocitrin, MSRB1, valtrate |
-| PARP | 222 | 25.1 | 8.8x | 2.3e-135 | **52** | BRD4770, NMNAT, valtrate, Gigantol |
-| Snail | 203 | 20.0 | 10.1x | 1.5e-134 | **11** | eriocitrin, dihydroisotanshinone I, Longikaurin A, MSRB1 |
-| Bcl-xL | 194 | 18.0 | 10.8x | 2.4e-133 | **19** | Methyl protodioscin, solasonine, heteronemin, psoralidin |
+| ERK | 410 | 41.4 | 9.9x | 9.9e-299 | **77** | NSC59984, MMEL1, L-685,458, CLDND1 |
+| caspase-3 | 383 | 36.1 | 10.6x | 1.7e-286 | **236** | SNX30, CLDND1, vulpinic acid, acevaltrate |
+| cyclin D1 | 329 | 29.6 | 11.1x | 1.0e-246 | **23** | FGF6, L-685,458, acevaltrate, GTF2E2 |
+| MMP-9 | 276 | 25.6 | 10.8x | 1.5e-198 | **18** | SCRN1, eriocitrin, isoginkgetin, SENP5 |
+| estrogen receptor | 266 | 25.7 | 10.3x | 7.9e-186 | **49** | giredestrant, ACADSB, GDC-0810, DNAJC12 |
+| ERK1 | 249 | 21.3 | 11.7x | 2.0e-185 | **36** | CLDND1, Agrimonolide, APMAP, SGK2 |
 
 ## Validation: does the ABC premise hold?
 
-Of the top 12 candidates checked against PubMed, **12 (100%) are ALREADY co-mentioned** in published abstracts.
+Of the top 6 candidates checked against PubMed, **6 (100%) are ALREADY co-mentioned** in published abstracts.
 
 > **This seed produces no usable discoveries.** The ABC premise is that A
 > and C have never been discussed together. Here that premise is false for
