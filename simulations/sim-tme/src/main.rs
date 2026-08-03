@@ -53,7 +53,31 @@ use ferroptosis_core::stromal::{stromal_adjacency_mask_2d, stromal_adjacent_kill
 const GRID_SIZE: usize = 500;
 const CELL_SIZE_UM: f64 = 20.0;
 const N_STEPS: u32 = 180;
-const SEED: u64 = 42;
+
+/// Master RNG seed. Historically a hard-coded `42` with no replicate loop
+/// anywhere, so every reported number in this engine is a SINGLE draw and the
+/// manuscript quotes point estimates with no dispersion. Several headline
+/// quantities rest on small event counts (the immune-coupling ratio has a
+/// denominator of five simulated events), where one draw says very little.
+///
+/// `FERRO_SEED` overrides it so `scripts/seed_replication.py` can run the same
+/// matrix across many seeds and report medians with bootstrap intervals.
+/// Unset ⇒ 42 ⇒ byte-identical to every committed number and to the #253
+/// production regression hash.
+static SEED: std::sync::LazyLock<u64> =
+    std::sync::LazyLock::new(|| match std::env::var("FERRO_SEED") {
+        Ok(raw) => match raw.trim().parse::<u64>() {
+            Ok(v) => {
+                eprintln!("FERRO_SEED={v}: replicate run, NOT the committed baseline");
+                v
+            }
+            Err(_) => {
+                eprintln!("error: FERRO_SEED must be a u64, got {raw:?}");
+                std::process::exit(2);
+            }
+        },
+        Err(_) => 42,
+    });
 
 /// Largest grid (`n_cells = GRID_SIZE²`) for which the per-cell additive RNG seed
 /// streams stay collision-free (#585). The per-cell seed is
@@ -943,7 +967,7 @@ fn main() {
     // --- Baseline: uniform O2 (no gradient) ---
     eprintln!("=== Baseline (uniform O2) ===\n");
     for (tx, tx_name) in &treatments {
-        let mut grid = TumorGrid::generate(GRID_SIZE, GRID_SIZE, CELL_SIZE_UM, SEED);
+        let mut grid = TumorGrid::generate(GRID_SIZE, GRID_SIZE, CELL_SIZE_UM, *SEED);
         // Uniform O2: no supply field, so the O2-dependence knob is inert here
         // (a uniform field would be all-1.0 ⇒ factor 1.0 anyway).
         run_spatial(
@@ -1007,7 +1031,7 @@ fn main() {
         eprintln!("\n=== O2 gradient (λ = {} μm) ===\n", lambda);
 
         for (tx, tx_name) in &treatments {
-            let mut grid = TumorGrid::generate(GRID_SIZE, GRID_SIZE, CELL_SIZE_UM, SEED);
+            let mut grid = TumorGrid::generate(GRID_SIZE, GRID_SIZE, CELL_SIZE_UM, *SEED);
 
             // Apply O2 gradient BEFORE simulation (modifies cell.basal_ros)
             let o2_map = apply_o2_gradient(&mut grid, lambda);
@@ -1097,7 +1121,7 @@ fn main() {
         );
 
         for (tx, tx_name) in &treatments {
-            let mut grid = TumorGrid::generate(GRID_SIZE, GRID_SIZE, CELL_SIZE_UM, SEED);
+            let mut grid = TumorGrid::generate(GRID_SIZE, GRID_SIZE, CELL_SIZE_UM, *SEED);
             let depths = compute_depth_map(&grid);
             let original_ros: Vec<f64> = grid.cells.iter().map(|gc| gc.cell.basal_ros).collect();
 
@@ -1165,7 +1189,7 @@ fn main() {
 
     // --- Compute stromal adjacency mask (used by both Feature B and C) ---
     // Mask is grid-geometry-dependent, not treatment-dependent.
-    let mask_grid = TumorGrid::generate(GRID_SIZE, GRID_SIZE, CELL_SIZE_UM, SEED);
+    let mask_grid = TumorGrid::generate(GRID_SIZE, GRID_SIZE, CELL_SIZE_UM, *SEED);
     let stromal_mask = stromal_adjacency_mask_2d(&mask_grid);
     let stromal_adj_count = stromal_mask.iter().filter(|&&b| b).count();
 
@@ -1191,7 +1215,7 @@ fn main() {
         );
 
         for (tx, tx_name) in &treatments {
-            let mut grid = TumorGrid::generate(GRID_SIZE, GRID_SIZE, CELL_SIZE_UM, SEED);
+            let mut grid = TumorGrid::generate(GRID_SIZE, GRID_SIZE, CELL_SIZE_UM, *SEED);
             // #358: capture the per-cell O2 supply so the immune-on gradient
             // SDT exo-ROS gets the same O2-dependent attenuation as the
             // immune-off gradient conditions (consistent under the flag).
@@ -1316,7 +1340,7 @@ fn main() {
         );
 
         for (tx, tx_name) in &treatments {
-            let mut grid = TumorGrid::generate(GRID_SIZE, GRID_SIZE, CELL_SIZE_UM, SEED);
+            let mut grid = TumorGrid::generate(GRID_SIZE, GRID_SIZE, CELL_SIZE_UM, *SEED);
             // #358: capture O2 supply for the consistent O2-dependent SDT path.
             let o2_supply: Vec<f64> = apply_o2_gradient(&mut grid, 120.0)
                 .iter()
@@ -1450,7 +1474,7 @@ fn main() {
     eprintln!("Warburg effect, ferritin iron release: primary literature only.\n");
 
     for (tx, tx_name) in &treatments {
-        let mut grid = TumorGrid::generate(GRID_SIZE, GRID_SIZE, CELL_SIZE_UM, SEED);
+        let mut grid = TumorGrid::generate(GRID_SIZE, GRID_SIZE, CELL_SIZE_UM, *SEED);
         // #358: capture O2 supply for the consistent O2-dependent SDT path.
         let o2_supply: Vec<f64> = apply_o2_gradient(&mut grid, 120.0)
             .iter()
@@ -1523,7 +1547,7 @@ fn main() {
 
     // Export pH field heatmap
     {
-        let mut ph_vis_grid = TumorGrid::generate(GRID_SIZE, GRID_SIZE, CELL_SIZE_UM, SEED);
+        let mut ph_vis_grid = TumorGrid::generate(GRID_SIZE, GRID_SIZE, CELL_SIZE_UM, *SEED);
         let ph_map_vis = apply_ph_gradient(&mut ph_vis_grid, &ph_cfg);
         let mut ph_hm = ndarray::Array2::<u8>::zeros((GRID_SIZE, GRID_SIZE));
         for &(r, c, ph) in &ph_map_vis {
