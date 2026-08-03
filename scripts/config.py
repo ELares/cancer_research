@@ -121,10 +121,18 @@ MECHANISM_KEYWORDS = {
         "synthetic lethality", "synthetic lethal", "parp inhibitor",
         "olaparib", "niraparib", "rucaparib", "talazoparib", "brca synthetic",
     ],
+    # #MECH-PRECISION: the bare phrase "membrane potential" was removed. Audited
+    # at 13.3% precision (95% CI 4-38%, n=15) because in this corpus that phrase
+    # almost always appears as MITOCHONDRIAL membrane potential -- a JC-1
+    # apoptosis assay readout carried by any paper that ran the assay, and
+    # unrelated to bioelectric modulation as a therapy. Of 182 tagged articles,
+    # roughly 24 were genuine. "transmembrane potential" is retained: it is the
+    # bioelectricity literature's own term and does not collide with the assay.
     "bioelectric": [
         "bioelectricity", "bioelectric signaling", "bioelectric signalling",
-        "membrane potential", "transmembrane potential", "vmem",
-        "depolarization cancer", "ion channel cancer",
+        "bioelectric modulation", "bioelectric state",
+        "transmembrane potential", "resting membrane potential", "membrane voltage",
+        "vmem", "depolarization cancer", "ion channel cancer",
     ],
     "electrolysis": [
         "electrolysis", "electrochemical therapy", "electrochemical treatment",
@@ -163,10 +171,25 @@ MECHANISM_KEYWORDS = {
         "microbiome cancer", "gut microbiota cancer", "fecal microbiota",
         "microbiome immunotherapy", "intratumoral bacteria",
     ],
+    # #MECH-PRECISION: audited at 13.3% precision, but the cause is a TAXONOMY
+    # mismatch rather than a matcher bug, and it is worth stating precisely.
+    # The manuscript defines this mechanism as "frequency therapy (including
+    # pulsed electromagnetic fields)", yet the keyword list led with
+    # "radiofrequency ablation" / "microwave ablation" -- thermal ablation, a
+    # physically different modality that destroys tissue with heat rather than
+    # modulating cells with a non-thermal field. Adjudicators judging against
+    # the stated definition therefore scored those articles as false positives.
+    #
+    # The list is narrowed to the non-thermal field therapies the label denotes.
+    # The thermal-ablation literature that this tag was silently absorbing is
+    # real and sizeable and needs its own mechanism; it is NOT covered by any
+    # other tag today, so removing it here creates a known, documented gap
+    # rather than a silent one.
     "frequency-therapy": [
-        "radiofrequency ablation", "rfa cancer", "microwave ablation",
         "electromagnetic frequency", "resonant frequency cancer",
-        "pemf cancer", "pulsed electromagnetic",
+        "pemf cancer", "pulsed electromagnetic", "pulsed electromagnetic field",
+        "low-frequency electromagnetic", "amplitude-modulated electromagnetic",
+        "tumor-specific frequencies", "frequency-modulated electromagnetic",
     ],
     "antibody-drug-conjugate": [
         "antibody-drug conjugate", "antibody drug conjugate",

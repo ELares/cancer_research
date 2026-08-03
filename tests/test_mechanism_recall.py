@@ -64,7 +64,12 @@ _LEAK_CASES = [
     ("Gene Editing", "crispr", True),
     ("Nanoparticles", "nanoparticle", True),  # contains "nanoparticle"
     ("Fecal Microbiota Transplantation", "microbiome", True),  # contains "fecal microbiota"
-    ("Radiofrequency Ablation", "frequency-therapy", True),
+    # #MECH-PRECISION: no longer leaky, because `frequency-therapy` no longer
+    # claims radiofrequency ablation. The mechanism denotes non-thermal field
+    # therapy (PEMF); RFA is thermal tissue destruction. The descriptor was
+    # dropped from the mechanism's reference set in mesh-mechanism-map.yaml at
+    # the same time, so it is neither a keyword nor a reference label now.
+    ("Radiofrequency Ablation", "frequency-therapy", False),
     ("CD47 Antigen", "phagocytosis-checkpoint", True),  # contains "cd47"
     ("mRNA Vaccines", "mrna-vaccine", True),  # contains "mrna vaccine"
 ]

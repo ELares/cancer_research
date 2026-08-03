@@ -734,6 +734,26 @@ pub struct PhConfig {
     pub iron_ph_sensitivity: f64,
     /// Ion trapping sensitivity for weak-base drugs (RSL3).
     pub ion_trap_sensitivity: f64,
+    /// Ion-trapping / delivery sensitivity for the SDT-PDT SENSITIZER (#SENS-SYM).
+    ///
+    /// The pH layer historically penalised only RSL3, so the sonosensitizer was
+    /// present at uniform concentration everywhere while the pharmacologic drug
+    /// faced an acidity gradient. That is not a property of the biology, it is
+    /// an artifact of which agent was given delivery physics: SDT and PDT both
+    /// require a *sensitizer*, which is a systemically dosed small molecule, and
+    /// the manuscript's own lead clinical exemplar (SONALA-001) is 5-ALA. The
+    /// ultrasound or light field is pH-independent; the molecule that converts
+    /// it into ROS is not.
+    ///
+    /// A consumer scales each cell's `exo_ros_peak` by
+    /// `(1 - sensitizer_ion_trap_sensitivity * (ph_edge - local_ph))`, clamped
+    /// like the RSL3 factor. Set equal to `ion_trap_sensitivity` to give the
+    /// sensitizer the SAME barrier the drug faces.
+    ///
+    /// `0.0` (the default) reproduces the historical asymmetric behaviour
+    /// exactly, so the production matrix stays byte-identical until the
+    /// symmetric run is deliberately requested.
+    pub sensitizer_ion_trap_sensitivity: f64,
 }
 
 impl Default for PhConfig {
@@ -744,6 +764,7 @@ impl Default for PhConfig {
             lambda_ph_um: 120.0,
             iron_ph_sensitivity: 1.5,
             ion_trap_sensitivity: 0.4,
+            sensitizer_ion_trap_sensitivity: 0.0,
         }
     }
 }
