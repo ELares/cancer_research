@@ -35,3 +35,5 @@ analysis/living-review/
 
 # Local-only outputs (e.g. named collaborator seed list, #541) — never committed
 local/
+corpus/atlas/raw/
+corpus/atlas/records/

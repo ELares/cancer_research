@@ -1,0 +1,708 @@
+# MeSH tree C04 (Neoplasms) topical descriptors -- the ATLAS cancer definition.
+# Source: NLM MeSH SPARQL endpoint, https://id.nlm.nih.gov/mesh/sparql (inference on).
+# Regenerate: python scripts/atlas_baseline.py --refresh-mesh
+# descriptors: 704
+D000008	Abdominal Neoplasms
+D000069293	Plasmablastic Lymphoma
+D000069295	Mammary Analogue Secretory Carcinoma
+D000069584	Unilateral Breast Neoplasms
+D000070779	Giant Cell Tumor of Tendon Sheath
+D000071380	Fibromatosis, Plantar
+D000071960	Breast Carcinoma In Situ
+D000074009	Tubular Sweat Gland Adenomas
+D000074723	Oncogene Addiction
+D000075122	Smoldering Multiple Myeloma
+D000075363	Immunoglobulin Light-chain Amyloidosis
+D000077192	Adenocarcinoma of Lung
+D000077195	Squamous Cell Carcinoma of Head and Neck
+D000077207	Chondrosarcoma, Clear Cell
+D000077216	Carcinoma, Ovarian Epithelial
+D000077273	Thyroid Cancer, Papillary
+D000077274	Nasopharyngeal Carcinoma
+D000077277	Esophageal Squamous Cell Carcinoma
+D000077777	Myopericytoma
+D000077779	Pancreatic Intraductal Neoplasms
+D000079822	Extranodal Extension
+D000080443	Diffuse Intrinsic Pontine Glioma
+D000082802	Warburg Effect, Oncologic
+D000083023	Colitis-Associated Neoplasms
+D000084122	Cardiac Papillary Fibroelastoma
+D000086002	Mesothelioma, Malignant
+D000093284	Non-Muscle Invasive Bladder Neoplasms
+D000096142	Cutaneous Malignant Melanoma
+D000098943	Uveal Melanoma
+D000099067	Blastic Plasmacytoid Dendritic Cell Neoplasm
+D000099313	Non-Melanoma Skin Neoplasms
+D000099314	Cutaneous Squamous Cell Carcinoma
+D000182	ACTH Syndrome, Ectopic
+D000230	Adenocarcinoma
+D000231	Adenocarcinoma, Papillary
+D000232	Adenofibroma
+D000235	Adenolymphoma
+D000236	Adenoma
+D000237	Adenoma, Basophil
+D000238	Adenoma, Chromophobe
+D000239	Adenoma, Acidophil
+D000306	Adrenal Cortex Neoplasms
+D000310	Adrenal Gland Neoplasms
+D000314	Adrenal Rest Tumor
+D000564	Ameloblastoma
+D000694	Anal Gland Neoplasms
+D000708	Anaplasia
+D000794	Angiokeratoma
+D001005	Anus Neoplasms
+D001063	Appendiceal Neoplasms
+D001079	Apudoma
+D001254	Astrocytoma
+D001353	Avian Leukosis
+D001357	Sarcoma, Avian
+D001471	Barrett Esophagus
+D001478	Basal Cell Nevus Syndrome
+D001650	Bile Duct Neoplasms
+D001661	Biliary Tract Neoplasms
+D001749	Urinary Bladder Neoplasms
+D001752	Blast Crisis
+D001845	Bone Cysts
+D001859	Bone Neoplasms
+D001913	Bowen's Disease
+D001932	Brain Neoplasms
+D001935	Branchioma
+D001943	Breast Neoplasms
+D001948	Brenner Tumor
+D001984	Bronchial Neoplasms
+D001994	Bronchogenic Cyst
+D002051	Burkitt Lymphoma
+D002275	Carcinoid Heart Disease
+D002276	Carcinoid Tumor
+D002277	Carcinoma
+D002278	Carcinoma in Situ
+D002279	Carcinoma 256, Walker
+D002280	Basal Cell Carcinoma
+D002281	Carcinoma, Basosquamous
+D002282	Adenocarcinoma, Bronchiolo-Alveolar
+D002283	Carcinoma, Bronchogenic
+D002284	Carcinoma, Brown-Pearce
+D002285	Carcinoma, Intraductal, Noninfiltrating
+D002286	Carcinoma, Ehrlich Tumor
+D002287	Carcinoma, Krebs 2
+D002288	Adenocarcinoma, Mucinous
+D002289	Carcinoma, Non-Small-Cell Lung
+D002291	Carcinoma, Papillary
+D002292	Carcinoma, Renal Cell
+D002293	Adenocarcinoma, Scirrhous
+D002294	Carcinoma, Squamous Cell
+D002295	Carcinoma, Transitional Cell
+D002296	Carcinosarcoma
+D002345	Carotid Body Tumor
+D002430	Cecal Neoplasms
+D002471	Cell Transformation, Neoplastic
+D002472	Cell Transformation, Viral
+D002485	Cementoma
+D002528	Cerebellar Neoplasms
+D002551	Cerebral Ventricle Neoplasms
+D002578	Uterine Cervical Dysplasia
+D002583	Uterine Cervical Neoplasms
+D002759	Adenoma, Bile Duct
+D002804	Chondroblastoma
+D002812	Chondroma
+D002813	Chondrosarcoma
+D002817	Chordoma
+D002820	Hydatidiform Mole, Invasive
+D002822	Choriocarcinoma
+D002830	Choroid Neoplasms
+D003043	Cocarcinogenesis
+D003110	Colonic Neoplasms
+D003123	Colorectal Neoplasms, Hereditary Nonpolyposis
+D003138	Common Bile Duct Neoplasms
+D003230	Conjunctival Neoplasms
+D003390	Cranial Nerve Neoplasms
+D003397	Craniopharyngioma
+D003528	Carcinoma, Adenoid Cystic
+D003536	Cystadenocarcinoma
+D003537	Cystadenoma
+D003557	Phyllodes Tumor
+D003560	Cysts
+D003803	Dentigerous Cyst
+D003884	Dermoid Cyst
+D003969	Vipoma
+D004067	Digestive System Neoplasms
+D004379	Duodenal Neoplasms
+D004387	Dupuytren Contracture
+D004407	Dysgerminoma
+D004416	Dysplastic Nevus Syndrome
+D004428	Ear Neoplasms
+D004701	Endocrine Gland Neoplasms
+D004806	Ependymoma
+D004814	Epidermal Cyst
+D004915	Leukemia, Erythroblastic, Acute
+D004919	Erythroplasia
+D004934	Esophageal Cyst
+D004938	Esophageal Neoplasms
+D005097	Exostoses, Multiple Hereditary
+D005134	Eye Neoplasms
+D005142	Eyelid Neoplasms
+D005153	Facial Neoplasms
+D005185	Fallopian Tube Neoplasms
+D005266	Femoral Neoplasms
+D005350	Fibroma
+D005354	Fibrosarcoma
+D005497	Follicular Cyst
+D005706	Gallbladder Neoplasms
+D005729	Ganglioneuroma
+D005736	Gardner Syndrome
+D005770	Gastrointestinal Neoplasms
+D005833	Genital Neoplasms, Female
+D005834	Genital Neoplasms, Male
+D005870	Giant Cell Tumors
+D005887	Gingival Neoplasms
+D005909	Glioblastoma
+D005910	Glioma
+D005918	Glomus Tumor
+D005925	Glomus Jugulare Tumor
+D005935	Glucagonoma
+D006106	Granulosa Cell Tumor
+D006222	Hamartoma
+D006223	Hamartoma Syndrome, Multiple
+D006258	Head and Neck Neoplasms
+D006338	Heart Neoplasms
+D006390	Hemangioendothelioma
+D006391	Hemangioma
+D006392	Hemangioma, Cavernous
+D006393	Hemangiopericytoma
+D006394	Hemangiosarcoma
+D006528	Carcinoma, Hepatocellular
+D006607	Adenoma, Sweat Gland
+D006689	Hodgkin Disease
+D006828	Hydatidiform Mole
+D007012	Hypopharyngeal Neoplasms
+D007029	Hypothalamic Neoplasms
+D007078	Ileal Neoplasms
+D007161	Immunoproliferative Small Intestinal Disease
+D007340	Insulinoma
+D007414	Intestinal Neoplasms
+D007516	Adenoma, Islet Cell
+D007570	Jaw Cysts
+D007573	Jaw Neoplasms
+D007580	Jejunal Neoplasms
+D007680	Kidney Neoplasms
+D007725	Krukenberg Tumor
+D007822	Laryngeal Neoplasms
+D007889	Leiomyoma
+D007890	Leiomyosarcoma
+D007938	Leukemia
+D007939	Leukemia L1210
+D007940	Leukemia L5178
+D007941	Leukemia P388
+D007942	Leukemia, Experimental
+D007943	Leukemia, Hairy Cell
+D007945	Leukemia, Lymphoid
+D007946	Leukemia, Mast-Cell
+D007947	Leukemia, Megakaryoblastic, Acute
+D007948	Leukemia, Monocytic, Acute
+D007951	Leukemia, Myeloid
+D007952	Leukemia, Plasma Cell
+D007953	Leukemia, Radiation-Induced
+D007971	Leukoplakia
+D007972	Leukoplakia, Oral
+D007984	Leydig Cell Tumor
+D008039	Linitis Plastica
+D008048	Lip Neoplasms
+D008067	Lipoma
+D008080	Liposarcoma
+D008113	Liver Neoplasms
+D008114	Liver Neoplasms, Experimental
+D008175	Lung Neoplasms
+D008202	Lymphangioma
+D008203	Lymphangiomyoma
+D008204	Lymphangiosarcoma
+D008207	Lymphatic Metastasis
+D008210	Lymphocele
+D008223	Lymphoma
+D008224	Lymphoma, Follicular
+D008228	Lymphoma, Non-Hodgkin
+D008230	Lymphomatoid Granulomatosis
+D008258	Waldenstrom Macroglobulinemia
+D008303	Malignant Carcinoid Syndrome
+D008325	Mammary Neoplasms, Experimental
+D008339	Mandibular Neoplasms
+D008415	Mastocytosis
+D008441	Maxillary Neoplasms
+D008444	Maxillary Sinus Neoplasms
+D008476	Mediastinal Cyst
+D008479	Mediastinal Neoplasms
+D008527	Medulloblastoma
+D008539	Meigs Syndrome
+D008545	Melanoma
+D008546	Melanoma, Experimental
+D008577	Meningeal Neoplasms
+D008579	Meningioma
+D008637	Mesenchymoma
+D008639	Mesenteric Cyst
+D008649	Mesonephroma
+D008654	Mesothelioma
+D008949	Adenoma, Pleomorphic
+D009062	Mouth Neoplasms
+D009078	Mucocele
+D009101	Multiple Myeloma
+D009157	Myasthenia Gravis
+D009182	Mycosis Fungoides
+D009188	Myelitis, Transverse
+D009208	Myoepithelioma
+D009214	Myoma
+D009217	Myosarcoma
+D009232	Myxoma
+D009236	Myxosarcoma
+D009303	Nasopharyngeal Neoplasms
+D009347	Nelson Syndrome
+D009360	Neoplastic Cells, Circulating
+D009361	Neoplasm Invasiveness
+D009362	Neoplasm Metastasis
+D009364	Neoplasm Recurrence, Local
+D009365	Neoplasm Regression, Spontaneous
+D009366	Neoplasm Seeding
+D009369	Neoplasms
+D009370	Neoplasms by Histologic Type
+D009371	Neoplasms by Site
+D009372	Neoplasms, Connective Tissue
+D009373	Neoplasms, Germ Cell and Embryonal
+D009374	Neoplasms, Experimental
+D009375	Neoplasms, Glandular and Epithelial
+D009376	Neoplasms, Hormone-Dependent
+D009377	Multiple Endocrine Neoplasia
+D009378	Neoplasms, Multiple Primary
+D009379	Neoplasms, Muscle Tissue
+D009380	Neoplasms, Nerve Tissue
+D009381	Neoplasms, Radiation-Induced
+D009382	Neoplasms, Unknown Primary
+D009383	Neoplasms, Vascular Tissue
+D009384	Paraneoplastic Endocrine Syndromes
+D009385	Neoplastic Processes
+D009386	Neoplastic Syndromes, Hereditary
+D009396	Wilms Tumor
+D009423	Nervous System Neoplasms
+D009442	Neurilemmoma
+D009447	Neuroblastoma
+D009455	Neurofibroma
+D009456	Neurofibromatosis 1
+D009463	Neuroma
+D009464	Neuroma, Acoustic
+D009506	Nevus
+D009507	Nevus of Ota
+D009508	Nevus, Pigmented
+D009631	Nonodontogenic Cysts
+D009669	Nose Neoplasms
+D009807	Odontogenic Cysts
+D009808	Odontogenic Tumors
+D009810	Odontoma
+D009837	Oligodendroglioma
+D009918	Orbital Neoplasms
+D009959	Oropharyngeal Neoplasms
+D010016	Osteoma
+D010017	Osteoma, Osteoid
+D010039	Otorhinolaryngologic Neoplasms
+D010048	Ovarian Cysts
+D010051	Ovarian Neoplasms
+D010144	Paget's Disease, Mammary
+D010145	Paget Disease, Extramammary
+D010157	Palatal Neoplasms
+D010178	Pancoast Syndrome
+D010181	Pancreatic Cyst
+D010190	Pancreatic Neoplasms
+D010192	Pancreatic Pseudocyst
+D010212	Papilloma
+D010235	Paraganglioma
+D010236	Paraganglioma, Extra-Adrenal
+D010255	Paranasal Sinus Neoplasms
+D010257	Paraneoplastic Syndromes
+D010282	Parathyroid Neoplasms
+D010307	Parotid Neoplasms
+D010310	Parovarian Cyst
+D010386	Pelvic Neoplasms
+D010412	Penile Neoplasms
+D010509	Periodontal Cyst
+D010524	Peripheral Nervous System Neoplasms
+D010534	Peritoneal Neoplasms
+D010580	Peutz-Jeghers Syndrome
+D010610	Pharyngeal Neoplasms
+D010673	Pheochromocytoma
+D010864	Pilonidal Sinus
+D010871	Pinealoma
+D010911	Pituitary Neoplasms
+D010954	Plasmacytoma
+D010997	Pleural Neoplasms
+D011085	Polycystic Ovary Syndrome
+D011087	Polycythemia Vera
+D011125	Adenomatous Polyposis Coli
+D011151	Popliteal Cyst
+D011230	Precancerous Conditions
+D011252	Pregnancy Complications, Neoplastic
+D011289	Preleukemia
+D011471	Prostatic Neoplasms
+D011553	Pseudomyxoma Peritonei
+D011648	Pulmonary Adenomatosis, Ovine
+D011842	Radicular Cyst
+D011900	Ranula
+D012004	Rectal Neoplasms
+D012142	Respiratory Tract Neoplasms
+D012175	Retinoblastoma
+D012186	Retroperitoneal Neoplasms
+D012207	Rhabdomyoma
+D012208	Rhabdomyosarcoma
+D012468	Salivary Gland Neoplasms
+D012509	Sarcoma
+D012510	Sarcoma 180
+D012511	Sarcoma 37
+D012512	Sarcoma, Ewing
+D012513	Sarcoma, Experimental
+D012514	Sarcoma, Kaposi
+D012515	Mast-Cell Sarcoma
+D012516	Osteosarcoma
+D012517	Sarcoma, Yoshida
+D012626	Sebaceous Gland Neoplasms
+D012707	Sertoli Cell Tumor
+D012751	Sezary Syndrome
+D012811	Sigmoid Neoplasms
+D012878	Skin Neoplasms
+D012888	Skull Neoplasms
+D012983	Soft Tissue Neoplasms
+D013005	Somatostatinoma
+D013120	Spinal Cord Neoplasms
+D013125	Spinal Neoplasms
+D013160	Splenic Neoplasms
+D013274	Stomach Neoplasms
+D013330	Struma Ovarii
+D013341	Sturge-Weber Syndrome
+D013362	Sublingual Gland Neoplasms
+D013365	Submandibular Gland Neoplasms
+D013544	Sweat Gland Neoplasms
+D013581	Synovial Cyst
+D013584	Sarcoma, Synovial
+D013586	Synovitis, Pigmented Villonodular
+D013724	Teratoma
+D013736	Testicular Neoplasms
+D013798	Thecoma
+D013899	Thoracic Neoplasms
+D013945	Thymoma
+D013953	Thymus Neoplasms
+D013955	Thyroglossal Cyst
+D013964	Thyroid Neoplasms
+D014062	Tongue Neoplasms
+D014067	Tonsillar Neoplasms
+D014134	Tracheal Neoplasms
+D014328	Trophoblastic Neoplasms
+D014402	Tuberous Sclerosis
+D014496	Urachal Cyst
+D014516	Ureteral Neoplasms
+D014523	Urethral Neoplasms
+D014565	Urogenital Neoplasms
+D014571	Urologic Neoplasms
+D014582	Urticaria Pigmentosa
+D014594	Uterine Neoplasms
+D014604	Uveal Neoplasms
+D014625	Vaginal Neoplasms
+D014685	Venereal Tumors, Veterinary
+D014846	Vulvar Neoplasms
+D014983	Xeroderma Pigmentosum
+D015043	Zollinger-Ellison Syndrome
+D015173	Supratentorial Neoplasms
+D015174	Epidural Neoplasms
+D015175	Prolactinoma
+D015179	Colorectal Neoplasms
+D015192	Infratentorial Neoplasms
+D015266	Carcinoma, Merkel Cell
+D015408	Gastrinoma
+D015448	Leukemia, B-Cell
+D015451	Leukemia, Lymphocytic, Chronic, B-Cell
+D015452	Precursor B-Cell Lymphoblastic Leukemia-Lymphoma
+D015456	Leukemia, Biphenotypic, Acute
+D015458	Leukemia, T-Cell
+D015459	Leukemia-Lymphoma, Adult T-Cell
+D015461	Leukemia, Prolymphocytic, T-Cell
+D015463	Leukemia, Prolymphocytic
+D015464	Leukemia, Myelogenous, Chronic, BCR-ABL Positive
+D015465	Leukemia, Myeloid, Accelerated Phase
+D015466	Leukemia, Myeloid, Chronic-Phase
+D015470	Leukemia, Myeloid, Acute
+D015471	Leukemia, Basophilic, Acute
+D015472	Leukemia, Eosinophilic, Acute
+D015473	Leukemia, Promyelocytic, Acute
+D015477	Leukemia, Myelomonocytic, Chronic
+D015479	Leukemia, Myelomonocytic, Acute
+D015529	Choledochal Cyst
+D015620	Histiocytic Disorders, Malignant
+D015624	Lambert-Eaton Myasthenic Syndrome
+D015674	Mammary Neoplasms, Animal
+D015811	Iris Neoplasms
+D015831	Osteochondroma
+D016066	Pleural Effusion, Malignant
+D016080	Arachnoid Cysts
+D016393	Lymphoma, B-Cell
+D016399	Lymphoma, T-Cell
+D016400	Lymphoma, Large-Cell, Immunoblastic
+D016403	Lymphoma, Large B-Cell, Diffuse
+D016410	Lymphoma, T-Cell, Cutaneous
+D016411	Lymphoma, T-Cell, Peripheral
+D016483	Lymphoma, AIDS-Related
+D016518	Neurofibromatosis 2
+D016543	Central Nervous System Neoplasms
+D016545	Choroid Plexus Neoplasms
+D016582	Leukemia, Feline
+D016583	Enzootic Bovine Leukosis
+D016586	Granular Cell Tumor
+D016606	Thyroid Nodule
+D016609	Neoplasms, Second Primary
+D016715	Proteus Syndrome
+D016864	Li-Fraumeni Syndrome
+D016889	Endometrial Neoplasms
+D017043	Chalazion
+D017169	Neoplasms, Post-Traumatic
+D017253	Neurofibromatoses
+D017254	Leukemic Infiltration
+D017599	Neuroectodermal Tumors
+D017600	Neuroectodermal Tumor, Melanotic
+D017624	WAGR Syndrome
+D017728	Lymphoma, Large-Cell, Anaplastic
+D017731	Lymphomatoid Papulosis
+D017733	Leukoplakia, Hairy
+D017824	Bone Cysts, Aneurysmal
+D018190	Neoplasm, Lymphatic Tissue
+D018191	Lymphangioma, Cystic
+D018192	Lymphangioleiomyomatosis
+D018193	Neoplasms, Complex and Mixed
+D018194	Adenomyoma
+D018195	Adenosarcoma
+D018196	Carcinoma, Adenosquamous
+D018197	Hepatoblastoma
+D018198	Mixed Tumor, Malignant
+D018199	Mixed Tumor, Mesodermal
+D018200	Mixed Tumor, Mullerian
+D018201	Nephroma, Mesoblastic
+D018202	Pulmonary Blastoma
+D018203	Sarcoma, Endometrial Stromal
+D018204	Neoplasms, Connective and Soft Tissue
+D018205	Neoplasms, Adipose Tissue
+D018206	Angiolipoma
+D018207	Angiomyolipoma
+D018208	Liposarcoma, Myxoid
+D018209	Myelolipoma
+D018210	Chondromatosis
+D018211	Chondrosarcoma, Mesenchymal
+D018212	Giant Cell Tumor of Bone
+D018213	Neoplasms, Bone Tissue
+D018214	Fibroma, Ossifying
+D018215	Osteoblastoma
+D018216	Osteochondromatosis
+D018217	Osteosarcoma, Juxtacortical
+D018218	Neoplasms, Fibrous Tissue
+D018219	Histiocytoma, Benign Fibrous
+D018220	Fibroma, Desmoplastic
+D018221	Fibromatosis, Abdominal
+D018222	Desmoid Tumors
+D018223	Dermatofibrosarcoma
+D018224	Myofibromatosis
+D018225	Neoplasms, Fibroepithelial
+D018226	Fibroadenoma
+D018227	Sarcoma, Clear Cell
+D018228	Sarcoma, Small Cell
+D018229	Angiomyoma
+D018230	Leiomyoma, Epithelioid
+D018231	Leiomyomatosis
+D018232	Rhabdomyosarcoma, Alveolar
+D018233	Rhabdomyosarcoma, Embryonal
+D018234	Sarcoma, Alveolar Soft Part
+D018235	Smooth Muscle Tumor
+D018236	Carcinoma, Embryonal
+D018237	Germinoma
+D018238	Gonadoblastoma
+D018239	Seminoma
+D018240	Endodermal Sinus Tumor
+D018241	Neuroectodermal Tumors, Primitive, Peripheral
+D018242	Neuroectodermal Tumors, Primitive
+D018243	Teratocarcinoma
+D018245	Trophoblastic Tumor, Placental Site
+D018246	Adrenocortical Adenoma
+D018248	Adenoma, Liver Cell
+D018249	Adenoma, Oxyphilic
+D018250	Acrospiroma
+D018251	Hidrocystoma
+D018252	Syringoma
+D018253	Adenoma, Villous
+D018254	Adenomatoid Tumor
+D018255	Adenomatosis, Pulmonary
+D018256	Adenomatous Polyps
+D018261	Mesothelioma, Cystic
+D018262	Adenocarcinoma, Clear Cell
+D018263	Adenocarcinoma, Follicular
+D018265	Carcinoma, Papillary, Follicular
+D018266	Adenocarcinoma, Sebaceous
+D018267	Carcinoma, Acinar Cell
+D018268	Adrenocortical Carcinoma
+D018269	Carcinoma, Endometrioid
+D018270	Carcinoma, Ductal, Breast
+D018273	Carcinoma, Islet Cell
+D018275	Carcinoma, Lobular
+D018276	Carcinoma, Medullary
+D018277	Carcinoma, Mucoepidermoid
+D018278	Carcinoma, Neuroendocrine
+D018279	Carcinoma, Signet Ring Cell
+D018280	Carcinoma, Skin Appendage
+D018281	Cholangiocarcinoma
+D018282	Cystadenocarcinoma, Mucinous
+D018283	Cystadenocarcinoma, Papillary
+D018284	Cystadenocarcinoma, Serous
+D018285	Klatskin Tumor
+D018286	Carcinoma, Giant Cell
+D018287	Carcinoma, Large Cell
+D018288	Carcinoma, Small Cell
+D018289	Carcinoma, Verrucous
+D018290	[OBSOLETE] Cervical Intraepithelial Neoplasia
+D018291	Cystadenoma, Mucinous
+D018292	Cystadenoma, Papillary
+D018293	Cystadenoma, Serous
+D018294	Neoplasms, Adnexal and Skin Appendage
+D018295	Neoplasms, Basal Cell
+D018296	Pilomatrixoma
+D018297	Neoplasms, Cystic, Mucinous, and Serous
+D018298	Mucoepidermoid Tumor
+D018299	Neoplasms, Ductal, Lobular, and Medullary
+D018300	Papilloma, Intraductal
+D018301	Neoplasms, Mesothelial
+D018302	Neoplasms, Neuroepithelial
+D018303	Ganglioglioma
+D018304	Esthesioneuroblastoma, Olfactory
+D018305	Ganglioneuroblastoma
+D018306	Neurocytoma
+D018307	Neoplasms, Squamous Cell
+D018308	Papilloma, Inverted
+D018309	Neoplasms, Gonadal Tissue
+D018310	Sertoli-Leydig Cell Tumor
+D018311	Luteoma
+D018312	Sex Cord-Gonadal Stromal Tumors
+D018315	Glioma, Subependymal
+D018316	Gliosarcoma
+D018317	Nerve Sheath Neoplasms
+D018318	Neurofibroma, Plexiform
+D018319	Neurofibrosarcoma
+D018321	Neurothekeoma
+D018322	Angiofibroma
+D018323	Hemangioendothelioma, Epithelioid
+D018324	Hemangioma, Capillary
+D018325	Hemangioblastoma
+D018326	Nevi and Melanomas
+D018327	Hutchinson's Melanotic Freckle
+D018328	Melanoma, Amelanotic
+D018329	Nevus, Blue
+D018330	Nevus, Intradermal
+D018331	Nevus, Spindle Cell
+D018332	Nevus, Epithelioid and Spindle Cell
+D018333	Odontogenic Cyst, Calcifying
+D018335	Rhabdoid Tumor
+D018358	Neuroendocrine Tumors
+D018365	Neoplasm, Residual
+D018442	Lymphoma, B-Cell, Marginal Zone
+D018567	Breast Neoplasms, Male
+D018761	Multiple Endocrine Neoplasia Type 1
+D018813	Multiple Endocrine Neoplasia Type 2a
+D018814	Multiple Endocrine Neoplasia Type 2b
+D018827	Carcinoma, Lewis Lung
+D019042	Muscle Neoplasms
+D019043	Vascular Neoplasms
+D019046	Bone Marrow Neoplasms
+D019048	Prostatic Intraepithelial Neoplasia
+D019292	Skull Base Neoplasms
+D019337	Hematologic Neoplasms
+D019572	Retinal Neoplasms
+D019574	Optic Nerve Neoplasms
+D020288	Papilloma, Choroid Plexus
+D020295	Brain Stem Neoplasms
+D020339	Optic Nerve Glioma
+D020361	Paraneoplastic Syndromes, Nervous System
+D020362	Paraneoplastic Cerebellar Degeneration
+D020363	Limbic Encephalitis
+D020364	Paraneoplastic Polyneuropathy
+D020522	Lymphoma, Mantle-Cell
+D020786	Hemangioma, Cavernous, Central Nervous System
+D020787	Central Nervous System Venous Angioma
+D020863	Central Nervous System Cysts
+D021441	Carcinoma, Pancreatic Ductal
+D023981	Sarcoma, Myeloid
+D030321	Denys-Drash Syndrome
+D031901	Gestational Trophoblastic Disease
+D031954	Choriocarcinoma, Non-gestational
+D034701	Mastocytosis, Cutaneous
+D034721	Mastocytosis, Systemic
+D034801	Mastocytoma
+D036821	Endometrial Stromal Tumors
+D043604	Glomus Tympanicum Tumor
+D044584	Carcinoma, Ductal
+D045888	Ganglion Cysts
+D046152	Gastrointestinal Stromal Tumors
+D047688	Breast Cyst
+D047708	Myofibroma
+D047868	Pulmonary Sclerosing Hemangioma
+D049309	Acanthoma
+D049328	Mongolian Spot
+D049912	Growth Hormone-Secreting Pituitary Adenoma
+D049913	ACTH-Secreting Pituitary Adenoma
+D050398	Adamantinoma
+D051527	Odontogenic Tumor, Squamous
+D051642	Histiocytoma
+D051677	Histiocytoma, Malignant Fibrous
+D052958	Tarlov Cysts
+D053578	Opsoclonus-Myoclonus Syndrome
+D054000	Nevus, Sebaceous of Jadassohn
+D054066	Leukemia, Large Granular Lymphocytic
+D054198	Precursor Cell Lymphoblastic Leukemia-Lymphoma
+D054218	Precursor T-Cell Lymphoblastic Leukemia-Lymphoma
+D054219	Neoplasms, Plasma Cell
+D054363	Solitary Fibrous Tumor, Pleural
+D054364	Solitary Fibrous Tumors
+D054391	Lymphoma, Extranodal NK-T-Cell
+D054403	Leukemia, Prolymphocytic, B-Cell
+D054429	Leukemia, Myelomonocytic, Juvenile
+D054438	Leukemia, Myeloid, Chronic, Atypical, BCR-ABL Negative
+D054446	Lymphoma, Primary Cutaneous Anaplastic Large Cell
+D054685	Lymphoma, Primary Effusion
+D054705	Mastocytoma, Skin
+D054739	Dendritic Cell Sarcoma, Interdigitating
+D054740	Dendritic Cell Sarcoma, Follicular
+D054747	Histiocytic Sarcoma
+D054752	Langerhans Cell Sarcoma
+D054973	Perivascular Epithelioid Cell Neoplasms
+D054975	Pallister-Hall Syndrome
+D055331	Adenomyoepithelioma
+D055613	Multiple Pulmonary Nodules
+D055623	Keratosis, Actinic
+D055653	Muir-Torre Syndrome
+D055752	Small Cell Lung Carcinoma
+D055756	Meningeal Carcinomatosis
+D055847	Lynch Syndrome II
+D055882	Nevus, Halo
+D056267	Pagetoid Reticulosis
+D056364	Colloid Cysts
+D056733	Carney Complex
+D057090	Eccrine Porocarcinoma
+D057091	Poroma
+D058249	Birt-Hogg-Dube Syndrome
+D058288	Sister Mary Joseph's Nodule
+D058405	Desmoplastic Small Round Cell Tumor
+D058527	Enteropathy-Associated T-Cell Lymphoma
+D058617	Composite Lymphoma
+D058739	Aberrant Crypt Foci
+D058922	Inflammatory Breast Neoplasms
+D059545	Paraneoplastic Syndromes, Ocular
+D059885	Kasabach-Merritt Syndrome
+D060426	Anti-N-Methyl-D-Aspartate Receptor Encephalitis
+D061206	Neoplasm Micrometastasis
+D061325	Hereditary Breast and Ovarian Cancer Syndrome
+D062625	Cystadenofibroma
+D062688	Buschke-Lowenstein Tumor
+D062689	Lipoblastoma
+D063646	Carcinogenesis
+D064090	Intraocular Lymphoma
+D064129	Prostatic Neoplasms, Castration-Resistant
+D064726	Triple Negative Breast Neoplasms
+D065309	Atypical Squamous Cells of the Cervix
+D065310	Squamous Intraepithelial Lesions of the Cervix
+D065311	Adenocarcinoma in Situ
+D065646	Thyroid Carcinoma, Anaplastic
