@@ -102,11 +102,37 @@ been marketing.
      old 4,830-article corpus contains ~223 cancer papers the census misses, and
      47 that are not cancer at all.
 2. **Normalize.** Identifiers, not strings. A gene is `NCBIGene:2879`, not
-   twelve spellings of GPX4.
+   twelve spellings of GPX4. *In progress, and harder than it looked.* Gene
+   symbols are ambiguous in the reference data itself: NCBI lists `FSP1` as an
+   official alias of three different genes, and PubTator resolved every
+   GPX4–FSP1 relation in the census to a spastic-paraplegia gene, leaving this
+   project's own headline claim with zero typed support until it was fixed.
+   Across the census, genes sit on a contested surface form for 28.3% of
+   mentions against ~2% for MeSH-coded chemicals and diseases. The graph now
+   refuses to resolve a measured sense collision rather than guessing
+   (`analysis/atlas-ambiguity.md`).
 3. **Measure every layer.** Precision and recall with intervals, against labels
    whose own agreement is reported.
 4. **Mine.** Contradiction detection, replication tracking, temporal emergence,
    and literature-based discovery across disconnected fields.
+
+   > **The discovery pillar does not work as built, and this is the honest
+   > record of it.** Given a time split — rank candidate pairs on the graph as it
+   > stood before year Y, then check what the literature went on to assert — the
+   > shipped ABC ranking scores 12.3% precision@20 against 17.2% for simply
+   > ranking the same candidates by how well studied they already are. No
+   > standard link predictor beats that baseline either, and the methods line up
+   > by how hard each corrects for degree: the harder the correction, the worse
+   > it does. What survives is the candidate *set*, which beats random several
+   > times over. A good generator, a bad ranker
+   > (`analysis/atlas-discovery-eval.md`).
+   >
+   > One caveat runs the other way and is not a rescue: that evaluation rewards
+   > anticipating the literature, while discovery is *for* connections the
+   > literature is slow to reach. A genuinely overlooked pair counts there as a
+   > miss. So the measured claim is narrow — correcting for popularity does not
+   > help predict what the field did next — and whether that is even the right
+   > target remains open.
 5. **Test.** Where the map implies a mechanism, the simulation engine tries to
    break it.
 6. **Give it away.** Every layer citable, reproducible, and MIT-licensed.
