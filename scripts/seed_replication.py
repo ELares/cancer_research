@@ -184,6 +184,65 @@ def main() -> None:
                  f"`{r['metric']}` | {r['n']} | {b} | {r['median']:.4g} | "
                  f"{r['lo']:.4g}-{r['hi']:.4g} |")
 
+    # --- the immune-coupling ratio, computed per seed ---
+    def _find(t, o, i, b, m):
+        for r in rows:
+            if (r["treatment"], r["o2"], r["immune"], r["block"], r["metric"]) == (t, o, i, b, m):
+                return r
+        return None
+
+    ratio_lines = []
+    for blk in range(3):
+        rr = _find("RSL3", "gradient_120um", "immune_on", blk, "immune_kills")
+        ss = _find("SDT", "gradient_120um", "immune_on", blk, "immune_kills")
+        if not (rr and ss):
+            continue
+        common = sorted(set(rr["by_seed"]) & set(ss["by_seed"]), key=lambda s: int(s))
+        ratios, zeros = [], 0
+        for s in common:
+            den = rr["by_seed"][s]
+            if den == 0:
+                zeros += 1
+            else:
+                ratios.append(ss["by_seed"][s] / den)
+        if not ratios:
+            continue
+        ratios.sort()
+        ratio_lines.append(dict(block=blk, n=len(common), zeros=zeros,
+                                seed42_sdt=rr and ss["by_seed"].get(str(args.start)),
+                                seed42_rsl3=rr["by_seed"].get(str(args.start)),
+                                median=statistics.median(ratios),
+                                lo=ratios[0], hi=ratios[-1]))
+
+    if ratio_lines:
+        L += ["", "## The immune-coupling ratio", "",
+              "The manuscript quotes an SDT:RSL3 immune-kill ratio of **104:1** and repeats",
+              "it six times. Its denominator is a single-digit event count, so this is the",
+              "quantity most exposed to seed choice. Computed as the median of PER-SEED",
+              "ratios (not the ratio of medians, which is a different and more flattering",
+              "statistic):", "",
+              "| block | seed 42 | median ratio | range | seeds with a ZERO denominator |",
+              "|---|---|---|---|---|"]
+        for r in ratio_lines:
+            s42 = (f"{r['seed42_sdt']:.0f}/{r['seed42_rsl3']:.0f}"
+                   if r["seed42_rsl3"] else f"{r['seed42_sdt']:.0f}/0")
+            L.append(f"| {r['block']} | {s42} | {r['median']:.0f}:1 | "
+                     f"{r['lo']:.0f}:1 - {r['hi']:.0f}:1 | {r['zeros']}/{r['n']} |")
+        b0 = ratio_lines[0]
+        L += ["",
+              f"Block 0 is the manuscript's condition. The published point estimate is",
+              f"**representative** -- the median across seeds is {b0['median']:.0f}:1 against a",
+              f"published 104:1, so seed 42 was not a lucky draw.",
+              "",
+              f"What the single seed hides is the spread: **{b0['lo']:.0f}:1 to {b0['hi']:.0f}:1**, a",
+              f"{b0['hi']/b0['lo']:.0f}-fold range, and in **{b0['zeros']} of {b0['n']}** seeds the RSL3 denominator",
+              "is zero so the ratio is undefined altogether.",
+              "",
+              "So the correction is about precision, not accuracy. Quoting `104:1` implies",
+              "two significant figures the data cannot support. An honest form is",
+              f"\"~{round(b0['median'], -1):.0f}:1, ranging roughly {b0['lo']:.0f}:1 to {b0['hi']:.0f}:1 across seeds and",
+              "undefined when the RSL3 arm scores no immune kills at all\".", ""]
+
     L += ["", "## How to read this", "",
           "The interval is a percentile bootstrap on the MEDIAN across seeds. It captures",
           "stochastic run-to-run variation ONLY. It is not a parameter-uncertainty",
