@@ -6705,6 +6705,83 @@
    "parsed": true,
    "records": "pubmed26n0958.jsonl.gz",
    "total": 30000
+  },
+  "pubmed26n0959.xml.gz": {
+   "cancer": 2660,
+   "no_mesh": 11285,
+   "parsed": true,
+   "records": "pubmed26n0959.jsonl.gz",
+   "total": 30000
+  },
+  "pubmed26n0960.xml.gz": {
+   "cancer": 3342,
+   "no_mesh": 7203,
+   "parsed": true,
+   "records": "pubmed26n0960.jsonl.gz",
+   "total": 30000
+  },
+  "pubmed26n0961.xml.gz": {
+   "cancer": 3102,
+   "no_mesh": 8261,
+   "parsed": true,
+   "records": "pubmed26n0961.jsonl.gz",
+   "total": 30000
+  },
+  "pubmed26n0962.xml.gz": {
+   "cancer": 3299,
+   "no_mesh": 8217,
+   "parsed": true,
+   "records": "pubmed26n0962.jsonl.gz",
+   "total": 30000
+  },
+  "pubmed26n0963.xml.gz": {
+   "cancer": 3178,
+   "no_mesh": 8259,
+   "parsed": true,
+   "records": "pubmed26n0963.jsonl.gz",
+   "total": 30000
+  },
+  "pubmed26n0964.xml.gz": {
+   "cancer": 3165,
+   "no_mesh": 7019,
+   "parsed": true,
+   "records": "pubmed26n0964.jsonl.gz",
+   "total": 30000
+  },
+  "pubmed26n0965.xml.gz": {
+   "cancer": 2929,
+   "no_mesh": 9823,
+   "parsed": true,
+   "records": "pubmed26n0965.jsonl.gz",
+   "total": 30000
+  },
+  "pubmed26n0966.xml.gz": {
+   "cancer": 3211,
+   "no_mesh": 7396,
+   "parsed": true,
+   "records": "pubmed26n0966.jsonl.gz",
+   "total": 30000
+  },
+  "pubmed26n0967.xml.gz": {
+   "cancer": 3087,
+   "no_mesh": 8180,
+   "parsed": true,
+   "records": "pubmed26n0967.jsonl.gz",
+   "total": 30000
+  },
+  "pubmed26n0968.xml.gz": {
+   "cancer": 2368,
+   "no_mesh": 12645,
+   "parsed": true,
+   "records": "pubmed26n0968.jsonl.gz",
+   "total": 30000
+  },
+  "pubmed26n0969.xml.gz": {
+   "cancer": 3271,
+   "no_mesh": 7578,
+   "parsed": true,
+   "records": "pubmed26n0969.jsonl.gz",
+   "total": 30000
   }
  },
  "source": "https://ftp.ncbi.nlm.nih.gov/pubmed/baseline/"
