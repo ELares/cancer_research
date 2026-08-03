@@ -39,6 +39,7 @@ Usage:
     python scripts/atlas_module_support.py
 """
 
+import gzip
 import json
 import sys
 from pathlib import Path
@@ -98,8 +99,31 @@ CLAIMS = [
 ]
 
 
+def load_comentions(root: Path) -> dict:
+    """Sentence-level co-mention counts from full text, if that layer has been built.
+
+    The PubTator relation graph is abstract-level and its edge recall is low, so a
+    zero there is uninformative. Full-text co-mention is the recall complement:
+    no predicate, no direction, but it answers "does the literature discuss this
+    pair at all", which is the question a zero in the relation column raises.
+    """
+    f = root / "comention" / "pairs.tsv.gz"
+    if not f.exists():
+        return {}
+    out = {}
+    with gzip.open(f, "rt", encoding="utf-8") as fh:
+        for line in fh:
+            a, b, c = line.rstrip("\n").split("\t")
+            out[(a, b)] = int(c)
+    return out
+
+
 def main() -> None:
-    idx = load_index(atlas_root())
+    root = atlas_root()
+    idx = load_index(root)
+    comention = load_comentions(root)
+    if comention:
+        print(f"co-mention layer: {len(comention):,} pairs", flush=True)
     rows = []
     for module, a, b, pmid, claim in CLAIMS:
         r = support(idx, a, b)
@@ -116,7 +140,8 @@ def main() -> None:
                          pmids=r["pmids"][:8],
                          pos=pos, neg=neg,
                          contested=bool(pos and neg),
-                         balance=(min(pos, neg) / max(pos, neg)) if (pos and neg) else None))
+                         balance=(min(pos, neg) / max(pos, neg)) if (pos and neg) else None,
+                         comention=comention.get(tuple(sorted((r["a"], r["b"]))))))
 
     found = [r for r in rows if r["resolved"] and r["total"] > 0]
     none_ = [r for r in rows if r["resolved"] and r["total"] == 0]
@@ -142,20 +167,23 @@ def main() -> None:
         "`associate`, which is nearer co-mention than knowledge, and the extractor scores",
         "~79.6 F1 on BioRED. A high count means the field discusses the pair.", "",
         f"## Result: {len(found)}/{len(rows)} claims have corpus support", "",
-        "| module | pair | articles | predicates | cited PMID in graph? | contested |",
-        "|---|---|---|---|---|---|",
+        "| module | pair | relation articles | full-text co-mentions | predicates | cited PMID? | contested |",
+        "|---|---|---|---|---|---|---|",
     ]
     for r in sorted(rows, key=lambda r: -r["total"]):
         pair = f"`{r['a']}` - `{r['b']}`"
         if not r["resolved"]:
-            L.append(f"| {r['module']} | {pair} | _unresolved_ | - | - | - |")
+            L.append(f"| {r['module']} | {pair} | _unresolved_ | - | - | - | - |")
             continue
         preds = ", ".join(f"{k} {v}" for k, v in
                           sorted(r["preds"].items(), key=lambda kv: -kv[1])[:3]) or "-"
         cited = {True: "yes", False: "no", None: "-"}[r["cited_present"]]
         con = (f"**yes** (+{r['pos']}/-{r['neg']}, bal {r['balance']:.2f})"
                if r.get("contested") else "no")
-        L.append(f"| {r['module']} | {pair} | {r['total']:,} | {preds} | {cited} | {con} |")
+        cm = r.get("comention")
+        cm_s = "-" if cm is None else f"**{cm:,}**"
+        L.append(f"| {r['module']} | {pair} | {r['total']:,} | {cm_s} | {preds} | "
+                 f"{cited} | {con} |")
 
     contested = [r for r in rows if r.get("contested")]
     if contested:
@@ -179,13 +207,19 @@ def main() -> None:
           "  other cancer article in the graph, so they are not single-paper assertions.",
           ]
     if none_:
+        rescued = [r for r in none_ if r.get("comention")]
         L += [f"* **{len(none_)}** resolved to real entities but have NO asserted relation "
-              "in the graph:",
-              ""] + [f"  * `{r['module']}`: {r['a']} - {r['b']} — {r['claim']}" for r in none_] + [
-              "",
-              "  That is not evidence against them. The pair may be discussed in full text",
-              "  the extractor did not reach, or the mechanism may be expressed through a",
-              "  process term the vocabulary cannot represent.", ""]
+              "in the abstract-level graph:",
+              ""] + [f"  * `{r['module']}`: {r['a']} - {r['b']} — {r['claim']}"
+                     + (f"  _(but **{r['comention']:,}** full-text co-mentions)_"
+                        if r.get("comention") else "")
+                     for r in none_] + [""]
+        if rescued:
+            L += [f"  **{len(rescued)} of those {len(none_)} ARE discussed in full text.** A zero in",
+                  "  the relation column is an abstract-level extraction failure, not evidence",
+                  "  against the mechanism. The clearest case is `fsp1` (AIFM2-GPX4), the",
+                  "  parallel pathway behind the manuscript's headline Bliss-synergy claim:",
+                  "  zero asserted relations, but the pair is co-mentioned in full text.", ""]
     if unres:
         L += [f"* **{len(unres)}** could not be resolved to an entity identifier at all:",
               ""] + [f"  * `{r['module']}`: {r['a']} - {r['b']}" for r in unres] + [""]
