@@ -34,25 +34,25 @@ Counts are not truth. About half of all relations carry the weakest predicate,
 
 | module | pair | relation articles | full-text co-mentions | predicates | cited PMID? | contested |
 |---|---|---|---|---|---|---|
-| system_xc | `SLC7A11` - `GPX4` | 31 | **1,725** | associate 26, positive_correlate 3, negative_correlate 2 | no | **yes** (+3/-2, bal 0.67) |
+| system_xc | `SLC7A11` - `GPX4` | 31 | **5,487** | associate 26, positive_correlate 3, negative_correlate 2 | no | **yes** (+3/-2, bal 0.67) |
 | erastin | `erastin` - `SLC7A11` | 29 | - | negative_correlate 18, associate 7, positive_correlate 4 | no | **yes** (+4/-18, bal 0.22) |
-| contact | `CDH1` - `YAP1` | 19 | **30** | associate 12, negative_correlate 4, positive_correlate 3 | no | **yes** (+3/-4, bal 0.75) |
-| ifngamma | `IFNG` - `SLC7A11` | 8 | **12** | negative_correlate 8 | yes | no |
-| dc_ferroptosis | `CD274` - `SLC7A11` | 6 | **40** | positive_correlate 4, negative_correlate 2 | yes | **yes** (+4/-2, bal 0.50) |
-| ifngamma | `IFNG` - `SLC3A2` | 3 | **7** | negative_correlate 3 | yes | no |
-| acsl4 | `ACSL4` - `GPX4` | 3 | **756** | associate 2, negative_correlate 1 | no | no |
-| dhodh | `DHODH` - `GPX4` | 1 | **47** | negative_correlate 1 | no | no |
-| alox | `ALOX15` - `ACSL4` | 1 | **27** | associate 1 | no | no |
-| fsp1 | `AIFM2` - `GPX4` | 0 | **69** | - | - | no |
-| gch1 | `GCH1` - `GPX4` | 0 | **70** | - | - | no |
-| prom2 | `PROM2` - `FTH1` | 0 | **1** | - | - | no |
-| vitk | `VKORC1L1` - `GPX4` | 0 | **1** | - | - | no |
-| copper | `ATP7A` - `GPX4` | 0 | **1** | - | - | no |
-| por | `POR` - `CYB5R1` | 0 | **4** | - | - | no |
-| dhc7 | `DHCR7` - `GPX4` | 0 | **1** | - | - | no |
-| repair | `CHMP5` - `CHMP6` | 0 | **1** | - | - | no |
-| mboat | `MBOAT2` - `GPX4` | 0 | **3** | - | - | no |
-| ether_lipid | `FAR1` - `AGPS` | 0 | **1** | - | - | no |
+| contact | `CDH1` - `YAP1` | 19 | **308** | associate 12, negative_correlate 4, positive_correlate 3 | no | **yes** (+3/-4, bal 0.75) |
+| ifngamma | `IFNG` - `SLC7A11` | 8 | **42** | negative_correlate 8 | yes | no |
+| dc_ferroptosis | `CD274` - `SLC7A11` | 6 | **147** | positive_correlate 4, negative_correlate 2 | yes | **yes** (+4/-2, bal 0.50) |
+| ifngamma | `IFNG` - `SLC3A2` | 3 | **26** | negative_correlate 3 | yes | no |
+| acsl4 | `ACSL4` - `GPX4` | 3 | **2,056** | associate 2, negative_correlate 1 | no | no |
+| dhodh | `DHODH` - `GPX4` | 1 | **114** | negative_correlate 1 | no | no |
+| alox | `ALOX15` - `ACSL4` | 1 | **137** | associate 1 | no | no |
+| fsp1 | `AIFM2` - `GPX4` | 0 | **249** | - | - | no |
+| gch1 | `GCH1` - `GPX4` | 0 | **173** | - | - | no |
+| prom2 | `PROM2` - `FTH1` | 0 | **5** | - | - | no |
+| vitk | `VKORC1L1` - `GPX4` | 0 | **8** | - | - | no |
+| copper | `ATP7A` - `GPX4` | 0 | **4** | - | - | no |
+| por | `POR` - `CYB5R1` | 0 | **9** | - | - | no |
+| dhc7 | `DHCR7` - `GPX4` | 0 | **9** | - | - | no |
+| repair | `CHMP5` - `CHMP6` | 0 | **10** | - | - | no |
+| mboat | `MBOAT2` - `GPX4` | 0 | **11** | - | - | no |
+| ether_lipid | `FAR1` - `AGPS` | 0 | **5** | - | - | no |
 | hdac_persister | `HDAC1` - `AIFM2` | 0 | - | - | - | no |
 
 ## Claims that sit on a CONTESTED edge
@@ -80,16 +80,16 @@ is wrong -- it says the module docs should state which side they took.
   other cancer article in the graph, so they are not single-paper assertions.
 * **11** resolved to real entities but have NO asserted relation in the abstract-level graph:
 
-  * `fsp1`: AIFM2 - GPX4 — FSP1/AIFM2 is the GPX4-independent parallel defence  _(but **69** full-text co-mentions)_
-  * `gch1`: GCH1 - GPX4 — GCH1/BH4 is a GPX4-independent radical-trapping defence  _(but **70** full-text co-mentions)_
-  * `prom2`: PROM2 - FTH1 — PROM2 exports ferritin-bound iron, draining the labile pool  _(but **1** full-text co-mentions)_
-  * `vitk`: VKORC1L1 - GPX4 — VKORC1L1 reduces vitamin K to a GPX4-independent radical trap  _(but **1** full-text co-mentions)_
-  * `copper`: ATP7A - GPX4 — copper ionophores degrade ATP7A and deplete GSH/GPX4  _(but **1** full-text co-mentions)_
-  * `por`: POR - CYB5R1 — POR and CYB5R1 generate the H2O2 the Fenton reaction needs  _(but **4** full-text co-mentions)_
-  * `dhc7`: DHCR7 - GPX4 — 7-DHC (consumed by DHCR7) is an endogenous radical trap  _(but **1** full-text co-mentions)_
-  * `repair`: CHMP5 - CHMP6 — ESCRT-III membrane repair blocks death execution  _(but **1** full-text co-mentions)_
-  * `mboat`: MBOAT2 - GPX4 — MBOAT1/2 remodel phospholipids toward MUFA-PE, GPX4-independently  _(but **3** full-text co-mentions)_
-  * `ether_lipid`: FAR1 - AGPS — FAR1/AGPS make the ether-PUFA pool that promotes ferroptosis  _(but **1** full-text co-mentions)_
+  * `fsp1`: AIFM2 - GPX4 — FSP1/AIFM2 is the GPX4-independent parallel defence  _(but **249** full-text co-mentions)_
+  * `gch1`: GCH1 - GPX4 — GCH1/BH4 is a GPX4-independent radical-trapping defence  _(but **173** full-text co-mentions)_
+  * `prom2`: PROM2 - FTH1 — PROM2 exports ferritin-bound iron, draining the labile pool  _(but **5** full-text co-mentions)_
+  * `vitk`: VKORC1L1 - GPX4 — VKORC1L1 reduces vitamin K to a GPX4-independent radical trap  _(but **8** full-text co-mentions)_
+  * `copper`: ATP7A - GPX4 — copper ionophores degrade ATP7A and deplete GSH/GPX4  _(but **4** full-text co-mentions)_
+  * `por`: POR - CYB5R1 — POR and CYB5R1 generate the H2O2 the Fenton reaction needs  _(but **9** full-text co-mentions)_
+  * `dhc7`: DHCR7 - GPX4 — 7-DHC (consumed by DHCR7) is an endogenous radical trap  _(but **9** full-text co-mentions)_
+  * `repair`: CHMP5 - CHMP6 — ESCRT-III membrane repair blocks death execution  _(but **10** full-text co-mentions)_
+  * `mboat`: MBOAT2 - GPX4 — MBOAT1/2 remodel phospholipids toward MUFA-PE, GPX4-independently  _(but **11** full-text co-mentions)_
+  * `ether_lipid`: FAR1 - AGPS — FAR1/AGPS make the ether-PUFA pool that promotes ferroptosis  _(but **5** full-text co-mentions)_
   * `hdac_persister`: HDAC1 - AIFM2 — HDACs and FSP1 together suppress persister-cell ferroptosis
 
   **10 of those 11 ARE discussed in full text.** A zero in

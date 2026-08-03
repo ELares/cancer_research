@@ -82,18 +82,22 @@ been marketing.
    explosion. Extending the definition beyond C04 adds **200,758 more (+4.8%),
    for 4,403,994**, and the extension is verified by the case that motivated it:
    both founding FSP1 papers are now in the census, matched on `Cell Line,
-   Tumor`, `Ferroptosis` and `Gene Expression Regulation, Neoplastic`. Alongside it: **783,271** articles recovered that MeSH has not
-   indexed yet (the un-indexed share climbs to 37.6% in the most recent baseline
-   files), **520,143** open-access full texts on external storage, and
-   **7,951,325** typed relations over 1,603,105 PMIDs.
+   Tumor`, `Ferroptosis` and `Gene Expression Regulation, Neoplastic`.
+
+   Alongside it: **783,271** articles recovered that MeSH has not indexed yet
+   (the un-indexed share reaches 37.6% in the most recent baseline files),
+   **520,143** open-access full texts on external storage, **7,951,325** typed
+   relations over 1,603,105 PMIDs, and **42.9 million** sentences of full text
+   mined for entity co-mention.
 
    Two corrections the census forced on itself, both instructive:
 
    * A tree-C04 definition **misses foundational mechanism papers**. Both
-     founding FSP1 papers (Doll 2019, Bersuker 2019, *Nature*) are absent from
-     it, and 62% of all ferroptosis papers sit outside C04. The definition now
-     includes nine adjacent experimental-context descriptors, with the C04 core
-     kept separable.
+     founding FSP1 papers (Doll 2019, Bersuker 2019, *Nature*) were absent from
+     it, and 62% of all ferroptosis papers sit outside C04. That is why the
+     definition now includes nine adjacent experimental-context descriptors,
+     with the C04 core kept separable — and why the check above, that those two
+     papers are now present, is the one that matters.
    * Neither a keyword corpus nor a MeSH census is a superset of the other. The
      old 4,830-article corpus contains ~223 cancer papers the census misses, and
      47 that are not cancer at all.
