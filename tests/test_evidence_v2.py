@@ -208,6 +208,47 @@ def test_opinion_pubtypes_are_never_primary_evidence():
 
 
 # --------------------------------------------------------------------------
+# Derived layer: better tags, without touching the frozen corpus
+# --------------------------------------------------------------------------
+
+DERIVED = REPO_ROOT / "corpus" / "derived" / "evidence-v2" / "index.jsonl"
+
+
+@pytest.mark.skipif(not DERIVED.exists(), reason="derived layer not built")
+def test_derived_layer_covers_the_frozen_corpus_without_mutating_it():
+    """The v2 tags ship as a parallel index keyed by PMID.
+
+    `corpus/INDEX.jsonl` is the snapshot every manuscript number is computed
+    from. The derived layer must cover the same PMIDs and must never be the
+    frozen file itself.
+    """
+    frozen = {json.loads(line)["pmid"] for line in INDEX.open(encoding="utf-8")}
+    rows = [json.loads(line) for line in DERIVED.open(encoding="utf-8")]
+    derived = {r["pmid"] for r in rows}
+
+    assert derived <= frozen, "derived layer contains PMIDs absent from the frozen corpus"
+    assert len(derived) > 0.95 * len(frozen), (
+        f"derived layer covers only {len(derived)}/{len(frozen)} frozen records")
+    for r in rows[:50]:
+        assert set(r) == {"pmid", "evidence_level_v2", "evidence_level_frozen", "changed"}
+        assert r["changed"] == (r["evidence_level_v2"] != r["evidence_level_frozen"])
+
+
+def test_derived_build_script_never_targets_frozen_paths():
+    """Structural guard: the build script's declared outputs sit outside the
+    frozen corpus. Cheaper than running the 4,830-record build in CI."""
+    src = (REPO_ROOT / "scripts" / "build_evidence_v2_index.py").read_text(encoding="utf-8")
+    # Every path it opens for writing must be under corpus/derived or analysis/.
+    assert 'OUT_DIR = PROJECT_ROOT / "corpus" / "derived"' in src
+    assert 'OUT_INDEX.open("w"' in src
+    assert "DELTA_MD.write_text" in src
+    # It must never open the frozen index or the tag files for writing.
+    assert 'FROZEN_INDEX.open("w"' not in src
+    assert "FROZEN_INDEX.write_text" not in src
+    assert 'TAGS_DIR' not in src, "the derived build must not touch tags/"
+
+
+# --------------------------------------------------------------------------
 # Channel separation: the evidence flag must not move any other tagger, and
 # structured metadata must not be matched as prose.
 # --------------------------------------------------------------------------
