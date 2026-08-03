@@ -1,0 +1,103 @@
+{
+  "conflicting_pairs": 4067,
+  "pairs_with_self_contradiction": 1,
+  "self_contradicting_assertions": 1,
+  "total_assertions_in_conflicts": 115024,
+  "eligible_pairs": 13589,
+  "ambiguous": {
+    "n": 3509,
+    "conflicted": 1376
+  },
+  "clean": {
+    "n": 10080,
+    "conflicted": 2691
+  },
+  "crude_risk_ratio": 1.468865058888229,
+  "mantel_haenszel": 1.4487880923261625,
+  "mh_ci95": [
+    1.3730084234608289,
+    1.5258147581981998
+  ],
+  "strata": {
+    "3": {
+      "amb": [
+        2130,
+        645
+      ],
+      "clean": [
+        6388,
+        1421
+      ]
+    },
+    "4": {
+      "amb": [
+        860,
+        430
+      ],
+      "clean": [
+        2303,
+        781
+      ]
+    },
+    "5": {
+      "amb": [
+        319,
+        188
+      ],
+      "clean": [
+        839,
+        320
+      ]
+    },
+    "6": {
+      "amb": [
+        122,
+        77
+      ],
+      "clean": [
+        327,
+        110
+      ]
+    },
+    "7": {
+      "amb": [
+        53,
+        27
+      ],
+      "clean": [
+        148,
+        43
+      ]
+    },
+    "8": {
+      "amb": [
+        14,
+        4
+      ],
+      "clean": [
+        42,
+        9
+      ]
+    },
+    "9": {
+      "amb": [
+        7,
+        4
+      ],
+      "clean": [
+        23,
+        4
+      ]
+    },
+    "10": {
+      "amb": [
+        4,
+        1
+      ],
+      "clean": [
+        10,
+        3
+      ]
+    }
+  }
+}

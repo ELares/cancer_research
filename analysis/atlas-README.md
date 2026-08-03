@@ -259,6 +259,31 @@ wrong — it says the docs should state which side they took.
 > subject so direction of effect is lost, and no context is attached — a
 > relation true in one cell line and false in another appears as a contradiction.
 
+### How much of that is real? — `atlas_contradiction_quality.py`
+
+The contradictions layer named extraction error as a caveat and never measured
+it. Two failure modes are now bounded, with opposite answers.
+
+**A single paper asserting both directions** would be extraction inconsistency
+rather than disagreement between studies. It happens to **1 paper in 115,024**.
+That mode is effectively absent, and the conflicts really are between papers.
+
+**Entity ambiguity manufacturing disagreement** is the one that bites. Merging
+two entities under one identifier merges two literatures, and two literatures
+about different biology will disagree. Pairs involving a measured sense collision
+are **1.45×** more likely to be flagged contradictory (95% CI 1.37–1.53).
+
+> That is not a popularity artifact, which it easily could have been: colliding
+> identifiers are contested *because* they are heavily mentioned, and more
+> assertions means more chance of showing both directions. Stratifying by
+> assertion count and pooling (Mantel-Haenszel) leaves it at 1.45× against a
+> crude 1.47×, it holds inside every stratum, and it *rises* with assertion count
+> — the direction conflation predicts.
+>
+> It is an association, not an attribution: it does not license subtracting 45%
+> of the ambiguous conflicts. Check any conflict involving a blocklisted symbol
+> for conflation before reading it as a scientific dispute.
+
 ### Emergence — `atlas_emergence.py` → `atlas-emergence.md`
 
 Which relations are *new*. **4,567** pairs have ≥80% of their support since 2021,

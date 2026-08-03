@@ -31,7 +31,21 @@ LIMITS
 ------
 `positive_correlate`/`negative_correlate` are extraction outputs, not curated
 judgements; the extractor scores ~79.6 F1 on BioRED, so some conflicts are
-extraction error rather than scientific disagreement. Directionality is also not
+extraction error rather than scientific disagreement.
+
+Two of those failure modes have since been MEASURED
+(`scripts/atlas_contradiction_quality.py`), with opposite answers:
+
+  * A single paper extracted as asserting both directions would be inconsistency
+    rather than disagreement. It happens to 1 paper in 115,024. This mode is
+    effectively absent, and the conflicts really are between studies.
+  * Merging two entities under one identifier merges two literatures, which will
+    disagree. Pairs involving an identifier measured as a SENSE COLLISION are
+    **1.45x** more likely to be flagged contradictory (95% CI 1.37-1.53). That
+    survives stratifying by assertion count, so it is not the popularity artifact
+    it could have been, and it rises with assertion count -- the direction
+    conflation predicts. Check any conflict involving a blocklisted symbol for
+    conflation before reading it as a scientific dispute. Directionality is also not
 preserved: the graph does not record which entity is subject. And no context is
 attached -- a relation true in one cell line and false in another appears here
 as a contradiction. Treat the output as a QUEUE FOR READING, not a verdict.

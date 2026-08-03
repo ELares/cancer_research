@@ -805,3 +805,54 @@ def test_comention_shape_filter_alone_would_keep_the_dangerous_forms():
     for a in ("psa", "p21", "p62", "er"):
         assert not cm.usable_alias(a)
         assert len(a) < cm.MIN_ALIAS_LEN, "excluded by length, which is incidental"
+
+
+# --- how much of the contradiction signal is real? (#ATLAS-CONTRA-Q) -------
+
+def test_contradiction_quality_separates_the_two_failure_modes():
+    """Two failure modes, measured, with opposite answers.
+
+    Within-paper self-contradiction is extraction inconsistency; ambiguity-driven
+    conflation is two literatures merged. Reporting only the reassuring one would
+    be as misleading as reporting only the alarming one.
+    """
+    import json
+    raw = json.loads(
+        (REPO_ROOT / "analysis" / "atlas-contradiction-quality.json").read_text())
+    # mode 1: essentially absent
+    assert raw["self_contradicting_assertions"] / raw["total_assertions_in_conflicts"] < 0.001
+    # mode 2: real, and above 1 with the interval excluding it
+    assert raw["mantel_haenszel"] > 1.0
+    assert raw["mh_ci95"][0] > 1.0, "if the CI ever spans 1, the caveat must be softened"
+
+
+def test_ambiguity_enrichment_is_not_a_popularity_artifact():
+    """The confound that would have made this finding worthless.
+
+    Colliding identifiers are contested BECAUSE they are heavily mentioned, and
+    a pair with more assertions has more chance of showing both directions. If
+    stratifying by assertion count collapsed the ratio toward 1, the crude number
+    would have been measuring popularity.
+    """
+    import json
+    raw = json.loads(
+        (REPO_ROOT / "analysis" / "atlas-contradiction-quality.json").read_text())
+    crude, adjusted = raw["crude_risk_ratio"], raw["mantel_haenszel"]
+    # the adjustment must barely move it -- that is what rules the confound out
+    assert abs(crude - adjusted) < 0.15, \
+        f"crude {crude:.2f} vs adjusted {adjusted:.2f}: the confound is no longer ruled out"
+    # and the enrichment must hold inside the strata, not only in the pooled number
+    held = 0
+    for s in raw["strata"].values():
+        an, ac = s["amb"]
+        cn, cc = s["clean"]
+        if an >= 20 and cn >= 20 and (ac / an) > (cc / cn):
+            held += 1
+    assert held >= 3, "the enrichment must survive within strata, not just pooled"
+
+
+def test_contradictions_module_carries_the_measured_caveat():
+    """A caveat measured elsewhere has to reach the module that needs it."""
+    src = (REPO_ROOT / "scripts" / "atlas_contradictions.py").read_text()
+    assert "1.45x" in src and "115,024" in src, \
+        "the contradiction module must state both measured failure modes"
