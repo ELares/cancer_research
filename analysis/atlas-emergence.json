@@ -5,7 +5,7 @@
   "n_sampled": 60,
   "median_year": 2023,
   "min_year": 2021,
-  "max_year": 2025,
+  "max_year": 2026,
   "recent": 60,
   "recent_share": 1.0,
   "total_relations": 63,
@@ -45,6 +45,28 @@
   ]
  },
  {
+  "a": "durvalumab",
+  "b": "hepatocellular carcinoma",
+  "n_sampled": 60,
+  "median_year": 2024,
+  "min_year": 2021,
+  "max_year": 2026,
+  "recent": 60,
+  "recent_share": 1.0,
+  "total_relations": 106,
+  "predicates": {
+   "treat": 105,
+   "associate": 1
+  },
+  "pmids": [
+   "33541088",
+   "34284418",
+   "35105553",
+   "35109664",
+   "35147513"
+  ]
+ },
+ {
   "a": "lenvatinib",
   "b": "bevacizumab",
   "n_sampled": 60,
@@ -59,41 +81,18 @@
    "cotreat": 32
   },
   "pmids": [
+   "33638735",
    "34678902",
    "34719212",
    "35210014",
-   "35220233",
-   "35493395"
-  ]
- },
- {
-  "a": "AKT",
-  "b": "PI3K",
-  "n_sampled": 60,
-  "median_year": 2025,
-  "min_year": 2021,
-  "max_year": 2026,
-  "recent": 60,
-  "recent_share": 1.0,
-  "total_relations": 650,
-  "predicates": {
-   "associate": 632,
-   "positive_correlate": 11,
-   "negative_correlate": 6
-  },
-  "pmids": [
-   "33540491",
-   "39212097",
-   "40136677",
-   "40147679",
-   "40158667"
+   "35220233"
   ]
  },
  {
   "a": "enfortumab vedotin",
   "b": "pembrolizumab",
   "n_sampled": 60,
-  "median_year": 2024,
+  "median_year": 2025,
   "min_year": 2021,
   "max_year": 2026,
   "recent": 60,
@@ -105,40 +104,18 @@
    "negative_correlate": 4
   },
   "pmids": [
-   "32589063",
    "33239713",
    "34028134",
    "35043748",
-   "35355328"
-  ]
- },
- {
-  "a": "efgartigimod",
-  "b": "myasthenia gravis",
-  "n_sampled": 60,
-  "median_year": 2025,
-  "min_year": 2021,
-  "max_year": 2026,
-  "recent": 60,
-  "recent_share": 1.0,
-  "total_relations": 118,
-  "predicates": {
-   "treat": 117,
-   "cause": 1
-  },
-  "pmids": [
-   "34146511",
-   "34821184",
-   "34949112",
-   "35349079",
-   "35639288"
+   "37403009",
+   "37477127"
   ]
  },
  {
   "a": "durvalumab",
   "b": "gemcitabine",
   "n_sampled": 60,
-  "median_year": 2025,
+  "median_year": 2024,
   "min_year": 2022,
   "max_year": 2026,
   "recent": 60,
@@ -154,30 +131,7 @@
    "36150578",
    "36257911",
    "36463640",
-   "36950960"
-  ]
- },
- {
-  "a": "OH",
-  "b": "H2O2",
-  "n_sampled": 60,
-  "median_year": 2025,
-  "min_year": 2024,
-  "max_year": 2026,
-  "recent": 60,
-  "recent_share": 1.0,
-  "total_relations": 67,
-  "predicates": {
-   "positive_correlate": 29,
-   "associate": 18,
-   "compare": 14
-  },
-  "pmids": [
-   "38658965",
-   "38688027",
-   "38699808",
-   "38722972",
-   "38855985"
+   "37096964"
   ]
  },
  {
@@ -9652,6 +9606,28 @@
   ]
  },
  {
+  "a": "AIFM2",
+  "b": "hepatocellular carcinoma",
+  "n_sampled": 9,
+  "median_year": 2024,
+  "min_year": 2022,
+  "max_year": 2025,
+  "recent": 9,
+  "recent_share": 1.0,
+  "total_relations": 9,
+  "predicates": {
+   "associate": 8,
+   "stimulate": 1
+  },
+  "pmids": [
+   "36423520",
+   "37695069",
+   "38244593",
+   "38393890",
+   "39313331"
+  ]
+ },
+ {
   "a": "LY6D",
   "b": "pancreatic cancer",
   "n_sampled": 9,
@@ -12570,29 +12546,6 @@
    "37269344",
    "37828724",
    "38214149"
-  ]
- },
- {
-  "a": "GPX4",
-  "b": "FSP1",
-  "n_sampled": 8,
-  "median_year": 2024,
-  "min_year": 2023,
-  "max_year": 2026,
-  "recent": 8,
-  "recent_share": 1.0,
-  "total_relations": 8,
-  "predicates": {
-   "associate": 4,
-   "positive_correlate": 2,
-   "negative_correlate": 2
-  },
-  "pmids": [
-   "36576648",
-   "37380771",
-   "39273151",
-   "39477303",
-   "40015539"
   ]
  },
  {
@@ -16163,27 +16116,6 @@
   ]
  },
  {
-  "a": "FSP1",
-  "b": "lung cancer",
-  "n_sampled": 7,
-  "median_year": 2023,
-  "min_year": 2022,
-  "max_year": 2026,
-  "recent": 7,
-  "recent_share": 1.0,
-  "total_relations": 7,
-  "predicates": {
-   "associate": 7
-  },
-  "pmids": [
-   "35256587",
-   "35459868",
-   "36264074",
-   "37903990",
-   "40616599"
-  ]
- },
- {
   "a": "metformin",
   "b": "cardiotoxicity",
   "n_sampled": 7,
@@ -17153,28 +17085,6 @@
    "38609996",
    "39492801",
    "39825831"
-  ]
- },
- {
-  "a": "FSP1",
-  "b": "gastric cancer",
-  "n_sampled": 7,
-  "median_year": 2025,
-  "min_year": 2023,
-  "max_year": 2025,
-  "recent": 7,
-  "recent_share": 1.0,
-  "total_relations": 8,
-  "predicates": {
-   "associate": 6,
-   "stimulate": 2
-  },
-  "pmids": [
-   "35691615",
-   "36995520",
-   "39273151",
-   "40075460",
-   "40862825"
   ]
  },
  {
@@ -18170,27 +18080,6 @@
   ]
  },
  {
-  "a": "FSP1",
-  "b": "hepatocellular carcinoma",
-  "n_sampled": 7,
-  "median_year": 2024,
-  "min_year": 2022,
-  "max_year": 2025,
-  "recent": 7,
-  "recent_share": 1.0,
-  "total_relations": 8,
-  "predicates": {
-   "associate": 8
-  },
-  "pmids": [
-   "36423520",
-   "36893885",
-   "37695069",
-   "39313331",
-   "39516467"
-  ]
- },
- {
   "a": "PI3K",
   "b": "doxorubicin",
   "n_sampled": 7,
@@ -18586,28 +18475,6 @@
   ]
  },
  {
-  "a": "FSP1",
-  "b": "coenzyme Q10",
-  "n_sampled": 7,
-  "median_year": 2024,
-  "min_year": 2023,
-  "max_year": 2025,
-  "recent": 7,
-  "recent_share": 1.0,
-  "total_relations": 8,
-  "predicates": {
-   "associate": 7,
-   "positive_correlate": 1
-  },
-  "pmids": [
-   "36893885",
-   "37178691",
-   "37580393",
-   "38168770",
-   "38514855"
-  ]
- },
- {
   "a": "PD-1",
   "b": "leukopenia",
   "n_sampled": 7,
@@ -18977,6 +18844,29 @@
    "37848756",
    "38536443",
    "40095205"
+  ]
+ },
+ {
+  "a": "AIFM2",
+  "b": "coenzyme Q10",
+  "n_sampled": 7,
+  "median_year": 2024,
+  "min_year": 2023,
+  "max_year": 2025,
+  "recent": 7,
+  "recent_share": 1.0,
+  "total_relations": 7,
+  "predicates": {
+   "associate": 5,
+   "positive_correlate": 1,
+   "negative_correlate": 1
+  },
+  "pmids": [
+   "37178691",
+   "38168770",
+   "38276975",
+   "38514855",
+   "38940330"
   ]
  },
  {
@@ -21683,6 +21573,114 @@
    "36923311",
    "38240703",
    "39884129"
+  ]
+ },
+ {
+  "a": "fluzoparib",
+  "b": "tumor",
+  "n_sampled": 6,
+  "median_year": 2022,
+  "min_year": 2021,
+  "max_year": 2024,
+  "recent": 6,
+  "recent_share": 1.0,
+  "total_relations": 6,
+  "predicates": {
+   "treat": 6
+  },
+  "pmids": [
+   "34118019",
+   "34389457",
+   "35112382",
+   "35304807",
+   "37166499"
+  ]
+ },
+ {
+  "a": "azoxymethane",
+  "b": "dying",
+  "n_sampled": 6,
+  "median_year": 2022,
+  "min_year": 2021,
+  "max_year": 2024,
+  "recent": 6,
+  "recent_share": 1.0,
+  "total_relations": 6,
+  "predicates": {
+   "cause": 6
+  },
+  "pmids": [
+   "34119183",
+   "34684488",
+   "34914638",
+   "36077084",
+   "38004214"
+  ]
+ },
+ {
+  "a": "avelumab",
+  "b": "rash",
+  "n_sampled": 6,
+  "median_year": 2022,
+  "min_year": 2021,
+  "max_year": 2025,
+  "recent": 6,
+  "recent_share": 1.0,
+  "total_relations": 7,
+  "predicates": {
+   "cause": 7
+  },
+  "pmids": [
+   "34143970",
+   "34477818",
+   "36279618",
+   "36952231",
+   "39354179"
+  ]
+ },
+ {
+  "a": "CaO2",
+  "b": "hyaluronic acid",
+  "n_sampled": 6,
+  "median_year": 2024,
+  "min_year": 2021,
+  "max_year": 2026,
+  "recent": 6,
+  "recent_share": 1.0,
+  "total_relations": 6,
+  "predicates": {
+   "associate": 5,
+   "positive_correlate": 1
+  },
+  "pmids": [
+   "34145652",
+   "37140070",
+   "38330663",
+   "39829267",
+   "40557564"
+  ]
+ },
+ {
+  "a": "CAR",
+  "b": "infectious diseases",
+  "n_sampled": 6,
+  "median_year": 2022,
+  "min_year": 2021,
+  "max_year": 2024,
+  "recent": 6,
+  "recent_share": 1.0,
+  "total_relations": 6,
+  "predicates": {
+   "inhibit": 2,
+   "associate": 2,
+   "stimulate": 2
+  },
+  "pmids": [
+   "33460558",
+   "33752707",
+   "34155235",
+   "37787373",
+   "38665060"
   ]
  }
 ]

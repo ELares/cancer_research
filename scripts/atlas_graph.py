@@ -36,6 +36,7 @@ Usage:
 import argparse
 import collections
 import gzip
+import hashlib
 import json
 import pickle
 import random
@@ -156,7 +157,27 @@ def build_index(root: Path) -> dict:
     edges: dict[tuple, collections.Counter] = collections.defaultdict(collections.Counter)
     sample: dict[tuple, list] = collections.defaultdict(list)
     seen_pmids: dict[tuple, set] = collections.defaultdict(set)
-    rng = random.Random(_RESERVOIR_SEED)
+    # One RNG PER PAIR, seeded from the pair itself. A single shared RNG is
+    # consumed in file order, so changing any pair's membership shifts every
+    # later draw and a rebuild reshuffles the sample for unrelated pairs too --
+    # applying 441 sense corrections rewrote the example PMIDs of MDM2-p53,
+    # which shares no paper with any of them. That makes rebuild diffs
+    # unreadable and hides which pairs actually moved. Seeding per pair means a
+    # pair's sample changes only when that pair's own evidence changes.
+    rngs: dict[tuple, random.Random] = {}
+
+    def pair_rng(key: tuple) -> random.Random:
+        r = rngs.get(key)
+        if r is None:
+            # hashlib, not hash(): PYTHONHASHSEED salts str hashing per process,
+            # so hash() would make the sample irreproducible across runs.
+            digest = hashlib.blake2b(
+                f"{_RESERVOIR_SEED}|{key[0]}|{key[1]}".encode(),
+                digest_size=8).digest()
+            r = random.Random(int.from_bytes(digest, "big"))
+            rngs[key] = r
+        return r
+
     with gzip.open(p["relations"], "rt", encoding="utf-8", errors="ignore") as fh:
         for line in fh:
             parts = line.rstrip("\n").split("\t")
@@ -179,7 +200,7 @@ def build_index(root: Path) -> dict:
             if len(res) < PMID_SAMPLE:
                 res.append(pmid)
             else:
-                j = rng.randrange(n)
+                j = pair_rng(key).randrange(n)
                 if j < PMID_SAMPLE:
                     res[j] = pmid
 

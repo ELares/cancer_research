@@ -615,3 +615,45 @@ def test_corroboration_requires_an_unambiguous_route():
     # the vast majority of contested-identifier assignments never touch an
     # ambiguous form at all, which is exactly why containment misleads
     assert raw["assignments_unaffected"] > 10 * raw["assignments_at_risk"]
+
+
+def test_pmid_sample_is_stable_against_unrelated_pairs(tmp_path, monkeypatch):
+    """A pair's example PMIDs must depend only on that pair's own evidence.
+
+    The reservoir originally drew from ONE shared RNG consumed in file order, so
+    any change in an earlier pair's membership shifted every later draw. Applying
+    441 sense corrections rewrote the example PMIDs of MDM2-p53, which shares no
+    paper with any corrected article -- making rebuild diffs unreadable and
+    hiding which pairs actually moved.
+
+    The unrelated pair must be written BEFORE the pair under test: a shared RNG
+    is only disturbed by draws that happen EARLIER in the file, so a fixture that
+    appends the noise afterwards passes under both implementations and measures
+    nothing.
+    """
+    import gzip as gz
+
+    def build(prefix_rows):
+        root = tmp_path / f"r{len(prefix_rows)}"
+        (root / "relations").mkdir(parents=True)
+        (root / "entities").mkdir(parents=True)
+        for kind in ("gene", "chemical", "disease"):
+            with gz.open(root / "entities" / f"{kind}.tsv.gz", "wt") as fh:
+                fh.write("")
+        rows = list(prefix_rows) + [
+            f"{9000000 + i}\tassociate\tGene|111\tGene|222"
+            for i in range(ag.PMID_SAMPLE + 40)
+        ]
+        with gz.open(root / "relations" / "relations.tsv.gz", "wt") as fh:
+            fh.write("\n".join(rows) + "\n")
+        return ag.build_index(root)
+
+    monkeypatch.setattr(ag, "DISAMBIGUATION_JSON", tmp_path / "none.json")
+    a = build([])
+    b = build([f"{8000000 + i}\tassociate\tGene|333\tGene|444"
+               for i in range(ag.PMID_SAMPLE + 120)])
+
+    key = tuple(sorted(("111", "222")))
+    assert len(a["pmids"][key]) == ag.PMID_SAMPLE
+    assert a["pmids"][key] == b["pmids"][key], \
+        "an unrelated pair processed earlier changed this pair's sample"

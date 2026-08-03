@@ -8,7 +8,7 @@ concentrated since **2021** are emerging claims; pairs spread across
 decades are settled background. A 4,830-article sample cannot tell these apart --
 it has neither the volume nor the time depth.
 
-Scanned 163,940 pairs with at least 6 dated asserting papers. **4,690** have ≥80% of their support in the recent window.
+Scanned 163,938 pairs with at least 6 dated asserting papers. **4,688** have ≥80% of their support in the recent window.
 
 ## Limits
 
@@ -25,14 +25,46 @@ with very large support are estimated.
 
 | pair | sampled papers | years | recent share | predicates |
 |---|---|---|---|---|
-| 68Ga-FAPI — FDG | 60 | 2021-2025 | 100% | compare 61, associate 1, interact 1 |
+| 68Ga-FAPI — FDG | 60 | 2021-2026 | 100% | compare 61, associate 1, interact 1 |
 | relatlimab — nivolumab | 60 | 2021-2026 | 100% | cotreat 58, compare 6 |
+| durvalumab — hepatocellular carcinoma | 60 | 2021-2026 | 100% | treat 105, associate 1 |
 | lenvatinib — bevacizumab | 60 | 2021-2026 | 100% | compare 32, cotreat 32 |
-| AKT — PI3K | 60 | 2021-2026 | 100% | associate 632, positive_correlate 11, negative_correlate 6 |
 | enfortumab vedotin — pembrolizumab | 60 | 2021-2026 | 100% | cotreat 107, compare 6, negative_correlate 4 |
-| efgartigimod — myasthenia gravis | 60 | 2021-2026 | 100% | treat 117, cause 1 |
 | durvalumab — gemcitabine | 60 | 2022-2026 | 100% | cotreat 64, associate 1, positive_correlate 1 |
-| OH — H2O2 | 60 | 2024-2026 | 100% | positive_correlate 29, associate 18, compare 14 |
+| relatlimab — melanoma | 59 | 2021-2025 | 100% | treat 61 |
+| durvalumab — biliary tract cancer | 58 | 2021-2026 | 100% | treat 58 |
+| almonertinib — non-small cell lung cancer | 54 | 2021-2026 | 100% | treat 54 |
+| belzutifan — von Hippel-Lindau disease | 49 | 2021-2026 | 100% | treat 47, associate 2 |
+| EGFR — mobocertinib | 43 | 2021-2025 | 100% | negative_correlate 40, associate 3, positive_correlate 1 |
+| STING — manganese | 39 | 2021-2026 | 100% | positive_correlate 37, associate 3 |
+| LAG3 — relatlimab | 38 | 2021-2025 | 100% | negative_correlate 32, associate 6, positive_correlate 2 |
+| glofitamab — diffuse large B-cell lymphoma | 37 | 2021-2025 | 100% | treat 35, associate 3 |
+| lazertinib — amivantamab | 37 | 2022-2026 | 100% | cotreat 37 |
+| mobocertinib — non-small cell lung cancer | 35 | 2021-2025 | 100% | treat 36 |
+| pirtobrutinib — chronic lymphocytic leukemia | 35 | 2022-2026 | 100% | treat 35, associate 1 |
+| ravulizumab — myasthenia gravis | 35 | 2022-2025 | 100% | treat 36 |
+| loncastuximab tesirine — diffuse large B-cell lymphoma | 33 | 2021-2025 | 100% | treat 34 |
+| cemiplimab — non-small cell lung cancer | 33 | 2021-2026 | 100% | treat 33 |
+| CaO2 — H2O2 | 31 | 2021-2026 | 100% | positive_correlate 16, associate 14, negative_correlate 1 |
+| anlotinib — sintilimab | 31 | 2021-2025 | 100% | cotreat 28, negative_correlate 2, compare 2 |
+| HER2 — disitamab vedotin | 31 | 2021-2026 | 100% | negative_correlate 18, associate 15 |
+| CD20 — COVID-19 | 31 | 2021-2025 | 100% | associate 31, inhibit 1 |
+| cGAS — hepatocellular carcinoma | 29 | 2021-2026 | 100% | associate 29, inhibit 1 |
+| durvalumab — cholangiocarcinoma | 29 | 2023-2025 | 100% | treat 30 |
+| PI3K — hepatocellular carcinoma | 29 | 2025-2026 | 100% | associate 29 |
+| PD-1 — anlotinib | 28 | 2021-2026 | 100% | negative_correlate 22, associate 5, positive_correlate 1 |
+| SLC7A11 — non-small cell lung cancer | 28 | 2021-2026 | 100% | associate 28 |
+| toripalimab — esophageal squamous cell carcinoma | 28 | 2021-2026 | 100% | treat 30 |
+| nirmatrelvir/ritonavir — COVID-19 | 28 | 2022-2025 | 100% | treat 27, associate 2 |
+| N6-methyladenosine — head and neck squamous cell carcinoma | 27 | 2021-2026 | 100% | associate 26, cause 1 |
+| enzalutamide — talazoparib | 27 | 2022-2025 | 100% | cotreat 27 |
+| TRPS1 — triple-negative breast cancer | 26 | 2021-2026 | 100% | associate 26, stimulate 1 |
+| sintilimab — esophageal squamous cell carcinoma | 26 | 2022-2026 | 100% | treat 26 |
+| copper — tricarboxylic acid | 26 | 2022-2026 | 100% | associate 27, positive_correlate 1 |
+| glofitamab — B-cell lymphoma | 25 | 2021-2026 | 100% | treat 26 |
+| belzutifan — tumor | 25 | 2021-2026 | 100% | treat 25 |
+| GPX4 — triple-negative breast cancer | 25 | 2022-2026 | 100% | associate 22, inhibit 2, stimulate 1 |
+| pirtobrutinib — mantle cell lymphoma | 25 | 2022-2025 | 100% | treat 25, associate 1 |
 
 ## For contrast: the most settled relations
 
