@@ -513,3 +513,65 @@ def test_hierarchical_relatedness_distinguishes_nesting_from_collision():
         "prefix matching must respect the dot separator"
     assert not aa.hierarchically_related(["C04.557"], ["C04.557"]), \
         "identical trees are the same node, not a parent/child pair"
+
+
+# --- curated domain senses are measured, not asserted (#ATLAS-AMBIG) --------
+
+def test_every_curated_domain_sense_is_confirmed_by_the_corpus():
+    """DOMAIN_SENSE entries are hand-written, so something must check them.
+
+    One of them was wrong: the `psa` note claimed the majority vote returned
+    NPEPPS when it returns KLK3, and the repository's own committed scan already
+    said so. This guard exists so a future hand-edit cannot reintroduce an
+    unmeasured claim.
+    """
+    import json
+    import atlas_ambiguity as aa
+    raw = json.loads(
+        (REPO_ROOT / "analysis" / "atlas-domain-sense-validation.json").read_text())
+    results = raw["results"]
+    assert set(results) == set(aa.DOMAIN_SENSE), \
+        "every curated sense must be validated, and vice versa"
+    for surface, r in results.items():
+        assert r["curated_is_dominant"], f"{surface}: curated sense is not dominant"
+        assert r["curated_share"] > 0.85, \
+            f"{surface}: curated sense only {r['curated_share']:.1%} of declaring papers"
+        assert r["curated_sense"] == aa.DOMAIN_SENSE[surface][1]
+
+
+def test_the_majority_vote_is_wrong_on_most_curated_collisions():
+    """The finding that justifies blocking rather than trusting the vote.
+
+    It is not merely noisy: it picks the sense the cancer literature essentially
+    never means. `psa` is the one case where the vote is already right, which is
+    why the count is asserted as 'most', not 'all'.
+    """
+    import json
+    raw = json.loads(
+        (REPO_ROOT / "analysis" / "atlas-domain-sense-validation.json").read_text())
+    disagree = [s for s, r in raw["results"].items() if not r["vote_matches_curated"]]
+    assert len(disagree) >= 3, "if the vote became reliable, revisit the blocklist"
+    assert "psa" not in disagree, "psa is the documented case where the vote is right"
+
+
+def test_domain_sense_probes_cover_every_curated_symbol():
+    """A curated sense with no probe would silently go unmeasured."""
+    import atlas_ambiguity as aa
+    import atlas_domain_sense as ads
+    missing = set(aa.DOMAIN_SENSE) - set(ads.PROBES)
+    assert not missing, f"no declaration probe for {missing}"
+    for surface, probes in ads.PROBES.items():
+        if surface in aa.DOMAIN_SENSE:
+            assert aa.DOMAIN_SENSE[surface][1] in probes, \
+                f"{surface}: the curated sense itself must be probeable"
+
+
+def test_declared_requires_exactly_one_sense():
+    import re
+    import atlas_domain_sense as ads
+    probes = {k: re.compile(v) for k, v in ads.PROBES["er"].items()}
+    assert ads.declared("estrogen receptor positive breast cancer", probes) == "ESR1"
+    assert ads.declared("epiregulin drives egfr signalling", probes) == "EREG"
+    assert ads.declared("er was measured", probes) is None, "no declaration"
+    assert ads.declared("estrogen receptor and endoplasmic reticulum stress",
+                        probes) is None, "two senses declared -> not usable"

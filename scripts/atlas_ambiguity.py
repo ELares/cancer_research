@@ -88,20 +88,35 @@ MIN_RUNNER_UP_SHARE = 0.20
 # nothing applies these silently. Symbols whose correct sense depends on the
 # individual paper -- FSP1 above all -- are deliberately absent.
 DOMAIN_SENSE = {
+    # Every share below is MEASURED, not asserted: scripts/atlas_domain_sense.py
+    # samples cancer papers carrying the symbol and counts how many declare each
+    # sense in their own words. See analysis/atlas-domain-sense-validation.md.
     "er": ("2099", "ESR1", "In the oncology literature 'ER' is the estrogen "
-                           "receptor (ER-positive/ER-negative disease). The "
-                           "majority vote returns EREG (epiregulin)."),
-    "psa": ("354", "KLK3", "'PSA' in cancer is prostate-specific antigen, "
-                           "KLK3. The majority vote returns NPEPPS."),
+                           "receptor (ER-positive/ER-negative disease): 98.7% of "
+                           "451 declaring papers, with epiregulin declared zero "
+                           "times. The majority vote returns EREG (epiregulin)."),
+    "psa": ("354", "KLK3", "'PSA' in cancer is prostate-specific antigen, KLK3: "
+                           "528 of 528 declaring papers. Here the majority vote "
+                           "ALREADY returns KLK3, so the form stays blocklisted "
+                           "only because NPEPPS is a genuinely different gene. An "
+                           "earlier version of this note claimed the vote returned "
+                           "NPEPPS; that was asserted rather than measured, and "
+                           "was wrong."),
     "cox-2": ("5743", "PTGS2", "'COX-2' in cancer pharmacology is "
                                "prostaglandin-endoperoxide synthase 2, the "
-                               "celecoxib target, not mitochondrial cytochrome "
-                               "c oxidase subunit II."),
+                               "celecoxib target: 541 of 541 declaring papers, "
+                               "with the mitochondrial cytochrome c oxidase "
+                               "subunit II declared zero times. The majority vote "
+                               "returns the mitochondrial one."),
     "p62": ("8878", "SQSTM1", "'p62' in autophagy and redox signalling is "
-                              "sequestosome-1. The majority vote returns "
-                              "NUP62, a nuclear pore protein."),
-    "p21": ("1026", "CDKN1A", "'p21' as a cell-cycle inhibitor is CDKN1A. The "
-                              "majority vote returns H3P16, a pseudogene."),
+                              "sequestosome-1: 97.4% of 272 declaring papers. The "
+                              "majority vote returns NUP62, a nuclear pore "
+                              "protein."),
+    "p21": ("1026", "CDKN1A", "'p21' as a cell-cycle inhibitor is CDKN1A: 89.6% "
+                              "of 336 declaring papers, the lowest share of the "
+                              "five because RAS p21 and a histone pseudogene are "
+                              "both real minority senses. The majority vote "
+                              "returns H3P16, the pseudogene."),
 }
 
 
