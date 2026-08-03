@@ -434,3 +434,40 @@ def test_ambiguity_scan_separates_species_from_sense():
     assert "fsp1" not in {r["surface"] for r in
                           sorted(raw["sense_collision"],
                                  key=lambda r: -r["total"])[:25]}
+
+
+def test_relation_corrections_move_only_the_atl1_identifiers():
+    """Precision guard on the index-build remap.
+
+    relations.tsv.gz stores identifiers, not the surface form that produced
+    them. A paper discussing BOTH cancer-associated fibroblasts and ferroptosis
+    would have its genuine S100A4 edge rewritten to AIFM2 if every colliding id
+    were correctable, so only ATL1 -- which just 1.9% of these papers mention
+    at all -- may move.
+    """
+    corr = {"111": "84883"}
+    assert ag._corrected("51062", "111", corr) == "84883", "ATL1 -> the real FSP1"
+    assert ag._corrected("73991", "111", corr) == "84883", "mouse Atl1 too"
+    assert ag._corrected("6275", "111", corr) == "6275", \
+        "a genuine S100A4 edge must survive a paper whose FSP1 means AIFM2"
+    assert ag._corrected("2879", "111", corr) == "2879", "GPX4 is untouched"
+    assert ag._corrected("51062", "999", corr) == "51062", \
+        "an undecided paper keeps what PubTator said"
+
+
+def test_corrections_load_maps_pmid_to_identifier(tmp_path, monkeypatch):
+    import json
+    f = tmp_path / "d.json"
+    f.write_text(json.dumps({"corrections": {
+        "1": {"pubtator": "ATL1", "corrected": "AIFM2"},
+        "2": {"pubtator": "ATL1", "corrected": "S100A4"},
+        "3": {"pubtator": "ATL1", "corrected": "nonsense"}}}))
+    monkeypatch.setattr(ag, "DISAMBIGUATION_JSON", f)
+    got = ag.load_corrections()
+    assert got == {"1": "84883", "2": "6275"}, "unknown senses are dropped, not guessed"
+
+
+def test_corrections_absent_file_is_not_fatal(tmp_path, monkeypatch):
+    """The index must still build on a checkout that has not run the layer."""
+    monkeypatch.setattr(ag, "DISAMBIGUATION_JSON", tmp_path / "missing.json")
+    assert ag.load_corrections() == {}

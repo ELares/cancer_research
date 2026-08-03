@@ -65,6 +65,48 @@ PMID_SAMPLE = 60
 _RESERVOIR_SEED = 20260803
 
 
+# Per-paper sense corrections from scripts/atlas_disambiguate.py, applied when
+# the relation edges are read so every consumer of the index sees the right
+# gene. Without this the manuscript's own GPX4+FSP1 claim has ZERO typed
+# relations: PubTator extracted them, then filed all of them under ATL1.
+DISAMBIGUATION_JSON = (Path(__file__).resolve().parents[1]
+                       / "analysis" / "atlas-disambiguation.json")
+# sense -> the identifier a corrected mention should carry
+_SENSE_ID = {"AIFM2": "84883", "S100A4": "6275", "ATL1": "51062"}
+# Only the ATL1 identifiers may be moved, and the restriction is deliberate.
+# relations.tsv.gz records identifiers, not the surface form that produced
+# them, so a paper discussing BOTH cancer-associated fibroblasts and
+# ferroptosis would have its genuine S100A4 edge rewritten to AIFM2 if every
+# colliding id were correctable. ATL1 is safe to move because it is a
+# hereditary spastic-paraplegia gene that only 1.9% of these papers mention at
+# all, whereas a paper that really means S100A4 or AIFM2 gets that identifier
+# from its own unambiguous surface form. This trades recall for precision: the
+# 33 papers corrected S100A4 -> AIFM2 keep their original edges.
+_CORRECTABLE = {"51062", "73991"}
+
+
+def load_corrections() -> dict:
+    """pmid -> corrected identifier, for the papers the disambiguator decided."""
+    try:
+        with open(DISAMBIGUATION_JSON) as fh:
+            raw = json.load(fh).get("corrections", {})
+    except (OSError, ValueError):
+        return {}
+    out = {}
+    for pmid, v in raw.items():
+        ident = _SENSE_ID.get(v.get("corrected"))
+        if ident:
+            out[pmid] = ident
+    return out
+
+
+def _corrected(ident: str, pmid: str, corrections: dict) -> str:
+    """Remap a colliding identifier to the sense this paper actually uses."""
+    if ident in _CORRECTABLE:
+        return corrections.get(pmid, ident)
+    return ident
+
+
 def paths(root: Path):
     return {
         "relations": root / "relations" / "relations.tsv.gz",
@@ -106,6 +148,10 @@ def build_index(root: Path) -> dict:
     canon_res = {i: c.most_common(1)[0][0] for i, c in canon.items()}
     print(f"  aliases {len(alias_res):,}, identifiers {len(canon_res):,}", flush=True)
 
+    corrections = load_corrections()
+    if corrections:
+        print(f"  applying {len(corrections):,} per-paper sense corrections", flush=True)
+
     print("  reading relations ...", flush=True)
     edges: dict[tuple, collections.Counter] = collections.defaultdict(collections.Counter)
     sample: dict[tuple, list] = collections.defaultdict(list)
@@ -117,8 +163,8 @@ def build_index(root: Path) -> dict:
             if len(parts) < 4:
                 continue
             pmid, rel, a, b = parts[0], parts[1], parts[2], parts[3]
-            ida = a.split("|", 1)[-1]
-            idb = b.split("|", 1)[-1]
+            ida = _corrected(a.split("|", 1)[-1], pmid, corrections)
+            idb = _corrected(b.split("|", 1)[-1], pmid, corrections)
             key = tuple(sorted((ida, idb)))
             edges[key][rel] += 1
             # one pair can assert several predicates from the same paper; count

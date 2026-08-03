@@ -223,10 +223,19 @@ def main() -> None:
                      for r in none_] + [""]
         if rescued:
             L += [f"  **{len(rescued)} of those {len(none_)} ARE discussed in full text.** A zero in",
-                  "  the relation column is an abstract-level extraction failure, not evidence",
-                  "  against the mechanism. The clearest case is `fsp1` (AIFM2-GPX4), the",
-                  "  parallel pathway behind the manuscript's headline Bliss-synergy claim:",
-                  "  zero asserted relations, but the pair is co-mentioned in full text.", ""]
+                  "  the relation column is therefore not evidence against the mechanism.",
+                  "  It has two distinct causes, and they were once conflated here:", "",
+                  "  1. **Abstract-level extraction sparsity.** PubTator's relations come from",
+                  "     abstracts, so a mechanism established in a Results section may never",
+                  "     be asserted in an extractable sentence.",
+                  "  2. **Entity-resolution collisions.** The relation WAS extracted and then",
+                  "     filed under the wrong gene. `fsp1` (AIFM2-GPX4) is the measured case:",
+                  "     it read zero not because nobody asserts GPX4-FSP1, but because every",
+                  "     such relation in the census was filed under ATL1, a spastic-paraplegia",
+                  "     gene sharing the `FSP1` alias. See `analysis/atlas-disambiguation.md`;",
+                  "     the corrections are applied at index build, so this column now counts",
+                  "     them. An earlier version of this report attributed that zero entirely",
+                  "     to cause 1, which was wrong.", ""]
     if unres:
         L += [f"* **{len(unres)}** could not be resolved to an entity identifier at all:",
               ""] + [f"  * `{r['module']}`: {r['a']} - {r['b']}" for r in unres] + [""]
