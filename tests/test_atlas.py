@@ -672,11 +672,13 @@ def test_discovery_eval_compares_against_popularity_not_just_random():
     raw = json.loads(
         (REPO_ROOT / "analysis" / "atlas-discovery-eval.json").read_text())
     head = raw["headline"]
-    assert set(head["precision"]) == {"abc", "popularity", "random"}
-    # identical candidate set, so the three must make the same number of predictions
-    assert head["predictions"]["abc"] == head["predictions"]["popularity"] \
-        == head["predictions"]["random"], \
-        "the rankings must differ only in order, never in the candidate set"
+    assert {"abc", "popularity", "random"} <= set(head["precision"])
+    # identical candidate set, so EVERY ranking must make the same number of
+    # predictions -- a method that quietly dropped candidates would look better
+    # for the wrong reason
+    counts = set(head["predictions"].values())
+    assert len(counts) == 1, \
+        f"the rankings must differ only in order, never in the candidate set: {head['predictions']}"
     assert head["precision"]["random"] < head["precision"]["popularity"], \
         "beating random is the floor, not the result"
 
@@ -714,3 +716,50 @@ def test_discovery_eval_result_holds_across_split_years():
         assert r["precision"]["abc"] < r["precision"]["popularity"], \
             f"split {r['split_year']} disagrees; re-read before trusting the verdict"
         assert r["paired"]["ci95"][1] < 0, f"split {r['split_year']} CI includes zero"
+
+
+def test_no_standard_link_predictor_beats_popularity():
+    """The follow-up question, answered so nobody has to re-ask it.
+
+    Once ABC is found to lose to popularity the obvious move is to swap in a
+    better-known link predictor. The standard ones were tried on the SAME
+    candidate set and none wins, so that avenue is closed rather than untried.
+    """
+    import json
+    raw = json.loads(
+        (REPO_ROOT / "analysis" / "atlas-discovery-eval.json").read_text())
+    prec = raw["headline"]["precision"]
+    for m in ("adamic_adar", "resource_alloc", "jaccard", "bridges", "abc"):
+        assert m in prec, f"{m} must be evaluated"
+        assert prec[m] <= prec["popularity"], \
+            f"{m} now beats popularity -- rewrite the verdict, do not delete this test"
+
+
+def test_degree_correction_monotonically_hurts():
+    """The shape of the result, not just its sign.
+
+    Rankings order themselves by how hard they correct for degree, and harder
+    correction does worse. That is what makes this a statement about the graph
+    rather than about one method's implementation.
+    """
+    import json
+    raw = json.loads(
+        (REPO_ROOT / "analysis" / "atlas-discovery-eval.json").read_text())
+    prec = raw["headline"]["precision"]
+    # Jaccard corrects hardest and must sit far below the uncorrected baselines
+    assert prec["jaccard"] < prec["abc"] < prec["popularity"]
+    assert prec["jaccard"] < prec["adamic_adar"]
+    # but even the hardest correction still beats chance: the candidate SET works
+    assert prec["jaccard"] > prec["random"]
+
+
+def test_eval_report_states_the_objection_to_its_own_target():
+    """A negative result must carry the argument against itself.
+
+    Predicting what the literature went on to say is not obviously the right
+    target for a layer whose purpose is finding OVERLOOKED connections. The
+    report has to say so, or it overclaims.
+    """
+    text = (REPO_ROOT / "analysis" / "atlas-discovery-eval.md").read_text()
+    assert "objection" in text.lower()
+    assert "overlooked" in text.lower() or "slow to reach" in text.lower()

@@ -23,11 +23,15 @@ degree band 30-800, top 20 each.
 
 ## Result
 
-| ranking | hits | predictions | precision@20 |
-|---|---|---|---|
-| abc | 489 | 3,985 | **12.3%** |
-| popularity | 687 | 3,985 | **17.2%** |
-| random | 118 | 3,985 | **3.0%** |
+| ranking | hits | predictions | precision@20 | paired vs popularity |
+|---|---|---|---|---|
+| popularity | 687 | 3,985 | **17.2%** | baseline |
+| adamic_adar | 653 | 3,985 | **16.4%** | -0.17 [-0.40, +0.05] (spans 0) |
+| bridges | 653 | 3,985 | **16.4%** | -0.17 [-0.40, +0.06] (spans 0) |
+| resource_alloc | 582 | 3,985 | **14.6%** | -0.53 [-0.77, -0.29] |
+| abc | 489 | 3,985 | **12.3%** | -0.99 [-1.27, -0.71] |
+| jaccard | 199 | 3,985 | **5.0%** | -2.44 [-2.91, -1.99] |
+| random | 104 | 3,985 | **2.6%** | -2.92 [-3.40, -2.44] |
 
 ### Is that difference real?
 
@@ -41,9 +45,52 @@ Paired bootstrap over seeds, 10,000 resamples:
 
 | split | abc | popularity | random | paired diff | 95% CI |
 |---|---|---|---|---|---|
-| 2018 | 12.3% | 17.2% | 3.0% | -0.99 | [-1.27, -0.71] |
-| 2015 | 11.5% | 19.2% | 2.9% | -1.54 | [-1.89, -1.21] |
-| 2021 | 6.7% | 10.8% | 1.7% | -0.81 | [-1.04, -0.59] |
+| 2018 | 12.3% | 17.2% | 2.6% | -0.99 | [-1.27, -0.71] |
+| 2015 | 11.5% | 19.2% | 3.5% | -1.54 | [-1.89, -1.21] |
+| 2021 | 6.7% | 10.8% | 1.5% | -0.81 | [-1.04, -0.59] |
+
+### The pattern in that table
+
+The rankings do not scatter. They order themselves by **how hard each one
+corrects for degree**, and the harder the correction, the worse it does:
+
+| ranking | degree correction | precision@20 |
+|---|---|---|
+| popularity | none -- it IS degree | 17.2% |
+| raw bridge count | none | 16.4% |
+| Adamic-Adar | down-weights hub bridges | 16.4% |
+| resource allocation | down-weights them harder | 14.6% |
+| ABC (hypergeometric) | divides out candidate degree | 12.3% |
+| Jaccard | normalises by BOTH degrees | 5.0% |
+| random | -- | 2.6% |
+
+Jaccard, the most aggressive correction, lands barely above chance. That is
+not a bug in any one method; it says the thing being corrected away is the
+signal. New edges in this graph genuinely do attach preferentially to
+well-connected entities, because attention concentrates -- so a ranking that
+removes degree removes most of what predicts the next edge.
+
+This also answers the obvious follow-up. The shipped ranking cannot be
+repaired by swapping in a better-known link predictor: the standard ones were
+tried here and none beats the baseline. Adamic-Adar and the raw bridge count
+tie with it (their intervals span zero); everything else loses.
+
+### The objection to this whole evaluation
+
+It is worth stating against my own result. This scores a ranking by whether
+it anticipates what the literature went on to assert. But Swanson-style
+discovery is FOR finding connections the literature is slow to reach -- the
+fish-oil/Raynaud case mattered precisely because nobody was about to publish
+it. On that reading, a method that beats popularity at predicting next year's
+edges may be selecting for the LEAST interesting hypotheses, and a method that
+loses to popularity is not thereby useless.
+
+So the defensible claim is narrow and it is the one the module actually made:
+`atlas_discovery.py` says it corrects for popularity, and measured against
+what the literature did next it does not help. Whether predicting the
+literature is the right target for a discovery layer at all is a separate
+question this evaluation cannot settle, and a genuinely overlooked connection
+would be scored here as a miss.
 
 ### Verdict: ABC ranking is WORSE than ranking by popularity
 
@@ -54,7 +101,7 @@ of them is already famous -- they order them measurably worse, at every
 split year tested.
 
 **But the candidate SET is doing real work.** Both rankings beat random by
-roughly 6x, so restricting attention
+roughly 7x, so restricting attention
 to 2-hop bridged entities is genuinely informative; it is the ranking
 within that set that fails. The honest summary is that
 `atlas_discovery.py` is a good candidate GENERATOR and a bad RANKER, and
@@ -67,30 +114,30 @@ what the literature went on to say, it does not.
 
 | seed | degree before 2018 | candidates | abc | popularity | random |
 |---|---|---|---|---|---|
-| PVT1 | 144 | 1,162 | 19 | 17 | 3 |
-| PD-1 | 507 | 5,330 | 17 | 15 | 6 |
-| nivolumab | 441 | 4,389 | 14 | 13 | 2 |
-| olaparib | 322 | 4,151 | 14 | 19 | 2 |
-| CD163 | 235 | 2,733 | 12 | 12 | 0 |
+| PVT1 | 144 | 1,162 | 19 | 17 | 4 |
+| PD-1 | 507 | 5,330 | 17 | 15 | 2 |
+| nivolumab | 441 | 4,389 | 14 | 13 | 1 |
+| olaparib | 322 | 4,151 | 14 | 19 | 5 |
+| CD163 | 235 | 2,733 | 12 | 12 | 3 |
 | CDC6 | 130 | 1,332 | 12 | 12 | 0 |
-| FGFR1 | 507 | 5,463 | 11 | 9 | 1 |
-| ruxolitinib | 248 | 2,775 | 11 | 13 | 1 |
-| DDX3X | 120 | 1,750 | 11 | 12 | 0 |
-| BMAL1 | 91 | 582 | 10 | 13 | 1 |
-| FGFR2 | 404 | 4,155 | 10 | 10 | 1 |
+| FGFR1 | 507 | 5,463 | 11 | 9 | 0 |
+| ruxolitinib | 248 | 2,775 | 11 | 13 | 3 |
+| DDX3X | 120 | 1,750 | 11 | 12 | 1 |
+| BMAL1 | 91 | 582 | 10 | 13 | 3 |
+| FGFR2 | 404 | 4,155 | 10 | 10 | 0 |
 | hydrogen | 349 | 3,976 | 10 | 9 | 1 |
-| dimethyl fumarate | 94 | 1,163 | 9 | 11 | 1 |
-| CXCR2 | 90 | 830 | 9 | 8 | 3 |
+| dimethyl fumarate | 94 | 1,163 | 9 | 11 | 3 |
+| CXCR2 | 90 | 830 | 9 | 8 | 1 |
 | miR-146a | 317 | 3,710 | 9 | 11 | 2 |
-| CXCL11 | 116 | 1,419 | 9 | 7 | 0 |
-| AZD8055 | 119 | 1,714 | 8 | 6 | 0 |
-| GATA2 | 206 | 2,450 | 8 | 10 | 0 |
+| CXCL11 | 116 | 1,419 | 9 | 7 | 1 |
+| AZD8055 | 119 | 1,714 | 8 | 6 | 1 |
+| GATA2 | 206 | 2,450 | 8 | 10 | 2 |
 | TP53 | 413 | 4,215 | 8 | 4 | 0 |
-| STIM1 | 133 | 929 | 7 | 7 | 4 |
+| STIM1 | 133 | 929 | 7 | 7 | 0 |
 | IL-4 | 369 | 3,451 | 7 | 3 | 0 |
-| ADAM12 | 127 | 1,562 | 7 | 10 | 1 |
-| Sox9 | 98 | 968 | 6 | 5 | 0 |
-| leptin | 688 | 7,132 | 6 | 4 | 1 |
+| ADAM12 | 127 | 1,562 | 7 | 10 | 0 |
+| Sox9 | 98 | 968 | 6 | 5 | 1 |
+| leptin | 688 | 7,132 | 6 | 4 | 2 |
 | lanthanide | 44 | 422 | 6 | 9 | 0 |
 
 ## What this cannot show

@@ -81,10 +81,27 @@ scores 17.2% against this module's 12.3%. The gap is paired-bootstrap decided
 2018 and 2021. So the bridge counting, hub filter and hypergeometric tail order
 candidates measurably WORSE than asking which of them is already well studied.
 
-What survives is the candidate SET: both rankings beat random by roughly 6x, so
-restricting attention to 2-hop bridged entities is genuinely informative. This is
-a good candidate generator and a bad ranker. Read the output as a
-popularity-weighted reading list, and see `analysis/atlas-discovery-eval.md`.
+What survives is the candidate SET: every ranking beats random by several times,
+so restricting attention to 2-hop bridged entities is genuinely informative. This
+is a good candidate generator and a bad ranker.
+
+Nor can it be repaired by swapping in a better link predictor. The standard ones
+were tried on the same candidate set and NONE beats popularity. They order
+themselves by how hard each corrects for degree, and the harder the correction
+the worse it does -- raw bridge count and Adamic-Adar tie with the baseline,
+resource allocation loses, this module's hypergeometric loses more, and Jaccard
+(normalising by both degrees) falls to near chance. New edges here genuinely do
+attach preferentially to well-connected entities, so removing degree removes most
+of what predicts the next edge.
+
+One caveat runs the other way, and it is in the evaluation's own report: that
+measurement scores a ranking by whether it anticipates the literature, while
+Swanson-style discovery is FOR connections the literature is slow to reach. A
+genuinely overlooked pair scores there as a miss. So the narrow claim is the one
+this module made and failed -- it says it corrects for popularity, and doing so
+does not help predict what the field went on to assert.
+
+See `analysis/atlas-discovery-eval.md`.
 
 Usage:
     python scripts/atlas_discovery.py --seed GPX4

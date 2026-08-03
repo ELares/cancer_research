@@ -54,6 +54,7 @@ import collections
 import glob
 import gzip
 import json
+import math
 import pickle
 import random
 import sys
@@ -146,7 +147,20 @@ def pair_first_year(root: Path, years: dict, corrections: dict) -> dict:
 
 
 def rank_all(adj_before, degrees, cutoff, n_nodes, seed_id, rng):
-    """The three rankings over one identical candidate set."""
+    """Every ranking, over one IDENTICAL candidate set, so only order differs.
+
+    Beyond the shipped ABC ranking and the two baselines, this includes the
+    standard degree-controlled link predictors. They are the obvious thing to
+    try once ABC is found to lose to popularity, and they cost nothing extra:
+    all of them are functions of the bridge set already computed.
+
+      adamic_adar  sum over bridges of 1/log(deg(b)) -- a bridge shared with a
+                   hub is weak evidence, a bridge through a specific entity is
+                   strong. The classic link-prediction baseline.
+      resource_alloc  sum of 1/deg(b) -- the same idea, punishing hubs harder.
+      jaccard      n / (deg_a + deg_c - n) -- normalises by BOTH degrees, so it
+                   is the most aggressive correction for candidate popularity.
+    """
     from scipy.stats import hypergeom
 
     a_nb = adj_before.get(seed_id, set())
@@ -170,15 +184,39 @@ def rank_all(adj_before, degrees, cutoff, n_nodes, seed_id, rng):
         deg_c = degrees.get(c, 0)
         if deg_c < MIN_CANDIDATE_DEGREE:
             continue
-        cands.append((c, n, deg_c, float(hypergeom.sf(n - 1, n_nodes, deg_a, deg_c))))
+        # deg(b) >= 1 for any b that bridges, and log(1) == 0 would divide by
+        # zero, so the Adamic-Adar denominator is floored.
+        aa = sum(1.0 / math.log(max(degrees.get(b, 1), 2)) for b in bs)
+        ra = sum(1.0 / max(degrees.get(b, 1), 1) for b in bs)
+        union = deg_a + deg_c - n
+        jac = (n / union) if union > 0 else 0.0
+        p = float(hypergeom.sf(n - 1, n_nodes, deg_a, deg_c))
+        cands.append({"c": c, "n": n, "deg_c": deg_c, "p": p,
+                      "aa": aa, "ra": ra, "jac": jac})
     if not cands:
         return None
 
-    abc = [c for c, _n, _d, _p in sorted(cands, key=lambda r: (r[3], -r[1]))]
-    pop = [c for c, _n, _d, _p in sorted(cands, key=lambda r: -r[2])]
-    rnd = [c for c, _n, _d, _p in cands]
+    # Sort by identifier BEFORE anything reads this list. `bridges` is filled by
+    # iterating adjacency SETS, and CPython's string hashing is salted per
+    # process (PYTHONHASHSEED), so set order -- and therefore the input order of
+    # this list -- differs between runs. Python's sort is stable, so that order
+    # leaks into every tie, and it reached the output: the random baseline drifted
+    # 2.9%-3.3% across runs with a fixed seed. Sorting here makes ties, the
+    # shuffle, and the reported numbers reproducible.
+    cands.sort(key=lambda r: r["c"])
+
+    order = lambda key: [r["c"] for r in sorted(cands, key=key)]  # noqa: E731
+    rnd = [r["c"] for r in cands]
     rng.shuffle(rnd)
-    return {"abc": abc, "popularity": pop, "random": rnd}
+    return {
+        "abc": order(lambda r: (r["p"], -r["n"])),
+        "popularity": order(lambda r: -r["deg_c"]),
+        "adamic_adar": order(lambda r: -r["aa"]),
+        "resource_alloc": order(lambda r: -r["ra"]),
+        "jaccard": order(lambda r: -r["jac"]),
+        "bridges": order(lambda r: -r["n"]),
+        "random": rnd,
+    }
 
 
 def evaluate(first, idx, Y, seeds_n, top, log=True):
@@ -206,7 +244,9 @@ def evaluate(first, idx, Y, seeds_n, top, log=True):
         return None
     seeds = rng.sample(pool, min(seeds_n, len(pool)))
 
-    hits = {m: 0 for m in ("abc", "popularity", "random")}
+    METHODS = ("abc", "popularity", "adamic_adar", "resource_alloc",
+               "jaccard", "bridges", "random")
+    hits = {m: 0 for m in METHODS}
     shown = {m: 0 for m in hits}
     per_seed = []
     for sid in seeds:
@@ -231,13 +271,22 @@ def evaluate(first, idx, Y, seeds_n, top, log=True):
     # PAIRED comparison. The three rankings run on the same seeds over the same
     # candidate set, so per-seed differences are paired; an interval on two
     # independent proportions would be the wrong test.
-    diffs = [r["abc"] - r["popularity"] for r in per_seed]
-    n = len(diffs)
-    boot = random.Random(SEED_RNG + 1)
-    means = sorted(sum(diffs[boot.randrange(n)] for _ in range(n)) / n
-                   for _ in range(10000))
-    ci = (means[int(0.025 * len(means))], means[int(0.975 * len(means))])
-    mean_diff = sum(diffs) / n
+    n = len(per_seed)
+    paired_all = {}
+    for m in METHODS:
+        if m == "popularity":
+            continue
+        d = [r[m] - r["popularity"] for r in per_seed]
+        boot = random.Random(SEED_RNG + 1)
+        means = sorted(sum(d[boot.randrange(n)] for _ in range(n)) / n
+                       for _ in range(10000))
+        lo, hi = means[int(0.025 * len(means))], means[int(0.975 * len(means))]
+        paired_all[m] = {"mean_diff": sum(d) / n, "ci95": [lo, hi],
+                         "decided": hi < 0 or lo > 0,
+                         "ahead": sum(1 for x in d if x > 0),
+                         "behind": sum(1 for x in d if x < 0)}
+    ci = tuple(paired_all["abc"]["ci95"])
+    mean_diff = paired_all["abc"]["mean_diff"]
     return {
         "split_year": Y, "seeds_evaluated": n, "top_k": top,
         "pairs_before": len(before), "pairs_after": len(after),
@@ -245,9 +294,10 @@ def evaluate(first, idx, Y, seeds_n, top, log=True):
         "abc_over_popularity": (prec["abc"] / prec["popularity"]
                                 if prec["popularity"] else float("inf")),
         "paired": {"mean_diff": mean_diff, "ci95": list(ci),
-                   "decided": ci[1] < 0 or ci[0] > 0,
-                   "abc_ahead": sum(1 for d in diffs if d > 0),
-                   "abc_behind": sum(1 for d in diffs if d < 0)},
+                   "decided": paired_all["abc"]["decided"],
+                   "abc_ahead": paired_all["abc"]["ahead"],
+                   "abc_behind": paired_all["abc"]["behind"]},
+        "paired_all": paired_all,
         "per_seed": per_seed,
     }
 
@@ -320,11 +370,16 @@ def main() -> int:
         f"{head['seeds_evaluated']} seed entities, sampled with a fixed seed from",
         f"degree band {SEED_DEGREE_MIN}-{SEED_DEGREE_MAX}, top {args.top} each.", "",
         "## Result", "",
-        f"| ranking | hits | predictions | precision@{args.top} |", "|---|---|---|---|",
+        f"| ranking | hits | predictions | precision@{args.top} | paired vs popularity |",
+        "|---|---|---|---|---|",
     ]
-    for m in ("abc", "popularity", "random"):
+    for m in sorted(prec, key=lambda k: -prec[k]):
+        pa = head["paired_all"].get(m)
+        vs = ("baseline" if m == "popularity" else
+              f"{pa['mean_diff']:+.2f} [{pa['ci95'][0]:+.2f}, {pa['ci95'][1]:+.2f}]"
+              + ("" if pa["decided"] else " (spans 0)"))
         L.append(f"| {m} | {head['hits'][m]:,} | {head['predictions'][m]:,} | "
-                 f"**{100*prec[m]:.1f}%** |")
+                 f"**{100*prec[m]:.1f}%** | {vs} |")
     L += [
         "", "### Is that difference real?", "",
         "Paired bootstrap over seeds, 10,000 resamples:", "",
@@ -346,7 +401,44 @@ def main() -> int:
                      f"{q['ci95'][1]:+.2f}] |")
         L.append("")
 
-    L += [f"### Verdict: {verdict}", ""]
+    L += [
+        "### The pattern in that table", "",
+        "The rankings do not scatter. They order themselves by **how hard each one",
+        "corrects for degree**, and the harder the correction, the worse it does:", "",
+        "| ranking | degree correction | precision@%d |" % args.top,
+        "|---|---|---|",
+        "| popularity | none -- it IS degree | %.1f%% |" % (100 * prec["popularity"]),
+        "| raw bridge count | none | %.1f%% |" % (100 * prec["bridges"]),
+        "| Adamic-Adar | down-weights hub bridges | %.1f%% |" % (100 * prec["adamic_adar"]),
+        "| resource allocation | down-weights them harder | %.1f%% |" % (100 * prec["resource_alloc"]),
+        "| ABC (hypergeometric) | divides out candidate degree | %.1f%% |" % (100 * prec["abc"]),
+        "| Jaccard | normalises by BOTH degrees | %.1f%% |" % (100 * prec["jaccard"]),
+        "| random | -- | %.1f%% |" % (100 * prec["random"]),
+        "",
+        "Jaccard, the most aggressive correction, lands barely above chance. That is",
+        "not a bug in any one method; it says the thing being corrected away is the",
+        "signal. New edges in this graph genuinely do attach preferentially to",
+        "well-connected entities, because attention concentrates -- so a ranking that",
+        "removes degree removes most of what predicts the next edge.", "",
+        "This also answers the obvious follow-up. The shipped ranking cannot be",
+        "repaired by swapping in a better-known link predictor: the standard ones were",
+        "tried here and none beats the baseline. Adamic-Adar and the raw bridge count",
+        "tie with it (their intervals span zero); everything else loses.", "",
+        "### The objection to this whole evaluation", "",
+        "It is worth stating against my own result. This scores a ranking by whether",
+        "it anticipates what the literature went on to assert. But Swanson-style",
+        "discovery is FOR finding connections the literature is slow to reach -- the",
+        "fish-oil/Raynaud case mattered precisely because nobody was about to publish",
+        "it. On that reading, a method that beats popularity at predicting next year's",
+        "edges may be selecting for the LEAST interesting hypotheses, and a method that",
+        "loses to popularity is not thereby useless.", "",
+        "So the defensible claim is narrow and it is the one the module actually made:",
+        "`atlas_discovery.py` says it corrects for popularity, and measured against",
+        "what the literature did next it does not help. Whether predicting the",
+        "literature is the right target for a discovery layer at all is a separate",
+        "question this evaluation cannot settle, and a genuinely overlooked connection",
+        "would be scored here as a miss.", "",
+        f"### Verdict: {verdict}", ""]
     if paired["decided"] and paired["mean_diff"] < 0:
         L += [
             "This is a negative result about this repository's own layer, and it is",

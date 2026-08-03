@@ -276,14 +276,24 @@ when the literature first asserts that pair in Y or later. The comparison that
 matters is not against random — almost anything beats random on a clustered
 co-occurrence graph — but against ranking the *same candidates* by popularity:
 
-| ranking | precision@20 |
-|---|---|
-| ABC (shipped) | 12.3% |
-| popularity | **17.2%** |
-| random | 3.0% |
+| ranking | degree correction | precision@20 |
+|---|---|---|
+| popularity | none — it *is* degree | **17.2%** |
+| raw bridge count | none | 16.5% |
+| Adamic-Adar | down-weights hub bridges | 16.4% |
+| resource allocation | harder | 14.6% |
+| **ABC (shipped)** | divides out candidate degree | **12.3%** |
+| Jaccard | normalises by both degrees | 5.0% |
+| random | — | 2.6% |
 
-Paired bootstrap: −0.99 hits of 20, 95% CI [−1.27, −0.71], behind on 97 of 200
-seeds, and it reproduces at split years 2015, 2018 and 2021.
+Paired bootstrap for ABC: −0.99 hits of 20, 95% CI [−1.27, −0.71], behind on 97
+of 200 seeds, reproduced at split years 2015, 2018 and 2021.
+
+**Nothing beats popularity**, and the rankings order themselves by how hard each
+corrects for degree — the harder the correction, the worse it does. So this
+cannot be repaired by swapping in a better link predictor; the standard ones were
+tried. New edges genuinely do attach preferentially to well-connected entities,
+so removing degree removes most of what predicts the next edge.
 
 > **A good candidate generator and a bad ranker.** Both rankings beat random by
 > ~6×, so restricting attention to 2-hop bridged entities is genuinely
@@ -294,6 +304,12 @@ seeds, and it reproduces at split years 2015, 2018 and 2021.
 > Nor is popularity a *good* ranking. On a graph where well-studied entities keep
 > accruing edges, predicting that a famous gene gains another relation is easy and
 > not very useful.
+>
+> **And the evaluation's own target is arguable.** It scores a ranking by whether
+> it anticipates the literature, while Swanson-style discovery is *for*
+> connections the literature is slow to reach — a genuinely overlooked pair scores
+> here as a miss. The narrow claim is the one the module made and failed: it says
+> it corrects for popularity, and doing so does not help.
 
 ## Two traps that have already bitten
 

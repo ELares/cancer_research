@@ -8,17 +8,29 @@
     "hits": {
       "abc": 489,
       "popularity": 687,
-      "random": 118
+      "adamic_adar": 653,
+      "resource_alloc": 582,
+      "jaccard": 199,
+      "bridges": 653,
+      "random": 104
     },
     "predictions": {
       "abc": 3985,
       "popularity": 3985,
+      "adamic_adar": 3985,
+      "resource_alloc": 3985,
+      "jaccard": 3985,
+      "bridges": 3985,
       "random": 3985
     },
     "precision": {
       "abc": 0.12271016311166875,
       "popularity": 0.172396486825596,
-      "random": 0.029611041405269763
+      "adamic_adar": 0.16386449184441657,
+      "resource_alloc": 0.14604767879548305,
+      "jaccard": 0.049937264742785446,
+      "bridges": 0.16386449184441657,
+      "random": 0.026097867001254705
     },
     "abc_over_popularity": 0.7117903930131003,
     "paired": {
@@ -31,6 +43,68 @@
       "abc_ahead": 30,
       "abc_behind": 97
     },
+    "paired_all": {
+      "abc": {
+        "mean_diff": -0.99,
+        "ci95": [
+          -1.27,
+          -0.71
+        ],
+        "decided": true,
+        "ahead": 30,
+        "behind": 97
+      },
+      "adamic_adar": {
+        "mean_diff": -0.17,
+        "ci95": [
+          -0.395,
+          0.05
+        ],
+        "decided": false,
+        "ahead": 45,
+        "behind": 68
+      },
+      "resource_alloc": {
+        "mean_diff": -0.525,
+        "ci95": [
+          -0.765,
+          -0.29
+        ],
+        "decided": true,
+        "ahead": 39,
+        "behind": 79
+      },
+      "jaccard": {
+        "mean_diff": -2.44,
+        "ci95": [
+          -2.91,
+          -1.99
+        ],
+        "decided": true,
+        "ahead": 14,
+        "behind": 124
+      },
+      "bridges": {
+        "mean_diff": -0.17,
+        "ci95": [
+          -0.395,
+          0.055
+        ],
+        "decided": false,
+        "ahead": 45,
+        "behind": 69
+      },
+      "random": {
+        "mean_diff": -2.915,
+        "ci95": [
+          -3.405,
+          -2.445
+        ],
+        "decided": true,
+        "ahead": 6,
+        "behind": 129
+      }
+    },
     "per_seed": [
       {
         "seed": "24883",
@@ -39,6 +113,10 @@
         "candidates": 222,
         "abc": 0,
         "popularity": 0,
+        "adamic_adar": 0,
+        "resource_alloc": 0,
+        "jaccard": 0,
+        "bridges": 0,
         "random": 0
       },
       {
@@ -48,7 +126,11 @@
         "candidates": 633,
         "abc": 4,
         "popularity": 4,
-        "random": 1
+        "adamic_adar": 6,
+        "resource_alloc": 6,
+        "jaccard": 0,
+        "bridges": 5,
+        "random": 0
       },
       {
         "seed": "MESH:D000628",
@@ -57,6 +139,10 @@
         "candidates": 735,
         "abc": 0,
         "popularity": 0,
+        "adamic_adar": 0,
+        "resource_alloc": 0,
+        "jaccard": 0,
+        "bridges": 0,
         "random": 0
       },
       {
@@ -66,6 +152,10 @@
         "candidates": 2515,
         "abc": 0,
         "popularity": 0,
+        "adamic_adar": 0,
+        "resource_alloc": 0,
+        "jaccard": 0,
+        "bridges": 0,
         "random": 0
       },
       {
@@ -75,7 +165,11 @@
         "candidates": 842,
         "abc": 0,
         "popularity": 4,
-        "random": 2
+        "adamic_adar": 3,
+        "resource_alloc": 0,
+        "jaccard": 1,
+        "bridges": 2,
+        "random": 0
       },
       {
         "seed": "151306",
@@ -84,6 +178,10 @@
         "candidates": 606,
         "abc": 5,
         "popularity": 5,
+        "adamic_adar": 6,
+        "resource_alloc": 7,
+        "jaccard": 1,
+        "bridges": 5,
         "random": 0
       },
       {
@@ -93,7 +191,11 @@
         "candidates": 929,
         "abc": 7,
         "popularity": 7,
-        "random": 4
+        "adamic_adar": 7,
+        "resource_alloc": 8,
+        "jaccard": 1,
+        "bridges": 6,
+        "random": 0
       },
       {
         "seed": "MESH:D013450",
@@ -102,6 +204,10 @@
         "candidates": 265,
         "abc": 0,
         "popularity": 0,
+        "adamic_adar": 0,
+        "resource_alloc": 0,
+        "jaccard": 0,
+        "bridges": 0,
         "random": 0
       },
       {
@@ -111,6 +217,10 @@
         "candidates": 1106,
         "abc": 4,
         "popularity": 6,
+        "adamic_adar": 6,
+        "resource_alloc": 6,
+        "jaccard": 0,
+        "bridges": 5,
         "random": 1
       },
       {
@@ -120,6 +230,10 @@
         "candidates": 4624,
         "abc": 0,
         "popularity": 0,
+        "adamic_adar": 0,
+        "resource_alloc": 0,
+        "jaccard": 0,
+        "bridges": 0,
         "random": 0
       },
       {
@@ -129,6 +243,10 @@
         "candidates": 210,
         "abc": 1,
         "popularity": 3,
+        "adamic_adar": 1,
+        "resource_alloc": 0,
+        "jaccard": 0,
+        "bridges": 2,
         "random": 1
       },
       {
@@ -138,7 +256,11 @@
         "candidates": 364,
         "abc": 1,
         "popularity": 1,
-        "random": 1
+        "adamic_adar": 1,
+        "resource_alloc": 2,
+        "jaccard": 1,
+        "bridges": 1,
+        "random": 0
       },
       {
         "seed": "60351",
@@ -147,7 +269,11 @@
         "candidates": 396,
         "abc": 0,
         "popularity": 1,
-        "random": 0
+        "adamic_adar": 1,
+        "resource_alloc": 2,
+        "jaccard": 0,
+        "bridges": 1,
+        "random": 1
       },
       {
         "seed": "3493",
@@ -156,7 +282,11 @@
         "candidates": 481,
         "abc": 0,
         "popularity": 4,
-        "random": 0
+        "adamic_adar": 1,
+        "resource_alloc": 1,
+        "jaccard": 0,
+        "bridges": 1,
+        "random": 1
       },
       {
         "seed": "1602",
@@ -165,7 +295,11 @@
         "candidates": 1243,
         "abc": 5,
         "popularity": 4,
-        "random": 1
+        "adamic_adar": 6,
+        "resource_alloc": 6,
+        "jaccard": 0,
+        "bridges": 6,
+        "random": 0
       },
       {
         "seed": "2520",
@@ -174,7 +308,11 @@
         "candidates": 6146,
         "abc": 3,
         "popularity": 2,
-        "random": 2
+        "adamic_adar": 2,
+        "resource_alloc": 2,
+        "jaccard": 2,
+        "bridges": 2,
+        "random": 0
       },
       {
         "seed": "406",
@@ -183,7 +321,11 @@
         "candidates": 582,
         "abc": 10,
         "popularity": 13,
-        "random": 1
+        "adamic_adar": 16,
+        "resource_alloc": 10,
+        "jaccard": 0,
+        "bridges": 18,
+        "random": 3
       },
       {
         "seed": "MESH:D006585",
@@ -192,6 +334,10 @@
         "candidates": 2000,
         "abc": 1,
         "popularity": 1,
+        "adamic_adar": 1,
+        "resource_alloc": 1,
+        "jaccard": 0,
+        "bridges": 1,
         "random": 0
       },
       {
@@ -201,6 +347,10 @@
         "candidates": 1319,
         "abc": 0,
         "popularity": 0,
+        "adamic_adar": 0,
+        "resource_alloc": 0,
+        "jaccard": 0,
+        "bridges": 0,
         "random": 0
       },
       {
@@ -210,6 +360,10 @@
         "candidates": 4978,
         "abc": 2,
         "popularity": 1,
+        "adamic_adar": 1,
+        "resource_alloc": 2,
+        "jaccard": 1,
+        "bridges": 1,
         "random": 0
       },
       {
@@ -219,6 +373,10 @@
         "candidates": 1098,
         "abc": 0,
         "popularity": 0,
+        "adamic_adar": 0,
+        "resource_alloc": 0,
+        "jaccard": 0,
+        "bridges": 1,
         "random": 0
       },
       {
@@ -228,6 +386,10 @@
         "candidates": 1139,
         "abc": 0,
         "popularity": 0,
+        "adamic_adar": 0,
+        "resource_alloc": 0,
+        "jaccard": 0,
+        "bridges": 0,
         "random": 0
       },
       {
@@ -237,6 +399,10 @@
         "candidates": 477,
         "abc": 2,
         "popularity": 2,
+        "adamic_adar": 2,
+        "resource_alloc": 2,
+        "jaccard": 0,
+        "bridges": 2,
         "random": 0
       },
       {
@@ -246,6 +412,10 @@
         "candidates": 1224,
         "abc": 0,
         "popularity": 0,
+        "adamic_adar": 0,
+        "resource_alloc": 0,
+        "jaccard": 0,
+        "bridges": 0,
         "random": 0
       },
       {
@@ -255,7 +425,11 @@
         "candidates": 793,
         "abc": 0,
         "popularity": 1,
-        "random": 1
+        "adamic_adar": 0,
+        "resource_alloc": 0,
+        "jaccard": 0,
+        "bridges": 0,
+        "random": 0
       },
       {
         "seed": "MESH:D017599",
@@ -264,6 +438,10 @@
         "candidates": 3663,
         "abc": 0,
         "popularity": 0,
+        "adamic_adar": 0,
+        "resource_alloc": 0,
+        "jaccard": 0,
+        "bridges": 0,
         "random": 0
       },
       {
@@ -273,7 +451,11 @@
         "candidates": 614,
         "abc": 0,
         "popularity": 4,
-        "random": 2
+        "adamic_adar": 0,
+        "resource_alloc": 0,
+        "jaccard": 0,
+        "bridges": 0,
+        "random": 0
       },
       {
         "seed": "20682",
@@ -282,7 +464,11 @@
         "candidates": 968,
         "abc": 6,
         "popularity": 5,
-        "random": 0
+        "adamic_adar": 9,
+        "resource_alloc": 8,
+        "jaccard": 0,
+        "bridges": 9,
+        "random": 1
       },
       {
         "seed": "MESH:D013890",
@@ -291,7 +477,11 @@
         "candidates": 1526,
         "abc": 2,
         "popularity": 5,
-        "random": 1
+        "adamic_adar": 5,
+        "resource_alloc": 4,
+        "jaccard": 1,
+        "bridges": 5,
+        "random": 0
       },
       {
         "seed": "MESH:C045210",
@@ -300,6 +490,10 @@
         "candidates": 602,
         "abc": 0,
         "popularity": 1,
+        "adamic_adar": 0,
+        "resource_alloc": 0,
+        "jaccard": 0,
+        "bridges": 0,
         "random": 1
       },
       {
@@ -309,7 +503,11 @@
         "candidates": 256,
         "abc": 0,
         "popularity": 1,
-        "random": 0
+        "adamic_adar": 1,
+        "resource_alloc": 0,
+        "jaccard": 0,
+        "bridges": 1,
+        "random": 1
       },
       {
         "seed": "MESH:D000690",
@@ -318,6 +516,10 @@
         "candidates": 1365,
         "abc": 1,
         "popularity": 0,
+        "adamic_adar": 0,
+        "resource_alloc": 0,
+        "jaccard": 1,
+        "bridges": 0,
         "random": 0
       },
       {
@@ -327,7 +529,11 @@
         "candidates": 124,
         "abc": 4,
         "popularity": 7,
-        "random": 2
+        "adamic_adar": 5,
+        "resource_alloc": 5,
+        "jaccard": 2,
+        "bridges": 5,
+        "random": 4
       },
       {
         "seed": "146713",
@@ -336,6 +542,10 @@
         "candidates": 454,
         "abc": 0,
         "popularity": 3,
+        "adamic_adar": 0,
+        "resource_alloc": 0,
+        "jaccard": 0,
+        "bridges": 0,
         "random": 0
       },
       {
@@ -345,7 +555,11 @@
         "candidates": 5463,
         "abc": 11,
         "popularity": 9,
-        "random": 1
+        "adamic_adar": 12,
+        "resource_alloc": 10,
+        "jaccard": 9,
+        "bridges": 12,
+        "random": 0
       },
       {
         "seed": "MESH:D010400",
@@ -354,7 +568,11 @@
         "candidates": 1650,
         "abc": 1,
         "popularity": 1,
-        "random": 0
+        "adamic_adar": 1,
+        "resource_alloc": 1,
+        "jaccard": 0,
+        "bridges": 1,
+        "random": 1
       },
       {
         "seed": "16189",
@@ -363,6 +581,10 @@
         "candidates": 3451,
         "abc": 7,
         "popularity": 3,
+        "adamic_adar": 6,
+        "resource_alloc": 7,
+        "jaccard": 6,
+        "bridges": 5,
         "random": 0
       },
       {
@@ -372,7 +594,11 @@
         "candidates": 1136,
         "abc": 0,
         "popularity": 1,
-        "random": 1
+        "adamic_adar": 0,
+        "resource_alloc": 0,
+        "jaccard": 0,
+        "bridges": 0,
+        "random": 0
       },
       {
         "seed": "12503",
@@ -381,6 +607,10 @@
         "candidates": 2340,
         "abc": 4,
         "popularity": 8,
+        "adamic_adar": 9,
+        "resource_alloc": 9,
+        "jaccard": 4,
+        "bridges": 10,
         "random": 0
       },
       {
@@ -390,6 +620,10 @@
         "candidates": 1101,
         "abc": 0,
         "popularity": 0,
+        "adamic_adar": 0,
+        "resource_alloc": 0,
+        "jaccard": 0,
+        "bridges": 0,
         "random": 0
       },
       {
@@ -399,7 +633,11 @@
         "candidates": 224,
         "abc": 0,
         "popularity": 2,
-        "random": 1
+        "adamic_adar": 3,
+        "resource_alloc": 0,
+        "jaccard": 0,
+        "bridges": 3,
+        "random": 0
       },
       {
         "seed": "MESH:D001424",
@@ -408,6 +646,10 @@
         "candidates": 3625,
         "abc": 0,
         "popularity": 2,
+        "adamic_adar": 0,
+        "resource_alloc": 0,
+        "jaccard": 0,
+        "bridges": 0,
         "random": 0
       },
       {
@@ -417,6 +659,10 @@
         "candidates": 936,
         "abc": 0,
         "popularity": 1,
+        "adamic_adar": 1,
+        "resource_alloc": 0,
+        "jaccard": 0,
+        "bridges": 1,
         "random": 0
       },
       {
@@ -426,6 +672,10 @@
         "candidates": 2064,
         "abc": 0,
         "popularity": 0,
+        "adamic_adar": 0,
+        "resource_alloc": 0,
+        "jaccard": 0,
+        "bridges": 0,
         "random": 0
       },
       {
@@ -435,7 +685,11 @@
         "candidates": 2775,
         "abc": 11,
         "popularity": 13,
-        "random": 1
+        "adamic_adar": 15,
+        "resource_alloc": 17,
+        "jaccard": 3,
+        "bridges": 16,
+        "random": 3
       },
       {
         "seed": "2885",
@@ -444,6 +698,10 @@
         "candidates": 3329,
         "abc": 4,
         "popularity": 4,
+        "adamic_adar": 6,
+        "resource_alloc": 3,
+        "jaccard": 0,
+        "bridges": 6,
         "random": 0
       },
       {
@@ -453,7 +711,11 @@
         "candidates": 2725,
         "abc": 0,
         "popularity": 0,
-        "random": 1
+        "adamic_adar": 0,
+        "resource_alloc": 0,
+        "jaccard": 0,
+        "bridges": 0,
+        "random": 0
       },
       {
         "seed": "MESH:D022882",
@@ -462,6 +724,10 @@
         "candidates": 184,
         "abc": 0,
         "popularity": 2,
+        "adamic_adar": 1,
+        "resource_alloc": 1,
+        "jaccard": 0,
+        "bridges": 1,
         "random": 0
       },
       {
@@ -471,6 +737,10 @@
         "candidates": 1029,
         "abc": 0,
         "popularity": 0,
+        "adamic_adar": 0,
+        "resource_alloc": 0,
+        "jaccard": 0,
+        "bridges": 0,
         "random": 0
       },
       {
@@ -480,7 +750,11 @@
         "candidates": 64,
         "abc": 0,
         "popularity": 2,
-        "random": 0
+        "adamic_adar": 1,
+        "resource_alloc": 2,
+        "jaccard": 0,
+        "bridges": 0,
+        "random": 1
       },
       {
         "seed": "MESH:D015840",
@@ -489,6 +763,10 @@
         "candidates": 1052,
         "abc": 0,
         "popularity": 0,
+        "adamic_adar": 0,
+        "resource_alloc": 0,
+        "jaccard": 0,
+        "bridges": 0,
         "random": 0
       },
       {
@@ -498,7 +776,11 @@
         "candidates": 7132,
         "abc": 6,
         "popularity": 4,
-        "random": 1
+        "adamic_adar": 4,
+        "resource_alloc": 3,
+        "jaccard": 6,
+        "bridges": 4,
+        "random": 2
       },
       {
         "seed": "16186",
@@ -507,6 +789,10 @@
         "candidates": 570,
         "abc": 2,
         "popularity": 0,
+        "adamic_adar": 2,
+        "resource_alloc": 0,
+        "jaccard": 1,
+        "bridges": 2,
         "random": 0
       },
       {
@@ -516,6 +802,10 @@
         "candidates": 758,
         "abc": 1,
         "popularity": 5,
+        "adamic_adar": 2,
+        "resource_alloc": 3,
+        "jaccard": 0,
+        "bridges": 4,
         "random": 0
       },
       {
@@ -525,7 +815,11 @@
         "candidates": 499,
         "abc": 3,
         "popularity": 9,
-        "random": 2
+        "adamic_adar": 7,
+        "resource_alloc": 5,
+        "jaccard": 0,
+        "bridges": 6,
+        "random": 1
       },
       {
         "seed": "16011",
@@ -534,6 +828,10 @@
         "candidates": 202,
         "abc": 0,
         "popularity": 0,
+        "adamic_adar": 0,
+        "resource_alloc": 0,
+        "jaccard": 0,
+        "bridges": 0,
         "random": 0
       },
       {
@@ -543,7 +841,11 @@
         "candidates": 3330,
         "abc": 3,
         "popularity": 5,
-        "random": 0
+        "adamic_adar": 4,
+        "resource_alloc": 3,
+        "jaccard": 3,
+        "bridges": 4,
+        "random": 1
       },
       {
         "seed": "MESH:D054331",
@@ -552,6 +854,10 @@
         "candidates": 743,
         "abc": 0,
         "popularity": 0,
+        "adamic_adar": 0,
+        "resource_alloc": 0,
+        "jaccard": 0,
+        "bridges": 0,
         "random": 0
       },
       {
@@ -561,7 +867,11 @@
         "candidates": 1714,
         "abc": 8,
         "popularity": 6,
-        "random": 0
+        "adamic_adar": 9,
+        "resource_alloc": 8,
+        "jaccard": 1,
+        "bridges": 9,
+        "random": 1
       },
       {
         "seed": "16848",
@@ -570,6 +880,10 @@
         "candidates": 408,
         "abc": 0,
         "popularity": 1,
+        "adamic_adar": 1,
+        "resource_alloc": 0,
+        "jaccard": 0,
+        "bridges": 1,
         "random": 0
       },
       {
@@ -579,7 +893,11 @@
         "candidates": 346,
         "abc": 5,
         "popularity": 12,
-        "random": 4
+        "adamic_adar": 11,
+        "resource_alloc": 5,
+        "jaccard": 0,
+        "bridges": 10,
+        "random": 3
       },
       {
         "seed": "MESH:D006812",
@@ -588,6 +906,10 @@
         "candidates": 5,
         "abc": 1,
         "popularity": 1,
+        "adamic_adar": 1,
+        "resource_alloc": 1,
+        "jaccard": 1,
+        "bridges": 1,
         "random": 1
       },
       {
@@ -597,6 +919,10 @@
         "candidates": 3386,
         "abc": 5,
         "popularity": 7,
+        "adamic_adar": 5,
+        "resource_alloc": 5,
+        "jaccard": 0,
+        "bridges": 5,
         "random": 0
       },
       {
@@ -606,6 +932,10 @@
         "candidates": 755,
         "abc": 1,
         "popularity": 1,
+        "adamic_adar": 1,
+        "resource_alloc": 1,
+        "jaccard": 0,
+        "bridges": 1,
         "random": 0
       },
       {
@@ -615,6 +945,10 @@
         "candidates": 1954,
         "abc": 0,
         "popularity": 0,
+        "adamic_adar": 0,
+        "resource_alloc": 0,
+        "jaccard": 0,
+        "bridges": 0,
         "random": 0
       },
       {
@@ -624,6 +958,10 @@
         "candidates": 1205,
         "abc": 2,
         "popularity": 3,
+        "adamic_adar": 1,
+        "resource_alloc": 1,
+        "jaccard": 2,
+        "bridges": 1,
         "random": 0
       },
       {
@@ -633,7 +971,11 @@
         "candidates": 4389,
         "abc": 14,
         "popularity": 13,
-        "random": 2
+        "adamic_adar": 14,
+        "resource_alloc": 12,
+        "jaccard": 9,
+        "bridges": 14,
+        "random": 1
       },
       {
         "seed": "MESH:D017290",
@@ -642,6 +984,10 @@
         "candidates": 841,
         "abc": 0,
         "popularity": 0,
+        "adamic_adar": 0,
+        "resource_alloc": 0,
+        "jaccard": 0,
+        "bridges": 0,
         "random": 0
       },
       {
@@ -651,7 +997,11 @@
         "candidates": 1750,
         "abc": 11,
         "popularity": 12,
-        "random": 0
+        "adamic_adar": 13,
+        "resource_alloc": 14,
+        "jaccard": 0,
+        "bridges": 13,
+        "random": 1
       },
       {
         "seed": "MESH:D000068298",
@@ -660,6 +1010,10 @@
         "candidates": 286,
         "abc": 0,
         "popularity": 0,
+        "adamic_adar": 0,
+        "resource_alloc": 0,
+        "jaccard": 0,
+        "bridges": 0,
         "random": 0
       },
       {
@@ -669,7 +1023,11 @@
         "candidates": 531,
         "abc": 3,
         "popularity": 8,
-        "random": 2
+        "adamic_adar": 6,
+        "resource_alloc": 4,
+        "jaccard": 1,
+        "bridges": 6,
+        "random": 0
       },
       {
         "seed": "MESH:C524858",
@@ -678,6 +1036,10 @@
         "candidates": 681,
         "abc": 0,
         "popularity": 1,
+        "adamic_adar": 1,
+        "resource_alloc": 2,
+        "jaccard": 0,
+        "bridges": 1,
         "random": 1
       },
       {
@@ -687,6 +1049,10 @@
         "candidates": 437,
         "abc": 0,
         "popularity": 0,
+        "adamic_adar": 0,
+        "resource_alloc": 0,
+        "jaccard": 0,
+        "bridges": 0,
         "random": 0
       },
       {
@@ -696,6 +1062,10 @@
         "candidates": 346,
         "abc": 0,
         "popularity": 8,
+        "adamic_adar": 3,
+        "resource_alloc": 5,
+        "jaccard": 1,
+        "bridges": 3,
         "random": 1
       },
       {
@@ -705,6 +1075,10 @@
         "candidates": 949,
         "abc": 4,
         "popularity": 3,
+        "adamic_adar": 5,
+        "resource_alloc": 3,
+        "jaccard": 0,
+        "bridges": 5,
         "random": 0
       },
       {
@@ -714,6 +1088,10 @@
         "candidates": 1995,
         "abc": 4,
         "popularity": 0,
+        "adamic_adar": 3,
+        "resource_alloc": 2,
+        "jaccard": 1,
+        "bridges": 4,
         "random": 0
       },
       {
@@ -723,7 +1101,11 @@
         "candidates": 4151,
         "abc": 14,
         "popularity": 19,
-        "random": 2
+        "adamic_adar": 17,
+        "resource_alloc": 15,
+        "jaccard": 5,
+        "bridges": 18,
+        "random": 5
       },
       {
         "seed": "406931",
@@ -732,7 +1114,11 @@
         "candidates": 418,
         "abc": 4,
         "popularity": 6,
-        "random": 2
+        "adamic_adar": 8,
+        "resource_alloc": 4,
+        "jaccard": 0,
+        "bridges": 7,
+        "random": 0
       },
       {
         "seed": "MESH:D028581",
@@ -741,6 +1127,10 @@
         "candidates": 422,
         "abc": 6,
         "popularity": 9,
+        "adamic_adar": 12,
+        "resource_alloc": 6,
+        "jaccard": 3,
+        "bridges": 12,
         "random": 0
       },
       {
@@ -750,7 +1140,11 @@
         "candidates": 1191,
         "abc": 6,
         "popularity": 11,
-        "random": 4
+        "adamic_adar": 7,
+        "resource_alloc": 5,
+        "jaccard": 0,
+        "bridges": 7,
+        "random": 0
       },
       {
         "seed": "MESH:D001170",
@@ -759,6 +1153,10 @@
         "candidates": 1515,
         "abc": 0,
         "popularity": 0,
+        "adamic_adar": 0,
+        "resource_alloc": 0,
+        "jaccard": 0,
+        "bridges": 0,
         "random": 0
       },
       {
@@ -768,6 +1166,10 @@
         "candidates": 357,
         "abc": 0,
         "popularity": 0,
+        "adamic_adar": 0,
+        "resource_alloc": 0,
+        "jaccard": 0,
+        "bridges": 0,
         "random": 0
       },
       {
@@ -777,7 +1179,11 @@
         "candidates": 68,
         "abc": 2,
         "popularity": 4,
-        "random": 4
+        "adamic_adar": 3,
+        "resource_alloc": 3,
+        "jaccard": 2,
+        "bridges": 3,
+        "random": 1
       },
       {
         "seed": "16440",
@@ -786,6 +1192,10 @@
         "candidates": 782,
         "abc": 1,
         "popularity": 6,
+        "adamic_adar": 4,
+        "resource_alloc": 4,
+        "jaccard": 0,
+        "bridges": 4,
         "random": 0
       },
       {
@@ -795,6 +1205,10 @@
         "candidates": 833,
         "abc": 0,
         "popularity": 0,
+        "adamic_adar": 0,
+        "resource_alloc": 0,
+        "jaccard": 0,
+        "bridges": 0,
         "random": 0
       },
       {
@@ -804,7 +1218,11 @@
         "candidates": 2733,
         "abc": 12,
         "popularity": 12,
-        "random": 0
+        "adamic_adar": 12,
+        "resource_alloc": 12,
+        "jaccard": 9,
+        "bridges": 12,
+        "random": 3
       },
       {
         "seed": "MESH:C520337",
@@ -813,6 +1231,10 @@
         "candidates": 422,
         "abc": 2,
         "popularity": 5,
+        "adamic_adar": 3,
+        "resource_alloc": 3,
+        "jaccard": 0,
+        "bridges": 4,
         "random": 0
       },
       {
@@ -822,6 +1244,10 @@
         "candidates": 313,
         "abc": 0,
         "popularity": 1,
+        "adamic_adar": 0,
+        "resource_alloc": 0,
+        "jaccard": 0,
+        "bridges": 0,
         "random": 0
       },
       {
@@ -831,6 +1257,10 @@
         "candidates": 225,
         "abc": 0,
         "popularity": 2,
+        "adamic_adar": 0,
+        "resource_alloc": 2,
+        "jaccard": 0,
+        "bridges": 0,
         "random": 0
       },
       {
@@ -840,6 +1270,10 @@
         "candidates": 2411,
         "abc": 0,
         "popularity": 1,
+        "adamic_adar": 0,
+        "resource_alloc": 0,
+        "jaccard": 0,
+        "bridges": 0,
         "random": 0
       },
       {
@@ -849,7 +1283,11 @@
         "candidates": 1047,
         "abc": 4,
         "popularity": 4,
-        "random": 1
+        "adamic_adar": 7,
+        "resource_alloc": 5,
+        "jaccard": 0,
+        "bridges": 7,
+        "random": 2
       },
       {
         "seed": "MESH:D014241",
@@ -858,7 +1296,11 @@
         "candidates": 1956,
         "abc": 4,
         "popularity": 5,
-        "random": 0
+        "adamic_adar": 2,
+        "resource_alloc": 4,
+        "jaccard": 4,
+        "bridges": 2,
+        "random": 1
       },
       {
         "seed": "2624",
@@ -867,7 +1309,11 @@
         "candidates": 2450,
         "abc": 8,
         "popularity": 10,
-        "random": 0
+        "adamic_adar": 8,
+        "resource_alloc": 9,
+        "jaccard": 7,
+        "bridges": 9,
+        "random": 2
       },
       {
         "seed": "20846",
@@ -876,6 +1322,10 @@
         "candidates": 2432,
         "abc": 5,
         "popularity": 6,
+        "adamic_adar": 9,
+        "resource_alloc": 7,
+        "jaccard": 1,
+        "bridges": 9,
         "random": 0
       },
       {
@@ -885,7 +1335,11 @@
         "candidates": 5330,
         "abc": 17,
         "popularity": 15,
-        "random": 6
+        "adamic_adar": 16,
+        "resource_alloc": 16,
+        "jaccard": 16,
+        "bridges": 17,
+        "random": 2
       },
       {
         "seed": "MESH:D001710",
@@ -894,7 +1348,11 @@
         "candidates": 4455,
         "abc": 6,
         "popularity": 8,
-        "random": 2
+        "adamic_adar": 8,
+        "resource_alloc": 9,
+        "jaccard": 5,
+        "bridges": 8,
+        "random": 1
       },
       {
         "seed": "20238",
@@ -903,7 +1361,11 @@
         "candidates": 856,
         "abc": 2,
         "popularity": 2,
-        "random": 0
+        "adamic_adar": 3,
+        "resource_alloc": 2,
+        "jaccard": 0,
+        "bridges": 4,
+        "random": 1
       },
       {
         "seed": "MESH:D013610",
@@ -912,6 +1374,10 @@
         "candidates": 2059,
         "abc": 0,
         "popularity": 0,
+        "adamic_adar": 0,
+        "resource_alloc": 0,
+        "jaccard": 0,
+        "bridges": 0,
         "random": 0
       },
       {
@@ -921,7 +1387,11 @@
         "candidates": 987,
         "abc": 3,
         "popularity": 9,
-        "random": 2
+        "adamic_adar": 7,
+        "resource_alloc": 7,
+        "jaccard": 1,
+        "bridges": 6,
+        "random": 1
       },
       {
         "seed": "MESH:D013006",
@@ -930,6 +1400,10 @@
         "candidates": 1055,
         "abc": 2,
         "popularity": 0,
+        "adamic_adar": 2,
+        "resource_alloc": 1,
+        "jaccard": 0,
+        "bridges": 2,
         "random": 0
       },
       {
@@ -939,7 +1413,11 @@
         "candidates": 176,
         "abc": 0,
         "popularity": 2,
-        "random": 1
+        "adamic_adar": 1,
+        "resource_alloc": 0,
+        "jaccard": 0,
+        "bridges": 1,
+        "random": 0
       },
       {
         "seed": "MESH:D002606",
@@ -948,6 +1426,10 @@
         "candidates": 1567,
         "abc": 0,
         "popularity": 1,
+        "adamic_adar": 1,
+        "resource_alloc": 1,
+        "jaccard": 0,
+        "bridges": 1,
         "random": 0
       },
       {
@@ -957,6 +1439,10 @@
         "candidates": 637,
         "abc": 0,
         "popularity": 2,
+        "adamic_adar": 0,
+        "resource_alloc": 1,
+        "jaccard": 0,
+        "bridges": 0,
         "random": 0
       },
       {
@@ -966,6 +1452,10 @@
         "candidates": 3736,
         "abc": 6,
         "popularity": 8,
+        "adamic_adar": 6,
+        "resource_alloc": 9,
+        "jaccard": 7,
+        "bridges": 6,
         "random": 1
       },
       {
@@ -975,6 +1465,10 @@
         "candidates": 999,
         "abc": 0,
         "popularity": 1,
+        "adamic_adar": 0,
+        "resource_alloc": 0,
+        "jaccard": 0,
+        "bridges": 0,
         "random": 0
       },
       {
@@ -984,7 +1478,11 @@
         "candidates": 430,
         "abc": 0,
         "popularity": 3,
-        "random": 0
+        "adamic_adar": 4,
+        "resource_alloc": 4,
+        "jaccard": 0,
+        "bridges": 3,
+        "random": 1
       },
       {
         "seed": "MESH:C113565",
@@ -993,6 +1491,10 @@
         "candidates": 571,
         "abc": 1,
         "popularity": 6,
+        "adamic_adar": 5,
+        "resource_alloc": 2,
+        "jaccard": 0,
+        "bridges": 4,
         "random": 0
       },
       {
@@ -1002,7 +1504,11 @@
         "candidates": 407,
         "abc": 3,
         "popularity": 12,
-        "random": 3
+        "adamic_adar": 9,
+        "resource_alloc": 7,
+        "jaccard": 0,
+        "bridges": 10,
+        "random": 0
       },
       {
         "seed": "553",
@@ -1011,6 +1517,10 @@
         "candidates": 507,
         "abc": 0,
         "popularity": 1,
+        "adamic_adar": 0,
+        "resource_alloc": 0,
+        "jaccard": 1,
+        "bridges": 0,
         "random": 0
       },
       {
@@ -1020,7 +1530,11 @@
         "candidates": 1562,
         "abc": 7,
         "popularity": 10,
-        "random": 1
+        "adamic_adar": 9,
+        "resource_alloc": 9,
+        "jaccard": 0,
+        "bridges": 10,
+        "random": 0
       },
       {
         "seed": "MESH:D003620",
@@ -1029,6 +1543,10 @@
         "candidates": 524,
         "abc": 0,
         "popularity": 2,
+        "adamic_adar": 0,
+        "resource_alloc": 0,
+        "jaccard": 0,
+        "bridges": 0,
         "random": 0
       },
       {
@@ -1038,7 +1556,11 @@
         "candidates": 1737,
         "abc": 0,
         "popularity": 0,
-        "random": 1
+        "adamic_adar": 0,
+        "resource_alloc": 0,
+        "jaccard": 0,
+        "bridges": 0,
+        "random": 0
       },
       {
         "seed": "MESH:D000069462",
@@ -1047,7 +1569,11 @@
         "candidates": 1163,
         "abc": 9,
         "popularity": 11,
-        "random": 1
+        "adamic_adar": 11,
+        "resource_alloc": 8,
+        "jaccard": 0,
+        "bridges": 11,
+        "random": 3
       },
       {
         "seed": "5531",
@@ -1056,6 +1582,10 @@
         "candidates": 167,
         "abc": 1,
         "popularity": 6,
+        "adamic_adar": 5,
+        "resource_alloc": 4,
+        "jaccard": 0,
+        "bridges": 4,
         "random": 2
       },
       {
@@ -1065,7 +1595,11 @@
         "candidates": 1045,
         "abc": 3,
         "popularity": 5,
-        "random": 0
+        "adamic_adar": 4,
+        "resource_alloc": 5,
+        "jaccard": 1,
+        "bridges": 5,
+        "random": 1
       },
       {
         "seed": "MESH:D005315",
@@ -1074,6 +1608,10 @@
         "candidates": 1217,
         "abc": 0,
         "popularity": 0,
+        "adamic_adar": 0,
+        "resource_alloc": 0,
+        "jaccard": 0,
+        "bridges": 0,
         "random": 0
       },
       {
@@ -1083,6 +1621,10 @@
         "candidates": 330,
         "abc": 0,
         "popularity": 0,
+        "adamic_adar": 0,
+        "resource_alloc": 0,
+        "jaccard": 0,
+        "bridges": 0,
         "random": 0
       },
       {
@@ -1092,6 +1634,10 @@
         "candidates": 497,
         "abc": 2,
         "popularity": 2,
+        "adamic_adar": 2,
+        "resource_alloc": 3,
+        "jaccard": 1,
+        "bridges": 1,
         "random": 0
       },
       {
@@ -1101,6 +1647,10 @@
         "candidates": 736,
         "abc": 2,
         "popularity": 4,
+        "adamic_adar": 2,
+        "resource_alloc": 1,
+        "jaccard": 0,
+        "bridges": 2,
         "random": 0
       },
       {
@@ -1110,7 +1660,11 @@
         "candidates": 468,
         "abc": 0,
         "popularity": 0,
-        "random": 0
+        "adamic_adar": 1,
+        "resource_alloc": 1,
+        "jaccard": 0,
+        "bridges": 1,
+        "random": 1
       },
       {
         "seed": "MESH:D054556",
@@ -1119,7 +1673,11 @@
         "candidates": 2176,
         "abc": 0,
         "popularity": 1,
-        "random": 2
+        "adamic_adar": 0,
+        "resource_alloc": 0,
+        "jaccard": 0,
+        "bridges": 0,
+        "random": 0
       },
       {
         "seed": "MESH:D000072657",
@@ -1128,6 +1686,10 @@
         "candidates": 308,
         "abc": 0,
         "popularity": 1,
+        "adamic_adar": 0,
+        "resource_alloc": 0,
+        "jaccard": 0,
+        "bridges": 0,
         "random": 0
       },
       {
@@ -1137,7 +1699,11 @@
         "candidates": 248,
         "abc": 3,
         "popularity": 5,
-        "random": 2
+        "adamic_adar": 5,
+        "resource_alloc": 4,
+        "jaccard": 0,
+        "bridges": 4,
+        "random": 1
       },
       {
         "seed": "84133",
@@ -1146,7 +1712,11 @@
         "candidates": 351,
         "abc": 3,
         "popularity": 8,
-        "random": 3
+        "adamic_adar": 6,
+        "resource_alloc": 6,
+        "jaccard": 3,
+        "bridges": 6,
+        "random": 1
       },
       {
         "seed": "MESH:D000077384",
@@ -1155,7 +1725,11 @@
         "candidates": 4313,
         "abc": 2,
         "popularity": 1,
-        "random": 1
+        "adamic_adar": 2,
+        "resource_alloc": 2,
+        "jaccard": 3,
+        "bridges": 2,
+        "random": 0
       },
       {
         "seed": "MESH:C093269",
@@ -1164,6 +1738,10 @@
         "candidates": 121,
         "abc": 0,
         "popularity": 0,
+        "adamic_adar": 0,
+        "resource_alloc": 0,
+        "jaccard": 0,
+        "bridges": 0,
         "random": 0
       },
       {
@@ -1173,7 +1751,11 @@
         "candidates": 445,
         "abc": 0,
         "popularity": 0,
-        "random": 0
+        "adamic_adar": 0,
+        "resource_alloc": 0,
+        "jaccard": 0,
+        "bridges": 0,
+        "random": 1
       },
       {
         "seed": "101",
@@ -1182,7 +1764,11 @@
         "candidates": 150,
         "abc": 6,
         "popularity": 8,
-        "random": 2
+        "adamic_adar": 7,
+        "resource_alloc": 8,
+        "jaccard": 1,
+        "bridges": 8,
+        "random": 1
       },
       {
         "seed": "MESH:D007177",
@@ -1191,7 +1777,11 @@
         "candidates": 1480,
         "abc": 0,
         "popularity": 1,
-        "random": 1
+        "adamic_adar": 0,
+        "resource_alloc": 0,
+        "jaccard": 0,
+        "bridges": 0,
+        "random": 0
       },
       {
         "seed": "MESH:D013853",
@@ -1200,6 +1790,10 @@
         "candidates": 1583,
         "abc": 5,
         "popularity": 4,
+        "adamic_adar": 5,
+        "resource_alloc": 6,
+        "jaccard": 5,
+        "bridges": 5,
         "random": 2
       },
       {
@@ -1209,7 +1803,11 @@
         "candidates": 2499,
         "abc": 6,
         "popularity": 7,
-        "random": 1
+        "adamic_adar": 7,
+        "resource_alloc": 7,
+        "jaccard": 6,
+        "bridges": 8,
+        "random": 0
       },
       {
         "seed": "MESH:C525422",
@@ -1218,6 +1816,10 @@
         "candidates": 90,
         "abc": 2,
         "popularity": 0,
+        "adamic_adar": 1,
+        "resource_alloc": 2,
+        "jaccard": 1,
+        "bridges": 1,
         "random": 0
       },
       {
@@ -1227,6 +1829,10 @@
         "candidates": 978,
         "abc": 1,
         "popularity": 3,
+        "adamic_adar": 2,
+        "resource_alloc": 3,
+        "jaccard": 0,
+        "bridges": 3,
         "random": 0
       },
       {
@@ -1236,7 +1842,11 @@
         "candidates": 4155,
         "abc": 10,
         "popularity": 10,
-        "random": 1
+        "adamic_adar": 9,
+        "resource_alloc": 10,
+        "jaccard": 6,
+        "bridges": 9,
+        "random": 0
       },
       {
         "seed": "MESH:D012640",
@@ -1245,6 +1855,10 @@
         "candidates": 5144,
         "abc": 0,
         "popularity": 1,
+        "adamic_adar": 0,
+        "resource_alloc": 0,
+        "jaccard": 0,
+        "bridges": 0,
         "random": 0
       },
       {
@@ -1254,7 +1868,11 @@
         "candidates": 830,
         "abc": 9,
         "popularity": 8,
-        "random": 3
+        "adamic_adar": 10,
+        "resource_alloc": 9,
+        "jaccard": 1,
+        "bridges": 10,
+        "random": 1
       },
       {
         "seed": "9429",
@@ -1263,6 +1881,10 @@
         "candidates": 6571,
         "abc": 2,
         "popularity": 5,
+        "adamic_adar": 2,
+        "resource_alloc": 3,
+        "jaccard": 2,
+        "bridges": 2,
         "random": 1
       },
       {
@@ -1272,6 +1894,10 @@
         "candidates": 5198,
         "abc": 3,
         "popularity": 6,
+        "adamic_adar": 4,
+        "resource_alloc": 5,
+        "jaccard": 6,
+        "bridges": 5,
         "random": 0
       },
       {
@@ -1281,7 +1907,11 @@
         "candidates": 701,
         "abc": 0,
         "popularity": 0,
-        "random": 1
+        "adamic_adar": 0,
+        "resource_alloc": 0,
+        "jaccard": 0,
+        "bridges": 0,
+        "random": 0
       },
       {
         "seed": "MESH:C066075",
@@ -1290,7 +1920,11 @@
         "candidates": 453,
         "abc": 0,
         "popularity": 1,
-        "random": 1
+        "adamic_adar": 1,
+        "resource_alloc": 0,
+        "jaccard": 0,
+        "bridges": 1,
+        "random": 0
       },
       {
         "seed": "MESH:C551528",
@@ -1299,7 +1933,11 @@
         "candidates": 1063,
         "abc": 5,
         "popularity": 9,
-        "random": 0
+        "adamic_adar": 8,
+        "resource_alloc": 9,
+        "jaccard": 2,
+        "bridges": 8,
+        "random": 1
       },
       {
         "seed": "2356",
@@ -1308,6 +1946,10 @@
         "candidates": 1377,
         "abc": 0,
         "popularity": 2,
+        "adamic_adar": 2,
+        "resource_alloc": 0,
+        "jaccard": 0,
+        "bridges": 2,
         "random": 0
       },
       {
@@ -1317,7 +1959,11 @@
         "candidates": 3761,
         "abc": 0,
         "popularity": 0,
-        "random": 1
+        "adamic_adar": 0,
+        "resource_alloc": 0,
+        "jaccard": 0,
+        "bridges": 0,
+        "random": 3
       },
       {
         "seed": "MESH:C533693",
@@ -1326,6 +1972,10 @@
         "candidates": 121,
         "abc": 0,
         "popularity": 0,
+        "adamic_adar": 0,
+        "resource_alloc": 0,
+        "jaccard": 0,
+        "bridges": 0,
         "random": 0
       },
       {
@@ -1335,6 +1985,10 @@
         "candidates": 221,
         "abc": 0,
         "popularity": 0,
+        "adamic_adar": 0,
+        "resource_alloc": 0,
+        "jaccard": 0,
+        "bridges": 0,
         "random": 0
       },
       {
@@ -1344,7 +1998,11 @@
         "candidates": 1752,
         "abc": 1,
         "popularity": 3,
-        "random": 0
+        "adamic_adar": 1,
+        "resource_alloc": 2,
+        "jaccard": 0,
+        "bridges": 1,
+        "random": 1
       },
       {
         "seed": "3304",
@@ -1353,7 +2011,11 @@
         "candidates": 364,
         "abc": 0,
         "popularity": 6,
-        "random": 0
+        "adamic_adar": 5,
+        "resource_alloc": 5,
+        "jaccard": 0,
+        "bridges": 5,
+        "random": 1
       },
       {
         "seed": "22059",
@@ -1362,6 +2024,10 @@
         "candidates": 4215,
         "abc": 8,
         "popularity": 4,
+        "adamic_adar": 6,
+        "resource_alloc": 5,
+        "jaccard": 7,
+        "bridges": 5,
         "random": 0
       },
       {
@@ -1371,6 +2037,10 @@
         "candidates": 1732,
         "abc": 0,
         "popularity": 1,
+        "adamic_adar": 0,
+        "resource_alloc": 0,
+        "jaccard": 0,
+        "bridges": 0,
         "random": 0
       },
       {
@@ -1380,7 +2050,11 @@
         "candidates": 255,
         "abc": 5,
         "popularity": 3,
-        "random": 2
+        "adamic_adar": 6,
+        "resource_alloc": 6,
+        "jaccard": 3,
+        "bridges": 5,
+        "random": 0
       },
       {
         "seed": "MESH:D009902",
@@ -1389,7 +2063,11 @@
         "candidates": 349,
         "abc": 0,
         "popularity": 0,
-        "random": 0
+        "adamic_adar": 0,
+        "resource_alloc": 0,
+        "jaccard": 0,
+        "bridges": 0,
+        "random": 1
       },
       {
         "seed": "53340",
@@ -1398,7 +2076,11 @@
         "candidates": 469,
         "abc": 1,
         "popularity": 4,
-        "random": 0
+        "adamic_adar": 1,
+        "resource_alloc": 1,
+        "jaccard": 0,
+        "bridges": 0,
+        "random": 1
       },
       {
         "seed": "21788",
@@ -1407,6 +2089,10 @@
         "candidates": 338,
         "abc": 0,
         "popularity": 1,
+        "adamic_adar": 1,
+        "resource_alloc": 0,
+        "jaccard": 0,
+        "bridges": 0,
         "random": 0
       },
       {
@@ -1416,6 +2102,10 @@
         "candidates": 3534,
         "abc": 2,
         "popularity": 7,
+        "adamic_adar": 1,
+        "resource_alloc": 2,
+        "jaccard": 2,
+        "bridges": 2,
         "random": 0
       },
       {
@@ -1425,7 +2115,11 @@
         "candidates": 5145,
         "abc": 0,
         "popularity": 2,
-        "random": 1
+        "adamic_adar": 1,
+        "resource_alloc": 0,
+        "jaccard": 0,
+        "bridges": 1,
+        "random": 2
       },
       {
         "seed": "MESH:C536875",
@@ -1434,6 +2128,10 @@
         "candidates": 568,
         "abc": 0,
         "popularity": 0,
+        "adamic_adar": 0,
+        "resource_alloc": 0,
+        "jaccard": 0,
+        "bridges": 0,
         "random": 0
       },
       {
@@ -1443,6 +2141,10 @@
         "candidates": 3652,
         "abc": 0,
         "popularity": 0,
+        "adamic_adar": 0,
+        "resource_alloc": 0,
+        "jaccard": 0,
+        "bridges": 0,
         "random": 0
       },
       {
@@ -1452,6 +2154,10 @@
         "candidates": 811,
         "abc": 0,
         "popularity": 0,
+        "adamic_adar": 0,
+        "resource_alloc": 0,
+        "jaccard": 0,
+        "bridges": 0,
         "random": 0
       },
       {
@@ -1461,6 +2167,10 @@
         "candidates": 378,
         "abc": 0,
         "popularity": 0,
+        "adamic_adar": 0,
+        "resource_alloc": 1,
+        "jaccard": 0,
+        "bridges": 0,
         "random": 0
       },
       {
@@ -1470,6 +2180,10 @@
         "candidates": 529,
         "abc": 3,
         "popularity": 5,
+        "adamic_adar": 3,
+        "resource_alloc": 3,
+        "jaccard": 2,
+        "bridges": 3,
         "random": 0
       },
       {
@@ -1479,6 +2193,10 @@
         "candidates": 1332,
         "abc": 12,
         "popularity": 12,
+        "adamic_adar": 14,
+        "resource_alloc": 9,
+        "jaccard": 2,
+        "bridges": 14,
         "random": 0
       },
       {
@@ -1488,6 +2206,10 @@
         "candidates": 761,
         "abc": 0,
         "popularity": 0,
+        "adamic_adar": 0,
+        "resource_alloc": 0,
+        "jaccard": 0,
+        "bridges": 0,
         "random": 0
       },
       {
@@ -1497,6 +2219,10 @@
         "candidates": 213,
         "abc": 6,
         "popularity": 7,
+        "adamic_adar": 9,
+        "resource_alloc": 7,
+        "jaccard": 2,
+        "bridges": 9,
         "random": 0
       },
       {
@@ -1506,6 +2232,10 @@
         "candidates": 508,
         "abc": 0,
         "popularity": 0,
+        "adamic_adar": 0,
+        "resource_alloc": 0,
+        "jaccard": 0,
+        "bridges": 0,
         "random": 0
       },
       {
@@ -1515,6 +2245,10 @@
         "candidates": 1653,
         "abc": 0,
         "popularity": 0,
+        "adamic_adar": 0,
+        "resource_alloc": 0,
+        "jaccard": 1,
+        "bridges": 0,
         "random": 0
       },
       {
@@ -1524,6 +2258,10 @@
         "candidates": 6099,
         "abc": 0,
         "popularity": 0,
+        "adamic_adar": 0,
+        "resource_alloc": 0,
+        "jaccard": 0,
+        "bridges": 0,
         "random": 0
       },
       {
@@ -1533,6 +2271,10 @@
         "candidates": 476,
         "abc": 0,
         "popularity": 0,
+        "adamic_adar": 0,
+        "resource_alloc": 0,
+        "jaccard": 1,
+        "bridges": 0,
         "random": 0
       },
       {
@@ -1542,7 +2284,11 @@
         "candidates": 613,
         "abc": 2,
         "popularity": 3,
-        "random": 1
+        "adamic_adar": 3,
+        "resource_alloc": 3,
+        "jaccard": 0,
+        "bridges": 3,
+        "random": 0
       },
       {
         "seed": "5820",
@@ -1551,7 +2297,11 @@
         "candidates": 1162,
         "abc": 19,
         "popularity": 17,
-        "random": 3
+        "adamic_adar": 20,
+        "resource_alloc": 18,
+        "jaccard": 2,
+        "bridges": 20,
+        "random": 4
       },
       {
         "seed": "8682",
@@ -1560,7 +2310,11 @@
         "candidates": 734,
         "abc": 2,
         "popularity": 1,
-        "random": 0
+        "adamic_adar": 2,
+        "resource_alloc": 2,
+        "jaccard": 0,
+        "bridges": 2,
+        "random": 1
       },
       {
         "seed": "2170",
@@ -1569,7 +2323,11 @@
         "candidates": 551,
         "abc": 5,
         "popularity": 2,
-        "random": 2
+        "adamic_adar": 5,
+        "resource_alloc": 3,
+        "jaccard": 0,
+        "bridges": 6,
+        "random": 0
       },
       {
         "seed": "RS#:1800871;CorrespondingGene:3586",
@@ -1578,6 +2336,10 @@
         "candidates": 143,
         "abc": 0,
         "popularity": 0,
+        "adamic_adar": 0,
+        "resource_alloc": 0,
+        "jaccard": 0,
+        "bridges": 0,
         "random": 0
       },
       {
@@ -1587,6 +2349,10 @@
         "candidates": 2503,
         "abc": 6,
         "popularity": 9,
+        "adamic_adar": 8,
+        "resource_alloc": 9,
+        "jaccard": 1,
+        "bridges": 8,
         "random": 0
       },
       {
@@ -1596,7 +2362,11 @@
         "candidates": 4743,
         "abc": 2,
         "popularity": 5,
-        "random": 0
+        "adamic_adar": 4,
+        "resource_alloc": 2,
+        "jaccard": 4,
+        "bridges": 3,
+        "random": 1
       },
       {
         "seed": "MESH:D007840",
@@ -1605,6 +2375,10 @@
         "candidates": 663,
         "abc": 2,
         "popularity": 1,
+        "adamic_adar": 1,
+        "resource_alloc": 1,
+        "jaccard": 0,
+        "bridges": 1,
         "random": 0
       },
       {
@@ -1614,7 +2388,11 @@
         "candidates": 630,
         "abc": 4,
         "popularity": 5,
-        "random": 1
+        "adamic_adar": 6,
+        "resource_alloc": 4,
+        "jaccard": 1,
+        "bridges": 6,
+        "random": 2
       },
       {
         "seed": "OMIM:612348",
@@ -1623,6 +2401,10 @@
         "candidates": 562,
         "abc": 0,
         "popularity": 0,
+        "adamic_adar": 0,
+        "resource_alloc": 0,
+        "jaccard": 0,
+        "bridges": 0,
         "random": 0
       },
       {
@@ -1632,6 +2414,10 @@
         "candidates": 638,
         "abc": 0,
         "popularity": 3,
+        "adamic_adar": 0,
+        "resource_alloc": 1,
+        "jaccard": 0,
+        "bridges": 0,
         "random": 0
       },
       {
@@ -1641,6 +2427,10 @@
         "candidates": 3710,
         "abc": 9,
         "popularity": 11,
+        "adamic_adar": 10,
+        "resource_alloc": 6,
+        "jaccard": 0,
+        "bridges": 10,
         "random": 2
       },
       {
@@ -1650,7 +2440,11 @@
         "candidates": 2480,
         "abc": 3,
         "popularity": 6,
-        "random": 0
+        "adamic_adar": 7,
+        "resource_alloc": 5,
+        "jaccard": 0,
+        "bridges": 7,
+        "random": 2
       },
       {
         "seed": "8089",
@@ -1659,7 +2453,11 @@
         "candidates": 156,
         "abc": 1,
         "popularity": 6,
-        "random": 1
+        "adamic_adar": 3,
+        "resource_alloc": 2,
+        "jaccard": 0,
+        "bridges": 4,
+        "random": 3
       },
       {
         "seed": "1211",
@@ -1668,7 +2466,11 @@
         "candidates": 590,
         "abc": 1,
         "popularity": 5,
-        "random": 1
+        "adamic_adar": 1,
+        "resource_alloc": 1,
+        "jaccard": 0,
+        "bridges": 1,
+        "random": 0
       },
       {
         "seed": "15235",
@@ -1677,7 +2479,11 @@
         "candidates": 226,
         "abc": 0,
         "popularity": 3,
-        "random": 1
+        "adamic_adar": 3,
+        "resource_alloc": 4,
+        "jaccard": 0,
+        "bridges": 3,
+        "random": 0
       },
       {
         "seed": "5340",
@@ -1686,7 +2492,11 @@
         "candidates": 4674,
         "abc": 1,
         "popularity": 2,
-        "random": 0
+        "adamic_adar": 1,
+        "resource_alloc": 2,
+        "jaccard": 1,
+        "bridges": 0,
+        "random": 1
       },
       {
         "seed": "MESH:D054364",
@@ -1695,6 +2505,10 @@
         "candidates": 1569,
         "abc": 0,
         "popularity": 0,
+        "adamic_adar": 0,
+        "resource_alloc": 0,
+        "jaccard": 0,
+        "bridges": 0,
         "random": 0
       },
       {
@@ -1704,6 +2518,10 @@
         "candidates": 4356,
         "abc": 0,
         "popularity": 0,
+        "adamic_adar": 0,
+        "resource_alloc": 0,
+        "jaccard": 0,
+        "bridges": 0,
         "random": 1
       },
       {
@@ -1713,6 +2531,10 @@
         "candidates": 525,
         "abc": 2,
         "popularity": 0,
+        "adamic_adar": 0,
+        "resource_alloc": 1,
+        "jaccard": 1,
+        "bridges": 0,
         "random": 0
       },
       {
@@ -1722,7 +2544,11 @@
         "candidates": 648,
         "abc": 0,
         "popularity": 0,
-        "random": 0
+        "adamic_adar": 0,
+        "resource_alloc": 0,
+        "jaccard": 1,
+        "bridges": 0,
+        "random": 1
       },
       {
         "seed": "6373",
@@ -1731,7 +2557,11 @@
         "candidates": 1419,
         "abc": 9,
         "popularity": 7,
-        "random": 0
+        "adamic_adar": 12,
+        "resource_alloc": 12,
+        "jaccard": 2,
+        "bridges": 11,
+        "random": 1
       },
       {
         "seed": "MESH:D002544",
@@ -1740,6 +2570,10 @@
         "candidates": 2293,
         "abc": 0,
         "popularity": 0,
+        "adamic_adar": 0,
+        "resource_alloc": 0,
+        "jaccard": 0,
+        "bridges": 0,
         "random": 0
       },
       {
@@ -1749,6 +2583,10 @@
         "candidates": 359,
         "abc": 0,
         "popularity": 0,
+        "adamic_adar": 0,
+        "resource_alloc": 0,
+        "jaccard": 0,
+        "bridges": 0,
         "random": 0
       },
       {
@@ -1758,6 +2596,10 @@
         "candidates": 3451,
         "abc": 0,
         "popularity": 0,
+        "adamic_adar": 0,
+        "resource_alloc": 0,
+        "jaccard": 0,
+        "bridges": 0,
         "random": 0
       },
       {
@@ -1767,7 +2609,11 @@
         "candidates": 237,
         "abc": 4,
         "popularity": 4,
-        "random": 2
+        "adamic_adar": 8,
+        "resource_alloc": 4,
+        "jaccard": 0,
+        "bridges": 7,
+        "random": 4
       },
       {
         "seed": "MESH:D006859",
@@ -1776,6 +2622,10 @@
         "candidates": 3976,
         "abc": 10,
         "popularity": 9,
+        "adamic_adar": 11,
+        "resource_alloc": 9,
+        "jaccard": 5,
+        "bridges": 11,
         "random": 1
       },
       {
@@ -1785,6 +2635,10 @@
         "candidates": 2954,
         "abc": 6,
         "popularity": 4,
+        "adamic_adar": 6,
+        "resource_alloc": 7,
+        "jaccard": 2,
+        "bridges": 6,
         "random": 0
       },
       {
@@ -1794,6 +2648,10 @@
         "candidates": 3579,
         "abc": 0,
         "popularity": 0,
+        "adamic_adar": 0,
+        "resource_alloc": 0,
+        "jaccard": 0,
+        "bridges": 0,
         "random": 0
       },
       {
@@ -1803,7 +2661,11 @@
         "candidates": 675,
         "abc": 0,
         "popularity": 1,
-        "random": 1
+        "adamic_adar": 1,
+        "resource_alloc": 0,
+        "jaccard": 0,
+        "bridges": 1,
+        "random": 0
       },
       {
         "seed": "MESH:D001855",
@@ -1812,7 +2674,11 @@
         "candidates": 6939,
         "abc": 0,
         "popularity": 0,
-        "random": 1
+        "adamic_adar": 0,
+        "resource_alloc": 0,
+        "jaccard": 0,
+        "bridges": 0,
+        "random": 0
       },
       {
         "seed": "79366",
@@ -1821,6 +2687,10 @@
         "candidates": 136,
         "abc": 4,
         "popularity": 4,
+        "adamic_adar": 5,
+        "resource_alloc": 3,
+        "jaccard": 1,
+        "bridges": 5,
         "random": 2
       },
       {
@@ -1830,6 +2700,10 @@
         "candidates": 551,
         "abc": 1,
         "popularity": 0,
+        "adamic_adar": 1,
+        "resource_alloc": 0,
+        "jaccard": 0,
+        "bridges": 1,
         "random": 0
       }
     ]
@@ -1844,17 +2718,29 @@
       "hits": {
         "abc": 458,
         "popularity": 767,
-        "random": 116
+        "adamic_adar": 673,
+        "resource_alloc": 563,
+        "jaccard": 109,
+        "bridges": 644,
+        "random": 139
       },
       "predictions": {
         "abc": 4000,
         "popularity": 4000,
+        "adamic_adar": 4000,
+        "resource_alloc": 4000,
+        "jaccard": 4000,
+        "bridges": 4000,
         "random": 4000
       },
       "precision": {
         "abc": 0.1145,
         "popularity": 0.19175,
-        "random": 0.029
+        "adamic_adar": 0.16825,
+        "resource_alloc": 0.14075,
+        "jaccard": 0.02725,
+        "bridges": 0.161,
+        "random": 0.03475
       },
       "abc_over_popularity": 0.5971316818774446,
       "paired": {
@@ -1867,6 +2753,68 @@
         "abc_ahead": 22,
         "abc_behind": 111
       },
+      "paired_all": {
+        "abc": {
+          "mean_diff": -1.545,
+          "ci95": [
+            -1.89,
+            -1.21
+          ],
+          "decided": true,
+          "ahead": 22,
+          "behind": 111
+        },
+        "adamic_adar": {
+          "mean_diff": -0.47,
+          "ci95": [
+            -0.695,
+            -0.25
+          ],
+          "decided": true,
+          "ahead": 34,
+          "behind": 77
+        },
+        "resource_alloc": {
+          "mean_diff": -1.02,
+          "ci95": [
+            -1.295,
+            -0.755
+          ],
+          "decided": true,
+          "ahead": 27,
+          "behind": 97
+        },
+        "jaccard": {
+          "mean_diff": -3.29,
+          "ci95": [
+            -3.795,
+            -2.795
+          ],
+          "decided": true,
+          "ahead": 4,
+          "behind": 134
+        },
+        "bridges": {
+          "mean_diff": -0.615,
+          "ci95": [
+            -0.84,
+            -0.395
+          ],
+          "decided": true,
+          "ahead": 25,
+          "behind": 86
+        },
+        "random": {
+          "mean_diff": -3.14,
+          "ci95": [
+            -3.63,
+            -2.655
+          ],
+          "decided": true,
+          "ahead": 13,
+          "behind": 131
+        }
+      },
       "per_seed": [
         {
           "seed": "3217",
@@ -1875,6 +2823,10 @@
           "candidates": 733,
           "abc": 9,
           "popularity": 9,
+          "adamic_adar": 10,
+          "resource_alloc": 12,
+          "jaccard": 0,
+          "bridges": 10,
           "random": 2
         },
         {
@@ -1884,7 +2836,11 @@
           "candidates": 459,
           "abc": 3,
           "popularity": 2,
-          "random": 0
+          "adamic_adar": 3,
+          "resource_alloc": 3,
+          "jaccard": 0,
+          "bridges": 3,
+          "random": 3
         },
         {
           "seed": "MESH:D011090",
@@ -1893,6 +2849,10 @@
           "candidates": 208,
           "abc": 3,
           "popularity": 1,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 3,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -1902,6 +2862,10 @@
           "candidates": 762,
           "abc": 2,
           "popularity": 4,
+          "adamic_adar": 4,
+          "resource_alloc": 3,
+          "jaccard": 0,
+          "bridges": 3,
           "random": 0
         },
         {
@@ -1911,6 +2875,10 @@
           "candidates": 691,
           "abc": 5,
           "popularity": 7,
+          "adamic_adar": 6,
+          "resource_alloc": 2,
+          "jaccard": 0,
+          "bridges": 7,
           "random": 2
         },
         {
@@ -1920,7 +2888,11 @@
           "candidates": 242,
           "abc": 3,
           "popularity": 14,
-          "random": 6
+          "adamic_adar": 11,
+          "resource_alloc": 11,
+          "jaccard": 0,
+          "bridges": 12,
+          "random": 4
         },
         {
           "seed": "MESH:C120158",
@@ -1929,6 +2901,10 @@
           "candidates": 176,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -1938,7 +2914,11 @@
           "candidates": 699,
           "abc": 2,
           "popularity": 7,
-          "random": 2
+          "adamic_adar": 6,
+          "resource_alloc": 5,
+          "jaccard": 0,
+          "bridges": 6,
+          "random": 1
         },
         {
           "seed": "8718",
@@ -1947,7 +2927,11 @@
           "candidates": 2074,
           "abc": 0,
           "popularity": 3,
-          "random": 0
+          "adamic_adar": 4,
+          "resource_alloc": 3,
+          "jaccard": 0,
+          "bridges": 2,
+          "random": 1
         },
         {
           "seed": "4747",
@@ -1956,7 +2940,11 @@
           "candidates": 499,
           "abc": 0,
           "popularity": 5,
-          "random": 3
+          "adamic_adar": 2,
+          "resource_alloc": 2,
+          "jaccard": 0,
+          "bridges": 3,
+          "random": 5
         },
         {
           "seed": "18176",
@@ -1965,7 +2953,11 @@
           "candidates": 1880,
           "abc": 3,
           "popularity": 4,
-          "random": 1
+          "adamic_adar": 5,
+          "resource_alloc": 4,
+          "jaccard": 1,
+          "bridges": 6,
+          "random": 0
         },
         {
           "seed": "329",
@@ -1974,6 +2966,10 @@
           "candidates": 2700,
           "abc": 8,
           "popularity": 3,
+          "adamic_adar": 7,
+          "resource_alloc": 6,
+          "jaccard": 1,
+          "bridges": 7,
           "random": 0
         },
         {
@@ -1983,6 +2979,10 @@
           "candidates": 1644,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -1992,7 +2992,11 @@
           "candidates": 801,
           "abc": 0,
           "popularity": 1,
-          "random": 1
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
+          "random": 2
         },
         {
           "seed": "MESH:D015766",
@@ -2001,6 +3005,10 @@
           "candidates": 1423,
           "abc": 4,
           "popularity": 9,
+          "adamic_adar": 4,
+          "resource_alloc": 6,
+          "jaccard": 1,
+          "bridges": 4,
           "random": 0
         },
         {
@@ -2010,6 +3018,10 @@
           "candidates": 6232,
           "abc": 7,
           "popularity": 5,
+          "adamic_adar": 7,
+          "resource_alloc": 7,
+          "jaccard": 2,
+          "bridges": 7,
           "random": 0
         },
         {
@@ -2019,6 +3031,10 @@
           "candidates": 1204,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 1,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -2028,7 +3044,11 @@
           "candidates": 470,
           "abc": 0,
           "popularity": 1,
-          "random": 0
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
+          "random": 1
         },
         {
           "seed": "11184",
@@ -2037,7 +3057,11 @@
           "candidates": 227,
           "abc": 3,
           "popularity": 10,
-          "random": 0
+          "adamic_adar": 7,
+          "resource_alloc": 3,
+          "jaccard": 0,
+          "bridges": 6,
+          "random": 2
         },
         {
           "seed": "MESH:D014526",
@@ -2046,6 +3070,10 @@
           "candidates": 1461,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -2055,7 +3083,11 @@
           "candidates": 511,
           "abc": 2,
           "popularity": 4,
-          "random": 0
+          "adamic_adar": 2,
+          "resource_alloc": 3,
+          "jaccard": 1,
+          "bridges": 2,
+          "random": 1
         },
         {
           "seed": "MESH:D044242",
@@ -2064,6 +3096,10 @@
           "candidates": 427,
           "abc": 1,
           "popularity": 2,
+          "adamic_adar": 4,
+          "resource_alloc": 4,
+          "jaccard": 0,
+          "bridges": 4,
           "random": 0
         },
         {
@@ -2073,6 +3109,10 @@
           "candidates": 1398,
           "abc": 0,
           "popularity": 1,
+          "adamic_adar": 0,
+          "resource_alloc": 2,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -2082,7 +3122,11 @@
           "candidates": 1668,
           "abc": 4,
           "popularity": 6,
-          "random": 0
+          "adamic_adar": 5,
+          "resource_alloc": 7,
+          "jaccard": 1,
+          "bridges": 5,
+          "random": 1
         },
         {
           "seed": "MESH:D004382",
@@ -2091,6 +3135,10 @@
           "candidates": 1256,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -2100,6 +3148,10 @@
           "candidates": 1206,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -2109,6 +3161,10 @@
           "candidates": 484,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -2118,7 +3174,11 @@
           "candidates": 388,
           "abc": 4,
           "popularity": 5,
-          "random": 1
+          "adamic_adar": 5,
+          "resource_alloc": 4,
+          "jaccard": 0,
+          "bridges": 5,
+          "random": 0
         },
         {
           "seed": "26354",
@@ -2127,7 +3187,11 @@
           "candidates": 799,
           "abc": 8,
           "popularity": 6,
-          "random": 0
+          "adamic_adar": 9,
+          "resource_alloc": 6,
+          "jaccard": 0,
+          "bridges": 8,
+          "random": 1
         },
         {
           "seed": "RS#:9344;HGVS:c.870G>A;CorrespondingGene:595",
@@ -2136,6 +3200,10 @@
           "candidates": 429,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -2145,7 +3213,11 @@
           "candidates": 525,
           "abc": 4,
           "popularity": 4,
-          "random": 2
+          "adamic_adar": 6,
+          "resource_alloc": 5,
+          "jaccard": 2,
+          "bridges": 6,
+          "random": 1
         },
         {
           "seed": "13867",
@@ -2154,6 +3226,10 @@
           "candidates": 1095,
           "abc": 5,
           "popularity": 4,
+          "adamic_adar": 5,
+          "resource_alloc": 4,
+          "jaccard": 1,
+          "bridges": 4,
           "random": 0
         },
         {
@@ -2163,7 +3239,11 @@
           "candidates": 369,
           "abc": 0,
           "popularity": 0,
-          "random": 0
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
+          "random": 1
         },
         {
           "seed": "MESH:C536223",
@@ -2172,6 +3252,10 @@
           "candidates": 911,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 1,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -2181,6 +3265,10 @@
           "candidates": 742,
           "abc": 1,
           "popularity": 3,
+          "adamic_adar": 3,
+          "resource_alloc": 1,
+          "jaccard": 0,
+          "bridges": 3,
           "random": 0
         },
         {
@@ -2190,7 +3278,11 @@
           "candidates": 1973,
           "abc": 0,
           "popularity": 0,
-          "random": 0
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
+          "random": 1
         },
         {
           "seed": "4040",
@@ -2199,7 +3291,11 @@
           "candidates": 658,
           "abc": 10,
           "popularity": 11,
-          "random": 2
+          "adamic_adar": 11,
+          "resource_alloc": 8,
+          "jaccard": 9,
+          "bridges": 11,
+          "random": 0
         },
         {
           "seed": "MESH:D010523",
@@ -2208,6 +3304,10 @@
           "candidates": 4367,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 1
         },
         {
@@ -2217,6 +3317,10 @@
           "candidates": 1369,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -2226,6 +3330,10 @@
           "candidates": 542,
           "abc": 1,
           "popularity": 0,
+          "adamic_adar": 1,
+          "resource_alloc": 1,
+          "jaccard": 0,
+          "bridges": 1,
           "random": 0
         },
         {
@@ -2235,7 +3343,11 @@
           "candidates": 381,
           "abc": 9,
           "popularity": 10,
-          "random": 1
+          "adamic_adar": 10,
+          "resource_alloc": 8,
+          "jaccard": 1,
+          "bridges": 10,
+          "random": 2
         },
         {
           "seed": "185",
@@ -2244,6 +3356,10 @@
           "candidates": 1910,
           "abc": 3,
           "popularity": 8,
+          "adamic_adar": 5,
+          "resource_alloc": 5,
+          "jaccard": 1,
+          "bridges": 5,
           "random": 1
         },
         {
@@ -2253,6 +3369,10 @@
           "candidates": 469,
           "abc": 4,
           "popularity": 6,
+          "adamic_adar": 4,
+          "resource_alloc": 3,
+          "jaccard": 1,
+          "bridges": 3,
           "random": 2
         },
         {
@@ -2262,7 +3382,11 @@
           "candidates": 394,
           "abc": 1,
           "popularity": 5,
-          "random": 0
+          "adamic_adar": 4,
+          "resource_alloc": 4,
+          "jaccard": 1,
+          "bridges": 3,
+          "random": 1
         },
         {
           "seed": "18131",
@@ -2271,7 +3395,11 @@
           "candidates": 287,
           "abc": 3,
           "popularity": 9,
-          "random": 1
+          "adamic_adar": 5,
+          "resource_alloc": 2,
+          "jaccard": 1,
+          "bridges": 6,
+          "random": 0
         },
         {
           "seed": "30834",
@@ -2280,7 +3408,11 @@
           "candidates": 150,
           "abc": 3,
           "popularity": 4,
-          "random": 3
+          "adamic_adar": 4,
+          "resource_alloc": 3,
+          "jaccard": 0,
+          "bridges": 4,
+          "random": 0
         },
         {
           "seed": "MESH:D007319",
@@ -2289,7 +3421,11 @@
           "candidates": 1621,
           "abc": 0,
           "popularity": 0,
-          "random": 1
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
+          "random": 2
         },
         {
           "seed": "19224",
@@ -2298,7 +3434,11 @@
           "candidates": 114,
           "abc": 2,
           "popularity": 2,
-          "random": 0
+          "adamic_adar": 2,
+          "resource_alloc": 1,
+          "jaccard": 1,
+          "bridges": 2,
+          "random": 1
         },
         {
           "seed": "MESH:C562390",
@@ -2307,7 +3447,11 @@
           "candidates": 954,
           "abc": 0,
           "popularity": 0,
-          "random": 0
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
+          "random": 1
         },
         {
           "seed": "MESH:D018376",
@@ -2316,6 +3460,10 @@
           "candidates": 718,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -2325,7 +3473,11 @@
           "candidates": 1396,
           "abc": 3,
           "popularity": 1,
-          "random": 1
+          "adamic_adar": 3,
+          "resource_alloc": 2,
+          "jaccard": 2,
+          "bridges": 3,
+          "random": 2
         },
         {
           "seed": "MESH:D000117",
@@ -2334,7 +3486,11 @@
           "candidates": 2547,
           "abc": 4,
           "popularity": 6,
-          "random": 1
+          "adamic_adar": 5,
+          "resource_alloc": 2,
+          "jaccard": 1,
+          "bridges": 4,
+          "random": 0
         },
         {
           "seed": "MESH:D013118",
@@ -2343,6 +3499,10 @@
           "candidates": 2445,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -2352,6 +3512,10 @@
           "candidates": 393,
           "abc": 0,
           "popularity": 1,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -2361,7 +3525,11 @@
           "candidates": 1452,
           "abc": 1,
           "popularity": 6,
-          "random": 0
+          "adamic_adar": 5,
+          "resource_alloc": 3,
+          "jaccard": 1,
+          "bridges": 5,
+          "random": 3
         },
         {
           "seed": "189",
@@ -2370,7 +3538,11 @@
           "candidates": 2500,
           "abc": 0,
           "popularity": 3,
-          "random": 0
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 1,
+          "bridges": 0,
+          "random": 1
         },
         {
           "seed": "MESH:D009123",
@@ -2379,6 +3551,10 @@
           "candidates": 1387,
           "abc": 1,
           "popularity": 0,
+          "adamic_adar": 1,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 1,
           "random": 0
         },
         {
@@ -2388,7 +3564,11 @@
           "candidates": 356,
           "abc": 10,
           "popularity": 15,
-          "random": 5
+          "adamic_adar": 15,
+          "resource_alloc": 13,
+          "jaccard": 1,
+          "bridges": 15,
+          "random": 3
         },
         {
           "seed": "MESH:D005702",
@@ -2397,7 +3577,11 @@
           "candidates": 393,
           "abc": 2,
           "popularity": 4,
-          "random": 0
+          "adamic_adar": 6,
+          "resource_alloc": 5,
+          "jaccard": 0,
+          "bridges": 3,
+          "random": 1
         },
         {
           "seed": "MESH:D000075902",
@@ -2406,6 +3590,10 @@
           "candidates": 304,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -2415,6 +3603,10 @@
           "candidates": 2284,
           "abc": 4,
           "popularity": 6,
+          "adamic_adar": 3,
+          "resource_alloc": 4,
+          "jaccard": 1,
+          "bridges": 3,
           "random": 0
         },
         {
@@ -2424,7 +3616,11 @@
           "candidates": 529,
           "abc": 2,
           "popularity": 3,
-          "random": 0
+          "adamic_adar": 3,
+          "resource_alloc": 1,
+          "jaccard": 0,
+          "bridges": 3,
+          "random": 1
         },
         {
           "seed": "18211",
@@ -2433,6 +3629,10 @@
           "candidates": 598,
           "abc": 1,
           "popularity": 2,
+          "adamic_adar": 3,
+          "resource_alloc": 3,
+          "jaccard": 2,
+          "bridges": 2,
           "random": 0
         },
         {
@@ -2442,7 +3642,11 @@
           "candidates": 838,
           "abc": 3,
           "popularity": 4,
-          "random": 0
+          "adamic_adar": 5,
+          "resource_alloc": 3,
+          "jaccard": 0,
+          "bridges": 4,
+          "random": 1
         },
         {
           "seed": "54739",
@@ -2451,7 +3655,11 @@
           "candidates": 1186,
           "abc": 4,
           "popularity": 8,
-          "random": 0
+          "adamic_adar": 8,
+          "resource_alloc": 7,
+          "jaccard": 0,
+          "bridges": 8,
+          "random": 2
         },
         {
           "seed": "28940",
@@ -2460,6 +3668,10 @@
           "candidates": 154,
           "abc": 0,
           "popularity": 1,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -2469,6 +3681,10 @@
           "candidates": 2699,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -2478,7 +3694,11 @@
           "candidates": 610,
           "abc": 0,
           "popularity": 3,
-          "random": 2
+          "adamic_adar": 2,
+          "resource_alloc": 1,
+          "jaccard": 0,
+          "bridges": 2,
+          "random": 1
         },
         {
           "seed": "7162",
@@ -2487,7 +3707,11 @@
           "candidates": 209,
           "abc": 1,
           "popularity": 5,
-          "random": 2
+          "adamic_adar": 2,
+          "resource_alloc": 1,
+          "jaccard": 0,
+          "bridges": 2,
+          "random": 1
         },
         {
           "seed": "18778",
@@ -2496,6 +3720,10 @@
           "candidates": 786,
           "abc": 1,
           "popularity": 4,
+          "adamic_adar": 4,
+          "resource_alloc": 3,
+          "jaccard": 0,
+          "bridges": 4,
           "random": 0
         },
         {
@@ -2505,6 +3733,10 @@
           "candidates": 363,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -2514,7 +3746,11 @@
           "candidates": 2393,
           "abc": 5,
           "popularity": 9,
-          "random": 1
+          "adamic_adar": 8,
+          "resource_alloc": 7,
+          "jaccard": 2,
+          "bridges": 9,
+          "random": 0
         },
         {
           "seed": "MESH:C120227",
@@ -2523,6 +3759,10 @@
           "candidates": 1603,
           "abc": 2,
           "popularity": 2,
+          "adamic_adar": 2,
+          "resource_alloc": 2,
+          "jaccard": 0,
+          "bridges": 1,
           "random": 0
         },
         {
@@ -2532,6 +3772,10 @@
           "candidates": 3648,
           "abc": 4,
           "popularity": 7,
+          "adamic_adar": 4,
+          "resource_alloc": 5,
+          "jaccard": 1,
+          "bridges": 4,
           "random": 0
         },
         {
@@ -2541,6 +3785,10 @@
           "candidates": 1484,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -2550,6 +3798,10 @@
           "candidates": 3090,
           "abc": 9,
           "popularity": 8,
+          "adamic_adar": 7,
+          "resource_alloc": 9,
+          "jaccard": 6,
+          "bridges": 7,
           "random": 1
         },
         {
@@ -2559,6 +3811,10 @@
           "candidates": 1394,
           "abc": 2,
           "popularity": 2,
+          "adamic_adar": 1,
+          "resource_alloc": 0,
+          "jaccard": 2,
+          "bridges": 1,
           "random": 0
         },
         {
@@ -2568,7 +3824,11 @@
           "candidates": 149,
           "abc": 0,
           "popularity": 11,
-          "random": 3
+          "adamic_adar": 7,
+          "resource_alloc": 4,
+          "jaccard": 1,
+          "bridges": 8,
+          "random": 1
         },
         {
           "seed": "MESH:D012185",
@@ -2577,6 +3837,10 @@
           "candidates": 434,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -2586,7 +3850,11 @@
           "candidates": 691,
           "abc": 2,
           "popularity": 10,
-          "random": 0
+          "adamic_adar": 8,
+          "resource_alloc": 9,
+          "jaccard": 0,
+          "bridges": 9,
+          "random": 2
         },
         {
           "seed": "6037",
@@ -2595,6 +3863,10 @@
           "candidates": 458,
           "abc": 0,
           "popularity": 2,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -2604,7 +3876,11 @@
           "candidates": 395,
           "abc": 4,
           "popularity": 11,
-          "random": 1
+          "adamic_adar": 7,
+          "resource_alloc": 4,
+          "jaccard": 0,
+          "bridges": 7,
+          "random": 3
         },
         {
           "seed": "MESH:D013431",
@@ -2613,6 +3889,10 @@
           "candidates": 2303,
           "abc": 4,
           "popularity": 3,
+          "adamic_adar": 5,
+          "resource_alloc": 5,
+          "jaccard": 1,
+          "bridges": 4,
           "random": 0
         },
         {
@@ -2622,7 +3902,11 @@
           "candidates": 1801,
           "abc": 18,
           "popularity": 16,
-          "random": 4
+          "adamic_adar": 19,
+          "resource_alloc": 15,
+          "jaccard": 2,
+          "bridges": 20,
+          "random": 1
         },
         {
           "seed": "MESH:D010016",
@@ -2631,6 +3915,10 @@
           "candidates": 626,
           "abc": 0,
           "popularity": 1,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -2640,6 +3928,10 @@
           "candidates": 6789,
           "abc": 4,
           "popularity": 9,
+          "adamic_adar": 6,
+          "resource_alloc": 5,
+          "jaccard": 4,
+          "bridges": 6,
           "random": 1
         },
         {
@@ -2649,7 +3941,11 @@
           "candidates": 523,
           "abc": 3,
           "popularity": 3,
-          "random": 0
+          "adamic_adar": 3,
+          "resource_alloc": 4,
+          "jaccard": 4,
+          "bridges": 3,
+          "random": 1
         },
         {
           "seed": "MESH:D003123",
@@ -2658,6 +3954,10 @@
           "candidates": 2151,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 1
         },
         {
@@ -2667,6 +3967,10 @@
           "candidates": 403,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -2676,6 +3980,10 @@
           "candidates": 537,
           "abc": 5,
           "popularity": 8,
+          "adamic_adar": 7,
+          "resource_alloc": 4,
+          "jaccard": 0,
+          "bridges": 6,
           "random": 1
         },
         {
@@ -2685,6 +3993,10 @@
           "candidates": 319,
           "abc": 3,
           "popularity": 4,
+          "adamic_adar": 6,
+          "resource_alloc": 5,
+          "jaccard": 1,
+          "bridges": 7,
           "random": 0
         },
         {
@@ -2694,7 +4006,11 @@
           "candidates": 3625,
           "abc": 0,
           "popularity": 0,
-          "random": 0
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
+          "random": 1
         },
         {
           "seed": "MESH:D019335",
@@ -2703,6 +4019,10 @@
           "candidates": 594,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -2712,7 +4032,11 @@
           "candidates": 282,
           "abc": 2,
           "popularity": 3,
-          "random": 1
+          "adamic_adar": 3,
+          "resource_alloc": 1,
+          "jaccard": 1,
+          "bridges": 3,
+          "random": 0
         },
         {
           "seed": "7272",
@@ -2721,7 +4045,11 @@
           "candidates": 623,
           "abc": 8,
           "popularity": 14,
-          "random": 1
+          "adamic_adar": 12,
+          "resource_alloc": 4,
+          "jaccard": 2,
+          "bridges": 11,
+          "random": 3
         },
         {
           "seed": "MESH:C078098",
@@ -2730,6 +4058,10 @@
           "candidates": 667,
           "abc": 0,
           "popularity": 2,
+          "adamic_adar": 1,
+          "resource_alloc": 1,
+          "jaccard": 0,
+          "bridges": 1,
           "random": 0
         },
         {
@@ -2739,6 +4071,10 @@
           "candidates": 954,
           "abc": 0,
           "popularity": 5,
+          "adamic_adar": 3,
+          "resource_alloc": 1,
+          "jaccard": 0,
+          "bridges": 3,
           "random": 0
         },
         {
@@ -2748,7 +4084,11 @@
           "candidates": 502,
           "abc": 4,
           "popularity": 7,
-          "random": 0
+          "adamic_adar": 7,
+          "resource_alloc": 6,
+          "jaccard": 0,
+          "bridges": 6,
+          "random": 1
         },
         {
           "seed": "51053",
@@ -2757,7 +4097,11 @@
           "candidates": 670,
           "abc": 2,
           "popularity": 2,
-          "random": 1
+          "adamic_adar": 1,
+          "resource_alloc": 3,
+          "jaccard": 0,
+          "bridges": 1,
+          "random": 0
         },
         {
           "seed": "6699",
@@ -2766,7 +4110,11 @@
           "candidates": 156,
           "abc": 1,
           "popularity": 6,
-          "random": 0
+          "adamic_adar": 2,
+          "resource_alloc": 1,
+          "jaccard": 0,
+          "bridges": 2,
+          "random": 2
         },
         {
           "seed": "MESH:D009377",
@@ -2775,6 +4123,10 @@
           "candidates": 1407,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -2784,6 +4136,10 @@
           "candidates": 438,
           "abc": 5,
           "popularity": 7,
+          "adamic_adar": 7,
+          "resource_alloc": 6,
+          "jaccard": 1,
+          "bridges": 6,
           "random": 0
         },
         {
@@ -2793,7 +4149,11 @@
           "candidates": 710,
           "abc": 0,
           "popularity": 2,
-          "random": 1
+          "adamic_adar": 2,
+          "resource_alloc": 2,
+          "jaccard": 0,
+          "bridges": 2,
+          "random": 0
         },
         {
           "seed": "MESH:D009669",
@@ -2802,6 +4162,10 @@
           "candidates": 1654,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -2811,6 +4175,10 @@
           "candidates": 283,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -2820,6 +4188,10 @@
           "candidates": 514,
           "abc": 3,
           "popularity": 5,
+          "adamic_adar": 6,
+          "resource_alloc": 3,
+          "jaccard": 0,
+          "bridges": 6,
           "random": 0
         },
         {
@@ -2829,6 +4201,10 @@
           "candidates": 1346,
           "abc": 1,
           "popularity": 6,
+          "adamic_adar": 1,
+          "resource_alloc": 2,
+          "jaccard": 1,
+          "bridges": 1,
           "random": 0
         },
         {
@@ -2838,7 +4214,11 @@
           "candidates": 436,
           "abc": 0,
           "popularity": 1,
-          "random": 0
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
+          "random": 1
         },
         {
           "seed": "1316",
@@ -2847,6 +4227,10 @@
           "candidates": 1573,
           "abc": 6,
           "popularity": 9,
+          "adamic_adar": 6,
+          "resource_alloc": 5,
+          "jaccard": 0,
+          "bridges": 6,
           "random": 1
         },
         {
@@ -2856,7 +4240,11 @@
           "candidates": 3637,
           "abc": 6,
           "popularity": 9,
-          "random": 2
+          "adamic_adar": 7,
+          "resource_alloc": 8,
+          "jaccard": 1,
+          "bridges": 8,
+          "random": 0
         },
         {
           "seed": "6773",
@@ -2865,7 +4253,11 @@
           "candidates": 1243,
           "abc": 7,
           "popularity": 10,
-          "random": 0
+          "adamic_adar": 9,
+          "resource_alloc": 10,
+          "jaccard": 1,
+          "bridges": 8,
+          "random": 1
         },
         {
           "seed": "26396",
@@ -2874,7 +4266,11 @@
           "candidates": 806,
           "abc": 2,
           "popularity": 6,
-          "random": 0
+          "adamic_adar": 5,
+          "resource_alloc": 4,
+          "jaccard": 0,
+          "bridges": 5,
+          "random": 1
         },
         {
           "seed": "14256",
@@ -2883,6 +4279,10 @@
           "candidates": 684,
           "abc": 0,
           "popularity": 1,
+          "adamic_adar": 1,
+          "resource_alloc": 0,
+          "jaccard": 1,
+          "bridges": 1,
           "random": 0
         },
         {
@@ -2892,6 +4292,10 @@
           "candidates": 1211,
           "abc": 1,
           "popularity": 2,
+          "adamic_adar": 2,
+          "resource_alloc": 2,
+          "jaccard": 1,
+          "bridges": 2,
           "random": 0
         },
         {
@@ -2901,6 +4305,10 @@
           "candidates": 814,
           "abc": 5,
           "popularity": 9,
+          "adamic_adar": 9,
+          "resource_alloc": 6,
+          "jaccard": 0,
+          "bridges": 9,
           "random": 1
         },
         {
@@ -2910,6 +4318,10 @@
           "candidates": 1470,
           "abc": 7,
           "popularity": 8,
+          "adamic_adar": 8,
+          "resource_alloc": 5,
+          "jaccard": 0,
+          "bridges": 8,
           "random": 1
         },
         {
@@ -2919,7 +4331,11 @@
           "candidates": 928,
           "abc": 0,
           "popularity": 0,
-          "random": 0
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
+          "random": 1
         },
         {
           "seed": "MESH:D007544",
@@ -2928,6 +4344,10 @@
           "candidates": 446,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -2937,7 +4357,11 @@
           "candidates": 416,
           "abc": 0,
           "popularity": 4,
-          "random": 0
+          "adamic_adar": 1,
+          "resource_alloc": 1,
+          "jaccard": 0,
+          "bridges": 1,
+          "random": 1
         },
         {
           "seed": "MESH:D005976",
@@ -2946,6 +4370,10 @@
           "candidates": 1505,
           "abc": 1,
           "popularity": 1,
+          "adamic_adar": 1,
+          "resource_alloc": 1,
+          "jaccard": 0,
+          "bridges": 1,
           "random": 0
         },
         {
@@ -2955,7 +4383,11 @@
           "candidates": 598,
           "abc": 1,
           "popularity": 3,
-          "random": 0
+          "adamic_adar": 1,
+          "resource_alloc": 1,
+          "jaccard": 1,
+          "bridges": 1,
+          "random": 1
         },
         {
           "seed": "MESH:D002807",
@@ -2964,7 +4396,11 @@
           "candidates": 200,
           "abc": 1,
           "popularity": 4,
-          "random": 0
+          "adamic_adar": 1,
+          "resource_alloc": 1,
+          "jaccard": 0,
+          "bridges": 2,
+          "random": 3
         },
         {
           "seed": "442915",
@@ -2973,6 +4409,10 @@
           "candidates": 521,
           "abc": 6,
           "popularity": 9,
+          "adamic_adar": 8,
+          "resource_alloc": 5,
+          "jaccard": 0,
+          "bridges": 7,
           "random": 4
         },
         {
@@ -2982,6 +4422,10 @@
           "candidates": 542,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -2991,6 +4435,10 @@
           "candidates": 126,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -3000,6 +4448,10 @@
           "candidates": 1634,
           "abc": 14,
           "popularity": 12,
+          "adamic_adar": 12,
+          "resource_alloc": 13,
+          "jaccard": 1,
+          "bridges": 12,
           "random": 0
         },
         {
@@ -3009,6 +4461,10 @@
           "candidates": 693,
           "abc": 2,
           "popularity": 2,
+          "adamic_adar": 1,
+          "resource_alloc": 1,
+          "jaccard": 0,
+          "bridges": 1,
           "random": 1
         },
         {
@@ -3018,7 +4474,11 @@
           "candidates": 410,
           "abc": 0,
           "popularity": 0,
-          "random": 1
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
+          "random": 0
         },
         {
           "seed": "MESH:D046152",
@@ -3027,6 +4487,10 @@
           "candidates": 5416,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 1
         },
         {
@@ -3036,7 +4500,11 @@
           "candidates": 3274,
           "abc": 4,
           "popularity": 7,
-          "random": 2
+          "adamic_adar": 5,
+          "resource_alloc": 6,
+          "jaccard": 2,
+          "bridges": 5,
+          "random": 0
         },
         {
           "seed": "MESH:D018275",
@@ -3045,7 +4513,11 @@
           "candidates": 2783,
           "abc": 0,
           "popularity": 0,
-          "random": 1
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
+          "random": 0
         },
         {
           "seed": "218",
@@ -3054,6 +4526,10 @@
           "candidates": 601,
           "abc": 1,
           "popularity": 9,
+          "adamic_adar": 5,
+          "resource_alloc": 4,
+          "jaccard": 0,
+          "bridges": 5,
           "random": 0
         },
         {
@@ -3063,7 +4539,11 @@
           "candidates": 348,
           "abc": 0,
           "popularity": 3,
-          "random": 2
+          "adamic_adar": 3,
+          "resource_alloc": 4,
+          "jaccard": 0,
+          "bridges": 2,
+          "random": 0
         },
         {
           "seed": "MESH:C096898",
@@ -3072,6 +4552,10 @@
           "candidates": 705,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -3081,7 +4565,11 @@
           "candidates": 883,
           "abc": 5,
           "popularity": 11,
-          "random": 2
+          "adamic_adar": 10,
+          "resource_alloc": 9,
+          "jaccard": 0,
+          "bridges": 7,
+          "random": 1
         },
         {
           "seed": "55379",
@@ -3090,6 +4578,10 @@
           "candidates": 804,
           "abc": 0,
           "popularity": 1,
+          "adamic_adar": 1,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -3099,7 +4591,11 @@
           "candidates": 760,
           "abc": 2,
           "popularity": 3,
-          "random": 1
+          "adamic_adar": 4,
+          "resource_alloc": 4,
+          "jaccard": 0,
+          "bridges": 4,
+          "random": 0
         },
         {
           "seed": "MESH:D018196",
@@ -3108,6 +4604,10 @@
           "candidates": 2303,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -3117,7 +4617,11 @@
           "candidates": 161,
           "abc": 6,
           "popularity": 5,
-          "random": 1
+          "adamic_adar": 6,
+          "resource_alloc": 6,
+          "jaccard": 1,
+          "bridges": 6,
+          "random": 2
         },
         {
           "seed": "7079",
@@ -3126,6 +4630,10 @@
           "candidates": 552,
           "abc": 2,
           "popularity": 2,
+          "adamic_adar": 2,
+          "resource_alloc": 2,
+          "jaccard": 0,
+          "bridges": 2,
           "random": 2
         },
         {
@@ -3135,6 +4643,10 @@
           "candidates": 674,
           "abc": 0,
           "popularity": 1,
+          "adamic_adar": 1,
+          "resource_alloc": 1,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -3144,6 +4656,10 @@
           "candidates": 276,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -3153,7 +4669,11 @@
           "candidates": 4368,
           "abc": 5,
           "popularity": 8,
-          "random": 1
+          "adamic_adar": 6,
+          "resource_alloc": 6,
+          "jaccard": 3,
+          "bridges": 7,
+          "random": 0
         },
         {
           "seed": "MESH:D010437",
@@ -3162,6 +4682,10 @@
           "candidates": 2728,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -3171,6 +4695,10 @@
           "candidates": 1162,
           "abc": 4,
           "popularity": 9,
+          "adamic_adar": 8,
+          "resource_alloc": 6,
+          "jaccard": 1,
+          "bridges": 6,
           "random": 1
         },
         {
@@ -3180,6 +4708,10 @@
           "candidates": 3243,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -3189,6 +4721,10 @@
           "candidates": 815,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -3198,6 +4734,10 @@
           "candidates": 422,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -3207,7 +4747,11 @@
           "candidates": 600,
           "abc": 10,
           "popularity": 10,
-          "random": 1
+          "adamic_adar": 13,
+          "resource_alloc": 5,
+          "jaccard": 0,
+          "bridges": 12,
+          "random": 0
         },
         {
           "seed": "406892",
@@ -3216,7 +4760,11 @@
           "candidates": 1735,
           "abc": 9,
           "popularity": 8,
-          "random": 0
+          "adamic_adar": 10,
+          "resource_alloc": 7,
+          "jaccard": 1,
+          "bridges": 9,
+          "random": 1
         },
         {
           "seed": "MESH:C030851",
@@ -3225,6 +4773,10 @@
           "candidates": 860,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -3234,6 +4786,10 @@
           "candidates": 308,
           "abc": 1,
           "popularity": 5,
+          "adamic_adar": 3,
+          "resource_alloc": 2,
+          "jaccard": 1,
+          "bridges": 2,
           "random": 0
         },
         {
@@ -3243,7 +4799,11 @@
           "candidates": 292,
           "abc": 5,
           "popularity": 3,
-          "random": 1
+          "adamic_adar": 4,
+          "resource_alloc": 3,
+          "jaccard": 2,
+          "bridges": 3,
+          "random": 2
         },
         {
           "seed": "6938",
@@ -3252,7 +4812,11 @@
           "candidates": 488,
           "abc": 5,
           "popularity": 13,
-          "random": 0
+          "adamic_adar": 12,
+          "resource_alloc": 8,
+          "jaccard": 0,
+          "bridges": 12,
+          "random": 3
         },
         {
           "seed": "MESH:D050500",
@@ -3261,7 +4825,11 @@
           "candidates": 3749,
           "abc": 0,
           "popularity": 0,
-          "random": 2
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
+          "random": 0
         },
         {
           "seed": "MESH:D006450",
@@ -3270,7 +4838,11 @@
           "candidates": 571,
           "abc": 0,
           "popularity": 0,
-          "random": 1
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
+          "random": 0
         },
         {
           "seed": "9133",
@@ -3279,7 +4851,11 @@
           "candidates": 298,
           "abc": 10,
           "popularity": 13,
-          "random": 4
+          "adamic_adar": 13,
+          "resource_alloc": 11,
+          "jaccard": 2,
+          "bridges": 12,
+          "random": 2
         },
         {
           "seed": "MESH:D013330",
@@ -3288,6 +4864,10 @@
           "candidates": 730,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -3297,6 +4877,10 @@
           "candidates": 683,
           "abc": 1,
           "popularity": 3,
+          "adamic_adar": 2,
+          "resource_alloc": 2,
+          "jaccard": 0,
+          "bridges": 2,
           "random": 0
         },
         {
@@ -3306,7 +4890,11 @@
           "candidates": 282,
           "abc": 0,
           "popularity": 4,
-          "random": 2
+          "adamic_adar": 3,
+          "resource_alloc": 4,
+          "jaccard": 0,
+          "bridges": 3,
+          "random": 0
         },
         {
           "seed": "MESH:D018771",
@@ -3315,7 +4903,11 @@
           "candidates": 2642,
           "abc": 0,
           "popularity": 0,
-          "random": 1
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
+          "random": 0
         },
         {
           "seed": "MESH:C014225",
@@ -3324,7 +4916,11 @@
           "candidates": 343,
           "abc": 6,
           "popularity": 5,
-          "random": 5
+          "adamic_adar": 7,
+          "resource_alloc": 7,
+          "jaccard": 1,
+          "bridges": 7,
+          "random": 6
         },
         {
           "seed": "MESH:D012421",
@@ -3333,6 +4929,10 @@
           "candidates": 932,
           "abc": 0,
           "popularity": 1,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -3342,7 +4942,11 @@
           "candidates": 2135,
           "abc": 0,
           "popularity": 1,
-          "random": 0
+          "adamic_adar": 1,
+          "resource_alloc": 1,
+          "jaccard": 1,
+          "bridges": 1,
+          "random": 1
         },
         {
           "seed": "MESH:D009408",
@@ -3351,6 +4955,10 @@
           "candidates": 639,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 1,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -3360,7 +4968,11 @@
           "candidates": 469,
           "abc": 3,
           "popularity": 8,
-          "random": 0
+          "adamic_adar": 6,
+          "resource_alloc": 3,
+          "jaccard": 0,
+          "bridges": 6,
+          "random": 3
         },
         {
           "seed": "2248",
@@ -3369,7 +4981,11 @@
           "candidates": 1147,
           "abc": 6,
           "popularity": 5,
-          "random": 0
+          "adamic_adar": 5,
+          "resource_alloc": 5,
+          "jaccard": 0,
+          "bridges": 6,
+          "random": 1
         },
         {
           "seed": "MESH:D012538",
@@ -3378,6 +4994,10 @@
           "candidates": 178,
           "abc": 1,
           "popularity": 5,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 1,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -3387,7 +5007,11 @@
           "candidates": 270,
           "abc": 0,
           "popularity": 1,
-          "random": 0
+          "adamic_adar": 2,
+          "resource_alloc": 4,
+          "jaccard": 0,
+          "bridges": 1,
+          "random": 1
         },
         {
           "seed": "2188",
@@ -3396,7 +5020,11 @@
           "candidates": 239,
           "abc": 0,
           "popularity": 7,
-          "random": 1
+          "adamic_adar": 1,
+          "resource_alloc": 5,
+          "jaccard": 0,
+          "bridges": 0,
+          "random": 0
         },
         {
           "seed": "MESH:C106533",
@@ -3405,6 +5033,10 @@
           "candidates": 266,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -3414,6 +5046,10 @@
           "candidates": 823,
           "abc": 0,
           "popularity": 1,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -3423,7 +5059,11 @@
           "candidates": 874,
           "abc": 7,
           "popularity": 5,
-          "random": 0
+          "adamic_adar": 4,
+          "resource_alloc": 5,
+          "jaccard": 5,
+          "bridges": 4,
+          "random": 1
         },
         {
           "seed": "MESH:C000615079",
@@ -3432,6 +5072,10 @@
           "candidates": 625,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -3441,6 +5085,10 @@
           "candidates": 607,
           "abc": 1,
           "popularity": 3,
+          "adamic_adar": 4,
+          "resource_alloc": 2,
+          "jaccard": 0,
+          "bridges": 3,
           "random": 0
         },
         {
@@ -3450,7 +5098,11 @@
           "candidates": 964,
           "abc": 0,
           "popularity": 0,
-          "random": 1
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
+          "random": 0
         },
         {
           "seed": "58918",
@@ -3459,7 +5111,11 @@
           "candidates": 947,
           "abc": 2,
           "popularity": 1,
-          "random": 0
+          "adamic_adar": 2,
+          "resource_alloc": 2,
+          "jaccard": 1,
+          "bridges": 2,
+          "random": 1
         },
         {
           "seed": "23705",
@@ -3468,7 +5124,11 @@
           "candidates": 1318,
           "abc": 9,
           "popularity": 10,
-          "random": 0
+          "adamic_adar": 9,
+          "resource_alloc": 7,
+          "jaccard": 0,
+          "bridges": 9,
+          "random": 2
         },
         {
           "seed": "11863",
@@ -3477,6 +5137,10 @@
           "candidates": 479,
           "abc": 1,
           "popularity": 3,
+          "adamic_adar": 1,
+          "resource_alloc": 1,
+          "jaccard": 1,
+          "bridges": 1,
           "random": 0
         },
         {
@@ -3486,6 +5150,10 @@
           "candidates": 751,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -3495,7 +5163,11 @@
           "candidates": 3050,
           "abc": 4,
           "popularity": 7,
-          "random": 0
+          "adamic_adar": 5,
+          "resource_alloc": 5,
+          "jaccard": 1,
+          "bridges": 5,
+          "random": 1
         },
         {
           "seed": "24683",
@@ -3504,6 +5176,10 @@
           "candidates": 4551,
           "abc": 1,
           "popularity": 1,
+          "adamic_adar": 1,
+          "resource_alloc": 1,
+          "jaccard": 0,
+          "bridges": 1,
           "random": 0
         },
         {
@@ -3513,6 +5189,10 @@
           "candidates": 1083,
           "abc": 5,
           "popularity": 13,
+          "adamic_adar": 11,
+          "resource_alloc": 8,
+          "jaccard": 0,
+          "bridges": 10,
           "random": 1
         },
         {
@@ -3522,7 +5202,11 @@
           "candidates": 461,
           "abc": 1,
           "popularity": 7,
-          "random": 1
+          "adamic_adar": 5,
+          "resource_alloc": 6,
+          "jaccard": 1,
+          "bridges": 5,
+          "random": 0
         },
         {
           "seed": "MESH:D006529",
@@ -3531,7 +5215,11 @@
           "candidates": 2499,
           "abc": 0,
           "popularity": 0,
-          "random": 1
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
+          "random": 0
         },
         {
           "seed": "6288",
@@ -3540,6 +5228,10 @@
           "candidates": 480,
           "abc": 2,
           "popularity": 8,
+          "adamic_adar": 4,
+          "resource_alloc": 3,
+          "jaccard": 1,
+          "bridges": 4,
           "random": 3
         },
         {
@@ -3549,6 +5241,10 @@
           "candidates": 1821,
           "abc": 0,
           "popularity": 2,
+          "adamic_adar": 1,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 2,
           "random": 0
         },
         {
@@ -3558,6 +5254,10 @@
           "candidates": 1172,
           "abc": 0,
           "popularity": 1,
+          "adamic_adar": 0,
+          "resource_alloc": 1,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -3567,7 +5267,11 @@
           "candidates": 205,
           "abc": 4,
           "popularity": 9,
-          "random": 2
+          "adamic_adar": 11,
+          "resource_alloc": 7,
+          "jaccard": 0,
+          "bridges": 10,
+          "random": 4
         },
         {
           "seed": "MESH:C572919",
@@ -3576,7 +5280,11 @@
           "candidates": 628,
           "abc": 3,
           "popularity": 4,
-          "random": 0
+          "adamic_adar": 5,
+          "resource_alloc": 3,
+          "jaccard": 0,
+          "bridges": 4,
+          "random": 1
         },
         {
           "seed": "MESH:C564499",
@@ -3585,7 +5293,11 @@
           "candidates": 1018,
           "abc": 0,
           "popularity": 1,
-          "random": 0
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
+          "random": 1
         },
         {
           "seed": "84798",
@@ -3594,6 +5306,10 @@
           "candidates": 233,
           "abc": 0,
           "popularity": 1,
+          "adamic_adar": 0,
+          "resource_alloc": 1,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -3603,7 +5319,11 @@
           "candidates": 392,
           "abc": 1,
           "popularity": 4,
-          "random": 0
+          "adamic_adar": 3,
+          "resource_alloc": 3,
+          "jaccard": 0,
+          "bridges": 3,
+          "random": 1
         },
         {
           "seed": "100507703",
@@ -3612,6 +5332,10 @@
           "candidates": 427,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -3621,6 +5345,10 @@
           "candidates": 276,
           "abc": 0,
           "popularity": 1,
+          "adamic_adar": 1,
+          "resource_alloc": 1,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -3630,7 +5358,11 @@
           "candidates": 387,
           "abc": 1,
           "popularity": 6,
-          "random": 0
+          "adamic_adar": 6,
+          "resource_alloc": 4,
+          "jaccard": 0,
+          "bridges": 5,
+          "random": 3
         },
         {
           "seed": "17210",
@@ -3639,7 +5371,11 @@
           "candidates": 1179,
           "abc": 5,
           "popularity": 8,
-          "random": 3
+          "adamic_adar": 9,
+          "resource_alloc": 8,
+          "jaccard": 3,
+          "bridges": 9,
+          "random": 0
         },
         {
           "seed": "MESH:D019888",
@@ -3648,7 +5384,11 @@
           "candidates": 1306,
           "abc": 6,
           "popularity": 5,
-          "random": 0
+          "adamic_adar": 6,
+          "resource_alloc": 5,
+          "jaccard": 1,
+          "bridges": 5,
+          "random": 1
         },
         {
           "seed": "MESH:D003847",
@@ -3657,6 +5397,10 @@
           "candidates": 4956,
           "abc": 13,
           "popularity": 9,
+          "adamic_adar": 15,
+          "resource_alloc": 13,
+          "jaccard": 6,
+          "bridges": 15,
           "random": 0
         },
         {
@@ -3666,7 +5410,11 @@
           "candidates": 1882,
           "abc": 2,
           "popularity": 4,
-          "random": 1
+          "adamic_adar": 4,
+          "resource_alloc": 3,
+          "jaccard": 0,
+          "bridges": 4,
+          "random": 0
         }
       ]
     },
@@ -3679,17 +5427,29 @@
       "hits": {
         "abc": 267,
         "popularity": 430,
-        "random": 68
+        "adamic_adar": 374,
+        "resource_alloc": 343,
+        "jaccard": 68,
+        "bridges": 370,
+        "random": 61
       },
       "predictions": {
         "abc": 4000,
         "popularity": 4000,
+        "adamic_adar": 4000,
+        "resource_alloc": 4000,
+        "jaccard": 4000,
+        "bridges": 4000,
         "random": 4000
       },
       "precision": {
         "abc": 0.06675,
         "popularity": 0.1075,
-        "random": 0.017
+        "adamic_adar": 0.0935,
+        "resource_alloc": 0.08575,
+        "jaccard": 0.017,
+        "bridges": 0.0925,
+        "random": 0.01525
       },
       "abc_over_popularity": 0.6209302325581396,
       "paired": {
@@ -3702,6 +5462,68 @@
         "abc_ahead": 21,
         "abc_behind": 89
       },
+      "paired_all": {
+        "abc": {
+          "mean_diff": -0.815,
+          "ci95": [
+            -1.045,
+            -0.595
+          ],
+          "decided": true,
+          "ahead": 21,
+          "behind": 89
+        },
+        "adamic_adar": {
+          "mean_diff": -0.28,
+          "ci95": [
+            -0.435,
+            -0.13
+          ],
+          "decided": true,
+          "ahead": 28,
+          "behind": 57
+        },
+        "resource_alloc": {
+          "mean_diff": -0.435,
+          "ci95": [
+            -0.615,
+            -0.255
+          ],
+          "decided": true,
+          "ahead": 24,
+          "behind": 64
+        },
+        "jaccard": {
+          "mean_diff": -1.81,
+          "ci95": [
+            -2.165,
+            -1.475
+          ],
+          "decided": true,
+          "ahead": 6,
+          "behind": 122
+        },
+        "bridges": {
+          "mean_diff": -0.3,
+          "ci95": [
+            -0.45,
+            -0.15
+          ],
+          "decided": true,
+          "ahead": 29,
+          "behind": 60
+        },
+        "random": {
+          "mean_diff": -1.845,
+          "ci95": [
+            -2.19,
+            -1.51
+          ],
+          "decided": true,
+          "ahead": 7,
+          "behind": 123
+        }
+      },
       "per_seed": [
         {
           "seed": "221656",
@@ -3710,7 +5532,11 @@
           "candidates": 224,
           "abc": 1,
           "popularity": 2,
-          "random": 0
+          "adamic_adar": 4,
+          "resource_alloc": 2,
+          "jaccard": 0,
+          "bridges": 2,
+          "random": 1
         },
         {
           "seed": "403885",
@@ -3719,6 +5545,10 @@
           "candidates": 120,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -3728,7 +5558,11 @@
           "candidates": 1110,
           "abc": 3,
           "popularity": 2,
-          "random": 0
+          "adamic_adar": 3,
+          "resource_alloc": 2,
+          "jaccard": 0,
+          "bridges": 3,
+          "random": 1
         },
         {
           "seed": "MESH:D000109",
@@ -3737,6 +5571,10 @@
           "candidates": 4916,
           "abc": 6,
           "popularity": 6,
+          "adamic_adar": 7,
+          "resource_alloc": 7,
+          "jaccard": 0,
+          "bridges": 7,
           "random": 0
         },
         {
@@ -3746,6 +5584,10 @@
           "candidates": 200,
           "abc": 1,
           "popularity": 5,
+          "adamic_adar": 2,
+          "resource_alloc": 2,
+          "jaccard": 0,
+          "bridges": 1,
           "random": 1
         },
         {
@@ -3755,6 +5597,10 @@
           "candidates": 472,
           "abc": 3,
           "popularity": 5,
+          "adamic_adar": 3,
+          "resource_alloc": 2,
+          "jaccard": 0,
+          "bridges": 5,
           "random": 0
         },
         {
@@ -3764,6 +5610,10 @@
           "candidates": 637,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -3773,6 +5623,10 @@
           "candidates": 562,
           "abc": 0,
           "popularity": 1,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -3782,7 +5636,11 @@
           "candidates": 1077,
           "abc": 1,
           "popularity": 2,
-          "random": 1
+          "adamic_adar": 2,
+          "resource_alloc": 1,
+          "jaccard": 1,
+          "bridges": 2,
+          "random": 0
         },
         {
           "seed": "MESH:D002547",
@@ -3791,6 +5649,10 @@
           "candidates": 1756,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -3800,7 +5662,11 @@
           "candidates": 4214,
           "abc": 4,
           "popularity": 2,
-          "random": 1
+          "adamic_adar": 4,
+          "resource_alloc": 3,
+          "jaccard": 2,
+          "bridges": 4,
+          "random": 0
         },
         {
           "seed": "MESH:D004872",
@@ -3809,6 +5675,10 @@
           "candidates": 714,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -3818,6 +5688,10 @@
           "candidates": 276,
           "abc": 0,
           "popularity": 3,
+          "adamic_adar": 2,
+          "resource_alloc": 1,
+          "jaccard": 0,
+          "bridges": 2,
           "random": 0
         },
         {
@@ -3827,6 +5701,10 @@
           "candidates": 5732,
           "abc": 3,
           "popularity": 4,
+          "adamic_adar": 4,
+          "resource_alloc": 4,
+          "jaccard": 3,
+          "bridges": 4,
           "random": 0
         },
         {
@@ -3836,6 +5714,10 @@
           "candidates": 406,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -3845,6 +5727,10 @@
           "candidates": 915,
           "abc": 0,
           "popularity": 1,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -3854,7 +5740,11 @@
           "candidates": 88,
           "abc": 0,
           "popularity": 2,
-          "random": 0
+          "adamic_adar": 1,
+          "resource_alloc": 2,
+          "jaccard": 1,
+          "bridges": 1,
+          "random": 1
         },
         {
           "seed": "2674",
@@ -3863,7 +5753,11 @@
           "candidates": 693,
           "abc": 1,
           "popularity": 1,
-          "random": 0
+          "adamic_adar": 1,
+          "resource_alloc": 1,
+          "jaccard": 1,
+          "bridges": 1,
+          "random": 1
         },
         {
           "seed": "14254",
@@ -3872,6 +5766,10 @@
           "candidates": 1499,
           "abc": 0,
           "popularity": 1,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -3881,6 +5779,10 @@
           "candidates": 684,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -3890,7 +5792,11 @@
           "candidates": 196,
           "abc": 1,
           "popularity": 1,
-          "random": 2
+          "adamic_adar": 2,
+          "resource_alloc": 1,
+          "jaccard": 0,
+          "bridges": 2,
+          "random": 0
         },
         {
           "seed": "MESH:C537751",
@@ -3899,6 +5805,10 @@
           "candidates": 683,
           "abc": 1,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -3908,7 +5818,11 @@
           "candidates": 1308,
           "abc": 1,
           "popularity": 3,
-          "random": 0
+          "adamic_adar": 1,
+          "resource_alloc": 2,
+          "jaccard": 2,
+          "bridges": 1,
+          "random": 1
         },
         {
           "seed": "7050",
@@ -3917,7 +5831,11 @@
           "candidates": 1043,
           "abc": 1,
           "popularity": 1,
-          "random": 0
+          "adamic_adar": 1,
+          "resource_alloc": 1,
+          "jaccard": 0,
+          "bridges": 1,
+          "random": 1
         },
         {
           "seed": "MESH:C536424",
@@ -3926,6 +5844,10 @@
           "candidates": 263,
           "abc": 1,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -3935,7 +5857,11 @@
           "candidates": 57,
           "abc": 0,
           "popularity": 3,
-          "random": 2
+          "adamic_adar": 4,
+          "resource_alloc": 4,
+          "jaccard": 1,
+          "bridges": 3,
+          "random": 1
         },
         {
           "seed": "MESH:D058437",
@@ -3944,6 +5870,10 @@
           "candidates": 1557,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -3953,6 +5883,10 @@
           "candidates": 1651,
           "abc": 2,
           "popularity": 2,
+          "adamic_adar": 2,
+          "resource_alloc": 2,
+          "jaccard": 1,
+          "bridges": 1,
           "random": 0
         },
         {
@@ -3962,7 +5896,11 @@
           "candidates": 231,
           "abc": 1,
           "popularity": 1,
-          "random": 1
+          "adamic_adar": 1,
+          "resource_alloc": 1,
+          "jaccard": 0,
+          "bridges": 1,
+          "random": 0
         },
         {
           "seed": "MESH:D000077144",
@@ -3971,6 +5909,10 @@
           "candidates": 1316,
           "abc": 0,
           "popularity": 3,
+          "adamic_adar": 0,
+          "resource_alloc": 1,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -3980,6 +5922,10 @@
           "candidates": 3772,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -3989,6 +5935,10 @@
           "candidates": 546,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -3998,6 +5948,10 @@
           "candidates": 252,
           "abc": 0,
           "popularity": 2,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -4007,6 +5961,10 @@
           "candidates": 907,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -4016,6 +5974,10 @@
           "candidates": 351,
           "abc": 0,
           "popularity": 2,
+          "adamic_adar": 2,
+          "resource_alloc": 1,
+          "jaccard": 0,
+          "bridges": 3,
           "random": 0
         },
         {
@@ -4025,6 +5987,10 @@
           "candidates": 1818,
           "abc": 2,
           "popularity": 2,
+          "adamic_adar": 3,
+          "resource_alloc": 3,
+          "jaccard": 0,
+          "bridges": 2,
           "random": 0
         },
         {
@@ -4034,6 +6000,10 @@
           "candidates": 223,
           "abc": 0,
           "popularity": 1,
+          "adamic_adar": 1,
+          "resource_alloc": 1,
+          "jaccard": 0,
+          "bridges": 1,
           "random": 0
         },
         {
@@ -4043,6 +6013,10 @@
           "candidates": 488,
           "abc": 1,
           "popularity": 5,
+          "adamic_adar": 4,
+          "resource_alloc": 4,
+          "jaccard": 0,
+          "bridges": 4,
           "random": 0
         },
         {
@@ -4052,7 +6026,11 @@
           "candidates": 257,
           "abc": 2,
           "popularity": 4,
-          "random": 2
+          "adamic_adar": 4,
+          "resource_alloc": 5,
+          "jaccard": 2,
+          "bridges": 4,
+          "random": 3
         },
         {
           "seed": "MESH:D012816",
@@ -4061,7 +6039,11 @@
           "candidates": 3356,
           "abc": 0,
           "popularity": 0,
-          "random": 1
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
+          "random": 0
         },
         {
           "seed": "19882",
@@ -4070,6 +6052,10 @@
           "candidates": 779,
           "abc": 0,
           "popularity": 1,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -4079,6 +6065,10 @@
           "candidates": 1595,
           "abc": 0,
           "popularity": 2,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -4088,6 +6078,10 @@
           "candidates": 708,
           "abc": 1,
           "popularity": 3,
+          "adamic_adar": 1,
+          "resource_alloc": 2,
+          "jaccard": 0,
+          "bridges": 1,
           "random": 0
         },
         {
@@ -4097,6 +6091,10 @@
           "candidates": 8066,
           "abc": 4,
           "popularity": 5,
+          "adamic_adar": 4,
+          "resource_alloc": 2,
+          "jaccard": 5,
+          "bridges": 4,
           "random": 1
         },
         {
@@ -4106,7 +6104,11 @@
           "candidates": 130,
           "abc": 0,
           "popularity": 2,
-          "random": 2
+          "adamic_adar": 1,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 1,
+          "random": 0
         },
         {
           "seed": "9271",
@@ -4115,6 +6117,10 @@
           "candidates": 843,
           "abc": 3,
           "popularity": 2,
+          "adamic_adar": 2,
+          "resource_alloc": 3,
+          "jaccard": 0,
+          "bridges": 2,
           "random": 0
         },
         {
@@ -4124,7 +6130,11 @@
           "candidates": 239,
           "abc": 7,
           "popularity": 10,
-          "random": 3
+          "adamic_adar": 8,
+          "resource_alloc": 9,
+          "jaccard": 0,
+          "bridges": 10,
+          "random": 2
         },
         {
           "seed": "MESH:C085925",
@@ -4133,6 +6143,10 @@
           "candidates": 748,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -4142,6 +6156,10 @@
           "candidates": 4932,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -4151,7 +6169,11 @@
           "candidates": 7708,
           "abc": 6,
           "popularity": 7,
-          "random": 1
+          "adamic_adar": 9,
+          "resource_alloc": 7,
+          "jaccard": 6,
+          "bridges": 9,
+          "random": 2
         },
         {
           "seed": "MESH:C025942",
@@ -4160,6 +6182,10 @@
           "candidates": 235,
           "abc": 1,
           "popularity": 1,
+          "adamic_adar": 1,
+          "resource_alloc": 1,
+          "jaccard": 0,
+          "bridges": 1,
           "random": 0
         },
         {
@@ -4169,6 +6195,10 @@
           "candidates": 1105,
           "abc": 0,
           "popularity": 1,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -4178,6 +6208,10 @@
           "candidates": 663,
           "abc": 4,
           "popularity": 9,
+          "adamic_adar": 8,
+          "resource_alloc": 5,
+          "jaccard": 0,
+          "bridges": 8,
           "random": 1
         },
         {
@@ -4187,7 +6221,11 @@
           "candidates": 3533,
           "abc": 2,
           "popularity": 5,
-          "random": 1
+          "adamic_adar": 3,
+          "resource_alloc": 1,
+          "jaccard": 1,
+          "bridges": 4,
+          "random": 0
         },
         {
           "seed": "MESH:C537962",
@@ -4196,6 +6234,10 @@
           "candidates": 905,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -4205,6 +6247,10 @@
           "candidates": 829,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -4214,6 +6260,10 @@
           "candidates": 715,
           "abc": 4,
           "popularity": 5,
+          "adamic_adar": 6,
+          "resource_alloc": 6,
+          "jaccard": 0,
+          "bridges": 6,
           "random": 0
         },
         {
@@ -4223,6 +6273,10 @@
           "candidates": 483,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -4232,7 +6286,11 @@
           "candidates": 7718,
           "abc": 6,
           "popularity": 6,
-          "random": 0
+          "adamic_adar": 8,
+          "resource_alloc": 7,
+          "jaccard": 1,
+          "bridges": 8,
+          "random": 1
         },
         {
           "seed": "MESH:D004961",
@@ -4241,7 +6299,11 @@
           "candidates": 4611,
           "abc": 0,
           "popularity": 2,
-          "random": 1
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
+          "random": 0
         },
         {
           "seed": "29127",
@@ -4250,7 +6312,11 @@
           "candidates": 542,
           "abc": 3,
           "popularity": 5,
-          "random": 2
+          "adamic_adar": 4,
+          "resource_alloc": 4,
+          "jaccard": 1,
+          "bridges": 6,
+          "random": 1
         },
         {
           "seed": "1443",
@@ -4259,6 +6325,10 @@
           "candidates": 1368,
           "abc": 3,
           "popularity": 8,
+          "adamic_adar": 6,
+          "resource_alloc": 5,
+          "jaccard": 0,
+          "bridges": 5,
           "random": 0
         },
         {
@@ -4268,6 +6338,10 @@
           "candidates": 969,
           "abc": 1,
           "popularity": 0,
+          "adamic_adar": 1,
+          "resource_alloc": 1,
+          "jaccard": 0,
+          "bridges": 1,
           "random": 0
         },
         {
@@ -4277,6 +6351,10 @@
           "candidates": 1025,
           "abc": 1,
           "popularity": 8,
+          "adamic_adar": 6,
+          "resource_alloc": 4,
+          "jaccard": 0,
+          "bridges": 6,
           "random": 0
         },
         {
@@ -4286,7 +6364,11 @@
           "candidates": 308,
           "abc": 0,
           "popularity": 2,
-          "random": 1
+          "adamic_adar": 2,
+          "resource_alloc": 1,
+          "jaccard": 0,
+          "bridges": 2,
+          "random": 0
         },
         {
           "seed": "218772",
@@ -4295,6 +6377,10 @@
           "candidates": 1336,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -4304,7 +6390,11 @@
           "candidates": 657,
           "abc": 5,
           "popularity": 6,
-          "random": 1
+          "adamic_adar": 6,
+          "resource_alloc": 3,
+          "jaccard": 0,
+          "bridges": 6,
+          "random": 0
         },
         {
           "seed": "MESH:C027493",
@@ -4313,6 +6403,10 @@
           "candidates": 2834,
           "abc": 1,
           "popularity": 3,
+          "adamic_adar": 2,
+          "resource_alloc": 2,
+          "jaccard": 0,
+          "bridges": 2,
           "random": 0
         },
         {
@@ -4322,6 +6416,10 @@
           "candidates": 284,
           "abc": 0,
           "popularity": 1,
+          "adamic_adar": 1,
+          "resource_alloc": 1,
+          "jaccard": 0,
+          "bridges": 1,
           "random": 0
         },
         {
@@ -4331,7 +6429,11 @@
           "candidates": 292,
           "abc": 4,
           "popularity": 2,
-          "random": 0
+          "adamic_adar": 3,
+          "resource_alloc": 4,
+          "jaccard": 0,
+          "bridges": 3,
+          "random": 1
         },
         {
           "seed": "MESH:D014403",
@@ -4340,6 +6442,10 @@
           "candidates": 636,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -4349,7 +6455,11 @@
           "candidates": 3188,
           "abc": 0,
           "popularity": 0,
-          "random": 0
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
+          "random": 1
         },
         {
           "seed": "MESH:C538110",
@@ -4358,6 +6468,10 @@
           "candidates": 381,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -4367,7 +6481,11 @@
           "candidates": 700,
           "abc": 1,
           "popularity": 2,
-          "random": 1
+          "adamic_adar": 1,
+          "resource_alloc": 1,
+          "jaccard": 1,
+          "bridges": 1,
+          "random": 0
         },
         {
           "seed": "8999",
@@ -4376,6 +6494,10 @@
           "candidates": 672,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -4385,6 +6507,10 @@
           "candidates": 332,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -4394,6 +6520,10 @@
           "candidates": 864,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -4403,6 +6533,10 @@
           "candidates": 2540,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -4412,7 +6546,11 @@
           "candidates": 121,
           "abc": 0,
           "popularity": 6,
-          "random": 2
+          "adamic_adar": 3,
+          "resource_alloc": 3,
+          "jaccard": 0,
+          "bridges": 5,
+          "random": 3
         },
         {
           "seed": "MESH:D014314",
@@ -4421,6 +6559,10 @@
           "candidates": 655,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -4430,6 +6572,10 @@
           "candidates": 520,
           "abc": 4,
           "popularity": 1,
+          "adamic_adar": 3,
+          "resource_alloc": 3,
+          "jaccard": 2,
+          "bridges": 2,
           "random": 0
         },
         {
@@ -4439,7 +6585,11 @@
           "candidates": 5741,
           "abc": 4,
           "popularity": 4,
-          "random": 2
+          "adamic_adar": 4,
+          "resource_alloc": 4,
+          "jaccard": 2,
+          "bridges": 4,
+          "random": 0
         },
         {
           "seed": "MESH:D005600",
@@ -4448,6 +6598,10 @@
           "candidates": 926,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -4457,7 +6611,11 @@
           "candidates": 870,
           "abc": 1,
           "popularity": 0,
-          "random": 0
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
+          "random": 1
         },
         {
           "seed": "MESH:C039602",
@@ -4466,7 +6624,11 @@
           "candidates": 684,
           "abc": 5,
           "popularity": 7,
-          "random": 1
+          "adamic_adar": 4,
+          "resource_alloc": 7,
+          "jaccard": 0,
+          "bridges": 6,
+          "random": 0
         },
         {
           "seed": "5339",
@@ -4475,7 +6637,11 @@
           "candidates": 994,
           "abc": 4,
           "popularity": 5,
-          "random": 0
+          "adamic_adar": 5,
+          "resource_alloc": 4,
+          "jaccard": 0,
+          "bridges": 5,
+          "random": 1
         },
         {
           "seed": "MESH:C014476",
@@ -4484,6 +6650,10 @@
           "candidates": 1493,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -4493,7 +6663,11 @@
           "candidates": 363,
           "abc": 4,
           "popularity": 5,
-          "random": 2
+          "adamic_adar": 5,
+          "resource_alloc": 7,
+          "jaccard": 0,
+          "bridges": 5,
+          "random": 1
         },
         {
           "seed": "MESH:D015780",
@@ -4502,6 +6676,10 @@
           "candidates": 967,
           "abc": 0,
           "popularity": 1,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -4511,7 +6689,11 @@
           "candidates": 525,
           "abc": 4,
           "popularity": 4,
-          "random": 1
+          "adamic_adar": 6,
+          "resource_alloc": 6,
+          "jaccard": 0,
+          "bridges": 5,
+          "random": 0
         },
         {
           "seed": "3954",
@@ -4520,7 +6702,11 @@
           "candidates": 157,
           "abc": 1,
           "popularity": 1,
-          "random": 1
+          "adamic_adar": 2,
+          "resource_alloc": 2,
+          "jaccard": 0,
+          "bridges": 2,
+          "random": 0
         },
         {
           "seed": "14257",
@@ -4529,6 +6715,10 @@
           "candidates": 928,
           "abc": 2,
           "popularity": 2,
+          "adamic_adar": 2,
+          "resource_alloc": 2,
+          "jaccard": 0,
+          "bridges": 2,
           "random": 0
         },
         {
@@ -4538,6 +6728,10 @@
           "candidates": 537,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 1,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -4547,6 +6741,10 @@
           "candidates": 507,
           "abc": 0,
           "popularity": 2,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -4556,6 +6754,10 @@
           "candidates": 4462,
           "abc": 0,
           "popularity": 1,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -4565,6 +6767,10 @@
           "candidates": 452,
           "abc": 0,
           "popularity": 2,
+          "adamic_adar": 2,
+          "resource_alloc": 2,
+          "jaccard": 0,
+          "bridges": 1,
           "random": 0
         },
         {
@@ -4574,6 +6780,10 @@
           "candidates": 188,
           "abc": 0,
           "popularity": 1,
+          "adamic_adar": 1,
+          "resource_alloc": 1,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -4583,6 +6793,10 @@
           "candidates": 212,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 1,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -4592,6 +6806,10 @@
           "candidates": 123,
           "abc": 1,
           "popularity": 1,
+          "adamic_adar": 1,
+          "resource_alloc": 1,
+          "jaccard": 0,
+          "bridges": 1,
           "random": 1
         },
         {
@@ -4601,7 +6819,11 @@
           "candidates": 371,
           "abc": 0,
           "popularity": 5,
-          "random": 1
+          "adamic_adar": 5,
+          "resource_alloc": 3,
+          "jaccard": 0,
+          "bridges": 4,
+          "random": 0
         },
         {
           "seed": "MESH:D002446",
@@ -4610,6 +6832,10 @@
           "candidates": 1776,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -4619,6 +6845,10 @@
           "candidates": 921,
           "abc": 2,
           "popularity": 1,
+          "adamic_adar": 1,
+          "resource_alloc": 2,
+          "jaccard": 0,
+          "bridges": 2,
           "random": 0
         },
         {
@@ -4628,6 +6858,10 @@
           "candidates": 474,
           "abc": 1,
           "popularity": 4,
+          "adamic_adar": 2,
+          "resource_alloc": 2,
+          "jaccard": 0,
+          "bridges": 2,
           "random": 1
         },
         {
@@ -4637,7 +6871,11 @@
           "candidates": 3447,
           "abc": 6,
           "popularity": 6,
-          "random": 1
+          "adamic_adar": 6,
+          "resource_alloc": 6,
+          "jaccard": 2,
+          "bridges": 6,
+          "random": 0
         },
         {
           "seed": "9520",
@@ -4646,7 +6884,11 @@
           "candidates": 6204,
           "abc": 1,
           "popularity": 1,
-          "random": 1
+          "adamic_adar": 1,
+          "resource_alloc": 1,
+          "jaccard": 3,
+          "bridges": 1,
+          "random": 0
         },
         {
           "seed": "MESH:D006695",
@@ -4655,6 +6897,10 @@
           "candidates": 1185,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -4664,6 +6910,10 @@
           "candidates": 456,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -4673,6 +6923,10 @@
           "candidates": 690,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -4682,7 +6936,11 @@
           "candidates": 1104,
           "abc": 0,
           "popularity": 5,
-          "random": 0
+          "adamic_adar": 0,
+          "resource_alloc": 1,
+          "jaccard": 0,
+          "bridges": 0,
+          "random": 1
         },
         {
           "seed": "18412",
@@ -4691,6 +6949,10 @@
           "candidates": 882,
           "abc": 1,
           "popularity": 1,
+          "adamic_adar": 2,
+          "resource_alloc": 3,
+          "jaccard": 0,
+          "bridges": 2,
           "random": 0
         },
         {
@@ -4700,7 +6962,11 @@
           "candidates": 5497,
           "abc": 0,
           "popularity": 0,
-          "random": 0
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
+          "random": 1
         },
         {
           "seed": "3987",
@@ -4709,7 +6975,11 @@
           "candidates": 385,
           "abc": 0,
           "popularity": 1,
-          "random": 0
+          "adamic_adar": 1,
+          "resource_alloc": 1,
+          "jaccard": 0,
+          "bridges": 1,
+          "random": 1
         },
         {
           "seed": "MESH:C091719",
@@ -4718,6 +6988,10 @@
           "candidates": 411,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -4727,6 +7001,10 @@
           "candidates": 3923,
           "abc": 2,
           "popularity": 1,
+          "adamic_adar": 3,
+          "resource_alloc": 1,
+          "jaccard": 0,
+          "bridges": 3,
           "random": 0
         },
         {
@@ -4736,6 +7014,10 @@
           "candidates": 2451,
           "abc": 2,
           "popularity": 3,
+          "adamic_adar": 4,
+          "resource_alloc": 2,
+          "jaccard": 0,
+          "bridges": 4,
           "random": 0
         },
         {
@@ -4745,6 +7027,10 @@
           "candidates": 849,
           "abc": 0,
           "popularity": 1,
+          "adamic_adar": 1,
+          "resource_alloc": 1,
+          "jaccard": 0,
+          "bridges": 1,
           "random": 0
         },
         {
@@ -4754,7 +7040,11 @@
           "candidates": 7435,
           "abc": 0,
           "popularity": 0,
-          "random": 0
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
+          "random": 1
         },
         {
           "seed": "26135",
@@ -4763,7 +7053,11 @@
           "candidates": 227,
           "abc": 2,
           "popularity": 2,
-          "random": 0
+          "adamic_adar": 2,
+          "resource_alloc": 2,
+          "jaccard": 0,
+          "bridges": 2,
+          "random": 1
         },
         {
           "seed": "MESH:C116255",
@@ -4772,6 +7066,10 @@
           "candidates": 573,
           "abc": 1,
           "popularity": 4,
+          "adamic_adar": 1,
+          "resource_alloc": 2,
+          "jaccard": 0,
+          "bridges": 1,
           "random": 1
         },
         {
@@ -4781,6 +7079,10 @@
           "candidates": 831,
           "abc": 1,
           "popularity": 1,
+          "adamic_adar": 1,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 1,
           "random": 0
         },
         {
@@ -4790,7 +7092,11 @@
           "candidates": 48,
           "abc": 0,
           "popularity": 2,
-          "random": 0
+          "adamic_adar": 1,
+          "resource_alloc": 1,
+          "jaccard": 0,
+          "bridges": 1,
+          "random": 1
         },
         {
           "seed": "MESH:C064541",
@@ -4799,6 +7105,10 @@
           "candidates": 902,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -4808,6 +7118,10 @@
           "candidates": 2024,
           "abc": 2,
           "popularity": 5,
+          "adamic_adar": 4,
+          "resource_alloc": 3,
+          "jaccard": 0,
+          "bridges": 4,
           "random": 0
         },
         {
@@ -4817,7 +7131,11 @@
           "candidates": 1970,
           "abc": 13,
           "popularity": 16,
-          "random": 3
+          "adamic_adar": 13,
+          "resource_alloc": 12,
+          "jaccard": 1,
+          "bridges": 12,
+          "random": 4
         },
         {
           "seed": "67118",
@@ -4826,7 +7144,11 @@
           "candidates": 474,
           "abc": 0,
           "popularity": 0,
-          "random": 0
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
+          "random": 1
         },
         {
           "seed": "4192",
@@ -4835,6 +7157,10 @@
           "candidates": 2557,
           "abc": 4,
           "popularity": 5,
+          "adamic_adar": 4,
+          "resource_alloc": 5,
+          "jaccard": 0,
+          "bridges": 4,
           "random": 1
         },
         {
@@ -4844,6 +7170,10 @@
           "candidates": 3208,
           "abc": 5,
           "popularity": 7,
+          "adamic_adar": 7,
+          "resource_alloc": 6,
+          "jaccard": 0,
+          "bridges": 7,
           "random": 1
         },
         {
@@ -4853,6 +7183,10 @@
           "candidates": 961,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 1,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 1,
           "random": 0
         },
         {
@@ -4862,6 +7196,10 @@
           "candidates": 119,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -4871,7 +7209,11 @@
           "candidates": 381,
           "abc": 2,
           "popularity": 4,
-          "random": 2
+          "adamic_adar": 3,
+          "resource_alloc": 4,
+          "jaccard": 0,
+          "bridges": 3,
+          "random": 0
         },
         {
           "seed": "41957",
@@ -4880,7 +7222,11 @@
           "candidates": 28,
           "abc": 1,
           "popularity": 2,
-          "random": 2
+          "adamic_adar": 2,
+          "resource_alloc": 2,
+          "jaccard": 1,
+          "bridges": 2,
+          "random": 1
         },
         {
           "seed": "6690",
@@ -4889,7 +7235,11 @@
           "candidates": 2845,
           "abc": 3,
           "popularity": 4,
-          "random": 0
+          "adamic_adar": 4,
+          "resource_alloc": 2,
+          "jaccard": 1,
+          "bridges": 4,
+          "random": 1
         },
         {
           "seed": "MESH:C527517",
@@ -4898,6 +7248,10 @@
           "candidates": 2346,
           "abc": 2,
           "popularity": 1,
+          "adamic_adar": 2,
+          "resource_alloc": 3,
+          "jaccard": 1,
+          "bridges": 2,
           "random": 0
         },
         {
@@ -4907,6 +7261,10 @@
           "candidates": 331,
           "abc": 2,
           "popularity": 1,
+          "adamic_adar": 3,
+          "resource_alloc": 1,
+          "jaccard": 0,
+          "bridges": 2,
           "random": 0
         },
         {
@@ -4916,6 +7274,10 @@
           "candidates": 6073,
           "abc": 3,
           "popularity": 1,
+          "adamic_adar": 1,
+          "resource_alloc": 3,
+          "jaccard": 2,
+          "bridges": 1,
           "random": 0
         },
         {
@@ -4925,6 +7287,10 @@
           "candidates": 215,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -4934,6 +7300,10 @@
           "candidates": 413,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -4943,6 +7313,10 @@
           "candidates": 1001,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -4952,6 +7326,10 @@
           "candidates": 1760,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -4961,7 +7339,11 @@
           "candidates": 6227,
           "abc": 0,
           "popularity": 0,
-          "random": 0
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
+          "random": 1
         },
         {
           "seed": "MESH:C043561",
@@ -4970,6 +7352,10 @@
           "candidates": 3039,
           "abc": 4,
           "popularity": 8,
+          "adamic_adar": 8,
+          "resource_alloc": 4,
+          "jaccard": 0,
+          "bridges": 8,
           "random": 0
         },
         {
@@ -4979,6 +7365,10 @@
           "candidates": 1349,
           "abc": 3,
           "popularity": 5,
+          "adamic_adar": 5,
+          "resource_alloc": 5,
+          "jaccard": 0,
+          "bridges": 4,
           "random": 0
         },
         {
@@ -4988,7 +7378,11 @@
           "candidates": 1824,
           "abc": 6,
           "popularity": 8,
-          "random": 1
+          "adamic_adar": 7,
+          "resource_alloc": 8,
+          "jaccard": 2,
+          "bridges": 7,
+          "random": 0
         },
         {
           "seed": "MESH:C049584",
@@ -4997,6 +7391,10 @@
           "candidates": 3642,
           "abc": 1,
           "popularity": 1,
+          "adamic_adar": 2,
+          "resource_alloc": 1,
+          "jaccard": 0,
+          "bridges": 2,
           "random": 0
         },
         {
@@ -5006,7 +7404,11 @@
           "candidates": 1587,
           "abc": 0,
           "popularity": 3,
-          "random": 1
+          "adamic_adar": 1,
+          "resource_alloc": 1,
+          "jaccard": 0,
+          "bridges": 1,
+          "random": 0
         },
         {
           "seed": "MESH:D054364",
@@ -5015,6 +7417,10 @@
           "candidates": 1930,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -5024,7 +7430,11 @@
           "candidates": 1487,
           "abc": 5,
           "popularity": 12,
-          "random": 0
+          "adamic_adar": 11,
+          "resource_alloc": 11,
+          "jaccard": 1,
+          "bridges": 10,
+          "random": 2
         },
         {
           "seed": "100302692",
@@ -5033,7 +7443,11 @@
           "candidates": 194,
           "abc": 5,
           "popularity": 4,
-          "random": 2
+          "adamic_adar": 6,
+          "resource_alloc": 7,
+          "jaccard": 0,
+          "bridges": 6,
+          "random": 0
         },
         {
           "seed": "MESH:D054508",
@@ -5042,7 +7456,11 @@
           "candidates": 818,
           "abc": 0,
           "popularity": 1,
-          "random": 1
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
+          "random": 0
         },
         {
           "seed": "MESH:C548400",
@@ -5051,7 +7469,11 @@
           "candidates": 2250,
           "abc": 2,
           "popularity": 2,
-          "random": 0
+          "adamic_adar": 1,
+          "resource_alloc": 2,
+          "jaccard": 1,
+          "bridges": 1,
+          "random": 1
         },
         {
           "seed": "MESH:D002921",
@@ -5060,6 +7482,10 @@
           "candidates": 2090,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -5069,7 +7495,11 @@
           "candidates": 377,
           "abc": 0,
           "popularity": 1,
-          "random": 1
+          "adamic_adar": 1,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 1,
+          "random": 0
         },
         {
           "seed": "MESH:C014651",
@@ -5078,6 +7508,10 @@
           "candidates": 459,
           "abc": 1,
           "popularity": 2,
+          "adamic_adar": 2,
+          "resource_alloc": 1,
+          "jaccard": 0,
+          "bridges": 2,
           "random": 0
         },
         {
@@ -5087,6 +7521,10 @@
           "candidates": 3532,
           "abc": 5,
           "popularity": 6,
+          "adamic_adar": 5,
+          "resource_alloc": 5,
+          "jaccard": 4,
+          "bridges": 5,
           "random": 0
         },
         {
@@ -5096,7 +7534,11 @@
           "candidates": 544,
           "abc": 5,
           "popularity": 9,
-          "random": 1
+          "adamic_adar": 8,
+          "resource_alloc": 8,
+          "jaccard": 0,
+          "bridges": 8,
+          "random": 0
         },
         {
           "seed": "MESH:D001982",
@@ -5105,6 +7547,10 @@
           "candidates": 1735,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -5114,7 +7560,11 @@
           "candidates": 441,
           "abc": 2,
           "popularity": 1,
-          "random": 0
+          "adamic_adar": 1,
+          "resource_alloc": 1,
+          "jaccard": 0,
+          "bridges": 1,
+          "random": 2
         },
         {
           "seed": "6692",
@@ -5123,7 +7573,11 @@
           "candidates": 1053,
           "abc": 1,
           "popularity": 2,
-          "random": 0
+          "adamic_adar": 2,
+          "resource_alloc": 2,
+          "jaccard": 0,
+          "bridges": 3,
+          "random": 1
         },
         {
           "seed": "1592",
@@ -5132,7 +7586,11 @@
           "candidates": 941,
           "abc": 0,
           "popularity": 1,
-          "random": 0
+          "adamic_adar": 1,
+          "resource_alloc": 1,
+          "jaccard": 0,
+          "bridges": 1,
+          "random": 1
         },
         {
           "seed": "MESH:C032854",
@@ -5141,6 +7599,10 @@
           "candidates": 1226,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -5150,7 +7612,11 @@
           "candidates": 4921,
           "abc": 0,
           "popularity": 0,
-          "random": 1
+          "adamic_adar": 0,
+          "resource_alloc": 1,
+          "jaccard": 1,
+          "bridges": 0,
+          "random": 0
         },
         {
           "seed": "MESH:C028797",
@@ -5159,6 +7625,10 @@
           "candidates": 144,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -5168,6 +7638,10 @@
           "candidates": 1432,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -5177,6 +7651,10 @@
           "candidates": 288,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -5186,7 +7664,11 @@
           "candidates": 1134,
           "abc": 0,
           "popularity": 1,
-          "random": 2
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
+          "random": 1
         },
         {
           "seed": "MESH:C016705",
@@ -5195,6 +7677,10 @@
           "candidates": 329,
           "abc": 2,
           "popularity": 2,
+          "adamic_adar": 2,
+          "resource_alloc": 2,
+          "jaccard": 0,
+          "bridges": 2,
           "random": 1
         },
         {
@@ -5204,6 +7690,10 @@
           "candidates": 1542,
           "abc": 0,
           "popularity": 5,
+          "adamic_adar": 5,
+          "resource_alloc": 5,
+          "jaccard": 1,
+          "bridges": 4,
           "random": 0
         },
         {
@@ -5213,6 +7703,10 @@
           "candidates": 673,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -5222,7 +7716,11 @@
           "candidates": 167,
           "abc": 0,
           "popularity": 2,
-          "random": 0
+          "adamic_adar": 1,
+          "resource_alloc": 1,
+          "jaccard": 0,
+          "bridges": 1,
+          "random": 1
         },
         {
           "seed": "19229",
@@ -5231,7 +7729,11 @@
           "candidates": 493,
           "abc": 0,
           "popularity": 1,
-          "random": 1
+          "adamic_adar": 1,
+          "resource_alloc": 1,
+          "jaccard": 0,
+          "bridges": 1,
+          "random": 0
         },
         {
           "seed": "MESH:D008715",
@@ -5240,6 +7742,10 @@
           "candidates": 6819,
           "abc": 9,
           "popularity": 11,
+          "adamic_adar": 8,
+          "resource_alloc": 6,
+          "jaccard": 3,
+          "bridges": 8,
           "random": 0
         },
         {
@@ -5249,6 +7755,10 @@
           "candidates": 1485,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -5258,6 +7768,10 @@
           "candidates": 1732,
           "abc": 0,
           "popularity": 4,
+          "adamic_adar": 1,
+          "resource_alloc": 0,
+          "jaccard": 1,
+          "bridges": 1,
           "random": 0
         },
         {
@@ -5267,6 +7781,10 @@
           "candidates": 2136,
           "abc": 2,
           "popularity": 3,
+          "adamic_adar": 2,
+          "resource_alloc": 4,
+          "jaccard": 1,
+          "bridges": 2,
           "random": 0
         },
         {
@@ -5276,6 +7794,10 @@
           "candidates": 1455,
           "abc": 1,
           "popularity": 1,
+          "adamic_adar": 1,
+          "resource_alloc": 1,
+          "jaccard": 0,
+          "bridges": 1,
           "random": 0
         },
         {
@@ -5285,6 +7807,10 @@
           "candidates": 1894,
           "abc": 2,
           "popularity": 5,
+          "adamic_adar": 3,
+          "resource_alloc": 2,
+          "jaccard": 0,
+          "bridges": 3,
           "random": 0
         },
         {
@@ -5294,6 +7820,10 @@
           "candidates": 460,
           "abc": 0,
           "popularity": 2,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -5303,6 +7833,10 @@
           "candidates": 1941,
           "abc": 3,
           "popularity": 4,
+          "adamic_adar": 4,
+          "resource_alloc": 4,
+          "jaccard": 0,
+          "bridges": 4,
           "random": 1
         },
         {
@@ -5312,6 +7846,10 @@
           "candidates": 3757,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -5321,6 +7859,10 @@
           "candidates": 420,
           "abc": 0,
           "popularity": 1,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -5330,6 +7872,10 @@
           "candidates": 3897,
           "abc": 6,
           "popularity": 4,
+          "adamic_adar": 5,
+          "resource_alloc": 4,
+          "jaccard": 3,
+          "bridges": 4,
           "random": 0
         },
         {
@@ -5339,6 +7885,10 @@
           "candidates": 412,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -5348,6 +7898,10 @@
           "candidates": 321,
           "abc": 1,
           "popularity": 1,
+          "adamic_adar": 0,
+          "resource_alloc": 1,
+          "jaccard": 1,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -5357,7 +7911,11 @@
           "candidates": 2659,
           "abc": 0,
           "popularity": 0,
-          "random": 1
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
+          "random": 0
         },
         {
           "seed": "2244",
@@ -5366,6 +7924,10 @@
           "candidates": 5847,
           "abc": 2,
           "popularity": 7,
+          "adamic_adar": 3,
+          "resource_alloc": 3,
+          "jaccard": 0,
+          "bridges": 3,
           "random": 0
         },
         {
@@ -5375,6 +7937,10 @@
           "candidates": 1088,
           "abc": 1,
           "popularity": 1,
+          "adamic_adar": 2,
+          "resource_alloc": 2,
+          "jaccard": 0,
+          "bridges": 2,
           "random": 0
         },
         {
@@ -5384,6 +7950,10 @@
           "candidates": 1491,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -5393,7 +7963,11 @@
           "candidates": 718,
           "abc": 4,
           "popularity": 2,
-          "random": 0
+          "adamic_adar": 4,
+          "resource_alloc": 4,
+          "jaccard": 0,
+          "bridges": 3,
+          "random": 2
         },
         {
           "seed": "MESH:C536589",
@@ -5402,6 +7976,10 @@
           "candidates": 724,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -5411,7 +7989,11 @@
           "candidates": 128,
           "abc": 4,
           "popularity": 2,
-          "random": 4
+          "adamic_adar": 2,
+          "resource_alloc": 2,
+          "jaccard": 1,
+          "bridges": 2,
+          "random": 0
         },
         {
           "seed": "407053",
@@ -5420,6 +8002,10 @@
           "candidates": 2134,
           "abc": 0,
           "popularity": 1,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -5429,7 +8015,11 @@
           "candidates": 1524,
           "abc": 4,
           "popularity": 3,
-          "random": 0
+          "adamic_adar": 4,
+          "resource_alloc": 1,
+          "jaccard": 0,
+          "bridges": 4,
+          "random": 2
         },
         {
           "seed": "64132",
@@ -5438,6 +8028,10 @@
           "candidates": 714,
           "abc": 0,
           "popularity": 1,
+          "adamic_adar": 1,
+          "resource_alloc": 1,
+          "jaccard": 0,
+          "bridges": 1,
           "random": 0
         },
         {
@@ -5447,6 +8041,10 @@
           "candidates": 464,
           "abc": 3,
           "popularity": 1,
+          "adamic_adar": 3,
+          "resource_alloc": 4,
+          "jaccard": 1,
+          "bridges": 3,
           "random": 0
         },
         {
@@ -5456,6 +8054,10 @@
           "candidates": 1024,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -5465,6 +8067,10 @@
           "candidates": 936,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -5474,6 +8080,10 @@
           "candidates": 3178,
           "abc": 4,
           "popularity": 7,
+          "adamic_adar": 7,
+          "resource_alloc": 4,
+          "jaccard": 1,
+          "bridges": 8,
           "random": 0
         },
         {
@@ -5483,6 +8093,10 @@
           "candidates": 421,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -5492,6 +8106,10 @@
           "candidates": 1873,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         },
         {
@@ -5501,6 +8119,10 @@
           "candidates": 3371,
           "abc": 0,
           "popularity": 0,
+          "adamic_adar": 0,
+          "resource_alloc": 0,
+          "jaccard": 0,
+          "bridges": 0,
           "random": 0
         }
       ]
