@@ -25,28 +25,47 @@ Counts are not truth. About half of all relations carry the weakest predicate,
 
 ## Result: 9/20 claims have corpus support
 
-| module | pair | articles | predicates | cited PMID in graph? |
-|---|---|---|---|---|
-| system_xc | `SLC7A11` - `GPX4` | 31 | associate 26, positive_correlate 3, negative_correlate 2 | no |
-| erastin | `erastin` - `SLC7A11` | 29 | negative_correlate 18, associate 7, positive_correlate 4 | no |
-| contact | `CDH1` - `YAP1` | 19 | associate 12, negative_correlate 4, positive_correlate 3 | no |
-| ifngamma | `IFNG` - `SLC7A11` | 8 | negative_correlate 8 | yes |
-| dc_ferroptosis | `CD274` - `SLC7A11` | 6 | positive_correlate 4, negative_correlate 2 | yes |
-| ifngamma | `IFNG` - `SLC3A2` | 3 | negative_correlate 3 | yes |
-| acsl4 | `ACSL4` - `GPX4` | 3 | associate 2, negative_correlate 1 | no |
-| dhodh | `DHODH` - `GPX4` | 1 | negative_correlate 1 | no |
-| alox | `ALOX15` - `ACSL4` | 1 | associate 1 | no |
-| fsp1 | `AIFM2` - `GPX4` | 0 | - | - |
-| gch1 | `GCH1` - `GPX4` | 0 | - | - |
-| prom2 | `PROM2` - `FTH1` | 0 | - | - |
-| vitk | `VKORC1L1` - `GPX4` | 0 | - | - |
-| copper | `ATP7A` - `GPX4` | 0 | - | - |
-| por | `POR` - `CYB5R1` | 0 | - | - |
-| dhc7 | `DHCR7` - `GPX4` | 0 | - | - |
-| repair | `CHMP5` - `CHMP6` | 0 | - | - |
-| mboat | `MBOAT2` - `GPX4` | 0 | - | - |
-| ether_lipid | `FAR1` - `AGPS` | 0 | - | - |
-| hdac_persister | `HDAC1` - `AIFM2` | 0 | - | - |
+| module | pair | articles | predicates | cited PMID in graph? | contested |
+|---|---|---|---|---|---|
+| system_xc | `SLC7A11` - `GPX4` | 31 | associate 26, positive_correlate 3, negative_correlate 2 | no | **yes** (+3/-2, bal 0.67) |
+| erastin | `erastin` - `SLC7A11` | 29 | negative_correlate 18, associate 7, positive_correlate 4 | no | **yes** (+4/-18, bal 0.22) |
+| contact | `CDH1` - `YAP1` | 19 | associate 12, negative_correlate 4, positive_correlate 3 | no | **yes** (+3/-4, bal 0.75) |
+| ifngamma | `IFNG` - `SLC7A11` | 8 | negative_correlate 8 | yes | no |
+| dc_ferroptosis | `CD274` - `SLC7A11` | 6 | positive_correlate 4, negative_correlate 2 | yes | **yes** (+4/-2, bal 0.50) |
+| ifngamma | `IFNG` - `SLC3A2` | 3 | negative_correlate 3 | yes | no |
+| acsl4 | `ACSL4` - `GPX4` | 3 | associate 2, negative_correlate 1 | no | no |
+| dhodh | `DHODH` - `GPX4` | 1 | negative_correlate 1 | no | no |
+| alox | `ALOX15` - `ACSL4` | 1 | associate 1 | no | no |
+| fsp1 | `AIFM2` - `GPX4` | 0 | - | - | no |
+| gch1 | `GCH1` - `GPX4` | 0 | - | - | no |
+| prom2 | `PROM2` - `FTH1` | 0 | - | - | no |
+| vitk | `VKORC1L1` - `GPX4` | 0 | - | - | no |
+| copper | `ATP7A` - `GPX4` | 0 | - | - | no |
+| por | `POR` - `CYB5R1` | 0 | - | - | no |
+| dhc7 | `DHCR7` - `GPX4` | 0 | - | - | no |
+| repair | `CHMP5` - `CHMP6` | 0 | - | - | no |
+| mboat | `MBOAT2` - `GPX4` | 0 | - | - | no |
+| ether_lipid | `FAR1` - `AGPS` | 0 | - | - | no |
+| hdac_persister | `HDAC1` - `AIFM2` | 0 | - | - | no |
+
+## Claims that sit on a CONTESTED edge
+
+These pairs are asserted in BOTH directions by the literature
+(`positive_correlate` and `negative_correlate`), yet each module cites a
+single paper and its docs do not mention the disagreement. See
+`analysis/atlas-contradictions.md` for the general catalogue.
+
+| module | pair | + | - | balance | cited PMID |
+|---|---|---|---|---|---|
+| `contact` | CDH1 - YAP1 | 3 | 4 | 0.75 | 31341276 |
+| `system_xc` | SLC7A11 - GPX4 | 3 | 2 | 0.67 | 22632970 |
+| `dc_ferroptosis` | CD274 - SLC7A11 | 4 | 2 | 0.50 | 39423128 |
+| `erastin` | erastin - SLC7A11 | 4 | 18 | 0.22 | 22632970 |
+
+A high balance means the field is genuinely split; a low one means the module
+is on the majority side of a mostly-settled question. Neither says the module
+is wrong -- it says the module docs should state which side they took.
+
 
 ## Reading
 

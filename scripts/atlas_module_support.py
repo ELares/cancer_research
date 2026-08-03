@@ -107,11 +107,16 @@ def main() -> None:
             rows.append(dict(module=module, a=a, b=b, pmid=pmid, claim=claim,
                              resolved=False, total=0, preds={}, cited_present=None))
             continue
+        pos = r["predicates"].get("positive_correlate", 0)
+        neg = r["predicates"].get("negative_correlate", 0)
         rows.append(dict(module=module, a=a, b=b, pmid=pmid, claim=claim,
                          resolved=True, total=r["total"], preds=r["predicates"],
                          a_name=r["a_name"], b_name=r["b_name"],
                          cited_present=(pmid in r["pmids"]) if r["pmids"] else None,
-                         pmids=r["pmids"][:8]))
+                         pmids=r["pmids"][:8],
+                         pos=pos, neg=neg,
+                         contested=bool(pos and neg),
+                         balance=(min(pos, neg) / max(pos, neg)) if (pos and neg) else None))
 
     found = [r for r in rows if r["resolved"] and r["total"] > 0]
     none_ = [r for r in rows if r["resolved"] and r["total"] == 0]
@@ -137,18 +142,37 @@ def main() -> None:
         "`associate`, which is nearer co-mention than knowledge, and the extractor scores",
         "~79.6 F1 on BioRED. A high count means the field discusses the pair.", "",
         f"## Result: {len(found)}/{len(rows)} claims have corpus support", "",
-        "| module | pair | articles | predicates | cited PMID in graph? |",
-        "|---|---|---|---|---|",
+        "| module | pair | articles | predicates | cited PMID in graph? | contested |",
+        "|---|---|---|---|---|---|",
     ]
     for r in sorted(rows, key=lambda r: -r["total"]):
         pair = f"`{r['a']}` - `{r['b']}`"
         if not r["resolved"]:
-            L.append(f"| {r['module']} | {pair} | _unresolved_ | - | - |")
+            L.append(f"| {r['module']} | {pair} | _unresolved_ | - | - | - |")
             continue
         preds = ", ".join(f"{k} {v}" for k, v in
                           sorted(r["preds"].items(), key=lambda kv: -kv[1])[:3]) or "-"
         cited = {True: "yes", False: "no", None: "-"}[r["cited_present"]]
-        L.append(f"| {r['module']} | {pair} | {r['total']:,} | {preds} | {cited} |")
+        con = (f"**yes** (+{r['pos']}/-{r['neg']}, bal {r['balance']:.2f})"
+               if r.get("contested") else "no")
+        L.append(f"| {r['module']} | {pair} | {r['total']:,} | {preds} | {cited} | {con} |")
+
+    contested = [r for r in rows if r.get("contested")]
+    if contested:
+        L += ["", "## Claims that sit on a CONTESTED edge", "",
+              "These pairs are asserted in BOTH directions by the literature",
+              "(`positive_correlate` and `negative_correlate`), yet each module cites a",
+              "single paper and its docs do not mention the disagreement. See",
+              "`analysis/atlas-contradictions.md` for the general catalogue.", "",
+              "| module | pair | + | - | balance | cited PMID |",
+              "|---|---|---|---|---|---|"]
+        for r in sorted(contested, key=lambda r: -(r["balance"] or 0)):
+            L.append(f"| `{r['module']}` | {r['a']} - {r['b']} | {r['pos']} | {r['neg']} | "
+                     f"{r['balance']:.2f} | {r['pmid']} |")
+        L += ["",
+              "A high balance means the field is genuinely split; a low one means the module",
+              "is on the majority side of a mostly-settled question. Neither says the module",
+              "is wrong -- it says the module docs should state which side they took.", ""]
 
     L += ["", "## Reading", "",
           f"* **{len(found)} of {len(rows)}** module claims are corroborated by at least one",
