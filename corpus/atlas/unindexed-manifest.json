@@ -6559,6 +6559,116 @@
    "cancer_text": 2417,
    "done": true,
    "unindexed": 16338
+  },
+  "pubmed26n1313.xml.gz": {
+   "cancer_text": 1896,
+   "done": true,
+   "unindexed": 15849
+  },
+  "pubmed26n1314.xml.gz": {
+   "cancer_text": 2252,
+   "done": true,
+   "unindexed": 16565
+  },
+  "pubmed26n1315.xml.gz": {
+   "cancer_text": 2055,
+   "done": true,
+   "unindexed": 15378
+  },
+  "pubmed26n1316.xml.gz": {
+   "cancer_text": 2088,
+   "done": true,
+   "unindexed": 15153
+  },
+  "pubmed26n1317.xml.gz": {
+   "cancer_text": 2372,
+   "done": true,
+   "unindexed": 16161
+  },
+  "pubmed26n1318.xml.gz": {
+   "cancer_text": 2173,
+   "done": true,
+   "unindexed": 15481
+  },
+  "pubmed26n1319.xml.gz": {
+   "cancer_text": 2197,
+   "done": true,
+   "unindexed": 16497
+  },
+  "pubmed26n1320.xml.gz": {
+   "cancer_text": 2252,
+   "done": true,
+   "unindexed": 15595
+  },
+  "pubmed26n1321.xml.gz": {
+   "cancer_text": 2839,
+   "done": true,
+   "unindexed": 17860
+  },
+  "pubmed26n1322.xml.gz": {
+   "cancer_text": 2167,
+   "done": true,
+   "unindexed": 16169
+  },
+  "pubmed26n1323.xml.gz": {
+   "cancer_text": 2695,
+   "done": true,
+   "unindexed": 18311
+  },
+  "pubmed26n1324.xml.gz": {
+   "cancer_text": 2434,
+   "done": true,
+   "unindexed": 17780
+  },
+  "pubmed26n1325.xml.gz": {
+   "cancer_text": 2359,
+   "done": true,
+   "unindexed": 16354
+  },
+  "pubmed26n1326.xml.gz": {
+   "cancer_text": 2881,
+   "done": true,
+   "unindexed": 18460
+  },
+  "pubmed26n1327.xml.gz": {
+   "cancer_text": 2804,
+   "done": true,
+   "unindexed": 19027
+  },
+  "pubmed26n1328.xml.gz": {
+   "cancer_text": 2899,
+   "done": true,
+   "unindexed": 20059
+  },
+  "pubmed26n1329.xml.gz": {
+   "cancer_text": 3090,
+   "done": true,
+   "unindexed": 20323
+  },
+  "pubmed26n1330.xml.gz": {
+   "cancer_text": 3692,
+   "done": true,
+   "unindexed": 22203
+  },
+  "pubmed26n1331.xml.gz": {
+   "cancer_text": 3355,
+   "done": true,
+   "unindexed": 22795
+  },
+  "pubmed26n1332.xml.gz": {
+   "cancer_text": 3704,
+   "done": true,
+   "unindexed": 24430
+  },
+  "pubmed26n1333.xml.gz": {
+   "cancer_text": 3517,
+   "done": true,
+   "unindexed": 23916
+  },
+  "pubmed26n1334.xml.gz": {
+   "cancer_text": 637,
+   "done": true,
+   "unindexed": 3921
   }
  },
  "validation": {

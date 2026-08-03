@@ -185,6 +185,67 @@ def main() -> None:
     for d in sorted(set(dec) | set(fdec)):
         L.append(f"| {d}s | {dec.get(d,0):,} | {fdec.get(d,0):,} |")
 
+    # --- What the census says about the frozen corpus itself ---
+    if complete:
+        import re as _re
+        from atlas_unindexed import is_cancer_text
+        not_in = [p for p in frozen_pmids if p not in census_pmids]
+        no_mesh = indexed_other = offtopic = offtopic_untagged = 0
+        frozen_rows = {}
+        with FROZEN.open(encoding="utf-8") as fh:
+            for line in fh:
+                r = json.loads(line)
+                frozen_rows[r["pmid"]] = r
+        for p in not_in:
+            fp = PROJECT_ROOT / "corpus" / "by-pmid" / f"{p}.md"
+            if not fp.exists():
+                continue
+            body = fp.read_text(errors="ignore")[:9000]
+            mm = _re.search(r"^mesh_terms:\s*(\[\]|\n((?:- .*\n)+))", body, _re.M)
+            if not mm or mm.group(1).strip() == "[]":
+                no_mesh += 1
+                continue
+            indexed_other += 1
+            ab = _re.search(r"## Abstract\n\n?(.*?)(?=\n## |\Z)", body, _re.S)
+            title = frozen_rows.get(p, {}).get("title", "")
+            if not is_cancer_text(title, ab.group(1) if ab else ""):
+                offtopic += 1
+                if not (frozen_rows.get(p, {}).get("mechanisms") or []):
+                    offtopic_untagged += 1
+
+        nf = len(frozen_pmids)
+        L += [
+            "", "## What the census says about the frozen corpus", "",
+            f"{len(not_in):,} of {nf:,} frozen records ({len(not_in)/nf:.1%}) are absent from the",
+            "census. Splitting them is informative, because the two causes point in opposite",
+            "directions:", "",
+            "| cause | n | share of frozen corpus |", "|---|---|---|",
+            f"| not yet MeSH-indexed (recent, concentrated 2022-2026) | {no_mesh:,} | {no_mesh/nf:.1%} |",
+            f"| indexed by NLM, but under no C04 descriptor | {indexed_other:,} | {indexed_other/nf:.1%} |",
+            "",
+            "The first is the census's blind spot and is recovered by",
+            "`scripts/atlas_unindexed.py`.",
+            "",
+            "The second cuts the other way and is a limit of the C04 definition itself: of",
+            f"those {indexed_other:,}, **{indexed_other-offtopic:,} ({(indexed_other-offtopic)/max(indexed_other,1):.0%}) are cancer papers by text**, which NLM",
+            "indexed under other trees (drug, enzyme, method) with cancer only as application",
+            "context. So a pure C04 filter loses roughly",
+            f"{(indexed_other-offtopic)/nf:.1%} of a hand-built cancer corpus. Neither a keyword",
+            "corpus nor a MeSH census is a superset of the other.",
+            "",
+            f"The residue -- **{offtopic} records ({offtopic/nf:.1%})** -- is genuinely not cancer:",
+            "pulsed-electromagnetic-field studies of bone healing and pain, mRNA vaccines for",
+            "COVID/Shigella/chikungunya, CRISPR method papers, bioelectric developmental",
+            "biology.",
+            "",
+            f"**{offtopic_untagged} of those {offtopic} ({offtopic_untagged/max(offtopic,1):.0%}) carry no mechanism tag at all.** That",
+            "matters for attributing blame: the mechanism tagger correctly declined to tag",
+            "them, so this is a QUERY-level defect in `scripts/queries.txt` pulling non-cancer",
+            "literature, distinct from the tag-level precision problem measured in",
+            "`analysis/mechanism-precision-report.md`. The two defects share themes (PEMF,",
+            "vaccines, CRISPR) but they are separate and need separate fixes.", "",
+        ]
+
     L += ["", "## What this changes", "",
           "1. Every mechanism count in the manuscript is a numerator without a",
           "   denominator. The census supplies it, and the ratios can finally be stated",

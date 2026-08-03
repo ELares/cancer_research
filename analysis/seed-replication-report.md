@@ -12,124 +12,169 @@ The engine had a hard-coded seed and no replicate loop, so every number it
 contributes was a single draw reported as a point estimate. Where an interval
 below spans a comparison, that comparison is not resolved by one run.
 
-## Metrics whose spread exceeds 25% of the median (31)
+## Metrics whose spread exceeds 25% of the median (48)
 
-| treatment | O2 | immune | metric | seed 42 | median | 95% CI | min-max |
-|---|---|---|---|---|---|---|---|
-| Control | cycling_80_150_p60 | off | `normoxic_kill_rate` | 0.000119 | 0.000119 | 0-0.0001785 | 0-0.000357 |
-| Control | cycling_80_150_p60 | off | `overall_kill_rate` | 6.288e-06 | 6.288e-06 | 0-9.432e-06 | 0-1.886e-05 |
-| Control | gradient_100um | off | `normoxic_kill_rate` | 0.000119 | 0.000119 | 0-0.0001785 | 0-0.000357 |
-| Control | gradient_100um | off | `overall_kill_rate` | 6.288e-06 | 6.288e-06 | 0-9.432e-06 | 0-1.886e-05 |
-| Control | gradient_120um | off | `normoxic_kill_rate` | 0.000119 | 0.000119 | 0-0.0001785 | 0-0.000357 |
-| Control | gradient_120um | off | `overall_kill_rate` | 6.288e-06 | 6.288e-06 | 0-9.432e-06 | 0-1.886e-05 |
-| Control | gradient_150um | off | `normoxic_kill_rate` | 0.000238 | 0.000119 | 0-0.000238 | 0-0.000357 |
-| Control | gradient_150um | off | `overall_kill_rate` | 1.258e-05 | 6.288e-06 | 0-1.258e-05 | 0-1.886e-05 |
-| RSL3 | gradient_120um | immune_on | `immune_kills` | 0 | 4 | 3-5 | 0-11 |
-| RSL3 | gradient_120um | immune_on | `hypoxic_kill_rate` | 0 | 0.000104 | 7.431e-05-0.0001115 | 0-0.0001858 |
-| Control | uniform | off | `normoxic_kill_rate` | 0.002618 | 0.00119 | 0.0009519-0.001368 | 0.0007139-0.002618 |
-| RSL3 | gradient_120um | immune_anti_pd1 | `immune_kills` | 16 | 15 | 12.5-16 | 8-25 |
-| RSL3 | gradient_120um | immune_on | `overall_kill_rate` | 0.0004842 | 0.0008174 | 0.0007671-0.0008835 | 0.0003899-0.00117 |
-| RSL3 | gradient_120um | immune_anti_pd1 | `hypoxic_kill_rate` | 0.000104 | 0.0001263 | 0.0001115-0.0001486 | 7.431e-05-0.0001932 |
-| RSL3 | gradient_120um | immune_on | `ferroptosis_kills` | 77 | 126 | 117-137 | 60-175 |
-| RSL3 | gradient_120um | immune_on | `normoxic_kill_rate` | 0.008924 | 0.01166 | 0.01059-0.01249 | 0.00702-0.01725 |
-| RSL3 | gradient_80um | off | `hypoxic_kill_rate` | 9.661e-05 | 0.0001115 | 9.661e-05-0.0001263 | 7.431e-05-0.0001709 |
-| RSL3 | cycling_80_150_p60 | off | `hypoxic_kill_rate` | 0.000104 | 0.0001226 | 0.0001078-0.0001449 | 7.431e-05-0.0001784 |
-| RSL3 | gradient_100um | off | `hypoxic_kill_rate` | 9.661e-05 | 0.0001152 | 9.661e-05-0.0001375 | 7.431e-05-0.0001709 |
-| RSL3 | gradient_120um | off | `hypoxic_kill_rate` | 9.661e-05 | 0.0001189 | 0.0001003-0.0001375 | 7.431e-05-0.0001709 |
-| RSL3 | gradient_150um | off | `hypoxic_kill_rate` | 0.000104 | 0.00013 | 0.0001078-0.0001449 | 8.174e-05-0.0001784 |
-| RSL3 | gradient_120um | immune_anti_pd1 | `normoxic_kill_rate` | 0.01273 | 0.01333 | 0.01285-0.01523 | 0.009876-0.01785 |
-| RSL3 | gradient_120um | immune_anti_pd1 | `ferroptosis_kills` | 136 | 140 | 131.5-150.5 | 113-175 |
-| RSL3 | gradient_120um | immune_anti_pd1 | `overall_kill_rate` | 0.0009558 | 0.0009715 | 0.0009149-0.001047 | 0.0007923-0.00122 |
-| RSL3 | gradient_80um | off | `normoxic_kill_rate` | 0.01166 | 0.01071 | 0.009995-0.01124 | 0.008567-0.01202 |
+| treatment | O2 | immune | block | metric | seed 42 | median | 95% CI | min-max |
+|---|---|---|---|---|---|---|---|---|
+| Control | cycling_80_150_p60 | off | 0 | `normoxic_kill_rate` | 0.000119 | 0.000119 | 0-0.0001785 | 0-0.000357 |
+| Control | cycling_80_150_p60 | off | 0 | `overall_kill_rate` | 6.288e-06 | 6.288e-06 | 0-9.432e-06 | 0-1.886e-05 |
+| Control | gradient_100um | off | 0 | `normoxic_kill_rate` | 0.000119 | 0.000119 | 0-0.0001785 | 0-0.000357 |
+| Control | gradient_100um | off | 0 | `overall_kill_rate` | 6.288e-06 | 6.288e-06 | 0-9.432e-06 | 0-1.886e-05 |
+| Control | gradient_120um | immune_anti_pd1 | 0 | `ferroptosis_kills` | 1 | 1 | 0-1.5 | 0-3 |
+| Control | gradient_120um | immune_anti_pd1 | 0 | `normoxic_kill_rate` | 0.000119 | 0.000119 | 0-0.0001785 | 0-0.000357 |
+| Control | gradient_120um | immune_anti_pd1 | 0 | `overall_kill_rate` | 6.288e-06 | 6.288e-06 | 0-9.432e-06 | 0-1.886e-05 |
+| Control | gradient_120um | immune_on | 0 | `ferroptosis_kills` | 1 | 1 | 0-1.5 | 0-3 |
+| Control | gradient_120um | immune_on | 0 | `normoxic_kill_rate` | 0.000119 | 0.000119 | 0-0.0001785 | 0-0.000357 |
+| Control | gradient_120um | immune_on | 0 | `overall_kill_rate` | 6.288e-06 | 6.288e-06 | 0-9.432e-06 | 0-1.886e-05 |
+| Control | gradient_120um | immune_on | 2 | `ferroptosis_kills` | 2 | 1 | 0-2 | 0-3 |
+| Control | gradient_120um | immune_on | 2 | `normoxic_kill_rate` | 0.000238 | 0.000119 | 0-0.000238 | 0-0.000357 |
+| Control | gradient_120um | immune_on | 2 | `overall_kill_rate` | 1.258e-05 | 6.288e-06 | 0-1.258e-05 | 0-1.886e-05 |
+| Control | gradient_120um | off | 0 | `normoxic_kill_rate` | 0.000119 | 0.000119 | 0-0.0001785 | 0-0.000357 |
+| Control | gradient_120um | off | 0 | `overall_kill_rate` | 6.288e-06 | 6.288e-06 | 0-9.432e-06 | 0-1.886e-05 |
+| Control | gradient_150um | off | 0 | `normoxic_kill_rate` | 0.000238 | 0.000119 | 0-0.000238 | 0-0.000357 |
+| Control | gradient_150um | off | 0 | `overall_kill_rate` | 1.258e-05 | 6.288e-06 | 0-1.258e-05 | 0-1.886e-05 |
+| RSL3 | gradient_120um | immune_on | 0 | `immune_kills` | 5 | 5 | 4-5.5 | 0-11 |
+| RSL3 | gradient_120um | immune_on | 2 | `immune_kills` | 0 | 3 | 2-3 | 0-6 |
+| RSL3 | gradient_120um | immune_on | 1 | `immune_kills` | 4 | 4 | 3-5 | 0-7 |
+| Control | uniform | off | 0 | `normoxic_kill_rate` | 0.002618 | 0.00119 | 0.0009519-0.001368 | 0.0007139-0.002618 |
+| RSL3 | gradient_120um | immune_anti_pd1 | 0 | `hypoxic_kill_rate` | 0.000104 | 0.0001263 | 0.0001115-0.0001523 | 7.431e-05-0.0001932 |
+| RSL3 | gradient_120um | immune_anti_pd1 | 1 | `hypoxic_kill_rate` | 0.000104 | 0.0001263 | 0.0001115-0.0001523 | 7.431e-05-0.0001932 |
+| RSL3 | gradient_120um | immune_on | 0 | `hypoxic_kill_rate` | 9.661e-05 | 0.0001226 | 0.000104-0.0001449 | 7.431e-05-0.0001858 |
+| RSL3 | gradient_120um | immune_on | 1 | `hypoxic_kill_rate` | 9.661e-05 | 0.0001226 | 0.000104-0.0001449 | 7.431e-05-0.0001858 |
 
 ## Full table
 
-| treatment | O2 | immune | metric | n | seed 42 | median | 95% CI |
-|---|---|---|---|---|---|---|---|
-| Control | cycling_80_150_p60 | off | `hypoxic_kill_rate` | 20 | 0 | 0 | 0-0 |
-| Control | cycling_80_150_p60 | off | `normoxic_kill_rate` | 20 | 0.000119 | 0.000119 | 0-0.0001785 |
-| Control | cycling_80_150_p60 | off | `overall_kill_rate` | 20 | 6.288e-06 | 6.288e-06 | 0-9.432e-06 |
-| Control | gradient_100um | off | `hypoxic_kill_rate` | 20 | 0 | 0 | 0-0 |
-| Control | gradient_100um | off | `normoxic_kill_rate` | 20 | 0.000119 | 0.000119 | 0-0.0001785 |
-| Control | gradient_100um | off | `overall_kill_rate` | 20 | 6.288e-06 | 6.288e-06 | 0-9.432e-06 |
-| Control | gradient_120um | immune_anti_pd1 | `ferroptosis_kills` | 40 | 0 | 0 | 0-1 |
-| Control | gradient_120um | immune_anti_pd1 | `hypoxic_kill_rate` | 40 | 0 | 0 | 0-0 |
-| Control | gradient_120um | immune_anti_pd1 | `immune_kills` | 40 | 0 | 0 | 0-0 |
-| Control | gradient_120um | immune_anti_pd1 | `normoxic_kill_rate` | 40 | 0 | 0 | 0-0.000119 |
-| Control | gradient_120um | immune_anti_pd1 | `overall_kill_rate` | 40 | 0 | 0 | 0-6.288e-06 |
-| Control | gradient_120um | immune_on | `ferroptosis_kills` | 60 | 2 | 0 | 0-1 |
-| Control | gradient_120um | immune_on | `hypoxic_kill_rate` | 60 | 0 | 0 | 0-0 |
-| Control | gradient_120um | immune_on | `immune_kills` | 60 | 0 | 0 | 0-0 |
-| Control | gradient_120um | immune_on | `normoxic_kill_rate` | 60 | 0.000238 | 0 | 0-0.000119 |
-| Control | gradient_120um | immune_on | `overall_kill_rate` | 60 | 1.258e-05 | 0 | 0-6.288e-06 |
-| Control | gradient_120um | off | `hypoxic_kill_rate` | 20 | 0 | 0 | 0-0 |
-| Control | gradient_120um | off | `normoxic_kill_rate` | 20 | 0.000119 | 0.000119 | 0-0.0001785 |
-| Control | gradient_120um | off | `overall_kill_rate` | 20 | 6.288e-06 | 6.288e-06 | 0-9.432e-06 |
-| Control | gradient_150um | off | `hypoxic_kill_rate` | 20 | 0 | 0 | 0-0 |
-| Control | gradient_150um | off | `normoxic_kill_rate` | 20 | 0.000238 | 0.000119 | 0-0.000238 |
-| Control | gradient_150um | off | `overall_kill_rate` | 20 | 1.258e-05 | 6.288e-06 | 0-1.258e-05 |
-| Control | gradient_80um | off | `hypoxic_kill_rate` | 20 | 0 | 0 | 0-0 |
-| Control | gradient_80um | off | `normoxic_kill_rate` | 20 | 0.000119 | 0 | 0-0.000119 |
-| Control | gradient_80um | off | `overall_kill_rate` | 20 | 6.288e-06 | 0 | 0-6.288e-06 |
-| Control | uniform | off | `hypoxic_kill_rate` | 20 | 0.001196 | 0.001085 | 0.001048-0.001156 |
-| Control | uniform | off | `normoxic_kill_rate` | 20 | 0.002618 | 0.00119 | 0.0009519-0.001368 |
-| Control | uniform | off | `overall_kill_rate` | 20 | 0.001302 | 0.001104 | 0.001066-0.001148 |
-| RSL3 | cycling_80_150_p60 | off | `hypoxic_kill_rate` | 20 | 0.000104 | 0.0001226 | 0.0001078-0.0001449 |
-| RSL3 | cycling_80_150_p60 | off | `normoxic_kill_rate` | 20 | 0.01475 | 0.01475 | 0.01434-0.01565 |
-| RSL3 | cycling_80_150_p60 | off | `overall_kill_rate` | 20 | 0.001075 | 0.001031 | 0.0009809-0.001063 |
-| RSL3 | gradient_100um | off | `hypoxic_kill_rate` | 20 | 9.661e-05 | 0.0001152 | 9.661e-05-0.0001375 |
-| RSL3 | gradient_100um | off | `normoxic_kill_rate` | 20 | 0.01345 | 0.01297 | 0.01226-0.01345 |
-| RSL3 | gradient_100um | off | `overall_kill_rate` | 20 | 0.000918 | 0.0008363 | 0.0008174-0.0008835 |
-| RSL3 | gradient_120um | immune_anti_pd1 | `ferroptosis_kills` | 40 | 136 | 140 | 131.5-150.5 |
-| RSL3 | gradient_120um | immune_anti_pd1 | `hypoxic_kill_rate` | 40 | 0.000104 | 0.0001263 | 0.0001115-0.0001486 |
-| RSL3 | gradient_120um | immune_anti_pd1 | `immune_kills` | 40 | 16 | 15 | 12.5-16 |
-| RSL3 | gradient_120um | immune_anti_pd1 | `normoxic_kill_rate` | 40 | 0.01273 | 0.01333 | 0.01285-0.01523 |
-| RSL3 | gradient_120um | immune_anti_pd1 | `overall_kill_rate` | 40 | 0.0009558 | 0.0009715 | 0.0009149-0.001047 |
-| RSL3 | gradient_120um | immune_on | `ferroptosis_kills` | 60 | 77 | 126 | 117-137 |
-| RSL3 | gradient_120um | immune_on | `hypoxic_kill_rate` | 60 | 0 | 0.000104 | 7.431e-05-0.0001115 |
-| RSL3 | gradient_120um | immune_on | `immune_kills` | 60 | 0 | 4 | 3-5 |
-| RSL3 | gradient_120um | immune_on | `normoxic_kill_rate` | 60 | 0.008924 | 0.01166 | 0.01059-0.01249 |
-| RSL3 | gradient_120um | immune_on | `overall_kill_rate` | 60 | 0.0004842 | 0.0008174 | 0.0007671-0.0008835 |
-| RSL3 | gradient_120um | off | `hypoxic_kill_rate` | 20 | 9.661e-05 | 0.0001189 | 0.0001003-0.0001375 |
-| RSL3 | gradient_120um | off | `normoxic_kill_rate` | 20 | 0.01499 | 0.01458 | 0.01404-0.01535 |
-| RSL3 | gradient_120um | off | `overall_kill_rate` | 20 | 0.001025 | 0.0009746 | 0.0009463-0.001025 |
-| RSL3 | gradient_150um | off | `hypoxic_kill_rate` | 20 | 0.000104 | 0.00013 | 0.0001078-0.0001449 |
-| RSL3 | gradient_150um | off | `normoxic_kill_rate` | 20 | 0.0169 | 0.0169 | 0.01636-0.01737 |
-| RSL3 | gradient_150um | off | `overall_kill_rate` | 20 | 0.001239 | 0.001198 | 0.001138-0.001239 |
-| RSL3 | gradient_80um | off | `hypoxic_kill_rate` | 20 | 9.661e-05 | 0.0001115 | 9.661e-05-0.0001263 |
-| RSL3 | gradient_80um | off | `normoxic_kill_rate` | 20 | 0.01166 | 0.01071 | 0.009995-0.01124 |
-| RSL3 | gradient_80um | off | `overall_kill_rate` | 20 | 0.0007546 | 0.0007074 | 0.0006382-0.0007357 |
-| RSL3 | uniform | off | `hypoxic_kill_rate` | 20 | 0.03532 | 0.03585 | 0.0356-0.03642 |
-| RSL3 | uniform | off | `normoxic_kill_rate` | 20 | 0.04415 | 0.04212 | 0.04141-0.04331 |
-| RSL3 | uniform | off | `overall_kill_rate` | 20 | 0.03659 | 0.03685 | 0.03668-0.03717 |
-| SDT | cycling_80_150_p60 | off | `hypoxic_kill_rate` | 20 | 0.8662 | 0.8664 | 0.8659-0.8667 |
-| SDT | cycling_80_150_p60 | off | `normoxic_kill_rate` | 20 | 0.9537 | 0.95 | 0.9494-0.9506 |
-| SDT | cycling_80_150_p60 | off | `overall_kill_rate` | 20 | 0.8782 | 0.8782 | 0.8777-0.8785 |
-| SDT | gradient_100um | off | `hypoxic_kill_rate` | 20 | 0.8661 | 0.8663 | 0.8658-0.8666 |
-| SDT | gradient_100um | off | `normoxic_kill_rate` | 20 | 0.9531 | 0.9488 | 0.9482-0.9496 |
-| SDT | gradient_100um | off | `overall_kill_rate` | 20 | 0.8779 | 0.8778 | 0.8773-0.8781 |
-| SDT | gradient_120um | immune_anti_pd1 | `ferroptosis_kills` | 40 | 1.395e+05 | 1.395e+05 | 1.395e+05-1.396e+05 |
-| SDT | gradient_120um | immune_anti_pd1 | `hypoxic_kill_rate` | 40 | 0.8759 | 0.8763 | 0.8759-0.8765 |
-| SDT | gradient_120um | immune_anti_pd1 | `immune_kills` | 40 | 1481 | 1497 | 1484-1508 |
-| SDT | gradient_120um | immune_anti_pd1 | `normoxic_kill_rate` | 40 | 0.947 | 0.9489 | 0.944-0.9523 |
-| SDT | gradient_120um | immune_anti_pd1 | `overall_kill_rate` | 40 | 0.8866 | 0.8868 | 0.8864-0.8871 |
-| SDT | gradient_120um | immune_on | `ferroptosis_kills` | 60 | 1.407e+05 | 1.397e+05 | 1.396e+05-1.398e+05 |
-| SDT | gradient_120um | immune_on | `hypoxic_kill_rate` | 60 | 0.8767 | 0.8702 | 0.87-0.8713 |
-| SDT | gradient_120um | immune_on | `immune_kills` | 60 | 496 | 529.5 | 525-535 |
-| SDT | gradient_120um | immune_on | `normoxic_kill_rate` | 60 | 0.9563 | 0.9506 | 0.9486-0.9515 |
-| SDT | gradient_120um | immune_on | `overall_kill_rate` | 60 | 0.8878 | 0.8815 | 0.8811-0.8824 |
-| SDT | gradient_120um | off | `hypoxic_kill_rate` | 20 | 0.8662 | 0.8663 | 0.8658-0.8667 |
-| SDT | gradient_120um | off | `normoxic_kill_rate` | 20 | 0.9538 | 0.9501 | 0.9494-0.9507 |
-| SDT | gradient_120um | off | `overall_kill_rate` | 20 | 0.8782 | 0.8781 | 0.8776-0.8784 |
-| SDT | gradient_150um | off | `hypoxic_kill_rate` | 20 | 0.8663 | 0.8664 | 0.866-0.8668 |
-| SDT | gradient_150um | off | `normoxic_kill_rate` | 20 | 0.9557 | 0.9517 | 0.9507-0.9522 |
-| SDT | gradient_150um | off | `overall_kill_rate` | 20 | 0.8785 | 0.8785 | 0.878-0.8788 |
-| SDT | gradient_80um | off | `hypoxic_kill_rate` | 20 | 0.8661 | 0.8662 | 0.8657-0.8666 |
-| SDT | gradient_80um | off | `normoxic_kill_rate` | 20 | 0.951 | 0.947 | 0.9465-0.9481 |
-| SDT | gradient_80um | off | `overall_kill_rate` | 20 | 0.8775 | 0.8776 | 0.8771-0.8778 |
-| SDT | uniform | off | `hypoxic_kill_rate` | 20 | 0.9119 | 0.9118 | 0.9113-0.912 |
-| SDT | uniform | off | `normoxic_kill_rate` | 20 | 0.9631 | 0.9587 | 0.9577-0.9597 |
-| SDT | uniform | off | `overall_kill_rate` | 20 | 0.9195 | 0.9191 | 0.9186-0.9195 |
+| treatment | O2 | immune | block | metric | n | seed 42 | median | 95% CI |
+|---|---|---|---|---|---|---|---|---|
+| Control | cycling_80_150_p60 | off | 0 | `hypoxic_kill_rate` | 20 | 0 | 0 | 0-0 |
+| Control | cycling_80_150_p60 | off | 0 | `normoxic_kill_rate` | 20 | 0.000119 | 0.000119 | 0-0.0001785 |
+| Control | cycling_80_150_p60 | off | 0 | `overall_kill_rate` | 20 | 6.288e-06 | 6.288e-06 | 0-9.432e-06 |
+| Control | gradient_100um | off | 0 | `hypoxic_kill_rate` | 20 | 0 | 0 | 0-0 |
+| Control | gradient_100um | off | 0 | `normoxic_kill_rate` | 20 | 0.000119 | 0.000119 | 0-0.0001785 |
+| Control | gradient_100um | off | 0 | `overall_kill_rate` | 20 | 6.288e-06 | 6.288e-06 | 0-9.432e-06 |
+| Control | gradient_120um | immune_anti_pd1 | 0 | `ferroptosis_kills` | 20 | 1 | 1 | 0-1.5 |
+| Control | gradient_120um | immune_anti_pd1 | 0 | `hypoxic_kill_rate` | 20 | 0 | 0 | 0-0 |
+| Control | gradient_120um | immune_anti_pd1 | 0 | `immune_kills` | 20 | 0 | 0 | 0-0 |
+| Control | gradient_120um | immune_anti_pd1 | 0 | `normoxic_kill_rate` | 20 | 0.000119 | 0.000119 | 0-0.0001785 |
+| Control | gradient_120um | immune_anti_pd1 | 0 | `overall_kill_rate` | 20 | 6.288e-06 | 6.288e-06 | 0-9.432e-06 |
+| Control | gradient_120um | immune_anti_pd1 | 1 | `ferroptosis_kills` | 20 | 0 | 0 | 0-0 |
+| Control | gradient_120um | immune_anti_pd1 | 1 | `hypoxic_kill_rate` | 20 | 0 | 0 | 0-0 |
+| Control | gradient_120um | immune_anti_pd1 | 1 | `immune_kills` | 20 | 0 | 0 | 0-0 |
+| Control | gradient_120um | immune_anti_pd1 | 1 | `normoxic_kill_rate` | 20 | 0 | 0 | 0-0 |
+| Control | gradient_120um | immune_anti_pd1 | 1 | `overall_kill_rate` | 20 | 0 | 0 | 0-0 |
+| Control | gradient_120um | immune_on | 0 | `ferroptosis_kills` | 20 | 1 | 1 | 0-1.5 |
+| Control | gradient_120um | immune_on | 0 | `hypoxic_kill_rate` | 20 | 0 | 0 | 0-0 |
+| Control | gradient_120um | immune_on | 0 | `immune_kills` | 20 | 0 | 0 | 0-0 |
+| Control | gradient_120um | immune_on | 0 | `normoxic_kill_rate` | 20 | 0.000119 | 0.000119 | 0-0.0001785 |
+| Control | gradient_120um | immune_on | 0 | `overall_kill_rate` | 20 | 6.288e-06 | 6.288e-06 | 0-9.432e-06 |
+| Control | gradient_120um | immune_on | 1 | `ferroptosis_kills` | 20 | 0 | 0 | 0-0 |
+| Control | gradient_120um | immune_on | 1 | `hypoxic_kill_rate` | 20 | 0 | 0 | 0-0 |
+| Control | gradient_120um | immune_on | 1 | `immune_kills` | 20 | 0 | 0 | 0-0 |
+| Control | gradient_120um | immune_on | 1 | `normoxic_kill_rate` | 20 | 0 | 0 | 0-0 |
+| Control | gradient_120um | immune_on | 1 | `overall_kill_rate` | 20 | 0 | 0 | 0-0 |
+| Control | gradient_120um | immune_on | 2 | `ferroptosis_kills` | 20 | 2 | 1 | 0-2 |
+| Control | gradient_120um | immune_on | 2 | `hypoxic_kill_rate` | 20 | 0 | 0 | 0-0 |
+| Control | gradient_120um | immune_on | 2 | `immune_kills` | 20 | 0 | 0 | 0-0 |
+| Control | gradient_120um | immune_on | 2 | `normoxic_kill_rate` | 20 | 0.000238 | 0.000119 | 0-0.000238 |
+| Control | gradient_120um | immune_on | 2 | `overall_kill_rate` | 20 | 1.258e-05 | 6.288e-06 | 0-1.258e-05 |
+| Control | gradient_120um | off | 0 | `hypoxic_kill_rate` | 20 | 0 | 0 | 0-0 |
+| Control | gradient_120um | off | 0 | `normoxic_kill_rate` | 20 | 0.000119 | 0.000119 | 0-0.0001785 |
+| Control | gradient_120um | off | 0 | `overall_kill_rate` | 20 | 6.288e-06 | 6.288e-06 | 0-9.432e-06 |
+| Control | gradient_150um | off | 0 | `hypoxic_kill_rate` | 20 | 0 | 0 | 0-0 |
+| Control | gradient_150um | off | 0 | `normoxic_kill_rate` | 20 | 0.000238 | 0.000119 | 0-0.000238 |
+| Control | gradient_150um | off | 0 | `overall_kill_rate` | 20 | 1.258e-05 | 6.288e-06 | 0-1.258e-05 |
+| Control | gradient_80um | off | 0 | `hypoxic_kill_rate` | 20 | 0 | 0 | 0-0 |
+| Control | gradient_80um | off | 0 | `normoxic_kill_rate` | 20 | 0.000119 | 0 | 0-0.000119 |
+| Control | gradient_80um | off | 0 | `overall_kill_rate` | 20 | 6.288e-06 | 0 | 0-6.288e-06 |
+| Control | uniform | off | 0 | `hypoxic_kill_rate` | 20 | 0.001196 | 0.001085 | 0.001048-0.001156 |
+| Control | uniform | off | 0 | `normoxic_kill_rate` | 20 | 0.002618 | 0.00119 | 0.0009519-0.001368 |
+| Control | uniform | off | 0 | `overall_kill_rate` | 20 | 0.001302 | 0.001104 | 0.001066-0.001148 |
+| RSL3 | cycling_80_150_p60 | off | 0 | `hypoxic_kill_rate` | 20 | 0.000104 | 0.0001226 | 0.0001078-0.0001449 |
+| RSL3 | cycling_80_150_p60 | off | 0 | `normoxic_kill_rate` | 20 | 0.01475 | 0.01475 | 0.01434-0.01565 |
+| RSL3 | cycling_80_150_p60 | off | 0 | `overall_kill_rate` | 20 | 0.001075 | 0.001031 | 0.0009809-0.001063 |
+| RSL3 | gradient_100um | off | 0 | `hypoxic_kill_rate` | 20 | 9.661e-05 | 0.0001152 | 9.661e-05-0.0001375 |
+| RSL3 | gradient_100um | off | 0 | `normoxic_kill_rate` | 20 | 0.01345 | 0.01297 | 0.01226-0.01345 |
+| RSL3 | gradient_100um | off | 0 | `overall_kill_rate` | 20 | 0.000918 | 0.0008363 | 0.0008174-0.0008835 |
+| RSL3 | gradient_120um | immune_anti_pd1 | 0 | `ferroptosis_kills` | 20 | 163 | 155 | 150.5-163 |
+| RSL3 | gradient_120um | immune_anti_pd1 | 0 | `hypoxic_kill_rate` | 20 | 0.000104 | 0.0001263 | 0.0001115-0.0001523 |
+| RSL3 | gradient_120um | immune_anti_pd1 | 0 | `immune_kills` | 20 | 18 | 16 | 14-17 |
+| RSL3 | gradient_120um | immune_anti_pd1 | 0 | `normoxic_kill_rate` | 20 | 0.01606 | 0.01594 | 0.01523-0.01666 |
+| RSL3 | gradient_120um | immune_anti_pd1 | 0 | `overall_kill_rate` | 20 | 0.001138 | 0.001078 | 0.001047-0.001126 |
+| RSL3 | gradient_120um | immune_anti_pd1 | 1 | `ferroptosis_kills` | 20 | 136 | 126 | 123-131.5 |
+| RSL3 | gradient_120um | immune_anti_pd1 | 1 | `hypoxic_kill_rate` | 20 | 0.000104 | 0.0001263 | 0.0001115-0.0001523 |
+| RSL3 | gradient_120um | immune_anti_pd1 | 1 | `immune_kills` | 20 | 16 | 12.5 | 10.5-15 |
+| RSL3 | gradient_120um | immune_anti_pd1 | 1 | `normoxic_kill_rate` | 20 | 0.01273 | 0.01243 | 0.0119-0.01285 |
+| RSL3 | gradient_120um | immune_anti_pd1 | 1 | `overall_kill_rate` | 20 | 0.0009558 | 0.0008835 | 0.00083-0.0009149 |
+| RSL3 | gradient_120um | immune_on | 0 | `ferroptosis_kills` | 20 | 163 | 155 | 150.5-163 |
+| RSL3 | gradient_120um | immune_on | 0 | `hypoxic_kill_rate` | 20 | 9.661e-05 | 0.0001226 | 0.000104-0.0001449 |
+| RSL3 | gradient_120um | immune_on | 0 | `immune_kills` | 20 | 5 | 5 | 4-5.5 |
+| RSL3 | gradient_120um | immune_on | 0 | `normoxic_kill_rate` | 20 | 0.01523 | 0.01499 | 0.01434-0.01589 |
+| RSL3 | gradient_120um | immune_on | 0 | `overall_kill_rate` | 20 | 0.001056 | 0.001009 | 0.0009809-0.00105 |
+| RSL3 | gradient_120um | immune_on | 1 | `ferroptosis_kills` | 20 | 136 | 126 | 123-131.5 |
+| RSL3 | gradient_120um | immune_on | 1 | `hypoxic_kill_rate` | 20 | 9.661e-05 | 0.0001226 | 0.000104-0.0001449 |
+| RSL3 | gradient_120um | immune_on | 1 | `immune_kills` | 20 | 4 | 4 | 3-5 |
+| RSL3 | gradient_120um | immune_on | 1 | `normoxic_kill_rate` | 20 | 0.01202 | 0.01166 | 0.01124-0.01208 |
+| RSL3 | gradient_120um | immune_on | 1 | `overall_kill_rate` | 20 | 0.0008803 | 0.0008174 | 0.0007954-0.0008646 |
+| RSL3 | gradient_120um | immune_on | 2 | `ferroptosis_kills` | 20 | 77 | 73 | 67.5-75.5 |
+| RSL3 | gradient_120um | immune_on | 2 | `hypoxic_kill_rate` | 20 | 0 | 0 | 0-0 |
+| RSL3 | gradient_120um | immune_on | 2 | `immune_kills` | 20 | 0 | 3 | 2-3 |
+| RSL3 | gradient_120um | immune_on | 2 | `normoxic_kill_rate` | 20 | 0.008924 | 0.008746 | 0.008329-0.009222 |
+| RSL3 | gradient_120um | immune_on | 2 | `overall_kill_rate` | 20 | 0.0004842 | 0.0004716 | 0.0004527-0.0004905 |
+| RSL3 | gradient_120um | off | 0 | `hypoxic_kill_rate` | 20 | 9.661e-05 | 0.0001189 | 0.0001003-0.0001375 |
+| RSL3 | gradient_120um | off | 0 | `normoxic_kill_rate` | 20 | 0.01499 | 0.01458 | 0.01404-0.01535 |
+| RSL3 | gradient_120um | off | 0 | `overall_kill_rate` | 20 | 0.001025 | 0.0009746 | 0.0009463-0.001025 |
+| RSL3 | gradient_150um | off | 0 | `hypoxic_kill_rate` | 20 | 0.000104 | 0.00013 | 0.0001078-0.0001449 |
+| RSL3 | gradient_150um | off | 0 | `normoxic_kill_rate` | 20 | 0.0169 | 0.0169 | 0.01636-0.01737 |
+| RSL3 | gradient_150um | off | 0 | `overall_kill_rate` | 20 | 0.001239 | 0.001198 | 0.001138-0.001239 |
+| RSL3 | gradient_80um | off | 0 | `hypoxic_kill_rate` | 20 | 9.661e-05 | 0.0001115 | 9.661e-05-0.0001263 |
+| RSL3 | gradient_80um | off | 0 | `normoxic_kill_rate` | 20 | 0.01166 | 0.01071 | 0.009995-0.01124 |
+| RSL3 | gradient_80um | off | 0 | `overall_kill_rate` | 20 | 0.0007546 | 0.0007074 | 0.0006382-0.0007357 |
+| RSL3 | uniform | off | 0 | `hypoxic_kill_rate` | 20 | 0.03532 | 0.03585 | 0.0356-0.03642 |
+| RSL3 | uniform | off | 0 | `normoxic_kill_rate` | 20 | 0.04415 | 0.04212 | 0.04141-0.04331 |
+| RSL3 | uniform | off | 0 | `overall_kill_rate` | 20 | 0.03659 | 0.03685 | 0.03668-0.03717 |
+| SDT | cycling_80_150_p60 | off | 0 | `hypoxic_kill_rate` | 20 | 0.8662 | 0.8664 | 0.8659-0.8667 |
+| SDT | cycling_80_150_p60 | off | 0 | `normoxic_kill_rate` | 20 | 0.9537 | 0.95 | 0.9494-0.9506 |
+| SDT | cycling_80_150_p60 | off | 0 | `overall_kill_rate` | 20 | 0.8782 | 0.8782 | 0.8777-0.8785 |
+| SDT | gradient_100um | off | 0 | `hypoxic_kill_rate` | 20 | 0.8661 | 0.8663 | 0.8658-0.8666 |
+| SDT | gradient_100um | off | 0 | `normoxic_kill_rate` | 20 | 0.9531 | 0.9488 | 0.9482-0.9496 |
+| SDT | gradient_100um | off | 0 | `overall_kill_rate` | 20 | 0.8779 | 0.8778 | 0.8773-0.8781 |
+| SDT | gradient_120um | immune_anti_pd1 | 0 | `ferroptosis_kills` | 20 | 1.396e+05 | 1.396e+05 | 1.395e+05-1.396e+05 |
+| SDT | gradient_120um | immune_anti_pd1 | 0 | `hypoxic_kill_rate` | 20 | 0.8759 | 0.8763 | 0.8757-0.8765 |
+| SDT | gradient_120um | immune_anti_pd1 | 0 | `immune_kills` | 20 | 1477 | 1496 | 1480-1508 |
+| SDT | gradient_120um | immune_anti_pd1 | 0 | `normoxic_kill_rate` | 20 | 0.9573 | 0.9525 | 0.9523-0.9537 |
+| SDT | gradient_120um | immune_anti_pd1 | 0 | `overall_kill_rate` | 20 | 0.8871 | 0.8871 | 0.8865-0.8874 |
+| SDT | gradient_120um | immune_anti_pd1 | 1 | `ferroptosis_kills` | 20 | 1.395e+05 | 1.395e+05 | 1.394e+05-1.395e+05 |
+| SDT | gradient_120um | immune_anti_pd1 | 1 | `hypoxic_kill_rate` | 20 | 0.8759 | 0.8763 | 0.8757-0.8765 |
+| SDT | gradient_120um | immune_anti_pd1 | 1 | `immune_kills` | 20 | 1481 | 1498 | 1482-1513 |
+| SDT | gradient_120um | immune_anti_pd1 | 1 | `normoxic_kill_rate` | 20 | 0.947 | 0.9431 | 0.9418-0.944 |
+| SDT | gradient_120um | immune_anti_pd1 | 1 | `overall_kill_rate` | 20 | 0.8866 | 0.8865 | 0.8859-0.8869 |
+| SDT | gradient_120um | immune_on | 0 | `ferroptosis_kills` | 20 | 1.396e+05 | 1.396e+05 | 1.395e+05-1.397e+05 |
+| SDT | gradient_120um | immune_on | 0 | `hypoxic_kill_rate` | 20 | 0.8696 | 0.87 | 0.8694-0.8702 |
+| SDT | gradient_120um | immune_on | 0 | `immune_kills` | 20 | 521 | 539 | 528.5-545 |
+| SDT | gradient_120um | immune_on | 0 | `normoxic_kill_rate` | 20 | 0.9548 | 0.9512 | 0.9505-0.9517 |
+| SDT | gradient_120um | immune_on | 0 | `overall_kill_rate` | 20 | 0.8813 | 0.8813 | 0.8809-0.8815 |
+| SDT | gradient_120um | immune_on | 1 | `ferroptosis_kills` | 20 | 1.396e+05 | 1.395e+05 | 1.395e+05-1.396e+05 |
+| SDT | gradient_120um | immune_on | 1 | `hypoxic_kill_rate` | 20 | 0.8696 | 0.87 | 0.8694-0.8702 |
+| SDT | gradient_120um | immune_on | 1 | `immune_kills` | 20 | 523 | 541 | 529-547 |
+| SDT | gradient_120um | immune_on | 1 | `normoxic_kill_rate` | 20 | 0.9443 | 0.9412 | 0.9397-0.942 |
+| SDT | gradient_120um | immune_on | 1 | `overall_kill_rate` | 20 | 0.8808 | 0.8808 | 0.8803-0.881 |
+| SDT | gradient_120um | immune_on | 2 | `ferroptosis_kills` | 20 | 1.407e+05 | 1.407e+05 | 1.406e+05-1.407e+05 |
+| SDT | gradient_120um | immune_on | 2 | `hypoxic_kill_rate` | 20 | 0.8767 | 0.8772 | 0.8768-0.8775 |
+| SDT | gradient_120um | immune_on | 2 | `immune_kills` | 20 | 496 | 514.5 | 505-519 |
+| SDT | gradient_120um | immune_on | 2 | `normoxic_kill_rate` | 20 | 0.9563 | 0.9524 | 0.9515-0.9535 |
+| SDT | gradient_120um | immune_on | 2 | `overall_kill_rate` | 20 | 0.8878 | 0.8879 | 0.8876-0.8882 |
+| SDT | gradient_120um | off | 0 | `hypoxic_kill_rate` | 20 | 0.8662 | 0.8663 | 0.8658-0.8667 |
+| SDT | gradient_120um | off | 0 | `normoxic_kill_rate` | 20 | 0.9538 | 0.9501 | 0.9494-0.9507 |
+| SDT | gradient_120um | off | 0 | `overall_kill_rate` | 20 | 0.8782 | 0.8781 | 0.8776-0.8784 |
+| SDT | gradient_150um | off | 0 | `hypoxic_kill_rate` | 20 | 0.8663 | 0.8664 | 0.866-0.8668 |
+| SDT | gradient_150um | off | 0 | `normoxic_kill_rate` | 20 | 0.9557 | 0.9517 | 0.9507-0.9522 |
+| SDT | gradient_150um | off | 0 | `overall_kill_rate` | 20 | 0.8785 | 0.8785 | 0.878-0.8788 |
+| SDT | gradient_80um | off | 0 | `hypoxic_kill_rate` | 20 | 0.8661 | 0.8662 | 0.8657-0.8666 |
+| SDT | gradient_80um | off | 0 | `normoxic_kill_rate` | 20 | 0.951 | 0.947 | 0.9465-0.9481 |
+| SDT | gradient_80um | off | 0 | `overall_kill_rate` | 20 | 0.8775 | 0.8776 | 0.8771-0.8778 |
+| SDT | uniform | off | 0 | `hypoxic_kill_rate` | 20 | 0.9119 | 0.9118 | 0.9113-0.912 |
+| SDT | uniform | off | 0 | `normoxic_kill_rate` | 20 | 0.9631 | 0.9587 | 0.9577-0.9597 |
+| SDT | uniform | off | 0 | `overall_kill_rate` | 20 | 0.9195 | 0.9191 | 0.9186-0.9195 |
 
 ## How to read this
 

@@ -84,6 +84,40 @@ real one.
 | 2010s | 1,165,252 | 513 |
 | 2020s | 859,015 | 4,291 |
 
+## What the census says about the frozen corpus
+
+1,210 of 4,830 frozen records (25.1%) are absent from the
+census. Splitting them is informative, because the two causes point in opposite
+directions:
+
+| cause | n | share of frozen corpus |
+|---|---|---|
+| not yet MeSH-indexed (recent, concentrated 2022-2026) | 940 | 19.5% |
+| indexed by NLM, but under no C04 descriptor | 270 | 5.6% |
+
+The first is the census's blind spot and is recovered by
+`scripts/atlas_unindexed.py`.
+
+The second cuts the other way and is a limit of the C04 definition itself: of
+those 270, **223 (83%) are cancer papers by text**, which NLM
+indexed under other trees (drug, enzyme, method) with cancer only as application
+context. So a pure C04 filter loses roughly
+4.6% of a hand-built cancer corpus. Neither a keyword
+corpus nor a MeSH census is a superset of the other.
+
+The residue -- **47 records (1.0%)** -- is genuinely not cancer:
+pulsed-electromagnetic-field studies of bone healing and pain, mRNA vaccines for
+COVID/Shigella/chikungunya, CRISPR method papers, bioelectric developmental
+biology.
+
+**45 of those 47 (96%) carry no mechanism tag at all.** That
+matters for attributing blame: the mechanism tagger correctly declined to tag
+them, so this is a QUERY-level defect in `scripts/queries.txt` pulling non-cancer
+literature, distinct from the tag-level precision problem measured in
+`analysis/mechanism-precision-report.md`. The two defects share themes (PEMF,
+vaccines, CRISPR) but they are separate and need separate fixes.
+
+
 ## What this changes
 
 1. Every mechanism count in the manuscript is a numerator without a
