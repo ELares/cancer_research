@@ -75,6 +75,44 @@ USER_AGENT = "cancer_research-atlas/1.0 (https://github.com/ELares/cancer_resear
 
 DEFAULT_ROOT = PROJECT_ROOT / "corpus" / "atlas"
 
+# --- Cancer-ADJACENT descriptors outside tree C04 (#ATLAS) -------------------
+#
+# A C04-only census misses foundational mechanism papers. Measured the hard way:
+# BOTH founding FSP1 papers -- Doll 2019 "FSP1 is a glutathione-independent
+# ferroptosis suppressor" and Bersuker 2019 "The CoQ oxidoreductase FSP1 acts
+# parallel to GPX4", both in Nature -- are ABSENT from the C04 census. They are
+# MeSH-indexed, but their only tumour-related descriptors are `Cell Line, Tumor`
+# (tree A11) and `Gene Expression Regulation, Neoplastic` (G05), neither of
+# which is in C04. FSP1 is the parallel pathway behind the manuscript's headline
+# GPX4+FSP1 synergy claim, so the census was missing the literature under its own
+# central result.
+#
+# Sizes of the gap, from PubMed counts (`<descriptor> NOT neoplasms[mh]`):
+#   Cell Line, Tumor                        304,371
+#   Antineoplastic Agents                   155,492
+#   Gene Expression Regulation, Neoplastic    8,177
+#   Xenograft Model Antitumor Assays          3,660
+#   Ferroptosis                               9,983  (62% of ALL ferroptosis papers)
+#
+# These are deliberately EXPERIMENTAL-CONTEXT descriptors ("this work used tumour
+# cells / an antitumour agent / a xenograft"), not topical ones. Broad process
+# terms like Apoptosis (D017209) are excluded: they would pull in most of cell
+# biology, and unlike Ferroptosis they are not the subject of this project.
+#
+# Records matched only by these carry `cancer_basis: "adjacent"` so the C04 core
+# stays separable and any analysis can choose its own strictness.
+ADJACENT_DESCRIPTORS = {
+    "D045744": "Cell Line, Tumor",
+    "D000970": "Antineoplastic Agents",
+    "D000971": "Antineoplastic Combined Chemotherapy Protocols",
+    "D015972": "Gene Expression Regulation, Neoplastic",
+    "D023041": "Xenograft Model Antitumor Assays",
+    "D000079403": "Ferroptosis",
+    "D059016": "Tumor Microenvironment",
+    "D014411": "Neoplastic Stem Cells",
+    "D019008": "Drug Resistance, Neoplasm",
+}
+
 
 def atlas_root() -> Path:
     return Path(os.getenv("FERRO_ATLAS_ROOT", str(DEFAULT_ROOT)))
@@ -195,7 +233,8 @@ def parse_articles(path: Path, c04: dict):
                     if mh.get("MajorTopicYN") == "Y":
                         major.append(ui)
                 hits = [u for u in mesh_uis if u in c04]
-                if not hits:
+                adj = [u for u in mesh_uis if u in ADJACENT_DESCRIPTORS]
+                if not hits and not adj:
                     continue
 
                 art = cit.find("Article")
@@ -226,6 +265,12 @@ def parse_articles(path: Path, c04: dict):
                     "mesh": mesh_labels,
                     "mesh_major": major,
                     "cancer_ui": hits,
+                    "adjacent_ui": adj,
+                    # "C04" = a true Neoplasms-tree descriptor; "adjacent" =
+                    # matched only by an experimental-context descriptor
+                    # (tumour cell line, antineoplastic agent, xenograft,
+                    # ferroptosis) from another tree.
+                    "cancer_basis": "C04" if hits else "adjacent",
                     "pub_types": [
                         (p.text or "") for p in
                         (art.findall("./PublicationTypeList/PublicationType") if art is not None else [])

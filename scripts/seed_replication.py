@@ -130,21 +130,23 @@ def main() -> None:
                 v = c.get(m)
                 if v is None:
                     continue
-                samples.setdefault((k, m), []).append(float(v))
+                samples.setdefault((k, m), []).append((seed, float(v)))
 
     baseline = {k: c for k, (_i, c) in keyed(runs.get(args.start, [])).items()}
 
     rows = []
-    for (k, m), vals in sorted(samples.items(), key=lambda kv: (kv[0][0], kv[0][1])):
-        if len(vals) < 2:
+    for (k, m), pairs in sorted(samples.items(), key=lambda kv: (kv[0][0], kv[0][1])):
+        if len(pairs) < 2:
             continue
+        by_seed = {s_: v for s_, v in pairs}
+        vals = [v for _s, v in pairs]
         med = statistics.median(vals)
         lo, hi = boot_ci(vals)
         base = baseline.get(k, {}).get(m)
         spread = (max(vals) - min(vals))
         rows.append(dict(treatment=k[0], o2=k[1], immune=k[2], block=k[3], metric=m,
                          n=len(vals), seed42=base, median=med, lo=lo, hi=hi,
-                         min=min(vals), max=max(vals),
+                         min=min(vals), max=max(vals), by_seed=by_seed,
                          rel_spread=(spread / med if med else 0.0)))
 
     RAW.write_text(json.dumps({"seeds": sorted(runs), "rows": rows}, indent=1), encoding="utf-8")
