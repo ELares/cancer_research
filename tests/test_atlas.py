@@ -899,3 +899,34 @@ def test_emergence_module_states_its_measured_accuracy():
     src = (REPO_ROOT / "scripts" / "atlas_emergence.py").read_text()
     assert "MEASURED ACCURACY" in src
     assert "atlas_emergence_error.py" in src
+
+
+# --- this repository is public (#PRIVACY) ----------------------------------
+
+def test_no_machine_specific_paths_in_tracked_files():
+    """A public repo must not carry the author's home directory or account name.
+
+    Found in a pre-push scan: `atlas_fulltext.DEFAULT_FT` was a literal
+    /Users/<account>/nas/... path, which leaks both the account and the fact
+    that full text sits on external storage, and three links in an older note
+    embedded an absolute checkout path. The default is now derived from
+    Path.home() so it resolves identically without being written down.
+    """
+    import re
+    import subprocess
+    files = subprocess.run(["git", "ls-files"], cwd=REPO_ROOT,
+                           capture_output=True, text=True).stdout.split()
+    # the corpus holds article text the authors wrote; it is not our prose
+    files = [f for f in files if not f.startswith("corpus/")]
+    pattern = re.compile(r"/Users/[A-Za-z0-9._-]+|/home/[A-Za-z0-9._-]+")
+    offenders = []
+    for rel in files:
+        p = REPO_ROOT / rel
+        try:
+            text = p.read_text(encoding="utf-8", errors="ignore")
+        except (OSError, IsADirectoryError):
+            continue
+        for m in pattern.finditer(text):
+            offenders.append(f"{rel}: {m.group(0)}")
+    assert not offenders, (
+        "machine-specific paths in a public repo:\n  " + "\n  ".join(offenders[:20]))

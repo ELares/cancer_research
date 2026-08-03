@@ -53,7 +53,11 @@ from atlas_baseline import atlas_root  # noqa: E402
 BULK = "https://ftp.ncbi.nlm.nih.gov/pub/pmc/deprecated/oa_bulk"
 SUBSETS = {"comm": "oa_comm", "noncomm": "oa_noncomm"}
 USER_AGENT = "cancer_research-atlas/1.0 (https://github.com/ELares/cancer_research)"
-DEFAULT_FT = Path("/Users/ezequiellares/nas/cancer-atlas/fulltext")
+# Full text is bulky enough to live off the repo disk, typically on external
+# storage. Derived from the home directory rather than written out, so no
+# machine-specific path or account name is committed to a public repository.
+# Override with FERRO_ATLAS_FULLTEXT to put it anywhere else.
+DEFAULT_FT = Path.home() / "nas" / "cancer-atlas" / "fulltext"
 
 _PKG_RE = re.compile(r'(oa_(?:comm|noncomm)_txt\.PMC\d+xxxxxx\.baseline\.[\d-]+\.tar\.gz)')
 _PMCID_RE = re.compile(r"(PMC\d+)")

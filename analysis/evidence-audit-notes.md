@@ -12,9 +12,9 @@ This note documents the main interpretation risk in the current corpus-wide evid
 
 The repo uses evidence-level summaries in:
 
-- [analysis/evidence-tiers.md](/Users/ezequiellares/go/src/github.com/ELares/cancer_research/analysis/evidence-tiers.md)
-- [analysis/gap-analysis.md](/Users/ezequiellares/go/src/github.com/ELares/cancer_research/analysis/gap-analysis.md)
-- [article/drafts/v1.md](/Users/ezequiellares/go/src/github.com/ELares/cancer_research/article/drafts/v1.md)
+- [analysis/evidence-tiers.md](../analysis/evidence-tiers.md)
+- [analysis/gap-analysis.md](../analysis/gap-analysis.md)
+- [article/drafts/v1.md](../article/drafts/v1.md)
 
 That is acceptable for hypothesis generation, but weak for strong absence claims.
 
