@@ -1,0 +1,242 @@
+{
+ "meta": {
+  "seed": "2879",
+  "seed_name": "GPX4",
+  "degree": 1065,
+  "hub_cutoff": 928,
+  "candidates": 9089,
+  "validated": 12,
+  "documented": 12,
+  "documented_share": 1.0
+ },
+ "rows": [
+  {
+   "c": "5594",
+   "c_name": "ERK",
+   "bridges": 410,
+   "deg_c": 6499,
+   "expected": 54.84583749346265,
+   "p": 8.562355222792515e-242,
+   "enrichment": 7.475498939165072,
+   "via": [
+    "NSC59984",
+    "MMEL1",
+    "L-685,458",
+    "CLDND1",
+    "GTF2E2",
+    "APMAP"
+   ],
+   "q": 7.782324661996117e-238,
+   "comentions": 77
+  },
+  {
+   "c": "836",
+   "c_name": "caspase-3",
+   "bridges": 383,
+   "deg_c": 5675,
+   "expected": 47.892003042837445,
+   "p": 2.4488391795900127e-234,
+   "enrichment": 7.997159769187815,
+   "via": [
+    "SNX30",
+    "vulpinic acid",
+    "CLDND1",
+    "acevaltrate",
+    "rhamnazin",
+    "Agrimonolide"
+   ],
+   "q": 1.1128749651646813e-230,
+   "comentions": 236
+  },
+  {
+   "c": "595",
+   "c_name": "cyclin D1",
+   "bridges": 329,
+   "deg_c": 4646,
+   "expected": 39.20814909903485,
+   "p": 2.880220421902014e-204,
+   "enrichment": 8.391112754876223,
+   "via": [
+    "FGF6",
+    "L-685,458",
+    "acevaltrate",
+    "GTF2E2",
+    "Roquin",
+    "PTPRG-AS1"
+   ],
+   "q": 8.726107804889135e-201,
+   "comentions": 23
+  },
+  {
+   "c": "4318",
+   "c_name": "MMP-9",
+   "bridges": 276,
+   "deg_c": 4021,
+   "expected": 33.933699424713545,
+   "p": 3.8918881566660525e-165,
+   "enrichment": 8.133507536139494,
+   "via": [
+    "SCRN1",
+    "eriocitrin",
+    "isoginkgetin",
+    "Monotropein",
+    "SENP5",
+    "MSRB1"
+   ],
+   "q": 8.843342863984437e-162,
+   "comentions": 18
+  },
+  {
+   "c": "5595",
+   "c_name": "ERK1",
+   "bridges": 249,
+   "deg_c": 3354,
+   "expected": 28.30480673227785,
+   "p": 7.351302698569776e-156,
+   "enrichment": 8.79709239335836,
+   "via": [
+    "CLDND1",
+    "APMAP",
+    "Agrimonolide",
+    "SGK2",
+    "falcarindiol",
+    "TSPAN15"
+   ],
+   "q": 1.3363198045460138e-152,
+   "comentions": 36
+  },
+  {
+   "c": "2099",
+   "c_name": "estrogen receptor",
+   "bridges": 266,
+   "deg_c": 4044,
+   "expected": 34.12779917272857,
+   "p": 4.425268158394514e-154,
+   "enrichment": 7.79423245705688,
+   "via": [
+    "giredestrant",
+    "ACADSB",
+    "GDC-0810",
+    "DNAJC12",
+    "TMEM147",
+    "Gigantol"
+   ],
+   "q": 6.703543715274623e-151,
+   "comentions": 49
+  },
+  {
+   "c": "MESH:D002534",
+   "c_name": "hypoxic",
+   "bridges": 223,
+   "deg_c": 2620,
+   "expected": 22.11049303475491,
+   "p": 2.5810200543936345e-151,
+   "enrichment": 10.085709063541554,
+   "via": [
+    "Bi2O3",
+    "NFS1",
+    "TRIM7",
+    "TRIM15",
+    "CLEC-2",
+    "SETD5"
+   ],
+   "q": 3.351270182054821e-148,
+   "comentions": 156
+  },
+  {
+   "c": "842",
+   "c_name": "caspase-9",
+   "bridges": 215,
+   "deg_c": 2617,
+   "expected": 22.085175676318165,
+   "p": 1.9452394473023117e-142,
+   "enrichment": 9.73503689312028,
+   "via": [
+    "FGF6",
+    "phillygenin",
+    "leonurine",
+    "Breviscapine",
+    "Methyl protodioscin",
+    "Arnicolide D"
+   ],
+   "q": 2.210035167066339e-139,
+   "comentions": 26
+  },
+  {
+   "c": "4313",
+   "c_name": "MMP-2",
+   "bridges": 239,
+   "deg_c": 3491,
+   "expected": 29.460966100889078,
+   "p": 2.8088310181658254e-141,
+   "enrichment": 8.112429143753959,
+   "via": [
+    "SCRN1",
+    "eriocitrin",
+    "MSRB1",
+    "valtrate",
+    "hinokiflavone",
+    "Arnicolide D"
+   ],
+   "q": 2.836607236012132e-138,
+   "comentions": 6
+  },
+  {
+   "c": "142",
+   "c_name": "PARP",
+   "bridges": 222,
+   "deg_c": 2980,
+   "expected": 25.14857604716398,
+   "p": 2.5657999466412375e-138,
+   "enrichment": 8.827537574439928,
+   "via": [
+    "BRD4770",
+    "NMNAT",
+    "valtrate",
+    "Gigantol",
+    "Breviscapine",
+    "Arnicolide D"
+   ],
+   "q": 2.3320555715022205e-135,
+   "comentions": 52
+  },
+  {
+   "c": "6615",
+   "c_name": "Snail",
+   "bridges": 203,
+   "deg_c": 2375,
+   "expected": 20.042908762420957,
+   "p": 1.77297502300663e-137,
+   "enrichment": 10.128270422535211,
+   "via": [
+    "eriocitrin",
+    "dihydroisotanshinone I",
+    "Longikaurin A",
+    "MSRB1",
+    "DPP7",
+    "beta-eudesmol"
+   ],
+   "q": 1.4649609076461145e-134,
+   "comentions": 11
+  },
+  {
+   "c": "598",
+   "c_name": "Bcl-xL",
+   "bridges": 194,
+   "deg_c": 2132,
+   "expected": 17.992202729044834,
+   "p": 3.140346039729046e-136,
+   "enrichment": 10.782448537378116,
+   "via": [
+    "Methyl protodioscin",
+    "solasonine",
+    "heteronemin",
+    "psoralidin",
+    "ferric ammonium citrate",
+    "Sinularin"
+   ],
+   "q": 2.3785504295914414e-133,
+   "comentions": 19
+  }
+ ]
+}
