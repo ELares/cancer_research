@@ -763,3 +763,45 @@ def test_eval_report_states_the_objection_to_its_own_target():
     text = (REPO_ROOT / "analysis" / "atlas-discovery-eval.md").read_text()
     assert "objection" in text.lower()
     assert "overlooked" in text.lower() or "slow to reach" in text.lower()
+
+
+# --- co-mention inherits the ambiguity problem too (#ATLAS-AMBIG) ----------
+
+def test_comention_alias_map_handles_sense_collisions(monkeypatch):
+    """The shape filter is not a sense filter, and the gap is load-bearing.
+
+    `usable_alias` keeps any single token carrying a digit or hyphen, which is
+    exactly the shape of `cox-2`, `p21`, `p62` and `fsp1` -- the forms whose
+    majority vote was measured wrong. Module support uses this layer's counts to
+    argue a zero in the relation column is an extraction failure rather than
+    absence of evidence, so a wrong identifier here corrupts that argument.
+    """
+    import atlas_comention as cm
+    monkeypatch.setattr(cm, "_ambiguity", lambda: (
+        {"cox-2", "fsp1"}, {"cox-2": {"id": "5743", "symbol": "PTGS2", "why": "x"}}))
+    idx = {"alias": {"cox-2": "4513",      # mitochondrial oxidase, the wrong sense
+                     "fsp1": "51062",      # atlastin, and no defensible default
+                     "gpx4": "2879",
+                     "acsl4": "11332"}}
+    amap, stats = cm.build_alias_map(idx)
+
+    assert amap["cox-2"] == "5743", "a measured domain sense must be applied"
+    assert "fsp1" not in amap, "no domain default -> drop rather than guess"
+    assert amap["gpx4"] == "2879", "unambiguous aliases are untouched"
+    assert stats == {"redirected": 1, "dropped_ambiguous": 1}
+
+
+def test_comention_shape_filter_alone_would_keep_the_dangerous_forms():
+    """Pins WHY the sense filter is needed, not just that it exists.
+
+    If usable_alias ever started rejecting these on shape, this test failing is
+    the signal that the sense filter's justification changed.
+    """
+    import atlas_comention as cm
+    for a in ("cox-2", "fsp1", "beta-actin", "ap-1"):
+        assert cm.usable_alias(a), f"{a} passes the shape filter, so shape is not enough"
+    # Length happens to exclude some collisions, but that is luck, not
+    # disambiguation -- these are rejected for being short, not for being ambiguous.
+    for a in ("psa", "p21", "p62", "er"):
+        assert not cm.usable_alias(a)
+        assert len(a) < cm.MIN_ALIAS_LEN, "excluded by length, which is incidental"

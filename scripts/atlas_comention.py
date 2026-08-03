@@ -39,6 +39,20 @@ symbols. The filter is reported so its aggressiveness is visible, and it is
 deliberately strict: a missing entity costs recall, a spurious one poisons every
 downstream count.
 
+That filter is about SHAPE, and shape says nothing about whether a form means one
+thing. Length happens to catch some collisions -- `psa`, `p21`, `p62` and `er` are
+all below the four-character minimum -- but that is luck, not disambiguation, and
+75 forms `scripts/atlas_ambiguity.py` measured as sense collisions came through
+it. Among them `cox-2` and `fsp1`, whose majority votes are WRONG: left alone this
+layer counts full-text COX-2 co-mentions against mitochondrial cytochrome c
+oxidase rather than PTGS2, and FSP1 against a spastic-paraplegia gene rather than
+the ferroptosis suppressor.
+
+So a second, SENSE filter now runs after it: a colliding form is redirected to its
+measured cancer-domain sense where one exists (1 of the 75) and dropped otherwise
+(the other 74). Both counts are reported at build time. Dropping costs recall,
+which this module already treats as the cheaper loss.
+
 Usage:
     python scripts/atlas_comention.py --limit 1     # one shard, smoke test
     python scripts/atlas_comention.py               # all shards
@@ -59,7 +73,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from atlas_baseline import atlas_root  # noqa: E402
 from atlas_fulltext import fulltext_root  # noqa: E402
-from atlas_graph import load_index  # noqa: E402
+from atlas_graph import _ambiguity, load_index  # noqa: E402
 
 MIN_ALIAS_LEN = 4
 MAX_NGRAM = 5
@@ -108,8 +122,38 @@ def usable_alias(a: str) -> bool:
     return any(ch.isdigit() for ch in a) or "-" in a
 
 
-def build_alias_map(idx: dict) -> dict:
-    return {a: i for a, i in idx["alias"].items() if usable_alias(a)}
+def build_alias_map(idx: dict) -> tuple:
+    """Usable surface form -> identifier, with sense collisions handled.
+
+    `usable_alias` is a SHAPE filter -- length, connectives, digits -- and shape
+    says nothing about whether a form means one thing. Its length rule happens to
+    exclude `psa`, `p21`, `p62` and `er`, but that is luck rather than
+    disambiguation: 75 forms measured as sense collisions by
+    `scripts/atlas_ambiguity.py` pass it, including `cox-2` and `fsp1`, whose
+    majority votes are wrong. Unfixed, this layer attributes full-text COX-2
+    co-mentions to mitochondrial cytochrome c oxidase and FSP1 co-mentions to a
+    spastic-paraplegia gene.
+
+    So a blocklisted form is either redirected to its curated cancer-domain
+    sense, where one has been MEASURED (`analysis/atlas-domain-sense-validation.md`
+    puts those at 89.6%-100% of declaring papers), or dropped. Dropping costs
+    recall; keeping a wrong identifier poisons every downstream count, and this
+    module's own docstring already chooses recall as the cheaper loss.
+    """
+    blocked, domain = _ambiguity()
+    out, redirected, dropped = {}, 0, 0
+    for a, i in idx["alias"].items():
+        if not usable_alias(a):
+            continue
+        if a in blocked:
+            if a in domain:
+                out[a] = domain[a]["id"]
+                redirected += 1
+            else:
+                dropped += 1
+            continue
+        out[a] = i
+    return out, {"redirected": redirected, "dropped_ambiguous": dropped}
 
 
 def sentence_entities(sentence: str, alias: dict) -> set:
@@ -183,9 +227,11 @@ def main() -> None:
 
     print("loading the entity alias map ...", flush=True)
     idx = load_index(root)
-    alias = build_alias_map(idx)
+    alias, amb = build_alias_map(idx)
     print(f"  {len(idx['alias']):,} aliases -> {len(alias):,} usable "
           f"({len(alias)/len(idx['alias']):.1%} kept after disambiguation filtering)")
+    print(f"  sense collisions: {amb['redirected']} redirected to a measured "
+          f"cancer-domain sense, {amb['dropped_ambiguous']} dropped as unresolvable")
 
     shards = sorted((fulltext_root() / "shards").glob("*.jsonl.gz"))
     if args.recent_first:

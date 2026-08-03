@@ -123,6 +123,14 @@ offline, no LLM. Measured on 6 of 28 shards, so these are lower bounds:
 > discuss this pair at all", which is precisely the question a zero in the
 > relation column raises. The alias filter is the other weak point: 87.7% of
 > surface forms survive it, and a spurious one poisons every downstream count.
+>
+> **That filter was about shape, not sense.** Its length rule happens to exclude
+> `psa`, `p21`, `p62` and `er`, but 75 measured sense collisions passed it —
+> including `cox-2` and `fsp1`, so full-text COX-2 co-mentions were counted
+> against mitochondrial cytochrome c oxidase and FSP1 against a
+> spastic-paraplegia gene. A sense filter now runs after the shape filter: one
+> form is redirected to its measured cancer-domain sense, the other 74 dropped.
+> Corrected counts arrive with the next co-mention build.
 
 ### Entity audit — `atlas_entity_audit.py` → `atlas-entity-audit.md`
 
