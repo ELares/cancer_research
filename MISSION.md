@@ -76,10 +76,24 @@ been marketing.
 
 ## How the work is ordered
 
-1. **Acquire the census.** PubMed baseline for all 4.28M cancer records; PMC
-   open access for the full-text subset; PubTator3 bulk for normalized entities
-   and typed relations. All three are public-domain bulk sources with no API
-   ceiling. *In progress — `scripts/atlas_baseline.py`.*
+1. **Acquire the census.** *Done, and it holds.* The first pass took 4,203,236
+   cancer articles from 39,994,988 scanned — 98.3% of what PubMed itself reports
+   for `neoplasms[mh]`, so the local MeSH filter reproduces NLM's tree
+   explosion. Alongside it: **783,271** articles recovered that MeSH has not
+   indexed yet (the un-indexed share climbs to 37.6% in the most recent baseline
+   files), **520,143** open-access full texts on external storage, and
+   **7,951,325** typed relations over 1,603,105 PMIDs.
+
+   Two corrections the census forced on itself, both instructive:
+
+   * A tree-C04 definition **misses foundational mechanism papers**. Both
+     founding FSP1 papers (Doll 2019, Bersuker 2019, *Nature*) are absent from
+     it, and 62% of all ferroptosis papers sit outside C04. The definition now
+     includes nine adjacent experimental-context descriptors, with the C04 core
+     kept separable.
+   * Neither a keyword corpus nor a MeSH census is a superset of the other. The
+     old 4,830-article corpus contains ~223 cancer papers the census misses, and
+     47 that are not cancer at all.
 2. **Normalize.** Identifiers, not strings. A gene is `NCBIGene:2879`, not
    twelve spellings of GPX4.
 3. **Measure every layer.** Precision and recall with intervals, against labels
