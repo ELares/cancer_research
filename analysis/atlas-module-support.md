@@ -25,6 +25,13 @@ Counts are not truth. About half of all relations carry the weakest predicate,
 
 ## Result: 9/20 claims have corpus support
 
+> **The denominator is hand-made.** These 20 are author-written claims with
+> author-chosen proxy entity pairs, covering 19 of roughly 30 library modules
+> (`CLAIMS` in this script). The fraction is a statement about that curated list,
+> not a survey of the library, and a different choice of proxy pairs would give a
+> different fraction. Several corroborated rows also rest on a single extracted
+> assertion, so read the per-row counts rather than the headline.
+
 | module | pair | relation articles | full-text co-mentions | predicates | cited PMID? | contested |
 |---|---|---|---|---|---|---|
 | system_xc | `SLC7A11` - `GPX4` | 31 | **1,725** | associate 26, positive_correlate 3, negative_correlate 2 | no | **yes** (+3/-2, bal 0.67) |

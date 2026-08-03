@@ -167,6 +167,13 @@ def main() -> None:
         "`associate`, which is nearer co-mention than knowledge, and the extractor scores",
         "~79.6 F1 on BioRED. A high count means the field discusses the pair.", "",
         f"## Result: {len(found)}/{len(rows)} claims have corpus support", "",
+        "> **The denominator is hand-made.** These "
+        f"{len(rows)} are author-written claims with",
+        "> author-chosen proxy entity pairs, covering 19 of roughly 30 library modules",
+        "> (`CLAIMS` in this script). The fraction is a statement about that curated list,",
+        "> not a survey of the library, and a different choice of proxy pairs would give a",
+        "> different fraction. Several corroborated rows also rest on a single extracted",
+        "> assertion, so read the per-row counts rather than the headline.", "",
         "| module | pair | relation articles | full-text co-mentions | predicates | cited PMID? | contested |",
         "|---|---|---|---|---|---|---|",
     ]

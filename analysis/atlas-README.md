@@ -36,6 +36,7 @@ is itself a finding — see *Coverage* below.
 | open-access full texts (on external storage) | 520,143 | `atlas_fulltext.py` |
 | typed, normalized relations | 7,951,325 over 1,603,105 PMIDs | `atlas_relations.py` |
 | queryable relation index | 2,186,309 entity pairs | `atlas_graph.py` |
+| full-text sentence co-mentions | 6.2M+ pairs (build in progress) | `atlas_comention.py` |
 
 ## The layers, and what each can actually answer
 
@@ -103,6 +104,31 @@ identifiers, and relations over a **fixed** predicate vocabulary (`associate`,
 >    co-mention than knowledge. Always read the per-predicate breakdown.
 > 3. **Query by identifier, not symbol.** See the entity audit.
 
+### Co-mention — `atlas_comention.py`
+
+The recall complement to the relation graph, and the reason literature-based
+discovery is worth revisiting. PubTator's relations are extracted from
+ABSTRACTS, and their edge recall is far too low for anything that reasons from
+absence: GPX4 and caspase-3 share 236 PubMed abstracts and **no graph edge**.
+
+This applies PubTator's own normalized vocabulary to the open-access full texts
+already on disk, extracting entity co-mention at SENTENCE level. Deterministic,
+offline, no LLM. Measured on 6 of 28 shards, so these are lower bounds:
+
+| pair | PubTator edge | full-text co-mention |
+|---|---|---|
+| GPX4–caspase-3 | 0 | 63 |
+| AIFM2–GPX4 | 0 | 69 |
+| GPX4–SLC7A11 | 31 | 1,725 |
+| ACSL4–GPX4 | 3 | 756 |
+
+> **Load-bearing caveat.** Co-mention carries **no predicate, no direction and no
+> polarity**. "X does not inhibit Y" produces the same edge as "X inhibits Y".
+> It cannot replace the typed relations; it answers only "does the literature
+> discuss this pair at all", which is precisely the question a zero in the
+> relation column raises. The alias filter is the other weak point: 87.7% of
+> surface forms survive it, and a spurious one poisons every downstream count.
+
 ### Entity audit — `atlas_entity_audit.py` → `atlas-entity-audit.md`
 
 Checks the symbols this project queries against NCBI's own record. **1 mismatch
@@ -124,10 +150,19 @@ Each `ferroptosis-core` realism layer was added on the strength of one or two
 papers. This asks how many *distinct* cancer articles assert the same entity
 relation, and whether the module's own cited PMID is among them. **9 of 20
 corroborated** — `SLC7A11–GPX4` 31 articles, `erastin–SLC7A11` 29, `IFNG–SLC7A11`
-8 with the cited PMID present.
+8 with the cited PMID present, and six others resting on 1–19.
 
-An absence here is **not** evidence against a mechanism: it may be inexpressible
-(caveat 1 above), or in full text the extractor did not reach.
+> **The denominator is hand-made.** Those 20 are author-written claims with
+> author-chosen proxy entity pairs, covering 19 of roughly 30 library modules.
+> "9 of 20" is therefore a statement about that curated list, not a survey of
+> the library, and a different choice of proxy pairs would give a different
+> fraction.
+
+An absence here is **not** evidence against a mechanism, and the co-mention
+layer proved it: **10 of the 11 modules with no asserted relation ARE discussed
+in full text.** The clearest case is `fsp1` (AIFM2–GPX4), the parallel pathway
+behind the manuscript's headline Bliss-synergy claim — zero relations, 69
+full-text co-mentions.
 
 ### Contradictions — `atlas_contradictions.py` → `atlas-contradictions.md`
 
