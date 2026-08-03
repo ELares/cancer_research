@@ -27,9 +27,10 @@ independent of anything the classifier sees. On that set PubTator3 is 47.4%
 accurate, and its errors are not spread evenly:
 
 * of 110 papers that spell out *ferroptosis suppressor protein 1*, **not one**
-  is resolved to AIFM2 -- 99 go to ATL1;
-* 69% of them carry no correct AIFM2 edge from any other mention either, so the
-  ferroptosis biology is not merely mislabelled, it is absent;
+  has that mention resolved to AIFM2 -- 99 go to ATL1;
+* 69% carry no correct AIFM2 edge from any OTHER mention either (the remaining
+  31% are rescued only because the paper also writes "AIFM2" somewhere), so for
+  most of them the ferroptosis biology is not merely mislabelled, it is absent;
 * the S100A4 assignments, by contrast, are mostly right, which is exactly why a
   blanket remap would do harm.
 
@@ -41,6 +42,12 @@ every phrase that can define a label is masked out of the text before a single
 feature is read (`MASK`). `ferroptosis` still counts as a cue, but only where it
 occurs outside `ferroptosis suppressor protein 1`. Without that step the
 headline number is circular.
+
+The gold set gets one further check that uses no feature at all: publication
+year. FSP1 was named as the ferroptosis suppressor in 2019, and not one of the
+110 AIFM2-sense papers predates it (range 2020-2026), while the S100A4 sense
+spans 1997-2025. A single pre-2019 AIFM2 paper would mean the gold rule was
+matching something other than what it claims.
 
 Requires network (NCBI E-utilities) for the title/abstract/MeSH of the affected
 papers. Only the derived verdicts are committed, so downstream stays offline and
@@ -165,6 +172,33 @@ def fetch(pmids: list) -> dict:
     return text
 
 
+def pub_years(pmids: list) -> dict:
+    """pmid -> publication year, for the independent temporal check.
+
+    Parsed from esummary rather than scraped out of the record text: taking the
+    earliest four-digit number in an article record picks up reference and
+    history dates, which produced a wrong answer before this was fixed.
+    """
+    out = {}
+    for i in range(0, len(pmids), 200):
+        batch = pmids[i:i + 200]
+        data = urllib.parse.urlencode(
+            {"db": "pubmed", "id": ",".join(batch), "retmode": "json"}).encode()
+        req = urllib.request.Request(
+            "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi", data=data)
+        try:
+            res = json.load(urllib.request.urlopen(req, timeout=120))["result"]
+        except Exception as exc:
+            print(f"  ! esummary batch failed: {exc}", file=sys.stderr)
+            continue
+        for p in batch:
+            pd = res.get(p, {}).get("pubdate", "")
+            if pd[:4].isdigit():
+                out[p] = int(pd[:4])
+        time.sleep(0.4)
+    return out
+
+
 def gold_label(t: str):
     """The sense a paper declares, or None if it declares zero or several."""
     hits = [k for k, rx in DECLARES.items() if rx.search(t)]
@@ -268,6 +302,12 @@ def main() -> int:
     pair_before = len(partner_pm & aifm2_pm)
     pair_after = len(partner_pm & (aifm2_pm | corrected_to_aifm2))
 
+    years = pub_years(sorted(gold))
+    year_buckets = collections.defaultdict(list)
+    for p, s in gold.items():
+        if p in years:
+            year_buckets[s].append(years[p])
+
     dist = collections.Counter(gold.values())
     lines = [
         f"# Resolving the `{args.symbol}` sense collision (#ATLAS-AMBIG)", "",
@@ -294,10 +334,11 @@ def main() -> int:
     lines += [
         "", "The errors are not evenly spread, and the shape is the finding:", "",
         f"* of the {dist.get('AIFM2',0)} papers that spell out *ferroptosis suppressor",
-        "  protein 1*, **not one** is resolved to AIFM2;",
+        "  protein 1*, **not one** has that mention resolved to AIFM2;",
         f"* **{orphaned}** of them ({100*orphaned/max(1,len(aifm2_gold)):.0f}%) carry no",
-        "  correct AIFM2 edge from any other mention either, so the ferroptosis",
-        "  biology is not merely mislabelled -- it is absent from the graph;",
+        "  correct AIFM2 edge from any OTHER mention either -- the rest are rescued",
+        "  only because the paper also writes \"AIFM2\" somewhere -- so for most of",
+        "  them the ferroptosis biology is not merely mislabelled, it is absent;",
         "* the S100A4 assignments are mostly correct, which is precisely why a",
         "  blanket remap of `FSP1` to AIFM2 would do harm rather than fix this.", "",
         "## What this layer does on it", "",
@@ -310,7 +351,24 @@ def main() -> int:
         lines.append(f"| {t} | {g} | {c}{'' if t == g else ' **wrong**'} |")
 
     lines += [
-        "", "## Why that number is not circular", "",
+        "", "## An independent check the classifier cannot see", "",
+        "Publication year is used by neither the gold rule nor the classifier, so it",
+        "is a free structural test. Doll and Bersuker named FSP1 as the ferroptosis",
+        "suppressor in 2019, so if the gold set is sound essentially no AIFM2-sense",
+        "paper can predate that, while the long-established S100A4 sense should span",
+        "decades.", "",
+        "| declared sense | n | median year | range | published before 2019 |",
+        "|---|---|---|---|---|",
+    ] + [
+        f"| {s} | {len(ys)} | {sorted(ys)[len(ys)//2]} | {min(ys)}-{max(ys)} | "
+        f"{sum(1 for y in ys if y < 2019)} "
+        f"({100*sum(1 for y in ys if y < 2019)/len(ys):.0f}%) |"
+        for s, ys in sorted(year_buckets.items()) if ys
+    ] + [
+        "", "The separation is what it should be, and the AIFM2 row is the strong form",
+        "of the test: a single pre-2019 paper declaring *ferroptosis suppressor protein",
+        "1* would mean the gold rule was matching something else.", "",
+        "## Why that number is not circular", "",
         "The gold label is defined by the presence of an expansion phrase. A",
         "classifier allowed to read that phrase would score near 100% and measure",
         "nothing at all. So every phrase that can define a label is masked out of",
@@ -357,6 +415,7 @@ def main() -> int:
         "layer_accuracy": {"correct": my_ok, "n": my_n, "wilson95": [lo, hi],
                            "abstained": len(gold) - my_n},
         "gold_aifm2_with_no_correct_edge": orphaned,
+        "gold_years": {k: sorted(v) for k, v in year_buckets.items()},
         "corrections": corrections,
         "abstentions": abstained,
     }, indent=2) + "\n")

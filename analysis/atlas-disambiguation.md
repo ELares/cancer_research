@@ -31,10 +31,11 @@ that is independent of anything the classifier reads
 The errors are not evenly spread, and the shape is the finding:
 
 * of the 110 papers that spell out *ferroptosis suppressor
-  protein 1*, **not one** is resolved to AIFM2;
+  protein 1*, **not one** has that mention resolved to AIFM2;
 * **76** of them (69%) carry no
-  correct AIFM2 edge from any other mention either, so the ferroptosis
-  biology is not merely mislabelled -- it is absent from the graph;
+  correct AIFM2 edge from any OTHER mention either -- the rest are rescued
+  only because the paper also writes "AIFM2" somewhere -- so for most of
+  them the ferroptosis biology is not merely mislabelled, it is absent;
 * the S100A4 assignments are mostly correct, which is precisely why a
   blanket remap of `FSP1` to AIFM2 would do harm rather than fix this.
 
@@ -48,6 +49,23 @@ The errors are not evenly spread, and the shape is the finding:
 | AIFM2 | AIFM2 | 95 |
 | AIFM2 | S100A4 | 3 **wrong** |
 | S100A4 | AIFM2 | 3 **wrong** |
+
+## An independent check the classifier cannot see
+
+Publication year is used by neither the gold rule nor the classifier, so it
+is a free structural test. Doll and Bersuker named FSP1 as the ferroptosis
+suppressor in 2019, so if the gold set is sound essentially no AIFM2-sense
+paper can predate that, while the long-established S100A4 sense should span
+decades.
+
+| declared sense | n | median year | range | published before 2019 |
+|---|---|---|---|---|
+| AIFM2 | 110 | 2023 | 2020-2026 | 0 (0%) |
+| S100A4 | 132 | 2019 | 1997-2025 | 65 (49%) |
+
+The separation is what it should be, and the AIFM2 row is the strong form
+of the test: a single pre-2019 paper declaring *ferroptosis suppressor protein
+1* would mean the gold rule was matching something else.
 
 ## Why that number is not circular
 

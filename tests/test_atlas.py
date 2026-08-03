@@ -436,6 +436,23 @@ def test_ambiguity_scan_separates_species_from_sense():
                                  key=lambda r: -r["total"])[:25]}
 
 
+def test_genes_are_measurably_dirtier_than_mesh_entities():
+    """The comparison that explains WHY the gene layer needed a blocklist.
+
+    MeSH is a curated vocabulary with one preferred term per concept; gene
+    symbols are not, and NCBI itself lists `FSP1` as an official alias of three
+    genes. If this ever stops holding, the blocklist's scope should be revisited.
+    """
+    import json
+    raw = json.loads((REPO_ROOT / "analysis" / "atlas-ambiguity.json").read_text())
+    by = raw["by_type"]
+    assert set(by) == {"gene", "chemical", "disease"}
+    gene = by["gene"]["mention_share"]
+    assert gene > 4 * max(by["chemical"]["mention_share"],
+                          by["disease"]["mention_share"]), \
+        "genes should be several times worse; if not, re-read the scan"
+
+
 def test_relation_corrections_move_only_the_atl1_identifiers():
     """Precision guard on the index-build remap.
 
@@ -471,3 +488,28 @@ def test_corrections_absent_file_is_not_fatal(tmp_path, monkeypatch):
     """The index must still build on a checkout that has not run the layer."""
     monkeypatch.setattr(ag, "DISAMBIGUATION_JSON", tmp_path / "missing.json")
     assert ag.load_corrections() == {}
+
+
+def test_hierarchical_relatedness_distinguishes_nesting_from_collision():
+    """The third ambiguity class, which genes do not have.
+
+    Glioblastoma nests under Glioma in the MeSH tree: merging them loses
+    specificity but does not attribute the biology to an unrelated concept.
+    Prostatic and Pancreatic Neoplasms do not nest, and conflating those is a
+    genuine sense collision between two different cancers.
+    """
+    import atlas_ambiguity as aa
+    glioblastoma = ["C04.557.465.625.600.380.080.335"]
+    glioma = ["C04.557.465.625.600.380"]
+    assert aa.hierarchically_related(glioblastoma, glioma)
+    assert aa.hierarchically_related(glioma, glioblastoma), "order must not matter"
+
+    prostate = ["C04.588.945.440.770", "C12.200.294.260.750"]
+    pancreas = ["C06.301.761", "C04.588.322.475"]
+    assert not aa.hierarchically_related(prostate, pancreas)
+
+    # a shared prefix that is not a tree-path boundary is not nesting
+    assert not aa.hierarchically_related(["C04.557.46"], ["C04.557.465"]), \
+        "prefix matching must respect the dot separator"
+    assert not aa.hierarchically_related(["C04.557"], ["C04.557"]), \
+        "identical trees are the same node, not a parent/child pair"

@@ -133,11 +133,50 @@ GTPase 1)**, a hereditary spastic paraplegia gene. The real FSP1 is **84883
 (AIFM2)**.
 
 That collision sits directly under the manuscript's headline GPX4+FSP1
-Bliss-synergy claim. Querying the graph for `FSP1` silently returns ATL1's edges.
+Bliss-synergy claim. Querying the graph for `FSP1` silently returned ATL1's edges.
 
-> The resolver deliberately **reproduces** this rather than patching it. Its job
-> is to report what the data says; the audit's job is to catch it. Re-run the
-> audit before trusting any symbol-based result.
+> This audit **reports** the collision; it does not fix it, and for a while
+> nothing did. The two layers below now do, and they replaced the earlier
+> position that reproducing the error was sufficient.
+
+### Entity ambiguity — `atlas_ambiguity.py` → `atlas-ambiguity.md`
+
+Asks the question the audit did not: **how many other FSP1s are there?**
+Measured across all three entity types, genes are the outlier by roughly ten
+times — 28.3% of gene mentions sit on a contested surface form against 2.0% for
+chemicals and 2.7% for diseases, because MeSH is a curated vocabulary with one
+preferred term per concept while NCBI lists `FSP1` as an official alias of three
+different genes.
+
+That contested share is **not** an error rate. Contested forms split three ways:
+species ambiguity (human vs mouse *GAPDH*, benign), hierarchical granularity
+(*Glioblastoma* under *Glioma*, lossy but not wrong) and genuine sense collisions
+(*EREG* vs *ESR1* for `ER`, damaging). Only the last is an error, and pooling
+them would overstate the damage several-fold.
+
+The damaging class reaches the field's most-queried concepts: `ER` resolves to
+**epiregulin** rather than the estrogen receptor across 54,293 mentions, `COX-2`
+to mitochondrial cytochrome c oxidase rather than PTGS2, `p21` to a
+**pseudogene**, and `PC` splits across **prostatic** and **pancreatic**
+neoplasms. `atlas_graph.resolve` now returns `None` on these instead of a
+plausible-looking wrong entity, so an analysis fails loudly.
+
+### Sense disambiguation — `atlas_disambiguate.py` → `atlas-disambiguation.md`
+
+`FSP1` gets no blanket fix, because there is nothing to fix it *to*: it is an
+official alias of AIFM2, S100A4 **and** ATL1, and remapping everything to AIFM2
+would corrupt the S100A4 papers, which are the plurality. So the sense is decided
+per paper.
+
+Against a gold set of the 242 papers that declare their own expansion — a label
+independent of anything the classifier reads — PubTator3 is **47.2%** accurate
+and this layer is **97.4%**. The number is only meaningful because every
+label-defining phrase is masked out before a feature is read; without that the
+measurement would be circular.
+
+The payoff lands on this project's own headline. GPX4+AIFM2 co-mention papers go
+**98 → 257**, and typed GPX4↔AIFM2 relations go **0 → 6** — there were none at
+all, because every one had been filed under atlastin.
 
 ### Module support — `atlas_module_support.py` → `atlas-module-support.md`
 

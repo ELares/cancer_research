@@ -49,7 +49,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from atlas_baseline import atlas_root  # noqa: E402
-from atlas_graph import load_index, resolve  # noqa: E402
+from atlas_graph import load_index, resolve, resolve_reason  # noqa: E402
 from config import PROJECT_ROOT  # noqa: E402
 
 OUT = PROJECT_ROOT / "analysis" / "atlas-contradictions.md"
@@ -102,7 +102,10 @@ def main() -> None:
             if r:
                 focus_ids.add(r)
             else:
-                print(f"  warning: could not resolve {f!r}", file=sys.stderr)
+                # a blocked sense collision is not the same failure as an
+                # unknown symbol, and the caller needs to know which it was
+                print(f"  warning: could not resolve {f!r}. "
+                      f"{resolve_reason(idx, f)}", file=sys.stderr)
 
     direction, valence = scan(idx, focus_ids)
     RAW.write_text(json.dumps({"direction": direction[:500], "valence": valence[:500]},
