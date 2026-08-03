@@ -37,3 +37,5 @@ analysis/living-review/
 local/
 corpus/atlas/raw/
 corpus/atlas/records/
+corpus/atlas/relations/
+corpus/atlas/entities/
