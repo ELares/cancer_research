@@ -930,3 +930,52 @@ def test_no_machine_specific_paths_in_tracked_files():
             offenders.append(f"{rel}: {m.group(0)}")
     assert not offenders, (
         "machine-specific paths in a public repo:\n  " + "\n  ".join(offenders[:20]))
+
+
+# --- quoted numbers must not rot (#ATLAS) ----------------------------------
+
+def _pct(n, d):
+    return 100 * n / d
+
+
+def test_headline_numbers_match_their_source_json():
+    """Prose quoting a stale number is the failure mode this catches.
+
+    Each of these figures is recomputed from the committed JSON and required to
+    appear verbatim in every document that cites it. If an analysis is re-run and
+    a number moves, this fails and the prose has to be updated with it -- which
+    is the point. Fixing it by editing the expected value here would defeat the
+    guard; edit the documents instead.
+    """
+    import json
+    A = REPO_ROOT / "analysis"
+    load = lambda n: json.loads((A / n).read_text())  # noqa: E731
+    amb = load("atlas-ambiguity.json")
+    dis = load("atlas-disambiguation.json")
+    imp = load("atlas-ambiguity-impact.json")
+    ev = load("atlas-discovery-eval.json")
+    cq = load("atlas-contradiction-quality.json")
+    ee = load("atlas-emergence-error.json")
+
+    claims = [
+        (f"{amb['by_type']['gene']['mention_share']:.1f}%",
+         ["atlas-ambiguity.md", "atlas-README.md"]),
+        (f"{_pct(dis['layer_accuracy']['correct'], dis['layer_accuracy']['n']):.1f}%",
+         ["atlas-disambiguation.md", "atlas-README.md"]),
+        (f"{_pct(imp['relation_rows_resting_on_at_risk'], imp['relation_rows']):.2f}%",
+         ["atlas-ambiguity-impact.md", "atlas-README.md"]),
+        (f"{100 * ev['headline']['precision']['popularity']:.1f}%",
+         ["atlas-discovery-eval.md", "atlas-README.md"]),
+        (f"{cq['mantel_haenszel']:.2f}x",
+         ["atlas-contradiction-quality.md"]),
+        (f"{_pct(ee['confusion_all']['precision'], 1):.1f}%",
+         ["atlas-emergence-error.md"]),
+    ]
+    missing = []
+    for value, docs in claims:
+        for doc in docs:
+            text = (A / doc).read_text()
+            # the README renders x as a multiplication sign in prose
+            if value not in text and value.replace("x", "×") not in text:
+                missing.append(f"{doc} does not quote {value}")
+    assert not missing, "stale or missing figures:\n  " + "\n  ".join(missing)
