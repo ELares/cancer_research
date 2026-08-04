@@ -135,7 +135,7 @@ def main() -> int:
     print("fetching abstracts to decompose the disagreements ...", flush=True)
     abs_text = abstracts(sorted(pmids))
 
-    matched = unmatched = 0
+    matched = unmatched = filtered = 0
     agree = disagree = 0
     no_pt = 0
     in_abstract = body_only = 0
@@ -148,10 +148,15 @@ def main() -> int:
                 grams.add(" ".join(toks[i:i + n]))
         seen = pt.get(r.get("pmid") or "", set())
         for ident, nm in zip(r["entities"], r.get("entity_names", r["entities"])):
-            if by_id.get(ident, set()) & grams:
+            forms = by_id.get(ident, set())
+            if forms & grams:
                 matched += 1
             else:
-                unmatched += 1
+                # Every sampled mention fired BY CONSTRUCTION when the sample was
+                # written, so a miss now means the alias that fired has since been
+                # removed from the map -- not that the tokenizer failed. The two
+                # are only distinguishable because the sample predates the filters.
+                filtered += 1
                 if len(examples) < 12:
                     examples.append({"pmid": r.get("pmid"), "entity": nm,
                                      "sentence": r["sentence"][:150]})
@@ -168,7 +173,7 @@ def main() -> int:
                 else:
                     body_only += 1
 
-    tot = matched + unmatched
+    tot = matched + unmatched + filtered
     scored = agree + disagree
     L = [
         "# How precise is the full-text co-mention layer? (#ATLAS-COMENT-AUDIT)", "",
@@ -183,7 +188,13 @@ def main() -> int:
         f"| | count |", "|---|---|",
         f"| entity mentions sampled | {tot:,} |",
         f"| alias found in the sentence | {matched:,} ({100*matched/max(1,tot):.1f}%) |",
-        f"| **not found** | **{unmatched:,} ({100*unmatched/max(1,tot):.1f}%)** |", "",
+        f"| **would no longer fire** | **{filtered:,} "
+        f"({100*filtered/max(1,tot):.1f}%)** |", "",
+        "Every sampled mention fired by construction when the sample was written,",
+        "so the second row is not a tokenizer failure -- it is the alias having",
+        "since been removed by the support and minority-form filters. That makes it",
+        "a direct read on how much volume those filters take out of a uniform",
+        "sample of what this layer used to match.", "",
     ]
     if examples:
         L += ["Examples where the alias could not be located:", ""]
@@ -215,8 +226,27 @@ def main() -> int:
         "positives, and it is where any future manual check should go.", "",
         f"Treating body-only matches as correct puts precision at "
         f"**{100*(agree+body_only)/max(1,scored):.1f}%** as an upper bound, against the",
-        f"{100*agree/max(1,scored):.1f}% corroboration rate as a lower bound. The true",
-        "value is between, and this data cannot narrow it further.", "",
+        f"{100*agree/max(1,scored):.1f}% corroboration rate as a lower bound.", "",
+        "### The bound has since been resolved by hand, and it sits near the bottom",
+        "",
+        "180 abstract-visible and 39 body-only mentions were read individually",
+        "(#617). The result was much worse than this bound's midpoint suggests:", "",
+        "| stratum | n | precision |", "|---|---|---|",
+        "| agreeing with PubTator | 493 | 92.5% |",
+        "| body-only | 439 | **30.8%** |",
+        "| abstract-visible | 180 | **14.6%** |", "",
+        "**Population-weighted precision was 55.5%**, near the bottom of the bound.",
+        "The body-only stratum was NOT the layer doing its job -- the same generic",
+        "aliases misfire in body text as in abstracts, and this report's earlier",
+        "framing of that stratum was wrong.", "",
+        "The cause was a single gap: `usable_alias` exempted every MULTI-WORD form",
+        "from the specificity test it applied to single tokens, so `tumor cells`",
+        "resolved to *Glucagonoma*, `overall survival` to *Prosthesis Failure* and",
+        "`et al` to *Multiple Myeloma*. 132 of 152 measured false positives were",
+        "multi-word.", "",
+        "Two measured filters now replace that proxy (see `atlas_comention.py`), and",
+        "the counts above are from the run BEFORE them. A fresh sample after the next",
+        "rebuild is what will confirm the repair.", "",
         "### Why corroboration alone is a lower bound", "",
         "PubTator reads abstracts; this layer reads full text. An entity discussed",
         "only in Methods or Results is genuinely present and genuinely absent from",
@@ -241,6 +271,7 @@ def main() -> int:
     RAW.write_text(json.dumps({
         "sentences": len(rows), "mentions": tot,
         "alias_found": matched, "alias_missing": unmatched,
+        "alias_filtered_out": filtered,
         "pubtator_scored": scored, "pubtator_agree": agree,
         "pubtator_disagree": disagree, "papers_without_pubtator": no_pt,
         "in_abstract": in_abstract,

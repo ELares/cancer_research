@@ -146,6 +146,24 @@ def build_index(root: Path) -> dict:
     # most frequent identifier (surface forms are genuinely ambiguous)
     alias_res = {a: c.most_common(1)[0][0] for a, c in alias.items()
                  if sum(c.values()) >= MIN_MENTIONS}
+    # How often each surface form appears at all. Computed here already and
+    # previously discarded, which cost the co-mention layer dearly: `MIN_MENTIONS`
+    # of 3 admits a generic English phrase mis-annotated in a handful of
+    # abstracts, and the majority vote then hands it an identifier. `tumor cells`
+    # resolves to Glucagonoma on 312 mentions, `overall survival` to Prosthesis
+    # Failure on 37, `et al` to Multiple Myeloma on 11. Support separates those
+    # cleanly from real matches -- measured on a labelled sample, correct
+    # matches have a median support of 1,067 and wrong ones 16 -- so consumers
+    # that read running text need it. See analysis/atlas-comention-audit.md.
+    alias_support = {a: sum(c.values()) for a, c in alias.items()
+                     if sum(c.values()) >= MIN_MENTIONS}
+    # Total mentions per identifier, so a consumer can ask what SHARE of an
+    # entity's mentions a given surface form accounts for. That share is the
+    # signal that separates a real name from a mis-annotation without needing
+    # any authority-name lookup: `tumor cells` is 2.8% of Glucagonoma's
+    # mentions and `et al` is 0.006% of Multiple Myeloma's, while `gpx4` is
+    # 63% of GPX4's and `erastin` 98.5% of erastin's.
+    ident_mentions = {i: sum(c.values()) for i, c in canon.items()}
     canon_res = {i: c.most_common(1)[0][0] for i, c in canon.items()}
     print(f"  aliases {len(alias_res):,}, identifiers {len(canon_res):,}", flush=True)
 
@@ -204,7 +222,8 @@ def build_index(root: Path) -> dict:
                 if j < PMID_SAMPLE:
                     res[j] = pmid
 
-    idx = {"alias": alias_res, "canon": canon_res,
+    idx = {"alias": alias_res, "alias_support": alias_support,
+           "ident_mentions": ident_mentions, "canon": canon_res,
            "edges": {k: dict(v) for k, v in edges.items()},
            "pmids": {k: sorted(v, key=int) for k, v in sample.items()},
            "n_pmids": {k: len(v) for k, v in seen_pmids.items()}}

@@ -1,13 +1,75 @@
 {
   "sentences": 400,
   "mentions": 1112,
-  "alias_found": 1112,
+  "alias_found": 572,
   "alias_missing": 0,
+  "alias_filtered_out": 540,
   "pubtator_scored": 1112,
   "pubtator_agree": 493,
   "pubtator_disagree": 619,
   "papers_without_pubtator": 0,
-  "in_abstract": 180,
-  "body_only": 439,
-  "examples_missing": []
+  "in_abstract": 91,
+  "body_only": 528,
+  "examples_missing": [
+    {
+      "pmid": "21535895",
+      "entity": "NOS",
+      "sentence": "Percentages were computed using the total number of patients in the overall study population or relevant group as the denominator unless otherwise spe"
+    },
+    {
+      "pmid": "36457699",
+      "entity": "triple-negative breast cancer",
+      "sentence": "The effect of the four sequences on the proliferation of three breast cancer cell lines, including two triple-negative cell lines (MDA-MB-231 and MDA-"
+    },
+    {
+      "pmid": "36457699",
+      "entity": "ICD",
+      "sentence": "The effect of the four sequences on the proliferation of three breast cancer cell lines, including two triple-negative cell lines (MDA-MB-231 and MDA-"
+    },
+    {
+      "pmid": "36457699",
+      "entity": "MB",
+      "sentence": "The effect of the four sequences on the proliferation of three breast cancer cell lines, including two triple-negative cell lines (MDA-MB-231 and MDA-"
+    },
+    {
+      "pmid": "36812605",
+      "entity": "FAB",
+      "sentence": "Samples are sorted by Sample Groups in TCGA data and by molecular subtypes in external data (luminal A, basal-like, HER2-enriched, and luminal B for M"
+    },
+    {
+      "pmid": "36812605",
+      "entity": "HER2-positive",
+      "sentence": "Samples are sorted by Sample Groups in TCGA data and by molecular subtypes in external data (luminal A, basal-like, HER2-enriched, and luminal B for M"
+    },
+    {
+      "pmid": "36812605",
+      "entity": "basal cell carcinoma",
+      "sentence": "Samples are sorted by Sample Groups in TCGA data and by molecular subtypes in external data (luminal A, basal-like, HER2-enriched, and luminal B for M"
+    },
+    {
+      "pmid": "28525384",
+      "entity": "Gleason 7",
+      "sentence": "As CAAT proteins are able to significantly stimulate breast cancer cell proliferation (Figures 2A, 2B, 4A and 4B), we evaluated the effect of palbocic"
+    },
+    {
+      "pmid": "30337520",
+      "entity": "interleukins 6 and 10",
+      "sentence": "During the progression of CAF activation, the described pathways involve sonic hedgehog, interleukins 6 and 10, transforming growth factor-\u03b21, platele"
+    },
+    {
+      "pmid": "30337520",
+      "entity": "PDGFR",
+      "sentence": "During the progression of CAF activation, the described pathways involve sonic hedgehog, interleukins 6 and 10, transforming growth factor-\u03b21, platele"
+    },
+    {
+      "pmid": "31692588",
+      "entity": "COVID-19",
+      "sentence": "Reports have show abnormal gene expression in NPC,19,20 but exploring novel molecular biomarkers that might predict tumor progression or relapse remai"
+    },
+    {
+      "pmid": "31692588",
+      "entity": "GEP",
+      "sentence": "Reports have show abnormal gene expression in NPC,19,20 but exploring novel molecular biomarkers that might predict tumor progression or relapse remai"
+    }
+  ]
 }
