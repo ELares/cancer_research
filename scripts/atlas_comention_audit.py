@@ -113,6 +113,10 @@ def abstracts(pmids: list) -> dict:
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
+    ap.add_argument("--dump-strata", metavar="DIR",
+                    help="write body-only and corroborated mentions to DIR as "
+                         "JSONL, so those strata can be hand-judged instead of "
+                         "carrying assumed precisions")
     ap.add_argument("--dump-abstract-visible", metavar="PATH",
                     help="write the abstract-visible disagreements to PATH as "
                          "JSONL, so the stratum can be hand-judged")
@@ -147,7 +151,8 @@ def main() -> int:
     no_pt = 0
     in_abstract = body_only = 0
     examples = []
-    abstract_visible = []  # the only stratum that can hold false positives
+    abstract_visible = []  # the only stratum PubTator could have contradicted
+    body_only_rows, corroborated_rows = [], []
     for r in rows:
         toks = _TOKEN.findall(r["sentence"].lower())
         grams = set()
@@ -168,10 +173,14 @@ def main() -> int:
                 if len(examples) < 12:
                     examples.append({"pmid": r.get("pmid"), "entity": nm,
                                      "sentence": r["sentence"][:150]})
+            rec = {"pmid": r.get("pmid"), "identifier": ident, "entity": nm,
+                   "sentence": r["sentence"][:600]}
             if not seen:
                 no_pt += 1
             elif ident in seen:
                 agree += 1
+                if len(corroborated_rows) < 5000:
+                    corroborated_rows.append(rec)
             else:
                 disagree += 1
                 # was the alias visible in the abstract PubTator actually read?
@@ -184,6 +193,8 @@ def main() -> int:
                             "entity": nm, "sentence": r["sentence"][:400]})
                 else:
                     body_only += 1
+                    if len(body_only_rows) < 5000:
+                        body_only_rows.append(rec)
 
     tot = matched + unmatched + filtered
     scored = agree + disagree
@@ -232,13 +243,19 @@ def main() -> int:
         f"{100*in_abstract/max(1,disagree):.1f}% |",
         f"| body-only, so PubTator could not have seen it | {body_only:,} | "
         f"{100*body_only/max(1,disagree):.1f}% |", "",
-        f"The body-only share is not evidence against this layer -- it is the layer",
-        "doing the job it exists for, finding entities the abstract-level extractor",
-        "structurally cannot reach. The first row is the one that could contain false",
-        "positives, and it is where any future manual check should go.", "",
-        f"Treating body-only matches as correct puts precision at "
-        f"**{100*(agree+body_only)/max(1,scored):.1f}%** as an upper bound, against the",
-        f"{100*agree/max(1,scored):.1f}% corroboration rate as a lower bound.", "",
+        "A body-only match is one PubTator could not have contradicted, because it",
+        "never read that text. That is what this layer exists to find -- and it is",
+        "NOT a reason to score the stratum as correct. This report used to say the",
+        "body-only share was \"the layer doing the job it exists for\"; hand judging",
+        "puts that stratum at **20.0%** precision (8 of 40,",
+        "`analysis/comention/body-only-judgements.csv`), the worst of the three. The",
+        "same generic forms misfire in body text as in abstracts, and there is no",
+        "abstract-level extractor to disagree with them.", "",
+        f"So read the {100*(agree+body_only)/max(1,scored):.1f}% that treating",
+        "body-only as correct would give as a bound that is now known to be far",
+        f"above the truth, and the {100*agree/max(1,scored):.1f}% corroboration rate",
+        "as a lower bound that is close to it. All three strata are measured in",
+        "`analysis/comention-regression.md`.", "",
         "### The bound has since been resolved by hand, and it sits near the bottom",
         "",
         "180 abstract-visible and 39 body-only mentions were read individually",
@@ -280,6 +297,15 @@ def main() -> int:
     ]
 
     OUT.write_text("\n".join(L) + "\n")
+    if args.dump_strata:
+        d = Path(args.dump_strata)
+        d.mkdir(parents=True, exist_ok=True)
+        for name, rowset in (("body-only", body_only_rows),
+                             ("corroborated", corroborated_rows)):
+            f = d / f"{name}.jsonl"
+            f.write_text("\n".join(json.dumps(e) for e in rowset) + "\n")
+            print(f"wrote {f}: {len(rowset)} {name} mentions for hand judging")
+
     if args.dump_abstract_visible:
         dest = Path(args.dump_abstract_visible)
         dest.write_text("\n".join(json.dumps(e) for e in abstract_visible) + "\n")

@@ -1596,24 +1596,38 @@ def test_comention_alias_matching_is_mechanically_sound():
     assert raw["alias_found"] + raw["alias_filtered_out"] == raw["mentions"]
 
 
-def test_comention_precision_is_reported_as_a_bound_not_a_number():
-    """Corroboration and precision are not the same thing.
+def test_comention_precision_is_reported_as_a_measurement_not_a_bound():
+    """Corroboration and precision are not the same thing, and now neither is a
+    bound the answer.
 
-    PubTator reads abstracts; this layer reads full text. An entity discussed
-    only in Methods is genuinely present and genuinely absent from PubTator's
-    annotation, so agreement UNDERSTATES precision. Reporting 44.3% as 'the
-    precision' would be as wrong as reporting the 83.8% upper bound as one.
+    PubTator reads abstracts; this layer reads full text, so agreement
+    UNDERSTATES precision and the agree-plus-body-only figure OVERSTATES it.
+    While only those two existed, reporting either as "the precision" was wrong.
+    All three strata are now hand-judged (#628), so a point estimate exists, and
+    the audit must point at it rather than leaving a reader with the bound --
+    which is known to sit far above the truth, because body-only measures 20%.
     """
     import json
-    import re
+
     raw = json.loads(
         (REPO_ROOT / "analysis" / "atlas-comention-audit.json").read_text())
     lower = raw["pubtator_agree"] / raw["pubtator_scored"]
     upper = (raw["pubtator_agree"] + raw["body_only"]) / raw["pubtator_scored"]
     assert lower < upper, "the bound must be an interval, not a point"
-    md = (REPO_ROOT / "analysis" / "atlas-comention-audit.md").read_text()
-    assert "upper bound" in md and "lower bound" in md
 
+    md = (REPO_ROOT / "analysis" / "atlas-comention-audit.md").read_text()
+    # The bound may still be shown, but not as the conclusion.
+    assert "comention-regression.md" in md, (
+        "the audit does not point at the measurement that supersedes its bound")
+    assert "NOT a reason to score the stratum as correct" in md, (
+        "the body-only stratum is being treated as correct again")
+    # And the measurement itself must be the one the regression reports.
+    reg = json.loads(
+        (REPO_ROOT / "analysis" / "comention-regression.json").read_text())
+    body = reg["measured_strata"]["body_only"]["precision"]
+    assert body < lower, (
+        "body-only now measures above the corroboration rate; the audit's "
+        "framing of which bound is close to the truth is stale")
 
 def test_disagreements_are_split_by_abstract_visibility():
     """Pooling the two kinds of disagreement would waste the measurement.

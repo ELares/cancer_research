@@ -62,12 +62,31 @@ def test_the_abstract_visible_stratum_grew():
     assert "did not measurably get cleaner" in txt
 
 
-def test_the_carried_over_precisions_are_declared_not_hidden():
-    """Only one stratum was re-measured; the other two are assumptions."""
+def test_every_stratum_is_measured_not_assumed():
+    """The two carried-over precisions were the biggest hole in the total.
+
+    They were assumed at 92.5% and 30.8% from #617. Measuring them mattered:
+    body-only came in at 20%, optimistic by about a third, and it is the stratum
+    carrying the most volume.
+    """
+    import csv as _csv
+
     d = _raw()
-    assert set(d["carried_over"]) == {"agree", "body_only"}
-    txt = DOC.read_text()
-    assert "carried over" in txt and "stated rather than buried" in txt
+    m = d["measured_strata"]
+    assert set(m) == {"agree", "body_only"}
+    for name, path in (("agree", "corroborated-judgements.csv"),
+                       ("body_only", "body-only-judgements.csv")):
+        f = REPO_ROOT / "analysis" / "comention" / path
+        rows = list(_csv.DictReader(f.open()))
+        assert len(rows) >= 30, f"{path} has only {len(rows)} judged mentions"
+        tp = sum(1 for r in rows if r["verdict"] == "TP")
+        assert m[name]["tp"] == tp and m[name]["n"] == len(rows)
+        assert abs(m[name]["precision"] - tp / len(rows)) < 1e-12
+        # Each judgement must be checkable: the span that fired and the label.
+        assert all("matched_span" in r and "authority_name" in r for r in rows)
+    assert m["body_only"]["precision"] < 0.308, (
+        "body-only no longer measures below its old assumed value; re-read")
+    assert "All three rows are now hand-judged" in DOC.read_text()
 
 
 def test_the_share_bug_is_fixed_at_the_source():
@@ -227,14 +246,16 @@ def test_the_regression_survives_a_shared_judging_flaw():
     d = _raw()
     sb, sa = d["before"]["strata"], d["after"]["strata"]
     abs_after = d["after"]["abstract_precision"]
+    agree_p = d["measured_strata"]["agree"]["precision"]
+    body_p = d["measured_strata"]["body_only"]["precision"]
     deltas = []
     for i in range(11):
         k = i / 10
-        B = (sb["agree"] * cr.AGREE_PRECISION
+        B = (sb["agree"] * agree_p
              + k * (sb["abstract"] * cr.PRIOR_ABSTRACT_PRECISION
-                    + sb["body"] * cr.BODY_ONLY_PRECISION))
-        A = (sa["agree"] * cr.AGREE_PRECISION
-             + k * (sa["abstract"] * abs_after + sa["body"] * cr.BODY_ONLY_PRECISION))
+                    + sb["body"] * body_p))
+        A = (sa["agree"] * agree_p
+             + k * (sa["abstract"] * abs_after + sa["body"] * body_p))
         deltas.append(A - B)
     assert all(x < 0 for x in deltas), (
         f"the regression reverses at some k: {[round(x,4) for x in deltas]}")

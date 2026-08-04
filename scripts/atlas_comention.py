@@ -163,6 +163,22 @@ def usable_alias(a: str) -> bool:
     return True
 
 
+def matched_forms(sentence: str, ident: str, alias: dict) -> list:
+    """Which alias forms of `ident` actually occur in this sentence.
+
+    The matcher works over token n-grams, so this reproduces that rather than
+    doing a substring search: `oral` must not be recovered from `oropharyngeal`.
+    Returns every candidate, since more than one form of the same identifier can
+    be present and the build does not record which one it counted.
+    """
+    toks = _TOKEN.findall(sentence.lower())
+    grams = set()
+    for n in range(1, 6):
+        for i in range(len(toks) - n + 1):
+            grams.add(" ".join(toks[i:i + n]))
+    return [a for a, i in alias.items() if i == ident and a in grams]
+
+
 def build_alias_map(idx: dict) -> tuple:
     """Usable surface form -> identifier, with sense collisions handled.
 
@@ -387,7 +403,18 @@ def main() -> None:
         with gzip.open(ap_path, "wt", encoding="utf-8") as fh:
             for row in audit["rows"]:
                 row = dict(row)
+                # `canon` is the identifier's most frequent surface form ACROSS
+                # THE CORPUS, not the span that fired in this sentence. Recording
+                # only that made the sample unjudgeable: the name is constant per
+                # identifier and is absent from the sentence in a third of rows
+                # (`left ventricular dysfunction` against "diagnosed with left
+                # breast cancer", where `left` is what actually matched). A
+                # reviewer cannot score a match without seeing what matched, and
+                # a first hand-judging pass went wrong for exactly this reason.
                 row["entity_names"] = [idx["canon"].get(e, e) for e in row["entities"]]
+                row["matched_spans"] = [
+                    sorted(matched_forms(row["sentence"], e, alias), key=len, reverse=True)
+                    for e in row["entities"]]
                 fh.write(json.dumps(row) + "\n")
         print(f"wrote {ap_path}: {len(audit['rows'])} sentences uniformly sampled "
               f"from {audit['seen']:,} kept, for precision auditing")
