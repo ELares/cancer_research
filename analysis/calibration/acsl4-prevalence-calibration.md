@@ -18,7 +18,7 @@ PanCancer Atlas studies.
 
 ## What the data says
 
-### 1. Within-cohort low-ACSL4 prevalence (the usable population prior)
+### 1. Within-cohort low-ACSL4 prevalence (usable at the DEEP cut only)
 
 Using the within-study mRNA z-scores (`*_rna_seq_v2_mrna_median_all_sample_Zscores`),
 the fraction of tumors in each cancer type's low-ACSL4 tail:
@@ -34,17 +34,25 @@ Because the z-scores are computed within each study, this is a within-cohort
 stratification number by construction (about a normal lower tail), and the small
 cross-type spread is expected, not a defect.
 
-> **Correction (#616): this is not an ACSL4-specific prior.** The paragraph above
-> originally called this "the real, committed population prior" for #444. The
-> by-construction caveat was already stated, but there was no control, so the figure
-> still read as evidence about ACSL4. Running the same measurement over six more
-> genes (`scripts/calibration_feasibility.py`) shows every one of them lands within
-> two points of the P(z < −1) = 15.87% normal expectation: GPX4 14.5%, SLC7A11 16.0%,
-> HMOX1 14.9%, TP53 14.1%, TFRC 15.2%, KEAP1 13.8%, against ACSL4's 14.4%. The number
-> describes how the z-score partitions any cohort, not how many tumors are
-> ACSL4-refractory, and a gene with no ferroptosis role would return it too. Use it
-> as the definition of the stratification cut-point, not as a biological prevalence.
-> The `status_from_zscore` bridge below is unaffected — it maps a scale.
+> **Correction (#616): the two rows above are not equally usable.** The `z < -1`
+> row was originally called "the real, committed population prior" for #444. The
+> by-construction caveat was already stated, but there was no control, so it still
+> read as evidence about ACSL4. Six control genes
+> (`scripts/calibration_feasibility.py`) all land within about two points of the
+> P(z < -1) = 15.87% normal expectation: GPX4 14.5%, SLC7A11 16.0%, HMOX1 14.9%,
+> TP53 14.1%, TFRC 15.2%, KEAP1 13.8%, against ACSL4's 14.4%. **Read the `z < -1`
+> figure as the definition of the stratification cut-point, not as a biological
+> prevalence** -- a gene with no ferroptosis role returns it too.
+>
+> **The `z < -2` row survives the same control.** ACSL4 sits at 2.98% against the
+> 2.28% normal expectation and exceeds it in 25 of 32 cancer types (sign test
+> p = 0.002), while five of the six controls sit at or below expectation. Only
+> TP53 (31/32) is more deviant. A left tail heavier than a normal is what a
+> discrete low-expression subpopulation looks like, and standardisation cannot
+> manufacture it, so this row IS evidence about ACSL4. It is also the row the
+> layer actually needs, since `ACSL4_NEGATIVE` sits at z = -2.
+>
+> The `status_from_zscore` bridge below is unaffected by either -- it maps a scale.
 
 ### 2. The calibrated data→model bridge
 

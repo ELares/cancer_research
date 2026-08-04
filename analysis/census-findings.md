@@ -86,11 +86,14 @@ a negative result.
 | TRANSFERRIN RECEPTOR | 1,482 | none |
 | TNF-ALPHA | 1,013 | none |
 
-None of them became a layer. When the top four were checked for a
-calibration target (#616), the route that partially anchored ACSL4 --
+None of them became a layer. When four of these were checked for
+a calibration target (#616), the route that partially anchored ACSL4 --
 cBioPortal within-cohort z-scores -- turned out to recover the normal
-distribution for every gene tested, so it carries no gene-specific
-signal and cannot anchor anything. Read the table as where the
+distribution at the z<-1 cut for every gene tested, so that cut carries
+no gene-specific signal. At the deeper z<-2 cut TP53 does separate
+(above the normal expectation in 31 of 32 cancer types), but it bounds
+a prevalence rather than a dose-response, so it is recorded as a weak
+anchor and no layer was written. Read the table as where the
 literature's attention and the available data fail to overlap, not as
 a backlog.
 

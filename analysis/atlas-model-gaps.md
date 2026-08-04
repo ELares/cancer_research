@@ -79,22 +79,33 @@ surface instead.
   calibration target before a new axis lands. Nothing here bypasses that;
   this only says which axes the literature would support calibrating.
 
-## What happened when the top four were checked (#616)
+## What happened when four of these were checked (#616)
 
-None of them became a layer, because no calibration target exists. The route
-that partially anchored ACSL4 (cBioPortal TCGA within-cohort z-scores, #462)
-turns out to recover the normal distribution for every gene tested -- HMOX1
-14.9%, TP53 14.1%, TFRC 15.2%, KEAP1 13.8% below z = -1, against the 15.87%
-a normal gives for anything -- so it cannot distinguish a gene whose
-low-expression tail matters from one with no ferroptosis role. Two of the
-four are also already absorbed by an existing parameter (TFRC by
-`ferritinophagy_release`, KEAP1 by `nrf2_gsh_rate`, which it regulates).
+Issue #616 picked HMOX1, TP53, TFRC and KEAP1 -- the top three of this table
+plus KEAP1, which sits ninth behind TNF-alpha, COX-2, IL-6, AKT and
+IL-1-beta. The selection is by plausible ferroptosis-regulator mechanism
+rather than strictly by rank; the five it skipped are broad inflammatory or
+signalling genes whose ferroptosis role is less direct. None of the four
+became a layer.
 
-The one signal that survived is TP53's DEEP tail (4.3% below z = -2 against
-an expected 2.28%, with much the widest inter-cancer spread), consistent with
-real deletion rather than standardisation. See
-`analysis/calibration/calibration-feasibility.md`, and the
-'Layers proposed and NOT built' rows in `CALIBRATION_STATUS.md`.
+The route that partially anchored ACSL4 (cBioPortal TCGA within-cohort
+z-scores, #462) recovers the normal distribution at the SHALLOW cut for
+every gene tested -- HMOX1 14.9%, TP53 14.1%, TFRC 15.2%, KEAP1 13.8% below
+z = -1, against the 15.87% a normal gives for anything -- so that cut cannot
+distinguish a gene whose low-expression tail matters from one with no
+ferroptosis role.
+
+At the DEEP cut TP53 separates: 4.27% below z = -2 against a 2.28%
+expectation, exceeding it in 31 of 32 cancer types, consistent with real
+deletion. That bounds a PREVALENCE rather than a dose-response, so it is
+recorded as a weak anchor and still not enough to write a layer on. HMOX1,
+TFRC and KEAP1 are unanchored at both cuts.
+
+See `analysis/calibration/calibration-feasibility.md` and the 'Layers
+proposed and NOT built' rows in `CALIBRATION_STATUS.md`. Note that TFRC is a
+genuinely uncovered axis rather than a duplicate: the engine models NCOA4
+release of iron from intracellular ferritin (`ferritinophagy_release`), not
+transferrin-receptor import across the membrane.
 
 So read this table as a map of where the literature's attention and the
 available data do NOT currently overlap, rather than as a backlog.

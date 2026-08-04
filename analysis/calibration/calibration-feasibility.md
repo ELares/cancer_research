@@ -7,62 +7,72 @@ any new off-by-default axis lands, so the question for the four mechanisms in
 `analysis/atlas-model-gaps.md` is whether public data could anchor them --
 not whether to write the layers.
 
-## The route that anchored ACSL4 does not work, and did not work then either
+## The two cuts do not agree, and that is the result
 
-cBioPortal mRNA z-scores are standardised WITHIN each study, so the fraction
-of tumours below z = -1 is **15.87%** for any gene under
-approximate normality. Across 32 TCGA PanCancer Atlas studies:
+cBioPortal mRNA z-scores are standardised WITHIN each study, so a shallow cut
+is fixed by construction: the fraction of tumours below z = -1 is
+**15.87%** for any gene under approximate normality. A deep cut is
+not similarly fixed -- a left tail heavier than a normal is the signature of a
+discrete low-expression subpopulation, which standardisation cannot
+manufacture. Measured across 32 TCGA PanCancer Atlas studies:
 
-| gene | low-expression fraction | deviation from normal | spread (IQR) | below z=-2 |
-|---|---|---|---|---|
-| ACSL4 | 14.4% | -1.5 | 3.0 | 3.0% |
-| GPX4 | 14.5% | -1.4 | 2.5 | 1.6% |
-| SLC7A11 | 16.0% | +0.2 | 2.9 | 1.7% |
-| HMOX1 *(gap)* | 14.9% | -1.0 | 1.8 | 1.9% |
-| TP53 *(gap)* | 14.1% | -1.8 | 4.7 | 4.3% |
-| TFRC *(gap)* | 15.2% | -0.7 | 2.0 | 2.1% |
-| KEAP1 *(gap)* | 13.8% | -2.0 | 3.1 | 1.5% |
+| gene | z < -1 | above expectation | z < -2 | above expectation | separates? |
+|---|---|---|---|---|---|
+| TP53 *(gap)* | 14.1% | 9/32 | 4.27% | 31/32 (p=1.5e-08) | **yes, deep cut** |
+| ACSL4 | 14.4% | 8/32 | 2.98% | 25/32 (p=0.0021) | **yes, deep cut** |
+| TFRC *(gap)* | 15.2% | 7/32 | 2.07% | 13/32 (p=0.38) | no |
+| HMOX1 *(gap)* | 14.9% | 11/32 | 1.91% | 11/32 (p=0.11) | no |
+| SLC7A11 | 16.0% | 17/32 | 1.69% | 7/32 (p=0.0021) | no |
+| GPX4 | 14.5% | 9/32 | 1.61% | 8/32 (p=0.007) | no |
+| KEAP1 *(gap)* | 13.8% | 7/32 | 1.49% | 10/32 (p=0.05) | no |
 
-**Every gene lands within two points of the normal expectation.** That is
-the standardisation being recovered, not biology. The route cannot separate a
-gene whose low-expression tail matters from one with no role in ferroptosis,
-so it anchors none of the four.
+**At z = -1, nothing separates** (0 of 7 genes).
+Every gene lands within about two points of the normal expectation, so this
+cut recovers the standardisation rather than any biology, and it cannot tell
+a gene whose low-expression tail matters from one with no ferroptosis role.
 
-### What this adds to #462
+**At z = -2, two genes separate**: ACSL4 and TP53. TP53 exceeds
+expectation in 31 of 32 cancer
+types and ACSL4 in 25 of 32,
+while the remaining five sit at or below it. That is a real, gene-specific
+signal: consistent with TP53 deletion and with a genuinely refractory
+low-ACSL4 subpopulation.
 
-`analysis/calibration/acsl4-prevalence-calibration.md` already noted that the
-figure is a within-cohort number "by construction (about a normal lower
-tail)". What it lacked was a CONTROL, and without one it still presented
-10.8-18.8% as ACSL4's population prior. The six other genes are that control,
-and they show the figure is not ACSL4's -- it is the z-score's. Anything with
-a roughly normal expression distribution returns it, including a gene with no
-ferroptosis role at all.
+## What this does to #462
 
-The ACSL4 layer's status-to-z-score BRIDGE is untouched: that maps a scale and
-is separately justified. What changes is that the prevalence number should be
-read as "how the z-score partitions any cohort", not as evidence about how
-many tumours are ACSL4-refractory. That distinction matters because the
-refractory phenotype is the thing the layer exists to stratify, and #462
-already found bulk mRNA does not rank it.
+It splits the finding in two rather than overturning it.
 
-## What does survive
+`analysis/calibration/acsl4-prevalence-calibration.md` reports both cuts. Its
+**z < -1 row (10.8-18.8%, median 14.4%) is NOT gene-specific** and should not
+be read as one -- six control genes return 13.8-16.0%, so a gene with no
+ferroptosis role would give the same figure. The document already noted the
+by-construction caveat, but with no control the number still read as evidence
+about ACSL4.
 
-The deep tail and the inter-cancer spread. TP53 sits at 4.3% below z = -2 against an expected
-2.28% and the others' ~1.5-2.1%, with the widest spread across
-cancer types. That is consistent with real TP53 loss in a subset of cancers
-rather than with standardisation, and is the one gene here where an
-expression-derived prior would carry information.
+Its **z < -2 row (median 3.0%) SURVIVES**. The same control that washes out
+the shallow cut separates ACSL4 at the deep one, so that row is evidence about
+ACSL4 and not merely about the z-score. It is also the cut the layer actually
+cares about, since `ACSL4_NEGATIVE` sits at z = -2.
+
+The `status_from_zscore` bridge is untouched by either: it maps a scale.
+
+> An earlier draft of this analysis reached the opposite conclusion on ACSL4
+> by comparing TP53 against "the others' ~1.5-2.1%" -- a range that silently
+> omitted ACSL4's own 2.98%, the highest of the six. Every comparison here now
+> runs against all seven genes, and a guard pins the deep-cut result for each.
 
 ## Verdict per gene
 
 | gene | calibration status | reason |
 |---|---|---|
-| HMOX1 | **data-blocked** | no public dataset maps onto a model observable; expression prevalence is uninformative |
-| TFRC | **data-blocked** | same; the engine also already absorbs iron import into `ferritinophagy_release` |
-| KEAP1 | **data-blocked** | same; its effect is already carried by `nrf2_gsh_rate`, which it regulates |
-| TP53 | **weak anchor available** | deep-tail deviation is real, and CTRPv2 carries 828 cell lines x 5 ferroptosis inducers for a sensitivity join if a cell-line expression source can be obtained |
+| HMOX1 | **data-blocked** | Unanchored at BOTH cuts: 14.9% at z<-1 and 1.91% at z<-2, exceeding expectation in only 11/32 types. Neither cut of this route carries information about it. |
+| TP53 | **weak anchor available** | The one gene here with a real signal: 4.27% at z<-2 against a 2.28% expectation, exceeding it in 31/32 types (p=2e-08), with the widest inter-cancer spread. Consistent with real deletion. CTRPv2 also carries 828 cell lines x 5 ferroptosis inducers for a sensitivity join if a cell-line expression source can be obtained. |
+| TFRC | **data-blocked** | Unanchored at both cuts (2.07% at z<-2, 13/32 types). Note that the engine models NCOA4 release of iron from intracellular ferritin (`ferritinophagy_release`), NOT transferrin-receptor import across the membrane, so this is a genuine uncovered axis rather than a duplicate. |
+| KEAP1 | **data-blocked** | Unanchored at both cuts, and the only gene BELOW expectation at z<-1 by more than two points (1.49% at z<-2). Much of its effect is already carried by `nrf2_gsh_rate`, the pathway it regulates, though the KEAP1 sensor itself is not separately modelled. |
 
-None of the four should have a layer written on this evidence. The honest
+None of the four should have a layer written on this evidence. Even TP53's
+signal bounds a PREVALENCE, not a dose-response: it says how many tumours sit
+in the deep tail, not what ferroptosis sensitivity to give them. The honest
 outcome is a data-blocked row, which is what #444 did for ACSL4 before #462
 found a partial anchor.
 
@@ -71,16 +81,26 @@ found a partial anchor.
 A cell-line expression matrix joinable to the committed CTRPv2 curves would
 make all four testable at once: correlate expression against ferroptosis-
 inducer EC50 across 828 lines. The DepMap download catalogue served that until
-recently and now returns HTML rather than the documented CSV, so the join is
+recently and now returns HTML rather than the documented CSV, so that join is
 blocked on access, not on method.
 
 ## Limits
 
+* **Scope of the negative.** Two routes were tried: cBioPortal expression
+  prevalence (measured above) and the DepMap cell-line join (access-blocked).
+  The data-blocked verdicts mean "neither route tried anchors this gene", not
+  "no dataset anywhere could". A targeted knockdown or overexpression
+  dose-response search per gene has not been run.
 * Bulk tumour mRNA, which #462 already found does not rank the ACSL4-low
   refractory phenotype the cell-line literature reports. The same caveat
-  applies with more force here.
-* Approximate normality is assumed when comparing to 15.87%. The observed
-  medians sit slightly below it for most genes, consistent with mild
-  right-skew in expression, and that does not change the conclusion.
+  applies here with more force.
+* The z < -1 comparison assumes approximate per-study normality. Most genes
+  sit slightly BELOW 15.87% while ACSL4 and TP53 sit below at z=-1 and ABOVE at
+  z=-2. That combination is not general skew -- it is what a discrete
+  low-expression subpopulation looks like, and it is the reason the two cuts
+  had to be measured separately rather than treated as one finding.
+* The sign test asks whether a gene is CONSISTENTLY above expectation across
+  cancer types. It does not bound the effect size, and the per-type fractions
+  are not independent of each other's sample sizes.
 * A gene can matter enormously and have a flat expression distribution. This
   measures whether THIS route informs a prior, not whether the gene matters.
