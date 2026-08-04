@@ -28,12 +28,23 @@ the fraction of tumors in each cancer type's low-ACSL4 tail:
 | `z < -1` ("low", ~ACSL4_LOW) | refractory-leaning | min 10.8%, **median 14.4%**, max 18.8% |
 | `z < -2` ("very low", ~ACSL4_NEGATIVE) | strongly refractory-leaning | min 0%, **median 3.0%**, max 5.4% |
 
-This is the **real, committed population prior** for #444: when simulating a patient
-cohort, roughly **1 in 7 tumors** falls in the low-ACSL4 (refractory-leaning) tail
-and roughly **3%** in the very-low tail, fairly uniformly across cancer types. Because
-the z-scores are computed within each study, this is a within-cohort stratification
-number by construction (about a normal lower tail), and the small cross-type spread is
-expected, not a defect.
+When simulating a patient cohort, roughly **1 in 7 tumors** falls in the low-ACSL4
+tail and roughly **3%** in the very-low tail, fairly uniformly across cancer types.
+Because the z-scores are computed within each study, this is a within-cohort
+stratification number by construction (about a normal lower tail), and the small
+cross-type spread is expected, not a defect.
+
+> **Correction (#616): this is not an ACSL4-specific prior.** The paragraph above
+> originally called this "the real, committed population prior" for #444. The
+> by-construction caveat was already stated, but there was no control, so the figure
+> still read as evidence about ACSL4. Running the same measurement over six more
+> genes (`scripts/calibration_feasibility.py`) shows every one of them lands within
+> two points of the P(z < −1) = 15.87% normal expectation: GPX4 14.5%, SLC7A11 16.0%,
+> HMOX1 14.9%, TP53 14.1%, TFRC 15.2%, KEAP1 13.8%, against ACSL4's 14.4%. The number
+> describes how the z-score partitions any cohort, not how many tumors are
+> ACSL4-refractory, and a gene with no ferroptosis role would return it too. Use it
+> as the definition of the stratification cut-point, not as a biological prevalence.
+> The `status_from_zscore` bridge below is unaffected — it maps a scale.
 
 ### 2. The calibrated data→model bridge
 

@@ -79,6 +79,26 @@ surface instead.
   calibration target before a new axis lands. Nothing here bypasses that;
   this only says which axes the literature would support calibrating.
 
+## What happened when the top four were checked (#616)
+
+None of them became a layer, because no calibration target exists. The route
+that partially anchored ACSL4 (cBioPortal TCGA within-cohort z-scores, #462)
+turns out to recover the normal distribution for every gene tested -- HMOX1
+14.9%, TP53 14.1%, TFRC 15.2%, KEAP1 13.8% below z = -1, against the 15.87%
+a normal gives for anything -- so it cannot distinguish a gene whose
+low-expression tail matters from one with no ferroptosis role. Two of the
+four are also already absorbed by an existing parameter (TFRC by
+`ferritinophagy_release`, KEAP1 by `nrf2_gsh_rate`, which it regulates).
+
+The one signal that survived is TP53's DEEP tail (4.3% below z = -2 against
+an expected 2.28%, with much the widest inter-cancer spread), consistent with
+real deletion rather than standardisation. See
+`analysis/calibration/calibration-feasibility.md`, and the
+'Layers proposed and NOT built' rows in `CALIBRATION_STATUS.md`.
+
+So read this table as a map of where the literature's attention and the
+available data do NOT currently overlap, rather than as a backlog.
+
 ## Limits
 
 * Gene mention is not mechanism. An article annotated for a gene may mention

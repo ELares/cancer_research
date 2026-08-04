@@ -1,0 +1,61 @@
+{
+  "expected_low": 0.15865525393145707,
+  "expected_verylow": 0.02275013194817921,
+  "genes": {
+    "ACSL4": {
+      "n_types": 32,
+      "median_low": 0.1436,
+      "iqr_low": 0.029700000000000004,
+      "median_verylow": 0.0298,
+      "dev_from_normal": -0.015055253931457069
+    },
+    "GPX4": {
+      "n_types": 32,
+      "median_low": 0.1446,
+      "iqr_low": 0.02460000000000001,
+      "median_verylow": 0.016100000000000003,
+      "dev_from_normal": -0.014055253931457068
+    },
+    "SLC7A11": {
+      "n_types": 32,
+      "median_low": 0.1602,
+      "iqr_low": 0.029199999999999976,
+      "median_verylow": 0.0169,
+      "dev_from_normal": 0.0015447460685429348
+    },
+    "HMOX1": {
+      "n_types": 32,
+      "median_low": 0.14895,
+      "iqr_low": 0.0179,
+      "median_verylow": 0.01905,
+      "dev_from_normal": -0.009705253931457075
+    },
+    "TP53": {
+      "n_types": 32,
+      "median_low": 0.1407,
+      "iqr_low": 0.04669999999999999,
+      "median_verylow": 0.042749999999999996,
+      "dev_from_normal": -0.017955253931457082
+    },
+    "TFRC": {
+      "n_types": 32,
+      "median_low": 0.1516,
+      "iqr_low": 0.020199999999999996,
+      "median_verylow": 0.020749999999999998,
+      "dev_from_normal": -0.007055253931457062
+    },
+    "KEAP1": {
+      "n_types": 32,
+      "median_low": 0.13829999999999998,
+      "iqr_low": 0.030799999999999994,
+      "median_verylow": 0.01495,
+      "dev_from_normal": -0.020355253931457096
+    }
+  },
+  "gaps": [
+    "HMOX1",
+    "TP53",
+    "TFRC",
+    "KEAP1"
+  ]
+}

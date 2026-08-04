@@ -137,7 +137,14 @@ def main() -> int:
         L += ["## 5. What the literature says to model next", "",
               "| gene | articles | engine handle |", "|---|---|---|"] + [
               f"| {g['gene']} | {g['papers']:,} | none |" for g in top] + [
-              "", "*Source:* `atlas-model-gaps.md`", ""]
+              "", "None of them became a layer. When the top four were checked for a",
+              "calibration target (#616), the route that partially anchored ACSL4 --",
+              "cBioPortal within-cohort z-scores -- turned out to recover the normal",
+              "distribution for every gene tested, so it carries no gene-specific",
+              "signal and cannot anchor anything. Read the table as where the",
+              "literature's attention and the available data fail to overlap, not as",
+              "a backlog.", "",
+              "*Source:* `atlas-model-gaps.md`, `calibration-feasibility.md`", ""]
 
     L += ["---", "", "## What the census did NOT support", "",
           "Reported here because a findings page that only lists wins is marketing.", ""]
