@@ -96,6 +96,50 @@ that really is unrecoverable, but it is an outlier rather than a symptom.
 The reason most identifiers are unreachable is that nobody writes their
 name, or that a near-identical entity holds it.
 
+## Two costs this measurement did not carry, and both are decisive
+
+The rows above score a mention as a name match if EITHER the identifier's
+canonical form OR the span that fired matches an authority name. That is a
+fair diagnostic, and it is not what a filter would see. A rule inside
+`build_alias_map` decides per FORM, before any sentence exists, so only the
+form is available to it.
+
+| what is compared | keeps | kept precision | FPs removed | TPs removed |
+|---|---|---|---|---|
+| canonical form OR span (reported above) | 34 | 82.4% | 95% | 39% |
+| **form only, as a filter would** | 21 | 100.0% | 100% | **54%** |
+| form only, normalised | 29 | 100.0% | 100% | 37% |
+
+At the insertion point the rule is CLEANER than reported -- it removes every
+span-bearing false positive -- and costs half again as many true positives,
+54% rather than 39%. The
+favourable number is the one this document originally quoted.
+
+### And it would delete most of the cancer vocabulary
+
+Precision on judged mentions cannot see this. MeSH tree C04 is the cancer
+definition the whole census is built on, so what the rule does to C04 is
+what it does to the layer's purpose:
+
+| rule | C04 census mass retained | C04 descriptors left with no route |
+|---|---|---|
+| form only, strict | **24.7%** | 260 of 670 |
+| form only, normalised | 64.2% | 152 of 670 |
+
+**The strict rule discards 75% of the
+cancer vocabulary's mentions and leaves
+260 cancer descriptors unreachable by any form
+at all.** `Neoplasms`, `Breast Neoplasms` and `Lung Neoplasms` are among them,
+because MeSH writes `Breast Neoplasms` where the literature writes
+`breast cancer`.
+
+Normalising plurals and collapsing the cancer/tumour/carcinoma family onto
+`neoplasm` recovers most of that at NO precision cost -- the same 100%
+false-positive removal, the same kept precision, and the true-positive cost
+falls from 54% to 37%.
+**Any implementation should normalise; the strict form measured above should
+not be built.**
+
 **It works on MeSH and does nothing useful on genes**, and the reason is
 that genes did not need it. A gene symbol is already a specific string, so
 the gene subset is 75% precise BEFORE any filtering,

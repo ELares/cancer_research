@@ -61,5 +61,35 @@
     "name_unused": 1707,
     "name_to_same": 1119,
     "name_to_different": 143
+  },
+  "at_insertion_point": {
+    "strict": {
+      "n": 160,
+      "kept": 21,
+      "kept_tp": 21,
+      "kept_precision": 1.0,
+      "fp_removed": 1.0,
+      "tp_removed": 0.5434782608695652
+    },
+    "normalised": {
+      "n": 160,
+      "kept": 29,
+      "kept_tp": 29,
+      "kept_precision": 1.0,
+      "fp_removed": 1.0,
+      "tp_removed": 0.3695652173913043
+    }
+  },
+  "c04_cost": {
+    "strict": {
+      "descriptors_reachable": 670,
+      "mass_retained": 0.24681955061454397,
+      "descriptors_killed": 260
+    },
+    "normalised": {
+      "descriptors_reachable": 670,
+      "mass_retained": 0.6420457633526465,
+      "descriptors_killed": 152
+    }
   }
 }
