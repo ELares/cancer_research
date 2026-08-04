@@ -73,10 +73,25 @@ filter admits it more readily than a specific name would be admitted. The
 filter written to exclude `as` and `treatment` was structurally disposed
 to keep them.
 
-Fixed in `atlas_graph.build_index`, which now records
-`alias_ident_support`, the count of a form for the identifier it actually
-resolves to. A rebuild is what will confirm the repair; this document
-reports the state before it.
+`atlas_graph.build_index` now records `alias_ident_support`, the count of
+a form for the identifier its own majority vote picks, which is the
+numerator the ratio always needed.
+
+**It is not enough, and that was measured rather than assumed.** Rebuilding
+the index and re-scoring the judged forms against the corrected share:
+
+* `as` still reads 124.5% (down from 274%), because the co-mention layer can
+  redirect a blocklisted form to a curated sense whose identifier is not the
+  one the majority vote counted. Numerator and denominator are still not
+  guaranteed commensurable.
+* More decisively, at the shipped 5% threshold the corrected share cuts
+  **nothing**: 0 of 37 judged false positives and 0 of 13 true positives.
+  The filter is inert on this stratum whether it is computed correctly or
+  not.
+
+So the bug is real and worth fixing on its own terms, but fixing it does not
+recover the lost precision. That is the same conclusion the overlap above
+reaches, arrived at independently: the share filter cannot do this job.
 
 ## The general lesson
 

@@ -86,3 +86,30 @@ def test_the_lesson_is_recorded_not_just_the_number():
     txt = DOC.read_text()
     assert "wrong about the population it was applied to" in txt
     assert "unblinded" in txt, "the judgement's own bias is not disclosed"
+
+
+def test_the_baseline_is_pinned_with_provenance_not_read_from_head():
+    """Reading the 'before' run from HEAD compared the audit against itself.
+
+    Once the post-rebuild audit was committed, HEAD held the new numbers, so the
+    script silently refused to produce anything. The historical run cannot
+    change, so it is pinned to the commit it came from and verified against git.
+    """
+    import comention_regression as cr
+    assert len(cr.PRE_REBUILD_COMMIT) == 40
+    assert cr.PRE_REBUILD_AUDIT["mentions"] == 1112
+    # The verification must be live, not a comment.
+    src = (REPO_ROOT / "scripts" / "comention_regression.py").read_text()
+    assert "the comparison baseline has moved" in src
+    assert "HEAD:analysis/atlas-comention-audit.json" not in src
+
+
+def test_the_source_fix_is_reported_as_insufficient():
+    """The share bug is real, and fixing it does not recover the precision.
+
+    Claiming a repair the measurement does not support is the failure mode this
+    whole document is about.
+    """
+    txt = DOC.read_text()
+    assert "It is not enough" in txt
+    assert "0 of 37" in txt, "the inert-filter measurement is missing"

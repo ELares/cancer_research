@@ -42,8 +42,12 @@ WHAT IT FOUND
    generic word collects a larger numerator from its other senses, so a
    MINIMUM-share filter admits it more readily than a specific name. The filter
    written to exclude `as` and `treatment` was structurally disposed to keep
-   them. Fixed in `atlas_graph.build_index` via `alias_ident_support`; the
-   rebuild is what will confirm the repair.
+   them. `atlas_graph.build_index` now records `alias_ident_support`, the
+   numerator the ratio always needed -- but re-scoring the judged forms against
+   the corrected share shows it does NOT rescue the filter: `as` still reads
+   124.5%, and at the shipped 5% threshold the corrected share cuts 0 of 37
+   false positives and 0 of 13 true ones. The filter is inert on this stratum
+   either way.
 
 THE GENERAL LESSON, WHICH IS THE POINT
 --------------------------------------
@@ -90,11 +94,34 @@ def wilson(k, n, z=1.96):
     return (max(0.0, (c - m) / den), min(1.0, (c + m) / den))
 
 
+# The pre-rebuild audit, pinned to the commit it came from. Reading it from
+# HEAD was wrong once the post-rebuild audit was committed: the script then
+# compared a run against itself and refused to produce anything. The historical
+# run cannot change, so it is a constant with its provenance attached.
+PRE_REBUILD_COMMIT = "4389be80a1163ed294afa4ad2da71a8780bd6390"
+PRE_REBUILD_AUDIT = {"mentions": 1112, "pubtator_agree": 493,
+                     "in_abstract": 91, "body_only": 528}
+
+
 def prior_audit():
-    """The audit as it stood before the rebuild, read from git."""
-    r = subprocess.run(["git", "show", "HEAD:analysis/atlas-comention-audit.json"],
-                       capture_output=True, text=True, cwd=PROJECT_ROOT)
-    return json.loads(r.stdout) if r.returncode == 0 else None
+    """The audit as it stood before the rebuild.
+
+    Verified against git when the repository still has that commit, so the
+    pinned numbers cannot drift silently; falls back to the constants when it
+    does not (a shallow clone, for instance).
+    """
+    r = subprocess.run(
+        ["git", "show", f"{PRE_REBUILD_COMMIT}:analysis/atlas-comention-audit.json"],
+        capture_output=True, text=True, cwd=PROJECT_ROOT)
+    if r.returncode == 0:
+        from_git = json.loads(r.stdout)
+        for k, v in PRE_REBUILD_AUDIT.items():
+            if from_git.get(k) != v:
+                raise SystemExit(
+                    f"pinned pre-rebuild {k}={v} does not match commit "
+                    f"{PRE_REBUILD_COMMIT[:12]} ({from_git.get(k)}); "
+                    "the comparison baseline has moved")
+    return dict(PRE_REBUILD_AUDIT)
 
 
 def strata(a):
@@ -116,8 +143,9 @@ def main() -> int:
         return 1
     after = json.loads(AUDIT.read_text())
     before = prior_audit()
-    if not before or before.get("mentions") == after.get("mentions"):
-        print("no pre-rebuild audit to compare against in git HEAD", file=sys.stderr)
+    if before["mentions"] == after["mentions"]:
+        print("the current audit equals the pre-rebuild one; nothing to compare",
+              file=sys.stderr)
         return 1
 
     judged = list(csv.DictReader(JUDGED.open()))
@@ -194,10 +222,22 @@ def main() -> int:
         "filter admits it more readily than a specific name would be admitted. The",
         "filter written to exclude `as` and `treatment` was structurally disposed",
         "to keep them.", "",
-        "Fixed in `atlas_graph.build_index`, which now records",
-        "`alias_ident_support`, the count of a form for the identifier it actually",
-        "resolves to. A rebuild is what will confirm the repair; this document",
-        "reports the state before it.", "",
+        "`atlas_graph.build_index` now records `alias_ident_support`, the count of",
+        "a form for the identifier its own majority vote picks, which is the",
+        "numerator the ratio always needed.", "",
+        "**It is not enough, and that was measured rather than assumed.** Rebuilding",
+        "the index and re-scoring the judged forms against the corrected share:", "",
+        "* `as` still reads 124.5% (down from 274%), because the co-mention layer can",
+        "  redirect a blocklisted form to a curated sense whose identifier is not the",
+        "  one the majority vote counted. Numerator and denominator are still not",
+        "  guaranteed commensurable.",
+        "* More decisively, at the shipped 5% threshold the corrected share cuts",
+        "  **nothing**: 0 of 37 judged false positives and 0 of 13 true positives.",
+        "  The filter is inert on this stratum whether it is computed correctly or",
+        "  not.", "",
+        "So the bug is real and worth fixing on its own terms, but fixing it does not",
+        "recover the lost precision. That is the same conclusion the overlap above",
+        "reaches, arrived at independently: the share filter cannot do this job.", "",
         "## The general lesson", "",
         "The #617 justification was true about the sample it was measured on and",
         "wrong about the population it was applied to. Removing the single-token",
