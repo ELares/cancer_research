@@ -56,6 +56,64 @@ of supporting papers, not a literature. 32 articles cannot establish a
 mechanism, and the simulation work is therefore doing more of the argument's
 load than the citation count suggests.
 
+## Did any leg gain ground while the field grew? (#ATLAS-TRAJ)
+
+The counts above are a snapshot, and a snapshot cannot separate *small
+because it is new and rising* from *small because nobody went there*. The
+field grew roughly 25-fold over this period, so every leg's raw count grew
+too. The question that distinguishes those two stories is whether a leg's
+SHARE of the ferroptosis field changed.
+
+Pooled into three-year windows, because the single-year cells are too small
+to compare (the 2019 SDT and PDT cells hold 0 and 4 articles). Wilson 95%
+intervals; a leg is called moved only when the two intervals are DISJOINT,
+which is a stricter test than a two-proportion comparison.
+
+| leg | 2019-2021 share | 2023-2025 share | verdict |
+|---|---|---|---|
+| lipid peroxidation | 20.85% [18.80, 23.06] | 11.43% [10.82, 12.07] | **falls** |
+| drug resistance | 3.59% [2.74, 4.71] | 3.84% [3.48, 4.24] | flat |
+| photodynamic therapy | 1.80% [1.22, 2.64] | 1.32% [1.11, 1.56] | flat |
+| immunotherapy | 0.65% [0.34, 1.23] | 0.51% [0.39, 0.67] | flat |
+| sonodynamic therapy | 0.14% [0.04, 0.52] | 0.24% [0.16, 0.36] | flat |
+| focused ultrasound | 0.00% [0.00, 0.28] | 0.00% [0.00, 0.04] | flat |
+
+**Nothing moved except lipid peroxidation, and that one is an artifact.**
+
+Every leg of the thesis grew at essentially the same rate as the field
+around it. The composition of the ferroptosis literature has been stable
+through a 25-fold expansion: no leg gained ground and no leg lost it.
+
+The exception is `lipid peroxidation`, which falls from 20.85% to 11.43%. Read that as
+vocabulary, not science. NLM introduced the `Ferroptosis` descriptor
+(D000079403) on 2020-01-01, and this census contains no ferroptosis-indexed
+article before 2019 -- so the early
+window sits right on the transition, when papers were still routinely
+co-indexed with the general `Lipid Peroxidation` term. Once the specific
+descriptor bedded in, indexers stopped reaching for the general one. The
+mechanism did not become less central to the field. The row is included
+because dropping an inconvenient result is worse than explaining it.
+
+### What this changes for the thesis
+
+It removes a reading the earlier snapshot allowed. A leg with 32 articles
+could have been small-and-accelerating -- an under-explored direction just
+starting to attract people -- and that would have been the most favourable
+interpretation available to this project. It is not what happened. The
+sonodynamic share sits at 0.14% early and 0.24% late, statistically
+indistinguishable, so the leg has stayed at roughly a quarter of one percent
+of its own field throughout the boom.
+
+The honest version is *persistently unexplored* rather than *newly emerging*.
+That is not a refutation: nobody tried it and abandoned it either, since the
+share is not falling. But the manuscript cannot argue that the field is
+moving toward its thesis, because measurably it is not.
+
+The same correction applies in the project's favour on the resistance leg.
+That leg is stable at 3.6-3.8%, not growing, so it is a dependable place to
+stand rather than a rising one -- and the manuscript should not describe it
+as a rapidly growing area on the strength of the field's overall growth.
+
 ## By year
 
 | year | ferroptosis | + SDT | + PDT | + resistance |
@@ -80,3 +138,9 @@ load than the citation count suggests.
   lower bounds on discussion and upper bounds on nothing.
 * Co-occurrence of two descriptors is not a claim that the article connects
   them, only that it is indexed for both.
+* The trajectory compares SHARES, so it is insensitive to the field's own
+  growth by design. A leg can be flat here while its raw output multiplies,
+  and for every leg above it did.
+* Disjoint Wilson intervals is a conservative test. A leg reported flat may
+  still be moving slowly; the claim is that this data cannot show it, not
+  that the leg is provably static.
