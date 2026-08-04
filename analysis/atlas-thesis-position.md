@@ -56,6 +56,93 @@ of supporting papers, not a literature. 32 articles cannot establish a
 mechanism, and the simulation work is therefore doing more of the argument's
 load than the citation count suggests.
 
+## Did any leg gain ground while the field grew? (#ATLAS-TRAJ)
+
+The counts above are a snapshot, and a snapshot cannot separate *small
+because it is new and rising* from *small because nobody went there*. Every
+leg's raw count grew, because the field did. The question that separates the
+two stories is whether a leg's SHARE of the ferroptosis field changed.
+
+Pooled into three-year windows, because the single-year cells are too small
+to compare (the 2019 SDT and PDT cells hold 0 and 4 articles). Wilson 95%
+intervals; a leg is called moved only when the two intervals are DISJOINT.
+
+**That test is conservative, which means blind over a range, so every verdict
+below ships with the size of change it could actually have detected.** A flat
+verdict on a leg with a 4x detection floor is not evidence that the leg did
+not move.
+
+| leg | early share | late share | verdict | would have needed | holds across windows |
+|---|---|---|---|---|---|
+| lipid peroxidation | 20.85% [18.80, 23.06] | 11.43% [10.82, 12.07] | **falls** | a 1.1x change | 1/6 flat |
+| drug resistance | 3.59% [2.74, 4.71] | 3.84% [3.48, 4.24] | flat | a 1.4x change | 4/6 flat |
+| photodynamic therapy | 1.80% [1.22, 2.64] | 1.32% [1.11, 1.56] | flat | a 1.6x change | 6/6 flat |
+| immunotherapy | 0.65% [0.34, 1.23] | 0.51% [0.39, 0.67] | flat | a 2.2x change | 6/6 flat |
+| sonodynamic therapy | 0.14% [0.04, 0.52] | 0.24% [0.16, 0.36] | flat | a 4.7x change | 6/6 flat |
+| focused ultrasound | 0.00% [0.00, 0.28] | 0.00% [0.00, 0.04] | flat | n/a (no early support) | 6/6 flat |
+
+**Moved: lipid peroxidation. Not distinguishable from flat: drug resistance, focused ultrasound, immunotherapy, photodynamic therapy, sonodynamic therapy.**
+
+No leg of the thesis is measurably gaining or losing ground on its own
+field. Read that as a bound, not as proof of stasis: the detection floors
+in the table are the honest statement of what this cannot see.
+
+### What this does and does not say about the sonodynamic leg
+
+It removes the most favourable reading the earlier snapshot allowed. A
+32-article leg could have been small-and-accelerating -- an under-explored
+direction just starting to attract people -- and nothing in the counts
+ruled that out.
+The share went 0.14% to 0.24%, and it is flat in all 6 window pairs tried, so there is no sign of
+an inflection.
+
+**But the honest limit is severe.** With only 2 early articles, the test would not have called a rise
+below **4.7x**. So the defensible statement is
+that the leg shows no detectable acceleration, NOT that it demonstrably has
+none. *Persistently unexplored* is supported as a description of the
+measured shares. The stronger claim an earlier draft made -- that the
+field is demonstrably not moving toward the thesis -- is not supported by
+a test this blind, and has been withdrawn.
+
+The leg is also not shrinking, so this is not a case of people trying it
+and giving up.
+
+### The resistance leg
+
+Flat on the headline windows at 3.59% to 3.84%, so it is a dependable place to stand
+rather than a rising one, and it should not be called a rapidly growing
+area on the strength of the field's overall growth.
+
+**That verdict is window-dependent**, and the report says so rather
+than reporting only the split that was chosen first: the leg is called
+*rises* in 2 of 6 window pairs,
+including 2021-2022 against 2024-2025. Those are the windows that
+start after the descriptor transition discussed below, so they are not
+obviously the worse choice. The cautious reading is that the resistance
+share may be drifting up and this data cannot settle it.
+
+### The one leg that moves, and why the obvious explanation is incomplete
+
+`lipid peroxidation` falls from 20.85% to 11.43%, the only disjoint result, and it moves in
+5 of 6 window pairs.
+
+The natural explanation is vocabulary rather than science. NLM introduced
+the `Ferroptosis` descriptor (D000079403) on 2020-01-01, and before a
+specific descriptor exists indexers reach for the general one, so a decline
+as the specific term beds in is what one would expect.
+
+**The series does not fully support that.** Year by year: 2019 30.1%, 2020 22.2%, 2021 18.2%, 2022 10.1%, 2023 8.3%, 2024 11.5%, 2025 12.8%, 2026 13.0%.
+The decline continues to 2023, three years past the introduction,
+and then REVERSES to 13.0% by 2026. Indexers dropping a
+general term cannot produce a rise. So the transition may explain the early
+part of the fall, but something else is driving the shape, and this report
+does not know what. It is stated as an open question rather than settled,
+because the tidy version was written first and the data refused it.
+
+What it is NOT is evidence that lipid peroxidation became less central to
+ferroptosis, which would be a claim about the biology that a co-indexing
+rate cannot support in either direction.
+
 ## By year
 
 | year | ferroptosis | + SDT | + PDT | + resistance |
@@ -80,3 +167,9 @@ load than the citation count suggests.
   lower bounds on discussion and upper bounds on nothing.
 * Co-occurrence of two descriptors is not a claim that the article connects
   them, only that it is indexed for both.
+* The trajectory compares SHARES, so it is insensitive to the field's own
+  growth by design. A leg can be flat here while its raw output multiplies,
+  and for every leg above it did.
+* Disjoint Wilson intervals is a conservative test. A leg reported flat may
+  still be moving slowly; the claim is that this data cannot show it, not
+  that the leg is provably static.

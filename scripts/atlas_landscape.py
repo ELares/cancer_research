@@ -134,6 +134,17 @@ def frozen_records():
 PRECISE = {"hifu", "sonodynamic", "antibody-drug-conjugate", "bispecific-antibody",
            "car-t", "oncolytic-virus", "phagocytosis-checkpoint", "mrna-vaccine"}
 PHYSICAL = {"hifu", "sonodynamic", "electrochemical-therapy"}
+# The pharmacological comparator is a CURATED list of drug modalities, not
+# "everything that is not physical". Sweeping in the delivery platforms and
+# genetic tools (nanoparticle, crispr, oncolytic-virus, mrna-vaccine,
+# microbiome, phagocytosis-checkpoint) inflates the ratio from 9.1:1 to 12.5:1
+# by counting things that are neither a drug class nor a physical modality, so
+# the comparison would no longer be the manuscript's. Kept module-level so the
+# figure that plots this ratio imports the same definition rather than
+# restating it.
+PHARMACOLOGICAL = {"immunotherapy", "car-t", "antibody-drug-conjugate",
+                   "bispecific-antibody", "synthetic-lethality", "epigenetic",
+                   "metabolic-targeting"}
 
 
 def _maturity_narrative(R: dict) -> list:
@@ -144,18 +155,31 @@ def _maturity_narrative(R: dict) -> list:
         den = sum(R[k]["mesh_census"] for k in keys)
         return (num / den) if den else 0.0
 
+    # DELIBERATELY the complement, not the curated `PHARMACOLOGICAL` set the
+    # volume ratio uses. A maturity question wants the whole non-physical
+    # literature as the comparator, since a delivery platform or a genetic tool
+    # has a clinical share of its own worth counting. The column is labelled
+    # accordingly below -- calling it "pharmacological" while computing the
+    # complement is what made the two comparisons look interchangeable.
     all_phys = share(PHYSICAL)
-    all_pharm = share(set(R) - PHYSICAL)
+    all_other = share(set(R) - PHYSICAL)
     pre_phys = share(PHYSICAL & PRECISE)
-    pre_pharm = share(PRECISE - PHYSICAL)
+    pre_other = share(PRECISE - PHYSICAL)
     hifu = R.get("hifu", {}).get("clinical_share") or 0
     sono = R.get("sonodynamic", {}).get("clinical_share") or 0
     cart = R.get("car-t", {}).get("clinical_share") or 0
     return [
         "",
-        "| comparison | physical | pharmacological |", "|---|---|---|",
-        f"| all mechanisms | {100*all_phys:.2f}% | {100*all_pharm:.2f}% |",
-        f"| precise descriptors only | {100*pre_phys:.2f}% | {100*pre_pharm:.2f}% |",
+        "| comparison | physical | everything else |", "|---|---|---|",
+        f"| all mechanisms | {100*all_phys:.2f}% | {100*all_other:.2f}% |",
+        f"| precise descriptors only | {100*pre_phys:.2f}% | {100*pre_other:.2f}% |",
+        "",
+        "The comparator here is every non-physical mechanism, NOT the curated",
+        "pharmacological set the volume ratio above uses. A maturity question wants",
+        "the whole non-physical literature, since a delivery platform or a genetic",
+        "tool has a clinical share worth counting; a volume ratio wants drug classes",
+        "specifically. The two are different comparisons and the column names now say",
+        "so.",
         "",
         "**The answer flips.** Taken across all mechanisms physical modalities look",
         "MORE clinically mature; restricted to descriptors that name a therapy rather",
@@ -164,8 +188,8 @@ def _maturity_narrative(R: dict) -> list:
         "in papers that are not about treatment, and those are not trials, so scope",
         "deflates the share exactly where it inflates the count.", "",
         "So the manuscript's direction survives on the sound comparison, but weakly:",
-        f"{100*pre_pharm:.2f}% against {100*pre_phys:.2f}%, a factor of "
-        f"{pre_pharm/max(pre_phys,1e-9):.2f}, not the gulf the volume ratio suggests.", "",
+        f"{100*pre_other:.2f}% against {100*pre_phys:.2f}%, a factor of "
+        f"{pre_other/max(pre_phys,1e-9):.2f}, not the gulf the volume ratio suggests.", "",
         "### The finding that does hold up", "",
         "`physical modalities` is not a maturity class, and treating it as one is what",
         "the manuscript actually gets wrong. Both of these rest on precise",
@@ -335,10 +359,7 @@ def main() -> int:
     # Therapy" over-counts, it over-counts identically in both.
     cap = {r["mechanism"]: (r["mesh_frozen"] / r["mesh_census"])
            for r in rows if r["mesh_census"] and r["mesh_frozen"]}
-    PHYS = ["sonodynamic", "hifu", "electrochemical-therapy"]
-    PHARM = ["immunotherapy", "car-t", "antibody-drug-conjugate",
-             "bispecific-antibody", "synthetic-lethality", "epigenetic",
-             "metabolic-targeting"]
+    PHYS, PHARM = sorted(PHYSICAL), sorted(PHARMACOLOGICAL)
     tot = lambda ks, c: sum(R[k][c] for k in ks if k in R and R[k].get(c))  # noqa: E731
     R = {r["mechanism"]: r for r in rows}
     kf_p, kf_h = tot(PHYS, "keyword_frozen"), tot(PHARM, "keyword_frozen")

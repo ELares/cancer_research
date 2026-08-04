@@ -78,5 +78,267 @@
       "drug resistance": 15,
       "immunotherapy": 2
     }
-  }
+  },
+  "trajectory": {
+    "sonodynamic therapy": {
+      "early": {
+        "k": 2,
+        "n": 1391,
+        "share": 0.0014378145219266715,
+        "ci": [
+          0.00039438094034644893,
+          0.005227476050440175
+        ]
+      },
+      "late": {
+        "k": 24,
+        "n": 10018,
+        "share": 0.002395687762028349,
+        "ci": [
+          0.0016104674244260058,
+          0.0035623942180888785
+        ]
+      },
+      "moved": false,
+      "direction": "flat",
+      "min_detectable_k": 67,
+      "min_detectable_share": 0.006687961668995808,
+      "min_detectable_ratio": 4.651477340786584,
+      "windows": {
+        "n_windows": 6,
+        "n_moved": 0,
+        "moved_windows": []
+      }
+    },
+    "photodynamic therapy": {
+      "early": {
+        "k": 25,
+        "n": 1391,
+        "share": 0.017972681524083392,
+        "ci": [
+          0.01220291575447037,
+          0.026397596303673002
+        ]
+      },
+      "late": {
+        "k": 132,
+        "n": 10018,
+        "share": 0.01317628269115592,
+        "ci": [
+          0.011122571399706101,
+          0.015603215206220697
+        ]
+      },
+      "moved": false,
+      "direction": "flat",
+      "min_detectable_k": 296,
+      "min_detectable_share": 0.02954681573168297,
+      "min_detectable_ratio": 1.6439848273108406,
+      "windows": {
+        "n_windows": 6,
+        "n_moved": 0,
+        "moved_windows": []
+      }
+    },
+    "focused ultrasound": {
+      "early": {
+        "k": 0,
+        "n": 1391,
+        "share": 0.0,
+        "ci": [
+          0.0,
+          0.002754147854494732
+        ]
+      },
+      "late": {
+        "k": 0,
+        "n": 10018,
+        "share": 0.0,
+        "ci": [
+          0.0,
+          0.00038332276175668156
+        ]
+      },
+      "moved": false,
+      "direction": "flat",
+      "min_detectable_k": 38,
+      "min_detectable_share": 0.003793172289878219,
+      "min_detectable_ratio": null,
+      "windows": {
+        "n_windows": 6,
+        "n_moved": 0,
+        "moved_windows": []
+      }
+    },
+    "drug resistance": {
+      "early": {
+        "k": 50,
+        "n": 1391,
+        "share": 0.035945363048166784,
+        "ci": [
+          0.027370835884398766,
+          0.04707604037739324
+        ]
+      },
+      "late": {
+        "k": 385,
+        "n": 10018,
+        "share": 0.03843082451587143,
+        "ci": [
+          0.034839920390271284,
+          0.04237558858364824
+        ]
+      },
+      "moved": false,
+      "direction": "flat",
+      "min_detectable_k": 514,
+      "min_detectable_share": 0.05130764623677381,
+      "min_detectable_ratio": 1.4273787183070474,
+      "windows": {
+        "n_windows": 6,
+        "n_moved": 2,
+        "moved_windows": [
+          {
+            "early": "2021-2022",
+            "late": "2024-2025",
+            "moved": true,
+            "direction": "rises"
+          },
+          {
+            "early": "2022-2023",
+            "late": "2024-2025",
+            "moved": true,
+            "direction": "rises"
+          }
+        ]
+      }
+    },
+    "immunotherapy": {
+      "early": {
+        "k": 9,
+        "n": 1391,
+        "share": 0.006470165348670022,
+        "ci": [
+          0.0034076475747468926,
+          0.01225119139306135
+        ]
+      },
+      "late": {
+        "k": 51,
+        "n": 10018,
+        "share": 0.005090836494310242,
+        "ci": [
+          0.003874314263172312,
+          0.006686778620195551
+        ]
+      },
+      "moved": false,
+      "direction": "flat",
+      "min_detectable_k": 145,
+      "min_detectable_share": 0.014473946895587942,
+      "min_detectable_ratio": 2.237028903529203,
+      "windows": {
+        "n_windows": 6,
+        "n_moved": 0,
+        "moved_windows": []
+      }
+    },
+    "lipid peroxidation": {
+      "early": {
+        "k": 290,
+        "n": 1391,
+        "share": 0.20848310567936737,
+        "ci": [
+          0.18795224979931166,
+          0.23061972281750734
+        ]
+      },
+      "late": {
+        "k": 1145,
+        "n": 10018,
+        "share": 0.11429427031343582,
+        "ci": [
+          0.10821106556647563,
+          0.12067317463145368
+        ]
+      },
+      "moved": true,
+      "direction": "falls",
+      "min_detectable_k": 2393,
+      "min_detectable_share": 0.23887003393890996,
+      "min_detectable_ratio": 1.1457524731345645,
+      "windows": {
+        "n_windows": 6,
+        "n_moved": 5,
+        "moved_windows": [
+          {
+            "early": "2019-2020",
+            "late": "2024-2025",
+            "moved": true,
+            "direction": "falls"
+          },
+          {
+            "early": "2020-2021",
+            "late": "2024-2025",
+            "moved": true,
+            "direction": "falls"
+          },
+          {
+            "early": "2022-2023",
+            "late": "2024-2025",
+            "moved": true,
+            "direction": "rises"
+          },
+          {
+            "early": "2019-2021",
+            "late": "2023-2025",
+            "moved": true,
+            "direction": "falls"
+          },
+          {
+            "early": "2020-2022",
+            "late": "2023-2025",
+            "moved": true,
+            "direction": "falls"
+          }
+        ]
+      }
+    }
+  },
+  "trajectory_windows": {
+    "early": [
+      "2019",
+      "2020",
+      "2021"
+    ],
+    "late": [
+      "2023",
+      "2024",
+      "2025"
+    ]
+  },
+  "legs": {
+    "sonodynamic therapy": [
+      "Ultrasonic Therapy"
+    ],
+    "photodynamic therapy": [
+      "Photochemotherapy",
+      "Photosensitizing Agents"
+    ],
+    "focused ultrasound": [
+      "High-Intensity Focused Ultrasound Ablation"
+    ],
+    "drug resistance": [
+      "Drug Resistance, Neoplasm"
+    ],
+    "immunotherapy": [
+      "Immune Checkpoint Inhibitors"
+    ],
+    "lipid peroxidation": [
+      "Lipid Peroxidation"
+    ]
+  },
+  "core": [
+    "Ferroptosis"
+  ]
 }

@@ -169,10 +169,17 @@ depend on our evidence tagger -- whose recall this repo measures at 55%.
 | `nanoparticle` | 36,788 | 182 | 0.49% |
 | `crispr` | 3,674 | 6 | 0.16% |
 
-| comparison | physical | pharmacological |
+| comparison | physical | everything else |
 |---|---|---|
 | all mechanisms | 5.52% | 3.43% |
 | precise descriptors only | 5.43% | 6.90% |
+
+The comparator here is every non-physical mechanism, NOT the curated
+pharmacological set the volume ratio above uses. A maturity question wants
+the whole non-physical literature, since a delivery platform or a genetic
+tool has a clinical share worth counting; a volume ratio wants drug classes
+specifically. The two are different comparisons and the column names now say
+so.
 
 **The answer flips.** Taken across all mechanisms physical modalities look
 MORE clinically mature; restricted to descriptors that name a therapy rather
