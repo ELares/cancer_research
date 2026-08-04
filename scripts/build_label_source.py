@@ -134,6 +134,28 @@ def gene_labels(gene_ids: list) -> dict:
     return found
 
 
+def top_unreachable(root, reachable: set, limit: int) -> set:
+    """The most-annotated identifiers no alias form resolves to.
+
+    Included so the table can answer questions about entities the layer misses,
+    not only about the ones it finds.
+    """
+    import collections
+    import gzip as _gzip
+
+    mentions = collections.Counter()
+    for kind in ("gene", "chemical", "disease"):
+        f = root / "entities" / f"{kind}.tsv.gz"
+        if not f.exists():
+            continue
+        with _gzip.open(f, "rt", errors="replace") as fh:
+            for line in fh:
+                p = line.rstrip("\n").split("\t")
+                if len(p) >= 3 and p[2] and p[2] != "-" and p[2] not in reachable:
+                    mentions[p[2]] += 1
+    return {i for i, _ in mentions.most_common(limit)}
+
+
 def load_table() -> dict:
     """identifier -> [names], from the committed table."""
     if not OUT.exists():
@@ -167,6 +189,11 @@ def main() -> int:
     idx = load_index(atlas_root())
     alias, _ = build_alias_map(idx)
     wanted = set(alias.values())
+    # Also cover the most-annotated identifiers the alias map CANNOT reach.
+    # Without them the table can only describe entities the layer already
+    # finds, which makes "is this entity unreachable by its own name?"
+    # unanswerable by construction -- the question that motivated the table.
+    wanted |= top_unreachable(atlas_root(), wanted, limit=3000)
     mesh_ids = {i.split(":", 1)[1] for i in wanted if i.startswith("MESH:")}
     gene_ids = sorted(i for i in wanted if not i.startswith(("MESH:", "OMIM:")))
     print(f"identifiers in use: {len(wanted):,} "

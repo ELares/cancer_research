@@ -104,3 +104,40 @@ def test_names_are_not_claimed_to_be_senses():
     txt = DOC.read_text()
     assert "Names, not senses" in txt
     assert "never whether it is the right" in txt
+
+
+def test_the_unreachable_class_is_measured_and_reported_as_near_empty():
+    """A hypothesis raised and then refuted by counting.
+
+    `Apoptosis` being locked out by a cortical-malformation descriptor looked
+    like the tip of a damaging class. It is not: most unreachable identifiers
+    are unreachable because nobody writes their name, or because a
+    near-identical entity holds it. The negative bounds how far the Apoptosis
+    finding should be read, so it must not quietly drop out.
+    """
+    u = _raw()["unreachable"]
+    assert u["annotated"] > 200000
+    assert u["reachable"] < u["annotated"]
+    n = u["examined"]
+    assert n > 2000, f"only {n} examined"
+    # The benign explanations must dominate; if the different-entity class ever
+    # grows past a fifth, the document's framing is stale and must be re-read.
+    benign = u["name_unused"] + u["name_to_same"]
+    assert benign / n > 0.8, f"benign causes are only {100*benign/n:.0f}%"
+    assert u["name_to_different"] / n < 0.2
+    txt = DOC.read_text()
+    assert "close to empty" in txt
+    assert "outlier rather than a symptom" in txt, (
+        "the bound on the Apoptosis finding is missing")
+
+
+def test_the_cross_namespace_cases_are_not_called_corruption():
+    """`Prostate-Specific Antigen` losing to `KLK3` is redundancy, not capture.
+
+    Counting those as an entity being locked out by a competitor would overstate
+    the finding; they are the same biological entity in two vocabularies.
+    """
+    txt = DOC.read_text()
+    assert "not what it looks like either" in txt
+    assert "cross-namespace redundancy" in txt
+    assert "are not competitors" in txt
