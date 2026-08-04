@@ -50,8 +50,14 @@ Issue templates live in `.github/ISSUE_TEMPLATE/`: bug report, corpus or literat
    tracked file:
 
    ```bash
-   python3 scripts/generate_release_manifest.py && git add MANIFEST.sha256
+   git add -A                                   # FIRST -- see below
+   python3 scripts/generate_release_manifest.py
+   git add MANIFEST.sha256
    ```
+
+   **Order matters.** The generator walks *tracked* files only, so a new file
+   that has not been `git add`ed yet is invisible to it and the manifest comes
+   out stale even though you just regenerated it.
 
    `MANIFEST.sha256` is a SHA256 of every tracked file, used for archival
    releases, and CI fails the `manifest` check when it is stale. Nothing local
