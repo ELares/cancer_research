@@ -47,7 +47,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from atlas_baseline import atlas_root  # noqa: E402
-from atlas_graph import load_index, support  # noqa: E402
+from atlas_graph import load_index, resolve, support  # noqa: E402
 from config import PROJECT_ROOT  # noqa: E402
 
 OUT = PROJECT_ROOT / "analysis" / "atlas-module-support.md"
@@ -192,6 +192,23 @@ def main() -> None:
         L.append(f"| {r['module']} | {pair} | {r['total']:,} | {cm_s} | {preds} | "
                  f"{cited} | {con} |")
 
+    # Which claims, if any, rest on an entity measured as a sense collision.
+    try:
+        _scan = json.loads(
+            (PROJECT_ROOT / "analysis" / "atlas-ambiguity.json").read_text())
+        _collide = set()
+        for _t in ("gene", "chemical", "disease"):
+            for _r in _scan["by_type"][_t]["sense_rows"]:
+                _collide |= {_r["top"]["id"], _r["runner_up"]["id"]}
+    except (OSError, ValueError, KeyError):
+        _collide = set()
+    colliding = []
+    for r in rows:
+        hits = [n for n in (r["a"], r["b"])
+                if resolve(idx, n) in _collide]
+        if hits:
+            colliding.append((r["module"], hits))
+
     contested = [r for r in rows if r.get("contested")]
     if contested:
         L += ["", "## Claims that sit on a CONTESTED edge", "",
@@ -208,6 +225,23 @@ def main() -> None:
               "A high balance means the field is genuinely split; a low one means the module",
               "is on the majority side of a mostly-settled question. Neither says the module",
               "is wrong -- it says the module docs should state which side they took.", ""]
+        # A contradiction can be manufactured by conflating two entities under one
+        # identifier, and that inflates the flag rate by 1.45x across the graph
+        # (analysis/atlas-contradiction-quality.md). So say whether it could be
+        # the explanation HERE, rather than leaving a reader to wonder.
+        if colliding:
+            L += ["> **Some of these may be conflation, not disagreement.** These claims rest",
+                  "> on entities measured as sense collisions, and merging two entities merges",
+                  "> two literatures, which will disagree "
+                  "(`analysis/atlas-contradiction-quality.md`):", ""]
+            L += [f">   * `{m}`: {', '.join(h)}" for m, h in colliding] + [""]
+        else:
+            L += ["> **Conflation does not explain these.** Across the graph, pairs built on a",
+                  "> measured sense collision are 1.45x more likely to be flagged contradictory",
+                  "> (`analysis/atlas-contradiction-quality.md`), so that had to be excluded.",
+                  f"> All {len(rows)} claims here rest on entities with no measured collision,",
+                  "> so these conflicts are disagreements between studies rather than two",
+                  "> literatures merged under one identifier.", ""]
 
     L += ["", "## Reading", "",
           f"* **{len(found)} of {len(rows)}** module claims are corroborated by at least one",

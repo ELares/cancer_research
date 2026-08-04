@@ -73,6 +73,13 @@ A high balance means the field is genuinely split; a low one means the module
 is on the majority side of a mostly-settled question. Neither says the module
 is wrong -- it says the module docs should state which side they took.
 
+> **Conflation does not explain these.** Across the graph, pairs built on a
+> measured sense collision are 1.45x more likely to be flagged contradictory
+> (`analysis/atlas-contradiction-quality.md`), so that had to be excluded.
+> All 20 claims here rest on entities with no measured collision,
+> so these conflicts are disagreements between studies rather than two
+> literatures merged under one identifier.
+
 
 ## Reading
 

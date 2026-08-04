@@ -1059,3 +1059,46 @@ def test_temporal_check_validates_the_undeclaring_corrections():
     other = years.get("S100A4", [])
     assert other and min(other) < 2019, \
         "the contrast sense must span decades, or the check proves nothing"
+
+
+def test_module_support_rules_out_conflation_for_contested_claims():
+    """A contested verdict has to survive the conflation explanation.
+
+    Across the graph, pairs built on a measured sense collision are 1.45x more
+    likely to be flagged contradictory. A reader seeing 'contested: yes' on a
+    module claim needs to know whether that could be two literatures merged
+    rather than a field divided, so the report states which it is.
+    """
+    text = (REPO_ROOT / "analysis" / "atlas-module-support.md").read_text()
+    assert "1.45x" in text, "the report must quote the measured enrichment"
+    assert ("Conflation does not explain these" in text
+            or "may be conflation, not disagreement" in text), \
+        "the report must resolve the conflation question either way"
+
+
+def test_no_module_claim_rests_on_a_colliding_entity():
+    """If a claim ever lands on one, its contested verdict needs re-reading.
+
+    This is the check that lets the report say conflation is excluded. It is a
+    property of the claim list, so it must be asserted rather than assumed.
+    """
+    import json
+    scan = json.loads((REPO_ROOT / "analysis" / "atlas-ambiguity.json").read_text())
+    collide = set()
+    for t in ("gene", "chemical", "disease"):
+        for r in scan["by_type"][t]["sense_rows"]:
+            collide |= {r["top"]["id"], r["runner_up"]["id"]}
+    import atlas_module_support as ms
+    from atlas_baseline import atlas_root
+    try:
+        idx = ag.load_index(atlas_root())
+    except SystemExit:
+        pytest.skip("atlas index not built in this checkout")
+    bad = []
+    for module, a, b, _pmid, _claim in ms.CLAIMS:
+        for name in (a, b):
+            if ag.resolve(idx, name) in collide:
+                bad.append(f"{module}: {name}")
+    assert not bad, (
+        "module claims now rest on colliding entities; their contested verdicts "
+        "must be re-read as possible conflation:\n  " + "\n  ".join(bad))
