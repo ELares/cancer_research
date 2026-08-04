@@ -163,6 +163,35 @@ def usable_alias(a: str) -> bool:
     return True
 
 
+def matched_forms(sentence: str, ident: str, alias: dict) -> list:
+    """Which alias forms of `ident` actually occur in this sentence.
+
+    Reproduces `sentence_entities`, which is LONGEST-MATCH WITH CONSUMPTION: it
+    walks the tokens, takes the longest alias starting at each position, and
+    skips past it. Generating every n-gram hit instead would report spans that
+    never fired -- in "breast cancer", `cancer` and `breast` are both aliases
+    but only `breast cancer` is counted. Listing them would put non-firing spans
+    in front of the next round of hand judging, which is the exact failure this
+    field was added to prevent.
+    """
+    toks = _TOKEN.findall(sentence.lower())
+    out, i = [], 0
+    while i < len(toks):
+        hit = None
+        for n in range(min(MAX_NGRAM, len(toks) - i), 0, -1):
+            gram = " ".join(toks[i:i + n])
+            if gram in alias:
+                hit = (gram, n)
+                break
+        if hit:
+            if alias[hit[0]] == ident:
+                out.append(hit[0])
+            i += hit[1]
+        else:
+            i += 1
+    return out
+
+
 def build_alias_map(idx: dict) -> tuple:
     """Usable surface form -> identifier, with sense collisions handled.
 
@@ -387,7 +416,18 @@ def main() -> None:
         with gzip.open(ap_path, "wt", encoding="utf-8") as fh:
             for row in audit["rows"]:
                 row = dict(row)
+                # `canon` is the identifier's most frequent surface form ACROSS
+                # THE CORPUS, not the span that fired in this sentence. Recording
+                # only that made the sample unjudgeable: the name is constant per
+                # identifier and is absent from the sentence in a third of rows
+                # (`left ventricular dysfunction` against "diagnosed with left
+                # breast cancer", where `left` is what actually matched). A
+                # reviewer cannot score a match without seeing what matched, and
+                # a first hand-judging pass went wrong for exactly this reason.
                 row["entity_names"] = [idx["canon"].get(e, e) for e in row["entities"]]
+                row["matched_spans"] = [
+                    sorted(matched_forms(row["sentence"], e, alias), key=len, reverse=True)
+                    for e in row["entities"]]
                 fh.write(json.dumps(row) + "\n")
         print(f"wrote {ap_path}: {len(audit['rows'])} sentences uniformly sampled "
               f"from {audit['seen']:,} kept, for precision auditing")

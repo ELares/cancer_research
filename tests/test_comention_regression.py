@@ -62,12 +62,36 @@ def test_the_abstract_visible_stratum_grew():
     assert "did not measurably get cleaner" in txt
 
 
-def test_the_carried_over_precisions_are_declared_not_hidden():
-    """Only one stratum was re-measured; the other two are assumptions."""
+def test_every_stratum_is_measured_not_assumed():
+    """The two carried-over precisions were the biggest hole in the total.
+
+    They were assumed at 92.5% and 30.8% from #617. Measuring them mattered:
+    body-only came in at 20%, optimistic by about a third, and it is the stratum
+    carrying the most volume.
+    """
+    import csv as _csv
+
     d = _raw()
-    assert set(d["carried_over"]) == {"agree", "body_only"}
-    txt = DOC.read_text()
-    assert "carried over" in txt and "stated rather than buried" in txt
+    m = d["measured_strata"]
+    assert set(m) == {"agree", "body_only"}
+    for name, path in (("agree", "corroborated-judgements.csv"),
+                       ("body_only", "body-only-judgements.csv")):
+        f = REPO_ROOT / "analysis" / "comention" / path
+        rows = list(_csv.DictReader(f.open()))
+        assert len(rows) >= 30, f"{path} has only {len(rows)} judged mentions"
+        tp = sum(1 for r in rows if r["verdict"] == "TP")
+        assert m[name]["tp"] == tp and m[name]["n"] == len(rows)
+        assert abs(m[name]["precision"] - tp / len(rows)) < 1e-12
+        # Each judgement must be checkable. csv.DictReader supplies every header
+        # key on every row, so `"matched_span" in r` tests the HEADER -- blanking
+        # every value passed it. Check the values.
+        filled = sum(1 for r in rows if (r.get("matched_span") or "").strip())
+        assert filled >= 0.9 * len(rows), (
+            f"{name}: only {filled}/{len(rows)} rows record the span that fired")
+        assert all(r.get("verdict") in ("TP", "FP") for r in rows)
+    assert m["body_only"]["precision"] < 0.308, (
+        "body-only no longer measures below its old assumed value; re-read")
+    assert "All three rows are now hand-judged" in DOC.read_text()
 
 
 def test_the_share_bug_is_fixed_at_the_source():
@@ -227,14 +251,16 @@ def test_the_regression_survives_a_shared_judging_flaw():
     d = _raw()
     sb, sa = d["before"]["strata"], d["after"]["strata"]
     abs_after = d["after"]["abstract_precision"]
+    agree_p = d["measured_strata"]["agree"]["precision"]
+    body_p = d["measured_strata"]["body_only"]["precision"]
     deltas = []
     for i in range(11):
         k = i / 10
-        B = (sb["agree"] * cr.AGREE_PRECISION
+        B = (sb["agree"] * agree_p
              + k * (sb["abstract"] * cr.PRIOR_ABSTRACT_PRECISION
-                    + sb["body"] * cr.BODY_ONLY_PRECISION))
-        A = (sa["agree"] * cr.AGREE_PRECISION
-             + k * (sa["abstract"] * abs_after + sa["body"] * cr.BODY_ONLY_PRECISION))
+                    + sb["body"] * body_p))
+        A = (sa["agree"] * agree_p
+             + k * (sa["abstract"] * abs_after + sa["body"] * body_p))
         deltas.append(A - B)
     assert all(x < 0 for x in deltas), (
         f"the regression reverses at some k: {[round(x,4) for x in deltas]}")
@@ -242,3 +268,68 @@ def test_the_regression_survives_a_shared_judging_flaw():
     # the impure strata, so correcting both sides cannot rescue it.
     assert deltas[0] < deltas[-1], "the gap no longer widens under correction"
     assert "WIDENS the gap" in DOC.read_text()
+
+
+def test_the_audit_does_not_assert_both_readings_of_the_body_only_stratum():
+    """It once said body-only was "the layer doing the job it exists for" in one
+    section and "NOT the layer doing its job" in another, three screens apart.
+
+    The second is right. A document holding both is worse than either, because a
+    reader takes whichever they reach first.
+    """
+    md = (REPO_ROOT / "analysis" / "atlas-comention-audit.md").read_text()
+    assert "asserted BOTH" in md, "the self-contradiction is no longer acknowledged"
+    # The two measurements of this stratum come from different runs AND
+    # different criteria, so the document must not present them as comparable.
+    assert "not like-for-like" in md
+    assert "PRE-FILTER measurement" in md, (
+        "the #617 block is not labelled as the pre-filter run, so its 30.8% reads "
+        "as current beside the post-filter 20.0%")
+
+
+def test_matched_forms_reproduces_the_build_matcher():
+    """It must be longest-match with consumption, not n-gram candidate generation.
+
+    The build's `sentence_entities` walks tokens, takes the longest alias at each
+    position and skips past it. Returning every n-gram hit instead reports spans
+    that never fired -- and those spans go straight in front of the next round of
+    hand judging, which is what this field exists to prevent.
+    """
+    import atlas_comention as ac
+
+    alias = {"breast cancer": "D001943", "cancer": "D009369", "breast": "D001940"}
+    s = "Patients with breast cancer were enrolled in the trial."
+    assert ac.matched_forms(s, "D001943", alias) == ["breast cancer"]
+    # The shorter aliases are consumed by the longer match and must NOT appear.
+    assert ac.matched_forms(s, "D009369", alias) == []
+    assert ac.matched_forms(s, "D001940", alias) == []
+
+    # It must still be token-based, not substring: `oral` is not in `oropharyngeal`.
+    assert ac.matched_forms("oropharyngeal carcinoma", "X", {"oral": "X"}) == []
+    assert ac.matched_forms("the oral cavity", "X", {"oral": "X"}) == ["oral"]
+
+    # And it must agree with the build's own matcher on the same input.
+    ents = ac.sentence_entities(s, alias)
+    fired = {e for e in (ents if isinstance(ents, (set, list)) else [])}
+    if fired:
+        assert "D001943" in fired and "D009369" not in fired
+
+
+def test_the_judged_sentences_are_long_enough_to_check_the_span():
+    """"Every verdict is checkable" is only true if the span is in the sentence.
+
+    The CSVs truncate, and three rows carried a span that fell past the cut --
+    including the row this work claimed to have resolved by recovering it.
+    """
+    import csv as _csv
+
+    for name in ("abstract-visible-judgements.csv", "body-only-judgements.csv",
+                 "corroborated-judgements.csv"):
+        path = REPO_ROOT / "analysis" / "comention" / name
+        for r in _csv.DictReader(path.open()):
+            span = (r.get("matched_span") or "").split("|")[0]
+            if not span:
+                continue
+            assert span.lower() in r["sentence"].lower(), (
+                f"{name} row {r['n']}: span {span!r} is not in the committed "
+                "sentence, so the verdict cannot be checked by a reader")

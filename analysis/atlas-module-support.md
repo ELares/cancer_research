@@ -32,7 +32,7 @@ Counts are not truth. About half of all relations carry the weakest predicate,
 > different fraction. Several corroborated rows also rest on a single extracted
 > assertion, so read the per-row counts rather than the headline.
 
-> **The co-mention column is measured at roughly 47% precision**
+> **The co-mention column is measured at roughly 42% precision** (95% interval roughly 32-53%),
 > (`analysis/comention-regression.md`), so read it as an upper bound on
 > discussion rather than a count of it. Roughly half of any figure in that
 > column is a generic surface form resolving to the wrong entity -- the
@@ -103,15 +103,15 @@ is wrong -- it says the module docs should state which side they took.
   other cancer article in the graph, so they are not single-paper assertions.
 * **9** resolved to real entities but have NO asserted relation in the abstract-level graph:
 
-  * `prom2`: PROM2 - FTH1 — PROM2 exports ferritin-bound iron, draining the labile pool  _(but **9** full-text co-mentions, too few to survive the layer's ~47% precision)_
+  * `prom2`: PROM2 - FTH1 — PROM2 exports ferritin-bound iron, draining the labile pool  _(but **9** full-text co-mentions, too few to survive the layer's ~42% precision)_
   * `vitk`: VKORC1L1 - GPX4 — VKORC1L1 reduces vitamin K to a GPX4-independent radical trap
-  * `copper`: ATP7A - GPX4 — copper ionophores degrade ATP7A and deplete GSH/GPX4  _(but **7** full-text co-mentions, too few to survive the layer's ~47% precision)_
-  * `por`: POR - CYB5R1 — POR and CYB5R1 generate the H2O2 the Fenton reaction needs  _(but **19** full-text co-mentions, too few to survive the layer's ~47% precision)_
-  * `dhc7`: DHCR7 - GPX4 — 7-DHC (consumed by DHCR7) is an endogenous radical trap  _(but **11** full-text co-mentions, too few to survive the layer's ~47% precision)_
+  * `copper`: ATP7A - GPX4 — copper ionophores degrade ATP7A and deplete GSH/GPX4  _(but **7** full-text co-mentions, too few to survive the layer's ~42% precision)_
+  * `por`: POR - CYB5R1 — POR and CYB5R1 generate the H2O2 the Fenton reaction needs  _(but **19** full-text co-mentions, too few to survive the layer's ~42% precision)_
+  * `dhc7`: DHCR7 - GPX4 — 7-DHC (consumed by DHCR7) is an endogenous radical trap  _(but **11** full-text co-mentions, too few to survive the layer's ~42% precision)_
   * `repair`: CHMP5 - CHMP6 — ESCRT-III membrane repair blocks death execution  _(but **63** full-text co-mentions)_
-  * `mboat`: MBOAT2 - GPX4 — MBOAT1/2 remodel phospholipids toward MUFA-PE, GPX4-independently  _(but **26** full-text co-mentions, too few to survive the layer's ~47% precision)_
+  * `mboat`: MBOAT2 - GPX4 — MBOAT1/2 remodel phospholipids toward MUFA-PE, GPX4-independently  _(but **26** full-text co-mentions, too few to survive the layer's ~42% precision)_
   * `ether_lipid`: FAR1 - AGPS — FAR1/AGPS make the ether-PUFA pool that promotes ferroptosis  _(but **89** full-text co-mentions)_
-  * `hdac_persister`: HDAC1 - AIFM2 — HDACs and FSP1 together suppress persister-cell ferroptosis  _(but **1** full-text co-mentions, too few to survive the layer's ~47% precision)_
+  * `hdac_persister`: HDAC1 - AIFM2 — HDACs and FSP1 together suppress persister-cell ferroptosis  _(but **1** full-text co-mentions, too few to survive the layer's ~42% precision)_
 
   **8 of those 9 ARE discussed in full text.** A zero in
   the relation column is therefore not evidence against the mechanism.

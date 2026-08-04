@@ -19,16 +19,18 @@ rebuild says the change made precision WORSE, and this script is the accounting.
 
 WHAT IT FOUND
 -------------
-1. Net population-weighted precision fell roughly 7 to 10 points depending on
-   how the two sides are made comparable (the reported figure, 56.8% -> 47.1%,
-   is the most pessimistic of the three; see the table in the report). The
-   layer produces 1.33x more mentions per sentence and PubTator corroborates a
-   smaller fraction of them (44.3% -> 32.5%).
+1. Net population-weighted precision fell by roughly 9 points once every
+   stratum was hand-judged rather than assumed: 50.6% -> 41.6%. The exact
+   levels depend on which body-only measurement is placed on the before side,
+   and both bases are tabulated in the report; the DELTA is robust to that
+   choice and the levels are not. The layer produces 1.33x more mentions per
+   sentence and PubTator corroborates a smaller fraction (44.3% -> 32.5%).
 
 2. The abstract-visible stratum -- the only one that can contain false
    positives -- nearly tripled as a share of all mentions, 8.2% -> 23.7%. Its
    own precision, judged at the IDENTIFIER level over 60 hand-read mentions, is
-   15.0%; it did not measurably improve, and the stratum tripled.
+   15.0%; it did not measurably improve, and the stratum tripled. All three
+   strata are now judged: corroborated 90.0% (36/40), body-only 20.0% (8/40).
 
 3. The replacement filters DO NOT SEPARATE true from false matches on that
    stratum. Measured over the judged sample, support ranges 77-355,572 for
@@ -66,6 +68,7 @@ Usage:
 import csv
 import json
 import math
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -75,15 +78,37 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from config import PROJECT_ROOT  # noqa: E402
 
 AUDIT = PROJECT_ROOT / "analysis" / "atlas-comention-audit.json"
-JUDGED = PROJECT_ROOT / "analysis" / "comention" / "abstract-visible-judgements.csv"
 OUT = PROJECT_ROOT / "analysis" / "comention-regression.md"
 RAW = PROJECT_ROOT / "analysis" / "comention-regression.json"
 
-# Carried over from the #617 hand audit and NOT re-measured here. Stated
-# explicitly because they are load-bearing in the weighted total below.
-AGREE_PRECISION = 0.925
-BODY_ONLY_PRECISION = 0.308
-PRIOR_ABSTRACT_PRECISION = 0.146
+# Every stratum is now hand-judged at the identifier level. These were assumed
+# values carried over from #617 (0.925 and 0.308) until #628 measured them, and
+# the assumption mattered: body-only was optimistic by half.
+JUDGED = {
+    "abstract": PROJECT_ROOT / "analysis" / "comention" / "abstract-visible-judgements.csv",
+    "body": PROJECT_ROOT / "analysis" / "comention" / "body-only-judgements.csv",
+    "agree": PROJECT_ROOT / "analysis" / "comention" / "corroborated-judgements.csv",
+}
+PRIOR_ABSTRACT_PRECISION = 0.146  # #617's figure, lenient criterion
+
+
+# Reference lists, table rows and PMC section markers. A co-mention harvested
+# from a cited paper's title is recorded against the CITING pmid, which is a
+# weaker claim than the layer is usually read as making.
+_STRUCTURAL = re.compile(r"====|\t|\bdoi\b|10\.\d{4}/|\b(?:19|20)\d\d\b\s+\d+\s+\d+")
+
+
+def structural_share(path) -> int:
+    """How many TRUE positives in this stratum sit in structural text."""
+    return sum(1 for r in csv.DictReader(path.open())
+               if r.get("verdict") == "TP" and _STRUCTURAL.search(r["sentence"]))
+
+
+def judged_precision(path, column="verdict"):
+    """Hand-judged precision for a stratum, with its Wilson interval."""
+    rows = [r for r in csv.DictReader(path.open()) if r.get(column)]
+    tp = sum(1 for r in rows if r[column] == "TP")
+    return tp / len(rows), len(rows), tp, wilson(tp, len(rows))
 
 
 def wilson(k, n, z=1.96):
@@ -133,14 +158,14 @@ def strata(a):
             "body": a["body_only"] / n}
 
 
-def weighted(s, abstract_precision):
-    return (s["agree"] * AGREE_PRECISION
+def weighted(s, abstract_precision, agree_p, body_p):
+    return (s["agree"] * agree_p
             + s["abstract"] * abstract_precision
-            + s["body"] * BODY_ONLY_PRECISION)
+            + s["body"] * body_p)
 
 
 def main() -> int:
-    if not AUDIT.exists() or not JUDGED.exists():
+    if not AUDIT.exists() or not all(f.exists() for f in JUDGED.values()):
         print("run scripts/atlas_comention_audit.py first", file=sys.stderr)
         return 1
     after = json.loads(AUDIT.read_text())
@@ -150,7 +175,7 @@ def main() -> int:
               file=sys.stderr)
         return 1
 
-    judged = list(csv.DictReader(JUDGED.open()))
+    judged = list(csv.DictReader(JUDGED["abstract"].open()))
     n = len(judged)
     # verdict_v2 judges at the IDENTIFIER level: does the sentence discuss the
     # entity the identifier DENOTES, per NLM, rather than merely contain the
@@ -163,12 +188,26 @@ def main() -> int:
     kept_tp = sum(1 for r in kept if r[key] == "TP")
     klo, khi = wilson(kept_tp, len(kept)) if kept else (0.0, 0.0)
     v1_prec = tp_v1 / n
+    struct_tp, struct_body = structural_share(JUDGED["agree"]), structural_share(JUDGED["body"])
     abs_prec = tp / n
     lo, hi = wilson(tp, n)
 
     sb, sa = strata(before), strata(after)
-    wb = weighted(sb, PRIOR_ABSTRACT_PRECISION)
-    wa = weighted(sa, abs_prec)
+    agree_p, agree_n, agree_tp, agree_ci = judged_precision(JUDGED["agree"])
+    body_p, body_n, body_tp, body_ci = judged_precision(JUDGED["body"])
+    # The strata precisions are measured on the AFTER sample. Applying them to
+    # the BEFORE run assumes the failure modes within a stratum did not change,
+    # only the stratum sizes -- which is the point of stratifying, but it is an
+    # assumption and it is stated in Limits.
+    wb = weighted(sb, PRIOR_ABSTRACT_PRECISION, agree_p, body_p)
+    wa = weighted(sa, abs_prec, agree_p, body_p)
+    # Extremes over the three strata intervals. Reported because a point
+    # estimate quoted five times in a downstream document reads as precision the
+    # samples do not support.
+    wa_lo = weighted(sa, lo, agree_ci[0], body_ci[0])
+    wa_hi = weighted(sa, hi, agree_ci[1], body_ci[1])
+    wb_lo = weighted(sb, PRIOR_ABSTRACT_PRECISION, agree_ci[0], body_ci[0])
+    wb_hi = weighted(sb, PRIOR_ABSTRACT_PRECISION, agree_ci[1], body_ci[1])
 
     L = [
         "# Did the #617 co-mention filters work? (#ATLAS-COMENT-REG)", "",
@@ -225,18 +264,52 @@ def main() -> int:
         "So the stratum did not measurably get cleaner, and it tripled in size.",
         "The weighted total:", "",
         "| stratum | before | after |", "|---|---|---|",
-        f"| corroborated | {100*sb['agree']:.1f}% x {100*AGREE_PRECISION:.1f}% | "
-        f"{100*sa['agree']:.1f}% x {100*AGREE_PRECISION:.1f}% |",
+        f"| corroborated | {100*sb['agree']:.1f}% x {100*agree_p:.1f}% | "
+        f"{100*sa['agree']:.1f}% x {100*agree_p:.1f}% |",
         f"| abstract-visible | {100*sb['abstract']:.1f}% x "
         f"{100*PRIOR_ABSTRACT_PRECISION:.1f}% | {100*sa['abstract']:.1f}% x "
         f"{100*abs_prec:.1f}% |",
-        f"| body-only | {100*sb['body']:.1f}% x {100*BODY_ONLY_PRECISION:.1f}% | "
-        f"{100*sa['body']:.1f}% x {100*BODY_ONLY_PRECISION:.1f}% |",
+        f"| body-only | {100*sb['body']:.1f}% x {100*body_p:.1f}% | "
+        f"{100*sa['body']:.1f}% x {100*body_p:.1f}% |",
         f"| **weighted** | **{100*wb:.1f}%** | **{100*wa:.1f}%** |", "",
-        "Only the abstract-visible row is re-measured. The corroborated and",
-        "body-only precisions are carried over from #617 and assumed unchanged,",
-        "which is the weakest assumption here and is stated rather than buried:",
-        "if body-only precision also moved, the total moves with it.", "",
+        f"Propagating the three strata intervals to their extremes, the after total",
+        f"spans **{100*wa_lo:.1f}% to {100*wa_hi:.1f}%** and the before total "
+        f"**{100*wb_lo:.1f}% to {100*wb_hi:.1f}%**. The point estimates are what this",
+        "document reports elsewhere for readability, and they are not the finding:",
+        "the separation between the two runs is, and it survives because the strata",
+        "WEIGHTS are exact counts while only the precisions carry sampling error.", "",
+        "**All three rows are now hand-judged**, which they were not when this was",
+        "first written. The corroborated and body-only precisions were assumed at",
+        "92.5% and 30.8%, carried over from #617, and the assumption mattered:", "",
+        f"* corroborated measures **{100*agree_p:.1f}%** ({agree_tp}/{agree_n}, 95% CI "
+        f"[{100*agree_ci[0]:.1f}%, {100*agree_ci[1]:.1f}%]). The 92.5% assumption",
+        "  holds. Its failures are a generic span landing on an over-specific",
+        "  descriptor: `hypoxic` to Hypoxia BRAIN, `metabolic` to Metabolic DISEASES.",
+        f"* body-only measures **{100*body_p:.1f}%** ({body_tp}/{body_n}, 95% CI "
+        f"[{100*body_ci[0]:.1f}%, {100*body_ci[1]:.1f}%]). The 30.8% assumption was",
+        "  optimistic by about a third, and this is the stratum carrying the most",
+        "  volume. `evaluation` resolves to Phobia, Social; `world` to Cutaneous",
+        "  Leishmaniasis; `mPTP`, the mitochondrial permeability transition pore, to",
+        "  the neurotoxin MPTP.", "",
+        "### Which body-only precision belongs on the BEFORE side", "",
+        "The table above uses the after-run 20.0% on both sides. #617 separately",
+        "read 39 body-only mentions from the BEFORE run and got 30.8%, so that is a",
+        "measurement of that run, not an assumption, and using it raises the before",
+        "level:", "",
+        "| basis for the before run | before | after | change |", "|---|---|---|---|",
+        f"| after-run precisions on both sides (as reported) | {100*wb:.1f}% | "
+        f"{100*wa:.1f}% | {100*(wa-wb):+.1f} |",
+        f"| each run's own body-only measurement | "
+        f"{100*weighted(sb, PRIOR_ABSTRACT_PRECISION, agree_p, 0.308):.1f}% | "
+        f"{100*wa:.1f}% | "
+        f"{100*(wa-weighted(sb, PRIOR_ABSTRACT_PRECISION, agree_p, 0.308)):+.1f} |", "",
+        "The two body-only figures are not separable at these sample sizes -- 8/40",
+        "against 12/39 is a two-sided Fisher p of about 0.31 -- so this is a choice",
+        "between defensible options rather than a correction. **The reported row is",
+        "the conservative one**: it gives the smaller regression. The delta is robust",
+        "to the choice (the two runs' body-only shares, 47.5% and 44.2%, nearly",
+        "cancel); the LEVEL is not, and quoting 41.6% without saying which basis",
+        "produced its counterpart would hide that.", "",
         "## Why retuning the thresholds will not fix it", "",
         "The replacement filters do not separate true matches from false ones on",
         "this stratum. Over the judged sample:", "",
@@ -297,12 +370,14 @@ def main() -> int:
         "The bold figure pairs a LENIENT before-abstract (14.6%, measured under #617)",
         "with a STRICT after-abstract. Like for like:", "",
         "| comparison | before | after | change |", "|---|---|---|---|",
-        f"| both lenient | {100*wb:.1f}% | {100*weighted(sa, v1_prec):.1f}% | "
-        f"{100*(weighted(sa, v1_prec)-wb):+.1f} |",
+        f"| both lenient | {100*wb:.1f}% | "
+        f"{100*weighted(sa, v1_prec, agree_p, body_p):.1f}% | "
+        f"{100*(weighted(sa, v1_prec, agree_p, body_p)-wb):+.1f} |",
         f"| both strict (before scaled by the same {abs_prec/max(1e-9,v1_prec):.2f} "
-        f"factor) | {100*weighted(sb, PRIOR_ABSTRACT_PRECISION*abs_prec/max(1e-9,v1_prec)):.1f}% | "
+        f"factor) | "
+        f"{100*weighted(sb, PRIOR_ABSTRACT_PRECISION*abs_prec/max(1e-9,v1_prec), agree_p, body_p):.1f}% | "
         f"{100*wa:.1f}% | "
-        f"{100*(wa-weighted(sb, PRIOR_ABSTRACT_PRECISION*abs_prec/max(1e-9,v1_prec))):+.1f} |",
+        f"{100*(wa-weighted(sb, PRIOR_ABSTRACT_PRECISION*abs_prec/max(1e-9,v1_prec), agree_p, body_p)):+.1f} |",
         f"| **as reported (mixed)** | **{100*wb:.1f}%** | **{100*wa:.1f}%** | "
         f"**{100*(wa-wb):+.1f}** |", "",
         "The reported figure is the most pessimistic of the three. All three are",
@@ -322,11 +397,11 @@ def main() -> int:
         "| k | before | after | change |", "|---|---|---|---|",
     ]
     for k in (1.0, 0.8, 0.6, 0.4, 0.2, 0.0):
-        B = (sb["agree"] * AGREE_PRECISION
+        B = (sb["agree"] * agree_p
              + k * (sb["abstract"] * PRIOR_ABSTRACT_PRECISION
-                    + sb["body"] * BODY_ONLY_PRECISION))
-        A = (sa["agree"] * AGREE_PRECISION
-             + k * (sa["abstract"] * abs_prec + sa["body"] * BODY_ONLY_PRECISION))
+                    + sb["body"] * body_p))
+        A = (sa["agree"] * agree_p
+             + k * (sa["abstract"] * abs_prec + sa["body"] * body_p))
         L.append(f"| {k:.1f} | {100*B:.1f}% | {100*A:.1f}% | {100*(A-B):+.1f} |")
 
     L += [
@@ -379,7 +454,7 @@ def main() -> int:
         "  GPX4 and ACSL4. A label source covering NCBI Gene is not an optimisation",
         "  here, it is a precondition.",
         "* It is tested only on the abstract-visible stratum. The corroborated",
-        f"  stratum is {100*sa['agree']:.0f}% of volume at {100*AGREE_PRECISION:.0f}%",
+        f"  stratum is {100*sa['agree']:.0f}% of volume at {100*agree_p:.0f}%",
         "  precision, and the trade would have to be re-judged against that, where",
         "  the filter has much more to lose.", "",
         "The word-bag comparison is also NOT clearly better than plain equality on",
@@ -393,6 +468,14 @@ def main() -> int:
         f"* {n} judged mentions gives a wide interval "
         f"([{100*lo:.1f}%, {100*hi:.1f}%]); the direction of the net change is",
         "  robust to it, the magnitude is not.",
+        f"* **A confound concentrated in the best stratum.** {struct_tp} of the "
+        f"{agree_tp} corroborated true positives come from reference-list entries,",
+        "  table rows or PMC structural markup rather than the paper's own prose,",
+        f"  against {struct_body} of {body_tp} in body-only. A co-mention harvested",
+        "  from a cited title is recorded against the CITING paper, which is a",
+        "  different claim from \"this paper discusses X and Y\". It is asymmetric,",
+        "  it sits in the stratum with the highest precision and a third of the",
+        "  volume, and it is not corrected for here.",
         "* Judgement is mine and unblinded. I knew which run each sentence came",
         "  from, which is exactly the bias that would flatter a fix I wrote, and",
         "  the result runs against my own prior change rather than for it.",
@@ -400,10 +483,15 @@ def main() -> int:
         "  layer, and it was caught only because an unrelated experiment surfaced",
         "  the authority labels. The corrected verdicts are committed beside the",
         "  originals so the correction itself can be audited.",
-        "* The carried-over strata were judged under #617 and may share the",
-        "  surface-form flaw. If they do, 92.5% and 30.8% are upper bounds and the",
-        "  weighted total is optimistic on both sides of the comparison.",
-        "* Body-only and corroborated precision are carried over unmeasured.",
+        "* **The strata precisions are measured on the AFTER sample and applied to",
+        "  the BEFORE run.** That assumes the failure modes WITHIN a stratum did not",
+        "  change, only the stratum sizes -- which is the point of stratifying, but",
+        "  it is an assumption and it moves the levels. #617 separately measured the",
+        "  before run's body-only stratum at 30.8% on 39 mentions, so that figure is",
+        "  a MEASUREMENT of that run rather than an assumption, and substituting the",
+        "  after-run 20.0% is the conservative choice. Both bases are tabulated",
+        "  above; the delta is robust to the choice and the level is not.",
+
     ]
 
     OUT.write_text("\n".join(L) + "\n")
@@ -412,9 +500,13 @@ def main() -> int:
                    "abstract_precision": PRIOR_ABSTRACT_PRECISION, "weighted": wb},
         "after": {"mentions": after["mentions"], "strata": sa,
                   "abstract_precision": abs_prec, "judged_n": n, "judged_tp": tp,
-                  "abstract_precision_ci": [lo, hi], "weighted": wa},
+                  "abstract_precision_ci": [lo, hi], "weighted": wa,
+                  "range": [wa_lo, wa_hi]},
         "net_change": wa - wb,
-        "carried_over": {"agree": AGREE_PRECISION, "body_only": BODY_ONLY_PRECISION},
+        "measured_strata": {
+            "agree": {"precision": agree_p, "n": agree_n, "tp": agree_tp, "ci": agree_ci},
+            "body_only": {"precision": body_p, "n": body_n, "tp": body_tp, "ci": body_ci},
+        },
     }, indent=2) + "\n")
     print(f"weighted precision {100*wb:.1f}% -> {100*wa:.1f}%  ({100*(wa-wb):+.1f} points)")
     print(f"wrote {OUT}")

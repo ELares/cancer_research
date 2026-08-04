@@ -60,6 +60,49 @@ OUT = PROJECT_ROOT / "analysis" / "atlas-comention-audit.md"
 RAW = PROJECT_ROOT / "analysis" / "atlas-comention-audit.json"
 
 
+def _measured_strata_lines() -> list:
+    """Report the hand-judged strata, ordered by the data.
+
+    An earlier version hardcoded "20.0% ... the worst of the three". Body-only
+    is the SECOND worst -- abstract-visible is lower -- and the two are not
+    distinguishable at these sample sizes. A superlative written by hand beside
+    numbers written by hand is exactly the drift this report keeps finding
+    elsewhere, so the ordering is now read from the measurement.
+    """
+    f = PROJECT_ROOT / "analysis" / "comention-regression.json"
+    try:
+        d = json.loads(f.read_text())
+        m = d["measured_strata"]
+    except (OSError, ValueError, KeyError):
+        return ["Hand-judged strata precisions are not available; run "
+                "`scripts/comention_regression.py`.", ""]
+    rows = [
+        ("body-only", m["body_only"]["precision"], m["body_only"]["n"],
+         m["body_only"]["ci"]),
+        ("abstract-visible", d["after"]["abstract_precision"],
+         d["after"]["judged_n"], d["after"]["abstract_precision_ci"]),
+        ("corroborated", m["agree"]["precision"], m["agree"]["n"], m["agree"]["ci"]),
+    ]
+    rows.sort(key=lambda r: r[1])
+    body = next(r for r in rows if r[0] == "body-only")
+    lowest = rows[0]
+    overlap = body[3][0] <= lowest[3][1] and lowest[3][0] <= body[3][1]
+    L = ["Hand judging puts the three strata at "
+         "(`analysis/comention/*-judgements.csv`):", "",
+         "| stratum | precision | 95% CI | n |", "|---|---|---|---|"]
+    for name, prec, n_, ci in rows:
+        L.append(f"| {name} | **{100*prec:.1f}%** | "
+                 f"[{100*ci[0]:.1f}%, {100*ci[1]:.1f}%] | {n_} |")
+    tail = (", and it is not distinguishable from the lowest at these sample sizes "
+            "-- the intervals overlap across most of their range."
+            if overlap and body is not lowest else ".")
+    L += ["",
+          f"Body-only is the {'lowest' if body is lowest else 'second lowest'}{tail}",
+          "It carries the most volume of the three, which is what makes it matter.",
+          ""]
+    return L
+
+
 def pubtator_by_paper(root: Path, want: set) -> dict:
     """pmid -> identifiers PubTator assigned, for the sampled papers only."""
     out = collections.defaultdict(set)
@@ -113,6 +156,10 @@ def abstracts(pmids: list) -> dict:
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
+    ap.add_argument("--dump-strata", metavar="DIR",
+                    help="write body-only and corroborated mentions to DIR as "
+                         "JSONL, so those strata can be hand-judged instead of "
+                         "carrying assumed precisions")
     ap.add_argument("--dump-abstract-visible", metavar="PATH",
                     help="write the abstract-visible disagreements to PATH as "
                          "JSONL, so the stratum can be hand-judged")
@@ -147,7 +194,8 @@ def main() -> int:
     no_pt = 0
     in_abstract = body_only = 0
     examples = []
-    abstract_visible = []  # the only stratum that can hold false positives
+    abstract_visible = []  # the only stratum PubTator could have contradicted
+    body_only_rows, corroborated_rows = [], []
     for r in rows:
         toks = _TOKEN.findall(r["sentence"].lower())
         grams = set()
@@ -168,10 +216,14 @@ def main() -> int:
                 if len(examples) < 12:
                     examples.append({"pmid": r.get("pmid"), "entity": nm,
                                      "sentence": r["sentence"][:150]})
+            rec = {"pmid": r.get("pmid"), "identifier": ident, "entity": nm,
+                   "sentence": r["sentence"][:600]}
             if not seen:
                 no_pt += 1
             elif ident in seen:
                 agree += 1
+                if len(corroborated_rows) < 5000:
+                    corroborated_rows.append(rec)
             else:
                 disagree += 1
                 # was the alias visible in the abstract PubTator actually read?
@@ -184,6 +236,8 @@ def main() -> int:
                             "entity": nm, "sentence": r["sentence"][:400]})
                 else:
                     body_only += 1
+                    if len(body_only_rows) < 5000:
+                        body_only_rows.append(rec)
 
     tot = matched + unmatched + filtered
     scored = agree + disagree
@@ -232,17 +286,30 @@ def main() -> int:
         f"{100*in_abstract/max(1,disagree):.1f}% |",
         f"| body-only, so PubTator could not have seen it | {body_only:,} | "
         f"{100*body_only/max(1,disagree):.1f}% |", "",
-        f"The body-only share is not evidence against this layer -- it is the layer",
-        "doing the job it exists for, finding entities the abstract-level extractor",
-        "structurally cannot reach. The first row is the one that could contain false",
-        "positives, and it is where any future manual check should go.", "",
-        f"Treating body-only matches as correct puts precision at "
-        f"**{100*(agree+body_only)/max(1,scored):.1f}%** as an upper bound, against the",
-        f"{100*agree/max(1,scored):.1f}% corroboration rate as a lower bound.", "",
-        "### The bound has since been resolved by hand, and it sits near the bottom",
+        "A body-only match is one PubTator could not have contradicted, because it",
+        "never read that text. That is what this layer exists to find -- and it is",
+        "NOT a reason to score the stratum as correct. This report asserted BOTH",
+        "readings at once -- that the body-only share was \"the layer doing the job",
+        "it exists for\" here, and that it was \"NOT the layer doing its job\" in the",
+        "#617 section below. The second is the right one.", "",
+    ] + _measured_strata_lines() + [
+        "The same generic forms misfire in body text as in abstracts, and there is",
+        "no abstract-level extractor to disagree with them.", "",
+        f"So read the {100*(agree+body_only)/max(1,scored):.1f}% that treating",
+        "body-only as correct would give as a bound that is now known to be far",
+        f"above the truth, and the {100*agree/max(1,scored):.1f}% corroboration rate",
+        "as a lower bound that is close to it. All three strata are measured in",
+        "`analysis/comention-regression.md`.", "",
+        "### The PRE-FILTER measurement (#617), kept for comparison",
         "",
         "180 abstract-visible and 39 body-only mentions were read individually",
-        "(#617). The result was much worse than this bound's midpoint suggests:", "",
+        "(#617), on the sample from BEFORE the filter change. Retained because it is",
+        "the only measurement of that run, and because its body-only n is an order of",
+        "magnitude larger than the post-filter one. **The two are not like-for-like**:",
+        "this pass judged whether the sentence contained the matched string, while the",
+        "post-filter pass asked whether the sentence discusses the entity the",
+        "IDENTIFIER denotes, which is stricter. Read the 30.8% below as an upper bound",
+        "on what a strict re-judging of that run would have given.", "",
         "| stratum | n | precision |", "|---|---|---|",
         "| agreeing with PubTator | 493 | 92.5% |",
         "| body-only | 439 | **30.8%** |",
@@ -280,6 +347,15 @@ def main() -> int:
     ]
 
     OUT.write_text("\n".join(L) + "\n")
+    if args.dump_strata:
+        d = Path(args.dump_strata)
+        d.mkdir(parents=True, exist_ok=True)
+        for name, rowset in (("body-only", body_only_rows),
+                             ("corroborated", corroborated_rows)):
+            f = d / f"{name}.jsonl"
+            f.write_text("\n".join(json.dumps(e) for e in rowset) + "\n")
+            print(f"wrote {f}: {len(rowset)} {name} mentions for hand judging")
+
     if args.dump_abstract_visible:
         dest = Path(args.dump_abstract_visible)
         dest.write_text("\n".join(json.dumps(e) for e in abstract_visible) + "\n")
