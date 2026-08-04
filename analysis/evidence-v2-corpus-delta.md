@@ -53,6 +53,7 @@ manuscript number still reproduces. The tags live at
 
 The dominant transition is untagged -> tagged: the frozen tagger never read the
 stored full text, so it left 57.8% of records with no evidence level at all.
+Checked later against NLM publication types, 74% of that untagged pile is reviews, editorials and comments -- literature with no evidence tier to assign -- and only 6 of 1,963 are trials. The genuine missed-primary residue is 13.9% (`analysis/atlas-evidence-check.md`).
 That is the recall gap the v2 layer closes.
 
 These tags are more accurate on every evaluation set (see

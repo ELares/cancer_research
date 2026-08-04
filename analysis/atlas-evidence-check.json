@@ -1,0 +1,21 @@
+{
+  "frozen_records": 4830,
+  "checked": 3659,
+  "grid": {
+    "untagged|non-primary": 1449,
+    "preclinical/theoretical|other primary": 1282,
+    "clinical|other primary": 236,
+    "clinical|trial": 167,
+    "untagged|other primary": 508,
+    "untagged|trial": 6,
+    "clinical|non-primary": 5,
+    "preclinical/theoretical|non-primary": 6
+  },
+  "preclinical_called_trial": 0,
+  "preclinical_total": 1288,
+  "untagged_trials": 6,
+  "untagged_non_primary": 1449,
+  "untagged_other_primary": 508,
+  "untagged_total": 1963,
+  "clinical_total": 408
+}

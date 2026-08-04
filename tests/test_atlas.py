@@ -1680,3 +1680,42 @@ def test_census_findings_names_the_integrity_failures():
     assert "pointed at unrelated" in md
     assert "spastic-paraplegia" in md
     assert "narrower than what it was used for" in md
+
+
+# --- evidence tagger against NLM's own labels (#ATLAS-EVCHECK) ------------
+
+def test_tagger_never_files_a_trial_as_preclinical():
+    """The most consequential error this layer could make, and it does not.
+
+    Filing human trial evidence as bench work would corrupt every
+    evidence-weighted comparison in the manuscript.
+    """
+    import json
+    raw = json.loads(
+        (REPO_ROOT / "analysis" / "atlas-evidence-check.json").read_text())
+    assert raw["preclinical_total"] > 500
+    assert raw["preclinical_called_trial"] == 0, \
+        "a clinical trial is now tagged preclinical -- the evidence layer needs re-checking"
+
+
+def test_untagged_is_mostly_non_primary_not_missed_evidence():
+    """57.8% untagged reads as a hole; most of it is the tagger working.
+
+    Reviews and editorials have no evidence tier because they report other
+    studies' evidence. The v2 rebuild added an opinion-pub-type veto for exactly
+    this reason, so leaving them untagged is correct behaviour.
+    """
+    import json
+    raw = json.loads(
+        (REPO_ROOT / "analysis" / "atlas-evidence-check.json").read_text())
+    share = raw["untagged_non_primary"] / raw["untagged_total"]
+    assert share > 0.5, f"only {share:.1%} of untagged is non-primary; re-read the claim"
+    assert raw["untagged_trials"] / raw["untagged_total"] < 0.02, \
+        "the untagged pile is now hiding trials"
+
+
+def test_evidence_check_states_what_publication_types_cannot_validate():
+    """NLM has no preclinical in-vivo vs in-vitro concept, which is the weak spot."""
+    md = (REPO_ROOT / "analysis" / "atlas-evidence-check.md").read_text()
+    assert "not evidence tiers" in md
+    assert "in-vivo" in md and "in-vitro" in md
