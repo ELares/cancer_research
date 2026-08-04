@@ -1522,3 +1522,43 @@ def test_disagreements_are_split_by_abstract_visibility():
     assert raw["in_abstract"] + raw["body_only"] == raw["pubtator_disagree"]
     assert raw["body_only"] > raw["in_abstract"], \
         "if most disagreements became abstract-visible, false positives are likely"
+
+
+# --- where the thesis sits in the literature (#ATLAS-THESIS) --------------
+
+def test_thesis_position_counts_the_legs_the_corpus_could_not_see():
+    """The corpus has no ferroptosis query, so it could not measure its own thesis.
+
+    That is the whole reason this exists: a 4,830-article keyword corpus built
+    without a ferroptosis or PDT query cannot say how much work exists on
+    ferroptosis or PDT, however carefully it is analysed.
+    """
+    import json
+    raw = json.loads(
+        (REPO_ROOT / "analysis" / "atlas-thesis-position.json").read_text())
+    t = raw["totals"]
+    assert t["ferroptosis"] > 5000, "the ferroptosis field should be large"
+    # the ordering that carries the argument
+    assert t["drug resistance"] > t["photodynamic therapy"] > t["sonodynamic therapy"]
+    assert t["sonodynamic therapy"] < 100, \
+        "if SDT-ferroptosis has grown into a literature, rewrite the framing"
+
+
+def test_thesis_position_is_reported_in_both_directions():
+    """A thin intersection supports the claim AND limits it.
+
+    Reporting only 'under-explored, as we said' would be self-serving; reporting
+    only 'thirty papers' would ignore that under-exploration is the thesis.
+    """
+    md = (REPO_ROOT / "analysis" / "atlas-thesis-position.md").read_text()
+    assert "not a refutation" in md
+    assert "not a literature" in md or "cannot establish a" in md
+    # and the SDT count must be flagged as an over-estimate, since the MeSH
+    # concept is broader than sonodynamic therapy
+    assert "OVER-estimate" in md or "over-estimate" in md
+
+
+def test_manuscript_states_its_own_evidence_thinness():
+    md = (REPO_ROOT / "article" / "drafts" / "v1.md").read_text()
+    assert "atlas-thesis-position.md" in md
+    assert "roughly thirty papers" in md
