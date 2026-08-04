@@ -46,8 +46,19 @@ Issue templates live in `.github/ISSUE_TEMPLATE/`: bug report, corpus or literat
 1. **Fork and branch** from `main`
 2. **Make focused changes** — one issue per PR where possible
 3. **Run tests** (both Python and Rust)
-4. **Describe your changes** in the PR body. The pull-request template (`.github/PULL_REQUEST_TEMPLATE.md`) has a checklist covering tests, the off-by-default byte-identical rule for simulation changes, and verifiable citations for claims
-5. **Link to the relevant issue** if one exists
+4. **Regenerate the release manifest** if you added, removed or edited any
+   tracked file:
+
+   ```bash
+   python3 scripts/generate_release_manifest.py && git add MANIFEST.sha256
+   ```
+
+   `MANIFEST.sha256` is a SHA256 of every tracked file, used for archival
+   releases, and CI fails the `manifest` check when it is stale. Nothing local
+   warns you first, so this is easy to miss -- it is the most common reason an
+   otherwise-green PR goes red.
+5. **Describe your changes** in the PR body. The pull-request template (`.github/PULL_REQUEST_TEMPLATE.md`) has a checklist covering tests, the off-by-default byte-identical rule for simulation changes, and verifiable citations for claims
+6. **Link to the relevant issue** if one exists
 
 ## Simulation layer policy (calibrate-or-cut, #501)
 

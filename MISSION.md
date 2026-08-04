@@ -45,7 +45,7 @@ can carry the weight put on it.
 | Full text | 4,830 (98.7% open-access, a biased slice) | **1,100,218 obtained**, with the bias measured |
 | Entities | unnormalized surface strings (3,260 spellings of ~1,200 genes) | NCBI Gene, MeSH, ChEBI, Cellosaurus identifiers |
 | Relations | none | typed, scored, sentence-attributed |
-| Evidence tiers | 57.8% of records untagged | measured, with a reported annotator ceiling |
+| Evidence tiers | 57.8% untagged, but 74% of that is reviews and editorials, which have no tier; the real residue is 13.9% ([checked against NLM](analysis/atlas-evidence-check.md)) | measured, with a reported annotator ceiling |
 
 ## What this cannot do, stated plainly
 
