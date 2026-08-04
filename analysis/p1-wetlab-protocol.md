@@ -1,10 +1,19 @@
 # P1 wet-lab protocol: GPX4i + FSP1i synergy in an FSP1-low persister line (#496)
 
-This is the detailed, runnable protocol for the **highest-leverage** falsifiable
+This is the detailed, runnable protocol for **the keystone** falsifiable
 prediction in the program, P1 (preregistered in `PREREGISTRATION.md`, experiment
 brief E4). It is written so a wet-lab collaborator can execute it in isolation,
 score it against a pre-stated numeric threshold, and report a clean confirm or
 refute.
+
+> **The keystone designation is `PREREGISTRATION.md`'s, not this document's.**
+> This protocol used to call P1 "the highest-leverage falsifiable prediction in
+> the program" on its own authority, while the preregistration named a different
+> experiment. That disagreement is resolved (#619): the preregistration is the
+> registering document and makes the call, on the basis that E4 is the most
+> DECISIVE experiment rather than the most novel. E1, testing the hypoxia leg,
+> remains the most novel test and is sequenced second. If that designation
+> changes, it changes there and this file follows.
 
 > **Status: this is a protocol, not a result.** No wet-lab work has been run by
 > the project (single non-domain author plus AI). Executing it requires a
