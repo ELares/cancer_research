@@ -1132,7 +1132,11 @@ def test_the_corrected_pmids_are_pinned():
     not guessed. The wrong values must not reappear anywhere in the repo.
     """
     import subprocess
-    wrong = {"33864050": "dhodh", "31919077": "gch1", "31761539": "prom2"}
+    # bad -> (module, the verified correction). A line naming BOTH is documenting
+    # the fix, not making the citation, so it is not a revert.
+    wrong = {"33864050": ("dhodh", "33981038"),
+             "31919077": ("gch1", "31989025"),
+             "31761539": ("prom2", "31735663")}
     files = subprocess.run(["git", "ls-files"], cwd=REPO_ROOT,
                            capture_output=True, text=True).stdout.split()
     hits = []
@@ -1146,9 +1150,10 @@ def test_the_corrected_pmids_are_pinned():
             text = (REPO_ROOT / rel).read_text(encoding="utf-8", errors="ignore")
         except OSError:
             continue
-        for bad, mod in wrong.items():
-            if bad in text:
-                hits.append(f"{rel}: {bad} ({mod})")
+        for line in text.splitlines():
+            for bad, (mod, good) in wrong.items():
+                if bad in line and good not in line:
+                    hits.append(f"{rel}: {bad} ({mod})")
     assert not hits, "a corrected citation has reverted:\n  " + "\n  ".join(hits)
 
     import atlas_module_support as ms
@@ -1156,3 +1161,39 @@ def test_the_corrected_pmids_are_pinned():
     assert by_module["dhodh"] == "33981038"    # Mao 2021 Nature
     assert by_module["gch1"] == "31989025"     # Kraft 2020 ACS Cent Sci
     assert by_module["prom2"] == "31735663"    # Brown 2019 Dev Cell
+
+
+# --- the news pipeline's "verified" label (#NEWS-VERIFY) -------------------
+
+def test_news_verification_links_are_measured_not_trusted():
+    """44 claims are labelled `verified` on links that mostly do not match.
+
+    A claim about electric fields treating brain cancer is 'verified' against
+    papers on freshwater fish biodiversity and speech-language pathology. The
+    linked identifiers cluster in one numeric band, which is the signature of
+    matching on when a record was indexed rather than what it says.
+    """
+    import json
+    raw = json.loads(
+        (REPO_ROOT / "analysis" / "news-verification-audit.json").read_text())
+    share = raw["zero_overlap"] / raw["pairs_resolved"]
+    assert share > 0.3, (
+        "the link quality improved -- re-read the audit and update the manuscript "
+        "footnotes and this guard together")
+    # the numeric clustering is the diagnostic, so it must be recorded
+    assert raw["dominant_prefix_count"] / raw["distinct_pmids"] > 0.2
+
+
+def test_manuscript_does_not_claim_verification_it_lacks():
+    """Two footnotes asserted 'Verified: PMID:X' against unrelated papers.
+
+    42020835 backed a pancreatic-cancer blood-test claim with a paper on
+    Andexanet Alfa withdrawal; 42020682 backed an electric-fields brain-cancer
+    claim with a survey of speech-language pathologists. Both assertions are
+    removed. The manuscript may cite the reporting -- it may not call it verified.
+    """
+    md = (REPO_ROOT / "article" / "drafts" / "v1.md").read_text()
+    for pmid in ("42020835", "42020682"):
+        assert f"Verified: PMID:{pmid}" not in md, \
+            f"the false verification claim for {pmid} has returned"
+    assert "not as verified evidence" in md

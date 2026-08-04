@@ -230,5 +230,1541 @@
         "HDAC1"
       ]
     }
+  ],
+  "prose_checked": 168,
+  "prose_flagged": 3,
+  "prose_rows": [
+    {
+      "pmid": "10051451",
+      "cited_in": [
+        "CLAUDE.md"
+      ],
+      "status": "ok",
+      "title": "Plasmalogens as endogenous antioxidants: somatic cell mutants reveal the importance of the vinyl ether.",
+      "journal": "The Biochemical journal"
+    },
+    {
+      "pmid": "10811131",
+      "cited_in": [
+        "CLAUDE.md"
+      ],
+      "status": "ok",
+      "title": "Role of extracellular matrix assembly in interstitial transport in solid tumors.",
+      "journal": "Cancer research"
+    },
+    {
+      "pmid": "10919633",
+      "cited_in": [
+        "CLAUDE.md"
+      ],
+      "status": "ok",
+      "title": "Fractals and cancer.",
+      "journal": "Cancer research"
+    },
+    {
+      "pmid": "10963860",
+      "cited_in": [
+        "article/drafts/v1.md",
+        "CLAUDE.md"
+      ],
+      "status": "ok",
+      "title": "The Haber-Weiss reaction and mechanisms of toxicity.",
+      "journal": "Toxicology"
+    },
+    {
+      "pmid": "11895922",
+      "cited_in": [
+        "article/drafts/v1.md",
+        "CLAUDE.md"
+      ],
+      "status": "ok",
+      "title": "Limited penetration of anticancer drugs through tumor tissue: a potential cause of resistance of solid tumors to chemotherapy.",
+      "journal": "Clinical cancer research : an official journal of the American Association for Cancer Research"
+    },
+    {
+      "pmid": "15771276",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Tissue ablation with irreversible electroporation.",
+      "journal": "Annals of biomedical engineering"
+    },
+    {
+      "pmid": "16361566",
+      "cited_in": [
+        "article/drafts/v1.md",
+        "CLAUDE.md"
+      ],
+      "status": "ok",
+      "title": "The distribution of the anticancer drug Doxorubicin in relation to blood vessels in solid tumors.",
+      "journal": "Clinical cancer research : an official journal of the American Association for Cancer Research"
+    },
+    {
+      "pmid": "18541331",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Antibody tumor penetration: transport opposed by systemic and antigen-mediated clearance.",
+      "journal": "Advanced drug delivery reviews"
+    },
+    {
+      "pmid": "20570523",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Glutamine addiction: a new therapeutic target in cancer.",
+      "journal": "Trends in biochemical sciences"
+    },
+    {
+      "pmid": "21392074",
+      "cited_in": [
+        "CLAUDE.md"
+      ],
+      "status": "ok",
+      "title": "Population pharmacokinetic analysis of sorafenib in patients with solid tumours.",
+      "journal": "British journal of clinical pharmacology"
+    },
+    {
+      "pmid": "22080947",
+      "cited_in": [
+        "CLAUDE.md"
+      ],
+      "status": "ok",
+      "title": "Senescence surveillance of pre-malignant hepatocytes limits liver cancer development.",
+      "journal": "Nature"
+    },
+    {
+      "pmid": "22439937",
+      "cited_in": [
+        "CLAUDE.md"
+      ],
+      "status": "ok",
+      "title": "Enzymatic targeting of the stroma ablates physical barriers to treatment of pancreatic ductal adenocarcinoma.",
+      "journal": "Cancer cell"
+    },
+    {
+      "pmid": "2362198",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "A modeling analysis of monoclonal antibody percolation through tumors: a binding-site barrier.",
+      "journal": "Journal of nuclear medicine : official publication, Society of Nuclear Medicine"
+    },
+    {
+      "pmid": "24561446",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Thermal ablation of tumours: biological mechanisms and advances in therapy.",
+      "journal": "Nature reviews. Cancer"
+    },
+    {
+      "pmid": "24695223",
+      "cited_in": [
+        "article/drafts/v1.md",
+        "CLAUDE.md"
+      ],
+      "status": "ok",
+      "title": "Quantitative proteomics identifies NCOA4 as the cargo receptor mediating ferritinophagy.",
+      "journal": "Nature"
+    },
+    {
+      "pmid": "25156255",
+      "cited_in": [
+        "CLAUDE.md"
+      ],
+      "status": "ok",
+      "title": "Tumour-infiltrating Gr-1+ myeloid cells antagonize senescence in cancer.",
+      "journal": "Nature"
+    },
+    {
+      "pmid": "25367011",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Emerging HIFU applications in cancer therapy.",
+      "journal": "International journal of hyperthermia : the official journal of European Society for Hyperthermic Oncology, North American Hyperthermia Group"
+    },
+    {
+      "pmid": "25446897",
+      "cited_in": [
+        "CLAUDE.md"
+      ],
+      "status": "ok",
+      "title": "Dissecting the tumor myeloid compartment reveals rare activating antigen-presenting cells critical for T cell immunity.",
+      "journal": "Cancer cell"
+    },
+    {
+      "pmid": "25728459",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "A review of low-intensity ultrasound for cancer therapy.",
+      "journal": "Ultrasound in medicine &amp; biology"
+    },
+    {
+      "pmid": "25787829",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Stage III pancreatic cancer and the role of irreversible electroporation.",
+      "journal": "BMJ (Clinical research ed.)"
+    },
+    {
+      "pmid": "26258317",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Treatment of 200 locally advanced (stage III) pancreatic adenocarcinoma patients with irreversible electroporation: safety and efficacy.",
+      "journal": "Annals of surgery"
+    },
+    {
+      "pmid": "26486350",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Sonodynamic Therapy: Concept, Mechanism and Application to Cancer Treatment.",
+      "journal": "Advances in experimental medicine and biology"
+    },
+    {
+      "pmid": "26670971",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Maintenance Therapy With Tumor-Treating Fields Plus Temozolomide vs Temozolomide Alone for Glioblastoma: A Randomized Clinical Trial.",
+      "journal": "JAMA"
+    },
+    {
+      "pmid": "26674251",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Mitochondrial Membrane Potential Identifies Cells with Enhanced Stemness for Cellular Therapy.",
+      "journal": "Cell metabolism"
+    },
+    {
+      "pmid": "27150293",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Focal vs extended ablation in localized prostate cancer with irreversible electroporation; a multi-center randomized controlled trial.",
+      "journal": "BMC cancer"
+    },
+    {
+      "pmid": "27245739",
+      "cited_in": [
+        "article/drafts/v1.md",
+        "CLAUDE.md"
+      ],
+      "status": "ok",
+      "title": "Autophagy promotes ferroptosis by degradation of ferritin.",
+      "journal": "Autophagy"
+    },
+    {
+      "pmid": "27728804",
+      "cited_in": [
+        "CLAUDE.md"
+      ],
+      "status": "ok",
+      "title": "Distinct Functions of Senescence-Associated Immune Responses in Liver Tumor Surveillance and Tumor Progression.",
+      "journal": "Cancer cell"
+    },
+    {
+      "pmid": "27748048",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Mechanisms and therapeutic effectiveness of pulsed electromagnetic field therapy in oncology.",
+      "journal": "Cancer medicine"
+    },
+    {
+      "pmid": "28281173",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Glioma Subclassifications and Their Clinical Significance.",
+      "journal": "Neurotherapeutics : the journal of the American Society for Experimental NeuroTherapeutics"
+    },
+    {
+      "pmid": "28633567",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Endogenous Bioelectric Signaling Networks: Exploiting Voltage Gradients for Control of Growth and Form.",
+      "journal": "Annual review of biomedical engineering"
+    },
+    {
+      "pmid": "28829584",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Two-Dimensional Graphene Augments Nanosonosensitized Sonocatalytic Tumor Eradication.",
+      "journal": "ACS nano"
+    },
+    {
+      "pmid": "28888202",
+      "cited_in": [
+        "article/drafts/v1.md",
+        "CLAUDE.md"
+      ],
+      "status": "ok",
+      "title": "Iron accumulation in senescent cells is coupled with impaired ferritinophagy and inhibition of ferroptosis.",
+      "journal": "Redox biology"
+    },
+    {
+      "pmid": "28918265",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Amorphous liquid metal electrodes enabled conformable electrochemical therapy of tumors.",
+      "journal": "Biomaterials"
+    },
+    {
+      "pmid": "28985560",
+      "cited_in": [
+        "article/drafts/v1.md",
+        "CLAUDE.md"
+      ],
+      "status": "ok",
+      "title": "Ferroptosis: A Regulated Cell Death Nexus Linking Metabolism, Redox Biology, and Disease.",
+      "journal": "Cell"
+    },
+    {
+      "pmid": "29088702",
+      "cited_in": [
+        "CLAUDE.md"
+      ],
+      "status": "ok",
+      "title": "Drug-tolerant persister cancer cells are vulnerable to GPX4 inhibition.",
+      "journal": "Nature"
+    },
+    {
+      "pmid": "29260225",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Effect of Tumor-Treating Fields Plus Maintenance Temozolomide vs Maintenance Temozolomide Alone on Survival in Patients With Glioblastoma: A Randomized Clinical Trial.",
+      "journal": "JAMA"
+    },
+    {
+      "pmid": "29575297",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Sonodynamic therapy-assisted immunotherapy: A novel modality for cancer treatment.",
+      "journal": "Cancer science"
+    },
+    {
+      "pmid": "29594551",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Pair-matched patient-reported quality of life and early oncological control following focal irreversible electroporation versus robot-assisted radical prostatectomy.",
+      "journal": "World journal of urology"
+    },
+    {
+      "pmid": "29613770",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Nanoenzyme-Augmented Cancer Sonodynamic Therapy by Catalytic Tumor Oxygenation.",
+      "journal": "ACS nano"
+    },
+    {
+      "pmid": "29960750",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "A Multicentre Study of 5-year Outcomes Following Focal Therapy in Treating Clinically Significant Nonmetastatic Prostate Cancer.",
+      "journal": "European urology"
+    },
+    {
+      "pmid": "29978216",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Safety and Efficacy of BIND-014, a Docetaxel Nanoparticle Targeting Prostate-Specific Membrane Antigen for Patients With Metastatic Castration-Resistant Prostate Cancer: A Phase 2 Clinical Trial.",
+      "journal": "JAMA oncology"
+    },
+    {
+      "pmid": "30686757",
+      "cited_in": [
+        "article/drafts/v1.md",
+        "CLAUDE.md"
+      ],
+      "status": "ok",
+      "title": "Exogenous Monounsaturated Fatty Acids Promote a Ferroptosis-Resistant Cell State.",
+      "journal": "Cell chemical biology"
+    },
+    {
+      "pmid": "30734370",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Platinum Nanoparticles to Enable Electrodynamic Therapy for Effective Cancer Treatment.",
+      "journal": "Advanced materials (Deerfield Beach, Fla.)"
+    },
+    {
+      "pmid": "30799221",
+      "cited_in": [
+        "CLAUDE.md"
+      ],
+      "status": "ok",
+      "title": "Imidazole Ketone Erastin Induces Ferroptosis and Slows Tumor Growth in a Mouse Lymphoma Model.",
+      "journal": "Cell chemical biology"
+    },
+    {
+      "pmid": "30962421",
+      "cited_in": [
+        "article/drafts/v1.md",
+        "CLAUDE.md"
+      ],
+      "status": "ok",
+      "title": "A GPX4-dependent cancer cell state underlies the clear-cell morphology and confers sensitivity to ferroptosis.",
+      "journal": "Nature communications"
+    },
+    {
+      "pmid": "31130474",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "High-frequency irreversible electroporation is an effective tumor ablation strategy that induces immunologic cell death and promotes systemic anti-tumor immunity.",
+      "journal": "EBioMedicine"
+    },
+    {
+      "pmid": "31270077",
+      "cited_in": [
+        "CLAUDE.md"
+      ],
+      "status": "ok",
+      "title": "Stearoyl-CoA Desaturase 1 Protects Ovarian Cancer Cells from Ferroptotic Cell Death.",
+      "journal": "Cancer research"
+    },
+    {
+      "pmid": "31409607",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Irreversible Electroporation Combined with Checkpoint Blockade and TLR7 Stimulation Induces Antitumor Immunity in a Murine Pancreatic Cancer Model.",
+      "journal": "Cancer immunology research"
+    },
+    {
+      "pmid": "31413923",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Vaccinia-based oncolytic immunotherapy Pexastimogene Devacirepvec in patients with advanced hepatocellular carcinoma after sorafenib failure: a randomized multicenter Phase IIb trial (TRAVERSE).",
+      "journal": "Oncoimmunology"
+    },
+    {
+      "pmid": "31560378",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Global, Regional, and National Cancer Incidence, Mortality, Years of Life Lost, Years Lived With Disability, and Disability-Adjusted Life-Years for 29 Cancer Groups, 1990 to 2017: A Systematic Analysis for the Global Burden of Disease Study.",
+      "journal": "JAMA oncology"
+    },
+    {
+      "pmid": "31712683",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Synthetic lethality as an engine for cancer drug target discovery.",
+      "journal": "Nature reviews. Drug discovery"
+    },
+    {
+      "pmid": "31848460",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Engineering strategies to overcome the current roadblocks in CAR T cell therapy.",
+      "journal": "Nature reviews. Clinical oncology"
+    },
+    {
+      "pmid": "32478924",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Management of glioblastoma: State of the art and future directions.",
+      "journal": "CA: a cancer journal for clinicians"
+    },
+    {
+      "pmid": "32563252",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "PARP inhibitor resistance: the underlying mechanisms and clinical implications.",
+      "journal": "Molecular cancer"
+    },
+    {
+      "pmid": "32734509",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Tumor Treating Fields in the Management of Patients with Malignant Gliomas.",
+      "journal": "Current treatment options in oncology"
+    },
+    {
+      "pmid": "32972405",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Targeting STAT3 in Cancer Immunotherapy.",
+      "journal": "Molecular cancer"
+    },
+    {
+      "pmid": "33008426",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Molecular alterations and targeted therapy in pancreatic ductal adenocarcinoma.",
+      "journal": "Journal of hematology &amp; oncology"
+    },
+    {
+      "pmid": "33064322",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Recent Advances in Nanomaterial-Assisted Combinational Sonodynamic Cancer Therapy.",
+      "journal": "Advanced materials (Deerfield Beach, Fla.)"
+    },
+    {
+      "pmid": "33122099",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Sonodynamic therapy-derived multimodal synergistic cancer therapy.",
+      "journal": "Cancer letters"
+    },
+    {
+      "pmid": "33144698",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Tumour treating fields therapy for glioblastoma: current advances and future directions.",
+      "journal": "British journal of cancer"
+    },
+    {
+      "pmid": "33188036",
+      "cited_in": [
+        "article/drafts/v1.md",
+        "CLAUDE.md"
+      ],
+      "status": "ok",
+      "title": "Vaccination with early ferroptotic cancer cells induces efficient antitumor immunity.",
+      "journal": "Journal for immunotherapy of cancer"
+    },
+    {
+      "pmid": "33288764",
+      "cited_in": [
+        "article/drafts/v1.md",
+        "CLAUDE.md"
+      ],
+      "status": "ok",
+      "title": "Tipping the immunostimulatory and inhibitory DAMP balance to harness immunogenic cell death.",
+      "journal": "Nature communications"
+    },
+    {
+      "pmid": "33311482",
+      "cited_in": [
+        "article/drafts/v1.md",
+        "CLAUDE.md"
+      ],
+      "status": "ok",
+      "title": "Ferroptotic damage promotes pancreatic tumorigenesis through a TMEM173/STING-dependent DNA sensor pathway.",
+      "journal": "Nature communications"
+    },
+    {
+      "pmid": "33384955",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "The Implications of PDK1-4 on Tumor Energy Metabolism, Aggressiveness and Therapy Resistance.",
+      "journal": "Frontiers in oncology"
+    },
+    {
+      "pmid": "33387088",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Cryoablation, high-intensity focused ultrasound, irreversible electroporation, and vascular-targeted photodynamic therapy for prostate cancer: a systemic review and meta-analysis.",
+      "journal": "International journal of clinical oncology"
+    },
+    {
+      "pmid": "33408790",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Manganese porphyrin-based metal-organic framework for synergistic sonodynamic therapy and ferroptosis in hypoxic tumors.",
+      "journal": "Theranostics"
+    },
+    {
+      "pmid": "33731874",
+      "cited_in": [
+        "article/drafts/v1.md",
+        "CLAUDE.md"
+      ],
+      "status": "ok",
+      "title": "Peroxisome-driven ether-linked phospholipids biosynthesis is essential for ferroptosis.",
+      "journal": "Cell death and differentiation"
+    },
+    {
+      "pmid": "33826908",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Bioelectric signaling: Reprogrammable circuits underlying embryogenesis, regeneration, and cancer.",
+      "journal": "Cell"
+    },
+    {
+      "pmid": "33840627",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Thermal Ablation as an Alternative for Surgical Resection of Small (&#x2264; 2 cm) Breast Cancers: A Meta-Analysis.",
+      "journal": "Clinical breast cancer"
+    },
+    {
+      "pmid": "34027953",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Engineering nanomedicine for glutathione depletion-augmented cancer therapy.",
+      "journal": "Chemical Society reviews"
+    },
+    {
+      "pmid": "34050151",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "CRISPR/Cas9 mediated deletion of the adenosine A2A receptor enhances CAR T cell efficacy.",
+      "journal": "Nature communications"
+    },
+    {
+      "pmid": "34051178",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Pembrolizumab alone or combined with chemotherapy versus chemotherapy as first-line therapy for advanced urothelial carcinoma (KEYNOTE-361): a randomised, open-label, phase 3 trial.",
+      "journal": "The Lancet. Oncology"
+    },
+    {
+      "pmid": "34118189",
+      "cited_in": [
+        "CLAUDE.md"
+      ],
+      "status": "ok",
+      "title": "Peroxidation of n-3 and n-6 polyunsaturated fatty acids in the acidic tumor environment leads to ferroptosis-mediated anticancer effects.",
+      "journal": "Cell metabolism"
+    },
+    {
+      "pmid": "34161051",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Lutetium-177-PSMA-617 for Metastatic Castration-Resistant Prostate Cancer.",
+      "journal": "The New England journal of medicine"
+    },
+    {
+      "pmid": "34373744",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Metabolic reprogramming of cancer-associated fibroblasts and its effect on cancer cell reprogramming.",
+      "journal": "Theranostics"
+    },
+    {
+      "pmid": "34579759",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Combination strategies to maximize the benefits of cancer immunotherapy.",
+      "journal": "Journal of hematology &amp; oncology"
+    },
+    {
+      "pmid": "34583722",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Targeting mutant p53 for cancer therapy: direct and indirect strategies.",
+      "journal": "Journal of hematology &amp; oncology"
+    },
+    {
+      "pmid": "34646381",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Ultrasound (US)-activated redox dyshomeostasis therapy reinforced by immunogenic cell death (ICD) through a mitochondrial targeting liposomal nanosystem.",
+      "journal": "Theranostics"
+    },
+    {
+      "pmid": "34655115",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "2D Piezoelectric Bi2 MoO6 Nanoribbons for GSH-Enhanced Sonodynamic Therapy.",
+      "journal": "Advanced materials (Deerfield Beach, Fla.)"
+    },
+    {
+      "pmid": "34669472",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "An ultrasound-driven immune-boosting molecular machine for systemic tumor suppression.",
+      "journal": "Science advances"
+    },
+    {
+      "pmid": "34842141",
+      "cited_in": [
+        "CLAUDE.md"
+      ],
+      "status": "ok",
+      "title": "Quantitative analysis of tumour spheroid structure.",
+      "journal": "eLife"
+    },
+    {
+      "pmid": "34862480",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Targeting cancer metabolism in the era of precision oncology.",
+      "journal": "Nature reviews. Drug discovery"
+    },
+    {
+      "pmid": "34894519",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Therapeutic potential of CAR T cell in malignancies: A scoping review.",
+      "journal": "Biomedicine &amp; pharmacotherapy = Biomedecine &amp; pharmacotherapie"
+    },
+    {
+      "pmid": "35189345",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "COVID-19 mRNA vaccines: Platforms and current developments.",
+      "journal": "Molecular therapy : the journal of the American Society of Gene Therapy"
+    },
+    {
+      "pmid": "35199647",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Tumor Treating Fields dually activate STING and AIM2 inflammasomes to induce adjuvant immunity in glioblastoma.",
+      "journal": "The Journal of clinical investigation"
+    },
+    {
+      "pmid": "35303871",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Engineering the next-generation of CAR T-cells with CRISPR-Cas9 gene editing.",
+      "journal": "Molecular cancer"
+    },
+    {
+      "pmid": "35338310",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Targeting ferroptosis as a vulnerability in cancer.",
+      "journal": "Nature reviews. Cancer"
+    },
+    {
+      "pmid": "35419607",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Radiotherapy combined with nivolumab or temozolomide for newly diagnosed glioblastoma with unmethylated MGMT promoter: An international randomized phase III trial.",
+      "journal": "Neuro-oncology"
+    },
+    {
+      "pmid": "35440726",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Targeting the gut and tumor microbiota in cancer.",
+      "journal": "Nature medicine"
+    },
+    {
+      "pmid": "35534566",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Claudin18.2-specific CAR T cells in gastrointestinal cancers: phase 1 trial interim results.",
+      "journal": "Nature medicine"
+    },
+    {
+      "pmid": "35568916",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Enhancement of antitumor immunotherapy using mitochondria-targeted cancer cell membrane-biomimetic MOF-mediated sonodynamic therapy and checkpoint blockade immunotherapy.",
+      "journal": "Journal of nanobiotechnology"
+    },
+    {
+      "pmid": "35621637",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Immune Checkpoint Inhibitors in Cancer Therapy.",
+      "journal": "Current oncology (Toronto, Ont.)"
+    },
+    {
+      "pmid": "35699224",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Piezotronic Effect-Augmented Cu2-xO-BaTiO3 Sonosensitizers for Multifunctional Cancer Dynamic Therapy.",
+      "journal": "ACS nano"
+    },
+    {
+      "pmid": "35760796",
+      "cited_in": [
+        "article/drafts/v1.md",
+        "CLAUDE.md"
+      ],
+      "status": "ok",
+      "title": "Cancer cells dying from ferroptosis impede dendritic cell-mediated anti-tumor immunity.",
+      "journal": "Nature communications"
+    },
+    {
+      "pmid": "35922516",
+      "cited_in": [
+        "CLAUDE.md"
+      ],
+      "status": "ok",
+      "title": "A non-canonical vitamin K cycle is a potent ferroptosis suppressor.",
+      "journal": "Nature"
+    },
+    {
+      "pmid": "35969778",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Lipid nanoparticle-mediated lymph node-targeting delivery of mRNA cancer vaccine elicits robust CD8+ T cell response.",
+      "journal": "Proceedings of the National Academy of Sciences of the United States of America"
+    },
+    {
+      "pmid": "36002574",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "RASA2 ablation in T cells boosts antigen sensitivity and long-term function.",
+      "journal": "Nature"
+    },
+    {
+      "pmid": "36059065",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "An insight into therapeutic efficacy of heterocycles as histone-modifying enzyme inhibitors that targets cancer epigenetic pathways.",
+      "journal": "Chemical biology &amp; drug design"
+    },
+    {
+      "pmid": "36077431",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Revisited Metabolic Control and Reprogramming Cancers by Means of the Warburg Effect in Tumor Cells.",
+      "journal": "International journal of molecular sciences"
+    },
+    {
+      "pmid": "36174631",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Clinical advances and ongoing trials on mRNA vaccines for cancer treatment.",
+      "journal": "The Lancet. Oncology"
+    },
+    {
+      "pmid": "36178986",
+      "cited_in": [
+        "CLAUDE.md"
+      ],
+      "status": "ok",
+      "title": "Ether lipid deficiency disrupts lipid homeostasis leading to ferroptosis sensitivity.",
+      "journal": "PLoS genetics"
+    },
+    {
+      "pmid": "36253536",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Targeting the gut microbiota for cancer therapy.",
+      "journal": "Nature reviews. Cancer"
+    },
+    {
+      "pmid": "36356599",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Non-viral precision T&#x2009;cell receptor replacement for personalized cell therapy.",
+      "journal": "Nature"
+    },
+    {
+      "pmid": "36385526",
+      "cited_in": [
+        "article/drafts/v1.md",
+        "CLAUDE.md"
+      ],
+      "status": "ok",
+      "title": "Ferroptosis of tumour neutrophils causes immune suppression in cancer.",
+      "journal": "Nature"
+    },
+    {
+      "pmid": "36402738",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "The emerging field of oncolytic virus-based cancer immunotherapy.",
+      "journal": "Trends in cancer"
+    },
+    {
+      "pmid": "36437106",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Emerging Sonodynamic Therapy-Based Nanomedicines for Cancer Immunotherapy.",
+      "journal": "Advanced science (Weinheim, Baden-Wurttemberg, Germany)"
+    },
+    {
+      "pmid": "36631681",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Therapy with oncolytic viruses: progress and challenges.",
+      "journal": "Nature reviews. Clinical oncology"
+    },
+    {
+      "pmid": "36768924",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Modulating Glycolysis to Improve Cancer Therapy.",
+      "journal": "International journal of molecular sciences"
+    },
+    {
+      "pmid": "36933770",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Combination immunotherapy for hepatocellular carcinoma.",
+      "journal": "Journal of hepatology"
+    },
+    {
+      "pmid": "37046777",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Mechanisms of Resistance and Current Treatment Options for Glioblastoma Multiforme (GBM).",
+      "journal": "Cancers"
+    },
+    {
+      "pmid": "37047585",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Liposomes in Cancer Therapy: How Did We Start and Where Are We Now.",
+      "journal": "International journal of molecular sciences"
+    },
+    {
+      "pmid": "37064872",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "The role of lipid metabolic reprogramming in tumor microenvironment.",
+      "journal": "Theranostics"
+    },
+    {
+      "pmid": "37165196",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Personalized RNA neoantigen vaccines stimulate T cells in pancreatic cancer.",
+      "journal": "Nature"
+    },
+    {
+      "pmid": "37214358",
+      "cited_in": [
+        "CLAUDE.md"
+      ],
+      "status": "off-topic",
+      "title": "Epidemiology of Fractures Following Electric Scooter Injury.",
+      "journal": "Indian journal of orthopaedics"
+    },
+    {
+      "pmid": "37217462",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Epigenetic regulation in the tumor microenvironment: molecular mechanisms and therapeutic targets.",
+      "journal": "Signal transduction and targeted therapy"
+    },
+    {
+      "pmid": "37312610",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Polymeric STING Pro-agonists for Tumor-Specific Sonodynamic Immunotherapy.",
+      "journal": "Angewandte Chemie (International ed. in English)"
+    },
+    {
+      "pmid": "37495877",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "CAR T therapy beyond cancer: the evolution of a living drug.",
+      "journal": "Nature"
+    },
+    {
+      "pmid": "37621595",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Research progress on reactive oxygen species production mechanisms in tumor sonodynamic therapy.",
+      "journal": "World journal of clinical cases"
+    },
+    {
+      "pmid": "37657460",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Tumor Treating Fields therapy with standard systemic therapy versus standard systemic therapy alone in metastatic non-small-cell lung cancer following progression on or after platinum-based therapy (LUNAR): a randomised, open-label, pivotal phase 3 study.",
+      "journal": "The Lancet. Oncology"
+    },
+    {
+      "pmid": "38064417",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "A \"One Arrow Three Eagle\" Strategy to Improve CM-272 Primed Bladder Cancer Immunotherapy.",
+      "journal": "Advanced materials (Deerfield Beach, Fla.)"
+    },
+    {
+      "pmid": "38168996",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "IL-10-expressing CAR T cells resist dysfunction and mediate durable clearance of solid tumors and metastases.",
+      "journal": "Nature biotechnology"
+    },
+    {
+      "pmid": "38225241",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Cancer epigenetics: from laboratory studies and clinical trials to precision medicine.",
+      "journal": "Cell death discovery"
+    },
+    {
+      "pmid": "38232641",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Evaluation of the cytotoxic and immunomodulatory effects of sonodynamic therapy in human pancreatic cancer spheroids.",
+      "journal": "Journal of photochemistry and photobiology. B, Biology"
+    },
+    {
+      "pmid": "38245601",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Real-world analysis of teclistamab in 123 RRMM patients from Germany.",
+      "journal": "Leukemia"
+    },
+    {
+      "pmid": "38302933",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "A multicentric, single arm, open-label, phase I/II study evaluating PSMA targeted radionuclide therapy in adult patients with metastatic clear cell renal cancer (PRadR).",
+      "journal": "BMC cancer"
+    },
+    {
+      "pmid": "38363528",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "The Future of Gene Therapy: A Review of In Vivo and Ex Vivo Delivery Methods for Genome Editing-Based Therapies.",
+      "journal": "Molecular biotechnology"
+    },
+    {
+      "pmid": "38491817",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Integrating natural compounds and nanoparticle-based drug delivery systems: A novel strategy for enhanced efficacy and selectivity in cancer therapy.",
+      "journal": "Cancer medicine"
+    },
+    {
+      "pmid": "38508135",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "KN046, a bispecific antibody against PD-L1 and CTLA-4, plus chemotherapy as first-line treatment for metastatic NSCLC: A multicenter phase 2 trial.",
+      "journal": "Cell reports. Medicine"
+    },
+    {
+      "pmid": "38509368",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Transcription-replication conflicts underlie sensitivity to PARP inhibitors.",
+      "journal": "Nature"
+    },
+    {
+      "pmid": "38679698",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Immunosuppressive tumor microenvironment and immunotherapy of hepatocellular carcinoma: current status and prospectives.",
+      "journal": "Journal of hematology &amp; oncology"
+    },
+    {
+      "pmid": "38835055",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Current and future immunotherapeutic approaches in pancreatic cancer treatment.",
+      "journal": "Journal of hematology &amp; oncology"
+    },
+    {
+      "pmid": "38961290",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "NBS1 lactylation is required for efficient DNA repair and chemotherapy resistance.",
+      "journal": "Nature"
+    },
+    {
+      "pmid": "38987590",
+      "cited_in": [
+        "article/drafts/v1.md",
+        "CLAUDE.md"
+      ],
+      "status": "ok",
+      "title": "Emergence of large-scale cell death through ferroptotic trigger waves.",
+      "journal": "Nature"
+    },
+    {
+      "pmid": "39134804",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "CAR-T and CAR-NK as cellular cancer immunotherapy for solid tumors.",
+      "journal": "Cellular &amp; molecular immunology"
+    },
+    {
+      "pmid": "39501968",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Advanced Nanomaterials for Cancer Therapy: Gold, Silver, and Iron Oxide Nanoparticles in Oncological Applications.",
+      "journal": "Advanced healthcare materials"
+    },
+    {
+      "pmid": "39519341",
+      "cited_in": [
+        "CLAUDE.md"
+      ],
+      "status": "ok",
+      "title": "A Systems Biology Approach Towards a Comprehensive Understanding of Ferroptosis.",
+      "journal": "International journal of molecular sciences"
+    },
+    {
+      "pmid": "39604730",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Interleukin-15-armoured GPC3 CAR T cells for patients with solid cancers.",
+      "journal": "Nature"
+    },
+    {
+      "pmid": "39614090",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "The changing treatment landscape of EGFR-mutant non-small-cell lung cancer.",
+      "journal": "Nature reviews. Clinical oncology"
+    },
+    {
+      "pmid": "39617017",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Safety and activity of CTX130, a CD70-targeted allogeneic CRISPR-Cas9-engineered CAR T-cell therapy, in patients with relapsed or refractory T-cell malignancies (COBALT-LYM): a single-arm, open-label, phase 1, dose-escalation study.",
+      "journal": "The Lancet. Oncology"
+    },
+    {
+      "pmid": "39627502",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Synthetic lethal strategies for the development of cancer therapeutics.",
+      "journal": "Nature reviews. Clinical oncology"
+    },
+    {
+      "pmid": "39633321",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Diet and Immune Effects Trial (DIET)- a randomized, double-blinded dietary intervention study in patients with melanoma receiving immunotherapy.",
+      "journal": "BMC cancer"
+    },
+    {
+      "pmid": "39669573",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Gut microbiota as a biomarker and modulator of anti-tumor immunotherapy outcomes.",
+      "journal": "Frontiers in immunology"
+    },
+    {
+      "pmid": "39791278",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "A pan-tumor review of the role of poly(adenosine diphosphate ribose) polymerase inhibitors.",
+      "journal": "CA: a cancer journal for clinicians"
+    },
+    {
+      "pmid": "39798545",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Clinical advances of mRNA vaccines for cancer immunotherapy.",
+      "journal": "Med (New York, N.Y.)"
+    },
+    {
+      "pmid": "39826104",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "From chaos to order: optimizing fecal microbiota transplantation for enhanced immune checkpoint inhibitors efficacy.",
+      "journal": "Gut microbes"
+    },
+    {
+      "pmid": "39826543",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Hyperacute rejection-engineered oncolytic virus for interventional clinical trial in refractory cancer patients.",
+      "journal": "Cell"
+    },
+    {
+      "pmid": "40108464",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Oncolytic virus VG161 in refractory hepatocellular carcinoma.",
+      "journal": "Nature"
+    },
+    {
+      "pmid": "40260627",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Izalontamab (SI-B001), a Novel EGFRxHER3 Bispecific Antibody in Patients with Locally Advanced or Metastatic Epithelial Tumor: Results from First-in-Human Phase I/Ib Study.",
+      "journal": "Clinical cancer research : an official journal of the American Association for Cancer Research"
+    },
+    {
+      "pmid": "40303342",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Nano drug delivery systems for advanced immune checkpoint blockade therapy.",
+      "journal": "Theranostics"
+    },
+    {
+      "pmid": "40448572",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Tumor Treating Fields With Gemcitabine and Nab-Paclitaxel for Locally Advanced Pancreatic Adenocarcinoma: Randomized, Open-Label, Pivotal Phase III PANOVA-3 Study.",
+      "journal": "Journal of clinical oncology : official journal of the American Society of Clinical Oncology"
+    },
+    {
+      "pmid": "40457437",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Precision nanomedicine: navigating the tumor microenvironment for enhanced cancer immunotherapy and targeted drug delivery.",
+      "journal": "Molecular cancer"
+    },
+    {
+      "pmid": "40484955",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Microbiota boost immunotherapy? A meta-analysis dives into fecal microbiota transplantation and immune checkpoint inhibitors.",
+      "journal": "BMC medicine"
+    },
+    {
+      "pmid": "40490790",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Sonodynamic therapy-boosted biomimetic nanoplatform targets ferroptosis and CD47 as vulnerabilities for cancer immunotherapy.",
+      "journal": "Journal of nanobiotechnology"
+    },
+    {
+      "pmid": "40700574",
+      "cited_in": [
+        "CLAUDE.md"
+      ],
+      "status": "ok",
+      "title": "A BCMA-mRNA vaccine is a promising therapeutic for multiple myeloma.",
+      "journal": "Blood"
+    },
+    {
+      "pmid": "40731111",
+      "cited_in": [
+        "CLAUDE.md"
+      ],
+      "status": "ok",
+      "title": "Senescence-associated lysosomal dysfunction impairs cystine deprivation-induced lipid peroxidation and ferroptosis.",
+      "journal": "Nature communications"
+    },
+    {
+      "pmid": "41296829",
+      "cited_in": [
+        "article/drafts/v1.md",
+        "CLAUDE.md"
+      ],
+      "status": "ok",
+      "title": "An early clinical trial of 5-ALA sonodynamic therapy in recurrent high-grade glioma.",
+      "journal": "Science translational medicine"
+    },
+    {
+      "pmid": "41322398",
+      "cited_in": [
+        "CLAUDE.md"
+      ],
+      "status": "ok",
+      "title": "Optimization of Immune Checkpoint Blockade via a Multiscale Model System.",
+      "journal": "Computational and systems oncology"
+    },
+    {
+      "pmid": "41417728",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "CRISPR screens define unified hallmarks of cancer cell-autonomous immune evasion.",
+      "journal": "Cell reports"
+    },
+    {
+      "pmid": "41494530",
+      "cited_in": [
+        "article/drafts/v1.md",
+        "CLAUDE.md"
+      ],
+      "status": "ok",
+      "title": "Extracellular GPX4 impairs antitumor immunity via dendritic ZP3 receptors.",
+      "journal": "Cell"
+    },
+    {
+      "pmid": "41554743",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Disruption of iron homeostasis sensitizes pancreatic cancer to irreversible electroporation.",
+      "journal": "Nature communications"
+    },
+    {
+      "pmid": "41572139",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Enzymatic Remodelling of Tumour Microenvironment Enhances Anti-CEACAM5 CAR T-Cell Efficacy Against Colorectal Cancer.",
+      "journal": "Advanced science (Weinheim, Baden-Wurttemberg, Germany)"
+    },
+    {
+      "pmid": "41833681",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "A multimodal neoadjuvant strategy incorporating PDT, RFA, and ICIs results in a notable pathological response and preservation of the sphincter in microsatellite stable low rectal cancer: A highly distinctive case report and literature review.",
+      "journal": "Photodiagnosis and photodynamic therapy"
+    },
+    {
+      "pmid": "41932308",
+      "cited_in": [
+        "article/drafts/v1.md",
+        "CLAUDE.md"
+      ],
+      "status": "ok",
+      "title": "The HIF-2 transcription factor mediates resistance to ferroptosis in pancreatic cancer.",
+      "journal": "Molecular cell"
+    },
+    {
+      "pmid": "42020682",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "off-topic",
+      "title": "How Do Speech-Language Pathologists (SLPs) Know? A Survey of SLPs' Disciplinary Epistemology.",
+      "journal": "International journal of language &amp; communication disorders"
+    },
+    {
+      "pmid": "42020835",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "off-topic",
+      "title": "Andexanet Alfa Withdrawn from the US: Implications for Intracranial Hemorrhage Care.",
+      "journal": "CNS drugs"
+    },
+    {
+      "pmid": "42032311",
+      "cited_in": [
+        "article/drafts/v1.md",
+        "CLAUDE.md"
+      ],
+      "status": "ok",
+      "title": "Electrophilic compound screening identifies GPX4-dependent ferroptosis as a senescence vulnerability.",
+      "journal": "Nature cell biology"
+    },
+    {
+      "pmid": "42190602",
+      "cited_in": [
+        "CLAUDE.md"
+      ],
+      "status": "ok",
+      "title": "Fueling death: Glucose metabolic reprogramming regulates ferroptosis and cuproptosis in cancer.",
+      "journal": "Biochemical and biophysical research communications"
+    },
+    {
+      "pmid": "7568060",
+      "cited_in": [
+        "article/drafts/v1.md"
+      ],
+      "status": "ok",
+      "title": "Targeting cancer micrometastases with monoclonal antibodies: a binding-site barrier.",
+      "journal": "Proceedings of the National Academy of Sciences of the United States of America"
+    }
   ]
 }
