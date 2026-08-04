@@ -1197,3 +1197,46 @@ def test_manuscript_does_not_claim_verification_it_lacks():
         assert f"Verified: PMID:{pmid}" not in md, \
             f"the false verification claim for {pmid} has returned"
     assert "not as verified evidence" in md
+
+
+def test_sentence_initial_words_are_not_proper_nouns():
+    """The root cause of the false verifications.
+
+    'Seven of these 26 patients had inoperable tumors' yielded the search term
+    ['Seven'], and the query `Seven` matches ~836,000 PubMed records. ESearch
+    returned the five most recently indexed, and the pipeline called that
+    verification -- which is why the linked identifiers all cluster in one
+    numeric band.
+    """
+    from verify_news_claims import extract_search_terms
+    assert extract_search_terms(
+        "Seven of these 26 patients had inoperable tumors.") == []
+    assert extract_search_terms(
+        "Results showed improvement.") == []
+    # genuine proper nouns still survive
+    terms = extract_search_terms(
+        "Pembrolizumab improved survival in Keytruda-treated NSCLC patients.")
+    assert "Keytruda" in terms and "NSCLC" in terms
+
+
+def test_a_search_result_is_not_verification():
+    """Accepting any non-empty result is what marked 44 claims verified.
+
+    The check must reject a paper sharing no subject matter with the claim
+    while still accepting one that does, including across morphological
+    variants -- 'tumors'/'tumor' and 'immune'/'immunity' must not count as
+    different words, or genuine support gets rejected.
+    """
+    from verify_news_claims import supports_claim
+    assert not supports_claim(
+        "Seven of these 26 patients had inoperable tumors",
+        "How Do Speech-Language Pathologists Know? A Survey")
+    assert not supports_claim(
+        "New blood test could catch pancreatic cancer before it is too late",
+        "Andexanet Alfa Withdrawn from the US: Implications for Intracranial Hemorrhage")
+    assert supports_claim(
+        "Electric fields supercharge immune system against brain cancer tumors",
+        "Tumor treating fields enhance antitumor immunity in glioblastoma")
+    assert supports_claim(
+        "New blood test could catch pancreatic cancer early detection",
+        "A blood-based test for early detection of pancreatic cancer")
