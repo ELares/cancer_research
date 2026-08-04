@@ -10,7 +10,7 @@ corpus, a 46,700-word manuscript, an 11-binary simulation suite, and a
 calibration ledger. It also hit its ceiling, and the ceiling is measurable:
 
 **4,830 articles is 0.11% of the cancer literature.** PubMed indexes 4,276,707
-articles under the MeSH tree C04 (Neoplasms). The corpus was assembled from 19
+articles under the MeSH tree C04 (Neoplasms). The corpus was assembled from 33
 hand-written keyword queries with a 500-record-per-query cap and inconsistent
 date windows, and it contains no photodynamic-therapy query and no ferroptosis
 query at all — the two topics the project's own simulation half is built on.
@@ -40,9 +40,9 @@ can carry the weight put on it.
 
 | | Now | Target |
 |---|---|---|
-| Articles | 4,830 | 4,276,707 |
-| Selection | 19 keyword queries, 500-record cap | MeSH tree C04, the complete census |
-| Full text | 4,830 (98.7% open-access, a biased slice) | ~919,000 open-access, with the bias measured |
+| Articles | 4,830 | **4,403,994 acquired** |
+| Selection | 33 keyword queries, 500-record cap | MeSH tree C04 + adjacent, the complete census |
+| Full text | 4,830 (98.7% open-access, a biased slice) | **1,100,218 obtained**, with the bias measured |
 | Entities | unnormalized surface strings (3,260 spellings of ~1,200 genes) | NCBI Gene, MeSH, ChEBI, Cellosaurus identifiers |
 | Relations | none | typed, scored, sentence-attributed |
 | Evidence tiers | 57.8% of records untagged | measured, with a reported annotator ceiling |
@@ -86,7 +86,7 @@ been marketing.
 
    Alongside it: **783,271** articles recovered that MeSH has not indexed yet
    (the un-indexed share reaches 37.6% in the most recent baseline files),
-   **520,143** open-access full texts on external storage, **7,951,325** typed
+   **1,100,218** open-access full texts on external storage, **7,951,325** typed
    relations over 1,603,105 PMIDs, and **42.9 million** sentences of full text
    mined for entity co-mention.
 
@@ -107,7 +107,7 @@ been marketing.
    official alias of three different genes, and PubTator resolved every
    GPX4–FSP1 relation in the census to a spastic-paraplegia gene, leaving this
    project's own headline claim with zero typed support until it was fixed.
-   Across the census, genes sit on a contested surface form for 28.3% of
+   Across the census, genes sit on a contested surface form for 27.7% of
    mentions against ~2% for MeSH-coded chemicals and diseases. The graph now
    refuses to resolve a measured sense collision rather than guessing
    (`analysis/atlas-ambiguity.md`).

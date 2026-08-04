@@ -12,6 +12,8 @@
       "rank_keyword": 13,
       "rank_mesh_census": 1,
       "rank_shift": 12,
+      "clinical_census": 1307,
+      "clinical_share": 0.03166335578274141,
       "top_descriptor": "DNA Methylation",
       "top_share": 0.7460148262997238
     },
@@ -23,6 +25,8 @@
       "rank_keyword": 2,
       "rank_mesh_census": 2,
       "rank_shift": 0,
+      "clinical_census": 182,
+      "clinical_share": 0.004947265412634555,
       "top_descriptor": "Nanoparticles",
       "top_share": 0.9270142437751441
     },
@@ -34,6 +38,8 @@
       "rank_keyword": 1,
       "rank_mesh_census": 3,
       "rank_shift": -2,
+      "clinical_census": 1430,
+      "clinical_share": 0.044841643148322355,
       "top_descriptor": "Immune Checkpoint Inhibitors",
       "top_share": 0.5164628410159925
     },
@@ -45,6 +51,8 @@
       "rank_keyword": 3,
       "rank_mesh_census": 4,
       "rank_shift": -1,
+      "clinical_census": 1020,
+      "clinical_share": 0.06641489777314755,
       "top_descriptor": "Immunotherapy, Adoptive",
       "top_share": 0.9278551894777965
     },
@@ -56,6 +64,8 @@
       "rank_keyword": 8,
       "rank_mesh_census": 5,
       "rank_shift": 3,
+      "clinical_census": 45,
+      "clinical_share": 0.0051084118515154955,
       "top_descriptor": "Glycolysis",
       "top_share": 0.9726416165285503
     },
@@ -67,6 +77,8 @@
       "rank_keyword": 7,
       "rank_mesh_census": 6,
       "rank_shift": 1,
+      "clinical_census": 580,
+      "clinical_share": 0.09636152184748296,
       "top_descriptor": "Immunoconjugates",
       "top_share": 1.0
     },
@@ -78,6 +90,8 @@
       "rank_keyword": 5,
       "rank_mesh_census": 7,
       "rank_shift": -2,
+      "clinical_census": 342,
+      "clinical_share": 0.06290233584697444,
       "top_descriptor": "Poly(ADP-ribose) Polymerase Inhibitors",
       "top_share": 0.9255103917601618
     },
@@ -89,6 +103,8 @@
       "rank_keyword": 4,
       "rank_mesh_census": 8,
       "rank_shift": -4,
+      "clinical_census": 201,
+      "clinical_share": 0.04015181781861766,
       "top_descriptor": "Oncolytic Virotherapy",
       "top_share": 0.8721534159009189
     },
@@ -100,6 +116,8 @@
       "rank_keyword": 6,
       "rank_mesh_census": 9,
       "rank_shift": -3,
+      "clinical_census": 6,
+      "clinical_share": 0.001633097441480675,
       "top_descriptor": "CRISPR-Cas Systems",
       "top_share": 0.8690800217746325
     },
@@ -111,6 +129,8 @@
       "rank_keyword": 10,
       "rank_mesh_census": 10,
       "rank_shift": 0,
+      "clinical_census": 326,
+      "clinical_share": 0.09416522241478914,
       "top_descriptor": "Antibodies, Bispecific",
       "top_share": 1.0
     },
@@ -122,6 +142,8 @@
       "rank_keyword": 12,
       "rank_mesh_census": 11,
       "rank_shift": 1,
+      "clinical_census": 142,
+      "clinical_share": 0.05646123260437376,
       "top_descriptor": "Electroporation",
       "top_share": 0.7506958250497018
     },
@@ -133,6 +155,8 @@
       "rank_keyword": 11,
       "rank_mesh_census": 12,
       "rank_shift": -1,
+      "clinical_census": 114,
+      "clinical_share": 0.04536410664544369,
       "top_descriptor": "Ultrasonic Therapy",
       "top_share": 1.0
     },
@@ -144,6 +168,8 @@
       "rank_keyword": 17,
       "rank_mesh_census": 13,
       "rank_shift": 4,
+      "clinical_census": 96,
+      "clinical_share": 0.07100591715976332,
       "top_descriptor": "High-Intensity Focused Ultrasound Ablation",
       "top_share": 1.0
     },
@@ -155,6 +181,8 @@
       "rank_keyword": 19,
       "rank_mesh_census": 14,
       "rank_shift": 5,
+      "clinical_census": 13,
+      "clinical_share": 0.014161220043572984,
       "top_descriptor": "CD47 Antigen",
       "top_share": 1.0
     },
@@ -166,6 +194,8 @@
       "rank_keyword": 16,
       "rank_mesh_census": 15,
       "rank_shift": 1,
+      "clinical_census": 12,
+      "clinical_share": 0.031578947368421054,
       "top_descriptor": "Fecal Microbiota Transplantation",
       "top_share": 1.0
     },
@@ -177,6 +207,8 @@
       "rank_keyword": 15,
       "rank_mesh_census": 16,
       "rank_shift": -1,
+      "clinical_census": 2,
+      "clinical_share": 0.006644518272425249,
       "top_descriptor": "mRNA Vaccines",
       "top_share": 1.0
     },
@@ -188,6 +220,8 @@
       "rank_keyword": 18,
       "rank_mesh_census": null,
       "rank_shift": null,
+      "clinical_census": 0,
+      "clinical_share": null,
       "top_descriptor": null,
       "top_share": 0.0
     }

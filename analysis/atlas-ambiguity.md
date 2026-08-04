@@ -15,9 +15,9 @@ discarded, so a wrong answer is indistinguishable from a right one.
 
 | entity type | surface forms | contested | share of mentions on a contested form |
 |---|---|---|---|
-| gene | 115,194 | 31,375 (27.2%) | 28.3% |
-| chemical | 69,409 | 2,146 (3.1%) | 2.0% |
-| disease | 353,403 | 22,782 (6.4%) | 2.7% |
+| gene | 147,582 | 39,763 (26.9%) | 27.7% |
+| chemical | 100,535 | 2,940 (2.9%) | 2.0% |
+| disease | 502,350 | 32,697 (6.5%) | 2.7% |
 
 Genes are roughly **ten times** worse than chemicals or diseases by
 mention share, and the reason is structural rather than accidental. MeSH is
@@ -43,9 +43,9 @@ against NCBI and NLM:
 
 | entity type | benign class | sense collision | unresolved |
 |---|---|---|---|
-| gene | 320 species (85.6%) | 54 (14.4%) | 35 |
-| chemical | 16 hierarchical (13.9%) | 99 (86.1%) | 285 |
-| disease | 63 hierarchical (23.9%) | 201 (76.1%) | 136 |
+| gene | 329 species (86.8%) | 50 (13.2%) | 32 |
+| chemical | 13 hierarchical (11.6%) | 99 (88.4%) | 288 |
+| disease | 60 hierarchical (22.6%) | 205 (77.4%) | 135 |
 
 ## The damaging class, by mention volume
 
@@ -53,61 +53,61 @@ against NCBI and NLM:
 
 | surface form | mentions | majority vote returns | runner-up |
 |---|---|---|---|
-| `beta-actin` | 64,363 | POTEF (Homo sapiens) | Actb (Mus musculus) |
-| `er` | 54,293 | EREG (Homo sapiens) | ESR1 (Homo sapiens) |
-| `psa` | 43,340 | KLK3 (Homo sapiens) | NPEPPS (Homo sapiens) |
-| `p21` | 37,471 | H3P16 (Homo sapiens) | CDKN1A (Homo sapiens) |
-| `parp` | 31,976 | PARP1 (Homo sapiens) | COL11A2 (Homo sapiens) |
-| `pi3k` | 27,617 | PIK3R1 (Homo sapiens) | PIK3CA (Homo sapiens) |
-| `tcr` | 19,220 | TRBV20OR9-2 (Homo sapiens) | Trav6-3 (Mus musculus) |
-| `car` | 17,308 | NR1I3 (Homo sapiens) | CXADRP1 (Homo sapiens) |
-| `cox-2` | 17,163 | COX2 (Homo sapiens) | PTGS2 (Homo sapiens) |
-| `p27` | 15,847 | DCTN6 (Homo sapiens) | IFI27 (Homo sapiens) |
-| `cd3` | 12,314 | Cd247 (Mus musculus) | Cd3e (Mus musculus) |
-| `ampk` | 12,250 | PRKAA2 (Homo sapiens) | PRKAA1 (Homo sapiens) |
-| `ap-1` | 11,659 | JUNB (Homo sapiens) | JUN (Homo sapiens) |
-| `hsp70` | 9,208 | HSPA4 (Homo sapiens) | Hspa1b (Mus musculus) |
-| `il-1` | 9,004 | IL1A (Homo sapiens) | IL1B (Homo sapiens) |
+| `beta-actin` | 102,921 | POTEF (Homo sapiens) | Actb (Mus musculus) |
+| `er` | 79,040 | EREG (Homo sapiens) | ESR1 (Homo sapiens) |
+| `psa` | 58,771 | KLK3 (Homo sapiens) | NPEPPS (Homo sapiens) |
+| `p21` | 57,393 | H3P16 (Homo sapiens) | CDKN1A (Homo sapiens) |
+| `parp` | 49,898 | PARP1 (Homo sapiens) | COL11A2 (Homo sapiens) |
+| `pi3k` | 48,108 | PIK3R1 (Homo sapiens) | PIK3CA (Homo sapiens) |
+| `tcr` | 29,385 | TRBV20OR9-2 (Homo sapiens) | Trav6-3 (Mus musculus) |
+| `cox-2` | 28,902 | COX2 (Homo sapiens) | PTGS2 (Homo sapiens) |
+| `car` | 27,687 | NR1I3 (Homo sapiens) | CXADRP1 (Homo sapiens) |
+| `p27` | 23,172 | DCTN6 (Homo sapiens) | IFI27 (Homo sapiens) |
+| `ampk` | 22,031 | PRKAA2 (Homo sapiens) | PRKAA1 (Homo sapiens) |
+| `ap-1` | 18,759 | JUNB (Homo sapiens) | JUN (Homo sapiens) |
+| `il-1` | 17,561 | IL1A (Homo sapiens) | IL1B (Homo sapiens) |
+| `cd3` | 17,401 | Cd247 (Mus musculus) | Cd3e (Mus musculus) |
+| `hsp70` | 15,561 | HSPA4 (Homo sapiens) | Hspa1b (Mus musculus) |
 
 ### chemical
 
 | surface form | mentions | majority vote returns | runner-up |
 |---|---|---|---|
-| `pi` | 34,659 | Phosphatidylinositols | Propidium |
-| `tca` | 8,895 | Trichloroacetic Acid | Tricarboxylic Acids |
-| `no` | 8,235 | Nobelium | Nitric Oxide |
-| `ps` | 4,853 | Phosphorus | Phosphatidylserines |
-| `tg` | 4,676 | Thioguanine | Triglycerides |
-| `ra` | 4,469 | Tretinoin | Radium |
-| `mda` | 4,249 | Malondialdehyde | 3,4-Methylenedioxyamphetamine |
-| `cy` | 3,439 | Cysteine | Cyclophosphamide |
-| `co` | 3,189 | Carbon Monoxide | Cobalt |
-| `dex` | 2,911 | Dexamethasone | Dextromethorphan |
-| `aa` | 2,241 | Arachidonic Acid | Amino Acids |
-| `aza` | 1,927 | Azathioprine | Azacitidine |
-| `met` | 1,853 | Methionine | Metformin |
-| `rns` | 1,843 | Reactive Nitrogen Species | Radon |
-| `hs` | 1,545 | Hydrogen | Heparan Sulfate |
+| `pi` | 59,467 | Phosphatidylinositols | Propidium |
+| `no` | 19,850 | Nobelium | Nitric Oxide |
+| `tca` | 15,806 | Trichloroacetic Acid | Tricarboxylic Acids |
+| `mda` | 12,657 | Malondialdehyde | 3,4-Methylenedioxyamphetamine |
+| `ps` | 9,125 | Phosphorus | Phosphatidylserines |
+| `tg` | 9,077 | Triglycerides | Thioguanine |
+| `co` | 7,290 | Carbon Monoxide | Cobalt |
+| `ra` | 6,821 | Tretinoin | Radium |
+| `dex` | 5,058 | Dextromethorphan | Dexamethasone |
+| `cy` | 4,851 | Cysteine | Cyclophosphamide |
+| `aa` | 4,541 | Arachidonic Acid | Amino Acids |
+| `rns` | 4,099 | Radon | Reactive Nitrogen Species |
+| `aza` | 3,293 | Azathioprine | Azacitidine |
+| `hs` | 2,734 | Hydrogen | Heparan Sulfate |
+| `oa` | 2,700 | Okadaic Acid | Oleic Acid |
 
 ### disease
 
 | surface form | mentions | majority vote returns | runner-up |
 |---|---|---|---|
-| `pd` | 20,242 | Parkinson Disease | Disease Progression |
-| `pr` | 18,713 | Lown-Ganong-Levine Syndrome | Epilepsies, Partial |
-| `sclc` | 16,218 | Small Cell Lung Carcinoma | Carcinoma, Small Cell |
-| `pc` | 15,980 | Pyruvate Carboxylase Deficiency Disease | Prostatic Neoplasms |
-| `sd` | 14,405 | Sexual Dysfunction, Physiological | Angina, Stable |
-| `ec` | 11,667 | Endometrial Neoplasms | Esophageal Neoplasms |
-| `dm` | 8,696 | Myotonic Dystrophy | Diabetes Mellitus |
-| `cin` | 7,093 | Uterine Cervical Dysplasia | Chromosomal Instability |
-| `hd` | 6,746 | Huntington Disease | Hodgkin Disease |
-| `acc` | 6,199 | Adrenocortical Carcinoma | Ectodermal Dysplasia |
-| `ac` | 5,129 | Farber Lipogranulomatosis | Adenocarcinoma |
-| `uc` | 4,873 | Colitis, Ulcerative | Urethral Neoplasms |
-| `tam` | 4,461 | Myopathies, Structural, Congenital | Cancer Pain |
-| `ir` | 4,284 | Insulin Resistance | Radiation Injuries |
-| `coad` | 4,131 | Colonic Neoplasms | Pulmonary Disease, Chronic Obstructive |
+| `pd` | 34,453 | Parkinson Disease | Disease Progression |
+| `pr` | 29,217 | Lown-Ganong-Levine Syndrome | Epilepsies, Partial |
+| `sclc` | 24,327 | Small Cell Lung Carcinoma | Carcinoma, Small Cell |
+| `pc` | 24,018 | Pyruvate Carboxylase Deficiency Disease | Pancreatic Neoplasms |
+| `sd` | 23,199 | Angina, Stable | Sexual Dysfunction, Physiological |
+| `ec` | 18,093 | Endometrial Neoplasms | Esophageal Neoplasms |
+| `dm` | 15,675 | Myotonic Dystrophy | Diabetes Mellitus |
+| `hd` | 9,913 | Huntington Disease | Hodgkin Disease |
+| `cin` | 9,834 | Uterine Cervical Dysplasia | Chromosomal Instability |
+| `acc` | 9,815 | Ectodermal Dysplasia | Adrenocortical Carcinoma |
+| `uc` | 8,477 | Colitis, Ulcerative | Urethral Neoplasms |
+| `ac` | 7,991 | Farber Lipogranulomatosis | Adenocarcinoma |
+| `coad` | 7,229 | Colonic Neoplasms | Pulmonary Disease, Chronic Obstructive |
+| `tam` | 7,082 | Myopathies, Structural, Congenital | Cancer Pain |
+| `cr` | 7,022 | Blindness | Remission, Spontaneous |
 
 Four are worth stating plainly, because they touch the most-queried
 concepts in the cancer literature:

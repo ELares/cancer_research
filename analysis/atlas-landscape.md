@@ -142,6 +142,65 @@ reports (17.6:1 against 9.1:1). The manuscript understates
 its own case, because the corpus it measured was tilted toward the modalities
 it argues are neglected.
 
+## The other half of the claim: preclinical, or just smaller?
+
+The manuscript says physical modalities remain comparatively *preclinical*,
+which is a maturity claim rather than a volume one. NLM assigns trial
+publication types independently of this project, so the share of a
+mechanism's census articles carrying one is a maturity signal that does not
+depend on our evidence tagger -- whose recall this repo measures at 55%.
+
+| mechanism | census articles | clinical trials | share |
+|---|---|---|---|
+| `antibody-drug-conjugate` | 6,019 | 580 | 9.64% |
+| `bispecific-antibody` | 3,462 | 326 | 9.42% |
+| `hifu` | 1,352 | 96 | 7.10% |
+| `car-t` | 15,358 | 1,020 | 6.64% |
+| `synthetic-lethality` | 5,437 | 342 | 6.29% |
+| `electrochemical-therapy` | 2,515 | 142 | 5.65% |
+| `sonodynamic` | 2,513 | 114 | 4.54% |
+| `immunotherapy` | 31,890 | 1,430 | 4.48% |
+| `oncolytic-virus` | 5,006 | 201 | 4.02% |
+| `epigenetic` | 41,278 | 1,307 | 3.17% |
+| `microbiome` | 380 | 12 | 3.16% |
+| `phagocytosis-checkpoint` | 918 | 13 | 1.42% |
+| `mrna-vaccine` | 301 | 2 | 0.66% |
+| `metabolic-targeting` | 8,809 | 45 | 0.51% |
+| `nanoparticle` | 36,788 | 182 | 0.49% |
+| `crispr` | 3,674 | 6 | 0.16% |
+
+| comparison | physical | pharmacological |
+|---|---|---|
+| all mechanisms | 5.52% | 3.43% |
+| precise descriptors only | 5.43% | 6.90% |
+
+**The answer flips.** Taken across all mechanisms physical modalities look
+MORE clinically mature; restricted to descriptors that name a therapy rather
+than a process or a material, they look less. Both cannot be reported as the
+finding, and the second is the sounder comparison -- a broad descriptor pulls
+in papers that are not about treatment, and those are not trials, so scope
+deflates the share exactly where it inflates the count.
+
+So the manuscript's direction survives on the sound comparison, but weakly:
+6.90% against 5.43%, a factor of 1.27, not the gulf the volume ratio suggests.
+
+### The finding that does hold up
+
+`physical modalities` is not a maturity class, and treating it as one is what
+the manuscript actually gets wrong. Both of these rest on precise
+single-descriptor signals:
+
+* **HIFU is 7.10% clinical -- more than CAR-T at 6.64%.**
+  It is an approved modality for prostate, fibroid and neurological
+  indications, and calling it preclinical is simply wrong.
+* **HIFU and sonodynamic differ by 1.6x** (7.10% against 4.54%), so the two are not at the same
+  stage and the aggregate hides it.
+
+The defensible statement is that SONODYNAMIC therapy is early, not that
+physical modalities are. The manuscript's own thesis rests on SDT, so this
+narrows the claim to the mechanism it actually cares about rather than
+weakening it.
+
 ## What MeSH cannot see
 
 Not every mechanism has a MeSH concept, and reporting those as zero would

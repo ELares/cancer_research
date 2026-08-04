@@ -1404,3 +1404,33 @@ def test_landscape_flags_over_broad_descriptors():
     md = (REPO_ROOT / "analysis" / "atlas-landscape.md").read_text()
     assert "DNA Methylation" in md
     assert "artifact of descriptor scope" in md
+
+
+def test_maturity_comparison_reports_that_it_flips():
+    """The result depends on descriptor choice, and hiding that would be spin.
+
+    Across all mechanisms physical modalities look MORE clinically mature;
+    restricted to descriptors naming a therapy rather than a process or a
+    material, they look less. Reporting either alone would be picking the
+    convenient one.
+    """
+    md = (REPO_ROOT / "analysis" / "atlas-landscape.md").read_text()
+    assert "The answer flips" in md
+    assert "precise descriptors only" in md
+
+
+def test_hifu_is_not_preclinical_and_the_manuscript_says_so():
+    """The specific claim that survives descriptor scrutiny.
+
+    Both HIFU and CAR-T rest on precise single descriptors, so comparing them
+    is clean, and HIFU comes out ahead. Calling physical modalities preclinical
+    as a class is what the manuscript got wrong.
+    """
+    import json
+    raw = json.loads((REPO_ROOT / "analysis" / "atlas-landscape.json").read_text())
+    R = {r["mechanism"]: r for r in raw["rows"]}
+    assert R["hifu"]["clinical_share"] > R["car-t"]["clinical_share"]
+    # and the two "physical" mechanisms are not at the same stage
+    assert R["hifu"]["clinical_share"] > 1.4 * R["sonodynamic"]["clinical_share"]
+    md = (REPO_ROOT / "article" / "drafts" / "v1.md").read_text()
+    assert "7.10%" in md and "not a maturity class" in md

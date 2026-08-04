@@ -60,6 +60,16 @@ import yaml  # noqa: E402
 from atlas_baseline import atlas_root  # noqa: E402
 from config import PROJECT_ROOT  # noqa: E402
 
+# NLM-assigned trial publication types. Trial-specific only: "Multicenter
+# Study" is excluded because it applies to observational work too, and
+# "Clinical Study" is not a trial designation.
+CLINICAL_TYPES = {
+    "Clinical Trial", "Randomized Controlled Trial", "Controlled Clinical Trial",
+    "Clinical Trial, Phase I", "Clinical Trial, Phase II",
+    "Clinical Trial, Phase III", "Clinical Trial, Phase IV",
+    "Pragmatic Clinical Trial", "Adaptive Clinical Trial",
+}
+
 MAP = PROJECT_ROOT / "analysis" / "mesh-mechanism-map.yaml"
 FROZEN = PROJECT_ROOT / "corpus" / "INDEX.jsonl"
 OUT = PROJECT_ROOT / "analysis" / "atlas-landscape.md"
@@ -116,6 +126,63 @@ def frozen_records():
             yield json.loads(line)
 
 
+# Mechanisms whose dominant descriptor names a therapy or modality, rather than
+# a process (Glycolysis, DNA Methylation), a material (Nanoparticles) or a
+# technique (Electroporation, CRISPR-Cas Systems). A broad descriptor pulls in
+# papers that are not about treatment at all, and those are unlikely to be
+# trials, so it DEFLATES the clinical share exactly where it inflates the count.
+PRECISE = {"hifu", "sonodynamic", "antibody-drug-conjugate", "bispecific-antibody",
+           "car-t", "oncolytic-virus", "phagocytosis-checkpoint", "mrna-vaccine"}
+PHYSICAL = {"hifu", "sonodynamic", "electrochemical-therapy"}
+
+
+def _maturity_narrative(R: dict) -> list:
+    """The maturity comparison, and the reason it does not settle cleanly."""
+    def share(keys):
+        keys = [k for k in keys if k in R and R[k].get("mesh_census")]
+        num = sum(R[k]["clinical_census"] for k in keys)
+        den = sum(R[k]["mesh_census"] for k in keys)
+        return (num / den) if den else 0.0
+
+    all_phys = share(PHYSICAL)
+    all_pharm = share(set(R) - PHYSICAL)
+    pre_phys = share(PHYSICAL & PRECISE)
+    pre_pharm = share(PRECISE - PHYSICAL)
+    hifu = R.get("hifu", {}).get("clinical_share") or 0
+    sono = R.get("sonodynamic", {}).get("clinical_share") or 0
+    cart = R.get("car-t", {}).get("clinical_share") or 0
+    return [
+        "",
+        "| comparison | physical | pharmacological |", "|---|---|---|",
+        f"| all mechanisms | {100*all_phys:.2f}% | {100*all_pharm:.2f}% |",
+        f"| precise descriptors only | {100*pre_phys:.2f}% | {100*pre_pharm:.2f}% |",
+        "",
+        "**The answer flips.** Taken across all mechanisms physical modalities look",
+        "MORE clinically mature; restricted to descriptors that name a therapy rather",
+        "than a process or a material, they look less. Both cannot be reported as the",
+        "finding, and the second is the sounder comparison -- a broad descriptor pulls",
+        "in papers that are not about treatment, and those are not trials, so scope",
+        "deflates the share exactly where it inflates the count.", "",
+        "So the manuscript's direction survives on the sound comparison, but weakly:",
+        f"{100*pre_pharm:.2f}% against {100*pre_phys:.2f}%, a factor of "
+        f"{pre_pharm/max(pre_phys,1e-9):.2f}, not the gulf the volume ratio suggests.", "",
+        "### The finding that does hold up", "",
+        "`physical modalities` is not a maturity class, and treating it as one is what",
+        "the manuscript actually gets wrong. Both of these rest on precise",
+        "single-descriptor signals:", "",
+        f"* **HIFU is {100*hifu:.2f}% clinical -- more than CAR-T at {100*cart:.2f}%.**",
+        "  It is an approved modality for prostate, fibroid and neurological",
+        "  indications, and calling it preclinical is simply wrong.",
+        f"* **HIFU and sonodynamic differ by {hifu/max(sono,1e-9):.1f}x** "
+        f"({100*hifu:.2f}% against {100*sono:.2f}%), so the two are not at the same",
+        "  stage and the aggregate hides it.", "",
+        "The defensible statement is that SONODYNAMIC therapy is early, not that",
+        "physical modalities are. The manuscript's own thesis rests on SDT, so this",
+        "narrows the claim to the mechanism it actually cares about rather than",
+        "weakening it.", "",
+    ]
+
+
 def main() -> int:
     mech, unmeasurable = load_map()
     print(f"{len(mech)} mechanisms with a discriminative MeSH leaf", flush=True)
@@ -141,6 +208,9 @@ def main() -> int:
     # per-descriptor counts, so a mechanism carried by one over-broad term is
     # visible instead of being reported as a bare total
     per_desc = collections.defaultdict(collections.Counter)
+    # Maturity, from NLM's own publication types rather than this project's
+    # evidence tagger, whose recall the repo measures at 55%.
+    clinical = collections.Counter()
     n_census = 0
     for i, f in enumerate(files, 1):
         with gzip.open(f, "rt", encoding="utf-8") as fh:
@@ -150,10 +220,12 @@ def main() -> int:
                 s = set(r.get("mesh") or [])
                 if not s:
                     continue
+                is_trial = bool(set(r.get("pub_types") or []) & CLINICAL_TYPES)
                 for name, descs in mech.items():
                     hit = s & descs
                     if hit:
                         mesh_census[name] += 1
+                        clinical[name] += is_trial
                         for d in hit:
                             per_desc[name][d] += 1
         if i % 300 == 0:
@@ -188,6 +260,9 @@ def main() -> int:
             "rank_mesh_census": rk_c.get(name),
             "rank_shift": ((rk_a.get(name) or 0) - (rk_c.get(name) or 0))
                           if (rk_a.get(name) and rk_c.get(name)) else None,
+            "clinical_census": clinical.get(name, 0),
+            "clinical_share": (clinical.get(name, 0) / mesh_census[name])
+                              if mesh_census.get(name) else None,
             "top_descriptor": conc.get(name, {}).get("top_descriptor"),
             "top_share": conc.get(name, {}).get("top_share", 0.0),
         })
@@ -307,6 +382,20 @@ def main() -> int:
         f"reports ({ratio_c:.1f}:1 against {ratio_a:.1f}:1). The manuscript understates",
         "its own case, because the corpus it measured was tilted toward the modalities",
         "it argues are neglected.", "",
+        "## The other half of the claim: preclinical, or just smaller?", "",
+        "The manuscript says physical modalities remain comparatively *preclinical*,",
+        "which is a maturity claim rather than a volume one. NLM assigns trial",
+        "publication types independently of this project, so the share of a",
+        "mechanism's census articles carrying one is a maturity signal that does not",
+        "depend on our evidence tagger -- whose recall this repo measures at 55%.", "",
+        "| mechanism | census articles | clinical trials | share |",
+        "|---|---|---|---|",
+    ] + [
+        f"| `{r['mechanism']}` | {r['mesh_census']:,} | {r['clinical_census']:,} | "
+        f"{100*r['clinical_share']:.2f}% |"
+        for r in sorted([x for x in rows if x.get("clinical_share") is not None],
+                        key=lambda x: -x["clinical_share"])
+    ] + _maturity_narrative(R) + [
         "## What MeSH cannot see", "",
         "Not every mechanism has a MeSH concept, and reporting those as zero would",
         "manufacture exactly the false gap this analysis exists to test for. They are",

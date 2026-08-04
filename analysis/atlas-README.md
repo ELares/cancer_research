@@ -168,7 +168,7 @@ Bliss-synergy claim. Querying the graph for `FSP1` silently returned ATL1's edge
 
 Asks the question the audit did not: **how many other FSP1s are there?**
 Measured across all three entity types, genes are the outlier by roughly ten
-times — 28.3% of gene mentions sit on a contested surface form against 2.0% for
+times — 27.7% of gene mentions sit on a contested surface form against 2.0% for
 chemicals and 2.7% for diseases, because MeSH is a curated vocabulary with one
 preferred term per concept while NCBI lists `FSP1` as an official alias of three
 different genes.
