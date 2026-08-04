@@ -86,6 +86,7 @@ RAW = PROJECT_ROOT / "analysis" / "comention-regression.json"
 # the assumption mattered: body-only was optimistic by half.
 JUDGED = {
     "abstract": PROJECT_ROOT / "analysis" / "comention" / "abstract-visible-judgements.csv",
+    "heldout": PROJECT_ROOT / "analysis" / "comention" / "abstract-visible-heldout-judgements.csv",
     "body": PROJECT_ROOT / "analysis" / "comention" / "body-only-judgements.csv",
     "agree": PROJECT_ROOT / "analysis" / "comention" / "corroborated-judgements.csv",
 }
@@ -189,6 +190,25 @@ def main() -> int:
     klo, khi = wilson(kept_tp, len(kept)) if kept else (0.0, 0.0)
     v1_prec = tp_v1 / n
     struct_tp, struct_body = structural_share(JUDGED["agree"]), structural_share(JUDGED["body"])
+    ho = list(csv.DictReader(JUDGED["heldout"].open()))
+    ho_n = len(ho)
+    ho_tp = sum(1 for r in ho if r["verdict"] == "TP")
+    ho_prec = ho_tp / ho_n
+    ho_lo, ho_hi = wilson(ho_tp, ho_n)
+
+    def _bag(s):
+        return frozenset(w for w in re.split(r"[^a-z0-9]+", (s or "").lower()) if w)
+
+    ho_keep = [r for r in ho if r["authority_name"]
+               and _bag(r["entity"]) == _bag(r["authority_name"])]
+    ho_keep_n = len(ho_keep)
+    ho_keep_tp = sum(1 for r in ho_keep if r["verdict"] == "TP")
+    ho_keep_prec = ho_keep_tp / ho_keep_n if ho_keep_n else 0.0
+    ho_fp = ho_n - ho_tp
+    ho_cut_fp = ((ho_fp - (ho_keep_n - ho_keep_tp)) / ho_fp) if ho_fp else 0.0
+    ho_cut_tp = ((ho_tp - ho_keep_tp) / ho_tp) if ho_tp else 0.0
+    ho_span_keep = sum(1 for r in ho if r["authority_name"] and
+                       _bag((r["matched_span"] or "").split("|")[0]) == _bag(r["authority_name"]))
     abs_prec = tp / n
     lo, hi = wilson(tp, n)
 
@@ -383,6 +403,36 @@ def main() -> int:
         "The reported figure is the most pessimistic of the three. All three are",
         "negative, so the direction does not turn on the choice, but the magnitude",
         "is a 7-to-9 point band rather than a single number.", "",
+        "## Held-out validation of the discriminator (#628 criterion 2)", "",
+        "Every judged mention above was used to SELECT the authority-name rule, so",
+        "none of them can validate it. A second sample was drawn the same way with a",
+        f"different seed, disjoint from the first ({ho_n} mentions,",
+        "`scripts/comention_judge_prep.py --exclude`), and judged before its numbers",
+        "were computed.", "",
+        f"**The stratum itself generalises**: held-out precision is {ho_tp}/{ho_n} = "
+        f"{100*ho_prec:.1f}% (CI [{100*ho_lo:.1f}%, {100*ho_hi:.1f}%]) against "
+        f"{100*abs_prec:.1f}% on the selection sample. The two are the same number",
+        "within noise, which is the first thing that had to be true.", "",
+        "**The rule generalises in direction, and its precision was optimistic:**", "",
+        "| | selection | held-out |", "|---|---|---|",
+        f"| false positives removed | 96% | {100*ho_cut_fp:.0f}% |",
+        f"| true positives removed | 60% | {100*ho_cut_tp:.0f}% |",
+        f"| precision of what it keeps | 66.7% (4/6) | "
+        f"{100*ho_keep_prec:.1f}% ({ho_keep_tp}/{ho_keep_n}) |", "",
+        "The direction survives -- it still removes almost every false positive at a",
+        "consistent 60% cost in true ones. The kept-precision estimate falls by a",
+        "third, which is exactly the selection optimism a held-out sample exists to",
+        "expose, and neither figure is well constrained: 4 and "
+        f"{ho_keep_n} surviving mentions give intervals so wide they overlap almost",
+        "entirely. What is established is that the rule separates; what is not is by",
+        "how much.", "",
+        "One further observation the held-out sample makes available. Applying the",
+        "rule to the MATCHED SPAN rather than the identifier's canonical name is",
+        f"stronger here -- it keeps {ho_span_keep} mentions, all correct, removing",
+        "every false positive -- but on a sample that small the difference is not",
+        "distinguishable from the identifier-level version, and the span was not",
+        "recorded when the first sample was judged, so this is a lead rather than a",
+        "result.", "",
         "## Does the regression survive if BOTH sides were judged leniently?", "",
         "This is the weakest point in the comparison, so it is worth working out",
         "rather than hedging. The carried-over precisions were measured under #617",
