@@ -53,6 +53,15 @@ measured cancer-domain sense where one exists (1 of the 75) and dropped otherwis
 (the other 74). Both counts are reported at build time. Dropping costs recall,
 which this module already treats as the cheaper loss.
 
+AUDITABILITY
+------------
+The build also writes `comention/audit-sample.jsonl.gz`: a uniform reservoir
+sample of matched sentences with their resolved entity names. This layer's
+precision has never been measured, and the alias map is its acknowledged weak
+point -- an unauditable weak point is indistinguishable from a sound one. The
+sample is drawn across the whole run rather than from the first shard, because
+shards are ordered by PMCID and a prefix would sample the oldest literature.
+
 Usage:
     python scripts/atlas_comention.py --limit 1     # one shard, smoke test
     python scripts/atlas_comention.py               # all shards
@@ -64,6 +73,7 @@ import collections
 import gzip
 import json
 import pickle
+import random
 import re
 import sys
 import time
@@ -178,7 +188,17 @@ def sentence_entities(sentence: str, alias: dict) -> set:
     return found
 
 
-def process_shard(path: Path, alias: dict, pairs: collections.Counter) -> dict:
+# A uniform sample of matched sentences, written alongside the counts so this
+# layer's precision can be AUDITED. Without it the build emits pair counts and
+# nothing that would let anyone check whether a match is real -- the alias map
+# is this module's acknowledged weak point, and an unauditable weak point is
+# indistinguishable from a sound one.
+AUDIT_SAMPLE = 400
+_AUDIT_SEED = 20260803
+
+
+def process_shard(path: Path, alias: dict, pairs: collections.Counter,
+                  audit=None, rng=None) -> dict:
     docs = sents = mentions = kept_sents = 0
     with gzip.open(path, "rt", encoding="utf-8", errors="ignore") as fh:
         for line in fh:
@@ -197,6 +217,19 @@ def process_shard(path: Path, alias: dict, pairs: collections.Counter) -> dict:
                 for a in range(len(ordered)):
                     for b in range(a + 1, len(ordered)):
                         pairs[(ordered[a], ordered[b])] += 1
+                if audit is not None:
+                    # Algorithm R over every kept sentence in the whole run, so
+                    # the sample is uniform across shards rather than a prefix
+                    # of the first one.
+                    audit["seen"] += 1
+                    row = {"pmid": rec.get("pmid"), "sentence": sentence,
+                           "entities": ordered}
+                    if len(audit["rows"]) < AUDIT_SAMPLE:
+                        audit["rows"].append(row)
+                    else:
+                        j = rng.randrange(audit["seen"])
+                        if j < AUDIT_SAMPLE:
+                            audit["rows"][j] = row
     return {"docs": docs, "sentences": sents, "kept_sentences": kept_sents,
             "mentions": mentions}
 
@@ -242,9 +275,11 @@ def main() -> None:
     print(f"shards: {len(shards)} total, {len(todo)} this run", flush=True)
 
     pairs: collections.Counter = collections.Counter()
+    audit = {"rows": [], "seen": 0}
+    arng = random.Random(_AUDIT_SEED)
     for i, s in enumerate(todo, 1):
         t0 = time.time()
-        stats = process_shard(s, alias, pairs)
+        stats = process_shard(s, alias, pairs, audit=audit, rng=arng)
         stats["done"] = True
         stats["seconds"] = round(time.time() - t0, 1)
         man["shards"][s.name] = stats
@@ -265,6 +300,18 @@ def main() -> None:
         for (a, b), c in pairs.most_common():
             fh.write(f"{a}\t{b}\t{c}\n")
     print(f"\nwrote {pf}: {len(pairs):,} distinct co-mentioned pairs")
+
+    # The audit sample, written with the entity NAMES resolved so a reader can
+    # judge a match without querying the index.
+    if audit["rows"]:
+        ap_path = out_dir / "audit-sample.jsonl.gz"
+        with gzip.open(ap_path, "wt", encoding="utf-8") as fh:
+            for row in audit["rows"]:
+                row = dict(row)
+                row["entity_names"] = [idx["canon"].get(e, e) for e in row["entities"]]
+                fh.write(json.dumps(row) + "\n")
+        print(f"wrote {ap_path}: {len(audit['rows'])} sentences uniformly sampled "
+              f"from {audit['seen']:,} kept, for precision auditing")
 
 
 if __name__ == "__main__":

@@ -979,3 +979,44 @@ def test_headline_numbers_match_their_source_json():
             if value not in text and value.replace("x", "×") not in text:
                 missing.append(f"{doc} does not quote {value}")
     assert not missing, "stale or missing figures:\n  " + "\n  ".join(missing)
+
+
+def test_comention_audit_sample_is_uniform_across_shards():
+    """The sample must not be a prefix of the first shard.
+
+    Full-text shards are ordered by PMCID, which correlates with publication
+    date, so keeping the first N kept sentences would sample the oldest
+    literature -- the same failure that once corrupted the emergence layer when
+    the index stored a lexicographic PMID prefix.
+    """
+    import collections
+    import random
+    import atlas_comention as cm
+
+    audit = {"rows": [], "seen": 0}
+    rng = random.Random(cm._AUDIT_SEED)
+    # simulate two shards; the second must be represented in the sample
+    for shard in (0, 1):
+        for i in range(cm.AUDIT_SAMPLE * 5):
+            audit["seen"] += 1
+            row = {"pmid": f"{shard}-{i}", "sentence": "s", "entities": ["a", "b"]}
+            if len(audit["rows"]) < cm.AUDIT_SAMPLE:
+                audit["rows"].append(row)
+            else:
+                j = rng.randrange(audit["seen"])
+                if j < cm.AUDIT_SAMPLE:
+                    audit["rows"][j] = row
+    shards = collections.Counter(r["pmid"].split("-")[0] for r in audit["rows"])
+    assert len(audit["rows"]) == cm.AUDIT_SAMPLE
+    assert shards["1"] > 0, "a later shard is unrepresented -- the sample is a prefix"
+    assert shards["0"] > 0, "the first shard vanished entirely"
+
+
+def test_comention_process_shard_audit_is_optional():
+    """The audit must not be required, so an existing caller keeps working."""
+    import collections
+    import atlas_comention as cm
+    import inspect
+    sig = inspect.signature(cm.process_shard)
+    assert sig.parameters["audit"].default is None
+    assert sig.parameters["rng"].default is None
