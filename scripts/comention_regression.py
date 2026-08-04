@@ -149,8 +149,16 @@ def main() -> int:
         return 1
 
     judged = list(csv.DictReader(JUDGED.open()))
-    tp = sum(1 for r in judged if r["verdict"] == "TP")
     n = len(judged)
+    # verdict_v2 judges at the IDENTIFIER level: does the sentence discuss the
+    # entity the identifier DENOTES, per NLM, rather than merely contain the
+    # matched string. `verdict` is the first pass and is retained so the
+    # correction below is checkable.
+    key = "verdict_v2" if "verdict_v2" in judged[0] else "verdict"
+    tp = sum(1 for r in judged if r[key] == "TP")
+    tp_v1 = sum(1 for r in judged if r["verdict"] == "TP")
+    kept = [r for r in judged if r.get("is_authority_name") == "True"]
+    kept_tp = sum(1 for r in kept if r[key] == "TP")
     abs_prec = tp / n
     lo, hi = wilson(tp, n)
 
@@ -182,14 +190,36 @@ def main() -> int:
         "corroborates a smaller share of them. The abstract-visible stratum -- the",
         "only one that can contain false positives, since PubTator read that text --",
         f"nearly tripled.", "",
+        "## A correction to how this was judged", "",
+        "The first pass judged the SURFACE FORM: does the sentence contain the",
+        "string that matched? That is the wrong question, and it flattered the",
+        f"layer. It gave {100*tp_v1/n:.1f}% on this sample.", "",
+        "The right question is whether the sentence discusses the entity the",
+        "IDENTIFIER denotes, because that identifier is what the co-mention pair is",
+        "recorded against. Checked against NLM's own descriptor labels, the matched",
+        "forms routinely resolve to something else entirely:", "",
+        "| matched form | what the identifier actually denotes |", "|---|---|",
+        "| `apoptosis` | Malformations of Cortical Development, Group I |",
+        "| `node` | Sick Sinus Syndrome |",
+        "| `chemotherapy` | Chemotherapy-Related Cognitive Impairment |",
+        "| `resistance` | Disease Resistance (host resistance, not drug) |",
+        "| `Migration` | Tooth Migration |",
+        "| `Aging` | Aging, Premature |",
+        "| `artery` | Renal Artery Obstruction |", "",
+        "Every one of those was scored correct on the first pass. None is.", "",
         "## Hand-judged precision on that stratum", "",
         f"{n} mentions were read individually "
-        f"(`analysis/comention/abstract-visible-judgements.csv`, seeded sample):",
-        f"**{tp}/{n} = {100*abs_prec:.1f}%** correct, 95% CI "
-        f"[{100*lo:.1f}%, {100*hi:.1f}%], against "
-        f"{100*PRIOR_ABSTRACT_PRECISION:.1f}% before.", "",
-        "The stratum got cleaner and still cost precision overall, because it",
-        "tripled in size. The weighted total:", "",
+        f"(`analysis/comention/abstract-visible-judgements.csv`, seeded sample, "
+        f"with each identifier's NLM label attached so the judgement is checkable):",
+        f"**{tp}/{n} = {100*abs_prec:.1f}%** correct at the identifier level, 95% CI "
+        f"[{100*lo:.1f}%, {100*hi:.1f}%].", "",
+        f"That is against {100*PRIOR_ABSTRACT_PRECISION:.1f}% before the filter",
+        "change -- but the two are NOT known to be methodologically comparable. The",
+        "earlier figure was produced under #617 and may have used the same",
+        "surface-form criterion this document has just abandoned. Read the",
+        "comparison as indicative; the identifier-level number is the sound one.", "",
+        "So the stratum did not measurably get cleaner, and it tripled in size.",
+        "The weighted total:", "",
         "| stratum | before | after |", "|---|---|---|",
         f"| corroborated | {100*sb['agree']:.1f}% x {100*AGREE_PRECISION:.1f}% | "
         f"{100*sa['agree']:.1f}% x {100*AGREE_PRECISION:.1f}% |",
@@ -259,6 +289,30 @@ def main() -> int:
         "  `atlas-module-support.md`, which argues a zero in the relation column is",
         "  an extraction failure rather than absence of evidence -- a claim that",
         "  should now be read against 50% precision, not 55%.", "",
+        "## A discriminator that does work (#628)", "",
+        "The filters above fail because they measure how OFTEN a form appears, and",
+        "the offenders are common words. The signal that separates them is whether",
+        "the form is a NAME of the entity at all -- which the index cannot answer,",
+        "since its `canon` field is just the most frequent surface form and is",
+        "therefore circular. NLM's descriptor labels are external.", "",
+        "Requiring the matched form to be the entity's authority name, compared as a",
+        "word bag so `squamous cell carcinoma` matches `Carcinoma, Squamous Cell`:", "",
+        "| | true | false |", "|---|---|---|",
+        f"| kept | {kept_tp} | {len(kept)-kept_tp} |",
+        f"| cut | {tp-kept_tp} | {(n-tp)-(len(kept)-kept_tp)} |", "",
+        f"It removes **{100*((n-tp)-(len(kept)-kept_tp))/max(1,n-tp):.0f}% of false",
+        f"positives** and {100*(tp-kept_tp)/max(1,tp):.0f}% of true ones, lifting",
+        f"precision on what it keeps from {100*abs_prec:.1f}% to "
+        f"{100*kept_tp/max(1,len(kept)):.1f}%. Against filters that cut nothing at",
+        "all, that is a discriminator rather than a threshold.", "",
+        "It is aggressive, and on a stratum this impure that is the right trade: a",
+        "60% loss of true matches buys a near-total removal of false ones. But it is",
+        "NOT yet a recommendation. It was selected on this sample, so its numbers are",
+        f"optimistic by construction, only {len(kept)} mentions survive it (95% CI",
+        "on the kept precision is very wide), and it has been tested only on the",
+        "abstract-visible stratum. #628 records what a real evaluation needs: a",
+        "held-out judged sample, and a MeSH/NCBI label dump so the check does not",
+        "depend on a live API.", "",
         "## Limits", "",
         f"* {n} judged mentions gives a wide interval "
         f"([{100*lo:.1f}%, {100*hi:.1f}%]); the direction of the net change is",
@@ -266,6 +320,13 @@ def main() -> int:
         "* Judgement is mine and unblinded. I knew which run each sentence came",
         "  from, which is exactly the bias that would flatter a fix I wrote, and",
         "  the result runs against my own prior change rather than for it.",
+        "* The first pass of that judgement was WRONG in a way that flattered the",
+        "  layer, and it was caught only because an unrelated experiment surfaced",
+        "  the authority labels. The corrected verdicts are committed beside the",
+        "  originals so the correction itself can be audited.",
+        "* The carried-over strata were judged under #617 and may share the",
+        "  surface-form flaw. If they do, 92.5% and 30.8% are upper bounds and the",
+        "  weighted total is optimistic on both sides of the comparison.",
         "* Body-only and corroborated precision are carried over unmeasured.",
     ]
 

@@ -30,7 +30,9 @@ def test_the_judgements_are_committed_and_match_the_reported_precision():
     rows = list(csv.DictReader(JUDGED.open()))
     assert len(rows) >= 50, f"only {len(rows)} judged mentions"
     assert {r["verdict"] for r in rows} <= {"TP", "FP"}
-    tp = sum(1 for r in rows if r["verdict"] == "TP")
+    # The reported number uses the identifier-level verdicts; `verdict` is kept
+    # as the superseded first pass so the correction stays auditable.
+    tp = sum(1 for r in rows if r["verdict_v2"] == "TP")
     d = _raw()["after"]
     assert d["judged_n"] == len(rows) and d["judged_tp"] == tp
     assert abs(d["abstract_precision"] - tp / len(rows)) < 1e-12
@@ -113,3 +115,50 @@ def test_the_source_fix_is_reported_as_insufficient():
     txt = DOC.read_text()
     assert "It is not enough" in txt
     assert "0 of 37" in txt, "the inert-filter measurement is missing"
+
+
+def test_judging_is_at_the_identifier_level_not_the_surface_form():
+    """The correction that changed the headline.
+
+    The first pass asked whether the sentence contained the matched string. The
+    identifier is what the co-mention pair is recorded against, so the right
+    question is whether the sentence discusses what that identifier DENOTES.
+    `apoptosis` resolving to Malformations of Cortical Development scored
+    correct under the first criterion and is plainly wrong.
+    """
+    rows = list(csv.DictReader(JUDGED.open()))
+    assert "verdict_v2" in rows[0], "identifier-level verdicts are missing"
+    assert "authority_name" in rows[0], "the NLM label is not attached, so the "\
+        "judgement cannot be checked by a reader"
+    v2 = sum(1 for r in rows if r["verdict_v2"] == "TP")
+    v1 = sum(1 for r in rows if r["verdict"] == "TP")
+    assert v2 < v1, "the stricter criterion should not be more permissive"
+    d = _raw()["after"]
+    assert abs(d["abstract_precision"] - v2 / len(rows)) < 1e-12, \
+        "the reported precision does not use the identifier-level verdicts"
+    # Spot-check the case that exposed the flaw.
+    apop = [r for r in rows if r["surface_form"].lower() == "apoptosis"]
+    assert apop and apop[0]["verdict_v2"] == "FP", \
+        "apoptosis -> Malformations of Cortical Development is not a true positive"
+
+
+def test_the_authority_discriminator_is_measured_and_not_yet_recommended():
+    """#628's first acceptance criterion, and its honest scope.
+
+    It must beat the filters it replaces on the judged sample, and it must be
+    labelled as selected-on-this-sample rather than validated.
+    """
+    rows = list(csv.DictReader(JUDGED.open()))
+    kept = [r for r in rows if r["is_authority_name"] == "True"]
+    assert kept, "the discriminator column is missing or never fires"
+    kept_tp = sum(1 for r in kept if r["verdict_v2"] == "TP")
+    all_tp = sum(1 for r in rows if r["verdict_v2"] == "TP")
+    all_fp = len(rows) - all_tp
+    cut_fp = all_fp - (len(kept) - kept_tp)
+    # It must remove the great majority of false positives -- the support and
+    # share filters removed none, which is the comparison that matters.
+    assert cut_fp / all_fp > 0.8, f"only {100*cut_fp/all_fp:.0f}% of FPs removed"
+    assert kept_tp / len(kept) > all_tp / len(rows), "precision did not improve"
+    txt = DOC.read_text()
+    assert "NOT yet a recommendation" in txt
+    assert "selected on this sample" in txt
