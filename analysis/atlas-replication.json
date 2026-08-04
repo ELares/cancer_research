@@ -1,0 +1,1437 @@
+{
+  "quiet_years": 5,
+  "latest_year": 2026,
+  "eligible_pairs": 1990659,
+  "orphans": 1310759,
+  "overall_replication_rate": 0.22704089449775175,
+  "cohorts": [
+    {
+      "year": 1950,
+      "pairs": 238,
+      "replicated": 61,
+      "rate": 0.25630252100840334
+    },
+    {
+      "year": 1951,
+      "pairs": 307,
+      "replicated": 76,
+      "rate": 0.247557003257329
+    },
+    {
+      "year": 1952,
+      "pairs": 238,
+      "replicated": 52,
+      "rate": 0.2184873949579832
+    },
+    {
+      "year": 1953,
+      "pairs": 244,
+      "replicated": 62,
+      "rate": 0.2540983606557377
+    },
+    {
+      "year": 1954,
+      "pairs": 273,
+      "replicated": 71,
+      "rate": 0.2600732600732601
+    },
+    {
+      "year": 1955,
+      "pairs": 291,
+      "replicated": 73,
+      "rate": 0.2508591065292096
+    },
+    {
+      "year": 1956,
+      "pairs": 309,
+      "replicated": 80,
+      "rate": 0.2588996763754045
+    },
+    {
+      "year": 1957,
+      "pairs": 336,
+      "replicated": 71,
+      "rate": 0.2113095238095238
+    },
+    {
+      "year": 1958,
+      "pairs": 335,
+      "replicated": 63,
+      "rate": 0.1880597014925373
+    },
+    {
+      "year": 1959,
+      "pairs": 365,
+      "replicated": 66,
+      "rate": 0.18082191780821918
+    },
+    {
+      "year": 1960,
+      "pairs": 351,
+      "replicated": 66,
+      "rate": 0.18803418803418803
+    },
+    {
+      "year": 1961,
+      "pairs": 432,
+      "replicated": 92,
+      "rate": 0.21296296296296297
+    },
+    {
+      "year": 1962,
+      "pairs": 492,
+      "replicated": 97,
+      "rate": 0.19715447154471544
+    },
+    {
+      "year": 1963,
+      "pairs": 264,
+      "replicated": 35,
+      "rate": 0.13257575757575757
+    },
+    {
+      "year": 1965,
+      "pairs": 486,
+      "replicated": 107,
+      "rate": 0.22016460905349794
+    },
+    {
+      "year": 1966,
+      "pairs": 740,
+      "replicated": 183,
+      "rate": 0.2472972972972973
+    },
+    {
+      "year": 1967,
+      "pairs": 856,
+      "replicated": 186,
+      "rate": 0.21728971962616822
+    },
+    {
+      "year": 1968,
+      "pairs": 862,
+      "replicated": 194,
+      "rate": 0.22505800464037123
+    },
+    {
+      "year": 1969,
+      "pairs": 911,
+      "replicated": 218,
+      "rate": 0.23929747530186607
+    },
+    {
+      "year": 1970,
+      "pairs": 995,
+      "replicated": 265,
+      "rate": 0.2663316582914573
+    },
+    {
+      "year": 1971,
+      "pairs": 1191,
+      "replicated": 345,
+      "rate": 0.28967254408060455
+    },
+    {
+      "year": 1972,
+      "pairs": 1179,
+      "replicated": 391,
+      "rate": 0.33163698049194235
+    },
+    {
+      "year": 1973,
+      "pairs": 1260,
+      "replicated": 474,
+      "rate": 0.3761904761904762
+    },
+    {
+      "year": 1974,
+      "pairs": 1444,
+      "replicated": 513,
+      "rate": 0.35526315789473684
+    },
+    {
+      "year": 1975,
+      "pairs": 5760,
+      "replicated": 1892,
+      "rate": 0.3284722222222222
+    },
+    {
+      "year": 1976,
+      "pairs": 5532,
+      "replicated": 1646,
+      "rate": 0.2975415762834418
+    },
+    {
+      "year": 1977,
+      "pairs": 5545,
+      "replicated": 1525,
+      "rate": 0.2750225428313796
+    },
+    {
+      "year": 1978,
+      "pairs": 5393,
+      "replicated": 1576,
+      "rate": 0.2922306693862414
+    },
+    {
+      "year": 1979,
+      "pairs": 6319,
+      "replicated": 1787,
+      "rate": 0.2827979110618769
+    },
+    {
+      "year": 1980,
+      "pairs": 7013,
+      "replicated": 1949,
+      "rate": 0.2779124483102809
+    },
+    {
+      "year": 1981,
+      "pairs": 7371,
+      "replicated": 2195,
+      "rate": 0.29778863112196446
+    },
+    {
+      "year": 1982,
+      "pairs": 8273,
+      "replicated": 2477,
+      "rate": 0.2994077118336758
+    },
+    {
+      "year": 1983,
+      "pairs": 10130,
+      "replicated": 3030,
+      "rate": 0.29911154985192495
+    },
+    {
+      "year": 1984,
+      "pairs": 11526,
+      "replicated": 3355,
+      "rate": 0.29108103418358494
+    },
+    {
+      "year": 1985,
+      "pairs": 11934,
+      "replicated": 3294,
+      "rate": 0.27601809954751133
+    },
+    {
+      "year": 1986,
+      "pairs": 12863,
+      "replicated": 3578,
+      "rate": 0.2781621705667418
+    },
+    {
+      "year": 1987,
+      "pairs": 13183,
+      "replicated": 3681,
+      "rate": 0.27922324205416066
+    },
+    {
+      "year": 1988,
+      "pairs": 13083,
+      "replicated": 3691,
+      "rate": 0.28212183749904457
+    },
+    {
+      "year": 1989,
+      "pairs": 15904,
+      "replicated": 4340,
+      "rate": 0.272887323943662
+    },
+    {
+      "year": 1990,
+      "pairs": 16542,
+      "replicated": 4499,
+      "rate": 0.27197436827469473
+    },
+    {
+      "year": 1991,
+      "pairs": 16864,
+      "replicated": 4663,
+      "rate": 0.2765061669829222
+    },
+    {
+      "year": 1992,
+      "pairs": 18460,
+      "replicated": 4982,
+      "rate": 0.2698808234019502
+    },
+    {
+      "year": 1993,
+      "pairs": 19030,
+      "replicated": 5305,
+      "rate": 0.2787703625853915
+    },
+    {
+      "year": 1994,
+      "pairs": 21286,
+      "replicated": 5948,
+      "rate": 0.27943249083904914
+    },
+    {
+      "year": 1995,
+      "pairs": 22597,
+      "replicated": 6093,
+      "rate": 0.26963756250829757
+    },
+    {
+      "year": 1996,
+      "pairs": 23960,
+      "replicated": 6514,
+      "rate": 0.27186978297161934
+    },
+    {
+      "year": 1997,
+      "pairs": 24930,
+      "replicated": 6823,
+      "rate": 0.2736863217007621
+    },
+    {
+      "year": 1998,
+      "pairs": 27386,
+      "replicated": 7437,
+      "rate": 0.27156211202804353
+    },
+    {
+      "year": 1999,
+      "pairs": 29467,
+      "replicated": 8221,
+      "rate": 0.278990056673567
+    },
+    {
+      "year": 2000,
+      "pairs": 31375,
+      "replicated": 8799,
+      "rate": 0.28044621513944223
+    },
+    {
+      "year": 2001,
+      "pairs": 34827,
+      "replicated": 10030,
+      "rate": 0.2879949464495937
+    },
+    {
+      "year": 2002,
+      "pairs": 37726,
+      "replicated": 10578,
+      "rate": 0.28039018183745956
+    },
+    {
+      "year": 2003,
+      "pairs": 42289,
+      "replicated": 11759,
+      "rate": 0.27806285322424273
+    },
+    {
+      "year": 2004,
+      "pairs": 49768,
+      "replicated": 13061,
+      "rate": 0.2624377109789423
+    },
+    {
+      "year": 2005,
+      "pairs": 52921,
+      "replicated": 13731,
+      "rate": 0.2594622172672474
+    },
+    {
+      "year": 2006,
+      "pairs": 55501,
+      "replicated": 13840,
+      "rate": 0.249364876308535
+    },
+    {
+      "year": 2007,
+      "pairs": 58819,
+      "replicated": 14459,
+      "rate": 0.2458219282884782
+    },
+    {
+      "year": 2008,
+      "pairs": 62734,
+      "replicated": 15082,
+      "rate": 0.240411897854433
+    },
+    {
+      "year": 2009,
+      "pairs": 65704,
+      "replicated": 15893,
+      "rate": 0.24188786070863266
+    },
+    {
+      "year": 2010,
+      "pairs": 69596,
+      "replicated": 16714,
+      "rate": 0.24015748031496062
+    },
+    {
+      "year": 2011,
+      "pairs": 75237,
+      "replicated": 17737,
+      "rate": 0.23574836848890837
+    },
+    {
+      "year": 2012,
+      "pairs": 83451,
+      "replicated": 18947,
+      "rate": 0.2270434146984458
+    },
+    {
+      "year": 2013,
+      "pairs": 89475,
+      "replicated": 19402,
+      "rate": 0.21684269348980162
+    },
+    {
+      "year": 2014,
+      "pairs": 92489,
+      "replicated": 19953,
+      "rate": 0.21573376293397054
+    },
+    {
+      "year": 2015,
+      "pairs": 97609,
+      "replicated": 19772,
+      "rate": 0.20256328822137304
+    },
+    {
+      "year": 2016,
+      "pairs": 97022,
+      "replicated": 18851,
+      "rate": 0.19429613902001608
+    },
+    {
+      "year": 2017,
+      "pairs": 93421,
+      "replicated": 17769,
+      "rate": 0.19020348743858448
+    },
+    {
+      "year": 2018,
+      "pairs": 93488,
+      "replicated": 17701,
+      "rate": 0.18933980831764505
+    },
+    {
+      "year": 2019,
+      "pairs": 103546,
+      "replicated": 18573,
+      "rate": 0.1793695555598478
+    },
+    {
+      "year": 2020,
+      "pairs": 107374,
+      "replicated": 18593,
+      "rate": 0.17316110045262353
+    },
+    {
+      "year": 2021,
+      "pairs": 120822,
+      "replicated": 16187,
+      "rate": 0.13397394514244096
+    }
+  ],
+  "focus_orphans": [
+    {
+      "year": 1975,
+      "a": "DLD",
+      "b": "effusion"
+    },
+    {
+      "year": 1975,
+      "a": "DLD",
+      "b": "neuroectodermal tumor"
+    },
+    {
+      "year": 1981,
+      "a": "GCH1",
+      "b": "poly(A)"
+    },
+    {
+      "year": 1983,
+      "a": "SLC3A2",
+      "b": "acute lymphoblastic leukemia"
+    },
+    {
+      "year": 1984,
+      "a": "SLC3A2",
+      "b": "fibrosarcoma"
+    },
+    {
+      "year": 1984,
+      "a": "GCH1",
+      "b": "methotrexate"
+    },
+    {
+      "year": 1985,
+      "a": "p53",
+      "b": "CHRFAM7A"
+    },
+    {
+      "year": 1985,
+      "a": "SLC3A2",
+      "b": "sarcoma"
+    },
+    {
+      "year": 1986,
+      "a": "SLC3A2",
+      "b": "SLC8A1"
+    },
+    {
+      "year": 1986,
+      "a": "p53",
+      "b": "preleukemia"
+    },
+    {
+      "year": 1987,
+      "a": "SLC3A2",
+      "b": "familial adenomatous polyposis"
+    },
+    {
+      "year": 1987,
+      "a": "SLC3A2",
+      "b": "CAI"
+    },
+    {
+      "year": 1987,
+      "a": "parathyroid hormone",
+      "b": "SLC3A2"
+    },
+    {
+      "year": 1987,
+      "a": "DLD",
+      "b": "nitroxide"
+    },
+    {
+      "year": 1987,
+      "a": "DLD",
+      "b": "quinone"
+    },
+    {
+      "year": 1987,
+      "a": "DLD",
+      "b": "neuroblastoma"
+    },
+    {
+      "year": 1987,
+      "a": "GCH1",
+      "b": "pulmonary nodules"
+    },
+    {
+      "year": 1987,
+      "a": "GCH1",
+      "b": "lung"
+    },
+    {
+      "year": 1988,
+      "a": "SLC3A2",
+      "b": "phorbol ester"
+    },
+    {
+      "year": 1988,
+      "a": "p53",
+      "b": "avarol"
+    },
+    {
+      "year": 1988,
+      "a": "DLD",
+      "b": "leukemia"
+    },
+    {
+      "year": 1988,
+      "a": "SLC3A2",
+      "b": "rectal cancer"
+    },
+    {
+      "year": 1989,
+      "a": "SLC3A2",
+      "b": "A23187"
+    },
+    {
+      "year": 1989,
+      "a": "GCH1",
+      "b": "hCG"
+    },
+    {
+      "year": 1989,
+      "a": "FTL",
+      "b": "p53"
+    },
+    {
+      "year": 1990,
+      "a": "p53",
+      "b": "HOS"
+    },
+    {
+      "year": 1991,
+      "a": "p53",
+      "b": "SP6"
+    },
+    {
+      "year": 1991,
+      "a": "CD45",
+      "b": "p53"
+    },
+    {
+      "year": 1992,
+      "a": "DLD",
+      "b": "glycine"
+    },
+    {
+      "year": 1992,
+      "a": "p53",
+      "b": "CD7"
+    },
+    {
+      "year": 1992,
+      "a": "MCC",
+      "b": "p53"
+    },
+    {
+      "year": 1992,
+      "a": "p53",
+      "b": "isoleucine"
+    },
+    {
+      "year": 1992,
+      "a": "p53",
+      "b": "desmoplastic infantile astrocytoma"
+    },
+    {
+      "year": 1992,
+      "a": "ALP",
+      "b": "p53"
+    },
+    {
+      "year": 1993,
+      "a": "p53",
+      "b": "multiple endocrine neoplasia type 2"
+    },
+    {
+      "year": 1993,
+      "a": "p53",
+      "b": "conditions"
+    },
+    {
+      "year": 1993,
+      "a": "ABCB4",
+      "b": "p53"
+    },
+    {
+      "year": 1993,
+      "a": "catalase",
+      "b": "GPX4"
+    },
+    {
+      "year": 1993,
+      "a": "p53",
+      "b": "2,5-MeC"
+    },
+    {
+      "year": 1993,
+      "a": "p53",
+      "b": "putrescine"
+    },
+    {
+      "year": 1993,
+      "a": "p53",
+      "b": "bronchial tumors"
+    },
+    {
+      "year": 1993,
+      "a": "p53",
+      "b": "dyskeratosis congenita"
+    },
+    {
+      "year": 1994,
+      "a": "p53",
+      "b": "conjunctival tumors"
+    },
+    {
+      "year": 1994,
+      "a": "p53",
+      "b": "Conjunctiva"
+    },
+    {
+      "year": 1994,
+      "a": "ITGA2",
+      "b": "p53"
+    },
+    {
+      "year": 1994,
+      "a": "ABCB1",
+      "b": "p53"
+    },
+    {
+      "year": 1994,
+      "a": "p53",
+      "b": "hemangioendothelioma"
+    },
+    {
+      "year": 1994,
+      "a": "p53",
+      "b": "intestinal polyps"
+    },
+    {
+      "year": 1994,
+      "a": "p21",
+      "b": "DMSO"
+    },
+    {
+      "year": 1994,
+      "a": "beta-globin",
+      "b": "Nrf2"
+    },
+    {
+      "year": 1994,
+      "a": "p53",
+      "b": "nerve injury"
+    },
+    {
+      "year": 1994,
+      "a": "p53",
+      "b": "IQ"
+    },
+    {
+      "year": 1994,
+      "a": "p53",
+      "b": "foot lesion"
+    },
+    {
+      "year": 1994,
+      "a": "p53",
+      "b": "hepatic focal lesions"
+    },
+    {
+      "year": 1994,
+      "a": "p53",
+      "b": "clofibric acid"
+    },
+    {
+      "year": 1994,
+      "a": "p53",
+      "b": "PHC"
+    },
+    {
+      "year": 1994,
+      "a": "p53",
+      "b": "primary aldosteronism"
+    },
+    {
+      "year": 1994,
+      "a": "p53",
+      "b": "neomycin"
+    },
+    {
+      "year": 1994,
+      "a": "p53",
+      "b": "nitroblue tetrazolium"
+    },
+    {
+      "year": 1995,
+      "a": "p53",
+      "b": "PAX8"
+    },
+    {
+      "year": 1995,
+      "a": "p53",
+      "b": "adamantinoma"
+    },
+    {
+      "year": 1995,
+      "a": "p53",
+      "b": "MVAC"
+    },
+    {
+      "year": 1995,
+      "a": "p21",
+      "b": "CDK2"
+    },
+    {
+      "year": 1995,
+      "a": "p53",
+      "b": "chloroethylene oxide"
+    },
+    {
+      "year": 1995,
+      "a": "DQB1",
+      "b": "p53"
+    },
+    {
+      "year": 1995,
+      "a": "p53",
+      "b": "Lewis lung carcinoma"
+    },
+    {
+      "year": 1995,
+      "a": "p53",
+      "b": "elliptinium"
+    },
+    {
+      "year": 1995,
+      "a": "p21",
+      "b": "restenosis"
+    },
+    {
+      "year": 1995,
+      "a": "p21",
+      "b": "9-nitrocamptothecin"
+    },
+    {
+      "year": 1995,
+      "a": "ESCO1",
+      "b": "p53"
+    },
+    {
+      "year": 1995,
+      "a": "p53",
+      "b": "UMP"
+    },
+    {
+      "year": 1995,
+      "a": "p53",
+      "b": "inflammatory pseudotumor"
+    },
+    {
+      "year": 1995,
+      "a": "p53",
+      "b": "germinoma"
+    },
+    {
+      "year": 1995,
+      "a": "CSF2RA",
+      "b": "p53"
+    },
+    {
+      "year": 1995,
+      "a": "cyclooxygenase-2",
+      "b": "B-ALL"
+    },
+    {
+      "year": 1995,
+      "a": "p53",
+      "b": "N-nitrosomethylbenzylamine"
+    },
+    {
+      "year": 1995,
+      "a": "DLD",
+      "b": "lipoic acid"
+    },
+    {
+      "year": 1995,
+      "a": "p53",
+      "b": "GCB"
+    },
+    {
+      "year": 1995,
+      "a": "p53",
+      "b": "dolastatin 10"
+    },
+    {
+      "year": 1995,
+      "a": "p53",
+      "b": "cystadenocarcinoma"
+    },
+    {
+      "year": 1995,
+      "a": "p53",
+      "b": "facial palsy"
+    },
+    {
+      "year": 1995,
+      "a": "DLD",
+      "b": "DMSO"
+    },
+    {
+      "year": 1995,
+      "a": "DLD",
+      "b": "DFP"
+    },
+    {
+      "year": 1995,
+      "a": "DLD",
+      "b": "TLCK"
+    },
+    {
+      "year": 1995,
+      "a": "p53",
+      "b": "oxidoreductase"
+    },
+    {
+      "year": 1995,
+      "a": "p53",
+      "b": "t(1;19"
+    },
+    {
+      "year": 1995,
+      "a": "DLD",
+      "b": "diethylstilbestrol"
+    },
+    {
+      "year": 1995,
+      "a": "DLD",
+      "b": "DES quinone"
+    },
+    {
+      "year": 1995,
+      "a": "p53",
+      "b": "chromosomal fragility"
+    },
+    {
+      "year": 1995,
+      "a": "CD2",
+      "b": "p53"
+    },
+    {
+      "year": 1995,
+      "a": "p21",
+      "b": "mezerein"
+    },
+    {
+      "year": 1995,
+      "a": "p53",
+      "b": "synovial chondromatosis"
+    },
+    {
+      "year": 1995,
+      "a": "DLD",
+      "b": "adenocarcinoma"
+    },
+    {
+      "year": 1995,
+      "a": "p53",
+      "b": "acetone"
+    },
+    {
+      "year": 1995,
+      "a": "p53",
+      "b": "guanine nucleotide"
+    },
+    {
+      "year": 1995,
+      "a": "p53",
+      "b": "cytosine nucleotide"
+    },
+    {
+      "year": 1995,
+      "a": "p53",
+      "b": "procarbazine"
+    },
+    {
+      "year": 1995,
+      "a": "EPHX1",
+      "b": "p53"
+    },
+    {
+      "year": 1995,
+      "a": "p21",
+      "b": "TTP"
+    },
+    {
+      "year": 1995,
+      "a": "CLP1",
+      "b": "p53"
+    },
+    {
+      "year": 1995,
+      "a": "p53",
+      "b": "familial disorder"
+    },
+    {
+      "year": 1995,
+      "a": "pRb",
+      "b": "p53"
+    },
+    {
+      "year": 1995,
+      "a": "p21",
+      "b": "mOS"
+    },
+    {
+      "year": 1995,
+      "a": "p53",
+      "b": "malignant fibrous histiocytoma of bone"
+    },
+    {
+      "year": 1995,
+      "a": "GCH1",
+      "b": "pheochromocytoma"
+    },
+    {
+      "year": 1995,
+      "a": "p53",
+      "b": "DDB"
+    },
+    {
+      "year": 1995,
+      "a": "p53",
+      "b": "dystrophy"
+    },
+    {
+      "year": 1995,
+      "a": "p53",
+      "b": "pulmonary sclerosing hemangioma"
+    },
+    {
+      "year": 1996,
+      "a": "p21",
+      "b": "E6/E7"
+    },
+    {
+      "year": 1996,
+      "a": "p53",
+      "b": "trypan blue"
+    },
+    {
+      "year": 1996,
+      "a": "p53",
+      "b": "diethylstilbestrol"
+    },
+    {
+      "year": 1996,
+      "a": "GCH1",
+      "b": "iNOS"
+    },
+    {
+      "year": 1996,
+      "a": "p21",
+      "b": "bladder"
+    },
+    {
+      "year": 1996,
+      "a": "p53",
+      "b": "testicular mass"
+    },
+    {
+      "year": 1996,
+      "a": "p21",
+      "b": "Tax"
+    },
+    {
+      "year": 1996,
+      "a": "p53",
+      "b": "TPO"
+    },
+    {
+      "year": 1996,
+      "a": "p53",
+      "b": "TNK1"
+    },
+    {
+      "year": 1996,
+      "a": "p53",
+      "b": "hyperparathyroidism"
+    },
+    {
+      "year": 1996,
+      "a": "p53",
+      "b": "xeroderma pigmentosum group A"
+    },
+    {
+      "year": 1996,
+      "a": "p53",
+      "b": "BPD"
+    },
+    {
+      "year": 1996,
+      "a": "p21",
+      "b": "trifluoroethanol"
+    },
+    {
+      "year": 1996,
+      "a": "IRP1",
+      "b": "p53"
+    },
+    {
+      "year": 1996,
+      "a": "cyclin D1",
+      "b": "p53"
+    },
+    {
+      "year": 1996,
+      "a": "PCNA",
+      "b": "p53"
+    },
+    {
+      "year": 1996,
+      "a": "p53",
+      "b": "TR2"
+    },
+    {
+      "year": 1996,
+      "a": "C/EBPalpha",
+      "b": "p53"
+    },
+    {
+      "year": 1996,
+      "a": "p53",
+      "b": "fetal loss"
+    },
+    {
+      "year": 1996,
+      "a": "p53",
+      "b": "diethyl ether"
+    },
+    {
+      "year": 1996,
+      "a": "p53",
+      "b": "NC"
+    },
+    {
+      "year": 1996,
+      "a": "PDGFB",
+      "b": "p53"
+    },
+    {
+      "year": 1996,
+      "a": "p21",
+      "b": "NRG1"
+    },
+    {
+      "year": 1996,
+      "a": "p53",
+      "b": "bistramide D"
+    },
+    {
+      "year": 1996,
+      "a": "p53",
+      "b": "syringocystadenoma papilliferum"
+    },
+    {
+      "year": 1996,
+      "a": "p53",
+      "b": "hereditary carcinomas"
+    },
+    {
+      "year": 1996,
+      "a": "E1A",
+      "b": "p53"
+    },
+    {
+      "year": 1996,
+      "a": "p53",
+      "b": "induration"
+    },
+    {
+      "year": 1996,
+      "a": "p53",
+      "b": "DDC"
+    },
+    {
+      "year": 1996,
+      "a": "p53",
+      "b": "foci"
+    },
+    {
+      "year": 1996,
+      "a": "p53",
+      "b": "UDP-4"
+    },
+    {
+      "year": 1996,
+      "a": "p21",
+      "b": "HIV"
+    },
+    {
+      "year": 1996,
+      "a": "p53",
+      "b": "gingival carcinoma"
+    },
+    {
+      "year": 1996,
+      "a": "p53",
+      "b": "Apt"
+    },
+    {
+      "year": 1996,
+      "a": "p53",
+      "b": "fat"
+    },
+    {
+      "year": 1996,
+      "a": "p53",
+      "b": "loss"
+    },
+    {
+      "year": 1996,
+      "a": "p53",
+      "b": "hormone resistance"
+    },
+    {
+      "year": 1996,
+      "a": "p21",
+      "b": "thyroid"
+    },
+    {
+      "year": 1996,
+      "a": "p21",
+      "b": "papillary carcinoma"
+    },
+    {
+      "year": 1996,
+      "a": "p21",
+      "b": "adenocarcinoma of the esophagus"
+    },
+    {
+      "year": 1996,
+      "a": "p21",
+      "b": "junction"
+    },
+    {
+      "year": 1996,
+      "a": "p53",
+      "b": "spinal cord tumors"
+    },
+    {
+      "year": 1996,
+      "a": "p21",
+      "b": "GM-CSF"
+    },
+    {
+      "year": 1996,
+      "a": "p21",
+      "b": "SCF"
+    },
+    {
+      "year": 1996,
+      "a": "p53",
+      "b": "merocyanine 540"
+    },
+    {
+      "year": 1996,
+      "a": "p53",
+      "b": "calcitonin"
+    },
+    {
+      "year": 1996,
+      "a": "DD1",
+      "b": "p53"
+    },
+    {
+      "year": 1996,
+      "a": "p53",
+      "b": "Ic"
+    },
+    {
+      "year": 1996,
+      "a": "p53",
+      "b": "estramustine"
+    },
+    {
+      "year": 1996,
+      "a": "AK5",
+      "b": "p53"
+    },
+    {
+      "year": 1996,
+      "a": "glycophorin A",
+      "b": "p53"
+    },
+    {
+      "year": 1996,
+      "a": "Gi",
+      "b": "p53"
+    },
+    {
+      "year": 1996,
+      "a": "p53",
+      "b": "oral hairy leukoplakia"
+    },
+    {
+      "year": 1996,
+      "a": "p21",
+      "b": "137Cs"
+    },
+    {
+      "year": 1996,
+      "a": "p53",
+      "b": "lacrimal gland tumors"
+    },
+    {
+      "year": 1996,
+      "a": "p53",
+      "b": "Ad5"
+    },
+    {
+      "year": 1997,
+      "a": "p53",
+      "b": "glycidyl methacrylate"
+    },
+    {
+      "year": 1997,
+      "a": "p53",
+      "b": "nordihydroguaiaretic acid"
+    },
+    {
+      "year": 1997,
+      "a": "p53",
+      "b": "l-stepholidine"
+    },
+    {
+      "year": 1997,
+      "a": "p21",
+      "b": "ASCUS"
+    },
+    {
+      "year": 1997,
+      "a": "CG",
+      "b": "p53"
+    },
+    {
+      "year": 1997,
+      "a": "p21",
+      "b": "juvenile polyposis"
+    },
+    {
+      "year": 1997,
+      "a": "p21",
+      "b": "adrenal adenoma"
+    },
+    {
+      "year": 1997,
+      "a": "cyclooxygenase-2",
+      "b": "retinyl acetate"
+    },
+    {
+      "year": 1997,
+      "a": "p53",
+      "b": "laryngeal papillomatosis"
+    },
+    {
+      "year": 1997,
+      "a": "alpha-glucosidase",
+      "b": "p53"
+    },
+    {
+      "year": 1997,
+      "a": "cyclooxygenase-2",
+      "b": "DuP-697"
+    },
+    {
+      "year": 1997,
+      "a": "p21",
+      "b": "raltitrexed"
+    },
+    {
+      "year": 1997,
+      "a": "p21",
+      "b": "thrombopoietin"
+    },
+    {
+      "year": 1997,
+      "a": "p53",
+      "b": "droloxifene"
+    },
+    {
+      "year": 1997,
+      "a": "p21",
+      "b": "ginsenoside Rg5"
+    },
+    {
+      "year": 1997,
+      "a": "p53",
+      "b": "multiple carcinomas"
+    },
+    {
+      "year": 1997,
+      "a": "p21",
+      "b": "methylprednisolone"
+    },
+    {
+      "year": 1997,
+      "a": "cyclooxygenase-2",
+      "b": "BZA-5B"
+    },
+    {
+      "year": 1997,
+      "a": "p21",
+      "b": "nitrogen mustard"
+    },
+    {
+      "year": 1997,
+      "a": "opiorphin",
+      "b": "p53"
+    },
+    {
+      "year": 1997,
+      "a": "p53",
+      "b": "paraneoplastic neurological syndromes"
+    },
+    {
+      "year": 1997,
+      "a": "p53",
+      "b": "etretinate"
+    },
+    {
+      "year": 1997,
+      "a": "p21",
+      "b": "alpha-tocopherol"
+    },
+    {
+      "year": 1997,
+      "a": "p21",
+      "b": "thymic epithelial tumors"
+    },
+    {
+      "year": 1997,
+      "a": "p53",
+      "b": "atractyloside"
+    },
+    {
+      "year": 1997,
+      "a": "p53",
+      "b": "intestinal carcinoids"
+    },
+    {
+      "year": 1997,
+      "a": "p53",
+      "b": "sodium arsenate"
+    },
+    {
+      "year": 1997,
+      "a": "RGS14",
+      "b": "p53"
+    },
+    {
+      "year": 1997,
+      "a": "A28",
+      "b": "p53"
+    },
+    {
+      "year": 1997,
+      "a": "RPL10A",
+      "b": "p53"
+    },
+    {
+      "year": 1997,
+      "a": "p53",
+      "b": "perianal disease"
+    },
+    {
+      "year": 1997,
+      "a": "p53",
+      "b": "AIDS-KS"
+    },
+    {
+      "year": 1997,
+      "a": "p53",
+      "b": "azelaic bishydroxamic acid"
+    },
+    {
+      "year": 1997,
+      "a": "EF1alpha",
+      "b": "p53"
+    },
+    {
+      "year": 1997,
+      "a": "p21",
+      "b": "teniposide"
+    },
+    {
+      "year": 1997,
+      "a": "p53",
+      "b": "ICI 164,384"
+    }
+  ]
+}

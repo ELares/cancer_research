@@ -1434,3 +1434,47 @@ def test_hifu_is_not_preclinical_and_the_manuscript_says_so():
     assert R["hifu"]["clinical_share"] > 1.4 * R["sonodynamic"]["clinical_share"]
     md = (REPO_ROOT / "article" / "drafts" / "v1.md").read_text()
     assert "7.10%" in md and "not a maturity class" in md
+
+
+# --- replications that never happened (#ATLAS-REPL) ------------------------
+
+def test_replication_cohorts_use_an_equal_window_not_a_minimum():
+    """The bias that manufactured a collapse in the first version.
+
+    Scoring whether a cohort was EVER replicated gave a clean monotonic decline
+    from ~60% in 1950 to 17.5% in 2020. That is not a finding about science: a
+    1975 pair has had fifty years to acquire a second paper and a 2020 pair has
+    had six. Every cohort must be scored on the same interval from its own
+    first assertion.
+    """
+    import json
+    raw = json.loads((REPO_ROOT / "analysis" / "atlas-replication.json").read_text())
+    rows = raw["cohorts"]
+    assert len(rows) > 10
+    early = [r for r in rows if r["year"] < 1980]
+    late = [r for r in rows if 2000 <= r["year"] <= 2014]
+    ea = sum(r["replicated"] for r in early) / max(1, sum(r["pairs"] for r in early))
+    la = sum(r["replicated"] for r in late) / max(1, sum(r["pairs"] for r in late))
+    # with an equal window the two eras must be comparable, not 3x apart
+    assert ea < 2 * la, (
+        f"early {ea:.3f} vs late {la:.3f}: the window looks unequal again")
+    md = (REPO_ROOT / "analysis" / "atlas-replication.md").read_text()
+    assert "equal, not merely a minimum" in md
+
+
+def test_replication_states_it_measures_co_assertion_not_replication():
+    """The word does more work than the measurement supports.
+
+    A second paper asserting the same pair may cite the first rather than test
+    it, and the pair key carries no direction, so a contradiction counts as a
+    replication. Calling that 'replication' without saying so would overclaim.
+    """
+    md = (REPO_ROOT / "analysis" / "atlas-replication.md").read_text()
+    assert "co-assertion" in md.lower()
+    assert "not truth" in md.lower() or "bounds attention" in md.lower()
+
+
+def test_recent_cohort_decline_is_flagged_as_an_upper_bound():
+    """MeSH lag biases the newest cohorts downward, so the drop is not measured."""
+    md = (REPO_ROOT / "analysis" / "atlas-replication.md").read_text()
+    assert "upper bound on a real decline" in md
