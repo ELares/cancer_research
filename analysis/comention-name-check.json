@@ -1,41 +1,41 @@
 {
   "identifiers_with_labels": 29195,
   "forms": {
-    "name": 26228,
-    "other": 17815,
-    "share": 0.5955089344504234
+    "name": 27062,
+    "other": 16981,
+    "share": 0.61444497422973
   },
   "mentions": {
-    "name": 33492597,
-    "other": 28516266,
-    "share": 0.5401259655414098
+    "name": 35395349,
+    "other": 26613514,
+    "share": 0.5708111274351216
   },
   "discriminator": {
     "all": {
       "n": 176,
       "base": 0.32954545454545453,
-      "kept": 48,
-      "kept_tp": 38,
-      "kept_precision": 0.7916666666666666,
+      "kept": 50,
+      "kept_tp": 39,
+      "kept_precision": 0.78,
       "kept_ci": [
-        0.6574082647864652,
-        0.8826985220411018
+        0.6475818431054045,
+        0.8724621377569771
       ],
-      "fp_removed": 0.9152542372881356,
-      "tp_removed": 0.3448275862068966
+      "fp_removed": 0.9067796610169492,
+      "tp_removed": 0.3275862068965517
     },
     "mesh": {
       "n": 160,
       "base": 0.2875,
-      "kept": 34,
-      "kept_tp": 28,
-      "kept_precision": 0.8235294117647058,
+      "kept": 36,
+      "kept_tp": 29,
+      "kept_precision": 0.8055555555555556,
       "kept_ci": [
-        0.6648593225994784,
-        0.9165114439643032
+        0.6497163793648479,
+        0.9024702798054665
       ],
-      "fp_removed": 0.9473684210526315,
-      "tp_removed": 0.391304347826087
+      "fp_removed": 0.9385964912280702,
+      "tp_removed": 0.3695652173913043
     },
     "gene": {
       "n": 16,
@@ -65,31 +65,31 @@
   "at_insertion_point": {
     "strict": {
       "n": 160,
-      "kept": 21,
-      "kept_tp": 21,
+      "kept": 22,
+      "kept_tp": 22,
       "kept_precision": 1.0,
       "fp_removed": 1.0,
-      "tp_removed": 0.5434782608695652
+      "tp_removed": 0.5217391304347826
     },
     "normalised": {
       "n": 160,
-      "kept": 29,
-      "kept_tp": 29,
+      "kept": 30,
+      "kept_tp": 30,
       "kept_precision": 1.0,
       "fp_removed": 1.0,
-      "tp_removed": 0.3695652173913043
+      "tp_removed": 0.34782608695652173
     }
   },
   "c04_cost": {
     "strict": {
       "descriptors_reachable": 670,
-      "mass_retained": 0.24681955061454397,
-      "descriptors_killed": 260
+      "mass_retained": 0.349937825913753,
+      "descriptors_killed": 206
     },
     "normalised": {
       "descriptors_reachable": 670,
-      "mass_retained": 0.6420457633526465,
-      "descriptors_killed": 152
+      "mass_retained": 0.7318180365769971,
+      "descriptors_killed": 126
     }
   }
 }

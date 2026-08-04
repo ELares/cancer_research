@@ -191,3 +191,50 @@ def test_the_cancer_vocabulary_cost_is_measured():
     flat = " ".join(DOC.read_text().split())
     assert "should not be built" in flat, (
         "the document does not warn against building the strict form")
+
+
+def test_the_table_carries_mesh_entry_terms():
+    """A preferred label is not how the literature writes a concept.
+
+    MeSH says `Breast Neoplasms`; papers say `breast cancer`. Without entry
+    terms the rule leaves 260 of 670 cancer descriptors unreachable.
+    """
+    import build_label_source as bls
+
+    t = bls.load_table()
+    breast = t.get("MESH:D001943", [])
+    assert len(breast) > 3, f"Breast Neoplasms has only {len(breast)} names"
+    assert breast[0] == "Breast Neoplasms", "the preferred label must come first"
+    joined = " | ".join(breast).lower()
+    assert "cancer" in joined, "no cancer-worded entry term for Breast Neoplasms"
+    # Across the table, entry terms must be a substantial addition.
+    mesh_names = sum(len(v) for k, v in t.items() if k.startswith("MESH:"))
+    mesh_ids = sum(1 for k in t if k.startswith("MESH:"))
+    assert mesh_names / mesh_ids > 1.2, (
+        f"only {mesh_names/mesh_ids:.2f} names per MeSH identifier; entry terms "
+        "are missing")
+
+
+def test_stopwords_are_dropped_because_mesh_stores_inverted_forms():
+    """`Cancer of Breast` must match `breast cancer` as a bag."""
+    import comention_name_check as c
+
+    assert c.norm_bag("Cancer of Breast") == c.norm_bag("breast cancer")
+    assert c.norm_bag("Breast Neoplasms") == c.norm_bag("breast cancer")
+    # But it must not collapse genuinely different concepts.
+    assert c.norm_bag("lung cancer") != c.norm_bag("breast cancer")
+
+
+def test_the_recommended_rule_beats_the_strict_one_on_both_axes():
+    """Precision is held while the two costs both fall. If either reverses, the
+    recommendation in the document is stale."""
+    d = _raw()
+    i, c = d["at_insertion_point"], d["c04_cost"]
+    assert i["normalised"]["tp_removed"] < i["strict"]["tp_removed"]
+    assert i["normalised"]["kept_precision"] >= i["strict"]["kept_precision"] - 1e-9
+    assert i["normalised"]["fp_removed"] >= i["strict"]["fp_removed"] - 1e-9
+    assert c["normalised"]["mass_retained"] > c["strict"]["mass_retained"]
+    assert c["normalised"]["mass_retained"] > 0.65, (
+        f"cancer vocabulary retention fell to "
+        f"{100*c['normalised']['mass_retained']:.1f}%; the rule is no longer safe "
+        "to build")
