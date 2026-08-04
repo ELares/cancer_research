@@ -151,6 +151,21 @@ def main() -> int:
 
     L += ["---", "", "## What the census did NOT support", "",
           "Reported here because a findings page that only lists wins is marketing.", ""]
+    reg = load("comention-regression.json")
+    if reg and reg["net_change"] < 0:
+        a, b = reg["after"], reg["before"]
+        L += [
+            "**A repair this project made to its own co-mention layer made it "
+            f"worse.** #617 measured the layer at {100*b['weighted']:.0f}% precision, "
+            "traced it to a filter that exempted multi-word forms, and replaced the "
+            "single-token test with two measured filters. Re-measured on a fresh "
+            f"sample after the rebuild, precision FELL to {100*a['weighted']:.0f}%. "
+            "The false positives had been multi-word because the multi-word channel "
+            "was the unfiltered one; closing it moved the pressure to the channel "
+            "just opened, and the top offenders are now bare English words. The "
+            "replacement filters were then measured and do not separate true matches "
+            "from false ones at all.",
+            "*Source:* `comention-regression.md`", ""]
     if disc:
         p = disc["headline"]["precision"]
         L += [f"**Literature-based discovery does not work as built.** The shipped ABC",
@@ -214,8 +229,22 @@ def main() -> int:
     if coment:
         lo = coment["pubtator_agree"] / coment["pubtator_scored"]
         hi = (coment["pubtator_agree"] + coment["body_only"]) / coment["pubtator_scored"]
-        L += ["---", "", "## Every layer now carries a bound", "",
-              f"* co-mention precision: {100*lo:.1f}% to {100*hi:.1f}%",
+        # A hand-judged measurement supersedes the corroboration bound where one
+        # exists. The bound is what this layer had before anyone read its output;
+        # reporting it once a measurement exists overstates what is known and,
+        # here, understates how bad the layer is.
+        reg = load("comention-regression.json")
+        if reg:
+            L += ["---", "", "## Every layer now carries a bound", "",
+                  f"* co-mention precision: **{100*reg['after']['weighted']:.0f}% "
+                  f"measured** (hand-judged, superseding the "
+                  f"{100*lo:.1f}%-{100*hi:.1f}% corroboration bound), and it FELL "
+                  f"{abs(100*reg['net_change']):.0f} points when the #617 filters "
+                  f"were changed",]
+        else:
+            L += ["---", "", "## Every layer now carries a bound", "",
+                  f"* co-mention precision: {100*lo:.1f}% to {100*hi:.1f}%",]
+        L += [
               (f"* contradictions: ambiguity inflates the flag rate "
                f"{contra['mantel_haenszel']:.2f}x" if contra else ""),
               "* emergence: 99.0% precision, 99.6% recall",
