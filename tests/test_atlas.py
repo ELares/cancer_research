@@ -1643,3 +1643,40 @@ def test_model_gaps_collapses_orthologs():
     raw = json.loads((REPO_ROOT / "analysis" / "atlas-model-gaps.json").read_text())
     names = [r["gene"] for r in raw["rows"][:15]]
     assert len(names) == len(set(names)), f"duplicate gene names survived: {names}"
+
+
+# --- the consolidated findings page (#CENSUS-FINDINGS) --------------------
+
+def test_census_findings_is_generated_not_hand_written():
+    """A summary that restates numbers by hand is a summary that rots.
+
+    Every figure must come from the JSON of the analysis that produced it, so
+    re-running an analysis and not updating the summary is impossible.
+    """
+    src = (REPO_ROOT / "scripts" / "census_findings.py").read_text()
+    md = (REPO_ROOT / "analysis" / "census-findings.md").read_text()
+    assert "cannot drift from the measurements" in md
+    # it must READ the artifacts, not embed their values
+    for artifact in ("atlas-landscape.json", "atlas-thesis-position.json",
+                     "atlas-discovery-eval.json"):
+        assert artifact in src
+
+
+def test_census_findings_reports_what_it_did_not_support():
+    """A findings page that only lists wins is marketing.
+
+    The discovery layer failing and the replication collapse being an artifact
+    of my own measurement both belong here as prominently as the successes.
+    """
+    md = (REPO_ROOT / "analysis" / "census-findings.md").read_text()
+    assert "did NOT support" in md
+    assert "does not work as built" in md
+    assert "was not" in md and "observation window" in md
+
+
+def test_census_findings_names_the_integrity_failures():
+    """The broken citations and false verifications must not be quietly dropped."""
+    md = (REPO_ROOT / "analysis" / "census-findings.md").read_text()
+    assert "pointed at unrelated" in md
+    assert "spastic-paraplegia" in md
+    assert "narrower than what it was used for" in md
