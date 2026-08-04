@@ -173,6 +173,21 @@ def _fetch_titles(pmids: list[str]) -> list[dict]:
 # Search-term extraction
 # ---------------------------------------------------------------------------
 
+# Capitalised words that are never proper nouns, so a sentence-initial one
+# carries no search specificity even if the sentence-start rule is relaxed.
+_NON_SPECIFIC = {
+    "one", "two", "three", "four", "five", "six", "seven", "eight", "nine",
+    "ten", "eleven", "twelve", "first", "second", "third", "half", "both",
+    "many", "several", "these", "those", "there", "here", "when", "while",
+    "however", "although", "because", "since", "results", "result", "patients",
+    "researchers", "scientists", "study", "studies", "data", "among", "during",
+}
+
+# The claim and a candidate paper must share at least this many content words
+# before the paper counts as supporting it. Without a check of this kind, ANY
+# non-empty search result was accepted as verification.
+MIN_TITLE_OVERLAP = 2
+
 # Words too common to be useful as search terms
 _STOP_WORDS = {
     "the", "a", "an", "and", "or", "but", "in", "on", "at", "to", "for",
@@ -197,11 +212,18 @@ def extract_search_terms(claim_text: str) -> list[str]:
     caps = re.findall(r"\b[A-Z][a-z]*(?:\s+[A-Z][a-z]*)+\b", claim_text)
     terms.extend(caps)
 
-    # Individual capitalised words that are likely proper nouns / drug names
-    single_caps = re.findall(r"\b[A-Z][a-z]{2,}\b", claim_text)
-    for w in single_caps:
-        if w.lower() not in _STOP_WORDS:
-            terms.append(w)
+    # Individual capitalised words that are likely proper nouns / drug names.
+    # A word is NOT a proper noun merely because it opens a sentence: this rule
+    # used to accept "Seven" from "Seven of these 26 patients had inoperable
+    # tumors", producing the single-term query `Seven`, which matches ~836,000
+    # PubMed records and returned the five most recently indexed.
+    for m in re.finditer(r"\b[A-Z][a-z]{2,}\b", claim_text):
+        before = claim_text[:m.start()].rstrip()
+        sentence_initial = (not before) or before[-1] in ".!?;:"
+        w = m.group(0)
+        if sentence_initial or w.lower() in _STOP_WORDS or w.lower() in _NON_SPECIFIC:
+            continue
+        terms.append(w)
 
     # All-caps acronyms (FDA, OS, PFS, etc.)
     acronyms = re.findall(r"\b[A-Z]{2,6}\b", claim_text)
@@ -219,6 +241,22 @@ def extract_search_terms(claim_text: str) -> list[str]:
             unique.append(t)
 
     return unique
+
+
+def supports_claim(claim_text: str, title: str) -> bool:
+    """Does a candidate paper share enough subject matter to count as support?
+
+    Deliberately crude, and deliberately applied: a supporting citation shares
+    vocabulary with the claim it supports. One that shares nothing is not
+    evidence of anything, whatever the search engine returned.
+    """
+    def words(s: str) -> set:
+        # Compared on a 5-character prefix so morphological variants match:
+        # without it "tumors"/"tumor" and "immune"/"immunity" count as
+        # different words and a genuinely supporting paper is rejected.
+        return {w[:5] for w in re.findall(r"[a-z]{4,}", (s or "").lower())
+                if w not in _STOP_WORDS and w not in _NON_SPECIFIC}
+    return len(words(claim_text) & words(title)) >= MIN_TITLE_OVERLAP
 
 
 # ---------------------------------------------------------------------------
@@ -282,10 +320,18 @@ def verify_claim(
     # --- PubMed fallback ---
     query = " ".join(terms[:5])  # keep query short
     pubmed_hits = search_pubmed(query, max_results=5)
-    if pubmed_hits:
+    # A search that RETURNS something is not a search that FOUND something.
+    # Accepting any non-empty result marked 44 claims "verified" against papers
+    # sharing no subject matter at all -- an electric-fields brain-cancer claim
+    # against freshwater fish biodiversity and speech-language pathology --
+    # because a degenerate query returns the most recently indexed records.
+    # See analysis/news-verification-audit.md.
+    supporting = [h for h in pubmed_hits
+                  if h.get("pmid") and supports_claim(claim.get("text", ""), h.get("title", ""))]
+    if supporting:
         claim["verification_status"] = "verified"
         claim["verification_source"] = "pubmed"
-        claim["linked_pmids"] = [h["pmid"] for h in pubmed_hits if h.get("pmid")]
+        claim["linked_pmids"] = [h["pmid"] for h in supporting]
         return claim
 
     # No match

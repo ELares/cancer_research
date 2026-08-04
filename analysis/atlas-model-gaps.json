@@ -1,0 +1,505 @@
+{
+  "ferroptosis_articles": 13346,
+  "rows": [
+    {
+      "gene": "GPX4",
+      "normalised": "GPX4",
+      "papers": 7203,
+      "modelled": true,
+      "handle": "gpx4_rate"
+    },
+    {
+      "gene": "SLC7A11",
+      "normalised": "SLC7A11",
+      "papers": 3808,
+      "modelled": true,
+      "handle": "erastin_xc_inhib"
+    },
+    {
+      "gene": "NRF2",
+      "normalised": "NFE2L2",
+      "papers": 2898,
+      "modelled": true,
+      "handle": "nrf2_gsh_rate"
+    },
+    {
+      "gene": "ACSL4",
+      "normalised": "ACSL4",
+      "papers": 2243,
+      "modelled": true,
+      "handle": "acsl4_status_boost"
+    },
+    {
+      "gene": "HO-1",
+      "normalised": "HMOX1",
+      "papers": 1583,
+      "modelled": false,
+      "handle": null
+    },
+    {
+      "gene": "P53",
+      "normalised": "TP53",
+      "papers": 1497,
+      "modelled": false,
+      "handle": null
+    },
+    {
+      "gene": "TRANSFERRIN RECEPTOR",
+      "normalised": "TFRC",
+      "papers": 1482,
+      "modelled": false,
+      "handle": null
+    },
+    {
+      "gene": "FTH1",
+      "normalised": "FTH1",
+      "papers": 1472,
+      "modelled": true,
+      "handle": "ferritinophagy_release"
+    },
+    {
+      "gene": "TNF-ALPHA",
+      "normalised": "TNF-ALPHA",
+      "papers": 1013,
+      "modelled": false,
+      "handle": null
+    },
+    {
+      "gene": "CYCLOOXYGENASE-2",
+      "normalised": "PTGS2",
+      "papers": 891,
+      "modelled": false,
+      "handle": null
+    },
+    {
+      "gene": "NCOA4",
+      "normalised": "NCOA4",
+      "papers": 860,
+      "modelled": true,
+      "handle": "ferritinophagy_release"
+    },
+    {
+      "gene": "IL-6",
+      "normalised": "IL-6",
+      "papers": 808,
+      "modelled": false,
+      "handle": null
+    },
+    {
+      "gene": "AKT",
+      "normalised": "AKT",
+      "papers": 806,
+      "modelled": false,
+      "handle": null
+    },
+    {
+      "gene": "IL-1BETA",
+      "normalised": "IL-1BETA",
+      "papers": 777,
+      "modelled": false,
+      "handle": null
+    },
+    {
+      "gene": "KEAP1",
+      "normalised": "KEAP1",
+      "papers": 768,
+      "modelled": false,
+      "handle": null
+    },
+    {
+      "gene": "TRANSFERRIN",
+      "normalised": "TRANSFERRIN",
+      "papers": 679,
+      "modelled": false,
+      "handle": null
+    },
+    {
+      "gene": "FSP1",
+      "normalised": "AIFM2",
+      "papers": 644,
+      "modelled": true,
+      "handle": "fsp1_rate"
+    },
+    {
+      "gene": "NF-KAPPAB",
+      "normalised": "NF-KAPPAB",
+      "papers": 583,
+      "modelled": false,
+      "handle": null
+    },
+    {
+      "gene": "SLC3A2",
+      "normalised": "SLC3A2",
+      "papers": 574,
+      "modelled": true,
+      "handle": "erastin_xc_inhib"
+    },
+    {
+      "gene": "MTOR",
+      "normalised": "MTOR",
+      "papers": 573,
+      "modelled": false,
+      "handle": null
+    },
+    {
+      "gene": "HIF-1ALPHA",
+      "normalised": "HIF1A",
+      "papers": 552,
+      "modelled": false,
+      "handle": null
+    },
+    {
+      "gene": "IFN-GAMMA",
+      "normalised": "IFN-GAMMA",
+      "papers": 484,
+      "modelled": true,
+      "handle": "ifngamma module"
+    },
+    {
+      "gene": "ALOX15",
+      "normalised": "ALOX15",
+      "papers": 483,
+      "modelled": true,
+      "handle": "alox_propagation_boost"
+    },
+    {
+      "gene": "STAT3",
+      "normalised": "STAT3",
+      "papers": 452,
+      "modelled": false,
+      "handle": null
+    },
+    {
+      "gene": "LPCAT3",
+      "normalised": "LPCAT3",
+      "papers": 446,
+      "modelled": false,
+      "handle": null
+    },
+    {
+      "gene": "TGF-BETA",
+      "normalised": "TGF-BETA",
+      "papers": 445,
+      "modelled": false,
+      "handle": null
+    },
+    {
+      "gene": "CATALASE",
+      "normalised": "CATALASE",
+      "papers": 431,
+      "modelled": false,
+      "handle": null
+    },
+    {
+      "gene": "DMT1",
+      "normalised": "DMT1",
+      "papers": 424,
+      "modelled": false,
+      "handle": null
+    },
+    {
+      "gene": "PD-L1",
+      "normalised": "PD-L1",
+      "papers": 413,
+      "modelled": false,
+      "handle": null
+    },
+    {
+      "gene": "FTL",
+      "normalised": "FTL",
+      "papers": 403,
+      "modelled": false,
+      "handle": null
+    },
+    {
+      "gene": "AMPK",
+      "normalised": "AMPK",
+      "papers": 400,
+      "modelled": false,
+      "handle": null
+    },
+    {
+      "gene": "CD4",
+      "normalised": "CD4",
+      "papers": 390,
+      "modelled": false,
+      "handle": null
+    },
+    {
+      "gene": "HMGB1",
+      "normalised": "HMGB1",
+      "papers": 377,
+      "modelled": false,
+      "handle": null
+    },
+    {
+      "gene": "BCL-2",
+      "normalised": "BCL-2",
+      "papers": 371,
+      "modelled": false,
+      "handle": null
+    },
+    {
+      "gene": "PD-1",
+      "normalised": "PD-1",
+      "papers": 347,
+      "modelled": false,
+      "handle": null
+    },
+    {
+      "gene": "BECLIN-1",
+      "normalised": "BECLIN-1",
+      "papers": 330,
+      "modelled": false,
+      "handle": null
+    },
+    {
+      "gene": "P62",
+      "normalised": "P62",
+      "papers": 328,
+      "modelled": false,
+      "handle": null
+    },
+    {
+      "gene": "ERK",
+      "normalised": "ERK",
+      "papers": 324,
+      "modelled": false,
+      "handle": null
+    },
+    {
+      "gene": "BAX",
+      "normalised": "BAX",
+      "papers": 318,
+      "modelled": false,
+      "handle": null
+    },
+    {
+      "gene": "GCLC",
+      "normalised": "GCLC",
+      "papers": 311,
+      "modelled": false,
+      "handle": null
+    },
+    {
+      "gene": "TLR4",
+      "normalised": "TLR4",
+      "papers": 308,
+      "modelled": false,
+      "handle": null
+    },
+    {
+      "gene": "EGFR",
+      "normalised": "EGFR",
+      "papers": 306,
+      "modelled": false,
+      "handle": null
+    },
+    {
+      "gene": "NQO1",
+      "normalised": "NQO1",
+      "papers": 305,
+      "modelled": false,
+      "handle": null
+    },
+    {
+      "gene": "HEPCIDIN",
+      "normalised": "HEPCIDIN",
+      "papers": 300,
+      "modelled": false,
+      "handle": null
+    },
+    {
+      "gene": "SOD",
+      "normalised": "SOD",
+      "papers": 292,
+      "modelled": false,
+      "handle": null
+    },
+    {
+      "gene": "YAP",
+      "normalised": "YAP",
+      "papers": 291,
+      "modelled": false,
+      "handle": null
+    },
+    {
+      "gene": "KRAS",
+      "normalised": "KRAS",
+      "papers": 289,
+      "modelled": false,
+      "handle": null
+    },
+    {
+      "gene": "JNK",
+      "normalised": "JNK",
+      "papers": 283,
+      "modelled": false,
+      "handle": null
+    },
+    {
+      "gene": "LC3",
+      "normalised": "LC3",
+      "papers": 281,
+      "modelled": false,
+      "handle": null
+    },
+    {
+      "gene": "SIRT1",
+      "normalised": "SIRT1",
+      "papers": 277,
+      "modelled": false,
+      "handle": null
+    },
+    {
+      "gene": "SCD1",
+      "normalised": "SCD1",
+      "papers": 272,
+      "modelled": false,
+      "handle": null
+    },
+    {
+      "gene": "SLC40A1",
+      "normalised": "SLC40A1",
+      "papers": 272,
+      "modelled": false,
+      "handle": null
+    },
+    {
+      "gene": "IRP2",
+      "normalised": "IRP2",
+      "papers": 268,
+      "modelled": false,
+      "handle": null
+    },
+    {
+      "gene": "NLRP3",
+      "normalised": "NLRP3",
+      "papers": 264,
+      "modelled": false,
+      "handle": null
+    },
+    {
+      "gene": "P38",
+      "normalised": "P38",
+      "papers": 257,
+      "modelled": false,
+      "handle": null
+    },
+    {
+      "gene": "COX-2",
+      "normalised": "PTGS2",
+      "papers": 252,
+      "modelled": false,
+      "handle": null
+    }
+  ],
+  "excluded_method_genes": [
+    {
+      "gene": "GAPDH",
+      "papers": 882,
+      "reason": "Western-blot loading control"
+    },
+    {
+      "gene": "BETA-ACTIN",
+      "papers": 739,
+      "reason": "Western-blot loading control"
+    },
+    {
+      "gene": "CASPASE-3",
+      "papers": 525,
+      "reason": "apoptosis marker, measured to show the death is NOT apoptotic"
+    },
+    {
+      "gene": "CD8",
+      "papers": 437,
+      "reason": "immune-cell marker rather than a ferroptosis mechanism"
+    }
+  ],
+  "gaps": [
+    {
+      "gene": "HO-1",
+      "normalised": "HMOX1",
+      "papers": 1583,
+      "modelled": false,
+      "handle": null
+    },
+    {
+      "gene": "P53",
+      "normalised": "TP53",
+      "papers": 1497,
+      "modelled": false,
+      "handle": null
+    },
+    {
+      "gene": "TRANSFERRIN RECEPTOR",
+      "normalised": "TFRC",
+      "papers": 1482,
+      "modelled": false,
+      "handle": null
+    },
+    {
+      "gene": "TNF-ALPHA",
+      "normalised": "TNF-ALPHA",
+      "papers": 1013,
+      "modelled": false,
+      "handle": null
+    },
+    {
+      "gene": "CYCLOOXYGENASE-2",
+      "normalised": "PTGS2",
+      "papers": 891,
+      "modelled": false,
+      "handle": null
+    },
+    {
+      "gene": "IL-6",
+      "normalised": "IL-6",
+      "papers": 808,
+      "modelled": false,
+      "handle": null
+    },
+    {
+      "gene": "AKT",
+      "normalised": "AKT",
+      "papers": 806,
+      "modelled": false,
+      "handle": null
+    },
+    {
+      "gene": "IL-1BETA",
+      "normalised": "IL-1BETA",
+      "papers": 777,
+      "modelled": false,
+      "handle": null
+    },
+    {
+      "gene": "KEAP1",
+      "normalised": "KEAP1",
+      "papers": 768,
+      "modelled": false,
+      "handle": null
+    },
+    {
+      "gene": "TRANSFERRIN",
+      "normalised": "TRANSFERRIN",
+      "papers": 679,
+      "modelled": false,
+      "handle": null
+    },
+    {
+      "gene": "NF-KAPPAB",
+      "normalised": "NF-KAPPAB",
+      "papers": 583,
+      "modelled": false,
+      "handle": null
+    },
+    {
+      "gene": "MTOR",
+      "normalised": "MTOR",
+      "papers": 573,
+      "modelled": false,
+      "handle": null
+    }
+  ]
+}

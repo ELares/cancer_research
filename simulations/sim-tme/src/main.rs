@@ -53,7 +53,31 @@ use ferroptosis_core::stromal::{stromal_adjacency_mask_2d, stromal_adjacent_kill
 const GRID_SIZE: usize = 500;
 const CELL_SIZE_UM: f64 = 20.0;
 const N_STEPS: u32 = 180;
-const SEED: u64 = 42;
+
+/// Master RNG seed. Historically a hard-coded `42` with no replicate loop
+/// anywhere, so every reported number in this engine is a SINGLE draw and the
+/// manuscript quotes point estimates with no dispersion. Several headline
+/// quantities rest on small event counts (the immune-coupling ratio has a
+/// denominator of five simulated events), where one draw says very little.
+///
+/// `FERRO_SEED` overrides it so `scripts/seed_replication.py` can run the same
+/// matrix across many seeds and report medians with bootstrap intervals.
+/// Unset ⇒ 42 ⇒ byte-identical to every committed number and to the #253
+/// production regression hash.
+static SEED: std::sync::LazyLock<u64> =
+    std::sync::LazyLock::new(|| match std::env::var("FERRO_SEED") {
+        Ok(raw) => match raw.trim().parse::<u64>() {
+            Ok(v) => {
+                eprintln!("FERRO_SEED={v}: replicate run, NOT the committed baseline");
+                v
+            }
+            Err(_) => {
+                eprintln!("error: FERRO_SEED must be a u64, got {raw:?}");
+                std::process::exit(2);
+            }
+        },
+        Err(_) => 42,
+    });
 
 /// Largest grid (`n_cells = GRID_SIZE²`) for which the per-cell additive RNG seed
 /// streams stay collision-free (#585). The per-cell seed is
@@ -524,6 +548,26 @@ fn run_spatial_with_immune(
                     (1.0 - params.rsl3_gpx4_inhib * drug_factor) / (1.0 - params.rsl3_gpx4_inhib);
                 grid.cells[idx].state.gpx4 *= correction;
             }
+        } else if ph_cfg.sensitizer_ion_trap_sensitivity > 0.0
+            && (tx == Treatment::SDT || tx == Treatment::PDT)
+        {
+            // #SENS-SYM: the SENSITIZER is a systemically dosed small molecule and
+            // faces the same acidity barrier the pharmacologic drug does. The
+            // ultrasound/light field is pH-independent; the molecule that converts
+            // it into ROS is not. Historically this branch did not exist, so the
+            // sensitizer sat at uniform concentration everywhere while RSL3 was
+            // penalised -- and that asymmetry, not the biology, produced part of
+            // the reported cross-modality resistance gap.
+            for &(r, c, local_ph) in ph_map.iter() {
+                let idx = r * cols + c;
+                if !grid.cells[idx].is_tumor {
+                    continue;
+                }
+                let availability = (1.0
+                    - ph_cfg.sensitizer_ion_trap_sensitivity * (ph_cfg.ph_edge - local_ph))
+                    .clamp(0.3, 1.0);
+                grid.cells[idx].state.exo_ros_peak *= availability;
+            }
         }
     }
 
@@ -923,7 +967,7 @@ fn main() {
     // --- Baseline: uniform O2 (no gradient) ---
     eprintln!("=== Baseline (uniform O2) ===\n");
     for (tx, tx_name) in &treatments {
-        let mut grid = TumorGrid::generate(GRID_SIZE, GRID_SIZE, CELL_SIZE_UM, SEED);
+        let mut grid = TumorGrid::generate(GRID_SIZE, GRID_SIZE, CELL_SIZE_UM, *SEED);
         // Uniform O2: no supply field, so the O2-dependence knob is inert here
         // (a uniform field would be all-1.0 ⇒ factor 1.0 anyway).
         run_spatial(
@@ -987,7 +1031,7 @@ fn main() {
         eprintln!("\n=== O2 gradient (λ = {} μm) ===\n", lambda);
 
         for (tx, tx_name) in &treatments {
-            let mut grid = TumorGrid::generate(GRID_SIZE, GRID_SIZE, CELL_SIZE_UM, SEED);
+            let mut grid = TumorGrid::generate(GRID_SIZE, GRID_SIZE, CELL_SIZE_UM, *SEED);
 
             // Apply O2 gradient BEFORE simulation (modifies cell.basal_ros)
             let o2_map = apply_o2_gradient(&mut grid, lambda);
@@ -1077,7 +1121,7 @@ fn main() {
         );
 
         for (tx, tx_name) in &treatments {
-            let mut grid = TumorGrid::generate(GRID_SIZE, GRID_SIZE, CELL_SIZE_UM, SEED);
+            let mut grid = TumorGrid::generate(GRID_SIZE, GRID_SIZE, CELL_SIZE_UM, *SEED);
             let depths = compute_depth_map(&grid);
             let original_ros: Vec<f64> = grid.cells.iter().map(|gc| gc.cell.basal_ros).collect();
 
@@ -1145,7 +1189,7 @@ fn main() {
 
     // --- Compute stromal adjacency mask (used by both Feature B and C) ---
     // Mask is grid-geometry-dependent, not treatment-dependent.
-    let mask_grid = TumorGrid::generate(GRID_SIZE, GRID_SIZE, CELL_SIZE_UM, SEED);
+    let mask_grid = TumorGrid::generate(GRID_SIZE, GRID_SIZE, CELL_SIZE_UM, *SEED);
     let stromal_mask = stromal_adjacency_mask_2d(&mask_grid);
     let stromal_adj_count = stromal_mask.iter().filter(|&&b| b).count();
 
@@ -1171,7 +1215,7 @@ fn main() {
         );
 
         for (tx, tx_name) in &treatments {
-            let mut grid = TumorGrid::generate(GRID_SIZE, GRID_SIZE, CELL_SIZE_UM, SEED);
+            let mut grid = TumorGrid::generate(GRID_SIZE, GRID_SIZE, CELL_SIZE_UM, *SEED);
             // #358: capture the per-cell O2 supply so the immune-on gradient
             // SDT exo-ROS gets the same O2-dependent attenuation as the
             // immune-off gradient conditions (consistent under the flag).
@@ -1296,7 +1340,7 @@ fn main() {
         );
 
         for (tx, tx_name) in &treatments {
-            let mut grid = TumorGrid::generate(GRID_SIZE, GRID_SIZE, CELL_SIZE_UM, SEED);
+            let mut grid = TumorGrid::generate(GRID_SIZE, GRID_SIZE, CELL_SIZE_UM, *SEED);
             // #358: capture O2 supply for the consistent O2-dependent SDT path.
             let o2_supply: Vec<f64> = apply_o2_gradient(&mut grid, 120.0)
                 .iter()
@@ -1383,7 +1427,30 @@ fn main() {
     }
 
     // --- pH gradient (Feature D) at λ=120μm with immune_on ---
-    let ph_cfg = PhConfig::default();
+    // #SENS-SYM: `FERRO_SENSITIZER_ION_TRAP` gives the SDT/PDT sensitizer the same
+    // acidity barrier RSL3 faces. Unset (or 0.0) reproduces the historical
+    // asymmetric behaviour byte-identically; set it equal to
+    // `ion_trap_sensitivity` (0.4) for the symmetric run.
+    let mut ph_cfg = PhConfig::default();
+    if let Ok(raw) = std::env::var("FERRO_SENSITIZER_ION_TRAP") {
+        match raw.trim().parse::<f64>() {
+            Ok(v) if (0.0..=1.0).contains(&v) => {
+                ph_cfg.sensitizer_ion_trap_sensitivity = v;
+                eprintln!(
+                    "FERRO_SENSITIZER_ION_TRAP={v}: sensitizer faces the pH barrier \
+                     (RSL3 ion_trap_sensitivity={})",
+                    ph_cfg.ion_trap_sensitivity
+                );
+            }
+            _ => {
+                eprintln!(
+                    "error: FERRO_SENSITIZER_ION_TRAP must be a number in [0,1], got {raw:?}"
+                );
+                std::process::exit(2);
+            }
+        }
+    }
+    let ph_cfg = ph_cfg;
     let immune_for_ph = SpatialImmuneConfig::for_2d();
 
     eprintln!("\n=== pH Gradient / Ion Trapping (O2 gradient λ=120μm, immune_on) ===");
@@ -1407,7 +1474,7 @@ fn main() {
     eprintln!("Warburg effect, ferritin iron release: primary literature only.\n");
 
     for (tx, tx_name) in &treatments {
-        let mut grid = TumorGrid::generate(GRID_SIZE, GRID_SIZE, CELL_SIZE_UM, SEED);
+        let mut grid = TumorGrid::generate(GRID_SIZE, GRID_SIZE, CELL_SIZE_UM, *SEED);
         // #358: capture O2 supply for the consistent O2-dependent SDT path.
         let o2_supply: Vec<f64> = apply_o2_gradient(&mut grid, 120.0)
             .iter()
@@ -1480,7 +1547,7 @@ fn main() {
 
     // Export pH field heatmap
     {
-        let mut ph_vis_grid = TumorGrid::generate(GRID_SIZE, GRID_SIZE, CELL_SIZE_UM, SEED);
+        let mut ph_vis_grid = TumorGrid::generate(GRID_SIZE, GRID_SIZE, CELL_SIZE_UM, *SEED);
         let ph_map_vis = apply_ph_gradient(&mut ph_vis_grid, &ph_cfg);
         let mut ph_hm = ndarray::Array2::<u8>::zeros((GRID_SIZE, GRID_SIZE));
         for &(r, c, ph) in &ph_map_vis {
@@ -1654,6 +1721,72 @@ mod tests {
             kill1 < kill0 * 0.3,
             "O2-dependent SDT must collapse vs the O2-independent bound: \
              dep=1 kill={kill1:.3} should be far below dep=0 kill={kill0:.3}"
+        );
+    }
+
+    /// #SENS-SYM: the sensitizer must be able to face the same acidity barrier
+    /// the drug faces.
+    ///
+    /// The pH block used to be gated on `tx == Treatment::RSL3`, so the
+    /// sonosensitizer sat at uniform concentration everywhere while RSL3 was
+    /// penalised -- and part of the reported cross-modality resistance gap came
+    /// from that modelling choice rather than from biology. SDT and PDT both
+    /// require a systemically dosed sensitizer (the lead clinical agent,
+    /// SONALA-001, is 5-ALA); the ultrasound FIELD is pH-independent, the
+    /// molecule that converts it into ROS is not.
+    ///
+    /// Guards both halves: `0.0` is inert (byte-identical to the historical
+    /// behaviour) and a non-zero value measurably lowers SDT kill.
+    #[test]
+    fn sensitizer_ion_trapping_lowers_sdt_kill_and_zero_is_inert() {
+        let sp = SpatialParams {
+            cell_size_um: CELL_SIZE_UM,
+            ..Default::default()
+        };
+        let params = Params::default();
+        let immune = SpatialImmuneConfig::for_2d();
+        let seed = SEED.wrapping_add((Treatment::SDT as u64) * 10_000_000);
+        let kill = |g: &TumorGrid| {
+            let c = g.census();
+            c.total_dead as f64 / c.total_tumor.max(1) as f64
+        };
+
+        let run = |sens: f64| {
+            let mut cfg = PhConfig::default();
+            cfg.sensitizer_ion_trap_sensitivity = sens;
+            let mut g = TumorGrid::generate(100, 100, CELL_SIZE_UM, seed);
+            let ph_map = apply_ph_gradient(&mut g, &cfg);
+            run_spatial_with_immune(
+                &mut g,
+                Treatment::SDT,
+                &params,
+                &sp,
+                &immune,
+                None,
+                Some((&ph_map, &cfg)),
+                seed,
+                None,
+                0.0,
+            );
+            kill(&g)
+        };
+
+        let baseline = run(0.0);
+        let inert_again = run(0.0);
+        let symmetric = run(0.4);
+
+        assert_eq!(
+            baseline, inert_again,
+            "sensitizer_ion_trap_sensitivity=0.0 must be deterministic and inert"
+        );
+        assert!(
+            baseline > 0.5,
+            "SDT should kill most of the tumor without a sensitizer penalty; got {baseline:.3}"
+        );
+        assert!(
+            symmetric < baseline * 0.9,
+            "giving the sensitizer the drug's acidity barrier must measurably lower SDT \
+             kill: symmetric={symmetric:.3} vs asymmetric={baseline:.3}"
         );
     }
 }

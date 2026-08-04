@@ -1,0 +1,82 @@
+{
+  "census_records": 4403994,
+  "totals": {
+    "ferroptosis": 13346,
+    "lipid peroxidation": 1647,
+    "drug resistance": 479,
+    "photodynamic therapy": 177,
+    "immunotherapy": 68,
+    "sonodynamic therapy": 32,
+    "focused ultrasound": 1
+  },
+  "growth": {
+    "from_year": 2020,
+    "from_n": 400,
+    "to_year": 2025,
+    "to_n": 4496,
+    "multiple": 11.24
+  },
+  "by_year": {
+    "2019": {
+      "ferroptosis": 176,
+      "lipid peroxidation": 53,
+      "drug resistance": 4,
+      "photodynamic therapy": 4
+    },
+    "2020": {
+      "ferroptosis": 400,
+      "lipid peroxidation": 89,
+      "drug resistance": 13,
+      "photodynamic therapy": 4,
+      "immunotherapy": 2
+    },
+    "2021": {
+      "ferroptosis": 815,
+      "lipid peroxidation": 148,
+      "drug resistance": 33,
+      "sonodynamic therapy": 2,
+      "photodynamic therapy": 17,
+      "immunotherapy": 7
+    },
+    "2022": {
+      "ferroptosis": 1400,
+      "lipid peroxidation": 142,
+      "drug resistance": 29,
+      "immunotherapy": 6,
+      "photodynamic therapy": 14,
+      "sonodynamic therapy": 4
+    },
+    "2023": {
+      "ferroptosis": 2021,
+      "lipid peroxidation": 168,
+      "drug resistance": 40,
+      "immunotherapy": 7,
+      "photodynamic therapy": 17
+    },
+    "2024": {
+      "ferroptosis": 3501,
+      "lipid peroxidation": 402,
+      "drug resistance": 126,
+      "photodynamic therapy": 44,
+      "immunotherapy": 20,
+      "sonodynamic therapy": 9
+    },
+    "2025": {
+      "ferroptosis": 4496,
+      "lipid peroxidation": 575,
+      "drug resistance": 219,
+      "sonodynamic therapy": 15,
+      "immunotherapy": 24,
+      "photodynamic therapy": 71
+    },
+    "2026": {
+      "ferroptosis": 537,
+      "lipid peroxidation": 70,
+      "sonodynamic therapy": 2,
+      "photodynamic therapy": 6,
+      "focused ultrasound": 1,
+      "drug resistance": 15,
+      "immunotherapy": 2
+    }
+  }
+}

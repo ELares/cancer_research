@@ -185,6 +185,40 @@ ledger is `simulations/calibration/CALIBRATION_STATUS.md`.
 As calibration data arrives, the plan is to report calibrated-versus-preregistered
 for each prediction, failures included.
 
+## Literature position of each prediction (measured 2026-08-03)
+
+Added after the census made it measurable. Each prediction chains ferroptosis to
+another concept, and MeSH indexes both sides, so the size of the literature each
+one lands in is countable across 4,403,994 cancer articles
+(`analysis/atlas-prediction-position.md`):
+
+| prediction | ferroptosis-intersecting articles |
+|---|---|
+| P1, P3 (persister / drug resistance) | 479 |
+| P4 (hypoxia) | 64 |
+| P5 (immunogenic cell death) | 41 |
+| P7 (pH / ion trapping) | 37 |
+| P6 (CAF coculture) | 22 |
+| P2, P8 (spheroid size) | 15 |
+
+**This is not a quality ranking, and low support is not a reason to drop a
+prediction.** A sparse leg is where novelty lives. But it bears on SEQUENCING,
+and on a disagreement between this document and
+`analysis/p1-wetlab-protocol.md`: the Sequencing section below calls E1 (testing
+P4) the keystone, while that protocol calls P1 the highest-leverage prediction in
+the program. Neither designation was made with these numbers.
+
+The relevant asymmetry is interpretability of a NEGATIVE result. P4 additionally
+depends on sonodynamic therapy, which has 32 ferroptosis-intersecting articles in
+the entire indexed literature (`analysis/atlas-thesis-position.md`), so a
+negative P4 could mean the mechanism is wrong or that nobody has yet worked out
+how to run the experiment well. P1 rests on GPX4/FSP1 parallel independence,
+which is established, so a negative P1 is simply a negative result.
+
+Whichever is called the keystone should state whether it is keystone because it
+is the most decisive or because it is the most novel. Those point at different
+experiments.
+
 ## Sequencing
 
 1. **Now:** register P1 through P8 above on OSF and mint the DOI, then paste it

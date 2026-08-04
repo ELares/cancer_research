@@ -78,10 +78,20 @@ mechanisms:
       Clean therapy leaf (n~47). Broad "Microbiota"/"Gastrointestinal Microbiome"
       are population/context descriptors and are EXCLUDED.
   frequency-therapy:
-    descriptors: ["Radiofrequency Ablation"]
+    descriptors: []
     note: >
-      Clean leaf (n~19). Broad "Electromagnetic Fields"/"Magnetic Field Therapy" are
-      context descriptors and are EXCLUDED.
+      NOT MeSH-measurable as of #MECH-PRECISION. "Radiofrequency Ablation" was the
+      reference descriptor, but the mechanism is defined in the manuscript as
+      "frequency therapy (including pulsed electromagnetic fields)" -- non-thermal
+      field modulation -- while radiofrequency ablation is THERMAL tissue
+      destruction, a physically different modality. The keyword list has been
+      narrowed accordingly, so the descriptor no longer belongs to this mechanism
+      and can no longer serve as its reference label.
+      Broad "Electromagnetic Fields"/"Magnetic Field Therapy" remain excluded as
+      context descriptors, so this mechanism now has no discriminative leaf and is
+      reported NOT-MeSH-measurable rather than as zero recall.
+      The thermal-ablation literature this tag used to absorb needs its own
+      mechanism; until it exists, that literature is a documented coverage gap.
   metabolic-targeting:
     descriptors: ["Warburg Effect, Oncologic", "Glycolysis"]
     note: Warburg leaf is specific but tiny (n~6); Glycolysis broader. Low-confidence.

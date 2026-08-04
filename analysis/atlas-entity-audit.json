@@ -1,0 +1,373 @@
+[
+ {
+  "symbol": "GPX4",
+  "gid": "2879",
+  "ncbi_symbol": "GPX4",
+  "desc": "glutathione peroxidase 4",
+  "status": "ok"
+ },
+ {
+  "symbol": "FSP1",
+  "gid": "51062",
+  "ncbi_symbol": "ATL1",
+  "desc": "atlastin GTPase 1",
+  "status": "MISMATCH"
+ },
+ {
+  "symbol": "AIFM2",
+  "gid": "84883",
+  "ncbi_symbol": "AIFM2",
+  "desc": "AIF family member 2, ferroptosis suppressor",
+  "status": "ok"
+ },
+ {
+  "symbol": "SLC7A11",
+  "gid": "23657",
+  "ncbi_symbol": "SLC7A11",
+  "desc": "solute carrier family 7 member 11",
+  "status": "ok"
+ },
+ {
+  "symbol": "SLC3A2",
+  "gid": "6520",
+  "ncbi_symbol": "SLC3A2",
+  "desc": "solute carrier family 3 member 2",
+  "status": "ok"
+ },
+ {
+  "symbol": "ACSL4",
+  "gid": "2182",
+  "ncbi_symbol": "ACSL4",
+  "desc": "acyl-CoA synthetase long chain family member 4",
+  "status": "ok"
+ },
+ {
+  "symbol": "LPCAT3",
+  "gid": "10162",
+  "ncbi_symbol": "LPCAT3",
+  "desc": "lysophosphatidylcholine acyltransferase 3",
+  "status": "ok"
+ },
+ {
+  "symbol": "ALOX15",
+  "gid": "246",
+  "ncbi_symbol": "ALOX15",
+  "desc": "arachidonate 15-lipoxygenase",
+  "status": "ok"
+ },
+ {
+  "symbol": "ALOX12",
+  "gid": "239",
+  "ncbi_symbol": "ALOX12",
+  "desc": "arachidonate 12-lipoxygenase, 12S type",
+  "status": "ok"
+ },
+ {
+  "symbol": "ALOX5",
+  "gid": "240",
+  "ncbi_symbol": "ALOX5",
+  "desc": "arachidonate 5-lipoxygenase",
+  "status": "ok"
+ },
+ {
+  "symbol": "NFE2L2",
+  "gid": "4780",
+  "ncbi_symbol": "NFE2L2",
+  "desc": "NFE2 like bZIP transcription factor 2",
+  "status": "ok"
+ },
+ {
+  "symbol": "KEAP1",
+  "gid": "9817",
+  "ncbi_symbol": "KEAP1",
+  "desc": "kelch like ECH associated protein 1",
+  "status": "ok"
+ },
+ {
+  "symbol": "DHODH",
+  "gid": "1723",
+  "ncbi_symbol": "DHODH",
+  "desc": "dihydroorotate dehydrogenase (quinone)",
+  "status": "ok"
+ },
+ {
+  "symbol": "GCH1",
+  "gid": "2643",
+  "ncbi_symbol": "GCH1",
+  "desc": "GTP cyclohydrolase 1",
+  "status": "ok"
+ },
+ {
+  "symbol": "FTH1",
+  "gid": "2495",
+  "ncbi_symbol": "FTH1",
+  "desc": "ferritin heavy chain 1",
+  "status": "ok"
+ },
+ {
+  "symbol": "FTL",
+  "gid": "2512",
+  "ncbi_symbol": "FTL",
+  "desc": "ferritin light chain",
+  "status": "ok"
+ },
+ {
+  "symbol": "NCOA4",
+  "gid": "8031",
+  "ncbi_symbol": "NCOA4",
+  "desc": "nuclear receptor coactivator 4",
+  "status": "ok"
+ },
+ {
+  "symbol": "PROM2",
+  "gid": "150696",
+  "ncbi_symbol": "PROM2",
+  "desc": "prominin 2",
+  "status": "ok"
+ },
+ {
+  "symbol": "TFRC",
+  "gid": "7037",
+  "ncbi_symbol": "TFRC",
+  "desc": "transferrin receptor",
+  "status": "ok"
+ },
+ {
+  "symbol": "SCD",
+  "gid": "6319",
+  "ncbi_symbol": "SCD",
+  "desc": "stearoyl-CoA desaturase",
+  "status": "ok"
+ },
+ {
+  "symbol": "MBOAT1",
+  "gid": "154141",
+  "ncbi_symbol": "MBOAT1",
+  "desc": "membrane bound glycerophospholipid O-acyltransferase 1",
+  "status": "ok"
+ },
+ {
+  "symbol": "MBOAT2",
+  "gid": "129642",
+  "ncbi_symbol": "MBOAT2",
+  "desc": "membrane bound glycerophospholipid O-acyltransferase 2",
+  "status": "ok"
+ },
+ {
+  "symbol": "FAR1",
+  "gid": "84188",
+  "ncbi_symbol": "FAR1",
+  "desc": "fatty acyl-CoA reductase 1",
+  "status": "ok"
+ },
+ {
+  "symbol": "AGPS",
+  "gid": "8540",
+  "ncbi_symbol": "AGPS",
+  "desc": "alkylglycerone phosphate synthase",
+  "status": "ok"
+ },
+ {
+  "symbol": "POR",
+  "gid": "5447",
+  "ncbi_symbol": "POR",
+  "desc": "cytochrome p450 oxidoreductase",
+  "status": "ok"
+ },
+ {
+  "symbol": "CYB5R1",
+  "gid": "51706",
+  "ncbi_symbol": "CYB5R1",
+  "desc": "cytochrome b5 reductase 1",
+  "status": "ok"
+ },
+ {
+  "symbol": "DHCR7",
+  "gid": "1717",
+  "ncbi_symbol": "DHCR7",
+  "desc": "7-dehydrocholesterol reductase",
+  "status": "ok"
+ },
+ {
+  "symbol": "EBP",
+  "gid": "10682",
+  "ncbi_symbol": "EBP",
+  "desc": "EBP cholestenol delta-isomerase",
+  "status": "ok"
+ },
+ {
+  "symbol": "SC5D",
+  "gid": "6309",
+  "ncbi_symbol": "SC5D",
+  "desc": "sterol-C5-desaturase",
+  "status": "ok"
+ },
+ {
+  "symbol": "VKORC1L1",
+  "gid": "154807",
+  "ncbi_symbol": "VKORC1L1",
+  "desc": "vitamin K epoxide reductase complex subunit 1L1",
+  "status": "ok"
+ },
+ {
+  "symbol": "ATP7A",
+  "gid": "538",
+  "ncbi_symbol": "ATP7A",
+  "desc": "ATPase copper transporting alpha",
+  "status": "ok"
+ },
+ {
+  "symbol": "ATP7B",
+  "gid": "540",
+  "ncbi_symbol": "ATP7B",
+  "desc": "ATPase copper transporting beta",
+  "status": "ok"
+ },
+ {
+  "symbol": "CHMP5",
+  "gid": "51510",
+  "ncbi_symbol": "CHMP5",
+  "desc": "charged multivesicular body protein 5",
+  "status": "ok"
+ },
+ {
+  "symbol": "CHMP6",
+  "gid": "79643",
+  "ncbi_symbol": "CHMP6",
+  "desc": "charged multivesicular body protein 6",
+  "status": "ok"
+ },
+ {
+  "symbol": "CDH1",
+  "gid": "999",
+  "ncbi_symbol": "CDH1",
+  "desc": "cadherin 1",
+  "status": "ok"
+ },
+ {
+  "symbol": "NF2",
+  "gid": "4771",
+  "ncbi_symbol": "NF2",
+  "desc": "NF2, moesin-ezrin-radixin like (MERLIN) tumor suppressor",
+  "status": "ok"
+ },
+ {
+  "symbol": "YAP1",
+  "gid": "10413",
+  "ncbi_symbol": "YAP1",
+  "desc": "Yes1 associated transcriptional regulator",
+  "status": "ok"
+ },
+ {
+  "symbol": "IFNG",
+  "gid": "3458",
+  "ncbi_symbol": "IFNG",
+  "desc": "interferon gamma",
+  "status": "ok"
+ },
+ {
+  "symbol": "CD274",
+  "gid": "29126",
+  "ncbi_symbol": "CD274",
+  "desc": "CD274 molecule",
+  "status": "ok"
+ },
+ {
+  "symbol": "PDCD1",
+  "gid": "5133",
+  "ncbi_symbol": "PDCD1",
+  "desc": "programmed cell death 1",
+  "status": "ok"
+ },
+ {
+  "symbol": "CTLA4",
+  "gid": "1493",
+  "ncbi_symbol": "CTLA4",
+  "desc": "cytotoxic T-lymphocyte associated protein 4",
+  "status": "ok"
+ },
+ {
+  "symbol": "HDAC1",
+  "gid": "3065",
+  "ncbi_symbol": "HDAC1",
+  "desc": "histone deacetylase 1",
+  "status": "ok"
+ },
+ {
+  "symbol": "TP53",
+  "gid": "7157",
+  "ncbi_symbol": "TP53",
+  "desc": "tumor protein p53",
+  "status": "ok"
+ },
+ {
+  "symbol": "KRAS",
+  "gid": "3845",
+  "ncbi_symbol": "KRAS",
+  "desc": "KRas proto-oncogene, GTPase",
+  "status": "ok"
+ },
+ {
+  "symbol": "EGFR",
+  "gid": "1956",
+  "ncbi_symbol": "EGFR",
+  "desc": "epidermal growth factor receptor",
+  "status": "ok"
+ },
+ {
+  "symbol": "ERBB2",
+  "gid": "2064",
+  "ncbi_symbol": "ERBB2",
+  "desc": "erb-b2 receptor tyrosine kinase 2",
+  "status": "ok"
+ },
+ {
+  "symbol": "BRCA1",
+  "gid": "672",
+  "ncbi_symbol": "BRCA1",
+  "desc": "BRCA1 DNA repair associated",
+  "status": "ok"
+ },
+ {
+  "symbol": "BRCA2",
+  "gid": "675",
+  "ncbi_symbol": "BRCA2",
+  "desc": "BRCA2 DNA repair associated",
+  "status": "ok"
+ },
+ {
+  "symbol": "PARP1",
+  "gid": "142",
+  "ncbi_symbol": "PARP1",
+  "desc": "poly(ADP-ribose) polymerase 1",
+  "status": "ok"
+ },
+ {
+  "symbol": "CDKN2A",
+  "gid": "1029",
+  "ncbi_symbol": "CDKN2A",
+  "desc": "cyclin dependent kinase inhibitor 2A",
+  "status": "ok"
+ },
+ {
+  "symbol": "MKI67",
+  "gid": "4288",
+  "ncbi_symbol": "MKI67",
+  "desc": "marker of proliferation Ki-67",
+  "status": "ok"
+ },
+ {
+  "symbol": "S100A4",
+  "gid": "6275",
+  "ncbi_symbol": "S100A4",
+  "desc": "S100 calcium binding protein A4",
+  "status": "ok"
+ },
+ {
+  "symbol": "ATL1",
+  "gid": "51062",
+  "ncbi_symbol": "ATL1",
+  "desc": "atlastin GTPase 1",
+  "status": "ok"
+ }
+]

@@ -1,0 +1,69 @@
+{
+  "census_records": 4403994,
+  "rows": [
+    {
+      "prediction": "P1",
+      "claim": "GPX4 + FSP1 dual inhibition in FSP1-low persisters",
+      "experiment": "E4",
+      "concept_articles": 71174,
+      "with_ferroptosis": 479,
+      "sdt_dependent": false
+    },
+    {
+      "prediction": "P3",
+      "claim": "post-withdrawal vulnerability window closes over days",
+      "experiment": "E5",
+      "concept_articles": 71174,
+      "with_ferroptosis": 479,
+      "sdt_dependent": false
+    },
+    {
+      "prediction": "P4",
+      "claim": "SDT retains more efficacy than RSL3 under hypoxia",
+      "experiment": "E1",
+      "concept_articles": 10238,
+      "with_ferroptosis": 64,
+      "sdt_dependent": true
+    },
+    {
+      "prediction": "P5",
+      "claim": "dense ferroptotic kill is more immunogenic per cell than sparse",
+      "experiment": "E3",
+      "concept_articles": 969,
+      "with_ferroptosis": 41,
+      "sdt_dependent": false
+    },
+    {
+      "prediction": "P7",
+      "claim": "RSL3 efficacy drops at acidic pH via ion trapping",
+      "experiment": "E6",
+      "concept_articles": 13862,
+      "with_ferroptosis": 37,
+      "sdt_dependent": false
+    },
+    {
+      "prediction": "P6",
+      "claim": "CAF coculture protects RSL3 more than SDT",
+      "experiment": "E2",
+      "concept_articles": 3471,
+      "with_ferroptosis": 22,
+      "sdt_dependent": true
+    },
+    {
+      "prediction": "P2",
+      "claim": "PDT/SDT less depth-limited than RSL3 in >=500um spheroids",
+      "experiment": "-",
+      "concept_articles": 5241,
+      "with_ferroptosis": 15,
+      "sdt_dependent": true
+    },
+    {
+      "prediction": "P8",
+      "claim": "RSL3 has the opposite size-dependence to generic cytotoxics",
+      "experiment": "-",
+      "concept_articles": 5241,
+      "with_ferroptosis": 15,
+      "sdt_dependent": false
+    }
+  ]
+}

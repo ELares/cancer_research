@@ -646,6 +646,23 @@ struct Overrides {
     /// O2-dependent, so SDT loses efficacy in hypoxic zones like the clinical
     /// SONALA-001 agent (manuscript §7.1).
     sdt_o2_dependence: f64,
+    /// pH ion trapping of the SDT/PDT SENSITIZER (#SENS-SYM).
+    ///
+    /// RSL3 carries three spatial delivery corrections in this binary (pH on the
+    /// constant path, vessel supply on the constant path, and `rsl3_drug_avail`
+    /// on the dosed path). The sensitizer carried only vessel supply, so tumour
+    /// acidity penalised the drug and not the sensitizer -- an asymmetry in the
+    /// modelling rather than in the biology. Both are systemically dosed small
+    /// molecules; the ultrasound/light FIELD is pH-independent, the molecule
+    /// that converts it into ROS is not, and the lead clinical agent
+    /// (SONALA-001) is 5-ALA.
+    ///
+    /// Applied where vessel supply is applied, so it covers the constant and
+    /// dosed paths uniformly. Set equal to `PhConfig::ion_trap_sensitivity`
+    /// (0.4) to give the sensitizer the same barrier the drug faces. `0.0`
+    /// (default) ⇒ factor exactly 1.0 ⇒ byte-identical, so the production
+    /// matrix SHA is unchanged. Only meaningful when `ph_on`.
+    sensitizer_ion_trap: f64,
     /// O2-dependent Fenton H₂O₂ substrate (#383): `oxygen::fenton_o2_factor`
     /// scales each tumor cell's `iron` (its only consumer is the Fenton term)
     /// DOWN where local O2 is low, since the Fenton reaction needs O2-derived
@@ -1134,7 +1151,11 @@ fn run_one_condition_full(
 
     // --- Apply pH gradient if requested (mutates cell.iron via library helper) ---
     let ph_field = if condition.ph_on {
-        let cfg = PhConfig::default();
+        let mut cfg = PhConfig::default();
+        // #SENS-SYM: give the sensitizer the drug's acidity barrier when asked.
+        // 0.0 (default) leaves the historical asymmetric behaviour untouched.
+        cfg.sensitizer_ion_trap_sensitivity = overrides.sensitizer_ion_trap;
+        let cfg = cfg;
         let field = radial_ph_field(&grid, cfg.ph_edge, cfg.ph_core, cfg.lambda_ph_um);
         for (idx, &local_ph) in field.iter().enumerate() {
             if grid.cells[idx].is_tumor {
@@ -1219,8 +1240,31 @@ fn run_one_condition_full(
                     // generates O2-dependent singlet oxygen, so the exo-ROS is
                     // scaled by local O2 availability. ×1.0 when
                     // sdt_o2_dependence == 0 → byte-identical.
+                    //
+                    // #SENS-SYM: pH ion trapping of the SENSITIZER. RSL3 has three
+                    // delivery corrections here (pH constant-path, vessel
+                    // constant-path, and `rsl3_drug_avail` on the dosed path) while
+                    // the sensitizer had only vessel supply, so acidity penalised
+                    // the drug and not the sensitizer. Both are systemically dosed
+                    // small molecules: the ultrasound/light FIELD is pH-independent,
+                    // the molecule that converts it into ROS is not. Applying it
+                    // here rather than in a separate pass covers the constant and
+                    // dosed paths uniformly, since `base_exo` is seeded from this
+                    // same value. `sensitizer_ion_trap_sensitivity == 0.0` (the
+                    // default) ⇒ factor exactly 1.0 ⇒ byte-identical.
+                    let sens_ph = match &ph_field {
+                        Some((ph_map, cfg)) if cfg.sensitizer_ion_trap_sensitivity > 0.0 => {
+                            ion_trap_factor_from_ph(
+                                ph_map[idx],
+                                cfg.ph_edge,
+                                cfg.sensitizer_ion_trap_sensitivity,
+                            )
+                        }
+                        _ => 1.0,
+                    };
                     raw * supply_field.as_ref().map_or(1.0, |s| s[idx])
                         * o2_dependent_exo_factor(o2_supply_for_exo[idx], sdt_o2_dependence)
+                        * sens_ph
                 };
                 if dose_modulates_exo {
                     base_exo[idx] = exo_ros_peak;
@@ -4032,7 +4076,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         // iron in secreted exosomes, DEPLETING the labile iron pool and starving
         // the Fenton reaction (the OPPOSITE sign to ferritinophagy #340), so RSL3
         // kills LESS than the baseline (ferroptosis resistance; the EMT/metastatic
-        // escape, Brown et al. Dev Cell 2019 PMID 31761539). The dead/LP panels
+        // escape, Brown et al. Dev Cell 2019 PMID 31735663). The dead/LP panels
         // show the reduced death front. No overlay.
         name: "prom2",
         desc: "RSL3 + PROM2 iron efflux (#484): MVB-exosome iron export starves Fenton, ferroptosis resistance",
@@ -9390,7 +9434,7 @@ mod tests {
     /// depleting the labile iron pool and starving the Fenton reaction (the
     /// OPPOSITE sign to ferritinophagy), so an RSL3 run with PROM2 efflux on kills
     /// LESS than the baseline (ferroptosis resistance; Brown et al. Dev Cell 2019
-    /// PMID 31761539). Magnitude uncalibrated; the direction is the result.
+    /// PMID 31735663). Magnitude uncalibrated; the direction is the result.
     #[test]
     fn prom2_iron_efflux_reduces_rsl3_kill() {
         let cfg = RunConfig {
@@ -9618,6 +9662,68 @@ mod tests {
              type_i={} type_ii={}",
             type_i_heavy.hypoxic_kill_rate,
             type_ii.hypoxic_kill_rate
+        );
+    }
+
+    /// #SENS-SYM: the sensitizer must be able to face the acidity barrier the drug
+    /// faces.
+    ///
+    /// RSL3 carries three spatial delivery corrections in this binary (pH on the
+    /// constant path, vessel supply on the constant path, `rsl3_drug_avail` on the
+    /// dosed path); the sensitizer carried only vessel supply, so tumour acidity
+    /// penalised the drug and not the sensitizer. Both are systemically dosed small
+    /// molecules -- the ultrasound FIELD is pH-independent, the molecule that
+    /// converts it into ROS is not.
+    ///
+    /// Guards both halves: `0.0` is exactly inert (the production matrix SHA
+    /// depends on it) and a non-zero value measurably lowers SDT kill.
+    #[test]
+    fn sensitizer_ion_trapping_lowers_sdt_kill_in_3d_and_zero_is_inert() {
+        let cfg = RunConfig {
+            grid_dim: 40,
+            n_steps: 120,
+        };
+        let cond = Condition {
+            name: "sens_sym".to_string(),
+            treatment: Treatment::SDT,
+            treatment_name: "SDT".to_string(),
+            o2_lambda: Some(120.0),
+            immune_on: false,
+            stromal_on: false,
+            ph_on: true, // the barrier only exists when the pH field does
+            dose_schedule: DoseSchedule::Constant,
+        };
+        let run = |sens: f64| {
+            run_one_condition_full(
+                &cond,
+                cfg,
+                None,
+                Overrides {
+                    sensitizer_ion_trap: sens,
+                    ..Default::default()
+                },
+            )
+        };
+
+        let asymmetric = run(0.0);
+        let inert_again = run(0.0);
+        let symmetric = run(0.4); // == PhConfig::default().ion_trap_sensitivity
+
+        assert_eq!(
+            asymmetric.overall_kill_rate, inert_again.overall_kill_rate,
+            "sensitizer_ion_trap = 0.0 must be exactly inert and deterministic"
+        );
+        assert!(
+            asymmetric.overall_kill_rate > 0.0,
+            "SDT should kill something without a sensitizer penalty; got {}",
+            asymmetric.overall_kill_rate
+        );
+        assert!(
+            symmetric.overall_kill_rate < asymmetric.overall_kill_rate,
+            "giving the sensitizer the drug's acidity barrier must lower SDT kill: \
+             symmetric={} vs asymmetric={}",
+            symmetric.overall_kill_rate,
+            asymmetric.overall_kill_rate
         );
     }
 

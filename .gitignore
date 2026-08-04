@@ -35,3 +35,17 @@ analysis/living-review/
 
 # Local-only outputs (e.g. named collaborator seed list, #541) — never committed
 local/
+corpus/atlas/raw/
+corpus/atlas/records/
+corpus/atlas/relations/
+corpus/atlas/entities/
+corpus/atlas/records_unindexed/
+corpus/atlas/records_c04only/
+corpus/atlas/comention/
+# Build state, not analysis output: per-file resume records pointing at the
+# gitignored data above. 25,370 lines that churn on every rebuild, and they buy
+# nothing offline -- atlas_coverage.py exits without corpus/atlas/records/,
+# which is gitignored, so it can never run from a fresh checkout anyway.
+corpus/atlas/manifest.json
+corpus/atlas/manifest-c04only.json
+corpus/atlas/unindexed-manifest.json

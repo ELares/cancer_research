@@ -49,6 +49,16 @@ fit:
 - `lp_propagation`: in-vivo PRCC range [0.05, 0.2], in-vitro posterior median 0.7823 (2.5% = 0.3979); entire 95% posterior above the in-vivo max: **True**.
 - `lp_rate`: in-vivo PRCC range [0.03, 0.12], in-vitro posterior median 0.7133 (2.5% = 0.3857); entire 95% posterior above the in-vivo max: **True**.
 
+> **What the "in-vivo PRCC priors" are (#PRIOR-PROVENANCE).** Those ranges are
+> not independently derived in-vivo measurements. `scripts/run_prcc.py:38` sets
+> them as "±50% of default": `lp_rate` [0.03, 0.12] is exactly ±50% of the 0.06
+> default, and `lp_propagation` [0.05, 0.20] is that rule with its upper end
+> capped. So the disjunction says the in-vitro fit lies outside the DEFAULTS'
+> OWN NEIGHBOURHOOD -- which is a restatement of the falsification, not an
+> independent reason to discount it. The numerical disjunction stands; its use
+> as a defence does not. Full argument in
+> `analysis/calibration/in-vivo-prior-provenance.md`.
+
 So the in-vitro joint posterior lies ABOVE the in-vivo PRCC priors used for the
 spatial/headline prior-predictive intervals. The consequence is unchanged from
 #332 and is the honest scope of #500:
