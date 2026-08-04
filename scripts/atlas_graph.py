@@ -164,6 +164,19 @@ def build_index(root: Path) -> dict:
     # mentions and `et al` is 0.006% of Multiple Myeloma's, while `gpx4` is
     # 63% of GPX4's and `erastin` 98.5% of erastin's.
     ident_mentions = {i: sum(c.values()) for i, c in canon.items()}
+    # The count of a form FOR THE IDENTIFIER IT RESOLVES TO, which is the only
+    # numerator that makes the ratio above an actual share.
+    #
+    # `alias_support` sums a form across every sense it carries, while
+    # `ident_mentions` sums an identifier across every form. Dividing one by the
+    # other is not a share and can exceed 1 -- measured at 274% for `as`, 133%
+    # for `gp`, 104% for `tss`. Worse, it is biased in exactly the wrong
+    # direction: an ambiguous generic word collects a LARGER numerator from its
+    # other senses, so a minimum-share filter admits it more readily than a
+    # specific name. That is how `as`, `treatment` and `effects` passed a filter
+    # written to exclude them (analysis/atlas-comention-audit.md).
+    alias_ident_support = {a: c.most_common(1)[0][1] for a, c in alias.items()
+                           if sum(c.values()) >= MIN_MENTIONS}
     canon_res = {i: c.most_common(1)[0][0] for i, c in canon.items()}
     print(f"  aliases {len(alias_res):,}, identifiers {len(canon_res):,}", flush=True)
 
@@ -223,6 +236,7 @@ def build_index(root: Path) -> dict:
                     res[j] = pmid
 
     idx = {"alias": alias_res, "alias_support": alias_support,
+           "alias_ident_support": alias_ident_support,
            "ident_mentions": ident_mentions, "canon": canon_res,
            "edges": {k: dict(v) for k, v in edges.items()},
            "pmids": {k: sorted(v, key=int) for k, v in sample.items()},

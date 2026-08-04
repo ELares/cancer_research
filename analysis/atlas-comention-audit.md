@@ -14,26 +14,15 @@ surface form present in the sentence. A failure is a tokenizer bug.
 
 | | count |
 |---|---|
-| entity mentions sampled | 1,112 |
-| alias found in the sentence | 572 (51.4%) |
-| **would no longer fire** | **540 (48.6%)** |
+| entity mentions sampled | 1,484 |
+| alias found in the sentence | 1,484 (100.0%) |
+| **would no longer fire** | **0 (0.0%)** |
 
 Every sampled mention fired by construction when the sample was written,
 so the second row is not a tokenizer failure -- it is the alias having
 since been removed by the support and minority-form filters. That makes it
 a direct read on how much volume those filters take out of a uniform
 sample of what this layer used to match.
-
-Examples where the alias could not be located:
-
-* `NOS` in PMID 21535895: Percentages were computed using the total number of patients in the overall study population or relevant group as the denominator unless otherwise spe...
-* `triple-negative breast cancer` in PMID 36457699: The effect of the four sequences on the proliferation of three breast cancer cell lines, including two triple-negative cell lines (MDA-MB-231 and MDA-...
-* `ICD` in PMID 36457699: The effect of the four sequences on the proliferation of three breast cancer cell lines, including two triple-negative cell lines (MDA-MB-231 and MDA-...
-* `MB` in PMID 36457699: The effect of the four sequences on the proliferation of three breast cancer cell lines, including two triple-negative cell lines (MDA-MB-231 and MDA-...
-* `FAB` in PMID 36812605: Samples are sorted by Sample Groups in TCGA data and by molecular subtypes in external data (luminal A, basal-like, HER2-enriched, and luminal B for M...
-* `HER2-positive` in PMID 36812605: Samples are sorted by Sample Groups in TCGA data and by molecular subtypes in external data (luminal A, basal-like, HER2-enriched, and luminal B for M...
-* `basal cell carcinoma` in PMID 36812605: Samples are sorted by Sample Groups in TCGA data and by molecular subtypes in external data (luminal A, basal-like, HER2-enriched, and luminal B for M...
-* `Gleason 7` in PMID 28525384: As CAAT proteins are able to significantly stimulate breast cancer cell proliferation (Figures 2A, 2B, 4A and 4B), we evaluated the effect of palbocic...
 
 ## Check 2: does PubTator agree?
 
@@ -43,9 +32,9 @@ paper, the full-text match is corroborated.
 
 | | count |
 |---|---|
-| mentions in papers PubTator annotated | 1,112 |
-| PubTator assigned the same entity | 493 (44.3%) |
-| it did not | 619 (55.7%) |
+| mentions in papers PubTator annotated | 1,484 |
+| PubTator assigned the same entity | 482 (32.5%) |
+| it did not | 1,002 (67.5%) |
 | papers with no PubTator annotation at all | 0 |
 
 ### Splitting the disagreements
@@ -55,16 +44,16 @@ would waste the measurement:
 
 | | count | share of disagreements |
 |---|---|---|
-| our alias appears in the ABSTRACT PubTator read | 91 | 14.7% |
-| body-only, so PubTator could not have seen it | 528 | 85.3% |
+| our alias appears in the ABSTRACT PubTator read | 351 | 35.0% |
+| body-only, so PubTator could not have seen it | 651 | 65.0% |
 
 The body-only share is not evidence against this layer -- it is the layer
 doing the job it exists for, finding entities the abstract-level extractor
 structurally cannot reach. The first row is the one that could contain false
 positives, and it is where any future manual check should go.
 
-Treating body-only matches as correct puts precision at **91.8%** as an upper bound, against the
-44.3% corroboration rate as a lower bound.
+Treating body-only matches as correct puts precision at **76.3%** as an upper bound, against the
+32.5% corroboration rate as a lower bound.
 
 ### The bound has since been resolved by hand, and it sits near the bottom
 

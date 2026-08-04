@@ -184,6 +184,10 @@ def build_alias_map(idx: dict) -> tuple:
     blocked, domain = _ambiguity()
     support = idx.get("alias_support") or {}
     ident_tot = idx.get("ident_mentions") or {}
+    # Per-(form, identifier) counts. Falls back to the cross-sense total on an
+    # index built before this field existed, which reproduces the old (wrong)
+    # behaviour rather than crashing -- the rebuild is what fixes it.
+    ident_support = idx.get("alias_ident_support") or {}
     out, redirected, dropped, thin, minority = {}, 0, 0, 0, 0
     for a, i in idx["alias"].items():
         if not usable_alias(a):
@@ -198,7 +202,11 @@ def build_alias_map(idx: dict) -> tuple:
             thin += 1
             continue
         if ident_tot:
-            share = support.get(a, 0) / max(1, ident_tot.get(i, 0))
+            # The numerator must be this form's count FOR THIS IDENTIFIER, not
+            # its total across every sense it carries. Using the cross-sense
+            # total made the ratio exceed 1 for ambiguous forms and inverted the
+            # filter's intent -- see the note in atlas_graph.build_index.
+            share = ident_support.get(a, support.get(a, 0)) / max(1, ident_tot.get(i, 0))
             if share < MIN_ALIAS_SHARE:
                 minority += 1
                 continue
