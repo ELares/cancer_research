@@ -4,7 +4,11 @@
   "genes": {
     "ACSL4": 2182,
     "GPX4": 2879,
-    "SLC7A11": 23657
+    "SLC7A11": 23657,
+    "HMOX1": 3162,
+    "TP53": 7157,
+    "TFRC": 7037,
+    "KEAP1": 9817
   },
   "low_z_threshold": -1.0,
   "verylow_z_threshold": -2.0,

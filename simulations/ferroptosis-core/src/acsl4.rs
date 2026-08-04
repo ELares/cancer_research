@@ -79,9 +79,13 @@ pub fn pufa_boost_from_status(status: f64) -> f64 {
 ///
 /// A consumer that has a patient's ACSL4 mRNA z-score can feed
 /// `pufa_boost_from_status(status_from_zscore(z))` to stratify that tumor. The
-/// per-cancer-type fraction of tumors with `z < -1` (about 11 to 19% in TCGA,
-/// median 14%) is the committed population prior for how many tumors fall in the
-/// low-ACSL4 (refractory-leaning) tail. The slope (`/2`) is the placeholder that
+/// per-cancer-type fraction of tumors with `z < -2` (median 3.0% in TCGA) is the
+/// committed population prior for how many tumors fall in the strongly
+/// refractory-leaning tail. Use the DEEP cut, not `z < -1`: #616 measured six
+/// control genes and found the `z < -1` fraction is ~15.9% for any gene, the
+/// normal expectation, so it carries no ACSL4-specific information. At `z < -2`
+/// ACSL4 does separate (above expectation in 25 of 32 cancer types), so that row
+/// is evidence about ACSL4 rather than about the z-score. The slope (`/2`) is the placeholder that
 /// reproduces the existing constants; only the within-cohort z interpretation is
 /// data-anchored, not the absolute status→ferroptosis magnitude.
 pub fn status_from_zscore(z: f64) -> f64 {

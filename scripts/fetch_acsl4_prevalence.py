@@ -44,7 +44,13 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 OUT_DIR = REPO_ROOT / "analysis" / "calibration"
 
 # Hugo symbol -> Entrez Gene ID for the ferroptosis lipid/defense axis genes.
-GENES = {"ACSL4": 2182, "GPX4": 2879, "SLC7A11": 23657}
+# ACSL4/GPX4/SLC7A11 anchor the #444 status layer. HMOX1/TP53/TFRC/KEAP1 are the
+# four most-studied ferroptosis mechanisms the engine has NO parameter for
+# (analysis/atlas-model-gaps.md), added for #616 to answer whether a calibration
+# target exists for them before any layer is written. Entrez IDs verified
+# against NCBI at time of writing.
+GENES = {"ACSL4": 2182, "GPX4": 2879, "SLC7A11": 23657,
+         "HMOX1": 3162, "TP53": 7157, "TFRC": 7037, "KEAP1": 9817}
 
 # z-score thresholds for the within-cohort low-expression tails.
 LOW_Z = -1.0

@@ -1,0 +1,109 @@
+{
+  "expected_low": 0.15865525393145707,
+  "expected_verylow": 0.02275013194817921,
+  "alpha": 0.01,
+  "genes": {
+    "ACSL4": {
+      "n_types": 32,
+      "median_low": 0.1436,
+      "median_verylow": 0.0298,
+      "iqr_low": 0.029625000000000012,
+      "dev_from_normal": -0.015055253931457069,
+      "types_above_expected_low": 8,
+      "types_above_expected_verylow": 25,
+      "p_low": 0.0070003666914999485,
+      "p_verylow": 0.0021024015732109547,
+      "separated_low": false,
+      "separated_verylow": true
+    },
+    "GPX4": {
+      "n_types": 32,
+      "median_low": 0.1446,
+      "median_verylow": 0.016100000000000003,
+      "iqr_low": 0.023749999999999993,
+      "dev_from_normal": -0.014055253931457068,
+      "types_above_expected_low": 9,
+      "types_above_expected_verylow": 8,
+      "p_low": 0.020061607006937265,
+      "p_verylow": 0.0070003666914999485,
+      "separated_low": false,
+      "separated_verylow": false
+    },
+    "SLC7A11": {
+      "n_types": 32,
+      "median_low": 0.1602,
+      "median_verylow": 0.0169,
+      "iqr_low": 0.02587499999999998,
+      "dev_from_normal": 0.0015447460685429348,
+      "types_above_expected_low": 17,
+      "types_above_expected_verylow": 7,
+      "p_low": 0.860050065908581,
+      "p_verylow": 0.0021024015732109547,
+      "separated_low": false,
+      "separated_verylow": false
+    },
+    "HMOX1": {
+      "n_types": 32,
+      "median_low": 0.14895,
+      "median_verylow": 0.01905,
+      "iqr_low": 0.017600000000000005,
+      "dev_from_normal": -0.009705253931457075,
+      "types_above_expected_low": 11,
+      "types_above_expected_verylow": 11,
+      "p_low": 0.11018416518345475,
+      "p_verylow": 0.11018416518345475,
+      "separated_low": false,
+      "separated_verylow": false
+    },
+    "TP53": {
+      "n_types": 32,
+      "median_low": 0.1407,
+      "median_verylow": 0.042749999999999996,
+      "iqr_low": 0.039325,
+      "dev_from_normal": -0.017955253931457082,
+      "types_above_expected_low": 9,
+      "types_above_expected_verylow": 31,
+      "p_low": 0.020061607006937265,
+      "p_verylow": 1.5366822481155396e-08,
+      "separated_low": false,
+      "separated_verylow": true
+    },
+    "TFRC": {
+      "n_types": 32,
+      "median_low": 0.1516,
+      "median_verylow": 0.020749999999999998,
+      "iqr_low": 0.019850000000000034,
+      "dev_from_normal": -0.007055253931457062,
+      "types_above_expected_low": 7,
+      "types_above_expected_verylow": 13,
+      "p_low": 0.0021024015732109547,
+      "p_verylow": 0.37708558747544885,
+      "separated_low": false,
+      "separated_verylow": false
+    },
+    "KEAP1": {
+      "n_types": 32,
+      "median_low": 0.13829999999999998,
+      "median_verylow": 0.01495,
+      "iqr_low": 0.031774999999999984,
+      "dev_from_normal": -0.020355253931457096,
+      "types_above_expected_low": 7,
+      "types_above_expected_verylow": 10,
+      "p_low": 0.0021024015732109547,
+      "p_verylow": 0.050102459732443094,
+      "separated_low": false,
+      "separated_verylow": false
+    }
+  },
+  "gaps": [
+    "HMOX1",
+    "TP53",
+    "TFRC",
+    "KEAP1"
+  ],
+  "separated_low": [],
+  "separated_verylow": [
+    "ACSL4",
+    "TP53"
+  ]
+}
