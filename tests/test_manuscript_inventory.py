@@ -89,3 +89,23 @@ def test_all_sim_binaries_appear_in_manuscript():
         "Simulation binaries missing from the manuscript build list "
         f"(Appendix B): {missing}. Add them so the reproduction guide stays complete."
     )
+
+
+def test_manuscript_scopes_the_acsl4_prevalence_claim_to_the_deep_cut():
+    """#616: the z<-1 low-ACSL4 fraction is not gene-specific; the z<-2 one is.
+
+    The manuscript originally called the shallow fraction "the population prior
+    for how many tumors fall in the refractory-leaning tail". Six control genes
+    return the same figure, so it describes the cut-point rather than ACSL4.
+    Guarded because a prevalence number that reads as biology is exactly the
+    kind of claim that survives a correction elsewhere in the repo.
+    """
+    md = (Path(__file__).resolve().parent.parent
+          / "article" / "drafts" / "v1.md").read_text()
+    assert "#616" in md, "the manuscript does not cite the correction"
+    assert "is not gene-specific" in md
+    # The shallow figure must never again be presented as the prior on its own.
+    assert ("nineteen percent of tumors per cancer type) is the population prior"
+            not in md), "the retracted framing has returned"
+    # And the surviving half must still be stated, or the correction over-reaches.
+    assert "deep-cut figure is genuine evidence about ACSL4" in md
