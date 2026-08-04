@@ -91,7 +91,7 @@ in Chapters 6 and 7. The brief covers P1 and P3 through P7; P2's depth-penetrati
 leg is folded into E1's confocal depth-sectioning, so it has no separate
 experiment.
 
-### E1. Spheroid RSL3 versus SDT kill at measured hypoxia (tests P4, the keystone)
+### E1. Spheroid RSL3 versus SDT kill at measured hypoxia (tests P4, the most novel test)
 
 - **Setup:** persister-enriched cells in spheroids of at least 500 um radius with
   verified hypoxic cores (pimonidazole), or a hypoxia chamber (21% versus 1% O2).
@@ -131,7 +131,7 @@ experiment.
   differential is wrong).
 - **Cost:** moderate (adds the DC-maturation readout).
 
-### E4. GPX4 plus FSP1 dose-matrix synergy (tests P1)
+### E4. GPX4 plus FSP1 dose-matrix synergy (tests P1, **the keystone**)
 
 - **Setup:** RSL3 (or ML162) by iFSP1 (or brequinar) dose matrix in
   persister-enriched cells.
@@ -141,6 +141,13 @@ experiment.
 - **Falsifies if:** CI greater than 0.8 (additive or antagonistic), revising the
   parallel-independent-repair assumption.
 - **Cost:** low (standard combination assay).
+- **Why this is the keystone:** because it is the most DECISIVE, not the most
+  novel. Both of its outcomes are informative. It rests on GPX4/FSP1 parallel
+  independence, which is established (Doll 2019, Bersuker 2019), so a negative
+  result falsifies the parallel-independent-repair assumption cleanly rather
+  than leaving the mechanism and the execution confounded. It also tests the
+  single most quantitative claim the model makes, the ~1.99x Bliss synergy, and
+  it is the cheapest experiment in the program to staff.
 
 ### E5. Sequential defense recovery after drug withdrawal (tests P3)
 
@@ -203,10 +210,11 @@ one lands in is countable across 4,403,994 cancer articles
 
 **This is not a quality ranking, and low support is not a reason to drop a
 prediction.** A sparse leg is where novelty lives. But it bears on SEQUENCING,
-and on a disagreement between this document and
-`analysis/p1-wetlab-protocol.md`: the Sequencing section below calls E1 (testing
-P4) the keystone, while that protocol calls P1 the highest-leverage prediction in
-the program. Neither designation was made with these numbers.
+and it settled a disagreement this document once had with
+`analysis/p1-wetlab-protocol.md`: this file used to call E1 (testing P4) the
+keystone while that protocol called P1 the highest-leverage prediction in the
+program, and neither designation had been made with these numbers. Resolved
+below (#619).
 
 The relevant asymmetry is interpretability of a NEGATIVE result. P4 additionally
 depends on sonodynamic therapy, which has 32 ferroptosis-intersecting articles in
@@ -215,17 +223,59 @@ negative P4 could mean the mechanism is wrong or that nobody has yet worked out
 how to run the experiment well. P1 rests on GPX4/FSP1 parallel independence,
 which is established, so a negative P1 is simply a negative result.
 
-Whichever is called the keystone should state whether it is keystone because it
-is the most decisive or because it is the most novel. Those point at different
-experiments.
+### The decision (#619)
+
+**E4, testing P1, is the keystone, on the basis of DECISIVENESS.** E1 remains in
+the program as the most novel test and is not demoted; it is sequenced second.
+`analysis/p1-wetlab-protocol.md` defers to this designation rather than making
+its own.
+
+Four things decided it, and the first is the one that would reverse the call if
+it were wrong:
+
+1. **Interpretability of a negative**, as set out above. A negative E4 is a
+   negative result. A negative E1 is ambiguous between "the mechanism is wrong"
+   and "nobody has worked out how to run this yet".
+
+2. **That ambiguity is not shrinking.** The sonodynamic leg has sat at roughly a
+   quarter of one percent of the ferroptosis field throughout a 25-fold
+   expansion of that field, statistically flat in every window pair tested
+   (`analysis/atlas-thesis-position.md`). So the hope that the technique matures
+   on its own is not supported by the literature's behaviour. The honest limit
+   cuts both ways: that test could not have detected a rise below about 4.7x, so
+   this is an absence of evidence of movement, not evidence of stasis.
+
+3. **Cost and recruitability.** E4 is a standard combination assay. E1 needs an
+   ultrasound rig, a sonosensitizer, spheroid culture, pimonidazole hypoxia
+   verification and confocal depth-sectioning. This program's stated bottleneck
+   is finding a wet-lab collaborator at all, and naming as keystone the
+   experiment that is hardest to staff sequences the whole program behind its
+   rarest resource.
+
+4. **P4 tests a claim this project has already softened.** The scientific review
+   found the "physical ROS bypasses hypoxia" framing over-extended, since SDT
+   ROS is widely oxygen-dependent and the lead clinical agent is Type II, and
+   Section 7.1 was rebalanced accordingly. A keystone is a poor use of an
+   experiment whose claim has already been partly retracted.
+
+**What this does NOT say.** P4 is not less important, and a sparse leg is not a
+weak one. E1 is the most distinctive test in the program and the one whose
+positive result would matter most. The two designations genuinely point at
+different experiments, and this document is choosing decisiveness over novelty
+and saying so, rather than leaving the choice implicit.
+
+This was delegated to the assistant by the owner rather than decided by
+measurement; the table above is retained so the reasoning stays auditable and
+the call can be revisited.
 
 ## Sequencing
 
 1. **Now:** register P1 through P8 above on OSF and mint the DOI, then paste it
    into the registration-status block at the top of this file.
-2. **Recruit:** circulate the Part 2 briefs to find a wet-lab collaborator for E1
-   (the keystone hypoxia leg) and E4 (the cheapest, the synergy claim). These two
-   issues are tracked as `help wanted` (#442 spheroid kill, #448 in-vivo PK).
+2. **Recruit:** circulate the Part 2 briefs to find a wet-lab collaborator for E4
+   FIRST (the keystone, and the cheapest to staff), then E1 (the most novel, and
+   the one needing an ultrasound rig). These two issues are tracked as
+   `help wanted` (#442 spheroid kill, #448 in-vivo PK).
 3. **Calibrate honestly:** as data arrives, report calibrated-versus-preregistered
    for each prediction, failures stated as plainly as confirmations.
 
