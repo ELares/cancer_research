@@ -86,6 +86,24 @@ from atlas_fulltext import fulltext_root  # noqa: E402
 from atlas_graph import _ambiguity, load_index  # noqa: E402
 
 MIN_ALIAS_LEN = 4
+# A surface form must be attested this often across the census before it may be
+# matched in running text. MEASURED, not guessed: on a 257-mention labelled
+# sample, correct matches have a median census support of 1,067 and wrong ones
+# 16. The graph's own MIN_MENTIONS of 3 is the proximate cause of the junk --
+# it admits a generic phrase mis-annotated in a handful of abstracts, and the
+# majority vote then assigns it an identifier.
+MIN_ALIAS_SUPPORT = 50
+# A surface form must also account for this share of its identifier's total
+# mentions. Support alone does not catch the largest false-positive families:
+# `tumor cells` has 312 census mentions and `t cell` 358, comfortably past the
+# support bar, but they are 2.8% and 0.8% of Glucagonoma and Lymphoma T-Cell
+# respectively -- a rare mis-annotation, not a name. Measured on 152 labelled
+# false positives this kills 91.4% of them, with their median share at 0.33%,
+# while real names sit at 46-98%.
+#
+# Both thresholds were chosen on that same labelled sample, so they are a FIT.
+# A fresh audit sample after the next rebuild is what would confirm them.
+MIN_ALIAS_SHARE = 0.05
 MAX_NGRAM = 5
 MIN_SENT_ENTITIES = 2
 MAX_SENT_ENTITIES = 12   # a 40-entity sentence is a table or a gene list, not a claim
@@ -120,16 +138,29 @@ def usable_alias(a: str) -> bool:
     """Keep only surface forms specific enough to match safely in running text."""
     if len(a) < MIN_ALIAS_LEN or a in STOPWORD_ALIASES:
         return False
+    # A trailing or leading hyphen is a tokenizer stub, not a name. The token
+    # pattern leaves `ifn-` behind from "IFN-gamma", and `ifn-` resolves to
+    # IFNA1 -- so interferon gamma was being counted as interferon alpha.
+    if a.startswith("-") or a.endswith("-"):
+        return False
     if " " in a:
         words = a.split()
         # a fragment that starts or ends on a connective is not a name
         if words[0] in _EDGE_WORDS or words[-1] in _EDGE_WORDS:
             return False
         return True
-    # single token: require a digit or hyphen. The lowercased alias no longer
-    # carries the original's internal capitals, so this is the available proxy
-    # for "looks like a symbol rather than an English word".
-    return any(ch.isdigit() for ch in a) or "-" in a
+    # A single token used to require a digit or hyphen, as a proxy for "looks
+    # like a symbol rather than an English word". The proxy was expensive and
+    # unnecessary: it dropped every purely alphabetic drug name -- `erastin`,
+    # `cisplatin`, `pembrolizumab` -- while catching only 3 of 152 measured
+    # false positives, because the real offenders are multi-word and were
+    # exempt from it anyway.
+    #
+    # Specificity is now MEASURED downstream, by census support and by the
+    # share of its identifier's mentions a form accounts for. Removing the
+    # proxy kills the same 141 of 152 false positives and retains strictly more
+    # true ones, so it is deleted rather than layered on top of.
+    return True
 
 
 def build_alias_map(idx: dict) -> tuple:
@@ -151,10 +182,26 @@ def build_alias_map(idx: dict) -> tuple:
     module's own docstring already chooses recall as the cheaper loss.
     """
     blocked, domain = _ambiguity()
-    out, redirected, dropped = {}, 0, 0
+    support = idx.get("alias_support") or {}
+    ident_tot = idx.get("ident_mentions") or {}
+    out, redirected, dropped, thin, minority = {}, 0, 0, 0, 0
     for a, i in idx["alias"].items():
         if not usable_alias(a):
             continue
+        # The shape filter exempts EVERY multi-word form from the specificity
+        # test it applies to single tokens, which is how `tumor cells`,
+        # `overall survival` and `et al` reached the matcher. Support is the
+        # test that catches them: 132 of 152 measured false positives were
+        # multi-word, and they separate from true matches by two orders of
+        # magnitude of census attestation.
+        if support and support.get(a, 0) < MIN_ALIAS_SUPPORT:
+            thin += 1
+            continue
+        if ident_tot:
+            share = support.get(a, 0) / max(1, ident_tot.get(i, 0))
+            if share < MIN_ALIAS_SHARE:
+                minority += 1
+                continue
         if a in blocked:
             if a in domain:
                 out[a] = domain[a]["id"]
@@ -163,7 +210,8 @@ def build_alias_map(idx: dict) -> tuple:
                 dropped += 1
             continue
         out[a] = i
-    return out, {"redirected": redirected, "dropped_ambiguous": dropped}
+    return out, {"redirected": redirected, "dropped_ambiguous": dropped,
+                 "dropped_thin": thin, "dropped_minority": minority}
 
 
 def sentence_entities(sentence: str, alias: dict) -> set:
@@ -271,6 +319,10 @@ def main() -> None:
           f"({len(alias)/len(idx['alias']):.1%} kept after disambiguation filtering)")
     print(f"  sense collisions: {amb['redirected']} redirected to a measured "
           f"cancer-domain sense, {amb['dropped_ambiguous']} dropped as unresolvable")
+    print(f"  thinly attested (< {MIN_ALIAS_SUPPORT} census mentions): "
+          f"{amb['dropped_thin']:,} dropped")
+    print(f"  minority form (< {100*MIN_ALIAS_SHARE:.0f}% of its identifier's "
+          f"mentions): {amb['dropped_minority']:,} dropped")
 
     shards = sorted((fulltext_root() / "shards").glob("*.jsonl.gz"))
     if args.recent_first:

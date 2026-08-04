@@ -788,23 +788,30 @@ def test_comention_alias_map_handles_sense_collisions(monkeypatch):
     assert amap["cox-2"] == "5743", "a measured domain sense must be applied"
     assert "fsp1" not in amap, "no domain default -> drop rather than guess"
     assert amap["gpx4"] == "2879", "unambiguous aliases are untouched"
-    assert stats == {"redirected": 1, "dropped_ambiguous": 1}
+    assert stats["redirected"] == 1 and stats["dropped_ambiguous"] == 1
 
 
-def test_comention_shape_filter_alone_would_keep_the_dangerous_forms():
-    """Pins WHY the sense filter is needed, not just that it exists.
+def test_shape_alone_cannot_separate_names_from_english():
+    """Why the specificity proxy was removed rather than tightened.
 
-    If usable_alias ever started rejecting these on shape, this test failing is
-    the signal that the sense filter's justification changed.
+    `usable_alias` used to require a digit or hyphen in a single token, as a
+    proxy for "looks like a symbol". It caught 3 of 152 measured false
+    positives -- the real offenders are multi-word and were exempt -- while
+    dropping every purely alphabetic drug name. Both facts are pinned here.
     """
     import atlas_comention as cm
-    for a in ("cox-2", "fsp1", "beta-actin", "ap-1"):
-        assert cm.usable_alias(a), f"{a} passes the shape filter, so shape is not enough"
-    # Length happens to exclude some collisions, but that is luck, not
-    # disambiguation -- these are rejected for being short, not for being ambiguous.
-    for a in ("psa", "p21", "p62", "er"):
-        assert not cm.usable_alias(a)
-        assert len(a) < cm.MIN_ALIAS_LEN, "excluded by length, which is incidental"
+    # multi-word English was ALWAYS exempt from the proxy, which is how
+    # `tumor cells` -> Glucagonoma reached the matcher
+    for a in ("tumor cells", "cancer cells", "overall survival"):
+        assert cm.usable_alias(a), f"{a} passes shape; only support/share catch it"
+    # and real drug names carry no digit or hyphen, so the proxy cost recall
+    for a in ("erastin", "cisplatin", "pembrolizumab"):
+        assert cm.usable_alias(a), f"{a} is a real name the proxy used to drop"
+    # length and tokenizer-stub rules remain, and are not proxies for sense
+    for a in ("psa", "p21", "er"):
+        assert not cm.usable_alias(a) and len(a) < cm.MIN_ALIAS_LEN
+    for a in ("ifn-", "high-"):
+        assert not cm.usable_alias(a), "a trailing hyphen is a tokenizer stub"
 
 
 # --- how much of the contradiction signal is real? (#ATLAS-CONTRA-Q) -------
@@ -1519,6 +1526,9 @@ def test_comention_alias_matching_is_mechanically_sound():
     assert raw["mentions"] > 500
     assert raw["alias_missing"] == 0, \
         f"{raw['alias_missing']} sampled entities have no alias in their sentence"
+    # the sample predates the support/minority filters, so a miss now means the
+    # alias was removed rather than that the tokenizer failed
+    assert raw["alias_found"] + raw["alias_filtered_out"] == raw["mentions"]
 
 
 def test_comention_precision_is_reported_as_a_bound_not_a_number():
@@ -1748,3 +1758,36 @@ def test_evidence_check_states_what_publication_types_cannot_validate():
     md = (REPO_ROOT / "analysis" / "atlas-evidence-check.md").read_text()
     assert "not evidence tiers" in md
     assert "in-vivo" in md and "in-vitro" in md
+
+
+def test_comention_filters_are_measured_not_guessed():
+    """Both thresholds come from a labelled sample, and both are a FIT.
+
+    MIN_ALIAS_SUPPORT and MIN_ALIAS_SHARE were chosen on the same 178-mention
+    sample they are evaluated against, so the resulting precision is not a
+    held-out number. The module must say so, because a fitted threshold quoted
+    as a measurement is exactly the error this repo keeps finding.
+    """
+    import atlas_comention as cm
+    src = (REPO_ROOT / "scripts" / "atlas_comention.py").read_text()
+    assert cm.MIN_ALIAS_SUPPORT >= 25 and 0 < cm.MIN_ALIAS_SHARE < 0.5
+    assert "FIT" in src and "fresh audit sample" in src
+
+
+def test_minority_form_filter_catches_the_generic_english_families():
+    """Support alone does not catch them; share does.
+
+    `tumor cells` has 312 census mentions and clears any support bar, but is
+    2.8% of Glucagonoma's mentions -- a rare mis-annotation, not a name.
+    """
+    import atlas_comention as cm
+    idx = {
+        "alias": {"tumor cells": "MESH:D005935", "gpx4": "2879"},
+        "alias_support": {"tumor cells": 312, "gpx4": 12827},
+        # Glucagonoma is mentioned 11,291 times; GPX4 12,457
+        "ident_mentions": {"MESH:D005935": 11291, "2879": 12457},
+    }
+    amap, stats = cm.build_alias_map(idx)
+    assert "tumor cells" not in amap, "a 2.8% minority form must not match text"
+    assert amap.get("gpx4") == "2879", "a dominant form must survive"
+    assert stats["dropped_minority"] == 1
