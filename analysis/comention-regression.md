@@ -197,6 +197,36 @@ The reported figure is the most pessimistic of the three. All three are
 negative, so the direction does not turn on the choice, but the magnitude
 is a 7-to-9 point band rather than a single number.
 
+## Does the reference-list confound move the headline? (measured: no)
+
+A co-mention harvested from a cited title is recorded against the CITING
+paper, which is a weaker claim than the layer is usually read as making, and
+it is asymmetric: 11 of the 36 corroborated true positives
+sit in structural text against 0 of 8 body-only. That
+was disclosed and uncorrected. Restricting every stratum to the paper's own
+prose:
+
+| stratum | all | prose only | n (prose) |
+|---|---|---|---|
+| corroborated | 90.0% | 86.2% | 29 |
+| body-only | 20.0% | 22.9% | 35 |
+| abstract-visible | 15.0% | 13.0% | 54 |
+
+Weighted, that is **41.1%** against the reported
+41.6% -- a difference of 0.4 points. **The
+confound is real and does not move the headline.**
+
+It also does not run the way it was assumed to. Structural text is MORE
+precise in the corroborated stratum, not less: a reference title naming two
+entities usually names them correctly, because a title is written to be
+precise. The effect is a wash rather than an inflation, and the stratum it
+helps is the one that needed help least.
+
+This holds the strata WEIGHTS fixed and varies only the precisions, so it
+answers whether the confound biases the precision estimate. It does not
+model a layer that excluded structural text at build time, which would
+shrink volume as well.
+
 ## Held-out validation of the discriminator (#628 criterion 2)
 
 Every judged mention above was used to SELECT the authority-name rule, so
