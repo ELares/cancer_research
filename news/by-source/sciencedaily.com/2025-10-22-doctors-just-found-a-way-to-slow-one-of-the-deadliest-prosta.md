@@ -14,14 +14,9 @@ claims:
     symptoms worsening and saw nearly a 50% risk reduction in BRCA-mutated cases.
   type: result
   category: FACTUAL
-  verification_status: verified
-  verification_source: pubmed
-  linked_pmids:
-  - '42016026'
-  - '42015879'
-  - '42013747'
-  - '42013351'
-  - '42011088'
+  verification_status: unverified
+  verification_source: null
+  linked_pmids: []
 - id: sciencedaily.com-2025-10-22-doctors-just-found-a-way-to-slow-one-of--002
   text: 'A major international study led by UCL researchers has found that combining
     two cancer drugs could substantially slow the progression of a severe and often
@@ -47,14 +42,9 @@ claims:
     progression and shorter survival under standard care.
   type: result
   category: FACTUAL
-  verification_status: verified
-  verification_source: pubmed
-  linked_pmids:
-  - '42015879'
-  - '42003188'
-  - '41995125'
-  - '41993234'
-  - '41993145'
+  verification_status: unverified
+  verification_source: null
+  linked_pmids: []
 - id: sciencedaily.com-2025-10-22-doctors-just-found-a-way-to-slow-one-of--004
   text: 'More than half of the participants (55.6%) carried mutations in
 
@@ -81,12 +71,9 @@ claims:
     48% in those with BRCA1 or BRCA2 mutations.'
   type: result
   category: FACTUAL
-  verification_status: verified
-  verification_source: corpus
-  linked_pmids:
-  - '39626160'
-  - '38629456'
-  - '36792166'
+  verification_status: unverified
+  verification_source: null
+  linked_pmids: []
 - id: sciencedaily.com-2025-10-22-doctors-just-found-a-way-to-slow-one-of--006
   text: Only 16% of these patients experienced significant symptom progression, compared
     to 34% in the placebo group.
@@ -102,14 +89,9 @@ claims:
     a longer follow-up period is needed to confirm whether it extends life expectancy.'
   type: speculation
   category: FACTUAL
-  verification_status: verified
-  verification_source: pubmed
-  linked_pmids:
-  - '42020929'
-  - '42020928'
-  - '42020926'
-  - '42020907'
-  - '42020905'
+  verification_status: unverified
+  verification_source: null
+  linked_pmids: []
 - id: sciencedaily.com-2025-10-22-doctors-just-found-a-way-to-slow-one-of--008
   text: Significantly more cases of anemia and high blood pressure were reported with
     niraparib, and 25% of patients required blood transfusions.
@@ -119,7 +101,7 @@ claims:
   verification_source: null
   linked_pmids: []
 review_status: pending
-credibility_score: 48.0
+credibility_score: 32.0
 scored_at: '2026-06-29'
 ---
 

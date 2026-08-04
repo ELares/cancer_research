@@ -25,14 +25,9 @@ claims:
     first step.
   type: opinion
   category: FACTUAL
-  verification_status: verified
-  verification_source: pubmed
-  linked_pmids:
-  - '41615367'
-  - '41610901'
-  - '41452918'
-  - '41390011'
-  - '41175888'
+  verification_status: unverified
+  verification_source: null
+  linked_pmids: []
 - id: sciencedaily.com-2026-03-29-new-cholesterol-guidelines-could-change--003
   text: The guidance also recommends a one-time test for Lp(a), which is tied to inherited
     risk and can raise heart disease risk by about 40% at levels of 125 nanomoles
@@ -43,7 +38,7 @@ claims:
   verification_source: null
   linked_pmids: []
 review_status: pending
-credibility_score: 39.2
+credibility_score: 23.2
 scored_at: '2026-06-29'
 ---
 

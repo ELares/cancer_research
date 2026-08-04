@@ -22,27 +22,17 @@ claims:
     drugs were able to clear dormant tumor cells from 80 percent of the study participants.
   type: result
   category: FACTUAL
-  verification_status: verified
-  verification_source: pubmed
-  linked_pmids:
-  - '42020855'
-  - '42020841'
-  - '42020835'
-  - '42020811'
-  - '42020743'
+  verification_status: unverified
+  verification_source: null
+  linked_pmids: []
 - id: sciencedaily.com-2025-09-02-scientists-discover-how-to-wipe-out-brea-003
   text: Patients who have MRD are more likely to experience breast cancer recurrence
     and have decreased overall survival.
   type: speculation
   category: FACTUAL
-  verification_status: verified
-  verification_source: pubmed
-  linked_pmids:
-  - '42019815'
-  - '42014859'
-  - '42010655'
-  - '42010448'
-  - '42010117'
+  verification_status: unverified
+  verification_source: null
+  linked_pmids: []
 - id: sciencedaily.com-2025-09-02-scientists-discover-how-to-wipe-out-brea-004
   text: If dormant tumor cells were found, patients were then eligible to enroll in
     the Phase II CLEVER clinical trial, which randomized patients to receive six cycles
@@ -53,9 +43,7 @@ claims:
   verification_status: verified
   verification_source: pubmed
   linked_pmids:
-  - '40961446'
   - '40897974'
-  - '40756372'
   - '40602662'
   - '40449509'
 - id: sciencedaily.com-2025-09-02-scientists-discover-how-to-wipe-out-brea-005
@@ -71,7 +59,7 @@ claims:
   verification_source: null
   linked_pmids: []
 review_status: pending
-credibility_score: 39.2
+credibility_score: 26.4
 scored_at: '2026-06-29'
 ---
 

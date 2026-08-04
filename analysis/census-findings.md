@@ -118,7 +118,7 @@ modest and the recent end is an upper bound because of indexing lag.
 ## Integrity problems found along the way
 
 * **3 module citations pointed at unrelated papers** -- a Nature news item on fetal-tissue policy, a Theriogenology paper on embryo vitrification, and a PMID that does not resolve. Corrected. (`atlas-citation-audit.md`)
-* **55.7% of the news pipeline's "verified" links** share no content word with the claim they verify. Root cause: a claim yielding the single search term `Seven` matched 835,973 records and the five newest were accepted. Fixed. (`news-verification-audit.md`)
+* **55.7% of the news pipeline's "verified" links** shared no content word with the claim they verified. Root cause: a claim yielding the single search term `Seven` matched 835,973 records and the five newest were accepted. The linker is fixed and re-run, and the same measurement now reads 1.9% -- but by WITHDRAWAL, not repair: 30 of the 44 verifications were dropped outright, and 19 of the 33 surviving pairs clear the bar on oncology boilerplate alone. (`news-verification-audit.md`)
 * **`FSP1` resolved to a spastic-paraplegia gene**, leaving the manuscript's headline GPX4+FSP1 claim with zero typed relations. Blocklist now covers 346 measured sense collisions. (`atlas-ambiguity.md`)
 * **The manuscript's mechanism count was 19 where the index carries 23** -- an undocumented 20-article threshold presented as coverage, and the four it hid were mostly physical modalities.
 

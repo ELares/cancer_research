@@ -79,9 +79,12 @@ audit() {
   $PY scripts/atlas_citation_audit.py
   log "news verification audit: does the 'verified' label hold"
   $PY scripts/news_verification_audit.py
-  # Deliberately NOT re-running scripts/verify_news_claims.py. That rewrites 44
-  # claim statuses and their credibility scores, which is a data change to
-  # review on its own rather than a pipeline side effect.
+  # Deliberately NOT re-running scripts/verify_news_claims.py. That rewrites
+  # claim statuses and their credibility scores (the post-fix re-run withdrew 30
+  # of 44 verifications and moved every article's score), which is a data change
+  # to review on its own rather than a pipeline side effect. It also depends on
+  # PubMed's live index, so it is not reproducible the way the rest of this
+  # pipeline is.
 }
 
 case "$PHASE" in

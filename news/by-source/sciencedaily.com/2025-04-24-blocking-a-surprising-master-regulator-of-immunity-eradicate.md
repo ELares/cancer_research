@@ -15,16 +15,11 @@ claims:
     lived for 18 weeks after tumor induction, when the experiment was terminated.
   type: result
   category: FACTUAL
-  verification_status: verified
-  verification_source: pubmed
-  linked_pmids:
-  - '42016858'
-  - '42016537'
-  - '42014210'
-  - '42005346'
-  - '42003393'
+  verification_status: unverified
+  verification_source: null
+  linked_pmids: []
 review_status: pending
-credibility_score: 47.2
+credibility_score: 15.2
 scored_at: '2026-06-29'
 ---
 
