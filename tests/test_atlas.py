@@ -1307,3 +1307,58 @@ def test_pipeline_does_not_silently_rewrite_news_claim_statuses():
     assert "news_verification_audit.py" in audit
     assert "$PY scripts/verify_news_claims.py" not in audit
     assert "Deliberately NOT" in audit
+
+
+# --- the manuscript's corpus statistics must match the frozen index --------
+
+def test_manuscript_corpus_statistics_match_the_frozen_index():
+    """The frozen index is immutable, so every headline count is checkable.
+
+    Checked all of them: 4,830 records, 803 journals, 22 cancer types,
+    2001-2026 and ~2,297 immunotherapy articles all match exactly. The
+    mechanism count did not -- the abstract said 19 where the index carries 23.
+    """
+    import collections
+    import json
+    idx = [json.loads(l) for l in
+           (REPO_ROOT / "corpus" / "INDEX.jsonl").read_text().splitlines() if l.strip()]
+    md = (REPO_ROOT / "article" / "drafts" / "v1.md").read_text()
+
+    assert len(idx) == 4830
+    assert len({r.get("journal") for r in idx if r.get("journal")}) == 803
+    mech = collections.Counter()
+    cancers = set()
+    for r in idx:
+        for m in (r.get("mechanisms") or []):
+            mech[m] += 1
+        cancers.update(r.get("cancer_types") or [])
+    assert len(cancers) == 22
+    assert mech["immunotherapy"] == 2297
+
+    # the corrected claim, and the threshold that explains the old one
+    assert len(mech) == 23, f"index now carries {len(mech)} mechanisms; update the manuscript"
+    assert sum(1 for c in mech.values() if c >= 20) == 19
+    assert "23 mechanisms" in md
+    assert "19 mechanisms, 22 cancer types" not in md, \
+        "the abstract has reverted to the undocumented threshold count"
+
+
+def test_the_thin_mechanisms_are_the_physical_modalities():
+    """Why the count mattered rather than being a rounding quibble.
+
+    The four mechanisms the old threshold excluded are cold-atmospheric-plasma,
+    electrolysis, radioligand-therapy and targeted-protein-degradation. Three
+    are physical or device modalities -- exactly the sparsity this manuscript
+    argues about -- so dropping them from the headline hid the project's own
+    evidence.
+    """
+    import collections
+    import json
+    idx = [json.loads(l) for l in
+           (REPO_ROOT / "corpus" / "INDEX.jsonl").read_text().splitlines() if l.strip()]
+    mech = collections.Counter()
+    for r in idx:
+        for m in (r.get("mechanisms") or []):
+            mech[m] += 1
+    thin = {k for k, c in mech.items() if c < 20}
+    assert {"cold-atmospheric-plasma", "electrolysis", "radioligand-therapy"} <= thin
