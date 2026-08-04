@@ -99,6 +99,17 @@ CLAIMS = [
 ]
 
 
+# The co-mention layer's measured precision, read from its own artifact so this
+# document cannot quote a stale figure. Falls back to None when the measurement
+# has not been run, in which case the caveat is omitted rather than invented.
+def comention_precision():
+    f = PROJECT_ROOT / "analysis" / "comention-regression.json"
+    try:
+        return json.loads(f.read_text())["after"]["weighted"]
+    except (OSError, ValueError, KeyError):
+        return None
+
+
 def load_comentions(root: Path) -> dict:
     """Sentence-level co-mention counts from full text, if that layer has been built.
 
@@ -177,7 +188,20 @@ def main() -> None:
         "> not a survey of the library, and a different choice of proxy pairs would give a",
         "> different fraction. Several corroborated rows also rest on a single extracted",
         "> assertion, so read the per-row counts rather than the headline.", "",
-    ] + ([] if comention else [
+    ] + ([
+        f"> **The co-mention column is measured at roughly "
+        f"{100*comention_precision():.0f}% precision**",
+        "> (`analysis/comention-regression.md`), so read it as an upper bound on",
+        "> discussion rather than a count of it. Roughly half of any figure in that",
+        "> column is a generic surface form resolving to the wrong entity -- the",
+        "> measured failure mode is bare English words like `treatment` and",
+        "> `effects` matching in their ordinary sense.", "",
+        "> That matters most where the number is SMALL, which is exactly where this",
+        "> document leans on it: a handful of co-mentions offered as evidence that a",
+        "> zero-relation module is discussed after all could be entirely noise. A",
+        "> large figure survives the error rate as evidence of discussion; a figure",
+        "> in single digits does not.", "",
+    ] if comention else [
         "> **The full-text co-mention layer is not built**, so that column is empty",
         "> throughout. An empty cell here means *not measured*, NOT *not discussed* --",
         "> the distinction matters because a zero in the relation column is read",
@@ -262,7 +286,10 @@ def main() -> None:
         L += [f"* **{len(none_)}** resolved to real entities but have NO asserted relation "
               "in the abstract-level graph:",
               ""] + [f"  * `{r['module']}`: {r['a']} - {r['b']} — {r['claim']}"
-                     + (f"  _(but **{r['comention']:,}** full-text co-mentions)_"
+                     + (f"  _(but **{r['comention']:,}** full-text co-mentions"
+                        + (f", too few to survive the layer's "
+                           f"~{100*comention_precision():.0f}% precision"
+                           if r["comention"] < 50 else "") + ")_"
                         if r.get("comention") else "")
                      for r in none_] + [""]
         if rescued:
