@@ -333,6 +333,7 @@ def test_seed_replication_by_seed_keys_survive_a_json_round_trip():
     before it was written. Keys must be str at creation, which is also what a
     JSON round trip produces."""
     import json
+    import re
     import seed_replication as sr
 
     src = Path(sr.__file__).read_text(encoding="utf-8")
@@ -423,6 +424,7 @@ def test_ambiguity_scan_separates_species_from_sense():
     roughly sevenfold, so the two populations must never be pooled.
     """
     import json
+    import re
     raw = json.loads((REPO_ROOT / "analysis" / "atlas-ambiguity.json").read_text())
     species = {r["surface"] for r in raw["species_ambiguity"]}
     sense = {r["surface"] for r in raw["sense_collision"]}
@@ -444,6 +446,7 @@ def test_genes_are_measurably_dirtier_than_mesh_entities():
     genes. If this ever stops holding, the blocklist's scope should be revisited.
     """
     import json
+    import re
     raw = json.loads((REPO_ROOT / "analysis" / "atlas-ambiguity.json").read_text())
     by = raw["by_type"]
     assert set(by) == {"gene", "chemical", "disease"}
@@ -474,6 +477,7 @@ def test_relation_corrections_move_only_the_atl1_identifiers():
 
 def test_corrections_load_maps_pmid_to_identifier(tmp_path, monkeypatch):
     import json
+    import re
     f = tmp_path / "d.json"
     f.write_text(json.dumps({"corrections": {
         "1": {"pubtator": "ATL1", "corrected": "AIFM2"},
@@ -526,6 +530,7 @@ def test_every_curated_domain_sense_is_confirmed_by_the_corpus():
     unmeasured claim.
     """
     import json
+    import re
     import atlas_ambiguity as aa
     raw = json.loads(
         (REPO_ROOT / "analysis" / "atlas-domain-sense-validation.json").read_text())
@@ -547,6 +552,7 @@ def test_the_majority_vote_is_wrong_on_most_curated_collisions():
     why the count is asserted as 'most', not 'all'.
     """
     import json
+    import re
     raw = json.loads(
         (REPO_ROOT / "analysis" / "atlas-domain-sense-validation.json").read_text())
     disagree = [s for s, r in raw["results"].items() if not r["vote_matches_curated"]]
@@ -587,6 +593,7 @@ def test_impact_report_never_presents_containment_as_an_error_rate():
     overstate the damage by that factor, so both must appear.
     """
     import json
+    import re
     raw = json.loads(
         (REPO_ROOT / "analysis" / "atlas-ambiguity-impact.json").read_text())
     rows = raw["relation_rows"]
@@ -607,6 +614,7 @@ def test_impact_report_never_presents_containment_as_an_error_rate():
 def test_corroboration_requires_an_unambiguous_route():
     """An assignment is only at risk when nothing else supports it."""
     import json
+    import re
     raw = json.loads(
         (REPO_ROOT / "analysis" / "atlas-ambiguity-impact.json").read_text())
     # a paper writing both `ER` and "estrogen receptor" is corroborated, not at risk
@@ -669,6 +677,7 @@ def test_discovery_eval_compares_against_popularity_not_just_random():
     baseline is ranking the SAME candidates by popularity.
     """
     import json
+    import re
     raw = json.loads(
         (REPO_ROOT / "analysis" / "atlas-discovery-eval.json").read_text())
     head = raw["headline"]
@@ -691,6 +700,7 @@ def test_discovery_ranking_underperformance_is_recorded_not_buried():
     claim over the measurement.
     """
     import json
+    import re
     raw = json.loads(
         (REPO_ROOT / "analysis" / "atlas-discovery-eval.json").read_text())
     head = raw["headline"]
@@ -706,6 +716,7 @@ def test_discovery_ranking_underperformance_is_recorded_not_buried():
 def test_discovery_eval_result_holds_across_split_years():
     """One split year could be an artifact; three agreeing is a result."""
     import json
+    import re
     raw = json.loads(
         (REPO_ROOT / "analysis" / "atlas-discovery-eval.json").read_text())
     runs = [raw["headline"]] + raw["robustness"]
@@ -726,6 +737,7 @@ def test_no_standard_link_predictor_beats_popularity():
     candidate set and none wins, so that avenue is closed rather than untried.
     """
     import json
+    import re
     raw = json.loads(
         (REPO_ROOT / "analysis" / "atlas-discovery-eval.json").read_text())
     prec = raw["headline"]["precision"]
@@ -743,6 +755,7 @@ def test_degree_correction_monotonically_hurts():
     rather than about one method's implementation.
     """
     import json
+    import re
     raw = json.loads(
         (REPO_ROOT / "analysis" / "atlas-discovery-eval.json").read_text())
     prec = raw["headline"]["precision"]
@@ -824,6 +837,7 @@ def test_contradiction_quality_separates_the_two_failure_modes():
     be as misleading as reporting only the alarming one.
     """
     import json
+    import re
     raw = json.loads(
         (REPO_ROOT / "analysis" / "atlas-contradiction-quality.json").read_text())
     # mode 1: essentially absent
@@ -842,6 +856,7 @@ def test_ambiguity_enrichment_is_not_a_popularity_artifact():
     would have been measuring popularity.
     """
     import json
+    import re
     raw = json.loads(
         (REPO_ROOT / "analysis" / "atlas-contradiction-quality.json").read_text())
     crude, adjusted = raw["crude_risk_ratio"], raw["mantel_haenszel"]
@@ -875,6 +890,7 @@ def test_emergence_error_separates_estimated_pairs_from_exact_ones():
     be wrong, and that is the population the error must be quoted on.
     """
     import json
+    import re
     raw = json.loads(
         (REPO_ROOT / "analysis" / "atlas-emergence-error.json").read_text())
     assert raw["pairs_exact"] + raw["pairs_estimated"] == raw["pairs_examined"]
@@ -893,6 +909,7 @@ def test_emergence_sampling_error_grows_with_support():
     the report would be wrong.
     """
     import json
+    import re
     raw = json.loads(
         (REPO_ROOT / "analysis" / "atlas-emergence-error.json").read_text())
     bands = raw["error_by_band"]
@@ -955,6 +972,7 @@ def test_headline_numbers_match_their_source_json():
     guard; edit the documents instead.
     """
     import json
+    import re
     A = REPO_ROOT / "analysis"
     load = lambda n: json.loads((A / n).read_text())  # noqa: E731
     amb = load("atlas-ambiguity.json")
@@ -1038,6 +1056,7 @@ def test_most_fsp1_corrections_are_extrapolated_and_the_report_says_so():
     measurement that was never made.
     """
     import json
+    import re
     raw = json.loads(
         (REPO_ROOT / "analysis" / "atlas-disambiguation.json").read_text())
     text = (REPO_ROOT / "analysis" / "atlas-disambiguation.md").read_text()
@@ -1056,6 +1075,7 @@ def test_temporal_check_validates_the_undeclaring_corrections():
     at or near zero while the other senses spread across decades.
     """
     import json
+    import re
     raw = json.loads(
         (REPO_ROOT / "analysis" / "atlas-disambiguation.json").read_text())
     years = raw.get("gold_years", {})
@@ -1090,6 +1110,7 @@ def test_no_module_claim_rests_on_a_colliding_entity():
     property of the claim list, so it must be asserted rather than assumed.
     """
     import json
+    import re
     scan = json.loads((REPO_ROOT / "analysis" / "atlas-ambiguity.json").read_text())
     collide = set()
     for t in ("gene", "chemical", "disease"):
@@ -1123,6 +1144,7 @@ def test_module_citations_are_not_broken():
     the graph failed to find a real paper rather than the paper being wrong.
     """
     import json
+    import re
     raw = json.loads(
         (REPO_ROOT / "analysis" / "atlas-citation-audit.json").read_text())
     broken = [r for r in raw["rows"]
@@ -1185,6 +1207,7 @@ def test_news_verification_links_no_longer_track_the_indexing_date():
     the linker has regressed toward picking recently indexed records again.
     """
     import json
+    import re
     raw = json.loads(
         (REPO_ROOT / "analysis" / "news-verification-audit.json").read_text())
     base = raw["baseline"]
@@ -1208,6 +1231,7 @@ def test_news_verification_report_states_the_residual_weakness():
     that showed 55.7% -> 1.9% without either fact would overstate the fix.
     """
     import json
+    import re
     raw = json.loads(
         (REPO_ROOT / "analysis" / "news-verification-audit.json").read_text())
     assert raw["claims_with_links"] < raw["baseline"]["claims_with_links"]
@@ -1231,6 +1255,41 @@ def test_manuscript_does_not_claim_verification_it_lacks():
         assert f"Verified: PMID:{pmid}" not in md, \
             f"the false verification claim for {pmid} has returned"
     assert "not as verified evidence" in md
+
+
+def test_every_manuscript_verification_claim_is_currently_backed():
+    """The invariant version of the guard above, which is only a blocklist.
+
+    Naming the two known-bad identifiers catches those two returning. It does
+    NOT catch the manuscript keeping a "Verified: PMID:X" footnote after the
+    linker withdraws that verification -- and #615 withdrew 30 of 44 in one
+    re-run, so that is a live failure mode rather than a hypothetical.
+
+    This asserts the property instead: every verification the book claims must
+    be backed by a claim the news index currently calls verified. A future
+    re-run that de-verifies a source now fails here, naming the footnote.
+    """
+    import json
+    import re
+
+    md = (REPO_ROOT / "article" / "drafts" / "v1.md").read_text()
+    claimed = set(re.findall(r"Verified: PMID:(\d+)", md))
+    assert claimed, "no verification claims found; has the footnote format changed?"
+
+    backed = set()
+    index = REPO_ROOT / "news" / "NEWS_INDEX.jsonl"
+    for line in index.read_text().splitlines():
+        if not line.strip():
+            continue
+        rec = json.loads(line)
+        if rec.get("verification_status") == "verified":
+            backed.update(rec.get("linked_pmids") or [])
+
+    unbacked = claimed - backed
+    assert not unbacked, (
+        f"the manuscript claims verification for {sorted(unbacked)}, which the "
+        f"news index no longer calls verified. Either restore the evidence or "
+        f"drop the 'Verified:' assertion, as was done for 42020835/42020682.")
 
 
 def test_sentence_initial_words_are_not_proper_nouns():
@@ -1356,6 +1415,7 @@ def test_manuscript_corpus_statistics_match_the_frozen_index():
     """
     import collections
     import json
+    import re
     idx = [json.loads(l) for l in
            (REPO_ROOT / "corpus" / "INDEX.jsonl").read_text().splitlines() if l.strip()]
     md = (REPO_ROOT / "article" / "drafts" / "v1.md").read_text()
@@ -1390,6 +1450,7 @@ def test_the_thin_mechanisms_are_the_physical_modalities():
     """
     import collections
     import json
+    import re
     idx = [json.loads(l) for l in
            (REPO_ROOT / "corpus" / "INDEX.jsonl").read_text().splitlines() if l.strip()]
     mech = collections.Counter()
@@ -1412,6 +1473,7 @@ def test_landscape_capture_is_scope_invariant_and_reported():
     stands.
     """
     import json
+    import re
     raw = json.loads((REPO_ROOT / "analysis" / "atlas-landscape.json").read_text())
     caps = [r["mesh_frozen"] / r["mesh_census"] for r in raw["rows"]
             if r["mesh_census"] and r["mesh_frozen"]]
@@ -1463,6 +1525,7 @@ def test_hifu_is_not_preclinical_and_the_manuscript_says_so():
     as a class is what the manuscript got wrong.
     """
     import json
+    import re
     raw = json.loads((REPO_ROOT / "analysis" / "atlas-landscape.json").read_text())
     R = {r["mechanism"]: r for r in raw["rows"]}
     assert R["hifu"]["clinical_share"] > R["car-t"]["clinical_share"]
@@ -1484,6 +1547,7 @@ def test_replication_cohorts_use_an_equal_window_not_a_minimum():
     first assertion.
     """
     import json
+    import re
     raw = json.loads((REPO_ROOT / "analysis" / "atlas-replication.json").read_text())
     rows = raw["cohorts"]
     assert len(rows) > 10
@@ -1521,6 +1585,7 @@ def test_recent_cohort_decline_is_flagged_as_an_upper_bound():
 def test_comention_alias_matching_is_mechanically_sound():
     """Check 1 is not a judgement call: a miss here is a tokenizer bug."""
     import json
+    import re
     raw = json.loads(
         (REPO_ROOT / "analysis" / "atlas-comention-audit.json").read_text())
     assert raw["mentions"] > 500
@@ -1540,6 +1605,7 @@ def test_comention_precision_is_reported_as_a_bound_not_a_number():
     precision' would be as wrong as reporting the 83.8% upper bound as one.
     """
     import json
+    import re
     raw = json.loads(
         (REPO_ROOT / "analysis" / "atlas-comention-audit.json").read_text())
     lower = raw["pubtator_agree"] / raw["pubtator_scored"]
@@ -1556,6 +1622,7 @@ def test_disagreements_are_split_by_abstract_visibility():
     positive; a body-only match is this layer doing what it exists for.
     """
     import json
+    import re
     raw = json.loads(
         (REPO_ROOT / "analysis" / "atlas-comention-audit.json").read_text())
     assert raw["in_abstract"] + raw["body_only"] == raw["pubtator_disagree"]
@@ -1573,6 +1640,7 @@ def test_thesis_position_counts_the_legs_the_corpus_could_not_see():
     ferroptosis or PDT, however carefully it is analysed.
     """
     import json
+    import re
     raw = json.loads(
         (REPO_ROOT / "analysis" / "atlas-thesis-position.json").read_text())
     t = raw["totals"]
@@ -1627,6 +1695,7 @@ def test_prediction_position_surfaces_the_keystone_disagreement():
     stay visible rather than being tidied into agreement.
     """
     import json
+    import re
     raw = json.loads(
         (REPO_ROOT / "analysis" / "atlas-prediction-position.json").read_text())
     R = {r["prediction"]: r for r in raw["rows"]}
@@ -1652,6 +1721,7 @@ def test_model_gaps_excludes_method_genes_with_reasons():
     to show the death is NOT apoptotic.
     """
     import json
+    import re
     raw = json.loads((REPO_ROOT / "analysis" / "atlas-model-gaps.json").read_text())
     excluded = {e["gene"] for e in raw["excluded_method_genes"]}
     assert {"GAPDH", "BETA-ACTIN", "CASPASE-3"} <= excluded
@@ -1667,6 +1737,7 @@ def test_model_gaps_reads_coverage_from_the_engine_not_the_claims_list():
     carries nrf2_gsh_rate and ferritinophagy_release.
     """
     import json
+    import re
     raw = json.loads((REPO_ROOT / "analysis" / "atlas-model-gaps.json").read_text())
     by = {r["normalised"]: r for r in raw["rows"]}
     for g in ("NFE2L2", "NCOA4"):
@@ -1679,6 +1750,7 @@ def test_model_gaps_reads_coverage_from_the_engine_not_the_claims_list():
 def test_model_gaps_collapses_orthologs():
     """Ranked raw, GPX4 takes three of the top eleven slots as three species."""
     import json
+    import re
     raw = json.loads((REPO_ROOT / "analysis" / "atlas-model-gaps.json").read_text())
     names = [r["gene"] for r in raw["rows"][:15]]
     assert len(names) == len(set(names)), f"duplicate gene names survived: {names}"
@@ -1730,6 +1802,7 @@ def test_tagger_never_files_a_trial_as_preclinical():
     evidence-weighted comparison in the manuscript.
     """
     import json
+    import re
     raw = json.loads(
         (REPO_ROOT / "analysis" / "atlas-evidence-check.json").read_text())
     assert raw["preclinical_total"] > 500
@@ -1745,6 +1818,7 @@ def test_untagged_is_mostly_non_primary_not_missed_evidence():
     this reason, so leaving them untagged is correct behaviour.
     """
     import json
+    import re
     raw = json.loads(
         (REPO_ROOT / "analysis" / "atlas-evidence-check.json").read_text())
     share = raw["untagged_non_primary"] / raw["untagged_total"]
@@ -1801,6 +1875,7 @@ def test_disambiguation_is_scored_against_a_majority_baseline():
     means anything without the baseline beside it.
     """
     import json
+    import re
     for name in ("atlas-disambiguation.json", "atlas-disambiguation-il1.json"):
         raw = json.loads((REPO_ROOT / "analysis" / name).read_text())
         dist = raw["gold_distribution"]
