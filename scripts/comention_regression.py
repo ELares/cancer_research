@@ -19,14 +19,16 @@ rebuild says the change made precision WORSE, and this script is the accounting.
 
 WHAT IT FOUND
 -------------
-1. Net population-weighted precision fell about 7 points, roughly 56.8% to
-   49.9%. The layer produces 1.33x more mentions per sentence and PubTator
-   corroborates a smaller fraction of them (44.3% -> 32.5%).
+1. Net population-weighted precision fell roughly 7 to 10 points depending on
+   how the two sides are made comparable (the reported figure, 56.8% -> 47.1%,
+   is the most pessimistic of the three; see the table in the report). The
+   layer produces 1.33x more mentions per sentence and PubTator corroborates a
+   smaller fraction of them (44.3% -> 32.5%).
 
 2. The abstract-visible stratum -- the only one that can contain false
    positives -- nearly tripled as a share of all mentions, 8.2% -> 23.7%. Its
-   own precision improved (14.6% -> 26.7%, 60 hand-judged) but nowhere near
-   enough to pay for tripling.
+   own precision, judged at the IDENTIFIER level over 60 hand-read mentions, is
+   15.0%; it did not measurably improve, and the stratum tripled.
 
 3. The replacement filters DO NOT SEPARATE true from false matches on that
    stratum. Measured over the judged sample, support ranges 77-355,572 for
@@ -149,8 +151,18 @@ def main() -> int:
         return 1
 
     judged = list(csv.DictReader(JUDGED.open()))
-    tp = sum(1 for r in judged if r["verdict"] == "TP")
     n = len(judged)
+    # verdict_v2 judges at the IDENTIFIER level: does the sentence discuss the
+    # entity the identifier DENOTES, per NLM, rather than merely contain the
+    # matched string. `verdict` is the first pass and is retained so the
+    # correction below is checkable.
+    key = "verdict_v2" if "verdict_v2" in judged[0] else "verdict"
+    tp = sum(1 for r in judged if r[key] == "TP")
+    tp_v1 = sum(1 for r in judged if r["verdict"] == "TP")
+    kept = [r for r in judged if r.get("is_authority_name") == "True"]
+    kept_tp = sum(1 for r in kept if r[key] == "TP")
+    klo, khi = wilson(kept_tp, len(kept)) if kept else (0.0, 0.0)
+    v1_prec = tp_v1 / n
     abs_prec = tp / n
     lo, hi = wilson(tp, n)
 
@@ -182,14 +194,36 @@ def main() -> int:
         "corroborates a smaller share of them. The abstract-visible stratum -- the",
         "only one that can contain false positives, since PubTator read that text --",
         f"nearly tripled.", "",
+        "## A correction to how this was judged", "",
+        "The first pass judged the SURFACE FORM: does the sentence contain the",
+        "string that matched? That is the wrong question, and it flattered the",
+        f"layer. It gave {100*tp_v1/n:.1f}% on this sample.", "",
+        "The right question is whether the sentence discusses the entity the",
+        "IDENTIFIER denotes, because that identifier is what the co-mention pair is",
+        "recorded against. Checked against NLM's own descriptor labels, the matched",
+        "forms routinely resolve to something else entirely:", "",
+        "| matched form | what the identifier actually denotes |", "|---|---|",
+        "| `apoptosis` | Malformations of Cortical Development, Group I |",
+        "| `node` | Sick Sinus Syndrome |",
+        "| `chemotherapy` | Chemotherapy-Related Cognitive Impairment |",
+        "| `resistance` | Disease Resistance (host resistance, not drug) |",
+        "| `Migration` | Tooth Migration |",
+        "| `Aging` | Aging, Premature |",
+        "| `artery` | Renal Artery Obstruction |", "",
+        "Every one of those was scored correct on the first pass. None is.", "",
         "## Hand-judged precision on that stratum", "",
         f"{n} mentions were read individually "
-        f"(`analysis/comention/abstract-visible-judgements.csv`, seeded sample):",
-        f"**{tp}/{n} = {100*abs_prec:.1f}%** correct, 95% CI "
-        f"[{100*lo:.1f}%, {100*hi:.1f}%], against "
-        f"{100*PRIOR_ABSTRACT_PRECISION:.1f}% before.", "",
-        "The stratum got cleaner and still cost precision overall, because it",
-        "tripled in size. The weighted total:", "",
+        f"(`analysis/comention/abstract-visible-judgements.csv`, seeded sample, "
+        f"with each identifier's NLM label attached so the judgement is checkable):",
+        f"**{tp}/{n} = {100*abs_prec:.1f}%** correct at the identifier level, 95% CI "
+        f"[{100*lo:.1f}%, {100*hi:.1f}%].", "",
+        f"That is against {100*PRIOR_ABSTRACT_PRECISION:.1f}% before the filter",
+        "change -- but the two are NOT known to be methodologically comparable. The",
+        "earlier figure was produced under #617 and may have used the same",
+        "surface-form criterion this document has just abandoned. Read the",
+        "comparison as indicative; the identifier-level number is the sound one.", "",
+        "So the stratum did not measurably get cleaner, and it tripled in size.",
+        "The weighted total:", "",
         "| stratum | before | after |", "|---|---|---|",
         f"| corroborated | {100*sb['agree']:.1f}% x {100*AGREE_PRECISION:.1f}% | "
         f"{100*sa['agree']:.1f}% x {100*AGREE_PRECISION:.1f}% |",
@@ -258,7 +292,103 @@ def main() -> int:
         "* No manuscript number depends on this layer. It feeds",
         "  `atlas-module-support.md`, which argues a zero in the relation column is",
         "  an extraction failure rather than absence of evidence -- a claim that",
-        "  should now be read against 50% precision, not 55%.", "",
+        f"  should now be read against {100*wa:.0f}% precision, not 55%.", "",
+        "## The headline compares two criteria, so here are all three", "",
+        "The bold figure pairs a LENIENT before-abstract (14.6%, measured under #617)",
+        "with a STRICT after-abstract. Like for like:", "",
+        "| comparison | before | after | change |", "|---|---|---|---|",
+        f"| both lenient | {100*wb:.1f}% | {100*weighted(sa, v1_prec):.1f}% | "
+        f"{100*(weighted(sa, v1_prec)-wb):+.1f} |",
+        f"| both strict (before scaled by the same {abs_prec/max(1e-9,v1_prec):.2f} "
+        f"factor) | {100*weighted(sb, PRIOR_ABSTRACT_PRECISION*abs_prec/max(1e-9,v1_prec)):.1f}% | "
+        f"{100*wa:.1f}% | "
+        f"{100*(wa-weighted(sb, PRIOR_ABSTRACT_PRECISION*abs_prec/max(1e-9,v1_prec))):+.1f} |",
+        f"| **as reported (mixed)** | **{100*wb:.1f}%** | **{100*wa:.1f}%** | "
+        f"**{100*(wa-wb):+.1f}** |", "",
+        "The reported figure is the most pessimistic of the three. All three are",
+        "negative, so the direction does not turn on the choice, but the magnitude",
+        "is a 7-to-9 point band rather than a single number.", "",
+        "## Does the regression survive if BOTH sides were judged leniently?", "",
+        "This is the weakest point in the comparison, so it is worth working out",
+        "rather than hedging. The carried-over precisions were measured under #617",
+        "and may share the surface-form criterion this document abandoned. If they",
+        "do, the `before` total is overstated too, and the regression could in",
+        "principle be an artifact of correcting only one side.", "",
+        "It is not. Suppose both sides' impure strata are overstated by the same",
+        "factor, so their true precisions are `k` times the reported ones for some",
+        "`k` in [0,1]. The corroborated stratum is left alone, since PubTator",
+        "assigned the same identifier there and that is an identifier-level check",
+        "already. Then:", "",
+        "| k | before | after | change |", "|---|---|---|---|",
+    ]
+    for k in (1.0, 0.8, 0.6, 0.4, 0.2, 0.0):
+        B = (sb["agree"] * AGREE_PRECISION
+             + k * (sb["abstract"] * PRIOR_ABSTRACT_PRECISION
+                    + sb["body"] * BODY_ONLY_PRECISION))
+        A = (sa["agree"] * AGREE_PRECISION
+             + k * (sa["abstract"] * abs_prec + sa["body"] * BODY_ONLY_PRECISION))
+        L.append(f"| {k:.1f} | {100*B:.1f}% | {100*A:.1f}% | {100*(A-B):+.1f} |")
+
+    L += [
+        "", "The change is negative for every `k`, and it gets MORE negative as `k`",
+        "falls. Correcting both sides therefore WIDENS the gap rather than closing",
+        "it, because the `after` run carries more of its weight in the impure",
+        "strata. The regression does not depend on the carried-over numbers being",
+        "right; it depends only on their being wrong by a similar factor on both",
+        "sides, which is the assumption that would have to hold for the objection",
+        "to bite.", "",
+        "## A signal that does separate, and what it actually is (#628)", "",
+        "The filters above fail because they measure how OFTEN a form appears, and",
+        "the offenders are common words. The signal that separates them is whether",
+        "the entity's own name looks like a name at all, checked against NLM's",
+        "descriptor labels, which are external to this corpus.", "",
+        "**Read the next table carefully, because an earlier draft of this section",
+        "described it wrongly and the correction changes what it is.** The audit",
+        "sample does not record the span that matched. `atlas_comention` writes",
+        "`entity_names` as `canon[identifier]` -- the identifier's most frequent",
+        "surface form ACROSS THE WHOLE CORPUS -- so the column is constant for a",
+        "given identifier and is absent from the sentence in 20 of these 60 rows",
+        "(`left ventricular dysfunction` sits against \"She was diagnosed with left",
+        "breast cancer\"; the span that fired was presumably `left`).", "",
+        "So this is an IDENTIFIER-LEVEL check, not a per-mention one: does this",
+        "identifier's dominant corpus name coincide with its authority label? It",
+        "cannot distinguish two mentions of the same identifier, and it would be",
+        "applied when building the alias map rather than when matching text. That is",
+        "a cheaper filter than the one first described, and a blunter one.", "",
+        "Compared as a word bag so `squamous cell carcinoma` matches `Carcinoma,",
+        "Squamous Cell`:", "",
+        "| | true | false |", "|---|---|---|",
+        f"| kept | {kept_tp} | {len(kept)-kept_tp} |",
+        f"| cut | {tp-kept_tp} | {(n-tp)-(len(kept)-kept_tp)} |", "",
+        f"It removes **{100*((n-tp)-(len(kept)-kept_tp))/max(1,n-tp):.0f}% of false",
+        f"positives** and {100*(tp-kept_tp)/max(1,tp):.0f}% of true ones, lifting",
+        f"precision on what it keeps from {100*abs_prec:.1f}% to "
+        f"{100*kept_tp/max(1,len(kept)):.1f}%. Against filters that cut nothing at",
+        "all, that is a discriminator rather than a threshold.", "",
+        f"It is aggressive. It discards {n-len(kept)} of {n} mentions on this",
+        f"stratum ({100*(n-len(kept))/n:.0f}%), and the kept precision carries a 95% CI of",
+        f"[{100*klo:.1f}%, {100*khi:.1f}%] on {len(kept)} survivors -- the point",
+        "estimate is not the finding, the separation is.", "",
+        "**Three reasons it is NOT a recommendation**, beyond the sample size:", "",
+        "* It was selected on this sample, so its numbers are optimistic by",
+        "  construction. A held-out judged sample is the next requirement.",
+        "* **It removes every gene.** NCBI Gene identifiers have no MeSH descriptor,",
+        "  so the rule cuts them unconditionally. This sample is 58 of 60 MeSH, so",
+        "  the 96% figure says nothing about the gene half of a layer built over",
+        "  gene, chemical and disease annotations -- in a repository whose subject is",
+        "  GPX4 and ACSL4. A label source covering NCBI Gene is not an optimisation",
+        "  here, it is a precondition.",
+        "* It is tested only on the abstract-visible stratum. The corroborated",
+        f"  stratum is {100*sa['agree']:.0f}% of volume at {100*AGREE_PRECISION:.0f}%",
+        "  precision, and the trade would have to be re-judged against that, where",
+        "  the filter has much more to lose.", "",
+        "The word-bag comparison is also NOT clearly better than plain equality on",
+        "this sample: equality fires on 4 rows, the word bag on 6, and the two extra",
+        "are one true match (`squamous cell carcinoma`) and one false one (`left",
+        "ventricular dysfunction` against `Ventricular Dysfunction, Left`). It adds a",
+        "true positive and a false positive, and LOWERS kept precision from 75% to",
+        f"{100*kept_tp/max(1,len(kept)):.1f}%. The favourable example was the one",
+        "quoted; the unfavourable one is now quoted beside it.", "",
         "## Limits", "",
         f"* {n} judged mentions gives a wide interval "
         f"([{100*lo:.1f}%, {100*hi:.1f}%]); the direction of the net change is",
@@ -266,6 +396,13 @@ def main() -> int:
         "* Judgement is mine and unblinded. I knew which run each sentence came",
         "  from, which is exactly the bias that would flatter a fix I wrote, and",
         "  the result runs against my own prior change rather than for it.",
+        "* The first pass of that judgement was WRONG in a way that flattered the",
+        "  layer, and it was caught only because an unrelated experiment surfaced",
+        "  the authority labels. The corrected verdicts are committed beside the",
+        "  originals so the correction itself can be audited.",
+        "* The carried-over strata were judged under #617 and may share the",
+        "  surface-form flaw. If they do, 92.5% and 30.8% are upper bounds and the",
+        "  weighted total is optimistic on both sides of the comparison.",
         "* Body-only and corroborated precision are carried over unmeasured.",
     ]
 
