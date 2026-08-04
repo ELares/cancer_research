@@ -23,7 +23,7 @@ Counts are not truth. About half of all relations carry the weakest predicate,
 `associate`, which is nearer co-mention than knowledge, and the extractor scores
 ~79.6 F1 on BioRED. A high count means the field discusses the pair.
 
-## Result: 10/20 claims have corpus support
+## Result: 11/20 claims have corpus support
 
 > **The denominator is hand-made.** These 20 are author-written claims with
 > author-chosen proxy entity pairs, covering 19 of roughly 30 library modules
@@ -32,27 +32,33 @@ Counts are not truth. About half of all relations carry the weakest predicate,
 > different fraction. Several corroborated rows also rest on a single extracted
 > assertion, so read the per-row counts rather than the headline.
 
+> **The full-text co-mention layer is not built**, so that column is empty
+> throughout. An empty cell here means *not measured*, NOT *not discussed* --
+> the distinction matters because a zero in the relation column is read
+> against exactly this column. Rebuild with
+> `python scripts/atlas_comention.py --rebuild`.
+
 | module | pair | relation articles | full-text co-mentions | predicates | cited PMID? | contested |
 |---|---|---|---|---|---|---|
-| system_xc | `SLC7A11` - `GPX4` | 31 | **5,487** | associate 26, positive_correlate 3, negative_correlate 2 | no | **yes** (+3/-2, bal 0.67) |
-| erastin | `erastin` - `SLC7A11` | 29 | - | negative_correlate 18, associate 7, positive_correlate 4 | no | **yes** (+4/-18, bal 0.22) |
-| contact | `CDH1` - `YAP1` | 19 | **308** | associate 12, negative_correlate 4, positive_correlate 3 | no | **yes** (+3/-4, bal 0.75) |
-| ifngamma | `IFNG` - `SLC7A11` | 8 | **42** | negative_correlate 8 | yes | no |
-| fsp1 | `AIFM2` - `GPX4` | 6 | **249** | associate 4, positive_correlate 2 | no | no |
-| dc_ferroptosis | `CD274` - `SLC7A11` | 6 | **147** | positive_correlate 4, negative_correlate 2 | yes | **yes** (+4/-2, bal 0.50) |
-| ifngamma | `IFNG` - `SLC3A2` | 3 | **26** | negative_correlate 3 | yes | no |
-| acsl4 | `ACSL4` - `GPX4` | 3 | **2,056** | associate 2, negative_correlate 1 | no | no |
-| dhodh | `DHODH` - `GPX4` | 1 | **114** | negative_correlate 1 | no | no |
-| alox | `ALOX15` - `ACSL4` | 1 | **137** | associate 1 | no | no |
-| gch1 | `GCH1` - `GPX4` | 0 | **173** | - | - | no |
-| prom2 | `PROM2` - `FTH1` | 0 | **5** | - | - | no |
-| vitk | `VKORC1L1` - `GPX4` | 0 | **8** | - | - | no |
-| copper | `ATP7A` - `GPX4` | 0 | **4** | - | - | no |
-| por | `POR` - `CYB5R1` | 0 | **9** | - | - | no |
-| dhc7 | `DHCR7` - `GPX4` | 0 | **9** | - | - | no |
-| repair | `CHMP5` - `CHMP6` | 0 | **10** | - | - | no |
-| mboat | `MBOAT2` - `GPX4` | 0 | **11** | - | - | no |
-| ether_lipid | `FAR1` - `AGPS` | 0 | **5** | - | - | no |
+| system_xc | `SLC7A11` - `GPX4` | 74 | - | associate 65, positive_correlate 6, negative_correlate 3 | no | **yes** (+6/-3, bal 0.50) |
+| erastin | `erastin` - `SLC7A11` | 63 | - | negative_correlate 39, associate 19, positive_correlate 5 | no | **yes** (+5/-39, bal 0.13) |
+| contact | `CDH1` - `YAP1` | 26 | - | associate 14, negative_correlate 7, positive_correlate 5 | no | **yes** (+5/-7, bal 0.71) |
+| ifngamma | `IFNG` - `SLC7A11` | 13 | - | negative_correlate 12, positive_correlate 1 | yes | **yes** (+1/-12, bal 0.08) |
+| acsl4 | `ACSL4` - `GPX4` | 13 | - | associate 7, negative_correlate 4, positive_correlate 2 | no | **yes** (+2/-4, bal 0.50) |
+| dc_ferroptosis | `CD274` - `SLC7A11` | 7 | - | positive_correlate 4, negative_correlate 2, associate 1 | yes | **yes** (+4/-2, bal 0.50) |
+| fsp1 | `AIFM2` - `GPX4` | 6 | - | associate 4, positive_correlate 2 | no | no |
+| ifngamma | `IFNG` - `SLC3A2` | 5 | - | negative_correlate 5 | yes | no |
+| dhodh | `DHODH` - `GPX4` | 5 | - | associate 3, negative_correlate 2 | no | no |
+| alox | `ALOX15` - `ACSL4` | 3 | - | associate 2, positive_correlate 1 | no | no |
+| gch1 | `GCH1` - `GPX4` | 1 | - | associate 1 | no | no |
+| prom2 | `PROM2` - `FTH1` | 0 | - | - | - | no |
+| vitk | `VKORC1L1` - `GPX4` | 0 | - | - | - | no |
+| copper | `ATP7A` - `GPX4` | 0 | - | - | - | no |
+| por | `POR` - `CYB5R1` | 0 | - | - | - | no |
+| dhc7 | `DHCR7` - `GPX4` | 0 | - | - | - | no |
+| repair | `CHMP5` - `CHMP6` | 0 | - | - | - | no |
+| mboat | `MBOAT2` - `GPX4` | 0 | - | - | - | no |
+| ether_lipid | `FAR1` - `AGPS` | 0 | - | - | - | no |
 | hdac_persister | `HDAC1` - `AIFM2` | 0 | - | - | - | no |
 
 ## Claims that sit on a CONTESTED edge
@@ -64,10 +70,12 @@ single paper and its docs do not mention the disagreement. See
 
 | module | pair | + | - | balance | cited PMID |
 |---|---|---|---|---|---|
-| `contact` | CDH1 - YAP1 | 3 | 4 | 0.75 | 31341276 |
-| `system_xc` | SLC7A11 - GPX4 | 3 | 2 | 0.67 | 22632970 |
+| `contact` | CDH1 - YAP1 | 5 | 7 | 0.71 | 31341276 |
+| `acsl4` | ACSL4 - GPX4 | 2 | 4 | 0.50 | 27842070 |
 | `dc_ferroptosis` | CD274 - SLC7A11 | 4 | 2 | 0.50 | 39423128 |
-| `erastin` | erastin - SLC7A11 | 4 | 18 | 0.22 | 22632970 |
+| `system_xc` | SLC7A11 - GPX4 | 6 | 3 | 0.50 | 22632970 |
+| `erastin` | erastin - SLC7A11 | 5 | 39 | 0.13 | 22632970 |
+| `ifngamma` | IFNG - SLC7A11 | 1 | 12 | 0.08 | 31043744 |
 
 A high balance means the field is genuinely split; a low one means the module
 is on the majority side of a mostly-settled question. Neither says the module
@@ -83,36 +91,19 @@ is wrong -- it says the module docs should state which side they took.
 
 ## Reading
 
-* **10 of 20** module claims are corroborated by at least one
+* **11 of 20** module claims are corroborated by at least one
   other cancer article in the graph, so they are not single-paper assertions.
-* **10** resolved to real entities but have NO asserted relation in the abstract-level graph:
+* **9** resolved to real entities but have NO asserted relation in the abstract-level graph:
 
-  * `gch1`: GCH1 - GPX4 — GCH1/BH4 is a GPX4-independent radical-trapping defence  _(but **173** full-text co-mentions)_
-  * `prom2`: PROM2 - FTH1 — PROM2 exports ferritin-bound iron, draining the labile pool  _(but **5** full-text co-mentions)_
-  * `vitk`: VKORC1L1 - GPX4 — VKORC1L1 reduces vitamin K to a GPX4-independent radical trap  _(but **8** full-text co-mentions)_
-  * `copper`: ATP7A - GPX4 — copper ionophores degrade ATP7A and deplete GSH/GPX4  _(but **4** full-text co-mentions)_
-  * `por`: POR - CYB5R1 — POR and CYB5R1 generate the H2O2 the Fenton reaction needs  _(but **9** full-text co-mentions)_
-  * `dhc7`: DHCR7 - GPX4 — 7-DHC (consumed by DHCR7) is an endogenous radical trap  _(but **9** full-text co-mentions)_
-  * `repair`: CHMP5 - CHMP6 — ESCRT-III membrane repair blocks death execution  _(but **10** full-text co-mentions)_
-  * `mboat`: MBOAT2 - GPX4 — MBOAT1/2 remodel phospholipids toward MUFA-PE, GPX4-independently  _(but **11** full-text co-mentions)_
-  * `ether_lipid`: FAR1 - AGPS — FAR1/AGPS make the ether-PUFA pool that promotes ferroptosis  _(but **5** full-text co-mentions)_
+  * `prom2`: PROM2 - FTH1 — PROM2 exports ferritin-bound iron, draining the labile pool
+  * `vitk`: VKORC1L1 - GPX4 — VKORC1L1 reduces vitamin K to a GPX4-independent radical trap
+  * `copper`: ATP7A - GPX4 — copper ionophores degrade ATP7A and deplete GSH/GPX4
+  * `por`: POR - CYB5R1 — POR and CYB5R1 generate the H2O2 the Fenton reaction needs
+  * `dhc7`: DHCR7 - GPX4 — 7-DHC (consumed by DHCR7) is an endogenous radical trap
+  * `repair`: CHMP5 - CHMP6 — ESCRT-III membrane repair blocks death execution
+  * `mboat`: MBOAT2 - GPX4 — MBOAT1/2 remodel phospholipids toward MUFA-PE, GPX4-independently
+  * `ether_lipid`: FAR1 - AGPS — FAR1/AGPS make the ether-PUFA pool that promotes ferroptosis
   * `hdac_persister`: HDAC1 - AIFM2 — HDACs and FSP1 together suppress persister-cell ferroptosis
-
-  **9 of those 10 ARE discussed in full text.** A zero in
-  the relation column is therefore not evidence against the mechanism.
-  It has two distinct causes, and they were once conflated here:
-
-  1. **Abstract-level extraction sparsity.** PubTator's relations come from
-     abstracts, so a mechanism established in a Results section may never
-     be asserted in an extractable sentence.
-  2. **Entity-resolution collisions.** The relation WAS extracted and then
-     filed under the wrong gene. `fsp1` (AIFM2-GPX4) is the measured case:
-     it read zero not because nobody asserts GPX4-FSP1, but because every
-     such relation in the census was filed under ATL1, a spastic-paraplegia
-     gene sharing the `FSP1` alias. See `analysis/atlas-disambiguation.md`;
-     the corrections are applied at index build, so this column now counts
-     them. An earlier version of this report attributed that zero entirely
-     to cause 1, which was wrong.
 
 ## Detail
 
@@ -120,26 +111,26 @@ is wrong -- it says the module docs should state which side they took.
 
 System Xc- supplies the cystine that sustains GSH for GPX4
 
-* 31 asserting relations
-* predicates: `associate` 26, `positive_correlate` 3, `negative_correlate` 2
+* 74 asserting relations
+* predicates: `associate` 65, `positive_correlate` 6, `negative_correlate` 3
 * module cites PMID 22632970 — not among the sampled supporting PMIDs
-* example PMIDs: 32471991, 33707434, 36485069, 36503029, 37055935, 37209607, 37531240, 37578947
+* example PMIDs: 31065106, 31679460, 32471991, 33707434, 34368653, 35419287, 35804926, 36033479
 
 ### `erastin` — erastin / SLC7A11
 
 erastin inhibits System Xc-
 
-* 29 asserting relations
-* predicates: `negative_correlate` 18, `associate` 7, `positive_correlate` 4
+* 63 asserting relations
+* predicates: `negative_correlate` 39, `associate` 19, `positive_correlate` 5
 * module cites PMID 22632970 — not among the sampled supporting PMIDs
-* example PMIDs: 25585997, 27612422, 27708226, 28553953, 31685775, 31761322, 32209255, 33019976
+* example PMIDs: 25585997, 27612422, 27708226, 28553953, 28835855, 30190786, 31065106, 31175120
 
 ### `contact` — E-cadherin / YAP
 
 E-cadherin -> NF2/YAP suppresses ACSL4/TFRC in dense cells
 
-* 19 asserting relations
-* predicates: `associate` 12, `negative_correlate` 4, `positive_correlate` 3
+* 26 asserting relations
+* predicates: `associate` 14, `negative_correlate` 7, `positive_correlate` 5
 * module cites PMID 31341276 — not among the sampled supporting PMIDs
 * example PMIDs: 23949920, 24378265, 25344213, 26254048, 27034169, 27835600, 27903989, 28475017
 
@@ -147,10 +138,28 @@ E-cadherin -> NF2/YAP suppresses ACSL4/TFRC in dense cells
 
 IFN-gamma represses System Xc- (SLC7A11), starving cystine
 
-* 8 asserting relations
-* predicates: `negative_correlate` 8
+* 13 asserting relations
+* predicates: `negative_correlate` 12, `positive_correlate` 1
 * module cites PMID 31043744 — **present in the graph**
-* example PMIDs: 31043744, 31554642, 34318944, 35322867, 35579155, 37939375, 40436350, 40963899
+* example PMIDs: 31043744, 31554642, 34318944, 34741776, 35322867, 35579155, 37939375, 38636133
+
+### `acsl4` — ACSL4 / GPX4
+
+ACSL4 sets the oxidisable-PUFA substrate GPX4 must defend
+
+* 13 asserting relations
+* predicates: `associate` 7, `negative_correlate` 4, `positive_correlate` 2
+* module cites PMID 27842070 — not among the sampled supporting PMIDs
+* example PMIDs: 31789401, 33070393, 34369274, 35809566, 37693126, 38819674, 39043312, 39290000
+
+### `dc_ferroptosis` — PD-L1 / SLC7A11
+
+PD-L1 loss on DCs downregulates System Xc-, killing the DCs
+
+* 7 asserting relations
+* predicates: `positive_correlate` 4, `negative_correlate` 2, `associate` 1
+* module cites PMID 39423128 — **present in the graph**
+* example PMIDs: 33744468, 34288020, 36267158, 36442849, 38655266, 39423128, 39603241
 
 ### `fsp1` — AIFM2 / GPX4
 
@@ -161,48 +170,39 @@ FSP1/AIFM2 is the GPX4-independent parallel defence
 * module cites PMID 31634899 — not among the sampled supporting PMIDs
 * example PMIDs: 36576648, 37380771, 39477303, 40015539, 40914768, 41481741
 
-### `dc_ferroptosis` — PD-L1 / SLC7A11
-
-PD-L1 loss on DCs downregulates System Xc-, killing the DCs
-
-* 6 asserting relations
-* predicates: `positive_correlate` 4, `negative_correlate` 2
-* module cites PMID 39423128 — **present in the graph**
-* example PMIDs: 33744468, 34288020, 36442849, 38655266, 39423128, 39603241
-
 ### `ifngamma` — IFN-gamma / SLC3A2
 
 IFN-gamma represses the System Xc- heavy chain SLC3A2
 
-* 3 asserting relations
-* predicates: `negative_correlate` 3
+* 5 asserting relations
+* predicates: `negative_correlate` 5
 * module cites PMID 31043744 — **present in the graph**
-* example PMIDs: 31043744, 34318944, 35579155
-
-### `acsl4` — ACSL4 / GPX4
-
-ACSL4 sets the oxidisable-PUFA substrate GPX4 must defend
-
-* 3 asserting relations
-* predicates: `associate` 2, `negative_correlate` 1
-* module cites PMID 27842070 — not among the sampled supporting PMIDs
-* example PMIDs: 31789401, 34369274, 38819674
+* example PMIDs: 31043744, 34318944, 35579155, 37286044, 40324981
 
 ### `dhodh` — DHODH / GPX4
 
 DHODH repairs lipid peroxides in parallel to GPX4
 
-* 1 asserting relations
-* predicates: `negative_correlate` 1
+* 5 asserting relations
+* predicates: `associate` 3, `negative_correlate` 2
 * module cites PMID 33981038 — not among the sampled supporting PMIDs
-* example PMIDs: 41369379
+* example PMIDs: 34145214, 36078133, 37147673, 39761766, 41369379
 
 ### `alox` — ALOX15 / ACSL4
 
 ALOX15 enzymatically peroxidises the ACSL4-supplied PUFA
 
+* 3 asserting relations
+* predicates: `associate` 2, `positive_correlate` 1
+* module cites PMID 27506793 — not among the sampled supporting PMIDs
+* example PMIDs: 37482742, 40023201, 41589658
+
+### `gch1` — GCH1 / GPX4
+
+GCH1/BH4 is a GPX4-independent radical-trapping defence
+
 * 1 asserting relations
 * predicates: `associate` 1
-* module cites PMID 27506793 — not among the sampled supporting PMIDs
-* example PMIDs: 37482742
+* module cites PMID 31989025 — not among the sampled supporting PMIDs
+* example PMIDs: 41559050
 

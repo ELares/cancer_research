@@ -1255,3 +1255,20 @@ def test_fulltext_recency_ceiling_is_documented():
     assert "PMC13" in src and "232,890" in src
     readme = (REPO_ROOT / "analysis" / "atlas-README.md").read_text()
     assert "cliff, not a slope" in readme.lower() or "A cliff, not a slope" in readme
+
+
+def test_comention_rebuild_clears_manifest_and_pairs_together():
+    """Clearing one without the other silently corrupts the counts.
+
+    The run merges its results into any existing pair table, relying on the
+    manifest to skip shards already counted there. Clearing the manifest alone
+    would re-count every shard on top of the existing table and double every
+    pair; clearing the table alone would lose the shards not reprocessed.
+    """
+    src = (REPO_ROOT / "scripts" / "atlas_comention.py").read_text()
+    assert "--rebuild" in src
+    # the unlink and the manifest reset must sit in the same branch
+    i = src.index("if args.rebuild:")
+    block = src[i:i + 700]
+    assert "unlink()" in block and 'man = {"shards": {}}' in block, \
+        "--rebuild must clear BOTH the pair table and the manifest"

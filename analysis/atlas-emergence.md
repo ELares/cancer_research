@@ -8,7 +8,7 @@ concentrated since **2021** are emerging claims; pairs spread across
 decades are settled background. A 4,830-article sample cannot tell these apart --
 it has neither the volume nor the time depth.
 
-Scanned 163,938 pairs with at least 6 dated asserting papers. **4,688** have ≥80% of their support in the recent window.
+Scanned 176,809 pairs with at least 6 dated asserting papers. **5,257** have ≥80% of their support in the recent window.
 
 ## Limits
 
@@ -25,46 +25,46 @@ with very large support are estimated.
 
 | pair | sampled papers | years | recent share | predicates |
 |---|---|---|---|---|
-| 68Ga-FAPI — FDG | 60 | 2021-2026 | 100% | compare 61, associate 1, interact 1 |
-| relatlimab — nivolumab | 60 | 2021-2026 | 100% | cotreat 58, compare 6 |
-| durvalumab — hepatocellular carcinoma | 60 | 2021-2026 | 100% | treat 105, associate 1 |
-| lenvatinib — bevacizumab | 60 | 2021-2026 | 100% | compare 32, cotreat 32 |
-| enfortumab vedotin — pembrolizumab | 60 | 2021-2026 | 100% | cotreat 107, compare 6, negative_correlate 4 |
-| durvalumab — gemcitabine | 60 | 2022-2026 | 100% | cotreat 64, associate 1, positive_correlate 1 |
-| relatlimab — melanoma | 59 | 2021-2025 | 100% | treat 61 |
-| durvalumab — biliary tract cancer | 58 | 2021-2026 | 100% | treat 58 |
-| almonertinib — non-small cell lung cancer | 54 | 2021-2026 | 100% | treat 54 |
-| belzutifan — von Hippel-Lindau disease | 49 | 2021-2026 | 100% | treat 47, associate 2 |
-| EGFR — mobocertinib | 43 | 2021-2025 | 100% | negative_correlate 40, associate 3, positive_correlate 1 |
-| STING — manganese | 39 | 2021-2026 | 100% | positive_correlate 37, associate 3 |
-| LAG3 — relatlimab | 38 | 2021-2025 | 100% | negative_correlate 32, associate 6, positive_correlate 2 |
-| glofitamab — diffuse large B-cell lymphoma | 37 | 2021-2025 | 100% | treat 35, associate 3 |
-| lazertinib — amivantamab | 37 | 2022-2026 | 100% | cotreat 37 |
-| mobocertinib — non-small cell lung cancer | 35 | 2021-2025 | 100% | treat 36 |
-| pirtobrutinib — chronic lymphocytic leukemia | 35 | 2022-2026 | 100% | treat 35, associate 1 |
+| 68Ga-FAPI — FDG | 52 | 2021-2026 | 100% | compare 69, associate 1, interact 1 |
+| OH — H2O2 | 51 | 2024-2026 | 100% | positive_correlate 58, associate 34, compare 19 |
+| durvalumab — biliary tract cancer | 48 | 2021-2026 | 100% | treat 77 |
+| STING — Mn | 47 | 2021-2026 | 100% | positive_correlate 58, associate 4 |
+| durvalumab — gemcitabine | 47 | 2022-2026 | 100% | cotreat 85, negative_correlate 2, associate 1 |
+| relatlimab — nivolumab | 44 | 2021-2026 | 100% | cotreat 76, compare 8, negative_correlate 1 |
+| GPX4 — Nrf2 | 44 | 2021-2026 | 100% | associate 37, positive_correlate 5, negative_correlate 3 |
+| EGFR — mobocertinib | 43 | 2021-2025 | 100% | negative_correlate 54, associate 5, positive_correlate 1 |
+| enfortumab vedotin — pembrolizumab | 43 | 2021-2026 | 100% | cotreat 161, compare 7, negative_correlate 4 |
+| relatlimab — melanoma | 42 | 2021-2025 | 100% | treat 85, associate 1 |
+| belzutifan — von Hippel-Lindau disease | 41 | 2021-2026 | 100% | treat 69, associate 2 |
+| lenvatinib — bevacizumab | 40 | 2021-2026 | 100% | cotreat 55, compare 46, negative_correlate 1 |
+| m6A — non-small cell lung cancer | 38 | 2021-2026 | 100% | associate 79, cause 7, treat 2 |
+| LAG3 — relatlimab | 38 | 2021-2025 | 100% | negative_correlate 50, associate 6, positive_correlate 2 |
+| adagrasib — RS#:121913530;HGVS:p.G12C;CorrespondingGene:3845 | 37 | 2021-2026 | 100% | inhibit 101, associate 2 |
+| glofitamab — diffuse large B-cell lymphoma | 37 | 2021-2025 | 100% | treat 49, associate 3 |
+| lazertinib — amivantamab | 37 | 2022-2026 | 100% | cotreat 54, compare 1 |
+| almonertinib — non-small cell lung cancer | 36 | 2021-2026 | 100% | treat 96 |
+| m6A — lung adenocarcinoma | 35 | 2021-2025 | 100% | associate 95, treat 10, cause 4 |
+| mobocertinib — non-small cell lung cancer | 35 | 2021-2025 | 100% | treat 52 |
+| dostarlimab — endometrial cancer | 35 | 2021-2026 | 100% | treat 109, associate 1 |
+| pirtobrutinib — chronic lymphocytic leukemia | 35 | 2022-2026 | 100% | treat 52, associate 1 |
 | ravulizumab — myasthenia gravis | 35 | 2022-2025 | 100% | treat 36 |
-| loncastuximab tesirine — diffuse large B-cell lymphoma | 33 | 2021-2025 | 100% | treat 34 |
-| cemiplimab — non-small cell lung cancer | 33 | 2021-2026 | 100% | treat 33 |
-| CaO2 — H2O2 | 31 | 2021-2026 | 100% | positive_correlate 16, associate 14, negative_correlate 1 |
-| anlotinib — sintilimab | 31 | 2021-2025 | 100% | cotreat 28, negative_correlate 2, compare 2 |
-| HER2 — disitamab vedotin | 31 | 2021-2026 | 100% | negative_correlate 18, associate 15 |
-| CD20 — COVID-19 | 31 | 2021-2025 | 100% | associate 31, inhibit 1 |
-| cGAS — hepatocellular carcinoma | 29 | 2021-2026 | 100% | associate 29, inhibit 1 |
-| durvalumab — cholangiocarcinoma | 29 | 2023-2025 | 100% | treat 30 |
-| PI3K — hepatocellular carcinoma | 29 | 2025-2026 | 100% | associate 29 |
-| PD-1 — anlotinib | 28 | 2021-2026 | 100% | negative_correlate 22, associate 5, positive_correlate 1 |
-| SLC7A11 — non-small cell lung cancer | 28 | 2021-2026 | 100% | associate 28 |
-| toripalimab — esophageal squamous cell carcinoma | 28 | 2021-2026 | 100% | treat 30 |
-| nirmatrelvir/ritonavir — COVID-19 | 28 | 2022-2025 | 100% | treat 27, associate 2 |
-| N6-methyladenosine — head and neck squamous cell carcinoma | 27 | 2021-2026 | 100% | associate 26, cause 1 |
-| enzalutamide — talazoparib | 27 | 2022-2025 | 100% | cotreat 27 |
-| TRPS1 — triple-negative breast cancer | 26 | 2021-2026 | 100% | associate 26, stimulate 1 |
-| sintilimab — esophageal squamous cell carcinoma | 26 | 2022-2026 | 100% | treat 26 |
-| copper — tricarboxylic acid | 26 | 2022-2026 | 100% | associate 27, positive_correlate 1 |
-| glofitamab — B-cell lymphoma | 25 | 2021-2026 | 100% | treat 26 |
-| belzutifan — tumor | 25 | 2021-2026 | 100% | treat 25 |
-| GPX4 — triple-negative breast cancer | 25 | 2022-2026 | 100% | associate 22, inhibit 2, stimulate 1 |
-| pirtobrutinib — mantle cell lymphoma | 25 | 2022-2025 | 100% | treat 25, associate 1 |
+| OH — copper | 35 | 2024-2026 | 100% | positive_correlate 33, associate 5, negative_correlate 1 |
+| CD20 — COVID-19 | 34 | 2021-2025 | 100% | associate 42, inhibit 1 |
+| loncastuximab tesirine — diffuse large B-cell lymphoma | 33 | 2021-2025 | 100% | treat 39 |
+| cemiplimab — non-small cell lung cancer | 33 | 2021-2026 | 100% | treat 51, associate 1 |
+| anlotinib — sintilimab | 31 | 2021-2025 | 100% | cotreat 53, negative_correlate 2, compare 2 |
+| PD-1 — anlotinib | 29 | 2021-2026 | 100% | negative_correlate 56, associate 6, positive_correlate 1 |
+| cGAS — hepatocellular carcinoma | 29 | 2021-2026 | 100% | associate 38, inhibit 1 |
+| durvalumab — cholangiocarcinoma | 29 | 2023-2025 | 100% | treat 50 |
+| DLAT — copper | 29 | 2023-2026 | 100% | associate 21, positive_correlate 15, interact 1 |
+| OH — glutathione | 29 | 2024-2026 | 100% | associate 13, positive_correlate 10, negative_correlate 9 |
+| sintilimab — hepatocellular carcinoma | 28 | 2021-2026 | 100% | treat 153, associate 2 |
+| SLC7A11 — non-small cell lung cancer | 28 | 2021-2026 | 100% | associate 35 |
+| toripalimab — esophageal squamous cell carcinoma | 28 | 2021-2026 | 100% | treat 48 |
+| nirmatrelvir/ritonavir — COVID-19 | 28 | 2022-2025 | 100% | treat 60, associate 3 |
+| N6-methyladenosine — head and neck squamous cell carcinoma | 27 | 2021-2026 | 100% | associate 38, cause 1 |
+| enzalutamide — talazoparib | 27 | 2022-2025 | 100% | cotreat 41 |
+| sintilimab — esophageal squamous cell carcinoma | 26 | 2022-2026 | 100% | treat 47 |
 
 ## For contrast: the most settled relations
 
@@ -74,13 +74,13 @@ with very large support are estimated.
 | stilbamidine — multiple myeloma | 17 | 1947-1951 | 1948 | treat 9, associate 8 |
 | leukemia — urethane | 55 | 1947-1973 | 1949 | treat 34, associate 16, cause 5 |
 | urethane — CML | 14 | 1947-1951 | 1949 | treat 10, associate 4 |
-| carbamate — leukemia | 7 | 1948-1987 | 1949 | treat 7 |
-| breast cancer — testosterone propionate | 25 | 1946-2014 | 1950 | treat 21, associate 3, cause 1 |
+| carbamate — leukemia | 9 | 1948-2018 | 1949 | treat 9 |
+| breast cancer — testosterone propionate | 25 | 1946-2014 | 1950 | treat 22, associate 3, cause 1 |
 | disease — nitrogen mustard | 16 | 1946-1988 | 1950 | treat 16 |
 | multiple myeloma — pentamidine | 9 | 1947-1952 | 1950 | treat 5, associate 4 |
 | urethane — chronic lymphocytic leukemia | 7 | 1947-1954 | 1950 | treat 6, associate 1 |
 | plasmacytoma — urethane | 7 | 1948-1967 | 1950 | associate 4, treat 3 |
-| aminopterin — acute myeloid leukemia | 24 | 1948-2021 | 1951 | treat 13, associate 11 |
+| aminopterin — acute myeloid leukemia | 24 | 1948-2021 | 1951 | treat 14, associate 11 |
 | aminopterin — leukemia | 27 | 1949-2022 | 1951 | treat 22, associate 5 |
 | multiple myeloma — urethane | 16 | 1947-1966 | 1951 | treat 10, associate 6 |
 | Dupuytren's contracture — vitamin E | 10 | 1948-2009 | 1951 | treat 9, associate 1 |

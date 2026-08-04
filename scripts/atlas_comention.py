@@ -238,6 +238,12 @@ def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--limit", type=int, default=0)
     ap.add_argument("--status", action="store_true")
+    ap.add_argument("--rebuild", action="store_true",
+                    help="reprocess every shard from scratch. Clears the manifest "
+                         "AND the pair table together, which is the only safe way: "
+                         "the run merges its results into any existing table, so "
+                         "reprocessing shards that are already counted there would "
+                         "double every pair.")
     ap.add_argument("--recent-first", action="store_true",
                     help="process the highest PMCID shards first (modern literature)")
     args = ap.parse_args()
@@ -269,6 +275,17 @@ def main() -> None:
     shards = sorted((fulltext_root() / "shards").glob("*.jsonl.gz"))
     if args.recent_first:
         shards = list(reversed(shards))
+    if args.rebuild:
+        # Both, or neither. Clearing the manifest alone re-counts every shard on
+        # top of the existing table; clearing the table alone loses the shards
+        # that will not be reprocessed.
+        pf_old = out_dir / "pairs.tsv.gz"
+        if pf_old.exists():
+            pf_old.unlink()
+        man = {"shards": {}}
+        man_path.write_text(json.dumps(man, indent=1, sort_keys=True), encoding="utf-8")
+        print("  --rebuild: manifest and pair table cleared", flush=True)
+
     todo = [s for s in shards if not man["shards"].get(s.name, {}).get("done")]
     if args.limit:
         todo = todo[:args.limit]
@@ -288,7 +305,9 @@ def main() -> None:
               f"{stats['kept_sentences']:,} usable sentences, {len(pairs):,} pairs so far, "
               f"{stats['seconds']}s", flush=True)
 
-    # merge with any previous run
+    # Merge with any previous run. Safe only because a shard already recorded in
+    # the manifest is skipped above, so its pairs are never added twice --
+    # --rebuild clears both together for exactly this reason.
     pf = out_dir / "pairs.tsv.gz"
     if pf.exists():
         print("merging with the previous pair table ...", flush=True)

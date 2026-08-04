@@ -124,6 +124,9 @@ def main() -> None:
     comention = load_comentions(root)
     if comention:
         print(f"co-mention layer: {len(comention):,} pairs", flush=True)
+    else:
+        print("co-mention layer ABSENT -- the full-text column will be empty",
+              file=sys.stderr)
     rows = []
     for module, a, b, pmid, claim in CLAIMS:
         r = support(idx, a, b)
@@ -174,6 +177,13 @@ def main() -> None:
         "> not a survey of the library, and a different choice of proxy pairs would give a",
         "> different fraction. Several corroborated rows also rest on a single extracted",
         "> assertion, so read the per-row counts rather than the headline.", "",
+    ] + ([] if comention else [
+        "> **The full-text co-mention layer is not built**, so that column is empty",
+        "> throughout. An empty cell here means *not measured*, NOT *not discussed* --",
+        "> the distinction matters because a zero in the relation column is read",
+        "> against exactly this column. Rebuild with",
+        "> `python scripts/atlas_comention.py --rebuild`.", "",
+    ]) + [
         "| module | pair | relation articles | full-text co-mentions | predicates | cited PMID? | contested |",
         "|---|---|---|---|---|---|---|",
     ]
