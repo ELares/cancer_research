@@ -105,6 +105,24 @@ def structural_share(path) -> int:
                if r.get("verdict") == "TP" and _STRUCTURAL.search(r["sentence"]))
 
 
+def prose_precision(path, column="verdict"):
+    """Precision restricted to the paper's own prose.
+
+    A co-mention harvested from a cited reference's title is recorded against
+    the CITING pmid, which is a weaker claim than the layer is read as making.
+    Excluding those says whether the confound moves the headline.
+    """
+    rows = [r for r in csv.DictReader(path.open())
+            if (r.get(column) or r.get("verdict_v2")) in ("TP", "FP")
+            and not _STRUCTURAL.search(r["sentence"])]
+    if not rows:
+        return None
+    tp = sum(1 for r in rows
+             if (r.get(column) or r.get("verdict_v2")) == "TP")
+    return {"n": len(rows), "tp": tp, "precision": tp / len(rows),
+            "ci": wilson(tp, len(rows))}
+
+
 def judged_precision(path, column="verdict"):
     """Hand-judged precision for a stratum, with its Wilson interval."""
     rows = [r for r in csv.DictReader(path.open()) if r.get(column)]
@@ -221,6 +239,15 @@ def main() -> int:
     # assumption and it is stated in Limits.
     wb = weighted(sb, PRIOR_ABSTRACT_PRECISION, agree_p, body_p)
     wa = weighted(sa, abs_prec, agree_p, body_p)
+    prose_agree = prose_precision(JUDGED["agree"])
+    prose_body = prose_precision(JUDGED["body"])
+    prose_abs = prose_precision(JUDGED["abstract"], "verdict_v2")
+    w_prose = weighted(
+        sa,
+        prose_abs["precision"] if prose_abs else abs_prec,
+        prose_agree["precision"] if prose_agree else agree_p,
+        prose_body["precision"] if prose_body else body_p)
+
     # Extremes over the three strata intervals. Reported because a point
     # estimate quoted five times in a downstream document reads as precision the
     # samples do not support.
@@ -403,6 +430,35 @@ def main() -> int:
         "The reported figure is the most pessimistic of the three. All three are",
         "negative, so the direction does not turn on the choice, but the magnitude",
         "is a 7-to-9 point band rather than a single number.", "",
+        "## Does the reference-list confound move the headline? (measured: no)", "",
+        "A co-mention harvested from a cited title is recorded against the CITING",
+        "paper, which is a weaker claim than the layer is usually read as making, and",
+        f"it is asymmetric: {struct_tp} of the {agree_tp} corroborated true positives",
+        f"sit in structural text against {struct_body} of {body_tp} body-only. That",
+        "was disclosed and uncorrected. Restricting every stratum to the paper's own",
+        "prose:", "",
+        "| stratum | all | prose only | n (prose) |", "|---|---|---|---|",
+    ] + [
+        f"| {nm} | {100*allp:.1f}% | {100*pr['precision']:.1f}% | {pr['n']} |"
+        for nm, allp, pr in (
+            ("corroborated", agree_p, prose_agree),
+            ("body-only", body_p, prose_body),
+            ("abstract-visible", abs_prec, prose_abs))
+        if pr
+    ] + [
+        "",
+        f"Weighted, that is **{100*w_prose:.1f}%** against the reported",
+        f"{100*wa:.1f}% -- a difference of {abs(100*(w_prose-wa)):.1f} points. **The",
+        "confound is real and does not move the headline.**", "",
+        "It also does not run the way it was assumed to. Structural text is MORE",
+        "precise in the corroborated stratum, not less: a reference title naming two",
+        "entities usually names them correctly, because a title is written to be",
+        "precise. The effect is a wash rather than an inflation, and the stratum it",
+        "helps is the one that needed help least.", "",
+        "This holds the strata WEIGHTS fixed and varies only the precisions, so it",
+        "answers whether the confound biases the precision estimate. It does not",
+        "model a layer that excluded structural text at build time, which would",
+        "shrink volume as well.", "",
         "## Held-out validation of the discriminator (#628 criterion 2)", "",
         "Every judged mention above was used to SELECT the authority-name rule, so",
         "none of them can validate it. A second sample was drawn the same way with a",
@@ -553,6 +609,9 @@ def main() -> int:
                   "abstract_precision_ci": [lo, hi], "weighted": wa,
                   "range": [wa_lo, wa_hi]},
         "net_change": wa - wb,
+        "prose_only": {"weighted": w_prose,
+                       "agree": prose_agree, "body": prose_body,
+                       "abstract": prose_abs},
         "measured_strata": {
             "agree": {"precision": agree_p, "n": agree_n, "tp": agree_tp, "ci": agree_ci},
             "body_only": {"precision": body_p, "n": body_n, "tp": body_tp, "ci": body_ci},

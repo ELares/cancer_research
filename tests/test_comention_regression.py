@@ -394,3 +394,30 @@ def test_the_judging_scaffold_is_reproducible():
     assert "--exclude" in src, "there is no way to draw a disjoint held-out sample"
     # It must use the build's matcher, not re-implement one.
     assert "from atlas_comention import build_alias_map, matched_forms" in src
+
+
+def test_the_structural_confound_is_measured_not_only_disclosed():
+    """It was flagged as uncorrected. Correcting it moves the headline by 0.4
+    points, and not in the assumed direction.
+
+    A reference title naming two entities usually names them correctly, because
+    a title is written to be precise, so structural text is MORE precise in the
+    corroborated stratum rather than less.
+    """
+    d = _raw()
+    pr = d["prose_only"]
+    assert pr["agree"] and pr["body"] and pr["abstract"]
+    for k in ("agree", "body", "abstract"):
+        assert pr[k]["n"] >= 20, f"{k} has only {pr[k]['n']} prose mentions"
+        assert abs(pr[k]["precision"] - pr[k]["tp"] / pr[k]["n"]) < 1e-12
+    # The headline must not depend on the confound.
+    assert abs(pr["weighted"] - d["after"]["weighted"]) < 0.03, (
+        f"prose-only weighted {pr['weighted']:.3f} now differs materially from "
+        f"{d['after']['weighted']:.3f}; the confound has started to matter")
+    # And the direction that surprised: structural text helps the best stratum.
+    assert pr["agree"]["precision"] < d["measured_strata"]["agree"]["precision"], (
+        "structural text no longer raises corroborated precision; the "
+        "explanation in the document is stale")
+    txt = " ".join(DOC.read_text().split())
+    assert "does not move the headline" in txt
+    assert "does not run the way it was assumed to" in txt
