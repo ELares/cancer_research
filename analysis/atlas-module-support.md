@@ -32,33 +32,27 @@ Counts are not truth. About half of all relations carry the weakest predicate,
 > different fraction. Several corroborated rows also rest on a single extracted
 > assertion, so read the per-row counts rather than the headline.
 
-> **The full-text co-mention layer is not built**, so that column is empty
-> throughout. An empty cell here means *not measured*, NOT *not discussed* --
-> the distinction matters because a zero in the relation column is read
-> against exactly this column. Rebuild with
-> `python scripts/atlas_comention.py --rebuild`.
-
 | module | pair | relation articles | full-text co-mentions | predicates | cited PMID? | contested |
 |---|---|---|---|---|---|---|
-| system_xc | `SLC7A11` - `GPX4` | 74 | - | associate 65, positive_correlate 6, negative_correlate 3 | no | **yes** (+6/-3, bal 0.50) |
+| system_xc | `SLC7A11` - `GPX4` | 74 | **19,936** | associate 65, positive_correlate 6, negative_correlate 3 | no | **yes** (+6/-3, bal 0.50) |
 | erastin | `erastin` - `SLC7A11` | 63 | - | negative_correlate 39, associate 19, positive_correlate 5 | no | **yes** (+5/-39, bal 0.13) |
-| contact | `CDH1` - `YAP1` | 26 | - | associate 14, negative_correlate 7, positive_correlate 5 | no | **yes** (+5/-7, bal 0.71) |
-| ifngamma | `IFNG` - `SLC7A11` | 13 | - | negative_correlate 12, positive_correlate 1 | yes | **yes** (+1/-12, bal 0.08) |
-| acsl4 | `ACSL4` - `GPX4` | 13 | - | associate 7, negative_correlate 4, positive_correlate 2 | no | **yes** (+2/-4, bal 0.50) |
-| dc_ferroptosis | `CD274` - `SLC7A11` | 7 | - | positive_correlate 4, negative_correlate 2, associate 1 | yes | **yes** (+4/-2, bal 0.50) |
-| fsp1 | `AIFM2` - `GPX4` | 6 | - | associate 4, positive_correlate 2 | no | no |
-| ifngamma | `IFNG` - `SLC3A2` | 5 | - | negative_correlate 5 | yes | no |
-| dhodh | `DHODH` - `GPX4` | 5 | - | associate 3, negative_correlate 2 | no | no |
-| alox | `ALOX15` - `ACSL4` | 3 | - | associate 2, positive_correlate 1 | no | no |
-| gch1 | `GCH1` - `GPX4` | 1 | - | associate 1 | no | no |
-| prom2 | `PROM2` - `FTH1` | 0 | - | - | - | no |
-| vitk | `VKORC1L1` - `GPX4` | 0 | - | - | - | no |
-| copper | `ATP7A` - `GPX4` | 0 | - | - | - | no |
-| por | `POR` - `CYB5R1` | 0 | - | - | - | no |
-| dhc7 | `DHCR7` - `GPX4` | 0 | - | - | - | no |
-| repair | `CHMP5` - `CHMP6` | 0 | - | - | - | no |
-| mboat | `MBOAT2` - `GPX4` | 0 | - | - | - | no |
-| ether_lipid | `FAR1` - `AGPS` | 0 | - | - | - | no |
+| contact | `CDH1` - `YAP1` | 26 | **537** | associate 14, negative_correlate 7, positive_correlate 5 | no | **yes** (+5/-7, bal 0.71) |
+| ifngamma | `IFNG` - `SLC7A11` | 13 | **100** | negative_correlate 12, positive_correlate 1 | yes | **yes** (+1/-12, bal 0.08) |
+| acsl4 | `ACSL4` - `GPX4` | 13 | **9,272** | associate 7, negative_correlate 4, positive_correlate 2 | no | **yes** (+2/-4, bal 0.50) |
+| dc_ferroptosis | `CD274` - `SLC7A11` | 7 | **266** | positive_correlate 4, negative_correlate 2, associate 1 | yes | **yes** (+4/-2, bal 0.50) |
+| fsp1 | `AIFM2` - `GPX4` | 6 | **588** | associate 4, positive_correlate 2 | no | no |
+| ifngamma | `IFNG` - `SLC3A2` | 5 | **67** | negative_correlate 5 | yes | no |
+| dhodh | `DHODH` - `GPX4` | 5 | **261** | associate 3, negative_correlate 2 | no | no |
+| alox | `ALOX15` - `ACSL4` | 3 | **535** | associate 2, positive_correlate 1 | no | no |
+| gch1 | `GCH1` - `GPX4` | 1 | **622** | associate 1 | no | no |
+| prom2 | `PROM2` - `FTH1` | 0 | **16** | - | - | no |
+| vitk | `VKORC1L1` - `GPX4` | 0 | **13** | - | - | no |
+| copper | `ATP7A` - `GPX4` | 0 | **9** | - | - | no |
+| por | `POR` - `CYB5R1` | 0 | **27** | - | - | no |
+| dhc7 | `DHCR7` - `GPX4` | 0 | **13** | - | - | no |
+| repair | `CHMP5` - `CHMP6` | 0 | **69** | - | - | no |
+| mboat | `MBOAT2` - `GPX4` | 0 | **27** | - | - | no |
+| ether_lipid | `FAR1` - `AGPS` | 0 | **23** | - | - | no |
 | hdac_persister | `HDAC1` - `AIFM2` | 0 | - | - | - | no |
 
 ## Claims that sit on a CONTESTED edge
@@ -95,15 +89,31 @@ is wrong -- it says the module docs should state which side they took.
   other cancer article in the graph, so they are not single-paper assertions.
 * **9** resolved to real entities but have NO asserted relation in the abstract-level graph:
 
-  * `prom2`: PROM2 - FTH1 — PROM2 exports ferritin-bound iron, draining the labile pool
-  * `vitk`: VKORC1L1 - GPX4 — VKORC1L1 reduces vitamin K to a GPX4-independent radical trap
-  * `copper`: ATP7A - GPX4 — copper ionophores degrade ATP7A and deplete GSH/GPX4
-  * `por`: POR - CYB5R1 — POR and CYB5R1 generate the H2O2 the Fenton reaction needs
-  * `dhc7`: DHCR7 - GPX4 — 7-DHC (consumed by DHCR7) is an endogenous radical trap
-  * `repair`: CHMP5 - CHMP6 — ESCRT-III membrane repair blocks death execution
-  * `mboat`: MBOAT2 - GPX4 — MBOAT1/2 remodel phospholipids toward MUFA-PE, GPX4-independently
-  * `ether_lipid`: FAR1 - AGPS — FAR1/AGPS make the ether-PUFA pool that promotes ferroptosis
+  * `prom2`: PROM2 - FTH1 — PROM2 exports ferritin-bound iron, draining the labile pool  _(but **16** full-text co-mentions)_
+  * `vitk`: VKORC1L1 - GPX4 — VKORC1L1 reduces vitamin K to a GPX4-independent radical trap  _(but **13** full-text co-mentions)_
+  * `copper`: ATP7A - GPX4 — copper ionophores degrade ATP7A and deplete GSH/GPX4  _(but **9** full-text co-mentions)_
+  * `por`: POR - CYB5R1 — POR and CYB5R1 generate the H2O2 the Fenton reaction needs  _(but **27** full-text co-mentions)_
+  * `dhc7`: DHCR7 - GPX4 — 7-DHC (consumed by DHCR7) is an endogenous radical trap  _(but **13** full-text co-mentions)_
+  * `repair`: CHMP5 - CHMP6 — ESCRT-III membrane repair blocks death execution  _(but **69** full-text co-mentions)_
+  * `mboat`: MBOAT2 - GPX4 — MBOAT1/2 remodel phospholipids toward MUFA-PE, GPX4-independently  _(but **27** full-text co-mentions)_
+  * `ether_lipid`: FAR1 - AGPS — FAR1/AGPS make the ether-PUFA pool that promotes ferroptosis  _(but **23** full-text co-mentions)_
   * `hdac_persister`: HDAC1 - AIFM2 — HDACs and FSP1 together suppress persister-cell ferroptosis
+
+  **8 of those 9 ARE discussed in full text.** A zero in
+  the relation column is therefore not evidence against the mechanism.
+  It has two distinct causes, and they were once conflated here:
+
+  1. **Abstract-level extraction sparsity.** PubTator's relations come from
+     abstracts, so a mechanism established in a Results section may never
+     be asserted in an extractable sentence.
+  2. **Entity-resolution collisions.** The relation WAS extracted and then
+     filed under the wrong gene. `fsp1` (AIFM2-GPX4) is the measured case:
+     it read zero not because nobody asserts GPX4-FSP1, but because every
+     such relation in the census was filed under ATL1, a spastic-paraplegia
+     gene sharing the `FSP1` alias. See `analysis/atlas-disambiguation.md`;
+     the corrections are applied at index build, so this column now counts
+     them. An earlier version of this report attributed that zero entirely
+     to cause 1, which was wrong.
 
 ## Detail
 

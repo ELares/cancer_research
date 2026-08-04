@@ -1478,3 +1478,47 @@ def test_recent_cohort_decline_is_flagged_as_an_upper_bound():
     """MeSH lag biases the newest cohorts downward, so the drop is not measured."""
     md = (REPO_ROOT / "analysis" / "atlas-replication.md").read_text()
     assert "upper bound on a real decline" in md
+
+
+# --- co-mention precision, measured at last (#ATLAS-COMENT-AUDIT) ----------
+
+def test_comention_alias_matching_is_mechanically_sound():
+    """Check 1 is not a judgement call: a miss here is a tokenizer bug."""
+    import json
+    raw = json.loads(
+        (REPO_ROOT / "analysis" / "atlas-comention-audit.json").read_text())
+    assert raw["mentions"] > 500
+    assert raw["alias_missing"] == 0, \
+        f"{raw['alias_missing']} sampled entities have no alias in their sentence"
+
+
+def test_comention_precision_is_reported_as_a_bound_not_a_number():
+    """Corroboration and precision are not the same thing.
+
+    PubTator reads abstracts; this layer reads full text. An entity discussed
+    only in Methods is genuinely present and genuinely absent from PubTator's
+    annotation, so agreement UNDERSTATES precision. Reporting 44.3% as 'the
+    precision' would be as wrong as reporting the 83.8% upper bound as one.
+    """
+    import json
+    raw = json.loads(
+        (REPO_ROOT / "analysis" / "atlas-comention-audit.json").read_text())
+    lower = raw["pubtator_agree"] / raw["pubtator_scored"]
+    upper = (raw["pubtator_agree"] + raw["body_only"]) / raw["pubtator_scored"]
+    assert lower < upper, "the bound must be an interval, not a point"
+    md = (REPO_ROOT / "analysis" / "atlas-comention-audit.md").read_text()
+    assert "upper bound" in md and "lower bound" in md
+
+
+def test_disagreements_are_split_by_abstract_visibility():
+    """Pooling the two kinds of disagreement would waste the measurement.
+
+    An alias visible in the abstract PubTator read is a candidate false
+    positive; a body-only match is this layer doing what it exists for.
+    """
+    import json
+    raw = json.loads(
+        (REPO_ROOT / "analysis" / "atlas-comention-audit.json").read_text())
+    assert raw["in_abstract"] + raw["body_only"] == raw["pubtator_disagree"]
+    assert raw["body_only"] > raw["in_abstract"], \
+        "if most disagreements became abstract-visible, false positives are likely"

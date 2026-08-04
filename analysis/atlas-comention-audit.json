@@ -1,0 +1,13 @@
+{
+  "sentences": 400,
+  "mentions": 1112,
+  "alias_found": 1112,
+  "alias_missing": 0,
+  "pubtator_scored": 1112,
+  "pubtator_agree": 493,
+  "pubtator_disagree": 619,
+  "papers_without_pubtator": 0,
+  "in_abstract": 180,
+  "body_only": 439,
+  "examples_missing": []
+}
