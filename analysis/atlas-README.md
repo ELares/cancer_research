@@ -182,6 +182,12 @@ and this layer is **97.4%**. The number is only meaningful because every
 label-defining phrase is masked out before a feature is read; without that the
 measurement would be circular.
 
+**Most corrections are extrapolated, and that is tested.** Accuracy is measured on
+papers that declare a sense, but 75% of the 441 corrections land on papers that
+declare nothing. Publication year checks that population independently: of 175
+undeclaring papers corrected to AIFM2, **zero** predate 2019 — against roughly 37
+expected if the classifier were assigning it without regard to the biology.
+
 The payoff lands on this project's own headline. GPX4+AIFM2 co-mention papers go
 **98 → 257**, and typed GPX4↔AIFM2 relations go **0 → 6** — there were none at
 all, because every one had been filed under atlastin. The corrections are

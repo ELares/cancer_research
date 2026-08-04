@@ -67,6 +67,25 @@ The separation is what it should be, and the AIFM2 row is the strong form
 of the test: a single pre-2019 paper declaring *ferroptosis suppressor protein
 1* would mean the gold rule was matching something else.
 
+### The extrapolation, and a test of it
+
+Accuracy above is measured on the 242 papers that declare a sense. But
+**331 of the 441 corrections (75%) land on papers that declare
+nothing**, so the headline is extrapolated to a population it never scored.
+That is the most important limitation here, and it is testable with the same
+independent signal.
+
+| corrected, undeclaring | n | published before 2019 |
+|---|---|---|
+| to AIFM2 | 175 | **0** |
+| to another sense | 156 | 70 |
+
+Across all corrected undeclaring papers 21% predate 2019, so if
+the classifier were assigning AIFM2 without regard to the biology it would put
+roughly **37** of them before the term existed. It puts
+**0**. The extrapolation is supported on exactly the population the gold
+set does not cover.
+
 ## Why that number is not circular
 
 The gold label is defined by the presence of an expansion phrase. A
@@ -99,6 +118,9 @@ the smaller number with nothing to indicate anything was missing.
 
 ## Limits
 
+* **Most corrections are extrapolated.** 75% land on papers that declare no sense, so their accuracy is inferred from the
+  declaring subset rather than measured. The temporal check above supports that
+  inference but does not replace a labelled evaluation of those papers.
 * Measured on `FSP1` only. The method generalises to any symbol whose
   senses have distinct spelled-out expansions, but no other symbol has been
   scored, and an unmeasured layer is not a validated one.

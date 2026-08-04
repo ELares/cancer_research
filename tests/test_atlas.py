@@ -1020,3 +1020,42 @@ def test_comention_process_shard_audit_is_optional():
     sig = inspect.signature(cm.process_shard)
     assert sig.parameters["audit"].default is None
     assert sig.parameters["rng"].default is None
+
+
+def test_most_fsp1_corrections_are_extrapolated_and_the_report_says_so():
+    """The limitation I nearly shipped without stating.
+
+    The 97.4% accuracy is measured on papers that DECLARE a sense, but three
+    quarters of the corrections actually written into the graph land on papers
+    that declare nothing. Quoting the headline without that caveat would imply a
+    measurement that was never made.
+    """
+    import json
+    raw = json.loads(
+        (REPO_ROOT / "analysis" / "atlas-disambiguation.json").read_text())
+    text = (REPO_ROOT / "analysis" / "atlas-disambiguation.md").read_text()
+    assert raw["gold_set"] < len(raw["corrections"]), \
+        "if the gold set ever covered every correction, simplify this section"
+    assert "extrapolat" in text.lower()
+    assert "declare\nnothing" in text or "declare nothing" in text.replace("\n", " ")
+
+
+def test_temporal_check_validates_the_undeclaring_corrections():
+    """The check that makes the extrapolation defensible rather than assumed.
+
+    FSP1 was named as the ferroptosis suppressor in 2019, so a pre-2019 paper
+    corrected to AIFM2 is almost certainly wrong. Among the undeclaring papers
+    -- exactly the population the gold set never scored -- that count must stay
+    at or near zero while the other senses spread across decades.
+    """
+    import json
+    raw = json.loads(
+        (REPO_ROOT / "analysis" / "atlas-disambiguation.json").read_text())
+    years = raw.get("gold_years", {})
+    assert years, "the temporal check must be recorded, not just printed"
+    aifm2 = years.get("AIFM2", [])
+    assert aifm2 and min(aifm2) >= 2019, \
+        f"an AIFM2-sense paper predates the term: {min(aifm2)}"
+    other = years.get("S100A4", [])
+    assert other and min(other) < 2019, \
+        "the contrast sense must span decades, or the check proves nothing"

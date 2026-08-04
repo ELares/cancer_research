@@ -302,11 +302,28 @@ def main() -> int:
     pair_before = len(partner_pm & aifm2_pm)
     pair_after = len(partner_pm & (aifm2_pm | corrected_to_aifm2))
 
-    years = pub_years(sorted(gold))
+    # Years for the gold set AND for every corrected paper, because the
+    # extrapolation below turns on the corrected-but-undeclaring population.
+    years = pub_years(sorted(set(gold) | set(corrections)))
     year_buckets = collections.defaultdict(list)
     for p, s in gold.items():
         if p in years:
             year_buckets[s].append(years[p])
+
+    # THE EXTRAPOLATION CHECK. Accuracy is measured on papers that declare a
+    # sense, but most corrections land on papers that declare nothing, so the
+    # headline is extrapolated to a population it never scored. Publication year
+    # tests that extrapolation directly and independently: FSP1 was named as the
+    # ferroptosis suppressor in 2019, so a pre-2019 paper corrected to AIFM2 is
+    # almost certainly wrong.
+    nd = {p: v["corrected"] for p, v in corrections.items() if p not in gold}
+    nd_years = {p: years[p] for p in nd if p in years}
+    nd_aifm2 = [p for p, v in nd.items() if v == "AIFM2" and p in nd_years]
+    nd_other = [p for p, v in nd.items() if v != "AIFM2" and p in nd_years]
+    nd_pre = sum(1 for p in nd_aifm2 if nd_years[p] < 2019)
+    base_pre = (sum(1 for p in nd_years if nd_years[p] < 2019) / len(nd_years)
+                if nd_years else 0.0)
+    expected_pre = base_pre * len(nd_aifm2)
 
     dist = collections.Counter(gold.values())
     lines = [
@@ -368,6 +385,22 @@ def main() -> int:
         "", "The separation is what it should be, and the AIFM2 row is the strong form",
         "of the test: a single pre-2019 paper declaring *ferroptosis suppressor protein",
         "1* would mean the gold rule was matching something else.", "",
+        "### The extrapolation, and a test of it", "",
+        f"Accuracy above is measured on the {len(gold)} papers that declare a sense. But",
+        f"**{len(nd):,} of the {len(corrections):,} corrections "
+        f"({100*len(nd)/max(1,len(corrections)):.0f}%) land on papers that declare",
+        "nothing**, so the headline is extrapolated to a population it never scored.",
+        "That is the most important limitation here, and it is testable with the same",
+        "independent signal.", "",
+        "| corrected, undeclaring | n | published before 2019 |", "|---|---|---|",
+        f"| to AIFM2 | {len(nd_aifm2)} | **{nd_pre}** |",
+        f"| to another sense | {len(nd_other)} | "
+        f"{sum(1 for p in nd_other if nd_years[p] < 2019)} |", "",
+        f"Across all corrected undeclaring papers {100*base_pre:.0f}% predate 2019, so if",
+        f"the classifier were assigning AIFM2 without regard to the biology it would put",
+        f"roughly **{expected_pre:.0f}** of them before the term existed. It puts",
+        f"**{nd_pre}**. The extrapolation is supported on exactly the population the gold",
+        "set does not cover.", "",
         "## Why that number is not circular", "",
         "The gold label is defined by the presence of an expansion phrase. A",
         "classifier allowed to read that phrase would score near 100% and measure",
@@ -392,6 +425,10 @@ def main() -> int:
         "evidence for the mechanism this project is built on, and the graph reported",
         "the smaller number with nothing to indicate anything was missing.", "",
         "## Limits", "",
+        f"* **Most corrections are extrapolated.** {100*len(nd)/max(1,len(corrections)):.0f}% "
+        "land on papers that declare no sense, so their accuracy is inferred from the",
+        "  declaring subset rather than measured. The temporal check above supports that",
+        "  inference but does not replace a labelled evaluation of those papers.",
         "* Measured on `FSP1` only. The method generalises to any symbol whose",
         "  senses have distinct spelled-out expansions, but no other symbol has been",
         "  scored, and an unmeasured layer is not a validated one.",
