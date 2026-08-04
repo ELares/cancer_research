@@ -70,6 +70,12 @@ The weighted total:
 | body-only | 47.5% x 20.0% | 44.2% x 20.0% |
 | **weighted** | **50.6%** | **41.6%** |
 
+Propagating the three strata intervals to their extremes, the after total
+spans **31.5% to 52.6%** and the before total **40.3% to 60.3%**. The point estimates are what this
+document reports elsewhere for readability, and they are not the finding:
+the separation between the two runs is, and it survives because the strata
+WEIGHTS are exact counts while only the precisions carry sampling error.
+
 **All three rows are now hand-judged**, which they were not when this was
 first written. The corroborated and body-only precisions were assumed at
 92.5% and 30.8%, carried over from #617, and the assumption mattered:
@@ -82,6 +88,26 @@ first written. The corroborated and body-only precisions were assumed at
   volume. `evaluation` resolves to Phobia, Social; `world` to Cutaneous
   Leishmaniasis; `mPTP`, the mitochondrial permeability transition pore, to
   the neurotoxin MPTP.
+
+### Which body-only precision belongs on the BEFORE side
+
+The table above uses the after-run 20.0% on both sides. #617 separately
+read 39 body-only mentions from the BEFORE run and got 30.8%, so that is a
+measurement of that run, not an assumption, and using it raises the before
+level:
+
+| basis for the before run | before | after | change |
+|---|---|---|---|
+| after-run precisions on both sides (as reported) | 50.6% | 41.6% | -9.0 |
+| each run's own body-only measurement | 55.7% | 41.6% | -14.2 |
+
+The two body-only figures are not separable at these sample sizes -- 8/40
+against 12/39 is a two-sided Fisher p of about 0.31 -- so this is a choice
+between defensible options rather than a correction. **The reported row is
+the conservative one**: it gives the smaller regression. The delta is robust
+to the choice (the two runs' body-only shares, 47.5% and 44.2%, nearly
+cancel); the LEVEL is not, and quoting 41.6% without saying which basis
+produced its counterpart would hide that.
 
 ## Why retuning the thresholds will not fix it
 
@@ -269,6 +295,13 @@ quoted; the unfavourable one is now quoted beside it.
 
 * 60 judged mentions gives a wide interval ([8.1%, 26.1%]); the direction of the net change is
   robust to it, the magnitude is not.
+* **A confound concentrated in the best stratum.** 11 of the 36 corroborated true positives come from reference-list entries,
+  table rows or PMC structural markup rather than the paper's own prose,
+  against 0 of 8 in body-only. A co-mention harvested
+  from a cited title is recorded against the CITING paper, which is a
+  different claim from "this paper discusses X and Y". It is asymmetric,
+  it sits in the stratum with the highest precision and a third of the
+  volume, and it is not corrected for here.
 * Judgement is mine and unblinded. I knew which run each sentence came
   from, which is exactly the bias that would flatter a fix I wrote, and
   the result runs against my own prior change rather than for it.
@@ -276,7 +309,11 @@ quoted; the unfavourable one is now quoted beside it.
   layer, and it was caught only because an unrelated experiment surfaced
   the authority labels. The corrected verdicts are committed beside the
   originals so the correction itself can be audited.
-* The carried-over strata were judged under #617 and may share the
-  surface-form flaw. If they do, 92.5% and 30.8% are upper bounds and the
-  weighted total is optimistic on both sides of the comparison.
-* Body-only and corroborated precision are carried over unmeasured.
+* **The strata precisions are measured on the AFTER sample and applied to
+  the BEFORE run.** That assumes the failure modes WITHIN a stratum did not
+  change, only the stratum sizes -- which is the point of stratifying, but
+  it is an assumption and it moves the levels. #617 separately measured the
+  before run's body-only stratum at 30.8% on 39 mentions, so that figure is
+  a MEASUREMENT of that run rather than an assumption, and substituting the
+  after-run 20.0% is the conservative choice. Both bases are tabulated
+  above; the delta is robust to the choice and the level is not.

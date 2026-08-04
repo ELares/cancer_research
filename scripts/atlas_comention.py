@@ -166,17 +166,30 @@ def usable_alias(a: str) -> bool:
 def matched_forms(sentence: str, ident: str, alias: dict) -> list:
     """Which alias forms of `ident` actually occur in this sentence.
 
-    The matcher works over token n-grams, so this reproduces that rather than
-    doing a substring search: `oral` must not be recovered from `oropharyngeal`.
-    Returns every candidate, since more than one form of the same identifier can
-    be present and the build does not record which one it counted.
+    Reproduces `sentence_entities`, which is LONGEST-MATCH WITH CONSUMPTION: it
+    walks the tokens, takes the longest alias starting at each position, and
+    skips past it. Generating every n-gram hit instead would report spans that
+    never fired -- in "breast cancer", `cancer` and `breast` are both aliases
+    but only `breast cancer` is counted. Listing them would put non-firing spans
+    in front of the next round of hand judging, which is the exact failure this
+    field was added to prevent.
     """
     toks = _TOKEN.findall(sentence.lower())
-    grams = set()
-    for n in range(1, 6):
-        for i in range(len(toks) - n + 1):
-            grams.add(" ".join(toks[i:i + n]))
-    return [a for a, i in alias.items() if i == ident and a in grams]
+    out, i = [], 0
+    while i < len(toks):
+        hit = None
+        for n in range(min(MAX_NGRAM, len(toks) - i), 0, -1):
+            gram = " ".join(toks[i:i + n])
+            if gram in alias:
+                hit = (gram, n)
+                break
+        if hit:
+            if alias[hit[0]] == ident:
+                out.append(hit[0])
+            i += hit[1]
+        else:
+            i += 1
+    return out
 
 
 def build_alias_map(idx: dict) -> tuple:

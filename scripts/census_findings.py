@@ -156,7 +156,9 @@ def main() -> int:
         a, b = reg["after"], reg["before"]
         L += [
             "**A repair this project made to its own co-mention layer made it "
-            f"worse.** #617 measured the layer at {100*b['weighted']:.0f}% precision, "
+            f"worse.** #617 measured the layer at 55.5% precision "
+            f"(recomputed at {100*b['weighted']:.0f}% once every stratum was "
+            "hand-judged rather than assumed), "
             "traced it to a filter that exempted multi-word forms, and replaced the "
             "single-token test with two measured filters. Re-measured on a fresh "
             f"sample after the rebuild, precision FELL to {100*a['weighted']:.0f}%. "

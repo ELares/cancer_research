@@ -105,7 +105,7 @@ a backlog.
 
 Reported here because a findings page that only lists wins is marketing.
 
-**A repair this project made to its own co-mention layer made it worse.** #617 measured the layer at 51% precision, traced it to a filter that exempted multi-word forms, and replaced the single-token test with two measured filters. Re-measured on a fresh sample after the rebuild, precision FELL to 42%. The false positives had been multi-word because the multi-word channel was the unfiltered one; closing it moved the pressure to the channel just opened, and the top offenders are now bare English words. The replacement filters were then measured and do not separate true matches from false ones at all.
+**A repair this project made to its own co-mention layer made it worse.** #617 measured the layer at 55.5% precision (recomputed at 51% once every stratum was hand-judged rather than assumed), traced it to a filter that exempted multi-word forms, and replaced the single-token test with two measured filters. Re-measured on a fresh sample after the rebuild, precision FELL to 42%. The false positives had been multi-word because the multi-word channel was the unfiltered one; closing it moved the pressure to the channel just opened, and the top offenders are now bare English words. The replacement filters were then measured and do not separate true matches from false ones at all.
 *Source:* `comention-regression.md`
 
 **Literature-based discovery does not work as built.** The shipped ABC

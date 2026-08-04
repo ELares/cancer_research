@@ -102,6 +102,16 @@ CLAIMS = [
 # The co-mention layer's measured precision, read from its own artifact so this
 # document cannot quote a stale figure. Falls back to None when the measurement
 # has not been run, in which case the caveat is omitted rather than invented.
+def _comention_interval() -> str:
+    """The stated precision is a point estimate; quote its range beside it."""
+    f = PROJECT_ROOT / "analysis" / "comention-regression.json"
+    try:
+        d = json.loads(f.read_text())["after"]
+        return f"95% interval roughly {100*d['range'][0]:.0f}-{100*d['range'][1]:.0f}%"
+    except (OSError, ValueError, KeyError):
+        return "interval not available"
+
+
 def comention_precision():
     f = PROJECT_ROOT / "analysis" / "comention-regression.json"
     try:
@@ -190,7 +200,8 @@ def main() -> None:
         "> assertion, so read the per-row counts rather than the headline.", "",
     ] + ([
         f"> **The co-mention column is measured at roughly "
-        f"{100*comention_precision():.0f}% precision**",
+        f"{100*comention_precision():.0f}% precision** "
+        f"({_comention_interval()}),",
         "> (`analysis/comention-regression.md`), so read it as an upper bound on",
         "> discussion rather than a count of it. Roughly half of any figure in that",
         "> column is a generic surface form resolving to the wrong entity -- the",

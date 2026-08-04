@@ -60,6 +60,49 @@ OUT = PROJECT_ROOT / "analysis" / "atlas-comention-audit.md"
 RAW = PROJECT_ROOT / "analysis" / "atlas-comention-audit.json"
 
 
+def _measured_strata_lines() -> list:
+    """Report the hand-judged strata, ordered by the data.
+
+    An earlier version hardcoded "20.0% ... the worst of the three". Body-only
+    is the SECOND worst -- abstract-visible is lower -- and the two are not
+    distinguishable at these sample sizes. A superlative written by hand beside
+    numbers written by hand is exactly the drift this report keeps finding
+    elsewhere, so the ordering is now read from the measurement.
+    """
+    f = PROJECT_ROOT / "analysis" / "comention-regression.json"
+    try:
+        d = json.loads(f.read_text())
+        m = d["measured_strata"]
+    except (OSError, ValueError, KeyError):
+        return ["Hand-judged strata precisions are not available; run "
+                "`scripts/comention_regression.py`.", ""]
+    rows = [
+        ("body-only", m["body_only"]["precision"], m["body_only"]["n"],
+         m["body_only"]["ci"]),
+        ("abstract-visible", d["after"]["abstract_precision"],
+         d["after"]["judged_n"], d["after"]["abstract_precision_ci"]),
+        ("corroborated", m["agree"]["precision"], m["agree"]["n"], m["agree"]["ci"]),
+    ]
+    rows.sort(key=lambda r: r[1])
+    body = next(r for r in rows if r[0] == "body-only")
+    lowest = rows[0]
+    overlap = body[3][0] <= lowest[3][1] and lowest[3][0] <= body[3][1]
+    L = ["Hand judging puts the three strata at "
+         "(`analysis/comention/*-judgements.csv`):", "",
+         "| stratum | precision | 95% CI | n |", "|---|---|---|---|"]
+    for name, prec, n_, ci in rows:
+        L.append(f"| {name} | **{100*prec:.1f}%** | "
+                 f"[{100*ci[0]:.1f}%, {100*ci[1]:.1f}%] | {n_} |")
+    tail = (", and it is not distinguishable from the lowest at these sample sizes "
+            "-- the intervals overlap across most of their range."
+            if overlap and body is not lowest else ".")
+    L += ["",
+          f"Body-only is the {'lowest' if body is lowest else 'second lowest'}{tail}",
+          "It carries the most volume of the three, which is what makes it matter.",
+          ""]
+    return L
+
+
 def pubtator_by_paper(root: Path, want: set) -> dict:
     """pmid -> identifiers PubTator assigned, for the sampled papers only."""
     out = collections.defaultdict(set)
@@ -248,11 +291,10 @@ def main() -> int:
         "NOT a reason to score the stratum as correct. This report asserted BOTH",
         "readings at once -- that the body-only share was \"the layer doing the job",
         "it exists for\" here, and that it was \"NOT the layer doing its job\" in the",
-        "#617 section below. The second is the right one; hand judging",
-        "puts that stratum at **20.0%** precision (8 of 40,",
-        "`analysis/comention/body-only-judgements.csv`), the worst of the three. The",
-        "same generic forms misfire in body text as in abstracts, and there is no",
-        "abstract-level extractor to disagree with them.", "",
+        "#617 section below. The second is the right one.", "",
+    ] + _measured_strata_lines() + [
+        "The same generic forms misfire in body text as in abstracts, and there is",
+        "no abstract-level extractor to disagree with them.", "",
         f"So read the {100*(agree+body_only)/max(1,scored):.1f}% that treating",
         "body-only as correct would give as a bound that is now known to be far",
         f"above the truth, and the {100*agree/max(1,scored):.1f}% corroboration rate",

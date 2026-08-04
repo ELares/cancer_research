@@ -66,11 +66,21 @@ never read that text. That is what this layer exists to find -- and it is
 NOT a reason to score the stratum as correct. This report asserted BOTH
 readings at once -- that the body-only share was "the layer doing the job
 it exists for" here, and that it was "NOT the layer doing its job" in the
-#617 section below. The second is the right one; hand judging
-puts that stratum at **20.0%** precision (8 of 40,
-`analysis/comention/body-only-judgements.csv`), the worst of the three. The
-same generic forms misfire in body text as in abstracts, and there is no
-abstract-level extractor to disagree with them.
+#617 section below. The second is the right one.
+
+Hand judging puts the three strata at (`analysis/comention/*-judgements.csv`):
+
+| stratum | precision | 95% CI | n |
+|---|---|---|---|
+| abstract-visible | **15.0%** | [8.1%, 26.1%] | 60 |
+| body-only | **20.0%** | [10.5%, 34.8%] | 40 |
+| corroborated | **90.0%** | [76.9%, 96.0%] | 40 |
+
+Body-only is the second lowest, and it is not distinguishable from the lowest at these sample sizes -- the intervals overlap across most of their range.
+It carries the most volume of the three, which is what makes it matter.
+
+The same generic forms misfire in body text as in abstracts, and there is
+no abstract-level extractor to disagree with them.
 
 So read the 76.7% that treating
 body-only as correct would give as a bound that is now known to be far

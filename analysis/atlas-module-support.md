@@ -32,7 +32,7 @@ Counts are not truth. About half of all relations carry the weakest predicate,
 > different fraction. Several corroborated rows also rest on a single extracted
 > assertion, so read the per-row counts rather than the headline.
 
-> **The co-mention column is measured at roughly 42% precision**
+> **The co-mention column is measured at roughly 42% precision** (95% interval roughly 32-53%),
 > (`analysis/comention-regression.md`), so read it as an upper bound on
 > discussion rather than a count of it. Roughly half of any figure in that
 > column is a generic surface form resolving to the wrong entity -- the

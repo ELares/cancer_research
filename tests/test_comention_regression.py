@@ -82,8 +82,13 @@ def test_every_stratum_is_measured_not_assumed():
         tp = sum(1 for r in rows if r["verdict"] == "TP")
         assert m[name]["tp"] == tp and m[name]["n"] == len(rows)
         assert abs(m[name]["precision"] - tp / len(rows)) < 1e-12
-        # Each judgement must be checkable: the span that fired and the label.
-        assert all("matched_span" in r and "authority_name" in r for r in rows)
+        # Each judgement must be checkable. csv.DictReader supplies every header
+        # key on every row, so `"matched_span" in r` tests the HEADER -- blanking
+        # every value passed it. Check the values.
+        filled = sum(1 for r in rows if (r.get("matched_span") or "").strip())
+        assert filled >= 0.9 * len(rows), (
+            f"{name}: only {filled}/{len(rows)} rows record the span that fired")
+        assert all(r.get("verdict") in ("TP", "FP") for r in rows)
     assert m["body_only"]["precision"] < 0.308, (
         "body-only no longer measures below its old assumed value; re-read")
     assert "All three rows are now hand-judged" in DOC.read_text()
@@ -280,3 +285,51 @@ def test_the_audit_does_not_assert_both_readings_of_the_body_only_stratum():
     assert "PRE-FILTER measurement" in md, (
         "the #617 block is not labelled as the pre-filter run, so its 30.8% reads "
         "as current beside the post-filter 20.0%")
+
+
+def test_matched_forms_reproduces_the_build_matcher():
+    """It must be longest-match with consumption, not n-gram candidate generation.
+
+    The build's `sentence_entities` walks tokens, takes the longest alias at each
+    position and skips past it. Returning every n-gram hit instead reports spans
+    that never fired -- and those spans go straight in front of the next round of
+    hand judging, which is what this field exists to prevent.
+    """
+    import atlas_comention as ac
+
+    alias = {"breast cancer": "D001943", "cancer": "D009369", "breast": "D001940"}
+    s = "Patients with breast cancer were enrolled in the trial."
+    assert ac.matched_forms(s, "D001943", alias) == ["breast cancer"]
+    # The shorter aliases are consumed by the longer match and must NOT appear.
+    assert ac.matched_forms(s, "D009369", alias) == []
+    assert ac.matched_forms(s, "D001940", alias) == []
+
+    # It must still be token-based, not substring: `oral` is not in `oropharyngeal`.
+    assert ac.matched_forms("oropharyngeal carcinoma", "X", {"oral": "X"}) == []
+    assert ac.matched_forms("the oral cavity", "X", {"oral": "X"}) == ["oral"]
+
+    # And it must agree with the build's own matcher on the same input.
+    ents = ac.sentence_entities(s, alias)
+    fired = {e for e in (ents if isinstance(ents, (set, list)) else [])}
+    if fired:
+        assert "D001943" in fired and "D009369" not in fired
+
+
+def test_the_judged_sentences_are_long_enough_to_check_the_span():
+    """"Every verdict is checkable" is only true if the span is in the sentence.
+
+    The CSVs truncate, and three rows carried a span that fell past the cut --
+    including the row this work claimed to have resolved by recovering it.
+    """
+    import csv as _csv
+
+    for name in ("abstract-visible-judgements.csv", "body-only-judgements.csv",
+                 "corroborated-judgements.csv"):
+        path = REPO_ROOT / "analysis" / "comention" / name
+        for r in _csv.DictReader(path.open()):
+            span = (r.get("matched_span") or "").split("|")[0]
+            if not span:
+                continue
+            assert span.lower() in r["sentence"].lower(), (
+                f"{name} row {r['n']}: span {span!r} is not in the committed "
+                "sentence, so the verdict cannot be checked by a reader")
