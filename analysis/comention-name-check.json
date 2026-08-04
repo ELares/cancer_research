@@ -1,5 +1,5 @@
 {
-  "identifiers_with_labels": 26226,
+  "identifiers_with_labels": 29195,
   "forms": {
     "name": 26228,
     "other": 17815,
@@ -12,8 +12,8 @@
   },
   "discriminator": {
     "all": {
-      "n": 175,
-      "base": 0.3314285714285714,
+      "n": 176,
+      "base": 0.32954545454545453,
       "kept": 48,
       "kept_tp": 38,
       "kept_precision": 0.7916666666666666,
@@ -21,12 +21,12 @@
         0.6574082647864652,
         0.8826985220411018
       ],
-      "fp_removed": 0.9145299145299145,
+      "fp_removed": 0.9152542372881356,
       "tp_removed": 0.3448275862068966
     },
     "mesh": {
-      "n": 159,
-      "base": 0.2893081761006289,
+      "n": 160,
+      "base": 0.2875,
       "kept": 34,
       "kept_tp": 28,
       "kept_precision": 0.8235294117647058,
@@ -34,7 +34,7 @@
         0.6648593225994784,
         0.9165114439643032
       ],
-      "fp_removed": 0.9469026548672567,
+      "fp_removed": 0.9473684210526315,
       "tp_removed": 0.391304347826087
     },
     "gene": {
@@ -50,5 +50,16 @@
       "fp_removed": 0.0,
       "tp_removed": 0.16666666666666666
     }
+  },
+  "unreachable": {
+    "annotated": 280777,
+    "reachable": 26382,
+    "unreachable": 254395,
+    "unreachable_mentions": 9821292,
+    "total_mentions": 77491170,
+    "examined": 2969,
+    "name_unused": 1707,
+    "name_to_same": 1119,
+    "name_to_different": 143
   }
 }

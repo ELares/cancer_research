@@ -68,6 +68,58 @@ def wilson(k, n, z=1.96):
     return (max(0.0, (c - m) / den), min(1.0, (c + m) / den))
 
 
+def unreachable_analysis(root, alias, labels) -> dict:
+    """Why can the layer not reach most of the identifiers PubTator annotates?
+
+    `Apoptosis` is unreachable because `apoptosis` resolves to a cortical
+    malformation descriptor instead. That looked like the tip of something, so
+    this counts the class -- and finds it nearly empty, which is the result.
+    """
+    import collections
+    import gzip as _gzip
+
+    reachable = set(alias.values())
+    mentions = collections.Counter()
+    for kind in ("gene", "chemical", "disease"):
+        f = root / "entities" / f"{kind}.tsv.gz"
+        if not f.exists():
+            continue
+        with _gzip.open(f, "rt", errors="replace") as fh:
+            for line in fh:
+                p_ = line.rstrip("\n").split("\t")
+                if len(p_) >= 3 and p_[2] and p_[2] != "-":
+                    mentions[p_[2]] += 1
+    miss = sorted(((i, c) for i, c in mentions.items() if i not in reachable),
+                  key=lambda kv: -kv[1])[:3000]
+    owner = {bag(f): i for f, i in alias.items()}
+
+    unused = same = different = unlabelled = 0
+    examples = []
+    for ident, c in miss:
+        names = labels.get(ident)
+        if not names:
+            unlabelled += 1
+            continue
+        w = owner.get(bag(names[0]))
+        if w is None:
+            unused += 1
+        elif bag(labels.get(w, [""])[0]) == bag(names[0]):
+            same += 1
+        else:
+            different += 1
+            if len(examples) < 8:
+                examples.append((names[0], labels.get(w, ["?"])[0], c))
+    n = len(miss) - unlabelled
+    return {"annotated": len(mentions), "reachable": len(reachable),
+            "unreachable": len(mentions) - len(reachable),
+            "unreachable_mentions": sum(c for i, c in mentions.items()
+                                        if i not in reachable),
+            "total_mentions": sum(mentions.values()),
+            "examined": n, "name_unused": unused, "name_to_same": same,
+            "name_to_different": different,
+            "examples": sorted(examples, key=lambda e: -e[2])}
+
+
 def judged_rows():
     rows = []
     for f in SAMPLES:
@@ -106,6 +158,7 @@ def main() -> int:
     ft, mt = f_name + f_other, m_name + m_other
 
     rows = judged_rows()
+    u = unreachable_analysis(atlas_root(), alias, labels)
 
     def evaluate(sel):
         sub = [r for r in rows if sel(r) and labels.get(r["identifier"])]
@@ -176,7 +229,43 @@ def main() -> int:
             f"{100*d['tp_removed']:.0f}% |")
 
     L += [
-        "", "**It works on MeSH and does nothing useful on genes**, and the reason is",
+        "", "## Why the layer cannot reach most identifiers, and why that is mostly fine",
+        "",
+        f"PubTator annotates **{u['annotated']:,}** distinct identifiers in the",
+        f"census. The alias map resolves to **{u['reachable']:,}** of them, so",
+        f"{100*u['unreachable']/u['annotated']:.0f}% are unreachable, carrying",
+        f"{100*u['unreachable_mentions']/u['total_mentions']:.0f}% of all annotated",
+        "mentions.", "",
+        "The `Apoptosis` case above suggested that might be silent corruption: an",
+        "entity locked out because a competitor won its name. Counting it over the",
+        f"{u['examined']:,} most-mentioned unreachable identifiers says otherwise.", "",
+        "| why it is unreachable | count | share |", "|---|---|---|",
+        f"| its own name is never used as a surface form | {u['name_unused']:,} | "
+        f"{100*u['name_unused']/u['examined']:.1f}% |",
+        f"| its name resolves to an entity carrying the SAME name | "
+        f"{u['name_to_same']:,} | {100*u['name_to_same']/u['examined']:.1f}% |",
+        f"| its name resolves to a DIFFERENT entity | {u['name_to_different']:,} | "
+        f"{100*u['name_to_different']/u['examined']:.1f}% |", "",
+        "The middle row is the ortholog and synonym class already measured in",
+        "`analysis/atlas-ambiguity.md`: the human gene wins the symbol and the mouse",
+        "one becomes unreachable, which for a cancer-literature question is a",
+        "reasonable outcome rather than a fault.", "",
+        "**And the last row is not what it looks like either.** Its largest cases are",
+        "the same biological entity holding both a MeSH descriptor and an NCBI gene",
+        "id, with the gene winning the form:", "",
+        "| loses its name | to | mentions |", "|---|---|---|",
+    ] + [f"| {a} | {b} | {c:,} |" for a, b, c in u["examples"]] + [
+        "", "`Prostate-Specific Antigen` and `KLK3` are not competitors. Neither are",
+        "`Insulin` and `INS`. This is cross-namespace redundancy, and the gene is",
+        "arguably the better target of the two.", "",
+        "**So the class that `Apoptosis` belongs to is close to empty.** That is a",
+        "negative result about a hypothesis raised in the previous section, and it",
+        "matters because it bounds how far that finding should be read: apoptosis",
+        "co-mentions really are filed under a cortical malformation descriptor, and",
+        "that really is unrecoverable, but it is an outlier rather than a symptom.",
+        "The reason most identifiers are unreachable is that nobody writes their",
+        "name, or that a near-identical entity holds it.", "",
+        "**It works on MeSH and does nothing useful on genes**, and the reason is",
         "that genes did not need it. A gene symbol is already a specific string, so",
         f"the gene subset is {100*gene['base']:.0f}% precise BEFORE any filtering,",
         f"against {100*mesh['base']:.0f}% for MeSH. On genes the rule removes",
@@ -219,6 +308,7 @@ def main() -> int:
         "forms": {"name": f_name, "other": f_other, "share": f_name / ft},
         "mentions": {"name": m_name, "other": m_other, "share": m_name / mt},
         "discriminator": {"all": allr, "mesh": mesh, "gene": gene},
+        "unreachable": {k: v for k, v in u.items() if k != "examples"},
     }, indent=2) + "\n")
     print(f"forms {100*f_name/ft:.1f}% names, mentions {100*m_name/mt:.1f}% names")
     print(f"discriminator: mesh removes {100*mesh['fp_removed']:.0f}% of FPs, "
