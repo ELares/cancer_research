@@ -89,6 +89,19 @@ def load_pmcid_map(root: Path) -> dict:
     Reads `records/` (MeSH-indexed) and `records_unindexed/` (text-recovered).
     Reading only the first silently excluded all 783,271 recovered articles,
     which is exactly the recent literature the recovery layer exists to reach.
+
+    A RECENCY CEILING follows from this map, and it is structural rather than a
+    bug. Full text can only be kept for an article the census already knows, so
+    the PMC bulk cannot be matched past whatever the PubMed baseline contains.
+    Measured on the 2026-06-17 bulk: both `PMC013xxxxxx` packages returned
+    EXACTLY zero cancer articles out of 232,890, while every other package
+    yielded 14-18%. The census's PMC identifier space stops at `PMC128xxxx`,
+    so nothing in the `PMC13` block can match at all.
+
+    That is a cliff, not the gradual decline MeSH indexing lag produces, and it
+    costs an estimated 32,000-41,000 cancer full texts (232,890 at the 13.9-17.7%
+    interquartile yield of the reachable packages). Closing it needs a newer
+    PubMed baseline, not a change here.
     """
     files = []
     for d in ("records", "records_unindexed"):

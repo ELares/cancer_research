@@ -28,7 +28,7 @@ is itself a finding — see *Coverage* below.
 |---|---|---|
 | MeSH-indexed cancer articles | **4,403,994** (4,203,236 C04 + 200,758 adjacent) | `atlas_baseline.py` |
 | recovered, not yet MeSH-indexed | 783,271 | `atlas_unindexed.py` |
-| open-access full texts (on external storage) | 520,143 | `atlas_fulltext.py` |
+| open-access full texts (on external storage) | 1,100,218 | `atlas_fulltext.py` |
 | typed, normalized relations | 7,951,325 over 1,603,105 PMIDs | `atlas_relations.py` |
 | queryable relation index | 2,186,309 entity pairs | `atlas_graph.py` |
 | full-text sentence co-mentions | 6.2M+ pairs (build in progress) | `atlas_comention.py` |
@@ -65,6 +65,23 @@ disproportionately much of the recent literature.
 > measured against MeSH truth on indexed articles: **precision 75.7%, recall
 > 95.6%**. So roughly one in four recovered records is not really cancer. Quote
 > that number wherever a count from this layer is used.
+
+### The full-text recency ceiling
+
+Full text is kept only for articles the census already knows, so the PMC bulk
+cannot be matched past whatever the PubMed baseline contains. On the 2026-06-17
+bulk both `PMC013xxxxxx` packages returned **exactly zero** cancer articles from
+232,890, while every other package yielded 14–18%.
+
+> **A cliff, not a slope.** MeSH indexing lag produces a gradual decline; an
+> abrupt 17.7% → 14.7% → 0.0% does not. The census's PMC identifier space stops
+> at `PMC128xxxx`, so nothing in the `PMC13` block can match at all — the PMC
+> full-text release is simply newer than the PubMed baseline behind the census.
+>
+> Cost: an estimated **32,000–41,000** cancer full texts (232,890 articles at the
+> 13.9–17.7% interquartile yield of the reachable packages). Closing it needs a
+> newer PubMed baseline, not a code change. It compounds with the MeSH lag
+> already documented under *Recovery*: both bite hardest at the recent end.
 
 ### Coverage — `atlas_coverage.py` → `atlas-coverage.md`
 

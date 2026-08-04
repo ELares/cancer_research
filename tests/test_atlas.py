@@ -1240,3 +1240,18 @@ def test_a_search_result_is_not_verification():
     assert supports_claim(
         "New blood test could catch pancreatic cancer early detection",
         "A blood-based test for early detection of pancreatic cancer")
+
+
+def test_fulltext_recency_ceiling_is_documented():
+    """A structural coverage limit must be stated, not left as a puzzle.
+
+    Two PMC bulk packages returned exactly zero cancer articles out of 232,890
+    while every other package yielded 14-18%. That is version skew -- the PMC
+    release is newer than the PubMed baseline the census was built from -- and
+    it looks like a bug unless the code says otherwise.
+    """
+    src = (REPO_ROOT / "scripts" / "atlas_fulltext.py").read_text()
+    assert "RECENCY CEILING" in src
+    assert "PMC13" in src and "232,890" in src
+    readme = (REPO_ROOT / "analysis" / "atlas-README.md").read_text()
+    assert "cliff, not a slope" in readme.lower() or "A cliff, not a slope" in readme
