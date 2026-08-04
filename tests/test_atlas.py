@@ -1562,3 +1562,42 @@ def test_manuscript_states_its_own_evidence_thinness():
     md = (REPO_ROOT / "article" / "drafts" / "v1.md").read_text()
     assert "atlas-thesis-position.md" in md
     assert "roughly thirty papers" in md
+
+
+# --- where each preregistered prediction sits (#ATLAS-PREDPOS) ------------
+
+def test_prediction_position_does_not_rank_predictions_by_support():
+    """Low literature support is not a reason to drop a prediction.
+
+    A sparse leg is where novelty lives, and P4 is deliberately the contested
+    one. Presenting these counts as a quality ranking would invert the point of
+    preregistering a disputed claim.
+    """
+    md = (REPO_ROOT / "analysis" / "atlas-prediction-position.md").read_text()
+    assert "not an argument that P4 is a bad prediction" in md
+    assert "where novelty lives" in md
+    pre = (REPO_ROOT / "PREREGISTRATION.md").read_text()
+    assert "not a quality ranking" in pre
+
+
+def test_prediction_position_surfaces_the_keystone_disagreement():
+    """Two planning documents name different primary experiments.
+
+    PREREGISTRATION.md calls E1 (testing P4) the keystone; the P1 protocol calls
+    P1 the highest-leverage prediction. That is a real strategic choice and must
+    stay visible rather than being tidied into agreement.
+    """
+    import json
+    raw = json.loads(
+        (REPO_ROOT / "analysis" / "atlas-prediction-position.json").read_text())
+    R = {r["prediction"]: r for r in raw["rows"]}
+    assert R["P1"]["with_ferroptosis"] > 5 * R["P4"]["with_ferroptosis"]
+    pre = (REPO_ROOT / "PREREGISTRATION.md").read_text()
+    assert "keystone" in pre and "p1-wetlab-protocol.md" in pre
+
+
+def test_unmeasurable_prediction_legs_are_flagged_not_zeroed():
+    """P2/P8 map onto a broad spheroid descriptor, not their actual claim."""
+    md = (REPO_ROOT / "analysis" / "atlas-prediction-position.md").read_text()
+    assert "loosest here" in md
+    assert "no descriptor for drug-tolerant persister cells" in md
