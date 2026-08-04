@@ -1272,3 +1272,38 @@ def test_comention_rebuild_clears_manifest_and_pairs_together():
     block = src[i:i + 700]
     assert "unlink()" in block and 'man = {"shards": {}}' in block, \
         "--rebuild must clear BOTH the pair table and the manifest"
+
+
+def test_pipeline_order_puts_the_graph_rebuild_after_disambiguation():
+    """The dependency that is easiest to get wrong and hardest to notice.
+
+    atlas_graph --build APPLIES the per-paper corrections that
+    atlas_disambiguate produces. Building the graph first yields an index
+    carrying stale corrections, which looks completely normal. Likewise the
+    ambiguity scan must precede both, since it produces the blocklist they read.
+    """
+    src = (REPO_ROOT / "scripts" / "atlas_pipeline.sh").read_text()
+    q = src[src.index("quality()"):src.index("mine()")]
+    i_amb = q.index("atlas_ambiguity.py")
+    i_dis = q.index("atlas_disambiguate.py")
+    i_gra = q.index("atlas_graph.py --build")
+    assert i_amb < i_dis < i_gra, (
+        "quality phase order is wrong: ambiguity -> disambiguate -> graph")
+    # co-mention consumes the blocklist, so it cannot precede the scan
+    assert i_amb < q.index("atlas_comention.py")
+    # and a corpus change requires the double-count-safe rebuild
+    assert "--rebuild" in q
+
+
+def test_pipeline_does_not_silently_rewrite_news_claim_statuses():
+    """Re-running the verifier is a data change, not a pipeline step.
+
+    scripts/verify_news_claims.py rewrites 44 claim statuses and their
+    credibility scores. Folding that into an audit phase would make a reviewable
+    decision happen as a side effect.
+    """
+    src = (REPO_ROOT / "scripts" / "atlas_pipeline.sh").read_text()
+    audit = src[src.index("audit()"):src.index("case \"$PHASE\"")]
+    assert "news_verification_audit.py" in audit
+    assert "$PY scripts/verify_news_claims.py" not in audit
+    assert "Deliberately NOT" in audit
