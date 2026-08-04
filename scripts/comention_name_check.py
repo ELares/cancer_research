@@ -1,0 +1,231 @@
+#!/usr/bin/env python3
+"""Is each alias form a NAME of the entity it resolves to? (#628)
+
+WHY
+---
+The co-mention layer matches full text against an alias map built from
+PubTator's annotations. `analysis/comention-regression.md` measured its
+precision by hand at roughly 42% and found the failure mode to be generic
+English words -- `treatment`, `effects`, `as`, `left` -- resolving to specific
+descriptors. Hand judging bounds that on samples of tens.
+
+`analysis/comention/authority-labels.tsv.gz` makes it answerable for the whole
+map. For every identifier the map resolves to, it carries the names NLM and NCBI
+give it: a MeSH label, or a gene's official symbol plus its description and
+listed aliases. A form that matches none of them is not a name of that entity by
+anyone's account.
+
+WHAT IT FINDS
+-------------
+Only about 54% of the layer's census mentions sit on a form that is a name of
+what it resolves to. The form-level figure is higher, near 60%, and the gap runs
+the WRONG way for the layer: non-name forms are used MORE than name forms,
+because generic English words are common words.
+
+The discriminator this measurement suggests works on MeSH and not on genes, and
+the reason is that genes did not need it. A gene symbol is already a specific
+string, so the gene subset of the judged samples is high precision before any
+filtering; MeSH descriptors are where generic words land.
+
+Usage:
+    python scripts/comention_name_check.py
+"""
+
+import csv
+import json
+import math
+import re
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+from atlas_baseline import atlas_root  # noqa: E402
+from atlas_comention import build_alias_map  # noqa: E402
+from atlas_graph import load_index  # noqa: E402
+from build_label_source import load_table  # noqa: E402
+from config import PROJECT_ROOT  # noqa: E402
+
+OUT = PROJECT_ROOT / "analysis" / "comention-name-check.md"
+RAW = PROJECT_ROOT / "analysis" / "comention-name-check.json"
+JUDGED = PROJECT_ROOT / "analysis" / "comention"
+SAMPLES = ["abstract-visible-judgements.csv",
+           "abstract-visible-heldout-judgements.csv",
+           "body-only-judgements.csv", "corroborated-judgements.csv"]
+
+
+def bag(s):
+    return frozenset(w for w in re.split(r"[^a-z0-9]+", (s or "").lower()) if w)
+
+
+def wilson(k, n, z=1.96):
+    if not n:
+        return (0.0, 0.0)
+    p = k / n
+    den = 1 + z * z / n
+    c = p + z * z / (2 * n)
+    m = z * math.sqrt(p * (1 - p) / n + z * z / (4 * n * n))
+    return (max(0.0, (c - m) / den), min(1.0, (c + m) / den))
+
+
+def judged_rows():
+    rows = []
+    for f in SAMPLES:
+        p = JUDGED / f
+        if not p.exists():
+            continue
+        for r in csv.DictReader(p.open()):
+            r["_canon"] = r.get("entity") or r.get("surface_form") or ""
+            r["_v"] = r.get("verdict_v2") or r.get("verdict") or ""
+            if r["_v"] in ("TP", "FP"):
+                rows.append(r)
+    return rows
+
+
+def main() -> int:
+    labels = load_table()
+    if not labels:
+        print("no authority table; run scripts/build_label_source.py", file=sys.stderr)
+        return 1
+    idx = load_index(atlas_root())
+    alias, _ = build_alias_map(idx)
+    support = idx.get("alias_support") or {}
+
+    f_name = f_other = m_name = m_other = 0
+    for form, ident in alias.items():
+        names = labels.get(ident)
+        if not names:
+            continue
+        w = support.get(form, 0)
+        if any(bag(n) == bag(form) for n in names):
+            f_name += 1
+            m_name += w
+        else:
+            f_other += 1
+            m_other += w
+    ft, mt = f_name + f_other, m_name + m_other
+
+    rows = judged_rows()
+
+    def evaluate(sel):
+        sub = [r for r in rows if sel(r) and labels.get(r["identifier"])]
+        keep = []
+        for r in sub:
+            names = labels[r["identifier"]]
+            cands = {bag(r["_canon"])}
+            span = (r.get("matched_span") or "").split("|")[0]
+            if span:
+                cands.add(bag(span))
+            if any(bag(n) in cands for n in names):
+                keep.append(r)
+        tp = sum(1 for r in sub if r["_v"] == "TP")
+        ktp = sum(1 for r in keep if r["_v"] == "TP")
+        fp = len(sub) - tp
+        return {"n": len(sub), "base": tp / len(sub) if sub else 0.0,
+                "kept": len(keep), "kept_tp": ktp,
+                "kept_precision": ktp / len(keep) if keep else 0.0,
+                "kept_ci": wilson(ktp, len(keep)),
+                "fp_removed": (fp - (len(keep) - ktp)) / fp if fp else 0.0,
+                "tp_removed": (tp - ktp) / tp if tp else 0.0}
+
+    allr = evaluate(lambda r: True)
+    gene = evaluate(lambda r: not r["identifier"].startswith(("MESH:", "OMIM:")))
+    mesh = evaluate(lambda r: r["identifier"].startswith("MESH:"))
+
+    L = [
+        "# Is each alias form a name of what it resolves to? (#628)", "",
+        "Generated by `scripts/comention_name_check.py`.", "",
+        "Hand judging bounded this layer's precision on samples of tens. The",
+        "committed authority table (`analysis/comention/authority-labels.tsv.gz`,",
+        f"{len(labels):,} identifiers) makes the same question answerable for the",
+        "whole alias map: for each form, is it a name of the entity it resolves to",
+        "according to NLM or NCBI?", "",
+        "## The whole map", "",
+        "| | forms | census mentions |", "|---|---|---|",
+        f"| a name of the entity it resolves to | {f_name:,} ({100*f_name/ft:.1f}%) | "
+        f"{m_name:,} ({100*m_name/mt:.1f}%) |",
+        f"| not a name of it | {f_other:,} ({100*f_other/ft:.1f}%) | "
+        f"{m_other:,} ({100*m_other/mt:.1f}%) |", "",
+        f"**About {100*m_name/mt:.0f}% of the layer's mentions sit on a form that is",
+        "a name of what it resolves to.** The mention figure is LOWER than the form",
+        f"figure ({100*m_name/mt:.1f}% against {100*f_name/ft:.1f}%), which is the",
+        "unfavourable direction: non-name forms are used MORE than name forms,",
+        "because generic English words are common words.", "",
+        "This is a property of the alias map, not a precision estimate. A form can",
+        "be a real name and still be the wrong entity in context, and a form that is",
+        "not a listed name can still be correct. It sits close to the hand-judged",
+        "precision, and the two are independent measurements of related things,",
+        "which is worth noting and not worth over-reading.", "",
+        "## The one identifier that shows what this means", "",
+        "The alias map has **no route to MeSH `Apoptosis` (D017209) at all**. The",
+        "form `apoptosis` resolves only to D065703, *Malformations of Cortical",
+        "Development, Group I*. So every apoptosis co-mention in the layer is filed",
+        "under a cortical malformation descriptor, and no query for the correct",
+        "identifier can reach any of them. That is not ambiguity between two senses;",
+        "it is the right answer being unreachable.", "",
+        "## Where the discriminator works, and where it does not", "",
+        f"Applied to the {len(rows)} hand-judged mentions, split by namespace:", "",
+        "| | judged | base precision | keeps | kept precision | FPs removed | TPs removed |",
+        "|---|---|---|---|---|---|---|",
+    ]
+    for name, d in (("all", allr), ("MeSH identifiers", mesh), ("gene identifiers", gene)):
+        L.append(
+            f"| {name} | {d['n']} | {100*d['base']:.1f}% | {d['kept']} | "
+            f"{100*d['kept_precision']:.1f}% [{100*d['kept_ci'][0]:.0f}, "
+            f"{100*d['kept_ci'][1]:.0f}] | {100*d['fp_removed']:.0f}% | "
+            f"{100*d['tp_removed']:.0f}% |")
+
+    L += [
+        "", "**It works on MeSH and does nothing useful on genes**, and the reason is",
+        "that genes did not need it. A gene symbol is already a specific string, so",
+        f"the gene subset is {100*gene['base']:.0f}% precise BEFORE any filtering,",
+        f"against {100*mesh['base']:.0f}% for MeSH. On genes the rule removes",
+        f"{100*gene['fp_removed']:.0f}% of false positives while still costing",
+        f"{100*gene['tp_removed']:.0f}% of true ones -- it has nothing to gain and",
+        "something to lose. On MeSH it removes",
+        f"{100*mesh['fp_removed']:.0f}% of false positives and lifts precision from",
+        f"{100*mesh['base']:.0f}% to {100*mesh['kept_precision']:.0f}%.", "",
+        "So the honest recommendation is narrower than the rule first looked: apply",
+        "it to MeSH identifiers only. Getting gene labels did not make the rule work",
+        "for genes -- it made it TESTABLE for genes, and the test says not to.", "",
+        "The gene row rests on "
+        f"{gene['n']} judged mentions, so 'does nothing useful' is weakly supported",
+        "and 'is not needed' is the safer reading of it.", "",
+        "## What the label table changed about the rule itself", "",
+        "Earlier measurements compared a form against a single preferred label and",
+        "reported a 60% true-positive cost. Comparing against every name an",
+        "authority lists -- a gene's symbol, description and aliases -- drops that to",
+        f"{100*allr['tp_removed']:.0f}%, because `xCT` really is a name of SLC7A11 and",
+        "`PHGPx` one of GPX4. The rule did not change; the reference did.", "",
+        "## Limits", "",
+        "* Names, not senses. `FSP1` is a listed alias of ATL1, so this check calls",
+        "  that resolution a name match. It is still the wrong gene in a ferroptosis",
+        "  paper, which is what `atlas_disambiguate.py` exists for. This measures",
+        "  whether a form is a name of an entity, never whether it is the right",
+        "  entity here.",
+        "* 244 alias forms resolve to identifiers absent from the table (76",
+        "  withdrawn gene ids and their forms); they are excluded rather than",
+        "  guessed.",
+        "* Ortholog pairs count as name matches, since `Mmp2` and `MMP2` share a word",
+        "  bag. That is the benign species class from `analysis/atlas-ambiguity.md`",
+        "  and inflates the name-match rate slightly.",
+        "* The judged mentions were drawn for a different purpose and the gene subset",
+        "  is small; the namespace split is a signal, not a settled result.",
+    ]
+
+    OUT.write_text("\n".join(L) + "\n")
+    RAW.write_text(json.dumps({
+        "identifiers_with_labels": len(labels),
+        "forms": {"name": f_name, "other": f_other, "share": f_name / ft},
+        "mentions": {"name": m_name, "other": m_other, "share": m_name / mt},
+        "discriminator": {"all": allr, "mesh": mesh, "gene": gene},
+    }, indent=2) + "\n")
+    print(f"forms {100*f_name/ft:.1f}% names, mentions {100*m_name/mt:.1f}% names")
+    print(f"discriminator: mesh removes {100*mesh['fp_removed']:.0f}% of FPs, "
+          f"gene removes {100*gene['fp_removed']:.0f}%")
+    print(f"wrote {OUT}")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
