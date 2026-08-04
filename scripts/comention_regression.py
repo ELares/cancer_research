@@ -19,14 +19,16 @@ rebuild says the change made precision WORSE, and this script is the accounting.
 
 WHAT IT FOUND
 -------------
-1. Net population-weighted precision fell about 7 points, roughly 56.8% to
-   49.9%. The layer produces 1.33x more mentions per sentence and PubTator
-   corroborates a smaller fraction of them (44.3% -> 32.5%).
+1. Net population-weighted precision fell roughly 7 to 10 points depending on
+   how the two sides are made comparable (the reported figure, 56.8% -> 47.1%,
+   is the most pessimistic of the three; see the table in the report). The
+   layer produces 1.33x more mentions per sentence and PubTator corroborates a
+   smaller fraction of them (44.3% -> 32.5%).
 
 2. The abstract-visible stratum -- the only one that can contain false
    positives -- nearly tripled as a share of all mentions, 8.2% -> 23.7%. Its
-   own precision improved (14.6% -> 26.7%, 60 hand-judged) but nowhere near
-   enough to pay for tripling.
+   own precision, judged at the IDENTIFIER level over 60 hand-read mentions, is
+   15.0%; it did not measurably improve, and the stratum tripled.
 
 3. The replacement filters DO NOT SEPARATE true from false matches on that
    stratum. Measured over the judged sample, support ranges 77-355,572 for
@@ -159,6 +161,8 @@ def main() -> int:
     tp_v1 = sum(1 for r in judged if r["verdict"] == "TP")
     kept = [r for r in judged if r.get("is_authority_name") == "True"]
     kept_tp = sum(1 for r in kept if r[key] == "TP")
+    klo, khi = wilson(kept_tp, len(kept)) if kept else (0.0, 0.0)
+    v1_prec = tp_v1 / n
     abs_prec = tp / n
     lo, hi = wilson(tp, n)
 
@@ -288,7 +292,22 @@ def main() -> int:
         "* No manuscript number depends on this layer. It feeds",
         "  `atlas-module-support.md`, which argues a zero in the relation column is",
         "  an extraction failure rather than absence of evidence -- a claim that",
-        "  should now be read against 50% precision, not 55%.", "",
+        f"  should now be read against {100*wa:.0f}% precision, not 55%.", "",
+        "## The headline compares two criteria, so here are all three", "",
+        "The bold figure pairs a LENIENT before-abstract (14.6%, measured under #617)",
+        "with a STRICT after-abstract. Like for like:", "",
+        "| comparison | before | after | change |", "|---|---|---|---|",
+        f"| both lenient | {100*wb:.1f}% | {100*weighted(sa, v1_prec):.1f}% | "
+        f"{100*(weighted(sa, v1_prec)-wb):+.1f} |",
+        f"| both strict (before scaled by the same {abs_prec/max(1e-9,v1_prec):.2f} "
+        f"factor) | {100*weighted(sb, PRIOR_ABSTRACT_PRECISION*abs_prec/max(1e-9,v1_prec)):.1f}% | "
+        f"{100*wa:.1f}% | "
+        f"{100*(wa-weighted(sb, PRIOR_ABSTRACT_PRECISION*abs_prec/max(1e-9,v1_prec))):+.1f} |",
+        f"| **as reported (mixed)** | **{100*wb:.1f}%** | **{100*wa:.1f}%** | "
+        f"**{100*(wa-wb):+.1f}** |", "",
+        "The reported figure is the most pessimistic of the three. All three are",
+        "negative, so the direction does not turn on the choice, but the magnitude",
+        "is a 7-to-9 point band rather than a single number.", "",
         "## Does the regression survive if BOTH sides were judged leniently?", "",
         "This is the weakest point in the comparison, so it is worth working out",
         "rather than hedging. The carried-over precisions were measured under #617",
@@ -318,14 +337,26 @@ def main() -> int:
         "right; it depends only on their being wrong by a similar factor on both",
         "sides, which is the assumption that would have to hold for the objection",
         "to bite.", "",
-        "## A discriminator that does work (#628)", "",
+        "## A signal that does separate, and what it actually is (#628)", "",
         "The filters above fail because they measure how OFTEN a form appears, and",
         "the offenders are common words. The signal that separates them is whether",
-        "the form is a NAME of the entity at all -- which the index cannot answer,",
-        "since its `canon` field is just the most frequent surface form and is",
-        "therefore circular. NLM's descriptor labels are external.", "",
-        "Requiring the matched form to be the entity's authority name, compared as a",
-        "word bag so `squamous cell carcinoma` matches `Carcinoma, Squamous Cell`:", "",
+        "the entity's own name looks like a name at all, checked against NLM's",
+        "descriptor labels, which are external to this corpus.", "",
+        "**Read the next table carefully, because an earlier draft of this section",
+        "described it wrongly and the correction changes what it is.** The audit",
+        "sample does not record the span that matched. `atlas_comention` writes",
+        "`entity_names` as `canon[identifier]` -- the identifier's most frequent",
+        "surface form ACROSS THE WHOLE CORPUS -- so the column is constant for a",
+        "given identifier and is absent from the sentence in 20 of these 60 rows",
+        "(`left ventricular dysfunction` sits against \"She was diagnosed with left",
+        "breast cancer\"; the span that fired was presumably `left`).", "",
+        "So this is an IDENTIFIER-LEVEL check, not a per-mention one: does this",
+        "identifier's dominant corpus name coincide with its authority label? It",
+        "cannot distinguish two mentions of the same identifier, and it would be",
+        "applied when building the alias map rather than when matching text. That is",
+        "a cheaper filter than the one first described, and a blunter one.", "",
+        "Compared as a word bag so `squamous cell carcinoma` matches `Carcinoma,",
+        "Squamous Cell`:", "",
         "| | true | false |", "|---|---|---|",
         f"| kept | {kept_tp} | {len(kept)-kept_tp} |",
         f"| cut | {tp-kept_tp} | {(n-tp)-(len(kept)-kept_tp)} |", "",
@@ -334,14 +365,30 @@ def main() -> int:
         f"precision on what it keeps from {100*abs_prec:.1f}% to "
         f"{100*kept_tp/max(1,len(kept)):.1f}%. Against filters that cut nothing at",
         "all, that is a discriminator rather than a threshold.", "",
-        "It is aggressive, and on a stratum this impure that is the right trade: a",
-        "60% loss of true matches buys a near-total removal of false ones. But it is",
-        "NOT yet a recommendation. It was selected on this sample, so its numbers are",
-        f"optimistic by construction, only {len(kept)} mentions survive it (95% CI",
-        "on the kept precision is very wide), and it has been tested only on the",
-        "abstract-visible stratum. #628 records what a real evaluation needs: a",
-        "held-out judged sample, and a MeSH/NCBI label dump so the check does not",
-        "depend on a live API.", "",
+        f"It is aggressive. It discards {n-len(kept)} of {n} mentions on this",
+        f"stratum ({100*(n-len(kept))/n:.0f}%), and the kept precision carries a 95% CI of",
+        f"[{100*klo:.1f}%, {100*khi:.1f}%] on {len(kept)} survivors -- the point",
+        "estimate is not the finding, the separation is.", "",
+        "**Three reasons it is NOT a recommendation**, beyond the sample size:", "",
+        "* It was selected on this sample, so its numbers are optimistic by",
+        "  construction. A held-out judged sample is the next requirement.",
+        "* **It removes every gene.** NCBI Gene identifiers have no MeSH descriptor,",
+        "  so the rule cuts them unconditionally. This sample is 58 of 60 MeSH, so",
+        "  the 96% figure says nothing about the gene half of a layer built over",
+        "  gene, chemical and disease annotations -- in a repository whose subject is",
+        "  GPX4 and ACSL4. A label source covering NCBI Gene is not an optimisation",
+        "  here, it is a precondition.",
+        "* It is tested only on the abstract-visible stratum. The corroborated",
+        f"  stratum is {100*sa['agree']:.0f}% of volume at {100*AGREE_PRECISION:.0f}%",
+        "  precision, and the trade would have to be re-judged against that, where",
+        "  the filter has much more to lose.", "",
+        "The word-bag comparison is also NOT clearly better than plain equality on",
+        "this sample: equality fires on 4 rows, the word bag on 6, and the two extra",
+        "are one true match (`squamous cell carcinoma`) and one false one (`left",
+        "ventricular dysfunction` against `Ventricular Dysfunction, Left`). It adds a",
+        "true positive and a false positive, and LOWERS kept precision from 75% to",
+        f"{100*kept_tp/max(1,len(kept)):.1f}%. The favourable example was the one",
+        "quoted; the unfavourable one is now quoted beside it.", "",
         "## Limits", "",
         f"* {n} judged mentions gives a wide interval "
         f"([{100*lo:.1f}%, {100*hi:.1f}%]); the direction of the net change is",

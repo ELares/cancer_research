@@ -54,7 +54,7 @@ n,pmid,identifier,surface_form,verdict,sentence,verdict_v2,authority_name,is_aut
 53,25070626,MESH:D019588,Aging,TP,"Moreover, Sir2, a yeast homolog of SIRT1, has been shown to be an important regulator of aging (Guarente & Kenyon, 2000), suggesting that SIRT1 may also be involved in aging and longevity.",FP,"Aging, Premature",False
 54,25649941,MESH:D009402,changes,FP,Changes in cortisol concentration in response to stress and postoperative pain in client-owned cats and correlation with objective clinical variables .,FP,"Nephrosis, Lipoid",False
 55,40894913,MESH:D012078,artery,TP,"These findings were confirmed in a second hemostasis model consisting of needle puncture of the carotid artery, which is much more severe than the classical tail bleeding assay (Figure 2E).",FP,Renal Artery Obstruction,False
-56,40430527,MESH:D014777,viral infection,FP,Inhibition of Vesicular Stomatitis Viral mRNA Synthesis by Interferons J.,TP,Virus Diseases,False
+56,40430527,MESH:D014777,viral infection,FP,Inhibition of Vesicular Stomatitis Viral mRNA Synthesis by Interferons J.,FP,Virus Diseases,False
 57,36497319,MESH:D004829,GENERAL,FP,"For example, diagnoses are based on documentation of ICD-10 codes by general practitioners.",FP,"Epilepsy, Generalized",False
 58,36845025,MESH:D020178,advanced,FP,"With the advancement of oncology, numerous molecular targeted agents, anti-angiogenesis monoclonal antibodies, and immunotherapeutic regimens are receiving more attention as effective treatments for advanced HCC.",FP,"Sleep Disorders, Circadian Rhythm",False
 59,22427965,MESH:D010455,peptides,TP,We then investigated the effects of the anti-hTM4SF5R2-3 peptide antibody on DNA synthesis using the BrdU incorporation assay.,TP,Peptides,True

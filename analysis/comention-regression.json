@@ -16,16 +16,16 @@
       "abstract": 0.23652291105121293,
       "body": 0.4386792452830189
     },
-    "abstract_precision": 0.16666666666666666,
+    "abstract_precision": 0.15,
     "judged_n": 60,
-    "judged_tp": 10,
+    "judged_tp": 9,
     "abstract_precision_ci": [
-      0.09313077201321034,
-      0.28031851497207827
+      0.08097349242295687,
+      0.26114825891159615
     ],
-    "weighted": 0.47497169811320755
+    "weighted": 0.4710296495956874
   },
-  "net_change": -0.09331517239038961,
+  "net_change": -0.09725722090790978,
   "carried_over": {
     "agree": 0.925,
     "body_only": 0.308

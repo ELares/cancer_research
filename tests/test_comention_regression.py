@@ -55,8 +55,11 @@ def test_the_abstract_visible_stratum_grew():
     before, after = d["before"]["strata"], d["after"]["strata"]
     assert after["abstract"] > before["abstract"] * 2, (
         "the stratum no longer tripled; the explanation in the document is stale")
-    # And it did get cleaner, which is why the loss is not obvious.
-    assert d["after"]["abstract_precision"] > d["before"]["abstract_precision"]
+    # It must NOT claim the stratum got cleaner. The two figures were produced
+    # under different criteria (surface-form then identifier-level), so the
+    # document says only that it did not measurably improve.
+    txt = DOC.read_text()
+    assert "did not measurably get cleaner" in txt
 
 
 def test_the_carried_over_precisions_are_declared_not_hidden():
@@ -133,6 +136,7 @@ def test_judging_is_at_the_identifier_level_not_the_surface_form():
     v2 = sum(1 for r in rows if r["verdict_v2"] == "TP")
     v1 = sum(1 for r in rows if r["verdict"] == "TP")
     assert v2 < v1, "the stricter criterion should not be more permissive"
+    assert 0 < v2, "verdict_v2 is all false positives; that is not a judgement"
     d = _raw()["after"]
     assert abs(d["abstract_precision"] - v2 / len(rows)) < 1e-12, \
         "the reported precision does not use the identifier-level verdicts"
@@ -140,6 +144,47 @@ def test_judging_is_at_the_identifier_level_not_the_surface_form():
     apop = [r for r in rows if r["surface_form"].lower() == "apoptosis"]
     assert apop and apop[0]["verdict_v2"] == "FP", \
         "apoptosis -> Malformations of Cortical Development is not a true positive"
+
+
+def test_the_discriminator_column_is_derivable_not_hand_entered():
+    """Nothing in the pipeline generates `is_authority_name`, so it could be
+
+    edited to anything without a failure. Re-derive it here from the two columns
+    it depends on, so a hand-edit cannot slip through -- the flagship
+    counterexample (`apoptosis` against Malformations of Cortical Development)
+    must never be marked a name match.
+    """
+    import re as _re
+
+    def bag(s):
+        return frozenset(w for w in _re.split(r"[^a-z0-9]+", (s or "").lower()) if w)
+
+    rows = list(csv.DictReader(JUDGED.open()))
+    for r in rows:
+        expected = bool(r["authority_name"]) and bag(r["surface_form"]) == bag(r["authority_name"])
+        assert (r["is_authority_name"] == "True") == expected, (
+            f"row {r['n']} ({r['surface_form']}): column says "
+            f"{r['is_authority_name']}, the rule gives {expected}")
+
+
+def test_the_discriminator_is_not_degenerate():
+    """A filter that keeps almost nothing scores perfectly and is worthless.
+
+    Removing 100% of false positives by keeping one mention would satisfy a
+    naive precision guard, so bound the recall side too.
+    """
+    rows = list(csv.DictReader(JUDGED.open()))
+    kept = [r for r in rows if r["is_authority_name"] == "True"]
+    all_tp = sum(1 for r in rows if r["verdict_v2"] == "TP")
+    kept_tp = sum(1 for r in kept if r["verdict_v2"] == "TP")
+    assert kept_tp >= 3, f"only {kept_tp} true matches survive; the filter is degenerate"
+    assert kept_tp / all_tp >= 0.3, (
+        f"keeps only {100*kept_tp/all_tp:.0f}% of true matches; report that as a "
+        "cost rather than a precision win")
+    txt = DOC.read_text()
+    assert "It removes every gene" in txt, (
+        "the gene blind spot is not disclosed; NCBI Gene ids have no MeSH label "
+        "so the rule cuts all of them")
 
 
 def test_the_authority_discriminator_is_measured_and_not_yet_recommended():
@@ -160,8 +205,13 @@ def test_the_authority_discriminator_is_measured_and_not_yet_recommended():
     assert cut_fp / all_fp > 0.8, f"only {100*cut_fp/all_fp:.0f}% of FPs removed"
     assert kept_tp / len(kept) > all_tp / len(rows), "precision did not improve"
     txt = DOC.read_text()
-    assert "NOT yet a recommendation" in txt
+    assert "NOT a recommendation" in txt
     assert "selected on this sample" in txt
+    # And it must describe what it actually is: an identifier-level check on the
+    # canonical corpus name, not a per-mention filter on the span that matched.
+    assert "IDENTIFIER-LEVEL check, not a per-mention one" in txt, (
+        "the discriminator is described as filtering the matched span, which the "
+        "audit sample does not record")
 
 
 def test_the_regression_survives_a_shared_judging_flaw():
