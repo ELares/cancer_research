@@ -141,3 +141,53 @@ def test_the_cross_namespace_cases_are_not_called_corruption():
     assert "not what it looks like either" in txt
     assert "cross-namespace redundancy" in txt
     assert "are not competitors" in txt
+
+
+def test_the_insertion_point_cost_is_reported_not_just_the_diagnostic():
+    """A filter inside `build_alias_map` sees the FORM, not the sentence.
+
+    The document's headline rows score canonical-form OR matched-span, which is
+    a fair diagnostic and not what a filter could use. Quoting only that
+    understated the true-positive cost by half again, and it is the number a
+    reader would build against.
+    """
+    d = _raw()["at_insertion_point"]
+    strict, norm = d["strict"], d["normalised"]
+    assert strict["tp_removed"] > _raw()["discriminator"]["mesh"]["tp_removed"], (
+        "the form-only cost is no longer higher than the diagnostic; if that is "
+        "real the document's warning is stale")
+    # Cleaner but more expensive: it removes every span-bearing false positive.
+    assert strict["fp_removed"] > 0.99 and strict["kept_precision"] > 0.95
+    flat = " ".join(DOC.read_text().split())
+    assert "form only, as a filter would" in flat
+    assert "favourable number is the one this document originally quoted" in flat
+
+
+def test_normalising_recovers_the_cost_at_no_precision_loss():
+    """The named change that makes the rule buildable."""
+    d = _raw()["at_insertion_point"]
+    strict, norm = d["strict"], d["normalised"]
+    assert norm["tp_removed"] < strict["tp_removed"], "normalising no longer helps"
+    assert norm["kept_precision"] >= strict["kept_precision"] - 1e-9
+    assert norm["fp_removed"] >= strict["fp_removed"] - 1e-9
+    assert norm["kept"] > strict["kept"]
+
+
+def test_the_cancer_vocabulary_cost_is_measured():
+    """Precision on judged mentions cannot see this, and it is decisive.
+
+    The strict rule leaves most of MeSH tree C04 -- the cancer definition the
+    census is built on -- unreachable. A rule that doubles precision by deleting
+    the vocabulary it exists to index is not an improvement.
+    """
+    c = _raw()["c04_cost"]
+    assert c["strict"] and c["normalised"], "the C04 cost is not computed"
+    assert c["strict"]["mass_retained"] < 0.4, (
+        "the strict rule no longer destroys the cancer vocabulary; re-read")
+    assert c["normalised"]["mass_retained"] > c["strict"]["mass_retained"] * 1.5
+    assert c["normalised"]["descriptors_killed"] < c["strict"]["descriptors_killed"]
+    # The generator wraps prose, so collapse whitespace before matching a phrase
+    # that can straddle a line break.
+    flat = " ".join(DOC.read_text().split())
+    assert "should not be built" in flat, (
+        "the document does not warn against building the strict form")

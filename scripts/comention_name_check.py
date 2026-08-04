@@ -68,6 +68,62 @@ def wilson(k, n, z=1.96):
     return (max(0.0, (c - m) / den), min(1.0, (c + m) / den))
 
 
+# Normalisation for the word-bag comparison. Strict equality is what the first
+# measurement used; it fails on plurals and on the cancer/tumour/neoplasm
+# synonym set, which is most of MeSH's oncology vocabulary.
+_PLURAL = [("ies", "y"), ("ses", "se")]
+_SYNONYM = {"cancer": "neoplasm", "tumor": "neoplasm", "tumour": "neoplasm",
+            "carcinoma": "neoplasm", "neoplasia": "neoplasm",
+            "malignancy": "neoplasm"}
+
+
+def norm_bag(s):
+    """Word bag with plurals stemmed, 1-char tokens dropped, and the
+    cancer/tumour family collapsed onto `neoplasm`."""
+    out = set()
+    for w in re.split(r"[^a-z0-9]+", (s or "").lower()):
+        if len(w) < 2:
+            continue
+        w = _SYNONYM.get(w, w)
+        for a, b in _PLURAL:
+            if w.endswith(a):
+                w = w[:-len(a)] + b
+                break
+        else:
+            if w.endswith("s") and not w.endswith("ss"):
+                w = w[:-1]
+        out.add(_SYNONYM.get(w, w))
+    return frozenset(out)
+
+
+def c04_cost(root, alias, labels, support, fn):
+    """What the rule would do to the cancer vocabulary the layer exists for.
+
+    The judged samples measure precision. They cannot say whether the rule
+    deletes the concepts the layer is FOR, and MeSH tree C04 is that list.
+    """
+    f = root / "mesh" / "c04-descriptors.tsv"
+    if not f.exists():
+        return None
+    c04 = {"MESH:" + line.split("\t")[0]
+           for line in f.read_text().splitlines()
+           if line and not line.startswith("#")}
+    by_ident = {}
+    for form, ident in alias.items():
+        if ident in c04:
+            by_ident.setdefault(ident, []).append(form)
+    kept = tot = dead = 0
+    for ident, forms in by_ident.items():
+        names = labels.get(ident, [])
+        surv = [x for x in forms if any(fn(n) == fn(x) for n in names)]
+        tot += sum(support.get(x, 0) for x in forms)
+        kept += sum(support.get(x, 0) for x in surv)
+        if not surv:
+            dead += 1
+    return {"descriptors_reachable": len(by_ident),
+            "mass_retained": kept / max(1, tot), "descriptors_killed": dead}
+
+
 def unreachable_analysis(root, alias, labels) -> dict:
     """Why can the layer not reach most of the identifiers PubTator annotates?
 
@@ -159,6 +215,28 @@ def main() -> int:
 
     rows = judged_rows()
     u = unreachable_analysis(atlas_root(), alias, labels)
+
+    def evaluate_form(cmp_fn):
+        """What a filter sees: the form alone, before any sentence exists."""
+        sub = [r for r in rows if r["identifier"].startswith("MESH:")
+               and labels.get(r["identifier"])]
+        keep = []
+        for r in sub:
+            span = (r.get("matched_span") or "").split("|")[0]
+            if span and any(cmp_fn(n) == cmp_fn(span) for n in labels[r["identifier"]]):
+                keep.append(r)
+        tp = sum(1 for r in sub if r["_v"] == "TP")
+        ktp = sum(1 for r in keep if r["_v"] == "TP")
+        fp = len(sub) - tp
+        return {"n": len(sub), "kept": len(keep), "kept_tp": ktp,
+                "kept_precision": ktp / len(keep) if keep else 0.0,
+                "fp_removed": (fp - (len(keep) - ktp)) / fp if fp else 0.0,
+                "tp_removed": (tp - ktp) / tp if tp else 0.0}
+
+    impl, norm = evaluate_form(bag), evaluate_form(norm_bag)
+    support = idx.get("alias_support") or {}
+    c04_strict = c04_cost(atlas_root(), alias, labels, support, bag)
+    c04_norm = c04_cost(atlas_root(), alias, labels, support, norm_bag)
 
     def evaluate(sel):
         sub = [r for r in rows if sel(r) and labels.get(r["identifier"])]
@@ -265,6 +343,51 @@ def main() -> int:
         "that really is unrecoverable, but it is an outlier rather than a symptom.",
         "The reason most identifiers are unreachable is that nobody writes their",
         "name, or that a near-identical entity holds it.", "",
+        "## Two costs this measurement did not carry, and both are decisive", "",
+        "The rows above score a mention as a name match if EITHER the identifier's",
+        "canonical form OR the span that fired matches an authority name. That is a",
+        "fair diagnostic, and it is not what a filter would see. A rule inside",
+        "`build_alias_map` decides per FORM, before any sentence exists, so only the",
+        "form is available to it.", "",
+        "| what is compared | keeps | kept precision | FPs removed | TPs removed |",
+        "|---|---|---|---|---|",
+        f"| canonical form OR span (reported above) | {mesh['kept']} | "
+        f"{100*mesh['kept_precision']:.1f}% | {100*mesh['fp_removed']:.0f}% | "
+        f"{100*mesh['tp_removed']:.0f}% |",
+        f"| **form only, as a filter would** | {impl['kept']} | "
+        f"{100*impl['kept_precision']:.1f}% | {100*impl['fp_removed']:.0f}% | "
+        f"**{100*impl['tp_removed']:.0f}%** |",
+        f"| form only, normalised | {norm['kept']} | "
+        f"{100*norm['kept_precision']:.1f}% | {100*norm['fp_removed']:.0f}% | "
+        f"{100*norm['tp_removed']:.0f}% |", "",
+        "At the insertion point the rule is CLEANER than reported -- it removes every",
+        "span-bearing false positive -- and costs half again as many true positives,",
+        f"{100*impl['tp_removed']:.0f}% rather than {100*mesh['tp_removed']:.0f}%. The",
+        "favourable number is the one this document originally quoted.", "",
+    ] + ([] if not (c04_strict and c04_norm) else [
+        "### And it would delete most of the cancer vocabulary", "",
+        "Precision on judged mentions cannot see this. MeSH tree C04 is the cancer",
+        "definition the whole census is built on, so what the rule does to C04 is",
+        "what it does to the layer's purpose:", "",
+        "| rule | C04 census mass retained | C04 descriptors left with no route |",
+        "|---|---|---|",
+        f"| form only, strict | **{100*c04_strict['mass_retained']:.1f}%** | "
+        f"{c04_strict['descriptors_killed']} of {c04_strict['descriptors_reachable']} |",
+        f"| form only, normalised | {100*c04_norm['mass_retained']:.1f}% | "
+        f"{c04_norm['descriptors_killed']} of {c04_norm['descriptors_reachable']} |", "",
+        f"**The strict rule discards {100*(1-c04_strict['mass_retained']):.0f}% of the",
+        "cancer vocabulary's mentions and leaves",
+        f"{c04_strict['descriptors_killed']} cancer descriptors unreachable by any form",
+        "at all.** `Neoplasms`, `Breast Neoplasms` and `Lung Neoplasms` are among them,",
+        "because MeSH writes `Breast Neoplasms` where the literature writes",
+        "`breast cancer`.", "",
+        "Normalising plurals and collapsing the cancer/tumour/carcinoma family onto",
+        "`neoplasm` recovers most of that at NO precision cost -- the same 100%",
+        "false-positive removal, the same kept precision, and the true-positive cost",
+        f"falls from {100*impl['tp_removed']:.0f}% to {100*norm['tp_removed']:.0f}%.",
+        "**Any implementation should normalise; the strict form measured above should",
+        "not be built.**", "",
+    ]) + [
         "**It works on MeSH and does nothing useful on genes**, and the reason is",
         "that genes did not need it. A gene symbol is already a specific string, so",
         f"the gene subset is {100*gene['base']:.0f}% precise BEFORE any filtering,",
@@ -309,6 +432,8 @@ def main() -> int:
         "mentions": {"name": m_name, "other": m_other, "share": m_name / mt},
         "discriminator": {"all": allr, "mesh": mesh, "gene": gene},
         "unreachable": {k: v for k, v in u.items() if k != "examples"},
+        "at_insertion_point": {"strict": impl, "normalised": norm},
+        "c04_cost": {"strict": c04_strict, "normalised": c04_norm},
     }, indent=2) + "\n")
     print(f"forms {100*f_name/ft:.1f}% names, mentions {100*m_name/mt:.1f}% names")
     print(f"discriminator: mesh removes {100*mesh['fp_removed']:.0f}% of FPs, "
