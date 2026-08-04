@@ -134,6 +134,17 @@ def frozen_records():
 PRECISE = {"hifu", "sonodynamic", "antibody-drug-conjugate", "bispecific-antibody",
            "car-t", "oncolytic-virus", "phagocytosis-checkpoint", "mrna-vaccine"}
 PHYSICAL = {"hifu", "sonodynamic", "electrochemical-therapy"}
+# The pharmacological comparator is a CURATED list of drug modalities, not
+# "everything that is not physical". Sweeping in the delivery platforms and
+# genetic tools (nanoparticle, crispr, oncolytic-virus, mrna-vaccine,
+# microbiome, phagocytosis-checkpoint) inflates the ratio from 9.1:1 to 12.5:1
+# by counting things that are neither a drug class nor a physical modality, so
+# the comparison would no longer be the manuscript's. Kept module-level so the
+# figure that plots this ratio imports the same definition rather than
+# restating it.
+PHARMACOLOGICAL = {"immunotherapy", "car-t", "antibody-drug-conjugate",
+                   "bispecific-antibody", "synthetic-lethality", "epigenetic",
+                   "metabolic-targeting"}
 
 
 def _maturity_narrative(R: dict) -> list:
@@ -335,10 +346,7 @@ def main() -> int:
     # Therapy" over-counts, it over-counts identically in both.
     cap = {r["mechanism"]: (r["mesh_frozen"] / r["mesh_census"])
            for r in rows if r["mesh_census"] and r["mesh_frozen"]}
-    PHYS = ["sonodynamic", "hifu", "electrochemical-therapy"]
-    PHARM = ["immunotherapy", "car-t", "antibody-drug-conjugate",
-             "bispecific-antibody", "synthetic-lethality", "epigenetic",
-             "metabolic-targeting"]
+    PHYS, PHARM = sorted(PHYSICAL), sorted(PHARMACOLOGICAL)
     tot = lambda ks, c: sum(R[k][c] for k in ks if k in R and R[k].get(c))  # noqa: E731
     R = {r["mechanism"]: r for r in rows}
     kf_p, kf_h = tot(PHYS, "keyword_frozen"), tot(PHARM, "keyword_frozen")
