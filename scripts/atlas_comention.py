@@ -72,6 +72,7 @@ import argparse
 import collections
 import gzip
 import json
+import os
 import pickle
 import random
 import re
@@ -192,6 +193,47 @@ def matched_forms(sentence: str, ident: str, alias: dict) -> list:
     return out
 
 
+# Normalisation for the authority-name comparison. Plurals are stemmed, 1-char
+# tokens and stopwords dropped, and the cancer/tumour/carcinoma family collapsed
+# onto `neoplasm`. Each piece is measured: MeSH writes `Breast Neoplasms` where
+# the literature writes `breast cancer`, and stores the INVERTED rendering
+# `Cancer of Breast`, so without all three the rule deletes three quarters of
+# the cancer vocabulary it exists to index.
+_AUTH_PLURAL = [("ies", "y"), ("ses", "se")]
+_AUTH_SYNONYM = {"cancer": "neoplasm", "tumor": "neoplasm", "tumour": "neoplasm",
+                 "carcinoma": "neoplasm", "neoplasia": "neoplasm",
+                 "malignancy": "neoplasm"}
+_AUTH_STOP = {"of", "the", "and", "in", "with", "for", "to", "or", "by", "an"}
+
+
+def _authority_bag(s: str) -> frozenset:
+    out = set()
+    for w in re.split(r"[^a-z0-9]+", (s or "").lower()):
+        if len(w) < 2:
+            continue
+        w = _AUTH_SYNONYM.get(w, w)
+        for a, b in _AUTH_PLURAL:
+            if w.endswith(a):
+                w = w[:-len(a)] + b
+                break
+        else:
+            if w.endswith("s") and not w.endswith("ss"):
+                w = w[:-1]
+        w = _AUTH_SYNONYM.get(w, w)
+        if w not in _AUTH_STOP:
+            out.add(w)
+    return frozenset(out)
+
+
+def _authority_labels() -> dict:
+    """The committed authority table, or {} if it has not been built."""
+    try:
+        from build_label_source import load_table
+        return load_table()
+    except Exception:
+        return {}
+
+
 def build_alias_map(idx: dict) -> tuple:
     """Usable surface form -> identifier, with sense collisions handled.
 
@@ -247,8 +289,55 @@ def build_alias_map(idx: dict) -> tuple:
                 dropped += 1
             continue
         out[a] = i
+
+    # The authority-name filter, OFF by default (FERRO_COMENTION_AUTHORITY=1).
+    #
+    # Every filter above asks how OFTEN a form appears. The measured failure mode
+    # is generic English words -- `treatment`, `effects`, `as`, `left` -- and
+    # frequency cannot separate those from real names, because generic words are
+    # common words. Support and share were measured over 180 hand-judged mentions
+    # and do not discriminate at all (analysis/comention-regression.md).
+    #
+    # Asking whether the form is a NAME of the entity does discriminate, but only
+    # for MeSH. Gene symbols are already specific strings, so the gene subset is
+    # 75% precise before filtering against 29% for MeSH, and applying the rule to
+    # genes removes no false positives while still costing true ones. MeSH-only
+    # is therefore the whole rule, not a simplification of it.
+    #
+    # Measured at this insertion point over the judged mentions: 100% of
+    # span-bearing false positives removed, 100% precision on what survives, at a
+    # cost of 34.8% of true positives and 26.8% of MeSH tree C04's census mass.
+    # Both numbers depend on entry terms being present in the authority table and
+    # on the normalised comparison; the strict form costs 54.3% and 75.3%
+    # respectively and should not be used (analysis/comention-name-check.md).
+    #
+    # Applied AFTER the blocklist and the DOMAIN_SENSE redirect, so a curated
+    # correction is never silently undone. All five redirects survive the check
+    # regardless, since they target genes.
+    rejected = 0
+    if os.getenv("FERRO_COMENTION_AUTHORITY") == "1":
+        labels = _authority_labels()
+        if labels:
+            keep = {}
+            for a, i in out.items():
+                if not i.startswith("MESH:"):
+                    keep[a] = i
+                    continue
+                names = labels.get(i)
+                if names is None or any(
+                        _authority_bag(n) == _authority_bag(a) for n in names):
+                    keep[a] = i
+                else:
+                    rejected += 1
+            out = keep
+        else:
+            print("  authority filter requested but no label table; run "
+                  "scripts/build_label_source.py -- proceeding UNFILTERED",
+                  file=sys.stderr)
+
     return out, {"redirected": redirected, "dropped_ambiguous": dropped,
-                 "dropped_thin": thin, "dropped_minority": minority}
+                 "dropped_thin": thin, "dropped_minority": minority,
+                 "dropped_not_a_name": rejected}
 
 
 def sentence_entities(sentence: str, alias: dict) -> set:
