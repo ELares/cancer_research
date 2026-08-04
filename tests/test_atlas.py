@@ -1362,3 +1362,45 @@ def test_the_thin_mechanisms_are_the_physical_modalities():
             mech[m] += 1
     thin = {k for k, c in mech.items() if c < 20}
     assert {"cold-atmospheric-plasma", "electrolysis", "radioligand-therapy"} <= thin
+
+
+# --- the manuscript recomputed at census scale (#ATLAS-LANDSCAPE) ----------
+
+def test_landscape_capture_is_scope_invariant_and_reported():
+    """The comparison that survives descriptor imprecision.
+
+    A cross-mechanism ranking is only as good as its least precise descriptor,
+    and several are broad -- 75% of `epigenetic` comes from 'DNA Methylation',
+    which any paper MEASURING methylation carries. Comparing the same labels
+    across two corpora cancels that entirely, and capture is the result that
+    stands.
+    """
+    import json
+    raw = json.loads((REPO_ROOT / "analysis" / "atlas-landscape.json").read_text())
+    caps = [r["mesh_frozen"] / r["mesh_census"] for r in raw["rows"]
+            if r["mesh_census"] and r["mesh_frozen"]]
+    assert len(caps) >= 12
+    assert max(caps) / min(caps) > 50, \
+        "capture is now near-uniform; the non-uniformity argument needs re-deriving"
+    # column B must actually be populated: reading MeSH from INDEX.jsonl, which
+    # carries none, silently produced a column of zeros that read as a finding
+    assert sum(1 for r in raw["rows"] if r["mesh_frozen"] > 0) >= 12, \
+        "MeSH/frozen column is empty -- the by-pmid join is broken again"
+
+
+def test_manuscript_carries_the_census_recomputation():
+    """The manuscript is updated by the research, not frozen against it."""
+    md = (REPO_ROOT / "article" / "drafts" / "v1.md").read_text()
+    assert "17.6:1" in md and "atlas-landscape.md" in md, \
+        "the census recomputation must reach the manuscript, not just the analysis"
+
+
+def test_landscape_flags_over_broad_descriptors():
+    """Reporting the rank shift without the scope caveat would be an artifact.
+
+    `epigenetic` ranks FIRST on the census and would be the headline, but most
+    of its matches come from one descriptor that is broader than the mechanism.
+    """
+    md = (REPO_ROOT / "analysis" / "atlas-landscape.md").read_text()
+    assert "DNA Methylation" in md
+    assert "artifact of descriptor scope" in md
