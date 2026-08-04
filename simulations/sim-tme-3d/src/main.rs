@@ -4076,7 +4076,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         // iron in secreted exosomes, DEPLETING the labile iron pool and starving
         // the Fenton reaction (the OPPOSITE sign to ferritinophagy #340), so RSL3
         // kills LESS than the baseline (ferroptosis resistance; the EMT/metastatic
-        // escape, Brown et al. Dev Cell 2019 PMID 31761539). The dead/LP panels
+        // escape, Brown et al. Dev Cell 2019 PMID 31735663). The dead/LP panels
         // show the reduced death front. No overlay.
         name: "prom2",
         desc: "RSL3 + PROM2 iron efflux (#484): MVB-exosome iron export starves Fenton, ferroptosis resistance",
@@ -9434,7 +9434,7 @@ mod tests {
     /// depleting the labile iron pool and starving the Fenton reaction (the
     /// OPPOSITE sign to ferritinophagy), so an RSL3 run with PROM2 efflux on kills
     /// LESS than the baseline (ferroptosis resistance; Brown et al. Dev Cell 2019
-    /// PMID 31761539). Magnitude uncalibrated; the direction is the result.
+    /// PMID 31735663). Magnitude uncalibrated; the direction is the result.
     #[test]
     fn prom2_iron_efflux_reduces_rsl3_kill() {
         let cfg = RunConfig {

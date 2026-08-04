@@ -279,7 +279,7 @@ pub fn ferritinophagy_iron_factor(step: u32, params: &Params) -> f64 {
 /// Pro-ferroptotic stress induces Prominin-2 (PROM2), which packages
 /// ferritin-bound iron into multivesicular bodies secreted as exosomes,
 /// DEPLETING the labile iron pool and starving the Fenton reaction (Brown et
-/// al., Dev Cell 2019, PMID 31761539; PROM2-overexpression drives EMT/metastatic
+/// al., Dev Cell 2019, PMID 31735663; PROM2-overexpression drives EMT/metastatic
 /// ferroptosis resistance, Paris et al., Clin Transl Med 2024). The OPPOSITE
 /// sign to ferritinophagy (#340): the Fenton iron is scaled DOWN by a factor
 /// that ramps from `1.0` (step 0) toward `1 - prom2_iron_efflux` with the shared

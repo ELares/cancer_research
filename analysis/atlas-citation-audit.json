@@ -1,0 +1,234 @@
+{
+  "claims": 20,
+  "flagged": 2,
+  "rows": [
+    {
+      "module": "ifngamma",
+      "pmid": "31043744",
+      "claim": "IFN-gamma represses System Xc- (SLC7A11), starving cystine",
+      "status": "ok",
+      "title": "CD8+ T cells regulate tumour ferroptosis during cancer immunotherapy.",
+      "journal": "Nature",
+      "mentions": [
+        "IFNG",
+        "SLC7A11"
+      ]
+    },
+    {
+      "module": "ifngamma",
+      "pmid": "31043744",
+      "claim": "IFN-gamma represses the System Xc- heavy chain SLC3A2",
+      "status": "ok",
+      "title": "CD8+ T cells regulate tumour ferroptosis during cancer immunotherapy.",
+      "journal": "Nature",
+      "mentions": [
+        "IFNG",
+        "SLC3A2"
+      ]
+    },
+    {
+      "module": "acsl4",
+      "pmid": "27842070",
+      "claim": "ACSL4 sets the oxidisable-PUFA substrate GPX4 must defend",
+      "status": "ok",
+      "title": "ACSL4 dictates ferroptosis sensitivity by shaping cellular lipid composition.",
+      "journal": "Nature chemical biology",
+      "mentions": [
+        "ACSL4",
+        "GPX4"
+      ]
+    },
+    {
+      "module": "fsp1",
+      "pmid": "31634899",
+      "claim": "FSP1/AIFM2 is the GPX4-independent parallel defence",
+      "status": "ok",
+      "title": "FSP1 is a glutathione-independent ferroptosis suppressor.",
+      "journal": "Nature",
+      "mentions": [
+        "AIFM2",
+        "GPX4"
+      ]
+    },
+    {
+      "module": "dhodh",
+      "pmid": "33981038",
+      "claim": "DHODH repairs lipid peroxides in parallel to GPX4",
+      "status": "ok",
+      "title": "DHODH-mediated ferroptosis defence is a targetable vulnerability in cancer.",
+      "journal": "Nature",
+      "mentions": [
+        "DHODH",
+        "GPX4"
+      ]
+    },
+    {
+      "module": "gch1",
+      "pmid": "31989025",
+      "claim": "GCH1/BH4 is a GPX4-independent radical-trapping defence",
+      "status": "ok",
+      "title": "GTP Cyclohydrolase 1/Tetrahydrobiopterin Counteract Ferroptosis through Lipid Remodeling.",
+      "journal": "ACS central science",
+      "mentions": [
+        "GCH1",
+        "GPX4"
+      ]
+    },
+    {
+      "module": "prom2",
+      "pmid": "31735663",
+      "claim": "PROM2 exports ferritin-bound iron, draining the labile pool",
+      "status": "ok",
+      "title": "Prominin2 Drives Ferroptosis Resistance by Stimulating Iron Export.",
+      "journal": "Developmental cell",
+      "mentions": [
+        "PROM2"
+      ]
+    },
+    {
+      "module": "vitk",
+      "pmid": "37467745",
+      "claim": "VKORC1L1 reduces vitamin K to a GPX4-independent radical trap",
+      "status": "ok",
+      "title": "Regulation of VKORC1L1 is critical for p53-mediated tumor suppression through vitamin K metabolism.",
+      "journal": "Cell metabolism",
+      "mentions": [
+        "VKORC1L1",
+        "GPX4"
+      ]
+    },
+    {
+      "module": "copper",
+      "pmid": "34390123",
+      "claim": "copper ionophores degrade ATP7A and deplete GSH/GPX4",
+      "status": "ok",
+      "title": "Elesclomol induces copper-dependent ferroptosis in colorectal cancer cells via degradation of ATP7A.",
+      "journal": "Molecular oncology",
+      "mentions": [
+        "ATP7A"
+      ]
+    },
+    {
+      "module": "alox",
+      "pmid": "27506793",
+      "claim": "ALOX15 enzymatically peroxidises the ACSL4-supplied PUFA",
+      "status": "entity-not-named",
+      "title": "Peroxidation of polyunsaturated fatty acids by lipoxygenases drives ferroptosis.",
+      "journal": "Proceedings of the National Academy of Sciences of the United States of America",
+      "mentions": []
+    },
+    {
+      "module": "por",
+      "pmid": "33860083",
+      "claim": "POR and CYB5R1 generate the H2O2 the Fenton reaction needs",
+      "status": "ok",
+      "title": "The oxidoreductases POR and CYB5R1 catalyze lipid peroxidation to execute ferroptosis.",
+      "journal": "Molecular &amp; cellular oncology",
+      "mentions": [
+        "POR",
+        "CYB5R1"
+      ]
+    },
+    {
+      "module": "dhc7",
+      "pmid": "38297130",
+      "claim": "7-DHC (consumed by DHCR7) is an endogenous radical trap",
+      "status": "ok",
+      "title": "7-Dehydrocholesterol dictates ferroptosis sensitivity.",
+      "journal": "Nature",
+      "mentions": [
+        "DHCR7",
+        "GPX4"
+      ]
+    },
+    {
+      "module": "repair",
+      "pmid": "31761326",
+      "claim": "ESCRT-III membrane repair blocks death execution",
+      "status": "ok",
+      "title": "ESCRT-III-dependent membrane repair blocks ferroptosis.",
+      "journal": "Biochemical and biophysical research communications",
+      "mentions": [
+        "CHMP5",
+        "CHMP6"
+      ]
+    },
+    {
+      "module": "contact",
+      "pmid": "31341276",
+      "claim": "E-cadherin -> NF2/YAP suppresses ACSL4/TFRC in dense cells",
+      "status": "ok",
+      "title": "Intercellular interaction dictates cancer cell ferroptosis via NF2-YAP signalling.",
+      "journal": "Nature",
+      "mentions": [
+        "YAP1"
+      ]
+    },
+    {
+      "module": "mboat",
+      "pmid": "37267948",
+      "claim": "MBOAT1/2 remodel phospholipids toward MUFA-PE, GPX4-independently",
+      "status": "ok",
+      "title": "Ferroptosis surveillance independent of GPX4 and differentially regulated by sex hormones.",
+      "journal": "Cell",
+      "mentions": [
+        "MBOAT2",
+        "GPX4"
+      ]
+    },
+    {
+      "module": "ether_lipid",
+      "pmid": "32939090",
+      "claim": "FAR1/AGPS make the ether-PUFA pool that promotes ferroptosis",
+      "status": "ok",
+      "title": "Plasticity of ether lipids promotes ferroptosis susceptibility and evasion.",
+      "journal": "Nature",
+      "mentions": [
+        "AGPS"
+      ]
+    },
+    {
+      "module": "dc_ferroptosis",
+      "pmid": "39423128",
+      "claim": "PD-L1 loss on DCs downregulates System Xc-, killing the DCs",
+      "status": "ok",
+      "title": "PD-L1 protects tumor-associated dendritic cells from ferroptosis during immunogenic chemotherapy.",
+      "journal": "Cell reports",
+      "mentions": [
+        "CD274",
+        "SLC7A11"
+      ]
+    },
+    {
+      "module": "system_xc",
+      "pmid": "22632970",
+      "claim": "System Xc- supplies the cystine that sustains GSH for GPX4",
+      "status": "entity-not-named",
+      "title": "Ferroptosis: an iron-dependent form of nonapoptotic cell death.",
+      "journal": "Cell",
+      "mentions": []
+    },
+    {
+      "module": "erastin",
+      "pmid": "22632970",
+      "claim": "erastin inhibits System Xc-",
+      "status": "ok",
+      "title": "Ferroptosis: an iron-dependent form of nonapoptotic cell death.",
+      "journal": "Cell",
+      "mentions": [
+        "erastin"
+      ]
+    },
+    {
+      "module": "hdac_persister",
+      "pmid": "41481741",
+      "claim": "HDACs and FSP1 together suppress persister-cell ferroptosis",
+      "status": "ok",
+      "title": "FSP1 and histone deacetylases suppress cancer persister cell ferroptosis.",
+      "journal": "Science advances",
+      "mentions": [
+        "HDAC1"
+      ]
+    }
+  ]
+}

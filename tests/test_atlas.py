@@ -1102,3 +1102,57 @@ def test_no_module_claim_rests_on_a_colliding_entity():
     assert not bad, (
         "module claims now rest on colliding entities; their contested verdicts "
         "must be re-read as possible conflation:\n  " + "\n  ".join(bad))
+
+
+# --- do the module citations point at the right papers? (#ATLAS-CITE) ------
+
+def test_module_citations_are_not_broken():
+    """Three of them were, and the failure was invisible in the support table.
+
+    The `dhodh` layer cited a Nature news item about US fetal-tissue policy,
+    `prom2` cited a Theriogenology paper on embryo vitrification, and `gch1`
+    cited a PMID that does not resolve. A citation pointing at an unrelated
+    paper reads in atlas-module-support.md as `cited-absent`, which looks like
+    the graph failed to find a real paper rather than the paper being wrong.
+    """
+    import json
+    raw = json.loads(
+        (REPO_ROOT / "analysis" / "atlas-citation-audit.json").read_text())
+    broken = [r for r in raw["rows"]
+              if r["status"] in ("wrong-subject", "unresolvable")]
+    assert not broken, "broken module citations:\n  " + "\n  ".join(
+        f"{r['module']} -> {r['pmid']}: {r['title'] or '(unresolvable)'}"
+        for r in broken)
+
+
+def test_the_corrected_pmids_are_pinned():
+    """Pin the three corrections so a revert is loud rather than silent.
+
+    Each was verified by exact title against the mechanism its module documents,
+    not guessed. The wrong values must not reappear anywhere in the repo.
+    """
+    import subprocess
+    wrong = {"33864050": "dhodh", "31919077": "gch1", "31761539": "prom2"}
+    files = subprocess.run(["git", "ls-files"], cwd=REPO_ROOT,
+                           capture_output=True, text=True).stdout.split()
+    hits = []
+    for rel in files:
+        # the audit report records what was wrong, and this file must name the
+        # wrong values in order to check for them; both would match themselves
+        if (rel.startswith("corpus/") or "citation-audit" in rel
+                or rel == "tests/test_atlas.py"):
+            continue
+        try:
+            text = (REPO_ROOT / rel).read_text(encoding="utf-8", errors="ignore")
+        except OSError:
+            continue
+        for bad, mod in wrong.items():
+            if bad in text:
+                hits.append(f"{rel}: {bad} ({mod})")
+    assert not hits, "a corrected citation has reverted:\n  " + "\n  ".join(hits)
+
+    import atlas_module_support as ms
+    by_module = {c[0]: c[3] for c in ms.CLAIMS}
+    assert by_module["dhodh"] == "33981038"    # Mao 2021 Nature
+    assert by_module["gch1"] == "31989025"     # Kraft 2020 ACS Cent Sci
+    assert by_module["prom2"] == "31735663"    # Brown 2019 Dev Cell

@@ -126,7 +126,7 @@ pub struct Params {
     /// stress induces Prominin-2, which packages ferritin-bound iron into
     /// multivesicular bodies secreted as exosomes, DEPLETING the labile iron pool
     /// and starving the Fenton reaction (Brown et al., Dev Cell 2019, PMID
-    /// 31761539). The OPPOSITE sign to `ferritinophagy_release`: the Fenton iron
+    /// 31735663). The OPPOSITE sign to `ferritinophagy_release`: the Fenton iron
     /// is scaled by a time-dependent factor (see `biochem::prom2_iron_factor`)
     /// that ramps from `1.0` toward `1 - prom2_iron_efflux` with the shared
     /// `ferritinophagy_tau` time constant, so a PROM2-high cell exports iron over

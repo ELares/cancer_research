@@ -194,7 +194,7 @@ DHODH repairs lipid peroxides in parallel to GPX4
 
 * 1 asserting relations
 * predicates: `negative_correlate` 1
-* module cites PMID 33864050 — not among the sampled supporting PMIDs
+* module cites PMID 33981038 — not among the sampled supporting PMIDs
 * example PMIDs: 41369379
 
 ### `alox` — ALOX15 / ACSL4
