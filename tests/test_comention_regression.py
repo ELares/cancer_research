@@ -1,0 +1,88 @@
+"""Guards for the measured #617 co-mention regression (#ATLAS-COMENT-REG).
+
+The finding runs against a change this repo made and justified, so it is exactly
+the kind of result that quietly reverts. These pin it to recomputed quantities.
+"""
+
+import csv
+import json
+import sys
+from pathlib import Path
+
+REPO_ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(REPO_ROOT / "scripts"))
+
+from comention_regression import wilson  # noqa: E402
+
+RAW = REPO_ROOT / "analysis" / "comention-regression.json"
+DOC = REPO_ROOT / "analysis" / "comention-regression.md"
+JUDGED = REPO_ROOT / "analysis" / "comention" / "abstract-visible-judgements.csv"
+COMENTION = REPO_ROOT / "scripts" / "atlas_comention.py"
+GRAPH = REPO_ROOT / "scripts" / "atlas_graph.py"
+
+
+def _raw():
+    return json.loads(RAW.read_text())
+
+
+def test_the_judgements_are_committed_and_match_the_reported_precision():
+    """The precision must be re-derivable from the judged rows, not asserted."""
+    rows = list(csv.DictReader(JUDGED.open()))
+    assert len(rows) >= 50, f"only {len(rows)} judged mentions"
+    assert {r["verdict"] for r in rows} <= {"TP", "FP"}
+    tp = sum(1 for r in rows if r["verdict"] == "TP")
+    d = _raw()["after"]
+    assert d["judged_n"] == len(rows) and d["judged_tp"] == tp
+    assert abs(d["abstract_precision"] - tp / len(rows)) < 1e-12
+    lo, hi = wilson(tp, len(rows))
+    assert abs(d["abstract_precision_ci"][0] - lo) < 1e-12
+
+
+def test_precision_fell_and_the_document_says_so():
+    """The finding. If a rebuild recovers it, this must fail and be re-read."""
+    d = _raw()
+    assert d["net_change"] < 0, "precision no longer fell; re-read the finding"
+    assert d["before"]["weighted"] > d["after"]["weighted"]
+    txt = DOC.read_text()
+    assert "**No." in txt, "the document no longer leads with the negative answer"
+
+
+def test_the_abstract_visible_stratum_grew():
+    """The mechanism of the loss: the stratum got cleaner but much larger."""
+    d = _raw()
+    before, after = d["before"]["strata"], d["after"]["strata"]
+    assert after["abstract"] > before["abstract"] * 2, (
+        "the stratum no longer tripled; the explanation in the document is stale")
+    # And it did get cleaner, which is why the loss is not obvious.
+    assert d["after"]["abstract_precision"] > d["before"]["abstract_precision"]
+
+
+def test_the_carried_over_precisions_are_declared_not_hidden():
+    """Only one stratum was re-measured; the other two are assumptions."""
+    d = _raw()
+    assert set(d["carried_over"]) == {"agree", "body_only"}
+    txt = DOC.read_text()
+    assert "carried over" in txt and "stated rather than buried" in txt
+
+
+def test_the_share_bug_is_fixed_at_the_source():
+    """The ratio must use a per-(form, identifier) count, not the cross-sense sum.
+
+    Dividing `alias_support` by `ident_mentions` is not a share and can exceed 1
+    (274% for `as`), and it admits ambiguous generic words MORE readily than
+    specific names -- the opposite of the filter's intent.
+    """
+    graph = GRAPH.read_text()
+    assert "alias_ident_support" in graph, "the corrected numerator is not recorded"
+    com = COMENTION.read_text()
+    assert "ident_support.get(a," in com, "the share still uses the cross-sense total"
+    # The old expression must not come back.
+    assert "share = support.get(a, 0) / max(1, ident_tot" not in com
+
+
+def test_the_lesson_is_recorded_not_just_the_number():
+    """A filter justified by an error distribution it then changes must be
+    re-measured. That is the transferable part."""
+    txt = DOC.read_text()
+    assert "wrong about the population it was applied to" in txt
+    assert "unblinded" in txt, "the judgement's own bias is not disclosed"

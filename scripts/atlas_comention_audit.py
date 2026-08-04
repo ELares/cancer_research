@@ -38,6 +38,7 @@ Usage:
     python scripts/atlas_comention_audit.py
 """
 
+import argparse
 import collections
 import gzip
 import json
@@ -111,6 +112,12 @@ def abstracts(pmids: list) -> dict:
 
 
 def main() -> int:
+    ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
+    ap.add_argument("--dump-abstract-visible", metavar="PATH",
+                    help="write the abstract-visible disagreements to PATH as "
+                         "JSONL, so the stratum can be hand-judged")
+    args = ap.parse_args()
+
     root = atlas_root()
     sample_path = root / "comention" / "audit-sample.jsonl.gz"
     if not sample_path.exists():
@@ -140,6 +147,7 @@ def main() -> int:
     no_pt = 0
     in_abstract = body_only = 0
     examples = []
+    abstract_visible = []  # the only stratum that can hold false positives
     for r in rows:
         toks = _TOKEN.findall(r["sentence"].lower())
         grams = set()
@@ -170,6 +178,10 @@ def main() -> int:
                 ab = abs_text.get(r.get("pmid") or "", "")
                 if ab and any(a in ab for a in by_id.get(ident, ())):
                     in_abstract += 1
+                    if len(abstract_visible) < 5000:
+                        abstract_visible.append({
+                            "pmid": r.get("pmid"), "identifier": ident,
+                            "entity": nm, "sentence": r["sentence"][:400]})
                 else:
                     body_only += 1
 
@@ -268,6 +280,12 @@ def main() -> int:
     ]
 
     OUT.write_text("\n".join(L) + "\n")
+    if args.dump_abstract_visible:
+        dest = Path(args.dump_abstract_visible)
+        dest.write_text("\n".join(json.dumps(e) for e in abstract_visible) + "\n")
+        print(f"wrote {dest}: {len(abstract_visible)} abstract-visible disagreements "
+              f"for hand judging")
+
     RAW.write_text(json.dumps({
         "sentences": len(rows), "mentions": tot,
         "alias_found": matched, "alias_missing": unmatched,
