@@ -162,3 +162,33 @@ def test_the_authority_discriminator_is_measured_and_not_yet_recommended():
     txt = DOC.read_text()
     assert "NOT yet a recommendation" in txt
     assert "selected on this sample" in txt
+
+
+def test_the_regression_survives_a_shared_judging_flaw():
+    """The comparison's weakest point, worked out rather than hedged.
+
+    If the carried-over precisions share the surface-form flaw, the `before`
+    total is overstated too. Scaling both sides' impure strata by the same
+    factor k, the change must stay negative for every k in [0,1] -- otherwise
+    the regression could be an artifact of correcting only one side.
+    """
+    import comention_regression as cr
+
+    d = _raw()
+    sb, sa = d["before"]["strata"], d["after"]["strata"]
+    abs_after = d["after"]["abstract_precision"]
+    deltas = []
+    for i in range(11):
+        k = i / 10
+        B = (sb["agree"] * cr.AGREE_PRECISION
+             + k * (sb["abstract"] * cr.PRIOR_ABSTRACT_PRECISION
+                    + sb["body"] * cr.BODY_ONLY_PRECISION))
+        A = (sa["agree"] * cr.AGREE_PRECISION
+             + k * (sa["abstract"] * abs_after + sa["body"] * cr.BODY_ONLY_PRECISION))
+        deltas.append(A - B)
+    assert all(x < 0 for x in deltas), (
+        f"the regression reverses at some k: {[round(x,4) for x in deltas]}")
+    # And it should widen as k falls -- the `after` run carries more weight in
+    # the impure strata, so correcting both sides cannot rescue it.
+    assert deltas[0] < deltas[-1], "the gap no longer widens under correction"
+    assert "WIDENS the gap" in DOC.read_text()

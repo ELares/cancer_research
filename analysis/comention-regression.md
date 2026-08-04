@@ -148,6 +148,37 @@ needs re-measuring once it changes that distribution.
   an extraction failure rather than absence of evidence -- a claim that
   should now be read against 50% precision, not 55%.
 
+## Does the regression survive if BOTH sides were judged leniently?
+
+This is the weakest point in the comparison, so it is worth working out
+rather than hedging. The carried-over precisions were measured under #617
+and may share the surface-form criterion this document abandoned. If they
+do, the `before` total is overstated too, and the regression could in
+principle be an artifact of correcting only one side.
+
+It is not. Suppose both sides' impure strata are overstated by the same
+factor, so their true precisions are `k` times the reported ones for some
+`k` in [0,1]. The corroborated stratum is left alone, since PubTator
+assigned the same identifier there and that is an identifier-level check
+already. Then:
+
+| k | before | after | change |
+|---|---|---|---|
+| 1.0 | 56.8% | 47.5% | -9.3 |
+| 0.8 | 53.7% | 44.0% | -9.7 |
+| 0.6 | 50.5% | 40.5% | -10.0 |
+| 0.4 | 47.3% | 37.0% | -10.3 |
+| 0.2 | 44.2% | 33.5% | -10.6 |
+| 0.0 | 41.0% | 30.0% | -11.0 |
+
+The change is negative for every `k`, and it gets MORE negative as `k`
+falls. Correcting both sides therefore WIDENS the gap rather than closing
+it, because the `after` run carries more of its weight in the impure
+strata. The regression does not depend on the carried-over numbers being
+right; it depends only on their being wrong by a similar factor on both
+sides, which is the assumption that would have to hold for the objection
+to bite.
+
 ## A discriminator that does work (#628)
 
 The filters above fail because they measure how OFTEN a form appears, and

@@ -289,6 +289,35 @@ def main() -> int:
         "  `atlas-module-support.md`, which argues a zero in the relation column is",
         "  an extraction failure rather than absence of evidence -- a claim that",
         "  should now be read against 50% precision, not 55%.", "",
+        "## Does the regression survive if BOTH sides were judged leniently?", "",
+        "This is the weakest point in the comparison, so it is worth working out",
+        "rather than hedging. The carried-over precisions were measured under #617",
+        "and may share the surface-form criterion this document abandoned. If they",
+        "do, the `before` total is overstated too, and the regression could in",
+        "principle be an artifact of correcting only one side.", "",
+        "It is not. Suppose both sides' impure strata are overstated by the same",
+        "factor, so their true precisions are `k` times the reported ones for some",
+        "`k` in [0,1]. The corroborated stratum is left alone, since PubTator",
+        "assigned the same identifier there and that is an identifier-level check",
+        "already. Then:", "",
+        "| k | before | after | change |", "|---|---|---|---|",
+    ]
+    for k in (1.0, 0.8, 0.6, 0.4, 0.2, 0.0):
+        B = (sb["agree"] * AGREE_PRECISION
+             + k * (sb["abstract"] * PRIOR_ABSTRACT_PRECISION
+                    + sb["body"] * BODY_ONLY_PRECISION))
+        A = (sa["agree"] * AGREE_PRECISION
+             + k * (sa["abstract"] * abs_prec + sa["body"] * BODY_ONLY_PRECISION))
+        L.append(f"| {k:.1f} | {100*B:.1f}% | {100*A:.1f}% | {100*(A-B):+.1f} |")
+
+    L += [
+        "", "The change is negative for every `k`, and it gets MORE negative as `k`",
+        "falls. Correcting both sides therefore WIDENS the gap rather than closing",
+        "it, because the `after` run carries more of its weight in the impure",
+        "strata. The regression does not depend on the carried-over numbers being",
+        "right; it depends only on their being wrong by a similar factor on both",
+        "sides, which is the assumption that would have to hold for the objection",
+        "to bite.", "",
         "## A discriminator that does work (#628)", "",
         "The filters above fail because they measure how OFTEN a form appears, and",
         "the offenders are common words. The signal that separates them is whether",
