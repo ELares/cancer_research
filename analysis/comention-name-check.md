@@ -12,12 +12,12 @@ according to NLM or NCBI?
 
 | | forms | census mentions |
 |---|---|---|
-| a name of the entity it resolves to | 26,228 (59.6%) | 33,492,597 (54.0%) |
-| not a name of it | 17,815 (40.4%) | 28,516,266 (46.0%) |
+| a name of the entity it resolves to | 27,062 (61.4%) | 35,395,349 (57.1%) |
+| not a name of it | 16,981 (38.6%) | 26,613,514 (42.9%) |
 
-**About 54% of the layer's mentions sit on a form that is
+**About 57% of the layer's mentions sit on a form that is
 a name of what it resolves to.** The mention figure is LOWER than the form
-figure (54.0% against 59.6%), which is the
+figure (57.1% against 61.4%), which is the
 unfavourable direction: non-name forms are used MORE than name forms,
 because generic English words are common words.
 
@@ -42,8 +42,8 @@ Applied to the 180 hand-judged mentions, split by namespace:
 
 | | judged | base precision | keeps | kept precision | FPs removed | TPs removed |
 |---|---|---|---|---|---|---|
-| all | 176 | 33.0% | 48 | 79.2% [66, 88] | 92% | 34% |
-| MeSH identifiers | 160 | 28.7% | 34 | 82.4% [66, 92] | 95% | 39% |
+| all | 176 | 33.0% | 50 | 78.0% [65, 87] | 91% | 33% |
+| MeSH identifiers | 160 | 28.7% | 36 | 80.6% [65, 90] | 94% | 37% |
 | gene identifiers | 16 | 75.0% | 14 | 71.4% [45, 88] | 0% | 17% |
 
 ## Why the layer cannot reach most identifiers, and why that is mostly fine
@@ -106,13 +106,13 @@ form is available to it.
 
 | what is compared | keeps | kept precision | FPs removed | TPs removed |
 |---|---|---|---|---|
-| canonical form OR span (reported above) | 34 | 82.4% | 95% | 39% |
-| **form only, as a filter would** | 21 | 100.0% | 100% | **54%** |
-| form only, normalised | 29 | 100.0% | 100% | 37% |
+| canonical form OR span (reported above) | 36 | 80.6% | 94% | 37% |
+| **form only, as a filter would** | 22 | 100.0% | 100% | **52%** |
+| form only, normalised (recommended) | 30 | 100.0% | 100% | 35% |
 
 At the insertion point the rule is CLEANER than reported -- it removes every
 span-bearing false positive -- and costs half again as many true positives,
-54% rather than 39%. The
+52% rather than 37%. The
 favourable number is the one this document originally quoted.
 
 ### And it would delete most of the cancer vocabulary
@@ -123,12 +123,12 @@ what it does to the layer's purpose:
 
 | rule | C04 census mass retained | C04 descriptors left with no route |
 |---|---|---|
-| form only, strict | **24.7%** | 260 of 670 |
-| form only, normalised | 64.2% | 152 of 670 |
+| form only, strict | **35.0%** | 206 of 670 |
+| form only, normalised | 73.2% | 126 of 670 |
 
-**The strict rule discards 75% of the
+**The strict rule discards 65% of the
 cancer vocabulary's mentions and leaves
-260 cancer descriptors unreachable by any form
+206 cancer descriptors unreachable by any form
 at all.** `Neoplasms`, `Breast Neoplasms` and `Lung Neoplasms` are among them,
 because MeSH writes `Breast Neoplasms` where the literature writes
 `breast cancer`.
@@ -136,9 +136,23 @@ because MeSH writes `Breast Neoplasms` where the literature writes
 Normalising plurals and collapsing the cancer/tumour/carcinoma family onto
 `neoplasm` recovers most of that at NO precision cost -- the same 100%
 false-positive removal, the same kept precision, and the true-positive cost
-falls from 54% to 37%.
+falls from 52% to 35%.
 **Any implementation should normalise; the strict form measured above should
 not be built.**
+
+Two changes got it there, and their order matters because each was worth
+little without the other:
+
+* **MeSH entry terms in the authority table.** A preferred label is not how
+  the literature writes a concept -- MeSH says `Breast Neoplasms`, papers say
+  `breast cancer`. Adding every term of every concept the descriptor carries
+  took C04 retention from 24.7% to 35.0% strict, 64.2% to 69.9% normalised.
+* **Dropping stopwords.** MeSH stores INVERTED renderings, `Cancer of Breast`
+  rather than `Breast Cancer`, so the bag carries an `of` the literature's
+  form does not. Measured BEFORE entry terms this was worth 1.0 point and
+  looked not worth having; measured after, it is worth 3.3 and takes
+  retention to 73.2%. A normalisation is only as good as the reference it
+  compares against.
 
 **It works on MeSH and does nothing useful on genes**, and the reason is
 that genes did not need it. A gene symbol is already a specific string, so
@@ -147,8 +161,8 @@ against 29% for MeSH. On genes the rule removes
 0% of false positives while still costing
 17% of true ones -- it has nothing to gain and
 something to lose. On MeSH it removes
-95% of false positives and lifts precision from
-29% to 82%.
+94% of false positives and lifts precision from
+29% to 81%.
 
 So the honest recommendation is narrower than the rule first looked: apply
 it to MeSH identifiers only. Getting gene labels did not make the rule work
@@ -162,7 +176,7 @@ and 'is not needed' is the safer reading of it.
 Earlier measurements compared a form against a single preferred label and
 reported a 60% true-positive cost. Comparing against every name an
 authority lists -- a gene's symbol, description and aliases -- drops that to
-34%, because `xCT` really is a name of SLC7A11 and
+33%, because `xCT` really is a name of SLC7A11 and
 `PHGPx` one of GPX4. The rule did not change; the reference did.
 
 ## Limits

@@ -45,6 +45,7 @@ Usage:
 """
 
 import argparse
+import collections
 import gzip
 import json
 import sys
@@ -69,6 +70,47 @@ UA = "cancer_research-atlas/1.0 (https://github.com/ELares/cancer_research)"
 def _get(url: str, timeout: int = 180) -> str:
     req = urllib.request.Request(url, headers={"User-Agent": UA})
     return urllib.request.urlopen(req, timeout=timeout).read().decode("utf-8", "replace")
+
+
+def mesh_entry_terms(uis: list) -> dict:
+    """UI -> every term of every concept the descriptor carries.
+
+    The preferred label alone is not how the literature writes a concept. MeSH
+    calls the breast-cancer descriptor `Breast Neoplasms`; papers write
+    `breast cancer`. Measured over MeSH tree C04, preferred labels alone leave
+    260 of 670 cancer descriptors unreachable by any surface form.
+
+    Fetched in bulk rather than one descriptor at a time -- the per-descriptor
+    `lookup/details` endpoint would be about 83 minutes for this map. The bulk
+    route returns the INVERTED renderings MeSH stores (`Cancer of Breast` rather
+    than `Breast Cancer`), which a word-bag comparison matches anyway once
+    stopwords are dropped.
+    """
+    found = collections.defaultdict(set)
+    batch = 100
+    for i in range(0, len(uis), batch):
+        chunk = uis[i:i + batch]
+        values = " ".join(f"mesh:{u}" for u in chunk)
+        query = (
+            "PREFIX mesh: <http://id.nlm.nih.gov/mesh/> "
+            "PREFIX meshv: <http://id.nlm.nih.gov/mesh/vocab#> "
+            f"SELECT ?d ?t WHERE {{ VALUES ?d {{ {values} }} "
+            "?d meshv:concept ?c . ?c meshv:term ?tm . "
+            "{ ?tm meshv:prefLabel ?t } UNION { ?tm meshv:altLabel ?t } }"
+        )
+        try:
+            params = urllib.parse.urlencode({"query": query, "format": "JSON"})
+            rows = json.loads(_get(f"{MESH_SPARQL}?{params}"))["results"]["bindings"]
+        except Exception as exc:
+            print(f"\n    ! entry-term batch at {i} failed: {exc}", file=sys.stderr)
+            time.sleep(2)
+            continue
+        for b in rows:
+            found[b["d"]["value"].rsplit("/", 1)[-1]].add(b["t"]["value"])
+        print(f"    entry terms: {len(found):,}/{len(uis):,}", end="\r", flush=True)
+        time.sleep(0.3)
+    print(f"    entry terms: {len(found):,}/{len(uis):,}          ")
+    return {k: sorted(v) for k, v in found.items()}
 
 
 def mesh_labels(uis: list) -> dict:
@@ -201,6 +243,8 @@ def main() -> int:
 
     print("  fetching MeSH labels ...")
     mesh = mesh_labels(sorted(mesh_ids))
+    print("  fetching MeSH entry terms ...")
+    entry = mesh_entry_terms(sorted(mesh_ids))
 
     print("  fetching gene names ...")
     genes = gene_labels(gene_ids)
@@ -208,9 +252,17 @@ def main() -> int:
     rows = {}
     for ident in sorted(wanted):
         if ident.startswith("MESH:"):
-            lab = mesh.get(ident.split(":", 1)[1])
+            ui = ident.split(":", 1)[1]
+            lab = mesh.get(ui)
             if lab:
-                rows[ident] = [lab]
+                # Preferred label first, then every entry term, deduplicated
+                # while preserving that order.
+                names, seen = [lab], {lab}
+                for e in entry.get(ui, ()):
+                    if e not in seen:
+                        names.append(e)
+                        seen.add(e)
+                rows[ident] = names
         elif not ident.startswith("OMIM:"):
             names = genes.get(ident)
             if names:

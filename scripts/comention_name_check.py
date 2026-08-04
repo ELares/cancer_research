@@ -77,6 +77,14 @@ _SYNONYM = {"cancer": "neoplasm", "tumor": "neoplasm", "tumour": "neoplasm",
             "malignancy": "neoplasm"}
 
 
+# Dropped before comparing. MeSH stores inverted renderings -- `Cancer of
+# Breast` rather than `Breast Cancer` -- so a word bag matches the literature's
+# form only once these are gone. Worth 3.3 points of cancer vocabulary, and
+# worth nothing at all before entry terms were in the table, which is why it was
+# measured twice.
+_STOPWORD = {"of", "the", "and", "in", "with", "for", "to", "or", "by", "an"}
+
+
 def norm_bag(s):
     """Word bag with plurals stemmed, 1-char tokens dropped, and the
     cancer/tumour family collapsed onto `neoplasm`."""
@@ -92,7 +100,9 @@ def norm_bag(s):
         else:
             if w.endswith("s") and not w.endswith("ss"):
                 w = w[:-1]
-        out.add(_SYNONYM.get(w, w))
+        w = _SYNONYM.get(w, w)
+        if w not in _STOPWORD:
+            out.add(w)
     return frozenset(out)
 
 
@@ -357,7 +367,7 @@ def main() -> int:
         f"| **form only, as a filter would** | {impl['kept']} | "
         f"{100*impl['kept_precision']:.1f}% | {100*impl['fp_removed']:.0f}% | "
         f"**{100*impl['tp_removed']:.0f}%** |",
-        f"| form only, normalised | {norm['kept']} | "
+        f"| form only, normalised (recommended) | {norm['kept']} | "
         f"{100*norm['kept_precision']:.1f}% | {100*norm['fp_removed']:.0f}% | "
         f"{100*norm['tp_removed']:.0f}% |", "",
         "At the insertion point the rule is CLEANER than reported -- it removes every",
@@ -387,6 +397,18 @@ def main() -> int:
         f"falls from {100*impl['tp_removed']:.0f}% to {100*norm['tp_removed']:.0f}%.",
         "**Any implementation should normalise; the strict form measured above should",
         "not be built.**", "",
+        "Two changes got it there, and their order matters because each was worth",
+        "little without the other:", "",
+        "* **MeSH entry terms in the authority table.** A preferred label is not how",
+        "  the literature writes a concept -- MeSH says `Breast Neoplasms`, papers say",
+        "  `breast cancer`. Adding every term of every concept the descriptor carries",
+        "  took C04 retention from 24.7% to 35.0% strict, 64.2% to 69.9% normalised.",
+        "* **Dropping stopwords.** MeSH stores INVERTED renderings, `Cancer of Breast`",
+        "  rather than `Breast Cancer`, so the bag carries an `of` the literature's",
+        "  form does not. Measured BEFORE entry terms this was worth 1.0 point and",
+        "  looked not worth having; measured after, it is worth 3.3 and takes",
+        "  retention to 73.2%. A normalisation is only as good as the reference it",
+        "  compares against.", "",
     ]) + [
         "**It works on MeSH and does nothing useful on genes**, and the reason is",
         "that genes did not need it. A gene symbol is already a specific string, so",
