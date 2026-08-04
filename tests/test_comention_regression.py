@@ -17,6 +17,8 @@ from comention_regression import wilson  # noqa: E402
 RAW = REPO_ROOT / "analysis" / "comention-regression.json"
 DOC = REPO_ROOT / "analysis" / "comention-regression.md"
 JUDGED = REPO_ROOT / "analysis" / "comention" / "abstract-visible-judgements.csv"
+HELDOUT = (REPO_ROOT / "analysis" / "comention"
+           / "abstract-visible-heldout-judgements.csv")
 COMENTION = REPO_ROOT / "scripts" / "atlas_comention.py"
 GRAPH = REPO_ROOT / "scripts" / "atlas_graph.py"
 
@@ -333,3 +335,62 @@ def test_the_judged_sentences_are_long_enough_to_check_the_span():
             assert span.lower() in r["sentence"].lower(), (
                 f"{name} row {r['n']}: span {span!r} is not in the committed "
                 "sentence, so the verdict cannot be checked by a reader")
+
+
+def test_the_heldout_sample_is_disjoint_from_the_selection_sample():
+    """#628 criterion 2. A rule cannot be validated on what selected it.
+
+    Disjointness is the whole property, so it is checked directly rather than
+    trusted to the `--exclude` flag that produced it.
+    """
+    import csv as _csv
+
+    sel = {(r["pmid"], r["identifier"])
+           for r in _csv.DictReader(JUDGED.open())}
+    held = list(_csv.DictReader(HELDOUT.open()))
+    assert len(held) >= 30, f"held-out sample is only {len(held)} mentions"
+    overlap = {(r["pmid"], r["identifier"]) for r in held} & sel
+    assert not overlap, f"{len(overlap)} held-out mentions were already judged"
+    assert all(r["verdict"] in ("TP", "FP") for r in held)
+
+
+def test_the_discriminator_still_separates_on_held_out_data():
+    """The direction must survive; the precision is allowed to fall.
+
+    Selection optimism is expected and is the reason the held-out sample exists.
+    What must not happen is the rule failing to separate at all.
+    """
+    import csv as _csv
+    import re as _re
+
+    def bag(s):
+        return frozenset(w for w in _re.split(r"[^a-z0-9]+", (s or "").lower()) if w)
+
+    held = list(_csv.DictReader(HELDOUT.open()))
+    keep = [r for r in held if r["authority_name"]
+            and bag(r["entity"]) == bag(r["authority_name"])]
+    tp = sum(1 for r in held if r["verdict"] == "TP")
+    fp = len(held) - tp
+    cut_fp = fp - (len(keep) - sum(1 for r in keep if r["verdict"] == "TP"))
+    assert cut_fp / fp > 0.8, (
+        f"the rule removes only {100*cut_fp/fp:.0f}% of false positives on held-out "
+        "data; it no longer separates")
+    txt = DOC.read_text()
+    assert "precision was optimistic" in txt, (
+        "the document does not report that the kept-precision estimate fell")
+    assert "what is not is by" in txt, "the sample-size caveat is missing"
+
+
+def test_the_judging_scaffold_is_reproducible():
+    """The seed and the span recovery lived only in a shell history.
+
+    Without a committed generator nobody, including a later session, can
+    re-derive the verdicts or draw a comparable sample.
+    """
+    prep = REPO_ROOT / "scripts" / "comention_judge_prep.py"
+    assert prep.exists(), "the judging-sample preparer is not committed"
+    src = prep.read_text()
+    assert "--seed" in src and "required=True" in src, "the seed is not recorded"
+    assert "--exclude" in src, "there is no way to draw a disjoint held-out sample"
+    # It must use the build's matcher, not re-implement one.
+    assert "from atlas_comention import build_alias_map, matched_forms" in src

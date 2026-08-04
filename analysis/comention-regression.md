@@ -197,6 +197,40 @@ The reported figure is the most pessimistic of the three. All three are
 negative, so the direction does not turn on the choice, but the magnitude
 is a 7-to-9 point band rather than a single number.
 
+## Held-out validation of the discriminator (#628 criterion 2)
+
+Every judged mention above was used to SELECT the authority-name rule, so
+none of them can validate it. A second sample was drawn the same way with a
+different seed, disjoint from the first (40 mentions,
+`scripts/comention_judge_prep.py --exclude`), and judged before its numbers
+were computed.
+
+**The stratum itself generalises**: held-out precision is 5/40 = 12.5% (CI [5.5%, 26.1%]) against 15.0% on the selection sample. The two are the same number
+within noise, which is the first thing that had to be true.
+
+**The rule generalises in direction, and its precision was optimistic:**
+
+| | selection | held-out |
+|---|---|---|
+| false positives removed | 96% | 94% |
+| true positives removed | 60% | 60% |
+| precision of what it keeps | 66.7% (4/6) | 50.0% (2/4) |
+
+The direction survives -- it still removes almost every false positive at a
+consistent 60% cost in true ones. The kept-precision estimate falls by a
+third, which is exactly the selection optimism a held-out sample exists to
+expose, and neither figure is well constrained: 4 and 4 surviving mentions give intervals so wide they overlap almost
+entirely. What is established is that the rule separates; what is not is by
+how much.
+
+One further observation the held-out sample makes available. Applying the
+rule to the MATCHED SPAN rather than the identifier's canonical name is
+stronger here -- it keeps 2 mentions, all correct, removing
+every false positive -- but on a sample that small the difference is not
+distinguishable from the identifier-level version, and the span was not
+recorded when the first sample was judged, so this is a lead rather than a
+result.
+
 ## Does the regression survive if BOTH sides were judged leniently?
 
 This is the weakest point in the comparison, so it is worth working out
