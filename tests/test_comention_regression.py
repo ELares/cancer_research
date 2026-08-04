@@ -263,3 +263,20 @@ def test_the_regression_survives_a_shared_judging_flaw():
     # the impure strata, so correcting both sides cannot rescue it.
     assert deltas[0] < deltas[-1], "the gap no longer widens under correction"
     assert "WIDENS the gap" in DOC.read_text()
+
+
+def test_the_audit_does_not_assert_both_readings_of_the_body_only_stratum():
+    """It once said body-only was "the layer doing the job it exists for" in one
+    section and "NOT the layer doing its job" in another, three screens apart.
+
+    The second is right. A document holding both is worse than either, because a
+    reader takes whichever they reach first.
+    """
+    md = (REPO_ROOT / "analysis" / "atlas-comention-audit.md").read_text()
+    assert "asserted BOTH" in md, "the self-contradiction is no longer acknowledged"
+    # The two measurements of this stratum come from different runs AND
+    # different criteria, so the document must not present them as comparable.
+    assert "not like-for-like" in md
+    assert "PRE-FILTER measurement" in md, (
+        "the #617 block is not labelled as the pre-filter run, so its 30.8% reads "
+        "as current beside the post-filter 20.0%")

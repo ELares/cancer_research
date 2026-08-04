@@ -63,8 +63,10 @@ would waste the measurement:
 
 A body-only match is one PubTator could not have contradicted, because it
 never read that text. That is what this layer exists to find -- and it is
-NOT a reason to score the stratum as correct. This report used to say the
-body-only share was "the layer doing the job it exists for"; hand judging
+NOT a reason to score the stratum as correct. This report asserted BOTH
+readings at once -- that the body-only share was "the layer doing the job
+it exists for" here, and that it was "NOT the layer doing its job" in the
+#617 section below. The second is the right one; hand judging
 puts that stratum at **20.0%** precision (8 of 40,
 `analysis/comention/body-only-judgements.csv`), the worst of the three. The
 same generic forms misfire in body text as in abstracts, and there is no
@@ -76,10 +78,16 @@ above the truth, and the 32.5% corroboration rate
 as a lower bound that is close to it. All three strata are measured in
 `analysis/comention-regression.md`.
 
-### The bound has since been resolved by hand, and it sits near the bottom
+### The PRE-FILTER measurement (#617), kept for comparison
 
 180 abstract-visible and 39 body-only mentions were read individually
-(#617). The result was much worse than this bound's midpoint suggests:
+(#617), on the sample from BEFORE the filter change. Retained because it is
+the only measurement of that run, and because its body-only n is an order of
+magnitude larger than the post-filter one. **The two are not like-for-like**:
+this pass judged whether the sentence contained the matched string, while the
+post-filter pass asked whether the sentence discusses the entity the
+IDENTIFIER denotes, which is stricter. Read the 30.8% below as an upper bound
+on what a strict re-judging of that run would have given.
 
 | stratum | n | precision |
 |---|---|---|
