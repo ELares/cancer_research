@@ -105,6 +105,9 @@ a backlog.
 
 Reported here because a findings page that only lists wins is marketing.
 
+**A repair this project made to its own co-mention layer made it worse.** #617 measured the layer at 57% precision, traced it to a filter that exempted multi-word forms, and replaced the single-token test with two measured filters. Re-measured on a fresh sample after the rebuild, precision FELL to 50%. The false positives had been multi-word because the multi-word channel was the unfiltered one; closing it moved the pressure to the channel just opened, and the top offenders are now bare English words. The replacement filters were then measured and do not separate true matches from false ones at all.
+*Source:* `comention-regression.md`
+
 **Literature-based discovery does not work as built.** The shipped ABC
 ranking scores 12.3% precision@20 against
 17.2% for ranking the same candidates by
@@ -139,7 +142,7 @@ None of these were computational errors. Every one was a true statement describi
 
 ## Every layer now carries a bound
 
-* co-mention precision: 44.3% to 91.8%
+* co-mention precision: **50% measured** (hand-judged, superseding the 32.5%-76.3% corroboration bound), and it FELL 7 points when the #617 filters were changed
 * contradictions: ambiguity inflates the flag rate 1.45x
 * emergence: 99.0% precision, 99.6% recall
 * FSP1 disambiguation: 97.4%, with 75% of corrections extrapolated and that extrapolation independently tested
