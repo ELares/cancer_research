@@ -137,3 +137,23 @@ def test_the_mesh_date_is_cited_not_recalled():
     # indexers dropping a general term cannot produce.
     assert "REVERSES" in txt or "reverses" in txt
     assert "open question" in txt
+
+
+def test_the_manuscript_carries_the_trajectory_finding():
+    """The book said the sonodynamic leg is "what an under-explored direction
+    looks like". That phrase is ambiguous between new-and-rising and
+    nobody-went-there, and the trajectory measurement resolves it.
+
+    It also has to carry the limit, because the same test could not have seen a
+    fourfold rise -- absence of evidence of movement, not evidence of stasis.
+    """
+    md = (REPO_ROOT / "article" / "drafts" / "v1.md").read_text()
+    flat = " ".join(md.split())
+    assert "persistently unexplored rather than newly emerging" in flat
+    assert "cannot claim the field is moving toward its thesis" in flat
+    # The honest limit must travel with the claim.
+    assert "absence of evidence of movement rather than evidence of stasis" in flat
+    # And the number must match the artifact rather than being restated.
+    sdt = _raw()["trajectory"]["sonodynamic therapy"]
+    assert f"{100*sdt['early']['share']:.2f} percent early" in flat
+    assert f"{100*sdt['late']['share']:.2f} percent late" in flat
