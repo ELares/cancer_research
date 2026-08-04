@@ -1601,3 +1601,45 @@ def test_unmeasurable_prediction_legs_are_flagged_not_zeroed():
     md = (REPO_ROOT / "analysis" / "atlas-prediction-position.md").read_text()
     assert "loosest here" in md
     assert "no descriptor for drug-tolerant persister cells" in md
+
+
+# --- literature-derived model gaps (#ATLAS-GAPS) --------------------------
+
+def test_model_gaps_excludes_method_genes_with_reasons():
+    """GAPDH ranks 11th because it is a loading control, not a mechanism.
+
+    Reporting Western-blot controls as modelling gaps would be absurd, and
+    caspase-3 is the instructive case: ferroptosis papers measure it precisely
+    to show the death is NOT apoptotic.
+    """
+    import json
+    raw = json.loads((REPO_ROOT / "analysis" / "atlas-model-gaps.json").read_text())
+    excluded = {e["gene"] for e in raw["excluded_method_genes"]}
+    assert {"GAPDH", "BETA-ACTIN", "CASPASE-3"} <= excluded
+    assert all(e["reason"] for e in raw["excluded_method_genes"])
+    gaps = {g["gene"] for g in raw["gaps"]}
+    assert not (gaps & excluded), "a method gene reached the gap list"
+
+
+def test_model_gaps_reads_coverage_from_the_engine_not_the_claims_list():
+    """The 20 module claims are not a coverage statement.
+
+    Comparing against them reports NRF2 and NCOA4 as gaps when params.rs
+    carries nrf2_gsh_rate and ferritinophagy_release.
+    """
+    import json
+    raw = json.loads((REPO_ROOT / "analysis" / "atlas-model-gaps.json").read_text())
+    by = {r["normalised"]: r for r in raw["rows"]}
+    for g in ("NFE2L2", "NCOA4"):
+        if g in by:
+            assert by[g]["modelled"], f"{g} is modelled in params.rs but read as a gap"
+    params = (REPO_ROOT / "simulations" / "ferroptosis-core" / "src" / "params.rs").read_text()
+    assert "nrf2_gsh_rate" in params and "ferritinophagy_release" in params
+
+
+def test_model_gaps_collapses_orthologs():
+    """Ranked raw, GPX4 takes three of the top eleven slots as three species."""
+    import json
+    raw = json.loads((REPO_ROOT / "analysis" / "atlas-model-gaps.json").read_text())
+    names = [r["gene"] for r in raw["rows"][:15]]
+    assert len(names) == len(set(names)), f"duplicate gene names survived: {names}"
