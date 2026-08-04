@@ -8,7 +8,7 @@ concentrated since **2021** are emerging claims; pairs spread across
 decades are settled background. A 4,830-article sample cannot tell these apart --
 it has neither the volume nor the time depth.
 
-Scanned 176,809 pairs with at least 6 dated asserting papers. **5,257** have ≥80% of their support in the recent window.
+Scanned 176,807 pairs with at least 6 dated asserting papers. **5,255** have ≥80% of their support in the recent window.
 
 ## Limits
 

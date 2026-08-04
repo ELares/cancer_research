@@ -194,19 +194,19 @@ would corrupt the S100A4 papers, which are the plurality. So the sense is decide
 per paper.
 
 Against a gold set of the 242 papers that declare their own expansion — a label
-independent of anything the classifier reads — PubTator3 is **47.2%** accurate
-and this layer is **97.4%**. The number is only meaningful because every
+independent of anything the classifier reads — PubTator3 is **36.3%** accurate
+and this layer is **96.2%**. The number is only meaningful because every
 label-defining phrase is masked out before a feature is read; without that the
 measurement would be circular.
 
 **Most corrections are extrapolated, and that is tested.** Accuracy is measured on
-papers that declare a sense, but 75% of the 441 corrections land on papers that
+papers that declare a sense, but 75% of the 1,191 corrections land on papers that
 declare nothing. Publication year checks that population independently: of 175
 undeclaring papers corrected to AIFM2, **zero** predate 2019 — against roughly 37
 expected if the classifier were assigning it without regard to the biology.
 
 The payoff lands on this project's own headline. GPX4+AIFM2 co-mention papers go
-**98 → 257**, and typed GPX4↔AIFM2 relations go **0 → 6** — there were none at
+**98 → 257**, and typed GPX4↔AIFM2 relations go **0 → 15** — there were none at
 all, because every one had been filed under atlastin. The corrections are
 applied when the index is built, so `atlas_module_support` moved from **9 of 20**
 corroborated module claims to **10 of 20**.
@@ -218,7 +218,7 @@ collisions. Those entries were written from domain knowledge, so this checks the
 against the corpus by counting papers that declare a sense in their own words.
 
 All five hold: `ER`→ESR1 at 98.7% of 451 declaring papers (epiregulin declared
-**zero** times), `COX-2`→PTGS2 541/541, `PSA`→KLK3 528/528, `p62`→SQSTM1 97.4%,
+**zero** times), `COX-2`→PTGS2 541/541, `PSA`→KLK3 528/528, `p62`→SQSTM1 96.2%,
 `p21`→CDKN1A 89.6%. **The majority vote is wrong in four of the five** — not
 noisy, but wrong in a consistent direction, picking the sense the cancer
 literature never means.

@@ -1791,3 +1791,36 @@ def test_minority_form_filter_catches_the_generic_english_families():
     assert "tumor cells" not in amap, "a 2.8% minority form must not match text"
     assert amap.get("gpx4") == "2879", "a dominant form must survive"
     assert stats["dropped_minority"] == 1
+
+
+def test_disambiguation_is_scored_against_a_majority_baseline():
+    """Accuracy without a constant-predictor baseline can flatter a bad classifier.
+
+    On IL-1 this layer scores 41.9% against a majority baseline of 80.3% -- it
+    loses to always answering the commoner sense. Neither that nor FSP1's 97.4%
+    means anything without the baseline beside it.
+    """
+    import json
+    for name in ("atlas-disambiguation.json", "atlas-disambiguation-il1.json"):
+        raw = json.loads((REPO_ROOT / "analysis" / name).read_text())
+        dist = raw["gold_distribution"]
+        maj = max(dist.values()) / sum(dist.values())
+        acc = raw["layer_accuracy"]["correct"] / raw["layer_accuracy"]["n"]
+        md = (REPO_ROOT / "analysis" / name.replace(".json", ".md")).read_text()
+        assert "majority sense" in md, f"{name} lacks the baseline"
+        assert f"{100*maj:.1f}%" in md
+        if name.endswith("il1.json"):
+            assert acc < maj, "IL-1 must show the layer losing to the constant"
+        else:
+            assert acc > maj, "FSP1 must show the layer beating it"
+
+
+def test_generalisation_condition_is_stated():
+    """The useful result is WHEN the method works, not that it does.
+
+    FSP1's senses occupy disjoint literatures; IL-1alpha and IL-1beta occupy the
+    same one and appear in the same papers, so no contextual cue separates them.
+    """
+    md = (REPO_ROOT / "analysis" / "atlas-disambiguation.md").read_text()
+    assert "does not generalise" in md.lower()
+    assert "disjoint literatures" in md

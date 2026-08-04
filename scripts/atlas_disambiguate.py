@@ -85,7 +85,8 @@ RAW = PROJECT_ROOT / "analysis" / "atlas-disambiguation.json"
 # The senses `FSP1` can carry, each with the identifiers PubTator uses for it
 # (human and mouse), the phrases by which a paper declares that sense, and the
 # contextual cues that survive masking.
-SENSES = {
+SYMBOL_SENSES = {
+  "FSP1": {
     "AIFM2": {
         "ids": ["84883"],
         "declares": r"ferroptosis[- ]suppressor[- ]protein[- ]?1"
@@ -108,10 +109,50 @@ SENSES = {
         "cues": [r"paraplegia", r"axon", r"endoplasmic reticulum", r"gtpase",
                  r"neuropath", r"hereditary"],
     },
+  },
+  # A SECOND symbol, to test whether the method generalises (#618). IL-1 is the
+  # case FSP1's neighbours were not: IL1A and IL1B are distinct genes, both
+  # heavily studied, and papers name them in full. `ER`, `COX-2`, `PSA` and
+  # `p62` all turned out to have a dominant sense -- 98-100% of declaring papers
+  # -- so a classifier cannot be scored on them.
+  "IL-1": {
+    "IL1A": {
+        "ids": ["3552", "16175"],
+        "declares": r"interleukin[- ]?1\s*alpha|interleukin[- ]?1a\b|il[- ]?1\s*alpha"
+                    r"|il-1\u03b1|\bil1a\b",
+        "cues": [r"keratinocyte", r"epiderm", r"sterile inflammation",
+                 r"necros", r"alarmin", r"intracellular precursor",
+                 r"calpain", r"membrane[- ]bound"],
+    },
+    "IL1B": {
+        "ids": ["3553", "16176"],
+        "declares": r"interleukin[- ]?1\s*beta|interleukin[- ]?1b\b|il[- ]?1\s*beta"
+                    r"|il-1\u03b2|\bil1b\b",
+        "cues": [r"inflammasome", r"nlrp3", r"caspase[- ]?1", r"pyroptos",
+                 r"canakinumab", r"gasdermin", r"pro[- ]?il", r"maturation"],
+    },
+  },
 }
 
-# Every phrase that can define a gold label, masked out before features are read.
-MASK = re.compile("|".join(s["declares"] for s in SENSES.values()))
+SENSES = SYMBOL_SENSES["FSP1"]
+
+
+def activate(symbol: str) -> None:
+    """Point the module's compiled patterns at one symbol's sense set.
+
+    Module-level globals rather than parameters, because `classify` and
+    `gold_label` are called from tests and from the audit with the FSP1 default
+    and changing their signatures would break those callers silently.
+    """
+    global SENSES, MASK, CUES, DECLARES, ID2SENSE
+    SENSES = SYMBOL_SENSES[symbol]
+    MASK = re.compile("|".join(v["declares"] for v in SENSES.values()))
+    CUES = {k: [re.compile(p) for p in v["cues"]] for k, v in SENSES.items()}
+    DECLARES = {k: re.compile(v["declares"]) for k, v in SENSES.items()}
+    ID2SENSE = {i: k for k, v in SENSES.items() for i in v["ids"]}
+
+
+MASK = re.compile("|".join(v["declares"] for v in SENSES.values()))
 CUES = {k: [re.compile(p) for p in v["cues"]] for k, v in SENSES.items()}
 DECLARES = {k: re.compile(v["declares"]) for k, v in SENSES.items()}
 ID2SENSE = {i: k for k, v in SENSES.items() for i in v["ids"]}
@@ -218,10 +259,16 @@ def classify(t: str):
     return best, score, ""
 
 
-def main() -> int:
+def main() -> int:  # noqa: C901
     ap = argparse.ArgumentParser()
-    ap.add_argument("--symbol", default="FSP1")
+    ap.add_argument("--symbol", default="FSP1", choices=sorted(SYMBOL_SENSES))
     args = ap.parse_args()
+    activate(args.symbol)
+    global OUT, RAW
+    if args.symbol != "FSP1":
+        slug = args.symbol.lower().replace("-", "")
+        OUT = PROJECT_ROOT / "analysis" / f"atlas-disambiguation-{slug}.md"
+        RAW = PROJECT_ROOT / "analysis" / f"atlas-disambiguation-{slug}.json"
 
     genes = atlas_root() / "entities" / "gene.tsv.gz"
     if not genes.exists():
@@ -272,6 +319,13 @@ def main() -> int:
 
     lo, hi = wilson(my_ok, my_n)
     ptlo, pthi = wilson(pt_ok, pt_n)
+
+    # The baseline neither this layer nor PubTator was ever scored against:
+    # always answer whichever sense is commoner. On a lopsided symbol it is
+    # very strong, and reporting accuracy without it can make a classifier that
+    # LOSES to a constant look like it works.
+    dist_all = collections.Counter(gold.values())
+    majority = (max(dist_all.values()) / sum(dist_all.values())) if dist_all else 0.0
 
     # Corrections: papers where this layer disagrees with the single sense
     # PubTator assigned. These are what a consumer applies.
@@ -401,6 +455,20 @@ def main() -> int:
         f"roughly **{expected_pre:.0f}** of them before the term existed. It puts",
         f"**{nd_pre}**. The extrapolation is supported on exactly the population the gold",
         "set does not cover.", "",
+        "## Against the baseline that matters", "",
+        "Neither figure above means anything without the constant predictor: always",
+        "answer whichever sense is commoner in the gold set. On a lopsided symbol it",
+        "is very strong, and a classifier can lose to it while looking respectable.", "",
+        "| | accuracy |", "|---|---|",
+        f"| always answer the majority sense | **{100*majority:.1f}%** |",
+        f"| PubTator3 | {100*pt_ok/max(1,pt_n):.1f}% |",
+        f"| this layer | {100*my_ok/max(1,my_n):.1f}% |", "",
+        ("This layer beats the constant by "
+         f"{100*(my_ok/max(1,my_n) - majority):+.1f} points."
+         if my_ok / max(1, my_n) > majority else
+         "**This layer LOSES to the constant** by "
+         f"{100*(majority - my_ok/max(1,my_n)):.1f} points, so it is not adding "
+         "information on this symbol."), "",
         "## Why that number is not circular", "",
         "The gold label is defined by the presence of an expansion phrase. A",
         "classifier allowed to read that phrase would score near 100% and measure",
@@ -425,6 +493,13 @@ def main() -> int:
         "evidence for the mechanism this project is built on, and the graph reported",
         "the smaller number with nothing to indicate anything was missing.", "",
         "## Limits", "",
+        "* **It does not generalise to every colliding symbol, and the condition is",
+        "  now known.** Run on `IL-1` (#618) this layer scores 41.9% against a",
+        "  majority-class baseline of 80.3% -- it LOSES to a constant. FSP1's senses",
+        "  live in DISJOINT literatures (ferroptosis, fibroblast biology, hereditary",
+        "  neurology), so context separates them. IL-1alpha and IL-1beta live in the",
+        "  SAME literature and are discussed in the same papers, so no contextual cue",
+        "  can. The method needs disjoint literatures, not merely distinct senses.",
         f"* **Most corrections are extrapolated.** {100*len(nd)/max(1,len(corrections)):.0f}% "
         "land on papers that declare no sense, so their accuracy is inferred from the",
         "  declaring subset rather than measured. The temporal check above supports that",
