@@ -53,31 +53,46 @@ def fig28_census_capture():
     """The frozen corpus's capture of the census, per mechanism."""
     d = json.loads(LANDSCAPE.read_text())
     # A mechanism with no census articles has no defined capture. Dropping it is
-    # the honest move: 0/0 plotted as 0% would read as "never captured".
-    rows = [r for r in d["rows"] if r["mesh_census"] > 0]
-    dropped = [r["mechanism"] for r in d["rows"] if r["mesh_census"] == 0]
-    for r in rows:
-        r["capture"] = r["mesh_frozen"] / r["mesh_census"]
+    # the honest move: 0/0 plotted as 0% would read as "never captured". A
+    # mechanism present in the census but absent from the corpus is dropped for
+    # the same reason -- capture 0 has no position on a log axis, and it would
+    # otherwise divide by zero in the spread below.
+    rows, dropped = [], []
+    for r in d["rows"]:
+        if r["mesh_census"] > 0 and r["mesh_frozen"] > 0:
+            rows.append({**r, "capture": r["mesh_frozen"] / r["mesh_census"]})
+        else:
+            dropped.append(r["mechanism"])
     rows.sort(key=lambda r: r["capture"])
 
     fig, (ax, bx) = plt.subplots(
-        1, 2, figsize=(13.5, 6.4), gridspec_kw={"width_ratios": [2.15, 1]})
+        1, 2, figsize=(14, 6.6), gridspec_kw={"width_ratios": [2, 1.15]})
 
     names = [r["mechanism"] for r in rows]
     caps = [100 * r["capture"] for r in rows]
     colors = ["#b5651d" if r["mechanism"] in PHYSICAL else "#4a6f8a" for r in rows]
-    ax.barh(range(len(rows)), caps, color=colors, height=0.72)
-    ax.set_yticks(range(len(rows)))
+
+    # A dot-and-stem plot, NOT bars. A bar encodes magnitude by length measured
+    # from zero, and a log axis has no zero -- matplotlib picks the left limit,
+    # so bar lengths would encode that arbitrary choice rather than the data. At
+    # the default limit the longest:shortest bar reads about 21x against a true
+    # 213x, flattening the finding by an order of magnitude. Position on a log
+    # axis is the honest encoding, and the stems are a reading aid only.
+    y = range(len(rows))
+    ax.hlines(y, min(caps) * 0.55, caps, color=colors, alpha=0.35, lw=1.6)
+    ax.scatter(caps, y, color=colors, s=58, zorder=3)
+    ax.set_yticks(list(y))
     ax.set_yticklabels(names)
     ax.set_xscale("log")
+    ax.set_xlim(min(caps) * 0.5, max(caps) * 2.6)
     ax.set_xlabel("share of the census this corpus captures (%, log scale)")
     ax.set_title("A. The frozen corpus samples the literature unevenly")
+    ax.grid(axis="x", alpha=0.18, which="both")
+    ax.set_axisbelow(True)
 
-    for i, (r, c) in enumerate(zip(rows, caps)):
-        ax.text(c * 1.12, i, f"{c:.2f}%", va="center", fontsize=8.5, color="#333")
+    for i, c in enumerate(caps):
+        ax.text(c * 1.13, i, f"{c:.2f}%", va="center", fontsize=8.5, color="#333")
 
-    # An empty band below the shortest bar, so the caption and legend never sit
-    # on top of a bar's own value label.
     spread = caps[-1] / caps[0]
     ax.set_ylim(-2.4, len(rows) - 0.4)
     ax.annotate(
@@ -92,41 +107,46 @@ def fig28_census_capture():
         labels=["physical modality", "other mechanism"],
         loc="lower right", fontsize=9, framealpha=0.95)
 
-    # Panel B: what the unevenness does to the manuscript's central claim. The
-    # ratio is recomputed here from the same committed rows rather than quoted,
-    # so it cannot drift away from panel A.
-    # PHARMACOLOGICAL is a curated list of drug modalities, imported rather than
-    # restated so this panel cannot drift from the committed analysis. It is NOT
-    # "everything that is not physical": counting the delivery platforms and
-    # genetic tools too would report 12.5:1 instead of 9.1:1 by including things
-    # that are neither a drug class nor a physical modality.
-    phys = [r for r in rows if r["mechanism"] in PHYSICAL]
-    pharm = [r for r in rows if r["mechanism"] in PHARMACOLOGICAL]
-    kw_ratio = sum(r["keyword_frozen"] for r in pharm) / sum(
-        r["keyword_frozen"] for r in phys)
-    census_ratio = sum(r["mesh_census"] for r in pharm) / sum(
-        r["mesh_census"] for r in phys)
-    cap_phys = 100 * sum(r["mesh_frozen"] for r in phys) / sum(
-        r["mesh_census"] for r in phys)
-    cap_pharm = 100 * sum(r["mesh_frozen"] for r in pharm) / sum(
-        r["mesh_census"] for r in pharm)
+    # Panel B: all THREE arms of the committed design. Showing only the first and
+    # last attributes the whole move to corpus selection, and it does not
+    # reconcile -- 9.1 x 3.3 is 30, not 17.6. The middle arm is where the missing
+    # factor lives, and it runs the OTHER way: holding the corpus fixed and
+    # switching keyword labels for MeSH CUTS the ratio, so by the more
+    # independent labelling method the manuscript overstates. Recomputed here
+    # from the committed rows rather than quoted, so it cannot drift from panel A.
+    R = {r["mechanism"]: r for r in rows}
+    tot = lambda ks, c: sum(R[k][c] for k in ks if k in R and R[k].get(c))  # noqa: E731
+    arms = [
+        ("this corpus,\nkeyword labels\n(what the\nmanuscript reports)",
+         tot(PHARMACOLOGICAL, "keyword_frozen") / tot(PHYSICAL, "keyword_frozen"), "#4a6f8a"),
+        ("same articles,\nMeSH labels\n(method effect\nalone)",
+         tot(PHARMACOLOGICAL, "mesh_frozen") / tot(PHYSICAL, "mesh_frozen"), "#9aaebd"),
+        ("the census,\nMeSH labels",
+         tot(PHARMACOLOGICAL, "mesh_census") / tot(PHYSICAL, "mesh_census"), "#2f4f4f"),
+    ]
+    cap_phys = 100 * tot(PHYSICAL, "mesh_frozen") / tot(PHYSICAL, "mesh_census")
+    cap_pharm = 100 * tot(PHARMACOLOGICAL, "mesh_frozen") / tot(PHARMACOLOGICAL, "mesh_census")
 
-    bx.bar([0, 1], [kw_ratio, census_ratio], color=["#4a6f8a", "#2f4f4f"], width=0.56)
-    bx.set_xticks([0, 1])
-    bx.set_xticklabels(["this corpus,\nkeyword labels\n(what the\nmanuscript reports)",
-                        "the census,\nMeSH labels"], fontsize=9.5)
+    vals = [a[1] for a in arms]
+    bx.bar(range(3), vals, color=[a[2] for a in arms], width=0.6)
+    bx.set_xticks(range(3))
+    bx.set_xticklabels([a[0] for a in arms], fontsize=8.5)
     bx.set_ylabel("pharmacological : physical articles")
-    bx.set_title("B. The claim survives, and was understated")
-    for x, v in [(0, kw_ratio), (1, census_ratio)]:
-        bx.text(x, v + census_ratio * 0.03, f"{v:.1f} : 1", ha="center",
-                fontweight="bold", fontsize=12)
-    bx.set_ylim(0, census_ratio * 1.62)
+    bx.set_title("B. Method and corpus pull in opposite directions")
+    for x, v in enumerate(vals):
+        bx.text(x, v + max(vals) * 0.03, f"{v:.1f} : 1", ha="center",
+                fontweight="bold", fontsize=11.5)
+    bx.set_ylim(0, max(vals) * 1.62)
     bx.annotate(
-        f"The corpus over-samples physical\nmodalities {cap_phys/cap_pharm:.1f}x "
-        f"({cap_phys:.2f}% vs {cap_pharm:.2f}%\ncapture), so it understates the\n"
-        f"imbalance it set out to measure.",
-        xy=(0.5, 0.885), xycoords="axes fraction", ha="center", va="center",
-        fontsize=8.8,
+        f"Switching keyword labels for MeSH on the SAME\n"
+        f"articles CUTS the ratio ({vals[1]/vals[0]:.2f}x). Widening to the\n"
+        f"census then RAISES it {vals[2]/vals[1]:.1f}x, because the corpus\n"
+        f"over-samples physical modalities {cap_phys/cap_pharm:.1f}x\n"
+        f"({cap_phys:.2f}% vs {cap_pharm:.2f}% capture).\n"
+        f"Net {vals[2]/vals[0]:.1f}x: the claim survives, but the\n"
+        f"corpus effect is larger than the net move shows.",
+        xy=(0.5, 0.875), xycoords="axes fraction", ha="center", va="center",
+        fontsize=8.2,
         bbox=dict(boxstyle="round,pad=0.4", fc="#eef2f5", ec="#4a6f8a", lw=1))
 
     fig.suptitle(
@@ -137,8 +157,13 @@ def fig28_census_capture():
         fig.savefig(FIG_DIR / f"fig28_census_capture.{ext}")
     plt.close(fig)
     print(f"fig28_census_capture: {len(rows)} mechanisms, {spread:.0f}x spread, "
-          f"{kw_ratio:.1f}:1 -> {census_ratio:.1f}:1"
-          + (f"; dropped (no census articles): {', '.join(dropped)}" if dropped else ""))
+          f"{vals[0]:.1f}:1 -> {vals[1]:.1f}:1 -> {vals[2]:.1f}:1"
+          + (f"; dropped: {', '.join(dropped)}" if dropped else ""))
+    return {"spread": spread, "ratios": vals, "dropped": dropped,
+            "capture": {r["mechanism"]: r["capture"] for r in rows},
+            # Reported so a guard can hold the encoding: a linear axis collapses
+            # everything under 10% into the axis and destroys the finding.
+            "xscale": ax.get_xscale()}
 
 
 def main() -> int:

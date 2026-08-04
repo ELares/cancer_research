@@ -1,20 +1,22 @@
 """Guards for the census figure (fig28).
 
-A figure that quotes numbers is a second copy of them, so it can drift away from
-the prose it illustrates without anything failing. These recompute the figure's
-numbers from the committed atlas JSON and assert they still match what
-`analysis/atlas-landscape.md` says, so the figure and the analysis cannot
-disagree silently.
+An earlier version of this file recomputed the figure's numbers in a PARALLEL
+re-implementation and compared that to the prose. It therefore passed while the
+figure plotted the opposite finding, while the log axis was removed, and while
+the PNG was replaced with an unrelated chart -- because nothing here ever ran
+the figure code.
 
-The pharmacological/physical class definitions are imported from
-`atlas_landscape`, not restated, for the same reason: a hand-written list beside
-the real one is how the 12.5:1-vs-9.1:1 discrepancy arose in the first place.
+These call `fig28_census_capture` itself, into a temporary directory, and assert
+on what it reports having plotted. The parallel-reimplementation checks are kept
+for the prose-vs-data comparison, which is a different question.
 """
 
 import json
 import re
 import sys
 from pathlib import Path
+
+import pytest
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT / "scripts"))
@@ -28,7 +30,23 @@ FIG_DIR = REPO_ROOT / "article" / "figures"
 
 def _rows():
     return [r for r in json.loads(LANDSCAPE_JSON.read_text())["rows"]
-            if r["mesh_census"] > 0]
+            if r["mesh_census"] > 0 and r["mesh_frozen"] > 0]
+
+
+@pytest.fixture(scope="module")
+def plotted(tmp_path_factory):
+    """Run the real figure code into a temp dir and return what it plotted."""
+    matplotlib = pytest.importorskip("matplotlib")
+    import generate_census_figures as gcf
+    out = tmp_path_factory.mktemp("fig28")
+    original = gcf.FIG_DIR
+    gcf.FIG_DIR = out
+    try:
+        result = gcf.fig28_census_capture()
+    finally:
+        gcf.FIG_DIR = original
+    result["_files"] = sorted(p.name for p in out.iterdir())
+    return result
 
 
 def test_figure_files_exist():
@@ -37,49 +55,73 @@ def test_figure_files_exist():
         assert f.exists() and f.stat().st_size > 5000, f
 
 
-def test_capture_spread_matches_the_committed_analysis():
-    """Panel A's headline: the 213-fold spread."""
-    caps = sorted(r["mesh_frozen"] / r["mesh_census"] for r in _rows()
-                  if r["mesh_frozen"])
-    spread = caps[-1] / caps[0]
+def test_the_figure_code_emits_both_formats(plotted):
+    assert plotted["_files"] == ["fig28_census_capture.pdf", "fig28_census_capture.png"]
+
+
+def test_panel_a_uses_a_log_axis(plotted):
+    """The encoding is load-bearing, not cosmetic.
+
+    A 213-fold spread on a linear axis collapses every mechanism under 10% onto
+    the axis, which is the whole finding. Bars were also replaced with dots for
+    the same reason: a log axis has no zero, so bar LENGTH would encode the
+    auto-chosen left limit rather than the data.
+    """
+    assert plotted["xscale"] == "log"
+
+
+def test_the_figure_plots_the_spread_the_analysis_states(plotted):
+    """Panel A's headline, read off the figure code rather than recomputed."""
     stated = re.search(r"a (\d+)-fold spread", LANDSCAPE_MD.read_text())
     assert stated, "atlas-landscape.md no longer states a fold spread"
-    assert round(spread) == int(stated.group(1)), (
-        f"figure would plot {spread:.0f}x, the analysis says {stated.group(1)}x")
+    assert round(plotted["spread"]) == int(stated.group(1)), (
+        f"the figure plots {plotted['spread']:.0f}x, the analysis says {stated.group(1)}x")
+
+
+def test_the_figure_plots_all_three_arms_in_the_right_order(plotted):
+    """Panel B must show the method arm, not just the first and last.
+
+    Showing only 9.1 and 17.6 attributes the whole move to corpus selection and
+    does not reconcile: 9.1 x 3.3 is 30, not 17.6. The missing factor is the
+    method effect, and it runs the other way.
+    """
+    ratios = plotted["ratios"]
+    assert len(ratios) == 3, f"expected three arms, got {len(ratios)}"
+    kw, mesh_frozen, census = ratios
+    md = LANDSCAPE_MD.read_text()
+    for v in ratios:
+        assert f"{v:.1f} : 1" in md, f"the figure plots {v:.1f}:1, absent from the analysis"
+    # The load-bearing shape: method CUTS the ratio, corpus RAISES it past the start.
+    assert mesh_frozen < kw, "the method arm no longer cuts the ratio"
+    assert census > kw, "the census arm no longer exceeds the manuscript's figure"
+
+
+def test_the_figure_drops_only_mechanisms_it_cannot_place(plotted):
+    """0/0 plotted as 0% would read as 'never captured', a different claim, and
+    a zero capture has no position on a log axis."""
+    all_rows = json.loads(LANDSCAPE_JSON.read_text())["rows"]
+    expected = sorted(r["mechanism"] for r in all_rows
+                      if not (r["mesh_census"] > 0 and r["mesh_frozen"] > 0))
+    assert sorted(plotted["dropped"]) == expected
+    assert expected, "fixture assumption gone: nothing left to exclude"
+    assert all(v > 0 for v in plotted["capture"].values())
 
 
 def test_panel_b_ratios_match_the_committed_analysis():
-    """Panel B's two bars: 9.1:1 by the manuscript's method, 17.6:1 on the census."""
+    """Independent recomputation, as a cross-check on the figure's own arithmetic."""
     R = {r["mechanism"]: r for r in _rows()}
     tot = lambda ks, c: sum(R[k][c] for k in ks if k in R and R[k].get(c))  # noqa: E731
     kw = tot(PHARMACOLOGICAL, "keyword_frozen") / tot(PHYSICAL, "keyword_frozen")
     census = tot(PHARMACOLOGICAL, "mesh_census") / tot(PHYSICAL, "mesh_census")
-
     md = LANDSCAPE_MD.read_text()
-    assert f"{kw:.1f} : 1" in md, f"figure would plot {kw:.1f}:1, absent from the analysis"
-    assert f"{census:.1f} : 1" in md, f"figure would plot {census:.1f}:1, absent"
-    # The direction is the load-bearing part: the census ratio must exceed the
-    # manuscript's, which is what "the manuscript understates its own case" means.
+    assert f"{kw:.1f} : 1" in md and f"{census:.1f} : 1" in md
     assert census > kw
 
 
 def test_pharmacological_set_is_curated_not_the_complement():
-    """The distinction that moved the ratio from 12.5:1 to 9.1:1.
-
-    If PHARMACOLOGICAL ever becomes "everything not physical", the figure and the
-    analysis would both silently start counting delivery platforms and genetic
-    tools as drug modalities.
-    """
+    """The distinction that moved the ratio from 12.5:1 to 9.1:1."""
     others = {r["mechanism"] for r in _rows()} - PHYSICAL
     assert PHARMACOLOGICAL < others, "pharmacological set must be a strict subset"
     for platform in ("nanoparticle", "crispr", "oncolytic-virus", "mrna-vaccine"):
         assert platform not in PHARMACOLOGICAL, (
             f"{platform} is a delivery platform or genetic tool, not a drug modality")
-
-
-def test_mechanisms_without_census_articles_are_excluded_not_zeroed():
-    """0/0 plotted as 0% would read as 'never captured', which is a different claim."""
-    all_rows = json.loads(LANDSCAPE_JSON.read_text())["rows"]
-    assert any(r["mesh_census"] == 0 for r in all_rows), (
-        "fixture assumption gone: no zero-census mechanism left to exclude")
-    assert all(r["mesh_census"] > 0 for r in _rows())
