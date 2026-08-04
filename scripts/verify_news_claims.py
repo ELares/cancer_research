@@ -272,6 +272,23 @@ _SELF_REFERENCING_DOMAINS = frozenset([
 ])
 
 
+def _mark_unverified(claim: dict) -> dict:
+    """Mark a claim unverified and DROP the evidence a previous run attached.
+
+    Setting the status without clearing the fields leaves failed evidence in
+    place: ``news_verification_audit.py`` reads every claim that carries
+    ``linked_pmids`` regardless of status, and a consumer reading the index has
+    no reason to expect identifiers hanging off a claim the pipeline has just
+    declined to verify. The first re-run left 17 claims reading
+    ``unverified`` while still advertising ``verification_source: pubmed`` and
+    five PMIDs each.
+    """
+    claim["verification_status"] = "unverified"
+    claim["verification_source"] = None
+    claim["linked_pmids"] = []
+    return claim
+
+
 def verify_claim(
     claim: dict,
     corpus_index: list[dict],
@@ -296,18 +313,30 @@ def verify_claim(
     if claim.get("category") != "FACTUAL":
         return claim
 
-    terms = extract_search_terms(claim.get("text", ""))
-    if not terms:
-        return claim
-
     # --- Self-referencing check ---
     # Tier 1 institutional sources that cite their own data are
     # "self-referencing" — legitimate but not independently verified.
+    # Checked BEFORE term extraction: whether the publisher is its own authority
+    # is a property of the publisher, not of what can be pulled out of the
+    # sentence. Ordered the other way round, three WHO claims that yield no
+    # search terms ("Approximately 38% of cancers can currently be prevented…")
+    # fall through and are labelled unverified instead.
     domain_base = source_domain.removeprefix("www.")
     if domain_base in _SELF_REFERENCING_DOMAINS:
         claim["verification_status"] = "self-referencing"
         claim["verification_source"] = f"institutional authority ({domain_base})"
         return claim
+
+    terms = extract_search_terms(claim.get("text", ""))
+    if not terms:
+        # No distinguishing term, so there is nothing to search for and this
+        # pipeline cannot verify the claim. Returning it untouched would leave
+        # whatever a previous run wrote — and these are precisely the sentences
+        # the sentence-initial-capital bug reached ("Seven of these 26 patients
+        # had inoperable tumors" → query `Seven`), so a stale verdict here is
+        # the one least worth preserving. 13 claims kept a bogus "verified"
+        # this way through the first re-run.
+        return _mark_unverified(claim)
 
     # --- Local corpus search ---
     corpus_hits = search_corpus(terms, corpus_index)
@@ -335,8 +364,7 @@ def verify_claim(
         return claim
 
     # No match
-    claim["verification_status"] = "unverified"
-    return claim
+    return _mark_unverified(claim)
 
 
 # ---------------------------------------------------------------------------
@@ -404,11 +432,14 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Verify news article claims.")
     parser.add_argument("article", nargs="?", help="Path to a single article")
     parser.add_argument("--all", action="store_true",
-                        help="Verify all articles with unverified factual claims")
+                        help="Verify articles that still have unverified factual claims")
+    parser.add_argument("--force", action="store_true",
+                        help="Re-verify EVERY article, including ones whose factual "
+                             "claims are all already verified (use after a linker fix)")
     args = parser.parse_args()
 
-    if not args.article and not args.all:
-        parser.error("Provide an article path or --all")
+    if not args.article and not (args.all or args.force):
+        parser.error("Provide an article path, --all, or --force")
 
     if args.article:
         path = Path(args.article).resolve()
@@ -416,17 +447,40 @@ def main() -> None:
         print(f"Verified {path.name}: {changed} claim(s) updated")
         return
 
-    # --all mode
     articles = find_all_articles()
     pending = [a for a in articles if _has_unverified_factual(a)]
-    print(f"Articles with unverified factual claims: {len(pending)}/{len(articles)}")
+
+    if args.force:
+        targets = articles
+        print(f"Re-verifying all {len(targets)} articles (--force)")
+    else:
+        # --all skips any article whose factual claims are ALL already verified,
+        # which is exactly the wrong set to skip after fixing the linker: those
+        # articles hold the verdicts the broken linker was most confident about.
+        # State the size of the blind spot rather than leaving it silent.
+        targets = pending
+        skipped_verified = 0
+        for a in articles:
+            if a in pending:
+                continue
+            fm, _ = load_article(a)
+            skipped_verified += sum(
+                1 for c in fm.get("claims", [])
+                if c.get("category") == "FACTUAL"
+                and c.get("verification_status") == "verified"
+            )
+        print(f"Articles with unverified factual claims: {len(pending)}/{len(articles)}")
+        if skipped_verified:
+            print(f"  note: {len(articles) - len(pending)} article(s) skipped, holding "
+                  f"{skipped_verified} already-`verified` claim(s) that will NOT be "
+                  f"re-checked. Use --force to revisit them.")
 
     total_changed = 0
-    for article_path in tqdm(pending, desc="  Verifying"):
+    for article_path in tqdm(targets, desc="  Verifying"):
         changed = verify_article(article_path)
         total_changed += changed
 
-    print(f"\nDone. Updated {total_changed} claims across {len(pending)} articles.")
+    print(f"\nDone. Updated {total_changed} claims across {len(targets)} articles.")
 
 
 if __name__ == "__main__":

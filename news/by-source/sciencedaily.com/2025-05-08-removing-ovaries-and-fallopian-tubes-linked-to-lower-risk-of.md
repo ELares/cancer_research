@@ -17,14 +17,9 @@ claims:
     being removed, which brings on early menopause.
   type: result
   category: FACTUAL
-  verification_status: verified
-  verification_source: pubmed
-  linked_pmids:
-  - '41790529'
-  - '41685740'
-  - '41647844'
-  - '41339842'
-  - '41093541'
+  verification_status: unverified
+  verification_source: null
+  linked_pmids: []
 - id: sciencedaily.com-2025-05-08-removing-ovaries-and-fallopian-tubes-lin-002
   text: This reduction was more pronounced in BRCA2 carriers compared to BRCA1 carriers
     (a 56% reduction compared to 38% respectively).
@@ -46,16 +41,11 @@ claims:
     this conclusion.
   type: result
   category: FACTUAL
-  verification_status: verified
-  verification_source: pubmed
-  linked_pmids:
-  - '42000820'
-  - '41980080'
-  - '41962617'
-  - '41959815'
-  - '41951978'
+  verification_status: unverified
+  verification_source: null
+  linked_pmids: []
 review_status: pending
-credibility_score: 31.2
+credibility_score: 15.2
 scored_at: '2026-06-29'
 ---
 

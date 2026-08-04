@@ -15,15 +15,13 @@ claims:
   type: result
   category: FACTUAL
   verification_status: verified
-  verification_source: corpus
+  verification_source: pubmed
   linked_pmids:
-  - '40572608'
-  - '41007751'
-  - '40884462'
-  - '41373888'
-  - '39537963'
+  - '42544366'
+  - '42534780'
+  - '42533271'
 review_status: pending
-credibility_score: 63.2
+credibility_score: 55.2
 scored_at: '2026-06-29'
 ---
 

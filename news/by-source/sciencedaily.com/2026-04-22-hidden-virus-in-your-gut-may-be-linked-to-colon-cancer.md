@@ -19,13 +19,10 @@ claims:
   verification_status: verified
   verification_source: corpus
   linked_pmids:
-  - '41766111'
-  - '40502306'
   - '39705641'
   - '38375030'
-  - '35472554'
 review_status: pending
-credibility_score: 63.2
+credibility_score: 60.5
 scored_at: '2026-06-29'
 ---
 

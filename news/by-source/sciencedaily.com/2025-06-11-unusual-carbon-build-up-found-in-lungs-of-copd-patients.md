@@ -27,16 +27,11 @@ claims:
     much and how forcefully patients can breathe out.
   type: opinion
   category: FACTUAL
-  verification_status: verified
-  verification_source: pubmed
-  linked_pmids:
-  - '42020933'
-  - '42020928'
-  - '42020927'
-  - '42020925'
-  - '42020921'
+  verification_status: unverified
+  verification_source: null
+  linked_pmids: []
 review_status: pending
-credibility_score: 47.2
+credibility_score: 15.2
 scored_at: '2026-06-29'
 ---
 

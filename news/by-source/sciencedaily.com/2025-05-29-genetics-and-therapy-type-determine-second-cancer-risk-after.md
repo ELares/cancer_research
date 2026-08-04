@@ -14,27 +14,17 @@ claims:
     risk, accounting for about 40% or more of the risk.
   type: result
   category: FACTUAL
-  verification_status: verified
-  verification_source: pubmed
-  linked_pmids:
-  - '42020823'
-  - '42020740'
-  - '42020693'
-  - '42020668'
-  - '42020618'
+  verification_status: unverified
+  verification_source: null
+  linked_pmids: []
 - id: sciencedaily.com-2025-05-29-genetics-and-therapy-type-determine-seco-002
   text: Depending on the cancer type, chemotherapy contributed from 8% to 35% of subsequent
     cancer risk.
   type: result
   category: FACTUAL
-  verification_status: verified
-  verification_source: pubmed
-  linked_pmids:
-  - '42020932'
-  - '42020921'
-  - '42020863'
-  - '42020861'
-  - '42020816'
+  verification_status: unverified
+  verification_source: null
+  linked_pmids: []
 - id: sciencedaily.com-2025-05-29-genetics-and-therapy-type-determine-seco-003
   text: That polygenic risk score approach revealed that depending on the cancer type,
     polygenic risk score contributed to 5% to 37% of the risk.
@@ -49,16 +39,11 @@ claims:
     risk.
   type: result
   category: FACTUAL
-  verification_status: verified
-  verification_source: pubmed
-  linked_pmids:
-  - '42020557'
-  - '42020532'
-  - '42020158'
-  - '42019891'
-  - '42019719'
+  verification_status: unverified
+  verification_source: null
+  linked_pmids: []
 review_status: pending
-credibility_score: 39.2
+credibility_score: 15.2
 scored_at: '2026-06-29'
 ---
 

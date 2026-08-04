@@ -32,14 +32,9 @@ claims:
     longer than five years after diagnosis.
   type: result
   category: FACTUAL
-  verification_status: verified
-  verification_source: pubmed
-  linked_pmids:
-  - '42020917'
-  - '42020751'
-  - '42020726'
-  - '42020373'
-  - '42020312'
+  verification_status: unverified
+  verification_source: null
+  linked_pmids: []
 - id: sciencedaily.com-2026-03-23-new-blood-test-could-catch-pancreatic-ca-004
   text: It correctly distinguished pancreatic cancer cases from non-cases 91.9% of
     the time across all stages, with a false positive rate of 5% in non-cases.
@@ -52,16 +47,11 @@ claims:
   text: For early-stage (stage I/II) cancer, the test detected 87.5% of cases.
   type: result
   category: FACTUAL
-  verification_status: verified
-  verification_source: pubmed
-  linked_pmids:
-  - '42020855'
-  - '42020841'
-  - '42020835'
-  - '42020811'
-  - '42020743'
+  verification_status: unverified
+  verification_source: null
+  linked_pmids: []
 review_status: pending
-credibility_score: 39.2
+credibility_score: 23.2
 scored_at: '2026-06-29'
 ---
 

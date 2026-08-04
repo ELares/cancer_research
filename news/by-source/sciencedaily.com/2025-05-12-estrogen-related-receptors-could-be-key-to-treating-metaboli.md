@@ -16,14 +16,9 @@ claims:
     receptor loss under normal conditions.
   type: result
   category: FACTUAL
-  verification_status: verified
-  verification_source: pubmed
-  linked_pmids:
-  - '42020776'
-  - '42020630'
-  - '42020628'
-  - '42020623'
-  - '42020460'
+  verification_status: unverified
+  verification_source: null
+  linked_pmids: []
 - id: sciencedaily.com-2025-05-12-estrogen-related-receptors-could-be-key--002
   text: Future research will continue to explore the function and regulation of both
     alpha- and gamma-type receptors, which may lead to other potential therapeutic
@@ -34,7 +29,7 @@ claims:
   verification_source: null
   linked_pmids: []
 review_status: pending
-credibility_score: 47.2
+credibility_score: 15.2
 scored_at: '2026-06-29'
 ---
 

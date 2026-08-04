@@ -30,14 +30,9 @@ claims:
     showed an even stronger immune response to TTFields and lived even longer.
   type: result
   category: FACTUAL
-  verification_status: verified
-  verification_source: pubmed
-  linked_pmids:
-  - '42020895'
-  - '42020840'
-  - '42020783'
-  - '42020752'
-  - '42020747'
+  verification_status: unverified
+  verification_source: null
+  linked_pmids: []
 - id: sciencedaily.com-2025-06-09-shocking-brain-cancer-breakthrough-elect-004
   text: 'Study methodology and results
 
@@ -48,24 +43,15 @@ claims:
   verification_status: verified
   verification_source: corpus
   linked_pmids:
-  - '41493473'
-  - '41490885'
-  - '41540424'
-  - '41672594'
-  - '40450573'
+  - '37327461'
 - id: sciencedaily.com-2025-06-09-shocking-brain-cancer-breakthrough-elect-005
   text: Seven of these 26 patients had inoperable tumors due to their locations --
     an especially high-risk subgroup with the worst prognosis and few treatment options.
   type: result
   category: FACTUAL
-  verification_status: verified
-  verification_source: pubmed
-  linked_pmids:
-  - '42020926'
-  - '42020923'
-  - '42020749'
-  - '42020708'
-  - '42020682'
+  verification_status: unverified
+  verification_source: null
+  linked_pmids: []
 - id: sciencedaily.com-2025-06-09-shocking-brain-cancer-breakthrough-elect-006
   text: 'Moving the research forward
 
@@ -76,11 +62,10 @@ claims:
   verification_status: verified
   verification_source: pubmed
   linked_pmids:
-  - '41111488'
-  - '40931817'
-  - '38166199'
-  - '37125397'
-  - '36747651'
+  - '42530333'
+  - '42516807'
+  - '42499270'
+  - '42497367'
 - id: sciencedaily.com-2025-06-09-shocking-brain-cancer-breakthrough-elect-007
   text: This Phase 3 trial, currently open at 28 sites across the United States, Europe
     and Israel, aims to enroll over 740 patients through April 2029, including those
@@ -95,7 +80,7 @@ claims:
   - '38375030'
   - '33129040'
 review_status: pending
-credibility_score: 49.9
+credibility_score: 39.2
 scored_at: '2026-06-29'
 ---
 

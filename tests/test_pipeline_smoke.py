@@ -377,3 +377,91 @@ class TestNewsPipeline:
         assert len(CLAIM_FACTUAL_MARKERS) >= 10
         assert "event" in CLAIM_TYPE_MARKERS
         assert "speculation" in CLAIM_TYPE_MARKERS
+
+
+class TestNewsVerificationGuards:
+    """Guards on the claim linker's four repaired failure modes (#NEWS-VERIFY).
+
+    All offline: nothing here touches the network.
+    """
+
+    def test_sentence_initial_capital_is_not_a_proper_noun(self):
+        """The original bug in one line.
+
+        "Seven of these 26 patients had inoperable tumors" yielded the single
+        term `Seven`, whose PubMed query matched 835,973 records; the five most
+        recently indexed were then accepted as verification.
+        """
+        from verify_news_claims import extract_search_terms
+        terms = extract_search_terms(
+            "Seven of these 26 patients had inoperable tumors due to their locations.")
+        assert "Seven" not in terms
+        assert terms == [], f"expected no searchable term, got {terms}"
+
+    def test_a_real_proper_noun_mid_sentence_still_survives(self):
+        """The fix must not silence the extractor entirely."""
+        from verify_news_claims import extract_search_terms
+        terms = extract_search_terms(
+            "The trial of pembrolizumab plus Optune reached its endpoint.")
+        assert "Optune" in terms
+
+    def test_supports_claim_needs_two_shared_content_words(self):
+        from verify_news_claims import supports_claim
+        claim = "Electric fields boosted the immune response in glioblastoma patients."
+        assert not supports_claim(
+            claim, "A survey of speech-language pathologists in school settings.")
+        assert supports_claim(
+            claim, "Electric fields and immune activation in glioblastoma.")
+
+    def test_unsearchable_factual_claim_loses_a_stale_verdict(self):
+        """A claim the extractor cannot query must not keep an old `verified`.
+
+        This is the residue the first re-run left: 13 claims returned early on
+        an empty term list and so kept verdicts the broken linker had written.
+        """
+        from verify_news_claims import verify_claim
+        claim = {"category": "FACTUAL",
+                 "text": "In comparison, the survival rate was 88% three years after surgery.",
+                 "verification_status": "verified",
+                 "verification_source": "pubmed",
+                 "linked_pmids": ["42020682"]}
+        verify_claim(claim, corpus_index=[], source_domain="sciencedaily.com")
+        assert claim["verification_status"] == "unverified"
+        assert claim["verification_source"] is None
+        assert claim["linked_pmids"] == []
+
+    def test_self_referencing_does_not_depend_on_extractable_terms(self):
+        """WHO is its own authority whatever the sentence looks like.
+
+        Checked after term extraction, three WHO claims that yield no terms
+        would be labelled `unverified` instead of `self-referencing`.
+        """
+        from verify_news_claims import verify_claim
+        claim = {"category": "FACTUAL",
+                 "text": "Approximately 38% of cancers can currently be prevented.",
+                 "verification_status": None, "verification_source": None,
+                 "linked_pmids": []}
+        verify_claim(claim, corpus_index=[], source_domain="who.int")
+        assert claim["verification_status"] == "self-referencing"
+
+    def test_committed_index_never_pairs_unverified_with_evidence(self):
+        """Withdrawn evidence must actually be gone from the committed data.
+
+        `news_verification_audit.py` reads every claim carrying `linked_pmids`
+        regardless of status, so a leftover list keeps a retracted verification
+        inside the measurement.
+        """
+        import json
+        from config import NEWS_DIR
+        index = NEWS_DIR / "NEWS_INDEX.jsonl"
+        if not index.exists():
+            return
+        for line in index.read_text(encoding="utf-8").splitlines():
+            if not line.strip():
+                continue
+            row = json.loads(line)
+            if row.get("verification_status") != "verified":
+                assert not row.get("linked_pmids"), (
+                    f"{row.get('claim_id')} is "
+                    f"{row.get('verification_status')} but still cites "
+                    f"{row.get('linked_pmids')}")

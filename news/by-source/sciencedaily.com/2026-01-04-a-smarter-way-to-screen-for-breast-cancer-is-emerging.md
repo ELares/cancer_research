@@ -15,14 +15,9 @@ claims:
     reached that of a typical 50-year-old.
   type: result
   category: FACTUAL
-  verification_status: verified
-  verification_source: pubmed
-  linked_pmids:
-  - '42020845'
-  - '42020842'
-  - '42020840'
-  - '42020820'
-  - '42020802'
+  verification_status: unverified
+  verification_source: null
+  linked_pmids: []
 - id: sciencedaily.com-2026-01-04-a-smarter-way-to-screen-for-breast-cance-002
   text: Those at average risk, about 62% of the group, were advised to undergo screening
     every two years.
@@ -36,28 +31,18 @@ claims:
     risk.
   type: result
   category: FACTUAL
-  verification_status: verified
-  verification_source: pubmed
-  linked_pmids:
-  - '42020819'
-  - '42020781'
-  - '42020510'
-  - '42020236'
-  - '42020176'
+  verification_status: unverified
+  verification_source: null
+  linked_pmids: []
 - id: sciencedaily.com-2026-01-04-a-smarter-way-to-screen-for-breast-cance-004
   text: The highest risk group, accounting for 2% of participants, was advised to
     receive screening twice a year, alternating between mammography and MRI, regardless
     of age.
   type: result
   category: FACTUAL
-  verification_status: verified
-  verification_source: pubmed
-  linked_pmids:
-  - '42020876'
-  - '42020853'
-  - '42020850'
-  - '42020821'
-  - '42020791'
+  verification_status: unverified
+  verification_source: null
+  linked_pmids: []
 - id: sciencedaily.com-2026-01-04-a-smarter-way-to-screen-for-breast-cance-005
   text: Among them, 89% opted for risk-based screening, suggesting strong acceptance
     of the personalized approach.
@@ -72,14 +57,9 @@ claims:
     family history of the disease.
   type: result
   category: FACTUAL
-  verification_status: verified
-  verification_source: pubmed
-  linked_pmids:
-  - '42020927'
-  - '42020923'
-  - '42020919'
-  - '42020853'
-  - '42020840'
+  verification_status: unverified
+  verification_source: null
+  linked_pmids: []
 - id: sciencedaily.com-2026-01-04-a-smarter-way-to-screen-for-breast-cance-007
   text: This approach improved the precision of risk predictions and resulted in 12%
     to 14% of participants being reassigned to a different risk category.
@@ -89,7 +69,7 @@ claims:
   verification_source: null
   linked_pmids: []
 review_status: pending
-credibility_score: 41.5
+credibility_score: 23.2
 scored_at: '2026-06-29'
 ---
 

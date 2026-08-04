@@ -174,11 +174,21 @@ def main() -> int:
                     "Theriogenology paper on embryo vitrification, and a PMID that "
                     "does not resolve. Corrected. (`atlas-citation-audit.md`)")
     if news:
-        rows.append(f"* **{100*news['zero_overlap']/news['pairs_resolved']:.1f}% of the "
-                    "news pipeline's \"verified\" links** share no content word with "
-                    "the claim they verify. Root cause: a claim yielding the single "
-                    "search term `Seven` matched 835,973 records and the five newest "
-                    "were accepted. Fixed. (`news-verification-audit.md`)")
+        base = news.get("baseline", news)
+        rows.append(
+            f"* **{100*base['zero_overlap']/base['pairs_resolved']:.1f}% of the "
+            "news pipeline's \"verified\" links** shared no content word with "
+            "the claim they verified. Root cause: a claim yielding the single "
+            "search term `Seven` matched 835,973 records and the five newest "
+            "were accepted. The linker is fixed and re-run, and the same "
+            f"measurement now reads "
+            f"{100*news['zero_overlap']/news['pairs_resolved']:.1f}% -- but by "
+            f"WITHDRAWAL, not repair: "
+            f"{base['claims_with_links'] - news['claims_with_links']} of the "
+            f"{base['claims_with_links']} verifications were dropped outright, and "
+            f"{news['two_plus_generic_only']} of the "
+            f"{news['two_plus']} surviving pairs clear the bar on oncology "
+            "boilerplate alone. (`news-verification-audit.md`)")
     if amb:
         rows.append(f"* **`FSP1` resolved to a spastic-paraplegia gene**, leaving the "
                     "manuscript's headline GPX4+FSP1 claim with zero typed relations. "

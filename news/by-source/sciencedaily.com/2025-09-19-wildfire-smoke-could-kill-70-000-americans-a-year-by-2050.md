@@ -26,14 +26,9 @@ claims:
     temperatures rise about 2 degrees Celsius above pre-industrial levels.
   type: speculation
   category: FACTUAL
-  verification_status: verified
-  verification_source: pubmed
-  linked_pmids:
-  - '42008781'
-  - '41965748'
-  - '41964172'
-  - '41957415'
-  - '41940613'
+  verification_status: unverified
+  verification_source: null
+  linked_pmids: []
 - id: sciencedaily.com-2025-09-19-wildfire-smoke-could-kill-70-000-america-003
   text: Wildfires can expose large numbers of people to these toxic pollutants for
     days or weeks at a time, contributing to deaths up to three years after the initial
@@ -53,7 +48,7 @@ claims:
   verification_source: null
   linked_pmids: []
 review_status: pending
-credibility_score: 36.0
+credibility_score: 20.0
 scored_at: '2026-06-29'
 ---
 

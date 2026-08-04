@@ -14,14 +14,9 @@ claims:
     and even works across multiple cancer types.
   type: result
   category: FACTUAL
-  verification_status: verified
-  verification_source: pubmed
-  linked_pmids:
-  - '42020876'
-  - '42020874'
-  - '42020866'
-  - '42020854'
-  - '42020832'
+  verification_status: unverified
+  verification_source: null
+  linked_pmids: []
 - id: sciencedaily.com-2026-03-21-new-ai-tool-predicts-cancer-spread-with--002
   text: 'The study, published in
 
@@ -41,7 +36,7 @@ claims:
   verification_source: null
   linked_pmids: []
 review_status: pending
-credibility_score: 39.2
+credibility_score: 23.2
 scored_at: '2026-06-29'
 ---
 

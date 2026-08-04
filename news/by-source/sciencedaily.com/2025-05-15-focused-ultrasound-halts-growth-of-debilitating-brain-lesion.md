@@ -22,14 +22,9 @@ claims:
     in lab mice.
   type: result
   category: FACTUAL
-  verification_status: verified
-  verification_source: pubmed
-  linked_pmids:
-  - '42020927'
-  - '42020923'
-  - '42020919'
-  - '42020853'
-  - '42020840'
+  verification_status: unverified
+  verification_source: null
+  linked_pmids: []
 - id: sciencedaily.com-2025-05-15-focused-ultrasound-halts-growth-of-debil-003
   text: 'There are few other institutions in the world with the critical mass of expertise
     and infrastructure to allow new discoveries like this."
@@ -48,7 +43,7 @@ claims:
   - '40422537'
   - '40207236'
 review_status: pending
-credibility_score: 55.2
+credibility_score: 39.2
 scored_at: '2026-06-29'
 ---
 

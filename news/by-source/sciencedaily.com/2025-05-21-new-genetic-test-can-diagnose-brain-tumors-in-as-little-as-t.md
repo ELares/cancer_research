@@ -40,12 +40,11 @@ claims:
     what type of tumour they may have.'
   type: mechanism
   category: FACTUAL
-  verification_status: verified
-  verification_source: corpus
-  linked_pmids:
-  - '26449559'
+  verification_status: unverified
+  verification_source: null
+  linked_pmids: []
 review_status: pending
-credibility_score: 28.5
+credibility_score: 15.2
 scored_at: '2026-06-29'
 ---
 

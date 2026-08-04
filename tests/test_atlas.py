@@ -1165,23 +1165,50 @@ def test_the_corrected_pmids_are_pinned():
 
 # --- the news pipeline's "verified" label (#NEWS-VERIFY) -------------------
 
-def test_news_verification_links_are_measured_not_trusted():
-    """44 claims are labelled `verified` on links that mostly do not match.
+def test_news_verification_links_no_longer_track_the_indexing_date():
+    """44 claims were labelled `verified` on links that mostly did not match.
 
-    A claim about electric fields treating brain cancer is 'verified' against
-    papers on freshwater fish biodiversity and speech-language pathology. The
-    linked identifiers cluster in one numeric band, which is the signature of
-    matching on when a record was indexed rather than what it says.
+    A claim about electric fields treating brain cancer was 'verified' against
+    papers on freshwater fish biodiversity and speech-language pathology,
+    because the linked identifiers clustered in one numeric band -- the
+    signature of matching on when a record was indexed rather than what it says.
+
+    `verify_news_claims.py` was fixed and re-run, so this guard now runs the
+    other way: it holds the repaired state in place. If either assertion trips,
+    the linker has regressed toward picking recently indexed records again.
     """
     import json
     raw = json.loads(
         (REPO_ROOT / "analysis" / "news-verification-audit.json").read_text())
+    base = raw["baseline"]
+    assert base["zero_overlap"] / base["pairs_resolved"] > 0.5, \
+        "the committed pre-fix baseline is what the improvement is measured against"
+
     share = raw["zero_overlap"] / raw["pairs_resolved"]
-    assert share > 0.3, (
-        "the link quality improved -- re-read the audit and update the manuscript "
-        "footnotes and this guard together")
-    # the numeric clustering is the diagnostic, so it must be recorded
-    assert raw["dominant_prefix_count"] / raw["distinct_pmids"] > 0.2
+    assert share < 0.10, (
+        f"no-content-word share back up to {share:.1%} (was 1.9% after the fix, "
+        f"{base['zero_overlap'] / base['pairs_resolved']:.1%} before it)")
+    # the numeric clustering was the diagnostic, so its collapse is the evidence
+    assert raw["dominant_prefix_count"] / raw["distinct_pmids"] < 0.2, \
+        "linked identifiers are clustering in one numeric band again"
+
+
+def test_news_verification_report_states_the_residual_weakness():
+    """The gain is mostly withdrawal, and the report has to say so.
+
+    30 of the 44 verifications were dropped rather than repaired, and most of
+    the surviving pairs clear the two-word bar on oncology boilerplate. A report
+    that showed 55.7% -> 1.9% without either fact would overstate the fix.
+    """
+    import json
+    raw = json.loads(
+        (REPO_ROOT / "analysis" / "news-verification-audit.json").read_text())
+    assert raw["claims_with_links"] < raw["baseline"]["claims_with_links"]
+    assert raw["two_plus_generic_only"] > 0, \
+        "the boilerplate-only residual must be counted, not assumed away"
+    md = (REPO_ROOT / "analysis" / "news-verification-audit.md").read_text()
+    assert "withdrawal, not repair" in md
+    assert "two shared words is a low bar" in md
 
 
 def test_manuscript_does_not_claim_verification_it_lacks():
@@ -1298,9 +1325,11 @@ def test_pipeline_order_puts_the_graph_rebuild_after_disambiguation():
 def test_pipeline_does_not_silently_rewrite_news_claim_statuses():
     """Re-running the verifier is a data change, not a pipeline step.
 
-    scripts/verify_news_claims.py rewrites 44 claim statuses and their
-    credibility scores. Folding that into an audit phase would make a reviewable
-    decision happen as a side effect.
+    scripts/verify_news_claims.py rewrites claim statuses and their credibility
+    scores -- the post-fix re-run withdrew 30 of 44 verifications and moved every
+    article's score. Folding that into an audit phase would make a reviewable
+    decision happen as a side effect, and it depends on PubMed's live index, so
+    it is not reproducible the way the rest of the pipeline is.
     """
     src = (REPO_ROOT / "scripts" / "atlas_pipeline.sh").read_text()
     audit = src[src.index("audit()"):src.index("case \"$PHASE\"")]

@@ -31,14 +31,9 @@ claims:
     safety.
   type: speculation
   category: FACTUAL
-  verification_status: verified
-  verification_source: pubmed
-  linked_pmids:
-  - '42020876'
-  - '42020874'
-  - '42020866'
-  - '42020854'
-  - '42020832'
+  verification_status: unverified
+  verification_source: null
+  linked_pmids: []
 - id: sciencedaily.com-2025-05-07-ai-human-task-sharing-could-cut-mammogra-003
   text: The researchers found that the delegation model outperformed both the full
     automation and the expert-alone approaches, yielding up to 30.1% in cost savings,
@@ -56,14 +51,9 @@ claims:
     That whole process only increases stress and anxiety for the patient, Ahsen said.'
   type: event
   category: FACTUAL
-  verification_status: verified
-  verification_source: pubmed
-  linked_pmids:
-  - '41960173'
-  - '41904215'
-  - '41892214'
-  - '41758150'
-  - '41564121'
+  verification_status: unverified
+  verification_source: null
+  linked_pmids: []
 - id: sciencedaily.com-2025-05-07-ai-human-task-sharing-could-cut-mammogra-005
   text: '"It has the potential to be that much more efficient of a workflow."
 
@@ -75,7 +65,7 @@ claims:
   verification_source: null
   linked_pmids: []
 review_status: pending
-credibility_score: 31.2
+credibility_score: 15.2
 scored_at: '2026-06-29'
 ---
 

@@ -1,293 +1,268 @@
 {
   "claims_total": 117,
-  "claims_with_links": 44,
-  "distinct_pmids": 175,
-  "pairs_resolved": 212,
-  "zero_overlap": 118,
-  "one_word": 41,
-  "two_plus": 53,
-  "dominant_prefix": "4202",
-  "dominant_prefix_count": 66,
+  "claims_with_links": 14,
+  "distinct_pmids": 45,
+  "pairs_resolved": 53,
+  "zero_overlap": 1,
+  "one_word": 19,
+  "two_plus": 33,
+  "two_plus_generic_only": 19,
+  "dominant_prefix": "4253",
+  "dominant_prefix_count": 3,
+  "baseline": {
+    "claims_with_links": 44,
+    "distinct_pmids": 175,
+    "pairs_resolved": 212,
+    "zero_overlap": 118,
+    "one_word": 41,
+    "two_plus": 53,
+    "dominant_prefix": "4202",
+    "dominant_prefix_count": 66
+  },
   "examples_zero_overlap": [
     {
-      "pmid": "42020926",
+      "pmid": "41651454",
       "overlap": 0,
-      "article": "What\u00e2\u0080\u0099s hiding inside colon cancer could change treatment",
-      "paper": "Basin-scale eDNA metabarcoding reveals freshwater fish biodiversity pa",
-      "claim_id": "sciencedaily.com-2026-04-02-what-s-hiding-inside-colon-cancer-could--002"
+      "shared": [],
+      "generic_only": false,
+      "article": "Focused ultrasound halts growth of debilitating brain lesions",
+      "paper": "Racial and Socioeconomic Healthcare Disparities in Access to Chimeric ",
+      "claim_id": "sciencedaily.com-2025-05-15-focused-ultrasound-halts-growth-of-debil-003"
+    }
+  ],
+  "examples_generic_only": [
+    {
+      "pmid": "39705641",
+      "overlap": 3,
+      "shared": [
+        "patients",
+        "states",
+        "united"
+      ],
+      "generic_only": true,
+      "article": "Hidden virus in your gut may be linked to colon cancer",
+      "paper": "Real-World Outcomes in Patients With Metastatic Renal Cell Carcinoma T",
+      "claim_id": "sciencedaily.com-2026-04-22-hidden-virus-in-your-gut-may-be-linked-t-001"
     },
     {
-      "pmid": "42020911",
-      "overlap": 0,
-      "article": "What\u00e2\u0080\u0099s hiding inside colon cancer could change treatment",
-      "paper": "Design and Validation of Mirtron-Mediated RNA Interference for Gene Th",
-      "claim_id": "sciencedaily.com-2026-04-02-what-s-hiding-inside-colon-cancer-could--002"
+      "pmid": "38375030",
+      "overlap": 3,
+      "shared": [
+        "cancer",
+        "states",
+        "united"
+      ],
+      "generic_only": true,
+      "article": "Hidden virus in your gut may be linked to colon cancer",
+      "paper": "Cost-effectiveness of tumor-treating fields plus standard therapy for ",
+      "claim_id": "sciencedaily.com-2026-04-22-hidden-virus-in-your-gut-may-be-linked-t-001"
     },
     {
-      "pmid": "42020897",
-      "overlap": 0,
-      "article": "What\u00e2\u0080\u0099s hiding inside colon cancer could change treatment",
-      "paper": "Transgenomes: automated detection and characterization of mitochondria",
-      "claim_id": "sciencedaily.com-2026-04-02-what-s-hiding-inside-colon-cancer-could--002"
+      "pmid": "40203774",
+      "overlap": 2,
+      "shared": [
+        "cancer",
+        "center"
+      ],
+      "generic_only": true,
+      "article": "95% of people carry this virus and scientists may have just found how ",
+      "paper": "The ideal strategies of antibody\u2012drug conjugate sequential treatment i",
+      "claim_id": "sciencedaily.com-2026-04-15-95-of-people-carry-this-virus-and-scient-001"
     },
     {
-      "pmid": "42020783",
-      "overlap": 0,
-      "article": "What\u00e2\u0080\u0099s hiding inside colon cancer could change treatment",
-      "paper": "Imputing causality and clonal dynamics from single-cell transcriptomic",
-      "claim_id": "sciencedaily.com-2026-04-02-what-s-hiding-inside-colon-cancer-could--002"
+      "pmid": "40203774",
+      "overlap": 2,
+      "shared": [
+        "cancer",
+        "center"
+      ],
+      "generic_only": true,
+      "article": "95% of people carry this virus and scientists may have just found how ",
+      "paper": "The ideal strategies of antibody\u2012drug conjugate sequential treatment i",
+      "claim_id": "sciencedaily.com-2026-04-15-95-of-people-carry-this-virus-and-scient-002"
     },
     {
-      "pmid": "41452918",
-      "overlap": 0,
-      "article": "New cholesterol guidelines could change when you get tested",
-      "paper": "A scoping review of turmeric adulteration based on data from six conti",
-      "claim_id": "sciencedaily.com-2026-03-29-new-cholesterol-guidelines-could-change--002"
-    },
-    {
-      "pmid": "41175888",
-      "overlap": 0,
-      "article": "New cholesterol guidelines could change when you get tested",
-      "paper": "Vorasidenib in IDH1-mutant or IDH2-mutant low-grade glioma (INDIGO): s",
-      "claim_id": "sciencedaily.com-2026-03-29-new-cholesterol-guidelines-could-change--002"
-    },
-    {
-      "pmid": "42020373",
-      "overlap": 0,
-      "article": "New blood test could catch pancreatic cancer before it\u00e2\u0080\u0099s too late",
-      "paper": "TBL1X/TBL1XR1 govern \u03b2-cell identity through a PAX6-containing gene re",
-      "claim_id": "sciencedaily.com-2026-03-23-new-blood-test-could-catch-pancreatic-ca-003"
-    },
-    {
-      "pmid": "42020312",
-      "overlap": 0,
-      "article": "New blood test could catch pancreatic cancer before it\u00e2\u0080\u0099s too late",
-      "paper": "Rethinking HNF1A-MODY: HNF1A at the crossroads of development and mult",
-      "claim_id": "sciencedaily.com-2026-03-23-new-blood-test-could-catch-pancreatic-ca-003"
-    },
-    {
-      "pmid": "42020855",
-      "overlap": 0,
-      "article": "New blood test could catch pancreatic cancer before it\u00e2\u0080\u0099s too late",
-      "paper": "Urinary Calprotectin Is Not a Reliable Surrogate of Fecal Calprotectin",
-      "claim_id": "sciencedaily.com-2026-03-23-new-blood-test-could-catch-pancreatic-ca-005"
-    },
-    {
-      "pmid": "42020841",
-      "overlap": 0,
-      "article": "New blood test could catch pancreatic cancer before it\u00e2\u0080\u0099s too late",
-      "paper": "Synergistic mitigation of lead [Pb(II)] stress in Triticum aestivum L.",
-      "claim_id": "sciencedaily.com-2026-03-23-new-blood-test-could-catch-pancreatic-ca-005"
-    },
-    {
-      "pmid": "42020835",
-      "overlap": 0,
-      "article": "New blood test could catch pancreatic cancer before it\u00e2\u0080\u0099s too late",
-      "paper": "Andexanet Alfa Withdrawn from the US: Implications for Intracranial He",
-      "claim_id": "sciencedaily.com-2026-03-23-new-blood-test-could-catch-pancreatic-ca-005"
-    },
-    {
-      "pmid": "42020811",
-      "overlap": 0,
-      "article": "New blood test could catch pancreatic cancer before it\u00e2\u0080\u0099s too late",
-      "paper": "[(68)Ga]Ga-NY104 PET/CT for the detection of clear cell renal cell car",
-      "claim_id": "sciencedaily.com-2026-03-23-new-blood-test-could-catch-pancreatic-ca-005"
-    },
-    {
-      "pmid": "42020874",
-      "overlap": 0,
-      "article": "New AI tool predicts cancer spread with surprising accuracy",
-      "paper": "Soil microbial succession for forensic estimation of postmortem interv",
-      "claim_id": "sciencedaily.com-2026-03-21-new-ai-tool-predicts-cancer-spread-with--001"
-    },
-    {
-      "pmid": "42020866",
-      "overlap": 0,
-      "article": "New AI tool predicts cancer spread with surprising accuracy",
-      "paper": "Outplaying elite table tennis players with an autonomous robot.",
-      "claim_id": "sciencedaily.com-2026-03-21-new-ai-tool-predicts-cancer-spread-with--001"
-    },
-    {
-      "pmid": "42020854",
-      "overlap": 0,
-      "article": "New AI tool predicts cancer spread with surprising accuracy",
-      "paper": "Rectal Inflammatory Myofibroblastic Tumor Treated with Endoscopic Subm",
-      "claim_id": "sciencedaily.com-2026-03-21-new-ai-tool-predicts-cancer-spread-with--001"
-    },
-    {
-      "pmid": "42020842",
-      "overlap": 0,
-      "article": "A smarter way to screen for breast cancer is emerging",
-      "paper": "Regulation for differential control.",
-      "claim_id": "sciencedaily.com-2026-01-04-a-smarter-way-to-screen-for-breast-cance-001"
-    },
-    {
-      "pmid": "42020840",
-      "overlap": 0,
-      "article": "A smarter way to screen for breast cancer is emerging",
-      "paper": "Leaf mold extract agar facilitates recovery of soil bacterial diversit",
-      "claim_id": "sciencedaily.com-2026-01-04-a-smarter-way-to-screen-for-breast-cance-001"
-    },
-    {
-      "pmid": "42020802",
-      "overlap": 0,
-      "article": "A smarter way to screen for breast cancer is emerging",
-      "paper": "Endovascular profiles linked to neutrophil activation in children and ",
-      "claim_id": "sciencedaily.com-2026-01-04-a-smarter-way-to-screen-for-breast-cance-001"
-    },
-    {
-      "pmid": "42020819",
-      "overlap": 0,
-      "article": "A smarter way to screen for breast cancer is emerging",
-      "paper": "Wheat Rhizosphere Bacterial Community Response to Bromus tectorum (L.)",
-      "claim_id": "sciencedaily.com-2026-01-04-a-smarter-way-to-screen-for-breast-cance-003"
-    },
-    {
-      "pmid": "42020781",
-      "overlap": 0,
-      "article": "A smarter way to screen for breast cancer is emerging",
-      "paper": "A targeted circulating tumor DNA landscape of copy number aberrations ",
-      "claim_id": "sciencedaily.com-2026-01-04-a-smarter-way-to-screen-for-breast-cance-003"
-    },
-    {
-      "pmid": "42020510",
-      "overlap": 0,
-      "article": "A smarter way to screen for breast cancer is emerging",
-      "paper": "Linking VOC assessment and cost-effectiveness for emission management ",
-      "claim_id": "sciencedaily.com-2026-01-04-a-smarter-way-to-screen-for-breast-cance-003"
-    },
-    {
-      "pmid": "42020236",
-      "overlap": 0,
-      "article": "A smarter way to screen for breast cancer is emerging",
-      "paper": "Trends in mortality related to benign gallbladder disease in the Unite",
-      "claim_id": "sciencedaily.com-2026-01-04-a-smarter-way-to-screen-for-breast-cance-003"
-    },
-    {
-      "pmid": "42020176",
-      "overlap": 0,
-      "article": "A smarter way to screen for breast cancer is emerging",
-      "paper": "[Genetic characteristics analysis of the VP1 region of coxsackievirus ",
-      "claim_id": "sciencedaily.com-2026-01-04-a-smarter-way-to-screen-for-breast-cance-003"
-    },
-    {
-      "pmid": "42020876",
-      "overlap": 0,
-      "article": "A smarter way to screen for breast cancer is emerging",
-      "paper": "Development and validation of a preoperative MRI-based predictive mode",
-      "claim_id": "sciencedaily.com-2026-01-04-a-smarter-way-to-screen-for-breast-cance-004"
-    },
-    {
-      "pmid": "42020853",
-      "overlap": 0,
-      "article": "A smarter way to screen for breast cancer is emerging",
-      "paper": "Using Radiomic Features to Detect Anatomical Errors and Assess Deep Le",
-      "claim_id": "sciencedaily.com-2026-01-04-a-smarter-way-to-screen-for-breast-cance-004"
-    },
-    {
-      "pmid": "42020850",
-      "overlap": 0,
-      "article": "A smarter way to screen for breast cancer is emerging",
-      "paper": "Primary intracranial infantile hemangioma presenting with hemorrhage: ",
-      "claim_id": "sciencedaily.com-2026-01-04-a-smarter-way-to-screen-for-breast-cance-004"
-    },
-    {
-      "pmid": "42020791",
-      "overlap": 0,
-      "article": "A smarter way to screen for breast cancer is emerging",
-      "paper": "A pipeline to characterize spinal cord pathology in neurological disor",
-      "claim_id": "sciencedaily.com-2026-01-04-a-smarter-way-to-screen-for-breast-cance-004"
-    },
-    {
-      "pmid": "42020927",
-      "overlap": 0,
-      "article": "A smarter way to screen for breast cancer is emerging",
-      "paper": "The superiority of one-day dietary preparation over three-day dietary ",
-      "claim_id": "sciencedaily.com-2026-01-04-a-smarter-way-to-screen-for-breast-cance-006"
-    },
-    {
-      "pmid": "42020923",
-      "overlap": 0,
-      "article": "A smarter way to screen for breast cancer is emerging",
-      "paper": "Landscape analysis of school-based vision programs in the United State",
-      "claim_id": "sciencedaily.com-2026-01-04-a-smarter-way-to-screen-for-breast-cance-006"
-    },
-    {
-      "pmid": "42020919",
-      "overlap": 0,
-      "article": "A smarter way to screen for breast cancer is emerging",
-      "paper": "Key factors of the deranged antiviral response in elderly patients wit",
-      "claim_id": "sciencedaily.com-2026-01-04-a-smarter-way-to-screen-for-breast-cance-006"
-    },
-    {
-      "pmid": "42020853",
-      "overlap": 0,
-      "article": "A smarter way to screen for breast cancer is emerging",
-      "paper": "Using Radiomic Features to Detect Anatomical Errors and Assess Deep Le",
-      "claim_id": "sciencedaily.com-2026-01-04-a-smarter-way-to-screen-for-breast-cance-006"
-    },
-    {
-      "pmid": "42020840",
-      "overlap": 0,
-      "article": "A smarter way to screen for breast cancer is emerging",
-      "paper": "Leaf mold extract agar facilitates recovery of soil bacterial diversit",
-      "claim_id": "sciencedaily.com-2026-01-04-a-smarter-way-to-screen-for-breast-cance-006"
-    },
-    {
-      "pmid": "42016026",
-      "overlap": 0,
+      "pmid": "40779733",
+      "overlap": 2,
+      "shared": [
+        "phase",
+        "trial"
+      ],
+      "generic_only": true,
       "article": "Doctors just found a way to slow one of the deadliest prostate cancers",
-      "paper": "Integrated Bioinformatics and Experimental Validation of the hsa_circ_",
-      "claim_id": "sciencedaily.com-2025-10-22-doctors-just-found-a-way-to-slow-one-of--001"
+      "paper": "Dual Immune Check Point Blockade in MGMT-Unmethylated Newly Diagnosed ",
+      "claim_id": "sciencedaily.com-2025-10-22-doctors-just-found-a-way-to-slow-one-of--002"
     },
     {
-      "pmid": "42013747",
-      "overlap": 0,
+      "pmid": "41037766",
+      "overlap": 2,
+      "shared": [
+        "phase",
+        "trial"
+      ],
+      "generic_only": true,
       "article": "Doctors just found a way to slow one of the deadliest prostate cancers",
-      "paper": "Whole genome sequencing of locally advanced and metastatic breast carc",
-      "claim_id": "sciencedaily.com-2025-10-22-doctors-just-found-a-way-to-slow-one-of--001"
+      "paper": "Mosunetuzumab Plus Polatuzumab Vedotin in Transplant-Ineligible Refrac",
+      "claim_id": "sciencedaily.com-2025-10-22-doctors-just-found-a-way-to-slow-one-of--002"
     },
     {
-      "pmid": "41995125",
-      "overlap": 0,
-      "article": "Doctors just found a way to slow one of the deadliest prostate cancers",
-      "paper": "Associations between haemoglobin-to-red cell distribution width ratio ",
-      "claim_id": "sciencedaily.com-2025-10-22-doctors-just-found-a-way-to-slow-one-of--003"
+      "pmid": "40449509",
+      "overlap": 2,
+      "shared": [
+        "phase",
+        "trial"
+      ],
+      "generic_only": true,
+      "article": "Scientists discover how to wipe out breast cancer\u00e2\u0080\u0099s hidden cells",
+      "paper": "Bexmarilimab plus azacitidine for high-risk myelodysplastic syndrome a",
+      "claim_id": "sciencedaily.com-2025-09-02-scientists-discover-how-to-wipe-out-brea-004"
     },
     {
-      "pmid": "41993234",
-      "overlap": 0,
-      "article": "Doctors just found a way to slow one of the deadliest prostate cancers",
-      "paper": "Association Between Regional Social Vulnerability and Race-Based Diffe",
-      "claim_id": "sciencedaily.com-2025-10-22-doctors-just-found-a-way-to-slow-one-of--003"
+      "pmid": "37327461",
+      "overlap": 2,
+      "shared": [
+        "cancer",
+        "phase"
+      ],
+      "generic_only": true,
+      "article": "Shocking brain cancer breakthrough: Electric fields supercharge immune",
+      "paper": "First-in-Human, Phase I Dose-Escalation and Dose-Expansion Study of Tr",
+      "claim_id": "sciencedaily.com-2025-06-09-shocking-brain-cancer-breakthrough-elect-004"
     },
     {
-      "pmid": "42020929",
-      "overlap": 0,
-      "article": "Doctors just found a way to slow one of the deadliest prostate cancers",
-      "paper": "Aging-related matrix metallopeptidase 10 and osteopontin levels are as",
-      "claim_id": "sciencedaily.com-2025-10-22-doctors-just-found-a-way-to-slow-one-of--007"
+      "pmid": "42530333",
+      "overlap": 2,
+      "shared": [
+        "clinical",
+        "trial"
+      ],
+      "generic_only": true,
+      "article": "Shocking brain cancer breakthrough: Electric fields supercharge immune",
+      "paper": "Two Years of Ocrelizumab Treatment in Black and Hispanic People with M",
+      "claim_id": "sciencedaily.com-2025-06-09-shocking-brain-cancer-breakthrough-elect-006"
     },
     {
-      "pmid": "42020928",
-      "overlap": 0,
-      "article": "Doctors just found a way to slow one of the deadliest prostate cancers",
-      "paper": "A study on the structural and magnetic properties of Fe(3)O(4)@SiO(2) ",
-      "claim_id": "sciencedaily.com-2025-10-22-doctors-just-found-a-way-to-slow-one-of--007"
+      "pmid": "42516807",
+      "overlap": 2,
+      "shared": [
+        "clinical",
+        "trial"
+      ],
+      "generic_only": true,
+      "article": "Shocking brain cancer breakthrough: Electric fields supercharge immune",
+      "paper": "Bayesian analysis of the early cold stored platelet transfusion follow",
+      "claim_id": "sciencedaily.com-2025-06-09-shocking-brain-cancer-breakthrough-elect-006"
     },
     {
-      "pmid": "42020926",
-      "overlap": 0,
-      "article": "Doctors just found a way to slow one of the deadliest prostate cancers",
-      "paper": "Basin-scale eDNA metabarcoding reveals freshwater fish biodiversity pa",
-      "claim_id": "sciencedaily.com-2025-10-22-doctors-just-found-a-way-to-slow-one-of--007"
+      "pmid": "42499270",
+      "overlap": 3,
+      "shared": [
+        "cancer",
+        "clinical",
+        "phase"
+      ],
+      "generic_only": true,
+      "article": "Shocking brain cancer breakthrough: Electric fields supercharge immune",
+      "paper": "On Hierarchical Composite Endpoints in Pediatric Cancer Supportive Car",
+      "claim_id": "sciencedaily.com-2025-06-09-shocking-brain-cancer-breakthrough-elect-006"
     },
     {
-      "pmid": "42020907",
-      "overlap": 0,
-      "article": "Doctors just found a way to slow one of the deadliest prostate cancers",
-      "paper": "Transduction of AAV Vectors in iPSC-Derived Retinal Organoids.",
-      "claim_id": "sciencedaily.com-2025-10-22-doctors-just-found-a-way-to-slow-one-of--007"
+      "pmid": "42497367",
+      "overlap": 2,
+      "shared": [
+        "phase",
+        "trial"
+      ],
+      "generic_only": true,
+      "article": "Shocking brain cancer breakthrough: Electric fields supercharge immune",
+      "paper": "AAML1831: A Phase III Trial Comparing Standard Induction Therapy With ",
+      "claim_id": "sciencedaily.com-2025-06-09-shocking-brain-cancer-breakthrough-elect-006"
+    },
+    {
+      "pmid": "39705641",
+      "overlap": 3,
+      "shared": [
+        "patients",
+        "states",
+        "united"
+      ],
+      "generic_only": true,
+      "article": "Shocking brain cancer breakthrough: Electric fields supercharge immune",
+      "paper": "Real-World Outcomes in Patients With Metastatic Renal Cell Carcinoma T",
+      "claim_id": "sciencedaily.com-2025-06-09-shocking-brain-cancer-breakthrough-elect-007"
+    },
+    {
+      "pmid": "33129040",
+      "overlap": 3,
+      "shared": [
+        "cancer",
+        "europe",
+        "phase"
+      ],
+      "generic_only": true,
+      "article": "Shocking brain cancer breakthrough: Electric fields supercharge immune",
+      "paper": "Impact of COVID-19 in paediatric early-phase cancer clinical trials in",
+      "claim_id": "sciencedaily.com-2025-06-09-shocking-brain-cancer-breakthrough-elect-007"
+    },
+    {
+      "pmid": "40923270",
+      "overlap": 2,
+      "shared": [
+        "cancer",
+        "medicine"
+      ],
+      "generic_only": true,
+      "article": "Age-related genetic changes in the blood associated with poor cancer p",
+      "paper": "High-voltage electrical pulses for pancreatic cancer treatment in the ",
+      "claim_id": "sciencedaily.com-2025-04-23-age-related-genetic-changes-in-the-blood-001"
+    },
+    {
+      "pmid": "41509977",
+      "overlap": 2,
+      "shared": [
+        "cancer",
+        "medicine"
+      ],
+      "generic_only": true,
+      "article": "Age-related genetic changes in the blood associated with poor cancer p",
+      "paper": "Glucose oxidase-powered nanocatalytic medicine: Rewiring tumor metabol",
+      "claim_id": "sciencedaily.com-2025-04-23-age-related-genetic-changes-in-the-blood-001"
+    },
+    {
+      "pmid": "41677622",
+      "overlap": 2,
+      "shared": [
+        "cancer",
+        "medicine"
+      ],
+      "generic_only": true,
+      "article": "Age-related genetic changes in the blood associated with poor cancer p",
+      "paper": "Immune Cell Modulation of Patient-Matched Organoid Drug Response in Pr",
+      "claim_id": "sciencedaily.com-2025-04-23-age-related-genetic-changes-in-the-blood-001"
+    },
+    {
+      "pmid": "40203774",
+      "overlap": 2,
+      "shared": [
+        "cancer",
+        "center"
+      ],
+      "generic_only": true,
+      "article": "Age-related genetic changes in the blood associated with poor cancer p",
+      "paper": "The ideal strategies of antibody\u2012drug conjugate sequential treatment i",
+      "claim_id": "sciencedaily.com-2025-04-23-age-related-genetic-changes-in-the-blood-003"
+    },
+    {
+      "pmid": "40129986",
+      "overlap": 2,
+      "shared": [
+        "center",
+        "patients"
+      ],
+      "generic_only": true,
+      "article": "Age-related genetic changes in the blood associated with poor cancer p",
+      "paper": "Effect of metachronous primary and secondary solid cancers in patients",
+      "claim_id": "sciencedaily.com-2025-04-23-age-related-genetic-changes-in-the-blood-003"
     }
   ]
 }

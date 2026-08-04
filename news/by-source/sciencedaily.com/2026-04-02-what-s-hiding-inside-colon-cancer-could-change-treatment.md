@@ -25,14 +25,9 @@ claims:
     challenging the long-held belief that all cancers have their own microbial signatures."
   type: result
   category: FACTUAL
-  verification_status: verified
-  verification_source: pubmed
-  linked_pmids:
-  - '42020926'
-  - '42020911'
-  - '42020897'
-  - '42020802'
-  - '42020783'
+  verification_status: unverified
+  verification_source: null
+  linked_pmids: []
 - id: sciencedaily.com-2026-04-02-what-s-hiding-inside-colon-cancer-could--003
   text: This might lead to additional research and treatment options for these types
     of cancer," said Dr. Gihawi.
@@ -52,7 +47,7 @@ claims:
   verification_source: null
   linked_pmids: []
 review_status: pending
-credibility_score: 55.2
+credibility_score: 23.2
 scored_at: '2026-06-29'
 ---
 

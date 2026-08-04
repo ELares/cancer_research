@@ -19,11 +19,8 @@ claims:
   verification_status: verified
   verification_source: pubmed
   linked_pmids:
-  - '41883318'
-  - '41677591'
-  - '41608578'
-  - '41605664'
-  - '41365472'
+  - '42547659'
+  - '42545507'
 - id: sciencedaily.com-2025-09-18-rogue-dna-rings-may-be-the-secret-spark--002
   text: In 2022, they funded team eDyNAmiC -- a $25m international, cross-disciplinary
     consortium of experts in cancer, clinical research, evolutionary biology, computer
