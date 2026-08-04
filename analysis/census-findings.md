@@ -128,7 +128,7 @@ None of these were computational errors. Every one was a true statement describi
 
 ## Every layer now carries a bound
 
-* co-mention precision: 44.3% to 83.8%
+* co-mention precision: 44.3% to 91.8%
 * contradictions: ambiguity inflates the flag rate 1.45x
 * emergence: 99.0% precision, 99.6% recall
 * FSP1 disambiguation: 97.4%, with 75% of corrections extrapolated and that extrapolation independently tested

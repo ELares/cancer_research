@@ -1456,6 +1456,29 @@
   ]
  },
  {
+  "a": "AIFM2",
+  "b": "lipid",
+  "n_sampled": 20,
+  "median_year": 2025,
+  "min_year": 2021,
+  "max_year": 2026,
+  "recent": 20,
+  "recent_share": 1.0,
+  "total_relations": 22,
+  "predicates": {
+   "associate": 16,
+   "negative_correlate": 5,
+   "positive_correlate": 1
+  },
+  "pmids": [
+   "34748909",
+   "35585057",
+   "35697272",
+   "35774015",
+   "36399287"
+  ]
+ },
+ {
   "a": "osimertinib",
   "b": "amivantamab",
   "n_sampled": 20,
@@ -3910,6 +3933,29 @@
   ]
  },
  {
+  "a": "GPX4",
+  "b": "AIFM2",
+  "n_sampled": 13,
+  "median_year": 2025,
+  "min_year": 2021,
+  "max_year": 2026,
+  "recent": 13,
+  "recent_share": 1.0,
+  "total_relations": 15,
+  "predicates": {
+   "associate": 10,
+   "positive_correlate": 3,
+   "negative_correlate": 2
+  },
+  "pmids": [
+   "34167028",
+   "36078133",
+   "36576648",
+   "37380771",
+   "38725840"
+  ]
+ },
+ {
   "a": "WDR4",
   "b": "tumor",
   "n_sampled": 13,
@@ -6301,28 +6347,6 @@
    "35149428",
    "36305543",
    "38102538"
-  ]
- },
- {
-  "a": "FSP1",
-  "b": "lipid",
-  "n_sampled": 11,
-  "median_year": 2024,
-  "min_year": 2021,
-  "max_year": 2026,
-  "recent": 11,
-  "recent_share": 1.0,
-  "total_relations": 12,
-  "predicates": {
-   "associate": 9,
-   "negative_correlate": 3
-  },
-  "pmids": [
-   "34748909",
-   "35585057",
-   "35774015",
-   "37287288",
-   "37738951"
   ]
  },
  {
@@ -9827,29 +9851,6 @@
   ]
  },
  {
-  "a": "GPX4",
-  "b": "FSP1",
-  "n_sampled": 9,
-  "median_year": 2025,
-  "min_year": 2021,
-  "max_year": 2026,
-  "recent": 9,
-  "recent_share": 1.0,
-  "total_relations": 11,
-  "predicates": {
-   "associate": 6,
-   "negative_correlate": 4,
-   "positive_correlate": 1
-  },
-  "pmids": [
-   "34167028",
-   "36078133",
-   "38725840",
-   "39273151",
-   "39453438"
-  ]
- },
- {
   "a": "immune-mediated diseases",
   "b": "pembrolizumab",
   "n_sampled": 9,
@@ -11449,9 +11450,9 @@
   "max_year": 2025,
   "recent": 9,
   "recent_share": 1.0,
-  "total_relations": 12,
+  "total_relations": 14,
   "predicates": {
-   "associate": 10,
+   "associate": 12,
    "stimulate": 2
   },
   "pmids": [
