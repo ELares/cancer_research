@@ -1,75 +1,14 @@
 {
   "sentences": 400,
-  "mentions": 1484,
-  "alias_found": 1471,
+  "mentions": 1094,
+  "alias_found": 1094,
   "alias_missing": 0,
-  "alias_filtered_out": 13,
-  "pubtator_scored": 1484,
-  "pubtator_agree": 482,
-  "pubtator_disagree": 1002,
+  "alias_filtered_out": 0,
+  "pubtator_scored": 1094,
+  "pubtator_agree": 657,
+  "pubtator_disagree": 437,
   "papers_without_pubtator": 0,
-  "in_abstract": 346,
-  "body_only": 656,
-  "examples_missing": [
-    {
-      "pmid": "30878600",
-      "entity": "19",
-      "sentence": "In the short PFS group, patients had significantly more driver gene mutations than in long PFS group (P\u202f=\u202f0\u00b7018)."
-    },
-    {
-      "pmid": "33995985",
-      "entity": "tyrosine kinase",
-      "sentence": "The phase\u2009II SORMAIN trial (N\u2009=\u200983) evaluated the use of sorafenib for 24\u2009months in adults with FLT3-ITD positive AML after obtaining complete hematol"
-    },
-    {
-      "pmid": "36421337",
-      "entity": "nosocomial infections",
-      "sentence": "More than 2500 studies from across the world were reporting hardship with cancer care delivery: due to increased risk of contracting COVID-19 and of m"
-    },
-    {
-      "pmid": "31837057",
-      "entity": "19",
-      "sentence": "Long non coding RNA MALAT1 promotes tumor growth and metastasis by inducing epithelial\u2010mesenchymal transition in oral squamous cell carcinoma\n."
-    },
-    {
-      "pmid": "37873185",
-      "entity": "19",
-      "sentence": "Identification of Long Non-coding RNAs Expressed During Early Adipogenesis."
-    },
-    {
-      "pmid": "24604487",
-      "entity": "nosocomial infections",
-      "sentence": "It is also the first trial to use the distress thermometer in primary care and the first to test a specific checklist to identify unmet needs of cance"
-    },
-    {
-      "pmid": "37533768",
-      "entity": "19",
-      "sentence": "For example, long\u2010term CT imaging of gold NP\u2010integrated MSCs revealed their specific migration to depression\u2010associated brain regions in model rats (F"
-    },
-    {
-      "pmid": "38744814",
-      "entity": "19",
-      "sentence": "Long read assemblies resolve complex amplicons and identify initiating processes\n\nPatient 43 showed a TDP genomic profile25\u2009(based on SV signatures26)"
-    },
-    {
-      "pmid": "32186705",
-      "entity": "nosocomial infections",
-      "sentence": "The influence of age on the likelihood of receiving end-of-life care consistent with patient treatment preferences\n."
-    },
-    {
-      "pmid": "33928028",
-      "entity": "19",
-      "sentence": "Among the over 150 RNA modifications, N6-methyladenosine (m6A) is the most abundant internal modification in eukaryotic RNAs, not only in messenger RN"
-    },
-    {
-      "pmid": "36325262",
-      "entity": "nosocomial infections",
-      "sentence": "In adopting ambulatory parathyroidectomy program, we will improve patient access to care but ongoing cost evaluation of this program to ensure sustain"
-    },
-    {
-      "pmid": "32831062",
-      "entity": "nosocomial infections",
-      "sentence": "Additionally, patients with breast cancer and severe mental illness also have higher rates of smoking, other adverse lifestyle behaviours, higher morb"
-    }
-  ]
+  "in_abstract": 117,
+  "body_only": 320,
+  "examples_missing": []
 }
