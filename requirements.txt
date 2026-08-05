@@ -8,6 +8,6 @@ matplotlib>=3.11.0
 numpy>=2.5.0
 scipy>=1.18.0
 beautifulsoup4>=4.15.0
-feedparser>=6.0.0
+feedparser>=6.0.14
 graphviz>=0.20.0
 pytest>=9.1.1
