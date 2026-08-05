@@ -10,9 +10,12 @@ a reason unrelated to the thing it names.
 One sub-class of that is mechanically decidable, and this file enumerates it: an
 `assert` whose entire expression is built from literal module constants -- with
 at most string/list methods called ON those constants -- and which therefore
-compares the test file to itself. `assert EXPECTED.count("\\n\\n") == 1` was a
-real instance here: it read a module-level literal and a literal, so blanking
-every value in the artifact it claimed to guard would not have moved it.
+compares the test file to itself. `assert EXPECTED.count("\\n\\n") == 1` is the shape:
+it reads a module-level literal and a literal, so blanking every value in the
+artifact it claims to guard would not move it. That exact line was written in a
+draft of `test_pdf_extraction.py` during this session and replaced before it was
+committed -- so it is NOT in the repo's history, and this file should not be
+read as claiming the class was ever merged here. It was not.
 
 WHAT THIS DOES NOT COVER, stated so the green is not over-read
 ---------------------------------------------------------------
@@ -149,11 +152,37 @@ def test_no_assertion_compares_the_test_file_to_itself():
           "line to ALLOW with the reason it is not vacuous.")
 
 
-def test_the_allowlist_entries_still_exist():
-    """A stale exemption silently widens the hole it was cut for."""
-    for key in ALLOW:
+def _bad_allow_entries(allow) -> list:
+    """Entries naming a file or line that no longer exists."""
+    bad = []
+    for key in allow:
         name, _, lineno = key.rpartition(":")
         path = TESTS / name
-        assert path.exists(), f"ALLOW names {name}, which is gone"
-        assert int(lineno) <= len(path.read_text().split("\n")), (
-            f"ALLOW names {key}, past the end of that file")
+        if not path.exists():
+            bad.append(f"{key}: {name} is gone")
+        elif not lineno.isdigit() or int(lineno) > len(path.read_text().split("\n")):
+            bad.append(f"{key}: past the end of {name}")
+    return bad
+
+
+def test_the_allowlist_entries_still_exist():
+    """A stale exemption silently widens the hole it was cut for.
+
+    ALLOW is empty today, so a bare `for key in ALLOW` loop would execute
+    nothing and pass for that reason alone -- an empty-loop test is exactly the
+    defect this file is about, and a review caught it here. The checker is
+    therefore a function, exercised below against synthetic entries so it is
+    known to work BEFORE the first real exemption is ever added.
+    """
+    assert _bad_allow_entries(ALLOW) == [], (
+        "stale ALLOW entries: " + "; ".join(_bad_allow_entries(ALLOW)))
+
+
+def test_the_allowlist_checker_actually_checks():
+    """Prove the checker fires, since the real allowlist is empty."""
+    assert _bad_allow_entries({"definitely_not_a_file.py:1": "why"}), (
+        "the allowlist checker does not notice a file that does not exist")
+    assert _bad_allow_entries({"test_no_vacuous_assertions.py:99999": "why"}), (
+        "the allowlist checker does not notice a line past the end of a file")
+    assert _bad_allow_entries({"test_no_vacuous_assertions.py:1": "why"}) == [], (
+        "the allowlist checker rejects a valid entry")
