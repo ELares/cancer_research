@@ -4,6 +4,34 @@ updates:
     directory: "/simulations"
     schedule:
       interval: "weekly"
+    ignore:
+      # rand and rand_distr are NOT ordinary dependencies here. Every seeded
+      # simulation draws from `StdRng`, and `sim-tme-3d/expected_summary.sha256`
+      # pins the production matrix byte-for-byte -- that file already names
+      # Ziggurat (rand_distr's normal-sampling algorithm) as one of the things
+      # the hash depends on. A major bump therefore does not just need an API
+      # migration (38 call sites across 8 files: `gen`/`gen::<` -> `random`,
+      # `gen_range` -> `random_range`, plus rand_distr 0.4 -> 0.5, whose own
+      # Cargo.toml pins rand 0.8 so the two must move together); it would move
+      # the RNG stream and with it every committed figure and calibration
+      # number.
+      #
+      # That is a scientific decision requiring a measured before/after, not a
+      # dependency update. See #605, closed for this reason.
+      #
+      # PINNED BY EXPLICIT RANGE, NOT `update-types: semver-major`. These are
+      # 0.x crates, and dependabot classifies updates by the LITERAL first
+      # version segment: 0.8.6 -> 0.10.2 keeps a major of 0, so it reads as a
+      # MINOR update and a semver-major ignore never matches it. The first
+      # version of this rule was written that way and would have let #605
+      # straight back in -- the config would have said one thing and the
+      # comment above it another. For a 0.x crate the breaking axis IS minor,
+      # so the range is stated outright; 0.8.7 and other 0.8.x patches still
+      # come through.
+      - dependency-name: "rand"
+        versions: [">= 0.9"]
+      - dependency-name: "rand_distr"
+        versions: [">= 0.5"]
 
   - package-ecosystem: "pip"
     directory: "/"
