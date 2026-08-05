@@ -1,0 +1,902 @@
+[
+ {
+  "id": "corroborated:1",
+  "stratum": "corroborated",
+  "n_judges": 3,
+  "votes_tp": 3,
+  "majority": "TP",
+  "adjudicated": "",
+  "unanimous": true,
+  "any_borderline": false
+ },
+ {
+  "id": "corroborated:2",
+  "stratum": "corroborated",
+  "n_judges": 3,
+  "votes_tp": 3,
+  "majority": "TP",
+  "adjudicated": "",
+  "unanimous": true,
+  "any_borderline": false
+ },
+ {
+  "id": "corroborated:3",
+  "stratum": "corroborated",
+  "n_judges": 3,
+  "votes_tp": 3,
+  "majority": "TP",
+  "adjudicated": "",
+  "unanimous": true,
+  "any_borderline": false
+ },
+ {
+  "id": "corroborated:4",
+  "stratum": "corroborated",
+  "n_judges": 3,
+  "votes_tp": 3,
+  "majority": "TP",
+  "adjudicated": "",
+  "unanimous": true,
+  "any_borderline": true
+ },
+ {
+  "id": "corroborated:5",
+  "stratum": "corroborated",
+  "n_judges": 3,
+  "votes_tp": 3,
+  "majority": "TP",
+  "adjudicated": "",
+  "unanimous": true,
+  "any_borderline": false
+ },
+ {
+  "id": "corroborated:6",
+  "stratum": "corroborated",
+  "n_judges": 3,
+  "votes_tp": 3,
+  "majority": "TP",
+  "adjudicated": "",
+  "unanimous": true,
+  "any_borderline": false
+ },
+ {
+  "id": "corroborated:7",
+  "stratum": "corroborated",
+  "n_judges": 3,
+  "votes_tp": 3,
+  "majority": "TP",
+  "adjudicated": "",
+  "unanimous": true,
+  "any_borderline": false
+ },
+ {
+  "id": "corroborated:8",
+  "stratum": "corroborated",
+  "n_judges": 3,
+  "votes_tp": 3,
+  "majority": "TP",
+  "adjudicated": "",
+  "unanimous": true,
+  "any_borderline": false
+ },
+ {
+  "id": "corroborated:9",
+  "stratum": "corroborated",
+  "n_judges": 3,
+  "votes_tp": 3,
+  "majority": "TP",
+  "adjudicated": "",
+  "unanimous": true,
+  "any_borderline": false
+ },
+ {
+  "id": "corroborated:10",
+  "stratum": "corroborated",
+  "n_judges": 3,
+  "votes_tp": 3,
+  "majority": "TP",
+  "adjudicated": "",
+  "unanimous": true,
+  "any_borderline": true
+ },
+ {
+  "id": "corroborated:11",
+  "stratum": "corroborated",
+  "n_judges": 3,
+  "votes_tp": 3,
+  "majority": "TP",
+  "adjudicated": "",
+  "unanimous": true,
+  "any_borderline": false
+ },
+ {
+  "id": "corroborated:12",
+  "stratum": "corroborated",
+  "n_judges": 3,
+  "votes_tp": 3,
+  "majority": "TP",
+  "adjudicated": "",
+  "unanimous": true,
+  "any_borderline": false
+ },
+ {
+  "id": "corroborated:13",
+  "stratum": "corroborated",
+  "n_judges": 3,
+  "votes_tp": 3,
+  "majority": "TP",
+  "adjudicated": "",
+  "unanimous": true,
+  "any_borderline": false
+ },
+ {
+  "id": "corroborated:14",
+  "stratum": "corroborated",
+  "n_judges": 3,
+  "votes_tp": 3,
+  "majority": "TP",
+  "adjudicated": "",
+  "unanimous": true,
+  "any_borderline": false
+ },
+ {
+  "id": "corroborated:15",
+  "stratum": "corroborated",
+  "n_judges": 3,
+  "votes_tp": 3,
+  "majority": "TP",
+  "adjudicated": "",
+  "unanimous": true,
+  "any_borderline": false
+ },
+ {
+  "id": "corroborated:16",
+  "stratum": "corroborated",
+  "n_judges": 3,
+  "votes_tp": 3,
+  "majority": "TP",
+  "adjudicated": "",
+  "unanimous": true,
+  "any_borderline": false
+ },
+ {
+  "id": "corroborated:17",
+  "stratum": "corroborated",
+  "n_judges": 3,
+  "votes_tp": 3,
+  "majority": "TP",
+  "adjudicated": "",
+  "unanimous": true,
+  "any_borderline": false
+ },
+ {
+  "id": "corroborated:18",
+  "stratum": "corroborated",
+  "n_judges": 3,
+  "votes_tp": 3,
+  "majority": "TP",
+  "adjudicated": "",
+  "unanimous": true,
+  "any_borderline": false
+ },
+ {
+  "id": "corroborated:19",
+  "stratum": "corroborated",
+  "n_judges": 3,
+  "votes_tp": 3,
+  "majority": "TP",
+  "adjudicated": "",
+  "unanimous": true,
+  "any_borderline": false
+ },
+ {
+  "id": "corroborated:20",
+  "stratum": "corroborated",
+  "n_judges": 3,
+  "votes_tp": 3,
+  "majority": "TP",
+  "adjudicated": "",
+  "unanimous": true,
+  "any_borderline": false
+ },
+ {
+  "id": "corroborated:21",
+  "stratum": "corroborated",
+  "n_judges": 3,
+  "votes_tp": 3,
+  "majority": "TP",
+  "adjudicated": "",
+  "unanimous": true,
+  "any_borderline": false
+ },
+ {
+  "id": "corroborated:22",
+  "stratum": "corroborated",
+  "n_judges": 3,
+  "votes_tp": 3,
+  "majority": "TP",
+  "adjudicated": "",
+  "unanimous": true,
+  "any_borderline": false
+ },
+ {
+  "id": "corroborated:23",
+  "stratum": "corroborated",
+  "n_judges": 3,
+  "votes_tp": 3,
+  "majority": "TP",
+  "adjudicated": "",
+  "unanimous": true,
+  "any_borderline": false
+ },
+ {
+  "id": "corroborated:24",
+  "stratum": "corroborated",
+  "n_judges": 3,
+  "votes_tp": 3,
+  "majority": "TP",
+  "adjudicated": "",
+  "unanimous": true,
+  "any_borderline": false
+ },
+ {
+  "id": "corroborated:25",
+  "stratum": "corroborated",
+  "n_judges": 3,
+  "votes_tp": 3,
+  "majority": "TP",
+  "adjudicated": "",
+  "unanimous": true,
+  "any_borderline": false
+ },
+ {
+  "id": "corroborated:26",
+  "stratum": "corroborated",
+  "n_judges": 3,
+  "votes_tp": 3,
+  "majority": "TP",
+  "adjudicated": "",
+  "unanimous": true,
+  "any_borderline": false
+ },
+ {
+  "id": "corroborated:27",
+  "stratum": "corroborated",
+  "n_judges": 3,
+  "votes_tp": 3,
+  "majority": "TP",
+  "adjudicated": "",
+  "unanimous": true,
+  "any_borderline": false
+ },
+ {
+  "id": "corroborated:28",
+  "stratum": "corroborated",
+  "n_judges": 3,
+  "votes_tp": 3,
+  "majority": "TP",
+  "adjudicated": "",
+  "unanimous": true,
+  "any_borderline": false
+ },
+ {
+  "id": "corroborated:29",
+  "stratum": "corroborated",
+  "n_judges": 3,
+  "votes_tp": 3,
+  "majority": "TP",
+  "adjudicated": "",
+  "unanimous": true,
+  "any_borderline": false
+ },
+ {
+  "id": "corroborated:30",
+  "stratum": "corroborated",
+  "n_judges": 3,
+  "votes_tp": 3,
+  "majority": "TP",
+  "adjudicated": "",
+  "unanimous": true,
+  "any_borderline": false
+ },
+ {
+  "id": "abstract-visible:1",
+  "stratum": "abstract-visible",
+  "n_judges": 3,
+  "votes_tp": 3,
+  "majority": "TP",
+  "adjudicated": "",
+  "unanimous": true,
+  "any_borderline": true
+ },
+ {
+  "id": "abstract-visible:2",
+  "stratum": "abstract-visible",
+  "n_judges": 3,
+  "votes_tp": 0,
+  "majority": "FP",
+  "adjudicated": "",
+  "unanimous": true,
+  "any_borderline": false
+ },
+ {
+  "id": "abstract-visible:3",
+  "stratum": "abstract-visible",
+  "n_judges": 3,
+  "votes_tp": 0,
+  "majority": "FP",
+  "adjudicated": "",
+  "unanimous": true,
+  "any_borderline": true
+ },
+ {
+  "id": "abstract-visible:4",
+  "stratum": "abstract-visible",
+  "n_judges": 3,
+  "votes_tp": 2,
+  "majority": "TP",
+  "adjudicated": "TP",
+  "unanimous": false,
+  "any_borderline": true
+ },
+ {
+  "id": "abstract-visible:5",
+  "stratum": "abstract-visible",
+  "n_judges": 3,
+  "votes_tp": 0,
+  "majority": "FP",
+  "adjudicated": "",
+  "unanimous": true,
+  "any_borderline": false
+ },
+ {
+  "id": "abstract-visible:6",
+  "stratum": "abstract-visible",
+  "n_judges": 3,
+  "votes_tp": 0,
+  "majority": "FP",
+  "adjudicated": "",
+  "unanimous": true,
+  "any_borderline": false
+ },
+ {
+  "id": "abstract-visible:7",
+  "stratum": "abstract-visible",
+  "n_judges": 3,
+  "votes_tp": 3,
+  "majority": "TP",
+  "adjudicated": "",
+  "unanimous": true,
+  "any_borderline": true
+ },
+ {
+  "id": "abstract-visible:8",
+  "stratum": "abstract-visible",
+  "n_judges": 3,
+  "votes_tp": 0,
+  "majority": "FP",
+  "adjudicated": "",
+  "unanimous": true,
+  "any_borderline": true
+ },
+ {
+  "id": "abstract-visible:9",
+  "stratum": "abstract-visible",
+  "n_judges": 3,
+  "votes_tp": 0,
+  "majority": "FP",
+  "adjudicated": "",
+  "unanimous": true,
+  "any_borderline": false
+ },
+ {
+  "id": "abstract-visible:10",
+  "stratum": "abstract-visible",
+  "n_judges": 3,
+  "votes_tp": 3,
+  "majority": "TP",
+  "adjudicated": "",
+  "unanimous": true,
+  "any_borderline": true
+ },
+ {
+  "id": "abstract-visible:11",
+  "stratum": "abstract-visible",
+  "n_judges": 3,
+  "votes_tp": 0,
+  "majority": "FP",
+  "adjudicated": "",
+  "unanimous": true,
+  "any_borderline": true
+ },
+ {
+  "id": "abstract-visible:12",
+  "stratum": "abstract-visible",
+  "n_judges": 3,
+  "votes_tp": 3,
+  "majority": "TP",
+  "adjudicated": "",
+  "unanimous": true,
+  "any_borderline": false
+ },
+ {
+  "id": "abstract-visible:13",
+  "stratum": "abstract-visible",
+  "n_judges": 3,
+  "votes_tp": 0,
+  "majority": "FP",
+  "adjudicated": "",
+  "unanimous": true,
+  "any_borderline": false
+ },
+ {
+  "id": "abstract-visible:14",
+  "stratum": "abstract-visible",
+  "n_judges": 3,
+  "votes_tp": 3,
+  "majority": "TP",
+  "adjudicated": "",
+  "unanimous": true,
+  "any_borderline": false
+ },
+ {
+  "id": "abstract-visible:15",
+  "stratum": "abstract-visible",
+  "n_judges": 3,
+  "votes_tp": 3,
+  "majority": "TP",
+  "adjudicated": "",
+  "unanimous": true,
+  "any_borderline": false
+ },
+ {
+  "id": "abstract-visible:16",
+  "stratum": "abstract-visible",
+  "n_judges": 3,
+  "votes_tp": 3,
+  "majority": "TP",
+  "adjudicated": "",
+  "unanimous": true,
+  "any_borderline": false
+ },
+ {
+  "id": "abstract-visible:17",
+  "stratum": "abstract-visible",
+  "n_judges": 3,
+  "votes_tp": 0,
+  "majority": "FP",
+  "adjudicated": "",
+  "unanimous": true,
+  "any_borderline": false
+ },
+ {
+  "id": "abstract-visible:18",
+  "stratum": "abstract-visible",
+  "n_judges": 3,
+  "votes_tp": 0,
+  "majority": "FP",
+  "adjudicated": "",
+  "unanimous": true,
+  "any_borderline": true
+ },
+ {
+  "id": "abstract-visible:19",
+  "stratum": "abstract-visible",
+  "n_judges": 3,
+  "votes_tp": 0,
+  "majority": "FP",
+  "adjudicated": "",
+  "unanimous": true,
+  "any_borderline": false
+ },
+ {
+  "id": "abstract-visible:20",
+  "stratum": "abstract-visible",
+  "n_judges": 3,
+  "votes_tp": 0,
+  "majority": "FP",
+  "adjudicated": "",
+  "unanimous": true,
+  "any_borderline": false
+ },
+ {
+  "id": "abstract-visible:21",
+  "stratum": "abstract-visible",
+  "n_judges": 3,
+  "votes_tp": 3,
+  "majority": "TP",
+  "adjudicated": "",
+  "unanimous": true,
+  "any_borderline": false
+ },
+ {
+  "id": "abstract-visible:22",
+  "stratum": "abstract-visible",
+  "n_judges": 3,
+  "votes_tp": 0,
+  "majority": "FP",
+  "adjudicated": "",
+  "unanimous": true,
+  "any_borderline": false
+ },
+ {
+  "id": "abstract-visible:23",
+  "stratum": "abstract-visible",
+  "n_judges": 3,
+  "votes_tp": 0,
+  "majority": "FP",
+  "adjudicated": "",
+  "unanimous": true,
+  "any_borderline": true
+ },
+ {
+  "id": "abstract-visible:24",
+  "stratum": "abstract-visible",
+  "n_judges": 3,
+  "votes_tp": 0,
+  "majority": "FP",
+  "adjudicated": "",
+  "unanimous": true,
+  "any_borderline": false
+ },
+ {
+  "id": "abstract-visible:25",
+  "stratum": "abstract-visible",
+  "n_judges": 3,
+  "votes_tp": 0,
+  "majority": "FP",
+  "adjudicated": "",
+  "unanimous": true,
+  "any_borderline": false
+ },
+ {
+  "id": "abstract-visible:26",
+  "stratum": "abstract-visible",
+  "n_judges": 3,
+  "votes_tp": 0,
+  "majority": "FP",
+  "adjudicated": "",
+  "unanimous": true,
+  "any_borderline": false
+ },
+ {
+  "id": "abstract-visible:27",
+  "stratum": "abstract-visible",
+  "n_judges": 3,
+  "votes_tp": 0,
+  "majority": "FP",
+  "adjudicated": "",
+  "unanimous": true,
+  "any_borderline": true
+ },
+ {
+  "id": "abstract-visible:28",
+  "stratum": "abstract-visible",
+  "n_judges": 3,
+  "votes_tp": 3,
+  "majority": "TP",
+  "adjudicated": "",
+  "unanimous": true,
+  "any_borderline": false
+ },
+ {
+  "id": "abstract-visible:29",
+  "stratum": "abstract-visible",
+  "n_judges": 3,
+  "votes_tp": 3,
+  "majority": "TP",
+  "adjudicated": "",
+  "unanimous": true,
+  "any_borderline": false
+ },
+ {
+  "id": "abstract-visible:30",
+  "stratum": "abstract-visible",
+  "n_judges": 3,
+  "votes_tp": 0,
+  "majority": "FP",
+  "adjudicated": "",
+  "unanimous": true,
+  "any_borderline": true
+ },
+ {
+  "id": "body-only:1",
+  "stratum": "body-only",
+  "n_judges": 3,
+  "votes_tp": 3,
+  "majority": "TP",
+  "adjudicated": "",
+  "unanimous": true,
+  "any_borderline": false
+ },
+ {
+  "id": "body-only:2",
+  "stratum": "body-only",
+  "n_judges": 3,
+  "votes_tp": 3,
+  "majority": "TP",
+  "adjudicated": "",
+  "unanimous": true,
+  "any_borderline": false
+ },
+ {
+  "id": "body-only:3",
+  "stratum": "body-only",
+  "n_judges": 3,
+  "votes_tp": 3,
+  "majority": "TP",
+  "adjudicated": "",
+  "unanimous": true,
+  "any_borderline": false
+ },
+ {
+  "id": "body-only:4",
+  "stratum": "body-only",
+  "n_judges": 3,
+  "votes_tp": 3,
+  "majority": "TP",
+  "adjudicated": "",
+  "unanimous": true,
+  "any_borderline": false
+ },
+ {
+  "id": "body-only:5",
+  "stratum": "body-only",
+  "n_judges": 3,
+  "votes_tp": 3,
+  "majority": "TP",
+  "adjudicated": "",
+  "unanimous": true,
+  "any_borderline": false
+ },
+ {
+  "id": "body-only:6",
+  "stratum": "body-only",
+  "n_judges": 3,
+  "votes_tp": 3,
+  "majority": "TP",
+  "adjudicated": "",
+  "unanimous": true,
+  "any_borderline": false
+ },
+ {
+  "id": "body-only:7",
+  "stratum": "body-only",
+  "n_judges": 3,
+  "votes_tp": 3,
+  "majority": "TP",
+  "adjudicated": "",
+  "unanimous": true,
+  "any_borderline": true
+ },
+ {
+  "id": "body-only:8",
+  "stratum": "body-only",
+  "n_judges": 3,
+  "votes_tp": 3,
+  "majority": "TP",
+  "adjudicated": "",
+  "unanimous": true,
+  "any_borderline": false
+ },
+ {
+  "id": "body-only:9",
+  "stratum": "body-only",
+  "n_judges": 3,
+  "votes_tp": 3,
+  "majority": "TP",
+  "adjudicated": "",
+  "unanimous": true,
+  "any_borderline": false
+ },
+ {
+  "id": "body-only:10",
+  "stratum": "body-only",
+  "n_judges": 3,
+  "votes_tp": 0,
+  "majority": "FP",
+  "adjudicated": "",
+  "unanimous": true,
+  "any_borderline": true
+ },
+ {
+  "id": "body-only:11",
+  "stratum": "body-only",
+  "n_judges": 3,
+  "votes_tp": 3,
+  "majority": "TP",
+  "adjudicated": "",
+  "unanimous": true,
+  "any_borderline": false
+ },
+ {
+  "id": "body-only:12",
+  "stratum": "body-only",
+  "n_judges": 3,
+  "votes_tp": 3,
+  "majority": "TP",
+  "adjudicated": "",
+  "unanimous": true,
+  "any_borderline": false
+ },
+ {
+  "id": "body-only:13",
+  "stratum": "body-only",
+  "n_judges": 3,
+  "votes_tp": 3,
+  "majority": "TP",
+  "adjudicated": "",
+  "unanimous": true,
+  "any_borderline": true
+ },
+ {
+  "id": "body-only:14",
+  "stratum": "body-only",
+  "n_judges": 3,
+  "votes_tp": 3,
+  "majority": "TP",
+  "adjudicated": "",
+  "unanimous": true,
+  "any_borderline": false
+ },
+ {
+  "id": "body-only:15",
+  "stratum": "body-only",
+  "n_judges": 3,
+  "votes_tp": 1,
+  "majority": "FP",
+  "adjudicated": "TP",
+  "unanimous": false,
+  "any_borderline": true
+ },
+ {
+  "id": "body-only:16",
+  "stratum": "body-only",
+  "n_judges": 3,
+  "votes_tp": 3,
+  "majority": "TP",
+  "adjudicated": "",
+  "unanimous": true,
+  "any_borderline": false
+ },
+ {
+  "id": "body-only:17",
+  "stratum": "body-only",
+  "n_judges": 3,
+  "votes_tp": 3,
+  "majority": "TP",
+  "adjudicated": "",
+  "unanimous": true,
+  "any_borderline": false
+ },
+ {
+  "id": "body-only:18",
+  "stratum": "body-only",
+  "n_judges": 3,
+  "votes_tp": 3,
+  "majority": "TP",
+  "adjudicated": "",
+  "unanimous": true,
+  "any_borderline": false
+ },
+ {
+  "id": "body-only:19",
+  "stratum": "body-only",
+  "n_judges": 3,
+  "votes_tp": 3,
+  "majority": "TP",
+  "adjudicated": "",
+  "unanimous": true,
+  "any_borderline": true
+ },
+ {
+  "id": "body-only:20",
+  "stratum": "body-only",
+  "n_judges": 3,
+  "votes_tp": 3,
+  "majority": "TP",
+  "adjudicated": "",
+  "unanimous": true,
+  "any_borderline": false
+ },
+ {
+  "id": "body-only:21",
+  "stratum": "body-only",
+  "n_judges": 3,
+  "votes_tp": 0,
+  "majority": "FP",
+  "adjudicated": "",
+  "unanimous": true,
+  "any_borderline": false
+ },
+ {
+  "id": "body-only:22",
+  "stratum": "body-only",
+  "n_judges": 3,
+  "votes_tp": 3,
+  "majority": "TP",
+  "adjudicated": "",
+  "unanimous": true,
+  "any_borderline": false
+ },
+ {
+  "id": "body-only:23",
+  "stratum": "body-only",
+  "n_judges": 3,
+  "votes_tp": 0,
+  "majority": "FP",
+  "adjudicated": "",
+  "unanimous": true,
+  "any_borderline": false
+ },
+ {
+  "id": "body-only:24",
+  "stratum": "body-only",
+  "n_judges": 3,
+  "votes_tp": 3,
+  "majority": "TP",
+  "adjudicated": "",
+  "unanimous": true,
+  "any_borderline": false
+ },
+ {
+  "id": "body-only:25",
+  "stratum": "body-only",
+  "n_judges": 3,
+  "votes_tp": 3,
+  "majority": "TP",
+  "adjudicated": "",
+  "unanimous": true,
+  "any_borderline": false
+ },
+ {
+  "id": "body-only:26",
+  "stratum": "body-only",
+  "n_judges": 3,
+  "votes_tp": 3,
+  "majority": "TP",
+  "adjudicated": "",
+  "unanimous": true,
+  "any_borderline": false
+ },
+ {
+  "id": "body-only:27",
+  "stratum": "body-only",
+  "n_judges": 3,
+  "votes_tp": 0,
+  "majority": "FP",
+  "adjudicated": "",
+  "unanimous": true,
+  "any_borderline": true
+ },
+ {
+  "id": "body-only:28",
+  "stratum": "body-only",
+  "n_judges": 3,
+  "votes_tp": 3,
+  "majority": "TP",
+  "adjudicated": "",
+  "unanimous": true,
+  "any_borderline": false
+ },
+ {
+  "id": "body-only:29",
+  "stratum": "body-only",
+  "n_judges": 3,
+  "votes_tp": 3,
+  "majority": "TP",
+  "adjudicated": "",
+  "unanimous": true,
+  "any_borderline": false
+ },
+ {
+  "id": "body-only:30",
+  "stratum": "body-only",
+  "n_judges": 3,
+  "votes_tp": 3,
+  "majority": "TP",
+  "adjudicated": "",
+  "unanimous": true,
+  "any_borderline": false
+ }
+]

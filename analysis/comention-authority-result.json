@@ -77,5 +77,37 @@
     "gene_tp_lost": 0.0,
     "mesh_n": 46,
     "gene_n": 12
-  }
+  },
+  "blind_panel": {
+    "corroborated": {
+      "n": 30,
+      "majority_tp": 30,
+      "adjudicated_tp": 30,
+      "precision": 1.0,
+      "adjudicated": 1.0,
+      "hostile": 0.9333333333333333,
+      "unanimous": 1.0
+    },
+    "abstract-visible": {
+      "n": 30,
+      "majority_tp": 11,
+      "adjudicated_tp": 11,
+      "precision": 0.36666666666666664,
+      "adjudicated": 0.36666666666666664,
+      "hostile": 0.23333333333333334,
+      "unanimous": 0.9666666666666667
+    },
+    "body-only": {
+      "n": 30,
+      "majority_tp": 25,
+      "adjudicated_tp": 26,
+      "precision": 0.8333333333333334,
+      "adjudicated": 0.8666666666666667,
+      "hostile": 0.7333333333333333,
+      "unanimous": 0.9666666666666667
+    }
+  },
+  "blind_weighted": 0.8835161486898233,
+  "blind_adjudicated": 0.8932663010359537,
+  "blind_hostile": 0.7999695307739184
 }

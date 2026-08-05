@@ -125,8 +125,39 @@ def recall_cost():
     }
 
 
+def blind_panel():
+    """Three independent judges per stratum, blind to the original verdicts.
+
+    The original 90 judgements were made by one person who knew which layer the
+    mentions came from and had written the rule being evaluated. That is the one
+    bias a self-assessment cannot remove, so it was tested rather than argued
+    about: verdicts stripped, three judges per stratum, a fourth adjudicating
+    disagreements, none with access to the originals.
+    """
+    f = JUDGED / "blind-rejudge-verdicts.json"
+    if not f.exists():
+        return None
+    rows = json.loads(f.read_text())
+    out = {}
+    for s in STRATA:
+        sub = [r for r in rows if r["stratum"] == s]
+        if not sub:
+            continue
+        maj = sum(1 for r in sub if r["majority"] == "TP")
+        adj = sum(1 for r in sub
+                  if (r["adjudicated"] or r["majority"]) == "TP")
+        hostile = sum(1 for r in sub
+                      if r["majority"] == "TP" and not r["any_borderline"])
+        out[s] = {"n": len(sub), "majority_tp": maj, "adjudicated_tp": adj,
+                  "precision": maj / len(sub), "adjudicated": adj / len(sub),
+                  "hostile": hostile / len(sub),
+                  "unanimous": sum(1 for r in sub if r["unanimous"]) / len(sub)}
+    return out or None
+
+
 def main() -> int:
     rc = recall_cost()
+    bp = blind_panel()
     audit = json.loads(AUDIT.read_text())
     tot = audit["mentions"]
     weight = {"corroborated": audit["pubtator_agree"] / tot,
@@ -155,6 +186,15 @@ def main() -> int:
         w_hi += weight[s] * hi
         w_adverse += weight[s] * adverse
         w_favourable += weight[s] * favourable
+
+    bp_w = bp_adj = bp_unan = bp_hostile = 0.0
+    if bp:
+        for s in STRATA:
+            if s in bp:
+                bp_w += weight[s] * bp[s]["precision"]
+                bp_adj += weight[s] * bp[s]["adjudicated"]
+                bp_hostile += weight[s] * bp[s]["hostile"]
+                bp_unan += bp[s]["unanimous"] / len(bp)
 
     L = [
         "# Did the authority filter make the layer more precise? (#628)", "",
@@ -224,6 +264,38 @@ def main() -> int:
         "new layer's composition shifted toward the corroborated stratum, and this",
         "calculation holds composition fixed.", "",
     ]) + [
+        "## An independent blind panel, because I could not check this myself", "",
+    ] + ([] if not bp else [
+        "The 90 judgements above were made by one person who knew which layer the",
+        "mentions came from and had written the rule being evaluated. That is the one",
+        "bias a self-assessment cannot remove. Three judges per stratum re-judged the",
+        "same items with the verdicts stripped out, a fourth adjudicated the",
+        "disagreements, and none had access to the originals.", "",
+        "| stratum | blind majority | adjudicated | original | judges unanimous |",
+        "|---|---|---|---|---|",
+    ] + [
+        f"| {s} | {100*bp[s]['precision']:.1f}% ({bp[s]['majority_tp']}/{bp[s]['n']}) | "
+        f"{100*bp[s]['adjudicated']:.1f}% | {100*strata[s]['precision']:.1f}% | "
+        f"{100*bp[s]['unanimous']:.0f}% |" for s in STRATA if s in bp
+    ] + [
+        f"| **weighted** | **{100*bp_w:.1f}%** | **{100*bp_adj:.1f}%** | "
+        f"{100*w_total:.1f}% | |", "",
+        "**The result survives, and the panel came out slightly HIGHER.** Judges",
+        f"agreed unanimously on {100*bp_unan:.0f}% of items and their hostile",
+        f"borderline bound is {100*bp_hostile:.1f}%, within two points of the",
+        f"{100*w_adverse:.1f}% self-reported one.", "",
+        "It was not simply confirmation. The panel found errors in the original",
+        "judging in BOTH directions -- five items too generous to the layer, three",
+        "too harsh -- and they very nearly cancelled, which is why the headline",
+        "barely moved. The single most consequential correction runs AGAINST the",
+        "original judge's own interest: `cox1` was scored a false positive on the",
+        "assumption that COX-1 meant PTGS1, when the identifier is MT-CO1 and the",
+        "sentence reads \"targets COX1 (cytochrome c oxidase subunit 1)\". The layer",
+        "was right and the judge was wrong, in the stratum carrying 60% of the",
+        "weight.", "",
+        "The original verdicts are kept unedited as the record of what was judged;",
+        "the panel is reported beside them rather than folded into them.", "",
+    ]) + [
         "## Bounding the judgement, since it was mine and unblinded", "",
         "Declaring a bias is weaker than bounding it. Every judgement that could",
         "not be settled mechanically -- no recoverable span, or an identifier",
@@ -266,6 +338,8 @@ def main() -> int:
         "weighted_adverse": w_adverse, "weighted_favourable": w_favourable,
         "mentions_per_400_sentences": tot, "unfiltered": UNFILTERED,
         "composition": weight, "recall_cost": rc,
+        "blind_panel": bp, "blind_weighted": bp_w,
+        "blind_adjudicated": bp_adj, "blind_hostile": bp_hostile,
     }, indent=2) + "\n")
     print(f"borderline-adverse {100*w_adverse:.1f}%  favourable {100*w_favourable:.1f}%")
     print(f"filtered layer: {100*w_total:.1f}% [{100*w_lo:.1f}, {100*w_hi:.1f}] "

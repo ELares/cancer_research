@@ -67,6 +67,39 @@ rather than the new layer's sample. It sits below the 88.0% measured directly, w
 new layer's composition shifted toward the corroborated stratum, and this
 calculation holds composition fixed.
 
+## An independent blind panel, because I could not check this myself
+
+The 90 judgements above were made by one person who knew which layer the
+mentions came from and had written the rule being evaluated. That is the one
+bias a self-assessment cannot remove. Three judges per stratum re-judged the
+same items with the verdicts stripped out, a fourth adjudicated the
+disagreements, and none had access to the originals.
+
+| stratum | blind majority | adjudicated | original | judges unanimous |
+|---|---|---|---|---|
+| corroborated | 100.0% (30/30) | 100.0% | 96.7% | 100% |
+| abstract-visible | 36.7% (11/30) | 36.7% | 43.3% | 97% |
+| body-only | 83.3% (25/30) | 86.7% | 86.7% | 97% |
+| **weighted** | **88.4%** | **89.3%** | 88.0% | |
+
+**The result survives, and the panel came out slightly HIGHER.** Judges
+agreed unanimously on 98% of items and their hostile
+borderline bound is 80.0%, within two points of the
+81.9% self-reported one.
+
+It was not simply confirmation. The panel found errors in the original
+judging in BOTH directions -- five items too generous to the layer, three
+too harsh -- and they very nearly cancelled, which is why the headline
+barely moved. The single most consequential correction runs AGAINST the
+original judge's own interest: `cox1` was scored a false positive on the
+assumption that COX-1 meant PTGS1, when the identifier is MT-CO1 and the
+sentence reads "targets COX1 (cytochrome c oxidase subunit 1)". The layer
+was right and the judge was wrong, in the stratum carrying 60% of the
+weight.
+
+The original verdicts are kept unedited as the record of what was judged;
+the panel is reported beside them rather than folded into them.
+
 ## Bounding the judgement, since it was mine and unblinded
 
 Declaring a bias is weaker than bounding it. Every judgement that could
