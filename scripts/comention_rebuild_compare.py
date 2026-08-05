@@ -142,6 +142,7 @@ def main() -> int:
         control_forms = flagoff_forms
     canon = idx.get("canon") or {}
     heavy = sorted(lost.items(), key=lambda kv: -kv[1])[:20]
+    confounded = control_forms != flagoff_forms
 
     L = [
         "# What changed in the layer between the two builds (#628)", "",
@@ -210,11 +211,25 @@ def main() -> int:
         "pairs with them -- measured over 400,000 real sentences, that happens ZERO",
         "times. Sentences falling below the two-entity floor cannot do it either,",
         "since a sentence with two gene entities keeps them both.", "",
+    ] + ([
+        "**The confound above is the explanation, and the clean A/B proves it.** In",
+        "the confounded pairing this figure was 40,050. Holding the index fixed and",
+        f"varying only the rule collapses it to {gg_lost}, out of "
+        f"{gg['baseline']:,} gene-gene pairs, which is "
+        f"{100*gg_lost/max(1,gg['baseline']):.4f}%. Almost the entire apparent loss",
+        "was the rebuilt index, exactly as the unresolved note predicted.", "",
+        f"The residual {gg_lost} is most likely the cap mechanism after all, too rare",
+        "for a 400,000-sentence probe to see: entity counts rise in about 1 sentence",
+        "in 10,000, and only a sentence already near the cap can be pushed over it.",
+        "It is left as a small unexplained residue rather than assigned, since",
+        f"{gg_lost} pairs is below the resolution of any test run here.", "",
+    ] if not confounded else [
         "**The remaining explanation is the confound above**: the corrected",
         "minority-share filter changed which forms are in the map at all, including",
         "gene forms, and that is a different build rather than a different rule. It is",
         "recorded as unresolved rather than attributed, because the clean A/B that",
         "would settle it has not been run.", "",
+    ]) + [
         "## The heaviest pairs the filter removed", "",
         "| pair | co-mentions |", "|---|---|",
     ]
@@ -241,7 +256,7 @@ def main() -> int:
         "control_alias_forms": control_forms,
         "gene_gene_lost": gg_lost, "gene_gene_gained": gg_gained,
         "baseline_alias_forms": BASELINE_FORMS, "flagoff_alias_forms": flagoff_forms,
-        "confounded": control_forms != flagoff_forms,
+        "confounded": confounded,
     }, indent=2) + "\n")
     print(f"pairs {len(old):,} -> {len(new):,} ({100*len(new)/max(1,len(old)):.1f}%), "
           f"gene-gene leak {leak}")

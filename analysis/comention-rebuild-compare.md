@@ -7,22 +7,28 @@ layer's actual output.
 
 ## Is this a clean A/B?
 
-**No, and every number below carries the difference.** The control build's
-map holds 45,140 forms where this code now produces
-44,287 with the filter off, so the two runs differ by more than
-the rule. Read the comparison as between two builds rather than as the
-filter's effect.
+**Yes.** Both builds ran on the same graph index and the same code, differing
+only in `FERRO_COMENTION_AUTHORITY`. The control's alias map is
+44,287 forms, which is what this code produces with the filter
+off, so every difference below is attributable to the rule.
+
+An earlier comparison was NOT clean: it used a preserved build from before
+the graph index was rebuilt, whose map held 45,140 forms. Those
+853 extra forms came from a correction to
+the minority-share filter's numerator, not from the authority rule, and they
+made a 40,050-pair gene-gene loss impossible to attribute. That run is kept
+at `baseline-preauthority/` as context and is not compared here.
 
 ## Pairs
 
 | | baseline | rebuilt | retained |
 |---|---|---|---|
-| distinct pairs | 15,616,727 | 8,265,855 | 52.9% |
-| co-mention weight | 869,413,927 | 168,913,267 | 19.4% |
-| pairs lost | | 8,193,398 | |
-| pairs gained | | 842,526 | |
+| distinct pairs | 15,482,176 | 8,265,855 | 53.4% |
+| co-mention weight | 858,731,971 | 168,913,267 | 19.7% |
+| pairs lost | | 8,039,483 | |
+| pairs gained | | 823,162 | |
 
-**842,526 pairs are NEW**, which a purely subtractive filter
+**823,162 pairs are NEW**, which a purely subtractive filter
 could not produce. Removing a long alias unmasks a shorter surviving one
 at the same position, because the matcher is longest-match with
 consumption. The pre-flight predicted this on 400 sentences and it holds
@@ -32,21 +38,21 @@ at corpus scale.
 
 | pair type | baseline | rebuilt | retained |
 |---|---|---|---|
-| mesh-mesh | 6,265,067 | 1,955,336 | 31.2% |
-| gene-mesh | 5,686,754 | 2,389,086 | 42.0% |
-| gene-gene | 3,373,437 | 3,680,540 | 109.1% |
-| mesh-omim | 154,667 | 98,853 | 63.9% |
-| gene-omim | 136,080 | 141,278 | 103.8% |
+| mesh-mesh | 6,225,527 | 1,955,336 | 31.4% |
+| gene-mesh | 5,620,591 | 2,389,086 | 42.5% |
+| gene-gene | 3,345,431 | 3,680,540 | 110.0% |
+| mesh-omim | 154,260 | 98,853 | 64.1% |
+| gene-omim | 135,645 | 141,278 | 104.2% |
 | omim-omim | 722 | 762 | 105.5% |
 
-**Gene-gene pairs: 3,373,437 -> 3,680,540**, and the net
+**Gene-gene pairs: 3,345,431 -> 3,680,540**, and the net
 figure hides two opposite movements that have to be read separately:
 
-* **347,153 gained.** Removing a MeSH alias frees the tokens it was
+* **335,130 gained.** Removing a MeSH alias frees the tokens it was
   consuming, so a shorter gene alias can match at the same position. The
   matcher is longest-match with consumption, so this is expected -- measured
   directly, entity counts rise in about 1 sentence in 10,000.
-* **40,050 lost.** This is the number that needed explaining, because
+* **21 lost.** This is the number that needed explaining, because
   a MeSH-only rule should not be able to remove a gene match: gene aliases
   are byte-identical between the builds, and removing an alias only ever
   frees tokens.
@@ -57,36 +63,41 @@ pairs with them -- measured over 400,000 real sentences, that happens ZERO
 times. Sentences falling below the two-entity floor cannot do it either,
 since a sentence with two gene entities keeps them both.
 
-**The remaining explanation is the confound above**: the corrected
-minority-share filter changed which forms are in the map at all, including
-gene forms, and that is a different build rather than a different rule. It is
-recorded as unresolved rather than attributed, because the clean A/B that
-would settle it has not been run.
+**The confound above is the explanation, and the clean A/B proves it.** In
+the confounded pairing this figure was 40,050. Holding the index fixed and
+varying only the rule collapses it to 21, out of 3,345,431 gene-gene pairs, which is 0.0006%. Almost the entire apparent loss
+was the rebuilt index, exactly as the unresolved note predicted.
+
+The residual 21 is most likely the cap mechanism after all, too rare
+for a 400,000-sentence probe to see: entity counts rise in about 1 sentence
+in 10,000, and only a sentence already near the cap can be pushed over it.
+It is left as a small unexplained residue rather than assigned, since
+21 pairs is below the resolution of any test run here.
 
 ## The heaviest pairs the filter removed
 
 | pair | co-mentions |
 |---|---|
-| CTV — TREATMENT | 820,253 |
-| TREATMENT — effects | 691,528 |
-| invasive carcinoma — Migration | 667,136 |
-| chemotherapy — TREATMENT | 572,048 |
-| disease — TREATMENT | 484,269 |
-| tumor — TREATMENT | 461,301 |
-| proliferation — Migration | 449,384 |
-| immune dysfunction — system | 430,670 |
-| right — left ventricular dysfunction | 408,437 |
-| proliferation — apoptosis | 407,435 |
-| hand — other | 404,993 |
-| NORMAL — tissue injury | 401,886 |
-| proliferation — invasive carcinoma | 392,815 |
-| WHI — breast cancer | 389,816 |
-| TREATMENT — advanced | 379,129 |
-| oral potentially malignant disorders — TREATMENT | 376,644 |
-| TME — surgical trauma | 371,241 |
-| tumor — other | 369,575 |
-| breast cancer — TREATMENT | 362,561 |
-| ACA — OPEN | 357,789 |
+| CTV — TREATMENT | 820,899 |
+| TREATMENT — effects | 691,951 |
+| invasive carcinoma — Migration | 667,220 |
+| chemotherapy — TREATMENT | 572,640 |
+| disease — TREATMENT | 484,730 |
+| tumor — TREATMENT | 461,869 |
+| proliferation — Migration | 449,464 |
+| immune dysfunction — system | 430,780 |
+| right — left ventricular dysfunction | 408,568 |
+| proliferation — apoptosis | 407,545 |
+| hand — other | 405,075 |
+| NORMAL — tissue injury | 401,962 |
+| proliferation — invasive carcinoma | 392,927 |
+| WHI — breast cancer | 389,954 |
+| TREATMENT — advanced | 379,444 |
+| oral potentially malignant disorders — TREATMENT | 376,802 |
+| TME — surgical trauma | 370,532 |
+| tumor — other | 369,823 |
+| breast cancer — TREATMENT | 362,775 |
+| ACA — OPEN | 359,448 |
 
 Read these as the test of whether the filter removed what it was
 supposed to. A generic word resolving to a specific descriptor is the

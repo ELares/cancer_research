@@ -1,29 +1,29 @@
 {
-  "baseline_pairs": 15616727,
+  "baseline_pairs": 15482176,
   "rebuilt_pairs": 8265855,
-  "lost": 8193398,
-  "gained": 842526,
-  "baseline_weight": 869413927,
+  "lost": 8039483,
+  "gained": 823162,
+  "baseline_weight": 858731971,
   "rebuilt_weight": 168913267,
   "by_namespace": {
     "mesh-mesh": {
-      "baseline": 6265067,
+      "baseline": 6225527,
       "rebuilt": 1955336
     },
     "mesh-omim": {
-      "baseline": 154667,
+      "baseline": 154260,
       "rebuilt": 98853
     },
     "gene-gene": {
-      "baseline": 3373437,
+      "baseline": 3345431,
       "rebuilt": 3680540
     },
     "gene-mesh": {
-      "baseline": 5686754,
+      "baseline": 5620591,
       "rebuilt": 2389086
     },
     "gene-omim": {
-      "baseline": 136080,
+      "baseline": 135645,
       "rebuilt": 141278
     },
     "omim-omim": {
@@ -31,11 +31,11 @@
       "rebuilt": 762
     }
   },
-  "gene_gene_leak": -307103,
-  "control_alias_forms": 45140,
-  "gene_gene_lost": 40050,
-  "gene_gene_gained": 347153,
+  "gene_gene_leak": -335109,
+  "control_alias_forms": 44287,
+  "gene_gene_lost": 21,
+  "gene_gene_gained": 335130,
   "baseline_alias_forms": 45140,
   "flagoff_alias_forms": 44287,
-  "confounded": true
+  "confounded": false
 }
