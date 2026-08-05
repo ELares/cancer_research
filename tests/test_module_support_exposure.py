@@ -63,11 +63,9 @@ def test_entity_degree_counts_both_endpoints():
     the degrees sum to twice the edge count. A version that counted one side
     survived every other guard here.
     """
-    from atlas_baseline import atlas_root
-    from atlas_graph import load_index
+    idx = _index_or_skip()
     from atlas_module_support import _entity_degree
 
-    idx = load_index(atlas_root())
     deg = _entity_degree(idx)
     n_edges = len(idx["edges"])
     self_pairs = sum(1 for k in idx["edges"] if k[0] == k[1])
@@ -84,11 +82,10 @@ def test_the_classification_matches_the_measured_threshold():
     Recomputed here from the graph so a hand-edited table cannot disagree with
     the measurement it claims to summarise.
     """
-    from atlas_baseline import atlas_root
-    from atlas_graph import load_index, resolve, support
+    idx = _index_or_skip()
+    from atlas_graph import resolve, support
     from atlas_module_support import CLAIMS, _entity_degree
 
-    idx = load_index(atlas_root())
     deg = _entity_degree(idx)
     weaker, totals = {}, {}
     for mod, a, b, _pmid, _claim in CLAIMS:
@@ -209,3 +206,52 @@ def test_the_coupling_caveat_is_stated():
         "term without disclosing it")
     assert "not evidence FOR a claim" in sec, (
         "a reader could take a high partner count as support for the claim")
+
+
+def _index_or_skip():
+    """The relation graph, or a skip.
+
+    The atlas bulk is gitignored and CI reads only committed artifacts, so the
+    graph-dependent checks below cannot run there. They are the strongest guards
+    in this file and they run locally; `test_the_document_agrees_with_its_own_artifact`
+    is the offline stand-in that DOES run everywhere.
+    """
+    import pytest
+    from atlas_baseline import atlas_root
+    from atlas_graph import load_index
+    try:
+        return load_index(atlas_root())
+    except SystemExit:
+        pytest.skip("atlas relation index not built in this checkout")
+
+
+def test_the_document_agrees_with_its_own_artifact():
+    """Offline: the .md and the .json must tell the same story.
+
+    Runs in CI, where the graph is absent. It cannot check the numbers against
+    the world -- only that the prose and the machine-readable companion have not
+    drifted apart, which is the failure this repo keeps finding.
+    """
+    raw = json.loads((REPO_ROOT / "analysis" / "atlas-module-support.json").read_text())
+    sec = _section()
+    assert sec, "the exposure section is missing"
+    assert f"at least {raw['exposure_floor']}" in sec, (
+        "the document's floor is not the artifact's")
+    n_below = sum(1 for c in raw["claims"]
+                  if c.get("weaker") is not None and c["total"] == 0
+                  and c["weaker"] < raw["exposure_floor"])
+    assert n_below == raw["zero_explained_by_exposure"]
+    assert f"{n_below} of the {raw['zero_relation']} zeros" in sec, (
+        "the document's count of below-the-line zeros is not the artifact's")
+    # Every zero row in the artifact must appear in the document's table, with
+    # the verdict the artifact's own numbers imply.
+    for c in raw["claims"]:
+        if c.get("weaker") is None or c["total"] > 0:
+            continue
+        line = next((ln for ln in sec.split("\n")
+                     if f"| {c['module']} | `{c['a']}`" in ln), None)
+        assert line, f"{c['module']} is missing from the exposure table"
+        expect = "no" if c["weaker"] >= raw["exposure_floor"] else "yes"
+        assert line.rstrip().endswith(f"| {expect} |"), (
+            f"{c['module']} (weaker {c['weaker']}, floor {raw['exposure_floor']}) "
+            "is marked the wrong way round")
