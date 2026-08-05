@@ -13,6 +13,14 @@
 # not bit-identical across libm versions. Confirmed identical on 1.92.0
 # and 1.96.0, so it is stable in practice for the pinned channel.
 #
+# DEPENDENCY-SPECIFIC for the same reason: `rand` / `rand_distr` supply
+# StdRng and the Ziggurat normal sampler named above, so a major bump of
+# either moves this hash and every seeded figure with it. Those bumps are
+# excluded in .github/dependabot.yml (by explicit version range, since a
+# semver-major ignore does not match a 0.x bump) rather than merged on green
+# CI; a
+# deliberate upgrade needs a measured before/after, not a rebase.
+#
 # Regenerate ONLY when an INTENTIONAL output change lands (and say why in
 # the PR):
 #   cd simulations

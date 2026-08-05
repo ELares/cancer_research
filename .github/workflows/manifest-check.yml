@@ -11,6 +11,21 @@ name: Manifest Freshness
 # changes any of them must regenerate it. To fix a failure:
 #   python3 scripts/generate_release_manifest.py && git add MANIFEST.sha256
 # The generator is stdlib-only and deterministic, so no dependencies are needed.
+#
+# KNOWN INTERACTION -- this gate makes every DEPENDABOT PR unmergeable, and it
+# is not a bug in either. requirements-lock.txt, requirements.txt,
+# simulations/Cargo.lock/toml and the workflow files are all inside the manifest
+# scope, so any bump leaves MANIFEST.sha256 stale; dependabot cannot run the
+# generator, so the check fails on arrival and nothing it opens can ever go
+# green. Nine PRs accumulated over a month before anyone traced the cause to
+# here rather than to the bumps.
+#
+# Do NOT narrow the scope to fix this: lockfiles are part of the provenance
+# record the Zenodo DOI points at, and excluding them would defeat the gate for
+# the files most likely to change silently. Bumps are instead processed in
+# BATCHES -- cherry-pick the open dependabot commits onto one branch, regenerate
+# the manifest once, run both suites, and close the originals as superseded.
+# One review and one CI cycle instead of N of each.
 
 on:
   push:
@@ -31,7 +46,7 @@ jobs:
           fetch-depth: 1
 
       - name: Install Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: '3.12'
 
