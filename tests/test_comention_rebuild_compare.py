@@ -106,6 +106,10 @@ def test_the_comparison_declares_whether_it_is_clean():
     d = json.loads(RAW.read_text())
     txt = DOC.read_text()
     assert "Is this a clean A/B?" in txt
+    # The question is a heading; the ANSWER is what matters and it is
+    # derived from the artifact, so require it to be stated either way.
+    assert "**Yes.**" in txt or "**No" in txt, (
+        "the section asks whether the comparison is clean and never answers")
     if d.get("confounded"):
         assert "every number below carries the difference" in txt
     else:

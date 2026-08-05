@@ -1240,6 +1240,12 @@ def test_news_verification_report_states_the_residual_weakness():
     md = (REPO_ROOT / "analysis" / "news-verification-audit.md").read_text()
     assert "withdrawal, not repair" in md
     assert "two shared words is a low bar" in md
+    # The heading alone is emitted unconditionally, so pin the finding under
+    # it: the residual weakness is that most surviving pairs clear the bar on
+    # oncology boilerplate. Without this the section could be empty.
+    assert "oncology boilerplate alone" in md
+    assert "not\ndistinguishable from coincidence" in md or (
+        "distinguishable from coincidence" in md)
 
 
 def test_manuscript_does_not_claim_verification_it_lacks():
@@ -1560,6 +1566,10 @@ def test_replication_cohorts_use_an_equal_window_not_a_minimum():
         f"early {ea:.3f} vs late {la:.3f}: the window looks unequal again")
     md = (REPO_ROOT / "analysis" / "atlas-replication.md").read_text()
     assert "equal, not merely a minimum" in md
+    # Body, not title: the section must actually SHOW the censored series it
+    # warns against, or the warning is decorative.
+    assert "ever* replicated gives" in md
+    assert "observation window\nshrinking" in md or "observation window" in md
 
 
 def test_replication_states_it_measures_co_assertion_not_replication():

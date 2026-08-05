@@ -79,6 +79,9 @@ def test_the_confound_and_the_unblinding_are_both_declared():
     assert "runs the opposite way to the earlier measurements" in flat
     # Recall cost must be stated, not just precision.
     assert "What it cost" in flat and "half the layer's output is gone" in flat.lower()
+    # "What it cost" is a heading the generator always writes. The cost
+    # itself is the pair-table line, which is derived from the A/B artifact.
+    assert "pair table went" in flat and "retained)" in flat
 
 
 def test_the_improvement_is_real_across_every_stratum():
