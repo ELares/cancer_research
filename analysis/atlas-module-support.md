@@ -32,7 +32,7 @@ Counts are not truth. About half of all relations carry the weakest predicate,
 > different fraction. Several corroborated rows also rest on a single extracted
 > assertion, so read the per-row counts rather than the headline.
 
-> **The co-mention column is measured at roughly 42% precision** (95% interval roughly 32-53%),
+> **The co-mention column is measured at roughly 88% precision** (95% interval roughly 74-94%, blind panel 88%),
 > (`analysis/comention-regression.md`), so read it as an upper bound on
 > discussion rather than a count of it. Roughly half of any figure in that
 > column is a generic surface form resolving to the wrong entity -- the
@@ -47,24 +47,24 @@ Counts are not truth. About half of all relations carry the weakest predicate,
 
 | module | pair | relation articles | full-text co-mentions | predicates | cited PMID? | contested |
 |---|---|---|---|---|---|---|
-| system_xc | `SLC7A11` - `GPX4` | 74 | **18,845** | associate 65, positive_correlate 6, negative_correlate 3 | no | **yes** (+6/-3, bal 0.50) |
-| erastin | `erastin` - `SLC7A11` | 63 | **1,519** | negative_correlate 39, associate 19, positive_correlate 5 | no | **yes** (+5/-39, bal 0.13) |
-| contact | `CDH1` - `YAP1` | 26 | **397** | associate 14, negative_correlate 7, positive_correlate 5 | no | **yes** (+5/-7, bal 0.71) |
-| fsp1 | `AIFM2` - `GPX4` | 15 | **579** | associate 10, positive_correlate 3, negative_correlate 2 | no | **yes** (+3/-2, bal 0.67) |
-| ifngamma | `IFNG` - `SLC7A11` | 13 | **108** | negative_correlate 12, positive_correlate 1 | yes | **yes** (+1/-12, bal 0.08) |
-| acsl4 | `ACSL4` - `GPX4` | 13 | **8,670** | associate 7, negative_correlate 4, positive_correlate 2 | no | **yes** (+2/-4, bal 0.50) |
-| dc_ferroptosis | `CD274` - `SLC7A11` | 7 | **227** | positive_correlate 4, negative_correlate 2, associate 1 | yes | **yes** (+4/-2, bal 0.50) |
-| ifngamma | `IFNG` - `SLC3A2` | 5 | **68** | negative_correlate 5 | yes | no |
-| dhodh | `DHODH` - `GPX4` | 5 | **1,218** | associate 3, negative_correlate 2 | no | no |
-| alox | `ALOX15` - `ACSL4` | 3 | **487** | associate 2, positive_correlate 1 | no | no |
-| gch1 | `GCH1` - `GPX4` | 1 | **551** | associate 1 | no | no |
-| prom2 | `PROM2` - `FTH1` | 0 | **9** | - | - | no |
+| system_xc | `SLC7A11` - `GPX4` | 74 | **19,413** | associate 65, positive_correlate 6, negative_correlate 3 | no | **yes** (+6/-3, bal 0.50) |
+| erastin | `erastin` - `SLC7A11` | 63 | **1,573** | negative_correlate 39, associate 19, positive_correlate 5 | no | **yes** (+5/-39, bal 0.13) |
+| contact | `CDH1` - `YAP1` | 26 | **417** | associate 14, negative_correlate 7, positive_correlate 5 | no | **yes** (+5/-7, bal 0.71) |
+| fsp1 | `AIFM2` - `GPX4` | 15 | **597** | associate 10, positive_correlate 3, negative_correlate 2 | no | **yes** (+3/-2, bal 0.67) |
+| ifngamma | `IFNG` - `SLC7A11` | 13 | **99** | negative_correlate 12, positive_correlate 1 | yes | **yes** (+1/-12, bal 0.08) |
+| acsl4 | `ACSL4` - `GPX4` | 13 | **9,027** | associate 7, negative_correlate 4, positive_correlate 2 | no | **yes** (+2/-4, bal 0.50) |
+| dc_ferroptosis | `CD274` - `SLC7A11` | 7 | **239** | positive_correlate 4, negative_correlate 2, associate 1 | yes | **yes** (+4/-2, bal 0.50) |
+| ifngamma | `IFNG` - `SLC3A2` | 5 | **66** | negative_correlate 5 | yes | no |
+| dhodh | `DHODH` - `GPX4` | 5 | **1,277** | associate 3, negative_correlate 2 | no | no |
+| alox | `ALOX15` - `ACSL4` | 3 | **517** | associate 2, positive_correlate 1 | no | no |
+| gch1 | `GCH1` - `GPX4` | 1 | **595** | associate 1 | no | no |
+| prom2 | `PROM2` - `FTH1` | 0 | **11** | - | - | no |
 | vitk | `VKORC1L1` - `GPX4` | 0 | - | - | - | no |
-| copper | `ATP7A` - `GPX4` | 0 | **7** | - | - | no |
-| por | `POR` - `CYB5R1` | 0 | **19** | - | - | no |
-| dhc7 | `DHCR7` - `GPX4` | 0 | **11** | - | - | no |
-| repair | `CHMP5` - `CHMP6` | 0 | **63** | - | - | no |
-| mboat | `MBOAT2` - `GPX4` | 0 | **26** | - | - | no |
+| copper | `ATP7A` - `GPX4` | 0 | **8** | - | - | no |
+| por | `POR` - `CYB5R1` | 0 | **20** | - | - | no |
+| dhc7 | `DHCR7` - `GPX4` | 0 | **13** | - | - | no |
+| repair | `CHMP5` - `CHMP6` | 0 | **69** | - | - | no |
+| mboat | `MBOAT2` - `GPX4` | 0 | **27** | - | - | no |
 | ether_lipid | `FAR1` - `AGPS` | 0 | **89** | - | - | no |
 | hdac_persister | `HDAC1` - `AIFM2` | 0 | **1** | - | - | no |
 
@@ -103,15 +103,15 @@ is wrong -- it says the module docs should state which side they took.
   other cancer article in the graph, so they are not single-paper assertions.
 * **9** resolved to real entities but have NO asserted relation in the abstract-level graph:
 
-  * `prom2`: PROM2 - FTH1 — PROM2 exports ferritin-bound iron, draining the labile pool  _(but **9** full-text co-mentions, too few to survive the layer's ~42% precision)_
+  * `prom2`: PROM2 - FTH1 — PROM2 exports ferritin-bound iron, draining the labile pool  _(but **11** full-text co-mentions)_
   * `vitk`: VKORC1L1 - GPX4 — VKORC1L1 reduces vitamin K to a GPX4-independent radical trap
-  * `copper`: ATP7A - GPX4 — copper ionophores degrade ATP7A and deplete GSH/GPX4  _(but **7** full-text co-mentions, too few to survive the layer's ~42% precision)_
-  * `por`: POR - CYB5R1 — POR and CYB5R1 generate the H2O2 the Fenton reaction needs  _(but **19** full-text co-mentions, too few to survive the layer's ~42% precision)_
-  * `dhc7`: DHCR7 - GPX4 — 7-DHC (consumed by DHCR7) is an endogenous radical trap  _(but **11** full-text co-mentions, too few to survive the layer's ~42% precision)_
-  * `repair`: CHMP5 - CHMP6 — ESCRT-III membrane repair blocks death execution  _(but **63** full-text co-mentions)_
-  * `mboat`: MBOAT2 - GPX4 — MBOAT1/2 remodel phospholipids toward MUFA-PE, GPX4-independently  _(but **26** full-text co-mentions, too few to survive the layer's ~42% precision)_
+  * `copper`: ATP7A - GPX4 — copper ionophores degrade ATP7A and deplete GSH/GPX4  _(but **8** full-text co-mentions, still thin against the layer's ~88% precision)_
+  * `por`: POR - CYB5R1 — POR and CYB5R1 generate the H2O2 the Fenton reaction needs  _(but **20** full-text co-mentions)_
+  * `dhc7`: DHCR7 - GPX4 — 7-DHC (consumed by DHCR7) is an endogenous radical trap  _(but **13** full-text co-mentions)_
+  * `repair`: CHMP5 - CHMP6 — ESCRT-III membrane repair blocks death execution  _(but **69** full-text co-mentions)_
+  * `mboat`: MBOAT2 - GPX4 — MBOAT1/2 remodel phospholipids toward MUFA-PE, GPX4-independently  _(but **27** full-text co-mentions)_
   * `ether_lipid`: FAR1 - AGPS — FAR1/AGPS make the ether-PUFA pool that promotes ferroptosis  _(but **89** full-text co-mentions)_
-  * `hdac_persister`: HDAC1 - AIFM2 — HDACs and FSP1 together suppress persister-cell ferroptosis  _(but **1** full-text co-mentions, too few to survive the layer's ~42% precision)_
+  * `hdac_persister`: HDAC1 - AIFM2 — HDACs and FSP1 together suppress persister-cell ferroptosis  _(but **1** full-text co-mentions, still thin against the layer's ~88% precision)_
 
   **8 of those 9 ARE discussed in full text.** A zero in
   the relation column is therefore not evidence against the mechanism.

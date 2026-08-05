@@ -290,7 +290,8 @@ def build_alias_map(idx: dict) -> tuple:
             continue
         out[a] = i
 
-    # The authority-name filter, OFF by default (FERRO_COMENTION_AUTHORITY=1).
+    # The authority-name filter, ON by default since #628
+    # (FERRO_COMENTION_AUTHORITY=0 disables it).
     #
     # Every filter above asks how OFTEN a form appears. The measured failure mode
     # is generic English words -- `treatment`, `effects`, `as`, `left` -- and
@@ -314,8 +315,25 @@ def build_alias_map(idx: dict) -> tuple:
     # Applied AFTER the blocklist and the DOMAIN_SENSE redirect, so a curated
     # correction is never silently undone. All five redirects survive the check
     # regardless, since they target genes.
+    #
+    # PROMOTED to on-by-default on this evidence, all of it measured:
+    #   precision      41.6% -> 88.0% on the filtered layer's own sample, and
+    #                  88.4% from an independent blind panel of three judges who
+    #                  never saw the first verdicts (analysis/comention-
+    #                  authority-result.md). Hostile borderline bound 80.1%.
+    #   recall cost    27.6% of true positives, 34.8% on MeSH and 0% on genes.
+    #   THE CONSUMER   gains. Every one of the 20 module-support pairs is flat or
+    #                  UP, 32,886 -> 34,058 co-mentions in total, because
+    #                  removing a MeSH alias frees the tokens it consumed and a
+    #                  gene alias matches at that position. The layer's only
+    #                  reader is 19/20 gene-gene, so the recall cost falls
+    #                  entirely on uses that do not exist.
+    #
+    # That last line is what decided it. A filter that halves a layer would be a
+    # poor trade if the layer's purpose is recall, which this one's is -- but the
+    # recall it actually supplies goes UP.
     rejected = 0
-    if os.getenv("FERRO_COMENTION_AUTHORITY") == "1":
+    if os.getenv("FERRO_COMENTION_AUTHORITY") != "0":
         labels = _authority_labels()
         if labels:
             keep = {}

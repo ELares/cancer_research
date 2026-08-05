@@ -102,22 +102,57 @@ CLAIMS = [
 # The co-mention layer's measured precision, read from its own artifact so this
 # document cannot quote a stale figure. Falls back to None when the measurement
 # has not been run, in which case the caveat is omitted rather than invented.
+def _thin_threshold() -> int:
+    """How small a count is too small to argue from.
+
+    Calibrated to the layer's measured precision rather than fixed: at ~42% a
+    handful of co-mentions could be entirely noise and 50 was the bar; at ~88%
+    the same count carries real information, so the bar drops. A constant here
+    would have gone stale silently the moment the filter was promoted.
+    """
+    p = comention_precision() or 0.42
+    return 50 if p < 0.6 else (20 if p < 0.8 else 10)
+
+
 def _comention_interval() -> str:
     """The stated precision is a point estimate; quote its range beside it."""
-    f = PROJECT_ROOT / "analysis" / "comention-regression.json"
     try:
-        d = json.loads(f.read_text())["after"]
+        d = json.loads((PROJECT_ROOT / "analysis"
+                        / "comention-authority-result.json").read_text())
+        return (f"95% interval roughly {100*d['weighted_ci'][0]:.0f}-"
+                f"{100*d['weighted_ci'][1]:.0f}%, blind panel "
+                f"{100*d['blind_weighted']:.0f}%")
+    except (OSError, ValueError, KeyError):
+        pass
+    try:
+        d = json.loads((PROJECT_ROOT / "analysis"
+                        / "comention-regression.json").read_text())["after"]
         return f"95% interval roughly {100*d['range'][0]:.0f}-{100*d['range'][1]:.0f}%"
     except (OSError, ValueError, KeyError):
         return "interval not available"
 
 
 def comention_precision():
-    f = PROJECT_ROOT / "analysis" / "comention-regression.json"
-    try:
-        return json.loads(f.read_text())["after"]["weighted"]
-    except (OSError, ValueError, KeyError):
-        return None
+    """The precision of the layer AS BUILT.
+
+    The authority filter is on by default since #628, so the figure that
+    describes this column is the filtered layer's, not the unfiltered one the
+    regression document measures. Reading the wrong artifact would have this
+    document quoting 42% for a layer measured at 88%, understating its own
+    evidence by half.
+    """
+    for f, path in ((PROJECT_ROOT / "analysis" / "comention-authority-result.json",
+                     ("weighted",)),
+                    (PROJECT_ROOT / "analysis" / "comention-regression.json",
+                     ("after", "weighted"))):
+        try:
+            d = json.loads(f.read_text())
+            for k in path:
+                d = d[k]
+            return d
+        except (OSError, ValueError, KeyError):
+            continue
+    return None
 
 
 def load_comentions(root: Path) -> dict:
@@ -298,9 +333,9 @@ def main() -> None:
               "in the abstract-level graph:",
               ""] + [f"  * `{r['module']}`: {r['a']} - {r['b']} — {r['claim']}"
                      + (f"  _(but **{r['comention']:,}** full-text co-mentions"
-                        + (f", too few to survive the layer's "
+                        + (f", still thin against the layer's "
                            f"~{100*comention_precision():.0f}% precision"
-                           if r["comention"] < 50 else "") + ")_"
+                           if r["comention"] < _thin_threshold() else "") + ")_"
                         if r.get("comention") else "")
                      for r in none_] + [""]
         if rescued:

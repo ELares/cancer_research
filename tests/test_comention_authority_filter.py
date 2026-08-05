@@ -31,25 +31,33 @@ def test_the_normalised_comparison_matches_how_mesh_and_papers_differ():
     assert b("Malignant Neoplasm of Breast") != b("breast cancer")
 
 
-def test_the_flag_is_off_by_default_and_changes_nothing():
-    """A new axis must not move the layer until it is asked to."""
-    was = os.environ.pop("FERRO_COMENTION_AUTHORITY", None)
-    try:
-        idx = {"alias": {"gpx4": "2879", "treatment": "MESH:D016609"},
-               "alias_support": {}, "ident_mentions": {}}
-        out, stats = ac.build_alias_map(idx)
-        assert stats["dropped_not_a_name"] == 0
-        assert set(out) == {"gpx4", "treatment"}
-    finally:
-        if was is not None:
-            os.environ["FERRO_COMENTION_AUTHORITY"] = was
+def test_the_filter_is_on_by_default_with_a_working_escape_hatch(monkeypatch):
+    """Promoted on measured evidence (#628); `=0` still turns it off.
+
+    An escape hatch that does not work is worse than none, because the first
+    person to need it will assume the layer is unfiltered when it is not.
+    """
+    monkeypatch.setattr(ac, "_authority_labels",
+                        lambda: {"MESH:D016609": ["Neoplasms, Second Primary"]})
+    idx = {"alias": {"gpx4": "2879", "treatment": "MESH:D016609"},
+           "alias_support": {}, "ident_mentions": {}}
+
+    monkeypatch.delenv("FERRO_COMENTION_AUTHORITY", raising=False)
+    out, stats = ac.build_alias_map(idx)
+    assert "treatment" not in out, "the filter is not on by default"
+    assert stats["dropped_not_a_name"] == 1
+
+    monkeypatch.setenv("FERRO_COMENTION_AUTHORITY", "0")
+    out, stats = ac.build_alias_map(idx)
+    assert set(out) == {"gpx4", "treatment"}, "the escape hatch does not disable it"
+    assert stats["dropped_not_a_name"] == 0
 
 
 def test_it_fails_open_when_the_label_table_is_missing(monkeypatch, capsys):
     """Silently emptying the MeSH half of the map would be far worse than
     doing nothing, so an absent table must warn and pass everything through."""
     monkeypatch.setattr(ac, "_authority_labels", lambda: {})
-    monkeypatch.setenv("FERRO_COMENTION_AUTHORITY", "1")
+    monkeypatch.delenv("FERRO_COMENTION_AUTHORITY", raising=False)
     idx = {"alias": {"treatment": "MESH:D016609"}, "alias_support": {},
            "ident_mentions": {}}
     out, stats = ac.build_alias_map(idx)
@@ -65,7 +73,7 @@ def test_it_touches_only_mesh_identifiers(monkeypatch):
                         lambda: {"MESH:D001943": ["Breast Neoplasms"],
                                  "MESH:D016609": ["Neoplasms, Second Primary"],
                                  "2879": ["GPX4", "glutathione peroxidase 4"]})
-    monkeypatch.setenv("FERRO_COMENTION_AUTHORITY", "1")
+    monkeypatch.delenv("FERRO_COMENTION_AUTHORITY", raising=False)
     idx = {"alias": {"breast cancer": "MESH:D001943",   # a name -> kept
                      "treatment": "MESH:D016609",       # not a name -> dropped
                      "phgpx": "2879"},                  # gene, not a listed name
@@ -85,7 +93,7 @@ def test_an_unlabelled_mesh_identifier_is_kept_not_dropped():
     monkey = types.SimpleNamespace()
     old = ac._authority_labels
     ac._authority_labels = lambda: {"MESH:D001943": ["Breast Neoplasms"]}
-    os.environ["FERRO_COMENTION_AUTHORITY"] = "1"
+    os.environ.pop("FERRO_COMENTION_AUTHORITY", None)
     try:
         idx = {"alias": {"whatever": "MESH:D999999"}, "alias_support": {},
                "ident_mentions": {}}
