@@ -29,15 +29,35 @@ def test_the_namespace_classifier_is_right():
 
 
 @pytest.mark.skipif(not RAW.exists(), reason="rebuild comparison not run yet")
-def test_the_filter_did_not_leak_into_gene_pairs():
-    """The invariant. A MeSH-only rule that loses gene-gene pairs is broken,
-    and the layer's only consumer is 19/20 gene-gene."""
+def test_the_gene_pair_movement_is_split_and_the_confound_declared():
+    """The invariant as first written was wrong, and the data said so.
+
+    "Gene-gene pairs must be unchanged" is not a property a MeSH-only filter
+    has: removing a MeSH alias frees the tokens it consumed, so a shorter gene
+    alias can match at the same position and CREATE pairs. The net figure was
+    negative, which a leak check reading it as a loss would have called a pass
+    in the wrong direction.
+
+    What genuinely needs explaining is the LOSS, and it is not attributable to
+    the filter, because the two builds also differ by a rebuilt index. The
+    document must declare that rather than assign the loss to the rule.
+    """
     import json
 
     d = json.loads(RAW.read_text())
-    assert d["gene_gene_leak"] == 0, (
-        f"{d['gene_gene_leak']} gene-gene pairs lost to a MeSH-only filter; this "
-        "is a leak, not a design choice")
+    assert "gene_gene_lost" in d and "gene_gene_gained" in d, (
+        "the net figure hides two opposite movements and must be split")
+    assert d["gene_gene_gained"] > 0, "unmasking produced no new gene pairs"
+    txt = DOC.read_text()
+    if d.get("confounded"):
+        assert "TWO changes, not one" in txt, (
+            "the builds differ by more than the filter and the document does "
+            "not say so")
+        assert "recorded as unresolved rather than attributed" in txt
+    else:
+        assert d["gene_gene_lost"] == 0, (
+            f"{d['gene_gene_lost']} gene-gene pairs lost with no confound to "
+            "explain them; a MeSH-only filter cannot do that")
 
 
 @pytest.mark.skipif(not RAW.exists(), reason="rebuild comparison not run yet")
