@@ -71,3 +71,27 @@ def test_the_improvement_is_real_across_every_stratum():
         assert d["strata"][s]["precision"] > d["unfiltered"][s], (
             f"{s} no longer improves under the filter")
     assert d["weighted"] > d["unfiltered"]["weighted"]
+
+
+def test_the_unblinding_is_bounded_not_only_declared():
+    """Declaring a bias is weaker than bounding it.
+
+    Every judgement that could not be settled mechanically is enumerated and
+    resolved both ways. If the adverse bound ever falls to the unfiltered
+    layer's precision, the improvement is no longer robust to my own judgement
+    and the headline must be re-read.
+    """
+    d = _raw()
+    assert "weighted_adverse" in d and "weighted_favourable" in d
+    assert d["weighted_adverse"] <= d["weighted"] <= d["weighted_favourable"]
+    assert d["weighted_adverse"] > d["unfiltered"]["weighted"], (
+        f"resolving every borderline call against the filter gives "
+        f"{d['weighted_adverse']:.3f}, at or below the unfiltered "
+        f"{d['unfiltered']['weighted']:.3f}; the improvement no longer survives "
+        "a hostile reading of the judging")
+    # The borderline set must be enumerated, not summarised.
+    import comention_authority_result as c
+    assert sum(len(v) for v in c.BORDERLINE.values()) >= 10, (
+        "too few borderline calls declared for the bound to mean anything")
+    flat = " ".join(DOC.read_text().split())
+    assert "Resolving every borderline call against the filter" in flat

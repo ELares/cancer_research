@@ -40,6 +40,32 @@ rule (`analysis/comention-rebuild-compare.md`). A control build with the
 filter off on the current index is running; until it lands, read the
 41.6% as context rather than as a clean baseline.
 
+## Bounding the judgement, since it was mine and unblinded
+
+Declaring a bias is weaker than bounding it. Every judgement that could
+not be settled mechanically -- no recoverable span, or an identifier
+denoting a degenerate concept like `Disease` or `health` where the question
+has no crisp answer -- is enumerated in the script and resolved BOTH ways:
+
+| stratum | borderline | all against the filter | as judged | all for it |
+|---|---|---|---|---|
+| corroborated | 1/30 | 93.3% | 96.7% | 96.7% |
+| abstract-visible | 11/30 | 23.3% | 43.3% | 60.0% |
+| body-only | 4/30 | 80.0% | 86.7% | 93.3% |
+| **weighted** | | **81.9%** | 88.0% | 91.8% |
+
+**Resolving every borderline call against the filter still gives
+81.9%**, against 41.6% for the
+unfiltered layer. The entire range sits above the comparison, so the
+unblinding cannot account for the improvement even under the most hostile
+reading of my own judgement.
+
+It does account for a good deal of the abstract-visible figure, which moves
+between 23.3% and
+60.0% -- 11 of its 30
+mentions are borderline, mostly degenerate identifiers like `Disease` and
+`health`. That stratum's number should be read as a range.
+
 ## Limits
 
 * 30 judged mentions per stratum, so the intervals are wide -- the

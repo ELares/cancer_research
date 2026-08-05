@@ -38,6 +38,17 @@ OUT = PROJECT_ROOT / "analysis" / "comention-authority-result.md"
 RAW = PROJECT_ROOT / "analysis" / "comention-authority-result.json"
 AUDIT = PROJECT_ROOT / "analysis" / "atlas-comention-audit.json"
 STRATA = ["corroborated", "abstract-visible", "body-only"]
+# A judgement is BORDERLINE when it could not be settled mechanically: no
+# recoverable span, so the match cannot be checked at all; or an identifier
+# denoting a degenerate generic concept (Disease, health, Death, Acids) or a
+# non-entity string (MUTATIONS, FEATURES), where "does the sentence discuss it"
+# has no crisp answer. Everything else was decided by reading the span against
+# the authority name. Enumerated so the sensitivity bound is auditable.
+BORDERLINE = {
+    "corroborated": {"10"},
+    "abstract-visible": {"1", "3", "4", "7", "8", "10", "11", "18", "23", "27", "30"},
+    "body-only": {"7", "13", "15", "27"},
+}
 # Measured on the unfiltered layer, all three strata hand-judged (#633).
 UNFILTERED = {"weighted": 0.416, "corroborated": 0.900,
               "abstract-visible": 0.150, "body-only": 0.200,
@@ -62,6 +73,7 @@ def main() -> int:
               "body-only": audit["body_only"] / tot}
 
     strata, w_total, w_lo, w_hi = {}, 0.0, 0.0, 0.0
+    w_adverse = w_favourable = 0.0
     for s in STRATA:
         f = JUDGED / f"{s}-authority-judgements.csv"
         if not f.exists():
@@ -70,11 +82,18 @@ def main() -> int:
         rows = [r for r in csv.DictReader(f.open()) if r["verdict"] in ("TP", "FP")]
         tp = sum(1 for r in rows if r["verdict"] == "TP")
         lo, hi = wilson(tp, len(rows))
+        bset = BORDERLINE.get(s, set())
+        clear_tp = sum(1 for r in rows if r["verdict"] == "TP" and r["n"] not in bset)
+        adverse, favourable = clear_tp / len(rows), (clear_tp + len(bset)) / len(rows)
         strata[s] = {"n": len(rows), "tp": tp, "precision": tp / len(rows),
-                     "ci": [lo, hi], "weight": weight[s]}
+                     "ci": [lo, hi], "weight": weight[s],
+                     "borderline": len(bset),
+                     "adverse": adverse, "favourable": favourable}
         w_total += weight[s] * tp / len(rows)
         w_lo += weight[s] * lo
         w_hi += weight[s] * hi
+        w_adverse += weight[s] * adverse
+        w_favourable += weight[s] * favourable
 
     L = [
         "# Did the authority filter make the layer more precise? (#628)", "",
@@ -116,7 +135,31 @@ def main() -> int:
         "rule (`analysis/comention-rebuild-compare.md`). A control build with the",
         "filter off on the current index is running; until it lands, read the",
         f"{100*UNFILTERED['weighted']:.1f}% as context rather than as a clean baseline.",
-        "", "## Limits", "",
+        "", "## Bounding the judgement, since it was mine and unblinded", "",
+        "Declaring a bias is weaker than bounding it. Every judgement that could",
+        "not be settled mechanically -- no recoverable span, or an identifier",
+        "denoting a degenerate concept like `Disease` or `health` where the question",
+        "has no crisp answer -- is enumerated in the script and resolved BOTH ways:",
+        "", "| stratum | borderline | all against the filter | as judged | all for it |",
+        "|---|---|---|---|---|",
+    ] + [
+        f"| {s} | {strata[s]['borderline']}/{strata[s]['n']} | "
+        f"{100*strata[s]['adverse']:.1f}% | {100*strata[s]['precision']:.1f}% | "
+        f"{100*strata[s]['favourable']:.1f}% |" for s in STRATA
+    ] + [
+        f"| **weighted** | | **{100*w_adverse:.1f}%** | {100*w_total:.1f}% | "
+        f"{100*w_favourable:.1f}% |", "",
+        f"**Resolving every borderline call against the filter still gives",
+        f"{100*w_adverse:.1f}%**, against {100*UNFILTERED['weighted']:.1f}% for the",
+        "unfiltered layer. The entire range sits above the comparison, so the",
+        "unblinding cannot account for the improvement even under the most hostile",
+        "reading of my own judgement.", "",
+        "It does account for a good deal of the abstract-visible figure, which moves",
+        f"between {100*strata['abstract-visible']['adverse']:.1f}% and",
+        f"{100*strata['abstract-visible']['favourable']:.1f}% -- 11 of its 30",
+        "mentions are borderline, mostly degenerate identifiers like `Disease` and",
+        "`health`. That stratum's number should be read as a range.", "",
+        "## Limits", "",
         "* 30 judged mentions per stratum, so the intervals are wide -- the",
         "  corroborated figure is 96.7% but its interval reaches down to 83.3%.",
         "* **The judging was unblinded and I knew which layer this was.** That is the",
@@ -131,9 +174,11 @@ def main() -> int:
     OUT.write_text("\n".join(L) + "\n")
     RAW.write_text(json.dumps({
         "strata": strata, "weighted": w_total, "weighted_ci": [w_lo, w_hi],
+        "weighted_adverse": w_adverse, "weighted_favourable": w_favourable,
         "mentions_per_400_sentences": tot, "unfiltered": UNFILTERED,
         "composition": weight,
     }, indent=2) + "\n")
+    print(f"borderline-adverse {100*w_adverse:.1f}%  favourable {100*w_favourable:.1f}%")
     print(f"filtered layer: {100*w_total:.1f}% [{100*w_lo:.1f}, {100*w_hi:.1f}] "
           f"vs {100*UNFILTERED['weighted']:.1f}% unfiltered")
     print(f"wrote {OUT}")
