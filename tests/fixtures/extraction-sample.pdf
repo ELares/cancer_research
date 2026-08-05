@@ -1,0 +1,85 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 3 /Kids [4 0 R 6 0 R 8 0 R] >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+4 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 5 0 R >>
+endobj
+5 0 obj
+<< /Length 1084 >>
+stream
+BT
+/F1 12 Tf
+1 0 0 1 72 720 Tm (Ferroptosis in cancer therapy) Tj
+1 0 0 1 72 700 Tm (A fixture document for extraction drift.) Tj
+1 0 0 1 72 670 Tm (Lipid peroxidation drives an iron dependent death.) Tj
+1 0 0 1 72 650 Tm (GPX4 is the canonical defence against that peroxidation.) Tj
+1 0 0 1 72 630 Tm (System Xc minus imports cystine to sustain glutathione.) Tj
+1 0 0 1 72 610 Tm (Erastin inhibits that transporter and starves the cell.) Tj
+1 0 0 1 72 590 Tm (FSP1 and DHODH repair peroxides in parallel to GPX4.) Tj
+1 0 0 1 72 570 Tm (ACSL4 sets how much oxidisable substrate the membrane holds.) Tj
+1 0 0 1 72 550 Tm (Labile iron drives the Fenton chemistry that propagates.) Tj
+1 0 0 1 72 530 Tm (Ferritinophagy releases stored iron into that labile pool.) Tj
+1 0 0 1 72 510 Tm (PROM2 exports it again, draining the pool and resisting.) Tj
+1 0 0 1 72 490 Tm (The balance of those two decides whether a cell dies.) Tj
+1 0 0 1 72 470 Tm (None of these sentences is a claim about the literature.) Tj
+1 0 0 1 72 450 Tm (They exist to give the extractor enough text to work on.) Tj
+ET
+endstream
+endobj
+6 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 7 0 R >>
+endobj
+7 0 obj
+<< /Length 0 >>
+stream
+endstream
+endobj
+8 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 9 0 R >>
+endobj
+9 0 obj
+<< /Length 1114 >>
+stream
+BT
+/F1 12 Tf
+1 0 0 1 72 600 Tm (Second block, drawn first in the content stream.) Tj
+1 0 0 1 72 700 Tm (First block by position, drawn second.) Tj
+1 0 0 1 72 560 Tm (Padding so the extracted document clears the one thousand) Tj
+1 0 0 1 72 540 Tm (character floor that the production extractors apply before) Tj
+1 0 0 1 72 520 Tm (they accept a PDF at all, since a shorter fixture would sit) Tj
+1 0 0 1 72 500 Tm (inside the region that real code discards and could not be) Tj
+1 0 0 1 72 480 Tm (passed through the real function under test.) Tj
+1 0 0 1 72 450 Tm (Trailing lines keep the page count and ordering intact.) Tj
+1 0 0 1 72 430 Tm (The reading order property above is unaffected by them.) Tj
+1 0 0 1 72 410 Tm (Each line is plain ASCII in the base fourteen Helvetica.) Tj
+1 0 0 1 72 390 Tm (No ligature, no embedded font, no column layout is present.) Tj
+1 0 0 1 72 370 Tm (Those shapes are named in the test as explicitly uncovered.) Tj
+1 0 0 1 72 350 Tm (A real paper carries all of them and this one does not.) Tj
+1 0 0 1 72 330 Tm (That limit is the honest boundary of what this guard proves.) Tj
+ET
+endstream
+endobj
+xref
+0 10
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000127 00000 n 
+0000000197 00000 n 
+0000000323 00000 n 
+0000001458 00000 n 
+0000001584 00000 n 
+0000001632 00000 n 
+0000001758 00000 n 
+trailer
+<< /Size 10 /Root 1 0 R >>
+startxref
+2923
+%%EOF
