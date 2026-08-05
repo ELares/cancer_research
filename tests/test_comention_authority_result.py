@@ -124,3 +124,52 @@ def test_the_rule_costs_nothing_on_genes_and_that_is_verified_not_assumed():
         "either it stopped firing or the measurement broke"
     flat = " ".join(DOC.read_text().split())
     assert "rather than assumed from the code" in flat
+
+
+def test_the_blind_panel_is_committed_and_recomputable():
+    """The one check the original judge could not perform on themselves."""
+    import json as _json
+
+    f = REPO_ROOT / "analysis" / "comention" / "blind-rejudge-verdicts.json"
+    rows = _json.loads(f.read_text())
+    assert len(rows) == 90, f"{len(rows)} blind verdicts, expected 90"
+    for r in rows:
+        assert r["n_judges"] >= 3, f"{r['id']} judged by only {r['n_judges']}"
+        assert r["majority"] in ("TP", "FP")
+    d = _raw()["blind_panel"]
+    for s in STRATA:
+        sub = [r for r in rows if r["stratum"] == s]
+        maj = sum(1 for r in sub if r["majority"] == "TP")
+        assert d[s]["majority_tp"] == maj and d[s]["n"] == len(sub)
+
+
+def test_the_blind_panel_confirms_rather_than_replaces_the_original():
+    """Both are reported. The originals are the record of what was judged and
+    are kept unedited; the panel is an independent measurement beside them."""
+    d = _raw()
+    assert abs(d["blind_weighted"] - d["weighted"]) < 0.06, (
+        f"blind {d['blind_weighted']:.3f} and original {d['weighted']:.3f} now "
+        "differ by more than 6 points; the headline needs re-reading")
+    assert d["blind_weighted"] > d["unfiltered"]["weighted"]
+    assert d["blind_hostile"] > d["unfiltered"]["weighted"], (
+        "the blind hostile bound no longer clears the unfiltered layer")
+    flat = " ".join(DOC.read_text().split())
+    assert "kept unedited as the record" in flat
+    # The correction that ran against the original judge must stay visible.
+    assert "the judge was wrong" in flat
+
+
+def test_inter_judge_agreement_is_high_enough_to_trust_the_panel():
+    """A panel that disagrees with itself cannot adjudicate anyone else."""
+    import json as _json
+
+    rows = _json.loads(
+        (REPO_ROOT / "analysis" / "comention" / "blind-rejudge-verdicts.json").read_text())
+    unan = sum(1 for r in rows if r["unanimous"])
+    assert unan / len(rows) > 0.9, (
+        f"judges agreed unanimously on only {100*unan/len(rows):.0f}% of items")
+    # Disagreement should be confined to items someone flagged borderline.
+    split = [r for r in rows if not r["unanimous"]]
+    assert all(r["any_borderline"] for r in split), (
+        "judges split on an item nobody found borderline; the criterion is "
+        "ambiguous somewhere it does not admit")
