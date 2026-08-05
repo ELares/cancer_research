@@ -32,18 +32,27 @@ Counts are not truth. About half of all relations carry the weakest predicate,
 > different fraction. Several corroborated rows also rest on a single extracted
 > assertion, so read the per-row counts rather than the headline.
 
-> **The co-mention column is measured at roughly 88% precision** (95% interval roughly 74-94%, blind panel 88%),
-> (`analysis/comention-regression.md`), so read it as an upper bound on
-> discussion rather than a count of it. Roughly half of any figure in that
-> column is a generic surface form resolving to the wrong entity -- the
-> measured failure mode is bare English words like `treatment` and
-> `effects` matching in their ordinary sense.
+> **The co-mention column is measured at roughly 88% precision** (95% interval
+> roughly 74-94%, blind panel 88%, `analysis/comention-authority-result.md`),
+> so read it as an upper bound on discussion rather than a count of it.
 
-> That matters most where the number is SMALL, which is exactly where this
+> **The remaining error is not spread evenly, and this column does not say
+> which stratum a figure came from.** Across the three: mentions PubTator also
+> corroborates are 97% correct (29/30) and carry 60% of the volume; mentions
+> found only in the body are 87% correct (26/30) and carry 29% of the volume;
+> mentions visible in the abstract are 43% correct (13/30) and carry 11% of
+> the volume. A count here is a blend of all three in unknown proportion, so
+> the honest reading of any single figure is the weighted 88% rather than
+> whichever stratum it might have come from. The largest single share of the
+> residual error sits in mentions visible in the abstract, at 51% of it -- a
+> plurality rather than a concentration, since that stratum carries only 11%
+> of the volume.
+
+> That still matters most where the number is SMALL, which is where this
 > document leans on it: a handful of co-mentions offered as evidence that a
-> zero-relation module is discussed after all could be entirely noise. A
-> large figure survives the error rate as evidence of discussion; a figure
-> in single digits does not.
+> zero-relation module is discussed after all is a handful of chances for the
+> 12% to land. A large figure survives the error rate as evidence of
+> discussion; a figure under 10 is flagged rather than argued from.
 
 | module | pair | relation articles | full-text co-mentions | predicates | cited PMID? | contested |
 |---|---|---|---|---|---|---|

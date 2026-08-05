@@ -24,9 +24,10 @@ clean one.
 
 Mentions per 400 sampled sentences fell 1,484 to
 1,094 (26% fewer), and the
-pair table went 15,616,727 to 8,265,855. Roughly half the layer's output is
-gone, which is the trade the offline prediction described and the reason the
-rule was measured this hard before being built.
+pair table went 15,482,176 to 8,265,855 (53.4% retained).
+Roughly half the layer's output is gone, which is the trade the offline
+prediction described and the reason the rule was measured this hard before
+being built.
 
 ## What is and is not confounded
 
@@ -34,11 +35,20 @@ rule was measured this hard before being built.
 uniform sample, against its own strata, and says what that layer is whatever
 produced it.
 
-**The comparison is not.** The graph index was rebuilt between the two
-builds, so their alias maps differ by 853 forms for reasons unrelated to the
-rule (`analysis/comention-rebuild-compare.md`). A control build with the
-filter off on the current index is running; until it lands, read the
-41.6% as context rather than as a clean baseline.
+**The comparison is clean too, now.** It was not when this document was
+first written: the only baseline available came from a build predating a
+graph-index rebuild, whose alias map held 45,140 forms against the current
+code's 44,287. A control build with the filter
+OFF on the current index has since landed
+(`analysis/comention-rebuild-compare.md`), so the two builds differ only in
+the rule, and the 41.6% is a real baseline
+rather than context.
+
+The confound was not cosmetic. Under the old pairing the filter appeared to
+destroy tens of thousands of gene-gene pairs, which a MeSH-only rule should
+not be able to do at all; against the control it loses 21 of 3,345,431, and gene-gene pairs on net
+go UP by 335,109 because removing a
+MeSH alias frees the tokens it was consuming.
 
 ## What it cost, measured rather than counted
 

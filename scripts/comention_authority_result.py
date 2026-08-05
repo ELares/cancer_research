@@ -10,14 +10,18 @@ one number as the other.
 
 WHAT IS AND IS NOT CONFOUNDED
 -----------------------------
-The BEFORE/AFTER comparison of the two builds is confounded: the graph index was
-rebuilt between them, so the alias maps differ by 853 forms for reasons
-unrelated to the rule (`analysis/comention-rebuild-compare.md`).
+The BEFORE/AFTER comparison was confounded while the only available baseline
+came from a build predating a graph-index rebuild, so the alias maps differed
+by 853 forms for reasons unrelated to the rule. A control build with the filter
+off on the CURRENT index then landed, and `comention-rebuild-compare.json`
+records which pairing it describes in `confounded`. This document reads that
+flag rather than restating a status, because the sentence "a control build is
+running" is true for a few hours and wrong forever after -- and it survived in
+the shipped document past the run it described.
 
-The ABSOLUTE precision of the filtered layer is not. It is judged on that
-layer's own uniform sample, against its own strata, and says what the layer is
-whatever produced it. That is the number this document reports; the comparison
-to 41.6% is offered as context and carries the confound.
+The ABSOLUTE precision of the filtered layer was never confounded either way.
+It is judged on that layer's own uniform sample, against its own strata, and
+says what the layer is whatever produced it.
 
 Usage:
     python scripts/comention_authority_result.py
@@ -53,6 +57,83 @@ BORDERLINE = {
 UNFILTERED = {"weighted": 0.416, "corroborated": 0.900,
               "abstract-visible": 0.150, "body-only": 0.200,
               "mentions_per_400": 1484}
+
+
+def _ab():
+    """The A/B artifact, or None."""
+    try:
+        return json.loads((PROJECT_ROOT / "analysis"
+                           / "comention-rebuild-compare.json").read_text())
+    except (OSError, ValueError):
+        return None
+
+
+def _pair_cost():
+    """The pair-table cost, against the baseline the comparison actually used.
+
+    This line held a hard-coded 15,616,727, which is the PRE-REBUILD baseline
+    from the confounded pairing. Once the clean control landed, the same
+    document declared the comparison clean sixteen lines below a cost figure
+    still measured against the discarded build -- and it disagreed with
+    `comention-rebuild-compare.md` (52.9% retained vs 53.4%) on the same two
+    builds. Read from the artifact so the two documents cannot diverge.
+    """
+    d = _ab()
+    if not d:
+        return ["and the pair table cannot be quoted: the A/B artifact is missing.", ""]
+    return [
+        f"pair table went {d['baseline_pairs']:,} to {d['rebuilt_pairs']:,} "
+        f"({100*d['rebuilt_pairs']/d['baseline_pairs']:.1f}% retained).",
+    ]
+
+
+def _comparison_status():
+    """Whether the before/after comparison is still confounded, read not stated.
+
+    The first version of this section said a control build "is running", which
+    was true for a few hours and then quietly wrong -- the run finished, the
+    clean A/B landed, and the shipped document still told readers to discount
+    the comparison. `comention-rebuild-compare.json` knows which pairing it
+    describes, so the paragraph is derived from it.
+    """
+    d = _ab()
+    if not d:
+        return [
+            "**The comparison cannot be checked.** The A/B artifact is missing, so",
+            f"read the {100*UNFILTERED['weighted']:.1f}% as context rather than as a",
+            "clean baseline until `scripts/comention_rebuild_compare.py` has run.", "",
+        ]
+    if d.get("confounded", True):
+        # `control_alias_forms` is the build actually compared against.
+        # `baseline_alias_forms` is a constant naming the historic pre-rebuild
+        # build, so a FUTURE confounded control would report the wrong gap.
+        return [
+            "**The comparison is not.** The graph index was rebuilt between the two",
+            f"builds, so their alias maps differ by "
+            f"{abs(d.get('control_alias_forms', 0) - d.get('flagoff_alias_forms', 0)):,} "
+            "forms for reasons unrelated to",
+            "the rule (`analysis/comention-rebuild-compare.md`). Read the",
+            f"{100*UNFILTERED['weighted']:.1f}% as context rather than as a clean",
+            "baseline until a control build on the current index lands.", "",
+        ]
+    return [
+        "**The comparison is clean too, now.** It was not when this document was",
+        "first written: the only baseline available came from a build predating a",
+        f"graph-index rebuild, whose alias map held "
+        f"{d.get('baseline_alias_forms', 0):,} forms against the current",
+        f"code's {d.get('flagoff_alias_forms', 0):,}. A control build with the filter",
+        "OFF on the current index has since landed",
+        "(`analysis/comention-rebuild-compare.md`), so the two builds differ only in",
+        f"the rule, and the {100*UNFILTERED['weighted']:.1f}% is a real baseline",
+        "rather than context.", "",
+        "The confound was not cosmetic. Under the old pairing the filter appeared to",
+        "destroy tens of thousands of gene-gene pairs, which a MeSH-only rule should",
+        f"not be able to do at all; against the control it loses "
+        f"{d['gene_gene_lost']} of "
+        f"{d['by_namespace']['gene-gene']['baseline']:,}, and gene-gene pairs on net",
+        f"go UP by {d['gene_gene_gained'] - d['gene_gene_lost']:,} because removing a",
+        "MeSH alias frees the tokens it was consuming.", "",
+    ]
 
 
 def wilson(k, n, z=1.96):
@@ -224,19 +305,16 @@ def main() -> int:
         "## What it cost", "",
         f"Mentions per 400 sampled sentences fell {UNFILTERED['mentions_per_400']:,} to",
         f"{tot:,} ({100*(1-tot/UNFILTERED['mentions_per_400']):.0f}% fewer), and the",
-        "pair table went 15,616,727 to 8,265,855. Roughly half the layer's output is",
-        "gone, which is the trade the offline prediction described and the reason the",
-        "rule was measured this hard before being built.", "",
+    ] + _pair_cost() + [
+        "Roughly half the layer's output is gone, which is the trade the offline",
+        "prediction described and the reason the rule was measured this hard before",
+        "being built.", "",
         "## What is and is not confounded", "",
         "**The absolute figure is clean.** It is judged on the filtered layer's own",
         "uniform sample, against its own strata, and says what that layer is whatever",
         "produced it.", "",
-        "**The comparison is not.** The graph index was rebuilt between the two",
-        "builds, so their alias maps differ by 853 forms for reasons unrelated to the",
-        "rule (`analysis/comention-rebuild-compare.md`). A control build with the",
-        "filter off on the current index is running; until it lands, read the",
-        f"{100*UNFILTERED['weighted']:.1f}% as context rather than as a clean baseline.",
-        "", "## What it cost, measured rather than counted", "",
+    ] + _comparison_status() + [
+        "## What it cost, measured rather than counted", "",
     ] + ([] if not rc else [
         "The pair and mention counts above say how much output went. They do not say",
         "how much of what went was RIGHT. Applying the shipped rule to the 180",

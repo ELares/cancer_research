@@ -106,7 +106,9 @@ a backlog.
 Reported here because a findings page that only lists wins is marketing.
 
 **A repair this project made to its own co-mention layer made it worse.** #617 measured the layer at 55.5% precision (recomputed at 51% once every stratum was hand-judged rather than assumed), traced it to a filter that exempted multi-word forms, and replaced the single-token test with two measured filters. Re-measured on a fresh sample after the rebuild, precision FELL to 42%. The false positives had been multi-word because the multi-word channel was the unfiltered one; closing it moved the pressure to the channel just opened, and the top offenders are now bare English words. The replacement filters were then measured and do not separate true matches from false ones at all.
-*Source:* `comention-regression.md`
+**It was then repaired for real, and the fix is measured at 88%** (#628). What separates true matches from false ones is not how much support a form has but whether the form is a NAME of the entity it resolves to, checked against NLM and NCBI rather than against the corpus. `treatment` is not a name of any descriptor; `xCT` is a name of SLC7A11. A blind panel of three judges who never saw the first verdicts put it at 88%, and the hostile bound, resolving every borderline case against the layer, is 80%.
+So the standing finding is not that the layer is broken. It is that this project shipped a filter justified by an error distribution the filter itself changed, did not notice for two issues, and needed a fresh sample drawn after the rebuild to see it. The cost of the real fix is 28% of true matches, paid entirely on MeSH terms (35%) and not at all on genes (0%).
+*Source:* `comention-regression.md`, `comention-authority-result.md`
 
 **Literature-based discovery does not work as built.** The shipped ABC
 ranking scores 12.3% precision@20 against
@@ -142,7 +144,7 @@ None of these were computational errors. Every one was a true statement describi
 
 ## Every layer now carries a bound
 
-* co-mention precision: **42% measured** (hand-judged, superseding the 32.5%-76.7% corroboration bound), and it FELL 9 points when the #617 filters were changed
+* co-mention precision: **88% measured** on the layer as shipped (blind panel 88%, hostile bound 80%), superseding both the 60.1%-89.4% corroboration bound and the 42% the layer measured before the authority filter was turned on
 * contradictions: ambiguity inflates the flag rate 1.45x
 * emergence: 99.0% precision, 99.6% recall
 * FSP1 disambiguation: 97.4%, with 75% of corrections extrapolated and that extrapolation independently tested

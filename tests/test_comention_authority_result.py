@@ -54,10 +54,27 @@ def test_the_interval_is_reported_beside_the_point_estimate():
 
 
 def test_the_confound_and_the_unblinding_are_both_declared():
-    """The comparison carries a confound and the judging carries a bias, and
-    this is the one result in the thread that favours a change I made."""
+    """The comparison's status and the judging's bias must both be declared.
+
+    The original guard pinned the literal sentence "The comparison is not."
+    That was right while the comparison WAS confounded, and it made the guard
+    fail for the correct reason once the clean A/B landed: the document had
+    stopped saying it because it had stopped being true. So the guard now
+    checks the document agrees with the artifact EITHER WAY, which it could not
+    do when the status was written by hand.
+    """
     flat = " ".join(DOC.read_text().split())
-    assert "The comparison is not." in flat
+    ab = REPO_ROOT / "analysis" / "comention-rebuild-compare.json"
+    if ab.exists():
+        confounded = json.loads(ab.read_text()).get("confounded", True)
+        if confounded:
+            assert "The comparison is not." in flat, (
+                "the A/B is confounded and the document does not say so")
+        else:
+            assert "The comparison is clean too" in flat, (
+                "the A/B is clean and the document still discounts the comparison")
+            assert "is running" not in flat, (
+                "the document describes a run that has since finished")
     assert "unblinded and I knew which layer this was" in flat
     assert "runs the opposite way to the earlier measurements" in flat
     # Recall cost must be stated, not just precision.
