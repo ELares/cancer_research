@@ -3,8 +3,19 @@
   "corroborated": 11,
   "zero_relation": 9,
   "unresolved": 0,
+  "n_claims_layers_only": 17,
+  "corroborated_layers_only": 8,
+  "core_engine_claims": [
+    "erastin",
+    "fsp1",
+    "system_xc"
+  ],
   "exposure_floor": 108,
+  "weaker_min": 6,
+  "weaker_max": 2792,
+  "below_floor_base_rate": 0.45288169986020377,
   "spearman_weaker_degree_vs_relations": 0.8568166078500651,
+  "spearman_excluding_gpx4": 0.8839641927498687,
   "zero_explained_by_exposure": 7,
   "zero_unexplained": [
     "copper",
