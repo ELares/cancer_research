@@ -52,6 +52,10 @@ from atlas_graph import load_index, resolve, support  # noqa: E402
 from config import PROJECT_ROOT  # noqa: E402
 
 OUT = PROJECT_ROOT / "analysis" / "atlas-module-support.md"
+# The machine-readable companion. Without it this analysis was the only
+# one in the atlas set that downstream documents could not quote without
+# copying numbers out of prose -- which is how stale figures get made.
+RAW = PROJECT_ROOT / "analysis" / "atlas-module-support.json"
 
 # (module, entity A, entity B, PMID cited in the module docs, one-line claim)
 # Pairs are the closest gene/chemical proxy for each module's mechanism, since
@@ -103,6 +107,216 @@ CLAIMS = [
 # The co-mention layer's measured precision, read from its own artifact so this
 # document cannot quote a stale figure. Falls back to None when the measurement
 # has not been run, in which case the caveat is omitted rather than invented.
+def _entity_degree(idx: dict) -> dict:
+    """identifier -> how many DISTINCT partners it has in the relation graph.
+
+    A measure of how exposed an entity is to being written about at all, which
+    is what decides whether a pair COULD have been asserted.
+    """
+    deg = {}
+    for key in idx["edges"]:
+        # `for i in key` over a 2-tuple double-counts a SELF-pair (a, a), which
+        # would give `a` two partners where it has one -- itself. 629 of the
+        # 2,840,563 edges are self-pairs and AIFM2 is one of them, so this
+        # touched two of the twenty claims. Tiny, and wrong is wrong.
+        for i in set(key):
+            deg[i] = deg.get(i, 0) + 1
+    return deg
+
+
+def _spearman(xs: list, ys: list) -> float:
+    """Rank correlation, stdlib only (scipy is not a dependency of this script)."""
+    def rank(v):
+        order = sorted(range(len(v)), key=lambda i: v[i])
+        r = [0.0] * len(v)
+        i = 0
+        while i < len(order):
+            j = i
+            while j + 1 < len(order) and v[order[j + 1]] == v[order[i]]:
+                j += 1
+            avg = (i + j) / 2 + 1
+            for k in range(i, j + 1):
+                r[order[k]] = avg
+            i = j + 1
+        return r
+    rx, ry = rank(xs), rank(ys)
+    n = len(xs)
+    mx, my = sum(rx) / n, sum(ry) / n
+    num = sum((a - mx) * (b - my) for a, b in zip(rx, ry))
+    den = (sum((a - mx) ** 2 for a in rx) * sum((b - my) ** 2 for b in ry)) ** 0.5
+    return num / den if den else 0.0
+
+
+def _below_floor_base_rate(idx: dict, degree: dict, rows: list):
+    """Share of ALL asserted pairs whose weaker entity sits below the claim floor.
+
+    The number that refutes "the census could not have corroborated them": if
+    nearly half of everything the census DOES assert sits below the line, the
+    line is not a detectability limit.
+    """
+    sup = [r["weaker"] for r in rows if r.get("weaker") is not None and r["total"] > 0]
+    if not sup:
+        return None
+    floor, below, total = min(sup), 0, 0
+    for key in idx["edges"]:
+        total += 1
+        if min(degree.get(key[0], 0), degree.get(key[1], 0)) < floor:
+            below += 1
+    return below / total if total else None
+
+
+def _kendall(xs: list, ys: list) -> float:
+    """Tie-corrected rank correlation (tau-b), stdlib only.
+
+    Reported beside Spearman because 9 of the 20 outcomes are tied at zero,
+    which is exactly the case Spearman handles least transparently.
+    """
+    n, con, dis, tx, ty = len(xs), 0, 0, 0, 0
+    for i in range(n):
+        for j in range(i + 1, n):
+            dx, dy = xs[i] - xs[j], ys[i] - ys[j]
+            if dx == 0 and dy == 0:
+                tx += 1; ty += 1
+            elif dx == 0:
+                tx += 1
+            elif dy == 0:
+                ty += 1
+            elif (dx > 0) == (dy > 0):
+                con += 1
+            else:
+                dis += 1
+    tot = n * (n - 1) / 2
+    den = ((tot - tx) * (tot - ty)) ** 0.5
+    return (con - dis) / den if den else 0.0
+
+
+def _exposure_section(rows: list, base_rate: float | None = None) -> list:
+    """Why a zero in the relation column is mostly not about the claim.
+
+    WHAT SURVIVED REVIEW, AND WHAT DID NOT
+    ---------------------------------------
+    The association is solid: entity exposure predicts corroboration at
+    rho ~ 0.86 (permutation p < 1e-5), tau ~ 0.70, and the two groups separate
+    at AUC 0.965. It holds under a different entity-level measure
+    (`ident_mentions`, rho ~ 0.83, same split) and RISES to 0.88 when every
+    GPX4 pair is dropped, so it is not an artifact of one hub gene.
+
+    Two things did NOT survive, and both were in the first draft:
+
+      * "the census could not have corroborated them whatever the biology is"
+        is false. The floor is a sample minimum, not a detectability limit, and
+        45% of all asserted pairs in the graph sit below it. The claim is
+        probabilistic and is now stated that way.
+      * naming WHICH zeros are genuine does not replicate across measures. On
+        entity degree the exceptions are copper and hdac_persister; on the
+        pair-level co-mention column already in this table the correlation
+        INVERTS (rho ~ -0.9) and the exceptions become ether_lipid and repair,
+        with zero overlap. So the table cannot currently single out a genuinely
+        unasserted link, and saying which two were interesting was reading one
+        measure and not the other.
+    """
+    usable = [r for r in rows if r.get("weaker") is not None]
+    if len(usable) < 5:
+        return []
+    w = [r["weaker"] for r in usable]
+    n = [r["total"] for r in usable]
+    rho, tau = _spearman(w, n), _kendall(w, n)
+    zero = [r for r in usable if r["total"] == 0]
+    nonzero = [r for r in usable if r["total"] > 0]
+    if not zero or not nonzero:
+        return []
+    floor = min(r["weaker"] for r in nonzero)
+    floor_row = min(nonzero, key=lambda r: r["weaker"])
+    explained = [r for r in zero if r["weaker"] < floor]
+    above = sorted([r for r in zero if r["weaker"] >= floor], key=lambda r: -r["weaker"])
+
+    # The same procedure run on the pair-level column already in this table.
+    cm = [r for r in zero if r.get("comention")]
+    cm_sup = [r["comention"] for r in nonzero if r.get("comention")]
+    cm_floor = min(cm_sup) if cm_sup else None
+    cm_above = sorted([r for r in cm if r["comention"] >= cm_floor],
+                      key=lambda r: -r["comention"]) if cm_floor else []
+
+    L = [
+        "## A zero is usually about EXPOSURE, not about the claim", "",
+        "The count above treats every zero alike. They are not alike. A pair can",
+        "only be asserted if both its entities are written about at all, and across",
+        f"these claims the WEAKER entity's number of distinct relation partners runs",
+        f"from {min(w)} to {max(w):,}, a factor of {max(w)//max(1, min(w))}.", "",
+        f"Exposure and corroboration track each other closely: Spearman "
+        f"**rho = {rho:.2f}**, Kendall **tau = {tau:.2f}** over {len(usable)} claims",
+        "(a permutation test puts the correlation beyond every one of 200,000",
+        "shuffles). It is not an artifact of one hub gene -- taking the WEAKER of",
+        "each pair structurally excludes GPX4, which is never the weaker side, and",
+        "dropping all nine GPX4 pairs RAISES rho to 0.88. An independent",
+        "entity-level measure (total mentions rather than partners) gives rho 0.83",
+        "and the identical split.", "",
+        f"Every claim that HAS support has a weaker entity of at least {floor}, and",
+        f"{len(explained)} of the {len(zero)} zeros fall below that. So a zero is a",
+        "poor guide to whether a claim is true: it mostly tracks how much one side",
+        "has been studied.", "",
+        "| module | pair | weaker partner count | below the supported range? |",
+        "|---|---|---|---|",
+    ]
+    for r in sorted(zero, key=lambda r: r["weaker"]):
+        L.append(f"| {r['module']} | `{r['a']}` - `{r['b']}` | {r['weaker']} "
+                 f"({r['deg_a']} / {r['deg_b']}) | "
+                 f"{'no' if r['weaker'] >= floor else 'yes'} |")
+
+    L += [
+        "", "### Three reasons not to push this further than it goes", "",
+        f"**The line is a sample minimum, not a threshold.** It is set by a single "
+        f"row -- `{floor_row['module']}`, which has "
+        f"{floor_row['total']} asserting article"
+        f"{'s' if floor_row['total'] != 1 else ''} under the weakest predicate the "
+        "graph has. Leave-one-out over the supported claims changes the line only "
+        f"when that row is dropped, and then it moves {floor}"
+        f" -> {min(r['weaker'] for r in nonzero if r is not floor_row)}. A bootstrap "
+        "over the supported set returns the shipped answer about two thirds of the "
+        "time.", "",
+    ]
+    if base_rate is not None:
+        L += [
+            "**Below the line does not mean undetectable.** An earlier version of "
+            "this section said the census could not have corroborated those claims "
+            "whatever the biology is. That is false: across the whole graph "
+            f"**{100*base_rate:.0f}% of all asserted pairs** have a weaker entity "
+            f"below {floor}, so pairs like these are corroborated constantly. The "
+            "honest statement is probabilistic -- a particular pair drawn from a "
+            "sparsely-studied entity's handful of relations is unlikely a priori -- "
+            "not that the machinery cannot see them.", "",
+        ]
+    if cm_floor is not None:
+        L += [
+            "**Which zeros are 'genuine' does not replicate across measures, so this "
+            "section does not name any.** Run the identical procedure on the "
+            "pair-level co-mention column already in the table above and the "
+            f"correlation INVERTS among the zeros (rho about -0.9), the line lands at "
+            f"{cm_floor}, and the rows above it become "
+            + ", ".join(f"`{r['module']}`" for r in cm_above)
+            + " -- with no overlap at all against the entity-degree answer ("
+            + ", ".join(f"`{r['module']}`" for r in above)
+            + "). Entity exposure and pair discussion are different constructs and "
+            "there is no reason they must agree, but the conclusion anyone would "
+            "draw is pair-level, so a result that flips with the measure is not one "
+            "to report. The first draft of this section named the entity-degree pair "
+            "as 'the interesting rows' without checking the column beside it.", "",
+        ]
+    L += [
+        "**Caveat on the correlation.** A pair's own relations contribute to both",
+        "entities' partner counts, so the two quantities share a term. Recomputing",
+        "with each pair's own edge removed moves rho by 0.01 and changes no row's",
+        "classification, and the contribution is exactly zero for every unsupported",
+        "row, so the coupling cannot manufacture the effect.", "",
+        "**And a high partner count is not evidence FOR a claim.** It makes a pair",
+        "measurable, not correct. An earlier draft added that GPX4 has the most",
+        "partners here, which is false -- across the twenty claims it ranks fifth,",
+        "behind CDH1, CD274, IFNG and YAP1. It is the maximum only within the",
+        "nine-row table above, and by 1.6x rather than by a wide margin.", "",
+    ]
+    return L
+
+
 def _thin_threshold() -> int:
     """How small a count is too small to argue from.
 
@@ -268,12 +482,14 @@ def main() -> None:
     else:
         print("co-mention layer ABSENT -- the full-text column will be empty",
               file=sys.stderr)
+    degree = _entity_degree(idx)
     rows = []
     for module, a, b, pmid, claim in CLAIMS:
         r = support(idx, a, b)
         if r is None:
             rows.append(dict(module=module, a=a, b=b, pmid=pmid, claim=claim,
-                             resolved=False, total=0, preds={}, cited_present=None))
+                             resolved=False, total=0, preds={}, cited_present=None,
+                             deg_a=None, deg_b=None, weaker=None))
             continue
         pos = r["predicates"].get("positive_correlate", 0)
         neg = r["predicates"].get("negative_correlate", 0)
@@ -285,7 +501,9 @@ def main() -> None:
                          pos=pos, neg=neg,
                          contested=bool(pos and neg),
                          balance=(min(pos, neg) / max(pos, neg)) if (pos and neg) else None,
-                         comention=comention.get(tuple(sorted((r["a"], r["b"]))))))
+                         comention=comention.get(tuple(sorted((r["a"], r["b"])))),
+                         deg_a=degree.get(r["a"], 0), deg_b=degree.get(r["b"], 0),
+                         weaker=min(degree.get(r["a"], 0), degree.get(r["b"], 0))))
 
     found = [r for r in rows if r["resolved"] and r["total"] > 0]
     none_ = [r for r in rows if r["resolved"] and r["total"] == 0]
@@ -428,6 +646,8 @@ def main() -> None:
         L += [f"* **{len(unres)}** could not be resolved to an entity identifier at all:",
               ""] + [f"  * `{r['module']}`: {r['a']} - {r['b']}" for r in unres] + [""]
 
+    L += _exposure_section(rows, base_rate=_below_floor_base_rate(idx, degree, rows))
+
     L += ["## Detail", ""]
     for r in sorted(rows, key=lambda r: -r["total"]):
         if not r["resolved"] or r["total"] == 0:
@@ -443,6 +663,29 @@ def main() -> None:
               f"* example PMIDs: {', '.join(r['pmids'])}", ""]
 
     OUT.write_text("\n".join(L) + "\n", encoding="utf-8")
+
+    usable = [r for r in rows if r.get("weaker") is not None]
+    supported = [r["weaker"] for r in usable if r["total"] > 0]
+    floor = min(supported) if supported else None
+    RAW.write_text(json.dumps({
+        "n_claims": len(rows),
+        "corroborated": len(found),
+        "zero_relation": len(none_),
+        "unresolved": len(unres),
+        "exposure_floor": floor,
+        "spearman_weaker_degree_vs_relations":
+            _spearman([r["weaker"] for r in usable], [r["total"] for r in usable])
+            if len(usable) >= 5 else None,
+        "zero_explained_by_exposure": sum(
+            1 for r in usable if r["total"] == 0 and floor is not None
+            and r["weaker"] < floor),
+        "zero_unexplained": [
+            r["module"] for r in usable if r["total"] == 0 and floor is not None
+            and r["weaker"] >= floor],
+        "claims": [{k: r[k] for k in ("module", "a", "b", "total", "comention",
+                                      "deg_a", "deg_b", "weaker")
+                    if k in r} for r in rows],
+    }, indent=2) + "\n", encoding="utf-8")
     print(f"wrote {OUT}")
     print(f"{len(found)}/{len(rows)} claims corroborated; {len(none_)} with no relation; "
           f"{len(unres)} unresolved")

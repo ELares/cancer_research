@@ -1,0 +1,215 @@
+{
+  "n_claims": 20,
+  "corroborated": 11,
+  "zero_relation": 9,
+  "unresolved": 0,
+  "exposure_floor": 108,
+  "spearman_weaker_degree_vs_relations": 0.8568166078500651,
+  "zero_explained_by_exposure": 7,
+  "zero_unexplained": [
+    "copper",
+    "hdac_persister"
+  ],
+  "claims": [
+    {
+      "module": "ifngamma",
+      "a": "IFNG",
+      "b": "SLC7A11",
+      "total": 13,
+      "comention": 99,
+      "deg_a": 3811,
+      "deg_b": 1474,
+      "weaker": 1474
+    },
+    {
+      "module": "ifngamma",
+      "a": "IFNG",
+      "b": "SLC3A2",
+      "total": 5,
+      "comention": 66,
+      "deg_a": 3811,
+      "deg_b": 354,
+      "weaker": 354
+    },
+    {
+      "module": "acsl4",
+      "a": "ACSL4",
+      "b": "GPX4",
+      "total": 13,
+      "comention": 9027,
+      "deg_a": 763,
+      "deg_b": 1930,
+      "weaker": 763
+    },
+    {
+      "module": "fsp1",
+      "a": "AIFM2",
+      "b": "GPX4",
+      "total": 15,
+      "comention": 597,
+      "deg_a": 328,
+      "deg_b": 1930,
+      "weaker": 328
+    },
+    {
+      "module": "dhodh",
+      "a": "DHODH",
+      "b": "GPX4",
+      "total": 5,
+      "comention": 1277,
+      "deg_a": 253,
+      "deg_b": 1930,
+      "weaker": 253
+    },
+    {
+      "module": "gch1",
+      "a": "GCH1",
+      "b": "GPX4",
+      "total": 1,
+      "comention": 595,
+      "deg_a": 108,
+      "deg_b": 1930,
+      "weaker": 108
+    },
+    {
+      "module": "prom2",
+      "a": "PROM2",
+      "b": "FTH1",
+      "total": 0,
+      "comention": 11,
+      "deg_a": 60,
+      "deg_b": 542,
+      "weaker": 60
+    },
+    {
+      "module": "vitk",
+      "a": "VKORC1L1",
+      "b": "GPX4",
+      "total": 0,
+      "comention": null,
+      "deg_a": 11,
+      "deg_b": 1930,
+      "weaker": 11
+    },
+    {
+      "module": "copper",
+      "a": "ATP7A",
+      "b": "GPX4",
+      "total": 0,
+      "comention": 8,
+      "deg_a": 208,
+      "deg_b": 1930,
+      "weaker": 208
+    },
+    {
+      "module": "alox",
+      "a": "ALOX15",
+      "b": "ACSL4",
+      "total": 3,
+      "comention": 517,
+      "deg_a": 362,
+      "deg_b": 763,
+      "weaker": 362
+    },
+    {
+      "module": "por",
+      "a": "POR",
+      "b": "CYB5R1",
+      "total": 0,
+      "comention": 20,
+      "deg_a": 145,
+      "deg_b": 12,
+      "weaker": 12
+    },
+    {
+      "module": "dhc7",
+      "a": "DHCR7",
+      "b": "GPX4",
+      "total": 0,
+      "comention": 13,
+      "deg_a": 87,
+      "deg_b": 1930,
+      "weaker": 87
+    },
+    {
+      "module": "repair",
+      "a": "CHMP5",
+      "b": "CHMP6",
+      "total": 0,
+      "comention": 69,
+      "deg_a": 31,
+      "deg_b": 29,
+      "weaker": 29
+    },
+    {
+      "module": "contact",
+      "a": "CDH1",
+      "b": "YAP1",
+      "total": 26,
+      "comention": 417,
+      "deg_a": 4898,
+      "deg_b": 2792,
+      "weaker": 2792
+    },
+    {
+      "module": "mboat",
+      "a": "MBOAT2",
+      "b": "GPX4",
+      "total": 0,
+      "comention": 27,
+      "deg_a": 37,
+      "deg_b": 1930,
+      "weaker": 37
+    },
+    {
+      "module": "ether_lipid",
+      "a": "FAR1",
+      "b": "AGPS",
+      "total": 0,
+      "comention": 89,
+      "deg_a": 6,
+      "deg_b": 58,
+      "weaker": 6
+    },
+    {
+      "module": "dc_ferroptosis",
+      "a": "CD274",
+      "b": "SLC7A11",
+      "total": 7,
+      "comention": 239,
+      "deg_a": 4805,
+      "deg_b": 1474,
+      "weaker": 1474
+    },
+    {
+      "module": "system_xc",
+      "a": "SLC7A11",
+      "b": "GPX4",
+      "total": 74,
+      "comention": 19413,
+      "deg_a": 1474,
+      "deg_b": 1930,
+      "weaker": 1474
+    },
+    {
+      "module": "erastin",
+      "a": "erastin",
+      "b": "SLC7A11",
+      "total": 63,
+      "comention": 1573,
+      "deg_a": 872,
+      "deg_b": 1474,
+      "weaker": 872
+    },
+    {
+      "module": "hdac_persister",
+      "a": "HDAC1",
+      "b": "AIFM2",
+      "total": 0,
+      "comention": 1,
+      "deg_a": 1197,
+      "deg_b": 328,
+      "weaker": 328
+    }
+  ]
+}
