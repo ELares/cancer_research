@@ -1,9 +1,9 @@
 {
   "quiet_years": 5,
   "latest_year": 2026,
-  "eligible_pairs": 1990659,
+  "eligible_pairs": 1990657,
   "orphans": 1310759,
-  "overall_replication_rate": 0.22704089449775175,
+  "overall_replication_rate": 0.2270401179108204,
   "cohorts": [
     {
       "year": 1950,
@@ -391,9 +391,9 @@
     },
     {
       "year": 2015,
-      "pairs": 97609,
+      "pairs": 97608,
       "replicated": 19772,
-      "rate": 0.20256328822137304
+      "rate": 0.2025653634947955
     },
     {
       "year": 2016,
@@ -415,15 +415,15 @@
     },
     {
       "year": 2019,
-      "pairs": 103546,
+      "pairs": 103545,
       "replicated": 18573,
-      "rate": 0.1793695555598478
+      "rate": 0.17937128784586412
     },
     {
       "year": 2020,
       "pairs": 107374,
-      "replicated": 18593,
-      "rate": 0.17316110045262353
+      "replicated": 18591,
+      "rate": 0.1731424739694898
     },
     {
       "year": 2021,
@@ -432,6 +432,465 @@
       "rate": 0.13397394514244096
     }
   ],
+  "cohorts_censored_ever": [
+    {
+      "year": 1950,
+      "pairs": 238,
+      "replicated": 143,
+      "rate": 0.6008403361344538
+    },
+    {
+      "year": 1951,
+      "pairs": 307,
+      "replicated": 179,
+      "rate": 0.5830618892508144
+    },
+    {
+      "year": 1952,
+      "pairs": 238,
+      "replicated": 135,
+      "rate": 0.5672268907563025
+    },
+    {
+      "year": 1953,
+      "pairs": 244,
+      "replicated": 151,
+      "rate": 0.6188524590163934
+    },
+    {
+      "year": 1954,
+      "pairs": 273,
+      "replicated": 171,
+      "rate": 0.6263736263736264
+    },
+    {
+      "year": 1955,
+      "pairs": 291,
+      "replicated": 176,
+      "rate": 0.6048109965635738
+    },
+    {
+      "year": 1956,
+      "pairs": 309,
+      "replicated": 188,
+      "rate": 0.6084142394822006
+    },
+    {
+      "year": 1957,
+      "pairs": 336,
+      "replicated": 187,
+      "rate": 0.5565476190476191
+    },
+    {
+      "year": 1958,
+      "pairs": 335,
+      "replicated": 198,
+      "rate": 0.591044776119403
+    },
+    {
+      "year": 1959,
+      "pairs": 365,
+      "replicated": 216,
+      "rate": 0.5917808219178082
+    },
+    {
+      "year": 1960,
+      "pairs": 351,
+      "replicated": 211,
+      "rate": 0.6011396011396012
+    },
+    {
+      "year": 1961,
+      "pairs": 432,
+      "replicated": 263,
+      "rate": 0.6087962962962963
+    },
+    {
+      "year": 1962,
+      "pairs": 492,
+      "replicated": 307,
+      "rate": 0.6239837398373984
+    },
+    {
+      "year": 1963,
+      "pairs": 264,
+      "replicated": 134,
+      "rate": 0.5075757575757576
+    },
+    {
+      "year": 1965,
+      "pairs": 486,
+      "replicated": 311,
+      "rate": 0.6399176954732511
+    },
+    {
+      "year": 1966,
+      "pairs": 740,
+      "replicated": 479,
+      "rate": 0.6472972972972973
+    },
+    {
+      "year": 1967,
+      "pairs": 856,
+      "replicated": 519,
+      "rate": 0.6063084112149533
+    },
+    {
+      "year": 1968,
+      "pairs": 862,
+      "replicated": 546,
+      "rate": 0.6334106728538283
+    },
+    {
+      "year": 1969,
+      "pairs": 911,
+      "replicated": 567,
+      "rate": 0.6223929747530187
+    },
+    {
+      "year": 1970,
+      "pairs": 995,
+      "replicated": 611,
+      "rate": 0.614070351758794
+    },
+    {
+      "year": 1971,
+      "pairs": 1191,
+      "replicated": 741,
+      "rate": 0.6221662468513854
+    },
+    {
+      "year": 1972,
+      "pairs": 1179,
+      "replicated": 736,
+      "rate": 0.6242578456318915
+    },
+    {
+      "year": 1973,
+      "pairs": 1260,
+      "replicated": 836,
+      "rate": 0.6634920634920635
+    },
+    {
+      "year": 1974,
+      "pairs": 1444,
+      "replicated": 935,
+      "rate": 0.6475069252077562
+    },
+    {
+      "year": 1975,
+      "pairs": 5760,
+      "replicated": 3443,
+      "rate": 0.5977430555555555
+    },
+    {
+      "year": 1976,
+      "pairs": 5532,
+      "replicated": 3266,
+      "rate": 0.5903832248734635
+    },
+    {
+      "year": 1977,
+      "pairs": 5545,
+      "replicated": 3127,
+      "rate": 0.563931469792606
+    },
+    {
+      "year": 1978,
+      "pairs": 5393,
+      "replicated": 3008,
+      "rate": 0.5577600593361766
+    },
+    {
+      "year": 1979,
+      "pairs": 6319,
+      "replicated": 3460,
+      "rate": 0.5475549928786201
+    },
+    {
+      "year": 1980,
+      "pairs": 7013,
+      "replicated": 3734,
+      "rate": 0.5324397547411949
+    },
+    {
+      "year": 1981,
+      "pairs": 7371,
+      "replicated": 3864,
+      "rate": 0.5242165242165242
+    },
+    {
+      "year": 1982,
+      "pairs": 8273,
+      "replicated": 4375,
+      "rate": 0.52882871993231
+    },
+    {
+      "year": 1983,
+      "pairs": 10130,
+      "replicated": 5328,
+      "rate": 0.5259624876604146
+    },
+    {
+      "year": 1984,
+      "pairs": 11526,
+      "replicated": 5850,
+      "rate": 0.5075481520041645
+    },
+    {
+      "year": 1985,
+      "pairs": 11934,
+      "replicated": 5875,
+      "rate": 0.49229093346740405
+    },
+    {
+      "year": 1986,
+      "pairs": 12863,
+      "replicated": 6300,
+      "rate": 0.4897768794215968
+    },
+    {
+      "year": 1987,
+      "pairs": 13183,
+      "replicated": 6411,
+      "rate": 0.4863081240992187
+    },
+    {
+      "year": 1988,
+      "pairs": 13083,
+      "replicated": 6425,
+      "rate": 0.4910953145303065
+    },
+    {
+      "year": 1989,
+      "pairs": 15904,
+      "replicated": 7580,
+      "rate": 0.4766096579476861
+    },
+    {
+      "year": 1990,
+      "pairs": 16542,
+      "replicated": 7935,
+      "rate": 0.4796880667392093
+    },
+    {
+      "year": 1991,
+      "pairs": 16864,
+      "replicated": 8024,
+      "rate": 0.47580645161290325
+    },
+    {
+      "year": 1992,
+      "pairs": 18460,
+      "replicated": 8687,
+      "rate": 0.4705850487540628
+    },
+    {
+      "year": 1993,
+      "pairs": 19030,
+      "replicated": 9143,
+      "rate": 0.48045191802417236
+    },
+    {
+      "year": 1994,
+      "pairs": 21286,
+      "replicated": 10171,
+      "rate": 0.4778258009959598
+    },
+    {
+      "year": 1995,
+      "pairs": 22597,
+      "replicated": 10724,
+      "rate": 0.4745762711864407
+    },
+    {
+      "year": 1996,
+      "pairs": 23960,
+      "replicated": 11387,
+      "rate": 0.47525041736227047
+    },
+    {
+      "year": 1997,
+      "pairs": 24930,
+      "replicated": 11886,
+      "rate": 0.4767749699157641
+    },
+    {
+      "year": 1998,
+      "pairs": 27386,
+      "replicated": 12848,
+      "rate": 0.4691448185204119
+    },
+    {
+      "year": 1999,
+      "pairs": 29467,
+      "replicated": 14046,
+      "rate": 0.4766688159636203
+    },
+    {
+      "year": 2000,
+      "pairs": 31375,
+      "replicated": 14947,
+      "rate": 0.476398406374502
+    },
+    {
+      "year": 2001,
+      "pairs": 34827,
+      "replicated": 16544,
+      "rate": 0.4750337381916329
+    },
+    {
+      "year": 2002,
+      "pairs": 37726,
+      "replicated": 17517,
+      "rate": 0.4643216879605577
+    },
+    {
+      "year": 2003,
+      "pairs": 42289,
+      "replicated": 19271,
+      "rate": 0.4556976991652676
+    },
+    {
+      "year": 2004,
+      "pairs": 49768,
+      "replicated": 21492,
+      "rate": 0.43184375502330813
+    },
+    {
+      "year": 2005,
+      "pairs": 52921,
+      "replicated": 22639,
+      "rate": 0.42778859054061713
+    },
+    {
+      "year": 2006,
+      "pairs": 55501,
+      "replicated": 22820,
+      "rate": 0.41116376281508443
+    },
+    {
+      "year": 2007,
+      "pairs": 58819,
+      "replicated": 23598,
+      "rate": 0.4011968921606964
+    },
+    {
+      "year": 2008,
+      "pairs": 62734,
+      "replicated": 24235,
+      "rate": 0.3863136417253802
+    },
+    {
+      "year": 2009,
+      "pairs": 65704,
+      "replicated": 24769,
+      "rate": 0.3769785705588701
+    },
+    {
+      "year": 2010,
+      "pairs": 69596,
+      "replicated": 25489,
+      "rate": 0.36624231277659636
+    },
+    {
+      "year": 2011,
+      "pairs": 75237,
+      "replicated": 26348,
+      "rate": 0.35020003455746507
+    },
+    {
+      "year": 2012,
+      "pairs": 83451,
+      "replicated": 27666,
+      "rate": 0.3315238882697631
+    },
+    {
+      "year": 2013,
+      "pairs": 89475,
+      "replicated": 28064,
+      "rate": 0.3136518580609109
+    },
+    {
+      "year": 2014,
+      "pairs": 92489,
+      "replicated": 27872,
+      "rate": 0.30135475570067793
+    },
+    {
+      "year": 2015,
+      "pairs": 97608,
+      "replicated": 27041,
+      "rate": 0.27703671830177856
+    },
+    {
+      "year": 2016,
+      "pairs": 97022,
+      "replicated": 24704,
+      "rate": 0.25462266290119767
+    },
+    {
+      "year": 2017,
+      "pairs": 93421,
+      "replicated": 22177,
+      "rate": 0.2373877393733743
+    },
+    {
+      "year": 2018,
+      "pairs": 93488,
+      "replicated": 20974,
+      "rate": 0.22434964915283245
+    },
+    {
+      "year": 2019,
+      "pairs": 103545,
+      "replicated": 20523,
+      "rate": 0.19820367955961177
+    },
+    {
+      "year": 2020,
+      "pairs": 107374,
+      "replicated": 18756,
+      "rate": 0.17467915882802168
+    },
+    {
+      "year": 2021,
+      "pairs": 120822,
+      "replicated": 16187,
+      "rate": 0.13397394514244096
+    },
+    {
+      "year": 2022,
+      "pairs": 106690,
+      "replicated": 12740,
+      "rate": 0.11941137876089605
+    },
+    {
+      "year": 2023,
+      "pairs": 103597,
+      "replicated": 9701,
+      "rate": 0.09364170777146057
+    },
+    {
+      "year": 2024,
+      "pairs": 106461,
+      "replicated": 6916,
+      "rate": 0.06496275631451894
+    },
+    {
+      "year": 2025,
+      "pairs": 115894,
+      "replicated": 3151,
+      "rate": 0.027188637893247276
+    },
+    {
+      "year": 2026,
+      "pairs": 11077,
+      "replicated": 41,
+      "rate": 0.003701363184977882
+    }
+  ],
+  "focus_orphans_total": 7794,
   "focus_orphans": [
     {
       "year": 1975,
