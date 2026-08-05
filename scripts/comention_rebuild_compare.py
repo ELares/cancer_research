@@ -27,8 +27,10 @@ Usage:
     python scripts/comention_rebuild_compare.py
 """
 
+import argparse
 import gzip
 import json
+import re
 import os
 import sys
 from pathlib import Path
@@ -47,6 +49,22 @@ OUT = PROJECT_ROOT / "analysis" / "comention-rebuild-compare.md"
 RAW = PROJECT_ROOT / "analysis" / "comention-rebuild-compare.json"
 
 
+def _forms_from_log(path):
+    """How many usable alias forms a build actually used, from its own log.
+
+    Read rather than assumed. Assuming the control matched the current code is
+    what let a rebuilt index masquerade as the filter's effect once already.
+    """
+    try:
+        for line in path.read_text(errors="replace").splitlines():
+            m = re.search(r"->\s*([\d,]+) usable", line)
+            if m:
+                return int(m.group(1).replace(",", ""))
+    except OSError:
+        pass
+    return None
+
+
 def load_pairs(path: Path) -> dict:
     out = {}
     with gzip.open(path, "rt", encoding="utf-8") as fh:
@@ -62,9 +80,22 @@ def ns(ident: str) -> str:
 
 
 def main() -> int:
+    ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
+    ap.add_argument("--control", default=None,
+                    help="pair table WITHOUT the filter (default: the live one)")
+    ap.add_argument("--treatment", default=None,
+                    help="pair table WITH the filter (default: authority-on/)")
+    ap.add_argument("--control-log", default=None,
+                    help="the control build's own log, so its alias-map size is "
+                         "READ rather than assumed; assuming it is what hid a "
+                         "confound once already")
+    args = ap.parse_args()
+
     root = atlas_root()
-    new_p = root / "comention" / "pairs.tsv.gz"
-    old_p = root / "comention" / "baseline-preauthority" / "pairs.tsv.gz"
+    # Direction: the CHANGE is turning the filter on, so `old` is the control.
+    old_p = Path(args.control) if args.control else root / "comention" / "pairs.tsv.gz"
+    new_p = (Path(args.treatment) if args.treatment
+             else root / "comention" / "authority-on" / "pairs.tsv.gz")
     for p in (new_p, old_p):
         if not p.exists():
             print(f"missing {p}", file=sys.stderr)
@@ -101,6 +132,14 @@ def main() -> int:
     flagoff_forms = len(_ac.build_alias_map(idx)[0])
     if _was is not None:
         os.environ["FERRO_COMENTION_AUTHORITY"] = _was
+    # What the CONTROL build actually used, read from its own log rather than
+    # assumed -- that assumption is exactly what hid the last confound.
+    control_forms = _forms_from_log(Path(
+        args.control_log or
+        PROJECT_ROOT / "corpus" / "atlas" / "logs" / "comention-control.log"))
+    or_none = control_forms is None
+    if or_none:
+        control_forms = flagoff_forms
     canon = idx.get("canon") or {}
     heavy = sorted(lost.items(), key=lambda kv: -kv[1])[:20]
 
@@ -110,20 +149,25 @@ def main() -> int:
         "pair table against the preserved baseline. Everything measured before this",
         "was either an offline prediction or a judged sample of mentions; this is the",
         "layer's actual output.", "",
-        "## Read this as TWO changes, not one", "",
-        "The title says \"between the two builds\" rather than \"the authority filter\"",
-        "because the two runs do not differ only by the filter. The baseline build",
-        f"used an alias map of {BASELINE_FORMS:,} forms; the same code with the filter",
-        f"OFF now produces {flagoff_forms:,}, because the graph index was rebuilt in",
-        "between to add `alias_ident_support` and correct the minority-share filter,",
-        "whose numerator had been a form's count across ALL its senses rather than",
-        "its count for the identifier it resolves to.", "",
-        f"So {abs(BASELINE_FORMS - flagoff_forms):,} forms "
-        f"({100*abs(BASELINE_FORMS-flagoff_forms)/BASELINE_FORMS:.1f}% of the map)",
-        "differ for a reason that has nothing to do with the authority rule, and every",
-        "number below carries both changes. A clean A/B would need a third build with",
-        "the filter off on the current index, which is another three hours and has not",
-        "been run.", "",
+        "## Is this a clean A/B?", "",
+    ] + ([
+        "**Yes.** Both builds ran on the same graph index and the same code, differing",
+        f"only in `FERRO_COMENTION_AUTHORITY`. The control's alias map is",
+        f"{flagoff_forms:,} forms, which is what this code produces with the filter",
+        "off, so every difference below is attributable to the rule.", "",
+        "An earlier comparison was NOT clean: it used a preserved build from before",
+        f"the graph index was rebuilt, whose map held {BASELINE_FORMS:,} forms. Those",
+        f"{abs(BASELINE_FORMS - flagoff_forms):,} extra forms came from a correction to",
+        "the minority-share filter's numerator, not from the authority rule, and they",
+        "made a 40,050-pair gene-gene loss impossible to attribute. That run is kept",
+        "at `baseline-preauthority/` as context and is not compared here.", "",
+    ] if flagoff_forms == control_forms else [
+        "**No, and every number below carries the difference.** The control build's",
+        f"map holds {control_forms:,} forms where this code now produces",
+        f"{flagoff_forms:,} with the filter off, so the two runs differ by more than",
+        "the rule. Read the comparison as between two builds rather than as the",
+        "filter's effect.", "",
+    ]) + [
         "## Pairs", "",
         "| | baseline | rebuilt | retained |", "|---|---|---|---|",
         f"| distinct pairs | {len(old):,} | {len(new):,} | "
@@ -194,9 +238,10 @@ def main() -> int:
         "lost": len(lost), "gained": len(gained),
         "baseline_weight": wsum(old), "rebuilt_weight": wsum(new),
         "by_namespace": by_ns, "gene_gene_leak": leak,
+        "control_alias_forms": control_forms,
         "gene_gene_lost": gg_lost, "gene_gene_gained": gg_gained,
         "baseline_alias_forms": BASELINE_FORMS, "flagoff_alias_forms": flagoff_forms,
-        "confounded": BASELINE_FORMS != flagoff_forms,
+        "confounded": control_forms != flagoff_forms,
     }, indent=2) + "\n")
     print(f"pairs {len(old):,} -> {len(new):,} ({100*len(new)/max(1,len(old)):.1f}%), "
           f"gene-gene leak {leak}")
