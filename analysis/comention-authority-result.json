@@ -59,5 +59,23 @@
     "corroborated": 0.6005484460694699,
     "abstract-visible": 0.10694698354661791,
     "body-only": 0.29250457038391225
+  },
+  "recall_cost": {
+    "n": 180,
+    "tp": 58,
+    "tp_kept": 42,
+    "tp_lost_share": 0.27586206896551724,
+    "tp_lost_ci": [
+      0.17752203680746195,
+      0.40204899628353175
+    ],
+    "fp": 122,
+    "fp_removed_share": 0.9098360655737705,
+    "kept_precision": 0.7924528301886793,
+    "base_precision": 0.32222222222222224,
+    "mesh_tp_lost": 0.34782608695652173,
+    "gene_tp_lost": 0.0,
+    "mesh_n": 46,
+    "gene_n": 12
   }
 }

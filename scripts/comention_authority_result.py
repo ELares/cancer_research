@@ -65,7 +65,68 @@ def wilson(k, n, z=1.96):
     return (max(0.0, (c - m) / den), min(1.0, (c + m) / den))
 
 
+def recall_cost():
+    """What the SHIPPED rule does to mentions already judged on the old layer.
+
+    Precision says how clean the survivors are. It cannot say what they cost,
+    and this thread had measured only precision. Applying the real rule --
+    `atlas_comention._authority_bag`, MeSH-only, unlabelled kept, no span kept --
+    to the 180 mentions judged on the unfiltered layer gives the other half.
+    """
+    import atlas_comention as ac
+    from build_label_source import load_table
+
+    labels = load_table()
+    rows = []
+    for f in ("abstract-visible-judgements.csv",
+              "abstract-visible-heldout-judgements.csv",
+              "body-only-judgements.csv", "corroborated-judgements.csv"):
+        path = JUDGED / f
+        if not path.exists():
+            continue
+        for r in csv.DictReader(path.open()):
+            v = r.get("verdict_v2") or r.get("verdict") or ""
+            if v in ("TP", "FP"):
+                r["_v"] = v
+                rows.append(r)
+    if not rows:
+        return None
+
+    def survives(r):
+        i = r["identifier"]
+        if not i.startswith("MESH:"):
+            return True
+        names = labels.get(i)
+        if names is None:
+            return True
+        span = (r.get("matched_span") or "").split("|")[0]
+        if not span:
+            return True
+        return any(ac._authority_bag(n) == ac._authority_bag(span) for n in names)
+
+    tp = [r for r in rows if r["_v"] == "TP"]
+    fp = [r for r in rows if r["_v"] == "FP"]
+    tk = sum(1 for r in tp if survives(r))
+    fk = sum(1 for r in fp if survives(r))
+    mesh_tp = [r for r in tp if r["identifier"].startswith("MESH:")]
+    mesh_k = sum(1 for r in mesh_tp if survives(r))
+    gene_tp = [r for r in tp if not r["identifier"].startswith("MESH:")]
+    gene_k = sum(1 for r in gene_tp if survives(r))
+    return {
+        "n": len(rows), "tp": len(tp), "tp_kept": tk,
+        "tp_lost_share": (len(tp) - tk) / len(tp) if tp else 0.0,
+        "tp_lost_ci": wilson(len(tp) - tk, len(tp)),
+        "fp": len(fp), "fp_removed_share": (len(fp) - fk) / len(fp) if fp else 0.0,
+        "kept_precision": tk / (tk + fk) if (tk + fk) else 0.0,
+        "base_precision": len(tp) / len(rows),
+        "mesh_tp_lost": (len(mesh_tp) - mesh_k) / len(mesh_tp) if mesh_tp else 0.0,
+        "gene_tp_lost": (len(gene_tp) - gene_k) / len(gene_tp) if gene_tp else 0.0,
+        "mesh_n": len(mesh_tp), "gene_n": len(gene_tp),
+    }
+
+
 def main() -> int:
+    rc = recall_cost()
     audit = json.loads(AUDIT.read_text())
     tot = audit["mentions"]
     weight = {"corroborated": audit["pubtator_agree"] / tot,
@@ -135,7 +196,35 @@ def main() -> int:
         "rule (`analysis/comention-rebuild-compare.md`). A control build with the",
         "filter off on the current index is running; until it lands, read the",
         f"{100*UNFILTERED['weighted']:.1f}% as context rather than as a clean baseline.",
-        "", "## Bounding the judgement, since it was mine and unblinded", "",
+        "", "## What it cost, measured rather than counted", "",
+    ] + ([] if not rc else [
+        "The pair and mention counts above say how much output went. They do not say",
+        "how much of what went was RIGHT. Applying the shipped rule to the 180",
+        "mentions already judged on the unfiltered layer answers that on the same",
+        "data:", "",
+        "| | n | outcome |", "|---|---|---|",
+        f"| true positives | {rc['tp']} | "
+        f"**{100*rc['tp_lost_share']:.1f}% lost** "
+        f"[{100*rc['tp_lost_ci'][0]:.1f}, {100*rc['tp_lost_ci'][1]:.1f}] |",
+        f"| false positives | {rc['fp']} | {100*rc['fp_removed_share']:.1f}% removed |",
+        f"| precision of survivors | | {100*rc['base_precision']:.1f}% -> "
+        f"{100*rc['kept_precision']:.1f}% |", "",
+        f"So it discards about one true match in four to remove nine false ones in",
+        "ten. And the cost is entirely where the rule applies:", "",
+        f"* MeSH true positives ({rc['mesh_n']}): "
+        f"**{100*rc['mesh_tp_lost']:.1f}% lost**",
+        f"* gene and OMIM true positives ({rc['gene_n']}): "
+        f"**{100*rc['gene_tp_lost']:.1f}% lost** -- the rule does not touch them,",
+        "  which is what MeSH-only means and is worth seeing confirmed on real",
+        "  judged data rather than assumed from the code.", "",
+        f"This {100*rc['kept_precision']:.1f}% is also an independent estimate of the",
+        "filtered layer's precision, arrived at from the OLD layer's judged mentions",
+        f"rather than the new layer's sample. It sits below the "
+        f"{100*w_total:.1f}% measured directly, which is the direction to expect: the",
+        "new layer's composition shifted toward the corroborated stratum, and this",
+        "calculation holds composition fixed.", "",
+    ]) + [
+        "## Bounding the judgement, since it was mine and unblinded", "",
         "Declaring a bias is weaker than bounding it. Every judgement that could",
         "not be settled mechanically -- no recoverable span, or an identifier",
         "denoting a degenerate concept like `Disease` or `health` where the question",
@@ -176,7 +265,7 @@ def main() -> int:
         "strata": strata, "weighted": w_total, "weighted_ci": [w_lo, w_hi],
         "weighted_adverse": w_adverse, "weighted_favourable": w_favourable,
         "mentions_per_400_sentences": tot, "unfiltered": UNFILTERED,
-        "composition": weight,
+        "composition": weight, "recall_cost": rc,
     }, indent=2) + "\n")
     print(f"borderline-adverse {100*w_adverse:.1f}%  favourable {100*w_favourable:.1f}%")
     print(f"filtered layer: {100*w_total:.1f}% [{100*w_lo:.1f}, {100*w_hi:.1f}] "
