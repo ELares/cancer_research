@@ -152,6 +152,7 @@ def main() -> int:
     L += ["---", "", "## What the census did NOT support", "",
           "Reported here because a findings page that only lists wins is marketing.", ""]
     reg = load("comention-regression.json")
+    auth = load("comention-authority-result.json")
     if reg and reg["net_change"] < 0:
         a, b = reg["after"], reg["before"]
         L += [
@@ -166,8 +167,33 @@ def main() -> int:
             "was the unfiltered one; closing it moved the pressure to the channel "
             "just opened, and the top offenders are now bare English words. The "
             "replacement filters were then measured and do not separate true matches "
-            "from false ones at all.",
-            "*Source:* `comention-regression.md`", ""]
+            "from false ones at all."]
+        # The failure above is the FIRST half of a closed arc. Reporting only the
+        # half that went wrong was accurate the day it was written and became a
+        # different kind of dishonesty once the second half shipped -- the same
+        # defect this page exists to catch, in this page.
+        if auth:
+            L += [
+                f"**It was then repaired for real, and the fix is measured at "
+                f"{100*auth['weighted']:.0f}%** (#628). What separates true matches "
+                "from false ones is not how much support a form has but whether the "
+                "form is a NAME of the entity it resolves to, checked against NLM "
+                "and NCBI rather than against the corpus. `treatment` is not a name "
+                f"of any descriptor; `xCT` is a name of SLC7A11. A blind panel of "
+                f"three judges who never saw the first verdicts put it at "
+                f"{100*auth['blind_weighted']:.0f}%, and the hostile bound, "
+                f"resolving every borderline case against the layer, is "
+                f"{100*auth['blind_hostile']:.0f}%.",
+                "So the standing finding is not that the layer is broken. It is that "
+                "this project shipped a filter justified by an error distribution "
+                "the filter itself changed, did not notice for two issues, and "
+                "needed a fresh sample drawn after the rebuild to see it. The cost "
+                f"of the real fix is {100*auth['recall_cost']['tp_lost_share']:.0f}% "
+                "of true matches, paid entirely on MeSH terms "
+                f"({100*auth['recall_cost']['mesh_tp_lost']:.0f}%) and not at all on "
+                f"genes ({100*auth['recall_cost']['gene_tp_lost']:.0f}%)."]
+        L += ["*Source:* `comention-regression.md`, "
+              "`comention-authority-result.md`", ""]
     if disc:
         p = disc["headline"]["precision"]
         L += [f"**Literature-based discovery does not work as built.** The shipped ABC",
@@ -236,7 +262,20 @@ def main() -> int:
         # reporting it once a measurement exists overstates what is known and,
         # here, understates how bad the layer is.
         reg = load("comention-regression.json")
-        if reg:
+        auth = load("comention-authority-result.json")
+        if auth:
+            # Quote the layer AS SHIPPED. The regression figure describes a
+            # configuration nothing runs any more, and a bound on a build nobody
+            # uses is not a bound.
+            L += ["---", "", "## Every layer now carries a bound", "",
+                  f"* co-mention precision: **{100*auth['weighted']:.0f}% measured** "
+                  f"on the layer as shipped (blind panel "
+                  f"{100*auth['blind_weighted']:.0f}%, hostile bound "
+                  f"{100*auth['blind_hostile']:.0f}%), superseding both the "
+                  f"{100*lo:.1f}%-{100*hi:.1f}% corroboration bound and the "
+                  f"{100*reg['after']['weighted']:.0f}% the layer measured before the "
+                  f"authority filter was turned on",]
+        elif reg:
             L += ["---", "", "## Every layer now carries a bound", "",
                   f"* co-mention precision: **{100*reg['after']['weighted']:.0f}% "
                   f"measured** (hand-judged, superseding the "

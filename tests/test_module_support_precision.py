@@ -2,9 +2,12 @@
 
 That column is load-bearing: the document uses it to argue a zero in the
 relation column is an extraction failure rather than absence of evidence. The
-layer behind it measures ~47% precision, and the argument is made most often on
-single-digit counts, where an error rate that size can account for the whole
-figure. Presenting the counts without the bound overstates the evidence.
+layer's precision is read from its own artifact rather than stated here -- it
+has moved from ~47% to 88% across two rebuilds, and a figure written into this
+docstring would be the very drift these tests exist to catch. The argument is
+made most often on single-digit counts, where whatever the error rate is can
+account for a large share of the figure, so presenting the counts without the
+bound overstates the evidence.
 """
 
 import json
@@ -46,7 +49,7 @@ def test_the_stated_precision_tracks_the_layer_as_built():
 
 
 def test_small_counts_are_flagged_where_they_carry_the_argument():
-    """A handful of co-mentions cannot survive a ~50% error rate."""
+    """A handful of co-mentions is a handful of chances for the error rate."""
     txt = DOC.read_text()
     if "co-mention layer is not built" in txt:
         return

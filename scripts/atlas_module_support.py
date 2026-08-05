@@ -42,6 +42,7 @@ Usage:
 import gzip
 import json
 import sys
+import textwrap
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -130,6 +131,90 @@ def _comention_interval() -> str:
         return f"95% interval roughly {100*d['range'][0]:.0f}-{100*d['range'][1]:.0f}%"
     except (OSError, ValueError, KeyError):
         return "interval not available"
+
+
+def _comention_caveat() -> list:
+    """How to read the co-mention column, derived rather than written.
+
+    The number beside this paragraph has always been read from the artifact.
+    The paragraph was not, and it went stale the moment the filter shipped: it
+    told readers that roughly half of any figure in the column was a generic
+    surface form and named `treatment` and `effects` as the failure mode, which
+    described the 41.6% layer. Those two forms are exactly what the authority
+    rule removes, so the caveat was warning about the one thing that had been
+    fixed while the number above it said 88%.
+
+    What replaces it is the structure the measurement actually shows: the error
+    is no longer spread evenly across the strata, and this column mixes them
+    without saying which one a figure came from.
+
+    All three strata are named, from the artifact's own keys. An earlier draft
+    named only the best and worst and called a count "a blend of the two",
+    which was self-refuting -- their weights sum to 71% -- and dropped
+    body-only, the stratum PubTator cannot contradict and which carries a third
+    of the residual error. It also hard-coded which stratum was which beside
+    derived numbers, so a five-point drift in the measurement would have
+    swapped them and emitted true numbers under a false sentence.
+    """
+    p = comention_precision()
+    if p is None:
+        return []
+    paras = [
+        f"**The co-mention column is measured at roughly {100*p:.0f}% precision** "
+        f"({_comention_interval()}, `analysis/comention-authority-result.md`), so "
+        f"read it as an upper bound on discussion rather than a count of it."
+    ]
+    try:
+        d = json.loads((PROJECT_ROOT / "analysis"
+                        / "comention-authority-result.json").read_text())
+        st = d["strata"]
+    except (OSError, ValueError, KeyError):
+        return _quote(paras)
+    # Label from the key, never from an assumed ordering.
+    gloss = {"corroborated": "mentions PubTator also corroborates",
+             "abstract-visible": "mentions visible in the abstract",
+             "body-only": "mentions found only in the body"}
+    order = sorted(st, key=lambda s: -st[s]["weight"])
+    listed = "; ".join(
+        f"{gloss.get(s, s)} are {100*st[s]['precision']:.0f}% correct "
+        f"({st[s]['tp']}/{st[s]['n']}) and carry {100*st[s]['weight']:.0f}% "
+        f"of the volume" for s in order)
+    err = {s: st[s]["weight"] * (1 - st[s]["precision"]) for s in st}
+    worst = max(err, key=err.get)
+    paras += [
+        f"**The remaining error is not spread evenly, and this column does not say "
+        f"which stratum a figure came from.** Across the three: {listed}. A count "
+        f"here is a blend of all three in unknown proportion, so the honest reading "
+        f"of any single figure is the weighted {100*p:.0f}% rather than whichever "
+        f"stratum it might have come from. The largest single share of the residual "
+        f"error sits in {gloss.get(worst, worst)}, at "
+        f"{100*err[worst]/sum(err.values()):.0f}% of it -- a plurality rather than a "
+        f"concentration, since that stratum carries only "
+        f"{100*st[worst]['weight']:.0f}% of the volume.",
+
+        f"That still matters most where the number is SMALL, which is where this "
+        f"document leans on it: a handful of co-mentions offered as evidence that a "
+        f"zero-relation module is discussed after all is a handful of chances for "
+        f"the {100*(1-p):.0f}% to land. A large figure survives the error rate as "
+        f"evidence of discussion; a figure under {_thin_threshold()} is flagged "
+        f"rather than argued from.",
+    ]
+    return _quote(paras)
+
+
+def _quote(paras: list, width: int = 76) -> list:
+    """Wrap paragraphs into a markdown blockquote.
+
+    Every emitted line carries its own `> `. Hand-writing the prefix on
+    f-strings that span source lines silently drops it from the continuation
+    lines, which markdown then renders by lazy continuation -- so it looks
+    right until someone edits near it.
+    """
+    out = []
+    for para in paras:
+        out += ["> " + ln for ln in textwrap.wrap(
+            para, width, break_on_hyphens=False, break_long_words=False)] + [""]
+    return out
 
 
 def comention_precision():
@@ -233,21 +318,7 @@ def main() -> None:
         "> not a survey of the library, and a different choice of proxy pairs would give a",
         "> different fraction. Several corroborated rows also rest on a single extracted",
         "> assertion, so read the per-row counts rather than the headline.", "",
-    ] + ([
-        f"> **The co-mention column is measured at roughly "
-        f"{100*comention_precision():.0f}% precision** "
-        f"({_comention_interval()}),",
-        "> (`analysis/comention-regression.md`), so read it as an upper bound on",
-        "> discussion rather than a count of it. Roughly half of any figure in that",
-        "> column is a generic surface form resolving to the wrong entity -- the",
-        "> measured failure mode is bare English words like `treatment` and",
-        "> `effects` matching in their ordinary sense.", "",
-        "> That matters most where the number is SMALL, which is exactly where this",
-        "> document leans on it: a handful of co-mentions offered as evidence that a",
-        "> zero-relation module is discussed after all could be entirely noise. A",
-        "> large figure survives the error rate as evidence of discussion; a figure",
-        "> in single digits does not.", "",
-    ] if comention else [
+    ] + (_comention_caveat() if comention else [
         "> **The full-text co-mention layer is not built**, so that column is empty",
         "> throughout. An empty cell here means *not measured*, NOT *not discussed* --",
         "> the distinction matters because a zero in the relation column is read",

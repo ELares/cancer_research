@@ -60,6 +60,97 @@ OUT = PROJECT_ROOT / "analysis" / "atlas-comention-audit.md"
 RAW = PROJECT_ROOT / "analysis" / "atlas-comention-audit.json"
 
 
+def _body_only_reading() -> list:
+    """Whether body-only is the layer working or the layer misfiring.
+
+    The document answered this once, for the unfiltered layer, where body-only
+    measured 20.0% against abstract-visible's 15.0% -- indistinguishable, and
+    the honest reading was that the same generic forms misfire everywhere and
+    body text simply has no extractor to disagree with them.
+
+    The authority filter reversed it. Body-only is now 86.7% and
+    abstract-visible 43.3%, a 43-point separation where there was five points,
+    so the two strata are no longer failing for one reason and the sentence
+    that said they were is now false. Derived, because this is the second time
+    the same paragraph has had to be rewritten by hand.
+    """
+    try:
+        st = json.loads((PROJECT_ROOT / "analysis"
+                         / "comention-authority-result.json").read_text())["strata"]
+        bo, av = st["body-only"], st["abstract-visible"]
+    except (OSError, ValueError, KeyError):
+        return []
+    gap = 100 * (bo["precision"] - av["precision"])
+    if gap < 10:
+        return [
+            "The two are within "
+            f"{abs(gap):.0f} points of each other, so they are plausibly failing for "
+            "the SAME reason: the same generic forms misfire in body text as in "
+            "abstracts, and body text has no abstract-level extractor to disagree "
+            "with them. On that reading the body-only stratum is not the layer doing "
+            "its job.", "",
+        ]
+    return [
+        f"**The two strata separate by {gap:.0f} points**, and that is the "
+        "interesting result. Before the authority filter they were five points "
+        "apart and both bad, which supported reading them as one failure: generic "
+        "forms misfiring everywhere, with no extractor to catch them in body text. "
+        f"They no longer behave alike. Body-only is now {100*bo['precision']:.0f}% "
+        f"and abstract-visible {100*av['precision']:.0f}%, so the shared "
+        "generic-word failure was most of what body-only suffered from, and "
+        "removing it left that stratum close to the corroborated one.", "",
+
+        "What is left in abstract-visible is therefore a DIFFERENT failure, not a "
+        "residue of the same one. It is also the stratum with the strongest prior "
+        "against it: an abstract-visible mention is one PubTator read and declined "
+        "to annotate, so the layer is disagreeing with the extractor on text they "
+        "both saw. Read the body-only stratum as largely the layer doing the job it "
+        "exists for, and the abstract-visible stratum as where the remaining error "
+        "lives.", "",
+    ]
+
+
+def _bound_reading(agree: int, body_only: int, scored: int) -> list:
+    """Where the truth sits between the corroboration bounds, measured.
+
+    This paragraph said the upper bound was "far above the truth" and the lower
+    bound "close to it". That described the unfiltered layer, where the truth
+    was 41.6% -- 18 points above the lower bound and 48 below the upper. The
+    shipped layer measures 88.0%, which inverts both: it sits 1.3 points under
+    the upper bound and 27.9 above the lower. So the characterisation is
+    computed from wherever the measurement actually landed rather than written
+    once and left.
+    """
+    lo = 100 * agree / max(1, scored)
+    hi = 100 * (agree + body_only) / max(1, scored)
+    for f in ("comention-authority-result.json", "comention-regression.json"):
+        try:
+            d = json.loads((PROJECT_ROOT / "analysis" / f).read_text())
+            truth = 100 * (d["weighted"] if "weighted" in d
+                           else d["after"]["weighted"])
+            break
+        except (OSError, ValueError, KeyError):
+            continue
+    else:
+        return [f"The bound runs {lo:.1f}% (corroboration alone) to {hi:.1f}% "
+                "(treating body-only as correct). Where the truth sits inside it "
+                "is measured in `analysis/comention-regression.md`.", ""]
+
+    def gloss(bound, name):
+        gap = abs(truth - bound)
+        return (f"the {bound:.1f}% {name} bound is "
+                + ("close to the truth" if gap < 5 else
+                   f"{gap:.0f} points {'above' if bound > truth else 'below'} it"))
+    return [
+        f"The measured precision of the layer as shipped is **{truth:.1f}%**, so "
+        f"{gloss(hi, 'upper')} and {gloss(lo, 'lower')}. Read the bounds that way "
+        "rather than as an estimate: they were computed before anyone read the "
+        "layer's output, and which end they sit near is a fact about this "
+        "particular build. All three strata are measured in "
+        "`analysis/comention-authority-result.md`.", "",
+    ]
+
+
 def _measured_strata_lines() -> list:
     """Report the hand-judged strata, ordered by the data.
 
@@ -68,38 +159,68 @@ def _measured_strata_lines() -> list:
     distinguishable at these sample sizes. A superlative written by hand beside
     numbers written by hand is exactly the drift this report keeps finding
     elsewhere, so the ordering is now read from the measurement.
+
+    The strata are read from whichever artifact describes the layer AS SHIPPED.
+    This function read `comention-regression.json` -- the UNFILTERED layer --
+    and printed its 15.0/20.0/90.0% under "Hand judging puts the three strata
+    at" in a document whose own counts came from the FILTERED layer, which
+    measures 43.3/86.7/96.7%. The numbers were right about a build nobody runs.
+
+    The "carries the most volume" superlative is derived for the same reason:
+    it was true of body-only before the promotion (44.2% against corroborated's
+    32.5%) and false after it (29.3% against 60.1%), and the docstring above
+    warns against exactly this.
     """
-    f = PROJECT_ROOT / "analysis" / "comention-regression.json"
+    auth = PROJECT_ROOT / "analysis" / "comention-authority-result.json"
     try:
-        d = json.loads(f.read_text())
-        m = d["measured_strata"]
+        d = json.loads(auth.read_text())
+        rows = [(s, v["precision"], v["n"], v["ci"], v["weight"])
+                for s, v in d["strata"].items()]
+        which = "the layer as shipped"
     except (OSError, ValueError, KeyError):
-        return ["Hand-judged strata precisions are not available; run "
-                "`scripts/comention_regression.py`.", ""]
-    rows = [
-        ("body-only", m["body_only"]["precision"], m["body_only"]["n"],
-         m["body_only"]["ci"]),
-        ("abstract-visible", d["after"]["abstract_precision"],
-         d["after"]["judged_n"], d["after"]["abstract_precision_ci"]),
-        ("corroborated", m["agree"]["precision"], m["agree"]["n"], m["agree"]["ci"]),
-    ]
+        f = PROJECT_ROOT / "analysis" / "comention-regression.json"
+        try:
+            d = json.loads(f.read_text())
+            m = d["measured_strata"]
+        except (OSError, ValueError, KeyError):
+            return ["Hand-judged strata precisions are not available; run "
+                    "`scripts/comention_regression.py`.", ""]
+        rows = [
+            ("body-only", m["body_only"]["precision"], m["body_only"]["n"],
+             m["body_only"]["ci"], None),
+            ("abstract-visible", d["after"]["abstract_precision"],
+             d["after"]["judged_n"], d["after"]["abstract_precision_ci"], None),
+            ("corroborated", m["agree"]["precision"], m["agree"]["n"],
+             m["agree"]["ci"], None),
+        ]
+        which = "the layer before the authority filter"
     rows.sort(key=lambda r: r[1])
     body = next(r for r in rows if r[0] == "body-only")
     lowest = rows[0]
     overlap = body[3][0] <= lowest[3][1] and lowest[3][0] <= body[3][1]
-    L = ["Hand judging puts the three strata at "
+    has_w = all(r[4] is not None for r in rows)
+    L = [f"Hand judging puts the three strata of {which} at "
          "(`analysis/comention/*-judgements.csv`):", "",
-         "| stratum | precision | 95% CI | n |", "|---|---|---|---|"]
-    for name, prec, n_, ci in rows:
+         "| stratum | precision | 95% CI | n |" + (" volume |" if has_w else ""),
+         "|---|---|---|---|" + ("---|" if has_w else "")]
+    for name, prec, n_, ci, w in rows:
         L.append(f"| {name} | **{100*prec:.1f}%** | "
-                 f"[{100*ci[0]:.1f}%, {100*ci[1]:.1f}%] | {n_} |")
+                 f"[{100*ci[0]:.1f}%, {100*ci[1]:.1f}%] | {n_} |"
+                 + (f" {100*w:.1f}% |" if has_w else ""))
     tail = (", and it is not distinguishable from the lowest at these sample sizes "
             "-- the intervals overlap across most of their range."
             if overlap and body is not lowest else ".")
     L += ["",
-          f"Body-only is the {'lowest' if body is lowest else 'second lowest'}{tail}",
-          "It carries the most volume of the three, which is what makes it matter.",
-          ""]
+          f"Body-only is the {'lowest' if body is lowest else 'second lowest'}{tail}"]
+    if has_w:
+        big = max(rows, key=lambda r: r[4])
+        L.append(
+            f"The stratum carrying the most volume is {big[0]} at "
+            f"{100*big[4]:.1f}%, against body-only's {100*body[4]:.1f}%."
+            if big[0] != "body-only" else
+            f"It carries the most volume of the three ({100*body[4]:.1f}%), which "
+            "is what makes it matter.")
+    L.append("")
     return L
 
 
@@ -295,15 +416,10 @@ def main() -> int:
         "NOT a reason to score the stratum as correct. This report asserted BOTH",
         "readings at once -- that the body-only share was \"the layer doing the job",
         "it exists for\" here, and that it was \"NOT the layer doing its job\" in the",
-        "#617 section below. The second is the right one.", "",
-    ] + _measured_strata_lines() + [
-        "The same generic forms misfire in body text as in abstracts, and there is",
-        "no abstract-level extractor to disagree with them.", "",
-        f"So read the {100*(agree+body_only)/max(1,scored):.1f}% that treating",
-        "body-only as correct would give as a bound that is now known to be far",
-        f"above the truth, and the {100*agree/max(1,scored):.1f}% corroboration rate",
-        "as a lower bound that is close to it. All three strata are measured in",
-        "`analysis/comention-regression.md`.", "",
+        "#617 section below. Which one is right is a question for the measurement,",
+        "and the answer has changed with the layer.", "",
+    ] + _measured_strata_lines() + _body_only_reading() + [
+    ] + _bound_reading(agree, body_only, scored) + [
         "### The PRE-FILTER measurement (#617), kept for comparison",
         "",
         "180 abstract-visible and 39 body-only mentions were read individually",
@@ -327,9 +443,14 @@ def main() -> int:
         "resolved to *Glucagonoma*, `overall survival` to *Prosthesis Failure* and",
         "`et al` to *Multiple Myeloma*. 132 of 152 measured false positives were",
         "multi-word.", "",
-        "Two measured filters now replace that proxy (see `atlas_comention.py`), and",
-        "the counts above are from the run BEFORE them. A fresh sample after the next",
-        "rebuild is what will confirm the repair.", "",
+        "Two measured filters replaced that proxy, and the counts above are from the",
+        "run BEFORE them. The fresh sample after that rebuild did NOT confirm the",
+        "repair: it REFUTED it (precision fell to 41.6%, `comention-regression.md`),",
+        "because closing the multi-word channel moved the pressure onto the",
+        "single-token one the same change had just opened. The repair that worked is",
+        "the authority-name rule (#628, `comention-authority-result.md`), which asks",
+        "whether a form is a NAME of what it resolves to rather than how much support",
+        "it has.", "",
         "### Why corroboration alone is a lower bound", "",
         "PubTator reads abstracts; this layer reads full text. An entity discussed",
         "only in Methods or Results is genuinely present and genuinely absent from",

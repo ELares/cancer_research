@@ -44,35 +44,33 @@ would waste the measurement:
 
 | | count | share of disagreements |
 |---|---|---|
-| our alias appears in the ABSTRACT PubTator read | 117 | 26.8% |
-| body-only, so PubTator could not have seen it | 320 | 73.2% |
+| our alias appears in the ABSTRACT PubTator read | 116 | 26.5% |
+| body-only, so PubTator could not have seen it | 321 | 73.5% |
 
 A body-only match is one PubTator could not have contradicted, because it
 never read that text. That is what this layer exists to find -- and it is
 NOT a reason to score the stratum as correct. This report asserted BOTH
 readings at once -- that the body-only share was "the layer doing the job
 it exists for" here, and that it was "NOT the layer doing its job" in the
-#617 section below. The second is the right one.
+#617 section below. Which one is right is a question for the measurement,
+and the answer has changed with the layer.
 
-Hand judging puts the three strata at (`analysis/comention/*-judgements.csv`):
+Hand judging puts the three strata of the layer as shipped at (`analysis/comention/*-judgements.csv`):
 
-| stratum | precision | 95% CI | n |
-|---|---|---|---|
-| abstract-visible | **15.0%** | [8.1%, 26.1%] | 60 |
-| body-only | **20.0%** | [10.5%, 34.8%] | 40 |
-| corroborated | **90.0%** | [76.9%, 96.0%] | 40 |
+| stratum | precision | 95% CI | n | volume |
+|---|---|---|---|---|
+| abstract-visible | **43.3%** | [27.4%, 60.8%] | 30 | 10.7% |
+| body-only | **86.7%** | [70.3%, 94.7%] | 30 | 29.3% |
+| corroborated | **96.7%** | [83.3%, 99.4%] | 30 | 60.1% |
 
-Body-only is the second lowest, and it is not distinguishable from the lowest at these sample sizes -- the intervals overlap across most of their range.
-It carries the most volume of the three, which is what makes it matter.
+Body-only is the second lowest.
+The stratum carrying the most volume is corroborated at 60.1%, against body-only's 29.3%.
 
-The same generic forms misfire in body text as in abstracts, and there is
-no abstract-level extractor to disagree with them.
+**The two strata separate by 43 points**, and that is the interesting result. Before the authority filter they were five points apart and both bad, which supported reading them as one failure: generic forms misfiring everywhere, with no extractor to catch them in body text. They no longer behave alike. Body-only is now 87% and abstract-visible 43%, so the shared generic-word failure was most of what body-only suffered from, and removing it left that stratum close to the corroborated one.
 
-So read the 89.3% that treating
-body-only as correct would give as a bound that is now known to be far
-above the truth, and the 60.1% corroboration rate
-as a lower bound that is close to it. All three strata are measured in
-`analysis/comention-regression.md`.
+What is left in abstract-visible is therefore a DIFFERENT failure, not a residue of the same one. It is also the stratum with the strongest prior against it: an abstract-visible mention is one PubTator read and declined to annotate, so the layer is disagreeing with the extractor on text they both saw. Read the body-only stratum as largely the layer doing the job it exists for, and the abstract-visible stratum as where the remaining error lives.
+
+The measured precision of the layer as shipped is **88.0%**, so the 89.4% upper bound is close to the truth and the 60.1% lower bound is 28 points below it. Read the bounds that way rather than as an estimate: they were computed before anyone read the layer's output, and which end they sit near is a fact about this particular build. All three strata are measured in `analysis/comention-authority-result.md`.
 
 ### The PRE-FILTER measurement (#617), kept for comparison
 
@@ -102,9 +100,14 @@ resolved to *Glucagonoma*, `overall survival` to *Prosthesis Failure* and
 `et al` to *Multiple Myeloma*. 132 of 152 measured false positives were
 multi-word.
 
-Two measured filters now replace that proxy (see `atlas_comention.py`), and
-the counts above are from the run BEFORE them. A fresh sample after the next
-rebuild is what will confirm the repair.
+Two measured filters replaced that proxy, and the counts above are from the
+run BEFORE them. The fresh sample after that rebuild did NOT confirm the
+repair: it REFUTED it (precision fell to 41.6%, `comention-regression.md`),
+because closing the multi-word channel moved the pressure onto the
+single-token one the same change had just opened. The repair that worked is
+the authority-name rule (#628, `comention-authority-result.md`), which asks
+whether a form is a NAME of what it resolves to rather than how much support
+it has.
 
 ### Why corroboration alone is a lower bound
 
