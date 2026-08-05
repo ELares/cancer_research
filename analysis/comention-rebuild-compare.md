@@ -5,21 +5,13 @@ pair table against the preserved baseline. Everything measured before this
 was either an offline prediction or a judged sample of mentions; this is the
 layer's actual output.
 
-## Read this as TWO changes, not one
+## Is this a clean A/B?
 
-The title says "between the two builds" rather than "the authority filter"
-because the two runs do not differ only by the filter. The baseline build
-used an alias map of 45,140 forms; the same code with the filter
-OFF now produces 44,287, because the graph index was rebuilt in
-between to add `alias_ident_support` and correct the minority-share filter,
-whose numerator had been a form's count across ALL its senses rather than
-its count for the identifier it resolves to.
-
-So 853 forms (1.9% of the map)
-differ for a reason that has nothing to do with the authority rule, and every
-number below carries both changes. A clean A/B would need a third build with
-the filter off on the current index, which is another three hours and has not
-been run.
+**No, and every number below carries the difference.** The control build's
+map holds 45,140 forms where this code now produces
+44,287 with the filter off, so the two runs differ by more than
+the rule. Read the comparison as between two builds rather than as the
+filter's effect.
 
 ## Pairs
 

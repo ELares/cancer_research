@@ -50,7 +50,7 @@ def test_the_gene_pair_movement_is_split_and_the_confound_declared():
     assert d["gene_gene_gained"] > 0, "unmasking produced no new gene pairs"
     txt = DOC.read_text()
     if d.get("confounded"):
-        assert "TWO changes, not one" in txt, (
+        assert "every number below carries the difference" in txt, (
             "the builds differ by more than the filter and the document does "
             "not say so")
         assert "recorded as unresolved rather than attributed" in txt
@@ -71,3 +71,36 @@ def test_the_comparison_reports_gained_pairs_not_only_lost():
     assert "gained" in d and "lost" in d
     assert d["rebuilt_pairs"] == d["baseline_pairs"] - d["lost"] + d["gained"], (
         "the pair arithmetic does not close; lost/gained are not a partition")
+
+
+def test_the_control_alias_map_is_read_from_its_log_not_assumed(tmp_path):
+    """Assuming the control matched the current code is what hid a confound.
+
+    A rebuilt graph index changed the alias map by 853 forms between two builds,
+    and because nothing read what each build ACTUALLY used, a 40,050-pair
+    gene-gene loss looked like the filter's doing for several hours.
+    """
+    import comention_rebuild_compare as c
+
+    log = tmp_path / "run.log"
+    log.write_text(
+        "loading the entity alias map ...\n"
+        "  739,383 aliases -> 44,287 usable (6.0% kept after disambiguation)\n"
+        "  [1/28] shard: 1 docs, 2 sentences, 3 pairs so far, 0.1s\n")
+    assert c._forms_from_log(log) == 44287
+    assert c._forms_from_log(tmp_path / "absent.log") is None
+
+
+@pytest.mark.skipif(not RAW.exists(), reason="rebuild comparison not run yet")
+def test_the_comparison_declares_whether_it_is_clean():
+    """A reader must not have to work out whether the two builds are comparable."""
+    import json
+
+    d = json.loads(RAW.read_text())
+    txt = DOC.read_text()
+    assert "Is this a clean A/B?" in txt
+    if d.get("confounded"):
+        assert "every number below carries the difference" in txt
+    else:
+        assert "**Yes.**" in txt
+        assert d["control_alias_forms"] == d["flagoff_alias_forms"]
