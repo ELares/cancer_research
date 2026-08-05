@@ -104,6 +104,16 @@ CLAIMS = [
 ]
 
 
+# Three of the CLAIMS are not off-by-default realism layers at all: they are
+# core-engine mechanisms described in the manuscript's Chapter 5 (GPX4/FSP1
+# parallel defence, System Xc- cystine supply, and erastin as a first-class drug
+# input). `fsp1_rate` and the Xc- factor are live in the default parameter set.
+# They are also three of the four best-corroborated rows, so quoting the overall
+# fraction as though it described "the layers" flatters the layers by borrowing
+# the core engine's evidence. Both denominators are reported.
+CORE_ENGINE = {"system_xc", "erastin", "fsp1"}
+
+
 # The co-mention layer's measured precision, read from its own artifact so this
 # document cannot quote a stale figure. Falls back to None when the measurement
 # has not been run, in which case the caveat is omitted rather than invented.
@@ -667,15 +677,29 @@ def main() -> None:
     usable = [r for r in rows if r.get("weaker") is not None]
     supported = [r["weaker"] for r in usable if r["total"] > 0]
     floor = min(supported) if supported else None
+    layers = [r for r in rows if r["module"] not in CORE_ENGINE]
+    no_gpx4 = [r for r in usable if "GPX4" not in (r["a"], r["b"])]
     RAW.write_text(json.dumps({
         "n_claims": len(rows),
         "corroborated": len(found),
         "zero_relation": len(none_),
         "unresolved": len(unres),
+        # The denominator that describes the LAYERS, with the core-engine rows
+        # removed. The overall fraction is not a survey of the library either:
+        # these are author-chosen proxy pairs for a subset of the modules.
+        "n_claims_layers_only": len(layers),
+        "corroborated_layers_only": sum(1 for r in layers if r["total"] > 0),
+        "core_engine_claims": sorted(CORE_ENGINE),
         "exposure_floor": floor,
+        "weaker_min": min((r["weaker"] for r in usable), default=None),
+        "weaker_max": max((r["weaker"] for r in usable), default=None),
+        "below_floor_base_rate": _below_floor_base_rate(idx, degree, rows),
         "spearman_weaker_degree_vs_relations":
             _spearman([r["weaker"] for r in usable], [r["total"] for r in usable])
             if len(usable) >= 5 else None,
+        "spearman_excluding_gpx4":
+            _spearman([r["weaker"] for r in no_gpx4], [r["total"] for r in no_gpx4])
+            if len(no_gpx4) >= 5 else None,
         "zero_explained_by_exposure": sum(
             1 for r in usable if r["total"] == 0 and floor is not None
             and r["weaker"] < floor),
