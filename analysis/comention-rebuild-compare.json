@@ -1,0 +1,40 @@
+{
+  "baseline_pairs": 15616727,
+  "rebuilt_pairs": 8265855,
+  "lost": 8193398,
+  "gained": 842526,
+  "baseline_weight": 869413927,
+  "rebuilt_weight": 168913267,
+  "by_namespace": {
+    "mesh-mesh": {
+      "baseline": 6265067,
+      "rebuilt": 1955336
+    },
+    "mesh-omim": {
+      "baseline": 154667,
+      "rebuilt": 98853
+    },
+    "gene-gene": {
+      "baseline": 3373437,
+      "rebuilt": 3680540
+    },
+    "gene-mesh": {
+      "baseline": 5686754,
+      "rebuilt": 2389086
+    },
+    "gene-omim": {
+      "baseline": 136080,
+      "rebuilt": 141278
+    },
+    "omim-omim": {
+      "baseline": 722,
+      "rebuilt": 762
+    }
+  },
+  "gene_gene_leak": -307103,
+  "gene_gene_lost": 40050,
+  "gene_gene_gained": 347153,
+  "baseline_alias_forms": 45140,
+  "flagoff_alias_forms": 44287,
+  "confounded": true
+}
