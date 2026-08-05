@@ -138,6 +138,58 @@ is wrong -- it says the module docs should state which side they took.
      them. An earlier version of this report attributed that zero entirely
      to cause 1, which was wrong.
 
+## A zero is usually about EXPOSURE, not about the claim
+
+The count above treats every zero alike. They are not alike. A pair can
+only be asserted if both its entities are written about at all, and across
+these claims the WEAKER entity's number of distinct relation partners runs
+from 6 to 2,792, a factor of 465.
+
+Exposure and corroboration track each other closely: Spearman **rho = 0.86**, Kendall **tau = 0.70** over 20 claims
+(a permutation test puts the correlation beyond every one of 200,000
+shuffles). It is not an artifact of one hub gene -- taking the WEAKER of
+each pair structurally excludes GPX4, which is never the weaker side, and
+dropping all nine GPX4 pairs RAISES rho to 0.88. An independent
+entity-level measure (total mentions rather than partners) gives rho 0.83
+and the identical split.
+
+Every claim that HAS support has a weaker entity of at least 108, and
+7 of the 9 zeros fall below that. So a zero is a
+poor guide to whether a claim is true: it mostly tracks how much one side
+has been studied.
+
+| module | pair | weaker partner count | below the supported range? |
+|---|---|---|---|
+| ether_lipid | `FAR1` - `AGPS` | 6 (6 / 58) | yes |
+| vitk | `VKORC1L1` - `GPX4` | 11 (11 / 1930) | yes |
+| por | `POR` - `CYB5R1` | 12 (145 / 12) | yes |
+| repair | `CHMP5` - `CHMP6` | 29 (31 / 29) | yes |
+| mboat | `MBOAT2` - `GPX4` | 37 (37 / 1930) | yes |
+| prom2 | `PROM2` - `FTH1` | 60 (60 / 542) | yes |
+| dhc7 | `DHCR7` - `GPX4` | 87 (87 / 1930) | yes |
+| copper | `ATP7A` - `GPX4` | 208 (208 / 1930) | no |
+| hdac_persister | `HDAC1` - `AIFM2` | 328 (1197 / 328) | no |
+
+### Three reasons not to push this further than it goes
+
+**The line is a sample minimum, not a threshold.** It is set by a single row -- `gch1`, which has 1 asserting article under the weakest predicate the graph has. Leave-one-out over the supported claims changes the line only when that row is dropped, and then it moves 108 -> 253. A bootstrap over the supported set returns the shipped answer about two thirds of the time.
+
+**Below the line does not mean undetectable.** An earlier version of this section said the census could not have corroborated those claims whatever the biology is. That is false: across the whole graph **45% of all asserted pairs** have a weaker entity below 108, so pairs like these are corroborated constantly. The honest statement is probabilistic -- a particular pair drawn from a sparsely-studied entity's handful of relations is unlikely a priori -- not that the machinery cannot see them.
+
+**Which zeros are 'genuine' does not replicate across measures, so this section does not name any.** Run the identical procedure on the pair-level co-mention column already in the table above and the correlation INVERTS among the zeros (rho about -0.9), the line lands at 66, and the rows above it become `ether_lipid`, `repair` -- with no overlap at all against the entity-degree answer (`hdac_persister`, `copper`). Entity exposure and pair discussion are different constructs and there is no reason they must agree, but the conclusion anyone would draw is pair-level, so a result that flips with the measure is not one to report. The first draft of this section named the entity-degree pair as 'the interesting rows' without checking the column beside it.
+
+**Caveat on the correlation.** A pair's own relations contribute to both
+entities' partner counts, so the two quantities share a term. Recomputing
+with each pair's own edge removed moves rho by 0.01 and changes no row's
+classification, and the contribution is exactly zero for every unsupported
+row, so the coupling cannot manufacture the effect.
+
+**And a high partner count is not evidence FOR a claim.** It makes a pair
+measurable, not correct. An earlier draft added that GPX4 has the most
+partners here, which is false -- across the twenty claims it ranks fifth,
+behind CDH1, CD274, IFNG and YAP1. It is the maximum only within the
+nine-row table above, and by 1.6x rather than by a wide margin.
+
 ## Detail
 
 ### `system_xc` — SLC7A11 / GPX4

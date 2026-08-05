@@ -47,6 +47,7 @@ def main() -> int:
     news = load("news-verification-audit.json")
     coment = load("atlas-comention-audit.json")
     contra = load("atlas-contradiction-quality.json")
+    modsup = load("atlas-module-support.json")
 
     missing = [n for n, v in [
         ("landscape", land), ("thesis", thesis), ("predictions", pred),
@@ -221,6 +222,31 @@ def main() -> int:
               "first assertion the decline is modest, and the recent end is an upper "
               "bound because of MeSH indexing lag.",
               "*Source:* `atlas-replication.md`", ""]
+    if modsup and modsup.get("exposure_floor") is not None:
+        n_zero = modsup["zero_relation"]
+        n_exp = modsup["zero_explained_by_exposure"]
+        L += [
+            f"**Most of what the census cannot corroborate is about what has been "
+            f"STUDIED, not about what is true.** Of the "
+            f"{modsup['n_claims']} simulation-module claims, {modsup['corroborated']} "
+            f"are corroborated by at least one asserting article and {n_zero} by none. "
+            f"Read flat, that looks like {n_zero} unsupported claims. It is not: a pair "
+            f"can only be asserted if BOTH its entities are written about, and the "
+            f"weaker entity's partner count across these claims runs from 6 to 2,792. "
+            f"Every claim that HAS support has a weaker entity of at least "
+            f"{modsup['exposure_floor']} partners, and {n_exp} of the {n_zero} zeros "
+            f"fall below that (Spearman rho = "
+            f"{modsup['spearman_weaker_degree_vs_relations']:.2f}, and the association "
+            f"survives dropping every GPX4 pair).",
+            "**But which zeros are 'genuine' cannot be identified, and the source "
+            "document deliberately names none.** The line is a sample minimum set by a "
+            "one-article row; 45% of all asserted pairs in the graph sit below it, so "
+            "it is not a detectability limit; and running the same procedure on the "
+            "pair-level co-mention column inverts the correlation and returns a "
+            "disjoint pair of exceptions. The finding is that a zero is a poor guide "
+            "to a claim's truth -- not that any particular zero is interesting.",
+            "*Source:* `atlas-module-support.md`", ""]
+
     if imp:
         L += [f"**The entity collisions are not as bad as containment suggests.**",
               f"{100*imp['relation_rows_touching_contested_id']/imp['relation_rows']:.1f}%"
