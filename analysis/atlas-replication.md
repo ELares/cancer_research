@@ -19,17 +19,27 @@ once as far as the machine-readable record shows.
 
 ## The rate
 
-Of 1,990,659 entity pairs first asserted at least 5 years ago,
+Of 1,990,657 entity pairs first asserted at least 5 years ago,
 **22.7%** acquired a second paper WITHIN 5 years. Allowing an
 unlimited horizon raises that to 34.2%, and **1,310,759** pairs have still been asserted exactly once.
 
 ### The window has to be equal, not merely a minimum
 
-Scoring each cohort on whether it was *ever* replicated produced a clean
-monotonic decline, from about 60% in 1950 to 17.5% in 2020. That is not a
-finding about science. A 1975 pair has had fifty years to acquire a second
-paper and a 2020 pair has had six, so the "decline" was the observation
-window shrinking as cohorts get newer.
+Scoring each cohort on whether it was *ever* replicated gives 60.1% for pairs first asserted in 1950 against 13.4% for 2021, a fall of 46.7 points across 71 years. That is not a finding about science. A 1950 pair has had 76 years to acquire a second paper and a 2021 pair has had 5, so the "decline" is the observation window shrinking as the cohorts get newer. Carried to the final cohort it reaches 0.4% at 2026, which is not evidence of anything: that cohort has had 0 years.
+
+The two series meet at the recent end. A pair first asserted in 2021 can only acquire a second paper by 2026, which is its own 5-year window, so "ever" and "within 5 years" are the same question there and both give 13.4%. The contrast below is therefore carried by the OLD end, where the censored measure has had decades of extra observation to bank -- which is exactly the bias being described, and is why the equal window is applied from each pair's own first assertion rather than from a fixed date.
+
+| first asserted | pairs | ever replicated | rate | window complete? |
+|---|---|---|---|---|
+| 1950 | 238 | 143 | 60.1% | yes |
+| 1959 | 365 | 216 | 59.2% | yes |
+| 1969 | 911 | 567 | 62.2% | yes |
+| 1978 | 5,393 | 3,008 | 55.8% | yes |
+| 1987 | 13,183 | 6,411 | 48.6% | yes |
+| 1996 | 23,960 | 11,387 | 47.5% | yes |
+| 2005 | 52,921 | 22,639 | 42.8% | yes |
+| 2014 | 92,489 | 27,872 | 30.1% | yes |
+| 2023 | 103,597 | 9,701 | 9.4% | no, 3y elapsed |
 
 Every cohort below is therefore scored on the SAME 5-year interval from
 its own first assertion, and cohorts too recent to have completed one are
@@ -60,7 +70,7 @@ excluded rather than shown declining:
 | 2011 | 75,237 | 17,737 | 23.6% |
 | 2014 | 92,489 | 19,953 | 21.6% |
 | 2017 | 93,421 | 17,769 | 19.0% |
-| 2020 | 107,374 | 18,593 | 17.3% |
+| 2020 | 107,374 | 18,591 | 17.3% |
 
 The dramatic version does not survive the fix, and what is left is
 modest:
@@ -78,7 +88,7 @@ one.
 
 ## Orphaned claims touching this project's mechanisms
 
-7,791 single-paper pairs involve a gene the simulation
+7,794 single-paper pairs involve a gene the simulation
 layers rest on. Oldest first, since those have had the longest to be
 followed up and were not:
 

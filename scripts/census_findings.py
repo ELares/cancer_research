@@ -203,11 +203,23 @@ def main() -> int:
               "A good candidate generator and a bad ranker.",
               "*Source:* `atlas-discovery-eval.md`", ""]
     if repl:
-        L += [f"**Replication looked like it was collapsing, and was not.** Scoring",
-              "cohorts on whether they were ever replicated gave a clean decline from",
-              "60% to 17.5%; that was the observation window shrinking, not science",
-              f"changing. On an equal {repl['quiet_years']}-year window the decline is",
-              "modest and the recent end is an upper bound because of indexing lag.",
+        # The censored series is read from the artifact. It used to be quoted
+        # from atlas-replication.md's PROSE, where it was a remembered figure
+        # from a development run that stored nothing -- so neither document
+        # could check it and neither would have noticed it going stale.
+        cen = repl.get("cohorts_censored_ever") or []
+        w = repl["quiet_years"]
+        done = [r for r in cen if r["year"] + w <= repl["latest_year"]]
+        span = (f"{100*done[0]['rate']:.1f}% for {done[0]['year']} to "
+                f"{100*done[-1]['rate']:.1f}% for {done[-1]['year']}"
+                if done else "a clean monotonic decline")
+        L += ["**Replication looked like it was collapsing, and was not.** Scoring "
+              f"cohorts on whether they were EVER replicated gives {span}; that is "
+              "the observation window shrinking, not science changing, since the "
+              "older cohort has had decades to acquire a second paper and the newer "
+              f"one had {w} years. On an equal {w}-year window from each pair's own "
+              "first assertion the decline is modest, and the recent end is an upper "
+              "bound because of MeSH indexing lag.",
               "*Source:* `atlas-replication.md`", ""]
     if imp:
         L += [f"**The entity collisions are not as bad as containment suggests.**",

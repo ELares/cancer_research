@@ -64,6 +64,80 @@ FOCUS = {"2879", "84883", "11332", "23657", "6520", "1738", "2643", "4780",
          "9817", "7157", "1026", "5743"}
 
 
+def _censoring_lines(censored_rows: list, latest: int, W: int) -> list:
+    """The censoring artifact, measured rather than remembered.
+
+    This paragraph asserted "from about 60% in 1950 to 17.5% in 2020" from a
+    development run whose output was never stored, so neither this document nor
+    `census_findings.py` -- which re-quotes it from this prose -- could check
+    the claim or notice it going stale. The series is now computed in the same
+    loop as the windowed one and written to the artifact, which costs one
+    counter and makes the repo's own methodological caveat reproducible.
+    """
+    if not censored_rows:
+        return ["Scoring each cohort on whether it was *ever* replicated is the",
+                "comparison this section warns against, but too few cohorts are large",
+                "enough to show it here.", ""]
+    # Compare the SAME cohort range the windowed series uses. Running the
+    # censored series to its own final cohort would end on a year that has had
+    # zero elapsed time, which demonstrates the artifact by picking a degenerate
+    # endpoint rather than a fair one.
+    complete = [r for r in censored_rows if r["year"] + W <= latest] or censored_rows
+    first_row, last_row = complete[0], complete[-1]
+    span = last_row["year"] - first_row["year"]
+    fell = first_row["rate"] - last_row["rate"]
+    tail = censored_rows[-1]
+    return [
+        f"Scoring each cohort on whether it was *ever* replicated gives "
+        f"{100*first_row['rate']:.1f}% for pairs first asserted in "
+        f"{first_row['year']} against {100*last_row['rate']:.1f}% for "
+        f"{last_row['year']}, a fall of {100*fell:.1f} points across "
+        f"{span} years. That is not a finding about science. A "
+        f"{first_row['year']} pair has had {latest - first_row['year']} years to "
+        f"acquire a second paper and a {last_row['year']} pair has had "
+        f"{latest - last_row['year']}, so the \"decline\" is the observation window "
+        f"shrinking as the cohorts get newer."
+        + (f" Carried to the final cohort it reaches {100*tail['rate']:.1f}% at "
+           f"{tail['year']}, which is not evidence of anything: that cohort has had "
+           f"{latest - tail['year']} years."
+           if tail is not last_row else ""), "",
+
+        # The honest limit of the demonstration, which a review established by
+        # proof rather than by reading: for the NEWEST complete cohort the two
+        # series are identical by construction, because a pair first asserted in
+        # `latest - W` can only be replicated inside its own window. So the
+        # contrast is carried entirely by the old end, and quoting it as a
+        # two-ended comparison overstates what separates the two measures.
+        f"The two series meet at the recent end. A pair first asserted in "
+        f"{last_row['year']} can only acquire a second paper by {latest}, which is "
+        f"its own {W}-year window, so \"ever\" and \"within {W} years\" are the same "
+        f"question there and both give {100*last_row['rate']:.1f}%. The contrast "
+        f"below is therefore carried by the OLD end, where the censored measure has "
+        f"had decades of extra observation to bank -- which is exactly the bias "
+        f"being described, and is why the equal window is applied from each pair's "
+        f"own first assertion rather than from a fixed date.", "",
+
+        "| first asserted | pairs | ever replicated | rate | window complete? |",
+        "|---|---|---|---|---|",
+    ] + [
+        f"| {r['year']} | {r['pairs']:,} | {r['replicated']:,} | "
+        f"{100*r['rate']:.1f}% | {_complete_cell(r, latest, W)} |"
+        for r in censored_rows[::max(1, len(censored_rows) // 8)]
+    ] + [""]
+
+
+def _complete_cell(row: dict, latest: int, W: int) -> str:
+    """Whether a cohort has had its full window, marked in the table.
+
+    This is the one table whose subject IS censoring, and it was showing a
+    complete 1950 cohort beside an incomplete 2023 one with nothing to tell
+    them apart -- inviting the reader to make the comparison the surrounding
+    prose warns against.
+    """
+    elapsed = latest - row["year"]
+    return "yes" if elapsed >= W else f"no, {elapsed}y elapsed"
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--quiet-years", type=int, default=5,
@@ -112,15 +186,29 @@ def main() -> int:
     # manufacture a decline that is really just censoring.
     W = args.quiet_years
     # Replicated WITHIN W years of first assertion, so every cohort is scored on
-    # the same interval. Scoring "ever" instead produced a clean monotonic
-    # decline from 60% in 1950 to 17.5% in 2020 -- which is not a finding about
-    # science, it is the observation window shrinking as the cohorts get newer.
+    # the same interval. Scoring "ever" instead produces an apparent monotonic
+    # decline that is not a finding about science but the observation window
+    # shrinking as the cohorts get newer.
+    #
+    # BOTH series are computed. The censored one was previously named in a
+    # comment and in the report's prose ("from about 60% in 1950 to 17.5% in
+    # 2020") with no artifact behind it: measured once during development,
+    # written down, and then re-quoted by `census_findings.py` from the prose.
+    # Two documents rested on a number neither could check and neither would
+    # notice going stale, which is the defect this repo keeps finding elsewhere.
+    # Computing it here costs one extra counter over a loop already running.
     cohort = collections.defaultdict(lambda: [0, 0])   # year -> [pairs, replicated]
+    censored = collections.defaultdict(lambda: [0, 0])
     for key, ys in pair_years.items():
         y0 = first[key]
+        ys = sorted(ys)
+        # The censored measure: replicated EVER, every cohort included, which is
+        # exactly what makes it wrong -- a 1950 pair has had 75 years to acquire
+        # a second paper and a 2020 pair five.
+        censored[y0][0] += 1
+        censored[y0][1] += len(ys) > 1
         if y0 + W > latest:          # not yet had its full window
             continue
-        ys = sorted(ys)
         within = len(ys) > 1 and ys[1] <= y0 + W
         cohort[y0][0] += 1
         cohort[y0][1] += within
@@ -128,6 +216,9 @@ def main() -> int:
     rows = [{"year": y, "pairs": v[0], "replicated": v[1],
              "rate": v[1] / v[0] if v[0] else 0.0}
             for y, v in sorted(cohort.items()) if v[0] >= 200]
+    censored_rows = [{"year": y, "pairs": v[0], "replicated": v[1],
+                      "rate": v[1] / v[0] if v[0] else 0.0}
+                     for y, v in sorted(censored.items()) if v[0] >= 200]
 
     orphans = [(k, first[k]) for k, pm in papers.items()
                if len(pm) == 1 and first[k] + W <= latest]
@@ -163,11 +254,7 @@ def main() -> int:
         f"unlimited horizon raises that to {100*overall_ever:.1f}%, and "
         f"**{len(orphans):,}** pairs have still been asserted exactly once.", "",
         "### The window has to be equal, not merely a minimum", "",
-        "Scoring each cohort on whether it was *ever* replicated produced a clean",
-        "monotonic decline, from about 60% in 1950 to 17.5% in 2020. That is not a",
-        "finding about science. A 1975 pair has had fifty years to acquire a second",
-        f"paper and a 2020 pair has had six, so the \"decline\" was the observation",
-        "window shrinking as cohorts get newer.", "",
+    ] + _censoring_lines(censored_rows, latest, W) + [
         f"Every cohort below is therefore scored on the SAME {W}-year interval from",
         "its own first assertion, and cohorts too recent to have completed one are",
         "excluded rather than shown declining:", "",
@@ -235,6 +322,14 @@ def main() -> int:
         "eligible_pairs": total_eligible, "orphans": len(orphans),
         "overall_replication_rate": overall,
         "cohorts": rows,
+        # The censored series the methodology section warns against, stored so
+        # the warning is checkable and so a second document can quote the
+        # artifact rather than this document's prose.
+        "cohorts_censored_ever": censored_rows,
+        # The COUNT as well as the sample. The list is truncated at 200, so a
+        # reader computing len(focus_orphans) gets 200 and not 7,794 -- which
+        # is exactly the mistake made while updating CLAUDE.md from this file.
+        "focus_orphans_total": len(focus_orphans),
         "focus_orphans": [{"year": y, "a": name(k[0]), "b": name(k[1])}
                           for k, y in focus_orphans[:200]],
     }, indent=2) + "\n")

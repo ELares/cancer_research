@@ -117,11 +117,7 @@ popularity, and no standard link predictor beats that baseline either.
 A good candidate generator and a bad ranker.
 *Source:* `atlas-discovery-eval.md`
 
-**Replication looked like it was collapsing, and was not.** Scoring
-cohorts on whether they were ever replicated gave a clean decline from
-60% to 17.5%; that was the observation window shrinking, not science
-changing. On an equal 5-year window the decline is
-modest and the recent end is an upper bound because of indexing lag.
+**Replication looked like it was collapsing, and was not.** Scoring cohorts on whether they were EVER replicated gives 60.1% for 1950 to 13.4% for 2021; that is the observation window shrinking, not science changing, since the older cohort has had decades to acquire a second paper and the newer one had 5 years. On an equal 5-year window from each pair's own first assertion the decline is modest, and the recent end is an upper bound because of MeSH indexing lag.
 *Source:* `atlas-replication.md`
 
 **The entity collisions are not as bad as containment suggests.**
