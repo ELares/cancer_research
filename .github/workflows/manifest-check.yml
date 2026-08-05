@@ -26,6 +26,18 @@ name: Manifest Freshness
 # BATCHES -- cherry-pick the open dependabot commits onto one branch, regenerate
 # the manifest once, run both suites, and close the originals as superseded.
 # One review and one CI cycle instead of N of each.
+#
+# WHEN A CHERRY-PICK CONFLICTS, DO NOT RESOLVE IT BY EDITING THE VERSION STRING.
+# Adjacent bumps in requirements-lock.txt conflict routinely, and substituting
+# `pkg==old` -> `pkg==new` by hand changes the version WITHOUT the dependency
+# closure. That is not hypothetical: feedparser 6.0.14 replaced its SGML backend
+# (`sgmllib3k` -> `feedparser-sgmllib`), and the substitution left the lock
+# pinning an orphan while the real backend floated unpinned at install time --
+# invisible, because CI installs without --no-deps and dependabot cannot propose
+# bumps for a package absent from every manifest. Re-resolve instead, per
+# CONTRIBUTING.md, and check the lock resolves to exactly itself:
+#   pip install --dry-run --ignore-installed --report r.json -r requirements-lock.txt
+# then confirm the resolved set equals the pinned set, in both directions.
 
 on:
   push:
