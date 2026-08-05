@@ -95,3 +95,32 @@ def test_the_unblinding_is_bounded_not_only_declared():
         "too few borderline calls declared for the bound to mean anything")
     flat = " ".join(DOC.read_text().split())
     assert "Resolving every borderline call against the filter" in flat
+
+
+def test_the_recall_cost_is_measured_with_the_shipped_rule():
+    """Precision alone is half an answer, and this thread had only that.
+
+    The rule is applied via `atlas_comention._authority_bag` -- the shipped
+    code path -- to mentions already judged on the unfiltered layer, so the cost
+    is measured on the same data rather than inferred from counts.
+    """
+    d = _raw()["recall_cost"]
+    assert d and d["n"] >= 150, "too few judged mentions to measure the cost"
+    assert 0 < d["tp_lost_share"] < 0.5, (
+        f"true-positive loss {d['tp_lost_share']:.3f} is outside the range this "
+        "trade was accepted on; re-read before shipping")
+    assert d["fp_removed_share"] > 0.8
+    assert d["kept_precision"] > d["base_precision"]
+
+
+def test_the_rule_costs_nothing_on_genes_and_that_is_verified_not_assumed():
+    """MeSH-only is a claim about the code. This checks it on judged data."""
+    d = _raw()["recall_cost"]
+    assert d["gene_n"] > 0, "no gene true positives to check the invariant on"
+    assert d["gene_tp_lost"] == 0.0, (
+        f"the rule lost {100*d['gene_tp_lost']:.0f}% of gene true positives; "
+        "MeSH-only is not holding")
+    assert d["mesh_tp_lost"] > 0, "the rule now costs nothing on MeSH either; "\
+        "either it stopped firing or the measurement broke"
+    flat = " ".join(DOC.read_text().split())
+    assert "rather than assumed from the code" in flat

@@ -40,6 +40,33 @@ rule (`analysis/comention-rebuild-compare.md`). A control build with the
 filter off on the current index is running; until it lands, read the
 41.6% as context rather than as a clean baseline.
 
+## What it cost, measured rather than counted
+
+The pair and mention counts above say how much output went. They do not say
+how much of what went was RIGHT. Applying the shipped rule to the 180
+mentions already judged on the unfiltered layer answers that on the same
+data:
+
+| | n | outcome |
+|---|---|---|
+| true positives | 58 | **27.6% lost** [17.8, 40.2] |
+| false positives | 122 | 91.0% removed |
+| precision of survivors | | 32.2% -> 79.2% |
+
+So it discards about one true match in four to remove nine false ones in
+ten. And the cost is entirely where the rule applies:
+
+* MeSH true positives (46): **34.8% lost**
+* gene and OMIM true positives (12): **0.0% lost** -- the rule does not touch them,
+  which is what MeSH-only means and is worth seeing confirmed on real
+  judged data rather than assumed from the code.
+
+This 79.2% is also an independent estimate of the
+filtered layer's precision, arrived at from the OLD layer's judged mentions
+rather than the new layer's sample. It sits below the 88.0% measured directly, which is the direction to expect: the
+new layer's composition shifted toward the corroborated stratum, and this
+calculation holds composition fixed.
+
 ## Bounding the judgement, since it was mine and unblinded
 
 Declaring a bias is weaker than bounding it. Every judgement that could
