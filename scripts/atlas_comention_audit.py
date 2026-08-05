@@ -156,6 +156,9 @@ def abstracts(pmids: list) -> dict:
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
+    ap.add_argument("--sample", metavar="PATH",
+                    help="audit a preserved sample instead of the live one, so a "
+                         "build can be judged while another is running")
     ap.add_argument("--dump-strata", metavar="DIR",
                     help="write body-only and corroborated mentions to DIR as "
                          "JSONL, so those strata can be hand-judged instead of "
@@ -166,7 +169,8 @@ def main() -> int:
     args = ap.parse_args()
 
     root = atlas_root()
-    sample_path = root / "comention" / "audit-sample.jsonl.gz"
+    sample_path = (Path(args.sample) if args.sample
+                   else root / "comention" / "audit-sample.jsonl.gz")
     if not sample_path.exists():
         print(f"missing {sample_path}; rebuild with "
               "`python scripts/atlas_comention.py --rebuild`", file=sys.stderr)

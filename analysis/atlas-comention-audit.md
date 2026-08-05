@@ -14,29 +14,15 @@ surface form present in the sentence. A failure is a tokenizer bug.
 
 | | count |
 |---|---|
-| entity mentions sampled | 1,484 |
-| alias found in the sentence | 1,471 (99.1%) |
-| **would no longer fire** | **13 (0.9%)** |
+| entity mentions sampled | 1,094 |
+| alias found in the sentence | 1,094 (100.0%) |
+| **would no longer fire** | **0 (0.0%)** |
 
 Every sampled mention fired by construction when the sample was written,
 so the second row is not a tokenizer failure -- it is the alias having
 since been removed by the support and minority-form filters. That makes it
 a direct read on how much volume those filters take out of a uniform
 sample of what this layer used to match.
-
-Examples where the alias could not be located:
-
-* `19` in PMID 30878600: In the short PFS group, patients had significantly more driver gene mutations than in long PFS group (P = 0·018)....
-* `tyrosine kinase` in PMID 33995985: The phase II SORMAIN trial (N = 83) evaluated the use of sorafenib for 24 months in adults with FLT3-ITD positive AML after obtaining complete hematol...
-* `nosocomial infections` in PMID 36421337: More than 2500 studies from across the world were reporting hardship with cancer care delivery: due to increased risk of contracting COVID-19 and of m...
-* `19` in PMID 31837057: Long non coding RNA MALAT1 promotes tumor growth and metastasis by inducing epithelial‐mesenchymal transition in oral squamous cell carcinoma
-....
-* `19` in PMID 37873185: Identification of Long Non-coding RNAs Expressed During Early Adipogenesis....
-* `nosocomial infections` in PMID 24604487: It is also the first trial to use the distress thermometer in primary care and the first to test a specific checklist to identify unmet needs of cance...
-* `19` in PMID 37533768: For example, long‐term CT imaging of gold NP‐integrated MSCs revealed their specific migration to depression‐associated brain regions in model rats (F...
-* `19` in PMID 38744814: Long read assemblies resolve complex amplicons and identify initiating processes
-
-Patient 43 showed a TDP genomic profile25 (based on SV signatures26)...
 
 ## Check 2: does PubTator agree?
 
@@ -46,9 +32,9 @@ paper, the full-text match is corroborated.
 
 | | count |
 |---|---|
-| mentions in papers PubTator annotated | 1,484 |
-| PubTator assigned the same entity | 482 (32.5%) |
-| it did not | 1,002 (67.5%) |
+| mentions in papers PubTator annotated | 1,094 |
+| PubTator assigned the same entity | 657 (60.1%) |
+| it did not | 437 (39.9%) |
 | papers with no PubTator annotation at all | 0 |
 
 ### Splitting the disagreements
@@ -58,8 +44,8 @@ would waste the measurement:
 
 | | count | share of disagreements |
 |---|---|---|
-| our alias appears in the ABSTRACT PubTator read | 346 | 34.5% |
-| body-only, so PubTator could not have seen it | 656 | 65.5% |
+| our alias appears in the ABSTRACT PubTator read | 117 | 26.8% |
+| body-only, so PubTator could not have seen it | 320 | 73.2% |
 
 A body-only match is one PubTator could not have contradicted, because it
 never read that text. That is what this layer exists to find -- and it is
@@ -82,9 +68,9 @@ It carries the most volume of the three, which is what makes it matter.
 The same generic forms misfire in body text as in abstracts, and there is
 no abstract-level extractor to disagree with them.
 
-So read the 76.7% that treating
+So read the 89.3% that treating
 body-only as correct would give as a bound that is now known to be far
-above the truth, and the 32.5% corroboration rate
+above the truth, and the 60.1% corroboration rate
 as a lower bound that is close to it. All three strata are measured in
 `analysis/comention-regression.md`.
 
