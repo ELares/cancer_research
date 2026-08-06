@@ -138,3 +138,34 @@ def test_the_findings_page_no_longer_asserts_the_second_half():
         "shows a degree-correcting ranker and a bad one are indistinguishable "
         "on this metric")
     assert "does not follow" in section
+
+
+def test_the_mission_statement_carries_the_same_correction():
+    """MISSION.md quotes this finding, and its wording outlives the analysis.
+
+    It ended with the same "a good generator, a bad ranker" summary the findings
+    page carried. The first half stands; the second does not follow. Guarded in
+    the same conditional way, so if a method ever shows headroom the original
+    summary becomes defensible again rather than being frozen out.
+    """
+    import re
+
+    mission = REPO_ROOT / "MISSION.md"
+    assert mission.exists()
+    txt = mission.read_text()
+    anchor = "shipped ABC ranking scores"
+    assert anchor in txt, (
+        "the discovery finding is gone from MISSION.md, or its wording changed "
+        "-- this guard must not pass silently in that case")
+    section = txt[txt.index(anchor):]
+    section = section[:section.index("atlas-discovery-headroom.md") + 40] \
+        if "atlas-discovery-headroom.md" in section else section[:2500]
+    d = _raw()
+    if d["any_headroom"]:
+        return
+    assert not re.search(r"^\s*>?\s*A good generator, a bad ranker", section, re.M), (
+        "MISSION.md still ends on the retracted summary")
+    assert "does not follow" in section
+    assert "not identifiable" in section, (
+        "the mission statement asserts the metric's limit without the stronger "
+        "limit that hub-selection's correctness is unidentifiable here")
