@@ -269,7 +269,7 @@ full-text co-mentions.
 
 ### Contradictions — `atlas_contradictions.py` → `atlas-contradictions.md`
 
-**4,667** pairs asserted in both directions, **6,764** chemicals asserted both to
+**7,068** pairs asserted in both directions, **9,094** chemicals asserted both to
 `treat` and `cause` a disease. Ranked by the *weaker* side, so a 12-vs-9 split
 outranks 50-vs-1.
 
@@ -322,8 +322,8 @@ tract (TOPAZ-1).
 > 60-PMID sample, so for well-supported pairs it is an estimate that a threshold
 > turns into a yes/no. Against the exact share from every dated asserting paper:
 > 89.4% of pairs carry no more papers than the sample holds and are exact; on the
-> 10.6% genuinely estimated, median share error 0.017 and the decision is 86.4%
-> precise at 93.2% recall; across all examined pairs, **99.0% precision, 99.6%
+> 10.5% genuinely estimated, median share error 0.022 and the decision is 88.1%
+> precise at 91.3% recall; across all examined pairs, **99.0% precision, 99.3%
 > recall**. Error grows with support (0.013 at 61–120 papers, 0.035 above 2,000),
 > so do not read one pair's share as exact when hundreds of papers sit behind it.
 

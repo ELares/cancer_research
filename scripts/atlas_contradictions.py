@@ -122,8 +122,20 @@ def main() -> None:
                       f"{resolve_reason(idx, f)}", file=sys.stderr)
 
     direction, valence = scan(idx, focus_ids)
-    RAW.write_text(json.dumps({"direction": direction[:500], "valence": valence[:500]},
-                              indent=1), encoding="utf-8")
+    # The TOTALS, not just the top 500. They were previously printed to stdout
+    # and nowhere else, so the figures quoted downstream had been copied from a
+    # terminal: uncheckable, undetectable when they drifted, and by the time
+    # anyone re-ran this they were wrong by about 50% (4,667 -> 7,068 direction,
+    # 6,764 -> 9,094 valence) because the disambiguation corrections had grown
+    # and merged more entities. The truncated lists are byte-identical across
+    # that change -- the top conflicts are stable while the tail grows -- so
+    # nothing in the artifact could have revealed it.
+    RAW.write_text(json.dumps({
+        "direction_conflicts": len(direction),
+        "valence_conflicts": len(valence),
+        "listed": 500,
+        "direction": direction[:500], "valence": valence[:500],
+    }, indent=1), encoding="utf-8")
 
     L = [
         "# Where the cancer literature contradicts itself (#ATLAS)", "",
@@ -136,6 +148,8 @@ def main() -> None:
         "harmful in another; a chemotherapeutic genuinely does both treat cancer and cause",
         "secondary malignancy. The point is that these are the pairs where citing a single",
         "paper is least safe -- exactly the pattern the simulation modules use.", "",
+        f"**{len(direction):,} direction conflicts** and **{len(valence):,} valence",
+        f"conflicts** were found; the tables below list the top 500 of each.", "",
         "Ranked by the WEAKER side's count, so a 50-vs-1 split (settled, one outlier) ranks",
         "below a 12-vs-9 split (genuinely divided). `balance` is weaker/stronger.", "",
         "## Limits -- this is a reading queue, not a verdict", "",

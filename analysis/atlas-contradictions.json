@@ -1,4 +1,7 @@
 {
+ "direction_conflicts": 7068,
+ "valence_conflicts": 9094,
+ "listed": 500,
  "direction": [
   {
    "a": "4193",
