@@ -13,6 +13,9 @@ harmful in another; a chemotherapeutic genuinely does both treat cancer and caus
 secondary malignancy. The point is that these are the pairs where citing a single
 paper is least safe -- exactly the pattern the simulation modules use.
 
+**7,068 direction conflicts** and **9,094 valence
+conflicts** were found; the tables below list the top 500 of each.
+
 Ranked by the WEAKER side's count, so a 50-vs-1 split (settled, one outlier) ranks
 below a 12-vs-9 split (genuinely divided). `balance` is weaker/stronger.
 
