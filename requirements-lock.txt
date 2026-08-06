@@ -13,7 +13,6 @@
 #
 # If installation fails on a different platform, regenerate
 # the lockfile on your platform using the commands above.
-
 beautifulsoup4==4.15.0
 certifi==2026.7.22
 charset-normalizer==3.4.9
@@ -27,9 +26,9 @@ idna==3.18
 iniconfig==2.3.0
 kiwisolver==1.5.0
 lxml==6.1.1
-matplotlib==3.11.0
-numpy==2.5.0
-packaging==26.2
+matplotlib==3.11.1
+numpy==2.5.1
+packaging==26.3
 pillow==12.3.0
 pluggy==1.6.0
 Pygments==2.20.0
