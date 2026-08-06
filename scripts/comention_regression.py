@@ -147,6 +147,22 @@ def wilson(k, n, z=1.96):
 PRE_REBUILD_COMMIT = "4389be80a1163ed294afa4ad2da71a8780bd6390"
 PRE_REBUILD_AUDIT = {"mentions": 1112, "pubtator_agree": 493,
                      "in_abstract": 91, "body_only": 528}
+# The AFTER side, pinned for the same reason the BEFORE side is.
+#
+# This document measures ONE historical change: the #617 filter swap. Its
+# "after" used to be read live from `analysis/atlas-comention-audit.json`, which
+# was correct exactly until that artifact was regenerated for a DIFFERENT build.
+# It was, when the authority filter shipped (#646), and the audit now describes
+# the filtered layer -- so re-running this generator silently recomputed a
+# historical regression against a build it does not describe and reported
+# precision RISING 10.9 points where the finding is that it FELL 9. Nothing
+# failed; the document simply rewrote its own conclusion. Found by accident,
+# months of commits after it became possible.
+#
+# Recovered from the audit as committed at ed6b10ec (#633), the last state that
+# describes the post-#617 pre-authority build.
+POST_617_AUDIT = {"mentions": 1484, "pubtator_agree": 482,
+                  "in_abstract": 346, "body_only": 656}
 
 
 def prior_audit():
@@ -187,12 +203,21 @@ def main() -> int:
     if not AUDIT.exists() or not all(f.exists() for f in JUDGED.values()):
         print("run scripts/atlas_comention_audit.py first", file=sys.stderr)
         return 1
-    after = json.loads(AUDIT.read_text())
+    # Both sides pinned: this is a historical comparison and neither end may
+    # drift with whatever the live artifact currently describes.
+    after = dict(POST_617_AUDIT)
     before = prior_audit()
     if before["mentions"] == after["mentions"]:
         print("the current audit equals the pre-rebuild one; nothing to compare",
               file=sys.stderr)
         return 1
+    if AUDIT.exists():
+        live = json.loads(AUDIT.read_text())
+        if live["mentions"] != after["mentions"]:
+            print(f"  note: the live audit describes a different build "
+                  f"({live['mentions']:,} mentions vs the pinned "
+                  f"{after['mentions']:,}); this document measures the #617 "
+                  f"change and uses the pinned values.", file=sys.stderr)
 
     judged = list(csv.DictReader(JUDGED["abstract"].open()))
     n = len(judged)
@@ -469,7 +494,14 @@ def main() -> int:
         f"{100*ho_prec:.1f}% (CI [{100*ho_lo:.1f}%, {100*ho_hi:.1f}%]) against "
         f"{100*abs_prec:.1f}% on the selection sample. The two are the same number",
         "within noise, which is the first thing that had to be true.", "",
-        "**The rule generalises in direction, and its precision was optimistic:**", "",
+        # Derived, not asserted. This was a fixed label claiming the estimate
+        # was optimistic -- printed unconditionally, and a test asserted the
+        # string to prove the document "reports that kept precision fell". If
+        # the held-out sample had come back HIGHER the label would still have
+        # printed and the test would still have passed.
+        f"**The rule generalises in direction, and its precision was "
+        f"{'optimistic' if ho_keep_prec < 0.667 else 'if anything conservative'}:**",
+        "",
         "| | selection | held-out |", "|---|---|---|",
         f"| false positives removed | 96% | {100*ho_cut_fp:.0f}% |",
         f"| true positives removed | 60% | {100*ho_cut_tp:.0f}% |",
