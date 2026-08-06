@@ -90,3 +90,28 @@ def test_the_identifiability_limit_is_stated():
         "without this, a reader takes 'the prior exhausts what is measurable' "
         "as evidence that popularity is the right prior")
     assert "statement about the" in flat and "evaluation" in flat
+
+
+def test_the_findings_page_no_longer_asserts_the_second_half():
+    """'A good candidate generator and a bad ranker' was half-wrong.
+
+    The first half stands -- the candidate set beats random severalfold. The
+    second does not follow, and this is the page where that claim travels
+    furthest, so it must carry the qualification rather than the slogan.
+    """
+    page = REPO_ROOT / "analysis" / "census-findings.md"
+    if not page.exists():
+        return
+    txt = page.read_text()
+    if "Literature-based discovery does not work" not in txt:
+        return
+    start = txt.index("Literature-based discovery does not work")
+    section = txt[start:txt.index("*Source:*", start)]
+    d = _raw()
+    if d["any_headroom"]:
+        return                      # the claim would be defensible again
+    assert "a bad ranker." not in section, (
+        "the findings page still asserts the ranker is bad; the headroom test "
+        "shows a degree-correcting ranker and a bad one are indistinguishable "
+        "on this metric")
+    assert "does not follow" in section

@@ -114,8 +114,8 @@ So the standing finding is not that the layer is broken. It is that this project
 ranking scores 10.1% precision@20 against
 15.5% for ranking the same candidates by
 popularity, and no standard link predictor beats that baseline either.
-A good candidate generator and a bad ranker.
-*Source:* `atlas-discovery-eval.md`
+The candidate SET is genuinely informative, so that half stands. The obvious second half -- a bad RANKER -- does not follow, and two later measurements say why. Ordering the methods by how hub-selecting each one is reproduces the precision leaderboard exactly (rank correlation 1.00), so the metric rewards NOT correcting for candidate degree; and blending any seed-specific signal into a degree-only prior adds nothing measurable at any weight. On this metric a degree-correcting ranker and a bad one cannot be told apart.
+*Source:* `atlas-discovery-eval.md`, `atlas-discovery-degree-bias.md`, `atlas-discovery-headroom.md`
 
 **Replication looked like it was collapsing, and was not.** Scoring cohorts on whether they were EVER replicated gives 60.1% for 1950 to 13.4% for 2021; that is the observation window shrinking, not science changing, since the older cohort has had decades to acquire a second paper and the newer one had 5 years. On an equal 5-year window from each pair's own first assertion the decline is modest, and the recent end is an upper bound because of MeSH indexing lag.
 *Source:* `atlas-replication.md`
