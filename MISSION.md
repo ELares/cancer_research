@@ -123,9 +123,23 @@ been marketing.
    > ranking the same candidates by how well studied they already are. No
    > standard link predictor beats that baseline either, and the methods line up
    > by how hard each corrects for degree: the harder the correction, the worse
-   > it does. What survives is the candidate *set*, which beats random several
-   > times over. A good generator, a bad ranker
-   > (`analysis/atlas-discovery-eval.md`).
+   > it does. That last sentence was an observation from what each formula does;
+   > it has since been measured. Ranking the methods by how hub-selecting they
+   > actually are — the mean degree of a method's top 20 over the mean degree of
+   > the pool it drew them from — reproduces the precision leaderboard exactly
+   > (rank correlation 1.00 over the seven
+   > measured methods), and blending any of the seed-specific signals into a
+   > degree-only prior adds nothing measurable at any weight tested.
+   >
+   > What survives is the candidate *set*, which beats random several times
+   > over. The other half of the old summary — a bad ranker — does not follow:
+   > on this metric a degree-correcting ranker and a bad one cannot be told
+   > apart, because the metric rewards not correcting. That is a limit of the
+   > evaluation, not a verdict on the ranking, and whether hub-selection is
+   > *wrong* is not identifiable from this corpus at all
+   > (`analysis/atlas-discovery-eval.md`,
+   > `analysis/atlas-discovery-degree-bias.md`,
+   > `analysis/atlas-discovery-headroom.md`).
    >
    > One caveat runs the other way and is not a rescue: that evaluation rewards
    > anticipating the literature, while discovery is *for* connections the
