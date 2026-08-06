@@ -31,10 +31,14 @@ are indistinguishable -- which is a statement about the evaluation, not a defenc
 of any ranker.
 
 THE DECISION RULE IS FIXED BEFORE THE RESULT IS SEEN, and written here rather
-than chosen afterwards: a method is credited with headroom only if its 95%
-bootstrap interval on the per-seed difference excludes zero. With seven methods
-this is seven tests, so a Holm correction is applied and both the raw and
-corrected verdicts are reported.
+than chosen afterwards. A method is credited with headroom only if BOTH hold:
+its 95% percentile bootstrap interval on the per-seed difference excludes zero,
+AND its Holm-corrected two-sided bootstrap p is below 0.05. The family is the
+methods in `SEED_AWARE` -- five of them, and the count is taken from that dict
+rather than written down, because an earlier draft of this docstring said
+"seven" while the code corrected over five. Verdicts were unchanged either way,
+but a factual error inside the one sentence whose job is to establish that the
+rule was fixed in advance is worth more than the arithmetic.
 
 WHY THIS IS AFFORDABLE
 ----------------------
@@ -125,15 +129,29 @@ def top_hits(rows, score, k):
 
 
 def paired_ci(diffs, rng):
+    """Mean, 95% percentile interval, and a two-sided p from ONE resample set.
+
+    The p used to be drawn from a SECOND, independent set of resamples while the
+    interval came from the first, so the two halves of the decision rule were
+    not computed from the same bootstrap. And its tails were asymmetric --
+    `P(mean* <= 0)` against `P(mean* > 0)` -- which returns p = 0 for a signal
+    that does nothing at all: an all-zero difference vector put every resample
+    at exactly zero, all of it in the first tail and none in the second. Both
+    tails are now inclusive, and the p is floored at the bootstrap's own
+    resolution rather than printed as 0.
+    """
     n = len(diffs)
     means = sorted(sum(diffs[rng.randrange(n)] for _ in range(n)) / n
                    for _ in range(N_BOOT))
-    return (sum(diffs) / n,
-            means[int(0.025 * N_BOOT)], means[int(0.975 * N_BOOT)])
+    le = sum(1 for x in means if x <= 0) / N_BOOT
+    ge = sum(1 for x in means if x >= 0) / N_BOOT
+    p = min(1.0, 2 * min(le, ge))
+    return (sum(diffs) / n, means[int(0.025 * N_BOOT)], means[int(0.975 * N_BOOT)],
+            max(p, 1.0 / N_BOOT))
 
 
 def holm(pvals: dict) -> dict:
-    """Holm-Bonferroni. Seven tests on one dataset need a correction."""
+    """Holm-Bonferroni over the methods tested, however many there are."""
     ordered = sorted(pvals.items(), key=lambda kv: kv[1])
     m, out, prev = len(ordered), {}, 0.0
     for i, (k, p) in enumerate(ordered):
@@ -193,13 +211,7 @@ def main() -> int:
     rng = random.Random(BOOTSTRAP_SEED)
     results, pvals = {}, {}
     for m, d in per_seed.items():
-        mean, lo, hi = paired_ci(d, rng)
-        # Two-sided bootstrap p: the share of resamples on the far side of zero,
-        # doubled. Reported for the Holm correction, not as the primary read.
-        means = sorted(sum(d[rng.randrange(n_seeds)] for _ in range(n_seeds)) / n_seeds
-                       for _ in range(N_BOOT))
-        share_le0 = sum(1 for x in means if x <= 0) / N_BOOT
-        p = min(1.0, 2 * min(share_le0, 1 - share_le0))
+        mean, lo, hi, p = paired_ci(d, rng)
         results[m] = {"mean_diff": mean, "ci95": [lo, hi],
                       "decided": hi < 0 or lo > 0,
                       "better": sum(1 for x in d if x > 0),
@@ -218,7 +230,7 @@ def main() -> int:
         for m in sorted(SEED_AWARE):
             if sweep[w][m] <= 0:
                 continue
-            mean, lo, hi = paired_ci(sweep_diffs[w][m], rng)
+            mean, lo, hi, _p = paired_ci(sweep_diffs[w][m], rng)
             tested.append({"weight": w, "method": m, "mean": mean, "ci95": [lo, hi],
                            "decided": lo > 0})
             if lo > 0:
@@ -257,8 +269,10 @@ def main() -> int:
         "is the per-seed difference in hits, through the same paired bootstrap the",
         "evaluation uses.", "",
         "**The decision rule was fixed before the result was seen** and is in the",
-        "script's docstring: headroom is credited only when the 95% interval",
-        "excludes zero, Holm-corrected across the five methods tested.", "",
+        "script's docstring: headroom is credited only when BOTH the 95% percentile",
+        f"interval excludes zero AND the Holm-corrected p (over the "
+        f"{len(SEED_AWARE)} methods) is below 0.05. The interval reported below is",
+        "uncorrected; the correction lives in the p column.", "",
         f"| method | mean Δ hits/{args.top} | 95% CI | better/worse/same | p (Holm) | headroom? |",
         "|---|---|---|---|---|---|",
     ]
@@ -276,15 +290,35 @@ def main() -> int:
               "redundant with popularity, and a ranking built on both would beat",
               "either -- which the isolated leaderboard could not have shown.", ""]
     else:
+        n_pos = len(tested)
         L += ["**No method adds measurable precision over the candidate-only prior.**",
-              "Every blend that moves the score at all moves it down, and no interval",
-              "excludes zero in the positive direction after correction.", "",
+              (f"At the headline weight every method is negative, and across the whole "
+               f"sweep {n_pos} of {len(sweep)*len(SEED_AWARE)} cells are positive at "
+               f"all -- against roughly half that many expected if every method were "
+               f"pure noise. None survives the decision rule."
+               if n_pos else
+               "Every blend that moves the score at all moves it down."),
+              "No interval excludes zero in the positive direction after correction.",
+              "",
               "On this metric the candidate prior exhausts what is measurable. That",
               "makes 'the shipped ranker is bad' and 'the metric cannot see discovery'",
               "indistinguishable ON THIS EVIDENCE -- which is a statement about the",
               "evaluation rather than a defence of any ranker.", ""]
     L += [
         "## What this cannot settle", "",
+        "**It tests ONE combination family**: a linear convex blend of two",
+        "within-seed percentile ranks. A signal could in principle be",
+        "complementary in a way that family cannot express -- informative only",
+        "inside a subpopulation, or requiring a conditional or multiplicative",
+        "combination. Three probes outside the family were run and none changed the",
+        "answer: a lexicographic blend at the limit (degree primary, method",
+        "breaking ties) is IDENTICAL to the benchmark for all five methods on all",
+        "200 seeds, because degree ties never straddle the top-20 cut; weights",
+        "below the sweep floor add nothing; and a two-stage retrieve-then-rerank",
+        "over six retrieval depths is negative in 29 of 30 cells and monotonically",
+        "worse with depth. Splitting seeds by pool size leaves every method",
+        "negative in both strata. So the result is not an artifact of the blend,",
+        "but it is stated over what was tested.", "",
         "Whether hub-selection is RIGHT. The separation between 'popularity is a",
         "good prior' and 'the target rewards popularity' is not identifiable from",
         "this corpus at any sample size: a latent importance drives degree, how much",

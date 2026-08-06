@@ -76,8 +76,18 @@ def test_the_verdict_follows_the_decision_rule_not_the_signs():
 
 
 def test_the_headline_matches_the_measured_headroom():
+    """Both directions, and neither satisfiable by the other's wording.
+
+    The positive branch used to assert "adds measurable precision", which is a
+    SUBSTRING of the negative headline "No method adds measurable precision" --
+    so the branch that exists to catch "the result flipped, the prose did not"
+    could not catch it. Proved by setting any_headroom truthy against the
+    negative document: it passed.
+    """
     d, txt = _raw(), DOC.read_text()
     if d["any_headroom"]:
+        assert "No method adds measurable precision" not in txt, (
+            "a method now has headroom but the document still says none does")
         assert "adds measurable precision" in txt
     else:
         assert "No method adds measurable precision" in txt
@@ -85,11 +95,18 @@ def test_the_headline_matches_the_measured_headroom():
 
 def test_the_identifiability_limit_is_stated():
     """One step past this result is a claim the corpus cannot support."""
-    flat = " ".join(DOC.read_text().split())
+    txt = DOC.read_text()
+    assert "## What this cannot settle" in txt, "the limits section is gone"
+    flat = " ".join(txt[txt.index("## What this cannot settle"):].split())
+    # Scoped to the limits SECTION. The previous version searched the whole
+    # document for "statement about the" and "evaluation", both of which appear
+    # in earlier sections another guard already pins -- so deleting this entire
+    # section left it green.
     assert "not identifiable" in flat, (
         "without this, a reader takes 'the prior exhausts what is measurable' "
         "as evidence that popularity is the right prior")
-    assert "statement about the" in flat and "evaluation" in flat
+    assert "ONE combination family" in flat, (
+        "the result is stated over all combinations when one family was tested")
 
 
 def test_the_findings_page_no_longer_asserts_the_second_half():
@@ -99,18 +116,24 @@ def test_the_findings_page_no_longer_asserts_the_second_half():
     second does not follow, and this is the page where that claim travels
     furthest, so it must carry the qualification rather than the slogan.
     """
+    import re
+
     page = REPO_ROOT / "analysis" / "census-findings.md"
-    if not page.exists():
-        return
+    assert page.exists(), "the findings page is missing"
     txt = page.read_text()
-    if "Literature-based discovery does not work" not in txt:
-        return
-    start = txt.index("Literature-based discovery does not work")
+    anchor = "Literature-based discovery does not work"
+    assert anchor in txt, (
+        "the discovery finding is gone from the findings page, or its heading "
+        "was reworded -- this guard used to return silently in that case")
+    start = txt.index(anchor)
     section = txt[start:txt.index("*Source:*", start)]
     d = _raw()
     if d["any_headroom"]:
         return                      # the claim would be defensible again
-    assert "a bad ranker." not in section, (
+    # Punctuation-independent. The previous version checked for "a bad ranker."
+    # with a trailing period, so "a bad ranker, plainly." re-asserted the exact
+    # retracted claim and passed.
+    assert not re.search(r"\ba bad ranker\b", section), (
         "the findings page still asserts the ranker is bad; the headroom test "
         "shows a degree-correcting ranker and a bad one are indistinguishable "
         "on this metric")

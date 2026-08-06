@@ -210,14 +210,16 @@ def main() -> int:
             L += [
                 "The candidate SET is genuinely informative, so that half stands. "
                 "The obvious second half -- a bad RANKER -- does not follow, and "
-                "two later measurements say why. Ordering the methods by how "
-                "hub-selecting each one is reproduces the precision leaderboard "
-                f"exactly (rank correlation "
-                f"{bias['spearman_L_vs_precision']:.2f}), so the metric rewards "
-                "NOT correcting for candidate degree; and blending any "
-                "seed-specific signal into a degree-only prior adds nothing "
-                "measurable at any weight. On this metric a degree-correcting "
-                "ranker and a bad one cannot be told apart.",
+                "two later measurements say why. Ordering the seven measured "
+                "methods by how hub-selecting each one is reproduces the "
+                f"precision leaderboard exactly (rank correlation "
+                f"{bias['spearman_L_vs_precision']:.2f} over those seven points), "
+                "so the metric rewards NOT correcting for candidate degree; and "
+                "blending each of the five seed-aware signals into a degree-only "
+                "prior adds nothing measurable, at any weight tested and under "
+                "three combination schemes outside the blend family. Among every "
+                "ranker measured, a degree-correcting one and a bad one cannot be "
+                "told apart on this metric.",
                 "*Source:* `atlas-discovery-eval.md`, "
                 "`atlas-discovery-degree-bias.md`, `atlas-discovery-headroom.md`", ""]
         else:

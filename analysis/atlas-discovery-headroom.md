@@ -23,22 +23,23 @@ is the per-seed difference in hits, through the same paired bootstrap the
 evaluation uses.
 
 **The decision rule was fixed before the result was seen** and is in the
-script's docstring: headroom is credited only when the 95% interval
-excludes zero, Holm-corrected across the five methods tested.
+script's docstring: headroom is credited only when BOTH the 95% percentile
+interval excludes zero AND the Holm-corrected p (over the 5 methods) is below 0.05. The interval reported below is
+uncorrected; the correction lives in the p column.
 
 | method | mean Δ hits/20 | 95% CI | better/worse/same | p (Holm) | headroom? |
 |---|---|---|---|---|---|
-| adamic_adar | -0.095 | [-0.215, +0.025] | 34/46/120 | 0.230 | no |
-| resource_alloc | -0.095 | [-0.220, +0.025] | 42/52/106 | 0.230 | no |
-| bridges | -0.125 | [-0.265, +0.005] | 35/45/120 | 0.188 | no |
+| adamic_adar | -0.095 | [-0.220, +0.030] | 34/46/120 | 0.260 | no |
+| resource_alloc | -0.095 | [-0.215, +0.025] | 42/52/106 | 0.260 | no |
+| bridges | -0.125 | [-0.265, +0.010] | 35/45/120 | 0.242 | no |
 | abc | -0.485 | [-0.725, -0.255] | 35/74/91 | 0.001 | no |
-| jaccard | -1.795 | [-2.180, -1.425] | 22/107/71 | 0.000 | no |
+| jaccard | -1.795 | [-2.180, -1.420] | 22/107/71 | 0.001 | no |
 
 ## What it says
 
 **No method adds measurable precision over the candidate-only prior.**
-Every blend that moves the score at all moves it down, and no interval
-excludes zero in the positive direction after correction.
+At the headline weight every method is negative, and across the whole sweep 2 of 25 cells are positive at all -- against roughly half that many expected if every method were pure noise. None survives the decision rule.
+No interval excludes zero in the positive direction after correction.
 
 On this metric the candidate prior exhausts what is measurable. That
 makes 'the shipped ranker is bad' and 'the metric cannot see discovery'
@@ -46,6 +47,20 @@ indistinguishable ON THIS EVIDENCE -- which is a statement about the
 evaluation rather than a defence of any ranker.
 
 ## What this cannot settle
+
+**It tests ONE combination family**: a linear convex blend of two
+within-seed percentile ranks. A signal could in principle be
+complementary in a way that family cannot express -- informative only
+inside a subpopulation, or requiring a conditional or multiplicative
+combination. Three probes outside the family were run and none changed the
+answer: a lexicographic blend at the limit (degree primary, method
+breaking ties) is IDENTICAL to the benchmark for all five methods on all
+200 seeds, because degree ties never straddle the top-20 cut; weights
+below the sweep floor add nothing; and a two-stage retrieve-then-rerank
+over six retrieval depths is negative in 29 of 30 cells and monotonically
+worse with depth. Splitting seeds by pool size leaves every method
+negative in both strata. So the result is not an artifact of the blend,
+but it is stated over what was tested.
 
 Whether hub-selection is RIGHT. The separation between 'popularity is a
 good prior' and 'the target rewards popularity' is not identifiable from
@@ -68,5 +83,5 @@ by construction. Mean change in hits at each weight, for every method:
 | 0.75 | -0.690 | -0.105 | -0.150 | -2.310 | -0.175 |
 | 0.9 | -0.795 | -0.200 | -0.255 | -2.475 | -0.270 |
 
-**No cell survives the decision rule.** 2 of 25 cells are positive at all; the largest is resource_alloc at w=0.1, +0.060 hits out of 20 with a 95% interval of [-0.010, +0.130] -- which includes zero.
+**No cell survives the decision rule.** 2 of 25 cells are positive at all; the largest is resource_alloc at w=0.1, +0.060 hits out of 20 with a 95% interval of [-0.005, +0.130] -- which includes zero.
 
