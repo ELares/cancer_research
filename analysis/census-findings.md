@@ -111,8 +111,8 @@ So the standing finding is not that the layer is broken. It is that this project
 *Source:* `comention-regression.md`, `comention-authority-result.md`
 
 **Literature-based discovery does not work as built.** The shipped ABC
-ranking scores 12.3% precision@20 against
-17.2% for ranking the same candidates by
+ranking scores 10.1% precision@20 against
+15.5% for ranking the same candidates by
 popularity, and no standard link predictor beats that baseline either.
 A good candidate generator and a bad ranker.
 *Source:* `atlas-discovery-eval.md`

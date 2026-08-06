@@ -73,6 +73,14 @@ def test_the_two_documents_describe_the_same_build():
         f"degree bias is computed at split {d['split']} but the precisions it "
         f"quotes come from {ev['split_year']}")
     assert d["top"] == ev["top_k"], "different k"
+    # Split year and k are NOT a build fingerprint. Both matched across two
+    # graphs that differed by 11% in edge count -- the corrections file this
+    # analysis consumes had grown -- and this guard passed while the document
+    # paired selectivity from one build with precision from the other.
+    assert d.get("pairs_before") == ev["pairs_before"], (
+        f"different graph builds: degree bias saw {d.get('pairs_before')} pairs "
+        f"before the split, the evaluation saw {ev['pairs_before']}. Every L "
+        "quoted beside a precision describes a different world.")
     for m, p in d["precision_at_k"].items():
         assert abs(p - ev["precision"][m]) < 1e-9, (
             f"the precision quoted for {m} is not the evaluation's")

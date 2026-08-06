@@ -2,6 +2,7 @@
   "split": 2018,
   "top": 20,
   "seeds_evaluated": 200,
+  "pairs_before": 1565428,
   "median_L": {
     "abc": 2.255350026280767,
     "popularity": 7.369635028612118,
@@ -21,16 +22,16 @@
     "random": -0.005683878054566035
   },
   "precision_at_k": {
-    "abc": 0.12271016311166875,
-    "popularity": 0.172396486825596,
-    "adamic_adar": 0.16386449184441657,
-    "resource_alloc": 0.14604767879548305,
-    "jaccard": 0.049937264742785446,
-    "bridges": 0.16386449184441657,
-    "random": 0.026097867001254705
+    "abc": 0.1005,
+    "popularity": 0.155,
+    "adamic_adar": 0.1445,
+    "resource_alloc": 0.12775,
+    "jaccard": 0.02425,
+    "bridges": 0.14125,
+    "random": 0.028
   },
-  "spearman_L_vs_precision": 0.9549937104572925,
-  "spearman_L_vs_precision_excluding_random": 0.9856107606091623,
+  "spearman_L_vs_precision": 1.0,
+  "spearman_L_vs_precision_excluding_random": 1.0,
   "per_seed": [
     {
       "seed": "23368",

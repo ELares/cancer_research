@@ -211,10 +211,20 @@ def main() -> int:
     ] + [
         "",
         f"Rank correlation between L and precision is **{rho_all:.2f}** over all",
-        f"{len(med)} methods and **{rho_real:.2f}** over the {len(med)-1} that carry any",
-        "signal at all. The exception is `random`, which is degree-neutral by",
-        "construction rather than by correction and has nothing to rank with; it is",
-        "the one point where a low L does not mean the method corrected for degree.", "",
+        f"{len(med)} methods"
+        + ("" if rho_all >= 0.999 else
+           f" and **{rho_real:.2f}** over the {len(med)-1} that carry any signal")
+        + ".",
+    ] + ([
+        "`random` sits exactly where a degree-neutral ranking should, at 1.0x, and",
+        "`jaccard` -- the only method that corrects PAST neutral -- is the only one",
+        "that scores below it. A ranking anti-correlated with what the target",
+        "rewards doing worse than no ranking at all is what that looks like.", "",
+    ] if rho_all >= 0.999 else [
+        "The exception is `random`, which is degree-neutral by construction rather",
+        "than by correction and has nothing to rank with; it is the one point where",
+        "a low L does not mean the method corrected for degree.", "",
+    ]) + [
         "**What the magnitude adds.** Knowing the direction, one could still hope a",
         "cleverer ranker corrects for degree AND scores well. The spread says how",
         f"little room there is for that: the methods run from {max(med.values()):.1f}x",
@@ -247,6 +257,8 @@ def main() -> int:
     OUT.write_text("\n".join(L) + "\n", encoding="utf-8")
     RAW.write_text(json.dumps({
         "split": args.split, "top": args.top, "seeds_evaluated": len(per_seed),
+        # Fingerprints the GRAPH, not just the split. See the dump script.
+        "pairs_before": len(before),
         "median_L": med, "share_of_popularity": share,
         "precision_at_k": prec,
         "spearman_L_vs_precision": rho_all,

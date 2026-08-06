@@ -341,18 +341,27 @@ when the literature first asserts that pair in Y or later. The comparison that
 matters is not against random — almost anything beats random on a clustered
 co-occurrence graph — but against ranking the *same candidates* by popularity:
 
-| ranking | degree correction | precision@20 |
-|---|---|---|
-| popularity | none — it *is* degree | **17.2%** |
-| raw bridge count | none | 16.5% |
-| Adamic-Adar | down-weights hub bridges | 16.4% |
-| resource allocation | harder | 14.6% |
-| **ABC (shipped)** | divides out candidate degree | **12.3%** |
-| Jaccard | normalises by both degrees | 5.0% |
-| random | — | 2.6% |
+| ranking | degree correction | measured selectivity | precision@20 |
+|---|---|---|---|
+| popularity | none — it *is* degree | 7.4× | **15.5%** |
+| Adamic-Adar | down-weights hub bridges | 5.6× | 14.4% |
+| raw bridge count | none | 5.5× | 14.1% |
+| resource allocation | harder | 4.3× | 12.8% |
+| **ABC (shipped)** | divides out candidate degree | 2.3× | **10.1%** |
+| random | — | 1.0× | 2.8% |
+| Jaccard | normalises by both degrees | 0.1× | 2.4% |
 
-Paired bootstrap for ABC: −0.99 hits of 20, 95% CI [−1.27, −0.71], behind on 97
+Paired bootstrap for ABC: -1.09 hits of 20, 95% CI [-1.41, -0.79], behind on 93
 of 200 seeds, reproduced at split years 2015, 2018 and 2021.
+
+The "degree correction" column was hand-written from what each formula does.
+The selectivity column measures it — mean degree of a ranking's top 20 over the
+mean degree of the pool it drew them from, so 1× is degree-neutral. The measured
+order confirms the written one, and the rank correlation between selectivity and
+precision is 0.99 over the six methods that carry any signal
+(`analysis/atlas-discovery-degree-bias.md`). That is why the second half of the
+conclusion below — a bad ranker — does not follow: on this metric a
+degree-correcting ranker and a bad one cannot be told apart.
 
 **Nothing beats popularity**, and the rankings order themselves by how hard each
 corrects for degree — the harder the correction, the worse it does. So this

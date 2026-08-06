@@ -45,19 +45,20 @@ the observation is now a measured quantity with a magnitude:
 
 | ranking | median L | precision@20 |
 |---|---|---|
-| popularity | 7.4x | 17.2% |
-| adamic_adar | 5.6x | 16.4% |
-| bridges | 5.5x | 16.4% |
-| resource_alloc | 4.3x | 14.6% |
-| abc | 2.3x | 12.3% |
-| random | 1.0x | 2.6% |
-| jaccard | 0.1x | 5.0% |
+| popularity | 7.4x | 15.5% |
+| adamic_adar | 5.6x | 14.4% |
+| bridges | 5.5x | 14.1% |
+| resource_alloc | 4.3x | 12.8% |
+| abc | 2.3x | 10.1% |
+| random | 1.0x | 2.8% |
+| jaccard | 0.1x | 2.4% |
 
-Rank correlation between L and precision is **0.95** over all
-7 methods and **0.99** over the 6 that carry any
-signal at all. The exception is `random`, which is degree-neutral by
-construction rather than by correction and has nothing to rank with; it is
-the one point where a low L does not mean the method corrected for degree.
+Rank correlation between L and precision is **1.00** over all
+7 methods.
+`random` sits exactly where a degree-neutral ranking should, at 1.0x, and
+`jaccard` -- the only method that corrects PAST neutral -- is the only one
+that scores below it. A ranking anti-correlated with what the target
+rewards doing worse than no ranking at all is what that looks like.
 
 **What the magnitude adds.** Knowing the direction, one could still hope a
 cleverer ranker corrects for degree AND scores well. The spread says how

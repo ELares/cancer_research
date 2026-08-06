@@ -119,7 +119,7 @@ been marketing.
    > **The discovery pillar does not work as built, and this is the honest
    > record of it.** Given a time split — rank candidate pairs on the graph as it
    > stood before year Y, then check what the literature went on to assert — the
-   > shipped ABC ranking scores 12.3% precision@20 against 17.2% for simply
+   > shipped ABC ranking scores 10.1% precision@20 against 15.5% for simply
    > ranking the same candidates by how well studied they already are. No
    > standard link predictor beats that baseline either, and the methods line up
    > by how hard each corrects for degree: the harder the correction, the worse
