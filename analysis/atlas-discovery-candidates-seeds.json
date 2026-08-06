@@ -1,0 +1,1611 @@
+{
+  "split": 2018,
+  "n_nodes": 105001,
+  "hub_cutoff": 809,
+  "pairs_before": 1565428,
+  "pairs_after": 868948,
+  "seeds_evaluated": 200,
+  "rows": 289217,
+  "seeds": [
+    {
+      "seed": "23368",
+      "seed_name": "ASPP1",
+      "degree": 48,
+      "deg_a_usable": 19,
+      "candidates": 475,
+      "pool_hits": 5
+    },
+    {
+      "seed": "441931",
+      "seed_name": "GPCR",
+      "degree": 81,
+      "deg_a_usable": 47,
+      "candidates": 819,
+      "pool_hits": 31
+    },
+    {
+      "seed": "MESH:C516667",
+      "seed_name": "pazopanib",
+      "degree": 455,
+      "deg_a_usable": 290,
+      "candidates": 5468,
+      "pool_hits": 235
+    },
+    {
+      "seed": "MESH:D004533",
+      "seed_name": "EGTA",
+      "degree": 203,
+      "deg_a_usable": 133,
+      "candidates": 2708,
+      "pool_hits": 5
+    },
+    {
+      "seed": "79623",
+      "seed_name": "GALNT14",
+      "degree": 47,
+      "deg_a_usable": 13,
+      "candidates": 339,
+      "pool_hits": 19
+    },
+    {
+      "seed": "1445",
+      "seed_name": "CSK",
+      "degree": 187,
+      "deg_a_usable": 108,
+      "candidates": 2410,
+      "pool_hits": 32
+    },
+    {
+      "seed": "RS#:121913227;HGVS:p.V600K;CorrespondingGene:673",
+      "seed_name": "RS#:121913227;HGVS:p.V600K;CorrespondingGene:673",
+      "degree": 31,
+      "deg_a_usable": 19,
+      "candidates": 428,
+      "pool_hits": 12
+    },
+    {
+      "seed": "5897",
+      "seed_name": "Rag2",
+      "degree": 50,
+      "deg_a_usable": 26,
+      "candidates": 832,
+      "pool_hits": 6
+    },
+    {
+      "seed": "MESH:D017829",
+      "seed_name": "granisetron",
+      "degree": 187,
+      "deg_a_usable": 117,
+      "candidates": 1899,
+      "pool_hits": 20
+    },
+    {
+      "seed": "MESH:D007011",
+      "seed_name": "hypoparathyroidism",
+      "degree": 51,
+      "deg_a_usable": 39,
+      "candidates": 1053,
+      "pool_hits": 6
+    },
+    {
+      "seed": "84464",
+      "seed_name": "SLX4",
+      "degree": 35,
+      "deg_a_usable": 24,
+      "candidates": 311,
+      "pool_hits": 13
+    },
+    {
+      "seed": "MESH:D009242",
+      "seed_name": "Pyr",
+      "degree": 52,
+      "deg_a_usable": 31,
+      "candidates": 732,
+      "pool_hits": 37
+    },
+    {
+      "seed": "6736",
+      "seed_name": "SRY",
+      "degree": 79,
+      "deg_a_usable": 55,
+      "candidates": 709,
+      "pool_hits": 9
+    },
+    {
+      "seed": "MESH:D012135",
+      "seed_name": "wheezing",
+      "degree": 69,
+      "deg_a_usable": 40,
+      "candidates": 1051,
+      "pool_hits": 4
+    },
+    {
+      "seed": "MESH:D029503",
+      "seed_name": "Diamond-Blackfan anemia",
+      "degree": 100,
+      "deg_a_usable": 61,
+      "candidates": 1202,
+      "pool_hits": 7
+    },
+    {
+      "seed": "5493",
+      "seed_name": "PPL",
+      "degree": 41,
+      "deg_a_usable": 15,
+      "candidates": 279,
+      "pool_hits": 9
+    },
+    {
+      "seed": "29260",
+      "seed_name": "TLR4",
+      "degree": 62,
+      "deg_a_usable": 38,
+      "candidates": 727,
+      "pool_hits": 37
+    },
+    {
+      "seed": "15248",
+      "seed_name": "HIC1",
+      "degree": 41,
+      "deg_a_usable": 20,
+      "candidates": 261,
+      "pool_hits": 8
+    },
+    {
+      "seed": "2350",
+      "seed_name": "FOLR2",
+      "degree": 66,
+      "deg_a_usable": 27,
+      "candidates": 775,
+      "pool_hits": 20
+    },
+    {
+      "seed": "3455",
+      "seed_name": "IFNAR2",
+      "degree": 48,
+      "deg_a_usable": 21,
+      "candidates": 572,
+      "pool_hits": 7
+    },
+    {
+      "seed": "MESH:D000437",
+      "seed_name": "alcohol abuse",
+      "degree": 197,
+      "deg_a_usable": 143,
+      "candidates": 2586,
+      "pool_hits": 17
+    },
+    {
+      "seed": "MESH:D000073618",
+      "seed_name": "VZV infection",
+      "degree": 31,
+      "deg_a_usable": 17,
+      "candidates": 460,
+      "pool_hits": 1
+    },
+    {
+      "seed": "8411",
+      "seed_name": "EEA1",
+      "degree": 45,
+      "deg_a_usable": 33,
+      "candidates": 290,
+      "pool_hits": 3
+    },
+    {
+      "seed": "MESH:D000090463",
+      "seed_name": "iron deficiency",
+      "degree": 111,
+      "deg_a_usable": 77,
+      "candidates": 1444,
+      "pool_hits": 44
+    },
+    {
+      "seed": "MESH:D002511",
+      "seed_name": "cephalosporins",
+      "degree": 137,
+      "deg_a_usable": 98,
+      "candidates": 1327,
+      "pool_hits": 10
+    },
+    {
+      "seed": "1072",
+      "seed_name": "cofilin",
+      "degree": 377,
+      "deg_a_usable": 249,
+      "candidates": 3732,
+      "pool_hits": 94
+    },
+    {
+      "seed": "MESH:C567034",
+      "seed_name": "choreoathetosis",
+      "degree": 68,
+      "deg_a_usable": 48,
+      "candidates": 1114,
+      "pool_hits": 4
+    },
+    {
+      "seed": "MESH:D003538",
+      "seed_name": "cystamine",
+      "degree": 76,
+      "deg_a_usable": 48,
+      "candidates": 946,
+      "pool_hits": 25
+    },
+    {
+      "seed": "MESH:D010042",
+      "seed_name": "ouabain",
+      "degree": 346,
+      "deg_a_usable": 209,
+      "candidates": 4065,
+      "pool_hits": 70
+    },
+    {
+      "seed": "MESH:D002298",
+      "seed_name": "cardenolides",
+      "degree": 39,
+      "deg_a_usable": 10,
+      "candidates": 105,
+      "pool_hits": 0
+    },
+    {
+      "seed": "19264",
+      "seed_name": "CD45",
+      "degree": 209,
+      "deg_a_usable": 146,
+      "candidates": 2755,
+      "pool_hits": 51
+    },
+    {
+      "seed": "MESH:D007555",
+      "seed_name": "isoxazole",
+      "degree": 62,
+      "deg_a_usable": 32,
+      "candidates": 390,
+      "pool_hits": 20
+    },
+    {
+      "seed": "MESH:C009091",
+      "seed_name": "protocatechuic acid",
+      "degree": 111,
+      "deg_a_usable": 51,
+      "candidates": 1331,
+      "pool_hits": 56
+    },
+    {
+      "seed": "MESH:C040920",
+      "seed_name": "isoliquiritigenin",
+      "degree": 235,
+      "deg_a_usable": 114,
+      "candidates": 2964,
+      "pool_hits": 124
+    },
+    {
+      "seed": "MESH:C520399",
+      "seed_name": "thiopurines",
+      "degree": 141,
+      "deg_a_usable": 92,
+      "candidates": 1975,
+      "pool_hits": 36
+    },
+    {
+      "seed": "407029",
+      "seed_name": "miR-30a",
+      "degree": 176,
+      "deg_a_usable": 78,
+      "candidates": 2064,
+      "pool_hits": 61
+    },
+    {
+      "seed": "14151",
+      "seed_name": "ferrochelatase",
+      "degree": 34,
+      "deg_a_usable": 25,
+      "candidates": 469,
+      "pool_hits": 1
+    },
+    {
+      "seed": "MESH:D018245",
+      "seed_name": "PSTT",
+      "degree": 52,
+      "deg_a_usable": 30,
+      "candidates": 910,
+      "pool_hits": 3
+    },
+    {
+      "seed": "2131",
+      "seed_name": "EXT1",
+      "degree": 94,
+      "deg_a_usable": 68,
+      "candidates": 1136,
+      "pool_hits": 29
+    },
+    {
+      "seed": "MESH:D004172",
+      "seed_name": "diplopia",
+      "degree": 92,
+      "deg_a_usable": 55,
+      "candidates": 1429,
+      "pool_hits": 13
+    },
+    {
+      "seed": "1543",
+      "seed_name": "CYP1A1",
+      "degree": 609,
+      "deg_a_usable": 432,
+      "candidates": 5669,
+      "pool_hits": 88
+    },
+    {
+      "seed": "MESH:D006502",
+      "seed_name": "Budd-Chiari syndrome",
+      "degree": 41,
+      "deg_a_usable": 21,
+      "candidates": 551,
+      "pool_hits": 2
+    },
+    {
+      "seed": "12224",
+      "seed_name": "KLF5",
+      "degree": 61,
+      "deg_a_usable": 32,
+      "candidates": 735,
+      "pool_hits": 20
+    },
+    {
+      "seed": "MESH:C015001",
+      "seed_name": "arsenite",
+      "degree": 447,
+      "deg_a_usable": 274,
+      "candidates": 4975,
+      "pool_hits": 73
+    },
+    {
+      "seed": "94033",
+      "seed_name": "mitochondrial ferritin",
+      "degree": 32,
+      "deg_a_usable": 11,
+      "candidates": 85,
+      "pool_hits": 7
+    },
+    {
+      "seed": "MESH:C535434",
+      "seed_name": "T2",
+      "degree": 175,
+      "deg_a_usable": 107,
+      "candidates": 2471,
+      "pool_hits": 16
+    },
+    {
+      "seed": "MESH:D009386",
+      "seed_name": "hereditary cancer",
+      "degree": 373,
+      "deg_a_usable": 314,
+      "candidates": 3511,
+      "pool_hits": 42
+    },
+    {
+      "seed": "MESH:D007941",
+      "seed_name": "P388 leukemia",
+      "degree": 315,
+      "deg_a_usable": 266,
+      "candidates": 2270,
+      "pool_hits": 1
+    },
+    {
+      "seed": "MESH:C076996",
+      "seed_name": "27-hydroxycholesterol",
+      "degree": 101,
+      "deg_a_usable": 48,
+      "candidates": 1180,
+      "pool_hits": 45
+    },
+    {
+      "seed": "257144",
+      "seed_name": "HGAL",
+      "degree": 32,
+      "deg_a_usable": 17,
+      "candidates": 321,
+      "pool_hits": 1
+    },
+    {
+      "seed": "MESH:C499403",
+      "seed_name": "icaritin",
+      "degree": 150,
+      "deg_a_usable": 56,
+      "candidates": 1827,
+      "pool_hits": 84
+    },
+    {
+      "seed": "MESH:D012368",
+      "seed_name": "Ro 20-1724",
+      "degree": 32,
+      "deg_a_usable": 24,
+      "candidates": 503,
+      "pool_hits": 0
+    },
+    {
+      "seed": "MESH:D000505",
+      "seed_name": "alopecia",
+      "degree": 549,
+      "deg_a_usable": 437,
+      "candidates": 5146,
+      "pool_hits": 53
+    },
+    {
+      "seed": "MESH:D019856",
+      "seed_name": "ethanolamine",
+      "degree": 114,
+      "deg_a_usable": 76,
+      "candidates": 1326,
+      "pool_hits": 10
+    },
+    {
+      "seed": "14205",
+      "seed_name": "VEGF-D",
+      "degree": 49,
+      "deg_a_usable": 23,
+      "candidates": 305,
+      "pool_hits": 7
+    },
+    {
+      "seed": "MESH:D044950",
+      "seed_name": "flavanones",
+      "degree": 40,
+      "deg_a_usable": 12,
+      "candidates": 208,
+      "pool_hits": 7
+    },
+    {
+      "seed": "MESH:D009347",
+      "seed_name": "Nelson's syndrome",
+      "degree": 49,
+      "deg_a_usable": 34,
+      "candidates": 958,
+      "pool_hits": 1
+    },
+    {
+      "seed": "330",
+      "seed_name": "BIRC3",
+      "degree": 447,
+      "deg_a_usable": 275,
+      "candidates": 4324,
+      "pool_hits": 101
+    },
+    {
+      "seed": "15404",
+      "seed_name": "Hoxa7",
+      "degree": 38,
+      "deg_a_usable": 22,
+      "candidates": 380,
+      "pool_hits": 2
+    },
+    {
+      "seed": "4811",
+      "seed_name": "entactin",
+      "degree": 45,
+      "deg_a_usable": 24,
+      "candidates": 348,
+      "pool_hits": 29
+    },
+    {
+      "seed": "155030",
+      "seed_name": "Gag",
+      "degree": 37,
+      "deg_a_usable": 26,
+      "candidates": 254,
+      "pool_hits": 2
+    },
+    {
+      "seed": "1523",
+      "seed_name": "CUX1",
+      "degree": 119,
+      "deg_a_usable": 63,
+      "candidates": 1468,
+      "pool_hits": 36
+    },
+    {
+      "seed": "23049",
+      "seed_name": "SMG1",
+      "degree": 89,
+      "deg_a_usable": 33,
+      "candidates": 643,
+      "pool_hits": 27
+    },
+    {
+      "seed": "MESH:D013395",
+      "seed_name": "sucrose",
+      "degree": 203,
+      "deg_a_usable": 127,
+      "candidates": 2880,
+      "pool_hits": 67
+    },
+    {
+      "seed": "MESH:C081565",
+      "seed_name": "AACOCF3",
+      "degree": 40,
+      "deg_a_usable": 19,
+      "candidates": 350,
+      "pool_hits": 5
+    },
+    {
+      "seed": "16156",
+      "seed_name": "IL-11",
+      "degree": 82,
+      "deg_a_usable": 52,
+      "candidates": 967,
+      "pool_hits": 27
+    },
+    {
+      "seed": "MESH:C000188",
+      "seed_name": "alachlor",
+      "degree": 43,
+      "deg_a_usable": 21,
+      "candidates": 196,
+      "pool_hits": 0
+    },
+    {
+      "seed": "MESH:D020765",
+      "seed_name": "intracranial lesions",
+      "degree": 85,
+      "deg_a_usable": 53,
+      "candidates": 1512,
+      "pool_hits": 22
+    },
+    {
+      "seed": "MESH:D024482",
+      "seed_name": "vitamin K2",
+      "degree": 148,
+      "deg_a_usable": 63,
+      "candidates": 1734,
+      "pool_hits": 58
+    },
+    {
+      "seed": "MESH:D000535",
+      "seed_name": "aluminum",
+      "degree": 317,
+      "deg_a_usable": 206,
+      "candidates": 3789,
+      "pool_hits": 80
+    },
+    {
+      "seed": "8989",
+      "seed_name": "TRPA1",
+      "degree": 79,
+      "deg_a_usable": 42,
+      "candidates": 533,
+      "pool_hits": 40
+    },
+    {
+      "seed": "MESH:C010038",
+      "seed_name": "azelaic acid",
+      "degree": 44,
+      "deg_a_usable": 25,
+      "candidates": 630,
+      "pool_hits": 11
+    },
+    {
+      "seed": "MESH:C538324",
+      "seed_name": "HL",
+      "degree": 116,
+      "deg_a_usable": 84,
+      "candidates": 1939,
+      "pool_hits": 22
+    },
+    {
+      "seed": "MESH:D017086",
+      "seed_name": "beta-thalassemia",
+      "degree": 94,
+      "deg_a_usable": 65,
+      "candidates": 1053,
+      "pool_hits": 11
+    },
+    {
+      "seed": "MESH:C478479",
+      "seed_name": "SU11274",
+      "degree": 79,
+      "deg_a_usable": 36,
+      "candidates": 720,
+      "pool_hits": 10
+    },
+    {
+      "seed": "MESH:D020511",
+      "seed_name": "junction",
+      "degree": 86,
+      "deg_a_usable": 58,
+      "candidates": 1083,
+      "pool_hits": 6
+    },
+    {
+      "seed": "MESH:C471992",
+      "seed_name": "bosutinib",
+      "degree": 186,
+      "deg_a_usable": 94,
+      "candidates": 2130,
+      "pool_hits": 90
+    },
+    {
+      "seed": "MESH:D016135",
+      "seed_name": "spine",
+      "degree": 40,
+      "deg_a_usable": 28,
+      "candidates": 507,
+      "pool_hits": 6
+    },
+    {
+      "seed": "MESH:D009828",
+      "seed_name": "oleanolic acid",
+      "degree": 256,
+      "deg_a_usable": 129,
+      "candidates": 2998,
+      "pool_hits": 118
+    },
+    {
+      "seed": "15904",
+      "seed_name": "ID4",
+      "degree": 40,
+      "deg_a_usable": 25,
+      "candidates": 567,
+      "pool_hits": 0
+    },
+    {
+      "seed": "MESH:C120029",
+      "seed_name": "HCPT",
+      "degree": 49,
+      "deg_a_usable": 20,
+      "candidates": 477,
+      "pool_hits": 7
+    },
+    {
+      "seed": "574434",
+      "seed_name": "miR-410",
+      "degree": 71,
+      "deg_a_usable": 29,
+      "candidates": 655,
+      "pool_hits": 18
+    },
+    {
+      "seed": "MESH:C055393",
+      "seed_name": "arenobufagin",
+      "degree": 50,
+      "deg_a_usable": 17,
+      "candidates": 592,
+      "pool_hits": 20
+    },
+    {
+      "seed": "MESH:C004763",
+      "seed_name": "dichloromethotrexate",
+      "degree": 32,
+      "deg_a_usable": 5,
+      "candidates": 72,
+      "pool_hits": 0
+    },
+    {
+      "seed": "MESH:D054714",
+      "seed_name": "echinocandins",
+      "degree": 40,
+      "deg_a_usable": 30,
+      "candidates": 432,
+      "pool_hits": 5
+    },
+    {
+      "seed": "10419",
+      "seed_name": "PRMT5",
+      "degree": 204,
+      "deg_a_usable": 106,
+      "candidates": 1740,
+      "pool_hits": 209
+    },
+    {
+      "seed": "4248",
+      "seed_name": "MGAT3",
+      "degree": 70,
+      "deg_a_usable": 28,
+      "candidates": 699,
+      "pool_hits": 19
+    },
+    {
+      "seed": "152559",
+      "seed_name": "PAQR3",
+      "degree": 57,
+      "deg_a_usable": 11,
+      "candidates": 316,
+      "pool_hits": 26
+    },
+    {
+      "seed": "MESH:C057862",
+      "seed_name": "microcystin-LR",
+      "degree": 139,
+      "deg_a_usable": 70,
+      "candidates": 1785,
+      "pool_hits": 85
+    },
+    {
+      "seed": "3561",
+      "seed_name": "IL2RG",
+      "degree": 67,
+      "deg_a_usable": 36,
+      "candidates": 1032,
+      "pool_hits": 27
+    },
+    {
+      "seed": "MESH:D012503",
+      "seed_name": "saponin",
+      "degree": 202,
+      "deg_a_usable": 104,
+      "candidates": 2541,
+      "pool_hits": 87
+    },
+    {
+      "seed": "22373",
+      "seed_name": "WAP",
+      "degree": 50,
+      "deg_a_usable": 34,
+      "candidates": 607,
+      "pool_hits": 5
+    },
+    {
+      "seed": "MESH:C530494",
+      "seed_name": "sagopilone",
+      "degree": 61,
+      "deg_a_usable": 22,
+      "candidates": 678,
+      "pool_hits": 0
+    },
+    {
+      "seed": "1366",
+      "seed_name": "CLDN7",
+      "degree": 158,
+      "deg_a_usable": 71,
+      "candidates": 2108,
+      "pool_hits": 25
+    },
+    {
+      "seed": "4897",
+      "seed_name": "NRCAM",
+      "degree": 65,
+      "deg_a_usable": 32,
+      "candidates": 794,
+      "pool_hits": 8
+    },
+    {
+      "seed": "1581",
+      "seed_name": "CYP7A1",
+      "degree": 92,
+      "deg_a_usable": 64,
+      "candidates": 1297,
+      "pool_hits": 11
+    },
+    {
+      "seed": "MESH:D006962",
+      "seed_name": "secondary hyperparathyroidism",
+      "degree": 69,
+      "deg_a_usable": 45,
+      "candidates": 1277,
+      "pool_hits": 3
+    },
+    {
+      "seed": "79215",
+      "seed_name": "growth factor",
+      "degree": 36,
+      "deg_a_usable": 22,
+      "candidates": 498,
+      "pool_hits": 0
+    },
+    {
+      "seed": "MESH:C053238",
+      "seed_name": "onapristone",
+      "degree": 41,
+      "deg_a_usable": 22,
+      "candidates": 655,
+      "pool_hits": 8
+    },
+    {
+      "seed": "8448",
+      "seed_name": "DOC-2",
+      "degree": 31,
+      "deg_a_usable": 10,
+      "candidates": 185,
+      "pool_hits": 3
+    },
+    {
+      "seed": "MESH:C018562",
+      "seed_name": "guggulipid",
+      "degree": 44,
+      "deg_a_usable": 22,
+      "candidates": 512,
+      "pool_hits": 0
+    },
+    {
+      "seed": "MESH:D010922",
+      "seed_name": "placental dysfunction",
+      "degree": 62,
+      "deg_a_usable": 43,
+      "candidates": 841,
+      "pool_hits": 15
+    },
+    {
+      "seed": "MESH:C077295",
+      "seed_name": "tiuxetan",
+      "degree": 40,
+      "deg_a_usable": 16,
+      "candidates": 388,
+      "pool_hits": 0
+    },
+    {
+      "seed": "MESH:D007964",
+      "seed_name": "leukocytosis",
+      "degree": 234,
+      "deg_a_usable": 152,
+      "candidates": 3439,
+      "pool_hits": 25
+    },
+    {
+      "seed": "24482",
+      "seed_name": "IGF-1",
+      "degree": 245,
+      "deg_a_usable": 162,
+      "candidates": 3075,
+      "pool_hits": 18
+    },
+    {
+      "seed": "1946",
+      "seed_name": "EFNA5",
+      "degree": 66,
+      "deg_a_usable": 35,
+      "candidates": 643,
+      "pool_hits": 19
+    },
+    {
+      "seed": "RS#:1128503;HGVS:c.1236C>T;CorrespondingGene:5243",
+      "seed_name": "RS#:1128503;HGVS:c.1236C>T;CorrespondingGene:5243",
+      "degree": 70,
+      "deg_a_usable": 24,
+      "candidates": 536,
+      "pool_hits": 16
+    },
+    {
+      "seed": "4295",
+      "seed_name": "motilin",
+      "degree": 57,
+      "deg_a_usable": 29,
+      "candidates": 709,
+      "pool_hits": 1
+    },
+    {
+      "seed": "MESH:C536203",
+      "seed_name": "neuro-inflammatory",
+      "degree": 66,
+      "deg_a_usable": 41,
+      "candidates": 1052,
+      "pool_hits": 5
+    },
+    {
+      "seed": "18854",
+      "seed_name": "PML",
+      "degree": 107,
+      "deg_a_usable": 69,
+      "candidates": 1147,
+      "pool_hits": 17
+    },
+    {
+      "seed": "MESH:D007099",
+      "seed_name": "imipramine",
+      "degree": 140,
+      "deg_a_usable": 94,
+      "candidates": 2382,
+      "pool_hits": 55
+    },
+    {
+      "seed": "4057",
+      "seed_name": "LTF",
+      "degree": 63,
+      "deg_a_usable": 28,
+      "candidates": 710,
+      "pool_hits": 23
+    },
+    {
+      "seed": "MESH:D006828",
+      "seed_name": "hydatidiform mole",
+      "degree": 398,
+      "deg_a_usable": 307,
+      "candidates": 4663,
+      "pool_hits": 19
+    },
+    {
+      "seed": "284654",
+      "seed_name": "RSPO1",
+      "degree": 56,
+      "deg_a_usable": 29,
+      "candidates": 499,
+      "pool_hits": 22
+    },
+    {
+      "seed": "MESH:C545357",
+      "seed_name": "antroquinonol",
+      "degree": 55,
+      "deg_a_usable": 18,
+      "candidates": 523,
+      "pool_hits": 3
+    },
+    {
+      "seed": "3339",
+      "seed_name": "PLC",
+      "degree": 136,
+      "deg_a_usable": 71,
+      "candidates": 1798,
+      "pool_hits": 54
+    },
+    {
+      "seed": "MESH:C473027",
+      "seed_name": "GW3965",
+      "degree": 59,
+      "deg_a_usable": 31,
+      "candidates": 360,
+      "pool_hits": 2
+    },
+    {
+      "seed": "MESH:C508757",
+      "seed_name": "ispinesib",
+      "degree": 55,
+      "deg_a_usable": 21,
+      "candidates": 417,
+      "pool_hits": 3
+    },
+    {
+      "seed": "16776",
+      "seed_name": "alpha5",
+      "degree": 32,
+      "deg_a_usable": 19,
+      "candidates": 384,
+      "pool_hits": 6
+    },
+    {
+      "seed": "MESH:C031208",
+      "seed_name": "SSM",
+      "degree": 56,
+      "deg_a_usable": 29,
+      "candidates": 790,
+      "pool_hits": 1
+    },
+    {
+      "seed": "79888",
+      "seed_name": "LPCAT1",
+      "degree": 43,
+      "deg_a_usable": 15,
+      "candidates": 519,
+      "pool_hits": 48
+    },
+    {
+      "seed": "4946",
+      "seed_name": "OAZ1",
+      "degree": 43,
+      "deg_a_usable": 27,
+      "candidates": 624,
+      "pool_hits": 6
+    },
+    {
+      "seed": "6750",
+      "seed_name": "somatostatin",
+      "degree": 686,
+      "deg_a_usable": 482,
+      "candidates": 6682,
+      "pool_hits": 59
+    },
+    {
+      "seed": "MESH:C565561",
+      "seed_name": "FA",
+      "degree": 49,
+      "deg_a_usable": 34,
+      "candidates": 755,
+      "pool_hits": 7
+    },
+    {
+      "seed": "MESH:D000875",
+      "seed_name": "anthralin",
+      "degree": 49,
+      "deg_a_usable": 28,
+      "candidates": 548,
+      "pool_hits": 1
+    },
+    {
+      "seed": "MESH:C403304",
+      "seed_name": "zerumbone",
+      "degree": 173,
+      "deg_a_usable": 66,
+      "candidates": 2328,
+      "pool_hits": 53
+    },
+    {
+      "seed": "4953",
+      "seed_name": "ornithine decarboxylase",
+      "degree": 496,
+      "deg_a_usable": 297,
+      "candidates": 4810,
+      "pool_hits": 63
+    },
+    {
+      "seed": "7976",
+      "seed_name": "FZD3",
+      "degree": 54,
+      "deg_a_usable": 22,
+      "candidates": 362,
+      "pool_hits": 17
+    },
+    {
+      "seed": "MESH:D000077385",
+      "seed_name": "silibinin",
+      "degree": 601,
+      "deg_a_usable": 348,
+      "candidates": 7385,
+      "pool_hits": 186
+    },
+    {
+      "seed": "25320",
+      "seed_name": "gastrin",
+      "degree": 135,
+      "deg_a_usable": 94,
+      "candidates": 1905,
+      "pool_hits": 0
+    },
+    {
+      "seed": "3141",
+      "seed_name": "HLCS",
+      "degree": 36,
+      "deg_a_usable": 17,
+      "candidates": 608,
+      "pool_hits": 2
+    },
+    {
+      "seed": "43847",
+      "seed_name": "KLK14",
+      "degree": 61,
+      "deg_a_usable": 32,
+      "candidates": 1050,
+      "pool_hits": 6
+    },
+    {
+      "seed": "MESH:D018327",
+      "seed_name": "lentigo maligna",
+      "degree": 94,
+      "deg_a_usable": 67,
+      "candidates": 1393,
+      "pool_hits": 8
+    },
+    {
+      "seed": "MESH:D013874",
+      "seed_name": "thiopental",
+      "degree": 93,
+      "deg_a_usable": 58,
+      "candidates": 1403,
+      "pool_hits": 2
+    },
+    {
+      "seed": "MESH:D013467",
+      "seed_name": "sulindac",
+      "degree": 486,
+      "deg_a_usable": 300,
+      "candidates": 5330,
+      "pool_hits": 36
+    },
+    {
+      "seed": "MESH:C410885",
+      "seed_name": "cholecystokinin-8",
+      "degree": 34,
+      "deg_a_usable": 21,
+      "candidates": 336,
+      "pool_hits": 0
+    },
+    {
+      "seed": "468",
+      "seed_name": "ATF4",
+      "degree": 363,
+      "deg_a_usable": 236,
+      "candidates": 3536,
+      "pool_hits": 294
+    },
+    {
+      "seed": "7039",
+      "seed_name": "TGF-alpha",
+      "degree": 702,
+      "deg_a_usable": 447,
+      "candidates": 7539,
+      "pool_hits": 55
+    },
+    {
+      "seed": "MESH:C448659",
+      "seed_name": "17-DMAG",
+      "degree": 210,
+      "deg_a_usable": 93,
+      "candidates": 2614,
+      "pool_hits": 29
+    },
+    {
+      "seed": "MESH:C025953",
+      "seed_name": "DA",
+      "degree": 185,
+      "deg_a_usable": 95,
+      "candidates": 2403,
+      "pool_hits": 59
+    },
+    {
+      "seed": "MESH:C551536",
+      "seed_name": "CRT0066101",
+      "degree": 30,
+      "deg_a_usable": 11,
+      "candidates": 267,
+      "pool_hits": 7
+    },
+    {
+      "seed": "10085",
+      "seed_name": "EDIL3",
+      "degree": 46,
+      "deg_a_usable": 14,
+      "candidates": 478,
+      "pool_hits": 14
+    },
+    {
+      "seed": "MESH:D001072",
+      "seed_name": "suicidal ideation",
+      "degree": 31,
+      "deg_a_usable": 25,
+      "candidates": 444,
+      "pool_hits": 2
+    },
+    {
+      "seed": "MESH:D007516",
+      "seed_name": "CIMP",
+      "degree": 288,
+      "deg_a_usable": 224,
+      "candidates": 3576,
+      "pool_hits": 11
+    },
+    {
+      "seed": "11783",
+      "seed_name": "Apaf-1",
+      "degree": 37,
+      "deg_a_usable": 26,
+      "candidates": 550,
+      "pool_hits": 6
+    },
+    {
+      "seed": "MESH:C055494",
+      "seed_name": "CAPE",
+      "degree": 353,
+      "deg_a_usable": 190,
+      "candidates": 4332,
+      "pool_hits": 101
+    },
+    {
+      "seed": "4435",
+      "seed_name": "CITED1",
+      "degree": 53,
+      "deg_a_usable": 24,
+      "candidates": 780,
+      "pool_hits": 5
+    },
+    {
+      "seed": "2139",
+      "seed_name": "EYA2",
+      "degree": 32,
+      "deg_a_usable": 10,
+      "candidates": 157,
+      "pool_hits": 14
+    },
+    {
+      "seed": "MESH:D006393",
+      "seed_name": "hemangiopericytoma",
+      "degree": 124,
+      "deg_a_usable": 68,
+      "candidates": 1746,
+      "pool_hits": 8
+    },
+    {
+      "seed": "12479",
+      "seed_name": "CD1d",
+      "degree": 61,
+      "deg_a_usable": 34,
+      "candidates": 562,
+      "pool_hits": 7
+    },
+    {
+      "seed": "79784",
+      "seed_name": "myosin",
+      "degree": 163,
+      "deg_a_usable": 98,
+      "candidates": 2022,
+      "pool_hits": 31
+    },
+    {
+      "seed": "16852",
+      "seed_name": "galectin-1",
+      "degree": 93,
+      "deg_a_usable": 48,
+      "candidates": 1086,
+      "pool_hits": 20
+    },
+    {
+      "seed": "MESH:C100573",
+      "seed_name": "PGA1",
+      "degree": 68,
+      "deg_a_usable": 25,
+      "candidates": 695,
+      "pool_hits": 4
+    },
+    {
+      "seed": "MESH:C017769",
+      "seed_name": "tricin",
+      "degree": 39,
+      "deg_a_usable": 9,
+      "candidates": 112,
+      "pool_hits": 5
+    },
+    {
+      "seed": "MESH:C086095",
+      "seed_name": "Dexa-BEAM",
+      "degree": 30,
+      "deg_a_usable": 13,
+      "candidates": 376,
+      "pool_hits": 0
+    },
+    {
+      "seed": "MESH:D015119",
+      "seed_name": "aminocaproic acid",
+      "degree": 114,
+      "deg_a_usable": 75,
+      "candidates": 1591,
+      "pool_hits": 12
+    },
+    {
+      "seed": "22370",
+      "seed_name": "vitronectin",
+      "degree": 53,
+      "deg_a_usable": 36,
+      "candidates": 468,
+      "pool_hits": 6
+    },
+    {
+      "seed": "MESH:D010618",
+      "seed_name": "phenanthroline",
+      "degree": 68,
+      "deg_a_usable": 30,
+      "candidates": 933,
+      "pool_hits": 7
+    },
+    {
+      "seed": "MESH:C058391",
+      "seed_name": "Pseudolaric acid B",
+      "degree": 96,
+      "deg_a_usable": 31,
+      "candidates": 1117,
+      "pool_hits": 45
+    },
+    {
+      "seed": "MESH:C013123",
+      "seed_name": "5,10-methylenetetrahydrofolate",
+      "degree": 54,
+      "deg_a_usable": 34,
+      "candidates": 638,
+      "pool_hits": 4
+    },
+    {
+      "seed": "MESH:C029603",
+      "seed_name": "dGTP",
+      "degree": 98,
+      "deg_a_usable": 76,
+      "candidates": 1269,
+      "pool_hits": 4
+    },
+    {
+      "seed": "2846",
+      "seed_name": "LPAR4",
+      "degree": 30,
+      "deg_a_usable": 12,
+      "candidates": 188,
+      "pool_hits": 10
+    },
+    {
+      "seed": "20604",
+      "seed_name": "somatostatin",
+      "degree": 93,
+      "deg_a_usable": 57,
+      "candidates": 874,
+      "pool_hits": 5
+    },
+    {
+      "seed": "MESH:D013024",
+      "seed_name": "soybean oil",
+      "degree": 60,
+      "deg_a_usable": 39,
+      "candidates": 1171,
+      "pool_hits": 9
+    },
+    {
+      "seed": "MESH:D009353",
+      "seed_name": "neocarzinostatin",
+      "degree": 196,
+      "deg_a_usable": 104,
+      "candidates": 2353,
+      "pool_hits": 0
+    },
+    {
+      "seed": "MESH:D003763",
+      "seed_name": "leakage",
+      "degree": 61,
+      "deg_a_usable": 38,
+      "candidates": 1087,
+      "pool_hits": 5
+    },
+    {
+      "seed": "4603",
+      "seed_name": "MYBL1",
+      "degree": 37,
+      "deg_a_usable": 18,
+      "candidates": 497,
+      "pool_hits": 10
+    },
+    {
+      "seed": "2021",
+      "seed_name": "endonuclease G",
+      "degree": 135,
+      "deg_a_usable": 71,
+      "candidates": 1478,
+      "pool_hits": 13
+    },
+    {
+      "seed": "MESH:D003703",
+      "seed_name": "colcemid",
+      "degree": 125,
+      "deg_a_usable": 64,
+      "candidates": 1161,
+      "pool_hits": 0
+    },
+    {
+      "seed": "MESH:D002393",
+      "seed_name": "catechol estrogens",
+      "degree": 115,
+      "deg_a_usable": 71,
+      "candidates": 1594,
+      "pool_hits": 4
+    },
+    {
+      "seed": "MESH:C066228",
+      "seed_name": "lobaplatin",
+      "degree": 115,
+      "deg_a_usable": 37,
+      "candidates": 1117,
+      "pool_hits": 37
+    },
+    {
+      "seed": "MESH:D010493",
+      "seed_name": "pericarditis",
+      "degree": 86,
+      "deg_a_usable": 51,
+      "candidates": 1394,
+      "pool_hits": 10
+    },
+    {
+      "seed": "MESH:D000275",
+      "seed_name": "adjustment disorder",
+      "degree": 113,
+      "deg_a_usable": 80,
+      "candidates": 1722,
+      "pool_hits": 10
+    },
+    {
+      "seed": "17386",
+      "seed_name": "MMP-1",
+      "degree": 154,
+      "deg_a_usable": 104,
+      "candidates": 1314,
+      "pool_hits": 33
+    },
+    {
+      "seed": "5046",
+      "seed_name": "PCSK6",
+      "degree": 64,
+      "deg_a_usable": 32,
+      "candidates": 727,
+      "pool_hits": 6
+    },
+    {
+      "seed": "818",
+      "seed_name": "CaMKII",
+      "degree": 244,
+      "deg_a_usable": 131,
+      "candidates": 2860,
+      "pool_hits": 81
+    },
+    {
+      "seed": "MESH:D018129",
+      "seed_name": "phosphatidylinositol phosphates",
+      "degree": 83,
+      "deg_a_usable": 53,
+      "candidates": 1169,
+      "pool_hits": 4
+    },
+    {
+      "seed": "23554",
+      "seed_name": "TSPAN12",
+      "degree": 31,
+      "deg_a_usable": 21,
+      "candidates": 227,
+      "pool_hits": 3
+    },
+    {
+      "seed": "3607",
+      "seed_name": "FOXK2",
+      "degree": 41,
+      "deg_a_usable": 16,
+      "candidates": 173,
+      "pool_hits": 26
+    },
+    {
+      "seed": "MESH:D006338",
+      "seed_name": "cardiac tumors",
+      "degree": 119,
+      "deg_a_usable": 76,
+      "candidates": 1690,
+      "pool_hits": 7
+    },
+    {
+      "seed": "23939",
+      "seed_name": "ERK5",
+      "degree": 74,
+      "deg_a_usable": 47,
+      "candidates": 768,
+      "pool_hits": 15
+    },
+    {
+      "seed": "MESH:D000092423",
+      "seed_name": "limbal stem cell deficiency",
+      "degree": 37,
+      "deg_a_usable": 19,
+      "candidates": 333,
+      "pool_hits": 4
+    },
+    {
+      "seed": "2153",
+      "seed_name": "FV",
+      "degree": 189,
+      "deg_a_usable": 115,
+      "candidates": 2460,
+      "pool_hits": 21
+    },
+    {
+      "seed": "4831",
+      "seed_name": "NME2",
+      "degree": 119,
+      "deg_a_usable": 49,
+      "candidates": 1103,
+      "pool_hits": 21
+    },
+    {
+      "seed": "5360",
+      "seed_name": "PLTP",
+      "degree": 42,
+      "deg_a_usable": 21,
+      "candidates": 717,
+      "pool_hits": 8
+    },
+    {
+      "seed": "7251",
+      "seed_name": "TSG101",
+      "degree": 76,
+      "deg_a_usable": 30,
+      "candidates": 240,
+      "pool_hits": 8
+    },
+    {
+      "seed": "20181",
+      "seed_name": "RXRalpha",
+      "degree": 100,
+      "deg_a_usable": 58,
+      "candidates": 1203,
+      "pool_hits": 11
+    },
+    {
+      "seed": "MESH:D014634",
+      "seed_name": "valinomycin",
+      "degree": 75,
+      "deg_a_usable": 42,
+      "candidates": 1121,
+      "pool_hits": 3
+    },
+    {
+      "seed": "MESH:C495818",
+      "seed_name": "KU55933",
+      "degree": 109,
+      "deg_a_usable": 55,
+      "candidates": 1338,
+      "pool_hits": 34
+    },
+    {
+      "seed": "406928",
+      "seed_name": "miR-137",
+      "degree": 218,
+      "deg_a_usable": 114,
+      "candidates": 2311,
+      "pool_hits": 76
+    },
+    {
+      "seed": "MESH:D001656",
+      "seed_name": "biliary atresia",
+      "degree": 62,
+      "deg_a_usable": 38,
+      "candidates": 856,
+      "pool_hits": 12
+    },
+    {
+      "seed": "580",
+      "seed_name": "BARD1",
+      "degree": 126,
+      "deg_a_usable": 70,
+      "candidates": 1246,
+      "pool_hits": 54
+    },
+    {
+      "seed": "MESH:D014265",
+      "seed_name": "TEM",
+      "degree": 47,
+      "deg_a_usable": 12,
+      "candidates": 185,
+      "pool_hits": 0
+    },
+    {
+      "seed": "MESH:D065626",
+      "seed_name": "NAFLD",
+      "degree": 337,
+      "deg_a_usable": 268,
+      "candidates": 3973,
+      "pool_hits": 315
+    },
+    {
+      "seed": "MESH:C565141",
+      "seed_name": "mixed cryoglobulinemia",
+      "degree": 36,
+      "deg_a_usable": 26,
+      "candidates": 609,
+      "pool_hits": 4
+    },
+    {
+      "seed": "RS#:555607708;HGVS:c.1100delC;CorrespondingGene:11200",
+      "seed_name": "RS#:555607708;HGVS:c.1100delC;CorrespondingGene:11200",
+      "degree": 40,
+      "deg_a_usable": 13,
+      "candidates": 240,
+      "pool_hits": 0
+    },
+    {
+      "seed": "3574",
+      "seed_name": "IL-7",
+      "degree": 300,
+      "deg_a_usable": 165,
+      "candidates": 3992,
+      "pool_hits": 117
+    },
+    {
+      "seed": "RS#:1695;HGVS:p.I105V;CorrespondingGene:2950",
+      "seed_name": "RS#:1695;HGVS:p.I105V;CorrespondingGene:2950",
+      "degree": 86,
+      "deg_a_usable": 23,
+      "candidates": 480,
+      "pool_hits": 3
+    },
+    {
+      "seed": "25875",
+      "seed_name": "HCCR-1",
+      "degree": 53,
+      "deg_a_usable": 11,
+      "candidates": 96,
+      "pool_hits": 0
+    },
+    {
+      "seed": "6776",
+      "seed_name": "STAT5",
+      "degree": 779,
+      "deg_a_usable": 535,
+      "candidates": 6925,
+      "pool_hits": 213
+    }
+  ]
+}
