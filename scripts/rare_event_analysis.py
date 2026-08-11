@@ -75,7 +75,8 @@ OUT_JSON = PROJECT_ROOT / "analysis" / "rare-event-findings.json"
 # rather than being a round number.
 BURDEN = {
     int(1e6): "the manuscript's standard run",
-    int(1e8): "sub-detection residual",
+    int(1e7): "sub-detection residual",
+    int(1e8): "below any imaging threshold",
     int(1e9): "~1 g, smallest clinically detectable lesion",
     int(1e10): "~10 g, intermediate burden",
     int(1e11): "~100 g, advanced metastatic disease",
@@ -121,6 +122,32 @@ def tracks_rule_of_three(rows: list) -> bool:
                for r in rows)
 
 
+def _witness(by_cond: dict) -> str:
+    """A real, checked example of the nesting for the prose to point at.
+
+    Written out by hand this read "1, 7, 76, 760 for PersisterNrf2 + Control",
+    which is a number in prose beside the generated table it describes -- the
+    shape that goes stale the moment another scale lands. It is computed now,
+    and it ASSERTS the monotonicity it claims rather than asserting it in
+    words: if a larger sample ever reported fewer deaths than a smaller one,
+    the nesting would be broken and this would say so instead.
+    """
+    # Keyed off the dict KEY, not off a field repeated inside the rows: the
+    # key already is (phenotype, treatment), and reading it from the row made
+    # this depend on the row's JSON shape for a name it was already handed.
+    candidates = [(k, v) for k, v in sorted(by_cond.items())
+                  if any(r["n_dead"] for r in v)]
+    if not candidates:
+        return "no condition has events yet"
+    (pheno, tx), best = max(candidates, key=lambda kv: len(kv[1]))
+    counts = [r["n_dead"] for r in best]
+    name = f"{pheno} + {tx}"
+    if counts != sorted(counts):
+        return (f"NOT monotone for {name}: {counts} — the nesting property is "
+                "violated and the sweep should be investigated")
+    return f"{', '.join(str(c) for c in counts)} for {name}"
+
+
 def figure(by_cond: dict, path_stem: Path) -> None:
     """Tail resolution against sample size, with the 3/n floor drawn explicitly.
 
@@ -139,18 +166,32 @@ def figure(by_cond: dict, path_stem: Path) -> None:
     ax.plot(ref, [3.0 / lo, 3.0 / hi], color="0.55", ls="--", lw=1.3, zorder=1,
             label="rule of three (3/n): the resolution floor, not a result")
 
+    # Conditions that are zero at every n plot at EXACTLY the same bound, so
+    # they land on top of each other and the last one drawn hides the rest --
+    # the first version of this figure showed two series where there were
+    # three. Nudge each one sideways by a few percent so all are visible. The
+    # offset is cosmetic and the caption says so; the alternative (leaving them
+    # superimposed) silently loses a condition.
+    overlapping = [k for k, v in sorted(by_cond.items())
+                   if all(r["n_dead"] == 0 for r in v)]
+
     colors = plt.get_cmap("tab10").colors
     for i, ((pheno, tx), rows) in enumerate(sorted(by_cond.items())):
         c = colors[i % len(colors)]
         kind = classify(rows)
-        xs = [r["n_cells"] for r in rows]
+        jitter = 1.0
+        if (pheno, tx) in overlapping and len(overlapping) > 1:
+            k = overlapping.index((pheno, tx)) - (len(overlapping) - 1) / 2
+            jitter = 1.10 ** k
+        rows = [dict(r, n_cells_plot=r["n_cells"] * jitter) for r in rows]
+        xs = [r["n_cells_plot"] for r in rows]
         # A zero-event point has no rate to plot -- plotting 0 on a log axis is
         # impossible and plotting it as a small number would be a lie. It is
         # drawn at its upper BOUND with a downward caret, which is what the
         # datum actually is: "somewhere below here".
-        zx = [r["n_cells"] for r in rows if r["n_dead"] == 0]
+        zx = [r["n_cells_plot"] for r in rows if r["n_dead"] == 0]
         zy = [r["poisson_ci_high"] for r in rows if r["n_dead"] == 0]
-        ex = [r["n_cells"] for r in rows if r["n_dead"] > 0]
+        ex = [r["n_cells_plot"] for r in rows if r["n_dead"] > 0]
         ey = [r["death_rate"] for r in rows if r["n_dead"] > 0]
 
         if zx:
@@ -180,7 +221,7 @@ def figure(by_cond: dict, path_stem: Path) -> None:
     fig.text(0.5, -0.06,
              "Triangles are zero-event runs plotted at their upper bound: the true rate is somewhere below. "
              "Circles are\nmeasured rates with exact Poisson intervals. A series lying ON the dashed line is "
-             "reporting the sample size,\nnot the biology.",
+             "reporting the sample size, not the biology.\nZero-event series are identical by construction, so they are offset horizontally by a few percent to keep each one visible.",
              ha="center", fontsize=8, color="0.35")
 
     for ext in ("png", "pdf"):
@@ -255,13 +296,18 @@ def main() -> int:
         if kind == "resolution-limited":
             n = last["n_cells"]
             expected = last["poisson_ci_high"] * n
+            floor_note = (
+                "and it is still tracking 3/n exactly, so this is a statement "
+                "about how far we could see, not about the rate."
+                if on_floor else
+                "and it has left the 3/n line, which means something other than "
+                "the sample size is now setting it — check the sweep."
+            )
             L += [
                 f"Zero events at every scale tried, up to {n:.0e} cells. The bound",
-                f"is now {last['poisson_ci_high']:.2e}, and it is still tracking 3/n"
-                if on_floor else "The bound has left the 3/n line.",
-                f"exactly — so this is a statement about how far we could see, not",
-                "about the rate. **The true rate remains unknown**; all that has",
-                "been established is that it is below the bound.", "",
+                f"is now {last['poisson_ci_high']:.2e}, {floor_note}",
+                "**The true rate remains unknown**; all that has been established",
+                "is that it is below the bound.", "",
                 f"Read against burden: in a population of {n:.0e} cells, fewer than",
                 f"about {expected:.0f} would be expected to die under this condition.", "",
             ]
@@ -297,6 +343,17 @@ def main() -> int:
         "  the CTRPv2 in-vitro posterior, and it is provably *disjoint* from these",
         "  priors (#332, #500) — so a rate computed here cannot be quoted as an",
         "  in-vitro prediction, and vice versa.",
+        "* **The points across n are NESTED, not independent.** `run_condition`",
+        "  seeds cell *i* from its global index (`i*2`, `i*2+1`) regardless of n,",
+        "  so the run at 1e8 is *literally the first 1e8 cells* of the run at 1e9.",
+        "  Each larger sample contains every smaller one. Two consequences: the",
+        f"  death counts must be monotone non-decreasing across the sweep",
+        f"  ({_witness(by_cond)}), and successive",
+        "  estimates are positively correlated, so the apparent convergence is",
+        "  smoother than four *independent* samples would look. The final",
+        "  interval is still correct — it depends only on the count and the n it",
+        "  came from — but the intermediate points are not four separate",
+        "  confirmations of it.",
         "* **Sampling error is not the dominant uncertainty.** Section 5.2 already",
         "  records that these outputs are parameter-limited, not sample-limited.",
         "  Driving n to 1e11 shrinks the sampling interval to nothing and leaves",

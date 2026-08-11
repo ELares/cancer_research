@@ -143,3 +143,34 @@ def test_the_conditions_swept_are_the_ones_at_the_resolution_limit():
     for pheno, tx, why in sweep.CONDITIONS:
         assert pheno and tx
         assert len(why) > 40, f"{pheno}/{tx} has no stated rationale"
+
+
+# --- the nesting witness --------------------------------------------------
+# The prose claims the samples are nested, and the evidence it offers is a
+# real count sequence. That sequence used to be typed out by hand next to the
+# generated table it described, which is the shape that goes stale silently.
+
+def test_the_witness_is_computed_and_reports_the_real_counts():
+    by_cond = {("PersisterNrf2", "Control"):
+               [_row(10**6, 1), _row(10**7, 7), _row(10**8, 76)]}
+    w = analysis._witness(by_cond)
+    assert "1, 7, 76" in w
+    assert "PersisterNrf2 + Control" in w
+
+
+def test_the_witness_refuses_to_claim_monotonicity_it_does_not_have():
+    """If nesting ever broke, the sentence asserting it must not still print.
+
+    A larger sample containing a smaller one cannot lose a death, so a
+    decreasing count means the seeding assumption is wrong -- and that is
+    exactly when a hand-written 'the counts are monotone' would be a lie.
+    """
+    broken = {("X", "Y"): [_row(10**6, 9), _row(10**7, 2)]}
+    w = analysis._witness(broken)
+    assert "NOT monotone" in w
+    assert "investigated" in w
+
+
+def test_the_witness_says_so_when_nothing_has_events_yet():
+    assert "no condition has events" in analysis._witness(
+        {("X", "Y"): [_row(10**6, 0)]})
