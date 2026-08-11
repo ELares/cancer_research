@@ -66,8 +66,16 @@ fi
 # until the harness lands on main this boots an instance that clones, fails to
 # find sim-scale, and burns the dead-man window discovering it. One remote
 # lookup here turns a paid twenty-minute mystery into a message.
-if ! git ls-tree -r --name-only "origin/${REPO_REF}" 2>/dev/null \
-     | grep -q '^simulations/sim-scale/'; then
+#
+# NOT a `... | grep -q` pipeline. Under `set -o pipefail` that construction is
+# inverted by its own success: grep -q exits the moment it matches, git gets
+# SIGPIPE and dies 141, pipefail promotes that to the pipeline's status, and the
+# check reports "not found" precisely WHEN IT FINDS IT. It did exactly that here
+# -- and the first version appeared to work, because it was asked about a ref
+# that genuinely lacked the harness and so gave the right answer for the wrong
+# reason. Matching in the shell keeps it a single command with no pipe to break.
+REF_FILES=$(git ls-tree -r --name-only "origin/${REPO_REF}" 2>/dev/null || true)
+if [[ "$REF_FILES" != *"simulations/sim-scale/"* ]]; then
   echo "'${REPO_REF}' does not contain simulations/sim-scale." >&2
   echo "  The harness has not landed on that ref yet. Either merge it first," >&2
   echo "  or launch with REPO_REF=<branch> pointing at the branch that has it." >&2

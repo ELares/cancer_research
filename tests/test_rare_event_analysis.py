@@ -198,3 +198,64 @@ def test_zero_cells_is_rejected_by_both_parse_branches():
                             "--treatment", "RSL3"], capture_output=True, text=True)
         assert r.returncode != 0, f"--cells {bad} was accepted"
         assert "null" not in r.stdout, f"--cells {bad} emitted a record of nulls"
+
+
+# --- the shell guard ------------------------------------------------------
+import re  # noqa: E402
+
+_GREP_Q = re.compile(r"\|\s*grep\s+(-\w*q|--quiet)")
+
+def test_no_grep_dash_q_pipeline_under_pipefail():
+    """`cmd | grep -q PATTERN` is inverted by its own success under pipefail.
+
+    grep -q exits the instant it matches, the producer gets SIGPIPE and dies
+    141, `set -o pipefail` promotes that to the pipeline's status, and the test
+    reports "not found" exactly WHEN IT FINDS IT. The launcher's ref preflight
+    did this and refused to launch against the very branch that had the code.
+
+    It is invisible in review and in a negative test -- a ref genuinely missing
+    the file gives the right answer for the wrong reason, which is how the first
+    version looked verified. Match in the shell, or use a consumer that drains
+    its input.
+    """
+    root = Path(__file__).resolve().parent.parent
+    offenders = []
+    for sh in (root / "scripts").rglob("*.sh"):
+        txt = sh.read_text()
+        if "pipefail" not in txt:
+            continue
+        for i, line in enumerate(txt.splitlines(), 1):
+            # Skip comments. The first version of this flagged the comment in
+            # launch_scale_run.sh that EXPLAINS the bug -- a detector matching
+            # its own description of what it detects, which is the same shape
+            # as a preflight grep that matches its own wrapper.
+            if line.lstrip().startswith("#"):
+                continue
+            if _GREP_Q.search(line):
+                offenders.append(f"{sh.relative_to(root)}:{i}: {line.strip()}")
+    assert not offenders, (
+        "grep -q in a pipeline under `set -o pipefail` inverts on match:\n  "
+        + "\n  ".join(offenders))
+
+
+def test_the_pipefail_detector_can_actually_fire():
+    """A scan returning zero because it is BROKEN looks exactly like a clean tree.
+
+    So the pattern is exercised against planted samples, including the comment
+    case it must NOT flag.
+    """
+    should_fire = [
+        "if ! git ls-tree -r x | grep -q '^a/b/'; then",
+        'foo | grep --quiet bar',
+        "cmd |grep -qE 'x'",
+    ]
+    should_not = [
+        "# NOT a `... | grep -q` pipeline. Under pipefail this inverts",
+        "git ls-tree x | grep -c '^a/' >/dev/null",
+        'if [[ "$FILES" != *"a/b/"* ]]; then',
+    ]
+    for line in should_fire:
+        assert _GREP_Q.search(line), f"detector missed: {line}"
+    for line in should_not:
+        assert line.lstrip().startswith("#") or not _GREP_Q.search(line), (
+            f"detector false-positived: {line}")
