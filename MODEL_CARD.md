@@ -108,8 +108,11 @@ tiers are:
 
 **Distribution, stated plainly:** a small core (depth physics, parts of the
 single-cell engine) is anchored or sensitivity-tested; the bulk of the 3D
-realism layers are **uncalibrated (illustrative)**, and the three 3D "validation"
-targets are **self-consistency** checks, not independent data. None of the
+realism layers are **uncalibrated (illustrative)**, and ALL EIGHT targets in
+`simulations/calibration/targets.yaml` are **self-consistency** checks, not
+independent data — not merely the three 3D ones. Naming only those implied the
+other five were independent measurements; they are not, and #589 relabelled them
+in the calibration documents without that reaching here. None of the
 uncalibrated layers feed the manuscript's quantitative claims.
 
 ### 7.2 What HAS been checked
@@ -127,7 +130,8 @@ uncalibrated layers feed the manuscript's quantitative claims.
 
 - Four layers are now anchored to or validated against independent published data: the single-cell RSL3 kill switch (in-vitro CTRPv2 GPX4 inhibitors with held-out comparison, #330), the spheroid zone geometry (Browning 2021 confocal structure, #333, geometry only), the tumor-PK partition + disposition structure (IKE/sorafenib, #334, structure + partition not per-tumor magnitudes), and the Krogh penetration form + reference-drug length (Primeau/Tannock, #335, form + doxorubicin λ only). The in-vivo kill magnitudes, the spatial immune coupling, the per-tumor PK presets, the ferroptosis-inducer penetration length, the dose-dependent binding-site barrier, and the 3D-realism layers are NOT validated against any independent ferroptosis dataset.
 - No clinical / patient-outcome validation of any kind.
-- The 3D self-consistency targets check the model against itself, not against measurements.
+- Every target in `targets.yaml` is a self-consistency check: the model against
+  its own previously reported behaviour, not against measurements.
 
 ## 8. Known failure modes and limitations
 
