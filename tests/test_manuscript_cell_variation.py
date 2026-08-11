@@ -3,13 +3,20 @@
 Section 5.3 said each cell's parameters are "drawn from a +/-20% uniform random
 variation around the population mean". `gen_cell` in
 `ferroptosis-core/src/cell.rs` draws each parameter from `Normal::new(mean, sd)`
-with per-parameter CV between 12% and 25%, floored at a physiological minimum.
+with per-parameter CV between 10% and 40%, floored at a physiological minimum.
 
 Three ways that was wrong, and the third is why this file exists:
 
   family   uniform vs Gaussian;
-  width    "+/-20%" against 95% spans of +/-24% to +/-49%;
+  width    "+/-20%" against 95% spans of +/-20% to +/-78%;
   SUPPORT  bounded against unbounded.
+
+The width line is itself a correction. It first read 12% to 25%, which is the
+range over the Glycolytic block ALONE -- the first phenotype in the file, and so
+the first one read. Across all four it is 10% to 40%, and the widest draw is
+nearly twice what the narrow reading suggested. `test_the_stated_cv_range_matches
+_the_code` computes the range from the source rather than restating it, which is
+what caught this; the docstring beside it had to be fixed by hand.
 
 A bounded draw makes a cell outside the box impossible, so a death rate reported
 as zero would be exactly zero and no sample size could ever find an event. The
