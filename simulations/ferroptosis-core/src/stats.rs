@@ -49,17 +49,68 @@ pub fn run_condition(
     pname: &str,
     tname: &str,
 ) -> SimResult {
-    let outcomes: Vec<(bool, f64, f64, f64)> = (0..n)
+    // CHUNKED DETERMINISTIC FOLD, not a collect.
+    //
+    // This used to `.collect()` every per-cell outcome into a Vec so the means
+    // could be summed in a fixed index order -- float addition is not
+    // associative, so a rayon fold/reduce made them depend on thread scheduling
+    // (#531). That bought bit-reproducibility at O(n) memory: 32 bytes a cell,
+    // which is 32 GB at a billion cells and 3.2 TB at a hundred billion. The
+    // buffer, not the arithmetic, was the ceiling on n.
+    //
+    // Chunking recovers both properties. The range is cut into fixed-size
+    // blocks; each block is summed sequentially (deterministic within itself,
+    // and identical however threads are scheduled), and the per-block partials
+    // are then summed in ascending block order. Same answer every run, memory
+    // proportional to the number of blocks rather than to n.
+    //
+    // It is also MORE accurate than the original. Naive summation error grows
+    // like n*eps -- about 2e-5 relative at 1e11 cells, which starts eating the
+    // mean it is reporting. Summing in blocks and then summing the partials is
+    // one level of pairwise summation, so the error grows like
+    // (CHUNK + n/CHUNK)*eps instead.
+    // The chunk size is a function of n ALONE -- never of the thread count.
+    // Tying it to available parallelism would make the summation order, and so
+    // the reported means, differ between machines, which is the property the
+    // collect() existed to protect in the first place.
+    //
+    // Aiming for ~4096 blocks keeps enough work units for rayon to balance
+    // across any core count (a fixed 65536 gave only 16 blocks at n=1e6 and
+    // cost 2.3x in wall time on 14 cores), while the upper clamp keeps the
+    // partials vector small at large n: at 1e11 cells it is ~1.5M blocks, or
+    // about 49 MB, against 3.2 TB for the old per-cell buffer.
+    let chunk = n.div_ceil(4096).clamp(1024, 1 << 16);
+    let n_chunks = n.div_ceil(chunk);
+    let partials: Vec<(usize, f64, f64, f64)> = (0..n_chunks)
         .into_par_iter()
-        .map(|i| {
-            let mut cell_rng = StdRng::seed_from_u64(i as u64 * 2);
-            let mut sim_rng = StdRng::seed_from_u64(i as u64 * 2 + 1);
-            let cell = gen_cell(pheno, &mut cell_rng);
-            sim_cell(&cell, tx, params, &mut sim_rng)
+        .map(|c| {
+            let lo = c * chunk;
+            let hi = ((c + 1) * chunk).min(n);
+            let (mut d, mut sl, mut sg, mut sp) = (0usize, 0.0, 0.0, 0.0);
+            for i in lo..hi {
+                let mut cell_rng = StdRng::seed_from_u64(i as u64 * 2);
+                let mut sim_rng = StdRng::seed_from_u64(i as u64 * 2 + 1);
+                let cell = gen_cell(pheno, &mut cell_rng);
+                let (dead, lp, gsh, gpx4) = sim_cell(&cell, tx, params, &mut sim_rng);
+                if dead {
+                    d += 1;
+                }
+                sl += lp;
+                sg += gsh;
+                sp += gpx4;
+            }
+            (d, sl, sg, sp)
         })
         .collect();
 
-    let dead = outcomes.iter().filter(|(d, _, _, _)| *d).count();
+    let mut dead = 0usize;
+    let (mut sum_lp, mut sum_gsh, mut sum_gpx4) = (0.0, 0.0, 0.0);
+    for (d, sl, sg, sp) in &partials {
+        dead += d;
+        sum_lp += sl;
+        sum_gsh += sg;
+        sum_gpx4 += sp;
+    }
     let dr = dead as f64 / n as f64;
     let (cl, ch) = wilson_ci(n, dead);
 
@@ -71,9 +122,9 @@ pub fn run_condition(
         death_rate: dr,
         ci_low: cl,
         ci_high: ch,
-        mean_lipid_perox: outcomes.iter().map(|(_, l, _, _)| l).sum::<f64>() / n as f64,
-        mean_gsh_final: outcomes.iter().map(|(_, _, g, _)| g).sum::<f64>() / n as f64,
-        mean_gpx4_final: outcomes.iter().map(|(_, _, _, p)| p).sum::<f64>() / n as f64,
+        mean_lipid_perox: sum_lp / n as f64,
+        mean_gsh_final: sum_gsh / n as f64,
+        mean_gpx4_final: sum_gpx4 / n as f64,
     }
 }
 
