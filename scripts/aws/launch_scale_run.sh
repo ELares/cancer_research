@@ -94,6 +94,14 @@ cargo build --release -p sim-scale
 if ! ./target/release/sim-scale --verify; then
   echo "SELF-CHECK FAILED — aborting before the expensive run"
   shutdown -h now
+  # EXIT, do not merely schedule the halt. \`shutdown\` is asynchronous: it
+  # returns immediately and the system takes time to come down, so without this
+  # the script falls straight through to the expensive sweep and runs it during
+  # the halt window -- having just printed "aborting". Observed for real: an
+  # accidental local execution of this body hit a failing self-check, printed
+  # the abort message, had \`shutdown\` refuse with "NOT super-user", and then
+  # started a 1e11 sweep anyway. The gate did not gate.
+  exit 1
 fi
 
 cd /root/repo
