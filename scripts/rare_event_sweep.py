@@ -45,6 +45,7 @@ Usage:
 
 import argparse
 import json
+import signal
 import subprocess
 import sys
 import time
@@ -177,6 +178,7 @@ def main() -> int:
     out_p = Path(args.out)
     out_p.parent.mkdir(parents=True, exist_ok=True)
     already = done_cells(out_p)
+    failures = []
     scales = [int(float(s)) for s in args.scales.split(",")]
 
     for n in scales:
@@ -191,9 +193,39 @@ def main() -> int:
             t0 = time.time()
             r = subprocess.run(cmd, capture_output=True, text=True)
             if r.returncode != 0:
-                print(f"  FAILED {pheno}/{tx} @ {n:.0e}: {r.stderr[:300]}", file=sys.stderr)
-                return 1
-            rec = json.loads(r.stdout)
+                # Report the RETURN CODE, not just stderr. A 1e10 run died after
+                # 27 minutes and logged "FAILED ... : " with nothing after the
+                # colon, because a process killed by a signal writes no stderr at
+                # all -- so the one line that could have identified it was the
+                # one not printed. Python reports a signal death as a NEGATIVE
+                # returncode, which distinguishes "the OS killed it" (SIGKILL
+                # under memory pressure, a stray SIGTERM from a parent shell)
+                # from "it panicked" in a way stderr alone never can.
+                rc = r.returncode
+                how = (f"killed by signal {-rc} ({signal.Signals(-rc).name})"
+                       if rc < 0 else f"exited {rc}")
+                print(f"  FAILED {pheno}/{tx} @ {n:.0e} after "
+                      f"{time.time()-t0:.0f}s: {how}", file=sys.stderr)
+                for stream, text in (("stderr", r.stderr), ("stdout", r.stdout)):
+                    if text and text.strip():
+                        print(f"    {stream}: {text.strip()[:500]}", file=sys.stderr)
+                    else:
+                        print(f"    {stream}: (empty)", file=sys.stderr)
+                # Keep going. Each cell is independent and the file is appended
+                # per result, so one dead condition must not cost the ones after
+                # it -- especially on a metered instance where the remaining
+                # budget is wall-clock on a dead-man timer. Rerunning resumes.
+                failures.append(f"{pheno}/{tx} @ {n:.0e} ({how})")
+                continue
+            try:
+                rec = json.loads(r.stdout)
+            except ValueError as e:
+                # Truncated or interleaved stdout: record it as a failure rather
+                # than crashing the sweep mid-way through a paid run.
+                print(f"  FAILED {pheno}/{tx} @ {n:.0e}: unparseable output "
+                      f"({e}); first 200 chars: {r.stdout[:200]!r}", file=sys.stderr)
+                failures.append(f"{pheno}/{tx} @ {n:.0e} (unparseable output)")
+                continue
             k = rec["n_dead"]
             lo, hi = poisson_ci(k, n)
             rec["poisson_ci_low"] = lo
@@ -206,6 +238,13 @@ def main() -> int:
                   f"poisson95=[{lo:.2e},{hi:.2e}]  {time.time()-t0:.0f}s", flush=True)
 
     print(f"wrote {out_p}")
+    if failures:
+        # Exit non-zero so a caller (or a CI step) knows the sweep is INCOMPLETE,
+        # while the rows that did land are still on disk and a rerun skips them.
+        print(f"{len(failures)} condition(s) did not complete:", file=sys.stderr)
+        for f in failures:
+            print(f"  {f}", file=sys.stderr)
+        return 1
     return 0
 
 

@@ -393,3 +393,30 @@ figures:
       genetic tools). Reads only committed atlas JSON, so it regenerates
       offline in seconds; it is a separate script from generate_figures.py,
       which loads the whole corpus and several gitignored simulation outputs.
+
+  - manuscript_figure: null
+    filename: fig29_rare_event_resolution
+    generator:
+      script: scripts/rare_event_analysis.py
+      function: figure
+    inputs:
+      - analysis/rare-event-sweep.jsonl
+    type: simulation
+    status: supplementary
+    note: >
+      How far down the death-rate tail a given sample size can see. Several
+      conditions in Figure 7 report exactly 0% at n = 1,000,000; because
+      gen_cell draws each per-cell parameter from an unbounded normal, that 0%
+      is an upper bound set by the sample size (~3e-6) rather than a
+      measurement, so this sweeps n upward and plots how the bound moves. The
+      load-bearing element is the dashed 3/n reference line: with zero events
+      the 95% upper bound is the rule of three, which falls exactly one decade
+      per decade of n, so a series lying on that line is reporting the sample
+      size and not the biology. Zero-event runs are drawn as downward carets at
+      their upper bound rather than as points at zero, which has no place on a
+      log axis; measured rates carry exact Poisson intervals. Zero-event series
+      are identical by construction and are offset horizontally a few percent
+      so none is hidden under another. Parameters are Params::default(), the
+      in-vivo set with zero calibration targets, so the rates are not
+      quantitative predictions -- the figure is about resolution, not about
+      biology. Regenerates offline in seconds from the committed sweep JSONL.
