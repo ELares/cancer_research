@@ -102,19 +102,55 @@ shutdown -h +${MAX_MINUTES}
 exec > >(tee -a /var/log/ferro-run.log) 2>&1
 set -x
 
-dnf -y install git gcc tmux
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-source /root/.cargo/env
+# PROGRESS MARKERS TO THE KERNEL RING BUFFER.
+#
+# A one-shot instance that shuts itself down takes its filesystem with it unless
+# you go and fetch the volume, and the first run died 78 seconds in with no way
+# to see why: /var/log was on a detached disk, writes to /dev/console never
+# surfaced in get-console-output, there is no S3 in this account, and no SSH key
+# to hand. Everything written to /dev/kmsg DOES surface there, because it is the
+# same buffer the kernel logs to. Each phase announces itself and its exit
+# status; it costs nothing and it is the difference between a diagnosis and
+# another paid guess. It found the bug below on the very next run.
+mark() { echo "FERRO: \$*" > /dev/kmsg 2>/dev/null || true; }
+step() { mark "BEGIN \$1"; shift; "\$@"; rc=\$?; mark "END rc=\$rc"; return \$rc; }
+
+mark "user-data started, ref=${REPO_REF}"
+
+# HOME AND THE ABSOLUTE PATH, both deliberately.
+#
+# cloud-init runs user-data as root but WITHOUT a sensible HOME -- it is unset
+# or "/". rustup installs into /root/.cargo anyway, but the env file it writes
+# says: export PATH="\$HOME/.cargo/bin:\$PATH". Sourcing that under the wrong
+# HOME puts a directory that does not exist on PATH and SUCCEEDS while doing it,
+# so there is no error to notice. Two runs got clean rc=0 from dnf, rustup and
+# git clone, then \`cargo build\` returned 127 -- command not found -- and the
+# self-check gate correctly refused to spend ten hours on a tree that had never
+# compiled. Setting HOME fixes the env file; the absolute path means we do not
+# depend on it at all. `tmux` is also gone from the dnf line: dnf is
+# transactional, so one unavailable package installs NOTHING, including git.
+export HOME=/root
+export CARGO_HOME=/root/.cargo
+export RUSTUP_HOME=/root/.rustup
+
+step "dnf install" dnf -y install git gcc || mark "dnf FAILED"
+step "rustup" bash -c "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --no-modify-path" \
+  || mark "rustup FAILED"
+export PATH="/root/.cargo/bin:\$PATH"
+mark "cargo version: \$(cargo --version 2>&1 | head -1)"
+command -v cargo >/dev/null || { mark "FATAL: cargo not on PATH, aborting"; shutdown -h now; exit 1; }
 
 cd /root
-git clone --depth 1 --branch ${REPO_REF} ${REPO_URL} repo
-cd repo/simulations
-cargo build --release -p sim-scale
+step "git clone" git clone --depth 1 --branch ${REPO_REF} ${REPO_URL} repo || mark "clone FAILED"
+cd repo/simulations || { mark "FATAL: no repo/simulations, aborting"; shutdown -h now; exit 1; }
+step "cargo build" cargo build --release -p sim-scale || mark "build FAILED"
 
 # The gate: an engine that cannot reproduce the committed figure does not get
 # to spend ten hours. If this fails we shut down immediately rather than
 # producing numbers nobody should trust.
+mark "BEGIN self-check"
 if ! ./target/release/sim-scale --verify; then
+  mark "SELF-CHECK FAILED — aborting"
   echo "SELF-CHECK FAILED — aborting before the expensive run"
   shutdown -h now
   # EXIT, do not merely schedule the halt. \`shutdown\` is asynchronous: it
@@ -138,7 +174,9 @@ OUT=/root/results/rare-event-sweep-1e11.jsonl
 # that did not. A local 1e10 run lost two good conditions to one dead one
 # before the driver was fixed to continue; here a lost condition would also
 # mean a whole second instance, so it is worth one free retry.
+mark "self-check passed; starting the sweep"
 for pass in 1 2; do
+  mark "sweep pass \$pass"
   echo "=== sweep pass \$pass ==="
   python3 scripts/rare_event_sweep.py --scales 1e11 --out "\$OUT" && break
   echo "pass \$pass left conditions incomplete; retrying the remainder"
@@ -147,6 +185,7 @@ done
 # Say plainly what came back, so the console log alone answers "did this work"
 # without attaching the volume.
 echo "=== results ==="
+mark "sweep finished, rows=\$(wc -l < "\$OUT" 2>/dev/null || echo 0)"
 wc -l < "\$OUT" 2>/dev/null || echo "NO RESULTS FILE"
 cat "\$OUT" 2>/dev/null
 
