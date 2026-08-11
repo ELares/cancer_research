@@ -60,6 +60,21 @@ if [[ -z "${KEY_NAME:-}" ]]; then
   exit 2
 fi
 
+# Check the ref actually CONTAINS the harness before launching anything.
+# REPO_REF defaults to main, which is right for the long run -- pointing it at a
+# feature branch would break permanently once that branch is deleted -- but
+# until the harness lands on main this boots an instance that clones, fails to
+# find sim-scale, and burns the dead-man window discovering it. One remote
+# lookup here turns a paid twenty-minute mystery into a message.
+if ! git ls-tree -r --name-only "origin/${REPO_REF}" 2>/dev/null \
+     | grep -q '^simulations/sim-scale/'; then
+  echo "'${REPO_REF}' does not contain simulations/sim-scale." >&2
+  echo "  The harness has not landed on that ref yet. Either merge it first," >&2
+  echo "  or launch with REPO_REF=<branch> pointing at the branch that has it." >&2
+  echo "  (Checked with: git ls-tree -r --name-only origin/${REPO_REF})" >&2
+  exit 2
+fi
+
 # Latest Amazon Linux 2023 for arm64, resolved rather than pinned so this does
 # not rot; pin it if a run must be reproducible to the AMI.
 AMI="${AMI:-$(aws ssm get-parameters --region "$REGION" \

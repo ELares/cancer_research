@@ -109,3 +109,25 @@ def test_manuscript_scopes_the_acsl4_prevalence_claim_to_the_deep_cut():
             not in md), "the retracted framing has returned"
     # And the surviving half must still be stated, or the correction over-reaches.
     assert "deep-cut figure is genuine evidence about ACSL4" in md
+
+
+def test_documented_binary_count_matches_the_crates_that_exist():
+    """The "N binaries" figure in README.md and CLAUDE.md must be derived.
+
+    Adding sim-scale made it 12 and three inventory statements still said 11 --
+    including the CLAUDE.md line the same PR was editing to bump a different
+    counter, so a human touched that exact line and did not see the stale number
+    beside it. A count written in prose next to a directory that can grow is a
+    number waiting to rot, so this recomputes it.
+    """
+    import re
+    root = Path(__file__).resolve().parent.parent
+    actual = len([p for p in (root / "simulations").glob("sim-*")
+                  if p.is_dir() and (p / "Cargo.toml").exists()])
+    assert actual > 0, "no sim-* crates found; the glob is wrong"
+    for name in ("README.md", "CLAUDE.md"):
+        txt = (root / name).read_text()
+        for m in re.finditer(r"(\d+) binaries", txt):
+            assert int(m.group(1)) == actual, (
+                f"{name} says {m.group(1)} binaries; {actual} sim-* crates exist "
+                f"({', '.join(sorted(p.name for p in (root/'simulations').glob('sim-*') if p.is_dir()))})")

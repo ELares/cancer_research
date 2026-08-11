@@ -79,8 +79,30 @@ CONDITIONS = [
 ]
 
 
+def params_key(overrides) -> str:
+    """A stable identity for the parameter set a row was produced under.
+
+    Sorted so {"a":1,"b":2} and {"b":2,"a":1} are the same key, since dict order
+    is an artifact of how the JSON was typed, not a different parameterisation.
+    """
+    if not overrides:
+        return "default"
+    return json.dumps(overrides, sort_keys=True, separators=(",", ":"))
+
+
 def done_cells(path: Path) -> set:
-    """(phenotype, treatment, n) already recorded, so a re-run resumes."""
+    """(phenotype, treatment, n, params) already recorded, so a re-run resumes.
+
+    THE PARAMETER SET IS PART OF THE KEY, and leaving it out was a real bug.
+    Without it, `--params '{"lp_propagation":0.78}'` against a file already
+    holding default-parameter rows resolves two ways, both wrong: at a scale
+    already present every cell prints "skip ... (already recorded)" and the
+    perturbed sweep never runs while exiting 0, and at a NEW scale the row is
+    appended beside the default-parameter rows with nothing to tell them apart.
+    The second is worse, because the analysis groups on (phenotype, treatment)
+    and would plot two provably disjoint parameterisations (#332, #500) as one
+    curve, then check monotonicity across the seam.
+    """
     if not path.exists():
         return set()
     out = set()
@@ -91,7 +113,8 @@ def done_cells(path: Path) -> set:
             r = json.loads(line)
         except ValueError:
             continue
-        out.add((r["phenotype"], r["treatment"], int(r["n_cells"])))
+        out.add((r["phenotype"], r["treatment"], int(r["n_cells"]),
+                 params_key(r.get("param_overrides"))))
     return out
 
 
@@ -153,6 +176,57 @@ def poisson_ci(k: int, n: int):
     return lo, hi
 
 
+def build_current_binary() -> bool:
+    """Rebuild the harness, because `BIN.exists()` is not a safe pre-flight.
+
+    THIS IS THE BUG THAT COST A RUN. The driver used to check only that the
+    binary was present. The binary on disk had been compiled BEFORE the chunked
+    fold landed (#682) -- 22:48 against a 23:15 source -- so it still buffered
+    every per-cell outcome: 32.3 bytes a cell, measured, against 0.29 for the
+    current source. At n=1e10 that is ~320 GB on a 48 GB machine, and the run
+    died at 27 minutes to a SIGKILL, which writes nothing to stderr.
+
+    The `--verify` gate could not catch it, and that is the part worth
+    remembering. It runs at n=1e6, where even the old path costs ~32 MB, so a
+    memory regression is invisible to it -- and the arithmetic it checks was
+    never wrong, since per-cell RNG seeding is by global index in both paths.
+    A stale binary passes its own self-check perfectly. The gate proves the
+    engine reproduces the figure; it says nothing about WHICH engine.
+
+    So the fix is not a better check, it is not needing one: build first, every
+    time. cargo is a no-op when nothing changed (~0.1 s). If cargo is missing we
+    refuse rather than fall back to the binary lying there, because running an
+    unknown build is the failure being prevented.
+    """
+    cargo_dir = PROJECT_ROOT / "simulations"
+    try:
+        r = subprocess.run(["cargo", "build", "--release", "-p", "sim-scale"],
+                           cwd=cargo_dir, capture_output=True, text=True)
+    except FileNotFoundError:
+        print("cargo not found; refusing to run a binary of unknown vintage.\n"
+              "  A stale build passes --verify and then dies at large n.",
+              file=sys.stderr)
+        return False
+    if r.returncode != 0:
+        print("cargo build failed:\n" + r.stderr[-2000:], file=sys.stderr)
+        return False
+    if not BIN.exists():
+        print(f"cargo reported success but {BIN} is absent", file=sys.stderr)
+        return False
+    # Report the margin so a reader can see the build is current rather than
+    # taking it on trust.
+    newest_src = max((f.stat().st_mtime for f in
+                      (PROJECT_ROOT / "simulations").rglob("*.rs")
+                      if "target" not in f.parts), default=0)
+    if BIN.stat().st_mtime < newest_src:
+        print("binary is older than the newest .rs even after building; "
+              "something is wrong with the build", file=sys.stderr)
+        return False
+    print(f"built {BIN.name} ({BIN.stat().st_mtime - newest_src:+.0f}s vs newest source)",
+          flush=True)
+    return True
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--scales", default="1e9",
@@ -162,9 +236,7 @@ def main() -> int:
                     help="JSON override map; omitted means Params::default()")
     args = ap.parse_args()
 
-    if not BIN.exists():
-        print(f"build the harness first: cargo build --release -p sim-scale\n  ({BIN})",
-              file=sys.stderr)
+    if not build_current_binary():
         return 1
     # The gate: refuse to spend hours on an engine that cannot reproduce a
     # known result.
@@ -183,8 +255,10 @@ def main() -> int:
 
     for n in scales:
         for pheno, tx, why in CONDITIONS:
-            if (pheno, tx, n) in already:
-                print(f"  skip {pheno}/{tx} @ {n:.0e} (already recorded)", flush=True)
+            pk = params_key(json.loads(args.params) if args.params else None)
+            if (pheno, tx, n, pk) in already:
+                print(f"  skip {pheno}/{tx} @ {n:.0e} [{pk}] (already recorded)",
+                      flush=True)
                 continue
             cmd = [str(BIN), "--cells", str(n), "--phenotype", pheno,
                    "--treatment", tx, "--label", f"sweep-{n:.0e}"]
@@ -238,6 +312,22 @@ def main() -> int:
                   f"poisson95=[{lo:.2e},{hi:.2e}]  {time.time()-t0:.0f}s", flush=True)
 
     print(f"wrote {out_p}")
+    # Regenerate the derived artifacts from the rows just written. The findings
+    # document, its JSON, and the figure are deterministic functions of this
+    # file, and nothing else regenerates them -- so without this the committed
+    # analysis silently describes an older tier than the data it points at. Not
+    # fatal if it fails: the rows are the result, the write-up is downstream,
+    # and on a metered instance a plotting error must not look like a lost run.
+    analysis = PROJECT_ROOT / "scripts" / "rare_event_analysis.py"
+    if analysis.exists() and Path(args.out) == OUT:
+        a = subprocess.run([sys.executable, str(analysis)],
+                           capture_output=True, text=True)
+        if a.returncode == 0:
+            print("regenerated the findings document and figure", flush=True)
+        else:
+            print(f"could not regenerate the analysis (rows are still safe in "
+                  f"{out_p}):\n{a.stderr[-800:]}", file=sys.stderr)
+
     if failures:
         # Exit non-zero so a caller (or a CI step) knows the sweep is INCOMPLETE,
         # while the rows that did land are still on disk and a rerun skips them.

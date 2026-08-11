@@ -90,7 +90,16 @@ struct Args {
 
 fn parse_count(s: &str) -> Result<usize, String> {
     let t = s.trim().replace('_', "");
+    // The zero check has to cover BOTH branches. It used to guard only the
+    // float-shorthand path, so an exact "0" parsed straight through as a usize
+    // and the run produced a record whose death_rate and three means were all
+    // null -- 0/0 is NaN, which serde_json writes as null -- with exit code 0.
+    // The sweep driver then died on the null while reading it, reporting a
+    // parse error for what was really a bad argument.
     if let Ok(v) = t.parse::<usize>() {
+        if v == 0 {
+            return Err(format!("count {s:?} is zero; nothing to simulate"));
+        }
         return Ok(v);
     }
     // 1e9 / 2.5e10 shorthand: a sweep is unreadable written out in full.

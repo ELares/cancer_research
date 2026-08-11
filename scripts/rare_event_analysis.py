@@ -127,6 +127,58 @@ def tracks_rule_of_three(rows: list) -> bool:
                for r in rows)
 
 
+def _provenance_caveat(by_cond: dict) -> list:
+    """State which parameter set produced these rows, READ FROM THE ROWS.
+
+    This paragraph used to assert "the parameters are the in-vivo defaults,
+    which carry zero calibration targets" as literal text, unconditionally --
+    while the harness stamps `params_source` on every row and the sweep exposes
+    `--params` precisely so a run CAN be driven from the CTRPv2 in-vitro
+    posterior instead. Drive it that way and the document would have printed
+    the in-vivo disclaimer over in-vitro numbers, which is the one error this
+    caveat exists to prevent. It is the same failure as a hand-written figure
+    beside a computed one: the sentence outlives the run it described.
+
+    Mixed provenance is reported as an error rather than summarised, because
+    the two parameterisations are provably disjoint (#332, #500) and a curve
+    spanning both is not a curve.
+    """
+    sources = sorted({r.get("params_source", "unrecorded")
+                      for rows in by_cond.values() for r in rows})
+    overrides = sorted({json.dumps(r.get("param_overrides") or {}, sort_keys=True)
+                        for rows in by_cond.values() for r in rows})
+
+    if len(overrides) > 1:
+        return [
+            "* **MIXED PARAMETER SETS IN ONE SWEEP FILE.** These rows were not all",
+            "  produced under the same parameters:",
+        ] + [f"    - `{o}`" for o in overrides] + [
+            "  The in-vivo defaults and the CTRPv2 in-vitro posterior are provably",
+            "  disjoint (#332, #500), so a curve drawn across them is not a curve.",
+            "  Split the file by parameter set before reading anything above.",
+        ]
+
+    if overrides == ['{}']:
+        return [
+            "* **The parameters are the in-vivo defaults, which carry zero",
+            "  calibration targets.** `targets.yaml` holds 8 self-consistency",
+            "  checks and 0 calibration targets. The repo's only data-anchored",
+            "  parameterisation is the CTRPv2 in-vitro posterior, and it is",
+            "  provably *disjoint* from these priors (#332, #500) — so a rate",
+            "  computed here cannot be quoted as an in-vitro prediction, and vice",
+            "  versa.",
+        ]
+
+    return [
+        "* **These rows were produced under an OVERRIDDEN parameter set**, not the",
+        f"  in-vivo defaults: `{overrides[0]}`",
+        f"  (recorded provenance: {'; '.join(sources)}).",
+        "  Read every rate above against that set. If it is the CTRPv2 in-vitro",
+        "  posterior then these are in-vitro numbers and must not be quoted as",
+        "  in-vivo ones; the two are provably disjoint (#332, #500).",
+    ]
+
+
 def _witness(by_cond: dict) -> str:
     """A real, checked example of the nesting for the prose to point at.
 
@@ -342,12 +394,7 @@ def main() -> int:
         "  the size of an advanced burden, sampled as independent cells*. The",
         "  spatial model is the one with interaction, and it does not reach these",
         "  counts.",
-        "* **The parameters are the in-vivo defaults, which carry zero calibration",
-        "  targets.** `targets.yaml` holds 8 self-consistency checks and 0",
-        "  calibration targets. The repo's only data-anchored parameterisation is",
-        "  the CTRPv2 in-vitro posterior, and it is provably *disjoint* from these",
-        "  priors (#332, #500) — so a rate computed here cannot be quoted as an",
-        "  in-vitro prediction, and vice versa.",
+    ] + _provenance_caveat(by_cond) + [
         "* **The points across n are NESTED, not independent.** `run_condition`",
         "  seeds cell *i* from its global index (`i*2`, `i*2+1`) regardless of n,",
         "  so the run at 1e8 is *literally the first 1e8 cells* of the run at 1e9.",

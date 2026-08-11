@@ -174,3 +174,27 @@ def test_the_witness_refuses_to_claim_monotonicity_it_does_not_have():
 def test_the_witness_says_so_when_nothing_has_events_yet():
     assert "no condition has events" in analysis._witness(
         {("X", "Y"): [_row(10**6, 0)]})
+
+
+# --- the count parser's zero boundary ------------------------------------
+
+def test_zero_cells_is_rejected_by_both_parse_branches():
+    """`--cells 0` used to parse as an exact usize and skip the guard.
+
+    The guard covered only the float-shorthand branch, so "0" returned Ok(0),
+    the run reported death_rate and all three means as null (0/0 is NaN, which
+    serde_json writes as null) with exit 0, and the sweep driver then failed
+    reading the null -- a bad argument surfacing as a parse error one layer
+    away from its cause.
+    """
+    import subprocess
+    root = Path(__file__).resolve().parent.parent
+    exe = root / "simulations" / "target" / "release" / "sim-scale"
+    if not exe.exists():
+        import pytest
+        pytest.skip("sim-scale not built")
+    for bad in ("0", "0.0", "-1", "0e9"):
+        r = subprocess.run([str(exe), "--cells", bad, "--phenotype", "Glycolytic",
+                            "--treatment", "RSL3"], capture_output=True, text=True)
+        assert r.returncode != 0, f"--cells {bad} was accepted"
+        assert "null" not in r.stdout, f"--cells {bad} emitted a record of nulls"
