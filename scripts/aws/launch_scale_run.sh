@@ -98,8 +98,26 @@ fi
 
 cd /root/repo
 mkdir -p /root/results
-python3 scripts/rare_event_sweep.py --scales 1e11 \\
-        --out /root/results/rare-event-sweep-1e11.jsonl || true
+OUT=/root/results/rare-event-sweep-1e11.jsonl
+
+# TWO PASSES, deliberately. A condition that dies to a signal is recorded and
+# skipped rather than retried within a pass, and the sweep is resumable by
+# design: a completed (condition, n) is never recomputed, so a second
+# invocation costs nothing for the ones that worked and retries only the ones
+# that did not. A local 1e10 run lost two good conditions to one dead one
+# before the driver was fixed to continue; here a lost condition would also
+# mean a whole second instance, so it is worth one free retry.
+for pass in 1 2; do
+  echo "=== sweep pass \$pass ==="
+  python3 scripts/rare_event_sweep.py --scales 1e11 --out "\$OUT" && break
+  echo "pass \$pass left conditions incomplete; retrying the remainder"
+done
+
+# Say plainly what came back, so the console log alone answers "did this work"
+# without attaching the volume.
+echo "=== results ==="
+wc -l < "\$OUT" 2>/dev/null || echo "NO RESULTS FILE"
+cat "\$OUT" 2>/dev/null
 
 # (3) done, so stop paying immediately rather than waiting for the dead-man
 shutdown -h now
