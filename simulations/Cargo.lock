@@ -744,6 +744,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "sim-scale"
+version = "0.1.0"
+dependencies = [
+ "clap",
+ "ferroptosis-core",
+ "rayon",
+ "serde_json",
+]
+
+[[package]]
 name = "sim-spatial"
 version = "0.2.0"
 dependencies = [
