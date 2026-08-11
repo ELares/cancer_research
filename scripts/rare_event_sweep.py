@@ -50,9 +50,14 @@ import sys
 import time
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from config import PROJECT_ROOT  # noqa: E402
+
+# Computed here, deliberately, rather than imported from scripts/config.py:
+# that module pulls in `requests` and `python-dotenv`, and this has to run on
+# a bare interpreter on a freshly booted instance with nothing pip-installed.
+# Importing it would have failed AFTER the Rust build and the self-check --
+# the most expensive possible place to discover a missing dependency.
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
 BIN = PROJECT_ROOT / "simulations" / "target" / "release" / "sim-scale"
 OUT = PROJECT_ROOT / "analysis" / "rare-event-sweep.jsonl"

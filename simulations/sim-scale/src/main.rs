@@ -102,13 +102,15 @@ fn parse_count(s: &str) -> Result<usize, String> {
 }
 
 fn parse_phenotype(s: &str) -> Result<Phenotype, String> {
-    Ok(match s.to_ascii_lowercase().replace(['-', '_'], "").as_str() {
-        "glycolytic" => Phenotype::Glycolytic,
-        "oxphos" => Phenotype::OXPHOS,
-        "persister" => Phenotype::Persister,
-        "persisternrf2" => Phenotype::PersisterNrf2,
-        _ => return Err(format!("unknown phenotype {s:?}")),
-    })
+    Ok(
+        match s.to_ascii_lowercase().replace(['-', '_'], "").as_str() {
+            "glycolytic" => Phenotype::Glycolytic,
+            "oxphos" => Phenotype::OXPHOS,
+            "persister" => Phenotype::Persister,
+            "persisternrf2" => Phenotype::PersisterNrf2,
+            _ => return Err(format!("unknown phenotype {s:?}")),
+        },
+    )
 }
 
 fn parse_treatment(s: &str) -> Result<Treatment, String> {

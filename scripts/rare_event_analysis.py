@@ -52,19 +52,24 @@ import json
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import matplotlib  # noqa: E402
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 
-from config import PROJECT_ROOT  # noqa: E402
 
 plt.rcParams.update({
     "font.size": 10, "axes.titlesize": 12, "axes.labelsize": 11,
     "figure.dpi": 300, "savefig.dpi": 300, "savefig.bbox": "tight",
 })
+
+# Computed here, deliberately, rather than imported from scripts/config.py:
+# that module pulls in `requests` and `python-dotenv`, and this has to run on
+# a bare interpreter on a freshly booted instance with nothing pip-installed.
+# Importing it would have failed AFTER the Rust build and the self-check --
+# the most expensive possible place to discover a missing dependency.
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
 SWEEP = PROJECT_ROOT / "analysis" / "rare-event-sweep.jsonl"
 FIG_DIR = PROJECT_ROOT / "article" / "figures"
