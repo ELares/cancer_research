@@ -379,11 +379,34 @@ def main() -> int:
                 "this, and one no amount of running at n = 1e6 could produce.", "",
             ]
         else:
+            # Quantify what the extra cells actually bought. "Large n buys
+            # precision" is true of every Monte Carlo ever run; the numbers are
+            # the finding. Both the width RATIO and the movement of the point
+            # estimate matter, and they say different things -- the first is how
+            # much the interval closed, the second is how wrong the small-n
+            # estimate was, which is the part a reader of Figure 7 needs.
+            first = rows[0]
+            w0 = (first["poisson_ci_high"] / first["poisson_ci_low"]
+                  if first["poisson_ci_low"] > 0 else float("inf"))
+            w1 = (last["poisson_ci_high"] / last["poisson_ci_low"]
+                  if last["poisson_ci_low"] > 0 else float("inf"))
+            drift = ((last["death_rate"] - first["death_rate"]) / last["death_rate"]
+                     if last["death_rate"] else 0.0)
             L += [
-                "Events at every scale, so the rate is measured rather than",
-                "bounded. What large n buys here is precision: the Poisson",
-                f"interval at {last['n_cells']:.0e} is",
-                f"[{last['poisson_ci_low']:.2e}, {last['poisson_ci_high']:.2e}].", "",
+                "Events at every scale, so this is a measurement rather than a",
+                "bound. What the extra cells bought:", "",
+                f"* the exact Poisson interval spans a factor of **{w1:.2f}** at",
+                f"  n = {last['n_cells']:.0e} ([{last['poisson_ci_low']:.2e},"
+                f" {last['poisson_ci_high']:.2e}]), against a factor of"
+                f" {w0:.0f} at n = {first['n_cells']:.0e}"
+                f" ([{first['poisson_ci_low']:.2e}, {first['poisson_ci_high']:.2e}]);",
+                f"* the point estimate moved from {first['death_rate']:.3e} to"
+                f" {last['death_rate']:.3e}, so the small-n figure was off by",
+                f"  **{abs(drift)*100:.0f}%** — it sat"
+                f" {'above' if drift < 0 else 'below'} the resolved value, and its",
+                "  interval did contain the answer, which is the honest defence of",
+                "  a small sample: the point estimate was noise, the interval was",
+                "  not a lie.", "",
             ]
 
     L += [

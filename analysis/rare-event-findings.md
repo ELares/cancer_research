@@ -29,13 +29,15 @@ The informative outcome is a **departure** from that line.
 | 1e+06 | the manuscript's standard run | 0 | < 3.69e-06 | zero events |
 | 1e+07 | sub-detection residual | 0 | < 3.69e-07 | zero events |
 | 1e+08 | below any imaging threshold | 0 | < 3.69e-08 | zero events |
+| 1e+09 | ~1 g, smallest clinically detectable lesion | 0 | < 3.69e-09 | zero events |
+| 1e+10 | ~10 g, intermediate burden | 0 | < 3.69e-10 | zero events |
 
-Zero events at every scale tried, up to 1e+08 cells. The bound
-is now 3.69e-08, and it is still tracking 3/n exactly, so this is a statement about how far we could see, not about the rate.
+Zero events at every scale tried, up to 1e+10 cells. The bound
+is now 3.69e-10, and it is still tracking 3/n exactly, so this is a statement about how far we could see, not about the rate.
 **The true rate remains unknown**; all that has been established
 is that it is below the bound.
 
-Read against burden: in a population of 1e+08 cells, fewer than
+Read against burden: in a population of 1e+10 cells, fewer than
 about 4 would be expected to die under this condition.
 
 ### Glycolytic + RSL3 — RESOLUTION-LIMITED
@@ -47,13 +49,15 @@ about 4 would be expected to die under this condition.
 | 1e+06 | the manuscript's standard run | 0 | < 3.69e-06 | zero events |
 | 1e+07 | sub-detection residual | 0 | < 3.69e-07 | zero events |
 | 1e+08 | below any imaging threshold | 0 | < 3.69e-08 | zero events |
+| 1e+09 | ~1 g, smallest clinically detectable lesion | 0 | < 3.69e-09 | zero events |
+| 1e+10 | ~10 g, intermediate burden | 0 | < 3.69e-10 | zero events |
 
-Zero events at every scale tried, up to 1e+08 cells. The bound
-is now 3.69e-08, and it is still tracking 3/n exactly, so this is a statement about how far we could see, not about the rate.
+Zero events at every scale tried, up to 1e+10 cells. The bound
+is now 3.69e-10, and it is still tracking 3/n exactly, so this is a statement about how far we could see, not about the rate.
 **The true rate remains unknown**; all that has been established
 is that it is below the bound.
 
-Read against burden: in a population of 1e+08 cells, fewer than
+Read against burden: in a population of 1e+10 cells, fewer than
 about 4 would be expected to die under this condition.
 
 ### PersisterNrf2 + Control — RESOLVED
@@ -65,11 +69,19 @@ about 4 would be expected to die under this condition.
 | 1e+06 | the manuscript's standard run | 1 | 1.000e-06 | [2.53e-08, 5.57e-06] |
 | 1e+07 | sub-detection residual | 7 | 7.000e-07 | [2.81e-07, 1.44e-06] |
 | 1e+08 | below any imaging threshold | 76 | 7.600e-07 | [5.99e-07, 9.51e-07] |
+| 1e+09 | ~1 g, smallest clinically detectable lesion | 760 | 7.600e-07 | [7.07e-07, 8.16e-07] |
+| 1e+10 | ~10 g, intermediate burden | 7,134 | 7.134e-07 | [6.97e-07, 7.30e-07] |
 
-Events at every scale, so the rate is measured rather than
-bounded. What large n buys here is precision: the Poisson
-interval at 1e+08 is
-[5.99e-07, 9.51e-07].
+Events at every scale, so this is a measurement rather than a
+bound. What the extra cells bought:
+
+* the exact Poisson interval spans a factor of **1.05** at
+  n = 1e+10 ([6.97e-07, 7.30e-07]), against a factor of 220 at n = 1e+06 ([2.53e-08, 5.57e-06]);
+* the point estimate moved from 1.000e-06 to 7.134e-07, so the small-n figure was off by
+  **40%** — it sat above the resolved value, and its
+  interval did contain the answer, which is the honest defence of
+  a small sample: the point estimate was noise, the interval was
+  not a lie.
 
 ## What this does not show
 
@@ -91,7 +103,7 @@ interval at 1e+08 is
   so the run at 1e8 is *literally the first 1e8 cells* of the run at 1e9.
   Each larger sample contains every smaller one. Two consequences: the
   death counts must be monotone non-decreasing across the sweep
-  (1, 7, 76 for PersisterNrf2 + Control), and successive
+  (1, 7, 76, 760, 7134 for PersisterNrf2 + Control), and successive
   estimates are positively correlated, so the apparent convergence is
   smoother than four *independent* samples would look. The final
   interval is still correct — it depends only on the count and the n it
