@@ -98,29 +98,40 @@ def test_the_bound_falls_exactly_one_decade_per_decade_of_n():
 # --- the classification ---------------------------------------------------
 
 def _row(n, dead):
+    """A sweep row. NOTE the two different bounds, which is the whole point.
+
+    `zero_event_upper_bound_95` is the rule of three, 3/n -- the familiar
+    one-sided 95% approximation. `poisson_ci_high` at zero events is the exact
+    two-sided 95% upper limit, -ln(0.025)/n = 3.689/n. This fixture used to set
+    BOTH to 3/n, which is the same conflation the prose and the figure shipped
+    with, so the guard could not have caught it.
+    """
+    import math
+    hi = (-math.log(0.025) / n) if dead == 0 else (dead + 3.0) / n
     return {"n_cells": n, "n_dead": dead,
             "death_rate": dead / n,
             "zero_event_upper_bound_95": 3.0 / n,
-            "poisson_ci_low": 0.0, "poisson_ci_high": 3.0 / n}
+            "poisson_ci_low": 0.0 if dead == 0 else max(dead - 2.0, 0.1) / n,
+            "poisson_ci_high": hi}
 
 
 def test_all_zero_is_resolution_limited():
     rows = [_row(10**6, 0), _row(10**9, 0)]
     assert analysis.classify(rows) == "resolution-limited"
-    assert analysis.tracks_rule_of_three(rows)
+    assert analysis.bound_is_pure_sample_size(rows)
 
 
 def test_zero_then_events_is_emergent():
     """The most informative outcome: it locates where the tail begins."""
     rows = [_row(10**6, 0), _row(10**9, 4)]
     assert analysis.classify(rows) == "emergent"
-    assert not analysis.tracks_rule_of_three(rows)
+    assert not analysis.bound_is_pure_sample_size(rows)
 
 
 def test_events_throughout_is_resolved():
     rows = [_row(10**6, 451), _row(10**9, 451_000)]
     assert analysis.classify(rows) == "resolved"
-    assert not analysis.tracks_rule_of_three(rows)
+    assert not analysis.bound_is_pure_sample_size(rows)
 
 
 def test_a_single_event_at_the_top_still_counts_as_emergent():
@@ -131,7 +142,7 @@ def test_a_single_event_at_the_top_still_counts_as_emergent():
     """
     rows = [_row(10**6, 0), _row(10**9, 0), _row(10**11, 1)]
     assert analysis.classify(rows) == "emergent"
-    assert not analysis.tracks_rule_of_three(rows)
+    assert not analysis.bound_is_pure_sample_size(rows)
 
 
 # --- the count parser -----------------------------------------------------
@@ -259,3 +270,37 @@ def test_the_pipefail_detector_can_actually_fire():
     for line in should_not:
         assert line.lstrip().startswith("#") or not _GREP_Q.search(line), (
             f"detector false-positived: {line}")
+
+
+def test_the_two_bounds_are_not_the_same_number():
+    """The rule of three and the exact Poisson limit differ by 23%.
+
+    Conflating them shipped: the prose and the figure quoted 3.689/n while
+    calling it 3/n, and the figure drew its reference line at 3/n while plotting
+    markers at 3.689/n, so every zero-event marker sat visibly above its own
+    floor. Both are proportional to 1/n, which is why the shape argument
+    survived and the constant did not.
+    """
+    import math
+    n = 10**11
+    rule_of_three = 3.0 / n
+    exact = sweep.poisson_ci(0, n)[1]
+    assert abs(exact - (-math.log(0.025) / n)) < 1e-24
+    assert exact > rule_of_three
+    assert abs(exact / rule_of_three - 1.2296) < 1e-3, (
+        "the two bounds differ by ~23%; if this ratio changes, the prose that "
+        "distinguishes them needs rechecking")
+    assert abs(analysis.ZERO_EVENT_CONST - 3.6888794541) < 1e-9
+
+
+def test_the_figure_reference_line_matches_what_is_plotted():
+    """The dashed floor and the zero-event markers must be the same quantity."""
+    src = (REPO_ROOT / "scripts" / "rare_event_analysis.py").read_text()
+    fig = src[src.index("def figure("):src.index("def main(")]
+    assert "ZERO_EVENT_CONST / lo" in fig and "ZERO_EVENT_CONST / hi" in fig, (
+        "the reference line is not drawn at ZERO_EVENT_CONST/n")
+    assert "3.0 / lo" not in fig and "3.0 / hi" not in fig, (
+        "the reference line is still drawn at 3/n while markers plot 3.689/n")
+    assert 'zy = [r["poisson_ci_high"]' in fig, (
+        "zero-event markers are no longer plotted at poisson_ci_high, so the "
+        "reference line may no longer match them")

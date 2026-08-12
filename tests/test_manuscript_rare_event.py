@@ -207,3 +207,28 @@ def test_the_resolved_sentence_quotes_its_own_numbers_positionally():
     assert rate == f"{v['bound_or_rate']:.3e}", f"rate {rate} vs {v['bound_or_rate']:.3e}"
     assert lo == f"{lo_e:.2e}" and hi == f"{hi_e:.2e}", "interval endpoints differ"
     assert factor == f"{hi_e/lo_e:.2f}", f"width factor {factor} vs {hi_e/lo_e:.2f}"
+
+
+def test_the_paragraph_does_not_conflate_the_two_zero_event_bounds():
+    """It quoted 3.689/n and called it the rule of three, which is 3/n.
+
+    They differ by 23%. Both are proportional to 1/n, so the shape argument was
+    unaffected and the error survived three readings of the figure -- including
+    two where the markers were visibly sitting above their own reference line.
+    """
+    import math
+    para = paragraph()
+    quoted = re.findall(r"3\.69e-\d+", para)
+    assert quoted, "the paragraph no longer quotes the zero-event bound"
+    # If it quotes 3.689/n it must not also claim to be tracking 3/n.
+    bad = re.search(r"tracks 3/n|is the rule of three|rule of three and\s+therefore", para)
+    assert not bad, (
+        f"the paragraph quotes {quoted[0]} (which is -ln(0.025)/n = 3.689/n) while "
+        f"calling it the rule of three (3/n). They differ by 23%.")
+    # and the distinction has to be stated, not merely avoided
+    assert "3.689/n" in para, "the paragraph should name the constant it quotes"
+    assert "rule of three" in para, (
+        "the paragraph should say explicitly that this is NOT the rule of three, "
+        "since that is the number a reader will assume")
+    n = 10**11
+    assert abs((-math.log(0.025) / n) / (3.0 / n) - 1.2296) < 1e-3

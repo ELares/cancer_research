@@ -10,15 +10,25 @@ a condition's rows across n, and that only exists once several are in hand.
 
 THE ONE DISTINCTION THIS WHOLE ANALYSIS TURNS ON
 ------------------------------------------------
-For a condition that never produces an event, the reported 95% upper bound is
-the rule of three, 3/n. That falls by exactly one decade per decade of n -- a
-straight line of slope -1 on log-log axes. It is a property of the SAMPLE SIZE
-and carries no information about the biology whatsoever. Plotting it without
-saying so would manufacture the appearance of a measured decline.
+For a condition that never produces an event, the bound reported here is the
+upper end of the EXACT (Garwood) two-sided 95% Poisson interval, which at zero
+events is -ln(0.025)/n = 3.6889/n. It falls by exactly one decade per decade of
+n -- a straight line of slope -1 on log-log axes -- so it is a property of the
+SAMPLE SIZE and carries no information about the biology whatsoever. Plotting it
+without saying so would manufacture the appearance of a measured decline.
+
+NOT the same number as the rule of three, and an earlier version of this file
+said it was. The rule of three, 3/n, is the familiar ONE-SIDED 95%
+approximation; the figure quoted 3.689/n while calling it 3/n, which are 23%
+apart. Both are proportional to 1/n, so the shape argument was never affected --
+but the constant was wrong, and the figure drew its reference line at 3/n while
+plotting the points at 3.689/n, which is why every zero-event marker sat visibly
+above the line. The 3/n value is still recorded per row as
+`zero_event_upper_bound_95`, honestly labelled.
 
 So each condition is classified:
 
-  RESOLUTION-LIMITED  every n gave zero events. The bound tracks 3/n exactly.
+  RESOLUTION-LIMITED  every n gave zero events. The bound is exactly 3.689/n.
                       The true rate is unknown and is somewhere below the last
                       bound. We learned a LIMIT, not a value.
   RESOLVED            events appeared. The rate estimate stabilises across n
@@ -49,6 +59,7 @@ Usage:
 
 import argparse
 import json
+import math
 import sys
 from pathlib import Path
 
@@ -113,17 +124,27 @@ def classify(rows: list) -> str:
     return "resolved"
 
 
-def tracks_rule_of_three(rows: list) -> bool:
-    """Is the reported bound exactly 3/n at every point?
+# Exact upper limit of a two-sided 95% Poisson interval at zero events.
+# gamma_q(0.975, 1) = -ln(1 - 0.975). Named so the constant is never retyped.
+ZERO_EVENT_CONST = -math.log(0.025)  # 3.6888794541139363
 
-    If it is, the curve carries no biology at all -- it is the sample size drawn
-    on a log axis. Checked rather than assumed, because a condition that picks
-    up a single event part-way up the sweep stops tracking it, and that
+
+def bound_is_pure_sample_size(rows: list) -> bool:
+    """Is the QUOTED bound exactly ZERO_EVENT_CONST/n at every point?
+
+    This used to compare `zero_event_upper_bound_95` (which is 3/n) while the
+    prose and the figure quoted `poisson_ci_high` (which is 3.689/n), so it
+    confirmed a property of a number nobody was reading. It now checks the
+    number actually reported.
+
+    If it holds, the curve carries no biology at all -- it is the sample size
+    drawn on a log axis. Checked rather than assumed, because a condition that
+    picks up a single event part-way up the sweep stops tracking it, and that
     departure is the whole signal.
     """
     return all(r["n_dead"] == 0 and
-               abs(r["zero_event_upper_bound_95"] - 3.0 / r["n_cells"])
-               < 1e-12 * max(1.0, 3.0 / r["n_cells"])
+               abs(r["poisson_ci_high"] - ZERO_EVENT_CONST / r["n_cells"])
+               < 1e-9 * (ZERO_EVENT_CONST / r["n_cells"])
                for r in rows)
 
 
@@ -205,8 +226,56 @@ def _witness(by_cond: dict) -> str:
     return f"{', '.join(str(c) for c in counts)} for {name}"
 
 
+def _tally(by_cond: dict) -> list:
+    """Report which classifications occurred AND which did not.
+
+    The document defined three categories and, on this data, printed only the two
+    that happened -- so a reader could not tell whether `emergent` was looked for
+    and absent, or simply never considered. An unused category is a RESULT when
+    the sweep was designed to detect it: no condition's tail became newly visible
+    between a million cells and a hundred billion, which is a stronger statement
+    about the model than either of the categories that did occur.
+
+    Counted from the data, including the zeros, so it cannot drift.
+    """
+    kinds = ["resolution-limited", "emergent", "resolved"]
+    counts = {k: 0 for k in kinds}
+    for rows in by_cond.values():
+        counts[classify(rows)] += 1
+    n = sum(counts.values())
+
+    L = ["## What each condition turned out to be", "",
+         f"Of {n} condition(s) swept:", ""]
+    meaning = {
+        "resolution-limited": "zero events at every n; the bound is still the "
+                              "sample size, so a limit was established, not a value",
+        "emergent": "zero at small n and non-zero at large n, locating where the "
+                    "tail begins",
+        "resolved": "events throughout; a measured rate whose interval closes",
+    }
+    for k in kinds:
+        L.append(f"* **{counts[k]} {k}** — {meaning[k]}")
+    L.append("")
+
+    if counts["emergent"] == 0 and n:
+        span = sorted({r["n_cells"] for rows in by_cond.values() for r in rows})
+        L += [
+            "**No condition was emergent, and that is a result rather than the "
+            "absence of one.**",
+            f"The sweep was built to detect a tail becoming visible somewhere",
+            f"between n = {span[0]:.0e} and n = {span[-1]:.0e}, and across that whole",
+            "range no condition crossed from zero into events.",
+            "The zero-event conditions did not merely sit below the million-cell",
+            "resolution; they stayed below every resolution tried, five decades",
+            "further down. Reported explicitly because a reader cannot otherwise",
+            "tell the difference between a category that was checked and came up",
+            "empty and one that was never considered.", "",
+        ]
+    return L
+
+
 def figure(by_cond: dict, path_stem: Path) -> None:
-    """Tail resolution against sample size, with the 3/n floor drawn explicitly.
+    """Tail resolution against sample size, with the zero-event floor drawn.
 
     The reference line is the point of the figure. Without it a reader sees
     three descending curves and reads a dose-response; with it they see that the
@@ -220,8 +289,13 @@ def figure(by_cond: dict, path_stem: Path) -> None:
         return
     lo, hi = min(ns) / 3, max(ns) * 3
     ref = [lo, hi]
-    ax.plot(ref, [3.0 / lo, 3.0 / hi], color="0.55", ls="--", lw=1.3, zorder=1,
-            label="rule of three (3/n): the resolution floor, not a result")
+    # The reference line must be the SAME quantity the zero-event points are
+    # plotted at, or the points sit off it for no stated reason. They did: the
+    # line was drawn at 3/n while the markers plot poisson_ci_high = 3.689/n,
+    # a 23% gap visible in every published version of this figure.
+    ax.plot(ref, [ZERO_EVENT_CONST / lo, ZERO_EVENT_CONST / hi], color="0.55",
+            ls="--", lw=1.3, zorder=1,
+            label="zero-event floor (exact 95% Poisson, 3.689/n): not a result")
 
     # Conditions that are zero at every n plot at EXACTLY the same bound, so
     # they land on top of each other and the last one drawn hides the rest --
@@ -275,10 +349,15 @@ def figure(by_cond: dict, path_stem: Path) -> None:
     ax.grid(True, which="minor", alpha=0.10)
     ax.legend(loc="upper right", fontsize=8.5, framealpha=0.95)
 
-    fig.text(0.5, -0.06,
+    # Offset scaled to the caption's line count: at -0.06 the four-line
+    # version overprinted the x-axis label. Derived so another line cannot
+    # collide again.
+    _cap_lines = 4
+    _cap_y = -0.035 * _cap_lines
+    fig.text(0.5, _cap_y,
              "Triangles are zero-event runs plotted at their upper bound: the true rate is somewhere below. "
              "Circles are\nmeasured rates with exact Poisson intervals. A series lying ON the dashed line is "
-             "reporting the sample size, not the biology.\nZero-event series are identical by construction, so they are offset horizontally by a few percent to keep each one visible.",
+             "reporting the sample size, not the biology.\nThe floor is the exact 95% Poisson upper limit at zero events, 3.689/n, not the round 3/n of the rule of three.\nZero-event series are identical by construction, so they are offset horizontally by a few percent to keep each one visible.",
              ha="center", fontsize=8, color="0.35")
 
     for ext in ("png", "pdf"):
@@ -313,15 +392,17 @@ def main() -> int:
         "threshold retains a positive-probability tail. A reported 0% is an upper",
         "bound set by the sample size — about 3e-6 at a million cells.", "",
         "This sweep pushes n up to resolve those bounds. For a condition that",
-        "still produces no events, the bound falls as exactly 3/n: one decade per",
+        "still produces no events, the bound falls as exactly 3.689/n -- the exact",
+        "95% Poisson upper limit at zero events -- which is one decade per",
         "decade of n, which is a property of the sample and carries no biology.",
         "The informative outcome is a **departure** from that line.", "",
+    ] + _tally(by_cond) + [
         "## Per condition", "",
     ]
 
     for (pheno, tx), rows in sorted(by_cond.items()):
         kind = classify(rows)
-        on_floor = tracks_rule_of_three(rows)
+        on_floor = bound_is_pure_sample_size(rows)
         last = rows[-1]
         findings[f"{pheno}/{tx}"] = {
             "classification": kind,
@@ -354,10 +435,10 @@ def main() -> int:
             n = last["n_cells"]
             expected = last["poisson_ci_high"] * n
             floor_note = (
-                "and it is still tracking 3/n exactly, so this is a statement "
+                "and it is still exactly 3.689/n, so this is a statement "
                 "about how far we could see, not about the rate."
                 if on_floor else
-                "and it has left the 3/n line, which means something other than "
+                "and it has left the zero-event floor, which means something other than "
                 "the sample size is now setting it — check the sweep."
             )
             L += [
@@ -409,6 +490,12 @@ def main() -> int:
                 "  not a lie.", "",
             ]
 
+    # Derived, not typed. This read "four" -- correct when the sweep stopped at
+    # 1e9 and stale the moment 1e10 and 1e11 landed, while the witness list two
+    # bullets down was computed and printed six counts. A hand-written number
+    # contradicting the derived one beside it is the worst version of the
+    # failure, because the stale figure reads as freshly checked.
+    _n_pts = len({r["n_cells"] for rows in by_cond.values() for r in rows})
     L += [
         "## What this does not show", "",
         "* **1e11 independent cells is not a 100-gram tumor.** These cells never",
@@ -425,9 +512,9 @@ def main() -> int:
         f"  death counts must be monotone non-decreasing across the sweep",
         f"  ({_witness(by_cond)}), and successive",
         "  estimates are positively correlated, so the apparent convergence is",
-        "  smoother than four *independent* samples would look. The final",
+        f"  smoother than {_n_pts} *independent* samples would look. The final",
         "  interval is still correct — it depends only on the count and the n it",
-        "  came from — but the intermediate points are not four separate",
+        f"  came from — but the intermediate points are not {_n_pts} separate",
         "  confirmations of it.",
         "* **Sampling error is not the dominant uncertainty.** Section 5.2 already",
         "  records that these outputs are parameter-limited, not sample-limited.",

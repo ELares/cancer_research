@@ -14,9 +14,28 @@ threshold retains a positive-probability tail. A reported 0% is an upper
 bound set by the sample size — about 3e-6 at a million cells.
 
 This sweep pushes n up to resolve those bounds. For a condition that
-still produces no events, the bound falls as exactly 3/n: one decade per
+still produces no events, the bound falls as exactly 3.689/n -- the exact
+95% Poisson upper limit at zero events -- which is one decade per
 decade of n, which is a property of the sample and carries no biology.
 The informative outcome is a **departure** from that line.
+
+## What each condition turned out to be
+
+Of 3 condition(s) swept:
+
+* **2 resolution-limited** — zero events at every n; the bound is still the sample size, so a limit was established, not a value
+* **0 emergent** — zero at small n and non-zero at large n, locating where the tail begins
+* **1 resolved** — events throughout; a measured rate whose interval closes
+
+**No condition was emergent, and that is a result rather than the absence of one.**
+The sweep was built to detect a tail becoming visible somewhere
+between n = 1e+06 and n = 1e+11, and across that whole
+range no condition crossed from zero into events.
+The zero-event conditions did not merely sit below the million-cell
+resolution; they stayed below every resolution tried, five decades
+further down. Reported explicitly because a reader cannot otherwise
+tell the difference between a category that was checked and came up
+empty and one that was never considered.
 
 ## Per condition
 
@@ -34,7 +53,7 @@ The informative outcome is a **departure** from that line.
 | 1e+11 | ~100 g, advanced metastatic disease | 0 | < 3.69e-11 | zero events |
 
 Zero events at every scale tried, up to 1e+11 cells. The bound
-is now 3.69e-11, and it is still tracking 3/n exactly, so this is a statement about how far we could see, not about the rate.
+is now 3.69e-11, and it is still exactly 3.689/n, so this is a statement about how far we could see, not about the rate.
 **The true rate remains unknown**; all that has been established
 is that it is below the bound.
 
@@ -55,7 +74,7 @@ about 4 would be expected to die under this condition.
 | 1e+11 | ~100 g, advanced metastatic disease | 0 | < 3.69e-11 | zero events |
 
 Zero events at every scale tried, up to 1e+11 cells. The bound
-is now 3.69e-11, and it is still tracking 3/n exactly, so this is a statement about how far we could see, not about the rate.
+is now 3.69e-11, and it is still exactly 3.689/n, so this is a statement about how far we could see, not about the rate.
 **The true rate remains unknown**; all that has been established
 is that it is below the bound.
 
@@ -108,9 +127,9 @@ bound. What the extra cells bought:
   death counts must be monotone non-decreasing across the sweep
   (1, 7, 76, 760, 7134, 72722 for PersisterNrf2 + Control), and successive
   estimates are positively correlated, so the apparent convergence is
-  smoother than four *independent* samples would look. The final
+  smoother than 6 *independent* samples would look. The final
   interval is still correct — it depends only on the count and the n it
-  came from — but the intermediate points are not four separate
+  came from — but the intermediate points are not 6 separate
   confirmations of it.
 * **Sampling error is not the dominant uncertainty.** Section 5.2 already
   records that these outputs are parameter-limited, not sample-limited.
