@@ -409,10 +409,14 @@ figures:
       gen_cell draws each per-cell parameter from an unbounded normal, that 0%
       is an upper bound set by the sample size (~3e-6) rather than a
       measurement, so this sweeps n upward and plots how the bound moves. The
-      load-bearing element is the dashed 3/n reference line: with zero events
-      the 95% upper bound is the rule of three, which falls exactly one decade
-      per decade of n, so a series lying on that line is reporting the sample
-      size and not the biology. Zero-event runs are drawn as downward carets at
+      load-bearing element is the dashed zero-event floor: with zero events
+      the exact two-sided 95% Poisson upper limit is -ln(0.025)/n = 3.689/n,
+      which falls exactly one decade per decade of n, so a series lying on that
+      line is reporting the sample size and not the biology. That is NOT the
+      rule of three: 3/n is the familiar one-sided 95% approximation, 23%
+      lower, recorded per row as `zero_event_upper_bound_95`. An earlier
+      version of this figure drew the line at 3/n while plotting the markers at
+      3.689/n, so every zero-event marker sat above its own floor. Zero-event runs are drawn as downward carets at
       their upper bound rather than as points at zero, which has no place on a
       log axis; measured rates carry exact Poisson intervals. Zero-event series
       are identical by construction and are offset horizontally a few percent
