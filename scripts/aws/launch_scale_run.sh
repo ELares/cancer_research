@@ -174,11 +174,28 @@ OUT=/root/results/rare-event-sweep-1e11.jsonl
 # that did not. A local 1e10 run lost two good conditions to one dead one
 # before the driver was fixed to continue; here a lost condition would also
 # mean a whole second instance, so it is worth one free retry.
+# EVERY SWEEP LINE GOES TO THE RING BUFFER TOO, not just the phase markers.
+#
+# The phase markers say the sweep started; they cannot say which of the three
+# conditions it is on, because the driver's per-condition results go to stdout
+# and from there to a log file on a disk nobody can read until the instance is
+# gone. During the first successful run that left "CPU is 99.9%" as the only
+# available signal for hours -- enough to know it was alive, not enough to know
+# whether it was on condition one or three, or whether one had already failed.
+# Piping through a reader mirrors each line into /dev/kmsg as it appears, so
+# console output carries the actual results. python3 -u because a pipe makes
+# stdout block-buffered, and a progress line that arrives an hour late is not
+# progress. \${PIPESTATUS[0]} because the pipeline's own status is the reader's.
 mark "self-check passed; starting the sweep"
 for pass in 1 2; do
   mark "sweep pass \$pass"
   echo "=== sweep pass \$pass ==="
-  python3 scripts/rare_event_sweep.py --scales 1e11 --out "\$OUT" && break
+  python3 -u scripts/rare_event_sweep.py --scales 1e11 --out "\$OUT" 2>&1 \
+    | while IFS= read -r line; do
+        echo "\$line"
+        echo "FERRO: \$line" > /dev/kmsg 2>/dev/null || true
+      done
+  [ "\${PIPESTATUS[0]}" -eq 0 ] && break
   echo "pass \$pass left conditions incomplete; retrying the remainder"
 done
 
