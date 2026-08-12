@@ -6,11 +6,15 @@
 > only remaining human step; once the DOI is minted, paste it into
 > `PREREGISTRATION.md` "Registration status" and `analysis/contribution-plan-2026.md`.
 >
-> **What this registers.** A set of *directional, pre-calibration* predictions of an
+> **What this registers.** A set of *directional* predictions of an
 > open ferroptosis simulation engine, plus the wet-lab experiments that would
-> falsify them. It is registered BEFORE fitting any layer to the external data
-> (#330/#502/#500/#333/#334/#335/#482) so that calibrated-versus-predicted stays
-> honest. The predictions are directional (sign of an effect); each carries a
+> falsify them. It is registered before any wet-lab data exists, and independently
+> of the model-side calibration legs (#330/#502/#500/#333/#334/#335/#482) — none of
+> which is used to set any prediction here, and four of which predate the
+> preregistration itself. This wording replaces an earlier claim that registration
+> came BEFORE fitting those layers; the git history says otherwise and is public, so
+> the claim was checkable and false. The defensible property is disjointness, stated
+> in section 6, not precedence. The predictions are directional (sign of an effect); each carries a
 > numeric model output and a pre-stated numeric falsification threshold.
 
 ---
