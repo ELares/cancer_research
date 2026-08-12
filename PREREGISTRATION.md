@@ -1,8 +1,22 @@
 # Preregistration of Falsifiable Predictions
 
 This document registers the model's specific, directional, falsifiable predictions
-and their pre-stated falsification criteria **before** the calibration and wet-lab
-work that would confirm or refute them. The point is to lock in what would count
+and their pre-stated falsification criteria **before any wet-lab data exists**, and
+**independently of** — not prior to — the model-side calibration legs.
+
+That distinction is deliberate and it corrects an earlier version of this sentence,
+which claimed registration came before the calibration work. It did not. Four of the
+calibration legs were committed before this file was: the CTRPv2 kill-switch fit and
+the spheroid zone geometry on 2026-06-06, the tumor-PK and Krogh penetration anchors
+on 2026-06-07, against this document's 2026-06-13. The git history is public, so the
+precedence claim was checkable and wrong.
+
+What is true, and is the claim that actually carries the weight, is DISJOINTNESS:
+none of those datasets is used to set any prediction below. The predictions come
+from the model's own outputs; the calibration legs anchor different quantities
+against independent data. A reader wanting the per-leg accounting will find it in
+Part 3, which has always been honest about what was already anchored at
+registration. The point is to lock in what would count
 as success and what would count as failure ahead of time, so that no prediction
 can be quietly re-fit after the data arrives. This operationalizes the first
 guiding principle of the project (let the evidence lead): the repository is here
@@ -170,8 +184,9 @@ experiment.
 
 ## Part 3: Calibration status at registration
 
-Registering before calibration is the point. For transparency, here is what was
-and was not anchored to independent data as of registration. The full per-layer
+What matters is that no prediction above is set by the calibration data, not that
+registration came first — it did not, for four of the legs. For transparency, here
+is what was and was not anchored to independent data as of registration. The full per-layer
 ledger is `simulations/calibration/CALIBRATION_STATUS.md`.
 
 - **Calibrated (in-vitro, held-out):** the single-cell RSL3 kill switch, fit to
@@ -181,13 +196,26 @@ ledger is `simulations/calibration/CALIBRATION_STATUS.md`.
   ketone erastin plus a sorafenib forward check (#334); Krogh penetration form and
   reference length versus Primeau/Tannock (#335).
 - **Prior-predictive only (parameter, not data-conditioned):** the spatial and
-  combination headlines that P1, P2, P4, P5, P6, and P7 rest on. An ABC analysis
+  combination headlines that P1, P2, P3, P4, P5, P6, and P7 rest on. An ABC analysis
   (#332) shows the in-vivo priors and the in-vitro posterior are disjoint, so the
   in-vivo and spatial headlines cannot be conditioned on the available in-vitro
   data and stay prior-predictive until an in-vivo ferroptosis dataset that maps onto
   these headline parameters exists (the in-vivo ferroptosis readouts that DO exist —
   e.g. IKE pharmacokinetics and in-vivo SCD1/MUFA data — measure different
   observables that do not condition the headlines).
+
+- **Derived from a calibration artifact, and therefore NOT independent of it:** P8.
+  Its numbers (kill near zero below about 280 um radius; 3.6 percent to 0.19 percent
+  over 144 to 540 um) are reproduced from `analysis/calibration/spheroid-kill-vs-size.md`,
+  which was committed the same day P8 was written. P8 is a statement of what the model
+  already computed, not a prediction made in advance of computing it. It is still
+  falsifiable by experiment — no ferroptosis-inducer size-kill data exists to test it
+  against — but it must not be counted as an independent hit if it later agrees with
+  the model.
+
+An earlier version of this section listed six predictions and silently omitted P3 and
+P8. P3 is prior-predictive like its neighbours; P8 needed the separate classification
+above, which is presumably why it was easier to leave out.
 
 As calibration data arrives, the plan is to report calibrated-versus-preregistered
 for each prediction, failures included.

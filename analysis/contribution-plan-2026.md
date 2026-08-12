@@ -6,7 +6,8 @@ A concrete plan to turn this repository from "interesting open work" into a
 1. a **venue split** (the corpus synthesis and the simulation methods are
    different contributions and should be published separately);
 2. a **preregistration draft** of the model's specific, falsifiable predictions,
-   to be registered BEFORE any calibration so that calibrated-versus-predicted
+   to be registered independently of the calibration legs (not before them; four
+   predate the preregistration) so that calibrated-versus-predicted
    stays honest;
 3. a **collaborator-facing experiment brief**: the cheapest wet-lab experiments
    that would validate or falsify the headline predictions.
@@ -71,7 +72,7 @@ judge the sim as if it claimed calibrated predictions, which it does not.
 
 ---
 
-## Part 2: Preregistration draft (register BEFORE calibration)
+## Part 2: Preregistration draft (registered independently of the calibration legs)
 
 > The registrable, time-stampable version of the predictions and experiment briefs
 > below now lives in the top-level [`PREREGISTRATION.md`](../PREREGISTRATION.md)
