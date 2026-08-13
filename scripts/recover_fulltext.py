@@ -21,7 +21,7 @@ import io
 import re
 from pathlib import Path
 
-import fitz
+import pymupdf
 from lxml import html
 
 from article_io import load_article, save_article
@@ -39,7 +39,7 @@ def find_placeholder(body: str) -> str | None:
 
 def extract_text_from_pdf_bytes(pdf_bytes: bytes) -> str | None:
     try:
-        with fitz.open(stream=pdf_bytes, filetype="pdf") as doc:
+        with pymupdf.open(stream=pdf_bytes, filetype="pdf") as doc:
             chunks = []
             for page in doc:
                 text = page.get_text("text").strip()

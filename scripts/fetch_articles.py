@@ -17,7 +17,7 @@ from datetime import date
 from pathlib import Path
 from xml.etree import ElementTree as ET
 
-import fitz
+import pymupdf
 import requests
 import yaml
 from lxml import html
@@ -307,7 +307,7 @@ def fetch_pmc_fulltext(pmcid: str) -> str | None:
 def extract_text_from_pdf_bytes(pdf_bytes: bytes) -> str | None:
     """Extract plain text from a PDF byte stream."""
     try:
-        with fitz.open(stream=pdf_bytes, filetype="pdf") as doc:
+        with pymupdf.open(stream=pdf_bytes, filetype="pdf") as doc:
             texts = []
             for page in doc:
                 text = page.get_text("text").strip()

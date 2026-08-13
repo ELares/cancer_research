@@ -11,7 +11,7 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-import fitz
+import pymupdf
 
 
 BOOKS_DIR = Path(__file__).resolve().parent.parent / "books"
@@ -30,7 +30,7 @@ def snippet_around(text: str, query: str, radius: int = 220) -> str:
 
 def search_pdf(pdf_path: Path, query: str, limit: int) -> list[dict]:
     matches = []
-    with fitz.open(pdf_path) as doc:
+    with pymupdf.open(pdf_path) as doc:
         for page_idx, page in enumerate(doc):
             text = page.get_text("text")
             if query.lower() not in text.lower():
