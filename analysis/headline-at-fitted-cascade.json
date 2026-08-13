@@ -1,0 +1,121 @@
+{
+  "ctrpv2_point": {
+    "admissibility": {
+      "admissible": false,
+      "constraint": 0.02,
+      "controls": {
+        "Glycolytic/Control": 0.0244,
+        "Persister/Control": 0.999467,
+        "PersisterNrf2/Control": 0.735158
+      },
+      "worst_condition": "Persister/Control",
+      "worst_rate": 0.999467
+    },
+    "bliss": 1.0,
+    "overrides": {
+      "lp_propagation": 0.7,
+      "lp_rate": 0.4
+    },
+    "penetration": {
+      "cns_bbb": 1.0,
+      "poorly_vascularized": 1.0,
+      "well_vascularized": 1.0
+    },
+    "single_cell": {
+      "Glycolytic/Control": 0.0244,
+      "Glycolytic/RSL3": 0.831838,
+      "Glycolytic/SDT": 0.999998,
+      "OXPHOS/RSL3": 0.999996,
+      "OXPHOS/SDT": 1.0,
+      "Persister/Control": 0.999467,
+      "Persister/RSL3": 1.0,
+      "Persister/SDT": 1.0,
+      "PersisterNrf2/Control": 0.735158,
+      "PersisterNrf2/RSL3": 0.999999,
+      "PersisterNrf2/SDT": 0.999999
+    },
+    "tme": {
+      "hypoxia": 0.6062126110058336,
+      "immune": 1.0
+    }
+  },
+  "default": {
+    "admissibility": {
+      "admissible": true,
+      "constraint": 0.02,
+      "controls": {
+        "Glycolytic/Control": 0.0,
+        "Persister/Control": 0.011927,
+        "PersisterNrf2/Control": 1e-06
+      },
+      "worst_condition": "Persister/Control",
+      "worst_rate": 0.011927
+    },
+    "bliss": 1.99194694457603,
+    "overrides": {},
+    "penetration": {
+      "cns_bbb": 0.018,
+      "poorly_vascularized": 0.026,
+      "well_vascularized": 0.121
+    },
+    "single_cell": {
+      "Glycolytic/Control": 0.0,
+      "Glycolytic/RSL3": 0.0,
+      "Glycolytic/SDT": 0.871887,
+      "OXPHOS/RSL3": 0.011375,
+      "OXPHOS/SDT": 0.998876,
+      "Persister/Control": 0.011927,
+      "Persister/RSL3": 0.424755,
+      "Persister/SDT": 0.999992,
+      "PersisterNrf2/Control": 1e-06,
+      "PersisterNrf2/RSL3": 0.000451,
+      "PersisterNrf2/SDT": 0.995446
+    },
+    "tme": {
+      "hypoxia": 0.8660647270835656,
+      "immune": 0.026865363791058628
+    }
+  },
+  "posterior_median": {
+    "admissibility": {
+      "admissible": false,
+      "constraint": 0.02,
+      "controls": {
+        "Glycolytic/Control": 0.112026,
+        "Persister/Control": 0.999679,
+        "PersisterNrf2/Control": 0.873457
+      },
+      "worst_condition": "Persister/Control",
+      "worst_rate": 0.999679
+    },
+    "bliss": 1.0,
+    "overrides": {
+      "gpx4_rate": 0.4071,
+      "gsh_scav_efficiency": 0.5183,
+      "lp_propagation": 0.7823,
+      "lp_rate": 0.7133
+    },
+    "penetration": {
+      "cns_bbb": 1.0,
+      "poorly_vascularized": 1.0,
+      "well_vascularized": 1.0
+    },
+    "single_cell": {
+      "Glycolytic/Control": 0.112026,
+      "Glycolytic/RSL3": 0.970927,
+      "Glycolytic/SDT": 0.999999,
+      "OXPHOS/RSL3": 1.0,
+      "OXPHOS/SDT": 1.0,
+      "Persister/Control": 0.999679,
+      "Persister/RSL3": 1.0,
+      "Persister/SDT": 1.0,
+      "PersisterNrf2/Control": 0.873457,
+      "PersisterNrf2/RSL3": 1.0,
+      "PersisterNrf2/SDT": 0.999999
+    },
+    "tme": {
+      "hypoxia": 0.4984357002192249,
+      "immune": 0.0
+    }
+  }
+}

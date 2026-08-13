@@ -84,6 +84,37 @@ existing — or re-deriving every headline at the fitted cascade and reporting b
 so a reader can see which directions survive crossing the bistable tipping point.
 The second is achievable now and is the cheaper of the two.
 
+## It has now been done, and it settles the question differently than expected
+
+`scripts/headline_at_fitted.py` re-derives every headline under three parameter
+sets — the in-vivo defaults, the #330 CTRPv2 point fit, and the #500 joint
+posterior medians — and writes `analysis/headline-at-fitted-cascade.md`.
+
+The expected outcome was a list of directions that survive the crossing and
+directions that do not. That is not what came back. **Both fitted sets are
+inadmissible for these models.** Under either, the untreated
+Persister/Control population dies at 99.97%, against the
+model's own stated constraint of under 2% — a factor of
+50. Every headline then degenerates: the Bliss
+ratio is exactly 1.0 because both single arms saturate, and all three penetration
+tissues kill 100%, so their ordering is trivially preserved and says nothing.
+
+So the disjunction documented above is no longer only an argument about parameter
+ranges. Substituting the in-vitro values into the in-vivo and spatial models does
+not merely fail to condition them — it breaks the baseline-viability constraint
+outright. The cheaper of the two routes has been taken and it does not lead where
+it was expected to: it rules the substitution out rather than grading the
+directions. Conditioning these headlines still requires an in-vivo dataset, and
+this is now demonstrated rather than argued.
+
+One direction is worth recording despite the degeneracy: the hypoxia
+kill-collapse gap stays positive at all three sets
+(0.866, 0.606,
+0.498). That is weak evidence — a
+positive gap in a saturated regime is nearly guaranteed — but it is the only
+headline that does not become meaningless, and it points the same way the
+manuscript reports.
+
 ## Provenance
 
 Every claim above is checkable from committed files: `scripts/run_prcc.py:38-39`,
