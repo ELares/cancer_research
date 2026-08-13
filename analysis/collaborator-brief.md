@@ -40,7 +40,9 @@ confirms or refutes.
 
 ## The falsifiable predictions (each has a numeric model output + threshold)
 
-P1 GPX4i + FSP1i synergy in FSP1-low persisters (Bliss ~1.99x; refuted if CI > 0.8).
+P1 GPX4i + FSP1i synergy in FSP1-low persisters (Bliss ~1.99x, 95% prior-predictive
+   ~1.0x to 5.2x -- the supra-additive DIRECTION is what is predicted, not the
+   magnitude; refuted if CI > 0.8).
 P2 physical-ROS modalities less depth-limited than RSL3 in large spheroids.
 P3 a days-timescale post-withdrawal vulnerability window with sequential defense recovery.
 P4 SDT retains more efficacy than RSL3 under hypoxia (the contested keystone, direction only).
