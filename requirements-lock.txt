@@ -41,7 +41,7 @@ PyYAML==6.0.3
 requests==2.34.2
 scipy==1.18.0
 six==1.17.0
-soupsieve==2.9.1
+soupsieve==2.9.2
 tqdm==4.70.0
 typing_extensions==4.16.0
 urllib3==2.7.0
