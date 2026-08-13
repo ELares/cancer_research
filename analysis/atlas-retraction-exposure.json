@@ -1,0 +1,163 @@
+{
+  "census_records": 4403994,
+  "pairs": 2854431,
+  "pairs_touched": 32294,
+  "pairs_uncorroborated": 7373,
+  "pmids_in_graph": 2095737,
+  "pred_tainted": {
+    "associate": 22285,
+    "cause": 767,
+    "compare": 91,
+    "cotreat": 256,
+    "inhibit": 1525,
+    "interact": 215,
+    "negative_correlate": 5142,
+    "positive_correlate": 5372,
+    "prevent": 27,
+    "stimulate": 1174,
+    "treat": 3645
+  },
+  "pred_total": {
+    "associate": 5355943,
+    "cause": 739412,
+    "compare": 71690,
+    "cotreat": 224146,
+    "inhibit": 223369,
+    "interact": 62500,
+    "negative_correlate": 847474,
+    "positive_correlate": 714547,
+    "prevent": 11256,
+    "stimulate": 227753,
+    "treat": 2030690
+  },
+  "retracted_articles": 6796,
+  "retracted_by_year": {
+    "2011": 167,
+    "2012": 166,
+    "2013": 247,
+    "2014": 325,
+    "2015": 337,
+    "2016": 305,
+    "2017": 394,
+    "2018": 624,
+    "2019": 758,
+    "2020": 564,
+    "2021": 539,
+    "2022": 960,
+    "2023": 215,
+    "2024": 220,
+    "2025": 52
+  },
+  "retraction_family_types": {
+    "Corrected and Republished Article": 174,
+    "Expression of Concern": 95,
+    "Published Erratum": 130,
+    "Retracted Publication": 6796,
+    "Retraction Notice": 37
+  },
+  "rows": 10509470,
+  "single_paper_pairs": 2003374,
+  "tainted_rows": 40499,
+  "uncorroborated_examples": [
+    [
+      "Chemical|MESH:C000154",
+      "Chemical|MESH:C457499"
+    ],
+    [
+      "Chemical|MESH:C000154",
+      "Gene|12367"
+    ],
+    [
+      "Chemical|MESH:C000154",
+      "Gene|1728"
+    ],
+    [
+      "Chemical|MESH:C000154",
+      "Gene|3162"
+    ],
+    [
+      "Chemical|MESH:C000154",
+      "Gene|4780"
+    ],
+    [
+      "Chemical|MESH:C000154",
+      "Gene|5468"
+    ],
+    [
+      "Chemical|MESH:C000541",
+      "Gene|1788"
+    ],
+    [
+      "Chemical|MESH:C000589253",
+      "Disease|MESH:D028361"
+    ],
+    [
+      "Chemical|MESH:C000589253",
+      "Gene|7157"
+    ],
+    [
+      "Chemical|MESH:C000589635",
+      "Chemical|MESH:D005485"
+    ],
+    [
+      "Chemical|MESH:C000589651",
+      "Gene|5591"
+    ],
+    [
+      "Chemical|MESH:C000589651",
+      "Gene|5888"
+    ],
+    [
+      "Chemical|MESH:C000591472",
+      "Gene|331"
+    ],
+    [
+      "Chemical|MESH:C000591472",
+      "Gene|6198"
+    ],
+    [
+      "Chemical|MESH:C000592079",
+      "Disease|MESH:D012516"
+    ],
+    [
+      "Chemical|MESH:C000592079",
+      "Gene|983"
+    ],
+    [
+      "Chemical|MESH:C000592079",
+      "Gene|995"
+    ],
+    [
+      "Chemical|MESH:C000592510",
+      "Chemical|MESH:D000077204"
+    ],
+    [
+      "Chemical|MESH:C000592510",
+      "Disease|MESH:D009369"
+    ],
+    [
+      "Chemical|MESH:C000593333",
+      "Chemical|MESH:D000077204"
+    ],
+    [
+      "Chemical|MESH:C000593333",
+      "Chemical|MESH:D005472"
+    ],
+    [
+      "Chemical|MESH:C000593333",
+      "Gene|1649"
+    ],
+    [
+      "Chemical|MESH:C000593333",
+      "Gene|27113"
+    ],
+    [
+      "Chemical|MESH:C000593570",
+      "Disease|MESH:D009369"
+    ],
+    [
+      "Chemical|MESH:C000594004",
+      "Disease|MESH:D009369"
+    ]
+  ]
+}
