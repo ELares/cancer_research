@@ -77,7 +77,7 @@
     "note": "6 of 11 swept parameters are practically non-identifiable from the kill rate (ST < 0.05)"
   },
   "data_constrained_in_production": 0,
-  "data_constrained_note": "The production simulation matrix uses fixed in-vivo defaults; the only data-conditioned fit is the in-vitro single-cell switch (#330), whose posterior is DISJOINT from the in-vivo/spatial regime that carries the headlines. So zero of the headline outputs are conditioned on data.",
+  "data_constrained_note": "The production simulation matrix uses fixed in-vivo defaults; the only data-conditioned fit is the in-vitro single-cell switch (#330), whose posterior is numerically DISJOINT from the in-vivo/spatial regime that carries the headlines. So zero of the headline outputs are conditioned on data.",
   "headlines": [
     {
       "key": "single_cell_kill_rate",
@@ -96,10 +96,10 @@
         "gpx4_degradation_by_ros"
       ],
       "prior_predictive": "Persister x RSL3 point 42.5%, but 95% prior-predictive [1.6%, 99.7%] (width 98.1%); PersisterNrf2 x RSL3 point 0.0%, interval [0.0%, 37.8%]",
-      "data_conditioned": "in-vitro only (ABC posterior); the in-vivo priors that produce the Figure 7 numbers are DISJOINT from the in-vitro data, so this headline cannot be conditioned on the data we hold",
+      "data_conditioned": "in-vitro only (ABC posterior, #332/#500); the in-vivo priors that produce the Figure 7 numbers are numerically DISJOINT from the in-vitro data. Read that carefully: those priors are +/-50% bands around the defaults themselves (scripts/run_prcc.py), so the disjunction says the in-vitro fit falls outside the defaults' own neighbourhood -- it restates the falsification rather than supplying independent grounds to discount it (analysis/calibration/in-vivo-prior-provenance.md)",
       "verdict": "directional_only",
       "rationale": "the point estimate is essentially uninformative under the documented parameter uncertainty (the interval nearly spans [0,1]); the robust claim is that the differential between phenotypes exists, not its magnitude",
-      "source": "sobol-sensitivity-report.md (#331); uncertainty-intervals-report.md (#332); abc-posterior-report.md (#332)"
+      "source": "sobol-sensitivity-report.md (#331); uncertainty-intervals-report.md (#332); abc-posterior-report.md (#332); joint-posterior.md (#500); abc-information-content.md; headline-at-fitted-cascade.md"
     },
     {
       "key": "bliss_synergy",

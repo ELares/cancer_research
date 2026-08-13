@@ -61,10 +61,10 @@ HEADLINES = [
         "drivers": ["lp_propagation", "gpx4_rate", "lp_rate"],
         "non_identifiable_params": list(SOBOL_NON_IDENTIFIABLE),
         "prior_predictive": "Persister x RSL3 point 42.5%, but 95% prior-predictive [1.6%, 99.7%] (width 98.1%); PersisterNrf2 x RSL3 point 0.0%, interval [0.0%, 37.8%]",
-        "data_conditioned": "in-vitro only (ABC posterior); the in-vivo priors that produce the Figure 7 numbers are DISJOINT from the in-vitro data, so this headline cannot be conditioned on the data we hold",
+        "data_conditioned": "in-vitro only (ABC posterior, #332/#500); the in-vivo priors that produce the Figure 7 numbers are numerically DISJOINT from the in-vitro data. Read that carefully: those priors are +/-50% bands around the defaults themselves (scripts/run_prcc.py), so the disjunction says the in-vitro fit falls outside the defaults' own neighbourhood -- it restates the falsification rather than supplying independent grounds to discount it (analysis/calibration/in-vivo-prior-provenance.md)",
         "verdict": "directional_only",
         "rationale": "the point estimate is essentially uninformative under the documented parameter uncertainty (the interval nearly spans [0,1]); the robust claim is that the differential between phenotypes exists, not its magnitude",
-        "source": "sobol-sensitivity-report.md (#331); uncertainty-intervals-report.md (#332); abc-posterior-report.md (#332)",
+        "source": "sobol-sensitivity-report.md (#331); uncertainty-intervals-report.md (#332); abc-posterior-report.md (#332); joint-posterior.md (#500); abc-information-content.md; headline-at-fitted-cascade.md",
     },
     {
         "key": "bliss_synergy",
@@ -138,7 +138,7 @@ def build() -> dict:
         "data_constrained_note": (
             "The production simulation matrix uses fixed in-vivo defaults; the only "
             "data-conditioned fit is the in-vitro single-cell switch (#330), whose "
-            "posterior is DISJOINT from the in-vivo/spatial regime that carries the "
+            "posterior is numerically DISJOINT from the in-vivo/spatial regime that carries the "
             "headlines. So zero of the headline outputs are conditioned on data."
         ),
         "headlines": HEADLINES,
@@ -154,6 +154,42 @@ def build() -> dict:
     }
 
 
+def _fitted_cascade_facts():
+    """Numbers for the closing section, READ FROM THE ARTIFACTS.
+
+    These were hand-typed beside two files that compute them. A figure written
+    into prose next to the artifact that produces it is the failure this
+    repository keeps rediscovering: the artifact moves, the sentence does not,
+    and the stale number reads as freshly checked. Missing artifacts produce an
+    explicit "not available" rather than a number that might be from last month.
+    """
+    root = Path(__file__).resolve().parent.parent
+    out = {}
+    try:
+        h = json.loads((root / "analysis" / "headline-at-fitted-cascade.json").read_text())
+        worst = max(("ctrpv2_point", "posterior_median"),
+                    key=lambda k: h[k]["admissibility"]["worst_rate"])
+        a = h[worst]["admissibility"]
+        out["baseline_default"] = h["default"]["admissibility"]["worst_rate"]
+        out["baseline_fitted"] = a["worst_rate"]
+        out["baseline_condition"] = a["worst_condition"]
+        out["baseline_constraint"] = a["constraint"]
+        out["bliss_fitted"] = h[worst]["bliss"]
+    except (OSError, ValueError, KeyError):
+        pass
+    try:
+        i = json.loads((root / "analysis" / "calibration"
+                        / "abc-information-content.json").read_text())
+        joint = [r for r in i if "joint-posterior" in r.get("artifact", "")][0]
+        params = joint["parameters"]
+        out["informed"] = sum(1 for v in params.values() if v["informed"])
+        out["total_params"] = len(params)
+        out["uninformed"] = [k for k, v in params.items() if not v["informed"]]
+    except (OSError, ValueError, KeyError, IndexError):
+        pass
+    return out
+
+
 def write_report(r: dict) -> None:
     def hsec(h: dict) -> str:
         return (
@@ -166,6 +202,30 @@ def write_report(r: dict) -> None:
             f"- **Source:** {h['source']}\n"
         )
 
+    f = _fitted_cascade_facts()
+    if "informed" in f:
+        un = ", ".join(f"`{u}`" for u in f["uninformed"]) or "none"
+        informed_clause = (
+            f"{f['informed']} of its {f['total_params']} parameters are informed by "
+            f"the data, including the whole LP cascade; only {un} "
+            f"{'is' if len(f['uninformed']) == 1 else 'are'} indistinguishable from "
+            "the prior")
+    else:
+        informed_clause = ("the per-parameter accounting is not available "
+                           "(abc-information-content.json missing)")
+    if "baseline_fitted" in f:
+        baseline_clause = (
+            f"untreated {f['baseline_condition']} death goes from "
+            f"{f['baseline_default']*100:.2f}% to {f['baseline_fitted']*100:.2f}%, "
+            f"against the model's own stated constraint of under "
+            f"{f['baseline_constraint']*100:.0f}%.")
+        bliss_clause = (
+            f"the Bliss ratio is exactly {f['bliss_fitted']:.1f} because both single "
+            "arms saturate")
+    else:
+        baseline_clause = ("the comparison is not available "
+                           "(headline-at-fitted-cascade.json missing).")
+        bliss_clause = "the headline table is not available"
     md = f"""# Practical-identifiability of the headline outputs (#503)
 
 A consolidated, reproducible accounting of which headline simulation results are
@@ -198,11 +258,34 @@ are practically non-identifiable from the kill rate** (Sobol total-effect ST < 0
 
 A headline becomes point-estimable when (1) its driving parameters are identified
 (narrowed) by data in the regime that produces it, and (2) the prior-predictive
-interval collapses to a usable width. Concretely: the multi-inducer joint fit
-(#500) plus System Xc- in the core (#502) would condition the LP-cascade and
-defense constants in a calibrated regime; until then, the manuscript's
-order-of-magnitude / directional labeling is the correct one, and this report is
-the standing evidence for it.
+interval collapses to a usable width.
+
+**The route this section used to name has been taken, and it is closed.** An
+earlier version said the multi-inducer joint fit (#500) plus System Xc- in the
+core (#502) "would condition the LP-cascade and defense constants in a calibrated
+regime". Both landed on 2026-06-25, one day after this report was first written,
+and neither made any headline point-estimable. That is the shape of a deferred
+note generally: it records where the author stopped looking, not what turned out
+to be true.
+
+What was learned by taking it:
+
+- #500 does condition the in-vitro switch, and it conditions it better than the
+  run's own summary claimed. Judged against an uninformative null rather than a
+  bare 0.6 threshold, {informed_clause}
+  (`analysis/calibration/abc-information-content.md`).
+- Condition (1) still fails anyway, because "the regime that produces it" is the
+  binding phrase. Carrying those in-vitro values into the in-vivo and spatial
+  models is not merely uninformative but INADMISSIBLE: {baseline_clause}
+  Every headline then degenerates -- {bliss_clause}
+  (`analysis/headline-at-fitted-cascade.md`).
+
+So the substitution route is ruled out by demonstration rather than by argument,
+and what remains is an in-vivo ferroptosis dataset that maps onto these
+dimensionless observables, which this repository has searched for and documented
+as not publicly existing. Until one appears, the manuscript's order-of-magnitude
+/ directional labeling is the correct one, and this report is the standing
+evidence for it.
 """
     OUT_MD.write_text(md, encoding="utf-8")
 

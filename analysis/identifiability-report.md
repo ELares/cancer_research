@@ -16,7 +16,7 @@ gsh_scav_efficiency, nrf2_gsh_rate, fsp1_rate, fenton_rate, death_threshold, gpx
 (lp_propagation ST=0.504, gpx4_rate ST=0.285, lp_rate ST=0.177).
 
 **Data-constrained in the production regime: 0.**
-The production simulation matrix uses fixed in-vivo defaults; the only data-conditioned fit is the in-vitro single-cell switch (#330), whose posterior is DISJOINT from the in-vivo/spatial regime that carries the headlines. So zero of the headline outputs are conditioned on data.
+The production simulation matrix uses fixed in-vivo defaults; the only data-conditioned fit is the in-vitro single-cell switch (#330), whose posterior is numerically DISJOINT from the in-vivo/spatial regime that carries the headlines. So zero of the headline outputs are conditioned on data.
 
 ## Per-headline verdicts
 
@@ -25,9 +25,9 @@ The production simulation matrix uses fixed in-vivo defaults; the only data-cond
 - **Drivers:** lp_propagation, gpx4_rate, lp_rate
 - **Non-identifiable:** gsh_scav_efficiency, nrf2_gsh_rate, fsp1_rate, fenton_rate, death_threshold, gpx4_degradation_by_ros
 - **Prior-predictive spread:** Persister x RSL3 point 42.5%, but 95% prior-predictive [1.6%, 99.7%] (width 98.1%); PersisterNrf2 x RSL3 point 0.0%, interval [0.0%, 37.8%]
-- **Data-conditioned:** in-vitro only (ABC posterior); the in-vivo priors that produce the Figure 7 numbers are DISJOINT from the in-vitro data, so this headline cannot be conditioned on the data we hold
+- **Data-conditioned:** in-vitro only (ABC posterior, #332/#500); the in-vivo priors that produce the Figure 7 numbers are numerically DISJOINT from the in-vitro data. Read that carefully: those priors are +/-50% bands around the defaults themselves (scripts/run_prcc.py), so the disjunction says the in-vitro fit falls outside the defaults' own neighbourhood -- it restates the falsification rather than supplying independent grounds to discount it (analysis/calibration/in-vivo-prior-provenance.md)
 - **Verdict:** `directional_only` (the point estimate is essentially uninformative under the documented parameter uncertainty (the interval nearly spans [0,1]); the robust claim is that the differential between phenotypes exists, not its magnitude)
-- **Source:** sobol-sensitivity-report.md (#331); uncertainty-intervals-report.md (#332); abc-posterior-report.md (#332)
+- **Source:** sobol-sensitivity-report.md (#331); uncertainty-intervals-report.md (#332); abc-posterior-report.md (#332); joint-posterior.md (#500); abc-information-content.md; headline-at-fitted-cascade.md
 ### RSL3 + FSP1i Bliss synergy_score (the ~1.99x)
 
 - **Drivers:** lp_propagation, gsh_scav_efficiency, gpx4_rate
@@ -70,8 +70,31 @@ No headline output is fully point-estimable. The single-cell kill rate and the i
 
 A headline becomes point-estimable when (1) its driving parameters are identified
 (narrowed) by data in the regime that produces it, and (2) the prior-predictive
-interval collapses to a usable width. Concretely: the multi-inducer joint fit
-(#500) plus System Xc- in the core (#502) would condition the LP-cascade and
-defense constants in a calibrated regime; until then, the manuscript's
-order-of-magnitude / directional labeling is the correct one, and this report is
-the standing evidence for it.
+interval collapses to a usable width.
+
+**The route this section used to name has been taken, and it is closed.** An
+earlier version said the multi-inducer joint fit (#500) plus System Xc- in the
+core (#502) "would condition the LP-cascade and defense constants in a calibrated
+regime". Both landed on 2026-06-25, one day after this report was first written,
+and neither made any headline point-estimable. That is the shape of a deferred
+note generally: it records where the author stopped looking, not what turned out
+to be true.
+
+What was learned by taking it:
+
+- #500 does condition the in-vitro switch, and it conditions it better than the
+  run's own summary claimed. Judged against an uninformative null rather than a
+  bare 0.6 threshold, 5 of its 7 parameters are informed by the data, including the whole LP cascade; only `hill`, `k_erastin` are indistinguishable from the prior
+  (`analysis/calibration/abc-information-content.md`).
+- Condition (1) still fails anyway, because "the regime that produces it" is the
+  binding phrase. Carrying those in-vitro values into the in-vivo and spatial
+  models is not merely uninformative but INADMISSIBLE: untreated Persister/Control death goes from 1.19% to 99.97%, against the model's own stated constraint of under 2%.
+  Every headline then degenerates -- the Bliss ratio is exactly 1.0 because both single arms saturate
+  (`analysis/headline-at-fitted-cascade.md`).
+
+So the substitution route is ruled out by demonstration rather than by argument,
+and what remains is an in-vivo ferroptosis dataset that maps onto these
+dimensionless observables, which this repository has searched for and documented
+as not publicly existing. Until one appears, the manuscript's order-of-magnitude
+/ directional labeling is the correct one, and this report is the standing
+evidence for it.
