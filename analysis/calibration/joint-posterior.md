@@ -32,6 +32,18 @@ constrained. **Unconstrained (>= 0.6 of prior width):** `lp_propagation`, `lp_ra
 These are the parameters the in-vitro dose-response panel does not identify (e.g.
 the GSH/GPX4 axis is partly degenerate with the LP cascade, consistent with the
 PRCC/Sobol identifiability findings); they are reported as intervals, not points.
+> **Correction: `gpx4_rate`, `lp_propagation`, `lp_rate` are NOT unconstrained.**
+> The 0.6 threshold above is a bare constant that ignores how many draws were
+> accepted, and that is what decides how narrow an UNINFORMATIVE posterior looks.
+> Measured: with 30 accepted draws, samples drawn from the prior
+> and nothing else still span a median 0.896 of the prior
+> width, and only 0.793 at the 5th percentile. So 0.6 sits far below anything noise
+> produces, and the flag fired on well-determined parameters. `gpx4_rate`, `lp_propagation`, `lp_rate` sit at the
+> 0th percentile of that null — they are among the best-determined parameters in
+> the run, and they are the cascade parameters the manuscript quotes credible
+> intervals for. Only `k_erastin` and `hill` are genuinely indistinguishable from
+> the prior. See `analysis/calibration/abc-information-content.md`; the generator
+> now judges against the null rather than the constant.
 
 ## Held-out posterior-predictive (ML210, never used in the fit)
 
