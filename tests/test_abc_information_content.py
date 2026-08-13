@@ -135,3 +135,86 @@ def test_the_analysis_states_what_it_does_not_measure():
     assert "not whether the model" in txt or "not whether the" in txt, (
         "the report no longer distinguishes 'the data moved this parameter' "
         "from 'the fit is right'")
+
+
+# --- the identifiability report's closing section --------------------------
+
+IDENT_MD = REPO_ROOT / "analysis" / "identifiability-report.md"
+IDENT_GEN = REPO_ROOT / "scripts" / "identifiability_report.py"
+
+
+def test_the_closing_section_does_not_still_promise_a_route_already_taken():
+    """It said #500 + #502 "would condition" the constants. Both landed.
+
+    Neither made any headline point-estimable, so the promise had become a
+    deferred note describing where the author stopped looking rather than what
+    turned out to be true.
+    """
+    txt = IDENT_MD.read_text()
+    tail = txt[txt.index("## What would make a headline point-estimable"):]
+    assert "has been taken, and it is closed" in tail, (
+        "the closing section no longer records that the route it used to name "
+        "was taken and did not work")
+    assert "INADMISSIBLE" in tail, (
+        "the closing section does not record the demonstrated reason the "
+        "substitution route is closed")
+
+
+def test_the_closing_figures_are_derived_from_the_artifacts():
+    """Every number in that section must come from a committed artifact.
+
+    They were hand-typed beside the two files that compute them, which is the
+    shape this repository keeps rediscovering: the artifact moves, the sentence
+    does not, and the stale figure reads as freshly checked.
+    """
+    import re
+    txt = IDENT_MD.read_text()
+    tail = txt[txt.index("## What would make a headline point-estimable"):]
+
+    h = json.loads((CAL.parent / "headline-at-fitted-cascade.json").read_text())
+    worst = max(("ctrpv2_point", "posterior_median"),
+                key=lambda k: h[k]["admissibility"]["worst_rate"])
+    a = h[worst]["admissibility"]
+    assert f"{a['worst_rate']*100:.2f}%" in tail, (
+        "the inadmissible untreated-death rate in the prose is not the one in "
+        "headline-at-fitted-cascade.json")
+    assert f"{h['default']['admissibility']['worst_rate']*100:.2f}%" in tail
+
+    joint = [r for r in reports() if "joint-posterior" in r["artifact"]][0]
+    informed = sum(1 for v in joint["parameters"].values() if v["informed"])
+    assert f"{informed} of its {len(joint['parameters'])} parameters" in tail, (
+        "the informed-parameter count in the prose is not the one in "
+        "abc-information-content.json")
+
+    # The generator must CALL the helper, not merely define it. Asserting the
+    # name appears anywhere passed a mutation that deleted the call site, because
+    # the function's own `def` line contains the name -- a guard satisfied by the
+    # thing it is checking for.
+    src = IDENT_GEN.read_text()
+    body = src[src.index("def write_report("):]
+    assert "_fitted_cascade_facts()" in body, (
+        "write_report no longer calls _fitted_cascade_facts(); the closing "
+        "figures are not being derived even if the helper still exists")
+    for literal in ("99.96%", "5 of its 7 parameters are informed"):
+        assert literal not in src, (
+            f"{literal!r} is hardcoded in the generator again")
+
+
+def test_the_disjunction_framing_carries_its_qualification():
+    """The in-vivo PRCC ranges are +/-50% of the defaults under question.
+
+    So the disjunction restates the falsification rather than supplying
+    independent grounds to discount the fit. Without that, "DISJOINT" reads as
+    stronger evidence than it is.
+    """
+    txt = IDENT_MD.read_text()
+    assert "DISJOINT" in txt, "the disjunction is no longer reported at all"
+    # NOT an `or`. The first version accepted either the explanation or the bare
+    # "+/-50%", and the bare number appears elsewhere in the document -- so
+    # deleting the sentence that does the explaining still passed.
+    assert "restates the falsification" in txt, (
+        "the report asserts DISJOINT without the circularity qualification that "
+        "analysis/calibration/in-vivo-prior-provenance.md establishes: the "
+        "in-vivo PRCC ranges are +/-50% bands around the defaults under "
+        "question, so the disjunction restates the falsification rather than "
+        "supplying independent grounds to discount the fit")
