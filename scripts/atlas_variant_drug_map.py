@@ -1,31 +1,30 @@
 #!/usr/bin/env python3
 """Which drugs the cancer literature discusses alongside which mutations.
 
-WHY THIS DATA WAS SITTING UNREAD
---------------------------------
-`corpus/atlas/relations/relations.tsv.gz` carries entity types this project
-never ingested: `ProteinMutation`, `DNAMutation`, `SNP`. Each variant entity
-arrives annotated inline -- `RS#:121434568;HGVS:p.L858R;CorrespondingGene:1956`
-is EGFR L858R -- and 228,501 relation rows touch one.
+WHY THIS LAYER WAS UNRESOLVED
+-----------------------------
+`corpus/atlas/relations/relations.tsv.gz` carries `ProteinMutation`,
+`DNAMutation` and `SNP` entities whose identifier holds the variant inline:
+`RS#:121434568;HGVS:p.L858R;CorrespondingGene:1956` is EGFR L858R.
 
-The only code that ever saw them discards them. `scripts/atlas_discovery.py:145`
-skips any identifier beginning `RS#`, `HGVS` or `CorrespondingGene`, for a good
-local reason: that function asks PubMed whether two terms co-occur in title or
-abstract, and an HGVS string is not a searchable term. But the effect is that
-the variant layer is absent from every other analysis in this repository.
+Those entities are NOT absent from this repository -- they are nodes in the
+graph index like any other, and `analysis/atlas-emergence.md` already ships a
+row reading `adagrasib -- RS#:121913530;HGVS:p.G12C;CorrespondingGene:3845`.
+What no analysis here has ever done is PARSE those fields. The identifier is
+passed through whole, as an opaque label, so nothing could group two spellings
+of one variant or say which gene a mutation belongs to. `atlas_discovery.py:145`
+skips them outright, for a good local reason: it asks PubMed whether two terms
+co-occur, and an HGVS string is not a searchable term.
 
 WHAT THIS BUILDS
 ----------------
 The drug-by-variant slice: relations with a `Chemical` on one side and a variant
-on the other, resolved to readable names through the authority table already
-committed for the co-mention work (`analysis/comention/authority-labels.tsv.gz`,
-NLM for MeSH and NCBI for genes). Resistance mutations are the therapeutically
-interesting case and surface by construction: a drug discussed alongside a
-specific substitution is usually reported to work, or to stop working, against
-it.
+on the other, with the fields parsed, the spellings reconciled, and both sides
+resolved to readable names through the authority table committed for the
+co-mention work (`analysis/comention/authority-labels.tsv.gz`).
 
-WHAT THIS IS NOT, STATED FIRST BECAUSE IT DECIDES HOW TO READ EVERYTHING ELSE
------------------------------------------------------------------------------
+WHAT THIS IS NOT, STATED FIRST BECAUSE IT DECIDES HOW EVERYTHING ELSE READS
+---------------------------------------------------------------------------
 CIViC, OncoKB and COSMIC curate drug-variant relationships with clinical
 evidence levels, expert review and directionality. This has none of those. It
 measures ATTENTION, not clinical actionability. `associate` carries no
@@ -33,47 +32,42 @@ direction, so a paper reporting that a mutation CONFERS RESISTANCE and one
 reporting that it PREDICTS RESPONSE land in the same bucket. For any clinical
 question the curated databases are the correct source.
 
-THE IDENTIFIER IS NOT THE VARIANT, WHICH IS WHY THIS SCRIPT HAS TWO PASSES
---------------------------------------------------------------------------
-The first version keyed a pair on whatever the entity string carried, and that
-splits one variant across several keys. Two distinct defects, both measured
-here rather than assumed, and both correctable without guessing:
+THE IDENTIFIER IS NOT THE VARIANT
+---------------------------------
+Keying a pair on whatever string the entity carried splits one variant across
+several keys. Two defects, and for each the OBVIOUS correction is wrong:
 
-1. THE RSID IS NOT THE VARIANT EITHER. The same change appears as
-   `RS#+HGVS+CorrespondingGene`, as `HGVS+CorrespondingGene`, as
-   `RS#+CorrespondingGene` with no HGVS, and at both protein and coding level
-   (`p.T790M` and `c.2369C>T` are one variant under rs121434569).
+1. THE RSID IS NOT THE VARIANT EITHER. One change arrives with an rsid and
+   without, and at protein and coding level. But an rsid cannot simply be
+   collapsed to one HGVS: rs121913529 covers KRAS `p.G12D`, `p.G12V` AND
+   `p.G12A` -- one multi-allelic codon-12 site, three substitutions, different
+   drug programs.
 
-   But an rsid CANNOT simply be collapsed to one HGVS: rs121913529 covers KRAS
-   `p.G12D`, `p.G12V` AND `p.G12A` -- one multi-allelic codon-12 site, three
-   different substitutions, targeted by different drugs. Merging on rsid would
-   destroy exactly the distinction this map exists to show.
+   THE AGREEMENT TEST MUST COVER EVERY SPELLING, which is where the first
+   version of this was wrong. Testing agreement among PROTEIN forms only and
+   sweeping the rest onto the winner over-merged 222 rsids and 7,713 rows:
+   under rs1801131 a 17-row `p.E429A` absorbed `c.1298A>C` (710) together with
+   `c.1286A>C` and `c.1298A>T`, which are a different position and a different
+   allele. Each representation class must now agree internally AND every
+   spelling must parse, so one unparsable string refuses the whole rsid rather
+   than riding along.
 
-   The rule that separates them needs no threshold: parse each protein form to
-   its (origin, position, new residue) triple, and collapse an rsid's forms
-   only when every parsable one agrees. That merges representation variety and
-   refuses multi-allelic sites. Measured over 2,983 rsids mapping to several
-   HGVS, 1,857 are one substitution written several ways and 620 are genuinely
-   multi-allelic. BRAF rs113488022 stays split, correctly: alongside 12,488
-   `p.V600E` it carries `p.V600G` and `p.E600V`, which the rule cannot tell
-   apart from a real second allele.
+2. THE MAJORITY IS NOT THE TRUTH. Some twins differ by one deleted position
+   digit, and reading the commoner as correct is wrong in both directions: TP53
+   `p.R72P` and ERBB2 `p.I655V` are real rs-backed polymorphisms whose LONGER
+   twins are the typos, while EGFR `p.T790M` is real and `p.T90M` the typo.
 
-2. A DIGIT DROPPED FROM THE POSITION. `p.V61F` on gene 3717 (JAK2) is the
-   canonical MPN driver V617F with a digit missing, and it carries 86% of that
-   variant's volume -- so the shipped map read JAK2 V617F at a seventh of its
-   real support. THE COUNTS CANNOT ADJUDICATE THIS and the first attempt to let
-   them was wrong in both directions: TP53 `p.R72P` and ERBB2 `p.I655V` are
-   real rs-backed polymorphisms whose longer twins are the typos, while EGFR
-   `p.T790M` is the real one and `p.T90M` the typo.
+   THE RSID ADJUDICATES, being assigned independently of the string that was
+   extracted. Where exactly one side carries rsids that side is canonical.
+   Where neither or both do, or where a form is a digit-drop twin of TWO
+   different canonicals (KRAS `p.G1V` is one digit from both `p.G12V` and
+   `p.G13V`), this ABSTAINS rather than guessing -- the same choice
+   `atlas_graph.resolve` makes for a contested surface form.
 
-   THE RSID ADJUDICATES. dbSNP assignment is independent of the string that
-   was extracted, so when exactly one side of a digit-drop twin carries rsids
-   that side is canonical -- and where neither or both do, this abstains rather
-   than guessing, the same choice `atlas_graph.resolve` makes for a contested
-   surface form. On JAK2 the verdict is independent of any count: `p.V617F`
-   carries rs77375493 on 620 of 624 rows, `p.V61F` carries none at all, and
-   both show the identical Polycythemia Vera / Myelofibrosis / Essential
-   Thrombocythemia profile in the same rank order.
+EVERY FIGURE IN THE REPORT IS DERIVED, INCLUDING THE WORKED EXAMPLES, which name
+whichever case the data says is largest. An earlier version hand-wrote them and
+shipped an rsid count that was wrong, in a paragraph whose neighbouring figures
+were freshly computed -- which is the shape that makes a stale number credible.
 
 Usage:
     python scripts/atlas_variant_drug_map.py
@@ -98,15 +92,16 @@ OUT_TSV = PROJECT_ROOT / "analysis" / "atlas-variant-drug-map.tsv.gz"
 
 VARIANT_TYPES = ("ProteinMutation", "DNAMutation", "SNP")
 
-# A single-substitution protein change: origin residue, position, new residue.
-# Only this shape can be checked for a dropped position digit; indels, frame
-# shifts and coding-DNA changes are left alone.
-SUBSTITUTION = re.compile(r"^p\.([A-Z])(\d+)([A-Z*])$")
+# A single-residue protein substitution, and a single-base change against a
+# coding/genomic/mitochondrial reference. Only these shapes can be compared;
+# anything else (indels, frame shifts, truncated or HTML-escaped strings such as
+# `c.1799T&gt`) is UNPARSABLE and refuses its whole rsid.
+PROTEIN = re.compile(r"^p\.([A-Z])(\d+)([A-Z*])$")
+NUCLEOTIDE = re.compile(r"^([cgmn])\.([+-]?\d+)([ACGT])>([ACGT])$")
 
-# NLM prefixes a retired descriptor's label. Displaying it unchanged reads as a
-# statement about the DRUG -- "[OBSOLETE] avapritinib" suggests a withdrawn
-# medicine, and avapritinib is approved. The descriptor was retired, not the
-# drug, so the prefix is stripped for display and counted.
+# NLM prefixes a retired descriptor's label. Displaying it unchanged states
+# something false about the DRUG: "[OBSOLETE] avapritinib" reads as a withdrawn
+# medicine, and avapritinib is approved. The DESCRIPTOR was retired.
 OBSOLETE = "[OBSOLETE] "
 
 
@@ -130,34 +125,108 @@ def parse_variant(ident: str) -> dict:
     return dict(f.split(":", 1) for f in ident.split(";") if ":" in f)
 
 
-def iter_variants(path: Path):
-    """Yield (pmid, predicate, variant_fields, other_type, other_id) per row."""
+def iter_rows(path: Path):
+    """Yield (pmid, predicate, ((type, id), (type, id))) for every relation row."""
     with gzip.open(path, "rt") as fh:
         for line in fh:
             parts = line.rstrip("\n").split("\t")
             if len(parts) < 4:
                 continue
-            pmid, pred, a, b = parts[0], parts[1], parts[2], parts[3]
-            ta, _, ia = a.partition("|")
-            tb, _, ib = b.partition("|")
-            a_var, b_var = ta in VARIANT_TYPES, tb in VARIANT_TYPES
-            if not (a_var or b_var):
-                continue
-            var, other = ((ia, (tb, ib)) if a_var else (ib, (ta, ia)))
-            yield pmid, pred, parse_variant(var), other[0], other[1]
+            ta, _, ia = parts[2].partition("|")
+            tb, _, ib = parts[3].partition("|")
+            yield parts[0], parts[1], ((ta, ia), (tb, ib))
+
+
+def classify_spellings(forms) -> tuple:
+    """Group HGVS spellings by representation class -> the changes each denotes.
+
+    Returns (classes, n_unparsable). `classes` maps a class key ("p", "c", "g",
+    ...) to the set of distinct changes seen in it, so a class holding more than
+    one change is a disagreement.
+    """
+    classes, unparsable = collections.defaultdict(set), 0
+    for h in forms:
+        m = PROTEIN.match(h)
+        if m:
+            classes["p"].add(m.groups())
+            continue
+        m = NUCLEOTIDE.match(h)
+        if m:
+            classes[m.group(1)].add(m.groups()[1:])
+            continue
+        unparsable += 1
+    return classes, unparsable
+
+
+def resolve_rsids(rs_hgvs: dict) -> tuple:
+    """(rsid, gene) -> the single HGVS its spellings all denote, where they do.
+
+    Collapses representation variety (`p.T790M` and `c.2369C>T`) and REFUSES
+    both multi-allelic sites (rs121913529 = KRAS G12D and G12V and G12A) and
+    anything carrying a spelling that cannot be checked. Nothing rests on a
+    dominance threshold: one disagreeing spelling refuses the rsid however rare
+    it is, so a 17-row form cannot capture a 710-row one.
+    """
+    fix, tally, refused = {}, collections.Counter(), []
+    for key, forms in rs_hgvs.items():
+        if len(forms) == 1:
+            fix[key] = next(iter(forms))
+            tally["single_spelling"] += 1
+            continue
+        classes, unparsable = classify_spellings(forms)
+        # A genuine disagreement is checked FIRST. Both can hold at once, and
+        # reporting the unparsable-string technicality then leaves the report
+        # showing spellings that all look checkable, so a reader cannot see why
+        # the rsid was refused.
+        if any(len(s) > 1 for s in classes.values()):
+            tally["classes_disagree_refused"] += 1
+            reason = "spellings that denote different changes"
+            evidence = sorted({h for h in forms
+                               if (m := PROTEIN.match(h) or NUCLEOTIDE.match(h))
+                               and len(classes[m.group(1) if m.re is NUCLEOTIDE
+                                               else "p"]) > 1})
+        elif unparsable:
+            tally["unparsable_spelling_refused"] += 1
+            reason = "a spelling that cannot be checked"
+            evidence = sorted(h for h in forms
+                              if not (PROTEIN.match(h) or NUCLEOTIDE.match(h)))
+        elif not classes:
+            tally["nothing_parsable_refused"] += 1
+            reason = "no parsable spelling at all"
+            evidence = sorted(forms)
+        else:
+            # Every spelling denotes one change. Canonical is the commonest
+            # PROTEIN form when there is one, since that is the key a reader
+            # recognises, else the commonest spelling of any class.
+            prot = {h: n for h, n in forms.items() if PROTEIN.match(h)}
+            fix[key] = max((prot or forms).items(), key=lambda kv: (kv[1], kv[0]))[0]
+            tally["one_change_many_spellings"] += 1
+            continue
+        # Would the SUPERSEDED rule -- agreement among protein forms only, every
+        # other spelling swept onto the winner -- have collapsed this? Recording
+        # it makes the size of that defect a derived number rather than a
+        # remembered one, and picks the example that demonstrates the fix.
+        refused.append({"rsid": key[0], "gene": key[1],
+                        "rows": sum(forms.values()), "reason": reason,
+                        "old_rule_would_have_collapsed": len(classes.get("p", ())) == 1,
+                        # The spellings that DEMONSTRATE the reason, so the
+                        # report shows the evidence rather than the top of an
+                        # unrelated frequency list. NOT truncated: the render
+                        # flags a displayed row by membership here, and a cap
+                        # made a genuinely offending spelling show as clean.
+                        "offending": {h: forms[h] for h in evidence},
+                        "spellings": dict(forms.most_common(6))})
+    refused.sort(key=lambda r: (-r["rows"], r["rsid"]))
+    return fix, dict(tally), refused
 
 
 def digit_drop_twins(gene_hgvs: dict) -> list:
-    """Every (gene, shorter, longer) pair differing by one deleted position digit.
-
-    Returns the full set with each side's occurrence count and rsid support, so
-    the adjudication and the abstentions are both reportable.
-    """
+    """Every (gene, shorter, longer) protein pair differing by one deleted digit."""
     out = []
     for gene, forms in gene_hgvs.items():
         parsed = {}
         for h, (n, rsids) in forms.items():
-            m = SUBSTITUTION.match(h)
+            m = PROTEIN.match(h)
             if m:
                 parsed[h] = (m.group(1), m.group(2), m.group(3), n, rsids)
         for x, y in itertools.combinations(sorted(parsed), 2):
@@ -172,79 +241,83 @@ def digit_drop_twins(gene_hgvs: dict) -> list:
                 continue
             out.append({
                 "gene": gene,
-                "shorter": short, "shorter_rows": ps[3], "shorter_rsids": len(ps[4]),
-                "longer": long_, "longer_rows": pl[3], "longer_rsids": len(pl[4]),
+                "shorter": short, "shorter_rows": ps[3],
+                "shorter_rsids": len(ps[4]), "shorter_rsid_rows": sum(ps[4].values()),
+                "shorter_top_rsid": ps[4].most_common(1)[0][0] if ps[4] else None,
+                "longer": long_, "longer_rows": pl[3],
+                "longer_rsids": len(pl[4]), "longer_rsid_rows": sum(pl[4].values()),
+                "longer_top_rsid": pl[4].most_common(1)[0][0] if pl[4] else None,
             })
+    out.sort(key=lambda t: (t["gene"], t["shorter"], t["longer"]))
     return out
 
 
-def resolve_rsids(rs_hgvs: dict) -> tuple:
-    """(rsid, gene) -> the one HGVS its forms all denote, where they do.
+def adjudicate_twins(gene_hgvs: dict) -> tuple:
+    """(corrections, the full twin table with a verdict on every pair).
 
-    Collapses representation variety (`p.T790M` and `c.2369C>T`) and REFUSES
-    multi-allelic sites (rs121913529 = KRAS G12D and G12V and G12A). The test
-    is that every parsable protein form agrees on its substitution triple, so
-    nothing here rests on a dominance threshold.
-    """
-    fix, tally = {}, collections.Counter()
-    for key, forms in rs_hgvs.items():
-        if len(forms) == 1:
-            fix[key] = next(iter(forms))
-            tally["single_form"] += 1
-            continue
-        triples = collections.defaultdict(collections.Counter)
-        for h, n in forms.items():
-            m = SUBSTITUTION.match(h)
-            if m:
-                triples[m.groups()][h] += n
-        if len(triples) == 1:
-            # Every protein form denotes one change; the cDNA spellings under
-            # the same rsid denote it too. Canonical = the commonest protein
-            # form, so the key a reader recognises wins.
-            fix[key] = next(iter(triples.values())).most_common(1)[0][0]
-            tally["one_change_many_spellings"] += 1
-        elif len(triples) > 1:
-            tally["multi_allelic_refused"] += 1
-        else:
-            tally["no_parsable_substitution_refused"] += 1
-    return fix, dict(tally)
-
-
-def build_canonical_maps(gene_hgvs: dict, rs_hgvs: dict) -> tuple:
-    """(twin corrections, rsid->HGVS resolutions, twin table, rsid tally).
-
-    The twin rule fires only when exactly one side carries rsids. Corrections
-    chain -- p.V2617F and p.V61F both reach p.V617F -- so each is followed to a
-    fixed point.
+    A twin is decided only by the rsid. A form that is a digit-drop twin of TWO
+    different canonicals is ambiguous -- KRAS `p.G1V` is one digit from both
+    `p.G12V` and `p.G13V`, which are different substitutions -- so it abstains.
+    An earlier version let the last write win, silently picking by ASCII order
+    and then reporting in the artifact a verdict it had not applied.
     """
     twins = digit_drop_twins(gene_hgvs)
-    raw = {}
+    candidates = collections.defaultdict(set)
     for t in twins:
         has_s, has_l = t["shorter_rsids"] > 0, t["longer_rsids"] > 0
         if has_s == has_l:
-            t["verdict"] = "abstain"
+            t["verdict"] = "abstain:the rsids cannot adjudicate"
             continue
-        canon, wrong = ((t["shorter"], t["longer"]) if has_s
-                        else (t["longer"], t["shorter"]))
+        t["_canon"], t["_wrong"] = ((t["shorter"], t["longer"]) if has_s
+                                    else (t["longer"], t["shorter"]))
+        candidates[(t["gene"], t["_wrong"])].add(t["_canon"])
+
+    fix = {}
+    for t in twins:
+        canon = t.pop("_canon", None)
+        wrong = t.pop("_wrong", None)
+        if canon is None:
+            continue
+        if len(candidates[(t["gene"], wrong)]) > 1:
+            t["verdict"] = ("abstain:this form is one digit from "
+                            + " and ".join(sorted(candidates[(t["gene"], wrong)])))
+            continue
+        fix[(t["gene"], wrong)] = canon
+        short_is_canon = canon == t["shorter"]
         t["verdict"] = "canonical:" + canon
-        t["rows_moved"] = t["longer_rows"] if has_s else t["shorter_rows"]
+        t["rows_moved"] = t["longer_rows"] if short_is_canon else t["shorter_rows"]
+        t["canonical_rows"] = t["shorter_rows"] if short_is_canon else t["longer_rows"]
+        t["canonical_rsid_rows"] = (t["shorter_rsid_rows"] if short_is_canon
+                                    else t["longer_rsid_rows"])
+        t["canonical_rsid"] = (t["shorter_top_rsid"] if short_is_canon
+                               else t["longer_top_rsid"])
         # The rule is load-bearing exactly when it moves the MAJORITY onto the
-        # minority string. Flagged rather than suppressed by a threshold: a
-        # hand-picked cutoff would hide the cases worth a reader's attention.
-        t["moves_majority"] = t["rows_moved"] > (
-            t["shorter_rows"] + t["longer_rows"] - t["rows_moved"])
-        raw[(t["gene"], wrong)] = canon
+        # minority string. Flagged rather than suppressed by a threshold, and
+        # reported WITH the row count its rsid evidence rests on, since most of
+        # these rest on a single row.
+        t["moves_majority"] = t["rows_moved"] > t["canonical_rows"]
+    return fix, twins
 
-    fixed = {}
-    for (gene, wrong), canon in raw.items():
-        seen = {wrong}
-        while (gene, canon) in raw and canon not in seen:
-            seen.add(canon)
-            canon = raw[(gene, canon)]
-        fixed[(gene, wrong)] = canon
 
-    rs_fix, rs_tally = resolve_rsids(rs_hgvs)
-    return fixed, rs_fix, twins, rs_tally
+def build_pairs(path: Path, canonicalize):
+    """(chemical, gene, variant) -> the papers and predicates asserting it."""
+    pairs = collections.defaultdict(
+        lambda: {"pmids": set(), "preds": collections.Counter()})
+    genes = collections.Counter()
+    chem_variant = 0
+    for pmid, pred, sides in iter_rows(path):
+        for (tv, iv), (to, io_) in (sides, sides[::-1]):
+            if tv not in VARIANT_TYPES:
+                continue
+            gene, var = canonicalize(parse_variant(iv))
+            genes[gene] += bool(gene)
+            if to != "Chemical":
+                continue
+            chem_variant += 1
+            e = pairs[(io_, gene, var)]
+            e["pmids"].add(pmid)
+            e["preds"][pred] += 1
+    return pairs, genes, chem_variant
 
 
 def main() -> int:
@@ -262,56 +335,73 @@ def main() -> int:
     gene_hgvs = collections.defaultdict(
         lambda: collections.defaultdict(lambda: [0, collections.Counter()]))
     rs_hgvs = collections.defaultdict(collections.Counter)
-    variant_rows = no_gene = 0
-    for _, _, f, _, _ in iter_variants(RELATIONS):
-        variant_rows += 1
+    rows_touching = occurrences = no_gene = 0
+    for _, _, sides in iter_rows(RELATIONS):
+        hit = False
+        for t, ident in sides:
+            if t not in VARIANT_TYPES:
+                continue
+            hit = True
+            occurrences += 1
+            f = parse_variant(ident)
+            gene, hgvs, rs = (f.get("CorrespondingGene", ""), f.get("HGVS", ""),
+                              f.get("RS#", ""))
+            if not gene:
+                no_gene += 1
+            if gene and hgvs:
+                rec = gene_hgvs[gene][hgvs]
+                rec[0] += 1
+                if rs:
+                    rec[1][rs] += 1
+                    rs_hgvs[(rs, gene)][hgvs] += 1
+        rows_touching += hit
+
+    rs_fix, rs_tally, refused = resolve_rsids(rs_hgvs)
+    twin_fix, twins = adjudicate_twins(gene_hgvs)
+
+    counts = collections.Counter()
+
+    def canonicalize(f):
         gene, hgvs, rs = (f.get("CorrespondingGene", ""), f.get("HGVS", ""),
                           f.get("RS#", ""))
-        if not gene:
-            no_gene += 1
-        if gene and hgvs:
-            rec = gene_hgvs[gene][hgvs]
-            rec[0] += 1
-            if rs:
-                rec[1][rs] += 1
-            if rs:
-                rs_hgvs[(rs, gene)][hgvs] += 1
-
-    twin_fix, rs_fix, twins, rs_tally = build_canonical_maps(gene_hgvs, rs_hgvs)
-
-    # --- pass 2: the drug-by-variant table, on canonical keys ------------------
-    pairs = collections.defaultdict(
-        lambda: {"pmids": set(), "preds": collections.Counter()})
-    rows = chem_variant = rs_filled = rs_respelled = twin_corrected = 0
-    variants = set()
-    genes = collections.Counter()
-
-    for pmid, pred, f, other_t, other_i in iter_variants(RELATIONS):
-        rows += 1
-        gene, hgvs, rs = (f.get("CorrespondingGene", ""), f.get("HGVS", ""),
-                          f.get("RS#", ""))
-        # The rsid resolution applies to EVERY row carrying it, not only the
-        # ones missing an HGVS: `c.2369C>T` and `p.T790M` are the same change
-        # and were being counted as two variants.
+        # Applied to EVERY row carrying the rsid, not only rows missing an HGVS:
+        # `c.2369C>T` and `p.T790M` were being counted as two variants.
         if rs and (rs, gene) in rs_fix:
             canon = rs_fix[(rs, gene)]
             if not hgvs:
-                rs_filled += 1
+                counts["rs_filled"] += 1
             elif hgvs != canon:
-                rs_respelled += 1
+                counts["rs_respelled"] += 1
             hgvs = canon
         if hgvs and (gene, hgvs) in twin_fix:
-            hgvs = twin_fix[(gene, hgvs)]
-            twin_corrected += 1
-        if gene:
-            genes[gene] += 1
-        variants.add((gene, hgvs or rs))
-        if other_t != "Chemical":
-            continue
-        chem_variant += 1
-        key = (other_i, gene, hgvs or rs)
-        pairs[key]["pmids"].add(pmid)
-        pairs[key]["preds"][pred] += 1
+            new = twin_fix[(gene, hgvs)]
+            counts["twin_corrected"] += new != hgvs
+            hgvs = new
+        # A bare rsid keeps its `rs` prefix: `113488022` in a variant column is
+        # indistinguishable from a codon position.
+        return gene, hgvs or (f"rs{rs}" if rs else "")
+
+    # --- pass 2: the drug-by-variant table, on canonical keys ------------------
+    pairs, genes, chem_variant = build_pairs(RELATIONS, canonicalize)
+
+    # The worked examples the report quotes are CHOSEN BY THE DATA -- the biggest
+    # case of each kind -- so the prose cannot go stale against the artifact.
+    movers = [t for t in twins if t.get("moves_majority")]
+    featured = max(movers, key=lambda t: t["shorter_rows"] + t["longer_rows"],
+                   default=None)
+
+    # --- pass 3: the disease profile corroborating the featured twin -----------
+    feat_disease = collections.defaultdict(collections.Counter)
+    if featured:
+        want = {featured["shorter"], featured["longer"]}
+        for _, _, sides in iter_rows(RELATIONS):
+            for (tv, iv), (to, io_) in (sides, sides[::-1]):
+                if tv not in VARIANT_TYPES or to != "Disease":
+                    continue
+                f = parse_variant(iv)
+                if f.get("CorrespondingGene") == featured["gene"] \
+                        and f.get("HGVS") in want:
+                    feat_disease[f["HGVS"]][io_] += 1
 
     def name(ident, prefix=""):
         n = lab.get(ident)
@@ -329,14 +419,10 @@ def main() -> int:
             "assertions": sum(v["preds"].values()),
             "predicates": dict(v["preds"].most_common()),
         })
-    table.sort(key=lambda r: (-r["papers"], r["drug"], r["gene"], r["variant"]))
+    table.sort(key=lambda r: (-r["papers"], r["drug_id"], r["gene_id"], r["variant"]))
 
-    # mtime=0 and no embedded filename, so an unchanged input regenerates a
-    # BYTE-IDENTICAL artifact. gzip.open() stamps the current time into the
-    # header, which makes every rerun a spurious diff and defeats any
-    # byte-identity check on a committed file.
-    with open(OUT_TSV, "wb") as raw, \
-            gzip.GzipFile(fileobj=raw, mode="wb", mtime=0) as gz, \
+    with open(OUT_TSV, "wb") as raw_fh, \
+            gzip.GzipFile(fileobj=raw_fh, mode="wb", mtime=0) as gz, \
             io.TextIOWrapper(gz, encoding="utf-8", newline="\n") as fh:
         fh.write("drug\tdrug_id\tgene\tgene_id\tvariant\tpapers\tassertions\tpredicates\n")
         for r in table:
@@ -345,17 +431,22 @@ def main() -> int:
                      f"{';'.join(f'{k}={n}' for k, n in r['predicates'].items())}\n")
 
     view = [r for r in table if r["gene"] == args.gene] if args.gene else table
-    applied = [t for t in twins if t["verdict"] != "abstain"]
+    applied = [t for t in twins if t["verdict"].startswith("canonical:")]
+    # Distinct variants IN THE MAP, not across the whole variant layer, and genes
+    # are never fused: a gene-less `p.G12C` is its own key, since it could be
+    # KRAS, NRAS or HRAS and this refuses to choose.
+    mapped = {(r["gene_id"], r["variant"]) for r in table}
     res = {
-        "relation_rows_touching_a_variant": rows,
-        "variant_entity_occurrences": variant_rows,
+        "relation_rows_touching_a_variant": rows_touching,
+        "variant_entity_occurrences": occurrences,
         "occurrences_with_no_gene": no_gene,
         "chemical_variant_rows": chem_variant,
-        "rsid_rows_given_an_hgvs": rs_filled,
-        "rsid_rows_respelled_to_one_form": rs_respelled,
+        "rsid_rows_given_an_hgvs": counts["rs_filled"],
+        "rsid_rows_respelled_to_one_form": counts["rs_respelled"],
         "rsid_resolution": rs_tally,
-        "digit_drop_rows_corrected": twin_corrected,
-        "distinct_variants": len(variants),
+        "digit_drop_rows_corrected": counts["twin_corrected"],
+        "distinct_variants_in_the_map": len(mapped),
+        "variants_in_the_map_with_no_gene": sum(1 for g, _ in mapped if not g),
         "distinct_drug_variant_pairs": len(table),
         "pairs_at_min_papers": sum(1 for r in table if r["papers"] >= args.min_papers),
         "single_paper_pairs": sum(1 for r in table if r["papers"] == 1),
@@ -363,32 +454,71 @@ def main() -> int:
             "found": len(twins),
             "adjudicated": len(applied),
             "abstained": len(twins) - len(applied),
-            "moving_the_majority": [t for t in applied if t.get("moves_majority")],
-            "largest": sorted(twins, key=lambda t: -(t["shorter_rows"] + t["longer_rows"]))[:12],
+            "corrections_applied": len(twin_fix),
+            "moving_the_majority": movers,
+            "featured": featured,
+            "featured_diseases": {k: dict(v.most_common(4))
+                                  for k, v in feat_disease.items()},
         },
-        "top_genes_by_variant_rows": {name(g, "gene:"): n for g, n in genes.most_common(15)},
+        "rsid_refusals": {
+            "count": len(refused),
+            "largest": refused[:5],
+            # The superseded protein-forms-only rule would have collapsed these,
+            # so this IS the size of the defect the corrected rule fixes.
+            "the_old_rule_would_have_collapsed": {
+                "rsids": sum(1 for x in refused if x["old_rule_would_have_collapsed"]),
+                "rows": sum(x["rows"] for x in refused
+                            if x["old_rule_would_have_collapsed"]),
+            },
+            # Featured = the largest case the OLD rule got WRONG, which is the
+            # one that demonstrates the fix. The largest refusal overall is BRAF,
+            # whose spellings are mostly variations of one change, so it argues
+            # the opposite of the point.
+            "featured": next((x for x in refused
+                              if x["old_rule_would_have_collapsed"]), None),
+        },
+        "top_genes_by_variant_rows": [
+            {"gene": name(g, "gene:"), "gene_id": g, "rows": n}
+            for g, n in genes.most_common(15)],
         "top_pairs": view[:60],
         "gene_filter": args.gene,
         "min_papers": args.min_papers,
     }
     OUT_JSON.write_text(json.dumps(res, indent=2, sort_keys=True) + "\n")
-    OUT_MD.write_text(render(res), encoding="utf-8")
+    OUT_MD.write_text(render(res, name), encoding="utf-8")
     print(f"wrote {OUT_MD}\nwrote {OUT_JSON}\nwrote {OUT_TSV}")
     print(f"  {chem_variant:,} chemical-variant rows -> {len(table):,} pairs")
-    print(f"  canonicalized: {rs_filled:,} rsid rows given an HGVS, "
-          f"{rs_respelled:,} respelled, {twin_corrected:,} digit-drop "
-          f"({len(applied)} of {len(twins)} twins)")
+    print(f"  rsid: {counts['rs_filled']:,} rows given an HGVS, "
+          f"{counts['rs_respelled']:,} respelled, {len(refused):,} rsids refused")
+    print(f"  twins: {len(applied)} of {len(twins)} adjudicated, "
+          f"{counts['twin_corrected']:,} rows corrected")
     return 0
 
 
-def render(r: dict) -> str:
-    tw = r["twins"]
-    rsr = r["rsid_resolution"]
-    single_pct = 100.0 * r["single_paper_pairs"] / max(r["distinct_drug_variant_pairs"], 1)
-    nogene_pct = 100.0 * r["occurrences_with_no_gene"] / max(r["variant_entity_occurrences"], 1)
+def a_fraction_of(total: int, part: int) -> str:
+    """'a seventh' rather than a hand-written word beside a computed number."""
+    words = {1: "the whole", 2: "half", 3: "a third", 4: "a quarter", 5: "a fifth",
+             6: "a sixth", 7: "a seventh", 8: "an eighth", 9: "a ninth",
+             10: "a tenth"}
+    k = round(total / max(part, 1))
+    return words.get(k, f"1/{k}")
+
+
+def render(r: dict, name) -> str:
+    tw, rsr = r["twins"], r["rsid_resolution"]
+    ref = r["rsid_refusals"]["featured"]
+    old = r["rsid_refusals"]["the_old_rule_would_have_collapsed"]
+    f = tw["featured"]
+    pairs_n = max(r["distinct_drug_variant_pairs"], 1)
+    single_pct = 100.0 * r["single_paper_pairs"] / pairs_n
+    nogene_pct = 100.0 * r["occurrences_with_no_gene"] / max(
+        r["variant_entity_occurrences"], 1)
+
     L = [
         "# Which drugs the literature discusses alongside which mutations", "",
-        "Generated by `scripts/atlas_variant_drug_map.py`.", "",
+        "Generated by `scripts/atlas_variant_drug_map.py`. Every figure below is",
+        "derived, including the worked examples, which name whichever case the",
+        "data says is largest.", "",
         "## Read this first", "",
         "**CIViC, OncoKB and COSMIC are the correct sources for any clinical",
         "question about a drug and a variant.** They curate directionality,",
@@ -400,98 +530,145 @@ def render(r: dict) -> str:
         "predicts RESPONSE land in the same bucket, and nothing here separates",
         "them. A high paper count means the pair is discussed, not that the drug",
         "works.", "",
-        "## Why this data was unread", "",
+        "## Why this layer was unresolved", "",
         "`relations.tsv.gz` carries `ProteinMutation`, `DNAMutation` and `SNP`",
-        "entities annotated inline: `RS#:121434568;HGVS:p.L858R;"
-        "CorrespondingGene:1956` is EGFR L858R. The only code that ever saw them",
-        "discards them -- `atlas_discovery.py:145` skips any identifier beginning",
-        "`RS#`, `HGVS` or `CorrespondingGene`, for the good local reason that it",
-        "asks PubMed whether two terms co-occur and an HGVS string is not a",
-        "searchable term. The effect was that the variant layer was absent from",
-        "every other analysis here.", "",
+        "entities whose identifier holds the variant inline:",
+        "`RS#:121434568;HGVS:p.L858R;CorrespondingGene:1956` is EGFR L858R.", "",
+        "Those entities are **not absent** from this repository. They are nodes in",
+        "the graph index like any other, and `analysis/atlas-emergence.md` already",
+        "ships a row reading `adagrasib -- RS#:121913530;HGVS:p.G12C;"
+        "CorrespondingGene:3845`. What no analysis here has ever done is **parse**",
+        "those fields: the identifier passes through whole, as an opaque label, so",
+        "nothing could group two spellings of one variant or say which gene a",
+        "mutation belongs to. `atlas_discovery.py:145` skips them outright, for a",
+        "good local reason -- it asks PubMed whether two terms co-occur, and an",
+        "HGVS string is not a searchable term.", "",
         "## The identifier is not the variant", "",
         "Keying a pair on whatever string the entity carried splits one variant",
-        "across several keys. Two defects, both measured rather than assumed:", "",
-        "**The rsid is not the variant either.** One change arrives with an",
-        "rsid and without, and at protein and coding level -- `p.T790M` and",
-        "`c.2369C>T` are one variant under rs121434569. But an rsid cannot",
-        "simply be collapsed to one HGVS: **rs121913529 covers KRAS `p.G12D`,",
-        "`p.G12V` and `p.G12A`** -- one multi-allelic codon-12 site, three",
-        "substitutions, different drugs. Merging on rsid would destroy exactly",
-        "the distinction this map exists to show.", "",
-        "The rule that separates them needs no threshold: parse each protein",
-        "form to its (origin, position, new residue) triple and collapse an",
-        "rsid's forms only when every parsable one agrees.", "",
-        "| rsIDs mapping to several HGVS | |", "|---|--:|",
-        f"| one substitution, several spellings: collapsed | "
+        "across several keys. For each of the two defects, the OBVIOUS correction",
+        "is wrong.", "",
+        "### The rsid is not the variant either", "",
+        "One change arrives with an rsid and without, and at protein and coding",
+        "level (`p.T790M` and `c.2369C>T`). But an rsid cannot simply be collapsed",
+        "to one HGVS: **rs121913529 covers KRAS `p.G12D`, `p.G12V` and `p.G12A`**,",
+        "one multi-allelic codon-12 site, three substitutions, different drug",
+        "programs. Merging on rsid would destroy exactly the distinction this map",
+        "exists to show.", "",
+        "The rule needs no threshold: parse every spelling to the change it",
+        "denotes, and collapse only when each representation class agrees",
+        "internally and nothing is unparsable.", "",
+        "| rsids carrying several spellings | |", "|---|--:|",
+        f"| one change, several spellings: collapsed | "
         f"{rsr.get('one_change_many_spellings', 0):,} |",
-        f"| genuinely multi-allelic: refused | "
-        f"{rsr.get('multi_allelic_refused', 0):,} |",
-        f"| no parsable substitution: refused | "
-        f"{rsr.get('no_parsable_substitution_refused', 0):,} |", "",
-        f"That gave **{r['rsid_rows_given_an_hgvs']:,}** rows an HGVS they",
-        f"lacked and respelled **{r['rsid_rows_respelled_to_one_form']:,}** onto",
-        "a single form. BRAF rs113488022 stays split, correctly: alongside",
-        "12,488 `p.V600E` it carries `p.V600G` and `p.E600V`, which the rule",
-        "cannot distinguish from a real second allele.", "",
-        f"**A dropped position digit.** {tw['found']} twin pairs differ by one",
-        "deleted digit. Counts cannot adjudicate them and reading the majority as",
-        "correct is wrong in both directions: TP53 `p.R72P` and ERBB2 `p.I655V`",
-        "are real rs-backed polymorphisms whose longer twins are typos, while",
-        "EGFR `p.T790M` is real and `p.T90M` the typo.", "",
-        "**The rsid adjudicates**, because dbSNP assignment is independent of the",
-        "string that was extracted. Where exactly one side carries rsids that side",
-        f"is canonical ({tw['adjudicated']} pairs, "
-        f"{r['digit_drop_rows_corrected']:,} rows); where neither or both do this",
-        f"abstains ({tw['abstained']} pairs) rather than guessing, the same choice",
-        "`atlas_graph.resolve` makes for a contested surface form.", "",
+        f"| spellings denote different changes: refused | "
+        f"{rsr.get('classes_disagree_refused', 0):,} |",
+        f"| a spelling cannot be checked: refused | "
+        f"{rsr.get('unparsable_spelling_refused', 0):,} |",
+        f"| nothing parsable at all: refused | "
+        f"{rsr.get('nothing_parsable_refused', 0):,} |", "",
+        f"That gave **{r['rsid_rows_given_an_hgvs']:,}** rows an HGVS they lacked "
+        f"and respelled **{r['rsid_rows_respelled_to_one_form']:,}** onto a single "
+        "form.", "",
     ]
+    if ref:
+        prot = max(((h, n) for h, n in ref["spellings"].items() if PROTEIN.match(h)),
+                   key=lambda kv: kv[1], default=("", 0))
+        big = max(ref["spellings"].items(), key=lambda kv: kv[1])
+        L += ["**Testing agreement among protein forms only is not enough**, which",
+              "is how the first version of this was wrong: it swept every other",
+              "spelling onto the winning protein form. That would have collapsed",
+              f"**{old['rsids']:,} of the rsids refused here, carrying "
+              f"{old['rows']:,} rows.**", "",
+              f"The largest of them shows what it cost. rs{ref['rsid']} on "
+              f"{name(ref['gene'], 'gene:')} carries {ref['rows']:,} rows across "
+              f"{ref['reason']}:", "",
+              "| spelling | rows | |", "|---|--:|---|"]
+        for h, n in ref["spellings"].items():
+            flag = " refuses the rsid" if h in ref["offending"] else ""
+            L.append(f"| `{h}` | {n:,} |{flag} |")
+        if prot[0] and prot[1] < big[1]:
+            L += ["",
+                  f"There is exactly one protein spelling, `{prot[0]}` at "
+                  f"{prot[1]:,} rows, so the old rule saw no disagreement among "
+                  f"protein forms and captured all {ref['rows']:,} rows onto it, "
+                  f"including the {big[1]:,}-row `{big[0]}`. The corrected rule "
+                  "compares the other classes too and refuses."]
+        L.append("")
+
+    L += ["### The majority is not the truth", "",
+          f"{tw['found']} twin pairs differ by one deleted position digit. Reading",
+          "the commoner as correct is wrong in both directions: TP53 `p.R72P` and",
+          "ERBB2 `p.I655V` are real rs-backed polymorphisms whose *longer* twins",
+          "are the typos, while EGFR `p.T790M` is real and `p.T90M` the typo.", "",
+          "**The rsid adjudicates**, being assigned independently of the string",
+          "that was extracted. Where exactly one side carries rsids that side is",
+          f"canonical ({tw['adjudicated']} pairs, {r['digit_drop_rows_corrected']:,}",
+          "rows). Where neither or both do, or where one form is one digit from",
+          f"two different canonicals, this **abstains** ({tw['abstained']} pairs),",
+          "the same choice `atlas_graph.resolve` makes for a contested surface",
+          "form. KRAS `p.G1V` is one digit from both `p.G12V` and `p.G13V`, which",
+          "are different substitutions, so it gets no verdict at all.", ""]
+
     if tw["moving_the_majority"]:
         L += ["The rule is load-bearing exactly where it moves the MAJORITY onto",
               "the minority string. Those cases are listed rather than suppressed",
-              "by a threshold, because a hand-picked cutoff would hide precisely",
-              "the rows worth checking:", "",
-              "| gene | non-canonical | rows | canonical | rows | rsids |",
+              "by a threshold, **with the row count their rsid evidence rests on**,",
+              "because most of them rest on very little:", "",
+              "| gene | non-canonical | rows | canonical | rows | rsid-bearing rows |",
               "|---|---|--:|---|--:|--:|"]
-        for t in tw["moving_the_majority"]:
-            s_can = t["verdict"] == "canonical:" + t["shorter"]
-            bad, good = ((t["longer"], t["shorter"]) if s_can
-                         else (t["shorter"], t["longer"]))
-            badn, goodn = ((t["longer_rows"], t["shorter_rows"]) if s_can
-                           else (t["shorter_rows"], t["longer_rows"]))
-            rsn = t["shorter_rsids"] if s_can else t["longer_rsids"]
-            L.append(f"| {t['gene']} | `{bad}` | {badn:,} | `{good}` | {goodn:,} | {rsn} |")
-        L += ["",
-              "The JAK2 row is the one that matters. Gene 3717 `p.V61F` is the",
-              "canonical myeloproliferative-neoplasm driver V617F with a digit",
-              "missing, and it carried 86% of that variant's volume, so the",
-              "uncorrected map read JAK2 V617F at a seventh of its real support.",
-              "The verdict does not rest on counts: `p.V617F` carries rs77375493",
-              "on 620 of 624 rows and `p.V61F` carries no rsid at all, and both",
-              "show the identical Polycythemia Vera / Primary Myelofibrosis /",
-              "Essential Thrombocythemia profile in the same rank order.", ""]
+        for t in sorted(tw["moving_the_majority"], key=lambda x: -x["rows_moved"]):
+            canon = t["verdict"].split(":", 1)[1]
+            bad = t["longer"] if canon == t["shorter"] else t["shorter"]
+            L.append(f"| {name(t['gene'], 'gene:')} | `{bad}` | {t['rows_moved']:,} |"
+                     f" `{canon}` | {t['canonical_rows']:,} |"
+                     f" {t['canonical_rsid_rows']:,} |")
+        L.append("")
+    if f:
+        canon = f["verdict"].split(":", 1)[1]
+        bad = f["longer"] if canon == f["shorter"] else f["shorter"]
+        badn, goodn = f["rows_moved"], f["canonical_rows"]
+        total = badn + goodn
+        L += [f"The {name(f['gene'], 'gene:')} row is the one that matters, and the",
+              f"only one whose rsid evidence is substantial. `{bad}` is `{canon}`",
+              "with a digit missing and carried "
+              f"**{100.0 * badn / total:.0f}%** of that variant's volume, so the",
+              f"uncorrected map read `{canon}` at "
+              f"**{a_fraction_of(total, goodn)}** of its real support.", "",
+              "The verdict does not rest on those counts, which point the other",
+              f"way: `{canon}` carries **rs{f['canonical_rsid']} on",
+              f"{f['canonical_rsid_rows']:,} of its {goodn:,} rows** while `{bad}`",
+              "carries no rsid at all."]
+        dis = tw["featured_diseases"]
+        a, b = list(dis.get(bad, {})), list(dis.get(canon, {}))
+        if a and a[:3] == b[:3]:
+            L += ["They also show the **identical** disease profile in the same",
+                  "rank order, which a coincidence of spelling would not produce: "
+                  + ", ".join(name(x) for x in b[:3]) + "."]
+        L.append("")
+
     L += ["## What is in it", "",
           "| | count |", "|---|--:|",
           f"| relation rows touching a variant | {r['relation_rows_touching_a_variant']:,} |",
-          f"| variant entity occurrences | {r['variant_entity_occurrences']:,} |",
-          f"| ...carrying no gene, left unresolved | {r['occurrences_with_no_gene']:,} ({nogene_pct:.1f}%) |",
+          f"| variant entity occurrences (both sides counted) | {r['variant_entity_occurrences']:,} |",
+          f"| ...carrying no gene | {r['occurrences_with_no_gene']:,} ({nogene_pct:.1f}%) |",
           f"| **chemical-to-variant rows** | **{r['chemical_variant_rows']:,}** |",
-          f"| distinct variants | {r['distinct_variants']:,} |",
+          f"| distinct variants IN THIS MAP | {r['distinct_variants_in_the_map']:,} |",
+          f"| ...of those, carrying no gene | {r['variants_in_the_map_with_no_gene']:,} |",
           f"| distinct (drug, gene, variant) pairs | {r['distinct_drug_variant_pairs']:,} |",
           f"| pairs with >= {r['min_papers']} papers | {r['pairs_at_min_papers']:,} |",
           f"| pairs resting on ONE paper | {r['single_paper_pairs']:,} ({single_pct:.1f}%) |",
           "",
-          f"An HGVS string with no `CorrespondingGene` ({nogene_pct:.1f}% of",
-          "occurrences) is genuinely ambiguous -- `p.G12C` alone could be KRAS,",
-          "NRAS or HRAS -- so those are left unresolved rather than assigned to",
-          "the most likely gene.", "",
+          "A variant with no `CorrespondingGene` is genuinely ambiguous, since",
+          "`p.G12C` alone could be KRAS, NRAS or HRAS. Those are left unresolved",
+          "and keyed separately: never assigned to a likely gene, and never merged",
+          "with the same spelling under a known one. They show `?` as the gene.", "",
           f"**{single_pct:.0f}% of pairs rest on a single paper.** The retraction",
           "analysis found the same shape across the whole graph (70.2%), and it",
           "is the first thing to know before reading any row below as evidence.", "",
           "## Genes carrying the most variant relations", "",
           "| gene | variant-touching rows |", "|---|--:|"]
-    for g, n in list(r["top_genes_by_variant_rows"].items())[:15]:
-        L.append(f"| {g} | {n:,} |")
+    for g in r["top_genes_by_variant_rows"][:15]:
+        L.append(f"| {g['gene']} | {g['rows']:,} |")
     L += ["", "## The most-discussed drug-variant pairs", "",
           "Ranked by asserting papers. `papers` counts distinct PMIDs; the",
           "predicate counts are ASSERTIONS, so they exceed the paper count when",
@@ -510,10 +687,10 @@ def render(r: dict) -> str:
           "* **Extractor error dominates.** PubTator's own error rate is larger",
           "  than most differences between rows here, and the digit-drop finding",
           "  above is a direct instance of it.",
-          "* **Canonicalization is incomplete.** It corrects the twins an rsid can",
-          f"  adjudicate; the {tw['abstained']} abstentions stay fragmented, as do",
-          "  variants written in forms this does not compare (indels, frame",
-          "  shifts, coding-DNA changes).",
+          "* **Reconciliation is deliberately incomplete.** It merges what the",
+          f"  evidence can adjudicate and refuses the rest: {tw['abstained']} twins",
+          f"  and {r['rsid_refusals']['count']:,} rsids stay fragmented rather than",
+          "  guessed, so one variant may still appear under more than one key.",
           "* **Attention is not importance.** A well-studied pair outranks a real",
           "  but rarely-written-about one, exactly as `atlas_model_gaps.py` warns",
           "  for its own ranking.",

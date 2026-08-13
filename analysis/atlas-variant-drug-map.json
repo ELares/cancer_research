@@ -1,39 +1,260 @@
 {
   "chemical_variant_rows": 24043,
-  "digit_drop_rows_corrected": 3826,
-  "distinct_drug_variant_pairs": 13617,
-  "distinct_variants": 52366,
+  "digit_drop_rows_corrected": 3835,
+  "distinct_drug_variant_pairs": 13765,
+  "distinct_variants_in_the_map": 7489,
   "gene_filter": null,
   "min_papers": 3,
-  "occurrences_with_no_gene": 14620,
-  "pairs_at_min_papers": 771,
+  "occurrences_with_no_gene": 14924,
+  "pairs_at_min_papers": 783,
   "relation_rows_touching_a_variant": 228501,
+  "rsid_refusals": {
+    "count": 1348,
+    "featured": {
+      "gene": "4524",
+      "offending": {
+        "c.-1298A>C": 3,
+        "c.1286A>C": 3,
+        "c.1298A>A": 1,
+        "c.1298A>C": 710,
+        "c.1298A>G": 1,
+        "c.1298A>T": 3,
+        "c.1298C>T": 2
+      },
+      "old_rule_would_have_collapsed": true,
+      "reason": "spellings that denote different changes",
+      "rows": 742,
+      "rsid": "1801131",
+      "spellings": {
+        "c.-1298A>C": 3,
+        "c.1286A>C": 3,
+        "c.1298A>C": 710,
+        "c.1298A>T": 3,
+        "c.1298C>T": 2,
+        "p.E429A": 17
+      }
+    },
+    "largest": [
+      {
+        "gene": "673",
+        "offending": {
+          "p.E600V": 6,
+          "p.V600E": 12488,
+          "p.V600G": 3,
+          "p.V600V": 2,
+          "p.V600X": 2
+        },
+        "old_rule_would_have_collapsed": false,
+        "reason": "spellings that denote different changes",
+        "rows": 13069,
+        "rsid": "113488022",
+        "spellings": {
+          "c.1799T&gt": 7,
+          "c.1799T>A": 330,
+          "p.V600E": 12488,
+          "p.V600E,D": 8,
+          "p.V600E,K": 209,
+          "p.V600E,R": 7
+        }
+      },
+      {
+        "gene": "1956",
+        "offending": {
+          "p.L858P": 1,
+          "p.L858R": 3303,
+          "p.L858X": 1,
+          "p.R858L": 1
+        },
+        "old_rule_would_have_collapsed": false,
+        "reason": "spellings that denote different changes",
+        "rows": 3329,
+        "rsid": "121434568",
+        "spellings": {
+          "c.2573T&gt": 4,
+          "c.2573T>G": 19,
+          "p.L858P": 1,
+          "p.L858R": 3303,
+          "p.L858X": 1,
+          "p.R858L": 1
+        }
+      },
+      {
+        "gene": "3845",
+        "offending": {
+          "c.35G>A": 95,
+          "c.35G>C": 6,
+          "c.35G>T": 95,
+          "p.G12A": 126,
+          "p.G12D": 1830,
+          "p.G12F": 2,
+          "p.G12G": 1,
+          "p.G12T": 1,
+          "p.G12V": 873,
+          "p.G12X": 9,
+          "p.V12G": 6
+        },
+        "old_rule_would_have_collapsed": false,
+        "reason": "spellings that denote different changes",
+        "rows": 3081,
+        "rsid": "121913529",
+        "spellings": {
+          "c.35G>A": 95,
+          "c.35G>T": 95,
+          "p.G12A": 126,
+          "p.G12D": 1830,
+          "p.G12V": 873,
+          "p.G12X": 9
+        }
+      },
+      {
+        "gene": "3845",
+        "offending": {
+          "c.34G>A": 14,
+          "c.34G>C": 14,
+          "c.34G>T": 67,
+          "p.G12A": 1,
+          "p.G12C": 1641,
+          "p.G12F": 2,
+          "p.G12R": 154,
+          "p.G12S": 128,
+          "p.G12T": 2,
+          "p.G12W": 1,
+          "p.G12X": 4
+        },
+        "old_rule_would_have_collapsed": false,
+        "reason": "spellings that denote different changes",
+        "rows": 2043,
+        "rsid": "121913530",
+        "spellings": {
+          "c.34G>A": 14,
+          "c.34G>C": 14,
+          "c.34G>T": 67,
+          "p.G12C": 1641,
+          "p.G12R": 154,
+          "p.G12S": 128
+        }
+      },
+      {
+        "gene": "4524",
+        "offending": {
+          "c.-677C>T": 3,
+          "c.665C>T": 4,
+          "c.667C>T": 47,
+          "c.677C>A": 2,
+          "c.677C>C": 6,
+          "c.677C>T": 1736,
+          "c.677T>T": 5,
+          "p.A222V": 31,
+          "p.A429E": 1,
+          "p.C677T": 2,
+          "p.R677T": 3,
+          "p.V222A": 1
+        },
+        "old_rule_would_have_collapsed": false,
+        "reason": "spellings that denote different changes",
+        "rows": 1857,
+        "rsid": "1801133",
+        "spellings": {
+          "c.667C>T": 47,
+          "c.677C&gt": 16,
+          "c.677C>C": 6,
+          "c.677C>T": 1736,
+          "c.677T>T": 5,
+          "p.A222V": 31
+        }
+      }
+    ],
+    "the_old_rule_would_have_collapsed": {
+      "rows": 7764,
+      "rsids": 232
+    }
+  },
   "rsid_resolution": {
-    "multi_allelic_refused": 615,
-    "no_parsable_substitution_refused": 507,
-    "one_change_many_spellings": 1849,
-    "single_form": 8338
+    "classes_disagree_refused": 964,
+    "one_change_many_spellings": 1635,
+    "single_spelling": 8357,
+    "unparsable_spelling_refused": 384
   },
-  "rsid_rows_given_an_hgvs": 12406,
-  "rsid_rows_respelled_to_one_form": 10010,
-  "single_paper_pairs": 11990,
-  "top_genes_by_variant_rows": {
-    "ABCB1": 1847,
-    "ABL1": 1686,
-    "BRAF": 15048,
-    "BRCA1": 3833,
-    "BRCA2": 2439,
-    "EGFR": 11398,
-    "JAK2": 4832,
-    "KIT": 2165,
-    "KRAS": 6517,
-    "MTHFR": 3702,
-    "PIK3CA": 1750,
-    "RET": 2558,
-    "TERT": 1688,
-    "TP53": 6163,
-    "XRCC1": 2294
-  },
+  "rsid_rows_given_an_hgvs": 10454,
+  "rsid_rows_respelled_to_one_form": 6167,
+  "single_paper_pairs": 12111,
+  "top_genes_by_variant_rows": [
+    {
+      "gene": "BRAF",
+      "gene_id": "673",
+      "rows": 15130
+    },
+    {
+      "gene": "EGFR",
+      "gene_id": "1956",
+      "rows": 11849
+    },
+    {
+      "gene": "KRAS",
+      "gene_id": "3845",
+      "rows": 6552
+    },
+    {
+      "gene": "TP53",
+      "gene_id": "7157",
+      "rows": 6245
+    },
+    {
+      "gene": "JAK2",
+      "gene_id": "3717",
+      "rows": 4880
+    },
+    {
+      "gene": "BRCA1",
+      "gene_id": "672",
+      "rows": 3907
+    },
+    {
+      "gene": "MTHFR",
+      "gene_id": "4524",
+      "rows": 3824
+    },
+    {
+      "gene": "RET",
+      "gene_id": "5979",
+      "rows": 2602
+    },
+    {
+      "gene": "BRCA2",
+      "gene_id": "675",
+      "rows": 2477
+    },
+    {
+      "gene": "XRCC1",
+      "gene_id": "7515",
+      "rows": 2344
+    },
+    {
+      "gene": "KIT",
+      "gene_id": "3815",
+      "rows": 2188
+    },
+    {
+      "gene": "ABCB1",
+      "gene_id": "5243",
+      "rows": 1923
+    },
+    {
+      "gene": "PIK3CA",
+      "gene_id": "5290",
+      "rows": 1767
+    },
+    {
+      "gene": "ABL1",
+      "gene_id": "25",
+      "rows": 1719
+    },
+    {
+      "gene": "VEGFA",
+      "gene_id": "7422",
+      "rows": 1704
+    }
+  ],
   "top_pairs": [
     {
       "assertions": 808,
@@ -160,16 +381,16 @@
       "variant": "p.T315I"
     },
     {
-      "assertions": 127,
+      "assertions": 124,
       "drug": "osimertinib",
       "drug_id": "MESH:C000596361",
       "gene": "EGFR",
       "gene_id": "1956",
-      "papers": 124,
+      "papers": 123,
       "predicates": {
         "associate": 22,
-        "inhibit": 61,
-        "stimulate": 44
+        "inhibit": 60,
+        "stimulate": 42
       },
       "variant": "p.C797S"
     },
@@ -401,7 +622,7 @@
         "associate": 4,
         "inhibit": 38
       },
-      "variant": "113488022"
+      "variant": "rs113488022"
     },
     {
       "assertions": 38,
@@ -415,20 +636,6 @@
         "inhibit": 31
       },
       "variant": "p.D816V"
-    },
-    {
-      "assertions": 43,
-      "drug": "Crizotinib",
-      "drug_id": "MESH:D000077547",
-      "gene": "ALK",
-      "gene_id": "238",
-      "papers": 37,
-      "predicates": {
-        "associate": 8,
-        "inhibit": 28,
-        "stimulate": 7
-      },
-      "variant": "p.L1196M"
     },
     {
       "assertions": 38,
@@ -457,18 +664,18 @@
       "variant": "p.D842V"
     },
     {
-      "assertions": 41,
-      "drug": "Folic Acid",
-      "drug_id": "MESH:D005492",
-      "gene": "MTHFR",
-      "gene_id": "4524",
-      "papers": 35,
+      "assertions": 43,
+      "drug": "Crizotinib",
+      "drug_id": "MESH:D000077547",
+      "gene": "ALK",
+      "gene_id": "238",
+      "papers": 37,
       "predicates": {
-        "associate": 38,
-        "inhibit": 2,
-        "stimulate": 1
+        "associate": 8,
+        "inhibit": 28,
+        "stimulate": 7
       },
-      "variant": "p.E429A"
+      "variant": "p.L1196M"
     },
     {
       "assertions": 35,
@@ -480,7 +687,7 @@
       "predicates": {
         "inhibit": 35
       },
-      "variant": "113488022"
+      "variant": "rs113488022"
     },
     {
       "assertions": 33,
@@ -495,20 +702,6 @@
         "stimulate": 5
       },
       "variant": "p.T315I"
-    },
-    {
-      "assertions": 31,
-      "drug": "Hydroxyurea",
-      "drug_id": "MESH:D006918",
-      "gene": "JAK2",
-      "gene_id": "3717",
-      "papers": 30,
-      "predicates": {
-        "associate": 6,
-        "inhibit": 24,
-        "stimulate": 1
-      },
-      "variant": "p.V617F"
     },
     {
       "assertions": 30,
@@ -534,6 +727,32 @@
         "inhibit": 30
       },
       "variant": "p.V600K"
+    },
+    {
+      "assertions": 31,
+      "drug": "Folic Acid",
+      "drug_id": "MESH:D005492",
+      "gene": "MTHFR",
+      "gene_id": "4524",
+      "papers": 30,
+      "predicates": {
+        "associate": 31
+      },
+      "variant": "c.1298A>C"
+    },
+    {
+      "assertions": 31,
+      "drug": "Hydroxyurea",
+      "drug_id": "MESH:D006918",
+      "gene": "JAK2",
+      "gene_id": "3717",
+      "papers": 30,
+      "predicates": {
+        "associate": 6,
+        "inhibit": 24,
+        "stimulate": 1
+      },
+      "variant": "p.V617F"
     },
     {
       "assertions": 32,
@@ -576,33 +795,6 @@
       "variant": "p.C481S"
     },
     {
-      "assertions": 28,
-      "drug": "Folic Acid",
-      "drug_id": "MESH:D005492",
-      "gene": "MTHFR",
-      "gene_id": "4524",
-      "papers": 27,
-      "predicates": {
-        "associate": 18,
-        "inhibit": 5,
-        "stimulate": 5
-      },
-      "variant": "1801133"
-    },
-    {
-      "assertions": 29,
-      "drug": "Homocysteine",
-      "drug_id": "MESH:D006710",
-      "gene": "MTHFR",
-      "gene_id": "4524",
-      "papers": 27,
-      "predicates": {
-        "associate": 20,
-        "stimulate": 9
-      },
-      "variant": "c.677C>T"
-    },
-    {
       "assertions": 27,
       "drug": "Iodine-131",
       "drug_id": "MESH:C000614965",
@@ -617,34 +809,6 @@
       "variant": "p.V600E"
     },
     {
-      "assertions": 31,
-      "drug": "Mercaptopurine",
-      "drug_id": "MESH:D015122",
-      "gene": "NUDT15",
-      "gene_id": "55270",
-      "papers": 27,
-      "predicates": {
-        "associate": 12,
-        "inhibit": 3,
-        "stimulate": 16
-      },
-      "variant": "p.R139C"
-    },
-    {
-      "assertions": 30,
-      "drug": "Platinum",
-      "drug_id": "MESH:D010984",
-      "gene": "ERCC1",
-      "gene_id": "2067",
-      "papers": 27,
-      "predicates": {
-        "associate": 7,
-        "inhibit": 12,
-        "stimulate": 11
-      },
-      "variant": "p.N118N"
-    },
-    {
       "assertions": 27,
       "drug": "midostaurin",
       "drug_id": "MESH:C059539",
@@ -656,6 +820,33 @@
         "inhibit": 24
       },
       "variant": "p.D816V"
+    },
+    {
+      "assertions": 28,
+      "drug": "Folic Acid",
+      "drug_id": "MESH:D005492",
+      "gene": "MTHFR",
+      "gene_id": "4524",
+      "papers": 27,
+      "predicates": {
+        "associate": 18,
+        "inhibit": 5,
+        "stimulate": 5
+      },
+      "variant": "rs1801133"
+    },
+    {
+      "assertions": 29,
+      "drug": "Homocysteine",
+      "drug_id": "MESH:D006710",
+      "gene": "MTHFR",
+      "gene_id": "4524",
+      "papers": 27,
+      "predicates": {
+        "associate": 20,
+        "stimulate": 9
+      },
+      "variant": "c.677C>T"
     },
     {
       "assertions": 26,
@@ -673,13 +864,40 @@
     },
     {
       "assertions": 27,
+      "drug": "lorlatinib",
+      "drug_id": "MESH:C000590786",
+      "gene": "ALK",
+      "gene_id": "238",
+      "papers": 25,
+      "predicates": {
+        "associate": 8,
+        "inhibit": 16,
+        "stimulate": 3
+      },
+      "variant": "p.G1202R"
+    },
+    {
+      "assertions": 25,
+      "drug": "Cetuximab",
+      "drug_id": "MESH:D000068818",
+      "gene": "EGFR",
+      "gene_id": "1956",
+      "papers": 25,
+      "predicates": {
+        "associate": 2,
+        "inhibit": 23
+      },
+      "variant": "p.T790M"
+    },
+    {
+      "assertions": 26,
       "drug": "Imatinib Mesylate",
       "drug_id": "MESH:D000068877",
       "gene": "ABL1",
       "gene_id": "25",
-      "papers": 26,
+      "papers": 25,
       "predicates": {
-        "associate": 3,
+        "associate": 2,
         "inhibit": 18,
         "stimulate": 6
       },
@@ -711,47 +929,7 @@
         "inhibit": 1,
         "stimulate": 9
       },
-      "variant": "671"
-    },
-    {
-      "assertions": 25,
-      "drug": "Cetuximab",
-      "drug_id": "MESH:D000068818",
-      "gene": "EGFR",
-      "gene_id": "1956",
-      "papers": 25,
-      "predicates": {
-        "associate": 2,
-        "inhibit": 23
-      },
-      "variant": "p.T790M"
-    },
-    {
-      "assertions": 27,
-      "drug": "lorlatinib",
-      "drug_id": "MESH:C000590786",
-      "gene": "ALK",
-      "gene_id": "238",
-      "papers": 25,
-      "predicates": {
-        "associate": 8,
-        "inhibit": 16,
-        "stimulate": 3
-      },
-      "variant": "p.G1202R"
-    },
-    {
-      "assertions": 24,
-      "drug": "Afatinib",
-      "drug_id": "MESH:D000077716",
-      "gene": "EGFR",
-      "gene_id": "1956",
-      "papers": 24,
-      "predicates": {
-        "associate": 4,
-        "inhibit": 20
-      },
-      "variant": "p.S768I"
+      "variant": "rs671"
     },
     {
       "assertions": 24,
@@ -776,6 +954,46 @@
         "inhibit": 24
       },
       "variant": "p.V600K"
+    },
+    {
+      "assertions": 24,
+      "drug": "Afatinib",
+      "drug_id": "MESH:D000077716",
+      "gene": "EGFR",
+      "gene_id": "1956",
+      "papers": 24,
+      "predicates": {
+        "associate": 4,
+        "inhibit": 20
+      },
+      "variant": "p.S768I"
+    },
+    {
+      "assertions": 23,
+      "drug": "osimertinib",
+      "drug_id": "MESH:C000596361",
+      "gene": "BRAF",
+      "gene_id": "673",
+      "papers": 23,
+      "predicates": {
+        "associate": 1,
+        "inhibit": 17,
+        "stimulate": 5
+      },
+      "variant": "p.V600E"
+    },
+    {
+      "assertions": 23,
+      "drug": "Imatinib Mesylate",
+      "drug_id": "MESH:D000068877",
+      "gene": "PDGFRA",
+      "gene_id": "5156",
+      "papers": 23,
+      "predicates": {
+        "associate": 1,
+        "inhibit": 22
+      },
+      "variant": "p.D842V"
     },
     {
       "assertions": 23,
@@ -806,31 +1024,28 @@
       "variant": "c.677C>T"
     },
     {
-      "assertions": 23,
-      "drug": "Imatinib Mesylate",
-      "drug_id": "MESH:D000068877",
-      "gene": "PDGFRA",
-      "gene_id": "5156",
-      "papers": 23,
-      "predicates": {
-        "associate": 1,
-        "inhibit": 22
-      },
-      "variant": "p.D842V"
-    },
-    {
-      "assertions": 23,
-      "drug": "osimertinib",
-      "drug_id": "MESH:C000596361",
+      "assertions": 22,
+      "drug": "trametinib",
+      "drug_id": "MESH:C560077",
       "gene": "BRAF",
       "gene_id": "673",
-      "papers": 23,
+      "papers": 22,
       "predicates": {
-        "associate": 1,
-        "inhibit": 17,
-        "stimulate": 5
+        "inhibit": 22
       },
-      "variant": "p.V600E"
+      "variant": "p.V600E,K"
+    },
+    {
+      "assertions": 22,
+      "drug": "dabrafenib",
+      "drug_id": "MESH:C561627",
+      "gene": "BRAF",
+      "gene_id": "673",
+      "papers": 22,
+      "predicates": {
+        "inhibit": 22
+      },
+      "variant": "p.V600E,K"
     },
     {
       "assertions": 25,
@@ -847,201 +1062,122 @@
     }
   ],
   "twins": {
-    "abstained": 33,
-    "adjudicated": 36,
-    "found": 69,
-    "largest": [
-      {
-        "gene": "3717",
-        "longer": "p.V617F",
-        "longer_rows": 622,
-        "longer_rsids": 1,
-        "moves_majority": true,
-        "rows_moved": 3747,
-        "shorter": "p.V61F",
-        "shorter_rows": 3747,
-        "shorter_rsids": 0,
-        "verdict": "canonical:p.V617F"
+    "abstained": 37,
+    "adjudicated": 32,
+    "corrections_applied": 32,
+    "featured": {
+      "canonical_rows": 624,
+      "canonical_rsid": "77375493",
+      "canonical_rsid_rows": 624,
+      "gene": "3717",
+      "longer": "p.V617F",
+      "longer_rows": 624,
+      "longer_rsid_rows": 624,
+      "longer_rsids": 1,
+      "longer_top_rsid": "77375493",
+      "moves_majority": true,
+      "rows_moved": 3759,
+      "shorter": "p.V61F",
+      "shorter_rows": 3759,
+      "shorter_rsid_rows": 0,
+      "shorter_rsids": 0,
+      "shorter_top_rsid": null,
+      "verdict": "canonical:p.V617F"
+    },
+    "featured_diseases": {
+      "p.V617F": {
+        "MESH:D009369": 88,
+        "MESH:D011087": 139,
+        "MESH:D013920": 55,
+        "MESH:D055728": 71
       },
-      {
-        "gene": "1956",
-        "longer": "p.T790M",
-        "longer_rows": 3958,
-        "longer_rsids": 1,
-        "moves_majority": false,
-        "rows_moved": 3,
-        "shorter": "p.T90M",
-        "shorter_rows": 3,
-        "shorter_rsids": 0,
-        "verdict": "canonical:p.T790M"
-      },
-      {
-        "gene": "1956",
-        "longer": "p.T790M",
-        "longer_rows": 3958,
-        "longer_rsids": 1,
-        "moves_majority": false,
-        "rows_moved": 1,
-        "shorter": "p.T79M",
-        "shorter_rows": 1,
-        "shorter_rsids": 0,
-        "verdict": "canonical:p.T790M"
-      },
-      {
-        "gene": "3717",
-        "longer": "p.V671F",
-        "longer_rows": 4,
-        "longer_rsids": 0,
-        "shorter": "p.V61F",
-        "shorter_rows": 3747,
-        "shorter_rsids": 0,
-        "verdict": "abstain"
-      },
-      {
-        "gene": "1956",
-        "longer": "p.L858R",
-        "longer_rows": 3231,
-        "longer_rsids": 1,
-        "moves_majority": false,
-        "rows_moved": 3,
-        "shorter": "p.L85R",
-        "shorter_rows": 3,
-        "shorter_rsids": 0,
-        "verdict": "canonical:p.L858R"
-      },
-      {
-        "gene": "3845",
-        "longer": "p.G12V",
-        "longer_rows": 863,
-        "longer_rsids": 1,
-        "moves_majority": false,
-        "rows_moved": 2,
-        "shorter": "p.G1V",
-        "shorter_rows": 2,
-        "shorter_rsids": 0,
-        "verdict": "canonical:p.G12V"
-      },
-      {
-        "gene": "3717",
-        "longer": "p.V2617F",
-        "longer_rows": 11,
-        "longer_rsids": 0,
-        "moves_majority": false,
-        "rows_moved": 11,
-        "shorter": "p.V617F",
-        "shorter_rows": 622,
-        "shorter_rsids": 1,
-        "verdict": "canonical:p.V617F"
-      },
-      {
-        "gene": "3717",
-        "longer": "p.V1617F",
-        "longer_rows": 3,
-        "longer_rsids": 0,
-        "moves_majority": false,
-        "rows_moved": 3,
-        "shorter": "p.V617F",
-        "shorter_rows": 622,
-        "shorter_rsids": 1,
-        "verdict": "canonical:p.V617F"
-      },
-      {
-        "gene": "7157",
-        "longer": "p.R172P",
-        "longer_rows": 3,
-        "longer_rsids": 0,
-        "moves_majority": false,
-        "rows_moved": 3,
-        "shorter": "p.R72P",
-        "shorter_rows": 600,
-        "shorter_rsids": 1,
-        "verdict": "canonical:p.R72P"
-      },
-      {
-        "gene": "207",
-        "longer": "p.E117K",
-        "longer_rows": 2,
-        "longer_rsids": 1,
-        "shorter": "p.E17K",
-        "shorter_rows": 320,
-        "shorter_rsids": 1,
-        "verdict": "abstain"
-      },
-      {
-        "gene": "5290",
-        "longer": "p.E542K",
-        "longer_rows": 196,
-        "longer_rsids": 1,
-        "moves_majority": false,
-        "rows_moved": 1,
-        "shorter": "p.E42K",
-        "shorter_rows": 1,
-        "shorter_rsids": 0,
-        "verdict": "canonical:p.E542K"
-      },
-      {
-        "gene": "324",
-        "longer": "p.I1307K",
-        "longer_rows": 162,
-        "longer_rsids": 1,
-        "moves_majority": false,
-        "rows_moved": 1,
-        "shorter": "p.I307K",
-        "shorter_rows": 1,
-        "shorter_rsids": 0,
-        "verdict": "canonical:p.I1307K"
+      "p.V61F": {
+        "MESH:D009369": 655,
+        "MESH:D011087": 688,
+        "MESH:D013920": 342,
+        "MESH:D055728": 365
       }
-    ],
+    },
+    "found": 69,
     "moving_the_majority": [
       {
-        "gene": "4763",
-        "longer": "p.Q1815X",
-        "longer_rows": 2,
-        "longer_rsids": 0,
-        "moves_majority": true,
-        "rows_moved": 2,
-        "shorter": "p.Q181X",
-        "shorter_rows": 1,
-        "shorter_rsids": 1,
-        "verdict": "canonical:p.Q181X"
-      },
-      {
+        "canonical_rows": 624,
+        "canonical_rsid": "77375493",
+        "canonical_rsid_rows": 624,
         "gene": "3717",
         "longer": "p.V617F",
-        "longer_rows": 622,
+        "longer_rows": 624,
+        "longer_rsid_rows": 624,
         "longer_rsids": 1,
+        "longer_top_rsid": "77375493",
         "moves_majority": true,
-        "rows_moved": 3747,
+        "rows_moved": 3759,
         "shorter": "p.V61F",
-        "shorter_rows": 3747,
+        "shorter_rows": 3759,
+        "shorter_rsid_rows": 0,
         "shorter_rsids": 0,
+        "shorter_top_rsid": null,
         "verdict": "canonical:p.V617F"
       },
       {
-        "gene": "79811",
-        "longer": "p.T1010I",
-        "longer_rows": 18,
-        "longer_rsids": 0,
-        "moves_majority": true,
-        "rows_moved": 18,
-        "shorter": "p.T110I",
-        "shorter_rows": 1,
-        "shorter_rsids": 1,
-        "verdict": "canonical:p.T110I"
-      },
-      {
+        "canonical_rows": 1,
+        "canonical_rsid": "758020217",
+        "canonical_rsid_rows": 1,
         "gene": "4734",
         "longer": "p.K848R",
         "longer_rows": 1,
+        "longer_rsid_rows": 1,
         "longer_rsids": 1,
+        "longer_top_rsid": "758020217",
         "moves_majority": true,
         "rows_moved": 2,
         "shorter": "p.K88R",
         "shorter_rows": 2,
+        "shorter_rsid_rows": 0,
         "shorter_rsids": 0,
+        "shorter_top_rsid": null,
         "verdict": "canonical:p.K848R"
+      },
+      {
+        "canonical_rows": 1,
+        "canonical_rsid": "753529924",
+        "canonical_rsid_rows": 1,
+        "gene": "4763",
+        "longer": "p.Q1815X",
+        "longer_rows": 2,
+        "longer_rsid_rows": 0,
+        "longer_rsids": 0,
+        "longer_top_rsid": null,
+        "moves_majority": true,
+        "rows_moved": 2,
+        "shorter": "p.Q181X",
+        "shorter_rows": 1,
+        "shorter_rsid_rows": 1,
+        "shorter_rsids": 1,
+        "shorter_top_rsid": "753529924",
+        "verdict": "canonical:p.Q181X"
+      },
+      {
+        "canonical_rows": 1,
+        "canonical_rsid": "555212753",
+        "canonical_rsid_rows": 1,
+        "gene": "79811",
+        "longer": "p.T1010I",
+        "longer_rows": 18,
+        "longer_rsid_rows": 0,
+        "longer_rsids": 0,
+        "longer_top_rsid": null,
+        "moves_majority": true,
+        "rows_moved": 18,
+        "shorter": "p.T110I",
+        "shorter_rows": 1,
+        "shorter_rsid_rows": 1,
+        "shorter_rsids": 1,
+        "shorter_top_rsid": "555212753",
+        "verdict": "canonical:p.T110I"
       }
     ]
   },
-  "variant_entity_occurrences": 228501
+  "variant_entity_occurrences": 232801,
+  "variants_in_the_map_with_no_gene": 953
 }
