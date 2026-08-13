@@ -48,25 +48,37 @@ one multi-allelic codon-12 site, three substitutions, different drug
 programs. Merging on rsid would destroy exactly the distinction this map
 exists to show.
 
-The rule needs no threshold: parse every spelling to the change it
-denotes, and collapse only when each representation class agrees
-internally and nothing is unparsable.
+The rule needs no threshold. Every spelling must parse; each
+representation class must agree internally; and a protein spelling must
+agree with a coding one ACROSS classes, since codon = (coding position
++ 2) // 3 relates them. Failing any of the three refuses the whole
+rsid.
 
 | rsids carrying several spellings | |
 |---|--:|
-| one change, several spellings: collapsed | 1,635 |
-| spellings denote different changes: refused | 964 |
-| a spelling cannot be checked: refused | 384 |
+| one change, several spellings: collapsed | 1,539 |
+| spellings denote different changes: refused | 915 |
+| protein and coding spellings cannot both be right: refused | 99 |
+| a spelling cannot be checked: refused | 430 |
 | nothing parsable at all: refused | 0 |
 
-That gave **10,454** rows an HGVS they lacked and respelled **6,167** onto a single form.
+The cross-class test is the one internal agreement cannot see, and it
+is also the strongest evidence that the collapses are right: where a
+protein and a coding spelling can be compared, the codon relation
+**agrees** for 1,539 rsids and
+fails for 99. It
+catches rs1494558, where `p.I66T` sits beside `c.412G>A` and codon 138
+is not residue 66, and rs2297518, where a missense sits beside a
+promoter position that cannot encode it.
+
+That gave **9,975** rows an HGVS they lacked and respelled **5,889** onto a single form.
 
 **Testing agreement among protein forms only is not enough**, which
 is how the first version of this was wrong: it swept every other
 spelling onto the winning protein form. That would have collapsed
-**232 of the rsids refused here, carrying 7,764 rows.**
+**337 of the rsids refused here, moving 4,527 rows onto a key they do not belong to.**
 
-The largest of them shows what it cost. rs1801131 on MTHFR carries 742 rows across spellings that denote different changes:
+The largest of them shows what it cost. rs1801131 on MTHFR carries 742 rows across 10 spellings, spellings that denote different changes (top 6 shown):
 
 | spelling | rows | |
 |---|--:|---|
@@ -77,7 +89,7 @@ The largest of them shows what it cost. rs1801131 on MTHFR carries 742 rows acro
 | `c.1298A>T` | 3 | refuses the rsid |
 | `c.1298C>T` | 2 | refuses the rsid |
 
-There is exactly one protein spelling, `p.E429A` at 17 rows, so the old rule saw no disagreement among protein forms and captured all 742 rows onto it, including the 710-row `c.1298A>C`. The corrected rule compares the other classes too and refuses.
+There is exactly one protein spelling, `p.E429A` at 17 rows, so the old rule saw no disagreement among protein forms and captured all 742 rows onto it, including the 710-row `c.1298A>C`.
 
 ### The majority is not the truth
 
@@ -127,11 +139,11 @@ rank order, which a coincidence of spelling would not produce: Polycythemia Vera
 | variant entity occurrences (both sides counted) | 232,801 |
 | ...carrying no gene | 14,924 (6.4%) |
 | **chemical-to-variant rows** | **24,043** |
-| distinct variants IN THIS MAP | 7,489 |
+| distinct variants IN THIS MAP | 7,510 |
 | ...of those, carrying no gene | 953 |
-| distinct (drug, gene, variant) pairs | 13,765 |
+| distinct (drug, gene, variant) pairs | 13,784 |
 | pairs with >= 3 papers | 783 |
-| pairs resting on ONE paper | 12,111 (88.0%) |
+| pairs resting on ONE paper | 12,132 (88.0%) |
 
 A variant with no `CorrespondingGene` is genuinely ambiguous, since
 `p.G12C` alone could be KRAS, NRAS or HRAS. Those are left unresolved
@@ -146,21 +158,21 @@ is the first thing to know before reading any row below as evidence.
 
 | gene | variant-touching rows |
 |---|--:|
-| BRAF | 15,130 |
-| EGFR | 11,849 |
-| KRAS | 6,552 |
-| TP53 | 6,245 |
-| JAK2 | 4,880 |
-| BRCA1 | 3,907 |
-| MTHFR | 3,824 |
-| RET | 2,602 |
-| BRCA2 | 2,477 |
-| XRCC1 | 2,344 |
-| KIT | 2,188 |
-| ABCB1 | 1,923 |
-| PIK3CA | 1,767 |
-| ABL1 | 1,719 |
-| VEGFA | 1,704 |
+| BRAF | 15,070 |
+| EGFR | 11,430 |
+| KRAS | 6,530 |
+| TP53 | 6,179 |
+| JAK2 | 4,843 |
+| BRCA1 | 3,848 |
+| MTHFR | 3,704 |
+| RET | 2,562 |
+| BRCA2 | 2,445 |
+| XRCC1 | 2,304 |
+| KIT | 2,171 |
+| ABCB1 | 1,847 |
+| PIK3CA | 1,752 |
+| TERT | 1,691 |
+| ABL1 | 1,687 |
 
 ## The most-discussed drug-variant pairs
 
@@ -222,7 +234,7 @@ pair is *written about*, and `associate` does not say which direction.
   above is a direct instance of it.
 * **Reconciliation is deliberately incomplete.** It merges what the
   evidence can adjudicate and refuses the rest: 37 twins
-  and 1,348 rsids stay fragmented rather than
+  and 1,444 rsids stay fragmented rather than
   guessed, so one variant may still appear under more than one key.
 * **Attention is not importance.** A well-studied pair outranks a real
   but rarely-written-about one, exactly as `atlas_model_gaps.py` warns

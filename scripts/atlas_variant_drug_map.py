@@ -45,12 +45,20 @@ several keys. Two defects, and for each the OBVIOUS correction is wrong:
 
    THE AGREEMENT TEST MUST COVER EVERY SPELLING, which is where the first
    version of this was wrong. Testing agreement among PROTEIN forms only and
-   sweeping the rest onto the winner over-merged 222 rsids and 7,713 rows:
-   under rs1801131 a 17-row `p.E429A` absorbed `c.1298A>C` (710) together with
-   `c.1286A>C` and `c.1298A>T`, which are a different position and a different
-   allele. Each representation class must now agree internally AND every
-   spelling must parse, so one unparsable string refuses the whole rsid rather
-   than riding along.
+   sweeping the rest onto the winner let a 17-row `p.E429A` absorb rs1801131's
+   `c.1298A>C` (710) together with `c.1286A>C` and `c.1298A>T`, which are a
+   different position and a different allele. (The size of that defect is
+   computed and reported; it is deliberately not repeated here, because the
+   first fix for it hand-wrote the figure into this docstring and it went stale
+   against the artifact within one commit.)
+
+   Three tests now, and a spelling failing any of them refuses its whole rsid:
+   every spelling must PARSE, each representation class must agree INTERNALLY,
+   and a protein spelling must agree with a coding one ACROSS classes, since
+   codon = (coding position + 2) // 3 relates them. That last test is what
+   catches rs1494558, where `p.I66T` and `c.412G>A` (codon 138) are two
+   different variants, and rs2297518, where a missense sits beside a promoter
+   position that cannot encode it.
 
 2. THE MAJORITY IS NOT THE TRUTH. Some twins differ by one deleted position
    digit, and reading the commoner as correct is wrong in both directions: TP53
@@ -143,19 +151,70 @@ def classify_spellings(forms) -> tuple:
     Returns (classes, n_unparsable). `classes` maps a class key ("p", "c", "g",
     ...) to the set of distinct changes seen in it, so a class holding more than
     one change is a disagreement.
+
+    `X` and `*` both denote a stop codon, so they are normalised together: nine
+    rsids were being reported to the reader as carrying "spellings that denote
+    different changes" when the only difference was `p.R461X` against
+    `p.R461*`. A no-change nucleotide spelling (`A>A`) denotes nothing and is
+    counted unparsable rather than allowed to agree with itself.
     """
     classes, unparsable = collections.defaultdict(set), 0
     for h in forms:
         m = PROTEIN.match(h)
         if m:
-            classes["p"].add(m.groups())
+            orig, pos, new = m.groups()
+            classes["p"].add((orig, pos, "*" if new == "X" else new))
             continue
         m = NUCLEOTIDE.match(h)
-        if m:
+        if m and m.group(3) != m.group(4):
             classes[m.group(1)].add(m.groups()[1:])
             continue
         unparsable += 1
     return classes, unparsable
+
+
+def codon_of(coding_position: str):
+    """The codon a plain coding position falls in, or None if there is not one.
+
+    A `+`/`-` offset is intronic or untranslated, so no protein change can
+    correspond to it and the caller must refuse rather than compare.
+    """
+    if coding_position.startswith(("+", "-")):
+        return None
+    return (int(coding_position) + 2) // 3
+
+
+def cross_class_conflict(classes: dict):
+    """Why a protein spelling cannot denote the same change as a coding one.
+
+    Returns a description, or None when they agree. Each class is already known
+    to hold exactly one change when this is called.
+
+    This is the only test that compares ACROSS representations, and it is what
+    the internal-agreement rule alone cannot see: rs1494558 carries `p.I66T`
+    beside `c.412G>A`, each the sole member of its class, and codon 138 is not
+    residue 66. On this corpus the relation AGREES for 1,521 of the 1,635 rsids
+    the internal test would collapse, which is independent evidence that the
+    collapse is right in the ordinary case.
+    """
+    if "p" not in classes:
+        return None
+    residue = int(next(iter(classes["p"]))[1])
+    for cls_key, changes in classes.items():
+        if cls_key == "p":
+            continue
+        if cls_key != "c":
+            # A genomic, mitochondrial or non-coding-transcript position has no
+            # arithmetic relation to a residue number, so nothing can be
+            # checked. Refusing keeps a variant visibly fragmented, which is the
+            # failure this whole design prefers.
+            return f"a `{cls_key}.` position cannot be checked against a residue number"
+        codon = codon_of(next(iter(changes))[0])
+        if codon is None:
+            return "a protein change beside a non-coding position"
+        if codon != residue:
+            return f"coding position falls in codon {codon}, not residue {residue}"
+    return None
 
 
 def resolve_rsids(rs_hgvs: dict) -> tuple:
@@ -194,10 +253,15 @@ def resolve_rsids(rs_hgvs: dict) -> tuple:
             tally["nothing_parsable_refused"] += 1
             reason = "no parsable spelling at all"
             evidence = sorted(forms)
+        elif (conflict := cross_class_conflict(classes)):
+            tally["classes_cannot_be_reconciled_refused"] += 1
+            reason = conflict
+            evidence = sorted(forms)
         else:
-            # Every spelling denotes one change. Canonical is the commonest
-            # PROTEIN form when there is one, since that is the key a reader
-            # recognises, else the commonest spelling of any class.
+            # Every spelling denotes one change, and a protein spelling agrees
+            # with its coding one. Canonical is the commonest PROTEIN form when
+            # there is one, since that is the key a reader recognises, else the
+            # commonest spelling of any class.
             prot = {h: n for h, n in forms.items() if PROTEIN.match(h)}
             fix[key] = max((prot or forms).items(), key=lambda kv: (kv[1], kv[0]))[0]
             tally["one_change_many_spellings"] += 1
@@ -206,15 +270,25 @@ def resolve_rsids(rs_hgvs: dict) -> tuple:
         # other spelling swept onto the winner -- have collapsed this? Recording
         # it makes the size of that defect a derived number rather than a
         # remembered one, and picks the example that demonstrates the fix.
+        # Would the SUPERSEDED rule -- agreement among protein forms only, every
+        # other spelling swept onto the winner -- have collapsed this? And how
+        # many rows would have CHANGED KEY, which is smaller than the rsid's
+        # total and is the number that means something.
+        old_collapse = len(classes.get("p", ())) == 1
+        old_canon = max(((h, n) for h, n in forms.items() if PROTEIN.match(h)),
+                        key=lambda kv: (kv[1], kv[0]), default=("", 0))
         refused.append({"rsid": key[0], "gene": key[1],
                         "rows": sum(forms.values()), "reason": reason,
-                        "old_rule_would_have_collapsed": len(classes.get("p", ())) == 1,
+                        "old_rule_would_have_collapsed": old_collapse,
+                        "old_rule_rows_moved": (sum(forms.values()) - old_canon[1]
+                                                if old_collapse else 0),
                         # The spellings that DEMONSTRATE the reason, so the
                         # report shows the evidence rather than the top of an
                         # unrelated frequency list. NOT truncated: the render
                         # flags a displayed row by membership here, and a cap
                         # made a genuinely offending spelling show as clean.
                         "offending": {h: forms[h] for h in evidence},
+                        "n_spellings": len(forms),
                         "spellings": dict(forms.most_common(6))})
     refused.sort(key=lambda r: (-r["rows"], r["rsid"]))
     return fix, dict(tally), refused
@@ -304,20 +378,32 @@ def build_pairs(path: Path, canonicalize):
     pairs = collections.defaultdict(
         lambda: {"pmids": set(), "preds": collections.Counter()})
     genes = collections.Counter()
+    # Both measures, so the report's "rows" column can be checked against the
+    # occurrence count it is NOT. They differ only for a gene appearing twice
+    # in one relation row, which is exactly the confusion being guarded.
+    gene_occurrences = collections.Counter()
     chem_variant = 0
     for pmid, pred, sides in iter_rows(path):
+        # Per ROW, not per occurrence: 4,300 rows carry a variant on both sides,
+        # and the column is labelled "variant-touching rows". Counting each
+        # occurrence inflated BRAF by 60 and EGFR by 419.
+        row_genes = set()
         for (tv, iv), (to, io_) in (sides, sides[::-1]):
             if tv not in VARIANT_TYPES:
                 continue
             gene, var = canonicalize(parse_variant(iv))
-            genes[gene] += bool(gene)
+            if gene:
+                row_genes.add(gene)
+                gene_occurrences[gene] += 1
             if to != "Chemical":
                 continue
             chem_variant += 1
             e = pairs[(io_, gene, var)]
             e["pmids"].add(pmid)
             e["preds"][pred] += 1
-    return pairs, genes, chem_variant
+        for g in row_genes:
+            genes[g] += 1
+    return pairs, genes, gene_occurrences, chem_variant
 
 
 def main() -> int:
@@ -382,7 +468,7 @@ def main() -> int:
         return gene, hgvs or (f"rs{rs}" if rs else "")
 
     # --- pass 2: the drug-by-variant table, on canonical keys ------------------
-    pairs, genes, chem_variant = build_pairs(RELATIONS, canonicalize)
+    pairs, genes, gene_occ, chem_variant = build_pairs(RELATIONS, canonicalize)
 
     # The worked examples the report quotes are CHOSEN BY THE DATA -- the biggest
     # case of each kind -- so the prose cannot go stale against the artifact.
@@ -457,7 +543,10 @@ def main() -> int:
             "corrections_applied": len(twin_fix),
             "moving_the_majority": movers,
             "featured": featured,
-            "featured_diseases": {k: dict(v.most_common(4))
+            # A LIST of pairs, not a dict: `json.dumps(sort_keys=True)` re-sorts
+            # a dict alphabetically, so the artifact contradicted the prose's
+            # "in the same rank order" claim while both were correct.
+            "featured_diseases": {k: [[name(d), n] for d, n in v.most_common(4)]
                                   for k, v in feat_disease.items()},
         },
         "rsid_refusals": {
@@ -469,6 +558,13 @@ def main() -> int:
                 "rsids": sum(1 for x in refused if x["old_rule_would_have_collapsed"]),
                 "rows": sum(x["rows"] for x in refused
                             if x["old_rule_would_have_collapsed"]),
+                # The rows whose KEY would have changed. Quoting the rsids'
+                # total instead overstates it, since the rows already on the
+                # winning spelling do not move.
+                "rows_moved": sum(x["old_rule_rows_moved"] for x in refused),
+                # Strictly less than `rows` by construction: the rows already
+                # sitting on the winning spelling do not move. If the two are
+                # ever equal, the counterfactual is quoting the wrong thing.
             },
             # Featured = the largest case the OLD rule got WRONG, which is the
             # one that demonstrates the fix. The largest refusal overall is BRAF,
@@ -478,7 +574,8 @@ def main() -> int:
                               if x["old_rule_would_have_collapsed"]), None),
         },
         "top_genes_by_variant_rows": [
-            {"gene": name(g, "gene:"), "gene_id": g, "rows": n}
+            {"gene": name(g, "gene:"), "gene_id": g, "rows": n,
+             "occurrences": gene_occ[g]}
             for g, n in genes.most_common(15)],
         "top_pairs": view[:60],
         "gene_filter": args.gene,
@@ -493,6 +590,18 @@ def main() -> int:
     print(f"  twins: {len(applied)} of {len(twins)} adjudicated, "
           f"{counts['twin_corrected']:,} rows corrected")
     return 0
+
+
+def profiles_agree(a: list, b: list, n: int = 3) -> bool:
+    """Do two ranked lists share their first `n` entries, in order?
+
+    A function rather than an inline condition so it can be tested directly.
+    `a and a[:3] == b[:3]` is TRUE when both lists hold one entry and it is the
+    same, which would print "identical profile in the same rank order" on a
+    single agreement; on this corpus both lists are long enough that the bug is
+    inert, so only a unit test can see it.
+    """
+    return len(a) >= n and len(b) >= n and a[:n] == b[:n]
 
 
 def a_fraction_of(total: int, part: int) -> str:
@@ -554,34 +663,54 @@ def render(r: dict, name) -> str:
         "one multi-allelic codon-12 site, three substitutions, different drug",
         "programs. Merging on rsid would destroy exactly the distinction this map",
         "exists to show.", "",
-        "The rule needs no threshold: parse every spelling to the change it",
-        "denotes, and collapse only when each representation class agrees",
-        "internally and nothing is unparsable.", "",
+        "The rule needs no threshold. Every spelling must parse; each",
+        "representation class must agree internally; and a protein spelling must",
+        "agree with a coding one ACROSS classes, since codon = (coding position",
+        "+ 2) // 3 relates them. Failing any of the three refuses the whole",
+        "rsid.", "",
         "| rsids carrying several spellings | |", "|---|--:|",
         f"| one change, several spellings: collapsed | "
         f"{rsr.get('one_change_many_spellings', 0):,} |",
         f"| spellings denote different changes: refused | "
         f"{rsr.get('classes_disagree_refused', 0):,} |",
+        f"| protein and coding spellings cannot both be right: refused | "
+        f"{rsr.get('classes_cannot_be_reconciled_refused', 0):,} |",
         f"| a spelling cannot be checked: refused | "
         f"{rsr.get('unparsable_spelling_refused', 0):,} |",
         f"| nothing parsable at all: refused | "
         f"{rsr.get('nothing_parsable_refused', 0):,} |", "",
+        "The cross-class test is the one internal agreement cannot see, and it",
+        "is also the strongest evidence that the collapses are right: where a",
+        "protein and a coding spelling can be compared, the codon relation",
+        f"**agrees** for {rsr.get('one_change_many_spellings', 0):,} rsids and",
+        f"fails for {rsr.get('classes_cannot_be_reconciled_refused', 0):,}. It",
+        "catches rs1494558, where `p.I66T` sits beside `c.412G>A` and codon 138",
+        "is not residue 66, and rs2297518, where a missense sits beside a",
+        "promoter position that cannot encode it.", "",
         f"That gave **{r['rsid_rows_given_an_hgvs']:,}** rows an HGVS they lacked "
         f"and respelled **{r['rsid_rows_respelled_to_one_form']:,}** onto a single "
         "form.", "",
     ]
     if ref:
-        prot = max(((h, n) for h, n in ref["spellings"].items() if PROTEIN.match(h)),
-                   key=lambda kv: kv[1], default=("", 0))
+        # From the FULL spelling set, not the displayed top six: if the sole
+        # protein spelling ranked below sixth the explanatory paragraph would
+        # silently vanish and the table would ship unexplained.
+        prot_all = {h: n for h, n in ref["offending"].items() if PROTEIN.match(h)}
+        prot = (max(prot_all.items(), key=lambda kv: kv[1]) if prot_all
+                else max(((h, n) for h, n in ref["spellings"].items()
+                          if PROTEIN.match(h)), key=lambda kv: kv[1],
+                         default=("", 0)))
         big = max(ref["spellings"].items(), key=lambda kv: kv[1])
+        shown, n_all = len(ref["spellings"]), ref["n_spellings"]
         L += ["**Testing agreement among protein forms only is not enough**, which",
               "is how the first version of this was wrong: it swept every other",
               "spelling onto the winning protein form. That would have collapsed",
-              f"**{old['rsids']:,} of the rsids refused here, carrying "
-              f"{old['rows']:,} rows.**", "",
+              f"**{old['rsids']:,} of the rsids refused here, moving "
+              f"{old['rows_moved']:,} rows onto a key they do not belong to.**", "",
               f"The largest of them shows what it cost. rs{ref['rsid']} on "
               f"{name(ref['gene'], 'gene:')} carries {ref['rows']:,} rows across "
-              f"{ref['reason']}:", "",
+              f"{n_all} spellings, {ref['reason']}"
+              + (f" (top {shown} shown):" if n_all > shown else ":"), "",
               "| spelling | rows | |", "|---|--:|---|"]
         for h, n in ref["spellings"].items():
             flag = " refuses the rsid" if h in ref["offending"] else ""
@@ -591,8 +720,7 @@ def render(r: dict, name) -> str:
                   f"There is exactly one protein spelling, `{prot[0]}` at "
                   f"{prot[1]:,} rows, so the old rule saw no disagreement among "
                   f"protein forms and captured all {ref['rows']:,} rows onto it, "
-                  f"including the {big[1]:,}-row `{big[0]}`. The corrected rule "
-                  "compares the other classes too and refuses."]
+                  f"including the {big[1]:,}-row `{big[0]}`."]
         L.append("")
 
     L += ["### The majority is not the truth", "",
@@ -639,11 +767,12 @@ def render(r: dict, name) -> str:
               f"{f['canonical_rsid_rows']:,} of its {goodn:,} rows** while `{bad}`",
               "carries no rsid at all."]
         dis = tw["featured_diseases"]
-        a, b = list(dis.get(bad, {})), list(dis.get(canon, {}))
-        if a and a[:3] == b[:3]:
+        a = [d for d, _ in dis.get(bad, [])]
+        b = [d for d, _ in dis.get(canon, [])]
+        if profiles_agree(a, b):
             L += ["They also show the **identical** disease profile in the same",
                   "rank order, which a coincidence of spelling would not produce: "
-                  + ", ".join(name(x) for x in b[:3]) + "."]
+                  + ", ".join(b[:3]) + "."]
         L.append("")
 
     L += ["## What is in it", "",

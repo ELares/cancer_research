@@ -1,17 +1,18 @@
 {
   "chemical_variant_rows": 24043,
   "digit_drop_rows_corrected": 3835,
-  "distinct_drug_variant_pairs": 13765,
-  "distinct_variants_in_the_map": 7489,
+  "distinct_drug_variant_pairs": 13784,
+  "distinct_variants_in_the_map": 7510,
   "gene_filter": null,
   "min_papers": 3,
   "occurrences_with_no_gene": 14924,
   "pairs_at_min_papers": 783,
   "relation_rows_touching_a_variant": 228501,
   "rsid_refusals": {
-    "count": 1348,
+    "count": 1444,
     "featured": {
       "gene": "4524",
+      "n_spellings": 10,
       "offending": {
         "c.-1298A>C": 3,
         "c.1286A>C": 3,
@@ -21,6 +22,7 @@
         "c.1298A>T": 3,
         "c.1298C>T": 2
       },
+      "old_rule_rows_moved": 725,
       "old_rule_would_have_collapsed": true,
       "reason": "spellings that denote different changes",
       "rows": 742,
@@ -37,6 +39,7 @@
     "largest": [
       {
         "gene": "673",
+        "n_spellings": 14,
         "offending": {
           "p.E600V": 6,
           "p.V600E": 12488,
@@ -44,6 +47,7 @@
           "p.V600V": 2,
           "p.V600X": 2
         },
+        "old_rule_rows_moved": 0,
         "old_rule_would_have_collapsed": false,
         "reason": "spellings that denote different changes",
         "rows": 13069,
@@ -59,12 +63,14 @@
       },
       {
         "gene": "1956",
+        "n_spellings": 6,
         "offending": {
           "p.L858P": 1,
           "p.L858R": 3303,
           "p.L858X": 1,
           "p.R858L": 1
         },
+        "old_rule_rows_moved": 0,
         "old_rule_would_have_collapsed": false,
         "reason": "spellings that denote different changes",
         "rows": 3329,
@@ -80,6 +86,7 @@
       },
       {
         "gene": "3845",
+        "n_spellings": 24,
         "offending": {
           "c.35G>A": 95,
           "c.35G>C": 6,
@@ -93,6 +100,7 @@
           "p.G12X": 9,
           "p.V12G": 6
         },
+        "old_rule_rows_moved": 0,
         "old_rule_would_have_collapsed": false,
         "reason": "spellings that denote different changes",
         "rows": 3081,
@@ -108,6 +116,7 @@
       },
       {
         "gene": "3845",
+        "n_spellings": 17,
         "offending": {
           "c.34G>A": 14,
           "c.34G>C": 14,
@@ -121,6 +130,7 @@
           "p.G12W": 1,
           "p.G12X": 4
         },
+        "old_rule_rows_moved": 0,
         "old_rule_would_have_collapsed": false,
         "reason": "spellings that denote different changes",
         "rows": 2043,
@@ -136,6 +146,7 @@
       },
       {
         "gene": "4524",
+        "n_spellings": 13,
         "offending": {
           "c.-677C>T": 3,
           "c.665C>T": 4,
@@ -150,6 +161,7 @@
           "p.R677T": 3,
           "p.V222A": 1
         },
+        "old_rule_rows_moved": 0,
         "old_rule_would_have_collapsed": false,
         "reason": "spellings that denote different changes",
         "rows": 1857,
@@ -165,94 +177,111 @@
       }
     ],
     "the_old_rule_would_have_collapsed": {
-      "rows": 7764,
-      "rsids": 232
+      "rows": 8603,
+      "rows_moved": 4527,
+      "rsids": 337
     }
   },
   "rsid_resolution": {
-    "classes_disagree_refused": 964,
-    "one_change_many_spellings": 1635,
+    "classes_cannot_be_reconciled_refused": 99,
+    "classes_disagree_refused": 915,
+    "one_change_many_spellings": 1539,
     "single_spelling": 8357,
-    "unparsable_spelling_refused": 384
+    "unparsable_spelling_refused": 430
   },
-  "rsid_rows_given_an_hgvs": 10454,
-  "rsid_rows_respelled_to_one_form": 6167,
-  "single_paper_pairs": 12111,
+  "rsid_rows_given_an_hgvs": 9975,
+  "rsid_rows_respelled_to_one_form": 5889,
+  "single_paper_pairs": 12132,
   "top_genes_by_variant_rows": [
     {
       "gene": "BRAF",
       "gene_id": "673",
-      "rows": 15130
+      "occurrences": 15130,
+      "rows": 15070
     },
     {
       "gene": "EGFR",
       "gene_id": "1956",
-      "rows": 11849
+      "occurrences": 11849,
+      "rows": 11430
     },
     {
       "gene": "KRAS",
       "gene_id": "3845",
-      "rows": 6552
+      "occurrences": 6552,
+      "rows": 6530
     },
     {
       "gene": "TP53",
       "gene_id": "7157",
-      "rows": 6245
+      "occurrences": 6245,
+      "rows": 6179
     },
     {
       "gene": "JAK2",
       "gene_id": "3717",
-      "rows": 4880
+      "occurrences": 4880,
+      "rows": 4843
     },
     {
       "gene": "BRCA1",
       "gene_id": "672",
-      "rows": 3907
+      "occurrences": 3907,
+      "rows": 3848
     },
     {
       "gene": "MTHFR",
       "gene_id": "4524",
-      "rows": 3824
+      "occurrences": 3824,
+      "rows": 3704
     },
     {
       "gene": "RET",
       "gene_id": "5979",
-      "rows": 2602
+      "occurrences": 2602,
+      "rows": 2562
     },
     {
       "gene": "BRCA2",
       "gene_id": "675",
-      "rows": 2477
+      "occurrences": 2477,
+      "rows": 2445
     },
     {
       "gene": "XRCC1",
       "gene_id": "7515",
-      "rows": 2344
+      "occurrences": 2344,
+      "rows": 2304
     },
     {
       "gene": "KIT",
       "gene_id": "3815",
-      "rows": 2188
+      "occurrences": 2188,
+      "rows": 2171
     },
     {
       "gene": "ABCB1",
       "gene_id": "5243",
-      "rows": 1923
+      "occurrences": 1923,
+      "rows": 1847
     },
     {
       "gene": "PIK3CA",
       "gene_id": "5290",
-      "rows": 1767
+      "occurrences": 1767,
+      "rows": 1752
+    },
+    {
+      "gene": "TERT",
+      "gene_id": "7015",
+      "occurrences": 1704,
+      "rows": 1691
     },
     {
       "gene": "ABL1",
       "gene_id": "25",
-      "rows": 1719
-    },
-    {
-      "gene": "VEGFA",
-      "gene_id": "7422",
-      "rows": 1704
+      "occurrences": 1719,
+      "rows": 1687
     }
   ],
   "top_pairs": [
@@ -1085,18 +1114,42 @@
       "verdict": "canonical:p.V617F"
     },
     "featured_diseases": {
-      "p.V617F": {
-        "MESH:D009369": 88,
-        "MESH:D011087": 139,
-        "MESH:D013920": 55,
-        "MESH:D055728": 71
-      },
-      "p.V61F": {
-        "MESH:D009369": 655,
-        "MESH:D011087": 688,
-        "MESH:D013920": 342,
-        "MESH:D055728": 365
-      }
+      "p.V617F": [
+        [
+          "Polycythemia Vera",
+          139
+        ],
+        [
+          "Neoplasms",
+          88
+        ],
+        [
+          "Primary Myelofibrosis",
+          71
+        ],
+        [
+          "Thrombocythemia, Essential",
+          55
+        ]
+      ],
+      "p.V61F": [
+        [
+          "Polycythemia Vera",
+          688
+        ],
+        [
+          "Neoplasms",
+          655
+        ],
+        [
+          "Primary Myelofibrosis",
+          365
+        ],
+        [
+          "Thrombocythemia, Essential",
+          342
+        ]
+      ]
     },
     "found": 69,
     "moving_the_majority": [

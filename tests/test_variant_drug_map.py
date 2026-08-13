@@ -229,16 +229,27 @@ def test_the_resolver_refuses_a_multi_allelic_site_and_collapses_a_respelling():
 
 
 def test_a_minority_protein_spelling_cannot_capture_a_majority():
-    """The property in one line, on synthetic input, with no corpus dependency."""
+    """The property in one line, on synthetic input, with no corpus dependency.
+
+    Asserts the REASON, not just the refusal. Checking `fix == {}` passed under
+    a mutation that removed the internal-agreement test entirely, because the
+    cross-class test caught the same fixture for a different reason -- the
+    refusal was right and the guard was measuring the wrong rule.
+    """
     m = mod()
     import collections
-    fix, _, _ = m.resolve_rsids({
-        ("1", "1"): collections.Counter({"p.A1B": 1, "c.100A>C": 999,
+    fix, tally, _ = m.resolve_rsids({
+        # codon (100+2)//3 = 34, so the protein residue AGREES and only the
+        # internal disagreement between c.100 and c.200 can refuse this.
+        ("1", "1"): collections.Counter({"p.A34B": 1, "c.100A>C": 999,
                                          "c.200A>C": 1}),
     })
     assert fix == {}, (
         "a 1-row protein spelling captured 1,000 rows whose coding spellings "
         "name two different positions")
+    assert tally.get("classes_disagree_refused") == 1, (
+        "the refusal came from some other test; the internal-agreement rule is "
+        f"no longer the thing rejecting this, tally was {dict(tally)}")
 
 
 # --- 3. reconciliation must not under-merge --------------------------------
@@ -354,7 +365,10 @@ def _derived_figures(r: dict) -> list:
         (f"{tw['found']} twin pairs", "twins.found"),
         (f"{r['rsid_rows_given_an_hgvs']:,}", "rsid_rows_given_an_hgvs"),
         (f"{old['rsids']:,} of the rsids refused", "old_rule.rsids"),
-        (f"{old['rows']:,} rows", "old_rule.rows"),
+        # rows_moved, NOT rows: an rsID's total includes the rows already on
+        # the winning spelling, which do not move. Quoting the total overstates
+        # the defect by roughly half.
+        (f"{old['rows_moved']:,} rows onto a key", "old_rule.rows_moved"),
     ]
     if f:
         out += [(f"rs{f['canonical_rsid']} on {f['canonical_rsid_rows']:,} of its "
@@ -372,6 +386,176 @@ def test_every_headline_figure_in_the_prose_comes_from_the_artifact():
         "these figures are in the JSON but not written as stated in the prose, "
         "so the prose is carrying a hand-typed number: "
         + "; ".join(f"{w} -> {s!r}" for s, w in missing))
+
+
+def test_the_counterfactual_counts_rows_that_move_not_rows_that_exist():
+    """Quoting an rsID's TOTAL overstates the defect by roughly half.
+
+    The rows already sitting on the spelling the old rule would have picked do
+    not move. Both sides of a JSON-versus-prose check move together when the
+    generator changes, so this pins the arithmetic relationship instead.
+    """
+    old = d()["rsid_refusals"]["the_old_rule_would_have_collapsed"]
+    assert 0 < old["rows_moved"] < old["rows"], (
+        f"rows_moved ({old['rows_moved']:,}) is not strictly inside "
+        f"(0, {old['rows']:,}); it is either quoting the rsIDs' total rows, "
+        "which counts rows that never change key, or has gone empty")
+
+
+def test_the_disease_profile_claim_needs_three_entries_in_order():
+    """The condition is inert on this corpus, so only a unit test can see it.
+
+    `a and a[:3] == b[:3]` is TRUE for two single-entry lists that match, and
+    would print "identical disease profile in the same rank order" on one
+    agreement.
+    """
+    m = mod()
+    assert not m.profiles_agree(["x"], ["x"]), (
+        "one shared disease satisfies the identical-profile claim")
+    assert not m.profiles_agree(["x", "y"], ["x", "y"]), (
+        "two shared diseases satisfy a claim about three")
+    assert not m.profiles_agree(["x", "y", "z"], ["x", "z", "y"]), (
+        "the claim says 'in the same rank order' but order is not checked")
+    assert m.profiles_agree(["x", "y", "z", "w"], ["x", "y", "z", "q"]), (
+        "three matching leading entries no longer satisfy the claim")
+
+
+def test_the_featured_examples_arithmetic_is_recomputed_here():
+    """The two figures the worked example turns on had NO guard.
+
+    A verification pass planted a wrong denominator (86% -> 602%) and an
+    off-by-one in the fraction word (a seventh -> an eighth); the whole suite
+    stayed green through both. These are the numbers a reader takes away, so
+    they are recomputed independently rather than compared to the JSON field
+    the generator wrote them from.
+    """
+    r, txt = d(), flat()
+    f = r["twins"]["featured"]
+    assert f, "no featured twin; the worked example has no subject"
+    bad, good = f["rows_moved"], f["canonical_rows"]
+    pct = 100.0 * bad / (bad + good)
+    assert f"**{pct:.0f}%** of that variant's volume" in txt, (
+        f"the share in the prose is not {pct:.0f}%, recomputed from "
+        f"{bad:,} non-canonical against {good:,} canonical rows")
+    assert 0.0 < pct < 100.0, "the share is outside the range a share can take"
+    # The fraction word is re-derived HERE, from an independent word list. The
+    # first version called the generator's own `a_fraction_of`, so an off-by-one
+    # in that function moved the document AND the expectation together and the
+    # guard compared the generator to itself.
+    words = {1: "the whole", 2: "half", 3: "a third", 4: "a quarter",
+             5: "a fifth", 6: "a sixth", 7: "a seventh", 8: "an eighth",
+             9: "a ninth", 10: "a tenth"}
+    k = round((bad + good) / good)
+    word = words.get(k, f"1/{k}")
+    assert f"at **{word}** of its real support" in txt, (
+        f"the fraction word in the prose is not {word!r}, which is what "
+        f"{good:,} of {bad + good:,} rounds to")
+
+
+def test_the_gene_table_counts_rows_not_occurrences():
+    """The column says "variant-touching rows" and once counted occurrences.
+
+    4,300 relation rows carry a variant on BOTH sides, so counting per
+    occurrence inflated BRAF by 60 and EGFR by 419 under a label that promised
+    rows. This is the same defect as the summary table's, one section later.
+    """
+    r = d()
+    top = r["top_genes_by_variant_rows"]
+    assert top, "the gene table is empty"
+    assert len(top) == 15, (
+        f"the gene table ships {len(top)} rows where the report promises 15")
+    txt = flat()
+    for g in top:
+        assert f"| {g['gene']} | {g['rows']:,} |" in txt, (
+            f"{g['gene']} is in the JSON at {g['rows']:,} but not written that "
+            "way in the document")
+    # Both measures are emitted, so the distinction is CHECKABLE rather than
+    # asserted. A count that is per-occurrence cannot be <= the per-row count.
+    # The first version of this guard compared the top gene to the corpus-wide
+    # row total, which a doubled count still fits inside.
+    for g in top:
+        assert g["rows"] <= g["occurrences"], (
+            f"{g['gene']} touches {g['rows']:,} rows but only "
+            f"{g['occurrences']:,} occurrences, which is impossible; the "
+            "column is counting occurrences under a rows label again")
+    assert any(g["rows"] < g["occurrences"] for g in top), (
+        "no gene in the table appears twice in any relation row, so the "
+        "per-row deduplication is doing nothing and this guard is vacuous")
+
+
+def test_the_canonical_choice_prefers_the_commonest_protein_spelling():
+    """max -> min survived the whole suite. Nothing pinned the direction.
+
+    Needs TWO protein spellings to isolate the choice, and the only way to have
+    two that do not disagree is one change written two ways: `p.R461X` and
+    `p.R461*` are the same stop codon. A single-protein-form fixture cannot see
+    the mutation, because min and max of one item are the same item.
+    """
+    m = mod()
+    import collections
+    fix, _, _ = m.resolve_rsids({
+        ("1", "1"): collections.Counter({"p.R461X": 9, "p.R461*": 2}),
+        # and the protein form must win over a commoner coding one
+        ("2", "2"): collections.Counter({"p.T790M": 9, "c.2369C>T": 4146}),
+    })
+    assert fix[("1", "1")] == "p.R461X", (
+        "the canonical spelling is the RARER of two equivalent protein forms")
+    assert fix[("2", "2")] == "p.T790M", (
+        "a coding spelling outranked a protein one; a reader looking up T790M "
+        "would find the variant filed under its cDNA spelling")
+
+
+def test_the_cross_class_check_reconciles_protein_and_coding_positions():
+    """Internal agreement cannot see this: each class holds one change.
+
+    rs1494558 carries `p.I66T` beside `c.412G>A`, and codon 138 is not residue
+    66 -- two different variants, each the sole member of its class.
+    """
+    m = mod()
+    import collections
+    fix, tally, _ = m.resolve_rsids({
+        # codon (412+2)//3 = 138, not residue 66 -> refuse
+        ("1494558", "3575"): collections.Counter({"p.I66T": 5, "c.412G>A": 3}),
+        # a promoter position cannot encode a missense -> refuse
+        ("2297518", "4843"): collections.Counter({"p.S608L": 13, "c.-954G>C": 4}),
+        # codon (2369+2)//3 = 790 = residue 790 -> collapse
+        ("121434569", "1956"): collections.Counter({"p.T790M": 4146, "c.2369C>T": 9}),
+    })
+    assert ("1494558", "3575") not in fix, (
+        "a protein spelling was merged with a coding spelling in a different "
+        "codon; these are two different variants")
+    assert ("2297518", "4843") not in fix, (
+        "a missense was merged with a promoter position that cannot encode it")
+    assert fix[("121434569", "1956")] == "p.T790M", (
+        "the cross-class check now refuses a codon relation that AGREES, so it "
+        "has become an unconditional refusal")
+    assert tally["classes_cannot_be_reconciled_refused"] == 2
+    assert m.codon_of("2369") == 790 and m.codon_of("-954") is None
+
+
+def test_a_stop_codon_written_two_ways_is_one_change():
+    """`p.R461X` and `p.R461*` were reported as denoting different changes."""
+    m = mod()
+    import collections
+    fix, _, _ = m.resolve_rsids({
+        ("1", "1"): collections.Counter({"p.R461X": 9, "p.R461*": 2,
+                                         "c.1381C>T": 4}),
+    })
+    assert fix.get(("1", "1")) == "p.R461X", (
+        "the two spellings of one stop codon are still treated as a "
+        "disagreement, so the report gives a reader a false reason")
+
+
+def test_a_no_change_nucleotide_spelling_cannot_agree_with_itself():
+    m = mod()
+    import collections
+    fix, tally, _ = m.resolve_rsids({
+        ("1", "1"): collections.Counter({"c.100A>A": 3, "c.100A>G": 40}),
+    })
+    assert ("1", "1") not in fix, (
+        "`c.100A>A` denotes no change; it must not let an rsID pass as though "
+        "its spellings agreed")
+    assert tally["unparsable_spelling_refused"] == 1
 
 
 def test_the_generator_does_not_hardcode_the_worked_example_figures():
@@ -408,17 +592,37 @@ def test_the_unread_claim_is_narrowed_to_what_is_true():
               if p.name != "atlas-variant-drug-map.md"
               and "CorrespondingGene" in p.read_text(errors="ignore")]
     txt = flat()
-    if others:
-        assert "not absent" in txt, (
-            f"{len(others)} other committed report(s) already carry variant "
-            f"identifiers (e.g. {others[0].name}), so the document must not "
-            "imply the entities are absent from this repository")
-        assert "atlas-emergence.md" in txt, (
-            "the report claims the entities appear elsewhere without naming "
-            "where, so a reader cannot check it")
-    parsers = [p.name for p in (REPO_ROOT / "scripts").glob("*.py")
-               if "CorrespondingGene" in p.read_text(errors="ignore")]
-    assert set(parsers) <= {"atlas_variant_drug_map.py", "atlas_discovery.py"}, (
+    # NOT `if others:`. Wrapping the assertions in the condition means that if
+    # atlas-emergence.md were regenerated without the identifier, the guard
+    # would go silently vacuous while the document still QUOTES that file --
+    # green and false, which is the failure mode this guard replaced.
+    assert others, (
+        "no other committed report carries a variant identifier any more, so "
+        "the document's 'not absent' framing and its citation of "
+        "atlas-emergence.md now describe something that is no longer true")
+    assert "not absent" in txt, (
+        f"{len(others)} other committed report(s) already carry variant "
+        f"identifiers (e.g. {others[0].name}), so the document must not imply "
+        "the entities are absent from this repository")
+    # The quoted row must exist in the file it is attributed to, verbatim.
+    quoted = "RS#:121913530;HGVS:p.G12C;CorrespondingGene:3845"
+    emergence = REPO_ROOT / "analysis" / "atlas-emergence.md"
+    assert quoted in txt and "atlas-emergence.md" in txt, (
+        "the report claims the entities appear elsewhere without quoting the "
+        "row or naming the file, so a reader cannot check it")
+    assert emergence.exists() and quoted in emergence.read_text(), (
+        "the document quotes a row from atlas-emergence.md that is not in "
+        "atlas-emergence.md")
+    # Recursive, and keyed on ANY of the three inline fields: a new consumer
+    # parsing only `HGVS` or `RS#`, or living in a subdirectory, escaped a
+    # non-recursive scan for the single literal `CorrespondingGene`.
+    parsers = sorted(
+        p.relative_to(REPO_ROOT).as_posix()
+        for p in (REPO_ROOT / "scripts").rglob("*.py")
+        if any(tok in p.read_text(errors="ignore")
+               for tok in ("CorrespondingGene", '"HGVS"', "'HGVS'", '"RS#"', "'RS#'")))
+    assert set(parsers) <= {"scripts/atlas_variant_drug_map.py",
+                            "scripts/atlas_discovery.py"}, (
         f"{parsers} now reference the inline variant fields; the claim that "
         "nothing else parses them needs re-checking against whatever changed")
 
