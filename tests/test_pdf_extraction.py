@@ -51,11 +51,19 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT / "scripts"))
 
 # A plain import, deliberately not `pytest.importorskip`. PyMuPDF is pinned in
-# requirements-lock.txt and CI installs it, so a skip could never be legitimate
-# -- and PyMuPDF has been steering users from `fitz` to `pymupdf`. If that alias
-# is ever dropped, all three scripts break outright; this gate must go red with
-# them rather than quietly skip.
-import fitz  # noqa: E402
+# requirements-lock.txt and CI installs it, so a skip could never be legitimate,
+# and this gate must go red rather than quietly skip if the import ever breaks.
+#
+# THE ALIAS THIS WARNED ABOUT HAS NOW BEEN DEPRECATED. An earlier version of this
+# comment said PyMuPDF "has been steering users from `fitz` to `pymupdf`" and that
+# all three scripts would break outright if the alias were dropped. 1.28.2 began
+# emitting "The `fitz` API is deprecated and will be removed in future", so the
+# scripts and this file were migrated to `import pymupdf` ahead of the removal.
+# The migration was verified to change nothing: the real extractors return
+# byte-identical text on the committed fixture before and after (1,522 chars,
+# sha256 1449f164...), which is the only property that matters, since these
+# functions are how PDFs become corpus text.
+import pymupdf  # noqa: E402
 from fetch_articles import extract_text_from_pdf_bytes as fetch_extract  # noqa: E402
 from recover_fulltext import extract_text_from_pdf_bytes as recover_extract  # noqa: E402
 
@@ -131,7 +139,7 @@ def test_empty_pages_are_skipped_not_joined_as_blanks():
     blank-line separator, so a corpus record would carry structure that was
     never in the paper.
     """
-    with fitz.open(stream=FIXTURE.read_bytes(), filetype="pdf") as doc:
+    with pymupdf.open(stream=FIXTURE.read_bytes(), filetype="pdf") as doc:
         per_page = [p.get_text("text").strip() for p in doc]
     assert len(per_page) == 3, "the fixture should have three pages"
     assert per_page[1] == "", (
@@ -146,7 +154,7 @@ def test_empty_pages_are_skipped_not_joined_as_blanks():
 
 def test_the_path_open_shape_agrees_with_the_bytes_shape():
     """`search_books.py` opens by path where the extractors open from bytes."""
-    with fitz.open(filename=str(FIXTURE)) as doc:
+    with pymupdf.open(filename=str(FIXTURE)) as doc:
         by_path = "\n\n".join(
             t for t in (p.get_text("text").strip() for p in doc) if t).strip()
     assert by_path == _text()
@@ -170,7 +178,11 @@ def test_every_pdf_reading_module_is_covered_here():
 
     Asserting that three named files use `get_text` would keep passing while a
     fourth extractor appeared beside them, unguarded. So the direction is
-    reversed -- whatever imports fitz has to be accounted for.
+    reversed -- whatever imports PyMuPDF has to be accounted for. The match
+    accepts BOTH `import fitz` and `import pymupdf`, which is what let the
+    migration off the deprecated alias happen without blinding this check; a
+    guard keyed to only the old spelling would have gone silently empty the
+    moment the rename landed.
     """
     known = {"fetch_articles.py", "recover_fulltext.py", "search_books.py",
              "make_extraction_fixture.py"}
