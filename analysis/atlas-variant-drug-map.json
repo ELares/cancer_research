@@ -24,6 +24,9 @@
       },
       "old_rule_rows_moved": 725,
       "old_rule_would_have_collapsed": true,
+      "protein_spellings": {
+        "p.E429A": 17
+      },
       "reason": "spellings that denote different changes",
       "rows": 742,
       "rsid": "1801131",
@@ -49,6 +52,13 @@
         },
         "old_rule_rows_moved": 0,
         "old_rule_would_have_collapsed": false,
+        "protein_spellings": {
+          "p.E600V": 6,
+          "p.V600E": 12488,
+          "p.V600G": 3,
+          "p.V600V": 2,
+          "p.V600X": 2
+        },
         "reason": "spellings that denote different changes",
         "rows": 13069,
         "rsid": "113488022",
@@ -72,6 +82,12 @@
         },
         "old_rule_rows_moved": 0,
         "old_rule_would_have_collapsed": false,
+        "protein_spellings": {
+          "p.L858P": 1,
+          "p.L858R": 3303,
+          "p.L858X": 1,
+          "p.R858L": 1
+        },
         "reason": "spellings that denote different changes",
         "rows": 3329,
         "rsid": "121434568",
@@ -102,6 +118,16 @@
         },
         "old_rule_rows_moved": 0,
         "old_rule_would_have_collapsed": false,
+        "protein_spellings": {
+          "p.G12A": 126,
+          "p.G12D": 1830,
+          "p.G12F": 2,
+          "p.G12G": 1,
+          "p.G12T": 1,
+          "p.G12V": 873,
+          "p.G12X": 9,
+          "p.V12G": 6
+        },
         "reason": "spellings that denote different changes",
         "rows": 3081,
         "rsid": "121913529",
@@ -132,6 +158,16 @@
         },
         "old_rule_rows_moved": 0,
         "old_rule_would_have_collapsed": false,
+        "protein_spellings": {
+          "p.G12A": 1,
+          "p.G12C": 1641,
+          "p.G12F": 2,
+          "p.G12R": 154,
+          "p.G12S": 128,
+          "p.G12T": 2,
+          "p.G12W": 1,
+          "p.G12X": 4
+        },
         "reason": "spellings that denote different changes",
         "rows": 2043,
         "rsid": "121913530",
@@ -163,6 +199,13 @@
         },
         "old_rule_rows_moved": 0,
         "old_rule_would_have_collapsed": false,
+        "protein_spellings": {
+          "p.A222V": 31,
+          "p.A429E": 1,
+          "p.C677T": 2,
+          "p.R677T": 3,
+          "p.V222A": 1
+        },
         "reason": "spellings that denote different changes",
         "rows": 1857,
         "rsid": "1801133",
@@ -183,8 +226,11 @@
     }
   },
   "rsid_resolution": {
-    "classes_cannot_be_reconciled_refused": 99,
     "classes_disagree_refused": 915,
+    "codon_mismatch_refused": 63,
+    "codon_relation_agrees": 1526,
+    "not_checkable_against_a_residue_refused": 36,
+    "nothing_to_compare_across_classes": 13,
     "one_change_many_spellings": 1539,
     "single_spelling": 8357,
     "unparsable_spelling_refused": 430

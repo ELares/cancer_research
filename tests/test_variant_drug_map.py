@@ -164,6 +164,31 @@ def test_the_agreement_test_covers_every_spelling_not_just_protein_forms():
     assert "p.E429A" not in refused[0]["offending"], (
         "the lone protein spelling is flagged as offending; it agrees with "
         "itself and is the form the old rule wrongly merged ONTO")
+    # ...and it must still be reachable for the explanatory paragraph, which is
+    # why the record carries the protein spellings SEPARATELY. Reading them
+    # back out of `offending` gave an always-empty dict on this very path.
+    assert refused[0]["protein_spellings"] == {"p.E429A": 17}, (
+        "the refusal record no longer carries its protein spellings, so the "
+        "worked example falls back to a truncated frequency list and can lose "
+        "its explanation entirely")
+
+
+def test_the_offending_set_names_a_spelling_for_every_refusal_reason():
+    """A no-change spelling matches the regex but is counted unparsable.
+
+    Testing the bare regex to build the evidence list therefore found nothing
+    to blame, and 42 refusals shipped an EMPTY offending set: a table whose
+    every row reads clean under a heading saying one of them is not.
+    """
+    m = mod()
+    import collections
+    _, tally, refused = m.resolve_rsids({
+        ("1", "1"): collections.Counter({"c.100A>A": 3, "c.100A>G": 40}),
+    })
+    assert tally.get("unparsable_spelling_refused") == 1
+    assert refused[0]["offending"] == {"c.100A>A": 3}, (
+        "the refusal names no offending spelling, so the report cannot show a "
+        "reader why the rsID was refused")
 
 
 def test_the_multi_allelic_refusal_is_still_protecting_something():
@@ -361,6 +386,9 @@ def _derived_figures(r: dict) -> list:
     tw = r["twins"]
     f, ref = tw["featured"], r["rsid_refusals"]["featured"]
     old = r["rsid_refusals"]["the_old_rule_would_have_collapsed"]
+    rsr = r["rsid_resolution"]
+    agree = rsr.get("codon_relation_agrees", 0)
+    mismatch = rsr.get("codon_mismatch_refused", 0)
     out = [
         (f"{tw['found']} twin pairs", "twins.found"),
         (f"{r['rsid_rows_given_an_hgvs']:,}", "rsid_rows_given_an_hgvs"),
@@ -368,14 +396,29 @@ def _derived_figures(r: dict) -> list:
         # rows_moved, NOT rows: an rsID's total includes the rows already on
         # the winning spelling, which do not move. Quoting the total overstates
         # the defect by roughly half.
-        (f"{old['rows_moved']:,} rows onto a key", "old_rule.rows_moved"),
+        (f"{old['rows_moved']:,} rows onto a single key", "old_rule.rows_moved"),
+        # The cross-class claim. Quoting the COLLAPSE total as the agreement
+        # count was wrong by 13, and quoting every cross-class refusal as a
+        # FAILURE was wrong by 36, in a sentence offered as the strongest
+        # evidence the collapses are right.
+        (f"**agrees** for {agree:,} rsids and **fails** for {mismatch:,}",
+         "rsid_resolution.codon agree/fail"),
+        (f"{100.0 * agree / max(agree + mismatch, 1):.1f}%", "codon agreement rate"),
+        (f"The other {rsr.get('not_checkable_against_a_residue_refused', 0):,} "
+         "refusals", "rsid_resolution.uncheckable"),
+        (f"| the coding position is in a different codon: refused | "
+         f"{mismatch:,} |", "tally row: codon mismatch"),
+        (f"| no position can be checked against the residue: refused | "
+         f"{rsr.get('not_checkable_against_a_residue_refused', 0):,} |",
+         "tally row: uncheckable"),
     ]
     if f:
         out += [(f"rs{f['canonical_rsid']} on {f['canonical_rsid_rows']:,} of its "
                  f"{f['canonical_rows']:,} rows", "twins.featured rsid support")]
     if ref:
         out += [(f"rs{ref['rsid']}", "rsid_refusals.featured rsid"),
-                (f"{ref['rows']:,} rows", "rsid_refusals.featured rows")]
+                (f"{ref['rows']:,} rows across {ref['n_spellings']} spellings",
+                 "rsid_refusals.featured rows and spelling count")]
     return out
 
 
@@ -505,6 +548,58 @@ def test_the_canonical_choice_prefers_the_commonest_protein_spelling():
         "would find the variant filed under its cDNA spelling")
 
 
+def test_the_codon_arithmetic_covers_all_three_positions_in_a_codon():
+    """`(pos + 2) // 3` is ceil(pos/3). An off-by-one hides in one residue class.
+
+    A verification pass planted `int(pos) // 3` and it falsely refused 142
+    rsIDs while every guard stayed green, because the fixtures used positions
+    2369 (mod 3 = 2) and 412 (mod 3 = 1) and never a multiple of 3. Third-base
+    wobble substitutions are exactly where such a bug lives, and 889 of the
+    corpus's 4,208 coding positions are in that class.
+    """
+    m = mod()
+    for pos, codon in ((1, 1), (2, 1), (3, 1),        # codon 1, all three bases
+                       (4, 2), (5, 2), (6, 2),        # codon 2
+                       (2367, 789), (2368, 790), (2369, 790), (2370, 790),
+                       (412, 138), (1381, 461)):
+        assert m.codon_of(str(pos)) == codon, (
+            f"coding position {pos} maps to codon {m.codon_of(str(pos))}, "
+            f"not {codon}; the arithmetic is off for position mod 3 == "
+            f"{pos % 3}")
+    for non_coding in ("-954", "+898", "-511"):
+        assert m.codon_of(non_coding) is None, (
+            f"{non_coding} is intronic or untranslated and has no codon, but "
+            "one was computed for it")
+
+
+def test_a_genomic_or_offset_position_refuses_rather_than_being_compared():
+    """Neither can be checked against a residue, and both must refuse.
+
+    Dropping either refusal survived the suite: no fixture had a `g.` class at
+    all, and the offset fixture only used a negative position, so removing the
+    `+` half of the check was invisible. Four of the genomic cases would be
+    wrongly ACCEPTED if a genomic coordinate were read as a codon, purely by
+    coordinate coincidence.
+    """
+    m = mod()
+    import collections
+    fix, tally, _ = m.resolve_rsids({
+        # a genomic coordinate that WOULD pass as a codon by coincidence
+        ("g1", "1"): collections.Counter({"p.A66B": 5, "g.196C>T": 3}),
+        ("neg", "1"): collections.Counter({"p.S608L": 13, "c.-954G>C": 4}),
+        ("pos", "1"): collections.Counter({"p.T300A": 27, "c.+898A>G": 2}),
+    })
+    assert fix == {}, (
+        "a position that cannot be checked against a residue number was "
+        "compared anyway; (196+2)//3 == 66 is a coordinate coincidence, not "
+        "a codon relation")
+    assert tally.get("not_checkable_against_a_residue_refused") == 3
+    assert not tally.get("codon_mismatch_refused"), (
+        "these are counted as codon FAILURES; they were never compared, so "
+        "reporting them that way overstates the error rate and mislabels a "
+        "protein-versus-genomic refusal as protein-versus-coding")
+
+
 def test_the_cross_class_check_reconciles_protein_and_coding_positions():
     """Internal agreement cannot see this: each class holds one change.
 
@@ -529,7 +624,16 @@ def test_the_cross_class_check_reconciles_protein_and_coding_positions():
     assert fix[("121434569", "1956")] == "p.T790M", (
         "the cross-class check now refuses a codon relation that AGREES, so it "
         "has become an unconditional refusal")
-    assert tally["classes_cannot_be_reconciled_refused"] == 2
+    # The two refusals are DIFFERENT KINDS and must be counted apart: one is a
+    # codon that was computed and disagreed, the other a position that could
+    # not be compared at all. Pooling them let the report call an unevaluated
+    # case a failure.
+    assert tally["codon_mismatch_refused"] == 1
+    assert tally["not_checkable_against_a_residue_refused"] == 1
+    assert tally["codon_relation_agrees"] == 1, (
+        "the collapse that was verified by the codon relation is not recorded "
+        "as such, so the report cannot say how often the relation was actually "
+        "evaluated rather than merely not contradicted")
     assert m.codon_of("2369") == 790 and m.codon_of("-954") is None
 
 

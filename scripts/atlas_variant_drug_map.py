@@ -145,6 +145,19 @@ def iter_rows(path: Path):
             yield parts[0], parts[1], ((ta, ia), (tb, ib))
 
 
+def _is_parsable(h: str) -> bool:
+    """One definition of parsable, used by the classifier AND the evidence.
+
+    A no-change `A>A` spelling matches the NUCLEOTIDE regex but denotes
+    nothing, so it is unparsable. Two call sites disagreeing about that is what
+    left 42 refusals reporting no offending spelling at all.
+    """
+    if PROTEIN.match(h):
+        return True
+    m = NUCLEOTIDE.match(h)
+    return bool(m) and m.group(3) != m.group(4)
+
+
 def classify_spellings(forms) -> tuple:
     """Group HGVS spellings by representation class -> the changes each denotes.
 
@@ -166,7 +179,7 @@ def classify_spellings(forms) -> tuple:
             classes["p"].add((orig, pos, "*" if new == "X" else new))
             continue
         m = NUCLEOTIDE.match(h)
-        if m and m.group(3) != m.group(4):
+        if m and _is_parsable(h):
             classes[m.group(1)].add(m.groups()[1:])
             continue
         unparsable += 1
@@ -184,37 +197,48 @@ def codon_of(coding_position: str):
     return (int(coding_position) + 2) // 3
 
 
-def cross_class_conflict(classes: dict):
-    """Why a protein spelling cannot denote the same change as a coding one.
+def cross_class_conflict(classes: dict) -> tuple:
+    """Can a protein spelling denote the same change as a coding one?
 
-    Returns a description, or None when they agree. Each class is already known
-    to hold exactly one change when this is called.
+    Returns (outcome, description). Outcome is one of:
+      "agree"        the codon relation was computed and it holds
+      "mismatch"     the codon relation was computed and it fails
+      "uncomparable" no comparison was possible, so this refuses
+      "none"         there is nothing to compare
 
-    This is the only test that compares ACROSS representations, and it is what
-    the internal-agreement rule alone cannot see: rs1494558 carries `p.I66T`
-    beside `c.412G>A`, each the sole member of its class, and codon 138 is not
-    residue 66. On this corpus the relation AGREES for 1,521 of the 1,635 rsids
-    the internal test would collapse, which is independent evidence that the
-    collapse is right in the ordinary case.
+    THE THREE OUTCOMES ARE KEPT APART BECAUSE THE REPORT QUOTES THEM. Collapsing
+    "mismatch" and "uncomparable" into one refusal count let the document claim
+    the codon relation "fails" for cases where it was never evaluated, and
+    label a protein-versus-GENOMIC refusal as protein-versus-coding.
+
+    Each class is known to hold exactly one change when this is called: the
+    three preceding branches in `resolve_rsids` have already excluded a
+    multi-change class, any unparsable spelling, and an empty `classes`. That
+    invariant is what makes `next(iter(...))` safe here.
     """
     if "p" not in classes:
-        return None
+        return "none", None
     residue = int(next(iter(classes["p"]))[1])
+    compared = False
     for cls_key, changes in classes.items():
         if cls_key == "p":
             continue
         if cls_key != "c":
             # A genomic, mitochondrial or non-coding-transcript position has no
-            # arithmetic relation to a residue number, so nothing can be
-            # checked. Refusing keeps a variant visibly fragmented, which is the
-            # failure this whole design prefers.
-            return f"a `{cls_key}.` position cannot be checked against a residue number"
+            # arithmetic relation to a residue number. Refusing keeps a variant
+            # visibly fragmented, which is the failure this design prefers --
+            # and it is not over-cautious: on this corpus four of these would be
+            # wrongly ACCEPTED if a genomic coordinate were read as a codon.
+            return ("uncomparable",
+                    f"a `{cls_key}.` position cannot be checked against a residue number")
         codon = codon_of(next(iter(changes))[0])
         if codon is None:
-            return "a protein change beside a non-coding position"
+            return "uncomparable", "a protein change beside a non-coding position"
         if codon != residue:
-            return f"coding position falls in codon {codon}, not residue {residue}"
-    return None
+            return ("mismatch",
+                    f"the coding position falls in codon {codon}, not residue {residue}")
+        compared = True
+    return ("agree" if compared else "none"), None
 
 
 def resolve_rsids(rs_hgvs: dict) -> tuple:
@@ -247,17 +271,24 @@ def resolve_rsids(rs_hgvs: dict) -> tuple:
         elif unparsable:
             tally["unparsable_spelling_refused"] += 1
             reason = "a spelling that cannot be checked"
-            evidence = sorted(h for h in forms
-                              if not (PROTEIN.match(h) or NUCLEOTIDE.match(h)))
-        elif not classes:
-            tally["nothing_parsable_refused"] += 1
-            reason = "no parsable spelling at all"
-            evidence = sorted(forms)
-        elif (conflict := cross_class_conflict(classes)):
-            tally["classes_cannot_be_reconciled_refused"] += 1
-            reason = conflict
+            # The SAME predicate `classify_spellings` uses, not a bare regex
+            # match: a no-change `A>A` spelling matches NUCLEOTIDE but is
+            # counted unparsable, so testing the regex alone left 42 refusals
+            # shipping an EMPTY offending set -- a table whose every row reads
+            # clean under a heading saying one of them is not.
+            evidence = sorted(h for h in forms if not _is_parsable(h))
+        elif (conflict := cross_class_conflict(classes))[0] in ("mismatch",
+                                                                "uncomparable"):
+            outcome, reason = conflict
+            tally["codon_mismatch_refused" if outcome == "mismatch"
+                  else "not_checkable_against_a_residue_refused"] += 1
             evidence = sorted(forms)
         else:
+            # Recorded so the report can say how often the cross-class relation
+            # was actually EVALUATED and held, rather than quoting the collapse
+            # total as though every collapse had been checked that way.
+            tally["codon_relation_agrees" if conflict[0] == "agree"
+                  else "nothing_to_compare_across_classes"] += 1
             # Every spelling denotes one change, and a protein spelling agrees
             # with its coding one. Canonical is the commonest PROTEIN form when
             # there is one, since that is the key a reader recognises, else the
@@ -266,6 +297,9 @@ def resolve_rsids(rs_hgvs: dict) -> tuple:
             fix[key] = max((prot or forms).items(), key=lambda kv: (kv[1], kv[0]))[0]
             tally["one_change_many_spellings"] += 1
             continue
+        # (`not classes` needs no branch: an empty classes dict means every
+        # spelling was unparsable, which the branch above has already caught.
+        # It shipped as a tally row that was provably always zero.)
         # Would the SUPERSEDED rule -- agreement among protein forms only, every
         # other spelling swept onto the winner -- have collapsed this? Recording
         # it makes the size of that defect a derived number rather than a
@@ -288,6 +322,14 @@ def resolve_rsids(rs_hgvs: dict) -> tuple:
                         # flags a displayed row by membership here, and a cap
                         # made a genuinely offending spelling show as clean.
                         "offending": {h: forms[h] for h in evidence},
+                        # The protein spellings from the FULL set. Deriving
+                        # them from `offending` gave an always-empty dict on a
+                        # disagreement refusal, since a sole protein form
+                        # agrees with itself and is never offending -- so the
+                        # explanatory paragraph fell back to the truncated
+                        # top-six it was written to stop using.
+                        "protein_spellings": {h: n for h, n in forms.items()
+                                              if PROTEIN.match(h)},
                         "n_spellings": len(forms),
                         "spellings": dict(forms.most_common(6))})
     refused.sort(key=lambda r: (-r["rows"], r["rsid"]))
@@ -615,6 +657,9 @@ def a_fraction_of(total: int, part: int) -> str:
 
 def render(r: dict, name) -> str:
     tw, rsr = r["twins"], r["rsid_resolution"]
+    agree = rsr.get("codon_relation_agrees", 0)
+    mismatch = rsr.get("codon_mismatch_refused", 0)
+    uncheckable = rsr.get("not_checkable_against_a_residue_refused", 0)
     ref = r["rsid_refusals"]["featured"]
     old = r["rsid_refusals"]["the_old_rule_would_have_collapsed"]
     f = tw["featured"]
@@ -673,19 +718,26 @@ def render(r: dict, name) -> str:
         f"{rsr.get('one_change_many_spellings', 0):,} |",
         f"| spellings denote different changes: refused | "
         f"{rsr.get('classes_disagree_refused', 0):,} |",
-        f"| protein and coding spellings cannot both be right: refused | "
-        f"{rsr.get('classes_cannot_be_reconciled_refused', 0):,} |",
+        f"| the coding position is in a different codon: refused | "
+        f"{rsr.get('codon_mismatch_refused', 0):,} |",
+        f"| no position can be checked against the residue: refused | "
+        f"{rsr.get('not_checkable_against_a_residue_refused', 0):,} |",
         f"| a spelling cannot be checked: refused | "
-        f"{rsr.get('unparsable_spelling_refused', 0):,} |",
-        f"| nothing parsable at all: refused | "
-        f"{rsr.get('nothing_parsable_refused', 0):,} |", "",
+        f"{rsr.get('unparsable_spelling_refused', 0):,} |", "",
         "The cross-class test is the one internal agreement cannot see, and it",
-        "is also the strongest evidence that the collapses are right: where a",
-        "protein and a coding spelling can be compared, the codon relation",
-        f"**agrees** for {rsr.get('one_change_many_spellings', 0):,} rsids and",
-        f"fails for {rsr.get('classes_cannot_be_reconciled_refused', 0):,}. It",
-        "catches rs1494558, where `p.I66T` sits beside `c.412G>A` and codon 138",
-        "is not residue 66, and rs2297518, where a missense sits beside a",
+        "is also the strongest evidence that the collapses are right. Where a",
+        "protein and a coding spelling were actually compared, the codon",
+        f"relation **agrees** for {agree:,} rsids and **fails** for "
+        f"{mismatch:,}, so it holds in {100.0 * agree / max(agree + mismatch, 1):.1f}%",
+        "of the cases it can decide.", "",
+        f"The other {uncheckable:,} refusals are ones it could NOT decide: a",
+        "genomic coordinate has no arithmetic relation to a residue number, and",
+        "neither does an intronic or untranslated offset. Those are counted",
+        "separately rather than folded into the failures, because quoting them",
+        "as failures would both overstate the error rate and mislabel a",
+        "protein-versus-genomic refusal as protein-versus-coding.", "",
+        "It catches rs1494558, where `p.I66T` sits beside `c.412G>A` and codon",
+        "138 is not residue 66, and rs2297518, where a missense sits beside a",
         "promoter position that cannot encode it.", "",
         f"That gave **{r['rsid_rows_given_an_hgvs']:,}** rows an HGVS they lacked "
         f"and respelled **{r['rsid_rows_respelled_to_one_form']:,}** onto a single "
@@ -695,18 +747,20 @@ def render(r: dict, name) -> str:
         # From the FULL spelling set, not the displayed top six: if the sole
         # protein spelling ranked below sixth the explanatory paragraph would
         # silently vanish and the table would ship unexplained.
-        prot_all = {h: n for h, n in ref["offending"].items() if PROTEIN.match(h)}
-        prot = (max(prot_all.items(), key=lambda kv: kv[1]) if prot_all
-                else max(((h, n) for h, n in ref["spellings"].items()
-                          if PROTEIN.match(h)), key=lambda kv: kv[1],
-                         default=("", 0)))
+        prot = max(ref["protein_spellings"].items(), key=lambda kv: kv[1],
+                   default=("", 0))
         big = max(ref["spellings"].items(), key=lambda kv: kv[1])
         shown, n_all = len(ref["spellings"]), ref["n_spellings"]
         L += ["**Testing agreement among protein forms only is not enough**, which",
               "is how the first version of this was wrong: it swept every other",
               "spelling onto the winning protein form. That would have collapsed",
               f"**{old['rsids']:,} of the rsids refused here, moving "
-              f"{old['rows_moved']:,} rows onto a key they do not belong to.**", "",
+              f"{old['rows_moved']:,} rows onto a single key.** That figure is",
+              "what it says and no more: it counts the rows whose spelling",
+              "would have changed, not a claim that every one of them would",
+              "have landed somewhere wrong. Some of those rsids are refused",
+              "only because a SIBLING spelling cannot be checked, and their",
+              "protein and coding forms do agree.", "",
               f"The largest of them shows what it cost. rs{ref['rsid']} on "
               f"{name(ref['gene'], 'gene:')} carries {ref['rows']:,} rows across "
               f"{n_all} spellings, {ref['reason']}"

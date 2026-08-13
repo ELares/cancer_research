@@ -58,17 +58,25 @@ rsid.
 |---|--:|
 | one change, several spellings: collapsed | 1,539 |
 | spellings denote different changes: refused | 915 |
-| protein and coding spellings cannot both be right: refused | 99 |
+| the coding position is in a different codon: refused | 63 |
+| no position can be checked against the residue: refused | 36 |
 | a spelling cannot be checked: refused | 430 |
-| nothing parsable at all: refused | 0 |
 
 The cross-class test is the one internal agreement cannot see, and it
-is also the strongest evidence that the collapses are right: where a
-protein and a coding spelling can be compared, the codon relation
-**agrees** for 1,539 rsids and
-fails for 99. It
-catches rs1494558, where `p.I66T` sits beside `c.412G>A` and codon 138
-is not residue 66, and rs2297518, where a missense sits beside a
+is also the strongest evidence that the collapses are right. Where a
+protein and a coding spelling were actually compared, the codon
+relation **agrees** for 1,526 rsids and **fails** for 63, so it holds in 96.0%
+of the cases it can decide.
+
+The other 36 refusals are ones it could NOT decide: a
+genomic coordinate has no arithmetic relation to a residue number, and
+neither does an intronic or untranslated offset. Those are counted
+separately rather than folded into the failures, because quoting them
+as failures would both overstate the error rate and mislabel a
+protein-versus-genomic refusal as protein-versus-coding.
+
+It catches rs1494558, where `p.I66T` sits beside `c.412G>A` and codon
+138 is not residue 66, and rs2297518, where a missense sits beside a
 promoter position that cannot encode it.
 
 That gave **9,975** rows an HGVS they lacked and respelled **5,889** onto a single form.
@@ -76,7 +84,12 @@ That gave **9,975** rows an HGVS they lacked and respelled **5,889** onto a sing
 **Testing agreement among protein forms only is not enough**, which
 is how the first version of this was wrong: it swept every other
 spelling onto the winning protein form. That would have collapsed
-**337 of the rsids refused here, moving 4,527 rows onto a key they do not belong to.**
+**337 of the rsids refused here, moving 4,527 rows onto a single key.** That figure is
+what it says and no more: it counts the rows whose spelling
+would have changed, not a claim that every one of them would
+have landed somewhere wrong. Some of those rsids are refused
+only because a SIBLING spelling cannot be checked, and their
+protein and coding forms do agree.
 
 The largest of them shows what it cost. rs1801131 on MTHFR carries 742 rows across 10 spellings, spellings that denote different changes (top 6 shown):
 
