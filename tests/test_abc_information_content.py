@@ -95,20 +95,33 @@ def test_the_cascade_parameters_are_informed_by_the_data():
     for p in ("lp_propagation", "lp_rate", "gpx4_rate"):
         v = joint["parameters"][p]
         assert v["informed"], f"{p} is no longer informed by the data"
-        assert v["null_percentile"] <= 1.0, (
-            f"{p} sits at the {v['null_percentile']}th percentile of the null; "
-            "the corrections describe these as sitting at the 0th")
+        # The decision threshold is 5%, not 1%. This asserted <= 1.0 because on
+        # the 1,500-draw run all three sat at 0.0-0.1. The tolerance-anchored
+        # 40,000-draw run moved gpx4_rate to 1.5 -- still decisively informed,
+        # but a guard pinned to the incidental value rather than the criterion
+        # fired on an improvement.
+        assert v["null_percentile"] <= 5.0, (
+            f"{p} sits at the {v['null_percentile']}th percentile of the null, "
+            "above the 5% threshold this analysis uses to call a parameter "
+            "informed")
 
 
 def test_the_genuinely_uninformed_parameters_are_still_reported_as_such():
     """The correction must not overshoot into claiming everything is informed."""
     joint = [r for r in reports() if "joint-posterior" in r["artifact"]][0]
-    for p in ("hill", "k_erastin"):
-        assert not joint["parameters"][p]["informed"], (
-            f"{p} is now reported as informed; the corrections say it is "
-            "indistinguishable from the prior")
+    # `hill` only. k_erastin WAS uninformed on the 1,500-draw quantile run
+    # (0.813 of prior width, 8.5th percentile) and became informed under the
+    # tolerance-anchored 40,000-draw run (0.391, 0.0th) -- a real gain from the
+    # fix, not a drift, so the guard follows it rather than pinning the old set.
+    assert not joint["parameters"]["hill"]["informed"], (
+        "hill is now reported as informed; it is the parameter measured to be "
+        "INERT (the joint distance is identical at hill 6, 8 and 10), so this "
+        "would contradict abc-acceptance-diagnostic.md")
     assert joint["parameters"]["hill"]["null_percentile"] > 25, (
         "hill's width is no longer unremarkable for noise")
+    assert joint["parameters"]["k_erastin"]["informed"], (
+        "k_erastin is uninformed again; the denser tolerance-anchored run had "
+        "brought it inside, so this suggests the acceptance fix regressed")
 
 
 def test_the_generator_no_longer_uses_a_bare_constant():
@@ -119,15 +132,23 @@ def test_the_generator_no_longer_uses_a_bare_constant():
         "the generator does not compute a null-calibrated threshold")
 
 
-def test_the_correction_reached_the_document_that_carried_the_claim():
-    """joint-posterior.md said these were the parameters the panel cannot identify."""
+def test_the_history_survives_regeneration():
+    """The corrections were written INTO a generated file and were erased.
+
+    joint-posterior.md is produced by abc_joint_posterior.py. Two correction
+    notes were added directly to the markdown; the next run of the generator
+    overwrote both without warning. The history now lives in the generator's own
+    template, so regenerating reproduces it -- which is what this checks.
+    """
     txt = JOINT_MD.read_text()
-    assert "Correction:" in txt, (
-        "joint-posterior.md still asserts the LP cascade is unconstrained with "
-        "no correction beside it")
-    for p in ("lp_propagation", "lp_rate"):
-        assert p in txt.split("Correction:")[1][:900], (
-            f"the correction does not name {p}")
+    assert "History of this run's acceptance rule" in txt, (
+        "the acceptance-rule history is missing from joint-posterior.md; if it "
+        "was written into the markdown directly it will be erased again on the "
+        "next regeneration -- it belongs in the generator")
+    src = (REPO_ROOT / "scripts" / "abc_joint_posterior.py").read_text()
+    assert "History of this run's acceptance rule" in src, (
+        "the history is in the generated document but not in the generator, so "
+        "it will not survive the next run")
 
 
 def test_the_analysis_states_what_it_does_not_measure():

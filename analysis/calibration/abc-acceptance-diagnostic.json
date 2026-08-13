@@ -9,8 +9,9 @@
     "lp_propagation": 0.7,
     "lp_rate": 0.4
   },
-  "epsilon_excess_over_committed": 0.5896,
-  "posterior_median_distance": 0.2413,
+  "epsilon_excess_over_committed": 0.1,
+  "n_accepted_now": 31,
+  "posterior_median_distance": 0.1548,
   "prior_truncation_test": {
     "hill": {
       "10.0": 0.2202,
@@ -23,12 +24,13 @@
       "3.0": 0.2202
     }
   },
-  "reported_epsilon": 0.35,
+  "reported_epsilon": 0.2422,
   "sampling": {
-    "best": 0.242,
-    "draws": 300,
-    "frac_inside_epsilon": 0.0133,
-    "n_beating_committed": 0,
-    "quantile_2pct": 0.3767
+    "best": 0.1506,
+    "draws": 20000,
+    "draws_of_record": 40000,
+    "frac_inside_epsilon": 0.0011,
+    "n_beating_committed": 9,
+    "quantile_2pct": 0.3652
   }
 }
