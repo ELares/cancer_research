@@ -182,13 +182,30 @@ def run(args):
     inside = (emp_h >= pp_band[0]) & (emp_h <= pp_band[2])
     pp_rmses = [ck.rmse(heldout_pred[k], emp_heldout) for k in range(len(posterior))]
 
-    # Which shared params are unconstrained (posterior ~ prior).
-    unconstrained = [n for n in names if post[n]["posterior_width_frac_of_prior"] >= 0.6]
+    # Which params are unconstrained -- judged against a NULL, not a constant.
+    #
+    # This was `>= 0.6`, a bare threshold that ignored how many draws were
+    # accepted. That is the thing which decides what an uninformative posterior
+    # looks like: with 30 accepted draws the 2.5-97.5 span of samples drawn from
+    # the prior and nothing else still covers ~0.90 of the prior width, because
+    # 30 points rarely reach the corners. So 0.6 sat far below anything noise
+    # produces and the flag fired on WELL-constrained parameters -- it labelled
+    # lp_propagation, lp_rate and gpx4_rate unconstrained while they sat at the
+    # 0th percentile of that null. Full treatment in
+    # `scripts/abc_posterior_information.py`.
+    null = np.percentile(
+        np.random.default_rng(0).uniform(0, 1, size=(20000, int(n_accept))),
+        [2.5, 97.5], axis=1)
+    null_widths = null[1] - null[0]
+    null_p5 = float(np.percentile(null_widths, 5))
+    unconstrained = [n for n in names
+                     if post[n]["posterior_width_frac_of_prior"] > null_p5]
 
     result = {
         "n_draws": args.n_draws,
         "n_accepted": int(n_accept),
         "accept_frac": ACCEPT_FRAC,
+        "uninformative_null_p5_width": round(null_p5, 3),
         "epsilon_joint_distance": round(eps, 4),
         "inducer_panel": {
             "fit": [ck.FIT_COMPOUND, ce.COMPOUND],
