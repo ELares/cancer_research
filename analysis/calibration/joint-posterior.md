@@ -45,6 +45,21 @@ PRCC/Sobol identifiability findings); they are reported as intervals, not points
 > the prior. See `analysis/calibration/abc-information-content.md`; the generator
 > now judges against the null rather than the constant.
 
+> **Second correction: the posterior median fits worse than a vector already in
+> this repository.** The #330 cascade plus #502's shared-switch erastin
+> parameters score **0.2202** on this run's own joint
+> distance; the posterior median scores 0.2413, and the
+> acceptance threshold is 0.35. The cause is not a truncated
+> prior — pushing `k_erastin` below its bound makes the fit worse, and `hill` is
+> inert — and not the small sample. Acceptance is a fixed 2% FRACTION, so the run
+> keeps its best 2% however bad they are and the reported epsilon is an output
+> rather than a criterion; it sits
+> 59% above what is demonstrably
+> achievable. Full diagnosis in
+> `analysis/calibration/abc-acceptance-diagnostic.md`. This does not overturn the
+> information-content result above: the parameters are informed, and the region
+> they are informed within is centred in the wrong place.
+
 ## Held-out posterior-predictive (ML210, never used in the fit)
 
 The accepted draws predict a held-out GPX4 inhibitor (ML210):
