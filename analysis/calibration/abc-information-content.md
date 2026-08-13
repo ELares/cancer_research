@@ -19,27 +19,27 @@ if its observed width falls below the 5th percentile of that null.
 
 ## `analysis/calibration/joint-posterior.json`
 
-1500 draws, **30 accepted**. With that many
+40000 draws, **31 accepted**. With that many
 draws an uninformative posterior still shows a median width of
-**0.896** of the prior, and only 0.793 at its 5th percentile — so anything at or below
-0.793 is doing real work.
+**0.898** of the prior, and only 0.797 at its 5th percentile — so anything at or below
+0.797 is doing real work.
 
 | parameter | width / prior | null percentile | informed? | old flag |
 |---|--:|--:|---|---|
-| `lp_propagation` | 0.620 | 0.0% | **yes** | unconstrained |
-| `lp_rate` | 0.616 | 0.0% | **yes** | unconstrained |
-| `gpx4_rate` | 0.680 | 0.1% | **yes** | unconstrained |
-| `gsh_scav_efficiency` | 0.569 | 0.0% | **yes** | — |
-| `k_um` | 0.457 | 0.0% | **yes** | — |
-| `k_erastin` | 0.813 | 8.5% | no | unconstrained |
-| `hill` | 0.902 | 55.1% | no | unconstrained |
+| `lp_propagation` | 0.573 | 0.0% | **yes** | — |
+| `lp_rate` | 0.615 | 0.0% | **yes** | unconstrained |
+| `gpx4_rate` | 0.759 | 1.5% | **yes** | unconstrained |
+| `gsh_scav_efficiency` | 0.365 | 0.0% | **yes** | — |
+| `k_um` | 0.163 | 0.0% | **yes** | — |
+| `k_erastin` | 0.391 | 0.0% | **yes** | — |
+| `hill` | 0.919 | 67.6% | no | unconstrained |
 
-**5 of 7 parameters are informed by the data**: `lp_propagation`, `lp_rate`, `gpx4_rate`, `gsh_scav_efficiency`, `k_um`.
+**6 of 7 parameters are informed by the data**: `lp_propagation`, `lp_rate`, `gpx4_rate`, `gsh_scav_efficiency`, `k_um`, `k_erastin`.
 
-**2 are indistinguishable from the prior**: `k_erastin`, `hill`. Their reported credible intervals are the prior's, and should
+**1 are indistinguishable from the prior**: `hill`. Their reported credible intervals are the prior's, and should
 not be read as inferred.
 
-**The 0.6 threshold mislabels 3 of them.** `lp_propagation`, `lp_rate`, `gpx4_rate` are flagged *unconstrained* by the generator while sitting at
+**The 0.6 threshold mislabels 2 of them.** `lp_rate`, `gpx4_rate` are flagged *unconstrained* by the generator while sitting at
 the very bottom of the uninformative null — they are among the
 best-determined parameters in the run. The flag understates the
 analysis's own result, and it does so for exactly the cascade

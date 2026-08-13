@@ -1,52 +1,52 @@
 [
   {
     "artifact": "analysis/calibration/joint-posterior.json",
-    "n_accepted": 30,
-    "n_draws": 1500,
-    "null_median_width": 0.896,
-    "null_p5_width": 0.793,
+    "n_accepted": 31,
+    "n_draws": 40000,
+    "null_median_width": 0.898,
+    "null_p5_width": 0.797,
     "parameters": {
       "gpx4_rate": {
         "informed": true,
         "legacy_flag_unconstrained": true,
-        "null_percentile": 0.1,
-        "width_frac_of_prior": 0.68
+        "null_percentile": 1.5,
+        "width_frac_of_prior": 0.759
       },
       "gsh_scav_efficiency": {
         "informed": true,
         "legacy_flag_unconstrained": false,
         "null_percentile": 0.0,
-        "width_frac_of_prior": 0.569
+        "width_frac_of_prior": 0.365
       },
       "hill": {
         "informed": false,
         "legacy_flag_unconstrained": true,
-        "null_percentile": 55.1,
-        "width_frac_of_prior": 0.902
+        "null_percentile": 67.6,
+        "width_frac_of_prior": 0.919
       },
       "k_erastin": {
-        "informed": false,
-        "legacy_flag_unconstrained": true,
-        "null_percentile": 8.5,
-        "width_frac_of_prior": 0.813
+        "informed": true,
+        "legacy_flag_unconstrained": false,
+        "null_percentile": 0.0,
+        "width_frac_of_prior": 0.391
       },
       "k_um": {
         "informed": true,
         "legacy_flag_unconstrained": false,
         "null_percentile": 0.0,
-        "width_frac_of_prior": 0.457
+        "width_frac_of_prior": 0.163
       },
       "lp_propagation": {
         "informed": true,
-        "legacy_flag_unconstrained": true,
+        "legacy_flag_unconstrained": false,
         "null_percentile": 0.0,
-        "width_frac_of_prior": 0.62
+        "width_frac_of_prior": 0.573
       },
       "lp_rate": {
         "informed": true,
         "legacy_flag_unconstrained": true,
         "null_percentile": 0.0,
-        "width_frac_of_prior": 0.616
+        "width_frac_of_prior": 0.615
       }
     }
   },

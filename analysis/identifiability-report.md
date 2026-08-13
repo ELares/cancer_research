@@ -84,7 +84,7 @@ What was learned by taking it:
 
 - #500 does condition the in-vitro switch, and it conditions it better than the
   run's own summary claimed. Judged against an uninformative null rather than a
-  bare 0.6 threshold, 5 of its 7 parameters are informed by the data, including the whole LP cascade; only `hill`, `k_erastin` are indistinguishable from the prior
+  bare 0.6 threshold, 6 of its 7 parameters are informed by the data, including the whole LP cascade; only `hill` is indistinguishable from the prior
   (`analysis/calibration/abc-information-content.md`).
 - Condition (1) still fails anyway, because "the regime that produces it" is the
   binding phrase. Carrying those in-vitro values into the in-vivo and spatial
