@@ -125,8 +125,8 @@ The candidate SET is genuinely informative, so that half stands. The obvious sec
 *Source:* `atlas-module-support.md`
 
 **The entity collisions are not as bad as containment suggests.**
-50.8% of relation rows touch a contested identifier, but only
-1.35% rest on an uncorroborated one.
+50.6% of relation rows touch a contested identifier, but only
+1.31% rest on an uncorroborated one.
 *Source:* `atlas-ambiguity-impact.md`
 
 ---

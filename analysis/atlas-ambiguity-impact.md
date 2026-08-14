@@ -6,7 +6,7 @@ which is a different question with a very different answer.
 
 ## The number not to use
 
-**50.8%** of relation rows touch an identifier that is
+**50.6%** of relation rows touch an identifier that is
 contested somewhere in the census. That sounds severe and means almost
 nothing. `ESR1` is contested because the string `ER` is ambiguous, but most
 ESR1 edges come from papers that wrote *estrogen receptor* in full, where
@@ -22,19 +22,19 @@ corroborates itself and the collision cost nothing. A paper writing only
 
 | | assignments | share |
 |---|---|---|
-| reached only by an unambiguous mention | 12,131,906 | 93.5% |
-| reached by both, so corroborated | 375,666 | 2.9% |
-| **at risk** -- ambiguous form the only route | **461,943** | **3.6%** |
-| total involving a contested identifier | 12,969,515 | |
+| reached only by an unambiguous mention | 17,141,004 | 93.0% |
+| reached by both, so corroborated | 573,621 | 3.1% |
+| **at risk** -- ambiguous form the only route | **726,186** | **3.9%** |
+| total involving a contested identifier | 18,440,811 | |
 
-Of the 837,609 assignments that involve an ambiguous form at
-all, 55% have no corroborating
+Of the 1,299,807 assignments that involve an ambiguous form at
+all, 56% have no corroborating
 unambiguous mention.
 
-**1.35%** of the 7,951,325 relation rows rest on an
-at-risk assignment -- 107,624 rows.
+**1.31%** of the 10,509,470 relation rows rest on an
+at-risk assignment -- 137,270 rows.
 
-That is roughly 38x
+That is roughly 39x
 smaller than the containment figure above, which is why both are reported
 here and neither is reported alone.
 

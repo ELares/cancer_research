@@ -9,8 +9,11 @@ docs cite them by PMID. That is the weakest form of literature grounding: it
 cannot distinguish a mechanism the field has replicated a hundred times from one
 asserted once in a single paper the author happened to read.
 
-The atlas can now answer that with a denominator. It holds 7,951,325 typed,
-normalized relations over 1,603,105 cancer-article PMIDs, drawn from NCBI's
+The atlas can now answer that with a denominator. It holds the census's typed,
+normalized relation layer over the cancer-article PMIDs it was extracted from
+(the row count is in `corpus/atlas/relations/manifest.json`, and is not
+repeated here because it grew by about a third when the layer was re-ingested
+and this sentence did not), drawn from NCBI's
 PubTator3 bulk release, with a FIXED predicate vocabulary (associate, treat,
 cause, inhibit, stimulate, positive_correlate, negative_correlate, cotreat,
 interact, compare, prevent, drug_interact).

@@ -10,8 +10,8 @@ along and never read.
 
 THE TWO TRAPS THIS GUARDS, both of which the project has fallen into before
 ------------------------------------------------------------------------
-1. CONTAINMENT REPORTED AS DAMAGE. `atlas_ambiguity_impact.py` found 50.8% of
-   rows touching a contested identifier against 1.35% actually at risk -- a
+1. CONTAINMENT REPORTED AS DAMAGE. `atlas_ambiguity_impact.py` found about half of
+   rows touching a contested identifier against a far smaller share actually at risk -- a
    38-fold gap. The same shape applies here, so the report must carry both.
 2. THE WRONG DENOMINATOR. 70.2% of the graph's pairs rest on a single paper,
    which is the population that a retraction can actually strand. Quoting the

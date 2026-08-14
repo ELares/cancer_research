@@ -20,13 +20,20 @@ If you have expertise in oncology, biochemistry, ferroptosis, immunology, comput
 
 ## What's here
 
-- **4,830 full-text cancer research articles** across 19 mechanisms, 22 cancer types, 803 journals (2001-2026); the corpus skews toward immunotherapy (the single most-studied mechanism, ~2,297 articles), with physical and pharmacologic ferroptosis approaches a smaller, more preclinical slice
+There are three literature surfaces here, and it matters which one a number comes from:
+
+- **A frozen 4,830-article full-text corpus** across 19 mechanisms, 22 cancer types, 803 journals (2001-2026), plus 5,593 abstract-only records. Every figure in the manuscript comes from this snapshot, and it is deliberately never mutated. It skews toward immunotherapy (~2,297 articles), with physical and pharmacologic ferroptosis approaches a smaller, more preclinical slice.
+- **A 4,403,994-article census of the whole indexed cancer literature** (MeSH tree C04 plus nine adjacent descriptors), built from the PubMed annual baseline because E-utilities cannot page past 10,000 hits. Alongside it: 1,100,218 open-access full texts, 10,509,470 typed relations over 2,095,737 PMIDs, and 283 million sentences mined for entity co-mention.
+- **A living review** that re-runs the queries monthly and reports a dated delta without ever touching the frozen corpus.
+
+The census exists because the frozen corpus is **0.11% of the cancer literature**, so several claims computed over it could not be tested on it. Some now can: `analysis/manuscript-vs-census.md` re-tests two of the manuscript's own published claims on expert MeSH labels over all 4.4M articles, and both survive — one of them understated by the manuscript.
+
 - **Python pipeline** for corpus fetching, tagging (7 tag layers), indexing, analysis, and figure generation
-- **11 Rust simulation binaries**, a mechanistic claim-testing engine for cancer therapies: single-cell and spatial Monte Carlo, drug penetration across tissue types, drug combinations, tumor microenvironment (oxygen gradients, spatial immune zones, DAMP-mediated T-cell activation, stromal shielding, vasculature, clonal heterogeneity), vulnerability windows, ICD immune cascades, and tumor PK. Worked implementations include ferroptosis/RSL3 biochemistry and PDT/SDT depth physics (2D row-based and 3D radial-depth dispatchers; sim-tme-3d is the 3D-spheroid capstone consuming the full TME library stack) plus photosensitizer PK (drug-light-interval scaling, saturating distribution phase, relative singlet-O₂ yield)
+- **12 Rust simulation binaries**, a mechanistic claim-testing engine for cancer therapies: single-cell and spatial Monte Carlo, drug penetration across tissue types, drug combinations, tumor microenvironment (oxygen gradients, spatial immune zones, DAMP-mediated T-cell activation, stromal shielding, vasculature, clonal heterogeneity), vulnerability windows, ICD immune cascades, and tumor PK. Worked implementations include ferroptosis/RSL3 biochemistry and PDT/SDT depth physics (2D row-based and 3D radial-depth dispatchers; sim-tme-3d is the 3D-spheroid capstone consuming the full TME library stack) plus photosensitizer PK (drug-light-interval scaling, saturating distribution phase, relative singlet-O₂ yield)
 - **ferroptosis-core library** (MIT, with Python bindings) — embeddable ferroptosis biochemistry engine; module list and current unit-test count in [`simulations/ferroptosis-core/README.md`](simulations/ferroptosis-core/README.md)
 - **Calibration infrastructure** linking simulation parameters to published experimental data
 - **[Model card](MODEL_CARD.md)** with the simulation suite's intended use, out-of-scope cases, assumptions/scope checklist, and per-layer calibration/validation status (the honest "broad but mostly uncalibrated" accounting, consolidated from [`CALIBRATION_STATUS.md`](simulations/calibration/CALIBRATION_STATUS.md))
-- **Book-format manuscript (~115 pp)** with 11 chapters, 3 appendices, and 24 figures (~39,400 words), cross-referenced against all analysis outputs
+- **Book-format manuscript (~115 pp)** with 11 chapters, 3 appendices, and 30 traceable figures (~48,400 words), cross-referenced against all analysis outputs and indexed in [`FIGURES.yaml`](FIGURES.yaml)
 
 Everything is organised so you can re-run the pipeline, challenge the conclusions, or extend the work in directions we haven't thought of yet.
 
@@ -51,11 +58,11 @@ These are computational predictions with documented assumptions and caveats, not
 
 | Directory | What you'll find |
 |-----------|-----------------|
-| `analysis/` | 15+ analysis outputs: evidence tiers, tissue-of-origin, diagnostic-therapy matching, combination audits, gap analysis |
-| `article/drafts/` | Manuscript (v1.md + v1.tex) with 24 figures |
-| `scripts/` | Python pipeline: tagging, indexing, analysis, figure generation, LaTeX generation, news authentication pipeline |
-| `simulations/` | [11 Rust binaries](simulations/README.md) (each with its own README) + [ferroptosis-core library](simulations/ferroptosis-core/) + [Python bindings](simulations/ferroptosis-python/) + [calibration](simulations/calibration/) |
-| `corpus/` | Full-text articles by PubMed ID + INDEX.jsonl |
+| `analysis/` | 106 analysis outputs. Frozen-corpus work (evidence tiers, tissue-of-origin, diagnostic-therapy matching, combination audits, gap analysis) plus 30 census-scale ones, including the drug-by-variant map, the co-treatment layer, retraction exposure, entity-ambiguity impact, and the manuscript-vs-census re-test |
+| `article/drafts/` | Manuscript (v1.md + v1.tex) with 30 traceable figures |
+| `scripts/` | Python pipeline: tagging, indexing, analysis, figure generation, LaTeX generation, news authentication. 39 of them are census-scale (`atlas_*.py`, `comention_*.py`); `scripts/atlas_pipeline.sh` documents the dependency order, which is load-bearing and fails silently if run wrong |
+| `simulations/` | [12 Rust binaries](simulations/README.md) (each with its own README) + [ferroptosis-core library](simulations/ferroptosis-core/) + [Python bindings](simulations/ferroptosis-python/) + [calibration](simulations/calibration/) |
+| `corpus/` | Frozen full text by PubMed ID + INDEX.jsonl; `corpus/atlas/` holds the census (bulk gitignored, committed artifacts in `analysis/`); `corpus/living/` holds the monthly deltas |
 | `tags/` | Precomputed tag indexes (mechanism, cancer type, tissue, evidence level, diagnostic-therapy) |
 | `news/` | News source scaffolding: fetched articles, extracted claims, verification results, credibility scores |
 | `tests/` | 785 Python tests (pipeline smoke + figure traceability + calibration-status ref guard + manuscript-inventory drift guard + depth-kill physics-constant guard + flagship-figure data guard + quantitative-figure drift guards (Figs 21/22/23) + invariant/integration + calibrate-extractor + MeSH evidence-fallback + gold-set precision-floor regression (#346) + Bliss/sim-tme/penetration prior-predictive intervals + ABC posterior (#332) + non-circular mechanism-recall (#412) + CTRPv2 calibration target + in-vitro kill-switch fit (#330) + System Xc-/erastin fit (#502) + joint multi-inducer posterior (#500) + spheroid structure validation (#333) + embedding evidence leg (#411) + RD-vs-BioFVM cross-check (#408) + dashboard data layer (#354) + tumor-PK measured-data anchor (#334) + Krogh penetration validation (#335) + spheroid size-aware zone thresholds (#333) + spheroid kill-vs-size direction (#333) + gene-symbol ambiguity/FSP1 sense disambiguation (#ATLAS-AMBIG) + rare-event Poisson intervals + tail-resolution classification + ferroptosis-python bindings) |

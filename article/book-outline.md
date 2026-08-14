@@ -2,7 +2,7 @@
 
 **Working title:** Cancer Therapy Mechanisms and Evidence: A Cross-Literature Synthesis
 
-**Target:** ~50,000 words (current: ~39,400). 5 Parts, 11 chapters, 3 appendices.
+**Target:** ~50,000 words (current: ~48,400, measured prose-only from v1.md). 5 Parts, 11 chapters, 3 appendices.
 
 > **Note:** This is a planning document, not manuscript content. Headings here
 > use the outline's own hierarchy for readability. The manuscript heading
@@ -215,7 +215,7 @@ Step-by-step: clone, build, run analysis, run simulations, compile PDF.
 | III: Simulations | 5-8 | ~12,700 | 16,500 |
 | IV: What's Next | 9-11 | ~5,100 | 11,500 |
 | V: References/Tools | Apps A-C | ~7,600 | 8,000 |
-| **Total** | **11 + 3 apps** | **~39,400** | **~54,000** |
+| **Total** | **11 + 3 apps** | **~48,400** | **~54,000** |
 
 ## Chapter → Issue Mapping
 

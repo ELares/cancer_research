@@ -17,8 +17,8 @@ scripts/ and analysis/ returns nothing.
 THE MEASUREMENT THAT MEANS SOMETHING, AND THE ONE THAT MISLEADS
 ---------------------------------------------------------------
 This repository has been here before. `atlas_ambiguity_impact.py` found that
-50.8% of relation rows TOUCH a contested identifier, which sounds severe and
-measures containment, while only 1.35% rest on an assignment that was actually
+50.6% of relation rows TOUCH a contested identifier, which sounds severe and
+measures containment, while only 1.31% rest on an assignment that was actually
 at risk -- a 38-fold difference between the alarming number and the true one.
 
 The same trap applies exactly. So both are computed and the containment figure
@@ -208,8 +208,8 @@ def render(r: dict) -> str:
         "itself, so every figure here is a **lower bound**.", "",
         "## The graph", "",
         "Two numbers, and reporting only the first would mislead — this repository",
-        "has made that exact error before, when 50.8% of relation rows *touching* a",
-        "contested identifier turned out to be 1.35% actually at risk.", "",
+        "has made that exact error before, when 50.6% of relation rows *touching* a",
+        "contested identifier turned out to be 1.31% actually at risk.", "",
         "| | count | share |", "|---|--:|--:|",
         f"| relation rows | {r['rows']:,} | |",
         f"| rows from a retracted paper | {r['tainted_rows']:,} | {pct_rows:.3f}% |",
