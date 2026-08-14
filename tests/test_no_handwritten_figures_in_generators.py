@@ -74,28 +74,57 @@ def all_generators():
         out.append(p)
     return out
 
-# Nouns whose count is a measurement in these documents.
-COUNTABLE = (r"row|pair|paper|rsid|regimen|spelling|sweep|panel|sample|entry|"
-             r"twin|collapse|refusal|triple|variant|gene|drug|mutation|record|"
-             r"article|combination|finding|guard|instance")
+# NOT a list of measured nouns. A closed allowlist is always one synonym from
+# being stepped around -- the first version omitted `key`, the very noun the fix
+# it shipped alongside introduced, so "ten refused keys" passed. The rule is
+# inverted: a number adjacent to ANY ordinary lowercase word is a quantity, and
+# a short EXEMPT list carries the collocations that are structural rather than
+# measured. That fails safe: an unlisted noun is a false positive an author must
+# consciously exempt, not a silent pass.
+COUNTABLE = r"[a-z][a-z-]{2,}"
+# Words that follow a number without counting anything.
+EXEMPT_AFTER = {
+    "and", "or", "to", "of", "in", "at", "on", "is", "was", "were", "per",
+    "than", "as", "the", "a", "an", "for", "with", "by", "from", "that",
+    "which", "relates", "sits", "inside", "above", "below", "gives", "holds",
+    "reads", "means", "denotes", "carries", "would", "will", "can", "may",
+    # Structural rather than measured: these count a rule, a design, or a named
+    # variant's alleles, none of which the corpus can change under the prose.
+    # Each is an EXEMPTION, so an unlisted noun still fails and the author must
+    # add it deliberately -- unlike an allowlist of measured nouns, which any
+    # synonym walks past.
+    "tests", "test", "things", "substitutions", "site", "refuses", "states",
+    "classes", "shapes", "reasons", "arms", "halves", "outcomes",
+    "preceding", "branches", "steps", "passes", "rules", "checks",
+}
 # THREE and above. `one`, `two`, `both` and `several` are grammatical rather
 # than measured -- "pairs resting on ONE paper" defines a category and cannot go
 # stale, while "a nine-pair panel" and "ten rsids" are counts of data that did.
 # Every historical instance of this defect used three or more, or a vague
 # magnitude.
-SPELLED = (r"three|four|five|six|seven|eight|nine|ten|eleven|twelve|"
-           r"dozen|tens|hundreds|thousands")
+# Built from morphemes rather than typed out, because a list that stops at
+# twelve can be outrun by counting higher: "a forty-pair panel" evaded the first
+# version, and this file's own prose writes "thirty-seven".
+_UNITS = ("three four five six seven eight nine ten eleven twelve thirteen "
+          "fourteen fifteen sixteen seventeen eighteen nineteen").split()
+_TENS = ("twenty thirty forty fifty sixty seventy eighty ninety").split()
+_BIG = ("hundred thousand million dozen tens hundreds thousands dozens").split()
+SPELLED = "|".join(
+    sorted(_UNITS + _TENS + _BIG + [f"{t}-{u}" for t in _TENS for u in _UNITS],
+           key=len, reverse=True))
 
 QUANTITY_SHAPES = [
     # 40-row sample, 36-pair sweep, 37 pairs, 25,443 rows
     # Digits three and above; 1 and 2 are grammatical for the same reason.
-    (rf"\b(?!(?:1|2)\b)\d[\d,]*\s*[-–]?\s*(?:{COUNTABLE})s?\b",
-     "a number modifying a countable noun"),
+    (rf"\b(?!(?:1|2)\b)\d[\d,]*\s*[-–]?\s*(?:{COUNTABLE})\b",
+     "a number modifying a noun"),
     # nine-pair panel, ten rsids, tens of papers
-    (rf"\b(?:{SPELLED})\s*[-–]?\s*(?:{COUNTABLE})s?\b", "a spelled quantity modifying a countable noun"),
+    (rf"\b(?:{SPELLED})\s*[-–]?\s*(?:{COUNTABLE})\b",
+     "a spelled quantity modifying a noun"),
     # below 1.3, above 3.7, at least 30, more than 2
     (r"\b(?:below|above|at least|at most|more than|fewer than|under|over|"
-     r"exceeds|beyond|up to|as many as)\s+\d", "a comparative pointing at a number"),
+     r"exceeds|beyond|up to|as many as)\s+\d[\d,]*(?:\.\d+)?",
+     "a comparative pointing at a number"),
     # 2.98/3.82, 7/7 vs 1/7, 8 of 10
     (r"\b\d+(?:\.\d+)?\s*(?:/|vs\.?|versus|against|to|and|of)\s*\d+(?:\.\d+)?\b",
      "a bare numeric range or ratio"),
@@ -110,30 +139,61 @@ COMPILED = [(re.compile(p, re.I), why) for p, why in QUANTITY_SHAPES]
 # papers" is not.
 IDENT_TOKEN = re.compile(
     r"^(?:rs\d+|MESH:[A-Z]?\d+|p\.[A-Z]\d+[A-Z*]|[cgmn]\.[+-]?\d+[ACGT]>[ACGT]|"
-    r"Chr\d+\S*|[A-Z][A-Za-z]*\d[A-Za-z0-9]*|[A-Z]{2,}[- ]?\d+|"
+    r"Chr\d+\S*|[A-Z][A-Za-z]*\d[A-Za-z0-9]*|[A-Z]{2,}[- ]?\d+|codon-?\d+|"
     r"CodeBreaK|KRYSTAL-\d|NEJ\d+|AG\d+-\d+|CAPItello-\d+|SOLAR-\d|FLAURA\d)$")
 
 
-def _prose_literals(path: Path):
-    """Non-f-string literals outside docstrings, with line numbers.
+def _prose_runs(path: Path):
+    """RUNS of adjacent string literals in a list, joined, with line numbers.
 
-    An f-string is a JoinedStr, so interpolating exempts a sentence
-    automatically. Docstrings are excluded here and checked separately, under a
-    rule they can actually satisfy: they cannot interpolate at all.
+    Scanning one literal at a time made coverage a coin flip. Both generators
+    wrap prose across adjacent elements of an `L` list every six to ten words at
+    an arbitrary column, so a number and its noun share a literal only by luck:
+    the retracted "in tens or hundreds of papers ... in nought to a handful"
+    passes a per-literal scan purely by wrapping after "papers,".
+
+    A run ends at an f-string, because an interpolated figure is the sanctioned
+    form and a sentence containing one is derived.
     """
     tree = ast.parse(path.read_text())
     docstrings = set()
     for node in ast.walk(tree):
-        if isinstance(node, (ast.Module, ast.FunctionDef, ast.AsyncFunctionDef,
-                             ast.ClassDef)):
-            body = getattr(node, "body", None)
-            if body and isinstance(body[0], ast.Expr) and \
-                    isinstance(body[0].value, ast.Constant) and \
-                    isinstance(body[0].value.value, str):
-                docstrings.add(id(body[0].value))
-    return [(n.lineno, n.value) for n in ast.walk(tree)
-            if isinstance(n, ast.Constant) and isinstance(n.value, str)
-            and id(n) not in docstrings]
+        body = getattr(node, "body", None)
+        if isinstance(body, list) and body and isinstance(body[0], ast.Expr) \
+                and isinstance(body[0].value, ast.Constant) \
+                and isinstance(body[0].value.value, str):
+            docstrings.add(id(body[0].value))
+
+    runs, seen = [], set()
+    for node in ast.walk(tree):
+        # Lists only. Prose is built with `L = [...]`; the panels are LISTS OF
+        # TUPLES whose inner tuples hold identifiers, and joining those produced
+        # "673 COMBI-d" -- a gene id beside a trial name, which is data, not a
+        # sentence. Tuple elements are marked seen so the loose-literal pass
+        # below does not pick them up either.
+        if isinstance(node, ast.Tuple):
+            for el in node.elts:
+                if isinstance(el, ast.Constant) and isinstance(el.value, str):
+                    seen.add(id(el))
+            continue
+        if not isinstance(node, ast.List):
+            continue
+        cur = []
+        for el in list(node.elts) + [None]:
+            if isinstance(el, ast.Constant) and isinstance(el.value, str) \
+                    and id(el) not in docstrings:
+                cur.append(el)
+                seen.add(id(el))
+                continue
+            if cur:
+                runs.append((cur[0].lineno, " ".join(c.value for c in cur)))
+            cur = []
+    # literals outside any list still count on their own
+    for n in ast.walk(tree):
+        if isinstance(n, ast.Constant) and isinstance(n.value, str) \
+                and id(n) not in docstrings and id(n) not in seen:
+            runs.append((n.lineno, n.value))
+    return runs
 
 
 def _strip_identifiers(text: str) -> str:
@@ -141,18 +201,37 @@ def _strip_identifiers(text: str) -> str:
                     else t for t in text.split())
 
 
+def _matches(text: str):
+    """Every quantity shape in a piece of prose, exemptions applied.
+
+    ONE definition, used by the prose scan AND the docstring scan. The two had
+    separate loops and the docstring one skipped the exemption filter, so
+    structural phrases the prose scan correctly ignored fired there instead --
+    which is the same two-call-sites-disagree defect this guard exists to stop
+    the generators committing.
+    """
+    cleaned = _strip_identifiers(text)
+    out = []
+    for rx, why in COMPILED:
+        for m in rx.finditer(cleaned):
+            frag = m.group(0).strip()
+            tail = re.split(r"[\s-]+", frag)[-1].lower()
+            if "modifying a noun" in why and tail in EXEMPT_AFTER:
+                continue
+            out.append((why, frag))
+    return out
+
+
 def offending(path: Path):
     bad = []
-    for lineno, text in _prose_literals(path):
+    for lineno, text in _prose_runs(path):
         flat = " ".join(text.split())
         if len(flat.split()) <= 1:
             continue
-        cleaned = _strip_identifiers(flat)
-        for rx, why in COMPILED:
-            m = rx.search(cleaned)
-            if m:
-                bad.append((lineno, why, m.group(0).strip(), flat[:110]))
-                break
+        # EVERY rule that matches, not the first: joining a run means one run
+        # can hold several defects, and stopping at the first hid the rest.
+        for why, frag in _matches(flat):
+            bad.append((lineno, why, frag, flat[:110]))
     return bad
 
 
@@ -197,12 +276,16 @@ def test_the_detector_finds_every_shape_it_claims_to():
         tmp = Path(fh.name)
     try:
         hits = offending(tmp)
-        frags = " | ".join(t for _, _, _, t in hits)
+        # The MATCHED fragments, not the truncated run text. Joining runs made
+        # the whole planted list one run, so the reported text is clipped and a
+        # check against it silently stopped testing most of the shapes.
+        frags = " | ".join(f for _, _, f, _ in hits)
+        runtext = " | ".join(t for _, _, _, t in hits)
         for must in ("nine-pair", "below 1.3", "36-pair", "ten rsids",
                      "2.98/3.82", "tens or hundreds"):
             assert must in frags, f"the detector missed {must!r}"
         for must_not in ("derived:", "rs77375493", "EGFR L858R", "CodeBreaK"):
-            assert must_not not in frags, (
+            assert must_not not in frags and must_not not in runtext, (
                 f"the detector flagged {must_not!r}, which is an interpolation "
                 "or an identifier and is the sanctioned form")
     finally:
@@ -275,18 +358,27 @@ def test_the_module_docstrings_carry_no_quantity_either():
     """
     offenders = {}
     for g in GENERATORS:
-        doc = ast.get_docstring(ast.parse(g.read_text())) or ""
+        tree = ast.parse(g.read_text())
+        docs = []
+        for node in ast.walk(tree):
+            d = ast.get_docstring(node) if isinstance(
+                node, (ast.Module, ast.FunctionDef, ast.AsyncFunctionDef,
+                       ast.ClassDef)) else None
+            if d:
+                docs.append((getattr(node, "name", "<module>"), d))
         bad = []
-        for line in doc.splitlines():
-            flat = " ".join(line.split())
-            if len(flat.split()) <= 1:
-                continue
-            cleaned = _strip_identifiers(flat)
-            for rx, why in COMPILED:
-                m = rx.search(cleaned)
-                if m:
-                    bad.append(f"[{why}: {m.group(0).strip()!r}] {flat[:100]}")
-                    break
+        # Every docstring, not only the module's. A function docstring cannot
+        # interpolate either, and three were shipping unscanned -- one of them
+        # added by the commit that introduced this guard, in the docstring of
+        # the helper written to replace the very phrase it repeated.
+        for owner, doc in docs:
+            # Join the docstring's lines too: a wrapped sentence in a docstring
+            # hides a quantity exactly as one in a list does.
+            flat_doc = " ".join(doc.split())
+            for why, frag in _matches(flat_doc):
+                i = flat_doc.find(frag.split()[0])
+                bad.append(f"{owner}(): [{why}: {frag!r}] "
+                           f"...{flat_doc[max(0, i - 40):i + 70]}...")
         if bad:
             offenders[g.name] = bad
     assert not offenders, (

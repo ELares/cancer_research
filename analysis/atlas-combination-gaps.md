@@ -83,7 +83,7 @@ That was wrong too, and it was wrong because two panel labels were
 mine to assign and I assigned them in the direction that made the
 split clean.
 
-Measured over 14 regimens with a molecular biomarker (11 approved combinations and 3 major published trials without one: NEJ009, AG221-005, KRYSTAL-7), with FLAURA2 relabelled
+Measured over 14 regimens with a molecular biomarker (11 approved combinations and 3 major published trials without one: AG221-005, KRYSTAL-7, NEJ009), with FLAURA2 relabelled
 to the substitution it actually enrols (the same one as MARIPOSA)
 and CAPItello-291 relabelled to the multi-gene alteration list it
 actually uses:

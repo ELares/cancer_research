@@ -150,7 +150,7 @@ def _is_parsable(h: str) -> bool:
 
     A no-change `A>A` spelling matches the NUCLEOTIDE regex but denotes
     nothing, so it is unparsable. Two call sites disagreeing about that is what
-    left 42 refusals reporting no offending spelling at all.
+    left a block of refusals reporting no offending spelling at all.
     """
     if PROTEIN.match(h):
         return True
@@ -165,8 +165,8 @@ def classify_spellings(forms) -> tuple:
     ...) to the set of distinct changes seen in it, so a class holding more than
     one change is a disagreement.
 
-    `X` and `*` both denote a stop codon, so they are normalised together: nine
-    rsids were being reported to the reader as carrying "spellings that denote
+    `X` and `*` both denote a stop codon, so they are normalised together: without
+    it, rsids carrying both were reported to the reader as carrying "spellings that denote
     different changes" when the only difference was `p.R461X` against
     `p.R461*`. A no-change nucleotide spelling (`A>A`) denotes nothing and is
     counted unparsable rather than allowed to agree with itself.
@@ -248,7 +248,7 @@ def resolve_rsids(rs_hgvs: dict) -> tuple:
     both multi-allelic sites (rs121913529 = KRAS G12D and G12V and G12A) and
     anything carrying a spelling that cannot be checked. Nothing rests on a
     dominance threshold: one disagreeing spelling refuses the rsid however rare
-    it is, so a 17-row form cannot capture a 710-row one.
+    it is, so a minority spelling cannot capture a dominant one.
     """
     fix, tally, refused = {}, collections.Counter(), []
     for key, forms in rs_hgvs.items():

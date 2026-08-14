@@ -4,8 +4,8 @@
 WHAT THIS READS
 ---------------
 `relations.tsv.gz` carries a large `cotreat` layer over tens of thousands of
-drug pairs, and those counts are NOT new here -- `atlas-retraction-exposure.md` already ships the
-224,146 and `atlas-emergence.md` already ships per-pair cotreat counts. What
+drug pairs, and those counts are NOT new here -- `atlas-retraction-exposure.md` already ships the same
+cotreat total and `atlas-emergence.md` already ships per-pair cotreat counts. What
 nothing had done is JOIN them to the gene and variant layers to ask what each
 combination is studied against.
 
@@ -165,6 +165,12 @@ RECOVERY_PANEL = [
 # Reported, never used to filter: no panel this size can support a classifier.
 CO_ADMIN_RATIO = 3.0
 
+# Panel entries that are major published trials rather than approved
+# COMBINATIONS. Named here so the count in the prose derives from the set:
+# all three sit in the not-both-targeted arm and all three miss, so each widens
+# the partner separation and narrows the biomarker one.
+NOT_APPROVED = {"NEJ009", "AG221-005", "KRYSTAL-7"}
+
 
 def resolve_drug(name: str, lab: dict) -> str:
     """Authority name -> identifier, or raise.
@@ -274,9 +280,11 @@ def join(cotreat: dict, drug_target: dict) -> dict:
 def _hi_lo(rec: dict) -> tuple:
     """(targeted min, targeted max, other min, other max) over the misses.
 
-    Derived rather than described. "tens or hundreds against nought to a
-    handful" was hand-written beside a table whose targeted column holds 6, 4
-    and 1, so the two ranges it named overlapped on half the rows.
+    Derived rather than described. The vague magnitude phrase this replaced was
+    hand-written beside a table whose own values contradicted it, so the two
+    ranges it named overlapped on rows it called far apart. The phrase is not
+    quoted here: a guard cannot tell a quoted retraction from an assertion, and
+    an exemption for quotation marks would be a bypass anyone could use.
     """
     m = [r for r in rec["panel"] if not r["recovered"]]
     hi = [max(r.get("drug_a_tied_anywhere", 0), r.get("drug_b_tied_anywhere", 0))
@@ -558,8 +566,9 @@ def render(r: dict) -> str:
           "mine to assign and I assigned them in the direction that made the",
           "split clean.", "",
           f"Measured over {rec['of']} regimens with a molecular biomarker "
-          f"({rec['of'] - 3} approved combinations and 3 major published trials "
-          "without one: NEJ009, AG221-005, KRYSTAL-7), with FLAURA2 relabelled",
+          f"({rec['of'] - len(NOT_APPROVED)} approved combinations and "
+          f"{len(NOT_APPROVED)} major published trials without one: "
+          + ", ".join(sorted(NOT_APPROVED)) + "), with FLAURA2 relabelled",
           "to the substitution it actually enrols (the same one as MARIPOSA)",
           "and CAPItello-291 relabelled to the multi-gene alteration list it",
           "actually uses:", "",
