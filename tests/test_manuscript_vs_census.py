@@ -52,6 +52,27 @@ def mod():
     return m
 
 
+def test_the_shipped_document_is_the_generator_s_output():
+    """Every other guard here is a substring check, which defends nothing.
+
+    A review rewrote the verdict to "survives decisively", DELETED the caveat
+    the newest section is built on, moved the central narrowing paragraph into
+    an appendix below the limitations, and weakened "the ratio survives it" to
+    "the ratio is unaffected by it" -- and the whole suite passed. The
+    substring guards survived because later sections happened to supply
+    duplicate matches for the phrases that were their only defence.
+
+    Re-rendering from the shipped JSON and comparing byte-for-byte means prose
+    can only change by changing the generator, and every other guard here then
+    only has to defend the generator's text.
+    """
+    m = mod()
+    assert m.render(d()) == DOC.read_text(), (
+        "the shipped markdown is not what the generator produces from the "
+        "shipped JSON, so the prose has been edited by hand or the two are "
+        "out of step; regenerate rather than editing the document")
+
+
 # --- the claims must still be the manuscript's ------------------------------
 
 def test_the_quoted_manuscript_figures_are_the_manuscript_s():
@@ -259,12 +280,17 @@ def test_the_headline_agrees_with_the_verdicts_it_summarises():
         "gone back to being a literal")
 
     # and the sentence must SAY what the verdicts hold
-    survived = (mt["census_exceeds_manuscript"] or mt["direction_holds"]) \
-        and g["corpus_exceeds_field"]
-    assert ("survive" in headline.lower()) == bool(survived), (
-        f"the headline says {headline!r} while the verdicts are "
-        f"8.2={mt['direction_holds']} 3.7={g['corpus_exceeds_field']}")
-    assert ("understate" in headline.lower()) == bool(
+    # PER CLAIM. Equating "the word survive appears" with "both held" raised a
+    # false alarm on a state the generator handles correctly (8.2 failed, 3.7
+    # held), and the likely repair under CI pressure is to loosen the guard.
+    for name, ok in (("section 8.2", mt["census_exceeds_manuscript"]
+                      or mt["direction_holds"]),
+                     ("section 3.7", g["corpus_exceeds_field"])):
+        says_failed = f"{name} does not survive" in headline.lower()
+        assert says_failed == (not ok), (
+            f"the headline {'says' if says_failed else 'does not say'} "
+            f"{name} failed while its verdict is {ok}: {headline!r}")
+    assert ("understated by the manuscript" in headline.lower()) == bool(
         mt["census_exceeds_manuscript"]), (
         "the headline's understatement clause does not track the verdict")
 
@@ -273,9 +299,14 @@ def test_the_headline_agrees_with_the_verdicts_it_summarises():
                                                   "census_exceeds_manuscript": False,
                                                   "direction_holds": False},
                            "growth": {**g, "corpus_exceeds_field": False}})
-    assert "survive" not in flipped.lower() or "Nothing" in flipped, (
-        f"with both verdicts false the headline still reads {flipped!r}")
-    assert "understate" not in flipped.lower()
+    # Per claim again. A substring test on "survive" is wrong here because
+    # "does not survive" contains it -- the shape that makes a negation-blind
+    # guard pass a document asserting the opposite of what it means.
+    for name in ("section 8.2", "section 3.7"):
+        assert f"{name} does not survive" in flipped.lower(), (
+            f"with both verdicts false the headline does not say {name} "
+            f"failed: {flipped!r}")
+    assert "understated by the manuscript" not in flipped
 
 
 def test_the_descriptor_choice_is_reported_as_a_choice():
@@ -285,10 +316,22 @@ def test_the_descriptor_choice_is_reported_as_a_choice():
     assert len(vs) >= 3, "the sensitivity analysis has been reduced to one pair"
     assert mt["ratio_range"] and mt["ratio_range"][0] < mt["ratio_range"][1], (
         "the variants no longer span a range, so the sensitivity is not shown")
-    assert mt["understatement_holds_under_every_variant"], (
-        f"the understatement no longer holds across the whole range "
-        f"{mt['ratio_range']}; the conclusion then depends on the descriptor "
-        "pair chosen and must not be stated unconditionally")
+    # AGREEMENT, not the favourable outcome. Asserting the flag is true is the
+    # pinning shape the headline guard was rewritten to stop doing, and render()
+    # already carries a correct branch for the unfavourable case -- which an
+    # assertion on the flag makes unreachable, so a census that refuted the
+    # claim would surface as a broken test rather than as a document reporting
+    # the refutation.
+    txt_ = flat()
+    favourable = "Every variant exceeds the manuscript's" in txt_
+    unfavourable = "Not every variant exceeds the manuscript's" in txt_
+    assert favourable != unfavourable, (
+        "the document states both or neither branch of the variant verdict")
+    assert favourable == mt["understatement_holds_under_every_variant"], (
+        f"the document says the understatement "
+        f"{'holds' if favourable else 'does not hold'} across the range while "
+        f"the measurement says "
+        f"{mt['understatement_holds_under_every_variant']}")
     txt = flat()
     for v in vs:
         assert f"| {v['variant']} |" in txt, (
@@ -302,10 +345,16 @@ def test_the_named_invalidator_is_measured_not_just_named():
     om = d()["modality_table"]["on_modality_and_tumour"]
     for k in ("pdt_pct", "sdt_pct", "gap_points", "filtered_ratio"):
         assert om.get(k) is not None, f"{k} is not measured"
-    assert om["symmetric_within_5_points"], (
-        f"the over-estimation is NOT symmetric ({om['pdt_pct']}% against "
-        f"{om['sdt_pct']}%, a {om['gap_points']}-point gap), so the raw ratio "
-        "is inflated and the verdict is unearned as stated")
+    txt_ = flat()
+    sym = "the over-estimation is symmetric" in txt_
+    asym = "one descriptor is materially broader" in txt_
+    assert sym != asym, "the document states both or neither symmetry branch"
+    assert sym == om["symmetric_within_5_points"], (
+        f"the document says the over-estimation is "
+        f"{'symmetric' if sym else 'asymmetric'} while the measurement "
+        f"({om['pdt_pct']}% against {om['sdt_pct']}%, a "
+        f"{om['gap_points']}-point gap) says "
+        f"{om['symmetric_within_5_points']}")
     assert 0 < om["pdt_pct"] <= 100 and 0 < om["sdt_pct"] <= 100
     assert "symmetric" in flat(), (
         "the symmetry result is measured but not reported")

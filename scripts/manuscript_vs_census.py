@@ -315,24 +315,35 @@ def main() -> int:
 
 
 def _headline(r: dict) -> str:
-    """One sentence stating the outcome, computed from the verdicts."""
+    """One sentence stating the outcome, computed from the SAME verdicts the
+    section bodies branch on.
+
+    The first derivation gated section 8.2 on `direction_holds`, which asks
+    only whether the ratio exceeds one -- a weaker bar than the body uses. A
+    census ratio above one but below the manuscript's therefore printed "both
+    claims survive" in the opening line while the body of the same document
+    said the ratio was smaller and the strength needed revisiting. That is the
+    headline-versus-body contradiction this file exists to avoid, reproduced by
+    the derivation that replaced the literal.
+    """
     mt, g = r["modality_table"], r["growth"]
-    held = [n for n, v in (("section 8.2", mt["census_exceeds_manuscript"]
-                            or mt["direction_holds"]),
-                           ("section 3.7", g["corpus_exceeds_field"])) if v]
-    failed = [n for n in ("section 8.2", "section 3.7") if n not in held]
-    parts = []
+    held, failed = [], []
+    if mt["census_exceeds_manuscript"]:
+        held.append("section 8.2 survives, understated by the manuscript")
+    elif mt["direction_holds"]:
+        held.append("section 8.2 holds in direction but on a smaller ratio "
+                    "than the manuscript argued from")
+    else:
+        failed.append("section 8.2 does not survive")
+    if g["corpus_exceeds_field"]:
+        held.append("section 3.7 survives")
+    else:
+        failed.append("section 3.7 does not survive")
+    if held and failed:
+        return f"{'; '.join(held).capitalize()}, but {' and '.join(failed)}."
     if held:
-        parts.append(f"{'Both' if len(held) == 2 else held[0].capitalize()} "
-                     + ("claims tested here survive" if len(held) == 2
-                        else "survives"))
-    if failed:
-        parts.append(("but " if held else "")
-                     + f"{' and '.join(failed)} does not")
-    tail = (" and the manuscript understates one of them."
-            if mt["census_exceeds_manuscript"] else ".")
-    return ("Nothing tested here survives." if not held
-            else ", ".join(parts) + tail)
+        return f"{'; '.join(held).capitalize()}."
+    return f"{' and '.join(failed).capitalize()}."
 
 
 def render(r: dict) -> str:
@@ -389,7 +400,10 @@ def render(r: dict) -> str:
                   "is broader than it.", "",
                   "NOT confirmed here, and each for a different reason: the",
                   "manuscript states the ratio holds on every ferroptosis AND ICD",
-                  "metric, and the ICD leg is unmeasurable at census scale (see",
+                  "metric, and the ICD leg is "
+                  + ("measurable at census scale but not tested here"
+                     if m["icd_column_is_measurable"]
+                     else "unmeasurable at census scale") + " (see",
                   "below); the depth-penetration argument is tissue optics, which",
                   "no publication count bears on; and 'more clinical experience,",
                   "approved photosensitizers' is not a literature-count claim",
@@ -450,9 +464,16 @@ def render(r: dict) -> str:
           f"  {m['min_for_a_ratio']}-article floor at census scale, so their rows",
           "  carry no census signal and are reported as unmeasurable rather than",
           "  as a finding.",
-          "* **The ICD column is not measurable.** Both sides are far below the",
-          "  floor, so no ratio is computed from it. The manuscript's ICD figures",
-          "  came from a broader keyword query, not a descriptor intersection.",
+          (f"* **The ICD column is not measurable.** Both sides are below the "
+           f"{m['min_for_a_ratio']}-article floor "
+           f"({next(x['census_ferroptosis_icd'] for x in m['rows'] if x['modality'] == 'PDT')} "
+           f"and {next(x['census_ferroptosis_icd'] for x in m['rows'] if x['modality'] == 'SDT')}), "
+           "so no ratio is computed from it."
+           if not m["icd_column_is_measurable"] else
+           "* **The ICD column IS now measurable**, which it was not when this "
+           "analysis was written; the report should be extended to test it."),
+          "  The manuscript's ICD figures came from a broader keyword query,",
+          "  not a descriptor intersection.",
           "* `Ultrasonic Therapy` is broader than sonodynamic therapy and",
           "  `Photochemotherapy` is broader than tumour PDT, which the manuscript",
           "  already states. Both legs are over-estimates and the ratio is only",

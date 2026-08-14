@@ -7,7 +7,7 @@ or over live PubMed queries run once. The census is the whole indexed
 cancer literature with expert MeSH labels, so several claims the frozen
 corpus could not test now are testable.
 
-**Both claims tested here survive and the manuscript understates one of them.** That is reported as prominently as the opposite
+**Section 8.2 survives, understated by the manuscript; section 3.7 survives.** That is reported as prominently as the opposite
 would be: a document that only ever finds its own work wanting is as
 unreliable as one that only ever confirms it.
 
@@ -95,9 +95,9 @@ The gap is 3.3 points, so the over-estimation is symmetric and the ratio survive
   10-article floor at census scale, so their rows
   carry no census signal and are reported as unmeasurable rather than
   as a finding.
-* **The ICD column is not measurable.** Both sides are far below the
-  floor, so no ratio is computed from it. The manuscript's ICD figures
-  came from a broader keyword query, not a descriptor intersection.
+* **The ICD column is not measurable.** Both sides are below the 10-article floor (3 and 1), so no ratio is computed from it.
+  The manuscript's ICD figures came from a broader keyword query,
+  not a descriptor intersection.
 * `Ultrasonic Therapy` is broader than sonodynamic therapy and
   `Photochemotherapy` is broader than tumour PDT, which the manuscript
   already states. Both legs are over-estimates and the ratio is only
