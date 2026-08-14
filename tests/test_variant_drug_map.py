@@ -189,6 +189,25 @@ def test_the_offending_set_names_a_spelling_for_every_refusal_reason():
     assert refused[0]["offending"] == {"c.100A>A": 3}, (
         "the refusal names no offending spelling, so the report cannot show a "
         "reader why the rsID was refused")
+    # BOTH conditions at once, which no other fixture carries. Reversing the
+    # two branches so the unparsable technicality is reported ahead of a
+    # genuine class disagreement reassigns 200 rsIDs to the wrong reason and
+    # strips the "refuses the rsid" flag from every disagreeing spelling in the
+    # shipped worked example -- a table whose every row reads clean under a
+    # heading saying one of them cannot be checked.
+    _, tally2, ref2 = m.resolve_rsids({
+        ("2", "2"): collections.Counter({"c.100A>C": 5, "c.200A>C": 3,
+                                         "c.100A>A": 1}),
+    })
+    assert tally2.get("classes_disagree_refused") == 1, (
+        "an rsID carrying BOTH a genuine disagreement and an unparsable "
+        "spelling is reported as unparsable; the disagreement is the "
+        "informative reason and the report shows the evidence for whichever "
+        "reason it names")
+    assert set(ref2[0]["offending"]) == {"c.100A>C", "c.200A>C"}, (
+        "the offending set names the no-change spelling rather than the two "
+        "that actually disagree, so the worked example would flag the wrong "
+        "rows")
 
 
 def test_the_multi_allelic_refusal_is_still_protecting_something():
@@ -371,6 +390,22 @@ def test_the_majority_moving_rule_reports_how_thin_its_evidence_is():
     assert all("canonical_rsid_rows" in t for t in movers), (
         "the majority-moving table no longer carries the row count its rsID "
         "evidence rests on")
+    # TWO-SIDED. `min(...) < 5` is monotone in the wrong direction: driving the
+    # evidence column to ZERO makes it pass MORE easily. An audit swapped the
+    # two branches of `canonical_rsid_rows`, so the doc reported the
+    # NON-canonical twin's rsID rows -- the column became 0/0/0/0 and the worked
+    # example read "carries rs77375493 on 0 of its 624 rows" beside "carries no
+    # rsid at all" -- and all 47 guards stayed green.
+    assert all(t["canonical_rsid_rows"] > 0 for t in movers), (
+        "a majority-moving correction reports ZERO rsID-bearing rows on its "
+        "canonical side; that is the evidence the correction rests on, so zero "
+        "means the column is reporting the wrong side of the twin")
+    feat = d()["twins"]["featured"]
+    assert feat["canonical_rsid_rows"] == feat["canonical_rows"], (
+        f"the featured twin reports {feat['canonical_rsid_rows']} rsID-bearing "
+        f"rows against {feat['canonical_rows']} canonical rows; every row of "
+        "the canonical form carries the adjudicating rsID, so these must be "
+        "equal and a mismatch means the column is misattributed")
     assert min(t["canonical_rsid_rows"] for t in movers) < 5, (
         "every majority-moving correction now rests on substantial evidence; "
         "if that is real the prose calling most of them thin must be rewritten")
@@ -493,6 +528,28 @@ def test_the_featured_examples_arithmetic_is_recomputed_here():
     assert f"at **{word}** of its real support" in txt, (
         f"the fraction word in the prose is not {word!r}, which is what "
         f"{good:,} of {bad + good:,} rounds to")
+
+
+def test_the_predicate_column_accounts_for_every_assertion():
+    """The table silently kept only each row's top three predicates.
+
+    Nothing said so, while the prose above it invited the reader to compare the
+    predicate counts against the paper count -- so two shipped rows understated
+    their own assertion totals with no way to tell.
+    """
+    r, txt = d(), flat()
+    for row in r["top_pairs"][:40]:
+        shown = sum(row["predicates"].values())
+        assert shown == row["assertions"], (
+            f"{row['drug']} / {row['gene']} / {row['variant']} reports "
+            f"{row['assertions']} assertions but its predicate dict sums to "
+            f"{shown}; the JSON is dropping predicates")
+        # and every one of them must reach the rendered table
+        for k, n in row["predicates"].items():
+            assert f"`{k}` {n}" in txt, (
+                f"predicate {k}={n} for {row['drug']}/{row['variant']} is in "
+                "the JSON but not in the shipped table, so the column is "
+                "truncated without saying so")
 
 
 def test_the_gene_table_counts_rows_not_occurrences():

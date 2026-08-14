@@ -30,21 +30,47 @@ known independently of the corpus, the ratio separates:
 | encorafenib + binimetinib | 165 | 20 | 8.25 | co-administered |
 | ipilimumab + nivolumab | 1,973 | 265 | 7.45 | co-administered |
 | cisplatin + etoposide | 2,672 | 223 | 11.98 | co-administered |
+| carboplatin + paclitaxel | 2,945 | 771 | 3.82 | co-administered |
+| fluorouracil + leucovorin | 2,442 | 47 | 51.96 | co-administered |
+| oxaliplatin + fluorouracil | 1,254 | 117 | 10.72 | co-administered |
+| doxorubicin + cyclophosphamide | 1,907 | 356 | 5.36 | co-administered |
+| rituximab + cyclophosphamide | 657 | 62 | 10.6 | co-administered |
+| gemcitabine + cisplatin | 2,450 | 275 | 8.91 | co-administered |
+| lenalidomide + dexamethasone | 1,174 | 77 | 15.25 | co-administered |
+| bortezomib + dexamethasone | 1,357 | 52 | 26.1 | co-administered |
+| venetoclax + azacitidine | 425 | 16 | 26.56 | co-administered |
+| cetuximab + irinotecan | 416 | 11 | 37.82 | co-administered |
+| pembrolizumab + pemetrexed | 146 | 5 | 29.2 | co-administered |
+| olaparib + bevacizumab | 80 | 6 | 13.33 | co-administered |
+| tucatinib + trastuzumab | 67 | 1 | 67.0 | co-administered |
+| abiraterone + prednisone | 109 | 17 | 6.41 | co-administered |
+| cytarabine + daunorubicin | 505 | 123 | 4.11 | co-administered |
 | alectinib + crizotinib | 86 | 111 | 0.77 | sequential or compared |
 | ceritinib + crizotinib | 57 | 46 | 1.24 | sequential or compared |
 | osimertinib + gefitinib | 28 | 52 | 0.54 | sequential or compared |
 | lorlatinib + crizotinib | 36 | 44 | 0.82 | sequential or compared |
+| nivolumab + pembrolizumab | 51 | 310 | 0.16 | sequential or compared |
+| cetuximab + panitumumab | 18 | 203 | 0.09 | sequential or compared |
+| paclitaxel + docetaxel | 55 | 558 | 0.1 | sequential or compared |
+| cisplatin + carboplatin | 261 | 1,156 | 0.23 | sequential or compared |
+| anastrozole + letrozole | 15 | 142 | 0.11 | sequential or compared |
+| azacitidine + decitabine | 6 | 111 | 0.05 | sequential or compared |
+| everolimus + temsirolimus | 3 | 41 | 0.07 | sequential or compared |
+| palbociclib + ribociclib | 3 | 102 | 0.03 | sequential or compared |
+| sorafenib + regorafenib | 119 | 40 | 2.98 | sequential or compared |
+| dasatinib + nilotinib | 14 | 197 | 0.07 | sequential or compared |
+| sunitinib + pazopanib | 17 | 128 | 0.13 | sequential or compared |
+| afatinib + osimertinib | 47 | 43 | 1.09 | sequential or compared |
+| vemurafenib + dabrafenib | 7 | 82 | 0.09 | sequential or compared |
 
-Every co-administered pair scores at or above **3.77** and every sequential one at or below **1.24**, with no overlap.
+Every co-administered pair scores at or above **3.77** and every sequential one at or below **2.98**, with no overlap.
 
 Across the whole corpus, **1,387** pairs carrying
 a `cotreat` row have MORE `compare` rows than `cotreat` ones. Every
 row below therefore carries its ratio, and one where `compare`
 dominates is flagged rather than silently presented as a combination.
 
-**This is a heuristic on a nine-pair panel, not a validated
-classifier.** It is reported so a reader can discount rows. Nothing
-is filtered out automatically.
+**This is a heuristic on a 37-pair panel, not a validated classifier.** It is reported so a reader can discount rows. Nothing is filtered out automatically.
 
 ## 2. What the variant join recovers, and why
 
@@ -57,7 +83,7 @@ That was wrong too, and it was wrong because two panel labels were
 mine to assign and I assigned them in the direction that made the
 split clean.
 
-Measured over 14 approved regimens, with FLAURA2 relabelled
+Measured over 14 regimens with a molecular biomarker (11 approved combinations and 3 major published trials without one: AG221-005, KRYSTAL-7, NEJ009), with FLAURA2 relabelled
 to the substitution it actually enrols (the same one as MARIPOSA)
 and CAPItello-291 relabelled to the multi-gene alteration list it
 actually uses:
@@ -87,21 +113,36 @@ panel:
 | the biomarker is a substitution | 7/12 | 1/2 | +0.08 |
 | **both drugs are targeted agents** | **7/7** | **1/7** | **+0.86** |
 
-**Partner-agent class explains the recoveries and biomarker class does not.**
+**Partner-agent class predicts the recoveries and biomarker class does not.**
 
-The relation extractor does not tie chemotherapy, a hypomethylating
-agent, a checkpoint antibody or an endocrine agent to a specific
-substitution, and this join requires BOTH drugs tied to the same
-variant. So a regimen pairing a targeted drug with any of those
-cannot be recovered however clearly its biomarker is written.
+### But not for the reason an earlier version gave
 
-That also explains the control, which the biomarker story only
-appeared to. Of the 59 papers
-asserting alpelisib + fulvestrant (SOLAR-1), 45
-annotate the gene and 0 annotate
-any variant. Fulvestrant is an endocrine agent, and the same miss
-occurs for ivosidenib + azacitidine, whose biomarker IS a single
-substitution and whose indication names it.
+That version asserted the extractor *cannot* tie a chemotherapy, a
+hypomethylating agent, a checkpoint antibody or an endocrine agent to
+a substitution. Nothing measured that, and measuring it refutes it.
+For each missed regimen, how many papers tie each drug to the target
+variant ANYWHERE, beside the zero that tie both in one paper:
+
+| trial | targeted partner | other partner | both, never together |
+|---|--:|--:|---|
+| FLAURA2 | 196 | 4 | yes |
+| NEJ009 | 164 | 2 | yes |
+| AGILE | 6 | 1 | yes |
+| AG221-005 | 4 | 0 | no |
+| KRYSTAL-7 | 100 | 2 | yes |
+| SOLAR-1 | 1 | 0 | no |
+
+Pemetrexed IS tied to EGFR L858R, azacitidine to IDH1 R132H,
+pembrolizumab to KRAS G12C. The extractor does it. What is thin is
+the VOLUME on one side: across the missed regimens the targeted
+partner is tied to the variant in 1 to 196 papers and the other in 0 to 4, so a single paper carrying BOTH links is rare
+rather than impossible.
+
+So the honest causal statement is weaker than the previous one and
+is what the join actually requires: **both drugs must be tied to the
+same variant in ONE paper, and for a targeted-plus-other regimen the
+second link is too rare for that to happen.** Partner class predicts
+the outcome; it is not the mechanism.
 
 So: **an absence is evidence about targeted-plus-targeted regimens
 and says nothing about a regimen with a chemotherapy, endocrine or
@@ -117,36 +158,38 @@ variant layer because it recovers several of those misses.
 | **both** | **2,605** (1.97%) |
 | gene-level triples | 24,864 |
 | ...resting on one paper | 23,068 |
-| ...reading as co-administration | 9,811 |
+| ...compare-dominated | 2,315 |
+| ...no comparison evidence | 17,467 |
+| ...reads as co-administration | 5,082 |
 | variant-level triples | 579 |
 
-| drug | drug | gene | papers | ratio | |
-|---|---|---|--:|--:|---|
-| pertuzumab | Trastuzumab | ERBB2 | 279 | 3.77 | |
-| trametinib | dabrafenib | BRAF | 257 | 6.23 | |
-| Trastuzumab | Lapatinib | ERBB2 | 127 | 2.43 | **compare-dominated** |
-| trametinib | dabrafenib | MAP2K7 | 84 | 6.23 | |
-| Trastuzumab | Docetaxel | ERBB2 | 75 | 19.59 | |
-| Trastuzumab | Paclitaxel | ERBB2 | 75 | 18.89 | |
-| Ipilimumab | Nivolumab | PDCD1 | 63 | 7.45 | |
-| encorafenib | binimetinib | BRAF | 60 | 8.25 | |
-| alectinib | Crizotinib | ALK | 51 | 0.77 | **compare-dominated** |
-| cobimetinib | Vemurafenib | BRAF | 42 | 7.84 | |
-| pertuzumab | Docetaxel | ERBB2 | 38 | 83.0 | |
-| Ipilimumab | Nivolumab | CTLA4 | 36 | 7.45 | |
-| Trastuzumab | Ado-Trastuzumab Emtansine | ERBB2 | 35 | 1.24 | **compare-dominated** |
-| Bevacizumab | Erlotinib Hydrochloride | EGFR | 33 | 15.47 | |
-| encorafenib | Cetuximab | BRAF | 32 | 19.6 | |
-| Docetaxel | Estramustine | KLK3 | 31 | 14.6 | |
-| ceritinib | Crizotinib | ALK | 29 | 1.24 | **compare-dominated** |
-| Trastuzumab | Carboplatin | ERBB2 | 29 | 17.25 | |
-| Ipilimumab | Nivolumab | CD274 | 29 | 7.45 | |
-| pyrotinib | Trastuzumab | ERBB2 | 28 | 18.25 | |
-| taxane | Trastuzumab | ERBB2 | 28 | 14.5 | |
-| encorafenib | binimetinib | MAP2K7 | 27 | 8.25 | |
-| Trastuzumab | Capecitabine | ERBB2 | 27 | 19.31 | |
-| Bleomycin | Cisplatin | AFP | 27 | 20.15 | |
-| Capecitabine | Lapatinib | ERBB2 | 26 | 11.65 | |
+| drug | drug | gene | papers | cotreat | compare | ratio | verdict |
+|---|---|---|--:|--:|--:|--:|---|
+| pertuzumab | Trastuzumab | ERBB2 | 279 | 742 | 197 | 3.77 | reads as co-administration |
+| trametinib | dabrafenib | BRAF | 257 | 691 | 111 | 6.23 | reads as co-administration |
+| Trastuzumab | Lapatinib | ERBB2 | 127 | 294 | 121 | 2.43 | compare-dominated |
+| trametinib | dabrafenib | MAP2K7 | 84 | 691 | 111 | 6.23 | reads as co-administration |
+| Trastuzumab | Docetaxel | ERBB2 | 75 | 529 | 27 | 19.59 | reads as co-administration |
+| Trastuzumab | Paclitaxel | ERBB2 | 75 | 529 | 28 | 18.89 | reads as co-administration |
+| Ipilimumab | Nivolumab | PDCD1 | 63 | 1973 | 265 | 7.45 | reads as co-administration |
+| encorafenib | binimetinib | BRAF | 60 | 165 | 20 | 8.25 | reads as co-administration |
+| alectinib | Crizotinib | ALK | 51 | 86 | 111 | 0.77 | compare-dominated |
+| cobimetinib | Vemurafenib | BRAF | 42 | 149 | 19 | 7.84 | reads as co-administration |
+| pertuzumab | Docetaxel | ERBB2 | 38 | 249 | 3 | 83.0 | reads as co-administration |
+| Ipilimumab | Nivolumab | CTLA4 | 36 | 1973 | 265 | 7.45 | reads as co-administration |
+| Trastuzumab | Ado-Trastuzumab Emtansine | ERBB2 | 35 | 122 | 98 | 1.24 | compare-dominated |
+| Bevacizumab | Erlotinib Hydrochloride | EGFR | 33 | 232 | 15 | 15.47 | reads as co-administration |
+| encorafenib | Cetuximab | BRAF | 32 | 98 | 5 | 19.6 | reads as co-administration |
+| Docetaxel | Estramustine | KLK3 | 31 | 146 | 10 | 14.6 | reads as co-administration |
+| ceritinib | Crizotinib | ALK | 29 | 57 | 46 | 1.24 | compare-dominated |
+| Trastuzumab | Carboplatin | ERBB2 | 29 | 138 | 8 | 17.25 | reads as co-administration |
+| Ipilimumab | Nivolumab | CD274 | 29 | 1973 | 265 | 7.45 | reads as co-administration |
+| pyrotinib | Trastuzumab | ERBB2 | 28 | 73 | 4 | 18.25 | reads as co-administration |
+| taxane | Trastuzumab | ERBB2 | 28 | 232 | 16 | 14.5 | reads as co-administration |
+| encorafenib | binimetinib | MAP2K7 | 27 | 165 | 20 | 8.25 | reads as co-administration |
+| Trastuzumab | Capecitabine | ERBB2 | 27 | 251 | 13 | 19.31 | reads as co-administration |
+| Bleomycin | Cisplatin | AFP | 27 | 1189 | 59 | 20.15 | reads as co-administration |
+| Capecitabine | Lapatinib | ERBB2 | 26 | 268 | 23 | 11.65 | reads as co-administration |
 
 ### Variant level
 
@@ -173,13 +216,18 @@ variant layer because it recovers several of those misses.
 * **Gene-symbol collisions pass straight through.** This reads
   PubTator's own gene assignment, so the `atlas_ambiguity` blocklist,
   which guards the alias-resolution path in `atlas_graph.resolve`,
-  does not apply. Verified in the authority table itself: `MEK` is an
-  alias of **MAP2K7** while MAP2K1 carries `MEK1`; `Met` is an alias
-  of **SLTM**; `PGP` reaches phosphoglycolate phosphatase rather than
-  P-glycoprotein; `NP` reaches **Neptunium**.
+  does not apply. Each collision below is CHECKED against the full
+  alias list at render time and dropped if it does not hold, because
+  a hand-written one did not: an earlier version claimed `NP` reaches
+  Neptunium *"verified in the authority table itself"*, and
+  Neptunium's alias list contains no `NP`.
+    * `MEK` resolves to **MAP2K7** (MAP2K1 carries `MEK1`, so `MEK` alone lands on MKK7)
+    * `Met` resolves to **SLTM** (an alias of SLTM, not the MET receptor)
+    * `PGP` resolves to **PGP** (phosphoglycolate phosphatase, not P-glycoprotein)
+    * `PSA` resolves to **KLK3** (KLK3, a response biomarker rather than a target)
 * **The gene layer's precision is not measured, at all.** No sample
   has been judged and no precision figure is claimed here. An earlier
-  version of this section reported a 40-row sample that this
+  version of this section reported a sample that this
   repository never ran. 23,068 of 24,864
   rows rest on a single paper, and the collision classes above are
   the known error source, but the rate is unknown.

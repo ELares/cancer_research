@@ -16,7 +16,6 @@
       "offending": {
         "c.-1298A>C": 3,
         "c.1286A>C": 3,
-        "c.1298A>A": 1,
         "c.1298A>C": 710,
         "c.1298A>G": 1,
         "c.1298A>T": 3,
@@ -188,9 +187,7 @@
           "c.665C>T": 4,
           "c.667C>T": 47,
           "c.677C>A": 2,
-          "c.677C>C": 6,
           "c.677C>T": 1736,
-          "c.677T>T": 5,
           "p.A222V": 31,
           "p.A429E": 1,
           "p.C677T": 2,
@@ -232,6 +229,8 @@
     "not_checkable_against_a_residue_refused": 36,
     "nothing_to_compare_across_classes": 13,
     "one_change_many_spellings": 1539,
+    "refused_here_collapsed_under_another_gene": 0,
+    "refused_here_single_spelling_under_another_gene": 10,
     "single_spelling": 8357,
     "unparsable_spelling_refused": 430
   },

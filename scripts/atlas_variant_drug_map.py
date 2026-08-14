@@ -45,14 +45,15 @@ several keys. Two defects, and for each the OBVIOUS correction is wrong:
 
    THE AGREEMENT TEST MUST COVER EVERY SPELLING, which is where the first
    version of this was wrong. Testing agreement among PROTEIN forms only and
-   sweeping the rest onto the winner let a 17-row `p.E429A` absorb rs1801131's
-   `c.1298A>C` (710) together with `c.1286A>C` and `c.1298A>T`, which are a
+   sweeping the rest onto the winner let a minority `p.E429A` absorb rs1801131's
+   dominant `c.1298A>C` together with `c.1286A>C` and `c.1298A>T`, which are a
    different position and a different allele. (The size of that defect is
    computed and reported; it is deliberately not repeated here, because the
    first fix for it hand-wrote the figure into this docstring and it went stale
    against the artifact within one commit.)
 
-   Three tests now, and a spelling failing any of them refuses its whole rsid:
+   Several tests now (named in AGREEMENT_TESTS), and a spelling failing any
+   of them refuses its whole rsid:
    every spelling must PARSE, each representation class must agree INTERNALLY,
    and a protein spelling must agree with a coding one ACROSS classes, since
    codon = (coding position + 2) // 3 relates them. That last test is what
@@ -100,6 +101,13 @@ OUT_TSV = PROJECT_ROOT / "analysis" / "atlas-variant-drug-map.tsv.gz"
 
 VARIANT_TYPES = ("ProteinMutation", "DNAMutation", "SNP")
 
+# The agreement tests, named so the prose can count them. Writing "the three
+# tests" counts the CODE, and a fourth test would stale that sentence exactly
+# the way a corpus change stales a hand-written figure.
+AGREEMENT_TESTS = ("every spelling parses",
+                   "each representation class agrees internally",
+                   "a protein spelling agrees with a coding one across classes")
+
 # A single-residue protein substitution, and a single-base change against a
 # coding/genomic/mitochondrial reference. Only these shapes can be compared;
 # anything else (indels, frame shifts, truncated or HTML-escaped strings such as
@@ -111,6 +119,23 @@ NUCLEOTIDE = re.compile(r"^([cgmn])\.([+-]?\d+)([ACGT])>([ACGT])$")
 # something false about the DRUG: "[OBSOLETE] avapritinib" reads as a withdrawn
 # medicine, and avapritinib is approved. The DESCRIPTOR was retired.
 OBSOLETE = "[OBSOLETE] "
+
+
+def _sibling_single_paper_share():
+    """The retraction analysis's single-paper share, READ from its artifact.
+
+    It was hand-written here. A figure borrowed from a sibling report is the
+    same defect as one borrowed from a reviewer: this document cannot keep it
+    fresh, and the sibling can be regenerated without this one noticing.
+    """
+    p = PROJECT_ROOT / "analysis" / "atlas-retraction-exposure.json"
+    if not p.exists():
+        return None
+    d = json.loads(p.read_text())
+    pairs, single = d.get("pairs"), d.get("single_paper_pairs")
+    if not (pairs and single):
+        return None
+    return 100.0 * single / pairs
 
 
 def load_labels() -> dict:
@@ -150,7 +175,7 @@ def _is_parsable(h: str) -> bool:
 
     A no-change `A>A` spelling matches the NUCLEOTIDE regex but denotes
     nothing, so it is unparsable. Two call sites disagreeing about that is what
-    left 42 refusals reporting no offending spelling at all.
+    left a block of refusals reporting no offending spelling at all.
     """
     if PROTEIN.match(h):
         return True
@@ -165,8 +190,8 @@ def classify_spellings(forms) -> tuple:
     ...) to the set of distinct changes seen in it, so a class holding more than
     one change is a disagreement.
 
-    `X` and `*` both denote a stop codon, so they are normalised together: nine
-    rsids were being reported to the reader as carrying "spellings that denote
+    `X` and `*` both denote a stop codon, so they are normalised together: without
+    it, rsids carrying both were reported to the reader as carrying "spellings that denote
     different changes" when the only difference was `p.R461X` against
     `p.R461*`. A no-change nucleotide spelling (`A>A`) denotes nothing and is
     counted unparsable rather than allowed to agree with itself.
@@ -212,7 +237,7 @@ def cross_class_conflict(classes: dict) -> tuple:
     label a protein-versus-GENOMIC refusal as protein-versus-coding.
 
     Each class is known to hold exactly one change when this is called: the
-    three preceding branches in `resolve_rsids` have already excluded a
+    preceding branches in `resolve_rsids` have already excluded a
     multi-change class, any unparsable spelling, and an empty `classes`. That
     invariant is what makes `next(iter(...))` safe here.
     """
@@ -248,7 +273,7 @@ def resolve_rsids(rs_hgvs: dict) -> tuple:
     both multi-allelic sites (rs121913529 = KRAS G12D and G12V and G12A) and
     anything carrying a spelling that cannot be checked. Nothing rests on a
     dominance threshold: one disagreeing spelling refuses the rsid however rare
-    it is, so a 17-row form cannot capture a 710-row one.
+    it is, so a minority spelling cannot capture a dominant one.
     """
     fix, tally, refused = {}, collections.Counter(), []
     for key, forms in rs_hgvs.items():
@@ -264,10 +289,17 @@ def resolve_rsids(rs_hgvs: dict) -> tuple:
         if any(len(s) > 1 for s in classes.values()):
             tally["classes_disagree_refused"] += 1
             reason = "spellings that denote different changes"
-            evidence = sorted({h for h in forms
-                               if (m := PROTEIN.match(h) or NUCLEOTIDE.match(h))
-                               and len(classes[m.group(1) if m.re is NUCLEOTIDE
-                                               else "p"]) > 1})
+            # `_is_parsable`, not the bare regex. A no-change `A>A` spelling
+            # MATCHES NUCLEOTIDE but denotes nothing and is counted unparsable
+            # by the classifier, so testing the regex here listed it among the
+            # spellings that "denote different changes" -- the same two-call-
+            # sites-disagree defect already fixed one branch below, still live
+            # in this one.
+            evidence = sorted({
+                h for h in forms
+                if _is_parsable(h)
+                and len(classes[(m.group(1) if (m := NUCLEOTIDE.match(h))
+                                 else "p")]) > 1})
         elif unparsable:
             tally["unparsable_spelling_refused"] += 1
             reason = "a spelling that cannot be checked"
@@ -333,6 +365,24 @@ def resolve_rsids(rs_hgvs: dict) -> tuple:
                         "n_spellings": len(forms),
                         "spellings": dict(forms.most_common(6))})
     refused.sort(key=lambda r: (-r["rows"], r["rsid"]))
+    # How often does the SAME rsid get different treatment under different
+    # genes? The unit of resolution is the (rsid, gene) key, and the report
+    # once asserted "ten rsids are refused under one gene while still
+    # collapsing under another" -- hand-written, and false: none of them
+    # collapses elsewhere, they have a single spelling there, which is the case
+    # the same document calls one where no collapse decision was made.
+    by_rsid = collections.defaultdict(set)
+    for (rs_, g_) in rs_hgvs:
+        by_rsid[rs_].add(g_)
+    refused_keys = {(r["rsid"], r["gene"]) for r in refused}
+    collapsed = {k for k in fix if len(rs_hgvs[k]) > 1}
+    single = {k for k in fix if len(rs_hgvs[k]) == 1}
+    tally["refused_here_collapsed_under_another_gene"] = sum(
+        1 for rs_, g_ in refused_keys
+        if any((rs_, o) in collapsed for o in by_rsid[rs_] if o != g_))
+    tally["refused_here_single_spelling_under_another_gene"] = sum(
+        1 for rs_, g_ in refused_keys
+        if any((rs_, o) in single for o in by_rsid[rs_] if o != g_))
     return fix, dict(tally), refused
 
 
@@ -711,9 +761,16 @@ def render(r: dict, name) -> str:
         "The rule needs no threshold. Every spelling must parse; each",
         "representation class must agree internally; and a protein spelling must",
         "agree with a coding one ACROSS classes, since codon = (coding position",
-        "+ 2) // 3 relates them. Failing any of the three refuses the whole",
-        "rsid.", "",
-        "| rsids carrying several spellings | |", "|---|--:|",
+        f"+ 2) // 3 relates them. Failing any of the {len(AGREEMENT_TESTS)} "
+        "refuses that rsid",
+        "UNDER THAT GENE: the unit of resolution is the (rsid, gene) key, not",
+        "the rsid. In practice that distinction is nearly inert here -- "
+        f"{rsr.get('refused_here_collapsed_under_another_gene', 0)} refused keys",
+        "have the same rsid collapsing under a different gene, and "
+        f"{rsr.get('refused_here_single_spelling_under_another_gene', 0)} have it",
+        "carrying a single spelling there, which is not a collapse decision at",
+        "all.", "",
+        "| (rsid, gene) keys carrying several spellings | |", "|---|--:|",
         f"| one change, several spellings: collapsed | "
         f"{rsr.get('one_change_many_spellings', 0):,} |",
         f"| spellings denote different changes: refused | "
@@ -742,6 +799,12 @@ def render(r: dict, name) -> str:
         f"That gave **{r['rsid_rows_given_an_hgvs']:,}** rows an HGVS they lacked "
         f"and respelled **{r['rsid_rows_respelled_to_one_form']:,}** onto a single "
         "form.", "",
+        f"Most of that fill is not the rule's doing. "
+        f"**{rsr.get('single_spelling', 0):,}** (rsid, gene) keys carry only ONE "
+        "spelling, so no class could disagree and no collapse decision was made: "
+        "a bare row simply inherits the one spelling its rsid was ever given. "
+        "The table above covers the keys with SEVERAL spellings, which is where "
+        f"the {len(AGREEMENT_TESTS)} tests apply.", "",
     ]
     if ref:
         # From the FULL spelling set, not the displayed top six: if the sole
@@ -831,7 +894,8 @@ def render(r: dict, name) -> str:
 
     L += ["## What is in it", "",
           "| | count |", "|---|--:|",
-          f"| relation rows touching a variant | {r['relation_rows_touching_a_variant']:,} |",
+          f"| relation rows touching a point-variant entity | "
+          f"{r['relation_rows_touching_a_variant']:,} |",
           f"| variant entity occurrences (both sides counted) | {r['variant_entity_occurrences']:,} |",
           f"| ...carrying no gene | {r['occurrences_with_no_gene']:,} ({nogene_pct:.1f}%) |",
           f"| **chemical-to-variant rows** | **{r['chemical_variant_rows']:,}** |",
@@ -841,13 +905,22 @@ def render(r: dict, name) -> str:
           f"| pairs with >= {r['min_papers']} papers | {r['pairs_at_min_papers']:,} |",
           f"| pairs resting on ONE paper | {r['single_paper_pairs']:,} ({single_pct:.1f}%) |",
           "",
+          "`relations.tsv.gz` also carries a fourth mutation type, `Mutation`,",
+          "holding structural variants as chromosomal ranges "
+          "(`Chr7:154954255-154998784dup`). It is deliberately out of scope: it",
+          "has no HGVS substitution to reconcile and none of the "
+          f"{len(AGREEMENT_TESTS)} tests applies to it, so the counts above are",
+          "point variants only.", "",
           "A variant with no `CorrespondingGene` is genuinely ambiguous, since",
           "`p.G12C` alone could be KRAS, NRAS or HRAS. Those are left unresolved",
           "and keyed separately: never assigned to a likely gene, and never merged",
           "with the same spelling under a known one. They show `?` as the gene.", "",
           f"**{single_pct:.0f}% of pairs rest on a single paper.** The retraction",
-          "analysis found the same shape across the whole graph (70.2%), and it",
-          "is the first thing to know before reading any row below as evidence.", "",
+          "analysis found the same shape across the whole graph"
+          + (f" ({_sibling_single_paper_share():.1f}%)"
+             if _sibling_single_paper_share() else "")
+          + ", and it is the first thing to know before reading any row below",
+          "as evidence.", "",
           "## Genes carrying the most variant relations", "",
           "| gene | variant-touching rows |", "|---|--:|"]
     for g in r["top_genes_by_variant_rows"][:15]:
@@ -860,7 +933,10 @@ def render(r: dict, name) -> str:
           "| drug | gene | variant | papers | predicates (assertions) |",
           "|---|---|---|--:|---|"]
     for row in r["top_pairs"][:40]:
-        preds = ", ".join(f"`{k}` {n}" for k, n in list(row["predicates"].items())[:3])
+        # ALL of them. Keeping the top three silently understated two shipped
+        # rows while the prose invited the reader to compare these counts with
+        # the paper count.
+        preds = ", ".join(f"`{k}` {n}" for k, n in row["predicates"].items())
         L.append(f"| {row['drug']} | {row['gene']} | `{row['variant']}` | "
                  f"{row['papers']} | {preds} |")
     L += ["", "## What this cannot say", "",
@@ -872,7 +948,7 @@ def render(r: dict, name) -> str:
           "  above is a direct instance of it.",
           "* **Reconciliation is deliberately incomplete.** It merges what the",
           f"  evidence can adjudicate and refuses the rest: {tw['abstained']} twins",
-          f"  and {r['rsid_refusals']['count']:,} rsids stay fragmented rather than",
+          f"  and {r['rsid_refusals']['count']:,} (rsid, gene) keys stay fragmented",
           "  guessed, so one variant may still appear under more than one key.",
           "* **Attention is not importance.** A well-studied pair outranks a real",
           "  but rarely-written-about one, exactly as `atlas_model_gaps.py` warns",
