@@ -70,6 +70,12 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from config import PROJECT_ROOT  # noqa: E402
 
 BASELINE_URL = "https://ftp.ncbi.nlm.nih.gov/pubmed/baseline/"
+# The annual baseline is cut once a year and everything published since lands
+# here, numbered continuously from where the baseline stops. Ingesting it is
+# what closes the recency cliff `atlas_fulltext.py` measures: both
+# `PMC013xxxxxx` packages returned exactly zero cancer articles because the
+# census's PMC identifier space ends where the baseline does.
+UPDATES_URL = "https://ftp.ncbi.nlm.nih.gov/pubmed/updatefiles/"
 MESH_SPARQL = "https://id.nlm.nih.gov/mesh/sparql"
 USER_AGENT = "cancer_research-atlas/1.0 (https://github.com/ELares/cancer_research)"
 
@@ -184,20 +190,66 @@ def fetch_c04_descriptors(dest: Path, force: bool = False) -> dict:
 _FILE_RE = re.compile(rb"pubmed\d+n\d+\.xml\.gz")
 
 
-def list_baseline_files() -> list[str]:
-    html = _get(BASELINE_URL, timeout=180)
+def list_baseline_files(url: str = BASELINE_URL) -> list[str]:
+    html = _get(url, timeout=180)
     return sorted({m.decode() for m in _FILE_RE.findall(html)})
 
 
-def download(name: str, raw_dir: Path) -> Path:
+def download(name: str, raw_dir: Path, url: str = BASELINE_URL) -> Path:
     dest = raw_dir / name
     if dest.exists() and dest.stat().st_size > 0:
         return dest
     raw_dir.mkdir(parents=True, exist_ok=True)
     tmp = dest.with_suffix(dest.suffix + ".part")
-    tmp.write_bytes(_get(BASELINE_URL + name, timeout=600))
+    tmp.write_bytes(_get(url + name, timeout=600))
     tmp.rename(dest)
     return dest
+
+
+def split_new_and_revised(pmids, known: set) -> tuple:
+    """(new, revised) for one update file, mutating `known` as it goes.
+
+    A function rather than two lines inside the ingest loop, because the ingest
+    loop can only be exercised by downloading from NCBI. The property it
+    carries is the one that produces a plausible wrong number rather than an
+    error: an update file's records are MOSTLY revisions of articles the census
+    already holds, so treating every record as new inflates the census by the
+    revision rate and makes a routine re-ingest read as literature growth.
+    """
+    new = revised = 0
+    for pid in pmids:
+        pid = str(pid)
+        if not pid:
+            continue
+        if pid in known:
+            revised += 1
+        else:
+            known.add(pid)
+            new += 1
+    return new, revised
+
+
+def census_pmids(root: Path) -> set:
+    """Every PMID already in the census, so an update can be split.
+
+    An update file carries REVISIONS of existing records as well as new ones,
+    and counting both as new would inflate the census by the revision rate.
+    """
+    seen = set()
+    d = root / "records"
+    if not d.exists():
+        return seen
+    for f in sorted(d.glob("*.jsonl.gz")):
+        with gzip.open(f, "rt", encoding="utf-8") as fh:
+            for line in fh:
+                i = line.find('"pmid"')
+                if i < 0:
+                    continue
+                j = line.find('"', line.find(":", i) + 1)
+                k = line.find('"', j + 1)
+                if j > 0 and k > j:
+                    seen.add(line[j + 1:k])
+    return seen
 
 
 # --------------------------------------------------------------------------
@@ -316,6 +368,10 @@ def main() -> None:
     ap.add_argument("--refresh-mesh", action="store_true", help="re-fetch the C04 descriptor set")
     ap.add_argument("--keep-raw", action="store_true",
                     help="keep downloaded XML (default: delete after parsing to save disk)")
+    ap.add_argument("--updates", action="store_true",
+                    help="ingest the daily update files instead of the annual "
+                         "baseline, into records_updates/ so the census is not "
+                         "mutated")
     args = ap.parse_args()
 
     root = atlas_root()
@@ -336,37 +392,72 @@ def main() -> None:
     c04 = fetch_c04_descriptors(root / "mesh" / "c04-descriptors.tsv", force=args.refresh_mesh)
     print(f"cancer definition: {len(c04)} MeSH C04 descriptors")
 
-    files = list_baseline_files()
-    print(f"baseline files available: {len(files)}")
+    url = UPDATES_URL if args.updates else BASELINE_URL
+    files = list_baseline_files(url)
+    print(f"{'update' if args.updates else 'baseline'} files available: {len(files)}")
     todo = [f for f in files if not man["files"].get(f, {}).get("parsed")]
     if args.limit:
         todo = todo[:args.limit]
     print(f"to process this run: {len(todo)}")
 
-    raw_dir, rec_dir = root / "raw", root / "records"
+    raw_dir = root / "raw"
+    # Updates land in their OWN directory. The census in records/ is what every
+    # committed atlas figure was computed on, and an update file carries
+    # revisions of records already in it, so merging in place would both mutate
+    # a frozen surface and double-count.
+    rec_dir = root / ("records_updates" if args.updates else "records")
     rec_dir.mkdir(parents=True, exist_ok=True)
 
+    known = census_pmids(root) if args.updates else set()
+    if args.updates:
+        print(f"census PMIDs already held: {len(known):,}")
+
+    fresh = revised = 0
     for i, name in enumerate(todo, 1):
         t0 = time.time()
-        path = download(name, raw_dir)
+        path = download(name, raw_dir, url)
         total, nomesh = count_articles(path)
         out = rec_dir / f"{name.replace('.xml.gz', '')}.jsonl.gz"
-        n = 0
+        n = new_here = 0
+        seen_here = []
         with gzip.open(out, "wt", encoding="utf-8") as fh:
             for rec in parse_articles(path, c04):
                 fh.write(json.dumps(rec, ensure_ascii=False) + "\n")
                 n += 1
+                if args.updates:
+                    seen_here.append(rec.get("pmid", ""))
+        if args.updates:
+            new_here, _rev = split_new_and_revised(seen_here, known)
         if not args.keep_raw:
             path.unlink(missing_ok=True)
-        man["files"][name] = {"parsed": True, "total": total, "cancer": n,
-                              "no_mesh": nomesh, "records": out.name}
+        entry = {"parsed": True, "total": total, "cancer": n,
+                 "no_mesh": nomesh, "records": out.name}
+        if args.updates:
+            entry.update({"source": "updatefiles", "new_pmids": new_here,
+                          "revised_pmids": n - new_here})
+            fresh += new_here
+            revised += n - new_here
+        man["files"][name] = entry
         save_manifest(root, man)
+        extra = (f", {new_here:,} new / {n - new_here:,} revised"
+                 if args.updates else "")
         print(f"  [{i}/{len(todo)}] {name}: {total:,} articles -> {n:,} cancer "
-              f"({n/total:.1%}), {time.time()-t0:.0f}s")
+              f"({n/total:.1%}){extra}, {time.time()-t0:.0f}s")
 
     done = sum(1 for s in man["files"].values() if s.get("parsed"))
     recs = sum(s.get("cancer", 0) for s in man["files"].values())
-    print(f"\nparsed {done}/{len(files)} baseline files; {recs:,} cancer articles so far")
+    if args.updates:
+        # The census is the BASELINE files only. `recs` sums every manifest
+        # entry including the update files just written, so subtracting `fresh`
+        # from it gives neither the census nor the merged total.
+        base = sum(e.get("cancer", 0) for e in man["files"].values()
+                   if e.get("source") != "updatefiles")
+        print(f"\nparsed {len(todo)} update files: {fresh:,} cancer articles NEW to "
+              f"the census, {revised:,} revisions of records it already held")
+        print(f"census {base:,} -> {base + fresh:,} if merged "
+              f"(+{100 * fresh / max(base, 1):.2f}%)")
+    else:
+        print(f"\nparsed {done}/{len(files)} baseline files; {recs:,} cancer articles so far")
 
 
 if __name__ == "__main__":

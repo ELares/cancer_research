@@ -40,6 +40,7 @@ corpus/atlas/records/
 corpus/atlas/relations/
 corpus/atlas/entities/
 corpus/atlas/records_unindexed/
+corpus/atlas/records_updates/
 corpus/atlas/records_c04only/
 corpus/atlas/comention/
 # Build state, not analysis output: per-file resume records pointing at the
