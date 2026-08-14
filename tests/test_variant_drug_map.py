@@ -551,11 +551,18 @@ def test_the_canonical_choice_prefers_the_commonest_protein_spelling():
 def test_the_codon_arithmetic_covers_all_three_positions_in_a_codon():
     """`(pos + 2) // 3` is ceil(pos/3). An off-by-one hides in one residue class.
 
-    A verification pass planted `int(pos) // 3` and it falsely refused 142
-    rsIDs while every guard stayed green, because the fixtures used positions
-    2369 (mod 3 = 2) and 412 (mod 3 = 1) and never a multiple of 3. Third-base
-    wobble substitutions are exactly where such a bug lives, and 889 of the
-    corpus's 4,208 coding positions are in that class.
+    The mutation that survives is `(pos + 3) // 3`: it falsely refuses 142
+    rsIDs and the pre-existing suite stayed entirely green, because every
+    fixture used a position with pos % 3 in {1, 2} (2369 and 412) and that
+    variant differs from the truth ONLY at pos % 3 == 0. Third-base wobble
+    substitutions are exactly where such a bug lives, and 889 of the corpus's
+    4,208 coding positions are in that class.
+
+    Note that `int(pos) // 3` -- which an earlier version of this docstring
+    named -- is NOT the surviving mutation: it differs at pos % 3 in {1, 2},
+    so the old fixtures already caught it. Getting that wrong made the guard
+    look like it closed a hole it was not closing, which is the point of
+    naming the mutation rather than describing it.
     """
     m = mod()
     for pos, codon in ((1, 1), (2, 1), (3, 1),        # codon 1, all three bases
