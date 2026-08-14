@@ -55,6 +55,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 GENERATORS = [
     REPO_ROOT / "scripts" / "atlas_combination_gaps.py",
     REPO_ROOT / "scripts" / "atlas_variant_drug_map.py",
+    REPO_ROOT / "scripts" / "manuscript_vs_census.py",
 ]
 
 
@@ -225,7 +226,14 @@ def _prose_runs(path: Path):
     return runs
 
 
+# A section reference names a place in a document; it is not a measurement and
+# cannot go stale against the corpus. Stripped as a PHRASE before tokenising,
+# because `8.2` on its own is indistinguishable from a threshold.
+SECTION_REF = re.compile(r"\b(?:section|§|chapter)\s*\d+(?:\.\d+)*", re.I)
+
+
 def _strip_identifiers(text: str) -> str:
+    text = SECTION_REF.sub(" ", text)
     return " ".join("" if IDENT_TOKEN.match(t.strip("`*|,.()[]"))
                     else t for t in text.split())
 
