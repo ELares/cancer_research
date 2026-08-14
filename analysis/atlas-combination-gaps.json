@@ -1,0 +1,689 @@
+{
+  "control": {
+    "drug_ids": [
+      "MESH:C585539",
+      "MESH:D000077267"
+    ],
+    "found_by_the_gene_join": 21,
+    "found_by_the_variant_join": 0,
+    "gene": "5290",
+    "gene_join_passes": true,
+    "name": "alpelisib + fulvestrant, for PIK3CA-mutated breast cancer (SOLAR-1)",
+    "of_those_annotating_any_variant": 0,
+    "of_those_annotating_the_gene": 45,
+    "papers_asserting_the_combination": 59,
+    "variant_join_passes": false,
+    "why": "FDA-approved for this population, so an analysis that finds no combination for PIK3CA has measured its own coverage"
+  },
+  "cotreat_rows": 224146,
+  "distinct_drug_pairs": 40878,
+  "gene_layer": {
+    "at_least_three_papers": 634,
+    "single_paper": 23068,
+    "top": [
+      {
+        "drug_a": "pertuzumab",
+        "drug_a_id": "MESH:C485206",
+        "drug_b": "Trastuzumab",
+        "drug_b_id": "MESH:D000068878",
+        "papers": 279,
+        "target": "ERBB2",
+        "target_id": "2064",
+        "variant": ""
+      },
+      {
+        "drug_a": "trametinib",
+        "drug_a_id": "MESH:C560077",
+        "drug_b": "dabrafenib",
+        "drug_b_id": "MESH:C561627",
+        "papers": 257,
+        "target": "BRAF",
+        "target_id": "673",
+        "variant": ""
+      },
+      {
+        "drug_a": "Trastuzumab",
+        "drug_a_id": "MESH:D000068878",
+        "drug_b": "Lapatinib",
+        "drug_b_id": "MESH:D000077341",
+        "papers": 127,
+        "target": "ERBB2",
+        "target_id": "2064",
+        "variant": ""
+      },
+      {
+        "drug_a": "trametinib",
+        "drug_a_id": "MESH:C560077",
+        "drug_b": "dabrafenib",
+        "drug_b_id": "MESH:C561627",
+        "papers": 84,
+        "target": "MAP2K7",
+        "target_id": "5609",
+        "variant": ""
+      },
+      {
+        "drug_a": "Trastuzumab",
+        "drug_a_id": "MESH:D000068878",
+        "drug_b": "Docetaxel",
+        "drug_b_id": "MESH:D000077143",
+        "papers": 75,
+        "target": "ERBB2",
+        "target_id": "2064",
+        "variant": ""
+      },
+      {
+        "drug_a": "Trastuzumab",
+        "drug_a_id": "MESH:D000068878",
+        "drug_b": "Paclitaxel",
+        "drug_b_id": "MESH:D017239",
+        "papers": 75,
+        "target": "ERBB2",
+        "target_id": "2064",
+        "variant": ""
+      },
+      {
+        "drug_a": "Ipilimumab",
+        "drug_a_id": "MESH:D000074324",
+        "drug_b": "Nivolumab",
+        "drug_b_id": "MESH:D000077594",
+        "papers": 63,
+        "target": "PDCD1",
+        "target_id": "5133",
+        "variant": ""
+      },
+      {
+        "drug_a": "encorafenib",
+        "drug_a_id": "MESH:C000601108",
+        "drug_b": "binimetinib",
+        "drug_b_id": "MESH:C581313",
+        "papers": 60,
+        "target": "BRAF",
+        "target_id": "673",
+        "variant": ""
+      },
+      {
+        "drug_a": "alectinib",
+        "drug_a_id": "MESH:C582670",
+        "drug_b": "Crizotinib",
+        "drug_b_id": "MESH:D000077547",
+        "papers": 51,
+        "target": "ALK",
+        "target_id": "238",
+        "variant": ""
+      },
+      {
+        "drug_a": "cobimetinib",
+        "drug_a_id": "MESH:C574276",
+        "drug_b": "Vemurafenib",
+        "drug_b_id": "MESH:D000077484",
+        "papers": 42,
+        "target": "BRAF",
+        "target_id": "673",
+        "variant": ""
+      },
+      {
+        "drug_a": "pertuzumab",
+        "drug_a_id": "MESH:C485206",
+        "drug_b": "Docetaxel",
+        "drug_b_id": "MESH:D000077143",
+        "papers": 38,
+        "target": "ERBB2",
+        "target_id": "2064",
+        "variant": ""
+      },
+      {
+        "drug_a": "Ipilimumab",
+        "drug_a_id": "MESH:D000074324",
+        "drug_b": "Nivolumab",
+        "drug_b_id": "MESH:D000077594",
+        "papers": 36,
+        "target": "CTLA4",
+        "target_id": "1493",
+        "variant": ""
+      },
+      {
+        "drug_a": "Trastuzumab",
+        "drug_a_id": "MESH:D000068878",
+        "drug_b": "Ado-Trastuzumab Emtansine",
+        "drug_b_id": "MESH:D000080044",
+        "papers": 35,
+        "target": "ERBB2",
+        "target_id": "2064",
+        "variant": ""
+      },
+      {
+        "drug_a": "Bevacizumab",
+        "drug_a_id": "MESH:D000068258",
+        "drug_b": "Erlotinib Hydrochloride",
+        "drug_b_id": "MESH:D000069347",
+        "papers": 33,
+        "target": "EGFR",
+        "target_id": "1956",
+        "variant": ""
+      },
+      {
+        "drug_a": "encorafenib",
+        "drug_a_id": "MESH:C000601108",
+        "drug_b": "Cetuximab",
+        "drug_b_id": "MESH:D000068818",
+        "papers": 32,
+        "target": "BRAF",
+        "target_id": "673",
+        "variant": ""
+      },
+      {
+        "drug_a": "Docetaxel",
+        "drug_a_id": "MESH:D000077143",
+        "drug_b": "Estramustine",
+        "drug_b_id": "MESH:D004961",
+        "papers": 31,
+        "target": "KLK3",
+        "target_id": "354",
+        "variant": ""
+      },
+      {
+        "drug_a": "ceritinib",
+        "drug_a_id": "MESH:C586847",
+        "drug_b": "Crizotinib",
+        "drug_b_id": "MESH:D000077547",
+        "papers": 29,
+        "target": "ALK",
+        "target_id": "238",
+        "variant": ""
+      },
+      {
+        "drug_a": "Trastuzumab",
+        "drug_a_id": "MESH:D000068878",
+        "drug_b": "Carboplatin",
+        "drug_b_id": "MESH:D016190",
+        "papers": 29,
+        "target": "ERBB2",
+        "target_id": "2064",
+        "variant": ""
+      },
+      {
+        "drug_a": "Ipilimumab",
+        "drug_a_id": "MESH:D000074324",
+        "drug_b": "Nivolumab",
+        "drug_b_id": "MESH:D000077594",
+        "papers": 29,
+        "target": "CD274",
+        "target_id": "29126",
+        "variant": ""
+      },
+      {
+        "drug_a": "pyrotinib",
+        "drug_a_id": "MESH:C000622954",
+        "drug_b": "Trastuzumab",
+        "drug_b_id": "MESH:D000068878",
+        "papers": 28,
+        "target": "ERBB2",
+        "target_id": "2064",
+        "variant": ""
+      },
+      {
+        "drug_a": "taxane",
+        "drug_a_id": "MESH:C080625",
+        "drug_b": "Trastuzumab",
+        "drug_b_id": "MESH:D000068878",
+        "papers": 28,
+        "target": "ERBB2",
+        "target_id": "2064",
+        "variant": ""
+      },
+      {
+        "drug_a": "encorafenib",
+        "drug_a_id": "MESH:C000601108",
+        "drug_b": "binimetinib",
+        "drug_b_id": "MESH:C581313",
+        "papers": 27,
+        "target": "MAP2K7",
+        "target_id": "5609",
+        "variant": ""
+      },
+      {
+        "drug_a": "Trastuzumab",
+        "drug_a_id": "MESH:D000068878",
+        "drug_b": "Capecitabine",
+        "drug_b_id": "MESH:D000069287",
+        "papers": 27,
+        "target": "ERBB2",
+        "target_id": "2064",
+        "variant": ""
+      },
+      {
+        "drug_a": "Bleomycin",
+        "drug_a_id": "MESH:D001761",
+        "drug_b": "Cisplatin",
+        "drug_b_id": "MESH:D002945",
+        "papers": 27,
+        "target": "AFP",
+        "target_id": "174",
+        "variant": ""
+      },
+      {
+        "drug_a": "Capecitabine",
+        "drug_a_id": "MESH:D000069287",
+        "drug_b": "Lapatinib",
+        "drug_b_id": "MESH:D000077341",
+        "papers": 26,
+        "target": "ERBB2",
+        "target_id": "2064",
+        "variant": ""
+      },
+      {
+        "drug_a": "Cisplatin",
+        "drug_a_id": "MESH:D002945",
+        "drug_b": "Etoposide",
+        "drug_b_id": "MESH:D005047",
+        "papers": 26,
+        "target": "AFP",
+        "target_id": "174",
+        "variant": ""
+      },
+      {
+        "drug_a": "nilotinib",
+        "drug_a_id": "MESH:C498826",
+        "drug_b": "Imatinib Mesylate",
+        "drug_b_id": "MESH:D000068877",
+        "papers": 25,
+        "target": "ABL1",
+        "target_id": "25",
+        "variant": ""
+      },
+      {
+        "drug_a": "cobimetinib",
+        "drug_a_id": "MESH:C574276",
+        "drug_b": "Vemurafenib",
+        "drug_b_id": "MESH:D000077484",
+        "papers": 25,
+        "target": "MAP2K7",
+        "target_id": "5609",
+        "variant": ""
+      },
+      {
+        "drug_a": "osimertinib",
+        "drug_a_id": "MESH:C000596361",
+        "drug_b": "Afatinib",
+        "drug_b_id": "MESH:D000077716",
+        "papers": 24,
+        "target": "EGFR",
+        "target_id": "1956",
+        "variant": ""
+      },
+      {
+        "drug_a": "brigatinib",
+        "drug_a_id": "MESH:C000598580",
+        "drug_b": "Crizotinib",
+        "drug_b_id": "MESH:D000077547",
+        "papers": 22,
+        "target": "ALK",
+        "target_id": "238",
+        "variant": ""
+      },
+      {
+        "drug_a": "lazertinib",
+        "drug_a_id": "MESH:C000707992",
+        "drug_b": "amivantamab",
+        "drug_b_id": "MESH:C000718215",
+        "papers": 22,
+        "target": "EGFR",
+        "target_id": "1956",
+        "variant": ""
+      },
+      {
+        "drug_a": "Cetuximab",
+        "drug_a_id": "MESH:D000068818",
+        "drug_b": "Afatinib",
+        "drug_b_id": "MESH:D000077716",
+        "papers": 22,
+        "target": "EGFR",
+        "target_id": "1956",
+        "variant": ""
+      },
+      {
+        "drug_a": "Alpelisib",
+        "drug_a_id": "MESH:C585539",
+        "drug_b": "Fulvestrant",
+        "drug_b_id": "MESH:D000077267",
+        "papers": 21,
+        "target": "PIK3CA",
+        "target_id": "5290",
+        "variant": ""
+      },
+      {
+        "drug_a": "Imatinib Mesylate",
+        "drug_a_id": "MESH:D000068877",
+        "drug_b": "Dasatinib",
+        "drug_b_id": "MESH:D000069439",
+        "papers": 21,
+        "target": "ABL1",
+        "target_id": "25",
+        "variant": ""
+      },
+      {
+        "drug_a": "sacituzumab govitecan",
+        "drug_a_id": "MESH:C000608132",
+        "drug_b": "Irinotecan",
+        "drug_b_id": "MESH:D000077146",
+        "papers": 20,
+        "target": "TACSTD2",
+        "target_id": "4070",
+        "variant": ""
+      },
+      {
+        "drug_a": "ramucirumab",
+        "drug_a_id": "MESH:C543333",
+        "drug_b": "Erlotinib Hydrochloride",
+        "drug_b_id": "MESH:D000069347",
+        "papers": 20,
+        "target": "EGFR",
+        "target_id": "1956",
+        "variant": ""
+      },
+      {
+        "drug_a": "Trastuzumab",
+        "drug_a_id": "MESH:D000068878",
+        "drug_b": "Anthracyclines",
+        "drug_b_id": "MESH:D018943",
+        "papers": 20,
+        "target": "ERBB2",
+        "target_id": "2064",
+        "variant": ""
+      },
+      {
+        "drug_a": "atezolizumab",
+        "drug_a_id": "MESH:C000594389",
+        "drug_b": "Bevacizumab",
+        "drug_b_id": "MESH:D000068258",
+        "papers": 19,
+        "target": "VEGFA",
+        "target_id": "7422",
+        "variant": ""
+      },
+      {
+        "drug_a": "atezolizumab",
+        "drug_a_id": "MESH:C000594389",
+        "drug_b": "Bevacizumab",
+        "drug_b_id": "MESH:D000068258",
+        "papers": 18,
+        "target": "CD274",
+        "target_id": "29126",
+        "variant": ""
+      },
+      {
+        "drug_a": "relatlimab",
+        "drug_a_id": "MESH:C000721227",
+        "drug_b": "Nivolumab",
+        "drug_b_id": "MESH:D000077594",
+        "papers": 18,
+        "target": "LAG3",
+        "target_id": "3902",
+        "variant": ""
+      }
+    ],
+    "triples": 24864
+  },
+  "overlap_share_of_cotreatment_papers": 1.97,
+  "paper_pair_combinations": 222173,
+  "papers_asserting_a_cotreatment": 132520,
+  "papers_asserting_a_variant_relation": 68420,
+  "papers_asserting_both": 2605,
+  "variant_layer": {
+    "at_least_three_papers": 35,
+    "single_paper": 512,
+    "top": [
+      {
+        "drug_a": "trametinib",
+        "drug_a_id": "MESH:C560077",
+        "drug_b": "dabrafenib",
+        "drug_b_id": "MESH:C561627",
+        "papers": 181,
+        "target": "BRAF",
+        "target_id": "673",
+        "variant": "p.V600E"
+      },
+      {
+        "drug_a": "encorafenib",
+        "drug_a_id": "MESH:C000601108",
+        "drug_b": "Cetuximab",
+        "drug_b_id": "MESH:D000068818",
+        "papers": 48,
+        "target": "BRAF",
+        "target_id": "673",
+        "variant": "p.V600E"
+      },
+      {
+        "drug_a": "encorafenib",
+        "drug_a_id": "MESH:C000601108",
+        "drug_b": "binimetinib",
+        "drug_b_id": "MESH:C581313",
+        "papers": 42,
+        "target": "BRAF",
+        "target_id": "673",
+        "variant": "p.V600E"
+      },
+      {
+        "drug_a": "binimetinib",
+        "drug_a_id": "MESH:C581313",
+        "drug_b": "Cetuximab",
+        "drug_b_id": "MESH:D000068818",
+        "papers": 25,
+        "target": "BRAF",
+        "target_id": "673",
+        "variant": "p.V600E"
+      },
+      {
+        "drug_a": "trametinib",
+        "drug_a_id": "MESH:C560077",
+        "drug_b": "dabrafenib",
+        "drug_b_id": "MESH:C561627",
+        "papers": 16,
+        "target": "BRAF",
+        "target_id": "673",
+        "variant": ""
+      },
+      {
+        "drug_a": "osimertinib",
+        "drug_a_id": "MESH:C000596361",
+        "drug_b": "Afatinib",
+        "drug_b_id": "MESH:D000077716",
+        "papers": 12,
+        "target": "EGFR",
+        "target_id": "1956",
+        "variant": "p.T790M"
+      },
+      {
+        "drug_a": "trametinib",
+        "drug_a_id": "MESH:C560077",
+        "drug_b": "dabrafenib",
+        "drug_b_id": "MESH:C561627",
+        "papers": 12,
+        "target": "BRAF",
+        "target_id": "673",
+        "variant": "p.V600K"
+      },
+      {
+        "drug_a": "osimertinib",
+        "drug_a_id": "MESH:C000596361",
+        "drug_b": "trametinib",
+        "drug_b_id": "MESH:C560077",
+        "papers": 10,
+        "target": "BRAF",
+        "target_id": "673",
+        "variant": "p.V600E"
+      },
+      {
+        "drug_a": "trametinib",
+        "drug_a_id": "MESH:C560077",
+        "drug_b": "dabrafenib",
+        "drug_b_id": "MESH:C561627",
+        "papers": 9,
+        "target": "BRAF",
+        "target_id": "673",
+        "variant": "p.V600E,K"
+      },
+      {
+        "drug_a": "osimertinib",
+        "drug_a_id": "MESH:C000596361",
+        "drug_b": "dabrafenib",
+        "drug_b_id": "MESH:C561627",
+        "papers": 8,
+        "target": "BRAF",
+        "target_id": "673",
+        "variant": "p.V600E"
+      },
+      {
+        "drug_a": "trametinib",
+        "drug_a_id": "MESH:C560077",
+        "drug_b": "Vemurafenib",
+        "drug_b_id": "MESH:D000077484",
+        "papers": 8,
+        "target": "BRAF",
+        "target_id": "673",
+        "variant": "p.V600E"
+      },
+      {
+        "drug_a": "cobimetinib",
+        "drug_a_id": "MESH:C574276",
+        "drug_b": "Vemurafenib",
+        "drug_b_id": "MESH:D000077484",
+        "papers": 8,
+        "target": "BRAF",
+        "target_id": "673",
+        "variant": "p.V600E"
+      },
+      {
+        "drug_a": "Cetuximab",
+        "drug_a_id": "MESH:D000068818",
+        "drug_b": "Vemurafenib",
+        "drug_b_id": "MESH:D000077484",
+        "papers": 7,
+        "target": "BRAF",
+        "target_id": "673",
+        "variant": "p.V600E"
+      },
+      {
+        "drug_a": "Cetuximab",
+        "drug_a_id": "MESH:D000068818",
+        "drug_b": "Afatinib",
+        "drug_b_id": "MESH:D000077716",
+        "papers": 6,
+        "target": "EGFR",
+        "target_id": "1956",
+        "variant": "p.T790M"
+      },
+      {
+        "drug_a": "osimertinib",
+        "drug_a_id": "MESH:C000596361",
+        "drug_b": "anlotinib",
+        "drug_b_id": "MESH:C000625192",
+        "papers": 5,
+        "target": "EGFR",
+        "target_id": "1956",
+        "variant": "p.T790M"
+      },
+      {
+        "drug_a": "osimertinib",
+        "drug_a_id": "MESH:C000596361",
+        "drug_b": "Crizotinib",
+        "drug_b_id": "MESH:D000077547",
+        "papers": 5,
+        "target": "EGFR",
+        "target_id": "1956",
+        "variant": "p.T790M"
+      },
+      {
+        "drug_a": "Cetuximab",
+        "drug_a_id": "MESH:D000068818",
+        "drug_b": "Irinotecan",
+        "drug_b_id": "MESH:D000077146",
+        "papers": 5,
+        "target": "BRAF",
+        "target_id": "673",
+        "variant": "p.V600E"
+      },
+      {
+        "drug_a": "osimertinib",
+        "drug_a_id": "MESH:C000596361",
+        "drug_b": "brigatinib",
+        "drug_b_id": "MESH:C000598580",
+        "papers": 4,
+        "target": "EGFR",
+        "target_id": "1956",
+        "variant": "p.C797S"
+      },
+      {
+        "drug_a": "osimertinib",
+        "drug_a_id": "MESH:C000596361",
+        "drug_b": "Bevacizumab",
+        "drug_b_id": "MESH:D000068258",
+        "papers": 4,
+        "target": "EGFR",
+        "target_id": "1956",
+        "variant": "p.T790M"
+      },
+      {
+        "drug_a": "sotorasib",
+        "drug_a_id": "MESH:C000706028",
+        "drug_b": "Panitumumab",
+        "drug_b_id": "MESH:D000077544",
+        "papers": 4,
+        "target": "KRAS",
+        "target_id": "3845",
+        "variant": "p.G12C"
+      },
+      {
+        "drug_a": "lazertinib",
+        "drug_a_id": "MESH:C000707992",
+        "drug_b": "amivantamab",
+        "drug_b_id": "MESH:C000718215",
+        "papers": 4,
+        "target": "EGFR",
+        "target_id": "1956",
+        "variant": "p.L858R"
+      },
+      {
+        "drug_a": "Irinotecan",
+        "drug_a_id": "MESH:D000077146",
+        "drug_b": "Vemurafenib",
+        "drug_b_id": "MESH:D000077484",
+        "papers": 4,
+        "target": "BRAF",
+        "target_id": "673",
+        "variant": "p.V600E"
+      },
+      {
+        "drug_a": "osimertinib",
+        "drug_a_id": "MESH:C000596361",
+        "drug_b": "icotinib",
+        "drug_b_id": "MESH:C531470",
+        "papers": 3,
+        "target": "EGFR",
+        "target_id": "1956",
+        "variant": "p.T790M"
+      },
+      {
+        "drug_a": "osimertinib",
+        "drug_a_id": "MESH:C000596361",
+        "drug_b": "Bevacizumab",
+        "drug_b_id": "MESH:D000068258",
+        "papers": 3,
+        "target": "EGFR",
+        "target_id": "1956",
+        "variant": "p.L858R"
+      },
+      {
+        "drug_a": "osimertinib",
+        "drug_a_id": "MESH:C000596361",
+        "drug_b": "Gefitinib",
+        "drug_b_id": "MESH:D000077156",
+        "papers": 3,
+        "target": "EGFR",
+        "target_id": "1956",
+        "variant": "p.T790M"
+      }
+    ],
+    "triples": 579
+  }
+}

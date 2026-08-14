@@ -725,10 +725,18 @@ def test_the_unread_claim_is_narrowed_to_what_is_true():
         for p in (REPO_ROOT / "scripts").rglob("*.py")
         if any(tok in p.read_text(errors="ignore")
                for tok in ("CorrespondingGene", '"HGVS"', "'HGVS'", '"RS#"', "'RS#'")))
+    # `atlas_combination_gaps.py` is a DOWNSTREAM consumer, added after this
+    # work and because of it. It is listed rather than exempted by a pattern,
+    # so a genuinely new parser still fires the guard -- which is how this
+    # entry got here: the combination analysis tripped it on the same commit
+    # that introduced it, which is the guard doing its job.
     assert set(parsers) <= {"scripts/atlas_variant_drug_map.py",
-                            "scripts/atlas_discovery.py"}, (
+                            "scripts/atlas_discovery.py",
+                            "scripts/atlas_combination_gaps.py"}, (
         f"{parsers} now reference the inline variant fields; the claim that "
-        "nothing else parses them needs re-checking against whatever changed")
+        "nothing else parsed them BEFORE this work needs re-checking against "
+        "whatever changed, and any new consumer belongs in this list with a "
+        "note saying why")
 
 
 def test_a_bare_rsid_in_the_variant_column_carries_its_prefix():
