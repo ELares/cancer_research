@@ -1,0 +1,154 @@
+{
+  "ferroptosis_records": 13346,
+  "growth": {
+    "census_end": 147008,
+    "census_growth": 1.1,
+    "census_start": 133204,
+    "corpus_end": 1167,
+    "corpus_exceeds_field": true,
+    "corpus_growth": 30.71,
+    "corpus_start": 38,
+    "end_year": 2025,
+    "open_access_end": 71136,
+    "open_access_growth": 1.67,
+    "open_access_start": 42558,
+    "per_year": [
+      {
+        "census": 133204,
+        "oa_share": 31.9,
+        "open_access": 42558,
+        "year": 2015
+      },
+      {
+        "census": 131794,
+        "oa_share": 33.0,
+        "open_access": 43459,
+        "year": 2016
+      },
+      {
+        "census": 129235,
+        "oa_share": 34.0,
+        "open_access": 43932,
+        "year": 2017
+      },
+      {
+        "census": 132662,
+        "oa_share": 34.1,
+        "open_access": 45233,
+        "year": 2018
+      },
+      {
+        "census": 141088,
+        "oa_share": 36.1,
+        "open_access": 50968,
+        "year": 2019
+      },
+      {
+        "census": 149677,
+        "oa_share": 39.8,
+        "open_access": 59577,
+        "year": 2020
+      },
+      {
+        "census": 155756,
+        "oa_share": 42.5,
+        "open_access": 66187,
+        "year": 2021
+      },
+      {
+        "census": 148445,
+        "oa_share": 45.2,
+        "open_access": 67132,
+        "year": 2022
+      },
+      {
+        "census": 143970,
+        "oa_share": 44.5,
+        "open_access": 64126,
+        "year": 2023
+      },
+      {
+        "census": 150014,
+        "oa_share": 43.6,
+        "open_access": 65394,
+        "year": 2024
+      },
+      {
+        "census": 147008,
+        "oa_share": 48.4,
+        "open_access": 71136,
+        "year": 2025
+      }
+    ],
+    "start_year": 2015,
+    "unexplained_by_availability": 18.39
+  },
+  "modality_table": {
+    "census_exceeds_manuscript": true,
+    "census_pdt_sdt_ratio": 4.75,
+    "icd_column_is_measurable": false,
+    "manuscript_pdt_sdt_ratio": 2.93,
+    "min_for_a_ratio": 10,
+    "ratio_is_measurable": true,
+    "rows": [
+      {
+        "census_ferroptosis": 152,
+        "census_ferroptosis_icd": 3,
+        "census_total": 16687,
+        "descriptor": "Photochemotherapy",
+        "manuscript_ferroptosis": 355,
+        "manuscript_ferroptosis_icd": 67,
+        "modality": "PDT",
+        "testable": true
+      },
+      {
+        "census_ferroptosis": 32,
+        "census_ferroptosis_icd": 1,
+        "census_total": 2513,
+        "descriptor": "Ultrasonic Therapy",
+        "manuscript_ferroptosis": 121,
+        "manuscript_ferroptosis_icd": 25,
+        "modality": "SDT",
+        "testable": true
+      },
+      {
+        "census_ferroptosis": 0,
+        "census_ferroptosis_icd": 0,
+        "census_total": 1888,
+        "descriptor": "Electroporation",
+        "manuscript_ferroptosis": 15,
+        "manuscript_ferroptosis_icd": null,
+        "modality": "IRE",
+        "testable": true
+      },
+      {
+        "census_ferroptosis": 1,
+        "census_ferroptosis_icd": 0,
+        "census_total": 1352,
+        "descriptor": "High-Intensity Focused Ultrasound Ablation",
+        "manuscript_ferroptosis": 3,
+        "manuscript_ferroptosis_icd": null,
+        "modality": "HIFU",
+        "testable": true
+      },
+      {
+        "census_ferroptosis": null,
+        "census_ferroptosis_icd": null,
+        "census_total": null,
+        "descriptor": null,
+        "manuscript_ferroptosis": 0,
+        "manuscript_ferroptosis_icd": 0,
+        "modality": "TTFields",
+        "testable": false
+      }
+    ],
+    "rows_below_ratio_floor": [
+      "IRE",
+      "HIFU"
+    ],
+    "untestable_rows": [
+      "TTFields"
+    ]
+  },
+  "records_with_mesh": 4403994
+}
