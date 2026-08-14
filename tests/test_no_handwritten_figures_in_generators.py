@@ -1,4 +1,13 @@
-"""No generator may hand-write a QUANTITY into prose it also derives.
+"""Two generators may not hand-write a QUANTITY into prose they also derive.
+
+SCOPE, FIRST, BECAUSE THE TITLE WOULD OTHERWISE OVERSTATE IT
+------------------------------------------------------------
+This rule is ENFORCED on two files. It is not repo-wide.
+`test_the_rule_is_honest_about_how_little_it_covers` measures and prints how
+many other scripts of the same shape would fail it, so the gap is a reported
+number rather than an implication. Those are candidates, not confirmed defects:
+a hand-written figure that is correct today is still a figure that cannot stay
+correct, which is the property being enforced here.
 
 WHY THIS FILE EXISTS
 --------------------
@@ -39,10 +48,31 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
+# ENFORCED for these. The rule is not repo-wide and this file must not imply
+# that it is: `all_generators()` below measures how many other scripts of the
+# same shape would fail it, and a test reports that number so the scope of the
+# exemption is visible rather than assumed.
 GENERATORS = [
     REPO_ROOT / "scripts" / "atlas_combination_gaps.py",
     REPO_ROOT / "scripts" / "atlas_variant_drug_map.py",
 ]
+
+
+def all_generators():
+    """Every script that renders prose into an analysis/*.md it also computes."""
+    out = []
+    for p in sorted((REPO_ROOT / "scripts").glob("*.py")):
+        t = p.read_text(errors="ignore")
+        if 'analysis"' not in t or ".md" not in t:
+            continue
+        if "write_text" not in t and "OUT_MD" not in t:
+            continue
+        try:
+            ast.parse(t)
+        except SyntaxError:
+            continue        # test_every_script_at_least_parses reports these
+        out.append(p)
+    return out
 
 # Nouns whose count is a measurement in these documents.
 COUNTABLE = (r"row|pair|paper|rsid|regimen|spelling|sweep|panel|sample|entry|"
@@ -177,6 +207,63 @@ def test_the_detector_finds_every_shape_it_claims_to():
                 "or an identifier and is the sanctioned form")
     finally:
         tmp.unlink()
+
+
+def test_every_script_at_least_parses():
+    """Found by accident, and nothing in the suite would have found it on purpose.
+
+    `scripts/evaluate_evidence_v2.py` carried a string literal broken across two
+    lines with no continuation and had not parsed since the commit that
+    introduced it. The file cannot be imported or run, and the analysis it
+    generates cannot be regenerated, but no test imports it and no CI job
+    compiles it, so it sat green.
+
+    This is the cheapest possible guard and it belongs beside the others here:
+    a generator that cannot parse cannot keep any of its figures fresh either.
+    """
+    bad = []
+    for f in sorted((REPO_ROOT / "scripts").rglob("*.py")):
+        try:
+            ast.parse(f.read_text(errors="ignore"))
+        except SyntaxError as e:
+            bad.append(f"{f.relative_to(REPO_ROOT)}:{e.lineno}  {e.msg}")
+    assert not bad, (
+        "these scripts do not parse, so they cannot be run or regenerated:\n  "
+        + "\n  ".join(bad))
+
+
+def test_the_rule_is_honest_about_how_little_it_covers():
+    """ADVISORY IN EFFECT, BLOCKING ON THE HONESTY OF THE CLAIM.
+
+    This file enforces the rule on two generators. The same detector, run over
+    every script that renders prose into an analysis/*.md it also computes,
+    finds the shape widely. That is the real size of the class, and printing it
+    here keeps the file from reading as a repo-wide guarantee it does not
+    provide.
+
+    It deliberately does NOT assert the uncovered count is zero. Every literal
+    it counts is a candidate, not a confirmed defect: many may be correct today
+    and simply unable to stay correct. Auditing them is a separate piece of
+    work, and failing CI on all of them would force that work to happen inside
+    an unrelated change.
+    """
+    gens = all_generators()
+    covered = {g.resolve() for g in GENERATORS}
+    uncovered = [(g.name, len(offending(g))) for g in gens
+                 if g.resolve() not in covered]
+    dirty = [(n, h) for n, h in uncovered if h]
+    print(f"\n  rule enforced on {len(covered)} of {len(gens)} generators; "
+          f"{len(dirty)} of the remaining {len(uncovered)} carry a "
+          f"hand-written quantity ({sum(h for _, h in dirty)} literals)")
+    for n, h in sorted(dirty, key=lambda r: -r[1])[:10]:
+        print(f"    {h:>3}  {n}")
+    assert len(covered) == len(GENERATORS), "GENERATORS holds a duplicate"
+    for g in GENERATORS:
+        assert g.exists(), f"{g.name} is enforced but does not exist"
+        assert g.resolve() in {x.resolve() for x in gens}, (
+            f"{g.name} is enforced but is not a generator by the same "
+            "definition this test uses, so the coverage figure it prints is "
+            "measuring a different population")
 
 
 def test_the_module_docstrings_carry_no_quantity_either():
