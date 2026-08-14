@@ -1,422 +1,565 @@
 {
   "control": {
-    "drug_ids": [
-      "MESH:C585539",
-      "MESH:D000077267"
-    ],
     "found_by_the_gene_join": 21,
-    "found_by_the_variant_join": 0,
-    "gene": "5290",
-    "gene_join_passes": true,
-    "name": "alpelisib + fulvestrant, for PIK3CA-mutated breast cancer (SOLAR-1)",
     "of_those_annotating_any_variant": 0,
     "of_those_annotating_the_gene": 45,
     "papers_asserting_the_combination": 59,
-    "variant_join_passes": false,
-    "why": "FDA-approved for this population, so an analysis that finds no combination for PIK3CA has measured its own coverage"
+    "regimen": "alpelisib + fulvestrant (SOLAR-1)"
   },
   "cotreat_rows": 224146,
+  "cotreat_semantics": {
+    "highest_sequential_ratio": 1.24,
+    "lowest_co_administered_ratio": 3.77,
+    "pairs_where_compare_outnumbers_cotreat": 1387,
+    "panel": [
+      {
+        "co_administered": true,
+        "compare": 197,
+        "cotreat": 742,
+        "pair": "trastuzumab + pertuzumab",
+        "ratio": 3.77
+      },
+      {
+        "co_administered": true,
+        "compare": 111,
+        "cotreat": 691,
+        "pair": "dabrafenib + trametinib",
+        "ratio": 6.23
+      },
+      {
+        "co_administered": true,
+        "compare": 20,
+        "cotreat": 165,
+        "pair": "encorafenib + binimetinib",
+        "ratio": 8.25
+      },
+      {
+        "co_administered": true,
+        "compare": 265,
+        "cotreat": 1973,
+        "pair": "ipilimumab + nivolumab",
+        "ratio": 7.45
+      },
+      {
+        "co_administered": true,
+        "compare": 223,
+        "cotreat": 2672,
+        "pair": "cisplatin + etoposide",
+        "ratio": 11.98
+      },
+      {
+        "co_administered": false,
+        "compare": 111,
+        "cotreat": 86,
+        "pair": "alectinib + crizotinib",
+        "ratio": 0.77
+      },
+      {
+        "co_administered": false,
+        "compare": 46,
+        "cotreat": 57,
+        "pair": "ceritinib + crizotinib",
+        "ratio": 1.24
+      },
+      {
+        "co_administered": false,
+        "compare": 52,
+        "cotreat": 28,
+        "pair": "osimertinib + gefitinib",
+        "ratio": 0.54
+      },
+      {
+        "co_administered": false,
+        "compare": 44,
+        "cotreat": 36,
+        "pair": "lorlatinib + crizotinib",
+        "ratio": 0.82
+      }
+    ],
+    "ratio_separates_the_panel": true
+  },
   "distinct_drug_pairs": 40878,
   "gene_layer": {
     "at_least_three_papers": 634,
+    "reading_as_co_administration": 13269,
     "single_paper": 23068,
     "top": [
       {
+        "cotreat_compare_ratio": 3.77,
         "drug_a": "pertuzumab",
         "drug_a_id": "MESH:C485206",
         "drug_b": "Trastuzumab",
         "drug_b_id": "MESH:D000068878",
         "papers": 279,
+        "reads_as_co_administration": true,
         "target": "ERBB2",
         "target_id": "2064",
         "variant": ""
       },
       {
+        "cotreat_compare_ratio": 6.23,
         "drug_a": "trametinib",
         "drug_a_id": "MESH:C560077",
         "drug_b": "dabrafenib",
         "drug_b_id": "MESH:C561627",
         "papers": 257,
+        "reads_as_co_administration": true,
         "target": "BRAF",
         "target_id": "673",
         "variant": ""
       },
       {
+        "cotreat_compare_ratio": 2.43,
         "drug_a": "Trastuzumab",
         "drug_a_id": "MESH:D000068878",
         "drug_b": "Lapatinib",
         "drug_b_id": "MESH:D000077341",
         "papers": 127,
+        "reads_as_co_administration": true,
         "target": "ERBB2",
         "target_id": "2064",
         "variant": ""
       },
       {
+        "cotreat_compare_ratio": 6.23,
         "drug_a": "trametinib",
         "drug_a_id": "MESH:C560077",
         "drug_b": "dabrafenib",
         "drug_b_id": "MESH:C561627",
         "papers": 84,
+        "reads_as_co_administration": true,
         "target": "MAP2K7",
         "target_id": "5609",
         "variant": ""
       },
       {
+        "cotreat_compare_ratio": 19.59,
         "drug_a": "Trastuzumab",
         "drug_a_id": "MESH:D000068878",
         "drug_b": "Docetaxel",
         "drug_b_id": "MESH:D000077143",
         "papers": 75,
+        "reads_as_co_administration": true,
         "target": "ERBB2",
         "target_id": "2064",
         "variant": ""
       },
       {
+        "cotreat_compare_ratio": 18.89,
         "drug_a": "Trastuzumab",
         "drug_a_id": "MESH:D000068878",
         "drug_b": "Paclitaxel",
         "drug_b_id": "MESH:D017239",
         "papers": 75,
+        "reads_as_co_administration": true,
         "target": "ERBB2",
         "target_id": "2064",
         "variant": ""
       },
       {
+        "cotreat_compare_ratio": 7.45,
         "drug_a": "Ipilimumab",
         "drug_a_id": "MESH:D000074324",
         "drug_b": "Nivolumab",
         "drug_b_id": "MESH:D000077594",
         "papers": 63,
+        "reads_as_co_administration": true,
         "target": "PDCD1",
         "target_id": "5133",
         "variant": ""
       },
       {
+        "cotreat_compare_ratio": 8.25,
         "drug_a": "encorafenib",
         "drug_a_id": "MESH:C000601108",
         "drug_b": "binimetinib",
         "drug_b_id": "MESH:C581313",
         "papers": 60,
+        "reads_as_co_administration": true,
         "target": "BRAF",
         "target_id": "673",
         "variant": ""
       },
       {
+        "cotreat_compare_ratio": 0.77,
         "drug_a": "alectinib",
         "drug_a_id": "MESH:C582670",
         "drug_b": "Crizotinib",
         "drug_b_id": "MESH:D000077547",
         "papers": 51,
+        "reads_as_co_administration": false,
         "target": "ALK",
         "target_id": "238",
         "variant": ""
       },
       {
+        "cotreat_compare_ratio": 7.84,
         "drug_a": "cobimetinib",
         "drug_a_id": "MESH:C574276",
         "drug_b": "Vemurafenib",
         "drug_b_id": "MESH:D000077484",
         "papers": 42,
+        "reads_as_co_administration": true,
         "target": "BRAF",
         "target_id": "673",
         "variant": ""
       },
       {
+        "cotreat_compare_ratio": 83.0,
         "drug_a": "pertuzumab",
         "drug_a_id": "MESH:C485206",
         "drug_b": "Docetaxel",
         "drug_b_id": "MESH:D000077143",
         "papers": 38,
+        "reads_as_co_administration": true,
         "target": "ERBB2",
         "target_id": "2064",
         "variant": ""
       },
       {
+        "cotreat_compare_ratio": 7.45,
         "drug_a": "Ipilimumab",
         "drug_a_id": "MESH:D000074324",
         "drug_b": "Nivolumab",
         "drug_b_id": "MESH:D000077594",
         "papers": 36,
+        "reads_as_co_administration": true,
         "target": "CTLA4",
         "target_id": "1493",
         "variant": ""
       },
       {
+        "cotreat_compare_ratio": 1.24,
         "drug_a": "Trastuzumab",
         "drug_a_id": "MESH:D000068878",
         "drug_b": "Ado-Trastuzumab Emtansine",
         "drug_b_id": "MESH:D000080044",
         "papers": 35,
+        "reads_as_co_administration": false,
         "target": "ERBB2",
         "target_id": "2064",
         "variant": ""
       },
       {
+        "cotreat_compare_ratio": 15.47,
         "drug_a": "Bevacizumab",
         "drug_a_id": "MESH:D000068258",
         "drug_b": "Erlotinib Hydrochloride",
         "drug_b_id": "MESH:D000069347",
         "papers": 33,
+        "reads_as_co_administration": true,
         "target": "EGFR",
         "target_id": "1956",
         "variant": ""
       },
       {
+        "cotreat_compare_ratio": 19.6,
         "drug_a": "encorafenib",
         "drug_a_id": "MESH:C000601108",
         "drug_b": "Cetuximab",
         "drug_b_id": "MESH:D000068818",
         "papers": 32,
+        "reads_as_co_administration": true,
         "target": "BRAF",
         "target_id": "673",
         "variant": ""
       },
       {
+        "cotreat_compare_ratio": 14.6,
         "drug_a": "Docetaxel",
         "drug_a_id": "MESH:D000077143",
         "drug_b": "Estramustine",
         "drug_b_id": "MESH:D004961",
         "papers": 31,
+        "reads_as_co_administration": true,
         "target": "KLK3",
         "target_id": "354",
         "variant": ""
       },
       {
+        "cotreat_compare_ratio": 1.24,
         "drug_a": "ceritinib",
         "drug_a_id": "MESH:C586847",
         "drug_b": "Crizotinib",
         "drug_b_id": "MESH:D000077547",
         "papers": 29,
+        "reads_as_co_administration": false,
         "target": "ALK",
         "target_id": "238",
         "variant": ""
       },
       {
+        "cotreat_compare_ratio": 17.25,
         "drug_a": "Trastuzumab",
         "drug_a_id": "MESH:D000068878",
         "drug_b": "Carboplatin",
         "drug_b_id": "MESH:D016190",
         "papers": 29,
+        "reads_as_co_administration": true,
         "target": "ERBB2",
         "target_id": "2064",
         "variant": ""
       },
       {
+        "cotreat_compare_ratio": 7.45,
         "drug_a": "Ipilimumab",
         "drug_a_id": "MESH:D000074324",
         "drug_b": "Nivolumab",
         "drug_b_id": "MESH:D000077594",
         "papers": 29,
+        "reads_as_co_administration": true,
         "target": "CD274",
         "target_id": "29126",
         "variant": ""
       },
       {
+        "cotreat_compare_ratio": 18.25,
         "drug_a": "pyrotinib",
         "drug_a_id": "MESH:C000622954",
         "drug_b": "Trastuzumab",
         "drug_b_id": "MESH:D000068878",
         "papers": 28,
+        "reads_as_co_administration": true,
         "target": "ERBB2",
         "target_id": "2064",
         "variant": ""
       },
       {
+        "cotreat_compare_ratio": 14.5,
         "drug_a": "taxane",
         "drug_a_id": "MESH:C080625",
         "drug_b": "Trastuzumab",
         "drug_b_id": "MESH:D000068878",
         "papers": 28,
+        "reads_as_co_administration": true,
         "target": "ERBB2",
         "target_id": "2064",
         "variant": ""
       },
       {
+        "cotreat_compare_ratio": 8.25,
         "drug_a": "encorafenib",
         "drug_a_id": "MESH:C000601108",
         "drug_b": "binimetinib",
         "drug_b_id": "MESH:C581313",
         "papers": 27,
+        "reads_as_co_administration": true,
         "target": "MAP2K7",
         "target_id": "5609",
         "variant": ""
       },
       {
+        "cotreat_compare_ratio": 19.31,
         "drug_a": "Trastuzumab",
         "drug_a_id": "MESH:D000068878",
         "drug_b": "Capecitabine",
         "drug_b_id": "MESH:D000069287",
         "papers": 27,
+        "reads_as_co_administration": true,
         "target": "ERBB2",
         "target_id": "2064",
         "variant": ""
       },
       {
+        "cotreat_compare_ratio": 20.15,
         "drug_a": "Bleomycin",
         "drug_a_id": "MESH:D001761",
         "drug_b": "Cisplatin",
         "drug_b_id": "MESH:D002945",
         "papers": 27,
+        "reads_as_co_administration": true,
         "target": "AFP",
         "target_id": "174",
         "variant": ""
       },
       {
+        "cotreat_compare_ratio": 11.65,
         "drug_a": "Capecitabine",
         "drug_a_id": "MESH:D000069287",
         "drug_b": "Lapatinib",
         "drug_b_id": "MESH:D000077341",
         "papers": 26,
+        "reads_as_co_administration": true,
         "target": "ERBB2",
         "target_id": "2064",
         "variant": ""
       },
       {
+        "cotreat_compare_ratio": 11.98,
         "drug_a": "Cisplatin",
         "drug_a_id": "MESH:D002945",
         "drug_b": "Etoposide",
         "drug_b_id": "MESH:D005047",
         "papers": 26,
+        "reads_as_co_administration": true,
         "target": "AFP",
         "target_id": "174",
         "variant": ""
       },
       {
+        "cotreat_compare_ratio": 0.57,
         "drug_a": "nilotinib",
         "drug_a_id": "MESH:C498826",
         "drug_b": "Imatinib Mesylate",
         "drug_b_id": "MESH:D000068877",
         "papers": 25,
+        "reads_as_co_administration": false,
         "target": "ABL1",
         "target_id": "25",
         "variant": ""
       },
       {
+        "cotreat_compare_ratio": 7.84,
         "drug_a": "cobimetinib",
         "drug_a_id": "MESH:C574276",
         "drug_b": "Vemurafenib",
         "drug_b_id": "MESH:D000077484",
         "papers": 25,
+        "reads_as_co_administration": true,
         "target": "MAP2K7",
         "target_id": "5609",
         "variant": ""
       },
       {
+        "cotreat_compare_ratio": 1.09,
         "drug_a": "osimertinib",
         "drug_a_id": "MESH:C000596361",
         "drug_b": "Afatinib",
         "drug_b_id": "MESH:D000077716",
         "papers": 24,
+        "reads_as_co_administration": false,
         "target": "EGFR",
         "target_id": "1956",
         "variant": ""
       },
       {
+        "cotreat_compare_ratio": 1.92,
         "drug_a": "brigatinib",
         "drug_a_id": "MESH:C000598580",
         "drug_b": "Crizotinib",
         "drug_b_id": "MESH:D000077547",
         "papers": 22,
+        "reads_as_co_administration": false,
         "target": "ALK",
         "target_id": "238",
         "variant": ""
       },
       {
+        "cotreat_compare_ratio": 54.0,
         "drug_a": "lazertinib",
         "drug_a_id": "MESH:C000707992",
         "drug_b": "amivantamab",
         "drug_b_id": "MESH:C000718215",
         "papers": 22,
+        "reads_as_co_administration": true,
         "target": "EGFR",
         "target_id": "1956",
         "variant": ""
       },
       {
+        "cotreat_compare_ratio": 7.6,
         "drug_a": "Cetuximab",
         "drug_a_id": "MESH:D000068818",
         "drug_b": "Afatinib",
         "drug_b_id": "MESH:D000077716",
         "papers": 22,
+        "reads_as_co_administration": true,
         "target": "EGFR",
         "target_id": "1956",
         "variant": ""
       },
       {
+        "cotreat_compare_ratio": 30.5,
         "drug_a": "Alpelisib",
         "drug_a_id": "MESH:C585539",
         "drug_b": "Fulvestrant",
         "drug_b_id": "MESH:D000077267",
         "papers": 21,
+        "reads_as_co_administration": true,
         "target": "PIK3CA",
         "target_id": "5290",
         "variant": ""
       },
       {
+        "cotreat_compare_ratio": 0.72,
         "drug_a": "Imatinib Mesylate",
         "drug_a_id": "MESH:D000068877",
         "drug_b": "Dasatinib",
         "drug_b_id": "MESH:D000069439",
         "papers": 21,
+        "reads_as_co_administration": false,
         "target": "ABL1",
         "target_id": "25",
         "variant": ""
       },
       {
+        "cotreat_compare_ratio": 5.14,
         "drug_a": "sacituzumab govitecan",
         "drug_a_id": "MESH:C000608132",
         "drug_b": "Irinotecan",
         "drug_b_id": "MESH:D000077146",
         "papers": 20,
+        "reads_as_co_administration": true,
         "target": "TACSTD2",
         "target_id": "4070",
         "variant": ""
       },
       {
+        "cotreat_compare_ratio": 22.0,
         "drug_a": "ramucirumab",
         "drug_a_id": "MESH:C543333",
         "drug_b": "Erlotinib Hydrochloride",
         "drug_b_id": "MESH:D000069347",
         "papers": 20,
+        "reads_as_co_administration": true,
         "target": "EGFR",
         "target_id": "1956",
         "variant": ""
       },
       {
+        "cotreat_compare_ratio": 3.83,
         "drug_a": "Trastuzumab",
         "drug_a_id": "MESH:D000068878",
         "drug_b": "Anthracyclines",
         "drug_b_id": "MESH:D018943",
         "papers": 20,
+        "reads_as_co_administration": true,
         "target": "ERBB2",
         "target_id": "2064",
         "variant": ""
       },
       {
+        "cotreat_compare_ratio": 13.16,
         "drug_a": "atezolizumab",
         "drug_a_id": "MESH:C000594389",
         "drug_b": "Bevacizumab",
         "drug_b_id": "MESH:D000068258",
         "papers": 19,
+        "reads_as_co_administration": true,
         "target": "VEGFA",
         "target_id": "7422",
         "variant": ""
       },
       {
+        "cotreat_compare_ratio": 13.16,
         "drug_a": "atezolizumab",
         "drug_a_id": "MESH:C000594389",
         "drug_b": "Bevacizumab",
         "drug_b_id": "MESH:D000068258",
         "papers": 18,
+        "reads_as_co_administration": true,
         "target": "CD274",
         "target_id": "29126",
         "variant": ""
       },
       {
+        "cotreat_compare_ratio": 9.5,
         "drug_a": "relatlimab",
         "drug_a_id": "MESH:C000721227",
         "drug_b": "Nivolumab",
         "drug_b_id": "MESH:D000077594",
         "papers": 18,
+        "reads_as_co_administration": true,
         "target": "LAG3",
         "target_id": "3902",
         "variant": ""
@@ -429,256 +572,445 @@
   "papers_asserting_a_cotreatment": 132520,
   "papers_asserting_a_variant_relation": 68420,
   "papers_asserting_both": 2605,
+  "recovery": {
+    "gene_keyed_recovered": 0,
+    "gene_keyed_total": 2,
+    "of": 10,
+    "panel": [
+      {
+        "biomarker_is_a_substitution": true,
+        "drug_ids": [
+          "MESH:C560077",
+          "MESH:C561627"
+        ],
+        "gene": "BRAF",
+        "papers": 181,
+        "recovered": true,
+        "regimen": "dabrafenib + trametinib",
+        "trial": "COMBI-d",
+        "variant": "p.V600E"
+      },
+      {
+        "biomarker_is_a_substitution": true,
+        "drug_ids": [
+          "MESH:C000601108",
+          "MESH:D000068818"
+        ],
+        "gene": "BRAF",
+        "papers": 48,
+        "recovered": true,
+        "regimen": "encorafenib + Cetuximab",
+        "trial": "BEACON",
+        "variant": "p.V600E"
+      },
+      {
+        "biomarker_is_a_substitution": true,
+        "drug_ids": [
+          "MESH:C000601108",
+          "MESH:C581313"
+        ],
+        "gene": "BRAF",
+        "papers": 42,
+        "recovered": true,
+        "regimen": "encorafenib + binimetinib",
+        "trial": "COLUMBUS",
+        "variant": "p.V600E"
+      },
+      {
+        "biomarker_is_a_substitution": true,
+        "drug_ids": [
+          "MESH:C574276",
+          "MESH:D000077484"
+        ],
+        "gene": "BRAF",
+        "papers": 8,
+        "recovered": true,
+        "regimen": "Vemurafenib + cobimetinib",
+        "trial": "coBRIM",
+        "variant": "p.V600E"
+      },
+      {
+        "biomarker_is_a_substitution": true,
+        "drug_ids": [
+          "MESH:C000707992",
+          "MESH:C000718215"
+        ],
+        "gene": "EGFR",
+        "papers": 4,
+        "recovered": true,
+        "regimen": "amivantamab + lazertinib",
+        "trial": "MARIPOSA",
+        "variant": "p.L858R"
+      },
+      {
+        "biomarker_is_a_substitution": true,
+        "drug_ids": [
+          "MESH:C000706028",
+          "MESH:D000077544"
+        ],
+        "gene": "KRAS",
+        "papers": 4,
+        "recovered": true,
+        "regimen": "sotorasib + Panitumumab",
+        "trial": "CodeBreaK 300",
+        "variant": "p.G12C"
+      },
+      {
+        "biomarker_is_a_substitution": true,
+        "drug_ids": [
+          "MESH:C000718190",
+          "MESH:D000068818"
+        ],
+        "gene": "KRAS",
+        "papers": 2,
+        "recovered": true,
+        "regimen": "adagrasib + Cetuximab",
+        "trial": "KRYSTAL-1",
+        "variant": "p.G12C"
+      },
+      {
+        "biomarker_is_a_substitution": true,
+        "drug_ids": [
+          "MESH:C575618",
+          "MESH:D000077267"
+        ],
+        "gene": "AKT1",
+        "papers": 1,
+        "recovered": true,
+        "regimen": "capivasertib + Fulvestrant",
+        "trial": "CAPItello-291",
+        "variant": "p.E17K"
+      },
+      {
+        "biomarker_is_a_substitution": false,
+        "drug_ids": [
+          "MESH:C585539",
+          "MESH:D000077267"
+        ],
+        "gene": "PIK3CA",
+        "papers": 0,
+        "recovered": false,
+        "regimen": "Alpelisib + Fulvestrant",
+        "trial": "SOLAR-1",
+        "variant": "(gene-level)"
+      },
+      {
+        "biomarker_is_a_substitution": false,
+        "drug_ids": [
+          "MESH:C000596361",
+          "MESH:D000068437"
+        ],
+        "gene": "EGFR",
+        "papers": 0,
+        "recovered": false,
+        "regimen": "osimertinib + Pemetrexed",
+        "trial": "FLAURA2",
+        "variant": "(gene-level)"
+      }
+    ],
+    "recovered": 8,
+    "substitution_keyed_recovered": 8,
+    "substitution_keyed_total": 8
+  },
   "variant_layer": {
-    "at_least_three_papers": 35,
     "single_paper": 512,
     "top": [
       {
+        "cotreat_compare_ratio": 6.23,
         "drug_a": "trametinib",
         "drug_a_id": "MESH:C560077",
         "drug_b": "dabrafenib",
         "drug_b_id": "MESH:C561627",
         "papers": 181,
+        "reads_as_co_administration": true,
         "target": "BRAF",
         "target_id": "673",
         "variant": "p.V600E"
       },
       {
+        "cotreat_compare_ratio": 19.6,
         "drug_a": "encorafenib",
         "drug_a_id": "MESH:C000601108",
         "drug_b": "Cetuximab",
         "drug_b_id": "MESH:D000068818",
         "papers": 48,
+        "reads_as_co_administration": true,
         "target": "BRAF",
         "target_id": "673",
         "variant": "p.V600E"
       },
       {
+        "cotreat_compare_ratio": 8.25,
         "drug_a": "encorafenib",
         "drug_a_id": "MESH:C000601108",
         "drug_b": "binimetinib",
         "drug_b_id": "MESH:C581313",
         "papers": 42,
+        "reads_as_co_administration": true,
         "target": "BRAF",
         "target_id": "673",
         "variant": "p.V600E"
       },
       {
+        "cotreat_compare_ratio": 20.0,
         "drug_a": "binimetinib",
         "drug_a_id": "MESH:C581313",
         "drug_b": "Cetuximab",
         "drug_b_id": "MESH:D000068818",
         "papers": 25,
+        "reads_as_co_administration": true,
         "target": "BRAF",
         "target_id": "673",
         "variant": "p.V600E"
       },
       {
+        "cotreat_compare_ratio": 6.23,
         "drug_a": "trametinib",
         "drug_a_id": "MESH:C560077",
         "drug_b": "dabrafenib",
         "drug_b_id": "MESH:C561627",
         "papers": 16,
+        "reads_as_co_administration": true,
         "target": "BRAF",
         "target_id": "673",
         "variant": ""
       },
       {
+        "cotreat_compare_ratio": 1.09,
         "drug_a": "osimertinib",
         "drug_a_id": "MESH:C000596361",
         "drug_b": "Afatinib",
         "drug_b_id": "MESH:D000077716",
         "papers": 12,
+        "reads_as_co_administration": false,
         "target": "EGFR",
         "target_id": "1956",
         "variant": "p.T790M"
       },
       {
+        "cotreat_compare_ratio": 6.23,
         "drug_a": "trametinib",
         "drug_a_id": "MESH:C560077",
         "drug_b": "dabrafenib",
         "drug_b_id": "MESH:C561627",
         "papers": 12,
+        "reads_as_co_administration": true,
         "target": "BRAF",
         "target_id": "673",
         "variant": "p.V600K"
       },
       {
+        "cotreat_compare_ratio": 22.0,
         "drug_a": "osimertinib",
         "drug_a_id": "MESH:C000596361",
         "drug_b": "trametinib",
         "drug_b_id": "MESH:C560077",
         "papers": 10,
+        "reads_as_co_administration": true,
         "target": "BRAF",
         "target_id": "673",
         "variant": "p.V600E"
       },
       {
+        "cotreat_compare_ratio": 6.23,
         "drug_a": "trametinib",
         "drug_a_id": "MESH:C560077",
         "drug_b": "dabrafenib",
         "drug_b_id": "MESH:C561627",
         "papers": 9,
+        "reads_as_co_administration": true,
         "target": "BRAF",
         "target_id": "673",
         "variant": "p.V600E,K"
       },
       {
+        "cotreat_compare_ratio": 4.67,
         "drug_a": "osimertinib",
         "drug_a_id": "MESH:C000596361",
         "drug_b": "dabrafenib",
         "drug_b_id": "MESH:C561627",
         "papers": 8,
+        "reads_as_co_administration": true,
         "target": "BRAF",
         "target_id": "673",
         "variant": "p.V600E"
       },
       {
+        "cotreat_compare_ratio": 0.71,
         "drug_a": "trametinib",
         "drug_a_id": "MESH:C560077",
         "drug_b": "Vemurafenib",
         "drug_b_id": "MESH:D000077484",
         "papers": 8,
+        "reads_as_co_administration": false,
         "target": "BRAF",
         "target_id": "673",
         "variant": "p.V600E"
       },
       {
+        "cotreat_compare_ratio": 7.84,
         "drug_a": "cobimetinib",
         "drug_a_id": "MESH:C574276",
         "drug_b": "Vemurafenib",
         "drug_b_id": "MESH:D000077484",
         "papers": 8,
+        "reads_as_co_administration": true,
         "target": "BRAF",
         "target_id": "673",
         "variant": "p.V600E"
       },
       {
+        "cotreat_compare_ratio": 19.0,
         "drug_a": "Cetuximab",
         "drug_a_id": "MESH:D000068818",
         "drug_b": "Vemurafenib",
         "drug_b_id": "MESH:D000077484",
         "papers": 7,
+        "reads_as_co_administration": true,
         "target": "BRAF",
         "target_id": "673",
         "variant": "p.V600E"
       },
       {
+        "cotreat_compare_ratio": 7.6,
         "drug_a": "Cetuximab",
         "drug_a_id": "MESH:D000068818",
         "drug_b": "Afatinib",
         "drug_b_id": "MESH:D000077716",
         "papers": 6,
+        "reads_as_co_administration": true,
         "target": "EGFR",
         "target_id": "1956",
         "variant": "p.T790M"
       },
       {
+        "cotreat_compare_ratio": 4.0,
         "drug_a": "osimertinib",
         "drug_a_id": "MESH:C000596361",
         "drug_b": "anlotinib",
         "drug_b_id": "MESH:C000625192",
         "papers": 5,
+        "reads_as_co_administration": true,
         "target": "EGFR",
         "target_id": "1956",
         "variant": "p.T790M"
       },
       {
+        "cotreat_compare_ratio": 13.0,
         "drug_a": "osimertinib",
         "drug_a_id": "MESH:C000596361",
         "drug_b": "Crizotinib",
         "drug_b_id": "MESH:D000077547",
         "papers": 5,
+        "reads_as_co_administration": true,
         "target": "EGFR",
         "target_id": "1956",
         "variant": "p.T790M"
       },
       {
+        "cotreat_compare_ratio": 37.82,
         "drug_a": "Cetuximab",
         "drug_a_id": "MESH:D000068818",
         "drug_b": "Irinotecan",
         "drug_b_id": "MESH:D000077146",
         "papers": 5,
+        "reads_as_co_administration": true,
         "target": "BRAF",
         "target_id": "673",
         "variant": "p.V600E"
       },
       {
+        "cotreat_compare_ratio": 6.0,
         "drug_a": "osimertinib",
         "drug_a_id": "MESH:C000596361",
         "drug_b": "brigatinib",
         "drug_b_id": "MESH:C000598580",
         "papers": 4,
+        "reads_as_co_administration": true,
         "target": "EGFR",
         "target_id": "1956",
         "variant": "p.C797S"
       },
       {
+        "cotreat_compare_ratio": 12.25,
         "drug_a": "osimertinib",
         "drug_a_id": "MESH:C000596361",
         "drug_b": "Bevacizumab",
         "drug_b_id": "MESH:D000068258",
         "papers": 4,
+        "reads_as_co_administration": true,
         "target": "EGFR",
         "target_id": "1956",
         "variant": "p.T790M"
       },
       {
+        "cotreat_compare_ratio": 17.0,
         "drug_a": "sotorasib",
         "drug_a_id": "MESH:C000706028",
         "drug_b": "Panitumumab",
         "drug_b_id": "MESH:D000077544",
         "papers": 4,
+        "reads_as_co_administration": true,
         "target": "KRAS",
         "target_id": "3845",
         "variant": "p.G12C"
       },
       {
+        "cotreat_compare_ratio": 54.0,
         "drug_a": "lazertinib",
         "drug_a_id": "MESH:C000707992",
         "drug_b": "amivantamab",
         "drug_b_id": "MESH:C000718215",
         "papers": 4,
+        "reads_as_co_administration": true,
         "target": "EGFR",
         "target_id": "1956",
         "variant": "p.L858R"
       },
       {
+        "cotreat_compare_ratio": 9.0,
         "drug_a": "Irinotecan",
         "drug_a_id": "MESH:D000077146",
         "drug_b": "Vemurafenib",
         "drug_b_id": "MESH:D000077484",
         "papers": 4,
+        "reads_as_co_administration": true,
         "target": "BRAF",
         "target_id": "673",
         "variant": "p.V600E"
       },
       {
+        "cotreat_compare_ratio": 1.0,
         "drug_a": "osimertinib",
         "drug_a_id": "MESH:C000596361",
         "drug_b": "icotinib",
         "drug_b_id": "MESH:C531470",
         "papers": 3,
+        "reads_as_co_administration": false,
         "target": "EGFR",
         "target_id": "1956",
         "variant": "p.T790M"
       },
       {
+        "cotreat_compare_ratio": 12.25,
         "drug_a": "osimertinib",
         "drug_a_id": "MESH:C000596361",
         "drug_b": "Bevacizumab",
         "drug_b_id": "MESH:D000068258",
         "papers": 3,
+        "reads_as_co_administration": true,
         "target": "EGFR",
         "target_id": "1956",
         "variant": "p.L858R"
       },
       {
+        "cotreat_compare_ratio": 0.54,
         "drug_a": "osimertinib",
         "drug_a_id": "MESH:C000596361",
         "drug_b": "Gefitinib",
         "drug_b_id": "MESH:D000077156",
         "papers": 3,
+        "reads_as_co_administration": false,
         "target": "EGFR",
         "target_id": "1956",
         "variant": "p.T790M"
