@@ -31,25 +31,26 @@ The ratio is a HEURISTIC on a nine-pair panel, not a validated classifier. It
 is reported so a reader can discount rows, not so anything can be filtered out
 automatically.
 
-2. AN ABSENCE IS INFORMATIVE ONLY ABOUT SUBSTITUTION-KEYED REGIMENS
--------------------------------------------------------------------
-The first version of this analysis claimed a variant-level absence carries NO
-information, generalising from one control that failed. That is too strong, and
-the analysis's own top row refutes it: dabrafenib + trametinib against BRAF
-V600E, 181 papers.
+2. WHAT THE VARIANT JOIN RECOVERS IS SET BY PARTNER-AGENT CLASS
+---------------------------------------------------------------
+Two earlier explanations were measured and refuted. The first said a
+variant-level absence carries NO information, generalising from one failed
+control, and the shipped table's own top row refutes it. The second said the
+recoveries split by whether the biomarker is a SUBSTITUTION -- also wrong,
+because two panel labels were the author's to assign and both were assigned in
+the direction that made the split clean.
 
-Measured against a panel of ten approved regimens, the variant join recovers
-EIGHT. The two it misses are both the same shape: alpelisib + fulvestrant
-(SOLAR-1) and osimertinib + chemotherapy (FLAURA2) are keyed to
-"PIK3CA-mutated" and "EGFR-mutated", a GENE-level biomarker, not to a
-substitution. The control makes the failure mode visible: of the 59 papers
-asserting alpelisib + fulvestrant, 45 annotate PIK3CA as a gene and NOT ONE
-annotates a variant.
+Corrected and extended to 14 regimens: biomarker class does not separate
+(7/12 against 1/2) and partner-agent class does (7/7 against 1/7). FLAURA2 is
+labelled with the substitution it actually enrols, the same one as MARIPOSA,
+and still misses -- because pemetrexed is a chemotherapy partner.
 
-So the honest statement is narrow and useful: an absence at variant level is
-evidence about substitution-keyed regimens and says nothing about gene-keyed
-ones, AND YOU CANNOT TELL WHICH YOU ARE LOOKING AT FROM THE ABSENCE ALONE. That
-is why the gene-level join is reported beside it rather than instead of it.
+WHAT IS MEASURED AND WHAT IS ONLY OBSERVED. The join needs BOTH drugs tied to
+the same variant IN ONE PAPER. Whether the extractor CAN tie a chemotherapy or
+endocrine agent to a substitution at all is a separate question, and it is
+measured here per missed regimen rather than asserted: for each drug, whether
+it is tied to the target variant anywhere in the corpus, beside whether the
+pair is tied to it in a single paper.
 
 WHAT NEITHER LAYER CAN SAY
 --------------------------
@@ -58,12 +59,13 @@ WHAT NEITHER LAYER CAN SAY
   a response biomarker.
 * This reads PubTator's OWN gene assignment, so the `atlas_ambiguity` blocklist
   -- which guards the alias-resolution path in `atlas_graph.resolve` -- does not
-  apply. Verified collisions in the authority table itself: `MEK` is an alias of
-  MAP2K7 while MAP2K1 carries `MEK1`; `Met` is an alias of SLTM; `PGP` resolves
-  to phosphoglycolate phosphatase rather than P-glycoprotein; `NP` reaches
-  Neptunium. The gene layer's precision is NOT measured at scale here and a
-  sampled estimate is reported as a bound, not a rate.
-* Most gene-layer triples rest on one paper.
+  apply. The collision examples in the report are DERIVED from the authority
+  table at render time, because a hand-written one was wrong: an earlier version
+  claimed `NP` reaches Neptunium "verified in the authority table itself", and
+  Neptunium's alias list contains no `NP` at all.
+* THE GENE LAYER'S PRECISION IS NOT MEASURED, AT ALL. No sample has been judged
+  and no precision figure is claimed. An earlier version of this section
+  reported a 40-row sample that this repository never ran.
 
 Usage:
     python scripts/atlas_combination_gaps.py
@@ -83,6 +85,12 @@ OUT_TSV = PROJECT_ROOT / "analysis" / "atlas-combination-gaps.tsv.gz"
 
 VARIANT_TYPES = ("ProteinMutation", "DNAMutation", "SNP")
 
+# 37 pairs whose real-world relationship is known INDEPENDENTLY of this corpus,
+# used to locate the boundary the co-administration flag sits on. An earlier
+# version cited "an independent 36-pair sweep" that this repository had never
+# run, in three places, to justify a threshold that flags every shipped row.
+# The sweep is now this panel and its boundary is derived below.
+#
 # NAMES, resolved through the authority table at runtime and asserted to
 # resolve. An earlier version hardcoded MeSH identifiers from memory and got
 # several wrong -- MESH:C571179 is eravacycline, not vemurafenib -- which
@@ -90,18 +98,36 @@ VARIANT_TYPES = ("ProteinMutation", "DNAMutation", "SNP")
 # the defect class this whole document is about, so an unresolvable name is a
 # hard failure rather than a miss.
 SEMANTIC_PANEL = [
-    ("trastuzumab", "pertuzumab", True),
-    ("dabrafenib", "trametinib", True),
-    ("encorafenib", "binimetinib", True),
-    ("ipilimumab", "nivolumab", True),
-    ("cisplatin", "etoposide", True),
-    ("alectinib", "crizotinib", False),
-    ("ceritinib", "crizotinib", False),
-    ("osimertinib", "gefitinib", False),
-    ("lorlatinib", "crizotinib", False),
+    # Co-administered: every one a standard regimen given together.
+    ("trastuzumab", "pertuzumab", True), ("dabrafenib", "trametinib", True),
+    ("encorafenib", "binimetinib", True), ("ipilimumab", "nivolumab", True),
+    ("cisplatin", "etoposide", True), ("carboplatin", "paclitaxel", True),
+    ("fluorouracil", "leucovorin", True), ("oxaliplatin", "fluorouracil", True),
+    ("doxorubicin", "cyclophosphamide", True),
+    ("rituximab", "cyclophosphamide", True), ("gemcitabine", "cisplatin", True),
+    ("lenalidomide", "dexamethasone", True),
+    ("bortezomib", "dexamethasone", True), ("venetoclax", "azacitidine", True),
+    ("cetuximab", "irinotecan", True), ("pembrolizumab", "pemetrexed", True),
+    ("olaparib", "bevacizumab", True), ("tucatinib", "trastuzumab", True),
+    ("abiraterone", "prednisone", True), ("cytarabine", "daunorubicin", True),
+    # Never co-administered: sequential lines, or two agents of one class.
+    ("alectinib", "crizotinib", False), ("ceritinib", "crizotinib", False),
+    ("osimertinib", "gefitinib", False), ("lorlatinib", "crizotinib", False),
+    ("nivolumab", "pembrolizumab", False), ("cetuximab", "panitumumab", False),
+    ("paclitaxel", "docetaxel", False), ("cisplatin", "carboplatin", False),
+    ("anastrozole", "letrozole", False), ("azacitidine", "decitabine", False),
+    ("everolimus", "temsirolimus", False), ("palbociclib", "ribociclib", False),
+    ("sorafenib", "regorafenib", False), ("dasatinib", "nilotinib", False),
+    ("sunitinib", "pazopanib", False), ("afatinib", "osimertinib", False),
+    ("vemurafenib", "dabrafenib", False),
 ]
 
-# Approved regimens with a molecular biomarker, used to measure what the
+# Regimens with a molecular biomarker. ELEVEN are approved combinations; three
+# (NEJ009, AG221-005, KRYSTAL-7) are major published trials without a combination
+# approval, and all three sit in the not-both-targeted arm and all three MISS --
+# so each widens the partner separation and narrows the biomarker one. Named
+# rather than quietly dropped, and the approved-only figures are reported too.
+# Used to measure what the
 # variant-level join RECOVERS rather than asserting that it recovers nothing.
 # An empty `variant` means the regimen's biomarker is stated at gene level,
 # which is the failure mode the misses share.
@@ -132,11 +158,8 @@ RECOVERY_PANEL = [
     ("capivasertib", "fulvestrant", "207", "", "CAPItello-291", False),
 ]
 
-# The ratio above which a pair reads as co-administered. Set at 3.0 rather than
-# inside the nine-pair panel's very wide gap, because an independent 36-pair
-# sweep put the real boundary at 2.98 (sorafenib then regorafenib, sequential
-# in HCC) and 3.82. A threshold of 2.0 sat below that boundary and flagged
-# thousands of rows the wider panel says are wrong.
+# The ratio above which a pair reads as co-administered. 3.0 sits inside the
+# gap the committed 37-pair panel MEASURES, reported in `co_admin_boundary`.
 # Reported, never used to filter: no panel this size can support a classifier.
 CO_ADMIN_RATIO = 3.0
 
@@ -155,6 +178,29 @@ def resolve_drug(name: str, lab: dict) -> str:
             f"({hits[:4]}); a panel entry must resolve to exactly one, because "
             "an unresolved one would ship as a false MISSED")
     return hits[0]
+
+
+def derive_collisions(paths, wanted) -> list:
+    """Confirm each claimed gene-symbol collision against the authority table.
+
+    Hand-writing these is how `NP -> Neptunium` shipped under the words
+    "verified in the authority table itself" when Neptunium's alias list holds
+    no `NP` at all. Each candidate is now checked against the FULL alias list
+    and one that does not hold is dropped rather than printed.
+    """
+    full = {}
+    with gzip.open(paths, "rt") as fh:
+        for line in fh:
+            q = line.rstrip("\n").split("\t")
+            if len(q) >= 2:
+                full[q[0]] = [x.strip() for x in q[1].split("|")]
+    out = []
+    for alias, ident, note in wanted:
+        names = full.get(ident)
+        if names and alias in names:
+            out.append({"alias": alias, "resolves_to": names[0], "id": ident,
+                        "note": note})
+    return out
 
 
 def load_labels() -> dict:
@@ -223,10 +269,17 @@ def join(cotreat: dict, drug_target: dict) -> dict:
     return out
 
 
-def ratio(pair_pred: dict, pair) -> float:
-    """cotreat rows per compare row. High means co-administration."""
+def ratio(pair_pred: dict, pair):
+    """(cotreat, compare, ratio-or-None). None when there is nothing to divide by.
+
+    `cotreat / max(compare, 1)` returns the raw cotreat COUNT when a pair has no
+    `compare` rows, and the flag built on it then labelled pairs with no
+    comparison evidence at all "compare-dominated". Most shipped rows are in
+    that state, so the label misdescribed the majority of the table.
+    """
     c = pair_pred.get(pair, {})
-    return round(c.get("cotreat", 0) / max(c.get("compare", 0), 1), 2)
+    ct, cm = c.get("cotreat", 0), c.get("compare", 0)
+    return ct, cm, (round(ct / cm, 2) if cm else None)
 
 
 def main() -> int:
@@ -248,12 +301,16 @@ def main() -> int:
     for an, bn, truth in SEMANTIC_PANEL:
         a, b = resolve_drug(an, lab), resolve_drug(bn, lab)
         c = pp.get(frozenset((a, b)), {})
+        ct, cm, rr = ratio(pp, frozenset((a, b)))
+        if not ct:
+            continue          # no cotreat rows: the pair says nothing here
         semantic.append({"pair": f"{an} + {bn}", "co_administered": truth,
-                         "cotreat": c.get("cotreat", 0),
-                         "compare": c.get("compare", 0),
-                         "ratio": ratio(pp, frozenset((a, b)))})
-    lo_true = min((x["ratio"] for x in semantic if x["co_administered"]), default=0)
-    hi_false = max((x["ratio"] for x in semantic if not x["co_administered"]),
+                         "cotreat": ct, "compare": cm, "ratio": rr})
+    # Only pairs with BOTH counts can locate a boundary; a null ratio has no
+    # position on the axis.
+    usable = [x for x in semantic if x["ratio"] is not None]
+    lo_true = min((x["ratio"] for x in usable if x["co_administered"]), default=0)
+    hi_false = max((x["ratio"] for x in usable if not x["co_administered"]),
                    default=0)
 
     # --- 2. what does the variant join recover? ------------------------------
@@ -266,6 +323,7 @@ def main() -> int:
         recovery.append({
             "trial": trial, "regimen": f"{nm(a)} + {nm(b)}",
             "drug_ids": sorted((a, b)),
+            "gene_id": gene, "variant_key": variant,
             "gene": nm(gene, "gene:"), "variant": variant or "(gene-level)",
             "biomarker_is_a_substitution": bool(variant),
             "both_drugs_are_targeted": both_targeted,
@@ -283,6 +341,26 @@ def main() -> int:
     def gap(x):
         return (x["yes_recovered"] / max(x["yes_total"], 1)
                 - x["no_recovered"] / max(x["no_total"], 1))
+
+    # WHY each miss misses, MEASURED. The document previously asserted that the
+    # extractor cannot tie a chemotherapy or endocrine agent to a substitution.
+    # Nothing tested that. What the join actually requires is both drugs tied to
+    # one variant IN ONE PAPER, so the two are separated here: is each drug ever
+    # tied to the target variant anywhere, and are both tied to it together?
+    anywhere = collections.defaultdict(set)
+    for pmid, dv in s["drug_var"].items():
+        for drug, vs in dv.items():
+            for v in vs:
+                anywhere[(drug, v)].add(pmid)
+    for r_ in recovery:
+        if r_["recovered"]:
+            continue
+        a2, b2 = r_["drug_ids"]
+        key = (r_["gene_id"], r_["variant_key"])
+        r_["drug_a_tied_anywhere"] = len(anywhere.get((a2, key), ()))
+        r_["drug_b_tied_anywhere"] = len(anywhere.get((b2, key), ()))
+        r_["both_tied_but_never_together"] = bool(
+            r_["drug_a_tied_anywhere"] and r_["drug_b_tied_anywhere"])
 
     # The control, kept because it is what made the failure MODE visible.
     ctrl_pair = frozenset((resolve_drug("alpelisib", lab),
@@ -302,14 +380,20 @@ def main() -> int:
         rows = []
         for (pr, t), pm in joined.items():
             a, b = sorted(pr)
-            rr = ratio(pp, pr)
+            ct, cm, rr = ratio(pp, pr)
             rows.append({
                 "drug_a": nm(a), "drug_b": nm(b), "drug_a_id": a, "drug_b_id": b,
                 "target": nm(t[0] if is_variant else t, "gene:"),
                 "target_id": t[0] if is_variant else t,
                 "variant": t[1] if is_variant else "",
-                "papers": len(pm), "cotreat_compare_ratio": rr,
-                "reads_as_co_administration": rr >= CO_ADMIN_RATIO})
+                "papers": len(pm), "cotreat": ct, "compare": cm,
+                "cotreat_compare_ratio": rr,
+                # THREE states, not two. A pair with no `compare` rows has no
+                # comparison evidence either way and must not be called
+                # compare-dominated.
+                "verdict": ("no comparison evidence" if rr is None
+                            else "reads as co-administration" if rr >= CO_ADMIN_RATIO
+                            else "compare-dominated")})
         rows.sort(key=lambda x: (-x["papers"], x["drug_a_id"], x["drug_b_id"],
                                  x["target_id"], x["variant"]))
         return rows
@@ -320,13 +404,14 @@ def main() -> int:
             gzip.GzipFile(fileobj=raw, mode="wb", mtime=0) as gz, \
             io.TextIOWrapper(gz, encoding="utf-8", newline="\n") as fh:
         fh.write("layer\tdrug_a\tdrug_b\ttarget\ttarget_id\tvariant\tpapers"
-                 "\tcotreat_compare_ratio\treads_as_co_administration\n")
+                 "\tcotreat\tcompare\tcotreat_compare_ratio\tverdict\n")
         for layer, rows in (("gene", gene_rows), ("variant", var_rows)):
             for r in rows:
+                rr = r["cotreat_compare_ratio"]
                 fh.write(f"{layer}\t{r['drug_a']}\t{r['drug_b']}\t{r['target']}\t"
                          f"{r['target_id']}\t{r['variant']}\t{r['papers']}\t"
-                         f"{r['cotreat_compare_ratio']}\t"
-                         f"{int(r['reads_as_co_administration'])}\n")
+                         f"{r['cotreat']}\t{r['compare']}\t"
+                         f"{'' if rr is None else rr}\t{r['verdict']}\n")
 
     cot_papers = set(s["cotreat"])
     overlap = len(cot_papers & s["has_var"])
@@ -359,13 +444,28 @@ def main() -> int:
             "partner_class_explains_better":
                 gap(by_partner) > gap(by_biomarker),
         },
+        "collisions": derive_collisions(
+            PROJECT_ROOT / "analysis" / "comention" / "authority-labels.tsv.gz",
+            [("MEK", "5609", "MAP2K1 carries `MEK1`, so `MEK` alone lands on MKK7"),
+             ("Met", "79811", "an alias of SLTM, not the MET receptor"),
+             ("PGP", "283871", "phosphoglycolate phosphatase, not P-glycoprotein"),
+             ("NO", "MESH:D009614", "nobelium, not nitric oxide"),
+             ("PSA", "354", "KLK3, a response biomarker rather than a target"),
+             ("NP", "MESH:D009405", "neptunium (claimed once and NOT true)")]),
+        "co_admin_boundary": {
+            "lowest_co_administered": lo_true,
+            "highest_sequential": hi_false,
+            "threshold": CO_ADMIN_RATIO,
+            "threshold_inside_the_gap": hi_false < CO_ADMIN_RATIO <= lo_true,
+            "panel_pairs": len(semantic),
+        },
         "control": control,
         "gene_layer": {
             "triples": len(gene_rows),
             "single_paper": sum(1 for r in gene_rows if r["papers"] == 1),
             "at_least_three_papers": sum(1 for r in gene_rows if r["papers"] >= 3),
-            "reading_as_co_administration": sum(
-                1 for r in gene_rows if r["reads_as_co_administration"]),
+            "by_verdict": dict(collections.Counter(
+                r["verdict"] for r in gene_rows)),
             "top": gene_rows[:40],
         },
         "variant_layer": {
@@ -440,7 +540,9 @@ def render(r: dict) -> str:
           "That was wrong too, and it was wrong because two panel labels were",
           "mine to assign and I assigned them in the direction that made the",
           "split clean.", "",
-          f"Measured over {rec['of']} approved regimens, with FLAURA2 relabelled",
+          f"Measured over {rec['of']} regimens with a molecular biomarker "
+          f"({rec['of'] - 3} approved combinations and 3 major published trials "
+          "without one: NEJ009, AG221-005, KRYSTAL-7), with FLAURA2 relabelled",
           "to the substitution it actually enrols (the same one as MARIPOSA)",
           "and CAPItello-291 relabelled to the multi-gene alteration list it",
           "actually uses:", "",
@@ -462,21 +564,36 @@ def render(r: dict) -> str:
           f"| **both drugs are targeted agents** | **{par['yes_recovered']}/"
           f"{par['yes_total']}** | **{par['no_recovered']}/{par['no_total']}** | "
           f"**{par['separation']:+.2f}** |", "",
-          ("**Partner-agent class explains the recoveries and biomarker class"
+          ("**Partner-agent class predicts the recoveries and biomarker class"
            " does not.**" if rec["partner_class_explains_better"] else
-           "**Biomarker class explains the recoveries at least as well.**"), "",
-          "The relation extractor does not tie chemotherapy, a hypomethylating",
-          "agent, a checkpoint antibody or an endocrine agent to a specific",
-          "substitution, and this join requires BOTH drugs tied to the same",
-          "variant. So a regimen pairing a targeted drug with any of those",
-          "cannot be recovered however clearly its biomarker is written.", "",
-          "That also explains the control, which the biomarker story only",
-          f"appeared to. Of the {c['papers_asserting_the_combination']} papers",
-          f"asserting {c['regimen']}, {c['of_those_annotating_the_gene']}",
-          f"annotate the gene and {c['of_those_annotating_any_variant']} annotate",
-          "any variant. Fulvestrant is an endocrine agent, and the same miss",
-          "occurs for ivosidenib + azacitidine, whose biomarker IS a single",
-          "substitution and whose indication names it.", "",
+           "**Biomarker class predicts the recoveries at least as well.**"), "",
+          "### But not for the reason an earlier version gave", "",
+          "That version asserted the extractor *cannot* tie a chemotherapy, a",
+          "hypomethylating agent, a checkpoint antibody or an endocrine agent to",
+          "a substitution. Nothing measured that, and measuring it refutes it.",
+          "For each missed regimen, how many papers tie each drug to the target",
+          "variant ANYWHERE, beside the zero that tie both in one paper:", "",
+          "| trial | targeted partner | other partner | both, never together |",
+          "|---|--:|--:|---|"]
+    for x in rec["panel"]:
+        if x["recovered"]:
+            continue
+        A, B = sorted((x.get("drug_a_tied_anywhere", 0),
+                       x.get("drug_b_tied_anywhere", 0)), reverse=True)
+        L.append(f"| {x['trial']} | {A} | {B} | "
+                 f"{'yes' if x.get('both_tied_but_never_together') else 'no'} |")
+    L += ["",
+          "Pemetrexed IS tied to EGFR L858R, azacitidine to IDH1 R132H,",
+          "pembrolizumab to KRAS G12C. The extractor does it. What is thin is",
+          "the VOLUME on one side: the targeted partner is tied to the variant",
+          "in tens or hundreds of papers and the other in nought to a handful,",
+          "so a single paper carrying BOTH links is rare rather than",
+          "impossible.", "",
+          "So the honest causal statement is weaker than the previous one and",
+          "is what the join actually requires: **both drugs must be tied to the",
+          "same variant in ONE paper, and for a targeted-plus-other regimen the",
+          "second link is too rare for that to happen.** Partner class predicts",
+          "the outcome; it is not the mechanism.", "",
           "So: **an absence is evidence about targeted-plus-targeted regimens",
           "and says nothing about a regimen with a chemotherapy, endocrine or",
           "immunotherapy partner.** The gene layer is reported beside the",
@@ -490,13 +607,15 @@ def render(r: dict) -> str:
           f"({r['overlap_share_of_cotreatment_papers']}%) |",
           f"| gene-level triples | {g['triples']:,} |",
           f"| ...resting on one paper | {g['single_paper']:,} |",
-          f"| ...reading as co-administration | {g['reading_as_co_administration']:,} |",
+          *[f"| ...{k} | {v:,} |" for k, v in sorted(g["by_verdict"].items())],
           f"| variant-level triples | {v['triples']:,} |", "",
-          "| drug | drug | gene | papers | ratio | |", "|---|---|---|--:|--:|---|"]
+          "| drug | drug | gene | papers | cotreat | compare | ratio | verdict |",
+          "|---|---|---|--:|--:|--:|--:|---|"]
     for row in g["top"][:25]:
-        flag = "" if row["reads_as_co_administration"] else " **compare-dominated**"
+        rr = row["cotreat_compare_ratio"]
         L.append(f"| {row['drug_a']} | {row['drug_b']} | {row['target']} | "
-                 f"{row['papers']} | {row['cotreat_compare_ratio']} |{flag} |")
+                 f"{row['papers']} | {row['cotreat']} | {row['compare']} | "
+                 f"{'--' if rr is None else rr} | {row['verdict']} |")
     L += ["", "### Variant level", "",
           "| drug | drug | gene | variant | papers | ratio |",
           "|---|---|---|---|--:|--:|"]
@@ -511,10 +630,13 @@ def render(r: dict) -> str:
           "* **Gene-symbol collisions pass straight through.** This reads",
           "  PubTator's own gene assignment, so the `atlas_ambiguity` blocklist,",
           "  which guards the alias-resolution path in `atlas_graph.resolve`,",
-          "  does not apply. Verified in the authority table itself: `MEK` is an",
-          "  alias of **MAP2K7** while MAP2K1 carries `MEK1`; `Met` is an alias",
-          "  of **SLTM**; `PGP` reaches phosphoglycolate phosphatase rather than",
-          "  P-glycoprotein; `NP` reaches **Neptunium**.",
+          "  does not apply. Each collision below is CHECKED against the full",
+          "  alias list at render time and dropped if it does not hold, because",
+          "  a hand-written one did not: an earlier version claimed `NP` reaches",
+          "  Neptunium *\"verified in the authority table itself\"*, and",
+          "  Neptunium's alias list contains no `NP`.",
+          *[f"    * `{x['alias']}` resolves to **{x['resolves_to']}** "
+            f"({x['note']})" for x in r["collisions"]],
           "* **The gene layer's precision is not measured, at all.** No sample",
           "  has been judged and no precision figure is claimed here. An earlier",
           "  version of this section reported a 40-row sample that this",

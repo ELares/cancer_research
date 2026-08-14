@@ -51,10 +51,12 @@ exists to show.
 The rule needs no threshold. Every spelling must parse; each
 representation class must agree internally; and a protein spelling must
 agree with a coding one ACROSS classes, since codon = (coding position
-+ 2) // 3 relates them. Failing any of the three refuses the whole
-rsid.
++ 2) // 3 relates them. Failing any of the three refuses that rsid
+UNDER THAT GENE: the unit of resolution is the (rsid, gene) key, and
+ten rsids are refused under one gene while still collapsing under
+another.
 
-| rsids carrying several spellings | |
+| (rsid, gene) keys carrying several spellings | |
 |---|--:|
 | one change, several spellings: collapsed | 1,539 |
 | spellings denote different changes: refused | 915 |
@@ -80,6 +82,8 @@ It catches rs1494558, where `p.I66T` sits beside `c.412G>A` and codon
 promoter position that cannot encode it.
 
 That gave **9,975** rows an HGVS they lacked and respelled **5,889** onto a single form.
+
+Most of that fill is not the rule's doing. **8,357** (rsid, gene) keys carry only ONE spelling, so no class could disagree and no collapse decision was made: a bare row simply inherits the one spelling its rsid was ever given. The table above covers the keys with SEVERAL spellings, which is where the three tests apply.
 
 **Testing agreement among protein forms only is not enough**, which
 is how the first version of this was wrong: it swept every other
@@ -148,7 +152,7 @@ rank order, which a coincidence of spelling would not produce: Polycythemia Vera
 
 | | count |
 |---|--:|
-| relation rows touching a variant | 228,501 |
+| relation rows touching a point-variant entity | 228,501 |
 | variant entity occurrences (both sides counted) | 232,801 |
 | ...carrying no gene | 14,924 (6.4%) |
 | **chemical-to-variant rows** | **24,043** |
@@ -157,6 +161,11 @@ rank order, which a coincidence of spelling would not produce: Polycythemia Vera
 | distinct (drug, gene, variant) pairs | 13,784 |
 | pairs with >= 3 papers | 783 |
 | pairs resting on ONE paper | 12,132 (88.0%) |
+
+`relations.tsv.gz` also carries a fourth mutation type, `Mutation`,
+holding structural variants as chromosomal ranges (`Chr7:154954255-154998784dup`). It is deliberately out of scope: it
+has no HGVS substitution to reconcile and none of the three tests
+applies to it, so the counts above are point variants only.
 
 A variant with no `CorrespondingGene` is genuinely ambiguous, since
 `p.G12C` alone could be KRAS, NRAS or HRAS. Those are left unresolved
@@ -196,12 +205,12 @@ pair is *written about*, and `associate` does not say which direction.
 
 | drug | gene | variant | papers | predicates (assertions) |
 |---|---|---|--:|---|
-| osimertinib | EGFR | `p.T790M` | 799 | `inhibit` 709, `associate` 90, `stimulate` 7 |
+| osimertinib | EGFR | `p.T790M` | 799 | `inhibit` 709, `associate` 90, `stimulate` 7, `interact` 2 |
 | Vemurafenib | BRAF | `p.V600E` | 573 | `inhibit` 548, `associate` 28, `stimulate` 2 |
 | dabrafenib | BRAF | `p.V600E` | 442 | `inhibit` 437, `associate` 7, `interact` 1 |
 | trametinib | BRAF | `p.V600E` | 306 | `inhibit` 306, `associate` 2 |
 | sotorasib | KRAS | `p.G12C` | 210 | `inhibit` 206, `associate` 8 |
-| osimertinib | EGFR | `p.L858R` | 196 | `inhibit` 171, `associate` 28, `interact` 1 |
+| osimertinib | EGFR | `p.L858R` | 196 | `inhibit` 171, `associate` 28, `interact` 1, `stimulate` 1 |
 | Gefitinib | EGFR | `p.L858R` | 164 | `inhibit` 138, `associate` 29 |
 | Gefitinib | EGFR | `p.T790M` | 152 | `inhibit` 95, `stimulate` 34, `associate` 23 |
 | Imatinib Mesylate | ABL1 | `p.T315I` | 128 | `inhibit` 96, `associate` 32 |
@@ -247,7 +256,7 @@ pair is *written about*, and `associate` does not say which direction.
   above is a direct instance of it.
 * **Reconciliation is deliberately incomplete.** It merges what the
   evidence can adjudicate and refuses the rest: 37 twins
-  and 1,444 rsids stay fragmented rather than
+  and 1,444 (rsid, gene) keys stay fragmented
   guessed, so one variant may still appear under more than one key.
 * **Attention is not importance.** A well-studied pair outranks a real
   but rarely-written-about one, exactly as `atlas_model_gaps.py` warns

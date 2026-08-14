@@ -103,24 +103,125 @@ def test_the_ratio_separates_the_panel_with_no_overlap():
         f"the {m.CO_ADMIN_RATIO} threshold is outside the gap the panel "
         f"measures ({sem['highest_sequential_ratio']} to "
         f"{sem['lowest_co_administered_ratio']}), so it is not supported by it")
-    # The nine-pair gap is very wide, so sitting inside it is a weak test. An
-    # independent 36-pair sweep put the real boundary at 2.98 (sorafenib then
-    # regorafenib, sequential in HCC), and a threshold below that flagged
-    # thousands of rows the wider panel says are not co-administered.
-    assert m.CO_ADMIN_RATIO >= 3.0, (
-        f"the threshold is {m.CO_ADMIN_RATIO}, below the 2.98 boundary a wider "
-        "panel measured; the nine-pair gap admits it but a wider one does not")
+    # The boundary is now MEASURED by the committed panel, not cited from a
+    # sweep this repository never ran; test_the_co_administration_boundary_
+    # comes_from_a_committed_panel checks the threshold against it.
+
+
+def test_a_pair_with_no_comparison_evidence_is_not_called_compare_dominated():
+    """`cotreat / max(compare, 1)` returns the raw COUNT when compare is zero.
+
+    The flag built on it then labelled pairs with no comparison evidence at all
+    "compare-dominated", which is most of the table. Three states now, and the
+    ratio is null where there is nothing to divide by.
+    """
+    rs = rows()
+    bad = [x for x in rs
+           if x["verdict"] == "compare-dominated" and x["compare"] == "0"]
+    assert not bad, (
+        f"{len(bad)} rows are called compare-dominated with zero compare rows, "
+        f"e.g. {bad[0]['drug_a']} + {bad[0]['drug_b']}; that is no evidence, "
+        "not evidence against")
+    nulls = [x for x in rs if x["compare"] == "0"]
+    assert nulls and all(x["cotreat_compare_ratio"] == "" for x in nulls), (
+        "a pair with no compare rows still ships a numeric ratio; that number "
+        "is the raw cotreat count wearing a ratio's label")
+    v = d()["gene_layer"]["by_verdict"]
+    assert set(v) == {"reads as co-administration", "compare-dominated",
+                      "no comparison evidence"}, (
+        f"the verdict column has collapsed back to fewer states: {sorted(v)}")
+
+
+def test_the_co_administration_boundary_comes_from_a_committed_panel():
+    """An earlier version cited a 36-pair sweep this repository never ran.
+
+    It appeared in three places and justified the threshold that flags every
+    shipped row. The panel is now committed and its boundary derived, so the
+    guard can compare the threshold against a measurement instead of a memory.
+    """
+    m, b = mod(), d()["co_admin_boundary"]
+    assert b["panel_pairs"] >= 30, (
+        f"the semantic panel is down to {b['panel_pairs']} pairs; the boundary "
+        "it locates is what the threshold rests on")
+    assert len(m.SEMANTIC_PANEL) >= 30
+    assert b["threshold_inside_the_gap"], (
+        f"the {b['threshold']} threshold is outside the measured gap "
+        f"({b['highest_sequential']}, {b['lowest_co_administered']}]")
+    assert b["highest_sequential"] < b["lowest_co_administered"], (
+        "the panel no longer separates, so no threshold is supported")
+    txt = flat()
+    for n in (b["highest_sequential"], b["lowest_co_administered"]):
+        assert str(n) in txt, f"the measured boundary {n} is not in the report"
+
+
+def test_the_missed_regimens_carry_the_measured_mechanism_not_an_asserted_one():
+    """The document asserted the extractor CANNOT link those drug classes.
+
+    Measuring it refutes that: pemetrexed is tied to EGFR L858R in 4 papers,
+    azacitidine to IDH1 R132H in 1, pembrolizumab to KRAS G12C in 2. What is
+    thin is the volume on one side, not the capability.
+    """
+    missed = [r for r in d()["recovery"]["panel"] if not r["recovered"]]
+    assert missed, "no regimen misses, so there is no mechanism to explain"
+    for r in missed:
+        for k in ("drug_a_tied_anywhere", "drug_b_tied_anywhere",
+                  "both_tied_but_never_together"):
+            assert k in r, f"{r['trial']} carries no measured {k}"
+    assert any(r["both_tied_but_never_together"] for r in missed), (
+        "no missed regimen has BOTH drugs tied to its variant somewhere; that "
+        "measurement is what refutes the asserted mechanism, and without it "
+        "the document's causal claim is back to being unmeasured")
+    txt = flat()
+    assert "is not the mechanism" in txt, (
+        "the report no longer distinguishes what partner class PREDICTS from "
+        "what causes it, which is the correction this section exists for")
+
+
+def test_the_collision_examples_are_derived_and_the_false_one_is_gone():
+    """`NP` -> Neptunium was hand-written under the words "verified in the
+    authority table itself". Neptunium's alias list contains no `NP`."""
+    m = mod()
+    aliases = {c["alias"] for c in d()["collisions"]}
+    assert "NP" not in aliases, (
+        "the NP/Neptunium collision is back; it does not exist in the "
+        "authority table and was shipped once as verified against it")
+    assert aliases, "no collision survived derivation, so the caveat has no instance"
+    assert "MEK" in aliases, "the MEK/MAP2K7 collision is gone"
+    # The deriving must actually be capable of REJECTING one, or it is a
+    # pass-through wearing the word "derived".
+    out = m.derive_collisions(
+        REPO_ROOT / "analysis" / "comention" / "authority-labels.tsv.gz",
+        [("NP", "MESH:D009405", "does not hold"), ("MEK", "5609", "holds")])
+    assert [c["alias"] for c in out] == ["MEK"], (
+        "derive_collisions did not reject a collision that the alias list does "
+        "not support, so it cannot have verified the ones it kept")
+
+
+def test_the_panel_does_not_call_unapproved_trials_approved():
+    """Three of the 14 are major trials without a combination approval.
+
+    All three sit in the not-both-targeted arm and all three MISS, so each one
+    widens the partner separation and narrows the biomarker one. Naming them is
+    the difference between a panel and a panel chosen in one direction.
+    """
+    txt = flat()
+    assert "approved regimens" not in txt or "3 major published trials" in txt, (
+        "the panel is described as approved regimens without naming the three "
+        "that are not")
+    for trial in ("NEJ009", "AG221-005", "KRYSTAL-7"):
+        assert trial in txt, f"{trial} is no longer named as a non-approved entry"
 
 
 def test_the_ratio_is_reported_never_used_to_filter():
     """A nine-pair panel cannot support a classifier, and the doc says so."""
     r = d()
-    flagged = sum(1 for x in rows() if x["reads_as_co_administration"] == "0")
+    flagged = sum(1 for x in rows() if x["verdict"] != "reads as co-administration")
     assert flagged > 0, (
         "no row is flagged compare-dominated any more; either the flag stopped "
         "being computed or the rows were filtered out, and filtering on a "
         "nine-pair heuristic is what the document promises not to do")
-    assert r["gene_layer"]["triples"] > r["gene_layer"]["reading_as_co_administration"], (
+    assert r["gene_layer"]["triples"] > r["gene_layer"]["by_verdict"].get(
+        "reads as co-administration", 0), (
         "every gene row now reads as co-administration, so the flag is inert")
     assert "not a validated classifier" in flat(), (
         "the report no longer states the ratio's status, so a reader may take "
