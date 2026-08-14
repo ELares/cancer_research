@@ -70,9 +70,7 @@ a `cotreat` row have MORE `compare` rows than `cotreat` ones. Every
 row below therefore carries its ratio, and one where `compare`
 dominates is flagged rather than silently presented as a combination.
 
-**This is a heuristic on a nine-pair panel, not a validated
-classifier.** It is reported so a reader can discount rows. Nothing
-is filtered out automatically.
+**This is a heuristic on a 37-pair panel, not a validated classifier.** It is reported so a reader can discount rows. Nothing is filtered out automatically.
 
 ## 2. What the variant join recovers, and why
 
@@ -136,10 +134,9 @@ variant ANYWHERE, beside the zero that tie both in one paper:
 
 Pemetrexed IS tied to EGFR L858R, azacitidine to IDH1 R132H,
 pembrolizumab to KRAS G12C. The extractor does it. What is thin is
-the VOLUME on one side: the targeted partner is tied to the variant
-in tens or hundreds of papers and the other in nought to a handful,
-so a single paper carrying BOTH links is rare rather than
-impossible.
+the VOLUME on one side: across the missed regimens the targeted
+partner is tied to the variant in 1 to 196 papers and the other in 0 to 4, so a single paper carrying BOTH links is rare
+rather than impossible.
 
 So the honest causal statement is weaker than the previous one and
 is what the join actually requires: **both drugs must be tied to the
@@ -230,7 +227,7 @@ variant layer because it recovers several of those misses.
     * `PSA` resolves to **KLK3** (KLK3, a response biomarker rather than a target)
 * **The gene layer's precision is not measured, at all.** No sample
   has been judged and no precision figure is claimed here. An earlier
-  version of this section reported a 40-row sample that this
+  version of this section reported a sample that this
   repository never ran. 23,068 of 24,864
   rows rest on a single paper, and the collision classes above are
   the known error source, but the rate is unknown.

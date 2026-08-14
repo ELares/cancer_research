@@ -52,9 +52,11 @@ The rule needs no threshold. Every spelling must parse; each
 representation class must agree internally; and a protein spelling must
 agree with a coding one ACROSS classes, since codon = (coding position
 + 2) // 3 relates them. Failing any of the three refuses that rsid
-UNDER THAT GENE: the unit of resolution is the (rsid, gene) key, and
-ten rsids are refused under one gene while still collapsing under
-another.
+UNDER THAT GENE: the unit of resolution is the (rsid, gene) key, not
+the rsid. In practice that distinction is nearly inert here -- 0 refused keys
+have the same rsid collapsing under a different gene, and 10 have it
+carrying a single spelling there, which is not a collapse decision at
+all.
 
 | (rsid, gene) keys carrying several spellings | |
 |---|--:|

@@ -229,6 +229,8 @@
     "not_checkable_against_a_residue_refused": 36,
     "nothing_to_compare_across_classes": 13,
     "one_change_many_spellings": 1539,
+    "refused_here_collapsed_under_another_gene": 0,
+    "refused_here_single_spelling_under_another_gene": 10,
     "single_spelling": 8357,
     "unparsable_spelling_refused": 430
   },

@@ -3,8 +3,8 @@
 
 WHAT THIS READS
 ---------------
-`relations.tsv.gz` carries 224,146 `cotreat` rows over 40,878 drug pairs. Those
-counts are NOT new here -- `atlas-retraction-exposure.md` already ships the
+`relations.tsv.gz` carries a large `cotreat` layer over tens of thousands of
+drug pairs, and those counts are NOT new here -- `atlas-retraction-exposure.md` already ships the
 224,146 and `atlas-emergence.md` already ships per-pair cotreat counts. What
 nothing had done is JOIN them to the gene and variant layers to ask what each
 combination is studied against.
@@ -17,17 +17,19 @@ required establishing two things first, and both turned out to be findings.
 -------------------------------------
 The predicate name promises that two drugs were given together. It does not
 deliver that: alectinib and crizotinib are sequential ALK inhibitors, never
-co-administered, and they carry 86 `cotreat` rows. Osimertinib and gefitinib,
-likewise mutually exclusive, carry 28.
+co-administered, and they carry `cotreat` rows anyway. So do osimertinib and
+gefitinib, likewise mutually exclusive.
 
 The corpus supplies its own discriminator, because it has a separate `compare`
 predicate over the same pairs, and the RATIO separates cleanly on a panel where
 the truth is known independently: every genuinely co-administered pair scores
-above 3.7 and every sequential-or-compared pair below 1.3, with no overlap.
+above every sequential-or-compared one, with no overlap. The boundary and the
+panel size are derived and reported; they are not repeated here, because a
+docstring cannot keep them fresh.
 Every row below therefore carries its cotreat:compare ratio, and a row where
 `compare` dominates is flagged rather than silently presented as a combination.
 
-The ratio is a HEURISTIC on a nine-pair panel, not a validated classifier. It
+The ratio is a HEURISTIC on a small panel, not a validated classifier. It
 is reported so a reader can discount rows, not so anything can be filtered out
 automatically.
 
@@ -40,8 +42,8 @@ recoveries split by whether the biomarker is a SUBSTITUTION -- also wrong,
 because two panel labels were the author's to assign and both were assigned in
 the direction that made the split clean.
 
-Corrected and extended to 14 regimens: biomarker class does not separate
-(7/12 against 1/2) and partner-agent class does (7/7 against 1/7). FLAURA2 is
+Corrected and extended: biomarker class does not separate and partner-agent
+class does, both measured and reported in the artifact. FLAURA2 is
 labelled with the substitution it actually enrols, the same one as MARIPOSA,
 and still misses -- because pemetrexed is a chemotherapy partner.
 
@@ -65,7 +67,7 @@ WHAT NEITHER LAYER CAN SAY
   Neptunium's alias list contains no `NP` at all.
 * THE GENE LAYER'S PRECISION IS NOT MEASURED, AT ALL. No sample has been judged
   and no precision figure is claimed. An earlier version of this section
-  reported a 40-row sample that this repository never ran.
+  reported a sample that this repository never ran.
 
 Usage:
     python scripts/atlas_combination_gaps.py
@@ -267,6 +269,21 @@ def join(cotreat: dict, drug_target: dict) -> dict:
             for target in dt.get(a, set()) & dt.get(b, set()):
                 out[(pair, target)].add(pmid)
     return out
+
+
+def _hi_lo(rec: dict) -> tuple:
+    """(targeted min, targeted max, other min, other max) over the misses.
+
+    Derived rather than described. "tens or hundreds against nought to a
+    handful" was hand-written beside a table whose targeted column holds 6, 4
+    and 1, so the two ranges it named overlapped on half the rows.
+    """
+    m = [r for r in rec["panel"] if not r["recovered"]]
+    hi = [max(r.get("drug_a_tied_anywhere", 0), r.get("drug_b_tied_anywhere", 0))
+          for r in m]
+    lo = [min(r.get("drug_a_tied_anywhere", 0), r.get("drug_b_tied_anywhere", 0))
+          for r in m]
+    return (min(hi), max(hi), min(lo), max(lo)) if m else (0, 0, 0, 0)
 
 
 def ratio(pair_pred: dict, pair):
@@ -528,9 +545,9 @@ def render(r: dict) -> str:
           "a `cotreat` row have MORE `compare` rows than `cotreat` ones. Every",
           "row below therefore carries its ratio, and one where `compare`",
           "dominates is flagged rather than silently presented as a combination.", "",
-          "**This is a heuristic on a nine-pair panel, not a validated",
-          "classifier.** It is reported so a reader can discount rows. Nothing",
-          "is filtered out automatically.", "",
+          f"**This is a heuristic on a {len(sem['panel'])}-pair panel, not a "
+          "validated classifier.** It is reported so a reader can discount "
+          "rows. Nothing is filtered out automatically.", "",
           "## 2. What the variant join recovers, and why", "",
           "An earlier version of this analysis claimed a variant-level absence",
           "carries NO information, generalising from one control that failed.",
@@ -585,10 +602,11 @@ def render(r: dict) -> str:
     L += ["",
           "Pemetrexed IS tied to EGFR L858R, azacitidine to IDH1 R132H,",
           "pembrolizumab to KRAS G12C. The extractor does it. What is thin is",
-          "the VOLUME on one side: the targeted partner is tied to the variant",
-          "in tens or hundreds of papers and the other in nought to a handful,",
-          "so a single paper carrying BOTH links is rare rather than",
-          "impossible.", "",
+          "the VOLUME on one side: across the missed regimens the targeted",
+          f"partner is tied to the variant in {_hi_lo(rec)[0]} to "
+          f"{_hi_lo(rec)[1]} papers and the other in {_hi_lo(rec)[2]} to "
+          f"{_hi_lo(rec)[3]}, so a single paper carrying BOTH links is rare",
+          "rather than impossible.", "",
           "So the honest causal statement is weaker than the previous one and",
           "is what the join actually requires: **both drugs must be tied to the",
           "same variant in ONE paper, and for a targeted-plus-other regimen the",
@@ -639,7 +657,7 @@ def render(r: dict) -> str:
             f"({x['note']})" for x in r["collisions"]],
           "* **The gene layer's precision is not measured, at all.** No sample",
           "  has been judged and no precision figure is claimed here. An earlier",
-          "  version of this section reported a 40-row sample that this",
+          "  version of this section reported a sample that this",
           f"  repository never ran. {g['single_paper']:,} of {g['triples']:,}",
           "  rows rest on a single paper, and the collision classes above are",
           "  the known error source, but the rate is unknown.",

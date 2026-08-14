@@ -45,8 +45,8 @@ several keys. Two defects, and for each the OBVIOUS correction is wrong:
 
    THE AGREEMENT TEST MUST COVER EVERY SPELLING, which is where the first
    version of this was wrong. Testing agreement among PROTEIN forms only and
-   sweeping the rest onto the winner let a 17-row `p.E429A` absorb rs1801131's
-   `c.1298A>C` (710) together with `c.1286A>C` and `c.1298A>T`, which are a
+   sweeping the rest onto the winner let a minority `p.E429A` absorb rs1801131's
+   dominant `c.1298A>C` together with `c.1286A>C` and `c.1298A>T`, which are a
    different position and a different allele. (The size of that defect is
    computed and reported; it is deliberately not repeated here, because the
    first fix for it hand-wrote the figure into this docstring and it went stale
@@ -340,6 +340,24 @@ def resolve_rsids(rs_hgvs: dict) -> tuple:
                         "n_spellings": len(forms),
                         "spellings": dict(forms.most_common(6))})
     refused.sort(key=lambda r: (-r["rows"], r["rsid"]))
+    # How often does the SAME rsid get different treatment under different
+    # genes? The unit of resolution is the (rsid, gene) key, and the report
+    # once asserted "ten rsids are refused under one gene while still
+    # collapsing under another" -- hand-written, and false: none of them
+    # collapses elsewhere, they have a single spelling there, which is the case
+    # the same document calls one where no collapse decision was made.
+    by_rsid = collections.defaultdict(set)
+    for (rs_, g_) in rs_hgvs:
+        by_rsid[rs_].add(g_)
+    refused_keys = {(r["rsid"], r["gene"]) for r in refused}
+    collapsed = {k for k in fix if len(rs_hgvs[k]) > 1}
+    single = {k for k in fix if len(rs_hgvs[k]) == 1}
+    tally["refused_here_collapsed_under_another_gene"] = sum(
+        1 for rs_, g_ in refused_keys
+        if any((rs_, o) in collapsed for o in by_rsid[rs_] if o != g_))
+    tally["refused_here_single_spelling_under_another_gene"] = sum(
+        1 for rs_, g_ in refused_keys
+        if any((rs_, o) in single for o in by_rsid[rs_] if o != g_))
     return fix, dict(tally), refused
 
 
@@ -719,9 +737,13 @@ def render(r: dict, name) -> str:
         "representation class must agree internally; and a protein spelling must",
         "agree with a coding one ACROSS classes, since codon = (coding position",
         "+ 2) // 3 relates them. Failing any of the three refuses that rsid",
-        "UNDER THAT GENE: the unit of resolution is the (rsid, gene) key, and",
-        "ten rsids are refused under one gene while still collapsing under",
-        "another.", "",
+        "UNDER THAT GENE: the unit of resolution is the (rsid, gene) key, not",
+        "the rsid. In practice that distinction is nearly inert here -- "
+        f"{rsr.get('refused_here_collapsed_under_another_gene', 0)} refused keys",
+        "have the same rsid collapsing under a different gene, and "
+        f"{rsr.get('refused_here_single_spelling_under_another_gene', 0)} have it",
+        "carrying a single spelling there, which is not a collapse decision at",
+        "all.", "",
         "| (rsid, gene) keys carrying several spellings | |", "|---|--:|",
         f"| one change, several spellings: collapsed | "
         f"{rsr.get('one_change_many_spellings', 0):,} |",
