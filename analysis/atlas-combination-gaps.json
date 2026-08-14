@@ -81,7 +81,7 @@
   "distinct_drug_pairs": 40878,
   "gene_layer": {
     "at_least_three_papers": 634,
-    "reading_as_co_administration": 13269,
+    "reading_as_co_administration": 9811,
     "single_paper": 23068,
     "top": [
       {
@@ -115,7 +115,7 @@
         "drug_b": "Lapatinib",
         "drug_b_id": "MESH:D000077341",
         "papers": 127,
-        "reads_as_co_administration": true,
+        "reads_as_co_administration": false,
         "target": "ERBB2",
         "target_id": "2064",
         "variant": ""
@@ -573,12 +573,25 @@
   "papers_asserting_a_variant_relation": 68420,
   "papers_asserting_both": 2605,
   "recovery": {
-    "gene_keyed_recovered": 0,
-    "gene_keyed_total": 2,
-    "of": 10,
+    "by_biomarker_class": {
+      "no_recovered": 1,
+      "no_total": 2,
+      "separation": 0.083,
+      "yes_recovered": 7,
+      "yes_total": 12
+    },
+    "by_partner_class": {
+      "no_recovered": 1,
+      "no_total": 7,
+      "separation": 0.857,
+      "yes_recovered": 7,
+      "yes_total": 7
+    },
+    "of": 14,
     "panel": [
       {
         "biomarker_is_a_substitution": true,
+        "both_drugs_are_targeted": true,
         "drug_ids": [
           "MESH:C560077",
           "MESH:C561627"
@@ -592,6 +605,7 @@
       },
       {
         "biomarker_is_a_substitution": true,
+        "both_drugs_are_targeted": true,
         "drug_ids": [
           "MESH:C000601108",
           "MESH:D000068818"
@@ -605,6 +619,7 @@
       },
       {
         "biomarker_is_a_substitution": true,
+        "both_drugs_are_targeted": true,
         "drug_ids": [
           "MESH:C000601108",
           "MESH:C581313"
@@ -618,6 +633,7 @@
       },
       {
         "biomarker_is_a_substitution": true,
+        "both_drugs_are_targeted": true,
         "drug_ids": [
           "MESH:C574276",
           "MESH:D000077484"
@@ -631,6 +647,7 @@
       },
       {
         "biomarker_is_a_substitution": true,
+        "both_drugs_are_targeted": true,
         "drug_ids": [
           "MESH:C000707992",
           "MESH:C000718215"
@@ -644,6 +661,7 @@
       },
       {
         "biomarker_is_a_substitution": true,
+        "both_drugs_are_targeted": true,
         "drug_ids": [
           "MESH:C000706028",
           "MESH:D000077544"
@@ -657,6 +675,7 @@
       },
       {
         "biomarker_is_a_substitution": true,
+        "both_drugs_are_targeted": true,
         "drug_ids": [
           "MESH:C000718190",
           "MESH:D000068818"
@@ -670,19 +689,77 @@
       },
       {
         "biomarker_is_a_substitution": true,
+        "both_drugs_are_targeted": false,
         "drug_ids": [
-          "MESH:C575618",
-          "MESH:D000077267"
+          "MESH:C000596361",
+          "MESH:D000068437"
         ],
-        "gene": "AKT1",
-        "papers": 1,
-        "recovered": true,
-        "regimen": "capivasertib + Fulvestrant",
-        "trial": "CAPItello-291",
-        "variant": "p.E17K"
+        "gene": "EGFR",
+        "papers": 0,
+        "recovered": false,
+        "regimen": "osimertinib + Pemetrexed",
+        "trial": "FLAURA2",
+        "variant": "p.L858R"
+      },
+      {
+        "biomarker_is_a_substitution": true,
+        "both_drugs_are_targeted": false,
+        "drug_ids": [
+          "MESH:D000077156",
+          "MESH:D016190"
+        ],
+        "gene": "EGFR",
+        "papers": 0,
+        "recovered": false,
+        "regimen": "Gefitinib + Carboplatin",
+        "trial": "NEJ009",
+        "variant": "p.L858R"
+      },
+      {
+        "biomarker_is_a_substitution": true,
+        "both_drugs_are_targeted": false,
+        "drug_ids": [
+          "MESH:C000627630",
+          "MESH:D001374"
+        ],
+        "gene": "IDH1",
+        "papers": 0,
+        "recovered": false,
+        "regimen": "ivosidenib + Azacitidine",
+        "trial": "AGILE",
+        "variant": "p.R132H"
+      },
+      {
+        "biomarker_is_a_substitution": true,
+        "both_drugs_are_targeted": false,
+        "drug_ids": [
+          "MESH:C000605269",
+          "MESH:D001374"
+        ],
+        "gene": "IDH2",
+        "papers": 0,
+        "recovered": false,
+        "regimen": "enasidenib + Azacitidine",
+        "trial": "AG221-005",
+        "variant": "p.R140Q"
+      },
+      {
+        "biomarker_is_a_substitution": true,
+        "both_drugs_are_targeted": false,
+        "drug_ids": [
+          "MESH:C000718190",
+          "MESH:C582435"
+        ],
+        "gene": "KRAS",
+        "papers": 0,
+        "recovered": false,
+        "regimen": "adagrasib + pembrolizumab",
+        "trial": "KRYSTAL-7",
+        "variant": "p.G12C"
       },
       {
         "biomarker_is_a_substitution": false,
+        "both_drugs_are_targeted": false,
         "drug_ids": [
           "MESH:C585539",
           "MESH:D000077267"
@@ -696,21 +773,21 @@
       },
       {
         "biomarker_is_a_substitution": false,
+        "both_drugs_are_targeted": false,
         "drug_ids": [
-          "MESH:C000596361",
-          "MESH:D000068437"
+          "MESH:C575618",
+          "MESH:D000077267"
         ],
-        "gene": "EGFR",
-        "papers": 0,
-        "recovered": false,
-        "regimen": "osimertinib + Pemetrexed",
-        "trial": "FLAURA2",
+        "gene": "AKT1",
+        "papers": 1,
+        "recovered": true,
+        "regimen": "capivasertib + Fulvestrant",
+        "trial": "CAPItello-291",
         "variant": "(gene-level)"
       }
     ],
-    "recovered": 8,
-    "substitution_keyed_recovered": 8,
-    "substitution_keyed_total": 8
+    "partner_class_explains_better": true,
+    "recovered": 8
   },
   "variant_layer": {
     "single_paper": 512,

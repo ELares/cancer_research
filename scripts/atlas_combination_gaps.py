@@ -105,23 +105,40 @@ SEMANTIC_PANEL = [
 # variant-level join RECOVERS rather than asserting that it recovers nothing.
 # An empty `variant` means the regimen's biomarker is stated at gene level,
 # which is the failure mode the misses share.
+# (drug a, drug b, gene, variant, trial, both drugs are targeted agents)
+#
+# `variant` empty means the regimen's biomarker is stated at gene level.
+# TWO LABELS I ORIGINALLY GOT WRONG, both in the direction that flattered my
+# first explanation: FLAURA2 enrols "exon 19 deletion OR L858R", the SAME
+# biomarker as MARIPOSA, so it cannot be gene-keyed while MARIPOSA is
+# substitution-keyed; and CAPItello-291's indication is PIK3CA/AKT1/PTEN-
+# altered, a three-gene alteration list, so it is gene-keyed rather than
+# E17K-keyed. Corrected, the biomarker split stops separating at all -- which
+# is what led to the partner-agent column.
 RECOVERY_PANEL = [
-    ("dabrafenib", "trametinib", "673", "p.V600E", "COMBI-d"),
-    ("encorafenib", "cetuximab", "673", "p.V600E", "BEACON"),
-    ("encorafenib", "binimetinib", "673", "p.V600E", "COLUMBUS"),
-    ("vemurafenib", "cobimetinib", "673", "p.V600E", "coBRIM"),
-    ("amivantamab", "lazertinib", "1956", "p.L858R", "MARIPOSA"),
-    ("sotorasib", "panitumumab", "3845", "p.G12C", "CodeBreaK 300"),
-    ("adagrasib", "cetuximab", "3845", "p.G12C", "KRYSTAL-1"),
-    ("capivasertib", "fulvestrant", "207", "p.E17K", "CAPItello-291"),
-    ("alpelisib", "fulvestrant", "5290", "", "SOLAR-1"),
-    ("osimertinib", "pemetrexed", "1956", "", "FLAURA2"),
+    ("dabrafenib", "trametinib", "673", "p.V600E", "COMBI-d", True),
+    ("encorafenib", "cetuximab", "673", "p.V600E", "BEACON", True),
+    ("encorafenib", "binimetinib", "673", "p.V600E", "COLUMBUS", True),
+    ("vemurafenib", "cobimetinib", "673", "p.V600E", "coBRIM", True),
+    ("amivantamab", "lazertinib", "1956", "p.L858R", "MARIPOSA", True),
+    ("sotorasib", "panitumumab", "3845", "p.G12C", "CodeBreaK 300", True),
+    ("adagrasib", "cetuximab", "3845", "p.G12C", "KRYSTAL-1", True),
+    ("osimertinib", "pemetrexed", "1956", "p.L858R", "FLAURA2", False),
+    ("gefitinib", "carboplatin", "1956", "p.L858R", "NEJ009", False),
+    ("ivosidenib", "azacitidine", "3417", "p.R132H", "AGILE", False),
+    ("enasidenib", "azacitidine", "3418", "p.R140Q", "AG221-005", False),
+    ("adagrasib", "pembrolizumab", "3845", "p.G12C", "KRYSTAL-7", False),
+    ("alpelisib", "fulvestrant", "5290", "", "SOLAR-1", False),
+    ("capivasertib", "fulvestrant", "207", "", "CAPItello-291", False),
 ]
 
-# The ratio above which a pair reads as co-administered, taken from the gap in
-# the panel (every true pair well above, every false pair well below).
-# Reported, never used to filter: a nine-pair panel cannot support a classifier.
-CO_ADMIN_RATIO = 2.0
+# The ratio above which a pair reads as co-administered. Set at 3.0 rather than
+# inside the nine-pair panel's very wide gap, because an independent 36-pair
+# sweep put the real boundary at 2.98 (sorafenib then regorafenib, sequential
+# in HCC) and 3.82. A threshold of 2.0 sat below that boundary and flagged
+# thousands of rows the wider panel says are wrong.
+# Reported, never used to filter: no panel this size can support a classifier.
+CO_ADMIN_RATIO = 3.0
 
 
 def resolve_drug(name: str, lab: dict) -> str:
@@ -241,7 +258,7 @@ def main() -> int:
 
     # --- 2. what does the variant join recover? ------------------------------
     recovery = []
-    for an, bn, gene, variant, trial in RECOVERY_PANEL:
+    for an, bn, gene, variant, trial, both_targeted in RECOVERY_PANEL:
         a, b = resolve_drug(an, lab), resolve_drug(bn, lab)
         pair = frozenset((a, b))
         n = sum(len(pm) for (pr, t), pm in by_variant.items()
@@ -251,9 +268,21 @@ def main() -> int:
             "drug_ids": sorted((a, b)),
             "gene": nm(gene, "gene:"), "variant": variant or "(gene-level)",
             "biomarker_is_a_substitution": bool(variant),
+            "both_drugs_are_targeted": both_targeted,
             "papers": n, "recovered": n > 0})
-    subst = [r for r in recovery if r["biomarker_is_a_substitution"]]
-    gene_keyed = [r for r in recovery if not r["biomarker_is_a_substitution"]]
+    def split(key):
+        yes = [r for r in recovery if r[key]]
+        no = [r for r in recovery if not r[key]]
+        return {"yes_recovered": sum(1 for r in yes if r["recovered"]),
+                "yes_total": len(yes),
+                "no_recovered": sum(1 for r in no if r["recovered"]),
+                "no_total": len(no)}
+    by_biomarker = split("biomarker_is_a_substitution")
+    by_partner = split("both_drugs_are_targeted")
+    # Which explanation fits? Separation = the gap between the two rates.
+    def gap(x):
+        return (x["yes_recovered"] / max(x["yes_total"], 1)
+                - x["no_recovered"] / max(x["no_total"], 1))
 
     # The control, kept because it is what made the failure MODE visible.
     ctrl_pair = frozenset((resolve_drug("alpelisib", lab),
@@ -323,10 +352,12 @@ def main() -> int:
             "panel": recovery,
             "recovered": sum(1 for r in recovery if r["recovered"]),
             "of": len(recovery),
-            "substitution_keyed_recovered": sum(1 for r in subst if r["recovered"]),
-            "substitution_keyed_total": len(subst),
-            "gene_keyed_recovered": sum(1 for r in gene_keyed if r["recovered"]),
-            "gene_keyed_total": len(gene_keyed),
+            "by_biomarker_class": {**by_biomarker,
+                                   "separation": round(gap(by_biomarker), 3)},
+            "by_partner_class": {**by_partner,
+                                 "separation": round(gap(by_partner), 3)},
+            "partner_class_explains_better":
+                gap(by_partner) > gap(by_biomarker),
         },
         "control": control,
         "gene_layer": {
@@ -400,36 +431,56 @@ def render(r: dict) -> str:
           "**This is a heuristic on a nine-pair panel, not a validated",
           "classifier.** It is reported so a reader can discount rows. Nothing",
           "is filtered out automatically.", "",
-          "## 2. An absence is informative only about substitution-keyed regimens",
-          "",
+          "## 2. What the variant join recovers, and why", "",
           "An earlier version of this analysis claimed a variant-level absence",
           "carries NO information, generalising from one control that failed.",
-          "That is too strong, and the analysis's own top variant row refutes it.",
-          "",
-          f"Measured against {rec['of']} approved regimens, the variant join",
-          f"recovers **{rec['recovered']}**:", "",
-          "| | regimen | gene | biomarker | papers | trial |",
-          "|---|---|---|---|--:|---|"]
+          "That is too strong, and the analysis's own top variant row refutes",
+          "it. The second version claimed the recoveries split by BIOMARKER",
+          "class -- substitution-keyed regimens recovered, gene-keyed ones not.",
+          "That was wrong too, and it was wrong because two panel labels were",
+          "mine to assign and I assigned them in the direction that made the",
+          "split clean.", "",
+          f"Measured over {rec['of']} approved regimens, with FLAURA2 relabelled",
+          "to the substitution it actually enrols (the same one as MARIPOSA)",
+          "and CAPItello-291 relabelled to the multi-gene alteration list it",
+          "actually uses:", "",
+          "| | regimen | gene | biomarker | both targeted | papers | trial |",
+          "|---|---|---|---|---|--:|---|"]
     for x in rec["panel"]:
         L.append(f"| {'found' if x['recovered'] else '**MISSED**'} | "
                  f"{x['regimen']} | {x['gene']} | `{x['variant']}` | "
+                 f"{'yes' if x['both_drugs_are_targeted'] else 'no'} | "
                  f"{x['papers']} | {x['trial']} |")
-    L += ["",
-          f"The split is the finding: **{rec['substitution_keyed_recovered']} of "
-          f"{rec['substitution_keyed_total']}** regimens whose biomarker IS a",
-          f"substitution are recovered, against **{rec['gene_keyed_recovered']} "
-          f"of {rec['gene_keyed_total']}** whose biomarker is stated at gene",
-          "level.", "",
-          "The control makes that failure mode visible. Of the",
-          f"{c['papers_asserting_the_combination']} papers asserting",
-          f"{c['regimen']}, **{c['of_those_annotating_the_gene']}** annotate the",
-          f"gene and **{c['of_those_annotating_any_variant']}** annotate any",
-          "variant. The literature writes *PIK3CA-mutated*, not *H1047R*.", "",
-          "So the honest statement is narrow: **an absence at variant level is",
-          "evidence about substitution-keyed regimens and says nothing about",
-          "gene-keyed ones, and you cannot tell which you are looking at from",
-          "the absence alone.** That is why the gene layer is reported beside it",
-          "rather than instead of it.", "",
+    bio, par = rec["by_biomarker_class"], rec["by_partner_class"]
+    L += ["", "Two explanations, one of which does not survive contact with the",
+          "panel:", "",
+          "| explanation | holds | does not hold | separation |",
+          "|---|--:|--:|--:|",
+          f"| the biomarker is a substitution | {bio['yes_recovered']}/"
+          f"{bio['yes_total']} | {bio['no_recovered']}/{bio['no_total']} | "
+          f"{bio['separation']:+.2f} |",
+          f"| **both drugs are targeted agents** | **{par['yes_recovered']}/"
+          f"{par['yes_total']}** | **{par['no_recovered']}/{par['no_total']}** | "
+          f"**{par['separation']:+.2f}** |", "",
+          ("**Partner-agent class explains the recoveries and biomarker class"
+           " does not.**" if rec["partner_class_explains_better"] else
+           "**Biomarker class explains the recoveries at least as well.**"), "",
+          "The relation extractor does not tie chemotherapy, a hypomethylating",
+          "agent, a checkpoint antibody or an endocrine agent to a specific",
+          "substitution, and this join requires BOTH drugs tied to the same",
+          "variant. So a regimen pairing a targeted drug with any of those",
+          "cannot be recovered however clearly its biomarker is written.", "",
+          "That also explains the control, which the biomarker story only",
+          f"appeared to. Of the {c['papers_asserting_the_combination']} papers",
+          f"asserting {c['regimen']}, {c['of_those_annotating_the_gene']}",
+          f"annotate the gene and {c['of_those_annotating_any_variant']} annotate",
+          "any variant. Fulvestrant is an endocrine agent, and the same miss",
+          "occurs for ivosidenib + azacitidine, whose biomarker IS a single",
+          "substitution and whose indication names it.", "",
+          "So: **an absence is evidence about targeted-plus-targeted regimens",
+          "and says nothing about a regimen with a chemotherapy, endocrine or",
+          "immunotherapy partner.** The gene layer is reported beside the",
+          "variant layer because it recovers several of those misses.", "",
           "## The two layers", "",
           "| | count |", "|---|--:|",
           f"| papers asserting a co-treatment | {r['papers_asserting_a_cotreatment']:,} |",
@@ -464,12 +515,12 @@ def render(r: dict) -> str:
           "  alias of **MAP2K7** while MAP2K1 carries `MEK1`; `Met` is an alias",
           "  of **SLTM**; `PGP` reaches phosphoglycolate phosphatase rather than",
           "  P-glycoprotein; `NP` reaches **Neptunium**.",
-          "* **The gene layer's precision is not measured at scale.** A 40-row",
-          "  sample judged from title and abstract put roughly a third of",
-          "  single-paper rows in a clearly-wrong class, mostly from the",
-          "  collisions above. Treat that as a bound on the tail rather than a",
-          f"  rate, and note that {g['single_paper']:,} of {g['triples']:,} rows",
-          "  are single-paper.",
+          "* **The gene layer's precision is not measured, at all.** No sample",
+          "  has been judged and no precision figure is claimed here. An earlier",
+          "  version of this section reported a 40-row sample that this",
+          f"  repository never ran. {g['single_paper']:,} of {g['triples']:,}",
+          "  rows rest on a single paper, and the collision classes above are",
+          "  the known error source, but the rate is unknown.",
           "* **Full table** is `analysis/atlas-combination-gaps.tsv.gz`, both",
           "  layers, with the ratio column.", "",
           "## The transferable part", "",

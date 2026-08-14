@@ -46,43 +46,67 @@ dominates is flagged rather than silently presented as a combination.
 classifier.** It is reported so a reader can discount rows. Nothing
 is filtered out automatically.
 
-## 2. An absence is informative only about substitution-keyed regimens
+## 2. What the variant join recovers, and why
 
 An earlier version of this analysis claimed a variant-level absence
 carries NO information, generalising from one control that failed.
-That is too strong, and the analysis's own top variant row refutes it.
+That is too strong, and the analysis's own top variant row refutes
+it. The second version claimed the recoveries split by BIOMARKER
+class -- substitution-keyed regimens recovered, gene-keyed ones not.
+That was wrong too, and it was wrong because two panel labels were
+mine to assign and I assigned them in the direction that made the
+split clean.
 
-Measured against 10 approved regimens, the variant join
-recovers **8**:
+Measured over 14 approved regimens, with FLAURA2 relabelled
+to the substitution it actually enrols (the same one as MARIPOSA)
+and CAPItello-291 relabelled to the multi-gene alteration list it
+actually uses:
 
-| | regimen | gene | biomarker | papers | trial |
-|---|---|---|---|--:|---|
-| found | dabrafenib + trametinib | BRAF | `p.V600E` | 181 | COMBI-d |
-| found | encorafenib + Cetuximab | BRAF | `p.V600E` | 48 | BEACON |
-| found | encorafenib + binimetinib | BRAF | `p.V600E` | 42 | COLUMBUS |
-| found | Vemurafenib + cobimetinib | BRAF | `p.V600E` | 8 | coBRIM |
-| found | amivantamab + lazertinib | EGFR | `p.L858R` | 4 | MARIPOSA |
-| found | sotorasib + Panitumumab | KRAS | `p.G12C` | 4 | CodeBreaK 300 |
-| found | adagrasib + Cetuximab | KRAS | `p.G12C` | 2 | KRYSTAL-1 |
-| found | capivasertib + Fulvestrant | AKT1 | `p.E17K` | 1 | CAPItello-291 |
-| **MISSED** | Alpelisib + Fulvestrant | PIK3CA | `(gene-level)` | 0 | SOLAR-1 |
-| **MISSED** | osimertinib + Pemetrexed | EGFR | `(gene-level)` | 0 | FLAURA2 |
+| | regimen | gene | biomarker | both targeted | papers | trial |
+|---|---|---|---|---|--:|---|
+| found | dabrafenib + trametinib | BRAF | `p.V600E` | yes | 181 | COMBI-d |
+| found | encorafenib + Cetuximab | BRAF | `p.V600E` | yes | 48 | BEACON |
+| found | encorafenib + binimetinib | BRAF | `p.V600E` | yes | 42 | COLUMBUS |
+| found | Vemurafenib + cobimetinib | BRAF | `p.V600E` | yes | 8 | coBRIM |
+| found | amivantamab + lazertinib | EGFR | `p.L858R` | yes | 4 | MARIPOSA |
+| found | sotorasib + Panitumumab | KRAS | `p.G12C` | yes | 4 | CodeBreaK 300 |
+| found | adagrasib + Cetuximab | KRAS | `p.G12C` | yes | 2 | KRYSTAL-1 |
+| **MISSED** | osimertinib + Pemetrexed | EGFR | `p.L858R` | no | 0 | FLAURA2 |
+| **MISSED** | Gefitinib + Carboplatin | EGFR | `p.L858R` | no | 0 | NEJ009 |
+| **MISSED** | ivosidenib + Azacitidine | IDH1 | `p.R132H` | no | 0 | AGILE |
+| **MISSED** | enasidenib + Azacitidine | IDH2 | `p.R140Q` | no | 0 | AG221-005 |
+| **MISSED** | adagrasib + pembrolizumab | KRAS | `p.G12C` | no | 0 | KRYSTAL-7 |
+| **MISSED** | Alpelisib + Fulvestrant | PIK3CA | `(gene-level)` | no | 0 | SOLAR-1 |
+| found | capivasertib + Fulvestrant | AKT1 | `(gene-level)` | no | 1 | CAPItello-291 |
 
-The split is the finding: **8 of 8** regimens whose biomarker IS a
-substitution are recovered, against **0 of 2** whose biomarker is stated at gene
-level.
+Two explanations, one of which does not survive contact with the
+panel:
 
-The control makes that failure mode visible. Of the
-59 papers asserting
-alpelisib + fulvestrant (SOLAR-1), **45** annotate the
-gene and **0** annotate any
-variant. The literature writes *PIK3CA-mutated*, not *H1047R*.
+| explanation | holds | does not hold | separation |
+|---|--:|--:|--:|
+| the biomarker is a substitution | 7/12 | 1/2 | +0.08 |
+| **both drugs are targeted agents** | **7/7** | **1/7** | **+0.86** |
 
-So the honest statement is narrow: **an absence at variant level is
-evidence about substitution-keyed regimens and says nothing about
-gene-keyed ones, and you cannot tell which you are looking at from
-the absence alone.** That is why the gene layer is reported beside it
-rather than instead of it.
+**Partner-agent class explains the recoveries and biomarker class does not.**
+
+The relation extractor does not tie chemotherapy, a hypomethylating
+agent, a checkpoint antibody or an endocrine agent to a specific
+substitution, and this join requires BOTH drugs tied to the same
+variant. So a regimen pairing a targeted drug with any of those
+cannot be recovered however clearly its biomarker is written.
+
+That also explains the control, which the biomarker story only
+appeared to. Of the 59 papers
+asserting alpelisib + fulvestrant (SOLAR-1), 45
+annotate the gene and 0 annotate
+any variant. Fulvestrant is an endocrine agent, and the same miss
+occurs for ivosidenib + azacitidine, whose biomarker IS a single
+substitution and whose indication names it.
+
+So: **an absence is evidence about targeted-plus-targeted regimens
+and says nothing about a regimen with a chemotherapy, endocrine or
+immunotherapy partner.** The gene layer is reported beside the
+variant layer because it recovers several of those misses.
 
 ## The two layers
 
@@ -93,14 +117,14 @@ rather than instead of it.
 | **both** | **2,605** (1.97%) |
 | gene-level triples | 24,864 |
 | ...resting on one paper | 23,068 |
-| ...reading as co-administration | 13,269 |
+| ...reading as co-administration | 9,811 |
 | variant-level triples | 579 |
 
 | drug | drug | gene | papers | ratio | |
 |---|---|---|--:|--:|---|
 | pertuzumab | Trastuzumab | ERBB2 | 279 | 3.77 | |
 | trametinib | dabrafenib | BRAF | 257 | 6.23 | |
-| Trastuzumab | Lapatinib | ERBB2 | 127 | 2.43 | |
+| Trastuzumab | Lapatinib | ERBB2 | 127 | 2.43 | **compare-dominated** |
 | trametinib | dabrafenib | MAP2K7 | 84 | 6.23 | |
 | Trastuzumab | Docetaxel | ERBB2 | 75 | 19.59 | |
 | Trastuzumab | Paclitaxel | ERBB2 | 75 | 18.89 | |
@@ -153,12 +177,12 @@ rather than instead of it.
   alias of **MAP2K7** while MAP2K1 carries `MEK1`; `Met` is an alias
   of **SLTM**; `PGP` reaches phosphoglycolate phosphatase rather than
   P-glycoprotein; `NP` reaches **Neptunium**.
-* **The gene layer's precision is not measured at scale.** A 40-row
-  sample judged from title and abstract put roughly a third of
-  single-paper rows in a clearly-wrong class, mostly from the
-  collisions above. Treat that as a bound on the tail rather than a
-  rate, and note that 23,068 of 24,864 rows
-  are single-paper.
+* **The gene layer's precision is not measured, at all.** No sample
+  has been judged and no precision figure is claimed here. An earlier
+  version of this section reported a 40-row sample that this
+  repository never ran. 23,068 of 24,864
+  rows rest on a single paper, and the collision classes above are
+  the known error source, but the rate is unknown.
 * **Full table** is `analysis/atlas-combination-gaps.tsv.gz`, both
   layers, with the ratio column.
 
