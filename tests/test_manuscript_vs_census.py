@@ -209,13 +209,77 @@ def test_the_report_states_what_a_surviving_claim_does_not_establish():
         "modalities they stand for")
 
 
-def test_the_confirmation_is_reported_as_prominently_as_a_failure():
-    """The specific risk of a self-check: burying the good news, or the bad."""
+def test_the_headline_agrees_with_the_verdicts_it_summarises():
+    """It was a STATIC STRING, and this guard used to pin it in place.
+
+    A review forced `understates()` to return False and got a document whose
+    section body read "the census ratio is smaller" while its opening line
+    still read "Both claims tested here survive". The guard asserted the fixed
+    words "survive" and "understated", so it held the endorsement steady
+    against the measurement -- the exact failure it was written to prevent,
+    landing on the one sentence a reader is most likely to read.
+
+    It now checks AGREEMENT with the computed verdicts, and the headline is
+    generated from them.
+    """
+    m, r = mod(), d()
     txt = DOC.read_text()
     head = txt[:txt.index("## The scope difference")]
-    assert "survive" in head, (
-        "the summary does not say the claims survived; a reader has to reach "
-        "the tables to learn the outcome")
-    assert "understated" in head, (
-        "the summary does not say the manuscript understated one of its own "
-        "claims, which is the more surprising half of the result")
+    mt, g = r["modality_table"], r["growth"]
+
+    headline = m._headline(r)
+    assert headline in " ".join(head.split()), (
+        "the shipped summary is not the sentence the verdicts generate; it has "
+        "gone back to being a literal")
+
+    # and the sentence must SAY what the verdicts hold
+    survived = (mt["census_exceeds_manuscript"] or mt["direction_holds"]) \
+        and g["corpus_exceeds_field"]
+    assert ("survive" in headline.lower()) == bool(survived), (
+        f"the headline says {headline!r} while the verdicts are "
+        f"8.2={mt['direction_holds']} 3.7={g['corpus_exceeds_field']}")
+    assert ("understate" in headline.lower()) == bool(
+        mt["census_exceeds_manuscript"]), (
+        "the headline's understatement clause does not track the verdict")
+
+    # the generator must flip it when the verdicts flip
+    flipped = m._headline({**r, "modality_table": {**mt,
+                                                  "census_exceeds_manuscript": False,
+                                                  "direction_holds": False},
+                           "growth": {**g, "corpus_exceeds_field": False}})
+    assert "survive" not in flipped.lower() or "Nothing" in flipped, (
+        f"with both verdicts false the headline still reads {flipped!r}")
+    assert "understate" not in flipped.lower()
+
+
+def test_the_descriptor_choice_is_reported_as_a_choice():
+    """A single pair ships a point estimate whose margin depends on it."""
+    mt = d()["modality_table"]
+    vs = mt["descriptor_variants"]
+    assert len(vs) >= 3, "the sensitivity analysis has been reduced to one pair"
+    assert mt["ratio_range"] and mt["ratio_range"][0] < mt["ratio_range"][1], (
+        "the variants no longer span a range, so the sensitivity is not shown")
+    assert mt["understatement_holds_under_every_variant"], (
+        f"the understatement no longer holds across the whole range "
+        f"{mt['ratio_range']}; the conclusion then depends on the descriptor "
+        "pair chosen and must not be stated unconditionally")
+    txt = flat()
+    for v in vs:
+        assert f"| {v['variant']} |" in txt, (
+            f"the {v['variant']!r} variant is computed but not shipped")
+
+
+def test_the_named_invalidator_is_measured_not_just_named():
+    """"the ratio is only as good as their relative over-estimation" sat beside
+    an unconditional verdict, unmeasured. A named invalidator that is never
+    measured reads as diligence while the verdict reads as settled."""
+    om = d()["modality_table"]["on_modality_and_tumour"]
+    for k in ("pdt_pct", "sdt_pct", "gap_points", "filtered_ratio"):
+        assert om.get(k) is not None, f"{k} is not measured"
+    assert om["symmetric_within_5_points"], (
+        f"the over-estimation is NOT symmetric ({om['pdt_pct']}% against "
+        f"{om['sdt_pct']}%, a {om['gap_points']}-point gap), so the raw ratio "
+        "is inflated and the verdict is unearned as stated")
+    assert 0 < om["pdt_pct"] <= 100 and 0 < om["sdt_pct"] <= 100
+    assert "symmetric" in flat(), (
+        "the symmetry result is measured but not reported")

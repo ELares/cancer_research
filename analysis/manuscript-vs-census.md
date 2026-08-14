@@ -7,10 +7,9 @@ or over live PubMed queries run once. The census is the whole indexed
 cancer literature with expert MeSH labels, so several claims the frozen
 corpus could not test now are testable.
 
-**Both claims tested here survive, and one is understated by the
-manuscript.** That is reported as prominently as a failure would be: a
-document that only ever finds its own work wanting is as unreliable as
-one that only ever confirms it.
+**Both claims tested here survive and the manuscript understates one of them.** That is reported as prominently as the opposite
+would be: a document that only ever finds its own work wanting is as
+unreliable as one that only ever confirms it.
 
 ## The scope difference that decides how every row reads
 
@@ -40,11 +39,52 @@ and reads it as PDT dominating SDT by approximately three to one.
 
 On the census it is **4.75:1** (152 against 32).
 
-**The claim survives and the manuscript understates it.** The
-direction, the conclusion drawn from it, and the framing of SDT
-as a depth-extended variant rather than a unique modality all
-hold on expert labels over the whole cancer literature, on a
-ratio larger than the one argued from.
+**The ferroptosis-count leg of the claim survives, on a larger
+ratio than the manuscript argued from.** That is the whole of
+what a count ratio can establish, and the manuscript's claim
+is broader than it.
+
+NOT confirmed here, and each for a different reason: the
+manuscript states the ratio holds on every ferroptosis AND ICD
+metric, and the ICD leg is unmeasurable at census scale (see
+below); the depth-penetration argument is tissue optics, which
+no publication count bears on; and 'more clinical experience,
+approved photosensitizers' is not a literature-count claim
+either. A count ratio speaks to attention, not to any of
+those.
+
+### The descriptor choice, and what it is worth
+
+MeSH gives PDT both a procedure and an agent descriptor while SDT has
+only a procedure one plus generic physics terms, so genuine
+sonodynamic papers land outside `Ultrasonic Therapy`. A single pair
+therefore ships a point estimate whose margin depends on a choice
+this analysis made. Every defensible variant:
+
+| descriptor set | PDT | SDT | ratio |
+|---|--:|--:|--:|
+| as the manuscript frames them | 152 | 32 | 4.75 |
+| SDT widened | 152 | 47 | 3.23 |
+| PDT widened | 202 | 32 | 6.31 |
+| both widened | 202 | 47 | 4.3 |
+
+The ratio ranges 3.23 to 6.31. **Every variant exceeds the manuscript's**, so neither the direction nor the understatement rests on the descriptor pair chosen here.
+
+### Is the over-estimation symmetric?
+
+Both descriptors are broader than the modality they name, so the
+ratio is only as good as their RELATIVE over-estimation. An earlier
+version stated that and never measured it, which left a named
+invalidator sitting beside an unconditional verdict. Measured by
+asking whether each record's own title and abstract discuss the
+modality and a tumour:
+
+| | on modality and tumour | of |
+|---|--:|--:|
+| PDT | 138 (90.8%) | 152 |
+| SDT | 28 (87.5%) | 32 |
+
+The gap is 3.3 points, so the over-estimation is symmetric and the ratio survives it: filtering to on-modality records gives 4.93 against the raw 4.75.
 
 ### What this table cannot test
 

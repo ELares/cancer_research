@@ -86,10 +86,89 @@
   "modality_table": {
     "census_exceeds_manuscript": true,
     "census_pdt_sdt_ratio": 4.75,
+    "descriptor_variants": [
+      {
+        "descriptors_pdt": [
+          "Photochemotherapy"
+        ],
+        "descriptors_sdt": [
+          "Ultrasonic Therapy"
+        ],
+        "pdt": 152,
+        "ratio": 4.75,
+        "sdt": 32,
+        "variant": "as the manuscript frames them"
+      },
+      {
+        "descriptors_pdt": [
+          "Photochemotherapy"
+        ],
+        "descriptors_sdt": [
+          "Ultrasonic Therapy",
+          "Ultrasonic Waves",
+          "Sonication",
+          "Ultrasonics",
+          "Microbubbles"
+        ],
+        "pdt": 152,
+        "ratio": 3.23,
+        "sdt": 47,
+        "variant": "SDT widened"
+      },
+      {
+        "descriptors_pdt": [
+          "Photochemotherapy",
+          "Photosensitizing Agents",
+          "Low-Level Light Therapy",
+          "Phototherapy"
+        ],
+        "descriptors_sdt": [
+          "Ultrasonic Therapy"
+        ],
+        "pdt": 202,
+        "ratio": 6.31,
+        "sdt": 32,
+        "variant": "PDT widened"
+      },
+      {
+        "descriptors_pdt": [
+          "Photochemotherapy",
+          "Photosensitizing Agents",
+          "Low-Level Light Therapy",
+          "Phototherapy"
+        ],
+        "descriptors_sdt": [
+          "Ultrasonic Therapy",
+          "Ultrasonic Waves",
+          "Sonication",
+          "Ultrasonics",
+          "Microbubbles"
+        ],
+        "pdt": 202,
+        "ratio": 4.3,
+        "sdt": 47,
+        "variant": "both widened"
+      }
+    ],
+    "direction_holds": true,
+    "direction_holds_under_every_variant": true,
     "icd_column_is_measurable": false,
     "manuscript_pdt_sdt_ratio": 2.93,
     "min_for_a_ratio": 10,
+    "on_modality_and_tumour": {
+      "filtered_ratio": 4.93,
+      "gap_points": 3.3,
+      "pdt_n": 138,
+      "pdt_pct": 90.8,
+      "sdt_n": 28,
+      "sdt_pct": 87.5,
+      "symmetric_within_5_points": true
+    },
     "ratio_is_measurable": true,
+    "ratio_range": [
+      3.23,
+      6.31
+    ],
     "rows": [
       {
         "census_ferroptosis": 152,
@@ -146,6 +225,7 @@
       "IRE",
       "HIFU"
     ],
+    "understatement_holds_under_every_variant": true,
     "untestable_rows": [
       "TTFields"
     ]
