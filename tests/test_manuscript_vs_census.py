@@ -240,6 +240,26 @@ def test_the_base_fragility_is_reported_and_the_finding_survives_it():
         "while showing nothing that moves")
     txt = flat()
     assert "should not be read as precise" in txt
+    # The break-even, which a chosen band cannot be accused of flattering.
+    assert g["break_even_base"] and g["break_even_base"] > g["corpus_start"], (
+        "the break-even base is not above the actual base, which would mean "
+        "the conclusion already fails")
+    assert g["break_even_multiple_of_actual"] > 2.0, (
+        f"the conclusion breaks at only "
+        f"{g['break_even_multiple_of_actual']}x the actual base, so it is "
+        "sensitive enough that the band should not be presented as reassuring")
+    assert f"{g['break_even_base']:,}" in txt, (
+        "the break-even base is computed but not reported")
+    # and it must BE the break-even: at that base the corpus must no longer win
+    m = mod()
+    assert not m.outgrew(g["corpus_end"] / g["break_even_base"],
+                         g["census_growth"]), (
+        "at the reported break-even base the corpus still outgrows the field, "
+        "so the figure is not the break-even it claims to be")
+    assert m.outgrew(g["corpus_end"] / (g["break_even_base"] - 1),
+                     g["census_growth"]), (
+        "one article below the reported break-even the corpus already fails, "
+        "so the break-even is off by more than rounding")
 
 
 def test_the_report_states_what_a_surviving_claim_does_not_establish():

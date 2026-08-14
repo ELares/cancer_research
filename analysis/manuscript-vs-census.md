@@ -144,6 +144,8 @@ the base a few articles either way:
 | 43 | x27.1 | yes |
 | 48 | x24.3 | yes |
 
+The conclusion fails only if the 2015 base were **1,061** articles or more, which is **27.9x** the 38 the corpus actually holds. A band of a few articles either way is an arbitrary choice and could be accused of flattering the answer; a break-even cannot.
+
 **The conclusion survives the whole band.** The claim being tested is that the corpus outgrew the field, and it does at every base in this range, so the fragility is in the precision of the figure and not in the finding.
 
 | year | census | open access | share |

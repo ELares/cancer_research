@@ -38,6 +38,7 @@ Usage:
 
 import collections
 import gzip
+import math
 import json
 from pathlib import Path
 
@@ -293,6 +294,19 @@ def main() -> int:
             # x30.71 is not read as precise, with the swing measured rather
             # than described: the conclusion is that the corpus outgrew the
             # field, and that holds across the whole band.
+            # THE BREAK-EVEN, which a chosen band cannot be accused of
+            # flattering: the base at which the corpus stops outgrowing the
+            # field. A band of plus-or-minus a few articles is an arbitrary
+            # choice; this is not.
+            # ceil, not int. The break-even is the FIRST base at which the
+            # corpus stops winning, and truncating gave the last base at which
+            # it still wins -- an off-by-one the guard below caught by asking
+            # the reported figure to actually fail.
+            "break_even_base": (
+                math.ceil(CORPUS_GROWTH_END / field) if field else None),
+            "break_even_multiple_of_actual": (
+                round(math.ceil(CORPUS_GROWTH_END / field) / CORPUS_GROWTH_START, 1)
+                if field else None),
             "base_sensitivity": [
                 {"base": CORPUS_GROWTH_START + delta,
                  "ratio": round(CORPUS_GROWTH_END / (CORPUS_GROWTH_START + delta), 1),
@@ -516,6 +530,13 @@ def render(r: dict) -> str:
         L.append(f"| {b['base']} | x{b['ratio']} | "
                  f"{'yes' if b['still_outgrows_field'] else 'NO'} |")
     L += ["",
+          (f"The conclusion fails only if the {g['start_year']} base were "
+           f"**{g['break_even_base']:,}** articles or more, which is "
+           f"**{g['break_even_multiple_of_actual']}x** the "
+           f"{g['corpus_start']} the corpus actually holds. A band of a few "
+           "articles either way is an arbitrary choice and could be accused of "
+           "flattering the answer; a break-even cannot."
+           if g.get("break_even_base") else ""), "",
           ("**The conclusion survives the whole band.** The claim being tested "
            "is that the corpus outgrew the field, and it does at every base in "
            "this range, so the fragility is in the precision of the figure and "
