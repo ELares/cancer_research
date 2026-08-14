@@ -83,6 +83,17 @@ def all_generators():
 # consciously exempt, not a silent pass.
 COUNTABLE = r"[a-z][a-z-]{2,}"
 # Words that follow a number without counting anything.
+# Words that are never the noun a number is counting, so the retry must not
+# land on one. Without this the skip-past-exempt walk reached "this", "them"
+# and "where" and reported them as counted nouns.
+NEVER_THE_NOUN = {
+    "this", "that", "these", "those", "them", "they", "it", "its", "their",
+    "there", "here", "where", "when", "which", "who", "what", "such",
+    "different", "other", "same", "own", "each", "every", "any", "some",
+    "both", "either", "neither", "more", "most", "less", "least", "very",
+    "only", "just", "still", "also", "then", "so", "because", "while",
+    "however", "rather", "instead", "again", "already", "never", "always",
+}
 EXEMPT_AFTER = {
     "and", "or", "to", "of", "in", "at", "on", "is", "was", "were", "per",
     "than", "as", "the", "a", "an", "for", "with", "by", "from", "that",
@@ -95,7 +106,11 @@ EXEMPT_AFTER = {
     # synonym walks past.
     "tests", "test", "things", "substitutions", "site", "refuses", "states",
     "classes", "shapes", "reasons", "arms", "halves", "outcomes",
-    "preceding", "branches", "steps", "passes", "rules", "checks",
+    "branches", "steps", "passes", "rules", "checks",
+    # NOT exempt: "tests" and "preceding". Those count the generator's OWN
+    # design, and the justification for this list -- things the corpus cannot
+    # change under the prose -- is true of the corpus and false of the code. A
+    # fourth agreement test would stale "the three tests apply" silently.
 }
 # THREE and above. `one`, `two`, `both` and `several` are grammatical rather
 # than measured -- "pairs resting on ONE paper" defines a category and cannot go
@@ -116,8 +131,21 @@ SPELLED = "|".join(
 QUANTITY_SHAPES = [
     # 40-row sample, 36-pair sweep, 37 pairs, 25,443 rows
     # Digits three and above; 1 and 2 are grammatical for the same reason.
-    (rf"\b(?!(?:1|2)\b)\d[\d,]*\s*[-–]?\s*(?:{COUNTABLE})\b",
+    (rf"\b(?!(?:1|2)\b)\d[\d,]*(?:\.\d+)?\s*[-–]?\s*(?:{COUNTABLE})\b",
      "a number modifying a noun"),
+    # A percentage is this repository's commonest way of stating a measurement
+    # and no rule mentioned `%`, so "the relation holds in 96.0% of the cases"
+    # was invisible.
+    # No trailing \b: `%` is not a word character, so a boundary after it can
+    # never match against a space, and the rule silently caught only the
+    # spelled-out "percent" forms. The planted control found this.
+    (r"\b\d+(?:\.\d+)?\s*(?:%|percent\b|percentage points?\b|pp\b)",
+     "a percentage"),
+    # A bare decimal threshold. `\d[\d,]*` never spanned the point, so the rule
+    # tested the FRACTIONAL digits against the next word and caught "2.98
+    # exactly" while missing "2.98 and the flag" -- it was not reading the
+    # number it flagged.
+    (r"\b\d+\.\d+\b", "a bare decimal threshold"),
     # nine-pair panel, ten rsids, tens of papers
     (rf"\b(?:{SPELLED})\s*[-–]?\s*(?:{COUNTABLE})\b",
      "a spelled quantity modifying a noun"),
@@ -172,9 +200,10 @@ def _prose_runs(path: Path):
         # sentence. Tuple elements are marked seen so the loose-literal pass
         # below does not pick them up either.
         if isinstance(node, ast.Tuple):
-            for el in node.elts:
-                if isinstance(el, ast.Constant) and isinstance(el.value, str):
-                    seen.add(id(el))
+            # Suppress JOINING only. Marking tuple strings `seen` skipped them
+            # entirely, and six live prose glosses ride inside the collision
+            # tuples -- so the exclusion written for `673 COMBI-d` was hiding
+            # shipped sentences. They fall through to the loose-literal pass.
             continue
         if not isinstance(node, ast.List):
             continue
@@ -215,9 +244,29 @@ def _matches(text: str):
     for rx, why in COMPILED:
         for m in rx.finditer(cleaned):
             frag = m.group(0).strip()
-            tail = re.split(r"[\s-]+", frag)[-1].lower()
-            if "modifying a noun" in why and tail in EXEMPT_AFTER:
-                continue
+            if "modifying a noun" in why:
+                tail = re.split(r"[\s-]+", frag)[-1].lower()
+                if tail in EXEMPT_AFTER:
+                    # Do NOT drop the sentence. `finditer` resumes past the
+                    # match, so an exempt first word ("40 of the regimens")
+                    # masked the real noun entirely. Re-test from just after
+                    # the number, skipping any run of exempt words.
+                    words = [t for t in cleaned[m.start():].split() if t]
+                    j, skipped = 1, 0
+                    # At most two exempt words. Walking further reached
+                    # pronouns several clauses away and called them counted.
+                    while j < len(words) and skipped < 2 and \
+                            words[j].strip(",.;:").lower() in EXEMPT_AFTER:
+                        j += 1
+                        skipped += 1
+                    if 0 < skipped and j < len(words):
+                        nxt = words[j].strip(",.;:()`*")
+                        low = nxt.lower()
+                        if re.fullmatch(COUNTABLE, nxt) and \
+                                low not in EXEMPT_AFTER and \
+                                low not in NEVER_THE_NOUN:
+                            out.append((why, f"{words[0]} ... {nxt}"))
+                    continue
             out.append((why, frag))
     return out
 
@@ -335,9 +384,14 @@ def test_the_rule_is_honest_about_how_little_it_covers():
     uncovered = [(g.name, len(offending(g))) for g in gens
                  if g.resolve() not in covered]
     dirty = [(n, h) for n, h in uncovered if h]
+    # "literals" was the wrong unit and not comparable across commits: a run is
+    # a GROUP of adjacent literals, and every matching rule is now reported, so
+    # the total counts (run, rule) matches. Naming it wrongly here, in the file
+    # that enforces derived units, is the defect this file is about.
     print(f"\n  rule enforced on {len(covered)} of {len(gens)} generators; "
           f"{len(dirty)} of the remaining {len(uncovered)} carry a "
-          f"hand-written quantity ({sum(h for _, h in dirty)} literals)")
+          f"hand-written quantity ({sum(h for _, h in dirty)} "
+          f"(run, rule) matches, not distinct literals)")
     for n, h in sorted(dirty, key=lambda r: -r[1])[:10]:
         print(f"    {h:>3}  {n}")
     assert len(covered) == len(GENERATORS), "GENERATORS holds a duplicate"
@@ -347,6 +401,40 @@ def test_the_rule_is_honest_about_how_little_it_covers():
             f"{g.name} is enforced but is not a generator by the same "
             "definition this test uses, so the coverage figure it prints is "
             "measuring a different population")
+
+
+def test_the_docstring_scan_would_notice_if_it_stopped_scanning():
+    """It had no positive control, so a broken scan looked like clean docstrings.
+
+    That is exactly the failure mode the detector self-test exists to prevent,
+    and the commit that rewrote this scan from module-only to every-docstring
+    did not extend the planted sample to cover it. Verified: mutating the
+    collection to gather nothing left the suite green.
+    """
+    import tempfile
+    planted = (
+        '"""A module docstring holding a forty-pair panel."""\n'
+        'def f():\n'
+        '    """A function docstring holding ten rsids and 96.0% of cases."""\n'
+        '    return 1\n')
+    with tempfile.NamedTemporaryFile("w", suffix=".py", delete=False) as fh:
+        fh.write(planted)
+        tmp = Path(fh.name)
+    try:
+        tree = ast.parse(tmp.read_text())
+        docs = [(getattr(n, "name", "<module>"), ast.get_docstring(n))
+                for n in ast.walk(tree)
+                if isinstance(n, (ast.Module, ast.FunctionDef, ast.ClassDef))
+                and ast.get_docstring(n)]
+        assert len(docs) == 2, (
+            f"the docstring collection found {len(docs)} of 2 planted "
+            "docstrings, so it is not walking function definitions")
+        hits = [f for _, d in docs for _, f in _matches(" ".join(d.split()))]
+        for must in ("forty-pair", "ten rsids", "96.0%"):
+            assert any(must in h for h in hits), (
+                f"the docstring scan missed {must!r} in a planted docstring")
+    finally:
+        tmp.unlink()
 
 
 def test_the_module_docstrings_carry_no_quantity_either():

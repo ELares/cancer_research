@@ -51,7 +51,7 @@ exists to show.
 The rule needs no threshold. Every spelling must parse; each
 representation class must agree internally; and a protein spelling must
 agree with a coding one ACROSS classes, since codon = (coding position
-+ 2) // 3 relates them. Failing any of the three refuses that rsid
++ 2) // 3 relates them. Failing any of the 3 refuses that rsid
 UNDER THAT GENE: the unit of resolution is the (rsid, gene) key, not
 the rsid. In practice that distinction is nearly inert here -- 0 refused keys
 have the same rsid collapsing under a different gene, and 10 have it
@@ -85,7 +85,7 @@ promoter position that cannot encode it.
 
 That gave **9,975** rows an HGVS they lacked and respelled **5,889** onto a single form.
 
-Most of that fill is not the rule's doing. **8,357** (rsid, gene) keys carry only ONE spelling, so no class could disagree and no collapse decision was made: a bare row simply inherits the one spelling its rsid was ever given. The table above covers the keys with SEVERAL spellings, which is where the three tests apply.
+Most of that fill is not the rule's doing. **8,357** (rsid, gene) keys carry only ONE spelling, so no class could disagree and no collapse decision was made: a bare row simply inherits the one spelling its rsid was ever given. The table above covers the keys with SEVERAL spellings, which is where the 3 tests apply.
 
 **Testing agreement among protein forms only is not enough**, which
 is how the first version of this was wrong: it swept every other
@@ -166,8 +166,8 @@ rank order, which a coincidence of spelling would not produce: Polycythemia Vera
 
 `relations.tsv.gz` also carries a fourth mutation type, `Mutation`,
 holding structural variants as chromosomal ranges (`Chr7:154954255-154998784dup`). It is deliberately out of scope: it
-has no HGVS substitution to reconcile and none of the three tests
-applies to it, so the counts above are point variants only.
+has no HGVS substitution to reconcile and none of the 3 tests applies to it, so the counts above are
+point variants only.
 
 A variant with no `CorrespondingGene` is genuinely ambiguous, since
 `p.G12C` alone could be KRAS, NRAS or HRAS. Those are left unresolved
@@ -175,8 +175,8 @@ and keyed separately: never assigned to a likely gene, and never merged
 with the same spelling under a known one. They show `?` as the gene.
 
 **88% of pairs rest on a single paper.** The retraction
-analysis found the same shape across the whole graph (70.2%), and it
-is the first thing to know before reading any row below as evidence.
+analysis found the same shape across the whole graph (70.2%), and it is the first thing to know before reading any row below
+as evidence.
 
 ## Genes carrying the most variant relations
 

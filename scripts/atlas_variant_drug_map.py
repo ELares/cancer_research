@@ -52,7 +52,8 @@ several keys. Two defects, and for each the OBVIOUS correction is wrong:
    first fix for it hand-wrote the figure into this docstring and it went stale
    against the artifact within one commit.)
 
-   Three tests now, and a spelling failing any of them refuses its whole rsid:
+   Several tests now (named in AGREEMENT_TESTS), and a spelling failing any
+   of them refuses its whole rsid:
    every spelling must PARSE, each representation class must agree INTERNALLY,
    and a protein spelling must agree with a coding one ACROSS classes, since
    codon = (coding position + 2) // 3 relates them. That last test is what
@@ -100,6 +101,13 @@ OUT_TSV = PROJECT_ROOT / "analysis" / "atlas-variant-drug-map.tsv.gz"
 
 VARIANT_TYPES = ("ProteinMutation", "DNAMutation", "SNP")
 
+# The agreement tests, named so the prose can count them. Writing "the three
+# tests" counts the CODE, and a fourth test would stale that sentence exactly
+# the way a corpus change stales a hand-written figure.
+AGREEMENT_TESTS = ("every spelling parses",
+                   "each representation class agrees internally",
+                   "a protein spelling agrees with a coding one across classes")
+
 # A single-residue protein substitution, and a single-base change against a
 # coding/genomic/mitochondrial reference. Only these shapes can be compared;
 # anything else (indels, frame shifts, truncated or HTML-escaped strings such as
@@ -111,6 +119,23 @@ NUCLEOTIDE = re.compile(r"^([cgmn])\.([+-]?\d+)([ACGT])>([ACGT])$")
 # something false about the DRUG: "[OBSOLETE] avapritinib" reads as a withdrawn
 # medicine, and avapritinib is approved. The DESCRIPTOR was retired.
 OBSOLETE = "[OBSOLETE] "
+
+
+def _sibling_single_paper_share():
+    """The retraction analysis's single-paper share, READ from its artifact.
+
+    It was hand-written here. A figure borrowed from a sibling report is the
+    same defect as one borrowed from a reviewer: this document cannot keep it
+    fresh, and the sibling can be regenerated without this one noticing.
+    """
+    p = PROJECT_ROOT / "analysis" / "atlas-retraction-exposure.json"
+    if not p.exists():
+        return None
+    d = json.loads(p.read_text())
+    pairs, single = d.get("pairs"), d.get("single_paper_pairs")
+    if not (pairs and single):
+        return None
+    return 100.0 * single / pairs
 
 
 def load_labels() -> dict:
@@ -212,7 +237,7 @@ def cross_class_conflict(classes: dict) -> tuple:
     label a protein-versus-GENOMIC refusal as protein-versus-coding.
 
     Each class is known to hold exactly one change when this is called: the
-    three preceding branches in `resolve_rsids` have already excluded a
+    preceding branches in `resolve_rsids` have already excluded a
     multi-change class, any unparsable spelling, and an empty `classes`. That
     invariant is what makes `next(iter(...))` safe here.
     """
@@ -736,7 +761,8 @@ def render(r: dict, name) -> str:
         "The rule needs no threshold. Every spelling must parse; each",
         "representation class must agree internally; and a protein spelling must",
         "agree with a coding one ACROSS classes, since codon = (coding position",
-        "+ 2) // 3 relates them. Failing any of the three refuses that rsid",
+        f"+ 2) // 3 relates them. Failing any of the {len(AGREEMENT_TESTS)} "
+        "refuses that rsid",
         "UNDER THAT GENE: the unit of resolution is the (rsid, gene) key, not",
         "the rsid. In practice that distinction is nearly inert here -- "
         f"{rsr.get('refused_here_collapsed_under_another_gene', 0)} refused keys",
@@ -778,7 +804,7 @@ def render(r: dict, name) -> str:
         "spelling, so no class could disagree and no collapse decision was made: "
         "a bare row simply inherits the one spelling its rsid was ever given. "
         "The table above covers the keys with SEVERAL spellings, which is where "
-        "the three tests apply.", "",
+        f"the {len(AGREEMENT_TESTS)} tests apply.", "",
     ]
     if ref:
         # From the FULL spelling set, not the displayed top six: if the sole
@@ -882,15 +908,19 @@ def render(r: dict, name) -> str:
           "`relations.tsv.gz` also carries a fourth mutation type, `Mutation`,",
           "holding structural variants as chromosomal ranges "
           "(`Chr7:154954255-154998784dup`). It is deliberately out of scope: it",
-          "has no HGVS substitution to reconcile and none of the three tests",
-          "applies to it, so the counts above are point variants only.", "",
+          "has no HGVS substitution to reconcile and none of the "
+          f"{len(AGREEMENT_TESTS)} tests applies to it, so the counts above are",
+          "point variants only.", "",
           "A variant with no `CorrespondingGene` is genuinely ambiguous, since",
           "`p.G12C` alone could be KRAS, NRAS or HRAS. Those are left unresolved",
           "and keyed separately: never assigned to a likely gene, and never merged",
           "with the same spelling under a known one. They show `?` as the gene.", "",
           f"**{single_pct:.0f}% of pairs rest on a single paper.** The retraction",
-          "analysis found the same shape across the whole graph (70.2%), and it",
-          "is the first thing to know before reading any row below as evidence.", "",
+          "analysis found the same shape across the whole graph"
+          + (f" ({_sibling_single_paper_share():.1f}%)"
+             if _sibling_single_paper_share() else "")
+          + ", and it is the first thing to know before reading any row below",
+          "as evidence.", "",
           "## Genes carrying the most variant relations", "",
           "| gene | variant-touching rows |", "|---|--:|"]
     for g in r["top_genes_by_variant_rows"][:15]:
