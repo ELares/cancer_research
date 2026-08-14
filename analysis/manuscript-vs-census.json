@@ -1,6 +1,38 @@
 {
   "ferroptosis_records": 13346,
   "growth": {
+    "base_sensitivity": [
+      {
+        "base": 33,
+        "ratio": 35.4,
+        "still_outgrows_field": true
+      },
+      {
+        "base": 36,
+        "ratio": 32.4,
+        "still_outgrows_field": true
+      },
+      {
+        "base": 38,
+        "ratio": 30.7,
+        "still_outgrows_field": true
+      },
+      {
+        "base": 40,
+        "ratio": 29.2,
+        "still_outgrows_field": true
+      },
+      {
+        "base": 43,
+        "ratio": 27.1,
+        "still_outgrows_field": true
+      },
+      {
+        "base": 48,
+        "ratio": 24.3,
+        "still_outgrows_field": true
+      }
+    ],
     "census_end": 147008,
     "census_growth": 1.1,
     "census_start": 133204,

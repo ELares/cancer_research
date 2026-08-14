@@ -289,6 +289,17 @@ def main() -> int:
             "corpus_growth": corpus,
             "corpus_exceeds_field": outgrew(corpus, field),
             "unexplained_by_availability": round(corpus / oa, 2) if oa else None,
+            # A ratio off a base this small is fragile as a FIGURE. Reported so
+            # x30.71 is not read as precise, with the swing measured rather
+            # than described: the conclusion is that the corpus outgrew the
+            # field, and that holds across the whole band.
+            "base_sensitivity": [
+                {"base": CORPUS_GROWTH_START + delta,
+                 "ratio": round(CORPUS_GROWTH_END / (CORPUS_GROWTH_START + delta), 1),
+                 "still_outgrows_field": outgrew(
+                     CORPUS_GROWTH_END / (CORPUS_GROWTH_START + delta), field)}
+                for delta in (-5, -2, 0, 2, 5, 10)
+                if CORPUS_GROWTH_START + delta > 0],
             "per_year": [{"year": y, "census": yt.get(y, 0), "open_access": yo.get(y, 0),
                           "oa_share": round(100.0 * yo.get(y, 0) / yt[y], 1)}
                          for y in sorted(yt)],
@@ -474,7 +485,25 @@ def render(r: dict) -> str:
     else:
         L += ["**The corpus did not outgrow the field**, so the attribution in",
               "section 3.7 needs revisiting.", ""]
-    L += ["| year | census | open access | share |", "|--:|--:|--:|--:|"]
+    bs = g["base_sensitivity"]
+    L += ["### How fragile is the corpus figure?", "",
+          f"A ratio computed off a base of {g['corpus_start']} articles is",
+          "sensitive as a FIGURE, so it should not be read as precise. Moving",
+          "the base a few articles either way:", "",
+          "| base | ratio | still outgrows the field |", "|--:|--:|---|"]
+    for b in bs:
+        L.append(f"| {b['base']} | x{b['ratio']} | "
+                 f"{'yes' if b['still_outgrows_field'] else 'NO'} |")
+    L += ["",
+          ("**The conclusion survives the whole band.** The claim being tested "
+           "is that the corpus outgrew the field, and it does at every base in "
+           "this range, so the fragility is in the precision of the figure and "
+           "not in the finding."
+           if all(b["still_outgrows_field"] for b in bs) else
+           "**The conclusion does NOT survive the whole band**, so the figure's "
+           "fragility reaches the finding and the attribution needs revisiting."),
+          "",
+          "| year | census | open access | share |", "|--:|--:|--:|--:|"]
     for y in g["per_year"]:
         L.append(f"| {y['year']} | {y['census']:,} | {y['open_access']:,} | "
                  f"{y['oa_share']}% |")

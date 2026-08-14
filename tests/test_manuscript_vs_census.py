@@ -195,6 +195,32 @@ def test_the_growth_claim_rules_out_both_confounds_it_names():
         "the per-year table does not cover the span the growth figure spans")
 
 
+def test_the_base_fragility_is_reported_and_the_finding_survives_it():
+    """A 31-fold ratio off a base of 38 is fragile as a FIGURE.
+
+    Stated so the number is not read as precise, and measured so the reader can
+    see the fragility does not reach the finding. If it ever does, the
+    attribution in section 3.7 needs revisiting rather than this guard
+    relaxing.
+    """
+    g = d()["growth"]
+    bs = g["base_sensitivity"]
+    assert len(bs) >= 4, "the sensitivity band has been reduced to a point"
+    assert any(b["base"] != g["corpus_start"] for b in bs), (
+        "every row uses the shipped base, so nothing is being varied")
+    assert all(b["still_outgrows_field"] for b in bs), (
+        "the corpus stops outgrowing the field somewhere in the base band, so "
+        "the fragility reaches the finding and section 3.7's attribution has "
+        "to be revisited")
+    # the band must actually span, or "fragile" is being asserted not shown
+    ratios = [b["ratio"] for b in bs]
+    assert max(ratios) - min(ratios) > 1.0, (
+        "the sensitivity band is flat, so the report calls the figure fragile "
+        "while showing nothing that moves")
+    txt = flat()
+    assert "should not be read as precise" in txt
+
+
 def test_the_report_states_what_a_surviving_claim_does_not_establish():
     txt = flat()
     assert "Surviving a census test is not validation" in txt, (

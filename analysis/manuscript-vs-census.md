@@ -129,6 +129,23 @@ So the mechanisms the corpus tracks did grow far faster than
 cancer literature as a whole, which is what the manuscript
 attributes the rise to.
 
+### How fragile is the corpus figure?
+
+A ratio computed off a base of 38 articles is
+sensitive as a FIGURE, so it should not be read as precise. Moving
+the base a few articles either way:
+
+| base | ratio | still outgrows the field |
+|--:|--:|---|
+| 33 | x35.4 | yes |
+| 36 | x32.4 | yes |
+| 38 | x30.7 | yes |
+| 40 | x29.2 | yes |
+| 43 | x27.1 | yes |
+| 48 | x24.3 | yes |
+
+**The conclusion survives the whole band.** The claim being tested is that the corpus outgrew the field, and it does at every base in this range, so the fragility is in the precision of the figure and not in the finding.
+
 | year | census | open access | share |
 |--:|--:|--:|--:|
 | 2015 | 133,204 | 42,558 | 31.9% |
