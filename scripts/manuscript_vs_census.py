@@ -341,8 +341,15 @@ def _headline(r: dict) -> str:
     the derivation that replaced the literal.
     """
     mt, g = r["modality_table"], r["growth"]
-    held, failed = [], []
-    if mt["census_exceeds_manuscript"]:
+    held, failed, undecided = [], [], []
+    # UNDECIDABLE IS NOT REFUTED. Without this branch, a census that cannot
+    # decide the ratio produced a headline saying section 8.2 "does not
+    # survive" beside a body saying the census cannot decide it -- converting
+    # unmeasurable into refuted, which is the one thing this document says
+    # three times it does not do.
+    if not mt["ratio_is_measurable"]:
+        undecided.append("section 8.2 cannot be decided at census scale")
+    elif mt["census_exceeds_manuscript"]:
         held.append("section 8.2 survives, understated by the manuscript")
     elif mt["direction_holds"]:
         held.append("section 8.2 holds in direction but on a smaller ratio "
@@ -353,11 +360,14 @@ def _headline(r: dict) -> str:
         held.append("section 3.7 survives")
     else:
         failed.append("section 3.7 does not survive")
-    if held and failed:
-        return f"{'; '.join(held).capitalize()}, but {' and '.join(failed)}."
+    parts = []
     if held:
-        return f"{'; '.join(held).capitalize()}."
-    return f"{' and '.join(failed).capitalize()}."
+        parts.append("; ".join(held))
+    if failed:
+        parts.append(("but " if held else "") + " and ".join(failed))
+    if undecided:
+        parts.append(("and " if (held or failed) else "") + " and ".join(undecided))
+    return ", ".join(parts).capitalize() + "."
 
 
 def render(r: dict) -> str:
@@ -478,8 +488,12 @@ def render(r: dict) -> str:
           f"  {m['min_for_a_ratio']}-article floor at census scale, so their rows",
           "  carry no census signal and are reported as unmeasurable rather than",
           "  as a finding.",
-          (f"* **The ICD column is not measurable.** Both sides are below the "
-           f"{m['min_for_a_ratio']}-article floor "
+          (f"* **The ICD column is not measurable.** "
+           + ("Both sides are" if max(
+               next(x['census_ferroptosis_icd'] for x in m['rows'] if x['modality'] == 'PDT'),
+               next(x['census_ferroptosis_icd'] for x in m['rows'] if x['modality'] == 'SDT'))
+               < m['min_for_a_ratio'] else "One side is")
+           + f" below the {m['min_for_a_ratio']}-article floor "
            f"({next(x['census_ferroptosis_icd'] for x in m['rows'] if x['modality'] == 'PDT')} "
            f"and {next(x['census_ferroptosis_icd'] for x in m['rows'] if x['modality'] == 'SDT')}), "
            "so no ratio is computed from it."

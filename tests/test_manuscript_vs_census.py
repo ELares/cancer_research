@@ -170,16 +170,26 @@ def test_rows_too_small_for_a_ratio_are_reported_as_unmeasurable():
         next(x["census_ferroptosis"] for x in mt["rows"] if x["modality"] == "PDT"),
         next(x["census_ferroptosis"] for x in mt["rows"] if x["modality"] == "SDT")), (
         "the measurability flag is not the function applied to the shipped counts")
-    assert mt["rows_below_ratio_floor"], (
-        "no row falls below the ratio floor any more; if every modality now "
-        "carries census signal the report's unmeasurable section is wrong")
-    for name in mt["rows_below_ratio_floor"]:
-        row = next(x for x in mt["rows"] if x["modality"] == name)
-        assert row["census_ferroptosis"] < mt["min_for_a_ratio"]
-    assert not mt["icd_column_is_measurable"], (
-        "the ICD column is now measurable at census scale; the report says it "
-        "is not and computes no ratio from it, so that has to be revisited")
+    # AGREEMENT, for these two as well. The commit that converted the variant
+    # and symmetry guards to agreement left these asserting the favourable
+    # outcome -- and ADDED the render() branches for the unfavourable case,
+    # making them unreachable. A census in which the ICD column became
+    # measurable would produce a correct, self-consistent document and a RED
+    # suite.
     txt = flat()
+    icd_yes = "The ICD column IS now measurable" in txt
+    icd_no = "The ICD column is not measurable" in txt
+    assert icd_yes != icd_no, "the report states both or neither ICD branch"
+    assert icd_yes == mt["icd_column_is_measurable"], (
+        f"the report says the ICD column "
+        f"{'IS' if icd_yes else 'is not'} measurable while the measurement "
+        f"says {mt['icd_column_is_measurable']}")
+    # the floor list must be exactly the rows that are under it
+    under = [x["modality"] for x in mt["rows"]
+             if x["testable"] and x["census_ferroptosis"] < mt["min_for_a_ratio"]]
+    assert mt["rows_below_ratio_floor"] == under, (
+        f"the reported floor list {mt['rows_below_ratio_floor']} is not the "
+        f"rows actually under the floor {under}")
     for name in mt["rows_below_ratio_floor"]:
         assert name in txt, f"{name} is not named as unmeasurable in the report"
 
@@ -314,19 +324,45 @@ def test_the_headline_agrees_with_the_verdicts_it_summarises():
         mt["census_exceeds_manuscript"]), (
         "the headline's understatement clause does not track the verdict")
 
-    # the generator must flip it when the verdicts flip
-    flipped = m._headline({**r, "modality_table": {**mt,
-                                                  "census_exceeds_manuscript": False,
-                                                  "direction_holds": False},
-                           "growth": {**g, "corpus_exceeds_field": False}})
-    # Per claim again. A substring test on "survive" is wrong here because
-    # "does not survive" contains it -- the shape that makes a negation-blind
-    # guard pass a document asserting the opposite of what it means.
-    for name in ("section 8.2", "section 3.7"):
-        assert f"{name} does not survive" in flipped.lower(), (
-            f"with both verdicts false the headline does not say {name} "
-            f"failed: {flipped!r}")
-    assert "understated by the manuscript" not in flipped
+    # EVERY state, and through render() so the headline is checked against the
+    # BODY it must agree with. Driving only the shipped state and an all-false
+    # fixture left the commit's central fix untested: swapping the branch order
+    # back -- the original defect verbatim -- kept the suite green, because
+    # neither of the two states that reach the changed branch was ever driven.
+    for meas in (True, False):
+        for exceeds in (True, False):
+            for direction in (True, False):
+                for grew in (True, False):
+                    if exceeds and not direction:
+                        continue          # cannot exceed without holding
+                    v = {**r,
+                         "modality_table": {**mt, "ratio_is_measurable": meas,
+                                            "census_exceeds_manuscript": meas and exceeds,
+                                            "direction_holds": meas and direction},
+                         "growth": {**g, "corpus_exceeds_field": grew}}
+                    doc = m.render(v).lower()
+                    head = doc[:doc.index("## the scope difference")]
+                    label = f"meas={meas} exceeds={exceeds} dir={direction} grew={grew}"
+                    if not meas:
+                        assert "cannot be decided" in head, (
+                            f"[{label}] an undecidable ratio is not reported as "
+                            f"undecidable in the headline: {head.strip()[:160]!r}")
+                        assert "section 8.2 does not survive" not in head, (
+                            f"[{label}] undecidable is reported as refuted, "
+                            "which the document says three times it does not do")
+                    else:
+                        assert (("section 8.2 does not survive" in head)
+                                == (not direction)), (
+                            f"[{label}] the headline's 8.2 clause disagrees "
+                            f"with its verdict: {head.strip()[:160]!r}")
+                        assert (("understated by the manuscript" in head)
+                                == bool(exceeds)), (
+                            f"[{label}] the understatement clause does not "
+                            "track the verdict")
+                    assert (("section 3.7 does not survive" in head)
+                            == (not grew)), (
+                        f"[{label}] the headline's 3.7 clause disagrees with "
+                        "its verdict")
 
 
 def test_the_descriptor_choice_is_reported_as_a_choice():
