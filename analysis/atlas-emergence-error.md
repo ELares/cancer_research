@@ -14,9 +14,9 @@ asserting paper in the relation dump.
 
 | | pairs |
 |---|---|
-| examined (>= 8 dated papers) | 127,609 |
-| exact -- no more papers than the sample holds | 114,196 (89.5%) |
-| genuinely estimated | 13,413 (10.5%) |
+| examined (>= 8 dated papers) | 156,352 |
+| exact -- no more papers than the sample holds | 139,794 (89.4%) |
+| genuinely estimated | 16,558 (10.6%) |
 
 Only the last group can be wrong, so it is reported separately below.
 Pooling them would flatter the estimator with cases where it does no
@@ -24,30 +24,30 @@ estimating.
 
 ## Error on the pairs that are actually estimated
 
-* median absolute error in the share: **0.022**
-* 95th percentile: **0.085**
+* median absolute error in the share: **0.020**
+* 95th percentile: **0.078**
 
 At the 80% threshold, against the exact answer:
 
 | | value |
 |---|---|
-| called emerging, and is | 178 |
-| called emerging, but is not | 24 |
-| missed | 17 |
-| **precision** | **88.1%** |
-| **recall** | **91.3%** |
+| called emerging, and is | 366 |
+| called emerging, but is not | 45 |
+| missed | 27 |
+| **precision** | **89.1%** |
+| **recall** | **93.1%** |
 
-Across every examined pair, including the exact ones, precision is 99.0% and recall 99.3% -- the
+Across every examined pair, including the exact ones, precision is 99.3% and recall 99.6% -- the
 number a reader of the emergence report is really getting.
 
 ## Error against how much sampling happened
 
 | asserting papers | pairs | median abs error |
 |---|---|---|
-| 61-120 | 7,297 | 0.018 |
-| 121-500 | 5,037 | 0.028 |
-| 501-2000 | 946 | 0.033 |
-| 2000+ | 133 | 0.045 |
+| 61-120 | 8,951 | 0.014 |
+| 121-500 | 6,239 | 0.027 |
+| 501-2000 | 1,184 | 0.034 |
+| 2000+ | 184 | 0.037 |
 
 ## What this means for the emergence report
 

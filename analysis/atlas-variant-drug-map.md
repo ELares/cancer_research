@@ -60,16 +60,16 @@ all.
 
 | (rsid, gene) keys carrying several spellings | |
 |---|--:|
-| one change, several spellings: collapsed | 1,539 |
-| spellings denote different changes: refused | 915 |
-| the coding position is in a different codon: refused | 63 |
+| one change, several spellings: collapsed | 1,574 |
+| spellings denote different changes: refused | 928 |
+| the coding position is in a different codon: refused | 65 |
 | no position can be checked against the residue: refused | 36 |
-| a spelling cannot be checked: refused | 430 |
+| a spelling cannot be checked: refused | 432 |
 
 The cross-class test is the one internal agreement cannot see, and it
 is also the strongest evidence that the collapses are right. Where a
 protein and a coding spelling were actually compared, the codon
-relation **agrees** for 1,526 rsids and **fails** for 63, so it holds in 96.0%
+relation **agrees** for 1,561 rsids and **fails** for 65, so it holds in 96.0%
 of the cases it can decide.
 
 The other 36 refusals are ones it could NOT decide: a
@@ -83,45 +83,45 @@ It catches rs1494558, where `p.I66T` sits beside `c.412G>A` and codon
 138 is not residue 66, and rs2297518, where a missense sits beside a
 promoter position that cannot encode it.
 
-That gave **9,975** rows an HGVS they lacked and respelled **5,889** onto a single form.
+That gave **10,069** rows an HGVS they lacked and respelled **6,009** onto a single form.
 
-Most of that fill is not the rule's doing. **8,357** (rsid, gene) keys carry only ONE spelling, so no class could disagree and no collapse decision was made: a bare row simply inherits the one spelling its rsid was ever given. The table above covers the keys with SEVERAL spellings, which is where the 3 tests apply.
+Most of that fill is not the rule's doing. **8,432** (rsid, gene) keys carry only ONE spelling, so no class could disagree and no collapse decision was made: a bare row simply inherits the one spelling its rsid was ever given. The table above covers the keys with SEVERAL spellings, which is where the 3 tests apply.
 
 **Testing agreement among protein forms only is not enough**, which
 is how the first version of this was wrong: it swept every other
 spelling onto the winning protein form. That would have collapsed
-**337 of the rsids refused here, moving 4,527 rows onto a single key.** That figure is
+**339 of the rsids refused here, moving 4,547 rows onto a single key.** That figure is
 what it says and no more: it counts the rows whose spelling
 would have changed, not a claim that every one of them would
 have landed somewhere wrong. Some of those rsids are refused
 only because a SIBLING spelling cannot be checked, and their
 protein and coding forms do agree.
 
-The largest of them shows what it cost. rs1801131 on MTHFR carries 742 rows across 10 spellings, spellings that denote different changes (top 6 shown):
+The largest of them shows what it cost. rs1801131 on MTHFR carries 744 rows across 10 spellings, spellings that denote different changes (top 6 shown):
 
 | spelling | rows | |
 |---|--:|---|
-| `c.1298A>C` | 710 | refuses the rsid |
+| `c.1298A>C` | 712 | refuses the rsid |
 | `p.E429A` | 17 | |
 | `c.-1298A>C` | 3 | refuses the rsid |
 | `c.1286A>C` | 3 | refuses the rsid |
 | `c.1298A>T` | 3 | refuses the rsid |
 | `c.1298C>T` | 2 | refuses the rsid |
 
-There is exactly one protein spelling, `p.E429A` at 17 rows, so the old rule saw no disagreement among protein forms and captured all 742 rows onto it, including the 710-row `c.1298A>C`.
+There is exactly one protein spelling, `p.E429A` at 17 rows, so the old rule saw no disagreement among protein forms and captured all 744 rows onto it, including the 712-row `c.1298A>C`.
 
 ### The majority is not the truth
 
-69 twin pairs differ by one deleted position digit. Reading
+71 twin pairs differ by one deleted position digit. Reading
 the commoner as correct is wrong in both directions: TP53 `p.R72P` and
 ERBB2 `p.I655V` are real rs-backed polymorphisms whose *longer* twins
 are the typos, while EGFR `p.T790M` is real and `p.T90M` the typo.
 
 **The rsid adjudicates**, being assigned independently of the string
 that was extracted. Where exactly one side carries rsids that side is
-canonical (32 pairs, 3,835
+canonical (32 pairs, 3,877
 rows). Where neither or both do, or where one form is one digit from
-two different canonicals, this **abstains** (37 pairs),
+two different canonicals, this **abstains** (39 pairs),
 the same choice `atlas_graph.resolve` makes for a contested surface
 form. KRAS `p.G1V` is one digit from both `p.G12V` and `p.G13V`, which
 are different substitutions, so it gets no verdict at all.
@@ -133,7 +133,7 @@ because most of them rest on very little:
 
 | gene | non-canonical | rows | canonical | rows | rsid-bearing rows |
 |---|---|--:|---|--:|--:|
-| JAK2 | `p.V61F` | 3,759 | `p.V617F` | 624 | 624 |
+| JAK2 | `p.V61F` | 3,801 | `p.V617F` | 625 | 625 |
 | SLTM | `p.T1010I` | 18 | `p.T110I` | 1 | 1 |
 | NEDD4 | `p.K88R` | 2 | `p.K848R` | 1 | 1 |
 | NF1 | `p.Q1815X` | 2 | `p.Q181X` | 1 | 1 |
@@ -145,7 +145,7 @@ uncorrected map read `p.V617F` at **a seventh** of its real support.
 
 The verdict does not rest on those counts, which point the other
 way: `p.V617F` carries **rs77375493 on
-624 of its 624 rows** while `p.V61F`
+625 of its 625 rows** while `p.V61F`
 carries no rsid at all.
 They also show the **identical** disease profile in the same
 rank order, which a coincidence of spelling would not produce: Polycythemia Vera, Neoplasms, Primary Myelofibrosis.
@@ -154,15 +154,15 @@ rank order, which a coincidence of spelling would not produce: Polycythemia Vera
 
 | | count |
 |---|--:|
-| relation rows touching a point-variant entity | 228,501 |
-| variant entity occurrences (both sides counted) | 232,801 |
-| ...carrying no gene | 14,924 (6.4%) |
-| **chemical-to-variant rows** | **24,043** |
-| distinct variants IN THIS MAP | 7,510 |
-| ...of those, carrying no gene | 953 |
-| distinct (drug, gene, variant) pairs | 13,784 |
-| pairs with >= 3 papers | 783 |
-| pairs resting on ONE paper | 12,132 (88.0%) |
+| relation rows touching a point-variant entity | 231,650 |
+| variant entity occurrences (both sides counted) | 236,003 |
+| ...carrying no gene | 15,069 (6.4%) |
+| **chemical-to-variant rows** | **24,415** |
+| distinct variants IN THIS MAP | 7,592 |
+| ...of those, carrying no gene | 965 |
+| distinct (drug, gene, variant) pairs | 13,952 |
+| pairs with >= 3 papers | 787 |
+| pairs resting on ONE paper | 12,272 (88.0%) |
 
 `relations.tsv.gz` also carries a fourth mutation type, `Mutation`,
 holding structural variants as chromosomal ranges (`Chr7:154954255-154998784dup`). It is deliberately out of scope: it
@@ -182,21 +182,21 @@ as evidence.
 
 | gene | variant-touching rows |
 |---|--:|
-| BRAF | 15,070 |
-| EGFR | 11,430 |
-| KRAS | 6,530 |
-| TP53 | 6,179 |
-| JAK2 | 4,843 |
-| BRCA1 | 3,848 |
-| MTHFR | 3,704 |
-| RET | 2,562 |
-| BRCA2 | 2,445 |
-| XRCC1 | 2,304 |
-| KIT | 2,171 |
-| ABCB1 | 1,847 |
-| PIK3CA | 1,752 |
-| TERT | 1,691 |
-| ABL1 | 1,687 |
+| BRAF | 15,391 |
+| EGFR | 11,624 |
+| KRAS | 6,803 |
+| TP53 | 6,298 |
+| JAK2 | 4,886 |
+| BRCA1 | 3,930 |
+| MTHFR | 3,717 |
+| RET | 2,580 |
+| BRCA2 | 2,461 |
+| XRCC1 | 2,315 |
+| KIT | 2,210 |
+| ABCB1 | 1,848 |
+| PIK3CA | 1,800 |
+| TERT | 1,706 |
+| ABL1 | 1,695 |
 
 ## The most-discussed drug-variant pairs
 
@@ -207,46 +207,46 @@ pair is *written about*, and `associate` does not say which direction.
 
 | drug | gene | variant | papers | predicates (assertions) |
 |---|---|---|--:|---|
-| osimertinib | EGFR | `p.T790M` | 799 | `inhibit` 709, `associate` 90, `stimulate` 7, `interact` 2 |
-| Vemurafenib | BRAF | `p.V600E` | 573 | `inhibit` 548, `associate` 28, `stimulate` 2 |
-| dabrafenib | BRAF | `p.V600E` | 442 | `inhibit` 437, `associate` 7, `interact` 1 |
-| trametinib | BRAF | `p.V600E` | 306 | `inhibit` 306, `associate` 2 |
-| sotorasib | KRAS | `p.G12C` | 210 | `inhibit` 206, `associate` 8 |
-| osimertinib | EGFR | `p.L858R` | 196 | `inhibit` 171, `associate` 28, `interact` 1, `stimulate` 1 |
-| Gefitinib | EGFR | `p.L858R` | 164 | `inhibit` 138, `associate` 29 |
-| Gefitinib | EGFR | `p.T790M` | 152 | `inhibit` 95, `stimulate` 34, `associate` 23 |
+| osimertinib | EGFR | `p.T790M` | 808 | `inhibit` 713, `associate` 93, `stimulate` 8, `interact` 3 |
+| Vemurafenib | BRAF | `p.V600E` | 579 | `inhibit` 553, `associate` 29, `stimulate` 2 |
+| dabrafenib | BRAF | `p.V600E` | 451 | `inhibit` 446, `associate` 7, `interact` 1 |
+| trametinib | BRAF | `p.V600E` | 316 | `inhibit` 316, `associate` 2 |
+| sotorasib | KRAS | `p.G12C` | 225 | `inhibit` 219, `associate` 8, `stimulate` 1, `interact` 1 |
+| osimertinib | EGFR | `p.L858R` | 206 | `inhibit` 178, `associate` 31, `interact` 1, `stimulate` 1 |
+| Gefitinib | EGFR | `p.L858R` | 166 | `inhibit` 140, `associate` 29 |
+| Gefitinib | EGFR | `p.T790M` | 154 | `inhibit` 97, `stimulate` 34, `associate` 23 |
+| osimertinib | EGFR | `p.C797S` | 129 | `inhibit` 64, `stimulate` 42, `associate` 24 |
 | Imatinib Mesylate | ABL1 | `p.T315I` | 128 | `inhibit` 96, `associate` 32 |
-| osimertinib | EGFR | `p.C797S` | 123 | `inhibit` 60, `stimulate` 42, `associate` 22 |
-| encorafenib | BRAF | `p.V600E` | 110 | `inhibit` 111, `associate` 1 |
-| Afatinib | EGFR | `p.T790M` | 109 | `inhibit` 74, `stimulate` 19, `associate` 16 |
-| ponatinib | ABL1 | `p.T315I` | 104 | `inhibit` 93, `associate` 10, `stimulate` 1 |
-| adagrasib | KRAS | `p.G12C` | 100 | `inhibit` 101, `associate` 2 |
+| encorafenib | BRAF | `p.V600E` | 121 | `inhibit` 122, `associate` 1 |
+| Afatinib | EGFR | `p.T790M` | 111 | `inhibit` 74, `stimulate` 20, `associate` 17 |
+| adagrasib | KRAS | `p.G12C` | 110 | `inhibit` 110, `associate` 3 |
+| ponatinib | ABL1 | `p.T315I` | 105 | `inhibit` 94, `associate` 10, `stimulate` 1 |
 | Erlotinib Hydrochloride | EGFR | `p.T790M` | 96 | `inhibit` 52, `stimulate` 26, `associate` 18 |
 | Folic Acid | MTHFR | `c.677C>T` | 96 | `associate` 97, `inhibit` 4 |
 | Erlotinib Hydrochloride | EGFR | `p.L858R` | 93 | `inhibit` 85, `associate` 7, `stimulate` 3 |
-| Cetuximab | BRAF | `p.V600E` | 82 | `inhibit` 66, `associate` 17 |
-| binimetinib | BRAF | `p.V600E` | 61 | `inhibit` 58, `associate` 2, `stimulate` 1 |
-| Afatinib | EGFR | `p.L858R` | 59 | `inhibit` 49, `associate` 11 |
+| Cetuximab | BRAF | `p.V600E` | 86 | `inhibit` 70, `associate` 17 |
+| binimetinib | BRAF | `p.V600E` | 66 | `inhibit` 63, `associate` 2, `stimulate` 1 |
+| Afatinib | EGFR | `p.L858R` | 61 | `inhibit` 51, `associate` 11 |
 | PLX 4720 | BRAF | `p.V600E` | 58 | `inhibit` 57, `associate` 1, `interact` 1 |
-| Methotrexate | MTHFR | `c.677C>T` | 51 | `associate` 35, `stimulate` 14, `inhibit` 3 |
+| Methotrexate | MTHFR | `c.677C>T` | 52 | `associate` 36, `stimulate` 14, `inhibit` 3 |
 | rociletinib | EGFR | `p.T790M` | 50 | `inhibit` 46, `associate` 5 |
-| ruxolitinib | JAK2 | `p.V617F` | 47 | `inhibit` 43, `associate` 6 |
-| alpha-hydroxyglutarate | IDH1 | `p.R132H` | 46 | `associate` 38, `stimulate` 7, `inhibit` 1 |
+| ruxolitinib | JAK2 | `p.V617F` | 48 | `inhibit` 44, `associate` 6 |
+| alpha-hydroxyglutarate | IDH1 | `p.R132H` | 47 | `associate` 39, `stimulate` 7, `inhibit` 1 |
 | Dasatinib | ABL1 | `p.T315I` | 43 | `inhibit` 27, `stimulate` 10, `associate` 6 |
+| avapritinib | KIT | `p.D816V` | 42 | `inhibit` 40, `associate` 3 |
 | Vemurafenib | BRAF | `rs113488022` | 41 | `inhibit` 38, `associate` 4 |
+| avapritinib | PDGFRA | `p.D842V` | 40 | `inhibit` 38, `associate` 3 |
 | Imatinib Mesylate | KIT | `p.D816V` | 38 | `inhibit` 31, `associate` 7 |
-| avapritinib | KIT | `p.D816V` | 37 | `inhibit` 37, `associate` 1 |
-| avapritinib | PDGFRA | `p.D842V` | 37 | `inhibit` 36, `associate` 2 |
 | Crizotinib | ALK | `p.L1196M` | 37 | `inhibit` 28, `associate` 8, `stimulate` 7 |
 | dabrafenib | BRAF | `rs113488022` | 34 | `inhibit` 35 |
 | nilotinib | ABL1 | `p.T315I` | 33 | `inhibit` 27, `stimulate` 5, `associate` 1 |
+| KRASG12D inhibitor MRTX1133 | KRAS | `p.G12D` | 31 | `inhibit` 33, `associate` 1 |
+| Hydroxyurea | JAK2 | `p.V617F` | 31 | `inhibit` 24, `associate` 7, `stimulate` 1 |
 | aumolertinib | EGFR | `p.T790M` | 30 | `inhibit` 28, `stimulate` 2 |
 | dabrafenib | BRAF | `p.V600K` | 30 | `inhibit` 30 |
 | Folic Acid | MTHFR | `c.1298A>C` | 30 | `associate` 31 |
-| Hydroxyurea | JAK2 | `p.V617F` | 30 | `inhibit` 24, `associate` 6, `stimulate` 1 |
-| KRASG12D inhibitor MRTX1133 | KRAS | `p.G12D` | 29 | `inhibit` 31, `associate` 1 |
+| Iodine-131 | BRAF | `p.V600E` | 29 | `associate` 21, `inhibit` 4, `stimulate` 4 |
 | Sorafenib | BRAF | `p.V600E` | 29 | `inhibit` 26, `associate` 3 |
-| ibrutinib | BTK | `p.C481S` | 28 | `inhibit` 15, `associate` 9, `stimulate` 4 |
 
 ## What this cannot say
 
@@ -257,8 +257,8 @@ pair is *written about*, and `associate` does not say which direction.
   than most differences between rows here, and the digit-drop finding
   above is a direct instance of it.
 * **Reconciliation is deliberately incomplete.** It merges what the
-  evidence can adjudicate and refuses the rest: 37 twins
-  and 1,444 (rsid, gene) keys stay fragmented
+  evidence can adjudicate and refuses the rest: 39 twins
+  and 1,461 (rsid, gene) keys stay fragmented
   guessed, so one variant may still appear under more than one key.
 * **Attention is not importance.** A well-studied pair outranks a real
   but rarely-written-about one, exactly as `atlas_model_gaps.py` warns

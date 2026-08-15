@@ -1,38 +1,38 @@
 {
-  "chemical_variant_rows": 24043,
-  "digit_drop_rows_corrected": 3835,
-  "distinct_drug_variant_pairs": 13784,
-  "distinct_variants_in_the_map": 7510,
+  "chemical_variant_rows": 24415,
+  "digit_drop_rows_corrected": 3877,
+  "distinct_drug_variant_pairs": 13952,
+  "distinct_variants_in_the_map": 7592,
   "gene_filter": null,
   "min_papers": 3,
-  "occurrences_with_no_gene": 14924,
-  "pairs_at_min_papers": 783,
-  "relation_rows_touching_a_variant": 228501,
+  "occurrences_with_no_gene": 15069,
+  "pairs_at_min_papers": 787,
+  "relation_rows_touching_a_variant": 231650,
   "rsid_refusals": {
-    "count": 1444,
+    "count": 1461,
     "featured": {
       "gene": "4524",
       "n_spellings": 10,
       "offending": {
         "c.-1298A>C": 3,
         "c.1286A>C": 3,
-        "c.1298A>C": 710,
+        "c.1298A>C": 712,
         "c.1298A>G": 1,
         "c.1298A>T": 3,
         "c.1298C>T": 2
       },
-      "old_rule_rows_moved": 725,
+      "old_rule_rows_moved": 727,
       "old_rule_would_have_collapsed": true,
       "protein_spellings": {
         "p.E429A": 17
       },
       "reason": "spellings that denote different changes",
-      "rows": 742,
+      "rows": 744,
       "rsid": "1801131",
       "spellings": {
         "c.-1298A>C": 3,
         "c.1286A>C": 3,
-        "c.1298A>C": 710,
+        "c.1298A>C": 712,
         "c.1298A>T": 3,
         "c.1298C>T": 2,
         "p.E429A": 17
@@ -44,7 +44,7 @@
         "n_spellings": 14,
         "offending": {
           "p.E600V": 6,
-          "p.V600E": 12488,
+          "p.V600E": 12779,
           "p.V600G": 3,
           "p.V600V": 2,
           "p.V600X": 2
@@ -53,20 +53,20 @@
         "old_rule_would_have_collapsed": false,
         "protein_spellings": {
           "p.E600V": 6,
-          "p.V600E": 12488,
+          "p.V600E": 12779,
           "p.V600G": 3,
           "p.V600V": 2,
           "p.V600X": 2
         },
         "reason": "spellings that denote different changes",
-        "rows": 13069,
+        "rows": 13365,
         "rsid": "113488022",
         "spellings": {
           "c.1799T&gt": 7,
-          "c.1799T>A": 330,
-          "p.V600E": 12488,
+          "c.1799T>A": 332,
+          "p.V600E": 12779,
           "p.V600E,D": 8,
-          "p.V600E,K": 209,
+          "p.V600E,K": 211,
           "p.V600E,R": 7
         }
       },
@@ -75,7 +75,7 @@
         "n_spellings": 6,
         "offending": {
           "p.L858P": 1,
-          "p.L858R": 3303,
+          "p.L858R": 3376,
           "p.L858X": 1,
           "p.R858L": 1
         },
@@ -83,18 +83,18 @@
         "old_rule_would_have_collapsed": false,
         "protein_spellings": {
           "p.L858P": 1,
-          "p.L858R": 3303,
+          "p.L858R": 3376,
           "p.L858X": 1,
           "p.R858L": 1
         },
         "reason": "spellings that denote different changes",
-        "rows": 3329,
+        "rows": 3402,
         "rsid": "121434568",
         "spellings": {
           "c.2573T&gt": 4,
           "c.2573T>G": 19,
           "p.L858P": 1,
-          "p.L858R": 3303,
+          "p.L858R": 3376,
           "p.L858X": 1,
           "p.R858L": 1
         }
@@ -103,80 +103,82 @@
         "gene": "3845",
         "n_spellings": 24,
         "offending": {
-          "c.35G>A": 95,
+          "c.35G>A": 96,
           "c.35G>C": 6,
           "c.35G>T": 95,
-          "p.G12A": 126,
-          "p.G12D": 1830,
+          "p.G12A": 129,
+          "p.G12D": 1892,
           "p.G12F": 2,
           "p.G12G": 1,
           "p.G12T": 1,
-          "p.G12V": 873,
+          "p.G12V": 907,
           "p.G12X": 9,
           "p.V12G": 6
         },
         "old_rule_rows_moved": 0,
         "old_rule_would_have_collapsed": false,
         "protein_spellings": {
-          "p.G12A": 126,
-          "p.G12D": 1830,
+          "p.G12A": 129,
+          "p.G12D": 1892,
           "p.G12F": 2,
           "p.G12G": 1,
           "p.G12T": 1,
-          "p.G12V": 873,
+          "p.G12V": 907,
           "p.G12X": 9,
           "p.V12G": 6
         },
         "reason": "spellings that denote different changes",
-        "rows": 3081,
+        "rows": 3181,
         "rsid": "121913529",
         "spellings": {
-          "c.35G>A": 95,
+          "c.35G>A": 96,
           "c.35G>T": 95,
-          "p.G12A": 126,
-          "p.G12D": 1830,
-          "p.G12V": 873,
+          "p.G12A": 129,
+          "p.G12D": 1892,
+          "p.G12V": 907,
           "p.G12X": 9
         }
       },
       {
         "gene": "3845",
-        "n_spellings": 17,
+        "n_spellings": 18,
         "offending": {
           "c.34G>A": 14,
           "c.34G>C": 14,
-          "c.34G>T": 67,
+          "c.34G>T": 70,
           "p.G12A": 1,
-          "p.G12C": 1641,
-          "p.G12F": 2,
-          "p.G12R": 154,
-          "p.G12S": 128,
+          "p.G12C": 1751,
+          "p.G12F": 3,
+          "p.G12R": 168,
+          "p.G12S": 138,
           "p.G12T": 2,
           "p.G12W": 1,
-          "p.G12X": 4
+          "p.G12X": 4,
+          "p.G12Y": 1
         },
         "old_rule_rows_moved": 0,
         "old_rule_would_have_collapsed": false,
         "protein_spellings": {
           "p.G12A": 1,
-          "p.G12C": 1641,
-          "p.G12F": 2,
-          "p.G12R": 154,
-          "p.G12S": 128,
+          "p.G12C": 1751,
+          "p.G12F": 3,
+          "p.G12R": 168,
+          "p.G12S": 138,
           "p.G12T": 2,
           "p.G12W": 1,
-          "p.G12X": 4
+          "p.G12X": 4,
+          "p.G12Y": 1
         },
         "reason": "spellings that denote different changes",
-        "rows": 2043,
+        "rows": 2183,
         "rsid": "121913530",
         "spellings": {
           "c.34G>A": 14,
           "c.34G>C": 14,
-          "c.34G>T": 67,
-          "p.G12C": 1641,
-          "p.G12R": 154,
-          "p.G12S": 128
+          "c.34G>T": 70,
+          "p.G12C": 1751,
+          "p.G12R": 168,
+          "p.G12S": 138
         }
       },
       {
@@ -187,7 +189,7 @@
           "c.665C>T": 4,
           "c.667C>T": 47,
           "c.677C>A": 2,
-          "c.677C>T": 1736,
+          "c.677C>T": 1743,
           "p.A222V": 31,
           "p.A429E": 1,
           "p.C677T": 2,
@@ -204,242 +206,258 @@
           "p.V222A": 1
         },
         "reason": "spellings that denote different changes",
-        "rows": 1857,
+        "rows": 1864,
         "rsid": "1801133",
         "spellings": {
           "c.667C>T": 47,
           "c.677C&gt": 16,
           "c.677C>C": 6,
-          "c.677C>T": 1736,
+          "c.677C>T": 1743,
           "c.677T>T": 5,
           "p.A222V": 31
         }
       }
     ],
     "the_old_rule_would_have_collapsed": {
-      "rows": 8603,
-      "rows_moved": 4527,
-      "rsids": 337
+      "rows": 8671,
+      "rows_moved": 4547,
+      "rsids": 339
     }
   },
   "rsid_resolution": {
-    "classes_disagree_refused": 915,
-    "codon_mismatch_refused": 63,
-    "codon_relation_agrees": 1526,
+    "classes_disagree_refused": 928,
+    "codon_mismatch_refused": 65,
+    "codon_relation_agrees": 1561,
     "not_checkable_against_a_residue_refused": 36,
     "nothing_to_compare_across_classes": 13,
-    "one_change_many_spellings": 1539,
+    "one_change_many_spellings": 1574,
     "refused_here_collapsed_under_another_gene": 0,
     "refused_here_single_spelling_under_another_gene": 10,
-    "single_spelling": 8357,
-    "unparsable_spelling_refused": 430
+    "single_spelling": 8432,
+    "unparsable_spelling_refused": 432
   },
-  "rsid_rows_given_an_hgvs": 9975,
-  "rsid_rows_respelled_to_one_form": 5889,
-  "single_paper_pairs": 12132,
+  "rsid_rows_given_an_hgvs": 10069,
+  "rsid_rows_respelled_to_one_form": 6009,
+  "single_paper_pairs": 12272,
   "top_genes_by_variant_rows": [
     {
       "gene": "BRAF",
       "gene_id": "673",
-      "occurrences": 15130,
-      "rows": 15070
+      "occurrences": 15452,
+      "rows": 15391
     },
     {
       "gene": "EGFR",
       "gene_id": "1956",
-      "occurrences": 11849,
-      "rows": 11430
+      "occurrences": 12051,
+      "rows": 11624
     },
     {
       "gene": "KRAS",
       "gene_id": "3845",
-      "occurrences": 6552,
-      "rows": 6530
+      "occurrences": 6826,
+      "rows": 6803
     },
     {
       "gene": "TP53",
       "gene_id": "7157",
-      "occurrences": 6245,
-      "rows": 6179
+      "occurrences": 6366,
+      "rows": 6298
     },
     {
       "gene": "JAK2",
       "gene_id": "3717",
-      "occurrences": 4880,
-      "rows": 4843
+      "occurrences": 4923,
+      "rows": 4886
     },
     {
       "gene": "BRCA1",
       "gene_id": "672",
-      "occurrences": 3907,
-      "rows": 3848
+      "occurrences": 3989,
+      "rows": 3930
     },
     {
       "gene": "MTHFR",
       "gene_id": "4524",
-      "occurrences": 3824,
-      "rows": 3704
+      "occurrences": 3837,
+      "rows": 3717
     },
     {
       "gene": "RET",
       "gene_id": "5979",
-      "occurrences": 2602,
-      "rows": 2562
+      "occurrences": 2620,
+      "rows": 2580
     },
     {
       "gene": "BRCA2",
       "gene_id": "675",
-      "occurrences": 2477,
-      "rows": 2445
+      "occurrences": 2493,
+      "rows": 2461
     },
     {
       "gene": "XRCC1",
       "gene_id": "7515",
-      "occurrences": 2344,
-      "rows": 2304
+      "occurrences": 2357,
+      "rows": 2315
     },
     {
       "gene": "KIT",
       "gene_id": "3815",
-      "occurrences": 2188,
-      "rows": 2171
+      "occurrences": 2227,
+      "rows": 2210
     },
     {
       "gene": "ABCB1",
       "gene_id": "5243",
-      "occurrences": 1923,
-      "rows": 1847
+      "occurrences": 1924,
+      "rows": 1848
     },
     {
       "gene": "PIK3CA",
       "gene_id": "5290",
-      "occurrences": 1767,
-      "rows": 1752
+      "occurrences": 1815,
+      "rows": 1800
     },
     {
       "gene": "TERT",
       "gene_id": "7015",
-      "occurrences": 1704,
-      "rows": 1691
+      "occurrences": 1719,
+      "rows": 1706
     },
     {
       "gene": "ABL1",
       "gene_id": "25",
-      "occurrences": 1719,
-      "rows": 1687
+      "occurrences": 1727,
+      "rows": 1695
     }
   ],
   "top_pairs": [
     {
-      "assertions": 808,
+      "assertions": 817,
       "drug": "osimertinib",
       "drug_id": "MESH:C000596361",
       "gene": "EGFR",
       "gene_id": "1956",
-      "papers": 799,
+      "papers": 808,
       "predicates": {
-        "associate": 90,
-        "inhibit": 709,
-        "interact": 2,
-        "stimulate": 7
+        "associate": 93,
+        "inhibit": 713,
+        "interact": 3,
+        "stimulate": 8
       },
       "variant": "p.T790M"
     },
     {
-      "assertions": 578,
+      "assertions": 584,
       "drug": "Vemurafenib",
       "drug_id": "MESH:D000077484",
       "gene": "BRAF",
       "gene_id": "673",
-      "papers": 573,
+      "papers": 579,
       "predicates": {
-        "associate": 28,
-        "inhibit": 548,
+        "associate": 29,
+        "inhibit": 553,
         "stimulate": 2
       },
       "variant": "p.V600E"
     },
     {
-      "assertions": 445,
+      "assertions": 454,
       "drug": "dabrafenib",
       "drug_id": "MESH:C561627",
       "gene": "BRAF",
       "gene_id": "673",
-      "papers": 442,
+      "papers": 451,
       "predicates": {
         "associate": 7,
-        "inhibit": 437,
+        "inhibit": 446,
         "interact": 1
       },
       "variant": "p.V600E"
     },
     {
-      "assertions": 308,
+      "assertions": 318,
       "drug": "trametinib",
       "drug_id": "MESH:C560077",
       "gene": "BRAF",
       "gene_id": "673",
-      "papers": 306,
+      "papers": 316,
       "predicates": {
         "associate": 2,
-        "inhibit": 306
+        "inhibit": 316
       },
       "variant": "p.V600E"
     },
     {
-      "assertions": 214,
+      "assertions": 229,
       "drug": "sotorasib",
       "drug_id": "MESH:C000706028",
       "gene": "KRAS",
       "gene_id": "3845",
-      "papers": 210,
+      "papers": 225,
       "predicates": {
         "associate": 8,
-        "inhibit": 206
+        "inhibit": 219,
+        "interact": 1,
+        "stimulate": 1
       },
       "variant": "p.G12C"
     },
     {
-      "assertions": 201,
+      "assertions": 211,
       "drug": "osimertinib",
       "drug_id": "MESH:C000596361",
       "gene": "EGFR",
       "gene_id": "1956",
-      "papers": 196,
+      "papers": 206,
       "predicates": {
-        "associate": 28,
-        "inhibit": 171,
+        "associate": 31,
+        "inhibit": 178,
         "interact": 1,
         "stimulate": 1
       },
       "variant": "p.L858R"
     },
     {
-      "assertions": 167,
+      "assertions": 169,
       "drug": "Gefitinib",
       "drug_id": "MESH:D000077156",
       "gene": "EGFR",
       "gene_id": "1956",
-      "papers": 164,
+      "papers": 166,
       "predicates": {
         "associate": 29,
-        "inhibit": 138
+        "inhibit": 140
       },
       "variant": "p.L858R"
     },
     {
-      "assertions": 152,
+      "assertions": 154,
       "drug": "Gefitinib",
       "drug_id": "MESH:D000077156",
       "gene": "EGFR",
       "gene_id": "1956",
-      "papers": 152,
+      "papers": 154,
       "predicates": {
         "associate": 23,
-        "inhibit": 95,
+        "inhibit": 97,
         "stimulate": 34
       },
       "variant": "p.T790M"
+    },
+    {
+      "assertions": 130,
+      "drug": "osimertinib",
+      "drug_id": "MESH:C000596361",
+      "gene": "EGFR",
+      "gene_id": "1956",
+      "papers": 129,
+      "predicates": {
+        "associate": 24,
+        "inhibit": 64,
+        "stimulate": 42
+      },
+      "variant": "p.C797S"
     },
     {
       "assertions": 128,
@@ -455,72 +473,58 @@
       "variant": "p.T315I"
     },
     {
-      "assertions": 124,
-      "drug": "osimertinib",
-      "drug_id": "MESH:C000596361",
-      "gene": "EGFR",
-      "gene_id": "1956",
-      "papers": 123,
-      "predicates": {
-        "associate": 22,
-        "inhibit": 60,
-        "stimulate": 42
-      },
-      "variant": "p.C797S"
-    },
-    {
-      "assertions": 112,
+      "assertions": 123,
       "drug": "encorafenib",
       "drug_id": "MESH:C000601108",
       "gene": "BRAF",
       "gene_id": "673",
-      "papers": 110,
+      "papers": 121,
       "predicates": {
         "associate": 1,
-        "inhibit": 111
+        "inhibit": 122
       },
       "variant": "p.V600E"
     },
     {
-      "assertions": 109,
+      "assertions": 111,
       "drug": "Afatinib",
       "drug_id": "MESH:D000077716",
       "gene": "EGFR",
       "gene_id": "1956",
-      "papers": 109,
+      "papers": 111,
       "predicates": {
-        "associate": 16,
+        "associate": 17,
         "inhibit": 74,
-        "stimulate": 19
+        "stimulate": 20
       },
       "variant": "p.T790M"
     },
     {
-      "assertions": 104,
-      "drug": "ponatinib",
-      "drug_id": "MESH:C545373",
-      "gene": "ABL1",
-      "gene_id": "25",
-      "papers": 104,
-      "predicates": {
-        "associate": 10,
-        "inhibit": 93,
-        "stimulate": 1
-      },
-      "variant": "p.T315I"
-    },
-    {
-      "assertions": 103,
+      "assertions": 113,
       "drug": "adagrasib",
       "drug_id": "MESH:C000718190",
       "gene": "KRAS",
       "gene_id": "3845",
-      "papers": 100,
+      "papers": 110,
       "predicates": {
-        "associate": 2,
-        "inhibit": 101
+        "associate": 3,
+        "inhibit": 110
       },
       "variant": "p.G12C"
+    },
+    {
+      "assertions": 105,
+      "drug": "ponatinib",
+      "drug_id": "MESH:C545373",
+      "gene": "ABL1",
+      "gene_id": "25",
+      "papers": 105,
+      "predicates": {
+        "associate": 10,
+        "inhibit": 94,
+        "stimulate": 1
+      },
+      "variant": "p.T315I"
     },
     {
       "assertions": 96,
@@ -564,42 +568,42 @@
       "variant": "p.L858R"
     },
     {
-      "assertions": 83,
+      "assertions": 87,
       "drug": "Cetuximab",
       "drug_id": "MESH:D000068818",
       "gene": "BRAF",
       "gene_id": "673",
-      "papers": 82,
+      "papers": 86,
       "predicates": {
         "associate": 17,
-        "inhibit": 66
+        "inhibit": 70
       },
       "variant": "p.V600E"
     },
     {
-      "assertions": 61,
+      "assertions": 66,
       "drug": "binimetinib",
       "drug_id": "MESH:C581313",
       "gene": "BRAF",
       "gene_id": "673",
-      "papers": 61,
+      "papers": 66,
       "predicates": {
         "associate": 2,
-        "inhibit": 58,
+        "inhibit": 63,
         "stimulate": 1
       },
       "variant": "p.V600E"
     },
     {
-      "assertions": 60,
+      "assertions": 62,
       "drug": "Afatinib",
       "drug_id": "MESH:D000077716",
       "gene": "EGFR",
       "gene_id": "1956",
-      "papers": 59,
+      "papers": 61,
       "predicates": {
         "associate": 11,
-        "inhibit": 49
+        "inhibit": 51
       },
       "variant": "p.L858R"
     },
@@ -618,14 +622,14 @@
       "variant": "p.V600E"
     },
     {
-      "assertions": 52,
+      "assertions": 53,
       "drug": "Methotrexate",
       "drug_id": "MESH:D008727",
       "gene": "MTHFR",
       "gene_id": "4524",
-      "papers": 51,
+      "papers": 52,
       "predicates": {
-        "associate": 35,
+        "associate": 36,
         "inhibit": 3,
         "stimulate": 14
       },
@@ -645,27 +649,27 @@
       "variant": "p.T790M"
     },
     {
-      "assertions": 49,
+      "assertions": 50,
       "drug": "ruxolitinib",
       "drug_id": "MESH:C540383",
       "gene": "JAK2",
       "gene_id": "3717",
-      "papers": 47,
+      "papers": 48,
       "predicates": {
         "associate": 6,
-        "inhibit": 43
+        "inhibit": 44
       },
       "variant": "p.V617F"
     },
     {
-      "assertions": 46,
+      "assertions": 47,
       "drug": "alpha-hydroxyglutarate",
       "drug_id": "MESH:C019417",
       "gene": "IDH1",
       "gene_id": "3417",
-      "papers": 46,
+      "papers": 47,
       "predicates": {
-        "associate": 38,
+        "associate": 39,
         "inhibit": 1,
         "stimulate": 7
       },
@@ -686,6 +690,19 @@
       "variant": "p.T315I"
     },
     {
+      "assertions": 43,
+      "drug": "avapritinib",
+      "drug_id": "MESH:C000707147",
+      "gene": "KIT",
+      "gene_id": "3815",
+      "papers": 42,
+      "predicates": {
+        "associate": 3,
+        "inhibit": 40
+      },
+      "variant": "p.D816V"
+    },
+    {
       "assertions": 42,
       "drug": "Vemurafenib",
       "drug_id": "MESH:D000077484",
@@ -699,6 +716,19 @@
       "variant": "rs113488022"
     },
     {
+      "assertions": 41,
+      "drug": "avapritinib",
+      "drug_id": "MESH:C000707147",
+      "gene": "PDGFRA",
+      "gene_id": "5156",
+      "papers": 40,
+      "predicates": {
+        "associate": 3,
+        "inhibit": 38
+      },
+      "variant": "p.D842V"
+    },
+    {
       "assertions": 38,
       "drug": "Imatinib Mesylate",
       "drug_id": "MESH:D000068877",
@@ -710,32 +740,6 @@
         "inhibit": 31
       },
       "variant": "p.D816V"
-    },
-    {
-      "assertions": 38,
-      "drug": "avapritinib",
-      "drug_id": "MESH:C000707147",
-      "gene": "KIT",
-      "gene_id": "3815",
-      "papers": 37,
-      "predicates": {
-        "associate": 1,
-        "inhibit": 37
-      },
-      "variant": "p.D816V"
-    },
-    {
-      "assertions": 38,
-      "drug": "avapritinib",
-      "drug_id": "MESH:C000707147",
-      "gene": "PDGFRA",
-      "gene_id": "5156",
-      "papers": 37,
-      "predicates": {
-        "associate": 2,
-        "inhibit": 36
-      },
-      "variant": "p.D842V"
     },
     {
       "assertions": 43,
@@ -778,6 +782,33 @@
       "variant": "p.T315I"
     },
     {
+      "assertions": 34,
+      "drug": "KRASG12D inhibitor MRTX1133",
+      "drug_id": "MESH:C000723088",
+      "gene": "KRAS",
+      "gene_id": "3845",
+      "papers": 31,
+      "predicates": {
+        "associate": 1,
+        "inhibit": 33
+      },
+      "variant": "p.G12D"
+    },
+    {
+      "assertions": 32,
+      "drug": "Hydroxyurea",
+      "drug_id": "MESH:D006918",
+      "gene": "JAK2",
+      "gene_id": "3717",
+      "papers": 31,
+      "predicates": {
+        "associate": 7,
+        "inhibit": 24,
+        "stimulate": 1
+      },
+      "variant": "p.V617F"
+    },
+    {
       "assertions": 30,
       "drug": "aumolertinib",
       "drug_id": "MESH:C000718108",
@@ -815,31 +846,18 @@
       "variant": "c.1298A>C"
     },
     {
-      "assertions": 31,
-      "drug": "Hydroxyurea",
-      "drug_id": "MESH:D006918",
-      "gene": "JAK2",
-      "gene_id": "3717",
-      "papers": 30,
-      "predicates": {
-        "associate": 6,
-        "inhibit": 24,
-        "stimulate": 1
-      },
-      "variant": "p.V617F"
-    },
-    {
-      "assertions": 32,
-      "drug": "KRASG12D inhibitor MRTX1133",
-      "drug_id": "MESH:C000723088",
-      "gene": "KRAS",
-      "gene_id": "3845",
+      "assertions": 29,
+      "drug": "Iodine-131",
+      "drug_id": "MESH:C000614965",
+      "gene": "BRAF",
+      "gene_id": "673",
       "papers": 29,
       "predicates": {
-        "associate": 1,
-        "inhibit": 31
+        "associate": 21,
+        "inhibit": 4,
+        "stimulate": 4
       },
-      "variant": "p.G12D"
+      "variant": "p.V600E"
     },
     {
       "assertions": 29,
@@ -869,18 +887,17 @@
       "variant": "p.C481S"
     },
     {
-      "assertions": 27,
-      "drug": "Iodine-131",
-      "drug_id": "MESH:C000614965",
-      "gene": "BRAF",
-      "gene_id": "673",
-      "papers": 27,
+      "assertions": 30,
+      "drug": "Homocysteine",
+      "drug_id": "MESH:D006710",
+      "gene": "MTHFR",
+      "gene_id": "4524",
+      "papers": 28,
       "predicates": {
-        "associate": 20,
-        "inhibit": 4,
-        "stimulate": 3
+        "associate": 21,
+        "stimulate": 9
       },
-      "variant": "p.V600E"
+      "variant": "c.677C>T"
     },
     {
       "assertions": 27,
@@ -894,6 +911,20 @@
         "inhibit": 24
       },
       "variant": "p.D816V"
+    },
+    {
+      "assertions": 27,
+      "drug": "Afatinib",
+      "drug_id": "MESH:D000077716",
+      "gene": "EGFR",
+      "gene_id": "1956",
+      "papers": 27,
+      "predicates": {
+        "associate": 2,
+        "inhibit": 24,
+        "stimulate": 1
+      },
+      "variant": "p.L861Q"
     },
     {
       "assertions": 28,
@@ -910,19 +941,6 @@
       "variant": "rs1801133"
     },
     {
-      "assertions": 29,
-      "drug": "Homocysteine",
-      "drug_id": "MESH:D006710",
-      "gene": "MTHFR",
-      "gene_id": "4524",
-      "papers": 27,
-      "predicates": {
-        "associate": 20,
-        "stimulate": 9
-      },
-      "variant": "c.677C>T"
-    },
-    {
       "assertions": 26,
       "drug": "Afatinib",
       "drug_id": "MESH:D000077716",
@@ -930,11 +948,11 @@
       "gene_id": "1956",
       "papers": 26,
       "predicates": {
-        "associate": 2,
-        "inhibit": 23,
+        "associate": 1,
+        "inhibit": 24,
         "stimulate": 1
       },
-      "variant": "p.L861Q"
+      "variant": "p.G719X"
     },
     {
       "assertions": 27,
@@ -985,11 +1003,10 @@
       "gene_id": "1956",
       "papers": 25,
       "predicates": {
-        "associate": 1,
-        "inhibit": 23,
-        "stimulate": 1
+        "associate": 4,
+        "inhibit": 21
       },
-      "variant": "p.G719X"
+      "variant": "p.S768I"
     },
     {
       "assertions": 31,
@@ -1031,16 +1048,16 @@
     },
     {
       "assertions": 24,
-      "drug": "Afatinib",
-      "drug_id": "MESH:D000077716",
-      "gene": "EGFR",
-      "gene_id": "1956",
+      "drug": "Imatinib Mesylate",
+      "drug_id": "MESH:D000068877",
+      "gene": "PDGFRA",
+      "gene_id": "5156",
       "papers": 24,
       "predicates": {
-        "associate": 4,
-        "inhibit": 20
+        "associate": 2,
+        "inhibit": 22
       },
-      "variant": "p.S768I"
+      "variant": "p.D842V"
     },
     {
       "assertions": 23,
@@ -1055,19 +1072,6 @@
         "stimulate": 5
       },
       "variant": "p.V600E"
-    },
-    {
-      "assertions": 23,
-      "drug": "Imatinib Mesylate",
-      "drug_id": "MESH:D000068877",
-      "gene": "PDGFRA",
-      "gene_id": "5156",
-      "papers": 23,
-      "predicates": {
-        "associate": 1,
-        "inhibit": 22
-      },
-      "variant": "p.D842V"
     },
     {
       "assertions": 23,
@@ -1099,6 +1103,34 @@
     },
     {
       "assertions": 22,
+      "drug": "dacomitinib",
+      "drug_id": "MESH:C525726",
+      "gene": "EGFR",
+      "gene_id": "1956",
+      "papers": 22,
+      "predicates": {
+        "associate": 2,
+        "inhibit": 19,
+        "stimulate": 1
+      },
+      "variant": "p.L858R"
+    },
+    {
+      "assertions": 22,
+      "drug": "dacomitinib",
+      "drug_id": "MESH:C525726",
+      "gene": "EGFR",
+      "gene_id": "1956",
+      "papers": 22,
+      "predicates": {
+        "associate": 2,
+        "inhibit": 15,
+        "stimulate": 5
+      },
+      "variant": "p.T790M"
+    },
+    {
+      "assertions": 22,
       "drug": "trametinib",
       "drug_id": "MESH:C560077",
       "gene": "BRAF",
@@ -1108,51 +1140,26 @@
         "inhibit": 22
       },
       "variant": "p.V600E,K"
-    },
-    {
-      "assertions": 22,
-      "drug": "dabrafenib",
-      "drug_id": "MESH:C561627",
-      "gene": "BRAF",
-      "gene_id": "673",
-      "papers": 22,
-      "predicates": {
-        "inhibit": 22
-      },
-      "variant": "p.V600E,K"
-    },
-    {
-      "assertions": 25,
-      "drug": "Aflatoxin B1",
-      "drug_id": "MESH:D016604",
-      "gene": "TP53",
-      "gene_id": "7157",
-      "papers": 22,
-      "predicates": {
-        "associate": 6,
-        "stimulate": 19
-      },
-      "variant": "p.R249S"
     }
   ],
   "twins": {
-    "abstained": 37,
+    "abstained": 39,
     "adjudicated": 32,
     "corrections_applied": 32,
     "featured": {
-      "canonical_rows": 624,
+      "canonical_rows": 625,
       "canonical_rsid": "77375493",
-      "canonical_rsid_rows": 624,
+      "canonical_rsid_rows": 625,
       "gene": "3717",
       "longer": "p.V617F",
-      "longer_rows": 624,
-      "longer_rsid_rows": 624,
+      "longer_rows": 625,
+      "longer_rsid_rows": 625,
       "longer_rsids": 1,
       "longer_top_rsid": "77375493",
       "moves_majority": true,
-      "rows_moved": 3759,
+      "rows_moved": 3801,
       "shorter": "p.V61F",
-      "shorter_rows": 3759,
+      "shorter_rows": 3801,
       "shorter_rsid_rows": 0,
       "shorter_rsids": 0,
       "shorter_top_rsid": null,
@@ -1162,7 +1169,7 @@
       "p.V617F": [
         [
           "Polycythemia Vera",
-          139
+          140
         ],
         [
           "Neoplasms",
@@ -1180,38 +1187,38 @@
       "p.V61F": [
         [
           "Polycythemia Vera",
-          688
+          699
         ],
         [
           "Neoplasms",
-          655
+          661
         ],
         [
           "Primary Myelofibrosis",
-          365
+          368
         ],
         [
           "Thrombocythemia, Essential",
-          342
+          344
         ]
       ]
     },
-    "found": 69,
+    "found": 71,
     "moving_the_majority": [
       {
-        "canonical_rows": 624,
+        "canonical_rows": 625,
         "canonical_rsid": "77375493",
-        "canonical_rsid_rows": 624,
+        "canonical_rsid_rows": 625,
         "gene": "3717",
         "longer": "p.V617F",
-        "longer_rows": 624,
-        "longer_rsid_rows": 624,
+        "longer_rows": 625,
+        "longer_rsid_rows": 625,
         "longer_rsids": 1,
         "longer_top_rsid": "77375493",
         "moves_majority": true,
-        "rows_moved": 3759,
+        "rows_moved": 3801,
         "shorter": "p.V61F",
-        "shorter_rows": 3759,
+        "shorter_rows": 3801,
         "shorter_rsid_rows": 0,
         "shorter_rsids": 0,
         "shorter_top_rsid": null,
@@ -1276,6 +1283,6 @@
       }
     ]
   },
-  "variant_entity_occurrences": 232801,
-  "variants_in_the_map_with_no_gene": 953
+  "variant_entity_occurrences": 236003,
+  "variants_in_the_map_with_no_gene": 965
 }
