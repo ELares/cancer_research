@@ -20,13 +20,44 @@ If you have expertise in oncology, biochemistry, ferroptosis, immunology, comput
 
 ## What's here
 
-There are three literature surfaces here, and it matters which one a number comes from:
+This project reads the cancer literature at census scale. It holds **5,187,265
+cancer articles** — the 4,403,994 that MeSH indexes under the neoplasms tree,
+plus 783,271 more recovered by text-matching because MeSH has not indexed them
+yet — with **1,116,481 open-access full texts**, **10,509,470 typed entity
+relations** over 2,095,737 articles, and 283 million sentences mined for
+co-mention. A daily-update stream adds the newest literature on top: the latest
+window carried 188,850 distinct articles, 65,966 of them new to the census.
 
-- **A frozen 4,830-article full-text corpus** across 23 mechanism tags, 22 cancer types, 803 journals (2001-2026), plus an abstract-only archive holding 5,586 records at manuscript freeze (5,593 today, as landmark field-definers are added out of band). Every figure in the manuscript comes from this snapshot, and it is deliberately never mutated. It skews toward immunotherapy (~2,297 articles), with physical and pharmacologic ferroptosis approaches a smaller, more preclinical slice.
-- **A 4,403,994-article census of the whole indexed cancer literature** (MeSH tree C04 plus nine adjacent descriptors), built from the PubMed annual baseline because E-utilities cannot page past 10,000 hits. Alongside it: 1,100,218 open-access full texts, 10,509,470 typed relations over 2,095,737 PMIDs, and 283 million sentences mined for entity co-mention.
-- **A living review** that re-runs the queries monthly and reports a dated delta without ever touching the frozen corpus.
+That is the whole indexed cancer literature, not a sample of it. It exists
+because most literature analyses — including this project's own, at first — are
+computed over a few thousand hand-retrieved papers, and there is no way to tell
+from inside such a corpus whether an apparent gap in the science is real or an
+artifact of which papers were retrieved. At census scale you can check.
 
-The census exists because the frozen corpus is **0.11% of the cancer literature**, so several claims computed over it could not be tested on it. Some now can: `analysis/manuscript-vs-census.md` re-tests two of the manuscript's own published claims on expert MeSH labels over all 4.4M articles, and both survive — one of them understated by the manuscript.
+**Three surfaces, and it matters which one a number comes from:**
+
+- **The census** (above): every cancer article PubMed has indexed. Built from
+  the PubMed annual baseline because E-utilities cannot page past 10,000 hits,
+  defined as MeSH tree C04 plus nine adjacent descriptors so that foundational
+  mechanism papers outside the cancer tree are not lost — both founding FSP1
+  papers are outside C04, as is 62% of all ferroptosis work.
+- **A frozen 4,830-article full-text corpus**, which is **0.11% of the census**
+  and the reason the census exists. Every figure in the manuscript is computed
+  on this snapshot, so it is deliberately never mutated — that immutability is
+  what makes the published numbers checkable, and it is also why it stays small.
+  It covers 23 mechanism tags, 22 cancer types and 803 journals (2001-2026),
+  alongside an abstract-only archive of 5,586 records at manuscript freeze
+  (5,593 today). It skews toward immunotherapy (~2,297 articles).
+- **A living review** that re-runs the queries monthly and reports a dated delta
+  without ever touching the frozen corpus.
+
+The frozen corpus is not just small, it is **unevenly** small: per-mechanism
+capture ranges from 0.20% to 41.86%, a 213-fold spread, so any relative
+prevalence computed on it inherits that bias. Measuring this is what the census
+is for. Where a manuscript claim can now be re-tested against all 4.4M articles
+on independent expert labels, it has been:
+`analysis/manuscript-vs-census.md` re-tests two and both survive — one of them
+understated by the manuscript, which the census corrects upward.
 
 - **Python pipeline** for corpus fetching, tagging (7 tag layers), indexing, analysis, and figure generation
 - **12 Rust simulation binaries**, a mechanistic claim-testing engine for cancer therapies: single-cell and spatial Monte Carlo, drug penetration across tissue types, drug combinations, tumor microenvironment (oxygen gradients, spatial immune zones, DAMP-mediated T-cell activation, stromal shielding, vasculature, clonal heterogeneity), vulnerability windows, ICD immune cascades, and tumor PK. Worked implementations include ferroptosis/RSL3 biochemistry and PDT/SDT depth physics (2D row-based and 3D radial-depth dispatchers; sim-tme-3d is the 3D-spheroid capstone consuming the full TME library stack) plus photosensitizer PK (drug-light-interval scaling, saturating distribution phase, relative singlet-O₂ yield)
@@ -65,7 +96,7 @@ These are computational predictions with documented assumptions and caveats, not
 | `corpus/` | Frozen full text by PubMed ID + INDEX.jsonl; `corpus/atlas/` holds the census (bulk gitignored, committed artifacts in `analysis/`); `corpus/living/` documents the frozen-versus-living split (the monthly deltas themselves are uploaded as workflow artifacts, never committed) |
 | `tags/` | Precomputed tag indexes (mechanism, cancer type, tissue, evidence level, diagnostic-therapy) |
 | `news/` | News source scaffolding: fetched articles, extracted claims, verification results, credibility scores |
-| `tests/` | 803 Python tests (pipeline smoke + figure traceability + calibration-status ref guard + manuscript-inventory drift guard + depth-kill physics-constant guard + flagship-figure data guard + quantitative-figure drift guards (Figs 21/22/23) + invariant/integration + calibrate-extractor + MeSH evidence-fallback + gold-set precision-floor regression (#346) + Bliss/sim-tme/penetration prior-predictive intervals + ABC posterior (#332) + non-circular mechanism-recall (#412) + CTRPv2 calibration target + in-vitro kill-switch fit (#330) + System Xc-/erastin fit (#502) + joint multi-inducer posterior (#500) + spheroid structure validation (#333) + embedding evidence leg (#411) + RD-vs-BioFVM cross-check (#408) + dashboard data layer (#354) + tumor-PK measured-data anchor (#334) + Krogh penetration validation (#335) + spheroid size-aware zone thresholds (#333) + spheroid kill-vs-size direction (#333) + gene-symbol ambiguity/FSP1 sense disambiguation (#ATLAS-AMBIG) + rare-event Poisson intervals + tail-resolution classification + ferroptosis-python bindings) |
+| `tests/` | 811 Python tests (pipeline smoke + figure traceability + calibration-status ref guard + manuscript-inventory drift guard + depth-kill physics-constant guard + flagship-figure data guard + quantitative-figure drift guards (Figs 21/22/23) + invariant/integration + calibrate-extractor + MeSH evidence-fallback + gold-set precision-floor regression (#346) + Bliss/sim-tme/penetration prior-predictive intervals + ABC posterior (#332) + non-circular mechanism-recall (#412) + CTRPv2 calibration target + in-vitro kill-switch fit (#330) + System Xc-/erastin fit (#502) + joint multi-inducer posterior (#500) + spheroid structure validation (#333) + embedding evidence leg (#411) + RD-vs-BioFVM cross-check (#408) + dashboard data layer (#354) + tumor-PK measured-data anchor (#334) + Krogh penetration validation (#335) + spheroid size-aware zone thresholds (#333) + spheroid kill-vs-size direction (#333) + gene-symbol ambiguity/FSP1 sense disambiguation (#ATLAS-AMBIG) + rare-event Poisson intervals + tail-resolution classification + ferroptosis-python bindings) |
 
 Start with the files in `analysis/` if you want to see what we've concluded so far—and where we're still uncertain.
 

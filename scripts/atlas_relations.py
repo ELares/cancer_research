@@ -80,8 +80,35 @@ def load_cancer_pmids(root: Path, include_recovered: bool = True) -> set:
     the right trade for a filter (a false-positive PMID contributes relations
     that simply are not about cancer, rather than corrupting a statistic), but
     `--indexed-only` is available where precision matters more.
+
+    THE UPDATE STREAM IS READ TOO, and it is the third time this exact omission
+    has been found in this project: a consumer enumerates census directories by
+    name, a new stream is added, and the consumer silently keeps answering for
+    the old world. `census_pmids` forgot `records_unindexed/` and called 20,345
+    already-held articles new; `atlas_fulltext.load_pmcid_map` forgot
+    `records_updates/` and left the PMC13 recovery cliff exactly where it was
+    while reporting success. Both failed silently, and so would this: the
+    newest 65,966 articles carry ZERO typed relations, which reads as "PubTator
+    has nothing for them" rather than "they were never offered to the filter".
+
+    Including them cannot manufacture coverage -- PubTator's bulk snapshot has
+    whatever it has -- but it removes this repository as a cause, which is the
+    part that is ours to fix. MEASURED, re-ingesting against the expanded set:
+
+        newest 65,966 articles     0% -> 50.5% carry typed relations
+        recovered stream                  46.0%
+        MeSH census                       39.4%
+        all 5,253,231 held         59.5% still carry none
+
+    The newest slice is the BEST covered, not the worst, because PubTator
+    processes recent literature and much of the old census predates it. The
+    remaining 59.5% is an upstream extraction ceiling rather than an omission
+    here: an article PubTator never processed, or in which it found no typed
+    relation, contributes nothing no matter how the filter is written.
     """
     dirs = ["records"] + (["records_unindexed"] if include_recovered else [])
+    if (root / "records_updates").exists():
+        dirs.append("records_updates")
     pmids = set()
     found_any = False
     for d in dirs:

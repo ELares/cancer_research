@@ -1,0 +1,641 @@
+{
+ "census_total": 4403994,
+ "composition": {
+  "by_comparator": {
+   "2022": {
+    "comparator_n": 148445,
+    "demonstrably_falling": 15,
+    "examples": [
+     {
+      "census": 7156,
+      "descriptor": "SARS-CoV-2",
+      "new": 197,
+      "rr_vs_census": 1.84,
+      "rr_vs_year": 0.36,
+      "year": 1232
+     },
+     {
+      "census": 5834,
+      "descriptor": "RNA, Circular",
+      "new": 220,
+      "rr_vs_census": 2.52,
+      "rr_vs_year": 0.47,
+      "year": 1049
+     },
+     {
+      "census": 1728,
+      "descriptor": "Systematic Reviews as Topic",
+      "new": 62,
+      "rr_vs_census": 2.4,
+      "rr_vs_year": 0.58,
+      "year": 239
+     },
+     {
+      "census": 3154,
+      "descriptor": "Anastomotic Leak",
+      "new": 89,
+      "rr_vs_census": 1.88,
+      "rr_vs_year": 0.65,
+      "year": 310
+     },
+     {
+      "census": 15112,
+      "descriptor": "Squamous Cell Carcinoma of Head and Neck",
+      "new": 533,
+      "rr_vs_census": 2.35,
+      "rr_vs_year": 0.66,
+      "year": 1814
+     },
+     {
+      "census": 1465,
+      "descriptor": "Oncologists",
+      "new": 51,
+      "rr_vs_census": 2.32,
+      "rr_vs_year": 0.67,
+      "year": 171
+     },
+     {
+      "census": 3210,
+      "descriptor": "Antigens, CD19",
+      "new": 104,
+      "rr_vs_census": 2.16,
+      "rr_vs_year": 0.68,
+      "year": 343
+     },
+     {
+      "census": 1689,
+      "descriptor": "Breast Density",
+      "new": 50,
+      "rr_vs_census": 1.98,
+      "rr_vs_year": 0.7,
+      "year": 161
+     },
+     {
+      "census": 3911,
+      "descriptor": "Venous Thromboembolism",
+      "new": 100,
+      "rr_vs_census": 1.71,
+      "rr_vs_year": 0.71,
+      "year": 319
+     },
+     {
+      "census": 4141,
+      "descriptor": "Endoscopic Mucosal Resection",
+      "new": 156,
+      "rr_vs_census": 2.52,
+      "rr_vs_year": 0.73,
+      "year": 484
+     },
+     {
+      "census": 6247,
+      "descriptor": "Nivolumab",
+      "new": 238,
+      "rr_vs_census": 2.54,
+      "rr_vs_year": 0.78,
+      "year": 691
+     },
+     {
+      "census": 6725,
+      "descriptor": "Epstein-Barr Virus Infections",
+      "new": 169,
+      "rr_vs_census": 1.68,
+      "rr_vs_year": 0.8,
+      "year": 475
+     }
+    ],
+    "flat_or_down": 50,
+    "flat_share": 8.4
+   },
+   "2023": {
+    "comparator_n": 143970,
+    "demonstrably_falling": 16,
+    "examples": [
+     {
+      "census": 1198,
+      "descriptor": "Clinical Relevance",
+      "new": 89,
+      "rr_vs_census": 4.96,
+      "rr_vs_year": 0.45,
+      "year": 430
+     },
+     {
+      "census": 15112,
+      "descriptor": "Squamous Cell Carcinoma of Head and Neck",
+      "new": 533,
+      "rr_vs_census": 2.35,
+      "rr_vs_year": 0.62,
+      "year": 1870
+     },
+     {
+      "census": 3154,
+      "descriptor": "Anastomotic Leak",
+      "new": 89,
+      "rr_vs_census": 1.88,
+      "rr_vs_year": 0.62,
+      "year": 311
+     },
+     {
+      "census": 1094,
+      "descriptor": "Tyrosine Kinase Inhibitors",
+      "new": 105,
+      "rr_vs_census": 6.41,
+      "rr_vs_year": 0.64,
+      "year": 357
+     },
+     {
+      "census": 1728,
+      "descriptor": "Systematic Reviews as Topic",
+      "new": 62,
+      "rr_vs_census": 2.4,
+      "rr_vs_year": 0.64,
+      "year": 210
+     },
+     {
+      "census": 4141,
+      "descriptor": "Endoscopic Mucosal Resection",
+      "new": 156,
+      "rr_vs_census": 2.52,
+      "rr_vs_year": 0.68,
+      "year": 501
+     },
+     {
+      "census": 3911,
+      "descriptor": "Venous Thromboembolism",
+      "new": 100,
+      "rr_vs_census": 1.71,
+      "rr_vs_year": 0.7,
+      "year": 314
+     },
+     {
+      "census": 5834,
+      "descriptor": "RNA, Circular",
+      "new": 220,
+      "rr_vs_census": 2.52,
+      "rr_vs_year": 0.7,
+      "year": 690
+     },
+     {
+      "census": 5262,
+      "descriptor": "Gallium Radioisotopes",
+      "new": 172,
+      "rr_vs_census": 2.18,
+      "rr_vs_year": 0.73,
+      "year": 517
+     },
+     {
+      "census": 1689,
+      "descriptor": "Breast Density",
+      "new": 50,
+      "rr_vs_census": 1.98,
+      "rr_vs_year": 0.73,
+      "year": 150
+     },
+     {
+      "census": 2451,
+      "descriptor": "Uveal Melanoma",
+      "new": 84,
+      "rr_vs_census": 2.29,
+      "rr_vs_year": 0.73,
+      "year": 252
+     },
+     {
+      "census": 2867,
+      "descriptor": "Breast Implants",
+      "new": 77,
+      "rr_vs_census": 1.79,
+      "rr_vs_year": 0.74,
+      "year": 228
+     }
+    ],
+    "flat_or_down": 49,
+    "flat_share": 8.2
+   },
+   "2024": {
+    "comparator_n": 150014,
+    "demonstrably_falling": 12,
+    "examples": [
+     {
+      "census": 689,
+      "descriptor": "Angiogenesis",
+      "new": 69,
+      "rr_vs_census": 6.69,
+      "rr_vs_year": 0.48,
+      "year": 326
+     },
+     {
+      "census": 1198,
+      "descriptor": "Clinical Relevance",
+      "new": 89,
+      "rr_vs_census": 4.96,
+      "rr_vs_year": 0.54,
+      "year": 375
+     },
+     {
+      "census": 7156,
+      "descriptor": "SARS-CoV-2",
+      "new": 197,
+      "rr_vs_census": 1.84,
+      "rr_vs_year": 0.57,
+      "year": 787
+     },
+     {
+      "census": 1094,
+      "descriptor": "Tyrosine Kinase Inhibitors",
+      "new": 105,
+      "rr_vs_census": 6.41,
+      "rr_vs_year": 0.63,
+      "year": 377
+     },
+     {
+      "census": 4141,
+      "descriptor": "Endoscopic Mucosal Resection",
+      "new": 156,
+      "rr_vs_census": 2.52,
+      "rr_vs_year": 0.67,
+      "year": 531
+     },
+     {
+      "census": 1728,
+      "descriptor": "Systematic Reviews as Topic",
+      "new": 62,
+      "rr_vs_census": 2.4,
+      "rr_vs_year": 0.68,
+      "year": 208
+     },
+     {
+      "census": 5834,
+      "descriptor": "RNA, Circular",
+      "new": 220,
+      "rr_vs_census": 2.52,
+      "rr_vs_year": 0.69,
+      "year": 720
+     },
+     {
+      "census": 7091,
+      "descriptor": "Neural Networks, Computer",
+      "new": 291,
+      "rr_vs_census": 2.74,
+      "rr_vs_year": 0.71,
+      "year": 934
+     },
+     {
+      "census": 4578,
+      "descriptor": "Sequence Analysis, RNA",
+      "new": 128,
+      "rr_vs_census": 1.87,
+      "rr_vs_year": 0.73,
+      "year": 397
+     },
+     {
+      "census": 3911,
+      "descriptor": "Venous Thromboembolism",
+      "new": 100,
+      "rr_vs_census": 1.71,
+      "rr_vs_year": 0.76,
+      "year": 299
+     },
+     {
+      "census": 1616,
+      "descriptor": "Bromodomain Containing Proteins",
+      "new": 55,
+      "rr_vs_census": 2.27,
+      "rr_vs_year": 0.77,
+      "year": 162
+     },
+     {
+      "census": 1908,
+      "descriptor": "Mendelian Randomization Analysis",
+      "new": 207,
+      "rr_vs_census": 7.24,
+      "rr_vs_year": 0.78,
+      "year": 601
+     }
+    ],
+    "flat_or_down": 79,
+    "flat_share": 13.2
+   },
+   "2025": {
+    "comparator_n": 147008,
+    "demonstrably_falling": 47,
+    "examples": [
+     {
+      "census": 689,
+      "descriptor": "Angiogenesis",
+      "new": 69,
+      "rr_vs_census": 6.69,
+      "rr_vs_year": 0.49,
+      "year": 313
+     },
+     {
+      "census": 7091,
+      "descriptor": "Neural Networks, Computer",
+      "new": 291,
+      "rr_vs_census": 2.74,
+      "rr_vs_year": 0.56,
+      "year": 1149
+     },
+     {
+      "census": 1198,
+      "descriptor": "Clinical Relevance",
+      "new": 89,
+      "rr_vs_census": 4.96,
+      "rr_vs_year": 0.59,
+      "year": 335
+     },
+     {
+      "census": 1078,
+      "descriptor": "Global Burden of Disease",
+      "new": 140,
+      "rr_vs_census": 8.67,
+      "rr_vs_year": 0.65,
+      "year": 483
+     },
+     {
+      "census": 589,
+      "descriptor": "Disability-Adjusted Life Years",
+      "new": 120,
+      "rr_vs_census": 13.6,
+      "rr_vs_year": 0.65,
+      "year": 413
+     },
+     {
+      "census": 4578,
+      "descriptor": "Sequence Analysis, RNA",
+      "new": 128,
+      "rr_vs_census": 1.87,
+      "rr_vs_year": 0.65,
+      "year": 440
+     },
+     {
+      "census": 2522,
+      "descriptor": "Quantum Dots",
+      "new": 75,
+      "rr_vs_census": 1.99,
+      "rr_vs_year": 0.65,
+      "year": 256
+     },
+     {
+      "census": 1422,
+      "descriptor": "Nutrition Surveys",
+      "new": 77,
+      "rr_vs_census": 3.62,
+      "rr_vs_year": 0.66,
+      "year": 261
+     },
+     {
+      "census": 4301,
+      "descriptor": "Global Health",
+      "new": 167,
+      "rr_vs_census": 2.59,
+      "rr_vs_year": 0.68,
+      "year": 544
+     },
+     {
+      "census": 3728,
+      "descriptor": "Chitosan",
+      "new": 112,
+      "rr_vs_census": 2.01,
+      "rr_vs_year": 0.69,
+      "year": 360
+     },
+     {
+      "census": 18924,
+      "descriptor": "Drug Carriers",
+      "new": 456,
+      "rr_vs_census": 1.61,
+      "rr_vs_year": 0.7,
+      "year": 1462
+     },
+     {
+      "census": 6456,
+      "descriptor": "Drug Liberation",
+      "new": 296,
+      "rr_vs_census": 3.06,
+      "rr_vs_year": 0.7,
+      "year": 943
+     }
+    ],
+    "flat_or_down": 193,
+    "flat_share": 32.3
+   },
+   "2026": {
+    "comparator_n": 12809,
+    "demonstrably_falling": 50,
+    "examples": [
+     {
+      "census": 2969,
+      "descriptor": "Limit of Detection",
+      "new": 208,
+      "rr_vs_census": 4.68,
+      "rr_vs_year": 0.4,
+      "year": 100
+     },
+     {
+      "census": 11090,
+      "descriptor": "Particle Size",
+      "new": 339,
+      "rr_vs_census": 2.04,
+      "rr_vs_year": 0.41,
+      "year": 159
+     },
+     {
+      "census": 1561,
+      "descriptor": "Metal-Organic Frameworks",
+      "new": 144,
+      "rr_vs_census": 6.16,
+      "rr_vs_year": 0.42,
+      "year": 66
+     },
+     {
+      "census": 689,
+      "descriptor": "Angiogenesis",
+      "new": 69,
+      "rr_vs_census": 6.69,
+      "rr_vs_year": 0.43,
+      "year": 31
+     },
+     {
+      "census": 3095,
+      "descriptor": "Catalysis",
+      "new": 131,
+      "rr_vs_census": 2.83,
+      "rr_vs_year": 0.45,
+      "year": 57
+     },
+     {
+      "census": 1989,
+      "descriptor": "Graphite",
+      "new": 60,
+      "rr_vs_census": 2.01,
+      "rr_vs_year": 0.45,
+      "year": 26
+     },
+     {
+      "census": 1900,
+      "descriptor": "Electrochemical Techniques",
+      "new": 123,
+      "rr_vs_census": 4.32,
+      "rr_vs_year": 0.46,
+      "year": 52
+     },
+     {
+      "census": 1561,
+      "descriptor": "Feedback, Physiological",
+      "new": 50,
+      "rr_vs_census": 2.14,
+      "rr_vs_year": 0.46,
+      "year": 21
+     },
+     {
+      "census": 854,
+      "descriptor": "Chlorophyllides",
+      "new": 50,
+      "rr_vs_census": 3.91,
+      "rr_vs_year": 0.49,
+      "year": 20
+     },
+     {
+      "census": 3377,
+      "descriptor": "Hydrogels",
+      "new": 238,
+      "rr_vs_census": 4.71,
+      "rr_vs_year": 0.49,
+      "year": 95
+     },
+     {
+      "census": 5162,
+      "descriptor": "Biosensing Techniques",
+      "new": 304,
+      "rr_vs_census": 3.93,
+      "rr_vs_year": 0.49,
+      "year": 120
+     },
+     {
+      "census": 37871,
+      "descriptor": "Drug Screening Assays, Antitumor",
+      "new": 1124,
+      "rr_vs_census": 1.98,
+      "rr_vs_year": 0.5,
+      "year": 436
+     }
+    ],
+    "flat_or_down": 268,
+    "flat_share": 44.9
+   }
+  },
+  "lcb_floor": 1.3,
+  "min_new": 50,
+  "pool_size": 597
+ },
+ "indexing": {
+  "pool_total": 783271,
+  "resolved_share_pct": 2.591,
+  "resolved_total": 20297,
+  "rows": [
+   {
+    "pool": 14211,
+    "rate_pct": 38.013,
+    "resolved": 5402,
+    "year": 2026
+   },
+   {
+    "pool": 111274,
+    "rate_pct": 10.919,
+    "resolved": 12150,
+    "year": 2025
+   },
+   {
+    "pool": 74688,
+    "rate_pct": 0.777,
+    "resolved": 580,
+    "year": 2024
+   },
+   {
+    "pool": 71013,
+    "rate_pct": 2.907,
+    "resolved": 2064,
+    "year": 2023
+   },
+   {
+    "pool": 72677,
+    "rate_pct": 0.033,
+    "resolved": 24,
+    "year": 2022
+   },
+   {
+    "pool": 68444,
+    "rate_pct": 0.019,
+    "resolved": 13,
+    "year": 2021
+   },
+   {
+    "pool": 53508,
+    "rate_pct": 0.007,
+    "resolved": 4,
+    "year": 2020
+   },
+   {
+    "pool": 39804,
+    "rate_pct": 0.0,
+    "resolved": 0,
+    "year": 2019
+   },
+   {
+    "pool": 36303,
+    "rate_pct": 0.017,
+    "resolved": 6,
+    "year": 2018
+   },
+   {
+    "pool": 32855,
+    "rate_pct": 0.012,
+    "resolved": 4,
+    "year": 2017
+   },
+   {
+    "pool": 26750,
+    "rate_pct": 0.0,
+    "resolved": 0,
+    "year": 2016
+   },
+   {
+    "pool": 23246,
+    "rate_pct": 0.017,
+    "resolved": 4,
+    "year": 2015
+   }
+  ],
+  "settled_max_rate_pct": 0.777,
+  "settled_years": 29
+ },
+ "legs": {
+  "complete_through": 2025,
+  "ferroptosis_all_years_after": 16059,
+  "ferroptosis_all_years_before": 13346,
+  "ferroptosis_complete_after": 12892,
+  "ferroptosis_complete_before": 12809,
+  "gain_in_trailing_year": 2630,
+  "gain_total": 2713,
+  "gain_trailing_share_pct": 96.9,
+  "latest_year": 2026,
+  "legs": {
+   "drug resistance": {
+    "after": 465,
+    "before": 464
+   },
+   "lipid peroxidation": {
+    "after": 1591,
+    "before": 1577
+   },
+   "photodynamic": {
+    "after": 171,
+    "before": 171
+   },
+   "sonodynamic (Ultrasonic Therapy, an over-estimate)": {
+    "after": 30,
+    "before": 30
+   }
+  }
+ },
+ "new_total": 65966
+}
