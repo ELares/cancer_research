@@ -6,7 +6,7 @@ which is a different question with a very different answer.
 
 ## The number not to use
 
-**50.6%** of relation rows touch an identifier that is
+**50.5%** of relation rows touch an identifier that is
 contested somewhere in the census. That sounds severe and means almost
 nothing. `ESR1` is contested because the string `ER` is ambiguous, but most
 ESR1 edges come from papers that wrote *estrogen receptor* in full, where
@@ -31,7 +31,7 @@ Of the 1,299,807 assignments that involve an ambiguous form at
 all, 56% have no corroborating
 unambiguous mention.
 
-**1.31%** of the 10,509,470 relation rows rest on an
+**1.28%** of the 10,700,928 relation rows rest on an
 at-risk assignment -- 137,270 rows.
 
 That is roughly 39x

@@ -17,8 +17,8 @@ scripts/ and analysis/ returns nothing.
 THE MEASUREMENT THAT MEANS SOMETHING, AND THE ONE THAT MISLEADS
 ---------------------------------------------------------------
 This repository has been here before. `atlas_ambiguity_impact.py` found that
-50.6% of relation rows TOUCH a contested identifier, which sounds severe and
-measures containment, while only 1.31% rest on an assignment that was actually
+50.5% of relation rows TOUCH a contested identifier, which sounds severe and
+measures containment, while only 1.28% rest on an assignment that was actually
 at risk -- a 39-fold difference between the alarming number and the true one.
 
 The same trap applies exactly. So both are computed and the containment figure
@@ -139,8 +139,8 @@ def scan_relations(retracted: set):
     That is NOT the same shape `atlas_graph.py` uses and the denominators are
     NOT interchangeable: the graph strips the type prefix and applies the
     per-paper sense corrections `atlas_disambiguate.py` produces, so it reports
-    2,840,563 pairs where this reports 2,854,431 over the same relations. The
-    13,868-pair difference is two different quantities, not drift. An earlier
+    2,888,791 pairs where this reports 2,902,827 over the same relations. The
+    14,036-pair difference is two different quantities, not drift. An earlier
     version of this docstring asserted they were comparable, and a documentation
     refresh then quoted this file's count under `atlas_graph.py`'s name.
     """
