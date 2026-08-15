@@ -29,8 +29,8 @@ is itself a finding — see *Coverage* below.
 | MeSH-indexed cancer articles | **4,403,994** (4,203,236 C04 + 200,758 adjacent) | `atlas_baseline.py` |
 | recovered, not yet MeSH-indexed | 783,271 | `atlas_unindexed.py` |
 | open-access full texts (on external storage) | 1,116,481 | `atlas_fulltext.py` |
-| typed, normalized relations | 10,509,470 over 2,095,737 PMIDs | `atlas_relations.py` |
-| queryable relation index | 2,840,563 entity pairs | `atlas_graph.py` |
+| typed, normalized relations | 10,700,928 over 2,129,080 PMIDs | `atlas_relations.py` |
+| queryable relation index | 2,888,791 entity pairs | `atlas_graph.py` |
 | full-text sentence co-mentions | 8,265,855 pairs over 1,100,218 documents | `atlas_comention.py` |
 
 The co-mention row names 1,100,218 and the full-text row names 1,116,481 on
@@ -49,8 +49,8 @@ once compared precisions from one build against a quantity computed on another.
 Read any relation count with the build it came from.
 
 **The pair count above is not interchangeable with the retraction layer's.**
-`atlas_graph.py` reports 2,840,563 and `atlas_retraction_exposure.py` reports
-2,854,431 over the same relations, and the 13,868-pair difference is not drift:
+`atlas_graph.py` reports 2,888,791 and `atlas_retraction_exposure.py` reports
+2,902,827 over the same relations, and the 14,036-pair difference is not drift:
 the graph strips the type prefix and applies the per-paper sense corrections
 `atlas_disambiguate.py` produces, and the retraction scan keys on the raw
 `Type|ID` field with no corrections. Two different quantities, so quoting either
@@ -261,7 +261,7 @@ relation rows touch a contested identifier, which measures **containment**, not
 error — most ESR1 edges come from papers that wrote "estrogen receptor" in full.
 
 The measurement that means something asks whether an ambiguous form was the
-*only* route to an assignment. **1.31% of relation rows** rest on one, and that
+*only* route to an assignment. **1.28% of relation rows** rest on one, and that
 is an upper bound since the vote is sometimes right.
 
 > **The practical lesson is an asymmetry.** Diffuse damage is ~1%, below the

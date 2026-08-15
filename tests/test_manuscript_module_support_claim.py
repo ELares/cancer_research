@@ -152,7 +152,19 @@ def test_both_limits_survive():
     para = _para()
     assert "minimum of an eleven-point sample" in para, (
         "the floor is presented as a detection limit")
-    assert "forty-five per cent" in para, "the base rate that bounds it is gone"
+    # DERIVED, not spelled. This assertion held the literal "forty-five per
+    # cent" while the figure it guards lives in the artifact, so a graph
+    # rebuild moved the base rate to forty-six and the guard failed for the
+    # right reason but with the wrong remedy on offer -- edit the guard, or
+    # edit the manuscript? Deriving it removes the question.
+    d = json.loads(RAW.read_text())
+    pct = round(100 * d["below_floor_base_rate"])
+    tens = {40: "forty", 50: "fifty", 30: "thirty", 60: "sixty"}
+    word = (tens[pct // 10 * 10] if pct % 10 == 0
+            else f"{tens[pct // 10 * 10]}-{WORDS[pct % 10]}")
+    assert f"{word} per cent" in para, (
+        f"the manuscript's base rate is not the artifact's {pct}% "
+        f"(expected the words '{word} per cent')")
     assert "inverts the ranking" in para, (
         "the manuscript names or implies specific genuine zeros without the "
         "cross-measure disclosure")

@@ -129,7 +129,7 @@ def _entity_degree(idx: dict) -> dict:
     for key in idx["edges"]:
         # `for i in key` over a 2-tuple double-counts a SELF-pair (a, a), which
         # would give `a` two partners where it has one -- itself. 629 of the
-        # 2,840,563 edges are self-pairs and AIFM2 is one of them, so this
+        # 2,888,791 edges are self-pairs and AIFM2 is one of them, so this
         # touched two of the twenty claims. Tiny, and wrong is wrong.
         for i in set(key):
             deg[i] = deg.get(i, 0) + 1

@@ -86,8 +86,8 @@ been marketing.
 
    Alongside it: **783,271** articles recovered that MeSH has not indexed yet
    (the un-indexed share reaches 37.6% in the most recent baseline files),
-   **1,116,481** open-access full texts on external storage, **10,509,470** typed
-   relations over 2,095,737 PMIDs, and **283 million** sentences of full text
+   **1,116,481** open-access full texts on external storage, **10,700,928** typed
+   relations over 2,129,080 PMIDs, and **283 million** sentences of full text
    mined for entity co-mention (55.3 million of them kept as carrying a
    co-mention).
 

@@ -10,11 +10,11 @@
     "fsp1",
     "system_xc"
   ],
-  "exposure_floor": 108,
-  "weaker_min": 6,
-  "weaker_max": 2792,
-  "below_floor_base_rate": 0.45288169986020377,
-  "spearman_weaker_degree_vs_relations": 0.8568166078500651,
+  "exposure_floor": 112,
+  "weaker_min": 9,
+  "weaker_max": 2876,
+  "below_floor_base_rate": 0.4586721573142536,
+  "spearman_weaker_degree_vs_relations": 0.8651160307120814,
   "spearman_excluding_gpx4": 0.8839641927498687,
   "zero_explained_by_exposure": 7,
   "zero_unexplained": [
@@ -26,11 +26,11 @@
       "module": "ifngamma",
       "a": "IFNG",
       "b": "SLC7A11",
-      "total": 13,
+      "total": 15,
       "comention": 99,
-      "deg_a": 3811,
-      "deg_b": 1474,
-      "weaker": 1474
+      "deg_a": 3893,
+      "deg_b": 1580,
+      "weaker": 1580
     },
     {
       "module": "ifngamma",
@@ -38,19 +38,19 @@
       "b": "SLC3A2",
       "total": 5,
       "comention": 66,
-      "deg_a": 3811,
-      "deg_b": 354,
-      "weaker": 354
+      "deg_a": 3893,
+      "deg_b": 375,
+      "weaker": 375
     },
     {
       "module": "acsl4",
       "a": "ACSL4",
       "b": "GPX4",
-      "total": 13,
+      "total": 16,
       "comention": 9027,
-      "deg_a": 763,
-      "deg_b": 1930,
-      "weaker": 763
+      "deg_a": 862,
+      "deg_b": 2144,
+      "weaker": 862
     },
     {
       "module": "fsp1",
@@ -59,7 +59,7 @@
       "total": 15,
       "comention": 597,
       "deg_a": 328,
-      "deg_b": 1930,
+      "deg_b": 2144,
       "weaker": 328
     },
     {
@@ -68,9 +68,9 @@
       "b": "GPX4",
       "total": 5,
       "comention": 1277,
-      "deg_a": 253,
-      "deg_b": 1930,
-      "weaker": 253
+      "deg_a": 263,
+      "deg_b": 2144,
+      "weaker": 263
     },
     {
       "module": "gch1",
@@ -78,9 +78,9 @@
       "b": "GPX4",
       "total": 1,
       "comention": 595,
-      "deg_a": 108,
-      "deg_b": 1930,
-      "weaker": 108
+      "deg_a": 112,
+      "deg_b": 2144,
+      "weaker": 112
     },
     {
       "module": "prom2",
@@ -88,9 +88,9 @@
       "b": "FTH1",
       "total": 0,
       "comention": 11,
-      "deg_a": 60,
-      "deg_b": 542,
-      "weaker": 60
+      "deg_a": 63,
+      "deg_b": 587,
+      "weaker": 63
     },
     {
       "module": "vitk",
@@ -98,9 +98,9 @@
       "b": "GPX4",
       "total": 0,
       "comention": null,
-      "deg_a": 11,
-      "deg_b": 1930,
-      "weaker": 11
+      "deg_a": 18,
+      "deg_b": 2144,
+      "weaker": 18
     },
     {
       "module": "copper",
@@ -108,9 +108,9 @@
       "b": "GPX4",
       "total": 0,
       "comention": 8,
-      "deg_a": 208,
-      "deg_b": 1930,
-      "weaker": 208
+      "deg_a": 212,
+      "deg_b": 2144,
+      "weaker": 212
     },
     {
       "module": "alox",
@@ -118,9 +118,9 @@
       "b": "ACSL4",
       "total": 3,
       "comention": 517,
-      "deg_a": 362,
-      "deg_b": 763,
-      "weaker": 362
+      "deg_a": 377,
+      "deg_b": 862,
+      "weaker": 377
     },
     {
       "module": "por",
@@ -128,7 +128,7 @@
       "b": "CYB5R1",
       "total": 0,
       "comention": 20,
-      "deg_a": 145,
+      "deg_a": 148,
       "deg_b": 12,
       "weaker": 12
     },
@@ -138,9 +138,9 @@
       "b": "GPX4",
       "total": 0,
       "comention": 13,
-      "deg_a": 87,
-      "deg_b": 1930,
-      "weaker": 87
+      "deg_a": 93,
+      "deg_b": 2144,
+      "weaker": 93
     },
     {
       "module": "repair",
@@ -158,9 +158,9 @@
       "b": "YAP1",
       "total": 26,
       "comention": 417,
-      "deg_a": 4898,
-      "deg_b": 2792,
-      "weaker": 2792
+      "deg_a": 4969,
+      "deg_b": 2876,
+      "weaker": 2876
     },
     {
       "module": "mboat",
@@ -168,9 +168,9 @@
       "b": "GPX4",
       "total": 0,
       "comention": 27,
-      "deg_a": 37,
-      "deg_b": 1930,
-      "weaker": 37
+      "deg_a": 38,
+      "deg_b": 2144,
+      "weaker": 38
     },
     {
       "module": "ether_lipid",
@@ -178,39 +178,39 @@
       "b": "AGPS",
       "total": 0,
       "comention": 89,
-      "deg_a": 6,
-      "deg_b": 58,
-      "weaker": 6
+      "deg_a": 9,
+      "deg_b": 60,
+      "weaker": 9
     },
     {
       "module": "dc_ferroptosis",
       "a": "CD274",
       "b": "SLC7A11",
-      "total": 7,
+      "total": 9,
       "comention": 239,
-      "deg_a": 4805,
-      "deg_b": 1474,
-      "weaker": 1474
+      "deg_a": 4971,
+      "deg_b": 1580,
+      "weaker": 1580
     },
     {
       "module": "system_xc",
       "a": "SLC7A11",
       "b": "GPX4",
-      "total": 74,
+      "total": 90,
       "comention": 19413,
-      "deg_a": 1474,
-      "deg_b": 1930,
-      "weaker": 1474
+      "deg_a": 1580,
+      "deg_b": 2144,
+      "weaker": 1580
     },
     {
       "module": "erastin",
       "a": "erastin",
       "b": "SLC7A11",
-      "total": 63,
+      "total": 68,
       "comention": 1573,
-      "deg_a": 872,
-      "deg_b": 1474,
-      "weaker": 872
+      "deg_a": 963,
+      "deg_b": 1580,
+      "weaker": 963
     },
     {
       "module": "hdac_persister",
@@ -218,7 +218,7 @@
       "b": "AIFM2",
       "total": 0,
       "comention": 1,
-      "deg_a": 1197,
+      "deg_a": 1219,
       "deg_b": 328,
       "weaker": 328
     }

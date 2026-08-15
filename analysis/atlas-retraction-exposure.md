@@ -33,16 +33,17 @@ itself, so every figure here is a **lower bound**.
 ## The graph
 
 Two numbers, and reporting only the first would mislead — this repository
-has made that exact error before, when 50.6% of relation rows *touching* a
-contested identifier turned out to be 1.31% actually at risk.
+has made that exact error before, when 50.5% of relation rows
+*touching* a contested identifier turned out to be 1.28% actually
+at risk.
 
 | | count | share |
 |---|--:|--:|
-| relation rows | 10,509,470 | |
-| rows from a retracted paper | 40,499 | 0.385% |
-| distinct entity pairs | 2,854,431 | |
-| pairs **touched** by a retracted paper | 32,294 | 1.131% |
-| pairs whose **only** support is retracted | **7,373** | 0.2583% |
+| relation rows | 10,700,928 | |
+| rows from a retracted paper | 40,499 | 0.378% |
+| distinct entity pairs | 2,902,827 | |
+| pairs **touched** by a retracted paper | 32,294 | 1.113% |
+| pairs whose **only** support is retracted | **7,329** | 0.2525% |
 
 The touched-to-uncorroborated ratio is **4.4x**: most pairs that
 involve a retracted paper are also asserted by papers that still stand, and
@@ -52,12 +53,12 @@ standing supports.
 
 ### The denominator that matters
 
-**2,003,374 of the graph's 2,854,431 pairs (70.2%) rest on a single
+**2,037,777 of the graph's 2,902,827 pairs (70.2%) rest on a single
 paper.** That is the population at risk: a pair asserted by many papers
 cannot be left unsupported by one retraction, so the uncorroborated class
 is drawn almost entirely from the single-paper pairs. Against that
-denominator the rate is **0.368%**,
-not 0.2583%.
+denominator the rate is **0.360%**,
+not 0.2525%.
 
 Reported both ways because picking either alone misleads in a different
 direction — and because the 70% figure is the more alarming one, and it
@@ -73,20 +74,20 @@ for that pair has been withdrawn, and a consumer should be told.
 
 | predicate | tainted rows | all rows | share |
 |---|--:|--:|--:|
-| `associate` | 22,285 | 5,355,943 | 0.416% |
-| `positive_correlate` | 5,372 | 714,547 | 0.752% |
-| `negative_correlate` | 5,142 | 847,474 | 0.607% |
-| `treat` | 3,645 | 2,030,690 | 0.179% |
-| `inhibit` | 1,525 | 223,369 | 0.683% |
-| `stimulate` | 1,174 | 227,753 | 0.515% |
-| `cause` | 767 | 739,412 | 0.104% |
-| `cotreat` | 256 | 224,146 | 0.114% |
-| `interact` | 215 | 62,500 | 0.344% |
-| `compare` | 91 | 71,690 | 0.127% |
-| `prevent` | 27 | 11,256 | 0.240% |
+| `associate` | 22,285 | 5,463,501 | 0.408% |
+| `positive_correlate` | 5,372 | 729,407 | 0.736% |
+| `negative_correlate` | 5,142 | 862,619 | 0.596% |
+| `treat` | 3,645 | 2,061,429 | 0.177% |
+| `inhibit` | 1,525 | 226,661 | 0.673% |
+| `stimulate` | 1,174 | 231,588 | 0.507% |
+| `cause` | 767 | 749,648 | 0.102% |
+| `cotreat` | 256 | 227,648 | 0.112% |
+| `interact` | 215 | 63,665 | 0.338% |
+| `compare` | 91 | 72,660 | 0.125% |
+| `prevent` | 27 | 11,394 | 0.237% |
 
-The rate is not uniform: `positive_correlate` carries 0.752% against
-0.416% for `associate`, the graph's bulk predicate — a factor of
+The rate is not uniform: `positive_correlate` carries 0.736% against
+0.408% for `associate`, the graph's bulk predicate — a factor of
 1.8x. Read that as a hypothesis rather than a
 result. It is consistent with retraction concentrating in claims about
 intervention rather than observation, but these are small counts, the

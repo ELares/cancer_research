@@ -23,8 +23,8 @@ If you have expertise in oncology, biochemistry, ferroptosis, immunology, comput
 This project reads the cancer literature at census scale. It holds **5,187,265
 cancer articles** — the 4,403,994 that MeSH indexes under the neoplasms tree,
 plus 783,271 more recovered by text-matching because MeSH has not indexed them
-yet — with **1,116,481 open-access full texts**, **10,509,470 typed entity
-relations** over 2,095,737 articles, and 283 million sentences mined for
+yet — with **1,116,481 open-access full texts**, **10,700,928 typed entity
+relations** over 2,129,080 articles, and 283 million sentences mined for
 co-mention. A daily-update stream adds the newest literature on top: the latest
 window carried 188,850 distinct articles, 65,966 of them new to the census.
 

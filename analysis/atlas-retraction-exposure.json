@@ -1,9 +1,9 @@
 {
   "census_records": 4403994,
-  "pairs": 2854431,
+  "pairs": 2902827,
   "pairs_touched": 32294,
-  "pairs_uncorroborated": 7373,
-  "pmids_in_graph": 2095737,
+  "pairs_uncorroborated": 7329,
+  "pmids_in_graph": 2129080,
   "pred_tainted": {
     "associate": 22285,
     "cause": 767,
@@ -18,17 +18,17 @@
     "treat": 3645
   },
   "pred_total": {
-    "associate": 5355943,
-    "cause": 739412,
-    "compare": 71690,
-    "cotreat": 224146,
-    "inhibit": 223369,
-    "interact": 62500,
-    "negative_correlate": 847474,
-    "positive_correlate": 714547,
-    "prevent": 11256,
-    "stimulate": 227753,
-    "treat": 2030690
+    "associate": 5463501,
+    "cause": 749648,
+    "compare": 72660,
+    "cotreat": 227648,
+    "inhibit": 226661,
+    "interact": 63665,
+    "negative_correlate": 862619,
+    "positive_correlate": 729407,
+    "prevent": 11394,
+    "stimulate": 231588,
+    "treat": 2061429
   },
   "retracted_articles": 6796,
   "retracted_by_year": {
@@ -55,8 +55,8 @@
     "Retracted Publication": 6796,
     "Retraction Notice": 37
   },
-  "rows": 10509470,
-  "single_paper_pairs": 2003374,
+  "rows": 10700928,
+  "single_paper_pairs": 2037777,
   "tainted_rows": 40499,
   "uncorroborated_examples": [
     [
