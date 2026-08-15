@@ -32,7 +32,7 @@ PubTator annotates their genes, so the field's attention is countable.
 | GPX4 | 7,203 | `gpx4_rate` |
 | SLC7A11 | 3,808 | `erastin_xc_inhib` |
 | NRF2 | 2,898 | `nrf2_gsh_rate` |
-| ACSL4 | 2,243 | `acsl4_status_boost` |
+| ACSL4 | 2,241 | `acsl4_status_boost` |
 | FTH1 | 1,472 | `ferritinophagy_release` |
 | NCOA4 | 860 | `ferritinophagy_release` |
 | FSP1 | 644 | `fsp1_rate` |

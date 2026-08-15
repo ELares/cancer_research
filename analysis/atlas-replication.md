@@ -19,27 +19,27 @@ once as far as the machine-readable record shows.
 
 ## The rate
 
-Of 1,990,657 entity pairs first asserted at least 5 years ago,
-**22.7%** acquired a second paper WITHIN 5 years. Allowing an
-unlimited horizon raises that to 34.2%, and **1,310,759** pairs have still been asserted exactly once.
+Of 2,370,011 entity pairs first asserted at least 5 years ago,
+**23.2%** acquired a second paper WITHIN 5 years. Allowing an
+unlimited horizon raises that to 34.7%, and **1,547,746** pairs have still been asserted exactly once.
 
 ### The window has to be equal, not merely a minimum
 
-Scoring each cohort on whether it was *ever* replicated gives 60.1% for pairs first asserted in 1950 against 13.4% for 2021, a fall of 46.7 points across 71 years. That is not a finding about science. A 1950 pair has had 76 years to acquire a second paper and a 2021 pair has had 5, so the "decline" is the observation window shrinking as the cohorts get newer. Carried to the final cohort it reaches 0.4% at 2026, which is not evidence of anything: that cohort has had 0 years.
+Scoring each cohort on whether it was *ever* replicated gives 60.3% for pairs first asserted in 1950 against 14.5% for 2022, a fall of 45.8 points across 72 years. That is not a finding about science. A 1950 pair has had 77 years to acquire a second paper and a 2022 pair has had 5, so the "decline" is the observation window shrinking as the cohorts get newer. Carried to the final cohort it reaches 1.2% at 2026, which is not evidence of anything: that cohort has had 1 years.
 
-The two series meet at the recent end. A pair first asserted in 2021 can only acquire a second paper by 2026, which is its own 5-year window, so "ever" and "within 5 years" are the same question there and both give 13.4%. The contrast below is therefore carried by the OLD end, where the censored measure has had decades of extra observation to bank -- which is exactly the bias being described, and is why the equal window is applied from each pair's own first assertion rather than from a fixed date.
+The two series meet at the recent end. A pair first asserted in 2022 can only acquire a second paper by 2027, which is its own 5-year window, so "ever" and "within 5 years" are the same question there and both give 14.5%. The contrast below is therefore carried by the OLD end, where the censored measure has had decades of extra observation to bank -- which is exactly the bias being described, and is why the equal window is applied from each pair's own first assertion rather than from a fixed date.
 
 | first asserted | pairs | ever replicated | rate | window complete? |
 |---|---|---|---|---|
-| 1950 | 238 | 143 | 60.1% | yes |
-| 1959 | 365 | 216 | 59.2% | yes |
-| 1969 | 911 | 567 | 62.2% | yes |
-| 1978 | 5,393 | 3,008 | 55.8% | yes |
-| 1987 | 13,183 | 6,411 | 48.6% | yes |
-| 1996 | 23,960 | 11,387 | 47.5% | yes |
-| 2005 | 52,921 | 22,639 | 42.8% | yes |
-| 2014 | 92,489 | 27,872 | 30.1% | yes |
-| 2023 | 103,597 | 9,701 | 9.4% | no, 3y elapsed |
+| 1950 | 237 | 143 | 60.3% | yes |
+| 1959 | 364 | 219 | 60.2% | yes |
+| 1969 | 912 | 580 | 63.6% | yes |
+| 1978 | 5,651 | 3,115 | 55.1% | yes |
+| 1987 | 13,426 | 6,668 | 49.7% | yes |
+| 1996 | 25,323 | 12,266 | 48.4% | yes |
+| 2005 | 53,371 | 24,092 | 45.1% | yes |
+| 2014 | 101,024 | 34,166 | 33.8% | yes |
+| 2023 | 140,100 | 16,426 | 11.7% | no, 4y elapsed |
 
 Every cohort below is therefore scored on the SAME 5-year interval from
 its own first assertion, and cohorts too recent to have completed one are
@@ -47,37 +47,31 @@ excluded rather than shown declining:
 
 | first asserted | pairs | replicated within 5y | rate |
 |---|---|---|---|
-| 1950 | 238 | 61 | 25.6% |
-| 1953 | 244 | 62 | 25.4% |
-| 1956 | 309 | 80 | 25.9% |
-| 1959 | 365 | 66 | 18.1% |
-| 1962 | 492 | 97 | 19.7% |
-| 1966 | 740 | 183 | 24.7% |
-| 1969 | 911 | 218 | 23.9% |
-| 1972 | 1,179 | 391 | 33.2% |
-| 1975 | 5,760 | 1,892 | 32.8% |
-| 1978 | 5,393 | 1,576 | 29.2% |
-| 1981 | 7,371 | 2,195 | 29.8% |
-| 1984 | 11,526 | 3,355 | 29.1% |
-| 1987 | 13,183 | 3,681 | 27.9% |
-| 1990 | 16,542 | 4,499 | 27.2% |
-| 1993 | 19,030 | 5,305 | 27.9% |
-| 1996 | 23,960 | 6,514 | 27.2% |
-| 1999 | 29,467 | 8,221 | 27.9% |
-| 2002 | 37,726 | 10,578 | 28.0% |
-| 2005 | 52,921 | 13,731 | 25.9% |
-| 2008 | 62,734 | 15,082 | 24.0% |
-| 2011 | 75,237 | 17,737 | 23.6% |
-| 2014 | 92,489 | 19,953 | 21.6% |
-| 2017 | 93,421 | 17,769 | 19.0% |
-| 2020 | 107,374 | 18,591 | 17.3% |
+| 1950 | 237 | 62 | 26.2% |
+| 1954 | 268 | 67 | 25.0% |
+| 1958 | 334 | 63 | 18.9% |
+| 1962 | 490 | 98 | 20.0% |
+| 1967 | 860 | 186 | 21.6% |
+| 1971 | 1,207 | 346 | 28.7% |
+| 1975 | 5,750 | 1,885 | 32.8% |
+| 1979 | 6,481 | 1,803 | 27.8% |
+| 1983 | 10,230 | 3,052 | 29.8% |
+| 1987 | 13,426 | 3,712 | 27.6% |
+| 1991 | 17,088 | 4,752 | 27.8% |
+| 1995 | 23,429 | 6,298 | 26.9% |
+| 1999 | 30,530 | 8,369 | 27.4% |
+| 2003 | 42,498 | 11,836 | 27.9% |
+| 2007 | 59,676 | 14,969 | 25.1% |
+| 2011 | 79,327 | 19,467 | 24.5% |
+| 2015 | 108,609 | 24,454 | 22.5% |
+| 2019 | 129,816 | 27,697 | 21.3% |
 
 The dramatic version does not survive the fix, and what is left is
 modest:
 
-* 1985-1999 cohorts: **27.5%**
-* 2000-2014 cohorts: **24.4%**
-* 2017 onward: **17.1%**
+* 1985-1999 cohorts: **27.3%**
+* 2000-2014 cohorts: **25.1%**
+* 2017 onward: **19.3%**
 
 The first two comparisons are between fully observed cohorts and the gap
 between them is small. The last is not trustworthy on its own: MeSH
@@ -88,7 +82,7 @@ one.
 
 ## Orphaned claims touching this project's mechanisms
 
-7,794 single-paper pairs involve a gene the simulation
+8,916 single-paper pairs involve a gene the simulation
 layers rest on. Oldest first, since those have had the longest to be
 followed up and were not:
 
@@ -107,11 +101,11 @@ followed up and were not:
 | 1987 | SLC3A2 — familial adenomatous polyposis |
 | 1987 | SLC3A2 — CAI |
 | 1987 | parathyroid hormone — SLC3A2 |
-| 1987 | DLD — nitroxide |
 | 1987 | DLD — quinone |
 | 1987 | DLD — neuroblastoma |
-| 1987 | GCH1 — pulmonary nodules |
+| 1987 | DLD — nitroxide |
 | 1987 | GCH1 — lung |
+| 1987 | GCH1 — pulmonary nodules |
 | 1988 | SLC3A2 — phorbol ester |
 | 1988 | p53 — avarol |
 | 1988 | DLD — leukemia |

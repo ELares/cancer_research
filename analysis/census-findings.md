@@ -111,22 +111,22 @@ So the standing finding is not that the layer is broken. It is that this project
 *Source:* `comention-regression.md`, `comention-authority-result.md`
 
 **Literature-based discovery does not work as built.** The shipped ABC
-ranking scores 10.1% precision@20 against
-15.5% for ranking the same candidates by
+ranking scores 13.1% precision@20 against
+20.5% for ranking the same candidates by
 popularity, and no standard link predictor beats that baseline either.
-The candidate SET is genuinely informative, so that half stands. The obvious second half -- a bad RANKER -- does not follow, and two later measurements say why. Ordering the seven measured methods by how hub-selecting each one is reproduces the precision leaderboard exactly (rank correlation 1.00 over those seven points), so the metric rewards NOT correcting for candidate degree; and blending each of the five seed-aware signals into a degree-only prior adds nothing measurable, at any weight tested and under three combination schemes outside the blend family. Among every ranker measured, a degree-correcting one and a bad one cannot be told apart on this metric.
+The candidate SET is genuinely informative, so that half stands. The obvious second half -- a bad RANKER -- does not follow, and two later measurements say why. Ordering the seven measured methods by how hub-selecting each one is reproduces the precision leaderboard exactly (rank correlation 0.96 over those seven points), so the metric rewards NOT correcting for candidate degree; and blending each of the five seed-aware signals into a degree-only prior adds nothing measurable, at any weight tested and under three combination schemes outside the blend family. Among every ranker measured, a degree-correcting one and a bad one cannot be told apart on this metric.
 *Source:* `atlas-discovery-eval.md`, `atlas-discovery-degree-bias.md`, `atlas-discovery-headroom.md`
 
-**Replication looked like it was collapsing, and was not.** Scoring cohorts on whether they were EVER replicated gives 60.1% for 1950 to 13.4% for 2021; that is the observation window shrinking, not science changing, since the older cohort has had decades to acquire a second paper and the newer one had 5 years. On an equal 5-year window from each pair's own first assertion the decline is modest, and the recent end is an upper bound because of MeSH indexing lag.
+**Replication looked like it was collapsing, and was not.** Scoring cohorts on whether they were EVER replicated gives 60.3% for 1950 to 14.5% for 2022; that is the observation window shrinking, not science changing, since the older cohort has had decades to acquire a second paper and the newer one had 5 years. On an equal 5-year window from each pair's own first assertion the decline is modest, and the recent end is an upper bound because of MeSH indexing lag.
 *Source:* `atlas-replication.md`
 
-**Most of what the census cannot corroborate is about what has been STUDIED, not about what is true.** Of the 20 simulation-module claims, 11 are corroborated by at least one asserting article and 9 by none. Read flat, that looks like 9 unsupported claims. It is not: a pair can only be asserted if BOTH its entities are written about, and the weaker entity's partner count across these claims runs from 6 to 2,792. Every claim that HAS support has a weaker entity of at least 112 partners, and 7 of the 9 zeros fall below that (Spearman rho = 0.87, and the association survives dropping every GPX4 pair).
+**Most of what the census cannot corroborate is about what has been STUDIED, not about what is true.** Of the 20 simulation-module claims, 11 are corroborated by at least one asserting article and 9 by none. Read flat, that looks like 9 unsupported claims. It is not: a pair can only be asserted if BOTH its entities are written about, and the weaker entity's partner count across these claims runs from 6 to 2,792. Every claim that HAS support has a weaker entity of at least 112 partners, and 7 of the 9 zeros fall below that (Spearman rho = 0.86, and the association survives dropping every GPX4 pair).
 **But which zeros are 'genuine' cannot be identified, and the source document deliberately names none.** The line is a sample minimum set by a one-article row; 45% of all asserted pairs in the graph sit below it, so it is not a detectability limit; and running the same procedure on the pair-level co-mention column inverts the correlation and returns a disjoint pair of exceptions. The finding is that a zero is a poor guide to a claim's truth -- not that any particular zero is interesting.
 *Source:* `atlas-module-support.md`
 
 **The entity collisions are not as bad as containment suggests.**
 50.5% of relation rows touch a contested identifier, but only
-1.28% rest on an uncorroborated one.
+1.31% rest on an uncorroborated one.
 *Source:* `atlas-ambiguity-impact.md`
 
 ---
