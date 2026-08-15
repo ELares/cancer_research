@@ -19,7 +19,7 @@ THE MEASUREMENT THAT MEANS SOMETHING, AND THE ONE THAT MISLEADS
 This repository has been here before. `atlas_ambiguity_impact.py` found that
 50.5% of relation rows TOUCH a contested identifier, which sounds severe and
 measures containment, while only 1.28% rest on an assignment that was actually
-at risk -- a 39-fold difference between the alarming number and the true one.
+at risk -- a 38-fold difference between the alarming number and the true one.
 
 The same trap applies exactly. So both are computed and the containment figure
 is never reported alone:

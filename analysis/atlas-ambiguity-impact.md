@@ -22,19 +22,19 @@ corroborates itself and the collision cost nothing. A paper writing only
 
 | | assignments | share |
 |---|---|---|
-| reached only by an unambiguous mention | 17,141,004 | 93.0% |
-| reached by both, so corroborated | 573,621 | 3.1% |
-| **at risk** -- ambiguous form the only route | **726,186** | **3.9%** |
-| total involving a contested identifier | 18,440,811 | |
+| reached only by an unambiguous mention | 17,330,645 | 93.0% |
+| reached by both, so corroborated | 578,746 | 3.1% |
+| **at risk** -- ambiguous form the only route | **733,971** | **3.9%** |
+| total involving a contested identifier | 18,643,362 | |
 
-Of the 1,299,807 assignments that involve an ambiguous form at
+Of the 1,312,717 assignments that involve an ambiguous form at
 all, 56% have no corroborating
 unambiguous mention.
 
-**1.28%** of the 10,700,928 relation rows rest on an
-at-risk assignment -- 137,270 rows.
+**1.31%** of the 10,700,928 relation rows rest on an
+at-risk assignment -- 140,598 rows.
 
-That is roughly 39x
+That is roughly 38x
 smaller than the containment figure above, which is why both are reported
 here and neither is reported alone.
 

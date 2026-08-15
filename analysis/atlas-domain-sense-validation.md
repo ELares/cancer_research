@@ -15,52 +15,52 @@ PubTator's majority vote disagrees with the curated sense in 4 of
 
 | symbol | curated sense | share of declaring papers | majority vote | vote correct? |
 |---|---|---|---|---|
-| `er` | ESR1 | 98.7% (451 declaring) | EREG | **no** |
-| `cox-2` | PTGS2 | 100.0% (541 declaring) | COX2 | **no** |
-| `p62` | SQSTM1 | 97.4% (272 declaring) | NUP62 | **no** |
-| `p21` | CDKN1A | 89.6% (336 declaring) | H3P16 | **no** |
-| `psa` | KLK3 | 100.0% (528 declaring) | KLK3 | yes |
+| `er` | ESR1 | 95.8% (450 declaring) | EREG | **no** |
+| `cox-2` | PTGS2 | 99.6% (486 declaring) | COX2 | **no** |
+| `p62` | SQSTM1 | 100.0% (226 declaring) | NUP62 | **no** |
+| `p21` | CDKN1A | 90.5% (274 declaring) | H3P16 | **no** |
+| `psa` | KLK3 | 100.0% (499 declaring) | KLK3 | yes |
 
 ## What each sample actually declared
 
-### `er` — 52,184 papers in the census, 800 sampled
+### `er` — 76,579 papers in the census, 800 sampled
 
 | declared sense | papers |
 |---|---|
-| ESR1 | 445 |
-| (none declared) | 349 |
-| (endoplasmic reticulum, not a gene) | 6 |
+| ESR1 | 431 |
+| (none declared) | 350 |
+| (endoplasmic reticulum, not a gene) | 19 |
 
-### `cox-2` — 14,740 papers in the census, 800 sampled
-
-| declared sense | papers |
-|---|---|
-| PTGS2 | 541 |
-| (none declared) | 259 |
-
-### `p62` — 6,546 papers in the census, 800 sampled
+### `cox-2` — 24,726 papers in the census, 800 sampled
 
 | declared sense | papers |
 |---|---|
-| (none declared) | 528 |
-| SQSTM1 | 265 |
-| NUP62 | 7 |
+| PTGS2 | 484 |
+| (none declared) | 314 |
+| COX2 (mitochondrial) | 2 |
 
-### `p21` — 31,405 papers in the census, 800 sampled
-
-| declared sense | papers |
-|---|---|
-| (none declared) | 464 |
-| CDKN1A | 301 |
-| H3P16 (histone pseudogene) | 26 |
-| RAS p21 | 9 |
-
-### `psa` — 40,837 papers in the census, 800 sampled
+### `p62` — 11,604 papers in the census, 800 sampled
 
 | declared sense | papers |
 |---|---|
-| KLK3 | 528 |
-| (none declared) | 272 |
+| (none declared) | 574 |
+| SQSTM1 | 226 |
+
+### `p21` — 47,659 papers in the census, 800 sampled
+
+| declared sense | papers |
+|---|---|
+| (none declared) | 526 |
+| CDKN1A | 248 |
+| H3P16 (histone pseudogene) | 20 |
+| RAS p21 | 6 |
+
+### `psa` — 55,663 papers in the census, 800 sampled
+
+| declared sense | papers |
+|---|---|
+| KLK3 | 499 |
+| (none declared) | 301 |
 
 ## Why this matters more than it looks
 
@@ -93,7 +93,7 @@ true, and it was written rather than measured.
   sample declares nothing, and those papers are excluded rather than guessed.
 * The share is measured on a sample, not the full pool, so it carries
   sampling error. The margins are wide enough that this does not change the
-  conclusion: the narrowest curated share above is 89.6%, and the widest
+  conclusion: the narrowest curated share above is 90.5%, and the widest
   is 100.0%.
 * This validates the DIRECTION of each curated sense. It does not measure how
   often applying that default would be wrong for an individual paper.

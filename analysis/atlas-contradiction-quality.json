@@ -1,102 +1,102 @@
 {
-  "conflicting_pairs": 4067,
+  "conflicting_pairs": 6373,
   "pairs_with_self_contradiction": 1,
   "self_contradicting_assertions": 1,
-  "total_assertions_in_conflicts": 115024,
-  "eligible_pairs": 13589,
+  "total_assertions_in_conflicts": 196364,
+  "eligible_pairs": 19735,
   "ambiguous": {
-    "n": 3509,
-    "conflicted": 1376
+    "n": 5309,
+    "conflicted": 2228
   },
   "clean": {
-    "n": 10080,
-    "conflicted": 2691
+    "n": 14426,
+    "conflicted": 4145
   },
-  "crude_risk_ratio": 1.468865058888229,
-  "mantel_haenszel": 1.4487880923261625,
+  "crude_risk_ratio": 1.4605749710133304,
+  "mantel_haenszel": 1.4450007862216403,
   "mh_ci95": [
-    1.3730084234608289,
-    1.5258147581981998
+    1.388404714697257,
+    1.504867074916966
   ],
   "strata": {
     "3": {
       "amb": [
-        2130,
-        645
+        3247,
+        1077
       ],
       "clean": [
-        6388,
-        1421
+        9073,
+        2105
       ]
     },
     "4": {
       "amb": [
-        860,
-        430
+        1251,
+        661
       ],
       "clean": [
-        2303,
-        781
+        3309,
+        1243
       ]
     },
     "5": {
       "amb": [
-        319,
-        188
+        516,
+        317
       ],
       "clean": [
-        839,
-        320
+        1239,
+        518
       ]
     },
     "6": {
       "amb": [
-        122,
-        77
+        180,
+        116
       ],
       "clean": [
-        327,
-        110
+        472,
+        176
       ]
     },
     "7": {
       "amb": [
-        53,
-        27
+        61,
+        29
       ],
       "clean": [
-        148,
-        43
+        207,
+        66
       ]
     },
     "8": {
       "amb": [
-        14,
-        4
+        35,
+        20
       ],
       "clean": [
-        42,
-        9
+        84,
+        25
       ]
     },
     "9": {
       "amb": [
-        7,
+        11,
         4
       ],
       "clean": [
-        23,
-        4
+        28,
+        7
       ]
     },
     "10": {
       "amb": [
-        4,
-        1
+        8,
+        4
       ],
       "clean": [
-        10,
-        3
+        14,
+        5
       ]
     }
   }

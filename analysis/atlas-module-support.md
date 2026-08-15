@@ -60,8 +60,8 @@ Counts are not truth. About half of all relations carry the weakest predicate,
 | erastin | `erastin` - `SLC7A11` | 68 | **1,573** | negative_correlate 42, associate 21, positive_correlate 5 | no | **yes** (+5/-42, bal 0.12) |
 | contact | `CDH1` - `YAP1` | 26 | **417** | associate 14, negative_correlate 7, positive_correlate 5 | no | **yes** (+5/-7, bal 0.71) |
 | acsl4 | `ACSL4` - `GPX4` | 16 | **9,027** | associate 10, negative_correlate 4, positive_correlate 2 | no | **yes** (+2/-4, bal 0.50) |
+| fsp1 | `AIFM2` - `GPX4` | 16 | **597** | associate 11, positive_correlate 3, negative_correlate 2 | no | **yes** (+3/-2, bal 0.67) |
 | ifngamma | `IFNG` - `SLC7A11` | 15 | **99** | negative_correlate 14, positive_correlate 1 | yes | **yes** (+1/-14, bal 0.07) |
-| fsp1 | `AIFM2` - `GPX4` | 15 | **597** | associate 10, positive_correlate 3, negative_correlate 2 | no | **yes** (+3/-2, bal 0.67) |
 | dc_ferroptosis | `CD274` - `SLC7A11` | 9 | **239** | positive_correlate 4, associate 3, negative_correlate 2 | yes | **yes** (+4/-2, bal 0.50) |
 | ifngamma | `IFNG` - `SLC3A2` | 5 | **66** | negative_correlate 5 | yes | no |
 | dhodh | `DHODH` - `GPX4` | 5 | **1,277** | associate 3, negative_correlate 2 | no | no |
@@ -145,7 +145,7 @@ only be asserted if both its entities are written about at all, and across
 these claims the WEAKER entity's number of distinct relation partners runs
 from 9 to 2,876, a factor of 319.
 
-Exposure and corroboration track each other closely: Spearman **rho = 0.87**, Kendall **tau = 0.71** over 20 claims
+Exposure and corroboration track each other closely: Spearman **rho = 0.86**, Kendall **tau = 0.70** over 20 claims
 (a permutation test puts the correlation beyond every one of 200,000
 shuffles). It is not an artifact of one hub gene -- taking the WEAKER of
 each pair structurally excludes GPX4, which is never the weaker side, and
@@ -168,7 +168,7 @@ has been studied.
 | prom2 | `PROM2` - `FTH1` | 63 (63 / 587) | yes |
 | dhc7 | `DHCR7` - `GPX4` | 93 (93 / 2144) | yes |
 | copper | `ATP7A` - `GPX4` | 212 (212 / 2144) | no |
-| hdac_persister | `HDAC1` - `AIFM2` | 328 (1219 / 328) | no |
+| hdac_persister | `HDAC1` - `AIFM2` | 356 (1219 / 356) | no |
 
 ### Three reasons not to push this further than it goes
 
@@ -228,6 +228,15 @@ ACSL4 sets the oxidisable-PUFA substrate GPX4 must defend
 * module cites PMID 27842070 — not among the sampled supporting PMIDs
 * example PMIDs: 31789401, 33070393, 34369274, 35809566, 37693126, 38819674, 39043312, 39290000
 
+### `fsp1` — AIFM2 / GPX4
+
+FSP1/AIFM2 is the GPX4-independent parallel defence
+
+* 16 asserting relations
+* predicates: `associate` 11, `positive_correlate` 3, `negative_correlate` 2
+* module cites PMID 31634899 — not among the sampled supporting PMIDs
+* example PMIDs: 34167028, 36078133, 36576648, 37380771, 38725840, 39453438, 39477303, 39626861
+
 ### `ifngamma` — IFN-gamma / SLC7A11
 
 IFN-gamma represses System Xc- (SLC7A11), starving cystine
@@ -236,15 +245,6 @@ IFN-gamma represses System Xc- (SLC7A11), starving cystine
 * predicates: `negative_correlate` 14, `positive_correlate` 1
 * module cites PMID 31043744 — **present in the graph**
 * example PMIDs: 31043744, 31554642, 34318944, 34741776, 35322867, 35579155, 37939375, 38636133
-
-### `fsp1` — AIFM2 / GPX4
-
-FSP1/AIFM2 is the GPX4-independent parallel defence
-
-* 15 asserting relations
-* predicates: `associate` 10, `positive_correlate` 3, `negative_correlate` 2
-* module cites PMID 31634899 — not among the sampled supporting PMIDs
-* example PMIDs: 34167028, 36078133, 36576648, 37380771, 38725840, 39453438, 39477303, 39626861
 
 ### `dc_ferroptosis` — PD-L1 / SLC7A11
 

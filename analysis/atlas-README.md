@@ -30,7 +30,7 @@ is itself a finding — see *Coverage* below.
 | recovered, not yet MeSH-indexed | 783,271 | `atlas_unindexed.py` |
 | open-access full texts (on external storage) | 1,116,481 | `atlas_fulltext.py` |
 | typed, normalized relations | 10,700,928 over 2,129,080 PMIDs | `atlas_relations.py` |
-| queryable relation index | 2,888,791 entity pairs | `atlas_graph.py` |
+| queryable relation index | 2,888,766 entity pairs | `atlas_graph.py` |
 | full-text sentence co-mentions | 8,265,855 pairs over 1,100,218 documents | `atlas_comention.py` |
 
 The co-mention row names 1,100,218 and the full-text row names 1,116,481 on
@@ -49,7 +49,7 @@ once compared precisions from one build against a quantity computed on another.
 Read any relation count with the build it came from.
 
 **The pair count above is not interchangeable with the retraction layer's.**
-`atlas_graph.py` reports 2,888,791 and `atlas_retraction_exposure.py` reports
+`atlas_graph.py` reports 2,888,766 and `atlas_retraction_exposure.py` reports
 2,902,827 over the same relations, and the 14,036-pair difference is not drift:
 the graph strips the type prefix and applies the per-paper sense corrections
 `atlas_disambiguate.py` produces, and the retraction scan keys on the raw
@@ -217,13 +217,13 @@ would corrupt the S100A4 papers, which are the plurality. So the sense is decide
 per paper.
 
 Against a gold set of the 242 papers that declare their own expansion — a label
-independent of anything the classifier reads — PubTator3 is **36.3%** accurate
+independent of anything the classifier reads — PubTator3 is **34.2%** accurate
 and this layer is **96.2%**. The number is only meaningful because every
 label-defining phrase is masked out before a feature is read; without that the
 measurement would be circular.
 
 **Most corrections are extrapolated, and that is tested.** Accuracy is measured on
-papers that declare a sense, but 75% of the 1,191 corrections land on papers that
+papers that declare a sense, but 75% of the 1,269 corrections land on papers that
 declare nothing. Publication year checks that population independently: of 175
 undeclaring papers corrected to AIFM2, **zero** predate 2019 — against roughly 37
 expected if the classifier were assigning it without regard to the biology.
@@ -256,13 +256,22 @@ needs a per-paper decision while these five need only a default.
 
 ### How much to discount — `atlas_ambiguity_impact.py`
 
-The question a reader actually has. The obvious answer is wrong by ~39x: 50.6% of
+The question a reader actually has. The obvious answer is wrong by ~38x: 50.6% of
 relation rows touch a contested identifier, which measures **containment**, not
 error — most ESR1 edges come from papers that wrote "estrogen receptor" in full.
 
 The measurement that means something asks whether an ambiguous form was the
-*only* route to an assignment. **1.28% of relation rows** rest on one, and that
+*only* route to an assignment. **1.31% of relation rows** rest on one, and that
 is an upper bound since the vote is sometimes right.
+
+**The fold factor moves with the build, and the integer is not the finding.**
+It has been 37.5x, 38.7x and 38.4x across three ingests in one day -- rounding
+to 38x, 39x and 38x -- and each move meant editing the same six files, twice.
+What is stable is the SHAPE: containment sits near half of all relation rows
+and damage near one percent, so the obvious reading overstates the problem by
+between one and two orders of magnitude. Quote that. An analysis depending on
+the difference between 38x and 39x is depending on which day the census was
+ingested.
 
 > **The practical lesson is an asymmetry.** Diffuse damage is ~1%, below the
 > extractor's own ~79.6 F1 error, and should not change any aggregate conclusion.
