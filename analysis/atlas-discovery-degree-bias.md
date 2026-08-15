@@ -19,16 +19,16 @@ construction, because popularity IS degree.
 | ranking | median L | share of popularity's selectivity |
 |---|---|---|
 | popularity | **7.4x** | 100% |
-| adamic_adar | **5.6x** | 72% |
-| bridges | **5.5x** | 71% |
+| adamic_adar | **5.4x** | 70% |
+| bridges | **5.4x** | 69% |
 | resource_alloc | **4.3x** | 52% |
-| abc | **2.3x** | 20% |
-| random | **1.0x** | -1% |
+| abc | **2.5x** | 24% |
+| random | **0.9x** | -1% |
 | jaccard | **0.1x** | -14% |
 
 ## What it says
 
-**The correction is real and it is large.** ABC sits at 2.3x against popularity's 7.4x, reproducing only 20% of the
+**The correction is real and it is large.** ABC sits at 2.5x against popularity's 7.4x, reproducing only 24% of the
 selectivity of ranking by degree itself. Jaccard normalises so hard it
 lands BELOW the pool average. The glosses in the precision table are
 accurate descriptions of what these methods do.
@@ -45,20 +45,19 @@ the observation is now a measured quantity with a magnitude:
 
 | ranking | median L | precision@20 |
 |---|---|---|
-| popularity | 7.4x | 15.5% |
-| adamic_adar | 5.6x | 14.4% |
-| bridges | 5.5x | 14.1% |
-| resource_alloc | 4.3x | 12.8% |
-| abc | 2.3x | 10.1% |
-| random | 1.0x | 2.8% |
-| jaccard | 0.1x | 2.4% |
+| popularity | 7.4x | 20.5% |
+| adamic_adar | 5.4x | 18.4% |
+| bridges | 5.4x | 18.1% |
+| resource_alloc | 4.3x | 15.6% |
+| abc | 2.5x | 13.1% |
+| random | 0.9x | 3.0% |
+| jaccard | 0.1x | 3.8% |
 
-Rank correlation between L and precision is **1.00** over all
-7 methods.
-`random` sits exactly where a degree-neutral ranking should, at 1.0x, and
-`jaccard` -- the only method that corrects PAST neutral -- is the only one
-that scores below it. A ranking anti-correlated with what the target
-rewards doing worse than no ranking at all is what that looks like.
+Rank correlation between L and precision is **0.96** over all
+7 methods and **1.00** over the 6 that carry any signal.
+The exception is `random`, which is degree-neutral by construction rather
+than by correction and has nothing to rank with; it is the one point where
+a low L does not mean the method corrected for degree.
 
 **What the magnitude adds.** Knowing the direction, one could still hope a
 cleverer ranker corrects for degree AND scores well. The spread says how

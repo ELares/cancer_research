@@ -77,22 +77,42 @@ SEED_RNG = 20260803
 SEED_DEGREE_MIN, SEED_DEGREE_MAX = 30, 800
 
 
+# Every stream that carries a `year`. NOT a cosmetic list: the two names this
+# tuple used to hold were `records` and `records_c04only`, and c04only is a
+# strict SUBSET of records -- measured, it adds exactly zero PMIDs -- so a loop
+# that read like a merge merged nothing, while the two streams holding the most
+# recent literature were never named. The layer whose subject is recency was
+# blind to 814,015 dated articles, overwhelmingly from 2021 onward.
+YEAR_STREAMS = ("records", "records_c04only", "records_unindexed", "records_updates")
+
+
 def pmid_years(root: Path) -> dict:
-    """Cached wrapper: the raw scan reads 2.2 GB of census records."""
+    """Cached wrapper: the raw scan reads 2.2 GB of census records.
+
+    THE CACHE RECORDS WHICH STREAMS BUILT IT. Keyed by path alone, it would
+    have silently defeated the fix that widened YEAR_STREAMS: the map was
+    rebuilt to cover 814,015 more articles, and every consumer would have gone
+    on loading the old pickle without a word. A cache whose key omits an input
+    is a way of not applying a change.
+    """
     cache = root / "records" / ".pmid-years.pkl"
     try:
         if cache.exists():
             with open(cache, "rb") as fh:
                 got = pickle.load(fh)
-            print(f"  year map from cache ({len(got):,} PMIDs); "
-                  f"delete {cache.name} to rebuild", flush=True)
-            return got
+            if isinstance(got, dict) and got.get("streams") == list(YEAR_STREAMS):
+                years = got["years"]
+                print(f"  year map from cache ({len(years):,} PMIDs); "
+                      f"delete {cache.name} to rebuild", flush=True)
+                return years
+            print(f"  {cache.name} was built from a different stream set; "
+                  "rebuilding", flush=True)
     except Exception:
         pass
     got = _scan_pmid_years(root)
     try:
         with open(cache, "wb") as fh:
-            pickle.dump(got, fh, protocol=5)
+            pickle.dump({"streams": list(YEAR_STREAMS), "years": got}, fh, protocol=5)
     except OSError:
         pass
     return got
@@ -106,7 +126,7 @@ def _scan_pmid_years(root: Path) -> dict:
     which would date every pair as ancient and silently zero the split.
     """
     years = {}
-    for d in ("records", "records_c04only"):
+    for d in YEAR_STREAMS:
         for f in sorted(glob.glob(str(root / d / "*.jsonl.gz"))):
             with gzip.open(f, "rt", encoding="utf-8") as fh:
                 for line in fh:

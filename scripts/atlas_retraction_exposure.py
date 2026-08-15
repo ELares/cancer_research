@@ -58,7 +58,17 @@ import sys
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-RECORDS = PROJECT_ROOT / "corpus" / "atlas" / "records"
+# Both streams that can carry a retraction flag. records/ is the MeSH-indexed
+# census and records_updates/ is the daily update stream; the join partner is
+# relations.tsv.gz, which was filtered against ALL census streams, so reading
+# records/ alone left 393,972 of the graph's PMIDs unreachable and their
+# retractions uncounted.
+#
+# records_unindexed/ is deliberately NOT here, and the reason is measured
+# rather than assumed: not one of its 783,271 records carries a `pub_types`
+# field, so it cannot contribute a retraction flag however it is read. Stated
+# so the omission reads as a decision instead of the same oversight again.
+RECORD_DIRS = ("records", "records_updates")
 RELATIONS = PROJECT_ROOT / "corpus" / "atlas" / "relations" / "relations.tsv.gz"
 OUT_MD = PROJECT_ROOT / "analysis" / "atlas-retraction-exposure.md"
 OUT_JSON = PROJECT_ROOT / "analysis" / "atlas-retraction-exposure.json"
@@ -78,23 +88,47 @@ FAMILY = ("retract", "concern", "withdraw", "errat", "corrected and republished"
 
 
 def scan_records():
-    """Retracted PMIDs in the cancer census, plus the denominators."""
-    shards = sorted(RECORDS.glob("*.jsonl.gz"))
+    """Retracted PMIDs across the scanned streams, plus the denominators.
+
+    THE SCAN AND THE DENOMINATOR ARE NOT THE SAME SET, deliberately.
+
+    Retraction flags are collected from records/ AND records_updates/, because
+    the join partner is the relation graph and that covers every stream.
+
+    But `census_records` stays records/ alone -- the figure every other analysis
+    in this repository divides by. Widening the scan to reach more retractions
+    and letting the denominator follow silently republishes a different census:
+    the first version of this change reported 4,838,554, which is not any
+    population at all. It counted every update RECORD, and an update file is
+    mostly REVISIONS of articles already counted, so the same article was
+    tallied once per revision.
+
+    A rate whose numerator grew for a good reason and whose denominator grew by
+    accident is worse than the narrower measurement it replaced.
+    """
+    shards = []
+    for d in RECORD_DIRS:
+        shards += sorted((PROJECT_ROOT / "corpus" / "atlas" / d).glob("*.jsonl.gz"))
     if not shards:
-        raise SystemExit(f"no census shards under {RECORDS}")
+        raise SystemExit(
+            f"no census shards under {', '.join(RECORD_DIRS)}")
     retracted = set()
     family = collections.Counter()      # every retraction-adjacent type seen
     total = 0
+    seen_pmids = set()
     by_year = collections.Counter()
     for p in shards:
+        frozen = p.parent.name == "records"
         with gzip.open(p, "rt") as fh:
             for line in fh:
                 r = json.loads(line)
-                total += 1
+                if frozen:
+                    total += 1
                 pts = r.get("pub_types") or []
                 pmid = str(r.get("pmid") or "")
                 if not pmid:
                     continue
+                seen_pmids.add(pmid)
                 for t in pts:
                     if any(k in t.lower() for k in FAMILY):
                         family[t] += 1
@@ -104,6 +138,7 @@ def scan_records():
                     if y:
                         by_year[int(y)] += 1
     return {"retracted": retracted, "family": family,
+            "distinct_articles_scanned": len(seen_pmids),
             "census_total": total, "by_year": by_year}
 
 

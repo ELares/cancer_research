@@ -14,11 +14,11 @@ read.
 | | count |
 |---|--:|
 | cancer census records | 4,403,994 |
-| `Retracted Publication` | 6,796 |
-| `Corrected and Republished Article` | 174 |
-| `Published Erratum` | 130 |
-| `Expression of Concern` | 95 |
-| `Retraction Notice` | 37 |
+| `Retracted Publication` | 7,900 |
+| `Published Erratum` | 222 |
+| `Corrected and Republished Article` | 176 |
+| `Expression of Concern` | 172 |
+| `Retraction Notice` | 49 |
 
 Only `Retracted Publication` is treated as tainted below. A retraction
 notice, erratum or republication is a legitimate record. These types are
@@ -26,7 +26,7 @@ discovered by pattern rather than named, because an earlier version of
 this script looked for `Retraction of Publication` — a plausible string
 PubMed does not use — and reported zero notices in a 4.4M-record census.
 
-That is 0.154% of the
+That is 0.169% of the
 census. Retraction indexing lags both publication and the retraction
 itself, so every figure here is a **lower bound**.
 
@@ -34,18 +34,18 @@ itself, so every figure here is a **lower bound**.
 
 Two numbers, and reporting only the first would mislead — this repository
 has made that exact error before, when 50.5% of relation rows
-*touching* a contested identifier turned out to be 1.28% actually
+*touching* a contested identifier turned out to be 1.31% actually
 at risk.
 
 | | count | share |
 |---|--:|--:|
 | relation rows | 10,700,928 | |
-| rows from a retracted paper | 40,499 | 0.378% |
+| rows from a retracted paper | 44,727 | 0.418% |
 | distinct entity pairs | 2,902,827 | |
-| pairs **touched** by a retracted paper | 32,294 | 1.113% |
-| pairs whose **only** support is retracted | **7,329** | 0.2525% |
+| pairs **touched** by a retracted paper | 35,361 | 1.218% |
+| pairs whose **only** support is retracted | **8,288** | 0.2855% |
 
-The touched-to-uncorroborated ratio is **4.4x**: most pairs that
+The touched-to-uncorroborated ratio is **4.3x**: most pairs that
 involve a retracted paper are also asserted by papers that still stand, and
 lose nothing when the retraction is applied. The second row is the damaging
 class — the graph asserts a relation that, after retraction, nothing
@@ -57,8 +57,8 @@ standing supports.
 paper.** That is the population at risk: a pair asserted by many papers
 cannot be left unsupported by one retraction, so the uncorroborated class
 is drawn almost entirely from the single-paper pairs. Against that
-denominator the rate is **0.360%**,
-not 0.2525%.
+denominator the rate is **0.407%**,
+not 0.2855%.
 
 Reported both ways because picking either alone misleads in a different
 direction — and because the 70% figure is the more alarming one, and it
@@ -74,20 +74,20 @@ for that pair has been withdrawn, and a consumer should be told.
 
 | predicate | tainted rows | all rows | share |
 |---|--:|--:|--:|
-| `associate` | 22,285 | 5,463,501 | 0.408% |
-| `positive_correlate` | 5,372 | 729,407 | 0.736% |
-| `negative_correlate` | 5,142 | 862,619 | 0.596% |
-| `treat` | 3,645 | 2,061,429 | 0.177% |
-| `inhibit` | 1,525 | 226,661 | 0.673% |
-| `stimulate` | 1,174 | 231,588 | 0.507% |
-| `cause` | 767 | 749,648 | 0.102% |
-| `cotreat` | 256 | 227,648 | 0.112% |
-| `interact` | 215 | 63,665 | 0.338% |
-| `compare` | 91 | 72,660 | 0.125% |
+| `associate` | 24,568 | 5,463,501 | 0.450% |
+| `positive_correlate` | 5,924 | 729,407 | 0.812% |
+| `negative_correlate` | 5,658 | 862,619 | 0.656% |
+| `treat` | 4,099 | 2,061,429 | 0.199% |
+| `inhibit` | 1,682 | 226,661 | 0.742% |
+| `stimulate` | 1,302 | 231,588 | 0.562% |
+| `cause` | 852 | 749,648 | 0.114% |
+| `cotreat` | 286 | 227,648 | 0.126% |
+| `interact` | 229 | 63,665 | 0.360% |
+| `compare` | 100 | 72,660 | 0.138% |
 | `prevent` | 27 | 11,394 | 0.237% |
 
-The rate is not uniform: `positive_correlate` carries 0.736% against
-0.408% for `associate`, the graph's bulk predicate — a factor of
+The rate is not uniform: `positive_correlate` carries 0.812% against
+0.450% for `associate`, the graph's bulk predicate — a factor of
 1.8x. Read that as a hypothesis rather than a
 result. It is consistent with retraction concentrating in claims about
 intervention rather than observation, but these are small counts, the

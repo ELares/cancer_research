@@ -16,7 +16,7 @@ ones carry anything the seed-blind one does not.
 
 ## The test
 
-Rank each pool by candidate degree alone (**15.5%** precision@20 over 200 seeds), then blend in one method's
+Rank each pool by candidate degree alone (**20.5%** precision@20 over 200 seeds), then blend in one method's
 within-seed percentile and re-score. Percentiles, not raw scores, so
 seed-level differences in scale cannot leak into the blend. The statistic
 is the per-seed difference in hits, through the same paired bootstrap the
@@ -29,16 +29,16 @@ uncorrected; the correction lives in the p column.
 
 | method | mean Δ hits/20 | 95% CI | better/worse/same | p (Holm) | headroom? |
 |---|---|---|---|---|---|
-| adamic_adar | -0.095 | [-0.220, +0.030] | 34/46/120 | 0.260 | no |
-| resource_alloc | -0.095 | [-0.215, +0.025] | 42/52/106 | 0.260 | no |
-| bridges | -0.125 | [-0.265, +0.010] | 35/45/120 | 0.242 | no |
-| abc | -0.485 | [-0.725, -0.255] | 35/74/91 | 0.001 | no |
-| jaccard | -1.795 | [-2.180, -1.420] | 22/107/71 | 0.001 | no |
+| adamic_adar | -0.205 | [-0.365, -0.045] | 40/64/96 | 0.015 | no |
+| bridges | -0.250 | [-0.420, -0.090] | 36/65/99 | 0.004 | no |
+| resource_alloc | -0.345 | [-0.525, -0.165] | 36/73/91 | 0.001 | no |
+| abc | -0.720 | [-1.000, -0.450] | 45/84/71 | 0.001 | no |
+| jaccard | -2.420 | [-2.835, -2.015] | 14/132/54 | 0.001 | no |
 
 ## What it says
 
 **No method adds measurable precision over the candidate-only prior.**
-At the headline weight every method is negative, and across the whole sweep 2 of 25 cells are positive at all -- against roughly half that many expected if every method were pure noise. None survives the decision rule.
+At the headline weight every method is negative, and across the whole sweep 1 of 25 cells are positive at all -- against roughly half that many expected if every method were pure noise. None survives the decision rule.
 No interval excludes zero in the positive direction after correction.
 
 On this metric the candidate prior exhausts what is measurable. That
@@ -77,11 +77,11 @@ by construction. Mean change in hits at each weight, for every method:
 
 | weight | abc | adamic_adar | bridges | jaccard | resource_alloc |
 |---|---|---|---|---|---|
-| 0.1 | -0.135 | +0.030 | -0.005 | -0.445 | +0.060 |
-| 0.25 | -0.360 | -0.040 | -0.065 | -1.195 | -0.005 |
-| 0.5 | -0.485 | -0.095 | -0.125 | -1.795 | -0.095 |
-| 0.75 | -0.690 | -0.105 | -0.150 | -2.310 | -0.175 |
-| 0.9 | -0.795 | -0.200 | -0.255 | -2.475 | -0.270 |
+| 0.1 | -0.250 | -0.045 | -0.060 | -0.520 | +0.005 |
+| 0.25 | -0.475 | -0.100 | -0.090 | -1.505 | -0.100 |
+| 0.5 | -0.720 | -0.205 | -0.250 | -2.420 | -0.345 |
+| 0.75 | -0.935 | -0.305 | -0.340 | -2.990 | -0.520 |
+| 0.9 | -1.195 | -0.380 | -0.440 | -3.200 | -0.645 |
 
-**No cell survives the decision rule.** 2 of 25 cells are positive at all; the largest is resource_alloc at w=0.1, +0.060 hits out of 20 with a 95% interval of [-0.005, +0.130] -- which includes zero.
+**No cell survives the decision rule.** 1 of 25 cells are positive at all; the largest is resource_alloc at w=0.1, +0.005 hits out of 20 with a 95% interval of [-0.095, +0.105] -- which includes zero.
 
