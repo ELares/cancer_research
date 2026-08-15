@@ -86,7 +86,9 @@ def list_packages() -> list[tuple[str, str]]:
 def load_pmcid_map(root: Path) -> dict:
     """PMCID -> PMID for every cancer article in EITHER census stream.
 
-    Reads `records/` (MeSH-indexed) and `records_unindexed/` (text-recovered).
+    Reads `records/` (MeSH-indexed), `records_unindexed/` (text-recovered) and
+    `records_updates/` (the daily update stream), in whatever combination is
+    present.
     Reading only the first silently excluded all 783,271 recovered articles,
     which is exactly the recent literature the recovery layer exists to reach.
 
@@ -100,11 +102,29 @@ def load_pmcid_map(root: Path) -> dict:
 
     That is a cliff, not the gradual decline MeSH indexing lag produces, and it
     costs an estimated 32,000-41,000 cancer full texts (232,890 at the 13.9-17.7%
-    interquartile yield of the reachable packages). Closing it needs a newer
-    PubMed baseline, not a change here.
+    interquartile yield of the reachable packages).
+
+    Closing it needs a newer PubMed baseline AND this map reading it. An earlier
+    version of this docstring said "not a change here", which stopped being true
+    the moment `atlas_baseline.py --updates` existed: the update stream writes to
+    its own directory precisely so it cannot mutate the frozen census, so a map
+    that reads only the first two directories never sees it and the cliff stays
+    exactly where it was. Both halves are required.
+
+    MEASURED ON THE UPDATE STREAM, and the recent end is the only part that
+    matters: the oldest 30 update files carry 3 records in the PMC13 block and
+    the newest 30 carry 7,140, because update files are numbered chronologically
+    and the early ones predate those identifier assignments. Sampling the wrong
+    end says the block is unreachable.
+
+    The 32,000-41,000 estimate is NOT a prediction of what this recovers. It
+    assumed the whole 232,890-article package would yield at the reachable rate
+    once matchable, whereas what can match is the census's own PMC13 identifiers,
+    and holding a PMC id does not put an article in the open-access bulk. Re-run
+    and measure it.
     """
     files = []
-    for d in ("records", "records_unindexed"):
+    for d in ("records", "records_unindexed", "records_updates"):
         files += sorted((root / d).glob("*.jsonl.gz"))
     if not files:
         raise SystemExit(f"no census under {root}; run scripts/atlas_baseline.py first")

@@ -178,6 +178,31 @@ def test_the_ingest_stays_resumable_across_both_sources():
         "restart from the beginning")
 
 
+def test_the_fulltext_map_reads_the_update_stream():
+    """Ingesting alone does not close the cliff; the map has to read it.
+
+    `records_updates/` is a separate directory BY DESIGN, so the census cannot
+    be mutated by an update run. The cost of that design is that every consumer
+    reading the census by directory name has to be told about the third stream,
+    and `load_pmcid_map` is the one that decides which PMC packages can match.
+    Miss it and the recency cliff stays exactly where it was while the ingest
+    reports success.
+    """
+    ft = (REPO_ROOT / "scripts" / "atlas_fulltext.py").read_text()
+    assert '("records", "records_unindexed", "records_updates")' in ft, (
+        "load_pmcid_map does not read records_updates/, so an update ingest "
+        "cannot make any new PMC package matchable")
+    # NOT `"not a change here" not in ft`: the correction quotes the wording it
+    # retracts, so a bare substring check fails on the fix itself. Assert the
+    # corrected claim instead.
+    assert "Both halves are required." in ft, (
+        "atlas_fulltext.py no longer states that closing the cliff needs both "
+        "a newer baseline AND this map reading it")
+    assert 'said "not a change here"' in ft, (
+        "the superseded claim is no longer marked as superseded, so a reader "
+        "cannot tell the docstring was corrected")
+
+
 def test_the_recency_cliff_this_exists_to_close_is_still_documented():
     """If the cliff is ever gone, the reason for this path should be revisited
     rather than the path quietly kept."""
