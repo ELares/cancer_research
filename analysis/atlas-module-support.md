@@ -56,25 +56,25 @@ Counts are not truth. About half of all relations carry the weakest predicate,
 
 | module | pair | relation articles | full-text co-mentions | predicates | cited PMID? | contested |
 |---|---|---|---|---|---|---|
-| system_xc | `SLC7A11` - `GPX4` | 90 | **19,413** | associate 81, positive_correlate 6, negative_correlate 3 | no | **yes** (+6/-3, bal 0.50) |
-| erastin | `erastin` - `SLC7A11` | 68 | **1,573** | negative_correlate 42, associate 21, positive_correlate 5 | no | **yes** (+5/-42, bal 0.12) |
-| contact | `CDH1` - `YAP1` | 26 | **417** | associate 14, negative_correlate 7, positive_correlate 5 | no | **yes** (+5/-7, bal 0.71) |
-| acsl4 | `ACSL4` - `GPX4` | 16 | **9,027** | associate 10, negative_correlate 4, positive_correlate 2 | no | **yes** (+2/-4, bal 0.50) |
-| fsp1 | `AIFM2` - `GPX4` | 16 | **597** | associate 11, positive_correlate 3, negative_correlate 2 | no | **yes** (+3/-2, bal 0.67) |
-| ifngamma | `IFNG` - `SLC7A11` | 15 | **99** | negative_correlate 14, positive_correlate 1 | yes | **yes** (+1/-14, bal 0.07) |
-| dc_ferroptosis | `CD274` - `SLC7A11` | 9 | **239** | positive_correlate 4, associate 3, negative_correlate 2 | yes | **yes** (+4/-2, bal 0.50) |
-| ifngamma | `IFNG` - `SLC3A2` | 5 | **66** | negative_correlate 5 | yes | no |
-| dhodh | `DHODH` - `GPX4` | 5 | **1,277** | associate 3, negative_correlate 2 | no | no |
-| alox | `ALOX15` - `ACSL4` | 3 | **517** | associate 2, positive_correlate 1 | no | no |
-| gch1 | `GCH1` - `GPX4` | 1 | **595** | associate 1 | no | no |
+| system_xc | `SLC7A11` - `GPX4` | 90 | **21,355** | associate 81, positive_correlate 6, negative_correlate 3 | no | **yes** (+6/-3, bal 0.50) |
+| erastin | `erastin` - `SLC7A11` | 68 | **1,681** | negative_correlate 42, associate 21, positive_correlate 5 | no | **yes** (+5/-42, bal 0.12) |
+| contact | `CDH1` - `YAP1` | 26 | **421** | associate 14, negative_correlate 7, positive_correlate 5 | no | **yes** (+5/-7, bal 0.71) |
+| acsl4 | `ACSL4` - `GPX4` | 16 | **10,099** | associate 10, negative_correlate 4, positive_correlate 2 | no | **yes** (+2/-4, bal 0.50) |
+| fsp1 | `AIFM2` - `GPX4` | 16 | **643** | associate 11, positive_correlate 3, negative_correlate 2 | no | **yes** (+3/-2, bal 0.67) |
+| ifngamma | `IFNG` - `SLC7A11` | 15 | **103** | negative_correlate 14, positive_correlate 1 | yes | **yes** (+1/-14, bal 0.07) |
+| dc_ferroptosis | `CD274` - `SLC7A11` | 9 | **246** | positive_correlate 4, associate 3, negative_correlate 2 | yes | **yes** (+4/-2, bal 0.50) |
+| ifngamma | `IFNG` - `SLC3A2` | 5 | **68** | negative_correlate 5 | yes | no |
+| dhodh | `DHODH` - `GPX4` | 5 | **1,354** | associate 3, negative_correlate 2 | no | no |
+| alox | `ALOX15` - `ACSL4` | 3 | **626** | associate 2, positive_correlate 1 | no | no |
+| gch1 | `GCH1` - `GPX4` | 1 | **616** | associate 1 | no | no |
 | prom2 | `PROM2` - `FTH1` | 0 | **11** | - | - | no |
 | vitk | `VKORC1L1` - `GPX4` | 0 | - | - | - | no |
-| copper | `ATP7A` - `GPX4` | 0 | **8** | - | - | no |
-| por | `POR` - `CYB5R1` | 0 | **20** | - | - | no |
-| dhc7 | `DHCR7` - `GPX4` | 0 | **13** | - | - | no |
+| copper | `ATP7A` - `GPX4` | 0 | **14** | - | - | no |
+| por | `POR` - `CYB5R1` | 0 | **21** | - | - | no |
+| dhc7 | `DHCR7` - `GPX4` | 0 | **14** | - | - | no |
 | repair | `CHMP5` - `CHMP6` | 0 | **69** | - | - | no |
-| mboat | `MBOAT2` - `GPX4` | 0 | **27** | - | - | no |
-| ether_lipid | `FAR1` - `AGPS` | 0 | **89** | - | - | no |
+| mboat | `MBOAT2` - `GPX4` | 0 | **28** | - | - | no |
+| ether_lipid | `FAR1` - `AGPS` | 0 | **91** | - | - | no |
 | hdac_persister | `HDAC1` - `AIFM2` | 0 | **1** | - | - | no |
 
 ## Claims that sit on a CONTESTED edge
@@ -114,12 +114,12 @@ is wrong -- it says the module docs should state which side they took.
 
   * `prom2`: PROM2 - FTH1 — PROM2 exports ferritin-bound iron, draining the labile pool  _(but **11** full-text co-mentions)_
   * `vitk`: VKORC1L1 - GPX4 — VKORC1L1 reduces vitamin K to a GPX4-independent radical trap
-  * `copper`: ATP7A - GPX4 — copper ionophores degrade ATP7A and deplete GSH/GPX4  _(but **8** full-text co-mentions, still thin against the layer's ~88% precision)_
-  * `por`: POR - CYB5R1 — POR and CYB5R1 generate the H2O2 the Fenton reaction needs  _(but **20** full-text co-mentions)_
-  * `dhc7`: DHCR7 - GPX4 — 7-DHC (consumed by DHCR7) is an endogenous radical trap  _(but **13** full-text co-mentions)_
+  * `copper`: ATP7A - GPX4 — copper ionophores degrade ATP7A and deplete GSH/GPX4  _(but **14** full-text co-mentions)_
+  * `por`: POR - CYB5R1 — POR and CYB5R1 generate the H2O2 the Fenton reaction needs  _(but **21** full-text co-mentions)_
+  * `dhc7`: DHCR7 - GPX4 — 7-DHC (consumed by DHCR7) is an endogenous radical trap  _(but **14** full-text co-mentions)_
   * `repair`: CHMP5 - CHMP6 — ESCRT-III membrane repair blocks death execution  _(but **69** full-text co-mentions)_
-  * `mboat`: MBOAT2 - GPX4 — MBOAT1/2 remodel phospholipids toward MUFA-PE, GPX4-independently  _(but **27** full-text co-mentions)_
-  * `ether_lipid`: FAR1 - AGPS — FAR1/AGPS make the ether-PUFA pool that promotes ferroptosis  _(but **89** full-text co-mentions)_
+  * `mboat`: MBOAT2 - GPX4 — MBOAT1/2 remodel phospholipids toward MUFA-PE, GPX4-independently  _(but **28** full-text co-mentions)_
+  * `ether_lipid`: FAR1 - AGPS — FAR1/AGPS make the ether-PUFA pool that promotes ferroptosis  _(but **91** full-text co-mentions)_
   * `hdac_persister`: HDAC1 - AIFM2 — HDACs and FSP1 together suppress persister-cell ferroptosis  _(but **1** full-text co-mentions, still thin against the layer's ~88% precision)_
 
   **8 of those 9 ARE discussed in full text.** A zero in
@@ -176,7 +176,7 @@ has been studied.
 
 **Below the line does not mean undetectable.** An earlier version of this section said the census could not have corroborated those claims whatever the biology is. That is false: across the whole graph **46% of all asserted pairs** have a weaker entity below 112, so pairs like these are corroborated constantly. The honest statement is probabilistic -- a particular pair drawn from a sparsely-studied entity's handful of relations is unlikely a priori -- not that the machinery cannot see them.
 
-**Which zeros are 'genuine' does not replicate across measures, so this section does not name any.** Run the identical procedure on the pair-level co-mention column already in the table above and the correlation INVERTS among the zeros (rho about -0.9), the line lands at 66, and the rows above it become `ether_lipid`, `repair` -- with no overlap at all against the entity-degree answer (`hdac_persister`, `copper`). Entity exposure and pair discussion are different constructs and there is no reason they must agree, but the conclusion anyone would draw is pair-level, so a result that flips with the measure is not one to report. The first draft of this section named the entity-degree pair as 'the interesting rows' without checking the column beside it.
+**Which zeros are 'genuine' does not replicate across measures, so this section does not name any.** Run the identical procedure on the pair-level co-mention column already in the table above and the correlation INVERTS among the zeros (rho about -0.9), the line lands at 68, and the rows above it become `ether_lipid`, `repair` -- with no overlap at all against the entity-degree answer (`hdac_persister`, `copper`). Entity exposure and pair discussion are different constructs and there is no reason they must agree, but the conclusion anyone would draw is pair-level, so a result that flips with the measure is not one to report. The first draft of this section named the entity-degree pair as 'the interesting rows' without checking the column beside it.
 
 **Caveat on the correlation.** A pair's own relations contribute to both
 entities' partner counts, so the two quantities share a term. Recomputing

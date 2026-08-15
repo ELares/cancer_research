@@ -231,8 +231,8 @@
       ]
     }
   ],
-  "prose_checked": 168,
-  "prose_flagged": 3,
+  "prose_checked": 166,
+  "prose_flagged": 1,
   "prose_rows": [
     {
       "pmid": "10051451",
@@ -1719,24 +1719,6 @@
       "status": "ok",
       "title": "The HIF-2 transcription factor mediates resistance to ferroptosis in pancreatic cancer.",
       "journal": "Molecular cell"
-    },
-    {
-      "pmid": "42020682",
-      "cited_in": [
-        "article/drafts/v1.md"
-      ],
-      "status": "off-topic",
-      "title": "How Do Speech-Language Pathologists (SLPs) Know? A Survey of SLPs' Disciplinary Epistemology.",
-      "journal": "International journal of language &amp; communication disorders"
-    },
-    {
-      "pmid": "42020835",
-      "cited_in": [
-        "article/drafts/v1.md"
-      ],
-      "status": "off-topic",
-      "title": "Andexanet Alfa Withdrawn from the US: Implications for Intracranial Hemorrhage Care.",
-      "journal": "CNS drugs"
     },
     {
       "pmid": "42032311",

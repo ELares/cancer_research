@@ -50,7 +50,7 @@ chose as the claim's proxy. Reported for completeness, not as errors.
 * `alox` -> 27506793: Peroxidation of polyunsaturated fatty acids by lipoxygenases drives ferroptosis.
 * `system_xc` -> 22632970: Ferroptosis: an iron-dependent form of nonapoptotic cell death.
 
-## Prose citations: 3 of 168 flagged
+## Prose citations: 1 of 166 flagged
 
 The manuscript and repo guide cite PMIDs in running text with no entity
 pair to check against, so these are tested only for existing and for being
@@ -60,8 +60,6 @@ citation can fail it.
 | PMID | cited in | journal | title |
 |---|---|---|---|
 | 37214358 | CLAUDE.md | Indian journal of orthop | Epidemiology of Fractures Following Electric Scooter Injury. |
-| 42020682 | article/drafts/v1.md | International journal of | How Do Speech-Language Pathologists (SLPs) Know? A Survey of |
-| 42020835 | article/drafts/v1.md | CNS drugs | Andexanet Alfa Withdrawn from the US: Implications for Intra |
 
 A subject-area miss is not automatically an error -- a methods or
 statistics citation legitimately mentions no cancer term. Each needs a
