@@ -31,13 +31,16 @@ is itself a finding — see *Coverage* below.
 | open-access full texts (on external storage) | 1,116,481 | `atlas_fulltext.py` |
 | typed, normalized relations | 10,700,928 over 2,129,080 PMIDs | `atlas_relations.py` |
 | queryable relation index | 2,888,766 entity pairs | `atlas_graph.py` |
-| full-text sentence co-mentions | 8,265,855 pairs over 1,100,218 documents | `atlas_comention.py` |
+| full-text sentence co-mentions | 8,365,086 pairs over 1,116,481 documents | `atlas_comention.py` |
 
-The co-mention row names 1,100,218 and the full-text row names 1,116,481 on
-purpose. The co-mention layer was built over the full texts held at the time;
-the 16,263 recovered from the `PMC013xxxxxx` block afterwards are not in it
-until it is rebuilt. Quoting the current holding beside a layer built on an
-older one is how a build fingerprint goes missing.
+Both rows now name 1,116,481. They disagreed for a while: the co-mention layer
+was built when the `PMC013xxxxxx` shards were empty, and the 16,263 full texts
+recovered into them afterwards were not in it. Closing that did NOT need the
+three-hour rebuild the tool otherwise requires -- a rebuild is mandatory only
+because the run merges into the existing table, so reprocessing a counted shard
+would double its pairs, and a shard that contributed ZERO documents put nothing
+there to double. `--redo-empty` requeues exactly those, asserts each really
+contributed nothing before touching it, and finished in under three minutes.
 
 **Relation and pair counts move when the layer is re-ingested.** These were
 7,951,325 relations over 1,603,105 PMIDs and 2,186,309 pairs on the previous
