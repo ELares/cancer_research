@@ -42,7 +42,7 @@ can carry the weight put on it.
 |---|---|---|
 | Articles | 4,830 | **4,403,994 acquired** |
 | Selection | 33 keyword queries, 500-record cap | MeSH tree C04 + adjacent, the complete census |
-| Full text | 4,830 (98.7% open-access, a biased slice) | **1,100,218 obtained**, with the bias measured |
+| Full text | 4,830 (98.7% open-access, a biased slice) | **1,116,481 obtained**, with the bias measured |
 | Entities | unnormalized surface strings (3,260 spellings of ~1,200 genes) | NCBI Gene, MeSH, ChEBI, Cellosaurus identifiers |
 | Relations | none | typed, scored, sentence-attributed |
 | Evidence tiers | 57.8% untagged, but 74% of that is reviews and editorials, which have no tier; the real residue is 13.9% ([checked against NLM](analysis/atlas-evidence-check.md)) | measured, with a reported annotator ceiling |
@@ -86,7 +86,7 @@ been marketing.
 
    Alongside it: **783,271** articles recovered that MeSH has not indexed yet
    (the un-indexed share reaches 37.6% in the most recent baseline files),
-   **1,100,218** open-access full texts on external storage, **10,509,470** typed
+   **1,116,481** open-access full texts on external storage, **10,509,470** typed
    relations over 2,095,737 PMIDs, and **283 million** sentences of full text
    mined for entity co-mention (55.3 million of them kept as carrying a
    co-mention).

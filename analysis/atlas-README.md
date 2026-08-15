@@ -28,10 +28,16 @@ is itself a finding — see *Coverage* below.
 |---|---|---|
 | MeSH-indexed cancer articles | **4,403,994** (4,203,236 C04 + 200,758 adjacent) | `atlas_baseline.py` |
 | recovered, not yet MeSH-indexed | 783,271 | `atlas_unindexed.py` |
-| open-access full texts (on external storage) | 1,100,218 | `atlas_fulltext.py` |
+| open-access full texts (on external storage) | 1,116,481 | `atlas_fulltext.py` |
 | typed, normalized relations | 10,509,470 over 2,095,737 PMIDs | `atlas_relations.py` |
 | queryable relation index | 2,840,563 entity pairs | `atlas_graph.py` |
 | full-text sentence co-mentions | 8,265,855 pairs over 1,100,218 documents | `atlas_comention.py` |
+
+The co-mention row names 1,100,218 and the full-text row names 1,116,481 on
+purpose. The co-mention layer was built over the full texts held at the time;
+the 16,263 recovered from the `PMC013xxxxxx` block afterwards are not in it
+until it is rebuilt. Quoting the current holding beside a layer built on an
+older one is how a build fingerprint goes missing.
 
 **Relation and pair counts move when the layer is re-ingested.** These were
 7,951,325 relations over 1,603,105 PMIDs and 2,186,309 pairs on the previous
