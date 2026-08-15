@@ -100,28 +100,40 @@ def load_pmcid_map(root: Path) -> dict:
     yielded 14-18%. The census's PMC identifier space stops at `PMC128xxxx`,
     so nothing in the `PMC13` block can match at all.
 
-    That is a cliff, not the gradual decline MeSH indexing lag produces, and it
-    costs an estimated 32,000-41,000 cancer full texts (232,890 at the 13.9-17.7%
-    interquartile yield of the reachable packages).
+    That is a cliff, not the gradual decline MeSH indexing lag produces.
 
-    Closing it needs a newer PubMed baseline AND this map reading it. An earlier
-    version of this docstring said "not a change here", which stopped being true
-    the moment `atlas_baseline.py --updates` existed: the update stream writes to
+    IT IS NOW CLOSED, AND MEASURED RATHER THAN ESTIMATED. Closing it needed a
+    newer PubMed baseline AND this map reading it: the update stream writes to
     its own directory precisely so it cannot mutate the frozen census, so a map
-    that reads only the first two directories never sees it and the cliff stays
-    exactly where it was. Both halves are required.
+    reading only the first two directories never sees it. An earlier version of
+    this docstring said "not a change here", which stopped being true the moment
+    `atlas_baseline.py --updates` existed. Both halves were required.
 
-    MEASURED ON THE UPDATE STREAM, and the recent end is the only part that
-    matters: the oldest 30 update files carry 3 records in the PMC13 block and
-    the newest 30 carry 7,140, because update files are numbered chronologically
-    and the early ones predate those identifier assignments. Sampling the wrong
-    end says the block is unreachable.
+    Re-running the two packages against the grown census:
 
-    The 32,000-41,000 estimate is NOT a prediction of what this recovers. It
-    assumed the whole 232,890-article package would yield at the reachable rate
-    once matchable, whereas what can match is the census's own PMC13 identifiers,
-    and holding a PMC id does not put an article in the open-access bulk. Re-run
-    and measure it.
+        oa_comm     149,864 articles ->  9,651 cancer
+        oa_noncomm   83,026 articles ->  6,612 cancer
+        total       232,890 articles -> 16,263 cancer   (6.98%)
+
+    against exactly 0 before. The full-text corpus went 1,100,218 -> 1,116,481.
+
+    THE ESTIMATE THIS REPLACES WAS ABOUT TWICE TOO HIGH. It read "an estimated
+    32,000-41,000 cancer full texts (232,890 at the 13.9-17.7% interquartile
+    yield of the reachable packages)", which applies a yield rate measured on
+    OTHER packages to this one. What can actually match is the census's own
+    identifiers in the block, and holding a PMC id does not put an article in
+    the open-access bulk: the census now holds 31,950 distinct PMC013xxxxxx
+    identifiers, so 31,950 was the ceiling and 16,263 is the realised half of it.
+
+    A NOTE ON READING THE BLOCK, because the first attempt got it backwards
+    twice. Update files are numbered chronologically, so the recent end is the
+    only part that carries these identifiers: across the 256-file window the
+    oldest 30 files carry ZERO block records and the newest 30 carry 34,644,
+    with 99,228 block records over 31,950 distinct ids in total. Sampling the
+    oldest files says the block is unreachable, which is the opposite
+    conclusion. And "starts with PMC13" is NOT the block: it also matches
+    7-digit ids like PMC1349338 from 1988, which live in package PMC001xxxxxx.
+    Compare numerically, 13,000,000 <= id < 14,000,000.
     """
     files = []
     for d in ("records", "records_unindexed", "records_updates"):
@@ -194,6 +206,13 @@ def main() -> None:
     ap.add_argument("--limit", type=int, default=0, help="process at most N packages")
     ap.add_argument("--status", action="store_true")
     ap.add_argument("--keep-raw", action="store_true", help="keep downloaded tarballs")
+    ap.add_argument("--only", default="", metavar="SUBSTR",
+                    help="process only packages whose name contains SUBSTR")
+    ap.add_argument("--redo", action="store_true",
+                    help="reprocess selected packages even if already done; use "
+                         "with --only after the census has grown, since a "
+                         "package's yield depends on the census it was matched "
+                         "against and a finished package is otherwise skipped")
     args = ap.parse_args()
 
     ft = fulltext_root()
@@ -217,7 +236,13 @@ def main() -> None:
 
     ft.mkdir(parents=True, exist_ok=True)
     pkgs = list_packages()
-    todo = [(l, n) for l, n in pkgs if not man["packages"].get(n, {}).get("done")]
+    todo = [(l, n) for l, n in pkgs
+            if args.redo or not man["packages"].get(n, {}).get("done")]
+    if args.only:
+        todo = [(l, n) for l, n in todo if args.only in n]
+        if not todo:
+            raise SystemExit(f"no package name contains {args.only!r}; "
+                             f"available: {', '.join(n for _, n in pkgs)}")
     if args.limit:
         todo = todo[:args.limit]
     print(f"packages available: {len(pkgs)}; to process this run: {len(todo)}")

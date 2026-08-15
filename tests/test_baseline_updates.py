@@ -19,12 +19,17 @@ THE TWO WAYS THIS GOES WRONG
    deliberate act.
 
 2. IT COUNTS REVISIONS AS NEW ARTICLES. An update file carries revised records
-   for articles the census already holds, and on this corpus they are the large
+   for articles the project already holds, and on this corpus they are the large
    majority. Measured over the full 256-file window: 434,560 cancer records,
-   188,850 distinct articles, of which 86,311 are new to the census and 102,539
-   it already held -- so 348,249 of the records are revisions, about 4 per new
-   article. Counting both as new inflates the census by the revision rate and
-   would make a routine re-ingest look like literature growth.
+   188,850 distinct articles, of which 65,966 are new and 122,884 were already
+   held -- so 368,594 of the records are revisions, about 5.6 per new article.
+
+   "ALREADY HELD" MEANS BOTH CENSUS STREAMS, and getting that wrong cost 24%.
+   `records/` is the MeSH-indexed census and `records_unindexed/` is the
+   text-recovered one; they are DISJOINT (measured intersection exactly 0), so
+   an article can sit in the second and not the first. Seeding from `records/`
+   alone called 20,345 already-recovered articles NEW, reporting 86,311 where
+   the answer is 65,966.
 
    AN EARLIER VERSION OF THIS DOCSTRING SAID "roughly three revisions for every
    two new articles", taken from the first fifth of the window and written as a
@@ -34,10 +39,17 @@ THE TWO WAYS THIS GOES WRONG
 3. IT FORGETS ITSELF WHEN RESUMED. The split is computed against a set that
    GROWS as files are read, so it is only correct if one pass sees every file.
    A 256-file ingest is routinely interrupted, and the resumed invocation used
-   to reseed from `records/` alone -- forgetting every update record already
-   written and counting those articles new a second time. The real run claimed
-   120,843 new against 86,311 actual, a 40% overstatement, and reported census
-   growth of +0.95% where the manifest-wide truth was +1.96%.
+   to reseed from what was on disk BEFORE it started -- forgetting every update
+   record the previous invocation had written and counting those articles new a
+   second time. The real run claimed 120,843 new; correcting the resume alone
+   gives 86,311 and correcting the stream definition too gives 65,966.
+
+   THREE GROWTH FIGURES WERE QUOTED FOR ONE RUN and none of the first two
+   survived: the run printed +0.95% (its own slice), the manifest then held
+   +2.74% (inflated by the resume double-count), and the corrected value is
+   +1.50% against the 4,403,994 MeSH-indexed census. Any of them reads as "the
+   census growth" out of context, so the denominator is now named at every
+   site that prints one.
 
 All three produce a plausible wrong number rather than an obvious failure, so
 they get the arithmetic pinned rather than described.
@@ -79,17 +91,43 @@ def test_updates_are_read_from_the_update_endpoint_not_the_baseline():
 def test_updates_never_write_into_the_census_directory():
     """records/ is frozen in practice: a dozen shipped analyses read it.
 
+    FOLLOWS THE WRITE, not a substring beside it. The first version pinned the
+    exact text of the `rec_dir` assignment and asserted two things that were
+    no-ops (`or True` over an ast walk, and a count that is true by
+    construction). The ingest does not write to `rec_dir`; it writes to `out`,
+    which is derived from it. Leaving the assignment intact and re-pointing
+    `out` at the census passed every assertion.
+
     Checked on the source rather than by running the ingest, because running it
     downloads from NCBI and the property is a structural one.
     """
     src = _src()
-    assert 'root / ("records_updates" if args.updates else "records")' in src, (
-        "the update path no longer selects a separate output directory, so an "
-        "update run would write into the census")
     tree = ast.parse(src)
-    # and the choice must be driven by the flag, not by anything else
-    assert "records_updates" in src and src.count("records_updates") >= 1
-    assert any(isinstance(n, ast.arg) or True for n in ast.walk(tree))
+    main_fn = next(f for f in ast.walk(tree)
+                   if isinstance(f, ast.FunctionDef) and f.name == "main")
+
+    # `rec_dir` must be the flag-conditional choice ...
+    rec = [a for a in ast.walk(main_fn) if isinstance(a, ast.Assign)
+           and any(getattr(t, "id", "") == "rec_dir" for t in a.targets)]
+    assert len(rec) == 1, f"expected one rec_dir assignment, found {len(rec)}"
+    assert isinstance(rec[0].value, ast.BinOp) and isinstance(rec[0].value.right, ast.IfExp), (
+        "rec_dir is no longer chosen by a conditional on the update flag")
+    names = {c.value for c in ast.walk(rec[0].value) if isinstance(c, ast.Constant)}
+    assert names == {"records_updates", "records"}, (
+        f"rec_dir chooses between {names}, not records_updates/records")
+
+    # ... AND the thing actually opened for writing must derive from rec_dir.
+    out = [a for a in ast.walk(main_fn) if isinstance(a, ast.Assign)
+           and any(getattr(t, "id", "") == "out" for t in a.targets)]
+    assert len(out) == 1, f"expected one `out` assignment, found {len(out)}"
+    src_of_out = ast.dump(out[0].value)
+    assert "rec_dir" in src_of_out, (
+        "the output path no longer derives from rec_dir, so the flag-conditional "
+        "directory choice does not control where records are written")
+    written = [c for c in ast.walk(main_fn) if isinstance(c, ast.Call)
+               and isinstance(c.func, ast.Attribute) and c.func.attr == "open"
+               and c.args and getattr(c.args[0], "id", "") == "out"]
+    assert written, "nothing is opened at `out`; the write path moved"
 
 
 def test_the_bulk_output_is_not_committed():
@@ -157,12 +195,29 @@ def test_the_census_total_is_computed_from_baseline_files_alone():
     because the wrong version produced a plausible figure rather than an error.
     """
     src = _src()
-    assert 'if e.get("source") != "updatefiles"' in src, (
-        "the census baseline is no longer computed from non-update entries, "
-        "so the growth line is summing the update files into the figure they "
+    # SCOPED TO main(). The bare substring also occurs in recount_updates, so
+    # the assertion stayed green while main() went back to summing the update
+    # files into the census base -- a guard satisfied by a different function
+    # than the one it is about.
+    tree = ast.parse(src)
+    main_fn = next(f for f in ast.walk(tree)
+                   if isinstance(f, ast.FunctionDef) and f.name == "main")
+    main_src = ast.unparse(main_fn)
+    assert "'updatefiles'" in main_src and "!=" in main_src, (
+        "main() no longer excludes update entries when computing the census "
+        "base, so the growth line sums the update files into the figure they "
         "are supposed to be added to")
-    assert "recs - fresh" not in src, (
-        "the superseded arithmetic is back")
+    base_asg = [a for a in ast.walk(main_fn) if isinstance(a, ast.Assign)
+                and any(getattr(t, "id", "") == "base" for t in a.targets)]
+    assert len(base_asg) == 1, f"expected one `base` assignment, found {len(base_asg)}"
+    base_src = ast.unparse(base_asg[0])
+    assert "updatefiles" in base_src, (
+        f"the census base is computed as `{base_src}`, which does not exclude "
+        "update entries")
+    assert "recs" not in base_src, (
+        f"the census base is computed as `{base_src}`, which reuses the "
+        "all-entries total the superseded arithmetic used")
+    assert "recs - fresh" not in src, "the superseded arithmetic is back"
 
     # and the property itself, on a synthetic manifest
     files = {
@@ -210,7 +265,10 @@ def test_a_resumed_ingest_does_not_forget_what_it_already_wrote():
     m = mod()
     with tempfile.TemporaryDirectory() as td:
         root = Path(td)
-        for sub, rows in (("records", ["1", "2"]), ("records_updates", ["3", "4"])):
+        # all THREE streams, because two of them are the census
+        for sub, rows in (("records", ["1", "2"]),
+                          ("records_unindexed", ["5", "6"]),
+                          ("records_updates", ["3", "4"])):
             d = root / sub
             d.mkdir(parents=True)
             with gzip.open(d / "a.jsonl.gz", "wt", encoding="utf-8") as fh:
@@ -218,14 +276,21 @@ def test_a_resumed_ingest_does_not_forget_what_it_already_wrote():
                     fh.write(json.dumps({"pmid": r}) + "\n")
 
         census_only = m.census_pmids(root)
-        assert census_only == {"1", "2"}, (
-            f"the default read {census_only}; it must see the census alone so a "
-            "fresh ingest is unaffected")
+        assert census_only == {"1", "2", "5", "6"}, (
+            f"the default read {census_only}; it must see BOTH census streams. "
+            "records_unindexed/ holds 783,271 text-recovered articles disjoint "
+            "from records/, and omitting it called 20,345 already-held "
+            "articles new")
 
         resumed = m.census_pmids(root, include_updates=True)
-        assert resumed == {"1", "2", "3", "4"}, (
+        assert resumed == {"1", "2", "3", "4", "5", "6"}, (
             f"a resumed ingest sees {resumed}; it must also see the update "
             "records already on disk or it counts them new a second time")
+
+        # the two failures are INDEPENDENT: each stream must be separately
+        # necessary, or one could be dropped while the totals still look right
+        assert "5" in census_only and "3" not in census_only
+        assert "3" in resumed
 
     # and the update path must actually ASK for that
     src = _src()
@@ -235,7 +300,7 @@ def test_a_resumed_ingest_does_not_forget_what_it_already_wrote():
 
 
 def test_the_reported_growth_is_read_from_the_manifest_not_the_run():
-    """A resumed run reported +0.95% against a true +2.74%.
+    """A resumed run reported +0.95%; the manifest then held +2.74%; both wrong.
 
     `fresh` counts only the current invocation. Census growth is a property of
     every update file parsed so far, which lives in the manifest, so reporting
@@ -285,9 +350,16 @@ def test_the_fulltext_map_reads_the_update_stream():
     # NOT `"not a change here" not in ft`: the correction quotes the wording it
     # retracts, so a bare substring check fails on the fix itself. Assert the
     # corrected claim instead.
-    assert "Both halves are required." in ft, (
+    assert "Both halves" in ft, (
         "atlas_fulltext.py no longer states that closing the cliff needs both "
         "a newer baseline AND this map reading it")
+    # the measured recovery, not the inherited estimate
+    assert "16,263" in ft and "6.98%" in ft, (
+        "the measured PMC13 recovery is gone; the docstring is back to quoting "
+        "an estimate computed for a different quantity")
+    assert "13,000,000" in ft, (
+        "the numeric block definition is gone -- 'starts with PMC13' also "
+        "matches 7-digit ids from 1988 and got this measurement wrong twice")
     assert 'said "not a change here"' in ft, (
         "the superseded claim is no longer marked as superseded, so a reader "
         "cannot tell the docstring was corrected")

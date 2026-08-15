@@ -235,6 +235,17 @@ def census_pmids(root: Path, include_updates: bool = False) -> set:
     An update file carries REVISIONS of existing records as well as new ones,
     and counting both as new would inflate the census by the revision rate.
 
+    "ALREADY HELD" MEANS BOTH CENSUS STREAMS. `records/` is the MeSH-indexed
+    census and `records_unindexed/` is the text-recovered one, 783,271 records
+    that `atlas_unindexed.py` exists to reach and that `atlas_fulltext.py`
+    already treats as "EITHER census stream". They are disjoint -- measured, the
+    intersection is exactly 0 -- so an article can be held in the second and
+    absent from the first. Reading only `records/` called 20,345 such articles
+    NEW when the project already had them, which is 24% of what it then reported
+    as new. The frozen 4,403,994 census total counts `records/` alone, and that
+    is a statement about which SNAPSHOT the manuscript quotes, not about what
+    the project holds.
+
     `include_updates` covers the RESUME case, and leaving it out was a real
     defect rather than a refinement. A 256-file ingest is routinely interrupted
     (this one was, by a full disk), and on the second invocation the update
@@ -244,7 +255,9 @@ def census_pmids(root: Path, include_updates: bool = False) -> set:
     the direction that flatters the result.
     """
     seen = set()
-    dirs = ["records"] + (["records_updates"] if include_updates else [])
+    dirs = ["records", "records_unindexed"]
+    if include_updates:
+        dirs.append("records_updates")
     for name in dirs:
         d = root / name
         if not d.exists():
@@ -396,20 +409,30 @@ def recount_updates(root: Path, man: dict) -> None:
     print(f"seeding from the census ...", flush=True)
     known = census_pmids(root)
     seeded = len(known)
-    new_tot = rev_tot = 0
+    new_tot = rev_tot = orphan_new = orphan_rev = 0
+    orphans = []
     for i, f in enumerate(files, 1):
         pmids = []
         with gzip.open(f, "rt", encoding="utf-8") as fh:
             for line in fh:
                 pmids.append(json.loads(line).get("pmid", ""))
         new, rev = split_new_and_revised(pmids, known)
-        new_tot += new
-        rev_tot += rev
         name = f.name.replace(".jsonl.gz", ".xml.gz")
         entry = man["files"].get(name)
         if entry is None:
-            print(f"  [{i}/{len(files)}] {name}: NOT IN MANIFEST, skipped")
+            # Its pmids STAY in `known` -- they are on disk, so a later file
+            # repeating them is genuinely a revision and must not be counted
+            # new. But its own counts are held out of the printed totals and
+            # reported, because folding them in would print a growth figure
+            # that cannot be reproduced from the manifest this just wrote.
+            orphan_new += new
+            orphan_rev += rev
+            orphans.append(name)
+            print(f"  [{i}/{len(files)}] {name}: no manifest entry; its "
+                  f"{new:,} new / {rev:,} revisions are held out of the total")
             continue
+        new_tot += new
+        rev_tot += rev
         was = entry.get("new_pmids")
         entry["new_pmids"] = new
         entry["revised_pmids"] = rev
@@ -418,8 +441,13 @@ def recount_updates(root: Path, man: dict) -> None:
     save_manifest(root, man)
     base = sum(e.get("cancer", 0) for e in man["files"].values()
                if e.get("source") != "updatefiles")
-    print(f"\ncensus seed {seeded:,} pmids")
-    print(f"recounted {len(files)} update files: {new_tot:,} new / {rev_tot:,} revisions")
+    print(f"\ncensus seed {seeded:,} pmids (records/ + records_unindexed/)")
+    print(f"recounted {len(files) - len(orphans)} manifest-backed update files: "
+          f"{new_tot:,} new / {rev_tot:,} revisions")
+    if orphans:
+        print(f"held out {len(orphans)} file(s) with no manifest entry "
+              f"({orphan_new:,} new / {orphan_rev:,} revisions): "
+              + ", ".join(orphans))
     print(f"census {base:,} -> {base + new_tot:,} (+{100 * new_tot / max(base, 1):.2f}%)")
 
 
@@ -448,10 +476,32 @@ def main() -> None:
         return
 
     if args.status:
-        done = [f for f, s in man["files"].items() if s.get("parsed")]
-        recs = sum(s.get("cancer", 0) for s in man["files"].values())
-        seen = sum(s.get("total", 0) for s in man["files"].values())
-        nomesh = sum(s.get("no_mesh", 0) for s in man["files"].values())
+        # Split by source. Pooling them reports a "census" that is neither the
+        # census nor the merged total -- the same defect the run summary had --
+        # and it pools two populations whose no-MeSH rates differ by 25 points
+        # (17.4% baseline against 42.2% updates), which is the very blind spot
+        # this line exists to make visible.
+        bl = {f: s for f, s in man["files"].items()
+              if s.get("source") != "updatefiles"}
+        up = {f: s for f, s in man["files"].items()
+              if s.get("source") == "updatefiles"}
+        done = [f for f, s in bl.items() if s.get("parsed")]
+        recs = sum(s.get("cancer", 0) for s in bl.values())
+        seen = sum(s.get("total", 0) for s in bl.values())
+        nomesh = sum(s.get("no_mesh", 0) for s in bl.values())
+        if up:
+            u_new = sum(s.get("new_pmids", 0) for s in up.values())
+            u_can = sum(s.get("cancer", 0) for s in up.values())
+            u_seen = sum(s.get("total", 0) for s in up.values())
+            u_nom = sum(s.get("no_mesh", 0) for s in up.values())
+            print(f"update files    : {len(up)} parsed")
+            print(f"  articles seen : {u_seen:,}")
+            print(f"  cancer records: {u_can:,}"
+                  + (f"  ({u_can/u_seen:.1%})" if u_seen else ""))
+            print(f"  NEW to census : {u_new:,}  (held in neither stream)")
+            print(f"  no MeSH       : {u_nom:,}"
+                  + (f"  ({u_nom/u_seen:.1%})" if u_seen else ""))
+            print("  -- baseline below, counted separately --")
         print(f"atlas root      : {root}")
         print(f"files parsed    : {len(done)}")
         print(f"articles seen   : {seen:,}")
@@ -525,8 +575,14 @@ def main() -> None:
         # `fresh` counts only THIS invocation. A 256-file ingest is routinely
         # resumed, and reporting the run's own total as the census growth
         # understates it by everything the previous runs did -- a resumed run
-        # here printed +0.95% against a true +2.74%. The growth is a property
-        # of the manifest, so it is read from the manifest.
+        # here printed +0.95% while the manifest then held +2.74%, and BOTH were
+        # wrong: the manifest figure was itself inflated by the resume
+        # double-count, and the corrected value is +1.50%. The growth is a
+        # property of the manifest, so it is read from the manifest.
+        #
+        # Every denominator is named, because "new to the census" has three
+        # defensible readings and they differ by 24%. `new_pmids` counts
+        # articles held in NEITHER census stream.
         ups = [e for e in man["files"].values()
                if e.get("source") == "updatefiles"]
         all_new = sum(e.get("new_pmids", 0) for e in ups)
@@ -536,8 +592,12 @@ def main() -> None:
         print(f"all {len(ups)} update files parsed so far: {all_new:,} cancer "
               f"articles NEW to the census, {all_rev:,} revisions of records "
               f"it already held")
-        print(f"census {base:,} -> {base + all_new:,} if merged "
+        print(f"census (MeSH-indexed, records/) {base:,} -> "
+              f"{base + all_new:,} if merged "
               f"(+{100 * all_new / max(base, 1):.2f}%)")
+        print("  new_pmids counts articles held in NEITHER records/ nor "
+              "records_unindexed/; the two streams are disjoint, so an article "
+              "already text-recovered is not new.")
     else:
         print(f"\nparsed {done}/{len(files)} baseline files; {recs:,} cancer articles so far")
 
