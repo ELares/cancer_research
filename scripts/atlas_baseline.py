@@ -229,16 +229,31 @@ def split_new_and_revised(pmids, known: set) -> tuple:
     return new, revised
 
 
-def census_pmids(root: Path) -> set:
-    """Every PMID already in the census, so an update can be split.
+def census_pmids(root: Path, include_updates: bool = False) -> set:
+    """Every PMID already held, so an update can be split.
 
     An update file carries REVISIONS of existing records as well as new ones,
     and counting both as new would inflate the census by the revision rate.
+
+    `include_updates` covers the RESUME case, and leaving it out was a real
+    defect rather than a refinement. A 256-file ingest is routinely interrupted
+    (this one was, by a full disk), and on the second invocation the update
+    records written by the first are on disk but not in `records/`. Reading only
+    `records/` therefore forgets them, so an article that arrived new in an early
+    file and was revised in a later one is counted NEW TWICE -- silently, and in
+    the direction that flatters the result.
     """
     seen = set()
-    d = root / "records"
-    if not d.exists():
-        return seen
+    dirs = ["records"] + (["records_updates"] if include_updates else [])
+    for name in dirs:
+        d = root / name
+        if not d.exists():
+            continue
+        _scan_pmids(d, seen)
+    return seen
+
+
+def _scan_pmids(d: Path, seen: set) -> None:
     for f in sorted(d.glob("*.jsonl.gz")):
         with gzip.open(f, "rt", encoding="utf-8") as fh:
             for line in fh:
@@ -249,7 +264,6 @@ def census_pmids(root: Path) -> set:
                 k = line.find('"', j + 1)
                 if j > 0 and k > j:
                     seen.add(line[j + 1:k])
-    return seen
 
 
 # --------------------------------------------------------------------------
@@ -361,6 +375,54 @@ def save_manifest(root: Path, man: dict) -> None:
     (root / "manifest.json").write_text(json.dumps(man, indent=1, sort_keys=True), encoding="utf-8")
 
 
+def recount_updates(root: Path, man: dict) -> None:
+    """Rebuild every update file's new/revised split from the records on disk.
+
+    The per-file split is computed against a set that GROWS as files are read,
+    so it is only correct if one pass sees every file. A resumed ingest used to
+    restart that set from `records/` alone, which forgot everything the previous
+    invocation had written and counted those articles new a second time. This
+    replays the whole window in filename order, which is the order the ingest
+    would have used, and is therefore what an uninterrupted run would have
+    recorded.
+
+    Reads only files already on disk and rewrites only the two split fields, so
+    it never re-downloads and never changes a cancer or total count.
+    """
+    d = root / "records_updates"
+    files = sorted(d.glob("*.jsonl.gz"))
+    if not files:
+        raise SystemExit(f"no update records under {d}")
+    print(f"seeding from the census ...", flush=True)
+    known = census_pmids(root)
+    seeded = len(known)
+    new_tot = rev_tot = 0
+    for i, f in enumerate(files, 1):
+        pmids = []
+        with gzip.open(f, "rt", encoding="utf-8") as fh:
+            for line in fh:
+                pmids.append(json.loads(line).get("pmid", ""))
+        new, rev = split_new_and_revised(pmids, known)
+        new_tot += new
+        rev_tot += rev
+        name = f.name.replace(".jsonl.gz", ".xml.gz")
+        entry = man["files"].get(name)
+        if entry is None:
+            print(f"  [{i}/{len(files)}] {name}: NOT IN MANIFEST, skipped")
+            continue
+        was = entry.get("new_pmids")
+        entry["new_pmids"] = new
+        entry["revised_pmids"] = rev
+        if was is not None and was != new:
+            print(f"  [{i}/{len(files)}] {name}: new {was:,} -> {new:,}")
+    save_manifest(root, man)
+    base = sum(e.get("cancer", 0) for e in man["files"].values()
+               if e.get("source") != "updatefiles")
+    print(f"\ncensus seed {seeded:,} pmids")
+    print(f"recounted {len(files)} update files: {new_tot:,} new / {rev_tot:,} revisions")
+    print(f"census {base:,} -> {base + new_tot:,} (+{100 * new_tot / max(base, 1):.2f}%)")
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--limit", type=int, default=0, help="process at most N baseline files")
@@ -372,10 +434,18 @@ def main() -> None:
                     help="ingest the daily update files instead of the annual "
                          "baseline, into records_updates/ so the census is not "
                          "mutated")
+    ap.add_argument("--recount-updates", action="store_true",
+                    help="recompute the new/revised split of every already-"
+                         "parsed update file from the records on disk, and "
+                         "rewrite the manifest with it")
     args = ap.parse_args()
 
     root = atlas_root()
     man = load_manifest(root)
+
+    if args.recount_updates:
+        recount_updates(root, man)
+        return
 
     if args.status:
         done = [f for f, s in man["files"].items() if s.get("parsed")]
@@ -408,7 +478,7 @@ def main() -> None:
     rec_dir = root / ("records_updates" if args.updates else "records")
     rec_dir.mkdir(parents=True, exist_ok=True)
 
-    known = census_pmids(root) if args.updates else set()
+    known = census_pmids(root, include_updates=True) if args.updates else set()
     if args.updates:
         print(f"census PMIDs already held: {len(known):,}")
 
@@ -452,10 +522,22 @@ def main() -> None:
         # from it gives neither the census nor the merged total.
         base = sum(e.get("cancer", 0) for e in man["files"].values()
                    if e.get("source") != "updatefiles")
-        print(f"\nparsed {len(todo)} update files: {fresh:,} cancer articles NEW to "
-              f"the census, {revised:,} revisions of records it already held")
-        print(f"census {base:,} -> {base + fresh:,} if merged "
-              f"(+{100 * fresh / max(base, 1):.2f}%)")
+        # `fresh` counts only THIS invocation. A 256-file ingest is routinely
+        # resumed, and reporting the run's own total as the census growth
+        # understates it by everything the previous runs did -- a resumed run
+        # here printed +0.95% against a true +2.74%. The growth is a property
+        # of the manifest, so it is read from the manifest.
+        ups = [e for e in man["files"].values()
+               if e.get("source") == "updatefiles"]
+        all_new = sum(e.get("new_pmids", 0) for e in ups)
+        all_rev = sum(e.get("revised_pmids", 0) for e in ups)
+        print(f"\nthis run: parsed {len(todo)} update files, {fresh:,} new / "
+              f"{revised:,} revisions")
+        print(f"all {len(ups)} update files parsed so far: {all_new:,} cancer "
+              f"articles NEW to the census, {all_rev:,} revisions of records "
+              f"it already held")
+        print(f"census {base:,} -> {base + all_new:,} if merged "
+              f"(+{100 * all_new / max(base, 1):.2f}%)")
     else:
         print(f"\nparsed {done}/{len(files)} baseline files; {recs:,} cancer articles so far")
 

@@ -19,13 +19,28 @@ THE TWO WAYS THIS GOES WRONG
    deliberate act.
 
 2. IT COUNTS REVISIONS AS NEW ARTICLES. An update file carries revised records
-   for articles the census already holds, and on this corpus they are the
-   MAJORITY -- roughly three revisions for every two new articles in the first
-   files ingested. Counting both as new inflates the census by the revision
-   rate and would make a routine re-ingest look like literature growth.
+   for articles the census already holds, and on this corpus they are the large
+   majority. Measured over the full 256-file window: 434,560 cancer records,
+   188,850 distinct articles, of which 86,311 are new to the census and 102,539
+   it already held -- so 348,249 of the records are revisions, about 4 per new
+   article. Counting both as new inflates the census by the revision rate and
+   would make a routine re-ingest look like literature growth.
 
-The second is the one that produces a plausible wrong number rather than an
-obvious failure, so it gets the arithmetic pinned rather than described.
+   AN EARLIER VERSION OF THIS DOCSTRING SAID "roughly three revisions for every
+   two new articles", taken from the first fifth of the window and written as a
+   property of the corpus. The ratio moved as the window progressed, which is
+   what a provisional number does; quote the denominator or wait for the run.
+
+3. IT FORGETS ITSELF WHEN RESUMED. The split is computed against a set that
+   GROWS as files are read, so it is only correct if one pass sees every file.
+   A 256-file ingest is routinely interrupted, and the resumed invocation used
+   to reseed from `records/` alone -- forgetting every update record already
+   written and counting those articles new a second time. The real run claimed
+   120,843 new against 86,311 actual, a 40% overstatement, and reported census
+   growth of +0.95% where the manifest-wide truth was +1.96%.
+
+All three produce a plausible wrong number rather than an obvious failure, so
+they get the arithmetic pinned rather than described.
 """
 
 import ast
@@ -176,6 +191,81 @@ def test_the_ingest_stays_resumable_across_both_sources():
     assert 'todo = [f for f in files if not man["files"].get(f, {}).get("parsed")]' in src, (
         "the resume filter is gone; an interrupted 256-file ingest would "
         "restart from the beginning")
+
+
+def test_a_resumed_ingest_does_not_forget_what_it_already_wrote():
+    """The defect that inflated a real run's new-article count by 40%.
+
+    The per-file new/revised split is computed against a set that GROWS as
+    files are read, so it is only correct if one pass sees every file. A
+    256-file ingest is routinely interrupted -- this one was, by a full disk --
+    and the resumed invocation seeded that set from `records/` alone, forgetting
+    every update record the previous invocation had written. An article that
+    arrived new in an early file and was revised in a later one was then counted
+    NEW TWICE, silently, in the direction that flatters the result. Measured on
+    the real run: 120,843 claimed against 86,311 actually new.
+    """
+    import gzip
+    import tempfile
+    m = mod()
+    with tempfile.TemporaryDirectory() as td:
+        root = Path(td)
+        for sub, rows in (("records", ["1", "2"]), ("records_updates", ["3", "4"])):
+            d = root / sub
+            d.mkdir(parents=True)
+            with gzip.open(d / "a.jsonl.gz", "wt", encoding="utf-8") as fh:
+                for r in rows:
+                    fh.write(json.dumps({"pmid": r}) + "\n")
+
+        census_only = m.census_pmids(root)
+        assert census_only == {"1", "2"}, (
+            f"the default read {census_only}; it must see the census alone so a "
+            "fresh ingest is unaffected")
+
+        resumed = m.census_pmids(root, include_updates=True)
+        assert resumed == {"1", "2", "3", "4"}, (
+            f"a resumed ingest sees {resumed}; it must also see the update "
+            "records already on disk or it counts them new a second time")
+
+    # and the update path must actually ASK for that
+    src = _src()
+    assert "census_pmids(root, include_updates=True) if args.updates" in src, (
+        "the update ingest no longer seeds its known-pmid set from the update "
+        "records it has already written, so resuming double-counts")
+
+
+def test_the_reported_growth_is_read_from_the_manifest_not_the_run():
+    """A resumed run reported +0.95% against a true +2.74%.
+
+    `fresh` counts only the current invocation. Census growth is a property of
+    every update file parsed so far, which lives in the manifest, so reporting
+    the run's own accumulator understates it by everything earlier runs did.
+    """
+    src = _src()
+    assert 'all_new = sum(e.get("new_pmids", 0) for e in ups)' in src, (
+        "the growth line no longer sums new_pmids across the manifest")
+    assert "base + all_new:,} if merged" in src, (
+        "the merged census total is not computed from the manifest-wide count")
+    assert "base + fresh:,} if merged" not in src, (
+        "the superseded per-run arithmetic is back")
+
+
+def test_the_recount_path_exists_and_only_touches_the_split():
+    """Repairing a bad manifest must not be a hand edit.
+
+    The manifest written by the resumed run held wrong per-file splits. The fix
+    replays the whole window in filename order from the records already on disk,
+    which is what an uninterrupted run would have recorded -- and it rewrites
+    ONLY the two split fields, so a cancer or total count can never move.
+    """
+    src = _src()
+    assert "def recount_updates(" in src, "the recount path is gone"
+    body = src[src.index("def recount_updates("):src.index("def main() ->")]
+    assert 'entry["new_pmids"] = new' in body and 'entry["revised_pmids"] = rev' in body
+    for forbidden in ('entry["cancer"]', 'entry["total"]', "download("):
+        assert forbidden not in body, (
+            f"recount_updates touches {forbidden}; it must only rewrite the "
+            "split and must never re-download")
 
 
 def test_the_fulltext_map_reads_the_update_stream():
