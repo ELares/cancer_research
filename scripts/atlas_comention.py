@@ -436,6 +436,15 @@ def main() -> None:
                          "the run merges its results into any existing table, so "
                          "reprocessing shards that are already counted there would "
                          "double every pair.")
+    ap.add_argument("--redo-empty", action="store_true",
+                    help="reprocess shards recorded as done that contributed "
+                         "ZERO documents. Safe where a full redo is not: the "
+                         "run merges into the existing table, so reprocessing "
+                         "a counted shard would double its pairs -- but a shard "
+                         "that contributed no documents put nothing in the "
+                         "table to double. Exists because the PMC013xxxxxx "
+                         "shards were empty when this layer was built and were "
+                         "filled afterwards by a full-text recovery.")
     ap.add_argument("--recent-first", action="store_true",
                     help="process the highest PMCID shards first (modern literature)")
     args = ap.parse_args()
@@ -483,6 +492,25 @@ def main() -> None:
         print("  --rebuild: manifest and pair table cleared", flush=True)
 
     todo = [s for s in shards if not man["shards"].get(s.name, {}).get("done")]
+    if args.redo_empty:
+        empty = [s for s in shards
+                 if man["shards"].get(s.name, {}).get("done")
+                 and man["shards"].get(s.name, {}).get("docs", 0) == 0]
+        # Assert the safety property rather than trusting the flag name: a
+        # shard is only re-runnable here if it contributed nothing to the pair
+        # table, and "nothing" has to mean every count, not just docs.
+        for s2 in empty:
+            rec = man["shards"][s2.name]
+            contributed = (rec.get("docs", 0) + rec.get("kept_sentences", 0)
+                           + rec.get("pairs", 0))
+            if contributed:
+                raise SystemExit(
+                    f"{s2.name} is recorded with docs=0 but contributed "
+                    f"{contributed} to the table; reprocessing it would double "
+                    "those pairs. Use --rebuild.")
+        todo = todo + [s2 for s2 in empty if s2 not in todo]
+        print(f"  --redo-empty: {len(empty)} previously-empty shard(s) requeued",
+              flush=True)
     if args.limit:
         todo = todo[:args.limit]
     print(f"shards: {len(shards)} total, {len(todo)} this run", flush=True)
