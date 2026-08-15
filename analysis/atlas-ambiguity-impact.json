@@ -1,11 +1,11 @@
 {
   "blocked_forms": 346,
-  "contested_identifiers": 563,
-  "assignments_total": 18440811,
-  "assignments_unaffected": 17141004,
-  "assignments_corroborated": 573621,
-  "assignments_at_risk": 726186,
+  "contested_identifiers": 565,
+  "assignments_total": 18643362,
+  "assignments_unaffected": 17330645,
+  "assignments_corroborated": 578746,
+  "assignments_at_risk": 733971,
   "relation_rows": 10700928,
-  "relation_rows_touching_contested_id": 5405601,
-  "relation_rows_resting_on_at_risk": 137270
+  "relation_rows_touching_contested_id": 5405924,
+  "relation_rows_resting_on_at_risk": 140598
 }

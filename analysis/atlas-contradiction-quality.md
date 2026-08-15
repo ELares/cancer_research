@@ -11,9 +11,9 @@ inconsistency rather than disagreement between studies.
 
 | | count | share |
 |---|---|---|
-| conflicting pairs examined | 4,067 | |
+| conflicting pairs examined | 6,373 | |
 | ... with any paper asserting BOTH directions | 1 | 0.02% |
-| asserting papers that contradict themselves | 1 of 115,024 | 0.00% |
+| asserting papers that contradict themselves | 1 of 196,364 | 0.00% |
 
 **This failure mode is essentially absent.** The conflicts really are
 between papers, which is the reading the report already gives them.
@@ -24,15 +24,15 @@ Merging two entities under one identifier merges two literatures, and two
 literatures about different biology will disagree. An apparent contradiction
 can therefore be two genes being conflated rather than a field divided.
 
-Among the 13,589 pairs carrying enough directional assertions to be
+Among the 19,735 pairs carrying enough directional assertions to be
 eligible for a conflict verdict at all:
 
 | pairs | n | flagged contradictory | rate |
 |---|---|---|---|
-| involving a measured sense collision | 3,509 | 1,376 | **39.2%** |
-| involving none | 10,080 | 2,691 | 26.7% |
+| involving a measured sense collision | 5,309 | 2,228 | **42.0%** |
+| involving none | 14,426 | 4,145 | 28.7% |
 
-Crude risk ratio: **1.47x**.
+Crude risk ratio: **1.46x**.
 
 ### The confound, and why the answer survives it
 
@@ -44,14 +44,15 @@ Stratifying by the number of directional assertions:
 
 | assertions | ambiguous | clean | ratio |
 |---|---|---|---|
-| 8-15 | 645/2130 (30.3%) | 1421/6388 (22.2%) | 1.36x |
-| 16-31 | 430/860 (50.0%) | 781/2303 (33.9%) | 1.47x |
-| 32-63 | 188/319 (58.9%) | 320/839 (38.1%) | 1.55x |
-| 64-127 | 77/122 (63.1%) | 110/327 (33.6%) | 1.88x |
-| 128-255 | 27/53 (50.9%) | 43/148 (29.1%) | 1.75x |
+| 8-15 | 1077/3247 (33.2%) | 2105/9073 (23.2%) | 1.43x |
+| 16-31 | 661/1251 (52.8%) | 1243/3309 (37.6%) | 1.41x |
+| 32-63 | 317/516 (61.4%) | 518/1239 (41.8%) | 1.47x |
+| 64-127 | 116/180 (64.4%) | 176/472 (37.3%) | 1.73x |
+| 128-255 | 29/61 (47.5%) | 66/207 (31.9%) | 1.49x |
+| 256-511 | 20/35 (57.1%) | 25/84 (29.8%) | 1.92x |
 
-Pooled with a Mantel-Haenszel estimator: **1.45x** (95% CI 1.37-1.53, 2,000 bootstrap resamples over pairs),
-against a crude 1.47x. The adjustment barely moves it, the enrichment
+Pooled with a Mantel-Haenszel estimator: **1.45x** (95% CI 1.39-1.50, 2,000 bootstrap resamples over pairs),
+against a crude 1.46x. The adjustment barely moves it, the enrichment
 holds inside every stratum, and it RISES with assertion count -- which is the
 direction merging two literatures predicts, since more papers means more
 chance both merged senses are represented.

@@ -12,28 +12,28 @@ answer -- only a per-paper one.
 
 ## The gold set
 
-1,902 cancer papers carry an `FSP1` annotation. Of those,
-**513** declare the expansion themselves and so carry a label
+1,988 cancer papers carry an `FSP1` annotation. Of those,
+**547** declare the expansion themselves and so carry a label
 that is independent of anything the classifier reads
-(294 AIFM2, 217 S100A4, 2 ATL1).
+(327 AIFM2, 218 S100A4, 2 ATL1).
 
 ## What PubTator3 does on it
 
-**180/496 = 36.3%** accurate (95% CI 32.2-40.6%).
+**181/530 = 34.2%** accurate (95% CI 30.2-38.3%).
 
 | paper declares | PubTator assigns | n |
 |---|---|---|
-| AIFM2 | ATL1 | 268 **wrong** |
-| S100A4 | S100A4 | 178 |
+| AIFM2 | ATL1 | 298 **wrong** |
+| S100A4 | S100A4 | 179 |
 | S100A4 | ATL1 | 29 **wrong** |
-| AIFM2 | S100A4 | 19 **wrong** |
+| AIFM2 | S100A4 | 22 **wrong** |
 | ATL1 | ATL1 | 2 |
 
 The errors are not evenly spread, and the shape is the finding:
 
-* of the 294 papers that spell out *ferroptosis suppressor
+* of the 327 papers that spell out *ferroptosis suppressor
   protein 1*, **not one** has that mention resolved to AIFM2;
-* **207** of them (70%) carry no
+* **234** of them (72%) carry no
   correct AIFM2 edge from any OTHER mention either -- the rest are rescued
   only because the paper also writes "AIFM2" somewhere -- so for most of
   them the ferroptosis biology is not merely mislabelled, it is absent;
@@ -42,14 +42,14 @@ The errors are not evenly spread, and the shape is the finding:
 
 ## What this layer does on it
 
-**477/496 = 96.2%** accurate (95% CI 94.1-97.5%), abstaining on 17 of the 513 gold papers.
+**508/528 = 96.2%** accurate (95% CI 94.2-97.5%), abstaining on 19 of the 547 gold papers.
 
 | paper declares | this layer assigns | n |
 |---|---|---|
-| AIFM2 | AIFM2 | 276 |
-| S100A4 | S100A4 | 201 |
+| AIFM2 | AIFM2 | 306 |
+| S100A4 | S100A4 | 202 |
 | S100A4 | AIFM2 | 13 **wrong** |
-| AIFM2 | S100A4 | 4 **wrong** |
+| AIFM2 | S100A4 | 5 **wrong** |
 | ATL1 | S100A4 | 1 **wrong** |
 | ATL1 | AIFM2 | 1 **wrong** |
 
@@ -63,9 +63,9 @@ decades.
 
 | declared sense | n | median year | range | published before 2019 |
 |---|---|---|---|---|
-| AIFM2 | 294 | 2023 | 2019-2026 | 0 (0%) |
+| AIFM2 | 327 | 2023 | 2019-2026 | 0 (0%) |
 | ATL1 | 2 | 2020 | 2019-2020 | 0 (0%) |
-| S100A4 | 217 | 2020 | 1997-2025 | 84 (39%) |
+| S100A4 | 218 | 2020 | 1997-2026 | 84 (39%) |
 
 The separation is what it should be, and the AIFM2 row is the strong form
 of the test: a single pre-2019 paper declaring *ferroptosis suppressor protein
@@ -73,20 +73,20 @@ of the test: a single pre-2019 paper declaring *ferroptosis suppressor protein
 
 ### The extrapolation, and a test of it
 
-Accuracy above is measured on the 513 papers that declare a sense. But
-**885 of the 1,191 corrections (74%) land on papers that declare
+Accuracy above is measured on the 547 papers that declare a sense. But
+**933 of the 1,269 corrections (74%) land on papers that declare
 nothing**, so the headline is extrapolated to a population it never scored.
 That is the most important limitation here, and it is testable with the same
 independent signal.
 
 | corrected, undeclaring | n | published before 2019 |
 |---|---|---|
-| to AIFM2 | 648 | **0** |
-| to another sense | 237 | 87 |
+| to AIFM2 | 695 | **0** |
+| to another sense | 238 | 87 |
 
-Across all corrected undeclaring papers 10% predate 2019, so if
+Across all corrected undeclaring papers 9% predate 2019, so if
 the classifier were assigning AIFM2 without regard to the biology it would put
-roughly **64** of them before the term existed. It puts
+roughly **65** of them before the term existed. It puts
 **0**. The extrapolation is supported on exactly the population the gold
 set does not cover.
 
@@ -98,11 +98,11 @@ is very strong, and a classifier can lose to it while looking respectable.
 
 | | accuracy |
 |---|---|
-| always answer the majority sense | **57.3%** |
-| PubTator3 | 36.3% |
+| always answer the majority sense | **59.8%** |
+| PubTator3 | 34.2% |
 | this layer | 96.2% |
 
-This layer beats the constant by +38.9 points.
+This layer beats the constant by +36.4 points.
 
 ## Why that number is not circular
 
@@ -115,7 +115,7 @@ The number above is what survives that masking.
 
 ## Corrections, and what they recover
 
-1,191 papers where this layer disagrees with the single sense
+1,269 papers where this layer disagrees with the single sense
 PubTator assigned. These are the per-paper corrections a consumer applies;
 the full table is in the JSON beside this report.
 
@@ -125,12 +125,12 @@ and the *real* FSP1 (AIFM2):
 
 | | papers co-mentioning GPX4 and AIFM2 |
 |---|---|
-| before correction | 282 |
-| after correction | 816 |
-| recovered | **+534** (189% more) |
+| before correction | 290 |
+| after correction | 872 |
+| recovered | **+582** (201% more) |
 
 So the collision was not a labelling nicety. It was hiding roughly
-65% of the census's own
+67% of the census's own
 evidence for the mechanism this project is built on, and the graph reported
 the smaller number with nothing to indicate anything was missing.
 

@@ -5,75 +5,75 @@
   "vote_disagrees": 4,
   "results": {
     "er": {
-      "pool": 52184,
+      "pool": 76579,
       "sampled": 800,
       "curated_sense": "ESR1",
       "majority_vote": "EREG",
       "declared": {
-        "(none declared)": 349,
-        "ESR1": 445,
-        "(endoplasmic reticulum, not a gene)": 6
+        "ESR1": 431,
+        "(none declared)": 350,
+        "(endoplasmic reticulum, not a gene)": 19
       },
-      "decided": 451,
-      "curated_share": 0.9866962305986696,
+      "decided": 450,
+      "curated_share": 0.9577777777777777,
       "curated_is_dominant": true,
       "vote_matches_curated": false
     },
     "cox-2": {
-      "pool": 14740,
+      "pool": 24726,
       "sampled": 800,
       "curated_sense": "PTGS2",
       "majority_vote": "COX2",
       "declared": {
-        "PTGS2": 541,
-        "(none declared)": 259
+        "PTGS2": 484,
+        "(none declared)": 314,
+        "COX2 (mitochondrial)": 2
       },
-      "decided": 541,
-      "curated_share": 1.0,
+      "decided": 486,
+      "curated_share": 0.9958847736625515,
       "curated_is_dominant": true,
       "vote_matches_curated": false
     },
     "p62": {
-      "pool": 6546,
+      "pool": 11604,
       "sampled": 800,
       "curated_sense": "SQSTM1",
       "majority_vote": "NUP62",
       "declared": {
-        "(none declared)": 528,
-        "NUP62": 7,
-        "SQSTM1": 265
+        "(none declared)": 574,
+        "SQSTM1": 226
       },
-      "decided": 272,
-      "curated_share": 0.9742647058823529,
+      "decided": 226,
+      "curated_share": 1.0,
       "curated_is_dominant": true,
       "vote_matches_curated": false
     },
     "p21": {
-      "pool": 31405,
+      "pool": 47659,
       "sampled": 800,
       "curated_sense": "CDKN1A",
       "majority_vote": "H3P16",
       "declared": {
-        "CDKN1A": 301,
-        "(none declared)": 464,
-        "RAS p21": 9,
-        "H3P16 (histone pseudogene)": 26
+        "CDKN1A": 248,
+        "(none declared)": 526,
+        "H3P16 (histone pseudogene)": 20,
+        "RAS p21": 6
       },
-      "decided": 336,
-      "curated_share": 0.8958333333333334,
+      "decided": 274,
+      "curated_share": 0.9051094890510949,
       "curated_is_dominant": true,
       "vote_matches_curated": false
     },
     "psa": {
-      "pool": 40837,
+      "pool": 55663,
       "sampled": 800,
       "curated_sense": "KLK3",
       "majority_vote": "KLK3",
       "declared": {
-        "KLK3": 528,
-        "(none declared)": 272
+        "KLK3": 499,
+        "(none declared)": 301
       },
-      "decided": 528,
+      "decided": 499,
       "curated_share": 1.0,
       "curated_is_dominant": true,
       "vote_matches_curated": true
