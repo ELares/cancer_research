@@ -71,6 +71,15 @@ OUT = PROJECT_ROOT / "analysis" / "atlas-emergence.md"
 RAW = PROJECT_ROOT / "analysis" / "atlas-emergence.json"
 
 
+# Every stream that carries a `year`. NOT a cosmetic list: the two names this
+# tuple used to hold were `records` and `records_c04only`, and c04only is a
+# strict SUBSET of records -- measured, it adds exactly zero PMIDs -- so a loop
+# that read like a merge merged nothing, while the two streams holding the most
+# recent literature were never named. The layer whose subject is recency was
+# blind to 814,015 dated articles, overwhelmingly from 2021 onward.
+YEAR_STREAMS = ("records", "records_c04only", "records_unindexed", "records_updates")
+
+
 def pmid_years(root: Path) -> tuple:
     """PMID -> publication year, merged across every census directory present.
 
@@ -83,7 +92,7 @@ def pmid_years(root: Path) -> tuple:
     """
     years = {}
     used = []
-    for d in ("records", "records_c04only"):
+    for d in YEAR_STREAMS:
         files = sorted(glob.glob(str(root / d / "*.jsonl.gz")))
         if not files:
             continue

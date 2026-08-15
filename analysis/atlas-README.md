@@ -378,16 +378,26 @@ co-occurrence graph — but against ranking the *same candidates* by popularity:
 
 | ranking | degree correction | measured selectivity | precision@20 |
 |---|---|---|---|
-| popularity | none — it *is* degree | 7.4× | **15.5%** |
-| Adamic-Adar | down-weights hub bridges | 5.6× | 14.4% |
-| raw bridge count | none | 5.5× | 14.1% |
-| resource allocation | harder | 4.3× | 12.8% |
-| **ABC (shipped)** | divides out candidate degree | 2.3× | **10.1%** |
-| random | — | 1.0× | 2.8% |
-| Jaccard | normalises by both degrees | 0.1× | 2.4% |
+| popularity | none — it *is* degree | 7.4× | **20.5%** |
+| Adamic-Adar | down-weights hub bridges | 5.4× | 18.4% |
+| raw bridge count | none | 5.4× | 18.1% |
+| resource allocation | harder | 4.3× | 15.6% |
+| **ABC (shipped)** | divides out candidate degree | 2.5× | **13.1%** |
+| Jaccard | normalises by both degrees | 0.1× | 3.8% |
+| random | — | 0.9× | 3.0% |
 
-Paired bootstrap for ABC: -1.09 hits of 20, 95% CI [-1.41, -0.79], behind on 93
-of 200 seeds, reproduced at split years 2015, 2018 and 2021.
+Paired bootstrap for ABC: -1.50 hits of 20, 95% CI [-1.85, -1.16].
+
+**These numbers rose across the board when the year map was widened** (a
+PMID→year table had been built from two directory names that resolve to one
+stream, so 18.5% of the graph's articles could not be dated and were dropped).
+Every ranking gained, the ordering held, and the conclusion did not move: the
+shipped ranker is still measurably worse than asking which candidate is already
+famous. The one thing that DID change is the bottom of the table — Jaccard and
+random now swap, so precision is monotone in selectivity across the five real
+methods rather than all seven. Both are near the floor and within a point of
+each other, which is a fact about the floor, not a correction that rescues
+Jaccard.
 
 The "degree correction" column was hand-written from what each formula does.
 The selectivity column measures it — mean degree of a ranking's top 20 over the

@@ -2,75 +2,75 @@
   "seeds": 200,
   "top": 20,
   "weight": 0.5,
-  "pairs_before": 1565428,
-  "benchmark_precision": 0.155,
+  "pairs_before": 1660418,
+  "benchmark_precision": 0.2055,
   "results": {
     "abc": {
-      "mean_diff": -0.485,
+      "mean_diff": -0.72,
       "ci95": [
-        -0.725,
-        -0.255
+        -1.0,
+        -0.45
       ],
       "decided": true,
-      "better": 35,
-      "worse": 74,
-      "same": 91,
+      "better": 45,
+      "worse": 84,
+      "same": 71,
       "p": 0.0001,
       "p_holm": 0.0005,
       "decided_holm": true
     },
     "bridges": {
-      "mean_diff": -0.125,
+      "mean_diff": -0.25,
       "ci95": [
-        -0.265,
-        0.01
-      ],
-      "decided": false,
-      "better": 35,
-      "worse": 45,
-      "same": 120,
-      "p": 0.0806,
-      "p_holm": 0.24180000000000001,
-      "decided_holm": false
-    },
-    "adamic_adar": {
-      "mean_diff": -0.095,
-      "ci95": [
-        -0.22,
-        0.03
-      ],
-      "decided": false,
-      "better": 34,
-      "worse": 46,
-      "same": 120,
-      "p": 0.1298,
-      "p_holm": 0.2596,
-      "decided_holm": false
-    },
-    "resource_alloc": {
-      "mean_diff": -0.095,
-      "ci95": [
-        -0.215,
-        0.025
-      ],
-      "decided": false,
-      "better": 42,
-      "worse": 52,
-      "same": 106,
-      "p": 0.1344,
-      "p_holm": 0.2596,
-      "decided_holm": false
-    },
-    "jaccard": {
-      "mean_diff": -1.795,
-      "ci95": [
-        -2.18,
-        -1.42
+        -0.42,
+        -0.09
       ],
       "decided": true,
-      "better": 22,
-      "worse": 107,
-      "same": 71,
+      "better": 36,
+      "worse": 65,
+      "same": 99,
+      "p": 0.0018,
+      "p_holm": 0.0036,
+      "decided_holm": true
+    },
+    "adamic_adar": {
+      "mean_diff": -0.205,
+      "ci95": [
+        -0.365,
+        -0.045
+      ],
+      "decided": true,
+      "better": 40,
+      "worse": 64,
+      "same": 96,
+      "p": 0.0152,
+      "p_holm": 0.0152,
+      "decided_holm": true
+    },
+    "resource_alloc": {
+      "mean_diff": -0.345,
+      "ci95": [
+        -0.525,
+        -0.165
+      ],
+      "decided": true,
+      "better": 36,
+      "worse": 73,
+      "same": 91,
+      "p": 0.0002,
+      "p_holm": 0.0006000000000000001,
+      "decided_holm": true
+    },
+    "jaccard": {
+      "mean_diff": -2.42,
+      "ci95": [
+        -2.835,
+        -2.015
+      ],
+      "decided": true,
+      "better": 14,
+      "worse": 132,
+      "same": 54,
       "p": 0.0001,
       "p_holm": 0.0005,
       "decided_holm": true
@@ -78,59 +78,49 @@
   },
   "sweep": {
     "0.1": {
-      "abc": -0.135,
-      "bridges": -0.005,
-      "adamic_adar": 0.03,
-      "resource_alloc": 0.06,
-      "jaccard": -0.445
+      "abc": -0.25,
+      "bridges": -0.06,
+      "adamic_adar": -0.045,
+      "resource_alloc": 0.005,
+      "jaccard": -0.52
     },
     "0.25": {
-      "abc": -0.36,
-      "bridges": -0.065,
-      "adamic_adar": -0.04,
-      "resource_alloc": -0.005,
-      "jaccard": -1.195
+      "abc": -0.475,
+      "bridges": -0.09,
+      "adamic_adar": -0.1,
+      "resource_alloc": -0.1,
+      "jaccard": -1.505
     },
     "0.5": {
-      "abc": -0.485,
-      "bridges": -0.125,
-      "adamic_adar": -0.095,
-      "resource_alloc": -0.095,
-      "jaccard": -1.795
+      "abc": -0.72,
+      "bridges": -0.25,
+      "adamic_adar": -0.205,
+      "resource_alloc": -0.345,
+      "jaccard": -2.42
     },
     "0.75": {
-      "abc": -0.69,
-      "bridges": -0.15,
-      "adamic_adar": -0.105,
-      "resource_alloc": -0.175,
-      "jaccard": -2.31
+      "abc": -0.935,
+      "bridges": -0.34,
+      "adamic_adar": -0.305,
+      "resource_alloc": -0.52,
+      "jaccard": -2.99
     },
     "0.9": {
-      "abc": -0.795,
-      "bridges": -0.255,
-      "adamic_adar": -0.2,
-      "resource_alloc": -0.27,
-      "jaccard": -2.475
+      "abc": -1.195,
+      "bridges": -0.44,
+      "adamic_adar": -0.38,
+      "resource_alloc": -0.645,
+      "jaccard": -3.2
     }
   },
   "sweep_positive_cells_tested": [
     {
       "weight": 0.1,
-      "method": "adamic_adar",
-      "mean": 0.03,
-      "ci95": [
-        -0.035,
-        0.095
-      ],
-      "decided": false
-    },
-    {
-      "weight": 0.1,
       "method": "resource_alloc",
-      "mean": 0.06,
+      "mean": 0.005,
       "ci95": [
-        -0.005,
-        0.13
+        -0.095,
+        0.105
       ],
       "decided": false
     }

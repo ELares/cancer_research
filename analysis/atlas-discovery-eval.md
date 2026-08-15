@@ -7,9 +7,9 @@ it a hit rate, which it has never had.
 ## Method
 
 A time split at **2018**. The graph is rebuilt as it stood before 2018
-(1,565,428 pairs), candidates are ranked, and a prediction
+(1,660,418 pairs), candidates are ranked, and a prediction
 counts as a hit if the literature first asserts that pair in 2018 or later
-(868,948 pairs did). Pairs already asserted before 2018 are
+(1,218,935 pairs did). Pairs already asserted before 2018 are
 excluded from prediction by construction, so a hit is a NEW statement rather
 than a rediscovery.
 
@@ -25,29 +25,29 @@ degree band 30-800, top 20 each.
 
 | ranking | hits | predictions | precision@20 | paired vs popularity |
 |---|---|---|---|---|
-| popularity | 620 | 4,000 | **15.5%** | baseline |
-| adamic_adar | 578 | 4,000 | **14.4%** | -0.21 [-0.43, +0.01] (spans 0) |
-| bridges | 565 | 4,000 | **14.1%** | -0.28 [-0.50, -0.06] |
-| resource_alloc | 511 | 4,000 | **12.8%** | -0.55 [-0.80, -0.30] |
-| abc | 402 | 4,000 | **10.1%** | -1.09 [-1.41, -0.79] |
-| random | 112 | 4,000 | **2.8%** | -2.54 [-2.96, -2.14] |
-| jaccard | 97 | 4,000 | **2.4%** | -2.62 [-3.08, -2.17] |
+| popularity | 822 | 4,000 | **20.5%** | baseline |
+| adamic_adar | 736 | 4,000 | **18.4%** | -0.43 [-0.68, -0.18] |
+| bridges | 722 | 4,000 | **18.1%** | -0.50 [-0.76, -0.25] |
+| resource_alloc | 622 | 4,000 | **15.6%** | -1.00 [-1.27, -0.73] |
+| abc | 522 | 4,000 | **13.1%** | -1.50 [-1.85, -1.16] |
+| jaccard | 152 | 4,000 | **3.8%** | -3.35 [-3.85, -2.86] |
+| random | 121 | 4,000 | **3.0%** | -3.50 [-3.97, -3.04] |
 
 ### Is that difference real?
 
 Paired bootstrap over seeds, 10,000 resamples:
 
-* mean per-seed difference (abc minus popularity): **-1.09** hits out of 20
-* 95% CI **[-1.41, -0.79]**
-* abc ahead on 31 seeds, behind on 93
+* mean per-seed difference (abc minus popularity): **-1.50** hits out of 20
+* 95% CI **[-1.85, -1.16]**
+* abc ahead on 27 seeds, behind on 114
 
 ### Robustness across split years
 
 | split | abc | popularity | random | paired diff | 95% CI |
 |---|---|---|---|---|---|
-| 2018 | 10.1% | 15.5% | 2.8% | -1.09 | [-1.41, -0.79] |
-| 2015 | 13.9% | 21.6% | 3.6% | -1.52 | [-1.89, -1.18] |
-| 2021 | 8.3% | 11.9% | 1.8% | -0.71 | [-0.98, -0.44] |
+| 2018 | 13.1% | 20.5% | 3.0% | -1.50 | [-1.85, -1.16] |
+| 2015 | 14.9% | 23.5% | 5.0% | -1.71 | [-2.09, -1.34] |
+| 2021 | 10.2% | 15.6% | 2.1% | -1.07 | [-1.40, -0.76] |
 
 ### The pattern in that table
 
@@ -56,13 +56,13 @@ corrects for degree**, and the harder the correction, the worse it does:
 
 | ranking | degree correction | precision@20 |
 |---|---|---|
-| popularity | none -- it IS degree | 15.5% |
-| raw bridge count | none | 14.1% |
-| Adamic-Adar | down-weights hub bridges | 14.4% |
-| resource allocation | down-weights them harder | 12.8% |
-| ABC (hypergeometric) | divides out candidate degree | 10.1% |
-| Jaccard | normalises by BOTH degrees | 2.4% |
-| random | -- | 2.8% |
+| popularity | none -- it IS degree | 20.5% |
+| raw bridge count | none | 18.1% |
+| Adamic-Adar | down-weights hub bridges | 18.4% |
+| resource allocation | down-weights them harder | 15.6% |
+| ABC (hypergeometric) | divides out candidate degree | 13.1% |
+| Jaccard | normalises by BOTH degrees | 3.8% |
+| random | -- | 3.0% |
 
 Jaccard, the most aggressive correction, lands barely above chance. That is
 not a bug in any one method; it says the thing being corrected away is the
@@ -101,7 +101,7 @@ of them is already famous -- they order them measurably worse, at every
 split year tested.
 
 **But the candidate SET is doing real work.** Both rankings beat random by
-roughly 6x, so restricting attention
+roughly 7x, so restricting attention
 to 2-hop bridged entities is genuinely informative; it is the ranking
 within that set that fails. The honest summary is that
 `atlas_discovery.py` is a good candidate GENERATOR and a bad RANKER, and
@@ -114,31 +114,31 @@ what the literature went on to say, it does not.
 
 | seed | degree before 2018 | candidates | abc | popularity | random |
 |---|---|---|---|---|---|
-| PRMT5 | 204 | 1,740 | 18 | 16 | 6 |
-| ATF4 | 363 | 3,536 | 14 | 15 | 1 |
-| icaritin | 150 | 1,827 | 12 | 12 | 4 |
-| cofilin | 377 | 3,732 | 9 | 9 | 1 |
-| STAT5 | 779 | 6,925 | 9 | 6 | 1 |
-| oleanolic acid | 256 | 2,998 | 8 | 6 | 2 |
-| miR-410 | 71 | 655 | 8 | 5 | 2 |
-| ornithine decarboxylase | 496 | 4,810 | 8 | 9 | 0 |
-| BIRC3 | 447 | 4,324 | 7 | 4 | 0 |
-| entactin | 45 | 348 | 7 | 10 | 2 |
-| DA | 185 | 2,403 | 7 | 6 | 1 |
-| lobaplatin | 115 | 1,117 | 7 | 5 | 1 |
-| miR-137 | 218 | 2,311 | 7 | 13 | 1 |
-| IL-7 | 300 | 3,992 | 7 | 10 | 1 |
-| GPCR | 81 | 819 | 6 | 8 | 1 |
-| pazopanib | 455 | 5,468 | 6 | 12 | 0 |
-| TLR4 | 62 | 727 | 6 | 3 | 2 |
-| CUX1 | 119 | 1,468 | 6 | 8 | 4 |
-| saponin | 202 | 2,541 | 6 | 9 | 0 |
-| CAPE | 353 | 4,332 | 6 | 6 | 1 |
-| isoliquiritigenin | 235 | 2,964 | 5 | 10 | 4 |
-| aluminum | 317 | 3,789 | 5 | 5 | 1 |
-| bosutinib | 186 | 2,130 | 5 | 11 | 3 |
-| PAQR3 | 57 | 316 | 5 | 10 | 2 |
-| zerumbone | 173 | 2,328 | 5 | 8 | 0 |
+| venetoclax | 214 | 3,005 | 17 | 17 | 5 |
+| miR-206 | 215 | 2,755 | 13 | 11 | 2 |
+| aryl hydrocarbon receptor | 780 | 7,719 | 12 | 11 | 2 |
+| TXNRD1 | 181 | 1,840 | 11 | 9 | 1 |
+| TBK1 | 42 | 471 | 11 | 8 | 1 |
+| docosahexaenoic acid | 730 | 7,751 | 10 | 10 | 0 |
+| Vps34 | 108 | 1,496 | 10 | 11 | 1 |
+| isoquercitrin | 74 | 694 | 10 | 11 | 3 |
+| EphA2 | 318 | 3,498 | 10 | 8 | 2 |
+| ALDOA | 69 | 334 | 9 | 11 | 3 |
+| PALB2 | 91 | 1,143 | 9 | 13 | 1 |
+| HOXA13 | 71 | 776 | 8 | 9 | 1 |
+| EPS8 | 83 | 575 | 8 | 9 | 0 |
+| eEF2K | 96 | 1,444 | 8 | 7 | 0 |
+| Snail | 258 | 2,651 | 8 | 7 | 3 |
+| CYP3A5 | 172 | 2,294 | 7 | 6 | 2 |
+| ginsenoside Rg1 | 84 | 760 | 7 | 8 | 2 |
+| diosgenin | 185 | 2,547 | 7 | 10 | 1 |
+| compound K | 137 | 2,124 | 7 | 13 | 2 |
+| ATG3 | 48 | 697 | 7 | 8 | 1 |
+| infliximab | 508 | 5,616 | 7 | 6 | 1 |
+| TMS | 143 | 1,449 | 7 | 10 | 2 |
+| porphyrin | 426 | 4,906 | 7 | 7 | 1 |
+| MAF | 158 | 1,725 | 6 | 8 | 0 |
+| hypericin | 276 | 3,540 | 6 | 9 | 0 |
 
 ## What this cannot show
 
