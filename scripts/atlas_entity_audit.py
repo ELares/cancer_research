@@ -147,7 +147,7 @@ def main() -> None:
           "be used, check it here first.", "",
           "This audit covers only the symbols this project queries. It is a spot check,",
           "not a proof that the rest of the graph is clean -- the base rate of this class",
-          "of error across 168,385 identifiers is unmeasured.", ""]
+          f"of error across {len(idx['canon']):,} identifiers is unmeasured.", ""]
 
     OUT.write_text("\n".join(L) + "\n", encoding="utf-8")
     print(f"wrote {OUT}")

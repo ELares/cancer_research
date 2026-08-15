@@ -586,10 +586,10 @@ def test_declared_requires_exactly_one_sense():
 def test_impact_report_never_presents_containment_as_an_error_rate():
     """The measurement mistake this report exists to avoid.
 
-    50.8% of relation rows touch a contested identifier. That is CONTAINMENT --
+    About half of all relation rows touch a contested identifier. That is CONTAINMENT --
     ESR1 is contested because `ER` is ambiguous, but most ESR1 edges come from
     papers that wrote 'estrogen receptor' in full. The figure that bounds the
-    damage is 1.35%, roughly 38x smaller. Reporting the first alone would
+    damage is far smaller, by roughly thirty-nine-fold. Reporting the first alone would
     overstate the damage by that factor, so both must appear.
     """
     import json

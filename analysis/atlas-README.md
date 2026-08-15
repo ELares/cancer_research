@@ -29,9 +29,26 @@ is itself a finding — see *Coverage* below.
 | MeSH-indexed cancer articles | **4,403,994** (4,203,236 C04 + 200,758 adjacent) | `atlas_baseline.py` |
 | recovered, not yet MeSH-indexed | 783,271 | `atlas_unindexed.py` |
 | open-access full texts (on external storage) | 1,100,218 | `atlas_fulltext.py` |
-| typed, normalized relations | 7,951,325 over 1,603,105 PMIDs | `atlas_relations.py` |
-| queryable relation index | 2,186,309 entity pairs | `atlas_graph.py` |
-| full-text sentence co-mentions | 6.2M+ pairs (build in progress) | `atlas_comention.py` |
+| typed, normalized relations | 10,509,470 over 2,095,737 PMIDs | `atlas_relations.py` |
+| queryable relation index | 2,840,563 entity pairs | `atlas_graph.py` |
+| full-text sentence co-mentions | 8,265,855 pairs over 1,100,218 documents | `atlas_comention.py` |
+
+**Relation and pair counts move when the layer is re-ingested.** These were
+7,951,325 relations over 1,603,105 PMIDs and 2,186,309 pairs on the previous
+build, a factor of about 1.3 smaller. Every committed report in `analysis/` has
+been regenerated against the current build, so none of them quotes the older
+one -- but the discovery artifacts carry `pairs_before` (1,565,428) as an
+explicit build fingerprint for a THIRD, older build, after a downstream analysis
+once compared precisions from one build against a quantity computed on another.
+Read any relation count with the build it came from.
+
+**The pair count above is not interchangeable with the retraction layer's.**
+`atlas_graph.py` reports 2,840,563 and `atlas_retraction_exposure.py` reports
+2,854,431 over the same relations, and the 13,868-pair difference is not drift:
+the graph strips the type prefix and applies the per-paper sense corrections
+`atlas_disambiguate.py` produces, and the retraction scan keys on the raw
+`Type|ID` field with no corrections. Two different quantities, so quoting either
+under the other's generator is a borrowed measurement.
 
 ## The layers, and what each can actually answer
 
@@ -233,12 +250,12 @@ needs a per-paper decision while these five need only a default.
 
 ### How much to discount — `atlas_ambiguity_impact.py`
 
-The question a reader actually has. The obvious answer is wrong by ~40×: 50.8% of
+The question a reader actually has. The obvious answer is wrong by ~39x: 50.6% of
 relation rows touch a contested identifier, which measures **containment**, not
 error — most ESR1 edges come from papers that wrote "estrogen receptor" in full.
 
 The measurement that means something asks whether an ambiguous form was the
-*only* route to an assignment. **1.35% of relation rows** rest on one, and that
+*only* route to an assignment. **1.31% of relation rows** rest on one, and that
 is an upper bound since the vote is sometimes right.
 
 > **The practical lesson is an asymmetry.** Diffuse damage is ~1%, below the

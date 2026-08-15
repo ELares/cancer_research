@@ -17,9 +17,9 @@ scripts/ and analysis/ returns nothing.
 THE MEASUREMENT THAT MEANS SOMETHING, AND THE ONE THAT MISLEADS
 ---------------------------------------------------------------
 This repository has been here before. `atlas_ambiguity_impact.py` found that
-50.8% of relation rows TOUCH a contested identifier, which sounds severe and
-measures containment, while only 1.35% rest on an assignment that was actually
-at risk -- a 38-fold difference between the alarming number and the true one.
+50.6% of relation rows TOUCH a contested identifier, which sounds severe and
+measures containment, while only 1.31% rest on an assignment that was actually
+at risk -- a 39-fold difference between the alarming number and the true one.
 
 The same trap applies exactly. So both are computed and the containment figure
 is never reported alone:
@@ -107,12 +107,42 @@ def scan_records():
             "census_total": total, "by_year": by_year}
 
 
+# KNOWN REGENERATION HAZARD, not yet fixed: the committed JSON is written
+# key-sorted while `render()` emits the retraction-type and per-predicate tables
+# in dict-insertion order, so regenerating the report reorders those rows even
+# when no number moved. The next regeneration will therefore produce a large
+# diff that looks like a data change and is not. Read the row VALUES, not the
+# row order, before concluding anything moved.
+
+
+def _amb(which: str) -> float:
+    """The sibling ambiguity-impact percentages, READ rather than retyped.
+
+    These two numbers were hand-written into the prose beside a table whose
+    every other figure is derived, which is how they survived a re-ingest that
+    moved both. They come from a committed artifact, so this raises rather than
+    degrading quietly if it is missing -- a silent fallback here would put a
+    vague sentence where a measured one used to be.
+    """
+    j = json.loads(
+        (PROJECT_ROOT / "analysis" / "atlas-ambiguity-impact.json").read_text())
+    rows = j["relation_rows"]
+    if which == "containment":
+        return 100 * j["relation_rows_touching_contested_id"] / rows
+    return 100 * j["relation_rows_resting_on_at_risk"] / rows
+
+
 def scan_relations(retracted: set):
     """Join the relation graph to the retracted set.
 
-    Pairs are keyed as an unordered entity pair, the same shape
-    `atlas_graph.py` uses, so the denominators are comparable with the other
-    consumers of this file.
+    Pairs are keyed as an unordered entity pair on the RAW `Type|ID` field.
+    That is NOT the same shape `atlas_graph.py` uses and the denominators are
+    NOT interchangeable: the graph strips the type prefix and applies the
+    per-paper sense corrections `atlas_disambiguate.py` produces, so it reports
+    2,840,563 pairs where this reports 2,854,431 over the same relations. The
+    13,868-pair difference is two different quantities, not drift. An earlier
+    version of this docstring asserted they were comparable, and a documentation
+    refresh then quoted this file's count under `atlas_graph.py`'s name.
     """
     rows = 0
     tainted_rows = 0
@@ -208,8 +238,9 @@ def render(r: dict) -> str:
         "itself, so every figure here is a **lower bound**.", "",
         "## The graph", "",
         "Two numbers, and reporting only the first would mislead — this repository",
-        "has made that exact error before, when 50.8% of relation rows *touching* a",
-        "contested identifier turned out to be 1.35% actually at risk.", "",
+        f"has made that exact error before, when {_amb('containment'):.1f}% of relation rows",
+        f"*touching* a contested identifier turned out to be {_amb('at_risk'):.2f}% actually",
+        "at risk.", "",
         "| | count | share |", "|---|--:|--:|",
         f"| relation rows | {r['rows']:,} | |",
         f"| rows from a retracted paper | {r['tainted_rows']:,} | {pct_rows:.3f}% |",

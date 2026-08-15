@@ -33,8 +33,8 @@ itself, so every figure here is a **lower bound**.
 ## The graph
 
 Two numbers, and reporting only the first would mislead — this repository
-has made that exact error before, when 50.8% of relation rows *touching* a
-contested identifier turned out to be 1.35% actually at risk.
+has made that exact error before, when 50.6% of relation rows *touching* a
+contested identifier turned out to be 1.31% actually at risk.
 
 | | count | share |
 |---|--:|--:|

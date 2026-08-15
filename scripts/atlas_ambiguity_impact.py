@@ -8,8 +8,8 @@ WHY
 refuses to guess on them. Neither answers the question a reader of this graph
 actually has: **how much of it should I discount?**
 
-The obvious way to answer it is wrong, and wrong by a factor of about forty.
-Counting relation rows that touch a contested identifier gives 50.8%, which
+The obvious way to answer it is wrong, and wrong by a factor of about thirty-nine.
+Counting relation rows that touch a contested identifier gives about half, which
 sounds catastrophic and measures almost nothing. `ESR1` is a contested
 identifier because the string `ER` is ambiguous -- but the overwhelming majority
 of ESR1 edges come from papers that wrote "estrogen receptor" in full, where
@@ -25,12 +25,12 @@ times in five.
 
 WHAT IT FINDS
 -------------
-1.35% of relation rows rest on an uncorroborated ambiguous assignment. That is
+A small fraction of relation rows rest on an uncorroborated ambiguous assignment. That is
 the honest upper bound on the damage, and it is an upper bound rather than an
 estimate because the vote is sometimes right (`PSA` resolves to KLK3 correctly).
 
 Both numbers are reported together, because reporting either alone misleads: the
-first overstates by ~40x, and the second alone hides how widely ambiguity is
+first overstates by ~39x, and the second alone hides how widely ambiguity is
 distributed.
 
 Reads only committed artifacts plus the gitignored entity/relation dumps. No

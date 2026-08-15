@@ -20,7 +20,7 @@ predictor. Breadth of coverage is not evidence of depth.**
 
 | Field | Value |
 |---|---|
-| Name | `ferroptosis-core` (embeddable engine) + `sim-tme-3d` (3D capstone binary) and 10 sibling binaries |
+| Name | `ferroptosis-core` (embeddable engine) + `sim-tme-3d` (3D capstone binary) and 11 sibling binaries |
 | Version | ferroptosis-core 0.67.0 (see `simulations/ferroptosis-core/Cargo.toml` for the authoritative current value) |
 | Author | Ezequiel Lares |
 | License | MIT |

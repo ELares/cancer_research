@@ -32,7 +32,12 @@ supportive neighbor cells) would get in the way?
    cancer type. The useful twist: the project *measures its own blind spots* — it shows that
    some apparent "nobody has studied this" gaps are really just side effects of which journals
    are free to read and how the search was worded, not real holes in the science.
-2. **A simulation engine.** A small, reusable program that models the ferroptosis chemistry
+2. **A census of the whole field.** Every cancer paper PubMed has indexed — about 4.4 million
+   of them — so those blind spots can be *measured* rather than argued about. The hand-picked
+   4,830 turn out to be 0.11% of the literature, and a wildly uneven 0.11%: some treatment
+   types are sampled 200 times more heavily than others. That is the single most important
+   caveat on everything else here, and it is why the census exists.
+3. **A simulation engine.** A small, reusable program that models the ferroptosis chemistry
    and the tumor environment, used to ask "if this idea were true, what would we expect to
    see?"
 

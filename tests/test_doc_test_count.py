@@ -33,11 +33,17 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 
 # Collected-test expectations. Bump these (and the doc strings) in lockstep with
 # intentional test additions/removals — that lockstep is the whole point.
-EXPECTED_TESTS_DIR = 773  # `tests/` total, including this meta-test
+EXPECTED_TESTS_DIR = 779  # `tests/` total, including this meta-test
 EXPECTED_BINDINGS = 12  # `simulations/ferroptosis-python/test_bindings.py`
 EXPECTED_TOTAL = EXPECTED_TESTS_DIR + EXPECTED_BINDINGS  # the documented "NNN Python tests"
 
 BINDINGS_FILE = REPO_ROOT / "simulations" / "ferroptosis-python" / "test_bindings.py"
+# CONTRIBUTING.md quotes the `pytest tests/` count, which is EXPECTED_TESTS_DIR
+# and NOT the documented total -- it sits beside the command that produces it,
+# and that command does not run the binding tests. It drifted to 351 (stale by
+# hundreds) precisely because it was outside this guard's scope.
+CONTRIBUTING_FILE = REPO_ROOT / "CONTRIBUTING.md"
+_CONTRIB_COUNT_RE = re.compile(r"\((\d+) tests\)")
 # (doc file, human label) pairs whose "NNN Python tests" must equal EXPECTED_TOTAL.
 DOC_FILES = [
     (REPO_ROOT / "CLAUDE.md", "CLAUDE.md ('NNN Python tests' in the simulation-suite line)"),
@@ -91,6 +97,26 @@ def _all_python_test_files() -> "list[Path]":
             if fn.endswith(".py") and (fn.startswith("test_") or fn.endswith("_test.py")):
                 found.append(Path(dirpath) / fn)
     return found
+
+
+def test_contributing_quotes_the_tests_dir_count_not_the_total():
+    """A third doc file states a test count, against a different denominator.
+
+    Folding it into DOC_FILES would be wrong: those must equal the documented
+    TOTAL (tests/ + bindings), while CONTRIBUTING sits next to `pytest tests/`
+    and must equal the tests/ count alone. Guarding it with the wrong constant
+    would have replaced a stale number with a confidently wrong one.
+    """
+    text = CONTRIBUTING_FILE.read_text(encoding="utf-8")
+    found = _CONTRIB_COUNT_RE.findall(text)
+    assert found, (
+        "CONTRIBUTING.md no longer states an '(N tests)' count beside the "
+        "pytest command, so this guard has nothing to check")
+    for value in found:
+        assert int(value) == EXPECTED_TESTS_DIR, (
+            f"CONTRIBUTING.md says ({value} tests) but tests/ collects "
+            f"{EXPECTED_TESTS_DIR}. It quotes the `pytest tests/` count, not "
+            f"the documented total of {EXPECTED_TOTAL}.")
 
 
 def test_documented_python_test_count_matches_collection():
