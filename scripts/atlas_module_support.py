@@ -486,23 +486,26 @@ def load_comentions(root: Path) -> dict:
 
 
 def _relation_scale() -> str:
-    """The relation layer's row count, READ from the manifest it writes.
+    """The relation layer's row count, READ rather than retyped.
 
     This was hand-written into the report and went stale by about a third when
     the layer was re-ingested, while the table beside it stayed current -- a
     document whose figures are derived and whose sentence is not is worse than
     one that hardcodes both, because the fresh numbers lend the stale one
     credibility.
+
+    Read from a COMMITTED artifact, not from `corpus/atlas/relations/manifest.json`.
+    That manifest is gitignored, so on any clone without the bulk census the
+    first version returned the vague fallback "the census's" SILENTLY -- which
+    regenerates this report with the number quietly deleted and produces a
+    MANIFEST diff that looks like ordinary churn. A fallback that degrades a
+    measured figure into an adjective is the same defect in a different
+    direction, so this raises instead.
     """
     import json as _json
-    m = Path(__file__).resolve().parent.parent / "corpus" / "atlas" / \
-        "relations" / "manifest.json"
-    if not m.exists():
-        return "the census's"
-    try:
-        return f"{_json.loads(m.read_text())['sources']['relation']['kept']:,}"
-    except (KeyError, ValueError):
-        return "the census's"
+    j = PROJECT_ROOT / "analysis" / "atlas-ambiguity-impact.json"
+    rows = _json.loads(j.read_text())["relation_rows"]
+    return f"{rows:,}"
 
 
 def main() -> None:

@@ -12,7 +12,7 @@ no graph edge. Absence in that graph is not informative.
 
 This raises recall using material already on disk: 520,143 open-access full
 texts. It does NOT need an LLM. The entity vocabulary is already normalized --
-529,652 surface forms mapped to 168,385 NCBI Gene and MeSH identifiers, from
+739,383 surface forms mapped to 214,199 NCBI Gene and MeSH identifiers, from
 PubTator3's own annotations -- so the same dictionary can be applied to full text
 directly, deterministically and offline.
 

@@ -17,6 +17,7 @@ Rust workspace for multi-scale cancer-therapy simulation: a mechanistic claim-te
 | [`sim-tme`](sim-tme/) | Tumor microenvironment: O2 gradients, immune, stromal, pH | Ch 7.1-7.5, Fig 14 | `output/tme/` |
 | [`sim-tme-3d`](sim-tme-3d/) | 3D spheroid TME simulation — capstone consumer of the 5-PR library stack (#185-#190); answers the manuscript's 2D-vs-3D dimensionality questions | — | `output/tme-3d/` |
 | [`sim-tumor-pk`](sim-tumor-pk/) | Two-compartment vascular/interstitial pharmacokinetics | Ch 8.2 | `output/tumor-pk/` |
+| [`sim-scale`](sim-scale/) | Large-n rare-event sweeps that resolve Figure 7's reported 0% death rates, which are upper bounds set by sample size (~3e-6 at 1M cells) rather than measurements of zero | Ch 5, Fig 7 | stdout (JSON) |
 
 Each binary has its own README with parameters, output format, example commands, and instructions for reproducing specific manuscript claims.
 

@@ -15,9 +15,13 @@ abstract: >
   Open-source cancer research combining cross-literature analysis of
   4,830 research articles with Monte Carlo biochemical simulations of
   ferroptosis sensitivity across cell phenotypes, drug combinations,
-  and tumor microenvironment features. Includes a reusable Rust
-  simulation engine (ferroptosis-core) with Python bindings, a news
-  source authentication pipeline, and a ~115-page book-format manuscript.
+  and tumor microenvironment features. A census layer covers the whole
+  indexed cancer literature -- 4,403,994 MeSH-indexed articles and
+  10,509,470 typed entity relations -- and is used to re-test the
+  corpus-scale claims against articles the project did not select.
+  Includes a reusable Rust simulation engine (ferroptosis-core) with
+  Python bindings, a news source authentication pipeline, and a
+  ~115-page book-format manuscript.
 keywords:
   - cancer research
   - ferroptosis

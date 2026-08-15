@@ -111,6 +111,27 @@ def test_manuscript_scopes_the_acsl4_prevalence_claim_to_the_deep_cut():
     assert "deep-cut figure is genuine evidence about ACSL4" in md
 
 
+def test_every_binary_is_listed_in_the_simulations_index():
+    """The count being right did not make the TABLE right.
+
+    `simulations/README.md` carries the per-binary table, and README.md links to
+    it as "[12 Rust binaries](simulations/README.md)". sim-scale was absent from
+    that table while every count in the repo already said 12, so the front door
+    linked to a page documenting eleven. A count guard cannot see this: it
+    compares two numbers and never opens the page the number points at.
+    """
+    root = Path(__file__).resolve().parent.parent
+    crates = sorted(p.name for p in (root / "simulations").glob("sim-*")
+                    if p.is_dir() and (p / "Cargo.toml").exists())
+    assert crates, "no sim-* crates found; the glob is wrong"
+    index = (root / "simulations" / "README.md").read_text()
+    missing = [c for c in crates if f"`{c}`" not in index]
+    assert not missing, (
+        "simulations/README.md does not list " + ", ".join(missing)
+        + f" -- it documents {len(crates) - len(missing)} of {len(crates)} "
+        "binaries while README.md links to it as the index of all of them")
+
+
 def test_documented_binary_count_matches_the_crates_that_exist():
     """The "N binaries" figure in README.md and CLAUDE.md must be derived.
 
