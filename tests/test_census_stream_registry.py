@@ -116,6 +116,11 @@ REGISTRY = {
         "records_unindexed/ is excluded on a MEASURED ground rather than an "
         "assumed one: none of its 783,271 records carries a pub_types field, "
         "so it cannot carry a retraction flag."),
+    "atlas_taxonomy_reach.py": (
+        {"records"},
+        "measures the mechanism taxonomy's field of view against the census the "
+        "rest of the repo quotes, so it must use the same 4,403,994 denominator "
+        "every capture figure is compared to."),
     "atlas_unindexed.py": (
         {"records_unindexed"},
         "it WRITES that stream; it is the recovery layer itself."),
