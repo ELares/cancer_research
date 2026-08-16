@@ -1,0 +1,41 @@
+{
+ "cancer_articles": 25809,
+ "modalities": {
+  "diagnostic imaging": {
+   "descriptor": 1558,
+   "either": 2910,
+   "qualifier": 2203,
+   "qualifier_only": 1352
+  },
+  "drug therapy": {
+   "descriptor": 3194,
+   "either": 5837,
+   "qualifier": 4678,
+   "qualifier_only": 2643
+  },
+  "radiotherapy": {
+   "descriptor": 842,
+   "either": 1461,
+   "qualifier": 1089,
+   "qualifier_only": 619
+  },
+  "surgery": {
+   "descriptor": 406,
+   "either": 4007,
+   "qualifier": 3945,
+   "qualifier_only": 3601
+  }
+ },
+ "n_shards": 8,
+ "seed": 20260816,
+ "shards": [
+  "pubmed26n0020.xml.gz",
+  "pubmed26n0588.xml.gz",
+  "pubmed26n0717.xml.gz",
+  "pubmed26n0768.xml.gz",
+  "pubmed26n0824.xml.gz",
+  "pubmed26n0955.xml.gz",
+  "pubmed26n0961.xml.gz",
+  "pubmed26n1197.xml.gz"
+ ]
+}
