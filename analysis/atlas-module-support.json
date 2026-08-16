@@ -27,7 +27,7 @@
       "a": "IFNG",
       "b": "SLC7A11",
       "total": 15,
-      "comention": 99,
+      "comention": 103,
       "deg_a": 3893,
       "deg_b": 1580,
       "weaker": 1580
@@ -37,7 +37,7 @@
       "a": "IFNG",
       "b": "SLC3A2",
       "total": 5,
-      "comention": 66,
+      "comention": 68,
       "deg_a": 3893,
       "deg_b": 375,
       "weaker": 375
@@ -47,7 +47,7 @@
       "a": "ACSL4",
       "b": "GPX4",
       "total": 16,
-      "comention": 9027,
+      "comention": 10099,
       "deg_a": 862,
       "deg_b": 2144,
       "weaker": 862
@@ -57,7 +57,7 @@
       "a": "AIFM2",
       "b": "GPX4",
       "total": 16,
-      "comention": 597,
+      "comention": 643,
       "deg_a": 356,
       "deg_b": 2144,
       "weaker": 356
@@ -67,7 +67,7 @@
       "a": "DHODH",
       "b": "GPX4",
       "total": 5,
-      "comention": 1277,
+      "comention": 1354,
       "deg_a": 263,
       "deg_b": 2144,
       "weaker": 263
@@ -77,7 +77,7 @@
       "a": "GCH1",
       "b": "GPX4",
       "total": 1,
-      "comention": 595,
+      "comention": 616,
       "deg_a": 112,
       "deg_b": 2144,
       "weaker": 112
@@ -107,7 +107,7 @@
       "a": "ATP7A",
       "b": "GPX4",
       "total": 0,
-      "comention": 8,
+      "comention": 14,
       "deg_a": 212,
       "deg_b": 2144,
       "weaker": 212
@@ -117,7 +117,7 @@
       "a": "ALOX15",
       "b": "ACSL4",
       "total": 3,
-      "comention": 517,
+      "comention": 626,
       "deg_a": 377,
       "deg_b": 862,
       "weaker": 377
@@ -127,7 +127,7 @@
       "a": "POR",
       "b": "CYB5R1",
       "total": 0,
-      "comention": 20,
+      "comention": 21,
       "deg_a": 148,
       "deg_b": 12,
       "weaker": 12
@@ -137,7 +137,7 @@
       "a": "DHCR7",
       "b": "GPX4",
       "total": 0,
-      "comention": 13,
+      "comention": 14,
       "deg_a": 93,
       "deg_b": 2144,
       "weaker": 93
@@ -157,7 +157,7 @@
       "a": "CDH1",
       "b": "YAP1",
       "total": 26,
-      "comention": 417,
+      "comention": 421,
       "deg_a": 4969,
       "deg_b": 2876,
       "weaker": 2876
@@ -167,7 +167,7 @@
       "a": "MBOAT2",
       "b": "GPX4",
       "total": 0,
-      "comention": 27,
+      "comention": 28,
       "deg_a": 38,
       "deg_b": 2144,
       "weaker": 38
@@ -177,7 +177,7 @@
       "a": "FAR1",
       "b": "AGPS",
       "total": 0,
-      "comention": 89,
+      "comention": 91,
       "deg_a": 9,
       "deg_b": 60,
       "weaker": 9
@@ -187,7 +187,7 @@
       "a": "CD274",
       "b": "SLC7A11",
       "total": 9,
-      "comention": 239,
+      "comention": 246,
       "deg_a": 4971,
       "deg_b": 1580,
       "weaker": 1580
@@ -197,7 +197,7 @@
       "a": "SLC7A11",
       "b": "GPX4",
       "total": 90,
-      "comention": 19413,
+      "comention": 21355,
       "deg_a": 1580,
       "deg_b": 2144,
       "weaker": 1580
@@ -207,7 +207,7 @@
       "a": "erastin",
       "b": "SLC7A11",
       "total": 68,
-      "comention": 1573,
+      "comention": 1681,
       "deg_a": 963,
       "deg_b": 1580,
       "weaker": 963
