@@ -60,11 +60,47 @@ on independent expert labels, it has been:
 understated by the manuscript, which the census corrects upward.
 
 - **Python pipeline** for corpus fetching, tagging (7 tag layers), indexing, analysis, and figure generation
-- **12 Rust simulation binaries**, a mechanistic claim-testing engine for cancer therapies: single-cell and spatial Monte Carlo, drug penetration across tissue types, drug combinations, tumor microenvironment (oxygen gradients, spatial immune zones, DAMP-mediated T-cell activation, stromal shielding, vasculature, clonal heterogeneity), vulnerability windows, ICD immune cascades, and tumor PK. Worked implementations include ferroptosis/RSL3 biochemistry and PDT/SDT depth physics (2D row-based and 3D radial-depth dispatchers; sim-tme-3d is the 3D-spheroid capstone consuming the full TME library stack) plus photosensitizer PK (drug-light-interval scaling, saturating distribution phase, relative singlet-O₂ yield)
+- **12 Rust simulation binaries**, a mechanistic claim-testing engine for **ferroptosis and physical-ROS therapies specifically** (not cancer therapies in general): single-cell and spatial Monte Carlo, drug penetration across tissue types, drug combinations, tumor microenvironment (oxygen gradients, spatial immune zones, DAMP-mediated T-cell activation, stromal shielding, vasculature, clonal heterogeneity), vulnerability windows, ICD immune cascades, and tumor PK. The worked implementations are ferroptosis/RSL3 biochemistry and PDT/SDT depth physics — there are no others (2D row-based and 3D radial-depth dispatchers; sim-tme-3d is the 3D-spheroid capstone consuming the full TME library stack) plus photosensitizer PK (drug-light-interval scaling, saturating distribution phase, relative singlet-O₂ yield)
 - **ferroptosis-core library** (MIT, with Python bindings) — embeddable ferroptosis biochemistry engine; module list and current unit-test count in [`simulations/ferroptosis-core/README.md`](simulations/ferroptosis-core/README.md)
 - **Calibration infrastructure** linking simulation parameters to published experimental data
 - **[Model card](MODEL_CARD.md)** with the simulation suite's intended use, out-of-scope cases, assumptions/scope checklist, and per-layer calibration/validation status (the honest "broad but mostly uncalibrated" accounting, consolidated from [`CALIBRATION_STATUS.md`](simulations/calibration/CALIBRATION_STATUS.md))
 - **Book-format manuscript (~115 pp)** with 11 chapters, 3 appendices, and 24 figures (~48,900 words), cross-referenced against all analysis outputs and indexed in [`FIGURES.yaml`](FIGURES.yaml)
+
+## What the work is actually about
+
+The corpus is broad. **The work is not, and that is worth saying plainly rather
+than leaving you to count files.**
+
+| | ferroptosis / physical-ROS | other therapy | method & tooling |
+|---|--:|--:|--:|
+| committed analyses | 13 | **1** | 95 |
+| preregistered predictions | **8 of 8** | 0 | — |
+| simulation engine modules | **33 of 33** | 0 | — |
+
+Every falsifiable commitment this project makes, and every module of its
+simulation engine, concerns ferroptosis or the physical-ROS modalities (PDT and
+SDT). Exactly one committed analysis takes any other therapy as its subject.
+
+A narrow thesis on a broad corpus is how most good science works, and the census
+above is genuinely broad. But a reader arriving at a front door that opens with
+five million articles will reasonably infer the analysis is commensurate, and it
+is not — so: **the census is a measuring instrument, and the thing being measured
+is mostly ferroptosis.** The largest bucket above is method work, which is about
+the instrument rather than about any biology.
+
+Two consequences worth carrying into anything you read here:
+
+- Mechanism shares quoted in this repo (immunotherapy 47.6% of the corpus, and
+  so on) are shares of **tagged** articles, and the mechanism taxonomy reaches
+  about 6% of the cancer literature — see
+  [`analysis/atlas-taxonomy-reach.md`](analysis/atlas-taxonomy-reach.md).
+- Areas with no lane at all are not absent because they were weighed and
+  dismissed. Radiotherapy, used by roughly half of all cancer patients, has no
+  query, no mechanism tag, no engine term and two mentions in the manuscript.
+
+Counts derived by [`scripts/scope_audit.py`](scripts/scope_audit.py); the
+bucketing is listed in [`analysis/scope-audit.md`](analysis/scope-audit.md) so a
+placement can be disputed.
 
 Everything is organised so you can re-run the pipeline, challenge the conclusions, or extend the work in directions we haven't thought of yet.
 
@@ -96,7 +132,7 @@ These are computational predictions with documented assumptions and caveats, not
 | `corpus/` | Frozen full text by PubMed ID + INDEX.jsonl; `corpus/atlas/` holds the census (bulk gitignored, committed artifacts in `analysis/`); `corpus/living/` documents the frozen-versus-living split (the monthly deltas themselves are uploaded as workflow artifacts, never committed) |
 | `tags/` | Precomputed tag indexes (mechanism, cancer type, tissue, evidence level, diagnostic-therapy) |
 | `news/` | News source scaffolding: fetched articles, extracted claims, verification results, credibility scores |
-| `tests/` | 825 Python tests (pipeline smoke + figure traceability + calibration-status ref guard + manuscript-inventory drift guard + depth-kill physics-constant guard + flagship-figure data guard + quantitative-figure drift guards (Figs 21/22/23) + invariant/integration + calibrate-extractor + MeSH evidence-fallback + gold-set precision-floor regression (#346) + Bliss/sim-tme/penetration prior-predictive intervals + ABC posterior (#332) + non-circular mechanism-recall (#412) + CTRPv2 calibration target + in-vitro kill-switch fit (#330) + System Xc-/erastin fit (#502) + joint multi-inducer posterior (#500) + spheroid structure validation (#333) + embedding evidence leg (#411) + RD-vs-BioFVM cross-check (#408) + dashboard data layer (#354) + tumor-PK measured-data anchor (#334) + Krogh penetration validation (#335) + spheroid size-aware zone thresholds (#333) + spheroid kill-vs-size direction (#333) + gene-symbol ambiguity/FSP1 sense disambiguation (#ATLAS-AMBIG) + rare-event Poisson intervals + tail-resolution classification + ferroptosis-python bindings) |
+| `tests/` | 832 Python tests (pipeline smoke + figure traceability + calibration-status ref guard + manuscript-inventory drift guard + depth-kill physics-constant guard + flagship-figure data guard + quantitative-figure drift guards (Figs 21/22/23) + invariant/integration + calibrate-extractor + MeSH evidence-fallback + gold-set precision-floor regression (#346) + Bliss/sim-tme/penetration prior-predictive intervals + ABC posterior (#332) + non-circular mechanism-recall (#412) + CTRPv2 calibration target + in-vitro kill-switch fit (#330) + System Xc-/erastin fit (#502) + joint multi-inducer posterior (#500) + spheroid structure validation (#333) + embedding evidence leg (#411) + RD-vs-BioFVM cross-check (#408) + dashboard data layer (#354) + tumor-PK measured-data anchor (#334) + Krogh penetration validation (#335) + spheroid size-aware zone thresholds (#333) + spheroid kill-vs-size direction (#333) + gene-symbol ambiguity/FSP1 sense disambiguation (#ATLAS-AMBIG) + rare-event Poisson intervals + tail-resolution classification + ferroptosis-python bindings) |
 
 Start with the files in `analysis/` if you want to see what we've concluded so far—and where we're still uncertain.
 
