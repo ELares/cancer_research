@@ -1,0 +1,129 @@
+{
+ "corpus_size": 4830,
+ "modalities": {
+  "chemotherapy": {
+   "any_fulltext": 3582,
+   "partner_tags": [
+    [
+     "immunotherapy",
+     58
+    ],
+    [
+     "nanoparticle",
+     27
+    ],
+    [
+     "bioelectric",
+     22
+    ],
+    [
+     "bispecific-antibody",
+     20
+    ],
+    [
+     "ttfields",
+     11
+    ],
+    [
+     "synthetic-lethality",
+     11
+    ],
+    [
+     "oncolytic-virus",
+     7
+    ],
+    [
+     "metabolic-targeting",
+     7
+    ]
+   ],
+   "strong_fulltext": 1995,
+   "subject_tagged_as_other": 140,
+   "subject_titled": 166,
+   "subject_untagged": 26
+  },
+  "radiotherapy": {
+   "any_fulltext": 2436,
+   "partner_tags": [
+    [
+     "immunotherapy",
+     45
+    ],
+    [
+     "ttfields",
+     11
+    ],
+    [
+     "nanoparticle",
+     7
+    ],
+    [
+     "bispecific-antibody",
+     6
+    ],
+    [
+     "electrochemical-therapy",
+     4
+    ],
+    [
+     "oncolytic-virus",
+     4
+    ],
+    [
+     "epigenetic",
+     3
+    ],
+    [
+     "hifu",
+     3
+    ]
+   ],
+   "strong_fulltext": 907,
+   "subject_tagged_as_other": 75,
+   "subject_titled": 88,
+   "subject_untagged": 13
+  },
+  "surgery": {
+   "any_fulltext": 2155,
+   "partner_tags": [
+    [
+     "immunotherapy",
+     8
+    ],
+    [
+     "ttfields",
+     4
+    ],
+    [
+     "frequency-therapy",
+     2
+    ],
+    [
+     "hifu",
+     2
+    ],
+    [
+     "microbiome",
+     1
+    ],
+    [
+     "car-t",
+     1
+    ],
+    [
+     "antibody-drug-conjugate",
+     1
+    ],
+    [
+     "synthetic-lethality",
+     1
+    ]
+   ],
+   "strong_fulltext": 547,
+   "subject_tagged_as_other": 17,
+   "subject_titled": 24,
+   "subject_untagged": 7
+  }
+ },
+ "strong_threshold": 5
+}
