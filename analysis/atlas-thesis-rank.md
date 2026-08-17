@@ -42,7 +42,7 @@ The largest ferroptosis-modality intersection is **antineoplastic agents** at 95
 
 * tumour-treating fields (no descriptor; `Electric Stimulation Therapy` is broader)
 * cold atmospheric plasma (no descriptor)
-* sonodynamic therapy specifically (`Ultrasonic Therapy` is broader, so the count below is an OVER-estimate and every ratio against it is a lower bound)
+* sonodynamic therapy specifically. `Ultrasonic Therapy` IS broader, but that is the smaller effect: measured, its precision is 90.6% (3 records of 32) while its recall is 46.0% (34 ferroptosis-SDT papers carry no such descriptor), so the count is an UNDER-estimate by roughly twofold and every ratio against it is an UPPER bound. An earlier version of this list stated the opposite; see analysis/atlas-descriptor-recall.md
 
 ## What this does and does not establish
 

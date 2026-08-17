@@ -1720,9 +1720,28 @@ def test_thesis_position_is_reported_in_both_directions():
     md = (REPO_ROOT / "analysis" / "atlas-thesis-position.md").read_text()
     assert "not a refutation" in md
     assert "not a literature" in md or "cannot establish a" in md
-    # and the SDT count must be flagged as an over-estimate, since the MeSH
-    # concept is broader than sonodynamic therapy
-    assert "OVER-estimate" in md or "over-estimate" in md
+    # The SDT count must carry a DIRECTION caveat, and the direction is the
+    # one the measurement supports. This assertion used to require the word
+    # "over-estimate", so the only way to fail it was to keep an error:
+    # `Ultrasonic Therapy` is broader, but its recall shortfall is larger than
+    # its breadth, making the count an UNDER-estimate. Re-derived from
+    # analysis/atlas-descriptor-recall.json rather than trusting either
+    # document's wording.
+    import json as _json
+    rec_path = REPO_ROOT / "analysis" / "atlas-descriptor-recall.json"
+    assert rec_path.exists(), (
+        "the descriptor-recall measurement is missing, so the direction of "
+        "this caveat is unsupported")
+    sdt = _json.loads(rec_path.read_text())["arms"]["SDT"]
+    breadth = sdt["descriptor"] - sdt["both"]
+    shortfall = sdt["text"] - sdt["both"]
+    if shortfall > breadth:
+        assert "UNDER-estimate" in md, (
+            f"recall misses {shortfall} sonodynamic papers against a breadth "
+            f"of {breadth}, so the count is an under-estimate; the report "
+            "does not say so")
+    else:
+        assert "OVER-estimate" in md or "over-estimate" in md
 
 
 def test_manuscript_states_its_own_evidence_thinness():

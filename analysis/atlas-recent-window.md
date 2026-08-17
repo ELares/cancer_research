@@ -63,14 +63,14 @@ Restricted to complete years (through 2025), ferroptosis goes 12,809 -> 12,892. 
 | drug resistance | 464 | 465 |
 | lipid peroxidation | 1,577 | 1,591 |
 | photodynamic | 171 | 171 |
-| sonodynamic (Ultrasonic Therapy, an over-estimate) | 30 | 30 |
+| sonodynamic (Ultrasonic Therapy, an under-estimate) | 30 | 30 |
 
 So the sonodynamic leg -- the thesis's own central mechanism -- is still supported by a literature of tens of papers, not hundreds. The window refilled a partial year; it did not change the field's shape.
 
 ## What this does not claim
 
 * Nothing here merges the update stream into the census. Every figure names the surface it came from, because the relation layer covers a different set again and a merged headline count would include articles the graph analyses cannot see.
-* `Ultrasonic Therapy` is broader than sonodynamic therapy, so that leg is an over-estimate, and it is still the thinnest.
+* `Ultrasonic Therapy` is broader than sonodynamic therapy, but measured that is the smaller effect: precision 90.6% against recall 46.0%, so the leg is an UNDER-estimate by roughly twofold and is still the thinnest even so. An earlier version called it an over-estimate; see analysis/atlas-descriptor-recall.md.
 * A descriptor that stops rising has not been shown to decline.
 * MeSH indexing lag biases every recent count downward. The point of the second section is that it does not explain all of it.
 

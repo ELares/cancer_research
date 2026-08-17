@@ -121,6 +121,15 @@ REGISTRY = {
         "gates a burden-weighted analysis on the same frozen census every other "
         "coverage figure divides by, so the assignability rate it reports is "
         "comparable with them."),
+    "atlas_descriptor_recall.py": (
+        {"records"},
+        "measures how completely two MeSH descriptors recall their concepts, "
+        "so it must read the stream those descriptors are assigned in. "
+        "records_unindexed/ carries no MeSH at all, so including it would put "
+        "articles in the denominator that CANNOT contribute to the numerator "
+        "and depress both recalls by construction -- and unequally, since the "
+        "un-indexed share differs by topic. The comparison is between two "
+        "descriptors on the same articles, which is what makes it symmetric."),
     "atlas_thesis_rank.py": (
         {"records"},
         "ranks the ferroptosis-modality intersection over the same frozen "

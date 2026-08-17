@@ -1,0 +1,107 @@
+{
+ "arms": {
+  "PDT": {
+   "both": 146,
+   "descriptor": 152,
+   "descriptor_not_text": [
+    {
+     "pmid": "31769461",
+     "title": "Hypoxia-augmented and photothermally-enhanced ferroptotic therapy with high specificity and efficiency."
+    },
+    {
+     "pmid": "33019767",
+     "title": "Novel Programmed Cell Death as Therapeutic Targets in Age-Related Macular Degeneration?"
+    },
+    {
+     "pmid": "37995402",
+     "title": "Topology-regulated nanocatalysts for ferroptosis-mediated cancer phototherapy."
+    },
+    {
+     "pmid": "38185333",
+     "title": "NIR-promoted ferrous ion regeneration enhances ferroptosis for glioblastoma treatment."
+    },
+    {
+     "pmid": "39693880",
+     "title": "Synergistic photoinduction of ferroptosis and apoptosis by a mitochondria-targeted iridium complex for bladder"
+    },
+    {
+     "pmid": "41190429",
+     "title": "A thiazolo[5,4-d]thiazole-bridged dinuclear iridium(III) photosensitizer induces ferroptosis for boosting phot"
+    }
+   ],
+   "descriptors": [
+    "photochemotherapy"
+   ],
+   "label": "photodynamic therapy",
+   "precision": 0.9605263157894737,
+   "precision_ci": [
+    0.9165634847775233,
+    0.9817853952921841
+   ],
+   "recall": 0.8021978021978022,
+   "recall_ci": [
+    0.7383407506723847,
+    0.8535616197568724
+   ],
+   "text": 182
+  },
+  "SDT": {
+   "both": 29,
+   "descriptor": 32,
+   "descriptor_not_text": [
+    {
+     "pmid": "34646381",
+     "title": "Ultrasound (US)-activated redox dyshomeostasis therapy reinforced by immunogenic cell death (ICD) through a mi"
+    },
+    {
+     "pmid": "39987131",
+     "title": "Engineering nanozyme immunomodulator with magnetic targeting effect for cascade-enzyodynamic and ultrasound-re"
+    },
+    {
+     "pmid": "40557564",
+     "title": "An Electronegativity-Modulated Piezoelectric Metal-Organic Framework for Tumor Piezocatalytic Ferroptosis."
+    }
+   ],
+   "descriptors": [
+    "ultrasonic therapy"
+   ],
+   "label": "sonodynamic therapy",
+   "precision": 0.90625,
+   "precision_ci": [
+    0.7578184527161214,
+    0.9675984487016337
+   ],
+   "recall": 0.4603174603174603,
+   "recall_ci": [
+    0.34308864576044984,
+    0.5821074811910463
+   ],
+   "text": 63
+  }
+ },
+ "descriptor_inflation": 1.6442307692307692,
+ "descriptor_inflation_ci": [
+  1.2473041132454428,
+  2.167470461915503
+ ],
+ "descriptor_route_significantly_inflates": true,
+ "manuscript_ratio": 2.93,
+ "ratio_by_descriptor": 4.75,
+ "ratio_by_descriptor_ci": [
+  3.244425154460386,
+  6.954236552192127
+ ],
+ "ratio_by_text": 2.888888888888889,
+ "ratio_by_text_ci": [
+  2.169228567832356,
+  3.84730273983311
+ ],
+ "ratio_pair": [
+  "PDT",
+  "SDT"
+ ],
+ "recall_asymmetry": 1.7427055702917773,
+ "subject": "ferroptosis",
+ "subject_articles": 13346,
+ "symmetric_ratio_covers_manuscript": true
+}
