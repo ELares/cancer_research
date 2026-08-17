@@ -116,6 +116,11 @@ REGISTRY = {
         "records_unindexed/ is excluded on a MEASURED ground rather than an "
         "assumed one: none of its 783,271 records carries a pub_types field, "
         "so it cannot carry a retraction flag."),
+    "atlas_site_coverage.py": (
+        {"records"},
+        "gates a burden-weighted analysis on the same frozen census every other "
+        "coverage figure divides by, so the assignability rate it reports is "
+        "comparable with them."),
     "atlas_thesis_rank.py": (
         {"records"},
         "ranks the ferroptosis-modality intersection over the same frozen "

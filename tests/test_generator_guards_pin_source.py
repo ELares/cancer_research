@@ -63,6 +63,7 @@ IN_SCOPE = {
     "test_baseline_updates.py",
     "test_thesis_rank.py",
     "test_engine_selectivity.py",
+    "test_site_coverage.py",
 }
 
 
