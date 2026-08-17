@@ -1,0 +1,142 @@
+{
+ "n_per_cell_type": 20000,
+ "seed": 20260817,
+ "treatments": {
+  "Control": {
+   "Glycolytic": {
+    "ci_high": 0.00019204311235897808,
+    "ci_low": 0.0,
+    "death_rate": 0.0
+   },
+   "OXPHOS": {
+    "ci_high": 0.000855101859276804,
+    "ci_low": 0.00023676841428105108,
+    "death_rate": 0.00045
+   },
+   "Persister": {
+    "ci_high": 0.012489140587570769,
+    "ci_low": 0.009598696780627549,
+    "death_rate": 0.01095
+   },
+   "PersisterNrf2": {
+    "ci_high": 0.00019204311235897808,
+    "ci_low": 0.0,
+    "death_rate": 0.0
+   },
+   "Stromal": {
+    "ci_high": 0.00019204311235897808,
+    "ci_low": 0.0,
+    "death_rate": 0.0
+   },
+   "_contrast": {
+    "caf": 0.0,
+    "ratio_best_case": null,
+    "ratio_worst_case": null,
+    "tumour_max": 0.01095,
+    "tumour_min": 0.0
+   }
+  },
+  "PDT": {
+   "Glycolytic": {
+    "ci_high": 0.8717343448132729,
+    "ci_low": 0.862324657133633,
+    "death_rate": 0.8671
+   },
+   "OXPHOS": {
+    "ci_high": 0.9992734387367337,
+    "ci_low": 0.9983349406457547,
+    "death_rate": 0.9989
+   },
+   "Persister": {
+    "ci_high": 0.9999911739447619,
+    "ci_low": 0.9997168021471904,
+    "death_rate": 0.99995
+   },
+   "PersisterNrf2": {
+    "ci_high": 0.9974050806466401,
+    "ci_low": 0.9958041437255425,
+    "death_rate": 0.9967
+   },
+   "Stromal": {
+    "ci_high": 0.07147027531054112,
+    "ci_low": 0.06449568834715955,
+    "death_rate": 0.0679
+   },
+   "_contrast": {
+    "caf": 0.0679,
+    "ratio_best_case": 14.72680412371134,
+    "ratio_worst_case": 12.770250368188512,
+    "tumour_max": 0.99995,
+    "tumour_min": 0.8671
+   }
+  },
+  "RSL3": {
+   "Glycolytic": {
+    "ci_high": 0.00019204311235897808,
+    "ci_low": 0.0,
+    "death_rate": 0.0
+   },
+   "OXPHOS": {
+    "ci_high": 0.012222848784502995,
+    "ci_low": 0.009365084605251501,
+    "death_rate": 0.0107
+   },
+   "Persister": {
+    "ci_high": 0.4260033396864544,
+    "ci_low": 0.4123277136848142,
+    "death_rate": 0.41915
+   },
+   "PersisterNrf2": {
+    "ci_high": 0.0009846864814489987,
+    "ci_low": 0.0003071453834863847,
+    "death_rate": 0.00055
+   },
+   "Stromal": {
+    "ci_high": 0.00019204311235897808,
+    "ci_low": 0.0,
+    "death_rate": 0.0
+   },
+   "_contrast": {
+    "caf": 0.0,
+    "ratio_best_case": null,
+    "ratio_worst_case": null,
+    "tumour_max": 0.41915,
+    "tumour_min": 0.0
+   }
+  },
+  "SDT": {
+   "Glycolytic": {
+    "ci_high": 0.8717343448132729,
+    "ci_low": 0.862324657133633,
+    "death_rate": 0.8671
+   },
+   "OXPHOS": {
+    "ci_high": 0.9992734387367337,
+    "ci_low": 0.9983349406457547,
+    "death_rate": 0.9989
+   },
+   "Persister": {
+    "ci_high": 0.9999911739447619,
+    "ci_low": 0.9997168021471904,
+    "death_rate": 0.99995
+   },
+   "PersisterNrf2": {
+    "ci_high": 0.9974050806466401,
+    "ci_low": 0.9958041437255425,
+    "death_rate": 0.9967
+   },
+   "Stromal": {
+    "ci_high": 0.07147027531054112,
+    "ci_low": 0.06449568834715955,
+    "death_rate": 0.0679
+   },
+   "_contrast": {
+    "caf": 0.0679,
+    "ratio_best_case": 14.72680412371134,
+    "ratio_worst_case": 12.770250368188512,
+    "tumour_max": 0.99995,
+    "tumour_min": 0.8671
+   }
+  }
+ }
+}
