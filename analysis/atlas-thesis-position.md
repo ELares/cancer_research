@@ -13,7 +13,7 @@ The census can.
 
 **13,346** cancer articles in the census carry the MeSH
 `Ferroptosis` descriptor.
-> **This enumerates the modalities the thesis names.** Ranked against all 166 in the committed partition universe the sonodynamic leg is rank 22 and `antineoplastic agents` is 29.8x larger, so the unexamined precedent is chemotherapy. See `analysis/atlas-thesis-rank.md` (#725).
+> **This enumerates the modalities the thesis names.** Ranked against all 166 in the committed partition universe the sonodynamic leg is rank 22 and `antineoplastic agents` is 29.8x larger in RAW COUNT -- but that ratio divides an umbrella pharmacologic-action descriptor by a specific technique, and normalising each by its own census prevalence REVERSES the direction (the umbrella is depleted relative to its base rate, the sonodynamic descriptor enriched). The chemotherapy-precedent reading holds for absolute attention only. See `analysis/atlas-thesis-rank.md` (#725), which carries the normalisation, an era control, and the breadth dependence of the replacement measure.
 
 
 It is growing fast: **400** in 2020 to **4,496** in 2025, a factor of **11** in 5 years.

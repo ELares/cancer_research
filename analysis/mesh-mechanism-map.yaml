@@ -112,7 +112,7 @@ mechanisms:
 # Reported with the reason; NEVER as 0% recall.
 unmeasurable:
   ttfields: "No TTFields-specific MeSH descriptor (only over-broad Electric Stimulation Therapy); ~38% of its tagger-positives also have empty MeSH."
-  cold-atmospheric-plasma: "No descriptor ('Plasma Gases' n~2); ~100% of its tagger-positives have empty MeSH."
+  cold-atmospheric-plasma: "'Plasma Gases' (D058626) EXISTS and carries 474 census records with 9 ferroptosis intersections, so the earlier 'no descriptor (n~2)' note here was wrong -- see analysis/atlas-thesis-rank.md. It is still not used for recall: D058626 sits under Inorganic Chemicals > Gases as a SUBSTANCE, its scope note spans surface modification, decontamination, dentistry and argon plasma coagulation, and ~23% of its records are not cold atmospheric plasma. Unmeasurable here for BREADTH, which is a different reason from absence."
   bioelectric: "Only cell-physiology descriptors (Membrane Potentials / Ion Channels), not the cancer-therapy thesis; pool thin and confounded."
   electrolysis: "Bucket-confounded: ~18/19 of its MeSH-pool carry 'Electrochemotherapy', which the tagger buckets as electrochemical-therapy (a taxonomy-boundary artifact, not a recall miss)."
   radioligand-therapy: "Descriptors ('Radioimmunotherapy'/'Radiopharmaceuticals') bleed to immunotherapy/ADC; tiny pool (n~18). Scaffold."
