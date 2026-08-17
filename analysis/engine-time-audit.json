@@ -1,0 +1,161 @@
+{
+ "carry_both": [
+  "biochem.rs",
+  "params.rs"
+ ],
+ "declares_step_duration": false,
+ "modules": {
+  "biochem.rs": {
+   "examples": [
+    {
+     "context": "/// the ~48-72h SCD1/MUFA enrichment is already complete). An acute/naive",
+     "line": 706,
+     "value": "72h"
+    }
+   ],
+   "per_step_mentions": 2,
+   "real_time_mentions": 1
+  },
+  "clonal.rs": {
+   "examples": [],
+   "per_step_mentions": 2,
+   "real_time_mentions": 0
+  },
+  "copper.rs": {
+   "examples": [],
+   "per_step_mentions": 10,
+   "real_time_mentions": 0
+  },
+  "dose_schedule.rs": {
+   "examples": [],
+   "per_step_mentions": 10,
+   "real_time_mentions": 0
+  },
+  "ifngamma.rs": {
+   "examples": [],
+   "per_step_mentions": 1,
+   "real_time_mentions": 0
+  },
+  "immune_spatial.rs": {
+   "examples": [],
+   "per_step_mentions": 17,
+   "real_time_mentions": 0
+  },
+  "oxygen.rs": {
+   "examples": [],
+   "per_step_mentions": 3,
+   "real_time_mentions": 0
+  },
+  "params.rs": {
+   "examples": [
+    {
+     "context": "/// assumes the ~48-72h SCD1/MUFA enrichment is already complete. A freshly",
+     "line": 63,
+     "value": "72h"
+    },
+    {
+     "context": "/// the literature 48-72h timescale; the acute-vs-established DIRECTION is",
+     "line": 71,
+     "value": "72h"
+    },
+    {
+     "context": "/// existing membrane MUFA. Membrane lipid half-life ~24-48h.",
+     "line": 80,
+     "value": "48h"
+    },
+    {
+     "context": "///   redistribution over ~24\u201348 h; setting `t_distribution_h \u2248 36`",
+     "line": 499,
+     "value": "48 h"
+    }
+   ],
+   "per_step_mentions": 14,
+   "real_time_mentions": 4
+  },
+  "persister.rs": {
+   "examples": [],
+   "per_step_mentions": 11,
+   "real_time_mentions": 0
+  },
+  "photosensitizer_pk.rs": {
+   "examples": [
+    {
+     "context": "/// ~24\u201348 h; default 0 is preserved for backwards compatibility.",
+     "line": 80,
+     "value": "48 h"
+    }
+   ],
+   "per_step_mentions": 0,
+   "real_time_mentions": 1
+  },
+  "repair.rs": {
+   "examples": [],
+   "per_step_mentions": 2,
+   "real_time_mentions": 0
+  },
+  "senescence.rs": {
+   "examples": [
+    {
+     "context": "/// ~14 to 21 day (one-to-three-week) timescale over which therapy-induced senescence",
+     "line": 305,
+     "value": "21 day"
+    },
+    {
+     "context": "\"fraction nearly resolved by 30 days: {late} vs peak {peak}\"",
+     "line": 584,
+     "value": "30 days"
+    }
+   ],
+   "per_step_mentions": 0,
+   "real_time_mentions": 2
+  },
+  "stromal.rs": {
+   "examples": [],
+   "per_step_mentions": 1,
+   "real_time_mentions": 0
+  },
+  "tumor_pk.rs": {
+   "examples": [
+    {
+     "context": "/// RSL3-like small molecule IV bolus. t_half \u2248 30 min (estimated for",
+     "line": 314,
+     "value": "30 min"
+    },
+    {
+     "context": "k_el: (2.0_f64).ln() / 30.0, // t_half = 30 min",
+     "line": 319,
+     "value": "30 min"
+    },
+    {
+     "context": "/// Doxorubicin IV bolus. Distribution-phase t_half \u2248 30 min.",
+     "line": 332,
+     "value": "30 min"
+    },
+    {
+     "context": "/// Real doxorubicin PK is multi-compartment (terminal t_half ~20-48h)",
+     "line": 333,
+     "value": "48h"
+    }
+   ],
+   "per_step_mentions": 0,
+   "real_time_mentions": 11
+  }
+ },
+ "modules_total": 33,
+ "per_step_only": [
+  "clonal.rs",
+  "copper.rs",
+  "dose_schedule.rs",
+  "ifngamma.rs",
+  "immune_spatial.rs",
+  "oxygen.rs",
+  "persister.rs",
+  "repair.rs",
+  "stromal.rs"
+ ],
+ "real_time_only": [
+  "photosensitizer_pk.rs",
+  "senescence.rs",
+  "tumor_pk.rs"
+ ]
+}
