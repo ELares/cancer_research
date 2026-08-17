@@ -43,6 +43,14 @@ def _doc():
     return json.loads(JSON_OUT.read_text())
 
 
+def _mod():
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("atr", SCRIPT)
+    m = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(m)
+    return m
+
+
 def test_the_universe_comes_from_the_committed_partitions():
     """A self-built list reproduces the defect this exists to correct."""
     src = SCRIPT.read_text()
@@ -164,3 +172,140 @@ def test_an_empty_scan_refuses_to_render():
     src = SCRIPT.read_text()
     assert 'if d["ferroptosis_total"] == 0:' in src
     assert "is not a finding" in src and "raise SystemExit" in src
+
+
+def test_absent_from_the_universe_renders_differently_from_zero():
+    """A scope boundary is not a measured zero.
+
+    `counts.get(desc, 0)` printed 0 under a column headed "count" for
+    `drug resistance, neoplasm`, whose real intersection is published by the
+    sibling atlas-thesis-position artifact from the same build and called
+    "the strong one". Absence and zero rendered identically.
+    """
+    d, md = _doc(), MD.read_text()
+    legs = d.get("leg_intersections") or {}
+    assert legs, "the thesis legs are no longer counted independently"
+    ranked = {k for k, _v in d["intersections"]}
+    for leg, desc in _mod().THESIS_LEGS.items():
+        c = legs.get(desc)
+        assert c is not None, f"{desc} has no measured count"
+        if desc not in ranked:
+            assert f"| {leg} | {desc} | {c:,} |" in md, (
+                f"{leg} is outside the ranking universe and the report does "
+                f"not print its real count of {c:,}")
+            assert "not a modality; outside this universe" in md
+            assert f"| {leg} | {desc} | 0 |" not in md, (
+                "an out-of-universe leg is rendering as a measured zero again")
+            # the EXPLANATORY paragraph, not just the table cell: suppressing
+            # it left the reader with a rank cell they cannot interpret, and
+            # the suite green
+            assert "outside the modality universe by construction" in md, (
+                f"{leg} sits outside the universe and the report no longer "
+                "explains that the boundary is by construction rather than a "
+                "measured absence")
+            assert leg in md.split("outside the modality universe")[0][-400:], (
+                f"the scope-boundary paragraph does not name {leg}")
+
+
+def test_the_out_of_universe_count_agrees_with_the_sibling_artifact():
+    """Two documents, same build, must not disagree about the same number."""
+    d = _doc()
+    sib = REPO_ROOT / "analysis" / "atlas-thesis-position.json"
+    if not sib.exists():
+        return
+    other = json.loads(sib.read_text())
+    legs = d.get("leg_intersections") or {}
+    flat = json.dumps(other)
+    for desc, c in legs.items():
+        if "drug resistance" in desc and c:
+            assert str(c) in flat, (
+                f"this report counts {c:,} for `{desc}` and the sibling "
+                "atlas-thesis-position artifact does not carry that number; "
+                "one of the two is from a different build")
+
+
+def test_the_headline_ratio_carries_its_prevalence_normalisation():
+    """A ratio of an umbrella descriptor to a specific one measures breadth.
+
+    Normalising each count by how common its descriptor is census-wide
+    REVERSES the direction, so publishing the raw ratio alone is publishing
+    the more flattering of two answers.
+    """
+    d, md = _doc(), MD.read_text()
+    tot = d.get("census_descriptor_totals") or {}
+    rows = d["intersections"]
+    if not rows:
+        return
+    top_name, top_c = rows[0]
+    sdt_desc = _mod().THESIS_LEGS["sonodynamic therapy"]
+    sdt_c = dict(rows).get(sdt_desc)
+    if not (sdt_c and tot.get(top_name) and tot.get(sdt_desc)):
+        return
+    base = d["ferroptosis_total"] / d["census"]
+    e_top = (top_c / tot[top_name]) / base
+    e_sdt = (sdt_c / tot[sdt_desc]) / base
+    assert f"**{e_top:.2f}x**" in md and f"**{e_sdt:.2f}x**" in md, (
+        "the report does not state both normalised enrichments its own "
+        "artifact implies")
+    # and the verdict must follow the numbers, not a fixed sentence
+    if e_sdt > e_top:
+        assert "The direction reverses" in md, (
+            f"normalised, the sonodynamic descriptor is {e_sdt:.2f}x its base "
+            f"rate against the umbrella term's {e_top:.2f}x, and the report "
+            "does not say the direction reverses")
+    else:
+        assert "The direction reverses" not in md
+
+
+def test_a_no_descriptor_claim_is_checked_against_the_census():
+    """A hand-written 'no descriptor' list beside a census that can answer it.
+
+    "cold atmospheric plasma (no descriptor)" shipped while `Plasma Gases`
+    carried 474 census records and 9 ferroptosis intersections -- more than a
+    leg this report ranks.
+    """
+    m, d, md = _mod(), _doc(), MD.read_text()
+    cand = d.get("candidate_intersections")
+    assert cand is not None, "the no-descriptor claims are no longer checked"
+    assert m.CANDIDATE_DESCRIPTORS, "no candidate descriptors are declared"
+    worst = min((v for _k, v in d["intersections"]), default=0)
+
+    # RECOUNT the candidates over a stride, so a zeroed counter cannot make
+    # the report claim "no descriptor" by construction. Zeroing `cand_inter`
+    # sent every candidate to 0, the `n > worst` branch never ran, and the
+    # whole refutation vanished with the suite green -- the guard only
+    # checked the strong case. A stride is a SUBSET, so the full count must
+    # be at least the strided one.
+    import gzip
+    want = {d2.lower() for d2 in m.CANDIDATE_DESCRIPTORS.values()}
+    seen = {k: 0 for k in want}
+    for f in sorted((m.ATLAS / "records").glob("*.jsonl.gz"))[::12]:
+        with gzip.open(f, "rt", encoding="utf-8") as fh:
+            for line in fh:
+                r = json.loads(line)
+                mesh = {x.lower() for x in (r.get("mesh") or [])}
+                if "ferroptosis" not in mesh:
+                    continue
+                for k in mesh & want:
+                    seen[k] += 1
+    for k, lo in seen.items():
+        assert cand.get(k, 0) >= lo, (
+            f"the artifact reports {cand.get(k, 0)} ferroptosis intersections "
+            f"for `{k}` and a 1-in-12 stride already finds {lo}; the counter "
+            "is not counting")
+    assert sum(seen.values()) > 0, (
+        "no candidate descriptor intersects ferroptosis even on a stride, so "
+        "this guard is not exercising the refutation path")
+
+    for modality, desc in m.CANDIDATE_DESCRIPTORS.items():
+        n = cand.get(desc, 0)
+        assert f"| {modality} | `{desc}` |" in md, (
+            f"{modality}'s candidate descriptor is not shown with its counts")
+        if n > worst:
+            assert "measurable after all" in md, (
+                f"`{desc}` carries {n:,} ferroptosis intersections against a "
+                f"smallest ranked entry of {worst:,}, and the report still "
+                "presents it as having no usable descriptor")
+            assert f"{modality} (no descriptor)" not in md, (
+                f"{modality} is still listed as having no descriptor while "
+                "one measurably exists")

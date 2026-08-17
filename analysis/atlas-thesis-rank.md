@@ -33,16 +33,40 @@
 |---|---|--:|--:|
 | sonodynamic therapy | ultrasonic therapy | 32 | 22 |
 | photodynamic therapy | photochemotherapy | 152 | 6 |
-| focused ultrasound | high-intensity focused ultrasound ablation | 1 | 160 |
-| drug resistance | drug resistance, neoplasm | 0 | not in the universe |
+| focused ultrasound | high-intensity focused ultrasound ablation | 1 | 161 |
+| drug resistance | drug resistance, neoplasm | 479 | *not a modality; outside this universe* |
+
+drug resistance is outside the modality universe by construction -- the universe is built from therapeutic MODALITIES and these are not one. The count column is their real census intersection, measured here; an earlier version of this table printed a zero there, which reads as a measured absence rather than a scope boundary.
 
 The largest ferroptosis-modality intersection is **antineoplastic agents** at 954 articles, which is **29.8x** the sonodynamic leg the simulation half rests on.
+
+### The same comparison, normalised by how common each descriptor is
+
+| descriptor | ferroptosis | census | share of its own literature | vs base rate |
+|---|--:|--:|--:|--:|
+| antineoplastic agents | 954 | 353,001 | 0.270% | **0.89x** |
+| ultrasonic therapy | 32 | 2,513 | 1.273% | **4.20x** |
+
+The census base rate is 0.303% (13,346 of 4,403,994). A value above 1 means ferroptosis literature is ENRICHED in that descriptor relative to the literature as a whole.
+
+**The direction reverses.** `antineoplastic agents` is the larger COUNT and is *0.89x* its own base rate, while the sonodynamic descriptor is *4.20x* its own -- so the ferroptosis literature is relatively enriched in sonodynamic work and depleted in the umbrella term. The raw ratio above measures how broad the descriptors are at least as much as where attention goes, and it should not be read alone.
 
 ## Not measurable this way, and named rather than shown as zero
 
 * tumour-treating fields (no descriptor; `Electric Stimulation Therapy` is broader)
-* cold atmospheric plasma (no descriptor)
 * sonodynamic therapy specifically. `Ultrasonic Therapy` IS broader, but that is the smaller effect: measured, its precision is 90.6% (3 records of 32) while its recall is 46.0% (34 ferroptosis-SDT papers carry no such descriptor), so the count is an UNDER-estimate by roughly twofold and every ratio against it is an UPPER bound. An earlier version of this list stated the opposite; see analysis/atlas-descriptor-recall.md
+
+Each of those claims names the descriptor it rests on, and the claim is CHECKED rather than asserted:
+
+| modality | candidate descriptor | census | x ferroptosis |
+|---|---|--:|--:|
+| tumour-treating fields | `electric stimulation therapy` | 945 | 1 |
+| cold atmospheric plasma | `plasma gases` | 474 | 9 |
+
+**One of these is measurable after all.** `plasma gases` carries 9 ferroptosis intersections, against a smallest RANKED entry of 1. Listing a modality as having no descriptor, while a descriptor for it sits in the census with a LARGER intersection than something this report does rank, is a hand-written claim the data refutes.
+
+The remaining `electric stimulation therapy` (1) does not exceed the smallest ranked entry (1), so the not-measurable framing stands for it -- the descriptor exists but carries no more ferroptosis literature than the thinnest thing already shown.
+
 
 ## What this does and does not establish
 
