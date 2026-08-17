@@ -1,0 +1,27 @@
+{
+ "assigned": 2546944,
+ "census": 4403994,
+ "multi_site": 207610,
+ "n_sites": 18,
+ "no_mesh": 0,
+ "sites": {
+  "bladder": 68363,
+  "brain/CNS": 177855,
+  "breast": 375499,
+  "cervix/uterus": 158452,
+  "colorectal": 245269,
+  "head and neck": 140066,
+  "kidney": 88262,
+  "leukaemia": 130376,
+  "liver": 199825,
+  "lung": 290414,
+  "lymphoma": 117890,
+  "oesophagus": 65076,
+  "ovary": 98618,
+  "pancreas": 99259,
+  "prostate": 162723,
+  "skin/melanoma": 205906,
+  "stomach": 120883,
+  "thyroid": 63046
+ }
+}
