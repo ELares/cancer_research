@@ -13,6 +13,8 @@ The census can.
 
 **13,346** cancer articles in the census carry the MeSH
 `Ferroptosis` descriptor.
+> **This enumerates the modalities the thesis names.** Ranked against all 166 in the committed partition universe the sonodynamic leg is rank 22 and `antineoplastic agents` is 29.8x larger, so the unexamined precedent is chemotherapy. See `analysis/atlas-thesis-rank.md` (#725).
+
 
 It is growing fast: **400** in 2020 to **4,496** in 2025, a factor of **11** in 5 years.
 
@@ -160,9 +162,13 @@ rate cannot support in either direction.
 
 * MeSH indexing lags publication, so the most recent year understates every
   column and is excluded from the growth figure rather than shown as a fall.
-* `Ultrasonic Therapy` is the closest MeSH concept to sonodynamic therapy and
-  is broader than it, so the SDT count is an OVER-estimate. The real
-  intersection is smaller than the number above, not larger.
+* `Ultrasonic Therapy` is the closest MeSH concept to sonodynamic therapy
+  and IS broader than it -- but measured, that is the smaller effect. It
+  recalls under half of the ferroptosis papers whose own text says
+  sonodynamic, against a breadth of a handful of records, so the SDT
+  count is an UNDER-estimate: the real intersection is LARGER than the
+  number above, not smaller. An earlier version of this file stated the
+  opposite; see `analysis/atlas-descriptor-recall.md`.
 * An article can discuss a mechanism without being indexed for it. These are
   lower bounds on discussion and upper bounds on nothing.
 * Co-occurrence of two descriptors is not a claim that the article connects

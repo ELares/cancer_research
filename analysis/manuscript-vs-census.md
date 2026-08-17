@@ -39,19 +39,15 @@ and reads it as PDT dominating SDT by approximately three to one.
 
 On the census it is **4.75:1** (152 against 32).
 
-**The ferroptosis-count leg of the claim survives, on a larger
-ratio than the manuscript argued from.** That is the whole of
-what a count ratio can establish, and the manuscript's claim
-is broader than it.
+**The ferroptosis-count leg of the claim survives.** The
+DESCRIPTOR ratio is larger than the manuscript's, but a
+symmetric rule applied to both arms is not, so this analysis
+does not claim the census argues from a larger ratio -- an
+earlier version said exactly that here, in synonyms, well
+below a headline withdrawing it.
 
-NOT confirmed here, and each for a different reason: the
-manuscript states the ratio holds on every ferroptosis AND ICD
-metric, and the ICD leg is unmeasurable at census scale (see
-below); the depth-penetration argument is tissue optics, which
-no publication count bears on; and 'more clinical experience,
-approved photosensitizers' is not a literature-count claim
-either. A count ratio speaks to attention, not to any of
-those.
+That is the whole of what a count ratio can establish, and
+the manuscript's claim is broader than it.
 
 ### The descriptor choice, and what it is worth
 

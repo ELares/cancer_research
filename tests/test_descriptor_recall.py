@@ -80,6 +80,64 @@ def test_the_text_rule_is_structurally_symmetric():
         f"the shared rule shape {first} is too thin to measure recall with")
 
 
+def test_the_text_rule_is_symmetric_in_COVERAGE_not_only_in_shape():
+    """Shape symmetry is necessary and nowhere near sufficient.
+
+    A reviewer changed the PDT stem `photodynamic` to `photo` -- same
+    alternative count, same three shapes, same descriptor-set size -- and the
+    shape guard passed while PDT text counts went 182 -> 509, the recall
+    asymmetry inverted, and the report's headline flipped back to "understated
+    by the manuscript". A twelve-character edit reversed the finding with
+    every guard green.
+
+    Coverage is checked two ways, both against the corpus rather than the
+    rule: each arm's stem must be SPECIFIC (nearly every article it matches
+    must also carry that arm's descriptor or the sibling modality vocabulary),
+    and the arms' specificities must be comparable.
+    """
+    import gzip
+    m = _mod()
+    pats = {k: re.compile(v["text"], re.I) for k, v in m.ARMS.items()}
+    descs = {k: set(v["descriptors"]) for k, v in m.ARMS.items()}
+    hit = {k: 0 for k in m.ARMS}
+    corroborated = {k: 0 for k in m.ARMS}
+    # A STRIDE, not a prefix. Shards are chronological, so the first N are the
+    # oldest literature: taking a prefix gave SDT zero hits, because
+    # sonodynamic therapy is recent. This repo already recorded that trap once
+    # (#722, where a prefix sampled only the oldest articles) and it was
+    # reproduced here within the hour.
+    every = sorted((m.ATLAS / "records").glob("*.jsonl.gz"))[::12]
+    shards = every
+    assert len(shards) > 40, f"only {len(shards)} shards sampled"
+    for f in shards:
+        with gzip.open(f, "rt", encoding="utf-8") as fh:
+            for line in fh:
+                r = json.loads(line)
+                mesh = {x.lower() for x in (r.get("mesh") or [])}
+                blob = (r.get("title") or "") + " " + (r.get("abstract") or "")
+                for k in m.ARMS:
+                    if pats[k].search(blob):
+                        hit[k] += 1
+                        if mesh & descs[k]:
+                            corroborated[k] += 1
+    spec = {k: (corroborated[k] / hit[k]) if hit[k] else None for k in hit}
+    measurable = {k: v for k, v in spec.items() if v is not None and hit[k] >= 30}
+    assert len(measurable) == len(m.ARMS), (
+        f"an arm matched too few articles to judge its specificity: {hit}")
+    lo = min(measurable.values())
+    assert lo > 0.25, (
+        f"arm specificities {({k: round(v, 3) for k, v in measurable.items()})} "
+        f"-- one stem matches far more articles than carry its descriptor, so "
+        "it is a broader concept than the arm it stands for and the ratio "
+        "would measure the stem rather than the modality")
+    ratio = max(measurable.values()) / lo
+    assert ratio < 2.0, (
+        f"the two arms' stems differ {ratio:.2f}x in how specifically they "
+        f"pick out their own descriptor ({({k: round(v, 3) for k, v in measurable.items()})}); "
+        "that is an asymmetric rule in coverage even though it is symmetric "
+        "in shape, which is the defect this analysis exists to correct")
+
+
 def test_each_arm_has_exactly_one_descriptor_so_breadth_is_comparable():
     m = _mod()
     sizes = {k: len(a["descriptors"]) for k, a in m.ARMS.items()}
@@ -125,10 +183,27 @@ def test_the_verdict_follows_the_measurement_and_can_flip():
     m, d = _mod(), _doc()
     md = MD.read_text()
     text_r, ms = d["ratio_by_text"], d["manuscript_ratio"]
-    if text_r <= ms * 1.05:
-        assert "reproduces" in md, (
-            "the symmetric ratio matches the manuscript and the report does "
-            "not say so")
+    ci = d["ratio_by_text_ci"]
+    # Decided by the INTERVAL, not by a point comparison. An earlier version
+    # branched on `text_r <= ms * 1.05` and demanded the word "reproduces" --
+    # a 5% window on a ratio whose 95% interval spans roughly [2.2, 3.9], so
+    # the verdict rode a threshold the data could not resolve.
+    covers = ci and ci[0] <= ms <= ci[1]
+    assert d["symmetric_ratio_covers_manuscript"] == bool(covers), (
+        "the artifact's coverage flag disagrees with its own interval")
+    if covers:
+        assert "cannot distinguish" in md, (
+            "the manuscript's ratio lies inside the symmetric interval and "
+            "the report does not say the two are indistinguishable")
+        # CLAIMING form, not substring: the report necessarily QUOTES
+        # "reproduces the manuscript's ratio" in the sentence withdrawing it.
+        # A bare ban trips on the retraction -- the sixth time that trap has
+        # fired in this repo.
+        for mt in re.finditer(r"reproduces the manuscript", md):
+            window = md[max(0, mt.start() - 250):mt.end() + 250]
+            assert re.search(r"withdraw|earlier draft|not support", window, re.I), (
+                "the report claims reproduction as a live claim; overlapping "
+                "intervals establish only that the two cannot be told apart")
     # and it must render differently when the numbers say otherwise
     flipped = {**d, "ratio_by_text": ms * 3}
     out = m.render(flipped)
@@ -172,9 +247,16 @@ def test_it_does_not_claim_the_manuscript_is_wrong():
     """The manuscript's own figure is reproduced; only a verdict is withdrawn."""
     md = MD.read_text()
     assert "Not that the manuscript is wrong" in md
-    assert "understated" in md, (
+    assert re.search(r"understat", md, re.I), (
         "the report no longer names the verdict it withdraws, so a reader "
         "cannot tell what changed")
+    # and it must NOT claim the census confirms the manuscript, which is a
+    # different and unsupported statement -- the intervals overlap, they do
+    # not coincide
+    assert "does not establish agreement" in md.lower() or \
+           "cannot distinguish" in md.lower(), (
+        "the report does not distinguish 'cannot tell them apart' from "
+        "'they agree'; the data supports only the former")
 
 
 def test_an_unmeasurable_arm_refuses_to_render():

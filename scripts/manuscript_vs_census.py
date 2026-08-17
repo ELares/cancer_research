@@ -134,7 +134,16 @@ def _recall_check():
     """
     path = PROJECT_ROOT / "analysis" / "atlas-descriptor-recall.json"
     if not path.exists():
-        return None
+        # NOT fail-open. An earlier version returned None here, and deleting
+        # the artifact silently restored the WITHDRAWN "understated by the
+        # manuscript" verdict with the suite green -- the default landed on
+        # the retracted claim, which is the opposite of safe.
+        raise SystemExit(
+            "analysis/atlas-descriptor-recall.json is missing. The Section 8.2 "
+            "verdict depends on it: without the recall measurement this "
+            "document would silently re-assert that the manuscript understated "
+            "its case, which is withdrawn. Run "
+            "`python scripts/atlas_descriptor_recall.py` first.")
     try:
         d = json.loads(path.read_text())
     except (OSError, ValueError):
@@ -532,7 +541,18 @@ def render(r: dict) -> str:
         L += [f"On the census it is **{m['census_pdt_sdt_ratio']}:1** "
               f"({pdt['census_ferroptosis']} against {sdt['census_ferroptosis']}).",
               ""]
-        if m["census_exceeds_manuscript"]:
+        rec_here = _recall_check()
+        if m["census_exceeds_manuscript"] and rec_here and \
+                not rec_here["symmetric_agrees"]:
+            L += ["**The ferroptosis-count leg of the claim survives.** The",
+                  "DESCRIPTOR ratio is larger than the manuscript's, but a",
+                  "symmetric rule applied to both arms is not, so this analysis",
+                  "does not claim the census argues from a larger ratio -- an",
+                  "earlier version said exactly that here, in synonyms, well",
+                  "below a headline withdrawing it.", "",]
+            L += ["That is the whole of what a count ratio can establish, and",
+                  "the manuscript's claim is broader than it.", "",]
+        elif m["census_exceeds_manuscript"]:
             L += ["**The ferroptosis-count leg of the claim survives, on a larger",
                   "ratio than the manuscript argued from.** That is the whole of",
                   "what a count ratio can establish, and the manuscript's claim",

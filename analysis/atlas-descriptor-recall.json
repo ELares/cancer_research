@@ -34,7 +34,15 @@
    ],
    "label": "photodynamic therapy",
    "precision": 0.9605263157894737,
+   "precision_ci": [
+    0.916562422565575,
+    0.9817856436760446
+   ],
    "recall": 0.8021978021978022,
+   "recall_ci": [
+    0.738339476914799,
+    0.8535624438607433
+   ],
    "text": 182
   },
   "SDT": {
@@ -59,18 +67,41 @@
    ],
    "label": "sonodynamic therapy",
    "precision": 0.90625,
+   "precision_ci": [
+    0.7578150066422117,
+    0.9675990373736805
+   ],
    "recall": 0.4603174603174603,
+   "recall_ci": [
+    0.34308665416425693,
+    0.5821096307840387
+   ],
    "text": 63
   }
  },
+ "descriptor_inflation": 1.6442307692307692,
+ "descriptor_inflation_ci": [
+  1.0206077654565535,
+  2.64890677299113
+ ],
+ "descriptor_route_significantly_inflates": true,
  "manuscript_ratio": 2.93,
  "ratio_by_descriptor": 4.75,
+ "ratio_by_descriptor_ci": [
+  3.2444024277104915,
+  6.954285265999476
+ ],
  "ratio_by_text": 2.888888888888889,
+ "ratio_by_text_ci": [
+  2.169217147724358,
+  3.8473229944271865
+ ],
  "ratio_pair": [
   "PDT",
   "SDT"
  ],
  "recall_asymmetry": 1.7427055702917773,
  "subject": "ferroptosis",
- "subject_articles": 13346
+ "subject_articles": 13346,
+ "symmetric_ratio_covers_manuscript": true
 }

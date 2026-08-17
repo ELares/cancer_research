@@ -56,6 +56,10 @@ GENERATORS = [
     REPO_ROOT / "scripts" / "atlas_combination_gaps.py",
     REPO_ROOT / "scripts" / "atlas_variant_drug_map.py",
     REPO_ROOT / "scripts" / "manuscript_vs_census.py",
+    # enrolled with the analysis it supports: a page whose subject is a
+    # sentence outliving the measurement beside it has no business
+    # hand-writing its own figures
+    REPO_ROOT / "scripts" / "atlas_descriptor_recall.py",
 ]
 
 

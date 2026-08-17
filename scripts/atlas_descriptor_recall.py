@@ -3,55 +3,73 @@
 
 WHAT THIS WITHDRAWS
 -------------------
-`analysis/manuscript-vs-census.md` reports the manuscript's Section 8.2
-PDT:SDT ratio as 2.93:1, recomputes it on the census as **4.75:1**, and
-concludes the claim "survives, UNDERSTATED by the manuscript". That verdict is
-the document's headline and it is repeated in CLAUDE.md.
+`analysis/manuscript-vs-census.md` recomputes the manuscript's Section 8.2
+PDT:SDT ratio on the census, finds a larger figure, and concludes the claim
+"survives, UNDERSTATED by the manuscript". That verdict is the document's
+headline and it is repeated in CLAUDE.md. Every figure below is rendered from
+the measurement; none is written into this docstring.
 
 It divides two MeSH descriptor counts, `Photochemotherapy` and
 `Ultrasonic Therapy`. A count ratio is only a ratio of the underlying concepts
 if both descriptors capture their concept equally well. Nobody measured that.
 
-Measured here, on the same ferroptosis-indexed census articles with the same
-generosity of text rule on both sides:
+Measured here on the same ferroptosis-indexed census articles, with one text
+rule applied identically to both arms, the two descriptors turn out comparably
+PRECISE and markedly different in RECALL. So the descriptor ratio is
+substantially a measurement of how consistently MeSH indexers apply two terms,
+and only partly of how much literature exists.
 
-    Photochemotherapy   recall 80.2%   precision 96.1%
-    Ultrasonic Therapy  recall 46.0%   precision 90.6%
+WHAT THE DATA SUPPORTS, AND WHAT AN EARLIER DRAFT OVER-CLAIMED
+----------------------------------------------------------------
+That earlier draft said the symmetric ratio "reproduces the manuscript's ratio
+to within a fraction of a percent". WITHDRAWN. On counts this size the symmetric ratio carries a
+wide interval, the difference from the manuscript's figure sits well inside
+sampling noise, and a reviewer's bootstrap put the probability of exceeding it
+near one half. Quoting a coin flip to that precision is the same
+error class this page exists to correct.
 
-The descriptors are comparably PRECISE and differ nearly twofold in RECALL. So
-the 4.75:1 is substantially a measurement of how consistently MeSH indexers
-apply two descriptors, and only partly of how much literature exists.
+Two claims ARE well supported, and the page is now built on them:
 
-Applying one rule to both sides gives **2.89:1** against the manuscript's
-2.93:1 -- a 1.4% difference. The honest conclusion is that the census
-REPRODUCES the manuscript's ratio, not that the manuscript understated it by
-62%.
+  the two recalls have disjoint intervals, so the descriptors genuinely
+  differ; and
+
+  the PAIRED inflation -- descriptor ratio over symmetric ratio, computed on
+  the same articles so shared noise cancels -- has an interval excluding 1.
+
+Those withdraw the understatement verdict, because the evidence for it
+disappears under a symmetric rule. They do NOT establish that the census
+agrees with the manuscript, and this page does not say so. Every figure is
+interpolated at render time; none is written here, because a docstring cannot
+be kept fresh.
 
 WHY THE EXISTING SYMMETRY CHECK MISSED IT
 -------------------------------------------
 `manuscript-vs-census.md` does check for asymmetry, and reports:
 
-    "The gap is 3.3 points, so the over-estimation is symmetric and the
-     ratio survives it"
+    "the over-estimation is symmetric and the ratio survives it"
 
 That is a check on PRECISION -- what share of each descriptor's records are
-on-modality -- and precision really is symmetric (90.8% vs 87.5%). Recall was
-never checked, and that is where the asymmetry lives. The same document's
-sensitivity analysis varies four DESCRIPTOR SETS and reports "every variant
-exceeds the manuscript's"; every variant is built from descriptors, so all
-four inherit the same recall gap. Varying the descriptor set cannot detect a
+on-modality -- and precision really is symmetric. RECALL was never checked,
+and that is where the asymmetry lives. The same document's sensitivity
+analysis varies several DESCRIPTOR SETS and reports that every variant exceeds
+the manuscript's; every variant is built from descriptors, so all of them
+inherit the same recall gap. Varying the descriptor set cannot detect a
 descriptor-versus-text recall problem.
 
-AND IT INVERTS A CAVEAT CARRIED IN SIX FILES
-----------------------------------------------
-Five documents state that `Ultrasonic Therapy` is BROADER than sonodynamic
+AND IT INVERTS A CAVEAT CARRIED ACROSS THE REPO
+------------------------------------------------
+Several documents state that `Ultrasonic Therapy` is BROADER than sonodynamic
 therapy, so the SDT count is an OVER-estimate and every ratio against it is a
-LOWER bound. Precision 90.6% says the breadth is real but small -- 3 of 32
-records, and reading them they are ultrasound-activated redox, enzyodynamic
-and piezocatalytic papers, sonodynamic-adjacent rather than physiotherapy.
-Recall 46.0% is far larger and runs the other way. The count is an
-UNDER-estimate by roughly a factor of two, and ratios against it are UPPER
-bounds.
+LOWER bound. The breadth is real but small; the recall shortfall is larger and
+runs the other way, so the count is an UNDER-estimate and ratios against it
+are UPPER bounds. Both quantities are rendered from the measurement rather
+than stated here -- an earlier draft hand-wrote the number of affected
+files, and got it wrong.
+
+SCOPE OF THE WORD "RECALL". The denominator is what each record's own title
+and abstract say, not ground truth. A record can carry a descriptor correctly
+while its abstract never uses the word, so this measures TEXT AGREEMENT and is
+labelled as such wherever it is used to compare the two arms.
 
 WHY THE TWO DESCRIPTORS DIFFER, WHICH IS ITS OWN FINDING
 ----------------------------------------------------------
@@ -64,10 +82,11 @@ project's taxonomy.
 
 WHAT THIS DOES NOT CLAIM
 -------------------------
-Not that the manuscript is wrong. Its 2.93:1 is reproduced almost exactly by
-an independent instrument, which is a stronger result for it than a number
-that disagreed. What is withdrawn is the "understated by 62%" verdict built on
-an asymmetric comparison.
+Not that the manuscript is wrong, and equally not that it is confirmed. A
+symmetric measurement cannot DISTINGUISH the census from the manuscript's
+figure, which is a different and weaker statement than agreement. What is
+withdrawn is the "understated" verdict, because the evidence for it was an
+asymmetric comparison.
 
 Nor that the text rule is ground truth. It has its own errors in both
 directions; the point is that it is applied IDENTICALLY to both arms, which
@@ -81,6 +100,7 @@ Usage:
 import argparse
 import gzip
 import json
+import math
 import re
 from pathlib import Path
 
@@ -110,6 +130,11 @@ ARMS = {
 # The pair the manuscript's Section 8.2 states, and its stated value.
 RATIO_PAIR = ("PDT", "SDT")
 MANUSCRIPT_RATIO = 2.93
+# The interval level, interpolated wherever it is printed. A "95%" typed into
+# prose is still a number a sentence can outlive, and this file's own subject
+# is exactly that failure.
+CONF = 0.95
+Z = 1.96
 
 
 def scan() -> dict:
@@ -152,16 +177,66 @@ def scan() -> dict:
                if stat[b]["descriptor"] else None)
     by_text = stat[a]["text"] / stat[b]["text"] if stat[b]["text"] else None
     recalls = [s["recall"] for s in stat.values() if s["recall"] is not None]
+
+    # UNCERTAINTY, because the first version of this analysis quoted the
+    # symmetric ratio as reproducing the manuscript to a fraction of a percent
+    # of 182 and 63. A reviewer's bootstrap put the 95% interval at roughly
+    # [2.2, 3.9] and P(ratio > manuscript) at 0.46 -- the verdict was a coin
+    # flip quoted to three significant figures. Closed-form Poisson
+    # log-ratio intervals are used so this stays deterministic and offline.
+    def _logratio_ci(x, y):
+        """Interval for x/y treating both as Poisson counts."""
+        if not x or not y:
+            return None
+        se = math.sqrt(1 / x + 1 / y)
+        pt = math.log(x / y)
+        return [math.exp(pt - Z * se), math.exp(pt + Z * se)]
+
+    def _wilson(k, n):
+        if not n:
+            return None
+        p, z = k / n, Z
+        d = 1 + z * z / n
+        c = p + z * z / (2 * n)
+        m = z * math.sqrt(p * (1 - p) / n + z * z / (4 * n * n))
+        return [(c - m) / d, (c + m) / d]
+
+    for k, s in stat.items():
+        s["recall_ci"] = _wilson(s["both"], s["text"])
+        s["precision_ci"] = _wilson(s["both"], s["descriptor"])
+
+    text_ci = _logratio_ci(stat[a]["text"], stat[b]["text"])
+    desc_ci = _logratio_ci(stat[a]["descriptor"], stat[b]["descriptor"])
+    # the comparison that is actually decisive: how much the descriptor route
+    # inflates the ratio relative to the symmetric one
+    inflation = by_desc / by_text if (by_desc and by_text) else None
+    infl_se = math.sqrt(sum(1 / stat[k][f] for k in (a, b)
+                            for f in ("text", "descriptor") if stat[k][f]))
+    infl_ci = ([math.exp(math.log(inflation) - 1.96 * infl_se),
+                math.exp(math.log(inflation) + 1.96 * infl_se)]
+               if inflation else None)
+    # and whether the recall gap itself excludes parity
+    ra = (max(recalls) / min(recalls)) if len(recalls) > 1 and min(recalls) else None
     return {
         "subject": SUBJECT,
         "subject_articles": n,
         "arms": stat,
         "ratio_pair": list(RATIO_PAIR),
         "ratio_by_descriptor": by_desc,
+        "ratio_by_descriptor_ci": desc_ci,
         "ratio_by_text": by_text,
+        "ratio_by_text_ci": text_ci,
         "manuscript_ratio": MANUSCRIPT_RATIO,
-        "recall_asymmetry": (max(recalls) / min(recalls)) if len(recalls) > 1
-                            and min(recalls) else None,
+        "recall_asymmetry": ra,
+        # the decisive quantity: the DIFFERENCE between the two routes, which
+        # is a paired comparison over the same articles and is far better
+        # determined than either ratio on its own
+        "descriptor_inflation": inflation,
+        "descriptor_inflation_ci": infl_ci,
+        "symmetric_ratio_covers_manuscript": bool(
+            text_ci and text_ci[0] <= MANUSCRIPT_RATIO <= text_ci[1]),
+        "descriptor_route_significantly_inflates": bool(
+            infl_ci and infl_ci[0] > 1.0),
     }
 
 
@@ -190,38 +265,61 @@ def render(d: dict) -> str:
               f"factor of **{d['recall_asymmetry']:.2f}** in **recall**.", ""]
 
     L += ["## What that does to the ratio the manuscript states", ""]
-    L += ["| how the two are counted | ratio |", "|---|--:|"]
-    L += [f"| by descriptor (what `manuscript-vs-census.md` reports) | "
-          f"**{d['ratio_by_descriptor']:.2f}:1** |"]
-    L += [f"| by one text rule applied to both | **{d['ratio_by_text']:.2f}:1** |"]
-    L += [f"| as the manuscript states it | {d['manuscript_ratio']:.2f}:1 |", ""]
+    def ci(v):
+        return f"[{v[0]:.2f}, {v[1]:.2f}]" if v else "n/a"
 
-    diff = abs(d["ratio_by_text"] - d["manuscript_ratio"]) / d["manuscript_ratio"]
-    over = (d["ratio_by_descriptor"] - d["manuscript_ratio"]) / d["manuscript_ratio"]
-    L += [f"So the census does not exceed the manuscript by "
-          f"{100*over:.0f}%. Measured symmetrically it **reproduces** the "
-          f"manuscript's ratio to within {100*diff:.1f}%.", ""]
-    L += ["That is a stronger result for the manuscript than the one being "
-          "withdrawn: an independent instrument over the whole indexed cancer "
-          "literature lands on the figure it published. What does not survive "
-          "is the claim that the manuscript **understated** its own case, "
-          "which rested on comparing two descriptors that do not capture "
-          "their concepts equally well.", ""]
+    L += [f"| how the two are counted | ratio | {100*CONF:g}% CI |",
+          "|---|--:|--:|"]
+    L += [f"| by descriptor (what `manuscript-vs-census.md` reports) | "
+          f"**{d['ratio_by_descriptor']:.2f}:1** | "
+          f"{ci(d['ratio_by_descriptor_ci'])} |"]
+    L += [f"| by one text rule applied to both | **{d['ratio_by_text']:.2f}:1** "
+          f"| {ci(d['ratio_by_text_ci'])} |"]
+    L += [f"| as the manuscript states it | {d['manuscript_ratio']:.2f}:1 | |",
+          ""]
+
+    L += ["**Both ratios are loosely determined and their intervals overlap, "
+          "so neither point estimate should be read alone.** An earlier draft "
+          "of this page said the symmetric ratio \"reproduces the manuscript's "
+          "ratio to within a fraction of a percent\" -- a precision the counts "
+          "come nowhere near supporting, on a difference well inside the "
+          "sampling noise. That sentence is withdrawn.", ""]
+
+    L += ["### What the data does support", ""]
+    if d.get("symmetric_ratio_covers_manuscript"):
+        L += [f"The manuscript's {d['manuscript_ratio']:.2f}:1 sits **inside** "
+              f"the symmetric interval {ci(d['ratio_by_text_ci'])}, so a "
+              f"symmetric measurement cannot distinguish the census from the "
+              f"manuscript. The evidence for UNDERSTATEMENT disappears -- "
+              f"which is what withdraws that verdict. It does not establish "
+              f"agreement, and this page does not claim it.", ""]
+    if d.get("descriptor_route_significantly_inflates"):
+        L += [f"The decisive quantity is the **paired** comparison of the two "
+              f"routes over the same articles: the descriptor route inflates "
+              f"the ratio by **{d['descriptor_inflation']:.2f}x**, "
+              f"{100*CONF:g}% CI "
+              f"{ci(d['descriptor_inflation_ci'])}, which excludes 1. That is "
+              f"far better determined than either ratio alone, because the "
+              f"two routes share their articles and much of their noise "
+              f"cancels.", ""]
+    L += ["So the robust claims are that the two descriptors differ in recall "
+          "and that the descriptor route inflates this particular ratio. The "
+          "size of the true ratio is not settled here.", ""]
 
     L += ["## Why the existing symmetry check did not catch this", ""]
     L += ["`manuscript-vs-census.md` does test for asymmetry and concludes "
-          "\"the gap is 3.3 points, so the over-estimation is symmetric\". "
-          "That is a test of **precision** -- what share of each descriptor's "
-          "records are on-modality -- and precision genuinely is symmetric. "
+          "that \"the over-estimation is symmetric\" from a small gap in the "
+          "share of each descriptor's records that are on-modality. That is a "
+          "test of **precision**, and precision genuinely is symmetric. "
           "Recall was never measured, and that is where the asymmetry is.", ""]
-    L += ["The same document varies four alternative descriptor sets and "
+    L += ["The same document varies several alternative descriptor sets and "
           "reports that every variant exceeds the manuscript's ratio. Every "
-          "variant is built from descriptors, so all four inherit the same "
+          "variant is built from descriptors, so all of them inherit the same "
           "recall gap. A sensitivity analysis over descriptor sets cannot "
           "detect a descriptor-versus-text recall problem.", ""]
 
     L += ["## The caveat this inverts", ""]
-    L += [f"Five files state that `Ultrasonic Therapy` is broader than "
+    L += [f"Several files state that `Ultrasonic Therapy` is broader than "
           f"sonodynamic therapy, so the count is an OVER-estimate and ratios "
           f"against it are LOWER bounds. The breadth is real and small: "
           f"precision {100*B['precision']:.1f}%, i.e. "
@@ -230,8 +328,14 @@ def render(d: dict) -> str:
           f"other way, so the count is an **under**-estimate and ratios "
           f"against it are **upper** bounds.", ""]
     if B["descriptor_not_text"]:
-        L += ["The records carrying the descriptor whose text does not say "
-              "sonodynamic -- the whole of the over-count -- are:", ""]
+        L += ["The records carrying the descriptor whose text does not use "
+              "this rule's words are listed below. They are an upper bound on "
+              "descriptor breadth, NOT a measurement of it: at least one is "
+              "matched by the wider vocabulary in "
+              "`manuscript_vs_census.py` (it says *sonosensitizer*), so it is "
+              "a miss of this rule rather than a wrong descriptor. An earlier "
+              "draft called these \"the whole of the over-count\", which "
+              "conflated the two.", ""]
         for r in B["descriptor_not_text"]:
             L.append(f"* {r['pmid']} — {r['title']}")
         L += [""]
