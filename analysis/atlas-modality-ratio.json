@@ -1,0 +1,45 @@
+{
+ "census": 4403994,
+ "partitions": {
+  "clinical-delivery": {
+   "both": 84052,
+   "n_pharm_descriptors": 63,
+   "n_phys_descriptors": 84,
+   "pharm": 893884,
+   "phys": 354753,
+   "ratio": 2.519736267205633
+  },
+  "maximally-inclusive": {
+   "both": 123392,
+   "n_pharm_descriptors": 236,
+   "n_phys_descriptors": 139,
+   "pharm": 1055354,
+   "phys": 626304,
+   "ratio": 1.6850507101982424
+  },
+  "mechanism-of-action": {
+   "both": 43659,
+   "n_pharm_descriptors": 39,
+   "n_phys_descriptors": 39,
+   "pharm": 773860,
+   "phys": 196717,
+   "ratio": 3.933874550750571
+  },
+  "minimally-inclusive": {
+   "both": 65348,
+   "n_pharm_descriptors": 17,
+   "n_phys_descriptors": 92,
+   "pharm": 660572,
+   "phys": 501837,
+   "ratio": 1.3163078848311305
+  },
+  "regulatory-class": {
+   "both": 92050,
+   "n_pharm_descriptors": 46,
+   "n_phys_descriptors": 137,
+   "pharm": 807570,
+   "phys": 592505,
+   "ratio": 1.3629758398663303
+  }
+ }
+}

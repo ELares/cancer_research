@@ -116,6 +116,11 @@ REGISTRY = {
         "records_unindexed/ is excluded on a MEASURED ground rather than an "
         "assumed one: none of its 783,271 records carries a pub_types field, "
         "so it cannot carry a retraction flag."),
+    "atlas_modality_ratio.py": (
+        {"records"},
+        "recomputes the manuscript's pharmacological-versus-physical ratio, so "
+        "it must divide by the same frozen census the manuscript's own figure "
+        "was computed on or the comparison is not the one being tested."),
     "atlas_taxonomy_reach.py": (
         {"records"},
         "measures the mechanism taxonomy's field of view against the census the "

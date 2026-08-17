@@ -176,8 +176,18 @@ def test_shards_are_sampled_across_the_range_not_taken_as_a_prefix():
 
 
 def test_render_only_works_without_the_raw_xml():
-    res = subprocess.run([sys.executable, str(SCRIPT), "--render-only"],
-                         cwd=REPO_ROOT, capture_output=True, text=True)
+    # Run against a COPY of the tree's artifacts. Invoking the generator here
+    # rewrites the committed report, which makes the suite non-idempotent and --
+    # measured the hard way -- lets a mutation sweep corrupt a committed file:
+    # a mutated renderer ran through this test and its text landed on disk.
+    import shutil, tempfile
+    with tempfile.TemporaryDirectory() as td:
+        shutil.copy2(MD, Path(td) / MD.name)
+        try:
+            res = subprocess.run([sys.executable, str(SCRIPT), "--render-only"],
+                                 cwd=REPO_ROOT, capture_output=True, text=True)
+        finally:
+            shutil.copy2(Path(td) / MD.name, MD)
     assert res.returncode == 0, (
         f"--render-only failed, so the report cannot be rebuilt without "
         f"re-downloading:\n{res.stdout}\n{res.stderr}")
