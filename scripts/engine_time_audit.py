@@ -25,39 +25,61 @@ The caveat "the scan is textual ... the real-time set is a lower bound" was
 already sitting two lines under that headline. A true caveat does not rescue a
 false headline.
 
-WHAT IS ACTUALLY TRUE, WHICH IS A SHARPER FINDING
----------------------------------------------------
-The CORE biochemical loop states no step duration -- that part survives. But
-two modules bind a step to a real duration, they DISAGREE, and one of them
-reaches production:
+WHAT IS ACTUALLY TRUE
+----------------------
+The CORE biochemical loop states no step duration -- that part survives.
+EXACTLY ONE module prices a step in wall-clock time: `tumor_pk`, at one minute
+per step, reaching `sim-tumor-pk`'s 180-step run = 3.0 hours.
 
-  tumor_pk       1 step = 1 minute, and `sim-tumor-pk` calls it with the same
-                 180-step count the production matrix uses, as does sim-tme-3d.
-  trigger_wave   1 step = `dt_min`, default 0.02 minutes -- fifty times finer.
+`trigger_wave`'s `dt_min` is NOT a second binding. It is a CFL-constrained
+integrator timestep -- the module asserts `dt < h^2/(2D)` on the next line --
+and pooling it with tumor_pk's alignment manufactured a "50x disagreement,
+unreconciled". Two solvers having different `dt` is not a contradiction.
 
-So the engine does not lack a step duration. It carries two, unreconciled, one
-of them silently load-bearing. THIS REVERSES THE WITHDRAWAL the previous
-version made: issue #727 originally alleged "four conflicting bindings", the
-last version withdrew that as "there are NONE", and the truth is two. The
-withdrawal over-corrected.
+TWO FURTHER RETRACTIONS, BOTH CAUGHT BY REVIEW BEFORE MERGE
+-------------------------------------------------------------
+A draft of this file concluded that because the priced run spans three hours,
+against P3's 24-hour threshold, "the model cannot represent either outcome of
+its most directly testable prediction". FALSE. `cell.rs` carries the four
+defenses' recovery half-times in DAYS, `sim-window` sweeps them to 28 days at
+P3's own timepoints, and that is a published manuscript figure. The draft
+compared one binary's INNER kill assay against a prediction scored on the
+OUTER recovery axis. Worse, the refutation was already in this script's own
+artifact and the renderer printed only the EMPTY caller lists, dropping its own
+counter-example.
 
-THE CONSEQUENCE, NOW QUANTIFIED RATHER THAN ASSERTED
-------------------------------------------------------
-Under the only binding that reaches production, the whole 180-step run spans
-three hours. PREREGISTRATION.md states P3's window as days and its FALSIFICATION
-THRESHOLD as "returns to baseline within 24 hours". The production loop is
-shorter than the threshold, so it cannot represent either outcome of the
-project's most directly testable prediction. That is stronger than "the units
-are missing": the units are present, they are inconsistent, and the one in force
-is off by nearly two orders of magnitude from the prediction it is meant to
-score.
+A later draft priced `sim-tme-3d` at 3.0 hours too. Its default matrix runs
+`DoseSchedule::Constant` and reaches the PK solver only under `--dose-sweep`;
+the check was a text grep for the module name.
+
+THE FINDING THAT REPLACES THEM
+--------------------------------
+P3 states the defenses recover "FSP1 and GSH first, GPX4 and NRF2 later". The
+engine's defaults are gsh 1d, gpx4 3d, nrf2 5d, fsp1 7d -- so `fsp1` is named
+early and is the SLOWEST. They contradict, and that is visible only BECAUSE
+the model represents the quantity.
+
+Scoped deliberately: this is NOT a falsification of P3 as registered, whose
+falsifier is simultaneity ("all four recover within the same timepoint"), which
+a sequential order satisfies. The disagreement is between the preregistration's
+descriptive ordering and the engine's defaults.
 
 WHAT THIS SCRIPT DOES NOT DO
 -----------------------------
-It does not choose a step duration or reconcile the two. That is a modelling
+It does not choose a step duration or reconcile anything. That is a modelling
 decision with consequences for every calibrated layer and for the committed
 byte-identity gates, and it belongs to whoever owns those calibrations. A guard
 fails if this script starts asserting one.
+
+KNOWN LIMITS OF THE REACHABILITY CHECK
+----------------------------------------
+`_reaches_by_default` resolves one call graph textually. It gives the right
+answer on this tree, but adversarial probing found it flips on: a CLI flag
+declared through clap rather than `std::env::args()`; braces inside the
+`env::args` closure; a trailing comment or string literal naming the symbol
+inside a live fn; and a nested `fn` inside `main`. `_enclosing_fn` returns the
+last `fn` DECLARED before an offset whether or not it has closed. Treat the
+opt-in classification as evidence, not proof.
 
 Usage:
     python scripts/engine_time_audit.py
@@ -362,17 +384,30 @@ def _pricing_symbols(module, binding_lines):
     lines = text.split("\n")
     out = set()
     for ln in binding_lines:
+        found = None
         for j in range(ln - 1, min(len(lines), ln + 12)):
-            m = re.match(r"\s*pub\s+(?:fn|struct|const|static)\s+(\w+)", lines[j])
+            m = re.match(r"\s*pub\s+(?:fn|struct|enum|const|static)\s+(\w+)",
+                         lines[j])
             if m:
-                out.add(m.group(1))
+                found = m.group(1)
                 break
-        else:
-            # inside a body: take the enclosing fn
-            off = sum(len(x) + 1 for x in lines[:ln])
-            fn = _enclosing_fn(text, off)
-            if fn:
-                out.add(fn)
+            # A doc comment on a STRUCT FIELD documents the struct, not the
+            # next free item. tumor_pk.rs:354 documents `time_min` inside
+            # `pub struct TumorPKResult {` at 353; scanning only downward from
+            # 354 skipped past the struct, hit no item, and fell through to
+            # the enclosing-fn guess -- which named `doxorubicin_iv_bolus`,
+            # declared 14 lines earlier and already closed. Because
+            # _step_counts uses any(), a spurious symbol can only ADD pricing:
+            # a binary calling that unrelated function was priced at 3.0 h.
+            if re.match(r"\s*pub\s+\w+\s*:", lines[j]):
+                for k in range(j, max(-1, j - 40), -1):
+                    s = re.match(r"\s*pub\s+(?:struct|enum)\s+(\w+)", lines[k])
+                    if s:
+                        found = s.group(1)
+                        break
+                break
+        if found:
+            out.add(found)
     return sorted(out)
 
 
@@ -734,7 +769,9 @@ def render(d: dict) -> str:
         if others:
             names = ", ".join("`{}` ({})".format(s["binary"], s["steps"])
                               for s in others)
-            L += [f"{len(others)} other binaries declare a step count "
+            L += [f"{len(others)} other "
+                  f"{'binary declares' if len(others) == 1 else 'binaries declare'} "
+                  f"a step count "
                   f"({names}) and consume no module that prices a step, so "
                   f"their runs cannot be converted to wall-clock time at all.",
                   ""]

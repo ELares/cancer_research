@@ -346,7 +346,7 @@
  ],
  "pricing_symbols": {
   "tumor_pk.rs": [
-   "doxorubicin_iv_bolus",
+   "TumorPKResult",
    "solve_tumor_pk"
   ]
  },

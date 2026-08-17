@@ -430,7 +430,16 @@ def test_the_real_time_table_is_complete_against_an_independent_scan():
         r"\b\d+(?:\.\d+)?\s*-?\s*(sec|seconds?|min|mins|minutes?|h|hrs?|"
         r"hours?|days?)\b", re.I)
     for p in sorted(src.glob("*.rs")):
-        body = p.read_text(errors="ignore")
+        # Replicate the generator's version-changelog skip. `scan()` ignores a
+        # `//!` line containing "v0.", because this repo's module headers carry
+        # dated changelogs full of "~48 to 72 h" and "14-21 day" that describe
+        # history rather than a quantity the module carries. Without the same
+        # skip this guard is BROADER than the generator and turns CI red the
+        # first time a module header gains a duration -- a valid change. Same
+        # class as the bare-`s` bug: fixed in one place, left in the other.
+        body = "\n".join(
+            ln for ln in p.read_text(errors="ignore").split("\n")
+            if not (ln.strip().startswith("//!") and "v0." in ln))
         if indep_bare.search(body) or indep_mag.search(body):
             assert p.name in listed, (
                 f"{p.name} carries a time-unit annotation and is missing from "
@@ -488,6 +497,20 @@ def test_a_binary_is_only_priced_if_the_pricing_call_is_default_reachable():
             "report does not say so -- it would simply vanish from the page")
         assert "opt-in flag" in md, (
             "the opt-in disclosure paragraph is gone from the report")
+        # and the span it WOULD have been priced at must be the real one.
+        # Hardcoding it shipped "listed this at 15.0 h" against a truth of
+        # 3.0 h with the suite green.
+        conv1 = d["wall_clock_conventions"][0]["minutes_per_step"]
+        would = s["steps"] * conv1 / 60
+        # anchored to the SENTENCE, not loose in the document: "3.0 h" also
+        # appears in the priced table above, so a whole-document substring
+        # check passed while the sentence itself said 15.0 h
+        sent = re.search(r"listed (?:this|these) at ([0-9.]+) h", md)
+        assert sent, "the opt-in paragraph no longer states the would-be span"
+        assert float(sent.group(1)) == round(would, 1), (
+            f"{s['binary']} would have been priced at {would:.1f} h "
+            f"({s['steps']} steps x {conv1:g} min); the report says "
+            f"{sent.group(1)} h")
 
 
 def test_the_p3_consumer_list_is_verified_against_source():
@@ -535,6 +558,36 @@ def test_orphan_scan_covers_every_module_carrying_real_time():
                 f"{p.name}: {names - set(fields[p.name])} not scanned")
 
 
+def test_the_scope_note_keeps_its_polarity_and_its_numbers():
+    """The correction that stops the finding over-claiming.
+
+    Inverting it to "this IS a falsification of P3 as registered", deleting it
+    outright, and fabricating its threshold all shipped with the suite green.
+    Polarity and both numbers are pinned to PREREGISTRATION.md here.
+    """
+    d, md = _doc(), MD.read_text()
+    p3 = d.get("p3") or {}
+    if not (d.get("p3_order") and not d["p3_order"]["agrees"]):
+        return                       # nothing to scope
+    assert "not** a falsification of P3 as registered" in md, (
+        "the scope note is gone or inverted; without it the ordering finding "
+        "reads as a falsification of the registered prediction, which it is not")
+    preg = (REPO_ROOT / "PREREGISTRATION.md").read_text()
+    blk = re.search(r"\*\*P3\..*?(?=\n\*\*P4\.)", preg, re.S)
+    assert blk, "P3's block is no longer locatable"
+    thr = re.search(r"within\s+(\d+)\s*hours", blk.group(0), re.I)
+    assert thr, "P3 no longer registers an hours threshold"
+    assert p3.get("threshold_hours") == float(thr.group(1)), (
+        f"the artifact's threshold {p3.get('threshold_hours')} is not the "
+        f"{thr.group(1)} hours the preregistration registers")
+    assert f"{float(thr.group(1)):g}-hour threshold" in md, (
+        "the rendered threshold is not the preregistration's")
+    # the registered falsifier really is simultaneity, which is what the note claims
+    assert "same timepoint" in blk.group(0), (
+        "P3's registered falsifier is no longer simultaneity; the scope note's "
+        "reasoning needs re-checking against the current text")
+
+
 def test_every_binding_appears_in_the_rendered_table():
     """Dropping the solver rows left the headline counting what it no longer showed."""
     d, md = _doc(), MD.read_text()
@@ -561,8 +614,12 @@ def test_the_artifact_is_fresh_against_the_live_sources():
     # round-trip through JSON so tuples compare as the lists they serialise to
     live = json.loads(json.dumps(m.scan(), sort_keys=True))
     committed = _doc()
+    # `p3` MUST be here. It is the sole source of the scope paragraph, and
+    # leaving it out let five mutations ship false text with the suite green --
+    # a fabricated 999-hour threshold, a fabricated span, and a stale
+    # PREREGISTRATION.md edit the report never followed.
     for key in ("wall_clock_conventions", "distinct_minutes_per_step",
-                "step_counts", "p3_modelled", "p3_order",
+                "step_counts", "p3", "p3_modelled", "p3_order",
                 "n_solver_timestep_conventions", "solver_timestep_conventions",
                 "step_bindings", "orphan_timescale_fields",
                 "real_time_module_callers", "pricing_symbols"):
@@ -572,6 +629,43 @@ def test_the_artifact_is_fresh_against_the_live_sources():
             f"`python scripts/engine_time_audit.py`.\n"
             f"  live      = {str(live.get(key))[:200]}\n"
             f"  committed = {str(committed.get(key))[:200]}")
+
+
+def test_no_source_file_still_asserts_a_retracted_claim():
+    """Prose in the CODE rots exactly like prose in the report.
+
+    Both docstrings outlived their claims: this guard file's still described
+    "six declarations ... a factor of fifty ... shorter than P3's 24-hour
+    threshold", and the generator's still said the two bindings "DISAGREE",
+    that "the truth is two", and that the model "cannot represent either
+    outcome" -- three claims the page it generates retracts. The generator's
+    survived a review that caught the test file's.
+
+    Checked as a CLAIMING form, not a substring: each phrase is allowed to
+    appear within 400 characters of a retraction marker, because the
+    retraction has to quote what it withdraws. Forbidding the bare string
+    trips on the correction itself -- a trap this repo has hit four times.
+    """
+    marker = re.compile(
+        r"FALSE|retract|withdraw|earlier draft|earlier version|previous "
+        r"version|previous draft|used to say|NOT a", re.I)
+    retracted = [
+        "fifty times finer",
+        "the truth is two",
+        "a factor of fifty",
+        "six declarations",
+        "cannot represent either outcome",
+        "three orders of magnitude",
+    ]
+    for path in (SCRIPT, Path(__file__)):
+        body = path.read_text()
+        for phrase in retracted:
+            for m in re.finditer(re.escape(phrase), body, re.I):
+                window = body[max(0, m.start() - 400):m.end() + 400]
+                assert marker.search(window), (
+                    f"{path.name} states the retracted claim {phrase!r} with no "
+                    "retraction marker within 400 characters, i.e. as a live "
+                    "claim rather than as something being withdrawn")
 
 
 def test_an_empty_scan_refuses_to_render():
