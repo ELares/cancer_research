@@ -215,13 +215,40 @@ def test_the_out_of_universe_count_agrees_with_the_sibling_artifact():
         return
     other = json.loads(sib.read_text())
     legs = d.get("leg_intersections") or {}
-    flat = json.dumps(other)
+    # COMPARE THE FIELD, not a substring of the whole blob. `str(c) in
+    # json.dumps(other)` is a scan in which roughly a third of small integers
+    # match something, so changing 479 to 478 passed.
+    def _find(obj, want_desc):
+        """Every numeric value stored against a key naming this descriptor."""
+        out = []
+        if isinstance(obj, dict):
+            for k, v in obj.items():
+                if isinstance(k, str) and want_desc in k.lower() and \
+                        isinstance(v, (int, float)):
+                    out.append(v)
+                out += _find(v, want_desc)
+        elif isinstance(obj, list):
+            # rows like ["drug resistance", 479, ...]
+            if any(isinstance(x, str) and want_desc in x.lower() for x in obj):
+                out += [x for x in obj if isinstance(x, (int, float))]
+            for v in obj:
+                out += _find(v, want_desc)
+        return out
+
+    checked = 0
     for desc, c in legs.items():
-        if "drug resistance" in desc and c:
-            assert str(c) in flat, (
-                f"this report counts {c:,} for `{desc}` and the sibling "
-                "atlas-thesis-position artifact does not carry that number; "
-                "one of the two is from a different build")
+        if "drug resistance" not in desc or not c:
+            continue
+        vals = _find(other, "drug resistance")
+        assert vals, (
+            "the sibling atlas-thesis-position artifact stores no number "
+            "against a drug-resistance key, so the two cannot be reconciled")
+        assert c in vals, (
+            f"this report counts {c:,} for `{desc}`; the sibling artifact "
+            f"stores {sorted(set(vals))} against its drug-resistance keys. "
+            "One of the two is from a different build")
+        checked += 1
+    assert checked, "the cross-artifact check exercised nothing"
 
 
 def test_the_headline_ratio_carries_its_prevalence_normalisation():
@@ -309,3 +336,111 @@ def test_a_no_descriptor_claim_is_checked_against_the_census():
             assert f"{modality} (no descriptor)" not in md, (
                 f"{modality} is still listed as having no descriptor while "
                 "one measurably exists")
+
+
+def test_the_normalisation_denominators_are_recounted_not_trusted():
+    """`census_descriptor_totals` is the whole denominator of the new headline.
+
+    Nothing recounted it. A reviewer multiplied the sonodynamic census total by
+    ten and the page printed "The direction holds under normalisation" -- the
+    PR's entire finding reversed, suite green. Recounted over a 1-in-12 STRIDE
+    (a subset, so the full count must be at least the strided one) and checked
+    for internal impossibility.
+    """
+    import gzip
+    m, d = _mod(), _doc()
+    tot = d.get("census_descriptor_totals") or {}
+    assert tot, "the census denominators are gone"
+
+    # INTERNAL IMPOSSIBILITY: an intersection cannot exceed the census total.
+    # Zeroing the census counter published "0 census records, 9 ferroptosis
+    # intersections" with everything green.
+    inter = dict(d["intersections"])
+    inter.update(d.get("leg_intersections") or {})
+    inter.update(d.get("candidate_intersections") or {})
+    for k, v in inter.items():
+        if k in tot:
+            assert v <= tot[k], (
+                f"`{k}` has {v:,} ferroptosis intersections against a census "
+                f"total of {tot[k]:,}, which is impossible")
+
+    watch = {d["intersections"][0][0],
+             m.THESIS_LEGS["sonodynamic therapy"]} | \
+            {x.lower() for x in m.CANDIDATE_DESCRIPTORS.values()}
+    seen = {k: 0 for k in watch}
+    for f in sorted((m.ATLAS / "records").glob("*.jsonl.gz"))[::12]:
+        with gzip.open(f, "rt", encoding="utf-8") as fh:
+            for line in fh:
+                r = json.loads(line)
+                mesh = {x.lower() for x in (r.get("mesh") or [])}
+                for k in mesh & watch:
+                    seen[k] += 1
+    for k, lo in seen.items():
+        assert tot.get(k, 0) >= lo, (
+            f"the artifact reports {tot.get(k, 0):,} census records for `{k}` "
+            f"and a 1-in-12 stride already finds {lo:,}; the denominator is "
+            "not counting what it claims")
+        # and not absurdly larger than a 12x extrapolation
+        assert tot.get(k, 0) <= max(lo * 40, 500), (
+            f"the artifact reports {tot.get(k, 0):,} census records for `{k}` "
+            f"against a strided estimate near {12*lo:,}; the denominator has "
+            "been inflated")
+
+
+def test_the_measurable_and_not_measurable_verdicts_are_mutually_exclusive():
+    """Loosening `>` to `>=` published both at once, in adjacent paragraphs."""
+    md = MD.read_text()
+    if "measurable after all" not in md:
+        return
+    # Bound each region at the paragraph break. A fixed character window
+    # spilled from the refuting paragraph into the ties paragraph and flagged
+    # a descriptor that appears in only one of them -- the guard was reading
+    # its own overrun.
+    after = md.split("measurable after all", 1)[1]
+    refute = after.split("\n\n", 1)[0]
+    named_refuting = [x for x in _mod().CANDIDATE_DESCRIPTORS.values()
+                      if x in refute]
+    assert named_refuting, (
+        "the refuting paragraph names no candidate descriptor, so the claim "
+        "cannot be checked against one")
+    # The ties paragraph must EXIST when there are ties: deleting it removed
+    # the statement that the not-measurable framing still stands for the
+    # candidate that does not refute, with the suite green -- the same hole as
+    # the scope-boundary paragraph one section over.
+    m2, d2 = _mod(), _doc()
+    cand2 = d2.get("candidate_intersections") or {}
+    rows2 = d2["intersections"]
+    cnames = {x.lower() for x in m2.CANDIDATE_DESCRIPTORS.values()}
+    worst2 = min([v for k, v in rows2 if k not in cnames], default=0)
+    ties = [x for x in m2.CANDIDATE_DESCRIPTORS.values()
+            if 0 < cand2.get(x.lower(), 0) <= worst2]
+    if ties:
+        assert "the not-measurable framing stands" in md, (
+            f"{ties} do not exceed the benchmark, and the report no longer "
+            "says the not-measurable framing stands for them")
+        for x in ties:
+            assert x in md
+    if "the not-measurable framing stands" in md:
+        para = md.split("the not-measurable framing stands", 1)[0]
+        stands = para.rsplit("\n\n", 1)[-1]
+        for desc in named_refuting:
+            assert desc not in stands, (
+                f"`{desc}` is reported BOTH as measurable after all and as one "
+                "the not-measurable framing stands for, in adjacent "
+                "paragraphs")
+
+
+def test_the_candidate_benchmark_excludes_the_candidates_themselves():
+    """Some candidates ARE in the ranked universe, so min(rows) includes them."""
+    m, d = _mod(), _doc()
+    cand = {x.lower() for x in m.CANDIDATE_DESCRIPTORS.values()}
+    rows = d["intersections"]
+    inside = [k for k, _v in rows if k in cand]
+    if not inside:
+        return
+    others = [v for k, v in rows if k not in cand]
+    worst = min(others, default=0)
+    md = MD.read_text()
+    assert f"smallest RANKED entry of {worst:,}" in md, (
+        f"{inside} are themselves in the ranking, so the benchmark must "
+        f"exclude them; it should be {worst:,}")

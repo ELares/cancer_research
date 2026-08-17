@@ -124,17 +124,35 @@ def scan(universe: set) -> dict:
     reported = universe | legs | cands   # every descriptor this report prints
     ferro_total = 0
     census = 0
+    # YEAR-RESOLVED, because MeSH `Ferroptosis` was only introduced in 2020:
+    # 98.7% of ferroptosis records postdate it against 20.6% of the census, so
+    # an all-time base rate is diluted by 45 years that COULD NOT have carried
+    # the descriptor. A reviewer measured ~31% of the headline enrichment as
+    # era rather than attention. This repo's own atlas_recent_window.py says
+    # comparing a recent window against a fifty-year census measures the ERA;
+    # that lesson was not applied here.
+    ferro_year = Counter()
+    census_year = Counter()
+    desc_year = {}
     for f in sorted((ATLAS / "records").glob("*.jsonl.gz")):
         with gzip.open(f, "rt", encoding="utf-8") as fh:
             for line in fh:
                 r = json.loads(line)
                 census += 1
                 mesh = {m.lower() for m in (r.get("mesh") or [])}
+                yr = r.get("year")
+                yr = yr if isinstance(yr, int) else None
+                if yr:
+                    census_year[yr] += 1
                 for m in mesh & reported:
                     census_desc[m] += 1
+                    if yr:
+                        desc_year.setdefault(m, Counter())[yr] += 1
                 if FERROPTOSIS not in mesh:
                     continue
                 ferro_total += 1
+                if yr:
+                    ferro_year[yr] += 1
                 for m in mesh & universe:
                     inter[m] += 1
                 for m in mesh & legs:
@@ -146,7 +164,90 @@ def scan(universe: set) -> dict:
             "intersections": [[k, v] for k, v in inter.most_common()],
             "leg_intersections": dict(leg_inter),
             "candidate_intersections": dict(cand_inter),
-            "census_descriptor_totals": dict(census_desc)}
+            "census_descriptor_totals": dict(census_desc),
+            "census_by_year": dict(census_year),
+            "ferroptosis_by_year": dict(ferro_year),
+            "descriptor_by_year": {k: dict(v) for k, v in desc_year.items()}}
+
+
+def _spearman(xs, ys):
+    """Rank correlation, stdlib only. Ties get average ranks."""
+    n = len(xs)
+    if n < 3:
+        return None
+
+    def ranks(v):
+        order = sorted(range(n), key=lambda i: v[i])
+        r = [0.0] * n
+        i = 0
+        while i < n:
+            j = i
+            while j + 1 < n and v[order[j + 1]] == v[order[i]]:
+                j += 1
+            avg = (i + j) / 2 + 1
+            for k in range(i, j + 1):
+                r[order[k]] = avg
+            i = j + 1
+        return r
+
+    rx, ry = ranks(xs), ranks(ys)
+    mx, my = sum(rx) / n, sum(ry) / n
+    num = sum((a - mx) * (b - my) for a, b in zip(rx, ry))
+    dx = sum((a - mx) ** 2 for a in rx) ** 0.5
+    dy = sum((b - my) ** 2 for b in ry) ** 0.5
+    return num / (dx * dy) if dx and dy else None
+
+
+def era_cut(d: dict, cover: float = 0.99) -> int | None:
+    """The earliest year covering `cover` of the subject's literature.
+
+    DERIVED, not typed. MeSH `Ferroptosis` was introduced in 2020, so an
+    all-time base rate is diluted by decades that could not carry the
+    descriptor -- but hardcoding 2020 would rot the moment the subject
+    changes, and would be a hand-written figure beside a derived one.
+    """
+    fy = {int(k): v for k, v in (d.get("ferroptosis_by_year") or {}).items()}
+    tot = sum(fy.values())
+    if not tot:
+        return None
+    run = 0
+    for y in sorted(fy, reverse=True):
+        run += fy[y]
+        if run >= cover * tot:
+            return y
+    return min(fy) if fy else None
+
+
+def enrichment(d: dict, desc: str, since: int | None = None):
+    """Share of `desc`'s own literature that is the subject, over the base rate.
+
+    `since` restricts BOTH arms to the same era, which is the only way the
+    comparison is symmetric.
+    """
+    if since is None:
+        n_c = (d.get("census_descriptor_totals") or {}).get(desc)
+        n_f = (dict(d["intersections"]).get(desc)
+               or (d.get("leg_intersections") or {}).get(desc)
+               or (d.get("candidate_intersections") or {}).get(desc))
+        base = d["ferroptosis_total"] / d["census"] if d["census"] else None
+        if not (n_c and n_f and base):
+            return None
+        return (n_f / n_c) / base
+    dy = (d.get("descriptor_by_year") or {}).get(desc) or {}
+    cy = {int(k): v for k, v in (d.get("census_by_year") or {}).items()}
+    fy = {int(k): v for k, v in (d.get("ferroptosis_by_year") or {}).items()}
+    n_c = sum(v for k, v in dy.items() if int(k) >= since)
+    cen = sum(v for k, v in cy.items() if k >= since)
+    fer = sum(v for k, v in fy.items() if k >= since)
+    # the descriptor's SUBJECT count in-era is not stored per year, so fall
+    # back to the all-time intersection: ferroptosis is ~entirely in-era by
+    # construction of the cut, which is why the cut is chosen at 99% coverage
+    n_f = (dict(d["intersections"]).get(desc)
+           or (d.get("leg_intersections") or {}).get(desc)
+           or (d.get("candidate_intersections") or {}).get(desc))
+    if not (n_c and n_f and cen and fer):
+        return None
+    return (n_f / n_c) / (fer / cen)
 
 
 def render(d: dict) -> str:
@@ -173,6 +274,9 @@ def render(d: dict) -> str:
     L += ["| leg | descriptor | count | rank of "
           f"{len(rows)} |", "|---|---|--:|--:|"]
     legs = d.get("leg_intersections") or {}
+    # every descriptor the scan actually looked for, so a genuine
+    # zero is distinguishable from one never counted
+    scanned = {x.lower() for x in THESIS_LEGS.values()}
     for leg, desc in THESIS_LEGS.items():
         # The count comes from the LEG scan, not from the universe. An earlier
         # version used `counts.get(desc, 0)`, so a descriptor merely absent
@@ -182,6 +286,11 @@ def render(d: dict) -> str:
         # sibling atlas-thesis-position artifact publishes from the same build.
         c = legs.get(desc, counts.get(desc))
         r = rank.get(desc)
+        # A real 0 must print as 0. Both Counters omit zero keys, so an
+        # earlier fix turned "absence printed as 0" into "a measured 0
+        # printed as not-measured" -- the same conflation, mirrored.
+        if c is None:
+            c = 0 if desc in scanned else None
         cell = f"{c:,}" if c is not None else "not measured"
         rank_cell = (str(r) if r else
                      "*not a modality; outside this universe*")
@@ -199,7 +308,14 @@ def render(d: dict) -> str:
               "boundary.", ""]
 
     top = rows[0] if rows else ("none", 0)
-    sdt = counts.get(THESIS_LEGS["sonodynamic therapy"], 0)
+    # SAME FIX AS THE LEG TABLE. This number carries the headline ratio
+    # and the whole normalisation section, and it was still reading from
+    # the universe dict twenty lines below the comment explaining why
+    # that is wrong: if it ever fell out of the universe, `if sdt:`
+    # would silently delete the entire finding.
+    _legs0 = d.get("leg_intersections") or {}
+    sdt = _legs0.get(THESIS_LEGS["sonodynamic therapy"],
+                     counts.get(THESIS_LEGS["sonodynamic therapy"], 0))
     if sdt:
         L += [f"The largest ferroptosis-modality intersection is **{top[0]}** at "
               f"{top[1]:,} articles, which is **{top[1]/sdt:.1f}x** the "
@@ -236,10 +352,80 @@ def render(d: dict) -> str:
                   f"({ferro:,} of {cen:,}). A value above 1 means ferroptosis "
                   f"literature is ENRICHED in that descriptor relative to the "
                   f"literature as a whole.", ""]
-            a, b = enrich[top[0]], enrich[THESIS_LEGS["sonodynamic therapy"]]
+
+            # ERA CONTROL. Without it the base rate is diluted by decades that
+            # could not carry the subject descriptor at all.
+            cut = era_cut(d)
+            if cut:
+                fy = {int(k): v for k, v in (d.get("ferroptosis_by_year") or {}).items()}
+                cy = {int(k): v for k, v in (d.get("census_by_year") or {}).items()}
+                f_in = sum(v for k, v in fy.items() if k >= cut)
+                c_in = sum(v for k, v in cy.items() if k >= cut)
+                f_sh = f_in / max(sum(fy.values()), 1)
+                c_sh = c_in / max(sum(cy.values()), 1)
+                L += [f"### The same figures, with both arms restricted to "
+                      f"{cut}+", ""]
+                L += [f"MeSH `Ferroptosis` is a recent descriptor: "
+                      f"**{100*f_sh:.1f}%** of the subject's literature is "
+                      f"{cut} or later against **{100*c_sh:.1f}%** of the "
+                      f"census, so an all-time base rate is diluted by years "
+                      f"that could not carry it. Restricting both arms:", ""]
+                L += ["| descriptor | all-time | " + f"{cut}+ |",
+                      "|---|--:|--:|"]
+                moved = []
+                for name in (top[0], THESIS_LEGS["sonodynamic therapy"]):
+                    a_all = enrichment(d, name)
+                    a_era = enrichment(d, name, since=cut)
+                    if a_all and a_era:
+                        L.append(f"| {name} | {a_all:.2f}x | **{a_era:.2f}x** |")
+                        moved.append((name, a_all, a_era))
+                L += [""]
+                big = [m for m in moved if abs(m[2] - m[1]) / m[1] > 0.15]
+                if big:
+                    worst_m = max(big, key=lambda m: abs(m[2] - m[1]) / m[1])
+                    L += [f"**A material part of the enrichment is era, not "
+                          f"attention.** `{worst_m[0]}` moves "
+                          f"{worst_m[1]:.2f}x to {worst_m[2]:.2f}x, i.e. "
+                          f"{100*abs(worst_m[2]-worst_m[1])/worst_m[1]:.0f}% of "
+                          f"the all-time figure. The DIRECTION survives the "
+                          f"restriction; the magnitude does not, and the "
+                          f"era-restricted column is the one to quote.", ""]
+
+            # BREADTH DEPENDENCE OF THE REPLACEMENT MEASURE, disclosed rather
+            # than assumed away. Enrichment is anti-correlated with descriptor
+            # size, so a specific descriptor is favoured by construction --
+            # the opposite sign to the raw ratio's bias, not its absence.
+            tot_all = d.get("census_descriptor_totals") or {}
+            pairs = [(tot_all[k], (v / tot_all[k]) / base)
+                     for k, v in rows if tot_all.get(k)]
+            if len(pairs) >= 30:
+                rho = _spearman([p[0] for p in pairs], [p[1] for p in pairs])
+                if rho is not None:
+                    L += [f"**The replacement measure has its own breadth "
+                          f"dependence, of the opposite sign.** Across the "
+                          f"{len(pairs)} ranked descriptors, enrichment "
+                          f"correlates with descriptor size at Spearman "
+                          f"rho = {rho:+.2f}: rarer descriptors score higher "
+                          f"almost mechanically, because a small literature "
+                          f"concentrated on one subject is a large share of "
+                          f"itself. The raw ratio favours broad descriptors "
+                          f"and this favours narrow ones, so neither is a "
+                          f"clean measure of attention and the pair should be "
+                          f"read together.", ""]
+            cut2 = era_cut(d)
+            a_e = enrichment(d, top[0], since=cut2) if cut2 else None
+            b_e = enrichment(d, THESIS_LEGS["sonodynamic therapy"],
+                             since=cut2) if cut2 else None
+            # Quote the era-restricted pair, having just told the reader that
+            # is the column to quote. An earlier draft stated the conclusion
+            # from the all-time figures three lines below saying not to.
+            a = a_e if a_e else enrich[top[0]]
+            b = b_e if b_e else enrich[THESIS_LEGS["sonodynamic therapy"]]
+            era_note = f" (both {cut2}+)" if (a_e and b_e) else ""
             if b > a:
-                L += [f"**The direction reverses.** `{top[0]}` is the larger "
-                      f"COUNT and is *{a:.2f}x* its own base rate, while the "
+                L += [f"**The direction reverses{era_note}.** `{top[0]}` is "
+                      f"the larger COUNT and is *{a:.2f}x* its own base rate, "
+                      f"while the "
                       f"sonodynamic descriptor is *{b:.2f}x* its own -- so the "
                       f"ferroptosis literature is relatively "
                       f"{'enriched' if b > 1 else 'less depleted'} in "
@@ -249,7 +435,7 @@ def render(d: dict) -> str:
                       f"the descriptors are at least as much as where "
                       f"attention goes, and it should not be read alone.", ""]
             else:
-                L += [f"The direction holds under normalisation: "
+                L += [f"The direction holds under normalisation{era_note}: "
                       f"`{top[0]}` is {a:.2f}x its base rate against the "
                       f"sonodynamic descriptor's {b:.2f}x.", ""]
 
@@ -270,13 +456,34 @@ def render(d: dict) -> str:
         for modality, desc, n_f, n_c in checked:
             L.append(f"| {modality} | `{desc}` | {n_c:,} | {n_f:,} |")
         L += [""]
-        worst = min((v for _k, v in rows), default=0)
+        # EXCLUDE THE CANDIDATES THEMSELVES from the benchmark. Some
+        # candidate descriptors ARE in the modality universe and therefore in
+        # `rows` -- `electric stimulation therapy` is ranked here -- so
+        # comparing a candidate against min(rows) compares it to a minimum it
+        # is one of. Undisclosed, that reads as an independent benchmark.
+        cand_names = {x.lower() for x in CANDIDATE_DESCRIPTORS.values()}
+        others = [v for k, v in rows if k not in cand_names]
+        worst = min(others, default=0)
         # Only the candidates that STRICTLY exceed the smallest ranked entry
         # refute the claim. One that merely ties it is as thin as the thinnest
         # thing already shown, and saying otherwise would overstate the
         # correction in the same direction as the error.
         refuting = [c for c in checked if c[2] > worst]
         ties = [c for c in checked if 0 < c[2] <= worst]
+        # THE BREADTH RULE MUST APPLY TO BOTH ARMS. The bullet above
+        # disqualifies TTFields BECAUSE `Electric Stimulation Therapy` is
+        # broader; accepting `Plasma Gases` with no breadth caveat applies the
+        # rule where it refuses and not where it admits. `Plasma Gases` is
+        # D058626 under Inorganic Chemicals -> Gases, a SUBSTANCE rather than a
+        # therapy descriptor, whose scope note covers surface modification,
+        # biological decontamination, dentistry and argon plasma coagulation;
+        # a reviewer measured ~23% of its census records as non-CAP.
+        if checked:
+            L += ["Both candidates are BROADER than the modality they stand "
+                  "for, and that cuts the same way on each: a count against "
+                  "either is an upper bound on the modality. It is stated here "
+                  "for both because an earlier version of this section applied "
+                  "the breadth rule only to the candidate it REFUSED.", ""]
         if refuting:
             L += ["**" + ("One of these is" if len(refuting) == 1
                           else f"{len(refuting)} of these are") +
