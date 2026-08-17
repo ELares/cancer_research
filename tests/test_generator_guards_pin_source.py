@@ -61,6 +61,7 @@ IN_SCOPE = {
     "test_engine_time_audit.py",
     "test_recent_window.py",
     "test_baseline_updates.py",
+    "test_thesis_rank.py",
 }
 
 
