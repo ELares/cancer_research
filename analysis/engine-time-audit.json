@@ -5,7 +5,6 @@
   "params.rs"
  ],
  "distinct_minutes_per_step": [
-  0.02,
   1.0
  ],
  "modules": {
@@ -146,7 +145,9 @@
   }
  },
  "modules_total": 33,
+ "n_solver_timesteps": 3,
  "n_step_bindings": 6,
+ "n_wall_clock_conventions": 1,
  "orphan_timescale_fields": {
   "cell.rs": {
    "fsp1_half_recovery_days": [
@@ -177,11 +178,69 @@
   }
  },
  "p3": {
+  "order_first": [
+   "fsp1",
+   "gsh"
+  ],
+  "order_later": [
+   "gpx4",
+   "nrf2"
+  ],
   "threshold_hours": 24.0,
   "window_hours": [
    72.0,
    168.0
   ]
+ },
+ "p3_modelled": {
+  "consumers": [
+   "sim-combo",
+   "sim-window"
+  ],
+  "recovery_days": {
+   "fsp1": 7.0,
+   "gpx4": 3.0,
+   "gsh": 1.0,
+   "nrf2": 5.0
+  },
+  "sweep": {
+   "binary": "sim-window",
+   "max_hours": 672.0,
+   "n_timepoints": 9
+  }
+ },
+ "p3_order": {
+  "agrees": false,
+  "engine_order": [
+   [
+    "gsh",
+    1.0
+   ],
+   [
+    "gpx4",
+    3.0
+   ],
+   [
+    "nrf2",
+    5.0
+   ],
+   [
+    "fsp1",
+    7.0
+   ]
+  ],
+  "fastest_later": "gpx4",
+  "fastest_later_days": 3.0,
+  "stated_first": {
+   "fsp1": 7.0,
+   "gsh": 1.0
+  },
+  "stated_later": {
+   "gpx4": 3.0,
+   "nrf2": 5.0
+  },
+  "violator": "fsp1",
+  "violator_days": 7.0
  },
  "per_step_only": [
   "clonal.rs",
@@ -194,10 +253,6 @@
   "repair.rs",
   "stromal.rs"
  ],
- "production": {
-  "binary": "sim-tumor-pk",
-  "steps": 180
- },
  "production_minutes_per_step": [
   1.0
  ],
@@ -247,6 +302,7 @@
   {
    "callers": [],
    "how": "named-field",
+   "kind": "solver-timestep",
    "line": 74,
    "minutes_per_step": 0.02,
    "module": "trigger_wave.rs",
@@ -256,6 +312,7 @@
   {
    "callers": [],
    "how": "named-field",
+   "kind": "solver-timestep",
    "line": 99,
    "minutes_per_step": 0.02,
    "module": "trigger_wave.rs",
@@ -265,6 +322,7 @@
   {
    "callers": [],
    "how": "named-field",
+   "kind": "solver-timestep",
    "line": 157,
    "minutes_per_step": 0.02,
    "module": "trigger_wave.rs",
@@ -277,6 +335,7 @@
     "sim-tumor-pk"
    ],
    "how": "unit-first",
+   "kind": "wall-clock",
    "line": 354,
    "minutes_per_step": 1.0,
    "module": "tumor_pk.rs",
@@ -289,6 +348,7 @@
     "sim-tumor-pk"
    ],
    "how": "unit-first",
+   "kind": "wall-clock",
    "line": 364,
    "minutes_per_step": 1.0,
    "module": "tumor_pk.rs",
@@ -301,11 +361,44 @@
     "sim-tumor-pk"
    ],
    "how": "loop-variable",
+   "kind": "wall-clock",
    "line": 391,
    "minutes_per_step": 1.0,
    "module": "tumor_pk.rs",
    "text": "for minute in 0..n_steps {",
    "unit": "minute"
+  }
+ ],
+ "step_counts": [
+  {
+   "binary": "sim-combo-mech",
+   "consumes_binding_module": [],
+   "steps": 180
+  },
+  {
+   "binary": "sim-tme",
+   "consumes_binding_module": [],
+   "steps": 180
+  },
+  {
+   "binary": "sim-tme-3d",
+   "consumes_binding_module": [
+    "tumor_pk"
+   ],
+   "steps": 180
+  },
+  {
+   "binary": "sim-tumor-pk",
+   "consumes_binding_module": [
+    "tumor_pk"
+   ],
+   "steps": 180
+  }
+ ],
+ "wall_clock_conventions": [
+  {
+   "minutes_per_step": 1.0,
+   "module": "tumor_pk.rs"
   }
  ]
 }

@@ -177,8 +177,18 @@ def find_step_bindings():
                 # from the start displays everything except the evidence.
                 lo = max(0, m.start() - 12)
                 hi = min(len(line), m.end() + 12)
+                # A named `dt_*` field is an INTEGRATOR'S OWN timestep, chosen
+                # for numerical stability -- trigger_wave asserts a CFL bound
+                # `dt < h^2/(2D)` right beside it. That is not a claim about
+                # what a simulation step is worth in wall-clock time. An
+                # earlier draft pooled the two and reported a "50x
+                # disagreement, unreconciled" between a PDE stability step and
+                # a step-to-minute alignment: unlike objects, and two solvers
+                # having different dt is not a contradiction.
+                kind = ("solver-timestep" if how == "named-field"
+                        else "wall-clock")
                 sites.append({
-                    "module": p.name, "line": ln, "how": how,
+                    "module": p.name, "line": ln, "how": how, "kind": kind,
                     "unit": u, "minutes_per_step": mpstep,
                     "text": ("..." if lo else "") + line[lo:hi].strip() +
                             ("..." if hi < len(line) else ""),
@@ -225,17 +235,39 @@ def _orphan_timescales():
     return out
 
 
-def _production_steps():
-    """The step count a production binary actually runs, read from source."""
+def _step_counts(binding_modules):
+    """Every binary's declared step count, and whether it consumes a binding.
+
+    The previous version matched `const N_STEPS: usize` and returned the FIRST
+    hit. Only sim-tumor-pk annotates `usize`; sim-tme-3d, sim-tme and
+    sim-combo-mech all use `u32`, so the "production binary" was being selected
+    by a type annotation and sim-tme-3d's count was never read at all. Two
+    planted mutations confirmed it: changing sim-tme-3d's count left the report
+    unchanged, and retyping sim-combo-mech's made it the "production" binary
+    for a binary that never touches the module in question.
+
+    So: read every binary regardless of integer type, and record separately
+    whether it references a module that declares a wall-clock binding. Only
+    those can price a step in real time.
+    """
+    stems = {Path(m).stem for m in binding_modules}
+    out = []
     for p in sorted(SIMS.glob("sim-*/src/main.rs")):
-        m = re.search(r"const\s+N_STEPS\s*:\s*usize\s*=\s*(\d+)", p.read_text(errors="ignore"))
-        if m:
-            return {"binary": p.parts[-3], "steps": int(m.group(1))}
-    return None
+        t = p.read_text(errors="ignore")
+        m = re.search(r"const\s+N_STEPS\s*:\s*\w+\s*=\s*(\d+)", t)
+        if not m:
+            continue
+        binary = p.parts[-3]
+        srcs = "".join(q.read_text(errors="ignore")
+                       for q in (p.parent).glob("*.rs"))
+        uses = sorted(s for s in stems if re.search(rf"\b{re.escape(s)}\b", srcs))
+        out.append({"binary": binary, "steps": int(m.group(1)),
+                    "consumes_binding_module": uses})
+    return out
 
 
 def _p3_threshold():
-    """P3's falsification threshold, parsed from the preregistration."""
+    """P3's stated threshold, window and RECOVERY ORDER, from the preregistration."""
     if not PREREG.exists():
         return None
     txt = PREREG.read_text(errors="ignore")
@@ -251,7 +283,88 @@ def _p3_threshold():
     if win:
         f = UNIT_MIN[win.group(3).lower()] / 60
         out["window_hours"] = [float(win.group(1)) * f, float(win.group(2)) * f]
+    # "(FSP1 and GSH first, GPX4 and NRF2 later)"
+    order = re.search(r"\(([^)]*?)\s+first,\s*([^)]*?)\s+later\)", b, re.I)
+    if order:
+        def names(s):
+            return sorted({w.lower() for w in re.findall(r"[A-Za-z][A-Za-z0-9]+", s)
+                           if w.lower() not in ("and", "or")})
+        out["order_first"] = names(order.group(1))
+        out["order_later"] = names(order.group(2))
     return out or None
+
+
+def _p3_is_modelled():
+    """Is P3's quantity represented anywhere, and does the engine AGREE with it?
+
+    The previous version of this report concluded the model "cannot represent
+    either outcome of its own most directly testable prediction". That is FALSE
+    and this function is why it is now measured instead of argued: `cell.rs`
+    carries per-defense recovery half-times in DAYS, `sim-window` sweeps them
+    from 0 to 28 days at P3's own timepoints, and the result is a published
+    manuscript figure. The refutation was already inside this script's own
+    artifact -- `orphan_timescale_fields["cell.rs"]` lists all four fields with
+    caller `sim-window` -- and the renderer printed only the fields with EMPTY
+    caller lists, so it computed the counter-example and dropped it.
+    """
+    cell = SRC / "cell.rs"
+    if not cell.exists():
+        return None
+    rates = {}
+    for m in re.finditer(r"\b(\w+)_half_recovery_days\s*:\s*(\d+(?:\.\d+)?)",
+                         cell.read_text(errors="ignore")):
+        rates[m.group(1).lower()] = float(m.group(2))
+    if not rates:
+        return None
+    consumers = sorted({p.parts[-3] for p in SIMS.glob("sim-*/src/*.rs")
+                        if re.search(r"half_recovery_days|RecoveryRates",
+                                     p.read_text(errors="ignore"))})
+    span = None
+    for p in SIMS.glob("sim-*/src/main.rs"):
+        t = p.read_text(errors="ignore")
+        if "timepoints_hours" not in t:
+            continue
+        blk = re.search(r"timepoints_hours[^;]*?vec!\[(.*?)\]", t, re.S)
+        if blk:
+            # Strip trailing line comments FIRST. `168.0, // 1 week` carries a
+            # bare `1` that a naive number scan counts as a tenth timepoint --
+            # nine values were reported as twelve.
+            body = re.sub(r"//[^\n]*", "", blk.group(1))
+            vals = [float(x) for x in re.findall(r"(\d+(?:\.\d+)?)", body)]
+            if vals:
+                span = {"binary": p.parts[-3], "max_hours": max(vals),
+                        "n_timepoints": len(vals)}
+    return {"recovery_days": rates, "consumers": consumers, "sweep": span}
+
+
+def _p3_order_verdict(p3, modelled):
+    """Does the engine's default recovery ORDER match the one P3 states?
+
+    Derived, not asserted: P3's grouping is parsed from the preregistration and
+    compared against cell.rs's defaults. This is a far sharper finding than the
+    units complaint the previous version shipped, and it is only visible
+    BECAUSE the model represents the quantity.
+    """
+    if not p3 or not modelled:
+        return None
+    first, later = p3.get("order_first"), p3.get("order_later")
+    rates = modelled["recovery_days"]
+    if not first or not later:
+        return None
+    f = {k: rates[k] for k in first if k in rates}
+    l = {k: rates[k] for k in later if k in rates}
+    if not f or not l:
+        return None
+    slowest_first = max(f, key=f.get)
+    fastest_later = min(l, key=l.get)
+    agrees = f[slowest_first] < l[fastest_later]
+    return {
+        "stated_first": f, "stated_later": l, "agrees": agrees,
+        "violator": None if agrees else slowest_first,
+        "violator_days": None if agrees else f[slowest_first],
+        "fastest_later": fastest_later, "fastest_later_days": l[fastest_later],
+        "engine_order": sorted(rates.items(), key=lambda kv: kv[1]),
+    }
 
 
 def scan() -> dict:
@@ -277,9 +390,16 @@ def scan() -> dict:
     for b in bindings:
         b["callers"] = _callers(Path(b["module"]).stem)
 
-    distinct = sorted({round(b["minutes_per_step"], 6) for b in bindings
-                       if b["minutes_per_step"] is not None})
-    in_prod = [b for b in bindings if b["callers"]]
+    # Count CONVENTIONS, not regex hits. `\bdt_min\b` matches the field
+    # declaration, its literal in baseline(), and `let dt = cfg.dt_min` -- one
+    # binding, three matches. An earlier draft reported "6 declarations" for
+    # what is 2 conventions in 2 modules.
+    wall = [b for b in bindings if b["kind"] == "wall-clock"]
+    solver = [b for b in bindings if b["kind"] == "solver-timestep"]
+    conventions = sorted({(b["module"], round(b["minutes_per_step"], 6))
+                          for b in wall if b["minutes_per_step"] is not None})
+    distinct = sorted({v for _, v in conventions})
+    in_prod = [b for b in wall if b["callers"]]
     prod_mps = sorted({round(b["minutes_per_step"], 6) for b in in_prod
                        if b["minutes_per_step"] is not None})
 
@@ -292,6 +412,8 @@ def scan() -> dict:
 
     # which real-time modules are actually reachable from a binary
     reach = {m: _callers(Path(m).stem) for m in sorted(set(real_only) | set(both))}
+    p3 = _p3_threshold()
+    modelled = _p3_is_modelled()
 
     return {
         "modules_total": len(list(SRC.glob("*.rs"))),
@@ -302,21 +424,44 @@ def scan() -> dict:
         "real_time_module_callers": reach,
         "step_bindings": bindings,
         "n_step_bindings": len(bindings),
+        "wall_clock_conventions": [{"module": m, "minutes_per_step": v}
+                                   for m, v in conventions],
+        "n_wall_clock_conventions": len(conventions),
+        "n_solver_timesteps": len(solver),
         "distinct_minutes_per_step": distinct,
         "bindings_reaching_production": len(in_prod),
         "production_minutes_per_step": prod_mps,
-        "production": _production_steps(),
+        "step_counts": _step_counts({b["module"] for b in wall}),
         "orphan_timescale_fields": _orphan_timescales(),
-        "p3": _p3_threshold(),
+        "p3": p3,
+        "p3_modelled": modelled,
+        "p3_order": _p3_order_verdict(p3, modelled),
     }
 
 
-def _span_hours(d):
-    """Hours the production loop spans, if a production binding exists."""
-    prod, mps = d.get("production"), d.get("production_minutes_per_step")
-    if not prod or not mps:
-        return None
-    return prod["steps"] * min(mps) / 60
+def _core_prices(d):
+    """Does the CORE biochemical loop itself price a step? Measured."""
+    return any(c["module"] == "biochem.rs"
+               for c in d.get("wall_clock_conventions", []))
+
+
+def _priced_runs(d):
+    """Binaries whose step count can actually be priced in wall-clock time.
+
+    Only a binary that CONSUMES a module declaring a wall-clock binding can be
+    priced. The previous version picked the first `usize`-typed N_STEPS it
+    found and called it "the production matrix", which survived two mutations.
+    """
+    out = []
+    for sc in d.get("step_counts", []):
+        if not sc["consumes_binding_module"]:
+            continue
+        for c in d.get("wall_clock_conventions", []):
+            if Path(c["module"]).stem in sc["consumes_binding_module"]:
+                out.append({**sc, "minutes_per_step": c["minutes_per_step"],
+                            "hours": sc["steps"] * c["minutes_per_step"] / 60})
+                break
+    return out
 
 
 def render(d: dict) -> str:
@@ -334,65 +479,146 @@ def render(d: dict) -> str:
               f"modules for a declaration binding a step to a duration: none "
               f"found.", ""]
     else:
-        mods = sorted({x["module"] for x in b})
-        L += [f"**{len(b)} declarations bind a step to a real duration**, in "
-              f"{', '.join(f'`{m}`' for m in mods)}, out of {n} library "
-              f"modules. The core biochemical loop states none; these do.", ""]
+        conv = d.get("wall_clock_conventions", [])
+        nsolv = d.get("n_solver_timesteps", 0)
+        mods = sorted({c["module"] for c in conv})
+        L += [f"**{len(conv)} module{'' if len(conv) == 1 else 's'} "
+              f"{'prices' if len(conv) == 1 else 'price'} a "
+              f"simulation step in wall-clock time** "
+              f"({', '.join(f'`{m}`' for m in mods) or 'none'}), out of {n} "
+              f"library modules, plus {nsolv} numerical-integrator timesteps "
+              f"that do not.", ""]
+        L += ["Those are counted as CONVENTIONS, not matches. A `dt_min` field "
+              "is matched three times -- its declaration, its default literal, "
+              "and its use -- and an earlier draft reported that arithmetic as "
+              "\"6 declarations\".", ""]
         if len(d["distinct_minutes_per_step"]) > 1:
             vals = ", ".join(f"{v:g} min" for v in d["distinct_minutes_per_step"])
             hi, lo = max(d["distinct_minutes_per_step"]), min(d["distinct_minutes_per_step"])
-            L += [f"**They disagree.** The distinct step durations declared are "
-                  f"{vals} -- a factor of {hi/lo:.0f} apart, unreconciled.", ""]
+            L += [f"The distinct wall-clock step durations are {vals}, a factor "
+                  f"of {hi/lo:.0f} apart.", ""]
 
     if b:
-        L += ["| module | line | how it is written | one step = | reached by |",
-              "|---|--:|---|--:|---|"]
+        L += ["| module | line | kind | how it is written | one step = | reached by |",
+              "|---|--:|---|---|--:|---|"]
         for x in b:
             mps = f"{x['minutes_per_step']:g} min" if x["minutes_per_step"] is not None else "unstated"
             who = ", ".join(f"`{c}`" for c in x["callers"]) or "*no caller*"
-            L.append(f"| `{x['module']}` | {x['line']} | `{x['text'][:64]}` | "
-                     f"{mps} | {who} |")
+            L.append(f"| `{x['module']}` | {x['line']} | {x['kind']} | "
+                     f"`{x['text'][:56]}` | {mps} | {who} |")
         L += [""]
+        L += ["`solver-timestep` rows are an integrator's own `dt`, constrained "
+              "by numerical stability -- `trigger_wave` asserts a CFL bound "
+              "beside its. Two solvers having different `dt` is not a "
+              "disagreement about what a step is worth, and an earlier draft "
+              "pooled them to report one.", ""]
 
-    span = _span_hours(d)
-    prod = d.get("production")
-    if span is not None and prod:
-        L += ["## The binding that is load-bearing", ""]
-        L += [f"`{prod['binary']}` runs **{prod['steps']} steps**, the same "
-              f"count as the production matrix, against a module documented at "
-              f"{min(d['production_minutes_per_step']):g} minute per step. So "
-              f"the whole production run spans **{span:.1f} hours** -- a fact "
-              f"stated nowhere, and the only step duration that reaches a "
-              f"binary.", ""]
-        p3 = d.get("p3") or {}
-        if "threshold_hours" in p3:
-            t = p3["threshold_hours"]
-            L += [f"`PREREGISTRATION.md` sets P3's falsification threshold at "
-                  f"**{t:g} hours**. The production loop spans {span:.1f} "
-                  f"hours, which is **{t/span:.0f}x shorter than the threshold "
-                  f"it would be scored against**.", ""]
-            if "window_hours" in p3:
-                lo, hi = p3["window_hours"]
-                L += [f"P3's predicted window is {lo/24:g} to {hi/24:g} days "
-                      f"({lo:g}-{hi:g} h), i.e. {lo/span:.0f}x to {hi/span:.0f}x "
-                      f"the entire run. The model cannot represent either "
-                      f"outcome of its own most directly testable prediction -- "
-                      f"not because the units are missing, but because the one "
-                      f"in force is inconsistent with the prediction's.", ""]
+    priced = _priced_runs(d)
+    if priced:
+        L += ["## What can actually be priced in wall-clock time", ""]
+        L += ["| binary | steps | min/step | span |", "|---|--:|--:|--:|"]
+        for r in priced:
+            L.append(f"| `{r['binary']}` | {r['steps']} | "
+                     f"{r['minutes_per_step']:g} | {r['hours']:.1f} h |")
+        L += [""]
+        others = [s for s in d.get("step_counts", [])
+                  if not s["consumes_binding_module"]]
+        if others:
+            names = ", ".join("`{}` ({})".format(s["binary"], s["steps"])
+                              for s in others)
+            L += [f"{len(others)} other binaries declare a step count "
+                  f"({names}) and consume no module that prices a step, so "
+                  f"their runs cannot be converted to wall-clock time at all.",
+                  ""]
+        L += ["These spans are properties of those binaries' assays. They are "
+              "**not** a bound on what the project can predict -- an earlier "
+              "draft of this page said they were, which was the second false "
+              "headline on it. See below.", ""]
+
+    # --- P3: represented, and the engine DISAGREES with it -------------------
+    mod = d.get("p3_modelled")
+    p3 = d.get("p3") or {}
+    if mod:
+        L += ["## P3 is represented, on a real-time axis, and this page "
+              "previously said it was not", ""]
+        sw = mod.get("sweep")
+        who = ", ".join(f"`{c}`" for c in mod["consumers"]) or "nothing"
+        L += [f"`cell.rs` carries per-defense recovery half-times **in days** "
+              f"({', '.join(f'`{k}` {v:g}d' for k, v in sorted(mod['recovery_days'].items()))}), "
+              f"consumed by {who}."]
+        if sw:
+            L += [f"`{sw['binary']}` sweeps {sw['n_timepoints']} timepoints out "
+                  f"to **{sw['max_hours']/24:g} days**, which is the axis P3 is "
+                  f"scored on."]
+        L += ["", "So a previous draft's conclusion -- that the model cannot "
+              "represent either outcome of its own most directly testable "
+              "prediction -- was **false**, and is withdrawn here. It compared "
+              "one binary's inner assay length against a prediction scored on a "
+              "different, outer axis: an asymmetric comparison, and the same "
+              "class of error as the absence this page already retracts.", ""]
+        L += ["Worse, the refutation was already inside this script's own "
+              "artifact. `orphan_timescale_fields` recorded those four fields "
+              "with their caller, and the renderer printed only the fields "
+              "whose caller list was EMPTY -- so it computed the "
+              "counter-example and dropped it before rendering.", ""]
+
+    order = d.get("p3_order")
+    if order:
+        L += ["### The finding that replaces it", ""]
+        eo = ", ".join(f"`{k}` {v:g}d" for k, v in order["engine_order"])
+        if not order["agrees"]:
+            L += [f"P3 states the defenses recover "
+                  f"**{', '.join(sorted(order['stated_first']))} first, "
+                  f"{', '.join(sorted(order['stated_later']))} later**. The "
+                  f"engine's defaults, fastest first, are {eo}.", ""]
+            L += [f"They **contradict**: `{order['violator']}` is stated to "
+                  f"recover early but is the engine's *slowest* at "
+                  f"{order['violator_days']:g} days, against "
+                  f"`{order['fastest_later']}` at "
+                  f"{order['fastest_later_days']:g} days among the defenses P3 "
+                  f"puts later. A wet-lab result matching the engine would "
+                  f"falsify P3's stated ordering, and a result matching P3 "
+                  f"would falsify the engine's defaults. That is a real, "
+                  f"scoreable disagreement -- and it is visible only BECAUSE "
+                  f"the model represents the quantity.", ""]
+        else:
+            L += [f"P3's stated ordering and the engine's defaults ({eo}) "
+                  f"agree.", ""]
 
     L += ["## Which modules carry real time, and whether anything calls them", ""]
     L += ["| module | callers |", "|---|---|"]
     for m, c in sorted(d["real_time_module_callers"].items()):
         L.append(f"| `{m}` | {', '.join(f'`{x}`' for x in c) or '**none**'} |")
     L += [""]
-    orphan_f = {m: [f for f, r in fs.items() if not r]
-                for m, fs in d.get("orphan_timescale_fields", {}).items()}
+    # BOTH sides, always. Printing only the empty caller lists is how this
+    # renderer computed `cell.rs`'s four P3 recovery fields -- reachable from
+    # sim-window -- and dropped them, leaving a false "P3 cannot be
+    # represented" claim standing over its own counter-example.
+    fields = d.get("orphan_timescale_fields", {})
+    orphan_f = {m: sorted(f for f, r in fs.items() if not r)
+                for m, fs in fields.items()}
     orphan_f = {m: fs for m, fs in orphan_f.items() if fs}
+    reach_f = {m: sorted((f, r) for f, r in fs.items() if r)
+               for m, fs in fields.items()}
+    reach_f = {m: fs for m, fs in reach_f.items() if fs}
+    if orphan_f or reach_f:
+        L += ["Module-level callers are too coarse to check what is actually "
+              "composed, so every real-time configuration field is listed with "
+              "its callers -- **both** those that have one and those that do "
+              "not. An earlier draft printed only the orphans, which is how it "
+              "dropped the four `cell.rs` recovery fields that refute its own "
+              "P3 claim.", ""]
+    if reach_f:
+        tot = sum(len(v) for v in reach_f.values())
+        L += [f"**{tot} real-time fields ARE reachable:**", ""]
+        for m, fs in sorted(reach_f.items()):
+            for f, r in fs:
+                L.append(f"* `{m}` `{f}` -> {', '.join(f'`{x}`' for x in r)}")
+        L += [""]
     if orphan_f:
         tot = sum(len(v) for v in orphan_f.values())
-        L += [f"Module-level callers are too coarse to check what is actually "
-              f"composed. **{tot} real-time configuration fields are referenced "
-              f"nowhere outside their own module**:", ""]
+        L += [f"**{tot} real-time configuration fields are referenced nowhere "
+              f"outside their own module**:", ""]
         for m, fs in sorted(orphan_f.items()):
             L.append(f"* `{m}`: {', '.join(f'`{f}`' for f in fs)}")
         L += [""]
@@ -403,12 +629,15 @@ def render(d: dict) -> str:
               "the timescale inside it is not.", ""]
 
     L += ["## What this does not do", ""]
-    L += ["* It does not choose a step duration, and does not reconcile the "
-          "declarations that disagree. That moves every calibrated layer and "
-          "the committed byte-identity gates.",
-          "* It does not claim the core loop declares one. It does not; the "
-          "modules composed alongside it do, which is a different statement "
-          "and the one that took three versions to get right.",
+    L += ["* It does not choose a step duration. Adopting one across the "
+          "engine would move every calibrated layer and the committed "
+          "byte-identity gates, and belongs to whoever owns those "
+          "calibrations.",
+          f"* The core biochemical loop (`biochem.rs`) "
+          f"{'declares no wall-clock step duration' if not _core_prices(d) else 'NOW declares one, so this sentence has changed'}; "
+          f"a module composed alongside it does, which is a different "
+          f"statement. Derived, because a fixed sentence here would survive "
+          f"biochem.rs acquiring one.",
           "* The scan is textual, so the binding set is a lower bound. That "
           "caveat was true in the previous version too, sitting under a "
           "headline asserting an absolute absence -- which is why the headline "
@@ -434,11 +663,14 @@ def main():
     OUT_MD.write_text(render(d), encoding="utf-8")
     print(f"wrote {OUT_MD}")
     print(f"wrote {OUT_JSON}")
-    print(f"  step bindings found: {d['n_step_bindings']}  "
+    print(f"  wall-clock conventions: {d['n_wall_clock_conventions']}  "
+          f"solver timesteps: {d['n_solver_timesteps']}  "
           f"distinct durations: {d['distinct_minutes_per_step']}")
-    span = _span_hours(d)
-    if span is not None:
-        print(f"  production run spans {span:.1f} h")
+    for r in _priced_runs(d):
+        print(f"    {r['binary']:16s} {r['steps']:>4} steps -> {r['hours']:.1f} h")
+    o = d.get("p3_order")
+    if o:
+        print(f"  P3 recovery order agrees with engine defaults: {o['agrees']}")
 
 
 if __name__ == "__main__":
