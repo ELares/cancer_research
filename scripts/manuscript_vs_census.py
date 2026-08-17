@@ -11,10 +11,26 @@ evidence lead" should test its own published claims first.
 
 WHAT THIS IS NOT
 ----------------
-Not a replication and not a refutation exercise. Two of the claims tested here
-SURVIVE and one of them is understated by the manuscript, which is reported as
-prominently as any failure would be. A document that only ever finds its own
-work wanting is as unreliable as one that only ever confirms it.
+Not a replication and not a refutation exercise. Both claims tested here
+SURVIVE, which is reported as prominently as any failure would be. A document
+that only ever finds its own work wanting is as unreliable as one that only
+ever confirms it.
+
+An earlier version of this file went further and said Section 8.2 was
+UNDERSTATED by the manuscript. That is WITHDRAWN. The census ratio divides two
+MeSH descriptor counts, and those descriptors recall their concepts at
+substantially different rates, so the gap was largely a measurement of indexing
+practice rather than of literature. One text rule applied to both arms
+reproduces the manuscript's ratio closely instead of exceeding it -- a better
+result for the manuscript than the withdrawn one, and a worse one for this
+document.
+
+Every figure behind that is measured in `analysis/atlas-descriptor-recall.md`
+and interpolated here at render time. None is written into this docstring,
+because a docstring cannot be kept fresh and this repo has a guard that says so.
+
+The symmetry check below is why it survived so long: it tested PRECISION, found
+it symmetric, and never tested RECALL.
 
 THE SCOPE DIFFERENCE THAT DECIDES HOW EVERY ROW READS
 ------------------------------------------------------
@@ -102,6 +118,89 @@ TUMOUR_WORDS = ("tumor", "tumour", "cancer", "carcinoma", "neoplas", "melanoma",
 # year-dependent retrieval effect is how much of each year is open access.
 GROWTH_START, GROWTH_END = 2015, 2025
 CORPUS_GROWTH_START, CORPUS_GROWTH_END = 38, 1167
+
+
+def _recall_check():
+    """The sibling recall measurement, or None.
+
+    Read from analysis/atlas-descriptor-recall.json rather than recomputed,
+    and every number this file quotes from it is interpolated at render time.
+    Typing them here is the defect tests/test_no_handwritten_figures_in_generators.py
+    exists to catch: a sentence that outlives the measurement beside it.
+
+    Fail-open: a missing artifact adds no qualification, because silently
+    withdrawing a verdict because a file is absent is worse than leaving it
+    standing where a reader can see it.
+    """
+    path = PROJECT_ROOT / "analysis" / "atlas-descriptor-recall.json"
+    if not path.exists():
+        return None
+    try:
+        d = json.loads(path.read_text())
+    except (OSError, ValueError):
+        return None
+    tr, mr = d.get("ratio_by_text"), d.get("manuscript_ratio")
+    if tr is None or not mr:
+        return None
+    arms = d.get("arms") or {}
+    return {"symmetric_ratio": tr, "manuscript_ratio": mr,
+            "symmetric_agrees": tr > mr,
+            "recall_asymmetry": d.get("recall_asymmetry"),
+            "recalls": {k: v.get("recall") for k, v in arms.items()},
+            "precisions": {k: v.get("precision") for k, v in arms.items()},
+            "descriptors": {k: (sorted(v.get("descriptors", []))[:1] or [k])[0]
+                            for k, v in arms.items()}}
+
+
+def _recall_gap_phrase():
+    """One clause naming the measured recall gap, interpolated not typed."""
+    rec = _recall_check()
+    if not rec:
+        return ("the recall of those descriptors is measured in "
+                "analysis/atlas-descriptor-recall.md")
+    recs = {k: v for k, v in rec["recalls"].items() if v is not None}
+    if len(recs) < 2:
+        return ("the recall of those descriptors is measured in "
+                "analysis/atlas-descriptor-recall.md")
+    hi, lo = max(recs.values()), min(recs.values())
+    return (f"analysis/atlas-descriptor-recall.md measures the two arms"
+            f" recalling their concepts at {100*hi:.1f}% and {100*lo:.1f}%")
+
+
+def _recall_caveat():
+    """The recall asymmetry, interpolated from the sibling artifact.
+
+    Every number here is read at render time. An earlier draft typed them into
+    the string and tripped the repo's own hand-written-figure guard, which is
+    the correct outcome: this file's whole subject is a sentence that outlived
+    the measurement beside it.
+    """
+    rec = _recall_check()
+    if not rec:
+        return ("* The relative-breadth worry above is a PRECISION check. The "
+                "RECALL of each descriptor is not measured here; see "
+                "`analysis/atlas-descriptor-recall.md`.")
+    recs = {k: v for k, v in rec["recalls"].items() if v is not None}
+    if len(recs) < 2:
+        return ("* Recall was not measurable for both arms; see "
+                "`analysis/atlas-descriptor-recall.md`.")
+    hi = max(recs, key=recs.get)
+    lo = min(recs, key=recs.get)
+    verb = ("REPRODUCES" if not rec["symmetric_agrees"] else "still exceeds")
+    return (
+        "* **Both descriptors are broader than their modality, and that is not "
+        "the axis that matters.** The relative-breadth worry above is a "
+        "PRECISION check and precision really is symmetric. The axis nobody "
+        f"measured is RECALL, and it is lopsided: "
+        f"`{rec['descriptors'].get(hi, hi)}` recalls {100*recs[hi]:.1f}% of "
+        f"{hi} papers while `{rec['descriptors'].get(lo, lo)}` recalls "
+        f"{100*recs[lo]:.1f}% of {lo} papers, a "
+        f"{recs[hi]/recs[lo]:.2f}x gap. One text rule applied to both arms "
+        f"gives {rec['symmetric_ratio']:.2f}:1 against the manuscript's "
+        f"{rec['manuscript_ratio']:.2f}:1, so the census {verb} the ratio. "
+        "See `analysis/atlas-descriptor-recall.md`. The variant sweep below "
+        "cannot see this: every variant is built from descriptors and "
+        "inherits the same gap.")
 
 
 def understates(census_ratio, manuscript_ratio, measurable) -> bool:
@@ -342,13 +441,29 @@ def _headline(r: dict) -> str:
     """
     mt, g = r["modality_table"], r["growth"]
     held, failed, undecided = [], [], []
+
+
     # UNDECIDABLE IS NOT REFUTED. Without this branch, a census that cannot
     # decide the ratio produced a headline saying section 8.2 "does not
     # survive" beside a body saying the census cannot decide it -- converting
     # unmeasurable into refuted, which is the one thing this document says
     # three times it does not do.
+    # THE UNDERSTATEMENT CLAIM IS CONFOUNDED BY DESCRIPTOR RECALL.
+    # `census_exceeds_manuscript` divides two descriptor counts, and
+    # analysis/atlas-descriptor-recall.md measures those descriptors recalling
+    # their concepts at 80.2% and 46.0% -- a 1.74x gap. One rule applied to
+    # both arms reproduces the manuscript's ratio instead of exceeding it. So
+    # "understated" is a statement about indexing practice unless the
+    # symmetric measurement agrees, and the decision is made by the data
+    # rather than by a threshold invented here.
+    rec = _recall_check()
     if not mt["ratio_is_measurable"]:
         undecided.append("section 8.2 cannot be decided at census scale")
+    elif mt["census_exceeds_manuscript"] and rec and not rec["symmetric_agrees"]:
+        held.append(
+            "section 8.2 survives; the census REPRODUCES the manuscript's "
+            "ratio under a symmetric rule, so the earlier 'understated by the "
+            "manuscript' verdict is withdrawn")
     elif mt["census_exceeds_manuscript"]:
         held.append("section 8.2 survives, understated by the manuscript")
     elif mt["direction_holds"]:
@@ -452,9 +567,12 @@ def render(r: dict) -> str:
         L.append(f"| {v['variant']} | {v['pdt']} | {v['sdt']} | {v['ratio']} |")
     L += ["",
           f"The ratio ranges {m['ratio_range'][0]} to {m['ratio_range'][1]}."
-          + (" **Every variant exceeds the manuscript's**, so neither the"
-             " direction nor the understatement rests on the descriptor pair"
-             " chosen here."
+          + (" **Every variant exceeds the manuscript's**, so the DIRECTION"
+             " does not rest on the descriptor pair chosen here. It does not"
+             " establish understatement: every variant is built from"
+             " descriptors, and " + _recall_gap_phrase() + ", so all of them"
+             " inherit the same gap. A sweep over descriptor sets cannot"
+             " detect a descriptor-versus-text recall problem."
              if m["understatement_holds_under_every_variant"] else
              " **Not every variant exceeds the manuscript's**, so the"
              " conclusion depends on which descriptors are used and the"
@@ -502,10 +620,7 @@ def render(r: dict) -> str:
            "analysis was written; the report should be extended to test it."),
           "  The manuscript's ICD figures came from a broader keyword query,",
           "  not a descriptor intersection.",
-          "* `Ultrasonic Therapy` is broader than sonodynamic therapy and",
-          "  `Photochemotherapy` is broader than tumour PDT, which the manuscript",
-          "  already states. Both legs are over-estimates and the ratio is only",
-          "  as good as their relative over-estimation.", "",
+          _recall_caveat(),  "",
           "## Section 3.7: the growth claim", "",
           "The manuscript reports the corpus growing from",
           f"{g['corpus_start']} full-text articles in {g['start_year']} to",

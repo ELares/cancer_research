@@ -7,7 +7,7 @@ or over live PubMed queries run once. The census is the whole indexed
 cancer literature with expert MeSH labels, so several claims the frozen
 corpus could not test now are testable.
 
-**Section 8.2 survives, understated by the manuscript; section 3.7 survives.** That is reported as prominently as the opposite
+**Section 8.2 survives; the census reproduces the manuscript's ratio under a symmetric rule, so the earlier 'understated by the manuscript' verdict is withdrawn; section 3.7 survives.** That is reported as prominently as the opposite
 would be: a document that only ever finds its own work wanting is as
 unreliable as one that only ever confirms it.
 
@@ -68,7 +68,7 @@ this analysis made. Every defensible variant:
 | PDT widened | 202 | 32 | 6.31 |
 | both widened | 202 | 47 | 4.3 |
 
-The ratio ranges 3.23 to 6.31. **Every variant exceeds the manuscript's**, so neither the direction nor the understatement rests on the descriptor pair chosen here.
+The ratio ranges 3.23 to 6.31. **Every variant exceeds the manuscript's**, so the DIRECTION does not rest on the descriptor pair chosen here. It does not establish understatement: every variant is built from descriptors, and analysis/atlas-descriptor-recall.md measures the two arms recalling their concepts at 80.2% and 46.0%, so all of them inherit the same gap. A sweep over descriptor sets cannot detect a descriptor-versus-text recall problem.
 
 ### Is the over-estimation symmetric?
 
@@ -98,10 +98,7 @@ The gap is 3.3 points, so the over-estimation is symmetric and the ratio survive
 * **The ICD column is not measurable.** Both sides are below the 10-article floor (3 and 1), so no ratio is computed from it.
   The manuscript's ICD figures came from a broader keyword query,
   not a descriptor intersection.
-* `Ultrasonic Therapy` is broader than sonodynamic therapy and
-  `Photochemotherapy` is broader than tumour PDT, which the manuscript
-  already states. Both legs are over-estimates and the ratio is only
-  as good as their relative over-estimation.
+* **Both descriptors are broader than their modality, and that is not the axis that matters.** The relative-breadth worry above is a PRECISION check and precision really is symmetric. The axis nobody measured is RECALL, and it is lopsided: `photochemotherapy` recalls 80.2% of PDT papers while `ultrasonic therapy` recalls 46.0% of SDT papers, a 1.74x gap. One text rule applied to both arms gives 2.89:1 against the manuscript's 2.93:1, so the census REPRODUCES the ratio. See `analysis/atlas-descriptor-recall.md`. The variant sweep below cannot see this: every variant is built from descriptors and inherits the same gap.
 
 ## Section 3.7: the growth claim
 

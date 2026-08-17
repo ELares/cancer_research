@@ -414,3 +414,43 @@ def test_the_named_invalidator_is_measured_not_just_named():
     assert 0 < om["pdt_pct"] <= 100 and 0 < om["sdt_pct"] <= 100
     assert "symmetric" in flat(), (
         "the symmetry result is measured but not reported")
+
+
+def test_the_recall_qualification_is_present_and_follows_the_measurement():
+    """The withdrawal of the 'understated' verdict must not be deletable.
+
+    Two mutations shipped a false page with the suite green: forcing
+    `symmetric_agrees` to True restored the withdrawn verdict, and deleting
+    `_recall_caveat()` from the renderer removed the whole correction. Both
+    are derived from the sibling artifact here, not from the generator's own
+    fields.
+    """
+    import json as _json
+    md = DOC.read_text()
+    rec_path = REPO_ROOT / "analysis" / "atlas-descriptor-recall.json"
+    if not rec_path.exists():
+        return                      # fail-open, like the generator
+    rec = _json.loads(rec_path.read_text())
+    tr, mr = rec["ratio_by_text"], rec["manuscript_ratio"]
+
+    # the caveat itself must be rendered
+    assert "The axis nobody measured is RECALL" in md, (
+        "the recall caveat is gone from the report; the descriptor ratio is "
+        "presented again as if the two arms were counted comparably")
+    recs = {k: v["recall"] for k, v in rec["arms"].items()}
+    hi, lo = max(recs.values()), min(recs.values())
+    assert f"{100*hi:.1f}%" in md and f"{100*lo:.1f}%" in md, (
+        "the report does not state both measured recalls")
+
+    # and the verdict must follow the SYMMETRIC comparison, re-derived
+    if tr <= mr:
+        assert "verdict is withdrawn" in md, (
+            f"the symmetric ratio {tr:.2f} does not exceed the manuscript's "
+            f"{mr:.2f}, so the 'understated' verdict must be withdrawn and "
+            "the report still asserts it")
+        assert "understated by the manuscript.**" not in md, (
+            "the withdrawn verdict is back in the headline")
+    else:
+        assert "verdict is withdrawn" not in md, (
+            "the symmetric ratio exceeds the manuscript's, so the "
+            "understatement verdict should stand rather than be withdrawn")
