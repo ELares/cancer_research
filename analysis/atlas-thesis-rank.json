@@ -1,0 +1,671 @@
+{
+ "census": 4403994,
+ "ferroptosis_total": 13346,
+ "intersections": [
+  [
+   "antineoplastic agents",
+   954
+  ],
+  [
+   "immunotherapy",
+   370
+  ],
+  [
+   "cisplatin",
+   251
+  ],
+  [
+   "doxorubicin",
+   206
+  ],
+  [
+   "sorafenib",
+   196
+  ],
+  [
+   "photochemotherapy",
+   152
+  ],
+  [
+   "photosensitizing agents",
+   143
+  ],
+  [
+   "plant extracts",
+   90
+  ],
+  [
+   "antineoplastic agents, phytogenic",
+   82
+  ],
+  [
+   "photothermal therapy",
+   74
+  ],
+  [
+   "molecular targeted therapy",
+   73
+  ],
+  [
+   "curcumin",
+   68
+  ],
+  [
+   "immune checkpoint inhibitors",
+   68
+  ],
+  [
+   "protein kinase inhibitors",
+   59
+  ],
+  [
+   "paclitaxel",
+   39
+  ],
+  [
+   "oxaliplatin",
+   37
+  ],
+  [
+   "temozolomide",
+   35
+  ],
+  [
+   "antineoplastic combined chemotherapy protocols",
+   34
+  ],
+  [
+   "gemcitabine",
+   33
+  ],
+  [
+   "antibiotics, antineoplastic",
+   32
+  ],
+  [
+   "phototherapy",
+   32
+  ],
+  [
+   "ultrasonic therapy",
+   32
+  ],
+  [
+   "fluorouracil",
+   31
+  ],
+  [
+   "mesenchymal stem cell transplantation",
+   29
+  ],
+  [
+   "deoxycytidine",
+   27
+  ],
+  [
+   "liver transplantation",
+   24
+  ],
+  [
+   "radiation-sensitizing agents",
+   22
+  ],
+  [
+   "dexamethasone",
+   21
+  ],
+  [
+   "bleomycin",
+   21
+  ],
+  [
+   "hyperthermia, induced",
+   19
+  ],
+  [
+   "histone deacetylase inhibitors",
+   18
+  ],
+  [
+   "gefitinib",
+   16
+  ],
+  [
+   "cyclophosphamide",
+   16
+  ],
+  [
+   "poly(adp-ribose) polymerase inhibitors",
+   15
+  ],
+  [
+   "phytotherapy",
+   13
+  ],
+  [
+   "antimetabolites, antineoplastic",
+   13
+  ],
+  [
+   "ovariectomy",
+   13
+  ],
+  [
+   "docetaxel",
+   13
+  ],
+  [
+   "antibodies, monoclonal",
+   12
+  ],
+  [
+   "antineoplastic agents, alkylating",
+   12
+  ],
+  [
+   "buthionine sulfoximine",
+   12
+  ],
+  [
+   "arsenic trioxide",
+   11
+  ],
+  [
+   "tamoxifen",
+   11
+  ],
+  [
+   "sirolimus",
+   10
+  ],
+  [
+   "drug therapy, combination",
+   10
+  ],
+  [
+   "tretinoin",
+   10
+  ],
+  [
+   "streptozocin",
+   10
+  ],
+  [
+   "administration, oral",
+   9
+  ],
+  [
+   "radiotherapy",
+   8
+  ],
+  [
+   "lycopene",
+   8
+  ],
+  [
+   "sunitinib",
+   8
+  ],
+  [
+   "immunomodulation",
+   7
+  ],
+  [
+   "antineoplastic agents, immunological",
+   7
+  ],
+  [
+   "lapatinib",
+   7
+  ],
+  [
+   "oncolytic virotherapy",
+   7
+  ],
+  [
+   "trastuzumab",
+   7
+  ],
+  [
+   "whole-body irradiation",
+   6
+  ],
+  [
+   "methotrexate",
+   6
+  ],
+  [
+   "cancer vaccines",
+   6
+  ],
+  [
+   "chemoradiotherapy",
+   6
+  ],
+  [
+   "imatinib mesylate",
+   6
+  ],
+  [
+   "carboplatin",
+   6
+  ],
+  [
+   "immunotherapy, adoptive",
+   6
+  ],
+  [
+   "injections",
+   5
+  ],
+  [
+   "cetuximab",
+   5
+  ],
+  [
+   "busulfan",
+   5
+  ],
+  [
+   "adjuvants, immunologic",
+   5
+  ],
+  [
+   "hematopoietic stem cell transplantation",
+   5
+  ],
+  [
+   "receptors, chimeric antigen",
+   5
+  ],
+  [
+   "organoplatinum compounds",
+   5
+  ],
+  [
+   "irinotecan",
+   5
+  ],
+  [
+   "radioimmunotherapy",
+   5
+  ],
+  [
+   "bortezomib",
+   5
+  ],
+  [
+   "genistein",
+   5
+  ],
+  [
+   "stem cell transplantation",
+   4
+  ],
+  [
+   "administration, inhalation",
+   4
+  ],
+  [
+   "androgen antagonists",
+   4
+  ],
+  [
+   "chemotherapy, adjuvant",
+   4
+  ],
+  [
+   "tirapazamine",
+   4
+  ],
+  [
+   "genetic therapy",
+   4
+  ],
+  [
+   "everolimus",
+   4
+  ],
+  [
+   "vemurafenib",
+   4
+  ],
+  [
+   "immunoconjugates",
+   4
+  ],
+  [
+   "epirubicin",
+   4
+  ],
+  [
+   "heavy ion radiotherapy",
+   4
+  ],
+  [
+   "vincristine",
+   4
+  ],
+  [
+   "antineoplastic agents, hormonal",
+   4
+  ],
+  [
+   "cytarabine",
+   3
+  ],
+  [
+   "antibodies, monoclonal, humanized",
+   3
+  ],
+  [
+   "bevacizumab",
+   3
+  ],
+  [
+   "erlotinib hydrochloride",
+   3
+  ],
+  [
+   "angiogenesis inhibitors",
+   3
+  ],
+  [
+   "radiofrequency ablation",
+   3
+  ],
+  [
+   "transplantation, homologous",
+   3
+  ],
+  [
+   "phosphoinositide-3 kinase inhibitors",
+   3
+  ],
+  [
+   "interferons",
+   3
+  ],
+  [
+   "hydroxyurea",
+   3
+  ],
+  [
+   "chemoembolization, therapeutic",
+   3
+  ],
+  [
+   "interferon type i",
+   3
+  ],
+  [
+   "axitinib",
+   3
+  ],
+  [
+   "hepatectomy",
+   3
+  ],
+  [
+   "rituximab",
+   3
+  ],
+  [
+   "topotecan",
+   2
+  ],
+  [
+   "neurosurgical procedures",
+   2
+  ],
+  [
+   "interferon-alpha",
+   2
+  ],
+  [
+   "injections, intraperitoneal",
+   2
+  ],
+  [
+   "interferon-beta",
+   2
+  ],
+  [
+   "bcg vaccine",
+   2
+  ],
+  [
+   "interleukin-4",
+   2
+  ],
+  [
+   "medroxyprogesterone acetate",
+   2
+  ],
+  [
+   "capecitabine",
+   2
+  ],
+  [
+   "transplantation, autologous",
+   2
+  ],
+  [
+   "cardiac surgical procedures",
+   2
+  ],
+  [
+   "prednisone",
+   2
+  ],
+  [
+   "nephrectomy",
+   2
+  ],
+  [
+   "imiquimod",
+   2
+  ],
+  [
+   "immunotoxins",
+   2
+  ],
+  [
+   "crizotinib",
+   2
+  ],
+  [
+   "ethiodized oil",
+   2
+  ],
+  [
+   "vorinostat",
+   2
+  ],
+  [
+   "mitoxantrone",
+   2
+  ],
+  [
+   "nivolumab",
+   1
+  ],
+  [
+   "mitotane",
+   1
+  ],
+  [
+   "drug therapy",
+   1
+  ],
+  [
+   "thioguanine",
+   1
+  ],
+  [
+   "asparaginase",
+   1
+  ],
+  [
+   "dactinomycin",
+   1
+  ],
+  [
+   "thalidomide",
+   1
+  ],
+  [
+   "trabectedin",
+   1
+  ],
+  [
+   "proteasome inhibitors",
+   1
+  ],
+  [
+   "prostatectomy",
+   1
+  ],
+  [
+   "cell- and tissue-based therapy",
+   1
+  ],
+  [
+   "antibodies, bispecific",
+   1
+  ],
+  [
+   "camptothecin",
+   1
+  ],
+  [
+   "castration",
+   1
+  ],
+  [
+   "hyperthermia",
+   1
+  ],
+  [
+   "etoposide",
+   1
+  ],
+  [
+   "gastrectomy",
+   1
+  ],
+  [
+   "radiotherapy, image-guided",
+   1
+  ],
+  [
+   "interleukin-2",
+   1
+  ],
+  [
+   "azacitidine",
+   1
+  ],
+  [
+   "electric stimulation therapy",
+   1
+  ],
+  [
+   "thoracic surgery, video-assisted",
+   1
+  ],
+  [
+   "splenectomy",
+   1
+  ],
+  [
+   "idarubicin",
+   1
+  ],
+  [
+   "vinblastine",
+   1
+  ],
+  [
+   "low-level light therapy",
+   1
+  ],
+  [
+   "surgical procedures, operative",
+   1
+  ],
+  [
+   "anticarcinogenic agents",
+   1
+  ],
+  [
+   "vinca alkaloids",
+   1
+  ],
+  [
+   "administration, cutaneous",
+   1
+  ],
+  [
+   "daunorubicin",
+   1
+  ],
+  [
+   "vitrectomy",
+   1
+  ],
+  [
+   "magnetic field therapy",
+   1
+  ],
+  [
+   "topoisomerase i inhibitors",
+   1
+  ],
+  [
+   "embolization, therapeutic",
+   1
+  ],
+  [
+   "radiosurgery",
+   1
+  ],
+  [
+   "administration, intranasal",
+   1
+  ],
+  [
+   "podophyllotoxin",
+   1
+  ],
+  [
+   "high-intensity focused ultrasound ablation",
+   1
+  ],
+  [
+   "panobinostat",
+   1
+  ],
+  [
+   "eflornithine",
+   1
+  ],
+  [
+   "letrozole",
+   1
+  ],
+  [
+   "injections, subcutaneous",
+   1
+  ],
+  [
+   "cranial irradiation",
+   1
+  ],
+  [
+   "tubulin modulators",
+   1
+  ]
+ ],
+ "universe_size": 416
+}
