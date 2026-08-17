@@ -128,6 +128,10 @@ def main() -> None:
         "experimental-context descriptors -- so it should not be read as agreeing with,",
         "or overshooting, `neoplasms[mh]`. See `analysis/atlas-README.md`.", "",
     ]
+
+    L += ["> " + (
+
+        "**Per-mechanism capture is conditioned on having a tag.** The mechanism layer reaches 5.98% of the cancer literature, so the capture spread here is variation inside that fraction. See `analysis/atlas-taxonomy-reach.md` (#730)."), ""]
     if not complete:
         L += [
             "> ## PARTIAL CENSUS — DO NOT READ THE TABLES BELOW AS FIELD SIZES",

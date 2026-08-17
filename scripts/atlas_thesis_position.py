@@ -254,6 +254,10 @@ def _render(n: int, totals, per_year) -> int:
         f"**{totals['ferroptosis']:,}** cancer articles in the census carry the MeSH",
         "`Ferroptosis` descriptor.",
     ]
+
+    L += ["> " + (
+
+        "**This enumerates the modalities the thesis names.** Ranked against all 166 in the committed partition universe the sonodynamic leg is rank 22 and `antineoplastic agents` is 29.8x larger, so the unexamined precedent is chemotherapy. See `analysis/atlas-thesis-rank.md` (#725)."), ""]
     if growth:
         a, n0, b, n1, mult = growth
         L += ["",
