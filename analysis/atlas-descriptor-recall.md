@@ -25,7 +25,7 @@ The two descriptors are comparably **precise** and differ by a factor of **1.74*
 
 The manuscript's 2.93:1 sits **inside** the symmetric interval [2.17, 3.85], so a symmetric measurement cannot distinguish the census from the manuscript. The evidence for UNDERSTATEMENT disappears -- which is what withdraws that verdict. It does not establish agreement, and this page does not claim it.
 
-The decisive quantity is the **paired** comparison of the two routes over the same articles: the descriptor route inflates the ratio by **1.64x**, 95% CI [1.02, 2.65], which excludes 1. That is far better determined than either ratio alone, because the two routes share their articles and much of their noise cancels.
+The decisive quantity is the **paired** comparison of the two routes over the same articles: the descriptor route inflates the ratio by **1.64x**, 95% CI [1.25, 2.17], which excludes 1. That is far better determined than either ratio alone, because the two routes share their articles and much of their noise cancels.
 
 So the robust claims are that the two descriptors differ in recall and that the descriptor route inflates this particular ratio. The size of the true ratio is not settled here.
 
@@ -51,7 +51,7 @@ Photodynamic therapy has a dedicated MeSH descriptor. Sonodynamic therapy has no
 
 ## What this does not claim
 
-* Not that the manuscript is wrong. Its ratio is reproduced almost exactly by an independent instrument.
+* Not that the manuscript is wrong, and equally **not that it is confirmed**. A symmetric measurement cannot tell the census apart from the manuscript's figure, which is weaker than agreement. An earlier draft of this bullet said the ratio was "reproduced almost exactly" -- the withdrawn over-precision, restated inside the section that exists to disclaim it, and a reviewer found it there.
 * Not that the text rule is ground truth. It has errors in both directions. The point is that it is applied IDENTICALLY to both arms, which the descriptor comparison is not.
 * Not that either descriptor is a bad descriptor. They are comparably precise; they are applied at different rates.
 

@@ -21,9 +21,9 @@ UNDERSTATED by the manuscript. That is WITHDRAWN. The census ratio divides two
 MeSH descriptor counts, and those descriptors recall their concepts at
 substantially different rates, so the gap was largely a measurement of indexing
 practice rather than of literature. One text rule applied to both arms
-reproduces the manuscript's ratio closely instead of exceeding it -- a better
-result for the manuscript than the withdrawn one, and a worse one for this
-document.
+is not shown to exceed the manuscript's -- its interval covers that figure --
+so the evidence for understatement disappears. That is weaker than agreement,
+and this file does not claim agreement.
 
 Every figure behind that is measured in `analysis/atlas-descriptor-recall.md`
 and interpolated here at render time. None is written into this docstring,
@@ -146,14 +146,38 @@ def _recall_check():
             "`python scripts/atlas_descriptor_recall.py` first.")
     try:
         d = json.loads(path.read_text())
-    except (OSError, ValueError):
-        return None
+    except (OSError, ValueError) as exc:
+        raise SystemExit(
+            f"analysis/atlas-descriptor-recall.json is unreadable ({exc}). "
+            "The Section 8.2 verdict depends on it; failing open here "
+            "silently re-asserts the withdrawn claim.") from exc
     tr, mr = d.get("ratio_by_text"), d.get("manuscript_ratio")
     if tr is None or not mr:
-        return None
+        # NOT fail-open. A partial regeneration leaves this field null, and
+        # returning None here silently restored the WITHDRAWN verdict.
+        raise SystemExit(
+            "analysis/atlas-descriptor-recall.json carries no symmetric ratio "
+            "(partial regeneration?). Re-run "
+            "`python scripts/atlas_descriptor_recall.py`.")
     arms = d.get("arms") or {}
+    # THE VERDICT RIDES THE INTERVAL, NOT THE POINT ESTIMATE. An earlier
+    # version used `tr > mr`, a bare threshold: a reviewer flipped the
+    # headline back to "understated by the manuscript" by adding the same
+    # sensitiser noun to BOTH arms -- a symmetric, entirely defensible rule --
+    # and by changing a single acronym token, both with every guard green.
+    # Understatement is only claimed when the symmetric interval EXCLUDES the
+    # manuscript's figure from below.
+    ci = d.get("ratio_by_text_ci")
+    agrees = bool(ci and ci[0] > mr)
     return {"symmetric_ratio": tr, "manuscript_ratio": mr,
-            "symmetric_agrees": tr > mr,
+            "symmetric_ratio_ci": ci,
+            # BUILD FINGERPRINT. Both artifacts count the same ferroptosis
+            # subset, and nothing compared them -- so a recall measurement
+            # from a different census build could qualify this document's
+            # verdict unnoticed. The repo already learned this from
+            # comention_regression's `pairs_before`.
+            "subject_articles": d.get("subject_articles"),
+            "symmetric_agrees": agrees,
             "recall_asymmetry": d.get("recall_asymmetry"),
             "recalls": {k: v.get("recall") for k, v in arms.items()},
             "precisions": {k: v.get("precision") for k, v in arms.items()},
@@ -195,7 +219,8 @@ def _recall_caveat():
                 "`analysis/atlas-descriptor-recall.md`.")
     hi = max(recs, key=recs.get)
     lo = min(recs, key=recs.get)
-    verb = ("REPRODUCES" if not rec["symmetric_agrees"] else "still exceeds")
+    verb = ("cannot be distinguished from" if not rec["symmetric_agrees"]
+            else "still exceeds")
     return (
         "* **Both descriptors are broader than their modality, and that is not "
         "the axis that matters.** The relative-breadth worry above is a "
@@ -206,7 +231,8 @@ def _recall_caveat():
         f"{100*recs[lo]:.1f}% of {lo} papers, a "
         f"{recs[hi]/recs[lo]:.2f}x gap. One text rule applied to both arms "
         f"gives {rec['symmetric_ratio']:.2f}:1 against the manuscript's "
-        f"{rec['manuscript_ratio']:.2f}:1, so the census {verb} the ratio. "
+        f"{rec['manuscript_ratio']:.2f}:1, so the census {verb} the "
+        f"manuscript on this ratio. "
         "See `analysis/atlas-descriptor-recall.md`. The variant sweep below "
         "cannot see this: every variant is built from descriptors and "
         "inherits the same gap.")
@@ -461,7 +487,7 @@ def _headline(r: dict) -> str:
     # `census_exceeds_manuscript` divides two descriptor counts, and
     # analysis/atlas-descriptor-recall.md measures those descriptors recalling
     # their concepts at 80.2% and 46.0% -- a 1.74x gap. One rule applied to
-    # both arms reproduces the manuscript's ratio instead of exceeding it. So
+    # both arms does not show the census exceeding the manuscript. So
     # "understated" is a statement about indexing practice unless the
     # symmetric measurement agrees, and the decision is made by the data
     # rather than by a threshold invented here.
@@ -470,8 +496,8 @@ def _headline(r: dict) -> str:
         undecided.append("section 8.2 cannot be decided at census scale")
     elif mt["census_exceeds_manuscript"] and rec and not rec["symmetric_agrees"]:
         held.append(
-            "section 8.2 survives; the census REPRODUCES the manuscript's "
-            "ratio under a symmetric rule, so the earlier 'understated by the "
+            "section 8.2 survives; a symmetric rule CANNOT DISTINGUISH the "
+            "census from the manuscript, so the earlier 'understated by the "
             "manuscript' verdict is withdrawn")
     elif mt["census_exceeds_manuscript"]:
         held.append("section 8.2 survives, understated by the manuscript")

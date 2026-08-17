@@ -84,9 +84,11 @@ WHAT THIS DOES NOT CLAIM
 -------------------------
 Not that the manuscript is wrong, and equally not that it is confirmed. A
 symmetric measurement cannot DISTINGUISH the census from the manuscript's
-figure, which is a different and weaker statement than agreement. What is
-withdrawn is the "understated" verdict, because the evidence for it was an
-asymmetric comparison.
+figure, which is different from and weaker than agreement. What is withdrawn
+is the "understated" verdict, because the evidence for it was an asymmetric
+comparison. An earlier draft of this very section then said the manuscript's
+ratio was "reproduced almost exactly", which is the withdrawn over-precision
+restated a few lines below its own withdrawal.
 
 Nor that the text rule is ground truth. It has its own errors in both
 directions; the point is that it is applied IDENTICALLY to both arms, which
@@ -102,6 +104,7 @@ import gzip
 import json
 import math
 import re
+import statistics
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -134,7 +137,10 @@ MANUSCRIPT_RATIO = 2.93
 # prose is still a number a sentence can outlive, and this file's own subject
 # is exactly that failure.
 CONF = 0.95
-Z = 1.96
+# DERIVED from CONF, never typed beside it. Hardcoding Z let a
+# mutation print a 68% interval under a "95% CI" label, because the
+# label was interpolated and the arithmetic was not.
+Z = statistics.NormalDist().inv_cdf(1 - (1 - CONF) / 2)
 
 
 def scan() -> dict:
@@ -210,11 +216,28 @@ def scan() -> dict:
     # the comparison that is actually decisive: how much the descriptor route
     # inflates the ratio relative to the symmetric one
     inflation = by_desc / by_text if (by_desc and by_text) else None
-    infl_se = math.sqrt(sum(1 / stat[k][f] for k in (a, b)
-                            for f in ("text", "descriptor") if stat[k][f]))
-    infl_ci = ([math.exp(math.log(inflation) - 1.96 * infl_se),
-                math.exp(math.log(inflation) + 1.96 * infl_se)]
-               if inflation else None)
+    # PAIRED, not independent. An earlier version summed 1/x over all four
+    # counts, treating each arm's descriptor and text totals as independent
+    # Poissons. They are not -- they SHARE `both`, so
+    #     Var(log(D/T)) = 1/D + 1/T - 2*both/(D*T)
+    # The independent form gave an SE 1.73x too large. It is CONSERVATIVE, so
+    # nothing published on it was false, but it put the lower bound at 1.02
+    # rather than 1.25 and, under two defensible text rules, flipped the
+    # significance flag to False and DISCARDED the one claim this analysis
+    # positively supports. An over-wide interval is not the safe direction
+    # when a flag keys off it. Verified against a 4,000-resample
+    # article-level bootstrap by a reviewer.
+    var = 0.0
+    for k in (a, b):
+        D, T, B = stat[k]["descriptor"], stat[k]["text"], stat[k]["both"]
+        if not (D and T):
+            var = None
+            break
+        var += 1 / D + 1 / T - 2 * B / (D * T)
+    infl_se = math.sqrt(var) if var and var > 0 else None
+    infl_ci = ([math.exp(math.log(inflation) - Z * infl_se),
+                math.exp(math.log(inflation) + Z * infl_se)]
+               if (inflation and infl_se) else None)
     # and whether the recall gap itself excludes parity
     ra = (max(recalls) / min(recalls)) if len(recalls) > 1 and min(recalls) else None
     return {
@@ -349,8 +372,13 @@ def render(d: dict) -> str:
           "under someone else's -- appearing again one layer up, in MeSH.", ""]
 
     L += ["## What this does not claim", ""]
-    L += ["* Not that the manuscript is wrong. Its ratio is reproduced almost "
-          "exactly by an independent instrument.",
+    L += ["* Not that the manuscript is wrong, and equally **not that it is "
+          "confirmed**. A symmetric measurement cannot tell the census apart "
+          "from the manuscript's figure, which is weaker than agreement. An "
+          "earlier draft of this bullet said the ratio was \"reproduced "
+          "almost exactly\" -- the withdrawn over-precision, restated inside "
+          "the section that exists to disclaim it, and a reviewer found it "
+          "there.",
           "* Not that the text rule is ground truth. It has errors in both "
           "directions. The point is that it is applied IDENTICALLY to both "
           "arms, which the descriptor comparison is not.",

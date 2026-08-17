@@ -2,13 +2,13 @@
 
 THE FINDING
 -----------
-`Photochemotherapy` recalls 80.2% of ferroptosis-PDT papers; `Ultrasonic
-Therapy` recalls 46.0% of ferroptosis-SDT papers. The two are comparably
-precise and differ 1.74-fold in recall, so the 4.75:1 PDT:SDT ratio that
-`manuscript-vs-census.md` reports is substantially a measurement of indexing
-practice. One rule applied to both arms gives 2.89:1 against the manuscript's
-2.93:1 -- the census REPRODUCES the manuscript rather than showing it
-understated its case by 62%.
+`Photochemotherapy` and `Ultrasonic Therapy` are comparably PRECISE and differ
+markedly in RECALL, so the PDT:SDT ratio `manuscript-vs-census.md` reports is
+substantially a measurement of indexing practice. Under one rule applied to
+both arms the census cannot be DISTINGUISHED from the manuscript, which
+withdraws the "understated by the manuscript" verdict without establishing
+agreement -- a distinction an earlier version of this docstring collapsed by
+saying the census "REPRODUCES" it.
 
 WHAT WOULD MAKE THIS ANALYSIS ITSELF WRONG
 --------------------------------------------
@@ -22,10 +22,12 @@ WHAT WOULD MAKE THIS ANALYSIS ITSELF WRONG
    manuscript's, the report must say the manuscript understated its case. A
    fixed sentence would make the conclusion unfalsifiable.
 
-3. THE INVERTED CAVEAT RETURNING. Five files said the SDT count is an
-   OVER-estimate and ratios against it are LOWER bounds. Precision says the
-   breadth is 3 records; recall says the shortfall is 34. The direction is
-   settled by measurement now and must stay that way.
+3. THE INVERTED CAVEAT RETURNING. Nine sites said the SDT count is an
+   OVER-estimate and ratios against it are LOWER bounds -- an earlier version
+   of this docstring said five, a hand-written count that was itself wrong,
+   and two review passes were needed to find the rest. The breadth is real
+   and small; the recall shortfall is larger. The direction is settled by
+   measurement now and must stay that way.
 
 4. TREATING THE TEXT RULE AS TRUTH. It is not; it is merely applied
    identically to both arms. The report must keep saying so.
@@ -264,3 +266,76 @@ def test_an_unmeasurable_arm_refuses_to_render():
     assert "matched nothing on one axis" in src
     assert "raise SystemExit" in src
     assert "is not a finding" in src
+
+
+def test_the_two_artifacts_describe_the_same_census_build():
+    """A free fingerprint nobody was comparing.
+
+    Both documents count the same ferroptosis subset. Setting this analysis's
+    `subject_articles` to a fabricated value left the page reading "Over the
+    99,999 census articles" beside the sibling's 13,346, with every guard
+    green -- the `pairs_before` lesson, unlearned one analysis over.
+    """
+    d = _doc()
+    sib = REPO_ROOT / "analysis" / "manuscript-vs-census.json"
+    if not sib.exists():
+        return
+    other = json.loads(sib.read_text())
+    theirs = other.get("ferroptosis_records") or other.get("subject_articles")
+    if theirs is None:
+        return
+    assert d["subject_articles"] == theirs, (
+        f"this analysis counted {d['subject_articles']:,} ferroptosis "
+        f"articles and manuscript-vs-census counted {theirs:,}; one of the "
+        "two artifacts is from a different census build, and this document's "
+        "recall figures qualify that one's verdict")
+    assert f"{d['subject_articles']:,}" in MD.read_text()
+
+
+def test_the_recall_table_matches_the_artifact_row_by_row():
+    """The central table was entirely unguarded.
+
+    Printing the same recall for both arms, while the sentence below still
+    stated a 1.74x gap, shipped a self-contradicting page with the suite
+    green.
+    """
+    d, md = _doc(), MD.read_text()
+    for k, s in d["arms"].items():
+        row = (f"| {k} | `{s['descriptors'][0].title()}` | {s['text']:,} | "
+               f"{s['descriptor']:,} | {s['both']:,} | "
+               f"**{100*s['recall']:.1f}%** | {100*s['precision']:.1f}% |")
+        assert row in md, (
+            f"the rendered row for {k} does not match its artifact counts; "
+            f"expected:\n  {row}")
+    recs = [s["recall"] for s in d["arms"].values()]
+    if abs(max(recs) - min(recs)) < 1e-12:
+        assert "factor of" not in md, (
+            "the table shows equal recalls while the report still states a "
+            "gap between them")
+
+
+def test_the_manuscript_ratio_constant_matches_the_manuscript():
+    """A free-floating duplicate of a figure the sibling pins to v1.md.
+
+    Changing it from 2.93 to 2.50 reverted the headline to "understated" with
+    every guard green, because nothing tied this constant to anything.
+    """
+    m = _mod()
+    # The figure comes from the manuscript's Section 8.2 TABLE, whose counts
+    # `manuscript_vs_census.MODALITIES` holds and whose own guards pin to
+    # v1.md. Deriving it from the census-intersection sentence instead gives
+    # 5.5 and is a different claim -- a mistake made writing this guard.
+    import importlib.util
+    spec = importlib.util.spec_from_file_location(
+        "mvc", REPO_ROOT / "scripts" / "manuscript_vs_census.py")
+    mvc = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mvc)
+    counts = {row[0]: row[2] for row in mvc.MODALITIES}
+    if not (counts.get("PDT") and counts.get("SDT")):
+        return
+    implied = counts["PDT"] / counts["SDT"]
+    assert abs(m.MANUSCRIPT_RATIO - implied) < 0.01 * implied, (
+        f"MANUSCRIPT_RATIO is {m.MANUSCRIPT_RATIO} but the manuscript's own "
+        f"Section 8.2 counts ({counts['PDT']}/{counts['SDT']}) imply "
+        f"{implied:.2f}; this constant decides the verdict and was "
+        "free-floating")
