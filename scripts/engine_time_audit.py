@@ -82,9 +82,31 @@ UNIT_MIN = {"sec": 1 / 60, "second": 1 / 60, "seconds": 1 / 60, "s": 1 / 60,
             "day": 1440.0, "days": 1440.0}
 UNIT_RE = r"(sec|seconds?|min|mins|minutes?|h|hrs?|hours?|days?)"
 
-# A real-time unit appearing with a magnitude. Narrow on purpose: the question
-# is which modules carry PHYSICAL time, not which mention the word.
+# A real-time unit appearing with a magnitude.
 TIME_UNIT = re.compile(r"\b(\d+(?:\.\d+)?)\s*(?:-)?\s*" + UNIT_RE + r"\b", re.I)
+# A real-time unit DECLARED without a magnitude, which is how a units
+# annotation is normally written: `half-time (days)`, `Time step (min)`,
+# `(um^2/min)`, `(1/min)`.
+#
+# THIS IS THE SAME BUG, ONE FUNCTION OVER. `find_step_bindings` was fixed to
+# see unit-first phrasing and TIME_UNIT was left requiring a number, so
+# `cell.rs` and `trigger_wave.rs` scored ZERO real-time mentions and vanished
+# from the table headed "which modules carry real time" -- while the same page,
+# twenty lines below, said cell.rs carries recovery half-times in days. The
+# page contradicted itself, and a second reviewer found it.
+#
+# Restricted to a parenthesised unit, which is how a units annotation is
+# conventionally written in Rust.
+#
+# Single-letter units are EXCLUDED here even though the magnitude form accepts
+# them, because without a number beside it a bare `h` or `s` is almost never a
+# duration. Measured: allowing them matched `(rows, h)` in reaction_diffusion
+# (h is GRID SPACING) and `("{:.1}", hours)` in io.rs (a format call), putting
+# two modules into the real-time table that carry none. Quotes and commas in
+# the parenthetical are excluded for the same reason.
+UNIT_RE_BARE = r"(secs?|seconds?|mins?|minutes?|hrs?|hours?|days?)"
+TIME_UNIT_BARE = re.compile(
+    r"\((?:[^()\"',]{0,24}?[/\s])?" + UNIT_RE_BARE + r"\s*\)", re.I)
 PER_STEP = re.compile(r"per[- ]step|per dimensionless|each step|/step", re.I)
 
 # --- the three ways a step-to-duration binding is actually written ----------
@@ -235,7 +257,126 @@ def _orphan_timescales():
     return out
 
 
-def _step_counts(binding_modules):
+def _blocks(text, opener_re):
+    """(start, end) offsets of brace-matched blocks opened by a pattern."""
+    out = []
+    for m in re.finditer(opener_re, text):
+        i = text.find("{", m.end() - 1 if m.end() else m.start())
+        if i < 0:
+            continue
+        depth, j = 0, i
+        while j < len(text):
+            if text[j] == "{":
+                depth += 1
+            elif text[j] == "}":
+                depth -= 1
+                if depth == 0:
+                    break
+            j += 1
+        out.append((m.start(), j))
+    return out
+
+
+def _enclosing_fn(text, pos):
+    """Name of the fn containing an offset, by scanning backwards."""
+    best = None
+    for m in re.finditer(r"\bfn\s+(\w+)", text):
+        if m.start() < pos:
+            best = m.group(1)
+        else:
+            break
+    return best
+
+
+def _reaches_by_default(binary_dir, symbol):
+    """Is `symbol` reachable in this binary WITHOUT an opt-in CLI flag?
+
+    A plain text grep says sim-tme-3d "uses" tumor_pk, and it does -- but its
+    default 24-condition matrix runs `DoseSchedule::Constant` throughout and
+    only reaches `solve_tumor_pk` through `run_dose_sweep`, which sits behind
+    `if std::env::args().any(|a| a == "--dose-sweep") { ...; return; }`. So the
+    3.0-hour span was being presented unqualified for a path the production
+    matrix never takes. A second reviewer caught it.
+
+    TRANSITIVE reachability from `main`, excluding CLI-guard blocks and
+    #[cfg(test)]. A single level is not enough and gave the wrong answer: the
+    `solve_tumor_pk` call sits in `rsl3_pk_factor_series`, whose only live call
+    site is inside `run_dose_sweep` -- so one level found "a caller outside
+    itself" and stopped, never discovering that `run_dose_sweep` is the thing
+    behind the flag.
+
+    Unresolved calls (through a trait object, a function pointer, a macro)
+    are not followed, so this can still report opt-in for something reachable
+    by an exotic route. It is stated as a limit rather than assumed away.
+    """
+    for p in sorted(binary_dir.glob("*.rs")):
+        text = p.read_text(errors="ignore")
+        dead = (_blocks(text, r"if\s+std::env::args\(\)[^\n{]*") +
+                _blocks(text, r"#\[cfg\(test\)\]\s*mod\s+\w+"))
+
+        def inside(pos):
+            return any(a <= pos <= b for a, b in dead)
+
+        def live_refs(name):
+            out = []
+            for m in re.finditer(rf"\b{re.escape(name)}\b", text):
+                s = m.start()
+                if inside(s):
+                    continue
+                line = text[text.rfind("\n", 0, s) + 1:s]
+                if re.match(r"\s*(//|/\*|\*)", line):
+                    continue          # a comment mentioning it is not a call.
+                    # sim-tme-3d documents `solve_tumor_pk` in a doc comment 13
+                    # lines above the function that calls it; counting that as
+                    # a reference attributed it to whatever fn preceded the
+                    # comment, which IS default-reachable, and the whole
+                    # opt-in detection silently inverted.
+                if re.match(r"\s*use\s", line) or re.search(r"\bfn\s*$", line):
+                    continue          # the import, or the definition itself
+                out.append(s)
+            return out
+
+        seen, frontier = set(), [symbol]
+        while frontier:
+            name = frontier.pop()
+            if name in seen:
+                continue
+            seen.add(name)
+            for r in live_refs(name):
+                fn = _enclosing_fn(text, r)
+                if fn is None or fn == "main":
+                    return True
+                if fn not in seen:
+                    frontier.append(fn)
+    return False
+
+
+def _pricing_symbols(module, binding_lines):
+    """The public items a module's wall-clock binding is attached to.
+
+    Derived from the binding's own position -- the item a doc comment
+    documents is the next one declared after it -- rather than named here, so
+    a rename cannot leave this pointing at nothing.
+    """
+    text = (SRC / module).read_text(errors="ignore")
+    lines = text.split("\n")
+    out = set()
+    for ln in binding_lines:
+        for j in range(ln - 1, min(len(lines), ln + 12)):
+            m = re.match(r"\s*pub\s+(?:fn|struct|const|static)\s+(\w+)", lines[j])
+            if m:
+                out.add(m.group(1))
+                break
+        else:
+            # inside a body: take the enclosing fn
+            off = sum(len(x) + 1 for x in lines[:ln])
+            fn = _enclosing_fn(text, off)
+            if fn:
+                out.add(fn)
+    return sorted(out)
+
+
+def _step_counts(binding_modules, symbols_by_module=None):
     """Every binary's declared step count, and whether it consumes a binding.
 
     The previous version matched `const N_STEPS: usize` and returned the FIRST
@@ -261,8 +402,16 @@ def _step_counts(binding_modules):
         srcs = "".join(q.read_text(errors="ignore")
                        for q in (p.parent).glob("*.rs"))
         uses = sorted(s for s in stems if re.search(rf"\b{re.escape(s)}\b", srcs))
+        # Does the PRICING symbol reach the default path, or only an opt-in
+        # flag? Module-name presence is not consumption of the binding.
+        default_path = []
+        for stem in uses:
+            syms = (symbols_by_module or {}).get(stem + ".rs", [])
+            if any(_reaches_by_default(p.parent, s) for s in syms):
+                default_path.append(stem)
         out.append({"binary": binary, "steps": int(m.group(1)),
-                    "consumes_binding_module": uses})
+                    "consumes_binding_module": uses,
+                    "prices_on_default_path": sorted(default_path)})
     return out
 
 
@@ -373,12 +522,18 @@ def scan() -> dict:
         text = p.read_text(errors="ignore")
         times, steps = [], 0
         for i, line in enumerate(text.split("\n"), 1):
+            ctx = line.strip()
+            skip = ctx.startswith("//!") and "v0." in ctx
             for m in TIME_UNIT.finditer(line):
-                ctx = line.strip()
-                if ctx.startswith("//!") and "v0." in ctx:
+                if skip:
                     continue
                 times.append({"line": i, "value": m.group(0).strip(),
-                              "context": ctx[:110]})
+                              "form": "magnitude", "context": ctx[:110]})
+            for m in TIME_UNIT_BARE.finditer(line):
+                if skip:
+                    continue
+                times.append({"line": i, "value": m.group(0).strip(),
+                              "form": "bare-unit", "context": ctx[:110]})
             if PER_STEP.search(line):
                 steps += 1
         if times or steps:
@@ -398,6 +553,13 @@ def scan() -> dict:
     solver = [b for b in bindings if b["kind"] == "solver-timestep"]
     conventions = sorted({(b["module"], round(b["minutes_per_step"], 6))
                           for b in wall if b["minutes_per_step"] is not None})
+    # Solver timesteps are deduplicated the SAME way. Reporting deduplicated
+    # conventions on one side and raw matches on the other put "1 module ...
+    # plus 3 numerical-integrator timesteps" in the headline, two lines above
+    # the sentence retracting exactly that arithmetic. There is ONE integrator
+    # timestep in the engine, matched three times.
+    solver_conv = sorted({(b["module"], round(b["minutes_per_step"], 6))
+                          for b in solver if b["minutes_per_step"] is not None})
     distinct = sorted({v for _, v in conventions})
     in_prod = [b for b in wall if b["callers"]]
     prod_mps = sorted({round(b["minutes_per_step"], 6) for b in in_prod
@@ -412,6 +574,10 @@ def scan() -> dict:
 
     # which real-time modules are actually reachable from a binary
     reach = {m: _callers(Path(m).stem) for m in sorted(set(real_only) | set(both))}
+    pricing_syms = {}
+    for mod in {b["module"] for b in wall}:
+        pricing_syms[mod] = _pricing_symbols(
+            mod, [b["line"] for b in wall if b["module"] == mod])
     p3 = _p3_threshold()
     modelled = _p3_is_modelled()
 
@@ -427,11 +593,15 @@ def scan() -> dict:
         "wall_clock_conventions": [{"module": m, "minutes_per_step": v}
                                    for m, v in conventions],
         "n_wall_clock_conventions": len(conventions),
-        "n_solver_timesteps": len(solver),
+        "solver_timestep_conventions": [{"module": m, "minutes_per_step": v}
+                                        for m, v in solver_conv],
+        "n_solver_timestep_conventions": len(solver_conv),
+        "n_solver_timestep_matches": len(solver),
         "distinct_minutes_per_step": distinct,
         "bindings_reaching_production": len(in_prod),
         "production_minutes_per_step": prod_mps,
-        "step_counts": _step_counts({b["module"] for b in wall}),
+        "pricing_symbols": pricing_syms,
+        "step_counts": _step_counts({b["module"] for b in wall}, pricing_syms),
         "orphan_timescale_fields": _orphan_timescales(),
         "p3": p3,
         "p3_modelled": modelled,
@@ -454,13 +624,25 @@ def _priced_runs(d):
     """
     out = []
     for sc in d.get("step_counts", []):
-        if not sc["consumes_binding_module"]:
+        mods = sc.get("prices_on_default_path") or []
+        if not mods:
             continue
         for c in d.get("wall_clock_conventions", []):
-            if Path(c["module"]).stem in sc["consumes_binding_module"]:
+            if Path(c["module"]).stem in mods:
                 out.append({**sc, "minutes_per_step": c["minutes_per_step"],
                             "hours": sc["steps"] * c["minutes_per_step"] / 60})
                 break
+    return out
+
+
+def _opt_in_only(d):
+    """Binaries that reference a pricing module but only behind a flag."""
+    out = []
+    for sc in d.get("step_counts", []):
+        uses = set(sc.get("consumes_binding_module") or [])
+        deflt = set(sc.get("prices_on_default_path") or [])
+        if uses and not deflt:
+            out.append({**sc, "opt_in_modules": sorted(uses)})
     return out
 
 
@@ -480,18 +662,22 @@ def render(d: dict) -> str:
               f"found.", ""]
     else:
         conv = d.get("wall_clock_conventions", [])
-        nsolv = d.get("n_solver_timesteps", 0)
+        nsolv = d.get("n_solver_timestep_conventions", 0)
+        nsolvm = d.get("n_solver_timestep_matches", 0)
         mods = sorted({c["module"] for c in conv})
         L += [f"**{len(conv)} module{'' if len(conv) == 1 else 's'} "
               f"{'prices' if len(conv) == 1 else 'price'} a "
               f"simulation step in wall-clock time** "
               f"({', '.join(f'`{m}`' for m in mods) or 'none'}), out of {n} "
-              f"library modules, plus {nsolv} numerical-integrator timesteps "
-              f"that do not.", ""]
-        L += ["Those are counted as CONVENTIONS, not matches. A `dt_min` field "
-              "is matched three times -- its declaration, its default literal, "
-              "and its use -- and an earlier draft reported that arithmetic as "
-              "\"6 declarations\".", ""]
+              f"library modules, plus {nsolv} numerical-integrator "
+              f"timestep{'' if nsolv == 1 else 's'} that "
+              f"{'does' if nsolv == 1 else 'do'} not.", ""]
+        L += [f"Both numbers are CONVENTIONS, not matches -- deduplicating one "
+              f"side and not the other is how an earlier draft reported "
+              f"\"6 declarations\". The {nsolv} integrator "
+              f"timestep{'' if nsolv == 1 else 's'} "
+              f"{'is' if nsolv == 1 else 'are'} matched {nsolvm} times, once "
+              f"per declaration, default literal and use.", ""]
         if len(d["distinct_minutes_per_step"]) > 1:
             vals = ", ".join(f"{v:g} min" for v in d["distinct_minutes_per_step"])
             hi, lo = max(d["distinct_minutes_per_step"]), min(d["distinct_minutes_per_step"])
@@ -521,6 +707,28 @@ def render(d: dict) -> str:
             L.append(f"| `{r['binary']}` | {r['steps']} | "
                      f"{r['minutes_per_step']:g} | {r['hours']:.1f} h |")
         L += [""]
+        optin = _opt_in_only(d)
+        if optin:
+            rows = ", ".join(
+                "`{}` ({} steps, via {})".format(
+                    s["binary"], s["steps"],
+                    ", ".join(f"`{m}`" for m in s["opt_in_modules"]))
+                for s in optin)
+            conv1 = d["wall_clock_conventions"][0]["minutes_per_step"]
+            would = ", ".join(
+                "{:.1f} h".format(s["steps"] * conv1 / 60) for s in optin)
+            L += [f"{len(optin)} "
+                  f"{'binary references' if len(optin) == 1 else 'binaries reference'} "
+                  f"a pricing module but only behind an opt-in flag, so "
+                  f"{'its' if len(optin) == 1 else 'their'} DEFAULT run cannot "
+                  f"be priced: {rows}. Reachability is checked transitively "
+                  f"from `main`, excluding `std::env::args()` guards and "
+                  f"`#[cfg(test)]`. An earlier draft listed "
+                  f"{'this' if len(optin) == 1 else 'these'} at {would} "
+                  f"unqualified, because the check was a text grep for the "
+                  f"module name -- and a one-level check still got it wrong, "
+                  f"since the call sits one function inside the guarded one.",
+                  ""]
         others = [s for s in d.get("step_counts", [])
                   if not s["consumes_binding_module"]]
         if others:
@@ -576,11 +784,26 @@ def render(d: dict) -> str:
                   f"{order['violator_days']:g} days, against "
                   f"`{order['fastest_later']}` at "
                   f"{order['fastest_later_days']:g} days among the defenses P3 "
-                  f"puts later. A wet-lab result matching the engine would "
-                  f"falsify P3's stated ordering, and a result matching P3 "
-                  f"would falsify the engine's defaults. That is a real, "
-                  f"scoreable disagreement -- and it is visible only BECAUSE "
-                  f"the model represents the quantity.", ""]
+                  f"puts later.", ""]
+            # SCOPE, because the first framing over-reached. P3's REGISTERED
+            # falsifier is simultaneity, not order identity, so the engine's
+            # order satisfies it -- the disagreement is between P3's
+            # descriptive parenthetical and the engine, which is worth
+            # publishing but is not scoreable under the registered rule.
+            if "threshold_hours" in p3:
+                L += [f"Scope: this is **not** a falsification of P3 as "
+                      f"registered. P3's stated falsifier is that all four "
+                      f"defenses recover within the same timepoint (no "
+                      f"sequential order), with a {p3['threshold_hours']:g}-hour "
+                      f"threshold"
+                      + (f" and a {p3['window_hours'][0]/24:g} to "
+                         f"{p3['window_hours'][1]/24:g} day window"
+                         if "window_hours" in p3 else "")
+                      + ". The engine's order IS sequential, so it satisfies "
+                      "that rule. The disagreement is between the "
+                      "preregistration's descriptive ordering and the engine's "
+                      "defaults, and it is visible only BECAUSE the model "
+                      "represents the quantity.", ""]
         else:
             L += [f"P3's stated ordering and the engine's defaults ({eo}) "
                   f"agree.", ""]
@@ -664,7 +887,7 @@ def main():
     print(f"wrote {OUT_MD}")
     print(f"wrote {OUT_JSON}")
     print(f"  wall-clock conventions: {d['n_wall_clock_conventions']}  "
-          f"solver timesteps: {d['n_solver_timesteps']}  "
+          f"solver timesteps: {d['n_solver_timestep_conventions']}  "
           f"distinct durations: {d['distinct_minutes_per_step']}")
     for r in _priced_runs(d):
         print(f"    {r['binary']:16s} {r['steps']:>4} steps -> {r['hours']:.1f} h")

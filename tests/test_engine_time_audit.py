@@ -2,11 +2,20 @@
 
 WHAT THIS DOCUMENT NOW CLAIMS
 ------------------------------
-Six declarations bind one engine step to a real duration, in two modules, and
-they DISAGREE by a factor of fifty (`tumor_pk` 1 min/step, `trigger_wave`
-0.02 min/step). Only `tumor_pk`'s reaches a binary, and `sim-tumor-pk` runs it
-for the same 180 steps the production matrix uses -- so the production run spans
-three hours, which is shorter than P3's own 24-hour falsification threshold.
+EXACTLY ONE module prices a simulation step in wall-clock time: `tumor_pk`, at
+one minute per step, reaching `sim-tumor-pk`'s 180-step run = 3.0 hours.
+`trigger_wave`'s `dt_min` is a CFL-constrained integrator timestep, not a
+binding on the simulation step. P3 IS represented -- `cell.rs` carries the four
+defenses' recovery half-times in days, `sim-window` sweeps them to 28 days, and
+that is a published manuscript figure -- and the finding is that the engine's
+default ORDER contradicts P3's stated one (`fsp1` is named early and is the
+slowest at 7d, against `gpx4` at 3d among those named later).
+
+NOTE ON THIS DOCSTRING. It previously still described the commit-1 narrative --
+"six declarations ... a factor of fifty ... shorter than P3's 24-hour
+threshold" -- every clause of which the page had already retracted, in a file
+edited by the same commit that retracted them. A second reviewer found it. A
+guard file's own prose rots exactly like the prose it guards.
 
 WHY THE PREVIOUS GUARDS DID NOT CATCH THE PREVIOUS HEADLINE
 -------------------------------------------------------------
@@ -203,7 +212,9 @@ def test_a_span_is_only_reported_for_a_binary_that_consumes_the_binding():
     assert conv, "no wall-clock convention, but the report shows spans"
     priced = 0
     for sc in d["step_counts"]:
-        mods = sc["consumes_binding_module"]
+        # default-path pricing, not mere module reference: sim-tme-3d names
+        # tumor_pk but reaches the PK solver only under --dose-sweep
+        mods = sc.get("prices_on_default_path") or []
         if not mods:
             continue
         src = "".join(p.read_text(errors="ignore") for p in
@@ -390,6 +401,177 @@ def test_the_composition_claim_is_measured_at_field_level():
             "referenced nowhere, which is what refutes the composition claim")
         for mod in orphans:
             assert f"`{mod}`" in md
+
+
+def test_the_real_time_table_is_complete_against_an_independent_scan():
+    """The table omitted cell.rs and trigger_wave.rs while the page's own body
+    said cell.rs carries half-times in days -- a self-contradiction 20 lines
+    apart, because TIME_UNIT still required a number before the unit after
+    find_step_bindings was fixed for exactly that. Re-scan independently."""
+    d, md = _doc(), MD.read_text()
+    listed = set(d["real_time_module_callers"])
+    src = REPO_ROOT / "simulations" / "ferroptosis-core" / "src"
+    # an independent rule covering BOTH forms: a parenthesised unit annotation
+    # OR a magnitude followed by a unit. Checking only the parenthesised form
+    # missed biochem.rs and params.rs, which qualify by magnitude, so dropping
+    # the `carry_both` group from the table survived.
+    unit = r"(secs?|seconds?|mins?|minutes?|hrs?|hours?|days?)"
+    indep_bare = re.compile(r"\((?:[^()\"',]{0,24}?[/\s])?" + unit + r"\s*\)", re.I)
+    # The magnitude form uses the SAME unit vocabulary the generator states --
+    # written out independently here, but not a different spec. Two mistakes
+    # to avoid, both made while writing this:
+    #   too narrow: without bare `h`, biochem.rs (which qualifies only via
+    #     "48-72h") is not demanded, and dropping the whole carry_both group
+    #     from the table survived.
+    #   too broad: adding bare `s` matched `1.0 - s` in oxygen.rs's linear O2
+    #     formula -- the supply variable, not seconds -- so the guard demanded
+    #     a module the generator rightly excludes and failed on a VALID tree.
+    indep_mag = re.compile(
+        r"\b\d+(?:\.\d+)?\s*-?\s*(sec|seconds?|min|mins|minutes?|h|hrs?|"
+        r"hours?|days?)\b", re.I)
+    for p in sorted(src.glob("*.rs")):
+        body = p.read_text(errors="ignore")
+        if indep_bare.search(body) or indep_mag.search(body):
+            assert p.name in listed, (
+                f"{p.name} carries a time-unit annotation and is missing from "
+                "the real-time table")
+            assert f"`{p.name}`" in md
+    for name in listed:
+        assert f"`{name}`" in md, f"{name} is in the artifact and not rendered"
+
+
+def test_the_bare_unit_rule_does_not_admit_non_durations():
+    """`(rows, h)` is grid spacing and `("{:.1}", hours)` is a format call."""
+    m = _mod()
+    for bad in ("(rows, h)", '("{:.1}", hours)', "(x, s)", "(a, b)"):
+        assert not m.TIME_UNIT_BARE.search(bad), (
+            f"{bad!r} matches the bare-unit rule; it is not a duration")
+    for good in ("(days)", "(min)", "(um/min)", "(1/min)", "(hours)"):
+        assert m.TIME_UNIT_BARE.search(good), f"{good!r} should match"
+
+
+def test_solver_and_wall_clock_counts_are_both_deduplicated():
+    """Deduping one side and not the other is the '6 declarations' error."""
+    d, md = _doc(), MD.read_text()
+    nc, nm = d["n_solver_timestep_conventions"], d["n_solver_timestep_matches"]
+    assert nc <= nm
+    assert f"plus {nc} numerical-integrator" in md, (
+        "the headline does not use the deduplicated solver count")
+    assert f"plus {nm} numerical-integrator" not in md or nc == nm, (
+        "the headline reports raw solver MATCHES beside deduplicated "
+        "wall-clock CONVENTIONS -- the arithmetic this page retracts")
+    assert f"matched {nm} times" in md
+
+
+def test_a_binary_is_only_priced_if_the_pricing_call_is_default_reachable():
+    """sim-tme-3d reaches solve_tumor_pk only under --dose-sweep."""
+    m, d = _mod(), _doc()
+    for sc in d["step_counts"]:
+        for stem in sc.get("prices_on_default_path", []):
+            syms = d["pricing_symbols"].get(stem + ".rs", [])
+            assert syms, f"{stem} prices without any pricing symbol"
+            bd = REPO_ROOT / "simulations" / sc["binary"] / "src"
+            assert any(m._reaches_by_default(bd, s) for s in syms), (
+                f"{sc['binary']} is priced on the default path but no pricing "
+                f"symbol of {stem} is reachable without an opt-in flag")
+    # The opt-in ones must be disclosed rather than silently dropped. Derived
+    # from the ARTIFACT, not by calling _opt_in_only: gating that function off
+    # made it return [], the loop ran zero times, and the whole disclosure
+    # could vanish from the page with the suite green.
+    md = MD.read_text()
+    optin = [s for s in d["step_counts"]
+             if s.get("consumes_binding_module")
+             and not s.get("prices_on_default_path")]
+    for s in optin:
+        assert f"`{s['binary']}`" in md, (
+            f"{s['binary']} references a pricing module behind a flag and the "
+            "report does not say so -- it would simply vanish from the page")
+        assert "opt-in flag" in md, (
+            "the opt-in disclosure paragraph is gone from the report")
+
+
+def test_the_p3_consumer_list_is_verified_against_source():
+    """Appending a fake consumer survived; check each one references it."""
+    d = _doc()
+    mod = d["p3_modelled"]
+    for binary in mod["consumers"]:
+        src_dir = REPO_ROOT / "simulations" / binary / "src"
+        assert src_dir.is_dir(), f"{binary} listed as a P3 consumer, does not exist"
+        src = "".join(p.read_text(errors="ignore") for p in src_dir.glob("*.rs"))
+        assert re.search(r"half_recovery_days|RecoveryRates", src), (
+            f"{binary} is listed as consuming the recovery rates and does not "
+            "reference them")
+
+
+def test_the_sim_window_sweep_is_verified_against_source():
+    """Truncating the timepoints survived: 8 timepoints / 14 days went unchecked."""
+    d = _doc()
+    sw = d["p3_modelled"].get("sweep")
+    assert sw, "the recovery sweep is no longer measured"
+    main = (REPO_ROOT / "simulations" / sw["binary"] / "src" / "main.rs").read_text()
+    blk = re.search(r"timepoints_hours[^;]*?vec!\[(.*?)\]", main, re.S)
+    assert blk, f"{sw['binary']} no longer declares timepoints_hours"
+    body = re.sub(r"//[^\n]*", "", blk.group(1))
+    vals = [float(x) for x in re.findall(r"(\d+(?:\.\d+)?)", body)]
+    assert sw["n_timepoints"] == len(vals), (
+        f"audit says {sw['n_timepoints']} timepoints, source has {len(vals)}")
+    assert sw["max_hours"] == max(vals), (
+        f"audit says {sw['max_hours']}h, source's maximum is {max(vals)}")
+
+
+def test_orphan_scan_covers_every_module_carrying_real_time():
+    """Skipping cell.rs in the orphan scan dropped the counter-example again."""
+    d = _doc()
+    fields = d["orphan_timescale_fields"]
+    src = REPO_ROOT / "simulations" / "ferroptosis-core" / "src"
+    pat = re.compile(r"\bpub\s+(\w+_(?:days?|hours?|hrs?|mins?|minutes?|secs?))\s*:")
+    for p in sorted(src.glob("*.rs")):
+        names = set(pat.findall(p.read_text(errors="ignore")))
+        if names:
+            assert p.name in fields, (
+                f"{p.name} declares real-time fields {sorted(names)} and the "
+                "orphan scan skipped it")
+            assert names <= set(fields[p.name]), (
+                f"{p.name}: {names - set(fields[p.name])} not scanned")
+
+
+def test_every_binding_appears_in_the_rendered_table():
+    """Dropping the solver rows left the headline counting what it no longer showed."""
+    d, md = _doc(), MD.read_text()
+    assert d["step_bindings"], "no bindings at all"
+    for b in d["step_bindings"]:
+        assert f"| `{b['module']}` | {b['line']} | {b['kind']} |" in md, (
+            f"{b['module']}:{b['line']} ({b['kind']}) is in the artifact and "
+            "missing from the rendered table")
+
+
+def test_the_artifact_is_fresh_against_the_live_sources():
+    """A REAL freshness gate: re-run the scan and diff.
+
+    Every other guard here compares the .md to the .json, and the two go stale
+    TOGETHER -- which is exactly how the scope-audit row on the README front
+    door went stale with all fifteen of its guards green. `--render-only` does
+    not help: it re-renders from the same committed JSON, so changing a Rust
+    source and not regenerating stays invisible to it.
+
+    The scan is a text walk over 33 files and takes well under a second, so
+    there is no reason for this gate not to exist.
+    """
+    m = _mod()
+    # round-trip through JSON so tuples compare as the lists they serialise to
+    live = json.loads(json.dumps(m.scan(), sort_keys=True))
+    committed = _doc()
+    for key in ("wall_clock_conventions", "distinct_minutes_per_step",
+                "step_counts", "p3_modelled", "p3_order",
+                "n_solver_timestep_conventions", "solver_timestep_conventions",
+                "step_bindings", "orphan_timescale_fields",
+                "real_time_module_callers", "pricing_symbols"):
+        assert live.get(key) == committed.get(key), (
+            f"`{key}` differs between a live scan and the committed artifact: "
+            f"analysis/engine-time-audit.json is stale. Re-run "
+            f"`python scripts/engine_time_audit.py`.\n"
+            f"  live      = {str(live.get(key))[:200]}\n"
+            f"  committed = {str(committed.get(key))[:200]}")
 
 
 def test_an_empty_scan_refuses_to_render():
