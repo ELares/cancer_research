@@ -315,6 +315,10 @@ def main() -> int:
         "| mechanism | A: keyword/frozen | B: MeSH/frozen | C: MeSH/census | rank A | rank C | shift | top descriptor supplies |",
         "|---|---|---|---|---|---|---|---|",
     ]
+
+    L += ["> " + (
+
+        "**The ratio below depends on the class boundary.** Both curated classes omit their largest real member -- PHYSICAL has no radiotherapy, PHARMACOLOGICAL no cytotoxic chemotherapy -- because neither has a mechanism tag. Five symmetric partitions give 1.32:1 to 3.93:1 against the 17.6:1 here; the direction survives, the magnitude does not. See `analysis/atlas-modality-ratio.md` (#724)."), ""]
     for r in rows:
         sh = r["rank_shift"]
         shift = "-" if sh is None else (f"**{sh:+d}**" if abs(sh) >= 3 else f"{sh:+d}")

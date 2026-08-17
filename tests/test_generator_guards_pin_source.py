@@ -152,3 +152,53 @@ def test_the_scope_list_only_holds_real_files():
     assert len(IN_SCOPE) >= 6, (
         "the in-scope set has shrunk below the analyses this rule was written "
         "from; narrowing it is how a rule stops applying to anything")
+
+
+# --- cross-references from superseded analyses to the ones that revise them ---
+#
+# Three committed analyses report figures that later work materially revised.
+# A reader who lands on the old one must find the new one, and the pointer has
+# to live in the GENERATOR: these are generated files, so a hand-written note in
+# the artifact is erased by the next regeneration. That mistake was made and
+# reverted while adding these.
+SUPERSEDED = {
+    "atlas_landscape.py": "analysis/atlas-modality-ratio.md",
+    "atlas_thesis_position.py": "analysis/atlas-thesis-rank.md",
+    "atlas_coverage.py": "analysis/atlas-taxonomy-reach.md",
+}
+
+
+def test_revised_analyses_point_at_what_revised_them():
+    missing = []
+    for gen, target in SUPERSEDED.items():
+        src = (REPO_ROOT / "scripts" / gen).read_text(encoding="utf-8")
+        if target not in src:
+            missing.append(f"{gen} does not point at {target}")
+    assert not missing, (
+        "\n  ".join([""] + missing)
+        + "\n\nThese generators produce reports whose headline figures were "
+          "materially revised by later work. The pointer must be in the "
+          "GENERATOR, not the artifact: the artifact is regenerated and a "
+          "hand-written note there is silently erased.")
+
+
+def test_the_pointer_is_not_inside_a_conditional():
+    """A conditional pointer appears only sometimes, which is worse than none.
+
+    The first attempt at these landed inside `if moved:` and `if growth:`
+    blocks, so the cross-reference would have been present or absent depending
+    on the data.
+    """
+    import ast
+    for gen, target in SUPERSEDED.items():
+        path = REPO_ROOT / "scripts" / gen
+        tree = ast.parse(path.read_text(encoding="utf-8"))
+        found_at_depth = []
+        for fn in [n for n in ast.walk(tree) if isinstance(n, ast.FunctionDef)]:
+            for stmt in fn.body:                      # TOP level of the function
+                if target in ast.dump(stmt):
+                    found_at_depth.append(fn.name)
+        assert found_at_depth, (
+            f"{gen}: the pointer to {target} is not a top-level statement of "
+            "any function, so it sits inside a branch and may not always be "
+            "emitted")
