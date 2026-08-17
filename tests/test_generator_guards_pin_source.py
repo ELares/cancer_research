@@ -64,6 +64,7 @@ IN_SCOPE = {
     "test_thesis_rank.py",
     "test_engine_selectivity.py",
     "test_site_coverage.py",
+    "test_oxygen_form_check.py",
 }
 
 
