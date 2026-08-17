@@ -1,29 +1,36 @@
 """Guards for the engine time-units audit (#727).
 
-THE CLAIM
----------
-Nothing in the engine states what one step is worth in real time, while modules
-carrying real time -- a 30-minute drug half-life, a 24-48 hour photosensitizer,
-a 14-21 day senescence programme -- are composed into the same 180-step run.
-The consequence is that PREREGISTRATION.md's P3, stated in days, cannot be
-scored against the model that produced it.
+WHAT THIS DOCUMENT NOW CLAIMS
+------------------------------
+Six declarations bind one engine step to a real duration, in two modules, and
+they DISAGREE by a factor of fifty (`tumor_pk` 1 min/step, `trigger_wave`
+0.02 min/step). Only `tumor_pk`'s reaches a binary, and `sim-tumor-pk` runs it
+for the same 180 steps the production matrix uses -- so the production run spans
+three hours, which is shorter than P3's own 24-hour falsification threshold.
 
-WHAT WOULD MAKE THIS WRONG
---------------------------
-1. IF SOMETHING DOES DECLARE A STEP DURATION. The whole claim is an absence, and
-   an absence is the easiest thing to assert carelessly. The audit SEARCHES for
-   a declaration rather than assuming there is none, and this pins that the
-   search is real by checking it can find one when one exists.
+WHY THE PREVIOUS GUARDS DID NOT CATCH THE PREVIOUS HEADLINE
+-------------------------------------------------------------
+The previous headline was "Nothing in the engine states it", and it was FALSE:
+`tumor_pk.rs:354` says "Time points in minutes (one per simulation step)". Three
+guards stood over that sentence and all three passed.
 
-2. IF THE REAL-TIME MODULES ARE NOT ACTUALLY COMPOSED. Two systems in one
-   codebase are only a problem if a single run uses both. The claim rests on
-   composition, not co-existence.
+  `test_the_absence_is_searched_for_not_assumed` asserted
+  `declares_step_duration is False` -- it PINNED THE WRONG ANSWER, so the only
+  way to fail it was to fix the bug.
 
-3. IF THE ISSUE'S ORIGINAL WORDING CREPT BACK. It said the engine has "four
-   conflicting step-duration bindings". Inspection found none: there are modules
-   with their own units that were never reconciled. "Definitions disagree"
-   implies four choices were made; nobody made any. The report must keep saying
-   the absence is the finding.
+  Its "prove the search can succeed" probe re-declared the SAME step-first
+  regex and ran it against `"One step is 15 minutes of simulated time."` -- a
+  string written to match it. A probe shaped to fit the pattern cannot discover
+  that the pattern misses the phrasing the source actually uses. That is a
+  guard computing its own expectation.
+
+  `test_the_timescale_span_claim_is_supported` checked the 30-minute and 14-21
+  day constants EXIST, which they do. It never checked they were COMPOSED,
+  which was the actual claim and was false.
+
+So the guards below are built the other way round: the fixtures come from the
+engine source rather than from the regex, and the headline is exercised in both
+directions.
 """
 
 import json
@@ -49,107 +56,177 @@ def _mod():
     return m
 
 
-def test_the_absence_is_searched_for_not_assumed():
-    """An absence asserted is worth nothing; an absence searched for is a result."""
+def test_the_detector_sees_the_phrasing_that_fooled_it():
+    """The regression test for the actual bug, using the REAL source line.
+
+    The fixture is read out of tumor_pk.rs rather than written here, so it
+    cannot be shaped to fit the pattern -- which is exactly how the previous
+    version of this guard passed over a live counter-example.
+    """
     m = _mod()
-    assert _doc()["declares_step_duration"] is False, (
-        "something now declares a step duration -- which is the outcome this "
-        "audit exists to prompt. Update the report: the finding has been fixed")
-    # and prove the search can succeed, or 'none found' means nothing
-    probe = re.compile(
-        r"(one|a|each|per)\s+step\s+(is|=|represents?|corresponds? to|equals?)\s*"
-        r"[^.\n]{0,40}\b(min|minute|hour|h|day|sec)", re.I)
-    assert probe.search("One step is 15 minutes of simulated time."), (
-        "the declaration pattern cannot match an obvious declaration, so "
-        "'none found' is a statement about the regex rather than the engine")
-    # and the SEARCH must still traverse real files. The artifact does not move
-    # when the scan is edited, so a scan neutered to look at nothing would keep
-    # reporting declares_step_duration=False and pass everything above.
-    assert 'for p in list(SRC.glob("*.rs"))' in SCRIPT.read_text(), (
-        "the declaration search no longer walks the engine source; "
-        "'none found' would then be a statement about an empty loop")
+    rs = (SRC / "tumor_pk.rs").read_text(errors="ignore")
+    real = [ln for ln in rs.split("\n")
+            if "one per simulation step" in ln.lower()]
+    assert real, (
+        "tumor_pk.rs no longer contains the unit-first step declaration this "
+        "audit was corrected to detect; re-check the finding against the "
+        "current source rather than deleting this test")
+
+    found = m.find_step_bindings()
+    assert found, "the detector finds no step binding anywhere in the engine"
+    tp = [b for b in found if b["module"] == "tumor_pk.rs"]
+    assert tp, (
+        "the detector no longer sees tumor_pk.rs's step-to-minute binding -- "
+        "the precise blindness that made the previous headline false")
+    assert any(b["minutes_per_step"] == 1.0 for b in tp), (
+        "tumor_pk's binding is no longer read as one minute per step")
 
 
-def test_both_time_systems_are_actually_present():
-    """Co-existence is the premise; without both sets the claim is empty."""
+def test_the_detector_is_not_limited_to_one_word_order():
+    """Step-first AND unit-first, or the absence is a fact about the regex."""
+    m = _mod()
+    hows = {h for h, _ in m.BINDINGS}
+    assert {"step-first", "unit-first"} <= hows, (
+        "the binding patterns no longer cover both word orders; a declaration "
+        "written the other way round would read as an absence")
+    # exercised, not merely declared
+    step_first = [p for h, p in m.BINDINGS if h == "step-first"][0]
+    unit_first = [p for h, p in m.BINDINGS if h == "unit-first"][0]
+    assert step_first.search("One step is 15 minutes of simulated time.")
+    assert unit_first.search("Time points in minutes (one per simulation step).")
+    # and neither pattern may match the other's sentence, which would mean one
+    # of them is loose enough to fire on anything
+    assert not step_first.search("Time points in minutes (one per simulation step).")
+
+
+def test_doc_comment_runs_are_joined_before_matching():
+    """The binding phrase routinely spans two `///` lines."""
+    m = _mod()
+    sample = ("    /// Returns concentration time-courses at 1-minute\n"
+              "    /// resolution (one value per simulation step)\n"
+              "    pub fn solve() {}\n")
+    joined = [t for _, t in m.logical_lines(sample)]
+    assert any("1-minute resolution (one value per simulation step)" in t
+               for t in joined), (
+        "consecutive doc-comment lines are no longer joined, so a declaration "
+        "split across two lines is invisible -- the second half of the bug")
+
+
+def test_the_headline_can_say_the_opposite():
+    """A headline that cannot flip is decoration, not a finding.
+
+    The previous one was a hardcoded 'Nothing in the engine states it' sitting
+    above a table that listed the module which states it.
+    """
+    m = _mod()
     d = _doc()
-    assert d["real_time_only"], "no module carries real time units"
-    assert d["per_step_only"], "no module carries per-step rates"
-    assert d["modules_total"] > 20, "the module scan found suspiciously few files"
-    # the specific ones the report names must really carry real time
-    for expected in ("tumor_pk.rs",):
-        assert expected in d["real_time_only"] + d["carry_both"], (
-            f"{expected} no longer carries a real-time constant, but the "
-            "report's argument names it")
+    absent = m.render({**d, "step_bindings": [], "n_step_bindings": 0,
+                       "distinct_minutes_per_step": [],
+                       "production_minutes_per_step": []})
+    assert "Nothing in the engine states it" in absent, (
+        "with no bindings the report no longer reports an absence")
+    present = m.render(d)
+    assert "Nothing in the engine states it" not in present, (
+        "the report still claims nothing states a step duration while "
+        f"{d['n_step_bindings']} declarations are in its own artifact")
+    assert str(d["n_step_bindings"]) in present
 
 
-def test_the_real_time_constants_are_real():
-    """Spot-check against the source, so the scan is not matching noise."""
+def test_the_conflict_is_derived_from_the_numbers():
+    """Two durations disagreeing is the finding; asserting it would not be."""
     d = _doc()
-    for name in d["real_time_only"] + d["carry_both"]:
-        ex = d["modules"][name]["examples"]
-        assert ex, f"{name} is classified real-time with no example"
-        src = (SRC / name).read_text(errors="ignore")
-        assert ex[0]["context"][:40] in src, (
-            f"{name}: the quoted context is not in the file, so the audit is "
-            "reporting something the source does not say")
-
-
-def test_the_timescale_span_claim_is_supported():
-    """Three orders of magnitude is a strong sentence and needs its evidence."""
+    vals = d["distinct_minutes_per_step"]
+    assert len(vals) >= 2, (
+        "the engine no longer declares two different step durations. If they "
+        "were reconciled, that is the outcome this audit exists to prompt -- "
+        "update the report rather than deleting the test")
     md = MD.read_text()
-    assert "three orders of magnitude" in md
-    joined = " ".join(
-        e["context"] for v in _doc()["modules"].values() for e in v["examples"])
-    assert re.search(r"\b30\s*min", joined, re.I), (
-        "no 30-minute constant found; the span claim's short end is missing")
-    assert re.search(r"1[0-9]\s*to\s*21\s*day|14 to 21 day", joined, re.I), (
-        "no multi-week constant found; the span claim's long end is missing")
+    ratio = max(vals) / min(vals)
+    assert f"factor of {ratio:.0f} apart" in md, (
+        "the report does not state the measured ratio between the conflicting "
+        "step durations")
+    src = SCRIPT.read_text()
+    assert 'if len(d["distinct_minutes_per_step"]) > 1:' in src, (
+        "the disagreement is no longer conditional on the measurement, so the "
+        "sentence would print whether or not they disagree")
 
 
-def test_it_does_not_invent_a_step_duration():
-    """Choosing one belongs to whoever owns the calibrated layers."""
+def test_the_production_span_is_read_from_source_not_written():
+    """180 steps and 1 min/step are facts about files, not prose."""
+    d = _doc()
+    prod = d["production"]
+    assert prod and prod["steps"] > 0
+    main = (REPO_ROOT / "simulations" / prod["binary"] / "src" / "main.rs")
+    assert re.search(rf"const\s+N_STEPS\s*:\s*usize\s*=\s*{prod['steps']}\b",
+                     main.read_text()), (
+        f"{prod['binary']} no longer runs {prod['steps']} steps; the span "
+        "figure in the report is stale")
+    span = prod["steps"] * min(d["production_minutes_per_step"]) / 60
+    assert f"{span:.1f} hours" in MD.read_text(), (
+        "the report does not state the span its own artifact implies")
+
+
+def test_the_p3_consequence_is_parsed_from_the_preregistration():
+    """The threshold must come from PREREGISTRATION.md, not from memory."""
+    d = _doc()
+    p3 = d.get("p3") or {}
+    assert "threshold_hours" in p3, (
+        "P3's falsification threshold is no longer parseable from "
+        "PREREGISTRATION.md; the consequence paragraph rests on it")
+    preg = (REPO_ROOT / "PREREGISTRATION.md").read_text()
+    blk = re.search(r"\*\*P3\..*?(?=\n\*\*P4\.)", preg, re.S)
+    assert blk, "P3's block is no longer locatable in the preregistration"
+    assert re.search(rf"within\s+{p3['threshold_hours']:g}\s*hours",
+                     blk.group(0), re.I), (
+        "the parsed threshold is not the one the preregistration states")
+
+
+def test_it_does_not_choose_or_reconcile_a_step_duration():
+    """Choosing one moves every calibrated layer and the byte-identity gates."""
     md, src = MD.read_text(), SCRIPT.read_text()
-    assert "does not choose a step duration" in md, (
-        "the report no longer disclaims choosing a duration")
-    assert not re.search(r"\bSTEP_MINUTES\b|\bstep_duration\s*=", src), (
+    assert "does not choose a step duration" in md
+    assert not re.search(r"\bSTEP_MINUTES\b|\bstep_duration\s*=\s*\d", src), (
         "the audit has started asserting a step duration, which is a modelling "
         "decision and not this script's to make")
+    # it must not write into the engine either
+    assert "ferroptosis-core" not in src.split("OUT_JSON")[1], (
+        "the generator reaches into the engine source after defining its "
+        "outputs; this audit measures and must not modify")
 
 
-def test_the_withdrawn_four_bindings_claim_does_not_return():
-    """It said four definitions conflict. There are none, and that is different."""
+def test_the_false_absence_claim_cannot_return():
+    """The retracted headline, pinned by IDENTIFIER not by substring.
+
+    The generator quotes the old sentence in order to withdraw it, so a bare
+    substring ban would trip on the retraction itself -- the shape that has now
+    caught guards in this repo four separate times.
+    """
     md = MD.read_text()
-    # NOT a bare substring check. The generator's docstring QUOTES the phrase
-    # in order to withdraw it, so forbidding the string outright fails on the
-    # correction itself -- the same shape as an earlier guard today that
-    # forbade "not a change here" and then tripped on the sentence retracting
-    # it. What must not return is the CLAIMING form, so the quote is required
-    # to stay attached to its withdrawal.
-    src = SCRIPT.read_text()
-    if "four conflicting" in src.lower():
-        assert "an earlier version of this issue said" in src.lower(), (
-            "the 'four conflicting step-duration bindings' phrase appears in "
-            "the generator without the withdrawal that makes it historical")
-    assert "four conflicting" not in md.lower(), (
-        "the withdrawn 'four conflicting step-duration bindings' framing is "
-        "back; inspection found no definitions at all, and 'definitions "
-        "disagree' implies choices nobody made")
-    assert "the absence is the finding" in md.lower() or \
-        "absence is the finding" in SCRIPT.read_text().lower(), (
-        "the report no longer distinguishes an absence from a disagreement")
+    d = _doc()
+    if d["n_step_bindings"] > 0:
+        assert "Nothing in the engine states it" not in md, (
+            "the report asserts nothing states a step duration while its own "
+            "artifact lists declarations that do")
+        assert "three orders of magnitude" not in md, (
+            "the withdrawn span sentence is back; it was built on a "
+            "composition that was never measured")
 
 
-def test_the_prediction_consequence_is_named_specifically():
-    """'Units matter' is a truism; naming the unfalsifiable prediction is not."""
-    md = MD.read_text()
-    assert "P3" in md, (
-        "the report no longer names which preregistered prediction this makes "
-        "unscoreable, which is what turns a units complaint into a finding")
-    preg = (REPO_ROOT / "PREREGISTRATION.md").read_text()
-    assert re.search(r"3 to 7 days", preg), (
-        "P3 no longer states a day-scale window, so the report's example is "
-        "stale and the claim needs re-checking against the current text")
+def test_the_composition_claim_is_measured_at_field_level():
+    """Module-level reachability is too coarse and passed over a false claim."""
+    d = _doc()
+    fields = d.get("orphan_timescale_fields")
+    assert fields, "the field-level composition check is gone"
+    orphans = {m: [f for f, r in fs.items() if not r] for m, fs in fields.items()}
+    orphans = {m: v for m, v in orphans.items() if v}
+    if orphans:
+        md = MD.read_text()
+        tot = sum(len(v) for v in orphans.values())
+        assert f"**{tot} real-time configuration fields are referenced" in md, (
+            "the report does not state how many declared timescales are "
+            "referenced nowhere, which is what refutes the composition claim")
+        for mod in orphans:
+            assert f"`{mod}`" in md
 
 
 def test_an_empty_scan_refuses_to_render():

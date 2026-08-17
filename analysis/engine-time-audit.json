@@ -1,9 +1,13 @@
 {
+ "bindings_reaching_production": 3,
  "carry_both": [
   "biochem.rs",
   "params.rs"
  ],
- "declares_step_duration": false,
+ "distinct_minutes_per_step": [
+  0.02,
+  1.0
+ ],
  "modules": {
   "biochem.rs": {
    "examples": [
@@ -142,6 +146,43 @@
   }
  },
  "modules_total": 33,
+ "n_step_bindings": 6,
+ "orphan_timescale_fields": {
+  "cell.rs": {
+   "fsp1_half_recovery_days": [
+    "sim-window"
+   ],
+   "gpx4_half_recovery_days": [
+    "sim-window"
+   ],
+   "gsh_half_recovery_days": [
+    "sim-window"
+   ],
+   "nrf2_half_recovery_days": [
+    "sim-window"
+   ]
+  },
+  "senescence.rs": {
+   "tau_induction_days": [],
+   "tau_recovery_days": []
+  },
+  "trigger_wave.rs": {
+   "diffusion_um2_per_min": [],
+   "dt_min": []
+  },
+  "tumor_pk.rs": {
+   "time_min": [
+    "sim-tumor-pk"
+   ]
+  }
+ },
+ "p3": {
+  "threshold_hours": 24.0,
+  "window_hours": [
+   72.0,
+   168.0
+  ]
+ },
  "per_step_only": [
   "clonal.rs",
   "copper.rs",
@@ -153,9 +194,118 @@
   "repair.rs",
   "stromal.rs"
  ],
+ "production": {
+  "binary": "sim-tumor-pk",
+  "steps": 180
+ },
+ "production_minutes_per_step": [
+  1.0
+ ],
+ "real_time_module_callers": {
+  "biochem.rs": [
+   "sim-combo",
+   "sim-combo-mech",
+   "sim-icd",
+   "sim-invivo",
+   "sim-spatial",
+   "sim-tissue-pk",
+   "sim-tme",
+   "sim-tme-3d",
+   "sim-window"
+  ],
+  "params.rs": [
+   "sim-combo",
+   "sim-combo-mech",
+   "sim-icd",
+   "sim-invivo",
+   "sim-original",
+   "sim-scale",
+   "sim-spatial",
+   "sim-tissue-pk",
+   "sim-tme",
+   "sim-tme-3d",
+   "sim-tumor-pk",
+   "sim-window"
+  ],
+  "photosensitizer_pk.rs": [
+   "sim-spatial"
+  ],
+  "senescence.rs": [
+   "sim-tme-3d"
+  ],
+  "tumor_pk.rs": [
+   "sim-tme-3d",
+   "sim-tumor-pk"
+  ]
+ },
  "real_time_only": [
   "photosensitizer_pk.rs",
   "senescence.rs",
   "tumor_pk.rs"
+ ],
+ "step_bindings": [
+  {
+   "callers": [],
+   "how": "named-field",
+   "line": 74,
+   "minutes_per_step": 0.02,
+   "module": "trigger_wave.rs",
+   "text": "pub dt_min: f64,",
+   "unit": "min"
+  },
+  {
+   "callers": [],
+   "how": "named-field",
+   "line": 99,
+   "minutes_per_step": 0.02,
+   "module": "trigger_wave.rs",
+   "text": "dt_min: 0.02,",
+   "unit": "min"
+  },
+  {
+   "callers": [],
+   "how": "named-field",
+   "line": 157,
+   "minutes_per_step": 0.02,
+   "module": "trigger_wave.rs",
+   "text": "...et dt = cfg.dt_min;",
+   "unit": "min"
+  },
+  {
+   "callers": [
+    "sim-tme-3d",
+    "sim-tumor-pk"
+   ],
+   "how": "unit-first",
+   "line": 354,
+   "minutes_per_step": 1.0,
+   "module": "tumor_pk.rs",
+   "text": "...me points in minutes (one per simulation step).",
+   "unit": "minutes"
+  },
+  {
+   "callers": [
+    "sim-tme-3d",
+    "sim-tumor-pk"
+   ],
+   "how": "unit-first",
+   "line": 364,
+   "minutes_per_step": 1.0,
+   "module": "tumor_pk.rs",
+   "text": "...-courses at 1-minute resolution (one value per simulation step). Internal...",
+   "unit": "minute"
+  },
+  {
+   "callers": [
+    "sim-tme-3d",
+    "sim-tumor-pk"
+   ],
+   "how": "loop-variable",
+   "line": 391,
+   "minutes_per_step": 1.0,
+   "module": "tumor_pk.rs",
+   "text": "for minute in 0..n_steps {",
+   "unit": "minute"
+  }
  ]
 }
