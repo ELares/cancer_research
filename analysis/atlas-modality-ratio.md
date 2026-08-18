@@ -46,18 +46,25 @@ That replacement list is a hand-written judgement too, and four of its ten are l
 
 ## Is surgery specific, or merely large?
 
-**A control that cannot work, and is withdrawn.** A held-out ratio is `pharmacological / (physical - articles removed)`, so it is a function of the MASS removed and of nothing else -- verified over all 25 partition-by-rule cells (max error 0.0e+00). A mass-matched permutation control was run here, drawing random physical descriptors until it had removed as many articles as the surgical rule did, and asking how often it reached the same spread. It cannot answer that: once the amount is matched the answer is identical whatever descriptors carried it, and the scatter it appeared to show was its greedy draw overshooting the target. The control and its number are withdrawn.
+**The control, and the version of it that could not work.** An earlier draft matched the removed mass PARTITION BY PARTITION. That pins `physical - removed` everywhere, so every held-out ratio is fixed before a descriptor is chosen and the draw has nothing left to vary -- it returned the surgical answer by construction, and the scatter it appeared to show was its greedy draw overshooting. The degeneracy is in the per-partition matching, not in permutation.
 
-**What can speak to specificity** is a named non-surgical family built the same way the surgical rule is. Those are not mass-matched, and the masses are reported so the comparison is not taken for more than it is.
+Matching the TOTAL instead leaves the allocation across the five free, which is where the information is. 1,000 draws (seed 20260818), each a random descriptor set from the union universe applied IDENTICALLY to all five -- the same shape as the surgical rule -- until 1,129,902 physical articles are removed, the total surgery removes:
 
-| removal | physical articles removed | spread across the five |
-|---|--:|--:|
-| nothing removed | 0 | 2.99x |
-| `energy/ablation family` | 206,473 (0.18x) | 3.96x |
-| `radiotherapy family` | 573,278 (0.51x) | 5.78x |
-| **`operative-only`** | **1,129,902** | **1.18x** |
+* spread 1.62x to 11.61x, median 3.34x
+* **0 of 1,000** reach the surgical rule's 1.18x
 
-Every named family removes LESS mass than surgery and still leaves the five further apart than removing nothing at all (`energy/ablation family` 3.96x, `radiotherapy family` 5.78x against 2.99x unremoved and 1.18x for surgery). That is the part the mass argument cannot explain: removing less mass moves a spread less, and these move it the WRONG WAY. The partitions do not disagree about radiotherapy or about ablation; they disagree about surgery.
+**Where the removal falls, not how big it is.** A spread responds to how UNEVENLY a removal lands, not to its total -- so each family's own five masses are reassigned across the partitions, exactly, over all 120 permutations. If the observed assignment is unremarkable among them the family's mass is near-uniform, and the result is a property of subtracting a roughly constant amount from unequal denominators.
+
+| removal | physical articles removed | least to most across the five | spread | reassignments at or below it | same total spread EVENLY |
+|---|--:|--:|--:|--:|--:|
+| nothing removed | 0 | - | 2.99x | - | - |
+| `energy/ablation family` | 206,473 (0.18x) | 20,890 to 54,435 | 3.96x | 120 of 120 | 3.47x |
+| **`operative-only`** | 1,129,902 | 0 to 353,184 | **1.18x** | 2 of 48 | 3.15x |
+| `radiotherapy family` | 573,278 (0.51x) | 86,328 to 131,818 | 5.78x | 54 of 120 | 5.58x |
+
+Surgery's masses run from 0 to 353,184 across the five, and only **2 of 48** reassignments of those same five numbers bring the five as close together as the real allocation does. Spreading the identical total EVENLY gives 3.15x. So it is not the amount: it is that the amount lands where the partitions differ.
+
+The named non-surgical families are the contrast, and an earlier version of this page read them wrongly. They do not collapse the five -- they widen them -- but that is NOT evidence about descriptors: `energy/ablation family` takes a near-uniform 20,890-to-54,435 mass and spreading the same total evenly already gives 3.47x of its 3.96x, `radiotherapy family` takes a near-uniform 86,328-to-131,818 mass and spreading the same total evenly already gives 5.58x of its 5.78x. Subtracting a roughly constant amount from unequal denominators must amplify the ratios already highest. What the two families establish is only that neither of them collapses the five; the reassignment column above is what establishes that surgery's does not do it by being large.
 
 | for comparison | | | | |
 |---|--:|--:|--:|--:|
@@ -103,7 +110,7 @@ Correcting a drug-therapy numerator and a radiotherapy denominator each by its o
 
 **But that is the wrong pair for these classes.** #722's own headline is that the sharpest case is SURGERY, at recall 0.101 against drug therapy's 0.547 -- and surgery is precisely what dominates the physical class here, at up to 63% of it. Correcting by THAT row moves the ratio sharply DOWN.
 
-**Neither correction is licensed.** #722 measures proxy sets of four to seven descriptors while the classes here hold 17 to 236. Where a class CONTAINS the proxy, the proxy's recall is a floor for the class's, because adding descriptors can only add matches -- measured, the pharmacological side contains the drug-therapy proxy in 5 of 5 partitions and the physical side contains the surgery proxy in 3 (counting only real DescriptorNames: `neoplasms/surgery` is a descriptor/qualifier composite that can never be a class member). Where it does not, the floor argument does not even apply. Either way, borrowing a proxy's recall as a class's would repeat the category error being retracted. The bias is real; its direction is not established here, and the measurement that would settle it -- these classes scored on both MeSH axes -- is not computable from the committed records, which carry the descriptor axis only.
+**Neither correction is licensed.** #722 measures proxy sets of four to seven descriptors while the classes here hold 17 to 236. Where a class CONTAINS the proxy, the proxy's recall is a floor for the class's, because adding descriptors can only add matches -- measured, the pharmacological side contains the drug-therapy proxy in 5 of 5 partitions and the physical side contains the surgery proxy in 3 -- and those are the three where surgery DOMINATES it; the two that fail, `clinical-delivery`, `mechanism-of-action`, are the two that admit least surgery, the second by construction (counting only real DescriptorNames: `neoplasms/surgery` -- a descriptor/qualifier composite that can never be a class member, and inert in #722's own descriptor arm too). Where it does not, the floor argument does not even apply. Either way, borrowing a proxy's recall as a class's would repeat the category error being retracted. The bias is real; its direction is not established here, and the measurement that would settle it -- these classes scored on both MeSH axes -- is not computable from the committed records, which carry the descriptor axis only.
 
 ## What would make this wrong
 

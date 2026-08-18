@@ -2009,11 +2009,31 @@
   "top_two_share": 0.6518133145662032
  },
  "mass_identity": {
-  "claim": "held-out ratio == pharm / (phys - articles removed)",
-  "holds": true,
-  "max_abs_error": 0.0,
-  "n_checks": 25,
-  "withdrawn_control": "mass-matched permutation over random descriptors"
+  "identity": "held-out ratio == pharm / (phys - articles that drop out)",
+  "identity_is_algebra_not_measurement": true,
+  "incidence_table_accounts_for_every_physical_article": true,
+  "per_partition": {
+   "clinical-delivery": {
+    "in_incidence_table": 354753,
+    "physical": 354753
+   },
+   "maximally-inclusive": {
+    "in_incidence_table": 626304,
+    "physical": 626304
+   },
+   "mechanism-of-action": {
+    "in_incidence_table": 196717,
+    "physical": 196717
+   },
+   "minimally-inclusive": {
+    "in_incidence_table": 501837,
+    "physical": 501837
+   },
+   "regulatory-class": {
+    "in_incidence_table": 592505,
+    "physical": 592505
+   }
+  }
  },
  "partitions": {
   "clinical-delivery": {
@@ -2076,6 +2096,73 @@
    "ratio_surgery_held_out": 3.3338149573143547,
    "surgical_share_of_physical": 0.5911663192715674
   }
+ },
+ "permutation": {
+  "allocation": {
+   "energy/ablation family": {
+    "mass_max": 54435,
+    "mass_min": 20890,
+    "mass_uniformity": 2.605792245093346,
+    "masses": {
+     "clinical-delivery": 51178,
+     "maximally-inclusive": 48483,
+     "mechanism-of-action": 54435,
+     "minimally-inclusive": 20890,
+     "regulatory-class": 31487
+    },
+    "median_assignment": 3.6938531918706845,
+    "n_at_or_below_observed": 120,
+    "n_feasible_assignments": 120,
+    "observed_spread": 3.9599481251914894,
+    "uniform_mass_spread": 3.4713487455839442
+   },
+   "operative-only": {
+    "mass_max": 353184,
+    "mass_min": 0,
+    "mass_uniformity": null,
+    "masses": {
+     "clinical-delivery": 111415,
+     "maximally-inclusive": 353184,
+     "mechanism-of-action": 0,
+     "minimally-inclusive": 315034,
+     "regulatory-class": 350269
+    },
+    "median_assignment": 97.2592716668744,
+    "n_at_or_below_observed": 2,
+    "n_feasible_assignments": 48,
+    "observed_spread": 1.1799918715103523,
+    "uniform_mass_spread": 3.1505084627787627
+   },
+   "radiotherapy family": {
+    "mass_max": 131818,
+    "mass_min": 86328,
+    "mass_uniformity": 1.5269437494208136,
+    "masses": {
+     "clinical-delivery": 131818,
+     "maximally-inclusive": 128476,
+     "mechanism-of-action": 112786,
+     "minimally-inclusive": 113870,
+     "regulatory-class": 86328
+    },
+    "median_assignment": 5.8547430898405555,
+    "n_at_or_below_observed": 54,
+    "n_feasible_assignments": 120,
+    "observed_spread": 5.7791269109628205,
+    "uniform_mass_spread": 5.580001875819387
+   }
+  },
+  "seed": 20260818,
+  "surgical_spread": 1.1799918715103523,
+  "target_total_mass": 1129902,
+  "total_matched": {
+   "degenerate_draws": 0,
+   "max": 11.60916965867759,
+   "median": 3.3364261159435644,
+   "min": 1.6200340948144527,
+   "n_at_or_below_surgical": 0,
+   "n_draws": 1000
+  },
+  "withdrawn_control": "mass matched PER PARTITION, which pins every held-out ratio before a descriptor is chosen"
  },
  "proxy_containment": {
   "non_descriptor_composites_dropped": {

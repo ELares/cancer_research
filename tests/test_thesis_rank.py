@@ -90,7 +90,7 @@ def test_the_whole_ranking_is_published():
         "too short to locate a leg within it")
     assert "| rank |" in md, "the ranking table is gone"
     # the leg table must report a rank OUT OF the full ranking, not in isolation
-    assert f"rank of {len(d['intersections'])}" in md, (
+    assert f"rank of {len(d['intersections'])} ranked" in md, (
         "the leg table does not state the size of the ranking its ranks are "
         "drawn from")
 
@@ -107,9 +107,11 @@ def test_the_thesis_legs_are_located_not_asserted():
     # descriptor matching NOTHING was removed from the universe is what put
     # this annotation there.
     def cell(desc):
-        tied = sum(1 for _k, v in d["intersections"] if v == counts[desc])
-        return (f"{rank[desc]} (tied with {tied - 1} others)" if tied > 1
-                else f"{rank[desc]}")
+        n = counts[desc]
+        span = [i + 1 for i, (_k, v) in enumerate(d["intersections"]) if v == n]
+        total = len(d["intersections"])
+        return (f"{span[0]}-{span[-1]} of {total} ({len(span)}-way tie at {n:,})"
+                if len(span) > 1 else f"{rank[desc]} of {total}")
     assert f"| sonodynamic therapy | {sdt} | {counts[sdt]:,} | {cell(sdt)} |" in md, (
         "the sonodynamic row is not the one the ranking supports")
     for name, desc in (("focused ultrasound",

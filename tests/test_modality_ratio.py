@@ -247,6 +247,67 @@ _ENERGY_WORDS = re.compile(
     r"brachytherap|proton therapy|light therapy", re.I)
 
 
+def test_every_surgical_descriptor_a_rule_skips_is_a_NAMED_exception():
+    """The page's own method, turned on the page: name every exclusion.
+
+    Three mutations passed the previous guards -- one dropping the nine
+    largest surgical descriptors NOT on the core list (headline 1.18x ->
+    1.53x), one stopping the primary rule excluding the energy leak it
+    describes, and one absorbing seven modalities that escape both hand lists.
+    A 90%-surgical floor cannot see any of them, and REMOVING surgical terms
+    even raises the surgical fraction. So the requirement is containment
+    against the generator's own declared exception sets, not a percentage.
+    """
+    m, d = _mod(), _doc()
+    parts = _parts()
+    # the generator's OWN declared exception sets, imported not restated
+    named = m.ENERGY_CAUGHT_BY_STEM | m.OPERATIVE_MISSED_BY_STEM
+    for name, leg in d["holdouts"].items():
+        for k, r in leg["partitions"].items():
+            members = {x.lower() for x in parts[k]["physical"]}
+            picked = set(r["descriptors"])
+            skipped = {x for x in members
+                       if _SURGICAL_WORDS.search(x) and x not in picked}
+            unnamed = {x for x in skipped
+                       if x not in named and "transplant" not in x}
+            assert not unnamed, (
+                f"rule {name!r} skips {sorted(unnamed)} in {k} -- surgical by "
+                "an independent reading and not on any exception list the "
+                "generator declares, so the page holds out less than it says")
+
+    # and the PRIMARY rule's two declared corrections, pinned directly: no
+    # guard anywhere used to reference what it excludes, only its spread
+    rules = m.holdout_rules()
+    for k, spec in parts.items():
+        members = {x.lower() for x in spec["physical"]}
+        got = rules[m.PRIMARY_RULE](members)
+        assert not (m.ENERGY_CAUGHT_BY_STEM & got), (
+            f"the primary rule holds out {sorted(m.ENERGY_CAUGHT_BY_STEM & got)} "
+            f"in {k}, while the page says it excludes them and calls "
+            "`Radiosurgery` radiotherapy mass")
+        assert (m.OPERATIVE_MISSED_BY_STEM & members) <= got, (
+            f"the primary rule does not hold out "
+            f"{sorted((m.OPERATIVE_MISSED_BY_STEM & members) - got)} in {k}, "
+            "which the page says it includes")
+
+
+def test_the_zero_surgery_paragraph_is_present_while_a_zero_partition_exists():
+    """It vanished silently under a mutation, taking the objection it answers."""
+    d, md = _doc(), MD.read_text()
+    zero = [k for k, c in d["partitions"].items()
+            if c["surgical_share_of_physical"] == 0]
+    wz = d.get("without_zero_surgery_partitions") or {}
+    assert sorted(zero) == sorted(wz.get("excluded", [])), (
+        f"partitions with no surgical mass are {sorted(zero)} but the "
+        f"leave-one-out block excludes {sorted(wz.get('excluded', []))}")
+    if zero:
+        assert wz.get("held_out_spread"), "the leave-one-out was not computed"
+        assert "admits no operative surgery at all" in md, (
+            "a partition the primary rule cannot move is the top of both "
+            "columns and the page does not say so")
+        assert f"**{wz['held_out_spread']:.2f}x**" in md
+
+
 def test_every_rule_holds_out_the_core_and_no_energy_modality():
     """A rule that drops nine real surgical terms, or absorbs nine energy ones,
     moved the headline spread by 60% and 12% respectively and passed every
@@ -481,40 +542,74 @@ def test_both_column_is_reported_not_resolved():
 # Controls
 # ---------------------------------------------------------------------------
 
-def test_the_withdrawn_permutation_is_not_quoted_and_the_identity_is_proved():
-    """A mass-matched permutation cannot answer its own question.
-
-    The held-out ratio is `pharm / (phys - articles removed)`, so once the
-    amount removed is matched the answer is identical whatever descriptors
-    carried it. The control shipped anyway, and its apparent scatter -- quoted
-    as "15 of 20" -- was its greedy draw overshooting the target, a number that
-    moved between 9 and 18 across seeds.
+def test_the_controls_that_can_discriminate_are_run_and_reported():
+    """The per-partition mass match had no power; the total match and the
+    allocation permutation do, and both must be present and quoted.
     """
     d, md = _doc(), MD.read_text()
-    ident = d.get("mass_identity") or {}
-    assert ident.get("holds"), "the mass identity is no longer verified"
-    assert ident["n_checks"] >= len(d["partitions"]) * 4, (
-        f"the identity is checked over only {ident['n_checks']} cells")
-    assert ident["max_abs_error"] < 1e-9
+    perm = d.get("permutation") or {}
+    tm = perm.get("total_matched") or {}
+    alloc = perm.get("allocation") or {}
+    m = _mod()
+    assert tm.get("n_draws", 0) >= 1000, (
+        f"the total-mass-matched control ran {tm.get('n_draws')} draws")
+    assert alloc.get(m.PRIMARY_RULE), "the allocation permutation is gone"
+    for name, a in alloc.items():
+        assert a["n_feasible_assignments"] >= 2, (
+            f"{name}: the allocation permutation has nothing to compare")
+        assert 0 <= a["n_at_or_below_observed"] <= a["n_feasible_assignments"]
+    pa = alloc[m.PRIMARY_RULE]
+    assert f"**{pa['n_at_or_below_observed']} of " in md or \
+        f"{pa['n_at_or_below_observed']} of {pa['n_feasible_assignments']}" in md, (
+        "the allocation result is computed and not rendered")
+    assert f"{tm['n_at_or_below_surgical']:,} of {tm['n_draws']:,}" in md
+    # the withdrawn design must not come back, and its verdict must not either
+    for gone in ("mass-matched random, median", "does NOT rest on the "
+                 "permutation:", "the mass argument cannot explain"):
+        assert gone not in md, f"the withdrawn reading {gone!r} is still here"
+    assert "could not work" in md and "per-partition" in md.lower()
 
-    # recomputed HERE, from the partition counts, not from the identity block
-    for name, leg in d["holdouts"].items():
-        for k, r in leg["partitions"].items():
-            c = d["partitions"][k]
-            left = c["phys"] - r["phys_held_out"]
-            if not left:
-                continue
-            assert abs(c["pharm"] / left - r["ratio"]) < 1e-9, (
-                f"{name}/{k}: the held-out ratio is not pharm/(phys-removed), "
-                "so the identity the page states is false")
 
-    assert "cannot work, and is withdrawn" in md
-    for gone in ("of 20** random draws", "mass-matched random, median",
-                 "does NOT rest on the permutation:"):
-        assert gone not in md, (
-            f"the withdrawn permutation number {gone!r} is still quoted")
-    assert "n_draws" not in json.dumps(d), (
-        "the withdrawn permutation still writes draw counts into the artifact")
+def test_the_identity_is_called_algebra_and_the_real_invariant_is_checked():
+    """The first version computed one expression twice and called the zero
+    difference a verification over 25 cells. Substituting a constant for
+    `_remaining` left it reporting `holds: True`.
+    """
+    d = _doc()
+    mi = d.get("mass_identity") or {}
+    assert mi.get("identity_is_algebra_not_measurement") is True
+    assert mi.get("incidence_table_accounts_for_every_physical_article") is True
+    per = mi.get("per_partition") or {}
+    assert per, "the invariant that CAN fail is not recorded"
+    for k, r in per.items():
+        assert r["in_incidence_table"] == d["partitions"][k]["phys"], (
+            f"{k}: the incidence table holds {r['in_incidence_table']} of the "
+            f"{d['partitions'][k]['phys']} physical articles, so the hold-out "
+            "arithmetic runs on a different denominator than the main table")
+    assert "max error" not in MD.read_text(), (
+        "the page still presents the algebraic identity as a measurement")
+
+
+def test_the_named_family_widening_is_not_claimed_as_descriptor_evidence():
+    """Their masses are near-uniform, so subtracting them from unequal
+    denominators must amplify the highest ratios. An earlier draft called that
+    "the part the mass argument cannot explain".
+    """
+    d, md = _doc(), MD.read_text()
+    m = _mod()
+    alloc = (d.get("permutation") or {}).get("allocation") or {}
+    for name, a in alloc.items():
+        if name == m.PRIMARY_RULE:
+            continue
+        u, obs = a.get("uniform_mass_spread"), a.get("observed_spread")
+        if not (u and obs):
+            continue
+        if u > obs * 0.5:
+            assert f"{u:.2f}x of its {obs:.2f}x" in md, (
+                f"spreading `{name}`'s mass EVENLY already gives {u:.2f}x of "
+                f"its {obs:.2f}x, so most of its widening is arithmetic, and "
+                "the page does not say so")
+    assert "Subtracting a roughly constant amount from unequal denominators" in md
 
 
 def test_the_named_controls_report_the_mass_they_remove():
@@ -531,7 +626,9 @@ def test_the_named_controls_report_the_mass_they_remove():
             "report does not say so, while comparing its spread to surgery's")
         # each control's per-partition mass must be its OWN, not surgery's
         assert per != rm["surgical"] or name == "surgical"
-    assert f"**{surg:,}**" in md
+    assert f"{surg:,}" in md, (
+        f"surgery removes {surg:,} physical articles and the report does not "
+        "state it beside the controls it is compared against")
 
 
 def test_a_named_family_control_does_not_reproduce_the_collapse():

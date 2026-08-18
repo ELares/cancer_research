@@ -291,7 +291,7 @@ def render(d: dict) -> str:
 
     L += ["## Where the thesis's own legs land", ""]
     L += ["| leg | descriptor | count | rank of "
-          f"{len(rows)} |", "|---|---|--:|--:|"]
+          f"{len(rows)} ranked |", "|---|---|--:|--:|"]
     legs = d.get("leg_intersections") or {}
     # every descriptor the scan actually looked for, so a genuine
     # zero is distinguishable from one never counted
@@ -311,9 +311,16 @@ def render(d: dict) -> str:
         if c is None:
             c = 0 if desc in scanned else None
         cell = f"{c:,}" if c is not None else "not measured"
-        # A rank inside a tie is not determined by the data. Report the span.
-        tied = sum(1 for _k, v in rows if r and v == dict(rows).get(desc))
-        rank_cell = ((f"{r} (tied with {tied - 1} others)" if tied > 1 else str(r))
+        # A rank inside a tie is not determined by the data, so publishing
+        # one index of it is publishing an artifact of the tie-break. Report
+        # the SPAN the tie occupies. "140 (tied with 44 others)" was worse
+        # than the bug it replaced: it implies ranks 140-184 in a 166-row
+        # table.
+        n = dict(rows).get(desc)
+        span = [i + 1 for i, (_k, v) in enumerate(rows) if v == n] if r else []
+        rank_cell = ((f"{span[0]}-{span[-1]} of {len(rows)} "
+                      f"({len(span)}-way tie at {n:,})" if len(span) > 1
+                      else f"{r} of {len(rows)}")
                      if r else
                      "*not a modality; outside this universe*")
         L.append(f"| {leg} | {desc} | {cell} | {rank_cell} |")

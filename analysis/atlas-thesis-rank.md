@@ -29,11 +29,11 @@
 
 ## Where the thesis's own legs land
 
-| leg | descriptor | count | rank of 166 |
+| leg | descriptor | count | rank of 166 ranked |
 |---|---|--:|--:|
-| sonodynamic therapy | ultrasonic therapy | 32 | 22 (tied with 2 others) |
-| photodynamic therapy | photochemotherapy | 152 | 6 |
-| focused ultrasound | high-intensity focused ultrasound ablation | 1 | 140 (tied with 44 others) |
+| sonodynamic therapy | ultrasonic therapy | 32 | 20-22 of 166 (3-way tie at 32) |
+| photodynamic therapy | photochemotherapy | 152 | 6 of 166 |
+| focused ultrasound | high-intensity focused ultrasound ablation | 1 | 122-166 of 166 (45-way tie at 1) |
 | drug resistance | drug resistance, neoplasm | 479 | *not a modality; outside this universe* |
 
 drug resistance is outside the modality universe by construction -- the universe is built from therapeutic MODALITIES and these are not one. The count column is their real census intersection, measured here; an earlier version of this table printed a zero there, which reads as a measured absence rather than a scope boundary.

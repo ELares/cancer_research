@@ -89,6 +89,7 @@ Usage:
 import argparse
 import gzip
 import json
+import random
 import re
 from collections import Counter
 from pathlib import Path
@@ -105,6 +106,9 @@ OUT_JSON = PROJECT_ROOT / "analysis" / "atlas-modality-ratio.json"
 # `article/drafts/v1.md` and `LANDSCAPE_CENSUS_RATIO` against the ratio this
 # script DERIVES from `atlas-landscape.json`, because the page divides by both
 # and a typed number beside a derived one reads as freshly derived.
+N_PERMUTATIONS = 1000
+PERMUTATION_SEED = 20260818
+
 MANUSCRIPT_RATIO = 9.1
 LANDSCAPE_CENSUS_RATIO = 17.6
 
@@ -285,9 +289,10 @@ def scan(parts: dict) -> dict:
     For each partition the scan records, per distinct set of matched physical
     descriptors, how many articles matched exactly that set. Every hold-out
     question -- how many articles still match after removing descriptors X --
-    is then answerable offline from that table, so alternative rules and a
-    permutation control cost no extra passes and, more importantly, are
-    computed from the SAME scan rather than from a second one that could differ.
+    is then answerable offline from that table, so the alternative rules and
+    both permutation controls cost no extra passes -- 3,000 total-mass-matched
+    draws run in seconds -- and, more importantly, are computed from the SAME
+    scan rather than from a second one that could differ.
     """
     sets = {k: {"ph": {x.lower() for x in v["pharmacological"]},
                 "py": {x.lower() for x in v["physical"]}}
@@ -326,6 +331,7 @@ def assemble(parts, sets, counts, combos, n) -> dict:
         "holdouts": {},
         "controls": {},
         "mass_identity": {},
+        "permutation": {},
         "removed_mass": {},
         "stem_alternative_hits": {},
         "landscape_composition": landscape_composition(),
@@ -386,6 +392,7 @@ def assemble(parts, sets, counts, combos, n) -> dict:
         }
 
     out["mass_identity"] = mass_identity(sets, counts, combos, rules)
+    out["permutation"] = permutation_controls(sets, counts, combos, primary)
     out["removed_mass"] = {
         "surgical": {k: counts[k]["phys"] - _remaining(combos[k], primary[k])
                      for k in sets},
@@ -458,41 +465,186 @@ def proxy_containment(sets) -> dict:
 
 
 def mass_identity(sets, counts, combos, rules) -> dict:
-    """The held-out ratio is `pharm / (phys - articles removed)`. Nothing else.
+    """The held-out ratio is `pharm / (phys - articles that drop out)`.
 
-    A MASS-MATCHED PERMUTATION CONTROL WAS RUN HERE AND IS WITHDRAWN. It drew
-    random physical descriptors until it had removed at least as many articles
-    as the surgical rule did, and reported how often it reached the same
-    spread. That control cannot work: `pharm` and `phys` are fixed per
-    partition, so once the number of articles removed is matched the held-out
-    ratio is IDENTICAL whatever descriptors carried it. The question it seemed
-    to answer is not askable of this statistic, and its apparent spread was
-    entirely the greedy draw overshooting its target.
+    THIS IS ALGEBRA, NOT A MEASUREMENT, and the first version of this function
+    presented it as one: it computed the same quantity twice by two spellings
+    of one expression and reported `max_abs_error == 0` over 25 cells as
+    verification. Substituting a constant for `_remaining` left it reporting
+    `holds: True`. "Articles that drop out" means articles no longer matching
+    the class AT ALL -- not articles carrying a removed descriptor, which is a
+    different and larger number, and the whole reason the incidence table
+    exists.
 
-    What replaces it is a PROOF rather than a sample: for every partition and
-    every rule, recompute `pharm / (phys - removed)` from the counts alone and
-    check it equals the ratio the incidence table produced. If they agree, the
-    ratio is a function of the removed MASS and of nothing else, which is what
-    the withdrawn control was groping at.
+    What is checked here instead is the invariant that CAN fail: the incidence
+    table must account for every physical-class article exactly once, or the
+    hold-out arithmetic is computed over a different denominator than the one
+    the main table publishes.
     """
-    checks, worst = [], 0.0
-    for name, rule in rules.items():
-        for k, s in sets.items():
-            removed = counts[k]["phys"] - _remaining(combos[k], rule(s["py"]))
-            left = counts[k]["phys"] - removed
-            if not left:
-                continue
-            from_mass = counts[k]["pharm"] / left
-            from_table = counts[k]["pharm"] / _remaining(combos[k], rule(s["py"]))
-            worst = max(worst, abs(from_mass - from_table))
-            checks.append([name, k, removed, from_mass])
+    rows, ok = {}, True
+    for k in sets:
+        tabled = sum(combos[k].values())
+        rows[k] = {"physical": counts[k]["phys"], "in_incidence_table": tabled}
+        ok = ok and tabled == counts[k]["phys"]
     return {
-        "claim": "held-out ratio == pharm / (phys - articles removed)",
-        "n_checks": len(checks),
-        "max_abs_error": worst,
-        "holds": worst < 1e-9,
-        "withdrawn_control": "mass-matched permutation over random descriptors",
+        "identity": "held-out ratio == pharm / (phys - articles that drop out)",
+        "identity_is_algebra_not_measurement": True,
+        "incidence_table_accounts_for_every_physical_article": ok,
+        "per_partition": rows,
     }
+
+
+def permutation_controls(sets, counts, combos, primary) -> dict:
+    """Two controls that CAN discriminate, and the one that could not.
+
+    WITHDRAWN: matching the removed mass PER PARTITION. That pins
+    `phys - removed` in every partition, so every held-out ratio is fixed
+    before a descriptor is chosen and the draw has nothing left to vary. It
+    returned the surgical spread by construction, and the scatter it seemed to
+    show was its greedy draw overshooting.
+
+    The degeneracy is in the per-partition matching, not in permutation. Two
+    designs keep the power:
+
+    (1) TOTAL-mass-matched. One random descriptor set is drawn from the union
+        universe and applied IDENTICALLY to all five -- the same shape as the
+        surgical rule -- until the TOTAL mass removed reaches surgery's. How
+        that total falls across the five is then free, and that is where the
+        information is.
+
+    (2) ALLOCATION. Keep a family's own five removed masses and permute WHICH
+        partition receives which. Exact over all 120 assignments, so there is
+        no sampling error at all. This is the control that separates "the
+        removal is large" from "the removal falls where the partitions
+        differ".
+    """
+    rng = random.Random(PERMUTATION_SEED)
+    universe = sorted(set().union(*(s["py"] for s in sets.values())))
+    target = sum(counts[k]["phys"] - _remaining(combos[k], primary[k])
+                 for k in sets)
+    surgical = _spread([counts[k]["pharm"] / _remaining(combos[k], primary[k])
+                        for k in sets if _remaining(combos[k], primary[k])])
+
+    def spread_of(removed: set):
+        out = []
+        for k, s in sets.items():
+            left = _remaining(combos[k], removed & s["py"])
+            if not left:
+                return None
+            out.append(counts[k]["pharm"] / left)
+        return _spread(out)
+
+    # INCREMENTAL. A combo drops out of the class exactly when its LAST
+    # member is chosen, so each draw costs one pass over the incidence lists
+    # rather than a full recount per descriptor added. Recomputing from
+    # scratch after every addition made this quadratic and the run unusable.
+    keys = sorted(sets)
+    tables = {}
+    for k in keys:
+        items = list(combos[k].items())
+        by_desc = {}
+        for idx, (fs, _n) in enumerate(items):
+            for x in fs:
+                by_desc.setdefault(x, []).append(idx)
+        tables[k] = (items, by_desc)
+
+    draws, degenerate = [], 0
+    for _ in range(N_PERMUTATIONS):
+        pool = list(universe)
+        rng.shuffle(pool)
+        need = {k: [len(fs) for fs, _n in tables[k][0]] for k in keys}
+        removed = {k: 0 for k in keys}
+        total, i = 0, 0
+        while i < len(pool) and total < target:
+            x = pool[i]
+            i += 1
+            for k in keys:
+                items, by_desc = tables[k]
+                for idx in by_desc.get(x, ()):
+                    need[k][idx] -= 1
+                    if not need[k][idx]:
+                        removed[k] += items[idx][1]
+                        total += items[idx][1]
+        ratios = []
+        for k in keys:
+            left = counts[k]["phys"] - removed[k]
+            if left <= 0:
+                ratios = None
+                break
+            ratios.append(counts[k]["pharm"] / left)
+        sp = _spread(ratios) if ratios else None
+        if sp is None:
+            degenerate += 1
+        else:
+            draws.append(sp)
+    draws.sort()
+    return {
+        "seed": PERMUTATION_SEED,
+        "surgical_spread": surgical,
+        "target_total_mass": target,
+        "total_matched": {
+            "n_draws": len(draws), "degenerate_draws": degenerate,
+            "min": draws[0] if draws else None,
+            "median": draws[len(draws) // 2] if draws else None,
+            "max": draws[-1] if draws else None,
+            "n_at_or_below_surgical":
+                sum(1 for x in draws if surgical and x <= surgical),
+        },
+        "allocation": allocation_permutation(sets, counts, combos, primary),
+        "withdrawn_control": "mass matched PER PARTITION, which pins every "
+                             "held-out ratio before a descriptor is chosen",
+    }
+
+
+def allocation_permutation(sets, counts, combos, primary) -> dict:
+    """Does the removal fall WHERE the partitions differ?
+
+    A family's five removed masses are held fixed and reassigned across the
+    partitions, exactly, over all 120 permutations. If the observed assignment
+    is unremarkable among them, the family's mass is near-uniform and the
+    result is a property of subtracting a roughly constant amount from unequal
+    denominators -- which is what the named non-surgical controls turn out to
+    be, and what an earlier draft of this page said "the mass argument cannot
+    explain".
+    """
+    import itertools
+    keys = sorted(sets)
+    families = {PRIMARY_RULE: {k: primary[k] for k in keys}}
+    for name, rule in CONTROL_RULES.items():
+        families[name] = {k: rule(sets[k]["py"]) for k in keys}
+    out = {}
+    for name, rem in families.items():
+        masses = [counts[k]["phys"] - _remaining(combos[k], rem[k]) for k in keys]
+        obs = _spread([counts[k]["pharm"] / (counts[k]["phys"] - m)
+                       for k, m in zip(keys, masses)
+                       if counts[k]["phys"] - m])
+        seen = []
+        for perm in itertools.permutations(masses):
+            if any(m >= counts[k]["phys"] for k, m in zip(keys, perm)):
+                continue
+            seen.append(_spread([counts[k]["pharm"] / (counts[k]["phys"] - m)
+                                 for k, m in zip(keys, perm)]))
+        seen = [x for x in seen if x]
+        out[name] = {
+            "masses": dict(zip(keys, masses)),
+            "mass_min": min(masses), "mass_max": max(masses),
+            # A ratio is undefined when a partition admits none of the family,
+            # which is exactly the case for surgery -- so the SPAN is reported
+            # and the ratio only where it exists.
+            "mass_uniformity": (max(masses) / min(masses)) if min(masses) else None,
+            "observed_spread": obs,
+            "n_feasible_assignments": len(seen),
+            "n_at_or_below_observed":
+                sum(1 for x in seen if obs and x <= obs),
+            "median_assignment": sorted(seen)[len(seen) // 2] if seen else None,
+            # the descriptor-free comparison: give every partition this
+            # family's MEAN mass and see how much of the effect survives
+            "uniform_mass_spread": _spread(
+                [counts[k]["pharm"] / (counts[k]["phys"] - sum(masses) / len(masses))
+                 for k in keys
+                 if counts[k]["phys"] - sum(masses) / len(masses) > 0]),
+        }
+    return out
 
 
 def qualifier_recalls() -> dict:
@@ -831,63 +983,106 @@ def _holdout_rule_section(d) -> list:
 
 
 def _control_section(d) -> list:
-    ident = d.get("mass_identity") or {}
     ctl = d.get("controls") or {}
     rm = d.get("removed_mass") or {}
+    perm = d.get("permutation") or {}
     if not ctl:
         return []
     pub = d.get("published_spread") or 0.0
     surg = (d["holdouts"].get(PRIMARY_RULE) or {}).get("spread")
-    L = ["## Is surgery specific, or merely large?", ""]
-    if ident.get("holds"):
-        L += [f"**A control that cannot work, and is withdrawn.** A held-out "
-              f"ratio is `pharmacological / (physical - articles removed)`, so "
-              f"it is a function of the MASS removed and of nothing else -- "
-              f"verified over all {ident['n_checks']} partition-by-rule cells "
-              f"(max error {ident['max_abs_error']:.1e}). A mass-matched "
-              f"permutation control was run here, drawing random physical "
-              f"descriptors until it had removed as many articles as the "
-              f"surgical rule did, and asking how often it reached the same "
-              f"spread. It cannot answer that: once the amount is matched the "
-              f"answer is identical whatever descriptors carried it, and the "
-              f"scatter it appeared to show was its greedy draw overshooting "
-              f"the target. The control and its number are withdrawn.", ""]
-    L += ["**What can speak to specificity** is a named non-surgical family "
-          "built the same way the surgical rule is. Those are not "
-          "mass-matched, and the masses are reported so the comparison is not "
-          "taken for more than it is.", ""]
-    L += ["| removal | physical articles removed | spread across the five |",
-          "|---|--:|--:|"]
-    L += [f"| nothing removed | 0 | {pub:.2f}x |"]
     surg_mass = sum((rm.get("surgical") or {}).values())
-    for name, leg in sorted(ctl.items()):
-        sp = leg.get("spread")
-        mass = sum(((rm.get("controls") or {}).get(name) or {}).values())
-        L.append(f"| `{name}` | {mass:,}"
-                 + (f" ({mass/surg_mass:.2f}x)" if surg_mass else "")
-                 + " | " + (f"{sp:.2f}x" if sp else "-") + " |")
-    if surg:
-        L.append(f"| **`{PRIMARY_RULE}`** | **{surg_mass:,}** | **{surg:.2f}x** |")
-    L += [""]
-    named = {k: v.get("spread") for k, v in ctl.items() if v.get("spread")}
-    if named and surg:
-        wider_than_nothing = {k: v for k, v in named.items() if v > pub}
-        if len(wider_than_nothing) == len(named):
-            L += [f"Every named family removes LESS mass than surgery and "
-                  f"still leaves the five further apart than removing nothing "
-                  f"at all ("
-                  + ", ".join(f"`{k}` {v:.2f}x" for k, v in sorted(named.items()))
-                  + f" against {pub:.2f}x unremoved and {surg:.2f}x for "
-                  f"surgery). That is the part the mass argument cannot "
-                  f"explain: removing less mass moves a spread less, and "
-                  f"these move it the WRONG WAY. The partitions do not "
-                  f"disagree about radiotherapy or about ablation; they "
-                  f"disagree about surgery.", ""]
-        else:
-            L += ["At least one named non-surgical family also brings the "
-                  "five together, so the attribution to surgery is weaker "
-                  "than the spread table suggests and should be read as one "
-                  "candidate among several.", ""]
+    L = ["## Is surgery specific, or merely large?", ""]
+
+    tm = perm.get("total_matched") or {}
+    if tm.get("n_draws"):
+        n = tm["n_at_or_below_surgical"]
+        L += [f"**The control, and the version of it that could not work.** "
+              f"An earlier draft matched the removed mass PARTITION BY "
+              f"PARTITION. That pins `physical - removed` everywhere, so every "
+              f"held-out ratio is fixed before a descriptor is chosen and the "
+              f"draw has nothing left to vary -- it returned the surgical "
+              f"answer by construction, and the scatter it appeared to show "
+              f"was its greedy draw overshooting. The degeneracy is in the "
+              f"per-partition matching, not in permutation.", ""]
+        L += [f"Matching the TOTAL instead leaves the allocation across the "
+              f"five free, which is where the information is. "
+              f"{tm['n_draws']:,} draws (seed {perm['seed']}), each a random "
+              f"descriptor set from the union universe applied IDENTICALLY to "
+              f"all five -- the same shape as the surgical rule -- until "
+              f"{perm['target_total_mass']:,} physical articles are removed, "
+              f"the total surgery removes:", ""]
+        L += [f"* spread {tm['min']:.2f}x to {tm['max']:.2f}x, median "
+              f"{tm['median']:.2f}x",
+              f"* **{n:,} of {tm['n_draws']:,}** reach the surgical rule's "
+              f"{surg:.2f}x" if surg else "",
+              ""]
+    L += ["**Where the removal falls, not how big it is.** A spread responds "
+          "to how UNEVENLY a removal lands, not to its total -- so each "
+          "family's own five masses are reassigned across the partitions, "
+          "exactly, over all 120 permutations. If the observed assignment is "
+          "unremarkable among them the family's mass is near-uniform, and the "
+          "result is a property of subtracting a roughly constant amount from "
+          "unequal denominators.", ""]
+    alloc = perm.get("allocation") or {}
+    if alloc:
+        L += ["| removal | physical articles removed | least to most across "
+              "the five | spread | reassignments at or below it | same total "
+              "spread EVENLY |", "|---|--:|--:|--:|--:|--:|"]
+        L += [f"| nothing removed | 0 | - | {pub:.2f}x | - | - |"]
+        for name in sorted(alloc):
+            a = alloc[name]
+            mass = sum(a["masses"].values())
+            lab = f"**`{name}`**" if name == PRIMARY_RULE else f"`{name}`"
+            L.append(
+                f"| {lab} | {mass:,}"
+                + (f" ({mass/surg_mass:.2f}x)" if surg_mass and name != PRIMARY_RULE
+                   else "")
+                + f" | {a['mass_min']:,} to {a['mass_max']:,}"
+                + " | " + (f"**{a['observed_spread']:.2f}x**"
+                           if name == PRIMARY_RULE
+                           else f"{a['observed_spread']:.2f}x")
+                + f" | {a['n_at_or_below_observed']} of "
+                  f"{a['n_feasible_assignments']} | "
+                + (f"{a['uniform_mass_spread']:.2f}x"
+                   if a.get("uniform_mass_spread") else "-") + " |")
+        L += [""]
+        pa = alloc.get(PRIMARY_RULE) or {}
+        others = {k: v for k, v in alloc.items() if k != PRIMARY_RULE}
+        if pa.get("n_feasible_assignments"):
+            L += [f"Surgery's masses run from {pa['mass_min']:,} to "
+                  f"{pa['mass_max']:,} across the five, "
+                  f"and only **{pa['n_at_or_below_observed']} of "
+                  f"{pa['n_feasible_assignments']}** reassignments of those "
+                  f"same five numbers bring the five as close together as the "
+                  f"real allocation does. Spreading the identical total "
+                  f"EVENLY gives {pa['uniform_mass_spread']:.2f}x. So it is "
+                  f"not the amount: it is that the amount lands where the "
+                  f"partitions differ.", ""]
+        # THE CORRECTION. An earlier draft said the named families widen the
+        # spread and "the mass argument cannot explain" it. A mass argument
+        # explains it almost completely: their masses are near-uniform, so
+        # subtracting them from unequal denominators must amplify the ratios
+        # already highest.
+        expl = {k: v for k, v in others.items()
+                if v.get("uniform_mass_spread") and v.get("observed_spread")}
+        if expl:
+            L += ["The named non-surgical families are the contrast, and an "
+                  "earlier version of this page read them wrongly. They do "
+                  "not collapse the five -- they widen them -- but that is "
+                  "NOT evidence about descriptors: "
+                  + ", ".join(
+                      f"`{k}` takes a near-uniform "
+                      f"{v['mass_min']:,}-to-{v['mass_max']:,} mass and "
+                      f"spreading the same total evenly already gives "
+                      f"{v['uniform_mass_spread']:.2f}x of its "
+                      f"{v['observed_spread']:.2f}x"
+                      for k, v in sorted(expl.items()))
+                  + ". Subtracting a roughly constant amount from unequal "
+                    "denominators must amplify the ratios already highest. "
+                    "What the two families establish is only that neither of "
+                    "them collapses the five; the reassignment column above "
+                    "is what establishes that surgery's does not do it by "
+                    "being large.", ""]
     return L
 
 
@@ -1030,13 +1225,21 @@ def _qualifier_section(d) -> list:
           f"side contains the drug-therapy proxy in "
           f"{cont.get('pharm_contains_drug_therapy', 0)} of "
           f"{len(d['partitions'])} partitions and the physical side contains "
-          f"the surgery proxy in {cont.get('phys_contains_surgery', 0)} "
+          f"the surgery proxy in {cont.get('phys_contains_surgery', 0)}"
+          + (" -- and those are the three where surgery DOMINATES it; the two "
+             "that fail, `"
+             + "`, `".join(sorted(k for k, v in
+                                  (cont.get("per_partition") or {}).items()
+                                  if not v.get("phys_contains_surgery")))
+             + "`, are the two that admit least surgery, the second by "
+               "construction"
+             if cont.get("per_partition") else "") + " "
           f"(counting only real DescriptorNames: "
           + ", ".join(f"`{x}`" for v in
                       (cont.get("non_descriptor_composites_dropped") or {}).values()
                       for x in v)
-          + " is a descriptor/qualifier composite that can never be a class "
-            "member). "
+          + " -- a descriptor/qualifier composite that can never be a class "
+            "member, and inert in #722's own descriptor arm too). "
           f"Where it does not, the floor argument does not even apply. Either "
           f"way, borrowing a proxy's recall as a class's would repeat the "
           f"category error being retracted. The bias is real; its direction "
