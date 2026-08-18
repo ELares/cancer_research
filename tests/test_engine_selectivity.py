@@ -25,6 +25,7 @@ in both the artifact and the renderer.
 """
 
 import json
+import re
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -111,10 +112,16 @@ def test_the_zero_denominator_is_flagged_as_a_tell():
     d, md = _doc(), MD.read_text()
     rsl3 = d["treatments"]["RSL3"]["Stromal"]["death_rate"]
     if rsl3 == 0.0:
-        assert "true by construction" in md, (
+        # THIS GUARD PINNED THE RETRACTED READING. It required the phrase
+        # "true by construction", i.e. the fingerprint inference a control in
+        # the same table refutes. What must be flagged is the UNDEFINED ratio
+        # and the assumption-restating problem, neither of which needs it.
+        assert "zero denominator" in md, (
             "RSL3 kills exactly zero non-tumour cells and the report does not "
-            "flag it; a ratio with that denominator restates the selectivity "
-            "assumption rather than testing it")
+            "flag the undefined ratio")
+        assert "restate the assumption rather than test it" in md, (
+            "the report no longer says a ratio against these parameters "
+            "restates the selectivity assumption instead of testing it")
         assert d["treatments"]["RSL3"]["_contrast"]["ratio_best_case"] is None, (
             "a ratio was computed against a zero denominator")
     # and the CODE must still refuse it. The artifact is static, so a generator
@@ -147,3 +154,84 @@ def test_the_uncalibrated_status_is_carried():
     assert "Uncalibrated" in md and "CALIBRATION_STATUS" in md, (
         "these are default parameters and the report must say so, or the "
         "numbers read as measurements of biology")
+
+
+def test_the_zero_is_not_read_as_a_fingerprint():
+    """A control in the same row refutes the causal reading.
+
+    The page said an exactly-zero non-tumour kill "is what a parameter set
+    chosen to produce it looks like". RSL3 also kills exactly zero of a TUMOUR
+    phenotype, printed in the same row of the same table, so the exactness is
+    a property of the RSL3 path against a resistant parameterisation rather
+    than evidence about how `Stromal` was chosen.
+    """
+    d, md = _doc(), MD.read_text()
+    rsl3 = d["treatments"]["RSL3"]
+    tumour_zeros = sorted(ph for ph, row in rsl3.items()
+                          if not ph.startswith("_") and ph != "Stromal"
+                          and row["death_rate"] == 0.0)
+    if rsl3["Stromal"]["death_rate"] != 0.0:
+        return
+    assert tumour_zeros, (
+        "no tumour phenotype has an exact zero any more, so the control that "
+        "refutes the fingerprint reading is gone; re-check the argument")
+    for ph in tumour_zeros:
+        assert f"`{ph}`" in md, (
+            f"`{ph}` is a tumour phenotype RSL3 also kills exactly zero of, "
+            "and the report does not name it as the control")
+    assert "That inference is withdrawn" in md, (
+        "the fingerprint inference is stated without its withdrawal")
+    # the CLAIMING form must not return
+    for m in re.finditer(r"chosen to produce it looks like", md):
+        w = md[max(0, m.start() - 300):m.end() + 300]
+        assert re.search(r"earlier version|withdrawn|refutes", w, re.I), (
+            "the report reads the exact zero as a fingerprint again, with a "
+            "tumour phenotype at exactly zero in the same table")
+    # and what survives must still be stated
+    assert "restate the assumption rather than test it" in md
+
+
+def test_the_seed_spread_uses_genuinely_disjoint_seeds():
+    """`sim_batch` draws cell i from seed+2i, so runs must be spaced by 2n.
+
+    Nothing said so, and the published ratios carried no interval -- anyone
+    re-running at a neighbouring seed would have confirmed them by
+    construction.
+    """
+    d, md = _doc(), MD.read_text()
+    n = d["n_per_cell_type"]
+    assert d.get("seed_stride") == 2 * n, (
+        f"the seed stride is {d.get('seed_stride')} for n={n:,}; runs spaced "
+        f"by less than {2*n:,} share cells and are not independent")
+    sp = d.get("seed_spread") or {}
+    assert sp, "the multi-seed spread is gone; the ratios carry no interval"
+    for t, s in sp.items():
+        assert s["n_seeds"] >= 4, f"{t}: only {s['n_seeds']} seeds"
+        assert s["best_lo"] <= s["best_hi"] and s["worst_lo"] <= s["worst_hi"]
+        assert s["worst_lo"] <= s["best_hi"], f"{t}: worst exceeds best"
+        assert f"{s['best_lo']:.2f}x - {s['best_hi']:.2f}x" in md, (
+            f"{t}'s measured best-case range is not rendered")
+    assert f"spaced by {2*n:,}" in md
+    # the SOURCE property, verified against the Rust rather than asserted
+    lib = (REPO_ROOT / "simulations" / "ferroptosis-python" / "src" / "lib.rs")
+    src = lib.read_text()
+    assert "seed.wrapping_add((i as u64) * 2)" in src, (
+        "sim_batch no longer derives its per-cell seed as seed + 2i, so the "
+        "stride this report states is no longer the right one")
+
+
+def test_the_point_estimates_are_not_presented_alone():
+    """A single-seed figure quoted to a decimal, with a measured range beside it."""
+    d, md = _doc(), MD.read_text()
+    sp = d.get("seed_spread") or {}
+    for t, s in sp.items():
+        pt = d["treatments"][t]["_contrast"].get("ratio_best_case")
+        if pt is None:
+            continue
+        assert "single-seed point estimates" in md, (
+            "the point ratios are shown without saying they are single-seed")
+        # and the range must actually contain, or bracket, the point
+        assert s["best_lo"] - 1e-6 <= pt <= s["best_hi"] + 1e-6, (
+            f"{t}: the published point ratio {pt:.2f} lies outside the "
+            f"measured range [{s['best_lo']:.2f}, {s['best_hi']:.2f}], so one "
+            "of the two was not computed from the same model")

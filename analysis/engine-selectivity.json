@@ -1,6 +1,24 @@
 {
  "n_per_cell_type": 20000,
+ "n_seeds": 8,
  "seed": 20260817,
+ "seed_spread": {
+  "PDT": {
+   "best_hi": 15.797788309636653,
+   "best_lo": 14.609203798392988,
+   "n_seeds": 8,
+   "worst_hi": 13.789099526066352,
+   "worst_lo": 12.750913075237401
+  },
+  "SDT": {
+   "best_hi": 15.797788309636653,
+   "best_lo": 14.609203798392988,
+   "n_seeds": 8,
+   "worst_hi": 13.789099526066352,
+   "worst_lo": 12.750913075237401
+  }
+ },
+ "seed_stride": 40000,
  "treatments": {
   "Control": {
    "Glycolytic": {

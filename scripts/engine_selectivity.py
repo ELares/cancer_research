@@ -51,11 +51,19 @@ TUMOUR = ["Glycolytic", "OXPHOS", "Persister", "PersisterNrf2"]
 NON_TUMOUR = "Stromal"
 TREATMENTS = ["Control", "RSL3", "SDT", "PDT"]
 SEED = 20260817
+# INDEPENDENT SEEDS MUST BE SPACED BY 2n. `sim_batch` draws cell i from
+# `seed + 2i` and its simulation RNG from `seed + 2i + 1`, so one run consumes
+# the whole span `seed .. seed + 2n - 1` (lib.rs, sim_batch). Two runs whose
+# seeds differ by less than 2n therefore SHARE almost every cell -- seed and
+# seed+2 differ by one cell in n -- and anyone "checking robustness" by
+# nudging the seed gets a false confirmation. Nothing said so.
+N_SEEDS = 8
 
 
 def run(n: int) -> dict:
     import ferroptosis_core as fc
-    out = {"n_per_cell_type": n, "seed": SEED, "treatments": {}}
+    out = {"n_per_cell_type": n, "seed": SEED, "seed_stride": 2 * n,
+           "n_seeds": N_SEEDS, "treatments": {}}
     for t in TREATMENTS:
         row = {}
         for ph in TUMOUR + [NON_TUMOUR]:
@@ -72,6 +80,30 @@ def run(n: int) -> dict:
             "ratio_worst_case": (min(tum) / caf) if caf > 0 else None,
         }
         out["treatments"][t] = row
+
+    # ACROSS GENUINELY DISJOINT SEEDS, spaced by 2n so no two runs share a
+    # cell. The published ratios carried no interval, and a re-run at a
+    # neighbouring seed would have confirmed them by construction.
+    spread = {}
+    for t in TREATMENTS:
+        best, worst = [], []
+        for k in range(N_SEEDS):
+            s = SEED + k * 2 * n
+            tum, caf = [], None
+            for ph in TUMOUR + [NON_TUMOUR]:
+                r = fc.sim_batch(ph, t, n, s)
+                if ph == NON_TUMOUR:
+                    caf = r["death_rate"]
+                else:
+                    tum.append(r["death_rate"])
+            if caf and caf > 0:
+                best.append(max(tum) / caf)
+                worst.append(min(tum) / caf)
+        if best:
+            spread[t] = {"best_lo": min(best), "best_hi": max(best),
+                         "worst_lo": min(worst), "worst_hi": max(worst),
+                         "n_seeds": len(best)}
+    out["seed_spread"] = spread
     return out
 
 
@@ -105,6 +137,30 @@ def render(d: dict) -> str:
         L.append(f"| {t} | {b} | {w} |")
     L += [""]
 
+    sp = d.get("seed_spread") or {}
+    if sp:
+        L += [f"Those are single-seed point estimates. Across "
+              f"**{d['n_seeds']} genuinely disjoint seeds**, spaced by "
+              f"{d['seed_stride']:,} so that no two runs share a cell:", ""]
+        L += ["| treatment | best-case range | worst-case range |",
+              "|---|--:|--:|"]
+        for tt in TREATMENTS:
+            if tt not in sp:
+                continue
+            s = sp[tt]
+            L.append(f"| {tt} | {s['best_lo']:.2f}x - {s['best_hi']:.2f}x | "
+                     f"{s['worst_lo']:.2f}x - {s['worst_hi']:.2f}x |")
+        L += [""]
+        L += [f"**Spacing matters and nothing said so.** `sim_batch` draws "
+              f"cell *i* from `seed + 2i`, so one run consumes the whole span "
+              f"`seed .. seed + {d['seed_stride'] - 1:,}`. Two runs whose "
+              f"seeds differ by less than {d['seed_stride']:,} share almost "
+              f"every cell -- `seed` and `seed + 2` differ by one cell in "
+              f"{d['n_per_cell_type']:,} and return bit-identical counts -- so "
+              f"anyone checking robustness by nudging the seed gets a false "
+              f"confirmation. The point estimates above sit near the bottom of "
+              f"both ranges.", ""]
+
     ctrl = d["treatments"]["Control"]["_contrast"]
     L += [f"Control is the baseline: with no treatment the CAF phenotype dies at "
           f"{100*ctrl['caf']:.2f}% and tumour phenotypes at "
@@ -130,19 +186,41 @@ def render(d: dict) -> str:
               "single-cell contrast between them as evidence about two "
               "different therapies.", ""]
 
+    # IS THE ZERO UNIQUE TO THE NON-TUMOUR PHENOTYPE? Derived, because the
+    # earlier version read it as a fingerprint of `Stromal` having been
+    # parameterised to produce it -- and a control printed in the same row of
+    # the same table refutes that: RSL3 also kills exactly zero of a TUMOUR
+    # phenotype. The exactness is a property of the RSL3 path against a
+    # resistant parameterisation, not evidence about how Stromal was chosen.
+    tumour_zeros = sorted(
+        ph for ph, row in d["treatments"]["RSL3"].items()
+        if not ph.startswith("_") and ph != NON_TUMOUR
+        and row["death_rate"] == 0.0)
+
     if rsl3_caf == 0.0:
-        L += ["## The selectivity claim is true by construction, not by result", ""]
+        L += ["## The zero denominator, and what it does and does not show", ""]
         L += [f"RSL3 kills **exactly zero** of {d['n_per_cell_type']:,} "
               f"non-tumour cells. Not a small number -- zero, with the interval "
               f"running to "
               f"{100*d['treatments']['RSL3'][NON_TUMOUR]['ci_high']:.3f}%.", ""]
-        L += ["The project's most load-bearing selectivity assumption is that "
-              "normal cells resist ferroptosis inducers. The `Stromal` "
-              "parameters were chosen to encode resistance. A ratio computed "
-              "here therefore restates the assumption rather than testing it, "
-              "and an exactly-zero denominator should be read as a tell rather "
-              "than as a result: it is what a parameter set chosen to produce "
-              "it looks like.", ""]
+        if tumour_zeros:
+            L += [f"**An earlier version of this page read that as a "
+                  f"fingerprint** -- \"what a parameter set chosen to produce "
+                  f"it looks like\". A control in the same row refutes it: "
+                  f"RSL3 also kills exactly zero "
+                  f"{', '.join(f'`{x}`' for x in tumour_zeros)} cells, and "
+                  f"{'that is a TUMOUR phenotype' if len(tumour_zeros) == 1 else 'those are TUMOUR phenotypes'}. "
+                  f"The exactness is a property of the RSL3 path against a "
+                  f"resistant parameterisation, not evidence about how "
+                  f"`Stromal` was chosen. That inference is withdrawn.", ""]
+        L += ["What survives, and it is the part that matters: a ratio with a "
+              "zero denominator is undefined, so no selectivity figure can be "
+              "computed here at all. And the project's load-bearing assumption "
+              "-- that normal cells resist ferroptosis inducers -- is encoded "
+              "in the `Stromal` parameters, so a ratio computed against them "
+              "would restate the assumption rather than test it. That does not "
+              "need the fingerprint argument, and is why it was never load "
+              "bearing.", ""]
         L += ["This is the concrete reason the missing normal-tissue phenotype "
               "matters. Until one exists whose parameters come from the "
               "literature rather than from the claim, the model cannot "
