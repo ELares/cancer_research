@@ -4,13 +4,67 @@
 
 ## The measured spread
 
-| partition | pharmacological | physical | both | **ratio** |
-|---|--:|--:|--:|--:|
-| mechanism-of-action | 773,860 | 196,717 | 43,659 | **3.93:1** |
-| clinical-delivery | 893,884 | 354,753 | 84,052 | **2.52:1** |
-| maximally-inclusive | 1,055,354 | 626,304 | 123,392 | **1.69:1** |
-| regulatory-class | 807,570 | 592,505 | 92,050 | **1.36:1** |
-| minimally-inclusive | 660,572 | 501,837 | 65,348 | **1.32:1** |
+The held-out column applies the `operative-only` rule below, identically to all five.
+
+| partition | pharmacological | physical | both | **ratio** | surgical share of physical | ratio, surgery held out |
+|---|--:|--:|--:|--:|--:|--:|
+| mechanism-of-action | 773,860 | 196,717 | 43,659 | **3.93:1** | 0.0% | 3.93:1 |
+| clinical-delivery | 893,884 | 354,753 | 84,052 | **2.52:1** | 31.4% | 3.67:1 |
+| maximally-inclusive | 1,055,354 | 626,304 | 123,392 | **1.69:1** | 56.4% | 3.86:1 |
+| regulatory-class | 807,570 | 592,505 | 92,050 | **1.36:1** | 59.1% | 3.33:1 |
+| minimally-inclusive | 660,572 | 501,837 | 65,348 | **1.32:1** | 62.8% | 3.54:1 |
+
+**The spread is one undeclared variable: whether operative surgery is a physical modality.** Its share of the physical class runs 0.0% to 62.8% across the five, ranking inversely with the published ratio (Spearman -1.00). Held out under the `operative-only` rule applied identically to all five, the spread collapses from **2.99x** (1.32-3.93) to **1.18x** (3.33-3.93) -- every partition landing near 3.7:1.
+
+One partition, `mechanism-of-action`, admits no operative surgery at all, so the primary rule does not move it and it is the top of both columns. The others are not merely converging on a fixed point: drop it and the remaining 4 still go from **1.91x** to **1.16x**.
+
+So the five are not five independent readings whose disagreement is the finding. They agree about pharmacological-versus-physical and disagree about one membership question nobody declared. An earlier version of this page called that spread "the deliverable".
+
+## The hold-out rule is itself a judgement
+
+Deciding what counts as operative surgery is as disputable as deciding whether surgery is physical, so naming one regex would move the undeclared variable up a level rather than remove it. Five rules are run. Each disagrees with the others about a named, listed set of descriptors (`holdouts` in the JSON carries every member of every set).
+
+| hold-out rule | descriptors held out | spread across the five | range |
+|---|--:|--:|---|
+| `operative-only` | 0-94 | **1.18x** | 3.33-3.93:1 |
+| `stem-list` | 4-104 | **1.23x** | 3.83-4.70:1 |
+| `stem-list plus missed operative terms` | 4-105 | **1.21x** | 3.89-4.71:1 |
+| `stem-list, energy modalities restored` | 0-101 | **1.21x** | 3.51-4.23:1 |
+| `stem-list, transplantation restored` | 4-96 | **1.21x** | 3.61-4.36:1 |
+
+The five rules disagree about which descriptors are surgery and agree about what happens when they are removed: every one lands between **1.18x and 1.23x**, a disagreement smaller than the collapse itself.
+
+**Inert alternatives.** 5 of 17 stems in the list match nothing anywhere in the partition universe (`debulk`, `graft`, `implantation`, `lymphadenectom`, `reconstructi`), so the rule is narrower than its length suggests.
+
+**What it leaks in.** `surg` reaches `cryosurgery`, `electrosurgery`, `radiosurgery`, `ultrasonic surgical procedures`, which are energy modalities rather than operative removal -- `Radiosurgery` is stereotactic radiotherapy, so holding it out removes radiotherapy mass from the physical class. `transplant` reaches cellular and organ transplantation, which is infused or grafted rather than resected.
+
+**What it leaks out.** No stem reaches `castration`, `conization`, `curettage`, `dilatation and curettage`, `eye enucleation`, `limb salvage`, `orthopedic procedures`, `pelvic exenteration`, `reoperation`, `vertebroplasty`.
+
+The `operative-only` rule excludes the first group and includes the second; `stem-list` does the opposite; the three intermediates take one correction each. That is the disagreement the table above prices.
+
+That replacement list is a hand-written judgement too, and four of its ten are looser than "operative removal": `vertebroplasty` injects cement rather than resecting, MeSH `Castration` covers the chemical kind, `Orthopedic Procedures` is an umbrella, and `Limb Salvage` names a goal that includes reconstruction. The `stem-list` rules in the table above exclude all four, which is part of what the 1.18x-to-1.23x band prices.
+
+## Is surgery specific, or merely large?
+
+**The control, and the version of it that could not work.** An earlier draft matched the removed mass PARTITION BY PARTITION. That pins `physical - removed` everywhere, so every held-out ratio is fixed before a descriptor is chosen and the draw has nothing left to vary -- it returned the surgical answer by construction, and the scatter it appeared to show was its greedy draw overshooting. The degeneracy is in the per-partition matching, not in permutation.
+
+Matching the TOTAL instead leaves the allocation across the five free, which is where the information is. 1,000 draws (seed 20260818), each a random descriptor set from the union universe applied IDENTICALLY to all five -- the same shape as the surgical rule -- until 1,129,902 physical articles are removed, the total surgery removes:
+
+* spread 1.62x to 11.61x, median 3.34x
+* **0 of 1,000** reach the surgical rule's 1.18x
+
+**Where the removal falls, as well as how big it is.** A spread responds to both -- the column at the right shows a perfectly even removal of the same total moving it on its own -- so each family's own five masses are also reassigned across the partitions, exactly, over all 120 permutations. Few reassignments matching the observed one means the real allocation is doing work; most or all of them matching means it is not. This is the exhaustive control but the cruder null: it admits allocations no descriptor set could produce, since a partition's surgical mass tracks its physical class size. It corroborates the draw above rather than carrying the result.
+
+| removal | physical articles removed | least to most across the five | spread | reassignments at or below it | same total spread EVENLY |
+|---|--:|--:|--:|--:|--:|
+| nothing removed | 0 | - | 2.99x | - | - |
+| `energy/ablation family` | 206,473 (0.18x) | 20,890 to 54,435 (2.6x) | 3.96x | 120 of 120 | 3.47x |
+| **`operative-only`** | 1,129,902 | 0 to 353,184 (one partition has none) | **1.18x** | 2 of 48 | not achievable |
+| `radiotherapy family` | 573,278 (0.51x) | 86,328 to 131,818 (1.5x) | 5.78x | 54 of 120 | 5.58x |
+
+Surgery's masses run from 0 to 353,184 across the five, and only **2 of 48** reassignments of those same five numbers bring the five as close together as the real allocation does (the 72 excluded assignments hand a partition more articles than its whole physical class, so they have no ratio; counting them would only lower the fraction). That total cannot be spread evenly at all: an equal share is 225,980 articles and `mechanism-of-action` holds fewer physical articles than that in total, which is itself the point -- surgery's mass is too concentrated for any partition-blind removal to imitate. So it is not the amount alone: it is that the amount lands where the partitions differ.
+
+The named non-surgical families are the contrast, and an earlier version of this page read them wrongly. They do not collapse the five -- they widen them -- but that is NOT evidence about descriptors, and their reassignment counts sit at or near the TOP of their own null rather than being unremarkable in it: `energy/ablation family` takes a 20,890-to-54,435 mass (2.6x, against surgery's 0-to-353,184) and spreading the same total evenly already gives 3.47x of its 3.96x, `radiotherapy family` takes a 86,328-to-131,818 mass (1.5x, against surgery's 0-to-353,184) and spreading the same total evenly already gives 5.58x of its 5.78x. Subtracting a roughly constant amount from unequal denominators must amplify the ratios already highest. What the two families establish is only that neither of them collapses the five; the reassignment column above is what establishes that surgery's does not do it by being large.
 
 | for comparison | | | | |
 |---|--:|--:|--:|--:|
@@ -19,15 +73,48 @@
 
 ## What this says
 
-Every partition built by one principle applied to both classes gives a ratio between **1.32:1 and 3.93:1**. The reported census figure is 17.6:1 -- between 4.5x and 13.4x larger than anything measured here.
+Every partition gives a ratio between **1.32:1 and 3.93:1**. The reported census figure is 17.6:1 -- between 4.5x and 13.4x larger than anything measured here.
 
 **The direction survives and the magnitude does not.** Pharmacological exceeds physical under all five partitions, so the claim's sign is robust. But the figure that makes it rhetorically powerful -- an order of magnitude -- is a property of a PHYSICAL class containing three mechanism tags and excluding radiotherapy, brachytherapy, hyperthermia, ablation and phototherapy.
 
 That exclusion is not a judgement anyone made. Those modalities have no mechanism tag in this project, so they could not enter a tag-based class. The census figure inherits the taxonomy's field of view rather than measuring the literature (see `analysis/atlas-taxonomy-reach.md`).
 
+## What the 17.6:1 comparator is made of
+
+Its numerator is 112,253 and its denominator 6,380. Two mechanisms supply **65%** of the numerator: `epigenetic` 41,278, `immunotherapy` 31,890. `atlas_landscape.py`'s own text calls the largest of them a SCOPE ARTIFACT rather than a therapy -- a descriptor carried by any paper that MEASURES the process.
+
+Dropping those from the numerator alone would be the one-sided narrowing this page exists to police. Applying that script's own `PRECISE` set to BOTH classes -- which also drops `electrochemical-therapy` from the denominator -- gives **6.43:1** on 24,839 against 3,865.
+
+So the comparator falls from 17.6:1 to 6.43:1 under that restriction, which is still 1.63x above the 3.33-3.93:1 range the partitions give once surgery is held fixed, so the symmetric restriction narrows the gap without closing it.
+
+**And "that script's own `PRECISE` set" has two readings.** The line above intersects it with the curated `PHARMACOLOGICAL` list. `atlas_landscape.py` itself uses `PRECISE` MINUS `PHYSICAL` for its maturity table, which adds `mrna-vaccine`, `oncolytic-virus`, `phagocytosis-checkpoint` to the numerator and gives **8.04:1**. Both are below the 17.6:1 headline; the page quotes the narrower one first because it is the closer match to the curated class this analysis is about, and reports this one so the choice is visible.
+
+**`PRECISE` is symmetric in rule and was written for a different question.** Its stated criterion is that the dominant descriptor names a therapy or modality rather than a process, a material or a technique, and it was defined for `atlas_landscape.py`'s MATURITY comparison, not for this volume ratio. Two excluded pharmacological mechanisms satisfy the criterion as written: `immunotherapy` (`Immune Checkpoint Inhibitors`), `synthetic-lethality` (`Poly(ADP-ribose) Polymerase Inhibitors`). Restoring them -- and nothing on the denominator side, which the same reading leaves untouched -- gives **16.08:1** instead of 6.43:1, so the restricted figure is sensitive to a membership judgement made elsewhere for another purpose. Both are reported; neither is adopted.
+
+After the restriction the classes are also no longer what their names suggest: pharmacological is `antibody-drug-conjugate`, `bispecific-antibody`, `car-t` and physical is `hifu`, `sonodynamic`.
+
+**A consequence this page does not resolve.** 6.43:1 is BELOW the manuscript's own 9.1:1, so under a symmetric restriction of `atlas_landscape.py`'s own sets the census does not understate the manuscript's case -- it overstates it. The claim that the manuscript understates itself by about 2x is carried in `article/drafts/v1.md`, `analysis/atlas-landscape.md`, `analysis/census-findings.md` and `CLAUDE.md`. Whether to restrict the comparator at all is a choice about what the ratio is FOR, and changing the manuscript's framing is an owner decision, so this page states the arithmetic and leaves those four sites alone.
+
+## The qualifier-axis caveat, and why its direction is not established
+
+The ingest reads MeSH DescriptorName and never QualifierName (#722), so both classes are understated. An earlier version of this page argued from two of that artifact's rows that the bias runs AGAINST the finding. THAT INFERENCE WAS INVALID: it compared percentage POINTS, and a ratio responds to relative rather than additive understatement. Every row, from the raw counts rather than the rounded percentages:
+
+| modality | descriptor axis | either axis | descriptor recall |
+|---|--:|--:|--:|
+| surgery | 406 | 4,007 | 0.101 |
+| diagnostic imaging | 1,558 | 2,910 | 0.535 |
+| drug therapy | 3,194 | 5,837 | 0.547 |
+| radiotherapy | 842 | 1,461 | 0.576 |
+
+Correcting a drug-therapy numerator and a radiotherapy denominator each by its own recall multiplies the ratio by 1.05 -- UP, not down.
+
+**But that is the wrong pair for these classes.** #722's own headline is that the sharpest case is SURGERY, at recall 0.101 against drug therapy's 0.547 -- and surgery is precisely what dominates the physical class here, at up to 63% of it. Correcting by THAT row moves the ratio sharply DOWN.
+
+**Neither correction is licensed.** #722 measures proxy sets of four to seven descriptors while the classes here hold 17 to 236. Where a class CONTAINS the proxy, the proxy's recall is a floor for the class's, because adding descriptors can only add matches -- measured, the pharmacological side contains the drug-therapy proxy in 5 of 5 partitions and the physical side contains the surgery proxy in 3 -- and those are the three where surgery DOMINATES it; the two that fail, `clinical-delivery`, `mechanism-of-action`, are the two that admit least surgery, the second by construction (counting only real DescriptorNames: `neoplasms/surgery` -- a descriptor/qualifier composite that can never be a class member, and inert in #722's own descriptor arm too). Where it does not, the floor argument does not even apply. Either way, borrowing a proxy's recall as a class's would repeat the category error being retracted. The bias is real; its direction is not established here, and the measurement that would settle it -- these classes scored on both MeSH axes -- is not computable from the committed records, which carry the descriptor axis only.
+
 ## What would make this wrong
 
-* If the partitions here are not defensible. Each was built by one stated principle, checked by an independent reviewer for one-sided widening, and required to reproduce its own count; every member is listed. Dispute a placement and re-run.
-* If descriptor-only counting biased the result. It does bias it, and it cuts AGAINST this finding's direction: the ingest misses the qualifier axis (#722), which understates drug therapy (12.4% vs 22.6% either-axis) more than radiotherapy (3.3% vs 5.7%). A qualifier-aware recount should move the ratio further down.
+* If the partitions here are not defensible. They are a committed member list and every member is disputable; dispute a placement and re-run. An earlier version of this bullet also claimed each was "checked by an independent reviewer for one-sided widening, and required to reproduce its own count", and the page's own summary claimed each was built by a single "stated" principle. NO ARTIFACT IN THIS REPO SUPPORTS ANY OF THAT -- `modality-partitions.json` carries only the two member lists, there is no reviewer record, no statement of principle, and the only per-partition counts are this script's own output, which makes "reproduce its own count" circular. All three clauses are withdrawn.
+* If the hold-out rule is doing the work. It is a hand-written list like the partitions, it leaks and it misses, and the section above enumerates both rather than asking to be trusted. What the finding rests on is that five rules disagreeing about named descriptor sets all land in the same place, and that 0 of 1,000 random descriptor sets removing the same TOTAL mass reach 1.18x, with 2 of 48 reassignments of surgery's OWN five masses corroborating it. It does NOT rest on matching that mass PARTITION BY PARTITION, which fixes every held-out ratio before a descriptor is chosen and is withdrawn, and it does NOT rest on the named families widening the spread, which their near-uniform masses largely explain.
 * Classes are not mutually exclusive, and the `both` column is reported rather than resolved. Combined-modality treatment is real, and forcing an article into one class would be the arbitrary step.
 

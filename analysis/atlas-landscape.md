@@ -24,6 +24,8 @@ claim actually rests on.
 
 ## Result
 
+> **The ratio below depends on the class boundary.** Both curated classes omit their largest real member -- PHYSICAL has no radiotherapy, PHARMACOLOGICAL no cytotoxic chemotherapy -- because neither has a mechanism tag. Recomputed over MeSH-descriptor partitions that move BOTH classes, the ratio is substantially smaller than the 17.6:1 reported in the volume section further down this page, and what it is depends on how much operative surgery the physical class admits: the direction survives, the magnitude does not. See `analysis/atlas-modality-ratio.md` (#724).
+
 | mechanism | A: keyword/frozen | B: MeSH/frozen | C: MeSH/census | rank A | rank C | shift | top descriptor supplies |
 |---|---|---|---|---|---|---|---|
 | `epigenetic` | 183 | 81 | 41,278 | 13 | 1 | **+12** | **75%** |
@@ -215,9 +217,9 @@ manufacture exactly the false gap this analysis exists to test for. They are
 excluded rather than counted:
 
 * `ttfields` -- No TTFields-specific MeSH descriptor (only over-broad Electric Stimulation Therapy); ~38% of its tagger-positives also have empty MeSH.
-* `cold-atmospheric-plasma` -- No descriptor ('Plasma Gases' n~2); ~100% of its tagger-positives have empty MeSH.
+* `cold-atmospheric-plasma` -- 'Plasma Gases' (D058626) EXISTS and carries 474 census records with 9 ferroptosis intersections, so the earlier 'no descriptor (n~2)' note here was wrong -- see analysis/atlas-thesis-rank.md. It is still not used for ...
 * `bioelectric` -- Only cell-physiology descriptors (Membrane Potentials / Ion Channels), not the cancer-therapy thesis; pool thin and confounded.
-* `electrolysis` -- Bucket-confounded: ~18/19 of its MeSH-pool carry 'Electrochemotherapy', which the tagger buckets as electrochemical-therapy (a taxonomy-boundary artif
+* `electrolysis` -- Bucket-confounded: ~18/19 of its MeSH-pool carry 'Electrochemotherapy', which the tagger buckets as electrochemical-therapy (a taxonomy-boundary artifact, not a recall miss).
 * `radioligand-therapy` -- Descriptors ('Radioimmunotherapy'/'Radiopharmaceuticals') bleed to immunotherapy/ADC; tiny pool (n~18). Scaffold.
 * `targeted-protein-degradation` -- Only the broad housekeeping 'Proteolysis'; no PROTAC descriptor; tiny pool (n~11). Scaffold.
 * `cuproptosis` -- No cuproptosis MeSH term (only 'Copper', the ion, n~6); 0 frozen-index tags. Scaffold.
