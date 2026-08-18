@@ -99,6 +99,15 @@ def test_the_text_rule_is_symmetric_in_COVERAGE_not_only_in_shape():
     """
     import gzip
     m = _mod()
+    # THE OFFLINE CONTRACT. corpus/atlas/records/ is gitignored bulk data, so
+    # CI has no shards: this guard recounts against the census and can only
+    # run where the census exists. Skipping keeps the contract while the
+    # check still fires for anyone holding the data -- which is where the
+    # scan-level mutations it exists to catch would be introduced.
+    import pytest
+    if not any((m.ATLAS / "records").glob("*.jsonl.gz")):
+        pytest.skip("census shards not present in this checkout")
+
     pats = {k: re.compile(v["text"], re.I) for k, v in m.ARMS.items()}
     descs = {k: set(v["descriptors"]) for k, v in m.ARMS.items()}
     hit = {k: 0 for k in m.ARMS}
