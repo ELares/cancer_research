@@ -25,29 +25,41 @@ The header of this section used to read "They are not untagged. They are filed u
 * **chemotherapy** is recorded as: `immunotherapy` 58, `nanoparticle` 27, `bioelectric` 22, `bispecific-antibody` 20
 * **surgery** is recorded as: `immunotherapy` 8, `ttfields` 4, `frequency-therapy` 2, `hifu` 2
 
+The `carry 2+` column is reported and deliberately NOT argued from. An earlier version read a below-average multi-tag rate as evidence against the combination-paper reading. That inference is invalid here: a paper about radiotherapy AND a checkpoint inhibitor can carry at most ONE modality tag, because radiotherapy has no lane. The hypothesis predicts enrichment for exactly one tag, not for two, so this column cannot test it in either direction.
+
 The third column used to be headed "carry a DIFFERENT modality's tag". It is `titled - untagged`, i.e. *carries at least one tag* -- and because the taxonomy has no lane for any of these three, the word DIFFERENT excluded nothing. Renamed to what it counts.
 
-### The causal reading is withdrawn
+### The control, and why the corpus rate was the wrong one
 
-**Every one of the three sits BELOW the corpus default** (chemotherapy 84.3%, radiotherapy 85.2%, surgery 70.8% against 88.7%). They are also untagged MORE often than the corpus and carry FEWER tags each. So the earlier claim -- that a modality with no name "does not become an untagged article, it becomes someone else's article" -- is not supported by these numbers: nothing here is elevated, and the second half of that sentence describes what almost every article in this corpus looks like.
+An earlier version of this page compared those rates against the corpus-wide tagged rate of 88.7% and concluded that nothing was elevated. **That comparison was between two different events.** For these three modalities "carries at least one tag" IS "filed under another modality", because no lane names them. For the corpus at large it is overwhelmingly "carries its OWN tag". The corpus rate was never a control for this.
 
-The combination-paper story goes with it. If these were papers about two modalities, they would carry MORE tags than average, not fewer.
+The event-matched control asks the same question of modalities that DO have a lane: how often is a title-anchored set recorded ENTIRELY under someone else?
 
-### What survives, and it is structural rather than causal
+| | titled | filed entirely under others |
+|---|--:|--:|
+| radiotherapy (no lane) | 88 | **75** (85.2%) |
+| chemotherapy (no lane) | 166 | **140** (84.3%) |
+| surgery (no lane) | 24 | **17** (70.8%) |
+| **modalities WITH a lane** | 2,480 | 152 (6.1%) |
 
-The taxonomy has no lane for radiotherapy, chemotherapy or surgery. So any tag an article about them carries is NECESSARILY another modality's -- that is guaranteed by the design, not discovered by this measurement. What this analysis contributes is the COUNT of articles in that position (75, 140, 17), and every co-occurrence, prevalence and capture figure the project computes attributes those whole papers to whichever partner happened to have a tag. That consequence is unchanged; the causal story about namelessness is what goes.
+That is a factor of 12 to 14. So the original sentence -- that a modality with no name becomes someone else's article -- is not merely supported, it is **true by construction**: the taxonomy has no lane for these three, so any tag such an article carries is necessarily another modality's. It is a property of the design rather than a discovery, and what this page contributes is the size of the affected set and the contrast above.
+
+Both readings this page has carried were wrong in opposite directions: the first presented a structural certainty as an empirical finding, and the second withdrew it against a denominator measuring something else.
 
 ### Some of those partners are tags the project has since withdrawn
 
 `corpus/INDEX.jsonl` is FROZEN and was tagged before #MECH-PRECISION retired the bare phrase "membrane potential" from `bioelectric` -- audited at 13.3% precision, because it nearly always appears as MITOCHONDRIAL membrane potential, a JC-1 apoptosis readout. Re-running the CURRENT vocabulary over the same articles, these partners disappear:
 
 * **chemotherapy**: `bioelectric`
+* **surgery**: `frequency-therapy`
 
 That matters most for the causal reading. `scripts/queries.txt` retrieves on "membrane potential" itself, so those articles are in this corpus BECAUSE of the phrase that then tagged them -- a retrieval-plus-retired-keyword artifact, not a partner absorbing a nameless modality.
 
-Only tags `scripts/config.py` records as narrowed under #MECH-PRECISION are listed. Other partners also drop out of the re-run, but this pass reads title and abstract while the frozen tagging read the stored full text, so those disappearances mix the vocabulary with the text scope and are not attributed here.
+Both passes run the production matcher over production text, so a disappearance can only be the vocabulary. Every other partner is untouched -- `immunotherapy` and `nanoparticle` and `ttfields` return identical counts -- which is what makes the two above attributable.
 
-**The absolute counts are NOT comparable between the two columns and are deliberately not published as a delta.** The frozen tagging read the stored full text; this re-run reads title and abstract only, so any difference in totals mixes the vocabulary change with a change of text scope. What the comparison isolates is which partner tags survive the vocabulary at all, which is the question here.
+Removing them moves the tagged counts: radiotherapy 75 -> 74, chemotherapy 140 -> 127 -- articles whose ONLY tag was a retired keyword.
+
+An earlier version of this section published three caveat paragraphs, one in bold, saying it read title and abstract while the frozen tagging read stored full text. Both halves were false: `corpus/INDEX.jsonl` carries no abstract field, so that pass matched titles alone, and `get_searchable_text` defaults to excluding the body, so the frozen tagger never read it either. Under the broken scope this partner would have vanished under ANY vocabulary. The caveats were excusing a defect rather than describing a limit.
 
 ## Why this is a different problem from a coverage gap
 

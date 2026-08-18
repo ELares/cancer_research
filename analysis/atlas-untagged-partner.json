@@ -42,35 +42,35 @@
    "partner_tags_current_vocabulary": [
     [
      "immunotherapy",
-     26
+     58
     ],
     [
      "nanoparticle",
-     14
-    ],
-    [
-     "ttfields",
-     9
-    ],
-    [
-     "synthetic-lethality",
-     7
-    ],
-    [
-     "electrochemical-therapy",
-     6
-    ],
-    [
-     "oncolytic-virus",
-     4
+     27
     ],
     [
      "bispecific-antibody",
-     4
+     20
     ],
     [
-     "sonodynamic",
-     3
+     "ttfields",
+     11
+    ],
+    [
+     "synthetic-lethality",
+     11
+    ],
+    [
+     "oncolytic-virus",
+     7
+    ],
+    [
+     "metabolic-targeting",
+     7
+    ],
+    [
+     "epigenetic",
+     6
     ]
    ],
    "strong_fulltext": 1995,
@@ -78,7 +78,7 @@
    "subject_tagged_as_other": 140,
    "subject_titled": 166,
    "subject_untagged": 26,
-   "tagged_current_vocabulary": 74
+   "tagged_current_vocabulary": 127
   },
   "radiotherapy": {
    "any_fulltext": 2436,
@@ -119,15 +119,19 @@
    "partner_tags_current_vocabulary": [
     [
      "immunotherapy",
-     25
+     45
     ],
     [
      "ttfields",
-     8
+     11
     ],
     [
      "nanoparticle",
-     5
+     7
+    ],
+    [
+     "bispecific-antibody",
+     6
     ],
     [
      "electrochemical-therapy",
@@ -138,16 +142,12 @@
      4
     ],
     [
-     "bispecific-antibody",
+     "epigenetic",
      3
     ],
     [
      "hifu",
-     2
-    ],
-    [
-     "synthetic-lethality",
-     2
+     3
     ]
    ],
    "strong_fulltext": 907,
@@ -155,7 +155,7 @@
    "subject_tagged_as_other": 75,
    "subject_titled": 88,
    "subject_untagged": 13,
-   "tagged_current_vocabulary": 52
+   "tagged_current_vocabulary": 74
   },
   "surgery": {
    "any_fulltext": 2155,
@@ -196,14 +196,34 @@
    "partner_tags_current_vocabulary": [
     [
      "immunotherapy",
-     5
+     8
     ],
     [
      "ttfields",
      4
     ],
     [
+     "hifu",
+     2
+    ],
+    [
+     "microbiome",
+     1
+    ],
+    [
      "car-t",
+     1
+    ],
+    [
+     "antibody-drug-conjugate",
+     1
+    ],
+    [
+     "synthetic-lethality",
+     1
+    ],
+    [
+     "electrochemical-therapy",
      1
     ]
    ],
@@ -212,8 +232,75 @@
    "subject_tagged_as_other": 17,
    "subject_titled": 24,
    "subject_untagged": 7,
-   "tagged_current_vocabulary": 10
+   "tagged_current_vocabulary": 17
   }
+ },
+ "named_control": {
+  "entirely_other": 152,
+  "per_modality": {
+   "antibody-drug-conjugate": {
+    "entirely_other": 0,
+    "titled": 147
+   },
+   "bioelectric": {
+    "entirely_other": 2,
+    "titled": 33
+   },
+   "bispecific-antibody": {
+    "entirely_other": 0,
+    "titled": 112
+   },
+   "car-t": {
+    "entirely_other": 1,
+    "titled": 197
+   },
+   "crispr": {
+    "entirely_other": 0,
+    "titled": 125
+   },
+   "epigenetic": {
+    "entirely_other": 48,
+    "titled": 126
+   },
+   "hifu": {
+    "entirely_other": 0,
+    "titled": 19
+   },
+   "immunotherapy": {
+    "entirely_other": 0,
+    "titled": 766
+   },
+   "mRNA-vaccine": {
+    "entirely_other": 32,
+    "titled": 170
+   },
+   "microbiome": {
+    "entirely_other": 69,
+    "titled": 134
+   },
+   "nanoparticle": {
+    "entirely_other": 0,
+    "titled": 163
+   },
+   "oncolytic-virus": {
+    "entirely_other": 0,
+    "titled": 150
+   },
+   "sonodynamic": {
+    "entirely_other": 0,
+    "titled": 136
+   },
+   "synthetic-lethality": {
+    "entirely_other": 0,
+    "titled": 134
+   },
+   "ttfields": {
+    "entirely_other": 0,
+    "titled": 68
+   }
+  },
+  "rate": 0.06129032258064516,
+  "titled": 2480
  },
  "strong_threshold": 5
 }
