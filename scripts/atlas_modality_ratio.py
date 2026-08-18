@@ -596,6 +596,28 @@ def permutation_controls(sets, counts, combos, primary) -> dict:
     }
 
 
+def _uniform_split(keys, counts, masses) -> dict:
+    """The descriptor-free comparison: give every partition the family's MEAN.
+
+    REFUSES rather than silently shrinking. The first version filtered out any
+    partition where the even share exceeded its whole physical class, so
+    surgery's cell was computed over four partitions receiving 80% of "the
+    identical total" -- while the column header and the sentence beside it both
+    said the same total, evenly, across the five. That a family's mass cannot
+    be spread evenly is itself the finding for that row: it is too concentrated
+    for any partition-blind removal to imitate.
+    """
+    mean = sum(masses) / len(masses)
+    short = [k for k in keys if counts[k]["phys"] - mean <= 0]
+    if short:
+        return {"uniform_mass_spread": None, "uniform_mass_feasible": False,
+                "uniform_mass_short": sorted(short), "uniform_mass_mean": mean}
+    return {"uniform_mass_spread": _spread(
+                [counts[k]["pharm"] / (counts[k]["phys"] - mean) for k in keys]),
+            "uniform_mass_feasible": True, "uniform_mass_short": [],
+            "uniform_mass_mean": mean}
+
+
 def allocation_permutation(sets, counts, combos, primary) -> dict:
     """Does the removal fall WHERE the partitions differ?
 
@@ -639,10 +661,7 @@ def allocation_permutation(sets, counts, combos, primary) -> dict:
             "median_assignment": sorted(seen)[len(seen) // 2] if seen else None,
             # the descriptor-free comparison: give every partition this
             # family's MEAN mass and see how much of the effect survives
-            "uniform_mass_spread": _spread(
-                [counts[k]["pharm"] / (counts[k]["phys"] - sum(masses) / len(masses))
-                 for k in keys
-                 if counts[k]["phys"] - sum(masses) / len(masses) > 0]),
+            **_uniform_split(keys, counts, masses),
         }
     return out
 
@@ -832,25 +851,29 @@ def render(d: dict) -> str:
 
 
 def _what_would_make_this_wrong(d) -> list:
-    ctl = d.get("controls") or {}
-    named = {k: v.get("spread") for k, v in ctl.items() if v.get("spread")}
+    perm = d.get("permutation") or {}
+    tm = perm.get("total_matched") or {}
+    alloc = (perm.get("allocation") or {}).get(PRIMARY_RULE) or {}
     surg = (d["holdouts"].get(PRIMARY_RULE) or {}).get("spread")
-    pub = d.get("published_spread") or 0.0
-    # DERIVED. Two earlier drafts of this bullet were wrong about the control:
-    # the first asserted that mass-matched random removals do NOT reproduce
-    # the collapse (they do), and the second leaned on the fact that they do
-    # as if that were a measurement (it is an arithmetic identity).
-    if named and surg:
+    # DERIVED, and this bullet has been wrong twice. v1 claimed random
+    # mass-matched removals do NOT reproduce the collapse (the per-partition
+    # version does, trivially). v2 rested the finding on the named families
+    # widening the spread, which the section above now retracts as arithmetic,
+    # and denied "the mass-matched permutation" while the load-bearing control
+    # IS one -- matched on the total rather than per partition.
+    if tm.get("n_draws") and alloc.get("n_feasible_assignments"):
         rests = (f"five rules disagreeing about named descriptor sets all land "
                  f"in the same place, and that "
-                 + ", ".join(f"`{k}`" for k in sorted(named))
-                 + f" -- non-surgical families built the same way, each "
-                 f"removing LESS physical mass -- leave the five further apart "
-                 f"than removing nothing at all ("
-                 + ", ".join(f"{v:.2f}x" for _k, v in sorted(named.items()))
-                 + f" against {pub:.2f}x). It does NOT rest on the "
-                 f"mass-matched permutation, which is withdrawn as unable to "
-                 f"answer its own question.")
+                 f"{tm['n_at_or_below_surgical']:,} of {tm['n_draws']:,} random "
+                 f"descriptor sets removing the same TOTAL mass reach "
+                 f"{surg:.2f}x, with {alloc['n_at_or_below_observed']} of "
+                 f"{alloc['n_feasible_assignments']} reassignments of "
+                 f"surgery's OWN five masses corroborating it. It does NOT "
+                 f"rest on matching that mass PARTITION BY PARTITION, which "
+                 f"fixes every held-out ratio before a descriptor is chosen "
+                 f"and is withdrawn, and it does NOT rest on the named "
+                 f"families widening the spread, which their near-uniform "
+                 f"masses largely explain.")
     else:
         rests = ("five rules disagreeing about named descriptor sets all land "
                  "in the same place.")
@@ -1016,13 +1039,17 @@ def _control_section(d) -> list:
               f"* **{n:,} of {tm['n_draws']:,}** reach the surgical rule's "
               f"{surg:.2f}x" if surg else "",
               ""]
-    L += ["**Where the removal falls, not how big it is.** A spread responds "
-          "to how UNEVENLY a removal lands, not to its total -- so each "
-          "family's own five masses are reassigned across the partitions, "
-          "exactly, over all 120 permutations. If the observed assignment is "
-          "unremarkable among them the family's mass is near-uniform, and the "
-          "result is a property of subtracting a roughly constant amount from "
-          "unequal denominators.", ""]
+    L += ["**Where the removal falls, as well as how big it is.** A spread "
+          "responds to both -- the column at the right shows a perfectly even "
+          "removal of the same total moving it on its own -- so each family's "
+          "own five masses are also reassigned across the partitions, "
+          "exactly, over all 120 permutations. Few reassignments matching the "
+          "observed one means the real allocation is doing work; most or all "
+          "of them matching means it is not. This is the exhaustive control "
+          "but the cruder null: it admits allocations no descriptor set could "
+          "produce, since a partition's surgical mass tracks its physical "
+          "class size. It corroborates the draw above rather than carrying "
+          "the result.", ""]
     alloc = perm.get("allocation") or {}
     if alloc:
         L += ["| removal | physical articles removed | least to most across "
@@ -1038,26 +1065,40 @@ def _control_section(d) -> list:
                 + (f" ({mass/surg_mass:.2f}x)" if surg_mass and name != PRIMARY_RULE
                    else "")
                 + f" | {a['mass_min']:,} to {a['mass_max']:,}"
+                + (f" ({a['mass_uniformity']:.1f}x)"
+                   if a.get("mass_uniformity") else " (one partition has none)")
                 + " | " + (f"**{a['observed_spread']:.2f}x**"
                            if name == PRIMARY_RULE
                            else f"{a['observed_spread']:.2f}x")
                 + f" | {a['n_at_or_below_observed']} of "
                   f"{a['n_feasible_assignments']} | "
                 + (f"{a['uniform_mass_spread']:.2f}x"
-                   if a.get("uniform_mass_spread") else "-") + " |")
+                   if a.get("uniform_mass_spread")
+                   else "not achievable") + " |")
         L += [""]
         pa = alloc.get(PRIMARY_RULE) or {}
         others = {k: v for k, v in alloc.items() if k != PRIMARY_RULE}
         if pa.get("n_feasible_assignments"):
+            even = (f"Spreading the identical total EVENLY gives "
+                    f"{pa['uniform_mass_spread']:.2f}x"
+                    if pa.get("uniform_mass_feasible") else
+                    f"That total cannot be spread evenly at all: an equal "
+                    f"share is {pa['uniform_mass_mean']:,.0f} articles and "
+                    f"`{'`, `'.join(pa['uniform_mass_short'])}` holds fewer "
+                    f"physical articles than that in total, which is itself "
+                    f"the point -- surgery's mass is too concentrated for any "
+                    f"partition-blind removal to imitate")
             L += [f"Surgery's masses run from {pa['mass_min']:,} to "
                   f"{pa['mass_max']:,} across the five, "
                   f"and only **{pa['n_at_or_below_observed']} of "
                   f"{pa['n_feasible_assignments']}** reassignments of those "
                   f"same five numbers bring the five as close together as the "
-                  f"real allocation does. Spreading the identical total "
-                  f"EVENLY gives {pa['uniform_mass_spread']:.2f}x. So it is "
-                  f"not the amount: it is that the amount lands where the "
-                  f"partitions differ.", ""]
+                  f"real allocation does (the {120 - pa['n_feasible_assignments']} "
+                  f"excluded assignments hand a partition more articles than "
+                  f"its whole physical class, so they have no ratio; counting "
+                  f"them would only lower the fraction). {even}. So it is "
+                  f"not the amount alone: it is that the amount lands where "
+                  f"the partitions differ.", ""]
         # THE CORRECTION. An earlier draft said the named families widen the
         # spread and "the mass argument cannot explain" it. A mass argument
         # explains it almost completely: their masses are near-uniform, so
@@ -1069,10 +1110,14 @@ def _control_section(d) -> list:
             L += ["The named non-surgical families are the contrast, and an "
                   "earlier version of this page read them wrongly. They do "
                   "not collapse the five -- they widen them -- but that is "
-                  "NOT evidence about descriptors: "
+                  "NOT evidence about descriptors, and their reassignment "
+                  "counts sit at or near the TOP of their own null rather "
+                  "than being unremarkable in it: "
                   + ", ".join(
-                      f"`{k}` takes a near-uniform "
-                      f"{v['mass_min']:,}-to-{v['mass_max']:,} mass and "
+                      f"`{k}` takes a "
+                      f"{v['mass_min']:,}-to-{v['mass_max']:,} mass "
+                      f"({v['mass_uniformity']:.1f}x, against surgery's "
+                      f"0-to-{alloc[PRIMARY_RULE]['mass_max']:,}) and "
                       f"spreading the same total evenly already gives "
                       f"{v['uniform_mass_spread']:.2f}x of its "
                       f"{v['observed_spread']:.2f}x"

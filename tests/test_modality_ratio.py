@@ -275,6 +275,23 @@ def test_every_surgical_descriptor_a_rule_skips_is_a_NAMED_exception():
                 "an independent reading and not on any exception list the "
                 "generator declares, so the page holds out less than it says")
 
+    # THE EXCEPTION SETS THEMSELVES must pass the independent reading, or the
+    # guard above is defeated by widening them: adding eight real operative
+    # descriptors to `ENERGY_CAUGHT_BY_STEM` moved the headline collapse
+    # 1.18x -> 1.54x with every guard green, while the page printed them under
+    # "which are energy modalities rather than operative removal".
+    for x in sorted(m.ENERGY_CAUGHT_BY_STEM):
+        assert _ENERGY_WORDS.search(x) or re.search(
+            r"cryosurg|radiosurg|electrosurg|ultrasonic surgical", x, re.I), (
+            f"{x!r} is declared an energy modality the stem list wrongly "
+            "catches, and reads as operative removal instead")
+    for x in sorted(m.OPERATIVE_MISSED_BY_STEM):
+        assert _SURGICAL_WORDS.search(x), (
+            f"{x!r} is declared operative removal the stem list misses, and "
+            "does not read as surgery by an independent word list")
+        assert not _ENERGY_WORDS.search(x), (
+            f"{x!r} is declared operative and reads as an energy modality")
+
     # and the PRIMARY rule's two declared corrections, pinned directly: no
     # guard anywhere used to reference what it excludes, only its spread
     rules = m.holdout_rules()
@@ -551,6 +568,7 @@ def test_the_controls_that_can_discriminate_are_run_and_reported():
     tm = perm.get("total_matched") or {}
     alloc = perm.get("allocation") or {}
     m = _mod()
+    surg = d["holdouts"][m.PRIMARY_RULE]["spread"]
     assert tm.get("n_draws", 0) >= 1000, (
         f"the total-mass-matched control ran {tm.get('n_draws')} draws")
     assert alloc.get(m.PRIMARY_RULE), "the allocation permutation is gone"
@@ -563,9 +581,48 @@ def test_the_controls_that_can_discriminate_are_run_and_reported():
         f"{pa['n_at_or_below_observed']} of {pa['n_feasible_assignments']}" in md, (
         "the allocation result is computed and not rendered")
     assert f"{tm['n_at_or_below_surgical']:,} of {tm['n_draws']:,}" in md
+    # ARITHMETIC INVARIANTS. Thirteen mutations that made the control look
+    # better than it is passed the first version of this guard: a flipped
+    # tail printed "1,000 of 1,000 reach" directly under "spread 1.62x to
+    # 11.61x", a shrunken target printed a mass the table below contradicted,
+    # an unshuffled pool printed 1,000 identical draws.
+    assert (tm["n_at_or_below_surgical"] > 0) == (tm["min"] <= surg), (
+        f"{tm['n_at_or_below_surgical']} draws are reported at or below "
+        f"{surg:.4f} while the minimum drawn spread is {tm['min']:.4f}")
+    assert (tm["min"] <= tm["median"] <= tm["max"])
+    assert tm["min"] < tm["max"], (
+        "every draw returned the same spread, so the pool is not being "
+        "shuffled and there is one draw wearing a thousand names")
+    assert perm["target_total_mass"] == sum(
+        (d["removed_mass"].get("surgical") or {}).values()), (
+        "the draws are matched to a different mass than the surgical rule "
+        "removes, so 'the total surgery removes' is not that total")
+    assert abs(perm["surgical_spread"] - surg) < 1e-9, (
+        "the count is taken against a different spread than the one the page "
+        "prints beside it")
+    assert tm["n_draws"] + tm["degenerate_draws"] == m.N_PERMUTATIONS
+    for name, a in alloc.items():
+        # the observed assignment is one of the permutations, so the count of
+        # assignments at or below it can never be zero
+        assert a["n_at_or_below_observed"] >= 1, (
+            f"{name}: the observed allocation is not counted among the "
+            "reassignments it is compared against")
+        assert a["n_feasible_assignments"] <= 120
+        # RECOMPUTED HERE. Dropping the feasibility filter divides by negative
+        # denominators, inflating the count with assignments that hand a
+        # partition more articles than its whole physical class.
+        import itertools
+        masses = [a["masses"][k] for k in sorted(a["masses"])]
+        phys = [d["partitions"][k]["phys"] for k in sorted(a["masses"])]
+        want = sum(1 for perm in itertools.permutations(masses)
+                   if all(m < p for m, p in zip(perm, phys)))
+        assert a["n_feasible_assignments"] == want, (
+            f"{name}: {a['n_feasible_assignments']} assignments counted "
+            f"feasible, {want} actually are -- an infeasible one has no ratio")
+
     # the withdrawn design must not come back, and its verdict must not either
     for gone in ("mass-matched random, median", "does NOT rest on the "
-                 "permutation:", "the mass argument cannot explain"):
+                 "permutation", "the mass argument cannot explain"):
         assert gone not in md, f"the withdrawn reading {gone!r} is still here"
     assert "could not work" in md and "per-partition" in md.lower()
 
@@ -590,6 +647,41 @@ def test_the_identity_is_called_algebra_and_the_real_invariant_is_checked():
         "the page still presents the algebraic identity as a measurement")
 
 
+def test_the_even_split_column_is_over_all_five_or_refuses():
+    """Surgery's even share exceeds one partition's entire physical class, and
+    the first version silently dropped that partition -- reporting 80% of "the
+    identical total" over four of five under a header saying otherwise.
+    """
+    d, md = _doc(), MD.read_text()
+    alloc = (d.get("permutation") or {}).get("allocation") or {}
+    for name, a in alloc.items():
+        # RECOMPUTED, not read: the first version filtered short partitions
+        # out inside the comprehension and reported `short: []` regardless.
+        mean = sum(a["masses"].values()) / len(a["masses"])
+        assert abs(a["uniform_mass_mean"] - mean) < 1e-6
+        short = sorted(k for k in a["masses"]
+                       if d["partitions"][k]["phys"] - mean <= 0)
+        assert a.get("uniform_mass_short", []) == short, (
+            f"{name}: partitions that cannot give up an even share are "
+            f"{short}, reported {a.get('uniform_mass_short')}")
+        assert a.get("uniform_mass_feasible") is (not short), (
+            f"{name}: an even split is reported feasible while {short} hold "
+            "fewer physical articles than an even share")
+        if a.get("uniform_mass_feasible"):
+            assert a["uniform_mass_spread"], f"{name}: feasible and no value"
+            continue
+        assert a["uniform_mass_spread"] is None
+        assert a["uniform_mass_short"], f"{name}: infeasible for no partition"
+        for k in a["uniform_mass_short"]:
+            assert d["partitions"][k]["phys"] <= a["uniform_mass_mean"], (
+                f"{k} is reported unable to give up an even share of "
+                f"{a['uniform_mass_mean']:,.0f} and holds "
+                f"{d['partitions'][k]['phys']:,} physical articles")
+        assert "cannot be spread evenly at all" in md, (
+            f"`{name}`'s even split is not achievable and the page does not "
+            "say so")
+
+
 def test_the_named_family_widening_is_not_claimed_as_descriptor_evidence():
     """Their masses are near-uniform, so subtracting them from unequal
     denominators must amplify the highest ratios. An earlier draft called that
@@ -603,6 +695,11 @@ def test_the_named_family_widening_is_not_claimed_as_descriptor_evidence():
             continue
         u, obs = a.get("uniform_mass_spread"), a.get("observed_spread")
         if not (u and obs):
+            continue
+        if a.get("uniform_mass_feasible") is False:
+            assert u is None, (
+                f"`{name}`'s even split is infeasible and a number is "
+                "reported anyway, over fewer partitions than the column says")
             continue
         if u > obs * 0.5:
             assert f"{u:.2f}x of its {obs:.2f}x" in md, (

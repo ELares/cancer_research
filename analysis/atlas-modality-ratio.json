@@ -2114,6 +2114,9 @@
     "n_at_or_below_observed": 120,
     "n_feasible_assignments": 120,
     "observed_spread": 3.9599481251914894,
+    "uniform_mass_feasible": true,
+    "uniform_mass_mean": 41294.6,
+    "uniform_mass_short": [],
     "uniform_mass_spread": 3.4713487455839442
    },
    "operative-only": {
@@ -2131,7 +2134,12 @@
     "n_at_or_below_observed": 2,
     "n_feasible_assignments": 48,
     "observed_spread": 1.1799918715103523,
-    "uniform_mass_spread": 3.1505084627787627
+    "uniform_mass_feasible": false,
+    "uniform_mass_mean": 225980.4,
+    "uniform_mass_short": [
+     "mechanism-of-action"
+    ],
+    "uniform_mass_spread": null
    },
    "radiotherapy family": {
     "mass_max": 131818,
@@ -2148,6 +2156,9 @@
     "n_at_or_below_observed": 54,
     "n_feasible_assignments": 120,
     "observed_spread": 5.7791269109628205,
+    "uniform_mass_feasible": true,
+    "uniform_mass_mean": 114655.6,
+    "uniform_mass_short": [],
     "uniform_mass_spread": 5.580001875819387
    }
   },
