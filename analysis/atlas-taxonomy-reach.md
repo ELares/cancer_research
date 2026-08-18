@@ -12,7 +12,18 @@ The keyword tagger carries **25 mechanisms** over **186 terms**. Applied to a un
 | **matched at least one mechanism** | **13,159** | **5.98%** (95% CI 5.88-6.08%) |
 | matched none | 207,040 | 94.02% |
 
-So every mechanism share this project reports is a share of roughly **6%** of the cancer literature, and the documented 0.20%-41.86% capture spread describes variation inside that fraction.
+| the production matcher | count | share |
+|---|--:|--:|
+| **matched at least one mechanism** | **14,979** | **6.80%** (95% CI 6.70-6.91%) |
+| matched none | 205,220 | 93.20% |
+
+The `matched at least one mechanism` row is a raw loop over `text_matches_keyword` on title and abstract. **Production is the 6.80% row**: `match_mechanisms` opens with a cancer-context gate and reads the MeSH descriptors as well as the title and abstract. On the same articles production's extra logic is worth -0.25 points on title+abstract -- a NET of the cancer-context gate and two composite matchers pulling opposite ways, not the gate alone, which an earlier version of this sentence attributed it to -- and the MeSH channel adds +1.08. An earlier version published the raw figure as the production field of view.
+
+Scope: **24.9%** of the sampled records carry no abstract at all, so for that quarter the production channel is title and MeSH only.
+
+So every mechanism share this project reports is a share of **6.8%** of the cancer literature.
+
+The documented 0.20%-41.86% per-mechanism capture spread is NOT variation inside this fraction: it is computed by the MeSH leaf map on both sides, a different instrument whose reach is reported below. An earlier version of this sentence attached the spread to the keyword reach, which is the conflation this script's own docstring forbids.
 
 ### The precision-first map, for contrast
 
@@ -26,62 +37,77 @@ The percentage is less interesting than its complement. If the remainder is lite
 
 | publication type | share of unlabelled |
 |---|--:|
-| case report | 14.9% |
-| guideline/consensus | 0.2% |
-| meta/systematic | 1.5% |
 | primary research (no special type) | 63.4% |
-| review/opinion | 19.3% |
+| review/opinion | 15.3% |
+| case report | 14.9% |
 | trial | 4.7% |
+| meta/systematic | 1.5% |
+| guideline/consensus | 0.2% |
 
-Most common MeSH descriptors among unlabelled articles, with demographic check-tags excluded (`Humans` alone sits on 92% of them and says nothing about subject):
+Most common MeSH descriptors among unlabelled articles, with **demographic check-tags and study-design descriptors both excluded** (`Humans` alone sits on 92% of them and says nothing about subject). Both exclusions are listed below rather than left implicit: an earlier caption said only "demographic check-tags excluded" while 16 study-design descriptors were also removed.
 
 | descriptor | share of unlabelled |
 |---|--:|
-| adenocarcinoma | 4.0% |
-| antineoplastic agents | 7.6% |
-| antineoplastic combined chemotherapy protocols | 3.8% |
-| apoptosis | 3.5% |
-| biomarkers, tumor | 4.4% |
-| brain neoplasms | 3.1% |
+| neoplasms | 12.1% |
 | breast neoplasms | 8.4% |
-| carcinoma, squamous cell | 3.4% |
-| cell proliferation | 4.0% |
-| colorectal neoplasms | 2.9% |
+| antineoplastic agents | 7.6% |
+| lung neoplasms | 6.4% |
+| neoplasm staging | 4.7% |
+| biomarkers, tumor | 4.4% |
+| liver neoplasms | 4.4% |
 | diagnosis, differential | 4.3% |
 | gene expression regulation, neoplastic | 4.0% |
+| cell proliferation | 4.0% |
+| adenocarcinoma | 4.0% |
+| antineoplastic combined chemotherapy protocols | 3.8% |
+
+The study-design descriptors removed from that table, which are what the remainder is METHODOLOGICALLY rather than what it is about. They are excluded from the ranking above because they describe how a study was run, and shown here because several outrank rows the table does print:
+
+| study-design descriptor | share of unlabelled |
+|---|--:|
+| cell line, tumor | 8.6% |
+| retrospective studies | 8.5% |
+| prognosis | 7.8% |
+| treatment outcome | 6.2% |
+| follow-up studies | 4.1% |
+| risk factors | 4.1% |
+| time factors | 3.4% |
+| survival rate | 2.8% |
 
 ### The verdict on the field of view
 
-The comfortable reading is that the unlabelled remainder is literature no mechanism taxonomy should claim. That is **partly true and not sufficient**: review, opinion and case reports account for 34.3% of it, but 63.4% is primary research with no special publication type.
+The comfortable reading is that the unlabelled remainder is literature no mechanism taxonomy should claim. That is **partly true and not sufficient**: review, opinion and case reports account for 31.6% of it, but 63.4% is primary research with no special publication type.
 
-And the remainder carries explicit therapy descriptors: `antineoplastic agents` and `antineoplastic combined chemotherapy protocols` together sit on **11.4%** of unlabelled articles. Those are therapy papers the taxonomy has no name for -- chemotherapy has no mechanism tag -- rather than literature outside its remit.
+And the remainder carries explicit therapy descriptors: `antineoplastic agents` and `antineoplastic combined chemotherapy protocols` sit on **11.1%** of unlabelled articles. Those are therapy papers the taxonomy has no name for -- chemotherapy has no mechanism tag -- rather than literature outside its remit. That is the UNION of the therapy descriptors, not the sum of two overlapping rows, which an earlier version published.
 
 So the field of view is a real limit and not merely a wording problem. The capture caveat should carry this number, and the backbone modalities with no tag are the first place to widen.
 
 ## Per mechanism, within the sample
 
+The 15 largest of 25 mechanisms with any hit, BY COUNT. An earlier version sliced an alphabetically reordered dict and omitted `nanoparticle`, the second-largest.
+
 | mechanism | sampled hits | share of census |
 |---|--:|--:|
-| antibody-drug-conjugate | 354 | 0.16% |
-| bioelectric | 56 | 0.03% |
-| bispecific-antibody | 145 | 0.07% |
-| car-t | 644 | 0.29% |
-| cold-atmospheric-plasma | 25 | 0.01% |
-| crispr | 438 | 0.20% |
-| cuproptosis | 75 | 0.03% |
-| disulfidptosis | 11 | 0.00% |
-| electrochemical-therapy | 59 | 0.03% |
-| electrolysis | 8 | 0.00% |
-| epigenetic | 1,188 | 0.54% |
-| frequency-therapy | 10 | 0.00% |
-| hifu | 115 | 0.05% |
 | immunotherapy | 6,276 | 2.85% |
-| mRNA-vaccine | 51 | 0.02% |
+| nanoparticle | 3,051 | 1.39% |
+| epigenetic | 1,188 | 0.54% |
+| metabolic-targeting | 683 | 0.31% |
+| car-t | 644 | 0.29% |
+| crispr | 438 | 0.20% |
+| synthetic-lethality | 373 | 0.17% |
+| antibody-drug-conjugate | 354 | 0.16% |
+| radioligand-therapy | 302 | 0.14% |
+| oncolytic-virus | 239 | 0.11% |
+| bispecific-antibody | 145 | 0.07% |
+| targeted-protein-degradation | 140 | 0.06% |
+| hifu | 115 | 0.05% |
+| phagocytosis-checkpoint | 81 | 0.04% |
+| cuproptosis | 75 | 0.03% |
 
 ## What this does not say
 
 * It does not say the taxonomy is wrong. A mechanism layer is supposed to label mechanism papers, and much of the literature is not about a therapeutic mechanism at all.
 * It does not measure precision. An article matching a keyword is not necessarily about that mechanism; `mechanism_recall.py` measures that separately against MeSH.
 * The keyword figure is sampled, so it carries an interval. The MeSH figure is a full-census count and does not.
-* Reach is measured on title and abstract only, which is what the production tagger reads for these fields.
+* Two reaches are reported: a raw keyword loop over title and abstract, and the production matcher, which also reads MeSH and applies a cancer-context gate. An earlier version reported only the first and described it as what production reads.
 

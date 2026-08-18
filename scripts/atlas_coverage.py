@@ -131,7 +131,7 @@ def main() -> None:
 
     L += ["> " + (
 
-        "**Per-mechanism capture is conditioned on having a tag.** The mechanism layer reaches 5.98% of the cancer literature, so the capture spread here is variation inside that fraction. See `analysis/atlas-taxonomy-reach.md` (#730)."), ""]
+        "**Per-mechanism capture is conditioned on having a tag.** The mechanism layer reaches 6.80% of the cancer literature measured through the PRODUCTION matcher (the 5.98% this sentence used to quote was a raw keyword loop over title and abstract, not what production reads). And the capture spread here is NOT variation inside that fraction: it is computed by the MeSH leaf map on both sides, a different instrument. See `analysis/atlas-taxonomy-reach.md` (#730), which retracts both halves of the earlier sentence."), ""]
     if not complete:
         L += [
             "> ## PARTIAL CENSUS — DO NOT READ THE TABLES BELOW AS FIELD SIZES",

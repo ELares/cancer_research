@@ -175,7 +175,7 @@ def render(d: dict) -> str:
           "prediction and module counts are mechanical.",
           "* Mechanism shares quoted elsewhere in this repo (immunotherapy 47.6% "
           "and so on) are shares of TAGGED articles, and the mechanism taxonomy "
-          "reaches about 6% of the cancer literature — see "
+          "reaches 6.8% of the cancer literature through the production matcher — see "
           "`analysis/atlas-taxonomy-reach.md`.",
           ""]
     return "\n".join(L) + "\n"
