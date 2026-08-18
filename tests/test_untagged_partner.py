@@ -3,7 +3,8 @@
 THE CLAIM
 ---------
 A modality the mechanism taxonomy cannot name does not become an untagged
-article. It becomes someone else's article: it arrives attached to a modality
+article. It becomes someone else's article -- TRUE BY CONSTRUCTION, since no
+lane names these three. It arrives attached to a modality
 that DOES have a tag, and the whole paper is filed under the partner.
 
 Measured on the frozen corpus, for articles TITLED about each modality:
@@ -62,6 +63,10 @@ def test_the_finding_holds_for_more_than_one_modality():
     assert len(absorbed) >= 3, (
         "fewer than three modalities have enough titled articles to judge")
     for m, frac in absorbed.items():
+        # This is a structural property, not an empirical one: with no lane
+        # for these modalities, a tagged article is necessarily filed under
+        # another. The threshold checks the SET IS LARGE ENOUGH TO MATTER, not
+        # that a hypothesis held.
         assert frac > 0.5, (
             f"{m}: only {100*frac:.0f}% of titled articles are filed under "
             "another modality, so the partner-attribution claim does not hold "
@@ -174,3 +179,140 @@ def test_an_empty_result_refuses_to_render():
     assert "is not a finding" in src and "raise SystemExit" in src
     assert 'subject_titled"] == 0' in src, (
         "the empty check no longer tests the titled count")
+
+
+def test_the_corpus_base_rate_is_measured_and_published():
+    """The control this analysis never ran.
+
+    Carrying another modality's tag is the corpus DEFAULT. Without the
+    default, a rate of 85% reads as a finding when the corpus runs at 88.7%.
+    """
+    d, md = _doc(), MD.read_text()
+    n, ct = d["corpus_size"], d.get("corpus_tagged")
+    assert ct, "the corpus tagged count is not measured"
+    # RE-DERIVED from INDEX.jsonl, not read back from the artifact
+    idx = [json.loads(l) for l in (REPO_ROOT / "corpus" / "INDEX.jsonl").open()
+           if l.strip()]
+    want = sum(1 for r in idx if (r.get("mechanisms") or []))
+    want_multi = sum(1 for r in idx if len(r.get("mechanisms") or []) >= 2)
+    assert ct == want, f"artifact says {ct} tagged, INDEX.jsonl gives {want}"
+    assert d.get("corpus_multi_tagged") == want_multi
+    assert f"**the corpus** | {n:,}" in md, (
+        "the corpus row is not in the table, so the per-modality rates have "
+        "no denominator beside them")
+    assert f"({100*ct/n:.1f}%)" in md
+
+
+def test_the_verdict_follows_the_event_matched_control():
+    """The corpus rate compared two different events.
+
+    For these three, "carries a tag" IS "filed under another modality"; for
+    the corpus it is overwhelmingly "carries its OWN tag". The event-matched
+    control is a title-anchored set for a modality that HAS a lane.
+    """
+    d, md = _doc(), MD.read_text()
+    nc = d.get("named_control")
+    assert nc and nc.get("rate") is not None, (
+        "the event-matched control is gone; without it the per-modality "
+        "rates have no comparator that measures the same event")
+    ncr = 100 * nc["rate"]
+    rates = {m: 100 * s["subject_tagged_as_other"] / s["subject_titled"]
+             for m, s in d["modalities"].items()}
+    assert f"({ncr:.1f}%)" in md, "the control rate is not rendered"
+    if all(r > ncr for r in rates.values()):
+        assert "true by construction" in md, (
+            f"every nameless modality ({min(rates.values()):.1f}-"
+            f"{max(rates.values()):.1f}%) exceeds the named control "
+            f"({ncr:.1f}%), and the report does not state the finding")
+    # the corpus rate must not be used as the verdict's comparator again
+    assert "was never a control for this" in md, (
+        "the report no longer records that the corpus-wide tagged rate "
+        "measures a different event")
+
+
+def test_every_rendered_rate_matches_the_artifact():
+    """The page could print 95.2% beside a JSON saying 85.2%.
+
+    No guard tied any rendered percentage to the numbers behind it, so a
+    mutation produced "Every one sits BELOW the corpus default (chemotherapy
+    94.3% ... against 88.7%)" -- self-refuting on its face -- with the suite
+    green.
+    """
+    d, md = _doc(), MD.read_text()
+    n, ct = d["corpus_size"], d["corpus_tagged"]
+    for m, s in d["modalities"].items():
+        tt = s["subject_titled"]
+        for val, label in ((s["subject_untagged"], "untagged"),
+                           (s["subject_tagged_as_other"], "tagged"),
+                           (s.get("subject_multi_tagged", 0), "multi")):
+            cell = f"{val:,} ({100*val/tt:.1f}%)"
+            # the tagged cell is bolded in the table
+            if cell not in md:
+                cell = f"**{val:,}** ({100*val/tt:.1f}%)"
+            assert cell in md, (
+                f"{m}'s {label} cell should render as `{cell}` and does not; "
+                "a rendered percentage is not tied to its count")
+    assert f"**{ct:,}** ({100*ct/n:.1f}%)" in md
+
+
+def test_the_multi_tag_column_is_not_argued_from():
+    """A combination paper cannot carry two tags when one lane is missing.
+
+    An earlier version read a below-average multi-tag rate as evidence
+    against the combination-paper story. That inference is invalid: the
+    hypothesis predicts enrichment for exactly ONE tag, because the other
+    modality has no lane to be tagged with.
+    """
+    d, md = _doc(), MD.read_text()
+    for m, s in d["modalities"].items():
+        assert s.get("subject_multi_tagged") is not None
+    assert "cannot test it in either direction" in md, (
+        "the report does not say why the multi-tag column cannot bear the "
+        "combination argument")
+    assert "carry FEWER tags" not in md, (
+        "the invalid multi-tag inference is back: a two-modality paper can "
+        "only carry one tag when one modality has no lane")
+
+
+def test_the_vocabulary_comparison_is_vocabulary_only():
+    """Both passes must run the production matcher on production text.
+
+    An earlier version built `title + record["abstract"]` from INDEX.jsonl,
+    which carries NO abstract field -- so it matched titles alone -- and then
+    published three caveat paragraphs, one bolded, claiming it read
+    title+abstract against a frozen tagging that read full text. Both halves
+    were false, and under that broken scope the partner would have vanished
+    under ANY vocabulary.
+
+    A proximity scan of config.py then filtered the result, which excluded
+    `frequency-therapy` (recorded 951 characters from its marker) and forced
+    a FALSE correction of prose that had been right. Both are gone: the
+    comparison isolates the vocabulary, so no heuristic is needed.
+    """
+    src = SCRIPT.read_text()
+    assert "get_searchable_text" in src and "match_mechanisms" in src, (
+        "the re-tag no longer goes through the production entry points, so a "
+        "difference between the two passes could be a text-scope artifact")
+    assert 'r.get("abstract")' not in src, (
+        "the re-tag reads an `abstract` field from INDEX.jsonl, which has "
+        "none -- it would silently match titles alone")
+    assert "#MECH-PRECISION(.{0,600})" not in src, (
+        "the proximity window is back; it is a scan of source-file layout, "
+        "wrong in both directions")
+    # the comparison must leave untouched partners untouched, or it is not
+    # isolating the vocabulary
+    d = _doc()
+    for m, s in d["modalities"].items():
+        old_t = dict(s.get("partner_tags") or [])
+        new_t = dict(s.get("partner_tags_current_vocabulary") or [])
+        shared = set(old_t) & set(new_t)
+        assert shared, f"{m}: no partner survives, which is not a vocabulary effect"
+        for k in shared:
+            assert old_t[k] == new_t[k], (
+                f"{m}: `{k}` moves {old_t[k]} -> {new_t[k]} between the two "
+                "passes; a surviving tag changing count means the comparison "
+                "is not vocabulary-only")
+    md = MD.read_text()
+    assert "a disappearance can only be the vocabulary" in md
+    assert "excusing a defect rather than describing a limit" in md, (
+        "the report no longer records that its earlier caveats were false")
