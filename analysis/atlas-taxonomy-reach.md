@@ -11,9 +11,15 @@ The keyword tagger carries **25 mechanisms** over **186 terms**. Applied to a un
 | sampled | 220,199 | |
 | **matched at least one mechanism** | **13,159** | **5.98%** (95% CI 5.88-6.08%) |
 | matched none | 207,040 | 94.02% |
-| **the PRODUCTION matcher** | **14,979** | **6.80%** (95% CI 6.70-6.91%) |
 
-The `matched at least one mechanism` row is a raw loop over `text_matches_keyword` on title and abstract. **Production is the 6.80% row**: `match_mechanisms` opens with a cancer-context gate and reads the MeSH descriptors as well as the title and abstract. On the same articles the gate alone costs -0.25 points and the MeSH channel adds +1.08. An earlier version published the raw figure as the production field of view.
+| the production matcher | count | share |
+|---|--:|--:|
+| **matched at least one mechanism** | **14,979** | **6.80%** (95% CI 6.70-6.91%) |
+| matched none | 205,220 | 93.20% |
+
+The `matched at least one mechanism` row is a raw loop over `text_matches_keyword` on title and abstract. **Production is the 6.80% row**: `match_mechanisms` opens with a cancer-context gate and reads the MeSH descriptors as well as the title and abstract. On the same articles production's extra logic is worth -0.25 points on title+abstract -- a NET of the cancer-context gate and two composite matchers pulling opposite ways, not the gate alone, which an earlier version of this sentence attributed it to -- and the MeSH channel adds +1.08. An earlier version published the raw figure as the production field of view.
+
+Scope: **24.9%** of the sampled records carry no abstract at all, so for that quarter the production channel is title and MeSH only.
 
 So every mechanism share this project reports is a share of **6.8%** of the cancer literature.
 
@@ -32,13 +38,13 @@ The percentage is less interesting than its complement. If the remainder is lite
 | publication type | share of unlabelled |
 |---|--:|
 | primary research (no special type) | 63.4% |
-| review/opinion | 19.3% |
-| case report | 12.2% |
-| trial | 4.5% |
-| meta/systematic | 0.3% |
+| review/opinion | 15.3% |
+| case report | 14.9% |
+| trial | 4.7% |
+| meta/systematic | 1.5% |
 | guideline/consensus | 0.2% |
 
-Most common MeSH descriptors among unlabelled articles, with demographic check-tags excluded (`Humans` alone sits on 92% of them and says nothing about subject):
+Most common MeSH descriptors among unlabelled articles, with **demographic check-tags and study-design descriptors both excluded** (`Humans` alone sits on 92% of them and says nothing about subject). Both exclusions are listed below rather than left implicit: an earlier caption said only "demographic check-tags excluded" while 16 study-design descriptors were also removed.
 
 | descriptor | share of unlabelled |
 |---|--:|
@@ -54,6 +60,19 @@ Most common MeSH descriptors among unlabelled articles, with demographic check-t
 | cell proliferation | 4.0% |
 | adenocarcinoma | 4.0% |
 | antineoplastic combined chemotherapy protocols | 3.8% |
+
+The study-design descriptors removed from that table, which are what the remainder is METHODOLOGICALLY rather than what it is about. They are excluded from the ranking above because they describe how a study was run, and shown here because several outrank rows the table does print:
+
+| study-design descriptor | share of unlabelled |
+|---|--:|
+| cell line, tumor | 8.6% |
+| retrospective studies | 8.5% |
+| prognosis | 7.8% |
+| treatment outcome | 6.2% |
+| follow-up studies | 4.1% |
+| risk factors | 4.1% |
+| time factors | 3.4% |
+| survival rate | 2.8% |
 
 ### The verdict on the field of view
 

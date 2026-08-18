@@ -87,10 +87,13 @@ MESH_MAP = PROJECT_ROOT / "analysis" / "mesh-mechanism-map.yaml"
 DEMOGRAPHIC_TAGS = {
     "humans", "female", "male", "animals", "adult", "aged", "middle aged",
     "young adult", "adolescent", "child", "aged, 80 and over", "mice",
-    "rats", "child, preschool", "infant", "mice, inbred balb c",
-    "mice, nude", "cells, cultured",
+    "rats", "child, preschool", "infant",
 }
 STUDY_DESIGN_TAGS = {
+    # model-system descriptors, moved out of the demographic set: they are not
+    # NLM check tags, and `cells, cultured` is the direct parallel of
+    # `cell line, tumor`
+    "mice, inbred balb c", "mice, nude", "cells, cultured",
     "retrospective studies", "prospective studies", "treatment outcome",
     "cell line, tumor", "prognosis", "survival rate", "follow-up studies",
     "time factors", "reproducibility of results", "risk factors",
@@ -111,13 +114,19 @@ THERAPY_DESCRIPTORS = {
 # Publication types that tell you what an unlabelled article IS. Deliberately
 # coarse: the question is whether a mechanism taxonomy SHOULD have reached it.
 PUBTYPE_BUCKETS = {
-    "review/opinion": ("review", "editorial", "comment", "letter", "news",
-                       "historical article", "lecture"),
-    "case report": ("case reports",),
+    # ORDER IS LOAD-BEARING: first match wins, so the most SPECIFIC needles
+    # must come first. `review/opinion` was first and carries the needle
+    # `review`, which is a substring of `systematic review` -- so a record
+    # typed Systematic Review could never reach `meta/systematic`, and that
+    # bucket's published share was a property of dict insertion order rather
+    # than of the literature.
+    "meta/systematic": ("meta-analysis", "systematic review"),
+    "guideline/consensus": ("guideline", "practice guideline", "consensus"),
     "trial": ("clinical trial", "randomized controlled trial",
               "controlled clinical trial", "multicenter study"),
-    "guideline/consensus": ("guideline", "practice guideline", "consensus"),
-    "meta/systematic": ("meta-analysis", "systematic review"),
+    "case report": ("case reports",),
+    "review/opinion": ("review", "editorial", "comment", "letter", "news",
+                       "historical article", "lecture"),
 }
 
 
@@ -164,10 +173,14 @@ def scan(sample_every: int):
     kw_hit = 0
     prod_hit = 0
     prod_ta_hit = 0
+    no_abstract = 0
     per_mech = Counter()
     untagged_pubtypes = Counter()
     untagged_mesh = Counter()
     untagged_design = Counter()
+    # measured, because the caption's "Humans alone sits on 92%"
+    # was hand-written in a generator beside derived figures
+    untagged_demo = Counter()
     # UNIONS, because two overlapping buckets summed is not a share of
     # anything. `antineoplastic agents` and the chemotherapy-protocols
     # descriptor co-occur, and so do review/opinion and case report.
@@ -196,6 +209,8 @@ def scan(sample_every: int):
                 # which opens with a cancer-context gate and reads MeSH as
                 # well as title and abstract. The two are not the same field
                 # of view and the report claimed they were.
+                if not (r.get("abstract") or "").strip():
+                    no_abstract += 1
                 title_t = normalize_text(r.get("title") or "")
                 if match_mechanisms(blob, title_t):
                     prod_ta_hit += 1
@@ -245,6 +260,7 @@ def scan(sample_every: int):
                     untagged_soft_union += 1
                 for m in mesh[:40]:
                     if m in DEMOGRAPHIC_TAGS:
+                        untagged_demo[m] += 1
                         continue
                     if m in STUDY_DESIGN_TAGS:
                         untagged_design[m] += 1
@@ -258,6 +274,7 @@ def scan(sample_every: int):
         "sampled": sampled,
         "keyword_hits": kw_hit,
         "production_hits": prod_hit,
+        "sampled_without_abstract": no_abstract,
         "production_title_abstract_hits": prod_ta_hit,
         # ORDERED LISTS OF PAIRS. A dict here is reordered by
         # `json.dumps(sort_keys=True)`, so the committed artifact was
@@ -268,6 +285,7 @@ def scan(sample_every: int):
         "untagged_pubtypes": [[k, v] for k, v in untagged_pubtypes.most_common()],
         "untagged_top_mesh": [[k, v] for k, v in untagged_mesh.most_common(25)],
         "untagged_top_study_design": [[k, v] for k, v in untagged_design.most_common(12)],
+        "demographic_shares": [[k, v] for k, v in untagged_demo.most_common(8)],
         "untagged_no_pubtype": untagged_no_pubtype,
         "untagged_multi_bucket": multi_bucket,
         "untagged_therapy_union": untagged_therapy_union,
@@ -316,24 +334,34 @@ def render(d: dict) -> str:
     L += [f"| sampled | {s:,} | |",
           f"| **matched at least one mechanism** | **{kw:,}** | "
           f"**{100*kw/s:.2f}%** (95% CI {100*lo:.2f}-{100*hi:.2f}%) |",
-          f"| matched none | {untagged:,} | {100*untagged/s:.2f}% |"]
+          f"| matched none | {untagged:,} | {100*untagged/s:.2f}% |", ""]
     if not d.get("production_hits"):
         L += [""]
     prod = d.get("production_hits")
     prod_ta = d.get("production_title_abstract_hits")
     if prod:
         plo, phi = wilson(prod, s)
-        L += [f"| **the PRODUCTION matcher** | **{prod:,}** | "
+        L += ["| the production matcher | count | share |", "|---|--:|--:|"]
+        L += [f"| **matched at least one mechanism** | **{prod:,}** | "
               f"**{100*prod/s:.2f}%** (95% CI {100*plo:.2f}-{100*phi:.2f}%) |",
-              ""]
+              f"| matched none | {s-prod:,} | {100*(s-prod)/s:.2f}% |", ""]
         L += [f"The `matched at least one mechanism` row is a raw loop over "
               f"`text_matches_keyword` on title and abstract. **Production is "
               f"the {100*prod/s:.2f}% row**: `match_mechanisms` opens with a "
               f"cancer-context gate and reads the MeSH descriptors as well as "
-              f"the title and abstract. On the same articles the gate alone "
-              f"costs {100*(prod_ta - kw)/s:+.2f} points and the MeSH channel "
-              f"adds {100*(prod - prod_ta)/s:+.2f}. An earlier version "
-              f"published the raw figure as the production field of view.", ""]
+              f"the title and abstract. On the same articles production's "
+              f"extra logic is worth {100*(prod_ta - kw)/s:+.2f} points on "
+              f"title+abstract -- a NET of the cancer-context gate and two "
+              f"composite matchers pulling opposite ways, not the gate alone, "
+              f"which an earlier version of this sentence attributed it to -- "
+              f"and the MeSH channel adds {100*(prod - prod_ta)/s:+.2f}. An "
+              f"earlier version published the raw figure as the production "
+              f"field of view.", ""]
+        na = d.get("sampled_without_abstract")
+        if na:
+            L += [f"Scope: **{100*na/s:.1f}%** of the sampled records carry no "
+                  f"abstract at all, so for that quarter the production "
+                  f"channel is title and MeSH only.", ""]
     L += [f"So every mechanism share this project reports is a share of "
           f"**{100*(prod or kw)/s:.1f}%** of the cancer literature.", ""]
     # NOT the capture spread. That is computed entirely by the MeSH map, whose
@@ -366,13 +394,31 @@ def render(d: dict) -> str:
     for k, v in _pairs(d["untagged_pubtypes"])[:8]:
         L.append(f"| {k} | {100*v/max(untagged,1):.1f}% |")
     L += [""]
-    L += ["Most common MeSH descriptors among unlabelled articles, with "
-          "demographic check-tags excluded (`Humans` alone sits on 92% of them "
-          "and says nothing about subject):", ""]
+    hum = _get(d.get("demographic_shares") or [], "humans")
+    hum_txt = (f"`Humans` alone sits on {100*hum/max(untagged,1):.0f}% of them"
+               if hum else "`Humans` alone sits on most of them")
+    L += [f"Most common MeSH descriptors among unlabelled articles, with "
+          f"**demographic check-tags and study-design descriptors both "
+          f"excluded** ({hum_txt} and says nothing about subject). Both "
+          f"exclusions are listed below rather than left implicit: an earlier "
+          f"caption said only \"demographic check-tags excluded\" while 16 "
+          f"study-design descriptors were also removed.", ""]
     L += ["| descriptor | share of unlabelled |", "|---|--:|"]
     for k, v in _pairs(d["untagged_top_mesh"])[:12]:
         L.append(f"| {k} | {100*v/max(untagged,1):.1f}% |")
     L += [""]
+
+    sd = _pairs(d.get("untagged_top_study_design") or [])
+    if sd:
+        L += ["The study-design descriptors removed from that table, which "
+              "are what the remainder is METHODOLOGICALLY rather than what it "
+              "is about. They are excluded from the ranking above because "
+              "they describe how a study was run, and shown here because "
+              "several outrank rows the table does print:", ""]
+        L += ["| study-design descriptor | share of unlabelled |", "|---|--:|"]
+        for k, v in sd[:8]:
+            L.append(f"| {k} | {100*v/max(untagged,1):.1f}% |")
+        L += [""]
 
     # The falsifier, answered from the numbers rather than asserted.
     # UNION, measured in the scan. Summing the two descriptor rows

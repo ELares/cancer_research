@@ -1,5 +1,39 @@
 {
  "census_total": 4403994,
+ "demographic_shares": [
+  [
+   "humans",
+   190404
+  ],
+  [
+   "female",
+   94455
+  ],
+  [
+   "male",
+   77441
+  ],
+  [
+   "middle aged",
+   60843
+  ],
+  [
+   "adult",
+   50823
+  ],
+  [
+   "aged",
+   47898
+  ],
+  [
+   "animals",
+   33780
+  ],
+  [
+   "mice",
+   17595
+  ]
+ ],
  "keyword_hits": 13159,
  "mesh_leaf_hits": 160342,
  "n_keywords": 186,
@@ -111,6 +145,7 @@
  "production_title_abstract_hits": 12611,
  "sample_every": 20,
  "sampled": 220199,
+ "sampled_without_abstract": 54725,
  "untagged_multi_bucket": 8399,
  "untagged_no_pubtype": 0,
  "untagged_pubtypes": [
@@ -120,23 +155,23 @@
   ],
   [
    "review/opinion",
-   40045
+   31718
   ],
   [
    "case report",
-   25299
+   30785
   ],
   [
    "trial",
-   9366
+   9650
   ],
   [
    "meta/systematic",
-   686
+   3112
   ],
   [
    "guideline/consensus",
-   363
+   494
   ]
  ],
  "untagged_soft_union": 65344,

@@ -306,7 +306,12 @@ def test_the_production_reach_is_reported_and_distinguished():
     s = d["sampled"]
     assert f"{100*d['production_hits']/s:.2f}%" in md, (
         "the production reach is measured and not rendered")
-    assert "PRODUCTION matcher" in md
+    # the SUBSTANCE, not the casing: the page must name the production
+    # entry point and say which row is production
+    assert "match_mechanisms" in md, (
+        "the report does not name the production entry point")
+    assert "Production is the" in md, (
+        "the report does not say which of the two rows is production")
     src = SCRIPT.read_text()
     assert "match_mechanisms" in src, (
         "the production entry point is no longer called, so the reported "
@@ -343,7 +348,7 @@ def test_the_excluded_tags_are_split_and_disclosed():
         "the section still silently drops what answers its own question")
 
 
-def test_scan_returns_ordered_pairs_not_dicts():
+def test_the_scan_honours_every_contract_the_page_depends_on():
     """Checks the SCAN's output shape, not the committed artifact.
 
     Reverting the storage to dicts is a scan-level change, so it is invisible
@@ -381,3 +386,205 @@ def test_scan_returns_ordered_pairs_not_dicts():
         vals = [v for _k, v in out[key]]
         assert vals == sorted(vals, reverse=True), (
             f"scan() returns {key} out of descending order")
+
+    # EVERY SCAN CONTRACT, not just the shapes. A reviewer's mutations to the
+    # scan -- zeroing `production_hits`, dropping the study-design exclusion,
+    # widening THERAPY_DESCRIPTORS while the prose still named two, moving the
+    # `break` out of the `if` so only one bucket could ever match -- were all
+    # invisible to a `--render-only` sweep and to any guard reading the
+    # committed artifact. They cost a 15-minute rescan to catch. Checked here
+    # in seconds instead.
+    s2, kw2 = out["sampled"], out["keyword_hits"]
+
+    assert out.get("production_hits"), (
+        "scan() no longer measures the production matcher, so the page's "
+        "headline reach would silently fall back to the raw keyword loop")
+    assert out["production_hits"] >= out["production_title_abstract_hits"], (
+        "the production channel with MeSH matches fewer articles than without "
+        "it, which cannot happen if MeSH is additional text")
+
+    assert out.get("sampled_without_abstract") is not None
+    assert out.get("demographic_shares"), "demographic shares not measured"
+    assert out.get("untagged_top_study_design"), (
+        "study-design descriptors are no longer separated, so they are back "
+        "in a table whose caption says only demographics were removed")
+    sd_keys = {k for k, _v in out["untagged_top_study_design"]}
+    md_keys = {k for k, _v in out["untagged_top_mesh"]}
+    assert not (sd_keys & md_keys), (
+        f"{sd_keys & md_keys} appear in BOTH the subject table and the "
+        "study-design table, so the exclusion is not happening")
+    demo_keys = {k for k, _v in out["demographic_shares"]}
+    assert not (demo_keys & md_keys), (
+        f"demographic check-tags {demo_keys & md_keys} are back in the "
+        "subject table")
+
+    # the union must be over EXACTLY the descriptors the prose names
+    assert out.get("untagged_therapy_union") is not None
+    assert len(m.THERAPY_DESCRIPTORS) == 2, (
+        f"THERAPY_DESCRIPTORS holds {len(m.THERAPY_DESCRIPTORS)} entries "
+        "while the rendered sentence names two; the measured union and the "
+        "prose would describe different sets")
+    # RECOUNT the union over the same shards using the constant. Asserting the
+    # constant's size does not stop the scan from using something else: a
+    # mutation replaced the set intersection with a single hardcoded
+    # descriptor and the constant stayed at two.
+    import gzip as _gz
+    want_u = 0
+    for f in subset:
+        with _gz.open(f, "rt", encoding="utf-8") as fh:
+            for line in fh:
+                r = json.loads(line)
+                mesh_l = [x.lower() for x in (r.get("mesh") or [])]
+                if not mesh_l:
+                    continue
+                blob = ((r.get("title") or "") + " "
+                        + (r.get("abstract") or "")).lower()
+                if {mm for mm, kk in
+                    [(a, b) for a, bs in m.config.MECHANISM_KEYWORDS.items()
+                     for b in bs]
+                    if m.text_matches_keyword(blob, kk)}:
+                    continue
+                if m.THERAPY_DESCRIPTORS.intersection(mesh_l):
+                    want_u += 1
+    assert out["untagged_therapy_union"] == want_u, (
+        f"the scan reports a therapy union of "
+        f"{out['untagged_therapy_union']} and a recount over the same shards "
+        f"using THERAPY_DESCRIPTORS gives {want_u}; the union is not being "
+        "computed from the constant the prose names")
+
+    # the buckets must partition the remainder exactly
+    bucket_tot = sum(v for _k, v in out["untagged_pubtypes"])
+    assert bucket_tot == s2 - kw2, (
+        f"the publication-type buckets sum to {bucket_tot:,} against "
+        f"{s2 - kw2:,} unlabelled articles; first-match-wins must partition")
+    assert len([1 for _k, v in out["untagged_pubtypes"] if v]) >= 3, (
+        "only one or two buckets ever match, which is what a misplaced "
+        "`break` looks like")
+    # EVERY declared bucket must be reachable. Deleting one, or ordering a
+    # broad needle ahead of a narrower one that contains it, starves a bucket
+    # silently: `review` is a substring of `systematic review`, so with
+    # review/opinion first the meta/systematic share became a property of
+    # dict insertion order.
+    declared = set(m.PUBTYPE_BUCKETS) | {"primary research (no special type)"}
+    got = {k for k, _v in out["untagged_pubtypes"]}
+    assert declared <= got, (
+        f"declared buckets {sorted(declared - got)} never matched a single "
+        "record; either they were removed or an earlier bucket's needle "
+        "swallows them")
+
+
+def test_the_study_design_exclusion_is_actually_rendered():
+    """The previous fix measured these and never printed them.
+
+    `untagged_top_study_design` appeared exactly once in the module -- in the
+    scan's return -- so `render()` never referenced it, the caption still said
+    "demographic check-tags excluded", and the main table was byte-identical.
+    A fix that changes no rendered byte is not a fix.
+    """
+    m, d, md = _mod(), _doc(), MD.read_text()
+    sd = m._pairs(d.get("untagged_top_study_design") or [])
+    assert sd, "study-design descriptors are no longer measured"
+    untagged = d["sampled"] - d["keyword_hits"]
+    for k, v in sd[:5]:
+        assert f"| {k} | {100*v/untagged:.1f}% |" in md, (
+            f"`{k}` is excluded from the main table and not shown anywhere; "
+            "the exclusion is silent again")
+    assert "study-design descriptors both" in md or \
+        "study-design descriptors removed" in md, (
+        "the caption no longer discloses that study-design descriptors are "
+        "excluded alongside the demographic check-tags")
+    # and the hidden ones really do outrank shown ones, which is why it matters
+    shown = [v for _k, v in m._pairs(d["untagged_top_mesh"])[:12]]
+    assert max(v for _k, v in sd) > min(shown), (
+        "no excluded study-design descriptor outranks a printed row, so the "
+        "claim that the exclusion hides something material no longer holds")
+
+
+def test_the_publication_type_buckets_are_a_true_partition():
+    """They must sum to the remainder exactly, and priority must be disclosed.
+
+    `review/opinion` was first in the dict and its needle `review` is a
+    substring of `systematic review`, so a Systematic Review record could
+    never reach `meta/systematic` -- that bucket's share was an artifact of
+    insertion order.
+    """
+    m, d = _mod(), _doc()
+    untagged = d["sampled"] - d["keyword_hits"]
+    tot = sum(v for _k, v in m._pairs(d["untagged_pubtypes"]))
+    assert tot == untagged, (
+        f"the buckets sum to {tot:,} against {untagged:,} unlabelled "
+        "articles; first-match-wins must partition the remainder exactly")
+    # no earlier bucket's needle may be a substring of a later one's
+    keys = list(m.PUBTYPE_BUCKETS)
+    for i, a in enumerate(keys):
+        for b in keys[i + 1:]:
+            for na in m.PUBTYPE_BUCKETS[a]:
+                for nb in m.PUBTYPE_BUCKETS[b]:
+                    assert na not in nb, (
+                        f"`{a}` is checked before `{b}` and its needle "
+                        f"'{na}' is a substring of '{nb}', so no record can "
+                        f"ever reach `{b}` via that type")
+
+
+def test_the_two_reach_tables_each_have_their_own_complement():
+    """`matched none` is the complement of ONE instrument.
+
+    Appending the production row under the raw table made the column read
+    5.98 + 94.02 + 6.80 = 106.8% -- the same summing-past-100% shape this
+    page fixes two sections later.
+    """
+    d, md = _doc(), MD.read_text()
+    s, kw = d["sampled"], d["keyword_hits"]
+    prod = d.get("production_hits")
+    assert f"| matched none | {s-kw:,} | {100*(s-kw)/s:.2f}% |" in md
+    if prod:
+        assert f"| matched none | {s-prod:,} | {100*(s-prod)/s:.2f}% |" in md, (
+            "the production block has no complement of its own, so the two "
+            "instruments' rows sit in one column that sums past 100%")
+
+
+def test_the_production_attribution_is_not_credited_to_the_gate_alone():
+    """The -0.25 is a NET of a gate and two composite matchers."""
+    md = MD.read_text()
+    if "PRODUCTION" not in md:
+        return
+    for mt in re.finditer(r"gate alone", md):
+        w = md[max(0, mt.start() - 300):mt.end() + 300]
+        assert "not the gate alone" in w or "earlier version" in w, (
+            "the title+abstract difference is attributed to the cancer-context "
+            "gate alone; it is a net of the gate and two composite matchers "
+            "pulling opposite ways")
+
+
+def test_the_empty_abstract_scope_is_stated():
+    """A quarter of the sample is title+MeSH only."""
+    d, md = _doc(), MD.read_text()
+    na = d.get("sampled_without_abstract")
+    assert na, "the empty-abstract count is no longer measured"
+    assert f"**{100*na/d['sampled']:.1f}%**" in md, (
+        "the report does not state what share of its sample carries no "
+        "abstract, which bounds what the title+abstract arm can see")
+
+
+def test_the_humans_share_is_measured_not_written():
+    """`Humans alone sits on 92%` was hand-written in a generator."""
+    m, d, md = _mod(), _doc(), MD.read_text()
+    demo = m._pairs(d.get("demographic_shares") or [])
+    assert demo, "the demographic shares are no longer measured"
+    untagged = d["sampled"] - d["keyword_hits"]
+    top, n = demo[0]
+    assert f"sits on {100*n/untagged:.0f}%" in md, (
+        f"the caption's demographic share is not the measured one "
+        f"({top} at {100*n/untagged:.1f}%)")
+
+
+def test_the_headline_reach_is_the_production_figure():
+    """Reverting it to the raw loop changed the page's central number silently."""
+    d, md = _doc(), MD.read_text()
+    prod, kw, s = d.get("production_hits"), d["keyword_hits"], d["sampled"]
+    if not prod:
+        return
+    assert f"share of **{100*prod/s:.1f}%** of the cancer literature" in md, (
+        f"the headline does not quote the production reach "
+        f"({100*prod/s:.1f}%); reverting it to the raw loop "
+        f"({100*kw/s:.1f}%) would change the page's central number in silence")
