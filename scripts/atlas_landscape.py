@@ -312,13 +312,20 @@ def main() -> int:
         "corpus selection at fixed labels. **A vs C** is the comparison the manuscript's",
         "claim actually rests on.", "",
         "## Result", "",
-        "| mechanism | A: keyword/frozen | B: MeSH/frozen | C: MeSH/census | rank A | rank C | shift | top descriptor supplies |",
-        "|---|---|---|---|---|---|---|---|",
     ]
 
     L += ["> " + (
 
-        "**The ratio below depends on the class boundary.** Both curated classes omit their largest real member -- PHYSICAL has no radiotherapy, PHARMACOLOGICAL no cytotoxic chemotherapy -- because neither has a mechanism tag. Five symmetric partitions give 1.32:1 to 3.93:1 against the 17.6:1 here; the direction survives, the magnitude does not. See `analysis/atlas-modality-ratio.md` (#724)."), ""]
+        # NO FIGURES HERE ON PURPOSE. This sentence used to carry hand-written
+        # copies of the other page's numbers, and its "five symmetric
+        # partitions" wording repeated a provenance claim that page has since
+        # withdrawn. A number typed beside a derived one reads as freshly
+        # derived; the pointer is what belongs here.
+        "**The ratio below depends on the class boundary.** Both curated classes omit their largest real member -- PHYSICAL has no radiotherapy, PHARMACOLOGICAL no cytotoxic chemotherapy -- because neither has a mechanism tag. Recomputed over MeSH-descriptor partitions that move BOTH classes, the ratio is substantially smaller than the figure below, and what it is depends on how much operative surgery the physical class admits: the direction survives, the magnitude does not. See `analysis/atlas-modality-ratio.md` (#724)."), ""]
+    L += [
+        "| mechanism | A: keyword/frozen | B: MeSH/frozen | C: MeSH/census | rank A | rank C | shift | top descriptor supplies |",
+        "|---|---|---|---|---|---|---|---|",
+    ]
     for r in rows:
         sh = r["rank_shift"]
         shift = "-" if sh is None else (f"**{sh:+d}**" if abs(sh) >= 3 else f"{sh:+d}")
@@ -428,7 +435,12 @@ def main() -> int:
     ]
     for k, v in (unmeasurable or {}).items():
         reason = v if isinstance(v, str) else (v or {}).get("reason", "")
-        L.append(f"* `{k}` -- {str(reason).strip()[:150]}")
+        # Truncate on a WORD boundary. A hard 150-char slice shipped
+        # "...the earlier note here was wr" and "...a taxonomy-boundary artif".
+        reason = str(reason).strip()
+        if len(reason) > 220:
+            reason = reason[:220].rsplit(" ", 1)[0] + " ..."
+        L.append(f"* `{k}` -- {reason}")
 
     L += [
         "", "## Limits", "",
