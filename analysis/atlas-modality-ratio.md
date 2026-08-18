@@ -4,13 +4,17 @@
 
 ## The measured spread
 
-| partition | pharmacological | physical | both | **ratio** |
-|---|--:|--:|--:|--:|
-| mechanism-of-action | 773,860 | 196,717 | 43,659 | **3.93:1** |
-| clinical-delivery | 893,884 | 354,753 | 84,052 | **2.52:1** |
-| maximally-inclusive | 1,055,354 | 626,304 | 123,392 | **1.69:1** |
-| regulatory-class | 807,570 | 592,505 | 92,050 | **1.36:1** |
-| minimally-inclusive | 660,572 | 501,837 | 65,348 | **1.32:1** |
+| partition | pharmacological | physical | both | **ratio** | surgical share of physical | ratio, surgery held out |
+|---|--:|--:|--:|--:|--:|--:|
+| mechanism-of-action | 773,860 | 196,717 | 43,659 | **3.93:1** | 9.8% | 4.36:1 |
+| clinical-delivery | 893,884 | 354,753 | 84,052 | **2.52:1** | 36.7% | 3.98:1 |
+| maximally-inclusive | 1,055,354 | 626,304 | 123,392 | **1.69:1** | 56.0% | 3.83:1 |
+| regulatory-class | 807,570 | 592,505 | 92,050 | **1.36:1** | 71.0% | 4.70:1 |
+| minimally-inclusive | 660,572 | 501,837 | 65,348 | **1.32:1** | 65.8% | 3.85:1 |
+
+**The spread is one undeclared variable: whether operative surgery is a physical modality.** Its share of the physical class runs 9.8% to 71.0% across the five. Held out under one regex applied identically to all five, the spread collapses from **2.99x** (1.32-3.93) to **1.23x** (3.83-4.70) -- every partition landing near 4.1:1.
+
+So the five are not five independent readings whose disagreement is the finding. They agree about pharmacological-versus-physical and disagree about one membership question nobody declared. An earlier version of this page called that spread "the deliverable".
 
 | for comparison | | | | |
 |---|--:|--:|--:|--:|
@@ -25,9 +29,17 @@ Every partition built by one principle applied to both classes gives a ratio bet
 
 That exclusion is not a judgement anyone made. Those modalities have no mechanism tag in this project, so they could not enter a tag-based class. The census figure inherits the taxonomy's field of view rather than measuring the literature (see `analysis/atlas-taxonomy-reach.md`).
 
+## What the 17.6:1 comparator is made of
+
+Its numerator is 112,253 and its denominator 6,380. Two mechanisms supply **65%** of the numerator: `epigenetic` 41,278, `immunotherapy` 31,890. `atlas_landscape.py`'s own text calls the largest of them a SCOPE ARTIFACT rather than a therapy -- a descriptor carried by any paper that MEASURES the process.
+
+Dropping those from the numerator alone would be the one-sided narrowing this page exists to police. Applying that script's own `PRECISE` set to BOTH classes -- which also drops `electrochemical-therapy` from the denominator -- gives **6.43:1** on 24,839 against 3,865.
+
+So the comparator falls from 17.6:1 to 6.43:1 under a symmetric restriction, which is within the range the partitions give once surgery is held fixed. The gap between this page and `atlas_landscape.py` is substantially a class-composition difference, not a disagreement about the literature.
+
 ## What would make this wrong
 
-* If the partitions here are not defensible. Each was built by one stated principle, checked by an independent reviewer for one-sided widening, and required to reproduce its own count; every member is listed. Dispute a placement and re-run.
-* If descriptor-only counting biased the result. It does bias it, and it cuts AGAINST this finding's direction: the ingest misses the qualifier axis (#722), which understates drug therapy (12.4% vs 22.6% either-axis) more than radiotherapy (3.3% vs 5.7%). A qualifier-aware recount should move the ratio further down.
+* If the partitions here are not defensible. They are a committed member list and every member is disputable; dispute a placement and re-run. An earlier version of this bullet also claimed each was "checked by an independent reviewer for one-sided widening, and required to reproduce its own count". NO ARTIFACT IN THIS REPO SUPPORTS EITHER CLAUSE -- `modality-partitions.json` carries only the two member lists, there is no reviewer record, and the only per-partition counts are this script's own output, which makes "reproduce its own count" circular. Both clauses are withdrawn.
+* If descriptor-only counting biased the result. An earlier version of this bullet argued that it cuts AGAINST the finding, from the #722 recalls: drug therapy 12.4% vs 22.6% either-axis against radiotherapy 3.3% vs 5.7%. THAT INFERENCE IS INVALID. Those are recalls of 0.547 and 0.579, and correcting each class by its own recall multiplies the ratio by 0.579/0.547 = 1.05 -- UP, not down. "Understates more" is true in percentage POINTS, and a ratio responds to relative rather than additive understatement. The bias is real and its direction is not established here.
 * Classes are not mutually exclusive, and the `both` column is reported rather than resolved. Combined-modality treatment is real, and forcing an article into one class would be the arbitrary step.
 

@@ -31,6 +31,7 @@ WHAT MAKES THIS EASY TO FAKE, AND THEREFORE WORTH GUARDING
 """
 
 import json
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -44,6 +45,14 @@ JSON_OUT = REPO_ROOT / "analysis" / "atlas-modality-ratio.json"
 
 def _doc():
     return json.loads(JSON_OUT.read_text())
+
+
+def _mod():
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("mr", SCRIPT)
+    m = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(m)
+    return m
 
 
 def _parts():
@@ -132,10 +141,17 @@ def test_the_report_keeps_the_direction_and_refuses_a_replacement_number():
 def test_the_understatement_caveat_points_the_right_way():
     """The known bias cuts against this finding, and saying so is the point."""
     md = MD.read_text()
-    assert "further down" in md, (
-        "the report no longer says the descriptor-only bias would move the "
-        "ratio further DOWN. A caveat that happens to favour the author's "
-        "conclusion has to be stated in the direction it actually runs")
+    # THIS GUARD REQUIRED AN INVALID INFERENCE. It pinned the phrase "further
+    # down", i.e. the claim that the #722 recalls move the ratio down. They do
+    # not: recalls of 0.547 and 0.579 multiply it by 1.05, UP. The guard's own
+    # message -- that a caveat favouring the author must be stated in the
+    # direction it actually runs -- is right, and pinning the wrong direction
+    # was the way to violate it.
+    assert "THAT INFERENCE IS INVALID" in md, (
+        "the report argues from the #722 recalls that the bias moves the "
+        "ratio down; correcting each class by its own recall moves it UP, and "
+        "the report must say so rather than restate the direction that "
+        "favours its conclusion")
     assert "12.4%" in md and "22.6%" in md, (
         "the measured qualifier-axis figures backing that caveat are gone")
 
@@ -169,3 +185,107 @@ def test_render_only_works_without_the_census():
         finally:
             shutil.copy2(Path(td) / MD.name, MD)
     assert res.returncode == 0, f"{res.stdout}\n{res.stderr}"
+
+
+def test_the_spread_is_attributed_to_the_variable_that_drives_it():
+    """The "deliverable" was one undeclared membership choice.
+
+    Surgery's share of the physical class runs 9.8% to 71.0% across the five
+    partitions, and holding it out under ONE regex collapses the spread from
+    ~3x to ~1.2x with every partition near 4:1. Presenting the five as
+    independent readings whose disagreement is the finding was wrong.
+    """
+    d, md = _doc(), MD.read_text()
+    ps = d["partitions"]
+    hos = [c.get("ratio_surgery_held_out") for c in ps.values()]
+    shares = [c.get("surgical_share_of_physical") for c in ps.values()]
+    assert all(h for h in hos), "the surgery-held-out ratios are gone"
+    assert all(s is not None for s in shares)
+    ratios = [c["ratio"] for c in ps.values()]
+    pub = max(ratios) / min(ratios)
+    held = max(hos) / min(hos)
+    for k, c in ps.items():
+        assert f"{100*c['surgical_share_of_physical']:.1f}%" in md, (
+            f"{k}'s surgical share is measured and not rendered")
+        assert f"{c['ratio_surgery_held_out']:.2f}:1" in md
+    if held < pub:
+        assert f"collapses from **{pub:.2f}x**" in md, (
+            f"holding surgery out takes the spread from {pub:.2f}x to "
+            f"{held:.2f}x and the report does not say so")
+        assert "one undeclared variable" in md
+    # the withdrawn framing must not stand as a live claim
+    for m in re.finditer(r"the deliverable", md):
+        w = md[max(0, m.start() - 300):m.end() + 300]
+        assert re.search(r"earlier version|withdraw", w, re.I), (
+            "the report still calls the spread the deliverable")
+
+
+def test_the_surgical_rule_is_one_rule_for_every_partition():
+    """A per-partition judgement would reproduce the defect being measured."""
+    m, d = _mod(), _doc()
+    src = SCRIPT.read_text()
+    assert "SURGICAL = re.compile(" in src, (
+        "the surgical set is no longer one compiled rule, so it could be a "
+        "per-partition judgement -- the asymmetry this page exists to find")
+    assert src.count("SURGICAL.search") == 1, (
+        "the surgical rule is applied in more than one place; it must be one "
+        "rule applied identically to every partition")
+    # and it must actually select something in every partition
+    for k, c in d["partitions"].items():
+        assert c.get("n_surgical_descriptors", 0) > 0, (
+            f"{k} has no surgical descriptors, so its held-out ratio is not a "
+            "held-out ratio")
+
+
+def test_the_unsupported_provenance_is_withdrawn():
+    """No artifact records a reviewer or a per-partition count."""
+    md, src = MD.read_text(), SCRIPT.read_text()
+    parts = json.loads((REPO_ROOT / "analysis" / "modality-partitions.json").read_text())
+    for k, v in parts.items():
+        assert set(v) <= {"pharmacological", "physical"}, (
+            f"{k} now carries {sorted(set(v) - {'pharmacological','physical'})}; "
+            "if a principle or reviewer record has been added, the withdrawn "
+            "clause can be restored")
+    for phrase in ("independent reviewer", "reproduce its own count"):
+        for m in re.finditer(re.escape(phrase), md):
+            w = md[max(0, m.start() - 400):m.end() + 400]
+            assert re.search(r"withdraw|earlier version|NO ARTIFACT", w, re.I), (
+                f"the report claims the partitions were {phrase!r} and no "
+                "artifact in the repo supports it")
+
+
+def test_the_qualifier_inference_is_not_restated():
+    """Those recalls move the ratio UP, not down."""
+    md = MD.read_text()
+    rec = REPO_ROOT / "analysis" / "atlas-ingest-sensitivity.json"
+    if rec.exists():
+        j = json.loads(rec.read_text())
+        # if the recalls are recoverable, the direction must follow them
+        assert "THAT INFERENCE IS INVALID" in md, (
+            "the report argues from the #722 recalls that a qualifier-aware "
+            "recount moves the ratio down; correcting each class by its own "
+            "recall moves it up")
+    assert "responds to relative rather than additive" in md
+
+
+def test_the_comparator_restriction_is_applied_to_both_classes():
+    """Narrowing only the numerator is the error this page polices."""
+    m, d = _mod(), _doc()
+    lc = d.get("landscape_composition") or {}
+    if not lc.get("precise_ratio"):
+        return
+    import importlib.util
+    spec = importlib.util.spec_from_file_location(
+        "al", REPO_ROOT / "scripts" / "atlas_landscape.py")
+    al = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(al)
+    assert set(lc["precise_pharm"]) == set(al.PHARMACOLOGICAL & al.PRECISE)
+    assert set(lc["precise_phys"]) == set(al.PHYSICAL & al.PRECISE), (
+        "the restriction is not applied to the physical class, so the "
+        "comparator is narrowed on one side only")
+    assert lc["dropped_phys"], (
+        "nothing is dropped from the denominator; if that is right the "
+        "symmetry claim needs re-checking rather than asserting")
+    md = MD.read_text()
+    assert f"**{lc['precise_ratio']:.2f}:1**" in md
+    assert "one-sided narrowing this page exists to police" in md

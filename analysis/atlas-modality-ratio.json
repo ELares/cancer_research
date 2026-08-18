@@ -1,45 +1,102 @@
 {
  "census": 4403994,
+ "landscape_composition": {
+  "denominator": 6380,
+  "dropped_pharm": [
+   "epigenetic",
+   "immunotherapy",
+   "metabolic-targeting",
+   "synthetic-lethality"
+  ],
+  "dropped_phys": [
+   "electrochemical-therapy"
+  ],
+  "numerator": 112253,
+  "precise_denominator": 3865,
+  "precise_numerator": 24839,
+  "precise_pharm": [
+   "antibody-drug-conjugate",
+   "bispecific-antibody",
+   "car-t"
+  ],
+  "precise_phys": [
+   "hifu",
+   "sonodynamic"
+  ],
+  "precise_ratio": 6.426649417852523,
+  "ratio": 17.594514106583073,
+  "top_two_numerator": [
+   [
+    "epigenetic",
+    41278
+   ],
+   [
+    "immunotherapy",
+    31890
+   ]
+  ],
+  "top_two_share": 0.6518133145662032
+ },
  "partitions": {
   "clinical-delivery": {
    "both": 84052,
    "n_pharm_descriptors": 63,
    "n_phys_descriptors": 84,
+   "n_surgical_descriptors": 36,
    "pharm": 893884,
    "phys": 354753,
-   "ratio": 2.519736267205633
+   "phys_nosurg": 224486,
+   "ratio": 2.519736267205633,
+   "ratio_surgery_held_out": 3.9819142396407794,
+   "surgical_share_of_physical": 0.3672047875564125
   },
   "maximally-inclusive": {
    "both": 123392,
    "n_pharm_descriptors": 236,
    "n_phys_descriptors": 139,
+   "n_surgical_descriptors": 80,
    "pharm": 1055354,
    "phys": 626304,
-   "ratio": 1.6850507101982424
+   "phys_nosurg": 275772,
+   "ratio": 1.6850507101982424,
+   "ratio_surgery_held_out": 3.8269077353756003,
+   "surgical_share_of_physical": 0.5596834763948498
   },
   "mechanism-of-action": {
    "both": 43659,
    "n_pharm_descriptors": 39,
    "n_phys_descriptors": 39,
+   "n_surgical_descriptors": 4,
    "pharm": 773860,
    "phys": 196717,
-   "ratio": 3.933874550750571
+   "phys_nosurg": 177359,
+   "ratio": 3.933874550750571,
+   "ratio_surgery_held_out": 4.3632406587768315,
+   "surgical_share_of_physical": 0.09840532338333749
   },
   "minimally-inclusive": {
    "both": 65348,
    "n_pharm_descriptors": 17,
    "n_phys_descriptors": 92,
+   "n_surgical_descriptors": 65,
    "pharm": 660572,
    "phys": 501837,
-   "ratio": 1.3163078848311305
+   "phys_nosurg": 171390,
+   "ratio": 1.3163078848311305,
+   "ratio_surgery_held_out": 3.854203862535737,
+   "surgical_share_of_physical": 0.6584747637180997
   },
   "regulatory-class": {
    "both": 92050,
    "n_pharm_descriptors": 46,
    "n_phys_descriptors": 137,
+   "n_surgical_descriptors": 104,
    "pharm": 807570,
    "phys": 592505,
-   "ratio": 1.3629758398663303
+   "phys_nosurg": 171872,
+   "ratio": 1.3629758398663303,
+   "ratio_surgery_held_out": 4.698671104077453,
+   "surgical_share_of_physical": 0.7099231230116202
   }
  }
 }
