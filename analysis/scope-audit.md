@@ -6,13 +6,24 @@
 
 | | ferroptosis / physical-ROS | other therapy | method |
 |---|--:|--:|--:|
-| committed analyses (109) | 13 | **1** | 95 |
+| committed analyses (118) | 14 | **1** | 103 |
 
 | preregistered predictions | **8 of 8** |
 |---|--:|
-| engine modules | **33 of 33** |
+| engine modules mentioning it anywhere | **29 of 32** |
+| engine modules mentioning it in CODE | **19 of 32** |
 
-Every falsifiable commitment the project makes, and every module of its simulation engine, concerns ferroptosis or the physical-ROS modalities.
+The module rows used to read `N of N` -- the same number on both sides of "of", arithmetic that cannot come out any other way, produced by counting `.rs` files without opening one. They are content measurements now, and the second is the stricter reading: a module can cite ferroptosis in a doc comment while its code is about geometry.
+
+**3 modules mention neither ferroptosis nor a physical-ROS modality anywhere in their text**: `reaction_diffusion.rs`, `spheroid.rs`, `vasculature.rs`. An earlier version of this page said every module of the engine concerns one or the other. It does not.
+
+Every falsifiable commitment the project makes concerns ferroptosis or the physical-ROS modalities. The engine is mostly but not entirely about them: 29 of 32 modules mention one, and only 19 do so in code.
+
+### The '1' is a filename marker, not a subject measurement
+
+The two buckets do not use the same admission rule. Therapy is matched on the FILENAME only; ferroptosis is matched on the filename OR the first 40 lines of body text. So the therapy count moves on a rename with contents unchanged, and an empty file with a therapy word in its name is filed as a therapy analysis.
+
+Applying the ferroptosis bucket's own body rule to a therapy vocabulary gives **29** analyses instead of 1. That is NOT the corrected number: most of those are instrument analyses that mention a therapy as a worked example rather than studying one. The honest statement is that the true figure lies between 1 and 29, and that neither rule measures subject.
 
 ## Why this is worth stating rather than hiding
 
@@ -26,11 +37,12 @@ Note also that method analyses -- the largest bucket -- are about the INSTRUMENT
 
 - `radioligand-audit`
 
-**ferroptosis-or-physical** (13):
+**ferroptosis-or-physical** (14):
 
 - `atlas-discovery-gpx4`
 - `deep-pattern-analysis`
 - `distilled-hypotheses-final`
+- `engine-selectivity`
 - `hypothesis-sdt-ferroptosis-icd`
 - `key-findings`
 - `osf-registration-package`
@@ -42,12 +54,9 @@ Note also that method analyses -- the largest bucket -- are about the INSTRUMENT
 - `sensitizer-symmetry`
 - `timeline`
 
-**method** (95): listed in `analysis/scope-audit.json`.
+**method** (103): listed in `analysis/scope-audit.json`.
 
 ## What this does not say
 
-* It does not say the focus is wrong. It says it is undeclared.
-* It does not measure quality or effort, only subject.
-* The analysis bucketing is a judgement applied by a stated rule; the prediction and module counts are mechanical.
-* Mechanism shares quoted elsewhere in this repo (immunotherapy 47.6% and so on) are shares of TAGGED articles, and the mechanism taxonomy reaches about 6% of the cancer literature — see `analysis/atlas-taxonomy-reach.md`.
+* Mechanism shares quoted elsewhere in this repo are shares of the **4,830-record frozen corpus** -- immunotherapy is 2,297 of 4,830 = **47.6%** -- not shares of the cancer literature. An earlier version of this bullet, and of README.md, called them shares of TAGGED articles; they are not, and the corpus carries three denominators that are not interchangeable: 47.6% of corpus articles, 53.6% of the 4,284 tagged records, 34.4% of all 6,678 mechanism tags. The taxonomy itself matches about 6.8% of the census through the production matcher -- see `analysis/atlas-taxonomy-reach.md`.
 
