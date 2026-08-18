@@ -44,6 +44,10 @@ import json
 import re
 from collections import Counter
 from pathlib import Path
+import sys
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import config  # noqa: E402
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 INDEX = PROJECT_ROOT / "corpus" / "INDEX.jsonl"
@@ -77,6 +81,36 @@ def load_index() -> list:
     return [json.loads(l) for l in INDEX.read_text().splitlines() if l.strip()]
 
 
+def retag_with_current_vocabulary(subject):
+    """Which mechanisms the CURRENT tagger would give these articles.
+
+    `corpus/INDEX.jsonl` is FROZEN and was tagged before #MECH-PRECISION
+    retired the bare phrase "membrane potential" from `bioelectric` (audited
+    at 13.3% precision -- it nearly always appears as MITOCHONDRIAL membrane
+    potential, a JC-1 apoptosis readout) and narrowed `frequency-therapy`.
+    So a partner table read off the frozen index can name a tag the project
+    has already withdrawn, as evidence.
+
+    Worse for the causal story: `scripts/queries.txt` retrieves on
+    "membrane potential" itself, so those articles are in the corpus BECAUSE
+    of the phrase that then tagged them -- a retrieval-plus-retired-keyword
+    artifact rather than a partner absorbing a nameless modality.
+    """
+    from tag_articles import text_matches_keyword
+    items = [(m, k) for m, ks in config.MECHANISM_KEYWORDS.items() for k in ks]
+    out = Counter()
+    still = 0
+    for r in subject:
+        blob = ((r.get("title") or "") + " " +
+                (r.get("abstract") or "")).lower()
+        hits = {m for m, k in items if text_matches_keyword(blob, k)}
+        if hits:
+            still += 1
+        for m in hits:
+            out[m] += 1
+    return out, still
+
+
 def scan() -> dict:
     idx = load_index()
     by_pmid = {str(r.get("pmid")): r for r in idx}
@@ -92,6 +126,16 @@ def scan() -> dict:
             if n:
                 fulltext_counts[name][pmid] = n
 
+    # THE CONTROL THIS ANALYSIS NEVER RAN. Carrying another modality's tag is
+    # the corpus DEFAULT, so a per-modality rate means nothing without it. All
+    # three subjects turn out to sit AT OR BELOW the default, which withdraws
+    # the causal reading: namelessness cannot be shown to raise something it
+    # does not raise.
+    n_tagged = sum(1 for r in idx if (r.get("mechanisms") or []))
+    n_multi = sum(1 for r in idx if len(r.get("mechanisms") or []) >= 2)
+    out["corpus_tagged"] = n_tagged
+    out["corpus_multi_tagged"] = n_multi
+
     for name, pat in CANDIDATES.items():
         subject = [r for r in idx if pat.search(r.get("title") or "")]
         strong = [p for p, n in fulltext_counts[name].items()
@@ -104,8 +148,10 @@ def scan() -> dict:
                 untagged += 1
             for m in ms:
                 tags[m] += 1
+        multi = sum(1 for r in subject if len(r.get("mechanisms") or []) >= 2)
         out["modalities"][name] = {
             "subject_titled": len(subject),
+            "subject_multi_tagged": multi,
             "strong_fulltext": len(strong),
             "any_fulltext": len(fulltext_counts[name]),
             "subject_untagged": untagged,
@@ -116,6 +162,9 @@ def scan() -> dict:
             # instead of `immunotherapy`. Rank is the finding here, so it must
             # survive serialisation.
             "partner_tags": [[k, v] for k, v in tags.most_common(8)],
+            "partner_tags_current_vocabulary":
+                [[k, v] for k, v in retag_with_current_vocabulary(subject)[0].most_common(8)],
+            "tagged_current_vocabulary": retag_with_current_vocabulary(subject)[1],
         }
     return out
 
@@ -139,15 +188,36 @@ def render(d: dict) -> str:
                  f"| {s['any_fulltext']:,} ({100*s['any_fulltext']/n:.1f}%) |")
     L += [""]
 
-    L += ["## They are not untagged. They are filed under their partner.", ""]
-    L += ["For the articles that are titled about each modality -- the "
-          "high-precision set -- here is what the taxonomy actually recorded:", ""]
-    L += ["| modality | titled | carry NO tag | carry a DIFFERENT modality's tag |",
-          "|---|--:|--:|--:|"]
+    n = d["corpus_size"]
+    ct = d.get("corpus_tagged")
+    cm = d.get("corpus_multi_tagged")
+    base = 100 * ct / n if ct else None
+    base_multi = 100 * cm / n if cm else None
+
+    L += ["## What the taxonomy recorded, against what it records by default", ""]
+    L += ["The header of this section used to read \"They are not untagged. "
+          "They are filed under their partner\", and the table carried no "
+          "denominator. Carrying another modality's tag is the CORPUS DEFAULT, "
+          "so the rate only means something beside it.", ""]
+    L += ["| modality | titled | carry NO tag | carry at least one tag | "
+          "carry 2+ |", "|---|--:|--:|--:|--:|"]
     for m, s in d["modalities"].items():
-        L.append(f"| {m} | {s['subject_titled']:,} | {s['subject_untagged']:,} | "
-                 f"**{s['subject_tagged_as_other']:,}** |")
+        tt = s["subject_titled"]
+        L.append(f"| {m} | {tt:,} | {s['subject_untagged']:,} "
+                 f"({100*s['subject_untagged']/tt:.1f}%) | "
+                 f"**{s['subject_tagged_as_other']:,}** "
+                 f"({100*s['subject_tagged_as_other']/tt:.1f}%) | "
+                 f"{s.get('subject_multi_tagged', 0):,} "
+                 f"({100*s.get('subject_multi_tagged', 0)/tt:.1f}%) |")
+    if base is not None:
+        L.append(f"| **the corpus** | {n:,} | {n-ct:,} "
+                 f"({100*(n-ct)/n:.1f}%) | **{ct:,}** ({base:.1f}%) | "
+                 f"{cm:,} ({base_multi:.1f}%) |")
     L += [""]
+
+    # THE COLUMN IS NOT WHAT ITS OLD HEADER SAID. `len(subject) - untagged` is
+    # "has at least one tag"; since no lane names these three modalities, the
+    # word DIFFERENT excluded nothing that could ever have been subtracted.
     for m, s in d["modalities"].items():
         if not s["partner_tags"]:
             continue
@@ -155,10 +225,96 @@ def render(d: dict) -> str:
         L.append(f"* **{m}** is recorded as: {top}")
     L += [""]
 
-    L += ["A modality with no name does not become an untagged article. It "
-          "becomes **someone else's article**. Every co-occurrence, prevalence "
-          "and capture figure the project computes attributes the whole paper "
-          "to the partner that happened to have a tag.", ""]
+    L += ["The third column used to be headed \"carry a DIFFERENT modality's "
+          "tag\". It is `titled - untagged`, i.e. *carries at least one tag* -- "
+          "and because the taxonomy has no lane for any of these three, the "
+          "word DIFFERENT excluded nothing. Renamed to what it counts.", ""]
+
+    if base is not None:
+        rates = {m: 100 * s["subject_tagged_as_other"] / s["subject_titled"]
+                 for m, s in d["modalities"].items()}
+        below = sorted(m for m, r in rates.items() if r < base)
+        L += ["### The causal reading is withdrawn", ""]
+        if len(below) == len(rates):
+            L += [f"**Every one of the three sits BELOW the corpus default** "
+                  f"({', '.join(f'{m} {rates[m]:.1f}%' for m in below)} against "
+                  f"{base:.1f}%). They are also untagged MORE often than the "
+                  f"corpus and carry FEWER tags each. So the earlier claim -- "
+                  f"that a modality with no name \"does not become an untagged "
+                  f"article, it becomes someone else's article\" -- is not "
+                  f"supported by these numbers: nothing here is elevated, and "
+                  f"the second half of that sentence describes what almost "
+                  f"every article in this corpus looks like.", ""]
+            L += ["The combination-paper story goes with it. If these were "
+                  "papers about two modalities, they would carry MORE tags "
+                  "than average, not fewer.", ""]
+        else:
+            L += [f"{', '.join(below) or 'None'} sit below the corpus default "
+                  f"of {base:.1f}%; the others are above it.", ""]
+
+        L += ["### What survives, and it is structural rather than causal", ""]
+        L += ["The taxonomy has no lane for radiotherapy, chemotherapy or "
+              "surgery. So any tag an article about them carries is "
+              "NECESSARILY another modality's -- that is guaranteed by the "
+              "design, not discovered by this measurement. What this analysis "
+              "contributes is the COUNT of articles in that position "
+              f"({', '.join(str(s['subject_tagged_as_other']) for s in d['modalities'].values())}), "
+              "and every co-occurrence, prevalence and capture figure the "
+              "project computes attributes those whole papers to whichever "
+              "partner happened to have a tag. That consequence is unchanged; "
+              "the causal story about namelessness is what goes.", ""]
+
+    # VOCABULARY VINTAGE. The frozen index was tagged before #MECH-PRECISION
+    # retired keywords, so a partner table read off it can name a tag the
+    # project has already withdrawn.
+    # WHICH TAGS WERE ACTUALLY RETIRED, read from config.py's own record
+    # rather than inferred from a disappearance -- a tag can also vanish here
+    # because this re-run reads less text, and attributing that to the
+    # vocabulary would be the asymmetric comparison this repo keeps making.
+    retired = set()
+    cfg = (PROJECT_ROOT / "scripts" / "config.py").read_text(errors="ignore")
+    for blk in re.finditer(r"#MECH-PRECISION(.{0,600})", cfg, re.S):
+        for mech in config.MECHANISM_KEYWORDS:
+            if re.search(rf"\b{re.escape(mech)}\b", blk.group(1)):
+                retired.add(mech)
+
+    gone = {}
+    for m, s in d["modalities"].items():
+        old_tags = {k for k, _v in s.get("partner_tags", [])}
+        new_tags = {k for k, _v in s.get("partner_tags_current_vocabulary", [])}
+        missing = sorted((old_tags - new_tags) & retired)
+        if missing:
+            gone[m] = missing
+    if gone:
+        L += ["### Some of those partners are tags the project has since "
+              "withdrawn", ""]
+        L += ["`corpus/INDEX.jsonl` is FROZEN and was tagged before "
+              "#MECH-PRECISION retired the bare phrase \"membrane potential\" "
+              "from `bioelectric` -- audited at 13.3% precision, because it "
+              "nearly always appears as MITOCHONDRIAL membrane potential, a "
+              "JC-1 apoptosis readout. Re-running the CURRENT vocabulary over "
+              "the same articles, these partners disappear:", ""]
+        for m, missing in gone.items():
+            L.append(f"* **{m}**: {', '.join(f'`{x}`' for x in missing)}")
+        L += [""]
+        L += ["That matters most for the causal reading. `scripts/queries.txt` "
+              "retrieves on \"membrane potential\" itself, so those articles "
+              "are in this corpus BECAUSE of the phrase that then tagged them "
+              "-- a retrieval-plus-retired-keyword artifact, not a partner "
+              "absorbing a nameless modality.", ""]
+        L += ["Only tags `scripts/config.py` records as narrowed under "
+              "#MECH-PRECISION are listed. Other partners also drop out of "
+              "the re-run, but this pass reads title and abstract while the "
+              "frozen tagging read the stored full text, so those "
+              "disappearances mix the vocabulary with the text scope and are "
+              "not attributed here.", ""]
+        L += ["**The absolute counts are NOT comparable between the two "
+              "columns and are deliberately not published as a delta.** The "
+              "frozen tagging read the stored full text; this re-run reads "
+              "title and abstract only, so any difference in totals mixes the "
+              "vocabulary change with a change of text scope. What the "
+              "comparison isolates is which partner tags survive the "
+              "vocabulary at all, which is the question here.", ""]
 
     L += ["## Why this is a different problem from a coverage gap", ""]
     L += ["A coverage gap is closed by retrieving more literature. This is "

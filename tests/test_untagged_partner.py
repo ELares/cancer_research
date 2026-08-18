@@ -174,3 +174,95 @@ def test_an_empty_result_refuses_to_render():
     assert "is not a finding" in src and "raise SystemExit" in src
     assert 'subject_titled"] == 0' in src, (
         "the empty check no longer tests the titled count")
+
+
+def test_the_corpus_base_rate_is_measured_and_published():
+    """The control this analysis never ran.
+
+    Carrying another modality's tag is the corpus DEFAULT. Without the
+    default, a rate of 85% reads as a finding when the corpus runs at 88.7%.
+    """
+    d, md = _doc(), MD.read_text()
+    n, ct = d["corpus_size"], d.get("corpus_tagged")
+    assert ct, "the corpus tagged count is not measured"
+    # RE-DERIVED from INDEX.jsonl, not read back from the artifact
+    idx = [json.loads(l) for l in (REPO_ROOT / "corpus" / "INDEX.jsonl").open()
+           if l.strip()]
+    want = sum(1 for r in idx if (r.get("mechanisms") or []))
+    want_multi = sum(1 for r in idx if len(r.get("mechanisms") or []) >= 2)
+    assert ct == want, f"artifact says {ct} tagged, INDEX.jsonl gives {want}"
+    assert d.get("corpus_multi_tagged") == want_multi
+    assert f"**the corpus** | {n:,}" in md, (
+        "the corpus row is not in the table, so the per-modality rates have "
+        "no denominator beside them")
+    assert f"({100*ct/n:.1f}%)" in md
+
+
+def test_the_causal_reading_follows_the_comparison():
+    """Every modality sits BELOW the default, so nothing is elevated."""
+    d, md = _doc(), MD.read_text()
+    n, ct = d["corpus_size"], d["corpus_tagged"]
+    base = 100 * ct / n
+    rates = {m: 100 * s["subject_tagged_as_other"] / s["subject_titled"]
+             for m, s in d["modalities"].items()}
+    below = [m for m, r in rates.items() if r < base]
+    if len(below) == len(rates):
+        assert "The causal reading is withdrawn" in md, (
+            f"all of {sorted(rates)} sit below the corpus default of "
+            f"{base:.1f}% and the report still presents the rate as a finding")
+        assert "sits BELOW the corpus default" in md or \
+               "sit BELOW the corpus default" in md
+        # the withdrawn sentence must not stand as a live claim
+        for m_ in re.finditer(r"becomes \*\*someone else's article\*\*", md):
+            w = md[max(0, m_.start() - 400):m_.end() + 400]
+            assert re.search(r"withdraw|earlier claim|not supported", w, re.I)
+    else:
+        assert "The causal reading is withdrawn" not in md
+
+
+def test_the_multi_tag_rate_is_reported_against_the_corpus():
+    """The combination-paper story predicts MORE tags; they carry fewer."""
+    d, md = _doc(), MD.read_text()
+    n, cm = d["corpus_size"], d.get("corpus_multi_tagged")
+    if not cm:
+        return
+    for m, s in d["modalities"].items():
+        mt = s.get("subject_multi_tagged")
+        assert mt is not None, f"{m} has no multi-tag count"
+        t_ = s["subject_titled"]
+        assert f"{mt:,} ({100*mt/t_:.1f}%)" in md, (
+            f"{m}'s multi-tag rate is measured and not rendered")
+    rates = [100 * s["subject_multi_tagged"] / s["subject_titled"]
+             for s in d["modalities"].values()]
+    if all(r < 100 * cm / n for r in rates):
+        assert "carry FEWER tags" in md, (
+            "every modality carries fewer tags than the corpus average, which "
+            "contradicts the combination-paper reading, and the report does "
+            "not say so")
+
+
+def test_retired_tags_are_named_from_config_not_inferred():
+    """A tag can also vanish because the re-run reads less text.
+
+    Attributing a scope effect to the vocabulary would be the asymmetric
+    comparison this repo keeps making, so only tags config.py records as
+    narrowed may be listed.
+    """
+    d, md = _doc(), MD.read_text()
+    src = (REPO_ROOT / "scripts" / "config.py").read_text()
+    assert "#MECH-PRECISION" in src, (
+        "config.py no longer records the keyword retirements this section "
+        "depends on")
+    for m, s in d["modalities"].items():
+        old = {k for k, _v in s.get("partner_tags", [])}
+        new = {k for k, _v in s.get("partner_tags_current_vocabulary", [])}
+        for tag in sorted(old - new):
+            if f"`{tag}`" in md.split("since withdrawn")[-1][:800]:
+                assert re.search(rf"#MECH-PRECISION.{{0,600}}\b{re.escape(tag)}\b",
+                                 src, re.S), (
+                    f"`{tag}` is listed as withdrawn under #MECH-PRECISION and "
+                    "config.py does not record it as narrowed; it may simply "
+                    "have dropped out because this pass reads less text")
+    assert "mix the vocabulary with the text scope" in md, (
+        "the report no longer discloses that the re-run reads a narrower text "
+        "than the frozen tagging, so its deltas would read as vocabulary")

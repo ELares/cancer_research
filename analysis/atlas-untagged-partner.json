@@ -1,5 +1,7 @@
 {
+ "corpus_multi_tagged": 1952,
  "corpus_size": 4830,
+ "corpus_tagged": 4284,
  "modalities": {
   "chemotherapy": {
    "any_fulltext": 3582,
@@ -37,10 +39,46 @@
      7
     ]
    ],
+   "partner_tags_current_vocabulary": [
+    [
+     "immunotherapy",
+     26
+    ],
+    [
+     "nanoparticle",
+     14
+    ],
+    [
+     "ttfields",
+     9
+    ],
+    [
+     "synthetic-lethality",
+     7
+    ],
+    [
+     "electrochemical-therapy",
+     6
+    ],
+    [
+     "oncolytic-virus",
+     4
+    ],
+    [
+     "bispecific-antibody",
+     4
+    ],
+    [
+     "sonodynamic",
+     3
+    ]
+   ],
    "strong_fulltext": 1995,
+   "subject_multi_tagged": 49,
    "subject_tagged_as_other": 140,
    "subject_titled": 166,
-   "subject_untagged": 26
+   "subject_untagged": 26,
+   "tagged_current_vocabulary": 74
   },
   "radiotherapy": {
    "any_fulltext": 2436,
@@ -78,10 +116,46 @@
      3
     ]
    ],
+   "partner_tags_current_vocabulary": [
+    [
+     "immunotherapy",
+     25
+    ],
+    [
+     "ttfields",
+     8
+    ],
+    [
+     "nanoparticle",
+     5
+    ],
+    [
+     "electrochemical-therapy",
+     4
+    ],
+    [
+     "oncolytic-virus",
+     4
+    ],
+    [
+     "bispecific-antibody",
+     3
+    ],
+    [
+     "hifu",
+     2
+    ],
+    [
+     "synthetic-lethality",
+     2
+    ]
+   ],
    "strong_fulltext": 907,
+   "subject_multi_tagged": 24,
    "subject_tagged_as_other": 75,
    "subject_titled": 88,
-   "subject_untagged": 13
+   "subject_untagged": 13,
+   "tagged_current_vocabulary": 52
   },
   "surgery": {
    "any_fulltext": 2155,
@@ -119,10 +193,26 @@
      1
     ]
    ],
+   "partner_tags_current_vocabulary": [
+    [
+     "immunotherapy",
+     5
+    ],
+    [
+     "ttfields",
+     4
+    ],
+    [
+     "car-t",
+     1
+    ]
+   ],
    "strong_fulltext": 547,
+   "subject_multi_tagged": 5,
    "subject_tagged_as_other": 17,
    "subject_titled": 24,
-   "subject_untagged": 7
+   "subject_untagged": 7,
+   "tagged_current_vocabulary": 10
   }
  },
  "strong_threshold": 5

@@ -10,21 +10,44 @@ Radiotherapy, chemotherapy and surgery have no mechanism tag in this project. Th
 | chemotherapy | 166 (3.4%) | 1,995 (41.3%) | 3,582 (74.2%) |
 | surgery | 24 (0.5%) | 547 (11.3%) | 2,155 (44.6%) |
 
-## They are not untagged. They are filed under their partner.
+## What the taxonomy recorded, against what it records by default
 
-For the articles that are titled about each modality -- the high-precision set -- here is what the taxonomy actually recorded:
+The header of this section used to read "They are not untagged. They are filed under their partner", and the table carried no denominator. Carrying another modality's tag is the CORPUS DEFAULT, so the rate only means something beside it.
 
-| modality | titled | carry NO tag | carry a DIFFERENT modality's tag |
-|---|--:|--:|--:|
-| radiotherapy | 88 | 13 | **75** |
-| chemotherapy | 166 | 26 | **140** |
-| surgery | 24 | 7 | **17** |
+| modality | titled | carry NO tag | carry at least one tag | carry 2+ |
+|---|--:|--:|--:|--:|
+| radiotherapy | 88 | 13 (14.8%) | **75** (85.2%) | 24 (27.3%) |
+| chemotherapy | 166 | 26 (15.7%) | **140** (84.3%) | 49 (29.5%) |
+| surgery | 24 | 7 (29.2%) | **17** (70.8%) | 5 (20.8%) |
+| **the corpus** | 4,830 | 546 (11.3%) | **4,284** (88.7%) | 1,952 (40.4%) |
 
 * **radiotherapy** is recorded as: `immunotherapy` 45, `ttfields` 11, `nanoparticle` 7, `bispecific-antibody` 6
 * **chemotherapy** is recorded as: `immunotherapy` 58, `nanoparticle` 27, `bioelectric` 22, `bispecific-antibody` 20
 * **surgery** is recorded as: `immunotherapy` 8, `ttfields` 4, `frequency-therapy` 2, `hifu` 2
 
-A modality with no name does not become an untagged article. It becomes **someone else's article**. Every co-occurrence, prevalence and capture figure the project computes attributes the whole paper to the partner that happened to have a tag.
+The third column used to be headed "carry a DIFFERENT modality's tag". It is `titled - untagged`, i.e. *carries at least one tag* -- and because the taxonomy has no lane for any of these three, the word DIFFERENT excluded nothing. Renamed to what it counts.
+
+### The causal reading is withdrawn
+
+**Every one of the three sits BELOW the corpus default** (chemotherapy 84.3%, radiotherapy 85.2%, surgery 70.8% against 88.7%). They are also untagged MORE often than the corpus and carry FEWER tags each. So the earlier claim -- that a modality with no name "does not become an untagged article, it becomes someone else's article" -- is not supported by these numbers: nothing here is elevated, and the second half of that sentence describes what almost every article in this corpus looks like.
+
+The combination-paper story goes with it. If these were papers about two modalities, they would carry MORE tags than average, not fewer.
+
+### What survives, and it is structural rather than causal
+
+The taxonomy has no lane for radiotherapy, chemotherapy or surgery. So any tag an article about them carries is NECESSARILY another modality's -- that is guaranteed by the design, not discovered by this measurement. What this analysis contributes is the COUNT of articles in that position (75, 140, 17), and every co-occurrence, prevalence and capture figure the project computes attributes those whole papers to whichever partner happened to have a tag. That consequence is unchanged; the causal story about namelessness is what goes.
+
+### Some of those partners are tags the project has since withdrawn
+
+`corpus/INDEX.jsonl` is FROZEN and was tagged before #MECH-PRECISION retired the bare phrase "membrane potential" from `bioelectric` -- audited at 13.3% precision, because it nearly always appears as MITOCHONDRIAL membrane potential, a JC-1 apoptosis readout. Re-running the CURRENT vocabulary over the same articles, these partners disappear:
+
+* **chemotherapy**: `bioelectric`
+
+That matters most for the causal reading. `scripts/queries.txt` retrieves on "membrane potential" itself, so those articles are in this corpus BECAUSE of the phrase that then tagged them -- a retrieval-plus-retired-keyword artifact, not a partner absorbing a nameless modality.
+
+Only tags `scripts/config.py` records as narrowed under #MECH-PRECISION are listed. Other partners also drop out of the re-run, but this pass reads title and abstract while the frozen tagging read the stored full text, so those disappearances mix the vocabulary with the text scope and are not attributed here.
+
+**The absolute counts are NOT comparable between the two columns and are deliberately not published as a delta.** The frozen tagging read the stored full text; this re-run reads title and abstract only, so any difference in totals mixes the vocabulary change with a change of text scope. What the comparison isolates is which partner tags survive the vocabulary at all, which is the question here.
 
 ## Why this is a different problem from a coverage gap
 
