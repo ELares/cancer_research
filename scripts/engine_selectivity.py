@@ -41,6 +41,7 @@ Usage:
 
 import argparse
 import json
+import re
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -60,9 +61,61 @@ SEED = 20260817
 N_SEEDS = 8
 
 
+RESISTANCE_AXES = {
+    # axis -> True if a LOWER value means more ferroptosis-resistant
+    "iron": True, "basal_ros": True, "lipid_unsat": True,
+    "gsh": False, "gpx4": False, "fsp1": False, "nrf2": False,
+}
+
+
+def phenotype_params() -> dict:
+    """Each phenotype's mean parameters, parsed from cell.rs.
+
+    The withdrawn fingerprint claim was given a derived control while the
+    SURVIVING claim -- that `Stromal` encodes the resistance assumption --
+    stayed bare prose in a page whose thesis is derive-don't-assert. This
+    makes it checkable.
+    """
+    src = (PROJECT_ROOT / "simulations" / "ferroptosis-core" / "src" / "cell.rs")
+    if not src.exists():
+        return {}
+    text = src.read_text(errors="ignore")
+    out = {}
+    for m in re.finditer(r"Phenotype::(\w+)\s*=>\s*Cell\s*\{(.*?)\n\s*\}", text, re.S):
+        name, body = m.group(1), m.group(2)
+        vals = {}
+        for f in RESISTANCE_AXES:
+            mm = re.search(rf"\b{f}:\s*norm\(rng,\s*([0-9.]+)", body)
+            if mm:
+                vals[f] = float(mm.group(1))
+        if vals:
+            out[name] = vals
+    return out
+
+
+def resistance_rank(params: dict, target: str) -> dict:
+    """On how many axes is `target` the most ferroptosis-resistant phenotype?"""
+    if target not in params:
+        return {}
+    axes, wins, detail = 0, 0, {}
+    for f, lower_is_resistant in RESISTANCE_AXES.items():
+        vals = {k: v[f] for k, v in params.items() if f in v}
+        if target not in vals or len(vals) < 2:
+            continue
+        axes += 1
+        best = min(vals.values()) if lower_is_resistant else max(vals.values())
+        won = abs(vals[target] - best) < 1e-9
+        wins += won
+        detail[f] = {"value": vals[target], "most_resistant": won}
+    return {"axes": axes, "wins": wins, "detail": detail}
+
+
 def run(n: int) -> dict:
     import ferroptosis_core as fc
+    pp = phenotype_params()
     out = {"n_per_cell_type": n, "seed": SEED, "seed_stride": 2 * n,
+           "phenotype_params": pp,
+           "stromal_resistance": resistance_rank(pp, NON_TUMOUR),
            "n_seeds": N_SEEDS, "treatments": {}}
     for t in TREATMENTS:
         row = {}
@@ -88,7 +141,12 @@ def run(n: int) -> dict:
     for t in TREATMENTS:
         best, worst = [], []
         for k in range(N_SEEDS):
-            s = SEED + k * 2 * n
+            # k starts at 1 so the SPREAD is disjoint from the point
+            # estimate above. An earlier version started at 0, so the
+            # published point was a MEMBER of the sample it was being
+            # compared against, and "sits near the bottom of the range"
+            # described a 37.5%-likely outcome for any member.
+            s = SEED + (k + 1) * 2 * n
             tum, caf = [], None
             for ph in TUMOUR + [NON_TUMOUR]:
                 r = fc.sim_batch(ph, t, n, s)
@@ -152,14 +210,42 @@ def render(d: dict) -> str:
                      f"{s['worst_lo']:.2f}x - {s['worst_hi']:.2f}x |")
         L += [""]
         L += [f"**Spacing matters and nothing said so.** `sim_batch` draws "
-              f"cell *i* from `seed + 2i`, so one run consumes the whole span "
-              f"`seed .. seed + {d['seed_stride'] - 1:,}`. Two runs whose "
-              f"seeds differ by less than {d['seed_stride']:,} share almost "
-              f"every cell -- `seed` and `seed + 2` differ by one cell in "
-              f"{d['n_per_cell_type']:,} and return bit-identical counts -- so "
-              f"anyone checking robustness by nudging the seed gets a false "
-              f"confirmation. The point estimates above sit near the bottom of "
-              f"both ranges.", ""]
+              f"cell *i* from `seed + 2i` and its simulation RNG from "
+              f"`seed + 2i + 1`, so one run consumes the whole span "
+              f"`seed .. seed + {d['seed_stride'] - 1:,}` -- EVEN offsets for "
+              f"the cells, ODD offsets for the simulation.", ""]
+        L += [f"That makes the overlap depend on the PARITY of the gap, which "
+              f"an earlier version of this paragraph got wrong by saying any "
+              f"gap under {d['seed_stride']:,} shares almost every cell. An "
+              f"EVEN gap *d* shares "
+              f"{d['n_per_cell_type']:,} - d/2 cells, so a gap of 2 differs in "
+              f"one cell and often returns the same count. An ODD gap shares "
+              f"**none** -- one run's cell seeds land on the other's "
+              f"simulation seeds -- so it is already an independent sample. "
+              f"The safe rule is unchanged and is what this table uses: space "
+              f"runs by {d['seed_stride']:,}. What is corrected is the reason, "
+              f"and the claim that a nudged seed necessarily returns a "
+              f"bit-identical count.", ""]
+        # DERIVED. An earlier version wrote "the point estimates sit near the
+        # bottom of both ranges" as prose, which survived being flipped to
+        # "the top", and computed it against a sample the point was a member
+        # of.
+        for tt in TREATMENTS:
+            if tt not in sp:
+                continue
+            pt = d["treatments"][tt]["_contrast"].get("ratio_best_case")
+            s0 = sp[tt]
+            span = s0["best_hi"] - s0["best_lo"]
+            if pt is None or span <= 0:
+                continue
+            frac = (pt - s0["best_lo"]) / span
+            where = "bottom" if frac < 0.5 else "top"
+            L += [f"The single-seed point for {tt} ({pt:.2f}x) sits at "
+                  f"{100*frac:.0f}% of that range, i.e. near the {where} of "
+                  f"it. The point's own seed is excluded from the spread, so "
+                  f"the two are independent -- an earlier version drew the "
+                  f"spread from a set containing the point.", ""]
+            break
 
     ctrl = d["treatments"]["Control"]["_contrast"]
     L += [f"Control is the baseline: with no treatment the CAF phenotype dies at "
@@ -213,6 +299,17 @@ def render(d: dict) -> str:
                   f"The exactness is a property of the RSL3 path against a "
                   f"resistant parameterisation, not evidence about how "
                   f"`Stromal` was chosen. That inference is withdrawn.", ""]
+        rr = d.get("stromal_resistance") or {}
+        if rr.get("axes"):
+            won = [k for k, v in rr["detail"].items() if v["most_resistant"]]
+            L += [f"**The surviving criticism, now measured rather than "
+                  f"asserted.** Parsed from `cell.rs`, `{NON_TUMOUR}` is the "
+                  f"most ferroptosis-resistant phenotype on "
+                  f"**{rr['wins']} of {rr['axes']}** parameter axes "
+                  f"({', '.join(f'`{x}`' for x in sorted(won))}). So the "
+                  f"resistance really is encoded in the parameters -- that "
+                  f"part of the original criticism stands, and only the "
+                  f"inference FROM THE EXACT ZERO is withdrawn.", ""]
         L += ["What survives, and it is the part that matters: a ratio with a "
               "zero denominator is undefined, so no selectivity figure can be "
               "computed here at all. And the project's load-bearing assumption "

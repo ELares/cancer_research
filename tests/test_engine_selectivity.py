@@ -38,6 +38,14 @@ def _doc():
     return json.loads(JSON_OUT.read_text())
 
 
+def _mod():
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("es", SCRIPT)
+    m = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(m)
+    return m
+
+
 def test_it_is_not_called_a_therapeutic_index():
     """Stromal is CAFs; dividing by it is not selectivity against normal tissue."""
     md, src = MD.read_text(), SCRIPT.read_text()
@@ -107,8 +115,15 @@ def test_the_sdt_pdt_identity_is_detected_not_assumed():
         "in prose would make it a claim rather than an observation")
 
 
-def test_the_zero_denominator_is_flagged_as_a_tell():
-    """An exactly-zero non-tumour kill is what an assumed answer looks like."""
+def test_the_zero_denominator_is_flagged_as_undefined():
+    """A zero denominator makes the ratio undefined -- that is the flag.
+
+    This guard was called `..._flagged_as_a_tell` and its docstring said
+    an exact zero "is what an assumed answer looks like" -- the withdrawn
+    inference, sitting on top of the very guard rewritten to stop pinning
+    it. A retraction that reaches the report and not the guard's identity
+    is half a retraction.
+    """
     d, md = _doc(), MD.read_text()
     rsl3 = d["treatments"]["RSL3"]["Stromal"]["death_rate"]
     if rsl3 == 0.0:
@@ -235,3 +250,100 @@ def test_the_point_estimates_are_not_presented_alone():
             f"{t}: the published point ratio {pt:.2f} lies outside the "
             f"measured range [{s['best_lo']:.2f}, {s['best_hi']:.2f}], so one "
             "of the two was not computed from the same model")
+
+
+
+def test_the_spread_seeds_are_actually_disjoint():
+    """The defect this analysis exists to name, in its own generator.
+
+    Changing the spread loop from `SEED + k*2n` to `SEED + k*2` renders a
+    0.01x-wide range beneath the words "8 genuinely disjoint seeds, spaced by
+    40,000 so that no two runs share a cell" -- a fake stability finding. The
+    stride assertion could not catch it: `seed_stride` is a literal the
+    generator writes independently of the loop.
+    """
+    m, d = _mod(), _doc()
+    src = SCRIPT.read_text()
+    n = d["n_per_cell_type"]
+    assert "* 2 * n" in src, (
+        "the spread loop no longer steps by 2n, so its runs share cells while "
+        "the report calls them disjoint")
+    # AND the offset must exclude the point's own seed. Recomputing the seed
+    # list from the constants here cannot see the loop changing, so the loop
+    # itself is pinned: `(k + 1)` is what keeps the point out of the sample it
+    # is compared against.
+    assert "s = SEED + (k + 1) * 2 * n" in src, (
+        "the spread loop no longer offsets by (k + 1), so it starts at SEED "
+        "and the published point estimate is a MEMBER of the sample it is "
+        "being compared against")
+    # and EMPIRICALLY: the seeds the generator would use must not overlap
+    seeds = [m.SEED + (k + 1) * 2 * n for k in range(m.N_SEEDS)]
+    spans = [(s, s + 2 * n - 1) for s in seeds]
+    for i, (a0, a1) in enumerate(spans):
+        for b0, b1 in spans[i + 1:]:
+            assert a1 < b0 or b1 < a0, (
+                f"seed spans {(a0, a1)} and {(b0, b1)} overlap, so those runs "
+                "share cells")
+    # the POINT estimate's span must be disjoint from all of them, or the
+    # point is a member of the sample it is compared against
+    p0, p1 = m.SEED, m.SEED + 2 * n - 1
+    for b0, b1 in spans:
+        assert p1 < b0 or b1 < p0, (
+            f"the point-estimate span {(p0, p1)} overlaps a spread seed "
+            f"{(b0, b1)}; the point would be a member of its own comparison "
+            "sample")
+
+
+def test_the_rendered_seed_count_is_the_one_actually_run():
+    """The page said 8 while the loop ran 4, and the JSON recorded both."""
+    d, md = _doc(), MD.read_text()
+    sp = d.get("seed_spread") or {}
+    for t_, s in sp.items():
+        assert s["n_seeds"] == d["n_seeds"], (
+            f"{t_}: the spread used {s['n_seeds']} seeds and the artifact "
+            f"advertises {d['n_seeds']}")
+    assert f"**{d['n_seeds']} genuinely disjoint seeds**" in md
+
+
+def test_the_point_versus_range_statement_follows_the_numbers():
+    """"Near the bottom" was prose that survived being flipped to "near the top"."""
+    d, md = _doc(), MD.read_text()
+    sp = d.get("seed_spread") or {}
+    for t_, s in sp.items():
+        pt = d["treatments"][t_]["_contrast"].get("ratio_best_case")
+        if pt is None:
+            continue
+        span = s["best_hi"] - s["best_lo"]
+        if span <= 0:
+            continue
+        frac = (pt - s["best_lo"]) / span
+        word = "bottom" if frac < 0.5 else "top"
+        assert f"near the {word} of" in md, (
+            f"the point {pt:.2f} sits at {100*frac:.0f}% of the "
+            f"[{s['best_lo']:.2f}, {s['best_hi']:.2f}] range, i.e. near the "
+            f"{word}, and the report says otherwise")
+        break
+
+
+def test_the_withdrawal_is_pinned_by_structure_not_a_phrase():
+    """The old guard required "true by construction"; requiring a different
+    literal is the same fragility. Pin the STRUCTURE: any sentence reading the
+    exact zero as evidence about how the parameters were chosen must carry a
+    withdrawal marker near it."""
+    md = MD.read_text()
+    causal = re.compile(
+        r"(chosen to produce|picked to deliver|signature of a parameter|"
+        r"what an assumed answer|true by construction|parameter set chosen)",
+        re.I)
+    # THE MARKER MUST BE IN THE SAME SENTENCE. A 400-character window let a
+    # newly inserted live claim sit beside the existing retraction and inherit
+    # its marker -- the retraction-quoting trap inverted.
+    for m_ in causal.finditer(md):
+        start = max(md.rfind(".", 0, m_.start()), md.rfind("\n", 0, m_.start()))
+        end = md.find(".", m_.end())
+        w = md[start + 1: end if end > 0 else len(md)]
+        assert re.search(r"withdraw|earlier version|earlier draft|refutes", w, re.I), (
+            f"the report reads the exact zero as evidence about how the "
+            f"parameters were chosen ({m_.group(0)!r}) with no withdrawal "
+            "beside it, while a tumour phenotype sits at exactly zero in the "
+            "same table")
