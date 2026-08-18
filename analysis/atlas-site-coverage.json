@@ -1,9 +1,94 @@
 {
+ "adjacent_basis": 200758,
  "assigned": 2546944,
  "census": 4403994,
+ "excluded_streams": {
+  "c04_core": 4203236,
+  "text_matched_no_mesh": 783271
+ },
+ "map_dropped": {
+  "breast": {
+   "benign or precursor lesion": [
+    "breast cyst"
+   ]
+  },
+  "cervix/uterus": {
+   "benign or precursor lesion": [
+    "leiomyoma",
+    "leiomyoma, epithelioid",
+    "leiomyomatosis",
+    "lymphangioleiomyomatosis",
+    "uterine cervical dysplasia"
+   ]
+  },
+  "head and neck": {
+   "benign or precursor lesion": [
+    "odontogenic cyst, calcifying"
+   ]
+  },
+  "leukaemia": {
+   "animal or induced model": [
+    "leukemia l1210",
+    "leukemia l5178",
+    "leukemia p388",
+    "leukemia, experimental",
+    "leukemia, radiation-induced"
+   ]
+  },
+  "liver": {
+   "animal or induced model": [
+    "liver neoplasms, experimental"
+   ]
+  },
+  "oesophagus": {
+   "benign or precursor lesion": [
+    "barrett esophagus",
+    "esophageal cyst"
+   ]
+  },
+  "ovary": {
+   "benign or precursor lesion": [
+    "parovarian cyst"
+   ]
+  },
+  "pancreas": {
+   "benign or precursor lesion": [
+    "pancreatic cyst",
+    "pancreatic pseudocyst"
+   ]
+  },
+  "prostate": {
+   "benign or precursor lesion": [
+    "prostatic intraepithelial neoplasia"
+   ]
+  },
+  "skin/melanoma": {
+   "animal or induced model": [
+    "melanoma, experimental"
+   ],
+   "benign or precursor lesion": [
+    "basal cell nevus syndrome",
+    "dysplastic nevus syndrome",
+    "keratosis, actinic",
+    "nevus",
+    "nevus of ota",
+    "nevus, blue",
+    "nevus, epithelioid and spindle cell",
+    "nevus, halo",
+    "nevus, intradermal",
+    "nevus, pigmented",
+    "nevus, sebaceous of jadassohn",
+    "nevus, spindle cell"
+   ]
+  },
+  "thyroid": {
+   "benign or precursor lesion": [
+    "thyroid nodule"
+   ]
+  }
+ },
  "multi_site": 207610,
  "n_sites": 18,
- "no_mesh": 0,
  "sites": {
   "bladder": 68363,
   "brain/CNS": 177855,
@@ -23,5 +108,170 @@
   "skin/melanoma": 205906,
   "stomach": 120883,
   "thyroid": 63046
+ },
+ "unassigned": {
+  "generic_neoplasms": 472968,
+  "no_c04_descriptor": 200758,
+  "same_sites_deeper": 533224,
+  "top_descriptors": [
+   [
+    "humans",
+    1143905
+   ],
+   [
+    "neoplasms",
+    472968
+   ],
+   [
+    "female",
+    413054
+   ],
+   [
+    "male",
+    378061
+   ],
+   [
+    "animals",
+    348652
+   ],
+   [
+    "adult",
+    236729
+   ],
+   [
+    "middle aged",
+    218356
+   ],
+   [
+    "cell line, tumor",
+    174045
+   ],
+   [
+    "antineoplastic agents",
+    167359
+   ],
+   [
+    "aged",
+    160723
+   ],
+   [
+    "mice",
+    159659
+   ],
+   [
+    "adolescent",
+    93357
+   ],
+   [
+    "child",
+    85249
+   ],
+   [
+    "retrospective studies",
+    63785
+   ],
+   [
+    "treatment outcome",
+    56638
+   ],
+   [
+    "rats",
+    54454
+   ],
+   [
+    "cell proliferation",
+    52067
+   ],
+   [
+    "apoptosis",
+    51344
+   ],
+   [
+    "signal transduction",
+    50596
+   ],
+   [
+    "aged, 80 and over",
+    49379
+   ]
+  ],
+  "total": 1857050
+ },
+ "variants": {
+  "deep": {
+   "assigned": 3080168,
+   "multi_site": 335135,
+   "n_descriptors": 264,
+   "sites": {
+    "bladder": 68363,
+    "brain/CNS": 276853,
+    "breast": 378481,
+    "cervix/uterus": 178073,
+    "colorectal": 263845,
+    "head and neck": 248669,
+    "kidney": 92056,
+    "leukaemia": 287042,
+    "liver": 212701,
+    "lung": 302957,
+    "lymphoma": 293298,
+    "oesophagus": 69236,
+    "ovary": 106182,
+    "pancreas": 109049,
+    "prostate": 162765,
+    "skin/melanoma": 231386,
+    "stomach": 127770,
+    "thyroid": 75860
+   }
+  },
+  "shallow": {
+   "assigned": 2546944,
+   "multi_site": 207610,
+   "n_descriptors": 42,
+   "sites": {
+    "bladder": 68363,
+    "brain/CNS": 177855,
+    "breast": 375499,
+    "cervix/uterus": 158452,
+    "colorectal": 245269,
+    "head and neck": 140066,
+    "kidney": 88262,
+    "leukaemia": 130376,
+    "liver": 199825,
+    "lung": 290414,
+    "lymphoma": 117890,
+    "oesophagus": 65076,
+    "ovary": 98618,
+    "pancreas": 99259,
+    "prostate": 162723,
+    "skin/melanoma": 205906,
+    "stomach": 120883,
+    "thyroid": 63046
+   }
+  },
+  "strict": {
+   "assigned": 3017978,
+   "multi_site": 323090,
+   "n_descriptors": 231,
+   "sites": {
+    "bladder": 68363,
+    "brain/CNS": 276853,
+    "breast": 378309,
+    "cervix/uterus": 165144,
+    "colorectal": 263845,
+    "head and neck": 248647,
+    "kidney": 92056,
+    "leukaemia": 267378,
+    "liver": 200066,
+    "lung": 302957,
+    "lymphoma": 293298,
+    "oesophagus": 65076,
+    "ovary": 105998,
+    "pancreas": 103135,
+    "prostate": 162723,
+    "skin/melanoma": 215017,
+    "stomach": 127770,
+    "thyroid": 71619
+   }
+  }
  }
 }

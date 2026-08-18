@@ -1,0 +1,269 @@
+# site	variant	MeSH descriptor
+# Resolved from DEEP_RULES in scripts/atlas_site_coverage.py against
+# corpus/atlas/mesh/c04-descriptors.tsv. Regenerate with that script.
+# `strict` drops animal/induced models and benign or precursor lesions;
+# the report publishes both so neither list is taken as the definition.
+bladder	deep+strict	urinary bladder neoplasms
+brain/CNS	deep+strict	astrocytoma
+brain/CNS	deep+strict	brain neoplasms
+brain/CNS	deep+strict	central nervous system neoplasms
+brain/CNS	deep+strict	cerebral ventricle neoplasms
+brain/CNS	deep+strict	craniopharyngioma
+brain/CNS	deep+strict	diffuse intrinsic pontine glioma
+brain/CNS	deep+strict	ependymoma
+brain/CNS	deep+strict	ganglioglioma
+brain/CNS	deep+strict	ganglion cysts
+brain/CNS	deep+strict	ganglioneuroblastoma
+brain/CNS	deep+strict	ganglioneuroma
+brain/CNS	deep+strict	glioblastoma
+brain/CNS	deep+strict	glioma
+brain/CNS	deep+strict	glioma, subependymal
+brain/CNS	deep+strict	gliosarcoma
+brain/CNS	deep+strict	hypothalamic neoplasms
+brain/CNS	deep+strict	infratentorial neoplasms
+brain/CNS	deep+strict	medulloblastoma
+brain/CNS	deep+strict	meningeal carcinomatosis
+brain/CNS	deep+strict	meningeal neoplasms
+brain/CNS	deep+strict	meningioma
+brain/CNS	deep+strict	nerve sheath neoplasms
+brain/CNS	deep+strict	neurocytoma
+brain/CNS	deep+strict	neuroectodermal tumors, primitive
+brain/CNS	deep+strict	neuroectodermal tumors, primitive, peripheral
+brain/CNS	deep+strict	neuroma, acoustic
+brain/CNS	deep+strict	oligodendroglioma
+brain/CNS	deep+strict	optic nerve glioma
+brain/CNS	deep+strict	paraganglioma
+brain/CNS	deep+strict	paraganglioma, extra-adrenal
+brain/CNS	deep+strict	pinealoma
+brain/CNS	deep+strict	pituitary neoplasms
+brain/CNS	deep+strict	skull base neoplasms
+brain/CNS	deep+strict	spinal cord neoplasms
+brain/CNS	deep+strict	supratentorial neoplasms
+breast	deep+strict	breast carcinoma in situ
+breast	deep	breast cyst
+breast	deep+strict	breast neoplasms
+breast	deep+strict	breast neoplasms, male
+breast	deep+strict	carcinoma, ductal, breast
+breast	deep+strict	hereditary breast and ovarian cancer syndrome
+breast	deep+strict	inflammatory breast neoplasms
+breast	deep+strict	phyllodes tumor
+breast	deep+strict	triple negative breast neoplasms
+breast	deep+strict	unilateral breast neoplasms
+cervix/uterus	deep+strict	choriocarcinoma
+cervix/uterus	deep+strict	choriocarcinoma, non-gestational
+cervix/uterus	deep+strict	endometrial neoplasms
+cervix/uterus	deep+strict	endometrial stromal tumors
+cervix/uterus	deep+strict	gestational trophoblastic disease
+cervix/uterus	deep+strict	hydatidiform mole
+cervix/uterus	deep+strict	hydatidiform mole, invasive
+cervix/uterus	deep	leiomyoma
+cervix/uterus	deep	leiomyoma, epithelioid
+cervix/uterus	deep	leiomyomatosis
+cervix/uterus	deep	lymphangioleiomyomatosis
+cervix/uterus	deep+strict	sarcoma, endometrial stromal
+cervix/uterus	deep+strict	trophoblastic neoplasms
+cervix/uterus	deep+strict	trophoblastic tumor, placental site
+cervix/uterus	deep	uterine cervical dysplasia
+cervix/uterus	deep+strict	uterine cervical neoplasms
+cervix/uterus	deep+strict	uterine neoplasms
+colorectal	deep+strict	adenomatous polyposis coli
+colorectal	deep+strict	anus neoplasms
+colorectal	deep+strict	cecal neoplasms
+colorectal	deep+strict	colonic neoplasms
+colorectal	deep+strict	colorectal neoplasms
+colorectal	deep+strict	colorectal neoplasms, hereditary nonpolyposis
+colorectal	deep+strict	rectal neoplasms
+colorectal	deep+strict	sigmoid neoplasms
+head and neck	deep+strict	ameloblastoma
+head and neck	deep+strict	ear neoplasms
+head and neck	deep+strict	esthesioneuroblastoma, olfactory
+head and neck	deep+strict	gingival neoplasms
+head and neck	deep+strict	head and neck neoplasms
+head and neck	deep+strict	hypopharyngeal neoplasms
+head and neck	deep+strict	jaw neoplasms
+head and neck	deep+strict	laryngeal neoplasms
+head and neck	deep+strict	lip neoplasms
+head and neck	deep+strict	mandibular neoplasms
+head and neck	deep+strict	maxillary neoplasms
+head and neck	deep+strict	maxillary sinus neoplasms
+head and neck	deep+strict	mouth neoplasms
+head and neck	deep+strict	nasopharyngeal carcinoma
+head and neck	deep+strict	nasopharyngeal neoplasms
+head and neck	deep+strict	nonodontogenic cysts
+head and neck	deep+strict	nose neoplasms
+head and neck	deep	odontogenic cyst, calcifying
+head and neck	deep+strict	odontogenic cysts
+head and neck	deep+strict	odontogenic tumor, squamous
+head and neck	deep+strict	odontogenic tumors
+head and neck	deep+strict	oropharyngeal neoplasms
+head and neck	deep+strict	otorhinolaryngologic neoplasms
+head and neck	deep+strict	palatal neoplasms
+head and neck	deep+strict	paranasal sinus neoplasms
+head and neck	deep+strict	parotid neoplasms
+head and neck	deep+strict	pharyngeal neoplasms
+head and neck	deep+strict	salivary gland neoplasms
+head and neck	deep+strict	squamous cell carcinoma of head and neck
+head and neck	deep+strict	sublingual gland neoplasms
+head and neck	deep+strict	submandibular gland neoplasms
+head and neck	deep+strict	tongue neoplasms
+head and neck	deep+strict	tonsillar neoplasms
+kidney	deep+strict	carcinoma, renal cell
+kidney	deep+strict	kidney neoplasms
+kidney	deep+strict	mesonephroma
+kidney	deep+strict	nephroma, mesoblastic
+kidney	deep+strict	wilms tumor
+leukaemia	deep+strict	blast crisis
+leukaemia	deep+strict	hematologic neoplasms
+leukaemia	deep+strict	leukemia
+leukaemia	deep	leukemia l1210
+leukaemia	deep	leukemia l5178
+leukaemia	deep	leukemia p388
+leukaemia	deep+strict	leukemia, b-cell
+leukaemia	deep+strict	leukemia, basophilic, acute
+leukaemia	deep+strict	leukemia, biphenotypic, acute
+leukaemia	deep+strict	leukemia, eosinophilic, acute
+leukaemia	deep+strict	leukemia, erythroblastic, acute
+leukaemia	deep	leukemia, experimental
+leukaemia	deep+strict	leukemia, feline
+leukaemia	deep+strict	leukemia, hairy cell
+leukaemia	deep+strict	leukemia, large granular lymphocytic
+leukaemia	deep+strict	leukemia, lymphocytic, chronic, b-cell
+leukaemia	deep+strict	leukemia, lymphoid
+leukaemia	deep+strict	leukemia, mast-cell
+leukaemia	deep+strict	leukemia, megakaryoblastic, acute
+leukaemia	deep+strict	leukemia, monocytic, acute
+leukaemia	deep+strict	leukemia, myelogenous, chronic, bcr-abl positive
+leukaemia	deep+strict	leukemia, myeloid
+leukaemia	deep+strict	leukemia, myeloid, accelerated phase
+leukaemia	deep+strict	leukemia, myeloid, acute
+leukaemia	deep+strict	leukemia, myeloid, chronic, atypical, bcr-abl negative
+leukaemia	deep+strict	leukemia, myeloid, chronic-phase
+leukaemia	deep+strict	leukemia, myelomonocytic, acute
+leukaemia	deep+strict	leukemia, myelomonocytic, chronic
+leukaemia	deep+strict	leukemia, myelomonocytic, juvenile
+leukaemia	deep+strict	leukemia, plasma cell
+leukaemia	deep+strict	leukemia, prolymphocytic
+leukaemia	deep+strict	leukemia, prolymphocytic, b-cell
+leukaemia	deep+strict	leukemia, prolymphocytic, t-cell
+leukaemia	deep+strict	leukemia, promyelocytic, acute
+leukaemia	deep	leukemia, radiation-induced
+leukaemia	deep+strict	leukemia, t-cell
+leukaemia	deep+strict	leukemia-lymphoma, adult t-cell
+leukaemia	deep+strict	leukemic infiltration
+leukaemia	deep+strict	polycythemia vera
+leukaemia	deep+strict	precursor b-cell lymphoblastic leukemia-lymphoma
+leukaemia	deep+strict	precursor cell lymphoblastic leukemia-lymphoma
+leukaemia	deep+strict	precursor t-cell lymphoblastic leukemia-lymphoma
+leukaemia	deep+strict	preleukemia
+liver	deep+strict	carcinoma, hepatocellular
+liver	deep+strict	hepatoblastoma
+liver	deep+strict	liver neoplasms
+liver	deep	liver neoplasms, experimental
+lung	deep+strict	adenocarcinoma of lung
+lung	deep+strict	bronchial neoplasms
+lung	deep+strict	carcinoma, lewis lung
+lung	deep+strict	carcinoma, non-small-cell lung
+lung	deep+strict	lung neoplasms
+lung	deep+strict	pancoast syndrome
+lung	deep+strict	pulmonary blastoma
+lung	deep+strict	small cell lung carcinoma
+lymphoma	deep+strict	adenolymphoma
+lymphoma	deep+strict	burkitt lymphoma
+lymphoma	deep+strict	composite lymphoma
+lymphoma	deep+strict	enteropathy-associated t-cell lymphoma
+lymphoma	deep+strict	hodgkin disease
+lymphoma	deep+strict	immunoproliferative small intestinal disease
+lymphoma	deep+strict	intraocular lymphoma
+lymphoma	deep+strict	leukemia-lymphoma, adult t-cell
+lymphoma	deep+strict	lymphoma
+lymphoma	deep+strict	lymphoma, aids-related
+lymphoma	deep+strict	lymphoma, b-cell
+lymphoma	deep+strict	lymphoma, b-cell, marginal zone
+lymphoma	deep+strict	lymphoma, extranodal nk-t-cell
+lymphoma	deep+strict	lymphoma, follicular
+lymphoma	deep+strict	lymphoma, large b-cell, diffuse
+lymphoma	deep+strict	lymphoma, large-cell, anaplastic
+lymphoma	deep+strict	lymphoma, large-cell, immunoblastic
+lymphoma	deep+strict	lymphoma, mantle-cell
+lymphoma	deep+strict	lymphoma, non-hodgkin
+lymphoma	deep+strict	lymphoma, primary cutaneous anaplastic large cell
+lymphoma	deep+strict	lymphoma, primary effusion
+lymphoma	deep+strict	lymphoma, t-cell
+lymphoma	deep+strict	lymphoma, t-cell, cutaneous
+lymphoma	deep+strict	lymphoma, t-cell, peripheral
+lymphoma	deep+strict	lymphomatoid granulomatosis
+lymphoma	deep+strict	lymphomatoid papulosis
+lymphoma	deep+strict	multiple myeloma
+lymphoma	deep+strict	mycosis fungoides
+lymphoma	deep+strict	plasmablastic lymphoma
+lymphoma	deep+strict	plasmacytoma
+lymphoma	deep+strict	precursor b-cell lymphoblastic leukemia-lymphoma
+lymphoma	deep+strict	precursor cell lymphoblastic leukemia-lymphoma
+lymphoma	deep+strict	precursor t-cell lymphoblastic leukemia-lymphoma
+lymphoma	deep+strict	sezary syndrome
+lymphoma	deep+strict	smoldering multiple myeloma
+lymphoma	deep+strict	waldenstrom macroglobulinemia
+oesophagus	deep	barrett esophagus
+oesophagus	deep	esophageal cyst
+oesophagus	deep+strict	esophageal neoplasms
+oesophagus	deep+strict	esophageal squamous cell carcinoma
+ovary	deep+strict	brenner tumor
+ovary	deep+strict	carcinoma, ovarian epithelial
+ovary	deep+strict	granulosa cell tumor
+ovary	deep+strict	hereditary breast and ovarian cancer syndrome
+ovary	deep+strict	luteoma
+ovary	deep+strict	meigs syndrome
+ovary	deep+strict	ovarian cysts
+ovary	deep+strict	ovarian neoplasms
+ovary	deep	parovarian cyst
+ovary	deep+strict	sertoli-leydig cell tumor
+ovary	deep+strict	thecoma
+pancreas	deep+strict	carcinoma, pancreatic ductal
+pancreas	deep+strict	gastrinoma
+pancreas	deep+strict	glucagonoma
+pancreas	deep+strict	insulinoma
+pancreas	deep	pancreatic cyst
+pancreas	deep+strict	pancreatic intraductal neoplasms
+pancreas	deep+strict	pancreatic neoplasms
+pancreas	deep	pancreatic pseudocyst
+pancreas	deep+strict	somatostatinoma
+pancreas	deep+strict	vipoma
+pancreas	deep+strict	zollinger-ellison syndrome
+prostate	deep	prostatic intraepithelial neoplasia
+prostate	deep+strict	prostatic neoplasms
+prostate	deep+strict	prostatic neoplasms, castration-resistant
+skin/melanoma	deep	basal cell nevus syndrome
+skin/melanoma	deep+strict	bowen's disease
+skin/melanoma	deep+strict	carcinoma, merkel cell
+skin/melanoma	deep+strict	cutaneous malignant melanoma
+skin/melanoma	deep+strict	dermatofibrosarcoma
+skin/melanoma	deep	dysplastic nevus syndrome
+skin/melanoma	deep	keratosis, actinic
+skin/melanoma	deep+strict	melanoma
+skin/melanoma	deep+strict	melanoma, amelanotic
+skin/melanoma	deep	melanoma, experimental
+skin/melanoma	deep+strict	mycosis fungoides
+skin/melanoma	deep+strict	nevi and melanomas
+skin/melanoma	deep	nevus
+skin/melanoma	deep	nevus of ota
+skin/melanoma	deep	nevus, blue
+skin/melanoma	deep	nevus, epithelioid and spindle cell
+skin/melanoma	deep	nevus, halo
+skin/melanoma	deep	nevus, intradermal
+skin/melanoma	deep	nevus, pigmented
+skin/melanoma	deep	nevus, sebaceous of jadassohn
+skin/melanoma	deep	nevus, spindle cell
+skin/melanoma	deep+strict	non-melanoma skin neoplasms
+skin/melanoma	deep+strict	paget disease, extramammary
+skin/melanoma	deep+strict	sebaceous gland neoplasms
+skin/melanoma	deep+strict	skin neoplasms
+skin/melanoma	deep+strict	sweat gland neoplasms
+skin/melanoma	deep+strict	uveal melanoma
+stomach	deep+strict	gastrointestinal stromal tumors
+stomach	deep+strict	linitis plastica
+stomach	deep+strict	stomach neoplasms
+thyroid	deep+strict	parathyroid neoplasms
+thyroid	deep+strict	thyroid cancer, papillary
+thyroid	deep+strict	thyroid carcinoma, anaplastic
+thyroid	deep+strict	thyroid neoplasms
+thyroid	deep	thyroid nodule

@@ -5,11 +5,48 @@
 | | count | share of census |
 |---|--:|--:|
 | census articles | 4,403,994 | |
-| carry no MeSH at all | 0 | 0.0% |
 | **assignable to a site** | **2,546,944** | **57.8%** |
 | assigned to more than one | 207,610 | 8.2% of assigned |
 
-Across 18 major sites:
+## What is not in this denominator
+
+An earlier version of this table carried a row reading `carry no MeSH at all | 0 | 0.0%`. THAT ROW COULD NOT HAVE BEEN ANYTHING ELSE: `atlas_baseline.py` admits a record to this stream only when a MeSH DescriptorName matches, so no record here can lack MeSH. It measured the admission rule and read as a property of the literature. What is actually excluded is this:
+
+* **783,271 MeSH-less cancer articles** sit in a second census stream, `corpus/atlas/records_unindexed/`, recovered by text match and carrying no descriptors at all. They are excluded by choice and cannot be assigned by any descriptor list. Over both streams assignability is 2,546,944 / 5,187,265 = **49.1%**, not 57.8%.
+* **200,758 articles (4.6% of this stream)** are admitted only by the nine adjacent experimental-context descriptors and carry NO C04 descriptor. Every site string is a C04 descriptor, so these are unassignable by construction. Over the C04 core alone (4,203,236 articles) assignability is **60.6%**.
+
+## The list is shallow, but not uniformly shallow
+
+The 18 sites are matched by 42 descriptors between them -- but not evenly. `stomach`, `ovary`, `bladder` and `thyroid` get one each while `brain/CNS` and `head and neck` get four, and the C04 tree holds far more for some sites than others. So the per-site column is understated by a different factor for every site, and it is the column a burden ratio divides into mortality.
+
+Measured against enumerated deeper lists of the SAME 18 sites (264 descriptors, and a strict variant of 231 that drops animal or induced models and benign or precursor lesions; both committed at `analysis/site-descriptor-map.tsv`):
+
+| site | shallow | deep | strict | deep/shallow | rank shallow -> deep |
+|---|--:|--:|--:|--:|--:|
+| breast | 375,499 | 378,481 | 378,309 | 1.01x | 1 -> 1 |
+| lung | 290,414 | 302,957 | 302,957 | 1.04x | 2 -> 2 |
+| colorectal | 245,269 | 263,845 | 263,845 | 1.08x | **3 -> 6** |
+| skin/melanoma | 205,906 | 231,386 | 215,017 | 1.12x | **4 -> 8** |
+| liver | 199,825 | 212,701 | 200,066 | 1.06x | **5 -> 9** |
+| brain/CNS | 177,855 | 276,853 | 276,853 | 1.56x | **6 -> 5** |
+| prostate | 162,723 | 162,765 | 162,723 | 1.00x | **7 -> 11** |
+| cervix/uterus | 158,452 | 178,073 | 165,144 | 1.12x | **8 -> 10** |
+| head and neck | 140,066 | 248,669 | 248,647 | 1.78x | **9 -> 7** |
+| leukaemia | 130,376 | 287,042 | 267,378 | 2.20x | **10 -> 4** |
+| stomach | 120,883 | 127,770 | 127,770 | 1.06x | **11 -> 12** |
+| lymphoma | 117,890 | 293,298 | 293,298 | 2.49x | **12 -> 3** |
+| pancreas | 99,259 | 109,049 | 103,135 | 1.10x | 13 -> 13 |
+| ovary | 98,618 | 106,182 | 105,998 | 1.08x | 14 -> 14 |
+| kidney | 88,262 | 92,056 | 92,056 | 1.04x | 15 -> 15 |
+| bladder | 68,363 | 68,363 | 68,363 | 1.00x | **16 -> 18** |
+| oesophagus | 65,076 | 69,236 | 65,076 | 1.06x | 17 -> 17 |
+| thyroid | 63,046 | 75,860 | 71,619 | 1.20x | **18 -> 16** |
+
+The understatement is not uniform and it is not small: `lymphoma` 2.49x, `leukaemia` 2.20x, `head and neck` 1.78x, `brain/CNS` 1.56x against `bladder` 1.00x, `prostate` 1.00x, `breast` 1.01x, `kidney` 1.04x. 12 of 18 sites change rank, `lymphoma` 12 -> 3, `leukaemia` 10 -> 4, `skin/melanoma` 4 -> 8. So the per-site column is comparable within a list and not across sites, and any burden ratio built on it inherits that.
+
+Assignability itself goes **57.8%** shallow -> **68.5%** strict -> **69.9%** deep (+533,224 articles at the top of that range). The shallow figure is the one this page leads with, because it is the list whose every member can be read in one screen -- but it is a floor, not the census's limit.
+
+Across 18 major sites, on the shallow list:
 
 | site | articles | share of census |
 |---|--:|--:|
@@ -34,9 +71,18 @@ Across 18 major sites:
 
 ## What this says about the burden question
 
-**57.8% of the census is assignable to one of these sites.** The remainder is not a failure of the census: much cancer literature is about biology, methods or cancer in general rather than a site, and a site-weighted analysis simply cannot speak to it.
+**57.8% of the census is assignable to one of these sites** on the shallow list.
 
-The spread across sites is 63,046 to 375,499 articles, a factor of 6. That spread is the thing a burden ratio would divide into mortality, so it carries directly into every literature-per-death figure.
+An earlier version of this page said the remainder "is not a failure of the census: much cancer literature is about biology, methods or cancer in general rather than a site". That was narrated rather than measured, and it is wrong for a large share of it. Of the 1,857,050 unassigned:
+
+* **533,224 (28.7%)** are the SAME 18 sites, named by a deeper descriptor the shallow list does not carry. Nothing about them is site-less.
+* 472,968 (25.5%) carry the generic `Neoplasms` descriptor, which is the reading the sentence describes.
+* 200,758 (10.8%) carry no C04 descriptor at all and could not be assigned by any list of C04 strings.
+* the rest is not featureless. The commonest descriptors on articles the list cannot place, excluding check-tags and the generic term: `cell line, tumor` 174,045, `antineoplastic agents` 167,359, `adolescent` 93,357, `child` 85,249, `retrospective studies` 63,785, `treatment outcome` 56,638, `rats` 54,454, `cell proliferation` 52,067.
+
+So the remainder is substantially a limit of THIS 18-site list rather than of the census, and the honest version of the original sentence is much narrower.
+
+The spread across sites is 63,046 to 375,499 articles, a factor of 6. That spread is the thing a burden ratio would divide into mortality, so it carries directly into every literature-per-death figure -- and the depth note above says how much of it is the list rather than the literature.
 
 Multi-site assignment is 8.2% of assigned articles. Those are counted once per site here, so the per-site column sums to more than the assigned total -- correct for 'how much literature touches this site', wrong for a partition. A burden ratio has to state which it wants.
 
@@ -44,5 +90,5 @@ Multi-site assignment is 8.2% of assigned articles. Those are counted once per s
 
 * GLOBOCAN site definitions do not map one-to-one onto MeSH descriptors, and the mismatch is not uniform: sites like `cervix/uterus` merge in MeSH where mortality data separates them.
 * Mortality and publication counts have different denominators and different geography. Global mortality is dominated by regions whose research output is not proportional to their burden, so a literature-per-death ratio partly measures where science is funded. That is a real finding, and a different one from neglect.
-* The site list here is shallow and checkable by design. A deep subtree walk would raise assignability, at the cost of a mapping nobody can audit -- and an unauditable denominator is worse than a conservative one.
+* Which list to use. An earlier version of this bullet said a deep subtree walk would raise assignability "at the cost of a mapping nobody can audit", and NEITHER HALF HAD BEEN MEASURED. The gain is measured above. The cost is not auditability: this repo already commits its entire cancer definition as a 704-descriptor file, and the resolved site map is committed beside this report at `analysis/site-descriptor-map.tsv`. The real cost is that each placement is a judgement, so the map has to be reviewed alongside the counts -- a review burden, not an audit impossibility.
 
