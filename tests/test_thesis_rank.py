@@ -304,6 +304,14 @@ def test_a_no_descriptor_claim_is_checked_against_the_census():
     # checked the strong case. A stride is a SUBSET, so the full count must
     # be at least the strided one.
     import gzip
+    # OFFLINE CONTRACT: corpus/atlas/records/ is gitignored bulk data, so CI
+    # has no shards. The recount can only run where the census exists; it
+    # still fires for anyone holding the data, which is where a scan-level
+    # change would be made.
+    import pytest
+    if not any((m.ATLAS / "records").glob("*.jsonl.gz")):
+        pytest.skip("census shards not present in this checkout")
+
     want = {d2.lower() for d2 in m.CANDIDATE_DESCRIPTORS.values()}
     seen = {k: 0 for k in want}
     for f in sorted((m.ATLAS / "records").glob("*.jsonl.gz"))[::12]:
@@ -349,6 +357,14 @@ def test_the_normalisation_denominators_are_recounted_not_trusted():
     """
     import gzip
     m, d = _mod(), _doc()
+    # OFFLINE CONTRACT: corpus/atlas/records/ is gitignored bulk data, so CI
+    # has no shards. The recount can only run where the census exists; it
+    # still fires for anyone holding the data, which is where a scan-level
+    # change would be made.
+    import pytest
+    if not any((m.ATLAS / "records").glob("*.jsonl.gz")):
+        pytest.skip("census shards not present in this checkout")
+
     tot = d.get("census_descriptor_totals") or {}
     assert tot, "the census denominators are gone"
 

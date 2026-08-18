@@ -357,6 +357,15 @@ def test_the_scan_honours_every_contract_the_page_depends_on():
     handful of shards so this costs seconds rather than the full scan.
     """
     m = _mod()
+    # THE OFFLINE CONTRACT. corpus/atlas/records/ is gitignored bulk data, so
+    # CI has no shards: this guard recounts against the census and can only
+    # run where the census exists. Skipping keeps the contract while the
+    # check still fires for anyone holding the data -- which is where the
+    # scan-level mutations it exists to catch would be introduced.
+    import pytest
+    if not any((m.ATLAS / "records").glob("*.jsonl.gz")):
+        pytest.skip("census shards not present in this checkout")
+
     shards = sorted((m.ATLAS / "records").glob("*.jsonl.gz"))
     assert shards, "no census shards available"
 
