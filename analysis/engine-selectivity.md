@@ -22,6 +22,19 @@ A ratio taken against the most-killed tumour phenotype flatters the modality; ag
 | SDT | 14.7x | 12.8x |
 | PDT | 14.7x | 12.8x |
 
+Those are single-seed point estimates. Across **8 genuinely disjoint seeds**, spaced by 40,000 so that no two runs share a cell:
+
+| treatment | best-case range | worst-case range |
+|---|--:|--:|
+| SDT | 14.61x - 15.80x | 12.75x - 13.79x |
+| PDT | 14.61x - 15.80x | 12.75x - 13.79x |
+
+**Spacing matters and nothing said so.** `sim_batch` draws cell *i* from `seed + 2i` and its simulation RNG from `seed + 2i + 1`, so one run consumes the whole span `seed .. seed + 39,999` -- EVEN offsets for the cells, ODD offsets for the simulation.
+
+That makes the overlap depend on the PARITY of the gap, which an earlier version of this paragraph got wrong by saying any gap under 40,000 shares almost every cell. An EVEN gap *d* shares 20,000 - d/2 cells, so a gap of 2 differs in one cell and often returns the same count. An ODD gap shares **none** -- one run's cell seeds land on the other's simulation seeds -- so it is already an independent sample. The safe rule is unchanged and is what this table uses: space runs by 40,000. What is corrected is the reason, and the claim that a nudged seed necessarily returns a bit-identical count.
+
+The single-seed point for SDT (14.73x) sits at 10% of that range, i.e. near the bottom of it. The point's own seed is excluded from the spread, so the two are independent -- an earlier version drew the spread from a set containing the point.
+
 Control is the baseline: with no treatment the CAF phenotype dies at 0.00% and tumour phenotypes at 0.00-1.09%. A contrast that does not exceed this is not about treatment.
 
 ## SDT and PDT are the same modality here
@@ -30,11 +43,15 @@ Their death rates are **bit-identical across every phenotype**, because `sdt_ros
 
 So any single-cell comparison of SDT against PDT is comparing a modality with itself. That is not a defect -- it is what the model says -- but it is worth knowing before reading a single-cell contrast between them as evidence about two different therapies.
 
-## The selectivity claim is true by construction, not by result
+## The zero denominator, and what it does and does not show
 
 RSL3 kills **exactly zero** of 20,000 non-tumour cells. Not a small number -- zero, with the interval running to 0.019%.
 
-The project's most load-bearing selectivity assumption is that normal cells resist ferroptosis inducers. The `Stromal` parameters were chosen to encode resistance. A ratio computed here therefore restates the assumption rather than testing it, and an exactly-zero denominator should be read as a tell rather than as a result: it is what a parameter set chosen to produce it looks like.
+**An earlier version of this page read that as a fingerprint** -- "what a parameter set chosen to produce it looks like". A control in the same row refutes it: RSL3 also kills exactly zero `Glycolytic` cells, and that is a TUMOUR phenotype. The exactness is a property of the RSL3 path against a resistant parameterisation, not evidence about how `Stromal` was chosen. That inference is withdrawn.
+
+**The surviving criticism, now measured rather than asserted.** Parsed from `cell.rs`, `Stromal` is the most ferroptosis-resistant phenotype on **6 of 7** parameter axes (`basal_ros`, `fsp1`, `gpx4`, `gsh`, `iron`, `lipid_unsat`). So the resistance really is encoded in the parameters -- that part of the original criticism stands, and only the inference FROM THE EXACT ZERO is withdrawn.
+
+What survives, and it is the part that matters: a ratio with a zero denominator is undefined, so no selectivity figure can be computed here at all. And the project's load-bearing assumption -- that normal cells resist ferroptosis inducers -- is encoded in the `Stromal` parameters, so a ratio computed against them would restate the assumption rather than test it. That does not need the fingerprint argument, and is why it was never load bearing.
 
 This is the concrete reason the missing normal-tissue phenotype matters. Until one exists whose parameters come from the literature rather than from the claim, the model cannot disagree with the project about selectivity.
 

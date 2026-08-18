@@ -1,6 +1,105 @@
 {
  "n_per_cell_type": 20000,
+ "n_seeds": 8,
+ "phenotype_params": {
+  "Glycolytic": {
+   "basal_ros": 0.2,
+   "fsp1": 1.0,
+   "gpx4": 1.0,
+   "gsh": 5.0,
+   "iron": 1.0,
+   "lipid_unsat": 1.0,
+   "nrf2": 1.0
+  },
+  "OXPHOS": {
+   "basal_ros": 0.5,
+   "fsp1": 1.0,
+   "gpx4": 1.0,
+   "gsh": 4.0,
+   "iron": 2.8,
+   "lipid_unsat": 1.6,
+   "nrf2": 1.2
+  },
+  "Persister": {
+   "basal_ros": 0.25,
+   "fsp1": 0.15,
+   "gpx4": 0.7,
+   "gsh": 4.8,
+   "iron": 1.5,
+   "lipid_unsat": 1.4,
+   "nrf2": 0.7
+  },
+  "PersisterNrf2": {
+   "basal_ros": 0.5,
+   "fsp1": 0.2,
+   "gpx4": 1.3,
+   "gsh": 7.0,
+   "iron": 2.8,
+   "lipid_unsat": 1.6,
+   "nrf2": 3.0
+  },
+  "Stromal": {
+   "basal_ros": 0.1,
+   "fsp1": 1.0,
+   "gpx4": 1.5,
+   "gsh": 8.0,
+   "iron": 0.3,
+   "lipid_unsat": 0.6,
+   "nrf2": 1.0
+  }
+ },
  "seed": 20260817,
+ "seed_spread": {
+  "PDT": {
+   "best_hi": 15.797788309636653,
+   "best_lo": 14.609203798392988,
+   "n_seeds": 8,
+   "worst_hi": 13.789099526066352,
+   "worst_lo": 12.750913075237401
+  },
+  "SDT": {
+   "best_hi": 15.797788309636653,
+   "best_lo": 14.609203798392988,
+   "n_seeds": 8,
+   "worst_hi": 13.789099526066352,
+   "worst_lo": 12.750913075237401
+  }
+ },
+ "seed_stride": 40000,
+ "stromal_resistance": {
+  "axes": 7,
+  "detail": {
+   "basal_ros": {
+    "most_resistant": true,
+    "value": 0.1
+   },
+   "fsp1": {
+    "most_resistant": true,
+    "value": 1.0
+   },
+   "gpx4": {
+    "most_resistant": true,
+    "value": 1.5
+   },
+   "gsh": {
+    "most_resistant": true,
+    "value": 8.0
+   },
+   "iron": {
+    "most_resistant": true,
+    "value": 0.3
+   },
+   "lipid_unsat": {
+    "most_resistant": true,
+    "value": 0.6
+   },
+   "nrf2": {
+    "most_resistant": false,
+    "value": 1.0
+   }
+  },
+  "wins": 6
+ },
  "treatments": {
   "Control": {
    "Glycolytic": {
