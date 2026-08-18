@@ -5,69 +5,292 @@
  "n_keywords": 186,
  "n_mechanisms": 25,
  "n_mesh_leaves": 31,
- "per_mechanism": {
-  "antibody-drug-conjugate": 354,
-  "bioelectric": 56,
-  "bispecific-antibody": 145,
-  "car-t": 644,
-  "cold-atmospheric-plasma": 25,
-  "crispr": 438,
-  "cuproptosis": 75,
-  "disulfidptosis": 11,
-  "electrochemical-therapy": 59,
-  "electrolysis": 8,
-  "epigenetic": 1188,
-  "frequency-therapy": 10,
-  "hifu": 115,
-  "immunotherapy": 6276,
-  "mRNA-vaccine": 51,
-  "metabolic-targeting": 683,
-  "microbiome": 33,
-  "nanoparticle": 3051,
-  "oncolytic-virus": 239,
-  "phagocytosis-checkpoint": 81,
-  "radioligand-therapy": 302,
-  "sonodynamic": 67,
-  "synthetic-lethality": 373,
-  "targeted-protein-degradation": 140,
-  "ttfields": 20
- },
+ "per_mechanism": [
+  [
+   "immunotherapy",
+   6276
+  ],
+  [
+   "nanoparticle",
+   3051
+  ],
+  [
+   "epigenetic",
+   1188
+  ],
+  [
+   "metabolic-targeting",
+   683
+  ],
+  [
+   "car-t",
+   644
+  ],
+  [
+   "crispr",
+   438
+  ],
+  [
+   "synthetic-lethality",
+   373
+  ],
+  [
+   "antibody-drug-conjugate",
+   354
+  ],
+  [
+   "radioligand-therapy",
+   302
+  ],
+  [
+   "oncolytic-virus",
+   239
+  ],
+  [
+   "bispecific-antibody",
+   145
+  ],
+  [
+   "targeted-protein-degradation",
+   140
+  ],
+  [
+   "hifu",
+   115
+  ],
+  [
+   "phagocytosis-checkpoint",
+   81
+  ],
+  [
+   "cuproptosis",
+   75
+  ],
+  [
+   "sonodynamic",
+   67
+  ],
+  [
+   "electrochemical-therapy",
+   59
+  ],
+  [
+   "bioelectric",
+   56
+  ],
+  [
+   "mRNA-vaccine",
+   51
+  ],
+  [
+   "microbiome",
+   33
+  ],
+  [
+   "cold-atmospheric-plasma",
+   25
+  ],
+  [
+   "ttfields",
+   20
+  ],
+  [
+   "disulfidptosis",
+   11
+  ],
+  [
+   "frequency-therapy",
+   10
+  ],
+  [
+   "electrolysis",
+   8
+  ]
+ ],
+ "production_hits": 14979,
+ "production_title_abstract_hits": 12611,
  "sample_every": 20,
  "sampled": 220199,
+ "untagged_multi_bucket": 8399,
  "untagged_no_pubtype": 0,
- "untagged_pubtypes": {
-  "case report": 30889,
-  "guideline/consensus": 515,
-  "meta/systematic": 3112,
-  "primary research (no special type)": 131281,
-  "review/opinion": 40045,
-  "trial": 9667
- },
- "untagged_top_mesh": {
-  "adenocarcinoma": 8227,
-  "antineoplastic agents": 15721,
-  "antineoplastic combined chemotherapy protocols": 7879,
-  "apoptosis": 7330,
-  "biomarkers, tumor": 9199,
-  "brain neoplasms": 6504,
-  "breast neoplasms": 17471,
-  "carcinoma, squamous cell": 7058,
-  "cell proliferation": 8296,
-  "colorectal neoplasms": 5956,
-  "diagnosis, differential": 8802,
-  "gene expression regulation, neoplastic": 8308,
-  "immunohistochemistry": 6239,
-  "liver neoplasms": 9085,
-  "lung neoplasms": 13253,
-  "magnetic resonance imaging": 6388,
-  "neoplasm recurrence, local": 7565,
-  "neoplasm staging": 9823,
-  "neoplasms": 24971,
-  "prostatic neoplasms": 7503,
-  "signal transduction": 6555,
-  "skin neoplasms": 6922,
-  "stomach neoplasms": 5844,
-  "tomography, x-ray computed": 7666,
-  "tumor cells, cultured": 6556
- }
+ "untagged_pubtypes": [
+  [
+   "primary research (no special type)",
+   131281
+  ],
+  [
+   "review/opinion",
+   40045
+  ],
+  [
+   "case report",
+   25299
+  ],
+  [
+   "trial",
+   9366
+  ],
+  [
+   "meta/systematic",
+   686
+  ],
+  [
+   "guideline/consensus",
+   363
+  ]
+ ],
+ "untagged_soft_union": 65344,
+ "untagged_therapy_union": 22917,
+ "untagged_top_mesh": [
+  [
+   "neoplasms",
+   24971
+  ],
+  [
+   "breast neoplasms",
+   17471
+  ],
+  [
+   "antineoplastic agents",
+   15721
+  ],
+  [
+   "lung neoplasms",
+   13253
+  ],
+  [
+   "neoplasm staging",
+   9823
+  ],
+  [
+   "biomarkers, tumor",
+   9199
+  ],
+  [
+   "liver neoplasms",
+   9085
+  ],
+  [
+   "diagnosis, differential",
+   8802
+  ],
+  [
+   "gene expression regulation, neoplastic",
+   8308
+  ],
+  [
+   "cell proliferation",
+   8296
+  ],
+  [
+   "adenocarcinoma",
+   8227
+  ],
+  [
+   "antineoplastic combined chemotherapy protocols",
+   7879
+  ],
+  [
+   "tomography, x-ray computed",
+   7666
+  ],
+  [
+   "neoplasm recurrence, local",
+   7565
+  ],
+  [
+   "prostatic neoplasms",
+   7503
+  ],
+  [
+   "apoptosis",
+   7330
+  ],
+  [
+   "carcinoma, squamous cell",
+   7058
+  ],
+  [
+   "skin neoplasms",
+   6922
+  ],
+  [
+   "tumor cells, cultured",
+   6556
+  ],
+  [
+   "signal transduction",
+   6555
+  ],
+  [
+   "brain neoplasms",
+   6504
+  ],
+  [
+   "magnetic resonance imaging",
+   6388
+  ],
+  [
+   "immunohistochemistry",
+   6239
+  ],
+  [
+   "colorectal neoplasms",
+   5956
+  ],
+  [
+   "stomach neoplasms",
+   5844
+  ]
+ ],
+ "untagged_top_study_design": [
+  [
+   "cell line, tumor",
+   17760
+  ],
+  [
+   "retrospective studies",
+   17499
+  ],
+  [
+   "prognosis",
+   16098
+  ],
+  [
+   "treatment outcome",
+   12915
+  ],
+  [
+   "follow-up studies",
+   8517
+  ],
+  [
+   "risk factors",
+   8502
+  ],
+  [
+   "time factors",
+   6944
+  ],
+  [
+   "survival rate",
+   5850
+  ],
+  [
+   "prospective studies",
+   5490
+  ],
+  [
+   "survival analysis",
+   3940
+  ],
+  [
+   "sensitivity and specificity",
+   3711
+  ],
+  [
+   "case-control studies",
+   3524
+  ]
+ ]
 }
