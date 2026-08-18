@@ -140,27 +140,84 @@ def test_the_shallow_map_stays_readable_and_the_deep_map_is_committed():
         by_site.setdefault(site, {})[desc] = variant
     assert set(by_site) == set(m.SITES), (
         "the committed map covers different sites than SITES")
-    # regenerate-and-diff: the file must be what the rules produce
+    # regenerate-and-diff: the file must be what the tree walk produces
     dm = m.deep_map()
     for site in m.SITES:
         assert set(by_site[site]) == dm[site]["deep"], (
-            f"{site}: the committed map is not what DEEP_RULES resolves to -- "
-            "re-run the generator")
-        strict = {d for d, v in by_site[site].items() if v == "deep+strict"}
-        assert strict == dm[site]["strict"], f"{site}: strict variant is stale"
-        # and every deep list must CONTAIN the shallow one, or the two columns
-        # beside each other are not the same site
+            f"{site}: the committed map is not what the tree walk resolves to")
         assert m.SITES[site] <= dm[site]["deep"], (
-            f"{site}: the deep list drops "
-            f"{sorted(m.SITES[site] - dm[site]['deep'])}, so the deep column "
-            "is not a superset of the shallow one it is compared against")
+            f"{site}: the deep list does not contain its own shallow roots")
     # every deep descriptor must be a real C04 descriptor, not an invention
-    c04 = {x.lower() for x in m.c04_labels()}
+    c04 = set(m.c04_labels().values())
     for site, descs in by_site.items():
         unknown = set(descs) - c04
         assert not unknown, (
             f"{site} maps to {sorted(unknown)}, which are not in the committed "
             "C04 descriptor file")
+    # and the count the report quotes must match the file it points at
+    assert len(rows) == _doc()["variants"]["deep"]["n_descriptors"], (
+        f"the committed map has {len(rows)} rows and the report says "
+        f"{_doc()['variants']['deep']['n_descriptors']} descriptors")
+
+
+def test_membership_is_the_tree_not_a_name_match():
+    """The first version matched descriptor NAMES and shipped five traps.
+
+    `ganGLIOn cysts`, `paraganGLIOma`, `ganglioneuroma` reached brain/CNS;
+    the benign salivary `adenoLYMPHOMA` reached lymphoma; a lung disease
+    reached cervix/uterus via `lymphangioLEIOMYOMAtosis`. A tree walk cannot
+    do that, because a descriptor either sits under a node or it does not.
+    """
+    m = _mod()
+    src = SCRIPT.read_text()
+    assert "DEEP_RULES" not in src and "STRICT_EXCLUSIONS" not in src, (
+        "the hand-written per-site name rules are back")
+    dm = m.deep_map()
+    tree = m.c04_tree()
+    lab = m.c04_labels()
+    by_label = {v: k for k, v in lab.items()}
+    traps = {
+        "brain/CNS": ["ganglion cysts", "paraganglioma", "ganglioneuroma",
+                      "neuroectodermal tumors, primitive, peripheral"],
+        "lymphoma": ["adenolymphoma", "multiple myeloma"],
+        "cervix/uterus": ["lymphangioleiomyomatosis"],
+        "head and neck": ["craniopharyngioma"],
+    }
+    for site, bad in traps.items():
+        for x in bad:
+            if x not in by_label:
+                continue
+            assert x not in dm[site]["deep"], (
+                f"{x!r} is under {site} again -- it is not beneath that "
+                "site's tree nodes, so only a name match could put it there")
+    # every placement must be justified by an actual tree relation
+    for site, v in dm.items():
+        for x in v["deep"]:
+            ts = tree.get(by_label[x], set())
+            assert any(t == r or t.startswith(r + ".")
+                       for t in ts for r in v["roots"]), (
+                f"{site} claims {x!r}, which sits at {sorted(ts)} and under "
+                f"none of {v['roots']}")
+
+
+def test_the_deep_column_declares_where_the_tree_merges_this_pages_sites():
+    """`Head and Neck Neoplasms` subsumes oesophagus and thyroid in MeSH."""
+    d, md = _doc(), MD.read_text()
+    m = _mod()
+    dm = m.deep_map()
+    want = {a: sorted(b for b in m.SITES
+                      if b != a and m.SITES[b] <= dm[a]["deep"])
+            for a in m.SITES
+            if any(b != a and m.SITES[b] <= dm[a]["deep"] for b in m.SITES)}
+    assert d.get("deep_site_overlaps") == want, (
+        f"the artifact records {d.get('deep_site_overlaps')} overlaps, the "
+        f"tree gives {want}")
+    for a, bs in want.items():
+        assert f"`{a}` subsumes" in md, (
+            f"the deep list for `{a}` contains {bs}, which this page lists as "
+            "separate sites, and the report does not say so")
+    if want:
+        assert "double-counts across the page's own list" in md
 
 
 def test_the_depth_is_measured_rather_than_traded_away_in_prose():
@@ -169,13 +226,13 @@ def test_the_depth_is_measured_rather_than_traded_away_in_prose():
     """
     d, md, src = _doc(), MD.read_text(), SCRIPT.read_text()
     var = d.get("variants") or {}
-    for k in ("shallow", "deep", "strict"):
+    for k in ("shallow", "deep"):
         assert var.get(k, {}).get("assigned"), f"the {k} variant was not run"
     assert var["deep"]["assigned"] > var["shallow"]["assigned"], (
         "the deep list assigns no more than the shallow one, so the page's "
         "measured gain needs rewriting rather than restating")
     assert var["shallow"]["assigned"] == d["assigned"]
-    for k in ("deep", "strict"):
+    for k in ("deep",):
         assert f"{100*var[k]['assigned']/d['census']:.1f}%" in md, (
             f"the {k} assignability is measured and not rendered")
     assert "nobody can audit" in md and "NEITHER HALF HAD BEEN MEASURED" in md, (

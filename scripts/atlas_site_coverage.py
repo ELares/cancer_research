@@ -105,115 +105,98 @@ SITES = {
 # disputed the same way the partitions in #724 can.
 # ---------------------------------------------------------------------------
 C04_TSV = ATLAS / "mesh" / "c04-descriptors.tsv"
+C04_TREE = ATLAS / "mesh" / "c04-tree-numbers.tsv"
 OUT_MAP = PROJECT_ROOT / "analysis" / "site-descriptor-map.tsv"
 
-DEEP_RULES = {
-    "lung": r"\blung\b|pulmonary blastoma|pancoast|bronchial neoplasms",
-    "breast": r"\bbreast\b|phyllodes",
-    "colorectal": r"colorectal|colonic neoplasms|rectal neoplasms|anus neoplasms|"
-                  r"sigmoid neoplasms|cecal neoplasms|adenomatous polyposis coli",
-    "prostate": r"prostat",
-    "stomach": r"stomach neoplasms|gastrointestinal stromal|linitis plastica",
-    "liver": r"liver neoplasms|hepatocellular|hepatoblastoma|liver cell adenoma",
-    "oesophagus": r"esophag",
-    "pancreas": r"pancrea|insulinoma|glucagonoma|somatostatinoma|vipoma|"
-                r"gastrinoma|zollinger",
-    "cervix/uterus": r"uterine|endometrial|trophoblastic|choriocarcinoma|"
-                     r"hydatidiform|leiomyoma",
-    "ovary": r"ovarian|granulosa cell tumor|thecoma|brenner tumor|"
-             r"sertoli-leydig|luteoma|meigs",
-    "bladder": r"urinary bladder neoplasms",
-    "kidney": r"kidney neoplasms|renal cell|wilms|nephroblastoma|nephroma",
-    "brain/CNS": r"brain neoplasms|glio|central nervous system neoplasms|"
-                 r"astrocytoma|medulloblastoma|meningioma|ependymoma|"
-                 r"oligodendroglioma|neurocytoma|pinealoma|craniopharyngioma|"
-                 r"supratentorial|infratentorial|neuroectodermal tumors, primitive|"
-                 r"cerebral ventricle neoplasms|skull base neoplasms|"
-                 r"spinal cord neoplasms|pituitary neoplasms|hypothalamic neoplasms|"
-                 r"meningeal (neoplasms|carcinomatosis)|gliosarcoma|"
-                 r"neuroma, acoustic|nerve sheath",
-    "leukaemia": r"leukemi|myelodysplastic|myeloproliferative|polycythemia vera|"
-                 r"thrombocythemia|primary myelofibrosis|preleukemia|blast crisis|"
-                 r"hematologic neoplasms",
-    "lymphoma": r"lymphoma|hodgkin|multiple myeloma|plasmacytoma|myelomatosis|"
-                r"waldenstrom|sezary|mycosis fungoides|lymphoproliferative|"
-                r"immunoproliferative|paraproteinemias|monoclonal gammopathy",
-    # `pharyn` alone reaches `Craniopharyngioma`, which is a brain tumour: a
-    # substring trap of exactly the kind this repo has been caught by before.
-    "head and neck": r"head and neck|mouth neoplasms|laryn|(?<!cranio)pharyn|"
-                     r"tongue neoplasms|lip neoplasms|palatal neoplasms|"
-                     r"gingival neoplasms|salivary gland neoplasms|parotid|"
-                     r"submandibular gland neoplasms|sublingual gland|maxillary|"
-                     r"jaw neoplasms|mandibular neoplasms|nose neoplasms|"
-                     r"paranasal sinus|otorhinolaryngologic neoplasms|"
-                     r"ear neoplasms|tonsillar|esthesioneuroblastoma|"
-                     r"ameloblastoma|odontogenic",
-    "skin/melanoma": r"melanoma|skin neoplasms|carcinoma, basal cell|"
-                     r"carcinoma, merkel cell|keratoacanthoma|bowen|"
-                     r"dermatofibrosarcoma|mycosis fungoides|nevus|"
-                     r"sweat gland neoplasms|sebaceous gland neoplasms|"
-                     r"hair follicle|paget disease, extramammary|"
-                     r"keratosis, actinic",
-    "thyroid": r"thyroid|parathyroid neoplasms",
-}
 
-# The STRICT variant drops two named groups, so the pair brackets the answer
-# instead of one list being published as if it were the definition. A single
-# number here would be a judgement wearing a measurement's clothes.
-STRICT_EXCLUSIONS = {
-    "animal or induced model": r"experimental|leukemia l\d|leukemia p\d|"
-                              r"radiation-induced|avian|sarcoma 180|"
-                              r"sarcoma, yoshida|carcinoma 256|"
-                              r"carcinoma, ehrlich|krukenberg",
-    "benign or precursor lesion": r"nevus|dysplasia|barrett|cyst$|cyst,|"
-                                  r"nodule|intraepithelial neoplasia|"
-                                  r"keratosis|leiomyoma|liver cell adenoma|"
-                                  r"thyroid nodule",
-}
-
-
-def c04_labels() -> list:
-    """The committed cancer definition, read rather than restated."""
-    out = []
+def c04_labels() -> dict:
+    """UI -> label, from the committed cancer definition. Read, not restated."""
+    out = {}
     for line in C04_TSV.read_text(encoding="utf-8").splitlines():
         if line.startswith("#") or not line.strip():
             continue
         parts = line.split("\t")
         if len(parts) >= 2:
-            out.append(parts[1].strip())
+            out[parts[0].strip()] = parts[1].strip().lower()
     if not out:
         raise SystemExit(f"no descriptors read from {C04_TSV}")
     return out
 
 
-def deep_map() -> dict:
-    """site -> {'deep': set, 'strict': set, 'dropped': {reason: [names]}}"""
-    labels = c04_labels()
+def c04_tree() -> dict:
+    """UI -> {tree numbers}. A descriptor may sit at several nodes."""
     out = {}
-    for site, pat in DEEP_RULES.items():
-        deep = {x.lower() for x in labels if re.search(pat, x, re.I)}
-        dropped = {}
-        strict = set(deep)
-        for reason, ex in STRICT_EXCLUSIONS.items():
-            hit = {x for x in strict if re.search(ex, x, re.I)}
-            if hit:
-                dropped[reason] = sorted(hit)
-                strict -= hit
-        out[site] = {"deep": deep, "strict": strict, "dropped": dropped}
+    for line in C04_TREE.read_text(encoding="utf-8").splitlines():
+        if line.startswith("#") or not line.strip():
+            continue
+        parts = line.split("\t")
+        if len(parts) >= 2:
+            out.setdefault(parts[0].strip(), set()).add(parts[1].strip())
+    if not out:
+        raise SystemExit(f"no tree numbers read from {C04_TREE}")
+    return out
+
+
+def deep_map() -> dict:
+    """site -> {'roots': [...], 'deep': {descriptors}}, DERIVED not written.
+
+    THE FIRST VERSION OF THIS FUNCTION WAS A SUBSTRING MATCHER over descriptor
+    labels, and it reproduced -- one function over -- the defect this page
+    exists to correct: a hand-written rule per site, with the same class of
+    trap. Measured, it put `Ganglion Cysts` and `Paraganglioma` under brain/CNS
+    (`ganGLIOn`, `paraganGLIOma`), the benign salivary `Adenolymphoma` under
+    lymphoma, a lung disease under cervix/uterus, and it merged 63,620
+    plasma-cell records into lymphoma, which moved the headline rank.
+
+    There is no rule here now. A site's deep list is every C04 descriptor
+    sitting at or beneath the tree nodes THE SHALLOW LIST ALREADY OCCUPIES, so
+    the only judgement is the shallow list, which was already published. NLM's
+    tree decides the rest, and a substring accident cannot reach a node it does
+    not sit under.
+    """
+    lab = c04_labels()
+    tree = c04_tree()
+    by_label = {v: k for k, v in lab.items()}
+    out = {}
+    for site, descs in SITES.items():
+        roots = set()
+        for d in descs:
+            ui = by_label.get(d)
+            if ui is None:
+                raise SystemExit(
+                    f"{site}: {d!r} is not a C04 descriptor, so the shallow "
+                    "list is not a subset of the census definition")
+            roots |= tree.get(ui, set())
+        # a root beneath another root adds nothing and would double the prose
+        roots = {r for r in roots
+                 if not any(r != o and r.startswith(o + ".") for o in roots)}
+        deep = {lab[u] for u, ts in tree.items()
+                if any(t == r or t.startswith(r + ".") for t in ts for r in roots)}
+        if not descs <= deep:
+            raise SystemExit(
+                f"{site}: the subtree walk does not contain its own roots "
+                f"({sorted(descs - deep)}), which cannot happen unless the "
+                "tree file and the descriptor file describe different builds")
+        out[site] = {"roots": sorted(roots), "deep": deep}
     return out
 
 
 def write_map(dm: dict) -> None:
-    """Commit the resolved map beside the report, so a placement is disputable."""
-    L = ["# site\tvariant\tMeSH descriptor",
-         "# Resolved from DEEP_RULES in scripts/atlas_site_coverage.py against",
-         "# corpus/atlas/mesh/c04-descriptors.tsv. Regenerate with that script.",
-         "# `strict` drops animal/induced models and benign or precursor lesions;",
-         "# the report publishes both so neither list is taken as the definition."]
+    """Commit the resolved map, so a placement is disputable."""
+    L = ["# site\ttree root\tMeSH descriptor",
+         "# DERIVED: every C04 descriptor at or beneath the tree nodes the",
+         "# shallow SITES list already occupies. No rule beyond that list --",
+         "# NLM's tree decides membership, from corpus/atlas/mesh/",
+         "# c04-tree-numbers.tsv. Regenerate with scripts/atlas_site_coverage.py."]
+    lab = c04_labels()
+    tree = c04_tree()
+    by_label = {v: k for k, v in lab.items()}
     for site in sorted(dm):
         for x in sorted(dm[site]["deep"]):
-            v = "deep+strict" if x in dm[site]["strict"] else "deep"
-            L.append(f"{site}\t{v}\t{x}")
+            ts = sorted(tree.get(by_label.get(x, ""), {""}))
+            root = next((r for r in dm[site]["roots"]
+                         for t in ts if t == r or t.startswith(r + ".")), "?")
+            L.append(f"{site}\t{root}\t{x}")
     OUT_MAP.write_text("\n".join(L) + "\n", encoding="utf-8")
 
 
@@ -234,7 +217,6 @@ def scan() -> dict:
     luts = {
         "shallow": _lut(SITES),
         "deep": _lut({s: v["deep"] for s, v in dm.items()}),
-        "strict": _lut({s: v["strict"] for s, v in dm.items()}),
     }
     per_site = {k: Counter() for k in luts}
     assigned = {k: 0 for k in luts}
@@ -285,13 +267,21 @@ def scan() -> dict:
         "variants": {
             k: {"assigned": assigned[k], "multi_site": multi[k],
                 "sites": dict(per_site[k].most_common()),
-                "n_descriptors": sum(len(v) for v in (
-                    SITES if k == "shallow" else
-                    {s: dm[s]["deep" if k == "deep" else "strict"]
-                     for s in dm}).values())}
+                "n_descriptors": sum(
+                    len(SITES[s] if k == "shallow" else dm[s]["deep"])
+                    for s in SITES)}
             for k in luts},
-        "map_dropped": {s: dm[s]["dropped"] for s in sorted(dm)
-                        if dm[s]["dropped"]},
+        "site_tree_roots": {s: dm[s]["roots"] for s in sorted(dm)},
+        # NLM's tree does not agree with this page's 18 sites about where the
+        # boundaries are. `Head and Neck Neoplasms` SUBSUMES oesophagus and
+        # thyroid, which are listed here separately -- so the deep column
+        # double-counts across the page's own list, and its rank order is
+        # partly a statement about MeSH rather than about the literature.
+        "deep_site_overlaps": {
+            a: sorted(b for b in SITES
+                      if b != a and SITES[b] <= dm[a]["deep"])
+            for a in sorted(SITES)
+            if any(b != a and SITES[b] <= dm[a]["deep"] for b in SITES)},
         "unassigned": {
             "total": total - assigned["shallow"],
             "same_sites_deeper": un_deeper,
@@ -382,9 +372,13 @@ def render(d: dict) -> str:
           "measured above. The cost is not auditability: this repo already "
           "commits its entire cancer definition as a 704-descriptor file, and "
           "the resolved site map is committed beside this report at "
-          "`analysis/site-descriptor-map.tsv`. The real cost is that each "
-          "placement is a judgement, so the map has to be reviewed alongside "
-          "the counts -- a review burden, not an audit impossibility.",
+          "`analysis/site-descriptor-map.tsv`. Nor is each placement a "
+          "judgement any more: the deep list is every descriptor at or "
+          "beneath the tree nodes the shallow list ALREADY occupies, so NLM "
+          "decides membership and the only thing to dispute is the shallow "
+          "list. What the deeper list does cost is scope -- a site's subtree "
+          "carries benign and precursor entities alongside the malignancies, "
+          "and a burden ratio has to say whether it wants them.",
           ""]
     return "\n".join(L) + "\n"
 
@@ -422,8 +416,8 @@ def _denominator_section(d, n, a, ex) -> list:
 
 def _depth_section(d, n, var) -> list:
     """The shallow list is not uniformly shallow, and that is the real defect."""
-    sh, dp, st = var.get("shallow"), var.get("deep"), var.get("strict")
-    if not (sh and dp and st):
+    sh, dp = var.get("shallow"), var.get("deep")
+    if not (sh and dp):
         return []
     L = ["## The list is shallow, but not uniformly shallow", ""]
     L += [f"The 18 sites are matched by {sh['n_descriptors']} descriptors "
@@ -433,20 +427,24 @@ def _depth_section(d, n, var) -> list:
           f"So the per-site column is understated by a different factor for "
           f"every site, and it is the column a burden ratio divides into "
           f"mortality.", ""]
-    L += [f"Measured against enumerated deeper lists of the SAME 18 sites "
-          f"({dp['n_descriptors']} descriptors, and a strict variant of "
-          f"{st['n_descriptors']} that drops animal or induced models and "
-          f"benign or precursor lesions; both committed at "
-          f"`analysis/site-descriptor-map.tsv`):", ""]
-    L += ["| site | shallow | deep | strict | deep/shallow | rank shallow -> deep |",
-          "|---|--:|--:|--:|--:|--:|"]
+    L += [f"Measured against the SAME 18 sites walked down NLM's own tree -- "
+          f"every C04 descriptor at or beneath the nodes the shallow list "
+          f"already occupies, {dp['n_descriptors']} descriptors, committed at "
+          f"`analysis/site-descriptor-map.tsv`. There is no rule to dispute "
+          f"beyond the shallow list itself: an earlier version of this "
+          f"section matched descriptor NAMES and put `Ganglion Cysts` and "
+          f"`Paraganglioma` under brain/CNS, a benign salivary tumour under "
+          f"lymphoma, and merged plasma-cell myeloma into lymphoma, which "
+          f"moved the headline rank.", ""]
+    L += ["| site | shallow | deep | deep/shallow | rank shallow -> deep |",
+          "|---|--:|--:|--:|--:|"]
     r_sh = {s: i + 1 for i, s in enumerate(sh["sites"])}
     r_dp = {s: i + 1 for i, s in enumerate(dp["sites"])}
     rows = sorted(sh["sites"].items(), key=lambda kv: -kv[1])
     for s, c in rows:
-        cd, cs = dp["sites"].get(s, 0), st["sites"].get(s, 0)
+        cd = dp["sites"].get(s, 0)
         mv = f"{r_sh[s]} -> {r_dp.get(s, 0)}"
-        L.append(f"| {s} | {c:,} | {cd:,} | {cs:,} | {cd/max(c,1):.2f}x | "
+        L.append(f"| {s} | {c:,} | {cd:,} | {cd/max(c,1):.2f}x | "
                  + (f"**{mv}**" if r_sh[s] != r_dp.get(s) else mv) + " |")
     L += [""]
     ratios = {s: dp["sites"].get(s, 0) / max(c, 1) for s, c in sh["sites"].items()}
@@ -454,7 +452,19 @@ def _depth_section(d, n, var) -> list:
     flat = sorted(ratios.items(), key=lambda kv: kv[1])[:4]
     moved = [(s, r_sh[s], r_dp.get(s)) for s in r_sh
              if r_dp.get(s) and r_sh[s] != r_dp[s]]
-    L += ["The understatement is not uniform and it is not small: "
+    ov = d.get("deep_site_overlaps") or {}
+    if ov:
+        L += ["**Read the deep column with its overlaps.** NLM's tree does not "
+              "draw this page's 18 boundaries: "
+              + "; ".join(f"`{a}` subsumes " + ", ".join(f"`{x}`" for x in b)
+                          for a, b in sorted(ov.items()))
+              + ". Those sites are listed separately here, so the deep column "
+                "double-counts across the page's own list and its rank order "
+                "is partly a statement about MeSH rather than about the "
+                "literature. That is a reason to read the ratio column rather "
+                "than the deep ranks, and a reason a burden analysis has to "
+                "pick its boundaries before it picks its depth.", ""]
+    L += ["The gap between the two lists is not uniform and it is not small: "
           + ", ".join(f"`{s}` {v:.2f}x" for s, v in worst)
           + " against " + ", ".join(f"`{s}` {v:.2f}x" for s, v in flat)
           + ". " + (f"{len(moved)} of {len(r_sh)} sites change rank, "
@@ -464,12 +474,15 @@ def _depth_section(d, n, var) -> list:
           + "So the per-site column is comparable within a list and not "
             "across sites, and any burden ratio built on it inherits that.", ""]
     L += [f"Assignability itself goes **{100*sh['assigned']/n:.1f}%** shallow "
-          f"-> **{100*st['assigned']/n:.1f}%** strict -> "
-          f"**{100*dp['assigned']/n:.1f}%** deep "
-          f"(+{dp['assigned']-sh['assigned']:,} articles at the top of that "
-          f"range). The shallow figure is the one this page leads with, "
-          f"because it is the list whose every member can be read in one "
-          f"screen -- but it is a floor, not the census's limit.", ""]
+          f"-> **{100*dp['assigned']/n:.1f}%** on the subtree walk "
+          f"(+{dp['assigned']-sh['assigned']:,} articles). The shallow figure "
+          f"is the one this page leads with, because it is the shorter and "
+          f"more conservative list -- NOT because it is more auditable, which "
+          f"the bullet below retracts. It is a floor, not the census's limit, "
+          f"and a deeper list can also over-reach: membership here is NLM's "
+          f"tree, so an accident of naming cannot cause that, but a site's "
+          f"subtree still carries benign and precursor entities its shallow "
+          f"row does not.", ""]
     return L
 
 
@@ -485,8 +498,8 @@ def _remainder_section(d, n, a) -> list:
          f"narrated rather than measured, and it is wrong for a large share of "
          f"it. Of the {t:,} unassigned:", ""]
     L += [f"* **{u['same_sites_deeper']:,} ({100*u['same_sites_deeper']/t:.1f}%)** "
-          f"are the SAME 18 sites, named by a deeper descriptor the shallow "
-          f"list does not carry. Nothing about them is site-less.",
+          f"are the SAME 18 sites, named by a descriptor beneath the shallow "
+          f"list's own tree nodes. The great majority of them name a site.",
           f"* {u['generic_neoplasms']:,} ({100*u['generic_neoplasms']/t:.1f}%) "
           f"carry the generic `Neoplasms` descriptor, which is the reading the "
           f"sentence describes.",
@@ -501,9 +514,15 @@ def _remainder_section(d, n, a) -> list:
               f"articles the list cannot place, excluding check-tags and the "
               f"generic term: "
               + ", ".join(f"`{k}` {v:,}" for k, v in top) + "."]
-    L += ["", "So the remainder is substantially a limit of THIS 18-site list "
-          "rather than of the census, and the honest version of the original "
-          "sentence is much narrower.", ""]
+    rest = t - u["same_sites_deeper"] - u["generic_neoplasms"] - u["no_c04_descriptor"]
+    L += [f"* the remaining {rest:,} ({100*rest/t:.1f}%) is none of those "
+          f"three, and is the largest single bucket."]
+    L += ["", f"So the honest version of the original sentence is much "
+          f"narrower: {100*u['same_sites_deeper']/t:.1f}% of the remainder is "
+          f"a limit of THIS 18-site list rather than of the census, a further "
+          f"{100*u['generic_neoplasms']/t:.1f}% is the reading the original "
+          f"sentence described, and {100*rest/t:.1f}% is neither and is not "
+          f"characterised here beyond the descriptors above.", ""]
     return L
 
 

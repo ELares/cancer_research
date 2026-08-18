@@ -19,32 +19,34 @@ An earlier version of this table carried a row reading `carry no MeSH at all | 0
 
 The 18 sites are matched by 42 descriptors between them -- but not evenly. `stomach`, `ovary`, `bladder` and `thyroid` get one each while `brain/CNS` and `head and neck` get four, and the C04 tree holds far more for some sites than others. So the per-site column is understated by a different factor for every site, and it is the column a burden ratio divides into mortality.
 
-Measured against enumerated deeper lists of the SAME 18 sites (264 descriptors, and a strict variant of 231 that drops animal or induced models and benign or precursor lesions; both committed at `analysis/site-descriptor-map.tsv`):
+Measured against the SAME 18 sites walked down NLM's own tree -- every C04 descriptor at or beneath the nodes the shallow list already occupies, 233 descriptors, committed at `analysis/site-descriptor-map.tsv`. There is no rule to dispute beyond the shallow list itself: an earlier version of this section matched descriptor NAMES and put `Ganglion Cysts` and `Paraganglioma` under brain/CNS, a benign salivary tumour under lymphoma, and merged plasma-cell myeloma into lymphoma, which moved the headline rank.
 
-| site | shallow | deep | strict | deep/shallow | rank shallow -> deep |
-|---|--:|--:|--:|--:|--:|
-| breast | 375,499 | 378,481 | 378,309 | 1.01x | 1 -> 1 |
-| lung | 290,414 | 302,957 | 302,957 | 1.04x | 2 -> 2 |
-| colorectal | 245,269 | 263,845 | 263,845 | 1.08x | **3 -> 6** |
-| skin/melanoma | 205,906 | 231,386 | 215,017 | 1.12x | **4 -> 8** |
-| liver | 199,825 | 212,701 | 200,066 | 1.06x | **5 -> 9** |
-| brain/CNS | 177,855 | 276,853 | 276,853 | 1.56x | **6 -> 5** |
-| prostate | 162,723 | 162,765 | 162,723 | 1.00x | **7 -> 11** |
-| cervix/uterus | 158,452 | 178,073 | 165,144 | 1.12x | **8 -> 10** |
-| head and neck | 140,066 | 248,669 | 248,647 | 1.78x | **9 -> 7** |
-| leukaemia | 130,376 | 287,042 | 267,378 | 2.20x | **10 -> 4** |
-| stomach | 120,883 | 127,770 | 127,770 | 1.06x | **11 -> 12** |
-| lymphoma | 117,890 | 293,298 | 293,298 | 2.49x | **12 -> 3** |
-| pancreas | 99,259 | 109,049 | 103,135 | 1.10x | 13 -> 13 |
-| ovary | 98,618 | 106,182 | 105,998 | 1.08x | 14 -> 14 |
-| kidney | 88,262 | 92,056 | 92,056 | 1.04x | 15 -> 15 |
-| bladder | 68,363 | 68,363 | 68,363 | 1.00x | **16 -> 18** |
-| oesophagus | 65,076 | 69,236 | 65,076 | 1.06x | 17 -> 17 |
-| thyroid | 63,046 | 75,860 | 71,619 | 1.20x | **18 -> 16** |
+| site | shallow | deep | deep/shallow | rank shallow -> deep |
+|---|--:|--:|--:|--:|
+| breast | 375,499 | 378,191 | 1.01x | **1 -> 2** |
+| lung | 290,414 | 304,402 | 1.05x | **2 -> 3** |
+| colorectal | 245,269 | 262,866 | 1.07x | **3 -> 5** |
+| skin/melanoma | 205,906 | 228,568 | 1.11x | **4 -> 7** |
+| liver | 199,825 | 212,500 | 1.06x | **5 -> 8** |
+| brain/CNS | 177,855 | 257,914 | 1.45x | 6 -> 6 |
+| prostate | 162,723 | 162,723 | 1.00x | **7 -> 10** |
+| cervix/uterus | 158,452 | 159,782 | 1.01x | **8 -> 11** |
+| head and neck | 140,066 | 380,530 | 2.72x | **9 -> 1** |
+| leukaemia | 130,376 | 266,602 | 2.04x | **10 -> 4** |
+| stomach | 120,883 | 120,883 | 1.00x | **11 -> 12** |
+| lymphoma | 117,890 | 196,557 | 1.67x | **12 -> 9** |
+| pancreas | 99,259 | 101,620 | 1.02x | 13 -> 13 |
+| ovary | 98,618 | 100,406 | 1.02x | 14 -> 14 |
+| kidney | 88,262 | 91,118 | 1.03x | 15 -> 15 |
+| bladder | 68,363 | 68,398 | 1.00x | 16 -> 16 |
+| oesophagus | 65,076 | 65,076 | 1.00x | **17 -> 18** |
+| thyroid | 63,046 | 67,705 | 1.07x | **18 -> 17** |
 
-The understatement is not uniform and it is not small: `lymphoma` 2.49x, `leukaemia` 2.20x, `head and neck` 1.78x, `brain/CNS` 1.56x against `bladder` 1.00x, `prostate` 1.00x, `breast` 1.01x, `kidney` 1.04x. 12 of 18 sites change rank, `lymphoma` 12 -> 3, `leukaemia` 10 -> 4, `skin/melanoma` 4 -> 8. So the per-site column is comparable within a list and not across sites, and any burden ratio built on it inherits that.
+**Read the deep column with its overlaps.** NLM's tree does not draw this page's 18 boundaries: `head and neck` subsumes `oesophagus`, `thyroid`. Those sites are listed separately here, so the deep column double-counts across the page's own list and its rank order is partly a statement about MeSH rather than about the literature. That is a reason to read the ratio column rather than the deep ranks, and a reason a burden analysis has to pick its boundaries before it picks its depth.
 
-Assignability itself goes **57.8%** shallow -> **68.5%** strict -> **69.9%** deep (+533,224 articles at the top of that range). The shallow figure is the one this page leads with, because it is the list whose every member can be read in one screen -- but it is a floor, not the census's limit.
+The gap between the two lists is not uniform and it is not small: `head and neck` 2.72x, `leukaemia` 2.04x, `lymphoma` 1.67x, `brain/CNS` 1.45x against `prostate` 1.00x, `stomach` 1.00x, `oesophagus` 1.00x, `bladder` 1.00x. 13 of 18 sites change rank, `head and neck` 9 -> 1, `leukaemia` 10 -> 4, `skin/melanoma` 4 -> 7. So the per-site column is comparable within a list and not across sites, and any burden ratio built on it inherits that.
+
+Assignability itself goes **57.8%** shallow -> **67.0%** on the subtree walk (+405,299 articles). The shallow figure is the one this page leads with, because it is the shorter and more conservative list -- NOT because it is more auditable, which the bullet below retracts. It is a floor, not the census's limit, and a deeper list can also over-reach: membership here is NLM's tree, so an accident of naming cannot cause that, but a site's subtree still carries benign and precursor entities its shallow row does not.
 
 Across 18 major sites, on the shallow list:
 
@@ -75,12 +77,13 @@ Across 18 major sites, on the shallow list:
 
 An earlier version of this page said the remainder "is not a failure of the census: much cancer literature is about biology, methods or cancer in general rather than a site". That was narrated rather than measured, and it is wrong for a large share of it. Of the 1,857,050 unassigned:
 
-* **533,224 (28.7%)** are the SAME 18 sites, named by a deeper descriptor the shallow list does not carry. Nothing about them is site-less.
-* 472,968 (25.5%) carry the generic `Neoplasms` descriptor, which is the reading the sentence describes.
+* **405,299 (21.8%)** are the SAME 18 sites, named by a descriptor beneath the shallow list's own tree nodes. The great majority of them name a site.
+* 476,436 (25.7%) carry the generic `Neoplasms` descriptor, which is the reading the sentence describes.
 * 200,758 (10.8%) carry no C04 descriptor at all and could not be assigned by any list of C04 strings.
-* the rest is not featureless. The commonest descriptors on articles the list cannot place, excluding check-tags and the generic term: `cell line, tumor` 174,045, `antineoplastic agents` 167,359, `adolescent` 93,357, `child` 85,249, `retrospective studies` 63,785, `treatment outcome` 56,638, `rats` 54,454, `cell proliferation` 52,067.
+* the rest is not featureless. The commonest descriptors on articles the list cannot place, excluding check-tags and the generic term: `cell line, tumor` 179,210, `antineoplastic agents` 175,705, `adolescent` 105,350, `child` 92,696, `retrospective studies` 75,983, `treatment outcome` 68,119, `aged, 80 and over` 59,060, `diagnosis, differential` 55,519.
+* the remaining 774,557 (41.7%) is none of those three, and is the largest single bucket.
 
-So the remainder is substantially a limit of THIS 18-site list rather than of the census, and the honest version of the original sentence is much narrower.
+So the honest version of the original sentence is much narrower: 21.8% of the remainder is a limit of THIS 18-site list rather than of the census, a further 25.7% is the reading the original sentence described, and 41.7% is neither and is not characterised here beyond the descriptors above.
 
 The spread across sites is 63,046 to 375,499 articles, a factor of 6. That spread is the thing a burden ratio would divide into mortality, so it carries directly into every literature-per-death figure -- and the depth note above says how much of it is the list rather than the literature.
 
@@ -90,5 +93,5 @@ Multi-site assignment is 8.2% of assigned articles. Those are counted once per s
 
 * GLOBOCAN site definitions do not map one-to-one onto MeSH descriptors, and the mismatch is not uniform: sites like `cervix/uterus` merge in MeSH where mortality data separates them.
 * Mortality and publication counts have different denominators and different geography. Global mortality is dominated by regions whose research output is not proportional to their burden, so a literature-per-death ratio partly measures where science is funded. That is a real finding, and a different one from neglect.
-* Which list to use. An earlier version of this bullet said a deep subtree walk would raise assignability "at the cost of a mapping nobody can audit", and NEITHER HALF HAD BEEN MEASURED. The gain is measured above. The cost is not auditability: this repo already commits its entire cancer definition as a 704-descriptor file, and the resolved site map is committed beside this report at `analysis/site-descriptor-map.tsv`. The real cost is that each placement is a judgement, so the map has to be reviewed alongside the counts -- a review burden, not an audit impossibility.
+* Which list to use. An earlier version of this bullet said a deep subtree walk would raise assignability "at the cost of a mapping nobody can audit", and NEITHER HALF HAD BEEN MEASURED. The gain is measured above. The cost is not auditability: this repo already commits its entire cancer definition as a 704-descriptor file, and the resolved site map is committed beside this report at `analysis/site-descriptor-map.tsv`. Nor is each placement a judgement any more: the deep list is every descriptor at or beneath the tree nodes the shallow list ALREADY occupies, so NLM decides membership and the only thing to dispute is the shallow list. What the deeper list does cost is scope -- a site's subtree carries benign and precursor entities alongside the malignancies, and a burden ratio has to say whether it wants them.
 
