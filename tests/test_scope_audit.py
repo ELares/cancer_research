@@ -178,7 +178,7 @@ def test_the_artifact_is_fresh_against_a_live_classification():
     second, so there is no reason for this gate not to exist.
     """
     m = _mod()
-    live = m.classify_analyses()
+    live, live_body = m.classify_analyses()
     committed = _doc()["analyses"]
     for bucket in ("ferroptosis-or-physical", "therapy-subject", "method"):
         got, want = sorted(committed.get(bucket, [])), sorted(live[bucket])
@@ -188,6 +188,15 @@ def test_the_artifact_is_fresh_against_a_live_classification():
             f"Re-run `python scripts/scope_audit.py`.\n"
             f"  only live      = {sorted(set(want) - set(got))[:8]}\n"
             f"  only committed = {sorted(set(got) - set(want))[:8]}")
+    committed_body = _doc().get("therapy_by_body")
+    assert committed_body is not None, "the body-route list is gone"
+    assert sorted(committed_body) == sorted(live_body), (
+        "`therapy_by_body` differs between a live classification and the "
+        "committed artifact -- the number carrying the whole asymmetry "
+        "section had no freshness gate, so it could go stale exactly the way "
+        "the headline row did.\n"
+        f"  only live      = {sorted(set(live_body) - set(committed_body))[:6]}\n"
+        f"  only committed = {sorted(set(committed_body) - set(live_body))[:6]}")
     n = len(list((REPO_ROOT / "analysis").glob("*.md")))
     tot = sum(len(committed.get(b, [])) for b in
               ("ferroptosis-or-physical", "therapy-subject", "method"))
@@ -216,6 +225,29 @@ def test_the_engine_module_row_measures_content():
     assert em["mention"] == len(mods) - len(silent)
     assert em["in_code"] <= em["mention"], (
         "more modules mention it in code than mention it at all")
+
+    # RE-DERIVED, because artifact-versus-page cannot see a scan that stopped
+    # stripping comments -- both sides move together and the page published a
+    # figure four higher than the truth with everything green.
+    def _strip_comments(s):
+        return "\n".join(ln for ln in s.split("\n")
+                          if not ln.strip().startswith(("//", "*", "/*")))
+
+    want_code = want_prod = 0
+    for f in mods:
+        body = f.read_text(errors="ignore")
+        if m.FERRO.search(_strip_comments(body)):
+            want_code += 1
+        i = body.find("#[cfg(test)]")
+        if m.FERRO.search(_strip_comments(body if i < 0 else body[:i])):
+            want_prod += 1
+    assert em["in_code"] == want_code, (
+        f"the audit reports {em['in_code']} modules mentioning it in code; an "
+        f"independent scan stripping comment lines gives {want_code}")
+    if "in_production_code" in em:
+        assert em["in_production_code"] == want_prod, (
+            f"the audit reports {em['in_production_code']} in production code; "
+            f"an independent scan excluding #[cfg(test)] gives {want_prod}")
     # and the page must not claim universality when it is not universal
     if em["mention"] < em["modules"]:
         assert "every module of its simulation engine, concerns" not in md, (
@@ -240,6 +272,18 @@ def test_the_headline_sentence_follows_the_table():
                 "predictions": {k: (i % 2 == 0) for i, k in enumerate(p)},
                 "engine_modules": {**d["engine_modules"],
                                    "mention": 1, "silent": ["x.rs"]}}
+    # THE PREDICATE MATTERS, not just the conditionality. Branching on
+    # `mention` meant three doc-comment edits could restore the universal
+    # claim: a module citing a PMID in a comment does not "concern"
+    # ferroptosis in the sense the sentence asserts.
+    all_mention = {**d, "engine_modules": {**d["engine_modules"],
+                                           "mention": d["engine_modules"]["modules"],
+                                           "silent": []}}
+    assert "and every module of its simulation engine" not in m.render(all_mention), (
+        "with every module MENTIONING it but only some using it in production "
+        "code, the page prints the universal claim again; the headline is "
+        "derived from the wrong predicate")
+
     out = m.render(doctored)
     assert "Every falsifiable commitment the project makes, and every module" \
         not in out, (
@@ -252,16 +296,27 @@ def test_the_headline_sentence_follows_the_table():
 def test_the_therapy_asymmetry_is_disclosed_with_both_numbers():
     """`1` is a filename marker; the naive symmetric fix over-claims."""
     d, md = _doc(), MD.read_text()
-    body = d["analyses"].get("_therapy_by_body")
+    body = d.get("therapy_by_body")
     assert body is not None, (
         "the body-route therapy count is gone, so the asymmetry is asserted "
         "rather than measured")
     n_ther = len(d["analyses"]["therapy-subject"])
-    assert f"gives **{len(body)}** analyses instead of {n_ther}" in md, (
-        "the report does not state both counts, so a reader cannot see how "
-        "much the admission rule is worth")
-    assert "neither rule measures subject" in md, (
-        "the report presents one of the two as the corrected number")
+    assert f"admits **{len(body)}** analyses" in md, (
+        "the report does not state the body-route count")
+    assert ("neither rule measures subject" in md
+            or "not established by either rule" in md), (
+        "the report presents one of the two rules as giving the corrected "
+        "number; neither measures subject")
+    # AND the decomposition, which is what shows the upper figure is not a
+    # bound: an earlier version published "between 1 and 29" as a range when
+    # several of the 29 sit in the page's own ferroptosis column.
+    overlap_f = sorted(set(body) & set(d["analyses"]["ferroptosis-or-physical"]))
+    if overlap_f:
+        assert f"**{len(overlap_f)} of them are in this page's own FERROPTOSIS column**" in md, (
+            f"{len(overlap_f)} body-route matches are already classified as "
+            "ferroptosis, so the body-route count cannot bound the therapy "
+            "count, and the report does not say so")
+        assert "not an upper bound" in md
 
 
 def test_the_mechanism_denominators_are_derived_and_named():
@@ -301,3 +356,83 @@ def test_the_mechanism_denominators_are_derived_and_named():
     assert "An earlier version of this bullet" in md, (
         "the correction is no longer recorded, so a reader cannot tell the "
         "denominator was wrong")
+
+
+def test_the_readme_denominators_are_pinned_to_the_artifact():
+    """The front-door half of the finding was guarded by nothing.
+
+    All four figures were hand-typed into README.md and a reviewer falsified
+    every one of them (2,297 -> 1,100, 47.6 -> 22.8, 53.6 -> 91.2,
+    34.4 -> 70.0) with the suite green. Derived on one page, retyped on the
+    other, is the exact shape this finding is about.
+    """
+    d, r = _doc(), README.read_text()
+    m = d.get("mechanism_denominators")
+    if not m:
+        return
+    assert f"{m['top_n']:,} of {m['corpus_records']:,}" in r, (
+        f"the README does not carry the derived counts "
+        f"{m['top_n']:,} of {m['corpus_records']:,}")
+    for val, label in ((m["share_of_corpus"], "corpus"),
+                       (m["share_of_tagged"], "tagged"),
+                       (m["share_of_tags"], "tags")):
+        assert f"{100*val:.1f}%" in r, (
+            f"the README does not carry the derived {label} share "
+            f"{100*val:.1f}%")
+    assert f"{m['tagged']:,}" in r and f"{m['tags']:,}" in r
+
+
+def test_the_module_rows_are_each_pinned_to_their_own_figure():
+    """`in_code` could be forced to equal `mention` undetected.
+
+    The README guard asserted `f"**{em['in_code']} of {em['modules']}**" in r`,
+    which the MENTION row already satisfies when the two are equal -- so a
+    mutation making every module count as in-code passed while the page
+    published a figure four higher than the truth.
+    """
+    d, r, md = _doc(), README.read_text(), MD.read_text()
+    em = d["engine_modules"]
+    if not isinstance(em, dict):
+        return
+    assert em["in_code"] <= em["mention"] <= em["modules"]
+    assert em.get("in_production_code", 0) <= em["in_code"], (
+        "more modules mention it in production code than in code at all")
+    # each row must appear with its OWN label, so one cannot stand in for another
+    for label, key in (("mentioning it anywhere", "mention"),
+                       ("mentioning it in code", "in_code"),
+                       ("mentioning it in PRODUCTION code", "in_production_code")):
+        if key not in em:
+            continue
+        assert f"{label} | **{em[key]} of {em['modules']}**" in md, (
+            f"the `{label}` row does not carry its own measured value "
+            f"{em[key]}")
+
+
+def test_the_denominator_verdict_is_checked_against_a_live_count():
+    """The guard built `counts` from INDEX.jsonl and never compared it.
+
+    A reviewer made the generator report the SECOND-largest mechanism as top
+    -- the page published "nanoparticle is 515 of 4,830 = 10.7%" beside a
+    README saying 47.6% -- and the suite stayed green, because the local was
+    dead. Three of six fields were free.
+    """
+    d = _doc()
+    m = d.get("mechanism_denominators")
+    if not m:
+        return
+    counts = {}
+    with (REPO_ROOT / "corpus" / "INDEX.jsonl").open() as fh:
+        for line in fh:
+            line = line.strip()
+            if not line:
+                continue
+            for x in (json.loads(line).get("mechanisms") or []):
+                counts[x] = counts.get(x, 0) + 1
+    top, top_n = max(counts.items(), key=lambda kv: kv[1])
+    assert m["top_mechanism"] == top, (
+        f"the artifact reports `{m['top_mechanism']}` as the top mechanism; "
+        f"a live count of INDEX.jsonl gives `{top}`")
+    assert m["top_n"] == top_n
+    assert abs(m["share_of_corpus"] - top_n / m["corpus_records"]) < 1e-12
+    assert abs(m["share_of_tagged"] - top_n / m["tagged"]) < 1e-12
+    assert abs(m["share_of_tags"] - top_n / m["tags"]) < 1e-12

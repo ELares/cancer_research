@@ -82,10 +82,15 @@ METHOD_STEM = re.compile(
 # Therapies whose NAME in a filename marks the analysis as being about them.
 # Deliberately a name list rather than a keyword scan of the body: almost every
 # analysis mentions immunotherapy somewhere, and mentioning is not being about.
-THERAPY_RE = re.compile(
-    r"immunotherap|checkpoint|car-?t|bispecific|radioligand|chemotherap|"
-    r"radiotherap|antibody-drug|oncolytic|crispr|mrna vaccine|"
-    r"targeted therap|kinase inhibitor", re.I)
+# ONE vocabulary for both admission rules, built from THERAPY_NAMES so the
+# body route and the filename route cannot differ in what they look for.
+# An earlier version used a separate 14-term list against the filename
+# route's 21, so the published contrast moved two things at once.
+def _therapy_re():
+    import re as _re
+    return _re.compile("|".join(_re.escape(x) for x in
+                                sorted(THERAPY_NAMES, key=len, reverse=True)),
+                       _re.I)
 
 THERAPY_NAMES = (
     "radioligand", "immunotherap", "checkpoint", "car-t", "cart",
@@ -114,7 +119,7 @@ def classify_analyses() -> dict:
         # genuinely instrument analyses that merely mention a therapy as a
         # worked example, so it over-claims in the opposite direction. Both
         # numbers are reported, with what each rule is.
-        if len(THERAPY_RE.findall(head)) >= 3 and not FERRO.search(stem):
+        if len(_therapy_re().findall(head)) >= 3 and not FERRO.search(stem):
             body_therapy.append(p.stem)
         if any(t in stem for t in THERAPY_NAMES):
             buckets["therapy-subject"].append(p.stem)
@@ -124,8 +129,7 @@ def classify_analyses() -> dict:
             buckets["ferroptosis-or-physical"].append(p.stem)
         else:
             buckets["method"].append(p.stem)
-    buckets["_therapy_by_body"] = sorted(body_therapy)
-    return buckets
+    return buckets, sorted(body_therapy)
 
 
 def classify_predictions() -> dict:
@@ -195,9 +199,10 @@ def engine_modules() -> dict:
     """
     d = PROJECT_ROOT / "simulations" / "ferroptosis-core" / "src"
     if not d.exists():
-        return {"modules": 0, "mention": 0, "in_code": 0, "silent": []}
+        return {"modules": 0, "mention": 0, "in_code": 0,
+                "in_production_code": 0, "silent": []}
     mods = [f for f in sorted(d.glob("*.rs")) if f.stem != "lib"]
-    mention, in_code, silent = 0, 0, []
+    mention, in_code, in_prod, silent = 0, 0, 0, []
     for f in mods:
         text = f.read_text(errors="ignore")
         if FERRO.search(text):
@@ -210,8 +215,18 @@ def engine_modules() -> dict:
                           if not ln.strip().startswith(("//", "*", "/*")))
         if FERRO.search(code):
             in_code += 1
+        # STRICTER STILL: drop the #[cfg(test)] block. Four modules pass the
+        # in-code check only via test code -- a field name in a byte-identity
+        # assert, a string literal in a CSV writer -- while the sentence
+        # beside the row invites the reader to take it as production code.
+        i = text.find("#[cfg(test)]")
+        prod = text if i < 0 else text[:i]
+        prod_code = "\n".join(ln for ln in prod.split("\n")
+                               if not ln.strip().startswith(("//", "*", "/*")))
+        if FERRO.search(prod_code):
+            in_prod += 1
     return {"modules": len(mods), "mention": mention, "in_code": in_code,
-            "silent": silent}
+            "in_production_code": in_prod, "silent": silent}
 
 
 def _denominator_note(d: dict) -> str:
@@ -266,14 +281,19 @@ def render(d: dict) -> str:
           "|---|--:|",
           f"| engine modules mentioning it anywhere | "
           f"**{em['mention']} of {em['modules']}** |",
-          f"| engine modules mentioning it in CODE | "
-          f"**{em['in_code']} of {em['modules']}** |", ""]
+          f"| engine modules mentioning it in code | "
+          f"**{em['in_code']} of {em['modules']}** |",
+          f"| engine modules mentioning it in PRODUCTION code | "
+          f"**{em.get('in_production_code', em['in_code'])} of "
+          f"{em['modules']}** |", ""]
     L += ["The module rows used to read `N of N` -- the same number on both "
           "sides of \"of\", arithmetic that cannot come out any other way, "
           "produced by counting `.rs` files without opening one. They are "
-          "content measurements now, and the second is the stricter reading: "
-          "a module can cite ferroptosis in a doc comment while its code is "
-          "about geometry.", ""]
+          "content measurements now, and the LAST is the one to read: a "
+          "module can cite ferroptosis in a doc comment while its code is "
+          "about geometry, and four modules pass the in-code check only via "
+          "their `#[cfg(test)]` block -- a field name in a byte-identity "
+          "assert, a string literal in a CSV writer.", ""]
     if em["silent"]:
         L += [f"**{len(em['silent'])} modules mention neither ferroptosis nor a "
               f"physical-ROS modality anywhere in their text**: "
@@ -286,7 +306,11 @@ def render(d: dict) -> str:
     # falsifiable commitment ...". This repo already fixed the same shape in
     # manuscript_vs_census.py, where a static headline could not flip.
     preds_all = (pf == len(p))
-    mods_all = (em["mention"] == em["modules"])
+    # PRODUCTION CODE, not a mention. A module citing a PMID in a doc
+    # comment does not "concern" ferroptosis in the sense the sentence
+    # claims, and branching on `mention` meant three comment edits could
+    # restore the universal claim this page retracts.
+    mods_all = (em.get("in_production_code", em["mention"]) == em["modules"])
     if preds_all and mods_all:
         L += ["Every falsifiable commitment the project makes, and every "
               "module of its simulation engine, concerns ferroptosis or the "
@@ -302,8 +326,11 @@ def render(d: dict) -> str:
               f"{em['mention']} of {em['modules']} engine modules concern "
               f"ferroptosis or the physical-ROS modalities.", ""]
 
-    body_t = a.get("_therapy_by_body") or []
+    body_t = d.get("therapy_by_body") or []
     if body_t:
+        overlap = {k: sorted(set(body_t) & set(a[k]))
+                   for k in ("ferroptosis-or-physical", "therapy-subject",
+                             "method")}
         L += [f"### The '{n_ther}' is a filename marker, not a subject "
               f"measurement", ""]
         L += [f"The two buckets do not use the same admission rule. Therapy is "
@@ -312,13 +339,30 @@ def render(d: dict) -> str:
               f"count moves on a rename with contents unchanged, and an empty "
               f"file with a therapy word in its name is filed as a therapy "
               f"analysis.", ""]
-        L += [f"Applying the ferroptosis bucket's own body rule to a therapy "
-              f"vocabulary gives **{len(body_t)}** analyses instead of "
-              f"{n_ther}. That is NOT the corrected number: most of those are "
-              f"instrument analyses that mention a therapy as a worked "
-              f"example rather than studying one. The honest statement is "
-              f"that the true figure lies between {n_ther} and "
-              f"{len(body_t)}, and that neither rule measures subject.", ""]
+        L += [f"Applying the ferroptosis bucket's body rule to the SAME "
+              f"vocabulary admits **{len(body_t)}** analyses. That is not an "
+              f"upper bound on 'other therapy', and an earlier version of "
+              f"this page published it as one. Where those "
+              f"{len(body_t)} already sit in the table above:", ""]
+        L += ["| already classified as | body-route matches |", "|---|--:|"]
+        for k, v in overlap.items():
+            L.append(f"| {k} | {len(v)} |")
+        L += [""]
+        n_f = len(overlap["ferroptosis-or-physical"])
+        n_m = len(overlap["method"])
+        L += [f"**{n_f} of them are in this page's own FERROPTOSIS column** "
+              f"({', '.join(f'`{x}`' for x in overlap['ferroptosis-or-physical'])}), "
+              f"so under a mutually exclusive bucketing "
+              f"{len(body_t)} cannot bound the therapy count. A further "
+              f"{n_m} are method analyses -- instrument work that cites a "
+              f"therapy as a worked example rather than studying one.", ""]
+        L += [f"So the body route does not measure 'other therapy' either. "
+              f"What it measures is how many analyses MENTION a therapy, "
+              f"which is a different question, and the honest reading of the "
+              f"table above is that the therapy figure is small and its exact "
+              f"value is not established by either rule. An earlier version "
+              f"published 'the true figure lies between {n_ther} and "
+              f"{len(body_t)}', a range whose upper end is not a bound.", ""]
 
     L += ["## Why this is worth stating rather than hiding", ""]
     L += ["A narrow thesis on a broad corpus is how most good science works, and "
@@ -338,14 +382,19 @@ def render(d: dict) -> str:
     L += [f"**method** ({n_meth}): listed in `analysis/scope-audit.json`.", ""]
 
     L += ["## What this does not say", ""]
-    L += [_denominator_note(d), ""]
+    L += ["* It does not say the focus is wrong. It says it is UNDECLARED, "
+          "which is a different criticism and the only one this page makes.",
+          "* It does not measure quality or effort, only subject. A method "
+          "analysis is not lesser work; it is work about the instrument.",
+          _denominator_note(d), ""]
     return "\n".join(L) + "\n"
 
 
 def main():
-    a = classify_analyses()
+    a, body_therapy = classify_analyses()
     p = classify_predictions()
-    d = {"analyses": a, "predictions": p, "engine_modules": engine_modules(),
+    d = {"analyses": a, "therapy_by_body": body_therapy,
+         "predictions": p, "engine_modules": engine_modules(),
          "mechanism_denominators": mechanism_denominators(),
          "n_analyses": sum(len(v) for v in a.values()),
          "n_predictions": len(p),
