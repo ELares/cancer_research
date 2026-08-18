@@ -102,8 +102,25 @@ def test_the_thesis_legs_are_located_not_asserted():
     rank = {k: i + 1 for i, (k, _v) in enumerate(d["intersections"])}
     sdt = "ultrasonic therapy"
     assert sdt in counts, "the sonodynamic descriptor is not in the universe"
-    assert f"| sonodynamic therapy | {sdt} | {counts[sdt]:,} | {rank[sdt]} |" in md, (
+    # A rank inside a tie is not determined by the data, so the cell carries
+    # the tie span. Recomputed here: a published rank that moved when a
+    # descriptor matching NOTHING was removed from the universe is what put
+    # this annotation there.
+    def cell(desc):
+        tied = sum(1 for _k, v in d["intersections"] if v == counts[desc])
+        return (f"{rank[desc]} (tied with {tied - 1} others)" if tied > 1
+                else f"{rank[desc]}")
+    assert f"| sonodynamic therapy | {sdt} | {counts[sdt]:,} | {cell(sdt)} |" in md, (
         "the sonodynamic row is not the one the ranking supports")
+    for name, desc in (("focused ultrasound",
+                        "high-intensity focused ultrasound ablation"),):
+        if desc in counts:
+            assert f"| {name} | {desc} | {counts[desc]:,} | {cell(desc)} |" in md
+    # and the ordering must be deterministic: count descending, then name
+    pairs = [tuple(x) for x in d["intersections"]]
+    assert pairs == sorted(pairs, key=lambda kv: (-kv[1], kv[0])), (
+        "the ranking is not ordered by (count, name), so a rank inside a tie "
+        "depends on set-iteration order and moves for no measured reason")
     # the headline multiple must be derived from the same two numbers
     top_name, top_n = d["intersections"][0]
     assert f"{top_n/counts[sdt]:.1f}x" in md, (

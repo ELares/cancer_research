@@ -321,7 +321,7 @@ def main() -> int:
         # partitions" wording repeated a provenance claim that page has since
         # withdrawn. A number typed beside a derived one reads as freshly
         # derived; the pointer is what belongs here.
-        "**The ratio below depends on the class boundary.** Both curated classes omit their largest real member -- PHYSICAL has no radiotherapy, PHARMACOLOGICAL no cytotoxic chemotherapy -- because neither has a mechanism tag. Recomputed over MeSH-descriptor partitions that move BOTH classes, the ratio is substantially smaller than the figure below, and what it is depends on how much operative surgery the physical class admits: the direction survives, the magnitude does not. See `analysis/atlas-modality-ratio.md` (#724)."), ""]
+        "**The ratio below depends on the class boundary.** Both curated classes omit their largest real member -- PHYSICAL has no radiotherapy, PHARMACOLOGICAL no cytotoxic chemotherapy -- because neither has a mechanism tag. Recomputed over MeSH-descriptor partitions that move BOTH classes, the ratio is substantially smaller than the 17.6:1 reported in the volume section further down this page, and what it is depends on how much operative surgery the physical class admits: the direction survives, the magnitude does not. See `analysis/atlas-modality-ratio.md` (#724)."), ""]
     L += [
         "| mechanism | A: keyword/frozen | B: MeSH/frozen | C: MeSH/census | rank A | rank C | shift | top descriptor supplies |",
         "|---|---|---|---|---|---|---|---|",

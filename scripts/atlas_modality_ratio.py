@@ -89,7 +89,6 @@ Usage:
 import argparse
 import gzip
 import json
-import random
 import re
 from collections import Counter
 from pathlib import Path
@@ -102,14 +101,12 @@ OUT_MD = PROJECT_ROOT / "analysis" / "atlas-modality-ratio.md"
 OUT_JSON = PROJECT_ROOT / "analysis" / "atlas-modality-ratio.json"
 
 # What the manuscript and the existing landscape analysis report, for contrast.
+# HARDCODED, and therefore pinned: `MANUSCRIPT_RATIO` is checked against
+# `article/drafts/v1.md` and `LANDSCAPE_CENSUS_RATIO` against the ratio this
+# script DERIVES from `atlas-landscape.json`, because the page divides by both
+# and a typed number beside a derived one reads as freshly derived.
 MANUSCRIPT_RATIO = 9.1
 LANDSCAPE_CENSUS_RATIO = 17.6
-
-# Draws for the mass-matched permutation control, and its seed. Fixed here so
-# the control is reproducible and cannot be re-rolled until it agrees.
-N_PERMUTATIONS = 20
-PERMUTATION_SEED = 20260818
-
 
 def load_partitions(d: dict | None = None) -> dict:
     """Load the committed partitions, refusing an input that carries its result.
@@ -216,10 +213,11 @@ def holdout_rules() -> dict:
     }
 
 
-# The rule the main table's held-out column uses. The strictest of the five:
-# it excludes everything any of the others excludes and includes the operative
-# terms the stem list misses. It is not privileged -- the spread is reported
-# across all five and they differ by less than the collapse itself.
+# The rule the main table's held-out column uses: the stem list minus the energy
+# modalities and transplantation, plus the operative terms no stem reaches. NOT
+# the strictest as set inclusion -- it is not a subset of `stem-list`, since it
+# ADDS the missed terms -- and not privileged either: the spread is reported
+# across all five, and they differ by less than the collapse itself.
 PRIMARY_RULE = "operative-only"
 
 CONTROL_RULES = {
@@ -230,8 +228,15 @@ CONTROL_RULES = {
 
 
 def _spread(vals) -> float | None:
-    vals = [v for v in vals if v]
-    if len(vals) < 2:
+    """max/min, REFUSING to compute over a partial set.
+
+    The first version dropped falsy entries, so a partition whose held-out
+    ratio came back `None` silently became a four-point range rendered
+    identically to a five-point one. A planted leg returning `None` above 60%
+    surgical share passed every guard that way.
+    """
+    vals = list(vals)
+    if len(vals) < 2 or any(not v for v in vals):
         return None
     return max(vals) / min(vals)
 
@@ -263,6 +268,17 @@ def _spearman(xs, ys) -> float | None:
     return num / (dx * dy) if dx and dy else None
 
 
+def classify(mesh: set, s: dict) -> tuple:
+    """(matches the pharmacological class, the physical descriptors it matched).
+
+    Factored out of `scan` so it is testable WITHOUT the census. A mutation
+    that had the pharmacological flag read the physical class inflated every
+    ratio on the page, and the only guard covering `scan` is census-dependent
+    and skips in CI, so nothing fired.
+    """
+    return bool(mesh & s["ph"]), mesh & s["py"]
+
+
 def scan(parts: dict) -> dict:
     """One pass over the census, storing the physical class's INCIDENCE STRUCTURE.
 
@@ -288,9 +304,8 @@ def scan(parts: dict) -> dict:
                 if not mesh:
                     continue
                 for k, s in sets.items():
-                    a = bool(mesh & s["ph"])
+                    a, hit = classify(mesh, s)
                     counts[k]["pharm"] += a
-                    hit = mesh & s["py"]
                     if hit:
                         counts[k]["phys"] += 1
                         counts[k]["both"] += a
@@ -310,7 +325,8 @@ def assemble(parts, sets, counts, combos, n) -> dict:
         "partitions": {},
         "holdouts": {},
         "controls": {},
-        "permutation": {},
+        "mass_identity": {},
+        "removed_mass": {},
         "stem_alternative_hits": {},
         "landscape_composition": landscape_composition(),
         "qualifier_recalls": qualifier_recalls(),
@@ -369,57 +385,113 @@ def assemble(parts, sets, counts, combos, n) -> dict:
             "spread": _spread([r["ratio"] for r in rows.values()]),
         }
 
-    out["permutation"] = permutation_control(sets, counts, combos, primary)
+    out["mass_identity"] = mass_identity(sets, counts, combos, rules)
+    out["removed_mass"] = {
+        "surgical": {k: counts[k]["phys"] - _remaining(combos[k], primary[k])
+                     for k in sets},
+        "controls": {name: {k: counts[k]["phys"] - _remaining(combos[k], rule(s["py"]))
+                            for k, s in sets.items()}
+                     for name, rule in CONTROL_RULES.items()},
+    }
+    # The collapse without the one partition that admits no operative surgery
+    # at all, so "the other four merely converge on it" can be checked.
+    zero = [k for k in sets
+            if not (counts[k]["phys"] - _remaining(combos[k], primary[k]))]
+    rest = [k for k in sets if k not in zero]
+    out["without_zero_surgery_partitions"] = {
+        "excluded": sorted(zero),
+        "published_spread": _spread([out["partitions"][k]["ratio"] for k in rest]),
+        "held_out_spread": _spread(
+            [out["partitions"][k]["ratio_surgery_held_out"] for k in rest]),
+    } if zero and len(rest) > 1 else {}
     out["published_spread"] = _spread(
         [v["ratio"] for v in out["partitions"].values()])
+    out["proxy_containment"] = proxy_containment(sets)
     return out
 
 
-def permutation_control(sets, counts, combos, primary) -> dict:
-    """Would removing ANY comparable mass of physical descriptors do this?
+def proxy_containment(sets) -> dict:
+    """Does each class actually CONTAIN #722's proxy descriptors?
 
-    The surgical rules remove a large slice of the physical class, and a large
-    removal shrinks a spread on its own. Each draw removes RANDOM physical
-    descriptors from each partition until it has held out at least as many
-    articles as the surgical rule did there, so the draws are mass-matched
-    partition by partition, and the spread across the five is recomputed. The
-    surgical collapse is only about surgery to the extent that it beats these.
+    The "a broader set recalls more by construction" argument only licenses a
+    floor where the broad class is a superset of the narrow proxy. Measured
+    rather than assumed: it is true of the pharmacological side everywhere and
+    false of the physical side in two partitions.
     """
-    rng = random.Random(PERMUTATION_SEED)
-    target = {k: counts[k]["phys"] - _remaining(combos[k], primary[k])
-              for k in sets}
-    draws = []
-    for _ in range(N_PERMUTATIONS):
-        ratios, sizes = [], []
+    src = PROJECT_ROOT / "scripts" / "atlas_ingest_sensitivity.py"
+    if not src.exists():
+        return {}
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("ings", src)
+    ings = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(ings)
+    # the proxy sets are IMPORTED, never restated -- a hand-written copy beside
+    # the real one is how this repo has produced a discrepancy before
+    # `neoplasms/surgery` in #722's surgery proxy is a descriptor/QUALIFIER
+    # composite, not a DescriptorName, so it can never be a member of a class
+    # built from descriptors. Counting it makes containment 0 of 5 by
+    # construction and says nothing about the classes.
+    proxies, dropped = {}, {}
+    for m, spec_ in ings.MODALITIES.items():
+        all_ = {x.lower() for x in spec_.get("descriptors", set())}
+        composite = {x for x in all_ if "/" in x}
+        proxies[m] = all_ - composite
+        if composite:
+            dropped[m] = sorted(composite)
+    out = {"proxies": {m: sorted(v) for m, v in proxies.items()},
+           "non_descriptor_composites_dropped": dropped,
+           "per_partition": {}}
+    for k, s in sets.items():
+        out["per_partition"][k] = {
+            "pharm_contains_drug_therapy":
+                proxies.get("drug therapy", set()) <= s["ph"],
+            "phys_contains_surgery":
+                proxies.get("surgery", set()) <= s["py"],
+            "phys_missing_surgery_proxy":
+                sorted(proxies.get("surgery", set()) - s["py"]),
+        }
+    out["pharm_contains_drug_therapy"] = sum(
+        1 for v in out["per_partition"].values() if v["pharm_contains_drug_therapy"])
+    out["phys_contains_surgery"] = sum(
+        1 for v in out["per_partition"].values() if v["phys_contains_surgery"])
+    return out
+
+
+def mass_identity(sets, counts, combos, rules) -> dict:
+    """The held-out ratio is `pharm / (phys - articles removed)`. Nothing else.
+
+    A MASS-MATCHED PERMUTATION CONTROL WAS RUN HERE AND IS WITHDRAWN. It drew
+    random physical descriptors until it had removed at least as many articles
+    as the surgical rule did, and reported how often it reached the same
+    spread. That control cannot work: `pharm` and `phys` are fixed per
+    partition, so once the number of articles removed is matched the held-out
+    ratio is IDENTICAL whatever descriptors carried it. The question it seemed
+    to answer is not askable of this statistic, and its apparent spread was
+    entirely the greedy draw overshooting its target.
+
+    What replaces it is a PROOF rather than a sample: for every partition and
+    every rule, recompute `pharm / (phys - removed)` from the counts alone and
+    check it equals the ratio the incidence table produced. If they agree, the
+    ratio is a function of the removed MASS and of nothing else, which is what
+    the withdrawn control was groping at.
+    """
+    checks, worst = [], 0.0
+    for name, rule in rules.items():
         for k, s in sets.items():
-            pool = sorted(s["py"])
-            rng.shuffle(pool)
-            chosen, i = set(), 0
-            while i < len(pool):
-                if counts[k]["phys"] - _remaining(combos[k], chosen) >= target[k]:
-                    break
-                chosen.add(pool[i])
-                i += 1
-            held = _remaining(combos[k], chosen)
-            ratios.append((counts[k]["pharm"] / held) if held else None)
-            sizes.append(len(chosen))
-        sp = _spread(ratios)
-        if sp:
-            draws.append({"spread": sp, "n_descriptors": sizes})
-    spreads = sorted(d["spread"] for d in draws)
-    surgical = _spread([counts[k]["pharm"] / _remaining(combos[k], primary[k])
-                        for k in sets if _remaining(combos[k], primary[k])])
+            removed = counts[k]["phys"] - _remaining(combos[k], rule(s["py"]))
+            left = counts[k]["phys"] - removed
+            if not left:
+                continue
+            from_mass = counts[k]["pharm"] / left
+            from_table = counts[k]["pharm"] / _remaining(combos[k], rule(s["py"]))
+            worst = max(worst, abs(from_mass - from_table))
+            checks.append([name, k, removed, from_mass])
     return {
-        "n_draws": len(draws),
-        "seed": PERMUTATION_SEED,
-        "spreads": spreads,
-        "median": spreads[len(spreads) // 2] if spreads else None,
-        "min": spreads[0] if spreads else None,
-        "max": spreads[-1] if spreads else None,
-        "surgical_spread": surgical,
-        "n_draws_at_or_below_surgical":
-            sum(1 for s in spreads if surgical and s <= surgical),
-        "articles_held_out_target": target,
+        "claim": "held-out ratio == pharm / (phys - articles removed)",
+        "n_checks": len(checks),
+        "max_abs_error": worst,
+        "holds": worst < 1e-9,
+        "withdrawn_control": "mass-matched permutation over random descriptors",
     }
 
 
@@ -480,6 +552,20 @@ def landscape_composition() -> dict:
         return sum(cen.get(x, 0) for x in names)
 
     ph, py, pre = al.PHARMACOLOGICAL, al.PHYSICAL, al.PRECISE
+    return restrict(cen, top, ph, py, pre)
+
+
+def restrict(cen: dict, top: dict, ph: set, py: set, pre: set) -> dict:
+    """The comparator arithmetic, separated from the files it reads.
+
+    Pulled out so the BOTH-SIDES property can be unit-tested. On today's data
+    the denominator side restores nothing, so a mutation dropping it is inert
+    and no artifact-reading guard can see it -- which is exactly the shape of
+    a one-sidedness that ships and waits.
+    """
+    def tot(names):
+        return sum(cen.get(x, 0) for x in names)
+
     num, den = tot(ph), tot(py)
     pre_ph, pre_py = sorted(ph & pre), sorted(py & pre)
     num_p, den_p = tot(pre_ph), tot(pre_py)
@@ -487,8 +573,14 @@ def landscape_composition() -> dict:
     # modality, rather than a process, a material or a technique". These two
     # pharmacological mechanisms satisfy it and are excluded anyway, so the
     # restriction is not the criterion applied evenly.
+    # BOTH SIDES. The first version tested only the numerator's dropped
+    # mechanisms, which is structurally the one-sided narrowing this page
+    # exists to police: today `Electroporation` does not read as a therapy so
+    # the number is unaffected, but nothing stopped it going the other way.
     restored = sorted(x for x in (ph - pre) if _names_a_therapy(top.get(x)))
+    restored_py = sorted(x for x in (py - pre) if _names_a_therapy(top.get(x)))
     num_r = num_p + tot(restored)
+    den_r = den_p + tot(restored_py)
     biggest = sorted(((x, cen.get(x, 0)) for x in ph), key=lambda kv: -kv[1])[:2]
     return {
         "numerator": num, "denominator": den,
@@ -501,8 +593,17 @@ def landscape_composition() -> dict:
         "dropped_pharm": sorted(ph - pre), "dropped_phys": sorted(py - pre),
         "top_descriptors": {x: top.get(x) for x in sorted(ph | py)},
         "criterion_restored_pharm": restored,
+        "criterion_restored_phys": restored_py,
         "criterion_restored_numerator": num_r,
-        "criterion_restored_ratio": num_r / den_p if den_p else None,
+        "criterion_restored_denominator": den_r,
+        "criterion_restored_ratio": num_r / den_r if den_r else None,
+        # `atlas_landscape.py`'s OWN maturity use is `PRECISE - PHYSICAL`, not
+        # `PHARMACOLOGICAL & PRECISE`. Reported because the page says it
+        # applies "that script's own PRECISE set" and then silently picks the
+        # intersection, which is a narrower numerator than the script uses.
+        "landscape_own_numerator": tot(pre - py),
+        "landscape_own_pharm": sorted(pre - py),
+        "landscape_own_ratio": (tot(pre - py) / den_p) if den_p else None,
     }
 
 
@@ -579,26 +680,25 @@ def render(d: dict) -> str:
 
 
 def _what_would_make_this_wrong(d) -> list:
-    perm = d.get("permutation") or {}
     ctl = d.get("controls") or {}
     named = {k: v.get("spread") for k, v in ctl.items() if v.get("spread")}
-    surg = perm.get("surgical_spread")
-    n_below = perm.get("n_draws_at_or_below_surgical")
-    # DERIVED. The first draft of this bullet asserted that mass-matched random
-    # removals do NOT reproduce the collapse. They do, and the bullet said
-    # otherwise because it was written before the control was run.
+    surg = (d["holdouts"].get(PRIMARY_RULE) or {}).get("spread")
+    pub = d.get("published_spread") or 0.0
+    # DERIVED. Two earlier drafts of this bullet were wrong about the control:
+    # the first asserted that mass-matched random removals do NOT reproduce
+    # the collapse (they do), and the second leaned on the fact that they do
+    # as if that were a measurement (it is an arithmetic identity).
     if named and surg:
         rests = (f"five rules disagreeing about named descriptor sets all land "
                  f"in the same place, and that "
-                 + ", ".join(f"`{k}`" for k in named)
-                 + f" -- non-surgical families built the same way -- do not "
-                 f"(their spreads are "
-                 + ", ".join(f"{v:.2f}x" for v in named.values())
-                 + f" against {surg:.2f}x). It does NOT rest on the "
-                 f"permutation: {n_below} of {perm['n_draws']} mass-matched "
-                 f"random removals reach the same place, so the descriptor "
-                 f"identities are not what carries it -- the AMOUNT of "
-                 f"surgical mass each partition admits is.")
+                 + ", ".join(f"`{k}`" for k in sorted(named))
+                 + f" -- non-surgical families built the same way, each "
+                 f"removing LESS physical mass -- leave the five further apart "
+                 f"than removing nothing at all ("
+                 + ", ".join(f"{v:.2f}x" for _k, v in sorted(named.items()))
+                 + f" against {pub:.2f}x). It does NOT rest on the "
+                 f"mass-matched permutation, which is withdrawn as unable to "
+                 f"answer its own question.")
     else:
         rests = ("five rules disagreeing about named descriptor sets all land "
                  "in the same place.")
@@ -639,8 +739,6 @@ def _spread_narrative(d, ranked, lo, hi) -> list:
     if len(hos) != len(ranked) or len(shares) != len(ranked):
         return []
     pub, held = hi / lo, max(hos) / min(hos)
-    perm = d.get("permutation") or {}
-    med = perm.get("median")
     rho = (d["holdouts"].get(PRIMARY_RULE) or {}).get(
         "spearman_share_vs_published_ratio")
     verb = ("collapses" if held < pub * 0.9
@@ -654,29 +752,15 @@ def _spread_narrative(d, ranked, lo, hi) -> list:
          f"all five, the spread {verb} from **{pub:.2f}x** ({lo:.2f}-{hi:.2f}) "
          f"to **{held:.2f}x** ({min(hos):.2f}-{max(hos):.2f}) -- every "
          f"partition landing near {sum(hos)/len(hos):.1f}:1.", ""]
-    if med:
-        share = ""
-        if med <= held:
-            share = (f", at or past where the surgical rule lands, so ALL of "
-                     f"the distance from {pub:.2f}x is what removing that "
-                     f"much physical mass does regardless of which descriptors "
-                     f"carry it")
-        elif med < pub:
-            frac = (pub - med) / (pub - held) if pub > held else 0.0
-            share = (f" -- {100*min(frac, 1.0):.0f}% of the collapse, so most "
-                     f"of the distance from {pub:.2f}x is what removing that "
-                     f"much physical mass does regardless of which descriptors "
-                     f"carry it")
-        L += [f"**What that does and does not establish.** Removing a "
-              f"mass-matched RANDOM set of physical descriptors takes the "
-              f"spread to a median of {med:.2f}x{share}. The control is "
-              f"matched to the surgical mass partition by partition, so it "
-              f"cannot show surgery is not the driver -- the mass it removes "
-              f"IS the surgical mass. What it shows is that the descriptor "
-              f"IDENTITIES do not matter once the amount is fixed. The "
-              f"section below runs the controls that can speak to "
-              f"specificity: named non-surgical families of comparable "
-              f"construction.", ""]
+    wz = d.get("without_zero_surgery_partitions") or {}
+    if wz.get("held_out_spread"):
+        L += [f"One partition, `{'`, `'.join(wz['excluded'])}`, admits no "
+              f"operative surgery at all, so the primary rule does not move "
+              f"it and it is the top of both columns. The others are not "
+              f"merely converging on a fixed point: drop it and the remaining "
+              f"{len(d['partitions']) - len(wz['excluded'])} still go from "
+              f"**{wz['published_spread']:.2f}x** to "
+              f"**{wz['held_out_spread']:.2f}x**.", ""]
     L += ["So the five are not five independent readings whose "
           "disagreement is the finding. They agree about "
           "pharmacological-versus-physical and disagree about one "
@@ -736,73 +820,74 @@ def _holdout_rule_section(d) -> list:
           "second; `stem-list` does the opposite; the three intermediates take "
           "one correction each. That is the disagreement the table above "
           "prices.", ""]
+    L += ["That replacement list is a hand-written judgement too, and four of "
+          "its ten are looser than \"operative removal\": `vertebroplasty` "
+          "injects cement rather than resecting, MeSH `Castration` covers the "
+          "chemical kind, `Orthopedic Procedures` is an umbrella, and `Limb "
+          "Salvage` names a goal that includes reconstruction. The "
+          "`stem-list` rules in the table above exclude all four, which is "
+          "part of what the 1.18x-to-1.23x band prices.", ""]
     return L
 
 
 def _control_section(d) -> list:
-    perm = d.get("permutation") or {}
+    ident = d.get("mass_identity") or {}
     ctl = d.get("controls") or {}
-    if not perm.get("n_draws"):
+    rm = d.get("removed_mass") or {}
+    if not ctl:
         return []
-    L = ["## Is surgery specific, or merely large?", ""]
-    surg = perm.get("surgical_spread")
     pub = d.get("published_spread") or 0.0
-    L += [f"Two different controls, answering two different questions. The "
-          f"first is a permutation: each of {perm['n_draws']} draws (seed "
-          f"{perm['seed']}) removes RANDOM physical descriptors from each "
-          f"partition until it has held out at least as many articles as the "
-          f"surgical rule did THERE, so it is mass-matched partition by "
-          f"partition. The second holds out two named non-surgical families "
-          f"built the same way the surgical rule is.", ""]
-    L += [f"| removal | spread across the five |", "|---|--:|"]
-    L += [f"| nothing removed | {pub:.2f}x |"]
-    L += [f"| mass-matched random, median of {perm['n_draws']} | "
-          f"{perm['median']:.2f}x |",
-          f"| mass-matched random, range | {perm['min']:.2f}-{perm['max']:.2f}x |"]
+    surg = (d["holdouts"].get(PRIMARY_RULE) or {}).get("spread")
+    L = ["## Is surgery specific, or merely large?", ""]
+    if ident.get("holds"):
+        L += [f"**A control that cannot work, and is withdrawn.** A held-out "
+              f"ratio is `pharmacological / (physical - articles removed)`, so "
+              f"it is a function of the MASS removed and of nothing else -- "
+              f"verified over all {ident['n_checks']} partition-by-rule cells "
+              f"(max error {ident['max_abs_error']:.1e}). A mass-matched "
+              f"permutation control was run here, drawing random physical "
+              f"descriptors until it had removed as many articles as the "
+              f"surgical rule did, and asking how often it reached the same "
+              f"spread. It cannot answer that: once the amount is matched the "
+              f"answer is identical whatever descriptors carried it, and the "
+              f"scatter it appeared to show was its greedy draw overshooting "
+              f"the target. The control and its number are withdrawn.", ""]
+    L += ["**What can speak to specificity** is a named non-surgical family "
+          "built the same way the surgical rule is. Those are not "
+          "mass-matched, and the masses are reported so the comparison is not "
+          "taken for more than it is.", ""]
+    L += ["| removal | physical articles removed | spread across the five |",
+          "|---|--:|--:|"]
+    L += [f"| nothing removed | 0 | {pub:.2f}x |"]
+    surg_mass = sum((rm.get("surgical") or {}).values())
     for name, leg in sorted(ctl.items()):
         sp = leg.get("spread")
-        L.append(f"| `{name}` | " + (f"{sp:.2f}x" if sp else "-") + " |")
+        mass = sum(((rm.get("controls") or {}).get(name) or {}).values())
+        L.append(f"| `{name}` | {mass:,}"
+                 + (f" ({mass/surg_mass:.2f}x)" if surg_mass else "")
+                 + " | " + (f"{sp:.2f}x" if sp else "-") + " |")
     if surg:
-        L.append(f"| **`{PRIMARY_RULE}`** | **{surg:.2f}x** |")
+        L.append(f"| **`{PRIMARY_RULE}`** | **{surg_mass:,}** | **{surg:.2f}x** |")
     L += [""]
-    n_below = perm.get("n_draws_at_or_below_surgical", 0)
-    if surg:
-        many = n_below >= 0.25 * perm["n_draws"]
-        L += [f"**{n_below} of {perm['n_draws']}** random draws reach the "
-              f"surgical rule's {surg:.2f}x. "
-              + (f"So once the AMOUNT of physical mass removed is fixed, which "
-                 f"descriptors carry it makes little difference, and the "
-                 f"permutation gives no evidence that the surgical "
-                 f"descriptors are special as descriptors. This control was "
-                 f"matched to the surgical mass, so it could not have: what "
-                 f"varies across the five partitions is how much surgery each "
-                 f"admits, and holding that amount out is the operation "
-                 f"either way."
-                 if many else
-                 f"So the surgical rule goes beyond what an equally large "
-                 f"arbitrary removal achieves. The control is still matched "
-                 f"to the surgical mass, so it bounds the descriptor "
-                 f"identities rather than the family.") + "", ""]
     named = {k: v.get("spread") for k, v in ctl.items() if v.get("spread")}
-    if named:
-        worse = {k: v for k, v in named.items() if surg and v > surg}
-        L += [f"**The named-family control is the one that speaks to "
-              f"specificity, and it does.** Holding out "
-              + ", ".join(f"`{k}` gives {v:.2f}x" for k, v in named.items())
-              + (f", against the surgical rule's {surg:.2f}x" if surg else "")
-              + ". "
-              + (f"Every one leaves the five further apart than surgery does"
-                 + (f", and {len([v for v in worse.values() if v > pub])} of "
-                    f"{len(named)} leave them further apart than removing "
-                    f"nothing at all" if any(v > pub for v in worse.values())
-                    else "")
-                 + ". The partitions do not disagree about radiotherapy or "
-                   "about ablation; they disagree about surgery."
-                 if len(worse) == len(named) else
-                 "At least one non-surgical family does as well, so the "
-                 "attribution to surgery is weaker than the spread table "
-                 "suggests and should be read as one candidate among "
-                 "several."), ""]
+    if named and surg:
+        wider_than_nothing = {k: v for k, v in named.items() if v > pub}
+        if len(wider_than_nothing) == len(named):
+            L += [f"Every named family removes LESS mass than surgery and "
+                  f"still leaves the five further apart than removing nothing "
+                  f"at all ("
+                  + ", ".join(f"`{k}` {v:.2f}x" for k, v in sorted(named.items()))
+                  + f" against {pub:.2f}x unremoved and {surg:.2f}x for "
+                  f"surgery). That is the part the mass argument cannot "
+                  f"explain: removing less mass moves a spread less, and "
+                  f"these move it the WRONG WAY. The partitions do not "
+                  f"disagree about radiotherapy or about ablation; they "
+                  f"disagree about surgery.", ""]
+        else:
+            L += ["At least one named non-surgical family also brings the "
+                  "five together, so the attribution to surgery is weaker "
+                  "than the spread table suggests and should be read as one "
+                  "candidate among several.", ""]
     return L
 
 
@@ -844,6 +929,20 @@ def _comparator_section(d, lo, hi) -> list:
               f"{pr:.2f}:1 under that restriction, {where}.", ""]
 
     # PRECISE was not written for this question.
+    own = lc.get("landscape_own_ratio")
+    if own:
+        L += [f"**And \"that script's own `PRECISE` set\" has two readings.** "
+              f"The line above intersects it with the curated "
+              f"`PHARMACOLOGICAL` list. `atlas_landscape.py` itself uses "
+              f"`PRECISE` MINUS `PHYSICAL` for its maturity table, which adds "
+              f"`" + "`, `".join(x for x in lc["landscape_own_pharm"]
+                                 if x not in lc["precise_pharm"]) +
+              f"` to the numerator and gives **{own:.2f}:1**. Both are below "
+              f"the {LANDSCAPE_CENSUS_RATIO}:1 headline; the page quotes the "
+              f"narrower one first because it is the closer match to the "
+              f"curated class this analysis is about, and reports this one so "
+              f"the choice is visible.", ""]
+
     rest = lc.get("criterion_restored_pharm") or []
     if rest and lc.get("criterion_restored_ratio"):
         names = ", ".join(
@@ -854,9 +953,15 @@ def _comparator_section(d, lo, hi) -> list:
               f"process, a material or a technique, and it was defined for "
               f"`atlas_landscape.py`'s MATURITY comparison, not for this "
               f"volume ratio. Two excluded pharmacological mechanisms satisfy "
-              f"the criterion as written: {names}. Restoring them gives "
-              f"**{lc['criterion_restored_ratio']:.2f}:1** instead of "
-              f"{pr:.2f}:1, so the restricted figure is sensitive to a "
+              f"the criterion as written: {names}. Restoring them -- and "
+              + (f"the denominator's `"
+                 + "`, `".join(lc.get("criterion_restored_phys") or [])
+                 + "`, which the same reading restores"
+                 if lc.get("criterion_restored_phys")
+                 else "nothing on the denominator side, which the same "
+                      "reading leaves untouched") +
+              f" -- gives **{lc['criterion_restored_ratio']:.2f}:1** instead "
+              f"of {pr:.2f}:1, so the restricted figure is sensitive to a "
               f"membership judgement made elsewhere for another purpose. Both "
               f"are reported; neither is adopted.", ""]
     L += [f"After the restriction the classes are also no longer what their "
@@ -916,16 +1021,29 @@ def _qualifier_section(d) -> list:
               f"of it. Correcting by THAT row moves the ratio sharply DOWN.", ""]
     sizes = [c["n_phys_descriptors"] for c in d["partitions"].values()]
     sizes += [c["n_pharm_descriptors"] for c in d["partitions"].values()]
+    cont = d.get("proxy_containment") or {}
     L += [f"**Neither correction is licensed.** #722 measures proxy sets of "
           f"four to seven descriptors while the classes here hold "
-          f"{min(sizes)} to {max(sizes)}, and a broader descriptor set recalls "
-          f"more by construction, so those recalls are floors for narrow "
-          f"proxies rather than measurements of these classes. Borrowing "
-          f"either pair would repeat the category error being retracted. The "
-          f"bias is real; its direction is not established here, and the "
-          f"measurement that would settle it -- these classes scored on both "
-          f"MeSH axes -- is not computable from the committed records, which "
-          f"carry the descriptor axis only.", ""]
+          f"{min(sizes)} to {max(sizes)}. Where a class CONTAINS the proxy, "
+          f"the proxy's recall is a floor for the class's, because adding "
+          f"descriptors can only add matches -- measured, the pharmacological "
+          f"side contains the drug-therapy proxy in "
+          f"{cont.get('pharm_contains_drug_therapy', 0)} of "
+          f"{len(d['partitions'])} partitions and the physical side contains "
+          f"the surgery proxy in {cont.get('phys_contains_surgery', 0)} "
+          f"(counting only real DescriptorNames: "
+          + ", ".join(f"`{x}`" for v in
+                      (cont.get("non_descriptor_composites_dropped") or {}).values()
+                      for x in v)
+          + " is a descriptor/qualifier composite that can never be a class "
+            "member). "
+          f"Where it does not, the floor argument does not even apply. Either "
+          f"way, borrowing a proxy's recall as a class's would repeat the "
+          f"category error being retracted. The bias is real; its direction "
+          f"is not established here, and the measurement that would settle "
+          f"it -- these classes scored on both MeSH axes -- is not computable "
+          f"from the committed records, which carry the descriptor axis "
+          f"only.", ""]
     return L
 
 

@@ -231,6 +231,46 @@ def test_the_holdout_rules_actually_select_surgery():
             "the page attributes the collapse to surgery")
 
 
+# Descriptors that are unambiguously operative removal. Written here, checked
+# against the partitions, and REQUIRED of every rule: the 90%-surgical floor
+# below leaves ~10 free slots per rule, which a mutation filled with real
+# energy descriptors while every guard stayed green.
+_MUST_HOLD_OUT = {
+    "surgical procedures, operative", "mastectomy", "prostatectomy",
+    "hepatectomy", "pneumonectomy", "gastrectomy", "colectomy",
+    "nephrectomy", "hysterectomy", "laparotomy", "thoracotomy",
+    "lymph node excision", "metastasectomy",
+}
+_ENERGY_WORDS = re.compile(
+    r"cryotherap|laser|photo|puva|ultraviolet|hyperthermi|diatherm|"
+    r"radiofrequency|electropor|ablat|coagulation|irradiat|radiotherap|"
+    r"brachytherap|proton therapy|light therapy", re.I)
+
+
+def test_every_rule_holds_out_the_core_and_no_energy_modality():
+    """A rule that drops nine real surgical terms, or absorbs nine energy ones,
+    moved the headline spread by 60% and 12% respectively and passed every
+    guard. Both are pinned against lists written in this file.
+    """
+    d = _doc()
+    parts = _parts()
+    for name, leg in d["holdouts"].items():
+        for k, r in leg["partitions"].items():
+            members = {x.lower() for x in parts[k]["physical"]}
+            picked = set(r["descriptors"])
+            core = _MUST_HOLD_OUT & members
+            missing = core - picked
+            assert not missing, (
+                f"rule {name!r} does not hold out {sorted(missing)} in {k}, "
+                "which are operative removal by any reading")
+            energy = {x for x in picked
+                      if _ENERGY_WORDS.search(x) and not _SURGICAL_WORDS.search(x)}
+            assert not energy, (
+                f"rule {name!r} holds out {sorted(energy)} in {k}; those "
+                "deliver energy rather than removing tissue, and the page "
+                "attributes the collapse to surgery")
+
+
 def test_the_rules_disagree_with_each_other():
     """Five rules that pick identical sets are one rule wearing five names."""
     d = _doc()["holdouts"]
@@ -361,6 +401,29 @@ def test_the_spread_verb_agrees_with_the_numbers():
         assert f"{c['ratio_surgery_held_out']:.2f}:1" in md
 
 
+def test_the_classifier_keeps_the_two_classes_apart():
+    """A mutation had `scan` count an article pharmacological when it matched
+    the PHYSICAL class, inflating every ratio, and nothing fired: the only
+    guard over `scan` is census-dependent and SKIPS in CI. Tested here on
+    synthetic records instead, so it runs everywhere.
+    """
+    m = _mod()
+    s = {"ph": {"antineoplastic agents"}, "py": {"mastectomy", "radiotherapy"}}
+    cases = [
+        ({"antineoplastic agents"}, True, set()),
+        ({"mastectomy"}, False, {"mastectomy"}),
+        ({"antineoplastic agents", "radiotherapy"}, True, {"radiotherapy"}),
+        ({"appendicitis"}, False, set()),
+        ({"mastectomy", "radiotherapy"}, False, {"mastectomy", "radiotherapy"}),
+    ]
+    for mesh, want_pharm, want_phys in cases:
+        got_pharm, got_phys = m.classify(mesh, s)
+        assert got_pharm is want_pharm, (
+            f"{sorted(mesh)}: pharmacological={got_pharm}, expected "
+            f"{want_pharm} -- the classifier is reading the wrong class")
+        assert got_phys == want_phys, f"{sorted(mesh)}: physical={got_phys}"
+
+
 def test_the_spread_verb_is_a_function_of_the_data_not_a_constant():
     """Hardcoding `collapses` is invisible while the spread really collapses.
 
@@ -418,48 +481,82 @@ def test_both_column_is_reported_not_resolved():
 # Controls
 # ---------------------------------------------------------------------------
 
-def test_the_controls_are_run_and_their_verdict_matches_their_numbers():
-    """The permutation reaches the surgical spread; the page must not deny it.
+def test_the_withdrawn_permutation_is_not_quoted_and_the_identity_is_proved():
+    """A mass-matched permutation cannot answer its own question.
 
-    Attributing the whole collapse to surgery, when a mass-matched arbitrary
-    removal does the same, is the over-claim this section exists to prevent.
+    The held-out ratio is `pharm / (phys - articles removed)`, so once the
+    amount removed is matched the answer is identical whatever descriptors
+    carried it. The control shipped anyway, and its apparent scatter -- quoted
+    as "15 of 20" -- was its greedy draw overshooting the target, a number that
+    moved between 9 and 18 across seeds.
     """
     d, md = _doc(), MD.read_text()
-    perm, ctl = d["permutation"], d["controls"]
-    assert perm["n_draws"] >= 10, "the permutation control has been reduced away"
-    assert len(perm["spreads"]) == perm["n_draws"]
-    assert perm["median"] and perm["surgical_spread"]
-    assert ctl, "the named-family controls are gone"
-    n_below = perm["n_draws_at_or_below_surgical"]
-    assert n_below == sum(1 for s in perm["spreads"]
-                          if s <= perm["surgical_spread"]), (
-        "the reported count of draws reaching the surgical spread does not "
-        "match the draws")
-    assert f"**{n_below} of {perm['n_draws']}**" in md, (
-        "the permutation's result is measured and not rendered")
-    if n_below >= 0.25 * perm["n_draws"]:
-        assert "does NOT rest on the permutation" in md, (
-            f"{n_below} of {perm['n_draws']} arbitrary mass-matched removals "
-            "reproduce the surgical collapse, and the report still leans on "
-            "the permutation as evidence that surgery is special")
-    for name, leg in ctl.items():
-        assert f"`{name}`" in md, f"control {name!r} is run and not rendered"
-        if leg.get("spread"):
-            assert f"{leg['spread']:.2f}x" in md
+    ident = d.get("mass_identity") or {}
+    assert ident.get("holds"), "the mass identity is no longer verified"
+    assert ident["n_checks"] >= len(d["partitions"]) * 4, (
+        f"the identity is checked over only {ident['n_checks']} cells")
+    assert ident["max_abs_error"] < 1e-9
+
+    # recomputed HERE, from the partition counts, not from the identity block
+    for name, leg in d["holdouts"].items():
+        for k, r in leg["partitions"].items():
+            c = d["partitions"][k]
+            left = c["phys"] - r["phys_held_out"]
+            if not left:
+                continue
+            assert abs(c["pharm"] / left - r["ratio"]) < 1e-9, (
+                f"{name}/{k}: the held-out ratio is not pharm/(phys-removed), "
+                "so the identity the page states is false")
+
+    assert "cannot work, and is withdrawn" in md
+    for gone in ("of 20** random draws", "mass-matched random, median",
+                 "does NOT rest on the permutation:"):
+        assert gone not in md, (
+            f"the withdrawn permutation number {gone!r} is still quoted")
+    assert "n_draws" not in json.dumps(d), (
+        "the withdrawn permutation still writes draw counts into the artifact")
+
+
+def test_the_named_controls_report_the_mass_they_remove():
+    """They are NOT mass-matched, and the argument depends on knowing that."""
+    d, md = _doc(), MD.read_text()
+    rm = d.get("removed_mass") or {}
+    surg = sum((rm.get("surgical") or {}).values())
+    assert surg > 0
+    assert rm.get("controls"), "the controls' removed mass is not recorded"
+    for name, per in rm["controls"].items():
+        mass = sum(per.values())
+        assert f"{mass:,}" in md, (
+            f"control `{name}` removes {mass:,} physical articles and the "
+            "report does not say so, while comparing its spread to surgery's")
+        # each control's per-partition mass must be its OWN, not surgery's
+        assert per != rm["surgical"] or name == "surgical"
+    assert f"**{surg:,}**" in md
 
 
 def test_a_named_family_control_does_not_reproduce_the_collapse():
     """If radiotherapy held out did this too, surgery would not be the story."""
     d = _doc()
-    surg = d["permutation"]["surgical_spread"]
+    surg = d["holdouts"][_mod().PRIMARY_RULE]["spread"]
     pub = d["published_spread"]
     spreads = {k: v["spread"] for k, v in d["controls"].items() if v.get("spread")}
     assert spreads, "no named-family control produced a spread"
+    rm = (d.get("removed_mass") or {}).get("controls") or {}
     for k, v in spreads.items():
         assert v > surg * 1.5, (
             f"holding out `{k}` gives {v:.2f}x against surgery's {surg:.2f}x, "
             f"so the page's attribution to surgery is not supported; the "
             f"unremoved spread is {pub:.2f}x")
+        # the load-bearing half: each removes LESS mass than surgery and still
+        # WIDENS past the unremoved baseline, which less mass cannot explain
+        assert v > pub, (
+            f"`{k}` brings the five closer together ({v:.2f}x against "
+            f"{pub:.2f}x unremoved), so it is a rival explanation rather than "
+            "a control")
+        assert sum(rm.get(k, {}).values()) < sum(
+            (d["removed_mass"].get("surgical") or {}).values()), (
+            f"`{k}` removes at least as much mass as surgery, so 'less mass "
+            "and still wider' is not the argument available")
 
 
 # ---------------------------------------------------------------------------
@@ -546,20 +643,77 @@ def test_the_precise_set_is_not_presented_as_the_criterion_applied_evenly():
         "no excluded pharmacological mechanism has a therapy-naming dominant "
         "descriptor any more; the page's argument that PRECISE is not its own "
         "criterion applied evenly needs redoing rather than deleting")
+    # THE SAME READING MUST BE APPLIED TO THE DENOMINATOR. Testing only the
+    # numerator's dropped mechanisms is the one-sided narrowing this page
+    # exists to police, structurally, even while the number is unaffected.
+    independently_py = sorted(
+        x for x in lc["dropped_phys"]
+        if re.search(r"inhibitor|therap|antibod|conjugat|vaccine|agent",
+                     tops.get(x) or "", re.I))
+    assert set(lc.get("criterion_restored_phys") or []) == set(independently_py), (
+        f"the generator restores {sorted(lc.get('criterion_restored_phys') or [])} "
+        f"on the denominator side but the same reading gives {independently_py}")
+    assert abs(lc["criterion_restored_ratio"]
+               - lc["criterion_restored_numerator"]
+               / lc["criterion_restored_denominator"]) < 1e-9
     rest = lc.get("criterion_restored_pharm") or []
     assert set(rest) == set(independently), (
         f"the generator restores {sorted(rest)} but the landscape artifact's "
         f"own top descriptors say {independently} satisfy PRECISE's stated "
         "criterion")
     assert lc["criterion_restored_ratio"], "the restored ratio was not computed"
-    assert abs(lc["criterion_restored_ratio"]
-               - lc["criterion_restored_numerator"]
-               / lc["precise_denominator"]) < 1e-9
     assert f"**{lc['criterion_restored_ratio']:.2f}:1**" in md, (
         "restoring the criterion-satisfying mechanisms changes the restricted "
         "ratio and the report does not say so")
     for x in rest:
         assert f"`{x}`" in md
+
+
+def test_the_two_quoted_ratios_are_pinned_to_their_sources():
+    """9.1 and 17.6 are typed constants rendered into prose beside numbers the
+    page derives. Pinned to the manuscript and to the landscape artifact, so
+    an edit there fails here rather than silently changing what is compared.
+    """
+    m = _mod()
+    v1 = (REPO_ROOT / "article" / "drafts" / "v1.md")
+    if v1.exists():
+        assert f"{m.MANUSCRIPT_RATIO}:1" in v1.read_text(), (
+            f"the manuscript no longer states {m.MANUSCRIPT_RATIO}:1, so the "
+            "constant this page divides by is stale")
+    lc = _doc().get("landscape_composition") or {}
+    if lc.get("ratio"):
+        assert abs(lc["ratio"] - m.LANDSCAPE_CENSUS_RATIO) < 0.1, (
+            f"the landscape artifact gives {lc['ratio']:.2f}:1 while this "
+            f"page types {m.LANDSCAPE_CENSUS_RATIO}:1 beside it")
+
+
+def test_the_criterion_restoration_is_symmetric_on_synthetic_data():
+    """Today the denominator side restores nothing, so a mutation dropping it
+    is INERT and no artifact-reading guard can see it. Exercised on data where
+    the physical side DOES have a therapy-naming dropped mechanism.
+    """
+    m = _mod()
+    cen = {"drugA": 100, "drugB": 50, "physA": 10, "physB": 5}
+    top = {"drugA": "Widget Inhibitors", "drugB": "Glycolysis",
+           "physA": "Ultrasonic Therapy", "physB": "Electrochemotherapy"}
+    ph, py, pre = {"drugA", "drugB"}, {"physA", "physB"}, {"drugA", "physA"}
+    r = m.restrict(cen, top, ph, py, pre)
+    # `drugB`/Glycolysis is a process -> stays dropped.
+    # `physB`/Electrochemotherapy names a therapy -> the SAME reading restores it.
+    assert r["criterion_restored_pharm"] == []
+    assert r["criterion_restored_phys"] == ["physB"], (
+        "the denominator's therapy-naming dropped mechanism is not restored, "
+        "so the restoration is applied to the numerator only -- the exact "
+        "one-sidedness this page exists to police")
+    assert r["criterion_restored_numerator"] == 100
+    assert r["criterion_restored_denominator"] == 15, (
+        f"denominator {r['criterion_restored_denominator']}, expected 10+5")
+    assert abs(r["criterion_restored_ratio"] - 100 / 15) < 1e-9
+    assert abs(r["precise_ratio"] - 100 / 10) < 1e-9
+    # and a therapy-naming NUMERATOR drop is restored too, symmetrically
+    r2 = m.restrict(cen, {**top, "drugB": "Widget Antibodies"}, ph, py, pre)
+    assert r2["criterion_restored_pharm"] == ["drugB"]
+    assert r2["criterion_restored_numerator"] == 150
 
 
 def test_the_comparator_consequence_for_the_understatement_claim_is_stated():
@@ -692,9 +846,8 @@ def test_the_scan_reproduces_the_committed_holdouts_on_a_sample():
                 if not mesh:
                     continue
                 for k, s in sets.items():
-                    a = bool(mesh & s["ph"])
+                    a, hit = m.classify(mesh, s)
                     counts[k]["pharm"] += a
-                    hit = mesh & s["py"]
                     if hit:
                         counts[k]["phys"] += 1
                         counts[k]["both"] += a

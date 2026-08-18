@@ -1942,11 +1942,13 @@
   }
  },
  "landscape_composition": {
+  "criterion_restored_denominator": 3865,
   "criterion_restored_numerator": 62166,
   "criterion_restored_pharm": [
    "immunotherapy",
    "synthetic-lethality"
   ],
+  "criterion_restored_phys": [],
   "criterion_restored_ratio": 16.084346701164296,
   "denominator": 6380,
   "dropped_pharm": [
@@ -1958,6 +1960,16 @@
   "dropped_phys": [
    "electrochemical-therapy"
   ],
+  "landscape_own_numerator": 31064,
+  "landscape_own_pharm": [
+   "antibody-drug-conjugate",
+   "bispecific-antibody",
+   "car-t",
+   "mrna-vaccine",
+   "oncolytic-virus",
+   "phagocytosis-checkpoint"
+  ],
+  "landscape_own_ratio": 8.0372574385511,
   "numerator": 112253,
   "precise_denominator": 3865,
   "precise_numerator": 24839,
@@ -1995,6 +2007,13 @@
    ]
   ],
   "top_two_share": 0.6518133145662032
+ },
+ "mass_identity": {
+  "claim": "held-out ratio == pharm / (phys - articles removed)",
+  "holds": true,
+  "max_abs_error": 0.0,
+  "n_checks": 25,
+  "withdrawn_control": "mass-matched permutation over random descriptors"
  },
  "partitions": {
   "clinical-delivery": {
@@ -2058,43 +2077,79 @@
    "surgical_share_of_physical": 0.5911663192715674
   }
  },
- "permutation": {
-  "articles_held_out_target": {
-   "clinical-delivery": 111415,
-   "maximally-inclusive": 353184,
-   "mechanism-of-action": 0,
-   "minimally-inclusive": 315034,
-   "regulatory-class": 350269
+ "proxy_containment": {
+  "non_descriptor_composites_dropped": {
+   "surgery": [
+    "neoplasms/surgery"
+   ]
   },
-  "max": 1.2588104743423176,
-  "median": 1.1666980977636483,
-  "min": 1.0943971681988223,
-  "n_draws": 20,
-  "n_draws_at_or_below_surgical": 15,
-  "seed": 20260818,
-  "spreads": [
-   1.0943971681988223,
-   1.1026364374725364,
-   1.1080704331396967,
-   1.123850726844998,
-   1.1354735269466496,
-   1.1386739375362493,
-   1.1609160604466189,
-   1.1621436752984278,
-   1.1640093035583325,
-   1.1661770093610295,
-   1.1666980977636483,
-   1.1718947313586097,
-   1.1761289710574563,
-   1.1767515258053893,
-   1.1792076004221856,
-   1.2099985927600103,
-   1.211149204003574,
-   1.211725039233638,
-   1.2167109498008841,
-   1.2588104743423176
-  ],
-  "surgical_spread": 1.1799918715103523
+  "per_partition": {
+   "clinical-delivery": {
+    "pharm_contains_drug_therapy": true,
+    "phys_contains_surgery": false,
+    "phys_missing_surgery_proxy": [
+     "hepatectomy",
+     "mastectomy",
+     "pneumonectomy"
+    ]
+   },
+   "maximally-inclusive": {
+    "pharm_contains_drug_therapy": true,
+    "phys_contains_surgery": true,
+    "phys_missing_surgery_proxy": []
+   },
+   "mechanism-of-action": {
+    "pharm_contains_drug_therapy": true,
+    "phys_contains_surgery": false,
+    "phys_missing_surgery_proxy": [
+     "hepatectomy",
+     "mastectomy",
+     "pneumonectomy",
+     "surgical procedures, operative"
+    ]
+   },
+   "minimally-inclusive": {
+    "pharm_contains_drug_therapy": true,
+    "phys_contains_surgery": true,
+    "phys_missing_surgery_proxy": []
+   },
+   "regulatory-class": {
+    "pharm_contains_drug_therapy": true,
+    "phys_contains_surgery": true,
+    "phys_missing_surgery_proxy": []
+   }
+  },
+  "pharm_contains_drug_therapy": 5,
+  "phys_contains_surgery": 3,
+  "proxies": {
+   "diagnostic imaging": [
+    "diagnostic imaging",
+    "magnetic resonance imaging",
+    "positron emission tomography computed tomography",
+    "tomography, x-ray computed"
+   ],
+   "drug therapy": [
+    "antineoplastic agents",
+    "antineoplastic combined chemotherapy protocols",
+    "chemotherapy, adjuvant",
+    "drug therapy"
+   ],
+   "radiotherapy": [
+    "chemoradiotherapy",
+    "radiosurgery",
+    "radiotherapy",
+    "radiotherapy dosage",
+    "radiotherapy planning, computer-assisted",
+    "radiotherapy, adjuvant",
+    "radiotherapy, intensity-modulated"
+   ],
+   "surgery": [
+    "hepatectomy",
+    "mastectomy",
+    "pneumonectomy",
+    "surgical procedures, operative"
+   ]
+  }
  },
  "published_spread": 2.9885671855982605,
  "qualifier_recalls": {
@@ -2122,6 +2177,31 @@
    }
   },
   "n_shards": 8
+ },
+ "removed_mass": {
+  "controls": {
+   "energy/ablation family": {
+    "clinical-delivery": 51178,
+    "maximally-inclusive": 48483,
+    "mechanism-of-action": 54435,
+    "minimally-inclusive": 20890,
+    "regulatory-class": 31487
+   },
+   "radiotherapy family": {
+    "clinical-delivery": 131818,
+    "maximally-inclusive": 128476,
+    "mechanism-of-action": 112786,
+    "minimally-inclusive": 113870,
+    "regulatory-class": 86328
+   }
+  },
+  "surgical": {
+   "clinical-delivery": 111415,
+   "maximally-inclusive": 353184,
+   "mechanism-of-action": 0,
+   "minimally-inclusive": 315034,
+   "regulatory-class": 350269
+  }
  },
  "stem_alternative_hits": {
   "amputat": [
@@ -2269,5 +2349,12 @@
    "stem cell transplantation",
    "transplantation, haploidentical"
   ]
+ },
+ "without_zero_surgery_partitions": {
+  "excluded": [
+   "mechanism-of-action"
+  ],
+  "held_out_spread": 1.159052654756708,
+  "published_spread": 1.9142453648136362
  }
 }

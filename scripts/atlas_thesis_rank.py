@@ -164,7 +164,14 @@ def scan(universe: set) -> dict:
                     cand_inter[m] += 1
     return {"census": census, "ferroptosis_total": ferro_total,
             "universe_size": len(universe),
-            "intersections": [[k, v] for k, v in inter.most_common()],
+            # DETERMINISTIC TIE-BREAK. `most_common()` preserves insertion
+            # order, which comes from `mesh & universe` set iteration and so
+            # depends on the universe's CONTENTS: removing one descriptor that
+            # matches nothing swapped two rank-1 entries and moved a published
+            # rank (HIFU 160 -> 161) for no measured reason. Ranks inside a tie
+            # are not determined by the data, so the ordering is fixed by name
+            # and the tie is reported alongside.
+            "intersections": sorted(inter.items(), key=lambda kv: (-kv[1], kv[0])),
             "leg_intersections": dict(leg_inter),
             "candidate_intersections": dict(cand_inter),
             "census_descriptor_totals": dict(census_desc),
@@ -267,9 +274,14 @@ def render(d: dict) -> str:
           "anyone; that claim is withdrawn, see `analysis/atlas-modality-ratio.md`.*",
           ""]
 
+    # `universe_size` is the number of descriptors SCANNED; `len(rows)` is the
+    # number that intersect ferroptosis at all. Saying "each of 415 ... ranked"
+    # while ranking 166 makes every rank read against the wrong denominator.
     L += [f"**{d['ferroptosis_total']:,} census articles carry MeSH "
-          f"`Ferroptosis`.** Their intersection with each of "
-          f"{d['universe_size']:,} modality descriptors, ranked:", ""]
+          f"`Ferroptosis`.** Of the {d['universe_size']:,} modality "
+          f"descriptors scanned, {len(rows):,} intersect it at all; the rest "
+          f"have no intersection and are not ranked. Ordered by count, ties "
+          f"broken by name:", ""]
     L += ["| rank | modality descriptor | ferroptosis articles | share of ferroptosis |",
           "|--:|---|--:|--:|"]
     for i, (k, v) in enumerate(rows[:20], 1):
@@ -299,7 +311,10 @@ def render(d: dict) -> str:
         if c is None:
             c = 0 if desc in scanned else None
         cell = f"{c:,}" if c is not None else "not measured"
-        rank_cell = (str(r) if r else
+        # A rank inside a tie is not determined by the data. Report the span.
+        tied = sum(1 for _k, v in rows if r and v == dict(rows).get(desc))
+        rank_cell = ((f"{r} (tied with {tied - 1} others)" if tied > 1 else str(r))
+                     if r else
                      "*not a modality; outside this universe*")
         L.append(f"| {leg} | {desc} | {cell} | {rank_cell} |")
     L += [""]
