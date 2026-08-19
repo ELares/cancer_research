@@ -18,7 +18,9 @@ title/abstract against how often the descriptor layer catches it, and reported a
   independent recounts produced six different numerators.
 
   A CONTROL THAT REFUTED THE EXPLANATION. Angiogenesis has no qualifier form and
-  scores LOWER descriptor recall than radiotherapy, so low recall is not
+  scores descriptor recall of the same low order as radiotherapy's (5.9%
+  against 2.7% -- an earlier docstring said LOWER, which those figures
+  contradict), so low recall is not
   evidence of a qualifier problem. Most of the spread was topicality.
 
 The design that survives compares the SAME articles parsed the SAME way,
@@ -32,6 +34,7 @@ it once its own measurement says surgery is the sharp one.
 """
 
 import json
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -191,3 +194,173 @@ def test_render_only_works_without_the_raw_xml():
     assert res.returncode == 0, (
         f"--render-only failed, so the report cannot be rebuilt without "
         f"re-downloading:\n{res.stdout}\n{res.stderr}")
+
+def test_every_descriptor_proxy_entry_can_actually_fire():
+    """`neoplasms/surgery` was a descriptor/QUALIFIER composite in a list
+    matched against DescriptorName text, so it could never match. It presented
+    the surgery arm as five entries when four were live, and the guard whose
+    stated purpose was "otherwise its qualifier-only figure would be the
+    qualifier count with nothing subtracted" asserted only non-emptiness --
+    reducing the arm to that one dead entry left the suite green.
+    """
+    m = _mod()
+    for name, spec in m.MODALITIES.items():
+        live = [d for d in spec["descriptors"] if "/" not in d]
+        assert live, f"{name}'s descriptor arm has no entry that can fire"
+        dead = sorted(set(spec["descriptors"]) - set(live))
+        assert not dead, (
+            f"{name} lists {dead}, which contain a qualifier and are matched "
+            "against DescriptorName, so they can never fire")
+        assert len(spec["qualifiers"]) >= 1
+
+
+def test_the_cross_modality_ordering_is_withdrawn():
+    """The gain is measured against a hand-written proxy for an open tree
+    while the qualifier arm is a whole closed axis, so ranking the rows ranks
+    proxy completeness as much as it ranks the axis.
+    """
+    md = MD.read_text()
+    assert "ORDERING is not a measurement" in md
+    assert "THAT ORDERING IS WITHDRAWN" in md
+    assert "ranks that incompleteness" in md
+    # the two clauses the ordering rested on must not stand unqualified
+    for m_ in re.finditer(r"nowhere the ingest looks", md):
+        w = md[max(0, m_.start() - 300):m_.end() + 300]
+        assert "WITHDRAWN" in w, (
+            "the report still says the qualifier axis carries these articles "
+            "and nowhere the ingest looks, which holds only against four "
+            "descriptors rather than against the ingest")
+    for m_ in re.finditer(r"and it says which those are", md):
+        w = md[max(0, m_.start() - 400):m_.end() + 200]
+        assert "no materiality threshold" in w
+
+
+def test_the_control_direction_matches_the_only_figures_the_repo_carries():
+    """5.9% against 2.7% is HIGHER, and three sites said LOWER."""
+    md, src = MD.read_text(), SCRIPT.read_text()
+    tst = Path(__file__).read_text()
+    for text, where in ((md, "report"), (src, "generator"), (tst, "guard")):
+        for m_ in re.finditer(r"[Ll]ower descriptor recall than radiotherapy",
+                              text):
+            w = text[max(0, m_.start() - 400):m_.end() + 400]
+            assert re.search(r"earlier|contradict|withdraw", w, re.I), (
+                f"the {where} says angiogenesis has lower descriptor recall "
+                "than radiotherapy, and the only figures the repo carries for "
+                "it are 5.9% against 2.7%")
+    assert "computed NOWHERE in this repo" in src, (
+        "the three figures behind the withdrawn claim are quoted as though "
+        "this repo produced them")
+
+
+def test_the_committed_report_is_what_the_generator_produces():
+    """No regenerate-and-diff gate existed, so every renderer edit was
+    invisible: a mutation dropping a whole bullet passed the suite.
+    """
+    m = _mod()
+    assert m.render(_doc()) == MD.read_text(), (
+        "analysis/atlas-ingest-sensitivity.md is not what the current "
+        "renderer produces from the committed JSON -- re-run with "
+        "--render-only")
+
+
+def test_the_tree_arm_is_computed_and_the_ordering_result_is_derived():
+    """The withdrawal used to be an argument. It is a measurement now: the
+    descriptor arm recomputed as the whole MeSH family the modality names.
+    """
+    d, md = _doc(), MD.read_text()
+    t = d.get("modalities_tree_arm")
+    cov = d.get("proxy_coverage_of_family")
+    assert t and cov, "the tree-family control is gone"
+    n = d["cancer_articles"]
+    for m, q in t.items():
+        p = d["modalities"][m]
+        assert q["descriptor"] >= p["descriptor"] or \
+            cov[m]["entries_in_family"] < cov[m]["proxy_entries"], (
+            f"{m}: the family arm finds fewer descriptor hits than a proxy "
+            "that is wholly inside it, which cannot be")
+        assert q["qualifier"] == p["qualifier"], (
+            f"{m}: the qualifier arm moved between the two runs, so the "
+            "comparison is not holding it fixed")
+        assert q["either"] >= q["descriptor"] and q["either"] >= q["qualifier"]
+        assert q["qualifier_only"] == q["qualifier"] - (
+            q["qualifier"] + q["descriptor"] - q["either"]), (
+            f"{m}: qualifier_only is not qualifier minus the overlap")
+        assert q["qualifier_only"] > 0, f"{m}: no gain survives the control"
+    # the ordering verdict must be DERIVED from the two arms
+    rp = sorted(d["modalities"], key=lambda m: -d["modalities"][m]["qualifier_only"])
+    rt = sorted(t, key=lambda m: -t[m]["qualifier_only"])
+    if rp != rt:
+        assert "THE ORDERING INVERTS" in md, (
+            f"the arms rank the modalities differently ({rp} vs {rt}) and the "
+            "report does not say so")
+        assert " > ".join(f"`{m}`" for m in rt) in md
+    else:
+        assert "does NOT change under the family arm" in md, (
+            "the ordering survives the control and the page still presents "
+            "the control as supporting its withdrawal")
+
+
+def test_the_interval_resamples_the_shards_it_actually_drew():
+    """Wilson over 25,809 articles treats eight near-single-year blocks as
+    independent draws. The bootstrap must resample the blocks, and it must be
+    reproducible from the committed artifact.
+    """
+    m_, d, md = _mod(), _doc(), MD.read_text()
+    ps = d.get("per_shard")
+    assert ps, "the per-shard counts are not committed, so no cluster interval "\
+        "can be computed or checked"
+    assert len(ps) == d["n_shards"]
+    assert sum(v["n"] for v in ps.values()) == d["cancer_articles"], (
+        "the per-shard counts do not sum to the population")
+    for mod in d["modalities"]:
+        assert sum(v["qualifier_only"][mod] for v in ps.values()) == \
+            d["modalities"][mod]["qualifier_only"], (
+            f"{mod}: the per-shard qualifier-only counts do not sum to the "
+            "pooled one")
+    bs = m_._bootstrap(d)
+    assert bs, "the shard bootstrap produced nothing"
+    for mod, b in bs.items():
+        pt = 100 * d["modalities"][mod]["qualifier_only"] / d["cancer_articles"]
+        assert b["lo"] <= pt <= b["hi"], (
+            f"{mod}: the point estimate {pt:.2f} is outside its own bootstrap "
+            f"interval {b['lo']}-{b['hi']}")
+        assert f"**{b['lo']:.2f}-{b['hi']:.2f}**" in md
+    # reproducible: same seed, same answer
+    assert m_._bootstrap(d) == bs
+
+
+def test_the_chronological_range_claim_is_checked_against_the_census():
+    """"sampled across the whole chronological range" is checkable from the
+    committed records, and four decades holding a quarter of the census turn
+    out to contribute a handful of articles.
+    """
+    d, md = _doc(), MD.read_text()
+    e = d.get("era_coverage")
+    if not e:
+        import pytest
+        pytest.skip("census not present (gitignored); CI reads artifacts only")
+    assert e["census_records"] > 100_000
+    assert sum(r["sample_n"] for r in e["rows"]) == e["sample_records"]
+    assert e["sample_records"] == d["cancer_articles"], (
+        "the era profile is not over the same articles the analysis counted")
+    for r in e["rows"]:
+        if r["ratio"] is not None and r["census_pct"]:
+            # the shares are rounded to 2dp and the ratio is not, so compare
+            # relatively rather than absolutely
+            want = r["sample_pct"] / r["census_pct"]
+            assert abs(r["ratio"] - want) <= 0.03 * max(want, 1.0), (
+                f"{r['decade']}s: ratio {r['ratio']} against "
+                f"{r['sample_pct']}/{r['census_pct']}")
+    thin = e.get("decades_effectively_unrepresented") or []
+    assert [r["decade"] for r in e["rows"] if r["ratio"] is not None
+            and r["ratio"] < 0.1] == thin
+    if thin:
+        assert "effectively unrepresented" in md
+        assert f"{e['census_share_unrepresented']:.1f}% of the census" in md
+        # and the claim those decades falsify must not stand unqualified
+        for m_ in re.finditer(r"across the whole chronological range", md):
+            w = md[max(0, m_.start() - 200):m_.end() + 400]
+            assert re.search(r"false as written|is worth", w), (
+                "the page still claims the sample spans the chronological "
+                f"range while {len(thin)} decades contribute "
+                f"{e['sample_records_in_those']} articles")

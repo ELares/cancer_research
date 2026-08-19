@@ -61,6 +61,16 @@ _PATTERN = re.compile(
 
 # module -> (streams it reads, why that set is the right one)
 REGISTRY = {
+    "atlas_ingest_sensitivity.py": (
+        {"records"},
+        "The qualifier measurement itself re-parses the raw baseline XML, which "
+        "is not a census stream at all -- the committed records carry only "
+        "DescriptorName, which is the very gap this analysis measures. It reads "
+        "records/ for ONE thing: checking its own sample's era coverage against "
+        "the census, since the 8 sampled shards have committed counterparts "
+        "with a year. records/ alone is right there because the question is "
+        "what the MeSH-indexed census contains; the text-recovered stream has "
+        "no MeSH and so nothing to compare against."),
     # --- reads every stream, because it is asking what the project HOLDS ---
     "atlas_baseline.py": (
         {"records", "records_unindexed", "records_updates"},

@@ -1,0 +1,33 @@
+# MeSH descriptors under E02.815.
+# Source: NLM MeSH SPARQL endpoint, https://id.nlm.nih.gov/mesh/sparql (inference on).
+# Regenerate: python scripts/atlas_ingest_sensitivity.py --refresh-trees
+# descriptors: 29
+D000069473	Radiation Dose Hypofractionation
+D000069475	Re-Irradiation
+D001918	Brachytherapy
+D010910	Pituitary Irradiation
+D011867	Radioisotope Teletherapy
+D011878	Radiotherapy
+D011879	Radiotherapy Dosage
+D011881	Radiotherapy, Computer-Assisted
+D011882	Radiotherapy, High-Energy
+D014916	Whole-Body Irradiation
+D014964	X-Ray Therapy
+D015182	Lymphatic Irradiation
+D016371	Cranial Irradiation
+D016499	Radioimmunotherapy
+D016634	Radiosurgery
+D016754	Boron Neutron Capture Therapy
+D017247	Neutron Capture Therapy
+D017619	Hemibody Irradiation
+D018714	Radiotherapy, Adjuvant
+D019583	Dose Fractionation, Radiation
+D020266	Radiotherapy, Conformal
+D050397	Radiotherapy, Intensity-Modulated
+D059186	Chemoradiotherapy, Adjuvant
+D059248	Chemoradiotherapy
+D061089	Radiotherapy, Image-Guided
+D061106	Radiotherapy Setup Errors
+D061766	Proton Therapy
+D061888	Craniospinal Irradiation
+D063193	Heavy Ion Radiotherapy
