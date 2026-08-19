@@ -17,7 +17,9 @@ Only **47** are demonstrably falling at the same z but a LOWER floor (an interva
 | point_le_1.0 (shipped) | 193 | 32.3% |
 | point_le_1.3 | 479 | 80.2% |
 
-And the cut is knife-edge: **244 of 597 (41%)** of the pool sits within 10% of it, so the share runs 22.4% at a cut of 0.95 to 44.9% at 1.05. The mirror-image test -- the admission rule applied in reverse -- is the bottom row of that table, and it is the number a reader who assumed one test was run twice would have expected.
+And the cut is knife-edge: **244 of 597 (41%)** of the pool sits within 10% of it, so the share runs 22.4% at a cut of 0.95 to 44.9% at 1.05.
+
+The mirror-image test -- the admission rule applied in reverse -- is the row labelled `interval_excludes_1.3 (mirrors admission)`, at **2 of 597 (0.3%)**. An earlier version of this sentence said "the bottom row of that table", which is a hand-written POSITION into a machine-ordered one: the bottom row is the LOOSEST variant, and the two orderings the generator can produce -- insertion order on a full run, key-sorted order through `--render-only` -- both put it there. A reader following that instruction read the largest number in the table instead of the smallest.
 
 | descriptor | vs whole census | vs 2025 | new | census | 2025 |
 |---|--:|--:|--:|--:|--:|
@@ -65,7 +67,9 @@ Resolution is overwhelmingly concentrated in the newest cohorts. Of the 12 shown
 
 The real maximum among cohorts at least two years old is **2.907%** (2023), not the 0.777% the 2024 row shows -- which is the figure the withdrawn sentence quoted.
 
-**And it is not monotone in age, which the withdrawn sentence assumed.** 2023 at 2.907%, 2001 at 2.312% all resolve FASTER than the 2024 cohort at 0.777%, despite being older -- and 2023 is 3.7x its rate. So "a cohort not indexed by then generally never will be" is WITHDRAWN: cohorts that miss the initial indexing window keep acquiring indexing in later batches at a low rate.
+**And it is not monotone in age, which the withdrawn sentence assumed.** 2023 at 2.907%, 2001 at 2.312% all resolve FASTER than the 2024 cohort at 0.777%, despite being older -- and 2023 is 3.7x its rate. So "a cohort not indexed by then generally never will be" is WITHDRAWN.
+
+**But the two exhibits are not the same kind of thing, and an earlier version of this paragraph read them as if they were.** The withdrawal is carried by the ADJACENT-PAIR inversion alone -- a cohort resolving faster than a younger one, spread across hundreds of journals. The oldest exhibit is a single journal's back-file being deposited in this window: essentially all of that cohort's resolutions come from one title and essentially none of its other journals acquired anything. Read as a cohort rate it says the opposite of what it appears to -- almost nothing in that cohort resolved. So the honest generalisation is that late resolution arrives in lumpy per-journal batches, NOT that cohorts keep acquiring indexing at a low rate, which is a mechanism this page has not measured and which the oldest exhibit actively refutes.
 
 What survives is the size of the effect rather than its shape. Resolution beyond the two newest cohorts is a few percent at most, so the recent blind spot is only partly lag -- but this is measured over ONE update window, which bounds a per-window rate and not a lifetime, and the page no longer claims waiting recovers nothing.
 

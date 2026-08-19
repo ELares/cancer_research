@@ -8,12 +8,41 @@
    "thyroid"
   ]
  },
+ "descriptors_in_more_than_one_site": [
+  "blastic plasmacytoid dendritic cell neoplasm",
+  "esophageal neoplasms",
+  "esophageal squamous cell carcinoma",
+  "hereditary breast and ovarian cancer syndrome",
+  "thyroid cancer, papillary",
+  "thyroid neoplasms",
+  "thyroid nodule"
+ ],
  "excluded_streams": {
   "c04_core": 4203236,
   "text_matched_no_mesh": 783271
  },
  "multi_site": 207610,
+ "n_distinct_descriptors": 225,
+ "n_placements": 233,
  "n_sites": 18,
+ "non_human_disease_placements": {
+  "leukaemia": [
+   "avian leukosis",
+   "enzootic bovine leukosis",
+   "leukemia l1210",
+   "leukemia l5178",
+   "leukemia p388",
+   "leukemia, experimental",
+   "leukemia, feline",
+   "leukemia, radiation-induced"
+  ],
+  "liver": [
+   "liver neoplasms, experimental"
+  ],
+  "skin/melanoma": [
+   "melanoma, experimental"
+  ]
+ },
  "site_tree_roots": {
   "bladder": [
    "C04.588.945.947.960"
@@ -88,29 +117,181 @@
    "C04.588.443.915"
   ]
  },
- "sites": {
-  "bladder": 68363,
-  "brain/CNS": 177855,
-  "breast": 375499,
-  "cervix/uterus": 158452,
-  "colorectal": 245269,
-  "head and neck": 140066,
-  "kidney": 88262,
-  "leukaemia": 130376,
-  "liver": 199825,
-  "lung": 290414,
-  "lymphoma": 117890,
-  "oesophagus": 65076,
-  "ovary": 98618,
-  "pancreas": 99259,
-  "prostate": 162723,
-  "skin/melanoma": 205906,
-  "stomach": 120883,
-  "thyroid": 63046
- },
+ "sites": [
+  [
+   "breast",
+   375499
+  ],
+  [
+   "lung",
+   290414
+  ],
+  [
+   "colorectal",
+   245269
+  ],
+  [
+   "skin/melanoma",
+   205906
+  ],
+  [
+   "liver",
+   199825
+  ],
+  [
+   "brain/CNS",
+   177855
+  ],
+  [
+   "prostate",
+   162723
+  ],
+  [
+   "cervix/uterus",
+   158452
+  ],
+  [
+   "head and neck",
+   140066
+  ],
+  [
+   "leukaemia",
+   130376
+  ],
+  [
+   "stomach",
+   120883
+  ],
+  [
+   "lymphoma",
+   117890
+  ],
+  [
+   "pancreas",
+   99259
+  ],
+  [
+   "ovary",
+   98618
+  ],
+  [
+   "kidney",
+   88262
+  ],
+  [
+   "bladder",
+   68363
+  ],
+  [
+   "oesophagus",
+   65076
+  ],
+  [
+   "thyroid",
+   63046
+  ]
+ ],
  "unassigned": {
   "generic_neoplasms": 476436,
   "no_c04_descriptor": 200758,
+  "residue_top_descriptors": [
+   [
+    "humans",
+    663834
+   ],
+   [
+    "female",
+    342011
+   ],
+   [
+    "male",
+    305305
+   ],
+   [
+    "adult",
+    208395
+   ],
+   [
+    "middle aged",
+    192750
+   ],
+   [
+    "animals",
+    162453
+   ],
+   [
+    "aged",
+    132579
+   ],
+   [
+    "mice",
+    87256
+   ],
+   [
+    "adolescent",
+    77662
+   ],
+   [
+    "child",
+    63881
+   ],
+   [
+    "retrospective studies",
+    59368
+   ],
+   [
+    "treatment outcome",
+    52785
+   ],
+   [
+    "diagnosis, differential",
+    52435
+   ],
+   [
+    "bone neoplasms",
+    45186
+   ],
+   [
+    "tomography, x-ray computed",
+    42836
+   ],
+   [
+    "multiple myeloma",
+    42185
+   ],
+   [
+    "prognosis",
+    39950
+   ],
+   [
+    "aged, 80 and over",
+    38399
+   ],
+   [
+    "cell line, tumor",
+    35873
+   ],
+   [
+    "magnetic resonance imaging",
+    35384
+   ],
+   [
+    "child, preschool",
+    35266
+   ],
+   [
+    "young adult",
+    32895
+   ],
+   [
+    "rats",
+    32234
+   ],
+   [
+    "cysts",
+    31823
+   ]
+  ],
   "same_sites_deeper": 405299,
   "top_descriptors": [
    [
@@ -201,51 +382,159 @@
    "assigned": 2952243,
    "multi_site": 389451,
    "n_descriptors": 233,
-   "sites": {
-    "bladder": 68398,
-    "brain/CNS": 257914,
-    "breast": 378191,
-    "cervix/uterus": 159782,
-    "colorectal": 262866,
-    "head and neck": 380530,
-    "kidney": 91118,
-    "leukaemia": 266602,
-    "liver": 212500,
-    "lung": 304402,
-    "lymphoma": 196557,
-    "oesophagus": 65076,
-    "ovary": 100406,
-    "pancreas": 101620,
-    "prostate": 162723,
-    "skin/melanoma": 228568,
-    "stomach": 120883,
-    "thyroid": 67705
-   }
+   "sites": [
+    [
+     "head and neck",
+     380530
+    ],
+    [
+     "breast",
+     378191
+    ],
+    [
+     "lung",
+     304402
+    ],
+    [
+     "leukaemia",
+     266602
+    ],
+    [
+     "colorectal",
+     262866
+    ],
+    [
+     "brain/CNS",
+     257914
+    ],
+    [
+     "skin/melanoma",
+     228568
+    ],
+    [
+     "liver",
+     212500
+    ],
+    [
+     "lymphoma",
+     196557
+    ],
+    [
+     "prostate",
+     162723
+    ],
+    [
+     "cervix/uterus",
+     159782
+    ],
+    [
+     "stomach",
+     120883
+    ],
+    [
+     "pancreas",
+     101620
+    ],
+    [
+     "ovary",
+     100406
+    ],
+    [
+     "kidney",
+     91118
+    ],
+    [
+     "bladder",
+     68398
+    ],
+    [
+     "thyroid",
+     67705
+    ],
+    [
+     "oesophagus",
+     65076
+    ]
+   ]
   },
   "shallow": {
    "assigned": 2546944,
    "multi_site": 207610,
    "n_descriptors": 42,
-   "sites": {
-    "bladder": 68363,
-    "brain/CNS": 177855,
-    "breast": 375499,
-    "cervix/uterus": 158452,
-    "colorectal": 245269,
-    "head and neck": 140066,
-    "kidney": 88262,
-    "leukaemia": 130376,
-    "liver": 199825,
-    "lung": 290414,
-    "lymphoma": 117890,
-    "oesophagus": 65076,
-    "ovary": 98618,
-    "pancreas": 99259,
-    "prostate": 162723,
-    "skin/melanoma": 205906,
-    "stomach": 120883,
-    "thyroid": 63046
-   }
+   "sites": [
+    [
+     "breast",
+     375499
+    ],
+    [
+     "lung",
+     290414
+    ],
+    [
+     "colorectal",
+     245269
+    ],
+    [
+     "skin/melanoma",
+     205906
+    ],
+    [
+     "liver",
+     199825
+    ],
+    [
+     "brain/CNS",
+     177855
+    ],
+    [
+     "prostate",
+     162723
+    ],
+    [
+     "cervix/uterus",
+     158452
+    ],
+    [
+     "head and neck",
+     140066
+    ],
+    [
+     "leukaemia",
+     130376
+    ],
+    [
+     "stomach",
+     120883
+    ],
+    [
+     "lymphoma",
+     117890
+    ],
+    [
+     "pancreas",
+     99259
+    ],
+    [
+     "ovary",
+     98618
+    ],
+    [
+     "kidney",
+     88262
+    ],
+    [
+     "bladder",
+     68363
+    ],
+    [
+     "oesophagus",
+     65076
+    ],
+    [
+     "thyroid",
+     63046
+    ]
+   ]
   }
  }
 }
