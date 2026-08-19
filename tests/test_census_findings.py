@@ -126,9 +126,15 @@ def test_the_committed_page_is_what_the_generator_produces():
     with tempfile.TemporaryDirectory() as td:
         shutil.copy2(MD, Path(td) / MD.name)
         try:
+            # A SENTINEL, because the test could otherwise compare the file to
+            # itself: point OUT at another path and the subprocess returns 0,
+            # writes nothing, and the equality holds vacuously.
+            MD.write_text("STALE-SENTINEL\n")
             r = subprocess.run([sys.executable, str(SCRIPT)], cwd=REPO_ROOT,
                                capture_output=True, text=True)
             fresh = MD.read_text()
+            assert fresh != "STALE-SENTINEL\n", (
+                "the generator ran and did not write the page")
         finally:
             shutil.copy2(Path(td) / MD.name, MD)
     assert r.returncode == 0, f"{r.stdout}\n{r.stderr}"
@@ -138,13 +144,30 @@ def test_the_committed_page_is_what_the_generator_produces():
 
 
 def test_no_headline_figure_is_a_literal():
-    """The failure this file exists for: a number typed into the renderer
-    cannot go stale, cannot be wrong about its own provenance, and cannot be
-    checked.
+    """A number typed into the renderer cannot go stale, cannot be wrong about
+    its own provenance, and cannot be checked.
+
+    Enumerating spellings does not work: `**17.6:1**` without spaces evaded a
+    ban on `**17.6 : 1**` -- the same number the ban was written for. Scanned
+    structurally instead.
     """
+    import ast
+    import re
     src = SCRIPT.read_text()
-    for bad in ("**17.6 : 1**", "**9.1 : 1**", "3.3x --", "6 to 2,792",
-                "**6.43 : 1**", "runs from 6 to"):
-        assert bad not in src, (
-            f"{bad!r} is typed into the generator; derive it from the "
-            "artifact it came from")
+    tree = ast.parse(src)
+    # SCOPED to the volume block this PR derives -- the maturity figures are
+    # still literals and are a separate, named piece of work. A guard that
+    # flags them too would be turned off rather than acted on.
+    lo = src[:src.index("**Volume.**")].count("\n") + 1
+    hi = src[:src.index("**Maturity.**")].count("\n") + 1
+    bad = []
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Constant) and isinstance(node.value, str):
+            ln = getattr(node, "lineno", 0)
+            if not (lo <= ln <= hi):
+                continue
+            if re.search(r"\b\d+\.\d", node.value) and "{" not in node.value:
+                bad.append((ln, node.value[:60]))
+    assert not bad, (
+        "these decimal figures are typed into the generator rather than "
+        f"derived: {bad}")

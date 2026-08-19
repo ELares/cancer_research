@@ -361,16 +361,20 @@ def render(d: dict) -> str:
               f"which is a different question, and the honest reading of the "
               f"table above is that the therapy figure is small and its exact "
               f"value is not established by either rule. An earlier version "
-              # A FACT ABOUT A PAST COMMIT, not a live measurement. Deriving
-              # it from the CURRENT count rewrote history: the body-route
-              # figure moved 38 -> 37 when an unrelated page's paragraph grew
-              # past this script's 40-line head window, and the sentence then
-              # claimed an earlier version had published 37, which it never
-              # did. A historical quotation must be a literal.
-              f"published 'the true figure lies between 1 and 38', a range "
-              f"whose upper end is not a bound. (Those two numbers are quoted "
-              f"as a FACT ABOUT A PAST COMMIT and are deliberately not "
-              f"derived; the live figures are {n_ther} and {len(body_t)}.)", ""]
+              # A QUOTATION FROM A PAST COMMIT, so it is a literal. Deriving
+              # it from the CURRENT count rewrote history. An earlier note
+              # here also got the history wrong twice over: the first
+              # published range really did say 37, and the count moved
+              # because THIS project's own census-findings page was
+              # rewritten, not an unrelated one. Measured across commits the
+              # body-route figure has read 37, then 38, then 37.
+              f"published 'the true figure lies between 1 and 37', a range "
+              f"whose upper end is not a bound. That figure is quoted as a "
+              f"fact about a past commit and is deliberately NOT derived -- "
+              f"it has read 37, 38 and 37 across commits, moving when an "
+              f"analysis page's own text grew past this script's 40-line "
+              f"head window rather than when its subject changed. The live "
+              f"figures are {n_ther} and {len(body_t)}.", ""]
 
     L += ["## Why this is worth stating rather than hiding", ""]
     L += ["A narrow thesis on a broad corpus is how most good science works, and "

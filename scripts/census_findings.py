@@ -62,34 +62,34 @@ def _volume(land) -> dict:
     # gives 1.9x, not the 3.3x the landscape page derives.
     cap_ph = tot(al.PHARMACOLOGICAL, "mesh_frozen") / max(num, 1)
     cap_py = tot(al.PHYSICAL, "mesh_frozen") / max(den, 1)
-    pre_n = tot(al.PHARMACOLOGICAL & al.PRECISE)
-    pre_d = tot(al.PHYSICAL & al.PRECISE)
-    # THE SAME ARTICLES UNDER MESH LABELS, which is what separates the two
-    # factors below. Without it the page welds them: 3.3x is the frozen->census
-    # step, 1.9x is the net against the manuscript's KEYWORD figure, and MeSH
-    # labelling alone moves the ratio the other way.
+    # THE SAME ARTICLES UNDER MESH LABELS. Without it the page welds two
+    # factors: 3.3x is the frozen->census step, the net against the
+    # manuscript's KEYWORD figure is different, and MeSH labelling alone
+    # moves the ratio the other way.
     b = tot(al.PHARMACOLOGICAL, "mesh_frozen") / max(
         tot(al.PHYSICAL, "mesh_frozen"), 1)
-    # ALL THREE RESTRICTIONS the sibling publishes, not just the one that
-    # inverts. `PRECISE - PHYSICAL` is what `atlas_landscape.py` ITSELF uses
-    # and is the literal referent of "that script's own PRECISE set".
-    alt_n = tot(al.PRECISE - al.PHYSICAL)
-    rest = sorted(x for x in (al.PHARMACOLOGICAL - al.PRECISE)
-                  if _names_therapy((cen.get(x) or {}).get("top_descriptor")))
+    # CALL THE SIBLING, DO NOT REIMPLEMENT IT. An earlier version rewrote
+    # `atlas_modality_ratio.restrict` here and got a LOOKALIKE: it restored
+    # only the numerator, and its therapy regex dropped the three alternatives
+    # that exist to catch PHYSICAL descriptors (`hifu`'s own descriptor is
+    # "High-Intensity Focused Ultrasound Ablation"). Both printed 16.08 only
+    # because the one dropped physical mechanism happens not to match either
+    # regex -- the sibling's own docstring names that trap. A hand-written copy
+    # beside the real one is how this repo has produced a discrepancy before.
+    spec2 = importlib.util.spec_from_file_location(
+        "mr", _P(__file__).resolve().parent / "atlas_modality_ratio.py")
+    mr = importlib.util.module_from_spec(spec2)
+    spec2.loader.exec_module(mr)
+    cen_counts = {k: (v.get("mesh_census") or 0) for k, v in cen.items()}
+    top = {k: v.get("top_descriptor") for k, v in cen.items()}
+    r = mr.restrict(cen_counts, top, al.PHARMACOLOGICAL, al.PHYSICAL, al.PRECISE)
     return {"ratio": num / den if den else 0.0,
             "ratio_mesh_frozen": b,
             "oversample": (cap_py / cap_ph) if cap_ph else 0.0,
-            "precise": (pre_n / pre_d) if pre_d else 0.0,
-            "precise_alt": (alt_n / pre_d) if pre_d else 0.0,
-            "criterion_restored": ((pre_n + tot(rest)) / pre_d) if pre_d else 0.0}
+            "precise": r["precise_ratio"],
+            "precise_alt": r["landscape_own_ratio"],
+            "criterion_restored": r["criterion_restored_ratio"]}
 
-
-_THERAPY = __import__("re").compile(
-    r"inhibitor|therap|antibod|conjugat|vaccine|agents?\b|blockade", __import__("re").I)
-
-
-def _names_therapy(desc) -> bool:
-    return bool(desc and _THERAPY.search(desc))
 
 
 def main() -> int:
@@ -140,9 +140,17 @@ def main() -> int:
             "now measurable rather than assumed.",
             "*Source:* `atlas-landscape.md`", ""]
 
-    L += ["## 2. The manuscript understated its own headline, and over-broadened another", ""]
+    _v = _volume(land) if land else None
+    if _v:
+        _n_below = sum(1 for x in (_v["precise"], _v["precise_alt"],
+                                   _v["criterion_restored"])
+                       if x < MANUSCRIPT_RATIO)
+        _w = {0: "no", 1: "one", 2: "two", 3: "all three"}[_n_below]
+        L += [f"## 2. The manuscript's headline holds under {_w} of three "
+              f"restrictions, and one claim was over-broadened", ""]
+    else:
+        L += ["## 2. The manuscript's volume and maturity claims", ""]
     if land:
-        _v = _volume(land)
         L += [
             f"**Volume.** Pharmacological to physical runs **{MANUSCRIPT_RATIO} : 1** by the",
             f"manuscript's keyword method and **{_v['ratio']:.1f} : 1** on the census.",
