@@ -87,7 +87,7 @@ def test_the_assignment_arithmetic_holds():
     assert d["multi_site"] <= a, "more multi-site articles than assigned ones"
     # the per-site column double-counts by design; it must exceed the assigned
     # total, or the multi-site figure is not what it says
-    assert sum(d["sites"].values()) >= a, (
+    assert sum(c for _s, c in _mod()._pairs(d["sites"])) >= a, (
         "the per-site counts sum below the assigned total, which is impossible "
         "if multi-site articles are counted once per site")
 
@@ -95,7 +95,7 @@ def test_the_assignment_arithmetic_holds():
 def test_the_spread_is_reported_because_a_ratio_divides_into_it():
     """Total coverage can look fine while cross-site comparison is unusable."""
     d, md = _doc(), MD.read_text()
-    vals = list(d["sites"].values())
+    vals = [c for _s, c in _mod()._pairs(d["sites"])]
     assert len(vals) >= 10, f"only {len(vals)} sites; the spread is not meaningful"
     lo, hi = min(vals), max(vals)
     assert f"{lo:,} to {hi:,}" in md, (
@@ -238,8 +238,8 @@ def test_the_depth_is_measured_rather_than_traded_away_in_prose():
     assert "nobody can audit" in md and "NEITHER HALF HAD BEEN MEASURED" in md, (
         "the unmeasured tradeoff is neither retracted nor replaced")
     # the per-site ratios must be rendered, since they are the finding
-    for s, c in d["sites"].items():
-        cd = var["deep"]["sites"].get(s, 0)
+    for s, c in _mod()._pairs(d["sites"]):
+        cd = dict(_mod()._pairs(var["deep"]["sites"])).get(s, 0)
         assert f"{cd/max(c,1):.2f}x" in md, f"{s}'s depth ratio is not rendered"
 
 
@@ -280,6 +280,135 @@ def test_the_dead_no_mesh_row_is_gone_and_the_real_exclusions_are_stated():
         "headline share is quoted against a denominator chosen by exclusion")
     assert d.get("adjacent_basis"), "adjacent-basis records are not counted"
     assert f"{d['adjacent_basis']:,}" in md
+
+
+def test_the_ranking_survives_a_json_round_trip():
+    """`sort_keys=True` reordered the stored rankings alphabetically, so
+    `--render-only` -- the script's own second documented invocation --
+    regenerated a DIFFERENT report: every rank cell became a self-identity and
+    the rank-change clause vanished. #730 fixed exactly this once already.
+    """
+    m, d = _mod(), _doc()
+    assert isinstance(d["sites"], list), (
+        "the per-site ranking is stored as a dict, which json.dumps("
+        "sort_keys=True) reorders alphabetically")
+    for k, v in (d.get("variants") or {}).items():
+        assert isinstance(v["sites"], list), f"{k}'s ranking is a dict"
+    # the committed report must be what the renderer produces from the
+    # committed artifact, which is what --render-only does
+    assert m.render(d) == MD.read_text(), (
+        "the committed report is not what --render-only reproduces")
+    # and rendering must not depend on key order at all
+    shuffled = json.loads(json.dumps(d, sort_keys=True))
+    assert m.render(shuffled) == MD.read_text(), (
+        "the report changes when the artifact's keys are sorted, so the "
+        "ranking is being read from something order-dependent")
+
+
+def test_the_map_root_column_actually_places_its_descriptor():
+    """`write_map`'s middle column is the whole auditability claim, and no
+    guard read it: falsifying 95 of 233 roots left every test green.
+    """
+    m = _mod()
+    tsv = REPO_ROOT / "analysis" / "site-descriptor-map.tsv"
+    tree = m.c04_tree()
+    lab = m.c04_labels()
+    by_label = {v: k for k, v in lab.items()}
+    n = 0
+    for line in tsv.read_text().splitlines():
+        if line.startswith("#") or not line.strip():
+            continue
+        site, root, desc = line.split("\t")
+        ts = tree.get(by_label.get(desc, ""), set())
+        assert any(t == root or t.startswith(root + ".") for t in ts), (
+            f"{site}: {desc!r} sits at {sorted(ts)}, none of which is under "
+            f"the root {root!r} the map says placed it")
+        n += 1
+    assert n >= 200
+
+
+def test_the_tree_file_is_pinned():
+    """Nothing pinned the 31KB committed input the whole walk reads. Dropping
+    one row and regenerating consistently left every guard green.
+    """
+    m = _mod()
+    tree, lab = m.c04_tree(), m.c04_labels()
+    assert set(tree) == set(lab), (
+        f"the tree file covers {len(tree)} descriptors and the definition "
+        f"file {len(lab)}; a partial fetch reads as a smaller tree")
+    pairs = sum(len(v) for v in tree.values())
+    assert pairs >= len(lab), "fewer tree numbers than descriptors"
+    # ancestor-closed: every internal node of a tree number must itself be a
+    # tree number somewhere, or the file was truncated by depth
+    allt = {t for v in tree.values() for t in v}
+    for t in sorted(allt):
+        parts = t.split(".")
+        for i in range(2, len(parts)):
+            anc = ".".join(parts[:i])
+            assert anc in allt or not anc.startswith("C04."), (
+                f"{t} has no ancestor {anc} in the file, so it is truncated")
+    for t in allt:
+        assert t.startswith("C04"), f"{t} is not a C04 tree number"
+
+
+def test_the_rank_change_finding_cannot_be_deleted_silently():
+    """`moved = []` deleted the "13 of 18 sites change rank" clause and every
+    guard stayed green, including the meta-guard written for that shape.
+    """
+    m, d, md = _mod(), _doc(), MD.read_text()
+    var = d["variants"]
+    sh = m._pairs(var["shallow"]["sites"])
+    dp = m._pairs(var["deep"]["sites"])
+    r_sh = {s: i + 1 for i, (s, _c) in enumerate(sh)}
+    r_dp = {s: i + 1 for i, (s, _c) in enumerate(dp)}
+    merged = set(d.get("deep_site_overlaps") or {})
+    moved = [s for s in r_sh
+             if s not in merged and r_dp.get(s) and r_sh[s] != r_dp[s]]
+    if moved:
+        assert f"{len(moved)} of {len(r_sh)} sites change rank" in md, (
+            f"{len(moved)} sites change rank between the two lists and the "
+            "report does not say so")
+    # a site whose subtree contains another of these sites gets no rank at all
+    for s in merged:
+        assert f"n/a (subsumes" in md
+        assert f"| {s} |" in md
+
+
+def test_the_scope_cost_names_more_than_benign_and_precursor():
+    """9.9% of placements are experimental models, veterinary disease or named
+    syndromes, and the page's only stated scope cost was benign/precursor.
+    """
+    d, md = _doc(), MD.read_text()
+    nh = d.get("non_human_disease_placements") or {}
+    if not nh:
+        return
+    tot = sum(len(v) for v in nh.values())
+    assert f"{tot} placements are experimental" in md, (
+        f"{tot} placements are not human disease at that site and the report "
+        "does not say so")
+    biggest = max(nh, key=lambda k: len(nh[k]))
+    for x in nh[biggest][:4]:
+        assert f"`{x}`" in md
+
+
+def test_the_residue_is_characterised_by_its_own_descriptors():
+    """The prose pointed at a descriptor list accumulated over EVERY
+    unassigned record, including the two buckets it had just excluded.
+    """
+    d, md = _doc(), MD.read_text()
+    u = d["unassigned"]
+    res = u.get("residue_top_descriptors")
+    assert res, "the residue has no descriptor profile of its own"
+    allu = dict(u.get("top_descriptors") or [])
+    resd = dict(res)
+    assert "neoplasms" not in resd, (
+        "the residue profile counts generic-`Neoplasms` records, which the "
+        "residue excludes by definition")
+    for k, v in resd.items():
+        assert v <= allu.get(k, v), (
+            f"{k} is commoner in the residue ({v:,}) than in every unassigned "
+            f"record ({allu.get(k)}), which cannot be")
+    assert "cancer at a site this list does not cover" in md.lower()
 
 
 def test_the_geography_caveat_survives():

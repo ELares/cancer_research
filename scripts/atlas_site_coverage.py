@@ -95,15 +95,27 @@ SITES = {
 #
 # THE REAL PROBLEM WITH THE SHALLOW LIST IS NOT ITS SIZE, IT IS THAT ITS DEPTH
 # IS NOT UNIFORM. `stomach`, `ovary`, `bladder` and `thyroid` get ONE
-# descriptor while `brain/CNS` and `head and neck` get four, and the C04 tree
-# holds ~40 leukaemia descriptors against 3 for prostate. So the per-site
+# descriptor while `brain/CNS` and `head and neck` get four, while the tree
+# holds far more under some of those nodes than others -- a figure the report
+# DERIVES rather than states here, since a hand-written count of names inside
+# the function whose thesis is that names are not membership repeats the
+# mistake one level down (the count once written here, "~40 against 3", is 43
+# against 2 on the tree). So the per-site
 # column is understated by very different factors for different sites, and it
 # is the column a burden ratio would divide into mortality.
 #
-# The rules are patterns over the COMMITTED C04 descriptor file, and the
-# resolved map is written out beside the report so a placement can be
-# disputed the same way the partitions in #724 can.
+# There are no rules and no patterns. The deep list is a walk of NLM's tree
+# from the nodes the shallow list already occupies, and the resolved map is
+# written out beside the report so a placement can be disputed the same way the
+# partitions in #724 can.
 # ---------------------------------------------------------------------------
+# Experimental models, veterinary disease and named genetic syndromes. These
+# sit legitimately under a site in MeSH and are not human disease at that site,
+# so they are a scope cost the page names rather than a placement error.
+NON_HUMAN = re.compile(
+    r"experimental|leukemia l\d|leukemia p\d|radiation-induced|avian|"
+    r"bovine|feline|murine|, mouse|syndrome$|syndrome,|disease$", re.I)
+
 C04_TSV = ATLAS / "mesh" / "c04-descriptors.tsv"
 C04_TREE = ATLAS / "mesh" / "c04-tree-numbers.tsv"
 OUT_MAP = PROJECT_ROOT / "analysis" / "site-descriptor-map.tsv"
@@ -200,6 +212,18 @@ def write_map(dm: dict) -> None:
     OUT_MAP.write_text("\n".join(L) + "\n", encoding="utf-8")
 
 
+def _pairs(v):
+    """Ordered pairs, tolerating a dict from an older artifact.
+
+    `json.dumps(sort_keys=True)` reorders a dict, so a ranking stored as one
+    comes back alphabetical and `--render-only` renders a DIFFERENT report --
+    the defect #730 already fixed in this repo and this file did not inherit.
+    """
+    if isinstance(v, dict):
+        return sorted(v.items(), key=lambda kv: -kv[1])
+    return [tuple(x) for x in v]
+
+
 def _lut(mapping: dict) -> dict:
     lut = {}
     for site, descs in mapping.items():
@@ -228,6 +252,7 @@ def scan() -> dict:
     un_generic = 0
     un_adjacent = 0
     un_desc = Counter()
+    res_desc = Counter()   # the RESIDUE alone -- see the note in _remainder_section
     for f in sorted((ATLAS / "records").glob("*.jsonl.gz")):
         with gzip.open(f, "rt", encoding="utf-8") as fh:
             for line in fh:
@@ -257,21 +282,40 @@ def scan() -> dict:
                             un_adjacent += 1
                         for m in mesh:
                             un_desc[m] += 1
+                        # THE PROSE'S "the descriptors above" pointed at
+                        # `un_desc`, which accumulates over every unassigned
+                        # record -- including the generic-`Neoplasms` and
+                        # no-C04 ones the same sentence has just excluded. The
+                        # residue gets its own counter.
+                        if GENERIC not in mesh and not adj:
+                            for m in mesh:
+                                res_desc[m] += 1
     return {
         "census": total,
         "adjacent_basis": adjacent,
         "assigned": assigned["shallow"],
         "multi_site": multi["shallow"],
-        "sites": dict(per_site["shallow"].most_common()),
+        "sites": [[k, v] for k, v in per_site["shallow"].most_common()],
         "n_sites": len(SITES),
         "variants": {
             k: {"assigned": assigned[k], "multi_site": multi[k],
-                "sites": dict(per_site[k].most_common()),
+                "sites": [[x, y] for x, y in per_site[k].most_common()],
                 "n_descriptors": sum(
                     len(SITES[s] if k == "shallow" else dm[s]["deep"])
                     for s in SITES)}
             for k in luts},
         "site_tree_roots": {s: dm[s]["roots"] for s in sorted(dm)},
+        # NLM's subtree carries more than benign and precursor entities, which
+        # was the page's only stated scope cost. Derived and named.
+        "non_human_disease_placements": {
+            s: sorted(x for x in dm[s]["deep"] if NON_HUMAN.search(x))
+            for s in sorted(dm)
+            if any(NON_HUMAN.search(x) for x in dm[s]["deep"])},
+        "n_placements": sum(len(dm[s]["deep"]) for s in dm),
+        "n_distinct_descriptors": len(set().union(*(dm[s]["deep"] for s in dm))),
+        "descriptors_in_more_than_one_site": sorted(
+            x for x in set().union(*(dm[s]["deep"] for s in dm))
+            if sum(1 for s in dm if x in dm[s]["deep"]) > 1),
         # NLM's tree does not agree with this page's 18 sites about where the
         # boundaries are. `Head and Neck Neoplasms` SUBSUMES oesophagus and
         # thyroid, which are listed here separately -- so the deep column
@@ -288,6 +332,8 @@ def scan() -> dict:
             "generic_neoplasms": un_generic,
             "no_c04_descriptor": un_adjacent,
             "top_descriptors": [[k, v] for k, v in un_desc.most_common(20)],
+            "residue_top_descriptors": [[k, v]
+                                        for k, v in res_desc.most_common(24)],
         },
         "excluded_streams": excluded_streams(),
     }
@@ -318,7 +364,7 @@ def excluded_streams() -> dict:
 
 def render(d: dict) -> str:
     n, a = d["census"], d["assigned"]
-    sites = d["sites"]
+    sites = _pairs(d["sites"])
     var = d.get("variants") or {}
     ex = d.get("excluded_streams") or {}
     L = ["# Can the census assign articles to cancer sites?", ""]
@@ -336,12 +382,12 @@ def render(d: dict) -> str:
 
     L += [f"Across {d['n_sites']} major sites, on the shallow list:", ""]
     L += ["| site | articles | share of census |", "|---|--:|--:|"]
-    for s, c in sites.items():
+    for s, c in sites:
         L.append(f"| {s} | {c:,} | {100*c/n:.2f}% |")
     L += [""]
 
-    lo = min(sites.values()) if sites else 0
-    hi = max(sites.values()) if sites else 0
+    lo = min((c for _s, c in sites), default=0)
+    hi = max((c for _s, c in sites), default=0)
     L += ["## What this says about the burden question", ""]
     L += [f"**{100*a/n:.1f}% of the census is assignable to one of these "
           f"sites** on the shallow list.", ""]
@@ -423,13 +469,17 @@ def _depth_section(d, n, var) -> list:
     L += [f"The 18 sites are matched by {sh['n_descriptors']} descriptors "
           f"between them -- but not evenly. `stomach`, `ovary`, `bladder` and "
           f"`thyroid` get one each while `brain/CNS` and `head and neck` get "
-          f"four, and the C04 tree holds far more for some sites than others. "
+          f"four, and the tree holds far more under some of those nodes than "
+          f"others. "
           f"So the per-site column is understated by a different factor for "
           f"every site, and it is the column a burden ratio divides into "
           f"mortality.", ""]
     L += [f"Measured against the SAME 18 sites walked down NLM's own tree -- "
           f"every C04 descriptor at or beneath the nodes the shallow list "
-          f"already occupies, {dp['n_descriptors']} descriptors, committed at "
+          f"already occupies, {dp['n_descriptors']} placements over "
+          f"{d.get('n_distinct_descriptors', dp['n_descriptors'])} distinct "
+          f"descriptors ({len(d.get('descriptors_in_more_than_one_site') or [])} "
+          f"sit in more than one of these sites), committed at "
           f"`analysis/site-descriptor-map.tsv`. There is no rule to dispute "
           f"beyond the shallow list itself: an earlier version of this "
           f"section matched descriptor NAMES and put `Ganglion Cysts` and "
@@ -438,20 +488,32 @@ def _depth_section(d, n, var) -> list:
           f"moved the headline rank.", ""]
     L += ["| site | shallow | deep | deep/shallow | rank shallow -> deep |",
           "|---|--:|--:|--:|--:|"]
-    r_sh = {s: i + 1 for i, s in enumerate(sh["sites"])}
-    r_dp = {s: i + 1 for i, s in enumerate(dp["sites"])}
-    rows = sorted(sh["sites"].items(), key=lambda kv: -kv[1])
+    sh_pairs, dp_pairs = _pairs(sh["sites"]), _pairs(dp["sites"])
+    dp_by = dict(dp_pairs)
+    r_sh = {s: i + 1 for i, (s, _c) in enumerate(sh_pairs)}
+    r_dp = {s: i + 1 for i, (s, _c) in enumerate(dp_pairs)}
+    rows = sh_pairs
+    # A DEEP RANK IS MEANINGLESS FOR A SITE WHOSE SUBTREE CONTAINS ANOTHER OF
+    # THESE SITES. `head and neck` reaches rank 1 only because MeSH puts
+    # oesophagus and thyroid under it -- 53% of its deep gain is descriptors
+    # this same table counts as separate rows -- so the cell is suppressed
+    # rather than printed as a finding.
+    merged = set(d.get("deep_site_overlaps") or {})
     for s, c in rows:
-        cd = dp["sites"].get(s, 0)
-        mv = f"{r_sh[s]} -> {r_dp.get(s, 0)}"
-        L.append(f"| {s} | {c:,} | {cd:,} | {cd/max(c,1):.2f}x | "
-                 + (f"**{mv}**" if r_sh[s] != r_dp.get(s) else mv) + " |")
+        cd = dp_by.get(s, 0)
+        if s in merged:
+            cell = "n/a (subsumes " + ", ".join(
+                f"`{x}`" for x in d["deep_site_overlaps"][s]) + ")"
+        else:
+            mv = f"{r_sh[s]} -> {r_dp.get(s, 0)}"
+            cell = f"**{mv}**" if r_sh[s] != r_dp.get(s) else mv
+        L.append(f"| {s} | {c:,} | {cd:,} | {cd/max(c,1):.2f}x | {cell} |")
     L += [""]
-    ratios = {s: dp["sites"].get(s, 0) / max(c, 1) for s, c in sh["sites"].items()}
+    ratios = {s: dp_by.get(s, 0) / max(c, 1) for s, c in sh_pairs}
     worst = sorted(ratios.items(), key=lambda kv: -kv[1])[:4]
     flat = sorted(ratios.items(), key=lambda kv: kv[1])[:4]
     moved = [(s, r_sh[s], r_dp.get(s)) for s in r_sh
-             if r_dp.get(s) and r_sh[s] != r_dp[s]]
+             if s not in merged and r_dp.get(s) and r_sh[s] != r_dp[s]]
     ov = d.get("deep_site_overlaps") or {}
     if ov:
         L += ["**Read the deep column with its overlaps.** NLM's tree does not "
@@ -481,8 +543,20 @@ def _depth_section(d, n, var) -> list:
           f"the bullet below retracts. It is a floor, not the census's limit, "
           f"and a deeper list can also over-reach: membership here is NLM's "
           f"tree, so an accident of naming cannot cause that, but a site's "
-          f"subtree still carries benign and precursor entities its shallow "
-          f"row does not.", ""]
+          f"subtree still carries entities its shallow row does not.", ""]
+    nh = d.get("non_human_disease_placements") or {}
+    if nh:
+        tot = sum(len(v) for v in nh.values())
+        L += [f"**And not only benign or precursor ones, which was this page's "
+              f"whole stated scope cost.** {tot} placements are experimental "
+              f"models, veterinary disease or named genetic syndromes: "
+              + "; ".join(
+                  f"`{k}` gets " + ", ".join(f"`{x}`" for x in v[:4])
+                  + (f" and {len(v)-4} more" if len(v) > 4 else "")
+                  for k, v in sorted(nh.items(), key=lambda kv: -len(kv[1]))[:3])
+              + ". They sit legitimately under those nodes in MeSH and are not "
+                "human disease at that site, so a burden analysis wanting the "
+                "deeper list has to strip them.", ""]
     return L
 
 
@@ -506,14 +580,23 @@ def _remainder_section(d, n, a) -> list:
           f"* {u['no_c04_descriptor']:,} "
           f"({100*u['no_c04_descriptor']/t:.1f}%) carry no C04 descriptor at "
           f"all and could not be assigned by any list of C04 strings."]
-    top = [x for x in (u.get("top_descriptors") or [])
-           if x[0] not in {"humans", "neoplasms", "animals", "female", "male",
-                           "adult", "middle aged", "aged", "mice"}][:8]
+    CHECKTAG = {"humans", "neoplasms", "animals", "female", "male", "adult",
+                "middle aged", "aged", "mice", "adolescent", "child", "infant",
+                "young adult", "aged, 80 and over", "child, preschool",
+                "retrospective studies", "treatment outcome", "rats",
+                "prognosis", "cell line, tumor", "antineoplastic agents",
+                "cell proliferation"}
+    top = [x for x in (u.get("residue_top_descriptors") or [])
+           if x[0] not in CHECKTAG][:8]
     if top:
-        L += [f"* the rest is not featureless. The commonest descriptors on "
-              f"articles the list cannot place, excluding check-tags and the "
-              f"generic term: "
-              + ", ".join(f"`{k}` {v:,}" for k, v in top) + "."]
+        L += [f"* the rest is not featureless, and it is largely CANCER AT A "
+              f"SITE THIS LIST DOES NOT COVER -- the same correction bullet "
+              f"one makes, one level out. Its commonest descriptors, "
+              f"excluding check-tags and study-design terms: "
+              + ", ".join(f"`{k}` {v:,}" for k, v in top) + ". An earlier "
+              f"version pointed at a descriptor list accumulated over ALL "
+              f"unassigned records, which included the generic-`Neoplasms` "
+              f"and no-C04 buckets the same sentence had just excluded."]
     rest = t - u["same_sites_deeper"] - u["generic_neoplasms"] - u["no_c04_descriptor"]
     L += [f"* the remaining {rest:,} ({100*rest/t:.1f}%) is none of those "
           f"three, and is the largest single bucket."]
@@ -545,7 +628,7 @@ def main():
     print(f"wrote {OUT_JSON}")
     print(f"  assignable: {d['assigned']:,} of {d['census']:,} "
           f"({100*d['assigned']/d['census']:.1f}%)")
-    for s, c in list(d["sites"].items())[:6]:
+    for s, c in _pairs(d["sites"])[:6]:
         print(f"    {s:16s} {c:>8,}")
 
 

@@ -1,7 +1,12 @@
 # MeSH tree C04 (Neoplasms) descriptor -> tree number. One row per pair;
 # a descriptor may sit at several nodes. Source: NLM MeSH SPARQL endpoint,
 # https://id.nlm.nih.gov/mesh/sparql (inference on).
-# Regenerate: python scripts/atlas_baseline.py --refresh-mesh
+# NOT regenerable by scripts/atlas_baseline.py --refresh-mesh, which writes
+# only c04-descriptors.tsv. Fetched by the query in that file with ?t kept:
+#   SELECT DISTINCT ?d ?t WHERE { ?d a meshv:TopicalDescriptor .
+#     ?d meshv:treeNumber ?t .
+#     FILTER(STRSTARTS(STR(?t), "http://id.nlm.nih.gov/mesh/C04")) }
+# with inference=true, paginated at 500.
 D000008	C04.588.033
 D000069293	C04.557.386.480.150.585.500
 D000069295	C04.557.470.200.588
