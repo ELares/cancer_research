@@ -99,18 +99,22 @@ After the restriction the classes are also no longer what their names suggest: p
 
 The ingest reads MeSH DescriptorName and never QualifierName (#722), so both classes are understated. An earlier version of this page argued from two of that artifact's rows that the bias runs AGAINST the finding. THAT INFERENCE WAS INVALID: it compared percentage POINTS, and a ratio responds to relative rather than additive understatement. Every row, from the raw counts rather than the rounded percentages:
 
-| modality | descriptor axis | either axis | descriptor recall |
-|---|--:|--:|--:|
-| surgery | 406 | 4,007 | 0.101 |
-| diagnostic imaging | 1,558 | 2,910 | 0.535 |
-| drug therapy | 3,194 | 5,837 | 0.547 |
-| radiotherapy | 842 | 1,461 | 0.576 |
+| modality | descriptor axis | either axis | descriptor recall | recall, whole MeSH family |
+|---|--:|--:|--:|--:|
+| surgery | 406 | 4,007 | 0.101 | 0.798 |
+| diagnostic imaging | 1,558 | 2,910 | 0.535 | 0.919 |
+| drug therapy | 3,194 | 5,837 | 0.547 | 0.645 |
+| radiotherapy | 842 | 1,461 | 0.576 | 0.652 |
 
 Correcting a drug-therapy numerator and a radiotherapy denominator each by its own recall multiplies the ratio by 1.05 -- UP, not down.
 
+**AND THE TWO ARMS POINT IN OPPOSITE DIRECTIONS.** Correcting a surgery-dominated physical class and a drug-therapy-like pharmacological one each by its own recall multiplies the ratio by recall_physical over recall_pharmacological. On the proxy arm that is 0.101/0.547 = **x0.19**, sharply DOWN. On the family arm it is 0.798/0.645 = **x1.24**, UP. So the direction is not merely unestablished for want of a measurement -- it FLIPS with a choice about the descriptor list, which is the strongest form the page's refusal can take and is why no correction is applied.
+
+**AND THE SURGERY ROW WAS A PROPERTY OF A FOUR-ENTRY LIST.** #722 now recomputes its descriptor arm as the whole MeSH family each modality names, and surgery's recall goes 0.101 to **0.798** -- the largest move of the four, because its proxy covered least of its own family. An earlier version of this page leaned on the 0.101 as the reason the bias might run DOWN for a surgery-heavy physical class. On the family arm surgery is no longer the outlier at all, and the ordering that made it the headline inverts. The conclusion below is unchanged -- neither correction was licensed and the direction was never established -- but the figure quoted as the reason was an artifact of a list, not a measurement of indexing.
+
 **But that is the wrong pair for these classes.** #722's own headline is that the sharpest case is SURGERY, at recall 0.101 against drug therapy's 0.547 -- and surgery is precisely what dominates the physical class here, at up to 63% of it. Correcting by THAT row moves the ratio sharply DOWN.
 
-**Neither correction is licensed.** #722 measures proxy sets of four to seven descriptors while the classes here hold 17 to 236. Where a class CONTAINS the proxy, the proxy's recall is a floor for the class's, because adding descriptors can only add matches -- measured, the pharmacological side contains the drug-therapy proxy in 5 of 5 partitions and the physical side contains the surgery proxy in 3 -- and those are the three where surgery DOMINATES it; the two that fail, `clinical-delivery`, `mechanism-of-action`, are the two that admit least surgery, the second by construction (counting only real DescriptorNames: `neoplasms/surgery` -- a descriptor/qualifier composite that can never be a class member, and inert in #722's own descriptor arm too). Where it does not, the floor argument does not even apply. Either way, borrowing a proxy's recall as a class's would repeat the category error being retracted. The bias is real; its direction is not established here, and the measurement that would settle it -- these classes scored on both MeSH axes -- is not computable from the committed records, which carry the descriptor axis only.
+**Neither correction is licensed.** #722 measures proxy sets of four to seven descriptors while the classes here hold 17 to 236. Where a class CONTAINS the proxy, the proxy's recall is a floor for the class's, because adding descriptors can only add matches -- measured, the pharmacological side contains the drug-therapy proxy in 5 of 5 partitions and the physical side contains the surgery proxy in 3 -- and those are the three where surgery DOMINATES it; the two that fail, `clinical-delivery`, `mechanism-of-action`, are the two that admit least surgery, the second by construction (counting only real DescriptorNames:  -- a descriptor/qualifier composite that can never be a class member, and inert in #722's own descriptor arm too). Where it does not, the floor argument does not even apply. Either way, borrowing a proxy's recall as a class's would repeat the category error being retracted. The bias is real; its direction is not established here, and the measurement that would settle it -- these classes scored on both MeSH axes -- is not computable from the committed records, which carry the descriptor axis only.
 
 ## What would make this wrong
 
