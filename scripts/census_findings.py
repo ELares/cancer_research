@@ -88,7 +88,12 @@ def _volume(land) -> dict:
             "oversample": (cap_py / cap_ph) if cap_ph else 0.0,
             "precise": r["precise_ratio"],
             "precise_alt": r["landscape_own_ratio"],
-            "criterion_restored": r["criterion_restored_ratio"]}
+            "criterion_restored": r["criterion_restored_ratio"],
+            # the maturity figures, derived for the same reason as the volume
+            # ones: a literal cannot be wrong about which field it came from
+            "hifu": (cen.get("hifu") or {}).get("clinical_share") or 0.0,
+            "cart": (cen.get("car-t") or {}).get("clinical_share") or 0.0,
+            "sono": (cen.get("sonodynamic") or {}).get("clinical_share") or 0.0}
 
 
 
@@ -171,11 +176,12 @@ def main() -> int:
             f"gives **{_v['criterion_restored']:.2f} : 1**. Only the first two fall below",
             f"the manuscript's {MANUSCRIPT_RATIO} : 1, so the inversion holds under two",
             f"readings of three and an earlier version of this paragraph quoted only",
-            f"the one that inverts. See `atlas-modality-ratio.md`.", "",            "**Maturity.** \"Physical modalities remain comparatively preclinical\" does",
-            "not hold as a class. HIFU is **7.10%** clinical against CAR-T's",
-            "**6.64%**, both on precise descriptors, and HIFU and sonodynamic differ",
-            "by 1.6x. The defensible claim is narrower: sonodynamic therapy",
-            "specifically is early -- which is the mechanism this work rests on.", "",
+            f"the one that inverts. See `atlas-modality-ratio.md`.", "",            f"**Maturity.** \"Physical modalities remain comparatively preclinical\" does",
+            f"not hold as a class. HIFU is **{100*_v['hifu']:.2f}%** clinical against",
+            f"CAR-T's **{100*_v['cart']:.2f}%**, both on precise descriptors, and HIFU",
+            f"and sonodynamic differ by {_v['hifu']/_v['sono']:.1f}x. The defensible",
+            f"claim is narrower: sonodynamic therapy specifically is early",
+            f"(**{100*_v['sono']:.2f}%**) -- which is the mechanism this work rests on.", "",
             "*What changed:* one claim strengthened, one narrowed. Both are in the",
             "manuscript.", "*Source:* `atlas-landscape.md`", ""]
 

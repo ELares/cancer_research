@@ -64,6 +64,16 @@ def test_the_volume_figures_are_recomputed_not_read_back():
     assert v["ratio"] > 1
     for k in ("precise", "precise_alt", "criterion_restored"):
         assert v[k] > 0, f"{k} was not computed"
+    # THE MATURITY FIGURES TOO, and against the right field: swapping
+    # `clinical_share` for another share leaves the page plausible and wrong,
+    # and the AST literal scan cannot see it because the number is still
+    # derived -- just from somewhere else.
+    for key, mech in (("hifu", "hifu"), ("cart", "car-t"), ("sono", "sonodynamic")):
+        assert abs(v[key] - cen[mech]["clinical_share"]) < 1e-12, (
+            f"{key} is not {mech}'s clinical_share; a derivation from the "
+            "wrong field is as wrong as a literal and harder to see")
+        assert f"{100*v[key]:.2f}%" in " ".join(MD.read_text().split()), (
+            f"{mech}'s clinical share is derived and not rendered")
 
 
 def test_all_three_restrictions_are_reported_not_only_the_one_that_inverts():
@@ -155,11 +165,11 @@ def test_no_headline_figure_is_a_literal():
     import re
     src = SCRIPT.read_text()
     tree = ast.parse(src)
-    # SCOPED to the volume block this PR derives -- the maturity figures are
-    # still literals and are a separate, named piece of work. A guard that
-    # flags them too would be turned off rather than acted on.
+    # THE WHOLE SECTION-2 BLOCK NOW. It was scoped to the volume paragraph
+    # while the maturity figures were still literals; they are derived too, so
+    # the exemption is gone rather than left as a permanent carve-out.
     lo = src[:src.index("**Volume.**")].count("\n") + 1
-    hi = src[:src.index("**Maturity.**")].count("\n") + 1
+    hi = src[:src.index("*What changed:*")].count("\n") + 1
     bad = []
     for node in ast.walk(tree):
         if isinstance(node, ast.Constant) and isinstance(node.value, str):

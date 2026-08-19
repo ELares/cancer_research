@@ -49,10 +49,11 @@ readings of three and an earlier version of this paragraph quoted only
 the one that inverts. See `atlas-modality-ratio.md`.
 
 **Maturity.** "Physical modalities remain comparatively preclinical" does
-not hold as a class. HIFU is **7.10%** clinical against CAR-T's
-**6.64%**, both on precise descriptors, and HIFU and sonodynamic differ
-by 1.6x. The defensible claim is narrower: sonodynamic therapy
-specifically is early -- which is the mechanism this work rests on.
+not hold as a class. HIFU is **7.10%** clinical against
+CAR-T's **6.64%**, both on precise descriptors, and HIFU
+and sonodynamic differ by 1.6x. The defensible
+claim is narrower: sonodynamic therapy specifically is early
+(**4.54%**) -- which is the mechanism this work rests on.
 
 *What changed:* one claim strengthened, one narrowed. Both are in the
 manuscript.
