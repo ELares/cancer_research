@@ -274,6 +274,83 @@ def test_the_exit_rule_asymmetry_is_priced():
         "the asymmetry falsifies")
 
 
+def test_the_all_years_leg_column_can_actually_move():
+    """The fix for (D) shipped four unguarded fields, so the NEW column could
+    be frozen exactly the way the complete-year one was -- three mutations
+    (dropping the gain term, restricting all_years_before, hardcoding the
+    excluded count to 0) each left the suite green while the page printed
+    "goes 32 to 32" under a heading about a column that cannot move.
+    """
+    lg = _doc()["legs"]
+    moved = 0
+    for k, v in lg["legs"].items():
+        for f in ("all_years_before", "all_years_after", "gain_all_years",
+                  "gain_excluded_by_the_filter"):
+            assert f in v, f"{k} has no {f}; the all-years column is gone"
+        assert v["all_years_after"] - v["all_years_before"] == v["gain_all_years"], (
+            f"{k}: all-years before/after do not differ by the all-years gain, "
+            "so one of them is not what its name says")
+        assert v["gain_all_years"] > 0, (
+            f"{k} gains nothing over all years, which cannot be true of a leg "
+            "the update window adds articles to")
+        assert 0 <= v["gain_excluded_by_the_filter"] <= v["gain_all_years"]
+        assert v["all_years_before"] >= v["before"], (
+            f"{k}: the all-years baseline is below the complete-year one")
+        moved += v["all_years_after"] > v["all_years_before"]
+    assert moved == len(lg["legs"]), (
+        f"only {moved} of {len(lg['legs'])} legs move in the all-years column; "
+        "the column added to fix a frozen column is frozen too")
+    # and at least one leg must be frozen in the COMPLETE-year column, or the
+    # finding this section reports has gone away and the prose needs rewriting
+    stuck = [k for k, v in lg["legs"].items() if v["before"] == v["after"]]
+    md = MD.read_text()
+    if stuck:
+        assert f"{len(stuck)} of these rows CANNOT MOVE" in md
+
+
+def test_the_mirror_variant_is_named_not_positioned():
+    """"the bottom row of that table" pointed at the LOOSEST variant (479 of
+    597) while the mirror of the admission rule is the strictest (2 of 597).
+    """
+    d, md = _doc(), MD.read_text()
+    best = d["composition"]["by_comparator"]
+    years = sorted((int(y) for y in best), reverse=True)
+    r = best[str(years[1] if len(years) > 1 else years[0])]
+    ev = r.get("exit_rule_variants") or {}
+    mirror = next(((k, v) for k, v in ev.items() if "mirrors admission" in k), None)
+    assert mirror, "the mirror variant is gone"
+    pool = d["composition"]["pool_size"]
+    assert f"`{mirror[0]}`, at **{mirror[1]:,} of {pool:,} " in md or \
+        f"`{mirror[0]}`, at **{mirror[1]:,} of {pool:,}" in md, (
+        "the mirror-image test is not identified by its LABEL; a positional "
+        "pointer into a machine-ordered table resolves to the wrong row")
+    # the retraction QUOTES the withdrawn instruction, so ban it only where it
+    # is not being withdrawn -- a flat ban would forbid the correction itself
+    for m_ in re.finditer(r"the bottom row of that table", md):
+        w = md[max(0, m_.start() - 200):m_.end() + 200]
+        assert re.search(r"earlier version|POSITION", w), (
+            "the report still instructs the reader to read the bottom row, "
+            "which is the loosest variant rather than the mirror")
+    # the mirror must be the strictest variant, i.e. the smallest count
+    assert mirror[1] == min(ev.values()), (
+        f"the row labelled the mirror of the admission rule gives "
+        f"{mirror[1]:,}, which is not the strictest of {sorted(ev.values())}")
+
+
+def test_the_two_falsifiers_are_not_read_as_one_kind_of_thing():
+    """The oldest exhibit is a single journal's back-file, not a cohort rate."""
+    md = MD.read_text()
+    faster = (_doc()["indexing"].get("older_than_and_faster_than_reference") or [])
+    if len(faster) > 1:
+        assert "not the same kind of thing" in md, (
+            "two falsifying cohorts are listed and the page reads them as one "
+            "kind of evidence")
+        assert "lumpy per-journal batches" in md
+        assert "keep acquiring indexing in later batches at a low rate" \
+            not in md.split("lumpy per-journal batches")[0], (
+            "the withdrawn mechanism is restated before its retraction")
+
+
 def test_the_thesis_legs_are_reported_on_complete_years():
     """The raw gain is a partial year refilling, not the field moving."""
     lg = _doc()["legs"]
