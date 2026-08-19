@@ -1263,6 +1263,26 @@ def _qualifier_section(d) -> list:
         L += [f"Correcting a drug-therapy numerator and a radiotherapy "
               f"denominator each by its own recall multiplies the ratio by "
               f"{rt['recall']/dt['recall']:.2f} -- UP, not down.", ""]
+    # THE TWO ARMS GIVE OPPOSITE DIRECTIONS, which is stronger than "not
+    # established" and is derived rather than asserted. Correcting each class
+    # by its own recall multiplies the ratio by recall_phys / recall_pharm.
+    if sg and dt and sg.get("recall_tree_arm") and dt.get("recall_tree_arm"):
+        f_proxy = sg["recall"] / dt["recall"]
+        f_tree = sg["recall_tree_arm"] / dt["recall_tree_arm"]
+        if (f_proxy - 1) * (f_tree - 1) < 0:
+            L += [f"**AND THE TWO ARMS POINT IN OPPOSITE DIRECTIONS.** "
+                  f"Correcting a surgery-dominated physical class and a "
+                  f"drug-therapy-like pharmacological one each by its own "
+                  f"recall multiplies the ratio by recall_physical over "
+                  f"recall_pharmacological. On the proxy arm that is "
+                  f"{sg['recall']:.3f}/{dt['recall']:.3f} = "
+                  f"**x{f_proxy:.2f}**, sharply DOWN. On the family arm it is "
+                  f"{sg['recall_tree_arm']:.3f}/{dt['recall_tree_arm']:.3f} = "
+                  f"**x{f_tree:.2f}**, UP. So the direction is not merely "
+                  f"unestablished for want of a measurement -- it FLIPS with a "
+                  f"choice about the descriptor list, which is the strongest "
+                  f"form the page's refusal can take and is why no correction "
+                  f"is applied.", ""]
     if sg and sg.get("recall_tree_arm"):
         L += [f"**AND THE SURGERY ROW WAS A PROPERTY OF A FOUR-ENTRY LIST.** "
               f"#722 now recomputes its descriptor arm as the whole MeSH "

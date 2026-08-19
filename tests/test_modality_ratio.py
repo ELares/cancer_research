@@ -1091,3 +1091,32 @@ def test_the_surgery_recall_is_shown_beside_its_family_control():
             "quotes the proxy figure as its reason")
         # the conclusion must NOT have moved -- it never rested on the figure
         assert "direction is not established here" in md
+
+
+def test_the_direction_flip_is_derived_from_both_arms():
+    """The page refuses to apply a qualifier correction. The strongest reason
+    is not "unmeasured" but that the two descriptor arms give OPPOSITE
+    directions, so the refusal must be computed rather than asserted -- and it
+    must stop being asserted if they ever agree.
+    """
+    d, md = _doc(), MD.read_text()
+    q = (d.get("qualifier_recalls") or {}).get("modalities") or {}
+    sg, dt = q.get("surgery"), q.get("drug therapy")
+    if not (sg and dt and sg.get("recall_tree_arm") and dt.get("recall_tree_arm")):
+        pytest.skip("#722 has not published the family arm")
+    fp = sg["recall"] / dt["recall"]
+    ft = sg["recall_tree_arm"] / dt["recall_tree_arm"]
+    if (fp - 1) * (ft - 1) < 0:
+        assert "OPPOSITE DIRECTIONS" in md, (
+            f"the proxy arm multiplies the ratio by {fp:.2f} and the family "
+            f"arm by {ft:.2f} -- opposite sides of 1 -- and the report does "
+            "not say so")
+        assert f"**x{fp:.2f}**" in md and f"**x{ft:.2f}**" in md
+        assert "no correction is applied" in md
+    else:
+        assert "OPPOSITE DIRECTIONS" not in md, (
+            f"both arms point the same way ({fp:.2f}, {ft:.2f}) and the page "
+            "still claims they conflict")
+    # either way the verdict must stay refused: a flip is a reason not to
+    # correct, never a licence to correct in the newer direction
+    assert "direction is not established here" in md
