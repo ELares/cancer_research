@@ -1,0 +1,25 @@
+# MeSH descriptors under E02.319.310, D27.505.954.248.
+# Source: NLM MeSH SPARQL endpoint, https://id.nlm.nih.gov/mesh/sparql (inference on).
+# Regenerate: python scripts/atlas_ingest_sensitivity.py --refresh-trees
+# descriptors: 21
+D000067856	Poly(ADP-ribose) Polymerase Inhibitors
+D000074322	Antineoplastic Agents, Immunological
+D000080903	Dual Anti-Platelet Therapy
+D000082082	Immune Checkpoint Inhibitors
+D000091203	MTOR Inhibitors
+D000903	Antibiotics, Antineoplastic
+D000964	Antimetabolites, Antineoplastic
+D000970	Antineoplastic Agents
+D000971	Antineoplastic Combined Chemotherapy Protocols
+D000972	Antineoplastic Agents, Phytogenic
+D004359	Drug Therapy, Combination
+D016588	Anticarcinogenic Agents
+D018906	Antineoplastic Agents, Alkylating
+D018931	Antineoplastic Agents, Hormonal
+D019653	Myeloablative Agonists
+D020533	Angiogenesis Inhibitors
+D023241	Antiretroviral Therapy, Highly Active
+D050256	Antimitotic Agents
+D059003	Topoisomerase Inhibitors
+D059004	Topoisomerase I Inhibitors
+D059005	Topoisomerase II Inhibitors

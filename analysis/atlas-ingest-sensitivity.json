@@ -26,7 +26,129 @@
    "qualifier_only": 3601
   }
  },
+ "modalities_tree_arm": {
+  "diagnostic imaging": {
+   "descriptor": 3295,
+   "either": 3587,
+   "qualifier": 2203,
+   "qualifier_only": 292
+  },
+  "drug therapy": {
+   "descriptor": 3874,
+   "either": 6009,
+   "qualifier": 4678,
+   "qualifier_only": 2135
+  },
+  "radiotherapy": {
+   "descriptor": 994,
+   "either": 1525,
+   "qualifier": 1089,
+   "qualifier_only": 531
+  },
+  "surgery": {
+   "descriptor": 4648,
+   "either": 5822,
+   "qualifier": 3945,
+   "qualifier_only": 1174
+  }
+ },
  "n_shards": 8,
+ "per_shard": {
+  "pubmed26n0020.xml.gz": {
+   "n": 2947,
+   "qualifier_only": {
+    "diagnostic imaging": 267,
+    "drug therapy": 214,
+    "radiotherapy": 159,
+    "surgery": 480
+   }
+  },
+  "pubmed26n0588.xml.gz": {
+   "n": 2732,
+   "qualifier_only": {
+    "diagnostic imaging": 32,
+    "drug therapy": 42,
+    "radiotherapy": 35,
+    "surgery": 161
+   }
+  },
+  "pubmed26n0717.xml.gz": {
+   "n": 3497,
+   "qualifier_only": {
+    "diagnostic imaging": 136,
+    "drug therapy": 323,
+    "radiotherapy": 86,
+    "surgery": 522
+   }
+  },
+  "pubmed26n0768.xml.gz": {
+   "n": 3750,
+   "qualifier_only": {
+    "diagnostic imaging": 161,
+    "drug therapy": 416,
+    "radiotherapy": 95,
+    "surgery": 624
+   }
+  },
+  "pubmed26n0824.xml.gz": {
+   "n": 3473,
+   "qualifier_only": {
+    "diagnostic imaging": 149,
+    "drug therapy": 351,
+    "radiotherapy": 70,
+    "surgery": 485
+   }
+  },
+  "pubmed26n0955.xml.gz": {
+   "n": 3382,
+   "qualifier_only": {
+    "diagnostic imaging": 205,
+    "drug therapy": 390,
+    "radiotherapy": 60,
+    "surgery": 492
+   }
+  },
+  "pubmed26n0961.xml.gz": {
+   "n": 3300,
+   "qualifier_only": {
+    "diagnostic imaging": 228,
+    "drug therapy": 381,
+    "radiotherapy": 50,
+    "surgery": 504
+   }
+  },
+  "pubmed26n1197.xml.gz": {
+   "n": 2728,
+   "qualifier_only": {
+    "diagnostic imaging": 174,
+    "drug therapy": 526,
+    "radiotherapy": 64,
+    "surgery": 333
+   }
+  }
+ },
+ "proxy_coverage_of_family": {
+  "diagnostic imaging": {
+   "entries_in_family": 4,
+   "family": 192,
+   "proxy_entries": 4
+  },
+  "drug therapy": {
+   "entries_in_family": 2,
+   "family": 21,
+   "proxy_entries": 4
+  },
+  "radiotherapy": {
+   "entries_in_family": 6,
+   "family": 29,
+   "proxy_entries": 7
+  },
+  "surgery": {
+   "entries_in_family": 4,
+   "family": 582,
+   "proxy_entries": 4
+  }
+ },
  "seed": 20260816,
  "shards": [
   "pubmed26n0020.xml.gz",
@@ -37,5 +159,11 @@
   "pubmed26n0955.xml.gz",
   "pubmed26n0961.xml.gz",
   "pubmed26n1197.xml.gz"
- ]
+ ],
+ "tree_family_sizes": {
+  "diagnostic imaging": 192,
+  "drug therapy": 21,
+  "radiotherapy": 29,
+  "surgery": 582
+ }
 }

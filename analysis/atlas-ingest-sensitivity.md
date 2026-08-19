@@ -13,6 +13,34 @@ Both arms see the same articles, selected exactly as the ingest selects them. Qu
 | radiotherapy | 3.3% | 4.2% | 5.7% | **2.4%** | +2.4 pts (2.2-2.6) |
 | surgery | 1.6% | 15.3% | 15.5% | **14.0%** | +14.0 pts (13.5-14.4) |
 
+## The descriptor arm as a SUBTREE, which is the control
+
+The gain above is measured against a hand-written proxy, and that proxy's completeness is the confound. So the arm is recomputed as every descriptor NLM puts under the node the modality names -- no list to dispute, the same shape as the fix #729 made for site coverage. Same shards, same 25,809 articles, qualifier arm untouched.
+
+| modality | proxy entries | family | gain, proxy | gain, family | descriptor recall, proxy -> family |
+|---|--:|--:|--:|--:|--:|
+| surgery | 4 | 582 | 13.95 pts | **4.55 pts** | 0.101 -> 0.798 |
+| drug therapy | 4 | 21 | 10.24 pts | **8.27 pts** | 0.547 -> 0.645 |
+| diagnostic imaging | 4 | 192 | 5.24 pts | **1.13 pts** | 0.535 -> 0.919 |
+| radiotherapy | 7 | 29 | 2.40 pts | **2.06 pts** | 0.576 -> 0.652 |
+
+**THE ORDERING INVERTS.** Proxy arm: `surgery` > `drug therapy` > `diagnostic imaging` > `radiotherapy`. Family arm: `drug therapy` > `surgery` > `radiotherapy` > `diagnostic imaging`. The top rank changes hands, and the modality published as the sharpest case is the one whose proxy covers least of its own family (4 entries against 582). The withdrawal above is measured now, not argued.
+
+Every gain stays strictly positive, so what the page licenses -- that the axis is unread and the loss is not negligible -- survives the control. The MAGNITUDES do not: the two arms disagree by up to 9.4 points.
+
+### The interval, resampled over shards
+
+The intervals in the first table treat 25,809 articles as independent draws. They are 8 near-single-year blocks, so the honest interval resamples the blocks (10,000 replicates):
+
+| modality | point | shard bootstrap 95% |
+|---|--:|--:|
+| surgery | 13.95% | **11.70-15.57** |
+| drug therapy | 10.24% | **7.46-13.06** |
+| diagnostic imaging | 5.24% | **3.81-6.70** |
+| radiotherapy | 2.40% | **1.78-3.28** |
+
+Every interval on this page should be read several times wider than printed. No point estimate and no sign moves.
+
 ## The cross-modality ORDERING is not a measurement
 
 The largest figure in that column is **surgery** at 14.0%, and an earlier version of this page called it "the sharpest case" and drew a prioritisation from the ranking. THAT ORDERING IS WITHDRAWN. Each row's gain is measured against a hand-written descriptor proxy of four to seven entries standing in for a MeSH family that runs from tens to hundreds of descriptors, and how completely each proxy covers its own family is neither controlled nor equal across the four rows -- while the qualifier arm is the WHOLE of a closed axis. So a row's gain is partly a statement about how incomplete its descriptor list is, and ranking the four against each other ranks that incompleteness as much as it ranks the qualifier axis.

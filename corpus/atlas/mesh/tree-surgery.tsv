@@ -1,0 +1,586 @@
+# MeSH descriptors under E04.
+# Source: NLM MeSH SPARQL endpoint, https://id.nlm.nih.gov/mesh/sparql (inference on).
+# Regenerate: python scripts/atlas_ingest_sensitivity.py --refresh-trees
+# descriptors: 582
+D000025	Abortion, Eugenic
+D000028	Abortion, Induced
+D000029	Abortion, Legal
+D000032	Abortion, Therapeutic
+D000067368	Transanal Endoscopic Surgery
+D000067369	Transanal Endoscopic Microsurgery
+D000069237	Arthrocentesis
+D000069258	Thoracentesis
+D000069278	Arterial Switch Operation
+D000069339	Trachelectomy
+D000069356	Tympanocentesis
+D000069577	Morcellation
+D000069916	Endoscopic Mucosal Resection
+D000070638	Ulnar Collateral Ligament Reconstruction
+D000070799	Open Fracture Reduction
+D000071062	Sutureless Surgical Procedures
+D000071085	Single-Balloon Enteroscopy
+D000071087	Balloon Enteroscopy
+D000071938	Fasciotomy
+D000072036	Prophylactic Mastectomy
+D000072228	Arthroplasty, Replacement, Shoulder
+D000072229	Posterior Cruciate Ligament Reconstruction
+D000073880	Body Contouring
+D000074060	Bronchial Thermoplasty
+D000074402	Synovectomy
+D000074403	Meniscectomy
+D000074406	Mastoidectomy
+D000074431	Keratectomy
+D000074432	Sphincterotomy
+D000074433	Myotomy
+D000074434	Heller Myotomy
+D000074642	Nephrolithotomy, Percutaneous
+D000074643	Nephrotomy
+D000074682	Nephroureterectomy
+D000074722	Lateral Internal Sphincterotomy
+D000074868	Salpingo-oophorectomy
+D000074882	Pyloromyotomy
+D000074883	Vulvectomy
+D000074885	Amniotomy
+D000075442	Transplantation, Haploidentical
+D000076822	Pinealectomy
+D000077845	Lipoabdominoplasty
+D000078542	Proctectomy
+D000078703	Radiofrequency Ablation
+D000079042	Maze Procedure
+D000079664	Continuous Renal Replacement Therapy
+D000079763	Intermittent Renal Replacement Therapy
+D000079782	Hybrid Renal Replacement Therapy
+D000080482	Enhanced Recovery After Surgery
+D000080872	Open Abdomen Techniques
+D000082622	Preoperative Exercise
+D000084982	Nasoalveolar Molding
+D000087526	Umbilical Cord Clamping
+D000088103	Ex utero Intrapartum Treatment Procedures
+D000092945	Tattoo Removal
+D000093562	Phalloplasty
+D000093667	Penile Transplantation
+D000094463	Transurethral Resection of Bladder
+D000094682	Endovascular Aneurysm Repair
+D000095782	Oral Frenectomy
+D000096584	Overlapping Surgery
+D000098522	Tracheostomy Decannulation
+D000098523	Device Lead Extraction
+D000098524	Hardware Removal
+D000098944	Aquablation
+D000099090	Colorectal Surgical Procedures
+D000099220	Pressurized Intraperitoneal Aerosol Chemotherapy
+D000099303	Septal Myectomy
+D000099316	Transcatheter Mitral Valve Replacement
+D000233	Adenoidectomy
+D000315	Adrenalectomy
+D000540	Alveolar Ridge Augmentation
+D000541	Alveolectomy
+D000543	Alveoloplasty
+D000556	Ambulatory Surgical Procedures
+D000649	Amniocentesis
+D000671	Amputation, Surgical
+D000713	Anastomosis, Roux-en-Y
+D000714	Anastomosis, Surgical
+D000762	Anesthesia Recovery Period
+D000800	Angioplasty, Balloon
+D001026	Coronary Artery Bypass
+D001047	Apicoectomy
+D001062	Appendectomy
+D001166	Arteriovenous Shunt, Surgical
+D001174	Arthrodesis
+D001178	Arthroplasty
+D001182	Arthroscopy
+D001243	Assisted Circulation
+D001340	Autonomic Nerve Block
+D001662	Biliary Tract Surgical Procedures
+D001706	Biopsy
+D001707	Biopsy, Needle
+D001751	Blade Implantation
+D001800	Blood Specimen Collection
+D001852	Bone Lengthening
+D001999	Bronchoscopy
+D002315	Cardiopulmonary Bypass
+D002369	Castration
+D002387	Cataract Extraction
+D002405	Catheterization, Central Venous
+D002406	Catheterization, Peripheral
+D002407	Catheterization, Swan-Ganz
+D002425	Cautery
+D002431	Cecostomy
+D002541	Cerebral Decortication
+D002548	Cerebral Revascularization
+D002557	Cerebrospinal Fluid Shunts
+D002585	Cesarean Section
+D002615	Chemexfoliation
+D002760	Cholangiopancreatography, Endoscopic Retrograde
+D002763	Cholecystectomy
+D002767	Cholecystostomy
+D002768	Choledochostomy
+D002818	Cordotomy
+D002944	Circumcision, Male
+D003082	Colectomy
+D003096	Collapse Therapy
+D003113	Colonoscopy
+D003125	Colostomy
+D003127	Colposcopy
+D003399	Craniotomy
+D003452	Cryosurgery
+D003464	Culdoscopy
+D003475	Curettage
+D003558	Cystoscopy
+D003559	Cystostomy
+D003608	Dacryocystorhinostomy
+D003646	Debridement
+D003714	Denervation
+D003757	Dental Implantation
+D003758	Dental Implantation, Endosseous
+D003759	Dental Implantation, Endosseous, Endodontic
+D003869	Dermabrasion
+D004107	Dilatation and Curettage
+D004188	Disarticulation
+D004210	Dissection
+D004322	Drainage
+D004384	Duodenoscopy
+D004385	Duodenostomy
+D004564	Electrocoagulation
+D004598	Electrosurgery
+D004691	Endarterectomy
+D004713	Endolymphatic Shunt
+D004724	Endoscopy
+D004766	Enterostomy
+D004841	Episiotomy
+D004944	Esophagoplasty
+D004945	Esophagoscopy
+D004946	Esophagostomy
+D005112	Extracorporeal Circulation
+D005113	Extraction, Obstetrical
+D005276	Fenestration, Labyrinth
+D005332	Fetoscopy
+D005592	Fracture Fixation
+D005593	Fracture Fixation, Internal
+D005594	Fracture Fixation, Intramedullary
+D005743	Gastrectomy
+D005763	Gastroenterostomy
+D005773	Gastroscopy
+D005774	Gastrostomy
+D005890	Gingivectomy
+D005893	Gingivoplasty
+D005927	Glossectomy
+D006324	Heart Arrest, Induced
+D006336	Heart Massage
+D006348	Cardiac Surgical Procedures
+D006353	Heart-Assist Devices
+D006428	Hemipelvectomy
+D006440	Hemofiltration
+D006464	Hemoperfusion
+D006488	Hemostasis, Surgical
+D006498	Hepatectomy
+D007016	Hypophysectomy
+D007017	Hypophysectomy, Chemical
+D007044	Hysterectomy
+D007045	Hysterectomy, Vaginal
+D007081	Ileostomy
+D007387	Internal Mammary-Coronary Artery Anastomosis
+D007423	Intra-Aortic Balloon Pumping
+D007430	Intraoperative Care
+D007432	Intraoperative Period
+D007581	Jejunoileal Bypass
+D007582	Jejunostomy
+D007646	Keratotomy, Radial
+D007751	Labor, Induced
+D007796	Laminectomy
+D007813	Laparotomy
+D007825	Laryngectomy
+D007828	Laryngoscopy
+D008026	Ligation
+D008028	Light Coagulation
+D008096	Lithotripsy
+D008197	Lymph Node Excision
+D008408	Mastectomy
+D008481	Mediastinoscopy
+D008866	Microsurgery
+D008876	Middle Ear Ventilation
+D009121	Muscle Denervation
+D009204	Myocardial Revascularization
+D009225	Myringoplasty
+D009392	Nephrectomy
+D009403	Nephrostomy, Percutaneous
+D009407	Nerve Block
+D009409	Nerve Crush
+D009919	Orchiectomy
+D010027	Osteotomy
+D010030	Ostomy
+D010052	Ovariectomy
+D010180	Pancreatectomy
+D010193	Pancreaticojejunostomy
+D010385	Pelvic Exenteration
+D010478	Chemotherapy, Cancer, Regional Perfusion
+D010491	Pericardial Window Techniques
+D010492	Pericardiectomy
+D010535	Laparoscopy
+D010536	Peritoneovenous Shunt
+D010611	Pharyngectomy
+D010613	Pharyngostomy
+D010951	Plasma Exchange
+D010956	Plasmapheresis
+D011013	Pneumonectomy
+D011025	Pneumonolysis
+D011031	Pneumothorax, Artificial
+D011167	Portacaval Shunt, Surgical
+D011170	Portasystemic Shunt, Surgical
+D011171	Portoenterostomy, Hepatic
+D011182	Postoperative Care
+D011184	Postoperative Period
+D011229	Preanesthetic Medication
+D011300	Preoperative Care
+D011351	Proctoscopy
+D011468	Prostatectomy
+D011612	Psychosurgery
+D011677	Punctures
+D012086	Reoperation
+D012092	Replantation
+D012225	Rhinoplasty
+D012489	Salpingostomy
+D012591	Scleral Buckling
+D012599	Sclerostomy
+D012690	Serial Extraction
+D012812	Sigmoidoscopy
+D013105	Sphincterotomy, Transduodenal
+D013123	Spinal Fusion
+D013129	Spinal Puncture
+D013156	Splenectomy
+D013164	Splenorenal Shunt, Surgical
+D013200	Stapes Mobilization
+D013201	Stapes Surgery
+D013238	Stereotaxic Techniques
+D013243	Sterilization Reversal
+D013244	Sterilization, Involuntary
+D013245	Sterilization, Reproductive
+D013246	Sterilization, Tubal
+D013396	Suction
+D013504	Cardiovascular Surgical Procedures
+D013505	Digestive System Surgical Procedures
+D013506	Otologic Surgical Procedures
+D013507	Endocrine Surgical Procedures
+D013508	Ophthalmologic Surgical Procedures
+D013509	Gynecologic Surgical Procedures
+D013510	Pulmonary Surgical Procedures
+D013511	Minor Surgical Procedures
+D013513	Obstetric Surgical Procedures
+D013514	Surgical Procedures, Operative
+D013516	Oral Surgical Procedures, Preprosthetic
+D013517	Otorhinolaryngologic Surgical Procedures
+D013519	Urogenital Surgical Procedures
+D013520	Urologic Surgical Procedures
+D013521	Urologic Surgical Procedures, Male
+D013536	Suture Techniques
+D013562	Sympathectomy
+D013563	Sympathectomy, Chemical
+D013567	Symphysiotomy
+D013653	Tattooing
+D013709	Tendon Transfer
+D013905	Thoracoplasty
+D013906	Thoracoscopy
+D013907	Thoracostomy
+D013908	Thoracotomy
+D013934	Thymectomy
+D013965	Thyroidectomy
+D014068	Tonsillectomy
+D014081	Tooth Extraction
+D014090	Tooth Replantation
+D014130	Trabeculectomy
+D014139	Tracheostomy
+D014140	Tracheotomy
+D014143	Traction
+D014180	Transplantation
+D014182	Transplantation, Autologous
+D014183	Transplantation, Heterologous
+D014184	Transplantation, Homologous
+D014185	Transplantation, Isogeneic
+D014207	Trephining
+D014433	Tympanoplasty
+D014462	Ultrafiltration
+D014519	Ureterostomy
+D014547	Urinary Diversion
+D014619	Vacuum Curettage
+D014620	Vacuum Extraction, Obstetrical
+D014626	Vaginal Smears
+D014628	Vagotomy
+D014629	Vagotomy, Proximal Gastric
+D014656	Vascular Surgical Procedures
+D014659	Vasectomy
+D014669	Vasovasostomy
+D014696	Ventriculostomy
+D014710	Version, Fetal
+D014727	Vestibuloplasty
+D014821	Vitrectomy
+D015167	Vagotomy, Truncal
+D015171	Ganglionectomy
+D015187	Lipectomy
+D015193	Chorionic Villi Sampling
+D015199	Extracorporeal Membrane Oxygenation
+D015353	Eye Enucleation
+D015361	Rhytidoplasty
+D015390	Gastric Bypass
+D015391	Gastroplasty
+D015409	Mastectomy, Radical
+D015410	Mastectomy, Extended Radical
+D015411	Mastectomy, Modified Radical
+D015412	Mastectomy, Segmental
+D015413	Mastectomy, Simple
+D015414	Mastectomy, Subcutaneous
+D015424	Reperfusion
+D015425	Myocardial Reperfusion
+D015580	Mohs Surgery
+D015626	Tissue Expansion
+D015641	Radiography, Interventional
+D015653	Cystectomy
+D015904	Biliopancreatic Diversion
+D015906	Angioplasty, Balloon, Coronary
+D015907	Hysteroscopy
+D015908	Counterpulsation
+D015948	Keratoplasty, Penetrating
+D016025	Bone Transplantation
+D016026	Bone Marrow Transplantation
+D016027	Heart Transplantation
+D016030	Kidney Transplantation
+D016031	Liver Transplantation
+D016035	Pancreas Transplantation
+D016038	Skin Transplantation
+D016039	Corneal Transplantation
+D016040	Lung Transplantation
+D016041	Heart-Lung Transplantation
+D016042	Transplantation, Heterotopic
+D016064	Vaginal Birth after Cesarean
+D016067	Nerve Transfer
+D016099	Endoscopy, Gastrointestinal
+D016105	Parathyroidectomy
+D016145	Endoscopy, Digestive System
+D016299	Dental Implantation, Subperiosteal
+D016332	Fetal Tissue Transplantation
+D016342	Angioplasty, Laser
+D016343	Monitoring, Intraoperative
+D016377	Organ Transplantation
+D016378	Tissue Transplantation
+D016380	Brain Tissue Transplantation
+D016381	Islets of Langerhans Transplantation
+D016462	Mammaplasty
+D016557	Guided Tissue Regeneration, Periodontal
+D016577	Pancreaticoduodenectomy
+D016629	Esophagectomy
+D016634	Radiosurgery
+D016639	Scleroplasty
+D016717	Sphincterotomy, Endoscopic
+D016737	Proctocolectomy, Restorative
+D016748	Venous Cutdown
+D016894	Endarterectomy, Carotid
+D017073	Atherectomy
+D017075	Laser Coagulation
+D017081	Cholecystectomy, Laparoscopic
+D017115	Catheter Ablation
+D017128	Embolectomy
+D017130	Angioplasty
+D017131	Thrombectomy
+D017218	Cordocentesis
+D017222	Angioplasty, Balloon, Laser-Assisted
+D017225	Atherectomy, Coronary
+D017233	Orbit Evisceration
+D017234	Eye Evisceration
+D017287	Ventriculoperitoneal Shunt
+D017391	Epikeratophakia
+D017546	Angioscopy
+D017558	Elective Surgical Procedures
+D017583	Hemodiafiltration
+D017586	Diskectomy
+D017587	Diskectomy, Percutaneous
+D017591	Petrosal Sinus Sampling
+D017602	Lithotripsy, Laser
+D017604	Cesarean Section, Repeat
+D017690	Cell Transplantation
+D017763	Autonomic Denervation
+D017764	Parasympathectomy
+D017792	Surgical Stapling
+D017893	Photopheresis
+D018084	Ultrasonography, Interventional
+D018380	Hematopoietic Stem Cell Transplantation
+D018421	Cardiomyoplasty
+D018463	Filtering Surgery
+D018607	Pregnancy Reduction, Multifetal
+D018610	Heart Bypass, Right
+D018611	Heart Bypass, Left
+D018662	Fundoplication
+D018666	Ureteroscopy
+D018729	Fontan Procedure
+D018889	Ilizarov Technique
+D018903	Photorefractive Keratectomy
+D018918	Phacoemulsification
+D018962	Phlebotomy
+D019051	Rhizotomy
+D019060	Minimally Invasive Surgical Procedures
+D019092	Conization
+D019093	Circumcision, Female
+D019152	Paracentesis
+D019168	Portasystemic Shunt, Transjugular Intrahepatic
+D019186	Mandibular Advancement
+D019248	Jaw Fixation Techniques
+D019299	Decompression, Surgical
+D019340	Osteotomy, Le Fort
+D019616	Thoracic Surgical Procedures
+D019635	Neurosurgical Procedures
+D019637	Orthopedic Procedures
+D019643	Arthroplasty, Replacement
+D019644	Arthroplasty, Replacement, Hip
+D019645	Arthroplasty, Replacement, Knee
+D019647	Oral Surgical Procedures
+D019651	Plastic Surgery Procedures
+D019654	Lens Implantation, Intraocular
+D019771	Axotomy
+D019857	Osteogenesis, Distraction
+D019882	Blepharoplasty
+D019917	Blood Vessel Prosthesis Implantation
+D019918	Heart Valve Prosthesis Implantation
+D019919	Prosthesis Implantation
+D019923	Capsulorhexis
+D019928	Breast Implantation
+D019929	Cochlear Implantation
+D019930	Mandibular Prosthesis Implantation
+D019931	Maxillofacial Prosthesis Implantation
+D019933	Ossicular Replacement
+D019935	Penile Implantation
+D019990	Perioperative Care
+D020519	Pericardiocentesis
+D020535	Video-Assisted Surgery
+D020728	Transurethral Resection of Prostate
+D020731	Keratomileusis, Laser In Situ
+D020775	Thoracic Surgery, Video-Assisted
+D020858	Tissue and Organ Harvesting
+D020878	Device Removal
+D020883	Hysterotomy
+D020884	Colpotomy
+D021701	Sentinel Lymph Node Biopsy
+D023802	Cerclage, Cervical
+D023821	Limb Salvage
+D024162	Second-Look Surgery
+D025321	Surgery, Computer-Assisted
+D032801	Iridectomy
+D033581	Stem Cell Transplantation
+D036101	Cord Blood Stem Cell Transplantation
+D036102	Peripheral Blood Stem Cell Transplantation
+D036761	Ultrasound, High-Intensity Focused, Transrectal
+D036861	Delivery, Obstetric
+D037981	Neck Dissection
+D038263	Auditory Brain Stem Implantation
+D038361	Neuronavigation
+D038421	Hemispherectomy
+D038481	Anterior Temporal Lobectomy
+D042282	Microdissection
+D044583	Neuroendoscopy
+D044963	Biopsy, Fine-Needle
+D044964	Cervicoplasty
+D045164	Mesenchymal Stem Cell Transplantation
+D046148	Donor Selection
+D046288	Body Piercing
+D046289	Body Modification, Non-Therapeutic
+D046690	Deep Brain Stimulation
+D047549	Coronary Artery Bypass, Off-Pump
+D048091	Guided Tissue Regeneration
+D048988	Corneal Surgery, Laser
+D049008	Keratectomy, Subepithelial, Laser-Assisted
+D050110	Bariatric Surgery
+D050376	Bone-Patellar Tendon-Bone Grafting
+D050377	Cold Ischemia
+D050792	Circulatory Arrest, Deep Hypothermia Induced
+D050806	Arthroplasty, Replacement, Finger
+D050812	Split-Brain Procedure
+D052096	Warm Ischemia
+D053625	Sperm Retrieval
+D053656	Tenodesis
+D053685	Laser Therapy
+D053715	Cystotomy
+D053783	Magnetic Resonance Imaging, Interventional
+D053860	Pallidotomy
+D054140	Refractive Surgical Procedures
+D054315	Oocyte Retrieval
+D054445	Facial Transplantation
+D054544	Arthroplasty, Subchondral
+D054843	Negative-Pressure Wound Therapy
+D054854	Vertebroplasty
+D055011	Ablation Techniques
+D055164	Nerve Expansion
+D055356	Endometrial Ablation Techniques
+D055357	Uterine Artery Embolization
+D056126	Orchiopexy
+D056346	Sternotomy
+D056424	Decompressive Craniectomy
+D056948	Orthognathic Surgical Procedures
+D057086	High-Intensity Focused Ultrasound Ablation
+D057111	Descemet Stripping Endothelial Keratoplasty
+D057234	Preoperative Period
+D057510	Endovascular Procedures
+D057586	Vitreoretinal Surgery
+D057605	Natural Orifice Endoscopic Surgery
+D057668	Bloodless Medical and Surgical Procedures
+D057725	Operative Blood Salvage
+D057769	Transmyocardial Laser Revascularization
+D057830	Gender-Affirming Surgery
+D057893	Immediate Dental Implant Loading
+D057908	Argon Plasma Coagulation
+D057913	Joint Capsule Release
+D057929	Arthroplasty, Replacement, Elbow
+D058017	Vascular Grafting
+D058106	Wound Closure Techniques
+D058107	Abdominal Wound Closure Techniques
+D058327	Norwood Procedures
+D058366	Blalock-Taussig Procedure
+D058385	Cardiac Valve Annuloplasty
+D058386	Mitral Valve Annuloplasty
+D058498	Kyphoplasty
+D058582	Double-Balloon Enteroscopy
+D058733	Hand-Assisted Laparoscopy
+D058737	Arthroplasty, Replacement, Ankle
+D058753	Laryngoplasty
+D058971	Tenotomy
+D058994	Salpingectomy
+D059035	Perioperative Period
+D059145	Total Disc Replacement
+D059146	Metastasectomy
+D059229	Osteotomy, Sagittal Split Ramus
+D059247	Fertility Preservation
+D059387	Sphenopalatine Ganglion Block
+D059485	Gastropexy
+D059526	Foraminotomy
+D059546	Sinus Floor Augmentation
+D059549	Anterior Cruciate Ligament Reconstruction
+D059685	Herniorrhaphy
+D059708	Ultrasonic Surgical Procedures
+D059745	Piezosurgery
+D059747	Nasal Surgical Procedures
+D060826	Cementoplasty
+D061145	Microvascular Decompression Surgery
+D061185	Mechanical Thrombolysis
+D061645	Abdominoplasty
+D061646	Operative Time
+D061705	Image-Guided Biopsy
+D061765	Endoscopic Ultrasound-Guided Fine Needle Aspiration
+D061865	Hemorrhoidectomy
+D061887	Conversion to Open Surgery
+D062005	Biopsy, Large-Core Needle
+D062086	Transtympanic Micropressure Treatment
+D062109	Dermatologic Surgical Procedures
+D062645	Percutaneous Coronary Intervention
+D062785	Hemiarthroplasty
+D063125	Balloon Embolectomy
+D063186	Uterine Myomectomy
+D063986	Vascularized Composite Allotransplantation
+D063987	Hand Transplantation
+D064727	Posterior Capsulotomy
+D064728	Alveolar Bone Grafting
+D064795	Intraoperative Neurophysiological Monitoring
+D065006	Papanicolaou Test
+D065286	Prophylactic Surgical Procedures
+D065287	Robotic Surgical Procedures
+D065406	Laminoplasty
+D065426	Cytoreduction Surgical Procedures
+D065467	Transcatheter Aortic Valve Replacement
+D065526	Acetabuloplasty
+D066254	Axillofemoral Bypass Grafting

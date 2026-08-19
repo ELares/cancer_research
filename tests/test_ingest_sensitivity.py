@@ -262,3 +262,68 @@ def test_the_committed_report_is_what_the_generator_produces():
         "renderer produces from the committed JSON -- re-run with "
         "--render-only")
 
+
+def test_the_tree_arm_is_computed_and_the_ordering_result_is_derived():
+    """The withdrawal used to be an argument. It is a measurement now: the
+    descriptor arm recomputed as the whole MeSH family the modality names.
+    """
+    d, md = _doc(), MD.read_text()
+    t = d.get("modalities_tree_arm")
+    cov = d.get("proxy_coverage_of_family")
+    assert t and cov, "the tree-family control is gone"
+    n = d["cancer_articles"]
+    for m, q in t.items():
+        p = d["modalities"][m]
+        assert q["descriptor"] >= p["descriptor"] or \
+            cov[m]["entries_in_family"] < cov[m]["proxy_entries"], (
+            f"{m}: the family arm finds fewer descriptor hits than a proxy "
+            "that is wholly inside it, which cannot be")
+        assert q["qualifier"] == p["qualifier"], (
+            f"{m}: the qualifier arm moved between the two runs, so the "
+            "comparison is not holding it fixed")
+        assert q["either"] >= q["descriptor"] and q["either"] >= q["qualifier"]
+        assert q["qualifier_only"] == q["qualifier"] - (
+            q["qualifier"] + q["descriptor"] - q["either"]), (
+            f"{m}: qualifier_only is not qualifier minus the overlap")
+        assert q["qualifier_only"] > 0, f"{m}: no gain survives the control"
+    # the ordering verdict must be DERIVED from the two arms
+    rp = sorted(d["modalities"], key=lambda m: -d["modalities"][m]["qualifier_only"])
+    rt = sorted(t, key=lambda m: -t[m]["qualifier_only"])
+    if rp != rt:
+        assert "THE ORDERING INVERTS" in md, (
+            f"the arms rank the modalities differently ({rp} vs {rt}) and the "
+            "report does not say so")
+        assert " > ".join(f"`{m}`" for m in rt) in md
+    else:
+        assert "does NOT change under the family arm" in md, (
+            "the ordering survives the control and the page still presents "
+            "the control as supporting its withdrawal")
+
+
+def test_the_interval_resamples_the_shards_it_actually_drew():
+    """Wilson over 25,809 articles treats eight near-single-year blocks as
+    independent draws. The bootstrap must resample the blocks, and it must be
+    reproducible from the committed artifact.
+    """
+    m_, d, md = _mod(), _doc(), MD.read_text()
+    ps = d.get("per_shard")
+    assert ps, "the per-shard counts are not committed, so no cluster interval "\
+        "can be computed or checked"
+    assert len(ps) == d["n_shards"]
+    assert sum(v["n"] for v in ps.values()) == d["cancer_articles"], (
+        "the per-shard counts do not sum to the population")
+    for mod in d["modalities"]:
+        assert sum(v["qualifier_only"][mod] for v in ps.values()) == \
+            d["modalities"][mod]["qualifier_only"], (
+            f"{mod}: the per-shard qualifier-only counts do not sum to the "
+            "pooled one")
+    bs = m_._bootstrap(d)
+    assert bs, "the shard bootstrap produced nothing"
+    for mod, b in bs.items():
+        pt = 100 * d["modalities"][mod]["qualifier_only"] / d["cancer_articles"]
+        assert b["lo"] <= pt <= b["hi"], (
+            f"{mod}: the point estimate {pt:.2f} is outside its own bootstrap "
+            f"interval {b['lo']}-{b['hi']}")
+        assert f"**{b['lo']:.2f}-{b['hi']:.2f}**" in md
+    # reproducible: same seed, same answer
+    assert m_._bootstrap(d) == bs

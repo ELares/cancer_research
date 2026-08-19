@@ -156,7 +156,83 @@ def parse_both_axes(path: Path, c04: dict):
                 elem.clear()
 
 
-def scan(n_shards: int, seed: int, keep: bool):
+# THE DESCRIPTOR ARM AS A SUBTREE, not a hand-written list. The audit that
+# produced the withdrawal above showed the cross-modality ordering was ranking
+# how completely each proxy covers its own MeSH family, so the family is the
+# control: every descriptor NLM puts under the node the modality names.
+TREE_FAMILIES = {
+    "radiotherapy": ["E02.815"],
+    "drug therapy": ["E02.319.310", "D27.505.954.248"],
+    "surgery": ["E04"],
+    "diagnostic imaging": ["E01.370.350"],
+}
+TREES_DIR = "mesh"
+
+
+def fetch_tree_family(prefixes, dest, force: bool = False) -> dict:
+    """UI -> label for every topical descriptor under any of `prefixes`.
+
+    The same query `atlas_baseline.fetch_c04_descriptors` runs, with the tree
+    filter as a parameter, cached the same way so CI reads only the committed
+    file.
+    """
+    import time
+    import urllib.parse
+    from pathlib import Path as _P
+    dest = _P(dest)
+    if dest.exists() and not force:
+        out = {}
+        for line in dest.read_text(encoding="utf-8").splitlines():
+            if line and not line.startswith("#"):
+                ui, label = line.split("\t", 1)
+                out[ui] = label
+        return out
+    from atlas_baseline import MESH_SPARQL, _get
+    filt = " || ".join(
+        f'STRSTARTS(STR(?t), "http://id.nlm.nih.gov/mesh/{p}")' for p in prefixes)
+    query = (
+        "PREFIX meshv: <http://id.nlm.nih.gov/mesh/vocab#> "
+        "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> "
+        "SELECT DISTINCT ?d ?label WHERE { "
+        "?d a meshv:TopicalDescriptor . ?d meshv:treeNumber ?t . "
+        f"?d rdfs:label ?label . FILTER({filt}) }} ORDER BY ?d"
+    )
+    found, offset, page = {}, 0, 500
+    while True:
+        params = urllib.parse.urlencode({
+            "query": query, "format": "JSON", "inference": "true",
+            "limit": page, "offset": offset})
+        data = json.loads(_get(f"{MESH_SPARQL}?{params}", timeout=180))
+        rows = data["results"]["bindings"]
+        for b in rows:
+            found[b["d"]["value"].rsplit("/", 1)[-1]] = b["label"]["value"]
+        if len(rows) < page:
+            break
+        offset += page
+        time.sleep(0.3)
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    dest.write_text(
+        f"# MeSH descriptors under {', '.join(prefixes)}.\n"
+        "# Source: NLM MeSH SPARQL endpoint, https://id.nlm.nih.gov/mesh/sparql "
+        "(inference on).\n"
+        "# Regenerate: python scripts/atlas_ingest_sensitivity.py --refresh-trees\n"
+        f"# descriptors: {len(found)}\n"
+        + "\n".join(f"{u}\t{l}" for u, l in sorted(found.items())) + "\n",
+        encoding="utf-8")
+    return found
+
+
+def tree_arms(root, force: bool = False) -> dict:
+    """modality -> {lowercased descriptor labels} for its whole MeSH family."""
+    out = {}
+    for m, prefixes in TREE_FAMILIES.items():
+        slug = m.replace(" ", "-")
+        f = root / TREES_DIR / f"tree-{slug}.tsv"
+        out[m] = {v.lower() for v in fetch_tree_family(prefixes, f, force).values()}
+    return out
+
+
+def scan(n_shards: int, seed: int, keep: bool, refresh_trees: bool = False):
     root = atlas_root()
     c04 = fetch_c04_descriptors(root / "mesh" / "c04-descriptors.tsv")
     names = list_baseline_files()
@@ -168,37 +244,160 @@ def scan(n_shards: int, seed: int, keep: bool):
 
     raw = root / "raw_sensitivity"
     raw.mkdir(parents=True, exist_ok=True)
+    trees = tree_arms(root, force=refresh_trees)
     stats = {m: Counter() for m in MODALITIES}
+    tstats = {m: Counter() for m in MODALITIES}
     n_cancer = 0
+    # per-SHARD counts, because the design is a cluster sample of shards and
+    # the published Wilson intervals treated 25,809 articles as independent
+    per_shard = {}
+    years = Counter()
     used = []
     try:
         for name in picked:
             p = download(name, raw)
             used.append(name)
+            shard = per_shard.setdefault(name, {"n": 0, "modalities": {
+                m: Counter() for m in MODALITIES}})
             for labels, quals in parse_both_axes(p, c04):
                 n_cancer += 1
+                shard["n"] += 1
                 lab, qua = set(labels), set(quals)
                 for m, spec in MODALITIES.items():
-                    d_hit = bool(lab & spec["descriptors"])
                     q_hit = bool(qua & spec["qualifiers"])
-                    s = stats[m]
-                    s["descriptor"] += d_hit
-                    s["qualifier"] += q_hit
-                    s["either"] += (d_hit or q_hit)
-                    s["qualifier_only"] += (q_hit and not d_hit)
+                    for arm, hit in (("proxy", bool(lab & spec["descriptors"])),
+                                     ("tree", bool(lab & trees[m]))):
+                        s = stats[m] if arm == "proxy" else tstats[m]
+                        s["descriptor"] += hit
+                        s["qualifier"] += q_hit
+                        s["either"] += (hit or q_hit)
+                        s["qualifier_only"] += (q_hit and not hit)
+                        if arm == "proxy":
+                            sh = shard["modalities"][m]
+                            sh["qualifier_only"] += (q_hit and not hit)
             if not keep:
                 p.unlink(missing_ok=True)
     finally:
         if not keep:
             shutil.rmtree(raw, ignore_errors=True)
 
+    out_shards = {k: {"n": v["n"],
+                      "qualifier_only": {m: c["qualifier_only"]
+                                         for m, c in v["modalities"].items()}}
+                  for k, v in per_shard.items()}
     return {
         "shards": used,
         "n_shards": len(used),
         "seed": seed,
         "cancer_articles": n_cancer,
         "modalities": {m: dict(s) for m, s in stats.items()},
+        "modalities_tree_arm": {m: dict(s) for m, s in tstats.items()},
+        "tree_family_sizes": {m: len(v) for m, v in trees.items()},
+        "proxy_coverage_of_family": {
+            m: {"proxy_entries": len(MODALITIES[m]["descriptors"]),
+                "family": len(trees[m]),
+                "entries_in_family": len(
+                    {x for x in MODALITIES[m]["descriptors"]} & trees[m])}
+            for m in MODALITIES},
+        "per_shard": {k: {"n": v["n"],
+                          "qualifier_only": {m: c["qualifier_only"]
+                                             for m, c in v["modalities"].items()}}
+                      for k, v in per_shard.items()},
     }
+
+
+def _bootstrap(d, reps=10000, seed=20260819):
+    """95% interval resampling SHARDS, which is the actual sampling unit.
+
+    The published Wilson intervals treat every article as an independent draw.
+    They are eight near-single-year blocks, so the interval that means
+    something resamples the blocks. Deterministic seed, so --render-only
+    reproduces it.
+    """
+    import random as _r
+    ps = d.get("per_shard") or {}
+    if len(ps) < 4:
+        return {}
+    names = sorted(ps)
+    out = {}
+    for m in d["modalities"]:
+        rng = _r.Random(seed)
+        vals = []
+        for _ in range(reps):
+            pick = [names[rng.randrange(len(names))] for _ in names]
+            num = sum(ps[k]["qualifier_only"].get(m, 0) for k in pick)
+            den = sum(ps[k]["n"] for k in pick)
+            if den:
+                vals.append(100 * num / den)
+        vals.sort()
+        out[m] = {"lo": round(vals[int(0.025 * len(vals))], 2),
+                  "hi": round(vals[int(0.975 * len(vals))], 2), "reps": reps}
+    return out
+
+
+def _tree_arm_section(d, n) -> list:
+    """The descriptor arm as a SUBTREE -- the control the withdrawal needed."""
+    t = d.get("modalities_tree_arm") or {}
+    cov = d.get("proxy_coverage_of_family") or {}
+    if not t:
+        return []
+    L = ["## The descriptor arm as a SUBTREE, which is the control", ""]
+    L += ["The gain above is measured against a hand-written proxy, and that "
+          "proxy's completeness is the confound. So the arm is recomputed as "
+          "every descriptor NLM puts under the node the modality names -- no "
+          "list to dispute, the same shape as the fix #729 made for site "
+          f"coverage. Same shards, same {n:,} articles, qualifier arm "
+          "untouched.", ""]
+    L += ["| modality | proxy entries | family | gain, proxy | gain, family | "
+          "descriptor recall, proxy -> family |", "|---|--:|--:|--:|--:|--:|"]
+    rank_p = sorted(d["modalities"],
+                    key=lambda m: -d["modalities"][m]["qualifier_only"])
+    for m in rank_p:
+        pr, q = d["modalities"][m], t[m]
+        c = cov.get(m, {})
+        L.append(f"| {m} | {c.get('proxy_entries', '?')} | "
+                 f"{c.get('family', '?')} | "
+                 f"{100*pr['qualifier_only']/n:.2f} pts | "
+                 f"**{100*q['qualifier_only']/n:.2f} pts** | "
+                 f"{pr['descriptor']/max(pr['either'],1):.3f} -> "
+                 f"{q['descriptor']/max(q['either'],1):.3f} |")
+    L += [""]
+    rank_t = sorted(t, key=lambda m: -t[m]["qualifier_only"])
+    if rank_p != rank_t:
+        c0 = cov.get(rank_p[0], {})
+        L += ["**THE ORDERING INVERTS.** Proxy arm: "
+              + " > ".join(f"`{m}`" for m in rank_p)
+              + ". Family arm: " + " > ".join(f"`{m}`" for m in rank_t)
+              + f". The top rank changes hands, and the modality published as "
+                f"the sharpest case is the one whose proxy covers least of its "
+                f"own family ({c0.get('proxy_entries')} entries against "
+                f"{c0.get('family')}). The withdrawal above is measured now, "
+                f"not argued.", ""]
+    else:
+        L += ["The ordering does NOT change under the family arm, which "
+              "weakens the withdrawal above rather than supporting it.", ""]
+    worst = max(abs(100*d["modalities"][m]["qualifier_only"]/n
+                    - 100*t[m]["qualifier_only"]/n) for m in t)
+    L += [f"Every gain stays strictly positive, so what the page licenses -- "
+          f"that the axis is unread and the loss is not negligible -- survives "
+          f"the control. The MAGNITUDES do not: the two arms disagree by up to "
+          f"{worst:.1f} points.", ""]
+
+    bs = _bootstrap(d)
+    if bs:
+        L += ["### The interval, resampled over shards", ""]
+        L += [f"The intervals in the first table treat {n:,} articles as "
+              f"independent draws. They are {len(d.get('per_shard') or {})} "
+              f"near-single-year blocks, so the honest interval resamples the "
+              f"blocks ({bs[rank_p[0]]['reps']:,} replicates):", ""]
+        L += ["| modality | point | shard bootstrap 95% |", "|---|--:|--:|"]
+        for m in rank_p:
+            pt = 100 * d["modalities"][m]["qualifier_only"] / n
+            b = bs[m]
+            L.append(f"| {m} | {pt:.2f}% | **{b['lo']:.2f}-{b['hi']:.2f}** |")
+        L += ["", "Every interval on this page should be read several times "
+              "wider than printed. No point estimate and no sign moves.", ""]
+    return L
 
 
 def render(d: dict) -> str:
@@ -233,6 +432,7 @@ def render(d: dict) -> str:
 
     best = max(d["modalities"].items(),
                key=lambda kv: kv[1].get("qualifier_only", 0))
+    L += _tree_arm_section(d, n)
     L += ["## The cross-modality ORDERING is not a measurement", ""]
     L += [f"The largest figure in that column is **{best[0]}** at "
           f"{100*best[1].get('qualifier_only',0)/n:.1f}%, and an earlier "
@@ -287,12 +487,15 @@ def main():
     ap.add_argument("--seed", type=int, default=20260816)
     ap.add_argument("--keep-raw", action="store_true")
     ap.add_argument("--render-only", action="store_true")
+    ap.add_argument("--refresh-trees", action="store_true",
+                    help="re-fetch each modality's MeSH tree family")
     args = ap.parse_args()
 
     if args.render_only:
         d = json.loads(OUT_JSON.read_text())
     else:
-        d = scan(args.shards, args.seed, args.keep_raw)
+        d = scan(args.shards, args.seed, args.keep_raw,
+                 refresh_trees=args.refresh_trees)
         if d["cancer_articles"] == 0:
             raise SystemExit(
                 "no cancer articles parsed, which is not a finding -- it is "

@@ -1,0 +1,196 @@
+# MeSH descriptors under E01.370.350.
+# Source: NLM MeSH SPARQL endpoint, https://id.nlm.nih.gov/mesh/sparql (inference on).
+# Regenerate: python scripts/atlas_ingest_sensitivity.py --refresh-trees
+# descriptors: 192
+D000069416	Intravital Microscopy
+D000070621	Cystography
+D000071941	Barium Enema
+D000072078	Positron Emission Tomography Computed Tomography
+D000072098	Single Photon Emission Computed Tomography Computed Tomography
+D000072226	Computed Tomography Angiography
+D000073758	Nonlinear Optical Microscopy
+D000073798	Second Harmonic Generation Microscopy
+D000076665	Ventilation-Perfusion Scan
+D000077564	Focused Assessment with Sonography for Trauma
+D000080925	Microwave Imaging
+D000081364	Multiparametric Magnetic Resonance Imaging
+D000081982	Laser Speckle Contrast Imaging
+D000082642	Brain Cortical Thickness
+D000090104	Dacryocystography
+D000092224	Dopaminergic Imaging
+D000092262	Ultrasonography, Carotid Arteries
+D000094443	Volume Electron Microscopy
+D000095497	Magnetic Resonance Myelography
+D000097188	Radiomics
+D000097785	Forensic Imaging
+D000097873	Postmortem Imaging
+D000097913	Quantitative Phase Imaging
+D000098543	Dynamic Contrast Enhanced Magnetic Resonance Imaging
+D000098642	Perfusion Magnetic Resonance Imaging
+D000099164	Magnetic Particle Imaging
+D000365	Age Determination by Skeleton
+D000366	Age Determination by Teeth
+D000790	Angiocardiography
+D000792	Angiography
+D001027	Aortography
+D001175	Arthrography
+D001931	Brain Mapping
+D001995	Bronchography
+D002533	Cerebral Angiography
+D002758	Cholangiography
+D002760	Cholangiopancreatography, Endoscopic Retrograde
+D002765	Cholecystography
+D002932	Cineangiography
+D002933	Cineradiography
+D003952	Diagnostic Imaging
+D004452	Echocardiography
+D004453	Echoencephalography
+D004571	Electrokymography
+D004577	Electron Probe Microanalysis
+D005471	Fluoroscopy
+D006696	Holography
+D007047	Hysterosalpingography
+D007089	Image Enhancement
+D007090	Image Interpretation, Computer-Assisted
+D008220	Lymphography
+D008279	Magnetic Resonance Imaging
+D008327	Mammography
+D008400	Mass Chest X-Ray
+D008852	Microradiography
+D008853	Microscopy
+D008854	Microscopy, Electron
+D008855	Microscopy, Electron, Scanning
+D008856	Microscopy, Fluorescence
+D008857	Microscopy, Interference
+D008858	Microscopy, Phase-Contrast
+D008859	Microscopy, Polarization
+D008860	Microscopy, Ultraviolet
+D009192	Myelography
+D009485	Neuroradiography
+D010690	Phlebography
+D010779	Photofluorography
+D010780	Photogrammetry
+D010781	Photography
+D010784	Photomicrography
+D011011	Pneumoencephalography
+D011029	Pneumoradiography
+D011172	Portography
+D011856	Radiographic Image Enhancement
+D011857	Radiographic Image Interpretation, Computer-Assisted
+D011858	Radiographic Magnification
+D011859	Radiography
+D011860	Radiography, Abdominal
+D011861	Radiography, Dental
+D011862	Radiography, Panoramic
+D011866	Radioisotope Renography
+D011875	Radionuclide Angiography
+D011877	Radionuclide Imaging
+D012796	Sialography
+D013382	Subtraction Technique
+D013817	Thermography
+D013902	Radiography, Thoracic
+D014054	Tomography
+D014055	Tomography, Emission-Computed
+D014056	Tomography, X-Ray
+D014057	Tomography, X-Ray Computed
+D014172	Transillumination
+D014463	Ultrasonography
+D014567	Urography
+D014695	Cerebral Ventriculography
+D014984	Xeromammography
+D014986	Xeroradiography
+D015150	Echocardiography, Doppler
+D015502	Absorptiometry, Photon
+D015635	Radionuclide Ventriculography
+D015637	Gated Blood-Pool Imaging
+D015641	Radiography, Interventional
+D015646	Ventriculography, First-Pass
+D015899	Tomography, Emission-Computed, Single-Photon
+D015900	Radiography, Dual-Energy Scanned Projection
+D015901	Angiography, Digital Subtraction
+D015903	Moire Topography
+D016216	Ultrasonography, Prenatal
+D016217	Ultrasonography, Mammary
+D016252	Microscopy, Scanning Tunneling
+D016253	Microscopy, Immunoelectron
+D016300	Radiography, Bitewing
+D016719	Radioimmunodetection
+D017023	Coronary Angiography
+D017348	Microscopy, Electron, Scanning Transmission
+D017352	Echo-Planar Imaging
+D017548	Echocardiography, Transesophageal
+D017585	Ultrasonography, Doppler, Transcranial
+D018084	Ultrasonography, Interventional
+D018608	Ultrasonography, Doppler
+D018613	Microscopy, Confocal
+D018615	Ultrasonography, Doppler, Color
+D018616	Ultrasonography, Doppler, Duplex
+D018617	Ultrasonography, Doppler, Pulsed
+D018618	Echocardiography, Doppler, Color
+D018619	Echocardiography, Doppler, Pulsed
+D018625	Microscopy, Atomic Force
+D018715	Microscopy, Video
+D018810	Magnetic Resonance Angiography
+D019028	Magnetic Resonance Imaging, Cine
+D019160	Endosonography
+D019252	Radiography, Dental, Digital
+D019265	Spectroscopy, Near-Infrared
+D019560	Echocardiography, Three-Dimensional
+D019561	Echocardiography, Four-Dimensional
+D019841	Defecography
+D020285	Cryoelectron Microscopy
+D020527	Microscopy, Scanning Probe
+D020678	Microscopic Angioscopy
+D021621	Imaging, Three-Dimensional
+D023861	Photography, Dental
+D023881	Colonography, Computed Tomographic
+D025401	Echocardiography, Stress
+D033401	Microscopy, Acoustic
+D036542	Tomography, Spiral Computed
+D036641	Microscopy, Fluorescence, Multiphoton
+D038524	Diffusion Magnetic Resonance Imaging
+D041622	Tomography, Optical
+D041623	Tomography, Optical Coherence
+D046032	Microscopy, Energy-Filtering Transmission Electron
+D046169	Dermoscopy
+D046529	Microscopy, Electron, Transmission
+D047569	Laser Scanning Cytometry
+D048208	Nuchal Translucency Measurement
+D049268	Positron-Emission Tomography
+D049448	Cholangiopancreatography, Magnetic Resonance
+D049489	Stroboscopy
+D051598	Whole Body Imaging
+D054459	Elasticity Imaging Techniques
+D054791	Cervical Length Measurement
+D054881	Sex Determination by Skeleton
+D054893	Cone-Beam Computed Tomography
+D054894	Spiral Cone-Beam Computed Tomography
+D055032	Electron Microscope Tomography
+D055069	Terahertz Imaging
+D055114	X-Ray Microtomography
+D055414	Myocardial Perfusion Imaging
+D055420	Perfusion Imaging
+D055424	Cardiac-Gated Imaging Techniques
+D055425	Respiratory-Gated Imaging Techniques
+D055426	Cardiac-Gated Single-Photon Emission Computer-Assisted Tomography
+D056324	Diffusion Tensor Imaging
+D056969	Voltage-Sensitive Dye Imaging
+D056973	Four-Dimensional Computed Tomography
+D057054	Molecular Imaging
+D057791	Cardiac Imaging Techniques
+D058948	Cell Tracking
+D059008	Time-Lapse Imaging
+D059168	Carotid Intima-Media Thickness
+D059869	Radiostereometric Analysis
+D059906	Neuroimaging
+D059907	Functional Neuroimaging
+D061305	Lymphoscintigraphy
+D061330	Multidetector Computed Tomography
+D061765	Endoscopic Ultrasound-Guided Fine Needle Aspiration
+D061848	Optical Imaging
+D062048	Narrow Band Imaging
+D062345	Nuclear Microscopy
+D063132	Connectome
+D064347	Microscopy, Electrochemical, Scanning
+D064847	Multimodal Imaging
+D066235	Fluorine-19 Magnetic Resonance Imaging
