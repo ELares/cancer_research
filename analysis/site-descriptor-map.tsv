@@ -1,0 +1,238 @@
+# site	tree root	MeSH descriptor
+# DERIVED: every C04 descriptor at or beneath the tree nodes the
+# shallow SITES list already occupies. No rule beyond that list --
+# NLM's tree decides membership, from corpus/atlas/mesh/
+# c04-tree-numbers.tsv. Regenerate with scripts/atlas_site_coverage.py.
+bladder	C04.588.945.947.960	non-muscle invasive bladder neoplasms
+bladder	C04.588.945.947.960	urinary bladder neoplasms
+brain/CNS	C04.588.614.250	arachnoid cysts
+brain/CNS	C04.557.465.625.600.380	astrocytoma
+brain/CNS	C04.588.614.250	brain neoplasms
+brain/CNS	C04.588.614.250	brain stem neoplasms
+brain/CNS	C04.588.614.250	central nervous system cysts
+brain/CNS	C04.588.614.250	central nervous system neoplasms
+brain/CNS	C04.588.614.250	cerebellar neoplasms
+brain/CNS	C04.588.614.250	cerebral ventricle neoplasms
+brain/CNS	C04.588.614.250	choroid plexus neoplasms
+brain/CNS	C04.588.614.250	colloid cysts
+brain/CNS	C04.557.465.625.600.380	diffuse intrinsic pontine glioma
+brain/CNS	C04.557.465.625.600.380	ependymoma
+brain/CNS	C04.588.614.250	epidural neoplasms
+brain/CNS	C04.557.465.625.600.380	ganglioglioma
+brain/CNS	C04.557.465.625.600.380	glioblastoma
+brain/CNS	C04.557.465.625.600.380	glioma
+brain/CNS	C04.557.465.625.600.380	glioma, subependymal
+brain/CNS	C04.557.465.625.600.380	gliosarcoma
+brain/CNS	C04.588.614.250	hypothalamic neoplasms
+brain/CNS	C04.588.614.250	infratentorial neoplasms
+brain/CNS	C04.557.465.625.600.380	medulloblastoma
+brain/CNS	C04.588.614.250	meningeal carcinomatosis
+brain/CNS	C04.588.614.250	meningeal neoplasms
+brain/CNS	C04.588.614.250	meningioma
+brain/CNS	C04.588.614.250	neurocytoma
+brain/CNS	C04.557.465.625.600.380	oligodendroglioma
+brain/CNS	C04.557.465.625.600.380	optic nerve glioma
+brain/CNS	C04.588.614.250	pallister-hall syndrome
+brain/CNS	C04.588.614.250	papilloma, choroid plexus
+brain/CNS	C04.588.614.250	pinealoma
+brain/CNS	C04.588.614.250	pituitary neoplasms
+brain/CNS	C04.588.614.250	spinal cord neoplasms
+brain/CNS	C04.588.614.250	supratentorial neoplasms
+breast	C04.588.180	breast carcinoma in situ
+breast	C04.588.180	breast neoplasms
+breast	C04.588.180	breast neoplasms, male
+breast	C04.557.470.200.025.232.500	carcinoma, ductal, breast
+breast	C04.588.180	carcinoma, lobular
+breast	C04.588.180	hereditary breast and ovarian cancer syndrome
+breast	C04.588.180	inflammatory breast neoplasms
+breast	C04.588.180	triple negative breast neoplasms
+breast	C04.588.180	unilateral breast neoplasms
+cervix/uterus	C04.588.945.418.948	carcinoma, endometrioid
+cervix/uterus	C04.588.945.418.948	endometrial neoplasms
+cervix/uterus	C04.588.945.418.948	uterine cervical neoplasms
+cervix/uterus	C04.588.945.418.948	uterine neoplasms
+colorectal	C04.588.274.476.411.307	adenomatous polyposis coli
+colorectal	C04.588.274.476.411.307	anal gland neoplasms
+colorectal	C04.588.274.476.411.307	anus neoplasms
+colorectal	C04.588.274.476.411.307	colitis-associated neoplasms
+colorectal	C04.588.274.476.411.307	colonic neoplasms
+colorectal	C04.588.274.476.411.307	colorectal neoplasms
+colorectal	C04.588.274.476.411.307	colorectal neoplasms, hereditary nonpolyposis
+colorectal	C04.588.274.476.411.307	gardner syndrome
+colorectal	C04.588.274.476.411.307	rectal neoplasms
+colorectal	C04.588.274.476.411.307	sigmoid neoplasms
+head and neck	C04.588.443	ear neoplasms
+head and neck	C04.588.443	esophageal neoplasms
+head and neck	C04.588.443	esophageal squamous cell carcinoma
+head and neck	C04.588.443	eyelid neoplasms
+head and neck	C04.588.443	facial neoplasms
+head and neck	C04.588.443	gingival neoplasms
+head and neck	C04.588.443	head and neck neoplasms
+head and neck	C04.588.443	hypopharyngeal neoplasms
+head and neck	C04.588.443	laryngeal neoplasms
+head and neck	C04.588.443	leukoplakia, hairy
+head and neck	C04.588.443	leukoplakia, oral
+head and neck	C04.588.443	lip neoplasms
+head and neck	C04.588.443	maxillary sinus neoplasms
+head and neck	C04.588.443	mouth neoplasms
+head and neck	C04.588.443	nasopharyngeal carcinoma
+head and neck	C04.588.443	nasopharyngeal neoplasms
+head and neck	C04.588.443	nose neoplasms
+head and neck	C04.588.443	oropharyngeal neoplasms
+head and neck	C04.588.443	otorhinolaryngologic neoplasms
+head and neck	C04.588.443	palatal neoplasms
+head and neck	C04.588.443	paranasal sinus neoplasms
+head and neck	C04.588.443	parathyroid neoplasms
+head and neck	C04.588.443	parotid neoplasms
+head and neck	C04.588.443	pharyngeal neoplasms
+head and neck	C04.588.443	salivary gland neoplasms
+head and neck	C04.557.470.200.400.565	squamous cell carcinoma of head and neck
+head and neck	C04.588.443	sublingual gland neoplasms
+head and neck	C04.588.443	submandibular gland neoplasms
+head and neck	C04.588.443	thyroid cancer, papillary
+head and neck	C04.588.443	thyroid neoplasms
+head and neck	C04.588.443	thyroid nodule
+head and neck	C04.588.443	tongue neoplasms
+head and neck	C04.588.443	tonsillar neoplasms
+head and neck	C04.588.443	tracheal neoplasms
+kidney	C04.557.470.200.025.390	carcinoma, renal cell
+kidney	C04.588.945.947.535	denys-drash syndrome
+kidney	C04.588.945.947.535	kidney neoplasms
+kidney	C04.588.945.947.535	nephroma, mesoblastic
+kidney	C04.588.945.947.535	wagr syndrome
+kidney	C04.588.945.947.535	wilms tumor
+leukaemia	C04.557.337	avian leukosis
+leukaemia	C04.557.337	blast crisis
+leukaemia	C04.557.337	blastic plasmacytoid dendritic cell neoplasm
+leukaemia	C04.557.337	enzootic bovine leukosis
+leukaemia	C04.557.337	leukemia
+leukaemia	C04.557.337	leukemia l1210
+leukaemia	C04.557.337	leukemia l5178
+leukaemia	C04.557.337	leukemia p388
+leukaemia	C04.557.337	leukemia, b-cell
+leukaemia	C04.557.337	leukemia, basophilic, acute
+leukaemia	C04.557.337	leukemia, biphenotypic, acute
+leukaemia	C04.557.337	leukemia, eosinophilic, acute
+leukaemia	C04.557.337	leukemia, erythroblastic, acute
+leukaemia	C04.557.337	leukemia, experimental
+leukaemia	C04.557.337	leukemia, feline
+leukaemia	C04.557.337	leukemia, hairy cell
+leukaemia	C04.557.337	leukemia, large granular lymphocytic
+leukaemia	C04.557.337	leukemia, lymphocytic, chronic, b-cell
+leukaemia	C04.557.337	leukemia, lymphoid
+leukaemia	C04.557.337	leukemia, mast-cell
+leukaemia	C04.557.337	leukemia, megakaryoblastic, acute
+leukaemia	C04.557.337	leukemia, monocytic, acute
+leukaemia	C04.557.337	leukemia, myelogenous, chronic, bcr-abl positive
+leukaemia	C04.557.337	leukemia, myeloid
+leukaemia	C04.557.337	leukemia, myeloid, accelerated phase
+leukaemia	C04.557.337	leukemia, myeloid, acute
+leukaemia	C04.557.337	leukemia, myeloid, chronic, atypical, bcr-abl negative
+leukaemia	C04.557.337	leukemia, myeloid, chronic-phase
+leukaemia	C04.557.337	leukemia, myelomonocytic, acute
+leukaemia	C04.557.337	leukemia, myelomonocytic, chronic
+leukaemia	C04.557.337	leukemia, myelomonocytic, juvenile
+leukaemia	C04.557.337	leukemia, plasma cell
+leukaemia	C04.557.337	leukemia, prolymphocytic
+leukaemia	C04.557.337	leukemia, prolymphocytic, b-cell
+leukaemia	C04.557.337	leukemia, prolymphocytic, t-cell
+leukaemia	C04.557.337	leukemia, promyelocytic, acute
+leukaemia	C04.557.337	leukemia, radiation-induced
+leukaemia	C04.557.337	leukemia, t-cell
+leukaemia	C04.557.337	leukemia-lymphoma, adult t-cell
+leukaemia	C04.557.337	precursor b-cell lymphoblastic leukemia-lymphoma
+leukaemia	C04.557.337	precursor cell lymphoblastic leukemia-lymphoma
+leukaemia	C04.557.337	precursor t-cell lymphoblastic leukemia-lymphoma
+leukaemia	C04.557.337	sarcoma, myeloid
+liver	C04.588.274.623	adenoma, liver cell
+liver	C04.557.470.200.025.255	carcinoma, hepatocellular
+liver	C04.588.274.623	liver neoplasms
+liver	C04.588.274.623	liver neoplasms, experimental
+lung	C04.588.894.797.520	adenocarcinoma of lung
+lung	C04.588.894.797.520	adenocarcinoma, bronchiolo-alveolar
+lung	C04.588.894.797.520	bronchial neoplasms
+lung	C04.588.894.797.520	carcinoma, bronchogenic
+lung	C04.588.894.797.520	carcinoma, non-small-cell lung
+lung	C04.588.894.797.520	lung neoplasms
+lung	C04.588.894.797.520	mesothelioma, malignant
+lung	C04.588.894.797.520	multiple pulmonary nodules
+lung	C04.588.894.797.520	pancoast syndrome
+lung	C04.588.894.797.520	pulmonary blastoma
+lung	C04.588.894.797.520	pulmonary sclerosing hemangioma
+lung	C04.588.894.797.520	small cell lung carcinoma
+lymphoma	C04.557.386	blastic plasmacytoid dendritic cell neoplasm
+lymphoma	C04.557.386	burkitt lymphoma
+lymphoma	C04.557.386	composite lymphoma
+lymphoma	C04.557.386	enteropathy-associated t-cell lymphoma
+lymphoma	C04.557.386	hodgkin disease
+lymphoma	C04.557.386	immunoproliferative small intestinal disease
+lymphoma	C04.557.386	intraocular lymphoma
+lymphoma	C04.557.386	lymphoma
+lymphoma	C04.557.386	lymphoma, aids-related
+lymphoma	C04.557.386	lymphoma, b-cell
+lymphoma	C04.557.386	lymphoma, b-cell, marginal zone
+lymphoma	C04.557.386	lymphoma, extranodal nk-t-cell
+lymphoma	C04.557.386	lymphoma, follicular
+lymphoma	C04.557.386	lymphoma, large b-cell, diffuse
+lymphoma	C04.557.386	lymphoma, large-cell, anaplastic
+lymphoma	C04.557.386	lymphoma, large-cell, immunoblastic
+lymphoma	C04.557.386	lymphoma, mantle-cell
+lymphoma	C04.557.386	lymphoma, non-hodgkin
+lymphoma	C04.557.386	lymphoma, primary cutaneous anaplastic large cell
+lymphoma	C04.557.386	lymphoma, primary effusion
+lymphoma	C04.557.386	lymphoma, t-cell
+lymphoma	C04.557.386	lymphoma, t-cell, cutaneous
+lymphoma	C04.557.386	lymphoma, t-cell, peripheral
+lymphoma	C04.557.386	lymphomatoid granulomatosis
+lymphoma	C04.557.386	lymphomatoid papulosis
+lymphoma	C04.557.386	mycosis fungoides
+lymphoma	C04.557.386	pagetoid reticulosis
+lymphoma	C04.557.386	plasmablastic lymphoma
+lymphoma	C04.557.386	sezary syndrome
+oesophagus	C04.588.274.476.205	esophageal neoplasms
+oesophagus	C04.557.470.200.400.330	esophageal squamous cell carcinoma
+ovary	C04.588.322.455	carcinoma, ovarian epithelial
+ovary	C04.588.322.455	granulosa cell tumor
+ovary	C04.588.322.455	hereditary breast and ovarian cancer syndrome
+ovary	C04.588.322.455	luteoma
+ovary	C04.588.322.455	meigs syndrome
+ovary	C04.588.322.455	ovarian neoplasms
+ovary	C04.588.322.455	sertoli-leydig cell tumor
+ovary	C04.588.322.455	thecoma
+pancreas	C04.588.274.761	adenoma, islet cell
+pancreas	C04.588.274.761	carcinoma, islet cell
+pancreas	C04.557.470.200.025.232.750	carcinoma, pancreatic ductal
+pancreas	C04.588.274.761	gastrinoma
+pancreas	C04.588.274.761	glucagonoma
+pancreas	C04.588.274.761	insulinoma
+pancreas	C04.588.274.761	pancreatic intraductal neoplasms
+pancreas	C04.588.274.761	pancreatic neoplasms
+pancreas	C04.588.274.761	somatostatinoma
+pancreas	C04.588.274.761	vipoma
+prostate	C04.588.945.440.770	prostatic neoplasms
+prostate	C04.588.945.440.770	prostatic neoplasms, castration-resistant
+skin/melanoma	C04.588.805	acanthoma
+skin/melanoma	C04.588.805	basal cell carcinoma
+skin/melanoma	C04.588.805	basal cell nevus syndrome
+skin/melanoma	C04.588.805	blastic plasmacytoid dendritic cell neoplasm
+skin/melanoma	C04.588.805	bowen's disease
+skin/melanoma	C04.557.465.625.650.510	cutaneous malignant melanoma
+skin/melanoma	C04.588.805	cutaneous squamous cell carcinoma
+skin/melanoma	C04.557.465.625.650.510	dysplastic nevus syndrome
+skin/melanoma	C04.557.465.625.650.510	hutchinson's melanotic freckle
+skin/melanoma	C04.588.805	mastocytoma, skin
+skin/melanoma	C04.588.805	mastocytosis, cutaneous
+skin/melanoma	C04.557.465.625.650.510	melanoma
+skin/melanoma	C04.557.465.625.650.510	melanoma, amelanotic
+skin/melanoma	C04.557.465.625.650.510	melanoma, experimental
+skin/melanoma	C04.588.805	muir-torre syndrome
+skin/melanoma	C04.588.805	non-melanoma skin neoplasms
+skin/melanoma	C04.588.805	sebaceous gland neoplasms
+skin/melanoma	C04.588.805	skin neoplasms
+skin/melanoma	C04.588.805	sweat gland neoplasms
+skin/melanoma	C04.588.805	urticaria pigmentosa
+skin/melanoma	C04.557.465.625.650.510	uveal melanoma
+stomach	C04.588.274.476.767	stomach neoplasms
+thyroid	C04.588.322.894	thyroid cancer, papillary
+thyroid	C04.588.322.894	thyroid neoplasms
+thyroid	C04.588.322.894	thyroid nodule
