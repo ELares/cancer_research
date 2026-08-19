@@ -1,5 +1,84 @@
 {
  "cancer_articles": 25809,
+ "era_coverage": {
+  "census_records": 441037,
+  "census_share_unrepresented": 25.15,
+  "census_stride": 10,
+  "decades_effectively_unrepresented": [
+   1950,
+   1960,
+   1980,
+   1990
+  ],
+  "n_census_shards_read": 134,
+  "rows": [
+   {
+    "census_pct": 0.56,
+    "decade": 1940,
+    "ratio": 14.66,
+    "sample_n": 2135,
+    "sample_pct": 8.27
+   },
+   {
+    "census_pct": 1.9,
+    "decade": 1950,
+    "ratio": 0.01,
+    "sample_n": 3,
+    "sample_pct": 0.01
+   },
+   {
+    "census_pct": 3.03,
+    "decade": 1960,
+    "ratio": 0.0,
+    "sample_n": 0,
+    "sample_pct": 0.0
+   },
+   {
+    "census_pct": 6.08,
+    "decade": 1970,
+    "ratio": 1.88,
+    "sample_n": 2947,
+    "sample_pct": 11.42
+   },
+   {
+    "census_pct": 9.12,
+    "decade": 1980,
+    "ratio": 0.0,
+    "sample_n": 1,
+    "sample_pct": 0.0
+   },
+   {
+    "census_pct": 11.1,
+    "decade": 1990,
+    "ratio": 0.0,
+    "sample_n": 0,
+    "sample_pct": 0.0
+   },
+   {
+    "census_pct": 18.81,
+    "decade": 2000,
+    "ratio": 0.12,
+    "sample_n": 595,
+    "sample_pct": 2.31
+   },
+   {
+    "census_pct": 28.57,
+    "decade": 2010,
+    "ratio": 2.35,
+    "sample_n": 17333,
+    "sample_pct": 67.16
+   },
+   {
+    "census_pct": 20.83,
+    "decade": 2020,
+    "ratio": 0.52,
+    "sample_n": 2795,
+    "sample_pct": 10.83
+   }
+  ],
+  "sample_records": 25809,
+  "sample_records_in_those": 4
+ },
  "modalities": {
   "diagnostic imaging": {
    "descriptor": 1558,

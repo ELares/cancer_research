@@ -237,9 +237,15 @@ def scan(n_shards: int, seed: int, keep: bool, refresh_trees: bool = False):
     c04 = fetch_c04_descriptors(root / "mesh" / "c04-descriptors.tsv")
     names = list_baseline_files()
     rng = random.Random(seed)
-    # Spread across the baseline rather than taking a prefix: the files are
-    # chronological, so a prefix samples only the oldest literature and MeSH
-    # indexing practice has changed over fifty years.
+    # Spread across the baseline rather than taking a prefix. THE REASON ONCE
+    # GIVEN HERE WAS WRONG: "the files are chronological, so a prefix samples
+    # only the oldest literature" is false as a monotone property -- file order
+    # is only broadly chronological, the oldest literature sits in the middle
+    # of the range, and a prefix samples the mid-1970s rather than the oldest.
+    # The decision stands on the real reason: a prefix is a contiguous block of
+    # near-single-year shards, so it samples one era whichever era that is,
+    # and MeSH indexing practice has changed over fifty years. What spreading
+    # does NOT buy is coverage -- see `era_coverage`.
     picked = sorted(rng.sample(names, min(n_shards, len(names))))
 
     raw = root / "raw_sensitivity"
@@ -306,6 +312,55 @@ def scan(n_shards: int, seed: int, keep: bool, refresh_trees: bool = False):
     }
 
 
+def era_coverage(shards, stride: int = 10) -> dict:
+    """What the 8 shards cover, against what the census holds.
+
+    `render()` calls the sample "sampled across the whole chronological
+    range". Whether that is true is checkable WITHOUT re-downloading anything:
+    the same shards have committed counterparts under corpus/atlas/records,
+    which carry a year. The census side is a STRIDE, never a prefix.
+    """
+    import gzip
+    root = atlas_root() / "records"
+    if not root.exists():
+        return {}
+
+    def decades(paths):
+        c, n = Counter(), 0
+        for f in paths:
+            if not f.exists():
+                continue
+            with gzip.open(f, "rt", encoding="utf-8") as fh:
+                for line in fh:
+                    y = json.loads(line).get("year")
+                    if isinstance(y, int):
+                        c[y - y % 10] += 1
+                        n += 1
+        return c, n
+
+    smp, n_s = decades(root / n.replace(".xml.gz", ".jsonl.gz") for n in shards)
+    files = sorted(root.glob("*.jsonl.gz"))
+    cen, n_c = decades(files[::stride])
+    if not (n_s and n_c):
+        return {}
+    rows = []
+    for d in sorted(set(cen) | set(smp)):
+        cs, ss = 100 * cen.get(d, 0) / n_c, 100 * smp.get(d, 0) / n_s
+        rows.append({"decade": d, "census_pct": round(cs, 2),
+                     "sample_pct": round(ss, 2), "sample_n": smp.get(d, 0),
+                     "ratio": round(ss / cs, 2) if cs else None})
+    thin = [r for r in rows if r["ratio"] is not None and r["ratio"] < 0.1]
+    return {
+        "census_stride": stride, "census_records": n_c, "sample_records": n_s,
+        "n_census_shards_read": len(files[::stride]),
+        "rows": rows,
+        "decades_effectively_unrepresented": [r["decade"] for r in thin],
+        "census_share_unrepresented": round(
+            sum(r["census_pct"] for r in thin), 2),
+        "sample_records_in_those": sum(r["sample_n"] for r in thin),
+    }
+
+
 def _bootstrap(d, reps=10000, seed=20260819):
     """95% interval resampling SHARDS, which is the actual sampling unit.
 
@@ -333,6 +388,37 @@ def _bootstrap(d, reps=10000, seed=20260819):
         out[m] = {"lo": round(vals[int(0.025 * len(vals))], 2),
                   "hi": round(vals[int(0.975 * len(vals))], 2), "reps": reps}
     return out
+
+
+def _era_section(d) -> list:
+    e = d.get("era_coverage") or {}
+    if not e.get("rows"):
+        return []
+    L = ["### What \"across the whole chronological range\" is worth", ""]
+    L += [f"This page says the shards are sampled across the whole "
+          f"chronological range. Checked against the census itself "
+          f"(1-in-{e['census_stride']} stride over the committed records, "
+          f"{e['census_records']:,} dated articles):", ""]
+    L += ["| decade | census | sample | sample n | ratio |",
+          "|--:|--:|--:|--:|--:|"]
+    for r in e["rows"]:
+        L.append(f"| {r['decade']}s | {r['census_pct']:.2f}% | "
+                 f"{r['sample_pct']:.2f}% | {r['sample_n']:,} | "
+                 + (f"{r['ratio']:.2f}x |" if r["ratio"] is not None else "- |"))
+    L += [""]
+    thin = e.get("decades_effectively_unrepresented") or []
+    if thin:
+        L += [f"**{len(thin)} decades are effectively unrepresented** -- "
+              + ", ".join(f"{x}s" for x in thin)
+              + f" carry {e['census_share_unrepresented']:.1f}% of the census "
+                f"and {e['sample_records_in_those']:,} of the "
+                f"{e['sample_records']:,} sampled articles. So the sentence is "
+                f"false as written: the shards are spread across the FILE "
+                f"index, which is only broadly chronological, and the sample "
+                f"is a handful of near-single-year blocks rather than a span. "
+                f"The decision to spread rather than take a prefix is still "
+                f"right; its stated reason is not.", ""]
+    return L
 
 
 def _tree_arm_section(d, n) -> list:
@@ -408,8 +494,9 @@ def render(d: dict) -> str:
 
     L += [f"`atlas_baseline.parse_articles` reads `DescriptorName` and never "
           f"`QualifierName`. This measures what that drops, on "
-          f"**{d['n_shards']} baseline shards** sampled across the whole "
-          f"chronological range (seed {d['seed']}), covering "
+          f"**{d['n_shards']} baseline shards** drawn at random from the file "
+          f"index (NOT a prefix; see the era note below for what that does "
+          f"and does not buy) with seed {d['seed']}, covering "
           f"**{n:,} cancer articles**.", ""]
 
     L += ["Both arms see the same articles, selected exactly as the ingest "
@@ -433,6 +520,7 @@ def render(d: dict) -> str:
     best = max(d["modalities"].items(),
                key=lambda kv: kv[1].get("qualifier_only", 0))
     L += _tree_arm_section(d, n)
+    L += _era_section(d)
     L += ["## The cross-modality ORDERING is not a measurement", ""]
     L += [f"The largest figure in that column is **{best[0]}** at "
           f"{100*best[1].get('qualifier_only',0)/n:.1f}%, and an earlier "
@@ -500,6 +588,13 @@ def main():
             raise SystemExit(
                 "no cancer articles parsed, which is not a finding -- it is "
                 "what a broken C04 set or a changed XML path looks like.")
+        OUT_JSON.write_text(json.dumps(d, indent=1, sort_keys=True) + "\n",
+                            encoding="utf-8")
+    # computed here rather than in scan(): it reads only committed records, so
+    # it works on the --render-only path too and needs no re-download
+    ec = era_coverage(d.get("shards") or [])
+    if ec:
+        d["era_coverage"] = ec
         OUT_JSON.write_text(json.dumps(d, indent=1, sort_keys=True) + "\n",
                             encoding="utf-8")
     OUT_MD.write_text(render(d), encoding="utf-8")

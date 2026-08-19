@@ -327,3 +327,40 @@ def test_the_interval_resamples_the_shards_it_actually_drew():
         assert f"**{b['lo']:.2f}-{b['hi']:.2f}**" in md
     # reproducible: same seed, same answer
     assert m_._bootstrap(d) == bs
+
+
+def test_the_chronological_range_claim_is_checked_against_the_census():
+    """"sampled across the whole chronological range" is checkable from the
+    committed records, and four decades holding a quarter of the census turn
+    out to contribute a handful of articles.
+    """
+    d, md = _doc(), MD.read_text()
+    e = d.get("era_coverage")
+    if not e:
+        import pytest
+        pytest.skip("census not present (gitignored); CI reads artifacts only")
+    assert e["census_records"] > 100_000
+    assert sum(r["sample_n"] for r in e["rows"]) == e["sample_records"]
+    assert e["sample_records"] == d["cancer_articles"], (
+        "the era profile is not over the same articles the analysis counted")
+    for r in e["rows"]:
+        if r["ratio"] is not None and r["census_pct"]:
+            # the shares are rounded to 2dp and the ratio is not, so compare
+            # relatively rather than absolutely
+            want = r["sample_pct"] / r["census_pct"]
+            assert abs(r["ratio"] - want) <= 0.03 * max(want, 1.0), (
+                f"{r['decade']}s: ratio {r['ratio']} against "
+                f"{r['sample_pct']}/{r['census_pct']}")
+    thin = e.get("decades_effectively_unrepresented") or []
+    assert [r["decade"] for r in e["rows"] if r["ratio"] is not None
+            and r["ratio"] < 0.1] == thin
+    if thin:
+        assert "effectively unrepresented" in md
+        assert f"{e['census_share_unrepresented']:.1f}% of the census" in md
+        # and the claim those decades falsify must not stand unqualified
+        for m_ in re.finditer(r"across the whole chronological range", md):
+            w = md[max(0, m_.start() - 200):m_.end() + 400]
+            assert re.search(r"false as written|is worth", w), (
+                "the page still claims the sample spans the chronological "
+                f"range while {len(thin)} decades contribute "
+                f"{e['sample_records_in_those']} articles")
