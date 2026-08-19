@@ -23,32 +23,32 @@ Measured against the SAME 18 sites walked down NLM's own tree -- every C04 descr
 
 | site | shallow | deep | deep/shallow | rank shallow -> deep |
 |---|--:|--:|--:|--:|
-| breast | 375,499 | 378,191 | 1.01x | **1 -> 2** |
-| lung | 290,414 | 304,402 | 1.05x | **2 -> 3** |
-| colorectal | 245,269 | 262,866 | 1.07x | **3 -> 5** |
-| skin/melanoma | 205,906 | 228,568 | 1.11x | **4 -> 7** |
-| liver | 199,825 | 212,500 | 1.06x | **5 -> 8** |
-| brain/CNS | 177,855 | 257,914 | 1.45x | 6 -> 6 |
-| prostate | 162,723 | 162,723 | 1.00x | **7 -> 10** |
-| cervix/uterus | 158,452 | 159,782 | 1.01x | **8 -> 11** |
+| breast | 375,499 | 378,191 | 1.01x | 1 -> 1 |
+| lung | 290,414 | 304,402 | 1.05x | 2 -> 2 |
+| colorectal | 245,269 | 262,866 | 1.07x | **3 -> 4** |
+| skin/melanoma | 205,906 | 228,568 | 1.11x | **4 -> 6** |
+| liver | 199,825 | 212,500 | 1.06x | **5 -> 7** |
+| brain/CNS | 177,855 | 257,914 | 1.45x | **6 -> 5** |
+| prostate | 162,723 | 162,723 | 1.00x | **7 -> 9** |
+| cervix/uterus | 158,452 | 159,782 | 1.01x | **8 -> 10** |
 | head and neck | 140,066 | 380,530 | 2.72x | n/a (subsumes `oesophagus`, `thyroid`) |
-| leukaemia | 130,376 | 266,602 | 2.04x | **10 -> 4** |
-| stomach | 120,883 | 120,883 | 1.00x | **11 -> 12** |
-| lymphoma | 117,890 | 196,557 | 1.67x | **12 -> 9** |
-| pancreas | 99,259 | 101,620 | 1.02x | 13 -> 13 |
-| ovary | 98,618 | 100,406 | 1.02x | 14 -> 14 |
-| kidney | 88,262 | 91,118 | 1.03x | 15 -> 15 |
-| bladder | 68,363 | 68,398 | 1.00x | 16 -> 16 |
-| oesophagus | 65,076 | 65,076 | 1.00x | **17 -> 18** |
-| thyroid | 63,046 | 67,705 | 1.07x | **18 -> 17** |
+| leukaemia | 130,376 | 266,602 | 2.04x | **9 -> 3** |
+| stomach | 120,883 | 120,883 | 1.00x | **10 -> 11** |
+| lymphoma | 117,890 | 196,557 | 1.67x | **11 -> 8** |
+| pancreas | 99,259 | 101,620 | 1.02x | 12 -> 12 |
+| ovary | 98,618 | 100,406 | 1.02x | 13 -> 13 |
+| kidney | 88,262 | 91,118 | 1.03x | 14 -> 14 |
+| bladder | 68,363 | 68,398 | 1.00x | 15 -> 15 |
+| oesophagus | 65,076 | 65,076 | 1.00x | **16 -> 17** |
+| thyroid | 63,046 | 67,705 | 1.07x | **17 -> 16** |
 
 **Read the deep column with its overlaps.** NLM's tree does not draw this page's 18 boundaries: `head and neck` subsumes `oesophagus`, `thyroid`. Those sites are listed separately here, so the deep column double-counts across the page's own list and its rank order is partly a statement about MeSH rather than about the literature. That is a reason to read the ratio column rather than the deep ranks, and a reason a burden analysis has to pick its boundaries before it picks its depth.
 
-The gap between the two lists is not uniform and it is not small: `head and neck` 2.72x, `leukaemia` 2.04x, `lymphoma` 1.67x, `brain/CNS` 1.45x against `prostate` 1.00x, `stomach` 1.00x, `oesophagus` 1.00x, `bladder` 1.00x. 12 of 18 sites change rank, `leukaemia` 10 -> 4, `skin/melanoma` 4 -> 7, `liver` 5 -> 8. So the per-site column is comparable within a list and not across sites, and any burden ratio built on it inherits that.
+The gap between the two lists is not uniform and it is not small (a `*` marks a site whose subtree contains another of these sites, so its figure counts descriptors this table lists separately): `head and neck`* 2.72x, `leukaemia` 2.04x, `lymphoma` 1.67x, `brain/CNS` 1.45x against `prostate` 1.00x, `stomach` 1.00x, `oesophagus` 1.00x, `bladder` 1.00x. 11 of 17 rankable sites change rank, `leukaemia` 9 -> 3, `lymphoma` 11 -> 8, `skin/melanoma` 4 -> 6. So the per-site column is comparable within a list and not across sites, and any burden ratio built on it inherits that.
 
 Assignability itself goes **57.8%** shallow -> **67.0%** on the subtree walk (+405,299 articles). The shallow figure is the one this page leads with, because it is the shorter and more conservative list -- NOT because it is more auditable, which the bullet below retracts. It is a floor, not the census's limit, and a deeper list can also over-reach: membership here is NLM's tree, so an accident of naming cannot cause that, but a site's subtree still carries entities its shallow row does not.
 
-**And not only benign or precursor ones, which was this page's whole stated scope cost.** 25 placements are experimental models, veterinary disease or named genetic syndromes: `leukaemia` gets `avian leukosis`, `enzootic bovine leukosis`, `leukemia l1210`, `leukemia l5178` and 4 more; `skin/melanoma` gets `basal cell nevus syndrome`, `bowen's disease`, `dysplastic nevus syndrome`, `melanoma, experimental` and 1 more; `lymphoma` gets `hodgkin disease`, `immunoproliferative small intestinal disease`, `sezary syndrome`. They sit legitimately under those nodes in MeSH and are not human disease at that site, so a burden analysis wanting the deeper list has to strip them.
+**And not only benign or precursor ones, which was this page's whole stated scope cost.** 10 placements are experimental models, veterinary disease or named genetic syndromes: `leukaemia` gets `avian leukosis`, `enzootic bovine leukosis`, `leukemia l1210`, `leukemia l5178` and 4 more; `liver` gets `liver neoplasms, experimental`; `skin/melanoma` gets `melanoma, experimental`. They sit legitimately under those nodes in MeSH and are not human disease at that site, so a burden analysis wanting the deeper list has to strip them.
 
 Across 18 major sites, on the shallow list:
 

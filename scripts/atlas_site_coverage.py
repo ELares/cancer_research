@@ -112,9 +112,14 @@ SITES = {
 # Experimental models, veterinary disease and named genetic syndromes. These
 # sit legitimately under a site in MeSH and are not human disease at that site,
 # so they are a scope cost the page names rather than a placement error.
+# `syndrome`/`disease` ONCE APPEARED HERE and made the page tell a reader to
+# strip `Hodgkin Disease` -- a descriptor the shallow SITES list itself uses to
+# define lymphoma -- along with Sezary syndrome and Bowen's disease. 15 of the
+# 25 placements it flagged were human cancers. A guard now refuses any shallow
+# member here, which is the one-line invariant that would have caught it.
 NON_HUMAN = re.compile(
     r"experimental|leukemia l\d|leukemia p\d|radiation-induced|avian|"
-    r"bovine|feline|murine|, mouse|syndrome$|syndrome,|disease$", re.I)
+    r"bovine|feline|murine|, mouse", re.I)
 
 C04_TSV = ATLAS / "mesh" / "c04-descriptors.tsv"
 C04_TREE = ATLAS / "mesh" / "c04-tree-numbers.tsv"
@@ -490,17 +495,24 @@ def _depth_section(d, n, var) -> list:
           "|---|--:|--:|--:|--:|"]
     sh_pairs, dp_pairs = _pairs(sh["sites"]), _pairs(dp["sites"])
     dp_by = dict(dp_pairs)
-    r_sh = {s: i + 1 for i, (s, _c) in enumerate(sh_pairs)}
-    r_dp = {s: i + 1 for i, (s, _c) in enumerate(dp_pairs)}
     rows = sh_pairs
     # A DEEP RANK IS MEANINGLESS FOR A SITE WHOSE SUBTREE CONTAINS ANOTHER OF
     # THESE SITES. `head and neck` reaches rank 1 only because MeSH puts
     # oesophagus and thyroid under it -- 53% of its deep gain is descriptors
     # this same table counts as separate rows -- so the cell is suppressed
     # rather than printed as a finding.
+    # A SITE WITH NO RANK MUST NOT OCCUPY ONE. Suppressing the cell while
+    # leaving the site in the ranking shifted every other site by one, so the
+    # bolded "changes" the page presented were partly artifacts of the rank it
+    # had just declared meaningless -- and one real move was hidden.
     merged = set(d.get("deep_site_overlaps") or {})
+    dp_pairs = [(x, c) for x, c in dp_pairs if x not in merged]
+    sh_rank_pairs = [(x, c) for x, c in sh_pairs if x not in merged]
+    dp_by_all = dict(_pairs(dp["sites"]))
+    r_sh = {x: i + 1 for i, (x, _c) in enumerate(sh_rank_pairs)}
+    r_dp = {x: i + 1 for i, (x, _c) in enumerate(dp_pairs)}
     for s, c in rows:
-        cd = dp_by.get(s, 0)
+        cd = dp_by_all.get(s, 0)
         if s in merged:
             cell = "n/a (subsumes " + ", ".join(
                 f"`{x}`" for x in d["deep_site_overlaps"][s]) + ")"
@@ -509,7 +521,7 @@ def _depth_section(d, n, var) -> list:
             cell = f"**{mv}**" if r_sh[s] != r_dp.get(s) else mv
         L.append(f"| {s} | {c:,} | {cd:,} | {cd/max(c,1):.2f}x | {cell} |")
     L += [""]
-    ratios = {s: dp_by.get(s, 0) / max(c, 1) for s, c in sh_pairs}
+    ratios = {s: dp_by_all.get(s, 0) / max(c, 1) for s, c in sh_pairs}
     worst = sorted(ratios.items(), key=lambda kv: -kv[1])[:4]
     flat = sorted(ratios.items(), key=lambda kv: kv[1])[:4]
     moved = [(s, r_sh[s], r_dp.get(s)) for s in r_sh
@@ -526,10 +538,14 @@ def _depth_section(d, n, var) -> list:
                 "literature. That is a reason to read the ratio column rather "
                 "than the deep ranks, and a reason a burden analysis has to "
                 "pick its boundaries before it picks its depth.", ""]
-    L += ["The gap between the two lists is not uniform and it is not small: "
-          + ", ".join(f"`{s}` {v:.2f}x" for s, v in worst)
-          + " against " + ", ".join(f"`{s}` {v:.2f}x" for s, v in flat)
-          + ". " + (f"{len(moved)} of {len(r_sh)} sites change rank, "
+    def _lab(x):
+        return f"`{x}`" + ("*" if x in merged else "")
+    L += ["The gap between the two lists is not uniform and it is not small "
+          "(a `*` marks a site whose subtree contains another of these sites, "
+          "so its figure counts descriptors this table lists separately): "
+          + ", ".join(f"{_lab(s)} {v:.2f}x" for s, v in worst)
+          + " against " + ", ".join(f"{_lab(s)} {v:.2f}x" for s, v in flat)
+          + ". " + (f"{len(moved)} of {len(r_sh)} rankable sites change rank, "
                     + ", ".join(f"`{s}` {i} -> {j}" for s, i, j in
                                 sorted(moved, key=lambda x: -abs(x[1] - x[2]))[:3])
                     + ". " if moved else "")

@@ -26,19 +26,6 @@
  "n_placements": 233,
  "n_sites": 18,
  "non_human_disease_placements": {
-  "brain/CNS": [
-   "pallister-hall syndrome"
-  ],
-  "breast": [
-   "hereditary breast and ovarian cancer syndrome"
-  ],
-  "colorectal": [
-   "gardner syndrome"
-  ],
-  "kidney": [
-   "denys-drash syndrome",
-   "wagr syndrome"
-  ],
   "leukaemia": [
    "avian leukosis",
    "enzootic bovine leukosis",
@@ -52,24 +39,8 @@
   "liver": [
    "liver neoplasms, experimental"
   ],
-  "lung": [
-   "pancoast syndrome"
-  ],
-  "lymphoma": [
-   "hodgkin disease",
-   "immunoproliferative small intestinal disease",
-   "sezary syndrome"
-  ],
-  "ovary": [
-   "hereditary breast and ovarian cancer syndrome",
-   "meigs syndrome"
-  ],
   "skin/melanoma": [
-   "basal cell nevus syndrome",
-   "bowen's disease",
-   "dysplastic nevus syndrome",
-   "melanoma, experimental",
-   "muir-torre syndrome"
+   "melanoma, experimental"
   ]
  },
  "site_tree_roots": {

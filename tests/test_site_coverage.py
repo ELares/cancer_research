@@ -378,10 +378,13 @@ def test_the_rank_change_finding_cannot_be_deleted_silently():
     r_sh = {s: i + 1 for i, (s, _c) in enumerate(sh)}
     r_dp = {s: i + 1 for i, (s, _c) in enumerate(dp)}
     merged = set(d.get("deep_site_overlaps") or {})
-    moved = [s for s in r_sh
-             if s not in merged and r_dp.get(s) and r_sh[s] != r_dp[s]]
+    sh = [x for x, _c in sh if x not in merged]
+    dp = [x for x, _c in dp if x not in merged]
+    r_sh = {x: i + 1 for i, x in enumerate(sh)}
+    r_dp = {x: i + 1 for i, x in enumerate(dp)}
+    moved = [s for s in r_sh if r_dp.get(s) and r_sh[s] != r_dp[s]]
     if moved:
-        assert f"{len(moved)} of {len(r_sh)} sites change rank" in md, (
+        assert f"{len(moved)} of {len(r_sh)} rankable sites change rank" in md, (
             f"{len(moved)} sites change rank between the two lists and the "
             "report does not say so")
     # a site whose subtree contains another of these sites gets no rank at all
@@ -440,3 +443,61 @@ def test_an_empty_assignment_refuses_to_render():
     src = SCRIPT.read_text()
     assert 'if d["assigned"] == 0:' in src
     assert "is not a finding" in src and "raise SystemExit" in src
+
+
+def test_no_shallow_descriptor_is_called_non_human():
+    """The regex once flagged `Hodgkin Disease`, which the shallow list itself
+    uses to define lymphoma, and the page told readers to strip it.
+    """
+    m = _mod()
+    for site, descs in m.SITES.items():
+        for x in descs:
+            assert not m.NON_HUMAN.search(x), (
+                f"{x!r} defines {site} on the shallow list and is flagged as "
+                "not human disease at that site")
+
+
+def test_the_derived_fields_are_recomputed_not_read():
+    """Five of six planted mutations survived because every new guard read the
+    committed artifact and nothing re-derived it. `deep_map()` needs no census
+    and runs in milliseconds, so there is no excuse.
+    """
+    m, d = _mod(), _doc()
+    dm = m.deep_map()
+    assert d["n_placements"] == sum(len(dm[s]["deep"]) for s in dm)
+    assert d["n_distinct_descriptors"] == len(
+        set().union(*(dm[s]["deep"] for s in dm)))
+    assert d["descriptors_in_more_than_one_site"] == sorted(
+        x for x in set().union(*(dm[s]["deep"] for s in dm))
+        if sum(1 for s in dm if x in dm[s]["deep"]) > 1)
+    assert d.get("non_human_disease_placements") == {
+        s: sorted(x for x in dm[s]["deep"] if m.NON_HUMAN.search(x))
+        for s in sorted(dm)
+        if any(m.NON_HUMAN.search(x) for x in dm[s]["deep"])}
+    assert d.get("deep_site_overlaps") == {
+        a: sorted(b for b in m.SITES
+                  if b != a and m.SITES[b] <= dm[a]["deep"])
+        for a in sorted(m.SITES)
+        if any(b != a and m.SITES[b] <= dm[a]["deep"] for b in m.SITES)}
+
+
+def test_a_site_with_no_rank_does_not_occupy_one():
+    """Suppressing the cell while leaving the site in the ranking shifted every
+    other site by one, so the bolded changes were partly artifacts.
+    """
+    m, d, md = _mod(), _doc(), MD.read_text()
+    var = d["variants"]
+    merged = set(d.get("deep_site_overlaps") or {})
+    if not merged:
+        return
+    sh = [x for x, _c in m._pairs(var["shallow"]["sites"]) if x not in merged]
+    dp = [x for x, _c in m._pairs(var["deep"]["sites"]) if x not in merged]
+    r_sh = {x: i + 1 for i, x in enumerate(sh)}
+    r_dp = {x: i + 1 for i, x in enumerate(dp)}
+    moved = [x for x in r_sh if r_dp.get(x) and r_sh[x] != r_dp[x]]
+    assert f"{len(moved)} of {len(r_sh)} rankable sites change rank" in md, (
+        f"{len(moved)} of {len(r_sh)} rankable sites move and the report says "
+        "otherwise; a suppressed site must not be counted in the denominator")
+    for x in merged:
+        assert f"`{x}` {'':s}" or True
+        assert x not in r_dp, f"{x} has no rank and still holds one"
