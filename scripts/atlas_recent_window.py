@@ -32,10 +32,13 @@ MOST UN-INDEXED LITERATURE IS PERMANENTLY UN-INDEXED
 The census is defined by MeSH, so an article NLM has not indexed is invisible to
 it, and the natural reading is that the un-indexed pool is a backlog that will
 resolve. It mostly will not. Tracking the baseline's text-matched un-indexed
-pool across the update window, resolution collapses within about two years of
-publication -- the most recent cohort resolves at tens of percent, the
-two-year-old cohort at well under one. A cohort that has not been indexed by
-then generally never will be.
+pool across the update window, resolution is overwhelmingly concentrated in the
+two newest cohorts -- tens of percent -- and every older one resolves at a few
+percent at most. It is NOT monotone in age, and an earlier version of this
+docstring said "a cohort that has not been indexed by then generally never will
+be": that is withdrawn, because cohorts older than the two-year-old one resolve
+FASTER than it does, one of them 3x faster and hidden by a 12-row truncation.
+Measured over one update window, this bounds a per-window rate, not a lifetime.
 
 That reframes every recent-window claim in this project, including ones it made
 before measuring this: the recent blind spot is only partly lag. The rest is
@@ -235,6 +238,18 @@ def composition(raw, comparators):
             continue
         dy = raw["desc_by_year"].get(year, Counter())
         flat, falling, rows = 0, 0, []
+        # THE EXIT RULE IS NOT THE ADMISSION RULE IN MIRROR IMAGE, and the
+        # headline is what you get by holding one side to an interval and the
+        # other to a point: a descriptor ENTERS on a 99% Katz lower bound above
+        # LCB_FLOOR and LEAVES on a bare point estimate at or below FLAT. Both
+        # mirrors are computed so the asymmetry is priced rather than hidden,
+        # and so is the sensitivity of the point cut, because the pool piles up
+        # against it.
+        mirror_floor = 0     # 99% interval excluding LCB_FLOOR, the exact mirror
+        mirror_one = 0       # 99% interval excluding 1.0
+        point_floor = 0      # point estimate at or below LCB_FLOOR
+        near = 0             # within 10% of the point cut
+        sweep = {}
         for d, a, b in pool:
             c = dy.get(d, 0)
             rr_all = (a / n_new) / (b / n_all) if b else float("inf")
@@ -243,10 +258,29 @@ def composition(raw, comparators):
                 flat += 1
                 if katz_lcb(c, n_y, a, n_new) > 1.0:
                     falling += 1
+            if c:
+                lcb_down = katz_lcb(c, n_y, a, n_new)
+                mirror_floor += lcb_down > LCB_FLOOR
+                mirror_one += lcb_down > 1.0
+            if rr_y <= LCB_FLOOR:
+                point_floor += 1
+            if rr_y != float("inf") and abs(rr_y - FLAT) <= 0.1 * FLAT:
+                near += 1
+            for cut in (0.95, 1.0, 1.05):
+                sweep[cut] = sweep.get(cut, 0) + (rr_y <= cut)
             rows.append((d, rr_all, rr_y, a, b, c))
         rows.sort(key=lambda r: (r[2], -r[1]))
         out["by_comparator"][str(year)] = {
             "comparator_n": n_y,
+            "exit_rule_variants": {
+                "point_le_1.0 (shipped)": flat,
+                "interval_excludes_1.0": mirror_one,
+                "interval_excludes_%s (mirrors admission)" % LCB_FLOOR:
+                    mirror_floor,
+                "point_le_%s" % LCB_FLOOR: point_floor,
+            },
+            "n_within_10pct_of_cut": near,
+            "point_cut_sweep": {str(k): v for k, v in sorted(sweep.items())},
             "flat_or_down": flat,
             "flat_share": round(100 * flat / len(pool), 1) if pool else 0.0,
             "demonstrably_falling": falling,
@@ -271,16 +305,55 @@ def indexing(raw):
         r = got.get(y, 0)
         rows.append({"year": y, "pool": n, "resolved": r,
                      "rate_pct": round(100 * r / n, 3)})
-    settled = [r for r in rows if r["rate_pct"] < 1.0]
+    # `settled_max_rate_pct` USED TO BE the maximum over `[r for r in rows if
+    # r["rate_pct"] < 1.0]` -- the largest member of a set selected for being
+    # under 1%, so it could not exceed 1% whatever the data did, and it was
+    # quoted as evidence that older cohorts settle. It is replaced by the
+    # maximum over every cohort old enough for the claim to be about, which
+    # CAN exceed 1% and does.
+    shown = rows[:12]
+    newest = max((r["year"] for r in rows), default=0)
+    older = [r for r in rows if r["year"] <= newest - 2]
+    settled = [r for r in older if r["rate_pct"] < 1.0]
     return {
-        "rows": rows[:12],
+        "rows": shown,
+        # EVERY cohort, not just the twelve the table prints. The counts in
+        # the prose are taken over all of them, and with only the shown rows
+        # committed no guard could check one -- which is how "29 of the
+        # cohorts shown" sat beside a 12-row table, and how a 25-year-old
+        # cohort resolving 3x faster than the two-year-old one stayed hidden.
+        "rows_all": rows,
+        "n_cohorts": len(rows),
+        "n_cohorts_shown": len(shown),
+        "n_shown_under_1pct": sum(1 for r in shown if r["rate_pct"] < 1.0),
         "pool_total": raw["unindexed_total"],
         "resolved_total": sum(got.values()),
         "resolved_share_pct": round(
             100 * sum(got.values()) / max(raw["unindexed_total"], 1), 3),
+        "older_cutoff_year": newest - 2,
+        "n_older_cohorts": len(older),
         "settled_years": len(settled),
-        "settled_max_rate_pct": round(max((r["rate_pct"] for r in settled),
-                                          default=0.0), 3),
+        "older_max_rate_pct": round(max((r["rate_pct"] for r in older),
+                                        default=0.0), 3),
+        "older_max_rate_year": max(older, key=lambda r: r["rate_pct"])["year"]
+        if older else None,
+        # THE MONOTONICITY THE PROSE ASSUMED. Cohorts that resolve FASTER than
+        # a younger one refute "a cohort not indexed by then generally never
+        # will be", and one of them was hidden by the 12-row truncation.
+        # The reference is the youngest cohort the withdrawn sentence was
+        # ABOUT -- the two-year-old one it called "well under one" -- not the
+        # one-year-old cohort, which is still resolving fast and against which
+        # nothing older could win.
+        "older_than_and_faster_than_reference": sorted(
+            ({"year": r["year"], "rate_pct": r["rate_pct"]}
+             for r in rows
+             if r["year"] < newest - 2
+             and r["rate_pct"] > next((x["rate_pct"] for x in rows
+                                       if x["year"] == newest - 2), 0.0)),
+            key=lambda r: -r["rate_pct"]),
+        "reference_year": newest - 2,
+        "reference_rate_pct": next(
+            (r["rate_pct"] for r in rows if r["year"] == newest - 2), None),
     }
 
 
@@ -325,9 +398,13 @@ def legs(raw):
             100 * gain_trailing / max(gain_total, 1), 1),
         "ferroptosis_complete_before": ferro_before,
         "ferroptosis_complete_after": ferro_after,
-        # restricted to complete years, matching the sentence above the table.
-        # All-years counts here would show the partial year as movement, which
-        # is the exact thing this section exists to strip out.
+        # BOTH COLUMNS, because the complete-year one CANNOT MOVE. The update
+        # stream is overwhelmingly the trailing year, so restricting to
+        # complete years excludes 100% of the sonodynamic gain, 100% of the
+        # photodynamic gain and almost all of drug resistance -- and the table
+        # then printed "171 -> 171" and "30 -> 30" under a heading saying the
+        # legs did not move. That was the filter's output, not stability, and
+        # the artifact already publishes both columns for ferroptosis overall.
         "legs": {
             k: {
                 "before": sum(v for y, v in raw["leg_census"].get(k, {}).items()
@@ -336,6 +413,13 @@ def legs(raw):
                              if y <= complete)
                 + sum(v for y, v in raw["leg_new"].get(k, {}).items()
                       if y <= complete),
+                "all_years_before": sum(raw["leg_census"].get(k, {}).values()),
+                "all_years_after": sum(raw["leg_census"].get(k, {}).values())
+                + sum(raw["leg_new"].get(k, {}).values()),
+                "gain_all_years": sum(raw["leg_new"].get(k, {}).values()),
+                "gain_excluded_by_the_filter": sum(
+                    v for y, v in raw["leg_new"].get(k, {}).items()
+                    if y > complete),
             } for k in LEGS},
     }
 
@@ -364,9 +448,38 @@ def render(d):
           f"{comp['min_new']} occurrences in the new window), "
           f"**{b['flat_or_down']:,} ({b['flat_share']}%)** are flat or lower "
           f"when the comparator is {best} alone.", ""]
-    L += [f"Only **{b['demonstrably_falling']:,}** are demonstrably falling at the "
-          "same confidence, so the defensible statement is that these topics are "
-          "no longer demonstrably *rising* -- not that they are in decline.", ""]
+    L += [f"Only **{b['demonstrably_falling']:,}** are demonstrably falling at "
+          f"the same z but a LOWER floor (an interval excluding 1.0, against "
+          f"the {comp['lcb_floor']} used for admission), so the defensible "
+          f"statement is that these topics are no longer demonstrably "
+          f"*rising* -- not that they are in decline.", ""]
+    ev = b.get("exit_rule_variants") or {}
+    if ev:
+        L += [f"**THE HEADLINE HOLDS ONE SIDE TO AN INTERVAL AND THE OTHER TO "
+              f"A POINT.** A descriptor ENTERS the pool on a 99% lower bound "
+              f"above {comp['lcb_floor']} against the whole census, and LEAVES "
+              f"on a bare point estimate at or below {FLAT} against the "
+              f"comparator. That is not the same test run twice. Every variant, "
+              f"on the same pool and the same comparator:", ""]
+        L += ["| exit rule | no longer rising | share |", "|---|--:|--:|"]
+        for k, v in ev.items():
+            L.append(f"| {k} | {v:,} | {100*v/max(comp['pool_size'],1):.1f}% |")
+        L += [""]
+        near = b.get("n_within_10pct_of_cut")
+        sweep = b.get("point_cut_sweep") or {}
+        if near and sweep:
+            lo = min(sweep, key=lambda k: float(k))
+            hi = max(sweep, key=lambda k: float(k))
+            L += [f"And the cut is knife-edge: **{near:,} of "
+                  f"{comp['pool_size']:,} "
+                  f"({100*near/max(comp['pool_size'],1):.0f}%)** of the pool "
+                  f"sits within 10% of it, so the share runs "
+                  f"{100*sweep[lo]/max(comp['pool_size'],1):.1f}% at a cut of "
+                  f"{lo} to {100*sweep[hi]/max(comp['pool_size'],1):.1f}% at "
+                  f"{hi}. The mirror-image test -- the admission rule applied "
+                  f"in reverse -- is the bottom row of that table, and it is "
+                  f"the number a reader who assumed one test was run twice "
+                  f"would have expected.", ""]
     L += ["| descriptor | vs whole census | vs " + best + " | new | census | " + best + " |",
           "|---|--:|--:|--:|--:|--:|"]
     for e in b["examples"][:8]:
@@ -386,7 +499,7 @@ def render(d):
           "A comparison against the whole census measures the era, not the topic.",
           ""]
 
-    L += ["## The un-indexed pool is mostly permanent, not a backlog", ""]
+    L += ["## The un-indexed pool resolves slowly, and not in age order", ""]
     L += [f"The census is defined by MeSH, so an un-indexed article is invisible "
           f"to it. Tracking the {idx['pool_total']:,} text-matched un-indexed "
           f"articles across the update window, "
@@ -398,14 +511,45 @@ def render(d):
         L.append(f"| {r['year']} | {r['pool']:,} | {r['resolved']:,} | "
                  f"{r['rate_pct']}% |")
     L += [""]
-    L += [f"Resolution collapses within about two years of publication: "
-          f"{idx['settled_years']} of the cohorts shown resolve at under 1%, the "
-          f"highest of them at {idx['settled_max_rate_pct']}%. A cohort not "
-          "indexed by then generally never will be, so the recent blind spot is "
-          "only partly lag -- the rest is literature MeSH does not index at all, "
-          "and waiting does not recover it.", ""]
+    faster = idx.get("older_than_and_faster_than_reference") or []
+    L += [f"Resolution is overwhelmingly concentrated in the newest cohorts. "
+          f"Of the {idx['n_cohorts_shown']} shown, "
+          f"{idx['n_shown_under_1pct']} resolve at under 1%; across all "
+          f"{idx['n_cohorts']} cohorts with a pool of at least 1,000, "
+          f"{idx['settled_years']} of the {idx['n_older_cohorts']} at least "
+          f"two years old do. AN EARLIER VERSION OF THIS SENTENCE SAID "
+          f"\"{idx['settled_years']} of the cohorts shown\", which is "
+          f"arithmetically impossible -- only {idx['n_cohorts_shown']} are "
+          f"shown -- and quoted a maximum that could not have exceeded 1%, "
+          f"because it was the largest member of a set selected for being "
+          f"below it.", ""]
+    if idx.get("older_max_rate_pct") is not None:
+        L += [f"The real maximum among cohorts at least two years old is "
+              f"**{idx['older_max_rate_pct']}%** ({idx['older_max_rate_year']}), "
+              f"not the {idx.get('reference_rate_pct')}% the "
+              f"{idx.get('reference_year')} row shows -- which is the figure "
+              f"the withdrawn sentence quoted.", ""]
+    if faster:
+        L += [f"**And it is not monotone in age, which the withdrawn sentence "
+              f"assumed.** "
+              + ", ".join(f"{r['year']} at {r['rate_pct']}%" for r in faster[:4])
+              + f" all resolve FASTER than the {idx['reference_year']} "
+              f"cohort at {idx.get('reference_rate_pct')}%, despite being "
+              f"older"
+              + (f" -- and {faster[0]['year']} is "
+                 f"{faster[0]['rate_pct']/max(idx.get('reference_rate_pct') or 1e-9, 1e-9):.1f}x "
+                 f"its rate" if idx.get("reference_rate_pct") else "")
+              + ". So \"a cohort not indexed by then generally never will be\" "
+                "is WITHDRAWN: cohorts that miss the initial indexing window "
+                "keep acquiring indexing in later batches at a low rate.", ""]
+    L += ["What survives is the size of the effect rather than its shape. "
+          "Resolution beyond the two newest cohorts is a few percent at most, "
+          "so the recent blind spot is only partly lag -- but this is measured "
+          "over ONE update window, which bounds a per-window rate and not a "
+          "lifetime, and the page no longer claims waiting recovers nothing.",
+          ""]
 
-    L += ["## The thesis legs did not move", ""]
+    L += ["## The thesis legs, on complete years and on all years", ""]
     L += [f"The update window adds {lg['gain_total']:,} ferroptosis-indexed "
           f"articles, taking the field from {lg['ferroptosis_all_years_before']:,} "
           f"to {lg['ferroptosis_all_years_after']:,}. But "
@@ -415,15 +559,42 @@ def render(d):
     L += [f"Restricted to complete years (through {lg['complete_through']}), "
           f"ferroptosis goes {lg['ferroptosis_complete_before']:,} -> "
           f"{lg['ferroptosis_complete_after']:,}. The legs:", ""]
-    L += [f"| leg (through {lg['complete_through']}) | before | after |",
-          "|---|--:|--:|"]
+    L += [f"| leg | through {lg['complete_through']} | all years | gain, all "
+          f"years | of which the filter excludes |", "|---|--:|--:|--:|--:|"]
     for k, v in lg["legs"].items():
-        L.append(f"| {k} | {v['before']:,} | {v['after']:,} |")
-    L += ["",
-          "So the sonodynamic leg -- the thesis's own central mechanism -- is "
-          "still supported by a literature of tens of papers, not hundreds. The "
-          "window refilled a partial year; it did not change the field's shape.",
-          ""]
+        exc = v.get("gain_excluded_by_the_filter", 0)
+        g = v.get("gain_all_years", 0)
+        L.append(f"| {k} | {v['before']:,} -> {v['after']:,} | "
+                 f"{v.get('all_years_before', 0):,} -> "
+                 f"{v.get('all_years_after', 0):,} | {g:,} | "
+                 + (f"{exc:,} ({100*exc/g:.0f}%)" if g else "-") + " |")
+    L += [""]
+    stuck = [k for k, v in lg["legs"].items()
+             if v["before"] == v["after"] and v.get("gain_all_years")]
+    if stuck:
+        short = [k.split(" (")[0] for k in stuck]
+        L += [f"**{len(stuck)} of these rows CANNOT MOVE in the complete-year "
+              f"column, and an earlier version of this section printed them "
+              f"under the heading \"The thesis legs did not move\".** The "
+              f"update stream is overwhelmingly {lg['latest_year']}, so the "
+              f"filter excludes "
+              + ", ".join(
+                  f"{100*lg['legs'][k].get('gain_excluded_by_the_filter',0)/max(lg['legs'][k].get('gain_all_years',1),1):.0f}% "
+                  f"of the {n} gain" for k, n in zip(stuck, short))
+              + ". Those rows reported the filter, not stability. Both columns "
+                "ship now, the way this section already reported ferroptosis "
+                "overall.", ""]
+    sono = next((v for k, v in lg["legs"].items()
+                 if k.startswith("sonodynamic")), None)
+    L += ["What survives is the conclusion rather than the table. On all years "
+          + (f"the sonodynamic leg -- the thesis's own central mechanism -- "
+             f"goes {sono.get('all_years_before', 0):,} to "
+             f"{sono.get('all_years_after', 0):,}, "
+             if sono else "the sonodynamic leg moves, ")
+          + "which is still a literature of tens of papers rather than "
+            "hundreds. The window did not change the field's shape; the "
+            "complete-year restriction just could not have shown it either "
+            "way.", ""]
 
     L += ["## What this does not claim", ""]
     L += ["* Nothing here merges the update stream into the census. Every figure "

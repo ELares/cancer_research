@@ -30,6 +30,7 @@ methodological:
 """
 
 import json
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -127,20 +128,150 @@ def test_the_share_is_shown_to_depend_on_the_comparator():
         assert f"| {y} |" in md, f"comparator {y} is in the JSON but not the table"
 
 
-def test_the_unindexed_pool_collapse_is_real():
-    """The claim is that resolution collapses with age, not that it is low."""
-    idx = _doc()["indexing"]
-    rows = {r["year"]: r["rate_pct"] for r in idx["rows"]}
-    assert len(rows) >= 4, "too few cohorts to show a collapse"
-    newest = max(rows)
-    old = [r for y, r in rows.items() if y <= newest - 3]
-    assert old, "no cohort three or more years old; the collapse is untestable"
-    assert rows[newest] > 10 * max(old), (
-        f"the newest cohort resolves at {rows[newest]}% against a maximum of "
-        f"{max(old)}% among cohorts 3+ years old; that is not a collapse")
-    assert idx["settled_years"] >= 2, (
-        "fewer than two cohorts resolve below 1%, so 'permanently un-indexed' "
-        "rests on a single year")
+def test_the_cohort_sentence_counts_the_cohorts_it_says_it_counts():
+    """"29 of the cohorts shown resolve at under 1%" -- 12 are shown.
+
+    The count came from the FULL row list while the table printed `rows[:12]`,
+    so the sentence was arithmetically impossible against the table beneath it.
+    """
+    idx, md = _doc()["indexing"], MD.read_text()
+    allr = idx.get("rows_all")
+    assert allr, (
+        "only the printed cohorts are committed, so no count taken over every "
+        "cohort can be checked -- which is how the impossible sentence shipped")
+    assert idx["n_cohorts"] == len(allr)
+    assert idx["rows"] == allr[:len(idx["rows"])], (
+        "the printed rows are not the head of the full list")
+    assert idx["n_cohorts_shown"] == len(idx["rows"])
+    assert idx["n_shown_under_1pct"] == sum(
+        1 for r in idx["rows"] if r["rate_pct"] < 1.0), (
+        "the shown-cohort count is not computed over the shown cohorts")
+    assert idx["n_older_cohorts"] == sum(
+        1 for r in allr if r["year"] <= idx["older_cutoff_year"])
+    assert idx["settled_years"] == sum(
+        1 for r in allr
+        if r["year"] <= idx["older_cutoff_year"] and r["rate_pct"] < 1.0)
+    assert (f"Of the {idx['n_cohorts_shown']} shown, "
+            f"{idx['n_shown_under_1pct']} resolve at under 1%") in md
+    # any count quoted over ALL cohorts must name its own denominator
+    assert (f"across all {idx['n_cohorts']} cohorts") in md, (
+        "a count over every cohort is quoted without saying so, which is how "
+        "29 came to sit beside a 12-row table")
+
+
+def test_no_maximum_is_taken_over_a_set_selected_by_that_maximum():
+    """`settled_max_rate_pct` was max over rows already filtered to <1%.
+
+    It could not exceed 1% whatever the data did, and it was quoted as the
+    evidence that older cohorts settle.
+    """
+    d, idx, md = _doc(), _doc()["indexing"], MD.read_text()
+    assert "settled_max_rate_pct" not in json.dumps(idx), (
+        "a maximum over a set selected for being below the threshold it is "
+        "quoted against is back")
+    src = SCRIPT.read_text()
+    for m in re.finditer("settled_max_rate_pct", src):
+        w = src[max(0, m.start() - 400):m.end() + 200]
+        assert "USED TO BE" in w, (
+            "the self-selecting maximum is computed again rather than only "
+            "described in the note explaining why it was removed")
+    allr = idx["rows_all"]
+    older = [r["rate_pct"] for r in allr if r["year"] <= idx["older_cutoff_year"]]
+    assert older, "no cohort old enough for the claim to be about"
+    # RECOMPUTED over every cohort, including the ones the table truncates
+    assert abs(idx["older_max_rate_pct"] - max(older)) < 1e-9, (
+        f"the reported maximum is {idx['older_max_rate_pct']}% and the "
+        f"cohorts give {max(older)}%")
+    assert idx["older_max_rate_year"] == max(
+        (r for r in allr if r["year"] <= idx["older_cutoff_year"]),
+        key=lambda r: r["rate_pct"])["year"]
+    assert f"**{idx['older_max_rate_pct']}%**" in md
+
+
+def test_the_resolution_claim_is_not_monotone_in_age_if_the_data_is_not():
+    """"a cohort not indexed by then generally never will be" is contradicted
+    by the table printed directly beneath it, and by a cohort the 12-row
+    truncation hid entirely.
+    """
+    idx, md = _doc()["indexing"], MD.read_text()
+    faster = idx.get("older_than_and_faster_than_reference")
+    assert faster is not None, "the monotonicity check was removed"
+    ref = idx.get("reference_rate_pct")
+    # RECOMPUTED from every cohort, so narrowing the window cannot hide one
+    allr = idx["rows_all"]
+    want = sorted(({"year": r["year"], "rate_pct": r["rate_pct"]}
+                   for r in allr
+                   if r["year"] < idx["reference_year"] and r["rate_pct"] > ref),
+                  key=lambda r: -r["rate_pct"])
+    assert faster == want, (
+        f"the report lists {[r['year'] for r in faster]} as older-and-faster "
+        f"and the cohorts give {[r['year'] for r in want]}")
+    for r in faster:
+        assert r["rate_pct"] > ref, "a listed cohort is not actually faster"
+        assert r["year"] < idx["reference_year"], "a listed cohort is not older"
+    if faster:
+        assert "not monotone in age" in md, (
+            f"{len(faster)} cohorts older than {idx['reference_year']} resolve "
+            f"faster than it does, and the report does not say so")
+        assert "is WITHDRAWN" in md
+        for r in faster[:4]:
+            assert f"{r['year']} at {r['rate_pct']}%" in md
+    for gone in ("generally never will be, so the recent blind spot",
+                 "mostly permanent, not a backlog"):
+        assert gone not in md, f"the withdrawn claim {gone!r} is back"
+    assert "bounds a per-window rate and not a lifetime" in md, (
+        "the measurement covers one update window and the page does not say "
+        "what that bounds")
+
+
+def test_the_exit_rule_asymmetry_is_priced():
+    """Enter on a 99% interval above 1.3, leave on a point at 1.0.
+
+    That is an interval test on the way in and a point test on the way out,
+    and the headline is what the mismatch produces.
+    """
+    d, md = _doc(), MD.read_text()
+    comp = d["composition"]
+    best = comp.get("by_comparator")
+    assert best, "the comparator block is gone"
+    for y, r in best.items():
+        ev = r.get("exit_rule_variants") or {}
+        assert len(ev) >= 3, f"{y}: the exit rule is reported without variants"
+        shipped = [v for k, v in ev.items() if "shipped" in k]
+        assert shipped and shipped[0] == r["flat_or_down"], (
+            f"{y}: the shipped variant does not equal the headline count")
+        mirror = [v for k, v in ev.items() if "mirrors admission" in k]
+        assert mirror, f"{y}: the mirror of the admission rule is not computed"
+        # A STRICTER TEST CANNOT ADMIT MORE. Ordered by strictness, the four
+        # variants must be monotone -- an interval excluding 1.3 is the
+        # hardest bar to clear, a point estimate at 1.3 the easiest.
+        order = ["mirrors admission", "interval_excludes_1.0",
+                 "point_le_1.0 (shipped)", "point_le_"]
+        got = []
+        for tag in order:
+            hit = [v for k, v in ev.items()
+                   if (tag in k) and not (tag == "point_le_"
+                                          and "1.0" in k)]
+            assert hit, f"{y}: no variant matching {tag!r}"
+            got.append(hit[0])
+        assert got == sorted(got), (
+            f"{y}: the exit variants are not monotone in strictness {got}, so "
+            "at least one is not the test its label claims")
+        assert r.get("n_within_10pct_of_cut") is not None
+        assert len(r.get("point_cut_sweep") or {}) >= 3
+    # and the page must render them for the comparator it leads with
+    # the comparator the page LEADS with is the second-newest, matching the
+    # renderer's own choice -- quoting variants for a different one would
+    # compare the table to a paragraph about another year
+    years = sorted((int(y) for y in best), reverse=True)
+    lead = str(years[1] if len(years) > 1 else years[0])
+    r = best[lead]
+    for k, v in (r.get("exit_rule_variants") or {}).items():
+        assert f"| {k} | {v:,} |" in md, f"exit variant {k!r} is not rendered"
+    assert "HOLDS ONE SIDE TO AN INTERVAL AND THE OTHER TO A POINT" in md
+    assert "at the same z but a LOWER floor" in md, (
+        "the report still says 'at the same confidence', which is the claim "
+        "the asymmetry falsifies")
 
 
 def test_the_thesis_legs_are_reported_on_complete_years():

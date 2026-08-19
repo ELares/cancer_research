@@ -6,7 +6,18 @@
 
 Of **597 MeSH descriptors** that rise significantly against the whole 4,403,994-article census (99% lower bound above 1.3, at least 50 occurrences in the new window), **193 (32.3%)** are flat or lower when the comparator is 2025 alone.
 
-Only **47** are demonstrably falling at the same confidence, so the defensible statement is that these topics are no longer demonstrably *rising* -- not that they are in decline.
+Only **47** are demonstrably falling at the same z but a LOWER floor (an interval excluding 1.0, against the 1.3 used for admission), so the defensible statement is that these topics are no longer demonstrably *rising* -- not that they are in decline.
+
+**THE HEADLINE HOLDS ONE SIDE TO AN INTERVAL AND THE OTHER TO A POINT.** A descriptor ENTERS the pool on a 99% lower bound above 1.3 against the whole census, and LEAVES on a bare point estimate at or below 1.0 against the comparator. That is not the same test run twice. Every variant, on the same pool and the same comparator:
+
+| exit rule | no longer rising | share |
+|---|--:|--:|
+| interval_excludes_1.0 | 47 | 7.9% |
+| interval_excludes_1.3 (mirrors admission) | 2 | 0.3% |
+| point_le_1.0 (shipped) | 193 | 32.3% |
+| point_le_1.3 | 479 | 80.2% |
+
+And the cut is knife-edge: **244 of 597 (41%)** of the pool sits within 10% of it, so the share runs 22.4% at a cut of 0.95 to 44.9% at 1.05. The mirror-image test -- the admission rule applied in reverse -- is the bottom row of that table, and it is the number a reader who assumed one test was run twice would have expected.
 
 | descriptor | vs whole census | vs 2025 | new | census | 2025 |
 |---|--:|--:|--:|--:|--:|
@@ -31,7 +42,7 @@ The share depends entirely on how recent the comparator is, which is the finding
 
 A comparison against the whole census measures the era, not the topic.
 
-## The un-indexed pool is mostly permanent, not a backlog
+## The un-indexed pool resolves slowly, and not in age order
 
 The census is defined by MeSH, so an un-indexed article is invisible to it. Tracking the 783,271 text-matched un-indexed articles across the update window, **20,297 (2.591%)** acquired indexing -- and which ones depends almost entirely on age.
 
@@ -50,22 +61,30 @@ The census is defined by MeSH, so an un-indexed article is invisible to it. Trac
 | 2016 | 26,750 | 0 | 0.0% |
 | 2015 | 23,246 | 4 | 0.017% |
 
-Resolution collapses within about two years of publication: 29 of the cohorts shown resolve at under 1%, the highest of them at 0.777%. A cohort not indexed by then generally never will be, so the recent blind spot is only partly lag -- the rest is literature MeSH does not index at all, and waiting does not recover it.
+Resolution is overwhelmingly concentrated in the newest cohorts. Of the 12 shown, 9 resolve at under 1%; across all 33 cohorts with a pool of at least 1,000, 29 of the 31 at least two years old do. AN EARLIER VERSION OF THIS SENTENCE SAID "29 of the cohorts shown", which is arithmetically impossible -- only 12 are shown -- and quoted a maximum that could not have exceeded 1%, because it was the largest member of a set selected for being below it.
 
-## The thesis legs did not move
+The real maximum among cohorts at least two years old is **2.907%** (2023), not the 0.777% the 2024 row shows -- which is the figure the withdrawn sentence quoted.
+
+**And it is not monotone in age, which the withdrawn sentence assumed.** 2023 at 2.907%, 2001 at 2.312% all resolve FASTER than the 2024 cohort at 0.777%, despite being older -- and 2023 is 3.7x its rate. So "a cohort not indexed by then generally never will be" is WITHDRAWN: cohorts that miss the initial indexing window keep acquiring indexing in later batches at a low rate.
+
+What survives is the size of the effect rather than its shape. Resolution beyond the two newest cohorts is a few percent at most, so the recent blind spot is only partly lag -- but this is measured over ONE update window, which bounds a per-window rate and not a lifetime, and the page no longer claims waiting recovers nothing.
+
+## The thesis legs, on complete years and on all years
 
 The update window adds 2,713 ferroptosis-indexed articles, taking the field from 13,346 to 16,059. But **96.9%** of that gain lands in 2026, an incomplete publication year the project's own claims already exclude.
 
 Restricted to complete years (through 2025), ferroptosis goes 12,809 -> 12,892. The legs:
 
-| leg (through 2025) | before | after |
-|---|--:|--:|
-| drug resistance | 464 | 465 |
-| lipid peroxidation | 1,577 | 1,591 |
-| photodynamic | 171 | 171 |
-| sonodynamic (Ultrasonic Therapy, an under-estimate) | 30 | 30 |
+| leg | through 2025 | all years | gain, all years | of which the filter excludes |
+|---|--:|--:|--:|--:|
+| drug resistance | 464 -> 465 | 479 -> 602 | 123 | 122 (99%) |
+| lipid peroxidation | 1,577 -> 1,591 | 1,647 -> 2,045 | 398 | 384 (96%) |
+| photodynamic | 171 -> 171 | 177 -> 203 | 26 | 26 (100%) |
+| sonodynamic (Ultrasonic Therapy, an under-estimate) | 30 -> 30 | 32 -> 36 | 4 | 4 (100%) |
 
-So the sonodynamic leg -- the thesis's own central mechanism -- is still supported by a literature of tens of papers, not hundreds. The window refilled a partial year; it did not change the field's shape.
+**2 of these rows CANNOT MOVE in the complete-year column, and an earlier version of this section printed them under the heading "The thesis legs did not move".** The update stream is overwhelmingly 2026, so the filter excludes 100% of the photodynamic gain, 100% of the sonodynamic gain. Those rows reported the filter, not stability. Both columns ship now, the way this section already reported ferroptosis overall.
+
+What survives is the conclusion rather than the table. On all years the sonodynamic leg -- the thesis's own central mechanism -- goes 32 to 36, which is still a literature of tens of papers rather than hundreds. The window did not change the field's shape; the complete-year restriction just could not have shown it either way.
 
 ## What this does not claim
 
