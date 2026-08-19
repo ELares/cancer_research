@@ -1,7 +1,14 @@
 # MeSH tree C04 (Neoplasms) descriptor -> tree number. One row per pair;
+<<<<<<< HEAD
 # a descriptor may sit at several nodes. Source: NLM MeSH SPARQL endpoint,
 # https://id.nlm.nih.gov/mesh/sparql (inference on).
 # Regenerate: python scripts/atlas_baseline.py --refresh-mesh
+=======
+# a descriptor may sit at several nodes.
+# Source: NLM MeSH SPARQL endpoint, https://id.nlm.nih.gov/mesh/sparql (inference on).
+# Regenerate: python scripts/atlas_baseline.py --refresh-mesh
+# descriptors: 704  pairs: 1077
+>>>>>>> main
 D000008	C04.588.033
 D000069293	C04.557.386.480.150.585.500
 D000069295	C04.557.470.200.588
