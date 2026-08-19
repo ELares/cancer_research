@@ -34,6 +34,41 @@ def load(name):
         return None
 
 
+MANUSCRIPT_RATIO = 9.1
+
+
+def _volume(land) -> dict:
+    """The volume claim's figures, DERIVED from the landscape artifact.
+
+    They were literals. Setting a source field to nonsense left the page
+    printing the old number, and rewriting 17.6 to 1.6 in the generator passed
+    every guard -- because nothing here read anything.
+    """
+    import importlib.util
+    from pathlib import Path as _P
+    spec = importlib.util.spec_from_file_location(
+        "al", _P(__file__).resolve().parent / "atlas_landscape.py")
+    al = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(al)
+    rows = land if isinstance(land, list) else land.get("rows") or []
+    cen = {r["mechanism"].lower(): r for r in rows if r.get("mechanism")}
+
+    def tot(keys, field="mesh_census"):
+        return sum((cen.get(k) or {}).get(field) or 0 for k in keys)
+
+    num, den = tot(al.PHARMACOLOGICAL), tot(al.PHYSICAL)
+    # CAPTURE is the frozen corpus's MeSH-labelled share of the census, which
+    # is `mesh_frozen`. `keyword_frozen` is the manuscript's own tagger and
+    # gives 1.9x, not the 3.3x the landscape page derives.
+    cap_ph = tot(al.PHARMACOLOGICAL, "mesh_frozen") / max(num, 1)
+    cap_py = tot(al.PHYSICAL, "mesh_frozen") / max(den, 1)
+    pre_n = tot(al.PHARMACOLOGICAL & al.PRECISE)
+    pre_d = tot(al.PHYSICAL & al.PRECISE)
+    return {"ratio": num / den if den else 0.0,
+            "oversample": (cap_py / cap_ph) if cap_ph else 0.0,
+            "precise": (pre_n / pre_d) if pre_d else 0.0}
+
+
 def main() -> int:
     land = load("atlas-landscape.json")
     thesis = load("atlas-thesis-position.json")
@@ -84,12 +119,23 @@ def main() -> int:
 
     L += ["## 2. The manuscript understated its own headline, and over-broadened another", ""]
     if land:
+        _v = _volume(land)
         L += [
-            "**Volume.** Pharmacological to physical runs **9.1 : 1** by the",
-            "manuscript's keyword method and **17.6 : 1** on the census, because the",
-            "corpus over-samples physical modalities 3.3x -- exactly what a corpus",
-            "built from queries about them would do. The claim survives and was",
-            "understated by about half.", "",
+            f"**Volume.** Pharmacological to physical runs **{MANUSCRIPT_RATIO} : 1** by the",
+            f"manuscript's keyword method and **{_v['ratio']:.1f} : 1** on the census,",
+            f"because the corpus over-samples physical modalities {_v['oversample']:.1f}x --",
+            f"exactly what a corpus built from queries about them would do, so the",
+            f"claim survives and is understated by {_v['ratio']/MANUSCRIPT_RATIO:.1f}x on",
+            f"THIS comparison.", "",
+            # THE MEASUREMENT THAT CONTRADICTS IT, in the section whose job is
+            # to be as complete about failures as wins. `atlas-modality-ratio.md`
+            # names this page as one of four carrying the claim.
+            f"That comparison is between the curated classes as `atlas_landscape.py`",
+            f"defines them. Restricting BOTH classes symmetrically to that script's",
+            f"own `PRECISE` set gives **{_v['precise']:.2f} : 1**, BELOW the manuscript's",
+            f"{MANUSCRIPT_RATIO} : 1, which INVERTS the understatement. The direction of",
+            f"the correction is a choice about what the ratio is FOR and is not",
+            f"settled here -- see `atlas-modality-ratio.md`.", "",
             "**Maturity.** \"Physical modalities remain comparatively preclinical\" does",
             "not hold as a class. HIFU is **7.10%** clinical against CAR-T's",
             "**6.64%**, both on precise descriptors, and HIFU and sonodynamic differ",
@@ -254,7 +300,8 @@ def main() -> int:
             f"are corroborated by at least one asserting article and {n_zero} by none. "
             f"Read flat, that looks like {n_zero} unsupported claims. It is not: a pair "
             f"can only be asserted if BOTH its entities are written about, and the "
-            f"weaker entity's partner count across these claims runs from 6 to 2,792. "
+            f"weaker entity's partner count across these claims runs from "
+            f"{modsup['weaker_min']:,} to {modsup['weaker_max']:,}. "
             f"Every claim that HAS support has a weaker entity of at least "
             f"{modsup['exposure_floor']} partners, and {n_exp} of the {n_zero} zeros "
             f"fall below that (Spearman rho = "
