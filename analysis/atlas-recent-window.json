@@ -103,8 +103,20 @@
       "year": 475
      }
     ],
+    "exit_rule_variants": {
+     "interval_excludes_1.0": 15,
+     "interval_excludes_1.3 (mirrors admission)": 3,
+     "point_le_1.0 (shipped)": 50,
+     "point_le_1.3": 117
+    },
     "flat_or_down": 50,
-    "flat_share": 8.4
+    "flat_share": 8.4,
+    "n_within_10pct_of_cut": 41,
+    "point_cut_sweep": {
+     "0.95": 36,
+     "1.0": 50,
+     "1.05": 60
+    }
    },
    "2023": {
     "comparator_n": 143970,
@@ -207,8 +219,20 @@
       "year": 228
      }
     ],
+    "exit_rule_variants": {
+     "interval_excludes_1.0": 16,
+     "interval_excludes_1.3 (mirrors admission)": 2,
+     "point_le_1.0 (shipped)": 49,
+     "point_le_1.3": 135
+    },
     "flat_or_down": 49,
-    "flat_share": 8.2
+    "flat_share": 8.2,
+    "n_within_10pct_of_cut": 40,
+    "point_cut_sweep": {
+     "0.95": 42,
+     "1.0": 49,
+     "1.05": 57
+    }
    },
    "2024": {
     "comparator_n": 150014,
@@ -311,8 +335,20 @@
       "year": 601
      }
     ],
+    "exit_rule_variants": {
+     "interval_excludes_1.0": 12,
+     "interval_excludes_1.3 (mirrors admission)": 3,
+     "point_le_1.0 (shipped)": 79,
+     "point_le_1.3": 286
+    },
     "flat_or_down": 79,
-    "flat_share": 13.2
+    "flat_share": 13.2,
+    "n_within_10pct_of_cut": 108,
+    "point_cut_sweep": {
+     "0.95": 54,
+     "1.0": 79,
+     "1.05": 103
+    }
    },
    "2025": {
     "comparator_n": 147008,
@@ -415,8 +451,20 @@
       "year": 943
      }
     ],
+    "exit_rule_variants": {
+     "interval_excludes_1.0": 47,
+     "interval_excludes_1.3 (mirrors admission)": 2,
+     "point_le_1.0 (shipped)": 193,
+     "point_le_1.3": 479
+    },
     "flat_or_down": 193,
-    "flat_share": 32.3
+    "flat_share": 32.3,
+    "n_within_10pct_of_cut": 244,
+    "point_cut_sweep": {
+     "0.95": 134,
+     "1.0": 193,
+     "1.05": 268
+    }
    },
    "2026": {
     "comparator_n": 12809,
@@ -519,8 +567,20 @@
       "year": 436
      }
     ],
+    "exit_rule_variants": {
+     "interval_excludes_1.0": 50,
+     "interval_excludes_1.3 (mirrors admission)": 14,
+     "point_le_1.0 (shipped)": 268,
+     "point_le_1.3": 457
+    },
     "flat_or_down": 268,
-    "flat_share": 44.9
+    "flat_share": 44.9,
+    "n_within_10pct_of_cut": 165,
+    "point_cut_sweep": {
+     "0.95": 220,
+     "1.0": 268,
+     "1.05": 308
+    }
    }
   },
   "lcb_floor": 1.3,
@@ -528,7 +588,26 @@
   "pool_size": 597
  },
  "indexing": {
+  "n_cohorts": 33,
+  "n_cohorts_shown": 12,
+  "n_older_cohorts": 31,
+  "n_shown_under_1pct": 9,
+  "older_cutoff_year": 2024,
+  "older_max_rate_pct": 2.907,
+  "older_max_rate_year": 2023,
+  "older_than_and_faster_than_reference": [
+   {
+    "rate_pct": 2.907,
+    "year": 2023
+   },
+   {
+    "rate_pct": 2.312,
+    "year": 2001
+   }
+  ],
   "pool_total": 783271,
+  "reference_rate_pct": 0.777,
+  "reference_year": 2024,
   "resolved_share_pct": 2.591,
   "resolved_total": 20297,
   "rows": [
@@ -605,7 +684,206 @@
     "year": 2015
    }
   ],
-  "settled_max_rate_pct": 0.777,
+  "rows_all": [
+   {
+    "pool": 14211,
+    "rate_pct": 38.013,
+    "resolved": 5402,
+    "year": 2026
+   },
+   {
+    "pool": 111274,
+    "rate_pct": 10.919,
+    "resolved": 12150,
+    "year": 2025
+   },
+   {
+    "pool": 74688,
+    "rate_pct": 0.777,
+    "resolved": 580,
+    "year": 2024
+   },
+   {
+    "pool": 71013,
+    "rate_pct": 2.907,
+    "resolved": 2064,
+    "year": 2023
+   },
+   {
+    "pool": 72677,
+    "rate_pct": 0.033,
+    "resolved": 24,
+    "year": 2022
+   },
+   {
+    "pool": 68444,
+    "rate_pct": 0.019,
+    "resolved": 13,
+    "year": 2021
+   },
+   {
+    "pool": 53508,
+    "rate_pct": 0.007,
+    "resolved": 4,
+    "year": 2020
+   },
+   {
+    "pool": 39804,
+    "rate_pct": 0.0,
+    "resolved": 0,
+    "year": 2019
+   },
+   {
+    "pool": 36303,
+    "rate_pct": 0.017,
+    "resolved": 6,
+    "year": 2018
+   },
+   {
+    "pool": 32855,
+    "rate_pct": 0.012,
+    "resolved": 4,
+    "year": 2017
+   },
+   {
+    "pool": 26750,
+    "rate_pct": 0.0,
+    "resolved": 0,
+    "year": 2016
+   },
+   {
+    "pool": 23246,
+    "rate_pct": 0.017,
+    "resolved": 4,
+    "year": 2015
+   },
+   {
+    "pool": 20124,
+    "rate_pct": 0.005,
+    "resolved": 1,
+    "year": 2014
+   },
+   {
+    "pool": 17799,
+    "rate_pct": 0.0,
+    "resolved": 0,
+    "year": 2013
+   },
+   {
+    "pool": 15952,
+    "rate_pct": 0.0,
+    "resolved": 0,
+    "year": 2012
+   },
+   {
+    "pool": 10840,
+    "rate_pct": 0.0,
+    "resolved": 0,
+    "year": 2011
+   },
+   {
+    "pool": 7481,
+    "rate_pct": 0.0,
+    "resolved": 0,
+    "year": 2010
+   },
+   {
+    "pool": 5835,
+    "rate_pct": 0.0,
+    "resolved": 0,
+    "year": 2009
+   },
+   {
+    "pool": 4282,
+    "rate_pct": 0.0,
+    "resolved": 0,
+    "year": 2008
+   },
+   {
+    "pool": 2914,
+    "rate_pct": 0.0,
+    "resolved": 0,
+    "year": 2007
+   },
+   {
+    "pool": 2180,
+    "rate_pct": 0.0,
+    "resolved": 0,
+    "year": 2006
+   },
+   {
+    "pool": 1686,
+    "rate_pct": 0.0,
+    "resolved": 0,
+    "year": 2005
+   },
+   {
+    "pool": 1477,
+    "rate_pct": 0.0,
+    "resolved": 0,
+    "year": 2004
+   },
+   {
+    "pool": 1357,
+    "rate_pct": 0.0,
+    "resolved": 0,
+    "year": 2003
+   },
+   {
+    "pool": 1507,
+    "rate_pct": 0.0,
+    "resolved": 0,
+    "year": 2002
+   },
+   {
+    "pool": 1903,
+    "rate_pct": 2.312,
+    "resolved": 44,
+    "year": 2001
+   },
+   {
+    "pool": 2513,
+    "rate_pct": 0.0,
+    "resolved": 0,
+    "year": 2000
+   },
+   {
+    "pool": 2107,
+    "rate_pct": 0.0,
+    "resolved": 0,
+    "year": 1999
+   },
+   {
+    "pool": 1738,
+    "rate_pct": 0.0,
+    "resolved": 0,
+    "year": 1998
+   },
+   {
+    "pool": 1770,
+    "rate_pct": 0.0,
+    "resolved": 0,
+    "year": 1997
+   },
+   {
+    "pool": 1608,
+    "rate_pct": 0.0,
+    "resolved": 0,
+    "year": 1996
+   },
+   {
+    "pool": 1321,
+    "rate_pct": 0.0,
+    "resolved": 0,
+    "year": 1995
+   },
+   {
+    "pool": 1201,
+    "rate_pct": 0.0,
+    "resolved": 0,
+    "year": 1994
+   }
+  ],
   "settled_years": 29
  },
  "legs": {
@@ -621,19 +899,35 @@
   "legs": {
    "drug resistance": {
     "after": 465,
-    "before": 464
+    "all_years_after": 602,
+    "all_years_before": 479,
+    "before": 464,
+    "gain_all_years": 123,
+    "gain_excluded_by_the_filter": 122
    },
    "lipid peroxidation": {
     "after": 1591,
-    "before": 1577
+    "all_years_after": 2045,
+    "all_years_before": 1647,
+    "before": 1577,
+    "gain_all_years": 398,
+    "gain_excluded_by_the_filter": 384
    },
    "photodynamic": {
     "after": 171,
-    "before": 171
+    "all_years_after": 203,
+    "all_years_before": 177,
+    "before": 171,
+    "gain_all_years": 26,
+    "gain_excluded_by_the_filter": 26
    },
    "sonodynamic (Ultrasonic Therapy, an under-estimate)": {
     "after": 30,
-    "before": 30
+    "all_years_after": 36,
+    "all_years_before": 32,
+    "before": 30,
+    "gain_all_years": 4,
+    "gain_excluded_by_the_filter": 4
    }
   }
  },
