@@ -293,7 +293,15 @@ def test_the_all_years_leg_column_can_actually_move():
         assert v["gain_all_years"] > 0, (
             f"{k} gains nothing over all years, which cannot be true of a leg "
             "the update window adds articles to")
-        assert 0 <= v["gain_excluded_by_the_filter"] <= v["gain_all_years"]
+        # NOT a bound. `0 <= x <= gain` is satisfied by 0, so hardcoding the
+        # excluded count to zero shipped green under the guard whose own
+        # docstring names that exact mutation. This is an identity: what the
+        # filter excludes IS the all-years gain minus the complete-year gain.
+        assert v["gain_excluded_by_the_filter"] == \
+            v["gain_all_years"] - (v["after"] - v["before"]), (
+            f"{k}: excluded {v['gain_excluded_by_the_filter']:,} is not the "
+            f"all-years gain {v['gain_all_years']:,} minus the complete-year "
+            f"gain {v['after'] - v['before']:,}")
         assert v["all_years_before"] >= v["before"], (
             f"{k}: the all-years baseline is below the complete-year one")
         moved += v["all_years_after"] > v["all_years_before"]
