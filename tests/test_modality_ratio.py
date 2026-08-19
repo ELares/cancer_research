@@ -1059,3 +1059,35 @@ def test_the_scan_reproduces_the_committed_holdouts_on_a_sample():
             want["partitions"][k]["n_phys_descriptors"]
     # the sample must actually exercise the physical class
     assert sum(c["phys"] for c in counts.values()) > 100
+
+
+def test_the_surgery_recall_is_shown_beside_its_family_control():
+    """This page leaned on surgery's 0.101 recall as the reason the qualifier
+    bias might run DOWN. #722 now recomputes the descriptor arm as the whole
+    MeSH family each modality names, and that figure was a property of a
+    four-entry list rather than of indexing.
+    """
+    d, md = _doc(), MD.read_text()
+    q = (d.get("qualifier_recalls") or {}).get("modalities") or {}
+    src = REPO_ROOT / "analysis" / "atlas-ingest-sensitivity.json"
+    if not src.exists():
+        pytest.skip("#722 artifact absent")
+    j = json.loads(src.read_text())
+    tree = j.get("modalities_tree_arm")
+    if not tree:
+        pytest.skip("#722 has not yet published the family arm")
+    for m, c in q.items():
+        assert "recall_tree_arm" in c, (
+            f"{m}: the family-arm recall is available and not carried, so the "
+            "page quotes a proxy figure with no control beside it")
+        t = tree[m]
+        assert abs(c["recall_tree_arm"] - t["descriptor"] / t["either"]) < 1e-9
+        assert f"{c['recall_tree_arm']:.3f}" in md
+    sg = q.get("surgery")
+    if sg and sg["recall_tree_arm"] > sg["recall"] * 2:
+        assert "A PROPERTY OF A FOUR-ENTRY LIST" in md, (
+            f"surgery's recall moves {sg['recall']:.3f} -> "
+            f"{sg['recall_tree_arm']:.3f} under the control and the page still "
+            "quotes the proxy figure as its reason")
+        # the conclusion must NOT have moved -- it never rested on the figure
+        assert "direction is not established here" in md

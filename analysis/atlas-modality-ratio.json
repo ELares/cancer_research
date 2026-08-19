@@ -2176,11 +2176,7 @@
   "withdrawn_control": "mass matched PER PARTITION, which pins every held-out ratio before a descriptor is chosen"
  },
  "proxy_containment": {
-  "non_descriptor_composites_dropped": {
-   "surgery": [
-    "neoplasms/surgery"
-   ]
-  },
+  "non_descriptor_composites_dropped": {},
   "per_partition": {
    "clinical-delivery": {
     "pharm_contains_drug_therapy": true,
@@ -2256,22 +2252,26 @@
    "diagnostic imaging": {
     "descriptor": 1558,
     "either": 2910,
-    "recall": 0.5353951890034364
+    "recall": 0.5353951890034364,
+    "recall_tree_arm": 0.9185949261221076
    },
    "drug therapy": {
     "descriptor": 3194,
     "either": 5837,
-    "recall": 0.5471989035463423
+    "recall": 0.5471989035463423,
+    "recall_tree_arm": 0.6446996172408055
    },
    "radiotherapy": {
     "descriptor": 842,
     "either": 1461,
-    "recall": 0.5763175906913073
+    "recall": 0.5763175906913073,
+    "recall_tree_arm": 0.6518032786885246
    },
    "surgery": {
     "descriptor": 406,
     "either": 4007,
-    "recall": 0.10132268530072373
+    "recall": 0.10132268530072373,
+    "recall_tree_arm": 0.7983510821023703
    }
   },
   "n_shards": 8

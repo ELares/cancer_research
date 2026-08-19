@@ -677,12 +677,20 @@ def qualifier_recalls() -> dict:
         return {}
     d = json.loads(INGEST.read_text())
     rows = {}
+    tree = d.get("modalities_tree_arm") or {}
     for m, c in (d.get("modalities") or {}).items():
         desc, either = c.get("descriptor"), c.get("either")
         if desc is None or not either:
             continue
-        rows[m] = {"descriptor": desc, "either": either,
-                   "recall": desc / either}
+        row = {"descriptor": desc, "either": either, "recall": desc / either}
+        # THE PROXY-ARM RECALL IS A PROPERTY OF A HAND-WRITTEN LIST, and this
+        # page leaned on the surgery row as the reason the bias might run
+        # DOWN. #722 now recomputes the descriptor arm as the whole MeSH
+        # family the modality names, which is the control that row needed.
+        t = tree.get(m) or {}
+        if t.get("either"):
+            row["recall_tree_arm"] = t["descriptor"] / t["either"]
+        rows[m] = row
     return {"modalities": rows, "cancer_articles": d.get("cancer_articles"),
             "n_shards": d.get("n_shards")}
 
@@ -1238,11 +1246,15 @@ def _qualifier_section(d) -> list:
           f"percentage POINTS, and a ratio responds to relative rather than "
           f"additive understatement. Every row, from the raw counts rather "
           f"than the rounded percentages:", ""]
-    L += ["| modality | descriptor axis | either axis | descriptor recall |",
-          "|---|--:|--:|--:|"]
+    has_tree = any("recall_tree_arm" in c for c in rows.values())
+    L += ["| modality | descriptor axis | either axis | descriptor recall"
+          + (" | recall, whole MeSH family |" if has_tree else " |"),
+          "|---|--:|--:|--:|" + ("--:|" if has_tree else "")]
     for m, c in sorted(rows.items(), key=lambda kv: kv[1]["recall"]):
         L.append(f"| {m} | {c['descriptor']:,} | {c['either']:,} | "
-                 f"{c['recall']:.3f} |")
+                 f"{c['recall']:.3f} |"
+                 + (f" {c['recall_tree_arm']:.3f} |"
+                    if c.get("recall_tree_arm") else (" |" if has_tree else "")))
     L += [""]
     dt = rows.get("drug therapy")
     rt = rows.get("radiotherapy")
@@ -1251,6 +1263,23 @@ def _qualifier_section(d) -> list:
         L += [f"Correcting a drug-therapy numerator and a radiotherapy "
               f"denominator each by its own recall multiplies the ratio by "
               f"{rt['recall']/dt['recall']:.2f} -- UP, not down.", ""]
+    if sg and sg.get("recall_tree_arm"):
+        L += [f"**AND THE SURGERY ROW WAS A PROPERTY OF A FOUR-ENTRY LIST.** "
+              f"#722 now recomputes its descriptor arm as the whole MeSH "
+              f"family each modality names, and surgery's recall goes "
+              f"{sg['recall']:.3f} to **{sg['recall_tree_arm']:.3f}** -- the "
+              f"largest move of the four, because its proxy covered least of "
+              f"its own family. An earlier version of this page leaned on the "
+              f"{sg['recall']:.3f} as the reason the bias might run DOWN for a "
+              f"surgery-heavy physical class. On the family arm surgery is no "
+              f"longer the outlier at all"
+              + (f", and the ordering that made it the headline inverts."
+                 if dt and dt.get("recall_tree_arm")
+                 and sg["recall_tree_arm"] > dt["recall_tree_arm"] else ".")
+              + " The conclusion below is unchanged -- neither correction was "
+                "licensed and the direction was never established -- but the "
+                "figure quoted as the reason was an artifact of a list, not a "
+                "measurement of indexing.", ""]
     if sg and dt:
         L += [f"**But that is the wrong pair for these classes.** #722's own "
               f"headline is that the sharpest case is SURGERY, at recall "
