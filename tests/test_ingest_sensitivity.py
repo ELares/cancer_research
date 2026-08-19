@@ -18,7 +18,9 @@ title/abstract against how often the descriptor layer catches it, and reported a
   independent recounts produced six different numerators.
 
   A CONTROL THAT REFUTED THE EXPLANATION. Angiogenesis has no qualifier form and
-  scores LOWER descriptor recall than radiotherapy, so low recall is not
+  scores descriptor recall of the same low order as radiotherapy's (5.9%
+  against 2.7% -- an earlier docstring said LOWER, which those figures
+  contradict), so low recall is not
   evidence of a qualifier problem. Most of the spread was topicality.
 
 The design that survives compares the SAME articles parsed the SAME way,
@@ -32,6 +34,7 @@ it once its own measurement says surgery is the sharp one.
 """
 
 import json
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -191,3 +194,71 @@ def test_render_only_works_without_the_raw_xml():
     assert res.returncode == 0, (
         f"--render-only failed, so the report cannot be rebuilt without "
         f"re-downloading:\n{res.stdout}\n{res.stderr}")
+
+def test_every_descriptor_proxy_entry_can_actually_fire():
+    """`neoplasms/surgery` was a descriptor/QUALIFIER composite in a list
+    matched against DescriptorName text, so it could never match. It presented
+    the surgery arm as five entries when four were live, and the guard whose
+    stated purpose was "otherwise its qualifier-only figure would be the
+    qualifier count with nothing subtracted" asserted only non-emptiness --
+    reducing the arm to that one dead entry left the suite green.
+    """
+    m = _mod()
+    for name, spec in m.MODALITIES.items():
+        live = [d for d in spec["descriptors"] if "/" not in d]
+        assert live, f"{name}'s descriptor arm has no entry that can fire"
+        dead = sorted(set(spec["descriptors"]) - set(live))
+        assert not dead, (
+            f"{name} lists {dead}, which contain a qualifier and are matched "
+            "against DescriptorName, so they can never fire")
+        assert len(spec["qualifiers"]) >= 1
+
+
+def test_the_cross_modality_ordering_is_withdrawn():
+    """The gain is measured against a hand-written proxy for an open tree
+    while the qualifier arm is a whole closed axis, so ranking the rows ranks
+    proxy completeness as much as it ranks the axis.
+    """
+    md = MD.read_text()
+    assert "ORDERING is not a measurement" in md
+    assert "THAT ORDERING IS WITHDRAWN" in md
+    assert "ranks that incompleteness" in md
+    # the two clauses the ordering rested on must not stand unqualified
+    for m_ in re.finditer(r"nowhere the ingest looks", md):
+        w = md[max(0, m_.start() - 300):m_.end() + 300]
+        assert "WITHDRAWN" in w, (
+            "the report still says the qualifier axis carries these articles "
+            "and nowhere the ingest looks, which holds only against four "
+            "descriptors rather than against the ingest")
+    for m_ in re.finditer(r"and it says which those are", md):
+        w = md[max(0, m_.start() - 400):m_.end() + 200]
+        assert "no materiality threshold" in w
+
+
+def test_the_control_direction_matches_the_only_figures_the_repo_carries():
+    """5.9% against 2.7% is HIGHER, and three sites said LOWER."""
+    md, src = MD.read_text(), SCRIPT.read_text()
+    tst = Path(__file__).read_text()
+    for text, where in ((md, "report"), (src, "generator"), (tst, "guard")):
+        for m_ in re.finditer(r"[Ll]ower descriptor recall than radiotherapy",
+                              text):
+            w = text[max(0, m_.start() - 400):m_.end() + 400]
+            assert re.search(r"earlier|contradict|withdraw", w, re.I), (
+                f"the {where} says angiogenesis has lower descriptor recall "
+                "than radiotherapy, and the only figures the repo carries for "
+                "it are 5.9% against 2.7%")
+    assert "computed NOWHERE in this repo" in src, (
+        "the three figures behind the withdrawn claim are quoted as though "
+        "this repo produced them")
+
+
+def test_the_committed_report_is_what_the_generator_produces():
+    """No regenerate-and-diff gate existed, so every renderer edit was
+    invisible: a mutation dropping a whole bullet passed the suite.
+    """
+    m = _mod()
+    assert m.render(_doc()) == MD.read_text(), (
+        "analysis/atlas-ingest-sensitivity.md is not what the current "
+        "renderer produces from the committed JSON -- re-run with "
+        "--render-only")
+

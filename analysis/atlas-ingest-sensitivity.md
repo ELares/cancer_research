@@ -13,12 +13,16 @@ Both arms see the same articles, selected exactly as the ingest selects them. Qu
 | radiotherapy | 3.3% | 4.2% | 5.7% | **2.4%** | +2.4 pts (2.2-2.6) |
 | surgery | 1.6% | 15.3% | 15.5% | **14.0%** | +14.0 pts (13.5-14.4) |
 
-The sharpest case is **surgery**, where 14.0% of cancer articles carry the modality on the qualifier axis and nowhere the ingest looks.
+## The cross-modality ORDERING is not a measurement
+
+The largest figure in that column is **surgery** at 14.0%, and an earlier version of this page called it "the sharpest case" and drew a prioritisation from the ranking. THAT ORDERING IS WITHDRAWN. Each row's gain is measured against a hand-written descriptor proxy of four to seven entries standing in for a MeSH family that runs from tens to hundreds of descriptors, and how completely each proxy covers its own family is neither controlled nor equal across the four rows -- while the qualifier arm is the WHOLE of a closed axis. So a row's gain is partly a statement about how incomplete its descriptor list is, and ranking the four against each other ranks that incompleteness as much as it ranks the qualifier axis.
+
+The same clause said the qualifier axis carries these articles "and nowhere the ingest looks". THAT IS ALSO WITHDRAWN: it holds only against these four descriptors, not against the ingest, which stores every DescriptorName an article carries.
 
 ## What this does and does not license
 
-* It licenses the re-parse in #722 step 2 for modalities whose marginal gain is material, and it says which those are.
+* It licenses the re-parse in #722 step 2 on the grounds that the axis is unread and every row's gain is material -- NOT on the grounds that one modality is sharper than another, which is the ordering withdrawn above. An earlier version of this bullet said "and it says which those are", and no materiality threshold appears anywhere on this page.
 * It does NOT say the census is missing articles. Membership is decided on descriptor UIs and is unaffected; this is a labelling gap inside the census, not a selection gap.
-* It does NOT support the earlier 2.5x text-versus-descriptor sensitivity claim, which compared concepts under asymmetric rules and failed a control: angiogenesis, with no qualifier form at all, has lower descriptor recall than radiotherapy.
+* It does NOT support the earlier 2.5x text-versus-descriptor sensitivity claim, which compared concepts under asymmetric rules and failed a control: angiogenesis, with no qualifier form at all, has descriptor recall of the same low order as radiotherapy's -- an earlier version of this bullet said LOWER, which contradicts the only figures the repo carries for it (5.9% against 2.7%), in three places at once. The direction was never the argument: both sit far below ferroptosis's 90.2%, which is what makes low descriptor recall not evidence of a qualifier problem. Those three figures are computed NOWHERE in this repo and the symmetric rule behind them is not stated, so they are quoted as the provenance of a withdrawn claim rather than as measurements.
 * The estimate is from sampled shards and carries Wilson intervals. MeSH indexing practice has changed over fifty years, so a sample spread across the range is not the same as a per-era estimate.
 

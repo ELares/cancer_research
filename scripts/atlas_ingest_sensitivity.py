@@ -5,7 +5,13 @@ WHY
 ---
 `atlas_baseline.parse_articles` reads only
 `./MeshHeadingList/MeshHeading/DescriptorName`. It never reads `QualifierName`
--- the string appears nowhere in scripts/, tests/ or analysis/ -- so the census
+-- an earlier version of this line added "the string appears nowhere in
+scripts/, tests/ or analysis/", which has since ROTTED: it now appears in this
+script, its test, its report and in atlas_modality_ratio. The substance is
+unaffected and is the checkable part -- `atlas_baseline.py:308` reads
+DescriptorName only, and `tests/test_atlas.py`'s parser fixture is built from
+DescriptorName alone, so that test is structurally incapable of failing on it
+-- so the census
 carries the descriptor axis of MeSH and drops the 76-subheading qualifier axis
 entirely. `Lung Neoplasms/radiotherapy` is stored as `Lung Neoplasms`.
 
@@ -89,7 +95,12 @@ MODALITIES = {
     "surgery": {
         "qualifiers": {"surgery"},
         "descriptors": {"surgical procedures, operative", "mastectomy",
-                        "neoplasms/surgery", "hepatectomy", "pneumonectomy"},
+                        # `neoplasms/surgery` WAS HERE and is removed: it is a
+                        # descriptor/qualifier composite, and the descriptor
+                        # arm matches DescriptorName text, so it could never
+                        # fire. It presented this arm as five entries when
+                        # four were live. Removing it changes no count.
+                        "hepatectomy", "pneumonectomy"},
     },
     "diagnostic imaging": {
         "qualifiers": {"diagnostic imaging"},
@@ -222,21 +233,47 @@ def render(d: dict) -> str:
 
     best = max(d["modalities"].items(),
                key=lambda kv: kv[1].get("qualifier_only", 0))
-    L += [f"The sharpest case is **{best[0]}**, where "
-          f"{100*best[1].get('qualifier_only',0)/n:.1f}% of cancer articles "
-          f"carry the modality on the qualifier axis and nowhere the ingest "
-          f"looks.", ""]
+    L += ["## The cross-modality ORDERING is not a measurement", ""]
+    L += [f"The largest figure in that column is **{best[0]}** at "
+          f"{100*best[1].get('qualifier_only',0)/n:.1f}%, and an earlier "
+          f"version of this page called it \"the sharpest case\" and drew a "
+          f"prioritisation from the ranking. THAT ORDERING IS WITHDRAWN. Each "
+          f"row's gain is measured against a hand-written descriptor proxy of "
+          f"four to seven entries standing in for a MeSH family that runs from "
+          f"tens to hundreds of descriptors, and how completely each proxy "
+          f"covers its own family is neither controlled nor equal across the "
+          f"four rows -- while the qualifier arm is the WHOLE of a closed "
+          f"axis. So a row's gain is partly a statement about how incomplete "
+          f"its descriptor list is, and ranking the four against each other "
+          f"ranks that incompleteness as much as it ranks the qualifier "
+          f"axis.", ""]
+    L += [f"The same clause said the qualifier axis carries these articles "
+          f"\"and nowhere the ingest looks\". THAT IS ALSO WITHDRAWN: it "
+          f"holds only against these four descriptors, not against the "
+          f"ingest, which stores every DescriptorName an article carries.", ""]
 
     L += ["## What this does and does not license", ""]
-    L += ["* It licenses the re-parse in #722 step 2 for modalities whose "
-          "marginal gain is material, and it says which those are.",
+    L += ["* It licenses the re-parse in #722 step 2 on the grounds that the "
+          "axis is unread and every row's gain is material -- NOT on the "
+          "grounds that one modality is sharper than another, which is the "
+          "ordering withdrawn above. An earlier version of this bullet said "
+          "\"and it says which those are\", and no materiality threshold "
+          "appears anywhere on this page.",
           "* It does NOT say the census is missing articles. Membership is "
           "decided on descriptor UIs and is unaffected; this is a labelling "
           "gap inside the census, not a selection gap.",
           "* It does NOT support the earlier 2.5x text-versus-descriptor "
           "sensitivity claim, which compared concepts under asymmetric rules "
           "and failed a control: angiogenesis, with no qualifier form at all, "
-          "has lower descriptor recall than radiotherapy.",
+          "has descriptor recall of the same low order as radiotherapy's -- "
+          "an earlier version of this bullet said LOWER, which contradicts the "
+          "only figures the repo carries for it (5.9% against 2.7%), in three "
+          "places at once. The direction was never the argument: both sit far "
+          "below ferroptosis's 90.2%, which is what makes low descriptor "
+          "recall not evidence of a qualifier problem. Those three figures are "
+          "computed NOWHERE in this repo and the symmetric rule behind them is "
+          "not stated, so they are quoted as the provenance of a withdrawn "
+          "claim rather than as measurements.",
           "* The estimate is from sampled shards and carries Wilson intervals. "
           "MeSH indexing practice has changed over fifty years, so a sample "
           "spread across the range is not the same as a per-era estimate.",
