@@ -349,6 +349,22 @@ def test_the_tree_file_is_pinned():
                 f"{t} has no ancestor {anc} in the file, so it is truncated")
     for t in allt:
         assert t.startswith("C04"), f"{t} is not a C04 tree number"
+    # THE FILE DECLARES ITS OWN SIZE, like the descriptor file beside it, so a
+    # partial fetch fails against the file rather than being invisible. It is
+    # written by `atlas_baseline.py --refresh-mesh` now; its header used to
+    # name that command while nothing in the repo wrote it.
+    import re as _re
+    head = (REPO_ROOT / "corpus" / "atlas" / "mesh"
+            / "c04-tree-numbers.tsv").read_text().splitlines()
+    dec = next((l for l in head if l.startswith("# descriptors:")), None)
+    assert dec, "the tree file does not declare its own size"
+    n_d, n_p = (int(x) for x in _re.findall(r"(\d+)", dec))
+    assert n_d == len(tree), f"header says {n_d} descriptors, file has {len(tree)}"
+    assert n_p == pairs, f"header says {n_p} pairs, file has {pairs}"
+    src = (REPO_ROOT / "scripts" / "atlas_baseline.py").read_text()
+    assert "def fetch_c04_tree_numbers(" in src, (
+        "nothing in the repo writes this committed input, and its header "
+        "names a command that does not produce it")
 
 
 def test_the_rank_change_finding_cannot_be_deleted_silently():

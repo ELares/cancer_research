@@ -183,6 +183,66 @@ def fetch_c04_descriptors(dest: Path, force: bool = False) -> dict:
     return found
 
 
+def fetch_c04_tree_numbers(dest: Path, force: bool = False) -> dict:
+    """Descriptor UI -> {tree numbers}, for the same C04 descriptors.
+
+    THE QUERY ABOVE ALREADY BINDS `?t` AND THROWS IT AWAY, and the site-coverage
+    analysis (#729) needs it: a site's descriptor list is derived by walking
+    down from the nodes a shallow list occupies, which is what stopped that
+    analysis matching descriptor NAMES and putting `Ganglion Cysts` under
+    brain/CNS. Without this the tree file is a committed input to a published
+    result that nothing in the repo can regenerate -- and its header said to
+    run `--refresh-mesh`, which did not write it.
+    """
+    if dest.exists() and not force:
+        out: dict[str, set] = {}
+        for line in dest.read_text(encoding="utf-8").splitlines():
+            if line and not line.startswith("#"):
+                ui, tree = line.split("\t", 1)
+                out.setdefault(ui, set()).add(tree)
+        return out
+
+    query = (
+        "PREFIX meshv: <http://id.nlm.nih.gov/mesh/vocab#> "
+        "SELECT DISTINCT ?d ?t WHERE { "
+        "?d a meshv:TopicalDescriptor . ?d meshv:treeNumber ?t . "
+        'FILTER(STRSTARTS(STR(?t), "http://id.nlm.nih.gov/mesh/C04")) } '
+        "ORDER BY ?d ?t"
+    )
+    pairs: set = set()
+    offset, page = 0, 500
+    while True:
+        params = urllib.parse.urlencode({
+            "query": query, "format": "JSON", "inference": "true",
+            "limit": page, "offset": offset,
+        })
+        data = json.loads(_get(f"{MESH_SPARQL}?{params}", timeout=180))
+        rows = data["results"]["bindings"]
+        for b in rows:
+            pairs.add((b["d"]["value"].rsplit("/", 1)[-1],
+                       b["t"]["value"].rsplit("/", 1)[-1]))
+        if len(rows) < page:
+            break
+        offset += page
+        time.sleep(0.3)
+
+    uis = {u for u, _t in pairs}
+    header = (
+        "# MeSH tree C04 (Neoplasms) descriptor -> tree number. One row per pair;\n"
+        "# a descriptor may sit at several nodes.\n"
+        "# Source: NLM MeSH SPARQL endpoint, https://id.nlm.nih.gov/mesh/sparql (inference on).\n"
+        "# Regenerate: python scripts/atlas_baseline.py --refresh-mesh\n"
+        f"# descriptors: {len(uis)}  pairs: {len(pairs)}\n"
+    )
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    dest.write_text(header + "\n".join(f"{u}\t{t}" for u, t in sorted(pairs)) + "\n",
+                    encoding="utf-8")
+    out = {}
+    for u, t in pairs:
+        out.setdefault(u, set()).add(t)
+    return out
+
+
 # --------------------------------------------------------------------------
 # Baseline file inventory + download
 # --------------------------------------------------------------------------
@@ -455,7 +515,7 @@ def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--limit", type=int, default=0, help="process at most N baseline files")
     ap.add_argument("--status", action="store_true", help="report progress and exit")
-    ap.add_argument("--refresh-mesh", action="store_true", help="re-fetch the C04 descriptor set")
+    ap.add_argument("--refresh-mesh", action="store_true", help="re-fetch the C04 descriptor set AND its tree numbers")
     ap.add_argument("--keep-raw", action="store_true",
                     help="keep downloaded XML (default: delete after parsing to save disk)")
     ap.add_argument("--updates", action="store_true",
@@ -510,6 +570,9 @@ def main() -> None:
         return
 
     c04 = fetch_c04_descriptors(root / "mesh" / "c04-descriptors.tsv", force=args.refresh_mesh)
+    # the tree numbers the same query already retrieves, cached beside them
+    fetch_c04_tree_numbers(root / "mesh" / "c04-tree-numbers.tsv",
+                           force=args.refresh_mesh)
     print(f"cancer definition: {len(c04)} MeSH C04 descriptors")
 
     url = UPDATES_URL if args.updates else BASELINE_URL
