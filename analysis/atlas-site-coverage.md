@@ -17,36 +17,38 @@ An earlier version of this table carried a row reading `carry no MeSH at all | 0
 
 ## The list is shallow, but not uniformly shallow
 
-The 18 sites are matched by 42 descriptors between them -- but not evenly. `stomach`, `ovary`, `bladder` and `thyroid` get one each while `brain/CNS` and `head and neck` get four, and the C04 tree holds far more for some sites than others. So the per-site column is understated by a different factor for every site, and it is the column a burden ratio divides into mortality.
+The 18 sites are matched by 42 descriptors between them -- but not evenly. `stomach`, `ovary`, `bladder` and `thyroid` get one each while `brain/CNS` and `head and neck` get four, and the tree holds far more under some of those nodes than others. So the per-site column is understated by a different factor for every site, and it is the column a burden ratio divides into mortality.
 
-Measured against the SAME 18 sites walked down NLM's own tree -- every C04 descriptor at or beneath the nodes the shallow list already occupies, 233 descriptors, committed at `analysis/site-descriptor-map.tsv`. There is no rule to dispute beyond the shallow list itself: an earlier version of this section matched descriptor NAMES and put `Ganglion Cysts` and `Paraganglioma` under brain/CNS, a benign salivary tumour under lymphoma, and merged plasma-cell myeloma into lymphoma, which moved the headline rank.
+Measured against the SAME 18 sites walked down NLM's own tree -- every C04 descriptor at or beneath the nodes the shallow list already occupies, 233 placements over 225 distinct descriptors (7 sit in more than one of these sites), committed at `analysis/site-descriptor-map.tsv`. There is no rule to dispute beyond the shallow list itself: an earlier version of this section matched descriptor NAMES and put `Ganglion Cysts` and `Paraganglioma` under brain/CNS, a benign salivary tumour under lymphoma, and merged plasma-cell myeloma into lymphoma, which moved the headline rank.
 
 | site | shallow | deep | deep/shallow | rank shallow -> deep |
 |---|--:|--:|--:|--:|
-| breast | 375,499 | 378,191 | 1.01x | **1 -> 2** |
-| lung | 290,414 | 304,402 | 1.05x | **2 -> 3** |
-| colorectal | 245,269 | 262,866 | 1.07x | **3 -> 5** |
-| skin/melanoma | 205,906 | 228,568 | 1.11x | **4 -> 7** |
-| liver | 199,825 | 212,500 | 1.06x | **5 -> 8** |
-| brain/CNS | 177,855 | 257,914 | 1.45x | 6 -> 6 |
-| prostate | 162,723 | 162,723 | 1.00x | **7 -> 10** |
-| cervix/uterus | 158,452 | 159,782 | 1.01x | **8 -> 11** |
-| head and neck | 140,066 | 380,530 | 2.72x | **9 -> 1** |
-| leukaemia | 130,376 | 266,602 | 2.04x | **10 -> 4** |
-| stomach | 120,883 | 120,883 | 1.00x | **11 -> 12** |
-| lymphoma | 117,890 | 196,557 | 1.67x | **12 -> 9** |
-| pancreas | 99,259 | 101,620 | 1.02x | 13 -> 13 |
-| ovary | 98,618 | 100,406 | 1.02x | 14 -> 14 |
-| kidney | 88,262 | 91,118 | 1.03x | 15 -> 15 |
-| bladder | 68,363 | 68,398 | 1.00x | 16 -> 16 |
-| oesophagus | 65,076 | 65,076 | 1.00x | **17 -> 18** |
-| thyroid | 63,046 | 67,705 | 1.07x | **18 -> 17** |
+| breast | 375,499 | 378,191 | 1.01x | 1 -> 1 |
+| lung | 290,414 | 304,402 | 1.05x | 2 -> 2 |
+| colorectal | 245,269 | 262,866 | 1.07x | **3 -> 4** |
+| skin/melanoma | 205,906 | 228,568 | 1.11x | **4 -> 6** |
+| liver | 199,825 | 212,500 | 1.06x | **5 -> 7** |
+| brain/CNS | 177,855 | 257,914 | 1.45x | **6 -> 5** |
+| prostate | 162,723 | 162,723 | 1.00x | **7 -> 9** |
+| cervix/uterus | 158,452 | 159,782 | 1.01x | **8 -> 10** |
+| head and neck | 140,066 | 380,530 | 2.72x | n/a (subsumes `oesophagus`, `thyroid`) |
+| leukaemia | 130,376 | 266,602 | 2.04x | **9 -> 3** |
+| stomach | 120,883 | 120,883 | 1.00x | **10 -> 11** |
+| lymphoma | 117,890 | 196,557 | 1.67x | **11 -> 8** |
+| pancreas | 99,259 | 101,620 | 1.02x | 12 -> 12 |
+| ovary | 98,618 | 100,406 | 1.02x | 13 -> 13 |
+| kidney | 88,262 | 91,118 | 1.03x | 14 -> 14 |
+| bladder | 68,363 | 68,398 | 1.00x | 15 -> 15 |
+| oesophagus | 65,076 | 65,076 | 1.00x | **16 -> 17** |
+| thyroid | 63,046 | 67,705 | 1.07x | **17 -> 16** |
 
 **Read the deep column with its overlaps.** NLM's tree does not draw this page's 18 boundaries: `head and neck` subsumes `oesophagus`, `thyroid`. Those sites are listed separately here, so the deep column double-counts across the page's own list and its rank order is partly a statement about MeSH rather than about the literature. That is a reason to read the ratio column rather than the deep ranks, and a reason a burden analysis has to pick its boundaries before it picks its depth.
 
-The gap between the two lists is not uniform and it is not small: `head and neck` 2.72x, `leukaemia` 2.04x, `lymphoma` 1.67x, `brain/CNS` 1.45x against `prostate` 1.00x, `stomach` 1.00x, `oesophagus` 1.00x, `bladder` 1.00x. 13 of 18 sites change rank, `head and neck` 9 -> 1, `leukaemia` 10 -> 4, `skin/melanoma` 4 -> 7. So the per-site column is comparable within a list and not across sites, and any burden ratio built on it inherits that.
+The gap between the two lists is not uniform and it is not small (a `*` marks a site whose subtree contains another of these sites, so its figure counts descriptors this table lists separately): `head and neck`* 2.72x, `leukaemia` 2.04x, `lymphoma` 1.67x, `brain/CNS` 1.45x against `prostate` 1.00x, `stomach` 1.00x, `oesophagus` 1.00x, `bladder` 1.00x. 11 of 17 rankable sites change rank, `leukaemia` 9 -> 3, `lymphoma` 11 -> 8, `skin/melanoma` 4 -> 6. So the per-site column is comparable within a list and not across sites, and any burden ratio built on it inherits that.
 
-Assignability itself goes **57.8%** shallow -> **67.0%** on the subtree walk (+405,299 articles). The shallow figure is the one this page leads with, because it is the shorter and more conservative list -- NOT because it is more auditable, which the bullet below retracts. It is a floor, not the census's limit, and a deeper list can also over-reach: membership here is NLM's tree, so an accident of naming cannot cause that, but a site's subtree still carries benign and precursor entities its shallow row does not.
+Assignability itself goes **57.8%** shallow -> **67.0%** on the subtree walk (+405,299 articles). The shallow figure is the one this page leads with, because it is the shorter and more conservative list -- NOT because it is more auditable, which the bullet below retracts. It is a floor, not the census's limit, and a deeper list can also over-reach: membership here is NLM's tree, so an accident of naming cannot cause that, but a site's subtree still carries entities its shallow row does not.
+
+**And not only benign or precursor ones, which was this page's whole stated scope cost.** 10 placements are experimental models, veterinary disease or named genetic syndromes: `leukaemia` gets `avian leukosis`, `enzootic bovine leukosis`, `leukemia l1210`, `leukemia l5178` and 4 more; `liver` gets `liver neoplasms, experimental`; `skin/melanoma` gets `melanoma, experimental`. They sit legitimately under those nodes in MeSH and are not human disease at that site, so a burden analysis wanting the deeper list has to strip them.
 
 Across 18 major sites, on the shallow list:
 
@@ -80,7 +82,7 @@ An earlier version of this page said the remainder "is not a failure of the cens
 * **405,299 (21.8%)** are the SAME 18 sites, named by a descriptor beneath the shallow list's own tree nodes. The great majority of them name a site.
 * 476,436 (25.7%) carry the generic `Neoplasms` descriptor, which is the reading the sentence describes.
 * 200,758 (10.8%) carry no C04 descriptor at all and could not be assigned by any list of C04 strings.
-* the rest is not featureless. The commonest descriptors on articles the list cannot place, excluding check-tags and the generic term: `cell line, tumor` 179,210, `antineoplastic agents` 175,705, `adolescent` 105,350, `child` 92,696, `retrospective studies` 75,983, `treatment outcome` 68,119, `aged, 80 and over` 59,060, `diagnosis, differential` 55,519.
+* the rest is not featureless, and it is largely CANCER AT A SITE THIS LIST DOES NOT COVER -- the same correction bullet one makes, one level out. Its commonest descriptors, excluding check-tags and study-design terms: `diagnosis, differential` 52,435, `bone neoplasms` 45,186, `tomography, x-ray computed` 42,836, `multiple myeloma` 42,185, `magnetic resonance imaging` 35,384, `cysts` 31,823. An earlier version pointed at a descriptor list accumulated over ALL unassigned records, which included the generic-`Neoplasms` and no-C04 buckets the same sentence had just excluded.
 * the remaining 774,557 (41.7%) is none of those three, and is the largest single bucket.
 
 So the honest version of the original sentence is much narrower: 21.8% of the remainder is a limit of THIS 18-site list rather than of the census, a further 25.7% is the reading the original sentence described, and 41.7% is neither and is not characterised here beyond the descriptors above.

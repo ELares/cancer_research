@@ -476,10 +476,23 @@ def render(d):
                   f"sits within 10% of it, so the share runs "
                   f"{100*sweep[lo]/max(comp['pool_size'],1):.1f}% at a cut of "
                   f"{lo} to {100*sweep[hi]/max(comp['pool_size'],1):.1f}% at "
-                  f"{hi}. The mirror-image test -- the admission rule applied "
-                  f"in reverse -- is the bottom row of that table, and it is "
-                  f"the number a reader who assumed one test was run twice "
-                  f"would have expected.", ""]
+                  f"{hi}.", ""]
+            mirror = next(((k, v) for k, v in ev.items()
+                           if "mirrors admission" in k), None)
+            if mirror:
+                L += [f"The mirror-image test -- the admission rule applied in "
+                      f"reverse -- is the row labelled "
+                      f"`{mirror[0]}`, at **{mirror[1]:,} of "
+                      f"{comp['pool_size']:,} "
+                      f"({100*mirror[1]/max(comp['pool_size'],1):.1f}%)**. An "
+                      f"earlier version of this sentence said \"the bottom row "
+                      f"of that table\", which is a hand-written POSITION into "
+                      f"a machine-ordered one: the bottom row is the LOOSEST "
+                      f"variant, and the two orderings the generator can "
+                      f"produce -- insertion order on a full run, key-sorted "
+                      f"order through `--render-only` -- both put it there. A "
+                      f"reader following that instruction read the largest "
+                      f"number in the table instead of the smallest.", ""]
     L += ["| descriptor | vs whole census | vs " + best + " | new | census | " + best + " |",
           "|---|--:|--:|--:|--:|--:|"]
     for e in b["examples"][:8]:
@@ -540,8 +553,21 @@ def render(d):
                  f"{faster[0]['rate_pct']/max(idx.get('reference_rate_pct') or 1e-9, 1e-9):.1f}x "
                  f"its rate" if idx.get("reference_rate_pct") else "")
               + ". So \"a cohort not indexed by then generally never will be\" "
-                "is WITHDRAWN: cohorts that miss the initial indexing window "
-                "keep acquiring indexing in later batches at a low rate.", ""]
+                "is WITHDRAWN.", ""]
+        L += ["**But the two exhibits are not the same kind of thing, and an "
+              "earlier version of this paragraph read them as if they were.** "
+              "The withdrawal is carried by the ADJACENT-PAIR inversion alone "
+              "-- a cohort resolving faster than a younger one, spread across "
+              "hundreds of journals. The oldest exhibit is a single journal's "
+              "back-file being deposited in this window: essentially all of "
+              "that cohort's resolutions come from one title and essentially "
+              "none of its other journals acquired anything. Read as a cohort "
+              "rate it says the opposite of what it appears to -- almost "
+              "nothing in that cohort resolved. So the honest generalisation "
+              "is that late resolution arrives in lumpy per-journal batches, "
+              "NOT that cohorts keep acquiring indexing at a low rate, which "
+              "is a mechanism this page has not measured and which the oldest "
+              "exhibit actively refutes.", ""]
     L += ["What survives is the size of the effect rather than its shape. "
           "Resolution beyond the two newest cohorts is a few percent at most, "
           "so the recent blind spot is only partly lag -- but this is measured "
