@@ -64,9 +64,32 @@ def _volume(land) -> dict:
     cap_py = tot(al.PHYSICAL, "mesh_frozen") / max(den, 1)
     pre_n = tot(al.PHARMACOLOGICAL & al.PRECISE)
     pre_d = tot(al.PHYSICAL & al.PRECISE)
+    # THE SAME ARTICLES UNDER MESH LABELS, which is what separates the two
+    # factors below. Without it the page welds them: 3.3x is the frozen->census
+    # step, 1.9x is the net against the manuscript's KEYWORD figure, and MeSH
+    # labelling alone moves the ratio the other way.
+    b = tot(al.PHARMACOLOGICAL, "mesh_frozen") / max(
+        tot(al.PHYSICAL, "mesh_frozen"), 1)
+    # ALL THREE RESTRICTIONS the sibling publishes, not just the one that
+    # inverts. `PRECISE - PHYSICAL` is what `atlas_landscape.py` ITSELF uses
+    # and is the literal referent of "that script's own PRECISE set".
+    alt_n = tot(al.PRECISE - al.PHYSICAL)
+    rest = sorted(x for x in (al.PHARMACOLOGICAL - al.PRECISE)
+                  if _names_therapy((cen.get(x) or {}).get("top_descriptor")))
     return {"ratio": num / den if den else 0.0,
+            "ratio_mesh_frozen": b,
             "oversample": (cap_py / cap_ph) if cap_ph else 0.0,
-            "precise": (pre_n / pre_d) if pre_d else 0.0}
+            "precise": (pre_n / pre_d) if pre_d else 0.0,
+            "precise_alt": (alt_n / pre_d) if pre_d else 0.0,
+            "criterion_restored": ((pre_n + tot(rest)) / pre_d) if pre_d else 0.0}
+
+
+_THERAPY = __import__("re").compile(
+    r"inhibitor|therap|antibod|conjugat|vaccine|agents?\b|blockade", __import__("re").I)
+
+
+def _names_therapy(desc) -> bool:
+    return bool(desc and _THERAPY.search(desc))
 
 
 def main() -> int:
@@ -122,21 +145,25 @@ def main() -> int:
         _v = _volume(land)
         L += [
             f"**Volume.** Pharmacological to physical runs **{MANUSCRIPT_RATIO} : 1** by the",
-            f"manuscript's keyword method and **{_v['ratio']:.1f} : 1** on the census,",
-            f"because the corpus over-samples physical modalities {_v['oversample']:.1f}x --",
-            f"exactly what a corpus built from queries about them would do, so the",
-            f"claim survives and is understated by {_v['ratio']/MANUSCRIPT_RATIO:.1f}x on",
-            f"THIS comparison.", "",
-            # THE MEASUREMENT THAT CONTRADICTS IT, in the section whose job is
-            # to be as complete about failures as wins. `atlas-modality-ratio.md`
-            # names this page as one of four carrying the claim.
-            f"That comparison is between the curated classes as `atlas_landscape.py`",
-            f"defines them. Restricting BOTH classes symmetrically to that script's",
-            f"own `PRECISE` set gives **{_v['precise']:.2f} : 1**, BELOW the manuscript's",
-            f"{MANUSCRIPT_RATIO} : 1, which INVERTS the understatement. The direction of",
-            f"the correction is a choice about what the ratio is FOR and is not",
-            f"settled here -- see `atlas-modality-ratio.md`.", "",
-            "**Maturity.** \"Physical modalities remain comparatively preclinical\" does",
+            f"manuscript's keyword method and **{_v['ratio']:.1f} : 1** on the census.",
+            f"THOSE ARE NOT ON COMPARABLE LABELS, and an earlier version of this",
+            f"paragraph welded the two factors with a `because`. The same articles",
+            f"under MeSH labels give **{_v['ratio_mesh_frozen']:.1f} : 1**, so MeSH",
+            f"labelling alone moves the ratio by",
+            f"{_v['ratio_mesh_frozen']/MANUSCRIPT_RATIO:.2f}x; census selection then",
+            f"multiplies it by {_v['oversample']:.1f}x, the corpus's over-sampling of",
+            f"physical modalities. Net against the manuscript's keyword figure,",
+            f"{_v['ratio']/MANUSCRIPT_RATIO:.1f}x.", "",
+            f"**And whether that is an understatement depends on the restriction.**",
+            f"The sibling page publishes three, and says of them that neither is",
+            f"adopted: restricting BOTH classes to `PHARMACOLOGICAL & PRECISE` gives",
+            f"**{_v['precise']:.2f} : 1**; using `PRECISE - PHYSICAL`, which is what",
+            f"`atlas_landscape.py` itself uses, gives **{_v['precise_alt']:.2f} : 1**;",
+            f"restoring the mechanisms that satisfy PRECISE's own stated criterion",
+            f"gives **{_v['criterion_restored']:.2f} : 1**. Only the first two fall below",
+            f"the manuscript's {MANUSCRIPT_RATIO} : 1, so the inversion holds under two",
+            f"readings of three and an earlier version of this paragraph quoted only",
+            f"the one that inverts. See `atlas-modality-ratio.md`.", "",            "**Maturity.** \"Physical modalities remain comparatively preclinical\" does",
             "not hold as a class. HIFU is **7.10%** clinical against CAR-T's",
             "**6.64%**, both on precise descriptors, and HIFU and sonodynamic differ",
             "by 1.6x. The defensible claim is narrower: sonodynamic therapy",

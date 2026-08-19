@@ -34,7 +34,7 @@ Applying the ferroptosis bucket's body rule to the SAME vocabulary admits **37**
 
 **7 of them are in this page's own FERROPTOSIS column** (`distilled-hypotheses-final`, `key-findings`, `pathway-target-audit`, `principle-resistance-tradeoff`, `resistant-state-map`, `scientific-lead-handoff`, `timeline`), so under a mutually exclusive bucketing 37 cannot bound the therapy count. A further 29 are method analyses -- instrument work that cites a therapy as a worked example rather than studying one.
 
-So the body route does not measure 'other therapy' either. What it measures is how many analyses MENTION a therapy, which is a different question, and the honest reading of the table above is that the therapy figure is small and its exact value is not established by either rule. An earlier version published 'the true figure lies between 1 and 37', a range whose upper end is not a bound.
+So the body route does not measure 'other therapy' either. What it measures is how many analyses MENTION a therapy, which is a different question, and the honest reading of the table above is that the therapy figure is small and its exact value is not established by either rule. An earlier version published 'the true figure lies between 1 and 38', a range whose upper end is not a bound. (Those two numbers are quoted as a FACT ABOUT A PAST COMMIT and are deliberately not derived; the live figures are 1 and 37.)
 
 ## Why this is worth stating rather than hiding
 

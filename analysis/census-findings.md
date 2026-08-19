@@ -27,18 +27,26 @@ now measurable rather than assumed.
 ## 2. The manuscript understated its own headline, and over-broadened another
 
 **Volume.** Pharmacological to physical runs **9.1 : 1** by the
-manuscript's keyword method and **17.6 : 1** on the census,
-because the corpus over-samples physical modalities 3.3x --
-exactly what a corpus built from queries about them would do, so the
-claim survives and is understated by 1.9x on
-THIS comparison.
+manuscript's keyword method and **17.6 : 1** on the census.
+THOSE ARE NOT ON COMPARABLE LABELS, and an earlier version of this
+paragraph welded the two factors with a `because`. The same articles
+under MeSH labels give **5.3 : 1**, so MeSH
+labelling alone moves the ratio by
+0.58x; census selection then
+multiplies it by 3.3x, the corpus's over-sampling of
+physical modalities. Net against the manuscript's keyword figure,
+1.9x.
 
-That comparison is between the curated classes as `atlas_landscape.py`
-defines them. Restricting BOTH classes symmetrically to that script's
-own `PRECISE` set gives **6.43 : 1**, BELOW the manuscript's
-9.1 : 1, which INVERTS the understatement. The direction of
-the correction is a choice about what the ratio is FOR and is not
-settled here -- see `atlas-modality-ratio.md`.
+**And whether that is an understatement depends on the restriction.**
+The sibling page publishes three, and says of them that neither is
+adopted: restricting BOTH classes to `PHARMACOLOGICAL & PRECISE` gives
+**6.43 : 1**; using `PRECISE - PHYSICAL`, which is what
+`atlas_landscape.py` itself uses, gives **8.04 : 1**;
+restoring the mechanisms that satisfy PRECISE's own stated criterion
+gives **16.08 : 1**. Only the first two fall below
+the manuscript's 9.1 : 1, so the inversion holds under two
+readings of three and an earlier version of this paragraph quoted only
+the one that inverts. See `atlas-modality-ratio.md`.
 
 **Maturity.** "Physical modalities remain comparatively preclinical" does
 not hold as a class. HIFU is **7.10%** clinical against CAR-T's
