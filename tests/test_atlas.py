@@ -1449,11 +1449,19 @@ def test_pipeline_does_not_silently_rewrite_news_claim_statuses():
 # --- the manuscript's corpus statistics must match the frozen index --------
 
 def test_manuscript_corpus_statistics_match_the_frozen_index():
-    """The frozen index is immutable, so every headline count is checkable.
+    """The frozen index is immutable, so every count computed from it is checkable.
 
-    Checked all of them: 4,830 records, 803 journals, 22 cancer types,
-    2001-2026 and ~2,297 immunotherapy articles all match exactly. The
-    mechanism count did not -- the abstract said 19 where the index carries 23.
+    Originally this pinned the index AND cross-checked the manuscript's
+    headline counts against it, which is how the abstract was caught saying 19
+    mechanisms where the index carries 23.
+
+    THE MANUSCRIPT HALF IS NOW CONDITIONAL, because the manuscript has stopped
+    making claims about this index -- every headline it once drew from here now
+    comes from the census. Forcing those sentences to stay would be a guard
+    holding a document to a source it deliberately left. So the index
+    assertions stand unconditionally (the file is on disk and immutable, and a
+    change to it is worth failing on), while the manuscript cross-check fires
+    only where the manuscript still makes the claim.
     """
     import collections
     import json
@@ -1474,11 +1482,34 @@ def test_manuscript_corpus_statistics_match_the_frozen_index():
     assert mech["immunotherapy"] == 2297
 
     # the corrected claim, and the threshold that explains the old one
-    assert len(mech) == 23, f"index now carries {len(mech)} mechanisms; update the manuscript"
+    assert len(mech) == 23, f"index now carries {len(mech)} mechanisms"
     assert sum(1 for c in mech.values() if c >= 20) == 19
-    assert "23 mechanisms" in md
+    # Conditional: the manuscript may legitimately no longer quote this index.
+    # What it must NEVER do is quote the WRONG figure, which is the defect this
+    # guard was written for -- so the undocumented threshold count stays banned
+    # unconditionally while the correct one is only required if some corpus
+    # mechanism count is quoted at all.
     assert "19 mechanisms, 22 cancer types" not in md, \
         "the abstract has reverted to the undocumented threshold count"
+    # THE POSITIVE MANUSCRIPT CHECK IS RETIRED, and the two attempts that
+    # failed are worth recording because both failed in this repo's own
+    # recurring ways. Matching `\d+ mechanisms` anywhere fired on two CENSUS
+    # counts (16 profiled mechanisms, 9 MeSH-measurable) that have nothing to
+    # do with this file. Keying on the index's signature figures with `in`
+    # matched "803" as a SUBSTRING inside a larger number -- the substring trap
+    # that has already produced defects here twice.
+    #
+    # The deeper problem is that no number-matching rule separates the two
+    # cases. The manuscript still REFERS to the retrieved corpus, in sentences
+    # that retract what was computed over it, and a retraction naming a corpus
+    # is not a claim about its statistics. Distinguishing "reports 4,830
+    # records" from "an earlier version ran this over a 4,830-article corpus"
+    # needs to read the sentence, and a guard that guesses will fire on the
+    # retractions -- which would push a future editor to delete them.
+    #
+    # What survives is the half that has teeth without guessing: the index
+    # assertions above, which fail if the frozen file changes, and the ban
+    # below on the one figure known to be wrong.
 
 
 def test_the_thin_mechanisms_are_the_physical_modalities():
@@ -1529,10 +1560,27 @@ def test_landscape_capture_is_scope_invariant_and_reported():
 
 
 def test_manuscript_carries_the_census_recomputation():
-    """The manuscript is updated by the research, not frozen against it."""
+    """The manuscript is updated by the research, not frozen against it.
+
+    AND IT MUST CARRY THE WHOLE RESULT. 17.6:1 alone is the flattering half:
+    restricting both classes to descriptors naming a therapy rather than a
+    process gives 6.43:1 or 8.04:1, and restoring two mechanisms that satisfy
+    the restriction's own criterion gives 16.08:1 -- three figures that
+    STRADDLE the 9.1:1 an earlier keyword analysis reported, so under two
+    readings of three the census OVERSTATES rather than understates it.
+    Quoting only 17.6:1 turns a straddle into a confirmation, which is the
+    error this guard now blocks.
+    """
     md = (REPO_ROOT / "article" / "drafts" / "v1.md").read_text()
-    assert "17.6:1" in md and "atlas-landscape.md" in md, \
+    assert "17.6:1" in md, \
         "the census recomputation must reach the manuscript, not just the analysis"
+    for alt in ("6.43:1", "8.04:1", "16.08:1"):
+        assert alt in md, (
+            f"the manuscript quotes 17.6:1 without {alt}; the restricted "
+            "comparators straddle the earlier figure and reporting only the "
+            "largest reads as a confirmation the arithmetic does not support")
+    assert "atlas-modality-ratio.md" in md or "atlas-landscape.md" in md, \
+        "the manuscript cites no source for the recomputation"
 
 
 def test_landscape_flags_over_broad_descriptors():

@@ -145,7 +145,7 @@ These are computational predictions with documented assumptions and caveats, not
 | `corpus/` | Frozen full text by PubMed ID + INDEX.jsonl; `corpus/atlas/` holds the census (bulk gitignored, committed artifacts in `analysis/`); `corpus/living/` documents the frozen-versus-living split (the monthly deltas themselves are uploaded as workflow artifacts, never committed) |
 | `tags/` | Precomputed tag indexes (mechanism, cancer type, tissue, evidence level, diagnostic-therapy) |
 | `news/` | News source scaffolding: fetched articles, extracted claims, verification results, credibility scores |
-| `tests/` | 1052 Python tests (pipeline smoke + figure traceability + calibration-status ref guard + manuscript-inventory drift guard + depth-kill physics-constant guard + flagship-figure data guard + quantitative-figure drift guards (Figs 21/22/23) + invariant/integration + calibrate-extractor + MeSH evidence-fallback + gold-set precision-floor regression (#346) + Bliss/sim-tme/penetration prior-predictive intervals + ABC posterior (#332) + non-circular mechanism-recall (#412) + CTRPv2 calibration target + in-vitro kill-switch fit (#330) + System Xc-/erastin fit (#502) + joint multi-inducer posterior (#500) + spheroid structure validation (#333) + embedding evidence leg (#411) + RD-vs-BioFVM cross-check (#408) + dashboard data layer (#354) + tumor-PK measured-data anchor (#334) + Krogh penetration validation (#335) + spheroid size-aware zone thresholds (#333) + spheroid kill-vs-size direction (#333) + gene-symbol ambiguity/FSP1 sense disambiguation (#ATLAS-AMBIG) + rare-event Poisson intervals + tail-resolution classification + ferroptosis-python bindings) |
+| `tests/` | 1057 Python tests (pipeline smoke + figure traceability + calibration-status ref guard + manuscript-inventory drift guard + depth-kill physics-constant guard + flagship-figure data guard + quantitative-figure drift guards (Figs 21/22/23) + invariant/integration + calibrate-extractor + MeSH evidence-fallback + gold-set precision-floor regression (#346) + Bliss/sim-tme/penetration prior-predictive intervals + ABC posterior (#332) + non-circular mechanism-recall (#412) + CTRPv2 calibration target + in-vitro kill-switch fit (#330) + System Xc-/erastin fit (#502) + joint multi-inducer posterior (#500) + spheroid structure validation (#333) + embedding evidence leg (#411) + RD-vs-BioFVM cross-check (#408) + dashboard data layer (#354) + tumor-PK measured-data anchor (#334) + Krogh penetration validation (#335) + spheroid size-aware zone thresholds (#333) + spheroid kill-vs-size direction (#333) + gene-symbol ambiguity/FSP1 sense disambiguation (#ATLAS-AMBIG) + rare-event Poisson intervals + tail-resolution classification + ferroptosis-python bindings) |
 
 Start with the files in `analysis/` if you want to see what we've concluded so far—and where we're still uncertain.
 
@@ -192,8 +192,14 @@ pip install -r requirements-dashboard.txt   # optional UI deps (streamlit, panda
 streamlit run scripts/dashboard.py
 ```
 
-The Corpus tab (filters, mechanism/cancer/evidence views, the mechanism x cancer
-matrix) needs only the committed `corpus/INDEX.jsonl`. The Simulation-sweep tab runs
+The Census tab reads the committed census aggregates under `analysis/` (~62 KB
+of JSON): mechanism volumes, clinical-trial shares from NLM publication types,
+anatomical concentration, convergence partners and growth. Record-level browsing
+of the census is deliberately not offered — it is 5,187,265 records and
+gitignored, so a panel that appeared to browse it would be browsing something
+else. The Corpus tab (filters, mechanism/cancer/evidence views, the mechanism x
+cancer matrix) needs only the committed `corpus/INDEX.jsonl` and browses the
+4,830-record retrieved archive retained as a method-comparison arm. The Simulation-sweep tab runs
 a live `ferroptosis_core.sim_batch` sweep when the bindings above are built, and
 otherwise degrades to the committed prior-predictive intervals. Self-hosting: behind
 auth, `streamlit run scripts/dashboard.py --server.address 0.0.0.0 --server.port 8501`.
@@ -201,7 +207,7 @@ auth, `streamlit run scripts/dashboard.py --server.address 0.0.0.0 --server.port
 **Live demo: https://elares.github.io/cancer_research/** — the Corpus tab runs
 entirely in your browser via [stlite](https://github.com/whitphx/stlite) (Streamlit
 compiled to WebAssembly/Pyodide): it executes `scripts/dashboard.py` on the committed
-`corpus/INDEX.jsonl` client-side, with **no server and no install** (first load ~30-60 s
+census aggregates and `corpus/INDEX.jsonl` client-side, with **no server and no install** (first load ~30-60 s
 while Pyodide + pandas + matplotlib download, then cached). The Simulation-sweep tab
 shows a read-only notice pointing to the committed prior-predictive intervals (the
 compiled `ferroptosis_core` extension is not available under Pyodide). The page is

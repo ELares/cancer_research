@@ -234,14 +234,20 @@ figures:
     note: Requires graphviz (dot) binary installed.
 
   - manuscript_figure: 20
-    filename: fig23_prisma_flow
+    filename: fig23_census_flow
     generator:
       script: scripts/generate_conceptual_diagrams.py
-      function: fig23_prisma_flow
+      function: fig23_census_flow
     inputs: []
     type: conceptual
     status: manuscript
-    note: Requires graphviz (dot) binary installed.
+    note: >-
+      Replaces fig23_prisma_flow. A PRISMA flow diagrams a systematic review's
+      screening decisions and none were ever made, so the shape implied a
+      protocol that did not exist. Redrawn in matplotlib rather than graphviz:
+      the old figure needed a `dot` binary that is not a Python dependency and
+      is absent from this environment and from CI, so nobody could regenerate
+      it to check it.
 
   - manuscript_figure: 21
     filename: fig24_hypoxia_killcurve
