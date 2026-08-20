@@ -1,0 +1,171 @@
+{
+ "census_sites": [
+  "breast",
+  "lung",
+  "colorectal",
+  "skin/melanoma",
+  "liver",
+  "brain/CNS",
+  "prostate",
+  "cervix/uterus",
+  "head and neck",
+  "leukaemia",
+  "stomach",
+  "lymphoma",
+  "pancreas",
+  "ovary",
+  "kidney",
+  "bladder",
+  "oesophagus",
+  "thyroid"
+ ],
+ "candidates": [
+  {
+   "source": "IARC Global Cancer Observatory (GLOBOCAN)",
+   "why": "the standard global site-resolved incidence and mortality series",
+   "urls": [
+    "https://gco.iarc.fr/gco-api/v1/cancers",
+    "https://gco.iarc.who.int/gco-api/analysis/today/data-population/900/",
+    "https://gco.iarc.fr/today/api/data/populations/900/",
+    "https://gco.iarc.fr/overtime/api/data/"
+   ],
+   "probes": [
+    {
+     "url": "https://gco.iarc.fr/gco-api/v1/cancers",
+     "status": 200,
+     "kind": "html-or-other",
+     "usable": false
+    },
+    {
+     "url": "https://gco.iarc.who.int/gco-api/analysis/today/data-population/900/",
+     "status": 200,
+     "kind": "html-or-other",
+     "usable": false
+    },
+    {
+     "url": "https://gco.iarc.fr/today/api/data/populations/900/",
+     "status": 200,
+     "kind": "html-or-other",
+     "usable": false
+    },
+    {
+     "url": "https://gco.iarc.fr/overtime/api/data/",
+     "status": 200,
+     "kind": "html-or-other",
+     "usable": false
+    }
+   ],
+   "any_json": false
+  },
+  {
+   "source": "WHO Global Health Observatory (OData)",
+   "why": "login-free and well documented; already used for other WHO series",
+   "urls": [
+    "https://ghoapi.azureedge.net/api/Indicator?$select=IndicatorCode,IndicatorName"
+   ],
+   "probes": [
+    {
+     "url": "https://ghoapi.azureedge.net/api/Indicator?$select=IndicatorCode,IndicatorName",
+     "status": 200,
+     "kind": "json",
+     "usable": true
+    }
+   ],
+   "any_json": true
+  }
+ ],
+ "gho_site_indicators": {
+  "breast": {
+   "code": "SA_0000001438",
+   "rows": 765,
+   "years": [
+    2002,
+    2004
+   ],
+   "spatial_types": [
+    "COUNTRY"
+   ],
+   "has_global_aggregate": false
+  },
+  "colorectal": {
+   "code": "SA_0000001439",
+   "rows": 762,
+   "years": [
+    2002,
+    2004
+   ],
+   "spatial_types": [
+    "COUNTRY"
+   ],
+   "has_global_aggregate": false
+  },
+  "liver": {
+   "code": "SA_0000001445",
+   "rows": 762,
+   "years": [
+    2002,
+    2004
+   ],
+   "spatial_types": [
+    "COUNTRY"
+   ],
+   "has_global_aggregate": false
+  },
+  "head and neck": {
+   "code": "SA_0000001448",
+   "rows": 763,
+   "years": [
+    2002,
+    2004
+   ],
+   "spatial_types": [
+    "COUNTRY"
+   ],
+   "has_global_aggregate": false
+  },
+  "oesophagus": {
+   "code": "SA_0000001449",
+   "rows": 758,
+   "years": [
+    2002,
+    2004
+   ],
+   "spatial_types": [
+    "COUNTRY"
+   ],
+   "has_global_aggregate": false
+  }
+ },
+ "gho_sites_covered": [
+  "breast",
+  "colorectal",
+  "head and neck",
+  "liver",
+  "oesophagus"
+ ],
+ "gho_sites_missing": [
+  "bladder",
+  "brain/CNS",
+  "cervix/uterus",
+  "kidney",
+  "leukaemia",
+  "lung",
+  "lymphoma",
+  "ovary",
+  "pancreas",
+  "prostate",
+  "skin/melanoma",
+  "stomach",
+  "thyroid"
+ ],
+ "gho_latest_year": 2004,
+ "gho_has_global": false,
+ "globocan_reachable": false,
+ "requirements": {
+  "site_resolved_at_census_granularity": false,
+  "global_not_national": false,
+  "recent_enough": false,
+  "reachable_without_registration": true
+ },
+ "feasible": false
+}
