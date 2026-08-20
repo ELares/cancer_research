@@ -109,6 +109,18 @@ def test_all_three_restrictions_are_reported_not_only_the_one_that_inverts():
         f"{len(below)} of {len(shown)} restrictions fall below the "
         f"manuscript's {m.MANUSCRIPT_RATIO}:1 and the page does not say so")
     assert "quoted only" in md and "the one that inverts" in md
+    # THE HEADING AND THE BODY MUST SPEND THE SAME COUNT THE SAME WAY. They
+    # once read "the headline HOLDS under two of three" above a body reading
+    # "the INVERSION holds under two readings of three" -- one number, two
+    # opposite claims. Nothing pinned it, and flipping the heading's count
+    # still passed every guard.
+    w = {1: "one", 2: "two", 3: "all three"}[len(below)]
+    assert f"INVERTED under {w} of three restrictions" in md, (
+        f"{len(below)} of three restrictions fall below the manuscript's "
+        f"figure, and the section heading does not say so in those terms")
+    assert "headline holds under" not in md, (
+        "the heading spends the below-9.1 count as though it supported the "
+        "manuscript, which is the opposite of what the body says")
 
 
 def test_the_two_factors_are_not_welded_into_one_derivation():
