@@ -24,19 +24,36 @@ one.
 now measurable rather than assumed.
 *Source:* `atlas-landscape.md`
 
-## 2. The manuscript understated its own headline, and over-broadened another
+## 2. The manuscript's volume headline is INVERTED under two of three restrictions, and its maturity claim was over-broadened
 
 **Volume.** Pharmacological to physical runs **9.1 : 1** by the
-manuscript's keyword method and **17.6 : 1** on the census, because the
-corpus over-samples physical modalities 3.3x -- exactly what a corpus
-built from queries about them would do. The claim survives and was
-understated by about half.
+manuscript's keyword method and **17.6 : 1** on the census.
+THOSE ARE NOT ON COMPARABLE LABELS, and an earlier version of this
+paragraph welded the two factors with a `because`. The same articles
+under MeSH labels give **5.3 : 1**, so MeSH
+labelling alone moves the ratio by
+0.58x; census selection then
+multiplies it by 3.3x, the corpus's over-sampling of
+physical modalities. Net against the manuscript's keyword figure,
+1.9x.
+
+**And whether that is an understatement depends on the restriction.**
+The sibling page publishes three, and says of them that neither is
+adopted: restricting BOTH classes to `PHARMACOLOGICAL & PRECISE` gives
+**6.43 : 1**; using `PRECISE - PHYSICAL`, which is what
+`atlas_landscape.py` itself uses, gives **8.04 : 1**;
+restoring the mechanisms that satisfy PRECISE's own stated criterion
+gives **16.08 : 1**. Only the first two fall below
+the manuscript's 9.1 : 1, so the inversion holds under two
+readings of three and an earlier version of this paragraph quoted only
+the one that inverts. See `atlas-modality-ratio.md`.
 
 **Maturity.** "Physical modalities remain comparatively preclinical" does
-not hold as a class. HIFU is **7.10%** clinical against CAR-T's
-**6.64%**, both on precise descriptors, and HIFU and sonodynamic differ
-by 1.6x. The defensible claim is narrower: sonodynamic therapy
-specifically is early -- which is the mechanism this work rests on.
+not hold as a class. HIFU is **7.10%** clinical against
+CAR-T's **6.64%**, both on precise descriptors, and HIFU
+and sonodynamic differ by 1.6x. The defensible
+claim is narrower: sonodynamic therapy specifically is early
+(**4.54%**) -- which is the mechanism this work rests on.
 
 *What changed:* one claim strengthened, one narrowed. Both are in the
 manuscript.
@@ -120,7 +137,7 @@ The candidate SET is genuinely informative, so that half stands. The obvious sec
 **Replication looked like it was collapsing, and was not.** Scoring cohorts on whether they were EVER replicated gives 60.3% for 1950 to 14.5% for 2022; that is the observation window shrinking, not science changing, since the older cohort has had decades to acquire a second paper and the newer one had 5 years. On an equal 5-year window from each pair's own first assertion the decline is modest, and the recent end is an upper bound because of MeSH indexing lag.
 *Source:* `atlas-replication.md`
 
-**Most of what the census cannot corroborate is about what has been STUDIED, not about what is true.** Of the 20 simulation-module claims, 11 are corroborated by at least one asserting article and 9 by none. Read flat, that looks like 9 unsupported claims. It is not: a pair can only be asserted if BOTH its entities are written about, and the weaker entity's partner count across these claims runs from 6 to 2,792. Every claim that HAS support has a weaker entity of at least 112 partners, and 7 of the 9 zeros fall below that (Spearman rho = 0.86, and the association survives dropping every GPX4 pair).
+**Most of what the census cannot corroborate is about what has been STUDIED, not about what is true.** Of the 20 simulation-module claims, 11 are corroborated by at least one asserting article and 9 by none. Read flat, that looks like 9 unsupported claims. It is not: a pair can only be asserted if BOTH its entities are written about, and the weaker entity's partner count across these claims runs from 9 to 2,876. Every claim that HAS support has a weaker entity of at least 112 partners, and 7 of the 9 zeros fall below that (Spearman rho = 0.86, and the association survives dropping every GPX4 pair).
 **But which zeros are 'genuine' cannot be identified, and the source document deliberately names none.** The line is a sample minimum set by a one-article row; 45% of all asserted pairs in the graph sit below it, so it is not a detectability limit; and running the same procedure on the pair-level co-mention column inverts the correlation and returns a disjoint pair of exceptions. The finding is that a zero is a poor guide to a claim's truth -- not that any particular zero is interesting.
 *Source:* `atlas-module-support.md`
 

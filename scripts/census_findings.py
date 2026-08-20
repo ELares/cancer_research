@@ -34,6 +34,69 @@ def load(name):
         return None
 
 
+MANUSCRIPT_RATIO = 9.1
+
+
+def _volume(land) -> dict:
+    """The volume claim's figures, DERIVED from the landscape artifact.
+
+    They were literals. Setting a source field to nonsense left the page
+    printing the old number, and rewriting 17.6 to 1.6 in the generator passed
+    every guard -- because nothing here read anything.
+    """
+    import importlib.util
+    from pathlib import Path as _P
+    spec = importlib.util.spec_from_file_location(
+        "al", _P(__file__).resolve().parent / "atlas_landscape.py")
+    al = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(al)
+    rows = land if isinstance(land, list) else land.get("rows") or []
+    cen = {r["mechanism"].lower(): r for r in rows if r.get("mechanism")}
+
+    def tot(keys, field="mesh_census"):
+        return sum((cen.get(k) or {}).get(field) or 0 for k in keys)
+
+    num, den = tot(al.PHARMACOLOGICAL), tot(al.PHYSICAL)
+    # CAPTURE is the frozen corpus's MeSH-labelled share of the census, which
+    # is `mesh_frozen`. `keyword_frozen` is the manuscript's own tagger and
+    # gives 1.9x, not the 3.3x the landscape page derives.
+    cap_ph = tot(al.PHARMACOLOGICAL, "mesh_frozen") / max(num, 1)
+    cap_py = tot(al.PHYSICAL, "mesh_frozen") / max(den, 1)
+    # THE SAME ARTICLES UNDER MESH LABELS. Without it the page welds two
+    # factors: 3.3x is the frozen->census step, the net against the
+    # manuscript's KEYWORD figure is different, and MeSH labelling alone
+    # moves the ratio the other way.
+    b = tot(al.PHARMACOLOGICAL, "mesh_frozen") / max(
+        tot(al.PHYSICAL, "mesh_frozen"), 1)
+    # CALL THE SIBLING, DO NOT REIMPLEMENT IT. An earlier version rewrote
+    # `atlas_modality_ratio.restrict` here and got a LOOKALIKE: it restored
+    # only the numerator, and its therapy regex dropped the three alternatives
+    # that exist to catch PHYSICAL descriptors (`hifu`'s own descriptor is
+    # "High-Intensity Focused Ultrasound Ablation"). Both printed 16.08 only
+    # because the one dropped physical mechanism happens not to match either
+    # regex -- the sibling's own docstring names that trap. A hand-written copy
+    # beside the real one is how this repo has produced a discrepancy before.
+    spec2 = importlib.util.spec_from_file_location(
+        "mr", _P(__file__).resolve().parent / "atlas_modality_ratio.py")
+    mr = importlib.util.module_from_spec(spec2)
+    spec2.loader.exec_module(mr)
+    cen_counts = {k: (v.get("mesh_census") or 0) for k, v in cen.items()}
+    top = {k: v.get("top_descriptor") for k, v in cen.items()}
+    r = mr.restrict(cen_counts, top, al.PHARMACOLOGICAL, al.PHYSICAL, al.PRECISE)
+    return {"ratio": num / den if den else 0.0,
+            "ratio_mesh_frozen": b,
+            "oversample": (cap_py / cap_ph) if cap_ph else 0.0,
+            "precise": r["precise_ratio"],
+            "precise_alt": r["landscape_own_ratio"],
+            "criterion_restored": r["criterion_restored_ratio"],
+            # the maturity figures, derived for the same reason as the volume
+            # ones: a literal cannot be wrong about which field it came from
+            "hifu": (cen.get("hifu") or {}).get("clinical_share") or 0.0,
+            "cart": (cen.get("car-t") or {}).get("clinical_share") or 0.0,
+            "sono": (cen.get("sonodynamic") or {}).get("clinical_share") or 0.0}
+
+
+
 def main() -> int:
     land = load("atlas-landscape.json")
     thesis = load("atlas-thesis-position.json")
@@ -82,19 +145,48 @@ def main() -> int:
             "now measurable rather than assumed.",
             "*Source:* `atlas-landscape.md`", ""]
 
-    L += ["## 2. The manuscript understated its own headline, and over-broadened another", ""]
+    _v = _volume(land) if land else None
+    if _v:
+        _n_below = sum(1 for x in (_v["precise"], _v["precise_alt"],
+                                   _v["criterion_restored"])
+                       if x < MANUSCRIPT_RATIO)
+        _w = {0: "no", 1: "one", 2: "two", 3: "all three"}[_n_below]
+        # THE COUNT IS OF RESTRICTIONS THAT FALL BELOW 9.1:1, i.e. that INVERT
+        # the understatement. An earlier heading spent it as "holds under two"
+        # while the body spent the same number as "the inversion holds under
+        # two" -- the page asserted both from one figure.
+        L += [f"## 2. The manuscript's volume headline is INVERTED under {_w} "
+              f"of three restrictions, and its maturity claim was "
+              f"over-broadened", ""]
+    else:
+        L += ["## 2. The manuscript's volume and maturity claims", ""]
     if land:
         L += [
-            "**Volume.** Pharmacological to physical runs **9.1 : 1** by the",
-            "manuscript's keyword method and **17.6 : 1** on the census, because the",
-            "corpus over-samples physical modalities 3.3x -- exactly what a corpus",
-            "built from queries about them would do. The claim survives and was",
-            "understated by about half.", "",
-            "**Maturity.** \"Physical modalities remain comparatively preclinical\" does",
-            "not hold as a class. HIFU is **7.10%** clinical against CAR-T's",
-            "**6.64%**, both on precise descriptors, and HIFU and sonodynamic differ",
-            "by 1.6x. The defensible claim is narrower: sonodynamic therapy",
-            "specifically is early -- which is the mechanism this work rests on.", "",
+            f"**Volume.** Pharmacological to physical runs **{MANUSCRIPT_RATIO} : 1** by the",
+            f"manuscript's keyword method and **{_v['ratio']:.1f} : 1** on the census.",
+            f"THOSE ARE NOT ON COMPARABLE LABELS, and an earlier version of this",
+            f"paragraph welded the two factors with a `because`. The same articles",
+            f"under MeSH labels give **{_v['ratio_mesh_frozen']:.1f} : 1**, so MeSH",
+            f"labelling alone moves the ratio by",
+            f"{_v['ratio_mesh_frozen']/MANUSCRIPT_RATIO:.2f}x; census selection then",
+            f"multiplies it by {_v['oversample']:.1f}x, the corpus's over-sampling of",
+            f"physical modalities. Net against the manuscript's keyword figure,",
+            f"{_v['ratio']/MANUSCRIPT_RATIO:.1f}x.", "",
+            f"**And whether that is an understatement depends on the restriction.**",
+            f"The sibling page publishes three, and says of them that neither is",
+            f"adopted: restricting BOTH classes to `PHARMACOLOGICAL & PRECISE` gives",
+            f"**{_v['precise']:.2f} : 1**; using `PRECISE - PHYSICAL`, which is what",
+            f"`atlas_landscape.py` itself uses, gives **{_v['precise_alt']:.2f} : 1**;",
+            f"restoring the mechanisms that satisfy PRECISE's own stated criterion",
+            f"gives **{_v['criterion_restored']:.2f} : 1**. Only the first two fall below",
+            f"the manuscript's {MANUSCRIPT_RATIO} : 1, so the inversion holds under two",
+            f"readings of three and an earlier version of this paragraph quoted only",
+            f"the one that inverts. See `atlas-modality-ratio.md`.", "",            f"**Maturity.** \"Physical modalities remain comparatively preclinical\" does",
+            f"not hold as a class. HIFU is **{100*_v['hifu']:.2f}%** clinical against",
+            f"CAR-T's **{100*_v['cart']:.2f}%**, both on precise descriptors, and HIFU",
+            f"and sonodynamic differ by {_v['hifu']/_v['sono']:.1f}x. The defensible",
+            f"claim is narrower: sonodynamic therapy specifically is early",
+            f"(**{100*_v['sono']:.2f}%**) -- which is the mechanism this work rests on.", "",
             "*What changed:* one claim strengthened, one narrowed. Both are in the",
             "manuscript.", "*Source:* `atlas-landscape.md`", ""]
 
@@ -254,7 +346,8 @@ def main() -> int:
             f"are corroborated by at least one asserting article and {n_zero} by none. "
             f"Read flat, that looks like {n_zero} unsupported claims. It is not: a pair "
             f"can only be asserted if BOTH its entities are written about, and the "
-            f"weaker entity's partner count across these claims runs from 6 to 2,792. "
+            f"weaker entity's partner count across these claims runs from "
+            f"{modsup['weaker_min']:,} to {modsup['weaker_max']:,}. "
             f"Every claim that HAS support has a weaker entity of at least "
             f"{modsup['exposure_floor']} partners, and {n_exp} of the {n_zero} zeros "
             f"fall below that (Spearman rho = "

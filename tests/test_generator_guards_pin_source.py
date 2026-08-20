@@ -53,6 +53,10 @@ TESTS = REPO_ROOT / "tests"
 # The advisory sweep over everything else is `scripts/audit_generator_guards.py`.
 # A new analysis should join this list, not the advisory one.
 IN_SCOPE = {
+    # the page that ASSEMBLES the campaign's conclusions, and therefore has
+    # the largest blast radius: 15 of 16 planted mutations survived it,
+    # including deleting a whole section, because every figure was a literal
+    "test_census_findings.py",
     "test_taxonomy_reach.py",
     "test_scope_audit.py",
     "test_ingest_sensitivity.py",

@@ -361,8 +361,23 @@ def render(d: dict) -> str:
               f"which is a different question, and the honest reading of the "
               f"table above is that the therapy figure is small and its exact "
               f"value is not established by either rule. An earlier version "
-              f"published 'the true figure lies between {n_ther} and "
-              f"{len(body_t)}', a range whose upper end is not a bound.", ""]
+              # A QUOTATION FROM A PAST COMMIT, so it is a literal. Deriving
+              # it from the CURRENT count rewrote history. An earlier note
+              # here also got the history wrong twice over: the first
+              # published range really did say 37, and the count moved
+              # because THIS project's own census-findings page was
+              # rewritten, not an unrelated one. Measured across commits the
+              # body-route figure has read 37, then 38, then 37.
+              f"published 'the true figure lies between 1 and 37', a range "
+              f"whose upper end is not a bound. That figure is quoted as a "
+              f"fact about a past commit and is deliberately NOT derived -- "
+              f"it has read 37, 38 and 37 across commits, moving TWICE on "
+              f"this script's 40-line head window and for opposite reasons -- "
+              f"once when a sibling page's head grew INTO the window past the "
+              f"three-hit threshold, once when this page's own therapy "
+              f"mention was pushed OUT of it -- rather than when any "
+              f"subject changed. The live "
+              f"figures are {n_ther} and {len(body_t)}.", ""]
 
     L += ["## Why this is worth stating rather than hiding", ""]
     L += ["A narrow thesis on a broad corpus is how most good science works, and "
