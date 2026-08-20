@@ -117,3 +117,44 @@ def test_the_undetermined_class_is_drawn_not_dropped():
     m = re.search(r'order = \[([^\]]+)\]', src)
     assert m and "undetermined" in m.group(1), (
         "fig9c no longer plots the undetermined class")
+
+
+# --- the generated LaTeX must reference files that exist -------------------
+
+def test_every_includegraphics_in_the_tex_resolves():
+    """The check no other guard makes.
+
+    FIGURES.yaml is checked against the figures directory, and the LaTeX figure
+    map is checked against FIGURES.yaml, but nothing checked the GENERATED
+    v1.tex against the filesystem. A stale .tex -- regenerated before a figure
+    was renamed, or not regenerated at all -- produces a document that fails at
+    build time with a missing-file error, and there is no LaTeX toolchain here
+    to discover that.
+    """
+    import re
+
+    tex_path = REPO / "article/drafts/v1.tex"
+    tex = tex_path.read_text()
+    paths = re.findall(r"\\includegraphics\[[^\]]*\]\{([^}]+)\}", tex)
+    assert paths, "v1.tex contains no figures, which means it did not generate"
+    missing = [p for p in paths
+               if not (tex_path.parent / p).resolve().exists()]
+    assert not missing, (
+        f"v1.tex references figures that do not exist: {missing}. Regenerate "
+        "with scripts/generate_latex.py, or the build fails on a missing file.")
+
+
+def test_the_tex_is_not_stale_against_the_figure_map():
+    """A .tex generated before a figure was repointed still compiles -- against
+    the OLD image. That is the caption/asset disagreement at file level, and it
+    is invisible to a build that succeeds."""
+    import re
+
+    tex = (REPO / "article/drafts/v1.tex").read_text()
+    for num, name in CENSUS_FIGURES.items():
+        assert f"{name}.pdf" in tex, (
+            f"v1.tex does not include {name}.pdf, so it predates figure {num} "
+            "being repointed; run scripts/generate_latex.py")
+    for old in SUPERSEDED:
+        assert f"{old}.pdf" not in tex, (
+            f"v1.tex still includes the superseded {old}.pdf")
