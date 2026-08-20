@@ -88,6 +88,12 @@ REGISTRY = {
         "can supply neither axis. Every record it holds would land in the "
         "unassigned bucket and depress the assignability rate without "
         "carrying any information about site."),
+    "census_mechanism_profile.py": (
+        {"records"},
+        "Joins mechanism descriptors, C04 site descriptors and NLM publication "
+        "types, all three of which only the indexed stream carries. Adding "
+        "records_unindexed would contribute records to no mechanism, no site "
+        "and no trial column while inflating nothing but the pass count."),
     "census_mechanism_growth.py": (
         {"records"},
         "Mechanism labels are MeSH descriptors, so the numerator can only come "

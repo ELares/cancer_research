@@ -77,7 +77,7 @@ is shown for completeness and is expected near 100% by construction.
 | Mechanism | Reason | N indep | N leaky | leaky recall |
 |---|---|---:|---:|---:|
 | crispr | independent-descriptor pool n=0 < N_MIN=30 (all discriminative descriptors are keyword-tautological) | 0 | 168 | 95.2% |
-| frequency-therapy | independent-descriptor pool n=0 < N_MIN=30 (all discriminative descriptors are keyword-tautological) | 0 | 19 | 89.5% |
+| frequency-therapy | independent-descriptor pool n=0 < N_MIN=30 (all discriminative descriptors are keyword-tautological) | 0 | 0 | n/a |
 | hifu | independent-descriptor pool n=0 < N_MIN=30 (all discriminative descriptors are keyword-tautological) | 0 | 47 | 80.9% |
 | microbiome | independent-descriptor pool n=0 < N_MIN=30 (all discriminative descriptors are keyword-tautological) | 0 | 47 | 85.1% |
 | mrna-vaccine | independent-descriptor pool n=0 < N_MIN=30 (all discriminative descriptors are keyword-tautological) | 0 | 126 | 44.4% |
@@ -94,7 +94,7 @@ limitation of the MeSH reference, not measured tagger misses.
 | Mechanism | Reason |
 |---|---|
 | bioelectric | Only cell-physiology descriptors (Membrane Potentials / Ion Channels), not the cancer-therapy thesis; pool thin and confounded. |
-| cold-atmospheric-plasma | No descriptor ('Plasma Gases' n~2); ~100% of its tagger-positives have empty MeSH. |
+| cold-atmospheric-plasma | 'Plasma Gases' (D058626) EXISTS and carries 474 census records with 9 ferroptosis intersections, so the earlier 'no descriptor (n~2)' note here was wrong -- see analysis/atlas-thesis-rank.md. It is still not used for recall: D058626 sits under Inorganic Chemicals > Gases as a SUBSTANCE, its scope note spans surface modification, decontamination, dentistry and argon plasma coagulation, and ~23% of its records are not cold atmospheric plasma. Unmeasurable here for BREADTH, which is a different reason from absence. |
 | cuproptosis | No cuproptosis MeSH term (only 'Copper', the ion, n~6); 0 frozen-index tags. Scaffold. |
 | disulfidptosis | Descriptor exists but n=1; 0 frozen-index tags. Scaffold. |
 | electrolysis | Bucket-confounded: ~18/19 of its MeSH-pool carry 'Electrochemotherapy', which the tagger buckets as electrochemical-therapy (a taxonomy-boundary artifact, not a recall miss). |

@@ -1,0 +1,2252 @@
+{
+ "census": 4403994,
+ "site_totals": {
+  "cervix/uterus": 159782,
+  "head and neck": 380530,
+  "thyroid": 67705,
+  "skin/melanoma": 228568,
+  "lung": 304402,
+  "breast": 378191,
+  "lymphoma": 196557,
+  "brain/CNS": 257914,
+  "liver": 212500,
+  "leukaemia": 266602,
+  "prostate": 162723,
+  "kidney": 91118,
+  "colorectal": 262866,
+  "pancreas": 101620,
+  "stomach": 120883,
+  "bladder": 68398,
+  "ovary": 100406,
+  "oesophagus": 65076
+ },
+ "count": {
+  "metabolic-targeting": 8809,
+  "epigenetic": 41278,
+  "sonodynamic": 2513,
+  "synthetic-lethality": 5437,
+  "car-t": 15358,
+  "immunotherapy": 31890,
+  "antibody-drug-conjugate": 6019,
+  "bispecific-antibody": 3462,
+  "electrochemical-therapy": 2515,
+  "phagocytosis-checkpoint": 918,
+  "oncolytic-virus": 5006,
+  "nanoparticle": 36788,
+  "hifu": 1352,
+  "crispr": 3674,
+  "microbiome": 380,
+  "mrna-vaccine": 301
+ },
+ "trials": {
+  "epigenetic": 1307,
+  "metabolic-targeting": 45,
+  "car-t": 1020,
+  "sonodynamic": 114,
+  "bispecific-antibody": 326,
+  "antibody-drug-conjugate": 580,
+  "electrochemical-therapy": 142,
+  "immunotherapy": 1430,
+  "oncolytic-virus": 201,
+  "nanoparticle": 182,
+  "hifu": 96,
+  "synthetic-lethality": 342,
+  "microbiome": 12,
+  "phagocytosis-checkpoint": 13,
+  "crispr": 6,
+  "mrna-vaccine": 2
+ },
+ "by_year": {
+  "metabolic-targeting": {
+   "1946": 1,
+   "1948": 7,
+   "1949": 3,
+   "1950": 6,
+   "1951": 9,
+   "1952": 5,
+   "1953": 4,
+   "1954": 6,
+   "1955": 4,
+   "1956": 12,
+   "1957": 13,
+   "1958": 19,
+   "1959": 15,
+   "1960": 20,
+   "1961": 21,
+   "1962": 20,
+   "1963": 24,
+   "1964": 32,
+   "1965": 58,
+   "1966": 48,
+   "1967": 51,
+   "1968": 62,
+   "1969": 51,
+   "1970": 58,
+   "1971": 40,
+   "1972": 52,
+   "1973": 30,
+   "1974": 36,
+   "1975": 26,
+   "1976": 43,
+   "1977": 37,
+   "1978": 30,
+   "1979": 37,
+   "1980": 23,
+   "1981": 26,
+   "1982": 23,
+   "1983": 31,
+   "1984": 23,
+   "1985": 24,
+   "1986": 28,
+   "1987": 23,
+   "1988": 24,
+   "1989": 24,
+   "1990": 27,
+   "1991": 18,
+   "1992": 25,
+   "1993": 20,
+   "1994": 12,
+   "1995": 17,
+   "1996": 21,
+   "1997": 24,
+   "1998": 21,
+   "1999": 13,
+   "2000": 18,
+   "2001": 15,
+   "2002": 27,
+   "2003": 27,
+   "2004": 31,
+   "2005": 35,
+   "2006": 52,
+   "2007": 70,
+   "2008": 79,
+   "2009": 86,
+   "2010": 135,
+   "2011": 149,
+   "2012": 210,
+   "2013": 270,
+   "2014": 312,
+   "2015": 377,
+   "2016": 392,
+   "2017": 399,
+   "2018": 437,
+   "2019": 518,
+   "2020": 607,
+   "2021": 670,
+   "2022": 540,
+   "2023": 438,
+   "2024": 682,
+   "2025": 816,
+   "2026": 90
+  },
+  "epigenetic": {
+   "1964": 2,
+   "1965": 1,
+   "1972": 14,
+   "1973": 13,
+   "1974": 14,
+   "1975": 19,
+   "1976": 15,
+   "1977": 19,
+   "1978": 14,
+   "1979": 10,
+   "1980": 11,
+   "1981": 25,
+   "1982": 28,
+   "1983": 20,
+   "1984": 58,
+   "1985": 49,
+   "1986": 40,
+   "1987": 41,
+   "1988": 27,
+   "1989": 35,
+   "1990": 27,
+   "1991": 27,
+   "1992": 34,
+   "1993": 37,
+   "1994": 26,
+   "1995": 34,
+   "1996": 57,
+   "1997": 195,
+   "1998": 174,
+   "1999": 240,
+   "2000": 319,
+   "2001": 482,
+   "2002": 586,
+   "2003": 802,
+   "2004": 915,
+   "2005": 1019,
+   "2006": 1113,
+   "2007": 1315,
+   "2008": 1330,
+   "2009": 1435,
+   "2010": 1642,
+   "2011": 1729,
+   "2012": 1966,
+   "2013": 2063,
+   "2014": 2209,
+   "2015": 2200,
+   "2016": 2093,
+   "2017": 2064,
+   "2018": 1971,
+   "2019": 2018,
+   "2020": 1958,
+   "2021": 1899,
+   "2022": 1521,
+   "2023": 1340,
+   "2024": 1812,
+   "2025": 2006,
+   "2026": 165
+  },
+  "sonodynamic": {
+   "1947": 1,
+   "1950": 1,
+   "1951": 2,
+   "1952": 3,
+   "1953": 4,
+   "1954": 4,
+   "1955": 5,
+   "1956": 3,
+   "1957": 1,
+   "1960": 2,
+   "1962": 2,
+   "1963": 5,
+   "1964": 2,
+   "1965": 5,
+   "1966": 7,
+   "1967": 9,
+   "1968": 6,
+   "1969": 12,
+   "1970": 9,
+   "1971": 13,
+   "1972": 10,
+   "1973": 7,
+   "1974": 7,
+   "1975": 5,
+   "1976": 8,
+   "1977": 11,
+   "1978": 10,
+   "1979": 6,
+   "1980": 13,
+   "1981": 17,
+   "1982": 31,
+   "1983": 17,
+   "1984": 27,
+   "1985": 15,
+   "1986": 10,
+   "1987": 12,
+   "1988": 12,
+   "1989": 22,
+   "1990": 31,
+   "1991": 31,
+   "1992": 24,
+   "1993": 28,
+   "1994": 20,
+   "1995": 22,
+   "1996": 26,
+   "1997": 17,
+   "1998": 27,
+   "1999": 34,
+   "2000": 34,
+   "2001": 40,
+   "2002": 32,
+   "2003": 51,
+   "2004": 66,
+   "2005": 74,
+   "2006": 71,
+   "2007": 89,
+   "2008": 98,
+   "2009": 76,
+   "2010": 83,
+   "2011": 59,
+   "2012": 63,
+   "2013": 41,
+   "2014": 55,
+   "2015": 46,
+   "2016": 41,
+   "2017": 38,
+   "2018": 46,
+   "2019": 55,
+   "2020": 70,
+   "2021": 99,
+   "2022": 68,
+   "2023": 76,
+   "2024": 176,
+   "2025": 243,
+   "2026": 27
+  },
+  "synthetic-lethality": {
+   "1976": 1,
+   "1980": 2,
+   "1982": 2,
+   "1983": 6,
+   "1984": 5,
+   "1985": 7,
+   "1986": 6,
+   "1987": 5,
+   "1988": 13,
+   "1989": 9,
+   "1990": 16,
+   "1991": 5,
+   "1992": 5,
+   "1993": 5,
+   "1994": 6,
+   "1995": 12,
+   "1996": 6,
+   "1997": 7,
+   "1998": 7,
+   "1999": 7,
+   "2000": 14,
+   "2001": 5,
+   "2002": 11,
+   "2003": 16,
+   "2004": 12,
+   "2005": 22,
+   "2006": 20,
+   "2007": 31,
+   "2008": 36,
+   "2009": 69,
+   "2010": 92,
+   "2011": 134,
+   "2012": 130,
+   "2013": 117,
+   "2014": 141,
+   "2015": 146,
+   "2016": 220,
+   "2017": 279,
+   "2018": 267,
+   "2019": 348,
+   "2020": 435,
+   "2021": 503,
+   "2022": 537,
+   "2023": 499,
+   "2024": 551,
+   "2025": 607,
+   "2026": 63
+  },
+  "car-t": {
+   "1947": 1,
+   "1951": 2,
+   "1957": 1,
+   "1958": 2,
+   "1959": 1,
+   "1964": 1,
+   "1988": 3,
+   "1989": 18,
+   "1990": 59,
+   "1991": 161,
+   "1992": 148,
+   "1993": 160,
+   "1994": 154,
+   "1995": 164,
+   "1996": 130,
+   "1997": 115,
+   "1998": 105,
+   "1999": 128,
+   "2000": 127,
+   "2001": 158,
+   "2002": 171,
+   "2003": 184,
+   "2004": 200,
+   "2005": 170,
+   "2006": 165,
+   "2007": 182,
+   "2008": 184,
+   "2009": 204,
+   "2010": 223,
+   "2011": 219,
+   "2012": 234,
+   "2013": 233,
+   "2014": 291,
+   "2015": 269,
+   "2016": 373,
+   "2017": 397,
+   "2018": 619,
+   "2019": 792,
+   "2020": 1009,
+   "2021": 1270,
+   "2022": 1298,
+   "2023": 1385,
+   "2024": 1635,
+   "2025": 1869,
+   "2026": 144
+  },
+  "immunotherapy": {
+   "1992": 2,
+   "1993": 1,
+   "1994": 1,
+   "1995": 9,
+   "1996": 8,
+   "1997": 10,
+   "1998": 12,
+   "1999": 11,
+   "2000": 12,
+   "2001": 15,
+   "2002": 24,
+   "2003": 22,
+   "2004": 35,
+   "2005": 55,
+   "2006": 48,
+   "2007": 59,
+   "2008": 91,
+   "2009": 86,
+   "2010": 110,
+   "2011": 109,
+   "2012": 145,
+   "2013": 191,
+   "2014": 246,
+   "2015": 464,
+   "2016": 741,
+   "2017": 1072,
+   "2018": 1378,
+   "2019": 1684,
+   "2020": 3102,
+   "2021": 4126,
+   "2022": 3898,
+   "2023": 3530,
+   "2024": 4762,
+   "2025": 5390,
+   "2026": 441
+  },
+  "antibody-drug-conjugate": {
+   "1957": 1,
+   "1992": 3,
+   "1993": 3,
+   "1994": 28,
+   "1995": 49,
+   "1996": 61,
+   "1997": 44,
+   "1998": 53,
+   "1999": 65,
+   "2000": 59,
+   "2001": 70,
+   "2002": 82,
+   "2003": 67,
+   "2004": 56,
+   "2005": 59,
+   "2006": 52,
+   "2007": 70,
+   "2008": 60,
+   "2009": 70,
+   "2010": 57,
+   "2011": 107,
+   "2012": 129,
+   "2013": 147,
+   "2014": 154,
+   "2015": 235,
+   "2016": 237,
+   "2017": 275,
+   "2018": 318,
+   "2019": 312,
+   "2020": 350,
+   "2021": 420,
+   "2022": 434,
+   "2023": 462,
+   "2024": 624,
+   "2025": 729,
+   "2026": 77
+  },
+  "bispecific-antibody": {
+   "1992": 1,
+   "1993": 10,
+   "1994": 20,
+   "1995": 52,
+   "1996": 44,
+   "1997": 42,
+   "1998": 30,
+   "1999": 40,
+   "2000": 27,
+   "2001": 44,
+   "2002": 28,
+   "2003": 30,
+   "2004": 32,
+   "2005": 40,
+   "2006": 31,
+   "2007": 26,
+   "2008": 30,
+   "2009": 47,
+   "2010": 43,
+   "2011": 46,
+   "2012": 67,
+   "2013": 66,
+   "2014": 63,
+   "2015": 104,
+   "2016": 99,
+   "2017": 107,
+   "2018": 120,
+   "2019": 151,
+   "2020": 198,
+   "2021": 281,
+   "2022": 244,
+   "2023": 266,
+   "2024": 422,
+   "2025": 574,
+   "2026": 37
+  },
+  "electrochemical-therapy": {
+   "1993": 5,
+   "1994": 13,
+   "1995": 14,
+   "1996": 13,
+   "1997": 14,
+   "1998": 22,
+   "1999": 21,
+   "2000": 38,
+   "2001": 45,
+   "2002": 35,
+   "2003": 51,
+   "2004": 47,
+   "2005": 66,
+   "2006": 66,
+   "2007": 65,
+   "2008": 97,
+   "2009": 80,
+   "2010": 82,
+   "2011": 86,
+   "2012": 111,
+   "2013": 116,
+   "2014": 127,
+   "2015": 136,
+   "2016": 135,
+   "2017": 122,
+   "2018": 126,
+   "2019": 134,
+   "2020": 140,
+   "2021": 118,
+   "2022": 89,
+   "2023": 87,
+   "2024": 93,
+   "2025": 110,
+   "2026": 11
+  },
+  "phagocytosis-checkpoint": {
+   "1994": 1,
+   "1995": 3,
+   "1996": 1,
+   "1997": 1,
+   "1999": 3,
+   "2000": 4,
+   "2001": 1,
+   "2002": 2,
+   "2003": 2,
+   "2004": 5,
+   "2005": 6,
+   "2006": 1,
+   "2007": 3,
+   "2008": 3,
+   "2009": 7,
+   "2010": 6,
+   "2011": 12,
+   "2012": 15,
+   "2013": 22,
+   "2014": 16,
+   "2015": 33,
+   "2016": 35,
+   "2017": 39,
+   "2018": 36,
+   "2019": 61,
+   "2020": 60,
+   "2021": 71,
+   "2022": 98,
+   "2023": 105,
+   "2024": 121,
+   "2025": 134,
+   "2026": 11
+  },
+  "oncolytic-virus": {
+   "1954": 2,
+   "1956": 1,
+   "1957": 2,
+   "1958": 1,
+   "1959": 2,
+   "1960": 5,
+   "1961": 1,
+   "1962": 2,
+   "1963": 1,
+   "1964": 4,
+   "1965": 6,
+   "2003": 1,
+   "2004": 2,
+   "2005": 55,
+   "2006": 147,
+   "2007": 163,
+   "2008": 199,
+   "2009": 214,
+   "2010": 240,
+   "2011": 193,
+   "2012": 294,
+   "2013": 258,
+   "2014": 213,
+   "2015": 271,
+   "2016": 237,
+   "2017": 232,
+   "2018": 248,
+   "2019": 248,
+   "2020": 294,
+   "2021": 326,
+   "2022": 245,
+   "2023": 242,
+   "2024": 314,
+   "2025": 319,
+   "2026": 24
+  },
+  "nanoparticle": {
+   "2004": 3,
+   "2005": 18,
+   "2006": 110,
+   "2007": 298,
+   "2008": 392,
+   "2009": 519,
+   "2010": 727,
+   "2011": 889,
+   "2012": 1073,
+   "2013": 1288,
+   "2014": 1531,
+   "2015": 1693,
+   "2016": 1968,
+   "2017": 2140,
+   "2018": 2325,
+   "2019": 2653,
+   "2020": 2776,
+   "2021": 3000,
+   "2022": 2730,
+   "2023": 2507,
+   "2024": 3433,
+   "2025": 4218,
+   "2026": 497
+  },
+  "hifu": {
+   "2007": 1,
+   "2009": 17,
+   "2010": 41,
+   "2011": 57,
+   "2012": 65,
+   "2013": 97,
+   "2014": 89,
+   "2015": 92,
+   "2016": 82,
+   "2017": 90,
+   "2018": 74,
+   "2019": 102,
+   "2020": 78,
+   "2021": 112,
+   "2022": 66,
+   "2023": 63,
+   "2024": 106,
+   "2025": 107,
+   "2026": 13
+  },
+  "crispr": {
+   "2014": 12,
+   "2015": 70,
+   "2016": 141,
+   "2017": 276,
+   "2018": 356,
+   "2019": 416,
+   "2020": 437,
+   "2021": 484,
+   "2022": 236,
+   "2023": 223,
+   "2024": 405,
+   "2025": 569,
+   "2026": 49
+  },
+  "microbiome": {
+   "2015": 8,
+   "2016": 4,
+   "2017": 4,
+   "2018": 20,
+   "2019": 28,
+   "2020": 24,
+   "2021": 45,
+   "2022": 36,
+   "2023": 30,
+   "2024": 58,
+   "2025": 109,
+   "2026": 14
+  },
+  "mrna-vaccine": {
+   "2020": 1,
+   "2021": 29,
+   "2022": 77,
+   "2023": 41,
+   "2024": 73,
+   "2025": 75,
+   "2026": 5
+  }
+ },
+ "by_site": {
+  "metabolic-targeting": {
+   "kidney": 139,
+   "brain/CNS": 493,
+   "leukaemia": 330,
+   "liver": 724,
+   "breast": 755,
+   "cervix/uterus": 195,
+   "lung": 587,
+   "stomach": 223,
+   "ovary": 226,
+   "lymphoma": 173,
+   "head and neck": 453,
+   "thyroid": 74,
+   "skin/melanoma": 239,
+   "colorectal": 560,
+   "prostate": 216,
+   "pancreas": 319,
+   "bladder": 84,
+   "oesophagus": 110
+  },
+  "epigenetic": {
+   "liver": 1906,
+   "leukaemia": 4673,
+   "breast": 3413,
+   "lymphoma": 1417,
+   "skin/melanoma": 1124,
+   "lung": 2697,
+   "colorectal": 4131,
+   "head and neck": 2385,
+   "thyroid": 338,
+   "pancreas": 761,
+   "ovary": 1123,
+   "cervix/uterus": 1415,
+   "brain/CNS": 3118,
+   "prostate": 1495,
+   "kidney": 725,
+   "bladder": 644,
+   "stomach": 1610,
+   "oesophagus": 655
+  },
+  "sonodynamic": {
+   "head and neck": 132,
+   "kidney": 73,
+   "liver": 225,
+   "lymphoma": 13,
+   "breast": 228,
+   "skin/melanoma": 105,
+   "colorectal": 51,
+   "bladder": 34,
+   "brain/CNS": 207,
+   "cervix/uterus": 123,
+   "lung": 55,
+   "prostate": 199,
+   "ovary": 39,
+   "stomach": 14,
+   "leukaemia": 27,
+   "pancreas": 68,
+   "thyroid": 9,
+   "oesophagus": 9
+  },
+  "synthetic-lethality": {
+   "leukaemia": 188,
+   "skin/melanoma": 84,
+   "ovary": 1481,
+   "brain/CNS": 157,
+   "lymphoma": 49,
+   "pancreas": 170,
+   "liver": 88,
+   "lung": 207,
+   "cervix/uterus": 116,
+   "colorectal": 120,
+   "bladder": 34,
+   "breast": 963,
+   "prostate": 451,
+   "head and neck": 76,
+   "stomach": 36,
+   "thyroid": 6,
+   "oesophagus": 15,
+   "kidney": 24
+  },
+  "car-t": {
+   "skin/melanoma": 1216,
+   "lymphoma": 2438,
+   "head and neck": 228,
+   "brain/CNS": 742,
+   "lung": 600,
+   "kidney": 297,
+   "liver": 400,
+   "ovary": 265,
+   "oesophagus": 36,
+   "breast": 329,
+   "leukaemia": 2284,
+   "stomach": 134,
+   "colorectal": 343,
+   "bladder": 37,
+   "prostate": 161,
+   "cervix/uterus": 55,
+   "pancreas": 233,
+   "thyroid": 19
+  },
+  "immunotherapy": {
+   "leukaemia": 372,
+   "skin/melanoma": 3740,
+   "lymphoma": 774,
+   "lung": 7237,
+   "pancreas": 516,
+   "prostate": 347,
+   "ovary": 478,
+   "colorectal": 1570,
+   "head and neck": 2134,
+   "thyroid": 145,
+   "kidney": 1166,
+   "breast": 1728,
+   "stomach": 1037,
+   "brain/CNS": 1137,
+   "liver": 1782,
+   "oesophagus": 637,
+   "bladder": 954,
+   "cervix/uterus": 587
+  },
+  "antibody-drug-conjugate": {
+   "leukaemia": 244,
+   "lymphoma": 1083,
+   "skin/melanoma": 199,
+   "pancreas": 124,
+   "breast": 971,
+   "brain/CNS": 167,
+   "colorectal": 198,
+   "lung": 344,
+   "ovary": 219,
+   "liver": 64,
+   "stomach": 130,
+   "prostate": 130,
+   "bladder": 135,
+   "kidney": 41,
+   "head and neck": 99,
+   "cervix/uterus": 73,
+   "thyroid": 9,
+   "oesophagus": 40
+  },
+  "electrochemical-therapy": {
+   "brain/CNS": 81,
+   "lymphoma": 45,
+   "head and neck": 127,
+   "skin/melanoma": 480,
+   "leukaemia": 80,
+   "liver": 271,
+   "pancreas": 225,
+   "breast": 102,
+   "prostate": 144,
+   "colorectal": 103,
+   "bladder": 26,
+   "stomach": 15,
+   "lung": 66,
+   "kidney": 60,
+   "cervix/uterus": 26,
+   "oesophagus": 11,
+   "thyroid": 5,
+   "ovary": 27
+  },
+  "bispecific-antibody": {
+   "lymphoma": 491,
+   "breast": 149,
+   "kidney": 18,
+   "leukaemia": 705,
+   "brain/CNS": 61,
+   "colorectal": 130,
+   "lung": 201,
+   "skin/melanoma": 78,
+   "prostate": 71,
+   "ovary": 88,
+   "liver": 39,
+   "head and neck": 51,
+   "pancreas": 48,
+   "thyroid": 13,
+   "stomach": 47,
+   "cervix/uterus": 18,
+   "bladder": 10,
+   "oesophagus": 12
+  },
+  "phagocytosis-checkpoint": {
+   "leukaemia": 79,
+   "ovary": 28,
+   "skin/melanoma": 59,
+   "kidney": 6,
+   "prostate": 10,
+   "colorectal": 45,
+   "lymphoma": 66,
+   "breast": 51,
+   "liver": 33,
+   "head and neck": 28,
+   "thyroid": 4,
+   "brain/CNS": 50,
+   "lung": 73,
+   "bladder": 15,
+   "oesophagus": 5,
+   "pancreas": 26,
+   "stomach": 13,
+   "cervix/uterus": 15
+  },
+  "oncolytic-virus": {
+   "lymphoma": 36,
+   "leukaemia": 50,
+   "skin/melanoma": 516,
+   "brain/CNS": 674,
+   "stomach": 42,
+   "ovary": 145,
+   "liver": 271,
+   "lung": 212,
+   "cervix/uterus": 37,
+   "breast": 213,
+   "pancreas": 236,
+   "prostate": 139,
+   "bladder": 64,
+   "colorectal": 211,
+   "head and neck": 155,
+   "kidney": 40,
+   "thyroid": 20,
+   "oesophagus": 16
+  },
+  "nanoparticle": {
+   "skin/melanoma": 1233,
+   "head and neck": 655,
+   "breast": 3938,
+   "ovary": 621,
+   "leukaemia": 327,
+   "lung": 1699,
+   "brain/CNS": 1828,
+   "pancreas": 680,
+   "liver": 1576,
+   "stomach": 282,
+   "prostate": 739,
+   "colorectal": 1343,
+   "bladder": 187,
+   "lymphoma": 163,
+   "thyroid": 122,
+   "kidney": 71,
+   "cervix/uterus": 332,
+   "oesophagus": 79
+  },
+  "hifu": {
+   "liver": 146,
+   "cervix/uterus": 338,
+   "brain/CNS": 33,
+   "prostate": 246,
+   "skin/melanoma": 10,
+   "kidney": 33,
+   "head and neck": 50,
+   "thyroid": 45,
+   "pancreas": 85,
+   "breast": 87,
+   "ovary": 3,
+   "lung": 14,
+   "bladder": 4,
+   "colorectal": 22,
+   "stomach": 3
+  },
+  "microbiome": {
+   "lymphoma": 3,
+   "colorectal": 72,
+   "skin/melanoma": 31,
+   "leukaemia": 14,
+   "liver": 26,
+   "ovary": 2,
+   "pancreas": 12,
+   "stomach": 5,
+   "kidney": 5,
+   "breast": 4,
+   "head and neck": 4,
+   "oesophagus": 4,
+   "prostate": 4,
+   "lung": 15,
+   "cervix/uterus": 1,
+   "brain/CNS": 1,
+   "bladder": 2
+  },
+  "crispr": {
+   "leukaemia": 284,
+   "liver": 146,
+   "cervix/uterus": 75,
+   "lung": 209,
+   "bladder": 29,
+   "skin/melanoma": 114,
+   "head and neck": 108,
+   "ovary": 87,
+   "kidney": 37,
+   "breast": 233,
+   "colorectal": 158,
+   "brain/CNS": 152,
+   "prostate": 94,
+   "lymphoma": 85,
+   "stomach": 27,
+   "pancreas": 67,
+   "oesophagus": 16,
+   "thyroid": 19
+  },
+  "mrna-vaccine": {
+   "pancreas": 9,
+   "breast": 9,
+   "lung": 18,
+   "skin/melanoma": 24,
+   "brain/CNS": 14,
+   "cervix/uterus": 7,
+   "leukaemia": 11,
+   "kidney": 4,
+   "prostate": 7,
+   "lymphoma": 9,
+   "colorectal": 5,
+   "stomach": 3,
+   "liver": 4,
+   "head and neck": 3,
+   "bladder": 2,
+   "ovary": 1
+  }
+ },
+ "partners": {
+  "immunotherapy": {
+   "antibody-drug-conjugate": 277,
+   "car-t": 512,
+   "bispecific-antibody": 235,
+   "nanoparticle": 517,
+   "oncolytic-virus": 263,
+   "epigenetic": 236,
+   "electrochemical-therapy": 16,
+   "synthetic-lethality": 133,
+   "metabolic-targeting": 64,
+   "microbiome": 73,
+   "phagocytosis-checkpoint": 97,
+   "crispr": 85,
+   "sonodynamic": 21,
+   "hifu": 8,
+   "mrna-vaccine": 12
+  },
+  "antibody-drug-conjugate": {
+   "immunotherapy": 277,
+   "bispecific-antibody": 190,
+   "car-t": 133,
+   "sonodynamic": 4,
+   "nanoparticle": 106,
+   "epigenetic": 22,
+   "synthetic-lethality": 35,
+   "oncolytic-virus": 6,
+   "crispr": 3,
+   "phagocytosis-checkpoint": 8,
+   "hifu": 1
+  },
+  "synthetic-lethality": {
+   "epigenetic": 120,
+   "metabolic-targeting": 12,
+   "nanoparticle": 36,
+   "antibody-drug-conjugate": 35,
+   "oncolytic-virus": 6,
+   "immunotherapy": 133,
+   "car-t": 9,
+   "crispr": 87,
+   "bispecific-antibody": 4,
+   "hifu": 1,
+   "electrochemical-therapy": 2,
+   "phagocytosis-checkpoint": 2
+  },
+  "epigenetic": {
+   "synthetic-lethality": 120,
+   "electrochemical-therapy": 1,
+   "car-t": 56,
+   "oncolytic-virus": 39,
+   "metabolic-targeting": 66,
+   "nanoparticle": 97,
+   "antibody-drug-conjugate": 22,
+   "bispecific-antibody": 6,
+   "immunotherapy": 236,
+   "phagocytosis-checkpoint": 5,
+   "crispr": 98,
+   "microbiome": 2,
+   "sonodynamic": 3
+  },
+  "bispecific-antibody": {
+   "antibody-drug-conjugate": 190,
+   "car-t": 377,
+   "immunotherapy": 235,
+   "oncolytic-virus": 22,
+   "metabolic-targeting": 1,
+   "epigenetic": 6,
+   "nanoparticle": 32,
+   "phagocytosis-checkpoint": 33,
+   "electrochemical-therapy": 1,
+   "synthetic-lethality": 4,
+   "mrna-vaccine": 1,
+   "crispr": 1
+  },
+  "car-t": {
+   "bispecific-antibody": 377,
+   "immunotherapy": 512,
+   "antibody-drug-conjugate": 133,
+   "electrochemical-therapy": 64,
+   "epigenetic": 56,
+   "oncolytic-virus": 131,
+   "nanoparticle": 116,
+   "phagocytosis-checkpoint": 18,
+   "hifu": 1,
+   "synthetic-lethality": 9,
+   "metabolic-targeting": 29,
+   "crispr": 230,
+   "microbiome": 2,
+   "mrna-vaccine": 5,
+   "sonodynamic": 3
+  },
+  "electrochemical-therapy": {
+   "car-t": 64,
+   "epigenetic": 1,
+   "sonodynamic": 11,
+   "nanoparticle": 27,
+   "hifu": 26,
+   "immunotherapy": 16,
+   "crispr": 15,
+   "oncolytic-virus": 6,
+   "bispecific-antibody": 1,
+   "metabolic-targeting": 2,
+   "synthetic-lethality": 2
+  },
+  "sonodynamic": {
+   "electrochemical-therapy": 11,
+   "antibody-drug-conjugate": 4,
+   "nanoparticle": 310,
+   "hifu": 21,
+   "oncolytic-virus": 3,
+   "metabolic-targeting": 3,
+   "immunotherapy": 21,
+   "phagocytosis-checkpoint": 2,
+   "car-t": 3,
+   "crispr": 1,
+   "epigenetic": 3
+  },
+  "metabolic-targeting": {
+   "synthetic-lethality": 12,
+   "epigenetic": 66,
+   "oncolytic-virus": 6,
+   "bispecific-antibody": 1,
+   "nanoparticle": 70,
+   "immunotherapy": 64,
+   "car-t": 29,
+   "crispr": 25,
+   "sonodynamic": 3,
+   "electrochemical-therapy": 2,
+   "phagocytosis-checkpoint": 5
+  },
+  "oncolytic-virus": {
+   "bispecific-antibody": 22,
+   "epigenetic": 39,
+   "car-t": 131,
+   "metabolic-targeting": 6,
+   "nanoparticle": 40,
+   "immunotherapy": 263,
+   "sonodynamic": 3,
+   "synthetic-lethality": 6,
+   "phagocytosis-checkpoint": 11,
+   "electrochemical-therapy": 6,
+   "crispr": 24,
+   "antibody-drug-conjugate": 6,
+   "mrna-vaccine": 3
+  },
+  "nanoparticle": {
+   "sonodynamic": 310,
+   "antibody-drug-conjugate": 106,
+   "epigenetic": 97,
+   "electrochemical-therapy": 27,
+   "immunotherapy": 517,
+   "car-t": 116,
+   "oncolytic-virus": 40,
+   "hifu": 37,
+   "synthetic-lethality": 36,
+   "metabolic-targeting": 70,
+   "phagocytosis-checkpoint": 52,
+   "bispecific-antibody": 32,
+   "crispr": 111,
+   "mrna-vaccine": 49,
+   "microbiome": 1
+  },
+  "hifu": {
+   "sonodynamic": 21,
+   "nanoparticle": 37,
+   "electrochemical-therapy": 26,
+   "car-t": 1,
+   "immunotherapy": 8,
+   "synthetic-lethality": 1,
+   "antibody-drug-conjugate": 1
+  },
+  "phagocytosis-checkpoint": {
+   "nanoparticle": 52,
+   "epigenetic": 5,
+   "car-t": 18,
+   "bispecific-antibody": 33,
+   "oncolytic-virus": 11,
+   "immunotherapy": 97,
+   "antibody-drug-conjugate": 8,
+   "crispr": 10,
+   "sonodynamic": 2,
+   "metabolic-targeting": 5,
+   "synthetic-lethality": 2
+  },
+  "crispr": {
+   "nanoparticle": 111,
+   "electrochemical-therapy": 15,
+   "epigenetic": 98,
+   "synthetic-lethality": 87,
+   "metabolic-targeting": 25,
+   "car-t": 230,
+   "oncolytic-virus": 24,
+   "immunotherapy": 85,
+   "antibody-drug-conjugate": 3,
+   "phagocytosis-checkpoint": 10,
+   "sonodynamic": 1,
+   "mrna-vaccine": 2,
+   "bispecific-antibody": 1
+  },
+  "microbiome": {
+   "immunotherapy": 73,
+   "car-t": 2,
+   "epigenetic": 2,
+   "nanoparticle": 1
+  },
+  "mrna-vaccine": {
+   "nanoparticle": 49,
+   "car-t": 5,
+   "bispecific-antibody": 1,
+   "immunotherapy": 12,
+   "crispr": 2,
+   "oncolytic-virus": 3
+  }
+ },
+ "rows": [
+  {
+   "mechanism": "epigenetic",
+   "census": 41278,
+   "trials": 1307,
+   "trial_share": 3.17,
+   "site_assigned": 33630,
+   "top_sites": [
+    {
+     "site": "leukaemia",
+     "n": 4673,
+     "enrichment": 1.79
+    },
+    {
+     "site": "colorectal",
+     "n": 4131,
+     "enrichment": 1.6
+    },
+    {
+     "site": "stomach",
+     "n": 1610,
+     "enrichment": 1.36
+    },
+    {
+     "site": "brain/CNS",
+     "n": 3118,
+     "enrichment": 1.23
+    },
+    {
+     "site": "ovary",
+     "n": 1123,
+     "enrichment": 1.14
+    },
+    {
+     "site": "oesophagus",
+     "n": 655,
+     "enrichment": 1.03
+    }
+   ],
+   "top_partners": [
+    {
+     "mechanism": "immunotherapy",
+     "n": 236
+    },
+    {
+     "mechanism": "synthetic-lethality",
+     "n": 120
+    },
+    {
+     "mechanism": "crispr",
+     "n": 98
+    },
+    {
+     "mechanism": "nanoparticle",
+     "n": 97
+    },
+    {
+     "mechanism": "metabolic-targeting",
+     "n": 66
+    },
+    {
+     "mechanism": "car-t",
+     "n": 56
+    }
+   ],
+   "start": 2200,
+   "end": 2006,
+   "growth": 0.91
+  },
+  {
+   "mechanism": "nanoparticle",
+   "census": 36788,
+   "trials": 182,
+   "trial_share": 0.49,
+   "site_assigned": 15875,
+   "top_sites": [
+    {
+     "site": "breast",
+     "n": 3938,
+     "enrichment": 2.25
+    },
+    {
+     "site": "liver",
+     "n": 1576,
+     "enrichment": 1.6
+    },
+    {
+     "site": "brain/CNS",
+     "n": 1828,
+     "enrichment": 1.53
+    },
+    {
+     "site": "pancreas",
+     "n": 680,
+     "enrichment": 1.44
+    },
+    {
+     "site": "ovary",
+     "n": 621,
+     "enrichment": 1.33
+    },
+    {
+     "site": "lung",
+     "n": 1699,
+     "enrichment": 1.2
+    }
+   ],
+   "top_partners": [
+    {
+     "mechanism": "immunotherapy",
+     "n": 517
+    },
+    {
+     "mechanism": "sonodynamic",
+     "n": 310
+    },
+    {
+     "mechanism": "car-t",
+     "n": 116
+    },
+    {
+     "mechanism": "crispr",
+     "n": 111
+    },
+    {
+     "mechanism": "antibody-drug-conjugate",
+     "n": 106
+    },
+    {
+     "mechanism": "epigenetic",
+     "n": 97
+    }
+   ],
+   "start": 1693,
+   "end": 4218,
+   "growth": 2.49
+  },
+  {
+   "mechanism": "immunotherapy",
+   "census": 31890,
+   "trials": 1430,
+   "trial_share": 4.48,
+   "site_assigned": 26341,
+   "top_sites": [
+    {
+     "site": "lung",
+     "n": 7237,
+     "enrichment": 3.09
+    },
+    {
+     "site": "skin/melanoma",
+     "n": 3740,
+     "enrichment": 2.13
+    },
+    {
+     "site": "bladder",
+     "n": 954,
+     "enrichment": 1.81
+    },
+    {
+     "site": "kidney",
+     "n": 1166,
+     "enrichment": 1.66
+    },
+    {
+     "site": "oesophagus",
+     "n": 637,
+     "enrichment": 1.27
+    },
+    {
+     "site": "stomach",
+     "n": 1037,
+     "enrichment": 1.12
+    }
+   ],
+   "top_partners": [
+    {
+     "mechanism": "nanoparticle",
+     "n": 517
+    },
+    {
+     "mechanism": "car-t",
+     "n": 512
+    },
+    {
+     "mechanism": "antibody-drug-conjugate",
+     "n": 277
+    },
+    {
+     "mechanism": "oncolytic-virus",
+     "n": 263
+    },
+    {
+     "mechanism": "epigenetic",
+     "n": 236
+    },
+    {
+     "mechanism": "bispecific-antibody",
+     "n": 235
+    }
+   ],
+   "start": 464,
+   "end": 5390,
+   "growth": 11.62
+  },
+  {
+   "mechanism": "car-t",
+   "census": 15358,
+   "trials": 1020,
+   "trial_share": 6.64,
+   "site_assigned": 9817,
+   "top_sites": [
+    {
+     "site": "lymphoma",
+     "n": 2438,
+     "enrichment": 4.33
+    },
+    {
+     "site": "leukaemia",
+     "n": 2284,
+     "enrichment": 2.99
+    },
+    {
+     "site": "skin/melanoma",
+     "n": 1216,
+     "enrichment": 1.86
+    },
+    {
+     "site": "kidney",
+     "n": 297,
+     "enrichment": 1.14
+    },
+    {
+     "site": "brain/CNS",
+     "n": 742,
+     "enrichment": 1.0
+    },
+    {
+     "site": "ovary",
+     "n": 265,
+     "enrichment": 0.92
+    }
+   ],
+   "top_partners": [
+    {
+     "mechanism": "immunotherapy",
+     "n": 512
+    },
+    {
+     "mechanism": "bispecific-antibody",
+     "n": 377
+    },
+    {
+     "mechanism": "crispr",
+     "n": 230
+    },
+    {
+     "mechanism": "antibody-drug-conjugate",
+     "n": 133
+    },
+    {
+     "mechanism": "oncolytic-virus",
+     "n": 131
+    },
+    {
+     "mechanism": "nanoparticle",
+     "n": 116
+    }
+   ],
+   "start": 269,
+   "end": 1869,
+   "growth": 6.95
+  },
+  {
+   "mechanism": "metabolic-targeting",
+   "census": 8809,
+   "trials": 45,
+   "trial_share": 0.51,
+   "site_assigned": 5900,
+   "top_sites": [
+    {
+     "site": "liver",
+     "n": 724,
+     "enrichment": 1.98
+    },
+    {
+     "site": "pancreas",
+     "n": 319,
+     "enrichment": 1.82
+    },
+    {
+     "site": "ovary",
+     "n": 226,
+     "enrichment": 1.31
+    },
+    {
+     "site": "colorectal",
+     "n": 560,
+     "enrichment": 1.24
+    },
+    {
+     "site": "breast",
+     "n": 755,
+     "enrichment": 1.16
+    },
+    {
+     "site": "lung",
+     "n": 587,
+     "enrichment": 1.12
+    }
+   ],
+   "top_partners": [
+    {
+     "mechanism": "nanoparticle",
+     "n": 70
+    },
+    {
+     "mechanism": "epigenetic",
+     "n": 66
+    },
+    {
+     "mechanism": "immunotherapy",
+     "n": 64
+    },
+    {
+     "mechanism": "car-t",
+     "n": 29
+    },
+    {
+     "mechanism": "crispr",
+     "n": 25
+    },
+    {
+     "mechanism": "synthetic-lethality",
+     "n": 12
+    }
+   ],
+   "start": 377,
+   "end": 816,
+   "growth": 2.16
+  },
+  {
+   "mechanism": "antibody-drug-conjugate",
+   "census": 6019,
+   "trials": 580,
+   "trial_share": 9.64,
+   "site_assigned": 4270,
+   "top_sites": [
+    {
+     "site": "lymphoma",
+     "n": 1083,
+     "enrichment": 4.42
+    },
+    {
+     "site": "breast",
+     "n": 971,
+     "enrichment": 2.06
+    },
+    {
+     "site": "ovary",
+     "n": 219,
+     "enrichment": 1.75
+    },
+    {
+     "site": "bladder",
+     "n": 135,
+     "enrichment": 1.58
+    },
+    {
+     "site": "pancreas",
+     "n": 124,
+     "enrichment": 0.98
+    },
+    {
+     "site": "lung",
+     "n": 344,
+     "enrichment": 0.91
+    }
+   ],
+   "top_partners": [
+    {
+     "mechanism": "immunotherapy",
+     "n": 277
+    },
+    {
+     "mechanism": "bispecific-antibody",
+     "n": 190
+    },
+    {
+     "mechanism": "car-t",
+     "n": 133
+    },
+    {
+     "mechanism": "nanoparticle",
+     "n": 106
+    },
+    {
+     "mechanism": "synthetic-lethality",
+     "n": 35
+    },
+    {
+     "mechanism": "epigenetic",
+     "n": 22
+    }
+   ],
+   "start": 235,
+   "end": 729,
+   "growth": 3.1
+  },
+  {
+   "mechanism": "synthetic-lethality",
+   "census": 5437,
+   "trials": 342,
+   "trial_share": 6.29,
+   "site_assigned": 4265,
+   "top_sites": [
+    {
+     "site": "ovary",
+     "n": 1481,
+     "enrichment": 11.85
+    },
+    {
+     "site": "prostate",
+     "n": 451,
+     "enrichment": 2.23
+    },
+    {
+     "site": "breast",
+     "n": 963,
+     "enrichment": 2.05
+    },
+    {
+     "site": "pancreas",
+     "n": 170,
+     "enrichment": 1.34
+    },
+    {
+     "site": "cervix/uterus",
+     "n": 116,
+     "enrichment": 0.58
+    },
+    {
+     "site": "leukaemia",
+     "n": 188,
+     "enrichment": 0.57
+    }
+   ],
+   "top_partners": [
+    {
+     "mechanism": "immunotherapy",
+     "n": 133
+    },
+    {
+     "mechanism": "epigenetic",
+     "n": 120
+    },
+    {
+     "mechanism": "crispr",
+     "n": 87
+    },
+    {
+     "mechanism": "nanoparticle",
+     "n": 36
+    },
+    {
+     "mechanism": "antibody-drug-conjugate",
+     "n": 35
+    },
+    {
+     "mechanism": "metabolic-targeting",
+     "n": 12
+    }
+   ],
+   "start": 146,
+   "end": 607,
+   "growth": 4.16
+  },
+  {
+   "mechanism": "oncolytic-virus",
+   "census": 5006,
+   "trials": 201,
+   "trial_share": 4.02,
+   "site_assigned": 3077,
+   "top_sites": [
+    {
+     "site": "brain/CNS",
+     "n": 674,
+     "enrichment": 2.91
+    },
+    {
+     "site": "pancreas",
+     "n": 236,
+     "enrichment": 2.59
+    },
+    {
+     "site": "skin/melanoma",
+     "n": 516,
+     "enrichment": 2.51
+    },
+    {
+     "site": "ovary",
+     "n": 145,
+     "enrichment": 1.61
+    },
+    {
+     "site": "liver",
+     "n": 271,
+     "enrichment": 1.42
+    },
+    {
+     "site": "bladder",
+     "n": 64,
+     "enrichment": 1.04
+    }
+   ],
+   "top_partners": [
+    {
+     "mechanism": "immunotherapy",
+     "n": 263
+    },
+    {
+     "mechanism": "car-t",
+     "n": 131
+    },
+    {
+     "mechanism": "nanoparticle",
+     "n": 40
+    },
+    {
+     "mechanism": "epigenetic",
+     "n": 39
+    },
+    {
+     "mechanism": "crispr",
+     "n": 24
+    },
+    {
+     "mechanism": "bispecific-antibody",
+     "n": 22
+    }
+   ],
+   "start": 271,
+   "end": 319,
+   "growth": 1.18
+  },
+  {
+   "mechanism": "crispr",
+   "census": 3674,
+   "trials": 6,
+   "trial_share": 0.16,
+   "site_assigned": 1940,
+   "top_sites": [
+    {
+     "site": "leukaemia",
+     "n": 284,
+     "enrichment": 1.88
+    },
+    {
+     "site": "ovary",
+     "n": 87,
+     "enrichment": 1.53
+    },
+    {
+     "site": "liver",
+     "n": 146,
+     "enrichment": 1.21
+    },
+    {
+     "site": "lung",
+     "n": 209,
+     "enrichment": 1.21
+    },
+    {
+     "site": "pancreas",
+     "n": 67,
+     "enrichment": 1.16
+    },
+    {
+     "site": "breast",
+     "n": 233,
+     "enrichment": 1.09
+    }
+   ],
+   "top_partners": [
+    {
+     "mechanism": "car-t",
+     "n": 230
+    },
+    {
+     "mechanism": "nanoparticle",
+     "n": 111
+    },
+    {
+     "mechanism": "epigenetic",
+     "n": 98
+    },
+    {
+     "mechanism": "synthetic-lethality",
+     "n": 87
+    },
+    {
+     "mechanism": "immunotherapy",
+     "n": 85
+    },
+    {
+     "mechanism": "metabolic-targeting",
+     "n": 25
+    }
+   ],
+   "start": 70,
+   "end": 569,
+   "growth": 8.13
+  },
+  {
+   "mechanism": "bispecific-antibody",
+   "census": 3462,
+   "trials": 326,
+   "trial_share": 9.42,
+   "site_assigned": 2230,
+   "top_sites": [
+    {
+     "site": "leukaemia",
+     "n": 705,
+     "enrichment": 4.06
+    },
+    {
+     "site": "lymphoma",
+     "n": 491,
+     "enrichment": 3.84
+    },
+    {
+     "site": "ovary",
+     "n": 88,
+     "enrichment": 1.35
+    },
+    {
+     "site": "lung",
+     "n": 201,
+     "enrichment": 1.01
+    },
+    {
+     "site": "colorectal",
+     "n": 130,
+     "enrichment": 0.76
+    },
+    {
+     "site": "pancreas",
+     "n": 48,
+     "enrichment": 0.73
+    }
+   ],
+   "top_partners": [
+    {
+     "mechanism": "car-t",
+     "n": 377
+    },
+    {
+     "mechanism": "immunotherapy",
+     "n": 235
+    },
+    {
+     "mechanism": "antibody-drug-conjugate",
+     "n": 190
+    },
+    {
+     "mechanism": "phagocytosis-checkpoint",
+     "n": 33
+    },
+    {
+     "mechanism": "nanoparticle",
+     "n": 32
+    },
+    {
+     "mechanism": "oncolytic-virus",
+     "n": 22
+    }
+   ],
+   "start": 104,
+   "end": 574,
+   "growth": 5.52
+  },
+  {
+   "mechanism": "electrochemical-therapy",
+   "census": 2515,
+   "trials": 142,
+   "trial_share": 5.65,
+   "site_assigned": 1894,
+   "top_sites": [
+    {
+     "site": "pancreas",
+     "n": 225,
+     "enrichment": 4.0
+    },
+    {
+     "site": "skin/melanoma",
+     "n": 480,
+     "enrichment": 3.8
+    },
+    {
+     "site": "liver",
+     "n": 271,
+     "enrichment": 2.31
+    },
+    {
+     "site": "prostate",
+     "n": 144,
+     "enrichment": 1.6
+    },
+    {
+     "site": "kidney",
+     "n": 60,
+     "enrichment": 1.19
+    },
+    {
+     "site": "colorectal",
+     "n": 103,
+     "enrichment": 0.71
+    }
+   ],
+   "top_partners": [
+    {
+     "mechanism": "car-t",
+     "n": 64
+    },
+    {
+     "mechanism": "nanoparticle",
+     "n": 27
+    },
+    {
+     "mechanism": "hifu",
+     "n": 26
+    },
+    {
+     "mechanism": "immunotherapy",
+     "n": 16
+    },
+    {
+     "mechanism": "crispr",
+     "n": 15
+    },
+    {
+     "mechanism": "sonodynamic",
+     "n": 11
+    }
+   ],
+   "start": 136,
+   "end": 110,
+   "growth": 0.81
+  },
+  {
+   "mechanism": "sonodynamic",
+   "census": 2513,
+   "trials": 114,
+   "trial_share": 4.54,
+   "site_assigned": 1611,
+   "top_sites": [
+    {
+     "site": "prostate",
+     "n": 199,
+     "enrichment": 2.6
+    },
+    {
+     "site": "liver",
+     "n": 225,
+     "enrichment": 2.25
+    },
+    {
+     "site": "brain/CNS",
+     "n": 207,
+     "enrichment": 1.71
+    },
+    {
+     "site": "kidney",
+     "n": 73,
+     "enrichment": 1.7
+    },
+    {
+     "site": "cervix/uterus",
+     "n": 123,
+     "enrichment": 1.64
+    },
+    {
+     "site": "pancreas",
+     "n": 68,
+     "enrichment": 1.42
+    }
+   ],
+   "top_partners": [
+    {
+     "mechanism": "nanoparticle",
+     "n": 310
+    },
+    {
+     "mechanism": "hifu",
+     "n": 21
+    },
+    {
+     "mechanism": "immunotherapy",
+     "n": 21
+    },
+    {
+     "mechanism": "electrochemical-therapy",
+     "n": 11
+    },
+    {
+     "mechanism": "antibody-drug-conjugate",
+     "n": 4
+    },
+    {
+     "mechanism": "oncolytic-virus",
+     "n": 3
+    }
+   ],
+   "start": 46,
+   "end": 243,
+   "growth": 5.28
+  },
+  {
+   "mechanism": "hifu",
+   "census": 1352,
+   "trials": 96,
+   "trial_share": 7.1,
+   "site_assigned": 1119,
+   "top_sites": [
+    {
+     "site": "cervix/uterus",
+     "n": 338,
+     "enrichment": 6.48
+    },
+    {
+     "site": "prostate",
+     "n": 246,
+     "enrichment": 4.63
+    },
+    {
+     "site": "pancreas",
+     "n": 85,
+     "enrichment": 2.56
+    },
+    {
+     "site": "liver",
+     "n": 146,
+     "enrichment": 2.1
+    },
+    {
+     "site": "thyroid",
+     "n": 45,
+     "enrichment": 2.03
+    },
+    {
+     "site": "kidney",
+     "n": 33,
+     "enrichment": 1.11
+    }
+   ],
+   "top_partners": [
+    {
+     "mechanism": "nanoparticle",
+     "n": 37
+    },
+    {
+     "mechanism": "electrochemical-therapy",
+     "n": 26
+    },
+    {
+     "mechanism": "sonodynamic",
+     "n": 21
+    },
+    {
+     "mechanism": "immunotherapy",
+     "n": 8
+    },
+    {
+     "mechanism": "car-t",
+     "n": 1
+    },
+    {
+     "mechanism": "synthetic-lethality",
+     "n": 1
+    }
+   ],
+   "start": 92,
+   "end": 107,
+   "growth": 1.16
+  },
+  {
+   "mechanism": "phagocytosis-checkpoint",
+   "census": 918,
+   "trials": 13,
+   "trial_share": 1.42,
+   "site_assigned": 606,
+   "top_sites": [
+    {
+     "site": "lymphoma",
+     "n": 66,
+     "enrichment": 1.9
+    },
+    {
+     "site": "leukaemia",
+     "n": 79,
+     "enrichment": 1.68
+    },
+    {
+     "site": "ovary",
+     "n": 28,
+     "enrichment": 1.58
+    },
+    {
+     "site": "skin/melanoma",
+     "n": 59,
+     "enrichment": 1.46
+    },
+    {
+     "site": "pancreas",
+     "n": 26,
+     "enrichment": 1.45
+    },
+    {
+     "site": "lung",
+     "n": 73,
+     "enrichment": 1.36
+    }
+   ],
+   "top_partners": [
+    {
+     "mechanism": "immunotherapy",
+     "n": 97
+    },
+    {
+     "mechanism": "nanoparticle",
+     "n": 52
+    },
+    {
+     "mechanism": "bispecific-antibody",
+     "n": 33
+    },
+    {
+     "mechanism": "car-t",
+     "n": 18
+    },
+    {
+     "mechanism": "oncolytic-virus",
+     "n": 11
+    },
+    {
+     "mechanism": "crispr",
+     "n": 10
+    }
+   ],
+   "start": 33,
+   "end": 134,
+   "growth": 4.06
+  },
+  {
+   "mechanism": "microbiome",
+   "census": 380,
+   "trials": 12,
+   "trial_share": 3.16,
+   "site_assigned": 205,
+   "top_sites": [
+    {
+     "site": "colorectal",
+     "n": 72,
+     "enrichment": 4.58
+    },
+    {
+     "site": "skin/melanoma",
+     "n": 31,
+     "enrichment": 2.27
+    },
+    {
+     "site": "liver",
+     "n": 26,
+     "enrichment": 2.04
+    }
+   ],
+   "top_partners": [
+    {
+     "mechanism": "immunotherapy",
+     "n": 73
+    },
+    {
+     "mechanism": "car-t",
+     "n": 2
+    },
+    {
+     "mechanism": "epigenetic",
+     "n": 2
+    },
+    {
+     "mechanism": "nanoparticle",
+     "n": 1
+    }
+   ],
+   "start": 8,
+   "end": 109,
+   "growth": null
+  },
+  {
+   "mechanism": "mrna-vaccine",
+   "census": 301,
+   "trials": 2,
+   "trial_share": 0.66,
+   "site_assigned": 130,
+   "top_sites": [
+    {
+     "site": "skin/melanoma",
+     "n": 24,
+     "enrichment": 2.77
+    }
+   ],
+   "top_partners": [
+    {
+     "mechanism": "nanoparticle",
+     "n": 49
+    },
+    {
+     "mechanism": "immunotherapy",
+     "n": 12
+    },
+    {
+     "mechanism": "car-t",
+     "n": 5
+    },
+    {
+     "mechanism": "oncolytic-virus",
+     "n": 3
+    },
+    {
+     "mechanism": "crispr",
+     "n": 2
+    },
+    {
+     "mechanism": "bispecific-antibody",
+     "n": 1
+    }
+   ],
+   "start": 0,
+   "end": 75,
+   "growth": null
+  }
+ ],
+ "start_year": 2015,
+ "end_year": 2025
+}
