@@ -53,7 +53,7 @@ def _sha256(path: Path) -> str:
 
 
 def _scope() -> "set[str]":
-    """Tracked files minus the generator's OWN declared exclusions.
+    """Files the manifest should cover, minus the generator's OWN exclusions.
 
     A first version inferred the scope from which top-level directories the
     manifest touched, and got it wrong in the way a heuristic does: `corpus/`
@@ -71,9 +71,25 @@ def _scope() -> "set[str]":
         "grm", REPO / "scripts/generate_release_manifest.py")
     m = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(m)
-    r = subprocess.run(["git", "ls-files"], cwd=REPO, capture_output=True,
-                       text=True, check=True)
-    return {f for f in r.stdout.split()
+    # TRACKED **PLUS UNTRACKED-BUT-NOT-IGNORED**, and the second half is not a
+    # nicety. The generator walks `git ls-files`, so a file that is new and not
+    # yet staged is invisible to it -- which means regenerating the manifest
+    # BEFORE `git add` produces a manifest that is stale the instant the commit
+    # lands. That is exactly how this branch shipped a stale manifest twice,
+    # the second time in the very commit that regenerated it to fix the first.
+    #
+    # A guard that also only looked at tracked files would reproduce the blind
+    # spot precisely: it passed, then `git add -A` made it wrong. Counting
+    # untracked-but-not-ignored files makes the order-of-operations failure
+    # visible while the files are still on disk. `--exclude-standard` keeps
+    # gitignored scratch out of it.
+    def _git(*args):
+        return subprocess.run(["git", *args], cwd=REPO, capture_output=True,
+                              text=True, check=True).stdout.split()
+
+    files = set(_git("ls-files")) | set(
+        _git("ls-files", "--others", "--exclude-standard"))
+    return {f for f in files
             if not any(f.startswith(p) for p in m.EXCLUDE_PREFIXES)
             and f not in m.EXCLUDE_FILES}
 
