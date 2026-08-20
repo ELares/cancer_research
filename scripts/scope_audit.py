@@ -371,9 +371,12 @@ def render(d: dict) -> str:
               f"published 'the true figure lies between 1 and 37', a range "
               f"whose upper end is not a bound. That figure is quoted as a "
               f"fact about a past commit and is deliberately NOT derived -- "
-              f"it has read 37, 38 and 37 across commits, moving when an "
-              f"analysis page's own text grew past this script's 40-line "
-              f"head window rather than when its subject changed. The live "
+              f"it has read 37, 38 and 37 across commits, moving TWICE on "
+              f"this script's 40-line head window and for opposite reasons -- "
+              f"once when a sibling page's head grew INTO the window past the "
+              f"three-hit threshold, once when this page's own therapy "
+              f"mention was pushed OUT of it -- rather than when any "
+              f"subject changed. The live "
               f"figures are {n_ther} and {len(body_t)}.", ""]
 
     L += ["## Why this is worth stating rather than hiding", ""]

@@ -151,8 +151,13 @@ def main() -> int:
                                    _v["criterion_restored"])
                        if x < MANUSCRIPT_RATIO)
         _w = {0: "no", 1: "one", 2: "two", 3: "all three"}[_n_below]
-        L += [f"## 2. The manuscript's headline holds under {_w} of three "
-              f"restrictions, and one claim was over-broadened", ""]
+        # THE COUNT IS OF RESTRICTIONS THAT FALL BELOW 9.1:1, i.e. that INVERT
+        # the understatement. An earlier heading spent it as "holds under two"
+        # while the body spent the same number as "the inversion holds under
+        # two" -- the page asserted both from one figure.
+        L += [f"## 2. The manuscript's volume headline is INVERTED under {_w} "
+              f"of three restrictions, and its maturity claim was "
+              f"over-broadened", ""]
     else:
         L += ["## 2. The manuscript's volume and maturity claims", ""]
     if land:

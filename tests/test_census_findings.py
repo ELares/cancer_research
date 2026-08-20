@@ -74,6 +74,16 @@ def test_the_volume_figures_are_recomputed_not_read_back():
             "wrong field is as wrong as a literal and harder to see")
         assert f"{100*v[key]:.2f}%" in " ".join(MD.read_text().split()), (
             f"{mech}'s clinical share is derived and not rendered")
+    # AND IN THE RIGHT SLOT. Transposing two values leaves both numbers on the
+    # page, so a presence check passes while the sentence says the opposite of
+    # the artifact.
+    flat = " ".join(MD.read_text().split())
+    assert (f"HIFU is **{100*v['hifu']:.2f}%** clinical against CAR-T's "
+            f"**{100*v['cart']:.2f}%**") in flat, (
+        "the maturity sentence does not attribute its two shares the way the "
+        "artifact does")
+    assert f"differ by {v['hifu']/v['sono']:.1f}x" in flat, (
+        "the HIFU-to-sonodynamic multiple is rendered and checked by nothing")
 
 
 def test_all_three_restrictions_are_reported_not_only_the_one_that_inverts():
@@ -169,7 +179,11 @@ def test_no_headline_figure_is_a_literal():
     # while the maturity figures were still literals; they are derived too, so
     # the exemption is gone rather than left as a permanent carve-out.
     lo = src[:src.index("**Volume.**")].count("\n") + 1
-    hi = src[:src.index("*What changed:*")].count("\n") + 1
+    # ANCHOR THE END *AFTER* THE START. "*What changed:*" also closes section
+    # 1, so an unanchored search put the window at [160, 144] and the scan
+    # skipped every node -- the widening broke the guard it was widening.
+    hi = src[:src.index("*What changed:*", src.index("**Volume.**"))].count("\n") + 1
+    assert lo < hi, f"the scan window is empty ({lo}, {hi})"
     bad = []
     for node in ast.walk(tree):
         if isinstance(node, ast.Constant) and isinstance(node.value, str):

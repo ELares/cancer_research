@@ -24,7 +24,7 @@ one.
 now measurable rather than assumed.
 *Source:* `atlas-landscape.md`
 
-## 2. The manuscript's headline holds under two of three restrictions, and one claim was over-broadened
+## 2. The manuscript's volume headline is INVERTED under two of three restrictions, and its maturity claim was over-broadened
 
 **Volume.** Pharmacological to physical runs **9.1 : 1** by the
 manuscript's keyword method and **17.6 : 1** on the census.
