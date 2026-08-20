@@ -88,6 +88,14 @@ REGISTRY = {
         "can supply neither axis. Every record it holds would land in the "
         "unassigned bucket and depress the assignability rate without "
         "carrying any information about site."),
+    "corpus_dependency_audit.py": (
+        {"records"},
+        "Reads the census only to learn its record SCHEMA -- which fields a "
+        "consumer could be pointed at -- and one shard is as informative as "
+        "all of them. records_unindexed would add nothing, since a "
+        "text-recovered record carries a SUBSET of the same fields, and a "
+        "consumer needing a field it lacks is already accounted for by the "
+        "indexed stream's schema."),
     "census_mechanism_profile.py": (
         {"records"},
         "Joins mechanism descriptors, C04 site descriptors and NLM publication "

@@ -1,0 +1,619 @@
+{
+ "excluded_mentions_only": [
+  "atlas_baseline.py",
+  "config.py",
+  "corpus_dependency_audit.py"
+ ],
+ "census_fields": [
+  "abstract",
+  "adjacent_ui",
+  "cancer_basis",
+  "cancer_ui",
+  "doi",
+  "journal",
+  "mesh",
+  "mesh_major",
+  "mesh_ui",
+  "pmcid",
+  "pmid",
+  "pub_types",
+  "title",
+  "year"
+ ],
+ "fulltext_fields": [
+  "licence",
+  "pmcid",
+  "pmid",
+  "text"
+ ],
+ "project_annotations": [
+  "biology_processes",
+  "cancer_types",
+  "diagnostic_therapy_links",
+  "evidence_level",
+  "evidence_signals",
+  "mechanisms",
+  "pathway_targets"
+ ],
+ "consumers": [
+  {
+   "script": "analyze_corpus.py",
+   "class": "needs project annotations",
+   "why": "reads `cancer_types`, `evidence_level`, `mechanisms`, `pathway_targets`, which the census does not carry: NLM assigns descriptors and publication types, not this project's mechanism, cancer-type or evidence tags",
+   "route": "path literal + config path symbol",
+   "annotations": [
+    "cancer_types",
+    "evidence_level",
+    "mechanisms",
+    "pathway_targets"
+   ],
+   "uses_fulltext": true,
+   "census_fields_read": [
+    "journal",
+    "pmid",
+    "title",
+    "year"
+   ]
+  },
+  {
+   "script": "atlas_coverage.py",
+   "class": "needs project annotations",
+   "why": "reads `mechanisms`, which the census does not carry: NLM assigns descriptors and publication types, not this project's mechanism, cancer-type or evidence tags",
+   "route": "path literal",
+   "annotations": [
+    "mechanisms"
+   ],
+   "uses_fulltext": false,
+   "census_fields_read": [
+    "abstract",
+    "cancer_ui",
+    "pmcid",
+    "pmid",
+    "title",
+    "year"
+   ]
+  },
+  {
+   "script": "atlas_evidence_check.py",
+   "class": "needs project annotations",
+   "why": "reads `evidence_level`, which the census does not carry: NLM assigns descriptors and publication types, not this project's mechanism, cancer-type or evidence tags",
+   "route": "path literal",
+   "annotations": [
+    "evidence_level"
+   ],
+   "uses_fulltext": false,
+   "census_fields_read": [
+    "pmid",
+    "pub_types"
+   ]
+  },
+  {
+   "script": "atlas_landscape.py",
+   "class": "needs project annotations",
+   "why": "reads `mechanisms`, which the census does not carry: NLM assigns descriptors and publication types, not this project's mechanism, cancer-type or evidence tags",
+   "route": "path literal",
+   "annotations": [
+    "mechanisms"
+   ],
+   "uses_fulltext": false,
+   "census_fields_read": [
+    "mesh",
+    "pub_types"
+   ]
+  },
+  {
+   "script": "atlas_untagged_partner.py",
+   "class": "needs project annotations",
+   "why": "reads `mechanisms`, which the census does not carry: NLM assigns descriptors and publication types, not this project's mechanism, cancer-type or evidence tags",
+   "route": "path literal",
+   "annotations": [
+    "mechanisms"
+   ],
+   "uses_fulltext": true,
+   "census_fields_read": [
+    "pmid",
+    "title"
+   ]
+  },
+  {
+   "script": "build_evidence_v2_index.py",
+   "class": "needs project annotations",
+   "why": "reads `evidence_level`, which the census does not carry: NLM assigns descriptors and publication types, not this project's mechanism, cancer-type or evidence tags",
+   "route": "path literal + config path symbol",
+   "annotations": [
+    "evidence_level"
+   ],
+   "uses_fulltext": true,
+   "census_fields_read": [
+    "pmid"
+   ]
+  },
+  {
+   "script": "build_index.py",
+   "class": "needs project annotations",
+   "why": "reads `mechanisms`, which the census does not carry: NLM assigns descriptors and publication types, not this project's mechanism, cancer-type or evidence tags",
+   "route": "config path symbol",
+   "annotations": [
+    "mechanisms"
+   ],
+   "uses_fulltext": true,
+   "census_fields_read": [
+    "year"
+   ]
+  },
+  {
+   "script": "build_news_index.py",
+   "class": "full text, available at census scale",
+   "why": "reads corpus full text, which the open-access layer supplies for 1,116,481 census records -- roughly 230 times more than the corpus holds, keyed by the same pmid",
+   "route": "path literal",
+   "annotations": [],
+   "uses_fulltext": true,
+   "census_fields_read": [
+    "title"
+   ]
+  },
+  {
+   "script": "census_diagnostic_chains.py",
+   "class": "full text, available at census scale",
+   "why": "reads corpus full text, which the open-access layer supplies for 1,116,481 census records -- roughly 230 times more than the corpus holds, keyed by the same pmid",
+   "route": "config path symbol",
+   "annotations": [],
+   "uses_fulltext": true,
+   "census_fields_read": [
+    "abstract",
+    "mesh",
+    "title"
+   ]
+  },
+  {
+   "script": "dashboard.py",
+   "class": "no record fields resolved",
+   "why": "touches the corpus but no record field was resolved statically; read it before drawing a conclusion",
+   "route": "path literal",
+   "annotations": [],
+   "uses_fulltext": false,
+   "census_fields_read": []
+  },
+  {
+   "script": "dashboard_data.py",
+   "class": "needs project annotations",
+   "why": "reads `evidence_level`, which the census does not carry: NLM assigns descriptors and publication types, not this project's mechanism, cancer-type or evidence tags",
+   "route": "path literal",
+   "annotations": [
+    "evidence_level"
+   ],
+   "uses_fulltext": false,
+   "census_fields_read": [
+    "year"
+   ]
+  },
+  {
+   "script": "detect_corpus_duplicates.py",
+   "class": "census-supplied fields only",
+   "why": "reads only `journal`, `pmid`, `title`, `year`, every one of which the census record carries",
+   "route": "path literal",
+   "annotations": [],
+   "uses_fulltext": false,
+   "census_fields_read": [
+    "journal",
+    "pmid",
+    "title",
+    "year"
+   ]
+  },
+  {
+   "script": "diagnostic_therapy_audit.py",
+   "class": "needs project annotations",
+   "why": "reads `diagnostic_therapy_links`, which the census does not carry: NLM assigns descriptors and publication types, not this project's mechanism, cancer-type or evidence tags",
+   "route": "config path symbol",
+   "annotations": [
+    "diagnostic_therapy_links"
+   ],
+   "uses_fulltext": false,
+   "census_fields_read": [
+    "pmid"
+   ]
+  },
+  {
+   "script": "embed_evidence_leg.py",
+   "class": "full text, available at census scale",
+   "why": "reads corpus full text, which the open-access layer supplies for 1,116,481 census records -- roughly 230 times more than the corpus holds, keyed by the same pmid",
+   "route": "config path symbol",
+   "annotations": [],
+   "uses_fulltext": true,
+   "census_fields_read": [
+    "mesh",
+    "pmid"
+   ]
+  },
+  {
+   "script": "embed_gold_set.py",
+   "class": "full text, available at census scale",
+   "why": "reads corpus full text, which the open-access layer supplies for 1,116,481 census records -- roughly 230 times more than the corpus holds, keyed by the same pmid",
+   "route": "config path symbol",
+   "annotations": [],
+   "uses_fulltext": true,
+   "census_fields_read": []
+  },
+  {
+   "script": "enrich_metadata.py",
+   "class": "full text, available at census scale",
+   "why": "reads corpus full text, which the open-access layer supplies for 1,116,481 census records -- roughly 230 times more than the corpus holds, keyed by the same pmid",
+   "route": "config path symbol",
+   "annotations": [],
+   "uses_fulltext": true,
+   "census_fields_read": [
+    "pmid"
+   ]
+  },
+  {
+   "script": "evaluate_evidence_v2.py",
+   "class": "full text, available at census scale",
+   "why": "reads corpus full text, which the open-access layer supplies for 1,116,481 census records -- roughly 230 times more than the corpus holds, keyed by the same pmid",
+   "route": "path literal + config path symbol",
+   "annotations": [],
+   "uses_fulltext": true,
+   "census_fields_read": [
+    "pmid"
+   ]
+  },
+  {
+   "script": "fetch_articles.py",
+   "class": "full text, available at census scale",
+   "why": "reads corpus full text, which the open-access layer supplies for 1,116,481 census records -- roughly 230 times more than the corpus holds, keyed by the same pmid",
+   "route": "config path symbol",
+   "annotations": [],
+   "uses_fulltext": true,
+   "census_fields_read": [
+    "abstract",
+    "doi",
+    "journal",
+    "pmcid",
+    "pmid",
+    "pub_types",
+    "title",
+    "year"
+   ]
+  },
+  {
+   "script": "fetch_semantic_scholar.py",
+   "class": "full text, available at census scale",
+   "why": "reads corpus full text, which the open-access layer supplies for 1,116,481 census records -- roughly 230 times more than the corpus holds, keyed by the same pmid",
+   "route": "path literal + config path symbol",
+   "annotations": [],
+   "uses_fulltext": true,
+   "census_fields_read": [
+    "abstract",
+    "pmcid",
+    "pmid",
+    "title",
+    "year"
+   ]
+  },
+  {
+   "script": "generate_figures.py",
+   "class": "needs project annotations",
+   "why": "reads `cancer_types`, `evidence_level`, `mechanisms`, `pathway_targets`, which the census does not carry: NLM assigns descriptors and publication types, not this project's mechanism, cancer-type or evidence tags",
+   "route": "path literal + config path symbol",
+   "annotations": [
+    "cancer_types",
+    "evidence_level",
+    "mechanisms",
+    "pathway_targets"
+   ],
+   "uses_fulltext": true,
+   "census_fields_read": [
+    "pmid",
+    "title",
+    "year"
+   ]
+  },
+  {
+   "script": "generate_release_manifest.py",
+   "class": "census-supplied fields only",
+   "why": "reads only `pmid`, every one of which the census record carries",
+   "route": "path literal + config path symbol",
+   "annotations": [],
+   "uses_fulltext": false,
+   "census_fields_read": [
+    "pmid"
+   ]
+  },
+  {
+   "script": "landmark_coverage.py",
+   "class": "census-supplied fields only",
+   "why": "reads only `abstract`, `doi`, `journal`, `mesh`, `pmid`, `title`, every one of which the census record carries",
+   "route": "path literal",
+   "annotations": [],
+   "uses_fulltext": false,
+   "census_fields_read": [
+    "abstract",
+    "doi",
+    "journal",
+    "mesh",
+    "pmid",
+    "title",
+    "year"
+   ]
+  },
+  {
+   "script": "living_review_triage.py",
+   "class": "needs project annotations",
+   "why": "reads `mechanisms`, which the census does not carry: NLM assigns descriptors and publication types, not this project's mechanism, cancer-type or evidence tags",
+   "route": "path literal",
+   "annotations": [
+    "mechanisms"
+   ],
+   "uses_fulltext": false,
+   "census_fields_read": [
+    "pub_types"
+   ]
+  },
+  {
+   "script": "living_review_update.py",
+   "class": "needs project annotations",
+   "why": "reads `evidence_level`, `mechanisms`, which the census does not carry: NLM assigns descriptors and publication types, not this project's mechanism, cancer-type or evidence tags",
+   "route": "path literal",
+   "annotations": [
+    "evidence_level",
+    "mechanisms"
+   ],
+   "uses_fulltext": true,
+   "census_fields_read": [
+    "abstract",
+    "pmid",
+    "pub_types",
+    "title",
+    "year"
+   ]
+  },
+  {
+   "script": "mechanism_precision.py",
+   "class": "needs project annotations",
+   "why": "reads `mechanisms`, which the census does not carry: NLM assigns descriptors and publication types, not this project's mechanism, cancer-type or evidence tags",
+   "route": "path literal",
+   "annotations": [
+    "mechanisms"
+   ],
+   "uses_fulltext": false,
+   "census_fields_read": []
+  },
+  {
+   "script": "mechanism_recall.py",
+   "class": "needs project annotations",
+   "why": "reads `mechanisms`, which the census does not carry: NLM assigns descriptors and publication types, not this project's mechanism, cancer-type or evidence tags",
+   "route": "path literal + config path symbol",
+   "annotations": [
+    "mechanisms"
+   ],
+   "uses_fulltext": true,
+   "census_fields_read": [
+    "pmid",
+    "title"
+   ]
+  },
+  {
+   "script": "news_verification_audit.py",
+   "class": "census-supplied fields only",
+   "why": "reads only `title`, every one of which the census record carries",
+   "route": "path literal",
+   "annotations": [],
+   "uses_fulltext": false,
+   "census_fields_read": [
+    "title"
+   ]
+  },
+  {
+   "script": "oa_bias_analysis.py",
+   "class": "needs project annotations",
+   "why": "reads `mechanisms`, which the census does not carry: NLM assigns descriptors and publication types, not this project's mechanism, cancer-type or evidence tags",
+   "route": "path literal",
+   "annotations": [
+    "mechanisms"
+   ],
+   "uses_fulltext": false,
+   "census_fields_read": [
+    "journal",
+    "pmid"
+   ]
+  },
+  {
+   "script": "provenance.py",
+   "class": "full text, available at census scale",
+   "why": "reads corpus full text, which the open-access layer supplies for 1,116,481 census records -- roughly 230 times more than the corpus holds, keyed by the same pmid",
+   "route": "config path symbol",
+   "annotations": [],
+   "uses_fulltext": true,
+   "census_fields_read": []
+  },
+  {
+   "script": "rank_collaborator_candidates.py",
+   "class": "full text, available at census scale",
+   "why": "reads corpus full text, which the open-access layer supplies for 1,116,481 census records -- roughly 230 times more than the corpus holds, keyed by the same pmid",
+   "route": "path literal + config path symbol",
+   "annotations": [],
+   "uses_fulltext": true,
+   "census_fields_read": [
+    "journal",
+    "year"
+   ]
+  },
+  {
+   "script": "recover_fulltext.py",
+   "class": "full text, available at census scale",
+   "why": "reads corpus full text, which the open-access layer supplies for 1,116,481 census records -- roughly 230 times more than the corpus holds, keyed by the same pmid",
+   "route": "config path symbol",
+   "annotations": [],
+   "uses_fulltext": true,
+   "census_fields_read": [
+    "journal",
+    "pmcid",
+    "pmid",
+    "title",
+    "year"
+   ]
+  },
+  {
+   "script": "retag_gold_set.py",
+   "class": "full text, available at census scale",
+   "why": "reads corpus full text, which the open-access layer supplies for 1,116,481 census records -- roughly 230 times more than the corpus holds, keyed by the same pmid",
+   "route": "path literal + config path symbol",
+   "annotations": [],
+   "uses_fulltext": true,
+   "census_fields_read": [
+    "mesh",
+    "pmid"
+   ]
+  },
+  {
+   "script": "sample_evidence_gold_set.py",
+   "class": "needs project annotations",
+   "why": "reads `evidence_level`, `mechanisms`, which the census does not carry: NLM assigns descriptors and publication types, not this project's mechanism, cancer-type or evidence tags",
+   "route": "config path symbol",
+   "annotations": [
+    "evidence_level",
+    "mechanisms"
+   ],
+   "uses_fulltext": true,
+   "census_fields_read": [
+    "journal",
+    "pmid",
+    "pub_types",
+    "title",
+    "year"
+   ]
+  },
+  {
+   "script": "scope_audit.py",
+   "class": "needs project annotations",
+   "why": "reads `mechanisms`, which the census does not carry: NLM assigns descriptors and publication types, not this project's mechanism, cancer-type or evidence tags",
+   "route": "path literal",
+   "annotations": [
+    "mechanisms"
+   ],
+   "uses_fulltext": false,
+   "census_fields_read": []
+  },
+  {
+   "script": "score_news.py",
+   "class": "full text, available at census scale",
+   "why": "reads corpus full text, which the open-access layer supplies for 1,116,481 census records -- roughly 230 times more than the corpus holds, keyed by the same pmid",
+   "route": "config path symbol",
+   "annotations": [],
+   "uses_fulltext": true,
+   "census_fields_read": [
+    "pmid"
+   ]
+  },
+  {
+   "script": "split_abstract_only.py",
+   "class": "full text, available at census scale",
+   "why": "reads corpus full text, which the open-access layer supplies for 1,116,481 census records -- roughly 230 times more than the corpus holds, keyed by the same pmid",
+   "route": "config path symbol",
+   "annotations": [],
+   "uses_fulltext": true,
+   "census_fields_read": []
+  },
+  {
+   "script": "strip_non_oa_fulltext.py",
+   "class": "full text, available at census scale",
+   "why": "reads corpus full text, which the open-access layer supplies for 1,116,481 census records -- roughly 230 times more than the corpus holds, keyed by the same pmid",
+   "route": "path literal + config path symbol",
+   "annotations": [],
+   "uses_fulltext": true,
+   "census_fields_read": [
+    "journal",
+    "pmcid",
+    "pmid"
+   ]
+  },
+  {
+   "script": "tag_articles.py",
+   "class": "needs project annotations",
+   "why": "reads `biology_processes`, `cancer_types`, `diagnostic_therapy_links`, `evidence_level`, `mechanisms`, `pathway_targets`, which the census does not carry: NLM assigns descriptors and publication types, not this project's mechanism, cancer-type or evidence tags",
+   "route": "config path symbol",
+   "annotations": [
+    "biology_processes",
+    "cancer_types",
+    "diagnostic_therapy_links",
+    "evidence_level",
+    "mechanisms",
+    "pathway_targets"
+   ],
+   "uses_fulltext": true,
+   "census_fields_read": [
+    "journal",
+    "pmid",
+    "pub_types",
+    "title"
+   ]
+  },
+  {
+   "script": "taxonomy_coverage.py",
+   "class": "needs project annotations",
+   "why": "reads `mechanisms`, which the census does not carry: NLM assigns descriptors and publication types, not this project's mechanism, cancer-type or evidence tags",
+   "route": "path literal",
+   "annotations": [
+    "mechanisms"
+   ],
+   "uses_fulltext": false,
+   "census_fields_read": [
+    "title"
+   ]
+  },
+  {
+   "script": "verify_news_claims.py",
+   "class": "full text, available at census scale",
+   "why": "reads corpus full text, which the open-access layer supplies for 1,116,481 census records -- roughly 230 times more than the corpus holds, keyed by the same pmid",
+   "route": "config path symbol",
+   "annotations": [],
+   "uses_fulltext": true,
+   "census_fields_read": [
+    "pmid",
+    "title"
+   ]
+  },
+  {
+   "script": "verify_references.py",
+   "class": "full text, available at census scale",
+   "why": "reads corpus full text, which the open-access layer supplies for 1,116,481 census records -- roughly 230 times more than the corpus holds, keyed by the same pmid",
+   "route": "path literal + config path symbol",
+   "annotations": [],
+   "uses_fulltext": true,
+   "census_fields_read": [
+    "journal",
+    "pmid",
+    "title",
+    "year"
+   ]
+  }
+ ],
+ "by_class": {
+  "needs project annotations": 19,
+  "full text, available at census scale": 17,
+  "no record fields resolved": 1,
+  "census-supplied fields only": 4
+ },
+ "n_consumers": 41,
+ "corpus_bound": [
+  "analyze_corpus.py",
+  "atlas_coverage.py",
+  "atlas_evidence_check.py",
+  "atlas_landscape.py",
+  "atlas_untagged_partner.py",
+  "build_evidence_v2_index.py",
+  "build_index.py",
+  "dashboard_data.py",
+  "diagnostic_therapy_audit.py",
+  "generate_figures.py",
+  "living_review_triage.py",
+  "living_review_update.py",
+  "mechanism_precision.py",
+  "mechanism_recall.py",
+  "oa_bias_analysis.py",
+  "sample_evidence_gold_set.py",
+  "scope_audit.py",
+  "tag_articles.py",
+  "taxonomy_coverage.py"
+ ]
+}

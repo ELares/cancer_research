@@ -6,7 +6,7 @@
 
 | | ferroptosis / physical-ROS | other therapy | method |
 |---|--:|--:|--:|
-| committed analyses (124) | 14 | **1** | 109 |
+| committed analyses (125) | 14 | **1** | 110 |
 
 | preregistered predictions | **8 of 8** |
 |---|--:|
@@ -65,7 +65,7 @@ Note also that method analyses -- the largest bucket -- are about the INSTRUMENT
 - `sensitizer-symmetry`
 - `timeline`
 
-**method** (109): listed in `analysis/scope-audit.json`.
+**method** (110): listed in `analysis/scope-audit.json`.
 
 ## What this does not say
 
