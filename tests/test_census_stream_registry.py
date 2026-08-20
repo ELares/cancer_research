@@ -88,6 +88,14 @@ REGISTRY = {
         "can supply neither axis. Every record it holds would land in the "
         "unassigned bucket and depress the assignability rate without "
         "carrying any information about site."),
+    "census_fulltext_ceiling.py": (
+        {"records"},
+        "Measures how much of the INDEXED stream's design-label gap open-access "
+        "full text could reach, so both the numerator and the denominator must "
+        "come from that stream. records_unindexed carries no publication types, "
+        "so every record in it is undetermined BY CONSTRUCTION -- folding it in "
+        "would inflate the gap with records that were never a labelling failure "
+        "and depress the ceiling with them."),
     "corpus_dependency_audit.py": (
         {"records"},
         "Reads the census only to learn its record SCHEMA -- which fields a "
