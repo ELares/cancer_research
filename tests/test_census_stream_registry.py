@@ -61,6 +61,19 @@ _PATTERN = re.compile(
 
 # module -> (streams it reads, why that set is the right one)
 REGISTRY = {
+    "census_evidence_design.py": (
+        {"records"},
+        "Study design is read from NLM publication types and MeSH check tags, "
+        "which only the INDEXED stream carries. records_unindexed has neither, "
+        "so there is no label of this kind to compute for it -- and the report "
+        "states that denominator rather than quietly using the smaller one."),
+    "census_oa_bias.py": (
+        {"records"},
+        "Compares mechanism ranking with and without a PMC identifier on "
+        "identical MeSH descriptors. Both arms must come from the same stream "
+        "or the comparison confounds availability with indexing; "
+        "records_unindexed carries no descriptors and so cannot supply either "
+        "arm."),
     "atlas_ingest_sensitivity.py": (
         {"records"},
         "The qualifier measurement itself re-parses the raw baseline XML, which "
