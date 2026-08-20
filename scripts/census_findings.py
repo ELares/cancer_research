@@ -111,6 +111,16 @@ def main() -> int:
     coment = load("atlas-comention-audit.json")
     contra = load("atlas-contradiction-quality.json")
     modsup = load("atlas-module-support.json")
+    # The #RETIRE-FROZEN campaign's own artifacts. Loaded fail-soft like the
+    # rest: a section whose artifact is absent is SKIPPED, never rendered with
+    # a placeholder, because a findings page that prints a heading over nothing
+    # reads as a finding nobody wrote down.
+    design = load("census-evidence-design.json")
+    ceiling = load("census-fulltext-ceiling.json")
+    growth = load("census-mechanism-growth.json")
+    sites = load("census-mechanism-sites.json")
+    chains = load("census-diagnostic-chains.json")
+    depend = load("corpus-dependency-audit.json")
 
     missing = [n for n, v in [
         ("landscape", land), ("thesis", thesis), ("predictions", pred),
@@ -122,9 +132,111 @@ def main() -> int:
     L = ["# What the census established (#CENSUS-FINDINGS)", "",
          "Assembled by `scripts/census_findings.py` from the committed JSON of each",
          "analysis, so it cannot drift from the measurements it summarises.", "",
-         "The question this answers: going from a 4,830-article keyword corpus to a",
+         "The question this answers: going from a keyword-retrieved corpus to a",
          "4,403,994-article MeSH census, what changed about what this project",
-         "believes?", "", "---", "",
+         "believes?", "", "---", ""]
+
+    # SECTION 0 -- the campaign that rebuilt the manuscript. Placed first
+    # because it is the only section that reports claims which CHANGED THEIR
+    # ANSWER rather than their magnitude, and because a synthesis page that
+    # buries its retractions below its confirmations is doing the thing this
+    # project keeps finding in other people's work.
+    L += ["## 0. Five manuscript findings changed their ANSWER", ""]
+    changed = []
+    if growth and growth.get("union_growth"):
+        changed.append(
+            f"**Growth was measured against the wrong denominator.** The "
+            f"retrieved corpus's rise was compared against the WHOLE cancer "
+            f"literature (x{growth['field_growth']}), which a corpus of "
+            f"emerging-therapy queries outgrows whether or not anything unusual "
+            f"happened. The matched denominator -- those same mechanisms in the "
+            f"census -- is **x{growth['union_growth']}**, so the claim SPLITS: "
+            f"the mechanisms really did outgrow the literature they sit in "
+            f"(x{growth['mechanisms_over_field']}) and the rest belongs to the "
+            f"retrieval.")
+    if sites and sites.get("rows"):
+        brain = next((r for r in sites["rows"] if r["site"] == "brain/CNS"), None)
+        leuk = next((r for r in sites["rows"] if r["site"] == "leukaemia"), None)
+        if brain and leuk:
+            # FORMATTED, not printed raw. The sites artifact stores enrichment
+            # unrounded so its guard can recompute it exactly; printing that
+            # straight into prose gave "0.9217761194363284x", which reads as
+            # false precision on a quantity determined to about two digits.
+            changed.append(
+                f"**Half of the tissue claim failed and half was strengthened.** "
+                f"Physical-modality research was reported as concentrated in "
+                f"epithelial and neuroectodermal contexts. Brain/CNS sits at "
+                f"{brain['physical_enrichment']:.2f}x for the physical class "
+                f"against {brain['pharmacological_enrichment']:.2f}x for the "
+                f"pharmacological -- indistinguishable -- so the neuroectodermal "
+                f"half does not survive. The haematologic half does, and is "
+                f"strengthened by a contrast it never had: leukaemia "
+                f"{leuk['physical_enrichment']:.2f}x against "
+                f"{leuk['pharmacological_enrichment']:.2f}x.")
+    if chains and chains.get("chains_zero_on_corpus"):
+        top = max(chains["rows"], key=lambda r: r["census"])
+        changed.append(
+            f"**The manuscript's own disclaimer was right on every count.** It "
+            f"warned that two diagnostic-therapy chains returned zero because of "
+            f"how the corpus was retrieved, and that one chain read far below its "
+            f"true volume. Both zeros populate on the census, and "
+            f"`{top['chain']}` -- {top['corpus_production_text']} in the corpus "
+            f"-- reads {top['census']:,}. The corpus arm reproduces its published "
+            f"figure exactly, so the same matcher is being read on two "
+            f"populations.")
+    changed.append(
+        "**The multi-mechanism co-occurrence rate is withdrawn as a finding.** "
+        "Running both labelling instruments over the SAME articles moves it from "
+        "45.6% of tagged records to 16.6%, and census selection takes it to 3.2%. "
+        "Neither endpoint measures how often researchers combine mechanisms.")
+    changed.append(
+        "**The missing-landmark exhibit dissolved.** All five papers named as "
+        "confirmed missing are in the census, and the two trials among them are "
+        "indexed Phase III -- so the claim they supported, that a non-detection "
+        "was an artifact rather than a statement about the modality, is now "
+        "demonstrable rather than suspected.")
+    for c in changed:
+        L += [f"* {c}", ""]
+
+    if design:
+        cl = design.get("classes", {})
+        und = design["census"] - design["classifiable"]
+        L += ["## 0b. The instrument's own limits, measured", "",
+              f"Study design now comes from NLM publication types and check tags "
+              f"rather than from a detector this project wrote, which removes the "
+              f"recall question and replaces it with a coarser one: "
+              f"**{und:,} records ({100*und/design['census']:.1f}%) carry no "
+              f"design-informative label at all**.", ""]
+        if ceiling:
+            L += [f"That gap is BOUNDED rather than merely reported. Only "
+                  f"{ceiling['ceiling_records']:,} of them "
+                  f"({ceiling['ceiling_share_of_undetermined']}%) are reachable "
+                  f"by open-access full text, so reading every readable paper "
+                  f"perfectly would close a fifth of it. And the reachable part "
+                  f"is not a sample of the whole: its median year is "
+                  f"{ceiling['median_year_reachable']} against the pile's "
+                  f"{ceiling['median_year_pile']}, and reachability varies "
+                  f"{ceiling['design_skew']['fold']}-fold across study designs. "
+                  f"A distribution recovered from it would describe the READABLE "
+                  f"literature, not the census.", ""]
+        L += ["Two mechanisms cannot be measured at census scale at all, because "
+              "MeSH has no descriptor for them: TTFields and bioelectric "
+              "modulation. Both are reported as *not measurable* rather than as "
+              "zero -- TTFields has FDA approval in two indications and completed "
+              "Phase III trials, and a zero would say nobody works on it.", ""]
+
+    if depend:
+        L += ["## 0c. What still needs the retrieved corpus", "",
+              f"Measured per FIELD rather than per script: of "
+              f"{depend['n_consumers']} consumers, "
+              f"**{len(depend['corpus_bound'])} are genuinely corpus-bound**, all "
+              f"for one reason -- they read annotations only this project "
+              f"produces. The rest read fields the census carries, or full text "
+              f"its own open-access layer carries in far greater quantity. "
+              f"\"Needs full text\" stopped meaning \"needs the corpus\" when "
+              f"that layer landed.", ""]
+
+    L += ["---", "",
          "## 1. The corpus was a 213-fold non-uniform sample", ""]
 
     if land:

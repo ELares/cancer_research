@@ -3,9 +3,35 @@
 Assembled by `scripts/census_findings.py` from the committed JSON of each
 analysis, so it cannot drift from the measurements it summarises.
 
-The question this answers: going from a 4,830-article keyword corpus to a
+The question this answers: going from a keyword-retrieved corpus to a
 4,403,994-article MeSH census, what changed about what this project
 believes?
+
+---
+
+## 0. Five manuscript findings changed their ANSWER
+
+* **Growth was measured against the wrong denominator.** The retrieved corpus's rise was compared against the WHOLE cancer literature (x1.1), which a corpus of emerging-therapy queries outgrows whether or not anything unusual happened. The matched denominator -- those same mechanisms in the census -- is **x2.77**, so the claim SPLITS: the mechanisms really did outgrow the literature they sit in (x2.52) and the rest belongs to the retrieval.
+
+* **Half of the tissue claim failed and half was strengthened.** Physical-modality research was reported as concentrated in epithelial and neuroectodermal contexts. Brain/CNS sits at 0.92x for the physical class against 0.91x for the pharmacological -- indistinguishable -- so the neuroectodermal half does not survive. The haematologic half does, and is strengthened by a contrast it never had: leukaemia 0.30x against 1.30x.
+
+* **The manuscript's own disclaimer was right on every count.** It warned that two diagnostic-therapy chains returned zero because of how the corpus was retrieved, and that one chain read far below its true volume. Both zeros populate on the census, and `her2-testing-to-trastuzumab` -- 28 in the corpus -- reads 5,190. The corpus arm reproduces its published figure exactly, so the same matcher is being read on two populations.
+
+* **The multi-mechanism co-occurrence rate is withdrawn as a finding.** Running both labelling instruments over the SAME articles moves it from 45.6% of tagged records to 16.6%, and census selection takes it to 3.2%. Neither endpoint measures how often researchers combine mechanisms.
+
+* **The missing-landmark exhibit dissolved.** All five papers named as confirmed missing are in the census, and the two trials among them are indexed Phase III -- so the claim they supported, that a non-detection was an artifact rather than a statement about the modality, is now demonstrable rather than suspected.
+
+## 0b. The instrument's own limits, measured
+
+Study design now comes from NLM publication types and check tags rather than from a detector this project wrote, which removes the recall question and replaces it with a coarser one: **1,958,401 records (44.5%) carry no design-informative label at all**.
+
+That gap is BOUNDED rather than merely reported. Only 404,031 of them (20.6%) are reachable by open-access full text, so reading every readable paper perfectly would close a fifth of it. And the reachable part is not a sample of the whole: its median year is 2019 against the pile's 2008, and reachability varies 3.2-fold across study designs. A distribution recovered from it would describe the READABLE literature, not the census.
+
+Two mechanisms cannot be measured at census scale at all, because MeSH has no descriptor for them: TTFields and bioelectric modulation. Both are reported as *not measurable* rather than as zero -- TTFields has FDA approval in two indications and completed Phase III trials, and a zero would say nobody works on it.
+
+## 0c. What still needs the retrieved corpus
+
+Measured per FIELD rather than per script: of 41 consumers, **19 are genuinely corpus-bound**, all for one reason -- they read annotations only this project produces. The rest read fields the census carries, or full text its own open-access layer carries in far greater quantity. "Needs full text" stopped meaning "needs the corpus" when that layer landed.
 
 ---
 
