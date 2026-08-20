@@ -74,6 +74,28 @@ REGISTRY = {
         "or the comparison confounds availability with indexing; "
         "records_unindexed carries no descriptors and so cannot supply either "
         "arm."),
+    "census_diagnostic_chains.py": (
+        {"records"},
+        "Chain membership is matched over title, MeSH and abstract. The "
+        "MeSH channel is the one the published corpus figure used and is "
+        "carried only by the indexed stream, so folding in records_unindexed "
+        "would change the instrument mid-measurement -- exactly the thing this "
+        "analysis exists to hold fixed between its two arms."),
+    "census_mechanism_sites.py": (
+        {"records"},
+        "Both the site assignment and the mechanism labels are MeSH "
+        "descriptors, and records_unindexed has no descriptors at all, so it "
+        "can supply neither axis. Every record it holds would land in the "
+        "unassigned bucket and depress the assignability rate without "
+        "carrying any information about site."),
+    "census_mechanism_growth.py": (
+        {"records"},
+        "Mechanism labels are MeSH descriptors, so the numerator can only come "
+        "from the indexed stream, and the field denominator must come from the "
+        "same stream or the growth ratio compares a MeSH-labelled numerator "
+        "against a denominator that includes records MeSH never reached -- "
+        "which would bias the ratio DOWN in exactly the recent years the claim "
+        "is about."),
     "atlas_ingest_sensitivity.py": (
         {"records"},
         "The qualifier measurement itself re-parses the raw baseline XML, which "

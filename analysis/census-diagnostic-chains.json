@@ -1,0 +1,77 @@
+{
+ "census_records": 4403994,
+ "census_shards": 1334,
+ "census_with_abstract": 3309948,
+ "census_matched": 18490,
+ "corpus_records": 4830,
+ "corpus_matched_production_text": 240,
+ "corpus_matched_without_annotations": 240,
+ "annotation_channel_cost_records": 0,
+ "rows": [
+  {
+   "chain": "her2-testing-to-trastuzumab",
+   "census": 5190,
+   "corpus_production_text": 28,
+   "corpus_without_annotations": 28
+  },
+  {
+   "chain": "egfr-mutation-to-egfr-inhibitor",
+   "census": 5079,
+   "corpus_production_text": 12,
+   "corpus_without_annotations": 12
+  },
+  {
+   "chain": "tmb-msi-to-immunotherapy",
+   "census": 3182,
+   "corpus_production_text": 33,
+   "corpus_without_annotations": 33
+  },
+  {
+   "chain": "pdl1-ihc-to-checkpoint",
+   "census": 1919,
+   "corpus_production_text": 13,
+   "corpus_without_annotations": 13
+  },
+  {
+   "chain": "brca-mutation-to-parp-inhibitor",
+   "census": 1718,
+   "corpus_production_text": 71,
+   "corpus_without_annotations": 71
+  },
+  {
+   "chain": "psma-imaging-to-radioligand",
+   "census": 713,
+   "corpus_production_text": 4,
+   "corpus_without_annotations": 4
+  },
+  {
+   "chain": "neoantigen-profiling-to-mrna-vaccine",
+   "census": 357,
+   "corpus_production_text": 79,
+   "corpus_without_annotations": 79
+  },
+  {
+   "chain": "kras-g12c-mutation-to-sotorasib",
+   "census": 287,
+   "corpus_production_text": 0,
+   "corpus_without_annotations": 0
+  },
+  {
+   "chain": "sstr-imaging-to-prrt",
+   "census": 259,
+   "corpus_production_text": 0,
+   "corpus_without_annotations": 0
+  },
+  {
+   "chain": "oncolytic-susceptibility-to-virotherapy",
+   "census": 32,
+   "corpus_production_text": 1,
+   "corpus_without_annotations": 1
+  }
+ ],
+ "chains_zero_on_census": [],
+ "chains_zero_on_corpus": [
+  "kras-g12c-mutation-to-sotorasib",
+  "sstr-imaging-to-prrt"
+ ]
+}

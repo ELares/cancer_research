@@ -91,10 +91,28 @@ def test_the_quoted_manuscript_figures_are_the_manuscript_s():
             f"the manuscript no longer states {ferro} for {name}; the modality "
             "table has been edited and this analysis is testing a claim that "
             "is no longer made")
-    assert f"from {m.CORPUS_GROWTH_START} full-text articles" in txt, (
-        "the manuscript's growth start is not the one this analysis quotes")
-    assert f"to {m.CORPUS_GROWTH_END:,} in {m.GROWTH_END}" in txt, (
-        "the manuscript's growth end is not the one this analysis quotes")
+    # The growth claim may legitimately be RETIRED from the manuscript, and
+    # this guard must not force it to stay. What it must not allow is the
+    # third state: a manuscript that has stopped making the claim while the
+    # analysis still reports a verdict on it. So whichever side of the
+    # retirement we are on, something in the manuscript has to anchor it.
+    if m.growth_claim_still_made(MANUSCRIPT.read_text()):
+        assert f"from {m.CORPUS_GROWTH_START} full-text articles" in txt, (
+            "the manuscript's growth start is not the one this analysis quotes")
+        assert f"to {m.CORPUS_GROWTH_END:,} in {m.GROWTH_END}" in txt, (
+            "the manuscript's growth end is not the one this analysis quotes")
+    else:
+        g = d()["growth"]
+        assert g["claim_still_made"] is False, (
+            "the manuscript no longer states the corpus growth figures but the "
+            "committed artifact still records the claim as live -- regenerate "
+            "analysis/manuscript-vs-census.json")
+        # The manuscript must still carry the measurement that replaced it, or
+        # the retraction points at nothing a reader can check.
+        assert f"{g['census_end']:,} in {m.GROWTH_END}" in txt, (
+            f"the growth claim is retired but the manuscript does not state "
+            f"the census figure ({g['census_end']:,} in {m.GROWTH_END}) that "
+            "replaced it, so the retraction is unanchored")
 
 
 def test_the_verdict_would_flip_if_the_measurement_did():
@@ -332,17 +350,20 @@ def test_the_headline_agrees_with_the_verdicts_it_summarises():
     for meas in (True, False):
         for exceeds in (True, False):
             for direction in (True, False):
-                for grew in (True, False):
+                for grew, live in ((True, True), (False, True),
+                                   (True, False), (False, False)):
                     if exceeds and not direction:
                         continue          # cannot exceed without holding
                     v = {**r,
                          "modality_table": {**mt, "ratio_is_measurable": meas,
                                             "census_exceeds_manuscript": meas and exceeds,
                                             "direction_holds": meas and direction},
-                         "growth": {**g, "corpus_exceeds_field": grew}}
+                         "growth": {**g, "corpus_exceeds_field": grew,
+                                    "claim_still_made": live}}
                     doc = m.render(v).lower()
                     head = doc[:doc.index("## the scope difference")]
-                    label = f"meas={meas} exceeds={exceeds} dir={direction} grew={grew}"
+                    label = (f"meas={meas} exceeds={exceeds} dir={direction} "
+                             f"grew={grew} live={live}")
                     if not meas:
                         assert "cannot be decided" in head, (
                             f"[{label}] an undecidable ratio is not reported as "
@@ -359,10 +380,29 @@ def test_the_headline_agrees_with_the_verdicts_it_summarises():
                                 == bool(exceeds)), (
                             f"[{label}] the understatement clause does not "
                             "track the verdict")
-                    assert (("section 3.7 does not survive" in head)
-                            == (not grew)), (
-                        f"[{label}] the headline's 3.7 clause disagrees with "
-                        "its verdict")
+                    # RETIRED IS NOT REFUTED, the same distinction this file
+                    # already enforces for undecidable. Once the manuscript
+                    # stops making the corpus growth claim there is no claim
+                    # left to fail, and a headline saying it "does not
+                    # survive" would tell a reader the measurement went
+                    # against it when in fact it was withdrawn on the
+                    # strength of that measurement.
+                    if not live:
+                        assert "retired" in head, (
+                            f"[{label}] the manuscript no longer makes the "
+                            f"growth claim and the headline does not say so: "
+                            f"{head.strip()[:200]!r}")
+                        assert "section 3.7 does not survive" not in head, (
+                            f"[{label}] a retired claim is reported as "
+                            "refuted")
+                    else:
+                        assert "retired" not in head, (
+                            f"[{label}] the claim is still made and the "
+                            "headline calls it retired")
+                        assert (("section 3.7 does not survive" in head)
+                                == (not grew)), (
+                            f"[{label}] the headline's 3.7 clause disagrees "
+                            "with its verdict")
 
 
 def test_the_descriptor_choice_is_reported_as_a_choice():
