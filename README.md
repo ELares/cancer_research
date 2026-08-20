@@ -199,7 +199,9 @@ of the census is deliberately not offered — it is 5,187,265 records and
 gitignored, so a panel that appeared to browse it would be browsing something
 else. The Corpus tab (filters, mechanism/cancer/evidence views, the mechanism x
 cancer matrix) needs only the committed `corpus/INDEX.jsonl` and browses the
-4,830-record retrieved archive retained as a method-comparison arm. The Simulation-sweep tab runs
+earlier keyword-retrieved archive, retained as a method-comparison arm: holding
+descriptor scope constant across it and the census is what separates a
+labelling effect from a selection effect. No figure rests on it. The Simulation-sweep tab runs
 a live `ferroptosis_core.sim_batch` sweep when the bindings above are built, and
 otherwise degrades to the committed prior-predictive intervals. Self-hosting: behind
 auth, `streamlit run scripts/dashboard.py --server.address 0.0.0.0 --server.port 8501`.
