@@ -53,6 +53,7 @@
    "atlas-thesis-rank",
    "atlas-untagged-partner",
    "atlas-variant-drug-map",
+   "burden-data-feasibility",
    "census-diagnostic-chains",
    "census-evidence-design",
    "census-external-check",
@@ -155,7 +156,7 @@
   "top_mechanism": "immunotherapy",
   "top_n": 2297
  },
- "n_analyses": 127,
+ "n_analyses": 128,
  "n_predictions": 8,
  "n_predictions_ferroptosis": 8,
  "n_therapy_subject": 1,
