@@ -1,0 +1,189 @@
+{
+ "big_shift_threshold": 3,
+ "census": 4403994,
+ "census_oa_rate": 0.2126131416164509,
+ "mechanisms": [
+  {
+   "mechanism": "epigenetic",
+   "median_year": 2015.0,
+   "oa_rate": 0.42739473811715684,
+   "rank_non_oa": 2,
+   "rank_oa": 1,
+   "shift": 1,
+   "total": 41278,
+   "with_fulltext": 17642,
+   "without": 23636
+  },
+  {
+   "mechanism": "nanoparticle",
+   "median_year": 2020.0,
+   "oa_rate": 0.2853919756442318,
+   "rank_non_oa": 1,
+   "rank_oa": 3,
+   "shift": -2,
+   "total": 36788,
+   "with_fulltext": 10499,
+   "without": 26289
+  },
+  {
+   "mechanism": "immunotherapy",
+   "median_year": 2022.0,
+   "oa_rate": 0.5228911884603324,
+   "rank_non_oa": 3,
+   "rank_oa": 2,
+   "shift": 1,
+   "total": 31890,
+   "with_fulltext": 16675,
+   "without": 15215
+  },
+  {
+   "mechanism": "car-t",
+   "median_year": 2020.0,
+   "oa_rate": 0.47297825237661156,
+   "rank_non_oa": 4,
+   "rank_oa": 4,
+   "shift": 0,
+   "total": 15358,
+   "with_fulltext": 7264,
+   "without": 8094
+  },
+  {
+   "mechanism": "metabolic-targeting",
+   "median_year": 2019.0,
+   "oa_rate": 0.44817799977295947,
+   "rank_non_oa": 5,
+   "rank_oa": 5,
+   "shift": 0,
+   "total": 8809,
+   "with_fulltext": 3948,
+   "without": 4861
+  },
+  {
+   "mechanism": "antibody-drug-conjugate",
+   "median_year": 2020.0,
+   "oa_rate": 0.37099185911280946,
+   "rank_non_oa": 6,
+   "rank_oa": 9,
+   "shift": -3,
+   "total": 6019,
+   "with_fulltext": 2233,
+   "without": 3786
+  },
+  {
+   "mechanism": "synthetic-lethality",
+   "median_year": 2021,
+   "oa_rate": 0.4761817178591135,
+   "rank_non_oa": 7,
+   "rank_oa": 6,
+   "shift": 1,
+   "total": 5437,
+   "with_fulltext": 2589,
+   "without": 2848
+  },
+  {
+   "mechanism": "oncolytic-virus",
+   "median_year": 2017,
+   "oa_rate": 0.5133839392728725,
+   "rank_non_oa": 8,
+   "rank_oa": 7,
+   "shift": 1,
+   "total": 5006,
+   "with_fulltext": 2570,
+   "without": 2436
+  },
+  {
+   "mechanism": "crispr",
+   "median_year": 2021.0,
+   "oa_rate": 0.6328252585737616,
+   "rank_non_oa": 12,
+   "rank_oa": 8,
+   "shift": 4,
+   "total": 3674,
+   "with_fulltext": 2325,
+   "without": 1349
+  },
+  {
+   "mechanism": "bispecific-antibody",
+   "median_year": 2021.0,
+   "oa_rate": 0.44020797227036396,
+   "rank_non_oa": 10,
+   "rank_oa": 10,
+   "shift": 0,
+   "total": 3462,
+   "with_fulltext": 1524,
+   "without": 1938
+  },
+  {
+   "mechanism": "electrochemical-therapy",
+   "median_year": 2015,
+   "oa_rate": 0.29105367793240555,
+   "rank_non_oa": 11,
+   "rank_oa": 11,
+   "shift": 0,
+   "total": 2515,
+   "with_fulltext": 732,
+   "without": 1783
+  },
+  {
+   "mechanism": "sonodynamic",
+   "median_year": 2011,
+   "oa_rate": 0.18424194190210905,
+   "rank_non_oa": 9,
+   "rank_oa": 13,
+   "shift": -4,
+   "total": 2513,
+   "with_fulltext": 463,
+   "without": 2050
+  },
+  {
+   "mechanism": "hifu",
+   "median_year": 2018.0,
+   "oa_rate": 0.2359467455621302,
+   "rank_non_oa": 13,
+   "rank_oa": 14,
+   "shift": -1,
+   "total": 1352,
+   "with_fulltext": 319,
+   "without": 1033
+  },
+  {
+   "mechanism": "phagocytosis-checkpoint",
+   "median_year": 2022.0,
+   "oa_rate": 0.5860566448801743,
+   "rank_non_oa": 14,
+   "rank_oa": 12,
+   "shift": 2,
+   "total": 918,
+   "with_fulltext": 538,
+   "without": 380
+  },
+  {
+   "mechanism": "microbiome",
+   "median_year": 2023.0,
+   "oa_rate": 0.55,
+   "rank_non_oa": 15,
+   "rank_oa": 15,
+   "shift": 0,
+   "total": 380,
+   "with_fulltext": 209,
+   "without": 171
+  },
+  {
+   "mechanism": "mrna-vaccine",
+   "median_year": 2024,
+   "oa_rate": 0.6345514950166113,
+   "rank_non_oa": 16,
+   "rank_oa": 16,
+   "shift": 0,
+   "total": 301,
+   "with_fulltext": 191,
+   "without": 110
+  }
+ ],
+ "moved": [
+  "antibody-drug-conjugate",
+  "crispr",
+  "sonodynamic"
+ ],
+ "with_pmcid": 936347
+}

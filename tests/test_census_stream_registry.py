@@ -61,6 +61,72 @@ _PATTERN = re.compile(
 
 # module -> (streams it reads, why that set is the right one)
 REGISTRY = {
+    "census_evidence_design.py": (
+        {"records"},
+        "Study design is read from NLM publication types and MeSH check tags, "
+        "which only the INDEXED stream carries. records_unindexed has neither, "
+        "so there is no label of this kind to compute for it -- and the report "
+        "states that denominator rather than quietly using the smaller one."),
+    "census_oa_bias.py": (
+        {"records"},
+        "Compares mechanism ranking with and without a PMC identifier on "
+        "identical MeSH descriptors. Both arms must come from the same stream "
+        "or the comparison confounds availability with indexing; "
+        "records_unindexed carries no descriptors and so cannot supply either "
+        "arm."),
+    "census_diagnostic_chains.py": (
+        {"records"},
+        "Chain membership is matched over title, MeSH and abstract. The "
+        "MeSH channel is the one the published corpus figure used and is "
+        "carried only by the indexed stream, so folding in records_unindexed "
+        "would change the instrument mid-measurement -- exactly the thing this "
+        "analysis exists to hold fixed between its two arms."),
+    "census_mechanism_sites.py": (
+        {"records"},
+        "Both the site assignment and the mechanism labels are MeSH "
+        "descriptors, and records_unindexed has no descriptors at all, so it "
+        "can supply neither axis. Every record it holds would land in the "
+        "unassigned bucket and depress the assignability rate without "
+        "carrying any information about site."),
+    "census_external_check.py": (
+        {"records"},
+        "Compares the census against PubMed's own index, and the comparison "
+        "only holds if both sides admit records the same way. `neoplasms[mh]` "
+        "returns C04-indexed records, so the census side must be the C04 CORE "
+        "of the indexed stream -- records_unindexed carries no MeSH at all and "
+        "every record in it would be a census-side record PubMed's query "
+        "cannot return, turning the whole check into a measurement of the "
+        "streams' definitions."),
+    "census_fulltext_ceiling.py": (
+        {"records"},
+        "Measures how much of the INDEXED stream's design-label gap open-access "
+        "full text could reach, so both the numerator and the denominator must "
+        "come from that stream. records_unindexed carries no publication types, "
+        "so every record in it is undetermined BY CONSTRUCTION -- folding it in "
+        "would inflate the gap with records that were never a labelling failure "
+        "and depress the ceiling with them."),
+    "corpus_dependency_audit.py": (
+        {"records"},
+        "Reads the census only to learn its record SCHEMA -- which fields a "
+        "consumer could be pointed at -- and one shard is as informative as "
+        "all of them. records_unindexed would add nothing, since a "
+        "text-recovered record carries a SUBSET of the same fields, and a "
+        "consumer needing a field it lacks is already accounted for by the "
+        "indexed stream's schema."),
+    "census_mechanism_profile.py": (
+        {"records"},
+        "Joins mechanism descriptors, C04 site descriptors and NLM publication "
+        "types, all three of which only the indexed stream carries. Adding "
+        "records_unindexed would contribute records to no mechanism, no site "
+        "and no trial column while inflating nothing but the pass count."),
+    "census_mechanism_growth.py": (
+        {"records"},
+        "Mechanism labels are MeSH descriptors, so the numerator can only come "
+        "from the indexed stream, and the field denominator must come from the "
+        "same stream or the growth ratio compares a MeSH-labelled numerator "
+        "against a denominator that includes records MeSH never reached -- "
+        "which would bias the ratio DOWN in exactly the recent years the claim "
+        "is about."),
     "atlas_ingest_sensitivity.py": (
         {"records"},
         "The qualifier measurement itself re-parses the raw baseline XML, which "

@@ -115,3 +115,94 @@ def summary_stats(records):
         "year_min": min(years) if years else None,
         "year_max": max(years) if years else None,
     }
+
+
+# --- census layer (#RETIRE-FROZEN) ----------------------------------------
+#
+# The corpus layer above reads 4,830 RECORDS. The census is 5,187,265 and is
+# gitignored, so record-level browsing of it is impossible in a browser and
+# impossible for anyone who has not run the multi-hour ingest.
+#
+# What IS shippable is the committed AGGREGATES -- the analysis JSON the census
+# scripts write, ~62 KB in total. That is the whole census's shape at a size a
+# Pyodide page can load, and it is the layer a reader actually wants: nobody
+# browses four million records one at a time.
+#
+# FAIL-SOFT, not fail-open. A missing artifact returns None and the caller says
+# so, because rendering an empty census panel that looks populated is worse
+# than rendering a notice. This is the same reason the simulation tab degrades
+# to committed intervals rather than showing a blank sweep.
+
+ANALYSIS = REPO_ROOT / "analysis"
+CENSUS_ARTIFACTS = {
+    "profile": "census-mechanism-profile.json",
+    "growth": "census-mechanism-growth.json",
+    "design": "census-evidence-design.json",
+    "sites": "census-mechanism-sites.json",
+    "chains": "census-diagnostic-chains.json",
+}
+
+
+def load_census(names=None, base=None):
+    """Load the committed census aggregates. Returns {name: dict-or-None}."""
+    base = Path(base) if base is not None else ANALYSIS
+    want = names or list(CENSUS_ARTIFACTS)
+    out = {}
+    for key in want:
+        path = base / CENSUS_ARTIFACTS[key]
+        try:
+            out[key] = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            out[key] = None
+    return out
+
+
+def census_headline(design):
+    """The two denominators, both of them.
+
+    Quoting the trial share against the whole census understates it and against
+    classifiable records alone overstates it, so neither is returned alone --
+    the caller gets both or nothing. Returns None if the artifact is missing.
+    """
+    if not design:
+        return None
+    total = design.get("census")
+    classifiable = design.get("classifiable")
+    trials = (design.get("classes") or {}).get("trial")
+    if not (total and classifiable and trials is not None):
+        return None
+    return {
+        "census": total,
+        "classifiable": classifiable,
+        "undetermined": total - classifiable,
+        "trials": trials,
+        "share_of_census": round(100 * trials / total, 2),
+        "share_of_classifiable": round(100 * trials / classifiable, 2),
+    }
+
+
+def census_mechanism_rows(profile):
+    """Per-mechanism rows for display, sorted by trial share.
+
+    SORTED BY TRIAL SHARE, NOT BY VOLUME, and the reason is a finding rather
+    than a preference: descriptor breadth varies enormously across mechanisms,
+    so a volume ordering is substantially an ordering of how broad each
+    descriptor is. Trial share is a ratio within a mechanism and does not have
+    that problem.
+    """
+    if not profile:
+        return []
+    rows = []
+    for r in profile.get("rows", []):
+        rows.append({
+            "mechanism": r["mechanism"],
+            "census articles": r["census"],
+            "clinical trials": r["trials"],
+            "trial share %": r["trial_share"],
+            "growth 2015-2025": r.get("growth"),
+            "top site": (r["top_sites"][0]["site"] if r.get("top_sites") else None),
+            "top partner": (r["top_partners"][0]["mechanism"]
+                            if r.get("top_partners") else None),
+        })
+    rows.sort(key=lambda r: -(r["trial share %"] or 0))
+    return rows

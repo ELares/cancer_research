@@ -91,6 +91,86 @@ def corpus_tab(records):
     st.dataframe(table, use_container_width=True, height=400)
 
 
+@st.cache_data
+def _census():
+    return dd.load_census()
+
+
+def census_tab():
+    """The census, at the only resolution a browser can hold: aggregates.
+
+    Record-level browsing is not offered and its absence is stated rather than
+    worked around. 5,187,265 records cannot be loaded client-side, and the
+    census is gitignored besides -- so a tab that appeared to browse it would
+    be browsing something else.
+    """
+    st.subheader("Census")
+    c = _census()
+    head = dd.census_headline(c.get("design"))
+    if head is None:
+        st.warning(
+            "The committed census aggregates are missing from `analysis/`. "
+            "Regenerate them with the `scripts/census_*.py` generators; this "
+            "panel shows nothing rather than showing a partial census that "
+            "looks complete."
+        )
+        return
+
+    a, b, d = st.columns(3)
+    a.metric("Cancer articles (MeSH-indexed)", f"{head['census']:,}")
+    b.metric("Clinical trials", f"{head['trials']:,}")
+    d.metric("Undetermined design", f"{head['undetermined']:,}")
+    st.caption(
+        f"The trial share has two denominators and both are shown because "
+        f"either alone misleads in a predictable direction: "
+        f"**{head['share_of_census']}%** of the whole census, "
+        f"**{head['share_of_classifiable']}%** of the "
+        f"{head['classifiable']:,} records carrying a design-informative "
+        f"label at all. Study design is read from NLM publication types and "
+        f"MeSH check tags -- labels assigned by professional indexers, not by "
+        f"a detector this project wrote."
+    )
+
+    rows = dd.census_mechanism_rows(c.get("profile"))
+    if rows:
+        st.markdown("#### Mechanisms, ordered by clinical-trial share")
+        st.caption(
+            "Ordered by trial share rather than by volume, and that is a "
+            "finding rather than a display preference: descriptor breadth "
+            "varies enormously between mechanisms, so a volume ranking is "
+            "substantially a ranking of how broad each descriptor is. A ratio "
+            "computed within one mechanism does not have that problem."
+        )
+        st.dataframe(pd.DataFrame(rows), use_container_width=True, hide_index=True)
+        st.caption(
+            "Two mechanisms this book discusses are absent because MeSH has no "
+            "descriptor for them: TTFields and bioelectric modulation. They are "
+            "unmeasurable here, NOT zero -- TTFields has FDA approval in two "
+            "indications and completed Phase III trials."
+        )
+
+    growth = c.get("growth")
+    if growth and growth.get("union_growth"):
+        st.markdown("#### Growth, against the denominator a growth claim needs")
+        st.caption(
+            f"Cancer literature as a whole grew x{growth['field_growth']} "
+            f"between {growth['start_year']} and {growth['end_year']}; the "
+            f"mechanisms tracked here grew x{growth['union_growth']}, which is "
+            f"x{growth['mechanisms_over_field']} the field. A corpus of "
+            f"emerging-therapy papers outgrows all of cancer research whether "
+            f"or not anything unusual happened, so the field is the wrong "
+            f"comparator and the mechanisms' own rate is the right one."
+        )
+
+    st.caption(
+        "Record-level browsing of the census is deliberately not offered: it is "
+        "5,187,265 records and gitignored. These panels read the committed "
+        "aggregates under `analysis/`, which is what a reader of a census "
+        "actually wants. The Corpus tab browses the 4,830-record retrieved "
+        "archive, retained as a method-comparison arm."
+    )
+
+
 def _load_json(rel):
     p = REPO_ROOT / rel
     return json.loads(p.read_text()) if p.exists() else None
@@ -141,12 +221,15 @@ def simulation_tab():
 
 def main():
     st.set_page_config(page_title="Cancer-research dashboard", layout="wide")
-    st.title("Cancer-research corpus + simulation dashboard")
-    st.caption("Issue #354. Corpus index: `corpus/INDEX.jsonl`. Read the MODEL_CARD for simulation scope/caveats.")
-    records = _records()
-    tab1, tab2 = st.tabs(["Corpus", "Simulation sweep"])
+    st.title("Cancer-research census + simulation dashboard")
+    st.caption("Census aggregates: `analysis/census-*.json`. Corpus index: "
+               "`corpus/INDEX.jsonl`. Read the MODEL_CARD for simulation "
+               "scope/caveats.")
+    tab0, tab1, tab2 = st.tabs(["Census", "Corpus (control arm)", "Simulation sweep"])
+    with tab0:
+        census_tab()
     with tab1:
-        corpus_tab(records)
+        corpus_tab(_records())
     with tab2:
         simulation_tab()
 

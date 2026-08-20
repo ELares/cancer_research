@@ -7,7 +7,7 @@ Creates 6 figures:
   fig20_stromal_shielding.pdf     — CAF boundary protection
   fig21_ph_ion_trapping.pdf       — pH gradient with drug trapping
   fig22_decision_flowchart.pdf    — Which modality for which context
-  fig23_prisma_flow.pdf           — PRISMA-inspired corpus construction flow
+  fig23_census_flow.pdf            — census construction flow
 
 Usage:
   python3 scripts/generate_conceptual_diagrams.py
@@ -363,82 +363,137 @@ def fig22_flowchart():
     print(f"  fig22_decision_flowchart")
 
 
-# ── Figure 23: PRISMA-inspired corpus construction flow ──────────────
+# ── Figure 23: census construction flow ──────────────────────────────
 
-def fig23_prisma_flow():
-    """PRISMA-inspired corpus construction flow diagram (Graphviz)."""
-    import graphviz
-    import subprocess
+# Boxes: (key, x, y, w, h, fill, edge, lines)
+_CENSUS_BOXES = [
+    ("baseline", 0.50, 0.90, 0.56, 0.10, "#E3F2FD", "#1565C0", [
+        ("PubMed Annual Baseline", "bold"),
+        ("1,334 gzipped XML files, ~40M records", ""),
+        ("E-utilities cannot page past 10,000 hits", "italic")]),
+    ("definition", 0.50, 0.735, 0.62, 0.105, "#E3F2FD", "#1565C0", [
+        ("Cancer = MeSH tree C04", "bold"),
+        ("704 topical descriptors (NLM SPARQL endpoint)", ""),
+        ("UNION 9 adjacent experimental-context descriptors", "")]),
+    ("indexed", 0.26, 0.525, 0.44, 0.125, "#C8E6C9", "#2E7D32", [
+        ("MeSH-Indexed Stream", "bold"),
+        ("n = 4,403,994", "bold"),
+        ("admitted on a DescriptorName match", ""),
+        ("200,758 (4.6%) adjacent-basis only", "")]),
+    ("recovered", 0.74, 0.520, 0.44, 0.145, "#FFF3E0", "#E65100", [
+        ("Text-Recovered Stream", "bold"),
+        ("n = 783,271", "bold"),
+        ("admitted on a text match where MeSH", ""),
+        ("has not indexed the record yet", ""),
+        ("matcher precision 75.7%, recall 95.6%", "italic")]),
+    ("census", 0.50, 0.335, 0.34, 0.075, "#E3F2FD", "#1565C0", [
+        ("Census", "bold"),
+        ("n = 5,187,265", "bold")]),
+    ("fulltext", 0.26, 0.135, 0.44, 0.115, "#EEEEEE", "#616161", [
+        ("Open-Access Full Text", "bold"),
+        ("1,116,481 of 7,517,526 seen", ""),
+        ("737,929 oa_comm | 378,552 oa_noncomm", ""),
+        ("licence class carried per record", "italic")]),
+    ("labels", 0.74, 0.135, 0.44, 0.115, "#EEEEEE", "#616161", [
+        ("Labels are NLM's, not ours", "bold"),
+        ("mechanism + site: MeSH descriptors", ""),
+        ("study design: publication types + check tags", ""),
+        ("44.5% carry no design-informative label", "italic")]),
+]
 
-    dot = graphviz.Digraph("prisma", format="pdf")
-    dot.attr(rankdir="TB", bgcolor="white", fontname="Helvetica",
-             label="PRISMA-Inspired Corpus Construction Flow",
-             labelloc="t", fontsize="14", fontcolor="black")
-    dot.attr("node", fontname="Helvetica", fontsize="10",
-             style="filled,rounded", shape="box", penwidth="1.5")
-    dot.attr("edge", fontname="Helvetica", fontsize="9", penwidth="1.5")
+# (from, to, label)
+_CENSUS_EDGES = [
+    ("baseline", "definition", ""),
+    ("definition", "indexed", "MeSH descriptor"),
+    ("definition", "recovered", "no MeSH yet"),
+    ("indexed", "census", ""),
+    ("recovered", "census", ""),
+    ("census", "fulltext", ""),
+    ("census", "labels", ""),
+]
 
-    # Pipeline stages (blue)
-    blue = dict(fillcolor="#E3F2FD", color="#1565C0")
-    dot.node("search",
-             "PubMed Search\n19 mechanism-specific queries\n"
-             "(MeSH terms + free-text synonyms)\n"
-             "Coverage through March 2026",
-             **blue)
-    dot.node("identified",
-             "Records Identified\nn = 10,415 unique PMIDs",
-             **blue)
 
-    # Branch: full-text (green) vs abstract-only (orange)
-    green_box = dict(fillcolor="#C8E6C9", color="#2E7D32")
-    orange_box = dict(fillcolor="#FFF3E0", color="#E65100")
-    dot.node("fulltext",
-             "Full Text Obtained\nn = 4,830\n803 journals, 2001\u20132026",
-             **green_box)
-    dot.node("abstract",
-             "Full Text Unavailable\nAbstract-Only Archive\nn = 5,586\n"
-             "(retained separately;\nnot used for quantitative results)",
-             **orange_box)
+def fig23_census_flow():
+    """Census construction flow diagram.
 
-    # Force side-by-side layout for the branch
-    with dot.subgraph() as s:
-        s.attr(rank="same")
-        s.node("fulltext")
-        s.node("abstract")
+    Replaces a PRISMA-inspired retrieval flow. The retrieval it diagrammed was
+    real -- 10,415 records screened to 4,830 -- but a PRISMA flow describes a
+    systematic review's screening decisions, and no screening decisions were
+    ever made: the counts recorded which articles a set of queries happened to
+    reach. Drawing them in a shape borrowed from systematic reviewing implied a
+    protocol that did not exist.
 
-    # Downstream stages (blue)
-    dot.node("enrichment",
-             "Enrichment & Indexing\nOpenAlex metadata "
-             "(OA status, citations, topics)\n"
-             "Indexed: 4,830 articles\n"
-             "Open Access: 4,769 (98.7%) | Non-OA: 61 (1.3%)",
-             **blue)
-    dot.node("tagging",
-             "Automated Tagging\n"
-             "19 mechanisms \u00d7 22 cancer types \u00d7 7 evidence tiers\n"
-             "Evidence-tagged: 2,038 (42.2%)\n"
-             "Precision 96%, Recall 55% (100-article gold set)",
-             **blue)
+    The census has a construction flow and it is a different shape. Nothing is
+    screened OUT; two streams are admitted by two DIFFERENT RULES, and which
+    stream a record lands in is a property of NLM's indexing rather than of the
+    record. So the two are drawn side by side as parallel admissions, both
+    feeding the total, rather than as a branch where one arm is discarded.
 
-    # Edges
-    dot.edge("search", "identified")
-    dot.edge("identified", "fulltext", label="  Full text\n  available  ")
-    dot.edge("identified", "abstract", label="  Full text\n  unavailable  ")
-    dot.edge("fulltext", "enrichment")
-    dot.edge("enrichment", "tagging")
+    DRAWN IN MATPLOTLIB RATHER THAN GRAPHVIZ, deliberately. The figure it
+    replaces needed a `dot` binary that is not a Python dependency and is not
+    present in this project's environment or in CI, so it could not be
+    regenerated by anyone who did not already have it installed -- a figure
+    nobody can reproduce is a figure nobody can check. This one uses the same
+    matplotlib the other conceptual diagrams use.
+    """
+    fig, ax = plt.subplots(figsize=(11, 9))
+    ax.set_xlim(0, 1)
+    ax.set_ylim(0, 1)
+    ax.axis("off")
+    ax.set_title("Census Construction", fontsize=15, fontweight="bold", pad=14)
 
-    # Render: save .gv source, then generate PDF and high-DPI PNG
-    out_base = str(OUT / "fig23_prisma_flow")
-    gv_path = out_base + ".gv"
+    pos = {}
+    for key, x, y, w, h, fill, edge, lines in _CENSUS_BOXES:
+        box = mpatches.FancyBboxPatch(
+            (x - w / 2, y - h / 2), w, h,
+            boxstyle="round,pad=0.008,rounding_size=0.012",
+            facecolor=fill, edgecolor=edge, linewidth=1.6, zorder=2)
+        ax.add_patch(box)
+        pos[key] = (x, y, w, h)
+        n = len(lines)
+        # Lay the lines out inside the box rather than at a fixed offset, so a
+        # box with five lines does not overflow one sized for three.
+        step = (h - 0.018) / max(n, 1)
+        top = y + h / 2 - 0.012 - step / 2
+        for k, (text, style) in enumerate(lines):
+            ax.text(x, top - k * step, text, ha="center", va="center",
+                    fontsize=8.4 if style == "bold" else 7.8,
+                    fontweight="bold" if style == "bold" else "normal",
+                    style="italic" if style == "italic" else "normal",
+                    color="#212121" if style != "italic" else "#555555",
+                    zorder=3)
 
-    with open(gv_path, "w") as f:
-        f.write(dot.source)
+    for src, dst, label in _CENSUS_EDGES:
+        x0, y0, _, h0 = pos[src]
+        x1, y1, _, h1 = pos[dst]
+        # zorder ABOVE the boxes and a shrink at the target end: drawn
+        # behind them, a diagonal arrow's head is covered by the box it points
+        # at, so every diagonal edge in the first render arrived headless while
+        # the one vertical edge looked fine.
+        arrow = FancyArrowPatch(
+            (x0, y0 - h0 / 2), (x1, y1 + h1 / 2),
+            arrowstyle="-|>", mutation_scale=13, linewidth=1.5,
+            shrinkA=1.0, shrinkB=3.0,
+            color="#455A64", connectionstyle="arc3,rad=0.0", zorder=4)
+        ax.add_patch(arrow)
+        if label:
+            ax.text((x0 + x1) / 2, (y0 - h0 / 2 + y1 + h1 / 2) / 2 + 0.012,
+                    label, ha="center", va="bottom", fontsize=7.6,
+                    style="italic", color="#455A64", zorder=3)
 
-    subprocess.run(["dot", "-Tpdf", "-o", out_base + ".pdf", gv_path], check=True)
-    subprocess.run(["dot", "-Tpng", "-Gdpi=300", "-o", out_base + ".png", gv_path], check=True)
+    ax.text(0.5, 0.028,
+            "Two parallel admission rules, not a screening funnel: nothing is "
+            "excluded, and which stream a record\nlands in reflects how far "
+            "NLM's indexing has reached rather than any judgement made here.",
+            ha="center", va="center", fontsize=8.2, color="#37474F",
+            style="italic", zorder=3)
 
-    Path(gv_path).unlink(missing_ok=True)
-    print(f"  fig23_prisma_flow")
+    fig.tight_layout()
+    out_base = OUT / "fig23_census_flow"
+    fig.savefig(str(out_base) + ".pdf", bbox_inches="tight")
+    fig.savefig(str(out_base) + ".png", dpi=300, bbox_inches="tight")
+    plt.close(fig)
+    print(f"  fig23_census_flow")
 
 
 if __name__ == "__main__":
@@ -448,5 +503,5 @@ if __name__ == "__main__":
     fig20_stromal()
     fig21_ph()
     fig22_flowchart()
-    fig23_prisma_flow()
+    fig23_census_flow()
     print("Done.")

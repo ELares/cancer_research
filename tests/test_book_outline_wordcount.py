@@ -120,3 +120,89 @@ def test_prose_only_is_not_the_same_as_a_raw_word_count():
     assert prose_words(raw) < len(raw.split()), (
         "prose_words returns the raw word count, so the 'prose-only' "
         "qualifier is no longer excluding anything")
+
+
+# --- per-part rows, not only the Total ------------------------------------
+
+PART_ROW_TO_HEADING = {
+    "I: Why This Exists": "# Part I: Why This Exists",
+    "II: What We Found": "# Part II: What We Found",
+    "III: Simulations": "# Part III: What The Simulations Show",
+    "IV: What's Next": "# Part IV: What Should Happen Next",
+    "V: References/Tools": "# Part V: References and Tools",
+    "front matter (title, abstract)": None,   # everything before Part I
+}
+
+
+def _part_word_counts() -> "dict[str, int]":
+    lines = MANUSCRIPT.read_text().split("\n")
+    starts = {}
+    for i, line in enumerate(lines):
+        for row, heading in PART_ROW_TO_HEADING.items():
+            if heading is not None and line.strip() == heading:
+                starts[row] = i
+    assert len(starts) == len(PART_ROW_TO_HEADING) - 1, (
+        f"manuscript part headings changed; found {sorted(starts)}")
+    ordered = sorted(starts.items(), key=lambda kv: kv[1])
+    out = {"front matter (title, abstract)": prose_words(
+        "\n".join(lines[: ordered[0][1]]))}
+    for k, (row, i) in enumerate(ordered):
+        end = ordered[k + 1][1] if k + 1 < len(ordered) else len(lines)
+        out[row] = prose_words("\n".join(lines[i:end]))
+    return out
+
+
+def test_every_per_part_row_matches_the_manuscript():
+    """The Total alone is not enough, and this file already knew it.
+
+    The outline's own note says the per-part figures are measured rather than
+    planned "because an earlier revision changed only the Total and left the
+    per-part rows stale". That is exactly what happened again: a helper kept
+    the Total correct by attributing every delta to Part II, so edits made in
+    Chapters 7 and 10 and in the glossary were booked against Chapters 3-4.
+    The Total stayed green throughout.
+
+    A row is allowed to be stale by less than the rounding step, since every
+    figure in the table is rounded to the nearest hundred.
+    """
+    measured = _part_word_counts()
+    documented = dict(_budget_rows())
+    step = 10 ** -ROUND_TO
+    # ONE FULL STEP, not half. Every figure is rounded to the nearest hundred
+    # and six independently-rounded rows need not sum to the rounded total, so
+    # the generator allocates the residual by largest remainder -- which can
+    # move a row a full step away from its own measurement.
+    #
+    # That looks like a loosened guard and is not, because it does not stand
+    # alone: the sum tests require the rows to add up EXACTLY. Booking one
+    # part's edit against another has to break one or the other, since moving
+    # words between rows changes two of them while the total stays put. The
+    # defect this was written for -- a helper crediting every delta to Part II
+    # -- fails on the first row it touches.
+    bad = []
+    for row, words in measured.items():
+        if row not in documented:
+            bad.append(f"{row}: no row in the budget table")
+            continue
+        if abs(documented[row] - words) > step:
+            bad.append(f"{row}: documented {documented[row]:,} vs measured "
+                       f"{words:,} (rounds to {round(words, ROUND_TO):,})")
+    assert not bad, (
+        "book-outline.md's per-part rows disagree with the manuscript:\n  "
+        + "\n  ".join(bad)
+        + "\nUpdate the rows the edit actually landed in, not whichever row "
+          "makes the Total add up.")
+
+
+def test_the_per_part_rows_sum_to_the_documented_total():
+    """A table whose rows do not add up to its own Total is reporting two
+    different documents. Checked against the DOCUMENTED figures rather than
+    the measured ones, so it fails on a bookkeeping error even when every
+    individual row happens to be within tolerance."""
+    documented = dict(_budget_rows())
+    total = documented["Total"]
+    parts = sum(v for k, v in documented.items() if k != "Total")
+    step = 10 ** -ROUND_TO
+    assert abs(parts - total) <= step * 3, (
+        f"the budget rows sum to {parts:,} against a documented Total of "
+        f"{total:,}")

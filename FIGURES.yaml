@@ -23,25 +23,28 @@ figures:
   # ── Manuscript figures (1-24) ──────────────────────────────────
 
   - manuscript_figure: 1
-    filename: fig5_publication_trends
+    filename: fig1c_ratio_straddle
     generator:
-      script: scripts/generate_figures.py
-      function: fig5_publication_trends
+      script: scripts/generate_census_figures.py
+      function: fig1c_ratio_straddle
     inputs:
-      - corpus/by-pmid/
-    type: corpus-derived
+      - analysis/atlas-modality-ratio.json
+    type: census-derived
     status: manuscript
+    note: >-
+      Replaces fig5_publication_trends. The manuscript's Figure 1 argues about the pharmacological:physical volume ratio, and no figure showed that the ratio STRADDLES the earlier keyword figure -- a single bar would be picking one of four definitions, and which one gets picked decides the direction of the conclusion.
 
   - manuscript_figure: 2
-    filename: fig2_mechanism_heatmap
+    filename: fig2c_census_volume
     generator:
-      script: scripts/generate_figures.py
-      function: fig2_mechanism_heatmap
+      script: scripts/generate_census_figures.py
+      function: fig2c_census_volume
     inputs:
-      - corpus/by-pmid/
-      - scripts/config.py
-    type: corpus-derived
+      - analysis/census-mechanism-growth.json
+    type: census-derived
     status: manuscript
+    note: >-
+      Replaces fig2_mechanism_heatmap. Census volume by year against the retrieved corpus's own on a second axis: the 31-fold rise against the census's 1.10-fold IS the retrieval effect, so the two curves are the argument.
 
   - manuscript_figure: 3
     filename: fig1_ferroptosis_comparison
@@ -130,45 +133,52 @@ figures:
     status: manuscript
 
   - manuscript_figure: 10
-    filename: fig9_evidence_tiers
+    filename: fig9c_design_composition
     generator:
-      script: scripts/generate_figures.py
-      function: fig9_evidence_tiers
+      script: scripts/generate_census_figures.py
+      function: fig9c_design_composition
     inputs:
-      - corpus/INDEX.jsonl
-    type: corpus-derived
+      - analysis/census-evidence-design.json
+    type: census-derived
     status: manuscript
+    note: >-
+      Replaces fig9_evidence_tiers. Study design from NLM publication types and check tags, with the UNDETERMINED share drawn rather than dropped -- it is the largest class, and omitting it would imply the census classifies everything.
 
   - manuscript_figure: 11
-    filename: fig14_tissue_mechanism_heatmap
+    filename: fig14c_class_by_site
     generator:
-      script: scripts/generate_figures.py
-      function: fig14_tissue_mechanism_heatmap
+      script: scripts/generate_census_figures.py
+      function: fig14c_class_by_site
     inputs:
-      - corpus/INDEX.jsonl
-      - scripts/config.py
-    type: corpus-derived
+      - analysis/census-mechanism-sites.json
+    type: census-derived
     status: manuscript
+    note: >-
+      Replaces fig14_tissue_mechanism_heatmap. Enrichment against each site's own share rather than counts, because a count chart reproduces the ordering of the SITES, not of the modality.
 
   - manuscript_figure: 12
-    filename: fig15_designed_combinations
+    filename: fig15c_mechanism_pairs
     generator:
-      script: scripts/generate_figures.py
-      function: fig15_designed_combinations
+      script: scripts/generate_census_figures.py
+      function: fig15c_mechanism_pairs
     inputs:
-      - corpus/INDEX.jsonl
-    type: corpus-derived
+      - analysis/census-mechanism-profile.json
+    type: census-derived
     status: manuscript
+    note: >-
+      Replaces fig15_designed_combinations. Pair COUNTS, never a rate: the designed-combination classifier needed full text and has no census analogue, and the co-occurrence rate is a property of the labelling instrument.
 
   - manuscript_figure: 13
-    filename: fig16_weighted_evidence
+    filename: fig16c_trial_share
     generator:
-      script: scripts/generate_figures.py
-      function: fig16_weighted_evidence
+      script: scripts/generate_census_figures.py
+      function: fig16c_trial_share
     inputs:
-      - corpus/INDEX.jsonl
-    type: corpus-derived
+      - analysis/census-mechanism-profile.json
+    type: census-derived
     status: manuscript
+    note: >-
+      Replaces fig16_weighted_evidence. The weighted composite's ranking moved seven places under a defensible reweighting; trial share from NLM publication types has no editorial parameter in it.
 
   - manuscript_figure: 14
     filename: fig17_damp_heatmap
@@ -234,14 +244,20 @@ figures:
     note: Requires graphviz (dot) binary installed.
 
   - manuscript_figure: 20
-    filename: fig23_prisma_flow
+    filename: fig23_census_flow
     generator:
       script: scripts/generate_conceptual_diagrams.py
-      function: fig23_prisma_flow
+      function: fig23_census_flow
     inputs: []
     type: conceptual
     status: manuscript
-    note: Requires graphviz (dot) binary installed.
+    note: >-
+      Replaces fig23_prisma_flow. A PRISMA flow diagrams a systematic review's
+      screening decisions and none were ever made, so the shape implied a
+      protocol that did not exist. Redrawn in matplotlib rather than graphviz:
+      the old figure needed a `dot` binary that is not a Python dependency and
+      is absent from this environment and from CI, so nobody could regenerate
+      it to check it.
 
   - manuscript_figure: 21
     filename: fig24_hypoxia_killcurve

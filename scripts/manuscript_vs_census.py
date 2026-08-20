@@ -113,11 +113,58 @@ SDT_WORDS = ("sonodynamic", "sono-dynamic", "sonosensitiz", "sonosensitis",
 TUMOUR_WORDS = ("tumor", "tumour", "cancer", "carcinoma", "neoplas", "melanoma",
                 "glioma", "sarcoma", "leukemi", "lymphoma", "metasta")
 
-# The growth claim in section 3.7, and the two confounds the census can rule
-# out or in. The corpus was retrieved ONCE with fixed queries, so the only
-# year-dependent retrieval effect is how much of each year is open access.
+# The growth claim section 3.7 USED TO MAKE, and the two confounds the census
+# can rule out or in. The corpus was retrieved ONCE with fixed queries, so the
+# only year-dependent retrieval effect is how much of each year is open access.
+#
+# THAT CLAIM HAS SINCE BEEN RETIRED FROM THE MANUSCRIPT, which changes what this
+# leg is for rather than making it pointless. A measurement that retires a claim
+# has to outlive the claim, or the retraction stops being checkable and becomes
+# something the reader has to take on trust. So the leg keeps running, and
+# `claim_still_made` decides whether it reports a VERDICT on a live claim or a
+# SOURCE for a withdrawn one. The section 8.2 leg is unaffected.
 GROWTH_START, GROWTH_END = 2015, 2025
 CORPUS_GROWTH_START, CORPUS_GROWTH_END = 38, 1167
+
+
+def growth_claim_still_made(manuscript: str) -> bool:
+    """Does the manuscript still ASSERT the corpus growth figures?
+
+    Read from the manuscript rather than configured, so retiring the claim is
+    detected instead of declared. Both endpoints must be present: a retraction
+    paragraph may legitimately mention one.
+    """
+    txt = " ".join(manuscript.split())
+    return (f"from {CORPUS_GROWTH_START} full-text articles" in txt
+            and f"to {CORPUS_GROWTH_END:,} in {GROWTH_END}" in txt)
+
+
+def _matched_denominator():
+    """The growth of the mechanisms the corpus tracks, or None.
+
+    THE COMPARISON IN THIS FILE USES THE WRONG DENOMINATOR. It measures the
+    corpus against the CANCER LITERATURE AS A WHOLE, and a corpus assembled from
+    queries about emerging therapies outgrows all of cancer research whether or
+    not anything unusual happened -- the field includes epidemiology, surgery,
+    supportive care and decades of established practice. So the excess was
+    attributed entirely to the mechanisms when most of it belongs to the
+    retrieval.
+
+    `analysis/census-mechanism-growth.json` measures the matched denominator:
+    the same mechanisms, MeSH-labelled, over articles the project did not
+    select. Read rather than recomputed, and every figure quoted from it is
+    interpolated at render time.
+
+    Fail-open: a missing artifact leaves the unmatched comparison standing
+    where a reader can see it, which is better than silently withdrawing it.
+    """
+    path = PROJECT_ROOT / "analysis" / "census-mechanism-growth.json"
+    if not path.exists():
+        return None
+    d = json.loads(path.read_text())
+    if d.get("start_year") != GROWTH_START or d.get("end_year") != GROWTH_END:
+        return None
+    return d
 
 
 def _recall_check():
@@ -419,6 +466,8 @@ def main() -> int:
             "open_access_start": yo.get(GROWTH_START, 0),
             "open_access_end": yo.get(GROWTH_END, 0),
             "open_access_growth": oa,
+            "claim_still_made": growth_claim_still_made(MANUSCRIPT.read_text()),
+            "matched_denominator": _matched_denominator(),
             "corpus_start": CORPUS_GROWTH_START,
             "corpus_end": CORPUS_GROWTH_END,
             "corpus_growth": corpus,
@@ -506,7 +555,14 @@ def _headline(r: dict) -> str:
                     "than the manuscript argued from")
     else:
         failed.append("section 8.2 does not survive")
-    if g["corpus_exceeds_field"]:
+    if not g["claim_still_made"]:
+        # Not a verdict. The manuscript now reports the census figure directly,
+        # so there is no corpus claim left to test -- and this measurement is
+        # the reason it was withdrawn, which is why it keeps being published.
+        undecided.append(
+            "section 3.7's corpus growth claim has been RETIRED from the "
+            "manuscript, which now reports the census measurement below")
+    elif g["corpus_exceeds_field"]:
         held.append("section 3.7 survives")
     else:
         failed.append("section 3.7 does not survive")
@@ -681,17 +737,37 @@ def render(r: dict) -> str:
           f"{g['open_access_end']:,} | x{g['open_access_growth']} |",
           f"| **the manuscript's corpus** | {g['corpus_start']} | "
           f"{g['corpus_end']:,} | **x{g['corpus_growth']}** |", ""]
-    if g["corpus_exceeds_field"]:
-        L += ["**The claim survives, and the census strengthens it by removing",
-              "the two obvious confounds.** The corpus was retrieved once with",
-              "fixed queries, so the only year-dependent retrieval effect is how",
-              "much of each year is open access. Neither the field's growth nor",
-              "the rise in availability comes close to accounting for the",
-              f"corpus's, which is **x{g['unexplained_by_availability']}** larger",
-              "than availability growth alone.", "",
-              "So the mechanisms the corpus tracks did grow far faster than",
-              "cancer literature as a whole, which is what the manuscript",
-              "attributes the rise to.", ""]
+    md = g.get("matched_denominator")
+    if md:
+        L[-1:] = [
+            f"| **...the mechanisms it tracks, in the census** | "
+            f"{md['union_start']:,} | {md['union_end']:,} | "
+            f"**x{md['union_growth']}** |", "",
+            "**The row above is the denominator this comparison needs, and the",
+            "one it originally lacked.** Measuring the corpus against the whole",
+            f"field attributes all of x{g['corpus_growth']} to the mechanisms.",
+            f"The mechanisms themselves grew x{md['union_growth']}, which is",
+            f"x{md['mechanisms_over_field']} the field -- a real result, and the",
+            "part of the manuscript's growth story that survives. The remaining",
+            f"factor of roughly",
+            f"{round(g['corpus_growth'] / md['union_growth'])} belongs to the",
+            "retrieval, not to the literature.", ""]
+    if md and g["corpus_exceeds_field"]:
+        L += ["**The claim SPLITS.** The mechanisms did grow faster than the",
+              "literature they sit in, which is the substance of what the",
+              "manuscript attributed the rise to. The magnitude did not survive:",
+              f"x{md['union_growth']} against a reported x{g['corpus_growth']}.",
+              "The corpus was retrieved once with fixed queries, so the only",
+              "year-dependent retrieval effect is how much of each year is open",
+              f"access, and that accounts for x{g['open_access_growth']} of the",
+              "gap; the rest is that a single retrieval recovers more of the",
+              "recent literature than of the older.", ""]
+    elif g["corpus_exceeds_field"]:
+        L += ["**The corpus outgrew the field**, but the matched denominator",
+              "(`analysis/census-mechanism-growth.json`) is absent, so how much",
+              "of that belongs to the mechanisms and how much to the retrieval",
+              "is NOT established by this table alone. Regenerate it before",
+              "reading the excess as a property of the literature.", ""]
     else:
         L += ["**The corpus did not outgrow the field**, so the attribution in",
               "section 3.7 needs revisiting.", ""]

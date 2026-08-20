@@ -22,7 +22,7 @@ cd ..
 ## Running Tests
 
 ```bash
-# Python pipeline, news, figure traceability, invariant, and integration tests (1027 tests)
+# Python pipeline, news, figure traceability, invariant, and integration tests (1124 tests)
 python3 -m pytest tests/ -q
 
 # Rust simulation tests (full workspace unit + integration suite)
@@ -121,3 +121,20 @@ See `CLAUDE.md` for guiding principles: let the evidence lead, stay open, be hon
 ## Code of Conduct
 
 Be respectful, constructive, and focused on the mission: contributing to cancer research openly and honestly. See [GitHub's Community Guidelines](https://docs.github.com/en/site-policy/github-terms/github-community-guidelines).
+
+### Regenerating MANIFEST.sha256
+
+`scripts/generate_release_manifest.py` walks `git ls-files`, so **stage your
+changes before you regenerate it**:
+
+```bash
+git add -A
+python3 scripts/generate_release_manifest.py
+git add MANIFEST.sha256
+```
+
+Regenerating first and staging afterwards produces a manifest that is stale the
+moment the commit lands, because the new files were untracked when the
+generator looked. `tests/test_manifest_freshness.py` catches that locally —
+it counts untracked-but-not-ignored files precisely so the ordering mistake is
+visible before CI finds it.

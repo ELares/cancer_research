@@ -7,7 +7,7 @@ or over live PubMed queries run once. The census is the whole indexed
 cancer literature with expert MeSH labels, so several claims the frozen
 corpus could not test now are testable.
 
-**Section 8.2 survives; a symmetric rule cannot distinguish the census from the manuscript, so the earlier 'understated by the manuscript' verdict is withdrawn; section 3.7 survives.** That is reported as prominently as the opposite
+**Section 8.2 survives; a symmetric rule cannot distinguish the census from the manuscript, so the earlier 'understated by the manuscript' verdict is withdrawn, and section 3.7's corpus growth claim has been retired from the manuscript, which now reports the census measurement below.** That is reported as prominently as the opposite
 would be: a document that only ever finds its own work wanting is as
 unreliable as one that only ever confirms it.
 
@@ -109,18 +109,27 @@ attention. The census can rule two confounds in or out.
 | cancer literature (census) | 133,204 | 147,008 | x1.1 |
 | ...of it open access | 42,558 | 71,136 | x1.67 |
 | **the manuscript's corpus** | 38 | 1,167 | **x30.71** |
+| **...the mechanisms it tracks, in the census** | 6,050 | 16,776 | **x2.77** |
 
-**The claim survives, and the census strengthens it by removing
-the two obvious confounds.** The corpus was retrieved once with
-fixed queries, so the only year-dependent retrieval effect is how
-much of each year is open access. Neither the field's growth nor
-the rise in availability comes close to accounting for the
-corpus's, which is **x18.39** larger
-than availability growth alone.
+**The row above is the denominator this comparison needs, and the
+one it originally lacked.** Measuring the corpus against the whole
+field attributes all of x30.71 to the mechanisms.
+The mechanisms themselves grew x2.77, which is
+x2.52 the field -- a real result, and the
+part of the manuscript's growth story that survives. The remaining
+factor of roughly
+11 belongs to the
+retrieval, not to the literature.
 
-So the mechanisms the corpus tracks did grow far faster than
-cancer literature as a whole, which is what the manuscript
-attributes the rise to.
+**The claim SPLITS.** The mechanisms did grow faster than the
+literature they sit in, which is the substance of what the
+manuscript attributed the rise to. The magnitude did not survive:
+x2.77 against a reported x30.71.
+The corpus was retrieved once with fixed queries, so the only
+year-dependent retrieval effect is how much of each year is open
+access, and that accounts for x1.67 of the
+gap; the rest is that a single retrieval recovers more of the
+recent literature than of the older.
 
 ### How fragile is the corpus figure?
 

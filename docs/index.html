@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Cancer-research corpus dashboard — live demo</title>
-  <meta name="description" content="In-browser (stlite/Pyodide) demo of the corpus-exploration dashboard for ELares/cancer_research. The Corpus tab runs entirely client-side on the committed corpus/INDEX.jsonl — no server, no install." />
+  <meta name="description" content="In-browser (stlite/Pyodide) demo of the census dashboard for ELares/cancer_research. Runs entirely client-side on committed aggregates over 5,187,265 cancer articles — no server, no install." />
   <!--
     Live demo for issue #565. This runs scripts/dashboard.py ENTIRELY IN THE
     BROWSER via stlite (Streamlit compiled to WebAssembly/Pyodide) — no Streamlit
@@ -41,12 +41,14 @@
 </head>
 <body>
   <div id="boot">
-    <h1>Loading the cancer-research corpus dashboard…</h1>
+    <h1>Loading the cancer-research census dashboard…</h1>
     <p>Booting Python (Pyodide) + pandas in your browser via stlite, then fetching
-       the corpus index (<code>corpus/INDEX.jsonl</code>, 4,830 records). First load
-       can take 30-60&nbsp;s; it caches afterward.</p>
-    <p>Nothing is installed and no server runs — the Corpus tab executes entirely
-       client-side. Source: <code>ELares/cancer_research</code> · issue #565.</p>
+       the census aggregates (<code>analysis/census-*.json</code>) and the retrieved
+       index. First load can take 30-60&nbsp;s; it caches afterward.</p>
+    <p>Nothing is installed and no server runs — everything executes client-side.
+       The Census tab reads committed aggregates over 5,187,265 cancer articles;
+       record-level browsing of the census is not offered, because it cannot be
+       loaded in a browser. Source: <code>ELares/cancer_research</code>.</p>
   </div>
   <div id="stlite-root"></div>
 
@@ -65,6 +67,15 @@
           "scripts/dashboard.py": { url: `${RAW}/scripts/dashboard.py` },
           "scripts/dashboard_data.py": { url: `${RAW}/scripts/dashboard_data.py` },
           "corpus/INDEX.jsonl": { url: `${RAW}/corpus/INDEX.jsonl` },
+          // The census aggregates the Census tab reads. WITHOUT THESE THE
+          // FRONT DOOR RENDERS ITS "aggregates missing" warning -- the
+          // fail-soft path working correctly and looking like a broken page.
+          // ~62 KB total, so they cost nothing next to Pyodide itself.
+          "analysis/census-diagnostic-chains.json": { url: `${RAW}/analysis/census-diagnostic-chains.json` },
+          "analysis/census-evidence-design.json": { url: `${RAW}/analysis/census-evidence-design.json` },
+          "analysis/census-mechanism-growth.json": { url: `${RAW}/analysis/census-mechanism-growth.json` },
+          "analysis/census-mechanism-profile.json": { url: `${RAW}/analysis/census-mechanism-profile.json` },
+          "analysis/census-mechanism-sites.json": { url: `${RAW}/analysis/census-mechanism-sites.json` },
         },
       },
       document.getElementById("stlite-root"),

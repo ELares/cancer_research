@@ -28,16 +28,22 @@ supportive neighbor cells) would get in the way?
 
 ## What's actually in here?
 
-1. **A literature map.** ~4,830 full-text cancer papers, auto-sorted by treatment type and
-   cancer type. The useful twist: the project *measures its own blind spots* — it shows that
-   some apparent "nobody has studied this" gaps are really just side effects of which journals
-   are free to read and how the search was worded, not real holes in the science.
-2. **A census of the whole field.** Every cancer paper PubMed has indexed — about 4.4 million
-   of them — so those blind spots can be *measured* rather than argued about. The hand-picked
-   4,830 turn out to be 0.11% of the literature, and a wildly uneven 0.11%: some treatment
-   types are sampled 200 times more heavily than others. That is the single most important
-   caveat on everything else here, and it is why the census exists.
-3. **A simulation engine.** A small, reusable program that models the ferroptosis chemistry
+1. **A map of the whole field.** Every cancer paper PubMed has indexed — 5,187,265 of them —
+   sorted by treatment type, by where in the body the cancer is, and by what kind of study it
+   was. Nothing here is a sample. That matters more than it sounds: a project that picks a few
+   thousand papers to study can never tell "nobody has researched this" apart from "our search
+   didn't find it", and this one does not have to guess.
+2. **Labels somebody else wrote.** The sorting uses the National Library of Medicine's own
+   subject headings and study-type labels, applied by professional indexers who have never
+   heard of this project. So when we say a treatment has few clinical trials behind it, that
+   is their label being counted, not ours being trusted.
+3. **An honest account of what even that cannot see.** The census has one real blind spot and
+   it is worth understanding: if the National Library of Medicine has no *name* for a
+   treatment, no amount of searching will count it. Tumor Treating Fields is the clearest
+   case — it is FDA-approved and has completed large trials, and it is simply invisible to
+   this instrument. Throughout, such treatments are reported as *not measurable* rather than
+   as zero, because a zero would read as "nobody is working on it," which would be false.
+4. **A simulation engine.** A small, reusable program that models the ferroptosis chemistry
    and the tumor environment, used to ask "if this idea were true, what would we expect to
    see?"
 

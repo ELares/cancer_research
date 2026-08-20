@@ -1,0 +1,260 @@
+{
+ "census": 4403994,
+ "shards": 1334,
+ "site_totals": {
+  "cervix/uterus": 159782,
+  "head and neck": 380530,
+  "thyroid": 67705,
+  "skin/melanoma": 228568,
+  "lung": 304402,
+  "breast": 378191,
+  "lymphoma": 196557,
+  "brain/CNS": 257914,
+  "liver": 212500,
+  "leukaemia": 266602,
+  "prostate": 162723,
+  "kidney": 91118,
+  "colorectal": 262866,
+  "pancreas": 101620,
+  "stomach": 120883,
+  "bladder": 68398,
+  "ovary": 100406,
+  "oesophagus": 65076
+ },
+ "class_by_site": {
+  "physical": {
+   "head and neck": 309,
+   "kidney": 163,
+   "liver": 634,
+   "lymphoma": 57,
+   "breast": 410,
+   "skin/melanoma": 594,
+   "colorectal": 174,
+   "bladder": 64,
+   "brain/CNS": 317,
+   "cervix/uterus": 483,
+   "lung": 133,
+   "prostate": 569,
+   "ovary": 69,
+   "stomach": 32,
+   "leukaemia": 107,
+   "pancreas": 374,
+   "thyroid": 59,
+   "oesophagus": 20
+  },
+  "pharmacological": {
+   "kidney": 2377,
+   "brain/CNS": 5781,
+   "liver": 4952,
+   "leukaemia": 8588,
+   "breast": 8128,
+   "lymphoma": 6154,
+   "skin/melanoma": 6526,
+   "lung": 11724,
+   "colorectal": 6958,
+   "cervix/uterus": 2421,
+   "stomach": 3177,
+   "ovary": 3776,
+   "head and neck": 5360,
+   "thyroid": 597,
+   "prostate": 2828,
+   "oesophagus": 1490,
+   "pancreas": 2120,
+   "bladder": 1856
+  }
+ },
+ "physical_members": [
+  "electrochemical-therapy",
+  "hifu",
+  "sonodynamic"
+ ],
+ "pharmacological_members": [
+  "antibody-drug-conjugate",
+  "bispecific-antibody",
+  "car-t",
+  "epigenetic",
+  "immunotherapy",
+  "metabolic-targeting",
+  "synthetic-lethality"
+ ],
+ "rows": [
+  {
+   "site": "pancreas",
+   "site_records": 101620,
+   "base_share": 0.02966278937055164,
+   "physical": 374,
+   "physical_enrichment": 2.7601553045565517,
+   "pharmacological": 2120,
+   "pharmacological_enrichment": 0.8426775960959463
+  },
+  {
+   "site": "prostate",
+   "site_records": 162723,
+   "base_share": 0.04749870177862896,
+   "physical": 569,
+   "physical_enrichment": 2.6224331816320436,
+   "pharmacological": 2828,
+   "pharmacological_enrichment": 0.7019969739279812
+  },
+  {
+   "site": "cervix/uterus",
+   "site_records": 159782,
+   "base_share": 0.04664022644366741,
+   "physical": 483,
+   "physical_enrichment": 2.267046275846375,
+   "pharmacological": 2421,
+   "pharmacological_enrichment": 0.612028595329854
+  },
+  {
+   "site": "liver",
+   "site_records": 212500,
+   "base_share": 0.06202856466485164,
+   "physical": 634,
+   "physical_enrichment": 2.2375432100545996,
+   "pharmacological": 4952,
+   "pharmacological_enrichment": 0.9412965760382183
+  },
+  {
+   "site": "skin/melanoma",
+   "site_records": 228568,
+   "base_share": 0.06671879985089793,
+   "physical": 594,
+   "physical_enrichment": 1.949001279404042,
+   "pharmacological": 6526,
+   "pharmacological_enrichment": 1.1532844027908553
+  },
+  {
+   "site": "kidney",
+   "site_records": 91118,
+   "base_share": 0.026597264730032714,
+   "physical": 163,
+   "physical_enrichment": 1.3416045830796417,
+   "pharmacological": 2377,
+   "pharmacological_enrichment": 1.0537310572108909
+  },
+  {
+   "site": "brain/CNS",
+   "site_records": 257914,
+   "base_share": 0.07528487165633198,
+   "physical": 317,
+   "physical_enrichment": 0.9217761194363284,
+   "pharmacological": 5781,
+   "pharmacological_enrichment": 0.9053840299032987
+  },
+  {
+   "site": "breast",
+   "site_records": 378191,
+   "base_share": 0.11039362305489367,
+   "physical": 410,
+   "physical_enrichment": 0.8130434859217649,
+   "pharmacological": 8128,
+   "pharmacological_enrichment": 0.868115044717241
+  },
+  {
+   "site": "bladder",
+   "site_records": 68398,
+   "base_share": 0.019965316545630694,
+   "physical": 64,
+   "physical_enrichment": 0.7017423364608166,
+   "pharmacological": 1856,
+   "pharmacological_enrichment": 1.096072663337428
+  },
+  {
+   "site": "thyroid",
+   "site_records": 67705,
+   "base_share": 0.019763030450041318,
+   "physical": 59,
+   "physical_enrichment": 0.6535403052363122,
+   "pharmacological": 597,
+   "pharmacological_enrichment": 0.3561708445017176
+  },
+  {
+   "site": "head and neck",
+   "site_records": 380530,
+   "base_share": 0.11107637511489879,
+   "physical": 309,
+   "physical_enrichment": 0.6089907353615888,
+   "pharmacological": 5360,
+   "pharmacological_enrichment": 0.5689585994631217
+  },
+  {
+   "site": "ovary",
+   "site_records": 100406,
+   "base_share": 0.02930842382936044,
+   "physical": 69,
+   "physical_enrichment": 0.5153835258099052,
+   "pharmacological": 3776,
+   "pharmacological_enrichment": 1.5190675868354657
+  },
+  {
+   "site": "colorectal",
+   "site_records": 262866,
+   "base_share": 0.0767303561373689,
+   "physical": 174,
+   "physical_enrichment": 0.49642762289584846,
+   "pharmacological": 6958,
+   "pharmacological_enrichment": 1.0691897462923736
+  },
+  {
+   "site": "lung",
+   "site_records": 304402,
+   "base_share": 0.08885467831110667,
+   "physical": 133,
+   "physical_enrichment": 0.32767646277526524,
+   "pharmacological": 11724,
+   "pharmacological_enrichment": 1.555725912785988
+  },
+  {
+   "site": "leukaemia",
+   "site_records": 266602,
+   "base_share": 0.07782089127895894,
+   "physical": 107,
+   "physical_enrichment": 0.30099652520596143,
+   "pharmacological": 8588,
+   "pharmacological_enrichment": 1.3011681078124995
+  },
+  {
+   "site": "oesophagus",
+   "site_records": 65076,
+   "base_share": 0.018995627642964166,
+   "physical": 20,
+   "physical_enrichment": 0.23048902595257342,
+   "pharmacological": 1490,
+   "pharmacological_enrichment": 0.9248476454797727
+  },
+  {
+   "site": "lymphoma",
+   "site_records": 196557,
+   "base_share": 0.05737481686978468,
+   "physical": 57,
+   "physical_enrichment": 0.21748406813665017,
+   "pharmacological": 6154,
+   "pharmacological_enrichment": 1.2646599178397913
+  },
+  {
+   "site": "stomach",
+   "site_records": 120883,
+   "base_share": 0.03528564227002946,
+   "physical": 32,
+   "physical_enrichment": 0.1985298690851771,
+   "pharmacological": 3177,
+   "pharmacological_enrichment": 1.0615898624672515
+  }
+ ],
+ "physical_total": 4568,
+ "pharmacological_total": 84813,
+ "site_assigned_records": 3425841,
+ "opposed_sites": [
+  "pancreas",
+  "prostate",
+  "cervix/uterus",
+  "liver",
+  "bladder",
+  "ovary",
+  "colorectal",
+  "lung",
+  "leukaemia",
+  "lymphoma",
+  "stomach"
+ ]
+}
