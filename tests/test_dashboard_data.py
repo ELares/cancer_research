@@ -171,3 +171,28 @@ def test_the_committed_census_artifacts_are_loadable():
         "Regenerate with the scripts/census_*.py generators.")
     assert dd.census_headline(c["design"]) is not None
     assert dd.census_mechanism_rows(c["profile"])
+
+
+def test_the_browser_demo_ships_every_census_artifact_the_dashboard_reads():
+    """The hosted page fetches an explicit file list, so a new artifact is
+    invisible to it until someone adds it there.
+
+    The failure is quiet and looks like a bug rather than an omission: the
+    Census tab's fail-soft path renders its "aggregates missing" warning, which
+    is the code working correctly and the front door looking broken. It shipped
+    that way until this guard existed.
+    """
+    html = (Path(__file__).resolve().parent.parent / "docs" / "index.html").read_text()
+    missing = [fn for fn in dd.CENSUS_ARTIFACTS.values()
+               if f"analysis/{fn}" not in html]
+    assert not missing, (
+        f"docs/index.html does not fetch {missing}; the hosted Census tab will "
+        "render its missing-artifact warning for them")
+
+
+def test_the_demo_does_not_promise_record_level_census_browsing():
+    """5,187,265 records cannot be loaded client-side, and the page must not
+    imply otherwise -- a reader who expects to browse them will read the
+    aggregate panels as a subset rather than as the whole census."""
+    html = (Path(__file__).resolve().parent.parent / "docs" / "index.html").read_text()
+    assert "record-level browsing of the census is not offered" in html.lower()
