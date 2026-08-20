@@ -804,112 +804,160 @@
    "start": 464,
    "end": 5390,
    "growth": 11.62,
-   "base_sufficient": true
+   "base_sufficient": true,
+   "recent_start": 3102,
+   "recent_end": 5390,
+   "recent_pct": 74.0
   },
   {
    "mechanism": "crispr",
    "start": 70,
    "end": 569,
    "growth": 8.13,
-   "base_sufficient": true
+   "base_sufficient": true,
+   "recent_start": 437,
+   "recent_end": 569,
+   "recent_pct": 30.0
   },
   {
    "mechanism": "car-t",
    "start": 269,
    "end": 1869,
    "growth": 6.95,
-   "base_sufficient": true
+   "base_sufficient": true,
+   "recent_start": 1009,
+   "recent_end": 1869,
+   "recent_pct": 85.0
   },
   {
    "mechanism": "bispecific-antibody",
    "start": 104,
    "end": 574,
    "growth": 5.52,
-   "base_sufficient": true
+   "base_sufficient": true,
+   "recent_start": 198,
+   "recent_end": 574,
+   "recent_pct": 190.0
   },
   {
    "mechanism": "sonodynamic",
    "start": 46,
    "end": 243,
    "growth": 5.28,
-   "base_sufficient": true
+   "base_sufficient": true,
+   "recent_start": 70,
+   "recent_end": 243,
+   "recent_pct": 247.0
   },
   {
    "mechanism": "synthetic-lethality",
    "start": 146,
    "end": 607,
    "growth": 4.16,
-   "base_sufficient": true
+   "base_sufficient": true,
+   "recent_start": 435,
+   "recent_end": 607,
+   "recent_pct": 40.0
   },
   {
    "mechanism": "phagocytosis-checkpoint",
    "start": 33,
    "end": 134,
    "growth": 4.06,
-   "base_sufficient": true
+   "base_sufficient": true,
+   "recent_start": 60,
+   "recent_end": 134,
+   "recent_pct": 123.0
   },
   {
    "mechanism": "antibody-drug-conjugate",
    "start": 235,
    "end": 729,
    "growth": 3.1,
-   "base_sufficient": true
+   "base_sufficient": true,
+   "recent_start": 350,
+   "recent_end": 729,
+   "recent_pct": 108.0
   },
   {
    "mechanism": "nanoparticle",
    "start": 1693,
    "end": 4218,
    "growth": 2.49,
-   "base_sufficient": true
+   "base_sufficient": true,
+   "recent_start": 2776,
+   "recent_end": 4218,
+   "recent_pct": 52.0
   },
   {
    "mechanism": "metabolic-targeting",
    "start": 377,
    "end": 816,
    "growth": 2.16,
-   "base_sufficient": true
+   "base_sufficient": true,
+   "recent_start": 607,
+   "recent_end": 816,
+   "recent_pct": 34.0
   },
   {
    "mechanism": "oncolytic-virus",
    "start": 271,
    "end": 319,
    "growth": 1.18,
-   "base_sufficient": true
+   "base_sufficient": true,
+   "recent_start": 294,
+   "recent_end": 319,
+   "recent_pct": 9.0
   },
   {
    "mechanism": "hifu",
    "start": 92,
    "end": 107,
    "growth": 1.16,
-   "base_sufficient": true
+   "base_sufficient": true,
+   "recent_start": 78,
+   "recent_end": 107,
+   "recent_pct": 37.0
   },
   {
    "mechanism": "epigenetic",
    "start": 2200,
    "end": 2006,
    "growth": 0.91,
-   "base_sufficient": true
+   "base_sufficient": true,
+   "recent_start": 1958,
+   "recent_end": 2006,
+   "recent_pct": 2.0
   },
   {
    "mechanism": "electrochemical-therapy",
    "start": 136,
    "end": 110,
    "growth": 0.81,
-   "base_sufficient": true
+   "base_sufficient": true,
+   "recent_start": 140,
+   "recent_end": 110,
+   "recent_pct": -21.0
   },
   {
    "mechanism": "microbiome",
    "start": 8,
    "end": 109,
-   "growth": 13.62,
-   "base_sufficient": false
+   "growth": null,
+   "base_sufficient": false,
+   "recent_start": 24,
+   "recent_end": 109,
+   "recent_pct": 354.0
   },
   {
    "mechanism": "mrna-vaccine",
    "start": 0,
    "end": 75,
    "growth": null,
-   "base_sufficient": false
+   "base_sufficient": false,
+   "recent_start": 1,
+   "recent_end": 75,
+   "recent_pct": null
   }
  ],
  "field_growth": 1.1,
@@ -919,5 +967,13 @@
  "field_start": 133204,
  "field_end": 147008,
  "mechanisms_over_field": 2.52,
- "min_base": 30
+ "min_base": 30,
+ "recent_start_year": 2020,
+ "shrinking": [
+  "epigenetic",
+  "electrochemical-therapy"
+ ],
+ "recent_shrinking": [
+  "electrochemical-therapy"
+ ]
 }

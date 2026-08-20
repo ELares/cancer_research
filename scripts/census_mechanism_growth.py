@@ -36,6 +36,11 @@ MECH_MAP = REPO / "analysis/mesh-mechanism-map.yaml"
 OUT_MD = REPO / "analysis/census-mechanism-growth.md"
 OUT_JSON = REPO / "analysis/census-mechanism-growth.json"
 START, END = 2015, 2025
+# A second window, because the manuscript quotes one. 2015-2025 spans a decade
+# and 2020-2025 is where the "post-2020 surge" claims live; a mechanism can
+# look flat on one and steep on the other (epigenetic: x0.91 and +2%), so both
+# are rendered rather than left for a reader to derive from the raw series.
+RECENT_START = 2020
 # Below this, a ratio is a statement about a handful of articles.
 MIN_BASE = 30
 
@@ -93,12 +98,23 @@ def assemble(d: dict) -> dict:
         a, b = v.get(s, 0), v.get(e, 0)
         rows.append({
             "mechanism": k, "start": a, "end": b,
-            "growth": g(a, b),
-            # A ratio off a tiny base is a statement about a handful of
-            # articles, not about a field; say so rather than rank on it.
+            # WITHHELD below the base floor, not merely flagged. An earlier
+            # version computed the ratio regardless and let `base_sufficient`
+            # gate only the RENDER, so the .md withheld microbiome's x13.62
+            # while the committed JSON carried it -- and a downstream reader
+            # takes the JSON. A caveat that lives in one representation of an
+            # artifact is not a caveat.
+            "growth": g(a, b) if a >= MIN_BASE else None,
             "base_sufficient": a >= MIN_BASE,
         })
     rows.sort(key=lambda r: (-(r["growth"] or 0)) if r["base_sufficient"] else 1e9)
+    rs = str(RECENT_START)
+    for r in rows:
+        v = d["mechanism_by_year"][r["mechanism"]]
+        a2, b2 = v.get(rs, 0), v.get(e, 0)
+        r["recent_start"] = a2
+        r["recent_end"] = b2
+        r["recent_pct"] = round(100 * (b2 - a2) / a2, 0) if a2 >= 20 else None
     field_growth = g(field.get(s, 0), field.get(e, 0))
     union_growth = g(union.get(s, 0), union.get(e, 0))
     out = dict(d)
@@ -113,6 +129,16 @@ def assemble(d: dict) -> dict:
         round(union_growth / field_growth, 2) if field_growth else None
     )
     out["min_base"] = MIN_BASE
+    out["recent_start_year"] = RECENT_START
+    # DERIVED, never asserted. A first draft of the manuscript called
+    # electrochemical therapy "the one mechanism whose literature is
+    # shrinking" -- an extremum claimed over a set nobody had enumerated, and
+    # false: epigenetic declines too (x0.91). The set is computed here so the
+    # prose beside it cannot name the wrong number of members.
+    out["shrinking"] = [r["mechanism"] for r in rows
+                        if r["growth"] is not None and r["growth"] < 1.0]
+    out["recent_shrinking"] = [r["mechanism"] for r in rows
+                               if r["recent_pct"] is not None and r["recent_pct"] < 0]
     return out
 
 
@@ -152,13 +178,27 @@ def render(d: dict) -> str:
         f"whether or not anything unusual happened; the question a growth claim "
         f"is asking is whether it outgrew the thing it is about.\n"
     )
+    rs = d["recent_start_year"]
     L.append("## Per mechanism\n")
-    L.append(f"| mechanism | {s} | {e} | growth |")
-    L.append("|---|--:|--:|--:|")
+    L.append(f"| mechanism | {s} | {e} | growth | {rs} | {e} | change |")
+    L.append("|---|--:|--:|--:|--:|--:|--:|")
     for r in ok:
+        rp = (f"{r['recent_pct']:+.0f}%" if r["recent_pct"] is not None else "n/a")
         L.append(f"| {r['mechanism']} | {r['start']:,} | {r['end']:,} | "
-                 f"x{r['growth']} |")
+                 f"x{r['growth']} | {r['recent_start']:,} | {r['recent_end']:,} | "
+                 f"{rp} |")
     L.append("")
+    shrink = d["shrinking"]
+    if shrink:
+        L.append(
+            f"{len(shrink)} mechanism(s) are SMALLER in {e} than in {s}: "
+            + ", ".join(f"`{m}`" for m in shrink)
+            + ". The count is derived rather than described, because an "
+            "extremum stated over a set nobody enumerated is how a second "
+            "member goes unnoticed.\n"
+        )
+    else:
+        L.append(f"No mechanism is smaller in {e} than in {s}.\n")
     if thin:
         L.append(
             f"{len(thin)} mechanism(s) start below the {d['min_base']}-article "
@@ -186,7 +226,14 @@ def main() -> int:
     ap.add_argument("--render-only", action="store_true")
     a = ap.parse_args()
     if a.render_only:
-        d = json.loads(OUT_JSON.read_text())
+        # RE-ASSEMBLE rather than render the stored derived fields. The JSON
+        # carries the raw per-year series, so every derived column can be
+        # recomputed from it -- which means adding a column does not strand
+        # --render-only against an artifact written before that column
+        # existed, and means the stored derived fields are checkable against a
+        # fresh derivation rather than merely trusted.
+        d = assemble(json.loads(OUT_JSON.read_text()))
+        OUT_JSON.write_text(json.dumps(d, indent=1) + "\n")
     else:
         d = assemble(scan(a.stride))
         OUT_JSON.write_text(json.dumps(d, indent=1) + "\n")

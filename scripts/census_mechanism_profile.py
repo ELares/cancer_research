@@ -209,7 +209,16 @@ def main() -> int:
     ap.add_argument("--render-only", action="store_true")
     a = ap.parse_args()
     if a.render_only:
-        d = json.loads(OUT_JSON.read_text())
+        # RE-ASSEMBLE rather than re-render. Rendering the stored derived
+        # fields makes every guard that reads this artifact INERT against a
+        # change to the derivation: a mutation sweep confirmed it, planting a
+        # wrong sort key and a wrong enrichment denominator and watching both
+        # survive a full guard run, because --render-only never recomputed the
+        # column the guards check. The raw counts are stored, so re-deriving
+        # costs nothing and makes the stored fields checkable rather than
+        # merely carried forward.
+        d = assemble(json.loads(OUT_JSON.read_text()))
+        OUT_JSON.write_text(json.dumps(d, indent=1) + "\n")
     else:
         d = assemble(scan(a.stride))
         OUT_JSON.write_text(json.dumps(d, indent=1) + "\n")

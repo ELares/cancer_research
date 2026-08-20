@@ -15,22 +15,24 @@ It is also the denominator `manuscript_vs_census.py` should have used and did no
 
 ## Per mechanism
 
-| mechanism | 2015 | 2025 | growth |
-|---|--:|--:|--:|
-| immunotherapy | 464 | 5,390 | x11.62 |
-| crispr | 70 | 569 | x8.13 |
-| car-t | 269 | 1,869 | x6.95 |
-| bispecific-antibody | 104 | 574 | x5.52 |
-| sonodynamic | 46 | 243 | x5.28 |
-| synthetic-lethality | 146 | 607 | x4.16 |
-| phagocytosis-checkpoint | 33 | 134 | x4.06 |
-| antibody-drug-conjugate | 235 | 729 | x3.1 |
-| nanoparticle | 1,693 | 4,218 | x2.49 |
-| metabolic-targeting | 377 | 816 | x2.16 |
-| oncolytic-virus | 271 | 319 | x1.18 |
-| hifu | 92 | 107 | x1.16 |
-| epigenetic | 2,200 | 2,006 | x0.91 |
-| electrochemical-therapy | 136 | 110 | x0.81 |
+| mechanism | 2015 | 2025 | growth | 2020 | 2025 | change |
+|---|--:|--:|--:|--:|--:|--:|
+| immunotherapy | 464 | 5,390 | x11.62 | 3,102 | 5,390 | +74% |
+| crispr | 70 | 569 | x8.13 | 437 | 569 | +30% |
+| car-t | 269 | 1,869 | x6.95 | 1,009 | 1,869 | +85% |
+| bispecific-antibody | 104 | 574 | x5.52 | 198 | 574 | +190% |
+| sonodynamic | 46 | 243 | x5.28 | 70 | 243 | +247% |
+| synthetic-lethality | 146 | 607 | x4.16 | 435 | 607 | +40% |
+| phagocytosis-checkpoint | 33 | 134 | x4.06 | 60 | 134 | +123% |
+| antibody-drug-conjugate | 235 | 729 | x3.1 | 350 | 729 | +108% |
+| nanoparticle | 1,693 | 4,218 | x2.49 | 2,776 | 4,218 | +52% |
+| metabolic-targeting | 377 | 816 | x2.16 | 607 | 816 | +34% |
+| oncolytic-virus | 271 | 319 | x1.18 | 294 | 319 | +9% |
+| hifu | 92 | 107 | x1.16 | 78 | 107 | +37% |
+| epigenetic | 2,200 | 2,006 | x0.91 | 1,958 | 2,006 | +2% |
+| electrochemical-therapy | 136 | 110 | x0.81 | 140 | 110 | -21% |
+
+2 mechanism(s) are SMALLER in 2025 than in 2015: `epigenetic`, `electrochemical-therapy`. The count is derived rather than described, because an extremum stated over a set nobody enumerated is how a second member goes unnoticed.
 
 2 mechanism(s) start below the 30-article base this table requires and are reported without a ratio, because a ratio off a handful of articles measures the handful: microbiome (8 to 109), mrna-vaccine (0 to 75).
 
