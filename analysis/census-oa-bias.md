@@ -23,7 +23,7 @@ The superseded version of this test compared 4,830 full-text records against 5,5
 | `microbiome` | 209 | 171 | 55.0% | 15 | 15 | +0 | 2023 |
 | `mrna-vaccine` | 191 | 110 | 63.5% | 16 | 16 | +0 | 2024 |
 
-**3 of 16 mechanisms shift three or more positions** between the two arms. OA rate runs 18.4% (`sonodynamic`) to 63.5% (`mrna-vaccine`), against 21.3% for the census as a whole.
+**3 of 16 mechanisms shift 3 or more positions** between the two arms. OA rate runs 18.4% (`sonodynamic`) to 63.5% (`mrna-vaccine`), against 21.3% for the census as a whole.
 
 **The confound is in the last column and is not controlled here.** PMC deposition rose steeply over the same period the newer mechanisms grew, so a mechanism with a recent median year has a high OA rate for reasons that have nothing to do with its subject. Read the OA column against the year column, not on its own: this measures an association, and attributing it to access rather than to publication era would need a design this page does not have.
 
