@@ -168,12 +168,23 @@ def test_every_per_part_row_matches_the_manuscript():
     measured = _part_word_counts()
     documented = dict(_budget_rows())
     step = 10 ** -ROUND_TO
+    # ONE FULL STEP, not half. Every figure is rounded to the nearest hundred
+    # and six independently-rounded rows need not sum to the rounded total, so
+    # the generator allocates the residual by largest remainder -- which can
+    # move a row a full step away from its own measurement.
+    #
+    # That looks like a loosened guard and is not, because it does not stand
+    # alone: the sum tests require the rows to add up EXACTLY. Booking one
+    # part's edit against another has to break one or the other, since moving
+    # words between rows changes two of them while the total stays put. The
+    # defect this was written for -- a helper crediting every delta to Part II
+    # -- fails on the first row it touches.
     bad = []
     for row, words in measured.items():
         if row not in documented:
             bad.append(f"{row}: no row in the budget table")
             continue
-        if abs(documented[row] - words) > step / 2:
+        if abs(documented[row] - words) > step:
             bad.append(f"{row}: documented {documented[row]:,} vs measured "
                        f"{words:,} (rounds to {round(words, ROUND_TO):,})")
     assert not bad, (

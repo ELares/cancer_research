@@ -88,6 +88,15 @@ REGISTRY = {
         "can supply neither axis. Every record it holds would land in the "
         "unassigned bucket and depress the assignability rate without "
         "carrying any information about site."),
+    "census_external_check.py": (
+        {"records"},
+        "Compares the census against PubMed's own index, and the comparison "
+        "only holds if both sides admit records the same way. `neoplasms[mh]` "
+        "returns C04-indexed records, so the census side must be the C04 CORE "
+        "of the indexed stream -- records_unindexed carries no MeSH at all and "
+        "every record in it would be a census-side record PubMed's query "
+        "cannot return, turning the whole check into a measurement of the "
+        "streams' definitions."),
     "census_fulltext_ceiling.py": (
         {"records"},
         "Measures how much of the INDEXED stream's design-label gap open-access "

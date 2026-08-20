@@ -31,6 +31,29 @@ from test_book_outline_wordcount import (  # noqa: E402
 def main() -> int:
     measured = _part_word_counts()
     total = prose_words(MANUSCRIPT.read_text())
+
+    # ROUNDING EACH ROW INDEPENDENTLY DOES NOT SUM. Every figure in the table
+    # is rounded to the nearest hundred, and six independently-rounded rows can
+    # miss the rounded total by up to three hundred -- which fails the
+    # pre-existing invariant that the table adds up. A table whose rows do not
+    # sum to its own Total is reporting two different documents, so the
+    # residual is allocated by LARGEST REMAINDER: the rows whose exact values
+    # sat closest to a rounding boundary absorb it, one step each. Every row
+    # stays within one step of its measurement and the column adds up.
+    step = 10 ** -ROUND_TO
+    rounded = {k: round(v, ROUND_TO) for k, v in measured.items()}
+    residual = round(total, ROUND_TO) - sum(rounded.values())
+    if residual:
+        direction = 1 if residual > 0 else -1
+        # Distance to the boundary in the direction we must move.
+        order = sorted(
+            measured,
+            key=lambda k: -direction * (measured[k] - rounded[k]))
+        for k in order[:abs(residual) // step]:
+            rounded[k] += direction * step
+        assert sum(rounded.values()) == round(total, ROUND_TO), (
+            "the residual allocation did not close the gap")
+    measured = rounded
     s = OUTLINE.read_text()
     start = s.index("| Part | Chapters | Current words | Target words |")
     end = s.index("\n\n", start)
@@ -46,7 +69,7 @@ def main() -> int:
         if label == "Total":
             new = round(total, ROUND_TO)
         elif label in measured:
-            new = round(measured[label], ROUND_TO)
+            new = measured[label]        # already rounded and reconciled
         else:
             print(f"  ! no manuscript section for row {label!r}", file=sys.stderr)
             lines.append(line)
