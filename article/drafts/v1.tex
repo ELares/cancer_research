@@ -186,9 +186,9 @@ We present a cross-literature analysis of the indexed cancer literature at censu
 
 \begin{figure}[ht]
 \centering
-\includegraphics[width=\textwidth]{../figures/fig5_publication_trends.pdf}
-\caption{Publication volume 2015--2025.}
-\label{fig:fig5_publication_trends}
+\includegraphics[width=\textwidth]{../figures/fig1c_ratio_straddle.pdf}
+\caption{The pharmacological:physical volume ratio under four class definitions, against the 9.1:1 an earlier keyword method reported. Two of the four exceed it and two fall below, so the DIRECTION of the imbalance survives every reading while the claim that the census understates the earlier case does not. Which definition is chosen decides the direction of that second conclusion, which is why all four are drawn.}
+\label{fig:fig1c_ratio_straddle}
 \end{figure}
 
 \section{Census Construction}
@@ -357,9 +357,9 @@ One caveat runs the other way and is worth measuring rather than waving at. MeSH
 
 \begin{figure}[ht]
 \centering
-\includegraphics[width=\textwidth]{../figures/fig2_mechanism_heatmap.pdf}
-\caption{Mechanism $\times$ cancer type matrix.}
-\label{fig:fig2_mechanism_heatmap}
+\includegraphics[width=\textwidth]{../figures/fig2c_census_volume.pdf}
+\caption{Census publication volume by year, with the retrieved corpus overlaid on a second axis. The corpus rises 31-fold over the decade the census grows 1.10-fold; separate axes because the two series differ by orders of magnitude, so their shapes are comparable and their heights are not.}
+\label{fig:fig2c_census_volume}
 \end{figure}
 
 Individual mechanisms do grow, and against a nearly flat field that growth is a real signal rather than a rising tide. Between 2020 and 2025 the census counts microbiome-directed work at +354\% (24 to 109), sonodynamic therapy +247\% (70 to 243), bispecific antibodies +190\% (198 to 574), antibody-drug conjugates +108\% (350 to 729), CAR-T +85\% (1,009 to 1,869), immunotherapy +74\% (3,102 to 5,390) and nanoparticle delivery +52\% (2,776 to 4,218). At the other end, epigenetic work is flat (+2\%) and electrochemical therapy declines (-21\%) --- the only mechanism in the set that is smaller in 2025 than it was in 2020.
@@ -526,9 +526,9 @@ The consequence is that we no longer report a co-occurrence \textit{rate} as a f
 
 \begin{figure}[ht]
 \centering
-\includegraphics[width=\textwidth]{../figures/fig15_designed_combinations.pdf}
-\caption{Classification of multi-mechanism articles into designed combinations, co-mentions, and reviews.}
-\label{fig:fig15_designed_combinations}
+\includegraphics[width=\textwidth]{../figures/fig15c_mechanism_pairs.pdf}
+\caption{The ten most frequent mechanism pairs in the census. Counts, not a rate: co-tagging records that two vocabularies appear on one article, and the co-occurrence rate is a property of the labelling instrument rather than of the field.}
+\label{fig:fig15c_mechanism_pairs}
 \end{figure}
 
 \begin{figure}[ht]
@@ -591,9 +591,9 @@ This replaces a seven-tier keyword evidence ladder that had been populated for 4
 
 \begin{figure}[ht]
 \centering
-\includegraphics[width=\textwidth]{../figures/fig9_evidence_tiers.pdf}
-\caption{Evidence tier composition by mechanism.}
-\label{fig:fig9_evidence_tiers}
+\includegraphics[width=\textwidth]{../figures/fig9c_design_composition.pdf}
+\caption{Study-design composition of the census, from NLM publication types and MeSH check tags. The undetermined class is drawn rather than dropped: at 44.5\% it is the largest, and omitting it would imply the census assigns a design to every record.}
+\label{fig:fig9c_design_composition}
 \end{figure}
 
 An earlier version of this section moved beyond raw counts by computing a weighted evidence score per mechanism, combining an evidence tier (Phase III at 12 points down to theoretical at 0.5) with citation-percentile and recency modifiers. That composite is retired, and it is retired on the strength of the sensitivity analysis this manuscript ran against it rather than because the census made it inconvenient. Under five alternative weighting schemes the headline finding --- that nanoparticles rank sixth by weighted evidence despite ranking second by volume --- held under four and failed under two, and the maximum rank shift across schemes was seven positions. A ranking that moves seven places under a defensible reweighting is substantially reporting the weights.
@@ -624,9 +624,9 @@ The defensible statement is therefore narrower and more useful than the one it r
 
 \begin{figure}[ht]
 \centering
-\includegraphics[width=\textwidth]{../figures/fig16_weighted_evidence.pdf}
-\caption{Weighted evidence score by mechanism (tier $\times$ citation percentile $\times$ recency).}
-\label{fig:fig16_weighted_evidence}
+\includegraphics[width=\textwidth]{../figures/fig16c_trial_share.pdf}
+\caption{Clinical-trial share against article volume (log axis). HIFU sits above CAR-T on a fraction of the volume, so physical modality is not a maturity class; nanoparticle delivery sits at high volume and 0.49\%.}
+\label{fig:fig16c_trial_share}
 \end{figure}
 
 \section{Main Contribution: A Broader Frame Before A Narrower Hypothesis}
@@ -641,13 +641,13 @@ The interesting question is not where the literature is but where each \textit{c
 
 Running the pharmacological class over the same sites with the same denominator is what makes the comparison carry, because whatever inflates or deflates a site in the tagged literature generally is common to both classes. The two disagree in direction at 11 of the 18 sites. The manuscript previously claimed the physical-modality literature was concentrated in epithelial and neuroectodermal contexts with almost no haematologic signal. The haematologic half survives and is strengthened: leukaemia sits at 0.30 for the physical class against 1.30 for the pharmacological, lymphoma at 0.22 against 1.26. The neuroectodermal half does not survive. Brain and CNS sits at 0.92 for the physical class and 0.91 for the pharmacological --- both at the site's own weight and indistinguishable from each other --- so the concentration reported earlier was a property of a corpus retrieved around mechanism keywords.
 
-One caveat is load-bearing on exactly that row. This physical class holds three mechanisms and omits radiotherapy, its largest real member, because radiotherapy has no mechanism tag in our taxonomy. Radiotherapy is central to brain practice, so the brain and CNS reading is a statement about sonodynamic, HIFU and electrochemical therapy, not about physically delivered treatment in general. The physical class also carries 4,568 site-assigned records against the pharmacological class's 84,813, so the ordering is far better determined than any single row (Figure~\ref{fig:fig14_tissue_mechanism_heatmap}). Full table in `analysis/census-mechanism-sites.md`.
+One caveat is load-bearing on exactly that row. This physical class holds three mechanisms and omits radiotherapy, its largest real member, because radiotherapy has no mechanism tag in our taxonomy. Radiotherapy is central to brain practice, so the brain and CNS reading is a statement about sonodynamic, HIFU and electrochemical therapy, not about physically delivered treatment in general. The physical class also carries 4,568 site-assigned records against the pharmacological class's 84,813, so the ordering is far better determined than any single row (Figure~\ref{fig:fig14c_class_by_site}). Full table in `analysis/census-mechanism-sites.md`.
 
 \begin{figure}[ht]
 \centering
-\includegraphics[width=\textwidth]{../figures/fig14_tissue_mechanism_heatmap.pdf}
-\caption{Tissue-of-origin $\times$ mechanism article counts (coverage: 62\%).}
-\label{fig:fig14_tissue_mechanism_heatmap}
+\includegraphics[width=\textwidth]{../figures/fig14c_class_by_site.pdf}
+\caption{Mechanism class by anatomical site, as enrichment against each site's own share of site-assigned records. Bold labels mark the sites where the physical and pharmacological classes move in opposite directions, the reading that does not depend on how much a site is written about. The physical class omits radiotherapy, its largest real member.}
+\label{fig:fig14c_class_by_site}
 \end{figure}
 
 \section{What the Evidence Actually Supports About PDT, SDT, and CAP}

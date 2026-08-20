@@ -107,7 +107,11 @@ class TestFigureTraceability:
 
     def test_valid_types(self, figures_data):
         """Figure types are from the allowed set."""
-        allowed = {"corpus-derived", "simulation", "conceptual", "unknown"}
+        # `census-derived` reads only committed census JSON, which is a
+        # different provenance from `corpus-derived`: it runs offline in
+        # seconds and needs neither the 243 MB corpus nor a census scan.
+        allowed = {"corpus-derived", "census-derived", "simulation",
+                   "conceptual", "unknown"}
         for entry in figures_data:
             assert entry["type"] in allowed, (
                 f"{entry['filename']} has invalid type: {entry['type']}"

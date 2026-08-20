@@ -22,11 +22,33 @@ fig28  Two panels. (A) per-mechanism capture -- the frozen corpus's share of the
        everything below 10% into the axis. (B) what that unevenness does to the
        manuscript's central corpus claim.
 
+Five more replace corpus-derived figures whose CAPTIONS were rewritten for the
+census. That gap is worth naming rather than quietly closing: a caption
+describing one measurement above an image plotting another is worse than
+leaving both stale, because a reader checks the caption and trusts the picture.
+
+fig2c   census publication volume by year, with the retrieved corpus overlaid on
+        a second axis -- the 31-fold rise against the census's 1.10-fold IS the
+        retrieval effect, so the two curves are the argument.
+fig9c   study-design composition from NLM publication types and check tags, with
+        the UNDETERMINED share drawn rather than dropped, since it is the
+        largest class and omitting it would imply the census classifies
+        everything.
+fig14c  mechanism class by anatomical site: enrichment against each site's own
+        share, physical against pharmacological, so a site's general prominence
+        cancels and only a disagreement between classes carries.
+fig15c  the ten most frequent mechanism pairs. Counts, never a RATE -- Section
+        3.13 shows the rate is a property of the labelling instrument.
+fig16c  clinical-trial share against volume on a log axis, the replacement for a
+        weighted composite whose ranking moved seven places under a defensible
+        reweighting.
+
 Usage:
     python scripts/generate_census_figures.py
 """
 
 import json
+import math
 import sys
 from pathlib import Path
 
@@ -41,6 +63,20 @@ from config import PROJECT_ROOT  # noqa: E402
 
 FIG_DIR = PROJECT_ROOT / "article" / "figures"
 LANDSCAPE = PROJECT_ROOT / "analysis" / "atlas-landscape.json"
+ANALYSIS = PROJECT_ROOT / "analysis"
+GROWTH = ANALYSIS / "census-mechanism-growth.json"
+DESIGN = ANALYSIS / "census-evidence-design.json"
+SITES = ANALYSIS / "census-mechanism-sites.json"
+PROFILE = ANALYSIS / "census-mechanism-profile.json"
+RATIO = ANALYSIS / "atlas-modality-ratio.json"
+# The manuscript's own keyword-method figure, for the fig1c reference line. It
+# is the thing the census ratios STRADDLE, so it is the panel's whole point.
+MANUSCRIPT_RATIO = 9.1
+
+# The retrieved corpus's own volume, for the fig2c overlay. Read from the
+# frozen index rather than typed, so the contrast cannot be drawn against a
+# number nobody can check.
+FROZEN_INDEX = PROJECT_ROOT / "corpus" / "INDEX.jsonl"
 
 plt.rcParams.update({
     "font.size": 11, "font.family": "serif", "axes.titlesize": 13,
@@ -166,12 +202,343 @@ def fig28_census_capture():
             "xscale": ax.get_xscale()}
 
 
+def _load(path):
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def _corpus_year_counts():
+    """Year histogram of the retrieved corpus, or None if it is absent.
+
+    Read rather than typed. Fail-soft: without it fig2c draws the census alone
+    and says so, because a contrast panel missing one of its two curves must
+    not silently render as a single-series chart that looks complete.
+    """
+    if not FROZEN_INDEX.exists():
+        return None
+    counts = {}
+    for line in FROZEN_INDEX.read_text(encoding="utf-8").splitlines():
+        if not line.strip():
+            continue
+        y = json.loads(line).get("year")
+        if isinstance(y, int):
+            counts[y] = counts.get(y, 0) + 1
+    return counts
+
+
+def fig2c_census_volume():
+    """Census volume by year against the corpus's own, on twin axes.
+
+    TWIN AXES ARE THE HONEST CHOICE HERE and also the risky one: two series
+    four orders of magnitude apart cannot share a scale, but twin axes let a
+    small series be drawn as tall as a large one. So the point of the panel is
+    the SHAPE difference, and each axis is labelled with its own total to stop
+    the heights being read against each other.
+    """
+    g = _load(GROWTH)
+    field = {int(k): v for k, v in g["field_by_year"].items()}
+    years = [y for y in sorted(field) if 1990 <= y <= g["end_year"]]
+    corpus = _corpus_year_counts()
+
+    fig, ax = plt.subplots(figsize=(9, 5))
+    ax.plot(years, [field[y] for y in years], color="#1565C0", linewidth=2.2,
+            label=f"census (x{g['field_growth']} over "
+                  f"{g['start_year']}-{g['end_year']})")
+    ax.set_xlabel("year")
+    ax.set_ylabel("census articles indexed", color="#1565C0")
+    ax.tick_params(axis="y", labelcolor="#1565C0")
+    ax.grid(alpha=0.25, linewidth=0.6)
+
+    if corpus:
+        cy = [y for y in years if y in corpus]
+        ax2 = ax.twinx()
+        ax2.plot(cy, [corpus[y] for y in cy], color="#E65100", linewidth=2.2,
+                 linestyle="--", label="retrieved corpus (right axis)")
+        ax2.set_ylabel("retrieved-corpus articles", color="#E65100")
+        ax2.tick_params(axis="y", labelcolor="#E65100")
+        lines = ax.get_lines() + ax2.get_lines()
+        ax.legend(lines, [l.get_label() for l in lines], loc="upper left",
+                  frameon=False, fontsize=9)
+        note = ("Separate axes: the two series differ by orders of magnitude, so "
+                "their HEIGHTS are not comparable and their SHAPES are.")
+    else:
+        ax.legend(loc="upper left", frameon=False, fontsize=9)
+        note = ("The retrieved-corpus overlay is absent because "
+                "corpus/INDEX.jsonl is not present.")
+
+    ax.set_title("Publication volume: the census, and the retrieval that "
+                 "looked like growth")
+    fig.text(0.5, -0.03, note, ha="center", fontsize=8.5, style="italic",
+             color="#455A64")
+    fig.savefig(FIG_DIR / "fig2c_census_volume.pdf")
+    fig.savefig(FIG_DIR / "fig2c_census_volume.png")
+    plt.close(fig)
+    print("  fig2c_census_volume")
+
+
+def fig9c_design_composition():
+    """Study-design classes, with the undetermined share DRAWN.
+
+    It is the largest class. A chart showing only the classified records would
+    imply the census assigns a design to everything, which is the single most
+    misleading thing this panel could do.
+    """
+    d = _load(DESIGN)
+    classes = d["classes"]
+    order = ["trial", "clinical-other", "animal-model", "cell-culture",
+             "animal-other", "non-primary", "undetermined"]
+    labels = {"trial": "clinical trial", "clinical-other": "patient study,\nno trial type",
+              "animal-model": "animal model", "cell-culture": "cell culture",
+              "animal-other": "animal, no human\ncheck tag",
+              "non-primary": "review, editorial,\ncomment", "undetermined": "undetermined"}
+    colors = {"trial": "#2E7D32", "clinical-other": "#66BB6A",
+              "animal-model": "#FB8C00", "cell-culture": "#FFB74D",
+              "animal-other": "#FFE0B2", "non-primary": "#90A4AE",
+              "undetermined": "#CFD8DC"}
+    vals = [classes[k] for k in order]
+    total = d["census"]
+
+    fig, ax = plt.subplots(figsize=(9, 5))
+    bars = ax.barh([labels[k] for k in order], vals,
+                   color=[colors[k] for k in order], edgecolor="#37474F",
+                   linewidth=0.7)
+    ax.invert_yaxis()
+    ax.set_xlabel(f"census articles (of {total:,})")
+    ax.set_title("Study design, from NLM publication types and MeSH check tags")
+    for b, v in zip(bars, vals):
+        ax.text(b.get_width() + total * 0.008, b.get_y() + b.get_height() / 2,
+                f"{v:,}  ({100 * v / total:.1f}%)", va="center", fontsize=9)
+    ax.set_xlim(0, max(vals) * 1.28)
+    ax.grid(axis="x", alpha=0.25, linewidth=0.6)
+    trial_share_all = 100 * classes["trial"] / total
+    trial_share_cls = 100 * classes["trial"] / d["classifiable"]
+    fig.text(0.5, -0.04,
+             f"Trial share has two denominators and both are shown: "
+             f"{trial_share_all:.1f}% of the census, {trial_share_cls:.1f}% of "
+             f"the {d['classifiable']:,} records carrying any design label. "
+             f"The undetermined class is drawn, not dropped.",
+             ha="center", fontsize=8.5, style="italic", color="#455A64")
+    fig.savefig(FIG_DIR / "fig9c_design_composition.pdf")
+    fig.savefig(FIG_DIR / "fig9c_design_composition.png")
+    plt.close(fig)
+    print("  fig9c_design_composition")
+
+
+def fig14c_class_by_site():
+    """Enrichment per site, physical against pharmacological.
+
+    Plotted as enrichment rather than as counts because a count chart
+    reproduces the ordering of the SITES, not of the modality. The 1.0 line is
+    drawn because it is the only value that means anything on its own.
+    """
+    d = _load(SITES)
+    rows = sorted(d["rows"], key=lambda r: -r["physical_enrichment"])
+    sites = [r["site"] for r in rows]
+    y = range(len(rows))
+    fig, ax = plt.subplots(figsize=(9, 7))
+    ax.barh([i - 0.2 for i in y], [r["physical_enrichment"] for r in rows],
+            height=0.4, color="#E65100", label="physical class")
+    ax.barh([i + 0.2 for i in y], [r["pharmacological_enrichment"] for r in rows],
+            height=0.4, color="#1565C0", label="pharmacological class")
+    ax.axvline(1.0, color="#37474F", linewidth=1.3)
+    ax.set_yticks(list(y))
+    ax.set_yticklabels(sites)
+    ax.invert_yaxis()
+    ax.set_xlabel("enrichment against the site's own share of site-assigned records")
+    ax.set_title("Where each class of modality sits, by anatomical site")
+    ax.legend(frameon=False, fontsize=9, loc="lower right")
+    ax.grid(axis="x", alpha=0.25, linewidth=0.6)
+    opposed = set(d["opposed_sites"])
+    for i, r in enumerate(rows):
+        if r["site"] in opposed:
+            ax.get_yticklabels()[i].set_fontweight("bold")
+    # WRAPPED. `bbox_inches="tight"` expands the canvas to fit any single-line
+    # text, so an unwrapped footnote silently stretched this panel to a 2.2:1
+    # aspect and shrank every bar.
+    fig.text(0.5, -0.03,
+             f"1.0 is the site's own weight. Bold labels mark the "
+             f"{len(opposed)} sites where the two classes move in OPPOSITE\n"
+             f"directions -- the reading that does not depend on how much a "
+             f"site is written about.\nThe physical class holds "
+             f"{len(d['physical_members'])} mechanisms and omits radiotherapy, "
+             f"its largest real member.",
+             ha="center", va="top", fontsize=8.5, style="italic",
+             color="#455A64")
+    fig.savefig(FIG_DIR / "fig14c_class_by_site.pdf")
+    fig.savefig(FIG_DIR / "fig14c_class_by_site.png")
+    plt.close(fig)
+    print("  fig14c_class_by_site")
+
+
+def fig15c_mechanism_pairs():
+    """The ten most frequent mechanism pairs. Counts, never a rate."""
+    d = _load(PROFILE)
+    seen, pairs = set(), []
+    for r in d["rows"]:
+        for p in r["top_partners"]:
+            key = tuple(sorted((r["mechanism"], p["mechanism"])))
+            if key not in seen:
+                seen.add(key)
+                pairs.append((key, p["n"]))
+    pairs.sort(key=lambda kv: -kv[1])
+    top = pairs[:10]
+    fig, ax = plt.subplots(figsize=(9, 5.5))
+    labels = [f"{a} + {b}" for (a, b), _ in top]
+    vals = [n for _, n in top]
+    bars = ax.barh(labels, vals, color="#5E35B1", edgecolor="#311B92",
+                   linewidth=0.7)
+    ax.invert_yaxis()
+    ax.set_xlabel("census articles carrying both mechanism descriptors")
+    ax.set_title("Where mechanisms co-occur")
+    for b, v in zip(bars, vals):
+        ax.text(b.get_width() + max(vals) * 0.01,
+                b.get_y() + b.get_height() / 2, f"{v:,}", va="center", fontsize=9)
+    ax.set_xlim(0, max(vals) * 1.14)
+    ax.grid(axis="x", alpha=0.25, linewidth=0.6)
+    fig.text(0.5, -0.04,
+             "Counts, not a rate. Co-tagging records that two vocabularies "
+             "appear on one article -- not that two mechanisms were tested in "
+             "combination -- and the co-occurrence RATE is a property of the "
+             "labelling instrument rather than of the field.",
+             ha="center", fontsize=8.5, style="italic", color="#455A64")
+    fig.savefig(FIG_DIR / "fig15c_mechanism_pairs.pdf")
+    fig.savefig(FIG_DIR / "fig15c_mechanism_pairs.png")
+    plt.close(fig)
+    print("  fig15c_mechanism_pairs")
+
+
+def fig16c_trial_share():
+    """Trial share against volume. The two axes are the point.
+
+    Volume on a log axis because the mechanisms span nearly two orders of
+    magnitude, and because a linear axis would put every small mechanism on the
+    spine -- including the two whose trial share is highest.
+    """
+    d = _load(PROFILE)
+    rows = [r for r in d["rows"] if r["census"] >= 200]
+    fig, ax = plt.subplots(figsize=(9, 6))
+    xs = [r["census"] for r in rows]
+    ys = [r["trial_share"] for r in rows]
+    ax.scatter(xs, ys, s=70, color="#00695C", edgecolor="#003D33", zorder=3)
+    # Offset each label away from its nearest already-placed neighbour rather
+    # than using one fixed offset: the two highest-share mechanisms sit within
+    # a label's height of each other and collided.
+    placed = []
+    for r in sorted(rows, key=lambda r: -r["trial_share"]):
+        x, y = r["census"], r["trial_share"]
+        dx, dy = 7, 4
+        for px, py, ptext in placed:
+            # The threshold has to account for the LABEL's width, not the
+            # point's position: at 0.22 decades `bispecific-antibody` still
+            # ran into `antibody-drug-conjugate` 0.24 decades away, because a
+            # long label reaches far past its own marker. Scale the exclusion
+            # with the neighbouring label's length.
+            reach = 0.14 + 0.016 * len(ptext)
+            if abs(math.log10(x) - math.log10(px)) < reach and abs(y - py) < 0.6:
+                dx, dy = -9, -13
+                break
+        ax.annotate(r["mechanism"], (x, y), textcoords="offset points",
+                    xytext=(dx, dy), fontsize=8.5, color="#263238",
+                    ha="left" if dx > 0 else "right")
+        placed.append((x, y, r["mechanism"]))
+    ax.set_xscale("log")
+    ax.set_xlabel("census articles (log)")
+    ax.set_ylabel("share carrying an NLM clinical-trial publication type (%)")
+    ax.set_title("Maturity does not follow volume")
+    ax.grid(alpha=0.25, linewidth=0.6)
+    hifu = next((r for r in rows if r["mechanism"] == "hifu"), None)
+    cart = next((r for r in rows if r["mechanism"] == "car-t"), None)
+    if hifu and cart and hifu["trial_share"] > cart["trial_share"]:
+        note = (f"HIFU sits at {hifu['trial_share']}% against CAR-T's "
+                f"{cart['trial_share']}% on {cart['census'] / hifu['census']:.0f}x "
+                f"the volume, so `physical modality` is not a maturity class.")
+    else:
+        note = ("Volume and trial share are plotted on separate axes because "
+                "they do not track each other.")
+    fig.text(0.5, -0.02, note, ha="center", fontsize=8.5, style="italic",
+             color="#455A64")
+    fig.savefig(FIG_DIR / "fig16c_trial_share.pdf")
+    fig.savefig(FIG_DIR / "fig16c_trial_share.png")
+    plt.close(fig)
+    print("  fig16c_trial_share")
+
+
+def fig1c_ratio_straddle():
+    """The pharmacological:physical ratio under four class definitions.
+
+    THE FIGURE EXISTS BECAUSE THE NUMBER IS NOT ONE NUMBER. The manuscript's
+    central corpus claim was reported as a single ratio, recomputed on the
+    census as a single larger one, and read as "the census understates the
+    manuscript's case". Restricting BOTH classes symmetrically -- to
+    descriptors naming a therapy rather than a process or a material -- gives
+    figures BELOW the manuscript's, so under two readings of three the census
+    overstates it instead.
+
+    Plotting one bar per definition against the manuscript's line is the only
+    honest presentation: a single bar would be picking one of four, and which
+    one gets picked decides the direction of the conclusion.
+    """
+    d = _load(RATIO)
+    lc = d["landscape_composition"]
+    bars = [
+        ("both curated classes\n(the headline)", lc["ratio"]),
+        ("therapy-naming descriptors,\nrestriction's own criterion", lc["criterion_restored_ratio"]),
+        ("therapy-naming, as the\nmaturity table defines it", lc["landscape_own_ratio"]),
+        ("therapy-naming, intersected with\nthe curated pharmacological list", lc["precise_ratio"]),
+    ]
+    fig, ax = plt.subplots(figsize=(9.5, 5.5))
+    labels = [b[0] for b in bars]
+    vals = [b[1] for b in bars]
+    colours = ["#1565C0" if v > MANUSCRIPT_RATIO else "#E65100" for v in vals]
+    rects = ax.barh(labels, vals, color=colours, edgecolor="#263238", linewidth=0.7)
+    ax.invert_yaxis()
+    ax.axvline(MANUSCRIPT_RATIO, color="#B71C1C", linewidth=1.8, linestyle="--")
+    # INSIDE the axes. Placed above the top bar in data coordinates it landed
+    # on top of the title, because the bar axis is inverted and -0.72 is off
+    # the top of the plot rather than below it.
+    ax.text(MANUSCRIPT_RATIO + 0.2, len(bars) - 0.55,
+            f"earlier keyword method: {MANUSCRIPT_RATIO}:1",
+            color="#B71C1C", fontsize=9, va="center", ha="left")
+    for r, v in zip(rects, vals):
+        ax.text(r.get_width() + 0.25, r.get_y() + r.get_height() / 2,
+                f"{v:.2f}:1", va="center", fontsize=9.5, fontweight="bold")
+    ax.set_xlim(0, max(vals) * 1.16)
+    ax.set_xlabel("pharmacological : physical, by census article count")
+    ax.set_title("The volume ratio is a choice about class membership")
+    ax.grid(axis="x", alpha=0.25, linewidth=0.6)
+    above = sum(1 for v in vals if v > MANUSCRIPT_RATIO)
+    fig.text(0.5, -0.06,
+             f"Blue exceeds the earlier figure, orange falls below it: "
+             f"{above} of {len(vals)} definitions above, {len(vals) - above} "
+             f"below.\nThe DIRECTION of the imbalance survives every reading; "
+             f"the claim that the census understates the earlier case does not.",
+             ha="center", va="top", fontsize=8.5, style="italic", color="#455A64")
+    fig.savefig(FIG_DIR / "fig1c_ratio_straddle.pdf")
+    fig.savefig(FIG_DIR / "fig1c_ratio_straddle.png")
+    plt.close(fig)
+    print("  fig1c_ratio_straddle")
+
+
+CENSUS_FIGURES = [
+    (RATIO, fig1c_ratio_straddle),
+    (LANDSCAPE, fig28_census_capture),
+    (GROWTH, fig2c_census_volume),
+    (DESIGN, fig9c_design_composition),
+    (SITES, fig14c_class_by_site),
+    (PROFILE, fig15c_mechanism_pairs),
+    (PROFILE, fig16c_trial_share),
+]
+
+
 def main() -> int:
-    if not LANDSCAPE.exists():
-        print(f"missing {LANDSCAPE}; run scripts/atlas_landscape.py", file=sys.stderr)
-        return 1
     FIG_DIR.mkdir(parents=True, exist_ok=True)
-    fig28_census_capture()
+    missing = sorted({p.name for p, _ in CENSUS_FIGURES if not p.exists()})
+    if missing:
+        print(f"missing committed artifacts: {', '.join(missing)}; run the "
+              f"matching scripts/census_*.py or scripts/atlas_landscape.py",
+              file=sys.stderr)
+        return 1
+    for _, fn in CENSUS_FIGURES:
+        fn()
     return 0
 
 

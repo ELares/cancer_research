@@ -205,8 +205,8 @@ body_tex = re.sub(r'^\|.*\|$', '', body_tex, flags=re.MULTILINE)
 
 # Replace figure placeholders
 figs = {
-    '1': ('fig5_publication_trends', 'Publication volume 2015--2025.'),
-    '2': ('fig2_mechanism_heatmap', 'Mechanism $\\times$ cancer type matrix.'),
+    '1': ('fig1c_ratio_straddle', 'The pharmacological:physical volume ratio under four class definitions, against the 9.1:1 an earlier keyword method reported. Two of the four exceed it and two fall below, so the DIRECTION of the imbalance survives every reading while the claim that the census understates the earlier case does not. Which definition is chosen decides the direction of that second conclusion, which is why all four are drawn.'),
+    '2': ('fig2c_census_volume', 'Census publication volume by year, with the retrieved corpus overlaid on a second axis. The corpus rises 31-fold over the decade the census grows 1.10-fold; separate axes because the two series differ by orders of magnitude, so their shapes are comparable and their heights are not.'),
     '3': ('fig1_ferroptosis_comparison', 'Ferroptosis engagement ($\\chi^2=97.3$, $p<5.9\\times10^{-23}$; corpus-derived, subject to tagging and taxonomy uncertainty).'),
     '4': ('fig4_molecular_overlap', 'Molecular pathway engagement (normalized \\%).'),
     '5': ('fig3_literature_disconnect', 'Literature disconnect between communities.'),
@@ -214,10 +214,10 @@ figs = {
     '7': ('fig7_monte_carlo_simulation', 'Monte Carlo simulation (1M cells/condition).'),
     '8': ('fig8_simulation_by_treatment', 'Depth-kill curves: tissue penetration sets modality reach (2D model). (a) Observed tumor kill versus depth across 1 cm of tissue: SDT (ultrasound) stays near 95 to 100\\% throughout, PDT (light) collapses from ${\\sim}93\\%$ at the surface to ${\\sim}0\\%$ by 10 mm (Beer-Lambert attenuation), and RSL3 (systemic drug) is a flat, near-zero baseline at every depth. (b) The driving physics from the model\'s own equations: PDT light decays as $\\exp(-\\mu_{\\mathrm{eff}} z)$ with $\\mu_{\\mathrm{eff}}{=}0.31$/mm ($\\delta{\\approx}3.2$ mm), SDT acoustic as $10^{-\\alpha f z/10}$ with $\\alpha{=}0.7$ dB/cm/MHz at 1 MHz, RSL3 uniform at 100\\%. RSL3 reaches every depth yet kills little, a biochemical limit, not a penetration one. The depth profiles follow well-measured physics (high confidence); absolute kill \\% rests on uncalibrated biochemistry, so the profile shape is the result, not the magnitudes. \\textbf{SDT is modeled as O$_2$-independent, an optimistic upper bound} (Section 7.1).'),
     '9': ('fig13_gold_set_eval', 'Evidence tagger performance: gold-set evaluation (100-article stratified sample).'),
-    '10': ('fig9_evidence_tiers', 'Evidence tier composition by mechanism.'),
-    '11': ('fig14_tissue_mechanism_heatmap', 'Tissue-of-origin $\\times$ mechanism article counts (coverage: 62\\%).'),
-    '12': ('fig15_designed_combinations', 'Classification of multi-mechanism articles into designed combinations, co-mentions, and reviews.'),
-    '13': ('fig16_weighted_evidence', 'Weighted evidence score by mechanism (tier $\\times$ citation percentile $\\times$ recency).'),
+    '10': ('fig9c_design_composition', 'Study-design composition of the census, from NLM publication types and MeSH check tags. The undetermined class is drawn rather than dropped: at 44.5\\% it is the largest, and omitting it would imply the census assigns a design to every record.'),
+    '11': ('fig14c_class_by_site', 'Mechanism class by anatomical site, as enrichment against each site\'s own share of site-assigned records. Bold labels mark the sites where the physical and pharmacological classes move in opposite directions, the reading that does not depend on how much a site is written about. The physical class omits radiotherapy, its largest real member.'),
+    '12': ('fig15c_mechanism_pairs', 'The ten most frequent mechanism pairs in the census. Counts, not a rate: co-tagging records that two vocabularies appear on one article, and the co-occurrence rate is a property of the labelling instrument rather than of the field.'),
+    '13': ('fig16c_trial_share', 'Clinical-trial share against article volume (log axis). HIFU sits above CAR-T on a fraction of the volume, so physical modality is not a maturity class; nanoparticle delivery sits at high volume and 0.49\\%.'),
     '14': ('fig17_damp_heatmap', 'DAMP spatial distribution after immune coupling (O$_2$ gradient $\\lambda$=120$\\mu$m, per-panel scaling---intensity not comparable across panels). SDT covers the full tumor area (139,641 kills, 539 immune kills); RSL3 produces sparse isolated hotspots (163 kills, 2 immune kills).'),
     '15': ('fig18_hypoxia_crosssection', 'Hypoxia cross-section: O$_2$ gradient from blood vessel (left) into tumor core (right). RSL3 efficacy collapses as basal ROS disappears; SDT maintains efficacy via exogenous ROS delivery.'),
     '16': ('fig19_immune_coupling_flow', 'Immune coupling pathway: SDT produces dense kill with high LP overshoot, generating strong DAMP fields and 104$\\times$ more immune kills than RSL3.'),
