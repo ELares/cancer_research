@@ -41,23 +41,17 @@ artifact of which papers were retrieved. At census scale you can check.
   defined as MeSH tree C04 plus nine adjacent descriptors so that foundational
   mechanism papers outside the cancer tree are not lost — both founding FSP1
   papers are outside C04, as is 62% of all ferroptosis work.
-- **A frozen 4,830-article full-text corpus**, which is **0.11% of the census**
-  and the reason the census exists. Every figure in the manuscript is computed
-  on this snapshot, so it is deliberately never mutated — that immutability is
-  what makes the published numbers checkable, and it is also why it stays small.
-  It covers 23 mechanism tags, 22 cancer types and 803 journals (2001-2026),
-  alongside an abstract-only archive of 5,586 records at manuscript freeze
-  (5,593 today). It skews toward immunotherapy (~2,297 articles).
-- **A living review** that re-runs the queries monthly and reports a dated delta
-  without ever touching the frozen corpus.
+- **An open-access full-text layer** of **1,116,481 cancer articles** (25.4% of
+  the indexed census), drawn from PMC's 28 bulk packages — 737,929
+  redistributable `oa_comm`, 378,552 `oa_noncomm`. Text is what an evidence
+  label can be read from; the other three quarters of the census are measured
+  from MeSH descriptors and NLM publication types instead.
+- **A living review** that re-runs monthly and reports a dated delta.
 
-The frozen corpus is not just small, it is **unevenly** small: per-mechanism
-capture ranges from 0.20% to 41.86%, a 213-fold spread, so any relative
-prevalence computed on it inherits that bias. Measuring this is what the census
-is for. Where a manuscript claim can now be re-tested against all 4.4M articles
-on independent expert labels, it has been:
-`analysis/manuscript-vs-census.md` re-tests two and both survive — one of them
-understated by the manuscript, which the census corrects upward.
+Every prevalence figure here is a share of the census, measured on
+expert-assigned MeSH descriptors rather than on this project's own retrieval.
+That distinction is not cosmetic: it is the difference between describing the
+literature and describing a search.
 
 - **Python pipeline** for corpus fetching, tagging (7 tag layers), indexing, analysis, and figure generation
 - **12 Rust simulation binaries**, a mechanistic claim-testing engine for **ferroptosis and physical-ROS therapies specifically** (not cancer therapies in general): single-cell and spatial Monte Carlo, drug penetration across tissue types, drug combinations, tumor microenvironment (oxygen gradients, spatial immune zones, DAMP-mediated T-cell activation, stromal shielding, vasculature, clonal heterogeneity), vulnerability windows, ICD immune cascades, and tumor PK. The worked implementations are ferroptosis/RSL3 biochemistry and PDT/SDT depth physics — there are no others (2D row-based and 3D radial-depth dispatchers; sim-tme-3d is the 3D-spheroid capstone consuming the full TME library stack) plus photosensitizer PK (drug-light-interval scaling, saturating distribution phase, relative singlet-O₂ yield)
@@ -103,13 +97,16 @@ the instrument rather than about any biology.
 
 Two consequences worth carrying into anything you read here:
 
-- Mechanism shares quoted in this repo are shares of the **4,830-record frozen
-  corpus** — immunotherapy is 2,297 of 4,830 = 47.6% — not of tagged articles,
-  which this line said until 2026-08-17. The corpus carries three denominators
-  that are not interchangeable: 47.6% of records, 53.6% of the 4,284 tagged
-  records, 34.4% of all 6,678 mechanism tags. The taxonomy itself matches about
-  6.8% of the census through the production matcher — see
-  [`analysis/atlas-taxonomy-reach.md`](analysis/atlas-taxonomy-reach.md).
+- Mechanism shares are shares of the **census records carrying a
+  discriminative MeSH descriptor** (165,700 across the measured mechanisms).
+  Immunotherapy is 31,890 = **19.2%**. Read that against what a keyword
+  retrieval reported for the same mechanism — 47.6% — and the gap is the point:
+  a corpus assembled from queries about immunotherapy finds immunotherapy
+  everywhere. Two cautions on the ranking: `epigenetic` leads on volume only
+  because 75% of its records come from `DNA Methylation`, a descriptor carried
+  by any paper that MEASURES the process, so its rank is a scope artifact and
+  not a discovery; and the taxonomy reaches about 6.8% of the census at all —
+  see [`analysis/atlas-taxonomy-reach.md`](analysis/atlas-taxonomy-reach.md).
 - Areas with no lane at all are not absent because they were weighed and
   dismissed. Radiotherapy, used by roughly half of all cancer patients, has no
   query, no mechanism tag, no engine term and two mentions in the manuscript.

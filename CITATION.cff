@@ -12,13 +12,14 @@ license: MIT
 url: "https://github.com/ELares/cancer_research"
 repository-code: "https://github.com/ELares/cancer_research"
 abstract: >
-  Open-source cancer research combining cross-literature analysis of
-  4,830 research articles with Monte Carlo biochemical simulations of
-  ferroptosis sensitivity across cell phenotypes, drug combinations,
-  and tumor microenvironment features. A census layer covers the whole
-  indexed cancer literature -- 4,403,994 MeSH-indexed articles and
-  10,509,470 typed entity relations -- and is used to re-test the
-  corpus-scale claims against articles the project did not select.
+  Open-source cancer research combining a census of the indexed cancer
+  literature -- 5,187,265 articles, being 4,403,994 with MeSH indexing
+  and 783,271 recovered by text match, carrying 10,509,470 typed entity
+  relations -- with Monte Carlo biochemical simulations of ferroptosis
+  sensitivity across cell phenotypes, drug combinations, and tumor
+  microenvironment features. Claims are measured over articles the
+  project did not select, using expert-assigned MeSH descriptors and
+  NLM publication types rather than the project's own retrieval.
   Includes a reusable Rust simulation engine (ferroptosis-core) with
   Python bindings, a news source authentication pipeline, and a
   ~115-page book-format manuscript.

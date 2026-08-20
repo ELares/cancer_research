@@ -362,24 +362,49 @@ def test_the_readme_denominators_are_pinned_to_the_artifact():
     """The front-door half of the finding was guarded by nothing.
 
     All four figures were hand-typed into README.md and a reviewer falsified
-    every one of them (2,297 -> 1,100, 47.6 -> 22.8, 53.6 -> 91.2,
-    34.4 -> 70.0) with the suite green. Derived on one page, retyped on the
+    every one of them with the suite green. Derived on one page, retyped on the
     other, is the exact shape this finding is about.
+
+    THE DENOMINATOR HAS MOVED. The README no longer quotes shares of the
+    4,830-record retrieval; it quotes shares of the census records carrying a
+    discriminative MeSH descriptor. So this pins the census figures, and pins
+    that the retrieval figure appears ONLY as the contrast it is now used for.
     """
-    d, r = _doc(), README.read_text()
-    m = d.get("mechanism_denominators")
-    if not m:
+    import json as _j
+    land = REPO_ROOT / "analysis" / "atlas-landscape.json"
+    r = README.read_text()
+    if not land.exists():
         return
-    assert f"{m['top_n']:,} of {m['corpus_records']:,}" in r, (
-        f"the README does not carry the derived counts "
-        f"{m['top_n']:,} of {m['corpus_records']:,}")
-    for val, label in ((m["share_of_corpus"], "corpus"),
-                       (m["share_of_tagged"], "tagged"),
-                       (m["share_of_tags"], "tags")):
-        assert f"{100*val:.1f}%" in r, (
-            f"the README does not carry the derived {label} share "
-            f"{100*val:.1f}%")
-    assert f"{m['tagged']:,}" in r and f"{m['tags']:,}" in r
+    rows = _j.loads(land.read_text())["rows"]
+    tot = sum(x["mesh_census"] or 0 for x in rows)
+    top = max(rows, key=lambda x: x["mesh_census"] or 0)
+    im = next(x for x in rows if x["mechanism"].lower() == "immunotherapy")
+    assert f"{tot:,}" in r, (
+        f"the README does not carry the census mechanism denominator {tot:,}")
+    assert f"{im['mesh_census']:,}" in r and f"{100*im['mesh_census']/tot:.1f}%" in r, (
+        f"the README does not carry immunotherapy's derived census share "
+        f"{im['mesh_census']:,} = {100*im['mesh_census']/tot:.1f}%")
+    # the leading mechanism by volume is a SCOPE ARTIFACT if one descriptor
+    # carries most of it; the README must say so rather than rank it silently
+    if (top.get("top_share") or 0) >= 0.5:
+        assert top["mechanism"] in r and "scope artifact" in r.lower(), (
+            f"`{top['mechanism']}` leads the census ranking on "
+            f"{100*top['top_share']:.0f}% of one descriptor and the README "
+            "presents the ranking without saying so")
+    # and the retrieval share may appear only as a contrast, never as the claim
+    d = _doc()
+    m = d.get("mechanism_denominators")
+    if m:
+        old_share = f"{100*m['share_of_corpus']:.1f}%"
+        for i in range(len(r)):
+            j = r.find(old_share, i)
+            if j < 0:
+                break
+            w = r[max(0, j - 400):j + 200]
+            assert "keyword retrieval" in w or "contrast" in w or "gap" in w, (
+                f"the README quotes {old_share} without marking it as the "
+                "retrieval figure it is being contrasted against")
+            i = j + 1
 
 
 def test_the_module_rows_are_each_pinned_to_their_own_figure():
