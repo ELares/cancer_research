@@ -61,8 +61,26 @@ PHASES = ["Clinical Trial, Phase I", "Clinical Trial, Phase II",
 COMPARED = ["sonodynamic", "hifu", "electrochemical-therapy",
             "radioligand-therapy", "ttfields", "immunotherapy", "car-t",
             "antibody-drug-conjugate"]
+# EVERY mechanism carrying both instruments, for the validity sweep. The
+# sonodynamic artifact was found by accident on a subset chosen for a different
+# reason, which is not a way to learn whether other descriptors are borrowed
+# too. Filled at scan time from the intersection of the two vocabularies.
+SWEEP_ALL = True
 # A share off a handful of trials is a statement about the handful.
 MIN_TRIALS = 10
+# THE FLOOR THAT MATTERS FOR THE VALIDITY TEST IS ON ARTICLES, NOT TRIALS, and
+# a first version got this exactly backwards. Requiring both arms to clear ten
+# TRIALS excluded sonodynamic -- the case the whole test was built from --
+# because a descriptor that inflates a share does so by piling trials onto the
+# descriptor arm while the term's own arm stays thin. So the worst artifacts
+# are precisely the ones a trial floor hides.
+#
+# The share ratio is trial-ratio over article-ratio, so what it needs is enough
+# ARTICLES on both arms to estimate two shares, plus enough trials on at least
+# one arm for the numerator to mean something. Sonodynamic has 2,513 and 1,379
+# articles: amply testable, and its 114-against-4 trials is the finding rather
+# than a reason to skip it.
+MIN_ARTICLES_FOR_VALIDITY = 200
 
 
 def _mesh_sets():
@@ -90,7 +108,9 @@ def _text_patterns():
 def scan(stride: int = 1) -> dict:
     mesh = _mesh_sets()
     text = _text_patterns()
-    want = set(COMPARED)
+    # The sweep needs every mechanism with both arms; the Section 9.4 view is a
+    # named subset of the same scan rather than a second pass.
+    want = set(COMPARED) | (set(mesh) & set(text) if SWEEP_ALL else set())
     mesh = {k: v for k, v in mesh.items() if k in want}
     text = {k: v for k, v in text.items() if k in want}
     prefilter = re.compile("|".join(p.pattern for p in text.values()))
@@ -122,6 +142,7 @@ def scan(stride: int = 1) -> dict:
         "census": n,
         "min_trials": MIN_TRIALS,
         "compared": COMPARED,
+        "swept": sorted(set(mesh) & set(text)),
         "mesh_measurable": sorted(mesh),
         "text_measurable": sorted(text),
         "arms": {a: {k: dict(v) for k, v in arms[a].items()} for a in arms},
@@ -130,7 +151,7 @@ def scan(stride: int = 1) -> dict:
 
 def assemble(d: dict) -> dict:
     rows = []
-    for k in d["compared"]:
+    for k in sorted(set(d["compared"]) | set(d.get("swept", []))):
         row = {"modality": k,
                "mesh_measurable": k in d["mesh_measurable"],
                "text_measurable": k in d["text_measurable"]}
@@ -174,6 +195,24 @@ def assemble(d: dict) -> dict:
                                  if not r["mesh_measurable"])
     out["arms_disagree"] = sorted(r["modality"] for r in rows
                                   if r["arms_disagree"])
+    # THE SWEEP. Only rows with both arms and enough trials on each to make a
+    # share mean anything; a mechanism with three trials on one arm produces a
+    # large ratio for reasons that have nothing to do with its descriptor.
+    testable = [r for r in rows
+                if r["mesh_articles"] >= MIN_ARTICLES_FOR_VALIDITY
+                and r["text_articles"] >= MIN_ARTICLES_FOR_VALIDITY
+                and max(r["mesh_trials"], r["text_trials"]) >= MIN_TRIALS
+                and r["arm_ratio"] is not None]
+    out["validity_tested"] = sorted(r["modality"] for r in testable)
+    out["validity_failed"] = sorted(r["modality"] for r in testable
+                                    if r["arms_disagree"])
+    out["section_94_view"] = list(COMPARED)
+    out["min_articles_for_validity"] = MIN_ARTICLES_FOR_VALIDITY
+    # Rows a trial-based floor WOULD have hidden, kept visible because the
+    # motivating case was one of them.
+    out["hidden_by_a_trial_floor"] = sorted(
+        r["modality"] for r in testable
+        if min(r["mesh_trials"], r["text_trials"]) < MIN_TRIALS)
     return out
 
 
@@ -249,28 +288,74 @@ def render(d: dict) -> str:
         L.append(f"| {r['modality']} | {r['text_trial_share']}% | "
                  f"{r['mesh_trial_share']}% | {mark}{r['arm_ratio']}x{mark} |")
     L.append("")
+    L.append(
+        f"Swept across every mechanism carrying both instruments: "
+        f"**{len(d['validity_failed'])} of {len(d['validity_tested'])} fail**, "
+        f"which is what makes a failure interpretable rather than a property "
+        f"of the method. Testability requires "
+        f"{d['min_articles_for_validity']} articles on each arm and "
+        f"{d['min_trials']} trials on at least one.\n"
+    )
+    if d["hidden_by_a_trial_floor"]:
+        L.append(
+            f"**The floor is on ARTICLES, not trials, and a first version had "
+            f"it backwards.** Requiring ten trials on BOTH arms excluded "
+            + ", ".join(f"`{m}`" for m in d["hidden_by_a_trial_floor"])
+            + " -- including the case this test was built from. A descriptor "
+              "that inflates a share does it by piling trials onto the "
+              "descriptor arm while the term's own arm stays thin, so the "
+              "worst artifacts are exactly the ones a trial floor hides. The "
+              "test would have been blind to the thing that motivated it.\n"
+        )
+    DIAGNOSES = {
+        "sonodynamic": (
+            "**The descriptor is too BROAD.** Of the 114 census articles "
+            "carrying `Ultrasonic Therapy` and a trial publication type, "
+            "exactly **2** mention sonodynamic therapy or a sonosensitiser "
+            "anywhere in title or abstract. The other 112 are ultrasound "
+            "HYPERTHERMIA trials, mostly from the 1980s and 1990s. Neither "
+            "reading favours the descriptor here: hyperthermia is not "
+            "sonodynamic therapy under any definition, so 4.54% is 98% "
+            "borrowed and 0.29% is the figure. THE MANUSCRIPT WAS CORRECTED."),
+        "nanoparticle": (
+            "**The descriptor is too NARROW, and the disagreement CONFIRMS a "
+            "caveat the manuscript already makes.** 81% of the text arm's "
+            "1,308 trials match only on `liposome`: approved liposomal "
+            "medicines are indexed by drug name, not under `Nanoparticles`. "
+            "So the two arms answer different questions -- 0.49% is how "
+            "clinical the literature that calls itself nanoparticle research "
+            "is, and 1.52% is how clinical nanoparticle-based delivery is once "
+            "liposomal drugs are counted. The manuscript's claim is about "
+            "novel experimental nanoplatforms, so 0.49% is the right figure "
+            "FOR THAT CLAIM and no correction follows -- but the caveat is now "
+            "a measurement rather than an assertion."),
+        "mrna-vaccine": (
+            "**The descriptor is too YOUNG.** `mRNA Vaccines` was minted in "
+            "2020 and its earliest census record is 2020, so it cannot see a "
+            "trial that predates it however relevant. The text arm reaches "
+            "earlier neoantigen-vaccine work. This is the descriptor-"
+            "introduction effect the translation-lag analysis measures, "
+            "showing up in a share rather than in a first-appearance year."),
+    }
     if d["arms_disagree"]:
+        L.append("### What each failure turned out to be\n")
         L.append(
-            f"**{', '.join(f'`{m}`' for m in d['arms_disagree'])} fails the "
-            f"test, and the failure was traced rather than inferred.** Of the "
-            f"114 census articles carrying `Ultrasonic Therapy` AND a trial "
-            f"publication type, exactly **2** mention sonodynamic therapy or a "
-            f"sonosensitiser anywhere in title or abstract. The remaining 112 "
-            f"are ultrasound HYPERTHERMIA trials, mostly from the 1980s and "
-            f"1990s -- a different modality that shares an instrument.\n"
+            "Three failures, three DIFFERENT causes, and the direction "
+            "differs too -- the descriptor arm reads high in one and low in "
+            "two. A test that flags mismatch does not tell you which arm is "
+            "right; that needs looking, and each was traced rather than "
+            "labelled.\n"
         )
+        for m in d["arms_disagree"]:
+            r = next(x for x in d["rows"] if x["modality"] == m)
+            L.append(f"**`{m}`** — text {r['text_trial_share']}%, descriptor "
+                     f"{r['mesh_trial_share']}%, {r['arm_ratio']}x. "
+                     + DIAGNOSES.get(m, "Not yet traced.") + "\n")
         L.append(
-            "So a descriptor-arm trial share of 4.54% for sonodynamic therapy "
-            "is 98% borrowed from work that is not sonodynamic therapy. The "
-            "text arm's 0.29% is the honest figure, and the correction runs "
-            "in the direction that makes this project's own thesis modality "
-            "look EARLIER than previously reported, not later.\n"
-        )
-        L.append(
-            "The other modalities pass, which is what makes the failure "
+            "The other mechanisms pass, which is what makes a failure "
             "interpretable rather than a property of the method: HIFU's two "
             "arms agree to within a tenth of a point, and the descriptor arm "
-            "is not systematically higher.\n"
+            "is not systematically higher or lower across the set.\n"
         )
     L.append("## The comparison Section 9.4 turns on\n")
     rl = next((r for r in d["rows"] if r["modality"] == "radioligand-therapy"),

@@ -89,6 +89,7 @@ def test_the_descriptor_artifact_is_derived_and_named(d):
         "sonodynamic no longer fails the arm-agreement test. Either the data "
         "changed or the test weakened; do not remove the manuscript correction "
         "without establishing which")
+    assert set(d["validity_failed"]) <= flagged
     # The other modalities must pass, or the test is flagging its own method
     # rather than a property of one descriptor.
     passing = [r for r in d["rows"] if r["mesh_trial_share"] and not r["arms_disagree"]]
@@ -98,6 +99,55 @@ def test_the_descriptor_artifact_is_derived_and_named(d):
     md = MD.read_text()
     assert "exactly **2** mention sonodynamic" in md
     assert "hyperthermia" in md.lower()
+
+
+def test_every_failure_is_traced_rather_than_labelled(d):
+    """Three failures with three different causes and two directions.
+
+    A test that flags mismatch does not say which arm is right. Reporting them
+    under one label -- "descriptor problems" -- would hide that one is a
+    descriptor too broad, one too narrow, and one too young, and that only the
+    first warranted a manuscript correction.
+    """
+    md = MD.read_text()
+    for m in d["validity_failed"]:
+        assert f"**`{m}`**" in md, f"{m} fails the test and is not diagnosed"
+    # The three causes must be distinguished, not merged.
+    assert "too BROAD" in md and "too NARROW" in md and "too YOUNG" in md, (
+        "the failures are reported under a single label; they have different "
+        "causes and only one of them implies a correction")
+    assert "does not tell you which arm is right" in md
+
+
+def test_the_validity_floor_is_on_articles_not_trials(d):
+    """The blind spot that would have hidden the motivating case.
+
+    A descriptor that inflates a share does it by piling trials onto the
+    descriptor arm while the term's own arm stays thin -- so requiring trials
+    on BOTH arms excludes exactly the worst artifacts. Sonodynamic has 4 text
+    trials against 114 descriptor trials and would have been skipped.
+    """
+    assert "sonodynamic" in d["validity_tested"], (
+        "sonodynamic is not in the tested set, so the sweep cannot see the "
+        "artifact it was built from")
+    assert "sonodynamic" in d["hidden_by_a_trial_floor"], (
+        "sonodynamic no longer has a thin arm, which would mean the blind-spot "
+        "note no longer describes this data")
+    for m in d["validity_tested"]:
+        r = next(x for x in d["rows"] if x["modality"] == m)
+        assert min(r["mesh_articles"], r["text_articles"]) >= d["min_articles_for_validity"]
+        assert max(r["mesh_trials"], r["text_trials"]) >= d["min_trials"]
+    md = MD.read_text()
+    assert "floor is on ARTICLES, not trials" in md
+    assert "blind to the thing that motivated it" in md
+
+
+def test_most_mechanisms_pass_or_the_test_measures_its_own_method(d):
+    tested, failed = len(d["validity_tested"]), len(d["validity_failed"])
+    assert tested >= 12, f"only {tested} mechanisms testable; the sweep is thin"
+    assert failed < tested / 2, (
+        f"{failed} of {tested} fail, so the two arms disagree generally and a "
+        "single failure is not evidence about a single descriptor")
 
 
 def test_the_correction_reached_the_manuscript():

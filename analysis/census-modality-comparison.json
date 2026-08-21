@@ -11,32 +11,92 @@
   "car-t",
   "antibody-drug-conjugate"
  ],
- "mesh_measurable": [
+ "swept": [
   "antibody-drug-conjugate",
+  "bispecific-antibody",
   "car-t",
+  "crispr",
   "electrochemical-therapy",
+  "epigenetic",
   "hifu",
   "immunotherapy",
-  "sonodynamic"
+  "metabolic-targeting",
+  "microbiome",
+  "mrna-vaccine",
+  "nanoparticle",
+  "oncolytic-virus",
+  "phagocytosis-checkpoint",
+  "sonodynamic",
+  "synthetic-lethality"
+ ],
+ "mesh_measurable": [
+  "antibody-drug-conjugate",
+  "bispecific-antibody",
+  "car-t",
+  "crispr",
+  "electrochemical-therapy",
+  "epigenetic",
+  "hifu",
+  "immunotherapy",
+  "metabolic-targeting",
+  "microbiome",
+  "mrna-vaccine",
+  "nanoparticle",
+  "oncolytic-virus",
+  "phagocytosis-checkpoint",
+  "sonodynamic",
+  "synthetic-lethality"
  ],
  "text_measurable": [
   "antibody-drug-conjugate",
+  "bispecific-antibody",
   "car-t",
+  "crispr",
   "electrochemical-therapy",
+  "epigenetic",
   "hifu",
   "immunotherapy",
+  "metabolic-targeting",
+  "microbiome",
+  "mrna-vaccine",
+  "nanoparticle",
+  "oncolytic-virus",
+  "phagocytosis-checkpoint",
   "radioligand-therapy",
   "sonodynamic",
+  "synthetic-lethality",
   "ttfields"
  ],
  "arms": {
   "mesh": {
+   "metabolic-targeting": {
+    "articles": 8809,
+    "trials": 45,
+    "Clinical Trial, Phase II": 7,
+    "Clinical Trial, Phase I": 3,
+    "Clinical Trial, Phase III": 3
+   },
+   "epigenetic": {
+    "articles": 41278,
+    "trials": 1307,
+    "Clinical Trial, Phase II": 509,
+    "Clinical Trial, Phase I": 422,
+    "Clinical Trial, Phase III": 98
+   },
    "sonodynamic": {
     "articles": 2513,
     "trials": 114,
     "Clinical Trial, Phase I": 17,
     "Clinical Trial, Phase II": 16,
     "Clinical Trial, Phase III": 2
+   },
+   "synthetic-lethality": {
+    "articles": 5437,
+    "trials": 342,
+    "Clinical Trial, Phase I": 128,
+    "Clinical Trial, Phase II": 140,
+    "Clinical Trial, Phase III": 67,
+    "Clinical Trial, Phase IV": 3
    },
    "car-t": {
     "articles": 15358,
@@ -61,11 +121,39 @@
     "Clinical Trial, Phase III": 76,
     "Clinical Trial, Phase IV": 2
    },
+   "bispecific-antibody": {
+    "articles": 3462,
+    "trials": 326,
+    "Clinical Trial, Phase I": 179,
+    "Clinical Trial, Phase II": 144,
+    "Clinical Trial, Phase III": 37
+   },
    "electrochemical-therapy": {
     "articles": 2515,
     "trials": 142,
     "Clinical Trial, Phase I": 34,
     "Clinical Trial, Phase II": 56
+   },
+   "phagocytosis-checkpoint": {
+    "articles": 918,
+    "trials": 13,
+    "Clinical Trial, Phase I": 11,
+    "Clinical Trial, Phase II": 3
+   },
+   "oncolytic-virus": {
+    "articles": 5006,
+    "trials": 201,
+    "Clinical Trial, Phase I": 132,
+    "Clinical Trial, Phase II": 57,
+    "Clinical Trial, Phase III": 7,
+    "Clinical Trial, Phase IV": 1
+   },
+   "nanoparticle": {
+    "articles": 36788,
+    "trials": 182,
+    "Clinical Trial, Phase I": 52,
+    "Clinical Trial, Phase II": 58,
+    "Clinical Trial, Phase III": 13
    },
    "hifu": {
     "articles": 1352,
@@ -74,6 +162,22 @@
     "Clinical Trial, Phase I": 8,
     "Clinical Trial, Phase III": 2,
     "Clinical Trial, Phase IV": 1
+   },
+   "crispr": {
+    "articles": 3674,
+    "trials": 6,
+    "Clinical Trial, Phase I": 5
+   },
+   "microbiome": {
+    "articles": 380,
+    "trials": 12,
+    "Clinical Trial, Phase I": 5,
+    "Clinical Trial, Phase II": 5
+   },
+   "mrna-vaccine": {
+    "articles": 301,
+    "trials": 2,
+    "Clinical Trial, Phase I": 1
    }
   },
   "text": {
@@ -92,6 +196,35 @@
     "Clinical Trial, Phase II": 112,
     "Clinical Trial, Phase III": 35
    },
+   "nanoparticle": {
+    "articles": 27549,
+    "trials": 419,
+    "Clinical Trial, Phase II": 164,
+    "Clinical Trial, Phase I": 143,
+    "Clinical Trial, Phase III": 33
+   },
+   "metabolic-targeting": {
+    "articles": 12727,
+    "trials": 47,
+    "Clinical Trial, Phase I": 10,
+    "Clinical Trial, Phase II": 14,
+    "Clinical Trial, Phase III": 1
+   },
+   "oncolytic-virus": {
+    "articles": 3630,
+    "trials": 157,
+    "Clinical Trial, Phase I": 101,
+    "Clinical Trial, Phase II": 50,
+    "Clinical Trial, Phase III": 9,
+    "Clinical Trial, Phase IV": 1
+   },
+   "bispecific-antibody": {
+    "articles": 2875,
+    "trials": 301,
+    "Clinical Trial, Phase I": 173,
+    "Clinical Trial, Phase II": 145,
+    "Clinical Trial, Phase III": 25
+   },
    "antibody-drug-conjugate": {
     "articles": 4596,
     "trials": 689,
@@ -100,6 +233,14 @@
     "Clinical Trial, Phase III": 130,
     "Clinical Trial, Phase IV": 2
    },
+   "synthetic-lethality": {
+    "articles": 6235,
+    "trials": 546,
+    "Clinical Trial, Phase I": 166,
+    "Clinical Trial, Phase II": 228,
+    "Clinical Trial, Phase III": 132,
+    "Clinical Trial, Phase IV": 3
+   },
    "hifu": {
     "articles": 2067,
     "trials": 155,
@@ -107,6 +248,20 @@
     "Clinical Trial, Phase II": 24,
     "Clinical Trial, Phase III": 4,
     "Clinical Trial, Phase IV": 1
+   },
+   "epigenetic": {
+    "articles": 20893,
+    "trials": 1010,
+    "Clinical Trial, Phase II": 449,
+    "Clinical Trial, Phase I": 448,
+    "Clinical Trial, Phase III": 70
+   },
+   "microbiome": {
+    "articles": 728,
+    "trials": 21,
+    "Clinical Trial, Phase III": 1,
+    "Clinical Trial, Phase I": 5,
+    "Clinical Trial, Phase II": 6
    },
    "electrochemical-therapy": {
     "articles": 955,
@@ -119,6 +274,25 @@
     "trials": 4,
     "Clinical Trial, Phase I": 4,
     "Clinical Trial, Phase II": 1
+   },
+   "phagocytosis-checkpoint": {
+    "articles": 1433,
+    "trials": 23,
+    "Clinical Trial, Phase I": 18,
+    "Clinical Trial, Phase II": 5,
+    "Clinical Trial, Phase III": 1
+   },
+   "crispr": {
+    "articles": 8502,
+    "trials": 29,
+    "Clinical Trial, Phase I": 14,
+    "Clinical Trial, Phase II": 9
+   },
+   "mrna-vaccine": {
+    "articles": 884,
+    "trials": 47,
+    "Clinical Trial, Phase I": 25,
+    "Clinical Trial, Phase II": 10
    },
    "car-t": {
     "articles": 11472,
@@ -138,201 +312,69 @@
  },
  "rows": [
   {
-   "modality": "sonodynamic",
+   "modality": "antibody-drug-conjugate",
    "mesh_measurable": true,
    "text_measurable": true,
-   "mesh_articles": 2513,
-   "mesh_trials": 114,
-   "mesh_trial_share": 4.54,
+   "mesh_articles": 6019,
+   "mesh_trials": 580,
+   "mesh_trial_share": 9.64,
    "mesh_phases": {
-    "I": 17,
-    "II": 16,
-    "III": 2,
-    "IV": 0
-   },
-   "mesh_phased": 35,
-   "mesh_late_phase": 2,
-   "mesh_late_share": 5.7,
-   "mesh_interpretable": true,
-   "text_articles": 1398,
-   "text_trials": 4,
-   "text_trial_share": 0.29,
-   "text_phases": {
-    "I": 4,
-    "II": 1,
-    "III": 0,
-    "IV": 0
-   },
-   "text_phased": 5,
-   "text_late_phase": 0,
-   "text_late_share": 0.0,
-   "text_interpretable": false,
-   "arm_ratio": 15.7,
-   "arms_disagree": true
-  },
-  {
-   "modality": "hifu",
-   "mesh_measurable": true,
-   "text_measurable": true,
-   "mesh_articles": 1352,
-   "mesh_trials": 96,
-   "mesh_trial_share": 7.1,
-   "mesh_phases": {
-    "I": 8,
-    "II": 9,
-    "III": 2,
-    "IV": 1
-   },
-   "mesh_phased": 20,
-   "mesh_late_phase": 3,
-   "mesh_late_share": 15.0,
-   "mesh_interpretable": true,
-   "text_articles": 2067,
-   "text_trials": 155,
-   "text_trial_share": 7.5,
-   "text_phases": {
-    "I": 15,
-    "II": 24,
-    "III": 4,
-    "IV": 1
-   },
-   "text_phased": 44,
-   "text_late_phase": 5,
-   "text_late_share": 11.4,
-   "text_interpretable": true,
-   "arm_ratio": 1.1,
-   "arms_disagree": false
-  },
-  {
-   "modality": "electrochemical-therapy",
-   "mesh_measurable": true,
-   "text_measurable": true,
-   "mesh_articles": 2515,
-   "mesh_trials": 142,
-   "mesh_trial_share": 5.65,
-   "mesh_phases": {
-    "I": 34,
-    "II": 56,
-    "III": 0,
-    "IV": 0
-   },
-   "mesh_phased": 90,
-   "mesh_late_phase": 0,
-   "mesh_late_share": 0.0,
-   "mesh_interpretable": true,
-   "text_articles": 955,
-   "text_trials": 63,
-   "text_trial_share": 6.6,
-   "text_phases": {
-    "I": 10,
-    "II": 27,
-    "III": 0,
-    "IV": 0
-   },
-   "text_phased": 37,
-   "text_late_phase": 0,
-   "text_late_share": 0.0,
-   "text_interpretable": true,
-   "arm_ratio": 1.2,
-   "arms_disagree": false
-  },
-  {
-   "modality": "radioligand-therapy",
-   "mesh_measurable": false,
-   "text_measurable": true,
-   "mesh_articles": 0,
-   "mesh_trials": 0,
-   "mesh_trial_share": null,
-   "mesh_phases": {
-    "I": 0,
-    "II": 0,
-    "III": 0,
-    "IV": 0
-   },
-   "mesh_phased": 0,
-   "mesh_late_phase": 0,
-   "mesh_late_share": null,
-   "mesh_interpretable": false,
-   "text_articles": 6049,
-   "text_trials": 384,
-   "text_trial_share": 6.35,
-   "text_phases": {
-    "I": 64,
-    "II": 112,
-    "III": 35,
-    "IV": 0
-   },
-   "text_phased": 211,
-   "text_late_phase": 35,
-   "text_late_share": 16.6,
-   "text_interpretable": true,
-   "arm_ratio": null,
-   "arms_disagree": false
-  },
-  {
-   "modality": "ttfields",
-   "mesh_measurable": false,
-   "text_measurable": true,
-   "mesh_articles": 0,
-   "mesh_trials": 0,
-   "mesh_trial_share": null,
-   "mesh_phases": {
-    "I": 0,
-    "II": 0,
-    "III": 0,
-    "IV": 0
-   },
-   "mesh_phased": 0,
-   "mesh_late_phase": 0,
-   "mesh_late_share": null,
-   "mesh_interpretable": false,
-   "text_articles": 421,
-   "text_trials": 26,
-   "text_trial_share": 6.18,
-   "text_phases": {
-    "I": 2,
-    "II": 8,
-    "III": 14,
-    "IV": 0
-   },
-   "text_phased": 24,
-   "text_late_phase": 14,
-   "text_late_share": 58.3,
-   "text_interpretable": true,
-   "arm_ratio": null,
-   "arms_disagree": false
-  },
-  {
-   "modality": "immunotherapy",
-   "mesh_measurable": true,
-   "text_measurable": true,
-   "mesh_articles": 31890,
-   "mesh_trials": 1430,
-   "mesh_trial_share": 4.48,
-   "mesh_phases": {
-    "I": 433,
-    "II": 639,
-    "III": 213,
+    "I": 282,
+    "II": 236,
+    "III": 76,
     "IV": 2
    },
-   "mesh_phased": 1287,
-   "mesh_late_phase": 215,
-   "mesh_late_share": 16.7,
+   "mesh_phased": 596,
+   "mesh_late_phase": 78,
+   "mesh_late_share": 13.1,
    "mesh_interpretable": true,
-   "text_articles": 118427,
-   "text_trials": 6686,
-   "text_trial_share": 5.65,
+   "text_articles": 4596,
+   "text_trials": 689,
+   "text_trial_share": 14.99,
    "text_phases": {
-    "I": 1763,
-    "II": 2570,
-    "III": 863,
-    "IV": 20
+    "I": 276,
+    "II": 302,
+    "III": 130,
+    "IV": 2
    },
-   "text_phased": 5216,
-   "text_late_phase": 883,
-   "text_late_share": 16.9,
+   "text_phased": 710,
+   "text_late_phase": 132,
+   "text_late_share": 18.6,
    "text_interpretable": true,
-   "arm_ratio": 1.3,
+   "arm_ratio": 1.6,
+   "arms_disagree": false
+  },
+  {
+   "modality": "bispecific-antibody",
+   "mesh_measurable": true,
+   "text_measurable": true,
+   "mesh_articles": 3462,
+   "mesh_trials": 326,
+   "mesh_trial_share": 9.42,
+   "mesh_phases": {
+    "I": 179,
+    "II": 144,
+    "III": 37,
+    "IV": 0
+   },
+   "mesh_phased": 360,
+   "mesh_late_phase": 37,
+   "mesh_late_share": 10.3,
+   "mesh_interpretable": true,
+   "text_articles": 2875,
+   "text_trials": 301,
+   "text_trial_share": 10.47,
+   "text_phases": {
+    "I": 173,
+    "II": 145,
+    "III": 25,
+    "IV": 0
+   },
+   "text_phased": 343,
+   "text_late_phase": 25,
+   "text_late_share": 7.3,
+   "text_interpretable": true,
+   "arm_ratio": 1.1,
    "arms_disagree": false
   },
   {
@@ -369,36 +411,498 @@
    "arms_disagree": false
   },
   {
-   "modality": "antibody-drug-conjugate",
+   "modality": "crispr",
    "mesh_measurable": true,
    "text_measurable": true,
-   "mesh_articles": 6019,
-   "mesh_trials": 580,
-   "mesh_trial_share": 9.64,
+   "mesh_articles": 3674,
+   "mesh_trials": 6,
+   "mesh_trial_share": 0.16,
    "mesh_phases": {
-    "I": 282,
-    "II": 236,
-    "III": 76,
-    "IV": 2
+    "I": 5,
+    "II": 0,
+    "III": 0,
+    "IV": 0
    },
-   "mesh_phased": 596,
-   "mesh_late_phase": 78,
-   "mesh_late_share": 13.1,
-   "mesh_interpretable": true,
-   "text_articles": 4596,
-   "text_trials": 689,
-   "text_trial_share": 14.99,
+   "mesh_phased": 5,
+   "mesh_late_phase": 0,
+   "mesh_late_share": 0.0,
+   "mesh_interpretable": false,
+   "text_articles": 8502,
+   "text_trials": 29,
+   "text_trial_share": 0.34,
    "text_phases": {
-    "I": 276,
-    "II": 302,
-    "III": 130,
+    "I": 14,
+    "II": 9,
+    "III": 0,
+    "IV": 0
+   },
+   "text_phased": 23,
+   "text_late_phase": 0,
+   "text_late_share": 0.0,
+   "text_interpretable": true,
+   "arm_ratio": 2.1,
+   "arms_disagree": false
+  },
+  {
+   "modality": "electrochemical-therapy",
+   "mesh_measurable": true,
+   "text_measurable": true,
+   "mesh_articles": 2515,
+   "mesh_trials": 142,
+   "mesh_trial_share": 5.65,
+   "mesh_phases": {
+    "I": 34,
+    "II": 56,
+    "III": 0,
+    "IV": 0
+   },
+   "mesh_phased": 90,
+   "mesh_late_phase": 0,
+   "mesh_late_share": 0.0,
+   "mesh_interpretable": true,
+   "text_articles": 955,
+   "text_trials": 63,
+   "text_trial_share": 6.6,
+   "text_phases": {
+    "I": 10,
+    "II": 27,
+    "III": 0,
+    "IV": 0
+   },
+   "text_phased": 37,
+   "text_late_phase": 0,
+   "text_late_share": 0.0,
+   "text_interpretable": true,
+   "arm_ratio": 1.2,
+   "arms_disagree": false
+  },
+  {
+   "modality": "epigenetic",
+   "mesh_measurable": true,
+   "text_measurable": true,
+   "mesh_articles": 41278,
+   "mesh_trials": 1307,
+   "mesh_trial_share": 3.17,
+   "mesh_phases": {
+    "I": 422,
+    "II": 509,
+    "III": 98,
+    "IV": 0
+   },
+   "mesh_phased": 1029,
+   "mesh_late_phase": 98,
+   "mesh_late_share": 9.5,
+   "mesh_interpretable": true,
+   "text_articles": 20893,
+   "text_trials": 1010,
+   "text_trial_share": 4.83,
+   "text_phases": {
+    "I": 448,
+    "II": 449,
+    "III": 70,
+    "IV": 0
+   },
+   "text_phased": 967,
+   "text_late_phase": 70,
+   "text_late_share": 7.2,
+   "text_interpretable": true,
+   "arm_ratio": 1.5,
+   "arms_disagree": false
+  },
+  {
+   "modality": "hifu",
+   "mesh_measurable": true,
+   "text_measurable": true,
+   "mesh_articles": 1352,
+   "mesh_trials": 96,
+   "mesh_trial_share": 7.1,
+   "mesh_phases": {
+    "I": 8,
+    "II": 9,
+    "III": 2,
+    "IV": 1
+   },
+   "mesh_phased": 20,
+   "mesh_late_phase": 3,
+   "mesh_late_share": 15.0,
+   "mesh_interpretable": true,
+   "text_articles": 2067,
+   "text_trials": 155,
+   "text_trial_share": 7.5,
+   "text_phases": {
+    "I": 15,
+    "II": 24,
+    "III": 4,
+    "IV": 1
+   },
+   "text_phased": 44,
+   "text_late_phase": 5,
+   "text_late_share": 11.4,
+   "text_interpretable": true,
+   "arm_ratio": 1.1,
+   "arms_disagree": false
+  },
+  {
+   "modality": "immunotherapy",
+   "mesh_measurable": true,
+   "text_measurable": true,
+   "mesh_articles": 31890,
+   "mesh_trials": 1430,
+   "mesh_trial_share": 4.48,
+   "mesh_phases": {
+    "I": 433,
+    "II": 639,
+    "III": 213,
     "IV": 2
    },
-   "text_phased": 710,
-   "text_late_phase": 132,
-   "text_late_share": 18.6,
+   "mesh_phased": 1287,
+   "mesh_late_phase": 215,
+   "mesh_late_share": 16.7,
+   "mesh_interpretable": true,
+   "text_articles": 118427,
+   "text_trials": 6686,
+   "text_trial_share": 5.65,
+   "text_phases": {
+    "I": 1763,
+    "II": 2570,
+    "III": 863,
+    "IV": 20
+   },
+   "text_phased": 5216,
+   "text_late_phase": 883,
+   "text_late_share": 16.9,
    "text_interpretable": true,
-   "arm_ratio": 1.6,
+   "arm_ratio": 1.3,
+   "arms_disagree": false
+  },
+  {
+   "modality": "metabolic-targeting",
+   "mesh_measurable": true,
+   "text_measurable": true,
+   "mesh_articles": 8809,
+   "mesh_trials": 45,
+   "mesh_trial_share": 0.51,
+   "mesh_phases": {
+    "I": 3,
+    "II": 7,
+    "III": 3,
+    "IV": 0
+   },
+   "mesh_phased": 13,
+   "mesh_late_phase": 3,
+   "mesh_late_share": 23.1,
+   "mesh_interpretable": true,
+   "text_articles": 12727,
+   "text_trials": 47,
+   "text_trial_share": 0.37,
+   "text_phases": {
+    "I": 10,
+    "II": 14,
+    "III": 1,
+    "IV": 0
+   },
+   "text_phased": 25,
+   "text_late_phase": 1,
+   "text_late_share": 4.0,
+   "text_interpretable": true,
+   "arm_ratio": 1.4,
+   "arms_disagree": false
+  },
+  {
+   "modality": "microbiome",
+   "mesh_measurable": true,
+   "text_measurable": true,
+   "mesh_articles": 380,
+   "mesh_trials": 12,
+   "mesh_trial_share": 3.16,
+   "mesh_phases": {
+    "I": 5,
+    "II": 5,
+    "III": 0,
+    "IV": 0
+   },
+   "mesh_phased": 10,
+   "mesh_late_phase": 0,
+   "mesh_late_share": 0.0,
+   "mesh_interpretable": true,
+   "text_articles": 728,
+   "text_trials": 21,
+   "text_trial_share": 2.88,
+   "text_phases": {
+    "I": 5,
+    "II": 6,
+    "III": 1,
+    "IV": 0
+   },
+   "text_phased": 12,
+   "text_late_phase": 1,
+   "text_late_share": 8.3,
+   "text_interpretable": true,
+   "arm_ratio": 1.1,
+   "arms_disagree": false
+  },
+  {
+   "modality": "mrna-vaccine",
+   "mesh_measurable": true,
+   "text_measurable": true,
+   "mesh_articles": 301,
+   "mesh_trials": 2,
+   "mesh_trial_share": 0.66,
+   "mesh_phases": {
+    "I": 1,
+    "II": 0,
+    "III": 0,
+    "IV": 0
+   },
+   "mesh_phased": 1,
+   "mesh_late_phase": 0,
+   "mesh_late_share": 0.0,
+   "mesh_interpretable": false,
+   "text_articles": 884,
+   "text_trials": 47,
+   "text_trial_share": 5.32,
+   "text_phases": {
+    "I": 25,
+    "II": 10,
+    "III": 0,
+    "IV": 0
+   },
+   "text_phased": 35,
+   "text_late_phase": 0,
+   "text_late_share": 0.0,
+   "text_interpretable": true,
+   "arm_ratio": 8.1,
+   "arms_disagree": true
+  },
+  {
+   "modality": "nanoparticle",
+   "mesh_measurable": true,
+   "text_measurable": true,
+   "mesh_articles": 36788,
+   "mesh_trials": 182,
+   "mesh_trial_share": 0.49,
+   "mesh_phases": {
+    "I": 52,
+    "II": 58,
+    "III": 13,
+    "IV": 0
+   },
+   "mesh_phased": 123,
+   "mesh_late_phase": 13,
+   "mesh_late_share": 10.6,
+   "mesh_interpretable": true,
+   "text_articles": 27549,
+   "text_trials": 419,
+   "text_trial_share": 1.52,
+   "text_phases": {
+    "I": 143,
+    "II": 164,
+    "III": 33,
+    "IV": 0
+   },
+   "text_phased": 340,
+   "text_late_phase": 33,
+   "text_late_share": 9.7,
+   "text_interpretable": true,
+   "arm_ratio": 3.1,
+   "arms_disagree": true
+  },
+  {
+   "modality": "oncolytic-virus",
+   "mesh_measurable": true,
+   "text_measurable": true,
+   "mesh_articles": 5006,
+   "mesh_trials": 201,
+   "mesh_trial_share": 4.02,
+   "mesh_phases": {
+    "I": 132,
+    "II": 57,
+    "III": 7,
+    "IV": 1
+   },
+   "mesh_phased": 197,
+   "mesh_late_phase": 8,
+   "mesh_late_share": 4.1,
+   "mesh_interpretable": true,
+   "text_articles": 3630,
+   "text_trials": 157,
+   "text_trial_share": 4.33,
+   "text_phases": {
+    "I": 101,
+    "II": 50,
+    "III": 9,
+    "IV": 1
+   },
+   "text_phased": 161,
+   "text_late_phase": 10,
+   "text_late_share": 6.2,
+   "text_interpretable": true,
+   "arm_ratio": 1.1,
+   "arms_disagree": false
+  },
+  {
+   "modality": "phagocytosis-checkpoint",
+   "mesh_measurable": true,
+   "text_measurable": true,
+   "mesh_articles": 918,
+   "mesh_trials": 13,
+   "mesh_trial_share": 1.42,
+   "mesh_phases": {
+    "I": 11,
+    "II": 3,
+    "III": 0,
+    "IV": 0
+   },
+   "mesh_phased": 14,
+   "mesh_late_phase": 0,
+   "mesh_late_share": 0.0,
+   "mesh_interpretable": true,
+   "text_articles": 1433,
+   "text_trials": 23,
+   "text_trial_share": 1.61,
+   "text_phases": {
+    "I": 18,
+    "II": 5,
+    "III": 1,
+    "IV": 0
+   },
+   "text_phased": 24,
+   "text_late_phase": 1,
+   "text_late_share": 4.2,
+   "text_interpretable": true,
+   "arm_ratio": 1.1,
+   "arms_disagree": false
+  },
+  {
+   "modality": "radioligand-therapy",
+   "mesh_measurable": false,
+   "text_measurable": true,
+   "mesh_articles": 0,
+   "mesh_trials": 0,
+   "mesh_trial_share": null,
+   "mesh_phases": {
+    "I": 0,
+    "II": 0,
+    "III": 0,
+    "IV": 0
+   },
+   "mesh_phased": 0,
+   "mesh_late_phase": 0,
+   "mesh_late_share": null,
+   "mesh_interpretable": false,
+   "text_articles": 6049,
+   "text_trials": 384,
+   "text_trial_share": 6.35,
+   "text_phases": {
+    "I": 64,
+    "II": 112,
+    "III": 35,
+    "IV": 0
+   },
+   "text_phased": 211,
+   "text_late_phase": 35,
+   "text_late_share": 16.6,
+   "text_interpretable": true,
+   "arm_ratio": null,
+   "arms_disagree": false
+  },
+  {
+   "modality": "sonodynamic",
+   "mesh_measurable": true,
+   "text_measurable": true,
+   "mesh_articles": 2513,
+   "mesh_trials": 114,
+   "mesh_trial_share": 4.54,
+   "mesh_phases": {
+    "I": 17,
+    "II": 16,
+    "III": 2,
+    "IV": 0
+   },
+   "mesh_phased": 35,
+   "mesh_late_phase": 2,
+   "mesh_late_share": 5.7,
+   "mesh_interpretable": true,
+   "text_articles": 1398,
+   "text_trials": 4,
+   "text_trial_share": 0.29,
+   "text_phases": {
+    "I": 4,
+    "II": 1,
+    "III": 0,
+    "IV": 0
+   },
+   "text_phased": 5,
+   "text_late_phase": 0,
+   "text_late_share": 0.0,
+   "text_interpretable": false,
+   "arm_ratio": 15.7,
+   "arms_disagree": true
+  },
+  {
+   "modality": "synthetic-lethality",
+   "mesh_measurable": true,
+   "text_measurable": true,
+   "mesh_articles": 5437,
+   "mesh_trials": 342,
+   "mesh_trial_share": 6.29,
+   "mesh_phases": {
+    "I": 128,
+    "II": 140,
+    "III": 67,
+    "IV": 3
+   },
+   "mesh_phased": 338,
+   "mesh_late_phase": 70,
+   "mesh_late_share": 20.7,
+   "mesh_interpretable": true,
+   "text_articles": 6235,
+   "text_trials": 546,
+   "text_trial_share": 8.76,
+   "text_phases": {
+    "I": 166,
+    "II": 228,
+    "III": 132,
+    "IV": 3
+   },
+   "text_phased": 529,
+   "text_late_phase": 135,
+   "text_late_share": 25.5,
+   "text_interpretable": true,
+   "arm_ratio": 1.4,
+   "arms_disagree": false
+  },
+  {
+   "modality": "ttfields",
+   "mesh_measurable": false,
+   "text_measurable": true,
+   "mesh_articles": 0,
+   "mesh_trials": 0,
+   "mesh_trial_share": null,
+   "mesh_phases": {
+    "I": 0,
+    "II": 0,
+    "III": 0,
+    "IV": 0
+   },
+   "mesh_phased": 0,
+   "mesh_late_phase": 0,
+   "mesh_late_share": null,
+   "mesh_interpretable": false,
+   "text_articles": 421,
+   "text_trials": 26,
+   "text_trial_share": 6.18,
+   "text_phases": {
+    "I": 2,
+    "II": 8,
+    "III": 14,
+    "IV": 0
+   },
+   "text_phased": 24,
+   "text_late_phase": 14,
+   "text_late_share": 58.3,
+   "text_interpretable": true,
+   "arm_ratio": null,
    "arms_disagree": false
   }
  ],
@@ -408,6 +912,47 @@
   "ttfields"
  ],
  "arms_disagree": [
+  "mrna-vaccine",
+  "nanoparticle",
+  "sonodynamic"
+ ],
+ "validity_tested": [
+  "antibody-drug-conjugate",
+  "bispecific-antibody",
+  "car-t",
+  "crispr",
+  "electrochemical-therapy",
+  "epigenetic",
+  "hifu",
+  "immunotherapy",
+  "metabolic-targeting",
+  "microbiome",
+  "mrna-vaccine",
+  "nanoparticle",
+  "oncolytic-virus",
+  "phagocytosis-checkpoint",
+  "sonodynamic",
+  "synthetic-lethality"
+ ],
+ "validity_failed": [
+  "mrna-vaccine",
+  "nanoparticle",
+  "sonodynamic"
+ ],
+ "section_94_view": [
+  "sonodynamic",
+  "hifu",
+  "electrochemical-therapy",
+  "radioligand-therapy",
+  "ttfields",
+  "immunotherapy",
+  "car-t",
+  "antibody-drug-conjugate"
+ ],
+ "min_articles_for_validity": 200,
+ "hidden_by_a_trial_floor": [
+  "crispr",
+  "mrna-vaccine",
   "sonodynamic"
  ]
 }
