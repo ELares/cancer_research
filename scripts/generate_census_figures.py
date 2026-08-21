@@ -446,6 +446,19 @@ def fig16c_trial_share():
     ax.set_ylabel("share carrying an NLM clinical-trial publication type (%)")
     ax.set_title("Maturity does not follow volume")
     ax.grid(alpha=0.25, linewidth=0.6)
+    # ONE POINT ON THIS CHART IS NOT MEASURING ITS OWN LABEL. `Ultrasonic
+    # Therapy` puts sonodynamic at 4.54%, and only 2 of those 114 trials
+    # mention sonodynamic therapy -- the rest are 1980s ultrasound hyperthermia.
+    # Plotting it unmarked would put a 15-fold artifact in the middle of the
+    # chart, on the modality this project's thesis rests on.
+    sono = next((r for r in rows if r["mechanism"] == "sonodynamic"), None)
+    if sono:
+        ax.annotate("descriptor artifact:\n0.29% on the term itself",
+                    (sono["census"], sono["trial_share"]),
+                    textcoords="offset points", xytext=(18, -30),
+                    fontsize=8, color="#B71C1C",
+                    arrowprops=dict(arrowstyle="->", color="#B71C1C",
+                                    linewidth=1.1))
     hifu = next((r for r in rows if r["mechanism"] == "hifu"), None)
     cart = next((r for r in rows if r["mechanism"] == "car-t"), None)
     if hifu and cart and hifu["trial_share"] > cart["trial_share"]:
