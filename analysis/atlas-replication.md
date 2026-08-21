@@ -139,3 +139,5 @@ followed up and were not:
 * MeSH indexing lag suppresses the most recent cohorts, which is why cohorts
   without a full 5-year window are excluded rather than shown declining.
 * Pairs whose papers the census cannot date are excluded entirely.
+* **The first-assertion year is a MINIMUM over an imperfect extractor, and a minimum has no error averaging.** PubTator runs at roughly 79.6 F1, and everywhere else in this project that error rate is tolerable because it averages out across a count. It does not average here: one false early extraction dates a pair earlier than the truth, and nothing later can pull it back.
+* That error has a DIRECTION, and it is worth carrying through the arithmetic rather than guessing. A pair falsely dated to year F when it truly begins at T starts its equal window at F, so a genuine second paper arriving after F+5 falls OUTSIDE the window and the pair scores unreplicated. The replication rate is therefore biased DOWN and the orphan count UP by however many pairs carry a false assertion more than the window ahead of their real one -- a fraction this analysis cannot measure without ground truth, but whose sign is not in doubt.

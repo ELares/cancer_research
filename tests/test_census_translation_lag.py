@@ -214,3 +214,54 @@ def test_it_does_not_claim_a_lag_measures_success(d):
     for overclaim in ("translated fastest", "most successful mechanism",
                       "proves that"):
         assert overclaim not in md.lower()
+
+
+# --- the lesson has to reach the sites that inherit it --------------------
+
+def test_the_manuscript_carries_the_statistic_limit():
+    """The finding constrains other claims, so it belongs where they are made.
+
+    Only 4 of 25 mechanisms survived this measurement, and the reason is a
+    property of the INSTRUMENT rather than of translation: a minimum has no
+    error averaging. Left only in this analysis, a reader has no way to know
+    which of the manuscript's other numbers inherit the limit.
+    """
+    md = (REPO / "article/drafts/v1.md").read_text()
+    d = json.loads(JSON.read_text())
+    n_rob = len(d["robust"])
+    n_all = n_rob + len(d["fragile"])
+    assert f"{n_rob} of {n_all} mechanisms" in md, (
+        "the manuscript does not state how many mechanisms survived, which is "
+        "the measurement that makes the limit concrete rather than cautionary")
+    assert "census-translation-lag.md" in md
+    for phrase in ("averages its errors", "MINIMUM"):
+        assert phrase in md, (
+            f"the manuscript states the limit without {phrase!r}, so a reader "
+            "cannot tell which statistics it applies to")
+
+
+def test_the_replication_analysis_carries_the_same_limit():
+    """It dates 2.37 million pairs by first assertion from an ~79.6-F1
+    extractor, so it inherits this defect exactly.
+
+    A newly found defect class has to reach the analyses that share it, or the
+    lesson stays local to where it happened to be discovered.
+    """
+    repl = REPO / "analysis/atlas-replication.md"
+    if not repl.exists():
+        pytest.skip("replication analysis not built")
+    md = repl.read_text()
+    assert "no error averaging" in md, (
+        "atlas-replication dates every pair by a MINIMUM over an imperfect "
+        "extractor and does not say so")
+    # ANCHORED TO THE SENTENCE, not to the words. `biased` and `DOWN` both
+    # already appear in an unrelated paragraph about MeSH indexing lag, so a
+    # two-word check passes on a document that never mentions this defect --
+    # the substring trap, in the guard written to propagate a finding.
+    assert "falls OUTSIDE the window and the pair scores unreplicated" in md, (
+        "the limit is stated without the mechanism that gives it a direction: "
+        "a false-early date starts the equal window early, so a genuine second "
+        "paper can arrive after it closes")
+    assert "replication rate is therefore biased DOWN" in md, (
+        "the direction is missing, which is the part a reader needs to know "
+        "whether the rate is optimistic or pessimistic")
