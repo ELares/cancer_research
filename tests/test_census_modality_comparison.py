@@ -193,3 +193,29 @@ def test_the_section_argument_is_not_overstated(d):
     md = MD.read_text()
     assert "does not establish meeting the same need" in md
     assert "targetable receptor" in md
+
+
+def test_validity_is_reported_as_question_dependent(d):
+    """The framing correction, and the check that saved a real figure.
+
+    "`Ultrasonic Therapy` is too broad" attaches a verdict to a descriptor
+    NAME. The same descriptor fails badly on clinical-trial share and passes
+    cleanly on the ferroptosis intersection this book's thesis rests on,
+    because the contaminating literature is old and intersecting with a
+    descriptor minted in 2020 removes it. A single verdict would be wrong in
+    one direction or the other whichever way it was written.
+    """
+    md = MD.read_text()
+    assert "property of the descriptor AND the question" in md
+    assert "30 of the 32" in md and "94%" in md
+    assert "era filter" in md or "removes exactly the contamination" in md
+    # And the thesis section must carry it, not just the methods analysis: a
+    # figure validated in an appendix while the chapter that uses it says
+    # nothing leaves the reader to assume it inherited the failure.
+    txt = " ".join(MANUSCRIPT.read_text().split())
+    assert "30 of the 32" in txt, (
+        "the thesis section does not state that its central figure survives "
+        "the descriptor-validity check, so a reader meeting the sonodynamic "
+        "trial-share correction elsewhere will assume it inherited the same "
+        "problem")
+    assert "survives a test that could have taken it away" in txt

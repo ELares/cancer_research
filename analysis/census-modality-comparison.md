@@ -70,6 +70,16 @@ Three failures, three DIFFERENT causes, and the direction differs too -- the des
 
 The other mechanisms pass, which is what makes a failure interpretable rather than a property of the method: HIFU's two arms agree to within a tenth of a point, and the descriptor arm is not systematically higher or lower across the set.
 
+## Validity is a property of the descriptor AND the question
+
+The framing above -- "`Ultrasonic Therapy` is too broad" -- is not quite right, and the correction matters because this book's central thesis figure rests on the same descriptor.
+
+Section 8.2 counts 32 census articles carrying both `Ferroptosis` and `Ultrasonic Therapy`, and reads them as the sonodynamic leg of this project's own hypothesis. If that descriptor were simply borrowed, that number would be borrowed too. **It is not: 30 of the 32 (94%) mention sonodynamic therapy or a sonosensitiser in title or abstract, and NONE mentions hyperthermia.** The same descriptor that fails badly on trial share passes cleanly here.
+
+The reason is measurable rather than hand-waved. The contaminating literature is OLD -- the 114 trials run 1981 to 2025 with a median of 2005 and 94% predating 2020 -- while `Ferroptosis` was minted in 2020 and its intersection with `Ultrasonic Therapy` runs 2021 to 2026 with a median of 2025 and NOTHING before 2020. Intersecting with a young descriptor imposes an era filter that removes exactly the contamination.
+
+So descriptor validity is not a property a descriptor has or lacks. It is a property of the descriptor AND the question asked of it, and a single verdict attached to a descriptor name would be wrong in one of these two directions whichever way it was written. The test has to be re-run per question, which is cheap, and this project's long-standing prose caveat -- "that descriptor is broad" -- was not merely imprecise but unattached to the question it was qualifying.
+
 ## The comparison Section 9.4 turns on
 
 The section argues that if radioligand therapy meets the same clinical need through a more mature path, the physical-ROS hypothesis is academically interesting and clinically unnecessary. On these two axes radioligand therapy is further along: 6.35% of its literature carries a trial publication type against sonodynamic therapy's 0.29%, and it has 35 Phase III or IV records against 0.
