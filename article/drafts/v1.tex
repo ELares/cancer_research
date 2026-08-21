@@ -582,15 +582,15 @@ The concentrated end reads as a validity check on the instrument rather than as 
 
 \textbf{A depleted cell is not a gap}, and this book names none as an opportunity. HIFU is depleted in leukaemia because leukaemia offers no focal target for an ablative beam: that is the modality working as designed, not an oversight. Distinguishing \textit{nobody has tried this} from \textit{this cannot work here} requires knowledge of the mechanism, which the counts do not carry. What the matrix supplies is a ranked list of places where the literature is thinner than arithmetic predicts, which is where such a judgement would begin rather than end.
 
-The more informative summary turns out not to be either tail but the spread of a mechanism's ratios across sites, which measures how site-specific its literature is without requiring any single cell to be extreme. It separates therapies aimed at particular organs from platforms and processes that appear wherever cancer is studied: HIFU (2.60) and synthetic lethality (1.86) at one end, CRISPR (0.28) and epigenetic approaches (0.33) at the other, with immunotherapy (0.60) and nanoparticle delivery (0.48) in between. The obvious objection --- that a small mechanism has noisier ratios and would drift to the extremes --- was tested rather than argued: the correlation between a mechanism's size and its spread is $-$0.33, so size does not predict spread (Figure~\ref{fig:fig3_literature_disconnect}).
+The more informative summary turns out not to be either tail but the spread of a mechanism's ratios across sites, which measures how site-specific its literature is without requiring any single cell to be extreme. It separates therapies aimed at particular organs from platforms and processes that appear wherever cancer is studied: HIFU (2.60) and synthetic lethality (1.86) at one end, CRISPR (0.28) and epigenetic approaches (0.33) at the other, with immunotherapy (0.60) and nanoparticle delivery (0.48) in between. The obvious objection --- that a small mechanism has noisier ratios and would drift to the extremes --- was tested rather than argued: the correlation between a mechanism's size and its spread is $-$0.33, so size does not predict spread (Figure~\ref{fig:fig5c_mechanism_site_matrix}).
 
 Two caveats belong with the falling zero count rather than after it. A mechanism MeSH cannot express does not appear in this matrix at all, so TTFields and bioelectric modulation are absent rather than empty, and an absent row contributes no zeros --- the headline "only 6 empty cells" is silent about them. And HIFU and sonodynamic each appear in both tails, which is one fact rather than two: a row's ratios are constrained, so concentrating a fixed literature into a few sites forces depletion in the rest, and the depleted cells are the arithmetic shadow of the concentrated ones. Full matrix in `analysis/census-mechanism-cancer-matrix.md`.
 
 \begin{figure}[ht]
 \centering
-\includegraphics[width=\textwidth]{../figures/fig3_literature_disconnect.pdf}
-\caption{Literature disconnect between communities.}
-\label{fig:fig3_literature_disconnect}
+\includegraphics[width=\textwidth]{../figures/fig5c_mechanism_site_matrix.pdf}
+\caption{Mechanism by anatomical site across the census, coloured by observed over expected under independent marginals rather than by article count -- a count heatmap reproduces the product of the marginals, so its brightest cell is always the largest mechanism crossed with the largest site. Cells whose expectation falls below 20 articles are grey, because a ratio computed on a handful is noise and colouring it would put the loudest colours on the least reliable cells. The concentrated cells recover known clinical concentrations from descriptors alone.}
+\label{fig:fig5c_mechanism_site_matrix}
 \end{figure}
 
 \chapter{Evidence Quality and Gaps}
