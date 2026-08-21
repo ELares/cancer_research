@@ -67,14 +67,20 @@ figures:
     status: manuscript
 
   - manuscript_figure: 5
-    filename: fig3_literature_disconnect
+    filename: fig5c_mechanism_site_matrix
     generator:
-      script: scripts/generate_figures.py
-      function: fig3_literature_disconnect
+      script: scripts/generate_census_figures.py
+      function: fig5c_mechanism_site_matrix
     inputs:
-      - corpus/by-pmid/
-    type: corpus-derived
+      - analysis/census-mechanism-cancer-matrix.json
+    type: census-derived
     status: manuscript
+    note: >-
+      Replaces fig3_literature_disconnect, whose subject the Figure 5
+      caption had not described for some time. Coloured by observed over
+      expected rather than by count: a count heatmap reproduces the product
+      of the marginals, so its brightest cell is always the biggest
+      mechanism crossed with the biggest site.
 
   - manuscript_figure: 6
     filename: fig6_sdt_chain_evidence

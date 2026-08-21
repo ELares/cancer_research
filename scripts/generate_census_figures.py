@@ -69,6 +69,7 @@ DESIGN = ANALYSIS / "census-evidence-design.json"
 SITES = ANALYSIS / "census-mechanism-sites.json"
 PROFILE = ANALYSIS / "census-mechanism-profile.json"
 RATIO = ANALYSIS / "atlas-modality-ratio.json"
+MATRIX = ANALYSIS / "census-mechanism-cancer-matrix.json"
 # The manuscript's own keyword-method figure, for the fig1c reference line. It
 # is the thing the census ratios STRADDLE, so it is the panel's whole point.
 MANUSCRIPT_RATIO = 9.1
@@ -518,8 +519,85 @@ def fig1c_ratio_straddle():
     print("  fig1c_ratio_straddle")
 
 
+def fig5c_mechanism_site_matrix():
+    """Mechanism by anatomical site, coloured by observed over expected.
+
+    COLOURED BY RATIO, NOT BY COUNT, and the difference is the figure's whole
+    argument. A count heatmap reproduces the product of the two marginals: the
+    biggest mechanism crossed with the biggest site is always the brightest
+    cell, so the picture shows which rows and columns are large and says
+    nothing about where a literature is unusually thick or thin.
+
+    Cells whose expectation falls below the interpretability floor are drawn in
+    grey rather than coloured. A ratio computed on a handful of articles is
+    noise, and colouring it would put the loudest colours on the least
+    reliable cells -- the failure mode of every heatmap built from sparse
+    counts.
+    """
+    import numpy as np
+    from matplotlib.colors import TwoSlopeNorm
+
+    d = _load(MATRIX)
+    mechs = [m for m, _ in sorted(d["mechanism_totals"].items(),
+                                  key=lambda kv: -kv[1])]
+    sites = [s for s, _ in sorted(d["site_totals"].items(),
+                                  key=lambda kv: -kv[1])]
+    cell = {(r["mechanism"], r["site"]): r for r in d["rows"]}
+
+    M = np.full((len(mechs), len(sites)), np.nan)
+    for i, m in enumerate(mechs):
+        for j, s in enumerate(sites):
+            r = cell.get((m, s))
+            if r and r["interpretable"] and r["ratio"]:
+                M[i, j] = r["ratio"]
+
+    fig, ax = plt.subplots(figsize=(11, 8))
+    # Diverging around 1.0 -- the only value that means anything on its own --
+    # on a log scale, because a ratio of 4 and a ratio of 1/4 are the same
+    # size of departure and a linear scale would render them as 3 and 0.75.
+    finite = M[np.isfinite(M)]
+    hi = float(np.nanmax(finite)) if finite.size else 2.0
+    norm = TwoSlopeNorm(vmin=np.log10(0.1), vcenter=0.0, vmax=np.log10(hi))
+    im = ax.imshow(np.log10(M), cmap="RdBu_r", norm=norm, aspect="auto")
+    ax.set_facecolor("#E0E0E0")
+
+    ax.set_xticks(range(len(sites)))
+    ax.set_xticklabels(sites, rotation=45, ha="right", fontsize=9)
+    ax.set_yticks(range(len(mechs)))
+    ax.set_yticklabels(mechs, fontsize=9)
+    ax.set_title("Where each mechanism's literature is thicker or thinner "
+                 "than its own marginals predict")
+    for i in range(len(mechs)):
+        for j in range(len(sites)):
+            if np.isfinite(M[i, j]) and (M[i, j] >= 3 or M[i, j] <= 0.2):
+                # White on the saturated ends: dark text on a dark cell is the
+                # label that only the person who wrote it can read, and the
+                # extreme cells are exactly the ones being labelled.
+                dark = M[i, j] >= 0.75 * hi or M[i, j] <= 0.15
+                ax.text(j, i, f"{M[i, j]:.1f}", ha="center", va="center",
+                        fontsize=7.5,
+                        color="#FFFFFF" if dark else "#212121")
+    cb = fig.colorbar(im, ax=ax, fraction=0.025, pad=0.02)
+    cb.set_label("observed / expected (log scale)", fontsize=9)
+    cb.set_ticks([np.log10(v) for v in (0.1, 0.25, 0.5, 1, 2, 4, 8)])
+    cb.set_ticklabels(["0.1", "0.25", "0.5", "1", "2", "4", "8"])
+    fig.text(0.5, -0.02,
+             f"Grey = expectation below {d['min_expected']:.0f} articles, where "
+             f"a ratio describes a handful. Labels shown only at 3x or 0.2x.\n"
+             f"Colour is NOT article count: a count heatmap reproduces the "
+             f"product of the marginals and shows only which rows and columns "
+             f"are large.",
+             ha="center", va="top", fontsize=8.2, style="italic",
+             color="#455A64")
+    fig.savefig(FIG_DIR / "fig5c_mechanism_site_matrix.pdf", bbox_inches="tight")
+    fig.savefig(FIG_DIR / "fig5c_mechanism_site_matrix.png", bbox_inches="tight")
+    plt.close(fig)
+    print("  fig5c_mechanism_site_matrix")
+
+
 CENSUS_FIGURES = [
     (RATIO, fig1c_ratio_straddle),
+    (MATRIX, fig5c_mechanism_site_matrix),
     (LANDSCAPE, fig28_census_capture),
     (GROWTH, fig2c_census_volume),
     (DESIGN, fig9c_design_composition),
