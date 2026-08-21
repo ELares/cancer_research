@@ -88,6 +88,13 @@ REGISTRY = {
         "can supply neither axis. Every record it holds would land in the "
         "unassigned bucket and depress the assignability rate without "
         "carrying any information about site."),
+    "census_translation_lag.py": (
+        {"records"},
+        "Dates a mechanism's literature and its first trial. Trial status "
+        "comes from NLM publication types, which only the indexed stream "
+        "carries, so the trial end of every lag is undefined for "
+        "records_unindexed -- and its text end would then start clocks the "
+        "trial end could never stop, turning every mechanism censored."),
     "census_external_check.py": (
         {"records"},
         "Compares the census against PubMed's own index, and the comparison "
