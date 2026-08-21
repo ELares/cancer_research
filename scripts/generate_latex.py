@@ -103,6 +103,8 @@ def cvt(t):
     t = t.replace('≫', '$\\gg$')
     t = t.replace('≪', '$\\ll$')
     t = t.replace('≈', '$\\approx$')
+    t = t.replace('†', '$\\dagger$')   # table footnote marker
+    t = t.replace('‡', '$\\ddagger$')
     t = t.replace('µ', '$\\mu$')
     t = t.replace('μ', '$\\mu$')      # U+03BC (Greek mu) — distinct from U+00B5 (micro sign)
     t = map_greek(t)                  # all remaining Greek letters (incl. Σ, Π, Δ, ...)

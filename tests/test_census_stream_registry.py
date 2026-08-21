@@ -88,6 +88,14 @@ REGISTRY = {
         "can supply neither axis. Every record it holds would land in the "
         "unassigned bucket and depress the assignability rate without "
         "carrying any information about site."),
+    "census_modality_comparison.py": (
+        {"records"},
+        "Trial status comes from NLM publication types and one arm from MeSH "
+        "descriptors, neither of which records_unindexed carries. Its text arm "
+        "COULD read that stream, and deliberately does not: the two arms are "
+        "compared against each other as a descriptor-validity test, so they "
+        "must read the same population or a divergence would measure the "
+        "streams rather than the descriptor."),
     "census_mechanism_cancer_matrix.py": (
         {"records"},
         "Both axes are MeSH descriptors -- mechanism and anatomical site -- so "

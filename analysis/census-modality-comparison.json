@@ -1,0 +1,413 @@
+{
+ "census": 4403994,
+ "min_trials": 10,
+ "compared": [
+  "sonodynamic",
+  "hifu",
+  "electrochemical-therapy",
+  "radioligand-therapy",
+  "ttfields",
+  "immunotherapy",
+  "car-t",
+  "antibody-drug-conjugate"
+ ],
+ "mesh_measurable": [
+  "antibody-drug-conjugate",
+  "car-t",
+  "electrochemical-therapy",
+  "hifu",
+  "immunotherapy",
+  "sonodynamic"
+ ],
+ "text_measurable": [
+  "antibody-drug-conjugate",
+  "car-t",
+  "electrochemical-therapy",
+  "hifu",
+  "immunotherapy",
+  "radioligand-therapy",
+  "sonodynamic",
+  "ttfields"
+ ],
+ "arms": {
+  "mesh": {
+   "sonodynamic": {
+    "articles": 2513,
+    "trials": 114,
+    "Clinical Trial, Phase I": 17,
+    "Clinical Trial, Phase II": 16,
+    "Clinical Trial, Phase III": 2
+   },
+   "car-t": {
+    "articles": 15358,
+    "trials": 1020,
+    "Clinical Trial, Phase III": 28,
+    "Clinical Trial, Phase I": 471,
+    "Clinical Trial, Phase II": 262
+   },
+   "immunotherapy": {
+    "articles": 31890,
+    "trials": 1430,
+    "Clinical Trial, Phase I": 433,
+    "Clinical Trial, Phase II": 639,
+    "Clinical Trial, Phase III": 213,
+    "Clinical Trial, Phase IV": 2
+   },
+   "antibody-drug-conjugate": {
+    "articles": 6019,
+    "trials": 580,
+    "Clinical Trial, Phase I": 282,
+    "Clinical Trial, Phase II": 236,
+    "Clinical Trial, Phase III": 76,
+    "Clinical Trial, Phase IV": 2
+   },
+   "electrochemical-therapy": {
+    "articles": 2515,
+    "trials": 142,
+    "Clinical Trial, Phase I": 34,
+    "Clinical Trial, Phase II": 56
+   },
+   "hifu": {
+    "articles": 1352,
+    "trials": 96,
+    "Clinical Trial, Phase II": 9,
+    "Clinical Trial, Phase I": 8,
+    "Clinical Trial, Phase III": 2,
+    "Clinical Trial, Phase IV": 1
+   }
+  },
+  "text": {
+   "immunotherapy": {
+    "articles": 118427,
+    "trials": 6686,
+    "Clinical Trial, Phase II": 2570,
+    "Clinical Trial, Phase I": 1763,
+    "Clinical Trial, Phase III": 863,
+    "Clinical Trial, Phase IV": 20
+   },
+   "radioligand-therapy": {
+    "articles": 6049,
+    "trials": 384,
+    "Clinical Trial, Phase I": 64,
+    "Clinical Trial, Phase II": 112,
+    "Clinical Trial, Phase III": 35
+   },
+   "antibody-drug-conjugate": {
+    "articles": 4596,
+    "trials": 689,
+    "Clinical Trial, Phase II": 302,
+    "Clinical Trial, Phase I": 276,
+    "Clinical Trial, Phase III": 130,
+    "Clinical Trial, Phase IV": 2
+   },
+   "hifu": {
+    "articles": 2067,
+    "trials": 155,
+    "Clinical Trial, Phase I": 15,
+    "Clinical Trial, Phase II": 24,
+    "Clinical Trial, Phase III": 4,
+    "Clinical Trial, Phase IV": 1
+   },
+   "electrochemical-therapy": {
+    "articles": 955,
+    "trials": 63,
+    "Clinical Trial, Phase I": 10,
+    "Clinical Trial, Phase II": 27
+   },
+   "sonodynamic": {
+    "articles": 1398,
+    "trials": 4,
+    "Clinical Trial, Phase I": 4,
+    "Clinical Trial, Phase II": 1
+   },
+   "car-t": {
+    "articles": 11472,
+    "trials": 521,
+    "Clinical Trial, Phase I": 312,
+    "Clinical Trial, Phase II": 151,
+    "Clinical Trial, Phase III": 15
+   },
+   "ttfields": {
+    "articles": 421,
+    "trials": 26,
+    "Clinical Trial, Phase I": 2,
+    "Clinical Trial, Phase II": 8,
+    "Clinical Trial, Phase III": 14
+   }
+  }
+ },
+ "rows": [
+  {
+   "modality": "sonodynamic",
+   "mesh_measurable": true,
+   "text_measurable": true,
+   "mesh_articles": 2513,
+   "mesh_trials": 114,
+   "mesh_trial_share": 4.54,
+   "mesh_phases": {
+    "I": 17,
+    "II": 16,
+    "III": 2,
+    "IV": 0
+   },
+   "mesh_phased": 35,
+   "mesh_late_phase": 2,
+   "mesh_late_share": 5.7,
+   "mesh_interpretable": true,
+   "text_articles": 1398,
+   "text_trials": 4,
+   "text_trial_share": 0.29,
+   "text_phases": {
+    "I": 4,
+    "II": 1,
+    "III": 0,
+    "IV": 0
+   },
+   "text_phased": 5,
+   "text_late_phase": 0,
+   "text_late_share": 0.0,
+   "text_interpretable": false,
+   "arm_ratio": 15.7,
+   "arms_disagree": true
+  },
+  {
+   "modality": "hifu",
+   "mesh_measurable": true,
+   "text_measurable": true,
+   "mesh_articles": 1352,
+   "mesh_trials": 96,
+   "mesh_trial_share": 7.1,
+   "mesh_phases": {
+    "I": 8,
+    "II": 9,
+    "III": 2,
+    "IV": 1
+   },
+   "mesh_phased": 20,
+   "mesh_late_phase": 3,
+   "mesh_late_share": 15.0,
+   "mesh_interpretable": true,
+   "text_articles": 2067,
+   "text_trials": 155,
+   "text_trial_share": 7.5,
+   "text_phases": {
+    "I": 15,
+    "II": 24,
+    "III": 4,
+    "IV": 1
+   },
+   "text_phased": 44,
+   "text_late_phase": 5,
+   "text_late_share": 11.4,
+   "text_interpretable": true,
+   "arm_ratio": 1.1,
+   "arms_disagree": false
+  },
+  {
+   "modality": "electrochemical-therapy",
+   "mesh_measurable": true,
+   "text_measurable": true,
+   "mesh_articles": 2515,
+   "mesh_trials": 142,
+   "mesh_trial_share": 5.65,
+   "mesh_phases": {
+    "I": 34,
+    "II": 56,
+    "III": 0,
+    "IV": 0
+   },
+   "mesh_phased": 90,
+   "mesh_late_phase": 0,
+   "mesh_late_share": 0.0,
+   "mesh_interpretable": true,
+   "text_articles": 955,
+   "text_trials": 63,
+   "text_trial_share": 6.6,
+   "text_phases": {
+    "I": 10,
+    "II": 27,
+    "III": 0,
+    "IV": 0
+   },
+   "text_phased": 37,
+   "text_late_phase": 0,
+   "text_late_share": 0.0,
+   "text_interpretable": true,
+   "arm_ratio": 1.2,
+   "arms_disagree": false
+  },
+  {
+   "modality": "radioligand-therapy",
+   "mesh_measurable": false,
+   "text_measurable": true,
+   "mesh_articles": 0,
+   "mesh_trials": 0,
+   "mesh_trial_share": null,
+   "mesh_phases": {
+    "I": 0,
+    "II": 0,
+    "III": 0,
+    "IV": 0
+   },
+   "mesh_phased": 0,
+   "mesh_late_phase": 0,
+   "mesh_late_share": null,
+   "mesh_interpretable": false,
+   "text_articles": 6049,
+   "text_trials": 384,
+   "text_trial_share": 6.35,
+   "text_phases": {
+    "I": 64,
+    "II": 112,
+    "III": 35,
+    "IV": 0
+   },
+   "text_phased": 211,
+   "text_late_phase": 35,
+   "text_late_share": 16.6,
+   "text_interpretable": true,
+   "arm_ratio": null,
+   "arms_disagree": false
+  },
+  {
+   "modality": "ttfields",
+   "mesh_measurable": false,
+   "text_measurable": true,
+   "mesh_articles": 0,
+   "mesh_trials": 0,
+   "mesh_trial_share": null,
+   "mesh_phases": {
+    "I": 0,
+    "II": 0,
+    "III": 0,
+    "IV": 0
+   },
+   "mesh_phased": 0,
+   "mesh_late_phase": 0,
+   "mesh_late_share": null,
+   "mesh_interpretable": false,
+   "text_articles": 421,
+   "text_trials": 26,
+   "text_trial_share": 6.18,
+   "text_phases": {
+    "I": 2,
+    "II": 8,
+    "III": 14,
+    "IV": 0
+   },
+   "text_phased": 24,
+   "text_late_phase": 14,
+   "text_late_share": 58.3,
+   "text_interpretable": true,
+   "arm_ratio": null,
+   "arms_disagree": false
+  },
+  {
+   "modality": "immunotherapy",
+   "mesh_measurable": true,
+   "text_measurable": true,
+   "mesh_articles": 31890,
+   "mesh_trials": 1430,
+   "mesh_trial_share": 4.48,
+   "mesh_phases": {
+    "I": 433,
+    "II": 639,
+    "III": 213,
+    "IV": 2
+   },
+   "mesh_phased": 1287,
+   "mesh_late_phase": 215,
+   "mesh_late_share": 16.7,
+   "mesh_interpretable": true,
+   "text_articles": 118427,
+   "text_trials": 6686,
+   "text_trial_share": 5.65,
+   "text_phases": {
+    "I": 1763,
+    "II": 2570,
+    "III": 863,
+    "IV": 20
+   },
+   "text_phased": 5216,
+   "text_late_phase": 883,
+   "text_late_share": 16.9,
+   "text_interpretable": true,
+   "arm_ratio": 1.3,
+   "arms_disagree": false
+  },
+  {
+   "modality": "car-t",
+   "mesh_measurable": true,
+   "text_measurable": true,
+   "mesh_articles": 15358,
+   "mesh_trials": 1020,
+   "mesh_trial_share": 6.64,
+   "mesh_phases": {
+    "I": 471,
+    "II": 262,
+    "III": 28,
+    "IV": 0
+   },
+   "mesh_phased": 761,
+   "mesh_late_phase": 28,
+   "mesh_late_share": 3.7,
+   "mesh_interpretable": true,
+   "text_articles": 11472,
+   "text_trials": 521,
+   "text_trial_share": 4.54,
+   "text_phases": {
+    "I": 312,
+    "II": 151,
+    "III": 15,
+    "IV": 0
+   },
+   "text_phased": 478,
+   "text_late_phase": 15,
+   "text_late_share": 3.1,
+   "text_interpretable": true,
+   "arm_ratio": 1.5,
+   "arms_disagree": false
+  },
+  {
+   "modality": "antibody-drug-conjugate",
+   "mesh_measurable": true,
+   "text_measurable": true,
+   "mesh_articles": 6019,
+   "mesh_trials": 580,
+   "mesh_trial_share": 9.64,
+   "mesh_phases": {
+    "I": 282,
+    "II": 236,
+    "III": 76,
+    "IV": 2
+   },
+   "mesh_phased": 596,
+   "mesh_late_phase": 78,
+   "mesh_late_share": 13.1,
+   "mesh_interpretable": true,
+   "text_articles": 4596,
+   "text_trials": 689,
+   "text_trial_share": 14.99,
+   "text_phases": {
+    "I": 276,
+    "II": 302,
+    "III": 130,
+    "IV": 2
+   },
+   "text_phased": 710,
+   "text_late_phase": 132,
+   "text_late_share": 18.6,
+   "text_interpretable": true,
+   "arm_ratio": 1.6,
+   "arms_disagree": false
+  }
+ ],
+ "common_arm": "text",
+ "mesh_missing": [
+  "radioligand-therapy",
+  "ttfields"
+ ],
+ "arms_disagree": [
+  "sonodynamic"
+ ]
+}
