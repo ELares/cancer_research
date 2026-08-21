@@ -82,6 +82,27 @@ def main() -> int:
         cells[3] = new_cell
         lines.append("| " + " | ".join(cells[1:-1]) + " |")
     OUTLINE.write_text(s[:start] + "\n".join(lines) + s[end:])
+    import re
+
+    # THE MANUSCRIPT'S OWN FRONT MATTER quotes the same total, and it is the
+    # first factual statement a reader meets. It had drifted to ~46,500 against
+    # a real 53,400 -- a 15% understatement -- because this helper updated the
+    # outline and nothing updated the document the outline describes.
+    #
+    # AND EVERY OTHER SITE THAT QUOTES IT. The count appears in the manuscript's
+    # front matter, the README and CLAUDE.md, and all three had drifted to
+    # different wrong values -- 46,500 in one and 48,500 in two others against a
+    # real 53,500. Updating one by hand is how three sites end up disagreeing;
+    # a helper that owns all of them is why they cannot.
+    want = f"~{round(total, ROUND_TO):,} words"
+    for path in (MANUSCRIPT, REPO / "README.md", REPO / "CLAUDE.md"):
+        if not path.exists():
+            continue
+        txt = path.read_text()
+        new_txt, k = re.subn(r"~[\d,]+ words", want, txt)
+        if k and new_txt != txt:
+            path.write_text(new_txt)
+            print(f"  {path.name} -> {want} ({k} site(s))")
 
     # The **Target:** line quotes the same total and goes stale on its own.
     s = OUTLINE.read_text()

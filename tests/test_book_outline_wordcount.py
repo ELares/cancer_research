@@ -206,3 +206,80 @@ def test_the_per_part_rows_sum_to_the_documented_total():
     assert abs(parts - total) <= step * 3, (
         f"the budget rows sum to {parts:,} against a documented Total of "
         f"{total:,}")
+
+
+# --- the manuscript's claims about ITSELF ---------------------------------
+
+def test_the_manuscript_states_its_own_length_correctly():
+    """A document that misdescribes itself in its first line.
+
+    The front matter claimed ~46,500 words while the manuscript measured
+    53,400 -- a 15% understatement that had drifted quietly, because the
+    word-budget guard checks `book-outline.md` and nothing checked the
+    manuscript's claim about itself. It is the first factual statement a
+    reader meets.
+    """
+    import re
+
+    txt = MANUSCRIPT.read_text()
+    m = re.search(r"~([\d,]+) words", txt)
+    assert m, "the manuscript no longer states its own word count"
+    claimed = int(m.group(1).replace(",", ""))
+    measured = prose_words(txt)
+    step = 10 ** -ROUND_TO
+    assert abs(claimed - measured) <= step, (
+        f"the manuscript says ~{claimed:,} words and measures {measured:,} "
+        f"(rounds to {round(measured, ROUND_TO):,}). Run "
+        "scripts/update_word_budget.py, which now updates this line too.")
+
+
+def test_the_manuscript_counts_its_own_chapters_and_appendices():
+    """The same class of self-description, checked the same way.
+
+    Cheap to verify and easy to leave stale through a restructure -- and a
+    reader has no way to notice, because the claim sits far from the thing it
+    counts.
+    """
+    import re
+
+    txt = MANUSCRIPT.read_text()
+    chapters = len(re.findall(r"^## Chapter ", txt, re.M))
+    appendices = len(re.findall(r"^## Appendix ", txt, re.M))
+    m = re.search(r"(\d+) chapters \+ (\d+) appendices", txt)
+    assert m, "the manuscript no longer states its chapter/appendix counts"
+    assert int(m.group(1)) == chapters, (
+        f"front matter says {m.group(1)} chapters; the manuscript has "
+        f"{chapters}")
+    assert int(m.group(2)) == appendices, (
+        f"front matter says {m.group(2)} appendices; the manuscript has "
+        f"{appendices}")
+
+
+def test_no_reader_facing_file_quotes_a_stale_word_count():
+    """Three files quoted the manuscript's length and all three disagreed.
+
+    The front matter said ~46,500, the README and CLAUDE.md said ~48,500, and
+    the manuscript measured 53,400. Each had been updated at a different time
+    by someone fixing the one in front of them, which is exactly how three
+    sites end up with three different wrong numbers.
+
+    `scripts/update_word_budget.py` owns all of them now. This checks the
+    property rather than trusting the helper.
+    """
+    import re
+
+    measured = prose_words(MANUSCRIPT.read_text())
+    step = 10 ** -ROUND_TO
+    bad = []
+    for name in ("article/drafts/v1.md", "README.md", "CLAUDE.md"):
+        path = REPO_ROOT / name
+        if not path.exists():
+            continue
+        for m in re.finditer(r"~([\d,]+) words", path.read_text()):
+            claimed = int(m.group(1).replace(",", ""))
+            if abs(claimed - measured) > step:
+                bad.append(f"{name}: ~{claimed:,} against a measured "
+                           f"{measured:,}")
+    assert not bad, (
+        "files quoting a stale manuscript length:\n  " + "\n  ".join(bad)
+        + "\nRun scripts/update_word_budget.py, which updates every site.")
