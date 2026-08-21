@@ -566,17 +566,25 @@ Notable triple-mechanism articles include the landmark thermal ablation review i
 \label{fig:fig4_molecular_overlap}
 \end{figure}
 
-\section{The Mechanism-Cancer Matrix: What Works Where}
+\section{The Mechanism-Site Matrix, and What a Gap Is}
 
-The 19 x 22 mechanism-cancer matrix reveals both deep concentrations and systematic gaps.
+An earlier version of this section reported a 19 x 22 mechanism-cancer matrix over the retrieved corpus and counted 94 empty cells (22.5\%) as gaps. This manuscript's own sensitivity analysis then found that count falls to 29-38 under a coarser taxonomy --- a quantity that moves by a factor of three with a labelling choice is a property of the labelling, and we said so at the time without being able to say what the right number was.
 
-\textbf{Dominant mechanism-cancer pairs} (top 5 by article count): immunotherapy-lung (250), immunotherapy-melanoma (207), TTFields-glioblastoma (204), immunotherapy-breast (162), and immunotherapy-pancreatic (138). These represent the densest full-text research axes in the current indexed corpus, though maturity of evidence varies substantially across them.
+At census scale it is \textbf{6 of 288 cells (2.1\%)}. The matrix is 16 mechanisms by 18 anatomical sites, both labelled by MeSH, over the 99,459 census articles carrying a descriptor on each axis. So the empty cells were overwhelmingly a property of the retrieval, which is what we suspected and could not demonstrate.
 
-\textbf{Broad-spectrum mechanisms} --- those studied across the widest range of cancer types --- include CAR-T therapy and checkpoint immunotherapy (22/22 cancer types), synthetic lethality and ADCs (21/22), and CRISPR, bispecific antibodies, epigenetic therapy, mRNA vaccines, metabolic targeting, and nanoparticles (20/22).
+That result also retires the measure that produced it. With 4.4 million articles nearly every mechanism-site pair has been written about at least once, so counting zeros no longer separates a neglected combination from a well-studied one. A gap measure returning 2\% on the full literature is not detecting gaps; it is reporting that the literature is large.
 
-\textbf{Narrow-spectrum mechanisms} include electrolysis (3/22), microbiome modulation and frequency therapy (11/22 each), HIFU (12/22), TTFields and electrochemical therapy (14/22 each), and sonodynamic therapy (15/22). The narrowness of TTFields coverage is particularly noteworthy given its strong clinical evidence base.
+What replaces it is a comparison a count cannot make: how a cell compares to what its own marginals predict. A mechanism appearing in tens of thousands of articles and a site carrying hundreds of thousands of records will meet often by arithmetic alone, and two small ones will meet rarely without anything being neglected. The ratio of observed to expected separates those, and is reported only where the expectation reaches 20 articles (242 of 288 cells).
 
-The most intensively researched cancer types across all mechanisms are breast cancer (697 total cross-mechanism article-instances), lung cancer (593), glioblastoma (529), pancreatic cancer (428), melanoma (425), and colorectal cancer (376). The least-researched cancer types are thyroid (19), esophageal (20), mesothelioma (49), and neuroblastoma (52).
+The concentrated end reads as a validity check on the instrument rather than as news, which is what one wants from a measure before trusting its other end. Synthetic lethality in ovarian cancer sits at 8.2 times expectation, which is PARP inhibition in BRCA-mutated disease; HIFU in cervix and uterus at 10.0 and in prostate at 5.6; CAR-T in lymphoma at 4.3 and leukaemia at 2.8; antibody-drug conjugates in lymphoma at 4.4. Each of these is a known clinical concentration, recovered from descriptors alone.
+
+\textbf{No significance test is computed, and the reason is not caution.} The null a chi-square would test --- that a mechanism's literature is distributed across sites independently of which site it is --- is known false before any data is read, since CAR-T concentrates in leukaemia precisely because that is what it treats. A test against it would return significance for nearly every cell and would be answering a question nobody asked. The ratio is an effect size and the ranking is what carries.
+
+\textbf{A depleted cell is not a gap}, and this book names none as an opportunity. HIFU is depleted in leukaemia because leukaemia offers no focal target for an ablative beam: that is the modality working as designed, not an oversight. Distinguishing \textit{nobody has tried this} from \textit{this cannot work here} requires knowledge of the mechanism, which the counts do not carry. What the matrix supplies is a ranked list of places where the literature is thinner than arithmetic predicts, which is where such a judgement would begin rather than end.
+
+The more informative summary turns out not to be either tail but the spread of a mechanism's ratios across sites, which measures how site-specific its literature is without requiring any single cell to be extreme. It separates therapies aimed at particular organs from platforms and processes that appear wherever cancer is studied: HIFU (2.60) and synthetic lethality (1.86) at one end, CRISPR (0.28) and epigenetic approaches (0.33) at the other, with immunotherapy (0.60) and nanoparticle delivery (0.48) in between. The obvious objection --- that a small mechanism has noisier ratios and would drift to the extremes --- was tested rather than argued: the correlation between a mechanism's size and its spread is $-$0.33, so size does not predict spread (Figure~\ref{fig:fig3_literature_disconnect}).
+
+Two caveats belong with the falling zero count rather than after it. A mechanism MeSH cannot express does not appear in this matrix at all, so TTFields and bioelectric modulation are absent rather than empty, and an absent row contributes no zeros --- the headline "only 6 empty cells" is silent about them. And HIFU and sonodynamic each appear in both tails, which is one fact rather than two: a row's ratios are constrained, so concentrating a fixed literature into a few sites forces depletion in the rest, and the depleted cells are the arithmetic shadow of the concentrated ones. Full matrix in `analysis/census-mechanism-cancer-matrix.md`.
 
 \begin{figure}[ht]
 \centering

@@ -1,0 +1,2994 @@
+{
+ "census": 4403994,
+ "universe": 99459,
+ "mechanism_totals": {
+  "metabolic-targeting": 5458,
+  "epigenetic": 30712,
+  "sonodynamic": 1445,
+  "synthetic-lethality": 3829,
+  "car-t": 8664,
+  "immunotherapy": 23358,
+  "antibody-drug-conjugate": 3767,
+  "electrochemical-therapy": 1660,
+  "bispecific-antibody": 1994,
+  "phagocytosis-checkpoint": 566,
+  "oncolytic-virus": 2820,
+  "nanoparticle": 15008,
+  "hifu": 1007,
+  "microbiome": 193,
+  "crispr": 1814,
+  "mrna-vaccine": 126
+ },
+ "site_totals": {
+  "kidney": 2688,
+  "brain/CNS": 8661,
+  "liver": 7501,
+  "leukaemia": 9366,
+  "breast": 12720,
+  "lymphoma": 6519,
+  "skin/melanoma": 8862,
+  "lung": 13953,
+  "colorectal": 8838,
+  "head and neck": 6563,
+  "cervix/uterus": 3348,
+  "stomach": 3564,
+  "ovary": 4675,
+  "thyroid": 814,
+  "bladder": 2197,
+  "prostate": 4347,
+  "oesophagus": 1618,
+  "pancreas": 3438
+ },
+ "cells": {
+  "metabolic-targeting": {
+   "kidney": 139,
+   "brain/CNS": 493,
+   "leukaemia": 330,
+   "liver": 724,
+   "breast": 755,
+   "cervix/uterus": 195,
+   "lung": 587,
+   "stomach": 223,
+   "ovary": 226,
+   "lymphoma": 173,
+   "head and neck": 453,
+   "thyroid": 74,
+   "skin/melanoma": 239,
+   "colorectal": 560,
+   "prostate": 216,
+   "pancreas": 319,
+   "bladder": 84,
+   "oesophagus": 110
+  },
+  "epigenetic": {
+   "liver": 1906,
+   "leukaemia": 4673,
+   "breast": 3413,
+   "lymphoma": 1417,
+   "skin/melanoma": 1124,
+   "lung": 2697,
+   "colorectal": 4131,
+   "head and neck": 2385,
+   "thyroid": 338,
+   "pancreas": 761,
+   "ovary": 1123,
+   "cervix/uterus": 1415,
+   "brain/CNS": 3118,
+   "prostate": 1495,
+   "kidney": 725,
+   "bladder": 644,
+   "stomach": 1610,
+   "oesophagus": 655
+  },
+  "sonodynamic": {
+   "head and neck": 132,
+   "kidney": 73,
+   "liver": 225,
+   "lymphoma": 13,
+   "breast": 228,
+   "skin/melanoma": 105,
+   "colorectal": 51,
+   "bladder": 34,
+   "brain/CNS": 207,
+   "cervix/uterus": 123,
+   "lung": 55,
+   "prostate": 199,
+   "ovary": 39,
+   "stomach": 14,
+   "leukaemia": 27,
+   "pancreas": 68,
+   "thyroid": 9,
+   "oesophagus": 9
+  },
+  "synthetic-lethality": {
+   "leukaemia": 188,
+   "skin/melanoma": 84,
+   "ovary": 1481,
+   "brain/CNS": 157,
+   "lymphoma": 49,
+   "pancreas": 170,
+   "liver": 88,
+   "lung": 207,
+   "cervix/uterus": 116,
+   "colorectal": 120,
+   "bladder": 34,
+   "breast": 963,
+   "prostate": 451,
+   "head and neck": 76,
+   "stomach": 36,
+   "thyroid": 6,
+   "oesophagus": 15,
+   "kidney": 24
+  },
+  "car-t": {
+   "skin/melanoma": 1216,
+   "lymphoma": 2438,
+   "head and neck": 228,
+   "brain/CNS": 742,
+   "lung": 600,
+   "kidney": 297,
+   "liver": 400,
+   "ovary": 265,
+   "oesophagus": 36,
+   "breast": 329,
+   "leukaemia": 2284,
+   "stomach": 134,
+   "colorectal": 343,
+   "bladder": 37,
+   "prostate": 161,
+   "cervix/uterus": 55,
+   "pancreas": 233,
+   "thyroid": 19
+  },
+  "immunotherapy": {
+   "leukaemia": 372,
+   "skin/melanoma": 3740,
+   "lymphoma": 774,
+   "lung": 7237,
+   "pancreas": 516,
+   "prostate": 347,
+   "ovary": 478,
+   "colorectal": 1570,
+   "head and neck": 2134,
+   "thyroid": 145,
+   "kidney": 1166,
+   "breast": 1728,
+   "stomach": 1037,
+   "brain/CNS": 1137,
+   "liver": 1782,
+   "oesophagus": 637,
+   "bladder": 954,
+   "cervix/uterus": 587
+  },
+  "antibody-drug-conjugate": {
+   "leukaemia": 244,
+   "lymphoma": 1083,
+   "skin/melanoma": 199,
+   "pancreas": 124,
+   "breast": 971,
+   "brain/CNS": 167,
+   "colorectal": 198,
+   "lung": 344,
+   "ovary": 219,
+   "liver": 64,
+   "stomach": 130,
+   "prostate": 130,
+   "bladder": 135,
+   "kidney": 41,
+   "head and neck": 99,
+   "cervix/uterus": 73,
+   "thyroid": 9,
+   "oesophagus": 40
+  },
+  "electrochemical-therapy": {
+   "brain/CNS": 81,
+   "lymphoma": 45,
+   "head and neck": 127,
+   "skin/melanoma": 480,
+   "leukaemia": 80,
+   "liver": 271,
+   "pancreas": 225,
+   "breast": 102,
+   "prostate": 144,
+   "colorectal": 103,
+   "bladder": 26,
+   "stomach": 15,
+   "lung": 66,
+   "kidney": 60,
+   "cervix/uterus": 26,
+   "oesophagus": 11,
+   "thyroid": 5,
+   "ovary": 27
+  },
+  "bispecific-antibody": {
+   "lymphoma": 491,
+   "breast": 149,
+   "kidney": 18,
+   "leukaemia": 705,
+   "brain/CNS": 61,
+   "colorectal": 130,
+   "lung": 201,
+   "skin/melanoma": 78,
+   "prostate": 71,
+   "ovary": 88,
+   "liver": 39,
+   "head and neck": 51,
+   "pancreas": 48,
+   "thyroid": 13,
+   "stomach": 47,
+   "cervix/uterus": 18,
+   "bladder": 10,
+   "oesophagus": 12
+  },
+  "phagocytosis-checkpoint": {
+   "leukaemia": 79,
+   "ovary": 28,
+   "skin/melanoma": 59,
+   "kidney": 6,
+   "prostate": 10,
+   "colorectal": 45,
+   "lymphoma": 66,
+   "breast": 51,
+   "liver": 33,
+   "head and neck": 28,
+   "thyroid": 4,
+   "brain/CNS": 50,
+   "lung": 73,
+   "bladder": 15,
+   "oesophagus": 5,
+   "pancreas": 26,
+   "stomach": 13,
+   "cervix/uterus": 15
+  },
+  "oncolytic-virus": {
+   "lymphoma": 36,
+   "leukaemia": 50,
+   "skin/melanoma": 516,
+   "brain/CNS": 674,
+   "stomach": 42,
+   "ovary": 145,
+   "liver": 271,
+   "lung": 212,
+   "cervix/uterus": 37,
+   "breast": 213,
+   "pancreas": 236,
+   "prostate": 139,
+   "bladder": 64,
+   "colorectal": 211,
+   "head and neck": 155,
+   "kidney": 40,
+   "thyroid": 20,
+   "oesophagus": 16
+  },
+  "nanoparticle": {
+   "skin/melanoma": 1233,
+   "head and neck": 655,
+   "breast": 3938,
+   "ovary": 621,
+   "leukaemia": 327,
+   "lung": 1699,
+   "brain/CNS": 1828,
+   "pancreas": 680,
+   "liver": 1576,
+   "stomach": 282,
+   "prostate": 739,
+   "colorectal": 1343,
+   "bladder": 187,
+   "lymphoma": 163,
+   "thyroid": 122,
+   "kidney": 71,
+   "cervix/uterus": 332,
+   "oesophagus": 79
+  },
+  "hifu": {
+   "liver": 146,
+   "cervix/uterus": 338,
+   "brain/CNS": 33,
+   "prostate": 246,
+   "skin/melanoma": 10,
+   "kidney": 33,
+   "head and neck": 50,
+   "thyroid": 45,
+   "pancreas": 85,
+   "breast": 87,
+   "ovary": 3,
+   "lung": 14,
+   "bladder": 4,
+   "colorectal": 22,
+   "stomach": 3
+  },
+  "microbiome": {
+   "lymphoma": 3,
+   "colorectal": 72,
+   "skin/melanoma": 31,
+   "leukaemia": 14,
+   "liver": 26,
+   "ovary": 2,
+   "pancreas": 12,
+   "stomach": 5,
+   "kidney": 5,
+   "breast": 4,
+   "head and neck": 4,
+   "oesophagus": 4,
+   "prostate": 4,
+   "lung": 15,
+   "cervix/uterus": 1,
+   "brain/CNS": 1,
+   "bladder": 2
+  },
+  "crispr": {
+   "leukaemia": 284,
+   "liver": 146,
+   "cervix/uterus": 75,
+   "lung": 209,
+   "bladder": 29,
+   "skin/melanoma": 114,
+   "head and neck": 108,
+   "ovary": 87,
+   "kidney": 37,
+   "breast": 233,
+   "colorectal": 158,
+   "brain/CNS": 152,
+   "prostate": 94,
+   "lymphoma": 85,
+   "stomach": 27,
+   "pancreas": 67,
+   "oesophagus": 16,
+   "thyroid": 19
+  },
+  "mrna-vaccine": {
+   "pancreas": 9,
+   "breast": 9,
+   "lung": 18,
+   "skin/melanoma": 24,
+   "brain/CNS": 14,
+   "cervix/uterus": 7,
+   "leukaemia": 11,
+   "kidney": 4,
+   "prostate": 7,
+   "lymphoma": 9,
+   "colorectal": 5,
+   "stomach": 3,
+   "liver": 4,
+   "head and neck": 3,
+   "bladder": 2,
+   "ovary": 1
+  }
+ },
+ "min_expected": 20.0,
+ "rows": [
+  {
+   "mechanism": "antibody-drug-conjugate",
+   "site": "bladder",
+   "observed": 135,
+   "expected": 83.2,
+   "ratio": 1.62,
+   "interpretable": true
+  },
+  {
+   "mechanism": "antibody-drug-conjugate",
+   "site": "brain/CNS",
+   "observed": 167,
+   "expected": 328.0,
+   "ratio": 0.51,
+   "interpretable": true
+  },
+  {
+   "mechanism": "antibody-drug-conjugate",
+   "site": "breast",
+   "observed": 971,
+   "expected": 481.8,
+   "ratio": 2.02,
+   "interpretable": true
+  },
+  {
+   "mechanism": "antibody-drug-conjugate",
+   "site": "cervix/uterus",
+   "observed": 73,
+   "expected": 126.8,
+   "ratio": 0.58,
+   "interpretable": true
+  },
+  {
+   "mechanism": "antibody-drug-conjugate",
+   "site": "colorectal",
+   "observed": 198,
+   "expected": 334.7,
+   "ratio": 0.59,
+   "interpretable": true
+  },
+  {
+   "mechanism": "antibody-drug-conjugate",
+   "site": "head and neck",
+   "observed": 99,
+   "expected": 248.6,
+   "ratio": 0.4,
+   "interpretable": true
+  },
+  {
+   "mechanism": "antibody-drug-conjugate",
+   "site": "kidney",
+   "observed": 41,
+   "expected": 101.8,
+   "ratio": 0.4,
+   "interpretable": true
+  },
+  {
+   "mechanism": "antibody-drug-conjugate",
+   "site": "leukaemia",
+   "observed": 244,
+   "expected": 354.7,
+   "ratio": 0.69,
+   "interpretable": true
+  },
+  {
+   "mechanism": "antibody-drug-conjugate",
+   "site": "liver",
+   "observed": 64,
+   "expected": 284.1,
+   "ratio": 0.23,
+   "interpretable": true
+  },
+  {
+   "mechanism": "antibody-drug-conjugate",
+   "site": "lung",
+   "observed": 344,
+   "expected": 528.5,
+   "ratio": 0.65,
+   "interpretable": true
+  },
+  {
+   "mechanism": "antibody-drug-conjugate",
+   "site": "lymphoma",
+   "observed": 1083,
+   "expected": 246.9,
+   "ratio": 4.39,
+   "interpretable": true
+  },
+  {
+   "mechanism": "antibody-drug-conjugate",
+   "site": "oesophagus",
+   "observed": 40,
+   "expected": 61.3,
+   "ratio": 0.65,
+   "interpretable": true
+  },
+  {
+   "mechanism": "antibody-drug-conjugate",
+   "site": "ovary",
+   "observed": 219,
+   "expected": 177.1,
+   "ratio": 1.24,
+   "interpretable": true
+  },
+  {
+   "mechanism": "antibody-drug-conjugate",
+   "site": "pancreas",
+   "observed": 124,
+   "expected": 130.2,
+   "ratio": 0.95,
+   "interpretable": true
+  },
+  {
+   "mechanism": "antibody-drug-conjugate",
+   "site": "prostate",
+   "observed": 130,
+   "expected": 164.6,
+   "ratio": 0.79,
+   "interpretable": true
+  },
+  {
+   "mechanism": "antibody-drug-conjugate",
+   "site": "skin/melanoma",
+   "observed": 199,
+   "expected": 335.6,
+   "ratio": 0.59,
+   "interpretable": true
+  },
+  {
+   "mechanism": "antibody-drug-conjugate",
+   "site": "stomach",
+   "observed": 130,
+   "expected": 135.0,
+   "ratio": 0.96,
+   "interpretable": true
+  },
+  {
+   "mechanism": "antibody-drug-conjugate",
+   "site": "thyroid",
+   "observed": 9,
+   "expected": 30.8,
+   "ratio": 0.29,
+   "interpretable": true
+  },
+  {
+   "mechanism": "bispecific-antibody",
+   "site": "bladder",
+   "observed": 10,
+   "expected": 44.0,
+   "ratio": 0.23,
+   "interpretable": true
+  },
+  {
+   "mechanism": "bispecific-antibody",
+   "site": "brain/CNS",
+   "observed": 61,
+   "expected": 173.6,
+   "ratio": 0.35,
+   "interpretable": true
+  },
+  {
+   "mechanism": "bispecific-antibody",
+   "site": "breast",
+   "observed": 149,
+   "expected": 255.0,
+   "ratio": 0.58,
+   "interpretable": true
+  },
+  {
+   "mechanism": "bispecific-antibody",
+   "site": "cervix/uterus",
+   "observed": 18,
+   "expected": 67.1,
+   "ratio": 0.27,
+   "interpretable": true
+  },
+  {
+   "mechanism": "bispecific-antibody",
+   "site": "colorectal",
+   "observed": 130,
+   "expected": 177.2,
+   "ratio": 0.73,
+   "interpretable": true
+  },
+  {
+   "mechanism": "bispecific-antibody",
+   "site": "head and neck",
+   "observed": 51,
+   "expected": 131.6,
+   "ratio": 0.39,
+   "interpretable": true
+  },
+  {
+   "mechanism": "bispecific-antibody",
+   "site": "kidney",
+   "observed": 18,
+   "expected": 53.9,
+   "ratio": 0.33,
+   "interpretable": true
+  },
+  {
+   "mechanism": "bispecific-antibody",
+   "site": "leukaemia",
+   "observed": 705,
+   "expected": 187.8,
+   "ratio": 3.75,
+   "interpretable": true
+  },
+  {
+   "mechanism": "bispecific-antibody",
+   "site": "liver",
+   "observed": 39,
+   "expected": 150.4,
+   "ratio": 0.26,
+   "interpretable": true
+  },
+  {
+   "mechanism": "bispecific-antibody",
+   "site": "lung",
+   "observed": 201,
+   "expected": 279.7,
+   "ratio": 0.72,
+   "interpretable": true
+  },
+  {
+   "mechanism": "bispecific-antibody",
+   "site": "lymphoma",
+   "observed": 491,
+   "expected": 130.7,
+   "ratio": 3.76,
+   "interpretable": true
+  },
+  {
+   "mechanism": "bispecific-antibody",
+   "site": "oesophagus",
+   "observed": 12,
+   "expected": 32.4,
+   "ratio": 0.37,
+   "interpretable": true
+  },
+  {
+   "mechanism": "bispecific-antibody",
+   "site": "ovary",
+   "observed": 88,
+   "expected": 93.7,
+   "ratio": 0.94,
+   "interpretable": true
+  },
+  {
+   "mechanism": "bispecific-antibody",
+   "site": "pancreas",
+   "observed": 48,
+   "expected": 68.9,
+   "ratio": 0.7,
+   "interpretable": true
+  },
+  {
+   "mechanism": "bispecific-antibody",
+   "site": "prostate",
+   "observed": 71,
+   "expected": 87.2,
+   "ratio": 0.81,
+   "interpretable": true
+  },
+  {
+   "mechanism": "bispecific-antibody",
+   "site": "skin/melanoma",
+   "observed": 78,
+   "expected": 177.7,
+   "ratio": 0.44,
+   "interpretable": true
+  },
+  {
+   "mechanism": "bispecific-antibody",
+   "site": "stomach",
+   "observed": 47,
+   "expected": 71.5,
+   "ratio": 0.66,
+   "interpretable": true
+  },
+  {
+   "mechanism": "bispecific-antibody",
+   "site": "thyroid",
+   "observed": 13,
+   "expected": 16.3,
+   "ratio": 0.8,
+   "interpretable": false
+  },
+  {
+   "mechanism": "car-t",
+   "site": "bladder",
+   "observed": 37,
+   "expected": 191.4,
+   "ratio": 0.19,
+   "interpretable": true
+  },
+  {
+   "mechanism": "car-t",
+   "site": "brain/CNS",
+   "observed": 742,
+   "expected": 754.5,
+   "ratio": 0.98,
+   "interpretable": true
+  },
+  {
+   "mechanism": "car-t",
+   "site": "breast",
+   "observed": 329,
+   "expected": 1108.1,
+   "ratio": 0.3,
+   "interpretable": true
+  },
+  {
+   "mechanism": "car-t",
+   "site": "cervix/uterus",
+   "observed": 55,
+   "expected": 291.6,
+   "ratio": 0.19,
+   "interpretable": true
+  },
+  {
+   "mechanism": "car-t",
+   "site": "colorectal",
+   "observed": 343,
+   "expected": 769.9,
+   "ratio": 0.45,
+   "interpretable": true
+  },
+  {
+   "mechanism": "car-t",
+   "site": "head and neck",
+   "observed": 228,
+   "expected": 571.7,
+   "ratio": 0.4,
+   "interpretable": true
+  },
+  {
+   "mechanism": "car-t",
+   "site": "kidney",
+   "observed": 297,
+   "expected": 234.2,
+   "ratio": 1.27,
+   "interpretable": true
+  },
+  {
+   "mechanism": "car-t",
+   "site": "leukaemia",
+   "observed": 2284,
+   "expected": 815.9,
+   "ratio": 2.8,
+   "interpretable": true
+  },
+  {
+   "mechanism": "car-t",
+   "site": "liver",
+   "observed": 400,
+   "expected": 653.4,
+   "ratio": 0.61,
+   "interpretable": true
+  },
+  {
+   "mechanism": "car-t",
+   "site": "lung",
+   "observed": 600,
+   "expected": 1215.5,
+   "ratio": 0.49,
+   "interpretable": true
+  },
+  {
+   "mechanism": "car-t",
+   "site": "lymphoma",
+   "observed": 2438,
+   "expected": 567.9,
+   "ratio": 4.29,
+   "interpretable": true
+  },
+  {
+   "mechanism": "car-t",
+   "site": "oesophagus",
+   "observed": 36,
+   "expected": 140.9,
+   "ratio": 0.26,
+   "interpretable": true
+  },
+  {
+   "mechanism": "car-t",
+   "site": "ovary",
+   "observed": 265,
+   "expected": 407.2,
+   "ratio": 0.65,
+   "interpretable": true
+  },
+  {
+   "mechanism": "car-t",
+   "site": "pancreas",
+   "observed": 233,
+   "expected": 299.5,
+   "ratio": 0.78,
+   "interpretable": true
+  },
+  {
+   "mechanism": "car-t",
+   "site": "prostate",
+   "observed": 161,
+   "expected": 378.7,
+   "ratio": 0.43,
+   "interpretable": true
+  },
+  {
+   "mechanism": "car-t",
+   "site": "skin/melanoma",
+   "observed": 1216,
+   "expected": 772.0,
+   "ratio": 1.58,
+   "interpretable": true
+  },
+  {
+   "mechanism": "car-t",
+   "site": "stomach",
+   "observed": 134,
+   "expected": 310.5,
+   "ratio": 0.43,
+   "interpretable": true
+  },
+  {
+   "mechanism": "car-t",
+   "site": "thyroid",
+   "observed": 19,
+   "expected": 70.9,
+   "ratio": 0.27,
+   "interpretable": true
+  },
+  {
+   "mechanism": "crispr",
+   "site": "bladder",
+   "observed": 29,
+   "expected": 40.1,
+   "ratio": 0.72,
+   "interpretable": true
+  },
+  {
+   "mechanism": "crispr",
+   "site": "brain/CNS",
+   "observed": 152,
+   "expected": 158.0,
+   "ratio": 0.96,
+   "interpretable": true
+  },
+  {
+   "mechanism": "crispr",
+   "site": "breast",
+   "observed": 233,
+   "expected": 232.0,
+   "ratio": 1.0,
+   "interpretable": true
+  },
+  {
+   "mechanism": "crispr",
+   "site": "cervix/uterus",
+   "observed": 75,
+   "expected": 61.1,
+   "ratio": 1.23,
+   "interpretable": true
+  },
+  {
+   "mechanism": "crispr",
+   "site": "colorectal",
+   "observed": 158,
+   "expected": 161.2,
+   "ratio": 0.98,
+   "interpretable": true
+  },
+  {
+   "mechanism": "crispr",
+   "site": "head and neck",
+   "observed": 108,
+   "expected": 119.7,
+   "ratio": 0.9,
+   "interpretable": true
+  },
+  {
+   "mechanism": "crispr",
+   "site": "kidney",
+   "observed": 37,
+   "expected": 49.0,
+   "ratio": 0.75,
+   "interpretable": true
+  },
+  {
+   "mechanism": "crispr",
+   "site": "leukaemia",
+   "observed": 284,
+   "expected": 170.8,
+   "ratio": 1.66,
+   "interpretable": true
+  },
+  {
+   "mechanism": "crispr",
+   "site": "liver",
+   "observed": 146,
+   "expected": 136.8,
+   "ratio": 1.07,
+   "interpretable": true
+  },
+  {
+   "mechanism": "crispr",
+   "site": "lung",
+   "observed": 209,
+   "expected": 254.5,
+   "ratio": 0.82,
+   "interpretable": true
+  },
+  {
+   "mechanism": "crispr",
+   "site": "lymphoma",
+   "observed": 85,
+   "expected": 118.9,
+   "ratio": 0.71,
+   "interpretable": true
+  },
+  {
+   "mechanism": "crispr",
+   "site": "oesophagus",
+   "observed": 16,
+   "expected": 29.5,
+   "ratio": 0.54,
+   "interpretable": true
+  },
+  {
+   "mechanism": "crispr",
+   "site": "ovary",
+   "observed": 87,
+   "expected": 85.3,
+   "ratio": 1.02,
+   "interpretable": true
+  },
+  {
+   "mechanism": "crispr",
+   "site": "pancreas",
+   "observed": 67,
+   "expected": 62.7,
+   "ratio": 1.07,
+   "interpretable": true
+  },
+  {
+   "mechanism": "crispr",
+   "site": "prostate",
+   "observed": 94,
+   "expected": 79.3,
+   "ratio": 1.19,
+   "interpretable": true
+  },
+  {
+   "mechanism": "crispr",
+   "site": "skin/melanoma",
+   "observed": 114,
+   "expected": 161.6,
+   "ratio": 0.71,
+   "interpretable": true
+  },
+  {
+   "mechanism": "crispr",
+   "site": "stomach",
+   "observed": 27,
+   "expected": 65.0,
+   "ratio": 0.42,
+   "interpretable": true
+  },
+  {
+   "mechanism": "crispr",
+   "site": "thyroid",
+   "observed": 19,
+   "expected": 14.8,
+   "ratio": 1.28,
+   "interpretable": false
+  },
+  {
+   "mechanism": "electrochemical-therapy",
+   "site": "bladder",
+   "observed": 26,
+   "expected": 36.7,
+   "ratio": 0.71,
+   "interpretable": true
+  },
+  {
+   "mechanism": "electrochemical-therapy",
+   "site": "brain/CNS",
+   "observed": 81,
+   "expected": 144.6,
+   "ratio": 0.56,
+   "interpretable": true
+  },
+  {
+   "mechanism": "electrochemical-therapy",
+   "site": "breast",
+   "observed": 102,
+   "expected": 212.3,
+   "ratio": 0.48,
+   "interpretable": true
+  },
+  {
+   "mechanism": "electrochemical-therapy",
+   "site": "cervix/uterus",
+   "observed": 26,
+   "expected": 55.9,
+   "ratio": 0.47,
+   "interpretable": true
+  },
+  {
+   "mechanism": "electrochemical-therapy",
+   "site": "colorectal",
+   "observed": 103,
+   "expected": 147.5,
+   "ratio": 0.7,
+   "interpretable": true
+  },
+  {
+   "mechanism": "electrochemical-therapy",
+   "site": "head and neck",
+   "observed": 127,
+   "expected": 109.5,
+   "ratio": 1.16,
+   "interpretable": true
+  },
+  {
+   "mechanism": "electrochemical-therapy",
+   "site": "kidney",
+   "observed": 60,
+   "expected": 44.9,
+   "ratio": 1.34,
+   "interpretable": true
+  },
+  {
+   "mechanism": "electrochemical-therapy",
+   "site": "leukaemia",
+   "observed": 80,
+   "expected": 156.3,
+   "ratio": 0.51,
+   "interpretable": true
+  },
+  {
+   "mechanism": "electrochemical-therapy",
+   "site": "liver",
+   "observed": 271,
+   "expected": 125.2,
+   "ratio": 2.16,
+   "interpretable": true
+  },
+  {
+   "mechanism": "electrochemical-therapy",
+   "site": "lung",
+   "observed": 66,
+   "expected": 232.9,
+   "ratio": 0.28,
+   "interpretable": true
+  },
+  {
+   "mechanism": "electrochemical-therapy",
+   "site": "lymphoma",
+   "observed": 45,
+   "expected": 108.8,
+   "ratio": 0.41,
+   "interpretable": true
+  },
+  {
+   "mechanism": "electrochemical-therapy",
+   "site": "oesophagus",
+   "observed": 11,
+   "expected": 27.0,
+   "ratio": 0.41,
+   "interpretable": true
+  },
+  {
+   "mechanism": "electrochemical-therapy",
+   "site": "ovary",
+   "observed": 27,
+   "expected": 78.0,
+   "ratio": 0.35,
+   "interpretable": true
+  },
+  {
+   "mechanism": "electrochemical-therapy",
+   "site": "pancreas",
+   "observed": 225,
+   "expected": 57.4,
+   "ratio": 3.92,
+   "interpretable": true
+  },
+  {
+   "mechanism": "electrochemical-therapy",
+   "site": "prostate",
+   "observed": 144,
+   "expected": 72.6,
+   "ratio": 1.98,
+   "interpretable": true
+  },
+  {
+   "mechanism": "electrochemical-therapy",
+   "site": "skin/melanoma",
+   "observed": 480,
+   "expected": 147.9,
+   "ratio": 3.25,
+   "interpretable": true
+  },
+  {
+   "mechanism": "electrochemical-therapy",
+   "site": "stomach",
+   "observed": 15,
+   "expected": 59.5,
+   "ratio": 0.25,
+   "interpretable": true
+  },
+  {
+   "mechanism": "electrochemical-therapy",
+   "site": "thyroid",
+   "observed": 5,
+   "expected": 13.6,
+   "ratio": 0.37,
+   "interpretable": false
+  },
+  {
+   "mechanism": "epigenetic",
+   "site": "bladder",
+   "observed": 644,
+   "expected": 678.4,
+   "ratio": 0.95,
+   "interpretable": true
+  },
+  {
+   "mechanism": "epigenetic",
+   "site": "brain/CNS",
+   "observed": 3118,
+   "expected": 2674.4,
+   "ratio": 1.17,
+   "interpretable": true
+  },
+  {
+   "mechanism": "epigenetic",
+   "site": "breast",
+   "observed": 3413,
+   "expected": 3927.8,
+   "ratio": 0.87,
+   "interpretable": true
+  },
+  {
+   "mechanism": "epigenetic",
+   "site": "cervix/uterus",
+   "observed": 1415,
+   "expected": 1033.8,
+   "ratio": 1.37,
+   "interpretable": true
+  },
+  {
+   "mechanism": "epigenetic",
+   "site": "colorectal",
+   "observed": 4131,
+   "expected": 2729.1,
+   "ratio": 1.51,
+   "interpretable": true
+  },
+  {
+   "mechanism": "epigenetic",
+   "site": "head and neck",
+   "observed": 2385,
+   "expected": 2026.6,
+   "ratio": 1.18,
+   "interpretable": true
+  },
+  {
+   "mechanism": "epigenetic",
+   "site": "kidney",
+   "observed": 725,
+   "expected": 830.0,
+   "ratio": 0.87,
+   "interpretable": true
+  },
+  {
+   "mechanism": "epigenetic",
+   "site": "leukaemia",
+   "observed": 4673,
+   "expected": 2892.1,
+   "ratio": 1.62,
+   "interpretable": true
+  },
+  {
+   "mechanism": "epigenetic",
+   "site": "liver",
+   "observed": 1906,
+   "expected": 2316.2,
+   "ratio": 0.82,
+   "interpretable": true
+  },
+  {
+   "mechanism": "epigenetic",
+   "site": "lung",
+   "observed": 2697,
+   "expected": 4308.6,
+   "ratio": 0.63,
+   "interpretable": true
+  },
+  {
+   "mechanism": "epigenetic",
+   "site": "lymphoma",
+   "observed": 1417,
+   "expected": 2013.0,
+   "ratio": 0.7,
+   "interpretable": true
+  },
+  {
+   "mechanism": "epigenetic",
+   "site": "oesophagus",
+   "observed": 655,
+   "expected": 499.6,
+   "ratio": 1.31,
+   "interpretable": true
+  },
+  {
+   "mechanism": "epigenetic",
+   "site": "ovary",
+   "observed": 1123,
+   "expected": 1443.6,
+   "ratio": 0.78,
+   "interpretable": true
+  },
+  {
+   "mechanism": "epigenetic",
+   "site": "pancreas",
+   "observed": 761,
+   "expected": 1061.6,
+   "ratio": 0.72,
+   "interpretable": true
+  },
+  {
+   "mechanism": "epigenetic",
+   "site": "prostate",
+   "observed": 1495,
+   "expected": 1342.3,
+   "ratio": 1.11,
+   "interpretable": true
+  },
+  {
+   "mechanism": "epigenetic",
+   "site": "skin/melanoma",
+   "observed": 1124,
+   "expected": 2736.5,
+   "ratio": 0.41,
+   "interpretable": true
+  },
+  {
+   "mechanism": "epigenetic",
+   "site": "stomach",
+   "observed": 1610,
+   "expected": 1100.5,
+   "ratio": 1.46,
+   "interpretable": true
+  },
+  {
+   "mechanism": "epigenetic",
+   "site": "thyroid",
+   "observed": 338,
+   "expected": 251.4,
+   "ratio": 1.34,
+   "interpretable": true
+  },
+  {
+   "mechanism": "hifu",
+   "site": "bladder",
+   "observed": 4,
+   "expected": 22.2,
+   "ratio": 0.18,
+   "interpretable": true
+  },
+  {
+   "mechanism": "hifu",
+   "site": "brain/CNS",
+   "observed": 33,
+   "expected": 87.7,
+   "ratio": 0.38,
+   "interpretable": true
+  },
+  {
+   "mechanism": "hifu",
+   "site": "breast",
+   "observed": 87,
+   "expected": 128.8,
+   "ratio": 0.68,
+   "interpretable": true
+  },
+  {
+   "mechanism": "hifu",
+   "site": "cervix/uterus",
+   "observed": 338,
+   "expected": 33.9,
+   "ratio": 9.97,
+   "interpretable": true
+  },
+  {
+   "mechanism": "hifu",
+   "site": "colorectal",
+   "observed": 22,
+   "expected": 89.5,
+   "ratio": 0.25,
+   "interpretable": true
+  },
+  {
+   "mechanism": "hifu",
+   "site": "head and neck",
+   "observed": 50,
+   "expected": 66.4,
+   "ratio": 0.75,
+   "interpretable": true
+  },
+  {
+   "mechanism": "hifu",
+   "site": "kidney",
+   "observed": 33,
+   "expected": 27.2,
+   "ratio": 1.21,
+   "interpretable": true
+  },
+  {
+   "mechanism": "hifu",
+   "site": "leukaemia",
+   "observed": 0,
+   "expected": 94.8,
+   "ratio": 0.0,
+   "interpretable": true
+  },
+  {
+   "mechanism": "hifu",
+   "site": "liver",
+   "observed": 146,
+   "expected": 75.9,
+   "ratio": 1.92,
+   "interpretable": true
+  },
+  {
+   "mechanism": "hifu",
+   "site": "lung",
+   "observed": 14,
+   "expected": 141.3,
+   "ratio": 0.1,
+   "interpretable": true
+  },
+  {
+   "mechanism": "hifu",
+   "site": "lymphoma",
+   "observed": 0,
+   "expected": 66.0,
+   "ratio": 0.0,
+   "interpretable": true
+  },
+  {
+   "mechanism": "hifu",
+   "site": "oesophagus",
+   "observed": 0,
+   "expected": 16.4,
+   "ratio": 0.0,
+   "interpretable": false
+  },
+  {
+   "mechanism": "hifu",
+   "site": "ovary",
+   "observed": 3,
+   "expected": 47.3,
+   "ratio": 0.06,
+   "interpretable": true
+  },
+  {
+   "mechanism": "hifu",
+   "site": "pancreas",
+   "observed": 85,
+   "expected": 34.8,
+   "ratio": 2.44,
+   "interpretable": true
+  },
+  {
+   "mechanism": "hifu",
+   "site": "prostate",
+   "observed": 246,
+   "expected": 44.0,
+   "ratio": 5.59,
+   "interpretable": true
+  },
+  {
+   "mechanism": "hifu",
+   "site": "skin/melanoma",
+   "observed": 10,
+   "expected": 89.7,
+   "ratio": 0.11,
+   "interpretable": true
+  },
+  {
+   "mechanism": "hifu",
+   "site": "stomach",
+   "observed": 3,
+   "expected": 36.1,
+   "ratio": 0.08,
+   "interpretable": true
+  },
+  {
+   "mechanism": "hifu",
+   "site": "thyroid",
+   "observed": 45,
+   "expected": 8.2,
+   "ratio": 5.46,
+   "interpretable": false
+  },
+  {
+   "mechanism": "immunotherapy",
+   "site": "bladder",
+   "observed": 954,
+   "expected": 516.0,
+   "ratio": 1.85,
+   "interpretable": true
+  },
+  {
+   "mechanism": "immunotherapy",
+   "site": "brain/CNS",
+   "observed": 1137,
+   "expected": 2034.0,
+   "ratio": 0.56,
+   "interpretable": true
+  },
+  {
+   "mechanism": "immunotherapy",
+   "site": "breast",
+   "observed": 1728,
+   "expected": 2987.3,
+   "ratio": 0.58,
+   "interpretable": true
+  },
+  {
+   "mechanism": "immunotherapy",
+   "site": "cervix/uterus",
+   "observed": 587,
+   "expected": 786.3,
+   "ratio": 0.75,
+   "interpretable": true
+  },
+  {
+   "mechanism": "immunotherapy",
+   "site": "colorectal",
+   "observed": 1570,
+   "expected": 2075.6,
+   "ratio": 0.76,
+   "interpretable": true
+  },
+  {
+   "mechanism": "immunotherapy",
+   "site": "head and neck",
+   "observed": 2134,
+   "expected": 1541.3,
+   "ratio": 1.38,
+   "interpretable": true
+  },
+  {
+   "mechanism": "immunotherapy",
+   "site": "kidney",
+   "observed": 1166,
+   "expected": 631.3,
+   "ratio": 1.85,
+   "interpretable": true
+  },
+  {
+   "mechanism": "immunotherapy",
+   "site": "leukaemia",
+   "observed": 372,
+   "expected": 2199.6,
+   "ratio": 0.17,
+   "interpretable": true
+  },
+  {
+   "mechanism": "immunotherapy",
+   "site": "liver",
+   "observed": 1782,
+   "expected": 1761.6,
+   "ratio": 1.01,
+   "interpretable": true
+  },
+  {
+   "mechanism": "immunotherapy",
+   "site": "lung",
+   "observed": 7237,
+   "expected": 3276.9,
+   "ratio": 2.21,
+   "interpretable": true
+  },
+  {
+   "mechanism": "immunotherapy",
+   "site": "lymphoma",
+   "observed": 774,
+   "expected": 1531.0,
+   "ratio": 0.51,
+   "interpretable": true
+  },
+  {
+   "mechanism": "immunotherapy",
+   "site": "oesophagus",
+   "observed": 637,
+   "expected": 380.0,
+   "ratio": 1.68,
+   "interpretable": true
+  },
+  {
+   "mechanism": "immunotherapy",
+   "site": "ovary",
+   "observed": 478,
+   "expected": 1097.9,
+   "ratio": 0.44,
+   "interpretable": true
+  },
+  {
+   "mechanism": "immunotherapy",
+   "site": "pancreas",
+   "observed": 516,
+   "expected": 807.4,
+   "ratio": 0.64,
+   "interpretable": true
+  },
+  {
+   "mechanism": "immunotherapy",
+   "site": "prostate",
+   "observed": 347,
+   "expected": 1020.9,
+   "ratio": 0.34,
+   "interpretable": true
+  },
+  {
+   "mechanism": "immunotherapy",
+   "site": "skin/melanoma",
+   "observed": 3740,
+   "expected": 2081.2,
+   "ratio": 1.8,
+   "interpretable": true
+  },
+  {
+   "mechanism": "immunotherapy",
+   "site": "stomach",
+   "observed": 1037,
+   "expected": 837.0,
+   "ratio": 1.24,
+   "interpretable": true
+  },
+  {
+   "mechanism": "immunotherapy",
+   "site": "thyroid",
+   "observed": 145,
+   "expected": 191.2,
+   "ratio": 0.76,
+   "interpretable": true
+  },
+  {
+   "mechanism": "metabolic-targeting",
+   "site": "bladder",
+   "observed": 84,
+   "expected": 120.6,
+   "ratio": 0.7,
+   "interpretable": true
+  },
+  {
+   "mechanism": "metabolic-targeting",
+   "site": "brain/CNS",
+   "observed": 493,
+   "expected": 475.3,
+   "ratio": 1.04,
+   "interpretable": true
+  },
+  {
+   "mechanism": "metabolic-targeting",
+   "site": "breast",
+   "observed": 755,
+   "expected": 698.0,
+   "ratio": 1.08,
+   "interpretable": true
+  },
+  {
+   "mechanism": "metabolic-targeting",
+   "site": "cervix/uterus",
+   "observed": 195,
+   "expected": 183.7,
+   "ratio": 1.06,
+   "interpretable": true
+  },
+  {
+   "mechanism": "metabolic-targeting",
+   "site": "colorectal",
+   "observed": 560,
+   "expected": 485.0,
+   "ratio": 1.15,
+   "interpretable": true
+  },
+  {
+   "mechanism": "metabolic-targeting",
+   "site": "head and neck",
+   "observed": 453,
+   "expected": 360.2,
+   "ratio": 1.26,
+   "interpretable": true
+  },
+  {
+   "mechanism": "metabolic-targeting",
+   "site": "kidney",
+   "observed": 139,
+   "expected": 147.5,
+   "ratio": 0.94,
+   "interpretable": true
+  },
+  {
+   "mechanism": "metabolic-targeting",
+   "site": "leukaemia",
+   "observed": 330,
+   "expected": 514.0,
+   "ratio": 0.64,
+   "interpretable": true
+  },
+  {
+   "mechanism": "metabolic-targeting",
+   "site": "liver",
+   "observed": 724,
+   "expected": 411.6,
+   "ratio": 1.76,
+   "interpretable": true
+  },
+  {
+   "mechanism": "metabolic-targeting",
+   "site": "lung",
+   "observed": 587,
+   "expected": 765.7,
+   "ratio": 0.77,
+   "interpretable": true
+  },
+  {
+   "mechanism": "metabolic-targeting",
+   "site": "lymphoma",
+   "observed": 173,
+   "expected": 357.7,
+   "ratio": 0.48,
+   "interpretable": true
+  },
+  {
+   "mechanism": "metabolic-targeting",
+   "site": "oesophagus",
+   "observed": 110,
+   "expected": 88.8,
+   "ratio": 1.24,
+   "interpretable": true
+  },
+  {
+   "mechanism": "metabolic-targeting",
+   "site": "ovary",
+   "observed": 226,
+   "expected": 256.5,
+   "ratio": 0.88,
+   "interpretable": true
+  },
+  {
+   "mechanism": "metabolic-targeting",
+   "site": "pancreas",
+   "observed": 319,
+   "expected": 188.7,
+   "ratio": 1.69,
+   "interpretable": true
+  },
+  {
+   "mechanism": "metabolic-targeting",
+   "site": "prostate",
+   "observed": 216,
+   "expected": 238.5,
+   "ratio": 0.91,
+   "interpretable": true
+  },
+  {
+   "mechanism": "metabolic-targeting",
+   "site": "skin/melanoma",
+   "observed": 239,
+   "expected": 486.3,
+   "ratio": 0.49,
+   "interpretable": true
+  },
+  {
+   "mechanism": "metabolic-targeting",
+   "site": "stomach",
+   "observed": 223,
+   "expected": 195.6,
+   "ratio": 1.14,
+   "interpretable": true
+  },
+  {
+   "mechanism": "metabolic-targeting",
+   "site": "thyroid",
+   "observed": 74,
+   "expected": 44.7,
+   "ratio": 1.66,
+   "interpretable": true
+  },
+  {
+   "mechanism": "microbiome",
+   "site": "bladder",
+   "observed": 2,
+   "expected": 4.3,
+   "ratio": 0.47,
+   "interpretable": false
+  },
+  {
+   "mechanism": "microbiome",
+   "site": "brain/CNS",
+   "observed": 1,
+   "expected": 16.8,
+   "ratio": 0.06,
+   "interpretable": false
+  },
+  {
+   "mechanism": "microbiome",
+   "site": "breast",
+   "observed": 4,
+   "expected": 24.7,
+   "ratio": 0.16,
+   "interpretable": true
+  },
+  {
+   "mechanism": "microbiome",
+   "site": "cervix/uterus",
+   "observed": 1,
+   "expected": 6.5,
+   "ratio": 0.15,
+   "interpretable": false
+  },
+  {
+   "mechanism": "microbiome",
+   "site": "colorectal",
+   "observed": 72,
+   "expected": 17.2,
+   "ratio": 4.2,
+   "interpretable": false
+  },
+  {
+   "mechanism": "microbiome",
+   "site": "head and neck",
+   "observed": 4,
+   "expected": 12.7,
+   "ratio": 0.31,
+   "interpretable": false
+  },
+  {
+   "mechanism": "microbiome",
+   "site": "kidney",
+   "observed": 5,
+   "expected": 5.2,
+   "ratio": 0.96,
+   "interpretable": false
+  },
+  {
+   "mechanism": "microbiome",
+   "site": "leukaemia",
+   "observed": 14,
+   "expected": 18.2,
+   "ratio": 0.77,
+   "interpretable": false
+  },
+  {
+   "mechanism": "microbiome",
+   "site": "liver",
+   "observed": 26,
+   "expected": 14.6,
+   "ratio": 1.79,
+   "interpretable": false
+  },
+  {
+   "mechanism": "microbiome",
+   "site": "lung",
+   "observed": 15,
+   "expected": 27.1,
+   "ratio": 0.55,
+   "interpretable": true
+  },
+  {
+   "mechanism": "microbiome",
+   "site": "lymphoma",
+   "observed": 3,
+   "expected": 12.7,
+   "ratio": 0.24,
+   "interpretable": false
+  },
+  {
+   "mechanism": "microbiome",
+   "site": "oesophagus",
+   "observed": 4,
+   "expected": 3.1,
+   "ratio": 1.27,
+   "interpretable": false
+  },
+  {
+   "mechanism": "microbiome",
+   "site": "ovary",
+   "observed": 2,
+   "expected": 9.1,
+   "ratio": 0.22,
+   "interpretable": false
+  },
+  {
+   "mechanism": "microbiome",
+   "site": "pancreas",
+   "observed": 12,
+   "expected": 6.7,
+   "ratio": 1.8,
+   "interpretable": false
+  },
+  {
+   "mechanism": "microbiome",
+   "site": "prostate",
+   "observed": 4,
+   "expected": 8.4,
+   "ratio": 0.47,
+   "interpretable": false
+  },
+  {
+   "mechanism": "microbiome",
+   "site": "skin/melanoma",
+   "observed": 31,
+   "expected": 17.2,
+   "ratio": 1.8,
+   "interpretable": false
+  },
+  {
+   "mechanism": "microbiome",
+   "site": "stomach",
+   "observed": 5,
+   "expected": 6.9,
+   "ratio": 0.72,
+   "interpretable": false
+  },
+  {
+   "mechanism": "microbiome",
+   "site": "thyroid",
+   "observed": 0,
+   "expected": 1.6,
+   "ratio": 0.0,
+   "interpretable": false
+  },
+  {
+   "mechanism": "mrna-vaccine",
+   "site": "bladder",
+   "observed": 2,
+   "expected": 2.8,
+   "ratio": 0.72,
+   "interpretable": false
+  },
+  {
+   "mechanism": "mrna-vaccine",
+   "site": "brain/CNS",
+   "observed": 14,
+   "expected": 11.0,
+   "ratio": 1.28,
+   "interpretable": false
+  },
+  {
+   "mechanism": "mrna-vaccine",
+   "site": "breast",
+   "observed": 9,
+   "expected": 16.1,
+   "ratio": 0.56,
+   "interpretable": false
+  },
+  {
+   "mechanism": "mrna-vaccine",
+   "site": "cervix/uterus",
+   "observed": 7,
+   "expected": 4.2,
+   "ratio": 1.65,
+   "interpretable": false
+  },
+  {
+   "mechanism": "mrna-vaccine",
+   "site": "colorectal",
+   "observed": 5,
+   "expected": 11.2,
+   "ratio": 0.45,
+   "interpretable": false
+  },
+  {
+   "mechanism": "mrna-vaccine",
+   "site": "head and neck",
+   "observed": 3,
+   "expected": 8.3,
+   "ratio": 0.36,
+   "interpretable": false
+  },
+  {
+   "mechanism": "mrna-vaccine",
+   "site": "kidney",
+   "observed": 4,
+   "expected": 3.4,
+   "ratio": 1.17,
+   "interpretable": false
+  },
+  {
+   "mechanism": "mrna-vaccine",
+   "site": "leukaemia",
+   "observed": 11,
+   "expected": 11.9,
+   "ratio": 0.93,
+   "interpretable": false
+  },
+  {
+   "mechanism": "mrna-vaccine",
+   "site": "liver",
+   "observed": 4,
+   "expected": 9.5,
+   "ratio": 0.42,
+   "interpretable": false
+  },
+  {
+   "mechanism": "mrna-vaccine",
+   "site": "lung",
+   "observed": 18,
+   "expected": 17.7,
+   "ratio": 1.02,
+   "interpretable": false
+  },
+  {
+   "mechanism": "mrna-vaccine",
+   "site": "lymphoma",
+   "observed": 9,
+   "expected": 8.3,
+   "ratio": 1.09,
+   "interpretable": false
+  },
+  {
+   "mechanism": "mrna-vaccine",
+   "site": "oesophagus",
+   "observed": 0,
+   "expected": 2.0,
+   "ratio": 0.0,
+   "interpretable": false
+  },
+  {
+   "mechanism": "mrna-vaccine",
+   "site": "ovary",
+   "observed": 1,
+   "expected": 5.9,
+   "ratio": 0.17,
+   "interpretable": false
+  },
+  {
+   "mechanism": "mrna-vaccine",
+   "site": "pancreas",
+   "observed": 9,
+   "expected": 4.4,
+   "ratio": 2.07,
+   "interpretable": false
+  },
+  {
+   "mechanism": "mrna-vaccine",
+   "site": "prostate",
+   "observed": 7,
+   "expected": 5.5,
+   "ratio": 1.27,
+   "interpretable": false
+  },
+  {
+   "mechanism": "mrna-vaccine",
+   "site": "skin/melanoma",
+   "observed": 24,
+   "expected": 11.2,
+   "ratio": 2.14,
+   "interpretable": false
+  },
+  {
+   "mechanism": "mrna-vaccine",
+   "site": "stomach",
+   "observed": 3,
+   "expected": 4.5,
+   "ratio": 0.66,
+   "interpretable": false
+  },
+  {
+   "mechanism": "mrna-vaccine",
+   "site": "thyroid",
+   "observed": 0,
+   "expected": 1.0,
+   "ratio": 0.0,
+   "interpretable": false
+  },
+  {
+   "mechanism": "nanoparticle",
+   "site": "bladder",
+   "observed": 187,
+   "expected": 331.5,
+   "ratio": 0.56,
+   "interpretable": true
+  },
+  {
+   "mechanism": "nanoparticle",
+   "site": "brain/CNS",
+   "observed": 1828,
+   "expected": 1306.9,
+   "ratio": 1.4,
+   "interpretable": true
+  },
+  {
+   "mechanism": "nanoparticle",
+   "site": "breast",
+   "observed": 3938,
+   "expected": 1919.4,
+   "ratio": 2.05,
+   "interpretable": true
+  },
+  {
+   "mechanism": "nanoparticle",
+   "site": "cervix/uterus",
+   "observed": 332,
+   "expected": 505.2,
+   "ratio": 0.66,
+   "interpretable": true
+  },
+  {
+   "mechanism": "nanoparticle",
+   "site": "colorectal",
+   "observed": 1343,
+   "expected": 1333.6,
+   "ratio": 1.01,
+   "interpretable": true
+  },
+  {
+   "mechanism": "nanoparticle",
+   "site": "head and neck",
+   "observed": 655,
+   "expected": 990.3,
+   "ratio": 0.66,
+   "interpretable": true
+  },
+  {
+   "mechanism": "nanoparticle",
+   "site": "kidney",
+   "observed": 71,
+   "expected": 405.6,
+   "ratio": 0.18,
+   "interpretable": true
+  },
+  {
+   "mechanism": "nanoparticle",
+   "site": "leukaemia",
+   "observed": 327,
+   "expected": 1413.3,
+   "ratio": 0.23,
+   "interpretable": true
+  },
+  {
+   "mechanism": "nanoparticle",
+   "site": "liver",
+   "observed": 1576,
+   "expected": 1131.9,
+   "ratio": 1.39,
+   "interpretable": true
+  },
+  {
+   "mechanism": "nanoparticle",
+   "site": "lung",
+   "observed": 1699,
+   "expected": 2105.5,
+   "ratio": 0.81,
+   "interpretable": true
+  },
+  {
+   "mechanism": "nanoparticle",
+   "site": "lymphoma",
+   "observed": 163,
+   "expected": 983.7,
+   "ratio": 0.17,
+   "interpretable": true
+  },
+  {
+   "mechanism": "nanoparticle",
+   "site": "oesophagus",
+   "observed": 79,
+   "expected": 244.2,
+   "ratio": 0.32,
+   "interpretable": true
+  },
+  {
+   "mechanism": "nanoparticle",
+   "site": "ovary",
+   "observed": 621,
+   "expected": 705.4,
+   "ratio": 0.88,
+   "interpretable": true
+  },
+  {
+   "mechanism": "nanoparticle",
+   "site": "pancreas",
+   "observed": 680,
+   "expected": 518.8,
+   "ratio": 1.31,
+   "interpretable": true
+  },
+  {
+   "mechanism": "nanoparticle",
+   "site": "prostate",
+   "observed": 739,
+   "expected": 655.9,
+   "ratio": 1.13,
+   "interpretable": true
+  },
+  {
+   "mechanism": "nanoparticle",
+   "site": "skin/melanoma",
+   "observed": 1233,
+   "expected": 1337.2,
+   "ratio": 0.92,
+   "interpretable": true
+  },
+  {
+   "mechanism": "nanoparticle",
+   "site": "stomach",
+   "observed": 282,
+   "expected": 537.8,
+   "ratio": 0.52,
+   "interpretable": true
+  },
+  {
+   "mechanism": "nanoparticle",
+   "site": "thyroid",
+   "observed": 122,
+   "expected": 122.8,
+   "ratio": 0.99,
+   "interpretable": true
+  },
+  {
+   "mechanism": "oncolytic-virus",
+   "site": "bladder",
+   "observed": 64,
+   "expected": 62.3,
+   "ratio": 1.03,
+   "interpretable": true
+  },
+  {
+   "mechanism": "oncolytic-virus",
+   "site": "brain/CNS",
+   "observed": 674,
+   "expected": 245.6,
+   "ratio": 2.74,
+   "interpretable": true
+  },
+  {
+   "mechanism": "oncolytic-virus",
+   "site": "breast",
+   "observed": 213,
+   "expected": 360.7,
+   "ratio": 0.59,
+   "interpretable": true
+  },
+  {
+   "mechanism": "oncolytic-virus",
+   "site": "cervix/uterus",
+   "observed": 37,
+   "expected": 94.9,
+   "ratio": 0.39,
+   "interpretable": true
+  },
+  {
+   "mechanism": "oncolytic-virus",
+   "site": "colorectal",
+   "observed": 211,
+   "expected": 250.6,
+   "ratio": 0.84,
+   "interpretable": true
+  },
+  {
+   "mechanism": "oncolytic-virus",
+   "site": "head and neck",
+   "observed": 155,
+   "expected": 186.1,
+   "ratio": 0.83,
+   "interpretable": true
+  },
+  {
+   "mechanism": "oncolytic-virus",
+   "site": "kidney",
+   "observed": 40,
+   "expected": 76.2,
+   "ratio": 0.52,
+   "interpretable": true
+  },
+  {
+   "mechanism": "oncolytic-virus",
+   "site": "leukaemia",
+   "observed": 50,
+   "expected": 265.6,
+   "ratio": 0.19,
+   "interpretable": true
+  },
+  {
+   "mechanism": "oncolytic-virus",
+   "site": "liver",
+   "observed": 271,
+   "expected": 212.7,
+   "ratio": 1.27,
+   "interpretable": true
+  },
+  {
+   "mechanism": "oncolytic-virus",
+   "site": "lung",
+   "observed": 212,
+   "expected": 395.6,
+   "ratio": 0.54,
+   "interpretable": true
+  },
+  {
+   "mechanism": "oncolytic-virus",
+   "site": "lymphoma",
+   "observed": 36,
+   "expected": 184.8,
+   "ratio": 0.19,
+   "interpretable": true
+  },
+  {
+   "mechanism": "oncolytic-virus",
+   "site": "oesophagus",
+   "observed": 16,
+   "expected": 45.9,
+   "ratio": 0.35,
+   "interpretable": true
+  },
+  {
+   "mechanism": "oncolytic-virus",
+   "site": "ovary",
+   "observed": 145,
+   "expected": 132.6,
+   "ratio": 1.09,
+   "interpretable": true
+  },
+  {
+   "mechanism": "oncolytic-virus",
+   "site": "pancreas",
+   "observed": 236,
+   "expected": 97.5,
+   "ratio": 2.42,
+   "interpretable": true
+  },
+  {
+   "mechanism": "oncolytic-virus",
+   "site": "prostate",
+   "observed": 139,
+   "expected": 123.3,
+   "ratio": 1.13,
+   "interpretable": true
+  },
+  {
+   "mechanism": "oncolytic-virus",
+   "site": "skin/melanoma",
+   "observed": 516,
+   "expected": 251.3,
+   "ratio": 2.05,
+   "interpretable": true
+  },
+  {
+   "mechanism": "oncolytic-virus",
+   "site": "stomach",
+   "observed": 42,
+   "expected": 101.1,
+   "ratio": 0.42,
+   "interpretable": true
+  },
+  {
+   "mechanism": "oncolytic-virus",
+   "site": "thyroid",
+   "observed": 20,
+   "expected": 23.1,
+   "ratio": 0.87,
+   "interpretable": true
+  },
+  {
+   "mechanism": "phagocytosis-checkpoint",
+   "site": "bladder",
+   "observed": 15,
+   "expected": 12.5,
+   "ratio": 1.2,
+   "interpretable": false
+  },
+  {
+   "mechanism": "phagocytosis-checkpoint",
+   "site": "brain/CNS",
+   "observed": 50,
+   "expected": 49.3,
+   "ratio": 1.01,
+   "interpretable": true
+  },
+  {
+   "mechanism": "phagocytosis-checkpoint",
+   "site": "breast",
+   "observed": 51,
+   "expected": 72.4,
+   "ratio": 0.7,
+   "interpretable": true
+  },
+  {
+   "mechanism": "phagocytosis-checkpoint",
+   "site": "cervix/uterus",
+   "observed": 15,
+   "expected": 19.1,
+   "ratio": 0.79,
+   "interpretable": false
+  },
+  {
+   "mechanism": "phagocytosis-checkpoint",
+   "site": "colorectal",
+   "observed": 45,
+   "expected": 50.3,
+   "ratio": 0.89,
+   "interpretable": true
+  },
+  {
+   "mechanism": "phagocytosis-checkpoint",
+   "site": "head and neck",
+   "observed": 28,
+   "expected": 37.3,
+   "ratio": 0.75,
+   "interpretable": true
+  },
+  {
+   "mechanism": "phagocytosis-checkpoint",
+   "site": "kidney",
+   "observed": 6,
+   "expected": 15.3,
+   "ratio": 0.39,
+   "interpretable": false
+  },
+  {
+   "mechanism": "phagocytosis-checkpoint",
+   "site": "leukaemia",
+   "observed": 79,
+   "expected": 53.3,
+   "ratio": 1.48,
+   "interpretable": true
+  },
+  {
+   "mechanism": "phagocytosis-checkpoint",
+   "site": "liver",
+   "observed": 33,
+   "expected": 42.7,
+   "ratio": 0.77,
+   "interpretable": true
+  },
+  {
+   "mechanism": "phagocytosis-checkpoint",
+   "site": "lung",
+   "observed": 73,
+   "expected": 79.4,
+   "ratio": 0.92,
+   "interpretable": true
+  },
+  {
+   "mechanism": "phagocytosis-checkpoint",
+   "site": "lymphoma",
+   "observed": 66,
+   "expected": 37.1,
+   "ratio": 1.78,
+   "interpretable": true
+  },
+  {
+   "mechanism": "phagocytosis-checkpoint",
+   "site": "oesophagus",
+   "observed": 5,
+   "expected": 9.2,
+   "ratio": 0.54,
+   "interpretable": false
+  },
+  {
+   "mechanism": "phagocytosis-checkpoint",
+   "site": "ovary",
+   "observed": 28,
+   "expected": 26.6,
+   "ratio": 1.05,
+   "interpretable": true
+  },
+  {
+   "mechanism": "phagocytosis-checkpoint",
+   "site": "pancreas",
+   "observed": 26,
+   "expected": 19.6,
+   "ratio": 1.33,
+   "interpretable": false
+  },
+  {
+   "mechanism": "phagocytosis-checkpoint",
+   "site": "prostate",
+   "observed": 10,
+   "expected": 24.7,
+   "ratio": 0.4,
+   "interpretable": true
+  },
+  {
+   "mechanism": "phagocytosis-checkpoint",
+   "site": "skin/melanoma",
+   "observed": 59,
+   "expected": 50.4,
+   "ratio": 1.17,
+   "interpretable": true
+  },
+  {
+   "mechanism": "phagocytosis-checkpoint",
+   "site": "stomach",
+   "observed": 13,
+   "expected": 20.3,
+   "ratio": 0.64,
+   "interpretable": true
+  },
+  {
+   "mechanism": "phagocytosis-checkpoint",
+   "site": "thyroid",
+   "observed": 4,
+   "expected": 4.6,
+   "ratio": 0.86,
+   "interpretable": false
+  },
+  {
+   "mechanism": "sonodynamic",
+   "site": "bladder",
+   "observed": 34,
+   "expected": 31.9,
+   "ratio": 1.07,
+   "interpretable": true
+  },
+  {
+   "mechanism": "sonodynamic",
+   "site": "brain/CNS",
+   "observed": 207,
+   "expected": 125.8,
+   "ratio": 1.65,
+   "interpretable": true
+  },
+  {
+   "mechanism": "sonodynamic",
+   "site": "breast",
+   "observed": 228,
+   "expected": 184.8,
+   "ratio": 1.23,
+   "interpretable": true
+  },
+  {
+   "mechanism": "sonodynamic",
+   "site": "cervix/uterus",
+   "observed": 123,
+   "expected": 48.6,
+   "ratio": 2.53,
+   "interpretable": true
+  },
+  {
+   "mechanism": "sonodynamic",
+   "site": "colorectal",
+   "observed": 51,
+   "expected": 128.4,
+   "ratio": 0.4,
+   "interpretable": true
+  },
+  {
+   "mechanism": "sonodynamic",
+   "site": "head and neck",
+   "observed": 132,
+   "expected": 95.4,
+   "ratio": 1.38,
+   "interpretable": true
+  },
+  {
+   "mechanism": "sonodynamic",
+   "site": "kidney",
+   "observed": 73,
+   "expected": 39.1,
+   "ratio": 1.87,
+   "interpretable": true
+  },
+  {
+   "mechanism": "sonodynamic",
+   "site": "leukaemia",
+   "observed": 27,
+   "expected": 136.1,
+   "ratio": 0.2,
+   "interpretable": true
+  },
+  {
+   "mechanism": "sonodynamic",
+   "site": "liver",
+   "observed": 225,
+   "expected": 109.0,
+   "ratio": 2.06,
+   "interpretable": true
+  },
+  {
+   "mechanism": "sonodynamic",
+   "site": "lung",
+   "observed": 55,
+   "expected": 202.7,
+   "ratio": 0.27,
+   "interpretable": true
+  },
+  {
+   "mechanism": "sonodynamic",
+   "site": "lymphoma",
+   "observed": 13,
+   "expected": 94.7,
+   "ratio": 0.14,
+   "interpretable": true
+  },
+  {
+   "mechanism": "sonodynamic",
+   "site": "oesophagus",
+   "observed": 9,
+   "expected": 23.5,
+   "ratio": 0.38,
+   "interpretable": true
+  },
+  {
+   "mechanism": "sonodynamic",
+   "site": "ovary",
+   "observed": 39,
+   "expected": 67.9,
+   "ratio": 0.57,
+   "interpretable": true
+  },
+  {
+   "mechanism": "sonodynamic",
+   "site": "pancreas",
+   "observed": 68,
+   "expected": 49.9,
+   "ratio": 1.36,
+   "interpretable": true
+  },
+  {
+   "mechanism": "sonodynamic",
+   "site": "prostate",
+   "observed": 199,
+   "expected": 63.2,
+   "ratio": 3.15,
+   "interpretable": true
+  },
+  {
+   "mechanism": "sonodynamic",
+   "site": "skin/melanoma",
+   "observed": 105,
+   "expected": 128.8,
+   "ratio": 0.82,
+   "interpretable": true
+  },
+  {
+   "mechanism": "sonodynamic",
+   "site": "stomach",
+   "observed": 14,
+   "expected": 51.8,
+   "ratio": 0.27,
+   "interpretable": true
+  },
+  {
+   "mechanism": "sonodynamic",
+   "site": "thyroid",
+   "observed": 9,
+   "expected": 11.8,
+   "ratio": 0.76,
+   "interpretable": false
+  },
+  {
+   "mechanism": "synthetic-lethality",
+   "site": "bladder",
+   "observed": 34,
+   "expected": 84.6,
+   "ratio": 0.4,
+   "interpretable": true
+  },
+  {
+   "mechanism": "synthetic-lethality",
+   "site": "brain/CNS",
+   "observed": 157,
+   "expected": 333.4,
+   "ratio": 0.47,
+   "interpretable": true
+  },
+  {
+   "mechanism": "synthetic-lethality",
+   "site": "breast",
+   "observed": 963,
+   "expected": 489.7,
+   "ratio": 1.97,
+   "interpretable": true
+  },
+  {
+   "mechanism": "synthetic-lethality",
+   "site": "cervix/uterus",
+   "observed": 116,
+   "expected": 128.9,
+   "ratio": 0.9,
+   "interpretable": true
+  },
+  {
+   "mechanism": "synthetic-lethality",
+   "site": "colorectal",
+   "observed": 120,
+   "expected": 340.2,
+   "ratio": 0.35,
+   "interpretable": true
+  },
+  {
+   "mechanism": "synthetic-lethality",
+   "site": "head and neck",
+   "observed": 76,
+   "expected": 252.7,
+   "ratio": 0.3,
+   "interpretable": true
+  },
+  {
+   "mechanism": "synthetic-lethality",
+   "site": "kidney",
+   "observed": 24,
+   "expected": 103.5,
+   "ratio": 0.23,
+   "interpretable": true
+  },
+  {
+   "mechanism": "synthetic-lethality",
+   "site": "leukaemia",
+   "observed": 188,
+   "expected": 360.6,
+   "ratio": 0.52,
+   "interpretable": true
+  },
+  {
+   "mechanism": "synthetic-lethality",
+   "site": "liver",
+   "observed": 88,
+   "expected": 288.8,
+   "ratio": 0.3,
+   "interpretable": true
+  },
+  {
+   "mechanism": "synthetic-lethality",
+   "site": "lung",
+   "observed": 207,
+   "expected": 537.2,
+   "ratio": 0.39,
+   "interpretable": true
+  },
+  {
+   "mechanism": "synthetic-lethality",
+   "site": "lymphoma",
+   "observed": 49,
+   "expected": 251.0,
+   "ratio": 0.2,
+   "interpretable": true
+  },
+  {
+   "mechanism": "synthetic-lethality",
+   "site": "oesophagus",
+   "observed": 15,
+   "expected": 62.3,
+   "ratio": 0.24,
+   "interpretable": true
+  },
+  {
+   "mechanism": "synthetic-lethality",
+   "site": "ovary",
+   "observed": 1481,
+   "expected": 180.0,
+   "ratio": 8.23,
+   "interpretable": true
+  },
+  {
+   "mechanism": "synthetic-lethality",
+   "site": "pancreas",
+   "observed": 170,
+   "expected": 132.4,
+   "ratio": 1.28,
+   "interpretable": true
+  },
+  {
+   "mechanism": "synthetic-lethality",
+   "site": "prostate",
+   "observed": 451,
+   "expected": 167.4,
+   "ratio": 2.69,
+   "interpretable": true
+  },
+  {
+   "mechanism": "synthetic-lethality",
+   "site": "skin/melanoma",
+   "observed": 84,
+   "expected": 341.2,
+   "ratio": 0.25,
+   "interpretable": true
+  },
+  {
+   "mechanism": "synthetic-lethality",
+   "site": "stomach",
+   "observed": 36,
+   "expected": 137.2,
+   "ratio": 0.26,
+   "interpretable": true
+  },
+  {
+   "mechanism": "synthetic-lethality",
+   "site": "thyroid",
+   "observed": 6,
+   "expected": 31.3,
+   "ratio": 0.19,
+   "interpretable": true
+  }
+ ],
+ "n_cells": 288,
+ "n_zero": 6,
+ "zero_cells": [
+  "hifu/leukaemia",
+  "hifu/lymphoma",
+  "hifu/oesophagus",
+  "microbiome/thyroid",
+  "mrna-vaccine/oesophagus",
+  "mrna-vaccine/thyroid"
+ ],
+ "n_interpretable": 242,
+ "most_depleted": [
+  {
+   "mechanism": "hifu",
+   "site": "leukaemia",
+   "observed": 0,
+   "expected": 94.8,
+   "ratio": 0.0,
+   "interpretable": true
+  },
+  {
+   "mechanism": "hifu",
+   "site": "lymphoma",
+   "observed": 0,
+   "expected": 66.0,
+   "ratio": 0.0,
+   "interpretable": true
+  },
+  {
+   "mechanism": "hifu",
+   "site": "ovary",
+   "observed": 3,
+   "expected": 47.3,
+   "ratio": 0.06,
+   "interpretable": true
+  },
+  {
+   "mechanism": "hifu",
+   "site": "stomach",
+   "observed": 3,
+   "expected": 36.1,
+   "ratio": 0.08,
+   "interpretable": true
+  },
+  {
+   "mechanism": "hifu",
+   "site": "lung",
+   "observed": 14,
+   "expected": 141.3,
+   "ratio": 0.1,
+   "interpretable": true
+  },
+  {
+   "mechanism": "hifu",
+   "site": "skin/melanoma",
+   "observed": 10,
+   "expected": 89.7,
+   "ratio": 0.11,
+   "interpretable": true
+  },
+  {
+   "mechanism": "sonodynamic",
+   "site": "lymphoma",
+   "observed": 13,
+   "expected": 94.7,
+   "ratio": 0.14,
+   "interpretable": true
+  },
+  {
+   "mechanism": "microbiome",
+   "site": "breast",
+   "observed": 4,
+   "expected": 24.7,
+   "ratio": 0.16,
+   "interpretable": true
+  },
+  {
+   "mechanism": "immunotherapy",
+   "site": "leukaemia",
+   "observed": 372,
+   "expected": 2199.6,
+   "ratio": 0.17,
+   "interpretable": true
+  },
+  {
+   "mechanism": "nanoparticle",
+   "site": "lymphoma",
+   "observed": 163,
+   "expected": 983.7,
+   "ratio": 0.17,
+   "interpretable": true
+  },
+  {
+   "mechanism": "hifu",
+   "site": "bladder",
+   "observed": 4,
+   "expected": 22.2,
+   "ratio": 0.18,
+   "interpretable": true
+  },
+  {
+   "mechanism": "nanoparticle",
+   "site": "kidney",
+   "observed": 71,
+   "expected": 405.6,
+   "ratio": 0.18,
+   "interpretable": true
+  }
+ ],
+ "most_enriched": [
+  {
+   "mechanism": "hifu",
+   "site": "cervix/uterus",
+   "observed": 338,
+   "expected": 33.9,
+   "ratio": 9.97,
+   "interpretable": true
+  },
+  {
+   "mechanism": "synthetic-lethality",
+   "site": "ovary",
+   "observed": 1481,
+   "expected": 180.0,
+   "ratio": 8.23,
+   "interpretable": true
+  },
+  {
+   "mechanism": "hifu",
+   "site": "prostate",
+   "observed": 246,
+   "expected": 44.0,
+   "ratio": 5.59,
+   "interpretable": true
+  },
+  {
+   "mechanism": "antibody-drug-conjugate",
+   "site": "lymphoma",
+   "observed": 1083,
+   "expected": 246.9,
+   "ratio": 4.39,
+   "interpretable": true
+  },
+  {
+   "mechanism": "car-t",
+   "site": "lymphoma",
+   "observed": 2438,
+   "expected": 567.9,
+   "ratio": 4.29,
+   "interpretable": true
+  },
+  {
+   "mechanism": "electrochemical-therapy",
+   "site": "pancreas",
+   "observed": 225,
+   "expected": 57.4,
+   "ratio": 3.92,
+   "interpretable": true
+  },
+  {
+   "mechanism": "bispecific-antibody",
+   "site": "lymphoma",
+   "observed": 491,
+   "expected": 130.7,
+   "ratio": 3.76,
+   "interpretable": true
+  },
+  {
+   "mechanism": "bispecific-antibody",
+   "site": "leukaemia",
+   "observed": 705,
+   "expected": 187.8,
+   "ratio": 3.75,
+   "interpretable": true
+  },
+  {
+   "mechanism": "electrochemical-therapy",
+   "site": "skin/melanoma",
+   "observed": 480,
+   "expected": 147.9,
+   "ratio": 3.25,
+   "interpretable": true
+  },
+  {
+   "mechanism": "sonodynamic",
+   "site": "prostate",
+   "observed": 199,
+   "expected": 63.2,
+   "ratio": 3.15,
+   "interpretable": true
+  },
+  {
+   "mechanism": "car-t",
+   "site": "leukaemia",
+   "observed": 2284,
+   "expected": 815.9,
+   "ratio": 2.8,
+   "interpretable": true
+  },
+  {
+   "mechanism": "oncolytic-virus",
+   "site": "brain/CNS",
+   "observed": 674,
+   "expected": 245.6,
+   "ratio": 2.74,
+   "interpretable": true
+  }
+ ],
+ "corpus_zero_share": 22.5,
+ "census_zero_share": 2.1,
+ "spread": [
+  {
+   "mechanism": "hifu",
+   "cells": 16,
+   "articles": 1007,
+   "spread": 2.6,
+   "min_ratio": 0.0,
+   "max_ratio": 9.97
+  },
+  {
+   "mechanism": "synthetic-lethality",
+   "cells": 18,
+   "articles": 3829,
+   "spread": 1.86,
+   "min_ratio": 0.19,
+   "max_ratio": 8.23
+  },
+  {
+   "mechanism": "bispecific-antibody",
+   "cells": 17,
+   "articles": 1994,
+   "spread": 1.06,
+   "min_ratio": 0.23,
+   "max_ratio": 3.76
+  },
+  {
+   "mechanism": "electrochemical-therapy",
+   "cells": 17,
+   "articles": 1660,
+   "spread": 1.06,
+   "min_ratio": 0.25,
+   "max_ratio": 3.92
+  },
+  {
+   "mechanism": "car-t",
+   "cells": 18,
+   "articles": 8664,
+   "spread": 1.03,
+   "min_ratio": 0.19,
+   "max_ratio": 4.29
+  },
+  {
+   "mechanism": "antibody-drug-conjugate",
+   "cells": 18,
+   "articles": 3767,
+   "spread": 0.94,
+   "min_ratio": 0.23,
+   "max_ratio": 4.39
+  },
+  {
+   "mechanism": "sonodynamic",
+   "cells": 17,
+   "articles": 1445,
+   "spread": 0.86,
+   "min_ratio": 0.14,
+   "max_ratio": 3.15
+  },
+  {
+   "mechanism": "oncolytic-virus",
+   "cells": 18,
+   "articles": 2820,
+   "spread": 0.72,
+   "min_ratio": 0.19,
+   "max_ratio": 2.74
+  },
+  {
+   "mechanism": "immunotherapy",
+   "cells": 18,
+   "articles": 23358,
+   "spread": 0.6,
+   "min_ratio": 0.17,
+   "max_ratio": 2.21
+  },
+  {
+   "mechanism": "nanoparticle",
+   "cells": 18,
+   "articles": 15008,
+   "spread": 0.48,
+   "min_ratio": 0.17,
+   "max_ratio": 2.05
+  },
+  {
+   "mechanism": "metabolic-targeting",
+   "cells": 18,
+   "articles": 5458,
+   "spread": 0.37,
+   "min_ratio": 0.48,
+   "max_ratio": 1.76
+  },
+  {
+   "mechanism": "phagocytosis-checkpoint",
+   "cells": 12,
+   "articles": 566,
+   "spread": 0.36,
+   "min_ratio": 0.4,
+   "max_ratio": 1.78
+  },
+  {
+   "mechanism": "epigenetic",
+   "cells": 18,
+   "articles": 30712,
+   "spread": 0.33,
+   "min_ratio": 0.41,
+   "max_ratio": 1.62
+  },
+  {
+   "mechanism": "crispr",
+   "cells": 17,
+   "articles": 1814,
+   "spread": 0.28,
+   "min_ratio": 0.42,
+   "max_ratio": 1.66
+  }
+ ],
+ "min_cells_for_spread": 8,
+ "size_vs_spread_r": -0.33,
+ "in_both_tails": [
+  "hifu",
+  "sonodynamic"
+ ]
+}
