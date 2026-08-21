@@ -88,6 +88,13 @@ REGISTRY = {
         "can supply neither axis. Every record it holds would land in the "
         "unassigned bucket and depress the assignability rate without "
         "carrying any information about site."),
+    "census_mechanism_cancer_matrix.py": (
+        {"records"},
+        "Both axes are MeSH descriptors -- mechanism and anatomical site -- so "
+        "records_unindexed can supply neither. Worse than useless here: its "
+        "records would enter neither the universe nor the marginals, but "
+        "counting them in the census total would make the universe look like a "
+        "smaller share of the literature than it is."),
     "census_translation_lag.py": (
         {"records"},
         "Dates a mechanism's literature and its first trial. Trial status "
