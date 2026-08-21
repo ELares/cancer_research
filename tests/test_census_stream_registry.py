@@ -88,6 +88,13 @@ REGISTRY = {
         "can supply neither axis. Every record it holds would land in the "
         "unassigned bucket and depress the assignability rate without "
         "carrying any information about site."),
+    "census_thesis_direction.py": (
+        {"records"},
+        "Both selectors are MeSH descriptors -- `Ferroptosis` and `Drug "
+        "Resistance, Neoplasm` -- so records_unindexed cannot supply the leg "
+        "at all. Its text is read only to CLASSIFY articles the descriptors "
+        "already selected, which is a different role from selection and does "
+        "not extend to a stream where selection is impossible."),
     "census_modality_comparison.py": (
         {"records"},
         "Trial status comes from NLM publication types and one arm from MeSH "

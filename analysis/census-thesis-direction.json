@@ -1,0 +1,41 @@
+{
+ "total": 479,
+ "counts": {
+  "exploit": 237,
+  "obstacle": 29,
+  "both": 37,
+  "neither": 176
+ },
+ "unclassified_sample": [
+  {
+   "year": 2019,
+   "title": "The induction of ferroptosis by impairing STAT3/Nrf2/GPx4 signaling enhances the sensitivity of osteosarcoma c"
+  },
+  {
+   "year": 2020,
+   "title": "Dihydrolipoamide dehydrogenase regulates cystine deprivation-induced ferroptosis in head and neck cancer."
+  },
+  {
+   "year": 2020,
+   "title": "CAF secreted miR-522 suppresses ferroptosis and promotes acquired chemo-resistance in gastric cancer."
+  },
+  {
+   "year": 2020,
+   "title": "NR5A2 synergizes with NCOA3 to induce breast cancer resistance to BET inhibitor by upregulating NRF2 to attenu"
+  },
+  {
+   "year": 2021,
+   "title": "TGF\u03b22-mediated epithelial-mesenchymal transition and NF-\u03baB pathway activation contribute to osimertinib resist"
+  },
+  {
+   "year": 2020,
+   "title": "Inhibition of Glutaredoxin 5 predisposes Cisplatin-resistant Head and Neck Cancer Cells to Ferroptosis."
+  }
+ ],
+ "classified": 266,
+ "unclassified": 213,
+ "exploit_share_of_classified": 89.1,
+ "direction_ratio": 8.2,
+ "unclassified_share": 44.5,
+ "points_the_projects_way": true
+}
