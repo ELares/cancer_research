@@ -61,6 +61,41 @@ PMID 29088702). One dose-matrix experiment confirms or refutes it.
   (lipid peroxidation). Rescue control: **ferrostatin-1** (Fer-1) and
   **liproxstatin-1**.
 
+### How much precedent each arm has
+
+The two arms are named symmetrically above and are not symmetric in the
+literature, which is worth knowing before the bench rather than after.
+Measured over the 13,346 census articles carrying the
+`Ferroptosis` descriptor (`analysis/census-protocol-precedent.md`):
+
+| reagent | articles naming it | role here |
+|---|--:|---|
+| RSL3 | 609 | arm 1, primary |
+| ML162 | 12 | arm 1, offered surrogate |
+| iFSP1 | 23 | arm 2, primary |
+| brequinar | 12 | arm 2, offered cross-check |
+
+Arm 1 rests on 621 articles and arm 2 on
+35 — a factor of 17.7. Three consequences
+for whoever runs this:
+
+1. **Dose-finding is asymmetric.** There is abundant published guidance for an
+   RSL3 EC50 in a given line and almost none for iFSP1, so the single-agent
+   pre-run matters far more on arm 2 than on arm 1. Budget for it.
+2. **The offered surrogates are thinner than the primaries.** ML162 appears in
+   roughly a fiftieth as many articles as RSL3, so a result obtained with it
+   has correspondingly less to be compared against. Prefer RSL3 unless
+   stability forces the substitution, and say which was used.
+3. **A negative result on arm 2 is harder to interpret.** With this little
+   comparative work, a null could mean the hypothesis is wrong or that the
+   dose or the FSP1-low status was wrong, and the protocol's pre-stated
+   falsification threshold cannot distinguish them on its own.
+
+None of this argues against the experiment. FSP1 inhibitors are recent — iFSP1
+comes from the 2019 papers this protocol builds on — and a compound is rare in
+the literature when it is new for the same reason it is rare when it is poor. A
+count cannot tell those apart. What it can do is say where the thin ice is.
+
 ## Design
 
 - **Dose matrix:** a full RSL3 (or ML162) by iFSP1 checkerboard, at least 6 by 6,

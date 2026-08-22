@@ -96,6 +96,16 @@ REGISTRY = {
         "status comes from publication types that stream does not carry, so "
         "including it would add articles to every denominator while adding "
         "nothing to any numerator, depressing every trial share."),
+    "census_protocol_precedent.py": (
+        {"records"},
+        "Selection is the `Ferroptosis` MeSH descriptor, which "
+        "records_unindexed does not carry. The reagent counting is a keyword "
+        "match and could technically run on any text, but the question is "
+        "COMPARATIVE -- how much precedent one arm has against the other -- so "
+        "both arms have to be counted over the same population or the ratio "
+        "would measure which stream each reagent's literature happens to sit "
+        "in. Adding a stream that skews recent would also favour the newer "
+        "reagent, which is the arm the asymmetry is about."),
     "census_hypoxia_direction.py": (
         {"records"},
         "Selection is a MeSH intersection -- `Ferroptosis` with the "
