@@ -1,0 +1,99 @@
+{
+ "ferroptosis_articles": 13346,
+ "combination_articles": 916,
+ "claim_articles": 998,
+ "claim_combination": 242,
+ "any_metric": 14,
+ "any_metric_combination": 8,
+ "claim_only_combination": 234,
+ "metric_all": {
+  "Chou-Talalay combination index": 14,
+  "isobologram": 1,
+  "dose reduction index": 1
+ },
+ "metric_combination": {
+  "Chou-Talalay combination index": 8
+ },
+ "control_records": 108712,
+ "control_stride": 40,
+ "control_metric": {
+  "isobologram": 15,
+  "Chou-Talalay combination index": 46,
+  "Loewe additivity": 1,
+  "dose reduction index": 2,
+  "ZIP (zero interaction potency)": 1,
+  "Bliss independence": 1
+ },
+ "rows": [
+  {
+   "metric": "Chou-Talalay combination index",
+   "articles": 14,
+   "combination_articles": 8,
+   "share_of_combination": 0.87,
+   "in_protocol": true,
+   "control_articles": 46
+  },
+  {
+   "metric": "isobologram",
+   "articles": 1,
+   "combination_articles": 0,
+   "share_of_combination": 0.0,
+   "in_protocol": false,
+   "control_articles": 15
+  },
+  {
+   "metric": "dose reduction index",
+   "articles": 1,
+   "combination_articles": 0,
+   "share_of_combination": 0.0,
+   "in_protocol": false,
+   "control_articles": 2
+  },
+  {
+   "metric": "Bliss independence",
+   "articles": 0,
+   "combination_articles": 0,
+   "share_of_combination": 0.0,
+   "in_protocol": true,
+   "control_articles": 1
+  },
+  {
+   "metric": "Loewe additivity",
+   "articles": 0,
+   "combination_articles": 0,
+   "share_of_combination": 0.0,
+   "in_protocol": false,
+   "control_articles": 1
+  },
+  {
+   "metric": "ZIP (zero interaction potency)",
+   "articles": 0,
+   "combination_articles": 0,
+   "share_of_combination": 0.0,
+   "in_protocol": false,
+   "control_articles": 1
+  },
+  {
+   "metric": "HSA (highest single agent)",
+   "articles": 0,
+   "combination_articles": 0,
+   "share_of_combination": 0.0,
+   "in_protocol": false,
+   "control_articles": 0
+  }
+ ],
+ "protocol_named": [
+  "Chou-Talalay combination index",
+  "Bliss independence"
+ ],
+ "subject_rankable": false,
+ "rankable_min": 30,
+ "leading_metric": "Chou-Talalay combination index",
+ "leading_control_articles": 46,
+ "runner_up_control_articles": 15,
+ "protocol_names_the_leader": true,
+ "subject_top_metric": "Chou-Talalay combination index",
+ "arms_agree": true,
+ "claim_with_metric_share": 3.31,
+ "combination_share": 6.86
+}
