@@ -106,6 +106,17 @@ REGISTRY = {
         "would measure which stream each reagent's literature happens to sit "
         "in. Adding a stream that skews recent would also favour the newer "
         "reagent, which is the arm the asymmetry is about."),
+    "census_synergy_metrics.py": (
+        {"records"},
+        "The subject arm selects on the `Ferroptosis` descriptor, which "
+        "records_unindexed does not carry. The CONTROL arm is a strided sample "
+        "of the same stream and must stay that way: its only job is to order "
+        "the metrics against the subject arm's vocabulary, so if the two arms "
+        "read different populations a difference between them would measure "
+        "the streams. The control also samples 1-in-40 shards rather than a "
+        "prefix, because shards are chronological and a prefix samples one "
+        "era -- and metric vocabulary is exactly the kind of thing that "
+        "changes with era."),
     "census_hypoxia_direction.py": (
         {"records"},
         "Selection is a MeSH intersection -- `Ferroptosis` with the "
