@@ -1,0 +1,33 @@
+title,regex_label,adjudicated,reason
+"Hypoxia inhibits ferritinophagy, increases mitochondrial ferritin, and protects from ferroptosis.",protects,protects,direct statement
+Activatable nanomedicine for overcoming hypoxia-induced resistance to chemotherapy and inhibiting tumor growth,protects,off-topic,"chemotherapy resistance, not hypoxia to ferroptosis"
+Hypoxia protects H9c2 cells against Ferroptosis through SENP1-mediated protein DeSUMOylation.,protects,protects,direct statement
+Hypoxia inhibits RANKL-induced ferritinophagy and protects osteoclasts from ferroptosis.,protects,protects,direct statement
+Melatonin Alleviates Acute Kidney Injury by Inhibiting NRF2/Slc7a11 Axis-Mediated Ferroptosis.,protects,off-topic,no hypoxia direction
+Hypoxia inhibits ferritinophagy-mediated ferroptosis in esophageal squamous cell carcinoma via the USP2-NCOA4 axis.,protects,protects,"direct statement, cancer"
+Hypoxia impairs male reproductive functions via inducing rat Leydig cell ferroptosis,protects,sensitises,REVERSED: hypoxia induces ferroptosis
+Mechanism of Mitophagy to Protect Yak Kidney from Hypoxia-Induced Fibrosis Damage by Regulating Ferroptosis Pathway.,protects,off-topic,"mitophagy effect, not hypoxia direction"
+Protocatechuic acid suppresses ferroptosis to protect against hypoxic-ischemic encephalopathy,protects,off-topic,"drug effect, not hypoxia direction"
+HIF-independent oxygen sensing via KDM6A regulates ferroptosis.,protects,ambiguous,no direction stated in title
+A breathless brake on ferroptosis.,protects,protects,commentary asserting a brake
+Guilu Erxian glue mitigates spermatogenesis dysfunction through HIF-1a/SLC7A11-mediated ferroptosis inhibition,protects,off-topic,drug effect
+Hypoxia blocks ferroptosis of hepatocellular carcinoma via suppression of METTL14 triggered YTHDF2-dependent silencing of SLC7A11.,sensitises,protects,"REVERSED: 'triggered' matched a downstream clause, cancer"
+FNDC5/irisin reduces ferroptosis and improves mitochondrial dysfunction in hypoxic cardiomyocytes,sensitises,off-topic,drug effect in a hypoxic context
+Hypoxia aggravates ferroptosis in RPE cells by promoting the Fenton reaction.,sensitises,sensitises,direct statement
+Overcoming Hypoxia-Induced Ferroptosis Resistance via a 19F/1H-MRI Traceable Core-Shell Nanostructure.,sensitises,protects,REVERSED: hypoxia CAUSES ferroptosis resistance
+miR-2115-3p inhibits ferroptosis by downregulating glutamic-oxaloacetic transaminase in preeclampsia.,sensitises,off-topic,no hypoxia direction
+Hypoxia Enhances Glioma Resistance to Sulfasalazine-Induced Ferroptosis by Upregulating SLC7A11,sensitises,protects,"REVERSED: hypoxia enhances RESISTANCE, cancer"
+Nrf2 plays protective role during intermittent hypoxia-induced ferroptosis in rat liver cells.,sensitises,sensitises,direct: hypoxia induces ferroptosis
+Plasma exosomes from patients with acute myocardial infarction alleviate myocardial injury by inhibiting ferroptosis,sensitises,off-topic,exosome effect
+HIF-1a drives resistance to ferroptosis in solid tumors by promoting lactate production,sensitises,protects,"REVERSED: HIF drives RESISTANCE, cancer"
+TIGAR reduces neuronal ferroptosis by inhibiting succinate dehydrogenase activity in cerebral ischemia.,sensitises,off-topic,no hypoxia direction
+Aggregation-Induced Emission CN-Based Nanoparticles to Alleviate Hypoxic Liver Fibrosis via Triggering HSC Ferroptosis,sensitises,off-topic,nanoparticle effect
+Endonuclear Circ-calm4 regulates ferroptosis via a circR-Loop of the COMP gene,sensitises,off-topic,no hypoxia direction
+Priming of cancer-immunity cycle by alleviating hypoxia-induced ferroptosis resistance and immunosuppression.,sensitises,protects,"REVERSED: hypoxia causes resistance, cancer"
+Placental Hypoxia-Induced Ferroptosis Drives Vascular Damage in Preeclampsia.,sensitises,sensitises,direct statement
+Rab7-regulated ferroptosis contributes to tubular epithelial cells injury in AKI.,sensitises,off-topic,no hypoxia direction
+Robust prediction of glioma prognosis by hypoxia-induced ferroptosis genes,sensitises,ambiguous,"prognostic signature, no mechanism direction"
+DHA and EPA exacerbate hypoxia-induced ferroptosis in gastric and small intestinal mucosa,sensitises,sensitises,direct statement
+Hypoxia Triggers ALYREF-Mediated m5C Methylation of KIF20A for Generating Ferroptosis Resistance in Cervical Cancer Cells.,sensitises,protects,"REVERSED: generates RESISTANCE, cancer"
+Hypoxia Aggravates Myocardial Ischemia/Reperfusion Injury Through the Promotion of Ferroptosis via ACSL4 Lactylation.,sensitises,sensitises,direct statement
+METTL3-m6A-SLC25A11 Axis Promotes Chronic Hypoxia-Induced Cardiomyocyte Ferroptosis.,sensitises,sensitises,direct statement
