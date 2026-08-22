@@ -13,6 +13,16 @@ The distinction matters because a count cannot make it. The project's thesis is 
 
 **Among the 266 articles carrying exactly one framing, the thesis direction leads 89.1% to 10.9% -- a ratio of 8.2 to 1.** The leg the manuscript leans on does point the way the manuscript needs, which had been assumed rather than measured.
 
+## The classifier errs in BOTH directions, and the raw split overstates the lead
+
+Every obstacle-labelled article was adjudicated and the exploit-labelled ones were sampled, so the correction is exact on one side and estimated on the other. Both sides are wrong, in opposite directions: 11 of the 29 obstacle-labelled articles are actually EXPLOIT papers, and 4 of 20 sampled exploit-labelled ones are actually OBSTACLE papers.
+
+The mechanism is the one the sibling hypoxia analysis names: *"counteracts ferroptosis resistance"* contains *"ferroptosis resistance"*, and *"suppress erastin-induced ferroptosis"* contains the language of induction. A phrase asserting one direction contains, as a substring, the phrase asserting the other -- here in both directions at once.
+
+**Corrected, the exploit share is 74.6%, not 89.1%** (range 53.8-86.5% propagating the sampled precision's interval). The DIRECTION survives every plausible correction -- exploit leads throughout the range -- and the MAGNITUDE does not: a ratio of 8.2 to 1 becomes roughly 3 to 1, and the raw figure should not be quoted.
+
+Ambiguous articles -- reviews, prognostic signatures, and titles stating no direction -- are dropped from numerator and denominator rather than assigned. Labels and reasons are committed in `analysis/thesis-direction-adjudication.csv`.
+
 ## What this does not establish
 
 That the thesis is right. A field framing something as "we can exploit X" is evidence about what the field is TRYING, and an exploit share of ninety per cent would say the idea is being pursued rather than that it works. This bounds attention and its direction, which is what a census can do, and stops there.
