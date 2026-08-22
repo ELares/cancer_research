@@ -1,0 +1,83 @@
+{
+ "total": 291,
+ "counts": {
+  "protects": 12,
+  "sensitises": 20,
+  "both": 5,
+  "neither": 254
+ },
+ "sample": [
+  {
+   "framing": "protects",
+   "year": 2020,
+   "title": "Hypoxia inhibits ferritinophagy, increases mitochondrial ferritin, and protects from ferroptosis."
+  },
+  {
+   "framing": "protects",
+   "year": 2021,
+   "title": "Activatable nanomedicine for overcoming hypoxia-induced resistance to chemotherapy and inhibiting tumor g"
+  },
+  {
+   "framing": "protects",
+   "year": 2021,
+   "title": "Hypoxia protects H9c2 cells against Ferroptosis through SENP1-mediated protein DeSUMOylation."
+  },
+  {
+   "framing": "protects",
+   "year": 2021,
+   "title": "Hypoxia inhibits RANKL-induced ferritinophagy and protects osteoclasts from ferroptosis."
+  },
+  {
+   "framing": "sensitises",
+   "year": 2021,
+   "title": "Hypoxia blocks ferroptosis of hepatocellular carcinoma via suppression of METTL14 triggered YTHDF2-depend"
+  },
+  {
+   "framing": "sensitises",
+   "year": 2022,
+   "title": "FNDC5/irisin reduces ferroptosis and improves mitochondrial dysfunction in hypoxic cardiomyocytes by Nrf2"
+  }
+ ],
+ "hypoxia_descriptors": [
+  "anoxia",
+  "cell hypoxia",
+  "hypoxia",
+  "hypoxia-inducible factor 1",
+  "hypoxia-inducible factor 1, alpha subunit",
+  "tumor hypoxia"
+ ],
+ "min_classified": 20,
+ "classified": 32,
+ "unclassified": 259,
+ "unclassified_share": 89.0,
+ "protects_share": 37.5,
+ "interpretable": true,
+ "dominance_threshold": 75.0,
+ "verdict": "genuinely split",
+ "protects_ci": [
+  22.9,
+  54.7
+ ],
+ "verdict_survives_interval": false,
+ "adjudication": {
+  "n": 32,
+  "labels": {
+   "protects": 11,
+   "off-topic": 12,
+   "sensitises": 7,
+   "ambiguous": 2
+  },
+  "regex_agreement": 34.4,
+  "regex_reversed": 7,
+  "regex_reversed_cancer": 5,
+  "directional": 18,
+  "protects": 11,
+  "sensitises": 7
+ },
+ "adj_protects_share": 61.1,
+ "adj_ci": [
+  38.6,
+  79.7
+ ],
+ "regex_direction_reversed_by_adjudication": true
+}

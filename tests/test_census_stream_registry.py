@@ -88,6 +88,13 @@ REGISTRY = {
         "can supply neither axis. Every record it holds would land in the "
         "unassigned bucket and depress the assignability rate without "
         "carrying any information about site."),
+    "census_hypoxia_direction.py": (
+        {"records"},
+        "Selection is a MeSH intersection -- `Ferroptosis` with the "
+        "hypoxia family -- which records_unindexed cannot supply. The stream "
+        "would also change what the measurement is about: its records skew "
+        "recent and un-reviewed, and a direction split is exactly the "
+        "statistic an era shift moves."),
     "census_thesis_direction.py": (
         {"records"},
         "Both selectors are MeSH descriptors -- `Ferroptosis` and `Drug "
