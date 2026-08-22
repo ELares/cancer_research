@@ -37,5 +37,40 @@
  "exploit_share_of_classified": 89.1,
  "direction_ratio": 8.2,
  "unclassified_share": 44.5,
- "points_the_projects_way": true
+ "points_the_projects_way": true,
+ "adjudication": {
+  "rows": 49,
+  "by_label": {
+   "exploit": {
+    "sampled": 20,
+    "decided": 18,
+    "adjudicated_exploit": 14,
+    "adjudicated_obstacle": 4,
+    "ambiguous": 2,
+    "precision": 0.7777777777777778,
+    "precision_ci": [
+     0.5478497354769452,
+     0.90999218086618
+    ]
+   },
+   "obstacle": {
+    "sampled": 29,
+    "decided": 25,
+    "adjudicated_exploit": 11,
+    "adjudicated_obstacle": 14,
+    "ambiguous": 4,
+    "precision": 0.56,
+    "precision_ci": [
+     0.37067017019564436,
+     0.7333462505299744
+    ]
+   }
+  },
+  "corrected_exploit_share": 74.6,
+  "corrected_range": [
+   53.8,
+   86.5
+  ],
+  "direction_survives": true
+ }
 }

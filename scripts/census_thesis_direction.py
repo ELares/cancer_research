@@ -83,6 +83,74 @@ def scan(stride: int = 1) -> dict:
     return {"total": total, "counts": counts, "unclassified_sample": unclassified}
 
 
+def _wilson(k: int, n: int):
+    import math
+
+    if not n:
+        return None
+    z = 1.96
+    ph = k / n
+    den = 1 + z * z / n
+    centre = (ph + z * z / (2 * n)) / den
+    half = z * math.sqrt(ph * (1 - ph) / n + z * z / (4 * n * n)) / den
+    return [max(0.0, centre - half), min(1.0, centre + half)]
+
+
+def load_adjudication(counts: dict) -> dict:
+    """Correct the classifier's counts using an adjudicated sample.
+
+    THE CLASSIFIER ERRS IN BOTH DIRECTIONS HERE, which the raw counts cannot
+    show. "Targeting cTRIP12 counteracts ferroptosis resistance" is an EXPLOIT
+    paper labelled obstacle, because it contains the obstacle phrase; "Nedd4
+    ... suppress erastin-induced ferroptosis" is an OBSTACLE paper labelled
+    exploit. Same substring failure as the sibling hypoxia analysis, in both
+    directions at once.
+
+    Every obstacle-labelled article was adjudicated (there are few) and the
+    exploit-labelled ones were sampled, so the correction is exact on one side
+    and estimated on the other. Ambiguous articles are dropped from both
+    numerator and denominator rather than assigned.
+    """
+    import csv
+    from collections import Counter
+
+    path = REPO / "analysis/thesis-direction-adjudication.csv"
+    if not path.exists():
+        return {}
+    rows = list(csv.DictReader(path.open(encoding="utf-8")))
+    by = {}
+    for label in ("exploit", "obstacle"):
+        sub = [r for r in rows if r["regex_label"] == label]
+        c = Counter(r["adjudicated"] for r in sub)
+        decided = c["exploit"] + c["obstacle"]
+        by[label] = {"sampled": len(sub), "decided": decided,
+                     "adjudicated_exploit": c["exploit"],
+                     "adjudicated_obstacle": c["obstacle"],
+                     "ambiguous": c["ambiguous"],
+                     "precision": (c[label] / decided) if decided else None,
+                     "precision_ci": _wilson(c[label], decided)}
+
+    def corrected(exploit_precision: float):
+        # Obstacle-labelled articles were adjudicated in full, so their
+        # contribution is a count rather than a rate.
+        ex = counts["exploit"] * exploit_precision + by["obstacle"]["adjudicated_exploit"]
+        ob = counts["exploit"] * (1 - exploit_precision) + by["obstacle"]["adjudicated_obstacle"]
+        return 100 * ex / (ex + ob) if (ex + ob) else None
+
+    p_hat = by["exploit"]["precision"]
+    lo_p, hi_p = by["exploit"]["precision_ci"]
+    point = corrected(p_hat)
+    band = sorted([corrected(lo_p), corrected(hi_p)])
+    return {
+        "rows": len(rows), "by_label": by,
+        "corrected_exploit_share": round(point, 1),
+        "corrected_range": [round(band[0], 1), round(band[1], 1)],
+        # The DIRECTION survives if every plausible correction keeps exploit
+        # ahead; the MAGNITUDE does not if the range is wide.
+        "direction_survives": band[0] > 50,
+    }
+
+
 def assemble(d: dict) -> dict:
     c = d["counts"]
     # SINGLY CLASSIFIED ONLY. An article carrying both framings is not evidence
@@ -102,6 +170,7 @@ def assemble(d: dict) -> dict:
     out["points_the_projects_way"] = bool(
         out["exploit_share_of_classified"] and
         out["exploit_share_of_classified"] > 50)
+    out["adjudication"] = load_adjudication(c)
     return out
 
 
@@ -150,6 +219,49 @@ def render(d: dict) -> str:
             f"connecting ferroptosis to drug resistance is substantially about "
             f"resistance TO ferroptosis. The manuscript leans on this leg and "
             f"should stop.\n"
+        )
+    a = d.get("adjudication") or {}
+    if a:
+        lo, hi = a["corrected_range"]
+        L.append("## The classifier errs in BOTH directions, and the raw split "
+                 "overstates the lead\n")
+        L.append(
+            f"Every obstacle-labelled article was adjudicated and the "
+            f"exploit-labelled ones were sampled, so the correction is exact "
+            f"on one side and estimated on the other. Both sides are wrong, in "
+            f"opposite directions: "
+            f"{a['by_label']['obstacle']['adjudicated_exploit']} of the "
+            f"{a['by_label']['obstacle']['sampled']} obstacle-labelled "
+            f"articles are actually EXPLOIT papers, and "
+            f"{a['by_label']['exploit']['adjudicated_obstacle']} of "
+            f"{a['by_label']['exploit']['sampled']} sampled exploit-labelled "
+            f"ones are actually OBSTACLE papers.\n"
+        )
+        L.append(
+            "The mechanism is the one the sibling hypoxia analysis names: "
+            "*\"counteracts ferroptosis resistance\"* contains *\"ferroptosis "
+            "resistance\"*, and *\"suppress erastin-induced ferroptosis\"* "
+            "contains the language of induction. A phrase asserting one "
+            "direction contains, as a substring, the phrase asserting the "
+            "other -- here in both directions at once.\n"
+        )
+        L.append(
+            f"**Corrected, the exploit share is {a['corrected_exploit_share']}%, "
+            f"not {d['exploit_share_of_classified']}%** (range {lo}-{hi}% "
+            f"propagating the sampled precision's interval). "
+            + ("The DIRECTION survives every plausible correction -- exploit "
+               "leads throughout the range -- and the MAGNITUDE does not: a "
+               f"ratio of {d['direction_ratio']} to 1 becomes roughly 3 to 1, "
+               "and the raw figure should not be quoted.\n"
+               if a["direction_survives"] else
+               "The range crosses even, so neither the magnitude NOR the "
+               "direction is established by this measurement.\n")
+        )
+        L.append(
+            f"Ambiguous articles -- reviews, prognostic signatures, and titles "
+            f"stating no direction -- are dropped from numerator and "
+            f"denominator rather than assigned. Labels and reasons are "
+            f"committed in `analysis/thesis-direction-adjudication.csv`.\n"
         )
     L.append("## What this does not establish\n")
     L.append(

@@ -22,6 +22,7 @@ import pytest
 REPO = Path(__file__).resolve().parent.parent
 JSON = REPO / "analysis/census-thesis-direction.json"
 MD = REPO / "analysis/census-thesis-direction.md"
+MANUSCRIPT = REPO / "article/drafts/v1.md"
 SCRIPT = REPO / "scripts/census_thesis_direction.py"
 # Pinned INDEPENDENTLY of the generator. Counting the alternations rather than
 # copying the patterns: the point is that the vocabulary cannot quietly grow.
@@ -140,3 +141,56 @@ def test_it_does_not_read_attention_as_endorsement(d):
     for overclaim in ("confirms the thesis", "supports the hypothesis",
                       "validates the project", "evidence that ferroptosis works"):
         assert overclaim not in md.lower()
+
+
+# --- the classifier errs in both directions, and the raw split overstates ----
+
+def test_the_adjudication_corrects_the_raw_split(d):
+    """The raw 89% is not the measurement.
+
+    Adjudicating found the classifier wrong in BOTH directions: exploit papers
+    labelled obstacle because they contain the obstacle phrase ("counteracts
+    ferroptosis resistance"), and obstacle papers labelled exploit because they
+    contain the induction phrase ("suppress erastin-induced ferroptosis"). The
+    same substring failure the sibling hypoxia analysis names, twice over.
+    """
+    a = d["adjudication"]
+    assert a, "the adjudication is missing, so the raw split stands uncorrected"
+    ex, ob = a["by_label"]["exploit"], a["by_label"]["obstacle"]
+    assert ob["adjudicated_exploit"] > 0, (
+        "no obstacle-labelled article was found to be an exploit paper, which "
+        "would mean the classifier no longer has the failure this correction "
+        "exists for")
+    assert ob["sampled"] == 29 or ob["sampled"] >= ob["decided"], ob
+    assert 0 < ex["precision"] < 1 and 0 < ob["precision"] < 1
+    # The correction must MOVE the answer, or it is decoration.
+    assert abs(a["corrected_exploit_share"] - d["exploit_share_of_classified"]) > 5, (
+        "the corrected share matches the raw one; either the classifier "
+        "improved or the correction is not being applied")
+
+
+def test_the_corrected_range_separates_direction_from_magnitude(d):
+    """Direction can survive a correction that destroys the magnitude, and
+    reporting only one of those is how a weakened claim keeps its old force."""
+    a = d["adjudication"]
+    lo, hi = a["corrected_range"]
+    assert lo <= a["corrected_exploit_share"] <= hi
+    assert a["direction_survives"] == (lo > 50)
+    md = MD.read_text()
+    assert f"{a['corrected_exploit_share']}%" in md
+    assert f"{lo}-{hi}%" in md
+    if a["direction_survives"]:
+        assert "DIRECTION survives" in md and "MAGNITUDE does not" in md
+        assert "should not be quoted" in md
+
+
+def test_the_manuscript_carries_the_corrected_figure_not_the_raw_one():
+    """The raw figure was in the manuscript before this correction existed."""
+    txt = " ".join(MANUSCRIPT.read_text().split())
+    a = json.loads(JSON.read_text())["adjudication"]
+    assert f"{a['corrected_exploit_share']}%" in txt, (
+        "the manuscript does not carry the corrected exploit share")
+    assert "a ratio of 8.2 to 1" not in txt, (
+        "the manuscript still states the uncorrected ratio, which the "
+        "adjudication showed overstates the lead by roughly threefold")
+    assert "errs in BOTH directions" in txt or "errs in both directions" in txt

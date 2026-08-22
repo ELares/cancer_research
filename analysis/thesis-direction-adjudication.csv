@@ -1,0 +1,50 @@
+title,regex_label,adjudicated,reason
+Adaptive Changes Allow Targeting of Ferroptosis for Glioma Treatment.,obstacle,exploit,targeting ferroptosis AS treatment
+"HLF regulates ferroptosis, development and chemoresistance of triple-negative breast cancer",obstacle,ambiguous,"regulates, no direction"
+A self-amplified ferroptosis nanoagent that inhibits tumor glutathione synthesis to reverse cancer chemoresistance.,obstacle,exploit,reverses chemoresistance via ferroptosis
+Androgen Receptor Variants Confer Castration Resistance by Counteracting Antiandrogen-Induced Ferroptosis.,obstacle,obstacle,resistance mechanism
+Inhibition of the RBMS1/PRNP axis improves ferroptosis resistance-mediated oxaliplatin chemoresistance,obstacle,exploit,inhibition improves outcome
+HNRNPA2B1-mediated m6A modification of FOXM1 promotes drug resistance and inhibits ferroptosis,obstacle,obstacle,resistance mechanism
+The engineered exosomes targeting ferroptosis: reverse immune checkpoint inhibitors resistance.,obstacle,exploit,reverses ICI resistance
+Meningioma achieves malignancy and erastin-induced ferroptosis resistance through FOXM1-AURKA-NRF2.,obstacle,obstacle,resistance mechanism
+Tumor-repopulating cells evade ferroptosis via PCK2-dependent phospholipid remodeling.,obstacle,obstacle,evasion mechanism
+Inhibition of FSP1: A new strategy for the treatment of tumors (Review).,obstacle,exploit,strategy to induce ferroptosis
+BUB1b impairs chemotherapy sensitivity via resistance to ferroptosis in lung adenocarcinoma.,obstacle,obstacle,resistance mechanism
+MCM4 potentiates evasion of hepatocellular carcinoma from sorafenib-induced ferroptosis,obstacle,obstacle,evasion mechanism
+Brusatol improves the efficacy of sorafenib in Huh7 cells via ferroptosis resistance dependent Nrf2,obstacle,exploit,improves efficacy
+Targeting NQO1 induces ferroptosis and triggers anti-tumor immunity in immunotherapy-resistant cancers.,obstacle,exploit,induces ferroptosis in resistant cancer
+Reactivation of MAPK-SOX2 pathway confers ferroptosis sensitivity in KRASG12C inhibitor resistant tumors.,obstacle,exploit,confers sensitivity in resistant tumours
+Targeting cTRIP12 counteracts ferroptosis resistance and augments sensitivity to immunotherapy,obstacle,exploit,counteracts the resistance
+COPS5 Triggers Ferroptosis Defense by Stabilizing MK2 in Hepatocellular Carcinoma.,obstacle,obstacle,defence mechanism
+Targeting HCG18 counteracts ferroptosis resistance via blocking miR-30a-5p/RRM2/GSS,obstacle,exploit,counteracts the resistance
+Identification of a novel signature derived from ferroptosis-related genes to predict prognosis,obstacle,ambiguous,prognostic signature
+ML385 increases ferroptosis via inhibiting Nrf2/HO-1 to enhance sensitivity of MCF-7 TAMR to tamoxifen.,obstacle,exploit,"increases ferroptosis, enhances sensitivity"
+Clock gene ARNTL2 enhances 5-fluorouracil resistance by upregulating SLC7A11 to suppress ferroptosis.,obstacle,obstacle,resistance mechanism
+5-HT regulates resistance to aumolertinib by attenuating ferroptosis in lung adenocarcinoma.,obstacle,obstacle,resistance mechanism
+DDR2 Confers Ferroptosis Resistance to Cancer-Associated Fibroblasts,obstacle,obstacle,resistance mechanism
+HNRNPC promotes gastric cancer tumorigenesis by triggering lactate-induced ferroptosis resistance.,obstacle,obstacle,resistance mechanism
+PARK7-driven IGF2BP3-K76 lactylation mediates ferroptosis and HAIC resistance,obstacle,ambiguous,"mediates both, unclear"
+Genome-wide CRISPR screen identifies splicing factor SF3B4 in driving hepatocellular carcinoma.,obstacle,ambiguous,no direction in title
+DLEU1 as a key regulator in glioblastoma: review of ferroptosis resistance,obstacle,obstacle,resistance review
+FAD synthase confers ferroptosis resistance and restrains CD8+ T cell recruitment,obstacle,obstacle,resistance mechanism
+THRAP3 promotes ferroptosis resistance in acute myelocytic leukemia via SLU7-mediated splicing.,obstacle,obstacle,resistance mechanism
+Iron-fueled ferroptosis: a new axis for immunomodulation to overcome cancer drug resistance,exploit,exploit,overcome resistance
+Auranofin facilitates gemcitabine sensitivity by regulating TXNRD1-related ferroptosis,exploit,exploit,facilitates sensitivity
+4EBP1-mediated SLC7A11 protein synthesis restrains ferroptosis triggered by MEK inhibitors,exploit,obstacle,REVERSED: restrains ferroptosis
+Non-canonical NOTCH1 signaling regulates ferroptosis vulnerability in dormant lung cancer cells,exploit,exploit,vulnerability in resistant cells
+Targeting polyamine metabolism and ferroptosis enhances efficacy of KRAS-targeted therapy,exploit,exploit,enhances efficacy
+Co-treatment of betulin and gefitinib is effective against EGFR wild-type/KRAS-mutant NSCLC,exploit,exploit,effective combination
+Epigenetic reprogramming of EMT promotes ferroptosis of head and neck cancer.,exploit,exploit,promotes ferroptosis
+Ponicidin promotes ferroptosis to enhance treatment sensitivity in Lenvatinib-resistant HCC,exploit,exploit,enhances sensitivity in resistant cells
+AKR1C4 regulates sensitivity of colorectal cancer cells to chemotherapy through ferroptosis,exploit,exploit,regulates sensitivity
+NPR1 promotes cisplatin resistance by inhibiting PARL-mediated mitophagy-dependent ferroptosis,exploit,obstacle,REVERSED: promotes resistance
+Ferroptosis-targeting drugs in breast cancer.,exploit,exploit,targeting ferroptosis
+WBP1 regulates mitochondrial function and ferroptosis to modulate chemoresistance,exploit,ambiguous,"modulates, no direction"
+In vivo vulnerabilities to GPX4 and HDAC inhibitors in drug-persistent BRAFV600E lung adenocarcinoma.,exploit,exploit,vulnerability in persisters
+"The crosstalk between signaling pathways, non-coding RNAs and ferroptosis in drug resistance of tumors.",exploit,ambiguous,"review, no direction"
+The HBP Pathway Inhibitor FR054 Enhances Temozolomide Sensitivity by Promoting Ferroptosis,exploit,exploit,enhances sensitivity
+Galectin-1-mediated MET/AXL signaling enhances sorafenib resistance by escaping ferroptosis.,exploit,obstacle,REVERSED: escapes ferroptosis
+ABCB1-mediated docetaxel resistance reversed by erastin in prostate cancer.,exploit,exploit,resistance reversed by ferroptosis inducer
+FDA-approved disulfiram induces ferroptosis and overcomes carfilzomib resistance,exploit,exploit,overcomes resistance
+Nedd4 ubiquitylates VDAC2/3 to suppress erastin-induced ferroptosis in melanoma.,exploit,obstacle,REVERSED: suppresses ferroptosis
+Enhanced Sensitivity to ALDH1A3-Dependent Ferroptosis in TMZ-Resistant Glioblastoma Cells.,exploit,exploit,enhanced sensitivity in resistant cells
