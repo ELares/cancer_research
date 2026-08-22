@@ -88,6 +88,14 @@ REGISTRY = {
         "can supply neither axis. Every record it holds would land in the "
         "unassigned bucket and depress the assignability rate without "
         "carrying any information about site."),
+    "census_unnamed_modalities.py": (
+        {"records"},
+        "Sizes modalities MeSH cannot name, so the selection is a keyword "
+        "match rather than a descriptor -- which means records_unindexed is "
+        "technically readable and is deliberately excluded anyway. Trial "
+        "status comes from publication types that stream does not carry, so "
+        "including it would add articles to every denominator while adding "
+        "nothing to any numerator, depressing every trial share."),
     "census_hypoxia_direction.py": (
         {"records"},
         "Selection is a MeSH intersection -- `Ferroptosis` with the "
