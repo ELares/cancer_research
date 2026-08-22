@@ -1,0 +1,273 @@
+{
+ "ferroptosis_articles": 13346,
+ "thin_threshold": 50,
+ "reagents": {
+  "GPX4 inhibitor (arm 1)": {
+   "RSL3": 609,
+   "FIN56": 26,
+   "ML210": 11,
+   "withaferin A": 5,
+   "ML162": 12,
+   "altretamine": 1,
+   "FINO2": 7
+  },
+  "FSP1 / DHODH inhibitor (arm 2)": {
+   "brequinar": 12,
+   "iFSP1": 23,
+   "FSEN1": 4,
+   "icFSP1": 1,
+   "viFSP1": 2
+  },
+  "system Xc- inhibitor (not in P1)": {
+   "erastin": 1167,
+   "sorafenib": 261,
+   "IKE": 49,
+   "sulfasalazine": 73
+  }
+ },
+ "cell_lines": {
+  "hct116": 46,
+  "a549": 134,
+  "4t1": 76,
+  "hela": 53,
+  "u87": 29,
+  "hepg2": 163,
+  "h1975": 11,
+  "mcf-7": 51,
+  "ht-1080": 12,
+  "b16": 18,
+  "huh7": 37,
+  "pc-3": 12,
+  "panc-1": 26,
+  "pc9": 10,
+  "hcc827": 9,
+  "sk-hep-1": 5
+ },
+ "groups": [
+  {
+   "role": "GPX4 inhibitor (arm 1)",
+   "rows": [
+    {
+     "reagent": "RSL3",
+     "articles": 609,
+     "share": 4.56,
+     "in_protocol": true,
+     "thin": false
+    },
+    {
+     "reagent": "FIN56",
+     "articles": 26,
+     "share": 0.19,
+     "in_protocol": false,
+     "thin": true
+    },
+    {
+     "reagent": "ML162",
+     "articles": 12,
+     "share": 0.09,
+     "in_protocol": true,
+     "thin": true
+    },
+    {
+     "reagent": "ML210",
+     "articles": 11,
+     "share": 0.08,
+     "in_protocol": false,
+     "thin": true
+    },
+    {
+     "reagent": "FINO2",
+     "articles": 7,
+     "share": 0.05,
+     "in_protocol": false,
+     "thin": true
+    },
+    {
+     "reagent": "withaferin A",
+     "articles": 5,
+     "share": 0.04,
+     "in_protocol": false,
+     "thin": true
+    },
+    {
+     "reagent": "altretamine",
+     "articles": 1,
+     "share": 0.01,
+     "in_protocol": false,
+     "thin": true
+    }
+   ],
+   "protocol_total": 621,
+   "group_total": 671
+  },
+  {
+   "role": "FSP1 / DHODH inhibitor (arm 2)",
+   "rows": [
+    {
+     "reagent": "iFSP1",
+     "articles": 23,
+     "share": 0.17,
+     "in_protocol": true,
+     "thin": true
+    },
+    {
+     "reagent": "brequinar",
+     "articles": 12,
+     "share": 0.09,
+     "in_protocol": true,
+     "thin": true
+    },
+    {
+     "reagent": "FSEN1",
+     "articles": 4,
+     "share": 0.03,
+     "in_protocol": false,
+     "thin": true
+    },
+    {
+     "reagent": "viFSP1",
+     "articles": 2,
+     "share": 0.01,
+     "in_protocol": false,
+     "thin": true
+    },
+    {
+     "reagent": "icFSP1",
+     "articles": 1,
+     "share": 0.01,
+     "in_protocol": false,
+     "thin": true
+    }
+   ],
+   "protocol_total": 35,
+   "group_total": 42
+  },
+  {
+   "role": "system Xc- inhibitor (not in P1)",
+   "rows": [
+    {
+     "reagent": "erastin",
+     "articles": 1167,
+     "share": 8.74,
+     "in_protocol": false,
+     "thin": false
+    },
+    {
+     "reagent": "sorafenib",
+     "articles": 261,
+     "share": 1.96,
+     "in_protocol": false,
+     "thin": false
+    },
+    {
+     "reagent": "sulfasalazine",
+     "articles": 73,
+     "share": 0.55,
+     "in_protocol": false,
+     "thin": false
+    },
+    {
+     "reagent": "IKE",
+     "articles": 49,
+     "share": 0.37,
+     "in_protocol": false,
+     "thin": true
+    }
+   ],
+   "protocol_total": 0,
+   "group_total": 1550
+  }
+ ],
+ "protocol_named": [
+  "ML162",
+  "RSL3",
+  "brequinar",
+  "iFSP1"
+ ],
+ "arm1_precedent": 621,
+ "arm2_precedent": 35,
+ "arm_asymmetry": 17.7,
+ "thin_arm": "FSP1 / DHODH inhibitor (arm 2)",
+ "cell_line_rows": [
+  {
+   "line": "hepg2",
+   "articles": 163,
+   "share": 1.22
+  },
+  {
+   "line": "a549",
+   "articles": 134,
+   "share": 1.0
+  },
+  {
+   "line": "4t1",
+   "articles": 76,
+   "share": 0.57
+  },
+  {
+   "line": "hela",
+   "articles": 53,
+   "share": 0.4
+  },
+  {
+   "line": "mcf-7",
+   "articles": 51,
+   "share": 0.38
+  },
+  {
+   "line": "hct116",
+   "articles": 46,
+   "share": 0.34
+  },
+  {
+   "line": "huh7",
+   "articles": 37,
+   "share": 0.28
+  },
+  {
+   "line": "u87",
+   "articles": 29,
+   "share": 0.22
+  },
+  {
+   "line": "panc-1",
+   "articles": 26,
+   "share": 0.19
+  },
+  {
+   "line": "b16",
+   "articles": 18,
+   "share": 0.13
+  },
+  {
+   "line": "ht-1080",
+   "articles": 12,
+   "share": 0.09
+  },
+  {
+   "line": "pc-3",
+   "articles": 12,
+   "share": 0.09
+  },
+  {
+   "line": "h1975",
+   "articles": 11,
+   "share": 0.08
+  },
+  {
+   "line": "pc9",
+   "articles": 10,
+   "share": 0.07
+  },
+  {
+   "line": "hcc827",
+   "articles": 9,
+   "share": 0.07
+  },
+  {
+   "line": "sk-hep-1",
+   "articles": 5,
+   "share": 0.04
+  }
+ ]
+}
