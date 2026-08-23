@@ -217,8 +217,8 @@ while a second reading sat in a binary. The audit now scans `sim-*/src` too.
 
 | reading | source | minutes/step | 180 steps |
 |---|---|--:|--:|
-| explicit declaration | `tumor_pk.rs`, "time points in minutes, one per simulation step" | **1.0** | 3.0 h |
-| implied window | `sim-tme/src/main.rs:14`, `sim-tme/README.md:138` and `sim-tme-3d/README.md:157` -- "resident T cell phase (0-48h)" -- each with `N_STEPS = 180` | **16.0** | 48 h |
+| explicit declaration | `tumor_pk.rs:354` -- "Time points in minutes (one per simulation step)." | **1.0** | 3.0 h |
+| implied window | `sim-tme/src/main.rs:14` -- "resident T cell phase (0-48h)"; `sim-tme/README.md:138` -- "the resident T cell phase (0-48h)"; `sim-tme-3d/README.md:157` -- "a 0–48 h resident T-cell cascade". Each crate declares `const N_STEPS: u32 = 180` in its own `main.rs`. | **16.0** | 48 h |
 
 The two are different KINDS of claim. `tumor_pk` declares a clock; the immune
 sources state which biology is in range and let a loop length imply one. The
@@ -237,9 +237,13 @@ README while also being the binary that reaches the PK solver under
 `--dose-sweep`, so it carries BOTH readings depending on which subsystem you
 are reading. The honest rule is narrower than a per-binary one:
 
-- **1 min/step** applies to the PK trajectory specifically -- `sim-tumor-pk`,
-  and `sim-tme-3d`'s `--dose-sweep` dosing schedule -- because that is the
-  quantity `tumor_pk.rs` declares a clock for.
+- **1 min/step** applies to the PK trajectory specifically: `sim-tumor-pk`, and
+  the drug-availability series `sim-tme-3d` derives from `tumor_pk` under the
+  `FromPk` dose protocol. Not the `--dose-sweep` RUN, which an earlier draft of
+  this bullet claimed and which the bullet below refutes -- four of its five
+  protocols (`Constant`, `Bolus`, `MultiDose`, `Infusion`) are step-indexed
+  schedules `tumor_pk` declares no clock for, and every protocol in that sweep
+  runs `immune_on: true`, so the run combines both readings.
 - **16 min/step** applies to the immune cascade specifically, wherever it is
   read, because that is the window the immune model states as its own scope.
 - Anything combining the two is unconvertible until one is measured.

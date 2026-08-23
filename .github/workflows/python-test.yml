@@ -25,6 +25,9 @@ on:
       - 'simulations/ferroptosis-core/src/**'
       - 'simulations/sim-*/src/**'
       - 'simulations/sim-*/README.md'
+      # Two step-duration guards read the manuscript live (the Section 8.4
+      # bullet-adjacency claim), so a manuscript edit can stale them:
+      - 'article/drafts/**'
       - 'requirements*.txt'
       - '.github/workflows/python-test.yml'
   pull_request:
@@ -50,6 +53,9 @@ on:
       - 'simulations/ferroptosis-core/src/**'
       - 'simulations/sim-*/src/**'
       - 'simulations/sim-*/README.md'
+      # Two step-duration guards read the manuscript live (the Section 8.4
+      # bullet-adjacency claim), so a manuscript edit can stale them:
+      - 'article/drafts/**'
       - 'requirements*.txt'
       - '.github/workflows/python-test.yml'
   schedule:

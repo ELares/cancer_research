@@ -260,12 +260,30 @@ def test_every_row_of_the_reading_table_matches_the_measurement():
         assert any(x in source for x in paths), (
             f"the {v} min/step row cites {source!r}; the audit attributes that "
             f"reading to {sorted(set(paths))}")
-        lines = {str(w["line"]) for w in d["implied_windows"]
-                 if w["minutes_per_step"] == v}
-        for cited in re.findall(r"\.(?:rs|md):(\d+)", source):
-            assert cited in lines, (
-                f"the {v} min/step row cites line {cited}, and the audit "
-                f"reports {sorted(lines)}")
+        # EVERY cited file:line must exist, and the text quoted beside it must
+        # actually be on that line. The previous version checked only that a
+        # line number appeared in the audit's implied-window list -- so a row
+        # could quote words the cited file does not contain, which is the "a
+        # claim in file A about file B" defect this whole section retracts.
+        cites = re.findall(r"`([^`]+?):(\d+)`\s*--\s*\"([^\"]+)\"", source)
+        assert cites, f"the {v} min/step row cites no file:line with a quote"
+        for path_s, lineno, quote in cites:
+            f = REPO / "simulations" / path_s if not (REPO / path_s).exists() \
+                else REPO / path_s
+            for cand in (REPO / path_s, REPO / "simulations" / path_s,
+                         REPO / "simulations/ferroptosis-core/src" / path_s):
+                if cand.exists():
+                    f = cand
+                    break
+            assert f.exists(), f"cited file {path_s} does not exist"
+            src_lines = f.read_text().splitlines()
+            n = int(lineno)
+            assert 1 <= n <= len(src_lines), (
+                f"{path_s} has {len(src_lines)} lines; the row cites {n}")
+            line = src_lines[n - 1]
+            assert quote in line, (
+                f"the {v} min/step row quotes {quote!r} at {path_s}:{n}, "
+                f"which reads {line.strip()!r}")
 
 
 def test_the_subsystem_rule_is_stated_and_not_a_per_binary_one():
@@ -463,3 +481,71 @@ def test_neither_stance_can_be_inverted_in_prose():
     assert "The claim was false" in tail, (
         "the retraction no longer says the claim was false")
     assert "was TRUE" not in tail and "was correct" not in tail
+
+
+def test_the_outer_axis_figures_are_derived_from_sim_window():
+    """"0 to 28 days" and "minimum timepoint spacing is 6 hours".
+
+    Two engine numbers the prose stated that nothing recomputed: a reviewer
+    moved them to 280 days and 60 hours against a green suite. Both are fixed
+    by `sim-window`'s own timepoint list.
+    """
+    doc = _doc()
+    main = (SIMS / "sim-window/src/main.rs").read_text()
+    m = re.search(r"timepoints_hours:\s*Vec<f64>\s*=\s*vec!\[(.*?)\];",
+                  main, re.S)
+    assert m, "sim-window no longer declares timepoints_hours"
+    body = re.sub(r"//[^\n]*", "", m.group(1))
+    hrs = sorted({int(float(x)) for x in re.findall(r"[\d.]+", body)})
+    assert len(hrs) >= 5, hrs
+    span_days = max(hrs) // 24
+    gaps = [b - a for a, b in zip(hrs, hrs[1:])]
+    assert f"over 0 to {span_days} days" in doc, (
+        f"sim-window spans {max(hrs)} h = {span_days} days; the doc says "
+        "otherwise")
+    assert f"spacing is {min(gaps)} hours" in doc, (
+        f"the smallest gap in {hrs} is {min(gaps)} h; the doc says otherwise")
+
+
+def test_the_prose_verbs_are_not_inverted():
+    """Meaning-level mutations that change no number.
+
+    A reviewer flipped `compete`->`agree`, `coarser`->`finer`,
+    `minimum`->`maximum`, `uncalibrated`->`calibrated`, `no caller`->`callers`
+    and `agrees with neither`->`with both`, all against a green suite. Each
+    pairs a claim with the source that settles it.
+    """
+    doc = _doc()
+    d = _audit()
+    declared = max(b["minutes_per_step"] for b in d["step_bindings"]
+                   if b["kind"] == "wall-clock")
+    implied = max(w["minutes_per_step"] for w in d["implied_windows"])
+    assert declared != implied
+    assert "readings compete for" in doc and "readings agree on" not in doc, (
+        "the doc says two readings AGREE while measuring them "
+        f"{implied / declared:g}x apart")
+    # trigger_wave really has no caller outside the library re-export.
+    callers = [q for q in (SIMS).glob("sim-*/src/*.rs")
+               if "trigger_wave" in q.read_text()]
+    assert not callers, f"trigger_wave is now called by {callers}"
+    assert "no caller in any binary" in doc
+    # scd_mufa_rate really is documented uncalibrated, and the doc must not
+    # say the opposite.
+    params = (CORE / "params.rs").read_text()
+    assert "uncalibrated" in params, (
+        "params.rs no longer describes any rate as uncalibrated")
+    assert "as uncalibrated against" in doc, (
+        "the doc no longer records scd_mufa_rate as uncalibrated")
+    assert "as calibrated against" not in doc
+    # the derived candidate agrees with neither reading
+    assert "It agrees with neither reading" in doc
+    assert "agrees with both" not in doc
+
+
+def test_the_citation_is_pinned_to_the_module_it_comes_from():
+    doc = _doc()
+    tw = (CORE / "trigger_wave.rs").read_text()
+    m = re.search(r"PMID[:\s]*(\d{7,8})", tw)
+    assert m, "trigger_wave no longer carries a PMID"
+    assert f"PMID {m.group(1)}" in doc, (
+        f"the doc cites a PMID trigger_wave.rs does not ({m.group(1)})")
