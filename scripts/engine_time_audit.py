@@ -28,8 +28,7 @@ false headline.
 WHAT IS ACTUALLY TRUE
 ----------------------
 The CORE biochemical loop states no step duration -- that part survives.
-ONE module DECLARES a step duration in wall-clock time (`tumor_pk`, one minute), and a SECOND reading is implied without declaring one: the immune model states a 0-48h scope over a 180-step loop in `sim-tme` and `sim-tme-3d`, pricing a step at 16 minutes. The two are 16x apart, neither is measured, and the reconciliation is the step-duration section of `simulations/calibration/parameter_provenance.md`
-per step, reaching `sim-tumor-pk`'s 180-step run = 3.0 hours.
+ONE module DECLARES a step duration in wall-clock time (`tumor_pk`, one minute), and a SECOND reading is implied without declaring one: the immune model states a 0-48h scope over a 180-step loop in `sim-tme` and `sim-tme-3d`, pricing a step at 16 minutes. The two are 16x apart, neither is measured, and the reconciliation is the step-duration section of `simulations/calibration/parameter_provenance.md`.
 
 `trigger_wave`'s `dt_min` is NOT a second binding. It is a CFL-constrained
 integrator timestep -- the module asserts `dt < h^2/(2D)` on the next line --
@@ -214,7 +213,20 @@ def _key(path) -> str:
     return path.name if crate == "ferroptosis-core" else f"{crate}/{path.name}"
 
 
-def _default_for(stem: str, field: str, unit: str):
+def _path_for(key: str):
+    """Resolve a `_key()` back to a real path.
+
+    `SRC / key` only works for library modules; a qualified binary key made it
+    look for `ferroptosis-core/src/sim-tme/main.rs` and the audit aborted with
+    a FileNotFoundError -- in exactly the scenario it exists to serve.
+    """
+    for q in _rust_sources():
+        if _key(q) == key:
+            return q
+    return SRC / key
+
+
+def _default_for(key: str, field: str, unit: str):
     """The literal a named per-step duration field is constructed with.
 
     Keyed on the DECLARING FILE. The first version ignored its `stem` argument
@@ -227,7 +239,12 @@ def _default_for(stem: str, field: str, unit: str):
     # matched, `or _rust_sources()` fell through to the whole tree, and the
     # bug this was written to fix reproduced verbatim: trigger_wave's 0.02
     # min/step got reported as another module's 30.0.
-    cands = [q for q in _rust_sources() if q.stem == stem]
+    # Keyed on the DECLARING FILE's full path. Two earlier attempts failed
+    # here: comparing `p.name` to a `p.stem` never matched, and then comparing
+    # stem to stem still crossed modules because twelve files share the stem
+    # `main` -- so `sim-tme/main.rs`, the file this reconciliation cites,
+    # could be handed `sim-combo`'s literal.
+    cands = [q for q in _rust_sources() if _key(q) == key]
     if not cands:
         return None
     for p in cands:
@@ -334,7 +351,7 @@ def find_step_bindings():
                     continue
                 if how == "named-field":
                     field = m.group(0)
-                    mpstep = _default_for(p.stem, field, u)
+                    mpstep = _default_for(_key(p), field, u)
                 else:
                     mpstep = (float(mag) if mag else 1.0) * UNIT_MIN[u]
                 # Show the MATCHED span, not the start of the joined block.
@@ -520,7 +537,7 @@ def _pricing_symbols(module, binding_lines):
     documents is the next one declared after it -- rather than named here, so
     a rename cannot leave this pointing at nothing.
     """
-    text = (SRC / module).read_text(errors="ignore")
+    text = _path_for(module).read_text(errors="ignore")
     lines = text.split("\n")
     out = set()
     for ln in binding_lines:
@@ -852,7 +869,8 @@ def render(d: dict) -> str:
               f"{'prices' if len(conv) == 1 else 'price'} a "
               f"simulation step in wall-clock time** "
               f"({', '.join(f'`{m}`' for m in mods) or 'none'}), out of {n} "
-              f"scanned modules (library and binaries), plus {nsolv} "
+              f"scanned Rust modules (library and binaries; the implied "
+              f"windows below also read each crate's README), plus {nsolv} "
               f"numerical-integrator "
               f"timestep{'' if nsolv == 1 else 's'} that "
               f"{'does' if nsolv == 1 else 'do'} not.", ""]
@@ -865,7 +883,8 @@ def render(d: dict) -> str:
                   f"({', '.join(srcs)}) state a scope window over a "
                   f"{iw[0]['n_steps']}-step loop, pricing a step at "
                   f"{', '.join(str(m) for m in mins)} min -- against the "
-                  f"declared {sorted({c['minutes_per_step'] for c in conv})}. "
+                  f"declared "
+                  f"{', '.join(str(x) for x in sorted({c['minutes_per_step'] for c in conv}))} min. "
                   f"Counting only declarations is how an earlier version of "
                   f"this audit reported exactly one binding while scanning the "
                   f"library alone. Neither reading is measured; the "
@@ -933,12 +952,29 @@ def render(d: dict) -> str:
         if others:
             names = ", ".join("`{}` ({})".format(s["binary"], s["steps"])
                               for s in others)
+            iw_bins = {w["binary"] for w in (d.get("implied_windows") or [])}
+            with_w = [s for s in others if s["binary"] in iw_bins]
+            without = [s for s in others if s["binary"] not in iw_bins]
             L += [f"{len(others)} other "
                   f"{'binary declares' if len(others) == 1 else 'binaries declare'} "
-                  f"a step count "
-                  f"({names}) and consume no module that prices a step, so "
-                  f"their runs cannot be converted to wall-clock time at all.",
-                  ""]
+                  f"a step count ({names}) and consume no module that DECLARES "
+                  f"a step duration.", ""]
+            if with_w:
+                L += ["Of those, "
+                      + ", ".join(f"`{s['binary']}`" for s in with_w)
+                      + (" states" if len(with_w) == 1 else " state")
+                      + " a scope window that IMPLIES one anyway, reported "
+                        "above. So 'cannot be converted' is true of what these "
+                        "binaries declare and false of what they imply -- which "
+                        "is the distinction this page existed for a while "
+                        "without making, contradicting its own headline.", ""]
+            if without:
+                L += [", ".join(f"`{s['binary']}`" for s in without)
+                      + (" declares" if len(without) == 1 else " declare")
+                      + " neither, so "
+                      + ("its" if len(without) == 1 else "their")
+                      + " runs cannot be converted to wall-clock time at all.",
+                      ""]
         L += ["These spans are properties of those binaries' assays. They are "
               "**not** a bound on what the project can predict -- an earlier "
               "draft of this page said they were, which was the second false "

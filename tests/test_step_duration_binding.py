@@ -176,47 +176,92 @@ def test_the_siblings_do_not_contradict_it():
 # ---------------------------------------------------------------------------
 
 def _table_rows():
-    """The reading table, parsed out of the doc."""
+    """The reading table, parsed out of the doc.
+
+    Every four-cell row between the header and the blank line -- NOT only the
+    bolded ones. Requiring `"**"` let an unbolded row be added invisibly, so
+    the two-row assertion above it could not see a third reading appear.
+    """
+    lines = DOC.read_text().splitlines()
+    try:
+        i = next(n for n, l in enumerate(lines)
+                 if l.startswith("| reading | source |"))
+    except StopIteration:
+        return []
     rows = []
-    for line in DOC.read_text().splitlines():
-        if line.startswith("| ") and "**" in line and "|" in line[2:]:
-            cells = [c.strip() for c in line.strip("|").split("|")]
-            if len(cells) == 4:
-                rows.append(cells)
+    for line in lines[i + 2:]:
+        if not line.startswith("|"):
+            break
+        cells = [c.strip() for c in line.strip("|").split("|")]
+        if len(cells) == 4:
+            rows.append(cells)
     return rows
 
 
 def test_every_row_of_the_reading_table_matches_the_measurement():
-    """Row by row: the number, its arithmetic, and its cited sources."""
+    """Row by row: the LABEL, the number, its arithmetic, and its sources.
+
+    The first version bound only the numbers, and a reviewer inverted the
+    document's central distinction with every test green -- calling the
+    declared reading "implied" and vice versa -- then re-attributed the
+    16 min/step reading to two unrelated binaries, because the source check
+    reduced `sim-tme/README.md` to the token `README`, which is a substring of
+    almost any path. It also accepted a third row and never read a line number
+    the doc cites.
+    """
     d = _audit()
     rows = _table_rows()
     assert len(rows) == 2, f"expected two readings, parsed {len(rows)}"
-    got = {}
+
+    declared = {b["minutes_per_step"] for b in d["step_bindings"]
+                if b["kind"] == "wall-clock"}
+    implied = {w["minutes_per_step"] for w in d["implied_windows"]}
+    assert declared and implied and not (declared & implied)
+
+    seen = {}
     for label, source, mins, span in rows:
         v = float(mins.strip("* "))
-        got[v] = (source, span)
-        # 180 steps x minutes must equal the span the row claims.
+        # THE LABEL IS THE CLAIM. A reading the audit measures as declared may
+        # not be presented as implied, or the whole finding inverts.
+        lab = label.lower()
+        if v in declared:
+            assert "declar" in lab and "implied" not in lab, (
+                f"{v} min/step is a DECLARED binding and the table labels it "
+                f"{label!r}")
+        elif v in implied:
+            assert "implied" in lab and "declar" not in lab.replace("never declar", ""), (
+                f"{v} min/step is only IMPLIED and the table labels it {label!r}")
+        else:
+            raise AssertionError(f"the table lists {v} min/step, which the "
+                                 f"audit does not measure")
         m = re.match(r"([\d.]+)\s*(h|min)", span.strip())
         assert m, f"unparseable span {span!r}"
         hours = float(m.group(1)) * (1 / 60 if m.group(2) == "min" else 1)
         assert abs(180 * v / 60 - hours) < 0.05, (
-            f"row {label!r}: 180 steps x {v} min is "
-            f"{180 * v / 60:.2f} h, not {hours} h")
-    declared = {b["minutes_per_step"] for b in d["step_bindings"]
-                if b["kind"] == "wall-clock"}
-    implied = {w["minutes_per_step"] for w in d["implied_windows"]}
-    assert set(got) == declared | implied, (
-        f"the table lists {sorted(got)} and the audit measures "
-        f"{sorted(declared | implied)}")
-    # And each row must cite a file the audit actually attributes it to.
-    for v, (source, _) in got.items():
-        srcs = ([b["module"] for b in d["step_bindings"]
-                 if b.get("minutes_per_step") == v]
-                + [f"{w['binary']}/{w['module']}" for w in d["implied_windows"]
-                   if w["minutes_per_step"] == v])
-        assert any(x.split("/")[-1].split(".")[0] in source for x in srcs), (
-            f"the {v} min/step row cites {source!r}, and the audit attributes "
-            f"that reading to {srcs}")
+            f"row {label!r}: 180 steps x {v} min is {180 * v / 60:.2f} h, "
+            f"not {hours} h")
+        seen[v] = source
+
+    assert set(seen) == declared | implied
+
+    # Sources compared on the FULL path, and every cited line number checked
+    # against the audit. A token match let `sim-tme/README.md` be satisfied by
+    # `sim-tumor-pk/src/main.rs`.
+    for v, source in seen.items():
+        paths = ([b["module"] for b in d["step_bindings"]
+                  if b.get("minutes_per_step") == v and b["kind"] == "wall-clock"]
+                 + [f"{w['binary']}/{w['module']}" for w in d["implied_windows"]
+                    if w["minutes_per_step"] == v])
+        assert paths
+        assert any(x in source for x in paths), (
+            f"the {v} min/step row cites {source!r}; the audit attributes that "
+            f"reading to {sorted(set(paths))}")
+        lines = {str(w["line"]) for w in d["implied_windows"]
+                 if w["minutes_per_step"] == v}
+        for cited in re.findall(r"\.(?:rs|md):(\d+)", source):
+            assert cited in lines, (
+                f"the {v} min/step row cites line {cited}, and the audit "
+                f"reports {sorted(lines)}")
 
 
 def test_the_subsystem_rule_is_stated_and_not_a_per_binary_one():

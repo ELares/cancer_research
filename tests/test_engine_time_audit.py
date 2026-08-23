@@ -2,8 +2,9 @@
 
 WHAT THIS DOCUMENT NOW CLAIMS
 ------------------------------
-ONE module DECLARES a step duration in wall-clock time (`tumor_pk`, one minute), and a SECOND reading is implied without declaring one: the immune model states a 0-48h scope over a 180-step loop in `sim-tme` and `sim-tme-3d`, pricing a step at 16 minutes. The two are 16x apart, neither is measured, and the reconciliation is the step-duration section of `simulations/calibration/parameter_provenance.md`  -- the line this file replaced said EXACTLY ONE, and rotted exactly as its own docstring warns prose does; the widened sweep is at
-one minute per step, reaching `sim-tumor-pk`'s 180-step run = 3.0 hours.
+ONE module DECLARES a step duration in wall-clock time (`tumor_pk`, one minute), and a SECOND reading is implied without declaring one: the immune model states a 0-48h scope over a 180-step loop in `sim-tme` and `sim-tme-3d`, pricing a step at 16 minutes. The two are 16x apart, neither is measured, and the reconciliation is the step-duration section of `simulations/calibration/parameter_provenance.md`.
+The line this file replaced said EXACTLY ONE, and rotted exactly as this
+docstring warns prose does.
 `trigger_wave`'s `dt_min` is a CFL-constrained integrator timestep, not a
 binding on the simulation step. P3 IS represented -- `cell.rs` carries the four
 defenses' recovery half-times in days, `sim-window` sweeps them to 28 days, and

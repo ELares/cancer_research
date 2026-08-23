@@ -244,14 +244,6 @@ are reading. The honest rule is narrower than a per-binary one:
   read, because that is the window the immune model states as its own scope.
 - Anything combining the two is unconvertible until one is measured.
 
-**A published headline sits on exactly that seam.** The immune-amplification
-result is stated as ~104:1 in 2D from `sim-tme` and ~4:1 re-run in 3D from
-`sim-tme-3d` (Chapter 7; P5 in `PREREGISTRATION.md`). Both are RATIOS of kills
-within a single run, so neither divides by a step duration and neither moves --
-but the pair is read as one claim across two binaries, and this section is why
-that reading needs the immune clock to be the same in both. It is: both state
-0-48h. The seam is real and, on this headline, harmless.
-
 ### What this section previously claimed, and why it was wrong
 
 Recorded rather than quietly deleted, because the failure is reusable.
