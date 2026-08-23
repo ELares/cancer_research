@@ -15,6 +15,19 @@ on:
       # the calibration suite still gets a per-PR signal (closes the coverage gap
       # the #564 issue assumed python-test already covered):
       - 'simulations/calibration/**'
+      # The engine-time audit reads the Rust SOURCE -- 33 library modules and
+      # 14 binary ones -- and `tests/test_engine_time_audit.py` re-scans it
+      # live. Without this path, a .rs-only PR that moves a step binding runs
+      # cargo-test alone and merges green while the committed artifact and the
+      # step-duration reconciliation go stale. The input set widened from 33
+      # files to 47 when the audit began scanning the binaries, so this covers
+      # both:
+      - 'simulations/ferroptosis-core/src/**'
+      - 'simulations/sim-*/src/**'
+      - 'simulations/sim-*/README.md'
+      # Two step-duration guards read the manuscript live (the Section 8.4
+      # bullet-adjacency claim), so a manuscript edit can stale them:
+      - 'article/drafts/**'
       - 'requirements*.txt'
       - '.github/workflows/python-test.yml'
   pull_request:
@@ -30,6 +43,19 @@ on:
       # the calibration suite still gets a per-PR signal (closes the coverage gap
       # the #564 issue assumed python-test already covered):
       - 'simulations/calibration/**'
+      # The engine-time audit reads the Rust SOURCE -- 33 library modules and
+      # 14 binary ones -- and `tests/test_engine_time_audit.py` re-scans it
+      # live. Without this path, a .rs-only PR that moves a step binding runs
+      # cargo-test alone and merges green while the committed artifact and the
+      # step-duration reconciliation go stale. The input set widened from 33
+      # files to 47 when the audit began scanning the binaries, so this covers
+      # both:
+      - 'simulations/ferroptosis-core/src/**'
+      - 'simulations/sim-*/src/**'
+      - 'simulations/sim-*/README.md'
+      # Two step-duration guards read the manuscript live (the Section 8.4
+      # bullet-adjacency claim), so a manuscript edit can stale them:
+      - 'article/drafts/**'
       - 'requirements*.txt'
       - '.github/workflows/python-test.yml'
   schedule:

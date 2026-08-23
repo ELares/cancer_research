@@ -201,3 +201,128 @@ Sobol total-effect screening at the Persister+RSL3 operating point (see `analysi
 | `death_threshold` | 0.003 | NO (kill-rate-insensitive) |
 | `gpx4_degradation_by_ros` | 0.000 | NO (kill-rate-insensitive) |
 <!-- SOBOL-IDENTIFIABILITY-END -->
+
+## What one step is worth in real time (#727a)
+
+Prediction P3 is stated in days and the model runs in steps, so scoring it
+needs a conversion. This records the conversion, what disagrees with it, and
+what adopting it makes unreachable.
+
+**Two wall-clock readings compete for the same 180-step loop, and they are 16x
+apart.** An earlier draft of this section claimed there was only one and that
+issue #727 had overcounted. That was wrong, and it was wrong for an instructive
+reason: `scripts/engine_time_audit.py` globbed `ferroptosis-core/src` only, so
+"exactly one binding anywhere in the engine" was measured over the LIBRARY
+while a second reading sat in a binary. The audit now scans `sim-*/src` too.
+
+| reading | source | minutes/step | 180 steps |
+|---|---|--:|--:|
+| explicit declaration | `tumor_pk.rs:354` -- "Time points in minutes (one per simulation step)." | **1.0** | 3.0 h |
+| implied window | `sim-tme/src/main.rs:14` -- "resident T cell phase (0-48h)"; `sim-tme/README.md:138` -- "the resident T cell phase (0-48h)"; `sim-tme-3d/README.md:157` -- "a 0–48 h resident T-cell cascade". Each crate declares `const N_STEPS: u32 = 180` in its own `main.rs`. | **16.0** | 48 h |
+
+The two are different KINDS of claim. `tumor_pk` declares a clock; the immune
+sources state which biology is in range and let a loop length imply one. The
+second is weaker evidence about intent and it is not weaker about consequence:
+`sim-tme` produced this book's published Chapter 7 immune numbers, and its
+60-step immune activation delay reads as 16 hours under it and one hour under
+the other.
+
+**Neither is adopted as correct, and that is the finding.** The engine does not
+have a step duration; it has two, and no measurement distinguishes them.
+
+**And they are not cleanly separable by binary.** An earlier draft of this
+section said to use 1 min/step for `sim-tme-3d` and 16 min/step for `sim-tme`.
+That was wrong: `sim-tme-3d` states the same 0-48h immune window in its own
+README while also being the binary that reaches the PK solver under
+`--dose-sweep`, so it carries BOTH readings depending on which subsystem you
+are reading. The honest rule is narrower than a per-binary one:
+
+- **1 min/step** applies to the PK trajectory specifically: `sim-tumor-pk`, and
+  the drug-availability series `sim-tme-3d` derives from `tumor_pk` under the
+  `FromPk` dose protocol. Not the `--dose-sweep` RUN, which an earlier draft of
+  this bullet claimed and which the bullet below refutes -- four of its five
+  protocols (`Constant`, `Bolus`, `MultiDose`, `Infusion`) are step-indexed
+  schedules `tumor_pk` declares no clock for, and every protocol in that sweep
+  runs `immune_on: true`, so the run combines both readings.
+- **16 min/step** applies to the immune cascade specifically, wherever it is
+  read, because that is the window the immune model states as its own scope.
+- Anything combining the two is unconvertible until one is measured.
+
+### What this section previously claimed, and why it was wrong
+
+Recorded rather than quietly deleted, because the failure is reusable.
+
+An earlier draft said the manuscript "states no per-step duration", making
+issue #727's ~16 min/step an attribution to text that did not exist. Section
+8.4 states the 0-48 hour immune window in the bullet IMMEDIATELY above the
+180-step sentence
+that draft quoted as evidence of silence, and says it again at two other
+points. The claim was false, and the guard protecting it grepped for the
+literal string "16 min/step" -- a quotient no document would ever write -- so
+it could not have failed.
+
+The measurement behind the draft had the same shape: `engine_time_audit.py`
+scanned `ferroptosis-core/src` only, so "exactly one binding anywhere in the
+engine" was true of the library and false of the engine. A claim is only as
+wide as the sweep behind it.
+
+### What is NOT a binding
+
+`trigger_wave.rs`'s `dt_min` (0.02 min) is a CFL-constrained integrator
+timestep for a PDE with no caller in any binary. Pooling it with the loop
+manufactures a 50x disagreement between quantities measuring different things.
+
+### The outer axis
+
+`cell.rs` carries the four defence half-recovery times in **days** (GSH 1,
+GPX4 3, NRF2 5, FSP1 7), swept by `sim-window` over 0 to 28 days. P3 is scored
+across BOTH axes, not one: the days axis sets a cell's initial state and
+`sim_cell` then runs the same 180-step loop to produce the death rate P3 reads.
+So P3 inherits whichever inner binding applies, and `sim-window`'s minimum
+timepoint spacing is 6 hours -- coarser than the whole inner assay under the 1
+min/step reading (3.0 h) and finer than it under the 16 min/step one (48 h),
+so even the relationship between the two axes depends on which reading is
+taken.
+
+### What adopting 1 min/step would make unreachable
+
+Recorded because a binding that silences an existing anchor has to say so.
+
+- **The MUFA/SCD1 timescale.** `params.rs` documents `scd_mufa_rate` as
+  uncalibrated against the ~48-72 hour SCD1/MUFA enrichment window. At 1
+  min/step a whole run is 3.0 hours, so the inner loop cannot represent that
+  accumulation at all. At 16 min/step a run is 48 hours and it becomes
+  borderline reachable -- which is an argument for the larger value that has
+  nothing to do with which binary you are in, and is exactly why this is left
+  open rather than decided here.
+- **Persister epigenetic locking is NOT a third anchor**, and an earlier draft
+  of this bullet said it was. `params.rs` names a days-to-weeks sustained-exposure
+  timescale and then says explicitly that it is "illustrative context only, NOT
+  from that source and NOT mapped to the dimensionless EMA `lock_threshold` used
+  here". Turning a stated non-mapping into a pricing is the same move this
+  section exists to retract, so it is withdrawn: the locking threshold is
+  dimensionless and neither reading makes it reachable or unreachable.
+
+### Status
+
+**Unresolved, and now measured rather than assumed.** No figure in this book is
+computed from a step duration, so nothing reported here moves either way; what
+changes is that the disagreement is written down with both sources named, and
+`scripts/engine_time_audit.py` will find a third READING IN THE SOURCE
+within the shape it looks for -- ONE window per line, the scope verb and
+the window on the same line, and `sim-*` crates only. That shape is
+narrower than "any third reading": `sim-tme/README.md:138` already
+carries a second window on the same line (`1-7 days`, which would price a
+step at 48 min) and the detector takes only the first. Stating the reach
+rather than the aspiration, because a claim is only as wide as the sweep
+behind it and this section says so two screens above.
+
+Resolving it needs a measurement rather than a decision, and a candidate
+measurement already exists here -- DERIVED, not stated anywhere in the engine's
+text, which is why the audit does not and should not report it as a third
+reading. `trigger_wave` is anchored to a measured ferroptotic front speed of
+5.52 um/min (Co 2024, PMID 38987590), and at the 20 um cell pitch these
+binaries use that is a ~3.6 minute cell crossing. It agrees with neither
+reading. That is a reason to run the experiment -- a lipid-peroxidation
+time-course under RSL3 would set the inner clock directly -- and not a third
+entry in the table above, which lists what the code SAYS.
