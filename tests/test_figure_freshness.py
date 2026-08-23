@@ -1,38 +1,33 @@
-"""Committed figures must be what their generator produces.
+"""Committed census figures must be what their generator draws.
 
-Every other committed artifact is gated by regenerating it and comparing
-(`tests/test_artifact_freshness.py`). Figures were the one class where that
-comparison could never pass: matplotlib embeds `/CreationDate` in a PDF, so a
-regenerated figure always differed from its committed copy, and a genuinely
-stale figure looked exactly like a fresh one. `scripts/figure_io.py` removes
-the field; this checks the result.
+Matplotlib embeds `/CreationDate` in a PDF, so a regenerated figure always
+differed from its committed copy and a stale figure looked exactly like a fresh
+one. `scripts/figure_io.py` removes the field; this checks the result.
 
-SCOPED TO THE CENSUS FIGURES, and the reason is the same reason they exist as
-a separate generator. `generate_census_figures.py` reads only committed
-analysis JSON and runs offline in seconds. `generate_figures.py` loads the
-whole corpus and gitignored simulation outputs, so it cannot run in CI at all
--- its figures are covered by `FIGURES.yaml` traceability and by nothing
-stronger, which this file states rather than implies.
+WHAT IS CHECKED. The eight census figures, by regenerating them into a scratch
+directory and comparing DRAWING SURFACES rather than file bytes -- content
+streams, images and their alpha planes, form xobjects, fonts, page geometry,
+and the graphics-state / pattern / shading / annotation resources those streams
+reference by name. Bytes are not comparable across platforms; surfaces are, and
+CI on two operating systems is the evidence.
 
-WHAT IT CANNOT CATCH is the same limit the artifact gate has: a figure drawn
-correctly from stale INPUT. Regenerating from the committed JSON cannot notice
-the JSON is old.
+WHAT IS NOT CHECKED, exhaustively, because every round of review of this file
+found a confident sentence outrunning the behaviour:
 
-AND WHAT IT DOES NOT COVER AT ALL: the twenty non-census PDFs that still
-embed a creation date. TWO DIFFERENT TWENTIES meet here and an earlier draft
-of this sentence merged them. Twenty non-census PDFs carry a creation date;
-`generate_figures.py` writes twenty figure stems; the overlap is 13, and the
-other 7 stale ones come from `generate_conceptual_diagrams.py`,
-`rare_event_analysis.py` and `sim-original`.
+- **No PNG content, at all.** The eight census PNGs are checked for existence
+  and nothing else. Replacing one with an unrelated image passes. PNG bytes are
+  not portable, and no portable comparison is implemented.
+- **The twenty non-census PDFs.** They still embed a creation date. Regenerating
+  them is not a metadata-only change -- it rewrites plots and emits figures that
+  were never committed -- so it is filed (#788), not done here.
+- **Stale inputs.** Regenerating from committed JSON cannot notice the JSON is
+  old.
+- **A correct-looking figure drawn from wrong data**, unless the difference
+  reaches one of the hashed surfaces.
 
-Making them deterministic means regenerating them, and that turned out not to
-be a metadata-only change: it rewrote 8 PDFs and 8 PNGs -- the PLOTS differ
-from the committed ones -- and emitted 7 figures (14 files) never committed at
-all. That measurement covers the 15 stems of `generate_figures.py`'s twenty
-that could be drawn here, so it is a FLOOR: five need gitignored simulation
-output, and of the stale-PDF twenty only 8 were exercised at all. Those
-plots differ from the published ones, which is either figure drift or input
-drift and is worth finding out rather than committing blind.
+Each hashed surface has a positive control that changes ONLY that surface and
+asserts it is seen; the flagship comparison has one that invokes it. Those
+controls are the reason to believe any of the above.
 """
 import hashlib
 import os
@@ -109,19 +104,73 @@ def _drawing(path):
                 out.append((f"xobject:{entry[1]}", hashlib.sha256(
                     doc.xref_stream(entry[0])).hexdigest()))
             # Resources the streams name rather than inline.
+            # `/Font` is the only POPULATED resource that was skipped, while
+            # three empty ones were hashed as defence-in-depth. Content
+            # streams name glyphs (`/F1 ... Tj`) exactly as they name alphas
+            # (`/A2 gs`), so swapping the Type3 outlines for `zero` and `one`
+            # in a figure made of counts changed what it reads and passed.
+            # `/MediaBox` and `/Rotate` are page geometry, cheap, same class.
             for key in ("ExtGState", "Pattern", "Shading"):
                 val = doc.xref_get_key(pg.xref, f"Resources/{key}")
                 out.append((key, hashlib.sha256(
                     _resolve(doc, val).encode()).hexdigest()))
+            # `/Font` needs the SUBTREE, not the dict. Hashing the resource
+            # object alone lists font names and xref numbers, so swapping the
+            # Type3 outlines for `zero` and `one` -- which changes what a
+            # figure made of counts READS -- left it unchanged.
+            out.append(("Font", _subtree_digest(
+                doc, doc.xref_get_key(pg.xref, "Resources/Font"))))
             # `Annots` is a PAGE key, not a resource category. Read as
             # `Resources/Annots` it returns the literal "null" on every page
             # forever, so the surface was inert -- and it was the one hashed
             # surface with no positive control, which is why that shipped.
-            out.append(("Annots", hashlib.sha256(_resolve(
-                doc, doc.xref_get_key(pg.xref, "Annots")).encode()).hexdigest()))
+            for key in ("Annots", "MediaBox", "Rotate"):
+                out.append((key, hashlib.sha256(_resolve(
+                    doc, doc.xref_get_key(pg.xref, key)).encode()).hexdigest()))
         return out
     finally:
         doc.close()
+
+
+def _subtree_digest(doc, val, depth: int = 6) -> str:
+    """Hash every object and stream reachable from `val`, to a bounded depth.
+
+    One level of indirection is not enough for a font: the resource dict names
+    xrefs, and the glyph outlines are streams two levels below it.
+    """
+    seen, parts = set(), []
+
+    def walk(v, d):
+        if d < 0:
+            return
+        kind, raw = (v if isinstance(v, tuple) else ("string", str(v)))
+        if kind not in ("xref", "array", "dict"):
+            parts.append(str(raw))
+            return
+        nums = re.findall(r"(\d+) 0 R", str(raw))
+        if not nums:
+            parts.append(str(raw))
+            return
+        for n in nums:
+            num = int(n)
+            if num in seen:
+                parts.append(f"@{num}")
+                continue
+            seen.add(num)
+            try:
+                obj = doc.xref_object(num, compressed=True)
+            except Exception:
+                parts.append(f"?{num}")
+                continue
+            parts.append(obj)
+            try:
+                parts.append(hashlib.sha256(doc.xref_stream(num)).hexdigest())
+            except Exception:
+                pass
+            walk(("dict", obj), d - 1)
+
+    walk(val, depth)
+    return hashlib.sha256("|".join(parts).encode()).hexdigest()
 
 
 def _resolve(doc, val) -> str:
@@ -147,6 +196,22 @@ def _resolve(doc, val) -> str:
         except Exception:
             return str(raw)
     return str(raw)
+
+
+def _assert_matches_committed(produced: Path) -> None:
+    """The flagship's comparison, extracted so a control can INVOKE it.
+
+    Inlined, it was unguarded: deleting its assertion, or pointing `committed`
+    at the produced file, left the suite green with a genuinely stale figure
+    on disk. The control below calls THIS.
+    """
+    committed = FIG_DIR / produced.name
+    assert committed.exists(), f"{produced.name} is not committed"
+    a, b = _drawing(produced), _drawing(committed)
+    assert a is not None, "no PDF reader available"
+    assert a == b, (
+        f"article/figures/{produced.name} is not what "
+        "scripts/generate_census_figures.py draws. Re-run it.")
 
 
 def _census_figures():
@@ -236,52 +301,26 @@ def test_the_corpus_figure_backlog_is_stated_and_shrinking():
                    if p.name not in census
                    and b"/CreationDate" in p.read_bytes())
     doc = _module_docstring()
-    assert "loads the whole corpus and gitignored simulation outputs" in doc
-    # The two claims this paragraph was rewritten FOR are guarded by their
-    # NUMBERS, derived below -- not by matching their rhetorical markers. A
-    # literal-marker assert lives in this same file, so a global rename keeps
-    # prose and assert in step and passes; only the derivation has teeth.
+    # The scope limits that remain, checked against the docstring. An earlier
+    # version asserted "generate_figures.py cannot run in CI at all", which is
+    # FALSE -- it exits 0 without the simulation outputs -- so a guard was
+    # requiring a false sentence to stay present. That claim is gone.
+    assert "No PNG content, at all" in doc
+    assert "The twenty non-census PDFs" in doc
     import yaml as _yaml
 
     _spec = _yaml.safe_load((REPO / "FIGURES.yaml").read_text())
     figs = _spec if isinstance(_spec, list) else _spec.get("figures", _spec)
     if isinstance(figs, dict):
         figs = list(figs.values())
-    census = {f"{f}.pdf" for f in _census_figures()}
-    stale = sorted(p.name for p in FIG_DIR.glob("*.pdf")
-                   if p.name not in census
-                   and b"/CreationDate" in p.read_bytes())
-    # ATTRIBUTED, not substring-matched. Counting `stem in source` gives 14
-    # because `generate_figures.py` carries a COMMENT about fig7 explaining
-    # that the Rust binary writes it -- the same defect this test corrects two
-    # blocks below, reproduced in the guard for the sentence about it.
     attributed = {f["filename"]: str(f["generator"].get("script", ""))
                   for f in figs if isinstance(f, dict)
                   and isinstance(f.get("generator"), dict)}
-    overlap = sum(1 for n in stale
-                  if attributed.get(n[:-4], "").endswith("generate_figures.py"))
-    assert f"the overlap is {overlap}" in doc, (
-        f"{overlap} stale PDFs are attributed to generate_figures.py; the "
-        "docstring says otherwise")
-    assert f"other {len(stale) - overlap} stale ones" in doc, (
-        f"{len(stale) - overlap} stale PDFs come from elsewhere; the "
-        "docstring says otherwise")
-    # Every one of them must come from a generator this cannot run, and the
-    # generator set is DERIVED from FIGURES.yaml rather than assumed: an
-    # earlier version named two scripts and the repo has three, so a figure
-    # from the third looked like an unexplained straggler.
-    gens = {f["generator"]["script"] for f in figs
-            if isinstance(f, dict) and isinstance(f.get("generator"), dict)
-            and f["generator"].get("script")}
-    python_gens = {g for g in gens if g.endswith(".py")}
-    # EXACT. A floor let a generator vanish from FIGURES.yaml -- shrinking
-    # coverage -- while still passing.
-    assert len(python_gens) == 4, sorted(python_gens)
+    python_gens = {g for g in attributed.values() if g.endswith(".py")}
     missing = sorted(g for g in python_gens if not (REPO / g).exists())
-    assert not missing, (
-        f"FIGURES.yaml names generators that do not exist: {missing}. The "
-        "previous version dropped them silently, so they were never checked.")
+    assert not missing, f"FIGURES.yaml names generators that do not exist: {missing}"
     sources = {g: (REPO / g).read_text() for g in python_gens}
+    assert len(python_gens) == 4, sorted(python_gens)
     # A figure FIGURES.yaml marks as an orphan has, by its own record, no
     # automated regeneration path -- `fig8_sensitivity_analysis` was made by an
     # external tool during a rewrite. That is read from the spec, not exempted
@@ -400,13 +439,7 @@ def test_the_committed_census_figures_are_what_the_generator_draws():
             f"{sorted(p.stem for p in produced)} but the source declares "
             f"{_census_figures()}")
         for p in produced:
-            committed = FIG_DIR / p.name
-            assert committed.exists(), f"{p.name} is not committed"
-            a, b = _drawing(p), _drawing(committed)
-            assert a is not None, "no PDF reader available"
-            assert a == b, (
-                f"article/figures/{p.name} is not what "
-                "scripts/generate_census_figures.py draws. Re-run it.")
+            _assert_matches_committed(p)
 
 
 def _module_docstring() -> str:
@@ -427,31 +460,6 @@ def _module_docstring() -> str:
     return " ".join(
         (_ast.get_docstring(_ast.parse(Path(__file__).read_text())) or "").split())
 
-
-def test_the_uncoverable_generator_is_named_rather_than_implied():
-    """`generate_figures.py` loads the corpus and gitignored simulation output,
-    so no CI check can regenerate it. Saying so is the point."""
-    doc = _module_docstring()
-    assert "loads the whole corpus and gitignored simulation outputs" in doc
-    other = REPO / "scripts/generate_figures.py"
-    assert other.exists()
-    src = other.read_text()
-    assert "make_figures_deterministic" in src, (
-        "the uncoverable generator should still write deterministic PDFs, so "
-        "its output can at least be diffed by hand")
-
-
-# ---------------------------------------------------------------------------
-# POSITIVE CONTROLS for `_drawing()`.
-#
-# Its absence is why three holes shipped in a row. A reviewer gutted the
-# comparison four ways -- deleting the content hash, the image hash, the
-# xobject hash, and finally replacing the whole function with a constant --
-# and the suite stayed green every time. A checker that cannot be shown to
-# detect anything is not a checker.
-#
-# Each control changes exactly ONE surface and asserts it is seen.
-# ---------------------------------------------------------------------------
 
 def _one_page_pdf(tmp, draw, name):
     import matplotlib
@@ -624,15 +632,17 @@ def _regen(tmp, edit=None):
     src = GEN.read_text()
     out = tmp / ("mut" if edit else "base")
     out.mkdir()
-    env = {**os.environ, "MPLBACKEND": "Agg", "FERRO_FIG_DIR": str(out)}
-    try:
-        if edit:
-            GEN.write_text(edit(src))
-        res = subprocess.run([sys.executable, str(GEN)], cwd=REPO,
-                             capture_output=True, text=True, env=env)
-    finally:
-        GEN.write_text(src)
-    assert GEN.read_text() == src, "the generator was not restored"
+    # Run a COPY. Writing the tracked generator and restoring it is the hazard
+    # the flagship's own docstring says this avoids -- and killing a run
+    # mid-test left the edit on disk, which is exactly how a strided sample
+    # scan once clobbered a committed sidecar here.
+    run_from = tmp / ("gen_mut.py" if edit else "gen_base.py")
+    run_from.write_text(edit(src) if edit else src)
+    env = {**os.environ, "MPLBACKEND": "Agg", "FERRO_FIG_DIR": str(out),
+           "PYTHONPATH": str(REPO / "scripts")}
+    res = subprocess.run([sys.executable, str(run_from)], cwd=REPO,
+                         capture_output=True, text=True, env=env)
+    assert GEN.read_text() == src, "the tracked generator was modified"
     assert res.returncode == 0, res.stderr[-500:]
     return out
 
@@ -727,7 +737,7 @@ def test_the_produced_set_equality_can_actually_fail():
 
     node = next(n for n in _ast.parse(Path(__file__).read_text()).body
                 if isinstance(n, _ast.FunctionDef)
-                and n.name == "test_the_committed_census_figures_are_what_the_generator_draws")
+                and n.name == "_assert_matches_committed")
     args = [_ast.unparse(c.args[0]) for c in _ast.walk(node)
             if isinstance(c, _ast.Call)
             and getattr(c.func, "id", "") == "_drawing" and c.args]
@@ -774,6 +784,101 @@ def test_the_flagship_comparison_can_actually_fail(tmp_path):
     finally:
         doc.close()
 
-    assert _drawing(out) != _drawing(src), (
-        "blanking the alpha plane of a committed figure does not change what "
-        "the flagship compares, so the flagship cannot detect a stale figure")
+    # INVOKE the flagship's comparison, do not re-implement it. The previous
+    # version asserted `_drawing(out) != _drawing(src)` inline, which made it a
+    # seventh `_drawing` control rather than a control of the check that uses
+    # it -- so deleting the flagship's assertion, or pointing `committed` at
+    # the produced file, both stayed green with a stale figure on disk.
+    staged = tmp_path / src.name
+    staged.write_bytes(out.read_bytes())
+    with pytest.raises(AssertionError):
+        _assert_matches_committed(staged)
+    # And it must PASS on the unperturbed figure, or it would "detect"
+    # everything and mean nothing.
+    staged.write_bytes(src.read_bytes())
+    _assert_matches_committed(staged)
+
+
+def test_swapping_glyph_outlines_is_detected(tmp_path):
+    """`/Font` control, crafted rather than drawn.
+
+    A font-family change is not isolating -- glyph metrics move the content
+    stream too, and the isolation assertion above correctly refuses it. The
+    reachable attack is the one a reviewer used: swap the Type3 outlines for
+    `zero` and `one` inside a committed figure, so a page made of counts reads
+    differently while every other surface is untouched. Hashing the `/Font`
+    RESOURCE did not catch it; hashing the subtree does.
+    """
+    try:
+        import pymupdf
+    except ImportError:
+        import fitz as pymupdf
+
+    src = FIG_DIR / "fig2c_census_volume.pdf"
+    copy = tmp_path / "c.pdf"
+    copy.write_bytes(src.read_bytes())
+    doc = pymupdf.open(copy)
+    swapped = False
+    try:
+        fonts = doc.xref_get_key(doc[0].xref, "Resources/Font")
+        assert fonts[0] == "xref", f"no font resource to perturb: {fonts}"
+        num = int(str(fonts[1]).split()[0])
+        for key in doc.xref_get_keys(num):
+            val = doc.xref_get_key(num, key)
+            if val[0] != "xref":
+                continue
+            procs = doc.xref_get_key(int(str(val[1]).split()[0]), "CharProcs")
+            if procs[0] != "xref":
+                continue
+            cnum = int(str(procs[1]).split()[0])
+            keys = doc.xref_get_keys(cnum)
+            if "zero" in keys and "one" in keys:
+                z = int(str(doc.xref_get_key(cnum, "zero")[1]).split()[0])
+                o = int(str(doc.xref_get_key(cnum, "one")[1]).split()[0])
+                zs, os_ = doc.xref_stream(z), doc.xref_stream(o)
+                doc.update_stream(z, os_)
+                doc.update_stream(o, zs)
+                swapped = True
+                break
+        assert swapped, (
+            "fig2c no longer carries Type3 `zero`/`one` glyphs, so this "
+            "control no longer perturbs the surface it was written for")
+        out = tmp_path / "m.pdf"
+        doc.save(out, deflate=True)
+    finally:
+        doc.close()
+
+    a, b = _drawing(out), _drawing(src)
+    moved = {k.split(":")[0] for (k, x), (_, y) in zip(a, b) if x != y}
+    assert moved == {"Font"}, (
+        f"swapping glyph outlines moved {sorted(moved) or 'nothing'}; it must "
+        "move the Font surface and only that")
+
+
+@pytest.mark.parametrize("key,value", [("MediaBox", "[0 0 900 700]"),
+                                       ("Rotate", "90")])
+def test_page_geometry_changes_are_detected(tmp_path, key, value):
+    """Crafted, for the same reason as the font control: no generator edit
+    moves page geometry without also moving the content stream, and a surface
+    hashed without a control is how `/Annots` shipped inert."""
+    try:
+        import pymupdf
+    except ImportError:
+        import fitz as pymupdf
+
+    src = FIG_DIR / "fig2c_census_volume.pdf"
+    copy = tmp_path / "c.pdf"
+    copy.write_bytes(src.read_bytes())
+    doc = pymupdf.open(copy)
+    try:
+        doc.xref_set_key(doc[0].xref, key, value)
+        out = tmp_path / "m.pdf"
+        doc.save(out, deflate=True)
+    finally:
+        doc.close()
+
+    a, b = _drawing(out), _drawing(src)
+    moved = {k.split(":")[0] for (k, x), (_, y) in zip(a, b) if x != y}
+    assert key in moved, (
+        f"changing /{key} moved {sorted(moved) or 'nothing'}; the surface is "
+        "hashed but not detected")
