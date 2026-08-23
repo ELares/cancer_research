@@ -1,0 +1,107 @@
+{
+ "rust": {
+  "reference_po2_mmhg": 40.0,
+  "formula": "let p = p_mmhg.max(0.0); (3.0 * p + 3.0) / (p + 3.0)",
+  "has_oer_exo_factor": true,
+  "has_relative_efficacy": true
+ },
+ "anchors": [
+  {
+   "name": "anoxic value m(0)",
+   "computed": 1.0,
+   "published": 1.0,
+   "ok": true
+  },
+  {
+   "name": "half-maximal at K mmHg",
+   "computed": 2.0,
+   "published": 2.0,
+   "ok": true
+  },
+  {
+   "name": "asymptote",
+   "computed": 2.999999994,
+   "published": 3.0,
+   "ok": true
+  }
+ ],
+ "formula_matches_published": true,
+ "expected_formula": "let p = p_mmhg.max(0.0); (3.0 * p + 3.0) / (p + 3.0)",
+ "rows": [
+  {
+   "pO2_mmhg": 0,
+   "o2_supply": 0.0,
+   "linear": 0.0,
+   "oer": 0.3496,
+   "gap": 0.3496
+  },
+  {
+   "pO2_mmhg": 0.5,
+   "o2_supply": 0.0125,
+   "linear": 0.0125,
+   "oer": 0.4495,
+   "gap": 0.437
+  },
+  {
+   "pO2_mmhg": 1,
+   "o2_supply": 0.025,
+   "linear": 0.025,
+   "oer": 0.5244,
+   "gap": 0.4994
+  },
+  {
+   "pO2_mmhg": 2,
+   "o2_supply": 0.05,
+   "linear": 0.05,
+   "oer": 0.6293,
+   "gap": 0.5793
+  },
+  {
+   "pO2_mmhg": 3,
+   "o2_supply": 0.075,
+   "linear": 0.075,
+   "oer": 0.6992,
+   "gap": 0.6242
+  },
+  {
+   "pO2_mmhg": 5,
+   "o2_supply": 0.125,
+   "linear": 0.125,
+   "oer": 0.7866,
+   "gap": 0.6616
+  },
+  {
+   "pO2_mmhg": 7.5,
+   "o2_supply": 0.1875,
+   "linear": 0.1875,
+   "oer": 0.849,
+   "gap": 0.6615
+  },
+  {
+   "pO2_mmhg": 10,
+   "o2_supply": 0.25,
+   "linear": 0.25,
+   "oer": 0.8874,
+   "gap": 0.6374
+  },
+  {
+   "pO2_mmhg": 20,
+   "o2_supply": 0.5,
+   "linear": 0.5,
+   "oer": 0.9576,
+   "gap": 0.4576
+  },
+  {
+   "pO2_mmhg": 40.0,
+   "o2_supply": 1.0,
+   "linear": 1.0,
+   "oer": 1.0,
+   "gap": 0.0
+  }
+ ],
+ "worst_gap_pO2": 5,
+ "worst_gap": 0.6616,
+ "anoxic_linear": 0.0,
+ "anoxic_oer": 0.3496,
+ "endpoints_agree": true
+}
