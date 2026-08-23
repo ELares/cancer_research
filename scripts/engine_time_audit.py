@@ -177,13 +177,85 @@ def logical_lines(text: str):
             i += 1
 
 
+# Modules that integrate their own equation on their own internal clock, so a
+# timestep of theirs is a numerical-stability parameter and not a statement
+# about what one loop step is worth. Named explicitly: deriving this from a
+# field name is what let a spelling decide a classification.
+SOLVER_MODULES = {"trigger_wave", "reaction_diffusion"}
+
+def _rust_sources():
+    """Every Rust source the engine ships, LIBRARY AND BINARIES.
+
+    The first version globbed `ferroptosis-core/src` only, so "exactly one
+    wall-clock binding exists anywhere in the engine" was measured over the
+    library alone -- and `sim-tme` carries a second one, in the binary that
+    produced the manuscript's published immune numbers. An audit whose scope is
+    narrower than its claim cannot find the thing it exists to find.
+    """
+    out = list(SRC.glob("*.rs"))
+    sims = SRC.parent.parent
+    for d in sorted(sims.glob("sim-*/src")):
+        out.extend(sorted(d.glob("*.rs")))
+    return out
+
+
 def _default_for(stem: str, field: str, unit: str):
-    """The literal a named per-step duration field is constructed with."""
-    for p in SRC.glob("*.rs"):
+    """The literal a named per-step duration field is constructed with.
+
+    Keyed on the DECLARING FILE. The first version ignored its `stem` argument
+    and returned the first match anywhere in the tree, so a second module
+    declaring the same field name silently rewrote another module's published
+    value -- `trigger_wave`'s 0.02 min/step was reported as 30.0 under a probe.
+    """
+    cands = [p for p in _rust_sources() if p.name == stem] or _rust_sources()
+    for p in cands:
         m = re.search(rf"\b{re.escape(field)}\s*:\s*(\d+(?:\.\d+)?)", p.read_text(errors="ignore"))
         if m:
             return float(m.group(1)) * UNIT_MIN[unit.lower()]
     return None
+
+
+def find_implied_windows():
+    """Bindings a binary IMPLIES without ever declaring a per-step duration.
+
+    `sim-tme` states no minutes-per-step anywhere. It states a validity WINDOW
+    for the biology it models -- "resident T cell phase (0-48h)" -- and a loop
+    length, `N_STEPS = 180`. Together those price a step at 16 minutes, and
+    that binary produced the manuscript's published immune numbers.
+
+    This is the form issue #727 pointed at, and the form an audit looking for
+    `dt_min` or "N minutes per step" cannot see. It is reported SEPARATELY from
+    an explicit declaration because it is weaker evidence -- a scope claim
+    about which biology is in range is not the same act as declaring a clock --
+    but it is a claim about the same quantity and it disagrees.
+    """
+    out = []
+    win = re.compile(r"\((\d+)\s*-\s*(\d+)\s*h\)")
+    for p_ in _rust_sources():
+        if not p_.parent.parent.name.startswith("sim-"):
+            continue
+        txt = p_.read_text(errors="ignore")
+        m_steps = re.search(r"const N_STEPS:\s*\w+\s*=\s*(\d+)", txt)
+        if not m_steps:
+            continue
+        steps = int(m_steps.group(1))
+        for ln, line in enumerate(txt.splitlines(), 1):
+            if not line.lstrip().startswith("//"):
+                continue
+            m = win.search(line)
+            if not m:
+                continue
+            hours = float(m.group(2)) - float(m.group(1))
+            if hours <= 0:
+                continue
+            out.append({
+                "binary": p_.parent.parent.name, "module": p_.name, "line": ln,
+                "kind": "implied-window", "n_steps": steps,
+                "window_hours": hours,
+                "minutes_per_step": round(hours * 60.0 / steps, 4),
+                "text": line.strip()[:160],
+            })
+    return out
 
 
 def find_step_bindings():
@@ -194,7 +266,7 @@ def find_step_bindings():
     a bool cannot carry the finding that they do.
     """
     sites = []
-    for p in sorted(SRC.glob("*.rs")):
+    for p in _rust_sources():
         text = p.read_text(errors="ignore")
         for ln, line in logical_lines(text):
             for how, pat in BINDINGS:
@@ -229,7 +301,18 @@ def find_step_bindings():
                 # disagreement, unreconciled" between a PDE stability step and
                 # a step-to-minute alignment: unlike objects, and two solvers
                 # having different dt is not a contradiction.
-                kind = ("solver-timestep" if how == "named-field"
+                # Classified by WHAT IT MEASURES, not by how it is spelled.
+                # Keying on `how == "named-field"` meant any second binding
+                # named `dt_<unit>` was excluded from the audit's own headline
+                # claim by construction: a probe shipped a 30 min/step
+                # wall-clock field and every guard stayed green.
+                #
+                # A solver timestep belongs to a module that integrates its own
+                # equation on its own internal clock. Anything else prices the
+                # 180-step loop. Unknown modules fall to WALL-CLOCK, the
+                # conservative direction, because that is the side that makes
+                # an "exactly one binding" claim harder to satisfy.
+                kind = ("solver-timestep" if p.stem in SOLVER_MODULES
                         else "wall-clock")
                 sites.append({
                     "module": p.name, "line": ln, "how": how, "kind": kind,
@@ -266,7 +349,7 @@ def _orphan_timescales():
     """
     field = re.compile(r"\bpub\s+(\w+_(?:days?|hours?|hrs?|mins?|minutes?|secs?))\s*:")
     out = {}
-    for p in sorted(SRC.glob("*.rs")):
+    for p in _rust_sources():
         names = set(field.findall(p.read_text(errors="ignore")))
         for nm in sorted(names):
             refs = []
@@ -553,7 +636,7 @@ def _p3_order_verdict(p3, modelled):
 
 def scan() -> dict:
     modules = {}
-    for p in sorted(SRC.glob("*.rs")):
+    for p in _rust_sources():
         text = p.read_text(errors="ignore")
         times, steps = [], 0
         for i, line in enumerate(text.split("\n"), 1):
@@ -623,6 +706,7 @@ def scan() -> dict:
         "real_time_only": sorted(real_only),
         "per_step_only": sorted(step_only),
         "real_time_module_callers": reach,
+        "implied_windows": find_implied_windows(),
         "step_bindings": bindings,
         "n_step_bindings": len(bindings),
         "wall_clock_conventions": [{"module": m, "minutes_per_step": v}
@@ -889,7 +973,12 @@ def render(d: dict) -> str:
               "the timescale inside it is not.", ""]
 
     L += ["## What this does not do", ""]
-    L += ["* It does not choose a step duration. Adopting one across the "
+    L += ["* It does not choose a step duration -- and it now MEASURES that "
+          "there are two competing readings rather than one, an explicit "
+          "`tumor_pk` declaration at 1 min/step and an implied window in "
+          "`sim-tme` at 16 min/step. The reconciliation, which adopts neither "
+          "and says which applies where, is the step-duration section of "
+          "`simulations/calibration/parameter_provenance.md`. Adopting one across the "
           "engine would move every calibrated layer and the committed "
           "byte-identity gates, and belongs to whoever owns those "
           "calibrations.",

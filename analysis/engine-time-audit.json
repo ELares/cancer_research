@@ -7,6 +7,18 @@
  "distinct_minutes_per_step": [
   1.0
  ],
+ "implied_windows": [
+  {
+   "binary": "sim-tme",
+   "kind": "implied-window",
+   "line": 14,
+   "minutes_per_step": 16.0,
+   "module": "main.rs",
+   "n_steps": 180,
+   "text": "//! - Spatial immune model valid for resident T cell phase (0-48h);",
+   "window_hours": 48.0
+  }
+ ],
  "modules": {
   "biochem.rs": {
    "examples": [
@@ -74,6 +86,36 @@
    "examples": [],
    "per_step_mentions": 17,
    "real_time_mentions": 0
+  },
+  "main.rs": {
+   "examples": [
+    {
+     "context": "// the CONDITION (timepoint) index. The committed timepoints have a 6-hour",
+     "form": "magnitude",
+     "line": 46,
+     "value": "6-hour"
+    },
+    {
+     "context": "// Timepoints: 0 to 28 days",
+     "form": "magnitude",
+     "line": 65,
+     "value": "28 days"
+    },
+    {
+     "context": "eprintln!(\"--- Timepoint: {:.0}h ({:.1} days) ---\", hours, days);",
+     "form": "bare-unit",
+     "line": 86,
+     "value": "({:.1} days)"
+    },
+    {
+     "context": "// Test at 7 days (1 week) with SDT",
+     "form": "magnitude",
+     "line": 158,
+     "value": "7 days"
+    }
+   ],
+   "per_step_mentions": 0,
+   "real_time_mentions": 4
   },
   "oxygen.rs": {
    "examples": [],
@@ -167,6 +209,11 @@
    ],
    "per_step_mentions": 0,
    "real_time_mentions": 4
+  },
+  "snapshot.rs": {
+   "examples": [],
+   "per_step_mentions": 3,
+   "real_time_mentions": 0
   },
   "stromal.rs": {
    "examples": [],
@@ -342,6 +389,7 @@
   "oxygen.rs",
   "persister.rs",
   "repair.rs",
+  "snapshot.rs",
   "stromal.rs"
  ],
  "pricing_symbols": {
@@ -366,6 +414,20 @@
    "sim-window"
   ],
   "cell.rs": [
+   "sim-combo",
+   "sim-combo-mech",
+   "sim-icd",
+   "sim-invivo",
+   "sim-original",
+   "sim-scale",
+   "sim-spatial",
+   "sim-tissue-pk",
+   "sim-tme",
+   "sim-tme-3d",
+   "sim-tumor-pk",
+   "sim-window"
+  ],
+  "main.rs": [
    "sim-combo",
    "sim-combo-mech",
    "sim-icd",
@@ -407,6 +469,7 @@
  },
  "real_time_only": [
   "cell.rs",
+  "main.rs",
   "photosensitizer_pk.rs",
   "senescence.rs",
   "trigger_wave.rs",
@@ -419,36 +482,6 @@
   }
  ],
  "step_bindings": [
-  {
-   "callers": [],
-   "how": "named-field",
-   "kind": "solver-timestep",
-   "line": 74,
-   "minutes_per_step": 0.02,
-   "module": "trigger_wave.rs",
-   "text": "pub dt_min: f64,",
-   "unit": "min"
-  },
-  {
-   "callers": [],
-   "how": "named-field",
-   "kind": "solver-timestep",
-   "line": 99,
-   "minutes_per_step": 0.02,
-   "module": "trigger_wave.rs",
-   "text": "dt_min: 0.02,",
-   "unit": "min"
-  },
-  {
-   "callers": [],
-   "how": "named-field",
-   "kind": "solver-timestep",
-   "line": 157,
-   "minutes_per_step": 0.02,
-   "module": "trigger_wave.rs",
-   "text": "...et dt = cfg.dt_min;",
-   "unit": "min"
-  },
   {
    "callers": [
     "sim-tme-3d",
@@ -487,6 +520,36 @@
    "module": "tumor_pk.rs",
    "text": "for minute in 0..n_steps {",
    "unit": "minute"
+  },
+  {
+   "callers": [],
+   "how": "named-field",
+   "kind": "solver-timestep",
+   "line": 74,
+   "minutes_per_step": 0.02,
+   "module": "trigger_wave.rs",
+   "text": "pub dt_min: f64,",
+   "unit": "min"
+  },
+  {
+   "callers": [],
+   "how": "named-field",
+   "kind": "solver-timestep",
+   "line": 99,
+   "minutes_per_step": 0.02,
+   "module": "trigger_wave.rs",
+   "text": "dt_min: 0.02,",
+   "unit": "min"
+  },
+  {
+   "callers": [],
+   "how": "named-field",
+   "kind": "solver-timestep",
+   "line": 157,
+   "minutes_per_step": 0.02,
+   "module": "trigger_wave.rs",
+   "text": "...et dt = cfg.dt_min;",
+   "unit": "min"
   }
  ],
  "step_counts": [

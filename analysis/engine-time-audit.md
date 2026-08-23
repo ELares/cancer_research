@@ -8,12 +8,12 @@ Both numbers are CONVENTIONS, not matches -- deduplicating one side and not the 
 
 | module | line | kind | how it is written | one step = | reached by |
 |---|--:|---|---|--:|---|
-| `trigger_wave.rs` | 74 | solver-timestep | `pub dt_min: f64,` | 0.02 min | *no caller* |
-| `trigger_wave.rs` | 99 | solver-timestep | `dt_min: 0.02,` | 0.02 min | *no caller* |
-| `trigger_wave.rs` | 157 | solver-timestep | `...et dt = cfg.dt_min;` | 0.02 min | *no caller* |
 | `tumor_pk.rs` | 354 | wall-clock | `...me points in minutes (one per simulation step).` | 1 min | `sim-tme-3d`, `sim-tumor-pk` |
 | `tumor_pk.rs` | 364 | wall-clock | `...-courses at 1-minute resolution (one value per simula` | 1 min | `sim-tme-3d`, `sim-tumor-pk` |
 | `tumor_pk.rs` | 391 | wall-clock | `for minute in 0..n_steps {` | 1 min | `sim-tme-3d`, `sim-tumor-pk` |
+| `trigger_wave.rs` | 74 | solver-timestep | `pub dt_min: f64,` | 0.02 min | *no caller* |
+| `trigger_wave.rs` | 99 | solver-timestep | `dt_min: 0.02,` | 0.02 min | *no caller* |
+| `trigger_wave.rs` | 157 | solver-timestep | `...et dt = cfg.dt_min;` | 0.02 min | *no caller* |
 
 `solver-timestep` rows are an integrator's own `dt`, constrained by numerical stability -- `trigger_wave` asserts a CFL bound beside its. Two solvers having different `dt` is not a disagreement about what a step is worth, and an earlier draft pooled them to report one.
 
@@ -52,6 +52,7 @@ Scope: this is **not** a falsification of P3 as registered. P3's stated falsifie
 |---|---|
 | `biochem.rs` | `sim-combo`, `sim-combo-mech`, `sim-icd`, `sim-invivo`, `sim-spatial`, `sim-tissue-pk`, `sim-tme`, `sim-tme-3d`, `sim-window` |
 | `cell.rs` | `sim-combo`, `sim-combo-mech`, `sim-icd`, `sim-invivo`, `sim-original`, `sim-scale`, `sim-spatial`, `sim-tissue-pk`, `sim-tme`, `sim-tme-3d`, `sim-tumor-pk`, `sim-window` |
+| `main.rs` | `sim-combo`, `sim-combo-mech`, `sim-icd`, `sim-invivo`, `sim-original`, `sim-scale`, `sim-spatial`, `sim-tissue-pk`, `sim-tme`, `sim-tme-3d`, `sim-tumor-pk`, `sim-window` |
 | `params.rs` | `sim-combo`, `sim-combo-mech`, `sim-icd`, `sim-invivo`, `sim-original`, `sim-scale`, `sim-spatial`, `sim-tissue-pk`, `sim-tme`, `sim-tme-3d`, `sim-tumor-pk`, `sim-window` |
 | `photosensitizer_pk.rs` | `sim-spatial` |
 | `senescence.rs` | `sim-tme-3d` |
@@ -77,7 +78,7 @@ An earlier version of this report said the day-scale, hour-scale and minute-scal
 
 ## What this does not do
 
-* It does not choose a step duration. Adopting one across the engine would move every calibrated layer and the committed byte-identity gates, and belongs to whoever owns those calibrations.
+* It does not choose a step duration -- and it now MEASURES that there are two competing readings rather than one, an explicit `tumor_pk` declaration at 1 min/step and an implied window in `sim-tme` at 16 min/step. The reconciliation, which adopts neither and says which applies where, is the step-duration section of `simulations/calibration/parameter_provenance.md`. Adopting one across the engine would move every calibrated layer and the committed byte-identity gates, and belongs to whoever owns those calibrations.
 * The core biochemical loop (`biochem.rs`) declares no wall-clock step duration; a module composed alongside it does, which is a different statement. Derived, because a fixed sentence here would survive biochem.rs acquiring one.
 * The scan is textual, so the binding set is a lower bound. That caveat was true in the previous version too, sitting under a headline asserting an absolute absence -- which is why the headline is now generated from the scan instead of written beside it.
 

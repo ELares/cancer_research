@@ -362,10 +362,25 @@ def test_it_does_not_choose_or_reconcile_a_step_duration():
     assert not re.search(r"\bSTEP_MINUTES\b|\bstep_duration\s*=\s*\d", src), (
         "the audit has started asserting a step duration, which is a modelling "
         "decision and not this script's to make")
-    # it must not write into the engine either
-    assert "ferroptosis-core" not in src.split("OUT_JSON")[1], (
-        "the generator reaches into the engine source after defining its "
-        "outputs; this audit measures and must not modify")
+    # It must not WRITE into the engine either. Checked as writes rather than
+    # as mentions: the previous proxy banned the substring "ferroptosis-core"
+    # anywhere after OUT_JSON, which fired on a docstring explaining WHICH
+    # directories the audit reads -- a scope note, and exactly the note that
+    # had to be added when the audit was found to be scanning the library only.
+    import ast as _ast
+
+    tree = _ast.parse(src)
+    for node in _ast.walk(tree):
+        if isinstance(node, _ast.Call) and getattr(node.func, "attr", "") in (
+                "write_text", "write_bytes", "mkdir", "unlink"):
+            target = getattr(node.func.value, "id", "")
+            assert target in ("OUT_MD", "OUT_JSON"), (
+                f"the audit writes via {target or '<expr>'}."
+                f"{node.func.attr}(); it measures and must not modify")
+        if isinstance(node, _ast.Call) and getattr(node.func, "id", "") == "open":
+            mode = next((a for a in node.args[1:2]), None)
+            if isinstance(mode, _ast.Constant) and "w" in str(mode.value):
+                raise AssertionError("the audit opens a file for writing")
 
 
 def test_the_false_absence_claim_cannot_return():
