@@ -2,7 +2,7 @@
 
 WHAT THIS DOCUMENT NOW CLAIMS
 ------------------------------
-EXACTLY ONE module prices a simulation step in wall-clock time: `tumor_pk`, at
+ONE module DECLARES a step duration in wall-clock time (`tumor_pk`, one minute), and a SECOND reading is implied without declaring one: the immune model states a 0-48h scope over a 180-step loop in `sim-tme` and `sim-tme-3d`, pricing a step at 16 minutes. The two are 16x apart, neither is measured, and the reconciliation is the step-duration section of `simulations/calibration/parameter_provenance.md`  -- the line this file replaced said EXACTLY ONE, and rotted exactly as its own docstring warns prose does; the widened sweep is at
 one minute per step, reaching `sim-tumor-pk`'s 180-step run = 3.0 hours.
 `trigger_wave`'s `dt_min` is a CFL-constrained integrator timestep, not a
 binding on the simulation step. P3 IS represented -- `cell.rs` carries the four
@@ -362,25 +362,48 @@ def test_it_does_not_choose_or_reconcile_a_step_duration():
     assert not re.search(r"\bSTEP_MINUTES\b|\bstep_duration\s*=\s*\d", src), (
         "the audit has started asserting a step duration, which is a modelling "
         "decision and not this script's to make")
-    # It must not WRITE into the engine either. Checked as writes rather than
-    # as mentions: the previous proxy banned the substring "ferroptosis-core"
-    # anywhere after OUT_JSON, which fired on a docstring explaining WHICH
-    # directories the audit reads -- a scope note, and exactly the note that
-    # had to be added when the audit was found to be scanning the library only.
+    # It must not WRITE into the engine either. The original guard banned the
+    # substring "ferroptosis-core" after OUT_JSON, which fired on a docstring
+    # naming the directories the audit READS. Its AST replacement was weaker in
+    # one direction that matters -- it passed `os.system("... > engine.rs")`,
+    # which the substring proxy caught.
+    #
+    # Both together: no write-capable call may name anything outside the two
+    # declared outputs, AND no shell-out / filesystem-mutating helper may be
+    # reachable at all.
     import ast as _ast
 
     tree = _ast.parse(src)
+    WRITE_ATTRS = {"write_text", "write_bytes", "mkdir", "unlink", "rmdir",
+                   "rename", "replace", "touch", "chmod", "symlink_to"}
+    BANNED_CALLS = {"system", "popen", "remove", "rmtree", "removedirs",
+                    "unlink", "rename", "replace", "run", "call",
+                    "check_call", "check_output", "Popen"}
     for node in _ast.walk(tree):
-        if isinstance(node, _ast.Call) and getattr(node.func, "attr", "") in (
-                "write_text", "write_bytes", "mkdir", "unlink"):
+        if not isinstance(node, _ast.Call):
+            continue
+        attr = getattr(node.func, "attr", "")
+        name = getattr(node.func, "id", "")
+        if attr in WRITE_ATTRS:
             target = getattr(node.func.value, "id", "")
             assert target in ("OUT_MD", "OUT_JSON"), (
-                f"the audit writes via {target or '<expr>'}."
-                f"{node.func.attr}(); it measures and must not modify")
-        if isinstance(node, _ast.Call) and getattr(node.func, "id", "") == "open":
-            mode = next((a for a in node.args[1:2]), None)
-            if isinstance(mode, _ast.Constant) and "w" in str(mode.value):
-                raise AssertionError("the audit opens a file for writing")
+                f"the audit writes via {target or '<expr>'}.{attr}(); it "
+                "measures and must not modify")
+        if attr == "open" or name == "open":
+            # Mode is args[1] for the builtin `open(path, "w")` and args[0]
+            # for the method `Path.open("w")`. Reading only args[1] let the
+            # method form through.
+            pos = node.args[1:2] if name == "open" else node.args[0:1]
+            args = list(pos) + [k.value for k in node.keywords
+                                if k.arg == "mode"]
+            for a in args:
+                if isinstance(a, _ast.Constant) and any(
+                        c in str(a.value) for c in "wax+"):
+                    raise AssertionError("the audit opens a file for writing")
+        if attr in BANNED_CALLS or name in BANNED_CALLS:
+            raise AssertionError(
+                f"the audit calls {attr or name}(), which can mutate the tree "
+                "outside its declared outputs")
 
 
 def test_the_false_absence_claim_cannot_return():

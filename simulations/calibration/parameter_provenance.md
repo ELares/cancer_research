@@ -218,22 +218,56 @@ while a second reading sat in a binary. The audit now scans `sim-*/src` too.
 | reading | source | minutes/step | 180 steps |
 |---|---|--:|--:|
 | explicit declaration | `tumor_pk.rs`, "time points in minutes, one per simulation step" | **1.0** | 3.0 h |
-| implied window | `sim-tme/src/main.rs:14`, "spatial immune model valid for resident T cell phase (0-48h)" with `N_STEPS = 180` | **16.0** | 48 h |
+| implied window | `sim-tme/src/main.rs:14`, `sim-tme/README.md:138` and `sim-tme-3d/README.md:157` -- "resident T cell phase (0-48h)" -- each with `N_STEPS = 180` | **16.0** | 48 h |
 
-The two are different KINDS of claim. `tumor_pk` declares a clock; `sim-tme`
-states which biology is in range and lets a loop length imply one. The second
-is weaker evidence about intent and it is not weaker about consequence: it is
-the binary that produced this book's published Chapter 7 immune numbers, and
-its 60-step immune activation delay reads as 16 hours under it and one hour
-under the other.
+The two are different KINDS of claim. `tumor_pk` declares a clock; the immune
+sources state which biology is in range and let a loop length imply one. The
+second is weaker evidence about intent and it is not weaker about consequence:
+`sim-tme` produced this book's published Chapter 7 immune numbers, and its
+60-step immune activation delay reads as 16 hours under it and one hour under
+the other.
 
 **Neither is adopted as correct, and that is the finding.** The engine does not
-have a step duration; it has two, in different binaries, and no measurement
-distinguishes them. What can be said is which applies where: use 1 min/step
-only for `sim-tumor-pk` and the `sim-tme-3d --dose-sweep` path, where the PK
-solver is what defines the axis, and 16 min/step only when reading `sim-tme`'s
-immune results, where the 0-48h window is the model's own stated scope. Any
-number that crosses those binaries is currently unconvertible.
+have a step duration; it has two, and no measurement distinguishes them.
+
+**And they are not cleanly separable by binary.** An earlier draft of this
+section said to use 1 min/step for `sim-tme-3d` and 16 min/step for `sim-tme`.
+That was wrong: `sim-tme-3d` states the same 0-48h immune window in its own
+README while also being the binary that reaches the PK solver under
+`--dose-sweep`, so it carries BOTH readings depending on which subsystem you
+are reading. The honest rule is narrower than a per-binary one:
+
+- **1 min/step** applies to the PK trajectory specifically -- `sim-tumor-pk`,
+  and `sim-tme-3d`'s `--dose-sweep` dosing schedule -- because that is the
+  quantity `tumor_pk.rs` declares a clock for.
+- **16 min/step** applies to the immune cascade specifically, wherever it is
+  read, because that is the window the immune model states as its own scope.
+- Anything combining the two is unconvertible until one is measured.
+
+**A published headline sits on exactly that seam.** The immune-amplification
+result is stated as ~104:1 in 2D from `sim-tme` and ~4:1 re-run in 3D from
+`sim-tme-3d` (Chapter 7; P5 in `PREREGISTRATION.md`). Both are RATIOS of kills
+within a single run, so neither divides by a step duration and neither moves --
+but the pair is read as one claim across two binaries, and this section is why
+that reading needs the immune clock to be the same in both. It is: both state
+0-48h. The seam is real and, on this headline, harmless.
+
+### What this section previously claimed, and why it was wrong
+
+Recorded rather than quietly deleted, because the failure is reusable.
+
+An earlier draft said the manuscript "states no per-step duration", making
+issue #727's ~16 min/step an attribution to text that did not exist. Section
+8.4 states the 0-48 hour immune window two bullets above the 180-step sentence
+that draft quoted as evidence of silence, and says it again at two other
+points. The claim was false, and the guard protecting it grepped for the
+literal string "16 min/step" -- a quotient no document would ever write -- so
+it could not have failed.
+
+The measurement behind the draft had the same shape: `engine_time_audit.py`
+scanned `ferroptosis-core/src` only, so "exactly one binding anywhere in the
+engine" was true of the library and false of the engine. A claim is only as
+wide as the sweep behind it.
 
 ### What is NOT a binding
 

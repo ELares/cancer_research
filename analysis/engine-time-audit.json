@@ -2,12 +2,23 @@
  "bindings_reaching_production": 3,
  "carry_both": [
   "biochem.rs",
-  "params.rs"
+  "params.rs",
+  "sim-tme/main.rs"
  ],
  "distinct_minutes_per_step": [
   1.0
  ],
  "implied_windows": [
+  {
+   "binary": "sim-tme",
+   "kind": "implied-window",
+   "line": 138,
+   "minutes_per_step": 16.0,
+   "module": "README.md",
+   "n_steps": 180,
+   "text": "- Immune model captures only the resident T cell phase (0-48h), not systemic lymph node priming (1-7 days)",
+   "window_hours": 48.0
+  },
   {
    "binary": "sim-tme",
    "kind": "implied-window",
@@ -17,8 +28,19 @@
    "n_steps": 180,
    "text": "//! - Spatial immune model valid for resident T cell phase (0-48h);",
    "window_hours": 48.0
+  },
+  {
+   "binary": "sim-tme-3d",
+   "kind": "implied-window",
+   "line": 157,
+   "minutes_per_step": 16.0,
+   "module": "README.md",
+   "n_steps": 180,
+   "text": "The spatial immune model (`immune_spatial`, #188) is a 0\u201348 h resident T-cell cascade with a single PD-1 brake. Phase 1 of #243 adds **T-cell exhaustion**: sust",
+   "window_hours": 48.0
   }
  ],
+ "library_modules": 33,
  "modules": {
   "biochem.rs": {
    "examples": [
@@ -86,36 +108,6 @@
    "examples": [],
    "per_step_mentions": 17,
    "real_time_mentions": 0
-  },
-  "main.rs": {
-   "examples": [
-    {
-     "context": "// the CONDITION (timepoint) index. The committed timepoints have a 6-hour",
-     "form": "magnitude",
-     "line": 46,
-     "value": "6-hour"
-    },
-    {
-     "context": "// Timepoints: 0 to 28 days",
-     "form": "magnitude",
-     "line": 65,
-     "value": "28 days"
-    },
-    {
-     "context": "eprintln!(\"--- Timepoint: {:.0}h ({:.1} days) ---\", hours, days);",
-     "form": "bare-unit",
-     "line": 86,
-     "value": "({:.1} days)"
-    },
-    {
-     "context": "// Test at 7 days (1 week) with SDT",
-     "form": "magnitude",
-     "line": 158,
-     "value": "7 days"
-    }
-   ],
-   "per_step_mentions": 0,
-   "real_time_mentions": 4
   },
   "oxygen.rs": {
    "examples": [],
@@ -210,10 +202,135 @@
    "per_step_mentions": 0,
    "real_time_mentions": 4
   },
-  "snapshot.rs": {
+  "sim-combo/main.rs": {
+   "examples": [
+    {
+     "context": "//! 2. SDT at variable delay (0-28 days) targets persisters",
+     "form": "magnitude",
+     "line": 8,
+     "value": "28 days"
+    },
+    {
+     "context": "//! 2. SDT at variable delay (0-28 days) targets persisters",
+     "form": "bare-unit",
+     "line": 8,
+     "value": "(0-28 days)"
+    }
+   ],
+   "per_step_mentions": 0,
+   "real_time_mentions": 2
+  },
+  "sim-spatial/main.rs": {
+   "examples": [
+    {
+     "context": "/// Porfimer defaults: t_half=504 h (Bellnier 2006), t_dist=0 h",
+     "form": "magnitude",
+     "line": 54,
+     "value": "504 h"
+    },
+    {
+     "context": "/// Porfimer defaults: t_half=504 h (Bellnier 2006), t_dist=0 h",
+     "form": "magnitude",
+     "line": 54,
+     "value": "0 h"
+    },
+    {
+     "context": "/// (legacy \"light at peak\"; set ~24\u201348 h to model porfimer absorption",
+     "form": "magnitude",
+     "line": 55,
+     "value": "48 h"
+    }
+   ],
+   "per_step_mentions": 0,
+   "real_time_mentions": 3
+  },
+  "sim-tme-3d/main.rs": {
+   "examples": [],
+   "per_step_mentions": 45,
+   "real_time_mentions": 0
+  },
+  "sim-tme-3d/snapshot.rs": {
    "examples": [],
    "per_step_mentions": 3,
    "real_time_mentions": 0
+  },
+  "sim-tme/main.rs": {
+   "examples": [
+    {
+     "context": "//! - Spatial immune model valid for resident T cell phase (0-48h);",
+     "form": "magnitude",
+     "line": 14,
+     "value": "48h"
+    },
+    {
+     "context": "//!   systemic lymph node priming (1-7 days) is NOT modeled",
+     "form": "magnitude",
+     "line": 15,
+     "value": "7 days"
+    },
+    {
+     "context": "//!   systemic lymph node priming (1-7 days) is NOT modeled",
+     "form": "bare-unit",
+     "line": 15,
+     "value": "(1-7 days)"
+    },
+    {
+     "context": "eprintln!(\"Immune model: resident T cell phase only (0-48h), not systemic.\\n\");",
+     "form": "magnitude",
+     "line": 1208,
+     "value": "48h"
+    }
+   ],
+   "per_step_mentions": 7,
+   "real_time_mentions": 4
+  },
+  "sim-tumor-pk/main.rs": {
+   "examples": [
+    {
+     "context": "eprintln!(\"Drug: RSL3-like IV bolus (t_half=30 min)\");",
+     "form": "magnitude",
+     "line": 116,
+     "value": "30 min"
+    },
+    {
+     "context": "eprintln!(\"Drug: RSL3-like IV bolus (t_half=30 min)\");",
+     "form": "bare-unit",
+     "line": 116,
+     "value": "(t_half=30 min)"
+    }
+   ],
+   "per_step_mentions": 0,
+   "real_time_mentions": 2
+  },
+  "sim-window/main.rs": {
+   "examples": [
+    {
+     "context": "// the CONDITION (timepoint) index. The committed timepoints have a 6-hour",
+     "form": "magnitude",
+     "line": 46,
+     "value": "6-hour"
+    },
+    {
+     "context": "// Timepoints: 0 to 28 days",
+     "form": "magnitude",
+     "line": 65,
+     "value": "28 days"
+    },
+    {
+     "context": "eprintln!(\"--- Timepoint: {:.0}h ({:.1} days) ---\", hours, days);",
+     "form": "bare-unit",
+     "line": 86,
+     "value": "({:.1} days)"
+    },
+    {
+     "context": "// Test at 7 days (1 week) with SDT",
+     "form": "magnitude",
+     "line": 158,
+     "value": "7 days"
+    }
+   ],
+   "per_step_mentions": 0,
+   "real_time_mentions": 4
   },
   "stromal.rs": {
    "examples": [],
@@ -281,7 +398,7 @@
    "real_time_mentions": 16
   }
  },
- "modules_total": 33,
+ "modules_total": 47,
  "n_solver_timestep_conventions": 1,
  "n_solver_timestep_matches": 3,
  "n_step_bindings": 6,
@@ -389,7 +506,8 @@
   "oxygen.rs",
   "persister.rs",
   "repair.rs",
-  "snapshot.rs",
+  "sim-tme-3d/main.rs",
+  "sim-tme-3d/snapshot.rs",
   "stromal.rs"
  ],
  "pricing_symbols": {
@@ -427,20 +545,6 @@
    "sim-tumor-pk",
    "sim-window"
   ],
-  "main.rs": [
-   "sim-combo",
-   "sim-combo-mech",
-   "sim-icd",
-   "sim-invivo",
-   "sim-original",
-   "sim-scale",
-   "sim-spatial",
-   "sim-tissue-pk",
-   "sim-tme",
-   "sim-tme-3d",
-   "sim-tumor-pk",
-   "sim-window"
-  ],
   "params.rs": [
    "sim-combo",
    "sim-combo-mech",
@@ -461,6 +565,11 @@
   "senescence.rs": [
    "sim-tme-3d"
   ],
+  "sim-combo/main.rs": [],
+  "sim-spatial/main.rs": [],
+  "sim-tme/main.rs": [],
+  "sim-tumor-pk/main.rs": [],
+  "sim-window/main.rs": [],
   "trigger_wave.rs": [],
   "tumor_pk.rs": [
    "sim-tme-3d",
@@ -469,9 +578,12 @@
  },
  "real_time_only": [
   "cell.rs",
-  "main.rs",
   "photosensitizer_pk.rs",
   "senescence.rs",
+  "sim-combo/main.rs",
+  "sim-spatial/main.rs",
+  "sim-tumor-pk/main.rs",
+  "sim-window/main.rs",
   "trigger_wave.rs",
   "tumor_pk.rs"
  ],
@@ -482,6 +594,36 @@
   }
  ],
  "step_bindings": [
+  {
+   "callers": [],
+   "how": "named-field",
+   "kind": "solver-timestep",
+   "line": 74,
+   "minutes_per_step": 0.02,
+   "module": "trigger_wave.rs",
+   "text": "pub dt_min: f64,",
+   "unit": "min"
+  },
+  {
+   "callers": [],
+   "how": "named-field",
+   "kind": "solver-timestep",
+   "line": 99,
+   "minutes_per_step": 0.02,
+   "module": "trigger_wave.rs",
+   "text": "dt_min: 0.02,",
+   "unit": "min"
+  },
+  {
+   "callers": [],
+   "how": "named-field",
+   "kind": "solver-timestep",
+   "line": 157,
+   "minutes_per_step": 0.02,
+   "module": "trigger_wave.rs",
+   "text": "...et dt = cfg.dt_min;",
+   "unit": "min"
+  },
   {
    "callers": [
     "sim-tme-3d",
@@ -520,36 +662,6 @@
    "module": "tumor_pk.rs",
    "text": "for minute in 0..n_steps {",
    "unit": "minute"
-  },
-  {
-   "callers": [],
-   "how": "named-field",
-   "kind": "solver-timestep",
-   "line": 74,
-   "minutes_per_step": 0.02,
-   "module": "trigger_wave.rs",
-   "text": "pub dt_min: f64,",
-   "unit": "min"
-  },
-  {
-   "callers": [],
-   "how": "named-field",
-   "kind": "solver-timestep",
-   "line": 99,
-   "minutes_per_step": 0.02,
-   "module": "trigger_wave.rs",
-   "text": "dt_min: 0.02,",
-   "unit": "min"
-  },
-  {
-   "callers": [],
-   "how": "named-field",
-   "kind": "solver-timestep",
-   "line": 157,
-   "minutes_per_step": 0.02,
-   "module": "trigger_wave.rs",
-   "text": "...et dt = cfg.dt_min;",
-   "unit": "min"
   }
  ],
  "step_counts": [

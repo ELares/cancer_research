@@ -28,7 +28,7 @@ false headline.
 WHAT IS ACTUALLY TRUE
 ----------------------
 The CORE biochemical loop states no step duration -- that part survives.
-EXACTLY ONE module prices a step in wall-clock time: `tumor_pk`, at one minute
+ONE module DECLARES a step duration in wall-clock time (`tumor_pk`, one minute), and a SECOND reading is implied without declaring one: the immune model states a 0-48h scope over a 180-step loop in `sim-tme` and `sim-tme-3d`, pricing a step at 16 minutes. The two are 16x apart, neither is measured, and the reconciliation is the step-duration section of `simulations/calibration/parameter_provenance.md`
 per step, reaching `sim-tumor-pk`'s 180-step run = 3.0 hours.
 
 `trigger_wave`'s `dt_min` is NOT a second binding. It is a CFL-constrained
@@ -192,11 +192,26 @@ def _rust_sources():
     produced the manuscript's published immune numbers. An audit whose scope is
     narrower than its claim cannot find the thing it exists to find.
     """
-    out = list(SRC.glob("*.rs"))
+    # SORTED. Every call site this replaced used `sorted(...)`, and the
+    # artifact is byte-compared in CI on two filesystems: an unsorted glob
+    # emits rows in directory order, which differs between APFS and ext4.
+    out = sorted(SRC.glob("*.rs"))
     sims = SRC.parent.parent
     for d in sorted(sims.glob("sim-*/src")):
         out.extend(sorted(d.glob("*.rs")))
-    return out
+    return sorted(out, key=lambda q: (q.parent.parent.name, q.name))
+
+
+def _key(path) -> str:
+    """A stable, UNIQUE label for a scanned file.
+
+    Keying on `p.name` collapsed twelve `main.rs` files into one entry, so the
+    binary the whole reconciliation is about vanished from the modules table
+    and a caller list pointed at all twelve at once. Library files keep their
+    bare name; a binary is qualified by its crate.
+    """
+    crate = path.parent.parent.name
+    return path.name if crate == "ferroptosis-core" else f"{crate}/{path.name}"
 
 
 def _default_for(stem: str, field: str, unit: str):
@@ -207,7 +222,14 @@ def _default_for(stem: str, field: str, unit: str):
     declaring the same field name silently rewrote another module's published
     value -- `trigger_wave`'s 0.02 min/step was reported as 30.0 under a probe.
     """
-    cands = [p for p in _rust_sources() if p.name == stem] or _rust_sources()
+    # Compare STEM to STEM. The first attempt compared `p.name` ("x.rs")
+    # against the `p.stem` ("x") its caller passes, so the filter never
+    # matched, `or _rust_sources()` fell through to the whole tree, and the
+    # bug this was written to fix reproduced verbatim: trigger_wave's 0.02
+    # min/step got reported as another module's 30.0.
+    cands = [q for q in _rust_sources() if q.stem == stem]
+    if not cands:
+        return None
     for p in cands:
         m = re.search(rf"\b{re.escape(field)}\s*:\s*(\d+(?:\.\d+)?)", p.read_text(errors="ignore"))
         if m:
@@ -215,47 +237,75 @@ def _default_for(stem: str, field: str, unit: str):
     return None
 
 
+# A window comment prices the LOOP only if it is scoping the model the loop
+# runs. Requiring a validity/scope verb keeps a pharmacokinetic half-life --
+# "terminal t_half ~20-48h" -- from being read as a step duration, which the
+# first version did, publishing a spurious 9.33 min/step.
+_SCOPE_VERB = re.compile(r"\b(valid for|models?|represents?|covers?|"
+                         r"applicable to|cascade|phase)\b", re.I)
+# Respellings of the same window. The first version matched `(0-48h)` alone,
+# so an en dash, "hr", "to", or a day unit hid the reading entirely.
+_WINDOW = re.compile(
+    r"\(?\s*(\d+(?:\.\d+)?)\s*(?:-|\u2013|\u2014|to)\s*"
+    r"(\d+(?:\.\d+)?)\s*(h|hr|hrs|hour|hours|d|day|days)\b", re.I)
+_WINDOW_UNIT_H = {"h": 1.0, "hr": 1.0, "hrs": 1.0, "hour": 1.0, "hours": 1.0,
+                  "d": 24.0, "day": 24.0, "days": 24.0}
+
+
 def find_implied_windows():
     """Bindings a binary IMPLIES without ever declaring a per-step duration.
 
     `sim-tme` states no minutes-per-step anywhere. It states a validity WINDOW
-    for the biology it models -- "resident T cell phase (0-48h)" -- and a loop
-    length, `N_STEPS = 180`. Together those price a step at 16 minutes, and
-    that binary produced the manuscript's published immune numbers.
+    for the biology it models -- "spatial immune model valid for resident T
+    cell phase (0-48h)" -- and a loop length, `N_STEPS = 180`. Together those
+    price a step at 16 minutes, in the binary that produced this book's
+    published immune numbers.
 
     This is the form issue #727 pointed at, and the form an audit looking for
-    `dt_min` or "N minutes per step" cannot see. It is reported SEPARATELY from
-    an explicit declaration because it is weaker evidence -- a scope claim
-    about which biology is in range is not the same act as declaring a clock --
-    but it is a claim about the same quantity and it disagrees.
+    `dt_min` or "N minutes per step" cannot see. Reported SEPARATELY from an
+    explicit declaration because it is weaker evidence about intent -- a scope
+    claim about which biology is in range is not the same act as declaring a
+    clock -- and not weaker about consequence.
+
+    READMEs are scanned too. The same 0-48h claim appears in `sim-tme-3d`'s and
+    `sim-tme`'s README, and reading only `.rs` attributed the window to one
+    binary while the doc assigned the other a different conversion.
     """
     out = []
-    win = re.compile(r"\((\d+)\s*-\s*(\d+)\s*h\)")
-    for p_ in _rust_sources():
-        if not p_.parent.parent.name.startswith("sim-"):
+    sims = SRC.parent.parent
+    for crate in sorted(sims.glob("sim-*")):
+        steps = None
+        for rs in sorted((crate / "src").glob("*.rs")):
+            m = re.search(r"const N_STEPS:\s*\w+\s*=\s*(\d+)",
+                          rs.read_text(errors="ignore"))
+            if m:
+                steps = int(m.group(1))
+                break
+        if not steps:
             continue
-        txt = p_.read_text(errors="ignore")
-        m_steps = re.search(r"const N_STEPS:\s*\w+\s*=\s*(\d+)", txt)
-        if not m_steps:
-            continue
-        steps = int(m_steps.group(1))
-        for ln, line in enumerate(txt.splitlines(), 1):
-            if not line.lstrip().startswith("//"):
-                continue
-            m = win.search(line)
-            if not m:
-                continue
-            hours = float(m.group(2)) - float(m.group(1))
-            if hours <= 0:
-                continue
-            out.append({
-                "binary": p_.parent.parent.name, "module": p_.name, "line": ln,
-                "kind": "implied-window", "n_steps": steps,
-                "window_hours": hours,
-                "minutes_per_step": round(hours * 60.0 / steps, 4),
-                "text": line.strip()[:160],
-            })
-    return out
+        files = sorted((crate / "src").glob("*.rs")) + \
+            sorted(crate.glob("README*"))
+        for f in files:
+            for ln, line in enumerate(f.read_text(errors="ignore").splitlines(), 1):
+                if f.suffix == ".rs" and not line.lstrip().startswith("//"):
+                    continue
+                if not _SCOPE_VERB.search(line):
+                    continue
+                m = _WINDOW.search(line)
+                if not m:
+                    continue
+                hours = (float(m.group(2)) - float(m.group(1))) \
+                    * _WINDOW_UNIT_H[m.group(3).lower()]
+                if hours <= 0:
+                    continue
+                out.append({
+                    "binary": crate.name, "module": f.name, "line": ln,
+                    "kind": "implied-window", "n_steps": steps,
+                    "window_hours": hours,
+                    "minutes_per_step": round(hours * 60.0 / steps, 4),
+                    "text": line.strip()[:160],
+                })
+    return sorted(out, key=lambda w: (w["binary"], w["module"], w["line"]))
 
 
 def find_step_bindings():
@@ -315,7 +365,7 @@ def find_step_bindings():
                 kind = ("solver-timestep" if p.stem in SOLVER_MODULES
                         else "wall-clock")
                 sites.append({
-                    "module": p.name, "line": ln, "how": how, "kind": kind,
+                    "module": _key(p), "line": ln, "how": how, "kind": kind,
                     "unit": u, "minutes_per_step": mpstep,
                     "text": ("..." if lo else "") + line[lo:hi].strip() +
                             ("..." if hi < len(line) else ""),
@@ -325,12 +375,19 @@ def find_step_bindings():
 
 
 def _callers(stem: str):
-    """Which simulation binaries reference this module. Measured, not assumed.
+    """Which simulation binaries reference this LIBRARY module.
+
+    Returns nothing for a binary. A binary is not referenced by anything in the
+    workspace, and the qualified module keys made that visible: asking for the
+    callers of `main.rs` matched all twelve binaries at once and published a
+    row saying so.
 
     The previous version claimed three timescales were 'all composed into the
     same 180-step run'. Nothing checked it, and the day-scale limb had no
     caller at all.
     """
+    if "/" in stem or stem == "main":
+        return []
     out = []
     for p in sorted(SIMS.glob("sim-*/src/*.rs")):
         if re.search(rf"\b{re.escape(stem)}\b", p.read_text(errors="ignore")):
@@ -358,7 +415,7 @@ def _orphan_timescales():
                     continue
                 if re.search(rf"\b{re.escape(nm)}\b", q.read_text(errors="ignore")):
                     refs.append(q.parts[-3] if "sim-" in str(q) else q.name)
-            out.setdefault(p.name, {})[nm] = sorted(set(refs))
+            out.setdefault(_key(p), {})[nm] = sorted(set(refs))
     return out
 
 
@@ -655,13 +712,15 @@ def scan() -> dict:
             if PER_STEP.search(line):
                 steps += 1
         if times or steps:
-            modules[p.name] = {"real_time_mentions": len(times),
+            modules[_key(p)] = {"real_time_mentions": len(times),
                                "per_step_mentions": steps,
                                "examples": times[:4]}
 
     bindings = find_step_bindings()
     for b in bindings:
-        b["callers"] = _callers(Path(b["module"]).stem)
+        b["callers"] = _callers(b["module"].split("/")[-1].rsplit(".", 1)[0]
+                                if "/" not in b["module"]
+                                else b["module"])
 
     # Count CONVENTIONS, not regex hits. `\bdt_min\b` matches the field
     # declaration, its literal in baseline(), and `let dt = cfg.dt_min` -- one
@@ -691,7 +750,8 @@ def scan() -> dict:
                  if v["per_step_mentions"] and not v["real_time_mentions"]}
 
     # which real-time modules are actually reachable from a binary
-    reach = {m: _callers(Path(m).stem) for m in sorted(set(real_only) | set(both))}
+    reach = {m: _callers(m if "/" in m else Path(m).stem)
+             for m in sorted(set(real_only) | set(both))}
     pricing_syms = {}
     for mod in {b["module"] for b in wall}:
         pricing_syms[mod] = _pricing_symbols(
@@ -700,7 +760,11 @@ def scan() -> dict:
     modelled = _p3_is_modelled()
 
     return {
-        "modules_total": len(list(SRC.glob("*.rs"))),
+        # The denominator must match what was actually scanned. It stayed at
+        # the library count after the scan widened to the binaries, so the
+        # headline read "1 of 33" over a 47-file sweep.
+        "modules_total": len(_rust_sources()),
+        "library_modules": len(sorted(SRC.glob("*.rs"))),
         "modules": modules,
         "carry_both": sorted(both),
         "real_time_only": sorted(real_only),
@@ -788,9 +852,25 @@ def render(d: dict) -> str:
               f"{'prices' if len(conv) == 1 else 'price'} a "
               f"simulation step in wall-clock time** "
               f"({', '.join(f'`{m}`' for m in mods) or 'none'}), out of {n} "
-              f"library modules, plus {nsolv} numerical-integrator "
+              f"scanned modules (library and binaries), plus {nsolv} "
+              f"numerical-integrator "
               f"timestep{'' if nsolv == 1 else 's'} that "
               f"{'does' if nsolv == 1 else 'do'} not.", ""]
+        iw = d.get("implied_windows") or []
+        if iw:
+            mins = sorted({w["minutes_per_step"] for w in iw})
+            srcs = sorted({f"`{w['binary']}/{w['module']}`" for w in iw})
+            L += [f"**A second reading is IMPLIED and never declared.** "
+                  f"{len(iw)} site{'' if len(iw) == 1 else 's'} "
+                  f"({', '.join(srcs)}) state a scope window over a "
+                  f"{iw[0]['n_steps']}-step loop, pricing a step at "
+                  f"{', '.join(str(m) for m in mins)} min -- against the "
+                  f"declared {sorted({c['minutes_per_step'] for c in conv})}. "
+                  f"Counting only declarations is how an earlier version of "
+                  f"this audit reported exactly one binding while scanning the "
+                  f"library alone. Neither reading is measured; the "
+                  f"reconciliation is the step-duration section of "
+                  f"`simulations/calibration/parameter_provenance.md`.", ""]
         L += [f"Both numbers are CONVENTIONS, not matches -- deduplicating one "
               f"side and not the other is how an earlier draft reported "
               f"\"6 declarations\". The {nsolv} integrator "
