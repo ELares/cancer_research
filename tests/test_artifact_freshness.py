@@ -38,6 +38,16 @@ in every artifact -- which is most of their numeric content. Corrupt a stored
 scan total and re-assembly propagates the corruption consistently into the
 derived fields and the prose, and both checks pass.
 
+IT ALSO CANNOT TELL A CORRECT RANK FROM A WRONG-BUT-EXPLICIT ONE. The
+order-dependence gate below catches an order INHERITED from serialisation; a
+renderer that sorts explicitly in the wrong direction is deterministic,
+reproducible, and green. Re-introducing this campaign's own regression -- an
+ascending sort where the sweep steps outward from a bound -- leaves the whole
+suite passing with the bound on the last row under prose describing the first.
+That is precisely the failure this campaign suffered, so the individual
+orderings need their own regression guards; `tests/test_report_orderings.py`
+pins them.
+
 What it does catch, precisely: an artifact that no longer matches the code
 that produces it. A renderer edited without regenerating, a `.md` hand-edited,
 a `.json` whose format drifted, a derived field that stopped being recomputed.
@@ -269,7 +279,12 @@ def _reproduce(mod, name):
         # docstring warns about: 16 of 18 assemblers change key order under
         # `sort_keys`, and for two of them the rendered markdown differs, so a
         # gate that omitted it would disagree with the generator the moment
-        # anyone adopted the documented round-trip pattern.
+        # anyone adopted the documented round-trip pattern. Measured: 18 of 18
+        # assemblers change key order under `sort_keys`, and for one --
+        # `burden_data_feasibility` -- the rendered markdown differs. (An
+        # earlier hand-written "16 of 18 ... two of them" was wrong on both
+        # counts, and this campaign's own ordering fixes are what moved the
+        # second figure to one.)
         kw = {k: v for k, v in _dump_kwargs(name).items() if k == "sort_keys"}
         return json.loads(json.dumps(_reassemble(mod, stored), **kw))
     return stored
@@ -399,7 +414,11 @@ def test_assemble_is_idempotent_where_it_is_used():
         twice = _reassemble(mod, json.loads(json.dumps(once)))
         assert once == twice, f"{n}.assemble() is not idempotent"
         checked += 1
-    assert checked >= 10, f"only {checked} generators exercised"
+    # EXACT, not a floor -- this file argues at the top that a floor with
+    # slack lets a generator drop out silently, and then shipped `>= 10`
+    # against a true 18.
+    assert checked == len(ASSEMBLERS), (
+        f"{checked} of {len(ASSEMBLERS)} assemblers exercised")
 
 
 def _shuffled(obj, rng):
@@ -429,7 +448,6 @@ ORDER_DEPENDENT = {
     "atlas_recent_window",
     "atlas_site_coverage",
     "census_mechanism_growth",
-    "census_mechanism_profile",
 }
 
 
@@ -466,6 +484,11 @@ def test_the_report_does_not_depend_on_dict_order(name):
     fires the fix is an explicit sort INSIDE the renderer -- never a sort of
     the input, which replaces a rank with an alphabet.
     """
+    assert ORDER_DEPENDENT <= set(LIVE), (
+        f"ORDER_DEPENDENT holds names that are not gated generators: "
+        f"{sorted(ORDER_DEPENDENT - set(LIVE))}. A renamed or removed "
+        "generator leaves a dead ratchet entry, which is the unexamined "
+        "exclusion list this file exists to argue against.")
     dependent = _order_dependent(name)
     if name in ORDER_DEPENDENT:
         assert dependent, (

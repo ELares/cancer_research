@@ -127,7 +127,10 @@ def assemble(d: dict) -> dict:
                 for s, v in sites.items()
                 if v >= 20
             ),
-            key=lambda r: -r["enrichment"],
+            # Same total-order requirement: equal enrichment otherwise falls
+            # back to dict order, which decides both the ranking AND which
+            # rows survive the `[:TOP_N]` cut.
+            key=lambda r: (-r["enrichment"], r["site"]),
         )
         yr = d["by_year"].get(k, {})
         a, b = yr.get(str(START), 0), yr.get(str(END), 0)
@@ -140,9 +143,12 @@ def assemble(d: dict) -> dict:
             "top_sites": enr[:TOP_N],
             "top_partners": sorted(
                 ({"mechanism": p, "n": v} for p, v in d["partners"].get(k, {}).items()),
-                # Tie-break by name so the ranking is total: equal counts
-                # otherwise fall back to dict order, which serialisation moves.
-                key=lambda r: (-r["n"], str(r.get("name", r.get("site", "")))),
+                # Tie-break by name so the ranking is TOTAL. The first
+                # attempt keyed on `r.get("name", r.get("site", ""))`, and
+                # these rows carry neither field, so the second key was the
+                # empty string for every row and the fix was inert while
+                # carrying a comment saying it worked.
+                key=lambda r: (-r["n"], r["mechanism"]),
             )[:TOP_N],
             "start": a, "end": b,
             "growth": round(b / a, 2) if a >= 30 else None,
