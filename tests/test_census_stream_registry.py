@@ -117,6 +117,14 @@ REGISTRY = {
         "prefix, because shards are chronological and a prefix samples one "
         "era -- and metric vocabulary is exactly the kind of thing that "
         "changes with era."),
+    "census_normal_tissue.py": (
+        {"records"},
+        "Both selectors are MeSH descriptors -- `Ferroptosis` and the "
+        "organ-toxicity set -- so records_unindexed, which has no descriptors, "
+        "cannot supply either. The stream would also break the analysis's "
+        "central comparison: the finding is a RATE difference between the C04 "
+        "and adjacent admission bases, and records_unindexed has neither, so "
+        "its records would enter a denominator with no basis to compare."),
     "census_hypoxia_direction.py": (
         {"records"},
         "Selection is a MeSH intersection -- `Ferroptosis` with the "

@@ -1,0 +1,452 @@
+{
+ "ferroptosis_articles": 13346,
+ "organ_toxicity_articles": 575,
+ "basis_all": {
+  "adjacent": 8219,
+  "C04": 5127
+ },
+ "basis_toxicity": {
+  "adjacent": 558,
+  "C04": 17
+ },
+ "names_inhibitor": 109,
+ "names_inducer": 66,
+ "names_both": 22,
+ "by_descriptor": {
+  "acute kidney injury": 297,
+  "chemical and drug induced liver injury": 115,
+  "cardiotoxicity": 110,
+  "neurotoxicity syndromes": 32,
+  "ototoxicity": 11,
+  "drug-related side effects and adverse reactions": 4,
+  "mucositis": 4,
+  "toxicity tests": 2,
+  "peripheral nervous system diseases": 1
+ },
+ "by_culprit_drug": {
+  "doxorubicin": 82,
+  "cisplatin": 80,
+  "sorafenib": 8,
+  "methotrexate": 2
+ },
+ "sample_seed": 728,
+ "sample_n": 40,
+ "sample": [
+  {
+   "pmid": "34296293",
+   "year": 2021,
+   "title": "Transcriptional activation of ENPP2 by FoxO4 protects cardiomyocytes from doxorubicin\u2011induced toxicity.",
+   "descriptors": [
+    "cardiotoxicity"
+   ],
+   "names_inhibitor": false,
+   "names_inducer": false
+  },
+  {
+   "pmid": "40476545",
+   "year": 2025,
+   "title": "Sesamin Alleviates Ferroptosis in Perfluorooctanesulfonate-Induced Liver Injury by Targeting Foxo1.",
+   "descriptors": [
+    "chemical and drug induced liver injury"
+   ],
+   "names_inhibitor": false,
+   "names_inducer": false
+  },
+  {
+   "pmid": "36437551",
+   "year": 2023,
+   "title": "Ginsenoside Rd Inhibited Ferroptosis to Alleviate CCl4-Induced Acute Liver Injury in Mice via cGAS/STING Pathway.",
+   "descriptors": [
+    "chemical and drug induced liver injury"
+   ],
+   "names_inhibitor": false,
+   "names_inducer": true
+  },
+  {
+   "pmid": "31034781",
+   "year": 2019,
+   "title": "Curcumin reduces renal damage associated with rhabdomyolysis by decreasing ferroptosis-mediated cell death.",
+   "descriptors": [
+    "acute kidney injury"
+   ],
+   "names_inhibitor": true,
+   "names_inducer": false
+  },
+  {
+   "pmid": "39544009",
+   "year": 2025,
+   "title": "Fortunellin attenuates sepsis-induced acute kidney injury by inhibiting inflammation and ferroptosis via the TLR4/NF-\u03baB pathway.",
+   "descriptors": [
+    "acute kidney injury"
+   ],
+   "names_inhibitor": false,
+   "names_inducer": false
+  },
+  {
+   "pmid": "39386217",
+   "year": 2024,
+   "title": "GSTT1/GSTM1 deficiency aggravated cisplatin-induced acute kidney injury via ROS-triggered ferroptosis.",
+   "descriptors": [
+    "acute kidney injury"
+   ],
+   "names_inhibitor": false,
+   "names_inducer": false
+  },
+  {
+   "pmid": "37364691",
+   "year": 2023,
+   "title": "Aloe-emodin alleviates doxorubicin-induced cardiotoxicity via inhibition of ferroptosis.",
+   "descriptors": [
+    "cardiotoxicity"
+   ],
+   "names_inhibitor": false,
+   "names_inducer": false
+  },
+  {
+   "pmid": "39645202",
+   "year": 2025,
+   "title": "Protective effect of thymoquinone against doxorubicin-induced cardiotoxicity and the underlying mechanism.",
+   "descriptors": [
+    "cardiotoxicity"
+   ],
+   "names_inhibitor": false,
+   "names_inducer": false
+  },
+  {
+   "pmid": "35265258",
+   "year": 2022,
+   "title": "Inhibition of the NADPH Oxidase Pathway Reduces Ferroptosis during Septic Renal Injury in Diabetic Mice.",
+   "descriptors": [
+    "acute kidney injury"
+   ],
+   "names_inhibitor": true,
+   "names_inducer": false
+  },
+  {
+   "pmid": "39557743",
+   "year": 2024,
+   "title": "ALKBH5 insufficiency protects against ferroptosis-driven cisplatin-induced renal cytotoxicity.",
+   "descriptors": [
+    "acute kidney injury"
+   ],
+   "names_inhibitor": false,
+   "names_inducer": false
+  },
+  {
+   "pmid": "35577350",
+   "year": 2022,
+   "title": "Preliminary study on 24p3 / neutrophil gelatinase-associated lipocalin (NGAL) ferroptosis inhibition in renal tubular epithelial cells.",
+   "descriptors": [
+    "acute kidney injury"
+   ],
+   "names_inhibitor": true,
+   "names_inducer": true
+  },
+  {
+   "pmid": "41077100",
+   "year": 2026,
+   "title": "Reticulon 3 deficiency induces ferroptosis via chaperone-mediated autophagy in ischemia-reperfusion induced acute kidney injury.",
+   "descriptors": [
+    "acute kidney injury"
+   ],
+   "names_inhibitor": false,
+   "names_inducer": false
+  },
+  {
+   "pmid": "41518980",
+   "year": 2026,
+   "title": "SLC7A11 alleviates diquat-induced neurotoxicity by inhibiting ferroptosis and preserving mitochondrial function.",
+   "descriptors": [
+    "neurotoxicity syndromes"
+   ],
+   "names_inhibitor": false,
+   "names_inducer": false
+  },
+  {
+   "pmid": "38644733",
+   "year": 2024,
+   "title": "Cadmium aggravates liver injury by activating ferroptosis and neutrophil extracellular traps formation in Nile tilapia (Oreochromis niloticus).",
+   "descriptors": [
+    "chemical and drug induced liver injury"
+   ],
+   "names_inhibitor": false,
+   "names_inducer": false
+  },
+  {
+   "pmid": "40914538",
+   "year": 2025,
+   "title": "Formoterol, a clinically approved drug, inhibits ferroptosis by suppressing lipid peroxidation and attenuates APAP-induced acute liver injury.",
+   "descriptors": [
+    "chemical and drug induced liver injury"
+   ],
+   "names_inhibitor": false,
+   "names_inducer": false
+  },
+  {
+   "pmid": "40744345",
+   "year": 2025,
+   "title": "Systemic aldehyde storm induced by allyl alcohol exposure results in extensive hepatic ferroptosis in Aldh2\u22172 knock-in mice.",
+   "descriptors": [
+    "chemical and drug induced liver injury"
+   ],
+   "names_inhibitor": false,
+   "names_inducer": false
+  },
+  {
+   "pmid": "40086679",
+   "year": 2025,
+   "title": "Selenium-enriched Bacillus subtilis attenuates emamectin benzoate-induced liver injury in grass carp through inhibiting inflammation and ferroptosis via activating Nrf2 signaling pathway.",
+   "descriptors": [
+    "chemical and drug induced liver injury"
+   ],
+   "names_inhibitor": false,
+   "names_inducer": false
+  },
+  {
+   "pmid": "40663488",
+   "year": 2025,
+   "title": "NSD1-916aa encoded by CircNSD1 contributes to AKI-to-CKD transition through inducing ferroptosis in tubular epithelial cells.",
+   "descriptors": [
+    "acute kidney injury"
+   ],
+   "names_inhibitor": false,
+   "names_inducer": false
+  },
+  {
+   "pmid": "40915108",
+   "year": 2025,
+   "title": "Small extracellular vesicles orchestrated pathological communications between breast cancer cells and cardiomyocytes as a novel mechanism exacerbating anthracycline cardiotoxicity by fueling ferroptosis.",
+   "descriptors": [
+    "cardiotoxicity"
+   ],
+   "names_inhibitor": false,
+   "names_inducer": false
+  },
+  {
+   "pmid": "34285231",
+   "year": 2021,
+   "title": "Dysfunction of the key ferroptosis-surveilling systems hypersensitizes mice to tubular necrosis during acute kidney injury.",
+   "descriptors": [
+    "acute kidney injury"
+   ],
+   "names_inhibitor": false,
+   "names_inducer": false
+  },
+  {
+   "pmid": "39488760",
+   "year": 2024,
+   "title": "Overexpression of Nfs1 Cysteine Desulphurase Relieves Sevoflurane-Induced Neurotoxicity and Cognitive Dysfunction in Neonatal Mice Via Suppressing Oxidative Stress and Ferroptosis.",
+   "descriptors": [
+    "neurotoxicity syndromes"
+   ],
+   "names_inhibitor": false,
+   "names_inducer": false
+  },
+  {
+   "pmid": "39947536",
+   "year": 2025,
+   "title": "Perillaldehyde ameliorates sepsis-associated acute kidney injury via inhibiting HSP90AA1-mediated ferroptosis and pyroptosis: Molecular structure and protein interaction of HSP90AA1.",
+   "descriptors": [
+    "acute kidney injury"
+   ],
+   "names_inhibitor": false,
+   "names_inducer": false
+  },
+  {
+   "pmid": "40840653",
+   "year": 2025,
+   "title": "Activation of aryl hydrocarbon receptor alleviates sepsis by promoting Nuclear Factor Erythroid 2-related Factor 2 expression to inhibit ferroptosis.",
+   "descriptors": [
+    "acute kidney injury"
+   ],
+   "names_inhibitor": false,
+   "names_inducer": false
+  },
+  {
+   "pmid": "39684253",
+   "year": 2024,
+   "title": "Syzygium aromaticum Extract Mitigates Doxorubicin-Induced Hepatotoxicity in Male Rats.",
+   "descriptors": [
+    "chemical and drug induced liver injury"
+   ],
+   "names_inhibitor": false,
+   "names_inducer": false
+  },
+  {
+   "pmid": "38593619",
+   "year": 2024,
+   "title": "Ginsenoside Rb1 attenuates doxorubicin induced cardiotoxicity by suppressing autophagy and ferroptosis.",
+   "descriptors": [
+    "cardiotoxicity"
+   ],
+   "names_inhibitor": false,
+   "names_inducer": false
+  },
+  {
+   "pmid": "40023585",
+   "year": 2025,
+   "title": "Protective effect of 2-hydroxyestrone and 2-hydroxyestradiol against chemically induced hepatotoxicity in vitro and in vivo.",
+   "descriptors": [
+    "chemical and drug induced liver injury"
+   ],
+   "names_inhibitor": false,
+   "names_inducer": true
+  },
+  {
+   "pmid": "41285254",
+   "year": 2026,
+   "title": "An intrabody targeting PHD2 protects mice against acetaminophen-induced liver injury by attenuating ferroptosis.",
+   "descriptors": [
+    "chemical and drug induced liver injury"
+   ],
+   "names_inhibitor": false,
+   "names_inducer": false
+  },
+  {
+   "pmid": "35279512",
+   "year": 2022,
+   "title": "Mitochondria-derived reactive oxygen species are involved in renal cell ferroptosis during lipopolysaccharide-induced acute kidney injury.",
+   "descriptors": [
+    "acute kidney injury"
+   ],
+   "names_inhibitor": true,
+   "names_inducer": false
+  },
+  {
+   "pmid": "36244460",
+   "year": 2022,
+   "title": "Asiatic acid alleviates LPS-induced acute kidney injury in broilers by inhibiting oxidative stress and ferroptosis via activation of the Nrf2 pathway.",
+   "descriptors": [
+    "acute kidney injury"
+   ],
+   "names_inhibitor": false,
+   "names_inducer": false
+  },
+  {
+   "pmid": "33166595",
+   "year": 2021,
+   "title": "Research mechanisms of and pharmaceutical treatments for ferroptosis in liver diseases.",
+   "descriptors": [
+    "chemical and drug induced liver injury"
+   ],
+   "names_inhibitor": false,
+   "names_inducer": false
+  },
+  {
+   "pmid": "39053765",
+   "year": 2024,
+   "title": "Iron metabolism in doxorubicin-induced cardiotoxicity: From mechanisms to therapies.",
+   "descriptors": [
+    "cardiotoxicity"
+   ],
+   "names_inhibitor": false,
+   "names_inducer": false
+  },
+  {
+   "pmid": "37354967",
+   "year": 2023,
+   "title": "Baicalein ameliorates polymyxin B-induced acute renal injury by inhibiting ferroptosis via regulation of SIRT1/p53 acetylation.",
+   "descriptors": [
+    "acute kidney injury"
+   ],
+   "names_inhibitor": false,
+   "names_inducer": false
+  },
+  {
+   "pmid": "36154307",
+   "year": 2022,
+   "title": "The effects of acrylamide-mediated dorsal root ganglion neurons injury on ferroptosis.",
+   "descriptors": [
+    "neurotoxicity syndromes"
+   ],
+   "names_inhibitor": true,
+   "names_inducer": false
+  },
+  {
+   "pmid": "37516014",
+   "year": 2023,
+   "title": "WBP2 restrains the lysosomal degradation of GPX4 to inhibit ferroptosis in cisplatin-induced acute kidney injury.",
+   "descriptors": [
+    "acute kidney injury"
+   ],
+   "names_inhibitor": false,
+   "names_inducer": false
+  },
+  {
+   "pmid": "35775122",
+   "year": 2022,
+   "title": "Lysine-specific demethylase 1 aggravated oxidative stress and ferroptosis induced by renal ischemia and reperfusion injury through activation of TLR4/NOX4 pathway in mice.",
+   "descriptors": [
+    "acute kidney injury"
+   ],
+   "names_inhibitor": false,
+   "names_inducer": false
+  },
+  {
+   "pmid": "39042632",
+   "year": 2024,
+   "title": "Exploring the role of ferroptosis-related genes as biomarkers in acute kidney injury.",
+   "descriptors": [
+    "acute kidney injury"
+   ],
+   "names_inhibitor": false,
+   "names_inducer": false
+  },
+  {
+   "pmid": "37119863",
+   "year": 2023,
+   "title": "Lycium barbarum polysaccharide-glycoprotein ameliorates ionizing radiation-induced epithelial injury by regulating oxidative stress and ferroptosis via the Nrf2 pathway.",
+   "descriptors": [
+    "drug-related side effects and adverse reactions"
+   ],
+   "names_inhibitor": false,
+   "names_inducer": false
+  },
+  {
+   "pmid": "38024532",
+   "year": 2023,
+   "title": "Shenshuaifu Granule Attenuates Acute Kidney Injury by Inhibiting Ferroptosis Mediated by p53/SLC7A11/GPX4 Pathway.",
+   "descriptors": [
+    "acute kidney injury"
+   ],
+   "names_inhibitor": false,
+   "names_inducer": false
+  },
+  {
+   "pmid": "38518851",
+   "year": 2024,
+   "title": "Selenium binding protein 1 protects renal tubular epithelial cells from ferroptosis by upregulating glutathione peroxidase 4.",
+   "descriptors": [
+    "acute kidney injury"
+   ],
+   "names_inhibitor": false,
+   "names_inducer": false
+  },
+  {
+   "pmid": "35986536",
+   "year": 2023,
+   "title": "Mitochondrial Translocation of P66Shc Aggravates Cisplatin-induced AKI by Promoting Ferroptosis.",
+   "descriptors": [
+    "acute kidney injury"
+   ],
+   "names_inhibitor": false,
+   "names_inducer": false
+  }
+ ],
+ "organ_toxicity_share": 4.31,
+ "inhibitor_share": 19.0,
+ "basis_rate": {
+  "adjacent": 6.79,
+  "C04": 0.33
+ },
+ "basis_rate_ratio": 20.6,
+ "adjudicated_n": 40,
+ "verdicts": {
+  "harm": 38,
+  "review": 2
+ },
+ "harm_share": 95.0,
+ "inhibitor_named_in_sample": 5,
+ "inhibitor_is_probe": 0,
+ "probe_share_of_inhibitor_mentions": 0.0
+}
