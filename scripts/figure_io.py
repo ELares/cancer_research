@@ -24,17 +24,40 @@ It is deliberately NARROW: it only fills in a `CreationDate` that the caller
 did not set, only for `.pdf` targets, and it leaves every other argument alone.
 A caller that wants its own metadata still gets it.
 """
+import functools
+import os
 from pathlib import Path
 
+import matplotlib
 from matplotlib.figure import Figure
+
+
+def _has_suffix(fname) -> bool:
+    try:
+        return bool(Path(os.fspath(fname)).suffix)
+    except TypeError:
+        return False
 
 _PATCHED = False
 
 
-def _is_pdf(fname) -> bool:
-    if isinstance(fname, (str, Path)):
-        return str(fname).lower().endswith(".pdf")
-    return False
+def _is_pdf(fname, fmt=None) -> bool:
+    """Is this savefig call producing a PDF?
+
+    Keyed on the explicit `format=` FIRST, then the filename suffix. Keying on
+    the suffix alone let three real calls through -- `savefig(buf,
+    format="pdf")` to a BytesIO, `savefig("noext", format="pdf")`, and any
+    non-`Path` `os.PathLike` -- each of which still embedded a creation date.
+    None is used in this repo today, and the guard only checks that the wrapper
+    is CALLED, so a new one would rejoin the backlog silently.
+    """
+    if fmt:
+        return str(fmt).lower() == "pdf"
+    try:
+        name = os.fspath(fname)
+    except TypeError:
+        return False
+    return str(name).lower().endswith(".pdf")
 
 
 def make_figures_deterministic() -> None:
@@ -44,14 +67,18 @@ def make_figures_deterministic() -> None:
         return
     original = Figure.savefig
 
+    @functools.wraps(original)
     def savefig(self, fname, *args, **kwargs):
-        if _is_pdf(fname):
+        fmt = kwargs.get("format") or matplotlib.rcParams.get("savefig.format")
+        # An explicit `format=` wins; rcParams only decides when the filename
+        # carries no suffix of its own.
+        if _is_pdf(fname, kwargs.get("format")) or (
+                not _has_suffix(fname) and str(fmt).lower() == "pdf"):
             meta = dict(kwargs.get("metadata") or {})
             meta.setdefault("CreationDate", None)
             kwargs["metadata"] = meta
         return original(self, fname, *args, **kwargs)
 
-    savefig.__doc__ = original.__doc__
     savefig._deterministic_wrapper = True          # so a guard can find it
     Figure.savefig = savefig
     _PATCHED = True

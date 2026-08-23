@@ -21,7 +21,8 @@ the JSON is old.
 AND WHAT IT DOES NOT COVER AT ALL: the twenty figures from the corpus
 generator, which still embed a creation date. Making them deterministic means
 regenerating them, and that turned out not to be a metadata-only change -- it
-rewrote fifteen PNGs and emitted fourteen figures that are not committed. Those
+rewrote 8 PDFs and 8 PNGs -- the PLOTS differ from the committed ones --
+and emitted 7 figures (14 files) that were never committed at all. Those
 plots differ from the published ones, which is either figure drift or input
 drift and is worth finding out rather than committing blind.
 """
@@ -41,17 +42,20 @@ GEN = REPO / "scripts/generate_census_figures.py"
 
 
 def _drawing(path):
-    """The page DRAWING OPERATIONS, not the file bytes.
+    """Everything the page DRAWS: content streams, images, and form xobjects.
 
-    Removing `/CreationDate` makes a PDF reproducible on one machine and NOT
-    across machines: CI proved it, failing on Linux against figures written on
-    macOS. Font embedding and subsetting differ by platform, so a raw
-    sha256 compares the toolchain as much as the figure.
+    Not the file bytes. Removing `/CreationDate` makes a PDF reproducible on
+    one machine and NOT across machines -- CI proved it, failing on Linux
+    against figures written on macOS, because font subsetting differs by
+    platform. A raw sha256 compares the toolchain as much as the figure.
 
-    The content stream is the sequence of drawing commands the page executes,
-    which is what "is this the figure the generator draws" actually asks. It is
-    also what verified, before this fix landed, that removing the timestamp
-    changed no plot.
+    CONTENT STREAMS ALONE ARE NOT ENOUGH, and assuming they were made this
+    check vacuous for the one census figure that is a raster.
+    `fig5c_mechanism_site_matrix` is drawn with `imshow`, so the heatmap --
+    the figure's entire payload -- lives in an image XObject that
+    `page.read_contents()` never sees. A reviewer mutated 201 matrix values,
+    regenerated, and the guard reported the figure fresh. Marker glyphs live in
+    form XObjects with the same problem.
     """
     try:
         import pymupdf
@@ -62,9 +66,29 @@ def _drawing(path):
             return None
     doc = pymupdf.open(path)
     try:
-        return [hashlib.sha256(pg.read_contents()).hexdigest() for pg in doc]
+        out = []
+        for pg in doc:
+            out.append(("content", hashlib.sha256(pg.read_contents()).hexdigest()))
+            for img in pg.get_images(full=True):
+                xref = img[0]
+                data = doc.extract_image(xref)["image"]
+                out.append(("image", hashlib.sha256(data).hexdigest()))
+            for name, xref in _form_xobjects(doc, pg):
+                out.append((f"xobject:{name}",
+                            hashlib.sha256(doc.xref_stream(xref)).hexdigest()))
+        return out
     finally:
         doc.close()
+
+
+def _form_xobjects(doc, page):
+    """(name, xref) for each form xobject the page references."""
+    out = []
+    for entry in page.get_xobjects():
+        # (xref, name, invoker, bbox) in current PyMuPDF
+        xref, name = entry[0], entry[1]
+        out.append((name, xref))
+    return sorted(out)
 
 
 def _census_figures():
@@ -110,21 +134,6 @@ def test_pdf_output_is_deterministic():
         assert b"/CreationDate" not in a.read_bytes()
 
 
-# Figures whose generator loads the corpus and gitignored simulation output.
-# They still embed a creation date because regenerating them here is NOT a
-# metadata-only change: it rewrote 15 PNGs, i.e. the PLOTS differ from the
-# committed ones, and it emitted 14 figures that were never committed at all.
-# Whether that is drift in the figures or in their inputs is a separate
-# question and is filed, not guessed at here.
-#
-# A RATCHET, not an allowlist: the test below fails if one of these has since
-# been made deterministic and not removed, so the set can only shrink.
-CORPUS_FIGURE_BACKLOG = frozenset(
-    p.name for p in sorted(FIG_DIR.glob("*.pdf"))
-    if b"/CreationDate" in p.read_bytes()
-) if False else frozenset()
-
-
 def test_no_census_figure_carries_a_creation_date():
     """The class this fix actually covers."""
     stale = [f"{f}.pdf" for f in _census_figures()
@@ -157,9 +166,14 @@ def test_the_corpus_figure_backlog_is_stated_and_shrinking():
             if isinstance(f, dict) and isinstance(f.get("generator"), dict)
             and f["generator"].get("script")}
     python_gens = {g for g in gens if g.endswith(".py")}
-    assert len(python_gens) >= 3, python_gens
-    sources = {g: (REPO / g).read_text() for g in python_gens
-               if (REPO / g).exists()}
+    # EXACT. A floor let a generator vanish from FIGURES.yaml -- shrinking
+    # coverage -- while still passing.
+    assert len(python_gens) == 4, sorted(python_gens)
+    missing = sorted(g for g in python_gens if not (REPO / g).exists())
+    assert not missing, (
+        f"FIGURES.yaml names generators that do not exist: {missing}. The "
+        "previous version dropped them silently, so they were never checked.")
+    sources = {g: (REPO / g).read_text() for g in python_gens}
     # A figure FIGURES.yaml marks as an orphan has, by its own record, no
     # automated regeneration path -- `fig8_sensitivity_analysis` was made by an
     # external tool during a rewrite. That is read from the spec, not exempted
