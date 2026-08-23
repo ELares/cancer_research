@@ -90,8 +90,13 @@ def _drawing(path):
                 out.append(("image",
                             hashlib.sha256(doc.extract_image(xref)["image"]).hexdigest()))
                 if smask:
+                    # DECOMPRESSED. `xref_stream_raw` returns the zlib-encoded
+                    # bytes, so a different zlib build produces a different
+                    # hash for identical pixels -- CI failed on Linux for
+                    # exactly that. Every other surface here is decompressed
+                    # too, which is what makes the comparison portable.
                     out.append(("smask", hashlib.sha256(
-                        doc.xref_stream_raw(smask)).hexdigest()))
+                        doc.xref_stream(smask)).hexdigest()))
             for entry in sorted(pg.get_xobjects()):
                 out.append((f"xobject:{entry[1]}", hashlib.sha256(
                     doc.xref_stream(entry[0])).hexdigest()))
