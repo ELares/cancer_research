@@ -18,17 +18,21 @@ WHAT IT CANNOT CATCH is the same limit the artifact gate has: a figure drawn
 correctly from stale INPUT. Regenerating from the committed JSON cannot notice
 the JSON is old.
 
-AND WHAT IT DOES NOT COVER AT ALL: the twenty figures from the corpus
-generator, which still embed a creation date. Making them deterministic means
+AND WHAT IT DOES NOT COVER AT ALL: the twenty non-census PDFs that still
+embed a creation date. Not all twenty come from `generate_figures.py` -- 13 do,
+and the rest come from `generate_conceptual_diagrams.py`,
+`rare_event_analysis.py` and `sim-original`. The two counts being equal is a
+coincidence and an earlier draft of this sentence read it as an identity. Making them deterministic means
 regenerating them, and that turned out not to be a metadata-only change -- it
-rewrote 8 PDFs and 8 PNGs -- the PLOTS differ from the committed ones --
-and emitted 7 figures (14 files) that were never committed at all. Those
+rewrote 8 PDFs and 8 PNGs -- the PLOTS differ from the committed ones -- and
+emitted 7 figures (14 files) that were never committed at all. That
+measurement covers the 15 of 20 figures that could be drawn here; the other 5
+need gitignored simulation output and were not exercised, so it is a floor. Those
 plots differ from the published ones, which is either figure drift or input
 drift and is worth finding out rather than committing blind.
 """
 import hashlib
 import re
-import shutil
 import subprocess
 import sys
 import tempfile
@@ -42,20 +46,32 @@ GEN = REPO / "scripts/generate_census_figures.py"
 
 
 def _drawing(path):
-    """Everything the page DRAWS: content streams, images, and form xobjects.
+    """Every surface the page draws from: content, images, alpha planes,
+    form xobjects, and the graphics-state / pattern / shading / annotation
+    resources those streams reference by NAME.
 
     Not the file bytes. Removing `/CreationDate` makes a PDF reproducible on
     one machine and NOT across machines -- CI proved it, failing on Linux
-    against figures written on macOS, because font subsetting differs by
-    platform. A raw sha256 compares the toolchain as much as the figure.
+    against figures written on macOS. A raw sha256 compares the toolchain as
+    much as the figure. (What the CI log establishes is that the difference
+    lies OUTSIDE everything hashed here; it does not identify the cause, and
+    this docstring does not claim to.)
 
-    CONTENT STREAMS ALONE ARE NOT ENOUGH, and assuming they were made this
-    check vacuous for the one census figure that is a raster.
-    `fig5c_mechanism_site_matrix` is drawn with `imshow`, so the heatmap --
-    the figure's entire payload -- lives in an image XObject that
-    `page.read_contents()` never sees. A reviewer mutated 201 matrix values,
-    regenerated, and the guard reported the figure fresh. Marker glyphs live in
-    form XObjects with the same problem.
+    THREE SURFACES WERE MISSED IN TURN, each found only by review:
+
+    - Content streams alone made the check vacuous for the one census figure
+      that is a raster: `fig5c_mechanism_site_matrix` is drawn with `imshow`,
+      so 201 mutated matrix values passed as fresh.
+    - Hashing the image then missed its `/SMask`. The heatmap's alpha plane is
+      a separate 2443x1848 xref, returned as `img[1]` and discarded. Blanking
+      it changes 48% of the rendered page.
+    - Hashing both still missed `/ExtGState`. Content streams reference alphas
+      by NAME (`/A2 gs`), so changing `alpha=0.18` to `0.90` in the generator
+      leaves the stream byte-identical and moves 48,937 pixels.
+
+    Each was the same defect one level down. `/Pattern`, `/Shading` and
+    `/Annots` are hashed for the same reason even though every census page has
+    them empty today.
     """
     try:
         import pymupdf
@@ -70,25 +86,41 @@ def _drawing(path):
         for pg in doc:
             out.append(("content", hashlib.sha256(pg.read_contents()).hexdigest()))
             for img in pg.get_images(full=True):
-                xref = img[0]
-                data = doc.extract_image(xref)["image"]
-                out.append(("image", hashlib.sha256(data).hexdigest()))
-            for name, xref in _form_xobjects(doc, pg):
-                out.append((f"xobject:{name}",
-                            hashlib.sha256(doc.xref_stream(xref)).hexdigest()))
+                xref, smask = img[0], img[1]
+                out.append(("image",
+                            hashlib.sha256(doc.extract_image(xref)["image"]).hexdigest()))
+                if smask:
+                    out.append(("smask", hashlib.sha256(
+                        doc.xref_stream_raw(smask)).hexdigest()))
+            for entry in sorted(pg.get_xobjects()):
+                out.append((f"xobject:{entry[1]}", hashlib.sha256(
+                    doc.xref_stream(entry[0])).hexdigest()))
+            # Resources the streams name rather than inline.
+            for key in ("ExtGState", "Pattern", "Shading", "Annots"):
+                val = doc.xref_get_key(pg.xref, f"Resources/{key}")
+                out.append((key, hashlib.sha256(
+                    _resolve(doc, val).encode()).hexdigest()))
         return out
     finally:
         doc.close()
 
 
-def _form_xobjects(doc, page):
-    """(name, xref) for each form xobject the page references."""
-    out = []
-    for entry in page.get_xobjects():
-        # (xref, name, invoker, bbox) in current PyMuPDF
-        xref, name = entry[0], entry[1]
-        out.append((name, xref))
-    return sorted(out)
+def _resolve(doc, val) -> str:
+    """Flatten a resource entry, following one level of indirection.
+
+    `xref_get_key` returns `('xref', '4 0 R')` for an indirect dict, which is
+    an object NUMBER -- stable across an unchanged regeneration but useless as
+    a comparison, since it says nothing about the contents. Following it is
+    what makes an `/ExtGState` alpha change visible.
+    """
+    kind, raw = (val if isinstance(val, tuple) else ("string", str(val)))
+    if kind == "xref":
+        try:
+            num = int(str(raw).split()[0])
+            return doc.xref_object(num, compressed=True)
+        except Exception:
+            return str(raw)
+    return str(raw)
 
 
 def _census_figures():
@@ -101,7 +133,10 @@ def _census_figures():
 
 def test_the_figure_list_is_discovered_from_the_generator():
     figs = _census_figures()
-    assert len(figs) >= 6, f"only {len(figs)} census figures found: {figs}"
+    # EXACT. A floor let two savefig calls be replaced by `pass`, shrinking
+    # coverage 25% while staying green -- and the flagship check derives its
+    # file list from this same discovery.
+    assert len(figs) == 8, f"{len(figs)} census figures found: {figs}"
     for f in figs:
         assert (FIG_DIR / f"{f}.pdf").exists(), f"{f}.pdf is missing"
 
@@ -228,7 +263,10 @@ def test_the_committed_census_figures_are_what_the_generator_draws():
                              capture_output=True, text=True, env=env)
         assert res.returncode == 0, (
             f"the census figure generator failed:\n{res.stderr[-800:]}")
-        produced = sorted(scratch.glob("*.pdf"))
+        # EVERY file, not just PDFs. Corrupting a committed census PNG passed:
+        # the docstring's own "PNGs already reproduce" is the reason to gate
+        # them, not the reason to skip them.
+        produced = sorted(p for p in scratch.glob("*") if p.is_file())
         assert produced, (
             "the generator wrote no PDF into FERRO_FIG_DIR, so it is either "
             "ignoring the override and writing into the working tree, or "
@@ -236,6 +274,11 @@ def test_the_committed_census_figures_are_what_the_generator_draws():
         for p in produced:
             committed = FIG_DIR / p.name
             assert committed.exists(), f"{p.name} is not committed"
+            if p.suffix.lower() != ".pdf":
+                assert p.read_bytes() == committed.read_bytes(), (
+                    f"article/figures/{p.name} is not what "
+                    "scripts/generate_census_figures.py draws. Re-run it.")
+                continue
             a, b = _drawing(p), _drawing(committed)
             assert a is not None, "no PDF reader available"
             assert a == b, (
@@ -254,3 +297,76 @@ def test_the_uncoverable_generator_is_named_rather_than_implied():
     assert "make_figures_deterministic" in src, (
         "the uncoverable generator should still write deterministic PDFs, so "
         "its output can at least be diffed by hand")
+
+
+# ---------------------------------------------------------------------------
+# POSITIVE CONTROLS for `_drawing()`.
+#
+# Its absence is why three holes shipped in a row. A reviewer gutted the
+# comparison four ways -- deleting the content hash, the image hash, the
+# xobject hash, and finally replacing the whole function with a constant --
+# and the suite stayed green every time. A checker that cannot be shown to
+# detect anything is not a checker.
+#
+# Each control changes exactly ONE surface and asserts it is seen.
+# ---------------------------------------------------------------------------
+
+def _one_page_pdf(tmp, draw, name):
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    sys.path.insert(0, str(REPO / "scripts"))
+    from figure_io import make_figures_deterministic
+    make_figures_deterministic()
+    fig, ax = plt.subplots(figsize=(2, 2))
+    draw(ax)
+    out = tmp / name
+    fig.savefig(out)
+    plt.close(fig)
+    return out
+
+
+@pytest.mark.parametrize("label,a,b", [
+    ("content (a line moves)",
+     lambda ax: ax.plot([0, 1], [0, 1]),
+     lambda ax: ax.plot([0, 1], [1, 0])),
+    ("image (raster values move)",
+     lambda ax: ax.imshow([[0.1, 0.2], [0.3, 0.4]]),
+     lambda ax: ax.imshow([[0.9, 0.2], [0.3, 0.4]])),
+    ("smask (only the alpha plane moves)",
+     lambda ax: ax.imshow([[[1, 0, 0, 0.5], [0, 1, 0, 0.5]],
+                           [[0, 0, 1, 0.5], [1, 1, 0, 0.5]]]),
+     lambda ax: ax.imshow([[[1, 0, 0, 1.0], [0, 1, 0, 1.0]],
+                           [[0, 0, 1, 1.0], [1, 1, 0, 1.0]]])),
+    ("extgstate (only a named alpha moves)",
+     lambda ax: (ax.plot([0, 1], [0, 1]), ax.grid(alpha=0.18)),
+     lambda ax: (ax.plot([0, 1], [0, 1]), ax.grid(alpha=0.90))),
+    # ISOLATING. Changing the marker SHAPE also changes the content stream, so
+    # it passed with xobject hashing deleted -- a control that does not isolate
+    # its surface proves nothing about that surface. Marker SIZE leaves the
+    # stream byte-identical (`/M0 Do`) and rewrites the glyph the name points
+    # at, which is measured: content same=True, xobjects same=False.
+    ("xobject (marker geometry changes, stream identical)",
+     lambda ax: ax.plot([0, 1], [0, 1], marker="o", markersize=6),
+     lambda ax: ax.plot([0, 1], [0, 1], marker="o", markersize=12)),
+])
+def test_the_comparison_detects_a_change_on_each_surface(tmp_path, label, a, b):
+    """If any of these stops failing, `_drawing()` has a hole on that surface."""
+    pa = _one_page_pdf(tmp_path, a, "a.pdf")
+    pb = _one_page_pdf(tmp_path, b, "b.pdf")
+    da, db = _drawing(pa), _drawing(pb)
+    assert da is not None, "no PDF reader available"
+    assert da != db, (
+        f"_drawing() cannot see a change to {label}, so any figure whose only "
+        "difference is on that surface passes as fresh")
+
+
+def test_the_comparison_is_stable_for_an_unchanged_figure(tmp_path):
+    """The other half: it must not fire on an honest regeneration, or the
+    controls above would be satisfied by a function that always differs."""
+    draw = lambda ax: (ax.imshow([[0.1, 0.2], [0.3, 0.4]]), ax.grid(alpha=0.3))
+    pa = _one_page_pdf(tmp_path, draw, "a.pdf")
+    pb = _one_page_pdf(tmp_path, draw, "b.pdf")
+    assert _drawing(pa) == _drawing(pb), (
+        "_drawing() differs for two identical figures, so every comparison it "
+        "makes is meaningless")
