@@ -48,6 +48,7 @@ Usage:
 """
 
 import json
+import os
 import math
 import sys
 from pathlib import Path
@@ -56,12 +57,24 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 
+from figure_io import make_figures_deterministic  # noqa: E402
+
+# PDFs embed a creation date, so without this a regenerated figure
+# differs from its committed copy even when the data has not moved --
+# which is why figure freshness could not be checked at all.
+make_figures_deterministic()
+
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from atlas_landscape import PHARMACOLOGICAL, PHYSICAL  # noqa: E402
 from config import PROJECT_ROOT  # noqa: E402
 
-FIG_DIR = PROJECT_ROOT / "article" / "figures"
+# Overridable so a freshness check can regenerate into a scratch directory and
+# compare, rather than rewriting the working tree to test it. Writing into the
+# repo to check the repo is how a strided sample scan once clobbered a
+# committed sidecar here.
+FIG_DIR = Path(os.environ.get("FERRO_FIG_DIR")) if os.environ.get("FERRO_FIG_DIR") \
+    else PROJECT_ROOT / "article" / "figures"
 LANDSCAPE = PROJECT_ROOT / "analysis" / "atlas-landscape.json"
 ANALYSIS = PROJECT_ROOT / "analysis"
 GROWTH = ANALYSIS / "census-mechanism-growth.json"

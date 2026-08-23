@@ -15,6 +15,12 @@ Usage:
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+
+from figure_io import make_figures_deterministic  # noqa: E402
+
+# PDFs embed a creation date; without this a regenerated figure differs
+# from its committed copy even when nothing about the drawing changed.
+make_figures_deterministic()
 import matplotlib.patches as mpatches
 from matplotlib.patches import FancyArrowPatch
 import numpy as np
