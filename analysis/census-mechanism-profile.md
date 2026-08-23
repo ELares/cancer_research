@@ -119,7 +119,7 @@ Most frequent co-occurring mechanisms: car-t (64), nanoparticle (27), hifu (26),
 
 Concentrates in (enrichment against the site's own share of site-assigned records): prostate 2.6x (199), liver 2.25x (225), brain/CNS 1.71x (207), kidney 1.7x (73), cervix/uterus 1.64x (123), pancreas 1.42x (68).
 
-Most frequent co-occurring mechanisms: nanoparticle (310), hifu (21), immunotherapy (21), electrochemical-therapy (11), antibody-drug-conjugate (4), oncolytic-virus (3).
+Most frequent co-occurring mechanisms: nanoparticle (310), hifu (21), immunotherapy (21), electrochemical-therapy (11), antibody-drug-conjugate (4), car-t (3).
 
 ## hifu
 
@@ -127,7 +127,7 @@ Most frequent co-occurring mechanisms: nanoparticle (310), hifu (21), immunother
 
 Concentrates in (enrichment against the site's own share of site-assigned records): cervix/uterus 6.48x (338), prostate 4.63x (246), pancreas 2.56x (85), liver 2.1x (146), thyroid 2.03x (45), kidney 1.11x (33).
 
-Most frequent co-occurring mechanisms: nanoparticle (37), electrochemical-therapy (26), sonodynamic (21), immunotherapy (8), car-t (1), synthetic-lethality (1).
+Most frequent co-occurring mechanisms: nanoparticle (37), electrochemical-therapy (26), sonodynamic (21), immunotherapy (8), antibody-drug-conjugate (1), car-t (1).
 
 ## phagocytosis-checkpoint
 

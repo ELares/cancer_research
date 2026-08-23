@@ -1,4 +1,31 @@
 {
+ "_raw_counts": {
+  "clinical-delivery": {
+   "both": 84052,
+   "pharm": 893884,
+   "phys": 354753
+  },
+  "maximally-inclusive": {
+   "both": 123392,
+   "pharm": 1055354,
+   "phys": 626304
+  },
+  "mechanism-of-action": {
+   "both": 43659,
+   "pharm": 773860,
+   "phys": 196717
+  },
+  "minimally-inclusive": {
+   "both": 65348,
+   "pharm": 660572,
+   "phys": 501837
+  },
+  "regulatory-class": {
+   "both": 92050,
+   "pharm": 807570,
+   "phys": 592505
+  }
+ },
  "census": 4403994,
  "controls": {
   "energy/ablation family": {

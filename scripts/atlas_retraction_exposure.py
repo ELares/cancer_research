@@ -220,6 +220,22 @@ def scan_relations(retracted: set):
     }
 
 
+def _roundtrip(d: dict) -> dict:
+    """Render from what the artifact WILL contain, not from the live dict.
+
+    The JSON is written with `sort_keys=True`, so a dict rendered in insertion
+    order produces a document that can never be reproduced from its own
+    artifact -- the row ordering differs.
+
+    ROUND-TRIPPING IS NOT ENOUGH ON ITS OWN, and assuming it was regressed a
+    published finding here: any ordering that CARRIED MEANING has to be
+    re-established inside the renderer, because sorting the input replaces a
+    rank order with an alphabetical one. Every table below that had a
+    meaningful order now sorts explicitly.
+    """
+    return json.loads(json.dumps(d, sort_keys=True))
+
+
 def main() -> int:
     print("scanning the census for retraction markers...", flush=True)
     rec = scan_records()
@@ -237,9 +253,22 @@ def main() -> int:
         **rel,
     }
     OUT_JSON.write_text(json.dumps(res, indent=2, sort_keys=True) + "\n")
-    OUT_MD.write_text(render(res), encoding="utf-8")
+    OUT_MD.write_text(render(_roundtrip(res)), encoding="utf-8")
     print(f"wrote {OUT_MD}\nwrote {OUT_JSON}")
     return 0
+
+
+def _by_count(d: dict) -> list:
+    """(key, count) pairs, count-descending.
+
+    These tables were built with `Counter.most_common()` and rendered straight
+    from dict order, so their ranking survived only as long as nobody
+    serialised them. Sorting HERE rather than relying on the input's order is
+    what makes the report both reproducible and correctly ranked -- rendering
+    a round-tripped artifact had put `Expression of Concern` (172) above
+    `Retracted Publication` (7,900).
+    """
+    return sorted(d.items(), key=lambda kv: (-kv[1], kv[0]))
 
 
 def render(r: dict) -> str:
@@ -260,7 +289,7 @@ def render(r: dict) -> str:
         "## The census", "",
         f"| | count |", "|---|--:|",
         f"| cancer census records | {r['census_records']:,} |",
-    ] + [f"| `{t}` | {n:,} |" for t, n in r["retraction_family_types"].items()] + [
+    ] + [f"| `{t}` | {n:,} |" for t, n in _by_count(r["retraction_family_types"])] + [
         "",
         "Only `Retracted Publication` is treated as tainted below. A retraction",
         "notice, erratum or republication is a legitimate record. These types are",
@@ -309,7 +338,7 @@ def render(r: dict) -> str:
         L += ["## Which predicates carry it", "",
               "| predicate | tainted rows | all rows | share |", "|---|--:|--:|--:|"]
         rates = {}
-        for p, n in r["pred_tainted"].items():
+        for p, n in _by_count(r["pred_tainted"]):
             tot = r["pred_total"].get(p, 0)
             rates[p] = 100.0 * n / max(tot, 1)
             L.append(f"| `{p}` | {n:,} | {tot:,} | {rates[p]:.3f}% |")

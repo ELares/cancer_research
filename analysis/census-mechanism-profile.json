@@ -2014,7 +2014,7 @@
      "n": 4
     },
     {
-     "mechanism": "oncolytic-virus",
+     "mechanism": "car-t",
      "n": 3
     }
    ],
@@ -2078,11 +2078,11 @@
      "n": 8
     },
     {
-     "mechanism": "car-t",
+     "mechanism": "antibody-drug-conjugate",
      "n": 1
     },
     {
-     "mechanism": "synthetic-lethality",
+     "mechanism": "car-t",
      "n": 1
     }
    ],

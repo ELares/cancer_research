@@ -486,6 +486,23 @@ def _tree_arm_section(d, n) -> list:
     return L
 
 
+def _roundtrip(d: dict) -> dict:
+    """Render from what the artifact WILL contain, not from the live dict.
+
+    `OUT_JSON` is written with `sort_keys=True`, so rendering the in-memory
+    dict produces a document a `--render-only` run cannot reproduce. Both paths
+    now render the same value.
+
+    Checked rather than assumed: the committed report already matches the
+    round-tripped render, so no published ordering changes and no table here
+    turned out to depend on the declared MODALITIES sequence. Where an order DOES
+    carry meaning it must be re-established inside the renderer -- sorting the
+    input replaces a rank with an alphabet, which flipped a published verdict
+    elsewhere in this repo.
+    """
+    return json.loads(json.dumps(d, sort_keys=True))
+
+
 def render(d: dict) -> str:
     n = d["cancer_articles"]
     L = ["# What the MeSH qualifier axis adds, inside cancer articles", ""]
@@ -597,7 +614,7 @@ def main():
         d["era_coverage"] = ec
         OUT_JSON.write_text(json.dumps(d, indent=1, sort_keys=True) + "\n",
                             encoding="utf-8")
-    OUT_MD.write_text(render(d), encoding="utf-8")
+    OUT_MD.write_text(render(_roundtrip(d)), encoding="utf-8")
     print(f"wrote {OUT_MD}")
     print(f"wrote {OUT_JSON}")
 

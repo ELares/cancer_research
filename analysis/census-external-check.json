@@ -1,1 +1,212 @@
-{"baseline_date": "2026/06/17", "census_records": 4403994, "c04_core": 4203236, "rows": [{"mechanism": "antibody-drug-conjugate", "census": 5354, "median_year": 2020, "pubmed": 5748, "query": "(\"X\"[mh:noexp]) AND neoplasms[mh] AND (\"1800\"[edat] : \"2026/06/17\"[edat])", "error": null, "ratio": 0.931, "rel_gap": 0.069, "flagged": false}, {"mechanism": "bispecific-antibody", "census": 3253, "median_year": 2021, "pubmed": 3594, "query": "(\"X\"[mh:noexp]) AND neoplasms[mh] AND (\"1800\"[edat] : \"2026/06/17\"[edat])", "error": null, "ratio": 0.905, "rel_gap": 0.095, "flagged": false}, {"mechanism": "car-t", "census": 14879, "median_year": 2020, "pubmed": 15811, "query": "(\"X\"[mh:noexp]) AND neoplasms[mh] AND (\"1800\"[edat] : \"2026/06/17\"[edat])", "error": null, "ratio": 0.941, "rel_gap": 0.059, "flagged": false}, {"mechanism": "crispr", "census": 3127, "median_year": 2021, "pubmed": 3341, "query": "(\"X\"[mh:noexp]) AND neoplasms[mh] AND (\"1800\"[edat] : \"2026/06/17\"[edat])", "error": null, "ratio": 0.936, "rel_gap": 0.064, "flagged": false}, {"mechanism": "electrochemical-therapy", "census": 2281, "median_year": 2015, "pubmed": 2332, "query": "(\"X\"[mh:noexp]) AND neoplasms[mh] AND (\"1800\"[edat] : \"2026/06/17\"[edat])", "error": null, "ratio": 0.978, "rel_gap": 0.022, "flagged": false}, {"mechanism": "epigenetic", "census": 38635, "median_year": 2015, "pubmed": 39560, "query": "(\"X\"[mh:noexp]) AND neoplasms[mh] AND (\"1800\"[edat] : \"2026/06/17\"[edat])", "error": null, "ratio": 0.977, "rel_gap": 0.023, "flagged": false}, {"mechanism": "frequency-therapy", "census": 0, "pubmed": null, "query": null, "error": "no MeSH descriptor: not comparable", "ratio": null, "rel_gap": null, "flagged": false}, {"mechanism": "hifu", "census": 1343, "median_year": 2018, "pubmed": 1396, "query": "(\"X\"[mh:noexp]) AND neoplasms[mh] AND (\"1800\"[edat] : \"2026/06/17\"[edat])", "error": null, "ratio": 0.962, "rel_gap": 0.038, "flagged": false}, {"mechanism": "immunotherapy", "census": 31164, "median_year": 2022, "pubmed": 33579, "query": "(\"X\"[mh:noexp]) AND neoplasms[mh] AND (\"1800\"[edat] : \"2026/06/17\"[edat])", "error": null, "ratio": 0.928, "rel_gap": 0.072, "flagged": false}, {"mechanism": "metabolic-targeting", "census": 8346, "median_year": 2018, "pubmed": 8730, "query": "(\"X\"[mh:noexp]) AND neoplasms[mh] AND (\"1800\"[edat] : \"2026/06/17\"[edat])", "error": null, "ratio": 0.956, "rel_gap": 0.044, "flagged": false}, {"mechanism": "microbiome", "census": 357, "median_year": 2023, "pubmed": 415, "query": "(\"X\"[mh:noexp]) AND neoplasms[mh] AND (\"1800\"[edat] : \"2026/06/17\"[edat])", "error": null, "ratio": 0.86, "rel_gap": 0.14, "flagged": true}, {"mechanism": "mrna-vaccine", "census": 289, "median_year": 2023, "pubmed": 321, "query": "(\"X\"[mh:noexp]) AND neoplasms[mh] AND (\"1800\"[edat] : \"2026/06/17\"[edat])", "error": null, "ratio": 0.9, "rel_gap": 0.1, "flagged": false}, {"mechanism": "nanoparticle", "census": 29075, "median_year": 2020, "pubmed": 30484, "query": "(\"X\"[mh:noexp]) AND neoplasms[mh] AND (\"1800\"[edat] : \"2026/06/17\"[edat])", "error": null, "ratio": 0.954, "rel_gap": 0.046, "flagged": false}, {"mechanism": "oncolytic-virus", "census": 4745, "median_year": 2016, "pubmed": 4900, "query": "(\"X\"[mh:noexp]) AND neoplasms[mh] AND (\"1800\"[edat] : \"2026/06/17\"[edat])", "error": null, "ratio": 0.968, "rel_gap": 0.032, "flagged": false}, {"mechanism": "phagocytosis-checkpoint", "census": 867, "median_year": 2022, "pubmed": 926, "query": "(\"X\"[mh:noexp]) AND neoplasms[mh] AND (\"1800\"[edat] : \"2026/06/17\"[edat])", "error": null, "ratio": 0.936, "rel_gap": 0.064, "flagged": false}, {"mechanism": "sonodynamic", "census": 2374, "median_year": 2009, "pubmed": 2452, "query": "(\"X\"[mh:noexp]) AND neoplasms[mh] AND (\"1800\"[edat] : \"2026/06/17\"[edat])", "error": null, "ratio": 0.968, "rel_gap": 0.032, "flagged": false}, {"mechanism": "synthetic-lethality", "census": 4974, "median_year": 2021, "pubmed": 5229, "query": "(\"X\"[mh:noexp]) AND neoplasms[mh] AND (\"1800\"[edat] : \"2026/06/17\"[edat])", "error": null, "ratio": 0.951, "rel_gap": 0.049, "flagged": false}], "compared": 16, "not_comparable": ["frequency-therapy"], "unresolved": [], "flag_threshold": 0.1, "flagged": ["microbiome"], "median_rel_gap": 0.054, "max_rel_gap": 0.14, "census_higher": 0, "census_lower": 16, "recency_test": {"prediction": "positive: retrospective MeSH indexing since the baseline", "n": 16, "spearman_year_vs_gap": 0.92, "supported": true}}
+{
+ "baseline_date": "2026/06/17",
+ "census_records": 4403994,
+ "c04_core": 4203236,
+ "rows": [
+  {
+   "mechanism": "antibody-drug-conjugate",
+   "census": 5354,
+   "median_year": 2020,
+   "pubmed": 5748,
+   "query": "(\"X\"[mh:noexp]) AND neoplasms[mh] AND (\"1800\"[edat] : \"2026/06/17\"[edat])",
+   "error": null,
+   "ratio": 0.931,
+   "rel_gap": 0.069,
+   "flagged": false
+  },
+  {
+   "mechanism": "bispecific-antibody",
+   "census": 3253,
+   "median_year": 2021,
+   "pubmed": 3594,
+   "query": "(\"X\"[mh:noexp]) AND neoplasms[mh] AND (\"1800\"[edat] : \"2026/06/17\"[edat])",
+   "error": null,
+   "ratio": 0.905,
+   "rel_gap": 0.095,
+   "flagged": false
+  },
+  {
+   "mechanism": "car-t",
+   "census": 14879,
+   "median_year": 2020,
+   "pubmed": 15811,
+   "query": "(\"X\"[mh:noexp]) AND neoplasms[mh] AND (\"1800\"[edat] : \"2026/06/17\"[edat])",
+   "error": null,
+   "ratio": 0.941,
+   "rel_gap": 0.059,
+   "flagged": false
+  },
+  {
+   "mechanism": "crispr",
+   "census": 3127,
+   "median_year": 2021,
+   "pubmed": 3341,
+   "query": "(\"X\"[mh:noexp]) AND neoplasms[mh] AND (\"1800\"[edat] : \"2026/06/17\"[edat])",
+   "error": null,
+   "ratio": 0.936,
+   "rel_gap": 0.064,
+   "flagged": false
+  },
+  {
+   "mechanism": "electrochemical-therapy",
+   "census": 2281,
+   "median_year": 2015,
+   "pubmed": 2332,
+   "query": "(\"X\"[mh:noexp]) AND neoplasms[mh] AND (\"1800\"[edat] : \"2026/06/17\"[edat])",
+   "error": null,
+   "ratio": 0.978,
+   "rel_gap": 0.022,
+   "flagged": false
+  },
+  {
+   "mechanism": "epigenetic",
+   "census": 38635,
+   "median_year": 2015,
+   "pubmed": 39560,
+   "query": "(\"X\"[mh:noexp]) AND neoplasms[mh] AND (\"1800\"[edat] : \"2026/06/17\"[edat])",
+   "error": null,
+   "ratio": 0.977,
+   "rel_gap": 0.023,
+   "flagged": false
+  },
+  {
+   "mechanism": "frequency-therapy",
+   "census": 0,
+   "pubmed": null,
+   "query": null,
+   "error": "no MeSH descriptor: not comparable",
+   "ratio": null,
+   "rel_gap": null,
+   "flagged": false
+  },
+  {
+   "mechanism": "hifu",
+   "census": 1343,
+   "median_year": 2018,
+   "pubmed": 1396,
+   "query": "(\"X\"[mh:noexp]) AND neoplasms[mh] AND (\"1800\"[edat] : \"2026/06/17\"[edat])",
+   "error": null,
+   "ratio": 0.962,
+   "rel_gap": 0.038,
+   "flagged": false
+  },
+  {
+   "mechanism": "immunotherapy",
+   "census": 31164,
+   "median_year": 2022,
+   "pubmed": 33579,
+   "query": "(\"X\"[mh:noexp]) AND neoplasms[mh] AND (\"1800\"[edat] : \"2026/06/17\"[edat])",
+   "error": null,
+   "ratio": 0.928,
+   "rel_gap": 0.072,
+   "flagged": false
+  },
+  {
+   "mechanism": "metabolic-targeting",
+   "census": 8346,
+   "median_year": 2018,
+   "pubmed": 8730,
+   "query": "(\"X\"[mh:noexp]) AND neoplasms[mh] AND (\"1800\"[edat] : \"2026/06/17\"[edat])",
+   "error": null,
+   "ratio": 0.956,
+   "rel_gap": 0.044,
+   "flagged": false
+  },
+  {
+   "mechanism": "microbiome",
+   "census": 357,
+   "median_year": 2023,
+   "pubmed": 415,
+   "query": "(\"X\"[mh:noexp]) AND neoplasms[mh] AND (\"1800\"[edat] : \"2026/06/17\"[edat])",
+   "error": null,
+   "ratio": 0.86,
+   "rel_gap": 0.14,
+   "flagged": true
+  },
+  {
+   "mechanism": "mrna-vaccine",
+   "census": 289,
+   "median_year": 2023,
+   "pubmed": 321,
+   "query": "(\"X\"[mh:noexp]) AND neoplasms[mh] AND (\"1800\"[edat] : \"2026/06/17\"[edat])",
+   "error": null,
+   "ratio": 0.9,
+   "rel_gap": 0.1,
+   "flagged": false
+  },
+  {
+   "mechanism": "nanoparticle",
+   "census": 29075,
+   "median_year": 2020,
+   "pubmed": 30484,
+   "query": "(\"X\"[mh:noexp]) AND neoplasms[mh] AND (\"1800\"[edat] : \"2026/06/17\"[edat])",
+   "error": null,
+   "ratio": 0.954,
+   "rel_gap": 0.046,
+   "flagged": false
+  },
+  {
+   "mechanism": "oncolytic-virus",
+   "census": 4745,
+   "median_year": 2016,
+   "pubmed": 4900,
+   "query": "(\"X\"[mh:noexp]) AND neoplasms[mh] AND (\"1800\"[edat] : \"2026/06/17\"[edat])",
+   "error": null,
+   "ratio": 0.968,
+   "rel_gap": 0.032,
+   "flagged": false
+  },
+  {
+   "mechanism": "phagocytosis-checkpoint",
+   "census": 867,
+   "median_year": 2022,
+   "pubmed": 926,
+   "query": "(\"X\"[mh:noexp]) AND neoplasms[mh] AND (\"1800\"[edat] : \"2026/06/17\"[edat])",
+   "error": null,
+   "ratio": 0.936,
+   "rel_gap": 0.064,
+   "flagged": false
+  },
+  {
+   "mechanism": "sonodynamic",
+   "census": 2374,
+   "median_year": 2009,
+   "pubmed": 2452,
+   "query": "(\"X\"[mh:noexp]) AND neoplasms[mh] AND (\"1800\"[edat] : \"2026/06/17\"[edat])",
+   "error": null,
+   "ratio": 0.968,
+   "rel_gap": 0.032,
+   "flagged": false
+  },
+  {
+   "mechanism": "synthetic-lethality",
+   "census": 4974,
+   "median_year": 2021,
+   "pubmed": 5229,
+   "query": "(\"X\"[mh:noexp]) AND neoplasms[mh] AND (\"1800\"[edat] : \"2026/06/17\"[edat])",
+   "error": null,
+   "ratio": 0.951,
+   "rel_gap": 0.049,
+   "flagged": false
+  }
+ ],
+ "compared": 16,
+ "not_comparable": [
+  "frequency-therapy"
+ ],
+ "unresolved": [],
+ "flag_threshold": 0.1,
+ "flagged": [
+  "microbiome"
+ ],
+ "median_rel_gap": 0.054,
+ "max_rel_gap": 0.14,
+ "census_higher": 0,
+ "census_lower": 16,
+ "recency_test": {
+  "prediction": "positive: retrospective MeSH indexing since the baseline",
+  "n": 16,
+  "spearman_year_vs_gap": 0.92,
+  "supported": true
+ }
+}

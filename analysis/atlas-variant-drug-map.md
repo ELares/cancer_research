@@ -211,7 +211,7 @@ pair is *written about*, and `associate` does not say which direction.
 | Vemurafenib | BRAF | `p.V600E` | 579 | `inhibit` 553, `associate` 29, `stimulate` 2 |
 | dabrafenib | BRAF | `p.V600E` | 451 | `inhibit` 446, `associate` 7, `interact` 1 |
 | trametinib | BRAF | `p.V600E` | 316 | `inhibit` 316, `associate` 2 |
-| sotorasib | KRAS | `p.G12C` | 225 | `inhibit` 219, `associate` 8, `stimulate` 1, `interact` 1 |
+| sotorasib | KRAS | `p.G12C` | 225 | `inhibit` 219, `associate` 8, `interact` 1, `stimulate` 1 |
 | osimertinib | EGFR | `p.L858R` | 206 | `inhibit` 178, `associate` 31, `interact` 1, `stimulate` 1 |
 | Gefitinib | EGFR | `p.L858R` | 166 | `inhibit` 140, `associate` 29 |
 | Gefitinib | EGFR | `p.T790M` | 154 | `inhibit` 97, `stimulate` 34, `associate` 23 |

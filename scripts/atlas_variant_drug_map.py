@@ -138,6 +138,25 @@ def _sibling_single_paper_share():
     return 100.0 * single / pairs
 
 
+def make_namer(lab: dict | None = None):
+    """identifier -> display name, as a reusable factory.
+
+    Hoisted out of `main` so the report can be re-rendered from its committed
+    artifact: `render` needs this resolver, and while it was a closure the
+    document could not be reproduced without re-running the whole scan, which
+    put the generator outside every freshness check.
+    """
+    lab = load_labels() if lab is None else lab
+
+    def name(ident, prefix=""):
+        n = lab.get(ident)
+        if n is None:
+            return f"{prefix}{ident}" if ident else "?"
+        return n[len(OBSOLETE):] if n.startswith(OBSOLETE) else n
+
+    return name
+
+
 def load_labels() -> dict:
     """identifier -> primary authority name (first field before the pipe)."""
     lab = {}
@@ -498,6 +517,19 @@ def build_pairs(path: Path, canonicalize):
     return pairs, genes, gene_occurrences, chem_variant
 
 
+def _roundtrip(d: dict) -> dict:
+    """Render from what the artifact WILL contain, not from the live dict.
+
+    The JSON is written with `sort_keys=True`, so rendering the in-memory dict
+    produces a document that cannot be reproduced from its own artifact.
+
+    Round-tripping is not enough on its own: the predicate column below is a
+    RANK, so it sorts itself by count rather than inheriting an order that
+    serialisation destroys.
+    """
+    return json.loads(json.dumps(d, sort_keys=True))
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--gene", default=None,
@@ -581,11 +613,7 @@ def main() -> int:
                         and f.get("HGVS") in want:
                     feat_disease[f["HGVS"]][io_] += 1
 
-    def name(ident, prefix=""):
-        n = lab.get(ident)
-        if n is None:
-            return f"{prefix}{ident}" if ident else "?"
-        return n[len(OBSOLETE):] if n.startswith(OBSOLETE) else n
+    name = make_namer(lab)
 
     table = []
     for (chem, gene, var), v in pairs.items():
@@ -674,7 +702,7 @@ def main() -> int:
         "min_papers": args.min_papers,
     }
     OUT_JSON.write_text(json.dumps(res, indent=2, sort_keys=True) + "\n")
-    OUT_MD.write_text(render(res, name), encoding="utf-8")
+    OUT_MD.write_text(render(_roundtrip(res), name), encoding="utf-8")
     print(f"wrote {OUT_MD}\nwrote {OUT_JSON}\nwrote {OUT_TSV}")
     print(f"  {chem_variant:,} chemical-variant rows -> {len(table):,} pairs")
     print(f"  rsid: {counts['rs_filled']:,} rows given an HGVS, "
@@ -829,7 +857,12 @@ def render(r: dict, name) -> str:
               f"{n_all} spellings, {ref['reason']}"
               + (f" (top {shown} shown):" if n_all > shown else ":"), "",
               "| spelling | rows | |", "|---|--:|---|"]
-        for h, n in ref["spellings"].items():
+        # Count-descending: this is a TOP-6 table ("top 6 shown") and the
+        # sentence below names its 712-row leader, so a reader has to be able
+        # to see it as a rank. Built by `most_common(6)` and previously
+        # rendered from dict order, which serialisation alphabetises.
+        for h, n in sorted(ref["spellings"].items(),
+                           key=lambda kv: (-kv[1], kv[0])):
             flag = " refuses the rsid" if h in ref["offending"] else ""
             L.append(f"| `{h}` | {n:,} |{flag} |")
         if prot[0] and prot[1] < big[1]:
@@ -936,7 +969,12 @@ def render(r: dict, name) -> str:
         # ALL of them. Keeping the top three silently understated two shipped
         # rows while the prose invited the reader to compare these counts with
         # the paper count.
-        preds = ", ".join(f"`{k}` {n}" for k, n in row["predicates"].items())
+        preds = ", ".join(f"`{k}` {n}" for k, n in sorted(
+            row["predicates"].items(), key=lambda kv: (-kv[1], kv[0])))
+        # Sorted HERE, not inherited from the input: these came from
+        # `Counter.most_common()` and a round-tripped artifact renders them
+        # alphabetically, putting `associate` 93 above `inhibit` 713 in a
+        # column headed "assertions".
         L.append(f"| {row['drug']} | {row['gene']} | `{row['variant']}` | "
                  f"{row['papers']} | {preds} |")
     L += ["", "## What this cannot say", "",

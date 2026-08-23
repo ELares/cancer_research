@@ -315,12 +315,76 @@ def scan(parts: dict) -> dict:
                         counts[k]["phys"] += 1
                         counts[k]["both"] += a
                         combos[k][frozenset(hit)] += 1
-    return assemble(parts, sets, counts, combos, n)
+    d = assemble(parts, sets, counts, combos, n)
+    # The incidence structure travels back with the result rather than being
+    # written here, and `assemble` does not write it either. With the write
+    # inside `assemble`, the strided sample scan in `tests/test_modality_ratio.py`
+    # clobbered the full committed sidecar -- 849 articles where the real
+    # structure holds 354,753 -- and `--render-only` re-wrote the file it had
+    # just read. Only `main()` writes, and only on the full-scan path.
+    d["_incidence_for_write"] = combos
+    return d
 
 
 def _remaining(combo: Counter, removed: set) -> int:
     """Articles still matching the physical class once `removed` is held out."""
     return sum(v for fs, v in combo.items() if fs - removed)
+
+
+# The incidence structure lives in a gzipped sidecar rather than in the main
+# artifact. Inlined it is 3.6 MB of JSON, which makes the artifact unreadable
+# and every diff useless; interned against its own 182-term vocabulary and
+# gzipped it is ~150 KB, and the main file stays diffable. `mtime=0` so an
+# unchanged input regenerates BYTE-IDENTICAL, the same convention
+# `atlas_variant_drug_map.py` uses for its tsv.
+OUT_INCIDENCE = PROJECT_ROOT / "analysis" / "atlas-modality-ratio-incidence.json.gz"
+
+
+def _write_incidence(combos: dict) -> None:
+    """Called from the SCAN path only.
+
+    Deliberately not from `assemble`, which must stay a pure function of its
+    inputs: with the write inside it, `--render-only` re-wrote the sidecar it
+    had just read, and anything calling `assemble` to check the artifact --
+    including the freshness gate -- mutated the repository as a side effect of
+    reading it. That is how a concurrent subprocess came to read a
+    half-written file.
+    """
+    vocab = sorted({x for c in combos.values() for fs in c for x in fs})
+    idx = {v: i for i, v in enumerate(vocab)}
+    payload = {
+        "vocab": vocab,
+        "rows": {k: sorted(([sorted(idx[x] for x in fs), v] for fs, v in c.items()),
+                           key=lambda r: (-r[1], r[0]))
+                 for k, c in combos.items()},
+    }
+    raw = (json.dumps(payload, separators=(",", ":")) + "\n").encode("utf-8")
+    with gzip.GzipFile(OUT_INCIDENCE, "wb", compresslevel=9, mtime=0) as fh:
+        fh.write(raw)
+
+
+def _read_incidence() -> dict:
+    with gzip.open(OUT_INCIDENCE, "rt", encoding="utf-8") as fh:
+        payload = json.load(fh)
+    vocab = payload["vocab"]
+    return {k: Counter({frozenset(vocab[i] for i in ids): v for ids, v in rows})
+            for k, rows in payload["rows"].items()}
+
+
+def _split_stored(d: dict) -> tuple:
+    """Recover the scan products from the artifact so `assemble` can re-run.
+
+    `parts` and `sets` come from the committed partitions file, which is the
+    scan's own input; `counts` and `combos` are read back from `_raw_counts`
+    and `_raw_incidence`. Everything else in the artifact is derived and is
+    recomputed rather than trusted.
+    """
+    parts = load_partitions()
+    sets = {k: {"ph": {x.lower() for x in v["pharmacological"]},
+                "py": {x.lower() for x in v["physical"]}}
+            for k, v in parts.items()}
+    counts = {k: Counter(v) for k, v in d["_raw_counts"].items()}
+    return parts, sets, counts, _read_incidence(), d["census"]
 
 
 def assemble(parts, sets, counts, combos, n) -> dict:
@@ -336,6 +400,15 @@ def assemble(parts, sets, counts, combos, n) -> dict:
         "stem_alternative_hits": {},
         "landscape_composition": landscape_composition(),
         "qualifier_recalls": qualifier_recalls(),
+        # THE RAW SCAN PRODUCTS, stored so `--render-only` can RE-ASSEMBLE.
+        # Without them the documented command re-renders the stored derived
+        # fields -- the hold-outs, the permutation test, the controls -- so
+        # every guard reading one is comparing the artifact to itself and
+        # cannot fail. `combos` is the incidence structure the docstring above
+        # says the scan records: per partition, how many articles matched each
+        # distinct SET of physical descriptors, which is what the hold-out
+        # arithmetic needs and what a per-partition total cannot reconstruct.
+        "_raw_counts": {k: dict(v) for k, v in counts.items()},
     }
 
     universe = set().union(*(s["py"] for s in sets.values()))
@@ -1413,13 +1486,21 @@ def main():
     ap.add_argument("--render-only", action="store_true")
     args = ap.parse_args()
     if args.render_only:
-        d = json.loads(OUT_JSON.read_text())
+        # Round-trip before rendering, matching the scan path four lines
+        # below: `assemble` emits tuples that JSON normalises to lists, and
+        # rendering the raw dict would let --render-only and a full run drift.
+        d = json.loads(json.dumps(
+            assemble(*_split_stored(json.loads(OUT_JSON.read_text()))),
+            sort_keys=True))
     else:
         d = scan(load_partitions())
         if not d["partitions"] or all(v["phys"] == 0 for v in d["partitions"].values()):
             raise SystemExit(
                 "no physical-class articles matched, which is not a finding -- "
                 "it is what a descriptor-case mismatch looks like.")
+        combos = d.pop("_incidence_for_write", None)
+        if combos is not None:
+            _write_incidence(combos)
         OUT_JSON.write_text(json.dumps(d, indent=1, sort_keys=True) + "\n",
                             encoding="utf-8")
         # Render from the ROUND-TRIPPED artifact, never from the in-memory

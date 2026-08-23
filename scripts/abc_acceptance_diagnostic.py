@@ -81,6 +81,22 @@ def _abc():
     return m
 
 
+def _roundtrip(d: dict) -> dict:
+    """Render from what the artifact WILL contain, not from the live dict.
+
+    The JSON is written with `sort_keys=True`, so a dict rendered in insertion
+    order produces a document that can never be reproduced from its own
+    artifact -- the row ordering differs.
+
+    ROUND-TRIPPING IS NOT ENOUGH ON ITS OWN, and assuming it was regressed a
+    published finding here: any ordering that CARRIED MEANING has to be
+    re-established inside the renderer, because sorting the input replaces a
+    rank order with an alphabetical one. Every table below that had a
+    meaningful order now sorts explicitly.
+    """
+    return json.loads(json.dumps(d, sort_keys=True))
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--draws", type=int, default=300)
@@ -144,13 +160,36 @@ def main() -> int:
         },
     }
     OUT_JSON.write_text(json.dumps(res, indent=2, sort_keys=True) + "\n")
-    OUT_MD.write_text(render(res), encoding="utf-8")
+    OUT_MD.write_text(render(_roundtrip(res)), encoding="utf-8")
     print(f"wrote {OUT_MD}\nwrote {OUT_JSON}")
     print(f"  committed {res['committed_distance']}  median "
           f"{res['posterior_median_distance']}  eps {eps}")
     print(f"  {res['sampling']['n_beating_committed']}/{args.draws} draws beat the "
           "committed vector")
     return 0
+
+
+# The bounds the committed vector sits on. Each sweep steps OUTWARD from its
+# bound (`k_erastin` 3->2->1, `hill` 6->8->10), which is the order the prose
+# below describes, so the table has to lead with the bound.
+BOUNDS = {"k_erastin": 3.0, "hill": 6.0}
+
+
+def _outward(d: dict, param: str) -> list:
+    """(value, distance) pairs ordered OUTWARD FROM THE BOUND.
+
+    Three orderings are possible here and two are wrong. The swept values are
+    dict KEYS, so JSON makes them strings and a round-tripped artifact renders
+    them lexicographically -- 10.0, 6.0, 8.0 -- directly above prose about what
+    happens between 6 and 10. Sorting numerically ASCENDING fixes `hill` and
+    silently reverses `k_erastin`, putting `(prior low bound)` on the last row
+    under a sentence that says "pushing below its bound", which is what the
+    first attempt at this shipped.
+
+    Distance from the bound is the sequence the sweep actually walks.
+    """
+    b = BOUNDS[param]
+    return sorted(d.items(), key=lambda kv: abs(float(kv[0]) - b))
 
 
 def render(r: dict) -> str:
@@ -204,9 +243,9 @@ def render(r: dict) -> str:
           "its low 3.0, `hill` at its high 6.0 — which looks like the box clipping",
           "the optimum. Stepping outside says otherwise.", "",
           "| parameter | value | joint distance |", "|---|--:|--:|"]
-    for v, d in ke.items():
+    for v, d in _outward(ke, "k_erastin"):
         L.append(f"| `k_erastin` | {v} | {d}{'  (prior low bound)' if v == '3.0' else ''} |")
-    for v, d in hl.items():
+    for v, d in _outward(hl, "hill"):
         L.append(f"| `hill` | {v} | {d}{'  (prior high bound)' if v == '6.0' else ''} |")
     L += ["",
           ("Pushing `k_erastin` below its bound makes the fit monotonically worse."
