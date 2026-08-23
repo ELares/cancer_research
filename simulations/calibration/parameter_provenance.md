@@ -250,7 +250,8 @@ Recorded rather than quietly deleted, because the failure is reusable.
 
 An earlier draft said the manuscript "states no per-step duration", making
 issue #727's ~16 min/step an attribution to text that did not exist. Section
-8.4 states the 0-48 hour immune window two bullets above the 180-step sentence
+8.4 states the 0-48 hour immune window in the bullet IMMEDIATELY above the
+180-step sentence
 that draft quoted as evidence of silence, and says it again at two other
 points. The claim was false, and the guard protecting it grepped for the
 literal string "16 min/step" -- a quotient no document would ever write -- so
@@ -274,8 +275,10 @@ GPX4 3, NRF2 5, FSP1 7), swept by `sim-window` over 0 to 28 days. P3 is scored
 across BOTH axes, not one: the days axis sets a cell's initial state and
 `sim_cell` then runs the same 180-step loop to produce the death rate P3 reads.
 So P3 inherits whichever inner binding applies, and `sim-window`'s minimum
-timepoint spacing is 6 hours, which is coarser than the inner assay under
-either reading.
+timepoint spacing is 6 hours -- coarser than the whole inner assay under the 1
+min/step reading (3.0 h) and finer than it under the 16 min/step one (48 h),
+so even the relationship between the two axes depends on which reading is
+taken.
 
 ### What adopting 1 min/step would make unreachable
 
@@ -288,21 +291,28 @@ Recorded because a binding that silences an existing anchor has to say so.
   borderline reachable -- which is an argument for the larger value that has
   nothing to do with which binary you are in, and is exactly why this is left
   open rather than decided here.
-- **Persister epigenetic locking**, priced in `params.rs` against "days to
-  weeks of continuous dosing", is unreachable under either.
-- **The `--dose-sweep` schedule reads oddly under 1 min/step**: doses at steps
-  10/55/100/145 become 45-minute intervals with a 20-minute bolus half-life.
-  The code flags those as illustrative and uncalibrated; under 16 min/step they
-  are 12-hour intervals, which is clinically ordinary.
+- **Persister epigenetic locking is NOT a third anchor**, and an earlier draft
+  of this bullet said it was. `params.rs` names a days-to-weeks sustained-exposure
+  timescale and then says explicitly that it is "illustrative context only, NOT
+  from that source and NOT mapped to the dimensionless EMA `lock_threshold` used
+  here". Turning a stated non-mapping into a pricing is the same move this
+  section exists to retract, so it is withdrawn: the locking threshold is
+  dimensionless and neither reading makes it reachable or unreachable.
 
 ### Status
 
 **Unresolved, and now measured rather than assumed.** No figure in this book is
 computed from a step duration, so nothing reported here moves either way; what
 changes is that the disagreement is written down with both sources named, and
-`scripts/engine_time_audit.py` will now find a third if one appears. Resolving
-it needs a measurement rather than a decision: a lipid-peroxidation time-course
-under RSL3 would set the inner clock directly. This repo already has one
-measured front speed -- `trigger_wave` is anchored to 5.52 um/min (Co 2024,
-PMID 38987590) -- and at the 20 um cell pitch used here that is a ~3.6 minute
-cell crossing, a third candidate from real data that agrees with neither.
+`scripts/engine_time_audit.py` will now find a third READING IN THE SOURCE if
+one appears.
+
+Resolving it needs a measurement rather than a decision, and a candidate
+measurement already exists here -- DERIVED, not stated anywhere in the engine's
+text, which is why the audit does not and should not report it as a third
+reading. `trigger_wave` is anchored to a measured ferroptotic front speed of
+5.52 um/min (Co 2024, PMID 38987590), and at the 20 um cell pitch these
+binaries use that is a ~3.6 minute cell crossing. It agrees with neither
+reading. That is a reason to run the experiment -- a lipid-peroxidation
+time-course under RSL3 would set the inner clock directly -- and not a third
+entry in the table above, which lists what the code SAYS.

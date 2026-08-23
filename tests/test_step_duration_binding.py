@@ -140,7 +140,11 @@ def test_the_costs_are_recorded_on_both_sides():
     assert "borderline reachable" in doc, (
         "the doc records what 1 min/step silences without recording that the "
         "other reading relieves it, which is an argument for the other side")
-    assert "clinically ordinary" in doc
+    # And a withdrawn cost must stay withdrawn rather than quietly returning:
+    # the persister anchor was cited as priced when `params.rs` says it is
+    # explicitly NOT mapped.
+    assert "NOT a third anchor" in doc
+    assert "Turning a stated non-mapping into a pricing" in doc
 
 
 def test_the_siblings_do_not_contradict_it():
@@ -303,3 +307,159 @@ def test_the_superseded_headline_is_gone_from_every_site():
     assert "A second reading is IMPLIED and never declared" in md, (
         "the artifact reports only the declared binding, so its headline "
         "contradicts the reconciliation it points at")
+
+
+# ---------------------------------------------------------------------------
+# THE PROSE, derived from source the way the table already is.
+#
+# Guarding the table and stopping there left eleven prose mutations passing a
+# green suite: the 60-step delay read as "6 hours and ten minutes", the front
+# speed as "~36 minute", the integrator gap as "5000x", the retraction as
+# "The claim was TRUE", and an appended "in practice, adopt 1 min/step
+# everywhere" -- the last two inverting the document's two central stances.
+#
+# Every number the prose states about the engine is recomputed here from the
+# file that determines it. A hand-written figure in a document about
+# hand-written figures being wrong is the defect this whole PR is retracting.
+# ---------------------------------------------------------------------------
+
+CORE = REPO / "simulations/ferroptosis-core/src"
+
+
+def _num_near(doc: str, phrase: str, pattern: str) -> str:
+    """The first match of `pattern` in the sentence containing `phrase`."""
+    i = doc.index(phrase)
+    window = doc[max(0, i - 200):i + 300]
+    m = re.search(pattern, window)
+    assert m, f"no {pattern!r} near {phrase!r}"
+    return m.group(1)
+
+
+def test_the_chapter_7_attribution_is_the_binary_that_produced_it():
+    """Which binary produced the published immune numbers is load-bearing:
+    it is why the implied reading matters rather than being a curiosity."""
+    doc = _doc()
+    d = _audit()
+    bins = sorted({w["binary"] for w in d["implied_windows"]})
+    m = re.search(r"`(sim-[\w-]+)` produced this book's", doc)
+    assert m, "the doc no longer attributes the published immune numbers"
+    named = m.group(1)
+    assert named in bins, f"{named} states no immune window; audit has {bins}"
+    # The 2D Chapter 7 numbers come from the 2D binary, not the 3D one.
+    ch7 = (REPO / "article/drafts/v1.md").read_text()
+    assert "104:1 in 2D" in ch7
+    assert named == "sim-tme", (
+        f"the doc credits {named}; the 104:1 figure is the 2D result and "
+        "sim-tme is the 2D binary")
+
+
+def test_the_immune_delay_figures_are_what_the_code_implies():
+    """"reads as 16 hours under it and one hour under the other"."""
+    doc = _doc()
+    main = (SIMS / "sim-tme/src/main.rs").read_text()
+    m = re.search(r"let immune_start_step\s*=\s*(\d+)", main)
+    assert m, "sim-tme no longer declares an immune activation delay"
+    steps = int(m.group(1))
+    d = _audit()
+    implied = max(w["minutes_per_step"] for w in d["implied_windows"])
+    declared = max(b["minutes_per_step"] for b in d["step_bindings"]
+                   if b["kind"] == "wall-clock")
+    hours = steps * implied / 60
+    assert f"{steps}-step immune activation delay" in doc, (
+        f"the doc no longer cites the {steps}-step delay it computes from")
+    assert f"reads as {int(hours)} hours" in doc, (
+        f"{steps} steps x {implied} min is {hours:g} hours; the doc says "
+        f"otherwise")
+    other = int(steps * declared / 60)
+    words = {1: "one", 2: "two", 3: "three"}
+    assert (f"{other} hour under the other" in doc
+            or f"{words.get(other, other)} hour under the other" in doc), (
+        f"{steps} steps x {declared} min is {other} hour(s); the doc says "
+        "otherwise")
+
+
+def test_the_integrator_gap_is_recomputed():
+    """"manufactures a 50x disagreement"."""
+    doc = _doc()
+    d = _audit()
+    solver = min(b["minutes_per_step"] for b in d["step_bindings"]
+                 if b["kind"] == "solver-timestep")
+    declared = max(b["minutes_per_step"] for b in d["step_bindings"]
+                   if b["kind"] == "wall-clock")
+    assert f"{int(declared / solver)}x disagreement" in doc, (
+        f"{declared} / {solver} is {declared / solver:g}x; the doc says "
+        "otherwise")
+
+
+def test_the_derived_front_speed_candidate_is_recomputed():
+    """"5.52 um/min ... at the 20 um cell pitch ... a ~3.6 minute crossing"."""
+    doc = _doc()
+    tw = (CORE / "trigger_wave.rs").read_text()
+    m = re.search(r"measured a baseline front speed of (\d+\.\d+)", tw)
+    assert m, "trigger_wave no longer states a measured BASELINE front speed"
+    speed = float(m.group(1))
+    pitch = None
+    for b in ("sim-tme", "sim-tme-3d"):
+        mm = re.search(r"const CELL_SIZE_UM:\s*f64\s*=\s*(\d+(?:\.\d+)?)",
+                       (SIMS / b / "src/main.rs").read_text())
+        if mm:
+            pitch = float(mm.group(1))
+            break
+    assert pitch, "no binary declares a cell pitch"
+    crossing = pitch / speed
+    assert f"{speed} um/min" in doc
+    assert f"{pitch:g} um cell pitch" in doc
+    assert f"~{crossing:.1f} minute cell crossing" in doc, (
+        f"{pitch} um / {speed} um/min is {crossing:.2f} min; the doc says "
+        "otherwise")
+    # And it must be marked as DERIVED, not as a third reading in the source.
+    assert "DERIVED, not stated anywhere in the engine's text" in doc
+    assert "not a third entry in the table above" in doc
+    assert "a third entry in the table above" not in doc.replace(
+        "not a third entry in the table above", ""), (
+        "the derived candidate is presented as a third reading in the table, "
+        "which lists what the code SAYS")
+    # The table has exactly the readings the audit measures, and this is not
+    # one of them.
+    assert len(_table_rows()) == 2
+
+
+def test_the_manuscript_adjacency_claim_is_checked_against_the_manuscript():
+    """"the bullet IMMEDIATELY above the 180-step sentence"."""
+    doc = _doc()
+    assert "bullet IMMEDIATELY above" in doc
+    md = (REPO / "article/drafts/v1.md").read_text().splitlines()
+    bullets = [n for n, l in enumerate(md) if l.startswith("**")
+               and 1195 <= n <= 1225]
+    window = next((n for n in bullets if "0-48 hour" in md[n]), None)
+    steps = next((n for n in bullets if "180 steps within a single" in md[n]), None)
+    assert window is not None and steps is not None, (
+        "Section 8.4 no longer carries both bullets the doc cites")
+    later = [n for n in bullets if n > window]
+    assert later and later[0] == steps, (
+        f"the 0-48h bullet (line {window + 1}) is not immediately above the "
+        f"180-step bullet (line {steps + 1}); intervening bullets at "
+        f"{[n + 1 for n in later if n < steps]}")
+
+
+def test_neither_stance_can_be_inverted_in_prose():
+    """The two things the document exists to say.
+
+    Banning three literal spellings of "adopt one" let a fourth walk past, and
+    nothing at all stopped the retraction being flipped to "The claim was TRUE".
+    """
+    doc = _doc()
+    # Stance 1: adopt neither.
+    assert "Neither is adopted as correct" in doc
+    assert not re.search(
+        r"adopt(?:ing)?\s+(?:the\s+)?1\s*min/step\s+(?:everywhere|as correct|"
+        r"throughout)|the\s+PK\s+declaration\s+is\s+the\s+correct\s+one|"
+        r"in practice,?\s+adopt", doc, re.I), (
+        "the doc adopts one reading in prose while its heading says it adopts "
+        "neither")
+    # Stance 2: the retraction retracts.
+    i = doc.index("What this section previously claimed")
+    tail = doc[i:i + 1200]
+    assert "The claim was false" in tail, (
+        "the retraction no longer says the claim was false")
+    assert "was TRUE" not in tail and "was correct" not in tail
