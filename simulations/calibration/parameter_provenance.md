@@ -201,3 +201,65 @@ Sobol total-effect screening at the Persister+RSL3 operating point (see `analysi
 | `death_threshold` | 0.003 | NO (kill-rate-insensitive) |
 | `gpx4_degradation_by_ros` | 0.000 | NO (kill-rate-insensitive) |
 <!-- SOBOL-IDENTIFIABILITY-END -->
+
+## What one step is worth in real time (#727a)
+
+Every prediction in `PREREGISTRATION.md` is stated in hours or days and the
+model runs in steps, so nothing time-stated can be scored until the conversion
+is written down. Issue #727 reports four conflicting bindings for the 180-step
+loop. Measured against the source (`scripts/engine_time_audit.py`,
+`analysis/engine-time-audit.md`), that overcounts: there are **two separate
+time axes and one binding each**, plus one quantity that is not a step binding
+at all.
+
+**The inner axis — the 180-step treatment loop.** Exactly one wall-clock
+binding exists anywhere in the engine: `tumor_pk.rs` prices a step at **1
+minute** ("Time points in minutes, one per simulation step"), and it is the
+only one reaching production code, via `sim-tumor-pk` and `sim-tme-3d`. So
+where a run needs a duration, **180 steps = 3.0 hours**.
+
+That binding is narrower than it looks and the narrowness is the point.
+`sim-tme-3d`'s default matrix uses `DoseSchedule::Constant` and never enters
+the PK solver, so the production matrix carries **no wall-clock reading at
+all** — it is dimensionless, and calling it 3.0 hours is a statement about the
+`--dose-sweep` path only.
+
+**The outer axis — recovery after withdrawal.** `cell.rs` carries the four
+defence half-recovery times in **days** (GSH 1, GPX4 3, NRF2 5, FSP1 7), swept
+by `sim-window` over 0 to 28 days at its own timepoints. This is a different
+quantity from the inner step, and comparing the two is the asymmetric
+comparison `engine_time_audit.py` retracted: prediction P3 is scored on THIS
+axis, not on the 180-step loop.
+
+**Not a step binding.** `trigger_wave.rs`'s `dt_min` (0.02 min) is a
+CFL-constrained integrator timestep for a PDE. Pooling it with the loop
+manufactures a 50x disagreement between quantities that measure different
+things.
+
+### What this binding makes known-wrong
+
+Adopting 1 min/step is not free, and the cost is recorded rather than hidden.
+
+- **The MUFA/SCD1 timescale does not fit inside the loop.** `params.rs`
+  documents `scd_mufa_rate` as uncalibrated against the ~48-72 hour SCD1/MUFA
+  enrichment window. At 1 min/step the whole 180-step run is 3.0 hours, so the
+  inner loop **cannot represent that accumulation at all** — the acute-versus-
+  established MUFA distinction (`mufa_acute_start`, ferroptosis-core 0.35.0) is
+  a direction the loop expresses and a timescale it does not. Anyone fitting
+  that rate must do it on the outer axis or lengthen the run.
+- **The manuscript makes no competing claim.** Section 8.4 says the simulation
+  "runs 180 steps within a single treatment window" and states no per-step
+  duration, so the ~16 min/step figure #727 attributes to it is not in the
+  text. 3.0 hours is consistent with "a single treatment window".
+
+### Status
+
+**Assumed, and load-bearing for scoring rather than for any reported number.**
+No figure in this book is computed from a step duration; the conversion exists
+so a time-stated prediction can be scored against a step-stated model. It is
+`tumor_pk.rs`'s value because that is the only one the code actually carries —
+not because a PK solver's convention is the right clock for a kill assay, which
+is a real weakness of this binding and the reason a measured alternative would
+supersede it immediately. Calibrating it means timing the modelled process
+against a real one: a lipid-peroxidation time-course under RSL3 would set it
+directly.
