@@ -12,6 +12,26 @@ outputs and quoted historical figures -- and this repo has already learned from
 trains exemption-adding rather than fixing. So each entry names a claim, the
 artifact path that produces it, and how it is rendered in prose.
 
+SHORT NUMBERS NEED CONTEXT, and this file shipped without it. Searching the
+manuscript for a bare rendered value is fine for `4,403,994` and vacuous for
+`6`, which occurs 824 times -- so the zero-cells guard could not have failed
+whatever the artifact said. Three more were nearly as weak: `1.1` (12 hits),
+`288` (12), `621` (9, every extra hit inside a PMID like `pmid35621637`).
+Each claim now carries a CONTEXT TEMPLATE, and a meta-guard refuses any short
+numeric claim that does not have one, so the class cannot come back.
+
+WHAT IT STILL CANNOT CATCH, and the obvious fix was tried and rejected: a
+figure quoted at TWO sites where only one was updated. "6 empty cells" appears
+twice and the guard is satisfied by either, so a half-propagated correction
+passes. The strict form -- assert no CONTRADICTING value appears in the same
+phrase -- was measured against the manuscript and is unusable: `{} articles`
+matches 70 distinct legitimate figures, `a factor of {}` matches 10, and even
+the tight `{} empty cells` matches the historical 94 the text cites on purpose.
+A gate that fires on correct prose trains exemption-adding rather than fixing,
+which this repo has already learned once from `audit_heading_only_assertions.py`.
+So the reach is stated instead: this checks a figure is CURRENT somewhere, not
+that every site quoting it moved.
+
 WHAT THIS CANNOT CATCH: a number that is correct but attached to the wrong
 sentence. `census-mechanism-profile.json` can say 2,513 while the manuscript
 attributes it to the wrong mechanism, and both would pass. This is a freshness
@@ -61,32 +81,50 @@ def _pct_rounded(v):
     return [f"{v}%", f"{round(v)}%"]
 
 
-# (label, artifact, dotted path, formatter)
+# (label, artifact, dotted path, formatter, context template)
+#
+# The template positions the value in the phrase the manuscript actually uses.
+# "{}" alone means the rendered value is distinctive enough to stand by itself;
+# anything short or digit-only must name its context or the meta-guard below
+# refuses it.
 CLAIMS = [
-    ("census records", "census-evidence-design.json", "census", _comma),
-    ("classifiable records", "census-evidence-design.json", "classifiable", _comma),
-    ("trial publication types", "census-evidence-design.json", "classes.trial", _comma),
-    ("full-text ceiling", "census-fulltext-ceiling.json", "ceiling_records", _comma),
+    ("census records", "census-evidence-design.json", "census", _comma, "{}"),
+    ("classifiable records", "census-evidence-design.json", "classifiable", _comma, "{}"),
+    ("trial publication types", "census-evidence-design.json", "classes.trial", _comma, "{}"),
+    ("full-text ceiling", "census-fulltext-ceiling.json", "ceiling_records", _comma, "{}"),
     ("ceiling share", "census-fulltext-ceiling.json",
-     "ceiling_share_of_undetermined", _pct),
-    ("mechanism growth", "census-mechanism-growth.json", "union_growth", str),
-    ("field growth", "census-mechanism-growth.json", "field_growth", str),
-    ("chains matched", "census-diagnostic-chains.json", "census_matched", _comma),
-    ("matrix universe", "census-mechanism-cancer-matrix.json", "universe", _comma),
-    ("matrix zero cells", "census-mechanism-cancer-matrix.json", "n_zero", str),
-    ("matrix cells", "census-mechanism-cancer-matrix.json", "n_cells", str),
+     "ceiling_share_of_undetermined", _pct, "{}"),
+    ("mechanism growth", "census-mechanism-growth.json", "union_growth", str,
+     "{}-fold"),
+    ("field growth", "census-mechanism-growth.json", "field_growth", str,
+     "field's {}"),
+    ("chains matched", "census-diagnostic-chains.json", "census_matched", _comma, "{}"),
+    ("matrix universe", "census-mechanism-cancer-matrix.json", "universe", _comma, "{}"),
+    ("matrix zero cells", "census-mechanism-cancer-matrix.json", "n_zero", str,
+     "{} empty cells"),
+    ("matrix cells", "census-mechanism-cancer-matrix.json", "n_cells", str,
+     "empty cells of {}"),
     ("thesis exploit share, corrected", "census-thesis-direction.json",
-     "adjudication.corrected_exploit_share", _pct),
+     "adjudication.corrected_exploit_share", _pct, "{}"),
     ("hypoxia protective share", "census-hypoxia-direction.json",
-     "adj_protects_share", _pct_rounded),
+     "adj_protects_share", _pct_rounded, "{}"),
+    # The two cautions attached to the GPX4+FSP1 test protocol. Both qualify an
+    # experiment the manuscript describes in the imperative, so a stale figure
+    # here would misdirect whoever runs it.
+    ("P1 arm asymmetry", "census-protocol-precedent.json", "arm_asymmetry", str,
+     "a factor of {}"),
+    ("P1 GPX4-arm precedent", "census-protocol-precedent.json",
+     "arm1_precedent", _comma, "{} articles"),
+    ("synergy-metric control size", "census-synergy-metrics.json",
+     "control_records", _comma, "{} records"),
 ]
 
 
-@pytest.mark.parametrize("label,artifact,path,fmt", CLAIMS,
+@pytest.mark.parametrize("label,artifact,path,fmt,ctx", CLAIMS,
                          ids=[c[0] for c in CLAIMS])
-def test_a_quoted_census_figure_matches_its_artifact(label, artifact, path, fmt):
+def test_a_quoted_census_figure_matches_its_artifact(label, artifact, path, fmt, ctx):
     want = fmt(_get(artifact, path))
-    wants = want if isinstance(want, list) else [want]
+    wants = [ctx.format(w) for w in (want if isinstance(want, list) else [want])]
     txt = " ".join(MANUSCRIPT.read_text().split())
     assert any(w in txt for w in wants), (
         f"the manuscript does not carry {label} as any of {wants} from "
@@ -148,7 +186,42 @@ def test_the_claim_list_is_declared_and_reads_the_artifacts():
     assert len(CLAIMS) >= 10
     src = Path(__file__).read_text()
     assert "DECLARED, NOT INFERRED" in src
-    for label, artifact, path, _ in CLAIMS:
+    for label, artifact, path, _, _ctx in CLAIMS:
         assert (REPO / "analysis" / artifact).exists(), (
             f"{label} names a missing artifact: {artifact}")
         _get(artifact, path)   # raises if the path has moved
+
+
+@pytest.mark.parametrize("label,artifact,path,fmt,ctx", CLAIMS,
+                         ids=[c[0] for c in CLAIMS])
+def test_no_claim_is_satisfied_by_an_accidental_match(label, artifact, path,
+                                                      fmt, ctx):
+    """META-GUARD on the guard: a search string that occurs everywhere is not
+    a check.
+
+    `n_zero` renders as "6" and the manuscript contains 824 of those, so that
+    claim passed unconditionally for as long as it existed. This refuses any
+    claim whose search string is short and digit-only unless a context template
+    places it in a phrase, and then requires the resulting string to be rare
+    enough that a coincidental hit is implausible.
+
+    The bar is deliberately loose -- a distinctive figure legitimately repeats
+    across an abstract, a body section and a caption -- so it catches vacuity
+    rather than policing style.
+    """
+    want = fmt(_get(artifact, path))
+    wants = [ctx.format(w) for w in (want if isinstance(want, list) else [want])]
+    txt = " ".join(MANUSCRIPT.read_text().split())
+    for w in wants:
+        # A trailing % already makes a string specific -- "20.6%" appears
+        # once -- so only a pure number is at risk of an accidental match.
+        bare = w.replace(",", "").replace(".", "")
+        if bare.isdigit() and len(bare) <= 4:
+            assert ctx != "{}", (
+                f"{label} searches for the bare short number {w!r}, which can "
+                "be matched by an unrelated figure or a PMID. Give it a "
+                "context template naming the phrase it appears in.")
+    hits = max(txt.count(w) for w in wants)
+    assert hits <= 15, (
+        f"{label} matches {hits} places in the manuscript, so the guard would "
+        f"pass on text having nothing to do with the claim")

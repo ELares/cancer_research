@@ -131,3 +131,22 @@ def test_the_claim_to_metric_gap_recomputes(d):
         d["claim_combination"] - d["any_metric_combination"])
     assert d["any_metric_combination"] <= d["any_metric"]
     assert d["combination_articles"] <= d["ferroptosis_articles"]
+
+
+def test_the_manuscript_does_not_offer_the_metrics_as_an_either_or(d):
+    """Section 6's test protocol says "Chou-Talalay analysis OR ... Bliss".
+
+    That reads as a free choice and it is not: the model's output is a Bliss
+    excess and the comparison literature names Chou-Talalay, so a collaborator
+    picking one gets a number that connects to only half of what the result has
+    to speak to. The correction may be reworded or moved, but it may not simply
+    disappear while the either/or stands.
+    """
+    txt = " ".join((REPO / "article/drafts/v1.md").read_text().split())
+    either_or = "Chou-Talalay analysis or compare against Bliss independence"
+    if either_or in txt:
+        assert "should be an *and*" in txt or "Report both" in txt, (
+            "the manuscript offers the two synergy metrics as alternatives "
+            "with nothing saying why both are needed")
+        assert f"{d['control_records']:,} records" in txt, (
+            "the correction is present without the measurement behind it")
