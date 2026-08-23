@@ -308,8 +308,14 @@ Recorded because a binding that silences an existing anchor has to say so.
 **Unresolved, and now measured rather than assumed.** No figure in this book is
 computed from a step duration, so nothing reported here moves either way; what
 changes is that the disagreement is written down with both sources named, and
-`scripts/engine_time_audit.py` will now find a third READING IN THE SOURCE if
-one appears.
+`scripts/engine_time_audit.py` will find a third READING IN THE SOURCE
+within the shape it looks for -- ONE window per line, the scope verb and
+the window on the same line, and `sim-*` crates only. That shape is
+narrower than "any third reading": `sim-tme/README.md:138` already
+carries a second window on the same line (`1-7 days`, which would price a
+step at 48 min) and the detector takes only the first. Stating the reach
+rather than the aspiration, because a claim is only as wide as the sweep
+behind it and this section says so two screens above.
 
 Resolving it needs a measurement rather than a decision, and a candidate
 measurement already exists here -- DERIVED, not stated anywhere in the engine's

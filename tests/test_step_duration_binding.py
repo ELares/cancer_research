@@ -540,6 +540,40 @@ def test_the_prose_verbs_are_not_inverted():
     # the derived candidate agrees with neither reading
     assert "It agrees with neither reading" in doc
     assert "agrees with both" not in doc
+    # The two the docstring named and the body did not check. `6 hours` is the
+    # MINIMUM gap (the maximum is 336), so "maximum ... is 6 hours" is flatly
+    # false, and the coarser/finer pair is the sentence's whole point.
+    assert "coarser than the whole inner assay" in doc and \
+        "finer than the whole inner assay" not in doc
+    assert "minimum\ntimepoint spacing" in DOC.read_text() or \
+        "minimum timepoint spacing" in doc
+    assert "maximum timepoint spacing" not in doc
+
+
+def test_the_detectors_stated_reach_matches_what_it_does():
+    """The Status paragraph describes the detector's shape, so it must.
+
+    An unbounded "will now find a third reading if one appears" was the same
+    over-claim this section retracts: the detector takes ONE window per line,
+    needs the scope verb and the window on one line, and walks `sim-*` only.
+    `sim-tme/README.md:138` already carries a second window it drops.
+    """
+    doc = _doc()
+    assert "ONE window per line" in doc
+    assert "if one appears" not in doc, (
+        "the reach claim is unbounded again")
+    # The dropped second window really is on that line.
+    line = (SIMS / "sim-tme/README.md").read_text().splitlines()[137]
+    assert "0-48h" in line and "1-7 days" in line, (
+        "README:138 no longer carries two windows, so the example is stale")
+    import sys
+    sys.path.insert(0, str(REPO / "scripts"))
+    import engine_time_audit as m
+    hits = [w for w in m.find_implied_windows()
+            if w["module"] == "README.md" and w["binary"] == "sim-tme"]
+    assert len(hits) == 1 and hits[0]["window_hours"] == 48.0, (
+        "the detector now reports more than one window for that line, so the "
+        "stated limitation is stale")
 
 
 def test_the_citation_is_pinned_to_the_module_it_comes_from():
