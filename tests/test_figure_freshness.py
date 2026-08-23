@@ -151,13 +151,37 @@ def _resolve(doc, val) -> str:
 
 def _census_figures():
     """The figures the census generator writes, read from its source."""
+    return sorted(_census_outputs()["pdf"])
+
+
+def _census_outputs() -> dict:
+    """Census figure stems, PER EXTENSION.
+
+    Folding both into one name set meant a deleted `.png` savefig left the
+    count unchanged, the existence check only ever looked for `{stem}.pdf`,
+    and the flagship globbed `*.pdf` -- so `fig2c_census_volume.png` could
+    stop being generated with the whole suite green. That is the same floor
+    defect this file retracts, still open on the PNG side.
+    """
     src = GEN.read_text()
-    names = set(re.findall(r'FIG_DIR / f?"([\w.]+?)\.(?:pdf|png)"', src))
-    names |= {m for m in re.findall(r'FIG_DIR / f"([\w]+)\.\{ext\}"', src)}
-    return sorted(names)
+    out = {"pdf": set(), "png": set()}
+    for stem, ext in re.findall(r'FIG_DIR / f?"([\w.]+?)\.(pdf|png)"', src):
+        out[ext].add(stem)
+    # `f"{stem}.{ext}"` loops write both.
+    for stem in re.findall(r'FIG_DIR / f"([\w]+)\.\{ext\}"', src):
+        out["pdf"].add(stem)
+        out["png"].add(stem)
+    return {k: sorted(v) for k, v in out.items()}
 
 
 def test_the_figure_list_is_discovered_from_the_generator():
+    outputs = _census_outputs()
+    assert len(outputs["png"]) == 8, (
+        f"{len(outputs['png'])} census PNGs are written: {outputs['png']}. "
+        "PNG stems are counted separately from PDF stems precisely so a "
+        "deleted `.png` savefig cannot hide behind the PDF count.")
+    for stem in outputs["png"]:
+        assert (FIG_DIR / f"{stem}.png").exists(), f"{stem}.png is missing"
     figs = _census_figures()
     # EXACT. A floor let two savefig calls be replaced by `pass`, shrinking
     # coverage 25% while staying green -- and the flagship check derives its
@@ -213,16 +237,39 @@ def test_the_corpus_figure_backlog_is_stated_and_shrinking():
                    and b"/CreationDate" in p.read_bytes())
     doc = _module_docstring()
     assert "loads the whole corpus and gitignored simulation outputs" in doc
+    # The two claims this paragraph was rewritten FOR are guarded by their
+    # NUMBERS, derived below -- not by matching their rhetorical markers. A
+    # literal-marker assert lives in this same file, so a global rename keeps
+    # prose and assert in step and passes; only the derivation has teeth.
+    import yaml as _yaml
+
+    _spec = _yaml.safe_load((REPO / "FIGURES.yaml").read_text())
+    figs = _spec if isinstance(_spec, list) else _spec.get("figures", _spec)
+    if isinstance(figs, dict):
+        figs = list(figs.values())
+    census = {f"{f}.pdf" for f in _census_figures()}
+    stale = sorted(p.name for p in FIG_DIR.glob("*.pdf")
+                   if p.name not in census
+                   and b"/CreationDate" in p.read_bytes())
+    # ATTRIBUTED, not substring-matched. Counting `stem in source` gives 14
+    # because `generate_figures.py` carries a COMMENT about fig7 explaining
+    # that the Rust binary writes it -- the same defect this test corrects two
+    # blocks below, reproduced in the guard for the sentence about it.
+    attributed = {f["filename"]: str(f["generator"].get("script", ""))
+                  for f in figs if isinstance(f, dict)
+                  and isinstance(f.get("generator"), dict)}
+    overlap = sum(1 for n in stale
+                  if attributed.get(n[:-4], "").endswith("generate_figures.py"))
+    assert f"the overlap is {overlap}" in doc, (
+        f"{overlap} stale PDFs are attributed to generate_figures.py; the "
+        "docstring says otherwise")
+    assert f"other {len(stale) - overlap} stale ones" in doc, (
+        f"{len(stale) - overlap} stale PDFs come from elsewhere; the "
+        "docstring says otherwise")
     # Every one of them must come from a generator this cannot run, and the
     # generator set is DERIVED from FIGURES.yaml rather than assumed: an
     # earlier version named two scripts and the repo has three, so a figure
     # from the third looked like an unexplained straggler.
-    import yaml
-
-    spec = yaml.safe_load((REPO / "FIGURES.yaml").read_text())
-    figs = spec if isinstance(spec, list) else spec.get("figures", spec)
-    if isinstance(figs, dict):
-        figs = list(figs.values())
     gens = {f["generator"]["script"] for f in figs
             if isinstance(f, dict) and isinstance(f.get("generator"), dict)
             and f["generator"].get("script")}
@@ -248,9 +295,14 @@ def test_the_corpus_figure_backlog_is_stated_and_shrinking():
         # A substring match is satisfied by a COMMENT saying the opposite:
         # `fig7_monte_carlo_simulation` passed only because
         # `generate_figures.py` carries a note explaining that the Rust binary
-        # writes it and this script does not. Require the stem to appear in a
-        # savefig-ish context, and fall back to the substring only when
-        # FIGURES.yaml attributes the figure to a non-Python generator.
+        # writes it and this script does not.
+        #
+        # What this DOES, precisely, because an earlier version of this comment
+        # described a "savefig-ish context" check that was never written: a
+        # figure FIGURES.yaml attributes to a non-Python generator is skipped
+        # outright, so fig7 no longer depends on a comment matching. For the
+        # rest the check is still a substring, and a comment mentioning a stem
+        # would still satisfy it -- stated rather than implied.
         attributed = {f["filename"]: f["generator"].get("script", "")
                       for f in figs if isinstance(f, dict)
                       and isinstance(f.get("generator"), dict)}
@@ -320,12 +372,20 @@ def test_the_committed_census_figures_are_what_the_generator_draws():
         #
         # BUT "nothing is lost" WOULD BE FALSE and an earlier version of this
         # comment said it. A raster-only rcParam moves every PNG while leaving
-        # vector PDFs untouched: measured, `savefig.dpi` 300 -> 150 in this
-        # generator moves 8 of 8 PNGs and only 1 of 8 PDFs -- fig5c, the sole
-        # figure carrying a raster. So editing one line here can stale seven
-        # committed PNGs with this suite green. That residual is real, it is
-        # the price of a portable comparison, and the `article/figures/**` CI
-        # path is what puts such a change in front of a reviewer.
+        # every vector PDF untouched: measured, turning `lines.antialiased`,
+        # `text.antialiased` and `patch.antialiased` off in this generator
+        # moves 8 of 8 PNGs and 0 of 8 PDFs, so editing one line here can
+        # stale eight committed PNGs with this suite green.
+        #
+        # The first version of this comment used `savefig.dpi` 300 -> 150,
+        # which was the wrong example for the claim: it moves 8 PNGs and 1 PDF
+        # (fig5c, the only figure with a raster), and that PDF failing turns
+        # the suite RED -- so the very line offered as "green" was caught. The
+        # residual is real; the example had to be one that demonstrates it.
+        #
+        # That residual is the price of a portable comparison, and the
+        # `article/figures/**` CI path is what puts such a change in front of
+        # a reviewer.
         produced = sorted(scratch.glob("*.pdf"))
         assert produced, (
             "the generator wrote no PDF into FERRO_FIG_DIR, so it is either "
@@ -449,14 +509,38 @@ def _one_page_pdf(tmp, draw, name):
      lambda ax: ax.plot([0, 1], [0, 1], marker="o", markersize=12)),
 ])
 def test_the_comparison_detects_a_change_on_each_surface(tmp_path, label, a, b):
-    """If any of these stops failing, `_drawing()` has a hole on that surface."""
+    """If any of these stops failing, `_drawing()` has a hole on that surface.
+
+    SELF-VERIFYING. Each control now proves its own isolation rather than
+    leaving it to a reviewer's printout: the named surface must be PRESENT in
+    both arms, and must be the ONLY one that moved. Both properties were
+    hand-checked before and both had already failed once -- the smask control
+    used `alpha=1.0`, which emits no SMask at all, so it compared list lengths
+    and tested presence rather than content; and the xobject control changed
+    the marker SHAPE, which moves the content stream too. Data-only fixes to
+    either are one edit from regressing, and this is what stops that.
+    """
+    surface = label.split()[0]
     pa = _one_page_pdf(tmp_path, a, "a.pdf")
     pb = _one_page_pdf(tmp_path, b, "b.pdf")
     da, db = _drawing(pa), _drawing(pb)
     assert da is not None, "no PDF reader available"
-    assert da != db, (
-        f"_drawing() cannot see a change to {label}, so any figure whose only "
-        "difference is on that surface passes as fresh")
+
+    def keys(d):
+        return [k.split(":")[0].lower() for k, _ in d]
+
+    assert surface in keys(da) and surface in keys(db), (
+        f"the {label} control does not emit a {surface!r} surface in both "
+        f"arms, so it tests PRESENCE rather than content. Arms carry "
+        f"{keys(da)} and {keys(db)}")
+    assert len(da) == len(db), (
+        f"the {label} control changes the surface LIST, not its contents: "
+        f"{keys(da)} vs {keys(db)}")
+    moved = {k.split(":")[0].lower()
+             for (k, x), (_, y) in zip(da, db) if x != y}
+    assert moved == {surface}, (
+        f"the {label} control moves {sorted(moved) or 'nothing'}; a control "
+        f"that does not isolate {surface!r} proves nothing about it")
 
 
 def test_the_comparison_is_stable_for_an_unchanged_figure(tmp_path):
@@ -566,8 +650,10 @@ def test_the_stated_png_residual_is_measured_not_asserted():
     with tempfile.TemporaryDirectory() as td:
         tmp = Path(td)
         base = _regen(tmp)
-        mut = _regen(tmp, lambda s: s.replace('"savefig.dpi": 300',
-                                              '"savefig.dpi": 150'))
+        mut = _regen(tmp, lambda s: s.replace(
+            "plt.rcParams.update({",
+            'plt.rcParams.update({\n    "lines.antialiased": False,\n'
+            '    "text.antialiased": False,\n    "patch.antialiased": False,'))
         moved_png, moved_pdf, caught = [], [], []
         for p in sorted(base.glob("*")):
             q = mut / p.name
@@ -628,3 +714,66 @@ def test_the_produced_set_equality_can_actually_fail():
         "the flagship no longer compares its produced set to the discovered "
         "one, so a figure that was never regenerated is never compared")
     assert "assert True or" not in flat
+    # And it must compare the PRODUCED file to the COMMITTED one. Rewriting
+    # that line to compare the committed figure to itself passed every other
+    # check, because all six surface controls exercise `_drawing()` and none
+    # exercised the call site.
+    #
+    # Checked by AST on the ARGUMENTS, not by matching source text: this
+    # assertion's own literal lives in the same file, so a rename that touches
+    # both keeps them in step and passes. Structure cannot be renamed into
+    # agreement.
+    import ast as _ast
+
+    node = next(n for n in _ast.parse(Path(__file__).read_text()).body
+                if isinstance(n, _ast.FunctionDef)
+                and n.name == "test_the_committed_census_figures_are_what_the_generator_draws")
+    args = [_ast.unparse(c.args[0]) for c in _ast.walk(node)
+            if isinstance(c, _ast.Call)
+            and getattr(c.func, "id", "") == "_drawing" and c.args]
+    assert len(args) >= 2 and len(set(args)) >= 2, (
+        f"the flagship calls _drawing on {args}; comparing a figure against "
+        "itself always succeeds")
+
+
+def test_the_flagship_comparison_can_actually_fail(tmp_path):
+    """END-TO-END control for the flagship, which had none.
+
+    Every other control exercises `_drawing()`; nothing exercised the check
+    that uses it. A reviewer voided both of the flagship's assertions with the
+    suite green -- comparing the committed figure to ITSELF, and relaxing the
+    set equality to a subset -- and a source-text grep does not cover the
+    self-compare.
+
+    So the flagship's own comparison is run here against a perturbed COPY of a
+    committed figure, on the surface this whole branch was blocked over.
+    """
+    try:
+        import pymupdf
+    except ImportError:
+        import fitz as pymupdf
+
+    src = FIG_DIR / "fig5c_mechanism_site_matrix.pdf"
+    assert src.exists()
+    copy = tmp_path / src.name
+    copy.write_bytes(src.read_bytes())
+
+    doc = pymupdf.open(copy)
+    try:
+        smasks = [img[1] for pg in doc for img in pg.get_images(full=True)
+                  if img[1]]
+        assert smasks, (
+            "fig5c no longer carries an alpha plane, so this control no longer "
+            "perturbs the surface it was written for")
+        length = len(doc.xref_stream(smasks[0]))
+        doc.update_stream(smasks[0], b"\xff" * length)
+        # Saved to a NEW path: pymupdf refuses a non-incremental save over the
+        # file it opened.
+        out = tmp_path / "perturbed.pdf"
+        doc.save(out, deflate=True)
+    finally:
+        doc.close()
+
+    assert _drawing(out) != _drawing(src), (
+        "blanking the alpha plane of a committed figure does not change what "
+        "the flagship compares, so the flagship cannot detect a stale figure")
