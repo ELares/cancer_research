@@ -6,13 +6,16 @@ one. `scripts/figure_io.py` removes the field; this checks the result.
 
 WHAT IS CHECKED. The eight census figures, by regenerating them into a scratch
 directory and comparing DRAWING SURFACES rather than file bytes -- content
-streams, images and their alpha planes, form xobjects, fonts, page geometry,
-and the graphics-state / pattern / shading / annotation resources those streams
-reference by name. Bytes are not comparable across platforms; surfaces are, and
+streams, images and their alpha planes (stream AND dict), form xobjects, page
+geometry resolved through inheritance (`/MediaBox`, `/CropBox`, `/Rotate`,
+`/UserUnit`), and the graphics-state / pattern / shading / annotation resources
+those streams reference by name. Fonts are NOT hashed -- see below. Bytes are not comparable across platforms; surfaces are, and
 CI on two operating systems is the evidence.
 
-WHAT IS NOT CHECKED, exhaustively, because every round of review of this file
-found a confident sentence outrunning the behaviour:
+WHAT IS NOT CHECKED. Not an exhaustive list -- an earlier version claimed
+to be one and a reviewer immediately found four surfaces missing from it,
+which is the shape of defect this file exists to retract. These are the
+ones known and deliberate:
 
 - **No PNG content, at all.** The eight census PNGs are checked for existence
   and nothing else. Replacing one with an unrelated image passes. PNG bytes are
@@ -93,6 +96,13 @@ def _drawing(path):
                 out.append(("image",
                             hashlib.sha256(doc.extract_image(xref)["image"]).hexdigest()))
                 if smask:
+                    # The DICT as well as the stream: setting `/Decode [1 0]`
+                    # inverts the whole alpha plane without touching a byte of
+                    # the stream, moving 57.7% of fig5c's pixels -- a larger
+                    # hole than the 48% blanking this branch already blocked on.
+                    out.append(("smaskdict", hashlib.sha256(
+                        doc.xref_object(smask, compressed=True).encode()
+                    ).hexdigest()))
                     # DECOMPRESSED. `xref_stream_raw` returns the zlib-encoded
                     # bytes, so a different zlib build produces a different
                     # hash for identical pixels -- CI failed on Linux for
@@ -137,9 +147,20 @@ def _drawing(path):
             # `Resources/Annots` it returns the literal "null" on every page
             # forever, so the surface was inert -- and it was the one hashed
             # surface with no positive control, which is why that shipped.
-            for key in ("Annots", "MediaBox", "Rotate"):
-                out.append((key, hashlib.sha256(_resolve(
-                    doc, doc.xref_get_key(pg.xref, key)).encode()).hexdigest()))
+            out.append(("Annots", hashlib.sha256(_resolve(
+                doc, doc.xref_get_key(pg.xref, "Annots")).encode()).hexdigest()))
+            # Page geometry read through the RESOLVED properties, not raw page
+            # keys. `xref_get_key(pg, "Rotate")` returns null when `/Rotate` is
+            # set on the inherited `/Pages` node, so the page rendered rotated
+            # and the surface saw nothing. And `/CropBox` -- the box viewers
+            # display and `\includegraphics` selects -- was not hashed at all:
+            # a committed figure could be cropped to 18% of its area, green.
+            for key, val in (("Rotate", pg.rotation),
+                             ("MediaBox", tuple(pg.mediabox)),
+                             ("CropBox", tuple(pg.cropbox)),
+                             ("UserUnit", doc.xref_get_key(pg.xref, "UserUnit"))):
+                out.append((key, hashlib.sha256(
+                    str(val).encode()).hexdigest()))
         return out
     finally:
         doc.close()
@@ -696,6 +717,26 @@ def test_the_produced_set_equality_can_actually_fail():
         "the flagship no longer compares its produced set to the discovered "
         "one, so a figure that was never regenerated is never compared")
     assert "assert True or" not in flat
+    # And it must actually CALL the comparison on every produced file.
+    # Slicing that loop to `produced[:0]` left 19 tests green with a wrong
+    # figure on disk -- the one fix in this file that had no control.
+    import ast as _ast
+
+    fn = next(n for n in _ast.parse(Path(__file__).read_text()).body
+              if isinstance(n, _ast.FunctionDef)
+              and n.name == "test_the_committed_census_figures_are_what_the_generator_draws")
+    looped = [
+        node for node in _ast.walk(fn)
+        if isinstance(node, _ast.For)
+        and _ast.unparse(node.iter) == "produced"
+        and any(isinstance(c, _ast.Call)
+                and getattr(c.func, "id", "") == "_assert_matches_committed"
+                for c in _ast.walk(node))
+    ]
+    assert looped, (
+        "the flagship does not iterate `produced` calling "
+        "_assert_matches_committed; slicing or renaming that loop leaves the "
+        "gate blind while every other check stays green")
     # And it must compare the PRODUCED file to the COMMITTED one. Rewriting
     # that line to compare the committed figure to itself passed every other
     # check, because all six surface controls exercise `_drawing()` and none
@@ -833,8 +874,14 @@ def test_the_font_surface_is_documented_as_uncovered(tmp_path):
         "the docstring no longer states that glyph outlines are uncovered")
 
 
-@pytest.mark.parametrize("key,value", [("MediaBox", "[0 0 900 700]"),
-                                       ("Rotate", "90")])
+@pytest.mark.parametrize("key,value", [
+    ("MediaBox", "[0 0 900 700]"),
+    ("Rotate", "90"),
+    # The box viewers display and `\includegraphics` selects. Cropping a
+    # committed figure to 18% of its area passed.
+    ("CropBox", "[100 100 300 300]"),
+    ("UserUnit", "5"),
+])
 def test_page_geometry_changes_are_detected(tmp_path, key, value):
     """Crafted, for the same reason as the font control: no generator edit
     moves page geometry without also moving the content stream, and a surface
@@ -860,3 +907,70 @@ def test_page_geometry_changes_are_detected(tmp_path, key, value):
     assert key in moved, (
         f"changing /{key} moved {sorted(moved) or 'nothing'}; the surface is "
         "hashed but not detected")
+
+
+def test_inverting_the_alpha_decode_is_detected(tmp_path):
+    """Control for the smask DICT, which the stream hash cannot see.
+
+    `/Decode [1 0]` inverts the whole alpha plane without touching a byte of
+    the stream: 57.7% of fig5c's pixels move. Larger than the 48% blanking
+    this branch already treated as blocking, and invisible until the dict was
+    hashed alongside the stream.
+    """
+    try:
+        import pymupdf
+    except ImportError:
+        import fitz as pymupdf
+
+    src = FIG_DIR / "fig5c_mechanism_site_matrix.pdf"
+    copy = tmp_path / "c.pdf"
+    copy.write_bytes(src.read_bytes())
+    doc = pymupdf.open(copy)
+    touched = 0
+    try:
+        for pg in doc:
+            for img in pg.get_images(full=True):
+                if img[1]:
+                    doc.xref_set_key(img[1], "Decode", "[1 0]")
+                    touched += 1
+        assert touched, "fig5c carries no alpha plane to invert"
+        out = tmp_path / "m.pdf"
+        doc.save(out, deflate=True)
+    finally:
+        doc.close()
+
+    a, b = _drawing(out), _drawing(src)
+    moved = {k.split(":")[0] for (k, x), (_, y) in zip(a, b) if x != y}
+    assert moved == {"smaskdict"}, (
+        f"inverting the alpha /Decode moved {sorted(moved) or 'nothing'}; it "
+        "must move the smask dict surface and only that")
+
+
+def test_geometry_inherited_from_the_pages_node_is_detected(tmp_path):
+    """Control for reading geometry RESOLVED rather than as raw page keys.
+
+    `/Rotate` on the inherited `/Pages` node renders the page rotated while
+    `xref_get_key(page, "Rotate")` returns null, so the surface saw nothing.
+    """
+    try:
+        import pymupdf
+    except ImportError:
+        import fitz as pymupdf
+
+    src = FIG_DIR / "fig2c_census_volume.pdf"
+    copy = tmp_path / "c.pdf"
+    copy.write_bytes(src.read_bytes())
+    doc = pymupdf.open(copy)
+    try:
+        parent = int(str(doc.xref_get_key(doc[0].xref, "Parent")[1]).split()[0])
+        doc.xref_set_key(parent, "Rotate", "90")
+        out = tmp_path / "m.pdf"
+        doc.save(out, deflate=True)
+    finally:
+        doc.close()
+
+    a, b = _drawing(out), _drawing(src)
+    moved = {k.split(":")[0] for (k, x), (_, y) in zip(a, b) if x != y}
+    assert "Rotate" in moved, (
+        f"an inherited /Rotate moved {sorted(moved) or 'nothing'}; the page "
+        "renders rotated, so the geometry surface must see it")
