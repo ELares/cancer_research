@@ -11,8 +11,11 @@ fresh one.
 
 Measured before fixing, on `fig28_census_capture.pdf`: regenerating produced a
 file of identical length differing at exactly one offset, inside
-`/CreationDate (D:2026...)`. PNGs already reproduce -- matplotlib writes no
-timestamp into them -- so this is a PDF-only problem.
+`/CreationDate (D:2026...)`. PNGs carry no timestamp, so this is a PDF-only problem. They also
+reproduce byte-identically WITHIN a platform and NOT across one: gating
+them by byte comparison passed locally and failed on Linux, because font
+rasterisation differs. That is why the freshness check compares PDF
+drawing surfaces and leaves PNGs to review.
 
 WHY A WRAPPER RATHER THAN 59 CALL-SITE EDITS. `metadata={"CreationDate": None}`
 has to reach every `savefig` that writes a PDF, and the two figure scripts have

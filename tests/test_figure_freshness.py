@@ -19,15 +19,18 @@ correctly from stale INPUT. Regenerating from the committed JSON cannot notice
 the JSON is old.
 
 AND WHAT IT DOES NOT COVER AT ALL: the twenty non-census PDFs that still
-embed a creation date. Not all twenty come from `generate_figures.py` -- 13 do,
-and the rest come from `generate_conceptual_diagrams.py`,
-`rare_event_analysis.py` and `sim-original`. The two counts being equal is a
-coincidence and an earlier draft of this sentence read it as an identity. Making them deterministic means
-regenerating them, and that turned out not to be a metadata-only change -- it
-rewrote 8 PDFs and 8 PNGs -- the PLOTS differ from the committed ones -- and
-emitted 7 figures (14 files) that were never committed at all. That
-measurement covers the 15 of 20 figures that could be drawn here; the other 5
-need gitignored simulation output and were not exercised, so it is a floor. Those
+embed a creation date. TWO DIFFERENT TWENTIES meet here and an earlier draft
+of this sentence merged them. Twenty non-census PDFs carry a creation date;
+`generate_figures.py` writes twenty figure stems; the overlap is 13, and the
+other 7 stale ones come from `generate_conceptual_diagrams.py`,
+`rare_event_analysis.py` and `sim-original`.
+
+Making them deterministic means regenerating them, and that turned out not to
+be a metadata-only change: it rewrote 8 PDFs and 8 PNGs -- the PLOTS differ
+from the committed ones -- and emitted 7 figures (14 files) never committed at
+all. That measurement covers the 15 stems of `generate_figures.py`'s twenty
+that could be drawn here, so it is a FLOOR: five need gitignored simulation
+output, and of the stale-PDF twenty only 8 were exercised at all. Those
 plots differ from the published ones, which is either figure drift or input
 drift and is worth finding out rather than committing blind.
 """
@@ -97,14 +100,24 @@ def _drawing(path):
                     # too, which is what makes the comparison portable.
                     out.append(("smask", hashlib.sha256(
                         doc.xref_stream(smask)).hexdigest()))
-            for entry in sorted(pg.get_xobjects()):
+            # Sorted by NAME. `sorted(get_xobjects())` orders by the object
+            # NUMBER, an allocation artifact: a regeneration that permutes
+            # numbering with identical content would reorder the list and
+            # report a false "not fresh".
+            for entry in sorted(pg.get_xobjects(), key=lambda e: e[1]):
                 out.append((f"xobject:{entry[1]}", hashlib.sha256(
                     doc.xref_stream(entry[0])).hexdigest()))
             # Resources the streams name rather than inline.
-            for key in ("ExtGState", "Pattern", "Shading", "Annots"):
+            for key in ("ExtGState", "Pattern", "Shading"):
                 val = doc.xref_get_key(pg.xref, f"Resources/{key}")
                 out.append((key, hashlib.sha256(
                     _resolve(doc, val).encode()).hexdigest()))
+            # `Annots` is a PAGE key, not a resource category. Read as
+            # `Resources/Annots` it returns the literal "null" on every page
+            # forever, so the surface was inert -- and it was the one hashed
+            # surface with no positive control, which is why that shipped.
+            out.append(("Annots", hashlib.sha256(_resolve(
+                doc, doc.xref_get_key(pg.xref, "Annots")).encode()).hexdigest()))
         return out
     finally:
         doc.close()
@@ -119,6 +132,13 @@ def _resolve(doc, val) -> str:
     what makes an `/ExtGState` alpha change visible.
     """
     kind, raw = (val if isinstance(val, tuple) else ("string", str(val)))
+    if kind == "array":
+        # Bare object numbers say nothing about contents, which is this
+        # function's own complaint about `xref`. Resolve each element.
+        nums = re.findall(r"(\d+) 0 R", str(raw))
+        if nums:
+            return "|".join(_resolve(doc, ("xref", f"{n} 0 R")) for n in nums)
+        return str(raw)
     if kind == "xref":
         try:
             num = int(str(raw).split()[0])
@@ -190,8 +210,8 @@ def test_the_corpus_figure_backlog_is_stated_and_shrinking():
     stale = sorted(p.name for p in FIG_DIR.glob("*.pdf")
                    if p.name not in census
                    and b"/CreationDate" in p.read_bytes())
-    doc = Path(__file__).read_text()
-    assert "loads the corpus and gitignored simulation output" in doc
+    doc = _module_docstring()
+    assert "loads the whole corpus and gitignored simulation outputs" in doc
     # Every one of them must come from a generator this cannot run, and the
     # generator set is DERIVED from FIGURES.yaml rather than assumed: an
     # earlier version named two scripts and the repo has three, so a figure
@@ -224,6 +244,17 @@ def test_the_corpus_figure_backlog_is_stated_and_shrinking():
         stem = name[:-4]
         if stem in orphans:
             continue
+        # A substring match is satisfied by a COMMENT saying the opposite:
+        # `fig7_monte_carlo_simulation` passed only because
+        # `generate_figures.py` carries a note explaining that the Rust binary
+        # writes it and this script does not. Require the stem to appear in a
+        # savefig-ish context, and fall back to the substring only when
+        # FIGURES.yaml attributes the figure to a non-Python generator.
+        attributed = {f["filename"]: f["generator"].get("script", "")
+                      for f in figs if isinstance(f, dict)
+                      and isinstance(f.get("generator"), dict)}
+        if not str(attributed.get(stem, "")).endswith(".py"):
+            continue
         assert any(stem in src for src in sources.values()), (
             f"{name} embeds a creation date and no figure generator in "
             f"FIGURES.yaml writes it, so it has no excuse for being uncovered")
@@ -244,9 +275,14 @@ def test_the_corpus_figure_backlog_is_stated_and_shrinking():
             "will embed a creation date")
 
 
-@pytest.mark.slow
 def test_the_committed_census_figures_are_what_the_generator_draws():
     """Regenerate into a scratch copy and compare.
+
+    Deliberately NOT marked `slow`. `pytest.ini` documents that marker as
+    meaning "the default run uses a cheaper check of the same property", and
+    there is no cheaper counterpart here -- this is the only figure-freshness
+    check. The marker is inert today (nothing passes `-m`), but if anyone
+    implements what the comment describes, the marker would silence the gate.
 
     Into a COPY: running the generator in place would rewrite the working tree
     during a test, which is how a strided sample scan once clobbered a
@@ -276,16 +312,32 @@ def test_the_committed_census_figures_are_what_the_generator_draws():
         # font stack, not the figure. That is the same over-generalisation this
         # branch already made once with PDF bytes.
         #
-        # Nothing is lost by it: every census PNG is drawn by the same code
-        # path as its PDF sibling in the same figure function, so a change to
-        # the plot moves the PDF's drawing surfaces and is caught there. What
-        # a PNG could catch alone is a hand-edit of the PNG only, which the
-        # `article/figures/**` CI path makes visible in review instead.
+        # A PLOT change is still caught: every census PNG is drawn by the
+        # same code path as its PDF sibling, verified with a real edit
+        # (`alpha=0.18`->`0.90` moved both fig28.pdf and fig28.png, and the
+        # PDF failed).
+        #
+        # BUT "nothing is lost" WOULD BE FALSE and an earlier version of this
+        # comment said it. A raster-only rcParam moves every PNG while leaving
+        # vector PDFs untouched: measured, `savefig.dpi` 300 -> 150 in this
+        # generator moves 8 of 8 PNGs and only 1 of 8 PDFs -- fig5c, the sole
+        # figure carrying a raster. So editing one line here can stale seven
+        # committed PNGs with this suite green. That residual is real, it is
+        # the price of a portable comparison, and the `article/figures/**` CI
+        # path is what puts such a change in front of a reviewer.
         produced = sorted(scratch.glob("*.pdf"))
         assert produced, (
             "the generator wrote no PDF into FERRO_FIG_DIR, so it is either "
             "ignoring the override and writing into the working tree, or "
             f"drawing nothing. stdout:\n{res.stdout[-500:]}")
+        # EXACT, not a floor of one. With `assert produced` alone, a figure
+        # that was never regenerated was simply never compared -- and the
+        # comment claiming this check "derives its file list from the same
+        # discovery" was false.
+        assert {p.stem for p in produced} == set(_census_figures()), (
+            "the generator drew "
+            f"{sorted(p.stem for p in produced)} but the source declares "
+            f"{_census_figures()}")
         for p in produced:
             committed = FIG_DIR / p.name
             assert committed.exists(), f"{p.name} is not committed"
@@ -296,11 +348,30 @@ def test_the_committed_census_figures_are_what_the_generator_draws():
                 "scripts/generate_census_figures.py draws. Re-run it.")
 
 
+def _module_docstring() -> str:
+    """This file's docstring, parsed.
+
+    NOT `Path(__file__).read_text()`. Both prose guards used to read the whole
+    file, which contains the assert statement doing the reading -- so each
+    literal occurred exactly once, inside its own assertion, and the ENTIRE
+    module docstring could be deleted with all twelve tests green. A guard
+    satisfied by its own source text is the vacuous-assertion class this repo
+    keeps a meta-test for.
+    """
+    import ast as _ast
+
+    # WHITESPACE-NORMALISED: every claim here wraps across lines, and a raw
+    # substring search misses it. That has hidden a mutation seven times in
+    # this session alone.
+    return " ".join(
+        (_ast.get_docstring(_ast.parse(Path(__file__).read_text())) or "").split())
+
+
 def test_the_uncoverable_generator_is_named_rather_than_implied():
     """`generate_figures.py` loads the corpus and gitignored simulation output,
     so no CI check can regenerate it. Saying so is the point."""
-    doc = Path(__file__).read_text()
-    assert "generate_figures.py` loads the whole corpus" in doc
+    doc = _module_docstring()
+    assert "loads the whole corpus and gitignored simulation outputs" in doc
     other = REPO / "scripts/generate_figures.py"
     assert other.exists()
     src = other.read_text()
@@ -343,11 +414,18 @@ def _one_page_pdf(tmp, draw, name):
     ("image (raster values move)",
      lambda ax: ax.imshow([[0.1, 0.2], [0.3, 0.4]]),
      lambda ax: ax.imshow([[0.9, 0.2], [0.3, 0.4]])),
+    # BOTH ARMS NON-OPAQUE. The first version used alpha 0.5 vs 1.0, and
+    # matplotlib emits NO SMask for a fully opaque image -- so the control
+    # compared surface-list LENGTHS and tested presence, never content.
+    # Replacing the smask hash with the xref NUMBER, or with the image's own
+    # hash, or with a constant, all passed the full suite, and blanking
+    # fig5c's alpha plane passed as fresh. That is the exact defect this
+    # control exists to prevent, on the exact surface it was written for.
     ("smask (only the alpha plane moves)",
-     lambda ax: ax.imshow([[[1, 0, 0, 0.5], [0, 1, 0, 0.5]],
-                           [[0, 0, 1, 0.5], [1, 1, 0, 0.5]]]),
-     lambda ax: ax.imshow([[[1, 0, 0, 1.0], [0, 1, 0, 1.0]],
-                           [[0, 0, 1, 1.0], [1, 1, 0, 1.0]]])),
+     lambda ax: ax.imshow([[[1, 0, 0, 0.50], [0, 1, 0, 0.50]],
+                           [[0, 0, 1, 0.50], [1, 1, 0, 0.50]]]),
+     lambda ax: ax.imshow([[[1, 0, 0, 0.75], [0, 1, 0, 0.75]],
+                           [[0, 0, 1, 0.75], [1, 1, 0, 0.75]]])),
     ("extgstate (only a named alpha moves)",
      lambda ax: (ax.plot([0, 1], [0, 1]), ax.grid(alpha=0.18)),
      lambda ax: (ax.plot([0, 1], [0, 1]), ax.grid(alpha=0.90))),
@@ -356,6 +434,15 @@ def _one_page_pdf(tmp, draw, name):
     # its surface proves nothing about that surface. Marker SIZE leaves the
     # stream byte-identical (`/M0 Do`) and rewrites the glyph the name points
     # at, which is measured: content same=True, xobjects same=False.
+    # `Annots` had NO control, which is why it shipped read from the wrong
+    # key ("Resources/Annots", always null) and hashed a constant forever.
+    # A url= annotation becomes a page-level /Annots entry; the two urls
+    # differ only inside it.
+    ("annots (an annotation target changes)",
+     lambda ax: (ax.plot([0, 1], [0, 1]),
+                 ax.annotate("x", (0.5, 0.5), url="https://example.com/a")),
+     lambda ax: (ax.plot([0, 1], [0, 1]),
+                 ax.annotate("x", (0.5, 0.5), url="https://example.com/b"))),
     ("xobject (marker geometry changes, stream identical)",
      lambda ax: ax.plot([0, 1], [0, 1], marker="o", markersize=6),
      lambda ax: ax.plot([0, 1], [0, 1], marker="o", markersize=12)),
@@ -380,3 +467,56 @@ def test_the_comparison_is_stable_for_an_unchanged_figure(tmp_path):
     assert _drawing(pa) == _drawing(pb), (
         "_drawing() differs for two identical figures, so every comparison it "
         "makes is meaningless")
+
+
+def test_resolve_follows_arrays_and_indirect_references(tmp_path):
+    """`_resolve`'s array branch is not reached by any current figure.
+
+    Every census page's `/Annots` resolves as a single indirect reference, so
+    the array path is defence-in-depth -- and an unmeasured branch in a guard
+    is the same defect as an unmeasured sentence in a report. Exercised
+    directly here so it cannot rot: hashing bare object NUMBERS is exactly the
+    vacuity `_resolve` exists to avoid, and two different annotations
+    routinely land on the same xref number.
+    """
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    sys.path.insert(0, str(REPO / "scripts"))
+    from figure_io import make_figures_deterministic
+    make_figures_deterministic()
+
+    def draw(url, name):
+        fig, ax = plt.subplots(figsize=(2, 2))
+        ax.plot([0, 1], [0, 1])
+        ax.annotate("x", (0.5, 0.5), url=url)
+        out = tmp_path / name
+        fig.savefig(out)
+        plt.close(fig)
+        return out
+
+    try:
+        import pymupdf
+    except ImportError:
+        import fitz as pymupdf
+
+    a = draw("https://example.com/a", "a.pdf")
+    b = draw("https://example.com/b", "b.pdf")
+    da, db = pymupdf.open(a), pymupdf.open(b)
+    try:
+        ka = da.xref_get_key(da[0].xref, "Annots")
+        kb = db.xref_get_key(db[0].xref, "Annots")
+        assert ka[1] == kb[1], (
+            "the two annotations no longer share an object number, so this "
+            "control no longer demonstrates that numbers are not contents")
+        assert _resolve(da, ka) != _resolve(db, kb), (
+            "_resolve returns the same value for different annotations, so it "
+            "is comparing object numbers rather than contents")
+        # And the array form is followed rather than stringified.
+        arr = ("array", f"[{ka[1]}]")
+        assert _resolve(da, arr) == _resolve(da, ka), (
+            "_resolve does not follow a one-element array to the same content "
+            "as the bare reference")
+    finally:
+        da.close()
+        db.close()
