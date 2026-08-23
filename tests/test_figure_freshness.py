@@ -6,10 +6,12 @@ one. `scripts/figure_io.py` removes the field; this checks the result.
 
 WHAT IS CHECKED. The eight census figures, by regenerating them into a scratch
 directory and comparing DRAWING SURFACES rather than file bytes -- content
-streams, images and their alpha planes (stream AND dict), form xobjects, page
-geometry resolved through inheritance (`/MediaBox`, `/CropBox`, `/Rotate`,
-`/UserUnit`), and the graphics-state / pattern / shading / annotation resources
-those streams reference by name. Fonts are NOT hashed -- see below. Bytes are not comparable across platforms; surfaces are, and
+streams, images and their alpha planes (stream AND dict), form xobjects
+(stream AND the `/BBox`, `/Matrix`, `/Group`, `/OC`, `/Subtype` that place and
+clip them), page geometry resolved through inheritance (`/MediaBox`,
+`/CropBox`, `/Rotate`, `/UserUnit`), the page transparency `/Group`, the
+document's optional-content configuration, and the graphics-state / pattern /
+shading / annotation resources those streams reference by name. Fonts are NOT hashed -- see below. Bytes are not comparable across platforms; surfaces are, and
 CI on two operating systems is the evidence.
 
 WHAT IS NOT CHECKED. Not an exhaustive list -- an earlier version claimed
@@ -25,16 +27,29 @@ ones known and deliberate:
   were never committed -- so it is filed (#788), not done here.
 - **Stale inputs.** Regenerating from committed JSON cannot notice the JSON is
   old.
-- **Glyph outlines.** `/Font` is not hashed: the subtree comparison that would
-  catch a glyph swap is not portable across operating systems. A generator edit
-  cannot reach this -- font changes move glyph metrics and so the content
-  stream -- but a hand-edited PDF can.
+- **The whole `/Font` subtree**, not only glyph outlines: an earlier version
+  of this bullet said "glyph outlines", and a reviewer showed that understates
+  it. Swapping the Type3 outlines for `zero` and `one` changes what a figure
+  made of counts READS, but so does `/Encoding /Differences` swapping the same
+  two names, and `/FontMatrix` doubles every character on the page. Anything a
+  font dictionary controls is uncovered. The subtree comparison that would
+  catch it is not portable across operating systems (CI failed on all eight
+  figures). A generator edit cannot reach this -- font changes move glyph
+  metrics and so the content stream -- but a hand-edited PDF can.
 - **A correct-looking figure drawn from wrong data**, unless the difference
   reaches one of the hashed surfaces.
 
 Each hashed surface has a positive control that changes ONLY that surface and
 asserts it is seen; the flagship comparison has one that invokes it. Those
 controls are the reason to believe any of the above.
+
+Where several keys of ONE object are read through the same call, at least one
+key of the group carries that control -- `/BBox`, `/Matrix` and `/Group` for
+form xobjects, `/Decode` for the alpha plane -- and their siblings (`/OC`,
+`/Subtype`, `/Width`, `/Height`, `/ColorSpace`, `/BitsPerComponent`,
+`/ImageMask`, `/Matte`) are read by the same mechanism and are NOT separately
+controlled. Said explicitly because "every surface has a control" would
+otherwise be the kind of unmeasured sentence this file exists to catch.
 """
 import hashlib
 import os
@@ -100,9 +115,19 @@ def _drawing(path):
                     # inverts the whole alpha plane without touching a byte of
                     # the stream, moving 57.7% of fig5c's pixels -- a larger
                     # hole than the 48% blanking this branch already blocked on.
-                    out.append(("smaskdict", hashlib.sha256(
-                        doc.xref_object(smask, compressed=True).encode()
-                    ).hexdigest()))
+                    #
+                    # NAMED KEYS, not `xref_object`. The whole object carries
+                    # `/Length` and its `/Filter` parameters -- compression
+                    # artifacts, and `/Length` is exactly what forced the
+                    # decompressed hash below -- so a re-save of an unchanged
+                    # figure moved this surface and reported a false stale.
+                    # Measured: `doc.save(deflate=True)` on fig5c moves it
+                    # while nothing drawn changes.
+                    for k in ("Decode", "Width", "Height", "ColorSpace",
+                              "BitsPerComponent", "ImageMask", "Matte"):
+                        out.append((f"smask:{k}", hashlib.sha256(
+                            _resolve(doc, doc.xref_get_key(smask, k)).encode()
+                        ).hexdigest()))
                     # DECOMPRESSED. `xref_stream_raw` returns the zlib-encoded
                     # bytes, so a different zlib build produces a different
                     # hash for identical pixels -- CI failed on Linux for
@@ -117,6 +142,23 @@ def _drawing(path):
             for entry in sorted(pg.get_xobjects(), key=lambda e: e[1]):
                 out.append((f"xobject:{entry[1]}", hashlib.sha256(
                     doc.xref_stream(entry[0])).hexdigest()))
+                # The DICT as well, exactly as for `/SMask` one level up, and
+                # missed for the same reason -- "hash the xobject" was read as
+                # "hash its stream". `/Matrix` decides WHERE and at what scale
+                # a form draws and `/BBox` clips it, so neither touches a byte
+                # of the stream: on `fig16c_trial_share.pdf` -- which
+                # `article/drafts/v1.tex` \includegraphics at \textwidth, and
+                # pdfTeX copies both keys verbatim -- `/Matrix [6 0 0 6 40 40]`
+                # moved 13.06% of the page in two independent renderers and
+                # `/BBox [0 0 .01 .01]` deleted every scatter marker.
+                #
+                # NAMED KEYS, not the whole object: `xref_object` carries
+                # `/Length` and `/Filter`, which are compression artifacts and
+                # not portable across platforms.
+                for k in ("BBox", "Matrix", "Group", "OC", "Subtype"):
+                    out.append((f"xobject:{entry[1]}:{k}", hashlib.sha256(
+                        _resolve(doc, doc.xref_get_key(entry[0], k)).encode()
+                    ).hexdigest()))
             # Resources the streams name rather than inline.
             # `/Font` is the only POPULATED resource that was skipped, while
             # three empty ones were hashed as defence-in-depth. Content
@@ -155,18 +197,38 @@ def _drawing(path):
             # and the surface saw nothing. And `/CropBox` -- the box viewers
             # display and `\includegraphics` selects -- was not hashed at all:
             # a committed figure could be cropped to 18% of its area, green.
+            # `/Group` is the page's transparency group. Setting
+            # `<</S/Transparency/CS/DeviceGray>>` greyscales fig5c's heatmap --
+            # 59.18% of its pixels -- with every other surface identical.
+            out.append(("Group", hashlib.sha256(_resolve(
+                doc, doc.xref_get_key(pg.xref, "Group")).encode()).hexdigest()))
             for key, val in (("Rotate", pg.rotation),
                              ("MediaBox", tuple(pg.mediabox)),
                              ("CropBox", tuple(pg.cropbox)),
                              ("UserUnit", doc.xref_get_key(pg.xref, "UserUnit"))):
                 out.append((key, hashlib.sha256(
                     str(val).encode()).hexdigest()))
+        # OPTIONAL CONTENT, once per document. An OCG listed in the catalog's
+        # `/OCProperties ... /D <</OFF[...]>>` and named by `/OC` on an xobject
+        # hides that xobject entirely: applied to fig5c's two heatmap images it
+        # renders the figure BLANK -- 49.33% of the page, larger than the 48%
+        # alpha blanking this branch already blocked on -- while every drawing
+        # surface stays byte-identical, because nothing drawn has changed.
+        #
+        # Renderer-dependent: MuPDF and Acrobat honour OCGs, Quartz ignores
+        # them, and pdfTeX drops `/OCProperties`, so the built article is
+        # probably unaffected. The COMMITTED STANDALONE FIGURE -- the artifact
+        # MANIFEST.sha256 hashes and an archive would mint a DOI for -- renders
+        # wrong, and that is the thing this file is about.
+        out.append(("OCProperties", hashlib.sha256(_resolve(
+            doc, doc.xref_get_key(doc.pdf_catalog(), "OCProperties")
+        ).encode()).hexdigest()))
         return out
     finally:
         doc.close()
 
 
-def _resolve(doc, val) -> str:
+def _resolve(doc, val, depth: int = 0) -> str:
     """Flatten a resource entry, following one level of indirection.
 
     `xref_get_key` returns `('xref', '4 0 R')` for an indirect dict, which is
@@ -179,15 +241,26 @@ def _resolve(doc, val) -> str:
         # Bare object numbers say nothing about contents, which is this
         # function's own complaint about `xref`. Resolve each element.
         nums = re.findall(r"(\d+) 0 R", str(raw))
-        if nums:
-            return "|".join(_resolve(doc, ("xref", f"{n} 0 R")) for n in nums)
+        if nums and depth < 4:
+            return "|".join(
+                _resolve(doc, ("xref", f"{n} 0 R"), depth + 1) for n in nums)
         return str(raw)
     if kind == "xref":
         try:
             num = int(str(raw).split()[0])
-            return doc.xref_object(num, compressed=True)
+            text = doc.xref_object(num, compressed=True)
         except Exception:
             return str(raw)
+        # An INDIRECT ARRAY resolves one level short otherwise. `/Annots` on
+        # every census page is `10 0 R -> []`, so the array branch above --
+        # which exists precisely because bare object numbers say nothing about
+        # contents -- was never reached on a real figure. Adding an annotation
+        # was still caught (the array text changes); mutating an existing one
+        # in place would not have been.
+        if depth < 4 and text.strip().startswith("[") and re.search(
+                r"\d+ 0 R", text):
+            return _resolve(doc, ("array", text), depth + 1)
+        return text
     return str(raw)
 
 
@@ -725,18 +798,38 @@ def test_the_produced_set_equality_can_actually_fail():
     fn = next(n for n in _ast.parse(Path(__file__).read_text()).body
               if isinstance(n, _ast.FunctionDef)
               and n.name == "test_the_committed_census_figures_are_what_the_generator_draws")
+    # STATEMENT-LEVEL in the loop body, not anywhere in its subtree. The
+    # first version of this guard asked only that the call appear somewhere
+    # under the `For` node, which the node shape survives: `if False:` around
+    # the call, and `try: ... except AssertionError: pass` around the body,
+    # both shipped a wrong fig2c with all 23 tests green. Requiring the call
+    # to be a direct child of the loop makes reaching it unconditional and
+    # its failure unswallowable.
     looped = [
         node for node in _ast.walk(fn)
         if isinstance(node, _ast.For)
         and _ast.unparse(node.iter) == "produced"
-        and any(isinstance(c, _ast.Call)
-                and getattr(c.func, "id", "") == "_assert_matches_committed"
-                for c in _ast.walk(node))
+        and any(isinstance(st, _ast.Expr) and isinstance(st.value, _ast.Call)
+                and getattr(st.value.func, "id", "") == "_assert_matches_committed"
+                for st in node.body)
     ]
     assert looped, (
         "the flagship does not iterate `produced` calling "
-        "_assert_matches_committed; slicing or renaming that loop leaves the "
-        "gate blind while every other check stays green")
+        "_assert_matches_committed unconditionally at the top of its loop "
+        "body; slicing, renaming, or guarding that call behind `if`/`try` "
+        "leaves the gate blind while every other check stays green")
+    # AND `produced` must be the REGENERATED set. Nothing pinned it, so
+    # repointing that one line at `FIG_DIR` turned the whole flagship into a
+    # comparison of the committed figures against themselves -- with the
+    # argument guard below still satisfied, because `_assert_matches_committed`
+    # is unchanged and still reads two different paths.
+    src = [_ast.unparse(t.value) for t in _ast.walk(fn)
+           if isinstance(t, _ast.Assign)
+           and [x for x in t.targets if _ast.unparse(x) == "produced"]]
+    assert src and all("scratch.glob" in x for x in src), (
+        f"the flagship binds `produced` to {src}; it must come from the "
+        "scratch directory the generator wrote, or it compares the committed "
+        "figures to themselves")
     # And it must compare the PRODUCED file to the COMMITTED one. Rewriting
     # that line to compare the committed figure to itself passed every other
     # check, because all six surface controls exercise `_drawing()` and none
@@ -869,9 +962,225 @@ def test_the_font_surface_is_documented_as_uncovered(tmp_path):
         "the gate now detects a glyph-outline swap. That is an improvement -- "
         "update the docstring, which states glyph outlines are outside it, and "
         "invert this assertion.")
-    doc_text = _module_docstring()
-    assert "Glyph outlines" in doc_text, (
-        "the docstring no longer states that glyph outlines are uncovered")
+    doc_text = " ".join(_module_docstring().split())
+    assert "The whole `/Font` subtree" in doc_text, (
+        "the docstring no longer states that the font subtree is uncovered")
+    # The WHOLE subtree, stated as such. Saying "glyph outlines" understates
+    # it -- `/Encoding` and `/FontMatrix` are neither outlines nor covered --
+    # and the test below is the control for the wider claim.
+    for name in ("/Encoding", "/FontMatrix"):
+        assert name in doc_text, (
+            f"the docstring names the font limit without {name}, which "
+            "understates it to a reader deciding whether to trust this gate")
+
+
+@pytest.mark.parametrize("what", ["encoding", "fontmatrix"])
+def test_the_font_limit_is_wider_than_glyph_outlines(tmp_path, what):
+    """The `/Font` bullet said "glyph outlines"; a reviewer showed it is the
+    whole dictionary. Swapping `/Encoding /Differences` for `zero` and `one`
+    makes every digit in a figure made of counts read wrong (1.27% of the
+    page), and doubling `/FontMatrix` doubles all its text (1.81%). Neither is
+    an outline, and neither is detected.
+
+    Asserted NOT detected, like the outline control: this documents the limit,
+    and fails the day a portable font comparison closes it.
+    """
+    try:
+        import pymupdf
+    except ImportError:
+        import fitz as pymupdf
+
+    src = FIG_DIR / "fig2c_census_volume.pdf"
+    copy = tmp_path / "c.pdf"
+    copy.write_bytes(src.read_bytes())
+    doc = pymupdf.open(copy)
+    touched = False
+    try:
+        fonts = doc.xref_get_key(doc[0].xref, "Resources/Font")
+        assert fonts[0] == "xref", f"no font resource to perturb: {fonts}"
+        num = int(str(fonts[1]).split()[0])
+        for key in doc.xref_get_keys(num):
+            val = doc.xref_get_key(num, key)
+            if val[0] != "xref":
+                continue
+            fnum = int(str(val[1]).split()[0])
+            if doc.xref_get_key(fnum, "FontMatrix")[0] == "null":
+                continue
+            if what == "fontmatrix":
+                before = str(doc.xref_get_key(fnum, "FontMatrix")[1])
+                doc.xref_set_key(fnum, "FontMatrix",
+                                 "[0.002 0 0 0.002 0 0]")
+                touched = True
+            else:
+                enc = doc.xref_get_key(fnum, "Encoding")
+                if enc[0] == "xref":
+                    target = int(str(enc[1]).split()[0])
+                    path, raw = "Differences", str(
+                        doc.xref_get_key(target, "Differences")[1])
+                else:
+                    # A DIRECT `/Encoding` dict, which is what matplotlib
+                    # writes. Setting the whole dict as the value of
+                    # `Differences` lands an edit and detects nothing about
+                    # the surface named here, so take the ARRAY out of it.
+                    target, path = fnum, "Encoding/Differences"
+                    m = re.search(r"/Differences\s*(\[.*\])\s*>>\s*$",
+                                  str(enc[1]), re.S)
+                    if not m:
+                        continue
+                    raw = m.group(1)
+                if "/zero" not in raw or "/one" not in raw:
+                    continue
+                before = str(doc.xref_get_key(fnum, "Encoding")[1])
+                doc.xref_set_key(target, path,
+                                 raw.replace("/zero", "/ZZZ")
+                                    .replace("/one", "/zero")
+                                    .replace("/ZZZ", "/one"))
+                touched = True
+            break
+        assert touched, (
+            f"fig2c no longer carries a Type3 font to perturb for {what}, so "
+            "this control no longer exercises the surface it documents")
+        out = tmp_path / "m.pdf"
+        doc.save(out, deflate=True)
+    finally:
+        doc.close()
+
+    # The mutation must have LANDED before "not detected" means anything: an
+    # edit that silently failed to apply is indistinguishable from a surface
+    # the gate covers, and reads as reassurance either way.
+    chk = pymupdf.open(out)
+    try:
+        key = "FontMatrix" if what == "fontmatrix" else "Encoding"
+        assert str(chk.xref_get_key(fnum, key)[1]) != str(before), (
+            f"the /{key} edit did not survive the save, so 'not detected' "
+            "would be reporting an unlanded mutation as a covered surface")
+    finally:
+        chk.close()
+    assert _drawing(out) == _drawing(src), (
+        f"the gate now detects a /{what} change. That is an improvement -- "
+        "narrow the docstring's font bullet and invert this assertion.")
+
+
+def _forms(doc, pg):
+    return [e for e in pg.get_xobjects()
+            if str(doc.xref_get_key(e[0], "Subtype")[1]) == "/Form"]
+
+
+@pytest.mark.parametrize("fig,key,value", [
+    # `article/drafts/v1.tex` includes fig16c at \textwidth, and pdfTeX copies
+    # a form xobject's `/Matrix` and `/BBox` verbatim, so this reaches the
+    # manuscript. 13.06% of the page under two independent renderers.
+    ("fig16c_trial_share", "Matrix", "[6 0 0 6 40 40]"),
+    # Collapsing the clip box deletes every marker the form draws.
+    ("fig16c_trial_share", "BBox", "[0 0 0.01 0.01]"),
+    ("fig28_census_capture", "Matrix", "[3 0 0 3 10 10]"),
+    # A transparency group on the FORM, the same attack as the page-level one
+    # a level down: 0.70% of fig16c.
+    ("fig16c_trial_share", "Group", "<</S/Transparency/CS/DeviceGray/I true>>"),
+])
+def test_form_xobject_placement_changes_are_detected(tmp_path, fig, key, value):
+    """The dict, not just the stream -- the `/SMask` defect one level down.
+
+    Neither key touches a byte of the stream that WAS hashed, so both shipped
+    green until a reviewer tried them.
+    """
+    try:
+        import pymupdf
+    except ImportError:
+        import fitz as pymupdf
+
+    src = FIG_DIR / f"{fig}.pdf"
+    copy = tmp_path / "c.pdf"
+    copy.write_bytes(src.read_bytes())
+    doc = pymupdf.open(copy)
+    try:
+        forms = _forms(doc, doc[0])
+        assert forms, f"{fig} no longer draws through a form xobject"
+        doc.xref_set_key(forms[0][0], key, value)
+        out = tmp_path / "m.pdf"
+        doc.save(out, deflate=True)
+    finally:
+        doc.close()
+
+    a, b = _drawing(out), _drawing(src)
+    moved = {k for (k, v), (k2, v2) in zip(a, b) if v != v2}
+    assert a != b, (
+        f"a form xobject's /{key} can be rewritten without the gate noticing; "
+        f"on {fig} that moves the drawing and ships green")
+    # ISOLATION: the named surface moved and nothing else did. A control that
+    # moves two surfaces proves neither, which is how the `alpha=1.0` smask
+    # control passed while testing presence rather than content.
+    assert moved == {f"xobject:{forms[0][1]}:{key}"}, (
+        f"expected only the /{key} surface to move, got {sorted(moved)}")
+
+
+def test_a_page_transparency_group_is_detected(tmp_path):
+    """`/Group` greyscales fig5c's heatmap -- 59.18% of its pixels -- while
+    every drawing surface stays byte-identical, because nothing drawn changed.
+    """
+    try:
+        import pymupdf
+    except ImportError:
+        import fitz as pymupdf
+
+    src = FIG_DIR / "fig5c_mechanism_site_matrix.pdf"
+    copy = tmp_path / "c.pdf"
+    copy.write_bytes(src.read_bytes())
+    doc = pymupdf.open(copy)
+    try:
+        assert doc.xref_get_key(doc[0].xref, "Group")[0] == "null", (
+            "fig5c now carries a /Group, so this control no longer adds one")
+        doc.xref_set_key(doc[0].xref, "Group",
+                         "<</S/Transparency/CS/DeviceGray/I true>>")
+        out = tmp_path / "m.pdf"
+        doc.save(out, deflate=True)
+    finally:
+        doc.close()
+
+    a, b = _drawing(out), _drawing(src)
+    moved = {k for (k, v), (k2, v2) in zip(a, b) if v != v2}
+    assert moved == {"Group"}, (
+        f"expected only the /Group surface to move, got {sorted(moved)}")
+
+
+def test_hiding_content_with_an_optional_content_group_is_detected(tmp_path):
+    """An OCG switched `/OFF` in the catalog and named by `/OC` renders fig5c
+    BLANK -- 49.33% of the page, larger than the alpha blanking this branch
+    already blocked on -- with every drawing surface identical.
+
+    Renderer-dependent (MuPDF and Acrobat honour it, Quartz does not) and
+    dropped by pdfTeX, so the exposure is the COMMITTED STANDALONE FIGURE,
+    which is the artifact MANIFEST.sha256 hashes.
+    """
+    try:
+        import pymupdf
+    except ImportError:
+        import fitz as pymupdf
+
+    src = FIG_DIR / "fig5c_mechanism_site_matrix.pdf"
+    copy = tmp_path / "c.pdf"
+    copy.write_bytes(src.read_bytes())
+    doc = pymupdf.open(copy)
+    try:
+        assert doc.xref_get_key(doc.pdf_catalog(), "OCProperties")[0] == "null"
+        x = doc.get_new_xref()
+        doc.update_object(x, "<</Type/OCG/Name(hidden)>>")
+        doc.xref_set_key(
+            doc.pdf_catalog(), "OCProperties",
+            f"<</OCGs[{x} 0 R]/D<</OFF[{x} 0 R]/Order[]/BaseState/ON>>>>")
+        imgs = doc[0].get_images(full=True)
+        assert imgs, "fig5c no longer carries the raster this control hides"
+        for img in imgs:
+            doc.xref_set_key(img[0], "OC", f"{x} 0 R")
+        out = tmp_path / "m.pdf"
+        doc.save(out, deflate=True)
+    finally:
+        doc.close()
+
+    a, b = _drawing(out), _drawing(src)
+    moved = {k for (k, v), (k2, v2) in zip(a, b) if v != v2}
+    assert moved == {"OCProperties"}, (
+        f"expected only the optional-content surface to move, got {sorted(moved)}")
 
 
 @pytest.mark.parametrize("key,value", [
@@ -940,8 +1249,8 @@ def test_inverting_the_alpha_decode_is_detected(tmp_path):
         doc.close()
 
     a, b = _drawing(out), _drawing(src)
-    moved = {k.split(":")[0] for (k, x), (_, y) in zip(a, b) if x != y}
-    assert moved == {"smaskdict"}, (
+    moved = {k for (k, x), (_, y) in zip(a, b) if x != y}
+    assert moved == {"smask:Decode"}, (
         f"inverting the alpha /Decode moved {sorted(moved) or 'nothing'}; it "
         "must move the smask dict surface and only that")
 
@@ -974,3 +1283,61 @@ def test_geometry_inherited_from_the_pages_node_is_detected(tmp_path):
     assert "Rotate" in moved, (
         f"an inherited /Rotate moved {sorted(moved) or 'nothing'}; the page "
         "renders rotated, so the geometry surface must see it")
+
+
+def test_an_annotation_mutated_in_place_is_detected(tmp_path):
+    """`_resolve` following an INDIRECT array, which no census figure exercises.
+
+    `/Annots` is `10 0 R -> []` on all eight pages, so the array branch -- the
+    one that exists because a bare object number says nothing about contents --
+    was never reached on a real figure, and only the existing direct-array
+    unit test covered it. ADDING an annotation was caught either way, because
+    the array text changes; moving one already there was not.
+    """
+    try:
+        import pymupdf
+    except ImportError:
+        import fitz as pymupdf
+
+    src = FIG_DIR / "fig2c_census_volume.pdf"
+    copy = tmp_path / "c.pdf"
+    copy.write_bytes(src.read_bytes())
+    doc = pymupdf.open(copy)
+    try:
+        doc[0].add_rect_annot((10, 10, 100, 100))
+        doc.save(tmp_path / "a.pdf", deflate=True)
+    finally:
+        doc.close()
+
+    doc = pymupdf.open(tmp_path / "a.pdf")
+    try:
+        annot = doc[0].first_annot
+        assert annot is not None, "the annotation was not written"
+        # INDIRECT, as every census page has it. pymupdf writes `/Annots` back
+        # as a DIRECT array, which the array branch already handled -- so the
+        # first version of this control passed with the recursion removed,
+        # testing the path that was never broken. Restore the real shape.
+        arr = doc.get_new_xref()
+        doc.update_object(arr, f"[{annot.xref} 0 R]")
+        doc.xref_set_key(doc[0].xref, "Annots", f"{arr} 0 R")
+        assert doc.xref_get_key(doc[0].xref, "Annots")[0] == "xref"
+        doc.save(tmp_path / "a.pdf", incremental=True, encryption=0)
+        before = str(doc.xref_get_key(annot.xref, "Rect")[1])
+        doc.xref_set_key(annot.xref, "Rect", "[200 200 400 400]")
+        assert str(doc.xref_get_key(annot.xref, "Rect")[1]) != before
+        doc.save(tmp_path / "b.pdf", deflate=True)
+    finally:
+        doc.close()
+
+    chk = pymupdf.open(tmp_path / "b.pdf")
+    try:
+        assert chk.xref_get_key(chk[0].xref, "Annots")[0] == "xref", (
+            "the save flattened /Annots to a direct array, so this control "
+            "exercises the branch that already worked")
+    finally:
+        chk.close()
+    a, b = _drawing(tmp_path / "b.pdf"), _drawing(tmp_path / "a.pdf")
+    moved = {k for (k, x), (_, y) in zip(a, b) if x != y}
+    assert moved == {"Annots"}, (
+        "moving an annotation already on the page is invisible: /Annots is an "
+        f"indirect array and its object NUMBER did not change. Moved: {sorted(moved)}")
