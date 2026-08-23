@@ -40,6 +40,33 @@ FIG_DIR = REPO / "article/figures"
 GEN = REPO / "scripts/generate_census_figures.py"
 
 
+def _drawing(path):
+    """The page DRAWING OPERATIONS, not the file bytes.
+
+    Removing `/CreationDate` makes a PDF reproducible on one machine and NOT
+    across machines: CI proved it, failing on Linux against figures written on
+    macOS. Font embedding and subsetting differ by platform, so a raw
+    sha256 compares the toolchain as much as the figure.
+
+    The content stream is the sequence of drawing commands the page executes,
+    which is what "is this the figure the generator draws" actually asks. It is
+    also what verified, before this fix landed, that removing the timestamp
+    changed no plot.
+    """
+    try:
+        import pymupdf
+    except ImportError:
+        try:
+            import fitz as pymupdf
+        except ImportError:
+            return None
+    doc = pymupdf.open(path)
+    try:
+        return [hashlib.sha256(pg.read_contents()).hexdigest() for pg in doc]
+    finally:
+        doc.close()
+
+
 def _census_figures():
     """The figures the census generator writes, read from its source."""
     src = GEN.read_text()
@@ -171,26 +198,33 @@ def test_the_committed_census_figures_are_what_the_generator_draws():
     during a test, which is how a strided sample scan once clobbered a
     committed sidecar in this repo.
     """
-    if not shutil.which(sys.executable):
-        pytest.skip("no interpreter")
+    import os
+
+    # NO SKIPS. Both conditions below were `pytest.skip` and both hid a real
+    # defect: the check reported green while never running, which is the exact
+    # thing this file argues about elsewhere. A generator that cannot run, or
+    # that ignores the output override and would therefore write into the
+    # working tree, is a failure.
     with tempfile.TemporaryDirectory() as td:
         scratch = Path(td) / "figures"
         scratch.mkdir()
-        env = {"MPLBACKEND": "Agg", "FERRO_FIG_DIR": str(scratch)}
-        import os
+        env = {**os.environ, "MPLBACKEND": "Agg",
+               "FERRO_FIG_DIR": str(scratch)}
         res = subprocess.run([sys.executable, str(GEN)], cwd=REPO,
-                             capture_output=True, text=True,
-                             env={**os.environ, **env})
-        if res.returncode != 0:
-            pytest.skip(f"census figure generator did not run: {res.stderr[-200:]}")
+                             capture_output=True, text=True, env=env)
+        assert res.returncode == 0, (
+            f"the census figure generator failed:\n{res.stderr[-800:]}")
         produced = sorted(scratch.glob("*.pdf"))
-        if not produced:
-            pytest.skip("generator does not honour FERRO_FIG_DIR")
+        assert produced, (
+            "the generator wrote no PDF into FERRO_FIG_DIR, so it is either "
+            "ignoring the override and writing into the working tree, or "
+            f"drawing nothing. stdout:\n{res.stdout[-500:]}")
         for p in produced:
             committed = FIG_DIR / p.name
             assert committed.exists(), f"{p.name} is not committed"
-            assert hashlib.sha256(p.read_bytes()).hexdigest() == \
-                hashlib.sha256(committed.read_bytes()).hexdigest(), (
+            a, b = _drawing(p), _drawing(committed)
+            assert a is not None, "no PDF reader available"
+            assert a == b, (
                 f"article/figures/{p.name} is not what "
                 "scripts/generate_census_figures.py draws. Re-run it.")
 
