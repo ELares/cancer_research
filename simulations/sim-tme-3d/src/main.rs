@@ -75,7 +75,8 @@ use ferroptosis_core::immune_spatial::{
 };
 use ferroptosis_core::nutrient::{apply_nutrient_stress_3d, NutrientConfig};
 use ferroptosis_core::oxygen::{
-    fenton_o2_factor, hypoxia_iron_factor, o2_dependent_exo_factor, por_o2_factor, radial_o2_field,
+    fenton_o2_factor, hypoxia_iron_factor, o2_dependent_exo_factor, oer_exo_factor, por_o2_factor,
+    radial_o2_field, OER_REFERENCE_PO2_MMHG,
 };
 use ferroptosis_core::params::{
     Params, PersisterConfig, PhConfig, SpatialImmuneConfig, SpatialParams, StromalConfig,
@@ -646,6 +647,19 @@ struct Overrides {
     /// O2-dependent, so SDT loses efficacy in hypoxic zones like the clinical
     /// SONALA-001 agent (manuscript §7.1).
     sdt_o2_dependence: f64,
+    /// Which functional form the O2-dependent arm of the exo-ROS yield takes
+    /// (#726). `false` (default) keeps the linear `(1-d) + d*s` this binary has
+    /// always used; `true` selects the measured Alper-Howard-Flanders oxygen
+    /// enhancement ratio, a saturating hyperbola.
+    ///
+    /// This is a SHAPE switch and nothing else: both forms return exactly 1.0
+    /// at `sdt_o2_dependence == 0`, and both agree at full O2 supply, so an
+    /// unconfigured run is byte-identical and a configured A/B measures the
+    /// functional form rather than a change of scale. They diverge hardest
+    /// below ~10 mmHg, which is where §7.1 and prediction P4 live -- the linear
+    /// form sends a fully anoxic cell to zero yield while the hyperbola leaves
+    /// it about a third. See `analysis/oxygen-form-check.md`.
+    sdt_o2_use_oer: bool,
     /// pH ion trapping of the SDT/PDT SENSITIZER (#SENS-SYM).
     ///
     /// RSL3 carries three spatial delivery corrections in this binary (pH on the
@@ -792,6 +806,7 @@ fn run_one_condition_full(
     // Oxygen-dependent SDT/PDT exo-ROS (#336). `0.0` (default/matrix) ⇒ the
     // exo-ROS O2 factor is exactly 1.0 ⇒ byte-identical.
     let sdt_o2_dependence = overrides.sdt_o2_dependence;
+    let sdt_o2_use_oer = overrides.sdt_o2_use_oer;
     // Oxygen-dependent Fenton H2O2 substrate (#383). `0.0` (default/matrix) ⇒
     // `fenton_o2_factor` returns 1.0 ⇒ `cell.iron` unchanged ⇒ byte-identical.
     let fenton_o2_dependence = overrides.fenton_o2_dependence;
@@ -1263,7 +1278,15 @@ fn run_one_condition_full(
                         _ => 1.0,
                     };
                     raw * supply_field.as_ref().map_or(1.0, |s| s[idx])
-                        * o2_dependent_exo_factor(o2_supply_for_exo[idx], sdt_o2_dependence)
+                        * if sdt_o2_use_oer {
+                            oer_exo_factor(
+                                o2_supply_for_exo[idx],
+                                sdt_o2_dependence,
+                                OER_REFERENCE_PO2_MMHG,
+                            )
+                        } else {
+                            o2_dependent_exo_factor(o2_supply_for_exo[idx], sdt_o2_dependence)
+                        }
                         * sens_ph
                 };
                 if dose_modulates_exo {
@@ -2754,6 +2777,8 @@ struct SnapshotPreset {
     /// `sdt-o2dep` preset makes SDT fully O2-gated, so the deep hypoxic core
     /// SURVIVES — the dead/LP panels show the hypoxic-core SDT survival front.
     sdt_o2_dependence: f64,
+    /// Select the OER hyperbola instead of the linear O2 form (#726).
+    sdt_o2_use_oer: bool,
     /// True if the NCOA4-ferritinophagy + hypoxia-iron coupling (#365/#381) is
     /// enabled (`ferritinophagy_release` + `hypoxia_iron_sensitivity`). `false`
     /// in every existing preset (byte-identical); `true` in the `ferritinophagy`
@@ -2846,6 +2871,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         senescence: false,
         phenotype_mufa: false,
         sdt_o2_dependence: 0.0,
+        sdt_o2_use_oer: false,
         ferritinophagy: false,
         ifngamma: false,
         alox: false,
@@ -2882,6 +2908,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         senescence: false,
         phenotype_mufa: false,
         sdt_o2_dependence: 0.0,
+        sdt_o2_use_oer: false,
         ferritinophagy: false,
         ifngamma: false,
         alox: false,
@@ -2918,6 +2945,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         senescence: false,
         phenotype_mufa: false,
         sdt_o2_dependence: 0.0,
+        sdt_o2_use_oer: false,
         ferritinophagy: false,
         ifngamma: false,
         alox: false,
@@ -2958,6 +2986,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         senescence: false,
         phenotype_mufa: false,
         sdt_o2_dependence: 0.0,
+        sdt_o2_use_oer: false,
         ferritinophagy: false,
         ifngamma: false,
         alox: false,
@@ -3001,6 +3030,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         senescence: false,
         phenotype_mufa: false,
         sdt_o2_dependence: 0.0,
+        sdt_o2_use_oer: false,
         ferritinophagy: false,
         ifngamma: false,
         alox: false,
@@ -3037,6 +3067,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         senescence: false,
         phenotype_mufa: false,
         sdt_o2_dependence: 0.0,
+        sdt_o2_use_oer: false,
         ferritinophagy: false,
         ifngamma: false,
         alox: false,
@@ -3078,6 +3109,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         senescence: false,
         phenotype_mufa: false,
         sdt_o2_dependence: 0.0,
+        sdt_o2_use_oer: false,
         ferritinophagy: false,
         ifngamma: false,
         alox: false,
@@ -3121,6 +3153,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         senescence: false,
         phenotype_mufa: false,
         sdt_o2_dependence: 0.0,
+        sdt_o2_use_oer: false,
         ferritinophagy: false,
         ifngamma: false,
         alox: false,
@@ -3160,6 +3193,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         senescence: false,
         phenotype_mufa: false,
         sdt_o2_dependence: 0.0,
+        sdt_o2_use_oer: false,
         ferritinophagy: false,
         ifngamma: false,
         alox: false,
@@ -3204,6 +3238,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         senescence: false,
         phenotype_mufa: false,
         sdt_o2_dependence: 0.0,
+        sdt_o2_use_oer: false,
         ferritinophagy: false,
         ifngamma: false,
         alox: false,
@@ -3248,6 +3283,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         senescence: false,
         phenotype_mufa: false,
         sdt_o2_dependence: 0.0,
+        sdt_o2_use_oer: false,
         ferritinophagy: false,
         ifngamma: false,
         alox: false,
@@ -3288,6 +3324,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         senescence: false,
         phenotype_mufa: false,
         sdt_o2_dependence: 0.0,
+        sdt_o2_use_oer: false,
         ferritinophagy: false,
         ifngamma: false,
         alox: false,
@@ -3329,6 +3366,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         senescence: false,
         phenotype_mufa: false,
         sdt_o2_dependence: 0.0,
+        sdt_o2_use_oer: false,
         ferritinophagy: false,
         ifngamma: false,
         alox: false,
@@ -3372,6 +3410,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         senescence: false,
         phenotype_mufa: false,
         sdt_o2_dependence: 0.0,
+        sdt_o2_use_oer: false,
         ferritinophagy: false,
         ifngamma: false,
         alox: false,
@@ -3414,6 +3453,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         senescence: false,
         phenotype_mufa: false,
         sdt_o2_dependence: 0.0,
+        sdt_o2_use_oer: false,
         ferritinophagy: false,
         ifngamma: false,
         alox: false,
@@ -3455,6 +3495,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         senescence: false,
         phenotype_mufa: false,
         sdt_o2_dependence: 0.0,
+        sdt_o2_use_oer: false,
         ferritinophagy: false,
         ifngamma: false,
         alox: false,
@@ -3496,6 +3537,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         senescence: false,
         phenotype_mufa: false,
         sdt_o2_dependence: 0.0,
+        sdt_o2_use_oer: false,
         ferritinophagy: false,
         ifngamma: false,
         alox: false,
@@ -3538,6 +3580,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         senescence: false,
         phenotype_mufa: false,
         sdt_o2_dependence: 0.0,
+        sdt_o2_use_oer: false,
         ferritinophagy: false,
         ifngamma: false,
         alox: false,
@@ -3585,6 +3628,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         senescence: true,
         phenotype_mufa: false,
         sdt_o2_dependence: 0.0,
+        sdt_o2_use_oer: false,
         ferritinophagy: false,
         ifngamma: false,
         alox: false,
@@ -3628,6 +3672,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         senescence: true,
         phenotype_mufa: false,
         sdt_o2_dependence: 0.0,
+        sdt_o2_use_oer: false,
         ferritinophagy: false,
         ifngamma: false,
         alox: false,
@@ -3671,6 +3716,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         senescence: false,
         phenotype_mufa: true,
         sdt_o2_dependence: 0.0,
+        sdt_o2_use_oer: false,
         ferritinophagy: false,
         ifngamma: false,
         alox: false,
@@ -3713,6 +3759,53 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         senescence: false,
         phenotype_mufa: false,
         sdt_o2_dependence: 1.0,
+        sdt_o2_use_oer: false,
+        ferritinophagy: false,
+        ifngamma: false,
+        alox: false,
+        acsl4_negative: false,
+        escrt: false,
+        por: false,
+        dhc7: false,
+        vitk: false,
+        prom2: false,
+        copper: false,
+        dietary_pufa: false,
+    },
+    SnapshotPreset {
+        // The same run as `sdt-o2dep`, with the O2-dependent arm on the MEASURED
+        // functional form instead of a straight line (#726). Eighty years of
+        // radiobiology measure the oxygen effect as the saturating
+        // Alper-Howard-Flanders hyperbola, and `sdt-o2dep`'s linear factor sends a
+        // fully anoxic cell to ZERO exogenous yield while the hyperbola leaves it
+        // about a third. Rendered beside `sdt-o2dep` this is the visible cost of
+        // the functional-form choice on the leg the project is least sure about:
+        // the same configuration, differing only in a shape nobody had measured
+        // against data. Both presets agree at the oxygenated rim by construction.
+        name: "sdt-oer",
+        desc: "SDT + O2-dependent exo-ROS on the MEASURED OER hyperbola (#726)",
+        treatment: Treatment::SDT,
+        treatment_name: "SDT",
+        immune_on: false,
+        stromal_on: false,
+        ph_on: false,
+        multidose: false,
+        persister: false,
+        persister_oxphos: false,
+        clonal: false,
+        vasculature: false,
+        spheroid: false,
+        slab: false,
+        suppressor: false,
+        checkpoints: false,
+        contact: false,
+        nutrient: false,
+        dc_subsets: false,
+        dc_ferroptosis: false,
+        senescence: false,
+        phenotype_mufa: false,
+        sdt_o2_dependence: 1.0,
+        sdt_o2_use_oer: true,
         ferritinophagy: false,
         ifngamma: false,
         alox: false,
@@ -3756,6 +3849,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         senescence: false,
         phenotype_mufa: false,
         sdt_o2_dependence: 0.0,
+        sdt_o2_use_oer: false,
         ferritinophagy: true,
         ifngamma: false,
         alox: false,
@@ -3800,6 +3894,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         senescence: false,
         phenotype_mufa: false,
         sdt_o2_dependence: 0.0,
+        sdt_o2_use_oer: false,
         ferritinophagy: false,
         ifngamma: true,
         alox: false,
@@ -3842,6 +3937,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         senescence: false,
         phenotype_mufa: false,
         sdt_o2_dependence: 0.0,
+        sdt_o2_use_oer: false,
         ferritinophagy: false,
         ifngamma: false,
         alox: true,
@@ -3886,6 +3982,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         senescence: false,
         phenotype_mufa: false,
         sdt_o2_dependence: 0.0,
+        sdt_o2_use_oer: false,
         ferritinophagy: false,
         ifngamma: false,
         alox: false,
@@ -3928,6 +4025,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         senescence: false,
         phenotype_mufa: false,
         sdt_o2_dependence: 0.0,
+        sdt_o2_use_oer: false,
         ferritinophagy: false,
         ifngamma: false,
         alox: false,
@@ -3970,6 +4068,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         senescence: false,
         phenotype_mufa: false,
         sdt_o2_dependence: 0.0,
+        sdt_o2_use_oer: false,
         ferritinophagy: false,
         ifngamma: false,
         alox: false,
@@ -4012,6 +4111,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         senescence: false,
         phenotype_mufa: false,
         sdt_o2_dependence: 0.0,
+        sdt_o2_use_oer: false,
         ferritinophagy: false,
         ifngamma: false,
         alox: false,
@@ -4058,6 +4158,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         senescence: false,
         phenotype_mufa: false,
         sdt_o2_dependence: 0.0,
+        sdt_o2_use_oer: false,
         ferritinophagy: false,
         ifngamma: false,
         alox: false,
@@ -4101,6 +4202,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         senescence: false,
         phenotype_mufa: false,
         sdt_o2_dependence: 0.0,
+        sdt_o2_use_oer: false,
         ferritinophagy: false,
         ifngamma: false,
         alox: false,
@@ -4144,6 +4246,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         senescence: false,
         phenotype_mufa: false,
         sdt_o2_dependence: 0.0,
+        sdt_o2_use_oer: false,
         ferritinophagy: false,
         ifngamma: false,
         alox: false,
@@ -4188,6 +4291,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         senescence: false,
         phenotype_mufa: false,
         sdt_o2_dependence: 0.0,
+        sdt_o2_use_oer: false,
         ferritinophagy: false,
         ifngamma: false,
         alox: false,
@@ -4230,6 +4334,7 @@ const SNAPSHOTS: &[SnapshotPreset] = &[
         senescence: false,
         phenotype_mufa: false,
         sdt_o2_dependence: 0.3,
+        sdt_o2_use_oer: false,
         ferritinophagy: false,
         ifngamma: false,
         alox: false,
@@ -4511,6 +4616,7 @@ fn run_snapshot(output_dir: &Path, tumor_radius_um: f64, name: &str) {
             // #380: O2-dependent SDT exo-ROS (0.0 for every other preset ⇒ the
             // exo-ROS is O2-independent, unchanged).
             sdt_o2_dependence: preset.sdt_o2_dependence,
+            sdt_o2_use_oer: preset.sdt_o2_use_oer,
             // #381: NCOA4-ferritinophagy + hypoxia-iron coupling. The §7.1 headline
             // knob values (both 2.0); 0.0 ⇒ inert for every other preset.
             ferritinophagy_release: if preset.ferritinophagy { 2.0 } else { 0.0 },
@@ -8459,19 +8565,43 @@ mod tests {
             p.sdt_o2_dependence, 1.0,
             "sdt-o2dep must make the exo-ROS fully O2-dependent"
         );
-        // Off-by-default invariant: only the two intentional SDT-O2 presets
-        // (sdt-o2dep = Type II / dep 1.0, and sdt-typei = Type-I-heavy / dep 0.3,
-        // #468) set a non-zero dependence; every other preset keeps 0.0 so the
-        // matrix stays byte-identical.
+        // Off-by-default invariant: only the three intentional SDT-O2 presets
+        // (sdt-o2dep = Type II / dep 1.0, sdt-typei = Type-I-heavy / dep 0.3
+        // (#468), and sdt-oer = the same dep 1.0 on the measured hyperbola
+        // (#726)) set a non-zero dependence; every other preset keeps 0.0 so
+        // the matrix stays byte-identical.
+        const SDT_O2_PRESETS: [&str; 3] = ["sdt-o2dep", "sdt-typei", "sdt-oer"];
         for q in SNAPSHOTS {
-            if q.name != "sdt-o2dep" && q.name != "sdt-typei" {
+            if !SDT_O2_PRESETS.contains(&q.name) {
                 assert_eq!(
                     q.sdt_o2_dependence, 0.0,
                     "preset {} must keep sdt_o2_dependence=0.0 (byte-identical)",
                     q.name
                 );
             }
+            // #726: the FORM switch is its own off-by-default invariant. Only
+            // `sdt-oer` selects the hyperbola; every other preset keeps the
+            // linear form, so no existing preset's output can move.
+            assert_eq!(
+                q.sdt_o2_use_oer,
+                q.name == "sdt-oer",
+                "preset {} has the wrong sdt_o2_use_oer setting",
+                q.name
+            );
         }
+        // And the pair that makes the form comparison meaningful: `sdt-oer`
+        // must differ from `sdt-o2dep` in the FORM and nothing else, or a
+        // reader comparing the two rendered panels is comparing two changes.
+        let base = resolve_snapshot("sdt-o2dep");
+        let oer = resolve_snapshot("sdt-oer");
+        assert_eq!(base.sdt_o2_dependence, oer.sdt_o2_dependence);
+        assert_eq!(base.treatment, oer.treatment);
+        assert_eq!(base.immune_on, oer.immune_on);
+        assert_eq!(base.stromal_on, oer.stromal_on);
+        assert_eq!(base.ph_on, oer.ph_on);
+        assert_eq!(base.spheroid, oer.spheroid);
+        assert_eq!(base.vasculature, oer.vasculature);
+        assert!(!base.sdt_o2_use_oer && oer.sdt_o2_use_oer);
     }
 
     /// #381: lock the `--snapshot=ferritinophagy` preset -> Overrides wiring. The
@@ -9662,6 +9792,83 @@ mod tests {
              type_i={} type_ii={}",
             type_i_heavy.hypoxic_kill_rate,
             type_ii.hypoxic_kill_rate
+        );
+    }
+
+    /// #726: the OER form is a different ANSWER, not a renaming.
+    ///
+    /// `analysis/oxygen-form-check.md` established that the engine's linear
+    /// O2 dependence is not the oxygen enhancement ratio and diverges from it
+    /// most below 10 mmHg -- the regime carrying §7.1 and prediction P4, the
+    /// leg this project calls its weakest. This is the consequence measured on
+    /// the spatial model rather than on the scalar function.
+    ///
+    /// Guards both halves. The flag must be EXACTLY inert when the O2
+    /// dependence is off, because the production matrix SHA depends on it; and
+    /// when the dependence is on it must raise hypoxic-core kill, because the
+    /// hyperbola leaves an anoxic cell about a third of its yield where the
+    /// straight line leaves it none.
+    #[test]
+    fn the_oer_form_raises_hypoxic_kill_and_is_inert_when_the_dependence_is_off() {
+        let cfg = RunConfig {
+            grid_dim: 60,
+            n_steps: 180,
+        };
+        let cond = Condition {
+            name: "sdt_oer".to_string(),
+            treatment: Treatment::SDT,
+            treatment_name: "SDT".to_string(),
+            o2_lambda: Some(50.0), // the same steep-gradient §7.1 config
+            immune_on: false,
+            stromal_on: false,
+            ph_on: false,
+            dose_schedule: DoseSchedule::Constant,
+        };
+        let run = |dep: f64, oer: bool| {
+            run_one_condition_full(
+                &cond,
+                cfg,
+                None,
+                Overrides {
+                    sdt_o2_dependence: dep,
+                    sdt_o2_use_oer: oer,
+                    ..Default::default()
+                },
+            )
+        };
+        // Inert with the dependence off: both forms return exactly 1.0, so
+        // selecting the shape cannot move a single cell.
+        let off_lin = run(0.0, false);
+        let off_oer = run(0.0, true);
+        assert_eq!(
+            off_lin.overall_kill_rate.to_bits(),
+            off_oer.overall_kill_rate.to_bits(),
+            "the OER flag moved a run with sdt_o2_dependence = 0, which would \
+             break the production matrix identity"
+        );
+        assert_eq!(
+            off_lin.hypoxic_kill_rate.to_bits(),
+            off_oer.hypoxic_kill_rate.to_bits()
+        );
+        // And with the dependence fully on, the functional form decides what
+        // happens in the core. The linear form is the pessimistic answer.
+        let on_lin = run(1.0, false);
+        let on_oer = run(1.0, true);
+        assert!(
+            on_oer.hypoxic_kill_rate > on_lin.hypoxic_kill_rate,
+            "the measured hyperbola must leave more hypoxic-core kill than the \
+             straight line: oer={} linear={}",
+            on_oer.hypoxic_kill_rate,
+            on_lin.hypoxic_kill_rate
+        );
+        // The choice of form must not be doing this by inflating everything:
+        // both agree at full O2 supply, so the oxygenated rim is unchanged in
+        // kind and the difference is concentrated in the hypoxic zone.
+        assert!(
+            on_oer.overall_kill_rate >= on_lin.overall_kill_rate,
+            "oer={} linear={}",
+            on_oer.overall_kill_rate,
+            on_lin.overall_kill_rate
         );
     }
 

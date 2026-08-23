@@ -237,6 +237,79 @@ pub fn fenton_o2_factor(o2_supply: f64, dependence: f64) -> f64 {
     (1.0 - d + d * s).clamp(0.0, 1.0)
 }
 
+/// Well-oxygenated tissue pO₂ in mmHg, the reference the OER is normalised at.
+///
+/// Tumour and normal tissue pO₂ are heterogeneous and this is a REFERENCE
+/// POINT, not a measurement of any particular tissue: it fixes what
+/// `o2_supply = 1.0` means in mmHg so a relative supply can be placed on the
+/// OER curve at all. 40 mmHg is a conventional well-perfused value; the
+/// hyperbola is nearly flat above ~20 mmHg, so the shape below 10 mmHg — the
+/// regime that carries every hypoxia claim in this project — is insensitive to
+/// the exact choice.
+pub const OER_REFERENCE_PO2_MMHG: f64 = 40.0;
+
+/// The Alper–Howard-Flanders oxygen enhancement ratio, `(3p + 3)/(p + 3)`.
+///
+/// Eighty years of radiobiology measure the oxygen effect as a SATURATING
+/// HYPERBOLA in pO₂: it rises steeply over the first few mmHg and then
+/// flattens, which is why the oxygen effect is a THRESHOLD phenomenon rather
+/// than a gradual one. Ranges from `1.0` at anoxia to an asymptote of `3.0`.
+///
+/// This is the calibration target the layer-freeze policy requires
+/// (`analysis/oxygen-form-check.md`, #726). Nothing calls it by default.
+pub fn oxygen_enhancement_ratio(p_mmhg: f64) -> f64 {
+    let p = p_mmhg.max(0.0);
+    (3.0 * p + 3.0) / (p + 3.0)
+}
+
+/// Relative radiosensitivity at `o2_supply`, normalised to full supply.
+///
+/// `oxygen_enhancement_ratio(p) / oxygen_enhancement_ratio(p_full)` where
+/// `p = o2_supply · p_full`, so it returns EXACTLY `1.0` at `o2_supply = 1`
+/// and falls to `m(0)/m(p_full)` at anoxia.
+///
+/// ## Why normalise at full supply rather than at the asymptote
+///
+/// Both choices are defensible and they answer different questions. Dividing
+/// by the asymptote `3.0` gives the textbook curve (0.333 at anoxia) but makes
+/// a fully oxygenated cell score ~0.95 rather than 1.0, so swapping forms
+/// would move the NORMOXIC baseline as well as the hypoxic response. Dividing
+/// by `m(p_full)` isolates the SHAPE, which is the thing under test: both this
+/// and the linear form agree exactly at `o2_supply = 1` and disagree in
+/// between, so an A/B measures the functional form and nothing else.
+pub fn oer_relative_efficacy(o2_supply: f64, p_full_mmhg: f64) -> f64 {
+    let s = o2_supply.clamp(0.0, 1.0);
+    let full = p_full_mmhg.max(f64::MIN_POSITIVE);
+    (oxygen_enhancement_ratio(s * full) / oxygen_enhancement_ratio(full)).clamp(0.0, 1.0)
+}
+
+/// The OER-shaped alternative to [`o2_dependent_exo_factor`] (#726).
+///
+/// Same contract in every respect a consumer sees — `dependence = 0` returns
+/// exactly `1.0`, so an unconfigured run is byte-identical — but the
+/// O₂-dependent arm follows the measured hyperbola instead of a straight line.
+///
+/// ## What changes, and where it matters
+///
+/// The two forms agree at both endpoints of the dependent arm and diverge
+/// hardest below 10 mmHg, which is exactly where this project's least certain
+/// claim lives: `PREREGISTRATION.md` flags P4, the SDT-under-hypoxia leg, as
+/// its weakest, and §7.1 turns on behaviour as O₂ approaches zero. A linear
+/// factor sends a fully anoxic cell to zero yield; the hyperbola leaves it
+/// roughly a third, because the oxygen effect saturates rather than scaling.
+///
+/// So this is not a renaming of the existing knob. It is a different answer to
+/// the question the project is least sure about, with published measurements
+/// behind it rather than a convenient functional form.
+///
+/// Off by default in the sense that matters: nothing selects it unless a
+/// consumer asks for it, and at `dependence = 0` it is identical to the linear
+/// form to the last bit.
+pub fn oer_exo_factor(o2_supply: f64, dependence: f64, p_full_mmhg: f64) -> f64 {
+    let d = dependence.clamp(0.0, 1.0);
+    (1.0 - d + d * oer_relative_efficacy(o2_supply, p_full_mmhg)).clamp(0.0, 1.0)
+}
+
 /// Dead-cell rate for each of three O₂-defined concentric shells.
 ///
 /// Zone semantics (matches `sim-tme`'s 2D
@@ -306,6 +379,101 @@ pub fn radial_o2_zone_kill_rates(grid: &TumorGrid3D, shell_depth_um: f64) -> (f6
 
 #[cfg(test)]
 mod tests {
+
+    // --- OER form (#726) --------------------------------------------------
+
+    #[test]
+    fn oer_matches_published_anchor_points() {
+        // Alper-Howard-Flanders: 1.0 at anoxia, asymptote 3.0, half-maximal at
+        // p = 3 mmHg (the K in the denominator), which is the property that
+        // makes the oxygen effect a threshold rather than a gradient.
+        assert!((oxygen_enhancement_ratio(0.0) - 1.0).abs() < 1e-12);
+        assert!((oxygen_enhancement_ratio(3.0) - 2.0).abs() < 1e-12);
+        assert!(oxygen_enhancement_ratio(1.0e6) > 2.999);
+        // Monotone increasing in pO2.
+        let mut prev = 0.0;
+        for i in 0..200 {
+            let v = oxygen_enhancement_ratio(i as f64 * 0.5);
+            assert!(v >= prev, "OER decreased at p={}", i as f64 * 0.5);
+            prev = v;
+        }
+    }
+
+    #[test]
+    fn oer_exo_factor_is_bit_identical_to_the_linear_form_at_zero_dependence() {
+        // The property that keeps the production matrix safe: an unconfigured
+        // run cannot tell the two forms apart.
+        for &s in &[0.0, 0.05, 0.37, 0.5, 0.9, 1.0] {
+            let lin = o2_dependent_exo_factor(s, 0.0);
+            let oer = oer_exo_factor(s, 0.0, OER_REFERENCE_PO2_MMHG);
+            assert_eq!(lin.to_bits(), oer.to_bits(), "differ at o2_supply={s}");
+        }
+    }
+
+    #[test]
+    fn the_two_forms_agree_at_full_supply_and_diverge_in_the_hypoxic_range() {
+        // Normalising at full supply is what makes this an A/B on SHAPE: the
+        // endpoint is held fixed so any difference is the functional form.
+        let lin_full = o2_dependent_exo_factor(1.0, 1.0);
+        let oer_full = oer_exo_factor(1.0, 1.0, OER_REFERENCE_PO2_MMHG);
+        assert!((lin_full - oer_full).abs() < 1e-12);
+        // And they part company where the project's weakest claim lives.
+        // 5 mmHg of 40 is o2_supply = 0.125.
+        let s = 5.0 / OER_REFERENCE_PO2_MMHG;
+        let lin = o2_dependent_exo_factor(s, 1.0);
+        let oer = oer_exo_factor(s, 1.0, OER_REFERENCE_PO2_MMHG);
+        assert!(
+            oer - lin > 0.5,
+            "expected a large gap at 5 mmHg, got {oer} vs {lin}"
+        );
+    }
+
+    #[test]
+    fn a_fully_anoxic_cell_keeps_yield_under_the_oer_and_loses_it_under_the_line() {
+        // The substantive disagreement, and the reason the choice is not
+        // cosmetic: the linear form says an anoxic cell gets nothing.
+        let lin = o2_dependent_exo_factor(0.0, 1.0);
+        let oer = oer_exo_factor(0.0, 1.0, OER_REFERENCE_PO2_MMHG);
+        assert_eq!(lin, 0.0);
+        assert!(oer > 0.3 && oer < 0.4, "anoxic OER factor was {oer}");
+    }
+
+    #[test]
+    fn oer_factor_is_monotone_and_bounded() {
+        for &d in &[0.0, 0.25, 0.5, 1.0] {
+            let mut prev = -1.0;
+            for i in 0..=100 {
+                let s = i as f64 / 100.0;
+                let v = oer_exo_factor(s, d, OER_REFERENCE_PO2_MMHG);
+                assert!((0.0..=1.0).contains(&v), "out of range: {v}");
+                assert!(v >= prev - 1e-12, "not monotone at s={s}, d={d}");
+                prev = v;
+            }
+        }
+        // Out-of-range inputs are clamped rather than extrapolated.
+        assert_eq!(
+            oer_exo_factor(-1.0, 1.0, OER_REFERENCE_PO2_MMHG),
+            oer_exo_factor(0.0, 1.0, OER_REFERENCE_PO2_MMHG)
+        );
+        assert_eq!(
+            oer_exo_factor(2.0, 1.0, OER_REFERENCE_PO2_MMHG),
+            oer_exo_factor(1.0, 1.0, OER_REFERENCE_PO2_MMHG)
+        );
+    }
+
+    #[test]
+    fn the_reference_po2_barely_moves_the_hypoxic_shape() {
+        // The claim in OER_REFERENCE_PO2_MMHG's doc comment, checked rather
+        // than asserted: the hyperbola is flat above ~20 mmHg, so the choice of
+        // reference does not decide the regime the project cares about.
+        let at_5mmhg = |full: f64| oer_exo_factor(5.0 / full, 1.0, full);
+        let a = at_5mmhg(30.0);
+        let b = at_5mmhg(60.0);
+        assert!(
+            (a - b).abs() < 0.05,
+            "reference choice moved 5 mmHg: {a} vs {b}"
+        );
+    }
     use super::*;
     use crate::grid::TumorGrid;
 

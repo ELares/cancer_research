@@ -153,3 +153,29 @@ def test_all_anchored_artifacts_present():
         "pdt-threshold-validation.json",
     ):
         assert (CALIB / name).exists(), f"missing anchored artifact: {name}"
+
+
+def test_oer_form_anchors_reproduced_live():
+    """#726: re-run the (pure-stdlib) OER validator and confirm the shipped
+    functional form still matches the published radiobiology.
+
+    Live rather than read-from-artifact for the reason the trigger-wave leg is
+    live: a committed JSON goes stale with its generator, and this leg's whole
+    content is that the Rust and the literature agree. It also re-parses the
+    Rust source, so a formula edit fails here even if nobody regenerated.
+    """
+    import validate_oer_form as vo
+
+    d = vo.build()
+    assert all(a["ok"] for a in d["anchors"]), d["anchors"]
+    assert d["formula_matches_published"], d["rust"]["formula"]
+    assert d["endpoints_agree"], (
+        "the OER and linear forms no longer agree at full O2 supply, so an "
+        "A/B between them confounds shape with scale")
+    # The disagreement that justifies carrying a second form at all.
+    assert d["worst_gap"] > 0.5 and d["worst_gap_pO2"] <= 10, (
+        f"forms converged: gap {d['worst_gap']} at {d['worst_gap_pO2']} mmHg")
+    committed = _load("oer-form-validation.json")
+    assert committed["rust"]["formula"] == d["rust"]["formula"], (
+        "committed OER validation is stale")
+    assert committed["rust"]["reference_po2_mmhg"] == d["rust"]["reference_po2_mmhg"]
