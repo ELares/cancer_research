@@ -109,12 +109,16 @@ def assemble(d: dict) -> dict:
     named = _protocol_named()
     n = d["ferroptosis_articles"]
     groups = []
-    for g, c in d["reagents"].items():
+    # Declared order, not dict order: arm 1 must precede arm 2, and the
+    # comparison between them is what this analysis is for. Serialisation
+    # alphabetises a dict and would put the FSP1 arm first.
+    for g in [k for k in REAGENTS if k in d["reagents"]]:
+        c = d["reagents"][g]
         rows = [{"reagent": k, "articles": v,
                  "share": round(100 * v / n, 2) if n else None,
                  "in_protocol": k in named,
                  "thin": v < d["thin_threshold"]}
-                for k, v in sorted(c.items(), key=lambda kv: -kv[1])]
+                for k, v in sorted(c.items(), key=lambda kv: (-kv[1], kv[0]))]
         groups.append({"role": g, "rows": rows,
                        "protocol_total": sum(r["articles"] for r in rows
                                              if r["in_protocol"]),

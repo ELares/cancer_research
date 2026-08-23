@@ -400,3 +400,82 @@ def test_assemble_is_idempotent_where_it_is_used():
         assert once == twice, f"{n}.assemble() is not idempotent"
         checked += 1
     assert checked >= 10, f"only {checked} generators exercised"
+
+
+def _shuffled(obj, rng):
+    """The same data with every dict's key order randomised."""
+    if isinstance(obj, dict):
+        items = list(obj.items())
+        rng.shuffle(items)
+        return {k: _shuffled(v, rng) for k, v in items}
+    if isinstance(obj, list):
+        return [_shuffled(v, rng) for v in obj]
+    return obj
+
+
+# Generators whose rendered order is still inherited from dict iteration
+# rather than established by the renderer. A RATCHET, not an allowlist: the
+# test below fails if a listed generator has been fixed and not removed, so the
+# set can only shrink, and it fails if any UNLISTED generator joins them, so it
+# cannot grow silently.
+#
+# Left rather than fixed in one sitting deliberately. Eight ordering defects
+# were repaired in this campaign and one of the repairs flipped a published
+# verdict, because each fix needs the ranked quantity identified individually
+# and checked against what the artifact published. Batching the last five at
+# the end of a long change is how that regression happened.
+ORDER_DEPENDENT = {
+    "atlas_ingest_sensitivity",
+    "atlas_recent_window",
+    "atlas_site_coverage",
+    "census_mechanism_growth",
+    "census_mechanism_profile",
+}
+
+
+def _order_dependent(name: str) -> bool:
+    import random
+
+    mod = importlib.import_module(name)
+    stored = json.loads(mod.OUT_JSON.read_text())
+    base = _render(mod, _reproduce(mod, name))
+    reassembles = hasattr(mod, "assemble") and _render_only_reassembles(name)
+    rng = random.Random(20260823)
+    for _ in range(5):
+        s = _shuffled(stored, rng)
+        d = _reassemble(mod, s) if reassembles else s
+        if _render(mod, d) != base:
+            return True
+    return False
+
+
+@pytest.mark.parametrize("name", LIVE)
+def test_the_report_does_not_depend_on_dict_order(name):
+    """A rendered order must be established by the renderer, not inherited.
+
+    THIS IS THE GATE FOR THE WORST THING THAT HAPPENED IN THIS CAMPAIGN. A
+    report that renders a dict in iteration order is reproducible only until
+    something serialises it -- and `json.dumps(sort_keys=True)` does. Four
+    tables silently lost a `Counter.most_common()` ranking that way, putting
+    `Expression of Concern` (172) above `Retracted Publication` (7,900); and a
+    monotone test reading dict order flipped a published verdict from "3 of 3"
+    to "2 of 3", failing the one admissible case.
+
+    Shuffling every dict and requiring the output to be unchanged catches the
+    whole class, including the orders nobody has thought about yet. When it
+    fires the fix is an explicit sort INSIDE the renderer -- never a sort of
+    the input, which replaces a rank with an alphabet.
+    """
+    dependent = _order_dependent(name)
+    if name in ORDER_DEPENDENT:
+        assert dependent, (
+            f"{name} is listed in ORDER_DEPENDENT and no longer depends on "
+            "dict order. Remove it from the set -- the list is a ratchet and "
+            "may only shrink.")
+        pytest.skip(f"{name} is a known-order-dependent generator (ratcheted)")
+    assert not dependent, (
+        f"{name} renders differently when its stored dicts are reordered, so "
+        "its published order is inherited from serialisation rather than "
+        "established by the renderer. Sort inside render(), on the quantity "
+        "the table is ranked by -- never sort the input, which replaces a rank "
+        "with an alphabet.")

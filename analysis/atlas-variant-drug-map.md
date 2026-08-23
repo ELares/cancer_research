@@ -101,12 +101,12 @@ The largest of them shows what it cost. rs1801131 on MTHFR carries 744 rows acro
 
 | spelling | rows | |
 |---|--:|---|
+| `c.1298A>C` | 712 | refuses the rsid |
+| `p.E429A` | 17 | |
 | `c.-1298A>C` | 3 | refuses the rsid |
 | `c.1286A>C` | 3 | refuses the rsid |
-| `c.1298A>C` | 712 | refuses the rsid |
 | `c.1298A>T` | 3 | refuses the rsid |
 | `c.1298C>T` | 2 | refuses the rsid |
-| `p.E429A` | 17 | |
 
 There is exactly one protein spelling, `p.E429A` at 17 rows, so the old rule saw no disagreement among protein forms and captured all 744 rows onto it, including the 712-row `c.1298A>C`.
 

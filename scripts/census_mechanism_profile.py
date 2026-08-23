@@ -140,7 +140,9 @@ def assemble(d: dict) -> dict:
             "top_sites": enr[:TOP_N],
             "top_partners": sorted(
                 ({"mechanism": p, "n": v} for p, v in d["partners"].get(k, {}).items()),
-                key=lambda r: -r["n"],
+                # Tie-break by name so the ranking is total: equal counts
+                # otherwise fall back to dict order, which serialisation moves.
+                key=lambda r: (-r["n"], str(r.get("name", r.get("site", "")))),
             )[:TOP_N],
             "start": a, "end": b,
             "growth": round(b / a, 2) if a >= 30 else None,

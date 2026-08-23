@@ -169,14 +169,27 @@ def main() -> int:
     return 0
 
 
-def _numeric(d: dict) -> list:
-    """(value, distance) pairs in NUMERIC order.
+# The bounds the committed vector sits on. Each sweep steps OUTWARD from its
+# bound (`k_erastin` 3->2->1, `hill` 6->8->10), which is the order the prose
+# below describes, so the table has to lead with the bound.
+BOUNDS = {"k_erastin": 3.0, "hill": 6.0}
 
-    The swept values are dict KEYS, so JSON makes them strings and a
-    round-tripped artifact renders them lexicographically -- 10.0, 6.0, 8.0 --
-    directly above prose saying the distance does not move between 6 and 10.
+
+def _outward(d: dict, param: str) -> list:
+    """(value, distance) pairs ordered OUTWARD FROM THE BOUND.
+
+    Three orderings are possible here and two are wrong. The swept values are
+    dict KEYS, so JSON makes them strings and a round-tripped artifact renders
+    them lexicographically -- 10.0, 6.0, 8.0 -- directly above prose about what
+    happens between 6 and 10. Sorting numerically ASCENDING fixes `hill` and
+    silently reverses `k_erastin`, putting `(prior low bound)` on the last row
+    under a sentence that says "pushing below its bound", which is what the
+    first attempt at this shipped.
+
+    Distance from the bound is the sequence the sweep actually walks.
     """
-    return sorted(d.items(), key=lambda kv: float(kv[0]))
+    b = BOUNDS[param]
+    return sorted(d.items(), key=lambda kv: abs(float(kv[0]) - b))
 
 
 def render(r: dict) -> str:
@@ -230,9 +243,9 @@ def render(r: dict) -> str:
           "its low 3.0, `hill` at its high 6.0 — which looks like the box clipping",
           "the optimum. Stepping outside says otherwise.", "",
           "| parameter | value | joint distance |", "|---|--:|--:|"]
-    for v, d in _numeric(ke):
+    for v, d in _outward(ke, "k_erastin"):
         L.append(f"| `k_erastin` | {v} | {d}{'  (prior low bound)' if v == '3.0' else ''} |")
-    for v, d in _numeric(hl):
+    for v, d in _outward(hl, "hill"):
         L.append(f"| `hill` | {v} | {d}{'  (prior high bound)' if v == '6.0' else ''} |")
     L += ["",
           ("Pushing `k_erastin` below its bound makes the fit monotonically worse."

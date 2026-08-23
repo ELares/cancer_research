@@ -38,9 +38,9 @@ the optimum. Stepping outside says otherwise.
 
 | parameter | value | joint distance |
 |---|--:|--:|
-| `k_erastin` | 1.0 | 0.2536 |
-| `k_erastin` | 2.0 | 0.2399 |
 | `k_erastin` | 3.0 | 0.2202  (prior low bound) |
+| `k_erastin` | 2.0 | 0.2399 |
+| `k_erastin` | 1.0 | 0.2536 |
 | `hill` | 6.0 | 0.2202  (prior high bound) |
 | `hill` | 8.0 | 0.2202 |
 | `hill` | 10.0 | 0.2202 |

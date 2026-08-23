@@ -215,6 +215,18 @@ def scan() -> dict:
     return out
 
 
+def _in_candidate_order(mods: dict) -> list:
+    """(modality, stats) pairs in the order `CANDIDATES` declares.
+
+    That order is radiotherapy, chemotherapy, surgery -- which is the order
+    this document's own opening sentence names them in. Rendering from dict
+    order made the page alphabetical once the artifact was round-tripped, so it
+    contradicted its own first paragraph.
+    """
+    return [(k, mods[k]) for k in CANDIDATES if k in mods] + \
+           [(k, v) for k, v in mods.items() if k not in CANDIDATES]
+
+
 def render(d: dict) -> str:
     n = d["corpus_size"]
     L = ["# What happens to a modality the taxonomy cannot name", ""]
@@ -228,7 +240,7 @@ def render(d: dict) -> str:
 
     L += ["| modality | titled about it | 5+ mentions in full text | any mention |",
           "|---|--:|--:|--:|"]
-    for m, s in d["modalities"].items():
+    for m, s in _in_candidate_order(d["modalities"]):
         L.append(f"| {m} | {s['subject_titled']:,} ({100*s['subject_titled']/n:.1f}%) "
                  f"| {s['strong_fulltext']:,} ({100*s['strong_fulltext']/n:.1f}%) "
                  f"| {s['any_fulltext']:,} ({100*s['any_fulltext']/n:.1f}%) |")
@@ -247,7 +259,7 @@ def render(d: dict) -> str:
           "so the rate only means something beside it.", ""]
     L += ["| modality | titled | carry NO tag | carry at least one tag | "
           "carry 2+ |", "|---|--:|--:|--:|--:|"]
-    for m, s in d["modalities"].items():
+    for m, s in _in_candidate_order(d["modalities"]):
         tt = s["subject_titled"]
         L.append(f"| {m} | {tt:,} | {s['subject_untagged']:,} "
                  f"({100*s['subject_untagged']/tt:.1f}%) | "
@@ -264,7 +276,7 @@ def render(d: dict) -> str:
     # THE COLUMN IS NOT WHAT ITS OLD HEADER SAID. `len(subject) - untagged` is
     # "has at least one tag"; since no lane names these three modalities, the
     # word DIFFERENT excluded nothing that could ever have been subtracted.
-    for m, s in d["modalities"].items():
+    for m, s in _in_candidate_order(d["modalities"]):
         if not s["partner_tags"]:
             continue
         top = ", ".join(f"`{k}` {v}" for k, v in s["partner_tags"][:4])
@@ -288,7 +300,7 @@ def render(d: dict) -> str:
     nc = d.get("named_control") or {}
     if nc.get("rate") is not None:
         rates = {m: 100 * s["subject_tagged_as_other"] / s["subject_titled"]
-                 for m, s in d["modalities"].items()}
+                 for m, s in _in_candidate_order(d["modalities"])}
         ncr = 100 * nc["rate"]
         L += ["### The control, and why the corpus rate was the wrong one", ""]
         L += [f"An earlier version of this page compared those rates against "
@@ -303,7 +315,7 @@ def render(d: dict) -> str:
               f"that DO have a lane: how often is a title-anchored set "
               f"recorded ENTIRELY under someone else?", ""]
         L += ["| | titled | filed entirely under others |", "|---|--:|--:|"]
-        for m, s in d["modalities"].items():
+        for m, s in _in_candidate_order(d["modalities"]):
             L.append(f"| {m} (no lane) | {s['subject_titled']:,} | "
                      f"**{s['subject_tagged_as_other']:,}** "
                      f"({rates[m]:.1f}%) |")
@@ -332,7 +344,7 @@ def render(d: dict) -> str:
     # because this re-run reads less text, and attributing that to the
     # vocabulary would be the asymmetric comparison this repo keeps making.
     gone = {}
-    for m, s in d["modalities"].items():
+    for m, s in _in_candidate_order(d["modalities"]):
         old_tags = {k for k, _v in s.get("partner_tags", [])}
         new_tags = {k for k, _v in s.get("partner_tags_current_vocabulary", [])}
         # EVERY partner that disappears, because the comparison is now
@@ -368,7 +380,7 @@ def render(d: dict) -> str:
               "`ttfields` return identical counts -- which is what makes the "
               "two above attributable.", ""]
         deltas = []
-        for m, s in d["modalities"].items():
+        for m, s in _in_candidate_order(d["modalities"]):
             a, b = s["subject_tagged_as_other"], s.get("tagged_current_vocabulary")
             if b is not None and b != a:
                 deltas.append(f"{m} {a} -> {b}")
@@ -443,7 +455,7 @@ def main():
     OUT_MD.write_text(render(_roundtrip(d)), encoding="utf-8")
     print(f"wrote {OUT_MD}")
     print(f"wrote {OUT_JSON}")
-    for m, s in d["modalities"].items():
+    for m, s in _in_candidate_order(d["modalities"]):
         print(f"  {m:14s} titled {s['subject_titled']:>4}  "
               f"of which filed under another modality "
               f"{s['subject_tagged_as_other']:>4}")

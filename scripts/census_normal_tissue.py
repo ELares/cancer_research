@@ -175,6 +175,16 @@ def assemble(d: dict) -> dict:
     return out
 
 
+def _ranked(d: dict) -> list:
+    """(key, count) pairs, count-descending.
+
+    These were built with `Counter.most_common()` and rendered from dict order,
+    so their ranking survived only until something serialised them. Sorting
+    HERE keeps the report both reproducible and correctly ranked.
+    """
+    return sorted(d.items(), key=lambda kv: (-kv[1], kv[0]))
+
+
 def render(d: dict) -> str:
     L = ["# Ferroptosis as a mechanism of normal-tissue harm\n"]
     L.append(
@@ -191,7 +201,7 @@ def render(d: dict) -> str:
         f"it is why this project has not met them.\n")
     L.append("| organ-toxicity descriptor | articles |")
     L.append("|---|--:|")
-    for k, v in d["by_descriptor"].items():
+    for k, v in _ranked(d["by_descriptor"]):
         L.append(f"| {k} | {v:,} |")
     L.append("")
     c04 = d["basis_rate"].get("C04")
@@ -222,7 +232,7 @@ def render(d: dict) -> str:
     if d["by_culprit_drug"]:
         L.append("| implicated agent | articles |")
         L.append("|---|--:|")
-        for k, v in d["by_culprit_drug"].items():
+        for k, v in _ranked(d["by_culprit_drug"]):
             L.append(f"| {k} | {v:,} |")
         L.append("")
     L.append("## Direction is adjudicated, not matched\n")
@@ -241,7 +251,7 @@ def render(d: dict) -> str:
             f"{d['sample_seed']}), and the verdicts are the measurement:\n")
         L.append("| verdict | records |")
         L.append("|---|--:|")
-        for k, v in d["verdicts"].items():
+        for k, v in _ranked(d["verdicts"]):
             L.append(f"| {k} | {v} |")
         L.append("")
         if d.get("inhibitor_named_in_sample") is not None:

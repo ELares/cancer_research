@@ -857,7 +857,12 @@ def render(r: dict, name) -> str:
               f"{n_all} spellings, {ref['reason']}"
               + (f" (top {shown} shown):" if n_all > shown else ":"), "",
               "| spelling | rows | |", "|---|--:|---|"]
-        for h, n in ref["spellings"].items():
+        # Count-descending: this is a TOP-6 table ("top 6 shown") and the
+        # sentence below names its 712-row leader, so a reader has to be able
+        # to see it as a rank. Built by `most_common(6)` and previously
+        # rendered from dict order, which serialisation alphabetises.
+        for h, n in sorted(ref["spellings"].items(),
+                           key=lambda kv: (-kv[1], kv[0])):
             flag = " refuses the rsid" if h in ref["offending"] else ""
             L.append(f"| `{h}` | {n:,} |{flag} |")
         if prot[0] and prot[1] < big[1]:

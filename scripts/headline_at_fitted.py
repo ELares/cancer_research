@@ -213,7 +213,12 @@ def _fmt(x):
 # sorts them alphabetically -- cns_bbb, poorly, well -- which reverses the
 # sequence and reported the gradient as BROKEN for `default`, the one
 # admissible set, whose kills are a textbook 12.10% > 2.60% > 1.80%.
-PENETRATION_ORDER = ("well_vascularized", "poorly_vascularized", "cns_bbb")
+# DERIVED from the constant that builds the dict, not re-typed beside it:
+# `headline_sensitivity.PENETRATION_TISSUES` determines both the keys and
+# their order, so taking it from there is order-correct by construction and
+# cannot drift. A hand-copied duplicate is the "one artifact describes
+# another" defect this repo keeps finding.
+PENETRATION_ORDER = tuple(k for k, _ in hs.PENETRATION_TISSUES)
 
 
 def _tissues_by_penetration(pen: dict) -> list:

@@ -6,8 +6,8 @@ Radiotherapy, chemotherapy and surgery have no mechanism tag in this project. Th
 
 | modality | titled about it | 5+ mentions in full text | any mention |
 |---|--:|--:|--:|
-| chemotherapy | 166 (3.4%) | 1,995 (41.3%) | 3,582 (74.2%) |
 | radiotherapy | 88 (1.8%) | 907 (18.8%) | 2,436 (50.4%) |
+| chemotherapy | 166 (3.4%) | 1,995 (41.3%) | 3,582 (74.2%) |
 | surgery | 24 (0.5%) | 547 (11.3%) | 2,155 (44.6%) |
 
 ## What the taxonomy recorded, against what it records by default
@@ -16,13 +16,13 @@ The header of this section used to read "They are not untagged. They are filed u
 
 | modality | titled | carry NO tag | carry at least one tag | carry 2+ |
 |---|--:|--:|--:|--:|
-| chemotherapy | 166 | 26 (15.7%) | **140** (84.3%) | 49 (29.5%) |
 | radiotherapy | 88 | 13 (14.8%) | **75** (85.2%) | 24 (27.3%) |
+| chemotherapy | 166 | 26 (15.7%) | **140** (84.3%) | 49 (29.5%) |
 | surgery | 24 | 7 (29.2%) | **17** (70.8%) | 5 (20.8%) |
 | **the corpus** | 4,830 | 546 (11.3%) | **4,284** (88.7%) | 1,952 (40.4%) |
 
-* **chemotherapy** is recorded as: `immunotherapy` 58, `nanoparticle` 27, `bioelectric` 22, `bispecific-antibody` 20
 * **radiotherapy** is recorded as: `immunotherapy` 45, `ttfields` 11, `nanoparticle` 7, `bispecific-antibody` 6
+* **chemotherapy** is recorded as: `immunotherapy` 58, `nanoparticle` 27, `bioelectric` 22, `bispecific-antibody` 20
 * **surgery** is recorded as: `immunotherapy` 8, `ttfields` 4, `frequency-therapy` 2, `hifu` 2
 
 The `carry 2+` column is reported and deliberately NOT argued from. An earlier version read a below-average multi-tag rate as evidence against the combination-paper reading. That inference is invalid here: a paper about radiotherapy AND a checkpoint inhibitor can carry at most ONE modality tag, because radiotherapy has no lane. The hypothesis predicts enrichment for exactly one tag, not for two, so this column cannot test it in either direction.
@@ -37,8 +37,8 @@ The event-matched control asks the same question of modalities that DO have a la
 
 | | titled | filed entirely under others |
 |---|--:|--:|
-| chemotherapy (no lane) | 166 | **140** (84.3%) |
 | radiotherapy (no lane) | 88 | **75** (85.2%) |
+| chemotherapy (no lane) | 166 | **140** (84.3%) |
 | surgery (no lane) | 24 | **17** (70.8%) |
 | **modalities WITH a lane** | 2,480 | 152 (6.1%) |
 
@@ -57,7 +57,7 @@ That matters most for the causal reading. `scripts/queries.txt` retrieves on "me
 
 Both passes run the production matcher over production text, so a disappearance can only be the vocabulary. Every other partner is untouched -- `immunotherapy` and `nanoparticle` and `ttfields` return identical counts -- which is what makes the two above attributable.
 
-Removing them moves the tagged counts: chemotherapy 140 -> 127, radiotherapy 75 -> 74 -- articles whose ONLY tag was a retired keyword.
+Removing them moves the tagged counts: radiotherapy 75 -> 74, chemotherapy 140 -> 127 -- articles whose ONLY tag was a retired keyword.
 
 An earlier version of this section published three caveat paragraphs, one in bold, saying it read title and abstract while the frozen tagging read stored full text. Both halves were false: `corpus/INDEX.jsonl` carries no abstract field, so that pass matched titles alone, and `get_searchable_text` defaults to excluding the body, so the frozen tagger never read it either. Under the broken scope this partner would have vanished under ANY vocabulary. The caveats were excusing a defect rather than describing a limit.
 

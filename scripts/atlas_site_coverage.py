@@ -367,6 +367,23 @@ def excluded_streams() -> dict:
     return out
 
 
+def _roundtrip(d: dict) -> dict:
+    """Render from what the artifact WILL contain, not from the live dict.
+
+    `OUT_JSON` is written with `sort_keys=True`, so rendering the in-memory
+    dict produces a document a `--render-only` run cannot reproduce. Both paths
+    now render the same value.
+
+    Checked rather than assumed: the committed report already matches the
+    round-tripped render, so no published ordering changes and no table here
+    turned out to depend on the declared SITES sequence. Where an order DOES
+    carry meaning it must be re-established inside the renderer -- sorting the
+    input replaces a rank with an alphabet, which flipped a published verdict
+    elsewhere in this repo.
+    """
+    return json.loads(json.dumps(d, sort_keys=True))
+
+
 def render(d: dict) -> str:
     n, a = d["census"], d["assigned"]
     sites = _pairs(d["sites"])
@@ -639,7 +656,7 @@ def main():
                 "it is what a descriptor-case mismatch looks like.")
         OUT_JSON.write_text(json.dumps(d, indent=1, sort_keys=True) + "\n",
                             encoding="utf-8")
-    OUT_MD.write_text(render(d), encoding="utf-8")
+    OUT_MD.write_text(render(_roundtrip(d)), encoding="utf-8")
     print(f"wrote {OUT_MD}")
     print(f"wrote {OUT_JSON}")
     print(f"  assignable: {d['assigned']:,} of {d['census']:,} "
