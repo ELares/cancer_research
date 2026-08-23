@@ -35,6 +35,7 @@ plots differ from the published ones, which is either figure drift or input
 drift and is worth finding out rather than committing blind.
 """
 import hashlib
+import os
 import re
 import subprocess
 import sys
@@ -520,3 +521,110 @@ def test_resolve_follows_arrays_and_indirect_references(tmp_path):
     finally:
         da.close()
         db.close()
+
+
+def _source_of(func_name: str) -> str:
+    """The source of one test function, comments included."""
+    import ast as _ast
+
+    src = Path(__file__).read_text()
+    tree = _ast.parse(src)
+    node = next(n for n in tree.body
+                if isinstance(n, _ast.FunctionDef) and n.name == func_name)
+    lines = src.splitlines()
+    return "\n".join(lines[node.lineno - 1:node.end_lineno])
+
+
+def _regen(tmp, edit=None):
+    """Run the census generator into a scratch dir, optionally with one edit."""
+    src = GEN.read_text()
+    out = tmp / ("mut" if edit else "base")
+    out.mkdir()
+    env = {**os.environ, "MPLBACKEND": "Agg", "FERRO_FIG_DIR": str(out)}
+    try:
+        if edit:
+            GEN.write_text(edit(src))
+        res = subprocess.run([sys.executable, str(GEN)], cwd=REPO,
+                             capture_output=True, text=True, env=env)
+    finally:
+        GEN.write_text(src)
+    assert GEN.read_text() == src, "the generator was not restored"
+    assert res.returncode == 0, res.stderr[-500:]
+    return out
+
+
+def test_the_stated_png_residual_is_measured_not_asserted():
+    """The docstring quotes how many PNGs a raster-only rcParam can stale.
+
+    A hand-written number beside a measured one is the defect this whole file
+    retracts, and two reviews disagreed about this particular figure (1 of 8
+    PDFs versus 2 of 8) -- which is itself the argument for deriving it. The
+    residual is recomputed here and the prose must match.
+    """
+    import tempfile
+
+    with tempfile.TemporaryDirectory() as td:
+        tmp = Path(td)
+        base = _regen(tmp)
+        mut = _regen(tmp, lambda s: s.replace('"savefig.dpi": 300',
+                                              '"savefig.dpi": 150'))
+        moved_png, moved_pdf, caught = [], [], []
+        for p in sorted(base.glob("*")):
+            q = mut / p.name
+            if p.read_bytes() == q.read_bytes():
+                continue
+            if p.suffix == ".png":
+                moved_png.append(p.stem)
+            else:
+                moved_pdf.append(p.stem)
+                if _drawing(p) != _drawing(q):
+                    caught.append(p.stem)
+        residual = len(moved_png) - len(caught)
+
+    # Restricted to the FLAGSHIP's own source, not the whole file. Searching
+    # the file let this guard be satisfied by ITS OWN DOCSTRING, which mentions
+    # "1 of 8 PDFs" while describing the disagreement -- the vacuous-assertion
+    # class, inside the test written to prevent it.
+    #
+    # Whitespace-normalised and comment markers stripped, because the claim
+    # sits in a wrapped block comment.
+    raw = _source_of("test_the_committed_census_figures_are_what_the_generator_draws")
+    doc = " ".join(raw.replace("#", " ").split())
+    assert f"moves {len(moved_png)} of 8 PNGs" in doc, (
+        f"{len(moved_png)} PNGs move; the comment says otherwise")
+    assert f"{len(moved_pdf)} of 8 PDFs" in doc, (
+        f"{len(moved_pdf)} PDFs move; the comment says otherwise")
+    assert residual > 0, "no residual, so the caveat is unnecessary"
+    words = {6: "six", 7: "seven", 8: "eight"}
+    assert f"stale {words.get(residual, residual)} committed PNGs" in doc, (
+        f"{residual} PNGs would go stale undetected; the comment says otherwise")
+
+
+def test_the_produced_set_equality_can_actually_fail():
+    """A control for the one fix that had none.
+
+    The exact produced-set assertion closed "a figure that was never
+    regenerated was never compared", and deleting it left the suite green --
+    so the hole could return silently. This is the same reasoning that gave
+    `/Annots` a control after it shipped inert.
+    """
+    import tempfile
+
+    with tempfile.TemporaryDirectory() as td:
+        out = _regen(Path(td))
+        produced = sorted(out.glob("*.pdf"))
+        assert {p.stem for p in produced} == set(_census_figures())
+        # Drop one and the comparison must no longer hold.
+        produced[0].unlink()
+        assert {p.stem for p in sorted(out.glob("*.pdf"))} != set(_census_figures()), (
+            "removing a regenerated figure leaves the set comparison "
+            "satisfied, so it cannot detect one that was never drawn")
+    # AND the flagship must actually make that comparison. Testing the idea
+    # in isolation left the flagship's own assertion deletable with the suite
+    # green -- which is the hole this control exists for.
+    body = _source_of("test_the_committed_census_figures_are_what_the_generator_draws")
+    flat = " ".join(body.split())
+    assert "== set(_census_figures())" in flat, (
+        "the flagship no longer compares its produced set to the discovered "
+        "one, so a figure that was never regenerated is never compared")
+    assert "assert True or" not in flat
