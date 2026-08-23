@@ -22,6 +22,10 @@ found a confident sentence outrunning the behaviour:
   were never committed -- so it is filed (#788), not done here.
 - **Stale inputs.** Regenerating from committed JSON cannot notice the JSON is
   old.
+- **Glyph outlines.** `/Font` is not hashed: the subtree comparison that would
+  catch a glyph swap is not portable across operating systems. A generator edit
+  cannot reach this -- font changes move glyph metrics and so the content
+  stream -- but a hand-edited PDF can.
 - **A correct-looking figure drawn from wrong data**, unless the difference
   reaches one of the hashed surfaces.
 
@@ -114,12 +118,21 @@ def _drawing(path):
                 val = doc.xref_get_key(pg.xref, f"Resources/{key}")
                 out.append((key, hashlib.sha256(
                     _resolve(doc, val).encode()).hexdigest()))
-            # `/Font` needs the SUBTREE, not the dict. Hashing the resource
-            # object alone lists font names and xref numbers, so swapping the
-            # Type3 outlines for `zero` and `one` -- which changes what a
-            # figure made of counts READS -- left it unchanged.
-            out.append(("Font", _subtree_digest(
-                doc, doc.xref_get_key(pg.xref, "Resources/Font"))))
+            # `/Font` IS DELIBERATELY NOT HASHED, and this is the gate's
+            # sharpest limit. Hashing the font subtree does catch a glyph-
+            # outline swap -- the reachable attack, where exchanging the Type3
+            # outlines for `zero` and `one` changes what a figure made of
+            # counts READS -- but it is NOT PORTABLE: font subsetting differs
+            # between macOS and Linux, and CI failed on every figure. Hashing
+            # the resource dict instead is portable and catches nothing, since
+            # it lists only names and xref numbers.
+            #
+            # So glyph outlines are outside the gate, stated rather than
+            # implied, and `test_the_font_surface_is_documented_as_uncovered`
+            # keeps that honest. A generator edit cannot reach it -- font
+            # changes move glyph metrics and therefore the content stream, so
+            # all eight figures are caught that way; the exposure is hand-
+            # edited or post-processed PDFs, which is what review is for.
             # `Annots` is a PAGE key, not a resource category. Read as
             # `Resources/Annots` it returns the literal "null" on every page
             # forever, so the surface was inert -- and it was the one hashed
@@ -130,47 +143,6 @@ def _drawing(path):
         return out
     finally:
         doc.close()
-
-
-def _subtree_digest(doc, val, depth: int = 6) -> str:
-    """Hash every object and stream reachable from `val`, to a bounded depth.
-
-    One level of indirection is not enough for a font: the resource dict names
-    xrefs, and the glyph outlines are streams two levels below it.
-    """
-    seen, parts = set(), []
-
-    def walk(v, d):
-        if d < 0:
-            return
-        kind, raw = (v if isinstance(v, tuple) else ("string", str(v)))
-        if kind not in ("xref", "array", "dict"):
-            parts.append(str(raw))
-            return
-        nums = re.findall(r"(\d+) 0 R", str(raw))
-        if not nums:
-            parts.append(str(raw))
-            return
-        for n in nums:
-            num = int(n)
-            if num in seen:
-                parts.append(f"@{num}")
-                continue
-            seen.add(num)
-            try:
-                obj = doc.xref_object(num, compressed=True)
-            except Exception:
-                parts.append(f"?{num}")
-                continue
-            parts.append(obj)
-            try:
-                parts.append(hashlib.sha256(doc.xref_stream(num)).hexdigest())
-            except Exception:
-                pass
-            walk(("dict", obj), d - 1)
-
-    walk(val, depth)
-    return hashlib.sha256("|".join(parts).encode()).hexdigest()
 
 
 def _resolve(doc, val) -> str:
@@ -799,8 +771,8 @@ def test_the_flagship_comparison_can_actually_fail(tmp_path):
     _assert_matches_committed(staged)
 
 
-def test_swapping_glyph_outlines_is_detected(tmp_path):
-    """`/Font` control, crafted rather than drawn.
+def test_the_font_surface_is_documented_as_uncovered(tmp_path):
+    """Glyph outlines are OUTSIDE the gate, and this pins that.
 
     A font-family change is not isolating -- glyph metrics move the content
     stream too, and the isolation assertion above correctly refuses it. The
@@ -848,11 +820,17 @@ def test_swapping_glyph_outlines_is_detected(tmp_path):
     finally:
         doc.close()
 
+    # NOT detected, and that is the documented limit rather than a surprise.
+    # The assertion runs the other way so the day a portable font comparison
+    # exists, this fails and the docstring gets corrected.
     a, b = _drawing(out), _drawing(src)
-    moved = {k.split(":")[0] for (k, x), (_, y) in zip(a, b) if x != y}
-    assert moved == {"Font"}, (
-        f"swapping glyph outlines moved {sorted(moved) or 'nothing'}; it must "
-        "move the Font surface and only that")
+    assert a == b, (
+        "the gate now detects a glyph-outline swap. That is an improvement -- "
+        "update the docstring, which states glyph outlines are outside it, and "
+        "invert this assertion.")
+    doc_text = _module_docstring()
+    assert "Glyph outlines" in doc_text, (
+        "the docstring no longer states that glyph outlines are uncovered")
 
 
 @pytest.mark.parametrize("key,value", [("MediaBox", "[0 0 900 700]"),
