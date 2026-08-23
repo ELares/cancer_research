@@ -2026,3 +2026,43 @@ def test_generalisation_condition_is_stated():
     md = (REPO_ROOT / "analysis" / "atlas-disambiguation.md").read_text()
     assert "does not generalise" in md.lower()
     assert "disjoint literatures" in md
+
+
+def test_landscape_derives_the_understatement_verdict_from_its_sibling():
+    """This page closed the section with a flat "the manuscript understates its
+    own case" while `census-findings.md` had already qualified it -- two
+    committed artifacts disagreeing about the same claim.
+
+    The verdict must now come from `atlas-modality-ratio.json`, so the two
+    cannot drift apart again: whichever restrictions that file publishes, this
+    page reports how many fall below the manuscript's own ratio and says the
+    direction is unfixed when any do.
+    """
+    import json as _json
+
+    md = (REPO_ROOT / "analysis" / "atlas-landscape.md").read_text()
+    src = REPO_ROOT / "analysis" / "atlas-modality-ratio.json"
+    if not src.exists():
+        pytest.skip("sibling ratio artifact absent")
+    comp = _json.loads(src.read_text()).get("landscape_composition") or {}
+    ratios = [comp.get("precise_ratio"), comp.get("landscape_own_ratio"),
+              comp.get("criterion_restored_ratio")]
+    if not all(ratios):
+        pytest.skip("restriction ratios absent")
+    flat = " ".join(md.split())
+    for v in ratios:
+        assert f"{v:.2f} : 1" in flat, (
+            f"restriction ratio {v:.2f} is not carried onto the landscape page, "
+            "so its verdict is not derived from the sibling artifact")
+    import re as _re
+    mr = _re.search(r"manuscript's own ([\d.]+):1", flat)
+    assert mr, "the manuscript's comparator ratio is not stated"
+    below = [v for v in ratios if v < float(mr.group(1))]
+    if below:
+        assert f"**{len(below)} of {len(ratios)} fall below" in flat, (
+            "restrictions fall below the manuscript's ratio and the page does "
+            "not say how many, so the reader cannot see the direction is unfixed")
+        assert "direction of the correction is not fixed by the data" in flat
+        assert "That the manuscript understates it does not" in flat
+    else:
+        assert "understatement reading holds under all of them" in flat

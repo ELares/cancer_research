@@ -93,7 +93,16 @@ So the comparator falls from 17.6:1 to 6.43:1 under that restriction, which is s
 
 After the restriction the classes are also no longer what their names suggest: pharmacological is `antibody-drug-conjugate`, `bispecific-antibody`, `car-t` and physical is `hifu`, `sonodynamic`.
 
-**A consequence this page does not resolve.** 6.43:1 is BELOW the manuscript's own 9.1:1, so under a symmetric restriction of `atlas_landscape.py`'s own sets the census does not understate the manuscript's case -- it overstates it. The claim that the manuscript understates itself by about 2x is carried in `article/drafts/v1.md`, `analysis/atlas-landscape.md`, `analysis/census-findings.md` and `CLAUDE.md`. Whether to restrict the comparator at all is a choice about what the ratio is FOR, and changing the manuscript's framing is an owner decision, so this page states the arithmetic and leaves those four sites alone.
+**A consequence this page does not resolve.** 6.43:1 is BELOW the manuscript's own 9.1:1, so under a symmetric restriction of `atlas_landscape.py`'s own sets the census does not understate the manuscript's case -- it overstates it. Whether to restrict the comparator at all is a choice about what the ratio is FOR, and changing the manuscript's framing is an owner decision, so this page states the arithmetic rather than editing anyone else's conclusion.
+
+Which sites still carry the flat claim is CHECKED rather than listed, because the hand-written list went stale: it named `article/drafts/v1.md`, which dropped the whole framing in the retire-frozen campaign.
+
+| site | still states the manuscript understates itself |
+|---|---|
+| `CLAUDE.md` | no |
+| `analysis/atlas-landscape.md` | no |
+| `analysis/census-findings.md` | no |
+| `article/drafts/v1.md` | no |
 
 ## The qualifier-axis caveat, and why its direction is not established
 

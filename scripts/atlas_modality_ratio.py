@@ -1218,18 +1218,82 @@ def _comparator_section(d, lo, hi) -> list:
           + "`, `".join(lc["precise_phys"]) + "`.", ""]
 
     if pr < MANUSCRIPT_RATIO:
+        still, cleared = _understatement_sites()
         L += [f"**A consequence this page does not resolve.** {pr:.2f}:1 is "
               f"BELOW the manuscript's own {MANUSCRIPT_RATIO}:1, so under a "
               f"symmetric restriction of `atlas_landscape.py`'s own sets the "
               f"census does not understate the manuscript's case -- it "
-              f"overstates it. The claim that the manuscript understates "
-              f"itself by about 2x is carried in `article/drafts/v1.md`, "
-              f"`analysis/atlas-landscape.md`, `analysis/census-findings.md` "
-              f"and `CLAUDE.md`. Whether to restrict the comparator at all is "
-              f"a choice about what the ratio is FOR, and changing the "
+              f"overstates it. Whether to restrict the comparator at all is a "
+              f"choice about what the ratio is FOR, and changing the "
               f"manuscript's framing is an owner decision, so this page states "
-              f"the arithmetic and leaves those four sites alone.", ""]
+              f"the arithmetic rather than editing anyone else's conclusion.",
+              ""]
+        L += ["Which sites still carry the flat claim is CHECKED rather than "
+              "listed, because the hand-written list went stale: it named "
+              "`article/drafts/v1.md`, which dropped the whole framing in the "
+              "retire-frozen campaign.", ""]
+        L += ["| site | still states the manuscript understates itself |",
+              "|---|---|"]
+        for site in sorted(still) + sorted(cleared):
+            L.append(f"| `{site}` | {'**yes**' if site in still else 'no'} |")
+        L.append("")
     return L
+
+
+# Sites that have at some point carried the flat "the manuscript understates
+# its own case by ~2x" reading. Membership is historical; whether each still
+# says it is measured, not remembered.
+UNDERSTATEMENT_SITES = (
+    "article/drafts/v1.md",
+    "analysis/atlas-landscape.md",
+    "analysis/census-findings.md",
+    "CLAUDE.md",
+)
+# THE PHRASE, and it appears in two opposite roles. A page can ASSERT the
+# reading, or it can QUOTE it in order to withdraw it -- and this repo now does
+# both, in the same file. A classifier that tries to tell those apart from the
+# wording is the failure this project has already recorded twice: one
+# direction's phrasing CONTAINS the other's, so `"manuscript understates its
+# own case" is WITHDRAWN` matches any pattern that matches the claim itself.
+#
+# So nothing is inferred. An occurrence is ACCEPTABLE when a qualifier appears
+# close to it, and a site is flagged only when some occurrence has none. That
+# fails safe: a new unqualified assertion is flagged, and the fix is to qualify
+# it rather than to add an exemption.
+_FLAT = re.compile(
+    r"manuscript\s+(?:now\s+)?understates\s+(?:its\s+own\s+case|itself)",
+    re.I)
+# Tokens that mark an occurrence as discussed rather than asserted.
+_QUALIFIERS = ("withdraw", "inverts", "depends on the restriction",
+               "not unconditional", "as unconditional", "below the manuscript",
+               "does not follow", "no longer")
+# Characters of context on each side. Wide enough to catch a qualifier in the
+# same sentence, narrow enough that an unrelated one two paragraphs away
+# cannot launder an assertion.
+_WINDOW = 260
+
+
+def _understatement_sites() -> tuple:
+    """Which of the historical sites still make the flat claim.
+
+    Returns (still_claiming, cleared). A missing file counts as cleared: it
+    cannot be asserting anything.
+    """
+    still, cleared = [], []
+    for site in UNDERSTATEMENT_SITES:
+        f = PROJECT_ROOT / site
+        text = f.read_text(encoding="utf-8") if f.exists() else ""
+        flat = " ".join(text.split())
+        bare = [m for m in _FLAT.finditer(flat)
+                if not _is_qualified(flat, m.start(), m.end())]
+        (still if bare else cleared).append(site)
+    return still, cleared
+
+
+def _is_qualified(text: str, start: int, end: int) -> bool:
+    """Does a qualifier sit near this occurrence?"""
+    window = text[max(0, start - _WINDOW):end + _WINDOW].lower()
+    return any(q in window for q in _QUALIFIERS)
 
 
 def _qualifier_section(d) -> list:
