@@ -142,3 +142,50 @@ def test_the_layer_freeze_target_is_reported_as_unnamed(d):
                                                   "tumour", "malignan")), (
             f"CTRPv2 curves carry a {col!r} column, so the report's claim that "
             "they hold no normal-tissue annotation is stale")
+
+
+def test_the_manuscript_states_the_selectivity_assumption_as_one(d):
+    """Section 8.4 now names the premise the model cannot check."""
+    txt = " ".join((REPO / "article/drafts/v1.md").read_text().split())
+    assert "nowhere argued because it is nowhere stated" in txt
+    assert f"{d['organ_toxicity_articles']:,} of the {d['ferroptosis_articles']:,}" in txt
+    # It must keep the CAF correction, which is the part most easily lost: the
+    # Stromal phenotype reads like a normal-tissue compartment and is not one.
+    assert "tumour-resident and parameterised for shielding" in txt
+    assert "not a therapeutic index" in txt
+    # And it must not over-read the literature it now cites.
+    assert "does not refute the premise" in txt
+    assert "quantitative question about therapeutic window" in txt
+
+
+def test_the_no_normal_tissue_column_claim_is_still_true():
+    """A handwritten claim ABOUT the document, so it needs checking.
+
+    Section 8.4 asserts that no Chapter 5-7 results table carries a
+    normal-tissue column and no preregistered prediction is scored on one. Both are the kind
+    of sentence that silently goes false the moment somebody adds the column --
+    which is the point at which the paragraph should be rewritten rather than
+    left standing.
+    """
+    import re
+
+    md = (REPO / "article/drafts/v1.md").read_text()
+    start = md.index("## Chapter 5")
+    end = md.index("## Chapter 8")
+    body = md[start:end]
+    # Table header rows only: "| A | B | C |"
+    headers = [ln for ln in body.splitlines()
+               if ln.strip().startswith("|") and "---" not in ln]
+    bad = re.compile(
+        r"\bnormal (tissue|cell)|\bhealthy\b|\btherapeutic index\b|\bstromal\b",
+        re.I)
+    hits = [h for h in headers if bad.search(h)]
+    assert not hits, (
+        "a Chapter 5-7 table now carries a normal-tissue column, so Section "
+        f"8.4's claim that none does is false: {hits[:2]}")
+    prereg = (REPO / "PREREGISTRATION.md").read_text()
+    part1 = prereg[prereg.index("## Part 1"):]
+    part1 = part1[:part1.index("## Part 2")] if "## Part 2" in part1 else part1
+    assert not bad.search(part1), (
+        "a preregistered prediction now scores on normal tissue, so Section "
+        "8.4's claim is stale")
