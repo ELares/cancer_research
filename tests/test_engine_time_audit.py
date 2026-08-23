@@ -376,10 +376,18 @@ def test_it_does_not_choose_or_reconcile_a_step_duration():
 
     tree = _ast.parse(src)
     WRITE_ATTRS = {"write_text", "write_bytes", "mkdir", "unlink", "rmdir",
-                   "rename", "replace", "touch", "chmod", "symlink_to"}
+                   "rename", "replace", "touch", "chmod", "symlink_to",
+                   "hardlink_to", "rmtree"}
+    # A reviewer walked five vectors past the first version of this set --
+    # `shutil.copy`, `shutil.move`, `os.open` + `os.write`, `os.link`, and an
+    # ALIASED `w = path.write_text; w(...)`. The comment above it claimed no
+    # filesystem-mutating helper was "reachable at all", which was an
+    # unmeasured sentence in a guard file.
     BANNED_CALLS = {"system", "popen", "remove", "rmtree", "removedirs",
                     "unlink", "rename", "replace", "run", "call",
-                    "check_call", "check_output", "Popen"}
+                    "check_call", "check_output", "Popen", "copy", "copy2",
+                    "copyfile", "move", "link", "symlink", "write",
+                    "makedirs", "mknod", "truncate", "chmod"}
     for node in _ast.walk(tree):
         if not isinstance(node, _ast.Call):
             continue
@@ -405,6 +413,20 @@ def test_it_does_not_choose_or_reconcile_a_step_duration():
             raise AssertionError(
                 f"the audit calls {attr or name}(), which can mutate the tree "
                 "outside its declared outputs")
+    # And a write method may not be captured as a VALUE either: binding
+    # `w = (SRC / "x.rs").write_text` and calling `w(...)` later is a call the
+    # walk above never sees as an attribute access on OUT_MD/OUT_JSON.
+    for node in _ast.walk(tree):
+        if isinstance(node, _ast.Attribute) and node.attr in WRITE_ATTRS:
+            parent_is_call = any(
+                isinstance(c, _ast.Call) and c.func is node
+                for c in _ast.walk(tree))
+            if not parent_is_call:
+                target = getattr(node.value, "id", "")
+                assert target in ("OUT_MD", "OUT_JSON"), (
+                    f"the audit captures {target or '<expr>'}.{node.attr} as a "
+                    "value, which sidesteps the call check")
+
 
 
 def test_the_false_absence_claim_cannot_return():
