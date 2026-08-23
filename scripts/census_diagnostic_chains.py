@@ -117,6 +117,38 @@ def scan_corpus_without_annotations() -> dict:
     }
 
 
+def _split_stored(d: dict) -> tuple:
+    """Recover the two scan products from the merged artifact.
+
+    `--render-only` must RE-ASSEMBLE from the stored raw counts rather than
+    re-render the stored derived fields, or every guard reading a derived
+    field is comparing the artifact to itself and cannot fail. This generator
+    used to load the assembled JSON and render it directly, so the row
+    ORDERING, the annotation-channel cost and both zero-chain lists were
+    re-emitted rather than recomputed.
+
+    The raw per-chain counts survive inside `rows`, so nothing extra needs
+    storing: this puts them back into the shapes `assemble` reads.
+    """
+    cen = {
+        "records": d["census_records"],
+        "shards": d["census_shards"],
+        "with_abstract": d["census_with_abstract"],
+        "matched": d["census_matched"],
+        "per_chain": {r["chain"]: r["census"] for r in d["rows"]},
+    }
+    cor = {
+        "records": d["corpus_records"],
+        "matched_production_text": d["corpus_matched_production_text"],
+        "matched_without_annotations": d["corpus_matched_without_annotations"],
+        "per_chain_production_text":
+            {r["chain"]: r["corpus_production_text"] for r in d["rows"]},
+        "per_chain_without_annotations":
+            {r["chain"]: r["corpus_without_annotations"] for r in d["rows"]},
+    }
+    return cen, cor
+
+
 def assemble(cen: dict, cor: dict) -> dict:
     from config import DIAGNOSTIC_THERAPY_ORDER
 
@@ -262,7 +294,7 @@ def main() -> int:
     ap.add_argument("--render-only", action="store_true")
     a = ap.parse_args()
     if a.render_only:
-        d = json.loads(OUT_JSON.read_text())
+        d = assemble(*_split_stored(json.loads(OUT_JSON.read_text())))
     else:
         cor = scan_corpus_without_annotations()
         print(f"corpus: {cor['matched_production_text']} production / "
