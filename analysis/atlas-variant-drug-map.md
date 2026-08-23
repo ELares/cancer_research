@@ -101,12 +101,12 @@ The largest of them shows what it cost. rs1801131 on MTHFR carries 744 rows acro
 
 | spelling | rows | |
 |---|--:|---|
-| `c.1298A>C` | 712 | refuses the rsid |
-| `p.E429A` | 17 | |
 | `c.-1298A>C` | 3 | refuses the rsid |
 | `c.1286A>C` | 3 | refuses the rsid |
+| `c.1298A>C` | 712 | refuses the rsid |
 | `c.1298A>T` | 3 | refuses the rsid |
 | `c.1298C>T` | 2 | refuses the rsid |
+| `p.E429A` | 17 | |
 
 There is exactly one protein spelling, `p.E429A` at 17 rows, so the old rule saw no disagreement among protein forms and captured all 744 rows onto it, including the 712-row `c.1298A>C`.
 
@@ -207,46 +207,46 @@ pair is *written about*, and `associate` does not say which direction.
 
 | drug | gene | variant | papers | predicates (assertions) |
 |---|---|---|--:|---|
-| osimertinib | EGFR | `p.T790M` | 808 | `inhibit` 713, `associate` 93, `stimulate` 8, `interact` 3 |
-| Vemurafenib | BRAF | `p.V600E` | 579 | `inhibit` 553, `associate` 29, `stimulate` 2 |
-| dabrafenib | BRAF | `p.V600E` | 451 | `inhibit` 446, `associate` 7, `interact` 1 |
-| trametinib | BRAF | `p.V600E` | 316 | `inhibit` 316, `associate` 2 |
-| sotorasib | KRAS | `p.G12C` | 225 | `inhibit` 219, `associate` 8, `stimulate` 1, `interact` 1 |
-| osimertinib | EGFR | `p.L858R` | 206 | `inhibit` 178, `associate` 31, `interact` 1, `stimulate` 1 |
-| Gefitinib | EGFR | `p.L858R` | 166 | `inhibit` 140, `associate` 29 |
-| Gefitinib | EGFR | `p.T790M` | 154 | `inhibit` 97, `stimulate` 34, `associate` 23 |
-| osimertinib | EGFR | `p.C797S` | 129 | `inhibit` 64, `stimulate` 42, `associate` 24 |
-| Imatinib Mesylate | ABL1 | `p.T315I` | 128 | `inhibit` 96, `associate` 32 |
-| encorafenib | BRAF | `p.V600E` | 121 | `inhibit` 122, `associate` 1 |
-| Afatinib | EGFR | `p.T790M` | 111 | `inhibit` 74, `stimulate` 20, `associate` 17 |
-| adagrasib | KRAS | `p.G12C` | 110 | `inhibit` 110, `associate` 3 |
-| ponatinib | ABL1 | `p.T315I` | 105 | `inhibit` 94, `associate` 10, `stimulate` 1 |
-| Erlotinib Hydrochloride | EGFR | `p.T790M` | 96 | `inhibit` 52, `stimulate` 26, `associate` 18 |
+| osimertinib | EGFR | `p.T790M` | 808 | `associate` 93, `inhibit` 713, `interact` 3, `stimulate` 8 |
+| Vemurafenib | BRAF | `p.V600E` | 579 | `associate` 29, `inhibit` 553, `stimulate` 2 |
+| dabrafenib | BRAF | `p.V600E` | 451 | `associate` 7, `inhibit` 446, `interact` 1 |
+| trametinib | BRAF | `p.V600E` | 316 | `associate` 2, `inhibit` 316 |
+| sotorasib | KRAS | `p.G12C` | 225 | `associate` 8, `inhibit` 219, `interact` 1, `stimulate` 1 |
+| osimertinib | EGFR | `p.L858R` | 206 | `associate` 31, `inhibit` 178, `interact` 1, `stimulate` 1 |
+| Gefitinib | EGFR | `p.L858R` | 166 | `associate` 29, `inhibit` 140 |
+| Gefitinib | EGFR | `p.T790M` | 154 | `associate` 23, `inhibit` 97, `stimulate` 34 |
+| osimertinib | EGFR | `p.C797S` | 129 | `associate` 24, `inhibit` 64, `stimulate` 42 |
+| Imatinib Mesylate | ABL1 | `p.T315I` | 128 | `associate` 32, `inhibit` 96 |
+| encorafenib | BRAF | `p.V600E` | 121 | `associate` 1, `inhibit` 122 |
+| Afatinib | EGFR | `p.T790M` | 111 | `associate` 17, `inhibit` 74, `stimulate` 20 |
+| adagrasib | KRAS | `p.G12C` | 110 | `associate` 3, `inhibit` 110 |
+| ponatinib | ABL1 | `p.T315I` | 105 | `associate` 10, `inhibit` 94, `stimulate` 1 |
+| Erlotinib Hydrochloride | EGFR | `p.T790M` | 96 | `associate` 18, `inhibit` 52, `stimulate` 26 |
 | Folic Acid | MTHFR | `c.677C>T` | 96 | `associate` 97, `inhibit` 4 |
-| Erlotinib Hydrochloride | EGFR | `p.L858R` | 93 | `inhibit` 85, `associate` 7, `stimulate` 3 |
-| Cetuximab | BRAF | `p.V600E` | 86 | `inhibit` 70, `associate` 17 |
-| binimetinib | BRAF | `p.V600E` | 66 | `inhibit` 63, `associate` 2, `stimulate` 1 |
-| Afatinib | EGFR | `p.L858R` | 61 | `inhibit` 51, `associate` 11 |
-| PLX 4720 | BRAF | `p.V600E` | 58 | `inhibit` 57, `associate` 1, `interact` 1 |
-| Methotrexate | MTHFR | `c.677C>T` | 52 | `associate` 36, `stimulate` 14, `inhibit` 3 |
-| rociletinib | EGFR | `p.T790M` | 50 | `inhibit` 46, `associate` 5 |
-| ruxolitinib | JAK2 | `p.V617F` | 48 | `inhibit` 44, `associate` 6 |
-| alpha-hydroxyglutarate | IDH1 | `p.R132H` | 47 | `associate` 39, `stimulate` 7, `inhibit` 1 |
-| Dasatinib | ABL1 | `p.T315I` | 43 | `inhibit` 27, `stimulate` 10, `associate` 6 |
-| avapritinib | KIT | `p.D816V` | 42 | `inhibit` 40, `associate` 3 |
-| Vemurafenib | BRAF | `rs113488022` | 41 | `inhibit` 38, `associate` 4 |
-| avapritinib | PDGFRA | `p.D842V` | 40 | `inhibit` 38, `associate` 3 |
-| Imatinib Mesylate | KIT | `p.D816V` | 38 | `inhibit` 31, `associate` 7 |
-| Crizotinib | ALK | `p.L1196M` | 37 | `inhibit` 28, `associate` 8, `stimulate` 7 |
+| Erlotinib Hydrochloride | EGFR | `p.L858R` | 93 | `associate` 7, `inhibit` 85, `stimulate` 3 |
+| Cetuximab | BRAF | `p.V600E` | 86 | `associate` 17, `inhibit` 70 |
+| binimetinib | BRAF | `p.V600E` | 66 | `associate` 2, `inhibit` 63, `stimulate` 1 |
+| Afatinib | EGFR | `p.L858R` | 61 | `associate` 11, `inhibit` 51 |
+| PLX 4720 | BRAF | `p.V600E` | 58 | `associate` 1, `inhibit` 57, `interact` 1 |
+| Methotrexate | MTHFR | `c.677C>T` | 52 | `associate` 36, `inhibit` 3, `stimulate` 14 |
+| rociletinib | EGFR | `p.T790M` | 50 | `associate` 5, `inhibit` 46 |
+| ruxolitinib | JAK2 | `p.V617F` | 48 | `associate` 6, `inhibit` 44 |
+| alpha-hydroxyglutarate | IDH1 | `p.R132H` | 47 | `associate` 39, `inhibit` 1, `stimulate` 7 |
+| Dasatinib | ABL1 | `p.T315I` | 43 | `associate` 6, `inhibit` 27, `stimulate` 10 |
+| avapritinib | KIT | `p.D816V` | 42 | `associate` 3, `inhibit` 40 |
+| Vemurafenib | BRAF | `rs113488022` | 41 | `associate` 4, `inhibit` 38 |
+| avapritinib | PDGFRA | `p.D842V` | 40 | `associate` 3, `inhibit` 38 |
+| Imatinib Mesylate | KIT | `p.D816V` | 38 | `associate` 7, `inhibit` 31 |
+| Crizotinib | ALK | `p.L1196M` | 37 | `associate` 8, `inhibit` 28, `stimulate` 7 |
 | dabrafenib | BRAF | `rs113488022` | 34 | `inhibit` 35 |
-| nilotinib | ABL1 | `p.T315I` | 33 | `inhibit` 27, `stimulate` 5, `associate` 1 |
-| KRASG12D inhibitor MRTX1133 | KRAS | `p.G12D` | 31 | `inhibit` 33, `associate` 1 |
-| Hydroxyurea | JAK2 | `p.V617F` | 31 | `inhibit` 24, `associate` 7, `stimulate` 1 |
+| nilotinib | ABL1 | `p.T315I` | 33 | `associate` 1, `inhibit` 27, `stimulate` 5 |
+| KRASG12D inhibitor MRTX1133 | KRAS | `p.G12D` | 31 | `associate` 1, `inhibit` 33 |
+| Hydroxyurea | JAK2 | `p.V617F` | 31 | `associate` 7, `inhibit` 24, `stimulate` 1 |
 | aumolertinib | EGFR | `p.T790M` | 30 | `inhibit` 28, `stimulate` 2 |
 | dabrafenib | BRAF | `p.V600K` | 30 | `inhibit` 30 |
 | Folic Acid | MTHFR | `c.1298A>C` | 30 | `associate` 31 |
 | Iodine-131 | BRAF | `p.V600E` | 29 | `associate` 21, `inhibit` 4, `stimulate` 4 |
-| Sorafenib | BRAF | `p.V600E` | 29 | `inhibit` 26, `associate` 3 |
+| Sorafenib | BRAF | `p.V600E` | 29 | `associate` 3, `inhibit` 26 |
 
 ## What this cannot say
 

@@ -1486,7 +1486,12 @@ def main():
     ap.add_argument("--render-only", action="store_true")
     args = ap.parse_args()
     if args.render_only:
-        d = assemble(*_split_stored(json.loads(OUT_JSON.read_text())))
+        # Round-trip before rendering, matching the scan path four lines
+        # below: `assemble` emits tuples that JSON normalises to lists, and
+        # rendering the raw dict would let --render-only and a full run drift.
+        d = json.loads(json.dumps(
+            assemble(*_split_stored(json.loads(OUT_JSON.read_text()))),
+            sort_keys=True))
     else:
         d = scan(load_partitions())
         if not d["partitions"] or all(v["phys"] == 0 for v in d["partitions"].values()):

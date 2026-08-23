@@ -415,6 +415,18 @@ def render(d: dict) -> str:
     return "\n".join(L) + "\n"
 
 
+def _roundtrip(d: dict) -> dict:
+    """Render from what the artifact WILL contain, not from the live dict.
+
+    The JSON is written with `sort_keys=True`, so a dict rendered in insertion
+    order produces a document that can never be reproduced from its own
+    artifact -- the row ordering differs. This repo has fixed that defect twice
+    before under other names; rendering the round-tripped value is what keeps
+    `--render-only` and the full run agreeing.
+    """
+    return json.loads(json.dumps(d, sort_keys=True))
+
+
 def main():
     d = scan()
     if not d["modalities"] or all(v["subject_titled"] == 0
@@ -424,7 +436,7 @@ def main():
             "it is what a broken index path or pattern looks like.")
     OUT_JSON.write_text(json.dumps(d, indent=1, sort_keys=True) + "\n",
                         encoding="utf-8")
-    OUT_MD.write_text(render(d), encoding="utf-8")
+    OUT_MD.write_text(render(_roundtrip(d)), encoding="utf-8")
     print(f"wrote {OUT_MD}")
     print(f"wrote {OUT_JSON}")
     for m, s in d["modalities"].items():

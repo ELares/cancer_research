@@ -81,6 +81,18 @@ def _abc():
     return m
 
 
+def _roundtrip(d: dict) -> dict:
+    """Render from what the artifact WILL contain, not from the live dict.
+
+    The JSON is written with `sort_keys=True`, so a dict rendered in insertion
+    order produces a document that can never be reproduced from its own
+    artifact -- the row ordering differs. This repo has fixed that defect twice
+    before under other names; rendering the round-tripped value is what keeps
+    `--render-only` and the full run agreeing.
+    """
+    return json.loads(json.dumps(d, sort_keys=True))
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--draws", type=int, default=300)
@@ -144,7 +156,7 @@ def main() -> int:
         },
     }
     OUT_JSON.write_text(json.dumps(res, indent=2, sort_keys=True) + "\n")
-    OUT_MD.write_text(render(res), encoding="utf-8")
+    OUT_MD.write_text(render(_roundtrip(res)), encoding="utf-8")
     print(f"wrote {OUT_MD}\nwrote {OUT_JSON}")
     print(f"  committed {res['committed_distance']}  median "
           f"{res['posterior_median_distance']}  eps {eps}")

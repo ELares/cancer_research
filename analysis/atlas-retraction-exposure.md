@@ -14,10 +14,10 @@ read.
 | | count |
 |---|--:|
 | cancer census records | 4,403,994 |
-| `Retracted Publication` | 7,900 |
-| `Published Erratum` | 222 |
 | `Corrected and Republished Article` | 176 |
 | `Expression of Concern` | 172 |
+| `Published Erratum` | 222 |
+| `Retracted Publication` | 7,900 |
 | `Retraction Notice` | 49 |
 
 Only `Retracted Publication` is treated as tainted below. A retraction
@@ -75,16 +75,16 @@ for that pair has been withdrawn, and a consumer should be told.
 | predicate | tainted rows | all rows | share |
 |---|--:|--:|--:|
 | `associate` | 24,568 | 5,463,501 | 0.450% |
-| `positive_correlate` | 5,924 | 729,407 | 0.812% |
-| `negative_correlate` | 5,658 | 862,619 | 0.656% |
-| `treat` | 4,099 | 2,061,429 | 0.199% |
-| `inhibit` | 1,682 | 226,661 | 0.742% |
-| `stimulate` | 1,302 | 231,588 | 0.562% |
 | `cause` | 852 | 749,648 | 0.114% |
-| `cotreat` | 286 | 227,648 | 0.126% |
-| `interact` | 229 | 63,665 | 0.360% |
 | `compare` | 100 | 72,660 | 0.138% |
+| `cotreat` | 286 | 227,648 | 0.126% |
+| `inhibit` | 1,682 | 226,661 | 0.742% |
+| `interact` | 229 | 63,665 | 0.360% |
+| `negative_correlate` | 5,658 | 862,619 | 0.656% |
+| `positive_correlate` | 5,924 | 729,407 | 0.812% |
 | `prevent` | 27 | 11,394 | 0.237% |
+| `stimulate` | 1,302 | 231,588 | 0.562% |
+| `treat` | 4,099 | 2,061,429 | 0.199% |
 
 The rate is not uniform: `positive_correlate` carries 0.812% against
 0.450% for `associate`, the graph's bulk predicate — a factor of

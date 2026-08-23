@@ -138,6 +138,25 @@ def _sibling_single_paper_share():
     return 100.0 * single / pairs
 
 
+def make_namer(lab: dict | None = None):
+    """identifier -> display name, as a reusable factory.
+
+    Hoisted out of `main` so the report can be re-rendered from its committed
+    artifact: `render` needs this resolver, and while it was a closure the
+    document could not be reproduced without re-running the whole scan, which
+    put the generator outside every freshness check.
+    """
+    lab = load_labels() if lab is None else lab
+
+    def name(ident, prefix=""):
+        n = lab.get(ident)
+        if n is None:
+            return f"{prefix}{ident}" if ident else "?"
+        return n[len(OBSOLETE):] if n.startswith(OBSOLETE) else n
+
+    return name
+
+
 def load_labels() -> dict:
     """identifier -> primary authority name (first field before the pipe)."""
     lab = {}
@@ -498,6 +517,15 @@ def build_pairs(path: Path, canonicalize):
     return pairs, genes, gene_occurrences, chem_variant
 
 
+def _roundtrip(d: dict) -> dict:
+    """Render from what the artifact WILL contain, not from the live dict.
+
+    The JSON is written with `sort_keys=True`, so rendering the in-memory dict
+    produces a document that cannot be reproduced from its own artifact.
+    """
+    return json.loads(json.dumps(d, sort_keys=True))
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--gene", default=None,
@@ -581,11 +609,7 @@ def main() -> int:
                         and f.get("HGVS") in want:
                     feat_disease[f["HGVS"]][io_] += 1
 
-    def name(ident, prefix=""):
-        n = lab.get(ident)
-        if n is None:
-            return f"{prefix}{ident}" if ident else "?"
-        return n[len(OBSOLETE):] if n.startswith(OBSOLETE) else n
+    name = make_namer(lab)
 
     table = []
     for (chem, gene, var), v in pairs.items():
@@ -674,7 +698,7 @@ def main() -> int:
         "min_papers": args.min_papers,
     }
     OUT_JSON.write_text(json.dumps(res, indent=2, sort_keys=True) + "\n")
-    OUT_MD.write_text(render(res, name), encoding="utf-8")
+    OUT_MD.write_text(render(_roundtrip(res), name), encoding="utf-8")
     print(f"wrote {OUT_MD}\nwrote {OUT_JSON}\nwrote {OUT_TSV}")
     print(f"  {chem_variant:,} chemical-variant rows -> {len(table):,} pairs")
     print(f"  rsid: {counts['rs_filled']:,} rows given an HGVS, "

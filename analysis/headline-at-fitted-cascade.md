@@ -111,11 +111,11 @@ of 50.
 
 | tissue | `default` | `ctrpv2_point` | `posterior_median` |
 |---|--:|--:|--:|
-| well_vascularized | 12.10% | 100.00% | 100.00% |
-| poorly_vascularized | 2.60% | 100.00% | 100.00% |
 | cns_bbb | 1.80% | 100.00% | 100.00% |
+| poorly_vascularized | 2.60% | 100.00% | 100.00% |
+| well_vascularized | 12.10% | 100.00% | 100.00% |
 
-*Not a verdict on the headline.* The ordering is preserved in 3 of 3 sets, but at the fitted sets every tissue saturates at 100%, so the ordering is trivially preserved and says nothing — but `ctrpv2_point`, `posterior_median` are inadmissible above, so this row reports arithmetic in a degenerate regime rather than a direction that held or failed.
+*Not a verdict on the headline.* The ordering is preserved in 2 of 3 sets, but at the fitted sets every tissue saturates at 100%, so the ordering is trivially preserved and says nothing — but `ctrpv2_point`, `posterior_median` are inadmissible above, so this row reports arithmetic in a degenerate regime rather than a direction that held or failed.
 
 ## What this does not license
 

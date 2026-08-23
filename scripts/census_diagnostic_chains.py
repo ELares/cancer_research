@@ -302,8 +302,8 @@ def main() -> int:
         cen = scan_census(a.stride)
         print(f"census: {cen['matched']:,} of {cen['records']:,}")
         d = assemble(cen, cor)
-        OUT_JSON.write_text(json.dumps(d, indent=1) + "\n")
-    OUT_MD.write_text(render(d))
+        OUT_JSON.write_text(json.dumps(d, indent=1) + "\n", encoding="utf-8")
+    OUT_MD.write_text(render(d), encoding="utf-8")
     print(f"wrote {OUT_MD}")
     return 0
 

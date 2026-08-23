@@ -27,13 +27,30 @@ derived fields (else guards are inert)", and two generators violate it: they
 load the already-assembled JSON and render it. Every guard reading a derived
 field of those two is comparing the artifact to itself.
 
-WHAT IT CANNOT CHECK, and the limit is the whole reason the census is scanned
-on a schedule rather than per-PR: whether the JSON is stale with respect to
-the CENSUS. Re-assembling from stored counts cannot notice that the counts
-themselves are old. That needs a full re-scan, which takes minutes per
-generator over 1,334 shards. So this gate covers renderer and prose drift --
-the drift that actually happens when somebody edits a docstring -- and says so
-rather than implying more.
+WHAT IT CANNOT CHECK, stated at full width because an adversarial review
+found the first version of this paragraph understated it.
+
+The obvious limit is census staleness: re-assembling from stored counts cannot
+notice the counts are old, and a full re-scan is minutes per generator over
+1,334 shards. But the real limit is broader. **This gate cannot detect any
+wrong value that re-assembly reproduces**, and that includes every RAW COUNT
+in every artifact -- which is most of their numeric content. Corrupt a stored
+scan total and re-assembly propagates the corruption consistently into the
+derived fields and the prose, and both checks pass.
+
+What it does catch, precisely: an artifact that no longer matches the code
+that produces it. A renderer edited without regenerating, a `.md` hand-edited,
+a `.json` whose format drifted, a derived field that stopped being recomputed.
+That is renderer and prose drift -- the drift that actually happens when
+somebody edits a docstring -- and it is genuinely less than "the artifacts are
+correct".
+
+A quantitative version of this limit was attempted and withdrawn: measuring
+the fraction of perturbed values that re-assembly restores conflates a raw
+count, which SHOULD move the output, with a derived field that is merely
+copied through. Two attempts got the polarity wrong in opposite directions, so
+the honest deliverable is the scoped claim above rather than a third guess at
+a metric.
 """
 import ast
 import importlib
@@ -51,52 +68,102 @@ sys.path.insert(0, str(SCRIPTS))
 # reason. This list is checked for staleness by a test below: an entry that no
 # longer names a real generator fails, so it cannot quietly become a dumping
 # ground.
-EXEMPT = {
-    "atlas_thesis_position": "has no render() -- it prints and writes inline",
-    "atlas_ambiguity": "writes no OUT_MD/OUT_JSON pair at module level",
+# Generators that own an artifact pair but have no top-level `render()`, so
+# there is nothing to re-render in process. Each entry is checked below: an
+# entry naming a script that has since grown a `render()` fails, so the list
+# cannot quietly become a dumping ground.
+#
+# These are the calibration and posterior scripts, which build their report
+# inline while writing. Gating them would mean refactoring each to expose a
+# pure renderer -- worth doing, and deliberately not folded into the PR that
+# introduces the gate.
+NO_RENDERER = {
+    "abc_joint_posterior", "abc_posterior", "calibrate_erastin",
+    "calibrate_kill_switch", "calibrate_pk", "embed_evidence_leg",
+    "identifiability_report", "rare_event_analysis", "validate_penetration",
+    "validate_rd_vs_biofvm", "validate_spheroid_kill",
+    "validate_spheroid_structure", "validate_trigger_wave",
 }
+EXEMPT: dict = {}
 
 
 def _generators():
-    """Every script exposing the --render-only contract, found by parsing."""
+    """Every script OWNING a committed artifact pair, found by parsing.
+
+    Keyed on the interface, not on a filename. The first version globbed
+    `census_*` and `atlas_*` and filtered on the substring "render-only", which
+    missed FOURTEEN generators with the identical interface -- including
+    `scope_audit` and `engine_time_audit`, the two this file's docstring cites
+    as the motivating defects, and five that carry `--render-only` and were
+    excluded purely by filename. A gate advertised as the general one was not
+    general over either of the cases that motivated it.
+    """
     out = []
-    for f in sorted(list(SCRIPTS.glob("census_*.py"))
-                    + list(SCRIPTS.glob("atlas_*.py"))):
-        src = f.read_text(encoding="utf-8")
-        if "render-only" not in src:
+    for f in sorted(SCRIPTS.glob("*.py")):
+        try:
+            tree = ast.parse(f.read_text(encoding="utf-8"))
+        except SyntaxError:
             continue
-        tree = ast.parse(src)
         fns = {n.name for n in tree.body if isinstance(n, ast.FunctionDef)}
         consts = {t.id for n in tree.body if isinstance(n, ast.Assign)
                   for t in n.targets if isinstance(t, ast.Name)}
-        out.append((f.stem, "render" in fns, "assemble" in fns,
-                    "OUT_MD" in consts and "OUT_JSON" in consts))
+        if not ("OUT_MD" in consts and "OUT_JSON" in consts):
+            continue
+        out.append((f.stem, "render" in fns, "assemble" in fns, True))
     return out
 
 
 GENERATORS = _generators()
-LIVE = [g[0] for g in GENERATORS if g[1] and g[3] and g[0] not in EXEMPT]
+LIVE = [g[0] for g in GENERATORS if g[1] and g[0] not in EXEMPT]
+# Pinned EXACTLY, not as a floor. A floor with slack lets a generator drop out
+# of the gate silently: at `>= 25` against 26, deleting the marker from one
+# script left the suite green with two parametrised cases quietly gone.
+EXPECTED_GENERATORS = 51
 
 
 def test_the_generator_list_is_discovered_not_listed():
-    """A hand-maintained list goes stale, which is this file's whole subject."""
-    assert len(GENERATORS) >= 25, (
-        f"only {len(GENERATORS)} generators discovered; the parse rule has "
-        "probably stopped matching")
-    assert len(LIVE) >= 23
+    """A hand-maintained list goes stale, which is this file's whole subject --
+    and so does a floor with slack."""
+    assert len(GENERATORS) == EXPECTED_GENERATORS, (
+        f"{len(GENERATORS)} generators discovered, expected exactly "
+        f"{EXPECTED_GENERATORS}. If a generator was added or removed, update "
+        "EXPECTED_GENERATORS in the same commit; if the parse rule stopped "
+        "matching, fix the rule.")
+    assert len(LIVE) == EXPECTED_GENERATORS - len(NO_RENDERER) - len(EXEMPT), (
+        f"{len(LIVE)} gated of {EXPECTED_GENERATORS} discovered, with "
+        f"{len(NO_RENDERER)} lacking a renderer and {len(EXEMPT)} exempt")
 
 
-def test_every_exemption_still_names_a_real_generator():
-    """An exemption for a script that no longer exists, or that has since
-    grown the interface, is an exemption nobody re-examined."""
+def test_every_known_generator_is_actually_gated():
+    """Coverage by NAME, so a generator cannot leave the gate unnoticed.
+
+    The count check above catches a generator disappearing; this catches one
+    that is still discovered but silently stops being exercised.
+    """
     names = {g[0] for g in GENERATORS}
+    for name in sorted(names - set(EXEMPT) - NO_RENDERER):
+        assert name in LIVE, (
+            f"{name} owns a committed artifact pair and is neither gated, "
+            "exempt, nor listed as having no renderer")
+
+
+def test_every_ungated_generator_is_ungated_for_a_checked_reason():
+    """An exemption nobody re-examines is how a gate hollows out.
+
+    Both lists are verified against the source rather than trusted: a script in
+    NO_RENDERER that has since grown a `render()` fails, and an EXEMPT entry
+    must name a real generator and carry a reason.
+    """
+    names = {g[0] for g in GENERATORS}
+    renders = {g[0] for g in GENERATORS if g[1]}
+    for name in sorted(NO_RENDERER):
+        assert name in names, f"NO_RENDERER lists {name!r}, which is no generator"
+        assert name not in renders, (
+            f"{name} now defines a top-level render(), so it should be gated "
+            "rather than listed as having none")
     for name, reason in EXEMPT.items():
         assert name in names, f"exemption {name!r} names no generator"
         assert reason.strip(), f"exemption {name!r} has no reason"
-        g = next(g for g in GENERATORS if g[0] == name)
-        assert not (g[1] and g[3]), (
-            f"{name} now has render() and OUT_MD/OUT_JSON, so its exemption "
-            f"({reason}) is stale and it should be gated")
 
 
 def _render_only_reassembles(name: str) -> bool:
@@ -141,17 +208,37 @@ def _reassemble(mod, stored):
 
 
 def _reproduce(mod, name):
-    """Replicate the generator's own render-only path."""
+    """Replicate the generator's own render-only path.
+
+    ROUND-TRIPPED, always. Generators write with `sort_keys=True` and several
+    then rendered the in-memory dict, producing a document that could not be
+    reproduced from its own artifact -- four were found that way. Rendering the
+    round-tripped value is what the artifact will actually contain, and it also
+    normalises tuples, which JSON turns into lists and a renderer may one day
+    distinguish.
+    """
     stored = json.loads(mod.OUT_JSON.read_text())
     if hasattr(mod, "assemble") and _render_only_reassembles(name):
-        return _reassemble(mod, stored)
+        return json.loads(json.dumps(_reassemble(mod, stored)))
     return stored
+
+
+def _render(mod, d):
+    """Call `render` the way the generator does.
+
+    One renderer needs an identifier->name resolver built from a committed
+    label table. The generator exposes a factory for it rather than closing
+    over it inside `main`, which is what let this one be gated at all.
+    """
+    if hasattr(mod, "make_namer"):
+        return mod.render(d, mod.make_namer())
+    return mod.render(d)
 
 
 @pytest.mark.parametrize("name", LIVE)
 def test_the_committed_markdown_is_what_the_renderer_produces(name):
     mod = importlib.import_module(name)
-    produced = mod.render(_reproduce(mod, name))
+    produced = _render(mod, _reproduce(mod, name))
     committed = mod.OUT_MD.read_text()
     assert produced == committed, (
         f"analysis/{mod.OUT_MD.name} is not what {name} renders. Either the "
@@ -201,6 +288,12 @@ ASSEMBLERS = [n for n in LIVE if any(g[0] == n and g[2] for g in GENERATORS)]
 @pytest.mark.parametrize("name", ASSEMBLERS)
 def test_render_only_reassembles_from_the_stored_raw_counts(name):
     """The contract that keeps every --render-only guard from being inert.
+
+    STRUCTURAL, and that is all it claims: it proves `assemble` is CALLED on
+    the render-only path, not that the call re-derives any particular amount.
+    An `assemble` that copied its input would satisfy this and the idempotency
+    check both. What rules that out here is reading the generators, not this
+    test.
 
     A generator that owns an `assemble()` and then renders the stored,
     already-assembled JSON is re-rendering its own derived fields. A guard
