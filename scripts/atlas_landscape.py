@@ -147,6 +147,55 @@ PHARMACOLOGICAL = {"immunotherapy", "car-t", "antibody-drug-conjugate",
                    "metabolic-targeting"}
 
 
+def _understatement_verdict(ratio_a: float) -> list:
+    """Whether the manuscript UNDERSTATES depends on the restriction, and the
+    sibling page already measured that.
+
+    This page used to close the section with a flat "the manuscript understates
+    its own case", which is stronger than the numbers carry: two of the three
+    restrictions `atlas_modality_ratio.py` publishes fall BELOW the manuscript's
+    own figure, so the DIRECTION of the correction flips with a choice about
+    which mechanisms count as pharmacological. `census-findings.md` had already
+    qualified it and this page had not, which is how two committed artifacts
+    came to disagree. Reading the restrictions from the artifact rather than
+    restating them is what stops that recurring.
+    """
+    src = PROJECT_ROOT / "analysis" / "atlas-modality-ratio.json"
+    if not src.exists():
+        return ["*(Restriction sensitivity unavailable: "
+                "`analysis/atlas-modality-ratio.json` is missing, so the "
+                "understatement verdict is not computed here.)*", ""]
+    comp = json.loads(src.read_text())["landscape_composition"]
+    rows = [("both classes restricted to `PHARMACOLOGICAL & PRECISE`",
+             comp["precise_ratio"]),
+            ("`PRECISE - PHYSICAL`, which this page's maturity table uses",
+             comp["landscape_own_ratio"]),
+            ("restoring the mechanisms that satisfy PRECISE's own criterion",
+             comp["criterion_restored_ratio"])]
+    below = [r for r in rows if r[1] < ratio_a]
+    L = ["**Whether that makes the manuscript an UNDERSTATEMENT depends on the",
+         "restriction, and this page used to assert that it does.** The ratio",
+         "above compares one curated class pair; restricting both classes",
+         "differently gives:", "",
+         "| restriction | ratio |", "|---|--:|"]
+    for label, v in rows:
+        mark = " *" if v < ratio_a else ""
+        L.append(f"| {label}{mark} | {v:.2f} : 1 |")
+    L += ["", f"\\* below the manuscript's own {ratio_a:.1f}:1.", ""]
+    if below:
+        L += [f"**{len(below)} of {len(rows)} fall below {ratio_a:.1f}:1**, so the "
+              "direction of the correction is not fixed by the data -- it flips",
+              "with a choice about which mechanisms count as pharmacological. What",
+              "survives across every restriction is that the imbalance is large and",
+              "that the frozen corpus over-samples physical modalities. That the",
+              "manuscript understates it does not. See",
+              "`analysis/atlas-modality-ratio.md` (#724).", ""]
+    else:
+        L += [f"Every restriction exceeds the manuscript's {ratio_a:.1f}:1, so the",
+              "understatement reading holds under all of them.", ""]
+    return L
+
+
 def _maturity_narrative(R: dict) -> list:
     """The maturity comparison, and the reason it does not settle cleanly."""
     def share(keys):
@@ -409,11 +458,11 @@ def main() -> int:
         f"{100*mf_h/mc_h:.2f}% for pharmacological ones -- it **over-samples physical",
         f"modalities by {over:.1f}x**, which is exactly what a corpus built from queries",
         "about them would do.", "",
-        "So the claim survives, and it survives in the direction that costs this",
-        "project something: the real imbalance is roughly **twice** what the manuscript",
-        f"reports ({ratio_c:.1f}:1 against {ratio_a:.1f}:1). The manuscript understates",
-        "its own case, because the corpus it measured was tilted toward the modalities",
-        "it argues are neglected.", "",
+        "So the claim survives: the census ratio is roughly **twice** what the",
+        f"manuscript reports ({ratio_c:.1f}:1 against {ratio_a:.1f}:1), because the",
+        "corpus it measured was tilted toward the modalities it argues are",
+        "neglected.", "",
+    ] + _understatement_verdict(ratio_a) + [
         "## The other half of the claim: preclinical, or just smaller?", "",
         "The manuscript says physical modalities remain comparatively *preclinical*,",
         "which is a maturity claim rather than a volume one. NLM assigns trial",

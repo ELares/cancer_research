@@ -138,11 +138,30 @@ The frozen corpus captures physical modalities at 4.53% against
 modalities by 3.3x**, which is exactly what a corpus built from queries
 about them would do.
 
-So the claim survives, and it survives in the direction that costs this
-project something: the real imbalance is roughly **twice** what the manuscript
-reports (17.6:1 against 9.1:1). The manuscript understates
-its own case, because the corpus it measured was tilted toward the modalities
-it argues are neglected.
+So the claim survives: the census ratio is roughly **twice** what the
+manuscript reports (17.6:1 against 9.1:1), because the
+corpus it measured was tilted toward the modalities it argues are
+neglected.
+
+**Whether that makes the manuscript an UNDERSTATEMENT depends on the
+restriction, and this page used to assert that it does.** The ratio
+above compares one curated class pair; restricting both classes
+differently gives:
+
+| restriction | ratio |
+|---|--:|
+| both classes restricted to `PHARMACOLOGICAL & PRECISE` * | 6.43 : 1 |
+| `PRECISE - PHYSICAL`, which this page's maturity table uses * | 8.04 : 1 |
+| restoring the mechanisms that satisfy PRECISE's own criterion | 16.08 : 1 |
+
+\* below the manuscript's own 9.1:1.
+
+**2 of 3 fall below 9.1:1**, so the direction of the correction is not fixed by the data -- it flips
+with a choice about which mechanisms count as pharmacological. What
+survives across every restriction is that the imbalance is large and
+that the frozen corpus over-samples physical modalities. That the
+manuscript understates it does not. See
+`analysis/atlas-modality-ratio.md` (#724).
 
 ## The other half of the claim: preclinical, or just smaller?
 

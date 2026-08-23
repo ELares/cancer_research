@@ -1120,3 +1120,64 @@ def test_the_direction_flip_is_derived_from_both_arms():
     # either way the verdict must stay refused: a flip is a reason not to
     # correct, never a licence to correct in the newer direction
     assert "direction is not established here" in md
+
+
+# ---------------------------------------------------------------------------
+# Propagating the withdrawal, and checking rather than listing
+# ---------------------------------------------------------------------------
+
+def test_no_site_still_asserts_the_flat_understatement_reading():
+    """The reading is withdrawn as unconditional, so nothing may state it bare.
+
+    Two of the three published restrictions land below the manuscript's own
+    9.1:1, so the DIRECTION of the correction flips with a choice about which
+    mechanisms count as pharmacological. A site is allowed to discuss the
+    claim; it is not allowed to make it.
+    """
+    m = _mod()
+    still, cleared = m._understatement_sites()
+    assert not still, (
+        "these sites still assert the manuscript understates its own case, "
+        f"with no qualifier nearby: {still}")
+    assert cleared, "the site list is empty, so this guard checks nothing"
+
+
+def test_the_detector_separates_asserting_from_withdrawing():
+    """A classifier inferring direction from wording would fail here, because
+    a withdrawal QUOTES the claim it withdraws. Nothing is inferred: an
+    occurrence passes only when a qualifier sits near it."""
+    m = _mod()
+    cases = [
+        ("The manuscript understates its own case, because the corpus was "
+         "tilted toward the modalities it argues are neglected.", True),
+        ("Measured at census scale, the manuscript understates itself by "
+         "about 2x.", True),
+        ('the "manuscript understates its own case ~2x" claim, which INVERTS '
+         "under this restriction", False),
+        ("the reading that the manuscript understates its own case is "
+         "WITHDRAWN as unconditional", False),
+        ("whether the manuscript understates it depends on the restriction",
+         False),
+    ]
+    for text, should_flag in cases:
+        flat = " ".join(text.split())
+        bare = [x for x in m._FLAT.finditer(flat)
+                if not m._is_qualified(flat, x.start(), x.end())]
+        assert bool(bare) == should_flag, (
+            f"detector {'missed' if should_flag else 'false-flagged'}: {text!r}")
+
+
+def test_the_site_table_is_derived_from_the_check(): 
+    """The hand-written list went stale -- it named `article/drafts/v1.md`,
+    which had dropped the framing entirely -- so the page must render what the
+    check returns, not a remembered list."""
+    m = _mod()
+    md = MD.read_text()
+    if "still states the manuscript understates itself" not in md:
+        pytest.skip("comparator section not rendered at this restriction")
+    still, cleared = m._understatement_sites()
+    for site in still:
+        assert f"| `{site}` | **yes** |" in md, f"{site} flagged but not shown"
+    for site in cleared:
+        assert f"| `{site}` | no |" in md, f"{site} cleared but not shown"
+    assert "CHECKED rather than listed" in md
