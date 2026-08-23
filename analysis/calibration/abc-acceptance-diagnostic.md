@@ -41,9 +41,9 @@ the optimum. Stepping outside says otherwise.
 | `k_erastin` | 1.0 | 0.2536 |
 | `k_erastin` | 2.0 | 0.2399 |
 | `k_erastin` | 3.0 | 0.2202  (prior low bound) |
-| `hill` | 10.0 | 0.2202 |
 | `hill` | 6.0 | 0.2202  (prior high bound) |
 | `hill` | 8.0 | 0.2202 |
+| `hill` | 10.0 | 0.2202 |
 
 Pushing `k_erastin` below its bound makes the fit monotonically worse.
 And `hill` is **inert**: the distance does not move at all between 6 and 10. It is not weakly identified, it has no effect — which is why it is the one parameter the information-content analysis still finds indistinguishable from its prior.

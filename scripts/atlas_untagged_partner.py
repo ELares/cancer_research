@@ -420,9 +420,13 @@ def _roundtrip(d: dict) -> dict:
 
     The JSON is written with `sort_keys=True`, so a dict rendered in insertion
     order produces a document that can never be reproduced from its own
-    artifact -- the row ordering differs. This repo has fixed that defect twice
-    before under other names; rendering the round-tripped value is what keeps
-    `--render-only` and the full run agreeing.
+    artifact -- the row ordering differs.
+
+    ROUND-TRIPPING IS NOT ENOUGH ON ITS OWN, and assuming it was regressed a
+    published finding here: any ordering that CARRIED MEANING has to be
+    re-established inside the renderer, because sorting the input replaces a
+    rank order with an alphabetical one. Every table below that had a
+    meaningful order now sorts explicitly.
     """
     return json.loads(json.dumps(d, sort_keys=True))
 

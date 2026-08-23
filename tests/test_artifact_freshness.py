@@ -54,8 +54,10 @@ a metric.
 """
 import ast
 import importlib
+import inspect
 import json
 import sys
+import textwrap
 from pathlib import Path
 
 import pytest
@@ -68,15 +70,33 @@ sys.path.insert(0, str(SCRIPTS))
 # reason. This list is checked for staleness by a test below: an entry that no
 # longer names a real generator fails, so it cannot quietly become a dumping
 # ground.
-# Generators that own an artifact pair but have no top-level `render()`, so
-# there is nothing to re-render in process. Each entry is checked below: an
-# entry naming a script that has since grown a `render()` fails, so the list
-# cannot quietly become a dumping ground.
+# The names a pure renderer goes by in this repo. Keying on ONE name was a
+# dodge hatch: an earlier version excluded 13 scripts for "having no
+# renderer", and 12 of them had a top-level `write_report(r)` taking the
+# stored dict and gated with zero refactoring. A quarter of the corpus was
+# excluded on a false premise, in a gate whose whole thesis is that the
+# previous exclusions were unjustified.
+RENDERER_NAMES = ("render", "write_report")
+
+# Owns an artifact pair but cannot be exercised in process. Two distinct
+# reasons, and the FIRST version of this list gave a false one -- it said these
+# scripts "build their report inline while writing" and would need refactoring,
+# when 12 of the 13 expose a top-level `write_report(r)`. A reviewer was right
+# that the justification was untrue; the real obstacle is different and is
+# CHECKED below rather than asserted:
 #
-# These are the calibration and posterior scripts, which build their report
-# inline while writing. Gating them would mean refactoring each to expose a
-# pure renderer -- worth doing, and deliberately not folded into the PR that
-# introduces the gate.
+#   `write_report(d)` WRITES the artifact and returns None. Calling it to
+#   compare would write to the repository, which is the property this gate
+#   promises not to have -- and writing during a check is exactly how a
+#   strided sample scan once clobbered a committed sidecar. Making these
+#   gateable means splitting each into `render(d) -> str` plus a writer, which
+#   is a real improvement and is not folded in here.
+#
+# `rare_event_analysis` has no renderer under any recognised name at all.
+#
+# The check below tries EVERY name in RENDERER_NAMES and requires a
+# write-only renderer to actually return None, so a script cannot be parked
+# here by renaming its renderer or by claiming a reason nobody verified.
 NO_RENDERER = {
     "abc_joint_posterior", "abc_posterior", "calibrate_erastin",
     "calibrate_kill_switch", "calibrate_pk", "embed_evidence_leg",
@@ -109,12 +129,14 @@ def _generators():
                   for t in n.targets if isinstance(t, ast.Name)}
         if not ("OUT_MD" in consts and "OUT_JSON" in consts):
             continue
-        out.append((f.stem, "render" in fns, "assemble" in fns, True))
+        out.append((f.stem, any(n in fns for n in RENDERER_NAMES),
+                    "assemble" in fns, True))
     return out
 
 
 GENERATORS = _generators()
-LIVE = [g[0] for g in GENERATORS if g[1] and g[0] not in EXEMPT]
+LIVE = [g[0] for g in GENERATORS
+        if g[1] and g[0] not in EXEMPT and g[0] not in NO_RENDERER]
 # Pinned EXACTLY, not as a floor. A floor with slack lets a generator drop out
 # of the gate silently: at `>= 25` against 26, deleting the marker from one
 # script left the suite green with two parametrised cases quietly gone.
@@ -158,9 +180,32 @@ def test_every_ungated_generator_is_ungated_for_a_checked_reason():
     renders = {g[0] for g in GENERATORS if g[1]}
     for name in sorted(NO_RENDERER):
         assert name in names, f"NO_RENDERER lists {name!r}, which is no generator"
-        assert name not in renders, (
-            f"{name} now defines a top-level render(), so it should be gated "
-            "rather than listed as having none")
+        if name not in renders:
+            continue                      # no renderer at all: nothing to check
+        # It HAS a renderer, so the exclusion rests on that renderer writing
+        # rather than returning. Verify it, on a dict it cannot act on, so the
+        # claim is measured rather than believed.
+        mod = importlib.import_module(name)
+        f = _renderer(mod)
+        src = inspect.getsource(f)
+        assert "write_text" in src, (
+            f"{name} exposes {f.__name__}() which does not write, so it can be "
+            "exercised in process and should be gated rather than excluded")
+        # Only the function's OWN returns, not those of helpers nested in it.
+        fn = ast.parse(textwrap.dedent(src)).body[0]
+        own = []
+        for node in ast.walk(fn):
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node is not fn:
+                continue
+            if isinstance(node, ast.Return):
+                own.append(node)
+        nested = {id(n) for f2 in ast.walk(fn)
+                  if isinstance(f2, (ast.FunctionDef, ast.AsyncFunctionDef)) and f2 is not fn
+                  for n in ast.walk(f2) if isinstance(n, ast.Return)}
+        returns_str = any(n.value is not None for n in own if id(n) not in nested)
+        assert not returns_str, (
+            f"{name}.{f.__name__}() now returns a value, so it can be compared "
+            "without writing and should be gated")
     for name, reason in EXEMPT.items():
         assert name in names, f"exemption {name!r} names no generator"
         assert reason.strip(), f"exemption {name!r} has no reason"
@@ -219,20 +264,51 @@ def _reproduce(mod, name):
     """
     stored = json.loads(mod.OUT_JSON.read_text())
     if hasattr(mod, "assemble") and _render_only_reassembles(name):
-        return json.loads(json.dumps(_reassemble(mod, stored)))
+        # Round-trip with the generator's OWN dump options, read from its
+        # source. Using a guessed set was the exact failure `_dump_kwargs`'s
+        # docstring warns about: 16 of 18 assemblers change key order under
+        # `sort_keys`, and for two of them the rendered markdown differs, so a
+        # gate that omitted it would disagree with the generator the moment
+        # anyone adopted the documented round-trip pattern.
+        kw = {k: v for k, v in _dump_kwargs(name).items() if k == "sort_keys"}
+        return json.loads(json.dumps(_reassemble(mod, stored), **kw))
     return stored
 
 
+def _renderer(mod):
+    """The generator's renderer, whatever it is called here."""
+    for n in RENDERER_NAMES:
+        f = getattr(mod, n, None)
+        if callable(f):
+            return f
+    return None
+
+
 def _render(mod, d):
-    """Call `render` the way the generator does.
+    """Call the renderer the way the generator does.
 
     One renderer needs an identifier->name resolver built from a committed
     label table. The generator exposes a factory for it rather than closing
-    over it inside `main`, which is what let this one be gated at all.
+    over it inside `main`, which is what let that one be gated at all.
     """
+    f = _renderer(mod)
     if hasattr(mod, "make_namer"):
-        return mod.render(d, mod.make_namer())
-    return mod.render(d)
+        return f(d, mod.make_namer())
+    return f(d)
+
+
+def _remediation(name: str) -> str:
+    """The command that actually regenerates THIS artifact.
+
+    Nine gated generators have no `--render-only`, so a message prescribing it
+    sends the reader to a flag that errors out. Read from the script's own
+    argparse rather than assumed.
+    """
+    src = (SCRIPTS / f"{name}.py").read_text(encoding="utf-8")
+    if "--render-only" in src:
+        return f"python scripts/{name}.py --render-only"
+    return (f"python scripts/{name}.py  (no --render-only: this one "
+            "re-runs its full scan or simulation)")
 
 
 @pytest.mark.parametrize("name", LIVE)
@@ -243,7 +319,7 @@ def test_the_committed_markdown_is_what_the_renderer_produces(name):
     assert produced == committed, (
         f"analysis/{mod.OUT_MD.name} is not what {name} renders. Either the "
         "generator changed and the artifact was not regenerated, or the "
-        f"artifact was hand-edited. Run `python scripts/{name}.py --render-only`.")
+        f"artifact was hand-edited. Run `{_remediation(name)}`.")
 
 
 def _dump_kwargs(name: str) -> dict:
@@ -279,7 +355,7 @@ def test_the_committed_json_is_what_the_generator_writes(name):
     produced = json.dumps(_reproduce(mod, name), **_dump_kwargs(name)) + "\n"
     assert produced == committed, (
         f"analysis/{mod.OUT_JSON.name} does not round-trip through {name}. "
-        f"Regenerate it with `python scripts/{name}.py --render-only`.")
+        f"Regenerate it with `{_remediation(name)}`.")
 
 
 ASSEMBLERS = [n for n in LIVE if any(g[0] == n and g[2] for g in GENERATORS)]
@@ -307,7 +383,7 @@ def test_render_only_reassembles_from_the_stored_raw_counts(name):
         "this artifact is inert.")
 
 
-def test_assemble_is_idempotent_where_it_is_used(name=None):
+def test_assemble_is_idempotent_where_it_is_used():
     """Re-assembling an assembled dict must not move anything.
 
     If it does, the raw counts are not sufficient to rebuild the derived

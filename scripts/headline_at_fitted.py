@@ -205,14 +205,44 @@ def _fmt(x):
     return str(x)
 
 
+# Tissues in DECREASING drug penetration, which is what the ordering claim
+# below is about. Named explicitly because the check is a monotone test and a
+# monotone test over dict iteration order is not a test of anything: it read
+# `list(res[...]["penetration"])` and was correct only while the scan happened
+# to insert the keys in this order. Round-tripping the artifact through JSON
+# sorts them alphabetically -- cns_bbb, poorly, well -- which reverses the
+# sequence and reported the gradient as BROKEN for `default`, the one
+# admissible set, whose kills are a textbook 12.10% > 2.60% > 1.80%.
+PENETRATION_ORDER = ("well_vascularized", "poorly_vascularized", "cns_bbb")
+
+
+def _tissues_by_penetration(pen: dict) -> list:
+    """Order the tissue keys by penetration, refusing an unknown key.
+
+    Refusing rather than falling back: a silent fallback to dict order is what
+    made the verdict depend on serialisation in the first place.
+    """
+    unknown = set(pen) - set(PENETRATION_ORDER)
+    if unknown:
+        raise SystemExit(
+            f"unknown tissue key(s) {sorted(unknown)}: add them to "
+            "PENETRATION_ORDER in penetration order, since the ordering "
+            "verdict below is a monotone test over this sequence")
+    return [t for t in PENETRATION_ORDER if t in pen]
+
+
 def _roundtrip(d: dict) -> dict:
     """Render from what the artifact WILL contain, not from the live dict.
 
     The JSON is written with `sort_keys=True`, so a dict rendered in insertion
     order produces a document that can never be reproduced from its own
-    artifact -- the row ordering differs. This repo has fixed that defect twice
-    before under other names; rendering the round-tripped value is what keeps
-    `--render-only` and the full run agreeing.
+    artifact -- the row ordering differs.
+
+    ROUND-TRIPPING IS NOT ENOUGH ON ITS OWN, and assuming it was regressed a
+    published finding here: any ordering that CARRIED MEANING has to be
+    re-established inside the renderer, because sorting the input replaces a
+    rank order with an alphabetical one. Every table below that had a
+    meaningful order now sorts explicitly.
     """
     return json.loads(json.dumps(d, sort_keys=True))
 
@@ -401,7 +431,7 @@ def render(res: dict) -> str:
     L += ["## Penetration gradient (RSL3-like vessel-wall kill)", "",
           "| tissue | " + " | ".join(f"`{s}`" for s in sets) + " |",
           "|---|" + "--:|" * len(sets)]
-    tissues = list(res[sets[0]]["penetration"])
+    tissues = _tissues_by_penetration(res[sets[0]]["penetration"])
     for t in tissues:
         L.append(f"| {t} | " + " | ".join(
             f"{res[s]['penetration'][t]*100:.2f}%" for s in sets) + " |")

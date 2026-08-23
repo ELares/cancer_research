@@ -522,6 +522,10 @@ def _roundtrip(d: dict) -> dict:
 
     The JSON is written with `sort_keys=True`, so rendering the in-memory dict
     produces a document that cannot be reproduced from its own artifact.
+
+    Round-tripping is not enough on its own: the predicate column below is a
+    RANK, so it sorts itself by count rather than inheriting an order that
+    serialisation destroys.
     """
     return json.loads(json.dumps(d, sort_keys=True))
 
@@ -960,7 +964,12 @@ def render(r: dict, name) -> str:
         # ALL of them. Keeping the top three silently understated two shipped
         # rows while the prose invited the reader to compare these counts with
         # the paper count.
-        preds = ", ".join(f"`{k}` {n}" for k, n in row["predicates"].items())
+        preds = ", ".join(f"`{k}` {n}" for k, n in sorted(
+            row["predicates"].items(), key=lambda kv: (-kv[1], kv[0])))
+        # Sorted HERE, not inherited from the input: these came from
+        # `Counter.most_common()` and a round-tripped artifact renders them
+        # alphabetically, putting `associate` 93 above `inhibit` 713 in a
+        # column headed "assertions".
         L.append(f"| {row['drug']} | {row['gene']} | `{row['variant']}` | "
                  f"{row['papers']} | {preds} |")
     L += ["", "## What this cannot say", "",

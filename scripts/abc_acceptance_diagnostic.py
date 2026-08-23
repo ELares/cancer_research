@@ -86,9 +86,13 @@ def _roundtrip(d: dict) -> dict:
 
     The JSON is written with `sort_keys=True`, so a dict rendered in insertion
     order produces a document that can never be reproduced from its own
-    artifact -- the row ordering differs. This repo has fixed that defect twice
-    before under other names; rendering the round-tripped value is what keeps
-    `--render-only` and the full run agreeing.
+    artifact -- the row ordering differs.
+
+    ROUND-TRIPPING IS NOT ENOUGH ON ITS OWN, and assuming it was regressed a
+    published finding here: any ordering that CARRIED MEANING has to be
+    re-established inside the renderer, because sorting the input replaces a
+    rank order with an alphabetical one. Every table below that had a
+    meaningful order now sorts explicitly.
     """
     return json.loads(json.dumps(d, sort_keys=True))
 
@@ -165,6 +169,16 @@ def main() -> int:
     return 0
 
 
+def _numeric(d: dict) -> list:
+    """(value, distance) pairs in NUMERIC order.
+
+    The swept values are dict KEYS, so JSON makes them strings and a
+    round-tripped artifact renders them lexicographically -- 10.0, 6.0, 8.0 --
+    directly above prose saying the distance does not move between 6 and 10.
+    """
+    return sorted(d.items(), key=lambda kv: float(kv[0]))
+
+
 def render(r: dict) -> str:
     s = r["sampling"]
     ke = r["prior_truncation_test"]["k_erastin"]
@@ -216,9 +230,9 @@ def render(r: dict) -> str:
           "its low 3.0, `hill` at its high 6.0 — which looks like the box clipping",
           "the optimum. Stepping outside says otherwise.", "",
           "| parameter | value | joint distance |", "|---|--:|--:|"]
-    for v, d in ke.items():
+    for v, d in _numeric(ke):
         L.append(f"| `k_erastin` | {v} | {d}{'  (prior low bound)' if v == '3.0' else ''} |")
-    for v, d in hl.items():
+    for v, d in _numeric(hl):
         L.append(f"| `hill` | {v} | {d}{'  (prior high bound)' if v == '6.0' else ''} |")
     L += ["",
           ("Pushing `k_erastin` below its bound makes the fit monotonically worse."
