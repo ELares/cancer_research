@@ -35,12 +35,29 @@ ones known and deliberate:
   not portable, and no portable comparison is implemented.
 - **Most non-census PDFs.** Twenty-two committed figures come from other
   generators. Five of them -- the corpus-derived ones, whose inputs are tracked
-  -- are now regenerated and gated by
-  `tests/test_figure_caption_statistics.py`; the other seventeen are not, and
-  fifteen still embed a creation date, so they cannot be checked at all.
-  Regenerating those is not a metadata-only change -- it rewrites plots from
-  gitignored simulation output and emits figures that were never committed --
-  so it stays filed (#788).
+  -- are regenerated and gated by `tests/test_figure_caption_statistics.py`;
+  the other seventeen are not, and ten of those seventeen `FIGURES.yaml` marks
+  `type: simulation`. Eight of the ten are drawn by `generate_figures.py` from
+  `simulations/output/`, which is gitignored, so CI cannot regenerate them at
+  all until #788's tracking decision is made; they were regenerated in the #790
+  pass and no longer embed a creation date, which is necessary for a freshness
+  check and not sufficient for one. The other two are not blocked that way, and the first
+  version of this bullet wrongly said they were:
+  `fig29_rare_event_resolution` reads the TRACKED `analysis/rare-event-sweep.jsonl`
+  through a deterministic generator, so regenerating it once -- which it
+  needs anyway, being one of the seven below -- would bring it under a
+  gate; and `fig7_monte_carlo_simulation` reads the TRACKED
+  `simulations/simulation_results.json`, but has no committed generator at all
+  -- it is a matplotlib figure whose producing code is not in this repository.
+  (It is skipped below by the non-Python-generator branch, not by the orphan
+  exemption: `FIGURES.yaml` gives its status as `manuscript` and names a `.rs`
+  file as its generator. An earlier version of this sentence said orphan,
+  contradicting the code comment a few lines under it.) (An earlier version of
+  this bullet said fig7 "is drawn by a Rust binary". It is not: `sim-original`
+  prints JSON and links no plotting crate, and the committed PDF's `/Producer`
+  is Matplotlib. The same false claim sits in a comment in
+  `scripts/generate_figures.py` and is corrected there too.) Across all seventeen, seven still embed a
+  creation date and so cannot be compared at all.
 - **Stale inputs.** Regenerating from committed JSON cannot notice the JSON is
   old.
 - **THE GENERATOR ITSELF IS TRUSTED.** Everything here compares what
@@ -780,7 +797,9 @@ def _corpus_derived_stems():
 
 def _spell(n: int) -> str:
     """Small numbers as the docstring writes them."""
-    words = {5: "five", 15: "fifteen", 17: "seventeen", 22: "twenty-two"}
+    words = {0: "no", 1: "one", 2: "two", 3: "three", 5: "five", 7: "seven",
+             8: "eight", 9: "nine", 10: "ten", 15: "fifteen",
+             17: "seventeen", 22: "twenty-two"}
     return words.get(n, str(n))
 
 
@@ -833,6 +852,48 @@ def test_the_corpus_figure_backlog_is_stated_and_shrinking():
     assert f"the other {_spell(total - gated)} are not" in doc, (
         f"{total - gated} non-census figures are ungated and the docstring "
         "says otherwise")
+    import yaml as _yaml
+
+    spec = _yaml.safe_load((REPO / "FIGURES.yaml").read_text())["figures"]
+    sim = {f["filename"] for f in spec if f.get("type") == "simulation"}
+    ungated = {Path(n).stem for n in names if n not in census} - set(
+        _corpus_derived_stems())
+    n_sim = len(ungated & sim)
+    # WHICH of the ten are blocked by gitignored inputs, derived from
+    # FIGURES.yaml rather than asserted. The first version of this bullet said
+    # none of the ten is checkable, which is false: two do not read
+    # `simulations/output/` at all.
+    import subprocess as _sp
+
+    tracked_files = set(_sp.run(["git", "ls-files"], cwd=REPO,
+                                capture_output=True, text=True).stdout.split())
+    blocked, free = [], []
+    for f in spec:
+        if f["filename"] not in (ungated & sim):
+            continue
+        ins = f.get("inputs") or []
+        (blocked if any(not (i in tracked_files) for i in ins) else free).append(
+            f["filename"])
+    # SPELLED INTO THE PROSE, not compared against literals here. The first
+    # version asserted `len(blocked) == 8 and len(free) == 2` -- two constants
+    # in the test compared against FIGURES.yaml -- so the docstring could say
+    # three and seven, or that none of the ten is checkable, and stay green.
+    # That is the defect this whole paragraph exists to retract, in its guard.
+    assert f"{_spell(len(blocked)).capitalize()} of the ten" in doc, (
+        f"{len(blocked)} of the simulation figures read an untracked input and "
+        f"the docstring says otherwise. blocked={sorted(blocked)}")
+    assert f"The other {_spell(len(free))} are not blocked" in doc, (
+        f"{len(free)} of them do not, and the docstring says otherwise. "
+        f"free={sorted(free)}")
+    for name in free:
+        assert name.split("_")[0] in doc, (
+            f"{name} is not blocked by a gitignored input and the docstring "
+            "does not name it among the two that are not")
+    assert f"{_spell(n_sim)} of those seventeen" in doc, (
+        f"FIGURES.yaml marks {n_sim} of the ungated figures as simulation and "
+        "the docstring says otherwise -- the first version said eight, which "
+        "was the number this branch regenerated rather than the number that "
+        "exist, and nothing measured it")
     assert f"{_spell(len(stale))} still embed a creation date" in doc, (
         f"{len(stale)} still embed a creation date and the docstring says "
         "otherwise")
@@ -862,8 +923,10 @@ def test_the_corpus_figure_backlog_is_stated_and_shrinking():
             continue
         # A substring match is satisfied by a COMMENT saying the opposite:
         # `fig7_monte_carlo_simulation` passed only because
-        # `generate_figures.py` carries a note explaining that the Rust binary
-        # writes it and this script does not.
+        # `generate_figures.py` carries a note about it. That note used to say
+        # the Rust binary writes the figure; it does not -- the binary prints
+        # the DATA as JSON and the PDF's producer is Matplotlib -- and the note
+        # says so now.
         #
         # What this DOES, precisely, because an earlier version of this comment
         # described a "savefig-ish context" check that was never written: a

@@ -173,6 +173,23 @@
       "ph_edge": 7.4,
       "ph_core": 6.5,
       "ph_lambda_um": 120.0
+    },
+    {
+      "treatment": "Control",
+      "o2_condition": "gradient_120um",
+      "o2_lambda_um": 120.0,
+      "immune_mode": "immune_on",
+      "total_tumor": 159033,
+      "total_dead": 1,
+      "ferroptosis_kills": 1,
+      "immune_kills": 0,
+      "overall_kill_rate": 6.288003118849547e-06,
+      "normoxic_kill_rate": 0.00011899095668729176,
+      "transition_kill_rate": 0.0,
+      "hypoxic_kill_rate": 0.0,
+      "stromal_mode": "off",
+      "stromal_adjacent_kill_rate": 0.0005567928730512249,
+      "stromal_adjacent_count": 1796
     }
   ]
 }
