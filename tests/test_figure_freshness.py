@@ -40,14 +40,20 @@ ones known and deliberate:
   old.
 - **THE GENERATOR ITSELF IS TRUSTED.** Everything here compares what
   `scripts/generate_census_figures.py` writes against what is committed, so a
-  generator that copies `article/figures/*.pdf` into its output directory
-  passes every check with all eight figures wrong -- measured, 57 green. This
-  is not closeable by comparing contents: on the authoring machine an honest
-  regeneration and a copy are the same bytes by design, which is the whole
-  point of removing `/CreationDate`. What stands between that and a merge is
-  the `scripts/**` CI path filter putting the diff in front of a reviewer.
-  Weaker versions ARE caught -- copying every PDF trips the produced-set
-  equality, and writing past `FERRO_FIG_DIR` trips `assert produced`.
+  generator that draws honestly and then copies THE EIGHT CENSUS FIGURES from
+  `article/figures` over its own output passes every test with all eight
+  wrong. This is not closeable by comparing contents: on the authoring machine
+  an honest regeneration and a copy are the same bytes by design, which is the
+  whole point of removing `/CreationDate`. What stands between that and a merge
+  is the `scripts/**` CI path filter putting the diff in front of a reviewer.
+
+  The EIGHT is load-bearing and the first version of this bullet got it wrong,
+  offering `article/figures/*.pdf` as the example -- that glob is 30 files, so
+  it trips the produced-set equality, which is the very sentence this bullet
+  ends with. Two weaker versions ARE caught that way: copying every PDF, and
+  writing past `FERRO_FIG_DIR`, which trips `assert produced`. No test count is
+  quoted here on purpose: the first version said "57 green" and the commit that
+  wrote it added two tests.
 - **The whole `/Font` subtree**, not only glyph outlines: an earlier version
   of this bullet said "glyph outlines", and a reviewer showed that understates
   it. Swapping the Type3 outlines for `zero` and `one` changes what a figure
@@ -469,11 +475,12 @@ def xref_name(doc, pg, xref) -> str:
 # the defect this file exists to retract, in the sentence explaining a
 # constant. Measured instead, and pinned by
 # `test_the_traversal_depth_committed_figures_need_is_measured`: the eight
-# committed figures reach depth 0, because no resource on any of them is
-# nested at all, and the deepest crafted control reaches 6. The suite pins the
-# bound somewhere in (4, 6]; everything above that is deliberate slack for
-# files this project does not yet produce, and it is slack rather than
-# evidence.
+# committed figures reach depth 0 exactly, because no resource on any of them
+# is nested at all, and the crafted probe reaches 6 exactly -- both pinned by
+# equality below, so this comment cannot go stale silently. Measured by
+# bisecting the constant, the suite needs a bound above 5: 4 and 5 fail
+# `deep-only`, 6 passes. Everything above 6 is deliberate slack for files this
+# project does not yet produce, and it is slack rather than evidence.
 _MAX_DEPTH = 24
 _MAX_DEPTH_SEEN = 0
 
@@ -2035,12 +2042,21 @@ def test_the_flagship_actually_performs_its_comparisons():
     statement silences this test too and exits 0, and this file does not
     pretend to cover that.
 
-    Measured, and narrower than the usual disclaimer: only the in-body call
-    form works. `@pytest.mark.skip` on the flagship is RED, because this test
-    calls the plain function and the marker never runs -- and
-    `@pytest.mark.slow` is red for the same reason, which is independent
-    evidence that the marker really is inert. The hole is one specific line,
-    not "any skip".
+    Measured, and the CONDITION matters -- two reviewers measured opposite
+    verdicts for `@pytest.mark.skip` because one staged a stale figure and one
+    did not, and the first version of this paragraph stated the verdict without
+    the condition, which made it false as written:
+
+    - WITH A STALE FIGURE ON DISK, a marker does not hide it. `@pytest.mark.skip`
+      leaves this test RED (1 failed) because it calls the plain function, and
+      `@pytest.mark.slow` with `-m "not slow"` likewise. That is the case that
+      matters, and it is why the marker route is not the hole.
+    - ON A CLEAN TREE the marked run still exits 0, reporting `1 skipped` or
+      `1 deselected`. A marker cannot be read as evidence the gate ran.
+
+    An in-body `pytest.skip()` call silences both tests in either case. So the
+    hole is that one line, and the disclosure is about that line rather than
+    about markers.
     """
     global _COMPARISONS
     before, mark = _COMPARISONS, len(_COMPARED)
@@ -2712,12 +2728,15 @@ def test_the_traversal_depth_committed_figures_need_is_measured():
         _MAX_DEPTH_SEEN = 0
         _drawing(probe)
         deep = _MAX_DEPTH_SEEN
-    assert deep >= 5, (
-        f"a six-link chain registered depth {deep}; the depth counter is not "
-        "tracking, so the measurement below is of the instrument, not the file")
-    assert reached <= 4, (
-        f"the committed figures now reach traversal depth {reached}; the "
-        "constant's comment says they reach 0, so the comment is stale")
+    assert deep == 6, (
+        f"the six-link probe registered depth {deep}, not 6; either the depth "
+        "counter is not tracking -- in which case the measurement below is of "
+        "the instrument rather than the file -- or the constant's comment, "
+        "which states 6 exactly, is stale")
+    assert reached == 0, (
+        f"the committed figures now reach traversal depth {reached}, not 0; "
+        "the constant's comment states 0 exactly, so update it together with "
+        "the headroom check below")
     assert _MAX_DEPTH >= reached + 8, (
         f"_MAX_DEPTH ({_MAX_DEPTH}) leaves less than 8 levels of headroom "
         f"above the {reached} the committed figures actually need")
