@@ -475,7 +475,9 @@ def fig6_sdt_chain_evidence(articles):
     # version of this comment quoted it here.) The STING bar was 32 against 4,
     # almost all of it "sugge(sting)".
     chain_steps = {
-        "ROS\ngeneration": r"reactive oxygen species|\bROS[- ]gener",
+        "ROS\ngeneration": (r"reactive oxygen species|\bROS[- ]gener"
+                            r"|(?:generat|induc|elicit|produc)\w*\s+"
+                            r"(?:high levels of\s+|the\s+)?\bROS\b"),
         # The bar is labelled DEPLETION and accepted a bare mention of
         # glutathione: 25 SDT articles, of which 14 say depletion or
         # consumption. A chain-evidence figure has to measure the step it
@@ -487,7 +489,10 @@ def fig6_sdt_chain_evidence(articles):
         # articles, which is the same false-negative trade this file has now
         # made twice.
         "GSH\ndepletion": (r"\bGSH deplet|\bglutathione deplet|\bGSH consum"
-                           r"|\bglutathione consum|deplet\w*\s+(?:intracellular\s+)?(?:gsh|glutathione)|consum\w*\s+(?:of\s+)?(?:gsh|glutathione)"),
+                           r"|\bglutathione consum"
+                           r"|(?:deplet|consum|scaveng|exhaust)\w*\s+"
+                           r"(?:of\s+|the\s+)?(?:\w+[- ]){0,2}"
+                           r"(?:gsh|glutathione)"),
         "GPX4\ninactivation": r"\bGPX4\b|glutathione peroxidase 4",
         "Lipid\nperoxidation": r"lipid peroxid",
         "Ferroptosis": r"ferroptosis",
@@ -529,16 +534,28 @@ def fig6_sdt_chain_evidence(articles):
     # which the drawn numbers have never satisfied: the last bar has always
     # been among the largest and the middle of the chain dips and recovers.
     # A caption that survives its own data changing is not describing it.
-    thinnest = min(range(len(counts)), key=lambda i: counts[i])
+    # EVERY DIP, not just the deepest. Naming only the global minimum and the
+    # endpoint produced the same sentence for the real chain -- which dips
+    # twice, at GPX4 inactivation and again at STING activation -- as for a
+    # chain that dips once and then holds. And `>=` called a flat chain
+    # "thinning", which nothing about a flat chain does.
     steps = [k.replace("\n", " ") for k in chain_steps]
-    monotone = all(a >= b for a, b in zip(counts, counts[1:]))
-    shape = ("thins monotonically from left to right" if monotone else
-             f"is not monotone: it bottoms out at {steps[thinnest]} "
-             f"({counts[thinnest]}) and recovers to {counts[-1]} at "
-             f"{steps[-1]}")
-    ax.text(0.5, -0.18, "Each bar = number of SDT articles mentioning this "
-            f"step. The chain {shape}. Co-mention is not evidence of the "
-            "link; these are counts of articles that name the step.",
+    dips = [i for i in range(1, len(counts) - 1)
+            if counts[i] < counts[i - 1] and counts[i] < counts[i + 1]]
+    if all(a > b for a, b in zip(counts, counts[1:])):
+        shape = "thins monotonically from left to right"
+    elif not dips:
+        shape = (f"does not thin monotonically: it runs {counts[0]} to "
+                 f"{counts[-1]} without an interior trough")
+    else:
+        named = ", ".join(f"{steps[i]} ({counts[i]})" for i in dips)
+        shape = (f"is not monotone: it dips at {named}, and ends at "
+                 f"{counts[-1]} at {steps[-1]}")
+    ax.text(0.5, -0.18, "Each bar = number of SDT articles engaging this "
+            f"step. The chain {shape}. Bars are not equally strict: ROS "
+            "generation and GSH depletion require the process to be "
+            "described, the rest require the molecule to be named. Co-mention "
+            "is not evidence of the link.",
             transform=ax.transAxes, ha='center', fontsize=9, style='italic',
             color='gray', wrap=True)
 

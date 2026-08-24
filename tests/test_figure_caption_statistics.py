@@ -238,6 +238,9 @@ _PATTERN_CASES = {
         ["ros generation", "ros-generating nanoparticles", "reactive oxygen species"],
         ["necrosis", "prostate cancer", "across the tumour", "sclerosis"],
     ),
+    "Ferroptosis": (["ferroptosis", "ferroptosis inducer"], ["apoptosis", "necroptosis"]),
+    "Apoptosis": (["apoptosis", "caspase-3 activation"], ["ferroptosis", "autophagy"]),
+    "Autophagy": (["autophagy", "autophagic flux"], ["apoptosis", "phagocytosis"]),
     "ER Stress": (
         ["er stress response", "er stressor thapsigargin", "er stresses",
          "endoplasmic reticulum stress"],
@@ -246,19 +249,86 @@ _PATTERN_CASES = {
 }
 
 
-@pytest.mark.parametrize("label", sorted(_PATTERN_CASES))
-def test_the_pathway_patterns_match_what_they_claim_to(label):
+# fig6's chain, which no test touched until a reviewer reinstated the exact
+# defect two commits had just removed -- a bare `glutathione` in the depletion
+# bar, overstating the chain's second link by 79% -- and the suite stayed
+# green. Every regex defect found in five review rounds lived in one of these
+# two dicts.
+_CHAIN_CASES = {
+    "ROS\ngeneration": (
+        ["ros generation", "generating ros", "generate high levels of ros",
+         "induce ros locally", "elicits ros-mediated apoptosis",
+         "reactive oxygen species"],
+        ["necrosis", "prostate", "across", "ros accumulation is reduced"],
+    ),
+    "GSH\ndepletion": (
+        ["gsh depletion", "depletes intra-tumoral glutathione",
+         "depletion of overexpressed glutathione", "consume the reduced glutathione",
+         "scavenges gsh via the mno2", "glutathione consumption"],
+        ["glutathione peroxidase 4 expression", "intracellular glutathione levels",
+         "glutathione (gsh) levels rapidly scavenge the sdt-induced ros"],
+    ),
+    "GPX4\ninactivation": (
+        ["gpx4 inactivation", "glutathione peroxidase 4"],
+        ["gpx4l", "agpx4"],
+    ),
+    "Lipid\nperoxidation": (["lipid peroxidation", "lipid peroxide"], ["peroxidase"]),
+    # "ferroptotic" is NOT required: measured, no corpus article says it
+    # without also saying "ferroptosis" (79 either way), so demanding it would
+    # pin a pattern change nothing observes. The case says what is true.
+    "Ferroptosis": (["ferroptosis", "ferroptosis-inducing"], ["apoptosis"]),
+    "DAMP\nrelease": (
+        ["damage-associated molecular patterns", "damps", "hmgb1", "hmgb-1",
+         "calreticulin"],
+        ["dampen", "damage associated with replication stress"],
+    ),
+    "STING\nactivation": (
+        ["sting pathway", "cgas-sting"],
+        ["suggesting", "existing", "boosting"],
+    ),
+    "ICD": (["immunogenic cell death"], ["cell death"]),
+}
+
+
+def _pattern_dict(name):
+    """A pattern dict as the generator defines it, executed from its source."""
+    src = GEN.read_text()
+    marker = f"    {name} = {{"
+    assert src.count(marker) == 1, (
+        f"expected exactly one `{name}` dict in the generator, found "
+        f"{src.count(marker)}")
+    body = src[src.index(marker):]
+    body = body[:body.index("\n    }") + 6]
+    ns = {}
+    exec("import re\n" + body.strip(), ns)          # noqa: S102 - our own source
+    return ns[name]
+
+
+def test_every_pattern_has_a_case():
+    """A case table that does not cover the dict is a check that never runs.
+
+    `_PATTERN_CASES` covered five of `pathways`' eight labels and none of
+    `chain_steps`, so three patterns in one figure and all eight in the other
+    could be rewritten with the suite green -- which a reviewer demonstrated
+    by reinstating a defect two commits had removed.
+    """
+    for name, cases in (("pathways", _PATTERN_CASES), ("chain_steps", _CHAIN_CASES)):
+        declared = set(_pattern_dict(name))
+        assert declared == set(cases), (
+            f"{name} declares {sorted(declared - set(cases))} with no case and "
+            f"{sorted(set(cases) - declared)} cased but absent")
+
+
+@pytest.mark.parametrize("which,label", (
+    [("pathways", k) for k in sorted(_PATTERN_CASES)]
+    + [("chain_steps", k) for k in sorted(_CHAIN_CASES)]))
+def test_the_patterns_match_what_they_claim_to(which, label):
     """The patterns are read from the generator, not restated here."""
     import re as _re
 
-    src = GEN.read_text()
-    body = src[src.index("    pathways = {"):]
-    body = body[:body.index("    }") + 5]
-    ns = {}
-    exec("import re\n" + body.strip(), ns)          # noqa: S102 - our own source
-    pattern = ns["pathways"][label]
-
-    should, should_not = _PATTERN_CASES[label]
+    pattern = _pattern_dict(which)[label]
+    should, should_not = (_PATTERN_CASES if which == "pathways"
+                          else _CHAIN_CASES)[label]
     for text in should:
         assert _re.search(pattern, text, _re.IGNORECASE), (
             f"/{label}/ no longer matches {text!r}; a right-hand word boundary "
@@ -422,9 +492,27 @@ def test_the_chapter_8_decomposition_is_derived_not_asserted(tmp_path):
     assert "neither of them GSH-positive" in sentence, (
         f"{positive} of the retagged articles are GSH-positive, and the "
         "paragraph no longer says so")
-    assert pcts["widened new"] > pcts["retired"], "the share did not rise"
-    assert "the share rose by about" in sentence, (
-        "the share rose and the paragraph does not say 'rose'")
+    # EVERY DIRECTION WORD, derived. Pinning only "rose" left "the count fell"
+    # and "Dual-pathway articles fall" free, and flipping both left the whole
+    # suite green with the manuscript stating both movements backwards.
+    for moved, rose, fell, what in (
+            (pcts["widened new"] - pcts["retired"],
+             "the share rose by about", "the share fell by about", "the share"),
+            (facts["widened instrument, new corpus"]
+             - facts["retired instrument, old corpus"],
+             "while the count rose because", "while the count fell because",
+             "the count"),
+            (facts["dual new"] - facts["dual old"],
+             "Dual-pathway articles rise", "Dual-pathway articles fall",
+             "the dual-pathway count")):
+        want, wrong = (rose, fell) if moved > 0 else (fell, rose)
+        assert moved != 0, f"{what} did not move; the paragraph claims it did"
+        assert want in sentence, (
+            f"{what} moved by {moved:+.4g} and the paragraph does not say so "
+            f"-- expected {want!r}")
+        assert wrong not in sentence, (
+            f"{what} moved by {moved:+.4g} and the paragraph states the "
+            f"opposite direction: {wrong!r}")
     assert "counting the word *glutathione* alone" in sentence, (
         "the paragraph no longer names the retired instrument, or names a "
         "different one -- it is `glutathione` alone that reproduces 72")
@@ -487,6 +575,16 @@ def _chapter_8_sentence() -> str:
     assert len(paras) == 1, (
         f"expected one retraction paragraph inside Chapter 8, found {len(paras)}")
     para = " ".join(paras[0].split())
+    # SENTENCE COUNT, so an inserted claim cannot hide between checked ones.
+    # A reviewer added "The corpus was never actually cut; this paragraph is
+    # fiction." mid-paragraph and every fragment assertion still passed --
+    # presence checks cannot see what else is there.
+    n_sentences = len([x for x in re.split(r"(?<=[.!?]) ", para) if x.strip()])
+    assert n_sentences == 10, (
+        f"the retraction paragraph has {n_sentences} sentences, not the 10 this "
+        "guard was written against. If a sentence was added, add it to the "
+        "checks below deliberately -- an unchecked sentence in a retraction is "
+        "how this paragraph came to need a guard.")
     assert para.endswith("broader than SDT alone."), (
         "the retraction paragraph does not end where this guard expects; it "
         "may have been split, and half of it would then go unchecked")
