@@ -220,6 +220,17 @@ def test_only_the_baseline_section_writes_the_damp_heatmaps():
         "the DAMP heatmap write is no longer inside the baseline immune "
         "section, so the panels are of a different run from the one the "
         "figure's counts are selected from")
+    # AND UNDER THE `immune_on` ARM. That loop runs `immune_on` and
+    # `immune_anti_pd1`; flipping the branch string alone puts the panels on
+    # the anti-PD-1 run (SDT 1,477 immune kills) while the annotations stay on
+    # `immune_on` (521) -- the original defect one arm over, and invisible to
+    # the end-to-end check, because the drawn numbers would still equal the
+    # selected ones.
+    guard = before.rfind('if *immune_label == "immune_on"')
+    assert guard > last_loop, (
+        "the DAMP heatmap write is not guarded by `immune_label == "
+        '"immune_on"` inside the baseline loop, so the panels may come from '
+        "the anti-PD-1 arm while the annotations come from the immune-on one")
 
 
 @pytest.mark.parametrize("doctor", ["drop_sdt", "no_summary"])
@@ -273,3 +284,37 @@ def test_the_generator_refuses_rather_than_labelling_a_panel_zero(tmp_path, doct
     assert not list(out.glob("*.pdf")), (
         "fig17 wrote a figure despite refusing; a partially written artifact "
         "is worse than none, because it looks regenerated")
+
+
+def test_the_latex_caption_states_the_baseline_counts():
+    """The caption is prose beside a measurement, so it is derived here.
+
+    `generate_latex.py`'s fig 14 entry carried "139,641 kills, 539 immune
+    kills / 163 kills, 2 immune kills" -- main's figure, one off on the
+    ferroptosis count -- while this branch moved the figure to 521 and 5. A
+    reviewer found it; nothing in the suite could, and reverting it plus
+    regenerating the manifest (the routine next step) left every test green.
+
+    `test_figure_captions_agree.py` compares the markdown and LaTeX captions on
+    shared content WORDS, which strips digits, so it cannot see this either.
+    """
+    rows, src = _conditions()
+    base = {r["treatment"]: r for r in _baseline_rows(_immune_on_rows(rows))}
+    latex = (REPO / "scripts/generate_latex.py").read_text()
+    entry = re.search(r"'14': \('fig17_damp_heatmap', '(.*?)'\),", latex, re.S)
+    assert entry, "the fig17 caption entry is gone or was renamed"
+    caption = entry.group(1)
+
+    for treatment in ("SDT", "RSL3"):
+        row = base[treatment]
+        ferro = f"{row['ferroptosis_kills']:,}"
+        immune = str(row["immune_kills"])
+        assert f"({ferro} kills, {immune} immune kills)" in caption, (
+            f"the LaTeX caption does not state {treatment}'s baseline counts "
+            f"({ferro} kills, {immune} immune kills) from {src.name}. It is "
+            "the caption that ships: release-pdf.yml builds from v1.tex")
+    # And it must say which of the three scenarios, for the same reason the
+    # figure's own suptitle does.
+    assert "baseline run" in caption, (
+        "the LaTeX caption does not name the scenario, so the shipped PDF "
+        "gives the reader less than the figure does")

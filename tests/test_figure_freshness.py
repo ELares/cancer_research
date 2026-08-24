@@ -37,11 +37,17 @@ ones known and deliberate:
   generators. Five of them -- the corpus-derived ones, whose inputs are tracked
   -- are regenerated and gated by `tests/test_figure_caption_statistics.py`;
   the other seventeen are not, and ten of those seventeen `FIGURES.yaml` marks
-  `type: simulation`; eight of the ten were regenerated in the #790 pass and no
-  longer embed a creation date, but none of the ten is checkable in CI, because
-  their inputs live under `simulations/output/`, which is gitignored -- the
-  tracking decision is measured on #788. Across all seventeen, seven still
-  embed a creation date and so cannot be compared at all.
+  `type: simulation`. Eight of the ten are drawn by `generate_figures.py` from
+  `simulations/output/`, which is gitignored, so CI cannot regenerate them at
+  all until #788's tracking decision is made; they were regenerated in the #790
+  pass and no longer embed a creation date, which is necessary for a freshness
+  check and not sufficient for one. The other two are not blocked that way and
+  the first version of this bullet wrongly said they were:
+  `fig29_rare_event_resolution` reads the TRACKED `analysis/rare-event-sweep.jsonl`
+  through a deterministic generator and could be gated today, and
+  `fig7_monte_carlo_simulation` is drawn by a Rust binary with no
+  `simulations/output/` input. Across all seventeen, seven still embed a
+  creation date and so cannot be compared at all.
 - **Stale inputs.** Regenerating from committed JSON cannot notice the JSON is
   old.
 - **THE GENERATOR ITSELF IS TRUSTED.** Everything here compares what
@@ -842,6 +848,29 @@ def test_the_corpus_figure_backlog_is_stated_and_shrinking():
     ungated = {Path(n).stem for n in names if n not in census} - set(
         _corpus_derived_stems())
     n_sim = len(ungated & sim)
+    # WHICH of the ten are blocked by gitignored inputs, derived from
+    # FIGURES.yaml rather than asserted. The first version of this bullet said
+    # none of the ten is checkable, which is false: two do not read
+    # `simulations/output/` at all.
+    import subprocess as _sp
+
+    tracked_files = set(_sp.run(["git", "ls-files"], cwd=REPO,
+                                capture_output=True, text=True).stdout.split())
+    blocked, free = [], []
+    for f in spec:
+        if f["filename"] not in (ungated & sim):
+            continue
+        ins = f.get("inputs") or []
+        (blocked if any(not (i in tracked_files) for i in ins) else free).append(
+            f["filename"])
+    assert len(blocked) == 8 and len(free) == 2, (
+        f"{len(blocked)} of the simulation figures read an untracked input and "
+        f"{len(free)} do not; the docstring says eight and two. blocked="
+        f"{sorted(blocked)} free={sorted(free)}")
+    for name in free:
+        assert name.split("_")[0] in doc, (
+            f"{name} is not blocked by a gitignored input and the docstring "
+            "does not name it among the two that are not")
     assert f"{_spell(n_sim)} of those seventeen" in doc, (
         f"FIGURES.yaml marks {n_sim} of the ungated figures as simulation and "
         "the docstring says otherwise -- the first version said eight, which "
