@@ -475,8 +475,7 @@ def fig6_sdt_chain_evidence(articles):
     # 118, 32, 4, 25, 14 and "eight SDT articles"; each was measured when
     # written and several were stale within two commits, one of them quoting a
     # different figure's bar. Nothing can keep a number in a comment honest --
-    # the
-    # repository has a rule against generators hand-writing quantities and it
+    # the repository has a rule against generators hand-writing quantities and it
     # does not reach comments -- so the reasoning stays here and the numbers
     # live in the figure, which is regenerated and gated.
     chain_steps = {

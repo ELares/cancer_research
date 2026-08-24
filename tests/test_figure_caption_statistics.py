@@ -742,7 +742,7 @@ def test_fig6_states_the_window_it_actually_matches_over():
         caption = " ".join(" ".join(p.get_text().split()) for p in doc)
     finally:
         doc.close()
-    assert f"{window:,} body characters" in caption, (
+    assert f"title and first {window:,} body characters" in caption, (
         f"load_corpus matches over the title plus the first {window:,} "
         "characters of each record's BODY and the figure does not say so. "
         "(The record's own first characters are YAML frontmatter, which is "
