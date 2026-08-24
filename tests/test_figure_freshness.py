@@ -56,8 +56,20 @@ ones known and deliberate:
   this bullet said fig7 "is drawn by a Rust binary". It is not: `sim-original`
   prints JSON and links no plotting crate, and the committed PDF's `/Producer`
   is Matplotlib. The same false claim sits in a comment in
-  `scripts/generate_figures.py` and is corrected there too.) Across all seventeen, seven still embed a
-  creation date and so cannot be compared at all.
+  `scripts/generate_figures.py` and is corrected there too.) Across all seventeen, two still embed a
+  creation date and so cannot be compared at all: `fig7_monte_carlo_simulation`
+  and `fig8_sensitivity_analysis`, which are precisely the two whose generator
+  is not in this repository. Every figure that HAS a committed generator is now
+  comparable.
+
+  That count was seven until the detector was fixed, and the true figure was
+  nine. The check was `b"/CreationDate" in blob`, and cairo -- which `dot`
+  renders through -- writes the Info dictionary into a compressed object
+  stream, so the literal never appears while the date is plainly there. The
+  two it could not see were `fig19_immune_coupling_flow` and
+  `fig22_decision_flowchart`, the only two drawn by graphviz, and therefore the
+  only two the savefig wrapper could never have cleaned. A byte scan looking
+  for the artifacts a wrapper cannot reach was blind in exactly that place.
 - **Stale inputs.** Regenerating from committed JSON cannot notice the JSON is
   old.
 - **THE GENERATOR ITSELF IS TRUSTED.** Everything here compares what
@@ -700,6 +712,35 @@ def _snapshot(d: Path) -> dict:
             for p in sorted(Path(d).glob("*.pdf"))}
 
 
+def _has_date(data) -> bool:
+    """Does this PDF carry a creation or modification date?
+
+    NOT `b"/CreationDate" in data`. That was the check here, at three sites,
+    and it is blind to exactly the files that most needed it: cairo -- which
+    is what `dot` renders through -- writes the Info dictionary into a
+    COMPRESSED OBJECT STREAM, so the literal string never appears in the file
+    while the date is plainly there to any parser. Measured on
+    `fig19_immune_coupling_flow.pdf` at b8299eb8: the byte scan reports clean,
+    `pymupdf` reports `D:20260422163455-07'00`. The backlog count this file
+    states was 7 by the byte scan and 9 in fact, and the two it missed were
+    the two whose date the savefig wrapper could never have removed.
+
+    `test_the_byte_scan_this_replaced_is_blind_to_a_real_date` pins that case
+    against the committed blob, so this is a measured difference and not a
+    precaution.
+    """
+    import pymupdf
+
+    doc = pymupdf.open(stream=data, filetype="pdf") if isinstance(data, bytes) \
+        else pymupdf.open(data)
+    try:
+        md = doc.metadata or {}
+        return bool((md.get("creationDate") or "").strip()
+                    or (md.get("modDate") or "").strip())
+    finally:
+        doc.close()
+
+
 def _census_figures():
     """The figures the census generator writes, read from its source."""
     return sorted(_census_outputs()["pdf"])
@@ -767,13 +808,13 @@ def test_pdf_output_is_deterministic():
         draw(b)
         assert a.read_bytes() == b.read_bytes(), (
             "two identical figures produced different bytes")
-        assert b"/CreationDate" not in a.read_bytes()
+        assert not _has_date(a)
 
 
 def test_no_census_figure_carries_a_creation_date():
     """The class this fix actually covers."""
     stale = [f"{f}.pdf" for f in _census_figures()
-             if b"/CreationDate" in (FIG_DIR / f"{f}.pdf").read_bytes()]
+             if _has_date(FIG_DIR / f"{f}.pdf")]
     assert not stale, (
         f"{len(stale)} census figures still embed a creation date, so they "
         f"cannot be checked for freshness: {stale}")
@@ -827,7 +868,7 @@ def test_the_corpus_figure_backlog_is_stated_and_shrinking():
         blob = subprocess.run(["git", "show", f"HEAD:{rel}"],
                               cwd=REPO, capture_output=True)
         assert blob.returncode == 0, rel
-        if b"/CreationDate" in blob.stdout:
+        if _has_date(blob.stdout):
             stale.append(Path(rel).name)
     doc = _module_docstring()
     # The scope limits that remain, checked against the docstring. An earlier
@@ -2901,3 +2942,34 @@ def test_the_png_and_pdf_output_sets_are_discovered_separately():
     assert set(after["pdf"]) == set(out["pdf"]), (
         "removing a PNG savefig changed the PDF set, so the two extensions "
         "are discovered together and a deleted png savefig is invisible")
+
+
+def test_the_byte_scan_this_replaced_is_blind_to_a_real_date():
+    """The measured case that justifies `_has_date` opening a parser.
+
+    Three sites here detected a creation date with `b"/CreationDate" in blob`.
+    That is not a cheaper spelling of the same check -- it is a different and
+    weaker one, and the difference is not hypothetical: it decided the backlog
+    count this file states, which read seven while the truth was nine.
+
+    Pinned against the committed blob at b8299eb8, the last commit before the
+    dates were cleared, so this stays a measurement rather than a story. If the
+    blob is ever unreachable the test fails rather than skipping: a positive
+    control that quietly stops running is the failure mode it exists to
+    prevent.
+    """
+    blob = subprocess.run(
+        ["git", "show", "b8299eb8:article/figures/fig19_immune_coupling_flow.pdf"],
+        cwd=REPO, capture_output=True)
+    assert blob.returncode == 0, (
+        "cannot read the pinned blob b8299eb8 -- CI needs fetch-depth: 0 for "
+        f"this control to run: {blob.stderr.decode()[:200]}")
+    data = blob.stdout
+    assert data.startswith(b"%PDF"), "the pinned blob is not a PDF"
+    assert b"CreationDate" not in data, (
+        "the byte scan now FINDS a date in this blob, so it is no longer the "
+        "example of the old check's blind spot and this control proves nothing")
+    assert _has_date(data), (
+        "the parser no longer reports a date for a blob that demonstrably "
+        "carries one, so `_has_date` has stopped detecting the case the byte "
+        "scan could not see")

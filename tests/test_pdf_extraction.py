@@ -185,7 +185,14 @@ def test_every_pdf_reading_module_is_covered_here():
     moment the rename landed.
     """
     known = {"fetch_articles.py", "recover_fulltext.py", "search_books.py",
-             "make_extraction_fixture.py"}
+             "make_extraction_fixture.py",
+             # WRITES metadata, never reads text. It opens a PDF only to clear
+             # the `/CreationDate` graphviz embeds, which the matplotlib
+             # savefig wrapper cannot reach. Listed as an exemption below
+             # rather than trusted: the claim "it does not extract" is
+             # asserted, so the day it starts calling get_text this fires.
+             "generate_conceptual_diagrams.py"}
+    NON_EXTRACTORS = {"generate_conceptual_diagrams.py"}
     importers = {p.name for p in (REPO_ROOT / "scripts").glob("*.py")
                  if "import fitz" in p.read_text() or "import pymupdf" in p.read_text()}
     assert importers <= known, (
@@ -197,3 +204,11 @@ def test_every_pdf_reading_module_is_covered_here():
         assert 'get_text("text")' in src, (
             f"{name} no longer uses get_text(\"text\"); this file pins a call it "
             "does not make, so the extraction path is unguarded again")
+    # The exemption, enforced rather than asserted in a comment. A module
+    # listed as "opens PDFs but does not read them" has to keep being that.
+    for name in importers & NON_EXTRACTORS:
+        src = (REPO_ROOT / "scripts" / name).read_text()
+        assert "get_text" not in src, (
+            f"{name} is exempted from this gate on the grounds that it only "
+            "rewrites PDF metadata, and it now calls get_text. Either remove "
+            "the exemption and cover its extraction path, or stop extracting")
