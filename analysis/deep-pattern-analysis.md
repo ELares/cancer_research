@@ -2,13 +2,18 @@
 
 Extracted from systematic mining of 10,413 articles across 19 mechanisms and 22 cancer types.
 
-> **These counts are over a corpus this project no longer holds.** The 10,413 articles were cut
-> to 4,830 and retagged in March 2026, so every absolute count and every percentage on this page
-> has a denominator that no longer exists. They are left as written because the page is a dated
-> record, not a live analysis. Do NOT carry a number from here into the manuscript without
-> recomputing it: the sentence about SDT GSH/GPX4 engagement in Chapter 7 quoted the "72 (11.8%)"
-> below for five months, and 72/0.118 is the retired denominator. Current values come from
-> `scripts/generate_figures.py` (fig1, fig4, fig6), which is regenerated and gated.
+> **These counts are over a corpus this project still has, but no longer uses.** The 10,413
+> articles were cut to 4,830 and retagged in March 2026, so every absolute count and every
+> percentage on this page has a denominator the project no longer works from. They are left as
+> written because the page is a dated record, not a live analysis, and the pre-cut corpus is
+> recoverable at commit `f65342df` if a number here needs re-deriving.
+>
+> Do NOT carry a number from here into the manuscript without recomputing it. Section 8.2 quoted
+> the "72 SDT articles engage GSH/GPX4 axis (11.8% of SDT corpus)" below for five months as
+> "72 (11.7%)" -- the percentages differ because the manuscript divided by the 617 SDT-tagged
+> articles and this page by a slightly different SDT denominator. Both are retired: the current
+> figure is 30 of 187 (16.0%), and Section 8.2 now carries the decomposition. Current values come
+> from `scripts/generate_figures.py` (fig1, fig4, fig6), which is regenerated and gated.
 
 This document remains useful, but it should now be read through a resistant-state lens. The repo's next iteration should treat OXPHOS-dependent persisters, NRF2-compensated escape, stromal sheltering, and therapy-induced senescence as the primary analytical layer, with modalities such as SDT, PDT, CAP, radioligands, or cell therapy mapped onto those states.
 

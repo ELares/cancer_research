@@ -339,19 +339,28 @@ def fig4_molecular_overlap(articles):
         "HIFU": "hifu",
     }
 
-    # WORD-BOUNDED on every acronym. Bodies are lower-cased before matching,
-    # so a bare `STING` matched "sugge(sting)", "exi(sting)", "boo(sting)" and
-    # "consi(sting)": 1,150 corpus hits against 68 real ones, which made the
-    # largest column of this figure about 94% artifact. Multi-word phrases are
-    # left unbounded because they cannot collide this way.
+    # BOUNDED ON THE LEFT, and on the right only where a suffix would be
+    # wrong. Bodies are lower-cased before matching, so a bare `STING` matched
+    # "sugge(sting)", "exi(sting)", "boo(sting)" and "consi(sting)": 1,150
+    # corpus hits against 68 real ones, and 136 of this figure's largest
+    # column against 12, so 91% of it was artifact.
+    #
+    # A right boundary is NOT free, and a first version of this fix traded one
+    # error for the other: `\bDAMP\b` misses "DAMPs", which is how almost
+    # everyone writes it -- 8 articles against 76 -- so it dropped a real SDT
+    # article whose abstract says "damage-associated molecular patterns
+    # (DAMPs)". Multi-word phrases collide too: unbounded `ER stress` matched
+    # "oth(er stress)es" and "und(er stress) conditions", 36 against 26, while
+    # a right boundary would drop "ER stressor". Left-bound those, and allow
+    # the plural where one exists.
     pathways = {
         "Ferroptosis": r"ferroptosis",
-        "ICD/DAMPs": r"immunogenic cell death|calreticulin|\bHMGB1\b|\bDAMP\b",
-        "GSH/GPX4": r"glutathione|\bGSH\b|\bGPX4\b",
+        "ICD/DAMPs": r"immunogenic cell death|calreticulin|\bHMGB1\b|\bDAMPs?\b|damage.associated",
+        "GSH/GPX4": r"glutathione|\bGSH\b|\bGPX4\b|\bSLC7A11\b",
         "STING/cGAS": r"\bSTING\b|\bcGAS\b|\bsting pathway\b",
-        "ROS": r"reactive oxygen species|\bROS generation\b",
+        "ROS": r"reactive oxygen species|\bROS[- ]gener",
         "Apoptosis": r"apoptosis|caspase",
-        "ER Stress": r"endoplasmic reticulum stress|\bER stress\b|\bUPR\b",
+        "ER Stress": r"endoplasmic reticulum stress|\bER stress|\bUPRs?\b",
         "Autophagy": r"autophagy|autophagic",
     }
 
@@ -457,7 +466,7 @@ def fig6_sdt_chain_evidence(articles):
         "GPX4\ninactivation": r"\bGPX4\b|glutathione peroxidase 4",
         "Lipid\nperoxidation": r"lipid peroxid",
         "Ferroptosis": r"ferroptosis",
-        "DAMP\nrelease": r"calreticulin|\bHMGB1\b|\bDAMP\b|damage.associated",
+        "DAMP\nrelease": r"calreticulin|\bHMGB1\b|\bDAMPs?\b|damage.associated",
         "STING\nactivation": r"\bSTING\b|\bcGAS\b",
         "ICD": r"immunogenic cell death",
     }

@@ -209,3 +209,62 @@ def test_the_regenerated_corpus_figures_are_what_the_generator_draws(tmp_path):
     # that never runs reports exactly what a check that passes reports.
     assert compared == len(tracked), (
         f"compared {compared} figures, not {len(tracked)}")
+
+
+# Strings that MUST match, and strings that must NOT, for the acronym patterns
+# these figures count with. Both halves are needed: unbounded, `STING` counted
+# "suggesting" and 91% of fig4's largest column was artifact; bounded on the
+# right, `DAMP` stopped counting "DAMPs", which is how almost everyone writes
+# it, and dropped a real SDT article. A fix that trades one error for the other
+# is not an improvement, and nothing in this repo pinned either direction.
+_PATTERN_CASES = {
+    "ICD/DAMPs": (
+        ["damage-associated molecular patterns (damps)", "release of damps",
+         "a damp signal", "calreticulin exposure", "hmgb1 release",
+         "immunogenic cell death"],
+        ["dampen the response", "dampened", "hmgb1a", "damping"],
+    ),
+    "GSH/GPX4": (
+        ["gsh depletion", "gsh/gpx4 axis", "glutathione peroxidase",
+         "gpx4 inactivation", "slc7a11 expression", "intracellular gsh)"],
+        ["changsha university", "gshan", "gpx4l"],
+    ),
+    "STING/cGAS": (
+        ["sting pathway activation", "cgas-sting signalling", "the sting agonist"],
+        ["suggesting that", "existing therapies", "boosting immunity",
+         "consisting of", "interestingly", "testing the hypothesis"],
+    ),
+    "ROS": (
+        ["ros generation", "ros-generating nanoparticles", "reactive oxygen species"],
+        ["necrosis", "prostate cancer", "across the tumour", "sclerosis"],
+    ),
+    "ER Stress": (
+        ["er stress response", "er stressor thapsigargin", "er stresses",
+         "endoplasmic reticulum stress"],
+        ["other stresses", "under stress conditions", "her stress levels"],
+    ),
+}
+
+
+@pytest.mark.parametrize("label", sorted(_PATTERN_CASES))
+def test_the_pathway_patterns_match_what_they_claim_to(label):
+    """The patterns are read from the generator, not restated here."""
+    import re as _re
+
+    g = _generator()
+    src = GEN.read_text()
+    body = src[src.index("    pathways = {"):]
+    body = body[:body.index("    }") + 5]
+    ns = {}
+    exec("import re\n" + body.strip(), ns)          # noqa: S102 - our own source
+    pattern = ns["pathways"][label]
+
+    should, should_not = _PATTERN_CASES[label]
+    for text in should:
+        assert _re.search(pattern, text, _re.IGNORECASE), (
+            f"/{label}/ no longer matches {text!r}; a right-hand word boundary "
+            "on an acronym drops its plural, which is how DAMPs was lost")
+    for text in should_not:
+        assert not _re.search(pattern, text, _re.IGNORECASE), (
+            f"/{label}/ matches {text!r}, which is a substring collision -- "
+            "the defect that made 91% of one column of fig4 an artifact")
