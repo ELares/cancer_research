@@ -35,12 +35,13 @@ ones known and deliberate:
   not portable, and no portable comparison is implemented.
 - **Most non-census PDFs.** Twenty-two committed figures come from other
   generators. Five of them -- the corpus-derived ones, whose inputs are tracked
-  -- are now regenerated and gated by
-  `tests/test_figure_caption_statistics.py`; the other seventeen are not, and
-  fifteen still embed a creation date, so they cannot be checked at all.
-  Regenerating those is not a metadata-only change -- it rewrites plots from
-  gitignored simulation output and emits figures that were never committed --
-  so it stays filed (#788).
+  -- are regenerated and gated by `tests/test_figure_caption_statistics.py`;
+  the other seventeen are not. Eight of those seventeen are the
+  simulation-derived figures, regenerated in the #790 pass so they no longer
+  embed a creation date, but still uncheckable in CI because their inputs live
+  under `simulations/output/`, which is gitignored -- the tracking decision is
+  measured on #788, and seven still embed a creation date and so cannot be
+  compared at all.
 - **Stale inputs.** Regenerating from committed JSON cannot notice the JSON is
   old.
 - **THE GENERATOR ITSELF IS TRUSTED.** Everything here compares what
@@ -780,7 +781,8 @@ def _corpus_derived_stems():
 
 def _spell(n: int) -> str:
     """Small numbers as the docstring writes them."""
-    words = {5: "five", 15: "fifteen", 17: "seventeen", 22: "twenty-two"}
+    words = {5: "five", 7: "seven", 8: "eight", 15: "fifteen",
+             17: "seventeen", 22: "twenty-two"}
     return words.get(n, str(n))
 
 
