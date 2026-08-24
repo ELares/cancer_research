@@ -32,7 +32,10 @@ from figure_io import make_figures_deterministic  # noqa: E402
 
 # PDFs embed a creation date, so without this a regenerated figure
 # differs from its committed copy even when the data has not moved --
-# which is why figure freshness could not be checked at all.
+# which is why figure freshness could not be checked at all. Determinism was
+# added here before there was anything to compare it against; what was
+# missing is the scratch-directory override below, without which a freshness
+# test has to write the working tree to find out.
 make_figures_deterministic()
 import matplotlib.patches as mpatches
 import numpy as np
@@ -42,7 +45,10 @@ from scipy import stats
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 PMID_DIR = PROJECT_ROOT / "corpus" / "by-pmid"
 INDEX_FILE = PROJECT_ROOT / "corpus" / "INDEX.jsonl"
-FIG_DIR = PROJECT_ROOT / "article" / "figures"
+# `FERRO_FIG_DIR` so a test can regenerate into a scratch directory and compare
+# without writing the working tree, exactly as the census generator allows.
+FIG_DIR = Path(os.environ.get(
+    "FERRO_FIG_DIR", str(PROJECT_ROOT / "article" / "figures")))
 FIG_DIR.mkdir(parents=True, exist_ok=True)
 
 # 2D TME (sim-tme) and combination-mechanism (sim-combo-mech) outputs. Both are
