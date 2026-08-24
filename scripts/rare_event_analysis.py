@@ -69,6 +69,12 @@ import matplotlib  # noqa: E402
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 
+from figure_io import make_figures_deterministic  # noqa: E402
+
+# PDFs embed a creation date; without this a regenerated figure differs
+# from its committed copy even when nothing about the drawing changed.
+make_figures_deterministic()
+
 
 plt.rcParams.update({
     "font.size": 10, "axes.titlesize": 12, "axes.labelsize": 11,

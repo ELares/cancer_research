@@ -27,6 +27,13 @@ from pathlib import Path
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+
+from figure_io import make_figures_deterministic  # noqa: E402
+
+# PDFs embed a creation date, so without this a regenerated figure
+# differs from its committed copy even when the data has not moved --
+# which is why figure freshness could not be checked at all.
+make_figures_deterministic()
 import matplotlib.patches as mpatches
 import numpy as np
 import yaml

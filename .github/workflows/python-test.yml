@@ -28,6 +28,12 @@ on:
       # Two step-duration guards read the manuscript live (the Section 8.4
       # bullet-adjacency claim), so a manuscript edit can stale them:
       - 'article/drafts/**'
+      # The figure freshness gate reads the committed figures and FIGURES.yaml.
+      # Without these, a PR that hand-edits or reverts a figure, or flips a
+      # figure's `status:` in the index, runs no Python CI at all -- the gate
+      # would never fire on the artifact class it gates:
+      - 'article/figures/**'
+      - 'FIGURES.yaml'
       - 'requirements*.txt'
       - '.github/workflows/python-test.yml'
   pull_request:
@@ -56,6 +62,12 @@ on:
       # Two step-duration guards read the manuscript live (the Section 8.4
       # bullet-adjacency claim), so a manuscript edit can stale them:
       - 'article/drafts/**'
+      # The figure freshness gate reads the committed figures and FIGURES.yaml.
+      # Without these, a PR that hand-edits or reverts a figure, or flips a
+      # figure's `status:` in the index, runs no Python CI at all -- the gate
+      # would never fire on the artifact class it gates:
+      - 'article/figures/**'
+      - 'FIGURES.yaml'
       - 'requirements*.txt'
       - '.github/workflows/python-test.yml'
   schedule:
