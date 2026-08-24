@@ -38,6 +38,16 @@ ones known and deliberate:
   were never committed -- so it is filed (#788), not done here.
 - **Stale inputs.** Regenerating from committed JSON cannot notice the JSON is
   old.
+- **THE GENERATOR ITSELF IS TRUSTED.** Everything here compares what
+  `scripts/generate_census_figures.py` writes against what is committed, so a
+  generator that copies `article/figures/*.pdf` into its output directory
+  passes every check with all eight figures wrong -- measured, 57 green. This
+  is not closeable by comparing contents: on the authoring machine an honest
+  regeneration and a copy are the same bytes by design, which is the whole
+  point of removing `/CreationDate`. What stands between that and a merge is
+  the `scripts/**` CI path filter putting the diff in front of a reviewer.
+  Weaker versions ARE caught -- copying every PDF trips the produced-set
+  equality, and writing past `FERRO_FIG_DIR` trips `assert produced`.
 - **The whole `/Font` subtree**, not only glyph outlines: an earlier version
   of this bullet said "glyph outlines", and a reviewer showed that understates
   it. Swapping the Type3 outlines for `zero` and `one` changes what a figure
@@ -62,8 +72,10 @@ controls are the reason to believe any of the above.
 Where several keys of ONE object are read through the same call, at least one
 key of the group carries that control -- `/BBox`, `/Matrix` and `/Group` for
 form xobjects, `/Decode` for the alpha plane, `/OC` for an image -- and their
-siblings (a form's own `/OC`, `/Subtype`, `/Width`, `/Height`, `/ColorSpace`,
-`/BitsPerComponent`, `/ImageMask`, `/Matte`, `/Mask`, `/Interpolate`) are read
+siblings (a form's own `/OC` and `/Subtype`; an IMAGE's `/Decode`, `/Width`,
+`/Height`, `/ColorSpace`, `/BitsPerComponent`, `/ImageMask`, `/Mask`,
+`/Interpolate`; and the alpha plane's `/Width`, `/Height`, `/ColorSpace`,
+`/BitsPerComponent`, `/ImageMask`, `/Matte`) are read
 by the same mechanism and are NOT separately controlled -- meaning each is an
 independently deletable element of a literal tuple, and deleting any one of
 them leaves this file green. "Read by the same mechanism" is a description of
@@ -321,9 +333,6 @@ def _indirect(val):
             return int(str(val[1]).split()[0])
         except Exception:
             return None
-    if isinstance(val, str):
-        m = re.fullmatch(r"\s*(\d+) 0 R\s*", val)
-        return int(m.group(1)) if m else None
     return None
 
 
@@ -453,10 +462,20 @@ def xref_name(doc, pg, xref) -> str:
 
 # How far a reference chain is followed. Not unbounded: a malformed or
 # adversarial file can chain arbitrarily, and every level multiplies work.
-# Chains of 11 exist in the test suite and 7 was the measured blind spot, so
-# the limit is stated here rather than buried, and the docstring says a limit
-# exists rather than claiming contents are followed without qualification.
+#
+# The number is HEADROOM, and the first version of this comment justified it
+# with "chains of 11 exist in the test suite and 7 was the measured blind
+# spot" -- a hand-written figure that measurement does not support, which is
+# the defect this file exists to retract, in the sentence explaining a
+# constant. Measured instead, and pinned by
+# `test_the_traversal_depth_committed_figures_need_is_measured`: the eight
+# committed figures reach depth 0, because no resource on any of them is
+# nested at all, and the deepest crafted control reaches 6. The suite pins the
+# bound somewhere in (4, 6]; everything above that is deliberate slack for
+# files this project does not yet produce, and it is slack rather than
+# evidence.
 _MAX_DEPTH = 24
+_MAX_DEPTH_SEEN = 0
 
 
 def _resolve(doc, val, depth: int = 0, stack=None) -> str:
@@ -521,6 +540,8 @@ def _resolve(doc, val, depth: int = 0, stack=None) -> str:
 
 def _substitute(doc, text: str, depth: int, stack) -> str:
     """Replace each `N 0 R` in `text` with what it resolves to."""
+    global _MAX_DEPTH_SEEN
+    _MAX_DEPTH_SEEN = max(_MAX_DEPTH_SEEN, depth)
     if depth >= _MAX_DEPTH:
         return _denumber(text) + "|<depth-limit>"
 
@@ -625,7 +646,9 @@ def _run_generator(scratch: Path, env: dict):
     directory being repopulated afterwards, and any line between the two is
     outside the window it covers -- a single line copying the committed
     figures in, placed above the snapshot, passed with all eight genuinely
-    stale. There is no gap here to insert one into.
+    stale. There is no gap IN THE CALLER to insert one into -- the two lines
+    below are still a gap, and a copy loop between them still works. That is
+    the boundary below, not a claim to have closed it.
 
     WHAT THIS DOES NOT CLAIM: an edit to THIS function, or to any of the
     guards it feeds, defeats it. Every attack in this file's history is an
@@ -653,7 +676,7 @@ def _census_figures():
     return sorted(_census_outputs()["pdf"])
 
 
-def _census_outputs() -> dict:
+def _census_outputs(src: str = None) -> dict:
     """Census figure stems, PER EXTENSION.
 
     Folding both into one name set meant a deleted `.png` savefig left the
@@ -662,7 +685,7 @@ def _census_outputs() -> dict:
     stop being generated with the whole suite green. That is the same floor
     defect this file retracts, still open on the PNG side.
     """
-    src = GEN.read_text()
+    src = GEN.read_text() if src is None else src
     out = {"pdf": set(), "png": set()}
     for stem, ext in re.findall(r'FIG_DIR / f?"([\w.]+?)\.(pdf|png)"', src):
         out[ext].add(stem)
@@ -2008,8 +2031,16 @@ def test_the_flagship_actually_performs_its_comparisons():
     or by an early return.
 
     Disabling the gate now takes edits to two tests rather than one. That is a
-    higher bar, not a proof: a `pytest.skip` reaches any test in any suite,
-    and this file does not pretend to cover that.
+    higher bar, not a proof: a `pytest.skip()` CALL as the flagship's first
+    statement silences this test too and exits 0, and this file does not
+    pretend to cover that.
+
+    Measured, and narrower than the usual disclaimer: only the in-body call
+    form works. `@pytest.mark.skip` on the flagship is RED, because this test
+    calls the plain function and the marker never runs -- and
+    `@pytest.mark.slow` is red for the same reason, which is independent
+    evidence that the marker really is inert. The hole is one specific line,
+    not "any skip".
     """
     global _COMPARISONS
     before, mark = _COMPARISONS, len(_COMPARED)
@@ -2508,9 +2539,16 @@ def test_image_surfaces_survive_a_renumbering(tmp_path):
         finally:
             d.close()
 
-    if image_xrefs(plain) == image_xrefs(shifted):
-        pytest.skip("this pymupdf build did not renumber the image objects, "
-                    "so the control cannot demonstrate the property")
+    # FAIL, do not skip. This was a `pytest.skip`, so dropping `garbage=4` --
+    # the control's own stated mechanism -- turned it into `56 passed,
+    # 1 skipped`, exit 0, with `xref_name` then replaceable by `str(xref)` and
+    # the suite green. The flagship's own comment two hundred lines up argues
+    # exactly this: "NO SKIPS ... the check reported green while never
+    # running." This was the last instance of it in the file.
+    assert image_xrefs(plain) != image_xrefs(shifted), (
+        "the objects were not renumbered, so this control cannot demonstrate "
+        "that image surfaces are keyed on the resource name rather than the "
+        "xref -- and it would have reported green while proving nothing")
     assert _drawing(plain) == _drawing(shifted), (
         "renumbering the objects of an identical drawing changed the surface "
         "list, so image surfaces are keyed on an allocation artifact")
@@ -2624,3 +2662,95 @@ def test_a_bare_name_resource_value_is_compared_by_mapping(tmp_path, first, seco
     assert moved == {"ColorSpace#Cs1", "ColorSpace#Cs2"}, (
         "swapping which NAME maps to which colour space moved "
         f"{sorted(moved) or 'nothing'}; the mapping is being compared as a set")
+
+
+def _deep_probe(tmp: Path) -> Path:
+    """A copy of fig2c whose `/Properties` hangs off a six-link chain."""
+    try:
+        import pymupdf
+    except ImportError:
+        import fitz as pymupdf
+
+    copy = tmp / "probe.pdf"
+    copy.write_bytes((FIG_DIR / "fig2c_census_volume.pdf").read_bytes())
+    doc = pymupdf.open(copy)
+    try:
+        head, _ = _chain(doc, "1", 6)
+        holder = doc.get_new_xref()
+        doc.update_object(holder, f"<</A {head} 0 R>>")
+        doc.xref_set_key(_page_resources_xref(doc), "Properties", f"{holder} 0 R")
+        out = tmp / "deep.pdf"
+        doc.save(out, deflate=True)
+        return out
+    finally:
+        doc.close()
+
+
+def test_the_traversal_depth_committed_figures_need_is_measured():
+    """`_MAX_DEPTH` is HEADROOM, and its justification used to be invented.
+
+    The constant's comment claimed "chains of 11 exist in the test suite and 7
+    was the measured blind spot". Neither number is real: instrumenting the
+    traversal shows the eight committed figures reach depth 0 -- no resource on
+    any of them is nested at all -- and the deepest crafted control reaches 6.
+
+    So the number is derived here rather than asserted there, and this fails if
+    a future figure ever gets close to the bound, which is the only condition
+    under which the slack stops being slack.
+    """
+    global _MAX_DEPTH_SEEN
+    _MAX_DEPTH_SEEN = 0
+    for stem in _census_figures():
+        assert _drawing(FIG_DIR / f"{stem}.pdf") is not None
+    reached = _MAX_DEPTH_SEEN
+    # The instrument first: a measurement of zero and a broken counter look
+    # identical, and `_MAX_DEPTH_SEEN = 0` in place of the `max()` passed this
+    # test unchanged. A crafted chain must move it.
+    deep = _MAX_DEPTH_SEEN
+    with tempfile.TemporaryDirectory() as td:
+        probe = _deep_probe(Path(td))
+        _MAX_DEPTH_SEEN = 0
+        _drawing(probe)
+        deep = _MAX_DEPTH_SEEN
+    assert deep >= 5, (
+        f"a six-link chain registered depth {deep}; the depth counter is not "
+        "tracking, so the measurement below is of the instrument, not the file")
+    assert reached <= 4, (
+        f"the committed figures now reach traversal depth {reached}; the "
+        "constant's comment says they reach 0, so the comment is stale")
+    assert _MAX_DEPTH >= reached + 8, (
+        f"_MAX_DEPTH ({_MAX_DEPTH}) leaves less than 8 levels of headroom "
+        f"above the {reached} the committed figures actually need")
+
+
+def test_the_png_and_pdf_output_sets_are_discovered_separately():
+    """CONTROL for the split in `_census_outputs`, which had none.
+
+    Folding both extensions into one set is green today, and it is the fix for
+    a real defect: with one set, deleting a `.png` savefig leaves the count
+    unchanged and the existence check -- which only ever looks for `{stem}.pdf`
+    -- never notices, so a census PNG can stop being generated with the suite
+    green. Two edits rather than one, and no control on either.
+    """
+    src = GEN.read_text()
+    out = _census_outputs(src)
+    assert set(out) == {"pdf", "png"}, f"the split is gone: {sorted(out)}"
+    assert out["pdf"] and out["png"], "one of the extension sets is empty"
+    # REMOVE a png savefig from a COPY of the source: the png set must shrink
+    # and the pdf set must not. Folding the two into one makes both shrink or
+    # neither, which is what leaves a deleted `.png` savefig invisible.
+    stem = sorted(out["png"])[0]
+    for spelling in (f'FIG_DIR / "{stem}.png"', f'FIG_DIR / f"{stem}.png"'):
+        if spelling in src:
+            doctored = src.replace(spelling, 'FIG_DIR / "_removed_.txt"')
+            break
+    else:
+        raise AssertionError(
+            f"{stem} is not written by a literal savefig, so this control "
+            "cannot demonstrate the split")
+    after = _census_outputs(doctored)
+    assert stem not in after["png"], (
+        "removing a png savefig did not shrink the png set")
+    assert set(after["pdf"]) == set(out["pdf"]), (
+        "removing a PNG savefig changed the PDF set, so the two extensions "
+        "are discovered together and a deleted png savefig is invisible")
