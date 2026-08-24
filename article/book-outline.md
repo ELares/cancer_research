@@ -212,9 +212,9 @@ Step-by-step: clone, build, run analysis, run simulations, compile PDF.
 |------|----------|--------------|-------------|
 | I: Why This Exists | 1-2 | ~4,200 | 6,000 |
 | II: What We Found | 3-4 | ~15,800 | 12,000 |
-| III: Simulations | 5-8 | ~21,200 | 16,500 |
+| III: Simulations | 5-8 | ~21,300 | 16,500 |
 | IV: What's Next | 9-11 | ~5,400 | 11,500 |
-| V: References/Tools | Apps A-C | ~7,700 | 8,000 |
+| V: References/Tools | Apps A-C | ~7,600 | 8,000 |
 | front matter (title, abstract) | — | ~1,300 | — |
 | **Total** | **11 + 3 apps** | **~55,600** | **~54,000** |
 

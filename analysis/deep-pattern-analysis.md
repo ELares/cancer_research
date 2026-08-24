@@ -3,8 +3,9 @@
 Extracted from systematic mining of 10,413 articles across 19 mechanisms and 22 cancer types.
 
 > **These counts are over a corpus this project still has, but no longer uses.** The 10,413
-> articles were cut to 4,830 and retagged in March 2026, so every absolute count and every
-> percentage on this page has a denominator the project no longer works from. They are left as
+> articles were cut to 4,830 and retagged in March 2026, so every count and percentage on this
+> page that divides by the corpus has a denominator the project no longer works from (per-paper
+> citation counts are unaffected). They are left as
 > written because the page is a dated record, not a live analysis, and the pre-cut corpus is
 > recoverable at commit `f65342df` if a number here needs re-deriving.
 >

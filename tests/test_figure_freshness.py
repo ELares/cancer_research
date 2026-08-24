@@ -33,9 +33,14 @@ ones known and deliberate:
 - **No PNG content, at all.** The eight census PNGs are checked for existence
   and nothing else. Replacing one with an unrelated image passes. PNG bytes are
   not portable, and no portable comparison is implemented.
-- **The twenty non-census PDFs.** They still embed a creation date. Regenerating
-  them is not a metadata-only change -- it rewrites plots and emits figures that
-  were never committed -- so it is filed (#788), not done here.
+- **Most non-census PDFs.** Twenty-two committed figures come from other
+  generators. Five of them -- the corpus-derived ones, whose inputs are tracked
+  -- are now regenerated and gated by
+  `tests/test_figure_caption_statistics.py`; the other seventeen are not, and
+  fifteen still embed a creation date, so they cannot be checked at all.
+  Regenerating those is not a metadata-only change -- it rewrites plots from
+  gitignored simulation output and emits figures that were never committed --
+  so it stays filed (#788).
 - **Stale inputs.** Regenerating from committed JSON cannot notice the JSON is
   old.
 - **THE GENERATOR ITSELF IS TRUSTED.** Everything here compares what
@@ -757,6 +762,12 @@ def test_no_census_figure_carries_a_creation_date():
         f"cannot be checked for freshness: {stale}")
 
 
+def _spell(n: int) -> str:
+    """Small numbers as the docstring writes them."""
+    words = {5: "five", 15: "fifteen", 17: "seventeen", 22: "twenty-two"}
+    return words.get(n, str(n))
+
+
 def test_the_corpus_figure_backlog_is_stated_and_shrinking():
     """The other generator's figures are NOT covered, and saying how many is
     what stops "figures are gated now" being read as covering all of them."""
@@ -770,7 +781,22 @@ def test_the_corpus_figure_backlog_is_stated_and_shrinking():
     # FALSE -- it exits 0 without the simulation outputs -- so a guard was
     # requiring a false sentence to stay present. That claim is gone.
     assert "No PNG content, at all" in doc
-    assert "The twenty non-census PDFs" in doc
+    # DERIVED, not a literal. The old assertion pinned the phrase "The twenty
+    # non-census PDFs", so the sentence stayed green while this PR gated five
+    # of them and removed the creation date from those five. A count stated in
+    # prose and pinned by its own spelling cannot notice being wrong.
+    assert "Most non-census PDFs" in doc
+    total = len([p for p in FIG_DIR.glob("*.pdf") if p.name not in census])
+    gated = 5
+    assert f"Twenty-two committed figures" in doc and total == 22, (
+        f"{total} non-census figures are committed; the docstring says "
+        "twenty-two")
+    assert f"the other {_spell(total - gated)} are not" in doc, (
+        f"{total - gated} non-census figures are ungated and the docstring "
+        "says otherwise")
+    assert f"{_spell(len(stale))} still embed a creation date" in doc, (
+        f"{len(stale)} still embed a creation date and the docstring says "
+        "otherwise")
     import yaml as _yaml
 
     _spec = _yaml.safe_load((REPO / "FIGURES.yaml").read_text())

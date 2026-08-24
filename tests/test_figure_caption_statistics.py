@@ -329,6 +329,8 @@ def test_the_chapter_8_decomposition_is_derived_not_asserted(tmp_path):
     the current corpus and from the pre-cut one, and the sentence read back.
     """
     import matplotlib
+    import subprocess
+
     matplotlib.use("Agg")
     g = _generator()
 
@@ -408,9 +410,41 @@ def test_the_chapter_8_decomposition_is_derived_not_asserted(tmp_path):
             f"Section 8.2 does not state {what} as measured -- expected "
             f"{fragment!r}. Recompute the sentence; do not adjust this test.")
 
-    assert facts["retagged and GSH-positive"] == 0, (
-        "a retagged article is GSH-positive, so the sentence's 'neither of "
+    # THE CLAIMS, not only the numerals. Four mutations of this paragraph left
+    # the first version of this guard green: "rose" to "fell", "glutathione"
+    # to "GPX4", "March 2026" to "January 2019", and "neither of them
+    # GSH-positive" to "both of them". A sentence made of fifteen correct
+    # numbers can still say the opposite of what they show.
+    positive = facts["retagged and GSH-positive"]
+    assert positive == 0, (
+        "a retagged article is GSH-positive, so the paragraph's 'neither of "
         "them GSH-positive' is now false")
+    assert "neither of them GSH-positive" in sentence, (
+        f"{positive} of the retagged articles are GSH-positive, and the "
+        "paragraph no longer says so")
+    assert pcts["widened new"] > pcts["retired"], "the share did not rise"
+    assert "the share rose by about" in sentence, (
+        "the share rose and the paragraph does not say 'rose'")
+    assert "counting the word *glutathione* alone" in sentence, (
+        "the paragraph no longer names the retired instrument, or names a "
+        "different one -- it is `glutathione` alone that reproduces 72")
+    # The reconstruction is HEDGED, because it is one. No text window over the
+    # pre-cut corpus reproduces the source page's 39 ferroptosis and 21 ICD
+    # counts alongside its 72, so the instrument is inferred, not recorded.
+    assert "reconstruction rather than a record" in sentence, (
+        "the paragraph states the retired instrument as fact; it is inferred "
+        "from one number and the companion counts do not corroborate it")
+    cut = subprocess.run(
+        ["git", "log", "-1", "--format=%cs", "37ab0f55"],
+        cwd=REPO, capture_output=True, text=True).stdout.strip()
+    assert cut[:4] and cut[5:7], f"cannot date the cut commit: {cut!r}"
+    month = {"01": "January", "02": "February", "03": "March", "04": "April",
+             "05": "May", "06": "June", "07": "July", "08": "August",
+             "09": "September", "10": "October", "11": "November",
+             "12": "December"}[cut[5:7]]
+    assert f"in {month} {cut[:4]}" in sentence, (
+        f"the corpus was cut in {month} {cut[:4]} and the paragraph says "
+        "something else")
     # The two rounded steps, computed from UNROUNDED shares. Subtracting the
     # rounded operands gives 2.2 and is what the first version of the sentence
     # published.
@@ -437,8 +471,58 @@ def _axis_patterns():
 
 
 def _chapter_8_sentence() -> str:
-    """The retraction paragraph in the manuscript source, whitespace-normalised."""
+    """The retraction paragraph in the manuscript source, whitespace-normalised.
+
+    BOUNDED to one paragraph inside Chapter 8. An unbounded `.*?` matched from
+    Section 8.2 to a copy of the closing sentence parked seven hundred lines
+    later under a different heading, swallowing the whole intervening
+    manuscript and passing -- so the guard could be satisfied by text that had
+    been moved out of the chapter it describes.
+    """
     text = (REPO / "article/drafts/v1.md").read_text()
-    m = re.search(r"SDT-specific data shows.*?recomputed from it\.", text, re.S)
-    assert m, "the Section 8.2 retraction paragraph is gone or was reworded"
-    return " ".join(m.group(0).split())
+    start = text.index("## Chapter 8:")
+    nxt = text.find("\n## ", start + 1)
+    chapter = text[start:nxt if nxt != -1 else len(text)]
+    paras = [p for p in chapter.split("\n\n") if "SDT-specific data shows" in p]
+    assert len(paras) == 1, (
+        f"expected one retraction paragraph inside Chapter 8, found {len(paras)}")
+    para = " ".join(paras[0].split())
+    assert para.endswith("broader than SDT alone."), (
+        "the retraction paragraph does not end where this guard expects; it "
+        "may have been split, and half of it would then go unchecked")
+    return para
+
+
+def test_the_latex_manuscript_is_a_regeneration_of_its_source():
+    """`v1.tex` must be exactly what `generate_latex.py` produces from `v1.md`.
+
+    THE RELEASE ARTIFACT IS THE TEX. `release-pdf.yml` builds the published PDF
+    from `article/drafts/v1.tex`, while every prose guard in this repository --
+    including the retraction guard above -- reads `v1.md`. A reviewer reverted
+    one sentence in the tex to the retracted "72 GSH/GPX4 articles (11.7%)",
+    regenerated `MANIFEST.sha256` exactly as the manifest error message
+    instructs, and the whole suite stayed green with the retracted number in
+    the shipped LaTeX.
+
+    That is the same .md/.tex split that let the fig1 caption drift for five
+    months, one level up: the caption was fixed in the generated file while its
+    generator still held the old value. Checking the two agree closes both.
+    """
+    import subprocess
+    import tempfile
+
+    tex = REPO / "article/drafts/v1.tex"
+    committed = tex.read_text()
+    with tempfile.TemporaryDirectory() as td:
+        backup = Path(td) / "v1.tex"
+        backup.write_text(committed)
+        res = subprocess.run(
+            [sys.executable, str(REPO / "scripts/generate_latex.py")],
+            cwd=REPO, capture_output=True, text=True)
+        regenerated = tex.read_text()
+        tex.write_text(committed)          # never leave the tree modified
+    assert res.returncode == 0, res.stderr[-600:]
+    assert regenerated == committed, (
+        "article/drafts/v1.tex is not what scripts/generate_latex.py draws "
+        "from v1.md. Re-run it -- an edit made directly to the tex is an edit "
+        "no prose guard in this repository can see, and it is what ships.")

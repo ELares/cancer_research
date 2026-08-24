@@ -4,11 +4,11 @@
 > 4,830 and retagged; the SDT-tagged set went from 617 articles to 187. Every absolute count and
 > percentage here therefore has a denominator the project no longer works from, and the pre-cut
 > corpus is recoverable at commit `f65342df` if one needs re-deriving. Current values come from
-> `scripts/generate_figures.py`, which is regenerated and gated; Section 8.2 of the manuscript
-> carries the decomposition of one of these numbers. Do not carry a figure from here into the
-> manuscript without recomputing it.
+> `scripts/generate_figures.py`, which is regenerated and gated. Do not carry a figure from here
+> into the manuscript without recomputing it.
 > On this page specifically: the only SDT count here is "39 SDT-ferroptosis articles", which is
-> now 19.
+> now 19. Section 8.2 of the manuscript decomposes the GSH/GPX4 and dual-pathway counts, neither
+> of which this page carries, so it is not the reference for this one.
 
 ## The Principle, Precisely Stated
 
