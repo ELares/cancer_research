@@ -41,12 +41,19 @@ ones known and deliberate:
   `simulations/output/`, which is gitignored, so CI cannot regenerate them at
   all until #788's tracking decision is made; they were regenerated in the #790
   pass and no longer embed a creation date, which is necessary for a freshness
-  check and not sufficient for one. The other two are not blocked that way and
-  the first version of this bullet wrongly said they were:
+  check and not sufficient for one. The other two are not blocked that way, and the first
+  version of this bullet wrongly said they were:
   `fig29_rare_event_resolution` reads the TRACKED `analysis/rare-event-sweep.jsonl`
-  through a deterministic generator and could be gated today, and
-  `fig7_monte_carlo_simulation` is drawn by a Rust binary with no
-  `simulations/output/` input. Across all seventeen, seven still embed a
+  through a deterministic generator, so regenerating it once -- which it
+  needs anyway, being one of the seven below -- would bring it under a
+  gate; and `fig7_monte_carlo_simulation` reads the TRACKED
+  `simulations/simulation_results.json`, but has no committed generator at all
+  -- it is a matplotlib figure whose producing code is not in this repository,
+  which is why the orphan exemption below covers it. (An earlier version of
+  this bullet said fig7 "is drawn by a Rust binary". It is not: `sim-original`
+  prints JSON and links no plotting crate, and the committed PDF's `/Producer`
+  is Matplotlib. The same false claim sits in a comment in
+  `scripts/generate_figures.py` and is corrected there too.) Across all seventeen, seven still embed a
   creation date and so cannot be compared at all.
 - **Stale inputs.** Regenerating from committed JSON cannot notice the JSON is
   old.
@@ -787,7 +794,8 @@ def _corpus_derived_stems():
 
 def _spell(n: int) -> str:
     """Small numbers as the docstring writes them."""
-    words = {5: "five", 7: "seven", 8: "eight", 10: "ten", 15: "fifteen",
+    words = {0: "no", 1: "one", 2: "two", 3: "three", 5: "five", 7: "seven",
+             8: "eight", 9: "nine", 10: "ten", 15: "fifteen",
              17: "seventeen", 22: "twenty-two"}
     return words.get(n, str(n))
 
@@ -863,10 +871,17 @@ def test_the_corpus_figure_backlog_is_stated_and_shrinking():
         ins = f.get("inputs") or []
         (blocked if any(not (i in tracked_files) for i in ins) else free).append(
             f["filename"])
-    assert len(blocked) == 8 and len(free) == 2, (
+    # SPELLED INTO THE PROSE, not compared against literals here. The first
+    # version asserted `len(blocked) == 8 and len(free) == 2` -- two constants
+    # in the test compared against FIGURES.yaml -- so the docstring could say
+    # three and seven, or that none of the ten is checkable, and stay green.
+    # That is the defect this whole paragraph exists to retract, in its guard.
+    assert f"{_spell(len(blocked)).capitalize()} of the ten" in doc, (
         f"{len(blocked)} of the simulation figures read an untracked input and "
-        f"{len(free)} do not; the docstring says eight and two. blocked="
-        f"{sorted(blocked)} free={sorted(free)}")
+        f"the docstring says otherwise. blocked={sorted(blocked)}")
+    assert f"The other {_spell(len(free))} are not blocked" in doc, (
+        f"{len(free)} of them do not, and the docstring says otherwise. "
+        f"free={sorted(free)}")
     for name in free:
         assert name.split("_")[0] in doc, (
             f"{name} is not blocked by a gitignored input and the docstring "

@@ -157,9 +157,16 @@ def test_the_fixture_agrees_with_the_live_engine():
         json.loads(SUMMARY.read_text())["conditions"]))
     fixed = _baseline_rows(_immune_on_rows(
         json.loads(FIXTURE.read_text())["conditions"]))
-    as_map = lambda rs: {r["treatment"]: r.get("immune_kills") for r in rs}
+    # EVERY FIELD THE GUARDS CONSUME, not just immune_kills: the caption check
+    # reads `ferroptosis_kills` too, so a fixture drifting on that field was
+    # caught only where a live engine exists -- which is not CI, the one place
+    # the fixture is the reference.
+    as_map = lambda rs: {r["treatment"]: (r.get("immune_kills"),
+                                          r.get("ferroptosis_kills"))
+                         for r in rs}
     assert as_map(live) == as_map(fixed), (
-        f"the committed fixture says {as_map(fixed)} and this machine's "
+        f"the committed fixture says {as_map(fixed)} (immune, ferroptosis) "
+        f"and this machine's "
         f"sim-tme says {as_map(live)}; CI checks the figure against the "
         "fixture, so a stale fixture makes that check meaningless")
 
@@ -231,6 +238,27 @@ def test_only_the_baseline_section_writes_the_damp_heatmaps():
         "the DAMP heatmap write is not guarded by `immune_label == "
         '"immune_on"` inside the baseline loop, so the panels may come from '
         "the anti-PD-1 arm while the annotations come from the immune-on one")
+    # INSIDE THAT BLOCK, by brace matching. `rfind` alone only says the `if`
+    # appears earlier in the file: dedenting the write out of the block while
+    # leaving it in the same loop passed, and then BOTH arms write, so the
+    # anti-PD-1 pass (which runs second) overwrites the CSVs and the panels
+    # become the anti-PD-1 run while the annotations stay immune_on.
+    open_brace = src.index("{", guard)
+    depth, end = 0, None
+    for i in range(open_brace, len(src)):
+        if src[i] == "{":
+            depth += 1
+        elif src[i] == "}":
+            depth -= 1
+            if depth == 0:
+                end = i
+                break
+    assert end is not None, "unbalanced braces after the immune_on guard"
+    write_at = src.index("damp_field_", guard)
+    assert open_brace < write_at < end, (
+        "the DAMP heatmap write is inside the baseline loop but OUTSIDE the "
+        "`immune_on` block, so the anti-PD-1 arm overwrites the CSVs and the "
+        "panels stop being the run the annotations are selected from")
 
 
 @pytest.mark.parametrize("doctor", ["drop_sdt", "no_summary"])
@@ -318,3 +346,23 @@ def test_the_latex_caption_states_the_baseline_counts():
     assert "baseline run" in caption, (
         "the LaTeX caption does not name the scenario, so the shipped PDF "
         "gives the reader less than the figure does")
+
+    # THE MARKDOWN CAPTION TOO. `v1.md` and `generate_latex.py` are two
+    # captions for one image, and `test_figure_captions_agree.py` compares them
+    # on shared content WORDS of four characters or more -- so every digit here
+    # is invisible to it, and reverting the markdown one plus regenerating the
+    # manifest left the whole suite green. Fixing one and leaving the other is
+    # how this pair drifts.
+    md = (REPO / "article/drafts/v1.md").read_text()
+    bracket = re.search(r"\[FIGURE 14:(.*?)\]", md, re.S)
+    assert bracket, "the fig17 markdown caption bracket is gone or was renamed"
+    md_caption = " ".join(bracket.group(1).split())
+    for treatment in ("SDT", "RSL3"):
+        row = base[treatment]
+        assert f"{row['immune_kills']} immune kills" in md_caption, (
+            f"the markdown caption does not state {treatment}'s baseline "
+            f"immune kills ({row['immune_kills']}) from {src.name}")
+    assert f"{base['SDT']['ferroptosis_kills']:,} ferroptosis kills" in md_caption
+    assert "baseline run" in md_caption, (
+        "the markdown caption does not name the scenario while the LaTeX one "
+        "does; they are peers")

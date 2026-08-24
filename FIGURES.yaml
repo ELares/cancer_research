@@ -97,7 +97,8 @@ figures:
     generator:
       script: simulations/sim-original/src/main.rs
       function: null
-    inputs: []
+    inputs:
+      - simulations/simulation_results.json
     type: simulation
     status: manuscript
     note: >
