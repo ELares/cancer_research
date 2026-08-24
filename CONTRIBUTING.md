@@ -22,7 +22,7 @@ cd ..
 ## Running Tests
 
 ```bash
-# Python pipeline, news, figure traceability, invariant, and integration tests (1477 tests)
+# Python pipeline, news, figure traceability, invariant, and integration tests (1487 tests)
 python3 -m pytest tests/ -q
 
 # Rust simulation tests (full workspace unit + integration suite)
