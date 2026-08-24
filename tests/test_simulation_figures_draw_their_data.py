@@ -26,13 +26,21 @@ Four narrower limits, each measured rather than assumed:
   RSL3 is caught, but only by the collapse ANNOTATION, which is `:.0f` and
   moves. SDT has no such annotation, so the same swap made for SDT alone would
   leave the PDF text byte-identical and nothing here would fire.
+- **Bar HEIGHTS are not read.** Swapping the two height lists on fig24's
+  `axA.bar` calls, so the blue "Normoxic" bars are drawn at hypoxic heights
+  while every label and annotation stays put, changes no text and passes. That
+  is the plot-level limit above, stated concretely because it is reachable by
+  a one-line edit.
 - **fig25 panel (b) is backed for one pair.** `tests/fixtures/bliss_synergy.json`
   holds `rsl3_fsp1i` only, so the other two scores are compared against
   nothing; dropping or altering `FSP1i+HDACi` cannot be detected here.
 - **fig24 panel (b) is ungated**, as is fig26 panel (b)'s GPX4 right-hand axis,
   whose tick labels are data-derived numbers no assertion reads.
 - **`closes ~day 3` is a presence check.** It is a hardcoded string in the
-  generator, so it would still read day 3 if the window moved.
+  generator, so it would still read day 3 if the window moved. It is the ONLY
+  such string left in these three figures: the two cohort footnotes read as
+  hardcoded too, and both turned out to be real fields of the simulation
+  output, so they are compared against the fixtures rather than listed here.
 
 BINDING. matplotlib writes a bar's annotation and its axis label into the text
 stream as separate runs with nothing tying the two together, so for fig24 and
@@ -41,6 +49,19 @@ enough: with only the values pinned, swapping fig24's two group labels or
 reordering fig25's four bar labels leaves every number exactly where it was and
 passes. Both tests therefore also pin the LABELS in the order they are drawn,
 which is what makes the positional binding say whose bar is whose.
+
+ORDER IN THE TEXT STREAM IS DRAW ORDER, NOT LAYOUT, and for fig24 the two
+differ. Its annotations are placed at hand-computed `xi -/+ w/2` offsets with
+no connection to the bars they describe, so swapping those two offsets moves
+each number over the other bar -- RSL3 re-captioned as 0.1% normoxic and 3.7%
+hypoxic, the same inversion the legend check was added to stop -- while the
+text stream stays byte-identical. An earlier version of this paragraph claimed
+pinning the labels "is what makes the positional binding say whose bar is
+whose"; it does not, and the mutation that proved it passed every assertion in
+this file. fig24's numbers are therefore ALSO compared left-to-right by
+bounding box, which is the check that actually binds a value to a bar.
+fig25's panel (a) needs no such check: it anchors each annotation to
+`bar.get_x() + bar.get_width() / 2`, so its text cannot drift off its bar.
 
 fig25's panel (b) is the one place a label sits beside its own value, so there
 each score is bound to its pair directly. A set comparison is not enough --
@@ -71,6 +92,33 @@ def _drawn(stem):
     doc = pymupdf.open(path)
     try:
         return " ".join(" ".join(p.get_text().split()) for p in doc)
+    finally:
+        doc.close()
+
+
+def _words(stem):
+    """Every word in the PDF with its bounding box, page 0.
+
+    `_drawn` returns the text STREAM, which is draw order, not layout. For a
+    matplotlib figure those two coincide only when the artist positions are
+    themselves in order -- and fig24's are not: it places each annotation at a
+    hand-computed `xi -/+ w/2` offset, entirely independent of the bar it is
+    meant to sit over. Swapping the two offsets moves both numbers onto the
+    wrong bars and leaves the text stream byte-identical, so no assertion over
+    `_drawn` can see it. Geometry can.
+    """
+    try:
+        import pymupdf
+    except ImportError:
+        try:
+            import fitz as pymupdf
+        except ImportError:
+            pytest.skip("no PDF reader available")
+    path = FIG_DIR / f"{stem}.pdf"
+    assert path.exists(), f"{stem}.pdf is not committed"
+    doc = pymupdf.open(path)
+    try:
+        return [(w[0], w[1], w[4]) for w in doc[0].get_text("words")]
     finally:
         doc.close()
 
@@ -112,6 +160,16 @@ def test_fig25_draws_its_bliss_numbers():
         f"fig25's panel (a) does not annotate "
         f"{fx['synergy_score']:.2f}x synergy; panel (b) drawing that number "
         "as a bar label is not the same claim")
+    # THE COHORT SIZE. It is drawn as a footnote and was compared against
+    # nothing, so the figure could claim any n. It is a real field of the
+    # simulation output, so it is now a fixture value rather than a scope
+    # limit -- the same move that turned fig26's timepoints from "nothing to
+    # compare" into a comparison.
+    whole = json.loads((FIXTURES / "bliss_synergy.json").read_text())
+    n = whole["n_cells_per_condition"]
+    assert f"{n:,} persister cells/condition" in text, (
+        f"fig25's footnote does not say {n:,} persister cells/condition, "
+        "which is what combo_summary.json records as n_cells_per_condition")
 
 
 def test_fig25_binds_each_pair_to_its_own_score():
@@ -132,6 +190,14 @@ def test_fig25_binds_each_pair_to_its_own_score():
     # HDACi` pair to the fixture made a CORRECT figure fail -- and worse, the
     # class silently matched the tail `1+HDACi`, so the guard reported "2 pairs
     # and 4 scores" rather than saying it could not read the name.
+    #
+    # The pair added was `Fer-1`+`HDACi`, and it was added to
+    # `simulations/output/combo-mech/combo_summary.json`, which is what panel
+    # (b) actually reads. An earlier version of this comment said "to the
+    # fixture"; adding a pair to `tests/fixtures/bliss_synergy.json` changes
+    # nothing at all, because that file is read only as `["rsl3_fsp1i"]` and
+    # panel (b) never touches it. The mutation was right and the sentence
+    # pointed at the wrong file.
     labels = re.search(r"((?:[^\s+]+\+[^\s+]+\s+)+)"
                        r"((?:\d+\.\d+×\s*)+)", text)
     assert labels, "fig25's panel (b) no longer lists its pairs and scores"
@@ -174,7 +240,34 @@ def test_fig24_draws_its_hypoxia_numbers():
     found = re.findall(r"\d+\.\d%", text)
     assert found[:4] == expected, (
         f"fig24 draws {found[:4]} and hypoxia_killcurve_rows.json gives "
-        f"{expected}")
+        f"{expected}. NOTE this compares DRAW ORDER, so a deliberate reordering "
+        "of the two treatment groups fails here too and reports as data drift; "
+        "the bar order is fixed by the generator's append order on purpose")
+
+    # BY POSITION, not by draw order -- this is the assertion that makes the
+    # binding real. The generator places each annotation at a hand-computed
+    # `xi - w/2` / `xi + w/2` offset that has no connection to the bar it sits
+    # over, so swapping the two offsets re-captions RSL3 as 0.1% normoxic and
+    # 3.7% hypoxic, inverting the figure's claim, and leaves the text stream
+    # BYTE-IDENTICAL. Every assertion above passed on exactly that mutation.
+    #
+    # Panel (a) is the left subplot; the collapse annotation draws two more
+    # percentages, and they are the two sharing a row with the arrow, so the
+    # arrow's y locates the row to drop rather than a hardcoded coordinate.
+    words = _words("fig24_hypoxia_killcurve")
+    panel_a = [w for w in words if w[0] < 330]
+    arrow_y = [y for x, y, t in panel_a if t.strip() in {"→", "\u2192"}]
+    assert len(arrow_y) == 1, (
+        f"expected exactly one arrow in fig24 panel (a), found {len(arrow_y)}; "
+        "the collapse annotation is what identifies the row to exclude")
+    bars = sorted(((x, t) for x, y, t in panel_a
+                   if re.fullmatch(r"\d+\.\d%", t)
+                   and abs(y - arrow_y[0]) > 3), key=lambda w: w[0])
+    assert [t for _, t in bars] == expected, (
+        f"fig24's bar annotations read {[t for _, t in bars]} LEFT TO RIGHT "
+        f"and the data gives {expected}. The numbers are drawn at fixed "
+        "offsets, so this is the only check that says each one sits over the "
+        "bar it describes")
     # THE GROUP LABELS, IN ORDER. Without this every bar can be relabelled --
     # swapping the two group labels puts RSL3's 3.7%/0.1% under the SDT
     # heading and passed, which is the #790 defect this file exists to catch.
@@ -268,6 +361,19 @@ def test_fig26_draws_the_timepoints_its_fixture_holds():
         "fig26's panel (a) legend is not `SDT (exogenous ROS)` then `RSL3 "
         "(GPX4 inhibitor)`; the curves may be labelled the wrong way round, "
         "which reverses the window claim the figure is drawn to make")
+    whole = json.loads((FIXTURES / "vulnerability_window.json").read_text())
+    n = whole["n_cells"]
+    assert f"{n:,} cells/condition" in text, (
+        f"fig26's footnote does not say {n:,} cells/condition, which is the "
+        "n_cells its own rows record")
+    # THE UNIT. The timepoints above are the only numbers this test gates, and
+    # this is the only text saying what they are measured in and from. Pinning
+    # the values while leaving the axis caption free is the half-bound shape
+    # the legend checks were added to close.
+    assert "Time post-chemotherapy (days)" in text, (
+        "fig26's x axis no longer says `Time post-chemotherapy (days)`, so "
+        "the timepoints this test compares are drawn without a unit or an "
+        "origin")
     assert "closes ~day 3" in text, (
         "fig26's window annotation is gone. NOTE this is a hardcoded string in "
         "the generator, not a derived one -- if the window moved, the "
