@@ -64,9 +64,13 @@ key of the group carries that control -- `/BBox`, `/Matrix` and `/Group` for
 form xobjects, `/Decode` for the alpha plane, `/OC` for an image -- and their
 siblings (a form's own `/OC`, `/Subtype`, `/Width`, `/Height`, `/ColorSpace`,
 `/BitsPerComponent`, `/ImageMask`, `/Matte`, `/Mask`, `/Interpolate`) are read
-by the same mechanism and are NOT separately controlled. A form's `/OC` was
-missing from this list until a reviewer removed it and nothing failed, which is
-the defect the list exists to prevent, inside the list. Said explicitly because "every surface has a
+by the same mechanism and are NOT separately controlled -- meaning each is an
+independently deletable element of a literal tuple, and deleting any one of
+them leaves this file green. "Read by the same mechanism" is a description of
+how they are hashed, NOT an argument that a control on one covers another; the
+list is a disclosure, and it is worth exactly that. A form's `/OC` was missing
+from it until a reviewer removed the key and nothing failed, which is the
+defect the list exists to prevent, inside the list. Said explicitly because "every surface has a
 control" would otherwise be the kind of unmeasured sentence this file exists to
 catch -- and it WAS one: a reviewer found three surfaces with no control at all
 (the form xobject STREAM, `/Pattern`, `/Shading`), because the isolation
@@ -215,8 +219,13 @@ def _drawing(path):
                 # surface moving. Nested form STREAMS were already covered --
                 # `get_xobjects()` recurses -- which made the gap exactly the
                 # non-XObject categories hanging off a form.
-                    out.extend(_resource_surfaces(
-                    doc, _object_text(doc, doc.xref_get_key(entry[0], "Resources")),
+                #
+                # OUTSIDE the key loop. It was indented one level too far, so
+                # every form's resources were walked five times per form and
+                # emitted five identical surfaces -- equal on both arms, so
+                # harmless to the verdict and five times the work.
+                out.extend(_resource_surfaces(
+                    doc, _materialize(doc, doc.xref_get_key(entry[0], "Resources")),
                     f"xobject:{entry[1]}:"))
             # Resources the streams name rather than inline.
             # `/Font` is the only POPULATED resource that was skipped, while
@@ -325,108 +334,67 @@ def _as_text(val) -> str:
     return str(val)
 
 
-def _dict_items(text: str):
-    """Top-level `(name, value_text)` pairs of a `<<...>>` dictionary.
+def _materialize(doc, val):
+    """An object NUMBER for a value, whether it is indirect or a direct dict.
 
-    Written out rather than delegated to `xref_get_keys` because that only
-    reads an INDIRECT object. A direct `/Resources` or a direct `/ExtGState` is
-    legal PDF, renders identically, and several optimisers emit it -- and it
-    made every category below read `null` while 62.42% of a page changed.
+    A direct `<<...>>` is written into a scratch object of the open document
+    -- never saved -- so that every read below goes through pymupdf's own
+    parser. The first version of this walked the dictionary TEXT with a
+    hand-written scanner, and a reviewer defeated it twice in the ways a
+    hand-written PDF scanner is always defeated:
+
+    - `_balanced` counted parentheses without honouring `\\)`, so a literal
+      string `(a\\) /ExtGState 99 0 R b)` ended early and the scanner resumed
+      INSIDE the string, reading a decoy `/ExtGState` as a real entry. With
+      `dict(...)` letting the later key win, a committed fig9c rendering 14.16%
+      differently passed all 53 tests.
+    - A bare-name value (`/Cs1 /DeviceRGB`, the ordinary spelling for a
+      colour space) parsed as an empty value plus a phantom entry named
+      `DeviceRGB`, so swapping which name mapped to which space compared equal.
+
+    Both are properties of the SCANNER, not of the PDF, and neither exists if
+    the object is handed to the parser that MuPDF already ships.
     """
-    text = text.strip()
-    if not (text.startswith("<<") and text.endswith(">>")):
-        return []
-    body, i, out = text[2:-2], 0, []
-    while i < len(body):
-        if body[i] != "/":
-            i += 1
-            continue
-        j = i + 1
-        while j < len(body) and (body[j].isalnum() or body[j] in "_-+#."):
-            j += 1
-        name = body[i + 1:j]
-        while j < len(body) and body[j].isspace():
-            j += 1
-        if j < len(body) and body[j] in "<[(":
-            end = _balanced(body, j)
-        else:
-            end = j
-            while end < len(body) and body[end] not in "/<[":
-                end += 1
-            # `12 0 R` ends at the R; a bare token ends at the next key.
-            m = re.match(r"\s*\d+\s+\d+\s+R", body[j:])
-            if m:
-                end = j + m.end()
-        out.append((name, body[j:end].strip()))
-        i = end if end > i else i + 1
-    return out
-
-
-def _balanced(text: str, start: int) -> int:
-    """Index just past the balanced `<<>>`, `[]` or `()` beginning at `start`."""
-    opens = {"<": ">", "[": "]", "(": ")"}
-    ch = text[start]
-    if ch == "<" and text[start:start + 2] == "<<":
-        depth, i = 0, start
-        while i < len(text) - 1:
-            if text[i:i + 2] == "<<":
-                depth, i = depth + 1, i + 2
-            elif text[i:i + 2] == ">>":
-                depth, i = depth - 1, i + 2
-                if depth == 0:
-                    return i
-            else:
-                i += 1
-        return len(text)
-    close = opens.get(ch, "")
-    depth, i = 0, start
-    while i < len(text):
-        if text[i] == ch:
-            depth += 1
-        elif text[i] == close:
-            depth -= 1
-            if depth == 0:
-                return i + 1
-        i += 1
-    return len(text)
-
-
-def _object_text(doc, val) -> str:
-    """A value as text, resolving ONE indirection so a dict comes back inline."""
     num = _indirect(val)
-    if num is None:
-        return _as_text(val)
+    if num is not None:
+        return num
+    text = _as_text(val).strip()
+    if not text.startswith("<<"):
+        return None
     try:
-        return doc.xref_object(num, compressed=True)
+        num = doc.get_new_xref()
+        doc.update_object(num, text)
+        return num
     except Exception:
-        return _as_text(val)
+        return None
 
 
-def _effective_resources(doc, pg) -> str:
-    """`/Resources` RESOLVED THROUGH INHERITANCE, returned as dict TEXT.
+def _effective_resources(doc, pg):
+    """`/Resources` RESOLVED THROUGH INHERITANCE, as an object number.
 
     `/Resources` is one of the four inheritable page attributes, alongside
     `/MediaBox`, `/CropBox` and `/Rotate` -- and geometry was already moved to
     the resolved properties for exactly this reason, while resources were not.
     Hoisting `/Resources` onto the `/Pages` node leaves the page rendering
-    identically and makes every category below read `null` FOREVER: measured,
+    identically and made every category below read `null` FOREVER: measured,
     53.01% of fig5c moved with no surface moving, which is simultaneously the
     inherited-`/Rotate` defect and the inert-`Resources/Annots` defect.
 
-    TEXT, not an xref number, because the first version of this returned an
-    object number and so treated a DIRECT `/Resources` dict as absent -- a
-    third door to the same 62.42% with nothing moving.
+    A DIRECT `/Resources` dict counts as present. Looking only for an object
+    number treated an inlined one -- legal, identical rendering, and what
+    several optimisers emit -- as absent, which was a third door to the same
+    62.42%.
     """
     node, depth = pg.xref, 0
     while node and depth < _MAX_PAGE_TREE:
         val = doc.xref_get_key(node, "Resources")
         if _as_text(val).strip() not in ("null", ""):
-            return _object_text(doc, val)
+            return _materialize(doc, val)
         node, depth = _indirect(doc.xref_get_key(node, "Parent")), depth + 1
-    return ""
+    return None
 
 
-def _resource_surfaces(doc, res_text: str, prefix: str):
+def _resource_surfaces(doc, res, prefix: str):
     """One surface per NAME in each resource category.
 
     PER NAME, because a positional join compares the multiset of reachable
@@ -436,20 +404,26 @@ def _resource_surfaces(doc, res_text: str, prefix: str):
 
     NO BARE CATEGORY SURFACE. One was emitted alongside these, hashing the
     list of names, and it could be replaced by a constant -- or deleted -- with
-    every test green, because the isolation rule deliberately excludes it. Its
-    stated justification, catching a name being added or removed, is what the
-    surface LIST already does: adding or removing a name adds or removes an
-    entry here, and the comparison is of the whole list. An uncontrolled
-    surface justified by a property something else provides is `/Annots`
-    shipping inert, which is this file's own signature defect.
+    every test green, because the isolation rule deliberately excluded it. Its
+    stated job, catching a name added or removed, is what the surface LIST
+    already does: adding or removing a name adds or removes an entry here, and
+    the comparison is of the whole list. An uncontrolled surface justified by a
+    property something else provides is `/Annots` shipping inert, which is this
+    file's signature defect.
     """
     out = []
-    cats = dict(_dict_items(res_text))
     for cat in _RESOURCE_CATEGORIES:
-        entries = _dict_items(_object_text(doc, cats.get(cat, "null")))
-        for name, val in sorted(entries):
+        num = (_materialize(doc, doc.xref_get_key(res, cat))
+               if res is not None else None)
+        names = []
+        if num is not None:
+            try:
+                names = sorted(doc.xref_get_keys(num))
+            except Exception:
+                names = []
+        for name in names:
             out.append((f"{prefix}{cat}#{name}", hashlib.sha256(
-                _substitute(doc, val, 0, ()).encode()).hexdigest()))
+                _resolve(doc, doc.xref_get_key(num, name)).encode()).hexdigest()))
     return out
 
 
@@ -626,6 +600,46 @@ def _assert_matches_committed(produced: Path) -> None:
     assert a == b, (
         f"article/figures/{produced.name} is not what "
         "scripts/generate_census_figures.py draws. Re-run it.")
+
+
+def _assert_compared_the_census_set(paths) -> None:
+    """Which files were compared, and from where. Extracted so it has a control.
+
+    Inlined, both halves were individually deletable with the suite green --
+    the defect this file names as its own signature, applied to the fix the
+    previous commit shipped for it.
+    """
+    assert {p.stem for p in paths} == set(_census_figures()), (
+        f"the flagship compared {sorted(p.stem for p in paths)}, not the "
+        f"census set {_census_figures()}")
+    parents = {p.parent for p in paths}
+    assert len(parents) == 1 and FIG_DIR.resolve() not in parents, (
+        f"the compared files came from {sorted(map(str, parents))}; they must "
+        "all come from one directory that is not article/figures")
+
+
+def _run_generator(scratch: Path, env: dict):
+    """Run the census generator and snapshot what it wrote, in one step.
+
+    ONE STEP because the snapshot's whole job is to notice the scratch
+    directory being repopulated afterwards, and any line between the two is
+    outside the window it covers -- a single line copying the committed
+    figures in, placed above the snapshot, passed with all eight genuinely
+    stale. There is no gap here to insert one into.
+
+    WHAT THIS DOES NOT CLAIM: an edit to THIS function, or to any of the
+    guards it feeds, defeats it. Every attack in this file's history is an
+    edit to the test suite, and no test can be robust against arbitrary edits
+    to itself. What these guards buy is that the shortcut has to look like
+    what it is in a diff -- `scratch = FIG_DIR`, a copy loop, a sliced
+    range -- rather than passing silently. That is the boundary, stated
+    rather than implied by an ever-tightening series of assertions.
+    """
+    res = subprocess.run([sys.executable, str(GEN)], cwd=REPO,
+                         capture_output=True, text=True, env=env)
+    assert res.returncode == 0, (
+        f"the census figure generator failed:\n{res.stderr[-800:]}")
+    return res, _snapshot(scratch)
 
 
 def _snapshot(d: Path) -> dict:
@@ -812,10 +826,7 @@ def test_the_committed_census_figures_are_what_the_generator_draws():
         scratch.mkdir()
         env = {**os.environ, "MPLBACKEND": "Agg",
                "FERRO_FIG_DIR": str(scratch)}
-        res = subprocess.run([sys.executable, str(GEN)], cwd=REPO,
-                             capture_output=True, text=True, env=env)
-        assert res.returncode == 0, (
-            f"the census figure generator failed:\n{res.stderr[-800:]}")
+        res, before = _run_generator(scratch, env)
         # PDFs only, and the reason is measured rather than assumed. PNGs are
         # byte-identical when regenerated on the SAME machine -- which is what
         # I checked before gating them -- and are NOT across machines: CI
@@ -845,7 +856,6 @@ def test_the_committed_census_figures_are_what_the_generator_draws():
         # That residual is the price of a portable comparison, and the
         # `article/figures/**` CI path is what puts such a change in front of
         # a reviewer.
-        before = _snapshot(scratch)
         produced = sorted(scratch.glob("*.pdf"))
         assert produced, (
             "the generator wrote no PDF into FERRO_FIG_DIR, so it is either "
@@ -1288,14 +1298,45 @@ def test_the_flagship_comparison_can_actually_fail(tmp_path):
         assert smasks, (
             "fig5c no longer carries an alpha plane, so this control no longer "
             "perturbs the surface it was written for")
-        length = len(doc.xref_stream(smasks[0]))
-        doc.update_stream(smasks[0], b"\xff" * length)
+        # `/Decode [1 0]` INVERTS the alpha plane without rewriting the
+        # stream. The previous perturbation wrote `b"\xff" * length` through
+        # `update_stream`, and the plane carries `/DecodeParms
+        # <</Predictor 10>>`: that round trip is lossy (4,514,664 bytes in,
+        # 4,512,816 out), so writing the stream's OWN bytes also moved the
+        # surface and also rendered differently -- the control raised either
+        # way and demonstrated a re-encoding artifact rather than a blanked
+        # figure.
+        before_dec = str(doc.xref_get_key(smasks[0], "Decode")[1])
+        doc.xref_set_key(smasks[0], "Decode", "[1 0]")
+        assert str(doc.xref_get_key(smasks[0], "Decode")[1]) != before_dec, (
+            "the /Decode edit did not land, so nothing was perturbed")
         # Saved to a NEW path: pymupdf refuses a non-incremental save over the
         # file it opened.
         out = tmp_path / "perturbed.pdf"
         doc.save(out, deflate=True)
     finally:
         doc.close()
+
+    # THE PERTURBATION MUST RENDER DIFFERENTLY, checked without `_drawing`.
+    # Replacing the blanking with a write of the stream's OWN bytes still made
+    # this test raise: the alpha plane carries `/DecodeParms <</Predictor 10>>`
+    # and pymupdf's `update_stream` round trip is lossy through it (4,514,664
+    # bytes in, 4,512,816 out), so the surface moved whatever was written. The
+    # control was passing on a re-encoding artifact, and its docstring claims a
+    # perturbed COPY on the surface this branch was blocked over. Pixels are
+    # the independent check: they come from the renderer, not from the hash
+    # under test.
+    def _pixels(path):
+        d = pymupdf.open(path)
+        try:
+            return d[0].get_pixmap(dpi=72).samples
+        finally:
+            d.close()
+
+    before, after = _pixels(src), _pixels(out)
+    assert len(before) == len(after) and before != after, (
+        "the perturbed copy renders identically to the committed figure, so "
+        "this control demonstrates nothing about the comparison it invokes")
 
     # INVOKE the flagship's comparison, do not re-implement it. The previous
     # version asserted `_drawing(out) != _drawing(src)` inline, which made it a
@@ -1982,14 +2023,7 @@ def test_the_flagship_actually_performs_its_comparisons():
     # exactly as well as eight calls naming eight files, and
     # `_assert_matches_committed(produced[0])` did precisely that -- one token,
     # seven figures never compared, the whole repository suite green.
-    paths = _COMPARED[mark:]
-    assert {p.stem for p in paths} == set(_census_figures()), (
-        f"the flagship compared {sorted(p.stem for p in paths)}, not the "
-        f"census set {_census_figures()}")
-    parents = {p.parent for p in paths}
-    assert len(parents) == 1 and FIG_DIR.resolve() not in parents, (
-        f"the compared files came from {sorted(map(str, parents))}; they must "
-        "all come from one directory that is not article/figures")
+    _assert_compared_the_census_set(_COMPARED[mark:])
 
 
 def _page_resources_xref(doc):
@@ -2451,8 +2485,12 @@ def test_image_surfaces_survive_a_renumbering(tmp_path):
     finally:
         doc.close()
 
-    # Force different object numbers for the same drawing: add throwaway
-    # objects, then compact so the images land elsewhere in the table.
+    # Force different object numbers for the same drawing. The renumbering
+    # comes from `garbage=4` compacting the table, NOT from the filler objects
+    # -- measured, dropping them leaves the numbers just as different -- and
+    # they are kept only to widen the shift. Said accurately because the first
+    # version of this comment credited the fillers, and a control whose stated
+    # mechanism is wrong is one edit from becoming a control that does nothing.
     shifted = tmp_path / "shifted.pdf"
     doc = pymupdf.open(copy)
     try:
@@ -2476,3 +2514,113 @@ def test_image_surfaces_survive_a_renumbering(tmp_path):
     assert _drawing(plain) == _drawing(shifted), (
         "renumbering the objects of an identical drawing changed the surface "
         "list, so image surfaces are keyed on an allocation artifact")
+
+
+def test_the_provenance_checks_can_actually_fail(tmp_path):
+    """CONTROLS for the three guards the previous commit added.
+
+    Each was individually deletable with the suite green: the stems assertion,
+    the single-parent assertion, and `_COMPARED.append` recording the real
+    path. That is this file's own signature defect -- "a guard with no control
+    is how three surfaces shipped inert here" -- applied to the fix shipped
+    FOR that defect, one commit later.
+    """
+    stems = _census_figures()
+    good = [tmp_path / f"{s}.pdf" for s in stems]
+    _assert_compared_the_census_set(good)          # the honest case passes
+
+    # Eight calls naming ONE file satisfy a count exactly as well as eight
+    # naming eight. This is the `_assert_matches_committed(produced[0])` edit.
+    with pytest.raises(AssertionError, match="not the census set"):
+        _assert_compared_the_census_set([good[0]] * len(stems))
+    # A subset, which is what slicing the loop produces.
+    with pytest.raises(AssertionError, match="not the census set"):
+        _assert_compared_the_census_set(good[:-1])
+    # The committed directory, which is what `scratch = FIG_DIR` produces.
+    with pytest.raises(AssertionError, match="not article/figures"):
+        _assert_compared_the_census_set(
+            [FIG_DIR.resolve() / f"{s}.pdf" for s in stems])
+    # And a mixture, which is what copying some figures in produces.
+    with pytest.raises(AssertionError, match="one directory"):
+        _assert_compared_the_census_set(
+            good[:-1] + [FIG_DIR.resolve() / f"{stems[-1]}.pdf"])
+
+    # `_COMPARED` must record the path actually handed to the comparison.
+    copy = tmp_path / f"{stems[0]}.pdf"
+    copy.write_bytes((FIG_DIR / copy.name).read_bytes())
+    mark = len(_COMPARED)
+    _assert_matches_committed(copy)
+    assert _COMPARED[mark:] == [copy.resolve()], (
+        "the comparison does not record the path it was given, so the "
+        "provenance assertions above are checking a fabrication")
+
+
+def test_the_scratch_snapshot_notices_a_repopulated_directory(tmp_path):
+    """CONTROL for `_snapshot`, which had none.
+
+    Replacing its body with `return {}` -- or with a name-keyed, content-blind
+    map -- left the whole file green, while the assertion using it claims to
+    notice the regenerated figures being overwritten. Both halves matter: it
+    must see a content change under an unchanged NAME, which is exactly what
+    copying a committed figure over a regenerated one looks like.
+    """
+    a, b = tmp_path / "one.pdf", tmp_path / "two.pdf"
+    a.write_bytes(b"%PDF-1.4 first")
+    b.write_bytes(b"%PDF-1.4 second")
+    before = _snapshot(tmp_path)
+    assert before == _snapshot(tmp_path), "_snapshot is not stable"
+    a.write_bytes(b.read_bytes())          # same names, different contents
+    assert _snapshot(tmp_path) != before, (
+        "_snapshot cannot see a file being overwritten by another with the "
+        "same name, which is the only thing it is there to notice")
+    assert set(_snapshot(tmp_path)) == {"one.pdf", "two.pdf"}, (
+        "_snapshot dropped a file")
+
+
+@pytest.mark.parametrize("first,second", [
+    ("/DeviceRGB", "/DeviceGray"),
+    ("[/Indexed /DeviceRGB 1 <FF0000 00FF00>]", "[/Indexed /DeviceRGB 1 <0000FF FFFF00>]"),
+])
+def test_a_bare_name_resource_value_is_compared_by_mapping(tmp_path, first, second):
+    """A resource value that is a NAME or an inline array, not a dictionary.
+
+    `/Cs1 /DeviceRGB` is the ordinary spelling for a colour space, and the
+    hand-written scanner this file used to walk resource dictionaries parsed it
+    as an empty value plus a phantom entry called `DeviceRGB` -- so swapping
+    WHICH name mapped to which space compared equal, the exact permutation the
+    per-name surfaces exist to catch. Reading through pymupdf's parser instead
+    fixes it, and this is what fails if anything goes back to reading text.
+    """
+    try:
+        import pymupdf
+    except ImportError:
+        import fitz as pymupdf
+
+    src = FIG_DIR / "fig2c_census_volume.pdf"
+    arms = []
+    for i in (0, 1):
+        copy = tmp_path / f"c{i}.pdf"
+        copy.write_bytes(src.read_bytes())
+        doc = pymupdf.open(copy)
+        try:
+            holder = doc.get_new_xref()
+            a, b = (first, second) if i == 0 else (second, first)
+            doc.update_object(holder, f"<</Cs1 {a}/Cs2 {b}>>")
+            doc.xref_set_key(_page_resources_xref(doc), "ColorSpace",
+                             f"{holder} 0 R")
+            got = doc.xref_get_key(holder, "Cs1")
+            assert "replace me" not in str(got), f"the value did not land: {got}"
+            out = tmp_path / f"m{i}.pdf"
+            doc.save(out, deflate=True)
+            arms.append(out)
+        finally:
+            doc.close()
+
+    a_, b_ = _drawing(arms[1]), _drawing(arms[0])
+    assert len(a_) == len(b_), (
+        f"the arms carry different surface lists: a name was invented or "
+        f"dropped. {[k for k, _ in a_]} vs {[k for k, _ in b_]}")
+    moved = {k for (k, x), (_, y) in zip(a_, b_) if x != y}
+    assert moved == {"ColorSpace#Cs1", "ColorSpace#Cs2"}, (
+        "swapping which NAME maps to which colour space moved "
+        f"{sorted(moved) or 'nothing'}; the mapping is being compared as a set")
