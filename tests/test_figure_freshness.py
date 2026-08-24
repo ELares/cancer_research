@@ -48,8 +48,11 @@ ones known and deliberate:
   needs anyway, being one of the seven below -- would bring it under a
   gate; and `fig7_monte_carlo_simulation` reads the TRACKED
   `simulations/simulation_results.json`, but has no committed generator at all
-  -- it is a matplotlib figure whose producing code is not in this repository,
-  which is why the orphan exemption below covers it. (An earlier version of
+  -- it is a matplotlib figure whose producing code is not in this repository.
+  (It is skipped below by the non-Python-generator branch, not by the orphan
+  exemption: `FIGURES.yaml` gives its status as `manuscript` and names a `.rs`
+  file as its generator. An earlier version of this sentence said orphan,
+  contradicting the code comment a few lines under it.) (An earlier version of
   this bullet said fig7 "is drawn by a Rust binary". It is not: `sim-original`
   prints JSON and links no plotting crate, and the committed PDF's `/Producer`
   is Matplotlib. The same false claim sits in a comment in

@@ -243,6 +243,14 @@ def test_only_the_baseline_section_writes_the_damp_heatmaps():
     # leaving it in the same loop passed, and then BOTH arms write, so the
     # anti-PD-1 pass (which runs second) overwrites the CSVs and the panels
     # become the anti-PD-1 run while the annotations stay immune_on.
+    # COMMENTS STRIPPED FIRST. The matcher counts raw braces, so one `{` in a
+    # `//` comment inside the block -- or an idiomatic `format!("{{")` -- runs
+    # the closing brace past the block and lets a dedented write pass. Rust
+    # line comments are the reachable case; block comments and braces inside
+    # string literals are not handled, and this says so rather than implying
+    # a parser.
+    src = "\n".join(line.split("//")[0] for line in src.splitlines())
+    guard = src.rfind('if *immune_label == "immune_on"', 0, src.index("damp_field_"))
     open_brace = src.index("{", guard)
     depth, end = 0, None
     for i in range(open_brace, len(src)):
@@ -333,14 +341,25 @@ def test_the_latex_caption_states_the_baseline_counts():
     assert entry, "the fig17 caption entry is gone or was renamed"
     caption = entry.group(1)
 
-    for treatment in ("SDT", "RSL3"):
+    # EACH NUMBER BOUND TO ITS TREATMENT. Substring-testing the pair only asks
+    # whether the digits appear somewhere, so a caption handing SDT's counts to
+    # RSL3 and RSL3's to SDT passed -- the same permutation hole the drawn-
+    # counts guard above was fixed for, reintroduced in the guard written
+    # afterwards.
+    for treatment, verb in (("SDT", "covers"), ("RSL3", "produces")):
         row = base[treatment]
-        ferro = f"{row['ferroptosis_kills']:,}"
-        immune = str(row["immune_kills"])
-        assert f"({ferro} kills, {immune} immune kills)" in caption, (
-            f"the LaTeX caption does not state {treatment}'s baseline counts "
-            f"({ferro} kills, {immune} immune kills) from {src.name}. It is "
-            "the caption that ships: release-pdf.yml builds from v1.tex")
+        m = re.search(
+            rf"{treatment} {verb}[^;.]*?\(([\d,]+) kills, (\d+) immune kills\)",
+            caption)
+        assert m, (
+            f"the LaTeX caption does not attribute a count pair to {treatment}; "
+            f"it is the caption that ships (release-pdf.yml builds v1.tex)")
+        assert m.group(1) == f"{row['ferroptosis_kills']:,}", (
+            f"{treatment}'s LaTeX caption says {m.group(1)} kills and "
+            f"{src.name} says {row['ferroptosis_kills']:,}")
+        assert m.group(2) == str(row["immune_kills"]), (
+            f"{treatment}'s LaTeX caption says {m.group(2)} immune kills and "
+            f"{src.name} says {row['immune_kills']}")
     # And it must say which of the three scenarios, for the same reason the
     # figure's own suptitle does.
     assert "baseline run" in caption, (
@@ -357,12 +376,90 @@ def test_the_latex_caption_states_the_baseline_counts():
     bracket = re.search(r"\[FIGURE 14:(.*?)\]", md, re.S)
     assert bracket, "the fig17 markdown caption bracket is gone or was renamed"
     md_caption = " ".join(bracket.group(1).split())
-    for treatment in ("SDT", "RSL3"):
+    # ALL THREE TREATMENTS, each bound to its own clause. The first version
+    # looped over SDT and RSL3 only and checked immune kills alone, so the
+    # `Control: negligible signal (0 immune kills)` clause THIS BRANCH ADDED
+    # had nothing behind it, and RSL3's kill count was equally free.
+    for treatment in ("Control", "RSL3", "SDT"):
         row = base[treatment]
-        assert f"{row['immune_kills']} immune kills" in md_caption, (
-            f"the markdown caption does not state {treatment}'s baseline "
-            f"immune kills ({row['immune_kills']}) from {src.name}")
-    assert f"{base['SDT']['ferroptosis_kills']:,} ferroptosis kills" in md_caption
+        clause = re.search(rf"{treatment}:(.*?)(?=(?:Control|RSL3|SDT):|$)",
+                           md_caption)
+        assert clause, f"the markdown caption has no {treatment} clause"
+        text = clause.group(1)
+        found = re.search(r"\((?:([\d,]+) (?:ferroptosis )?kills, )?"
+                          r"(\d+) immune kills\)", text)
+        assert found, (
+            f"{treatment}'s markdown clause states no immune-kill count: "
+            f"{text.strip()!r}")
+        assert found.group(2) == str(row["immune_kills"]), (
+            f"the markdown caption gives {treatment} {found.group(2)} immune "
+            f"kills and {src.name} says {row['immune_kills']}")
+        if found.group(1):
+            assert found.group(1) == f"{row['ferroptosis_kills']:,}", (
+                f"the markdown caption gives {treatment} {found.group(1)} "
+                f"kills and {src.name} says {row['ferroptosis_kills']:,}")
     assert "baseline run" in md_caption, (
         "the markdown caption does not name the scenario while the LaTeX one "
         "does; they are peers")
+
+
+def test_fig7_is_not_drawn_by_the_rust_binary():
+    """The retraction, checked rather than asserted.
+
+    Three sites said `fig7_monte_carlo_simulation` "is drawn by a Rust binary"
+    and none of them was measured, so reverting all three -- docstring,
+    generator comment, and `FIGURES.yaml` note -- left the whole suite green.
+    The facts are mechanically checkable in a few lines, so they are.
+    """
+    cargo = (REPO / "simulations/sim-original/Cargo.toml").read_text()
+    deps = cargo.split("[dependencies]", 1)[-1]
+    for plotting in ("plotters", "plotlib", "charming", "poloto", "textplots"):
+        assert plotting not in deps, (
+            f"sim-original now depends on {plotting}; it may draw fig7 after "
+            "all, and three sites say it does not")
+
+    pdf = REPO / "article/figures/fig7_monte_carlo_simulation.pdf"
+    if not pdf.exists():
+        pytest.skip("fig7 is not committed here")
+    # The whole file: matplotlib writes its /Producer in the trailing metadata
+    # object, not the header, and a 4 KB head slice missed it by 19 KB.
+    assert b"Matplotlib" in pdf.read_bytes(), (
+        "fig7's PDF no longer identifies Matplotlib as its producer, so the "
+        "retraction that it is not drawn by the Rust binary needs rechecking")
+
+    # And the data input it DOES take from the binary must stay tracked, since
+    # that is the half of the claim that says the figure is reproducible in
+    # principle.
+    import subprocess
+
+    tracked = subprocess.run(
+        ["git", "ls-files", "simulations/simulation_results.json"],
+        cwd=REPO, capture_output=True, text=True).stdout.strip()
+    assert tracked, (
+        "simulations/simulation_results.json is no longer tracked, so fig7's "
+        "input is not available and the docstring says it is")
+
+    # AND THE RETRACTED WORDING MUST STAY RETRACTED. Checking the facts alone
+    # leaves the prose free: reverting all three sites to "drawn by a Rust
+    # binary" passed, because the facts were still true and no guard read the
+    # sentences. Named refusal, the way the fig6 caption guard refuses its own
+    # retracted claims.
+    for path in ("tests/test_figure_freshness.py",
+                 "scripts/generate_figures.py",
+                 "FIGURES.yaml",
+                 "simulations/README.md"):
+        text = (REPO / path).read_text()
+        for claim in ("is drawn by a Rust binary",
+                      "generated by the Rust binary",
+                      "figure produced\n      by the binary",
+                      "The FIGURE is drawn by the binary"):
+            body = text
+            # The retraction itself quotes the claim in order to retract it,
+            # so only an occurrence OUTSIDE a retracting sentence counts.
+            for marker in ("An earlier version", "wrongly said", "is not:",
+                           "and NOT", "It is not"):
+                body = re.sub(rf"[^.]*{re.escape(marker)}[^.]*\.", "", body)
+            assert claim not in body, (
+                f"{path} asserts {claim!r} of fig7 again; sim-original links "
+                "no plotting crate and the committed PDF's producer is "
+                "Matplotlib")
