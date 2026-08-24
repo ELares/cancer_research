@@ -37,10 +37,16 @@ Four narrower limits, each measured rather than assumed:
 - **fig24 panel (b) is ungated**, as is fig26 panel (b)'s GPX4 right-hand axis,
   whose tick labels are data-derived numbers no assertion reads.
 - **`closes ~day 3` is a presence check.** It is a hardcoded string in the
-  generator, so it would still read day 3 if the window moved. It is the ONLY
-  such string left in these three figures: the two cohort footnotes read as
-  hardcoded too, and both turned out to be real fields of the simulation
-  output, so they are compared against the fixtures rather than listed here.
+  generator, so it would still read day 3 if the window moved.
+
+  The two cohort footnotes were in the same class and are no longer: an
+  earlier version of this bullet claimed they were "compared against the
+  fixtures", which was false in the way that matters. They were string
+  literals in the generator, so halving n in the simulation output left both
+  captions unchanged and every guard green -- the figures overstated their
+  cohorts by 2x and 200x with nothing able to say so. Comparing a drawn
+  constant to a fixture cannot fail. The GENERATOR now derives both numbers
+  from the run it plots, which is what makes the comparison mean anything.
 
 BINDING. matplotlib writes a bar's annotation and its axis label into the text
 stream as separate runs with nothing tying the two together, so for fig24 and
@@ -63,10 +69,21 @@ bounding box, which is the check that actually binds a value to a bar.
 fig25's panel (a) needs no such check: it anchors each annotation to
 `bar.get_x() + bar.get_width() / 2`, so its text cannot drift off its bar.
 
-fig25's panel (b) is the one place a label sits beside its own value, so there
-each score is bound to its pair directly. A set comparison is not enough --
-two scores swapped between pairs would satisfy one -- and that is the defect
-the fig17 guard was fixed for in #790.
+fig25's panel (b) draws each score on the same ROW as its pair label, and that
+row is the binding -- they are ~200 points apart in x, so "beside" was never
+true and reading them as two parallel lists was reading draw order again.
+Mirroring the y coordinate in the generator's single drawing loop re-pairs
+every score with a different pair, leaving the text stream identical; it
+credited the flagship RSL3+FSP1i pair with a barely-additive 1.21x and gave
+its 1.99x to FSP1i+HDACi, with this file green. Scores are now attributed by
+shared row.
+
+EVERY POSITIONAL CHECK HERE EXISTS BECAUSE THE STREAM ORDER OF SOME ELEMENT
+TURNED OUT NOT TO BE ITS LAYOUT. That has now been true of bar annotations
+(fixed offsets), tick labels (emitted in tick-location order, so `set_xticks`
+reversed moves the group captions onto the other treatment), and panel (b)'s
+scores (one loop, mirrored y). Each was found after a previous round wrote a
+sentence claiming the binding was already established.
 """
 import json
 import re
@@ -96,8 +113,53 @@ def _drawn(stem):
         doc.close()
 
 
+def _split_x(words):
+    """The x coordinate separating the left panel from the right one.
+
+    DERIVED FROM THE FIGURE, not a page coordinate. This was `w[0] < 330`,
+    which is 0.2 points inside panel (a)'s right edge at the current figsize
+    and tight-bbox trim, so it survived nothing: widening fig24 to figsize
+    (14, 4.5) pushed `87.8%` to x=342 and the guard reported the resize as
+    data drift, and adding two clauses to the footnote -- which is one
+    unwrapped `fig.text`, so it sets the trimmed page width -- shifted every
+    word ~145 points right and lost the arrow entirely.
+
+    Both panels are titled `(a) ...` and `(b) ...`, so the boundary is the
+    midpoint between those two titles. It moves with the layout, which is the
+    property the constant did not have.
+    """
+    a = [w for w in words if w[2] == "(a)"]
+    b = [w for w in words if w[2] == "(b)"]
+    assert len(a) == 1 and len(b) == 1, (
+        f"expected one `(a)` and one `(b)` panel title, found {len(a)} and "
+        f"{len(b)}; the panel split is derived from them")
+    # The midpoint of the two titles' STARTS is not the boundary -- the titles
+    # differ in length and each is CENTRED over its own axes, so that midpoint
+    # landed at 247 and cut off fig24's right-hand bar annotation at 276. Each
+    # title's full extent is needed, so take the words sharing the `(a)` row.
+    #
+    # The row is split AT THE `(b)` MARKER, not at its widest internal gap: on
+    # fig25 the longer panel-(a) title has a bigger gap inside itself than the
+    # one between the panels, so the gap heuristic put the boundary in the
+    # middle of a title.
+    row = sorted([w for w in words if abs(w[1] - a[0][1]) < 1.5],
+                 key=lambda w: w[0])
+    marks = [j for j, w in enumerate(row) if w[2] == "(b)"]
+    assert len(marks) == 1 and row[0][2] == "(a)", (
+        f"the panel-title row does not read `(a) ... (b) ...`: "
+        f"{[w[2] for w in row][:12]}")
+    left, right = row[:marks[0]], row[marks[0]:]
+    assert left, "no words precede `(b)` on the title row"
+    centre = lambda part: (part[0][0] + part[-1][0]) / 2
+    return (centre(left) + centre(right)) / 2
+
+
 def _words(stem):
-    """Every word in the PDF with its bounding box, page 0.
+    """Every word on page 0 as `(x0, y0, text)`.
+
+    Only page 0, and only the top-left corner of each box -- these figures are
+    single-page and every check here needs left-to-right or same-row ordering,
+    not extents. `_drawn` reads all pages; this deliberately does not.
 
     `_drawn` returns the text STREAM, which is draw order, not layout. For a
     matplotlib figure those two coincide only when the artist positions are
@@ -205,13 +267,45 @@ def test_fig25_binds_each_pair_to_its_own_score():
     scores = re.findall(r"\d+\.\d+×", labels.group(2))
     assert len(pairs) == len(scores), (
         f"fig25 draws {len(pairs)} pairs and {len(scores)} scores")
-    mapping = dict(zip(pairs, scores))
-    key = next((p for p in pairs if set(p.split("+")) == {"RSL3", "FSP1i"}), None)
+    key = next((q for q in pairs if set(q.split("+")) == {"RSL3", "FSP1i"}), None)
     assert key, f"fig25's panel (b) no longer draws the RSL3/FSP1i pair: {pairs}"
-    assert mapping.get(key) == f"{fx['synergy_score']:.2f}×", (
-        f"fig25 gives {key} {mapping.get(key)} and the fixture "
-        f"says {fx['synergy_score']:.2f}x -- the label and the score it is "
-        "drawn beside disagree with the data")
+
+    # PAIRED BY ROW, not by stream order. `dict(zip(pairs, scores))` binds the
+    # nth name to the nth score, which is draw order -- and the generator draws
+    # both in one loop, so mirroring the y coordinate (`len(scores) - 1 - i`)
+    # re-pairs every score against a different drug pair while leaving the
+    # stream identical. That published a figure crediting the 1.99x synergy to
+    # FSP1i+HDACi and giving the flagship RSL3+FSP1i a barely-additive 1.21x,
+    # with this test green. The docstring called this binding "direct"; it was
+    # the same defect the fig17 guard was written for.
+    #
+    # A label and its score share a row and are far apart in x (~300 against
+    # ~520), so the row is the only thing tying them together.
+    words = _words("fig25_bliss_synergy")
+    # NO PANEL FILTER HERE, deliberately. Panel (b)'s pair labels are its
+    # y-tick labels, drawn to the LEFT of its own axes -- far enough left to
+    # fall on panel (a)'s side of any title-derived boundary, which is why the
+    # split used for fig24 is wrong for this figure. The row IS the filter:
+    # panel (a)'s synergy annotation is the only other `N.NN×` word and no
+    # pair label shares its row, so it is excluded by having no partner
+    # rather than by a coordinate.
+    names = [(x, y, t) for x, y, t in words
+             if re.fullmatch(r"[^\s+]+\+[^\s+]+", t)]
+    vals = [(x, y, t) for x, y, t in words if re.fullmatch(r"\d+\.\d+×", t)]
+    assert len(names) == len(pairs), (
+        f"fig25 draws {len(names)} pair labels by geometry and {len(pairs)} "
+        "in the text stream; the two readings disagree")
+    by_row = {}
+    for x, y, t in names:
+        near = [v for v in vals if abs(v[1] - y) < 3]
+        assert len(near) == 1, (
+            f"{t} shares a row with {len(near)} scores, so no score can be "
+            "attributed to it")
+        by_row[t] = near[0][2]
+    assert by_row[key] == f"{fx['synergy_score']:.2f}×", (
+        f"fig25 draws {key} on the same row as {by_row[key]} and the fixture "
+        f"says {fx['synergy_score']:.2f}x -- the pair and the score beside it "
+        "disagree with the data")
 
 
 def test_fig24_draws_its_hypoxia_numbers():
@@ -255,7 +349,7 @@ def test_fig24_draws_its_hypoxia_numbers():
     # percentages, and they are the two sharing a row with the arrow, so the
     # arrow's y locates the row to drop rather than a hardcoded coordinate.
     words = _words("fig24_hypoxia_killcurve")
-    panel_a = [w for w in words if w[0] < 330]
+    panel_a = [w for w in words if w[0] < _split_x(words)]
     arrow_y = [y for x, y, t in panel_a if t.strip() in {"→", "\u2192"}]
     assert len(arrow_y) == 1, (
         f"expected exactly one arrow in fig24 panel (a), found {len(arrow_y)}; "
@@ -268,13 +362,38 @@ def test_fig24_draws_its_hypoxia_numbers():
         f"and the data gives {expected}. The numbers are drawn at fixed "
         "offsets, so this is the only check that says each one sits over the "
         "bar it describes")
+
+    # AND THE GROUP LABELS BY POSITION TOO. Pinning the numbers to their bars
+    # while leaving the labels bound to the text stream binds nothing: tick
+    # labels are emitted in tick-LOCATION order, so `set_xticks(x[::-1])`
+    # moves `RSL3 (GPX4 inhibitor)` over the SDT bars and leaves the stream
+    # untouched. The four numbers stay over their own bars and the figure now
+    # captions 3.7%/0.1% as SDT -- the #790 inversion again, reached by a
+    # different route, and the suite was green on it.
+    #
+    # The tick row is the one y where both names appear: `SDT` also occurs in
+    # the footnote, so bottom-most is not the right rule.
+    rows = {}
+    for x, y, t in panel_a:
+        if t in ("RSL3", "SDT"):
+            rows.setdefault(round(y, 1), []).append((x, t))
+    tick_rows = [r for r in rows.values()
+                 if {t for _, t in r} == {"RSL3", "SDT"}]
+    assert len(tick_rows) == 1, (
+        f"expected exactly one row carrying both group labels, found "
+        f"{len(tick_rows)}; that row is what identifies the tick labels")
+    order = [t for _, t in sorted(tick_rows[0])]
+    assert order == ["RSL3", "SDT"], (
+        f"fig24's group labels read {order} LEFT TO RIGHT while its bars are "
+        f"compared as {expected} -- RSL3's pair first. The labels sit over the "
+        "wrong groups, so the figure captions each treatment with the other's "
+        "numbers")
     # THE GROUP LABELS, IN ORDER. Without this every bar can be relabelled --
     # swapping the two group labels puts RSL3's 3.7%/0.1% under the SDT
     # heading and passed, which is the #790 defect this file exists to catch.
     labels = re.search(r"(RSL3 \(GPX4 inhibitor\)) (SDT \(exogenous ROS\))", text)
     assert labels, (
-        "fig24's group labels are not RSL3 then SDT in that order, so the "
-        "positional binding above no longer says which bar is whose")
+        "fig24's group labels are not RSL3 then SDT in the text stream")
     # AND THE SERIES LEGEND, which is the other half of a 2x2 and was the
     # weaker half: pinning only the group axis left "which of these two bars
     # is the hypoxic one" unstated. Swapping the two `label=` strings on
@@ -364,16 +483,38 @@ def test_fig26_draws_the_timepoints_its_fixture_holds():
     whole = json.loads((FIXTURES / "vulnerability_window.json").read_text())
     n = whole["n_cells"]
     assert f"{n:,} cells/condition" in text, (
-        f"fig26's footnote does not say {n:,} cells/condition, which is the "
-        "n_cells its own rows record")
+        f"fig26's footnote does not say {n:,} cells/condition. The fixture "
+        "carries n_cells as a top-level scalar, hoisted from the live run's "
+        "rows, which the generator now reads rather than hardcoding")
     # THE UNIT. The timepoints above are the only numbers this test gates, and
     # this is the only text saying what they are measured in and from. Pinning
     # the values while leaving the axis caption free is the half-bound shape
     # the legend checks were added to close.
-    assert "Time post-chemotherapy (days)" in text, (
-        "fig26's x axis no longer says `Time post-chemotherapy (days)`, so "
-        "the timepoints this test compares are drawn without a unit or an "
-        "origin")
+    # SCOPED TO PANEL (a) BY POSITION. The caption is drawn under both panels,
+    # so a bare `in text` is satisfied by panel (b) -- relabelling panel (a)
+    # alone as `(hours)` passed, leaving the panel that carries the gated
+    # timepoints, the window shading and the `closes ~day 3` annotation
+    # declaring hours over ticks in days. That is the same hole this file
+    # documents closing for fig25 a few tests above.
+    wds = _words("fig26_vulnerability_window")
+    split = _split_x(wds)
+    rows = {}
+    for x, y, t in wds:
+        rows.setdefault(round(y, 1), []).append((x, t))
+    captions = [" ".join(t for _, t in sorted(r))
+                for r in rows.values()
+                if any(t == "post-chemotherapy" for _, t in r)]
+    left_caption = [" ".join(t for _, t in sorted(r))
+                    for r in rows.values()
+                    if any(t == "post-chemotherapy" and x < split for x, t in r)]
+    assert left_caption, (
+        f"fig26's panel (a) draws no `Time post-chemotherapy` caption; the "
+        f"captions found were {captions}")
+    for cap in left_caption:
+        assert "(days)" in cap, (
+            f"fig26's panel (a) x axis reads {cap!r}, not days. Its ticks are "
+            "the fixture's timepoint_days, so the panel is declaring a unit "
+            "its own numbers are not in")
     assert "closes ~day 3" in text, (
         "fig26's window annotation is gone. NOTE this is a hardcoded string in "
         "the generator, not a derived one -- if the window moved, the "

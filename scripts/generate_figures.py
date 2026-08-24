@@ -1472,8 +1472,15 @@ def fig25_bliss_synergy():
     axB.legend(fontsize=8, loc="lower right")
 
     fig.suptitle("Dual-pathway (GPX4 + FSP1) depletion is synergistic", fontsize=12, y=1.02)
+    # DERIVED, not typed. This footnote read "1,000 persister cells/condition"
+    # as a literal, so the figure asserted a cohort size the simulation never
+    # confirmed -- halving n in the sim output left the caption saying 1,000.
+    # A guard comparing the drawn text to the data could not fail while the
+    # text was a constant, so the number comes from the run.
+    n_cells = data["n_cells_per_condition"] if isinstance(data, dict) else None
+    assert n_cells, "combo_summary.json carries no n_cells_per_condition"
     fig.text(0.5, -0.04,
-             "1,000 persister cells/condition, 2D culture params. Drug potencies are estimates; the "
+             f"{n_cells:,} persister cells/condition, 2D culture params. Drug potencies are estimates; the "
              "directional finding (dual-pathway > single) held across the ±50% sensitivity sweep (§5).",
              ha="center", fontsize=7.5, style="italic", color="gray")
     fig.savefig(FIG_DIR / "fig25_bliss_synergy.pdf", bbox_inches="tight")
@@ -1543,8 +1550,14 @@ def fig26_vulnerability_window():
     axB.legend(lA + lB, llA + llB, fontsize=8, loc="center right")
 
     fig.suptitle("The ferroptosis-sensitive window: days for RSL3, weeks for SDT", fontsize=12, y=1.02)
+    # DERIVED, for the same reason as fig25's. See that comment.
+    n_seen = {r.get("n_cells") for r in data if r.get("n_cells")}
+    assert len(n_seen) == 1, (
+        f"vulnerability_window rows disagree on n_cells ({sorted(n_seen)}); "
+        "the footnote states one cohort size for the whole figure")
+    n_cells = n_seen.pop()
     fig.text(0.5, -0.04,
-             "100,000 cells/condition; x-axis shows sampled timepoints (not linear in time). Defense-recovery "
+             f"{n_cells:,} cells/condition; x-axis shows sampled timepoints (not linear in time). Defense-recovery "
              "half-times (GPX4 3 d, FSP1 7 d, NRF2 5 d, GSH 1 d) are literature-estimated, so window durations "
              "are approximate until experimentally validated.",
              ha="center", fontsize=7.5, style="italic", color="gray")
