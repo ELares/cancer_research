@@ -1,5 +1,15 @@
 # A Candidate Therapeutic Principle: The Obligate Tradeoff of Resistance
 
+> **Counts on this page are over the pre-March-2026 corpus of 10,413 articles**, which was cut to
+> 4,830 and retagged; the SDT-tagged set went from 617 articles to 187. Every absolute count and
+> percentage here therefore has a denominator the project no longer works from, and the pre-cut
+> corpus is recoverable at commit `f65342df` if one needs re-deriving. Current values come from
+> `scripts/generate_figures.py`, which is regenerated and gated. Do not carry a figure from here
+> into the manuscript without recomputing it.
+> On this page specifically: the only SDT count here is "39 SDT-ferroptosis articles", which is
+> now 19. Section 8.2 of the manuscript decomposes the GSH/GPX4 and dual-pathway counts, neither
+> of which this page carries, so it is not the reference for this one.
+
 ## The Principle, Precisely Stated
 
 **Every cancer escape route incurs a specific, predictable biophysical cost that creates a new vulnerability. These costs are not accidental — they are thermodynamic necessities. A cure-oriented strategy should not try to prevent escape, but instead anticipate which escape route the tumor will take and pre-position the therapy that exploits the tradeoff.**

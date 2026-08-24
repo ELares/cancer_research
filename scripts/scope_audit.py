@@ -107,7 +107,16 @@ def classify_analyses() -> dict:
     for p in sorted((PROJECT_ROOT / "analysis").glob("*.md")):
         stem = p.stem.lower()
         text = p.read_text(errors="ignore")
-        head = "\n".join(text.split("\n")[:40])
+        # BLOCKQUOTE BANNERS ARE NOT CONTENT. The window is 40 lines of a
+        # document's own prose; a provenance banner prepended to the top of a
+        # page pushes real lines out of it and moves this audit's numbers
+        # without any subject changing. That happened a third time when five
+        # analysis pages gained retired-corpus banners: therapy-by-body fell
+        # 46 -> 44 and the ferroptosis overlap 7 -> 5, purely from displacement.
+        # The page's own prose already warns the figure has moved on this
+        # window rather than on content, so the window now skips them.
+        lines = [ln for ln in text.split("\n") if not ln.lstrip().startswith(">")]
+        head = "\n".join(lines[:40])
         # THE TWO BUCKETS USE DIFFERENT ADMISSION RULES, and that is the
         # finding rather than a bug to paper over. Therapy is FILENAME ONLY;
         # ferroptosis is filename OR body. So the therapy count moves on a

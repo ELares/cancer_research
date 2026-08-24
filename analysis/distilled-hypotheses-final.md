@@ -1,5 +1,15 @@
 # Distilled Hypotheses: What Survives Ruthless Scrutiny
 
+> **Counts on this page are over the pre-March-2026 corpus of 10,413 articles**, which was cut to
+> 4,830 and retagged; the SDT-tagged set went from 617 articles to 187. Every absolute count and
+> percentage here therefore has a denominator the project no longer works from, and the pre-cut
+> corpus is recoverable at commit `f65342df` if one needs re-deriving. Current values come from
+> `scripts/generate_figures.py`, which is regenerated and gated; Section 8.2 of the manuscript
+> carries the decomposition of one of these numbers. Do not carry a figure from here into the
+> manuscript without recomputing it.
+> On this page specifically: "39 ferroptosis articles, 21 ICD articles, 72 GSH/GPX4 articles,
+> 7 dual-pathway articles" is now 19 / 28 / 30 / 3.
+
 ## What we eliminate
 
 **"Ferroptosis is a cancer vulnerability"** — Already a 2,045-citation review (PMID:35338310). Not novel.

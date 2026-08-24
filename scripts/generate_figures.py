@@ -32,7 +32,10 @@ from figure_io import make_figures_deterministic  # noqa: E402
 
 # PDFs embed a creation date, so without this a regenerated figure
 # differs from its committed copy even when the data has not moved --
-# which is why figure freshness could not be checked at all.
+# which is why figure freshness could not be checked at all. Determinism was
+# added here before there was anything to compare it against; what was
+# missing is the scratch-directory override below, without which a freshness
+# test has to write the working tree to find out.
 make_figures_deterministic()
 import matplotlib.patches as mpatches
 import numpy as np
@@ -42,7 +45,10 @@ from scipy import stats
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 PMID_DIR = PROJECT_ROOT / "corpus" / "by-pmid"
 INDEX_FILE = PROJECT_ROOT / "corpus" / "INDEX.jsonl"
-FIG_DIR = PROJECT_ROOT / "article" / "figures"
+# `FERRO_FIG_DIR` so a test can regenerate into a scratch directory and compare
+# without writing the working tree, exactly as the census generator allows.
+FIG_DIR = Path(os.environ.get(
+    "FERRO_FIG_DIR", str(PROJECT_ROOT / "article" / "figures")))
 FIG_DIR.mkdir(parents=True, exist_ok=True)
 
 # 2D TME (sim-tme) and combination-mechanism (sim-combo-mech) outputs. Both are
@@ -85,7 +91,12 @@ def load_corpus():
 
 
 def classify_ferroptosis(articles):
-    """Classify articles by physical modality and ferroptosis/ICD engagement."""
+    """Classify articles by physical modality and ferroptosis/ICD engagement.
+
+    Acronyms are WORD-BOUNDED, as in the pattern sets below and for the same
+    measured reason: matching is case-insensitive, so an unbounded acronym
+    counts every word that contains it -- "sugge(STING)", "(UPR)egulation".
+    """
     physical_mechs = {
         "SDT": "sonodynamic",
         "TTFields": "ttfields",
@@ -99,14 +110,14 @@ def classify_ferroptosis(articles):
         mech_articles = [a for a in articles if mech_key in a.get("mechanisms", [])]
         ferro = sum(1 for a in mech_articles if "ferroptosis" in a.get("_text", ""))
         icd = sum(1 for a in mech_articles if re.search(
-            r"immunogenic cell death|calreticulin|HMGB1", a.get("_text", ""), re.IGNORECASE
+            r"immunogenic cell death|calreticulin|\bHMGB[- ]?1\b", a.get("_text", ""), re.IGNORECASE
         ))
         gsh = sum(1 for a in mech_articles if re.search(
-            r"glutathione|GSH|GPX4|SLC7A11", a.get("_text", ""), re.IGNORECASE
+            r"glutathione|\bGSH\b|\bGPX4\b|\bSLC7A11\b", a.get("_text", ""), re.IGNORECASE
         ))
         both = sum(1 for a in mech_articles if (
             "ferroptosis" in a.get("_text", "") and
-            re.search(r"immunogenic cell death|calreticulin|HMGB1", a.get("_text", ""), re.IGNORECASE)
+            re.search(r"immunogenic cell death|calreticulin|\bHMGB[- ]?1\b", a.get("_text", ""), re.IGNORECASE)
         ))
         results[label] = {
             "total": len(mech_articles),
@@ -158,7 +169,10 @@ def fig1_ferroptosis_comparison(articles):
                 ax.annotate(f'{height:.1f}%', xy=(bar.get_x() + bar.get_width() / 2, height),
                            xytext=(0, 3), textcoords="offset points", ha='center', va='bottom', fontsize=8)
 
-    # Statistical test: chi-squared for SDT vs others on ferroptosis
+    # Statistical test: chi-squared for SDT vs others on ferroptosis.
+    # Annotated `p = `, not `p < `: printed as `p < 4.7e-10` the statement
+    # is false of its own value (4.74983e-10 is not below its own
+    # rounding), and a caption quoting it then has to pick a relation.
     sdt_ferro = data["SDT"]["ferroptosis"]
     sdt_total = data["SDT"]["total"]
     other_ferro = sum(data[m]["ferroptosis"] for m in modalities if m != "SDT")
@@ -168,7 +182,7 @@ def fig1_ferroptosis_comparison(articles):
                    [other_ferro, other_total - other_ferro]]
     chi2, p_value, _, _ = stats.chi2_contingency(contingency)
 
-    ax.text(0.98, 0.95, f"SDT vs others (ferroptosis):\nχ² = {chi2:.1f}, p < {p_value:.1e}",
+    ax.text(0.98, 0.95, f"SDT vs others (ferroptosis):\nχ² = {chi2:.1f}, p = {p_value:.1e}",
             transform=ax.transAxes, ha='right', va='top', fontsize=9,
             bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
 
@@ -325,14 +339,39 @@ def fig4_molecular_overlap(articles):
         "HIFU": "hifu",
     }
 
+    # BOUNDED ON THE LEFT, and on the right only where a suffix would be
+    # wrong. Matching is case-insensitive -- `re.IGNORECASE`, not the
+    # lower-casing, is what makes an unbounded acronym count every word that
+    # contains it. Measured over the 4,830-article corpus, per alternation:
+    #
+    #   STING/cGAS   1,150 -> 68     ("sugge(sting)", "exi(sting)", "boo(sting)")
+    #   UPR            361 -> 9      ("(upr)egulation" -- the largest single
+    #                                  collision in this set, and most of why
+    #                                  the ER Stress column collapsed)
+    #   ER stress       36 -> 27     ("oth(er stress)es", "und(er stress)")
+    #
+    # On this figure that made STING/cGAS -- its largest column at 136 -- read
+    # 12 real hits, so 91% of it was artifact.
+    #
+    # A RIGHT BOUNDARY IS NOT FREE, and a first version of this fix traded one
+    # error for the other. `\bDAMP\b` misses "DAMPs", which is how almost
+    # everyone writes it (8 articles against 76), dropping a real SDT article
+    # whose abstract says "damage-associated molecular patterns (DAMPs)"; that
+    # row also gained `damage.associated`, for parity with fig6's DAMP bar.
+    # `\bER stress\b` would drop "ER stressor", so that phrase is left-bounded
+    # only -- and the phrase alternative had to grow `(er)` as well, because
+    # "endoplasmic reticulum (ER) stress" is the commonest spelling and neither
+    # alternative could reach it: 11 articles, one of them sonodynamic.
     pathways = {
         "Ferroptosis": r"ferroptosis",
-        "ICD/DAMPs": r"immunogenic cell death|calreticulin|HMGB1|DAMP",
-        "GSH/GPX4": r"glutathione|GSH|GPX4",
-        "STING/cGAS": r"STING|cGAS|sting pathway",
-        "ROS": r"reactive oxygen species|ROS generation",
+        "ICD/DAMPs": (r"immunogenic cell death|calreticulin|\bHMGB[- ]?1\b"
+                      r"|\bDAMPs?\b|damage[- ]associated molecular"),
+        "GSH/GPX4": r"glutathione|\bGSH\b|\bGPX4\b|\bSLC7A11\b",
+        "STING/cGAS": r"\bSTING\b|\bcGAS\b|\bsting pathway\b",
+        "ROS": r"reactive oxygen species|\bROS\b",
         "Apoptosis": r"apoptosis|caspase",
-        "ER Stress": r"endoplasmic reticulum stress|ER stress|UPR",
+        "ER Stress": (r"endoplasmic reticulum(?:\s*\(er\))?\s*stress"
+                      r"|\bER stress|\bUPRs?\b|unfolded protein response"),
         "Autophagy": r"autophagy|autophagic",
     }
 
@@ -428,14 +467,46 @@ def fig6_sdt_chain_evidence(articles):
 
     sdt_articles = [a for a in articles if "sonodynamic" in a.get("mechanisms", [])]
 
+    # Bounded for the same reason as fig4's pathway set: unbounded, this
+    # figure's first bar counted "nec(ros)is" and "p(ros)tate" as ROS
+    # generation, and its STING bar was almost entirely "sugge(sting)".
+    #
+    # NO COUNTS IN THIS COMMENT. Successive versions of it quoted 146, 106,
+    # 118, 32, 4, 25, 14 and "eight SDT articles"; each was measured when
+    # written and several were stale within two commits, one of them quoting a
+    # different figure's bar. Nothing can keep a number in a comment honest --
+    # the repository has a rule against generators hand-writing quantities and it
+    # does not reach comments -- so the reasoning stays here and the numbers
+    # live in the figure, which is regenerated and gated.
     chain_steps = {
-        "ROS\ngeneration": r"reactive oxygen species|ROS",
-        "GSH\ndepletion": r"glutathione|GSH depletion|GSH consumption",
-        "GPX4\ninactivation": r"GPX4|glutathione peroxidase 4",
+        "ROS\ngeneration": (r"reactive (?:\w+ )?oxygen species|reactive oxide species"
+                            r"|\bROS[- ]gener|\bROS[- ]?produc"
+                            r"|(?:generat|induc|elicit|produc)\w*\s+"
+                            r"(?:high levels of\s+|the\s+)?\bROS\b"),
+        # The bar is labelled DEPLETION and accepted a bare mention of
+        # glutathione. A chain-evidence figure has to measure the step it
+        # names, or the chain reads stronger than the literature is.
+        #
+        # BOTH WORD ORDERS, and both verbs. A first version matched only
+        # noun-before-verb ("GSH depletion"), missing "depletes intra-tumoral
+        # glutathione", "depletion of overexpressed glutathione", "consume the
+        # reduced glutathione" and "scavenges GSH" -- the first of which is an
+        # article the manuscript names as an exemplar. That is the same
+        # false-negative trade made for `DAMP`, for `ER stress` and for this
+        # bar's neighbour above, which is why the case table in
+        # `tests/test_figure_caption_statistics.py` now pins both directions
+        # for every pattern in both dicts.
+        "GSH\ndepletion": (r"\bGSH deplet|\bglutathione deplet|\bGSH consum"
+                           r"|\bglutathione consum"
+                           r"|(?:deplet|consum|scaveng|exhaust)\w*\s+"
+                           r"(?:of\s+|the\s+)?(?:\w+[- ]){0,2}"
+                           r"(?:gsh|glutathione)"),
+        "GPX4\ninactivation": r"\bGPX4\b|glutathione peroxidase 4",
         "Lipid\nperoxidation": r"lipid peroxid",
         "Ferroptosis": r"ferroptosis",
-        "DAMP\nrelease": r"calreticulin|HMGB1|DAMP|damage.associated",
-        "STING\nactivation": r"STING|cGAS",
+        "DAMP\nrelease": (r"calreticulin|\bHMGB[- ]?1\b|\bDAMPs?\b"
+                           r"|damage[- ]associated molecular"),
+        "STING\nactivation": r"\bSTING\b|\bcGAS\b",
         "ICD": r"immunogenic cell death",
     }
 
@@ -466,10 +537,59 @@ def fig6_sdt_chain_evidence(articles):
         ax.annotate(str(count), xy=(bar.get_x() + bar.get_width() / 2, bar.get_height()),
                    xytext=(0, 3), textcoords="offset points", ha='center', fontsize=10, fontweight='bold')
 
-    # Add the chain narrative
-    ax.text(0.5, -0.18, "Each bar = number of SDT articles mentioning this step. "
-            "The chain is supported at each link but thins from left to right.",
-            transform=ax.transAxes, ha='center', fontsize=9, style='italic', color='gray')
+    # THE NARRATIVE IS DERIVED FROM THE BARS, not asserted beside them. It
+    # used to read "supported at each link but thins from left to right",
+    # which the drawn numbers have never satisfied: the last bar has always
+    # been among the largest and the middle of the chain dips and recovers.
+    # A caption that survives its own data changing is not describing it.
+    # EVERY DIP, not just the deepest. Naming only the global minimum and the
+    # endpoint produced the same sentence for the real chain -- which dips
+    # twice, at GPX4 inactivation and again at STING activation -- as for a
+    # chain that dips once and then holds. And `>=` called a flat chain
+    # "thinning", which nothing about a flat chain does.
+    steps = [k.replace("\n", " ") for k in chain_steps]
+    # PLATEAU TROUGHS TOO. A strict `counts[i] < both neighbours` test misses
+    # a trough that is two bars wide -- `[50,40,20,20,40,50]` has an obvious
+    # dip and reported none -- and misses the shallower of two dips when one
+    # bar of it ties. Walk the runs of equal values instead.
+    runs, i = [], 0
+    while i < len(counts):
+        j = i
+        while j + 1 < len(counts) and counts[j + 1] == counts[i]:
+            j += 1
+        runs.append((i, j))
+        i = j + 1
+    dips = [start for k, (start, end) in enumerate(runs)
+            if 0 < k < len(runs) - 1
+            and counts[start] < counts[runs[k - 1][0]]
+            and counts[start] < counts[runs[k + 1][0]]]
+    if all(a >= b for a, b in zip(counts, counts[1:])):
+        shape = ("thins monotonically from left to right" if
+                 any(a > b for a, b in zip(counts, counts[1:]))
+                 else "is flat from left to right")
+    elif not dips:
+        shape = (f"does not thin monotonically: it runs {counts[0]} to "
+                 f"{counts[-1]} without an interior trough")
+    else:
+        named = ", ".join(f"{steps[i]} ({counts[i]})" for i in dips)
+        shape = (f"is not monotone: it dips at {named}, and ends at "
+                 f"{counts[-1]} at {steps[-1]}")
+    # NO STRICTNESS CLAIM. A previous caption said "ROS generation and GSH
+    # depletion require the process to be described, the rest require the
+    # molecule to be named", and it was false in both halves: the ROS bar
+    # accepts the bare phrase "reactive oxygen species", and three of the
+    # remaining bars name processes rather than molecules. It was an
+    # unmeasured sentence added by the commit that removed the previous
+    # unmeasured sentence. What each bar admits is the pattern above; the
+    # figure states what the counts are and what they are not.
+    ax.text(0.5, -0.18, "Each bar = number of SDT articles whose title and "
+            "first 4,000 body characters -- the abstract, and the start of "
+            f"any full text held -- match that step. The chain {shape}. "
+            "Matching a step "
+            "is not evidence that the article demonstrates it, and the steps "
+            "are matched by different rules; co-mention is not the link.",
+            transform=ax.transAxes, ha='center', fontsize=9, style='italic',
+            color='gray', wrap=True)
 
     plt.tight_layout()
     fig.savefig(FIG_DIR / "fig6_sdt_chain_evidence.pdf")
