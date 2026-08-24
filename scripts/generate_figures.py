@@ -91,7 +91,12 @@ def load_corpus():
 
 
 def classify_ferroptosis(articles):
-    """Classify articles by physical modality and ferroptosis/ICD engagement."""
+    """Classify articles by physical modality and ferroptosis/ICD engagement.
+
+    Acronyms are WORD-BOUNDED, as in the pathway sets below and for the same
+    measured reason: bodies are lower-cased before matching, so an unbounded
+    acronym counts every word that contains it.
+    """
     physical_mechs = {
         "SDT": "sonodynamic",
         "TTFields": "ttfields",
@@ -105,14 +110,14 @@ def classify_ferroptosis(articles):
         mech_articles = [a for a in articles if mech_key in a.get("mechanisms", [])]
         ferro = sum(1 for a in mech_articles if "ferroptosis" in a.get("_text", ""))
         icd = sum(1 for a in mech_articles if re.search(
-            r"immunogenic cell death|calreticulin|HMGB1", a.get("_text", ""), re.IGNORECASE
+            r"immunogenic cell death|calreticulin|\bHMGB1\b", a.get("_text", ""), re.IGNORECASE
         ))
         gsh = sum(1 for a in mech_articles if re.search(
-            r"glutathione|GSH|GPX4|SLC7A11", a.get("_text", ""), re.IGNORECASE
+            r"glutathione|\bGSH\b|\bGPX4\b|\bSLC7A11\b", a.get("_text", ""), re.IGNORECASE
         ))
         both = sum(1 for a in mech_articles if (
             "ferroptosis" in a.get("_text", "") and
-            re.search(r"immunogenic cell death|calreticulin|HMGB1", a.get("_text", ""), re.IGNORECASE)
+            re.search(r"immunogenic cell death|calreticulin|\bHMGB1\b", a.get("_text", ""), re.IGNORECASE)
         ))
         results[label] = {
             "total": len(mech_articles),
@@ -164,7 +169,10 @@ def fig1_ferroptosis_comparison(articles):
                 ax.annotate(f'{height:.1f}%', xy=(bar.get_x() + bar.get_width() / 2, height),
                            xytext=(0, 3), textcoords="offset points", ha='center', va='bottom', fontsize=8)
 
-    # Statistical test: chi-squared for SDT vs others on ferroptosis
+    # Statistical test: chi-squared for SDT vs others on ferroptosis.
+    # Annotated `p = `, not `p < `: printed as `p < 4.7e-10` the statement
+    # is false of its own value (4.74983e-10 is not below its own
+    # rounding), and a caption quoting it then has to pick a relation.
     sdt_ferro = data["SDT"]["ferroptosis"]
     sdt_total = data["SDT"]["total"]
     other_ferro = sum(data[m]["ferroptosis"] for m in modalities if m != "SDT")
@@ -174,7 +182,7 @@ def fig1_ferroptosis_comparison(articles):
                    [other_ferro, other_total - other_ferro]]
     chi2, p_value, _, _ = stats.chi2_contingency(contingency)
 
-    ax.text(0.98, 0.95, f"SDT vs others (ferroptosis):\nχ² = {chi2:.1f}, p < {p_value:.1e}",
+    ax.text(0.98, 0.95, f"SDT vs others (ferroptosis):\nχ² = {chi2:.1f}, p = {p_value:.1e}",
             transform=ax.transAxes, ha='right', va='top', fontsize=9,
             bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
 
@@ -331,14 +339,19 @@ def fig4_molecular_overlap(articles):
         "HIFU": "hifu",
     }
 
+    # WORD-BOUNDED on every acronym. Bodies are lower-cased before matching,
+    # so a bare `STING` matched "sugge(sting)", "exi(sting)", "boo(sting)" and
+    # "consi(sting)": 1,150 corpus hits against 68 real ones, which made the
+    # largest column of this figure about 94% artifact. Multi-word phrases are
+    # left unbounded because they cannot collide this way.
     pathways = {
         "Ferroptosis": r"ferroptosis",
-        "ICD/DAMPs": r"immunogenic cell death|calreticulin|HMGB1|DAMP",
-        "GSH/GPX4": r"glutathione|GSH|GPX4",
-        "STING/cGAS": r"STING|cGAS|sting pathway",
-        "ROS": r"reactive oxygen species|ROS generation",
+        "ICD/DAMPs": r"immunogenic cell death|calreticulin|\bHMGB1\b|\bDAMP\b",
+        "GSH/GPX4": r"glutathione|\bGSH\b|\bGPX4\b",
+        "STING/cGAS": r"\bSTING\b|\bcGAS\b|\bsting pathway\b",
+        "ROS": r"reactive oxygen species|\bROS generation\b",
         "Apoptosis": r"apoptosis|caspase",
-        "ER Stress": r"endoplasmic reticulum stress|ER stress|UPR",
+        "ER Stress": r"endoplasmic reticulum stress|\bER stress\b|\bUPR\b",
         "Autophagy": r"autophagy|autophagic",
     }
 
@@ -434,14 +447,18 @@ def fig6_sdt_chain_evidence(articles):
 
     sdt_articles = [a for a in articles if "sonodynamic" in a.get("mechanisms", [])]
 
+    # Word-bounded for the same reason as fig4's pathway set: unbounded, this
+    # figure's first bar counted "nec(ros)is" and "p(ros)tate" as ROS
+    # generation (146 SDT articles against 118) and its STING bar was 32
+    # against 4, almost all of it "sugge(sting)".
     chain_steps = {
-        "ROS\ngeneration": r"reactive oxygen species|ROS",
-        "GSH\ndepletion": r"glutathione|GSH depletion|GSH consumption",
-        "GPX4\ninactivation": r"GPX4|glutathione peroxidase 4",
+        "ROS\ngeneration": r"reactive oxygen species|\bROS\b",
+        "GSH\ndepletion": r"glutathione|\bGSH depletion\b|\bGSH consumption\b",
+        "GPX4\ninactivation": r"\bGPX4\b|glutathione peroxidase 4",
         "Lipid\nperoxidation": r"lipid peroxid",
         "Ferroptosis": r"ferroptosis",
-        "DAMP\nrelease": r"calreticulin|HMGB1|DAMP|damage.associated",
-        "STING\nactivation": r"STING|cGAS",
+        "DAMP\nrelease": r"calreticulin|\bHMGB1\b|\bDAMP\b|damage.associated",
+        "STING\nactivation": r"\bSTING\b|\bcGAS\b",
         "ICD": r"immunogenic cell death",
     }
 

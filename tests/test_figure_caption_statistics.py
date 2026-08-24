@@ -23,6 +23,18 @@ TEX = REPO / "article/drafts/v1.tex"
 GEN = REPO / "scripts/generate_figures.py"
 
 
+def _corpus_derived_stems():
+    """Figure stems FIGURES.yaml declares corpus-derived from this generator."""
+    import yaml
+
+    figs = yaml.safe_load((REPO / "FIGURES.yaml").read_text())["figures"]
+    return sorted(
+        f["filename"] for f in figs
+        if f.get("type") == "corpus-derived"
+        and str(f.get("generator", {}).get("script", "")).endswith(
+            "generate_figures.py"))
+
+
 def _generator():
     sys.path.insert(0, str(REPO / "scripts"))
     import matplotlib
@@ -44,6 +56,26 @@ def _caption_statistic():
     return float(m.group(1)), float(m.group(2)) * 10 ** int(m.group(3))
 
 
+def _figure_annotation():
+    """The chi-squared and p the committed fig1 actually draws."""
+    try:
+        import pymupdf
+    except ImportError:
+        try:
+            import fitz as pymupdf
+        except ImportError:
+            return None
+    doc = pymupdf.open(REPO / "article/figures/fig1_ferroptosis_comparison.pdf")
+    try:
+        text = " ".join(" ".join(page.get_text().split()) for page in doc)
+    finally:
+        doc.close()
+    m = re.search(r"\u03c7\u00b2\s*=\s*([\d.]+),\s*p\s*=\s*([\d.]+e?-?\d*)", text)
+    if not m:
+        return None
+    return float(m.group(1)), m.group(2)
+
+
 def test_the_fig1_caption_matches_the_corpus():
     g = _generator()
     from scipy import stats as sp
@@ -63,10 +95,25 @@ def test_the_fig1_caption_matches_the_corpus():
         f"the caption states chi^2 = {stated_chi2} and the corpus gives "
         f"{chi2:.1f}. Regenerate fig1 and update the caption together -- the "
         "previous mismatch survived a corpus halving because nothing checked")
-    # Order of magnitude, not the mantissa: the caption rounds and this test
-    # should not fail on a rounding convention.
-    assert abs(p - stated_p) < stated_p, (
-        f"the caption states p = {stated_p:.2e} and the corpus gives {p:.2e}")
+    # TWO-SIDED, to two significant figures. The first version asserted
+    # `abs(p - stated_p) < stated_p`, which holds for EVERY stated_p >= p --
+    # a caption claiming `p = 1.0`, i.e. no significance at all, passed it.
+    # Only an understated p could fail, which is the wrong half: a caption
+    # that overstates its own p is the one that misleads a reader.
+    assert f"{p:.1e}" == f"{stated_p:.1e}", (
+        f"the caption states p = {stated_p:.1e} and the corpus gives "
+        f"{p:.1e}. These must agree to the digits both display")
+    # AND THE FIGURE MUST DISPLAY THE SAME NUMBERS. The caption sits beside a
+    # figure that draws its own annotation, and a reviewer found the two
+    # disagreeing in the digit both print (caption 4.8, figure 4.7) in the very
+    # commit written to stop a caption drifting from its figure. Read out of
+    # the committed PDF, so this compares the artifact a reader sees.
+    drawn = _figure_annotation()
+    assert drawn is not None, "fig1 no longer annotates its chi-squared test"
+    drawn_chi2, drawn_p = drawn
+    assert drawn_chi2 == stated_chi2 and drawn_p == f"{stated_p:.1e}", (
+        f"the figure draws chi^2 = {drawn_chi2}, p = {drawn_p} and the caption "
+        f"states chi^2 = {stated_chi2}, p = {stated_p:.1e}")
 
 
 def test_the_caption_statistic_is_the_one_the_figure_draws():
@@ -78,9 +125,18 @@ def test_the_caption_statistic_is_the_one_the_figure_draws():
     body = src[src.index("def fig1_ferroptosis_comparison"):]
     body = body[:body.index("\ndef ")]
     flat = " ".join(body.split())
+    # THE OTHERS ARM TOO. Pinning only the SDT arm left `other_ferro`,
+    # `other_total` and the `modalities` list free -- and those decide the
+    # table. Measured: rewriting the others arm to drop one modality makes the
+    # figure draw chi^2 = 36.3 while the caption and this test both still say
+    # 38.8, which is verbatim the "two artifacts agreeing while both diverge
+    # from the figure" failure this test is here to exclude.
     for fragment in (
+            'modalities = ["SDT", "IRE", "HIFU", "TTFields", "Frequency"]',
             "sdt_ferro = data[\"SDT\"][\"ferroptosis\"]",
             "sdt_total = data[\"SDT\"][\"total\"]",
+            "other_ferro = sum(data[m][\"ferroptosis\"] for m in modalities if m != \"SDT\")",
+            "other_total = sum(data[m][\"total\"] for m in modalities if m != \"SDT\")",
             "contingency = [[sdt_ferro, sdt_total - sdt_ferro], [other_ferro, other_total - other_ferro]]",
             "chi2, p_value, _, _ = stats.chi2_contingency(contingency)"):
         assert " ".join(fragment.split()) in flat, (
@@ -89,13 +145,31 @@ def test_the_caption_statistic_is_the_one_the_figure_draws():
 
 
 def test_the_regenerated_corpus_figures_are_what_the_generator_draws(tmp_path):
-    """The five corpus figures with TRACKED inputs, regenerated and compared.
+    """The corpus figures with TRACKED inputs, regenerated and compared.
 
-    Only these five. The generator also writes three figures from
-    `simulations/output/`, which is gitignored -- regenerating those would
-    commit plots drawn from data nobody else has and CI cannot reproduce -- and
-    seven that are not committed at all. Both sets are measured and reported in
-    issue #788 rather than swept into this comparison.
+    The set is DISCOVERED from `FIGURES.yaml` -- the entries whose `type` is
+    `corpus-derived` and whose generator is this script -- and asserted to be
+    exactly what this test compares. Hard-coding it meant `tracked[:0]` passed,
+    and a new corpus-derived figure would have been added to the manuscript and
+    silently skipped here.
+
+    The generator writes 20 figure stems, 13 of which are committed. Eight of
+    those thirteen read `simulations/output/`, which is gitignored -- nothing
+    under it is tracked but `.gitkeep` -- so regenerating them would commit
+    plots drawn from data nobody else has and CI cannot reproduce:
+    fig8_simulation_by_treatment, fig10_invivo_comparison, fig11_mufa_sweep,
+    fig17_damp_heatmap, fig24_hypoxia_killcurve, fig25_bliss_synergy,
+    fig26_vulnerability_window, fig27_resistance_asymmetry. An earlier version
+    of this docstring said "three", naming only the last three of the eight.
+    Seven more stems are drawn on every run and have never been committed.
+    Both sets are reported on issue #788 rather than swept in here.
+
+    PNG CONTENT IS NOT CHECKED, only the PDFs -- the same hole the census gate
+    documents, for the same reason (PNG bytes are not portable across
+    platforms, and CI compares against figures authored on macOS). Measured:
+    restoring a superseded PNG beside a fresh PDF passes. The PNGs are
+    committed and hashed into MANIFEST.sha256, so a swap is caught there as a
+    changed file, but not here as a stale figure.
     """
     import os
     import subprocess
@@ -110,9 +184,15 @@ def test_the_regenerated_corpus_figures_are_what_the_generator_draws(tmp_path):
                          env={**os.environ, "MPLBACKEND": "Agg",
                               "FERRO_FIG_DIR": str(out)})
     assert res.returncode == 0, res.stderr[-800:]
-    tracked = ["fig1_ferroptosis_comparison", "fig4_molecular_overlap",
-               "fig6_sdt_chain_evidence", "fig12_pathway_targets",
-               "fig13_gold_set_eval"]
+    tracked = _corpus_derived_stems()
+    assert tracked == sorted([
+        "fig1_ferroptosis_comparison", "fig4_molecular_overlap",
+        "fig6_sdt_chain_evidence", "fig12_pathway_targets",
+        "fig13_gold_set_eval"]), (
+        f"FIGURES.yaml now declares {tracked} as corpus-derived from this "
+        "generator. Add the new figure to this comparison deliberately, or "
+        "correct FIGURES.yaml -- do not let the set drift silently")
+    compared = 0
     for stem in tracked:
         produced = out / f"{stem}.pdf"
         assert produced.exists(), f"the generator no longer draws {stem}"
@@ -123,3 +203,9 @@ def test_the_regenerated_corpus_figures_are_what_the_generator_draws(tmp_path):
         assert a == b, (
             f"article/figures/{stem}.pdf is not what "
             "scripts/generate_figures.py draws. Re-run it.")
+        compared += 1
+    # A COUNT, because slicing the loop to `tracked[:0]` left this green. The
+    # census gate learned the same lesson through six review rounds: a check
+    # that never runs reports exactly what a check that passes reports.
+    assert compared == len(tracked), (
+        f"compared {compared} figures, not {len(tracked)}")
