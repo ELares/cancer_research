@@ -320,6 +320,16 @@ def test_every_pattern_has_a_case():
         assert declared == set(cases), (
             f"{name} declares {sorted(declared - set(cases))} with no case and "
             f"{sorted(set(cases) - declared)} cased but absent")
+        # AND EACH ENTRY MUST SAY SOMETHING. Key coverage alone let an entry
+        # be emptied to `([], [])` with the suite green, which is a case table
+        # that covers the dict and tests none of it -- the vacuity the
+        # generator comment claims this table forecloses.
+        for label in sorted(cases):
+            should, should_not = cases[label]
+            assert should and should_not, (
+                f"{name}[{label!r}] has {len(should)} must-match and "
+                f"{len(should_not)} must-not-match cases; both directions are "
+                "needed or the pattern is pinned in one direction only")
 
 
 @pytest.mark.parametrize("which,label", (
@@ -703,13 +713,13 @@ def test_cited_titles_match_the_corpus_record():
 def test_fig6_states_the_window_it_actually_matches_over():
     """The caption's description of the instrument, checked against the code.
 
-    Seven review rounds have found a false sentence in this one caption four
+    Seven review rounds have found a false sentence in this one caption three
     times: it claimed the chain "thins from left to right" when it never did,
     then that the bars differ in strictness in a way they do not, then that
     matching is over "title or abstract" when `load_corpus` slices the first
-    4,000 characters of the record -- a window that reaches `## Full Text` in
-    187 of 187 SDT records, so five of the eight bars would be lower if it
-    were the abstract alone.
+    4,000 characters of each record's BODY -- a window that reaches
+    `## Full Text` in 187 of 187 SDT records, so five of the eight bars would
+    be lower if it were the abstract alone.
 
     Each replacement was written by the commit that removed the previous one.
     A caption nothing reads is prose beside a measurement, which is the defect
@@ -732,9 +742,12 @@ def test_fig6_states_the_window_it_actually_matches_over():
         caption = " ".join(" ".join(p.get_text().split()) for p in doc)
     finally:
         doc.close()
-    assert f"{window:,} characters" in caption, (
-        f"load_corpus matches over the first {window:,} characters of each "
-        "record and the figure does not say so")
+    assert f"{window:,} body characters" in caption, (
+        f"load_corpus matches over the title plus the first {window:,} "
+        "characters of each record's BODY and the figure does not say so. "
+        "(The record's own first characters are YAML frontmatter, which is "
+        "not matched -- an earlier caption said 'first 4,000 characters of "
+        "the record', which named the wrong span.)")
     for wrong in ("title or abstract matches",
                   "thins from left to right. Matching",
                   "require the molecule to be named"):

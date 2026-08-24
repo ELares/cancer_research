@@ -472,9 +472,10 @@ def fig6_sdt_chain_evidence(articles):
     # generation, and its STING bar was almost entirely "sugge(sting)".
     #
     # NO COUNTS IN THIS COMMENT. Successive versions of it quoted 146, 106,
-    # 118, 25, 14 and "eight SDT articles"; each was measured when written and
-    # three were stale within two commits, one of them quoting a different
-    # figure's bar. Nothing can keep a number in a comment honest -- the
+    # 118, 32, 4, 25, 14 and "eight SDT articles"; each was measured when
+    # written and several were stale within two commits, one of them quoting a
+    # different figure's bar. Nothing can keep a number in a comment honest --
+    # the
     # repository has a rule against generators hand-writing quantities and it
     # does not reach comments -- so the reasoning stays here and the numbers
     # live in the figure, which is regenerated and gated.
@@ -582,9 +583,10 @@ def fig6_sdt_chain_evidence(articles):
     # unmeasured sentence added by the commit that removed the previous
     # unmeasured sentence. What each bar admits is the pattern above; the
     # figure states what the counts are and what they are not.
-    ax.text(0.5, -0.18, "Each bar = number of SDT articles whose first "
-            "4,000 characters -- title, abstract and the start of any full "
-            f"text held -- match that step. The chain {shape}. Matching a step "
+    ax.text(0.5, -0.18, "Each bar = number of SDT articles whose title and "
+            "first 4,000 body characters -- the abstract, and the start of "
+            f"any full text held -- match that step. The chain {shape}. "
+            "Matching a step "
             "is not evidence that the article demonstrates it, and the steps "
             "are matched by different rules; co-mention is not the link.",
             transform=ax.transAxes, ha='center', fontsize=9, style='italic',

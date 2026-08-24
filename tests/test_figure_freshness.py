@@ -762,6 +762,22 @@ def test_no_census_figure_carries_a_creation_date():
         f"cannot be checked for freshness: {stale}")
 
 
+def _corpus_derived_stems():
+    """The figures the sibling gate covers, from FIGURES.yaml -- not a literal.
+
+    This was `gated = 5` next to a derived total, in the test whose own comment
+    argues a count pinned by its spelling cannot notice being wrong.
+    """
+    import yaml
+
+    figs = yaml.safe_load((REPO / "FIGURES.yaml").read_text())["figures"]
+    return sorted(
+        f["filename"] for f in figs
+        if f.get("type") == "corpus-derived"
+        and str(f.get("generator", {}).get("script", "")).endswith(
+            "generate_figures.py"))
+
+
 def _spell(n: int) -> str:
     """Small numbers as the docstring writes them."""
     words = {5: "five", 15: "fifteen", 17: "seventeen", 22: "twenty-two"}
@@ -772,9 +788,28 @@ def test_the_corpus_figure_backlog_is_stated_and_shrinking():
     """The other generator's figures are NOT covered, and saying how many is
     what stops "figures are gated now" being read as covering all of them."""
     census = {f"{f}.pdf" for f in _census_figures()}
-    stale = sorted(p.name for p in FIG_DIR.glob("*.pdf")
-                   if p.name not in census
-                   and b"/CreationDate" in p.read_bytes())
+    # FROM GIT, not the working tree. Both counts here are statements about
+    # what is COMMITTED, and running the generator -- which the README tells
+    # you to do -- rewrites three simulation figures in place and drops the
+    # stale count from 15 to 12 without committing anything.
+    import subprocess
+
+    listed = subprocess.run(
+        ["git", "ls-files", "article/figures/*.pdf"],
+        cwd=REPO, capture_output=True, text=True)
+    assert listed.returncode == 0, listed.stderr
+    paths = listed.stdout.split()
+    assert paths, "git lists no committed figures"
+    names = {Path(x).name for x in paths}
+    stale = []
+    for rel in sorted(paths):
+        if Path(rel).name in census:
+            continue
+        blob = subprocess.run(["git", "show", f"HEAD:{rel}"],
+                              cwd=REPO, capture_output=True)
+        assert blob.returncode == 0, rel
+        if b"/CreationDate" in blob.stdout:
+            stale.append(Path(rel).name)
     doc = _module_docstring()
     # The scope limits that remain, checked against the docstring. An earlier
     # version asserted "generate_figures.py cannot run in CI at all", which is
@@ -786,8 +821,12 @@ def test_the_corpus_figure_backlog_is_stated_and_shrinking():
     # of them and removed the creation date from those five. A count stated in
     # prose and pinned by its own spelling cannot notice being wrong.
     assert "Most non-census PDFs" in doc
-    total = len([p for p in FIG_DIR.glob("*.pdf") if p.name not in census])
-    gated = 5
+    # TRACKED, not on disk. `generate_figures.py` writes seven stems that are
+    # never committed, so after the regeneration step the README documents,
+    # this counted 29 and reported "29 non-census figures are committed" --
+    # a false message from a guard about counting honestly.
+    total = len([n for n in names if n not in census])
+    gated = len(_corpus_derived_stems())
     assert f"Twenty-two committed figures" in doc and total == 22, (
         f"{total} non-census figures are committed; the docstring says "
         "twenty-two")
