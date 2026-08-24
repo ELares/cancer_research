@@ -18,12 +18,34 @@ annotations are right -- a mis-drawn curve, a swapped panel, a wrong colour
 map. It compares the numbers rendered as text. That is a smaller claim than
 "the figure is correct", and it is the claim the committed data can support.
 
-BINDING IS POSITIONAL where the artifact gives no alternative. A matplotlib bar
-annotation carries no label in the text stream, so for fig24 and fig25's panel
-(a) the order is the bar order, documented per figure below. Where labels ARE
-adjacent -- fig25's panel (b) -- each value is bound to its own label, because
-a set comparison passes when two values are swapped between subjects, which is
-the defect the fig17 guard was fixed for.
+Four narrower limits, each measured rather than assumed:
+
+- **A change too small to survive rounding is invisible.** fig24's four bars
+  are drawn `:.1f`, and RSL3's hypoxic value is 0.1% whether it is the mean
+  over the four lambdas or the single 120um condition. Making that swap for
+  RSL3 is caught, but only by the collapse ANNOTATION, which is `:.0f` and
+  moves. SDT has no such annotation, so the same swap made for SDT alone would
+  leave the PDF text byte-identical and nothing here would fire.
+- **fig25 panel (b) is backed for one pair.** `tests/fixtures/bliss_synergy.json`
+  holds `rsl3_fsp1i` only, so the other two scores are compared against
+  nothing; dropping or altering `FSP1i+HDACi` cannot be detected here.
+- **fig24 panel (b) is ungated**, as is fig26 panel (b)'s GPX4 right-hand axis,
+  whose tick labels are data-derived numbers no assertion reads.
+- **`closes ~day 3` is a presence check.** It is a hardcoded string in the
+  generator, so it would still read day 3 if the window moved.
+
+BINDING. matplotlib writes a bar's annotation and its axis label into the text
+stream as separate runs with nothing tying the two together, so for fig24 and
+fig25's panel (a) a value is bound to its bar by ORDER. Order alone is not
+enough: with only the values pinned, swapping fig24's two group labels or
+reordering fig25's four bar labels leaves every number exactly where it was and
+passes. Both tests therefore also pin the LABELS in the order they are drawn,
+which is what makes the positional binding say whose bar is whose.
+
+fig25's panel (b) is the one place a label sits beside its own value, so there
+each score is bound to its pair directly. A set comparison is not enough --
+two scores swapped between pairs would satisfy one -- and that is the defect
+the fig17 guard was fixed for in #790.
 """
 import json
 import re
@@ -75,11 +97,11 @@ def test_fig25_draws_its_bliss_numbers():
     # THE BAR LABELS, IN ORDER, for the same reason as fig24's: reordering
     # them without the values captioned the Bliss expectation as the observed
     # combination and passed.
-    for i, label in enumerate(("RSL3 alone", "FSP1i alone",
-                               "Bliss expected", "Observed combination")):
+    bars = ("RSL3 alone", "FSP1i alone", "Bliss expected",
+            "Observed combination")
+    for label in bars:
         assert label in text, f"fig25 no longer labels a bar {label!r}"
-    order = [text.index(l) for l in ("RSL3 alone", "FSP1i alone",
-                                     "Bliss expected", "Observed combination")]
+    order = [text.index(l) for l in bars]
     assert order == sorted(order), (
         "fig25's panel (a) labels are not in the order its values are "
         f"compared in; the bars may be mislabelled. positions={order}")
@@ -103,7 +125,14 @@ def test_fig25_binds_each_pair_to_its_own_score():
     # pairs and 4 scores" -- and fails again if the sim ever emits the pair
     # with drug_a and drug_b the other way round, which the generator's own
     # lookup deliberately tolerates.
-    labels = re.search(r"((?:[A-Za-z0-9]+\+[A-Za-z0-9]+\s+)+)"
+    #
+    # THE CHARACTER CLASS IS `[^\s+]`, NOT `[A-Za-z0-9]`. Deriving the names
+    # is only half the fix: an alphanumeric class cannot span a hyphen, and
+    # ferroptosis drug names are full of them. Adding a legitimate `Fer-1 +
+    # HDACi` pair to the fixture made a CORRECT figure fail -- and worse, the
+    # class silently matched the tail `1+HDACi`, so the guard reported "2 pairs
+    # and 4 scores" rather than saying it could not read the name.
+    labels = re.search(r"((?:[^\s+]+\+[^\s+]+\s+)+)"
                        r"((?:\d+\.\d+×\s*)+)", text)
     assert labels, "fig25's panel (b) no longer lists its pairs and scores"
     pairs = labels.group(1).split()
@@ -153,6 +182,17 @@ def test_fig24_draws_its_hypoxia_numbers():
     assert labels, (
         "fig24's group labels are not RSL3 then SDT in that order, so the "
         "positional binding above no longer says which bar is whose")
+    # AND THE SERIES LEGEND, which is the other half of a 2x2 and was the
+    # weaker half: pinning only the group axis left "which of these two bars
+    # is the hypoxic one" unstated. Swapping the two `label=` strings on
+    # `axA.bar` re-captions 3.7%/91.9% as the HYPOXIC bars and 0.1%/87.8% as
+    # the normoxic ones -- the thesis of the figure inverted -- and passed.
+    # The legend is emitted in bar-call order, the same order as the values.
+    series = re.search(r"Normoxic \(uniform O2\)\s+Hypoxic \(O2 gradient\)", text)
+    assert series, (
+        "fig24's series legend is not `Normoxic (uniform O2)` then `Hypoxic "
+        "(O2 gradient)`. The bar VALUES are compared in that order, so if the "
+        "legend disagrees the figure says hypoxia raises the kill rate")
     # And the collapse annotation must be the ratio of the two it names, not a
     # number carried along beside them.
     collapse = re.search(r"(\d+\.\d%) → (\d+\.\d%) \(~(\d+)× collapse\)", text)
@@ -160,16 +200,27 @@ def test_fig24_draws_its_hypoxia_numbers():
     assert [collapse.group(1), collapse.group(2)] == expected[:2], (
         f"fig24's collapse annotation names {collapse.group(1)} → "
         f"{collapse.group(2)} while its bars draw {expected[:2]}")
-    # RELATIVE, because an absolute +/-1 is meaningless at a ratio of ~900:
-    # with the uniform values swapped the same assertion fired at 934 against
-    # 897, a 0.4% difference. The generator clamps its denominator, so this
-    # does too rather than dividing by zero and reporting an error instead of
-    # a diagnosis.
+    # THE TOLERANCE IS DERIVED FROM THE FORMAT STRING, not from the magnitude.
+    # The generator renders this ratio with `:.0f`, so a CORRECT figure can
+    # differ from the fixture by at most 0.5 -- at any magnitude, since
+    # rounding error does not grow with the value. 0.6 leaves that half-unit
+    # of headroom and nothing more.
+    #
+    # Two earlier attempts were looser for reasons that do not survive being
+    # checked. An absolute 1.0 admits a genuinely wrong annotation: adding 0.9
+    # before formatting draws `~38x` against a data ratio of 37.18 and passed.
+    # A `max(1.0, 0.02 * ratio)` was no better -- at 37.18 the relative term is
+    # 0.744, so the floor always won and the relative branch never ran.
+    #
+    # The clamp matches the generator's own `max(hyp, 0.01)`; both operate on
+    # percentages, so a hypoxic rate at or below 0.01% is pinned identically on
+    # both sides instead of one of them dividing by zero.
     ratio = kills["RSL3"][0] / max(kills["RSL3"][1], 0.01)
     drawn_ratio = int(collapse.group(3))
-    assert abs(drawn_ratio - ratio) <= max(1.0, 0.02 * ratio), (
+    assert abs(drawn_ratio - ratio) <= 0.6, (
         f"fig24 says ~{drawn_ratio}x collapse and the fixture gives "
-        f"{ratio:.1f}x")
+        f"{ratio:.1f}x. The generator formats with `:.0f`, so a correct "
+        "figure is within 0.5 of the data")
 
 
 def test_fig26_draws_the_timepoints_its_fixture_holds():
@@ -206,6 +257,17 @@ def test_fig26_draws_the_timepoints_its_fixture_holds():
     assert not values, (
         f"fig26 now annotates {values}; add them to this comparison against "
         "vulnerability_window.json rather than leaving them ungated")
+    # THE CURVE LEGEND. The timepoints above say WHEN, and nothing said WHICH
+    # CURVE IS WHICH. Swapping the two `label=` strings on `axA.plot` labels
+    # the curve that holds near 100% out to day 28 as RSL3 and the collapsing
+    # one as SDT -- "days for RSL3, weeks for SDT" reversed, under a suptitle
+    # still asserting the original claim -- and passed. Legend entries are
+    # emitted in plot-call order, so pinning the order pins the pairing.
+    legend = re.search(r"SDT \(exogenous ROS\)\s+RSL3 \(GPX4 inhibitor\)", text)
+    assert legend, (
+        "fig26's panel (a) legend is not `SDT (exogenous ROS)` then `RSL3 "
+        "(GPX4 inhibitor)`; the curves may be labelled the wrong way round, "
+        "which reverses the window claim the figure is drawn to make")
     assert "closes ~day 3" in text, (
         "fig26's window annotation is gone. NOTE this is a hardcoded string in "
         "the generator, not a derived one -- if the window moved, the "
