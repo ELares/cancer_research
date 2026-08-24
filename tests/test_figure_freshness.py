@@ -36,12 +36,12 @@ ones known and deliberate:
 - **Most non-census PDFs.** Twenty-two committed figures come from other
   generators. Five of them -- the corpus-derived ones, whose inputs are tracked
   -- are regenerated and gated by `tests/test_figure_caption_statistics.py`;
-  the other seventeen are not. Eight of those seventeen are the
-  simulation-derived figures, regenerated in the #790 pass so they no longer
-  embed a creation date, but still uncheckable in CI because their inputs live
-  under `simulations/output/`, which is gitignored -- the tracking decision is
-  measured on #788, and seven still embed a creation date and so cannot be
-  compared at all.
+  the other seventeen are not, and ten of those seventeen `FIGURES.yaml` marks
+  `type: simulation`; eight of the ten were regenerated in the #790 pass and no
+  longer embed a creation date, but none of the ten is checkable in CI, because
+  their inputs live under `simulations/output/`, which is gitignored -- the
+  tracking decision is measured on #788. Across all seventeen, seven still
+  embed a creation date and so cannot be compared at all.
 - **Stale inputs.** Regenerating from committed JSON cannot notice the JSON is
   old.
 - **THE GENERATOR ITSELF IS TRUSTED.** Everything here compares what
@@ -781,7 +781,7 @@ def _corpus_derived_stems():
 
 def _spell(n: int) -> str:
     """Small numbers as the docstring writes them."""
-    words = {5: "five", 7: "seven", 8: "eight", 15: "fifteen",
+    words = {5: "five", 7: "seven", 8: "eight", 10: "ten", 15: "fifteen",
              17: "seventeen", 22: "twenty-two"}
     return words.get(n, str(n))
 
@@ -835,6 +835,18 @@ def test_the_corpus_figure_backlog_is_stated_and_shrinking():
     assert f"the other {_spell(total - gated)} are not" in doc, (
         f"{total - gated} non-census figures are ungated and the docstring "
         "says otherwise")
+    import yaml as _yaml
+
+    spec = _yaml.safe_load((REPO / "FIGURES.yaml").read_text())["figures"]
+    sim = {f["filename"] for f in spec if f.get("type") == "simulation"}
+    ungated = {Path(n).stem for n in names if n not in census} - set(
+        _corpus_derived_stems())
+    n_sim = len(ungated & sim)
+    assert f"{_spell(n_sim)} of those seventeen" in doc, (
+        f"FIGURES.yaml marks {n_sim} of the ungated figures as simulation and "
+        "the docstring says otherwise -- the first version said eight, which "
+        "was the number this branch regenerated rather than the number that "
+        "exist, and nothing measured it")
     assert f"{_spell(len(stale))} still embed a creation date" in doc, (
         f"{len(stale)} still embed a creation date and the docstring says "
         "otherwise")

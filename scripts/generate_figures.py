@@ -1272,26 +1272,39 @@ def fig17_damp_heatmap():
     if summary_path.exists():
         summary = json.loads(summary_path.read_text())
         conditions = summary.get("conditions", summary) if isinstance(summary, dict) else summary
-        # THE SCENARIO THE HEATMAPS ARE OF, selected by name. Three conditions
-        # carry `immune_mode: immune_on` -- the dedicated immune run
+        # THE SCENARIO THE HEATMAPS ARE OF, selected by name. Three SCENARIOS
+        # carry `immune_mode: immune_on`, three treatments each -- the immune run
         # (`stromal_mode: off`), the stromal run, and the pH run -- and this
         # loop used to keep whichever the file listed LAST, which is the pH
         # one. The DAMP CSVs below are written by the dedicated immune section
         # alone (`sim-tme/src/main.rs:1265`, inside a loop over immune modes),
-        # so the figure rendered the baseline run's fields and labelled them
-        # with the pH run's kill counts: 0/0/496 drawn over panels whose data
-        # is 0/5/521. The manuscript's 104:1 is 521/5, i.e. the panels'
+        # so the generator rendered the baseline run's fields and labelled
+        # them with the pH run's kill counts -- on the data as it stands, 0/0/496
+        # over panels whose own counts are 0/5/521. (The figure committed
+        # before this fix drew 0/2/539, which is neither: it predates the
+        # generator state that produced the mismatch.) The manuscript's 104:1 is 521/5, i.e. the panels'
         # scenario, so the figure disagreed with the section it illustrates.
         matched = [r for r in conditions
                    if r.get("immune_mode") == "immune_on"
                    and r.get("stromal_mode") == "off"
                    and "ph_mode" not in r]
-        assert matched, (
-            "tme_summary.json carries no baseline immune_on condition "
-            "(stromal_mode=off, no ph_mode); the DAMP heatmaps cannot be "
-            "labelled with counts from a run they are not of")
         for r in matched:
             imm_kills_map[r["treatment"]] = r.get("immune_kills", 0)
+
+    # REFUSE PER TREATMENT, and OUTSIDE the exists() branch. A first version
+    # asserted only that the matched list was non-empty, and asserted it inside
+    # `if summary_path.exists()`, so two ways of drawing "(0 immune kills)" on
+    # every panel survived it: a missing summary file skipped the check
+    # entirely, and a summary carrying only the Control row satisfied a
+    # non-empty list while RSL3 and SDT fell through `.get(tx, 0)`. A zero
+    # rendered on a panel reads as a result, not as an absence.
+    missing = [label for _, label in treatment_keys if label not in imm_kills_map]
+    assert not missing, (
+        f"no baseline immune_on condition for {missing} in "
+        f"{summary_path} (immune_mode=immune_on, stromal_mode=off, no "
+        "ph_mode). The DAMP heatmaps come from that run, so labelling them "
+        "with anything else -- including a default of zero -- puts one run's "
+        "panels under another run's numbers")
 
     # Load DAMP fields
     # NOTE: sim-tme encodes each treatment's DAMP field independently as u8
@@ -1302,7 +1315,7 @@ def fig17_damp_heatmap():
     panels = []
     for tx_key, tx_label in treatment_keys:
         data = np.loadtxt(TME_DIR / f"damp_field_{tx_key}.csv", delimiter=",")
-        imm_kills = imm_kills_map.get(tx_label, 0)
+        imm_kills = imm_kills_map[tx_label]
         panels.append((tx_label, data, int(imm_kills)))
 
     fig, axes = plt.subplots(1, 3, figsize=(14, 4.5), constrained_layout=True)
