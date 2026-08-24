@@ -537,13 +537,20 @@ def test_the_chapter_8_decomposition_is_derived_not_asserted(tmp_path):
             dual_titles[pmid(a)] = a.get("title") or ""
     surveys = {k: v for k, v in dual_titles.items() if surveyish.search(v)}
     assert len(dual_titles) == facts["dual new"]
-    assert len(surveys) == 1, (
-        f"{len(surveys)} of the {len(dual_titles)} dual-pathway articles read "
-        f"as surveys, not one: {sorted(dual_titles)}. The paragraph says two "
-        "primary reports and a survey.")
-    assert "two primary reports and a survey" in sentence, (
-        "one of the dual-pathway articles is a survey and the paragraph no "
-        f"longer says so: {sorted(surveys.values())}")
+    # BOTH HALVES DERIVED. Pinning only "one survey" and the literal phrase
+    # left the "two" free: adding a fourth dual-pathway article to the corpus
+    # and updating the two numerals gave a paragraph claiming two primary
+    # reports of a set holding three, with the guard green.
+    primaries = len(dual_titles) - len(surveys)
+    words = {0: "no", 1: "one", 2: "two", 3: "three", 4: "four", 5: "five"}
+    expected = (f"{words.get(primaries, primaries)} primary report"
+                f"{'' if primaries == 1 else 's'} and "
+                f"{words.get(len(surveys), len(surveys))} survey"
+                f"{'' if len(surveys) == 1 else 's'}")
+    assert expected in sentence, (
+        f"the dual-pathway set is {primaries} primary and {len(surveys)} "
+        f"survey by title, so the paragraph should read {expected!r}. "
+        f"Titles: {sorted(dual_titles.values())}")
     assert "reconstruction rather than a record" in sentence, (
         "the paragraph states the retired instrument as fact; it is inferred "
         "from one number and the companion counts do not corroborate it")
@@ -670,9 +677,13 @@ def test_cited_titles_match_the_corpus_record():
     m = re.search(r"\[\^refs_group8\]:(.*?)(?=\n\[\^|\n\n)", text, re.S)
     assert m, "the dual-pathway footnote is gone or was renamed"
     footnote = " ".join(m.group(1).split())
-    cited = re.findall(r"PMID:\s*(\d+)", footnote)
-    assert cited, f"no PMIDs in the footnote: {footnote[:120]}"
-    for pmid in cited:
+    # PER SEGMENT, so a title is checked against the PMID it names. Searching
+    # the whole footnote for each title made the titles interchangeable: two
+    # could be swapped and every assertion still passed -- which is verbatim
+    # what this test's docstring says it closes.
+    segments = re.findall(r"(.*?PMID:\s*(\d+))", footnote)
+    assert segments, f"no PMIDs in the footnote: {footnote[:120]}"
+    for segment, pmid in segments:
         record = REPO / f"corpus/by-pmid/{pmid}.md"
         assert record.exists(), (
             f"the footnote cites PMID {pmid}, which is not in the corpus -- "
@@ -684,6 +695,48 @@ def test_cited_titles_match_the_corpus_record():
         # Compared on words, because the footnote drops the trailing period
         # and the corpus keeps it; the failure this catches is a paraphrase,
         # not punctuation.
-        assert " ".join(title.split()).lower() in footnote.lower(), (
-            f"the footnote's title for {pmid} is not the corpus title:\n"
-            f"  corpus: {title}")
+        assert " ".join(title.split()).lower() in segment.lower(), (
+            f"the footnote's entry for {pmid} does not carry that article's "
+            f"corpus title:\n  corpus:  {title}\n  footnote: {segment.strip()}")
+
+
+def test_fig6_states_the_window_it_actually_matches_over():
+    """The caption's description of the instrument, checked against the code.
+
+    Seven review rounds have found a false sentence in this one caption four
+    times: it claimed the chain "thins from left to right" when it never did,
+    then that the bars differ in strictness in a way they do not, then that
+    matching is over "title or abstract" when `load_corpus` slices the first
+    4,000 characters of the record -- a window that reaches `## Full Text` in
+    187 of 187 SDT records, so five of the eight bars would be lower if it
+    were the abstract alone.
+
+    Each replacement was written by the commit that removed the previous one.
+    A caption nothing reads is prose beside a measurement, which is the defect
+    this whole file exists to close, so this reads it.
+    """
+    try:
+        import pymupdf
+    except ImportError:
+        try:
+            import fitz as pymupdf
+        except ImportError:
+            pytest.skip("no PDF reader available")
+
+    src = GEN.read_text()
+    m = re.search(r"fm\[\"_text\"\]|_text.*?body\[:(\d+)\]|body\[:(\d+)\]", src)
+    assert m, "cannot find the text window in load_corpus"
+    window = int(next(g for g in m.groups() if g))
+    doc = pymupdf.open(REPO / "article/figures/fig6_sdt_chain_evidence.pdf")
+    try:
+        caption = " ".join(" ".join(p.get_text().split()) for p in doc)
+    finally:
+        doc.close()
+    assert f"{window:,} characters" in caption, (
+        f"load_corpus matches over the first {window:,} characters of each "
+        "record and the figure does not say so")
+    for wrong in ("title or abstract matches",
+                  "thins from left to right. Matching",
+                  "require the molecule to be named"):
+        assert wrong not in caption, (
+            f"the caption carries a retracted claim: {wrong!r}")

@@ -479,7 +479,7 @@ def fig6_sdt_chain_evidence(articles):
     # does not reach comments -- so the reasoning stays here and the numbers
     # live in the figure, which is regenerated and gated.
     chain_steps = {
-        "ROS\ngeneration": (r"reactive \w+ (?:oxygen )?species"
+        "ROS\ngeneration": (r"reactive (?:\w+ )?oxygen species|reactive oxide species"
                             r"|\bROS[- ]gener|\bROS[- ]?produc"
                             r"|(?:generat|induc|elicit|produc)\w*\s+"
                             r"(?:high levels of\s+|the\s+)?\bROS\b"),
@@ -490,8 +490,8 @@ def fig6_sdt_chain_evidence(articles):
         # BOTH WORD ORDERS, and both verbs. A first version matched only
         # noun-before-verb ("GSH depletion"), missing "depletes intra-tumoral
         # glutathione", "depletion of overexpressed glutathione", "consume the
-        # reduced glutathione" and "scavenges GSH" -- three of which are
-        # articles the manuscript names as exemplars. That is the same
+        # reduced glutathione" and "scavenges GSH" -- the first of which is an
+        # article the manuscript names as an exemplar. That is the same
         # false-negative trade made for `DAMP`, for `ER stress` and for this
         # bar's neighbour above, which is why the case table in
         # `tests/test_figure_caption_statistics.py` now pins both directions
@@ -582,8 +582,9 @@ def fig6_sdt_chain_evidence(articles):
     # unmeasured sentence added by the commit that removed the previous
     # unmeasured sentence. What each bar admits is the pattern above; the
     # figure states what the counts are and what they are not.
-    ax.text(0.5, -0.18, "Each bar = number of SDT articles whose title or "
-            f"abstract matches that step. The chain {shape}. Matching a step "
+    ax.text(0.5, -0.18, "Each bar = number of SDT articles whose first "
+            "4,000 characters -- title, abstract and the start of any full "
+            f"text held -- match that step. The chain {shape}. Matching a step "
             "is not evidence that the article demonstrates it, and the steps "
             "are matched by different rules; co-mention is not the link.",
             transform=ax.transAxes, ha='center', fontsize=9, style='italic',
