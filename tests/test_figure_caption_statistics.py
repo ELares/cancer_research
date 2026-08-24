@@ -258,7 +258,10 @@ _CHAIN_CASES = {
     "ROS\ngeneration": (
         ["ros generation", "generating ros", "generate high levels of ros",
          "induce ros locally", "elicits ros-mediated apoptosis",
-         "reactive oxygen species"],
+         "reactive oxygen species", "ros production",
+         "boost ultrasound (us)-initiated ros production",
+         "reactive singlet oxygen species (ros)",
+         "generate reactive oxide species (ros)"],
         ["necrosis", "prostate", "across", "ros accumulation is reduced"],
     ),
     "GSH\ndepletion": (
@@ -519,6 +522,28 @@ def test_the_chapter_8_decomposition_is_derived_not_asserted(tmp_path):
     # The reconstruction is HEDGED, because it is one. No text window over the
     # pre-cut corpus reproduces the source page's 39 ferroptosis and 21 ICD
     # counts alongside its 72, so the instrument is inferred, not recorded.
+    # THE SURVEY/PRIMARY SPLIT, derived from the corpus records rather than
+    # asserted beside them. Round 4 replaced a deleted PMID by reading the
+    # counting instrument instead of reading the article, and picked a
+    # text-mining survey; round 5 wrote the correction as prose, which the
+    # next reviewer flipped to "three primary reports and no survey" with the
+    # whole suite green.
+    surveyish = re.compile(
+        r"text[- ]mining|bibliometric|knowledge structure|scientometric|"
+        r"\bmapping\b.*\bthemes\b", re.I)
+    dual_titles = {}
+    for a in sn:
+        if "ferroptosis" in a["_text"] and re.search(icd, a["_text"], re.I):
+            dual_titles[pmid(a)] = a.get("title") or ""
+    surveys = {k: v for k, v in dual_titles.items() if surveyish.search(v)}
+    assert len(dual_titles) == facts["dual new"]
+    assert len(surveys) == 1, (
+        f"{len(surveys)} of the {len(dual_titles)} dual-pathway articles read "
+        f"as surveys, not one: {sorted(dual_titles)}. The paragraph says two "
+        "primary reports and a survey.")
+    assert "two primary reports and a survey" in sentence, (
+        "one of the dual-pathway articles is a survey and the paragraph no "
+        f"longer says so: {sorted(surveys.values())}")
     assert "reconstruction rather than a record" in sentence, (
         "the paragraph states the retired instrument as fact; it is inferred "
         "from one number and the companion counts do not corroborate it")
@@ -624,3 +649,41 @@ def test_the_latex_manuscript_is_a_regeneration_of_its_source():
         "article/drafts/v1.tex is not what scripts/generate_latex.py draws "
         "from v1.md. Re-run it -- an edit made directly to the tex is an edit "
         "no prose guard in this repository can see, and it is what ships.")
+
+
+def test_cited_titles_match_the_corpus_record():
+    """A footnote's title must be the title the corpus holds.
+
+    `34646381` was cited as "…through a mitochondrial targeting **strategy**"
+    at three sites in the manuscript; the record says "…through a mitochondrial
+    targeting **liposomal nanosystem**". Nothing tied a footnote to the article
+    it names, so a paraphrase introduced during an edit stayed for as long as
+    nobody opened the file.
+
+    Scoped to the PMIDs Section 8.2 enumerates, which are the ones this PR
+    rewrote; a repository-wide version of this check is a larger job (many
+    cited PMIDs are not in the corpus at all) and is not attempted here.
+    """
+    import yaml
+
+    text = (REPO / "article/drafts/v1.md").read_text()
+    m = re.search(r"\[\^refs_group8\]:(.*?)(?=\n\[\^|\n\n)", text, re.S)
+    assert m, "the dual-pathway footnote is gone or was renamed"
+    footnote = " ".join(m.group(1).split())
+    cited = re.findall(r"PMID:\s*(\d+)", footnote)
+    assert cited, f"no PMIDs in the footnote: {footnote[:120]}"
+    for pmid in cited:
+        record = REPO / f"corpus/by-pmid/{pmid}.md"
+        assert record.exists(), (
+            f"the footnote cites PMID {pmid}, which is not in the corpus -- "
+            "it was cited as evidence and the article is not held")
+        fm = yaml.safe_load(
+            re.match(r"^---\n(.*?\n)---", record.read_text(), re.S).group(1))
+        title = (fm.get("title") or "").rstrip(".")
+        assert title, f"{pmid} has no title in the corpus"
+        # Compared on words, because the footnote drops the trailing period
+        # and the corpus keeps it; the failure this catches is a paraphrase,
+        # not punctuation.
+        assert " ".join(title.split()).lower() in footnote.lower(), (
+            f"the footnote's title for {pmid} is not the corpus title:\n"
+            f"  corpus: {title}")

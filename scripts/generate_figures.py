@@ -467,27 +467,35 @@ def fig6_sdt_chain_evidence(articles):
 
     sdt_articles = [a for a in articles if "sonodynamic" in a.get("mechanisms", [])]
 
-    # Bounded for the same reason as fig4's pathway set. Unbounded, this
+    # Bounded for the same reason as fig4's pathway set: unbounded, this
     # figure's first bar counted "nec(ros)is" and "p(ros)tate" as ROS
-    # generation: 146 SDT articles, against 106 now that the pattern requires
-    # generation as the label says. (118 is what fig4's broader "ROS" column
-    # counts -- a different pattern in a different figure, and an earlier
-    # version of this comment quoted it here.) The STING bar was 32 against 4,
-    # almost all of it "sugge(sting)".
+    # generation, and its STING bar was almost entirely "sugge(sting)".
+    #
+    # NO COUNTS IN THIS COMMENT. Successive versions of it quoted 146, 106,
+    # 118, 25, 14 and "eight SDT articles"; each was measured when written and
+    # three were stale within two commits, one of them quoting a different
+    # figure's bar. Nothing can keep a number in a comment honest -- the
+    # repository has a rule against generators hand-writing quantities and it
+    # does not reach comments -- so the reasoning stays here and the numbers
+    # live in the figure, which is regenerated and gated.
     chain_steps = {
-        "ROS\ngeneration": (r"reactive oxygen species|\bROS[- ]gener"
+        "ROS\ngeneration": (r"reactive \w+ (?:oxygen )?species"
+                            r"|\bROS[- ]gener|\bROS[- ]?produc"
                             r"|(?:generat|induc|elicit|produc)\w*\s+"
                             r"(?:high levels of\s+|the\s+)?\bROS\b"),
         # The bar is labelled DEPLETION and accepted a bare mention of
-        # glutathione: 25 SDT articles, of which 14 say depletion or
-        # consumption. A chain-evidence figure has to measure the step it
+        # glutathione. A chain-evidence figure has to measure the step it
         # names, or the chain reads stronger than the literature is.
         #
-        # BOTH WORD ORDERS. A first version matched only noun-before-verb
-        # ("GSH depletion") and so missed "depletes glutathione", "deplete
-        # intracellular GSH" and "consumption of glutathione" -- eight SDT
-        # articles, which is the same false-negative trade this file has now
-        # made twice.
+        # BOTH WORD ORDERS, and both verbs. A first version matched only
+        # noun-before-verb ("GSH depletion"), missing "depletes intra-tumoral
+        # glutathione", "depletion of overexpressed glutathione", "consume the
+        # reduced glutathione" and "scavenges GSH" -- three of which are
+        # articles the manuscript names as exemplars. That is the same
+        # false-negative trade made for `DAMP`, for `ER stress` and for this
+        # bar's neighbour above, which is why the case table in
+        # `tests/test_figure_caption_statistics.py` now pins both directions
+        # for every pattern in both dicts.
         "GSH\ndepletion": (r"\bGSH deplet|\bglutathione deplet|\bGSH consum"
                            r"|\bglutathione consum"
                            r"|(?:deplet|consum|scaveng|exhaust)\w*\s+"
@@ -540,10 +548,25 @@ def fig6_sdt_chain_evidence(articles):
     # chain that dips once and then holds. And `>=` called a flat chain
     # "thinning", which nothing about a flat chain does.
     steps = [k.replace("\n", " ") for k in chain_steps]
-    dips = [i for i in range(1, len(counts) - 1)
-            if counts[i] < counts[i - 1] and counts[i] < counts[i + 1]]
-    if all(a > b for a, b in zip(counts, counts[1:])):
-        shape = "thins monotonically from left to right"
+    # PLATEAU TROUGHS TOO. A strict `counts[i] < both neighbours` test misses
+    # a trough that is two bars wide -- `[50,40,20,20,40,50]` has an obvious
+    # dip and reported none -- and misses the shallower of two dips when one
+    # bar of it ties. Walk the runs of equal values instead.
+    runs, i = [], 0
+    while i < len(counts):
+        j = i
+        while j + 1 < len(counts) and counts[j + 1] == counts[i]:
+            j += 1
+        runs.append((i, j))
+        i = j + 1
+    dips = [start for k, (start, end) in enumerate(runs)
+            if 0 < k < len(runs) - 1
+            and counts[start] < counts[runs[k - 1][0]]
+            and counts[start] < counts[runs[k + 1][0]]]
+    if all(a >= b for a, b in zip(counts, counts[1:])):
+        shape = ("thins monotonically from left to right" if
+                 any(a > b for a, b in zip(counts, counts[1:]))
+                 else "is flat from left to right")
     elif not dips:
         shape = (f"does not thin monotonically: it runs {counts[0]} to "
                  f"{counts[-1]} without an interior trough")
@@ -551,11 +574,18 @@ def fig6_sdt_chain_evidence(articles):
         named = ", ".join(f"{steps[i]} ({counts[i]})" for i in dips)
         shape = (f"is not monotone: it dips at {named}, and ends at "
                  f"{counts[-1]} at {steps[-1]}")
-    ax.text(0.5, -0.18, "Each bar = number of SDT articles engaging this "
-            f"step. The chain {shape}. Bars are not equally strict: ROS "
-            "generation and GSH depletion require the process to be "
-            "described, the rest require the molecule to be named. Co-mention "
-            "is not evidence of the link.",
+    # NO STRICTNESS CLAIM. A previous caption said "ROS generation and GSH
+    # depletion require the process to be described, the rest require the
+    # molecule to be named", and it was false in both halves: the ROS bar
+    # accepts the bare phrase "reactive oxygen species", and three of the
+    # remaining bars name processes rather than molecules. It was an
+    # unmeasured sentence added by the commit that removed the previous
+    # unmeasured sentence. What each bar admits is the pattern above; the
+    # figure states what the counts are and what they are not.
+    ax.text(0.5, -0.18, "Each bar = number of SDT articles whose title or "
+            f"abstract matches that step. The chain {shape}. Matching a step "
+            "is not evidence that the article demonstrates it, and the steps "
+            "are matched by different rules; co-mention is not the link.",
             transform=ax.transAxes, ha='center', fontsize=9, style='italic',
             color='gray', wrap=True)
 
