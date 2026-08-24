@@ -284,7 +284,18 @@ def _corpus_at(commit, tmp):
     out = subprocess.run(
         ["git", "archive", commit, "corpus/by-pmid"],
         cwd=REPO, capture_output=True)
-    assert out.returncode == 0, out.stderr[-400:].decode(errors="replace")
+    if out.returncode != 0:
+        shallow = subprocess.run(
+            ["git", "rev-parse", "--is-shallow-repository"],
+            cwd=REPO, capture_output=True, text=True).stdout.strip()
+        raise AssertionError(
+            f"cannot read the corpus at {commit}: "
+            f"{out.stderr[-300:].decode(errors='replace')}"
+            + ("\n\nThis clone is SHALLOW. The retraction in Section 8.2 is a "
+               "claim about this repository's own history, so checking it needs "
+               "that history: use `fetch-depth: 0` (which .github/workflows/"
+               "python-test.yml sets for exactly this reason) or "
+               "`git fetch --unshallow`." if shallow == "true" else ""))
     with tarfile.open(fileobj=io.BytesIO(out.stdout)) as tar:
         tar.extractall(tmp, filter="data")
     arts = []
