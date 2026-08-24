@@ -340,27 +340,36 @@ def fig4_molecular_overlap(articles):
     }
 
     # BOUNDED ON THE LEFT, and on the right only where a suffix would be
-    # wrong. Bodies are lower-cased before matching, so a bare `STING` matched
-    # "sugge(sting)", "exi(sting)", "boo(sting)" and "consi(sting)": 1,150
-    # corpus hits against 68 real ones, and 136 of this figure's largest
-    # column against 12, so 91% of it was artifact.
+    # wrong. Bodies are lower-cased before matching, so an unbounded acronym
+    # counts every word containing it. Measured over the 4,830-article corpus,
+    # per alternation:
     #
-    # A right boundary is NOT free, and a first version of this fix traded one
-    # error for the other: `\bDAMP\b` misses "DAMPs", which is how almost
-    # everyone writes it -- 8 articles against 76 -- so it dropped a real SDT
-    # article whose abstract says "damage-associated molecular patterns
-    # (DAMPs)". Multi-word phrases collide too: unbounded `ER stress` matched
-    # "oth(er stress)es" and "und(er stress) conditions", 36 against 26, while
-    # a right boundary would drop "ER stressor". Left-bound those, and allow
-    # the plural where one exists.
+    #   STING/cGAS   1,150 -> 68     ("sugge(sting)", "exi(sting)", "boo(sting)")
+    #   UPR            361 -> 9      ("(upr)egulation" -- the largest single
+    #                                  collision in this set, and most of why
+    #                                  the ER Stress column collapsed)
+    #   ER stress       36 -> 27     ("oth(er stress)es", "und(er stress)")
+    #
+    # On this figure that made STING/cGAS -- its largest column at 136 -- read
+    # 12 real hits, so 91% of it was artifact.
+    #
+    # A RIGHT BOUNDARY IS NOT FREE, and a first version of this fix traded one
+    # error for the other. `\bDAMP\b` misses "DAMPs", which is how almost
+    # everyone writes it (8 articles against 76), dropping a real SDT article
+    # whose abstract says "damage-associated molecular patterns (DAMPs)"; that
+    # row also gained `damage.associated`, for parity with fig6's DAMP bar.
+    # `\bER stress\b` would drop "ER stressor", so that phrase is left-bounded
+    # only -- and the phrase alternative had to grow `(er)` as well, because
+    # "endoplasmic reticulum (ER) stress" is the commonest spelling and neither
+    # alternative could reach it: 11 articles, one of them sonodynamic.
     pathways = {
         "Ferroptosis": r"ferroptosis",
         "ICD/DAMPs": r"immunogenic cell death|calreticulin|\bHMGB1\b|\bDAMPs?\b|damage.associated",
         "GSH/GPX4": r"glutathione|\bGSH\b|\bGPX4\b|\bSLC7A11\b",
         "STING/cGAS": r"\bSTING\b|\bcGAS\b|\bsting pathway\b",
-        "ROS": r"reactive oxygen species|\bROS[- ]gener",
+        "ROS": r"reactive oxygen species|\bROS\b",
         "Apoptosis": r"apoptosis|caspase",
-        "ER Stress": r"endoplasmic reticulum stress|\bER stress|\bUPRs?\b",
+        "ER Stress": r"endoplasmic reticulum(?:\s*\(er\))?\s*stress|\bER stress|\bUPRs?\b",
         "Autophagy": r"autophagy|autophagic",
     }
 
@@ -461,8 +470,12 @@ def fig6_sdt_chain_evidence(articles):
     # generation (146 SDT articles against 118) and its STING bar was 32
     # against 4, almost all of it "sugge(sting)".
     chain_steps = {
-        "ROS\ngeneration": r"reactive oxygen species|\bROS\b",
-        "GSH\ndepletion": r"glutathione|\bGSH depletion\b|\bGSH consumption\b",
+        "ROS\ngeneration": r"reactive oxygen species|\bROS[- ]gener",
+        # The bar is labelled DEPLETION and accepted a bare mention of
+        # glutathione: 25 SDT articles of which only 9 said depletion or
+        # consumption. A chain-evidence figure has to measure the step it
+        # names, or the chain reads stronger than the literature is.
+        "GSH\ndepletion": r"\bGSH deplet|\bglutathione deplet|\bGSH consum",
         "GPX4\ninactivation": r"\bGPX4\b|glutathione peroxidase 4",
         "Lipid\nperoxidation": r"lipid peroxid",
         "Ferroptosis": r"ferroptosis",

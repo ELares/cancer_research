@@ -251,7 +251,6 @@ def test_the_pathway_patterns_match_what_they_claim_to(label):
     """The patterns are read from the generator, not restated here."""
     import re as _re
 
-    g = _generator()
     src = GEN.read_text()
     body = src[src.index("    pathways = {"):]
     body = body[:body.index("    }") + 5]
@@ -268,3 +267,167 @@ def test_the_pathway_patterns_match_what_they_claim_to(label):
         assert not _re.search(pattern, text, _re.IGNORECASE), (
             f"/{label}/ matches {text!r}, which is a substring collision -- "
             "the defect that made 91% of one column of fig4 an artifact")
+
+
+# The pre-cut corpus, recoverable from git. Extracting all 10,413 files takes
+# about a second, which is what makes gating the decomposition possible at all.
+PRE_CUT_COMMIT = "f65342df"
+
+
+def _corpus_at(commit, tmp):
+    """The by-pmid corpus as it stood at `commit`, parsed like the generator."""
+    import subprocess
+    import tarfile
+    import io
+    import yaml
+
+    out = subprocess.run(
+        ["git", "archive", commit, "corpus/by-pmid"],
+        cwd=REPO, capture_output=True)
+    assert out.returncode == 0, out.stderr[-400:].decode(errors="replace")
+    with tarfile.open(fileobj=io.BytesIO(out.stdout)) as tar:
+        tar.extractall(tmp, filter="data")
+    arts = []
+    for f in sorted((Path(tmp) / "corpus/by-pmid").glob("*.md")):
+        m = re.match(r"^---\n(.*?\n)---\n\n?(.*)", f.read_text(encoding="utf-8"),
+                     re.DOTALL)
+        if not m:
+            continue
+        fm = yaml.safe_load(m.group(1)) or {}
+        fm["_text"] = (fm.get("title", "") + " " + m.group(2).lower()[:4000]).lower()
+        fm["_pmid"] = f.stem
+        arts.append(fm)
+    return arts
+
+
+def _sdt(arts):
+    return [a for a in arts if "sonodynamic" in (a.get("mechanisms") or [])]
+
+
+def test_the_chapter_8_decomposition_is_derived_not_asserted(tmp_path):
+    """Section 8.2 states fifteen numbers about a retraction. Derive all of them.
+
+    This test exists because the sentence it checks is the THIRD attempt. The
+    first hand-wrote a count over a corpus that had been halved underneath it
+    and stood for five months. The second explained the change with a mechanism
+    that could not have produced it -- refuted from this repository's own git
+    history by a reviewer in an afternoon. Both were prose beside correct
+    figures, which is exactly the position the fig1 caption was in.
+
+    So the same treatment the caption got: every number recomputed here, from
+    the current corpus and from the pre-cut one, and the sentence read back.
+    """
+    import matplotlib
+    matplotlib.use("Agg")
+    g = _generator()
+
+    old = _corpus_at(PRE_CUT_COMMIT, tmp_path)
+    new = g.load_corpus()
+    so, sn = _sdt(old), _sdt(new)
+    # READ FROM THE GENERATOR, not restated here. Hard-coded, this test kept
+    # passing when the generator's instrument was narrowed -- so the sentence
+    # would have gone on describing an axis the code no longer counted, which
+    # is the drift it exists to prevent, one level up.
+    axis, icd = _axis_patterns()
+
+    def count(pool, pat):
+        return sum(1 for a in pool if re.search(pat, a["_text"], re.I))
+
+    def dual(pool):
+        return sum(1 for a in pool
+                   if "ferroptosis" in a["_text"] and re.search(icd, a["_text"], re.I))
+
+    facts = {
+        "old corpus size": len(old),
+        "new corpus size": len(new),
+        "old SDT": len(so),
+        "new SDT": len(sn),
+        "retired instrument, old corpus": count(so, r"glutathione"),
+        "widened instrument, old corpus": count(so, axis),
+        "widened instrument, new corpus": count(sn, axis),
+        "dual old": dual(so),
+        "dual new": dual(sn),
+    }
+    # The generator's loader does not synthesise `_pmid`; the frontmatter
+    # carries `pmid`, sometimes quoted. One accessor for both corpora.
+    def pmid(a):
+        return str(a.get("pmid") or a.get("_pmid") or "").strip()
+
+    assert all(pmid(a) for a in so) and all(pmid(a) for a in sn), (
+        "an article carries no pmid, so the deleted/retagged split below "
+        "would silently compare empty strings")
+    lost = {pmid(a) for a in so} - {pmid(a) for a in sn}
+    still_held = {pmid(a) for a in new}
+    facts["deleted"] = len(lost - still_held)
+    facts["retagged"] = len(lost & still_held)
+    by_pmid = {pmid(a): a for a in so}
+    facts["retagged and GSH-positive"] = sum(
+        1 for p in (lost & still_held) if re.search(axis, by_pmid[p]["_text"], re.I))
+
+    # The identity that makes "deleted" and "retagged" mean what they say.
+    assert facts["deleted"] + facts["retagged"] + facts["new SDT"] == facts["old SDT"], (
+        f"the SDT set does not decompose: {facts}")
+
+    sentence = _chapter_8_sentence()
+    pcts = {
+        "retired": 100 * facts["retired instrument, old corpus"] / facts["old SDT"],
+        "widened old": 100 * facts["widened instrument, old corpus"] / facts["old SDT"],
+        "widened new": 100 * facts["widened instrument, new corpus"] / facts["new SDT"],
+    }
+    required = [
+        (f"{facts['widened instrument, new corpus']} GSH/GPX4 articles", "current count"),
+        (f"({pcts['widened new']:.1f}% of SDT-tagged articles)", "current share"),
+        (f"{facts['dual new']} dual-pathway", "current dual-pathway"),
+        (f"read {facts['retired instrument, old corpus']} "
+         f"({pcts['retired']:.1f}%) and {facts['dual old']}", "the retired trio"),
+        (f"{facts['retired instrument, old corpus']}/{facts['old SDT']} "
+         f"= {pcts['retired']:.1f}%", "the retired division"),
+        (f"{facts['widened instrument, old corpus']} of those same {facts['old SDT']}, "
+         f"or {pcts['widened old']:.1f}%", "the instrument step"),
+        (f"{facts['old corpus size']:,} articles to {facts['new corpus size']:,}", "the cut"),
+        (f"{facts['widened instrument, new corpus']} of {facts['new SDT']}, "
+         f"or {pcts['widened new']:.1f}%", "the corpus step"),
+        (f"{facts['deleted']} of the {facts['old SDT']} were deleted", "the deletions"),
+        (f"only {facts['retagged']} were retagged", "the retags"),
+        (f"{facts['dual old']} to {facts['dual new']}", "dual-pathway movement"),
+        (PRE_CUT_COMMIT, "the recovery commit"),
+    ]
+    for fragment, what in required:
+        assert fragment in sentence, (
+            f"Section 8.2 does not state {what} as measured -- expected "
+            f"{fragment!r}. Recompute the sentence; do not adjust this test.")
+
+    assert facts["retagged and GSH-positive"] == 0, (
+        "a retagged article is GSH-positive, so the sentence's 'neither of "
+        "them GSH-positive' is now false")
+    # The two rounded steps, computed from UNROUNDED shares. Subtracting the
+    # rounded operands gives 2.2 and is what the first version of the sentence
+    # published.
+    assert f"about {pcts['widened old'] - pcts['retired']:.1f} points" in sentence
+    assert f"{pcts['widened new'] - pcts['widened old']:.1f} from the corpus" in sentence
+
+
+def _axis_patterns():
+    """The GSH-axis and ICD patterns `classify_ferroptosis` actually uses."""
+    src = GEN.read_text()
+    body = src[src.index("def classify_ferroptosis"):]
+    body = body[:body.index("\n    return results")]
+    gsh = re.search(r'gsh = sum\(.*?re\.search\(\s*r"([^"]+)"', body, re.S)
+    icd = re.search(r'icd = sum\(.*?re\.search\(\s*r"([^"]+)"', body, re.S)
+    assert gsh and icd, (
+        "cannot read the GSH/ICD patterns out of classify_ferroptosis; if it "
+        "was restructured, update this reader rather than restating them")
+    # The sentence names the axis components in prose, so they must agree.
+    for token in ("glutathione", "GSH", "GPX4", "SLC7A11"):
+        assert token.lower() in gsh.group(1).lower(), (
+            f"the GSH axis no longer counts {token}, which Section 8.2 lists "
+            "by name as part of the widened instrument")
+    return gsh.group(1), icd.group(1)
+
+
+def _chapter_8_sentence() -> str:
+    """The retraction paragraph in the manuscript source, whitespace-normalised."""
+    text = (REPO / "article/drafts/v1.md").read_text()
+    m = re.search(r"SDT-specific data shows.*?recomputed from it\.", text, re.S)
+    assert m, "the Section 8.2 retraction paragraph is gone or was reworded"
+    return " ".join(m.group(0).split())

@@ -10,10 +10,13 @@ Extracted from systematic mining of 10,413 articles across 19 mechanisms and 22 
 >
 > Do NOT carry a number from here into the manuscript without recomputing it. Section 8.2 quoted
 > the "72 SDT articles engage GSH/GPX4 axis (11.8% of SDT corpus)" below for five months as
-> "72 (11.7%)" -- the percentages differ because the manuscript divided by the 617 SDT-tagged
-> articles and this page by a slightly different SDT denominator. Both are retired: the current
-> figure is 30 of 187 (16.0%), and Section 8.2 now carries the decomposition. Current values come
-> from `scripts/generate_figures.py` (fig1, fig4, fig6), which is regenerated and gated.
+> "72 (11.7%)". The 11.7% is the correct division and the 11.8% on this page is an arithmetic slip:
+> both use the same denominator of 617, as the neighbouring lines confirm (39/617 = 6.3% and
+> 21/617 = 3.4%, both stated correctly), and 72/617 is 11.669%. An earlier version of this banner
+> explained the gap by supposing this page used a different denominator, which its own lines
+> disprove. Both figures are retired regardless: the current value is 30 of 187 (16.0%), and
+> Section 8.2 carries the decomposition. Current values come from `scripts/generate_figures.py`
+> (fig1, fig4, fig6), which is regenerated and gated.
 
 This document remains useful, but it should now be read through a resistant-state lens. The repo's next iteration should treat OXPHOS-dependent persisters, NRF2-compensated escape, stromal sheltering, and therapy-induced senescence as the primary analytical layer, with modalities such as SDT, PDT, CAP, radioligands, or cell therapy mapped onto those states.
 

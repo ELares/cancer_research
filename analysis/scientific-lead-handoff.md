@@ -3,14 +3,16 @@
 **Status**: Rigorous lead warranting experimental investigation. Not a claimed solution.
 
 > **Counts on this page are over the pre-March-2026 corpus of 10,413 articles**, which was cut to
-> 4,830 and retagged. Every absolute count and percentage here therefore has a denominator the
-> project no longer works from; the pre-cut corpus is recoverable at commit `f65342df` if one needs
-> re-deriving. The SDT figures specifically: what this page reports as 39 ferroptosis / 21 ICD /
-> 72 GSH-GPX4 / 6-7 dual-pathway articles over 617 SDT-tagged articles is now 19 / 28 / 30 / 3 over
-> 187, and the shares move too, because the instrument widened as the corpus shrank (Section 8.2 of
-> the manuscript carries the decomposition). Current values come from `scripts/generate_figures.py`,
-> which is regenerated and gated; do not carry a number from here into the manuscript without
-> recomputing it.
+> 4,830 and retagged; the SDT-tagged set went from 617 articles to 187. Every absolute count and
+> percentage here therefore has a denominator the project no longer works from, and the pre-cut
+> corpus is recoverable at commit `f65342df` if one needs re-deriving. Current values come from
+> `scripts/generate_figures.py`, which is regenerated and gated; Section 8.2 of the manuscript
+> carries the decomposition of one of these numbers. Do not carry a figure from here into the
+> manuscript without recomputing it.
+> On this page specifically: "42 ferroptosis-related articles and 72 GSH/GPX4-axis articles"
+> is now 19 and 30, and "6 dual-pathway articles" is now 3. The 42 is not a typo for the 39 the
+> sibling analyses carry -- it is what the superseded fig6 drew, and the two instruments
+> differed.
 
 ---
 
