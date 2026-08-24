@@ -1272,9 +1272,26 @@ def fig17_damp_heatmap():
     if summary_path.exists():
         summary = json.loads(summary_path.read_text())
         conditions = summary.get("conditions", summary) if isinstance(summary, dict) else summary
-        for r in conditions:
-            if r.get("immune_mode") == "immune_on":
-                imm_kills_map[r["treatment"]] = r.get("immune_kills", 0)
+        # THE SCENARIO THE HEATMAPS ARE OF, selected by name. Three conditions
+        # carry `immune_mode: immune_on` -- the dedicated immune run
+        # (`stromal_mode: off`), the stromal run, and the pH run -- and this
+        # loop used to keep whichever the file listed LAST, which is the pH
+        # one. The DAMP CSVs below are written by the dedicated immune section
+        # alone (`sim-tme/src/main.rs:1265`, inside a loop over immune modes),
+        # so the figure rendered the baseline run's fields and labelled them
+        # with the pH run's kill counts: 0/0/496 drawn over panels whose data
+        # is 0/5/521. The manuscript's 104:1 is 521/5, i.e. the panels'
+        # scenario, so the figure disagreed with the section it illustrates.
+        matched = [r for r in conditions
+                   if r.get("immune_mode") == "immune_on"
+                   and r.get("stromal_mode") == "off"
+                   and "ph_mode" not in r]
+        assert matched, (
+            "tme_summary.json carries no baseline immune_on condition "
+            "(stromal_mode=off, no ph_mode); the DAMP heatmaps cannot be "
+            "labelled with counts from a run they are not of")
+        for r in matched:
+            imm_kills_map[r["treatment"]] = r.get("immune_kills", 0)
 
     # Load DAMP fields
     # NOTE: sim-tme encodes each treatment's DAMP field independently as u8
@@ -1306,9 +1323,14 @@ def fig17_damp_heatmap():
 
     axes[0].set_ylabel("y (cells)")
 
+    # NAMES THE SCENARIO. `sim-tme` runs three conditions with immune coupling
+    # on -- baseline, stromal-shielded, and pH-gradient -- and a reader cannot
+    # tell which one a panel is of. This figure is the baseline throughout,
+    # panels and counts alike.
     fig.suptitle(
         "DAMP Spatial Distribution After Immune Coupling\n"
-        "(O$_2$ gradient $\\lambda$=120$\\mu$m, 500×500 grid, per-panel scaling)",
+        "(baseline run: O$_2$ gradient $\\lambda$=120$\\mu$m, no stromal "
+        "shielding, no pH gradient; 500×500 grid, per-panel scaling)",
         fontsize=13, y=1.04)
 
     fig.savefig(FIG_DIR / "fig17_damp_heatmap.pdf")
