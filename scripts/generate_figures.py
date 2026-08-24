@@ -1852,7 +1852,9 @@ def main():
     # plotting crate, while the committed PDF's `/Producer` is Matplotlib. Its
     # DATA comes from the binary, and whatever drew the figure from
     # `simulations/simulation_results.json` was never committed:
-    #   cargo run --release -p sim-original   -> simulations/simulation_results.json
+    #   cargo run --release -p sim-original > simulations/simulation_results.json
+    # (it PRINTS the JSON and writes no file of its own -- #530 removed the
+    # unconditional write that dirtied the tracked copy on every run)
 
     fig9_evidence_tiers(index)
     fig10_invivo_comparison()

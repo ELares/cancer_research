@@ -923,8 +923,10 @@ def test_the_corpus_figure_backlog_is_stated_and_shrinking():
             continue
         # A substring match is satisfied by a COMMENT saying the opposite:
         # `fig7_monte_carlo_simulation` passed only because
-        # `generate_figures.py` carries a note explaining that the Rust binary
-        # writes it and this script does not.
+        # `generate_figures.py` carries a note about it. That note used to say
+        # the Rust binary writes the figure; it does not -- the binary prints
+        # the DATA as JSON and the PDF's producer is Matplotlib -- and the note
+        # says so now.
         #
         # What this DOES, precisely, because an earlier version of this comment
         # described a "savefig-ish context" check that was never written: a
