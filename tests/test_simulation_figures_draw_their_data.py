@@ -810,7 +810,7 @@ def _mult(text):
 
 
 def _annotation_arrows(stem, panel, near):
-    """Annotation arrows in `panel` as `[(start, tip), ...]`, nearest `near` first.
+    """Annotation arrows in `panel` as `[(start, tip), ...]`, last-drawn first.
 
     `near` is the annotation's own text box `(x0, y0, x1, y1)`. matplotlib
     draws the arrow from the text to `xy`, so among the path's points the one
@@ -831,11 +831,9 @@ def _annotation_arrows(stem, panel, near):
     draws it FROM these words, so it has a point beside them; spines,
     gridlines, data lines and markers do not.
 
-    Nothing is manufactured -- a path with no curve is not an arrow -- and
-    nothing is chosen by reference to the answer. Ordering by distance to the
-    TEXT is what the caller uses to pick this annotation's arrow rather than
-    another artist's, which is the rule an earlier comment here described and
-    did not implement.
+    Nothing is chosen by reference to the answer: paint order and adjacency to
+    the words are both properties of how the figure was BUILT, not of where
+    the arrow happens to point.
     """
     pymupdf = _reader()
     lo, hi = panel
@@ -905,17 +903,41 @@ def _annotation_arrows(stem, panel, near):
             anchor = min(ends, key=dist)
             if dist(anchor) > max(ny1 - ny0, 6.0):
                 continue
+            # NOT A BOX AROUND THE TEXT. `bbox=dict(boxstyle="round")` draws a
+            # patch that SURROUNDS the words, so it touches them by
+            # construction, and it carries both a fill and a stroke, so no
+            # colour rule separates it.
+            #
+            # CONCENTRIC, not containing. Strict containment cannot work: a
+            # word box from `_word_bboxes` includes ascender and descender
+            # space the glyphs do not use, so it is TALLER than the patch
+            # hugging them -- measured, the words span y 57.1-74.1 and the
+            # patch 59.0-76.0, so the patch fails to contain them by 1.9pt and
+            # survived. What is true is that a box drawn AROUND text shares
+            # its centre, while an arrow is offset toward what it points at:
+            # measured 1.9pt against 29pt here.
+            cx = (min(q[0] for q in pts) + max(q[0] for q in pts)) / 2
+            cy = (min(q[1] for q in pts) + max(q[1] for q in pts)) / 2
+            tcx, tcy = (nx0 + nx1) / 2, (ny0 + ny1) / 2
+            if ((cx - tcx) ** 2 + (cy - tcy) ** 2) ** 0.5 < (ny1 - ny0) / 2:
+                continue
             out.append((anchor, max(pts, key=dist)))
     finally:
         doc.close()
-    # THE ONE THAT REACHES FURTHEST. Sorting by how close a path STARTS to the
-    # words put a `bbox=dict(boxstyle="round")` patch first: it surrounds the
-    # text, so it touches it by construction and its own corners are the
-    # "tip", 5pt away. An arrow is the thing that goes somewhere -- it starts
-    # at the words like the box does and then reaches out to what it points
-    # at. No threshold: the box's reach is its padding, the arrow's is the
-    # distance to its target.
-    return sorted(out, key=lambda pair: -dist(pair[1]))
+    # THE LAST ONE DRAWN. Every other tiebreak picked a data artist:
+    #
+    #   nearest anchor   a curve passing through the text anchors at 0.0
+    #   furthest reach   a BAR RECTANGLE reaches the panel floor, and a data
+    #                    curve reaches its own last timepoint -- both dwarf an
+    #                    arrow, and on fig25 the winner was the very bar the
+    #                    assertion then compared against itself, so it could
+    #                    not fail
+    #
+    # `get_drawings` returns paint order, and matplotlib draws an annotation
+    # AFTER the artists it annotates. That is a fact about when the call is
+    # made, not about what the result looks like, which is why every
+    # appearance-based rule before it failed.
+    return out[::-1]
 
 
 def _assert_titled(panels, boxes, stem, titles, top):
@@ -1724,9 +1746,22 @@ def test_fig25_draws_its_bliss_numbers():
     # the arrow, 15.6pt further right, fell outside it. `same_row` has the
     # right edges; this file has made the left-edge-for-right-edge slip
     # before, which is why the two are named apart here.
+    # THE WORDS' MEASURED EXTENT, not `ay_mid` plus a guess. `+/- 8` was a
+    # constant standing in for the annotation's height, and the docstring of
+    # the helper it feeds claims the scale is "the annotation's own height,
+    # not a constant" -- true at fig26's call site and false here. It also
+    # made the box 2pt SHORTER than a `boxstyle="round"` patch around the same
+    # words, so the containment test that exists to exclude that patch missed
+    # it, the patch won on paint order, and a correct figure was rejected.
     seg = same_row[lo:hi + 1]
-    ann_box = (min(x0 for x0, _, _ in seg), ay_mid - 8,
-               max(x1 for _, x1, _ in seg), ay_mid + 8)
+    seg_texts = {t for _, _, t in seg}
+    seg_boxes = [b for b in _word_bboxes("fig25_bliss_synergy")
+                 if b[4] in seg_texts and abs((b[1] + b[3]) / 2 - ay_mid) < 4
+                 and any(abs(b[0] - x0) < 0.01 for x0, _, _ in seg)]
+    assert seg_boxes, (
+        "fig25's synergy annotation words cannot be located as boxes")
+    ann_box = (min(b[0] for b in seg_boxes), min(b[1] for b in seg_boxes),
+               max(b[2] for b in seg_boxes), max(b[3] for b in seg_boxes))
     arrows25 = _annotation_arrows("fig25_bliss_synergy", (a_lo25, a_hi25),
                                   ann_box)
     a_bars = sorted((r for r in _filled_rects("fig25_bliss_synergy")

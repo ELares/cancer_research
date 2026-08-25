@@ -149,12 +149,12 @@ case("fig25 colour swap with a bar shrunk below the size cut", True,
      edit=lambda root: _shrink_rate_b(root))
 
 # --------------------------- correct figures whose ARROWS are drawn oddly
-# `_annotation_arrows` requires exactly one lone cubic Bezier per panel, which
-# is a hard requirement: anything that adds or removes one breaks it. These are
-# the ways an arrow or its text legitimately gains geometry. Measured: a
-# `boxstyle="round"` text box is a FILLED patch of several curve items, so it
-# is not a lone Bezier; `angle3` still renders as one Bezier, and its tip stays
-# at `xy` even though the route there changes.
+# `_annotation_arrows` identifies the arrow by PROVENANCE, not appearance: a
+# path with an endpoint beside the annotation's words, not enclosing them, not
+# running frame-to-frame, and last in paint order (matplotlib draws an
+# annotation after the artists it annotates). These are the ways an arrow or
+# its text legitimately gains geometry; each defeated one of the six earlier
+# appearance-based rules.
 case("fig25 arrow with connectionstyle arc3", False,
      [('arrowprops=dict(arrowstyle="->", color="#C44E52")',
        'arrowprops=dict(arrowstyle="->", color="#C44E52", '
@@ -202,6 +202,21 @@ case("fig26 arrow at a zero value, on the axis", False,
      [("xy=(win_end, rsl3[win_end])", "xy=(win_end, 0)")])
 case("fig25 arrow at the observed bar's base", False,
      [("xy=(3, vals[3]), xytext=(1.9, 93)", "xy=(3, 0), xytext=(1.9, 93)")])
+
+# ------------------ round 32: artists that out-reach or out-anchor the arrow
+# A bar rectangle reaches the panel floor and a data curve reaches its own last
+# timepoint, so both dwarf an arrow. On fig25 the winner was the very bar the
+# assertion then compared against itself, which cannot fail.
+case("fig25 arrow onto the monotherapy, taller combo bar", True,
+     [("xy=(3, vals[3]), xytext=(1.9, 93)", "xy=(0, vals[0]), xytext=(1.9, 93)")],
+     edit=lambda root: _set_rate_combo(root, 0.90))
+case("fig25 taller combo bar alone", False, edit=lambda root: _set_rate_combo(root, 0.90))
+case("fig25 arrow onto the monotherapy, annotation lowered", True,
+     [("xy=(3, vals[3]), xytext=(1.9, 93)", "xy=(0, vals[0]), xytext=(1.9, 90)")])
+case("fig26 annotation at day 0, level with the curve", False,
+     [("xytext=(win_end + 0.4, 24)", "xytext=(0.0, 40)")])
+case("fig26 annotation at day 0, above the curve", False,
+     [("xytext=(win_end + 0.4, 24)", "xytext=(0.0, 47)")])
 
 # ------------------------------------------------- correct figures, restyled
 case("committed figures, unmodified", False)
@@ -336,6 +351,33 @@ def _shrink_rate_b(root: Path) -> None:
         fix.write_text(json.dumps(d, indent=1))
 
 
+def _set_rate_combo(root: Path, value: float) -> None:
+    """RSL3+FSP1i's observed combination rate, in the run AND the fixture.
+
+    A legitimate re-run: a higher observed kill raises the bar's top, which is
+    what brought a bar rectangle within reach of the annotation and let it be
+    read as the arrow. `bliss_prediction` and `synergy_score` are recomputed so
+    the figure and its fixture still agree and the drift guard is not what
+    fires.
+    """
+    for rel, key in (("simulations/output/combo-mech/combo_summary.json",
+                      "combinations"),
+                     ("tests/fixtures/bliss_synergy.json", None)):
+        p = root / rel
+        if not p.exists():
+            continue
+        d = json.loads(p.read_text())
+        rows = d[key] if key else [d["rsl3_fsp1i"]]
+        for c in rows:
+            if key and (c.get("drug_a"), c.get("drug_b")) != ("RSL3", "FSP1i"):
+                continue
+            c["rate_combo"] = value
+            a, b = c["rate_a"], c["rate_b"]
+            c["bliss_prediction"] = a + b - a * b
+            c["synergy_score"] = value / c["bliss_prediction"]
+        p.write_text(json.dumps(d, indent=1))
+
+
 def _extra_pairs(n: int):
     def edit(root: Path) -> None:
         p = root / "simulations/output/combo-mech/combo_summary.json"
@@ -446,11 +488,21 @@ def run_case(root: Path, case_tuple) -> tuple[str, str]:
             src = src.replace(find, repl, 1)
         gen.write_text(src)
         if edit:
-            before = {p: v for p, v in saved.items() if p != gen}
+            # COMPARE PARSED VALUES, NOT BYTES. Every callback re-serialises
+            # with `json.dumps(indent=1)` while four of the five tracked
+            # inputs are committed at `indent=2`, so a byte comparison was
+            # non-empty unconditionally and this check could never fire --
+            # verified by neutering a callback's value loop so it changed
+            # nothing at all, which still reported OK. The guard against a
+            # vacuous case was itself vacuous, which is the defect it exists
+            # to report.
+            before = {p: json.loads(v) for p, v in saved.items()
+                      if p != gen and p.suffix == ".json"}
             edit(root)
-            changed = [p for p, v in before.items() if p.read_text() != v]
+            changed = [p for p, v in before.items()
+                       if json.loads(p.read_text()) != v]
             if not changed:
-                return "SKIP", ("the edit callback changed no tracked input; "
+                return "SKIP", ("the edit callback changed no tracked value; "
                                 "this case tests nothing")
         r = subprocess.run([sys.executable, str(root / "regen.py"), json.dumps(rc)],
                            capture_output=True, text=True, cwd=root)
