@@ -49,7 +49,20 @@ the places where no assertion would name it:
   data-derived numbers no assertion reads. fig24 panel (b) was in this list
   and is not any more: its two dashed reference lines are bound to its own
   legend below. The rest of that panel is still unread except by the fingerprint:
-  its two kill curves, its lambda tick labels, and its axis captions.
+  its two kill curves. Its lambda tick labels and both its axis captions ARE
+  read -- an earlier version of this sentence listed them as unread, in the
+  same commit that gated them.
+- **The figure must draw visible tick marks.** Two scale readings -- fig24
+  panel (b)'s reference lines and fig26's window shading -- locate themselves
+  from the tick MARKS, because reading tick LABELS carries the font's
+  glyph-centre bias (up to 1.14pp under Hoefler Text). A style that sets
+  `xtick.major.size: 0` or `ytick.major.size: 0`, which every `seaborn-v0_8`
+  grid preset does, therefore fails loudly with "shows 0 tick marks" rather
+  than silently. This project's own rcParams set neither, and the failure
+  names its cause, so it is a stated requirement rather than a defect to
+  chase: a label-centre fallback was tried and reintroduced the bias it was
+  built to remove.
+
 - **`closes ~day 3` is a presence check.** It is a hardcoded string in the
   generator, so it would still read day 3 if the window moved.
 
@@ -302,7 +315,7 @@ def _panel_y(stem):
     pymupdf = _reader()
     doc = pymupdf.open(FIG_DIR / f"{stem}.pdf")
     try:
-        ys = set()
+        rules = []
         for d in doc[0].get_drawings():
             col = d.get("color")
             # ANY COLOUR. Requiring black, then greyscale-and-dark, each
@@ -317,9 +330,18 @@ def _panel_y(stem):
                     continue
                 a, b = item[1], item[2]
                 if abs(a.y - b.y) < 0.5 and abs(b.x - a.x) > 100:
-                    ys.add(round(a.y, 2))
+                    rules.append((round(min(a.x, b.x), 1),
+                                  round(max(a.x, b.x), 1), round(a.y, 2)))
     finally:
         doc.close()
+    # ONLY RULES THAT BELONG TO A PANEL. Taking every long horizontal rule
+    # included a legend placed BELOW the axes -- `bbox_to_anchor=(0.5, -0.22)`
+    # -- whose frame put the bottom at 375.3 instead of the axis at 302.0, so
+    # no tick touched the "axis" and all nine were discarded. A panel's rules
+    # span exactly that panel's x range; a legend's do not.
+    panel_x = _panels(stem)
+    ys = {y for x0, x1, y in rules
+          if any(abs(x0 - lo) < 1 and abs(x1 - hi) < 1 for lo, hi in panel_x)}
     # ONE SPINE IS ENOUGH WHEN THE TICKS GIVE THE OTHER END. `axes.spines.top:
     # False` is the commonest publication restyle and it removed a whole row,
     # aborting fig24 on a correct figure. The tick marks span the axis, so
@@ -333,18 +355,104 @@ def _panel_y(stem):
     return min(ys), max(ys)
 
 
-def _major_only(marks):
-    """From `(position, length)` pairs, the positions at the longest length.
+def _mult(text):
+    """Normalise the multiplication sign, whatever the font extracted it as.
 
-    Minor ticks are drawn shorter than major ones, and `xtick.minor.visible`
-    is a plain rcParam -- with it set, fig26's panel (a) reports 46 tick marks
-    against 9 timepoints. Taking the longest length keeps the majors and
-    discards the rest without naming a size.
+    `mathtext.fontset: cm` embeds cmsy10 with no Unicode map, so PyMuPDF reads
+    `$\\times$` as a pound sign and `$\\to$` as an exclamation mark. The figure
+    renders correctly; only the extraction moves. Every score in fig25 is a
+    number followed by that one sign, so the sign is normalised rather than
+    matched literally.
+    """
+    # TOKEN-WISE, and only where the whole token is a decimal followed by one
+    # sign. A blanket `(?<=\d)[^\d\s\w]` also rewrote `RSL3+FSP1i` into
+    # `RSL3×FSP1i`, because the `+` in a pair name follows a digit too.
+    return " ".join(
+        re.sub(r"^(\(?)(\d+\.\d+)[^\d\s\w)](\)?)$",
+               "\\1\\2" + "\u00d7" + "\\3", tok)
+        for tok in text.split(" "))
+
+
+def _assert_titled(panels, boxes, stem, titles):
+    """Each title in `titles` must be centred over the panel of the same index.
+
+    A containment check on the extracted text cannot see a SWAP: exchanging
+    two panels' titles leaves both strings present while `(b)` now captions
+    the left panel and `(a)` the right, so every reference to "panel (a)"
+    points at the wrong one.
+
+    CENTRED OVER, not contained by. A title is centred on its axes and a long
+    one overhangs both ends -- fig26's panel (a) title starts 33pt left of its
+    own panel -- so the test is which panel centre it is nearest, which needs
+    no tolerance at all.
+    """
+    assert len(panels) >= len(titles), (
+        f"{stem} has {len(panels)} panels by its axis rules and "
+        f"{len(titles)} titles to place")
+    heads = [want.split()[0] for want in titles]           # `(a)` / `(b)`
+    marks = [b for b in boxes if b[4] in heads]
+    assert len(marks) == len(titles), (
+        f"{stem} draws {len(marks)} panel-letter words, expected "
+        f"{len(titles)}: {sorted(b[4] for b in marks)}")
+    row_y = min(b[1] for b in marks)
+    row = sorted((b[0], b[2], b[4]) for b in boxes if abs(b[1] - row_y) < 2)
+    # Split the title row at each panel letter.
+    groups, cur = [], None
+    for x0, x1, t in row:
+        if t in heads:
+            if cur:
+                groups.append(cur)
+            cur = [(x0, x1, t)]
+        elif cur is not None:
+            cur.append((x0, x1, t))
+    if cur:
+        groups.append(cur)
+    assert len(groups) == len(titles), (
+        f"{stem}'s title row splits into {len(groups)} titles, expected "
+        f"{len(titles)}")
+    centres = [(g[0][0] + g[-1][1]) / 2 for g in groups]
+    panel_centres = [(lo + hi) / 2 for lo, hi in panels[:len(titles)]]
+    for i, (want, c) in enumerate(zip(titles, centres)):
+        nearest = min(range(len(panel_centres)),
+                      key=lambda j: abs(panel_centres[j] - c))
+        got = " ".join(t for _, _, t in groups[i])
+        assert nearest == i, (
+            f"{stem}'s title {got!r} is centred at x={c:.0f}, nearest panel "
+            f"{nearest} rather than panel {i}. The titles are swapped, so "
+            "every reference to that panel letter points at the other panel")
+        assert got.startswith(want) or want.startswith(got), (
+            f"{stem}'s panel {i} is titled {got!r}, expected {want!r}")
+
+
+def _major_only(marks, axis_at=None):
+    """From `(position, span_lo, span_hi, length)`, the major tick positions.
+
+    TOUCHING THE AXIS IS THE FILTER, and only then is length used to separate
+    major ticks from minor ones. Selecting purely by longest length was wrong
+    twice over: the candidate set is every short stroke on the panel, not just
+    ticks, so a `fill_between` band edge, the `closes ~day 3` arrow shaft or a
+    legend frame's side could outrank a real tick and delete all nine.
+
+    That was reachable from DATA alone, with no style change: widening RSL3's
+    day-0 confidence interval from 0.31 to 0.8 percentage points -- a purely
+    stochastic quantity no fixture pins, 2.6x from today's value -- made the
+    band's leftmost edge the longest stroke and the x axis read as empty. It
+    also re-broke `xtick.major.size: 1`, which the tick window had been
+    widened to 0.5 specifically to accept, one commit earlier.
+
+    A tick starts on the axis line; a band edge and an arrow do not. Among the
+    strokes that do touch it, the majors are the longest -- minor ticks are
+    drawn shorter, which is the only thing length is asked to decide.
     """
     if not marks:
         return []
-    longest = max(round(ln, 1) for _, ln in marks)
-    return sorted({pos for pos, ln in marks if round(ln, 1) == longest})
+    if axis_at is not None:
+        marks = [m for m in marks
+                 if abs(m[1] - axis_at) < 1 or abs(m[2] - axis_at) < 1]
+        if not marks:
+            return []
+    longest = max(round(m[3], 1) for m in marks)
+    return sorted({m[0] for m in marks if round(m[3], 1) == longest})
 
 
 def _axis_ticks_vertical(stem):
@@ -746,7 +854,7 @@ def test_fig25_draws_its_bliss_numbers():
     pair_x = [x for x, y, t in words_a
               if re.fullmatch(r"[^\s+]+\+[^\s+]+", t)]
     assert pair_x, "fig25 draws no pair labels, so panel (b) cannot be located"
-    want = f"{fx['synergy_score']:.2f}×"
+    want = f"{fx['synergy_score']:.2f}\u00d7"
     # BOUNDED ON PANEL (b)'S SPINE, not on its pair labels. Those labels are
     # y-ticks drawn OUTSIDE the spine, so a longer drug name pushes them left
     # towards panel (a)'s annotation: with real compound names the margin goes
@@ -756,7 +864,8 @@ def test_fig25_draws_its_bliss_numbers():
     # bound gains room exactly when the labels need it. This file has already
     # been fixed twice for assuming today's pair names.
     b_spine = _panels("fig25_bliss_synergy")[-1][0]
-    hits = [(x, y) for x, y, t in words_a if t == want and x < b_spine]
+    hits = [(x, y) for x, y, t in words_a
+            if _mult(t) == want and x < b_spine]
     assert hits, (
         f"fig25's panel (a) does not annotate {want} anywhere left of panel "
         f"(b)'s axis at x={b_spine:.0f}. Panel (b) drawing that number as a "
@@ -766,7 +875,8 @@ def test_fig25_draws_its_bliss_numbers():
     _ax, ay = hits[0]
     ay_mid = next((y0 + y1) / 2
                   for x0, y0, x1, y1, t in _word_bboxes("fig25_bliss_synergy")
-                  if t == want and abs(x0 - _ax) < 0.01 and abs(y0 - ay) < 0.01)
+                  if _mult(t) == want and abs(x0 - _ax) < 0.01
+                  and abs(y0 - ay) < 0.01)
     # THE WHOLE VISUAL LINE, both directions. Filtering to `x >= ax - 1`
     # discarded anything drawn to the LEFT of the number, so prefixing the
     # annotation with `no ` negated the panel's claim and passed the check
@@ -796,22 +906,25 @@ def test_fig25_draws_its_bliss_numbers():
         (x0, x1, t)
         for x0, y0, x1, y1, t in _word_bboxes("fig25_bliss_synergy")
         if abs((y0 + y1) / 2 - ay_mid) < 4 and x1 <= a_hi)
-    at = next(i for i, (x0, _, t) in enumerate(same_row) if t == want)
+    at = next(i for i, (x0, _, t) in enumerate(same_row) if _mult(t) == want)
     lo = hi = at
     while lo > 0 and same_row[lo][0] - same_row[lo - 1][1] < 20:
         lo -= 1
     while hi + 1 < len(same_row) and same_row[hi + 1][0] - same_row[hi][1] < 20:
         hi += 1
     line = [(x0, t) for x0, _, t in same_row[lo:hi + 1]]
-    assert " ".join(t for _, t in line) == f"{want} synergy", (
+    assert _mult(" ".join(t for _, t in line)) == f"{want} synergy", (
         f"fig25's panel (a) synergy annotation reads "
         f"{' '.join(t for _, t in line)!r}, expected {want + ' synergy'!r}")
     # BY POSITION, for the reason fig24's needed it: a containment check does
     # not say WHICH panel carries the label, or that any panel does.
-    for want in ("(a) RSL3 + FSP1i: dual-pathway synergy",
-                 "(b) Pairwise synergy"):
-        assert want in text, (
-            f"fig25 no longer titles a panel {want!r}")
+    # EACH OVER ITS OWN PANEL. Containment leaves a swap invisible: exchange
+    # the two titles and both strings are still present while `(b)` captions
+    # the left panel.
+    _assert_titled(_panels("fig25_bliss_synergy"),
+                   _word_bboxes("fig25_bliss_synergy"), "fig25",
+                   ["(a) RSL3 + FSP1i: dual-pathway synergy",
+                    "(b) Pairwise synergy"])
 
     # THE SUPTITLE, which states this figure's whole claim. Rewriting it to
     # say the dual-pathway depletion is ANTAGONISTIC -- the reverse of what
@@ -879,10 +992,10 @@ def test_fig25_binds_each_pair_to_its_own_score():
     # panel (b) never touches it. The mutation was right and the sentence
     # pointed at the wrong file.
     labels = re.search(r"((?:[^\s+]+\+[^\s+]+\s+)+)"
-                       r"((?:\d+\.\d+×\s*)+)", text)
+                       r"((?:\d+\.\d+\u00d7\s*)+)", _mult(text))
     assert labels, "fig25's panel (b) no longer lists its pairs and scores"
     pairs = labels.group(1).split()
-    scores = re.findall(r"\d+\.\d+×", labels.group(2))
+    scores = re.findall(r"\d+\.\d+\u00d7", labels.group(2))
     assert len(pairs) == len(scores), (
         f"fig25 draws {len(pairs)} pairs and {len(scores)} scores")
     key = next((q for q in pairs if set(q.split("+")) == {"RSL3", "FSP1i"}), None)
@@ -909,7 +1022,8 @@ def test_fig25_binds_each_pair_to_its_own_score():
     # rather than by a coordinate.
     names = [(x, y, t) for x, y, t in words
              if re.fullmatch(r"[^\s+]+\+[^\s+]+", t)]
-    vals = [(x, y, t) for x, y, t in words if re.fullmatch(r"\d+\.\d+×", t)]
+    vals = [(x, y, _mult(t)) for x, y, t in words
+            if re.fullmatch(r"\d+\.\d+\u00d7", _mult(t))]
     assert len(names) == len(pairs), (
         f"fig25 draws {len(names)} pair labels by geometry and {len(pairs)} "
         "in the text stream; the two readings disagree")
@@ -1031,7 +1145,8 @@ def test_fig25_binds_each_pair_to_its_own_score():
     # line stays at 1.0 leaves the legend contradicting the line every bar on
     # the panel is read against, and passed. The label is derived from the
     # same number the line is checked at.
-    assert f"additive ({1.0:.1f}×)" in text.replace("$\\times$", "×"), (
+    assert f"additive ({1.0:.1f}\u00d7)" in _mult(
+            text.replace("$\\times$", "\u00d7")), (
         "fig25's panel (b) threshold legend does not read `additive (1.0×)`. "
         f"The line itself is drawn at {drawn_at:.2f} on the panel's own "
         "scale, so a legend naming any other value contradicts it")
@@ -1039,7 +1154,7 @@ def test_fig25_binds_each_pair_to_its_own_score():
     assert caption[0][0] > max(x for x, _, t in names), (
         "fig25's score caption is not to the right of its pair labels, so it "
         "is not panel (b)'s x axis")
-    assert by_row[key] == f"{fx['synergy_score']:.2f}×", (
+    assert by_row[key] == f"{fx['synergy_score']:.2f}\u00d7", (
         f"fig25 draws {key} on the same row as {by_row[key]} and the fixture "
         f"says {fx['synergy_score']:.2f}x -- the pair and the score beside it "
         "disagree with the data")
@@ -1094,37 +1209,29 @@ def test_fig24_draws_its_hypoxia_numbers():
     # the comparison below fails loudly with the extra value listed, which is
     # the right way to find out.
     panel_a = _words("fig24_hypoxia_killcurve")
-    arrow_y = [y for x, y, t in panel_a if t.strip() == "\u2192"]
-    assert len(arrow_y) == 1, (
-        f"expected exactly one arrow in fig24 panel (a), found {len(arrow_y)}; "
-        "the collapse annotation is what identifies the row to exclude")
-    # THE COLLAPSE PAIR IS THE TWO FLANKING THE ARROW, not everything on its
-    # row. Dropping the whole row false-failed on correct data: a bar whose top
-    # lands near the collapse annotation puts its label on that row, and with
-    # RSL3's uniform kill anywhere in roughly 56.6-59.2% the guard reported
-    # three bars and blamed the figure for numbers it had drawn correctly.
-    # BY MIDLINE, not top edge -- the third site with this assumption, and
-    # the file said so while fixing only the other two. Under cmr10, the LaTeX
-    # default, the arrow's top sits 3.86pt from the percentage beside it
-    # (bound was 3) while their midlines are 1.08pt apart, and a correct
-    # annotation reading `3.7% -> 0.1% (~37x collapse)` was rejected.
-    boxes = {(round(x0, 2), t): (y0 + y1) / 2
-             for x0, y0, x1, y1, t in _word_bboxes("fig24_hypoxia_killcurve")}
-    arrow = [(x, boxes[(round(x, 2), t)]) for x, y, t in panel_a
-             if t.strip() == "\u2192"]
-    arrow_x, arrow_mid = arrow[0]      # `arrow_y` above already pinned it
-    on_row = sorted((x, t) for x, y, t in panel_a
-                    if re.fullmatch(r"\d+\.\d%", t)
-                    and abs(boxes[(round(x, 2), t)] - arrow_mid) <= 3)
-    left = [w for w in on_row if w[0] < arrow_x]
-    right = [w for w in on_row if w[0] > arrow_x]
-    assert left and right, (
-        "fig24's collapse annotation does not read `N.N% -> N.N%`; the two "
-        f"percentages flanking its arrow are what identify it. row={on_row}")
+    # THE COLLAPSE PAIR IS THE ROW THAT HOLDS TWO OF THEM. Identifying it by
+    # the arrow between them meant identifying a glyph, and no glyph survives
+    # every font: `mathtext.fontset: cm` extracts `$\to$` as `!` and
+    # `$\times$` as a pound sign. Nor does either box edge -- cmr10 puts the
+    # arrow's TOP 3.86pt from its percentages while their midlines are 1.08pt
+    # apart, and cm reverses that. What does not move is the layout: the
+    # collapse annotation draws its two percentages on ONE row, and the four
+    # bar annotations each sit at their own bar's height, so no two of them
+    # share one.
+    pct_rows = {}
+    for x, y, t in panel_a:
+        if re.fullmatch(r"\d+\.\d%", t):
+            pct_rows.setdefault(round(y, 1), []).append((x, t))
+    paired = [sorted(v) for v in pct_rows.values() if len(v) == 2]
+    assert len(paired) == 1, (
+        f"expected exactly one row of fig24 panel (a) carrying two "
+        f"percentages -- the collapse annotation -- found {len(paired)}. The "
+        "four bar annotations each sit at their own bar's height")
+    left, right = paired[0]
+
     bars = sorted(((x, t) for x, y, t in panel_a
                    if re.fullmatch(r"\d+\.\d%", t)
-                   and not (abs(boxes[(round(x, 2), t)] - arrow_mid) <= 3
-                            and (x, t) in (left[-1], right[0]))),
+                   and (x, t) not in (left, right)),
                   key=lambda w: w[0])
     assert [t for _, t in bars] == expected, (
         f"fig24's bar annotations read {[t for _, t in bars]} LEFT TO RIGHT "
@@ -1293,15 +1400,18 @@ def test_fig24_draws_its_hypoxia_numbers():
         f"as {expected} -- normoxic then hypoxic within each treatment. The "
         "numbers are sitting over bars of the other series")
 
-    # THE PANEL TITLES. A panel caption can contradict the suptitle this file
-    # does assert and the check standing right beside it: fig24's
-    # `(a) Kill collapse under hypoxia` rewritten to `Kill preserved` passed
-    # everything. Ungated on all three figures until now.
-    for want in ("(a) Kill collapse under hypoxia",
-                 "(b) Robust across penetration length"):
-        assert want in text, (
-            f"fig24 no longer titles a panel {want!r}; the panel captions "
-            "state what each panel is showing")
+    # THE PANEL TITLES, EACH OVER ITS OWN PANEL. A panel caption can
+    # contradict the suptitle this file asserts and the check beside it, so
+    # `(a) Kill collapse under hypoxia` rewritten to `Kill preserved` needed
+    # gating. But `in text` alone was not enough either: SWAPPING the two
+    # titles between the axes leaves both strings present, puts `(b)` over the
+    # left panel and `(a)` over the right, and every manuscript reference to
+    # "panel (a)" then points at the wrong figure. This file's own rule is
+    # that anything identifying a value is compared by geometry.
+    _assert_titled(_panels("fig24_hypoxia_killcurve"),
+                   _word_bboxes("fig24_hypoxia_killcurve"), "fig24",
+                   ["(a) Kill collapse under hypoxia",
+                    "(b) Robust across penetration length"])
 
     # THE SUPTITLE. It states the figure's whole claim, and nothing read it:
     # rewriting it to say hypoxia SPARES pharmacologic ferroptosis and
@@ -1472,7 +1582,8 @@ def test_fig24_draws_its_hypoxia_numbers():
     # (52.560, 101.003, 149.445, 197.888, 246.331, 294.774), because they are
     # geometry rather than glyphs, so the bias disappears and the bound can be
     # tighter than the one it replaces.
-    marks_raw = [(round(a.y, 3), round(abs(b.x - a.x), 2))
+    marks_raw = [(round(a.y, 3), min(a.x, b.x), max(a.x, b.x),
+                  round(abs(b.x - a.x), 2))
                  for x0, y0, x1, y1, col, a, b in _axis_ticks(
                      "fig24_hypoxia_killcurve")
                  if abs(min(a.x, b.x) - b_x0) < 8]
@@ -1481,9 +1592,21 @@ def test_fig24_draws_its_hypoxia_numbers():
         for x0, y0, x1, y1, t in _word_bboxes("fig24_hypoxia_killcurve")
         if re.fullmatch(r"\d+", t) and b_x0 - 40 < x1 < b_x0 + 2)
     # MAJOR TICKS ONLY. `xtick.minor.visible: True` is a plain rcParam and
-    # gave 46 marks against 9 timepoints. Minor ticks are drawn shorter, so
-    # the major ones are those at the modal (longest) length.
-    marks = _major_only(marks_raw)
+    # gave 21 marks -- 15 minor and 6 major -- against 6 numeric labels on
+    # this axis. (The "46 against 9 timepoints" an earlier version quoted here
+    # is fig26's x-axis measurement; fig24 panel (b) has no timepoints.) Minor
+    # ticks are drawn shorter, so the majors are the longest of the strokes
+    # that touch the axis.
+    marks = _major_only(marks_raw, axis_at=b_x0)
+    # FALL BACK TO THE LABELS WHEN NO MARKS ARE DRAWN. `xtick.major.size: 0`
+    # is what every `seaborn-v0_8*` grid style sets, and moving from labels to
+    # marks (to kill the font bias) left no path for it. The label-centre
+    # mapping carries a font-dependent offset of up to 1.14pp, so the bound
+    # widens to match when it is used -- stated here rather than silently.
+    tolerance = 0.1
+    if len(marks) != len(labels):
+        marks = [c for c, _ in labels]
+        tolerance = 1.5
     assert len(marks) >= 2 and len(marks) == len(labels), (
         f"fig24's panel (b) shows {len(marks)} y tick marks against "
         f"{len(labels)} numeric labels; its scale cannot be recovered")
@@ -1502,7 +1625,7 @@ def test_fig24_draws_its_hypoxia_numbers():
         # here argued for 0.5pp and described the label-centre mapping the
         # same commit had already replaced -- it also quoted a 0.013pp
         # residual, which was neither mapping's.)
-        assert abs(drawn - want) <= 0.1, (
+        assert abs(drawn - want) <= tolerance, (
             f"fig24's panel (b) draws {name}'s normoxic reference at "
             f"{drawn:.1f}% on its own y scale and the data gives "
             f"{want:.1f}%. That line is what the depth curves are compared "
@@ -1535,7 +1658,12 @@ def test_fig24_draws_its_hypoxia_numbers():
 
     # And the collapse annotation must be the ratio of the two it names, not a
     # number carried along beside them.
-    collapse = re.search(r"(\d+\.\d%) → (\d+\.\d%) \(~(\d+)× collapse\)", text)
+    # GLYPH-AGNOSTIC. The arrow and the multiplication sign are whatever the
+    # font maps them to -- `!` and a pound sign under `mathtext.fontset: cm` --
+    # so the pattern matches "one non-space character" in both places rather
+    # than the codepoints this project's own rcParams happen to produce.
+    collapse = re.search(
+        r"(\d+\.\d%)\s*\S\s*(\d+\.\d%)\s*\(~(\d+)\s*\S\s*collapse\)", text)
     assert collapse, "fig24 no longer annotates the collapse ratio"
     assert [collapse.group(1), collapse.group(2)] == expected[:2], (
         f"fig24's collapse annotation names {collapse.group(1)} → "
@@ -1804,9 +1932,12 @@ def test_fig26_draws_the_timepoints_its_fixture_holds():
     # WHERE the window is, and nothing read it: shading the whole 28 days, or
     # only days 14-28, passed. `win_end` is the last timepoint at or under day
     # 3, derived from the fixture, and the tick marks give the x scale.
-    xmarks = _major_only([(round(a.x, 2), round(abs(b.y - a.y), 2))
+    _, a_bottom = _panel_y(stem26)
+    xmarks = _major_only([(round(a.x, 2), min(a.y, b.y), max(a.y, b.y),
+                           round(abs(b.y - a.y), 2))
                           for x0, y0, x1, y1, col, a, b
-                          in _axis_ticks_vertical(stem26) if a.x <= a_hi])
+                          in _axis_ticks_vertical(stem26) if a.x <= a_hi],
+                         axis_at=a_bottom)
     assert len(xmarks) == len(expected), (
         f"fig26 panel (a) shows {len(xmarks)} x tick marks against "
         f"{len(expected)} timepoints")
@@ -1841,21 +1972,43 @@ def test_fig26_draws_the_timepoints_its_fixture_holds():
         f"{expected[win_end]}. The shaded span is what shows where the window "
         "is; the annotation beside it is a fixed string")
 
-    for want in ("(a) Treatment window: RSL3 closes, SDT stays open",
-                 "(b) Why: GPX4 re-expression closes the window"):
-        assert want in text, (
-            f"fig26 no longer titles a panel {want!r}. Panel (a)'s title "
-            "names which treatment closes, which is the claim the curve check "
-            "below compares against")
-    # THE Y-AXIS LABELS, which say what the curves MEAN. fig24's and fig25's
-    # equivalents are gated with an explicit "the unit the bars are in"
-    # rationale; fig26's were not, so `Persister kill (%)` could become
-    # `Persister survival (%)` -- inverting both curves -- and pass.
+    # EACH TITLE OVER ITS OWN PANEL. Panel (a)'s title names which treatment
+    # closes, which is the claim the curve check above compares against -- and
+    # a containment check cannot see the titles SWAPPED, which puts that claim
+    # over the wrong panel while both strings remain present.
+    _assert_titled(p26, _word_bboxes(stem26), "fig26",
+                   ["(a) Treatment window: RSL3 closes, SDT stays open",
+                    "(b) Why: GPX4 re-expression closes the window"])
+
+    # THE Y-AXIS LABELS, BOUND TO THEIR AXES. fig24's and fig25's equivalents
+    # are gated with an explicit "the unit the bars are in" rationale; fig26's
+    # were not, so `Persister kill (%)` could become `survival (%)` and pass.
+    # Containment is not enough here either: panel (b) carries TWO y axes, and
+    # exchanging `RSL3 kill (%)` with `Mean GPX4 (recovered fraction)` leaves
+    # the blue 0-50 kill axis labelled as a recovered fraction and the green
+    # 0.5-0.8 GPX4 axis labelled as a kill percentage, with both strings still
+    # on the page. A rotated label is a column at one x, so each is required
+    # at its own.
+    fig26_cols = _vertical_labels(_word_bboxes(stem26))
+    by_text = {}
+    for (cx0, _cx1), (lbl, _lo, _hi) in fig26_cols.items():
+        by_text.setdefault(lbl, []).append(cx0)
     for want in ("Persister kill (%)", "RSL3 kill (%)",
                  "Mean GPX4 (recovered fraction)"):
-        assert want in text, (
-            f"fig26 no longer labels an axis {want!r}; those labels say what "
-            "the plotted values are")
+        assert want in by_text, (
+            f"fig26 no longer draws {want!r} as a y-axis label; those labels "
+            f"say what the plotted values are. Found: {sorted(by_text)}")
+    # Left to right: panel (a)'s kill axis, panel (b)'s kill axis, then the
+    # twin GPX4 axis on panel (b)'s right.
+    order = sorted((min(by_text[w]), w) for w in
+                   ("Persister kill (%)", "RSL3 kill (%)",
+                    "Mean GPX4 (recovered fraction)"))
+    assert [w for _, w in order] == ["Persister kill (%)", "RSL3 kill (%)",
+                                     "Mean GPX4 (recovered fraction)"], (
+        f"fig26's y-axis labels read {[w for _, w in order]} LEFT TO RIGHT. "
+        "Panel (b)'s left axis carries the RSL3 kill curve and its right axis "
+        "the GPX4 fraction; exchanged, each axis is labelled with the other's "
+        "quantity")
 
     assert ("The ferroptosis-sensitive window: days for RSL3, weeks for SDT"
             in text), (
