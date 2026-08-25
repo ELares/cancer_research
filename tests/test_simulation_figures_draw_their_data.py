@@ -77,10 +77,18 @@ the places where no assertion would name it:
 
 - **A panel needs at least one horizontal spine.** `_panels` locates panels
   from long horizontal axis rules, so turning off BOTH `axes.spines.top` and
-  `axes.spines.bottom` leaves nothing to find them by and every reader here
-  aborts with "no horizontal axis rules found, so panels cannot be located".
-  Any single spine removed is fine, including `bottom`, whose absence used to
-  put the axis 6.8pt out and silently emptied fig26's x scale.
+  `axes.spines.bottom` removes what it looks for. Any single spine removed is
+  fine, including `bottom`, whose absence used to put the axis 6.8pt out and
+  silently emptied fig26's x scale.
+
+  The failure is NOT uniform, and an earlier version of this bullet said it
+  was ("every reader here aborts"). Measured with both off: fig25 aborts with
+  "no horizontal axis rules found", but fig24 returns `[(56.8, 176.4)]` and
+  fig26 returns `[(330.0, 446.4), (624.3, 781.2)]` -- LEGEND FRAMES, because a
+  legend frame is also a long horizontal rule and with the real ones gone
+  nothing outranks it. The suite still fails overall, so nothing ships, but
+  the mechanism is `_panels` mistaking a legend for a panel rather than
+  declining to answer.
 
 - **The figure must draw visible tick marks.** Two scale readings -- fig24
   panel (b)'s reference lines and fig26's window shading -- locate themselves
@@ -384,8 +392,19 @@ def _panels(stem):
     # simply untrue. Two panels with two outside legends tie on size just as
     # readily, and combined with the despining above (where the panels' height
     # is zero and the legends' is not) `_panels` returned the two LEGEND
-    # FRAMES. Width does not depend on the spines: panels are the wide things
-    # on a figure and a legend is a box beside them.
+    # FRAMES. Width does not depend on the spines, which is why it is the
+    # better tie-break.
+    #
+    # IT IS A TIE-BREAK, NOT AN INVARIANT, and the sentence that stood here
+    # ("panels are the wide things on a figure and a legend is a box beside
+    # them") overstates it. A legend can be made wider than its panel:
+    # `legend.fontsize: 20` with `handlelength: 8` and two entries outside the
+    # axes measures 418pt against a 279pt panel, and `_panels` then returns
+    # the legend. On fig26 the same legend CONTAINS panel (b), so the nesting
+    # filter deletes the real panel before this code runs at all. Both fail
+    # loudly rather than silently, and both are reachable at the parent too,
+    # so this is a known bound on the helper and not a claim that it cannot
+    # happen.
     extent = {}
     for k in outer:
         ys = [y for x0, x1, y in rules if (x0, x1) == k]
@@ -399,14 +418,24 @@ def _panels(stem):
 
 
 def _long_vertical_ends(stem):
-    """Both y ends of every long vertical rule -- the side spines.
+    """Both y ends of every long vertical rule STANDING ON A PANEL EDGE.
 
     A left or right spine runs the full height of the axes, so its ends ARE
     the plotting area's top and bottom. `_panel_y` and `_axes_top` both need
     that when a horizontal spine has been turned off, and each was reaching
     for it separately.
+
+    AT A PANEL EDGE, because "long and vertical" is not enough to be a spine.
+    A `fill_between` band is drawn with a stroke colour, so its edges survive
+    every other filter here, and widening fig26's confidence band to +/-40
+    puts four more values in this list -- one of them at 385.96, BELOW the
+    axis at 302.04. Both callers take `min`/`max`, so that value would have
+    become the bottom of the plotting area the moment a spine was missing and
+    the fallback fired. A spine sits ON a panel's left or right edge; a band
+    edge sits at whatever x its data does.
     """
     pymupdf = _reader()
+    edges = {x for panel in _panels(stem) for x in panel}
     doc = pymupdf.open(FIG_DIR / f"{stem}.pdf")
     try:
         out = []
@@ -420,7 +449,8 @@ def _long_vertical_ends(stem):
                 if item[0] != "l":
                     continue
                 a, b = item[1], item[2]
-                if abs(a.x - b.x) < 0.5 and abs(b.y - a.y) > 100:
+                if (abs(a.x - b.x) < 0.5 and abs(b.y - a.y) > 100
+                        and any(abs(a.x - e) < 1 for e in edges)):
                     out.extend((min(a.y, b.y), max(a.y, b.y)))
         return out
     finally:
@@ -640,15 +670,40 @@ def _assert_titled(panels, boxes, stem, titles, top):
     # 52.56), every title word fell outside the band, and all three figures
     # were reported as having no title at all.
     #
-    # The midpoint alone is too fine a line: fig26's topmost tick label `50`
-    # is CENTRED on a tick that sits exactly at the axes top, so its midpoint
-    # (52.54) misses the boundary (52.56) by 0.02pt. What separates them is
-    # not where the centre falls but how much of the word is inside: `50`
-    # reaches half its own height in, a title at `titlepad: 3` reaches 7% and
-    # at `titlepad: 0` still only 23%. A third is the line, with both sides
-    # well clear of it.
+    # The midpoint alone is too fine a line, and it fails in the direction
+    # that matters: fig26's topmost tick label `50` is CENTRED on a tick
+    # sitting exactly at the axes top, so it reaches 49.89% of its own height
+    # in and its midpoint misses the boundary by 0.018pt. That near-half is
+    # structural rather than lucky -- a label centred ON the boundary
+    # straddles it -- so anything at or above about half is in-axes text.
+    #
+    # The line is drawn between the two measured extremes, each the deepest
+    # panel-letter reach over all three figures:
+    #
+    #   committed                                    -7.86%  (clear of the axes)
+    #   axes.titlepad: 3                              7.33%
+    #   axes.titlepad: 0                              7.33%  (SATURATES here --
+    #       matplotlib clamps the title's ink bottom to the axes top, so
+    #       reducing the pad further changes nothing)
+    #   axes.titlepad: 0 + axes.titley: 1.0          23.82%
+    #   Courier New + titlepad: 0                    28.88%
+    #   Courier New + titlepad: 0 + titley: 1.0      39.98%  (deepest seen)
+    #   ---- 45% ----
+    #   fig26's `50` tick label                      49.89%  (nearest in-axes)
+    #
+    # The two Courier rows are an UPPER BOUND on how deep a title can reach,
+    # not figures that must pass: monospace widens fig26's titles until `(b)`
+    # is drawn over `stays`, so those figures fail the genuine-collision check
+    # anyway. Bounding the cut with them errs toward accepting, which is the
+    # safe direction here -- the thing on the other side is at 49.89%.
+    #
+    # An earlier version cut at a third and justified it with "at
+    # `titlepad: 0` still only 23%", which is two errors: 0 gives 7.33%, and
+    # 23.82% needs `axes.titley` set as well. Measured properly the worst
+    # title is 39.98%, so a third left 4.4 points of margin where it read as
+    # having plenty. 45% splits the two classes near-evenly.
     band = ([b for b in boxes
-             if b[1] >= row_y - 0.5 and b[3] - top < (b[3] - b[1]) / 3]
+             if b[1] >= row_y - 0.5 and b[3] - top < 0.45 * (b[3] - b[1])]
             if top is not None
             else [b for b in boxes if abs(b[1] - row_y) < 2])
     rows = _cluster_rows(band, key=lambda b: b[1])
@@ -1278,16 +1333,31 @@ def test_fig25_draws_its_bliss_numbers():
     same_row = sorted(
         (x0, x1, t)
         for x0, y0, x1, y1, t in _word_bboxes("fig25_bliss_synergy")
-        # WHERE THE WORD STARTS, not where it ends. Bounding on the right
-        # edge clips the annotation's own text the moment it overhangs its
-        # panel -- `annotate(..., fontsize=18)` pushes `synergy` past panel
-        # (a)'s edge and the run read `1.99x` alone on a correct figure. It
-        # cannot widen to the inter-panel gap the way the fig24 and fig26
-        # legend scans did, because that gap is where panel (b)'s pair labels
-        # are drawn, which is what this bound exists to exclude. A word that
-        # STARTS inside panel (a) belongs to it however far it runs; panel
-        # (b)'s labels start beyond it.
-        if abs((y0 + y1) / 2 - ay_mid) < 4 and x0 <= a_hi + 1)
+        # WHERE THE WORD'S MIDDLE IS. Neither edge separates these two cases,
+        # because in both of them a word starts inside panel (a) and ends
+        # outside it:
+        #
+        #   * bounding on the RIGHT edge clips the annotation's own text the
+        #     moment it overhangs -- `annotate(..., fontsize=18)` pushes
+        #     `synergy` past the edge and the run read `1.99x` alone;
+        #   * bounding on the LEFT edge re-opened the case the comment above
+        #     records, where panel (b)'s top pair label `RSL3+FSP1i` starts
+        #     23.6pt INSIDE panel (a) at 17 pairs and the 20pt gap-walk
+        #     absorbed it, reading `1.99x synergy RSL3+FSP1i`.
+        #
+        # It cannot widen to the inter-panel gap the way the fig24 and fig26
+        # legend scans did, because that gap is where panel (b)'s labels are
+        # drawn. The midpoint decides both: at 17 pairs `synergy` centres at
+        # 321.4 and `RSL3+FSP1i` at 342.8, against a panel edge of 330.2.
+        #
+        # It moves the boundary rather than removing it, and the measurement
+        # is the honest form of that: the annotation font passes at 12, 14, 16
+        # and 18 and fails from 20 up, where `synergy`'s own CENTRE clears the
+        # panel edge. The left-edge bound failed from 16, so this is strictly
+        # better and still bounded. Past that the annotation is more than half
+        # out of the panel it annotates, which is a figure worth fixing rather
+        # than a reading worth widening for.
+        if abs((y0 + y1) / 2 - ay_mid) < 4 and (x0 + x1) / 2 <= a_hi + 1)
     at = next(i for i, (x0, _, t) in enumerate(same_row) if _mult(t) == want)
     lo = hi = at
     while lo > 0 and same_row[lo][0] - same_row[lo - 1][1] < 20:
