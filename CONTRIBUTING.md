@@ -31,6 +31,32 @@ cd simulations && cargo test --workspace
 
 All tests must pass before submitting a PR.
 
+### Verifying the figure guards (local, after touching them)
+
+`tests/test_simulation_figures_draw_their_data.py` asserts what fig24, fig25 and
+fig26 actually *draw*. A guard like that can fail in two ways a green suite does
+not show: it can pass a figure whose meaning is wrong, or reject one that is
+correct. `scripts/verify_figure_guards.py` mutates the generator and checks both
+directions.
+
+```bash
+python3 scripts/verify_figure_guards.py          # 39 cases, both directions
+python3 scripts/verify_figure_guards.py --list   # names only
+python3 scripts/verify_figure_guards.py -k arrow # a subset
+```
+
+It is a LOCAL tool, not a CI test: it regenerates the figures, and the generator
+reads `simulations/output/`, which is gitignored — the same reason the guards
+compare against committed fixtures instead of regenerating. It refuses to run if
+regeneration is not bit-identical to the committed PDFs, and it reports a case
+whose anchor text has moved as SKIP rather than dropping it silently.
+
+**Run it after relaxing any assertion.** Where a review shows a guard rejecting a
+correct figure, the tempting fix is to widen the assertion until that case
+passes; three times on PR #792 that produced a guard the original defect then
+walked straight through — including a bound that zero satisfies, under which a
+bar chart drawn with no bars passed every check.
+
 ## Code Style
 
 - **Python**: Follow existing patterns. Use type hints, docstrings, and `tqdm` for progress bars. Scripts in `scripts/` import from `config.py` and `article_io.py`.
