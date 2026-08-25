@@ -48,8 +48,8 @@ the places where no assertion would name it:
 - **fig26 panel (b)'s GPX4 right-hand axis is ungated** -- its tick labels are
   data-derived numbers no assertion reads. fig24 panel (b) was in this list
   and is not any more: its two dashed reference lines are bound to its own
-  legend below. The rest of that panel -- the four kill curves themselves --
-  is still unread except by the fingerprint.
+  legend below. The rest of that panel is still unread except by the fingerprint:
+  its two kill curves, its lambda tick labels, and its axis captions.
 - **`closes ~day 3` is a presence check.** It is a hardcoded string in the
   generator, so it would still read day 3 if the window moved.
 
@@ -231,9 +231,14 @@ def _vertical_labels(words):
     # would merge them last-write-wins. (Two earlier versions of this note
     # said "one such column" and then "TWO", and neither counted the tick
     # stacks. The conclusion held; the count did not.)
+    # FULL EXTENTS. This took `(x0, x1, y0, text)` and reported min/max over
+    # TOP edges, so any midpoint computed from it was biased upward by half a
+    # line height -- at `axes.labelsize` 24 the y-label read 44.3pt
+    # off-centre when its true offset was 0.0, consuming 71% of the
+    # centredness budget with an artifact. It takes full boxes now.
     cols = {}
-    for x0, x1, y, t in words:
-        cols.setdefault((round(x0, 1), round(x1, 1)), []).append((y, t))
+    for x0, y0, x1, y1, t in words:
+        cols.setdefault((round(x0, 1), round(x1, 1)), []).append((y0, y1, t))
     # BOTTOM TO TOP. A 90-degree rotated label puts its first word at the
     # LARGEST y, so reading in ascending y gives "(%) kill tumor Overall".
     # Returns text AND the column's own vertical extent, so a caller checking
@@ -245,44 +250,47 @@ def _vertical_labels(words):
     # it had just done. fig24 already carries a spurious horizontal column
     # (`RSL3 RSL3`, its panel (b) legend, at x=595.6), so this is not
     # hypothetical; x1 keeps it separate only if x1 survives.
-    return {key: (" ".join(t for _, t in sorted(ws, reverse=True)),
-                  min(y for y, _ in ws), max(y for y, _ in ws))
+    return {key: (" ".join(t for _, _, t in sorted(ws, reverse=True)),
+                  min(y0 for y0, _, _ in ws), max(y1 for _, y1, _ in ws))
             for key, ws in cols.items() if len(ws) > 1}
 
 
 def _panels(stem):
     """Each panel's x range, from the axis spines: `[(x0, x1), ...]` left to right.
 
-    The spines are the long black horizontal strokes, and they are the only
-    thing on the page that states where a panel actually ENDS. Earlier versions
-    of this file guessed that boundary from panel titles (which broke when a
-    title wrapped) and from the rightmost bar annotation (which is 53pt inside
-    panel (a)'s real edge, so a stray label between the two panels counted as
-    belonging to the second one).
+    BY GEOMETRY, NOT BY COLOUR. Two earlier versions keyed on the stroke's
+    colour -- first exactly black, which `axes.edgecolor="0.3"` broke, then
+    "greyscale", with an undocumented `min(col) > 0.75` cut doing the real
+    work. The stated rationale was false: matplotlib's DEFAULT LEGEND FRAME is
+    greyscale at 0.8, so greyscale never distinguished an axis from a box, and
+    the brightness cut meant any `axes.edgecolor` at or above 0.76 aborted
+    every geometric reader in this file at once -- `ggplot`, `fivethirtyeight`,
+    `Solarize_Light2` and `seaborn-v0_8-whitegrid` among them.
+    What actually distinguishes a panel is that its top and bottom spines
+    share an x range and that range is the widest on the page; a legend frame
+    is a box too, but a narrow one.
     """
     pymupdf = _reader()
     doc = pymupdf.open(FIG_DIR / f"{stem}.pdf")
     try:
-        spans = set()
+        spans = {}
         for d in doc[0].get_drawings():
-            col = d.get("color")
-            # ANY GREY, NOT ONLY BLACK. Requiring exactly (0,0,0) meant
-            # `axes.edgecolor="0.3"` -- seaborn's default and most journal
-            # templates -- aborted every geometric reader in this file at
-            # once, on figures that render perfectly. An axis frame is
-            # greyscale; a data series is not.
-            if col is None or max(col) - min(col) > 0.1 or min(col) > 0.75:
+            if d.get("color") is None:
                 continue
             for item in d["items"]:
                 if item[0] != "l":
                     continue
                 a, b = item[1], item[2]
                 if abs(a.y - b.y) < 0.5 and abs(b.x - a.x) > 100:
-                    spans.add((round(min(a.x, b.x), 1), round(max(a.x, b.x), 1)))
+                    key = (round(min(a.x, b.x), 1), round(max(a.x, b.x), 1))
+                    spans.setdefault(key, set()).add(round(a.y, 1))
     finally:
         doc.close()
-    assert spans, f"{stem}: no axis spines found, so panels cannot be located"
-    return sorted(spans)
+    boxes = [k for k, ys in spans.items() if len(ys) >= 2]
+    assert boxes, f"{stem}: no paired horizontal rules found, so panels cannot be located"
+    widest = max(k[1] - k[0] for k in boxes)
+    panels = sorted(k for k in boxes if k[1] - k[0] > widest * 0.9)
+    return panels
 
 
 def _panel_y(stem):
@@ -293,12 +301,12 @@ def _panel_y(stem):
         ys = set()
         for d in doc[0].get_drawings():
             col = d.get("color")
-            # ANY GREY, NOT ONLY BLACK. Requiring exactly (0,0,0) meant
-            # `axes.edgecolor="0.3"` -- seaborn's default and most journal
-            # templates -- aborted every geometric reader in this file at
-            # once, on figures that render perfectly. An axis frame is
-            # greyscale; a data series is not.
-            if col is None or max(col) - min(col) > 0.1 or min(col) > 0.75:
+            # ANY COLOUR. Requiring black, then greyscale-and-dark, each
+            # broke a shipped style: `axes.edgecolor` is freely settable and
+            # matplotlib's own legend frame is greyscale 0.8. A tick mark is
+            # identified by its SHAPE -- a short stroke perpendicular to an
+            # axis -- not by how it is painted.
+            if col is None:
                 continue
             for item in d["items"]:
                 if item[0] != "l":
@@ -329,12 +337,12 @@ def _axis_ticks_vertical(stem):
         out = []
         for d in doc[0].get_drawings():
             col = d.get("color")
-            # ANY GREY, NOT ONLY BLACK. Requiring exactly (0,0,0) meant
-            # `axes.edgecolor="0.3"` -- seaborn's default and most journal
-            # templates -- aborted every geometric reader in this file at
-            # once, on figures that render perfectly. An axis frame is
-            # greyscale; a data series is not.
-            if col is None or max(col) - min(col) > 0.1 or min(col) > 0.75:
+            # ANY COLOUR. Requiring black, then greyscale-and-dark, each
+            # broke a shipped style: `axes.edgecolor` is freely settable and
+            # matplotlib's own legend frame is greyscale 0.8. A tick mark is
+            # identified by its SHAPE -- a short stroke perpendicular to an
+            # axis -- not by how it is painted.
+            if col is None:
                 continue
             for item in d["items"]:
                 if item[0] != "l":
@@ -356,12 +364,12 @@ def _axis_ticks(stem):
         out = []
         for d in doc[0].get_drawings():
             col = d.get("color")
-            # ANY GREY, NOT ONLY BLACK. Requiring exactly (0,0,0) meant
-            # `axes.edgecolor="0.3"` -- seaborn's default and most journal
-            # templates -- aborted every geometric reader in this file at
-            # once, on figures that render perfectly. An axis frame is
-            # greyscale; a data series is not.
-            if col is None or max(col) - min(col) > 0.1 or min(col) > 0.75:
+            # ANY COLOUR. Requiring black, then greyscale-and-dark, each
+            # broke a shipped style: `axes.edgecolor` is freely settable and
+            # matplotlib's own legend frame is greyscale 0.8. A tick mark is
+            # identified by its SHAPE -- a short stroke perpendicular to an
+            # axis -- not by how it is painted.
+            if col is None:
                 continue
             for item in d["items"]:
                 if item[0] != "l":
@@ -791,7 +799,7 @@ def test_fig25_draws_its_bliss_numbers():
         "synergistic, which is the claim its synergy score and its additive "
         "reference line exist to support")
 
-    cols = _vertical_labels(_boxed_row_words("fig25_bliss_synergy"))
+    cols = _vertical_labels(_word_bboxes("fig25_bliss_synergy"))
     kill_axes = sorted(k[0] for k, (lbl, _, _) in cols.items()
                        if lbl == "Persister kill (%)")
     assert len(kill_axes) == 1, (
@@ -1063,7 +1071,7 @@ def test_fig24_draws_its_hypoxia_numbers():
     # the comparison below fails loudly with the extra value listed, which is
     # the right way to find out.
     panel_a = _words("fig24_hypoxia_killcurve")
-    arrow_y = [y for x, y, t in panel_a if t.strip() in {"→", "\u2192"}]
+    arrow_y = [y for x, y, t in panel_a if t.strip() == "\u2192"]
     assert len(arrow_y) == 1, (
         f"expected exactly one arrow in fig24 panel (a), found {len(arrow_y)}; "
         "the collapse annotation is what identifies the row to exclude")
@@ -1080,9 +1088,8 @@ def test_fig24_draws_its_hypoxia_numbers():
     boxes = {(round(x0, 2), t): (y0 + y1) / 2
              for x0, y0, x1, y1, t in _word_bboxes("fig24_hypoxia_killcurve")}
     arrow = [(x, boxes[(round(x, 2), t)]) for x, y, t in panel_a
-             if t.strip() in {"→", "\u2192"}]
-    assert arrow, "fig24's collapse annotation draws no arrow"
-    arrow_x, arrow_mid = arrow[0]
+             if t.strip() == "\u2192"]
+    arrow_x, arrow_mid = arrow[0]      # `arrow_y` above already pinned it
     on_row = sorted((x, t) for x, y, t in panel_a
                     if re.fullmatch(r"\d+\.\d%", t)
                     and abs(boxes[(round(x, 2), t)] - arrow_mid) <= 3)
@@ -1157,7 +1164,21 @@ def test_fig24_draws_its_hypoxia_numbers():
     # The chain closed here is legend text -> swatch colour -> bar position.
     # The four bars are the series-coloured rectangles standing on the axis
     # baseline, which is the y1 they share and the legend swatches do not.
-    rects = _filled_rects("fig24_hypoxia_killcurve")
+    # SCOPED TO PANEL (a). The scan is page-wide and panel (b) draws its
+    # `o-`/`s-` markers as filled rectangles in the SAME two series colours,
+    # at the bottom of a panel that shares fig24's y range. `lines.markersize:
+    # 14` alone -- no generator edit -- made it report six bars on the
+    # baseline, and `axB.set_ylim(0, 100)` put four panel-(b) markers 2.81pt
+    # BELOW the real bars, so `max(y1)` picked them and every real bar was
+    # excluded. The text scan beside this was scoped for exactly this reason
+    # and the rectangle scan was not.
+    a_right = _panels("fig24_hypoxia_killcurve")[0][1]
+    rects = [r for r in _filled_rects("fig24_hypoxia_killcurve")
+             if r[1] <= a_right + 1]
+    # The bottom-most filled edge in panel (a) is the axis the bars stand on;
+    # a legend swatch floats above it. Used below to tell the two apart
+    # without a width bound.
+    bar_baseline = max(r[3] for r in rects)
     # EXACTLY ONE ENTRY EACH. The scan is page-wide, and panel (b) draws
     # `normoxic` and `(hypoxic)` in its own legend -- only their case and
     # parentheses keep them out. Capitalising them there rebinds panel (a)'s
@@ -1192,7 +1213,14 @@ def test_fig24_draws_its_hypoxia_numbers():
             # twice. A legend swatch is immediately left of its label; the
             # real one is 22.4pt left, the impostor 87pt right.
             near = sorted((abs(r[2] - y), r) for r in rects
-                          if abs(r[2] - y) < 8 and r[1] - r[0] < 52
+                          # NOT ON THE BASELINE, rather than under a width
+                          # bound. `< 52` was a measured midpoint between the
+                          # swatch (16pt) and the bars (53pt), and it rejected
+                          # `legend.handlelength` 8, whose swatch is 80pt.
+                          # What actually separates them is that a bar stands
+                          # on the axis and a swatch floats.
+                          if abs(r[2] - y) < 8
+                          and abs(r[3] - bar_baseline) > 1
                           and 0 < x - r[1] < 60)
             assert near, f"fig24's {t!r} legend entry has no swatch beside it"
             legend[t] = near[0][1][4]
@@ -1269,7 +1297,7 @@ def test_fig24_draws_its_hypoxia_numbers():
     # added to panel (b). A count says how many, never where.
     px = _panels("fig24_hypoxia_killcurve")
     assert len(px) >= 2, f"fig24 has {len(px)} panels by its spines, expected 2"
-    columns = _vertical_labels(_boxed_row_words("fig24_hypoxia_killcurve"))
+    columns = _vertical_labels(_word_bboxes("fig24_hypoxia_killcurve"))
     kill_cols = sorted(k for k, (lbl, _, _) in columns.items()
                        if lbl == "Overall tumor kill (%)")
     kill_axes = [k[0] for k in kill_cols]
@@ -1328,7 +1356,7 @@ def test_fig24_draws_its_hypoxia_numbers():
         # CENTRED on its axis, so the test is on its midpoint.
         col_mid = (col_lo + col_hi) / 2
         axis_mid = (y_lo + y_hi) / 2
-        assert abs(col_mid - axis_mid) <= (y_hi - y_lo) * 0.25, (
+        assert abs(col_mid - axis_mid) <= (y_hi - y_lo) * 0.08, (
             f"fig24's `Overall tumor kill (%)` label at x={x:.0f} is "
             f"centred at y={col_mid:.0f} while its panel's axis is centred at "
             f"{axis_mid:.0f} (spanning {y_lo:.0f} to {y_hi:.0f}); a y-axis "
@@ -1442,6 +1470,26 @@ def test_fig24_draws_its_hypoxia_numbers():
             f"{drawn:.1f}% on its own y scale and the data gives "
             f"{want:.1f}%. That line is what the depth curves are compared "
             "against, so it has to be the value it claims")
+
+    # PANEL (b)'S LAMBDA AXIS, in ascending order. Reversing those tick labels
+    # -- so the axis reads 150/120/100/80 while the curves are plotted 80 to
+    # 150 -- survived every check here, which is the same tick-array inversion
+    # already closed on panel (a) and on fig26. The values are in the
+    # fixture's own condition names.
+    lam = sorted(int(re.search(r"gradient_(\d+)um", r["o2_condition"]).group(1))
+                 for r in {r["o2_condition"]: r for r in rows
+                           if r["o2_condition"].startswith("gradient_")}.values())
+    assert len(lam) >= 2, (
+        f"hypoxia_killcurve_rows.json names {len(lam)} gradient conditions; "
+        "fig24's panel (b) plots one point per lambda")
+    lam_labels = [t for _, t in sorted(
+        ((x0 + x1) / 2, t)
+        for x0, y0, x1, y1, t in _word_bboxes("fig24_hypoxia_killcurve")
+        if re.fullmatch(r"\d+", t) and b_x0 - 5 <= x0 <= b_x1 + 5 and y0 > y_hi)]
+    assert lam_labels == [str(v) for v in lam], (
+        f"fig24's panel (b) x axis reads {lam_labels} LEFT TO RIGHT and the "
+        f"fixture's gradient conditions are {lam}. The curves are plotted in "
+        "ascending lambda, so a reversed axis reads the depth trend backwards")
 
     # And the collapse annotation must be the ratio of the two it names, not a
     # number carried along beside them.
@@ -1609,7 +1657,20 @@ def test_fig26_draws_the_timepoints_its_fixture_holds():
     # the row at each `Time` closed that and false-failed the moment the
     # caption wrapped onto two lines. Nearest-unit handles both: the unit is
     # adjacent on one row, and directly below when wrapped.
-    units = [(x, y, t) for x, y, t in wds if re.fullmatch(r"\(\w+\)", t)]
+    # ON THE CAPTION'S OWN LINE. The nearest parenthesised word was taken from
+    # anywhere on the page, so at `axes.labelsize` 34 the panel title `(a)`
+    # sits closer to the caption than its own `(days)` does and a correct
+    # figure was told its axis declared the wrong unit. A unit belongs to the
+    # caption beside it, which means the same line.
+    stem26 = "fig26_vulnerability_window"
+    cap_mid = {}
+    for x0, y0, x1, y1, t in _word_bboxes(stem26):
+        cap_mid[(round(x0, 2), t)] = (y0 + y1) / 2
+    subj_mids = [cap_mid[(round(x, 2), "post-chemotherapy")]
+                 for x, y, t in wds if t == "post-chemotherapy"]
+    units = [(x, y, t) for x, y, t in wds
+             if re.fullmatch(r"\(\w+\)", t)
+             and any(abs(cap_mid[(round(x, 2), t)] - m) < 6 for m in subj_mids)]
     subjects = [(x, y, t) for x, y, t in wds if t == "post-chemotherapy"]
     assert len(subjects) == 2, (
         f"fig26 draws {len(subjects)} x-axis captions, expected one per panel")
@@ -1630,7 +1691,6 @@ def test_fig26_draws_the_timepoints_its_fixture_holds():
     #
     # Each legend entry has its line sample ~6pt below its text, and the claim
     # is which curve is still high at the last timepoint.
-    stem26 = "fig26_vulnerability_window"
     p26 = _panels(stem26)
     a_lo, a_hi = p26[0]
     doc_lines = _hlines_any("fig26_vulnerability_window")
@@ -1925,7 +1985,19 @@ def _fingerprint(stem):
         for info in page.get_images(full=True):
             rects = sorted(tuple(round(v, 2) for v in r)
                            for r in page.get_image_rects(info[0]))
-            images.append((info[1:], rects))
+            # THE PIXELS, NOT JUST THE METADATA. The raster's dimensions come
+            # from the figure geometry rather than from the data, so a heatmap
+            # redrawn from DIFFERENT numbers keeps the same size, colourspace
+            # and placement and hashed identically -- verified with two random
+            # seeds. Latent for these three figures, which draw no raster, but
+            # fig17 draws its heatmaps with `imshow`, which is the case this
+            # backstop names as reachable.
+            try:
+                raw = doc.extract_image(info[0])["image"]
+                digest = hashlib.sha256(raw).hexdigest()[:16]
+            except Exception:
+                digest = None
+            images.append((info[1:], rects, digest))
     finally:
         doc.close()
 
