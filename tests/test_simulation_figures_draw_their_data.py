@@ -220,11 +220,14 @@ def _vertical_labels(words):
     #
     # It is not a general separation: two horizontal words of equal width
     # stacked at the same x still group, and fig24 already contains one such
-    # column -- `RSL3 RSL3`, its panel (b) legend, at x=595.6. That is
-    # harmless because callers select by the label TEXT, and it is why the
-    # returned key is the full extent rather than x0: collapsing back onto x0
-    # would merge that column with a real one, last-write-wins, undoing the
-    # grouping this just did.
+    # column. That is harmless because callers select by the label TEXT.
+    # Measured, fig24 has TWO such columns -- `SDT SDT` at (595.6, 612.8) and
+    # `RSL3 RSL3` at (595.6, 617.5), its panel (b) legend -- and they share an
+    # x0 with each OTHER, not with either real label at (3.0, 20.5) and
+    # (337.8, 355.3). Collapsing onto x0 would merge those two spurious
+    # columns and leave the real ones untouched; an earlier version of this
+    # note said it would merge a spurious column with a real one, which the
+    # measurement does not support.
     cols = {}
     for x0, x1, y, t in words:
         cols.setdefault((round(x0, 1), round(x1, 1)), []).append((y, t))
@@ -436,26 +439,55 @@ def _boxed_rows(stem):
     pymupdf = _reader()
     doc = pymupdf.open(FIG_DIR / f"{stem}.pdf")
     try:
-        out = {}
-        for w in doc[0].get_text("words"):
-            out.setdefault(round(w[1], 1), []).append((w[0], w[2], w[4]))
-        return {k: sorted(v) for k, v in out.items()}
+        ws = [(w[1], w[0], w[2], w[4]) for w in doc[0].get_text("words")]
+        return {round(min(y for y, _, _, _ in row), 1):
+                sorted((x0, x1, t) for _, x0, x1, t in row)
+                for row in _cluster_rows(ws, key=lambda w: w[0])}
     finally:
         doc.close()
 
 
-def _rows(words):
-    """Group words by y, rounded, preserving `(x, text)` per row.
+def _cluster_rows(items, key, tol=1.0):
+    """Group `items` into rows by `key(item)`, within `tol` of each other.
 
-    Three checks need it: two panels drawn side by side share y coordinates for
-    their tick labels and axis captions, so "same row" is what identifies a
-    horizontal series -- and, when both panels land in one row, what makes a
-    per-panel check have to work at word level rather than row level.
+    ROUNDING IS NOT GROUPING. `round(y, 1)` puts two words on different rows
+    whenever they straddle a boundary, however close they are -- and glyph
+    extents make that a coin flip, not a property of the figure. Measured:
+    fig25's four bar-label heads sit at y0 339.0485, 339.0485, 339.0504,
+    339.0504, a spread of 0.0019pt, and `round` split them into 339.0 and
+    339.1 because `RSL3`/`FSP1i` are cap-height while `Bliss`/`Observed`
+    carry ascenders. A correct figure then failed being told its bars were
+    mislabelled. This file had already diagnosed the same knife edge for the
+    caption row and fixed it only there.
     """
-    out = {}
-    for x, y, t in words:
-        out.setdefault(round(y, 1), []).append((x, t))
+    out = []
+    for item in sorted(items, key=key):
+        if out and abs(key(item) - key(out[-1][-1])) <= tol:
+            out[-1].append(item)
+        else:
+            out.append([item])
     return out
+
+
+def _rows(words):
+    """Group words into rows by y, tolerantly, as `representative_y -> [(x, text)]`.
+
+    Two panels drawn side by side share y coordinates for their tick labels and
+    axis captions, so "same row" is what identifies a horizontal series -- and,
+    when both panels land in one row, what makes a per-panel check have to work
+    at word level rather than row level.
+    """
+    return {round(min(y for _, y, _ in row), 1): [(x, t) for x, _, t in row]
+            for row in _cluster_rows(words, key=lambda w: w[1])}
+
+
+def _row_containing(rows, y, tol=1.5):
+    """The row whose key is nearest `y`, or raise if none is close."""
+    near = sorted(rows, key=lambda k: abs(k - y))
+    assert near and abs(near[0] - y) <= tol, (
+        f"no row within {tol}pt of y={y:.2f}; rows are at "
+        f"{sorted(rows)[:8]}")
+    return rows[near[0]]
 
 
 def _words(stem):
@@ -776,7 +808,8 @@ def test_fig25_binds_each_pair_to_its_own_score():
     # nearest-neighbour. Neither was true: the gap is 73.8pt, and
     # nearest-neighbour is what fig26's unit check does -- this is a split,
     # and the difference is exactly why the fixed cut it replaced broke.)
-    row_words = _boxed_rows("fig25_bliss_synergy")[round(caption[0][1], 1)]
+    row_words = _row_containing(_boxed_rows("fig25_bliss_synergy"),
+                                caption[0][1])
     gaps = [(row_words[i + 1][0] - row_words[i][1], i)      # EDGE to edge
             for i in range(len(row_words) - 1)]
     cap_row = [t for _, _, t in row_words]
@@ -1000,8 +1033,17 @@ def test_fig24_draws_its_hypoxia_numbers():
             # (Two earlier versions of this comment were wrong here: one said
             # both entries resolved to the same colour, the other quoted 13pt,
             # which is the label-to-label pitch and not any swatch distance.)
+            # LEFT OF THE TEXT, AND CLOSE TO IT. There was no x term at all,
+            # so `sorted` picked the nearest candidate ANYWHERE on the row --
+            # and once the bars are narrower than 40pt the SDT normoxic BAR,
+            # 87pt to the right, sat 3.28pt from `Hypoxic` and beat that
+            # entry's own swatch at 4.20pt. Both entries then resolved to the
+            # same colour and a correct figure was told it drew one colour
+            # twice. A legend swatch is immediately left of its label; the
+            # real one is 22.4pt left, the impostor 87pt right.
             near = sorted((abs(r[2] - y), r) for r in rects
-                          if abs(r[2] - y) < 8 and r[1] - r[0] < 40)
+                          if abs(r[2] - y) < 8 and r[1] - r[0] < 40
+                          and 0 < x - r[1] < 40)
             assert near, f"fig24's {t!r} legend entry has no swatch beside it"
             legend[t] = near[0][1][4]
     assert set(legend) == {"Normoxic", "Hypoxic"}, (
@@ -1193,7 +1235,16 @@ def test_fig24_draws_its_hypoxia_numbers():
     for name in ("SDT", "RSL3"):
         drawn = (refs[ref_colour[name]][0] - ty0) / scale + tv0
         want = kills[name][0]
-        assert abs(drawn - want) <= max(1.0, 0.03 * want), (
+        # 0.1pp, KEYED TO THE READING ERROR. `max(1.0, 0.03 * want)` gave
+        # 1.00pp for RSL3 and 2.76pp for SDT against a mapping whose worst
+        # residual across seven style variations is 0.013pp -- about 200x too
+        # wide. It let `rsl3_norm + 0.9` pass (a 25% relative error) and
+        # `sdt_norm - 2.7` pass, which is 65% of the whole normoxic-hypoxic
+        # gap the panel exists to show. It is also the tolerance shape this
+        # file rejects for the collapse ratio: a floor and a relative term
+        # where the floor wins for one value and the term for the other, so
+        # both failure modes are live in one expression.
+        assert abs(drawn - want) <= 0.1, (
             f"fig24's panel (b) draws {name}'s normoxic reference at "
             f"{drawn:.1f}% on its own y scale and the data gives "
             f"{want:.1f}%. That line is what the depth curves are compared "
@@ -1323,7 +1374,14 @@ def test_fig26_draws_the_timepoints_its_fixture_holds():
     # together, so only adjacent concatenations count, and only on the rows
     # the band above already identified as tick rows.
     tick_ys = {round(y, 1) for y in sorted(by_row, reverse=True)[:2]}
-    adjacent = {expected[i] + expected[i + 1] for i in range(len(expected) - 1)}
+    # RUNS OF ANY LENGTH, not just pairs. Three or more labels can merge --
+    # `00.250.5` at one figure size, `00.250.50.751` with sixteen timepoints --
+    # and a pairs-only set stayed silent, letting the failure revert to the
+    # count message that drags in panel (b)'s GPX4 tick. The verdict was still
+    # a correct FAIL; the diagnosis regressed.
+    adjacent = {"".join(expected[i:j])
+                for i in range(len(expected))
+                for j in range(i + 2, len(expected) + 1)}
     merged = sorted({t for x, y, t in wds
                      if round(y, 1) in tick_ys and t in adjacent})
     assert not merged, (
@@ -1460,9 +1518,9 @@ def test_fig26_draws_the_timepoints_its_fixture_holds():
 # regeneration, so every platform hashes the same bytes with the same pinned
 # reader. That is why it can run in CI where the figures cannot be rebuilt.
 DRAWING_FINGERPRINTS = {
-    "fig24_hypoxia_killcurve": "c00563683483f7dd",
-    "fig25_bliss_synergy": "dd28d52f72699490",
-    "fig26_vulnerability_window": "59b34cf28b52fdad",
+    "fig24_hypoxia_killcurve": "3cd455312c46f0a7",
+    "fig25_bliss_synergy": "675b7c1ad552f2a8",
+    "fig26_vulnerability_window": "eb8fe32f4eb9eb1e",
 }
 
 
@@ -1538,10 +1596,16 @@ def _fingerprint(stem):
                 # A transparency group: no path items, but its bbox and
                 # blend/opacity are part of what the page shows.
                 r = d.get("rect")
+                # `isolated` and `knockout` belong HERE. They were in the
+                # path paint tuple, where PyMuPDF never sets them -- the group
+                # branch returns before that tuple is built -- so replacing
+                # both with names that do not exist left all three hashes
+                # unchanged. Inert keys read as coverage.
                 items.append(("group", d.get("level"),
                               None if r is None else
                               tuple(round(v, 2) for v in (r.x0, r.y0, r.x1, r.y1)),
-                              d.get("blendmode"), d.get("opacity")))
+                              d.get("blendmode"), d.get("opacity"),
+                              d.get("isolated"), d.get("knockout")))
                 continue
             if d.get("type") == "clip":
                 sc = d.get("scissor")
@@ -1564,8 +1628,7 @@ def _fingerprint(stem):
                         else d.get(k)
                         for k in ("width", "dashes", "stroke_opacity",
                                   "fill_opacity", "even_odd", "closePath",
-                                  "lineCap", "lineJoin", "isolated",
-                                  "knockout")))
+                                  "lineCap", "lineJoin")))
             for item in d["items"]:
                 kind, rest = item[0], item[1:]
                 coords = []
@@ -1595,7 +1658,27 @@ def _fingerprint(stem):
                 items.append((kind, tuple(coords), paint, d.get("level")))
     finally:
         doc.close()
-    blob = json.dumps({"words": words, "items": items}, sort_keys=True)
+    # RASTER IMAGES TOO. `get_drawings` returns no image XObjects and
+    # `get_text` cannot see them, so an entire layer was unread: painting a
+    # solid black raster over 18.9% of fig25 -- covering the panel -- left the
+    # hash byte-identical and all seven tests green. It is the one layer that
+    # can hide a whole figure, and it is reachable in this very file, since
+    # fig17 already draws its heatmaps with `imshow`. Both the xref metadata
+    # and where each image LANDS are recorded, because the same image moved
+    # is a different page.
+    doc = _reader().open(FIG_DIR / f"{stem}.pdf")
+    try:
+        page = doc[0]
+        images = []
+        for info in page.get_images(full=True):
+            rects = sorted(tuple(round(v, 2) for v in r)
+                           for r in page.get_image_rects(info[0]))
+            images.append((info[1:], rects))
+    finally:
+        doc.close()
+
+    blob = json.dumps({"words": words, "items": items, "images": images},
+                      sort_keys=True)
     return hashlib.sha256(blob.encode()).hexdigest()[:16]
 
 
