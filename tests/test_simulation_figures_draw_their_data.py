@@ -349,6 +349,36 @@ def _stroke_points(stem):
         doc.close()
 
 
+def _boxed_row_words(stem):
+    """Every word as `(x0, x1, y0, text)`."""
+    pymupdf = _reader()
+    doc = pymupdf.open(FIG_DIR / f"{stem}.pdf")
+    try:
+        return [(w[0], w[2], w[1], w[4]) for w in doc[0].get_text("words")]
+    finally:
+        doc.close()
+
+
+def _boxed_rows(stem):
+    """Rows of `(x0, x1, text)` keyed by rounded y, with word EXTENTS.
+
+    `_rows` keeps only each word's left edge, so a "gap" computed from it is
+    start-to-start and carries the width of the preceding word. That inflated
+    the typical gap enough to swallow the real one: at label size 13 the
+    between-group gap is 63.3pt and a start-to-start median put the threshold
+    just above it.
+    """
+    pymupdf = _reader()
+    doc = pymupdf.open(FIG_DIR / f"{stem}.pdf")
+    try:
+        out = {}
+        for w in doc[0].get_text("words"):
+            out.setdefault(round(w[1], 1), []).append((w[0], w[2], w[4]))
+        return {k: sorted(v) for k, v in out.items()}
+    finally:
+        doc.close()
+
+
 def _rows(words):
     """Group words by y, rounded, preserving `(x, text)` per row.
 
@@ -493,13 +523,25 @@ def test_fig25_draws_its_bliss_numbers():
         "not the same claim")
     # The two words sit 0.87pt apart vertically (57.115 and 57.985), so an
     # exact row key splits them; the annotation is one visual line.
-    ax, ay = hits[0]
+    _ax, ay = hits[0]
     # THE WHOLE VISUAL LINE, both directions. Filtering to `x >= ax - 1`
     # discarded anything drawn to the LEFT of the number, so prefixing the
     # annotation with `no ` negated the panel's claim and passed the check
     # written to pin that exact annotation.
-    line = sorted((x, t) for x, y, t in words_a
-                  if abs(y - ay) < 2 and x < min(pair_x))
+    # THE CONTIGUOUS RUN CONTAINING THE NUMBER. Bounding this by panel (b)'s
+    # pair labels held only while those labels stayed put: at a figure width
+    # of 8 or less they move left of the annotation's own trailing word, and a
+    # correct figure failed reading `1.99×` with its `synergy` dropped. The
+    # annotation is one visual run, so the run is what defines it.
+    same_row = sorted((x0, x1, t) for x0, x1, y, t in _boxed_row_words(
+        "fig25_bliss_synergy") if abs(y - ay) < 2)
+    at = next(i for i, (x0, _, t) in enumerate(same_row) if t == want)
+    lo = hi = at
+    while lo > 0 and same_row[lo][0] - same_row[lo - 1][1] < 20:
+        lo -= 1
+    while hi + 1 < len(same_row) and same_row[hi + 1][0] - same_row[hi][1] < 20:
+        hi += 1
+    line = [(x0, t) for x0, _, t in same_row[lo:hi + 1]]
     assert " ".join(t for _, t in line) == f"{want} synergy", (
         f"fig25's panel (a) synergy annotation reads "
         f"{' '.join(t for _, t in line)!r}, expected {want + ' synergy'!r}")
@@ -612,17 +654,36 @@ def test_fig25_binds_each_pair_to_its_own_score():
     assert len(caption) == 1, (
         f"fig25 draws the word `score` {len(caption)} times; the panel (b) "
         "x-axis caption cannot be identified")
-    # SCOPED TO PANEL (b) BY X. Panel (b)'s caption sits 0.35pt from panel
-    # (a)'s second-line bar labels (`alone alone expected combination`), and
-    # only `round(y, 1)` landing on 319.8 against 319.5 kept them apart. One
-    # point of `axes.labelsize` closes that gap to 0.006pt, merges the two
-    # groups into one row, and a CORRECT figure fails with a message accusing
-    # the panel of drawing the reciprocal. The two groups are 76 points apart
-    # in x, which is the difference that is actually real -- the same
-    # nearest-neighbour lesson fig26's unit check already learned.
-    _b0 = _panels("fig25_bliss_synergy")[-1][0]
-    cap_row = [t for x, t in sorted(_rows(words)[round(caption[0][1], 1)])
-               if x >= _b0 - 20]
+    # SPLIT ON THE GAP, not at a fixed x. Panel (b)'s caption shares a row
+    # with panel (a)'s second-line bar labels -- 0.35pt apart at the committed
+    # label size, 0.006pt at one point larger, so `round(y, 1)` alone stops
+    # separating them. An absolute cut near panel (b)'s spine fixed that and
+    # broke something worse: the caption is CENTRED, so once it is wider than
+    # its panel its leading word falls left of the cut and is dropped --
+    # measured, every `axes.labelsize` from 16 up and every figure width of 8
+    # or less failed on a correct figure, where the fixed cut had failed at
+    # exactly one label size. A knife edge became an open-ended one.
+    #
+    # What is real is the space between the two groups: measured edge to edge,
+    # `combination` ends at 325.4 and `Bliss` starts at 399.1, a gap of 73.8pt
+    # at the committed size and 63.3pt at label size 13, against word spacing
+    # of a few points inside either group. So the row is split at its widest
+    # gap when that gap dwarfs the typical one, and the right-hand group is
+    # panel (b)'s caption. No width ceiling.
+    #
+    # (An earlier version of this comment said 76pt and called the approach
+    # nearest-neighbour. Neither was true: the gap is 73.8pt, and
+    # nearest-neighbour is what fig26's unit check does -- this is a split,
+    # and the difference is exactly why the fixed cut it replaced broke.)
+    row_words = _boxed_rows("fig25_bliss_synergy")[round(caption[0][1], 1)]
+    gaps = [(row_words[i + 1][0] - row_words[i][1], i)      # EDGE to edge
+            for i in range(len(row_words) - 1)]
+    cap_row = [t for _, _, t in row_words]
+    if gaps:
+        widest, at = max(gaps)
+        typical = sorted(g for g, _ in gaps)[len(gaps) // 2]
+        if widest > max(20.0, 3 * typical):
+            cap_row = [t for _, _, t in row_words[at + 1:]]
     assert " ".join(cap_row) == "Bliss synergy score (observed / expected)", (
         f"fig25's panel (b) x axis reads {' '.join(cap_row)!r}; the values "
         "compared here are the observed-over-expected ratio, and the "
@@ -914,27 +975,35 @@ def test_fig24_draws_its_hypoxia_numbers():
     # rotated label dropped ON TOP of panel (a)'s own bars counted as
     # labelling panel (b), and the message asserted a conclusion the bound
     # could not support.
-    (a_x0, a_x1), (b_x0, b_x1) = px[0], px[-1]
+    (a_x0, _a_x1), (b_x0, b_x1) = px[0], px[-1]
     assert kill_axes[0] < a_x0, (
         f"fig24's leftmost `Overall tumor kill (%)` label is at "
         f"x={kill_axes[0]:.0f}, inside panel (a) rather than left of its axis "
         f"at x={a_x0:.0f}. Panel (a)'s values are drawn without the axis "
         "label that says what they are")
-    # SLACK KEYED TO PANEL WIDTH, and a claim the bound can support. A y-axis
-    # label is drawn just outside its own axes, and panel (b)'s sits only
-    # 7.6pt clear of panel (a)'s right spine -- so a larger font or a narrower
-    # figure slides it a couple of points INSIDE that spine while it still
-    # plainly labels panel (b). The bound now allows an intrusion of 5% of a
-    # panel's width and says what it actually detects; a label dropped in the
-    # middle of panel (a) (round 9's mutation put one at x=308 against a
-    # spine at 330) is still far outside it.
-    slack = (a_x1 - a_x0) * 0.05
-    assert a_x1 - slack < kill_axes[1] < b_x0, (
-        f"fig24's second `Overall tumor kill (%)` label is at "
-        f"x={kill_axes[1]:.0f}, which is not just outside panel (b)'s left "
-        f"edge ({b_x0:.0f}) -- it sits more than {slack:.0f}pt inside panel "
-        f"(a), whose axis ends at {a_x1:.0f}, so it is labelling panel (a)'s "
-        "data rather than panel (b)'s")
+    # EACH LABEL SITS THE SAME DISTANCE LEFT OF ITS OWN AXIS. That offset is
+    # 48.2pt for both panels on the committed figure -- identical, because it
+    # is set by the tick labels and the font, not by where the panel is. So
+    # the invariant is that the two offsets AGREE, which needs no slack and
+    # does not care about the figure's width.
+    #
+    # The bound this replaces was `a_x1 - 5% of panel width < x < b_x0`, and
+    # its slack scaled the wrong way: the label's intrusion into panel (a) is
+    # font-derived and absolute, so as the figure narrows the intrusion grows
+    # while the slack shrinks. Measured, a correct fig24 at width 7 intruded
+    # 12.6pt against 8.9pt of slack and failed.
+    off_a = a_x0 - kill_axes[0]
+    off_b = b_x0 - kill_axes[1]
+    assert off_a > 0 and off_b > 0, (
+        f"fig24 draws a `Overall tumor kill (%)` label at x={kill_axes} that "
+        f"is not left of its own axis (panels start at {a_x0:.0f} and "
+        f"{b_x0:.0f}); a y-axis label sits outside the data it labels")
+    tol = max(4.0, 0.15 * max(off_a, off_b))
+    assert abs(off_a - off_b) <= tol, (
+        f"fig24's two `Overall tumor kill (%)` labels sit {off_a:.0f}pt and "
+        f"{off_b:.0f}pt left of their panels' axes. A y-axis label is offset "
+        "by its own tick labels and font, so the two should agree -- one of "
+        "these is not labelling the panel beside it")
 
     # PANEL (b)'S REFERENCE LINES, bound to PANEL (b)'S OWN LEGEND. Each
     # treatment's normoxic kill is drawn there as a dashed horizontal line,
@@ -1155,7 +1224,6 @@ def test_fig26_draws_the_timepoints_its_fixture_holds():
     # is which curve is still high at the last timepoint.
     p26 = _panels("fig26_vulnerability_window")
     a_lo, a_hi = p26[0]
-    segs = []
     doc_lines = _hlines_any("fig26_vulnerability_window")
     legend_col = {}
     for x, y, t in wds:
@@ -1299,6 +1367,7 @@ def _fingerprint(stem):
         # scanlines down to 164) without moving a single coordinate. Order in
         # the content stream IS paint order, and it is deterministic for a
         # given file, so keeping it costs nothing and closes occlusion.
+        # (kept as `words` because that is the JSON key the hash uses)
         words = spans
         items = []
         # extended=True ADDS THE CLIP STATE. Without it a path can be in the
