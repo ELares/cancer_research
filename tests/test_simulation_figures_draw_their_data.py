@@ -89,7 +89,7 @@ reversing it puts every number neatly on top of the wrong bar with the stream
 unchanged, inverting the synergy claim. Panel (a) is checked by position too.
 
 fig25's panel (b) draws each score on the same ROW as its pair label, and that
-row is the binding -- they are ~200 points apart in x, so "beside" was never
+row is the binding -- they are 226 to 305 points apart in x, so "beside" was never
 true and reading them as two parallel lists was reading draw order again.
 Mirroring the y coordinate in the generator's single drawing loop re-pairs
 every score with a different pair, leaving the text stream identical; it
@@ -536,8 +536,8 @@ def test_fig25_binds_each_pair_to_its_own_score():
     # with this test green. The docstring called this binding "direct"; it was
     # the same defect the fig17 guard was written for.
     #
-    # A label and its score share a row and are far apart in x (~300 against
-    # ~520), so the row is the only thing tying them together.
+    # A label and its score share a row and are 226 to 305 points apart in x,
+    # so the row is the only thing tying them together.
     words = _words("fig25_bliss_synergy")
     # NO PANEL FILTER HERE, deliberately. Panel (b)'s pair labels are its
     # y-tick labels, drawn to the LEFT of its own axes -- far enough left to
@@ -583,9 +583,16 @@ def test_fig25_binds_each_pair_to_its_own_score():
     # rather than points.
     # CENTRES. A tick label is centred on its tick, so its left edge is offset
     # by half its own width -- using x0 put the additive line at 1.08.
+    # `\d+(?:\.\d+)?`, NOT `\d+\.\d`. Panel (b)'s x limit is
+    # `max(scores) * 1.25`, so once the top score passes ~3.2 matplotlib
+    # switches to INTEGER tick labels and a one-decimal pattern matches none of
+    # them. Measured: raising RSL3+FSP1i's synergy to 3.5 -- a stronger result,
+    # the direction this figure argues for -- made a correct figure fail with
+    # "0 numeric x tick labels". This file already paid for that exact mistake
+    # once, in the pair-name regex a few blocks up.
     ticks = sorted((cx, float(t))
                    for cx, y, t in _word_centres("fig25_bliss_synergy")
-                   if re.fullmatch(r"\d+\.\d", t)
+                   if re.fullmatch(r"\d+(?:\.\d+)?", t)
                    and cx > fig25_panels[-1][0] - 20)
     assert len(ticks) >= 2, (
         f"fig25's panel (b) draws {len(ticks)} numeric x tick labels; its "
@@ -1085,8 +1092,9 @@ def test_fig26_draws_the_timepoints_its_fixture_holds():
 # The backstop
 # ---------------------------------------------------------------------------
 
-# Recorded fingerprints of what each figure DRAWS: every word with its
-# position, and every filled rectangle with its geometry and colour.
+# Recorded fingerprints of what each figure DRAWS: every text span with its
+# box, colour, size, font and opacity, and every path item with its geometry
+# and every paint property, in paint order.
 #
 # WHY THIS EXISTS. Eight adversarial rounds found eight different elements
 # whose ARRANGEMENT was unchecked -- annotations at fixed offsets, annotations
@@ -1115,9 +1123,9 @@ def test_fig26_draws_the_timepoints_its_fixture_holds():
 # regeneration, so every platform hashes the same bytes with the same pinned
 # reader. That is why it can run in CI where the figures cannot be rebuilt.
 DRAWING_FINGERPRINTS = {
-    "fig24_hypoxia_killcurve": "07e6250620223912",
-    "fig25_bliss_synergy": "4a220e7221e8c2b5",
-    "fig26_vulnerability_window": "5558f5a7ece1f7e2",
+    "fig24_hypoxia_killcurve": "0de71938d0e45c74",
+    "fig25_bliss_synergy": "a448b5531b00b674",
+    "fig26_vulnerability_window": "7b460b5418a91451",
 }
 
 
@@ -1161,10 +1169,24 @@ def _fingerprint(stem):
         for block in page.get_text("dict")["blocks"]:
             for line in block.get("lines", ()):
                 for span in line["spans"]:
+                    # ALPHA TOO. Colour was closed and the property next to
+                    # it reaching the identical outcome was not: `alpha=0.0`
+                    # on fig24's four bar annotations renders 0 non-white
+                    # pixels where the committed figure renders 1176, with
+                    # every span's bbox, colour, size and font unchanged and
+                    # all sixteen tests green. Paths already had their two
+                    # opacities hashed; text did not.
                     spans.append((tuple(round(v, 2) for v in span["bbox"]),
                                   span["text"], span["color"],
-                                  round(span["size"], 2), span.get("font")))
-        words = sorted(spans, key=str)
+                                  round(span["size"], 2), span.get("font"),
+                                  span.get("alpha")))
+        # DOCUMENT ORDER, NOT SORTED. Sorting made the hash blind to what is
+        # drawn on top of what: `zorder=0` on fig25's additive threshold line
+        # hides 77% of it behind the bars it is the reference for (709 visible
+        # scanlines down to 164) without moving a single coordinate. Order in
+        # the content stream IS paint order, and it is deterministic for a
+        # given file, so keeping it costs nothing and closes occlusion.
+        words = spans
         items = []
         for d in page.get_drawings():
             # EVERY PAINT PROPERTY, not just the two colours. Width, dash
@@ -1210,8 +1232,7 @@ def _fingerprint(stem):
                 items.append((kind, tuple(coords), paint))
     finally:
         doc.close()
-    blob = json.dumps({"words": words, "items": sorted(items, key=str)},
-                      sort_keys=True)
+    blob = json.dumps({"words": words, "items": items}, sort_keys=True)
     return hashlib.sha256(blob.encode()).hexdigest()[:16]
 
 
