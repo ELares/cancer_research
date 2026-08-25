@@ -1539,14 +1539,19 @@ def test_fig26_draws_the_timepoints_its_fixture_holds():
     cap_y = min(y for x, y, t in wds if t == "post-chemotherapy")
     numeric = [(x, y, t) for x, y, t in wds
                if re.fullmatch(r"\d+(?:\.\d+)?", t) and 0 < cap_y - y < 60]
-    by_row = {}
-    for x, y, t in numeric:
-        by_row.setdefault(round(y, 1), []).append((x, t))
+    # CLUSTERED, NOT ROUNDED. Found by searching for the shape rather than
+    # waiting for it to be reported: this accumulator still keyed rows on
+    # `round(y, 1)` after that was corrected at three other sites in this
+    # file. A row that straddles a rounding boundary splits, which both
+    # changes what `[:2]` below selects and lets a word fall outside the
+    # collision scan's row filter.
+    rows26 = _cluster_rows(numeric, key=lambda w: w[1])
+    rows26.sort(key=lambda r: -min(y for _, y, _ in r))   # nearest the caption
     band = []
-    for y in sorted(by_row, reverse=True):          # nearest the caption first
+    for row in rows26:
         if len(band) >= 2 * len(expected):
             break
-        band.extend(by_row[y])
+        band.extend((x, t) for x, _, t in row)
     # DIAGNOSE A COLLISION RATHER THAN JUST COUNTING. When two tick labels
     # overlap on the page PyMuPDF returns them as ONE word -- at font.size 15
     # panel (a) draws `0.250.5` -- and the figure really is defective, but a
@@ -1566,7 +1571,7 @@ def test_fig26_draws_the_timepoints_its_fixture_holds():
     # its x axis was unreadable. Only two labels drawn side by side can run
     # together, so only adjacent concatenations count, and only on the rows
     # the band above already identified as tick rows.
-    tick_ys = {round(y, 1) for y in sorted(by_row, reverse=True)[:2]}
+    tick_ys = {round(y, 2) for row in rows26[:2] for _, y, _ in row}
     # RUNS OF ANY LENGTH, not just pairs. Three or more labels can merge --
     # `00.250.5` at one figure size, `00.250.50.751` with sixteen timepoints --
     # and a pairs-only set stayed silent, letting the failure revert to the
@@ -1576,7 +1581,8 @@ def test_fig26_draws_the_timepoints_its_fixture_holds():
                 for i in range(len(expected))
                 for j in range(i + 2, len(expected) + 1)}
     merged = sorted({t for x, y, t in wds
-                     if round(y, 1) in tick_ys and t in adjacent})
+                     if any(abs(y - ty) < 1.0 for ty in tick_ys)
+                     and t in adjacent})
     assert not merged, (
         f"fig26 draws {merged} as single words: adjacent tick labels have "
         "collided and been run together, so the axis is unreadable at this "
