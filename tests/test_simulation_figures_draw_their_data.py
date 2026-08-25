@@ -76,9 +76,13 @@ the places where no assertion would name it:
   remedy is to wrap the title, and that now works -- wrapping both fig26
   titles at that size passes.
 
-- **A panel needs at least one horizontal spine.** `_panels` locates panels
-  from long horizontal axis rules, so turning off BOTH `axes.spines.top` and
-  `axes.spines.bottom` removes what it looks for. Any single spine removed is
+- **A panel needs at least one horizontal spine DRAWN.** `_panels` locates
+  panels from long horizontal axis rules, so turning off BOTH
+  `axes.spines.top` and `axes.spines.bottom` removes what it looks for -- and
+  so does `axes.linewidth: 0`, which leaves the spines enabled and draws
+  nothing. That is how `seaborn-v0_8`, `-dark` and `-darkgrid` reach this
+  limit; naming only the `spines.*` route would have read as though a style
+  that sets neither were safe. Any single spine removed is
   fine, including `bottom`, whose absence used to put the axis 6.8pt out and
   silently emptied fig26's x scale.
 
@@ -99,12 +103,20 @@ the places where no assertion would name it:
   left` shifts every label relative to its tick, and the additive line then
   read 0.92 instead of 1.0, accusing a correct figure of moving the line that
   every score on the panel is compared against. A style that sets
-  `xtick.major.size: 0` or `ytick.major.size: 0`, which every `seaborn-v0_8`
-  grid preset does, therefore fails loudly with "shows 0 tick marks" or
+  `xtick.major.size: 0` or `ytick.major.size: 0` therefore fails loudly with
+  "shows 0 tick marks" or
   "its scale cannot be recovered" rather than silently. This project's own
   rcParams set neither, and the failure names its cause, so it is a stated
   requirement rather than a defect to chase: a label-centre fallback was tried
   and reintroduced the bias it was built to remove.
+
+  Which styles those are, measured on the pinned matplotlib 3.11.1 rather
+  than characterised: six of the 28 available -- `fivethirtyeight`,
+  `seaborn-v0_8`, `-dark`, `-darkgrid`, `-white` and `-whitegrid`. An earlier
+  version of this bullet said "every `seaborn-v0_8` grid preset", which is
+  wrong in both directions: `-white` and `-dark` are not grid presets and do
+  set it, while `-ticks` (6.0) and `-talk` (3.5) are seaborn and do not, and
+  `fivethirtyeight` is not seaborn at all.
 
   This bullet was WRONG about fig24 until the fallback was deleted. fig24 kept
   one, widening its bound 0.1pp -> 1.5pp when no marks were drawn, so under
@@ -422,6 +434,46 @@ def _panels(stem):
     return sorted(best[1])
 
 
+def _axes_box(stem):
+    """The plotting area's (top, bottom), from the CLIP matplotlib applies.
+
+    THE CLIP IS THE ANSWER, and three rounds of hunting for it in the spines
+    were the wrong question. matplotlib clips a panel's artists to its axes
+    rectangle, so `get_drawings(extended=True)` carries a `clip` entry whose
+    `scissor` IS the plotting area -- measured identical to `_panel_y` on all
+    three committed figures, (52.56, 302.04) in every case.
+
+    What that removes, all at once: it does not care whether a spine is drawn,
+    so no despining breaks it; it does not care how far a confidence band
+    reaches, because the band is the thing being clipped; and it does not care
+    about `axes.xmargin`, `ytick.alignment` or any other placement rcParam,
+    because a scissor is geometry the renderer emitted rather than a property
+    inferred from what happened to be drawn.
+
+    Returns None when no clip spans a panel, and the spine and tick paths stay
+    behind it for that case.
+    """
+    pymupdf = _reader()
+    panel_x = _panels(stem)
+    doc = pymupdf.open(FIG_DIR / f"{stem}.pdf")
+    try:
+        boxes = []
+        for d in doc[0].get_drawings(extended=True):
+            if d.get("type") != "clip":
+                continue
+            sc = d.get("scissor")
+            if sc is None:
+                continue
+            if any(abs(sc.x0 - lo) < 1 and abs(sc.x1 - hi) < 1
+                   for lo, hi in panel_x):
+                boxes.append((sc.y0, sc.y1))
+    finally:
+        doc.close()
+    if not boxes:
+        return None
+    return min(b[0] for b in boxes), max(b[1] for b in boxes)
+
+
 def _long_vertical_ends(stem):
     """Both y ends of every long vertical rule STANDING ON A PANEL EDGE.
 
@@ -440,32 +492,58 @@ def _long_vertical_ends(stem):
     first and last data points ON the spine -- a fact this file documents in
     two other places -- so the band's own outer edges land exactly there.
 
-    What is left is that a spine runs the WHOLE height of the axes, so at any
-    given panel edge it is the longest stroke there. A band spans its data
-    and is shorter, whatever its x.
+    "Longest at each panel edge" was the next attempt and it is FALSE in the
+    configuration the paragraph above names. PyMuPDF returns PRE-CLIP
+    geometry, so a band edge running from above the axes to below them is
+    LONGER than the spine: at fig26's shared edge with `axes.xmargin: 0` and
+    a band wider than the y range, the spine is 249.48 and two band edges are
+    272.36 and 272.17, so the reduction picked a band and `_axes_top` returned
+    -66.61 for a true 52.56.
+
+    This helper is now a FALLBACK behind `_axes_box`, which reads the clip
+    matplotlib actually applies and is not guessing at all. What is kept here
+    is the part that does hold: a stroke enclosed by a clip spanning the whole
+    panel is that panel's DATA, whatever its length, and the reduction is
+    keyed on the panel EDGE rather than on the stroke's own x -- an earlier
+    version keyed on `round(a.x, 1)`, so a stroke admitted by the 1pt
+    tolerance but more than 0.05pt off got its own key and was never reduced
+    against the spine at all.
     """
     pymupdf = _reader()
-    edges = {x for panel in _panels(stem) for x in panel}
+    panel_x = _panels(stem)
+    edges = {x for panel in panel_x for x in panel}
     doc = pymupdf.open(FIG_DIR / f"{stem}.pdf")
     try:
+        clipped_to_panel = False
         longest = {}
-        for d in doc[0].get_drawings():
-            if d.get("color") is None:
+        for d in doc[0].get_drawings(extended=True):
+            if d.get("type") == "clip":
+                sc = d.get("scissor")
+                clipped_to_panel = sc is not None and any(
+                    abs(sc.x0 - lo) < 1 and abs(sc.x1 - hi) < 1
+                    for lo, hi in panel_x)
+                continue
+            if d.get("type") == "group" or d.get("color") is None:
                 continue
             dashes = (d.get("dashes") or "").strip()
             if dashes and dashes != "[] 0":
+                continue
+            if clipped_to_panel:      # this is a panel's data, not its frame
                 continue
             for item in d["items"]:
                 if item[0] != "l":
                     continue
                 a, b = item[1], item[2]
-                if (abs(a.x - b.x) < 0.5 and abs(b.y - a.y) > 100
-                        and any(abs(a.x - e) < 1 for e in edges)):
-                    key = round(a.x, 1)
-                    span = (min(a.y, b.y), max(a.y, b.y))
-                    if key not in longest or (span[1] - span[0]) > (
-                            longest[key][1] - longest[key][0]):
-                        longest[key] = span
+                if abs(a.x - b.x) >= 0.5 or abs(b.y - a.y) <= 100:
+                    continue
+                near = [e for e in edges if abs(a.x - e) < 1]
+                if not near:
+                    continue
+                key = round(near[0], 1)          # THE EDGE, not the stroke
+                span = (min(a.y, b.y), max(a.y, b.y))
+                if key not in longest or (span[1] - span[0]) > (
+                        longest[key][1] - longest[key][0]):
+                    longest[key] = span
         return [v for span in longest.values() for v in span]
     finally:
         doc.close()
@@ -526,6 +604,10 @@ def _panel_y(stem):
     # having no scale at all. The ticks stay as the last resort, for a figure
     # despined on every side.
     if len(ys) < 2:
+        box = _axes_box(stem)
+        if box is not None:
+            ys |= {round(v, 2) for v in box}
+    if len(ys) < 2:
         ys |= {round(v, 2) for v in _long_vertical_ends(stem)}
     if len(ys) < 2:
         tick_ys = {round(a.y, 2) for _, _, _, _, _, a, _ in _axis_ticks(stem)}
@@ -547,9 +629,13 @@ def _axes_top(stem):
     as `(a) Kill collapse under hypoxia 100 Normoxic (uniform O2) ...`.
 
     Either spine gives the same answer, so both are read: the top horizontal
-    rule spanning a panel, and the upper end of a long vertical rule. Anything
-    drawn INSIDE the axes has a larger y than their top, so taking the minimum
-    is safe against data strokes.
+    rule spanning a panel, and the upper end of a long vertical rule.
+
+    "Anything drawn INSIDE the axes has a larger y than their top, so taking
+    the minimum is safe against data strokes" stood here and is FALSE, which
+    the body of this function goes on to say: PyMuPDF reports pre-clip
+    geometry, so a confidence band reaches above the axes with no spine
+    missing at all. `_axes_box` is consulted first for exactly that reason.
 
     Returns None when the top genuinely cannot be established -- one lone
     horizontal rule and no vertical spine, which is what `axes.spines.left`,
@@ -597,6 +683,9 @@ def _axes_top(stem):
     # missing spine at all. Widening fig26's band to +/-23pp returned an axes
     # top of 16.28 against a true 52.56, and every figure reported having no
     # title, which is round 23's symptom reached by a second route.
+    box = _axes_box(stem)
+    if box is not None:
+        return box[0]
     vert = _long_vertical_ends(stem)
     if vert:
         return min(vert + horiz)
@@ -1648,8 +1737,11 @@ def test_fig25_binds_each_pair_to_its_own_score():
     # sub-additive, and only the fingerprint noticed. Panel (b)'s x tick
     # labels give the scale, so the line's position is checked in DATA units
     # rather than points.
-    # CENTRES. A tick label is centred on its tick, so its left edge is offset
-    # by half its own width -- using x0 put the additive line at 1.08.
+    # THE CENTRE IS NOW ONLY AN X FILTER. This block used to take the label's
+    # centre as its POSITION, because a label is centred on its tick and using
+    # `x0` put the additive line at 1.08. Position comes from the tick marks
+    # now, so what survives here is `cx` deciding which labels belong to panel
+    # (b) and, below, which mark each label sits nearest.
     # `\d+(?:\.\d+)?`, NOT `\d+\.\d`. Panel (b)'s x limit is
     # `max(scores) * 1.25`, so once the top score passes ~3.2 matplotlib
     # switches to INTEGER tick labels and a one-decimal pattern matches none of
@@ -1673,15 +1765,36 @@ def test_fig25_binds_each_pair_to_its_own_score():
          in _axis_ticks_vertical("fig25_bliss_synergy")
          if b_lo - 1 <= a.x <= b_hi + 1],
         axis_at=bottom)
-    values = sorted(float(t)
+    labels = sorted((cx, float(t))
                     for cx, y, t in _word_centres("fig25_bliss_synergy")
                     if re.fullmatch(r"\d+(?:\.\d+)?", t) and cx > b_lo - 20)
-    assert len(mark_xs) >= 2 and len(mark_xs) == len(values), (
+    assert len(mark_xs) >= 2 and len(mark_xs) == len(labels), (
         f"fig25's panel (b) shows {len(mark_xs)} x tick marks against "
-        f"{len(values)} numeric labels; its scale cannot be recovered")
-    # Marks and labels are both in ascending order, so pairing by order is
-    # unambiguous once the counts agree.
-    ticks = list(zip(mark_xs, values))
+        f"{len(labels)} numeric labels; its scale cannot be recovered")
+    # PAIR EACH MARK WITH THE LABEL NEAREST IT, NOT BY RANK. Taking the mark
+    # positions was right -- a label's own x carries the font's glyph bias and
+    # moves with `xtick.alignment`. Sorting the VALUES and zipping them onto
+    # the marks was not: it manufactures the ascending order that the comment
+    # here then claimed to have observed, so a label sitting on the wrong tick
+    # became invisible. Relabelling panel (b)'s ticks `0.0 0.5 2.0 1.5 1.0`
+    # left the additive line under a label reading 2.0 -- every score on the
+    # panel compared against a line the axis says is somewhere else -- and
+    # passed every semantic check, where the label-based reading it replaced
+    # had caught it.
+    #
+    # Nearest-in-x keeps the association the figure actually draws while still
+    # taking position from the marks.
+    ticks = [(mx, min(labels, key=lambda lv: abs(lv[0] - mx))[1])
+             for mx in mark_xs]
+    assert len({min(labels, key=lambda lv: abs(lv[0] - mx))[0]
+                for mx in mark_xs}) == len(mark_xs), (
+        "fig25's panel (b) has two tick marks claiming the same label; the "
+        "axis scale cannot be attributed")
+    drawn_values = [v for _, v in ticks]
+    assert all(b > a for a, b in zip(drawn_values, drawn_values[1:])), (
+        f"fig25's panel (b) x tick labels read {drawn_values} left to right "
+        "and must ascend. A label on the wrong tick moves the additive line "
+        "relative to the scores without moving either")
     (tx0, tv0), (tx1, tv1) = ticks[0], ticks[-1]
     scale = (tx1 - tx0) / (tv1 - tv0)
     dashed = sorted(x for x, y0, y1, col
