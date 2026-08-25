@@ -108,6 +108,7 @@ anything a reader takes as identifying a value -- a label, a unit, a position
 in a series -- is compared by geometry, and the text stream is treated as
 evidence of content only, never of arrangement.
 """
+import hashlib
 import json
 import re
 from pathlib import Path
@@ -187,6 +188,25 @@ def _filled_rects(stem):
         return out
     finally:
         doc.close()
+
+
+def _vertical_labels(words):
+    """Rotated axis labels, as `x -> "the words bottom to top"`.
+
+    A y-axis label is drawn rotated, so its words share an x and differ in y.
+    Grouping on x recovers each panel's label separately, which counting
+    occurrences cannot: fig24 gives both panels the same y-axis text, so
+    `text.count(...) == 2` was satisfied while panel (a) had NO label at all
+    (its words moved to the title) and again while panel (a) was relabelled and
+    a second copy added to panel (b). A count cannot say where anything is.
+    """
+    cols = {}
+    for x, y, t in words:
+        cols.setdefault(round(x, 1), []).append((y, t))
+    # BOTTOM TO TOP. A 90-degree rotated label puts its first word at the
+    # LARGEST y, so reading in ascending y gives "(%) kill tumor Overall".
+    return {x: " ".join(t for _, t in sorted(ws, reverse=True))
+            for x, ws in cols.items() if len(ws) > 1}
 
 
 def _rows(words):
@@ -299,9 +319,13 @@ def test_fig25_draws_its_bliss_numbers():
         f"fig25's panel (a) does not annotate "
         f"{fx['synergy_score']:.2f}x synergy; panel (b) drawing that number "
         "as a bar label is not the same claim")
-    assert "Persister kill (%)" in text, (
-        "fig25's panel (a) y axis no longer reads `Persister kill (%)`; the "
-        "four values compared above are drawn as percentages")
+    # BY POSITION, for the reason fig24's needed it: a containment check does
+    # not say WHICH panel carries the label, or that any panel does.
+    cols = _vertical_labels(_words("fig25_bliss_synergy"))
+    assert sorted(cols.values()).count("Persister kill (%)") == 1, (
+        "fig25 does not draw `Persister kill (%)` as a y-axis label exactly "
+        f"once; vertical labels found: {sorted(cols.values())}. The four "
+        "values compared above are drawn as percentages")
 
     # THE COHORT SIZE. It is drawn as a footnote and was compared against
     # nothing, so the figure could claim any n. It is a real field of the
@@ -386,10 +410,21 @@ def test_fig25_binds_each_pair_to_its_own_score():
     # THE SCORE'S DEFINITION. Panel (b)'s values are pinned and the caption
     # saying what they MEAN was not: flipping it to "(expected / observed)"
     # inverts every score on the panel and passed.
-    assert "Bliss synergy score (observed / expected)" in text, (
-        "fig25's panel (b) x axis no longer defines the score as "
-        "`observed / expected`; the values compared here are that ratio, and "
-        "the reciprocal is a different claim")
+    # Panel (b)'s caption is horizontal, so position is its row. Bind it to
+    # the panel by requiring it to sit to the RIGHT of every pair label, which
+    # is what makes it panel (b)'s caption rather than a string anywhere.
+    caption = [(x, y) for x, y, t in words if t == "score"]
+    assert len(caption) == 1, (
+        f"fig25 draws the word `score` {len(caption)} times; the panel (b) "
+        "x-axis caption cannot be identified")
+    cap_row = [t for _, t in sorted(_rows(words)[round(caption[0][1], 1)])]
+    assert " ".join(cap_row) == "Bliss synergy score (observed / expected)", (
+        f"fig25's panel (b) x axis reads {' '.join(cap_row)!r}; the values "
+        "compared here are the observed-over-expected ratio, and the "
+        "reciprocal is a different claim about every bar on the panel")
+    assert caption[0][0] > max(x for x, _, t in names), (
+        "fig25's score caption is not to the right of its pair labels, so it "
+        "is not panel (b)'s x axis")
     assert by_row[key] == f"{fx['synergy_score']:.2f}×", (
         f"fig25 draws {key} on the same row as {by_row[key]} and the fixture "
         f"says {fx['synergy_score']:.2f}x -- the pair and the score beside it "
@@ -528,14 +563,27 @@ def test_fig24_draws_its_hypoxia_numbers():
     # The four bars are the series-coloured rectangles standing on the axis
     # baseline, which is the y1 they share and the legend swatches do not.
     rects = _filled_rects("fig24_hypoxia_killcurve")
+    # EXACTLY ONE ENTRY EACH. The scan is page-wide, and panel (b) draws
+    # `normoxic` and `(hypoxic)` in its own legend -- only their case and
+    # parentheses keep them out. Capitalising them there rebinds panel (a)'s
+    # colours through last-write-wins, so the count is checked rather than
+    # assumed.
+    for want in ("Normoxic", "Hypoxic"):
+        n = sum(1 for _, _, t in panel_a if t == want)
+        assert n == 1, (
+            f"{want!r} is drawn {n} times on fig24; the legend entry it names "
+            "can no longer be identified unambiguously")
     legend = {}
     for x, y, t in panel_a:
         if t in ("Normoxic", "Hypoxic"):
-            # MATCH ON THE TOP EDGE. Comparing the word's y0 to the rect's
-            # y1 picked the swatch of the entry ABOVE for both entries, so
-            # both resolved to the same colour and the check reported fig24
-            # drawing one colour twice. The swatch sits a few points below its
-            # own label; the entry above is a whole line away.
+            # MATCH ON THE TOP EDGE. A swatch sits ~4pt below its own
+            # label's top and ~13pt below the label above it, so comparing the
+            # word's y0 to the rect's BOTTOM edge (y1) puts the correct swatch
+            # 9.8pt away -- outside this tolerance -- and the entry resolves to
+            # nothing at all. Measured: with y1 the check fails as "Normoxic
+            # legend entry has no swatch beside it". (An earlier version of
+            # this comment said both entries resolved to the same colour;
+            # that is what happened at a wider tolerance, not at this one.)
             near = sorted((abs(r[2] - y), r) for r in rects
                           if abs(r[2] - y) < 8 and r[1] - r[0] < 40)
             assert near, f"fig24's {t!r} legend entry has no swatch beside it"
@@ -551,30 +599,57 @@ def test_fig24_draws_its_hypoxia_numbers():
     bars_drawn = sorted((r for r in rects
                          if r[4] in series and abs(r[3] - baseline) < 0.5),
                         key=lambda r: r[0])
-    assert len(bars_drawn) == 4, (
-        f"expected four bars standing on fig24's baseline, found "
-        f"{len(bars_drawn)}")
-    got = ["Normoxic" if r[4] == legend["Normoxic"] else "Hypoxic"
-           for r in bars_drawn]
-    assert got == ["Normoxic", "Hypoxic", "Normoxic", "Hypoxic"], (
-        f"fig24's bars read {got} LEFT TO RIGHT and its annotations are "
-        f"compared as {expected} -- normoxic then hypoxic within each "
-        "treatment. The numbers are sitting over bars of the other series")
+    # A ZERO-HEIGHT BAR DRAWS NO RECTANGLE AT ALL. matplotlib emits no `re`
+    # item for it, so requiring four false-failed on correct data: setting
+    # RSL3's hypoxic rate to 0.0 in the run AND the fixture together left every
+    # value, label and legend assertion passing and died here on "found 3". A
+    # zero rate is anticipated elsewhere in this figure -- the generator clamps
+    # its collapse denominator at 0.01 for exactly that -- and today's value is
+    # 0.1%. So each bar is matched to the annotation above it, and an
+    # annotation with no bar under it is a bar of height zero, not a defect.
+    assert bars_drawn, "fig24 draws no bars on its baseline at all"
+    assert len(bars_drawn) <= 4, (
+        f"fig24 draws {len(bars_drawn)} bars on its baseline, more than the "
+        "four its data has; something else is being read as a bar")
+    got = []
+    for x, t in bars:
+        under = [r for r in bars_drawn if r[0] - 1 <= x <= r[1] + 1]
+        if not under:
+            got.append(None)                        # a zero-height bar
+            continue
+        assert len(under) == 1, (
+            f"the annotation {t} at x={x:.0f} sits over {len(under)} bars")
+        got.append("Normoxic" if under[0][4] == legend["Normoxic"] else "Hypoxic")
+    want = ["Normoxic", "Hypoxic", "Normoxic", "Hypoxic"]
+    paired = [(g, w) for g, w in zip(got, want) if g is not None]
+    assert len(paired) >= 2, (
+        f"only {len(paired)} of fig24's four annotations have a bar beneath "
+        "them, so colour cannot say which series they belong to")
+    assert [g for g, _ in paired] == [w for _, w in paired], (
+        f"fig24's bars read {got} under its annotations, which are compared "
+        f"as {expected} -- normoxic then hypoxic within each treatment. The "
+        "numbers are sitting over bars of the other series")
 
     # THE UNIT THE BARS ARE IN. Four percentages are pinned above and nothing
     # said they were percentages: relabelling the axis "Overall tumor kill
     # (fraction surviving)" left every value in place and passed, inverting
     # what the bars mean. The same omission covered fig25's two axes.
-    # COUNTED, NOT MATCHED. fig24 gives BOTH panels the same y-axis label, so
-    # `"..." in text` is satisfied by panel (b)'s copy -- relabelling panel (a)
-    # alone as `(fraction surviving)` inverted what its bars mean and passed.
-    # That is the fourth time in this file a bare containment check was
-    # satisfied by the other panel. Two panels draw it, so two is the number.
-    assert text.count("Overall tumor kill (%)") == 2, (
-        f"fig24 draws `Overall tumor kill (%)` "
-        f"{text.count('Overall tumor kill (%)')} times, expected once per "
-        "panel. The four values compared above are drawn as percentages, and "
-        "a panel relabelled alone still leaves the other copy standing")
+    # BY POSITION. fig24 gives both panels the same y-axis label, so
+    # `"..." in text` is satisfied by panel (b)'s copy -- the third time in
+    # this file a bare containment check was answered by the other panel --
+    # after fig25's synergy annotation and fig26's `(days)` caption. The
+    # count that replaced it was no better: `== 2` held while panel (a) had no
+    # y-axis label at all (the words moved into its title), and held again
+    # while panel (a) was relabelled `(fraction surviving)` and a second copy
+    # added to panel (b). A count says how many, never where.
+    columns = _vertical_labels(panel_a)
+    kill_axes = sorted(x for x, lbl in columns.items()
+                       if lbl == "Overall tumor kill (%)")
+    assert len(kill_axes) == 2, (
+        f"fig24 draws `Overall tumor kill (%)` as a y-axis label at "
+        f"{len(kill_axes)} positions, expected one per panel. Columns found: "
+        f"{sorted(columns.values())}. The values compared above are drawn as "
+        "percentages")
 
     # And the collapse annotation must be the ratio of the two it names, not a
     # number carried along beside them.
@@ -673,16 +748,30 @@ def test_fig26_draws_the_timepoints_its_fixture_holds():
     # Both panels share the tick row, so the row holds 2N labels: the left N
     # are panel (a)'s and the right N panel (b)'s, and each must read in
     # ascending order.
-    # SELECTED BY THE BAND ABOVE THE CAPTION, not by requiring one exact row.
-    # Requiring a single row of 2N numerics false-failed on a layout-only
-    # change: `set_xticklabels(labels, rotation=45)` -- the ordinary fix for
-    # nine crowded ticks -- gives every label its own y and the row vanishes,
-    # and the guard then reported finding no ticks at all. The tick labels sit
-    # between the axes and the x-axis caption whatever their rotation, so the
-    # caption's own y is the anchor.
+    # ROWS ACCUMULATED UPWARD FROM THE CAPTION until 2N labels are in hand.
+    # Neither simpler rule survives rotation, and the two failures are
+    # different, which is why this took three attempts. Measured, with
+    # `set_xticklabels(labels, rotation=45)`:
+    #
+    #   unrotated          one row of 18, 14.7 above the caption
+    #   rotated on axA     TWO rows of 9, at 13.5 and 14.7
+    #   rotated on both    one row of 18, at 27.6 (the caption moves too)
+    #
+    # Requiring a single row of 2N fails the middle case; a fixed band of 25
+    # fails the last. Taking rows nearest the caption first and stopping at 2N
+    # handles all three, and stops well before the y-axis ticks, which are
+    # single-element rows 32 or more above it.
     cap_y = min(y for x, y, t in wds if t == "post-chemotherapy")
-    band = [(x, t) for x, y, t in wds
-            if re.fullmatch(r"\d+(?:\.\d+)?", t) and 0 < cap_y - y <= 25]
+    numeric = [(x, y, t) for x, y, t in wds
+               if re.fullmatch(r"\d+(?:\.\d+)?", t) and 0 < cap_y - y < 60]
+    by_row = {}
+    for x, y, t in numeric:
+        by_row.setdefault(round(y, 1), []).append((x, t))
+    band = []
+    for y in sorted(by_row, reverse=True):          # nearest the caption first
+        if len(band) >= 2 * len(expected):
+            break
+        band.extend(by_row[y])
     assert len(band) == 2 * len(expected), (
         f"expected {2 * len(expected)} numeric tick labels above fig26's "
         f"x-axis caption (both panels share the axis), found {len(band)}: "
@@ -700,11 +789,11 @@ def test_fig26_draws_the_timepoints_its_fixture_holds():
     # at each `Time` and require every caption to end in days.
     # EACH CAPTION'S UNIT IS ITS NEAREST ONE, by distance rather than by row.
     # Both panels' captions are drawn at the same y, so grouping by row merges
-    # them and a substring check is satisfied by the other panel's copy -- that
-    # bug shipped once already, as the fix for the round before it. Splitting
-    # the row at each `Time` fixed that but false-failed the moment the caption
-    # wrapped onto two lines. Nearest-unit works for both: adjacent on one row,
-    # and directly below when wrapped.
+    # them and a containment check is answered by the other panel's copy --
+    # that shipped once already, as the fix for the round before it. Splitting
+    # the row at each `Time` closed that and false-failed the moment the
+    # caption wrapped onto two lines. Nearest-unit handles both: the unit is
+    # adjacent on one row, and directly below when wrapped.
     units = [(x, y, t) for x, y, t in wds if re.fullmatch(r"\(\w+\)", t)]
     subjects = [(x, y, t) for x, y, t in wds if t == "post-chemotherapy"]
     assert len(subjects) == 2, (
@@ -722,3 +811,82 @@ def test_fig26_draws_the_timepoints_its_fixture_holds():
         "the generator, not a derived one -- if the window moved, the "
         "annotation would still read day 3 and this assertion would still "
         "pass, so it is a presence check and not a data guard")
+
+
+# ---------------------------------------------------------------------------
+# The backstop
+# ---------------------------------------------------------------------------
+
+# Recorded fingerprints of what each figure DRAWS: every word with its
+# position, and every filled rectangle with its geometry and colour.
+#
+# WHY THIS EXISTS. Six adversarial rounds found six different elements whose
+# ARRANGEMENT was unchecked -- annotations at fixed offsets, annotations
+# anchored to the wrong bar of a reversed zip, three sets of tick labels, a
+# legend, a label/value list, and finally the bar rectangles themselves, which
+# move under their own labels leaving every word untouched. Each round closed
+# the element it found and the next round found another. Closing them one at a
+# time is not converging, because the list is not the mutation SPACE.
+#
+# This is the space. Anything that moves, recolours, adds or removes a drawn
+# element changes the hash, so a seventh unchecked element cannot pass
+# silently -- it fails here even though no semantic check named it.
+#
+# It is deliberately a BACKSTOP, not a replacement. It says "something in the
+# drawing moved and nothing above noticed"; it cannot say what the change
+# means. That is the semantic checks' job, and they stay. When this fails,
+# either add the check that explains the change or update the hash on purpose.
+#
+# PORTABLE BY CONSTRUCTION: computed from the COMMITTED PDF, not from a
+# regeneration, so every platform hashes the same bytes with the same pinned
+# reader. That is why it can run in CI where the figures cannot be rebuilt.
+DRAWING_FINGERPRINTS = {
+    "fig24_hypoxia_killcurve": "f90cc9ea48092e48",
+    "fig25_bliss_synergy": "65a30b55c1132c4f",
+    "fig26_vulnerability_window": "2ae02e54ed384f63",
+}
+
+
+def _fingerprint(stem):
+    """A hash of everything drawn: words with positions, rects with colours."""
+    pymupdf = _reader()
+    path = FIG_DIR / f"{stem}.pdf"
+    assert path.exists(), f"{stem}.pdf is not committed"
+    doc = pymupdf.open(path)
+    try:
+        page = doc[0]
+        words = sorted((round(w[0], 2), round(w[1], 2), w[4])
+                       for w in page.get_text("words"))
+        rects = []
+        for d in page.get_drawings():
+            fill = d.get("fill")
+            for item in d["items"]:
+                if item[0] == "re":
+                    r = item[1]
+                    rects.append((round(r.x0, 2), round(r.y0, 2),
+                                  round(r.x1, 2), round(r.y1, 2),
+                                  None if fill is None
+                                  else tuple(round(c, 4) for c in fill)))
+    finally:
+        doc.close()
+    blob = json.dumps({"words": words, "rects": sorted(rects, key=str)},
+                      sort_keys=True)
+    return hashlib.sha256(blob.encode()).hexdigest()[:16]
+
+
+@pytest.mark.parametrize("stem", sorted(DRAWING_FINGERPRINTS))
+def test_nothing_in_the_drawing_moved_unnoticed(stem):
+    """The check that does not need to know what to look for.
+
+    Every assertion above had to be written for a specific element after a
+    specific defect. This one covers the elements nobody has thought about
+    yet, which is where all six review rounds found their defects.
+    """
+    got = _fingerprint(stem)
+    assert got == DRAWING_FINGERPRINTS[stem], (
+        f"{stem}'s drawing changed: fingerprint {got}, recorded "
+        f"{DRAWING_FINGERPRINTS[stem]}. Something moved, recoloured, appeared "
+        "or disappeared, and no check above noticed -- which is the case this "
+        "exists for. Work out what changed and either add the assertion that "
+        "explains it, or update the hash here deliberately if the new drawing "
+        "is correct. Do not update it to make the suite green.")
