@@ -76,24 +76,14 @@ the places where no assertion would name it:
   remedy is to wrap the title, and that now works -- wrapping both fig26
   titles at that size passes.
 
-- **A panel needs at least one horizontal spine DRAWN.** `_panels` locates
-  panels from long horizontal axis rules, so turning off BOTH
-  `axes.spines.top` and `axes.spines.bottom` removes what it looks for -- and
-  so does `axes.linewidth: 0`, which leaves the spines enabled and draws
-  nothing. That is how `seaborn-v0_8`, `-dark` and `-darkgrid` reach this
-  limit; naming only the `spines.*` route would have read as though a style
-  that sets neither were safe. Any single spine removed is
-  fine, including `bottom`, whose absence used to put the axis 6.8pt out and
-  silently emptied fig26's x scale.
-
-  The failure is NOT uniform, and an earlier version of this bullet said it
-  was ("every reader here aborts"). Measured with both off: fig25 aborts with
-  "no horizontal axis rules found", but fig24 returns `[(56.8, 176.4)]` and
-  fig26 returns `[(330.0, 446.4), (624.3, 781.2)]` -- LEGEND FRAMES, because a
-  legend frame is also a long horizontal rule and with the real ones gone
-  nothing outranks it. The suite still fails overall, so nothing ships, but
-  the mechanism is `_panels` mistaking a legend for a panel rather than
-  declining to answer.
+- **A panel no longer needs a spine at all.** This was a stated limit and is
+  retired: `_panels` read long horizontal rules, so turning off both
+  `axes.spines.top` and `axes.spines.bottom` -- or setting `axes.linewidth: 0`,
+  which leaves the spines enabled and draws nothing, as `seaborn-v0_8`,
+  `-dark` and `-darkgrid` do -- left it with nothing to find, and worse, it
+  then returned the two LEGEND FRAMES rather than declining. Panels come from
+  matplotlib's own clip now (`_panel_boxes`), which is emitted whether or not
+  a spine is painted, and both configurations pass.
 
 - **The figure must draw visible tick marks.** THREE scale readings -- fig24
   panel (b)'s reference lines, fig26's window shading, and fig25's additive
@@ -330,7 +320,66 @@ def _vertical_labels(words):
             for key, ws in cols.items() if len(ws) > 1}
 
 
+def _panel_boxes(stem):
+    """Each panel's RECTANGLE `(x0, y0, x1, y1)`, from matplotlib's own clip.
+
+    THE RENDERER STATES THIS; inferring it from the drawn rules was the source
+    of most of this file's defects. matplotlib clips a panel's artists to its
+    axes rectangle, so `get_drawings(extended=True)` carries a `clip` entry
+    whose scissor IS the panel. Discard the one covering the whole page, keep
+    the rectangles no other rectangle contains, and what remains is the
+    panels: the marker and legend clips are inside them.
+
+    Measured against the rule-based reader it replaces, which is kept below as
+    a fallback for a figure that clips nothing:
+
+      * identical x ranges on all five figures tried (fig24/25/26/27/17);
+      * fig27 is a 2x2 and this returns FOUR boxes where the rule-based
+        reader can only ever return two x ranges, because its rows share them;
+      * correct where the rule-based reader is WRONG rather than merely
+        absent -- with both horizontal spines off, or `axes.linewidth: 0`
+        (which `seaborn-v0_8`, `-dark` and `-darkgrid` set), that reader
+        returns the two LEGEND FRAMES, and under `seaborn-v0_8-dark` it
+        aborts entirely;
+      * unmoved by a legend placed outside the axes, which made that reader
+        report a third panel.
+
+    No size constant, no nesting-plus-grouping-plus-tie-break, no dashed-rule
+    guard: a clip is geometry the renderer emitted, not a property inferred
+    from what happened to be drawn.
+    """
+    pymupdf = _reader()
+    doc = pymupdf.open(FIG_DIR / f"{stem}.pdf")
+    try:
+        page = doc[0].rect
+        rects = {(round(r.x0, 1), round(r.y0, 1), round(r.x1, 1), round(r.y1, 1))
+                 for d in doc[0].get_drawings(extended=True)
+                 if d.get("type") == "clip"
+                 for r in [d.get("scissor")] if r is not None}
+    finally:
+        doc.close()
+    inner = {k for k in rects
+             if not (k[0] <= 0.5 and k[1] <= 0.5
+                     and k[2] >= page.x1 - 0.5 and k[3] >= page.y1 - 0.5)}
+    return sorted(k for k in inner
+                  if not any(o != k and o[0] <= k[0] and o[1] <= k[1]
+                             and o[2] >= k[2] and o[3] >= k[3] for o in inner))
+
+
 def _panels(stem):
+    """Each panel's x range, left to right: `[(x0, x1), ...]`.
+
+    From the clip where there is one; a 2x2 grid's rows share an x range, so
+    these are DISTINCT ranges and `_panel_boxes` is what a per-panel question
+    should ask.
+    """
+    boxes = _panel_boxes(stem)
+    if boxes:
+        return sorted({(b[0], b[2]) for b in boxes})
+    return _panels_from_rules(stem)
+
+
+def _panels_from_rules(stem):
     """Each panel's x range, from the axis rules: `[(x0, x1), ...]` left to right.
 
     NESTING IS THE DISCRIMINATOR, not colour, not pairing, not width. Three
@@ -437,41 +486,27 @@ def _panels(stem):
 def _axes_box(stem):
     """The plotting area's (top, bottom), from the CLIP matplotlib applies.
 
-    THE CLIP IS THE ANSWER, and three rounds of hunting for it in the spines
-    were the wrong question. matplotlib clips a panel's artists to its axes
-    rectangle, so `get_drawings(extended=True)` carries a `clip` entry whose
-    `scissor` IS the plotting area -- measured identical to `_panel_y` on all
-    three committed figures, (52.56, 302.04) in every case.
+    The vertical extent of `_panel_boxes` -- measured identical to `_panel_y`
+    on all three committed figures, (52.56, 302.04) in every case.
 
-    What that removes, all at once: it does not care whether a spine is drawn,
-    so no despining breaks it; it does not care how far a confidence band
-    reaches, because the band is the thing being clipped; and it does not care
-    about `axes.xmargin`, `ytick.alignment` or any other placement rcParam,
-    because a scissor is geometry the renderer emitted rather than a property
-    inferred from what happened to be drawn.
+    It does not care how far a confidence band reaches, because the band is
+    the thing being clipped, nor about `axes.xmargin`, `ytick.alignment` or
+    any other placement rcParam.
 
-    Returns None when no clip spans a panel, and the spine and tick paths stay
-    behind it for that case.
+    "It does not care whether a spine is drawn" was ALSO claimed here and was
+    false when written: this read `_panels`, which needs a horizontal spine
+    DRAWN, so with both off it returned None and was exactly as spine-
+    dependent as the three spine-based discriminators it replaced. It reads
+    `_panel_boxes` now, which is why the claim holds -- the fix was to make
+    the sentence true rather than to soften it.
+
+    Returns None when the figure clips nothing, and the spine and tick paths
+    stay behind it for that case.
     """
-    pymupdf = _reader()
-    panel_x = _panels(stem)
-    doc = pymupdf.open(FIG_DIR / f"{stem}.pdf")
-    try:
-        boxes = []
-        for d in doc[0].get_drawings(extended=True):
-            if d.get("type") != "clip":
-                continue
-            sc = d.get("scissor")
-            if sc is None:
-                continue
-            if any(abs(sc.x0 - lo) < 1 and abs(sc.x1 - hi) < 1
-                   for lo, hi in panel_x):
-                boxes.append((sc.y0, sc.y1))
-    finally:
-        doc.close()
+    boxes = _panel_boxes(stem)
     if not boxes:
         return None
-    return min(b[0] for b in boxes), max(b[1] for b in boxes)
+    return min(b[1] for b in boxes), max(b[3] for b in boxes)
 
 
 def _long_vertical_ends(stem):
@@ -502,33 +537,28 @@ def _long_vertical_ends(stem):
 
     This helper is now a FALLBACK behind `_axes_box`, which reads the clip
     matplotlib actually applies and is not guessing at all. What is kept here
-    is the part that does hold: a stroke enclosed by a clip spanning the whole
-    panel is that panel's DATA, whatever its length, and the reduction is
-    keyed on the panel EDGE rather than on the stroke's own x -- an earlier
-    version keyed on `round(a.x, 1)`, so a stroke admitted by the 1pt
-    tolerance but more than 0.05pt off got its own key and was never reduced
-    against the spine at all.
+    is the reduction keyed on the panel EDGE rather than on the stroke's own x
+    -- an earlier version keyed on `round(a.x, 1)`, so a stroke admitted by
+    the 1pt tolerance but more than 0.05pt off got its own key and was never
+    reduced against the spine at all.
+
+    A clip-based filter was added here too and was DEAD: both callers are
+    gated on `_axes_box(stem) is None`, and `_axes_box` returns None only when
+    the figure has no panel clip at all -- which is precisely when the filter
+    has nothing to match. It is gone. What reaches this code is a figure that
+    clips nothing, so there is no data-clip to exclude.
     """
     pymupdf = _reader()
     panel_x = _panels(stem)
     edges = {x for panel in panel_x for x in panel}
     doc = pymupdf.open(FIG_DIR / f"{stem}.pdf")
     try:
-        clipped_to_panel = False
         longest = {}
         for d in doc[0].get_drawings(extended=True):
-            if d.get("type") == "clip":
-                sc = d.get("scissor")
-                clipped_to_panel = sc is not None and any(
-                    abs(sc.x0 - lo) < 1 and abs(sc.x1 - hi) < 1
-                    for lo, hi in panel_x)
-                continue
-            if d.get("type") == "group" or d.get("color") is None:
+            if d.get("type") in ("clip", "group") or d.get("color") is None:
                 continue
             dashes = (d.get("dashes") or "").strip()
             if dashes and dashes != "[] 0":
-                continue
-            if clipped_to_panel:      # this is a panel's data, not its frame
                 continue
             for item in d["items"]:
                 if item[0] != "l":
@@ -1782,6 +1812,13 @@ def test_fig25_binds_each_pair_to_its_own_score():
     # passed every semantic check, where the label-based reading it replaced
     # had caught it.
     #
+    # What that does to the panel, stated exactly because the commit message
+    # that introduced this fix got it wrong: the three pairs score 1.99, 1.25
+    # and 1.21, so NONE is sub-additive. A line the axis calls 2.0 makes the
+    # flagship 1.99x pair read as barely additive and the other two as
+    # sub-additive -- it understates every pair, rather than promoting two
+    # sub-additive ones as that message claimed.
+    #
     # Nearest-in-x keeps the association the figure actually draws while still
     # taking position from the marks.
     ticks = [(mx, min(labels, key=lambda lv: abs(lv[0] - mx))[1])
@@ -1795,6 +1832,27 @@ def test_fig25_binds_each_pair_to_its_own_score():
         f"fig25's panel (b) x tick labels read {drawn_values} left to right "
         "and must ascend. A label on the wrong tick moves the additive line "
         "relative to the scores without moving either")
+    # AFFINE, NOT MERELY ASCENDING. The scale below is fitted on the FIRST and
+    # LAST tick, so every interior label is unread by it -- and ascending is
+    # far weaker than the straight line that fit assumes. Relabelling the
+    # middle tick of `0.0 0.5 1.0 1.5 2.0` to `0.7` still ascends, so it
+    # passed, and it puts the additive line exactly on a tick the axis calls
+    # 0.7 while the legend beside it reads `additive (1.0x)`. That is the
+    # failure this block's own message names.
+    #
+    # An axis is linear, so equal steps in x are equal steps in value. The
+    # tolerance is relative to the median step, which keeps this true at any
+    # figure width and tick count.
+    steps = [(b[0] - a[0], b[1] - a[1]) for a, b in zip(ticks, ticks[1:])]
+    rates = sorted(dx / dv for dx, dv in steps if dv)
+    assert len(rates) == len(steps), (
+        "fig25's panel (b) draws two tick labels with the same value")
+    mid = rates[len(rates) // 2]
+    assert max(abs(r - mid) for r in rates) <= 0.02 * abs(mid), (
+        f"fig25's panel (b) tick labels are not evenly spaced in value: "
+        f"{drawn_values} over marks {[round(x, 1) for x in mark_xs]}. The "
+        "scale is read from the end ticks, so a wrong interior label moves "
+        "the additive line relative to the scores without moving either")
     (tx0, tv0), (tx1, tv1) = ticks[0], ticks[-1]
     scale = (tx1 - tx0) / (tv1 - tv0)
     dashed = sorted(x for x, y0, y1, col
@@ -1824,6 +1882,35 @@ def test_fig25_binds_each_pair_to_its_own_score():
         f"fig25's additive threshold line is drawn at {drawn_at:.2f} on its "
         "own x scale, not 1.0. Every score on the panel is read against that "
         "line, so moving it changes which pairs read as synergistic")
+    # THE BAR LENGTHS, WHICH NOTHING READ. Every pair label, every printed
+    # score and every row binding can be correct while the bars themselves are
+    # drawn at the wrong lengths: the generator reverses BOTH the names and
+    # the scores (`barh(names[::-1], scores[::-1])`), and dropping one
+    # reversal leaves each row labelled and annotated correctly while the
+    # flagship RSL3+FSP1i is drawn as the SHORTEST bar of the three -- the
+    # least synergistic, which is the reverse of this figure's claim. The
+    # panel is a bar chart and its bars were the one thing unread.
+    #
+    # A bar starts at data zero, which is panel (b)'s own spine, so its RIGHT
+    # edge is its value on the scale just established.
+    # `_filled_rects` is (x0, x1, y0, y1, fill). The axes BACKGROUND also
+    # starts on the spine, so it is excluded by spanning the whole panel.
+    b_hi = _panels("fig25_bliss_synergy")[-1][1]
+    bar_rects = [r for r in _filled_rects("fig25_bliss_synergy")
+                 if abs(r[0] - b_spine) < 2 and r[1] > b_spine + 2
+                 and r[1] < b_hi - 1]
+    assert len(bar_rects) >= len(names), (
+        f"fig25's panel (b) draws {len(bar_rects)} bars standing on its axis "
+        f"against {len(names)} pair labels")
+    for x, y, t in names:
+        near = sorted(bar_rects, key=lambda r: abs((r[2] + r[3]) / 2 - y))
+        drawn = (near[0][1] - tx0) / scale + tv0
+        want = float(_mult(by_row[t]).rstrip("\u00d7"))
+        assert abs(drawn - want) <= 0.05, (
+            f"fig25's panel (b) draws {t}'s bar reaching {drawn:.2f} on its "
+            f"own x scale while the score printed on that row is {want:.2f}. "
+            "The bar is what the panel compares; a correct label beside a "
+            "wrong-length bar inverts the ranking it shows")
     # THE LABEL MUST NAME THE POSITION THE LINE IS AT. `"additive" in text`
     # is a presence check: relabelling the entry `additive (2.0×)` while the
     # line stays at 1.0 leaves the legend contradicting the line every bar on
@@ -1932,6 +2019,37 @@ def test_fig24_draws_its_hypoxia_numbers():
         f"reads {[b[4] for b in sorted(pcts)]}")
     lb, rb = max(before, key=lambda b: b[0]), min(after, key=lambda b: b[0])
     left, right = (lb[0], lb[4]), (rb[0], rb[4])
+    # AND IT MUST SIT OVER THE GROUP IT DESCRIBES. The annotation is found by
+    # flanking the arrow anywhere on the page and is then EXCLUDED from the
+    # bar-position check below, so the one annotation singled out by identity
+    # was the one never placed: moving its `xytext` from 0.55 to 1.0 recentres
+    # it from x=198 -- between the two groups -- to x=264, directly over the
+    # SDT group, whose bars read 91.9% and 87.8%. It quotes RSL3's numbers, so
+    # the figure then attributes RSL3's collapse to SDT.
+    #
+    # Its own values say which group it belongs to: the four bar annotations
+    # are checked against the data below, so the group holding the two values
+    # this sentence quotes is the group it must not stray from.
+    # NOT NEAREST -- IT MUST NOT REACH THE OTHER GROUP. "Nearest the bars it
+    # quotes" is FALSE of the correct figure and was tried: the annotation is
+    # deliberately placed BETWEEN the two groups, at x=198, which is 66pt from
+    # RSL3's own bars (90 and 144) and only 26pt from SDT's (238 and 291). The
+    # committed figure failed that check, which is the check being wrong.
+    #
+    # What is true is that it must stay left of the group it does not
+    # describe. At `xytext` 1.0 it recentres to x=264, PAST SDT's first bar,
+    # and the figure reads RSL3's collapse onto SDT's bars.
+    ann_x = (lb[0] + rb[2]) / 2
+    bars_all = sorted(((x, t) for x, y, t in panel_a
+                       if re.fullmatch(r"\d+\.\d%", t)
+                       and (x, t) not in (left, right)), key=lambda w: w[0])
+    others = [x for x, t in bars_all if t not in (left[1], right[1])]
+    if len(bars_all) == 4 and others:
+        assert ann_x < min(others), (
+            f"fig24's collapse annotation is centred at x={ann_x:.0f}, at or "
+            f"past the first bar of the group it does NOT quote "
+            f"(x={min(others):.0f}). It quotes RSL3's values, so drawing it "
+            "over the SDT bars attributes RSL3's collapse to SDT")
 
     bars = sorted(((x, t) for x, y, t in panel_a
                    if re.fullmatch(r"\d+\.\d%", t)
@@ -2745,6 +2863,22 @@ def test_fig26_draws_the_timepoints_its_fixture_holds():
         f"fig26 opens the RSL3 window at the tick for day {expected[left_at]}, "
         "and the data has it open from the first timepoint. The shaded span is "
         "what shows where the window is")
+    # AND THE CAPTION THAT SAYS WHAT THE SHADE MEANS. Both shade edges are
+    # pinned to the tick, and the words naming it were left free: moving
+    # `RSL3 window open` from x=261-299 to x=408-446 puts it over days ~21-28,
+    # the region this same panel shades as CLOSED, and nothing fired. A label
+    # for a region has to sit in the region.
+    caption = [b for b in _word_bboxes(stem26) if b[4] == "window"]
+    caption = [b for b in caption if a_lo - 1 <= (b[0] + b[2]) / 2 <= a_hi + 1
+               and b[1] > _axes_box(stem26)[0]]
+    assert len(caption) == 1, (
+        f"fig26's panel (a) draws the word `window` {len(caption)} times "
+        "inside the axes; the shade's caption cannot be identified")
+    cap_x = (caption[0][0] + caption[0][2]) / 2
+    assert shade[0][0] - 1 <= cap_x <= shade[0][1] + 1, (
+        f"fig26 draws `RSL3 window open` centred at x={cap_x:.0f}, outside "
+        f"the span it names ({shade[0][0]:.0f}-{shade[0][1]:.0f}). The words "
+        "then sit over the days the same panel shades as closed")
     right_at = min(range(len(xmarks)), key=lambda i: abs(xmarks[i] - shade[0][1]))
     assert right_at == win_end, (
         f"fig26 shades the RSL3 window out to the tick for day "
