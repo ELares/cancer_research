@@ -1477,8 +1477,17 @@ def fig25_bliss_synergy():
     # confirmed -- halving n in the sim output left the caption saying 1,000.
     # A guard comparing the drawn text to the data could not fail while the
     # text was a constant, so the number comes from the run.
-    n_cells = data["n_cells_per_condition"] if isinstance(data, dict) else None
-    assert n_cells, "combo_summary.json carries no n_cells_per_condition"
+    n_cells = data.get("n_cells_per_condition") if isinstance(data, dict) else None
+    if not n_cells:
+        # SKIP, not assert. An older combo_summary.json has no such field, and
+        # aborting here would take every figure after this one down with it --
+        # the same failure this project just fixed in the conceptual-diagram
+        # generator. Drawing it with the cohort clause dropped is worse: the
+        # footnote would silently stop stating n.
+        print(f"  {COMBO_SUMMARY} carries no n_cells_per_condition — the "
+              "footnote states the cohort size, so skipping rather than "
+              "drawing a figure that cannot say it.")
+        return
     fig.text(0.5, -0.04,
              f"{n_cells:,} persister cells/condition, 2D culture params. Drug potencies are estimates; the "
              "directional finding (dual-pathway > single) held across the ±50% sensitivity sweep (§5).",
@@ -1552,9 +1561,13 @@ def fig26_vulnerability_window():
     fig.suptitle("The ferroptosis-sensitive window: days for RSL3, weeks for SDT", fontsize=12, y=1.02)
     # DERIVED, for the same reason as fig25's. See that comment.
     n_seen = {r.get("n_cells") for r in data if r.get("n_cells")}
-    assert len(n_seen) == 1, (
-        f"vulnerability_window rows disagree on n_cells ({sorted(n_seen)}); "
-        "the footnote states one cohort size for the whole figure")
+    if len(n_seen) != 1:
+        why = ("carry no n_cells at all" if not n_seen
+               else f"disagree on n_cells {sorted(n_seen)}")
+        print(f"  {WINDOW_JSON}: rows {why}, and the footnote states one "
+              "cohort size for the whole figure — skipping rather than "
+              "drawing a figure that cannot say it.")
+        return
     n_cells = n_seen.pop()
     fig.text(0.5, -0.04,
              f"{n_cells:,} cells/condition; x-axis shows sampled timepoints (not linear in time). Defense-recovery "

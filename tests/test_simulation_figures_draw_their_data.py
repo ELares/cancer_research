@@ -43,8 +43,10 @@ Four narrower limits, each measured rather than assumed:
   earlier version of this bullet claimed they were "compared against the
   fixtures", which was false in the way that matters. They were string
   literals in the generator, so halving n in the simulation output left both
-  captions unchanged and every guard green -- the figures overstated their
-  cohorts by 2x and 200x with nothing able to say so. Comparing a drawn
+  captions unchanged and every guard green -- each figure then overstated its
+  cohort by 2x, with nothing able to say so. (An earlier version of this
+  sentence said "2x and 200x"; 200x is what a different mutation gives, not
+  the halving described beside it.) Comparing a drawn
   constant to a fixture cannot fail. The GENERATOR now derives both numbers
   from the run it plots, which is what makes the comparison mean anything.
 
@@ -66,8 +68,11 @@ pinning the labels "is what makes the positional binding say whose bar is
 whose"; it does not, and the mutation that proved it passed every assertion in
 this file. fig24's numbers are therefore ALSO compared left-to-right by
 bounding box, which is the check that actually binds a value to a bar.
-fig25's panel (a) needs no such check: it anchors each annotation to
-`bar.get_x() + bar.get_width() / 2`, so its text cannot drift off its bar.
+An earlier version of this paragraph exempted fig25's panel (a) on the grounds
+that it anchors each annotation to `bar.get_x() + bar.get_width() / 2`. That
+anchors a label to A bar, not to ITS bar -- the pairing is the `zip`, and
+reversing it puts every number neatly on top of the wrong bar with the stream
+unchanged, inverting the synergy claim. Panel (a) is checked by position too.
 
 fig25's panel (b) draws each score on the same ROW as its pair label, and that
 row is the binding -- they are ~200 points apart in x, so "beside" was never
@@ -79,11 +84,23 @@ its 1.99x to FSP1i+HDACi, with this file green. Scores are now attributed by
 shared row.
 
 EVERY POSITIONAL CHECK HERE EXISTS BECAUSE THE STREAM ORDER OF SOME ELEMENT
-TURNED OUT NOT TO BE ITS LAYOUT. That has now been true of bar annotations
-(fixed offsets), tick labels (emitted in tick-location order, so `set_xticks`
-reversed moves the group captions onto the other treatment), and panel (b)'s
-scores (one loop, mirrored y). Each was found after a previous round wrote a
-sentence claiming the binding was already established.
+TURNED OUT NOT TO BE ITS LAYOUT, in every figure and for every element class
+here: bar annotations (anchored at a fixed offset on fig24, and to the wrong
+bar of a reversed `zip` on fig25), tick labels (fig24's groups, fig25's bars,
+fig26's timepoints), and panel (b)'s scores (one loop, mirrored y).
+
+Tick labels are emitted in TICK-ARRAY order -- the order of the sequence handed
+to `set_xticks`, not the left-to-right order of the resulting positions. That
+is exactly why reversing the array leaves the text stream untouched while the
+drawing inverts. An earlier version of this paragraph said "tick-location
+order", which is the opposite and refutes its own conclusion: were it true, the
+stream WOULD flip and the existing stream-order checks would already catch it.
+
+Each of these was found after a previous round wrote a sentence claiming the
+binding was already established, so the rule this file now follows is that
+anything a reader takes as identifying a value -- a label, a unit, a position
+in a series -- is compared by geometry, and the text stream is treated as
+evidence of content only, never of arrangement.
 """
 import json
 import re
@@ -97,13 +114,7 @@ FIXTURES = REPO / "tests/fixtures"
 
 
 def _drawn(stem):
-    try:
-        import pymupdf
-    except ImportError:
-        try:
-            import fitz as pymupdf
-        except ImportError:
-            pytest.skip("no PDF reader available")
+    pymupdf = _reader()
     path = FIG_DIR / f"{stem}.pdf"
     assert path.exists(), f"{stem}.pdf is not committed"
     doc = pymupdf.open(path)
@@ -113,45 +124,46 @@ def _drawn(stem):
         doc.close()
 
 
-def _split_x(words):
-    """The x coordinate separating the left panel from the right one.
+def _reader():
+    """The PDF reader, or a FAILURE -- never a skip.
 
-    DERIVED FROM THE FIGURE, not a page coordinate. This was `w[0] < 330`,
-    which is 0.2 points inside panel (a)'s right edge at the current figsize
-    and tight-bbox trim, so it survived nothing: widening fig24 to figsize
-    (14, 4.5) pushed `87.8%` to x=342 and the guard reported the resize as
-    data drift, and adding two clauses to the footnote -- which is one
-    unwrapped `fig.text`, so it sets the trimmed page width -- shifted every
-    word ~145 points right and lost the arrow entirely.
-
-    Both panels are titled `(a) ...` and `(b) ...`, so the boundary is the
-    midpoint between those two titles. It moves with the layout, which is the
-    property the constant did not have.
+    Both readers used to `pytest.skip` when neither import worked, which turns
+    the entire gate off silently: every figure in this file would report as
+    fine on a machine that cannot open a PDF. A gate that disables itself when
+    its instrument is missing is the failure it exists to prevent, and it is
+    the same reasoning as the freshness suite's positive control failing rather
+    than skipping when its pinned blob is unreachable. PyMuPDF is pinned in
+    `requirements-lock.txt`, so this is a hard requirement, not an optional
+    extra.
     """
-    a = [w for w in words if w[2] == "(a)"]
-    b = [w for w in words if w[2] == "(b)"]
-    assert len(a) == 1 and len(b) == 1, (
-        f"expected one `(a)` and one `(b)` panel title, found {len(a)} and "
-        f"{len(b)}; the panel split is derived from them")
-    # The midpoint of the two titles' STARTS is not the boundary -- the titles
-    # differ in length and each is CENTRED over its own axes, so that midpoint
-    # landed at 247 and cut off fig24's right-hand bar annotation at 276. Each
-    # title's full extent is needed, so take the words sharing the `(a)` row.
-    #
-    # The row is split AT THE `(b)` MARKER, not at its widest internal gap: on
-    # fig25 the longer panel-(a) title has a bigger gap inside itself than the
-    # one between the panels, so the gap heuristic put the boundary in the
-    # middle of a title.
-    row = sorted([w for w in words if abs(w[1] - a[0][1]) < 1.5],
-                 key=lambda w: w[0])
-    marks = [j for j, w in enumerate(row) if w[2] == "(b)"]
-    assert len(marks) == 1 and row[0][2] == "(a)", (
-        f"the panel-title row does not read `(a) ... (b) ...`: "
-        f"{[w[2] for w in row][:12]}")
-    left, right = row[:marks[0]], row[marks[0]:]
-    assert left, "no words precede `(b)` on the title row"
-    centre = lambda part: (part[0][0] + part[-1][0]) / 2
-    return (centre(left) + centre(right)) / 2
+    try:
+        import pymupdf
+        return pymupdf
+    except ImportError:
+        pass
+    try:
+        import fitz
+        return fitz
+    except ImportError as exc:
+        raise AssertionError(
+            "no PDF reader available, so none of these figures can be "
+            "checked. PyMuPDF is pinned in requirements-lock.txt; install it "
+            "rather than letting this gate pass by not running"
+        ) from exc
+
+
+def _rows(words):
+    """Group words by y, rounded, preserving `(x, text)` per row.
+
+    Three checks need it: two panels drawn side by side share y coordinates for
+    their tick labels and axis captions, so "same row" is what identifies a
+    horizontal series -- and, when both panels land in one row, what makes a
+    per-panel check have to work at word level rather than row level.
+    """
+    out = {}
+    for x, y, t in words:
+        out.setdefault(round(y, 1), []).append((x, t))
+    return out
 
 
 def _words(stem):
@@ -169,13 +181,7 @@ def _words(stem):
     wrong bars and leaves the text stream byte-identical, so no assertion over
     `_drawn` can see it. Geometry can.
     """
-    try:
-        import pymupdf
-    except ImportError:
-        try:
-            import fitz as pymupdf
-        except ImportError:
-            pytest.skip("no PDF reader available")
+    pymupdf = _reader()
     path = FIG_DIR / f"{stem}.pdf"
     assert path.exists(), f"{stem}.pdf is not committed"
     doc = pymupdf.open(path)
@@ -215,6 +221,35 @@ def test_fig25_draws_its_bliss_numbers():
     assert order == sorted(order), (
         "fig25's panel (a) labels are not in the order its values are "
         f"compared in; the bars may be mislabelled. positions={order}")
+
+    # BOTH BY POSITION, for the reasons fig24 needed it. The two checks above
+    # read the text stream, and for panel (a) the stream is neither the bar
+    # order nor the label order:
+    #
+    #  - Reversing the `zip` that pairs bars with values puts every number
+    #    neatly on top of the WRONG bar -- RSL3 alone captioned 84.1% and the
+    #    combination 40.0%, the synergy claim inverted -- with the stream
+    #    unchanged. `bar.get_x() + bar.get_width()/2` anchors each label to A
+    #    bar, not to ITS bar; the pairing is the zip, and nothing read it.
+    #  - `set_xticks(...[::-1])` reverses the tick labels the same way it does
+    #    on fig24, and `text.index` cannot see it.
+    wds = _words("fig25_bliss_synergy")
+    drawn = sorted((x, t) for x, y, t in wds if re.fullmatch(r"\d+\.\d%", t))
+    assert [t for _, t in drawn] == expected, (
+        f"fig25's panel (a) bar annotations read {[t for _, t in drawn]} LEFT "
+        f"TO RIGHT and bliss_synergy.json gives {expected}. Each number is "
+        "anchored to the centre of some bar, so only position says which")
+    # The labels are two-line, so the FIRST word of each carries its position.
+    heads = [b.split()[0] for b in bars]
+    rows = [r for r in _rows(wds).values()
+            if sorted(t for _, t in r) == sorted(heads)]
+    assert len(rows) == 1, (
+        f"expected one row holding the four bar-label heads {heads}, found "
+        f"{len(rows)}")
+    assert [t for _, t in sorted(rows[0])] == heads, (
+        f"fig25's panel (a) bar labels read "
+        f"{[t for _, t in sorted(rows[0])]} LEFT TO RIGHT and its values are "
+        f"compared as {heads}; the bars are labelled in the wrong order")
     # SCOPED TO PANEL (a). A bare `in text` was satisfied by panel (b), which
     # draws the same score as a bar label -- so replacing panel (a)'s
     # annotation with a wrong value, or deleting it, both passed.
@@ -348,8 +383,15 @@ def test_fig24_draws_its_hypoxia_numbers():
     # Panel (a) is the left subplot; the collapse annotation draws two more
     # percentages, and they are the two sharing a row with the arrow, so the
     # arrow's y locates the row to drop rather than a hardcoded coordinate.
-    words = _words("fig24_hypoxia_killcurve")
-    panel_a = [w for w in words if w[0] < _split_x(words)]
+    # NO PANEL FILTER. The only `N.N%` words fig24 draws are its four bar
+    # annotations and the collapse annotation's two; panel (b) plots curves
+    # against a plain axis and draws none. A panel split was used here and is
+    # gone: derived from the titles it false-failed the moment a title wrapped
+    # onto two lines, and every version of it was a coordinate standing in for
+    # a fact the words already carry. If panel (b) ever does draw a percentage
+    # the comparison below fails loudly with the extra value listed, which is
+    # the right way to find out.
+    panel_a = _words("fig24_hypoxia_killcurve")
     arrow_y = [y for x, y, t in panel_a if t.strip() in {"→", "\u2192"}]
     assert len(arrow_y) == 1, (
         f"expected exactly one arrow in fig24 panel (a), found {len(arrow_y)}; "
@@ -490,31 +532,59 @@ def test_fig26_draws_the_timepoints_its_fixture_holds():
     # this is the only text saying what they are measured in and from. Pinning
     # the values while leaving the axis caption free is the half-bound shape
     # the legend checks were added to close.
-    # SCOPED TO PANEL (a) BY POSITION. The caption is drawn under both panels,
-    # so a bare `in text` is satisfied by panel (b) -- relabelling panel (a)
-    # alone as `(hours)` passed, leaving the panel that carries the gated
-    # timepoints, the window shading and the `closes ~day 3` annotation
-    # declaring hours over ticks in days. That is the same hole this file
-    # documents closing for fig25 a few tests above.
     wds = _words("fig26_vulnerability_window")
-    split = _split_x(wds)
-    rows = {}
-    for x, y, t in wds:
-        rows.setdefault(round(y, 1), []).append((x, t))
-    captions = [" ".join(t for _, t in sorted(r))
-                for r in rows.values()
-                if any(t == "post-chemotherapy" for _, t in r)]
-    left_caption = [" ".join(t for _, t in sorted(r))
-                    for r in rows.values()
-                    if any(t == "post-chemotherapy" and x < split for x, t in r)]
-    assert left_caption, (
-        f"fig26's panel (a) draws no `Time post-chemotherapy` caption; the "
-        f"captions found were {captions}")
-    for cap in left_caption:
-        assert "(days)" in cap, (
-            f"fig26's panel (a) x axis reads {cap!r}, not days. Its ticks are "
-            "the fixture's timepoint_days, so the panel is declaring a unit "
-            "its own numbers are not in")
+
+    # THE TIMEPOINTS BY POSITION. The run check above reads the text stream,
+    # which is tick-ARRAY order: `set_xticks(x[::-1])` reverses the time axis
+    # on both panels -- day 28 at the left, the window shading and the
+    # `closes ~day 3` arrow pointing at day 7, the RSL3 collapse running
+    # backwards -- and leaves the stream byte-identical. These labels are the
+    # only data values this test gates, so stream order was gating nothing.
+    #
+    # Both panels share the tick row, so the row holds 2N labels: the left N
+    # are panel (a)'s and the right N panel (b)'s, and each must read in
+    # ascending order.
+    tick_rows = [r for r in _rows(wds).values()
+                 if [t for _, t in r] and
+                 all(re.fullmatch(r"\d+(?:\.\d+)?", t) for _, t in r)
+                 and len(r) == 2 * len(expected)]
+    assert len(tick_rows) == 1, (
+        f"expected one row of {2 * len(expected)} numeric tick labels (both "
+        f"panels share the axis), found {len(tick_rows)}")
+    ticks = [t for _, t in sorted(tick_rows[0])]
+    assert ticks[:len(expected)] == expected and ticks[len(expected):] == expected, (
+        f"fig26's tick labels read {ticks} LEFT TO RIGHT; each panel should "
+        f"read {expected} in ascending order. The axis may be reversed, which "
+        "the text stream cannot show")
+
+    # THE UNIT, PER PANEL AND BY WORDS. Both x-labels are drawn at the SAME y,
+    # so grouping the caption by row merges them into one string -- an earlier
+    # version of this check did exactly that and `"(days)" in cap` was
+    # satisfied by panel (b)'s copy while panel (a) said hours. Split the row
+    # at each `Time` and require every caption to end in days.
+    caption_rows = [r for r in _rows(wds).values()
+                    if any(t == "post-chemotherapy" for _, t in r)]
+    assert len(caption_rows) == 1, (
+        f"expected one x-axis caption row, found {len(caption_rows)}")
+    words_in_row = [t for _, t in sorted(caption_rows[0])]
+    caps, cur = [], None
+    for t in words_in_row:
+        if t == "Time":
+            if cur:
+                caps.append(cur)
+            cur = [t]
+        elif cur is not None:
+            cur.append(t)
+    if cur:
+        caps.append(cur)
+    assert len(caps) == 2, (
+        f"fig26 draws {len(caps)} x-axis captions, expected one per panel: "
+        f"{[' '.join(c) for c in caps]}")
+    for c in caps:
+        assert " ".join(c) == "Time post-chemotherapy (days)", (
+            f"an x axis reads {' '.join(c)!r}. The ticks are the fixture's "
+            "timepoint_days, so a panel saying anything else is declaring a "
+            "unit its own numbers are not in")
     assert "closes ~day 3" in text, (
         "fig26's window annotation is gone. NOTE this is a hardcoded string in "
         "the generator, not a derived one -- if the window moved, the "
