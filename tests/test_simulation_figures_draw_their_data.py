@@ -23,7 +23,12 @@ annotations are right -- a mis-drawn curve, a swapped panel, a wrong colour
 map. It compares the numbers rendered as text. That is a smaller claim than
 "the figure is correct", and it is the claim the committed data can support.
 
-Four narrower limits, each measured rather than assumed:
+Four narrower limits, each measured rather than assumed. READ THEM AS LIMITS
+OF THE SEMANTIC CHECKS ONLY. The fingerprint at the end of this file hashes
+the whole drawing, so every mutation named below now fails there -- verified,
+each one -- but it fails as "something moved and nothing explained it", which
+is a weaker statement than the assertion that would name the defect. These are
+the places where no assertion would name it:
 
 - **A change too small to survive rounding is invisible.** fig24's four bars
   are drawn `:.1f`, and RSL3's hypoxic value is 0.1% whether it is the mean
@@ -209,6 +214,38 @@ def _vertical_labels(words):
             for x, ws in cols.items() if len(ws) > 1}
 
 
+def _hlines(stem):
+    """Long horizontal stroked lines as `(y, colour)`, page 0.
+
+    fig24's panel (b) draws each treatment's normoxic kill as a dashed
+    reference line. Swapping which VALUE each `axhline` receives, while leaving
+    both labels and both colours alone, exchanges those two lines -- panel (b)
+    then asserts RSL3's normoxic kill is ~92% and SDT's ~4%, the figure's
+    thesis inverted. Nothing in this file saw it: panel (b) carried no
+    assertion, and the fingerprint's line GEOMETRY is unchanged by a swap
+    because the same two lines are still drawn. Only what colour sits at which
+    height moves.
+    """
+    pymupdf = _reader()
+    doc = pymupdf.open(FIG_DIR / f"{stem}.pdf")
+    try:
+        out = []
+        for d in doc[0].get_drawings():
+            col = d.get("color")
+            if col is None:
+                continue
+            for item in d["items"]:
+                if item[0] != "l":
+                    continue
+                a, b = item[1], item[2]
+                if abs(a.y - b.y) < 0.5 and abs(b.x - a.x) > 100:
+                    out.append((round(a.y, 2),
+                                tuple(round(c, 4) for c in col)))
+        return out
+    finally:
+        doc.close()
+
+
 def _rows(words):
     """Group words by y, rounded, preserving `(x, text)` per row.
 
@@ -244,6 +281,26 @@ def _words(stem):
     doc = pymupdf.open(path)
     try:
         return [(w[0], w[1], w[4]) for w in doc[0].get_text("words")]
+    finally:
+        doc.close()
+
+
+def _word_centres(stem):
+    """`(centre_x, y0, text)` per word.
+
+    The bar matcher needs the annotation's CENTRE, because the generator
+    anchors these with `ha="center"`. Keying on the left edge only worked
+    while the bars were much wider than their labels: at a bar width of 0.13 --
+    a pure style constant, figure otherwise correct -- a label's left edge
+    falls outside its own bar and the guard reported a data inversion.
+    """
+    pymupdf = _reader()
+    path = FIG_DIR / f"{stem}.pdf"
+    assert path.exists(), f"{stem}.pdf is not committed"
+    doc = pymupdf.open(path)
+    try:
+        return [((w[0] + w[2]) / 2, w[1], w[4])
+                for w in doc[0].get_text("words")]
     finally:
         doc.close()
 
@@ -315,10 +372,30 @@ def test_fig25_draws_its_bliss_numbers():
     # SCOPED TO PANEL (a). A bare `in text` was satisfied by panel (b), which
     # draws the same score as a bar label -- so replacing panel (a)'s
     # annotation with a wrong value, or deleting it, both passed.
-    assert f"{fx['synergy_score']:.2f}× synergy" in text, (
-        f"fig25's panel (a) does not annotate "
-        f"{fx['synergy_score']:.2f}x synergy; panel (b) drawing that number "
-        "as a bar label is not the same claim")
+    # IN PANEL (a), BY POSITION. `f"{score:.2f}× synergy" in text` is stream
+    # adjacency, not scope: deleting panel (a)'s annotation outright and
+    # rewording panel (b)'s title to begin `synergy, pairwise ...` recreates
+    # the substring out of panel (b)'s bar label and title, and the check that
+    # exists to require the annotation passes with the annotation gone. Panel
+    # (b)'s pair labels are the rightmost thing panel (a) must be left of.
+    words_a = _words("fig25_bliss_synergy")
+    pair_x = [x for x, y, t in words_a
+              if re.fullmatch(r"[^\s+]+\+[^\s+]+", t)]
+    assert pair_x, "fig25 draws no pair labels, so panel (b) cannot be located"
+    want = f"{fx['synergy_score']:.2f}×"
+    hits = [(x, y) for x, y, t in words_a if t == want and x < min(pair_x)]
+    assert hits, (
+        f"fig25's panel (a) does not annotate {want} anywhere left of panel "
+        f"(b)'s pair labels. Panel (b) drawing that number as a bar label is "
+        "not the same claim")
+    # The two words sit 0.87pt apart vertically (57.115 and 57.985), so an
+    # exact row key splits them; the annotation is one visual line.
+    ax, ay = hits[0]
+    line = sorted((x, t) for x, y, t in words_a
+                  if abs(y - ay) < 2 and x < min(pair_x) and x >= ax - 1)
+    assert " ".join(t for _, t in line) == f"{want} synergy", (
+        f"fig25's panel (a) synergy annotation reads "
+        f"{' '.join(t for _, t in line)!r}, expected {want + ' synergy'!r}")
     # BY POSITION, for the reason fig24's needed it: a containment check does
     # not say WHICH panel carries the label, or that any panel does.
     cols = _vertical_labels(_words("fig25_bliss_synergy"))
@@ -576,14 +653,18 @@ def test_fig24_draws_its_hypoxia_numbers():
     legend = {}
     for x, y, t in panel_a:
         if t in ("Normoxic", "Hypoxic"):
-            # MATCH ON THE TOP EDGE. A swatch sits ~4pt below its own
-            # label's top and ~13pt below the label above it, so comparing the
-            # word's y0 to the rect's BOTTOM edge (y1) puts the correct swatch
-            # 9.8pt away -- outside this tolerance -- and the entry resolves to
-            # nothing at all. Measured: with y1 the check fails as "Normoxic
-            # legend entry has no swatch beside it". (An earlier version of
-            # this comment said both entries resolved to the same colour;
-            # that is what happened at a wider tolerance, not at this one.)
+            # MATCH ON THE TOP EDGE, and let `sorted` pick. Measured on the
+            # committed figure: each label's own swatch is 4.20pt below its
+            # top, and the OTHER swatch is 8.80pt away for `Hypoxic` (the
+            # entry above it) and 17.20pt for `Normoxic`. So the margin this
+            # has to work in is 4.20 against 8.80 -- it is `sorted(...)`
+            # taking the nearest that makes it right, not the `< 8` bound,
+            # which only rejects far-away candidates. Comparing instead to the
+            # rect's BOTTOM edge (y1) puts the correct swatch 9.80pt away,
+            # outside the bound, and the entry resolves to nothing at all.
+            # (Two earlier versions of this comment were wrong here: one said
+            # both entries resolved to the same colour, the other quoted 13pt,
+            # which is the label-to-label pitch and not any swatch distance.)
             near = sorted((abs(r[2] - y), r) for r in rects
                           if abs(r[2] - y) < 8 and r[1] - r[0] < 40)
             assert near, f"fig24's {t!r} legend entry has no swatch beside it"
@@ -611,9 +692,13 @@ def test_fig24_draws_its_hypoxia_numbers():
     assert len(bars_drawn) <= 4, (
         f"fig24 draws {len(bars_drawn)} bars on its baseline, more than the "
         "four its data has; something else is being read as a bar")
+    centres = {(round(y, 2), t): cx
+               for cx, y, t in _word_centres("fig24_hypoxia_killcurve")}
     got = []
     for x, t in bars:
-        under = [r for r in bars_drawn if r[0] - 1 <= x <= r[1] + 1]
+        cx = next((c for (yy, tt), c in centres.items()
+                   if tt == t and abs(c - x) < 40), x)
+        under = [r for r in bars_drawn if r[0] <= cx <= r[1]]
         if not under:
             got.append(None)                        # a zero-height bar
             continue
@@ -650,6 +735,46 @@ def test_fig24_draws_its_hypoxia_numbers():
         f"{len(kill_axes)} positions, expected one per panel. Columns found: "
         f"{sorted(columns.values())}. The values compared above are drawn as "
         "percentages")
+    # AND ONE OF THEM LABELS PANEL (a). Counting columns is still counting:
+    # stripping panel (a)'s y-label and dropping one stray rotated copy at the
+    # page edge leaves two columns and panel (a) with no label at all, while
+    # the four percentages it is supposed to describe stay where they are. A
+    # y-axis label sits to the LEFT of the data it labels, so panel (a)'s must
+    # be left of panel (a)'s own bars and panel (b)'s to their right.
+    left_edge = min(x for x, _ in bars)
+    right_edge = max(x for x, _ in bars)
+    assert kill_axes[0] < left_edge, (
+        f"fig24's leftmost `Overall tumor kill (%)` label is at "
+        f"x={kill_axes[0]:.0f}, right of panel (a)'s first bar annotation at "
+        f"x={left_edge:.0f}. Panel (a)'s values are drawn without the axis "
+        "label that says what they are")
+    assert kill_axes[1] > right_edge, (
+        f"fig24's second `Overall tumor kill (%)` label is at "
+        f"x={kill_axes[1]:.0f}, which is not right of panel (a)'s last bar "
+        f"annotation at x={right_edge:.0f}; it does not label panel (b)")
+
+    # PANEL (b)'S REFERENCE LINES. Each treatment's normoxic kill is drawn
+    # there as a dashed horizontal line in that treatment's colour, and SDT's
+    # is far higher than RSL3's -- that gap IS the panel's claim. Swapping the
+    # two values exchanges the lines while every label, colour and word stays
+    # put, and until now nothing here looked at panel (b) at all.
+    lines = _hlines("fig24_hypoxia_killcurve")
+    by_colour = {}
+    for y, col in lines:
+        by_colour.setdefault(col, []).append(y)
+    for name, col in (("SDT", legend["Hypoxic"]), ("RSL3", legend["Normoxic"])):
+        assert col in by_colour, (
+            f"fig24's panel (b) draws no {name} reference line in the colour "
+            "its own legend gives that treatment")
+    # Smaller y is higher on the page, and SDT's normoxic kill is the larger
+    # number, so its line must sit above RSL3's.
+    sdt_y = min(by_colour[legend["Hypoxic"]])
+    rsl3_y = min(by_colour[legend["Normoxic"]])
+    assert sdt_y < rsl3_y, (
+        f"fig24's panel (b) draws SDT's normoxic reference at y={sdt_y:.0f} "
+        f"and RSL3's at y={rsl3_y:.0f}, so RSL3's is the higher kill rate. "
+        f"The data gives SDT {kills['SDT'][0]:.1f}% against RSL3 "
+        f"{kills['RSL3'][0]:.1f}% -- the two lines are exchanged")
 
     # And the collapse annotation must be the ratio of the two it names, not a
     # number carried along beside them.
@@ -841,14 +966,37 @@ def test_fig26_draws_the_timepoints_its_fixture_holds():
 # regeneration, so every platform hashes the same bytes with the same pinned
 # reader. That is why it can run in CI where the figures cannot be rebuilt.
 DRAWING_FINGERPRINTS = {
-    "fig24_hypoxia_killcurve": "f90cc9ea48092e48",
-    "fig25_bliss_synergy": "65a30b55c1132c4f",
-    "fig26_vulnerability_window": "2ae02e54ed384f63",
+    "fig24_hypoxia_killcurve": "d35ddfbbd3558f95",
+    "fig25_bliss_synergy": "b5c8a4737e17f450",
+    "fig26_vulnerability_window": "5e6e1fc87eebe95d",
 }
 
 
 def _fingerprint(stem):
-    """A hash of everything drawn: words with positions, rects with colours."""
+    """A hash of everything drawn: word positions and path geometry.
+
+    EVERY ITEM TYPE, not just rectangles. The first version hashed only `re`
+    items -- 14 of fig24's 112 drawing items, and 24 of fig26's 277, where the
+    plotted CURVES are the data. Swapping the two `axhline` VALUES in fig24's
+    panel (b), keeping every label and colour, moved the two reference lines
+    (y=72.06 and y=285.91 exchanged), inverted what panel (b) claims, and
+    passed the whole file. A backstop that reads an eighth of the drawing is
+    not a backstop.
+
+    COLOUR IS PART OF IT, and has to be. Dropping it looked attractive because
+    PyMuPDF 1.24.14 reports fig25's `#999999` bar as 0.664 where 1.28.2 reports
+    0.5999 -- but 1.24.14 is below the `>=1.28.0` floor requirements.txt
+    declares, so that divergence is outside the supported range. And without
+    colour the hash is blind to the mutation that motivated widening it in the
+    first place: swapping which VALUE each of fig24's two `axhline` calls draws
+    exchanges the two reference lines, and since the pair of line geometries is
+    unchanged as a SET, only the colour attached to each one moves. Geometry
+    alone cannot see a swap; the swap is the defect.
+
+    The hash is therefore bound to the reader as well as the file. That is
+    stated in the failure message rather than engineered away, because the
+    alternative -- a backstop that cannot see a swap -- is worse.
+    """
     pymupdf = _reader()
     path = FIG_DIR / f"{stem}.pdf"
     assert path.exists(), f"{stem}.pdf is not committed"
@@ -857,19 +1005,25 @@ def _fingerprint(stem):
         page = doc[0]
         words = sorted((round(w[0], 2), round(w[1], 2), w[4])
                        for w in page.get_text("words"))
-        rects = []
+        items = []
         for d in page.get_drawings():
-            fill = d.get("fill")
+            paint = tuple(
+                None if d.get(k) is None
+                else tuple(round(c, 2) for c in d[k])
+                for k in ("fill", "color"))
             for item in d["items"]:
-                if item[0] == "re":
-                    r = item[1]
-                    rects.append((round(r.x0, 2), round(r.y0, 2),
-                                  round(r.x1, 2), round(r.y1, 2),
-                                  None if fill is None
-                                  else tuple(round(c, 4) for c in fill)))
+                kind, rest = item[0], item[1:]
+                coords = []
+                for part in rest:
+                    for attr in ("x0", "y0", "x1", "y1"):
+                        if hasattr(part, attr):
+                            coords.append(round(getattr(part, attr), 2))
+                    if hasattr(part, "x") and hasattr(part, "y"):
+                        coords.extend([round(part.x, 2), round(part.y, 2)])
+                items.append((kind, tuple(coords), paint))
     finally:
         doc.close()
-    blob = json.dumps({"words": words, "rects": sorted(rects, key=str)},
+    blob = json.dumps({"words": words, "items": sorted(items, key=str)},
                       sort_keys=True)
     return hashlib.sha256(blob.encode()).hexdigest()[:16]
 
@@ -883,10 +1037,18 @@ def test_nothing_in_the_drawing_moved_unnoticed(stem):
     yet, which is where all six review rounds found their defects.
     """
     got = _fingerprint(stem)
+    reader = _reader()
+    version = getattr(reader, "version", ("?",))[0]
     assert got == DRAWING_FINGERPRINTS[stem], (
         f"{stem}'s drawing changed: fingerprint {got}, recorded "
         f"{DRAWING_FINGERPRINTS[stem]}. Something moved, recoloured, appeared "
         "or disappeared, and no check above noticed -- which is the case this "
         "exists for. Work out what changed and either add the assertion that "
         "explains it, or update the hash here deliberately if the new drawing "
-        "is correct. Do not update it to make the suite green.")
+        "is correct. Do not update it to make the suite green.\n"
+        f"\nPDF reader: PyMuPDF {version}. The hash is read out of the "
+        "committed file, so the same bytes give the same value everywhere "
+        "with the same reader -- but the reader is part of it. CI installs "
+        "requirements-lock.txt, which pins 1.28.2; requirements.txt allows "
+        ">=1.28.0, so a newer one here can move this hash without the figure "
+        "having changed at all. Check the version before hunting the drawing.")

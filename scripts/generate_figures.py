@@ -1477,6 +1477,12 @@ def fig25_bliss_synergy():
     # confirmed -- halving n in the sim output left the caption saying 1,000.
     # A guard comparing the drawn text to the data could not fail while the
     # text was a constant, so the number comes from the run.
+    # NOTE the asymmetry with `combos` three lines up, which accepts a bare
+    # list. A list-form combo_summary.json carries no cohort size anywhere, so
+    # this figure skips on an input the line above still reads. That is
+    # deliberate -- the footnote states n, and there is no n to state -- and
+    # `test_fig22_fixture_matches_live` fails loudly on it rather than letting
+    # the stale committed PDF pass as current.
     n_cells = data.get("n_cells_per_condition") if isinstance(data, dict) else None
     if not n_cells:
         # SKIP, not assert. An older combo_summary.json has no such field, and
