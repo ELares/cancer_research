@@ -148,6 +148,31 @@ case("fig25 colour swap with a bar shrunk below the size cut", True,
        'colors = ["#4C72B0", "#55A868", "#C44E52", "#999999"]')],
      edit=lambda root: _shrink_rate_b(root))
 
+# --------------------------- correct figures whose ARROWS are drawn oddly
+# `_annotation_arrows` requires exactly one lone cubic Bezier per panel, which
+# is a hard requirement: anything that adds or removes one breaks it. These are
+# the ways an arrow or its text legitimately gains geometry. Measured: a
+# `boxstyle="round"` text box is a FILLED patch of several curve items, so it
+# is not a lone Bezier; `angle3` still renders as one Bezier, and its tip stays
+# at `xy` even though the route there changes.
+case("fig25 arrow with connectionstyle arc3", False,
+     [('arrowprops=dict(arrowstyle="->", color="#C44E52")',
+       'arrowprops=dict(arrowstyle="->", color="#C44E52", '
+       'connectionstyle="arc3,rad=0.4")')])
+case("fig25 arrow with connectionstyle angle3", False,
+     [('arrowprops=dict(arrowstyle="->", color="#C44E52")',
+       'arrowprops=dict(arrowstyle="->", color="#C44E52", '
+       'connectionstyle="angle3")')])
+case("fig26 arrow with connectionstyle arc3", False,
+     [('arrowprops=dict(arrowstyle="->", color="#4C72B0")',
+       'arrowprops=dict(arrowstyle="->", color="#4C72B0", '
+       'connectionstyle="arc3,rad=0.3")')])
+case("fig25 annotation in a rounded bbox", False,
+     [('fontsize=10, fontweight="bold", color="#C44E52"',
+       'fontsize=10, fontweight="bold", color="#C44E52", '
+       'bbox=dict(boxstyle="round", fc="w")')])
+case("legend.fancybox", False, rc={"legend.fancybox": True})
+
 # ------------------------------------------------- correct figures, restyled
 case("committed figures, unmodified", False)
 case("xtick.direction inout", False, rc={"xtick.direction": "inout"})
