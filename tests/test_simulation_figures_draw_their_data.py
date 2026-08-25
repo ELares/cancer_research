@@ -23,7 +23,7 @@ annotations are right -- a mis-drawn curve, a swapped panel, a wrong colour
 map. It compares the numbers rendered as text. That is a smaller claim than
 "the figure is correct", and it is the claim the committed data can support.
 
-Four narrower limits, each measured rather than assumed. READ THEM AS LIMITS
+Five narrower limits, each measured rather than assumed. READ THEM AS LIMITS
 OF THE SEMANTIC CHECKS ONLY. The fingerprint at the end of this file hashes
 the whole drawing, so every mutation named below now fails there -- verified,
 each one -- but it fails as "something moved and nothing explained it", which
@@ -45,8 +45,11 @@ the places where no assertion would name it:
   holds one combination, `rsl3_fsp1i` (alongside the cohort size), so the other
   scores are compared against nothing; dropping or altering `FSP1i+HDACi`
   cannot be detected here.
-- **fig24 panel (b) is ungated**, as is fig26 panel (b)'s GPX4 right-hand axis,
-  whose tick labels are data-derived numbers no assertion reads.
+- **fig26 panel (b)'s GPX4 right-hand axis is ungated** -- its tick labels are
+  data-derived numbers no assertion reads. fig24 panel (b) was in this list
+  and is not any more: its two dashed reference lines are bound to its own
+  legend below. The rest of that panel -- the four kill curves themselves --
+  is still unread except by the fingerprint.
 - **`closes ~day 3` is a presence check.** It is a hardcoded string in the
   generator, so it would still read day 3 if the window moved.
 
@@ -214,32 +217,89 @@ def _vertical_labels(words):
             for x, ws in cols.items() if len(ws) > 1}
 
 
-def _hlines(stem):
-    """Long horizontal stroked lines as `(y, colour)`, page 0.
+def _panels(stem):
+    """Each panel's x range, from the axis spines: `[(x0, x1), ...]` left to right.
 
-    fig24's panel (b) draws each treatment's normoxic kill as a dashed
-    reference line. Swapping which VALUE each `axhline` receives, while leaving
-    both labels and both colours alone, exchanges those two lines -- panel (b)
-    then asserts RSL3's normoxic kill is ~92% and SDT's ~4%, the figure's
-    thesis inverted. Nothing in this file saw it: panel (b) carried no
-    assertion, and the fingerprint's line GEOMETRY is unchanged by a swap
-    because the same two lines are still drawn. Only what colour sits at which
-    height moves.
+    The spines are the long black horizontal strokes, and they are the only
+    thing on the page that states where a panel actually ENDS. Earlier versions
+    of this file guessed that boundary from panel titles (which broke when a
+    title wrapped) and from the rightmost bar annotation (which is 53pt inside
+    panel (a)'s real edge, so a stray label between the two panels counted as
+    belonging to the second one).
     """
     pymupdf = _reader()
     doc = pymupdf.open(FIG_DIR / f"{stem}.pdf")
     try:
-        out = []
+        spans = set()
         for d in doc[0].get_drawings():
             col = d.get("color")
-            if col is None:
+            if col is None or tuple(round(c, 2) for c in col) != (0.0, 0.0, 0.0):
                 continue
             for item in d["items"]:
                 if item[0] != "l":
                     continue
                 a, b = item[1], item[2]
                 if abs(a.y - b.y) < 0.5 and abs(b.x - a.x) > 100:
-                    out.append((round(a.y, 2),
+                    spans.add((round(min(a.x, b.x), 1), round(max(a.x, b.x), 1)))
+    finally:
+        doc.close()
+    assert spans, f"{stem}: no axis spines found, so panels cannot be located"
+    return sorted(spans)
+
+
+def _dashed_lines(stem):
+    """Long DASHED horizontal strokes as `(y, x0, x1, colour)`.
+
+    DASHED IS THE DISCRIMINATOR. An earlier version took every stroke with
+    |dy| < 0.5 and |dx| > 100, which on fig24 also matches both axis spines,
+    panel (a)'s legend frame, and -- the reason it was wrong rather than merely
+    loose -- the near-flat segments of panel (b)'s own DATA CURVES, which run
+    108.7pt with a dy of 0.05 to 0.09. Taking `min()` per colour over that set
+    picked a curve segment whenever a curve happened to sit above the reference
+    line, so deleting an `axhline` outright still passed: a curve answered for
+    it, and the failure message named a y that was never a reference line.
+
+    The two reference lines carry `dashes='[ 3.7 1.6 ] 0'`; every curve and
+    spine is solid.
+    """
+    pymupdf = _reader()
+    doc = pymupdf.open(FIG_DIR / f"{stem}.pdf")
+    try:
+        out = []
+        for d in doc[0].get_drawings():
+            dashes = (d.get("dashes") or "").strip()
+            col = d.get("color")
+            if col is None or not dashes or dashes == "[] 0":
+                continue
+            for item in d["items"]:
+                if item[0] != "l":
+                    continue
+                a, b = item[1], item[2]
+                if abs(a.y - b.y) < 0.5:
+                    out.append((round(a.y, 2), min(a.x, b.x), max(a.x, b.x),
+                                tuple(round(c, 4) for c in col)))
+        return out
+    finally:
+        doc.close()
+
+
+def _dashed_verticals(stem):
+    """Long DASHED vertical strokes as `(x, y0, y1, colour)`."""
+    pymupdf = _reader()
+    doc = pymupdf.open(FIG_DIR / f"{stem}.pdf")
+    try:
+        out = []
+        for d in doc[0].get_drawings():
+            dashes = (d.get("dashes") or "").strip()
+            col = d.get("color")
+            if col is None or not dashes or dashes == "[] 0":
+                continue
+            for item in d["items"]:
+                if item[0] != "l":
+                    continue
+                a, b = item[1], item[2]
+                if abs(a.x - b.x) < 0.5 and abs(b.y - a.y) > 50:
+                    out.append((round(a.x, 2), min(a.y, b.y), max(a.y, b.y),
                                 tuple(round(c, 4) for c in col)))
         return out
     finally:
@@ -391,18 +451,33 @@ def test_fig25_draws_its_bliss_numbers():
     # The two words sit 0.87pt apart vertically (57.115 and 57.985), so an
     # exact row key splits them; the annotation is one visual line.
     ax, ay = hits[0]
+    # THE WHOLE VISUAL LINE, both directions. Filtering to `x >= ax - 1`
+    # discarded anything drawn to the LEFT of the number, so prefixing the
+    # annotation with `no ` negated the panel's claim and passed the check
+    # written to pin that exact annotation.
     line = sorted((x, t) for x, y, t in words_a
-                  if abs(y - ay) < 2 and x < min(pair_x) and x >= ax - 1)
+                  if abs(y - ay) < 2 and x < min(pair_x))
     assert " ".join(t for _, t in line) == f"{want} synergy", (
         f"fig25's panel (a) synergy annotation reads "
         f"{' '.join(t for _, t in line)!r}, expected {want + ' synergy'!r}")
     # BY POSITION, for the reason fig24's needed it: a containment check does
     # not say WHICH panel carries the label, or that any panel does.
     cols = _vertical_labels(_words("fig25_bliss_synergy"))
-    assert sorted(cols.values()).count("Persister kill (%)") == 1, (
+    kill_axes = sorted(x for x, lbl in cols.items()
+                       if lbl == "Persister kill (%)")
+    assert len(kill_axes) == 1, (
         "fig25 does not draw `Persister kill (%)` as a y-axis label exactly "
         f"once; vertical labels found: {sorted(cols.values())}. The four "
         "values compared above are drawn as percentages")
+    # AND IT LABELS PANEL (a). Counting was the same defect fig24's version
+    # had: removing panel (a)'s y-label and dropping one rotated copy past the
+    # right edge of panel (b) left the count at one, 475pt from the bars it is
+    # supposed to describe.
+    fig25_panels = _panels("fig25_bliss_synergy")
+    assert kill_axes[0] < fig25_panels[0][0], (
+        f"fig25's `Persister kill (%)` label is at x={kill_axes[0]:.0f}, not "
+        f"left of panel (a)'s axis at x={fig25_panels[0][0]:.0f}; it does not "
+        "label the bars whose values are compared above")
 
     # THE COHORT SIZE. It is drawn as a footnote and was compared against
     # nothing, so the figure could claim any n. It is a real field of the
@@ -499,6 +574,37 @@ def test_fig25_binds_each_pair_to_its_own_score():
         f"fig25's panel (b) x axis reads {' '.join(cap_row)!r}; the values "
         "compared here are the observed-over-expected ratio, and the "
         "reciprocal is a different claim about every bar on the panel")
+    fig25_panels = _panels("fig25_bliss_synergy")
+    # THE ADDITIVE LINE, on panel (b)'s own scale. `axvline(1.0)` is what
+    # turns a score into a synergy claim, and nothing read it: moving it to
+    # 1.9 with its label unchanged makes two of the three pairs read
+    # sub-additive, and only the fingerprint noticed. Panel (b)'s x tick
+    # labels give the scale, so the line's position is checked in DATA units
+    # rather than points.
+    # CENTRES. A tick label is centred on its tick, so its left edge is offset
+    # by half its own width -- using x0 put the additive line at 1.08.
+    ticks = sorted((cx, float(t))
+                   for cx, y, t in _word_centres("fig25_bliss_synergy")
+                   if re.fullmatch(r"\d+\.\d", t)
+                   and cx > fig25_panels[-1][0] - 20)
+    assert len(ticks) >= 2, (
+        f"fig25's panel (b) draws {len(ticks)} numeric x tick labels; its "
+        "scale cannot be recovered")
+    (tx0, tv0), (tx1, tv1) = ticks[0], ticks[-1]
+    scale = (tx1 - tx0) / (tv1 - tv0)
+    vlines = [x for x, y0, y1, col in _dashed_verticals("fig25_bliss_synergy")
+              if fig25_panels[-1][0] <= x <= fig25_panels[-1][1]]
+    assert len(vlines) == 1, (
+        f"fig25's panel (b) draws {len(vlines)} dashed vertical lines, "
+        "expected one additive threshold")
+    drawn_at = (vlines[0] - tx0) / scale + tv0
+    assert abs(drawn_at - 1.0) < 0.02, (
+        f"fig25's additive threshold line is drawn at {drawn_at:.2f} on its "
+        "own x scale, not 1.0. Every score on the panel is read against that "
+        "line, so moving it changes which pairs read as synergistic")
+    assert "additive" in text, (
+        "fig25's panel (b) no longer labels its threshold line `additive`")
+
     assert caption[0][0] > max(x for x, _, t in names), (
         "fig25's score caption is not to the right of its pair labels, so it "
         "is not panel (b)'s x axis")
@@ -727,6 +833,8 @@ def test_fig24_draws_its_hypoxia_numbers():
     # y-axis label at all (the words moved into its title), and held again
     # while panel (a) was relabelled `(fraction surviving)` and a second copy
     # added to panel (b). A count says how many, never where.
+    px = _panels("fig24_hypoxia_killcurve")
+    assert len(px) >= 2, f"fig24 has {len(px)} panels by its spines, expected 2"
     columns = _vertical_labels(panel_a)
     kill_axes = sorted(x for x, lbl in columns.items()
                        if lbl == "Overall tumor kill (%)")
@@ -741,39 +849,74 @@ def test_fig24_draws_its_hypoxia_numbers():
     # the four percentages it is supposed to describe stay where they are. A
     # y-axis label sits to the LEFT of the data it labels, so panel (a)'s must
     # be left of panel (a)'s own bars and panel (b)'s to their right.
-    left_edge = min(x for x, _ in bars)
-    right_edge = max(x for x, _ in bars)
-    assert kill_axes[0] < left_edge, (
+    # BOUNDED ON THE PANEL SPINES. Using panel (a)'s rightmost bar annotation
+    # as the divider put the boundary 53pt inside panel (a)'s real edge, so a
+    # rotated label dropped ON TOP of panel (a)'s own bars counted as
+    # labelling panel (b), and the message asserted a conclusion the bound
+    # could not support.
+    (a_x0, a_x1), (b_x0, b_x1) = px[0], px[-1]
+    assert kill_axes[0] < a_x0, (
         f"fig24's leftmost `Overall tumor kill (%)` label is at "
-        f"x={kill_axes[0]:.0f}, right of panel (a)'s first bar annotation at "
-        f"x={left_edge:.0f}. Panel (a)'s values are drawn without the axis "
+        f"x={kill_axes[0]:.0f}, inside panel (a) rather than left of its axis "
+        f"at x={a_x0:.0f}. Panel (a)'s values are drawn without the axis "
         "label that says what they are")
-    assert kill_axes[1] > right_edge, (
+    assert a_x1 < kill_axes[1] < b_x0, (
         f"fig24's second `Overall tumor kill (%)` label is at "
-        f"x={kill_axes[1]:.0f}, which is not right of panel (a)'s last bar "
-        f"annotation at x={right_edge:.0f}; it does not label panel (b)")
+        f"x={kill_axes[1]:.0f}, not between panel (a)'s right edge "
+        f"({a_x1:.0f}) and panel (b)'s left edge ({b_x0:.0f}); it does not "
+        "label panel (b)")
 
-    # PANEL (b)'S REFERENCE LINES. Each treatment's normoxic kill is drawn
-    # there as a dashed horizontal line in that treatment's colour, and SDT's
-    # is far higher than RSL3's -- that gap IS the panel's claim. Swapping the
-    # two values exchanges the lines while every label, colour and word stays
-    # put, and until now nothing here looked at panel (b) at all.
-    lines = _hlines("fig24_hypoxia_killcurve")
-    by_colour = {}
-    for y, col in lines:
-        by_colour.setdefault(col, []).append(y)
-    for name, col in (("SDT", legend["Hypoxic"]), ("RSL3", legend["Normoxic"])):
-        assert col in by_colour, (
-            f"fig24's panel (b) draws no {name} reference line in the colour "
-            "its own legend gives that treatment")
-    # Smaller y is higher on the page, and SDT's normoxic kill is the larger
-    # number, so its line must sit above RSL3's.
-    sdt_y = min(by_colour[legend["Hypoxic"]])
-    rsl3_y = min(by_colour[legend["Normoxic"]])
+    # PANEL (b)'S REFERENCE LINES, bound to PANEL (b)'S OWN LEGEND. Each
+    # treatment's normoxic kill is drawn there as a dashed horizontal line,
+    # and SDT's sits far above RSL3's -- that gap is the panel's claim.
+    #
+    # Two things this must not do, both of which an earlier version did. It
+    # must not take any long flat stroke as a reference line, because panel
+    # (b)'s own data curves flatten out and answered for a deleted `axhline`.
+    # And it must not name the treatments by panel (a)'s series colours: those
+    # happen to be the same two hex values, so recolouring panel (a) alone --
+    # a style change leaving panel (b) correct -- failed with a message about
+    # panel (b)'s legend, which it was not reading. Panel (b) captions its own
+    # lines, and each caption has a dashed sample beside it.
+    b_x0, b_x1 = px[-1]
+    dashed = _dashed_lines("fig24_hypoxia_killcurve")
+    ref_colour = {}
+    for x, y, t in panel_a:
+        if t != "normoxic":
+            continue
+        owner = [w for w in panel_a
+                 if abs(w[1] - y) < 1 and w[0] < x and w[2] in ("SDT", "RSL3")]
+        assert len(owner) == 1, (
+            f"fig24's panel (b) legend row at y={y:.0f} names "
+            f"{len(owner)} treatments")
+        sample = [d for d in dashed
+                  if 0 < d[0] - y < 10 and d[2] - d[1] < 40]
+        assert sample, (
+            f"fig24's `{owner[0][2]} normoxic` legend entry has no dashed "
+            "sample beside it, so its colour cannot be read from the legend")
+        ref_colour[owner[0][2]] = sample[0][3]
+    assert set(ref_colour) == {"SDT", "RSL3"}, (
+        f"fig24's panel (b) legend captions {sorted(ref_colour)} as normoxic "
+        "references, expected SDT and RSL3")
+    assert ref_colour["SDT"] != ref_colour["RSL3"], (
+        "fig24's panel (b) draws both normoxic references in one colour")
+    refs = {}
+    for y, x0, x1, col in dashed:
+        if x0 >= b_x0 - 1 and x1 <= b_x1 + 1 and (x1 - x0) > (b_x1 - b_x0) * 0.8:
+            refs.setdefault(col, []).append(y)
+    for name in ("SDT", "RSL3"):
+        assert ref_colour[name] in refs, (
+            f"fig24's panel (b) draws no full-width dashed {name} reference "
+            "line in the colour its own legend gives that treatment")
+        assert len(refs[ref_colour[name]]) == 1, (
+            f"fig24's panel (b) draws {len(refs[ref_colour[name]])} {name} "
+            "reference lines")
+    sdt_y = refs[ref_colour["SDT"]][0]
+    rsl3_y = refs[ref_colour["RSL3"]][0]
     assert sdt_y < rsl3_y, (
         f"fig24's panel (b) draws SDT's normoxic reference at y={sdt_y:.0f} "
-        f"and RSL3's at y={rsl3_y:.0f}, so RSL3's is the higher kill rate. "
-        f"The data gives SDT {kills['SDT'][0]:.1f}% against RSL3 "
+        f"and RSL3's at y={rsl3_y:.0f}, so RSL3's reads as the higher kill "
+        f"rate. The data gives SDT {kills['SDT'][0]:.1f}% against RSL3 "
         f"{kills['RSL3'][0]:.1f}% -- the two lines are exchanged")
 
     # And the collapse annotation must be the ratio of the two it names, not a
@@ -945,17 +1088,23 @@ def test_fig26_draws_the_timepoints_its_fixture_holds():
 # Recorded fingerprints of what each figure DRAWS: every word with its
 # position, and every filled rectangle with its geometry and colour.
 #
-# WHY THIS EXISTS. Six adversarial rounds found six different elements whose
-# ARRANGEMENT was unchecked -- annotations at fixed offsets, annotations
+# WHY THIS EXISTS. Eight adversarial rounds found eight different elements
+# whose ARRANGEMENT was unchecked -- annotations at fixed offsets, annotations
 # anchored to the wrong bar of a reversed zip, three sets of tick labels, a
 # legend, a label/value list, and finally the bar rectangles themselves, which
 # move under their own labels leaving every word untouched. Each round closed
 # the element it found and the next round found another. Closing them one at a
 # time is not converging, because the list is not the mutation SPACE.
 #
-# This is the space. Anything that moves, recolours, adds or removes a drawn
-# element changes the hash, so a seventh unchecked element cannot pass
-# silently -- it fails here even though no semantic check named it.
+# It is much wider than the semantic checks and it is still not "the space".
+# Two rounds have now found elements it did not cover: it read only rectangle
+# items, missing every line and curve, and then read no paint property beyond
+# colour, so a confidence band turned opaque enough to hide the curves beneath
+# it left the hash unmoved. It now covers every path item, every paint
+# property, and text spans with their colour and size -- which is a claim
+# about what it READS, not a promise that nothing can slip past it. Treat a
+# green fingerprint as "nothing I know how to look at moved", and keep adding
+# semantic checks, which say what a change MEANS.
 #
 # It is deliberately a BACKSTOP, not a replacement. It says "something in the
 # drawing moved and nothing above noticed"; it cannot say what the change
@@ -966,16 +1115,16 @@ def test_fig26_draws_the_timepoints_its_fixture_holds():
 # regeneration, so every platform hashes the same bytes with the same pinned
 # reader. That is why it can run in CI where the figures cannot be rebuilt.
 DRAWING_FINGERPRINTS = {
-    "fig24_hypoxia_killcurve": "d35ddfbbd3558f95",
-    "fig25_bliss_synergy": "b5c8a4737e17f450",
-    "fig26_vulnerability_window": "5e6e1fc87eebe95d",
+    "fig24_hypoxia_killcurve": "07e6250620223912",
+    "fig25_bliss_synergy": "4a220e7221e8c2b5",
+    "fig26_vulnerability_window": "5558f5a7ece1f7e2",
 }
 
 
 def _fingerprint(stem):
     """A hash of everything drawn: word positions and path geometry.
 
-    EVERY ITEM TYPE, not just rectangles. The first version hashed only `re`
+    EVERY ITEM TYPE AND EVERY PAINT PROPERTY, over spans rather than words. The first version hashed only `re`
     items -- 14 of fig24's 112 drawing items, and 24 of fig26's 277, where the
     plotted CURVES are the data. Swapping the two `axhline` VALUES in fig24's
     panel (b), keeping every label and colour, moved the two reference lines
@@ -1003,23 +1152,61 @@ def _fingerprint(stem):
     doc = pymupdf.open(path)
     try:
         page = doc[0]
-        words = sorted((round(w[0], 2), round(w[1], 2), w[4])
-                       for w in page.get_text("words"))
+        # SPANS, NOT WORDS, because a word carries no colour or size. Drawing
+        # fig24's four bar annotations in white leaves them invisible on a
+        # white ground -- the four values this whole file exists to gate gone
+        # from the artifact -- while every word is still at its old position
+        # and every check, this one included, passed.
+        spans = []
+        for block in page.get_text("dict")["blocks"]:
+            for line in block.get("lines", ()):
+                for span in line["spans"]:
+                    spans.append((tuple(round(v, 2) for v in span["bbox"]),
+                                  span["text"], span["color"],
+                                  round(span["size"], 2), span.get("font")))
+        words = sorted(spans, key=str)
         items = []
         for d in page.get_drawings():
-            paint = tuple(
-                None if d.get(k) is None
-                else tuple(round(c, 2) for c in d[k])
-                for k in ("fill", "color"))
+            # EVERY PAINT PROPERTY, not just the two colours. Width, dash
+            # pattern and opacity are all invisible to a colour-only hash, and
+            # each is enough on its own to change what the figure SAYS:
+            # turning fig26's confidence bands from alpha 0.15 to 0.95 covers
+            # the plotted curves entirely -- the data of the figure -- and the
+            # hash did not move.
+            paint = (
+                tuple(None if d.get(k) is None
+                      else tuple(round(c, 2) for c in d[k])
+                      for k in ("fill", "color"))
+                + tuple(round(d[k], 3) if isinstance(d.get(k), float)
+                        else d.get(k)
+                        for k in ("width", "dashes", "stroke_opacity",
+                                  "fill_opacity", "even_odd", "closePath")))
             for item in d["items"]:
                 kind, rest = item[0], item[1:]
                 coords = []
                 for part in rest:
-                    for attr in ("x0", "y0", "x1", "y1"):
-                        if hasattr(part, attr):
-                            coords.append(round(getattr(part, attr), 2))
-                    if hasattr(part, "x") and hasattr(part, "y"):
+                    if hasattr(part, "ul"):                  # Quad
+                        for corner in (part.ul, part.ur, part.ll, part.lr):
+                            coords.extend([round(corner.x, 2),
+                                           round(corner.y, 2)])
+                    elif hasattr(part, "x0"):                # Rect
+                        coords.extend(round(getattr(part, a), 2)
+                                      for a in ("x0", "y0", "x1", "y1"))
+                    elif hasattr(part, "x"):                 # Point
                         coords.extend([round(part.x, 2), round(part.y, 2)])
+                    else:
+                        coords.append(part)                  # scalar (radius)
+                # AN UNRECOGNISED SHAPE MUST NOT HASH AS NOTHING. The first
+                # version read x0/y0/x1/y1 or x/y and fell through silently
+                # otherwise -- a `qu` item has neither, so a quad would have
+                # been recorded as an empty tuple and any change to it would
+                # have been invisible while the docstring claimed every item
+                # type was covered. None of these three figures draws one
+                # today, which is exactly why it would have gone unnoticed.
+                assert coords, (
+                    f"{stem}: a `{kind}` drawing item produced no coordinates, "
+                    "so it would be hashed as nothing. Teach this extractor "
+                    "the shape rather than letting it hash an empty tuple")
                 items.append((kind, tuple(coords), paint))
     finally:
         doc.close()

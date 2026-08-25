@@ -187,6 +187,10 @@ def test_fig23_fixture_matches_live():
     # take n_cells from any row -- so this compares the same subset the figure
     # states in its footnote.
     fix = _fixture("vulnerability_window.json")
+    # The loop above iterates `live` directly and would raise on the dict
+    # form, so this tolerance is unreachable today; it is here so that adding
+    # the same handling above does not leave this line behind. An earlier
+    # comment claimed it mirrored a tolerance up there. It does not.
     live_rows = live["rows"] if isinstance(live, dict) and "rows" in live else live
     live_n = {x["n_cells"] for x in live_rows
               if x["treatment"] in ("RSL3", "SDT") and x.get("n_cells")}
