@@ -85,6 +85,16 @@ the places where no assertion would name it:
   matplotlib's own clip now (`_panel_boxes`), which is emitted whether or not
   a spine is painted, and both configurations pass.
 
+- **A panel must not contain an INSET.** `_panel_boxes` correctly drops an
+  inset's clip -- it is contained by its parent panel, so the nesting filter
+  removes it -- but the inset's own tick LABELS are still words inside the
+  parent's x range, so a scale reading counts them: adding an inset to fig25
+  panel (b) gives "5 x tick marks against 11 numeric labels; its scale cannot
+  be recovered". It fails loudly rather than reading the wrong scale, and none
+  of these three figures has an inset, so this is a stated bound rather than a
+  defect to chase. A colorbar is fine and needs no exemption: it legitimately
+  shrinks the panel, and `_panel_boxes` tracks that.
+
 - **The figure must draw visible tick marks.** THREE scale readings -- fig24
   panel (b)'s reference lines, fig26's window shading, and fig25's additive
   threshold line -- locate themselves from the tick MARKS. fig25's was the
@@ -347,15 +357,40 @@ def _panel_boxes(stem):
     No size constant, no nesting-plus-grouping-plus-tie-break, no dashed-rule
     guard: a clip is geometry the renderer emitted, not a property inferred
     from what happened to be drawn.
+
+    TWO BOUNDS, both stated because a reviewer found them rather than the file
+    declaring them:
+
+      * A PANEL THAT DRAWS NOTHING EMITS NO CLIP, so it is not returned and
+        the count is short. Verified by clearing fig25's panel (b): this
+        returns one box, and the suite fails loudly with "fig25 draws no pair
+        labels, so panel (b) cannot be located" rather than reading one panel
+        as two.
+      * THE FALLBACK BELOW IS THEREFORE UNREACHABLE ON EVERY FIGURE HERE. It
+        is gated on zero boxes, and none of the 30 committed figures clips
+        nothing. It is kept for a figure that draws only text, and this note
+        says plainly that nothing exercises it -- which is the honest status,
+        not a claim that it works.
     """
     pymupdf = _reader()
     doc = pymupdf.open(FIG_DIR / f"{stem}.pdf")
     try:
         page = doc[0].rect
-        rects = {(round(r.x0, 1), round(r.y0, 1), round(r.x1, 1), round(r.y1, 1))
-                 for d in doc[0].get_drawings(extended=True)
-                 if d.get("type") == "clip"
-                 for r in [d.get("scissor")] if r is not None}
+        # DEDUP ON A ROUNDED KEY, RETURN THE EXACT RECTANGLE. Rounding the
+        # returned values made `_axes_box` give (52.6, 302.0) where
+        # `_panel_y` gives (52.56, 302.04), so the docstring's own evidence --
+        # "measured identical" -- stopped being true of its output.
+        seen = {}
+        for d in doc[0].get_drawings(extended=True):
+            if d.get("type") != "clip":
+                continue
+            r = d.get("scissor")
+            if r is None:
+                continue
+            key = (round(r.x0, 1), round(r.y0, 1),
+                   round(r.x1, 1), round(r.y1, 1))
+            seen.setdefault(key, (r.x0, r.y0, r.x1, r.y1))
+        rects = set(seen.values())
     finally:
         doc.close()
     inner = {k for k in rects
@@ -486,8 +521,16 @@ def _panels_from_rules(stem):
 def _axes_box(stem):
     """The plotting area's (top, bottom), from the CLIP matplotlib applies.
 
-    The vertical extent of `_panel_boxes` -- measured identical to `_panel_y`
-    on all three committed figures, (52.56, 302.04) in every case.
+    The vertical extent of `_panel_boxes`. On all three committed figures it
+    is 52.55999755859375 to 302.0400085449219, which `_panel_y` reports as
+    (52.56, 302.04) because that function rounds its spine coordinates to 2dp
+    -- the same plotting area, agreeing to 4e-3 pt.
+
+    An earlier version of this sentence said "measured identical", and then a
+    later commit rounded THIS function's output to 1dp, which made even the
+    displayed values differ ((52.6, 302.0) against (52.56, 302.04)). The
+    rounding is gone from the returned value and the claim is stated as the
+    agreement it is rather than as an equality neither side ever had.
 
     It does not care how far a confidence band reaches, because the band is
     the thing being clipped, nor about `axes.xmargin`, `ytick.alignment` or
@@ -1549,6 +1592,24 @@ def test_fig25_draws_its_bliss_numbers():
     assert _mult(" ".join(t for _, t in line)) == f"{want} synergy", (
         f"fig25's panel (a) synergy annotation reads "
         f"{' '.join(t for _, t in line)!r}, expected {want + ' synergy'!r}")
+    # AND IT MUST SIT OVER THE BAR IT NAMES. The synergy score belongs to the
+    # OBSERVED COMBINATION -- the last of panel (a)'s four bars -- and nothing
+    # placed it: repointing `xy`/`xytext` to the first bar draws `1.99x
+    # synergy` over `RSL3 alone`, attributing the whole dual-pathway result to
+    # the monotherapy, and it passed. Same class as fig24's collapse
+    # annotation and fig26's window caption, both closed a round earlier; this
+    # was the third instance and was not looked for.
+    #
+    # It is anchored over the RIGHT half of the panel, so the test is which
+    # half of panel (a) its own words fall in -- no bar identification needed,
+    # and it survives any bar width.
+    a_lo25, a_hi25 = _panels("fig25_bliss_synergy")[0]
+    ann_mid = (line[0][0] + max(x for x, _ in line)) / 2
+    assert ann_mid > (a_lo25 + a_hi25) / 2, (
+        f"fig25's panel (a) synergy annotation is centred at x={ann_mid:.0f}, "
+        f"in the LEFT half of a panel spanning {a_lo25:.0f}-{a_hi25:.0f}. It "
+        "names the observed-combination bar, the rightmost of four, so drawn "
+        "there it credits the synergy to a monotherapy bar")
     # BY POSITION, for the reason fig24's needed it: a containment check does
     # not say WHICH panel carries the label, or that any panel does.
     # EACH OVER ITS OWN PANEL. Containment leaves a swap invisible: exchange
@@ -1893,18 +1954,68 @@ def test_fig25_binds_each_pair_to_its_own_score():
     #
     # A bar starts at data zero, which is panel (b)'s own spine, so its RIGHT
     # edge is its value on the scale just established.
-    # `_filled_rects` is (x0, x1, y0, y1, fill). The axes BACKGROUND also
-    # starts on the spine, so it is excluded by spanning the whole panel.
-    b_hi = _panels("fig25_bliss_synergy")[-1][1]
+    # `_filled_rects` is (x0, x1, y0, y1, fill). THE BACKGROUND IS EXCLUDED BY
+    # SPANNING THE PANEL ON BOTH AXES, not by its right edge alone: keyed on
+    # the right edge, `set_xlim(0, max(scores))` -- dropping the generator's
+    # 1.25 headroom -- deletes the bar that reaches the axis limit, which is
+    # the flagship pair's, and the count assertion then failed on a correct
+    # figure.
+    b_lo_x, b_hi_x = _panels("fig25_bliss_synergy")[-1]
+    b_top, b_bot = _axes_box("fig25_bliss_synergy") or _panel_y(
+        "fig25_bliss_synergy")
     bar_rects = [r for r in _filled_rects("fig25_bliss_synergy")
                  if abs(r[0] - b_spine) < 2 and r[1] > b_spine + 2
-                 and r[1] < b_hi - 1]
-    assert len(bar_rects) >= len(names), (
+                 and not (abs(r[0] - b_lo_x) < 1 and abs(r[1] - b_hi_x) < 1
+                          and abs(r[2] - b_top) < 1 and abs(r[3] - b_bot) < 1)]
+    # A ZERO-LENGTH BAR DRAWS NO RECTANGLE, exactly as fig24's zero-height bar
+    # does -- matplotlib emits no `re` item for it -- so a pair scoring 0.0
+    # false-failed a hard count. fig24's block already solved this by matching
+    # bars to annotations and tolerating a missing one; this one re-asserted
+    # the count instead. Match by row and let a row have no bar.
+    assert len(bar_rects) <= len(names), (
         f"fig25's panel (b) draws {len(bar_rects)} bars standing on its axis "
-        f"against {len(names)} pair labels")
+        f"against {len(names)} pair labels; something else is being read as "
+        "a bar")
+    # BY THE LABEL'S MIDLINE. `names` carries TOP-LEFT corners, and a bar's
+    # key here is its row CENTRE, so the two are offset by half a line: at 15
+    # pairs the pitch is 15.32pt against an 8.01pt offset and every row bound
+    # to the row ABOVE, failing a correct figure. The by-row score binding
+    # above documents this exact hazard and defends itself with a runner-up
+    # ratio; this block copied the nearest-neighbour and neither guard.
+    label_mid = {b[4]: (b[1] + b[3]) / 2 for b in _word_bboxes(
+        "fig25_bliss_synergy")}
     for x, y, t in names:
-        near = sorted(bar_rects, key=lambda r: abs((r[2] + r[3]) / 2 - y))
-        drawn = (near[0][1] - tx0) / scale + tv0
+        mid = label_mid.get(t, y)
+        ranked = sorted(bar_rects, key=lambda r: abs((r[2] + r[3]) / 2 - mid))
+        if not ranked:
+            continue
+        best = ranked[0]
+        # A ROW WITH NO BAR IS A ZERO-LENGTH BAR, not a mis-binding. The
+        # nearest rectangle is then the NEXT row's, so the runner-up guard
+        # below would fire on a correct figure -- which it did, on a pair
+        # scored 0.0. A bar overlaps the row it belongs to; a neighbour's does
+        # not, so vertical overlap decides whether this row has one at all.
+        if not (best[2] <= mid <= best[3]):
+            continue
+        runner = ranked[1] if len(ranked) > 1 else None
+        d_best = abs((best[2] + best[3]) / 2 - mid)
+        assert runner is None or abs(
+            (runner[2] + runner[3]) / 2 - mid) > 3 * d_best + 3, (
+            f"{t}'s nearest bar is {d_best:.1f}pt away and the next is "
+            f"{abs((runner[2] + runner[3]) / 2 - mid):.1f}pt; the rows are "
+            "too close together to attribute a bar to a pair")
+        # AND THE HIGHLIGHT COLOUR, the other half of what a bar encodes. The
+        # generator colours RSL3+FSP1i red and everything else blue, so
+        # de-pairing the colour list alone moves the highlight onto the
+        # weakest pair -- every length and label correct, the emphasis on the
+        # wrong row. Adding the length check and leaving this was the same
+        # omission one level down.
+        is_red = best[4][0] > best[4][2]
+        assert is_red == (t == "RSL3+FSP1i"), (
+            f"fig25's panel (b) draws {t}'s bar in {best[4]}, and the "
+            f"highlight colour marks the flagship pair. It is on "
+            f"{'this row' if is_red else 'another row'}")
+        drawn = (best[1] - tx0) / scale + tv0
         want = float(_mult(by_row[t]).rstrip("\u00d7"))
         assert abs(drawn - want) <= 0.05, (
             f"fig25's panel (b) draws {t}'s bar reaching {drawn:.2f} on its "
@@ -2032,24 +2143,38 @@ def test_fig24_draws_its_hypoxia_numbers():
     # this sentence quotes is the group it must not stray from.
     # NOT NEAREST -- IT MUST NOT REACH THE OTHER GROUP. "Nearest the bars it
     # quotes" is FALSE of the correct figure and was tried: the annotation is
-    # deliberately placed BETWEEN the two groups, at x=198, which is 66pt from
-    # RSL3's own bars (90 and 144) and only 26pt from SDT's (238 and 291). The
-    # committed figure failed that check, which is the check being wrong.
+    # centred at x=198, and the four bar LABELS this code compares against sit
+    # at 79.0 and 132.1 (RSL3's, which it quotes) and 223.6 and 276.7 (SDT's)
+    # -- so 65.8pt from the nearer of its own and 25.7pt from the nearer of
+    # the other's. The committed figure failed that check, which is the check
+    # being wrong. An earlier version attached those distances to the bar
+    # CENTRES (90.4, 190.7, 237.9, 291.0), which give 54.4 and 40.0: same
+    # conclusion, coordinates that were not the ones measured.
     #
     # What is true is that it must stay left of the group it does not
     # describe. At `xytext` 1.0 it recentres to x=264, PAST SDT's first bar,
     # and the figure reads RSL3's collapse onto SDT's bars.
+    # BOTH SIDES AS CENTRES, and the guard does not switch itself off. Two
+    # defects here, both mine: `ann_x` was a midpoint compared against
+    # `min(others)`, a LEFT EDGE -- about 14pt of asymmetry on a 25.8pt margin
+    # -- and the whole check sat behind `if len(bars_all) == 4`, so it
+    # silently vanished whenever the four annotations were not all distinct,
+    # which this file elsewhere contemplates (SDT's gradient rates collapsing
+    # onto its uniform rate). A guard that turns itself off on the figures it
+    # is least sure about is not a guard.
     ann_x = (lb[0] + rb[2]) / 2
-    bars_all = sorted(((x, t) for x, y, t in panel_a
-                       if re.fullmatch(r"\d+\.\d%", t)
-                       and (x, t) not in (left, right)), key=lambda w: w[0])
-    others = [x for x, t in bars_all if t not in (left[1], right[1])]
-    if len(bars_all) == 4 and others:
+    centres = {t: cx for cx, y, t in _word_centres("fig24_hypoxia_killcurve")}
+    bars_all = [(x, t) for x, y, t in panel_a
+                if re.fullmatch(r"\d+\.\d%", t) and (x, t) not in (left, right)]
+    others = [centres.get(t, x) for x, t in bars_all
+              if t not in (left[1], right[1])]
+    assert bars_all, "fig24 draws no bar annotations to place the collapse note against"
+    if others:
         assert ann_x < min(others), (
             f"fig24's collapse annotation is centred at x={ann_x:.0f}, at or "
-            f"past the first bar of the group it does NOT quote "
-            f"(x={min(others):.0f}). It quotes RSL3's values, so drawing it "
-            "over the SDT bars attributes RSL3's collapse to SDT")
+            f"past the centre of the first annotation of the group it does "
+            f"NOT quote (x={min(others):.0f}). It quotes RSL3's values, so "
+            "drawing it there attributes RSL3's collapse to SDT")
 
     bars = sorted(((x, t) for x, y, t in panel_a
                    if re.fullmatch(r"\d+\.\d%", t)
@@ -2865,15 +2990,47 @@ def test_fig26_draws_the_timepoints_its_fixture_holds():
         "what shows where the window is")
     # AND THE CAPTION THAT SAYS WHAT THE SHADE MEANS. Both shade edges are
     # pinned to the tick, and the words naming it were left free: moving
-    # `RSL3 window open` from x=261-299 to x=408-446 puts it over days ~21-28,
-    # the region this same panel shades as CLOSED, and nothing fired. A label
-    # for a region has to sit in the region.
-    caption = [b for b in _word_bboxes(stem26) if b[4] == "window"]
-    caption = [b for b in caption if a_lo - 1 <= (b[0] + b[2]) / 2 <= a_hi + 1
-               and b[1] > _axes_box(stem26)[0]]
+    # `RSL3 window open` rightwards puts it past the day-14 tick, into the
+    # region this same panel shades as CLOSED, and nothing fired. A label for
+    # a region has to sit in the region. (An earlier note said "x=261-299 to
+    # x=408-446 ... days ~21-28": that day range interpolates linearly across
+    # an axis this figure's own footnote states is NOT linear in time, and the
+    # x range was neither the word this check reads nor the whole annotation.)
+    # THE TREATMENT NAME, WHICH IS THE HALF THAT CARRIES THE MEANING. Reading
+    # only `window` located the caption and checked nothing about what it
+    # says: renaming it `SDT window open` captions the days-0-to-3 span as
+    # SDT's, while the panel title says RSL3 closes and SDT stays open, and it
+    # passed -- the assertion message even printed a string the code never
+    # read. The shading marks the window that CLOSES, so the treatment named
+    # beside it is the one whose curve collapses.
+    inside = [b for b in _word_bboxes(stem26)
+              if a_lo - 1 <= (b[0] + b[2]) / 2 <= a_hi + 1
+              and b[1] > _axes_box(stem26)[0]]
+    caption = [b for b in inside if b[4] == "window"]
     assert len(caption) == 1, (
         f"fig26's panel (a) draws the word `window` {len(caption)} times "
         "inside the axes; the shade's caption cannot be identified")
+    cap_row = [b for b in inside if abs(b[1] - caption[0][1]) < 2]
+    named = {b[4] for b in cap_row} & {"RSL3", "SDT"}
+    assert named == {"RSL3"}, (
+        f"fig26's window caption names {sorted(named) or 'no treatment'}, and "
+        "the span it labels is the window that CLOSES -- which this figure's "
+        "own title attributes to RSL3, not SDT")
+    # AND THE SHADE'S COLOUR, which says the same thing a second way. The span
+    # is drawn in the series colour of the treatment whose window it marks, so
+    # recolouring it to SDT's red captions days 0-3 as SDT's window while the
+    # words beside it say RSL3 -- and the shade is selected by GEOMETRY, so
+    # nothing read its fill. The legend gives which colour is which.
+    # The fill is the series colour exactly -- `alpha` is a paint property,
+    # not a colour change -- so this compares componentwise with a tolerance
+    # only for the 4-decimal rounding `_filled_rects` applies.
+    shade_fill = shade[0][4]
+    assert (len(shade_fill) == len(legend_col["RSL3"]) and
+            max(abs(a - b) for a, b in zip(shade_fill,
+                                           legend_col["RSL3"])) < 0.01), (
+        f"fig26 draws the window shade in {shade_fill}, which is not the "
+        f"colour its own legend gives RSL3 ({legend_col['RSL3']}). The span "
+        "marks the window that closes, so its colour attributes it")
     cap_x = (caption[0][0] + caption[0][2]) / 2
     assert shade[0][0] - 1 <= cap_x <= shade[0][1] + 1, (
         f"fig26 draws `RSL3 window open` centred at x={cap_x:.0f}, outside "
@@ -2890,6 +3047,24 @@ def test_fig26_draws_the_timepoints_its_fixture_holds():
     # closes, which is the claim the curve check above compares against -- and
     # a containment check cannot see the titles SWAPPED, which puts that claim
     # over the wrong panel while both strings remain present.
+    # `closes ~day 3` MUST SIT WHERE IT SAYS. The string is a stated presence
+    # check -- it is hardcoded, so it would still read day 3 if the window
+    # moved -- but its PLACEMENT was unread too, and that is a separate claim:
+    # repointing it to the last timepoint puts the words over day 28, the far
+    # end of the axis, still reading `closes ~day 3`. The same argument the
+    # shade caption above rests on ("a label for a region has to sit in the
+    # region") applies to an annotation naming a DAY.
+    closes = [b for b in _word_bboxes(stem26) if b[4] == "closes"
+              and a_lo - 1 <= (b[0] + b[2]) / 2 <= a_hi + 1
+              and b[1] > _axes_box(stem26)[0]]
+    if closes:
+        cl_x = (closes[0][0] + closes[0][2]) / 2
+        near_tick = min(range(len(xmarks)), key=lambda i: abs(xmarks[i] - cl_x))
+        assert float(expected[near_tick]) <= 7.0, (
+            f"fig26's `closes ~day 3` annotation is drawn nearest the tick "
+            f"for day {expected[near_tick]}. It names day 3, and an "
+            "annotation naming a day has to sit at it")
+
     _assert_titled(p26, _word_bboxes(stem26), "fig26",
                    ["(a) Treatment window: RSL3 closes, SDT stays open",
                     "(b) Why: GPX4 re-expression closes the window"],
