@@ -57,7 +57,8 @@ the places where no assertion would name it:
   those as unread, in the same commit that gated them). Its two kill curves
   remain unread except by the fingerprint.
 - **The collapse arrow's glyph is pinned, so `mathtext.fontset: cm` fails
-  here** -- and so does `plt.style.use("bmh")`, which sets that fontset. cm
+  here** -- and so do `plt.style.use("bmh")` and `plt.style.use("classic")`,
+  both of which set that fontset. cm
   embeds cmsy10 with no Unicode map, so PyMuPDF reads `$\to$` as `!`. This
   was briefly not a limit: the pattern matched "one non-space character" in
   the arrow's place so that any font would do, and that silently removed the
@@ -90,10 +91,14 @@ the places where no assertion would name it:
   the mechanism is `_panels` mistaking a legend for a panel rather than
   declining to answer.
 
-- **The figure must draw visible tick marks.** Two scale readings -- fig24
-  panel (b)'s reference lines and fig26's window shading -- locate themselves
-  from the tick MARKS, because reading tick LABELS carries the font's
-  glyph-centre bias (up to 1.14pp under Hoefler Text). A style that sets
+- **The figure must draw visible tick marks.** THREE scale readings -- fig24
+  panel (b)'s reference lines, fig26's window shading, and fig25's additive
+  threshold line -- locate themselves from the tick MARKS. fig25's was the
+  last on labels and joined them because label bias is not only the font's
+  glyph-centre offset (up to 1.14pp under Hoefler Text): `xtick.alignment:
+  left` shifts every label relative to its tick, and the additive line then
+  read 0.92 instead of 1.0, accusing a correct figure of moving the line that
+  every score on the panel is compared against. A style that sets
   `xtick.major.size: 0` or `ytick.major.size: 0`, which every `seaborn-v0_8`
   grid preset does, therefore fails loudly with "shows 0 tick marks" or
   "its scale cannot be recovered" rather than silently. This project's own
@@ -425,20 +430,25 @@ def _long_vertical_ends(stem):
     that when a horizontal spine has been turned off, and each was reaching
     for it separately.
 
-    AT A PANEL EDGE, because "long and vertical" is not enough to be a spine.
-    A `fill_between` band is drawn with a stroke colour, so its edges survive
-    every other filter here, and widening fig26's confidence band to +/-40
-    puts four more values in this list -- one of them at 385.96, BELOW the
-    axis at 302.04. Both callers take `min`/`max`, so that value would have
-    become the bottom of the plotting area the moment a spine was missing and
-    the fallback fired. A spine sits ON a panel's left or right edge; a band
-    edge sits at whatever x its data does.
+    THE LONGEST STROKE AT EACH PANEL EDGE, because "long and vertical" is not
+    enough to be a spine and neither is "at a panel edge". A `fill_between`
+    band is drawn with a stroke colour, so its edges survive every other
+    filter here: widening fig26's confidence band to +/-40 puts EIGHT more
+    values in this list, one of them at 385.96, below the axis at 302.04, and
+    two ABOVE the axes entirely. Filtering to a panel edge removes the
+    interior ones but not the outermost, because `axes.xmargin: 0` puts the
+    first and last data points ON the spine -- a fact this file documents in
+    two other places -- so the band's own outer edges land exactly there.
+
+    What is left is that a spine runs the WHOLE height of the axes, so at any
+    given panel edge it is the longest stroke there. A band spans its data
+    and is shorter, whatever its x.
     """
     pymupdf = _reader()
     edges = {x for panel in _panels(stem) for x in panel}
     doc = pymupdf.open(FIG_DIR / f"{stem}.pdf")
     try:
-        out = []
+        longest = {}
         for d in doc[0].get_drawings():
             if d.get("color") is None:
                 continue
@@ -451,8 +461,12 @@ def _long_vertical_ends(stem):
                 a, b = item[1], item[2]
                 if (abs(a.x - b.x) < 0.5 and abs(b.y - a.y) > 100
                         and any(abs(a.x - e) < 1 for e in edges)):
-                    out.extend((min(a.y, b.y), max(a.y, b.y)))
-        return out
+                    key = round(a.x, 1)
+                    span = (min(a.y, b.y), max(a.y, b.y))
+                    if key not in longest or (span[1] - span[0]) > (
+                            longest[key][1] - longest[key][0]):
+                        longest[key] = span
+        return [v for span in longest.values() for v in span]
     finally:
         doc.close()
 
@@ -549,7 +563,7 @@ def _axes_top(stem):
     panel_x = _panels(stem)
     doc = pymupdf.open(FIG_DIR / f"{stem}.pdf")
     try:
-        horiz, vert = [], []
+        horiz = []
         for d in doc[0].get_drawings():
             if d.get("color") is None:
                 continue
@@ -572,10 +586,18 @@ def _axes_top(stem):
                     if any(abs(lo - x0) < 1 and abs(hi - x1) < 1
                            for x0, x1 in panel_x):
                         horiz.append(a.y)
-                elif abs(a.x - b.x) < 0.5 and abs(b.y - a.y) > 100:
-                    vert.append(min(a.y, b.y))
     finally:
         doc.close()
+    # THROUGH THE SHARED HELPER, which is what the helper's own docstring said
+    # was happening and was not: `_long_vertical_ends` had exactly one caller
+    # and this function kept an unfiltered copy of the same scan. That left
+    # the panel-edge and longest-at-each-edge filters protecting `_panel_y`
+    # only -- and this is the WORSE site to leave open, because it takes
+    # `min`: a confidence band whose edges reach ABOVE the axes needs no
+    # missing spine at all. Widening fig26's band to +/-23pp returned an axes
+    # top of 16.28 against a true 52.56, and every figure reported having no
+    # title, which is round 23's symptom reached by a second route.
+    vert = _long_vertical_ends(stem)
     if vert:
         return min(vert + horiz)
     # TWO ROWS OF RULES MEAN A TOP AND A BOTTOM; one row is only a bottom.
@@ -693,15 +715,26 @@ def _assert_titled(panels, boxes, stem, titles, top):
     #
     # The two Courier rows are an UPPER BOUND on how deep a title can reach,
     # not figures that must pass: monospace widens fig26's titles until `(b)`
-    # is drawn over `stays`, so those figures fail the genuine-collision check
-    # anyway. Bounding the cut with them errs toward accepting, which is the
+    # (x 549.1-572.5) is drawn over `open` (549.5-580.7), so those figures
+    # fail the genuine-collision check anyway. `stays` is clear by 7.4pt here
+    # -- `(b)` over `stays` is the `axes.titlesize: 16` case, and an earlier
+    # version of this comment reused that pairing for this configuration. Bounding the cut with them errs toward accepting, which is the
     # safe direction here -- the thing on the other side is at 49.89%.
     #
     # An earlier version cut at a third and justified it with "at
     # `titlepad: 0` still only 23%", which is two errors: 0 gives 7.33%, and
-    # 23.82% needs `axes.titley` set as well. Measured properly the worst
-    # title is 39.98%, so a third left 4.4 points of margin where it read as
-    # having plenty. 45% splits the two classes near-evenly.
+    # 23.82% needs `axes.titley` set as well. Its replacement then said a
+    # third "left 4.4 points of margin", which is 33.33 minus the 28.88 row
+    # and does not follow from the 39.98 named in the same sentence -- against
+    # that, a third leaves MINUS 6.65, i.e. it already rejected the deepest
+    # title measured.
+    #
+    # None of this table decides the question any more. Depth cannot separate
+    # the two classes at all, because a tick label's reach is a property of
+    # `ytick.alignment` -- 49.89% at the default, 41.64% at `center`, 23.82%
+    # at `baseline`, which is shallower than titles in this very table. The
+    # cut is kept as a cheap upper bound on the band; POSITION is what
+    # separates a title from a tick label, and that is done per RUN above.
     band = ([b for b in boxes
              if b[1] >= row_y - 0.5 and b[3] - top < 0.45 * (b[3] - b[1])]
             if top is not None
@@ -730,6 +763,21 @@ def _assert_titled(panels, boxes, stem, titles, top):
             else:
                 run.append(b)
         runs.append(run)
+        # A RUN MUST OVERLAP A PANEL. Depth alone cannot separate a title from
+        # a y-tick label, and the table below only made that look possible
+        # because it was measured at one `ytick.alignment`. The label's reach
+        # is a property of THAT setting, not of sitting on the boundary:
+        # `center` (which `plt.style.use("classic")` sets) puts fig26's
+        # topmost label at 41.64% and `baseline` at 23.82% -- shallower than
+        # several legitimate titles, so no fraction exists that splits the two
+        # classes. Position does: a y-tick label is drawn OUTSIDE its panel,
+        # left of the spine it labels, while a title is centred ON its panel.
+        #
+        # By RUN rather than by word, because a title may overhang -- fig26's
+        # panel (a) title starts 33pt left of its own panel, so its first word
+        # overlaps nothing while the run it belongs to plainly does.
+        runs = [r for r in runs
+                if any(r[0][0] <= hi and r[-1][2] >= lo for lo, hi in panels)]
         for run in runs:
             cur = None
             for b in run:
@@ -1347,16 +1395,30 @@ def test_fig25_draws_its_bliss_numbers():
         #
         # It cannot widen to the inter-panel gap the way the fig24 and fig26
         # legend scans did, because that gap is where panel (b)'s labels are
-        # drawn. The midpoint decides both: at 17 pairs `synergy` centres at
-        # 321.4 and `RSL3+FSP1i` at 342.8, against a panel edge of 330.2.
+        # drawn. The midpoint decides both: at 17 pairs the annotation's
+        # `synergy` centres at 275.19 and panel (b)'s `RSL3+FSP1i` at 342.80,
+        # against a panel edge of 330.2 -- 55pt of separation, not the 9pt an
+        # earlier version of this comment implied by quoting 321.4, which is
+        # `synergy`'s centre in a DIFFERENT figure (three pairs, annotation
+        # fontsize 18). The other two numbers in that sentence were right.
         #
-        # It moves the boundary rather than removing it, and the measurement
-        # is the honest form of that: the annotation font passes at 12, 14, 16
-        # and 18 and fails from 20 up, where `synergy`'s own CENTRE clears the
-        # panel edge. The left-edge bound failed from 16, so this is strictly
-        # better and still bounded. Past that the annotation is more than half
-        # out of the panel it annotates, which is a figure worth fixing rather
-        # than a reading worth widening for.
+        # IT IS A TRADE, NOT AN IMPROVEMENT ON EVERY AXIS. Measured on the
+        # same figure by sweeping the annotation's fontsize, first failure:
+        #
+        #   right edge (x1)   16      17 pairs: passes
+        #   left edge  (x0)   32      17 pairs: FAILS
+        #   midpoint          20      17 pairs: passes
+        #
+        # So the midpoint buys the pair-count case and gives back annotation
+        # headroom, 32 down to 20. An earlier version of this comment called
+        # it "strictly better" than the left-edge bound and cited 16 as that
+        # bound's ceiling -- 16 belongs to the RIGHT-edge bound two rounds
+        # earlier, so the number was attached to the wrong thing and the
+        # conclusion it supported was the reverse of the measurement.
+        #
+        # Past fontsize 20 the annotation is more than half outside the panel
+        # it annotates, which is a figure worth fixing rather than a reading
+        # worth widening for.
         if abs((y0 + y1) / 2 - ay_mid) < 4 and (x0 + x1) / 2 <= a_hi + 1)
     at = next(i for i, (x0, _, t) in enumerate(same_row) if _mult(t) == want)
     lo = hi = at
@@ -1595,13 +1657,31 @@ def test_fig25_binds_each_pair_to_its_own_score():
     # the direction this figure argues for -- made a correct figure fail with
     # "0 numeric x tick labels". This file already paid for that exact mistake
     # once, in the pair-name regex a few blocks up.
-    ticks = sorted((cx, float(t))
-                   for cx, y, t in _word_centres("fig25_bliss_synergy")
-                   if re.fullmatch(r"\d+(?:\.\d+)?", t)
-                   and cx > fig25_panels[-1][0] - 20)
-    assert len(ticks) >= 2, (
-        f"fig25's panel (b) draws {len(ticks)} numeric x tick labels; its "
-        "scale cannot be recovered")
+    # SCALE FROM THE TICK MARKS, NOT THE TICK LABELS -- the third scale
+    # reading to need this and the one that was left behind. fig24's y scale
+    # was moved to the marks because a label's bbox centre carries the font's
+    # digit-glyph asymmetry; fig25's x scale kept reading labels, and the bias
+    # is not only the font's. `xtick.alignment: left` shifts every label
+    # relative to its tick, and the additive line then read 0.92 instead of
+    # 1.0 -- a correct figure accused of moving the line every score on the
+    # panel is compared against. Marks are geometry and do not move.
+    b_lo, b_hi = fig25_panels[-1]
+    bottom = _panel_y("fig25_bliss_synergy")[1]
+    mark_xs = _major_only(
+        [(round(a.x, 2), min(a.y, b.y), max(a.y, b.y), round(abs(b.y - a.y), 2))
+         for x0, y0, x1, y1, col, a, b
+         in _axis_ticks_vertical("fig25_bliss_synergy")
+         if b_lo - 1 <= a.x <= b_hi + 1],
+        axis_at=bottom)
+    values = sorted(float(t)
+                    for cx, y, t in _word_centres("fig25_bliss_synergy")
+                    if re.fullmatch(r"\d+(?:\.\d+)?", t) and cx > b_lo - 20)
+    assert len(mark_xs) >= 2 and len(mark_xs) == len(values), (
+        f"fig25's panel (b) shows {len(mark_xs)} x tick marks against "
+        f"{len(values)} numeric labels; its scale cannot be recovered")
+    # Marks and labels are both in ascending order, so pairing by order is
+    # unambiguous once the counts agree.
+    ticks = list(zip(mark_xs, values))
     (tx0, tv0), (tx1, tv1) = ticks[0], ticks[-1]
     scale = (tx1 - tx0) / (tv1 - tv0)
     dashed = sorted(x for x, y0, y1, col
