@@ -218,16 +218,19 @@ def _vertical_labels(words):
     # x-extent -- their width is the text HEIGHT -- so x1 separates them from
     # a horizontal word of a DIFFERENT width.
     #
-    # It is not a general separation: two horizontal words of equal width
-    # stacked at the same x still group, and fig24 already contains one such
-    # column. That is harmless because callers select by the label TEXT.
-    # Measured, fig24 has TWO such columns -- `SDT SDT` at (595.6, 612.8) and
-    # `RSL3 RSL3` at (595.6, 617.5), its panel (b) legend -- and they share an
-    # x0 with each OTHER, not with either real label at (3.0, 20.5) and
-    # (337.8, 355.3). Collapsing onto x0 would merge those two spurious
-    # columns and leave the real ones untouched; an earlier version of this
-    # note said it would merge a spurious column with a real one, which the
-    # measurement does not support.
+    # It is not a general separation: any words of equal width stacked at the
+    # same x group together, whether or not they are a rotated label. Measured
+    # on the committed fig24, this returns SIX columns -- the two real labels
+    # at (3.0, 20.5) and (337.8, 355.3), the two y-tick stacks `20 40 60 80`
+    # at (30.2, 44.2) and (365.0, 379.0), and panel (b)'s legend read
+    # vertically as `SDT SDT` and `RSL3 RSL3`, both starting at x0 595.6.
+    # That is harmless because callers select by the label TEXT.
+    #
+    # It is still why the returned key is the full extent rather than x0: the
+    # two legend columns share an x0 with each other, so collapsing onto x0
+    # would merge them last-write-wins. (Two earlier versions of this note
+    # said "one such column" and then "TWO", and neither counted the tick
+    # stacks. The conclusion held; the count did not.)
     cols = {}
     for x0, x1, y, t in words:
         cols.setdefault((round(x0, 1), round(x1, 1)), []).append((y, t))
@@ -381,14 +384,27 @@ def _hlines_any(stem):
 
 
 def _stroke_points(stem):
-    """Every stroked segment endpoint as `(x, y, colour)`."""
+    """Every STROKE-ONLY segment endpoint as `(x, y, colour)`.
+
+    `fill is None` IS THE CURVE FILTER. A `fill_between` band is reported with
+    a stroke colour too (type `fs`, 81 of fig26's 103 coloured drawings), and
+    it is drawn in the series colour and spans the same x -- so taking every
+    coloured segment made "where does this curve end" read the BAND. On the
+    committed figure both endpoints already came from bands, and swapping only
+    the two `axA.plot` data arguments -- so the curve labelled SDT traces
+    RSL3's data and collapses to zero by day 28, inverting the panel's whole
+    claim -- passed, because the untouched bands still ended where the
+    assertion expected. The mirror image was worse: swapping only the two
+    `fill_between` calls rejected a correct pair of curves and blamed the
+    curves for it.
+    """
     pymupdf = _reader()
     doc = pymupdf.open(FIG_DIR / f"{stem}.pdf")
     try:
         out = []
         for d in doc[0].get_drawings():
             col = d.get("color")
-            if col is None:
+            if col is None or d.get("fill") is not None:
                 continue
             c = tuple(round(v, 4) for v in col)
             for item in d["items"]:
@@ -589,12 +605,22 @@ def test_fig25_draws_its_bliss_numbers():
         f"TO RIGHT and bliss_synergy.json gives {expected}. Each number is "
         "anchored to the centre of some bar, so only position says which")
     # The labels are two-line, so the FIRST word of each carries its position.
+    # SCOPED TO PANEL (a) BY X, not by requiring the row to hold only these
+    # four words. Panel (b)'s x tick labels sit just above the heads, and the
+    # separation is 0.1 x `xtick.labelsize` -- 1.101pt at the committed size,
+    # so tolerance clustering at 1.0 cleared it by 0.101pt and merged the two
+    # groups at tick size 9, at `font.size` 8, and under Helvetica (0.164pt).
+    # The previous `round(y, 1)` keying had the same knife edge in a different
+    # place; clustering moved it rather than removing it. The two groups are
+    # ~70pt apart in x and on opposite sides of a panel spine, which is the
+    # separation that does not depend on a font.
     heads = [b.split()[0] for b in bars]
-    rows = [r for r in _rows(wds).values()
-            if sorted(t for _, t in r) == sorted(heads)]
+    a_hi = _panels("fig25_bliss_synergy")[0][1]
+    rows = [[w for w in r if w[0] <= a_hi] for r in _rows(wds).values()]
+    rows = [r for r in rows if sorted(t for _, t in r) == sorted(heads)]
     assert len(rows) == 1, (
-        f"expected one row holding the four bar-label heads {heads}, found "
-        f"{len(rows)}")
+        f"expected one row of panel (a) holding the four bar-label heads "
+        f"{heads}, found {len(rows)}")
     assert [t for _, t in sorted(rows[0])] == heads, (
         f"fig25's panel (a) bar labels read "
         f"{[t for _, t in sorted(rows[0])]} LEFT TO RIGHT and its values are "
@@ -630,6 +656,9 @@ def test_fig25_draws_its_bliss_numbers():
     # The two words sit 0.87pt apart vertically (57.115 and 57.985), so an
     # exact row key splits them; the annotation is one visual line.
     _ax, ay = hits[0]
+    ay_mid = next((y0 + y1) / 2
+                  for x0, y0, x1, y1, t in _word_bboxes("fig25_bliss_synergy")
+                  if t == want and abs(x0 - _ax) < 0.01 and abs(y0 - ay) < 0.01)
     # THE WHOLE VISUAL LINE, both directions. Filtering to `x >= ax - 1`
     # discarded anything drawn to the LEFT of the number, so prefixing the
     # annotation with `no ` negated the panel's claim and passed the check
@@ -639,8 +668,19 @@ def test_fig25_draws_its_bliss_numbers():
     # of 8 or less they move left of the annotation's own trailing word, and a
     # correct figure failed reading `1.99×` with its `synergy` dropped. The
     # annotation is one visual run, so the run is what defines it.
-    same_row = sorted((x0, x1, t) for x0, x1, y, t in _boxed_row_words(
-        "fig25_bliss_synergy") if abs(y - ay) < 2)
+    # BY MIDLINE. `y` here is each word's TOP edge, and a number and the word
+    # beside it share a baseline but not a top: 0.87pt apart on the committed
+    # font, 2.70pt under Helvetica, and 2.26pt at annotation fontsize 26 --
+    # each of which dropped `synergy` from the run and failed a correct
+    # figure. Bottom edges are no better (0.73pt apart here). The vertical
+    # centre differs by 0.1pt on the committed figure and stays close as the
+    # font changes, because both words are set on one line. This file states
+    # the same lesson forty lines below for the score matcher and had applied
+    # it only there.
+    same_row = sorted(
+        (x0, x1, t)
+        for x0, y0, x1, y1, t in _word_bboxes("fig25_bliss_synergy")
+        if abs((y0 + y1) / 2 - ay_mid) < 4)
     at = next(i for i, (x0, _, t) in enumerate(same_row) if t == want)
     lo = hi = at
     while lo > 0 and same_row[lo][0] - same_row[lo - 1][1] < 20:
@@ -1244,7 +1284,16 @@ def test_fig24_draws_its_hypoxia_numbers():
         # file rejects for the collapse ratio: a floor and a relative term
         # where the floor wins for one value and the term for the other, so
         # both failure modes are live in one expression.
-        assert abs(drawn - want) <= 0.1, (
+        # 0.5pp, WIDE ENOUGH FOR THE FONT. The mapping reads each tick
+        # label's bbox CENTRE, so it carries that font's digit-glyph
+        # asymmetry as a constant offset -- measured, the residual is 0.006pp
+        # on the committed serif but +0.243pp on monospace, +0.249 on
+        # Helvetica and +0.387 on STIXGeneral, which are exactly the fonts a
+        # manuscript switches to. A 0.1pp bound rejected correct figures in
+        # three of seven fonts tried. This is still five times tighter than
+        # the `max(1.0, 0.03 * want)` it replaced, and it kills the errors
+        # that motivated tightening it: +0.9pp on RSL3 and -2.7pp on SDT.
+        assert abs(drawn - want) <= 0.5, (
             f"fig24's panel (b) draws {name}'s normoxic reference at "
             f"{drawn:.1f}% on its own y scale and the data gives "
             f"{want:.1f}%. That line is what the depth curves are compared "
