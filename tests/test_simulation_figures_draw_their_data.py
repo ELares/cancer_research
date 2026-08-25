@@ -524,7 +524,8 @@ def _axes_box(stem):
     The vertical extent of `_panel_boxes`. On all three committed figures it
     is 52.55999755859375 to 302.0400085449219, which `_panel_y` reports as
     (52.56, 302.04) because that function rounds its spine coordinates to 2dp
-    -- the same plotting area, agreeing to 4e-3 pt.
+    -- the same plotting area, agreeing to 8.5e-6 pt (measured
+    componentwise: 2.4e-06 at the top, 8.5e-06 at the bottom).
 
     An earlier version of this sentence said "measured identical", and then a
     later commit rounded THIS function's output to 1dp, which made even the
@@ -806,6 +807,50 @@ def _mult(text):
         re.sub(r"^(\(?)(\d+\.\d+)[^\d\s\w)](\)?)$",
                "\\1\\2" + "\u00d7" + "\\3", tok)
         for tok in text.split(" "))
+
+
+def _arrow_heads(stem, panel):
+    """Arrowhead tips inside `panel` as `[(x, y), ...]`.
+
+    THE ARROW IS WHAT POINTS, and two placement checks in this file bound only
+    where the annotation's TEXT sits. `annotate` draws both: move `xy` and
+    leave `xytext` alone and the words stay put while the arrow swings onto a
+    different bar -- fig25's `1.99x synergy` onto `RSL3 alone`, fig26's
+    `closes ~day 3` onto day 28. Both passed.
+
+    An arrowhead is a SHORT path of at most four segments, drawn in a series
+    colour, that is neither a spine (black, and spanning the panel) nor a
+    legend sample (perfectly horizontal). Its tip is the endpoint shared by
+    two of its segments, which is what `annotate` puts at `xy`.
+    """
+    pymupdf = _reader()
+    lo, hi = panel
+    top, bot = _axes_box(stem) or _panel_y(stem)
+    doc = pymupdf.open(FIG_DIR / f"{stem}.pdf")
+    try:
+        tips = []
+        for d in doc[0].get_drawings():
+            col = d.get("color")
+            if col is None or max(col) - min(col) < 0.05:   # black/grey
+                continue
+            lines = [it for it in d["items"] if it[0] == "l"]
+            if not lines or len(lines) > 4:
+                continue
+            pts = [q for it in lines for q in (it[1], it[2])]
+            if not all(lo - 2 <= q.x <= hi + 2 and top - 2 <= q.y <= bot + 2
+                       for q in pts):
+                continue
+            if all(abs(it[1].y - it[2].y) < 0.2 for it in lines):
+                continue                                    # legend sample
+            counts = {}
+            for q in pts:
+                counts[(round(q.x, 2), round(q.y, 2))] = counts.get(
+                    (round(q.x, 2), round(q.y, 2)), 0) + 1
+            shared = [k for k, n in counts.items() if n > 1]
+            tips.extend(shared or [max(counts, key=lambda k: k[0])])
+    finally:
+        doc.close()
+    return tips
 
 
 def _assert_titled(panels, boxes, stem, titles, top):
@@ -1605,6 +1650,41 @@ def test_fig25_draws_its_bliss_numbers():
     # and it survives any bar width.
     a_lo25, a_hi25 = _panels("fig25_bliss_synergy")[0]
     ann_mid = (line[0][0] + max(x for x, _ in line)) / 2
+    # AND THE ARROW MUST LAND ON THAT BAR. The words are only half of what
+    # `annotate` draws: repointing `xy` while leaving `xytext` alone moves the
+    # arrow onto `RSL3 alone` and leaves the text exactly where it was, which
+    # passed. The bar it names is the rightmost of panel (a)'s four.
+    heads25 = _arrow_heads("fig25_bliss_synergy", (a_lo25, a_hi25))
+    a_bars = sorted((r for r in _filled_rects("fig25_bliss_synergy")
+                     if a_lo25 - 1 <= r[0] and r[1] <= a_hi25 + 1
+                     and (r[1] - r[0]) > 5 and (r[3] - r[2]) > 5
+                     and not (abs(r[0] - a_lo25) < 1 and abs(r[1] - a_hi25) < 1)),
+                    key=lambda r: r[0])
+    # THE PANEL (a) BAR COLOURS, the sibling one panel to the left. Panel
+    # (b)'s highlight was bound a round ago with the argument that "the panel
+    # is a bar chart and its bars were the one thing unread"; panel (a) uses
+    # the same red-marks-the-result convention and was left entirely unread.
+    # Re-ordering its colour list highlights the BLISS-EXPECTED bar in the
+    # result colour and greys out the observed combination, so the panel
+    # presents the model's own prediction as the finding, and it passed.
+    if len(a_bars) == 4:
+        result, predicted = a_bars[-1][4], a_bars[-2][4]
+        assert result[0] > result[2], (
+            f"fig25's panel (a) draws the observed-combination bar in "
+            f"{result}, not the result colour. The red bar is what the panel "
+            "presents as its finding")
+        assert max(predicted) - min(predicted) < 0.05, (
+            f"fig25's panel (a) draws the Bliss-expected bar in {predicted}, "
+            "not grey. Colouring the PREDICTION as the result presents the "
+            "model's own expectation as the measurement")
+    if heads25 and len(a_bars) >= 2:
+        tip = max(heads25, key=lambda q: q[0])
+        last = a_bars[-1]
+        assert last[0] - 2 <= tip[0] <= last[1] + 2, (
+            f"fig25's panel (a) synergy arrow points at x={tip[0]:.0f}, "
+            f"outside the observed-combination bar it names "
+            f"({last[0]:.0f}-{last[1]:.0f}). The arrow is what attributes the "
+            "score to a bar")
     assert ann_mid > (a_lo25 + a_hi25) / 2, (
         f"fig25's panel (a) synergy annotation is centred at x={ann_mid:.0f}, "
         f"in the LEFT half of a panel spanning {a_lo25:.0f}-{a_hi25:.0f}. It "
@@ -1987,15 +2067,33 @@ def test_fig25_binds_each_pair_to_its_own_score():
     for x, y, t in names:
         mid = label_mid.get(t, y)
         ranked = sorted(bar_rects, key=lambda r: abs((r[2] + r[3]) / 2 - mid))
+        # NO BARS AT ALL IS THE SAME CLAIM AS NO BAR ON THIS ROW, and it had
+        # its own `continue`, so drawing the panel with EVERY bar zero-length
+        # while still printing the real scores skipped every row and passed.
+        # One rule for both: a row without a bar must be printing 0.00x.
         if not ranked:
+            assert float(_mult(by_row[t]).rstrip("\u00d7")) == 0.0, (
+                f"fig25's panel (b) prints {by_row[t]} on {t}'s row and draws "
+                "no bars on its axis at all")
             continue
         best = ranked[0]
-        # A ROW WITH NO BAR IS A ZERO-LENGTH BAR, not a mis-binding. The
-        # nearest rectangle is then the NEXT row's, so the runner-up guard
-        # below would fire on a correct figure -- which it did, on a pair
-        # scored 0.0. A bar overlaps the row it belongs to; a neighbour's does
-        # not, so vertical overlap decides whether this row has one at all.
+        # A ROW WITH NO BAR MUST BE A ROW SCORING ZERO. Tolerating a missing
+        # bar is right -- matplotlib emits no `re` item for a zero-length one,
+        # and a pair scored 0.0 false-failed a hard count -- but the previous
+        # round paid for it by flipping the total-count bound from `>=` to
+        # `<=`, which ZERO satisfies. Every row then skipped, and the length
+        # and colour checks below evaporated with it: panel (b) drawn with no
+        # bar for RSL3+FSP1i, the pair the figure exists to argue for, passed
+        # every semantic assertion.
+        #
+        # The invariant is per-row and the score printed on the row decides
+        # it, so no total is needed: a bar overlaps the row it belongs to, and
+        # a row without one has to be printing 0.00x.
         if not (best[2] <= mid <= best[3]):
+            assert float(_mult(by_row[t]).rstrip("\u00d7")) == 0.0, (
+                f"fig25's panel (b) prints {by_row[t]} on {t}'s row and draws "
+                "no bar there. Only a zero score draws no rectangle, so the "
+                "bar for this pair is missing from the panel it is compared in")
             continue
         runner = ranked[1] if len(ranked) > 1 else None
         d_best = abs((best[2] + best[3]) / 2 - mid)
@@ -2148,8 +2246,12 @@ def test_fig24_draws_its_hypoxia_numbers():
     # -- so 65.8pt from the nearer of its own and 25.7pt from the nearer of
     # the other's. The committed figure failed that check, which is the check
     # being wrong. An earlier version attached those distances to the bar
-    # CENTRES (90.4, 190.7, 237.9, 291.0), which give 54.4 and 40.0: same
-    # conclusion, coordinates that were not the ones measured.
+    # CENTRES, quoting them as (90.4, 190.7, 237.9, 291.0). The measured
+    # centres are 90.43, 143.52, 237.89, 290.98: 190.7 is not a fig24
+    # coordinate at all, it is panel (a)'s MIDLINE on fig25, which the other
+    # check added in that same commit compares against. A number borrowed
+    # from the neighbouring edit -- and the 54.4 the same sentence derives
+    # from it does not follow from 190.7 either.
     #
     # What is true is that it must stay left of the group it does not
     # describe. At `xytext` 1.0 it recentres to x=264, PAST SDT's first bar,
@@ -2162,13 +2264,33 @@ def test_fig24_draws_its_hypoxia_numbers():
     # which this file elsewhere contemplates (SDT's gradient rates collapsing
     # onto its uniform rate). A guard that turns itself off on the figures it
     # is least sure about is not a guard.
+    # CENTRES FROM EACH ANNOTATION'S OWN BOX, not from a dict keyed on its
+    # TEXT. Keying on text collapses duplicates, and it does so in EXACTLY the
+    # case the previous round's comment named as the reason for removing the
+    # `len(bars_all) == 4` gate: make SDT O2-independent -- what fig24's own
+    # footnote says the model assumes -- and both SDT annotations read
+    # `91.9%`, so the dict kept the last-drawn one and `min(others)` became
+    # SDT's RIGHTMOST bar at 290.98 instead of its leftmost at 237.89. That is
+    # 53pt of slack, and the annotation could then be drawn on top of SDT's
+    # second bar and pass. Removing a self-disabling gate and replacing it
+    # with a silent loosening in the same scenario is not an improvement.
     ann_x = (lb[0] + rb[2]) / 2
-    centres = {t: cx for cx, y, t in _word_centres("fig24_hypoxia_killcurve")}
-    bars_all = [(x, t) for x, y, t in panel_a
-                if re.fullmatch(r"\d+\.\d%", t) and (x, t) not in (left, right)]
-    others = [centres.get(t, x) for x, t in bars_all
+    bars_all = [(b[0], b[2], b[4]) for b in boxes_a
+                if re.fullmatch(r"\d+\.\d%", b[4])
+                and (b[0], b[4]) not in (left, right)]
+    assert bars_all, (
+        "fig24 draws no bar annotations to place the collapse note against")
+    others = [(x0 + x1) / 2 for x0, x1, t in bars_all
               if t not in (left[1], right[1])]
-    assert bars_all, "fig24 draws no bar annotations to place the collapse note against"
+    # NO `if others:` GATE EITHER. That was the other half of the same defect:
+    # a guard that skips itself whenever its own inputs look unusual. If the
+    # two values this annotation quotes account for every bar annotation on
+    # the panel, there is no other group to stray into and nothing to check --
+    # which is a fact about the figure, so it is asserted rather than assumed.
+    assert others or len(bars_all) <= 2, (
+        f"fig24 draws {len(bars_all)} bar annotations and none belongs to a "
+        "group other than the one the collapse note quotes; the note's "
+        "placement cannot be checked")
     if others:
         assert ann_x < min(others), (
             f"fig24's collapse annotation is centred at x={ann_x:.0f}, at or "
@@ -3057,13 +3179,46 @@ def test_fig26_draws_the_timepoints_its_fixture_holds():
     closes = [b for b in _word_bboxes(stem26) if b[4] == "closes"
               and a_lo - 1 <= (b[0] + b[2]) / 2 <= a_hi + 1
               and b[1] > _axes_box(stem26)[0]]
+    # THE ARROW, AND THE DAY IT NAMES. Two defects in the version this
+    # replaces. It read only where the WORDS sit, so repointing `xy` swung the
+    # arrow to day 28 with the text unmoved, and it passed. And its bound was
+    # `<= 7.0` on a figure whose `closes` word is already nearest the DAY-7
+    # tick -- zero margin, a constant chosen to admit the correct figure
+    # rather than derived from anything, and one-sided, so day 0 passed too.
+    #
+    # `win_end` is the last timepoint at or under day 3 and is already
+    # computed above, so the arrow's tick is compared against the window it
+    # names rather than against a number picked to fit.
+    heads26 = _arrow_heads(stem26, (a_lo, a_hi))
+    if heads26:
+        tip = min(heads26, key=lambda q: abs(q[0] - xmarks[win_end]))
+        near_tick = min(range(len(xmarks)),
+                        key=lambda i: abs(xmarks[i] - tip[0]))
+        assert near_tick <= win_end, (
+            f"fig26's `closes ~day 3` arrow points at the tick for day "
+            f"{expected[near_tick]}, and the window it names closes at day "
+            f"{expected[win_end]}. The arrow is what says which timepoint "
+            "the annotation is about")
+    # AND THE WORDS, BOUNDED BY THE FIGURE'S OWN GEOMETRY. The arrow carries
+    # the meaning and is bound above, so moving the text alone is layout
+    # rather than an inverted claim -- but printing `closes ~day 3` over day
+    # 28 is still a figure worth rejecting, and the previous bound that caught
+    # it (`<= 7.0`) was a constant chosen to admit the correct figure, with
+    # zero margin and no lower side.
+    #
+    # The annotation belongs to the window it names, so it must sit inside the
+    # shaded span or within one tick pitch of its closing edge. Both terms are
+    # measured off this figure: the committed text centres 24.7pt right of the
+    # shade against a local pitch of 30.6pt, day 0 falls INSIDE the span, and
+    # day 28 is 91.4pt out. Nothing here is a chosen number.
     if closes:
         cl_x = (closes[0][0] + closes[0][2]) / 2
-        near_tick = min(range(len(xmarks)), key=lambda i: abs(xmarks[i] - cl_x))
-        assert float(expected[near_tick]) <= 7.0, (
-            f"fig26's `closes ~day 3` annotation is drawn nearest the tick "
-            f"for day {expected[near_tick]}. It names day 3, and an "
-            "annotation naming a day has to sit at it")
+        pitch = max(abs(b - a) for a, b in zip(xmarks, xmarks[1:]))
+        assert shade[0][0] - pitch <= cl_x <= shade[0][1] + pitch, (
+            f"fig26's `closes ~day 3` words are centred at x={cl_x:.0f}, more "
+            f"than one tick pitch ({pitch:.0f}pt) outside the span they name "
+            f"({shade[0][0]:.0f}-{shade[0][1]:.0f}). The annotation belongs to "
+            "the window it describes")
 
     _assert_titled(p26, _word_bboxes(stem26), "fig26",
                    ["(a) Treatment window: RSL3 closes, SDT stays open",
