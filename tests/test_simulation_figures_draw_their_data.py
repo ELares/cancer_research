@@ -25,7 +25,7 @@ map. It compares the numbers rendered as text. That is a smaller claim than
 
 Five narrower limits, each measured rather than assumed. READ THEM AS LIMITS
 OF THE SEMANTIC CHECKS ONLY. The fingerprint at the end of this file hashes
-the whole drawing, so every mutation named below now fails there -- verified,
+as much of the drawing as it has been taught to read, so every mutation named below now fails there -- verified,
 each one -- but it fails as "something moved and nothing explained it", which
 is a weaker statement than the assertion that would name the defect. These are
 the places where no assertion would name it:
@@ -306,6 +306,49 @@ def _dashed_verticals(stem):
         doc.close()
 
 
+def _hlines_any(stem):
+    """Short horizontal stroked segments as `(x0, y, colour)` -- legend samples."""
+    pymupdf = _reader()
+    doc = pymupdf.open(FIG_DIR / f"{stem}.pdf")
+    try:
+        out = []
+        for d in doc[0].get_drawings():
+            col = d.get("color")
+            if col is None:
+                continue
+            for item in d["items"]:
+                if item[0] != "l":
+                    continue
+                a, b = item[1], item[2]
+                if abs(a.y - b.y) < 0.5 and 3 < abs(b.x - a.x) < 45:
+                    out.append((min(a.x, b.x), round(a.y, 2),
+                                tuple(round(c, 4) for c in col)))
+        return sorted(out)
+    finally:
+        doc.close()
+
+
+def _stroke_points(stem):
+    """Every stroked segment endpoint as `(x, y, colour)`."""
+    pymupdf = _reader()
+    doc = pymupdf.open(FIG_DIR / f"{stem}.pdf")
+    try:
+        out = []
+        for d in doc[0].get_drawings():
+            col = d.get("color")
+            if col is None:
+                continue
+            c = tuple(round(v, 4) for v in col)
+            for item in d["items"]:
+                if item[0] != "l":
+                    continue
+                for pt in (item[1], item[2]):
+                    out.append((pt.x, pt.y, c))
+        return out
+    finally:
+        doc.close()
+
+
 def _rows(words):
     """Group words by y, rounded, preserving `(x, text)` per row.
 
@@ -569,7 +612,17 @@ def test_fig25_binds_each_pair_to_its_own_score():
     assert len(caption) == 1, (
         f"fig25 draws the word `score` {len(caption)} times; the panel (b) "
         "x-axis caption cannot be identified")
-    cap_row = [t for _, t in sorted(_rows(words)[round(caption[0][1], 1)])]
+    # SCOPED TO PANEL (b) BY X. Panel (b)'s caption sits 0.35pt from panel
+    # (a)'s second-line bar labels (`alone alone expected combination`), and
+    # only `round(y, 1)` landing on 319.8 against 319.5 kept them apart. One
+    # point of `axes.labelsize` closes that gap to 0.006pt, merges the two
+    # groups into one row, and a CORRECT figure fails with a message accusing
+    # the panel of drawing the reciprocal. The two groups are 76 points apart
+    # in x, which is the difference that is actually real -- the same
+    # nearest-neighbour lesson fig26's unit check already learned.
+    _b0 = _panels("fig25_bliss_synergy")[-1][0]
+    cap_row = [t for x, t in sorted(_rows(words)[round(caption[0][1], 1)])
+               if x >= _b0 - 20]
     assert " ".join(cap_row) == "Bliss synergy score (observed / expected)", (
         f"fig25's panel (b) x axis reads {' '.join(cap_row)!r}; the values "
         "compared here are the observed-over-expected ratio, and the "
@@ -867,11 +920,21 @@ def test_fig24_draws_its_hypoxia_numbers():
         f"x={kill_axes[0]:.0f}, inside panel (a) rather than left of its axis "
         f"at x={a_x0:.0f}. Panel (a)'s values are drawn without the axis "
         "label that says what they are")
-    assert a_x1 < kill_axes[1] < b_x0, (
+    # SLACK KEYED TO PANEL WIDTH, and a claim the bound can support. A y-axis
+    # label is drawn just outside its own axes, and panel (b)'s sits only
+    # 7.6pt clear of panel (a)'s right spine -- so a larger font or a narrower
+    # figure slides it a couple of points INSIDE that spine while it still
+    # plainly labels panel (b). The bound now allows an intrusion of 5% of a
+    # panel's width and says what it actually detects; a label dropped in the
+    # middle of panel (a) (round 9's mutation put one at x=308 against a
+    # spine at 330) is still far outside it.
+    slack = (a_x1 - a_x0) * 0.05
+    assert a_x1 - slack < kill_axes[1] < b_x0, (
         f"fig24's second `Overall tumor kill (%)` label is at "
-        f"x={kill_axes[1]:.0f}, not between panel (a)'s right edge "
-        f"({a_x1:.0f}) and panel (b)'s left edge ({b_x0:.0f}); it does not "
-        "label panel (b)")
+        f"x={kill_axes[1]:.0f}, which is not just outside panel (b)'s left "
+        f"edge ({b_x0:.0f}) -- it sits more than {slack:.0f}pt inside panel "
+        f"(a), whose axis ends at {a_x1:.0f}, so it is labelling panel (a)'s "
+        "data rather than panel (b)'s")
 
     # PANEL (b)'S REFERENCE LINES, bound to PANEL (b)'S OWN LEGEND. Each
     # treatment's normoxic kill is drawn there as a dashed horizontal line,
@@ -1081,6 +1144,50 @@ def test_fig26_draws_the_timepoints_its_fixture_holds():
             f"{nearest[2]!r}. The ticks are the fixture's timepoint_days, so a "
             "panel saying anything else declares a unit its own numbers are "
             "not in")
+    # THE CURVE LEGEND, BY COLOUR AND POSITION. The stream-order check above
+    # binds nothing on its own: `axA.legend(handles[::-1], labels, ...)` gives
+    # the SDT label the RSL3 line's colour and marker -- "days for RSL3, weeks
+    # for SDT" inverted -- and passed every semantic check here, caught only by
+    # the fingerprint as an unexplained change. fig24's two legends were both
+    # given geometric bindings for exactly this reason; this one was left out.
+    #
+    # Each legend entry has its line sample ~6pt below its text, and the claim
+    # is which curve is still high at the last timepoint.
+    p26 = _panels("fig26_vulnerability_window")
+    a_lo, a_hi = p26[0]
+    segs = []
+    doc_lines = _hlines_any("fig26_vulnerability_window")
+    legend_col = {}
+    for x, y, t in wds:
+        if t not in ("SDT", "RSL3") or not (a_lo <= x <= a_hi):
+            continue
+        sample = [seg for seg in doc_lines
+                  if 0 < seg[1] - y < 10 and abs(seg[0] - x) < 60]
+        if sample:
+            legend_col.setdefault(t, sample[0][2])
+    assert set(legend_col) == {"SDT", "RSL3"}, (
+        f"fig26's panel (a) legend captions {sorted(legend_col)}, expected "
+        "SDT and RSL3, each with a line sample beside it")
+    assert legend_col["SDT"] != legend_col["RSL3"], (
+        "fig26 draws both panel (a) legend samples in one colour")
+    ends = {}
+    for x, y, col in _stroke_points("fig26_vulnerability_window"):
+        if not (a_lo <= x <= a_hi) or col not in legend_col.values():
+            continue
+        if x > ends.get(col, (-1, 0))[0]:
+            ends[col] = (x, y)
+    for name in ("SDT", "RSL3"):
+        assert legend_col[name] in ends, (
+            f"fig26's panel (a) draws no curve in the colour its legend gives "
+            f"{name}")
+    sdt_end = ends[legend_col["SDT"]][1]
+    rsl3_end = ends[legend_col["RSL3"]][1]
+    assert sdt_end < rsl3_end, (
+        f"fig26's panel (a) ends with the SDT curve at y={sdt_end:.0f} and "
+        f"RSL3 at y={rsl3_end:.0f}, so RSL3 is the one still killing at the "
+        "last timepoint. The figure's title is `days for RSL3, weeks for "
+        "SDT`; the curves or the legend are exchanged")
+
     assert "closes ~day 3" in text, (
         "fig26's window annotation is gone. NOTE this is a hardcoded string in "
         "the generator, not a derived one -- if the window moved, the "
@@ -1096,8 +1203,8 @@ def test_fig26_draws_the_timepoints_its_fixture_holds():
 # box, colour, size, font and opacity, and every path item with its geometry
 # and every paint property, in paint order.
 #
-# WHY THIS EXISTS. Eight adversarial rounds found eight different elements
-# whose ARRANGEMENT was unchecked -- annotations at fixed offsets, annotations
+# WHY THIS EXISTS. Successive adversarial rounds each found a different
+# element whose ARRANGEMENT was unchecked -- annotations at fixed offsets, annotations
 # anchored to the wrong bar of a reversed zip, three sets of tick labels, a
 # legend, a label/value list, and finally the bar rectangles themselves, which
 # move under their own labels leaving every word untouched. Each round closed
@@ -1105,14 +1212,20 @@ def test_fig26_draws_the_timepoints_its_fixture_holds():
 # time is not converging, because the list is not the mutation SPACE.
 #
 # It is much wider than the semantic checks and it is still not "the space".
-# Two rounds have now found elements it did not cover: it read only rectangle
-# items, missing every line and curve, and then read no paint property beyond
-# colour, so a confidence band turned opaque enough to hide the curves beneath
-# it left the hash unmoved. It now covers every path item, every paint
-# property, and text spans with their colour and size -- which is a claim
-# about what it READS, not a promise that nothing can slip past it. Treat a
-# green fingerprint as "nothing I know how to look at moved", and keep adding
-# semantic checks, which say what a change MEANS.
+# FOUR rounds have now found elements it did not cover, each after it had been
+# widened for the last one: it read only rectangle items, missing every line
+# and curve; then no paint property beyond colour, so a confidence band turned
+# opaque enough to hide the curves left it unmoved; then no text opacity and
+# no paint order, so a value could be transparent or buried behind a bar; and
+# then no clip, so a path could be in the stream and scissored off the page.
+#
+# It now reads every path item with its geometry, every paint property, the
+# clip in force and the nesting level, transparency groups, and text spans
+# with box, colour, size, font and opacity -- in paint order. That is a claim
+# about what it READS, not a promise that nothing can slip past it, and the
+# history above is the reason to state it that way. Treat a green fingerprint
+# as "nothing I know how to look at moved", and keep adding semantic checks,
+# which say what a change MEANS.
 #
 # It is deliberately a BACKSTOP, not a replacement. It says "something in the
 # drawing moved and nothing above noticed"; it cannot say what the change
@@ -1123,9 +1236,9 @@ def test_fig26_draws_the_timepoints_its_fixture_holds():
 # regeneration, so every platform hashes the same bytes with the same pinned
 # reader. That is why it can run in CI where the figures cannot be rebuilt.
 DRAWING_FINGERPRINTS = {
-    "fig24_hypoxia_killcurve": "0de71938d0e45c74",
-    "fig25_bliss_synergy": "a448b5531b00b674",
-    "fig26_vulnerability_window": "7b460b5418a91451",
+    "fig24_hypoxia_killcurve": "7822f5da7e31d9d8",
+    "fig25_bliss_synergy": "0e6e769553b76f80",
+    "fig26_vulnerability_window": "456a227169e9af16",
 }
 
 
@@ -1188,7 +1301,30 @@ def _fingerprint(stem):
         # given file, so keeping it costs nothing and closes occlusion.
         words = spans
         items = []
-        for d in page.get_drawings():
+        # extended=True ADDS THE CLIP STATE. Without it a path can be in the
+        # content stream and invisible on the page: setting a clip box on
+        # panel (b)'s four kill curves erases 60% of them -- 8507 pixels at
+        # 200 dpi -- while every coordinate and paint property stays exactly
+        # as it was, so the hash did not move. The extended list carries
+        # `clip` entries with the scissor rect in force and a `level` for each
+        # entry, which is what says WHICH clip applies to which path.
+        for d in page.get_drawings(extended=True):
+            if d.get("type") == "group":
+                # A transparency group: no path items, but its bbox and
+                # blend/opacity are part of what the page shows.
+                r = d.get("rect")
+                items.append(("group", d.get("level"),
+                              None if r is None else
+                              tuple(round(v, 2) for v in (r.x0, r.y0, r.x1, r.y1)),
+                              d.get("blendmode"), d.get("opacity")))
+                continue
+            if d.get("type") == "clip":
+                sc = d.get("scissor")
+                items.append(("clip", d.get("level"),
+                              None if sc is None else
+                              tuple(round(v, 2) for v in
+                                    (sc.x0, sc.y0, sc.x1, sc.y1))))
+                continue
             # EVERY PAINT PROPERTY, not just the two colours. Width, dash
             # pattern and opacity are all invisible to a colour-only hash, and
             # each is enough on its own to change what the figure SAYS:
@@ -1229,7 +1365,7 @@ def _fingerprint(stem):
                     f"{stem}: a `{kind}` drawing item produced no coordinates, "
                     "so it would be hashed as nothing. Teach this extractor "
                     "the shape rather than letting it hash an empty tuple")
-                items.append((kind, tuple(coords), paint))
+                items.append((kind, tuple(coords), paint, d.get("level")))
     finally:
         doc.close()
     blob = json.dumps({"words": words, "items": items}, sort_keys=True)
@@ -1242,7 +1378,7 @@ def test_nothing_in_the_drawing_moved_unnoticed(stem):
 
     Every assertion above had to be written for a specific element after a
     specific defect. This one covers the elements nobody has thought about
-    yet, which is where all six review rounds found their defects.
+    yet, which is where every review round has found its defects.
     """
     got = _fingerprint(stem)
     reader = _reader()
