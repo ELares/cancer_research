@@ -256,24 +256,30 @@ def _vertical_labels(words):
 
 
 def _panels(stem):
-    """Each panel's x range, from the axis spines: `[(x0, x1), ...]` left to right.
+    """Each panel's x range, from the axis rules: `[(x0, x1), ...]` left to right.
 
-    BY GEOMETRY, NOT BY COLOUR. Two earlier versions keyed on the stroke's
-    colour -- first exactly black, which `axes.edgecolor="0.3"` broke, then
-    "greyscale", with an undocumented `min(col) > 0.75` cut doing the real
-    work. The stated rationale was false: matplotlib's DEFAULT LEGEND FRAME is
-    greyscale at 0.8, so greyscale never distinguished an axis from a box, and
-    the brightness cut meant any `axes.edgecolor` at or above 0.76 aborted
-    every geometric reader in this file at once -- `ggplot`, `fivethirtyeight`,
-    `Solarize_Light2` and `seaborn-v0_8-whitegrid` among them.
-    What actually distinguishes a panel is that its top and bottom spines
-    share an x range and that range is the widest on the page; a legend frame
-    is a box too, but a narrow one.
+    NESTING IS THE DISCRIMINATOR, not colour, not pairing, not width. Three
+    earlier versions each keyed on something that is true of the committed
+    figure and not of a figure in general:
+
+      * exactly black -- `axes.edgecolor="0.3"` broke it;
+      * greyscale plus a brightness cut -- matplotlib's own legend frame is
+        greyscale 0.8, so the cut was doing the real work and any edgecolor
+        at or above 0.76 aborted every reader here;
+      * paired rules at least 90% of the widest -- `axes.spines.top: False`
+        leaves ONE rule per panel and aborted all three figures, and
+        `width_ratios=[1.2, 1]` dropped the narrower panel outright.
+
+    What is actually true is structural: a legend frame is drawn INSIDE the
+    panel it belongs to, and a panel is not inside anything. So take every
+    long horizontal rule's x range and discard the ones another range
+    contains. No constant, and it survives a despined, recoloured or
+    unequally sized figure.
     """
     pymupdf = _reader()
     doc = pymupdf.open(FIG_DIR / f"{stem}.pdf")
     try:
-        spans = {}
+        spans = set()
         for d in doc[0].get_drawings():
             if d.get("color") is None:
                 continue
@@ -282,15 +288,13 @@ def _panels(stem):
                     continue
                 a, b = item[1], item[2]
                 if abs(a.y - b.y) < 0.5 and abs(b.x - a.x) > 100:
-                    key = (round(min(a.x, b.x), 1), round(max(a.x, b.x), 1))
-                    spans.setdefault(key, set()).add(round(a.y, 1))
+                    spans.add((round(min(a.x, b.x), 1), round(max(a.x, b.x), 1)))
     finally:
         doc.close()
-    boxes = [k for k, ys in spans.items() if len(ys) >= 2]
-    assert boxes, f"{stem}: no paired horizontal rules found, so panels cannot be located"
-    widest = max(k[1] - k[0] for k in boxes)
-    panels = sorted(k for k in boxes if k[1] - k[0] > widest * 0.9)
-    return panels
+    assert spans, f"{stem}: no horizontal axis rules found, so panels cannot be located"
+    outer = [k for k in spans
+             if not any(o != k and o[0] <= k[0] and k[1] <= o[1] for o in spans)]
+    return sorted(outer)
 
 
 def _panel_y(stem):
@@ -327,6 +331,20 @@ def _panel_y(stem):
         f"{stem}: fewer than two spine rows and no tick marks to close the "
         "vertical extent")
     return min(ys), max(ys)
+
+
+def _major_only(marks):
+    """From `(position, length)` pairs, the positions at the longest length.
+
+    Minor ticks are drawn shorter than major ones, and `xtick.minor.visible`
+    is a plain rcParam -- with it set, fig26's panel (a) reports 46 tick marks
+    against 9 timepoints. Taking the longest length keeps the majors and
+    discards the rest without naming a size.
+    """
+    if not marks:
+        return []
+    longest = max(round(ln, 1) for _, ln in marks)
+    return sorted({pos for pos, ln in marks if round(ln, 1) == longest})
 
 
 def _axis_ticks_vertical(stem):
@@ -790,6 +808,11 @@ def test_fig25_draws_its_bliss_numbers():
         f"{' '.join(t for _, t in line)!r}, expected {want + ' synergy'!r}")
     # BY POSITION, for the reason fig24's needed it: a containment check does
     # not say WHICH panel carries the label, or that any panel does.
+    for want in ("(a) RSL3 + FSP1i: dual-pathway synergy",
+                 "(b) Pairwise synergy"):
+        assert want in text, (
+            f"fig25 no longer titles a panel {want!r}")
+
     # THE SUPTITLE, which states this figure's whole claim. Rewriting it to
     # say the dual-pathway depletion is ANTAGONISTIC -- the reverse of what
     # the synergy score and the additive reference line show -- passed every
@@ -1270,6 +1293,16 @@ def test_fig24_draws_its_hypoxia_numbers():
         f"as {expected} -- normoxic then hypoxic within each treatment. The "
         "numbers are sitting over bars of the other series")
 
+    # THE PANEL TITLES. A panel caption can contradict the suptitle this file
+    # does assert and the check standing right beside it: fig24's
+    # `(a) Kill collapse under hypoxia` rewritten to `Kill preserved` passed
+    # everything. Ungated on all three figures until now.
+    for want in ("(a) Kill collapse under hypoxia",
+                 "(b) Robust across penetration length"):
+        assert want in text, (
+            f"fig24 no longer titles a panel {want!r}; the panel captions "
+            "state what each panel is showing")
+
     # THE SUPTITLE. It states the figure's whole claim, and nothing read it:
     # rewriting it to say hypoxia SPARES pharmacologic ferroptosis and
     # collapses exogenous ROS -- the exact reverse of what the bars show --
@@ -1439,14 +1472,18 @@ def test_fig24_draws_its_hypoxia_numbers():
     # (52.560, 101.003, 149.445, 197.888, 246.331, 294.774), because they are
     # geometry rather than glyphs, so the bias disappears and the bound can be
     # tighter than the one it replaces.
-    marks = sorted({round(a.y, 3)
-                    for x0, y0, x1, y1, col, a, b in _axis_ticks(
-                        "fig24_hypoxia_killcurve")
-                    if abs(min(a.x, b.x) - b_x0) < 8})
+    marks_raw = [(round(a.y, 3), round(abs(b.x - a.x), 2))
+                 for x0, y0, x1, y1, col, a, b in _axis_ticks(
+                     "fig24_hypoxia_killcurve")
+                 if abs(min(a.x, b.x) - b_x0) < 8]
     labels = sorted(
         ((y0 + y1) / 2, float(t))
         for x0, y0, x1, y1, t in _word_bboxes("fig24_hypoxia_killcurve")
         if re.fullmatch(r"\d+", t) and b_x0 - 40 < x1 < b_x0 + 2)
+    # MAJOR TICKS ONLY. `xtick.minor.visible: True` is a plain rcParam and
+    # gave 46 marks against 9 timepoints. Minor ticks are drawn shorter, so
+    # the major ones are those at the modal (longest) length.
+    marks = _major_only(marks_raw)
     assert len(marks) >= 2 and len(marks) == len(labels), (
         f"fig24's panel (b) shows {len(marks)} y tick marks against "
         f"{len(labels)} numeric labels; its scale cannot be recovered")
@@ -1485,7 +1522,12 @@ def test_fig24_draws_its_hypoxia_numbers():
     lam_labels = [t for _, t in sorted(
         ((x0 + x1) / 2, t)
         for x0, y0, x1, y1, t in _word_bboxes("fig24_hypoxia_killcurve")
-        if re.fullmatch(r"\d+", t) and b_x0 - 5 <= x0 <= b_x1 + 5 and y0 > y_hi)]
+        # BELOW THE PANEL MIDLINE, not below the spine. `xtick.direction: in`
+        # lifts the labels 3.5pt and put them above a spine they clear by only
+        # 3.15pt outward, so a correct axis read as empty and was reported
+        # reversed.
+        if re.fullmatch(r"\d+", t) and b_x0 - 5 <= x0 <= b_x1 + 5
+        and y0 > (y_lo + y_hi) / 2)]
     assert lam_labels == [str(v) for v in lam], (
         f"fig24's panel (b) x axis reads {lam_labels} LEFT TO RIGHT and the "
         f"fixture's gradient conditions are {lam}. The curves are plotted in "
@@ -1657,28 +1699,38 @@ def test_fig26_draws_the_timepoints_its_fixture_holds():
     # the row at each `Time` closed that and false-failed the moment the
     # caption wrapped onto two lines. Nearest-unit handles both: the unit is
     # adjacent on one row, and directly below when wrapped.
-    # ON THE CAPTION'S OWN LINE. The nearest parenthesised word was taken from
-    # anywhere on the page, so at `axes.labelsize` 34 the panel title `(a)`
-    # sits closer to the caption than its own `(days)` does and a correct
-    # figure was told its axis declared the wrong unit. A unit belongs to the
-    # caption beside it, which means the same line.
+    # SCOPED BY PANEL, NOT BY LINE. Two earlier rules each failed one way:
+    # nearest-anywhere let a panel title beat the caption's own unit at large
+    # label sizes, and restricting to the caption's own LINE re-opened the
+    # very hole this block exists to close -- wrap panel (a)'s caption onto
+    # two lines and change its unit to `(hours)` and the search skipped it,
+    # answering from panel (b)'s `(days)`, which is the cross-panel answer.
+    # A caption and its unit belong to the same PANEL, which is an x range
+    # `_panels` already gives us, and that holds whether the caption wraps or
+    # not.
     stem26 = "fig26_vulnerability_window"
-    cap_mid = {}
-    for x0, y0, x1, y1, t in _word_bboxes(stem26):
-        cap_mid[(round(x0, 2), t)] = (y0 + y1) / 2
-    subj_mids = [cap_mid[(round(x, 2), "post-chemotherapy")]
-                 for x, y, t in wds if t == "post-chemotherapy"]
-    units = [(x, y, t) for x, y, t in wds
-             if re.fullmatch(r"\(\w+\)", t)
-             and any(abs(cap_mid[(round(x, 2), t)] - m) < 6 for m in subj_mids)]
+    p26 = _panels(stem26)
+    panel_of = lambda xx: next((i for i, (lo, hi) in enumerate(p26)
+                                if lo - 30 <= xx <= hi + 30), None)
+    units = [(x, y, t) for x, y, t in wds if re.fullmatch(r"\(\w+\)", t)]
     subjects = [(x, y, t) for x, y, t in wds if t == "post-chemotherapy"]
     assert len(subjects) == 2, (
         f"fig26 draws {len(subjects)} x-axis captions, expected one per panel")
     for x, y, _ in subjects:
-        assert units, "fig26 draws no parenthesised unit beside its x axis"
-        nearest = min(units, key=lambda u: (u[0] - x) ** 2 + (u[1] - y) ** 2)
+        panel = panel_of(x)
+        assert panel is not None, (
+            f"fig26's x-axis caption at x={x:.0f} is not inside either panel")
+        # BELOW the caption's own row and within its own panel: a wrapped
+        # caption puts the unit on the next line down, never on the other
+        # panel.
+        here = [u for u in units
+                if panel_of(u[0]) == panel and u[1] >= y - 2]
+        assert here, (
+            f"fig26's panel {panel} x-axis caption draws no parenthesised "
+            "unit; every panel states the unit its ticks are in")
+        nearest = min(here, key=lambda u: (u[0] - x) ** 2 + (u[1] - y) ** 2)
         assert nearest[2] == "(days)", (
-            f"the x-axis caption at x={x:.0f} is nearest the unit "
+            f"fig26's panel {panel} x-axis caption is nearest the unit "
             f"{nearest[2]!r}. The ticks are the fixture's timepoint_days, so a "
             "panel saying anything else declares a unit its own numbers are "
             "not in")
@@ -1691,7 +1743,6 @@ def test_fig26_draws_the_timepoints_its_fixture_holds():
     #
     # Each legend entry has its line sample ~6pt below its text, and the claim
     # is which curve is still high at the last timepoint.
-    p26 = _panels(stem26)
     a_lo, a_hi = p26[0]
     doc_lines = _hlines_any("fig26_vulnerability_window")
     legend_col = {}
@@ -1714,8 +1765,18 @@ def test_fig26_draws_the_timepoints_its_fixture_holds():
         sample = sorted((seg for seg in doc_lines
                          if abs(seg[1] - y_mid) < 12 and abs(seg[0] - x) < 60),
                         key=lambda seg: (abs(seg[1] - y_mid), abs(seg[0] - x)))
+        # NEAREST WINS, and a candidate must be genuinely beside its label.
+        # The loop takes any `SDT`/`RSL3` word inside panel (a) -- which
+        # includes the in-panel `RSL3 window open` annotation -- and
+        # `setdefault` locked whichever came first. At legend fontsize 10 and
+        # up the annotation's `RSL3` sat 6.02pt from the SDT sample and
+        # claimed red, while the real entry 0.51pt from its own blue sample
+        # was ignored, so a clean figure was told it drew one colour twice.
         if sample:
-            legend_col.setdefault(t, sample[0][2])
+            dist = abs(sample[0][1] - y_mid)
+            if t not in legend_col or dist < legend_col[t][0]:
+                legend_col[t] = (dist, sample[0][2])
+    legend_col = {k: v[1] for k, v in legend_col.items()}
     assert set(legend_col) == {"SDT", "RSL3"}, (
         f"fig26's panel (a) legend captions {sorted(legend_col)}, expected "
         "SDT and RSL3, each with a line sample beside it")
@@ -1743,9 +1804,9 @@ def test_fig26_draws_the_timepoints_its_fixture_holds():
     # WHERE the window is, and nothing read it: shading the whole 28 days, or
     # only days 14-28, passed. `win_end` is the last timepoint at or under day
     # 3, derived from the fixture, and the tick marks give the x scale.
-    xmarks = sorted({round(a.x, 2)
-                     for x0, y0, x1, y1, col, a, b in _axis_ticks_vertical(stem26)
-                     if a.x <= a_hi})
+    xmarks = _major_only([(round(a.x, 2), round(abs(b.y - a.y), 2))
+                          for x0, y0, x1, y1, col, a, b
+                          in _axis_ticks_vertical(stem26) if a.x <= a_hi])
     assert len(xmarks) == len(expected), (
         f"fig26 panel (a) shows {len(xmarks)} x tick marks against "
         f"{len(expected)} timepoints")
@@ -1753,7 +1814,12 @@ def test_fig26_draws_the_timepoints_its_fixture_holds():
     shade = [r for r in _filled_rects(stem26)
              if r[0] >= a_lo - 1 and r[1] <= a_hi + 1
              and (r[1] - r[0]) > 20 and (r[3] - r[2]) > 100
-             and r[4] not in ((1.0, 1.0, 1.0),)]
+             # NOT THE AXES PATCH. Excluding white by literal meant any
+             # `axes.facecolor` -- ggplot, Solarize_Light2, bmh,
+             # dark_background -- counted the panel's own background as a
+             # second span. The patch spans the panel EXACTLY; the window
+             # shade is strictly inside it.
+             and not (abs(r[0] - a_lo) < 1 and abs(r[1] - a_hi) < 1)]
     assert len(shade) == 1, (
         f"fig26's panel (a) draws {len(shade)} shaded spans, expected one "
         "marking the RSL3 window")
@@ -1774,6 +1840,22 @@ def test_fig26_draws_the_timepoints_its_fixture_holds():
         f"{expected[right_at]}, and the data closes it at day "
         f"{expected[win_end]}. The shaded span is what shows where the window "
         "is; the annotation beside it is a fixed string")
+
+    for want in ("(a) Treatment window: RSL3 closes, SDT stays open",
+                 "(b) Why: GPX4 re-expression closes the window"):
+        assert want in text, (
+            f"fig26 no longer titles a panel {want!r}. Panel (a)'s title "
+            "names which treatment closes, which is the claim the curve check "
+            "below compares against")
+    # THE Y-AXIS LABELS, which say what the curves MEAN. fig24's and fig25's
+    # equivalents are gated with an explicit "the unit the bars are in"
+    # rationale; fig26's were not, so `Persister kill (%)` could become
+    # `Persister survival (%)` -- inverting both curves -- and pass.
+    for want in ("Persister kill (%)", "RSL3 kill (%)",
+                 "Mean GPX4 (recovered fraction)"):
+        assert want in text, (
+            f"fig26 no longer labels an axis {want!r}; those labels say what "
+            "the plotted values are")
 
     assert ("The ferroptosis-sensitive window: days for RSL3, weeks for SDT"
             in text), (
