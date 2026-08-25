@@ -193,6 +193,16 @@ case("fig24 wide bars hide the note over SDT", True,
 case("fig26 arrow at the right day, on neither curve", True,
      [("xy=(win_end, rsl3[win_end])", "xy=(win_end, 40)")])
 
+# ------------------- arrows pointing AT the frame, which must still be found
+# `_annotation_arrows` drops a path with BOTH endpoints on the panel frame, to
+# exclude a gridline drawn through the annotation. An arrow pointing at a value
+# that happens to lie on the frame -- a zero, which sits on the x axis -- has
+# only its target end there and must survive. Measured: both do.
+case("fig26 arrow at a zero value, on the axis", False,
+     [("xy=(win_end, rsl3[win_end])", "xy=(win_end, 0)")])
+case("fig25 arrow at the observed bar's base", False,
+     [("xy=(3, vals[3]), xytext=(1.9, 93)", "xy=(3, 0), xytext=(1.9, 93)")])
+
 # ------------------------------------------------- correct figures, restyled
 case("committed figures, unmodified", False)
 case("xtick.direction inout", False, rc={"xtick.direction": "inout"})
