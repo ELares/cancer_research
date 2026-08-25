@@ -809,59 +809,113 @@ def _mult(text):
         for tok in text.split(" "))
 
 
-def _annotation_arrows(stem, panel):
-    """Annotation arrows inside `panel` as `[(start, tip), ...]`.
+def _annotation_arrows(stem, panel, near):
+    """Annotation arrows in `panel` as `[(start, tip), ...]`, nearest `near` first.
 
-    THE SHAFT, NOT THE HEAD. An earlier version looked for the arrowHEAD -- "a
-    short path of at most four segments, not a spine, not a legend sample" --
-    and that description was wrong in every clause. It bounded the SEGMENT
-    COUNT and never the length, so a 249pt spine qualified; it tested colour
-    neutrality and never the "spans the panel" its own docstring claimed, so
-    `Solarize_Light2`'s tinted gridlines qualified; and for a straight line,
-    which has no shared endpoint, it MANUFACTURED a tip from the rightmost
-    point. On that style it returned six gridlines and one real arrow, picked
-    a gridline, and rejected a correct figure.
+    `near` is the annotation's own text box `(x0, y0, x1, y1)`. matplotlib
+    draws the arrow from the text to `xy`, so among the path's points the one
+    closest to that box is the start and the farthest is the TIP -- which is
+    what `xy` names and what the caller wants.
 
-    What matplotlib actually emits for `annotate(..., arrowprops=...)` is two
-    paths: the shaft as a SINGLE cubic Bezier (`c`), and the head as a short
-    stroked or filled path. Measured on both figures here, the shaft's first
-    control point sits at the text and its last sits at `xy` -- which is the
-    tip, and is what the caller wants.
+    A PATH THAT TOUCHES THE TEXT, and nothing about its shape. Two earlier
+    rules each named a shape and each excluded a real arrow: "exactly one lone
+    Bezier" assumed a stroked shaft plus a separate head, which is true only
+    for stroked arrowstyles on an `arc3`/`angle3` connection, and rejected six
+    correct figures (`simple`, `fancy`, `wedge` draw shaft and head as one
+    many-curve FILLED path; `angle`, `bar` and `arc` draw a many-item shaft).
+    Relaxing that to "contains a Bezier" then admitted every round MARKER,
+    since matplotlib draws an `o` as eight filled Beziers -- and still missed
+    `bar`, whose rectangular detour contains no curve at all.
 
-    Keying on the shaft fixes four separate escapes at once:
+    Shape was the wrong question. What defines this arrow is that `annotate`
+    draws it FROM these words, so it has a point beside them; spines,
+    gridlines, data lines and markers do not.
 
-      * `arrowstyle="-"` draws NO head, so a head-based search returned
-        nothing and both call sites skipped themselves. The shaft is still
-        drawn, so a headless arrow is still read.
-      * a triangle MARKER (`^-`, which this very figure's other panel uses) is
-        a short multi-segment path and was classified as an arrowhead; it is
-        not a lone Bezier.
-      * spines and gridlines are single straight `l` items, never `c`.
-      * nothing is manufactured: a path that is not a Bezier is not an arrow.
+    Nothing is manufactured -- a path with no curve is not an arrow -- and
+    nothing is chosen by reference to the answer. Ordering by distance to the
+    TEXT is what the caller uses to pick this annotation's arrow rather than
+    another artist's, which is the rule an earlier comment here described and
+    did not implement.
     """
     pymupdf = _reader()
     lo, hi = panel
     top, bot = _axes_box(stem) or _panel_y(stem)
+    nx0, ny0, nx1, ny1 = near
 
-    def inside(q):
-        return lo - 2 <= q.x <= hi + 2 and top - 2 <= q.y <= bot + 2
+    def dist(q):
+        dx = max(nx0 - q[0], 0.0, q[0] - nx1)
+        dy = max(ny0 - q[1], 0.0, q[1] - ny1)
+        return (dx * dx + dy * dy) ** 0.5
 
     doc = pymupdf.open(FIG_DIR / f"{stem}.pdf")
     try:
         out = []
         for d in doc[0].get_drawings():
-            if d.get("color") is None:
+            # NO CURVE REQUIREMENT. Requiring a Bezier was a proxy for
+            # excluding spines, gridlines, data lines and markers, and it
+            # excluded a real arrow too: `connectionstyle="bar"` routes the
+            # shaft as a rectangular detour of straight segments and contains
+            # no curve at all. The proxy is unnecessary, because "starts at
+            # the annotation's own words" already excludes every one of those
+            # -- none of them touches the text -- and it is the property that
+            # actually defines this arrow rather than some other artist's.
+            pts = []
+            for it in d["items"]:
+                if it[0] == "c":
+                    pts += [(q.x, q.y) for q in it[1:5]]
+                elif it[0] == "l":
+                    pts += [(it[1].x, it[1].y), (it[2].x, it[2].y)]
+                elif it[0] == "re":
+                    r = it[1]
+                    pts += [(r.x0, r.y0), (r.x1, r.y1)]
+            if not pts:
                 continue
-            curves = [it for it in d["items"] if it[0] == "c"]
-            if len(curves) != 1 or len(d["items"]) != 1:
+            if not all(lo - 2 <= q[0] <= hi + 2 and top - 2 <= q[1] <= bot + 2
+                       for q in pts):
                 continue
-            a, b = curves[0][1], curves[0][4]
-            if not (inside(a) and inside(b)):
+            # IT MUST TOUCH THE TEXT. Admitting any path with a curve let in
+            # every round MARKER -- matplotlib draws an `o` as a filled path
+            # of eight Beziers -- and a rounded legend frame, so with a
+            # `connectionstyle` the arrow no longer sorted first and a marker
+            # was read as the arrow. `annotate` starts the arrow at the text,
+            # inset by `shrinkA` (2pt by default), so the real one has a point
+            # within about a line of the words. The scale is the annotation's
+            # own height, not a constant: a bigger font moves the text and the
+            # arrow together.
+            # AN ENDPOINT AT THE WORDS, not merely a point near them. Any
+            # point was enough for a GRIDLINE that happens to pass beside the
+            # annotation, and a gridline spans the panel, so it reached
+            # furthest and won. An arrow STOPS at the text; a line passing by
+            # has the text near its middle and its ends at the panel edge.
+            # NOT A PATH THAT CROSSES THE PANEL. A vertical GRIDLINE drawn
+            # through the annotation has its top end a few points above the
+            # words, so "an endpoint at the text" admitted it -- and it spans
+            # the panel, so it reached furthest and won, pointing the check at
+            # x=224 instead of the bar at 264-318. What separates them needs
+            # no distance at all: a gridline and a spine BEGIN AND END on the
+            # panel's boundary, and an arrow has one end at the text and the
+            # other at what it points to, neither on the frame.
+            def _on_frame(q):
+                return (abs(q[0] - lo) < 1 or abs(q[0] - hi) < 1
+                        or abs(q[1] - top) < 1 or abs(q[1] - bot) < 1)
+
+            ends = (pts[0], pts[-1])
+            if all(_on_frame(q) for q in ends):
                 continue
-            out.append(((a.x, a.y), (b.x, b.y)))
+            anchor = min(ends, key=dist)
+            if dist(anchor) > max(ny1 - ny0, 6.0):
+                continue
+            out.append((anchor, max(pts, key=dist)))
     finally:
         doc.close()
-    return out
+    # THE ONE THAT REACHES FURTHEST. Sorting by how close a path STARTS to the
+    # words put a `bbox=dict(boxstyle="round")` patch first: it surrounds the
+    # text, so it touches it by construction and its own corners are the
+    # "tip", 5pt away. An arrow is the thing that goes somewhere -- it starts
+    # at the words like the box does and then reaches out to what it points
+    # at. No threshold: the box's reach is its padding, the arrow's is the
+    # distance to its target.
+    return sorted(out, key=lambda pair: -dist(pair[1]))
 
 
 def _assert_titled(panels, boxes, stem, titles, top):
@@ -1665,7 +1719,16 @@ def test_fig25_draws_its_bliss_numbers():
     # `annotate` draws: repointing `xy` while leaving `xytext` alone moves the
     # arrow onto `RSL3 alone` and leaves the text exactly where it was, which
     # passed. The bar it names is the rightmost of panel (a)'s four.
-    arrows25 = _annotation_arrows("fig25_bliss_synergy", (a_lo25, a_hi25))
+    # THE WORDS' FULL EXTENT. `line` carries `(x0, text)`, so `max(x0)` is the
+    # last word's LEFT edge -- the box then stopped where `synergy` starts and
+    # the arrow, 15.6pt further right, fell outside it. `same_row` has the
+    # right edges; this file has made the left-edge-for-right-edge slip
+    # before, which is why the two are named apart here.
+    seg = same_row[lo:hi + 1]
+    ann_box = (min(x0 for x0, _, _ in seg), ay_mid - 8,
+               max(x1 for _, x1, _ in seg), ay_mid + 8)
+    arrows25 = _annotation_arrows("fig25_bliss_synergy", (a_lo25, a_hi25),
+                                  ann_box)
     a_bars = sorted((r for r in _filled_rects("fig25_bliss_synergy")
                      if a_lo25 - 1 <= r[0] and r[1] <= a_hi25 + 1
                      and (r[1] - r[0]) > 5 and (r[3] - r[2]) > 5
@@ -1702,9 +1765,9 @@ def test_fig25_draws_its_bliss_numbers():
     # sibling on fig26 selected `min(..., key=distance to the expected tick)`
     # and then asserted the winner was near that tick, which cannot fail while
     # any candidate is near it.
-    assert len(arrows25) == 1, (
-        f"fig25's panel (a) draws {len(arrows25)} annotation arrows; the "
-        "synergy annotation's cannot be identified")
+    assert arrows25, (
+        "fig25's panel (a) draws no annotation arrow; the synergy annotation "
+        "is not attached to anything")
     tip = arrows25[0][1]
     if len(a_bars) >= 2:
         last = a_bars[-1]
@@ -2332,9 +2395,30 @@ def test_fig24_draws_its_hypoxia_numbers():
     assert len(centres) >= 4, (
         f"fig24 draws {len(centres)} bar annotations besides the collapse "
         "note's two; its two treatment groups cannot be located")
+    # THE SPLIT MUST BE EVEN, AND THE GAP MUST BE UNIQUELY WIDEST. The four
+    # annotation centres sit at `xi +/- w/2`, so the within-group gap is `w`
+    # and the between-group gap is `1 - w`: at `w >= 0.5` a WITHIN-group gap
+    # is the widest, `max` over `(gap, index)` breaks the tie toward the
+    # rightmost, and the split comes out 3/1. `others` then held only SDT's
+    # rightmost annotation and the bound moved 53pt right -- so a defect this
+    # file's own harness catalogues became undetectable at `w = 0.55`.
+    #
+    # Two groups of two is what a grouped bar chart with two treatments and
+    # two series draws. Asserting that, rather than trusting the widest gap to
+    # find it, is what the artifact can actually supply.
     gaps = [(b - a, i) for i, (a, b) in enumerate(zip(centres, centres[1:]))]
-    _, at = max(gaps)
+    widest, at = max(gaps)
+    runners = [g for g, i in gaps if i != at]
+    assert not runners or widest > max(runners) + 0.5, (
+        f"fig24's bar annotations are spaced {[round(g, 1) for g, _ in gaps]}, "
+        "with no uniquely widest gap; its two treatment groups cannot be "
+        "separated by position")
     left_group, right_group = centres[:at + 1], centres[at + 1:]
+    assert len(left_group) == len(right_group), (
+        f"fig24's annotation centres split {len(left_group)}/"
+        f"{len(right_group)} at the widest gap, and a two-series grouped bar "
+        "chart draws two groups of equal size; the split is not on the "
+        "boundary between treatments")
     quoted_texts = {left[1], right[1]}
     in_left = sum(1 for x0, x1, t in bars_all
                   if t in quoted_texts and (x0 + x1) / 2 in left_group)
@@ -3261,10 +3345,22 @@ def test_fig26_draws_the_timepoints_its_fixture_holds():
     # uses) the old head-based search returned 31 candidates, discarded the
     # real tip at x=437, and picked a triangle vertex sitting exactly on the
     # expected tick, so the arrow could point at day 28 and pass.
-    arrows26 = _annotation_arrows(stem26, (a_lo, a_hi))
-    assert len(arrows26) == 1, (
-        f"fig26's panel (a) draws {len(arrows26)} annotation arrows; the "
-        "`closes ~day 3` arrow cannot be identified")
+    # THE WHOLE ANNOTATION, not the one word this check happens to locate it
+    # by. `annotate` attaches its arrow to whichever EDGE of the full text
+    # faces the target, so the attachment point moves from one end of
+    # `closes ~day 3` to the other when the text moves across the target.
+    # Passing only `closes` put the anchor 30pt away and found no arrow at
+    # all, on a correct figure.
+    cl_row = [b for b in _word_bboxes(stem26)
+              if abs(b[1] - closes[0][1]) < 2
+              and a_lo - 1 <= (b[0] + b[2]) / 2 <= a_hi + 1
+              and b[1] > _axes_box(stem26)[0]]
+    cl_box = (min(b[0] for b in cl_row), min(b[1] for b in cl_row),
+              max(b[2] for b in cl_row), max(b[3] for b in cl_row))
+    arrows26 = _annotation_arrows(stem26, (a_lo, a_hi), cl_box)
+    assert arrows26, (
+        "fig26's panel (a) draws no annotation arrow; `closes ~day 3` is not "
+        "attached to a timepoint")
     tip = arrows26[0][1]
     if True:
         near_tick = min(range(len(xmarks)),
@@ -3281,8 +3377,59 @@ def test_fig26_draws_the_timepoints_its_fixture_holds():
         # while `closes ~day 3` marked the curve the panel title says STAYS
         # OPEN. The two curves are far apart at day 3; the tip must be on the
         # one whose window closes.
-        rsl3_y = ends[legend_col["RSL3"]][1]
-        sdt_y = ends[legend_col["SDT"]][1]
+        # THE CURVES AT THE DAY THE ARROW NAMES, not at the last timepoint.
+        # `ends` keeps each colour's RIGHTMOST stroke point -- the day-28
+        # values -- so comparing against it is a half-plane test ("nearer the
+        # bottom of the panel than the top"), not "on the RSL3 curve". Under
+        # it an arrow tip at day 3 and 40% kill, which is on NEITHER curve
+        # (RSL3 is 1.4% there, SDT ~99%), passed.
+        # FROM THE MARKERS, which sit exactly on the data points. Averaging
+        # stroke points over a window either side of the day is wrong on a
+        # steep curve: RSL3 falls from 42% to 1.4% across day 3, so a 6pt-wide
+        # average landed 17.6pt off the value the arrow correctly points at,
+        # and the committed figure failed. Each marker is a filled square
+        # centred on its own datum.
+        at_x = xmarks[win_end]
+        marks = [r for r in _filled_rects(stem26)
+                 if a_lo - 1 <= r[0] and r[1] <= a_hi + 1
+                 and 2 < (r[1] - r[0]) < 12 and 2 < (r[3] - r[2]) < 12]
+        assert marks, (
+            "fig26's panel (a) draws no data markers, so its curves cannot be "
+            "located at a specific day")
+        marker_h = max(r[3] - r[2] for r in marks)
+
+        # THE NEAREST VERTEX, not the nearest marker. RSL3's markers are
+        # squares and SDT's are circles -- matplotlib draws a circle as filled
+        # Beziers, so a rectangle scan finds one series and not the other. A
+        # curve is a polyline through its data points, so the stroke vertex
+        # nearest this day IS the value plotted there, whatever the marker.
+        pts_by_col = {}
+        for x, y, col in _stroke_points(stem26):
+            if a_lo - 1 <= x <= a_hi + 1:
+                pts_by_col.setdefault(col, []).append((x, y))
+
+        def _curve_y(colour):
+            here = pts_by_col.get(colour) or []
+            if not here:
+                return None
+            return min(here, key=lambda q: abs(q[0] - at_x))[1]
+
+        rsl3_y = _curve_y(legend_col["RSL3"])
+        sdt_y = _curve_y(legend_col["SDT"])
+        assert rsl3_y is not None and sdt_y is not None, (
+            "fig26's panel (a) draws no RSL3 or SDT marker at the day the "
+            "`closes` annotation names; its curves cannot be located there")
+        # ON THE CURVE, not merely nearer it. "Nearer RSL3 than SDT" is a
+        # half-plane test: an arrow tip at day 3 and 40% kill is on NEITHER
+        # curve -- RSL3 is 1.4% there and SDT ~99% -- and it is nearer RSL3,
+        # so it passed. `annotate` puts the tip exactly at `xy`, which for a
+        # correct figure is exactly on the curve, so the tolerance is the
+        # marker the figure draws there rather than a chosen number.
+        assert abs(tip[1] - rsl3_y) <= marker_h, (
+            f"fig26's `closes ~day 3` arrow lands at y={tip[1]:.0f}, which is "
+            f"{abs(tip[1] - rsl3_y):.0f}pt off the RSL3 curve at that day "
+            f"(y={rsl3_y:.0f}) -- more than the {marker_h:.0f}pt marker drawn "
+            "there. The arrow points at no plotted value")
         assert abs(tip[1] - rsl3_y) < abs(tip[1] - sdt_y), (
             f"fig26's `closes ~day 3` arrow lands at y={tip[1]:.0f}, nearer "
             f"the SDT curve than RSL3's. It names the window that closes, "
@@ -3296,12 +3443,13 @@ def test_fig26_draws_the_timepoints_its_fixture_holds():
     #
     # The annotation belongs to the window it names, so it must sit inside the
     # shaded span or within one tick pitch of its closing edge. Both terms are
-    # measured off this figure: the committed text centres 24.7pt right of the
+    # measured off this figure: the committed text centres 24.6pt right of the
     # shade against a local pitch of 30.6pt, day 0 falls INSIDE the span, and
     # day 28 centres 104.1pt out. Nothing here is a chosen number.
     #
-    # An earlier version said 24.7 and 91.4. The first is 24.63 rounded the
-    # wrong way; the second is the day-28 box's LEFT EDGE (91.68), while the
+    # An earlier version said 24.7 and 91.4, and the commit correcting the
+    # second left the first standing four lines above its own retraction. The
+    # measured value is 24.63, which rounds to 24.6; the second is the day-28 box's LEFT EDGE (91.68), while the
     # assertion below compares the CENTRE (104.08) -- the same centre-vs-edge
     # conflation this file flags seventy lines earlier.
     if closes:

@@ -173,6 +173,26 @@ case("fig25 annotation in a rounded bbox", False,
        'bbox=dict(boxstyle="round", fc="w")')])
 case("legend.fancybox", False, rc={"legend.fancybox": True})
 
+# ---------------- arrow styles and connection styles, all correct figures
+# Round 31 showed a shape-based arrow rule rejecting six of these. The rule is
+# "it starts at the annotation's words" now, and these pin that it stays so.
+for _style in ("simple", "fancy", "wedge"):
+    case(f"fig25 arrowstyle={_style}", False,
+         [('arrowprops=dict(arrowstyle="->", color="#C44E52")',
+           f'arrowprops=dict(arrowstyle="{_style}", color="#C44E52")')])
+for _conn in ("angle,angleA=0,angleB=90,rad=5", "bar,fraction=0.2"):
+    case(f"fig26 connectionstyle={_conn.split(',')[0]}", False,
+         [('arrowprops=dict(arrowstyle="->", color="#4C72B0")',
+           f'arrowprops=dict(arrowstyle="->", color="#4C72B0", '
+           f'connectionstyle="{_conn}")')])
+case("fig24 bar width 0.45", False, [("w = 0.36", "w = 0.45")])
+case("fig24 bar width 0.55 interleaves the groups", True,
+     [("w = 0.36", "w = 0.55")])
+case("fig24 wide bars hide the note over SDT", True,
+     [("w = 0.36", "w = 0.55"), ("xytext=(0.55, 55)", "xytext=(1.0, 55)")])
+case("fig26 arrow at the right day, on neither curve", True,
+     [("xy=(win_end, rsl3[win_end])", "xy=(win_end, 40)")])
+
 # ------------------------------------------------- correct figures, restyled
 case("committed figures, unmodified", False)
 case("xtick.direction inout", False, rc={"xtick.direction": "inout"})
@@ -270,17 +290,40 @@ def _shrink_rate_b(root: Path) -> None:
 
     3.7% is 9.2pt today; at 1.5% the bar drops out of the rectangle scan, and
     a colour check gated on "exactly four bars" switched itself off.
+
+    BOTH THE RUN AND THE FIXTURE, and an earlier version edited only the run.
+    `tests/fixtures/bliss_synergy.json` is shaped `{_comment, rsl3_fsp1i, ...}`
+    -- no `combinations` key and no top-level `rate_b` -- so the loop matched
+    nothing there while still rewriting the file. The figure then disagreed
+    with its own fixture, the DRIFT assertion fired first, and this case was
+    reported as caught while the colour guard it exists for was never reached.
+    A control (the same edit with the colour swap removed) failed identically,
+    which is how that was established.
+
+    `bliss_prediction` and `synergy_score` are recomputed, because a run with
+    rate_a 40%, rate_b 1.5% and a stale 42.2% prediction is not the
+    "legitimate re-run" this case claims to be.
     """
-    for rel in ("simulations/output/combo-mech/combo_summary.json",
-                "tests/fixtures/bliss_synergy.json"):
-        p = root / rel
-        if not p.exists():
-            continue
-        d = json.loads(p.read_text())
-        for c in (d["combinations"] if "combinations" in d else [d]):
-            if isinstance(c, dict) and "rate_b" in c:
-                c["rate_b"] = 0.015
-        p.write_text(json.dumps(d, indent=1))
+    def _fix(c):
+        c["rate_b"] = 0.015
+        a, b = c["rate_a"], c["rate_b"]
+        c["bliss_prediction"] = a + b - a * b
+        if c.get("rate_combo") is not None and c["bliss_prediction"]:
+            c["synergy_score"] = c["rate_combo"] / c["bliss_prediction"]
+
+    run = root / "simulations/output/combo-mech/combo_summary.json"
+    if run.exists():
+        d = json.loads(run.read_text())
+        for c in d["combinations"]:
+            if (c.get("drug_a"), c.get("drug_b")) == ("RSL3", "FSP1i"):
+                _fix(c)
+        run.write_text(json.dumps(d, indent=1))
+
+    fix = root / "tests/fixtures/bliss_synergy.json"
+    if fix.exists():
+        d = json.loads(fix.read_text())
+        _fix(d["rsl3_fsp1i"])
+        fix.write_text(json.dumps(d, indent=1))
 
 
 def _extra_pairs(n: int):
@@ -374,7 +417,12 @@ def run_case(root: Path, case_tuple) -> tuple[str, str]:
     name, expect_fail, subs, rc, edit = case_tuple
     gen = root / "scripts" / "generate_figures.py"
     saved = {p: p.read_text() for p in [gen]}
+    # EVERY FILE AN `edit=` CALLBACK CAN TOUCH. `bliss_synergy.json` was
+    # missing from this list while a callback rewrote it -- harmless only
+    # because that rewrite happened to be value-preserving.
     for rel in ("tests/fixtures/hypoxia_killcurve_rows.json",
+                "tests/fixtures/bliss_synergy.json",
+                "tests/fixtures/vulnerability_window.json",
                 "simulations/output/tme/tme_summary.json",
                 "simulations/output/combo-mech/combo_summary.json"):
         p = root / rel
@@ -388,7 +436,12 @@ def run_case(root: Path, case_tuple) -> tuple[str, str]:
             src = src.replace(find, repl, 1)
         gen.write_text(src)
         if edit:
+            before = {p: v for p, v in saved.items() if p != gen}
             edit(root)
+            changed = [p for p, v in before.items() if p.read_text() != v]
+            if not changed:
+                return "SKIP", ("the edit callback changed no tracked input; "
+                                "this case tests nothing")
         r = subprocess.run([sys.executable, str(root / "regen.py"), json.dumps(rc)],
                            capture_output=True, text=True, cwd=root)
         if r.returncode:
