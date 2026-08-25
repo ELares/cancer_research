@@ -201,6 +201,8 @@ def _filled_rects(stem):
 def _vertical_labels(words):
     """Rotated axis labels, as `x -> "the words bottom to top"`.
 
+    Takes `(x0, x1, y, text)` tuples -- see `_boxed_row_words`.
+
     A y-axis label is drawn rotated, so its words share an x and differ in y.
     Grouping on x recovers each panel's label separately, which counting
     occurrences cannot: fig24 gives both panels the same y-axis text, so
@@ -208,13 +210,24 @@ def _vertical_labels(words):
     (its words moved to the title) and again while panel (a) was relabelled and
     a second copy added to panel (b). A count cannot say where anything is.
     """
+    # KEYED ON THE FULL X EXTENT. Grouping on x0 alone let a HORIZONTAL word
+    # join a rotated column whenever it happened to start at the same x: at
+    # one style setting the footnote's word `upper` shares x0=489.629 with
+    # panel (b)'s label and the column read "upper Overall tumor kill (%)",
+    # failing a correct figure. A rotated label's words all have the same
+    # x-extent -- their width is the text HEIGHT -- so x1 separates them from
+    # anything horizontal.
     cols = {}
-    for x, y, t in words:
-        cols.setdefault(round(x, 1), []).append((y, t))
+    for x0, x1, y, t in words:
+        cols.setdefault((round(x0, 1), round(x1, 1)), []).append((y, t))
     # BOTTOM TO TOP. A 90-degree rotated label puts its first word at the
     # LARGEST y, so reading in ascending y gives "(%) kill tumor Overall".
-    return {x: " ".join(t for _, t in sorted(ws, reverse=True))
-            for x, ws in cols.items() if len(ws) > 1}
+    # Returns text AND the column's own vertical extent, so a caller checking
+    # where the label sits does not have to re-find its words by x0 -- which
+    # re-opens the very hole this function was fixed for.
+    return {key[0]: (" ".join(t for _, t in sorted(ws, reverse=True)),
+                     min(y for y, _ in ws), max(y for y, _ in ws))
+            for key, ws in cols.items() if len(ws) > 1}
 
 
 def _panels(stem):
@@ -245,6 +258,28 @@ def _panels(stem):
         doc.close()
     assert spans, f"{stem}: no axis spines found, so panels cannot be located"
     return sorted(spans)
+
+
+def _panel_y(stem):
+    """The vertical extent of the plotting area, from the axis spines."""
+    pymupdf = _reader()
+    doc = pymupdf.open(FIG_DIR / f"{stem}.pdf")
+    try:
+        ys = set()
+        for d in doc[0].get_drawings():
+            col = d.get("color")
+            if col is None or tuple(round(c, 2) for c in col) != (0.0, 0.0, 0.0):
+                continue
+            for item in d["items"]:
+                if item[0] != "l":
+                    continue
+                a, b = item[1], item[2]
+                if abs(a.y - b.y) < 0.5 and abs(b.x - a.x) > 100:
+                    ys.add(round(a.y, 2))
+    finally:
+        doc.close()
+    assert len(ys) >= 2, f"{stem}: fewer than two spine rows found"
+    return min(ys), max(ys)
 
 
 def _dashed_lines(stem):
@@ -516,11 +551,20 @@ def test_fig25_draws_its_bliss_numbers():
               if re.fullmatch(r"[^\s+]+\+[^\s+]+", t)]
     assert pair_x, "fig25 draws no pair labels, so panel (b) cannot be located"
     want = f"{fx['synergy_score']:.2f}×"
-    hits = [(x, y) for x, y, t in words_a if t == want and x < min(pair_x)]
+    # BOUNDED ON PANEL (b)'S SPINE, not on its pair labels. Those labels are
+    # y-ticks drawn OUTSIDE the spine, so a longer drug name pushes them left
+    # towards panel (a)'s annotation: with real compound names the margin goes
+    # from 81pt today to 1.0pt for `Liproxstatin-1+Ferrostatin-1` and to below
+    # zero for `Liproxstatin-1+Deferoxamine`, failing a correct figure. The
+    # spine moves the other way -- longer tick labels shrink panel (b), so the
+    # bound gains room exactly when the labels need it. This file has already
+    # been fixed twice for assuming today's pair names.
+    b_spine = _panels("fig25_bliss_synergy")[-1][0]
+    hits = [(x, y) for x, y, t in words_a if t == want and x < b_spine]
     assert hits, (
         f"fig25's panel (a) does not annotate {want} anywhere left of panel "
-        f"(b)'s pair labels. Panel (b) drawing that number as a bar label is "
-        "not the same claim")
+        f"(b)'s axis at x={b_spine:.0f}. Panel (b) drawing that number as a "
+        "bar label is not the same claim")
     # The two words sit 0.87pt apart vertically (57.115 and 57.985), so an
     # exact row key splits them; the annotation is one visual line.
     _ax, ay = hits[0]
@@ -547,12 +591,13 @@ def test_fig25_draws_its_bliss_numbers():
         f"{' '.join(t for _, t in line)!r}, expected {want + ' synergy'!r}")
     # BY POSITION, for the reason fig24's needed it: a containment check does
     # not say WHICH panel carries the label, or that any panel does.
-    cols = _vertical_labels(_words("fig25_bliss_synergy"))
-    kill_axes = sorted(x for x, lbl in cols.items()
+    cols = _vertical_labels(_boxed_row_words("fig25_bliss_synergy"))
+    kill_axes = sorted(x for x, (lbl, _, _) in cols.items()
                        if lbl == "Persister kill (%)")
     assert len(kill_axes) == 1, (
         "fig25 does not draw `Persister kill (%)` as a y-axis label exactly "
-        f"once; vertical labels found: {sorted(cols.values())}. The four "
+        f"once; vertical labels found: {sorted(v[0] for v in cols.values())}. "
+        f"The four "
         "values compared above are drawn as percentages")
     # AND IT LABELS PANEL (a). Counting was the same defect fig24's version
     # had: removing panel (a)'s y-label and dropping one rotated copy past the
@@ -637,13 +682,26 @@ def test_fig25_binds_each_pair_to_its_own_score():
     assert len(names) == len(pairs), (
         f"fig25 draws {len(names)} pair labels by geometry and {len(pairs)} "
         "in the text stream; the two readings disagree")
+    # NEAREST, NOT WITHIN 3pt. `y` here is each word's TOP edge, and the pair
+    # labels are y-ticks at `font.size` while the scores are drawn at
+    # fontsize=8 -- vertically centred on the same row, their tops diverge by
+    # about 0.73pt per point of size difference. A fixed 3pt bound therefore
+    # broke on `font.size: 15`, on `tick_params(labelsize=16)`, and on a
+    # larger score annotation, each a correct figure. In every one of those
+    # the right partner was still nearest by 7x or more, which is the property
+    # that actually holds -- the same nearest-neighbour lesson fig26's unit
+    # check learned, left un-applied here.
     by_row = {}
     for x, y, t in names:
-        near = [v for v in vals if abs(v[1] - y) < 3]
-        assert len(near) == 1, (
-            f"{t} shares a row with {len(near)} scores, so no score can be "
-            "attributed to it")
-        by_row[t] = near[0][2]
+        ranked = sorted(vals, key=lambda v: abs(v[1] - y))
+        assert ranked, f"fig25 draws no scores at all beside {t}"
+        best = ranked[0]
+        runner = ranked[1] if len(ranked) > 1 else None
+        assert runner is None or abs(runner[1] - y) > 3 * abs(best[1] - y) + 3, (
+            f"{t}'s nearest score is {abs(best[1] - y):.1f}pt away and the "
+            f"next is {abs(runner[1] - y):.1f}pt; the rows are too close "
+            "together to attribute a score to a pair")
+        by_row[t] = best[2]
     # THE SCORE'S DEFINITION. Panel (b)'s values are pinned and the caption
     # saying what they MEAN was not: flipping it to "(expected / observed)"
     # inverts every score on the panel and passed.
@@ -723,8 +781,15 @@ def test_fig25_binds_each_pair_to_its_own_score():
         f"fig25's additive threshold line is drawn at {drawn_at:.2f} on its "
         "own x scale, not 1.0. Every score on the panel is read against that "
         "line, so moving it changes which pairs read as synergistic")
-    assert "additive" in text, (
-        "fig25's panel (b) no longer labels its threshold line `additive`")
+    # THE LABEL MUST NAME THE POSITION THE LINE IS AT. `"additive" in text`
+    # is a presence check: relabelling the entry `additive (2.0×)` while the
+    # line stays at 1.0 leaves the legend contradicting the line every bar on
+    # the panel is read against, and passed. The label is derived from the
+    # same number the line is checked at.
+    assert f"additive ({1.0:.1f}×)" in text.replace("$\\times$", "×"), (
+        "fig25's panel (b) threshold legend does not read `additive (1.0×)`. "
+        f"The line itself is drawn at {drawn_at:.2f} on the panel's own "
+        "scale, so a legend naming any other value contradicts it")
 
     assert caption[0][0] > max(x for x, _, t in names), (
         "fig25's score caption is not to the right of its pair labels, so it "
@@ -956,13 +1021,14 @@ def test_fig24_draws_its_hypoxia_numbers():
     # added to panel (b). A count says how many, never where.
     px = _panels("fig24_hypoxia_killcurve")
     assert len(px) >= 2, f"fig24 has {len(px)} panels by its spines, expected 2"
-    columns = _vertical_labels(panel_a)
-    kill_axes = sorted(x for x, lbl in columns.items()
+    columns = _vertical_labels(_boxed_row_words("fig24_hypoxia_killcurve"))
+    kill_axes = sorted(x for x, (lbl, _, _) in columns.items()
                        if lbl == "Overall tumor kill (%)")
     assert len(kill_axes) == 2, (
         f"fig24 draws `Overall tumor kill (%)` as a y-axis label at "
         f"{len(kill_axes)} positions, expected one per panel. Columns found: "
-        f"{sorted(columns.values())}. The values compared above are drawn as "
+        f"{sorted(v[0] for v in columns.values())}. The values compared above "
+        f"are drawn as "
         "percentages")
     # AND ONE OF THEM LABELS PANEL (a). Counting columns is still counting:
     # stripping panel (a)'s y-label and dropping one stray rotated copy at the
@@ -998,6 +1064,19 @@ def test_fig24_draws_its_hypoxia_numbers():
         f"fig24 draws a `Overall tumor kill (%)` label at x={kill_axes} that "
         f"is not left of its own axis (panels start at {a_x0:.0f} and "
         f"{b_x0:.0f}); a y-axis label sits outside the data it labels")
+    # AND EACH LABEL MUST SIT BESIDE ITS PANEL VERTICALLY. The offsets above
+    # compare x only, so a rotated label floating ABOVE panel (a) -- with no
+    # label beside its bars at all -- satisfied them. The spines give the
+    # panel's y range as well as its x range.
+    y_lo, y_hi = _panel_y("fig24_hypoxia_killcurve")
+    for x in kill_axes:
+        _, col_lo, col_hi = columns[x]
+        assert y_lo - 5 <= col_lo and col_hi <= y_hi + 5, (
+            f"fig24's `Overall tumor kill (%)` label at x={x:.0f} spans "
+            f"y={col_lo:.0f} to {col_hi:.0f}, outside its panel's plotting "
+            f"area ({y_lo:.0f} to {y_hi:.0f}); a y-axis label sits beside the "
+            "data it labels")
+
     tol = max(4.0, 0.15 * max(off_a, off_b))
     assert abs(off_a - off_b) <= tol, (
         f"fig24's two `Overall tumor kill (%)` labels sit {off_a:.0f}pt and "
@@ -1107,32 +1186,15 @@ def test_fig26_draws_the_timepoints_its_fixture_holds():
     days = sorted({r["timepoint_days"] for r in rows})
     expected = [f"{d:g}" for d in days]
     text = _drawn("fig26_vulnerability_window")
-    # Both panels share the axis, so the run appears twice; check the first.
-    run = re.search(r"\b" + r"\s+".join(re.escape(d) for d in expected) + r"\b",
-                    text)
-    assert run, (
-        f"fig26 does not draw its timepoints {expected} in order; "
-        "vulnerability_window.json is what it plots against")
-    assert text.count(run.group(0)) >= 2, (
-        "fig26 draws the timepoint axis once; both panels share it, so a "
-        "single occurrence means one panel lost its labels")
-    # No data value beyond the axes is annotated, and if one appears it needs
-    # a comparison rather than passing unnoticed.
-    values = re.findall(r"\d+\.\d%|\d+\.\d+×", text)
-    assert not values, (
-        f"fig26 now annotates {values}; add them to this comparison against "
-        "vulnerability_window.json rather than leaving them ungated")
-    # THE CURVE LEGEND. The timepoints above say WHEN, and nothing said WHICH
-    # CURVE IS WHICH. Swapping the two `label=` strings on `axA.plot` labels
-    # the curve that holds near 100% out to day 28 as RSL3 and the collapsing
-    # one as SDT -- "days for RSL3, weeks for SDT" reversed, under a suptitle
-    # still asserting the original claim -- and passed. Legend entries are
-    # emitted in plot-call order, so pinning the order pins the pairing.
-    legend = re.search(r"SDT \(exogenous ROS\)\s+RSL3 \(GPX4 inhibitor\)", text)
-    assert legend, (
-        "fig26's panel (a) legend is not `SDT (exogenous ROS)` then `RSL3 "
-        "(GPX4 inhibitor)`; the curves may be labelled the wrong way round, "
-        "which reverses the window claim the figure is drawn to make")
+    # NO STREAM-ORDER RUN CHECK HERE. There was one, asserting the nine
+    # labels appear in order in the extracted text, and it added no coverage
+    # the positional check below does not already have -- while failing FIRST,
+    # with a message about a panel losing its labels, in cases where PyMuPDF
+    # merely merges two crowded tick words into one (a narrow figure, or more
+    # timepoints). Stream order is not layout, which is why the positional
+    # check exists; keeping a weaker duplicate in front of it only made the
+    # diagnosis worse.
+
     whole = json.loads((FIXTURES / "vulnerability_window.json").read_text())
     n = whole["n_cells"]
     assert f"{n:,} cells/condition" in text, (
@@ -1179,6 +1241,27 @@ def test_fig26_draws_the_timepoints_its_fixture_holds():
         if len(band) >= 2 * len(expected):
             break
         band.extend(by_row[y])
+    # DIAGNOSE A COLLISION RATHER THAN JUST COUNTING. When two tick labels
+    # overlap on the page PyMuPDF returns them as ONE word -- at font.size 15
+    # panel (a) draws `0.250.5` -- and the figure really is defective, but a
+    # bare count reports it as missing labels and sends the reader looking for
+    # the wrong thing.
+    # SCANNED ON THE RAW WORDS, not on the band. A collided pair reads
+    # `0.250.5` -- two decimal points -- so the numeric pattern that builds
+    # the band rejects it, panel (a) contributes one label too few, and the
+    # accumulator reaches its count by pulling in a y-axis tick row. The
+    # symptom then looks like the wrong labels rather than like two labels on
+    # top of each other.
+    joined = "".join(expected)
+    merged = sorted({t for x, y, t in wds
+                     if 0 < cap_y - y < 60
+                     and re.fullmatch(r"[\d.]+", t)
+                     and t not in expected
+                     and t in joined})
+    assert not merged, (
+        f"fig26 draws {merged} as single words: adjacent tick labels have "
+        "collided and been run together, so the axis is unreadable at this "
+        "size. The expected labels are " + ", ".join(expected))
     assert len(band) == 2 * len(expected), (
         f"expected {2 * len(expected)} numeric tick labels above fig26's "
         f"x-axis caption (both panels share the axis), found {len(band)}: "
