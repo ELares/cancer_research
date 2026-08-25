@@ -216,7 +216,15 @@ def _vertical_labels(words):
     # panel (b)'s label and the column read "upper Overall tumor kill (%)",
     # failing a correct figure. A rotated label's words all have the same
     # x-extent -- their width is the text HEIGHT -- so x1 separates them from
-    # anything horizontal.
+    # a horizontal word of a DIFFERENT width.
+    #
+    # It is not a general separation: two horizontal words of equal width
+    # stacked at the same x still group, and fig24 already contains one such
+    # column -- `RSL3 RSL3`, its panel (b) legend, at x=595.6. That is
+    # harmless because callers select by the label TEXT, and it is why the
+    # returned key is the full extent rather than x0: collapsing back onto x0
+    # would merge that column with a real one, last-write-wins, undoing the
+    # grouping this just did.
     cols = {}
     for x0, x1, y, t in words:
         cols.setdefault((round(x0, 1), round(x1, 1)), []).append((y, t))
@@ -225,8 +233,14 @@ def _vertical_labels(words):
     # Returns text AND the column's own vertical extent, so a caller checking
     # where the label sits does not have to re-find its words by x0 -- which
     # re-opens the very hole this function was fixed for.
-    return {key[0]: (" ".join(t for _, t in sorted(ws, reverse=True)),
-                     min(y for y, _ in ws), max(y for y, _ in ws))
+    # KEYED ON THE FULL EXTENT ON THE WAY OUT TOO. Grouping on (x0, x1) and
+    # then returning a dict keyed on x0 alone put two columns that share a
+    # rounded x0 back into one slot, last-write-wins -- undoing the grouping
+    # it had just done. fig24 already carries a spurious horizontal column
+    # (`RSL3 RSL3`, its panel (b) legend, at x=595.6), so this is not
+    # hypothetical; x1 keeps it separate only if x1 survives.
+    return {key: (" ".join(t for _, t in sorted(ws, reverse=True)),
+                  min(y for y, _ in ws), max(y for y, _ in ws))
             for key, ws in cols.items() if len(ws) > 1}
 
 
@@ -380,6 +394,22 @@ def _stroke_points(stem):
                 for pt in (item[1], item[2]):
                     out.append((pt.x, pt.y, c))
         return out
+    finally:
+        doc.close()
+
+
+def _word_bboxes(stem):
+    """Every word as `(x0, y0, x1, y1, text)` -- the full box.
+
+    A tick label is centred on its tick, so mapping a drawn y to a data value
+    needs the label's vertical CENTRE. Using its top edge put fig24's SDT
+    reference at 88.6% against a true 91.9%.
+    """
+    pymupdf = _reader()
+    doc = pymupdf.open(FIG_DIR / f"{stem}.pdf")
+    try:
+        return [(w[0], w[1], w[2], w[3], w[4])
+                for w in doc[0].get_text("words")]
     finally:
         doc.close()
 
@@ -592,7 +622,7 @@ def test_fig25_draws_its_bliss_numbers():
     # BY POSITION, for the reason fig24's needed it: a containment check does
     # not say WHICH panel carries the label, or that any panel does.
     cols = _vertical_labels(_boxed_row_words("fig25_bliss_synergy"))
-    kill_axes = sorted(x for x, (lbl, _, _) in cols.items()
+    kill_axes = sorted(k[0] for k, (lbl, _, _) in cols.items()
                        if lbl == "Persister kill (%)")
     assert len(kill_axes) == 1, (
         "fig25 does not draw `Persister kill (%)` as a y-axis label exactly "
@@ -691,9 +721,22 @@ def test_fig25_binds_each_pair_to_its_own_score():
     # the right partner was still nearest by 7x or more, which is the property
     # that actually holds -- the same nearest-neighbour lesson fig26's unit
     # check learned, left un-applied here.
+    # RANKED WITHIN PANEL (b). The comment above says panel (a)'s synergy
+    # annotation is excluded "by having no partner rather than by a
+    # coordinate" -- true at three pairs, false as soon as panel (b) gains
+    # rows and its top bar climbs toward that annotation. Measured, correct
+    # figures failed at 12 pairs with font.size 12, at 9 pairs with 15, at 5
+    # with 16, and at 25 pairs even at the committed size: the runner-up was
+    # panel (a)'s annotation, 174pt left of panel (b)'s spine. x separates
+    # them unambiguously and the spine is already computed above.
+    b_spine = _panels("fig25_bliss_synergy")[-1][0]
+    scoped = [v for v in vals if v[0] >= b_spine]
+    assert scoped, (
+        f"fig25 draws no synergy scores right of panel (b)'s axis at "
+        f"x={b_spine:.0f}")
     by_row = {}
     for x, y, t in names:
-        ranked = sorted(vals, key=lambda v: abs(v[1] - y))
+        ranked = sorted(scoped, key=lambda v: abs(v[1] - y))
         assert ranked, f"fig25 draws no scores at all beside {t}"
         best = ranked[0]
         runner = ranked[1] if len(ranked) > 1 else None
@@ -1022,8 +1065,9 @@ def test_fig24_draws_its_hypoxia_numbers():
     px = _panels("fig24_hypoxia_killcurve")
     assert len(px) >= 2, f"fig24 has {len(px)} panels by its spines, expected 2"
     columns = _vertical_labels(_boxed_row_words("fig24_hypoxia_killcurve"))
-    kill_axes = sorted(x for x, (lbl, _, _) in columns.items()
+    kill_cols = sorted(k for k, (lbl, _, _) in columns.items()
                        if lbl == "Overall tumor kill (%)")
+    kill_axes = [k[0] for k in kill_cols]
     assert len(kill_axes) == 2, (
         f"fig24 draws `Overall tumor kill (%)` as a y-axis label at "
         f"{len(kill_axes)} positions, expected one per panel. Columns found: "
@@ -1069,8 +1113,9 @@ def test_fig24_draws_its_hypoxia_numbers():
     # label beside its bars at all -- satisfied them. The spines give the
     # panel's y range as well as its x range.
     y_lo, y_hi = _panel_y("fig24_hypoxia_killcurve")
-    for x in kill_axes:
-        _, col_lo, col_hi = columns[x]
+    for key in kill_cols:
+        _, col_lo, col_hi = columns[key]
+        x = key[0]
         assert y_lo - 5 <= col_lo and col_hi <= y_hi + 5, (
             f"fig24's `Overall tumor kill (%)` label at x={x:.0f} spans "
             f"y={col_lo:.0f} to {col_hi:.0f}, outside its panel's plotting "
@@ -1129,13 +1174,30 @@ def test_fig24_draws_its_hypoxia_numbers():
         assert len(refs[ref_colour[name]]) == 1, (
             f"fig24's panel (b) draws {len(refs[ref_colour[name]])} {name} "
             "reference lines")
-    sdt_y = refs[ref_colour["SDT"]][0]
-    rsl3_y = refs[ref_colour["RSL3"]][0]
-    assert sdt_y < rsl3_y, (
-        f"fig24's panel (b) draws SDT's normoxic reference at y={sdt_y:.0f} "
-        f"and RSL3's at y={rsl3_y:.0f}, so RSL3's reads as the higher kill "
-        f"rate. The data gives SDT {kills['SDT'][0]:.1f}% against RSL3 "
-        f"{kills['RSL3'][0]:.1f}% -- the two lines are exchanged")
+    # READ IN DATA UNITS, off panel (b)'s own y-axis ticks. Comparing only
+    # which line is higher left the VALUES unread: drawing SDT's reference at
+    # 0.6x its real rate -- 55% while its own bar says 91.9% -- kept the
+    # ordering and passed every semantic check. And the ordering itself was
+    # hardcoded, so a run where RSL3's uniform kill genuinely exceeded SDT's
+    # would be told its lines were exchanged when they were correct. The tick
+    # labels give the scale, the same way fig25's additive line is checked.
+    yticks = sorted(
+        ((y0 + y1) / 2, float(t))
+        for x0, y0, x1, y1, t in _word_bboxes("fig24_hypoxia_killcurve")
+        if re.fullmatch(r"\d+", t) and b_x0 - 40 < x1 < b_x0 + 2)
+    assert len(yticks) >= 2, (
+        f"fig24's panel (b) shows {len(yticks)} numeric y tick labels; its "
+        "scale cannot be recovered")
+    (ty0, tv0), (ty1, tv1) = yticks[0], yticks[-1]
+    scale = (ty1 - ty0) / (tv1 - tv0)
+    for name in ("SDT", "RSL3"):
+        drawn = (refs[ref_colour[name]][0] - ty0) / scale + tv0
+        want = kills[name][0]
+        assert abs(drawn - want) <= max(1.0, 0.03 * want), (
+            f"fig24's panel (b) draws {name}'s normoxic reference at "
+            f"{drawn:.1f}% on its own y scale and the data gives "
+            f"{want:.1f}%. That line is what the depth curves are compared "
+            "against, so it has to be the value it claims")
 
     # And the collapse annotation must be the ratio of the two it names, not a
     # number carried along beside them.
@@ -1252,12 +1314,18 @@ def test_fig26_draws_the_timepoints_its_fixture_holds():
     # accumulator reaches its count by pulling in a y-axis tick row. The
     # symptom then looks like the wrong labels rather than like two labels on
     # top of each other.
-    joined = "".join(expected)
+    # ADJACENT PAIRS ONLY, AND ONLY ON THE TICK ROWS. Testing `t in joined`
+    # -- a substring of every day label concatenated -- let a y-axis tick
+    # impersonate a collision: with a 0.75-day timepoint added, `joined`
+    # contains "0.50", which is panel (b)'s GPX4 axis tick 36.5pt above the
+    # caption at a completely different x. A correct figure failed being told
+    # its x axis was unreadable. Only two labels drawn side by side can run
+    # together, so only adjacent concatenations count, and only on the rows
+    # the band above already identified as tick rows.
+    tick_ys = {round(y, 1) for y in sorted(by_row, reverse=True)[:2]}
+    adjacent = {expected[i] + expected[i + 1] for i in range(len(expected) - 1)}
     merged = sorted({t for x, y, t in wds
-                     if 0 < cap_y - y < 60
-                     and re.fullmatch(r"[\d.]+", t)
-                     and t not in expected
-                     and t in joined})
+                     if round(y, 1) in tick_ys and t in adjacent})
     assert not merged, (
         f"fig26 draws {merged} as single words: adjacent tick labels have "
         "collided and been run together, so the axis is unreadable at this "
@@ -1312,8 +1380,13 @@ def test_fig26_draws_the_timepoints_its_fixture_holds():
     for x, y, t in wds:
         if t not in ("SDT", "RSL3") or not (a_lo <= x <= a_hi):
             continue
-        sample = [seg for seg in doc_lines
-                  if 0 < seg[1] - y < 10 and abs(seg[0] - x) < 60]
+        # NEAREST, not lowest-x. `_hlines_any` returns sorted by x, so
+        # `sample[0]` took whichever candidate started furthest left rather
+        # than the one belonging to this entry. fig24's equivalent already
+        # ranks by distance.
+        sample = sorted((seg for seg in doc_lines
+                         if 0 < seg[1] - y < 10 and abs(seg[0] - x) < 60),
+                        key=lambda seg: (abs(seg[1] - y), abs(seg[0] - x)))
         if sample:
             legend_col.setdefault(t, sample[0][2])
     assert set(legend_col) == {"SDT", "RSL3"}, (
@@ -1387,9 +1460,9 @@ def test_fig26_draws_the_timepoints_its_fixture_holds():
 # regeneration, so every platform hashes the same bytes with the same pinned
 # reader. That is why it can run in CI where the figures cannot be rebuilt.
 DRAWING_FINGERPRINTS = {
-    "fig24_hypoxia_killcurve": "7822f5da7e31d9d8",
-    "fig25_bliss_synergy": "0e6e769553b76f80",
-    "fig26_vulnerability_window": "456a227169e9af16",
+    "fig24_hypoxia_killcurve": "c00563683483f7dd",
+    "fig25_bliss_synergy": "dd28d52f72699490",
+    "fig26_vulnerability_window": "59b34cf28b52fdad",
 }
 
 
@@ -1490,7 +1563,9 @@ def _fingerprint(stem):
                 + tuple(round(d[k], 3) if isinstance(d.get(k), float)
                         else d.get(k)
                         for k in ("width", "dashes", "stroke_opacity",
-                                  "fill_opacity", "even_odd", "closePath")))
+                                  "fill_opacity", "even_odd", "closePath",
+                                  "lineCap", "lineJoin", "isolated",
+                                  "knockout")))
             for item in d["items"]:
                 kind, rest = item[0], item[1:]
                 coords = []
