@@ -298,8 +298,61 @@ def _panel_y(stem):
                     ys.add(round(a.y, 2))
     finally:
         doc.close()
-    assert len(ys) >= 2, f"{stem}: fewer than two spine rows found"
+    # ONE SPINE IS ENOUGH WHEN THE TICKS GIVE THE OTHER END. `axes.spines.top:
+    # False` is the commonest publication restyle and it removed a whole row,
+    # aborting fig24 on a correct figure. The tick marks span the axis, so
+    # they close the range when a spine is gone.
+    if len(ys) < 2:
+        tick_ys = {round(a.y, 2) for _, _, _, _, _, a, _ in _axis_ticks(stem)}
+        ys |= tick_ys
+    assert len(ys) >= 2, (
+        f"{stem}: fewer than two spine rows and no tick marks to close the "
+        "vertical extent")
     return min(ys), max(ys)
+
+
+def _axis_ticks_vertical(stem):
+    """Short black tick marks on a horizontal axis (vertical strokes)."""
+    pymupdf = _reader()
+    doc = pymupdf.open(FIG_DIR / f"{stem}.pdf")
+    try:
+        out = []
+        for d in doc[0].get_drawings():
+            col = d.get("color")
+            if col is None or tuple(round(c, 2) for c in col) != (0.0, 0.0, 0.0):
+                continue
+            for item in d["items"]:
+                if item[0] != "l":
+                    continue
+                a, b = item[1], item[2]
+                if abs(a.x - b.x) < 0.2 and 1 < abs(b.y - a.y) < 8:
+                    out.append((a.x, min(a.y, b.y), b.x, max(a.y, b.y),
+                                tuple(round(c, 4) for c in col), a, b))
+        return out
+    finally:
+        doc.close()
+
+
+def _axis_ticks(stem):
+    """Short black axis tick marks as `(x0, y0, x1, y1, colour, p1, p2)`."""
+    pymupdf = _reader()
+    doc = pymupdf.open(FIG_DIR / f"{stem}.pdf")
+    try:
+        out = []
+        for d in doc[0].get_drawings():
+            col = d.get("color")
+            if col is None or tuple(round(c, 2) for c in col) != (0.0, 0.0, 0.0):
+                continue
+            for item in d["items"]:
+                if item[0] != "l":
+                    continue
+                a, b = item[1], item[2]
+                if abs(a.y - b.y) < 0.2 and 1 < abs(b.x - a.x) < 8:
+                    out.append((min(a.x, b.x), a.y, max(a.x, b.x), b.y,
+                                tuple(round(c, 4) for c in col), a, b))
+        return out
+    finally:
+        doc.close()
 
 
 def _dashed_lines(stem):
@@ -470,9 +523,13 @@ def _cluster_rows(items, key, tol=1.0):
     whenever they straddle a boundary, however close they are -- and glyph
     extents make that a coin flip, not a property of the figure. Measured:
     fig25's four bar-label heads sit at y0 339.0485, 339.0485, 339.0504,
-    339.0504, a spread of 0.0019pt, and `round` split them into 339.0 and
-    339.1 because `RSL3`/`FSP1i` are cap-height while `Bliss`/`Observed`
-    carry ascenders. A correct figure then failed being told its bars were
+    339.0504 AT FIGURE HEIGHT 5 -- three of nine sampled heights hit this --
+    a spread of 0.0019pt, and `round` split them into 339.0 and 339.1 because
+    `RSL3`/`FSP1i` are cap-height while `Bliss`/`Observed` carry ascenders.
+    On the committed figure they are at 306.2885/306.2905, which `round`
+    happens NOT to split; an earlier version of this note quoted the height-5
+    coordinates without saying so, which reads as though the committed figure
+    were affected. A correct figure then failed being told its bars were
     mislabelled. This file had already diagnosed the same knife edge for the
     caption row and fixed it only there.
     """
@@ -677,10 +734,17 @@ def test_fig25_draws_its_bliss_numbers():
     # font changes, because both words are set on one line. This file states
     # the same lesson forty lines below for the score matcher and had applied
     # it only there.
+    # SCOPED TO PANEL (a). `hits` was bounded by panel (b)'s spine but the run
+    # was built over the whole page, so the 20pt gap-walk absorbed panel (b)'s
+    # top y-tick label once the panel grew: at 17 pairs the annotation read
+    # `1.99× synergy RSL3+FSP1i` and a correct figure failed. Panel (b)'s pair
+    # labels are drawn LEFT of its spine, so the spine cannot bound this --
+    # panel (a)'s right edge can, and `_panels` is already called here.
+    a_hi = _panels("fig25_bliss_synergy")[0][1]
     same_row = sorted(
         (x0, x1, t)
         for x0, y0, x1, y1, t in _word_bboxes("fig25_bliss_synergy")
-        if abs((y0 + y1) / 2 - ay_mid) < 4)
+        if abs((y0 + y1) / 2 - ay_mid) < 4 and x1 <= a_hi)
     at = next(i for i, (x0, _, t) in enumerate(same_row) if t == want)
     lo = hi = at
     while lo > 0 and same_row[lo][0] - same_row[lo - 1][1] < 20:
@@ -693,6 +757,15 @@ def test_fig25_draws_its_bliss_numbers():
         f"{' '.join(t for _, t in line)!r}, expected {want + ' synergy'!r}")
     # BY POSITION, for the reason fig24's needed it: a containment check does
     # not say WHICH panel carries the label, or that any panel does.
+    # THE SUPTITLE, which states this figure's whole claim. Rewriting it to
+    # say the dual-pathway depletion is ANTAGONISTIC -- the reverse of what
+    # the synergy score and the additive reference line show -- passed every
+    # check here. The same omission covered fig24's and fig26's headlines.
+    assert "Dual-pathway (GPX4 + FSP1) depletion is synergistic" in text, (
+        "fig25's suptitle no longer states that dual-pathway depletion is "
+        "synergistic, which is the claim its synergy score and its additive "
+        "reference line exist to support")
+
     cols = _vertical_labels(_boxed_row_words("fig25_bliss_synergy"))
     kill_axes = sorted(k[0] for k, (lbl, _, _) in cols.items()
                        if lbl == "Persister kill (%)")
@@ -1132,6 +1205,19 @@ def test_fig24_draws_its_hypoxia_numbers():
         f"as {expected} -- normoxic then hypoxic within each treatment. The "
         "numbers are sitting over bars of the other series")
 
+    # THE SUPTITLE. It states the figure's whole claim, and nothing read it:
+    # rewriting it to say hypoxia SPARES pharmacologic ferroptosis and
+    # collapses exogenous ROS -- the exact reverse of what the bars show --
+    # passed every check here. This file already gates comparable non-numeric
+    # claims (the score's definition, the additive line's label, the axis
+    # unit), so leaving the headline unread was an omission rather than a
+    # scope boundary.
+    assert ("Hypoxia collapses pharmacologic ferroptosis but not exogenous ROS"
+            in text), (
+        "fig24's suptitle no longer states that hypoxia collapses "
+        "pharmacologic ferroptosis but not exogenous ROS, which is what its "
+        "bars and its panel (b) references are drawn to show")
+
     # THE UNIT THE BARS ARE IN. Four percentages are pinned above and nothing
     # said they were percentages: relabelling the axis "Overall tumor kill
     # (fraction surviving)" left every value in place and passed, inverting
@@ -1234,8 +1320,16 @@ def test_fig24_draws_its_hypoxia_numbers():
         assert len(owner) == 1, (
             f"fig24's panel (b) legend row at y={y:.0f} names "
             f"{len(owner)} treatments")
-        sample = [d for d in dashed
-                  if 0 < d[0] - y < 10 and d[2] - d[1] < 40]
+        # Same correction as fig26's, for the same reason: the dashed sample
+        # is centred on its label, so a band measured from the label's top
+        # loses it once the legend font grows past about 13pt.
+        y_mid = next((yy0 + yy1) / 2
+                     for xx0, yy0, xx1, yy1, tt in _word_bboxes(
+                         "fig24_hypoxia_killcurve")
+                     if tt == t and abs(xx0 - x) < 0.01 and abs(yy0 - y) < 0.01)
+        sample = sorted((d for d in dashed
+                         if abs(d[0] - y_mid) < 12 and d[2] - d[1] < 40),
+                        key=lambda d: abs(d[0] - y_mid))
         assert sample, (
             f"fig24's `{owner[0][2]} normoxic` legend entry has no dashed "
             "sample beside it, so its colour cannot be read from the legend")
@@ -1263,14 +1357,31 @@ def test_fig24_draws_its_hypoxia_numbers():
     # hardcoded, so a run where RSL3's uniform kill genuinely exceeded SDT's
     # would be told its lines were exchanged when they were correct. The tick
     # labels give the scale, the same way fig25's additive line is checked.
-    yticks = sorted(
+    # SCALE FROM THE TICK MARKS, NOT THE TICK LABELS. A label's bbox centre
+    # carries that font's digit-glyph asymmetry as a constant offset, so the
+    # mapping was biased by the typeface: 0.006pp on the committed serif but
+    # +0.243 on monospace, +0.386 on STIXGeneral and +1.143 on Hoefler Text.
+    # Widening the bound to absorb that was the wrong repair -- it let a real
+    # 0.45pp error through and still rejected correct figures in five journal
+    # serifs. The tick MARKS are byte-identical across every font tried
+    # (52.560, 101.003, 149.445, 197.888, 246.331, 294.774), because they are
+    # geometry rather than glyphs, so the bias disappears and the bound can be
+    # tighter than the one it replaces.
+    marks = sorted({round(a.y, 3)
+                    for x0, y0, x1, y1, col, a, b in _axis_ticks(
+                        "fig24_hypoxia_killcurve")
+                    if abs(min(a.x, b.x) - b_x0) < 8})
+    labels = sorted(
         ((y0 + y1) / 2, float(t))
         for x0, y0, x1, y1, t in _word_bboxes("fig24_hypoxia_killcurve")
         if re.fullmatch(r"\d+", t) and b_x0 - 40 < x1 < b_x0 + 2)
-    assert len(yticks) >= 2, (
-        f"fig24's panel (b) shows {len(yticks)} numeric y tick labels; its "
-        "scale cannot be recovered")
-    (ty0, tv0), (ty1, tv1) = yticks[0], yticks[-1]
+    assert len(marks) >= 2 and len(marks) == len(labels), (
+        f"fig24's panel (b) shows {len(marks)} y tick marks against "
+        f"{len(labels)} numeric labels; its scale cannot be recovered")
+    # Marks and labels are both in y order, and the tick pitch (48.4pt) dwarfs
+    # any glyph offset, so pairing by order is unambiguous.
+    ty0, tv0 = marks[0], labels[0][1]
+    ty1, tv1 = marks[-1], labels[-1][1]
     scale = (ty1 - ty0) / (tv1 - tv0)
     for name in ("SDT", "RSL3"):
         drawn = (refs[ref_colour[name]][0] - ty0) / scale + tv0
@@ -1293,7 +1404,7 @@ def test_fig24_draws_its_hypoxia_numbers():
         # three of seven fonts tried. This is still five times tighter than
         # the `max(1.0, 0.03 * want)` it replaced, and it kills the errors
         # that motivated tightening it: +0.9pp on RSL3 and -2.7pp on SDT.
-        assert abs(drawn - want) <= 0.5, (
+        assert abs(drawn - want) <= 0.1, (
             f"fig24's panel (b) draws {name}'s normoxic reference at "
             f"{drawn:.1f}% on its own y scale and the data gives "
             f"{want:.1f}%. That line is what the depth curves are compared "
@@ -1480,7 +1591,8 @@ def test_fig26_draws_the_timepoints_its_fixture_holds():
     #
     # Each legend entry has its line sample ~6pt below its text, and the claim
     # is which curve is still high at the last timepoint.
-    p26 = _panels("fig26_vulnerability_window")
+    stem26 = "fig26_vulnerability_window"
+    p26 = _panels(stem26)
     a_lo, a_hi = p26[0]
     doc_lines = _hlines_any("fig26_vulnerability_window")
     legend_col = {}
@@ -1491,9 +1603,18 @@ def test_fig26_draws_the_timepoints_its_fixture_holds():
         # `sample[0]` took whichever candidate started furthest left rather
         # than the one belonging to this entry. fig24's equivalent already
         # ranks by distance.
+        # BY MIDLINE, AND NEAREST. The sample sits at the label's vertical
+        # CENTRE, so a one-sided 10pt band from the label's TOP edge grows
+        # out of range as the legend font grows: at fontsize 16 the offset is
+        # 12.16pt and a correct figure was told its legend had no samples.
+        # This is the third site with the top-edge assumption; the previous
+        # round fixed one and said so.
+        y_mid = next((yy0 + yy1) / 2
+                     for xx0, yy0, xx1, yy1, tt in _word_bboxes(stem26)
+                     if tt == t and abs(xx0 - x) < 0.01 and abs(yy0 - y) < 0.01)
         sample = sorted((seg for seg in doc_lines
-                         if 0 < seg[1] - y < 10 and abs(seg[0] - x) < 60),
-                        key=lambda seg: (abs(seg[1] - y), abs(seg[0] - x)))
+                         if abs(seg[1] - y_mid) < 12 and abs(seg[0] - x) < 60),
+                        key=lambda seg: (abs(seg[1] - y_mid), abs(seg[0] - x)))
         if sample:
             legend_col.setdefault(t, sample[0][2])
     assert set(legend_col) == {"SDT", "RSL3"}, (
@@ -1518,6 +1639,37 @@ def test_fig26_draws_the_timepoints_its_fixture_holds():
         f"RSL3 at y={rsl3_end:.0f}, so RSL3 is the one still killing at the "
         "last timepoint. The figure's title is `days for RSL3, weeks for "
         "SDT`; the curves or the legend are exchanged")
+
+    # THE WINDOW SHADING, in tick units. `axvspan(-0.3, win_end)` is what shows
+    # WHERE the window is, and nothing read it: shading the whole 28 days, or
+    # only days 14-28, passed. `win_end` is the last timepoint at or under day
+    # 3, derived from the fixture, and the tick marks give the x scale.
+    xmarks = sorted({round(a.x, 2)
+                     for x0, y0, x1, y1, col, a, b in _axis_ticks_vertical(stem26)
+                     if a.x <= a_hi})
+    assert len(xmarks) == len(expected), (
+        f"fig26 panel (a) shows {len(xmarks)} x tick marks against "
+        f"{len(expected)} timepoints")
+    win_end = max(i for i, d in enumerate(days) if d <= 3.0)
+    shade = [r for r in _filled_rects(stem26)
+             if r[0] >= a_lo - 1 and r[1] <= a_hi + 1
+             and (r[1] - r[0]) > 20 and (r[3] - r[2]) > 100
+             and r[4] not in ((1.0, 1.0, 1.0),)]
+    assert len(shade) == 1, (
+        f"fig26's panel (a) draws {len(shade)} shaded spans, expected one "
+        "marking the RSL3 window")
+    right_at = min(range(len(xmarks)), key=lambda i: abs(xmarks[i] - shade[0][1]))
+    assert right_at == win_end, (
+        f"fig26 shades the RSL3 window out to the tick for day "
+        f"{expected[right_at]}, and the data closes it at day "
+        f"{expected[win_end]}. The shaded span is what shows where the window "
+        "is; the annotation beside it is a fixed string")
+
+    assert ("The ferroptosis-sensitive window: days for RSL3, weeks for SDT"
+            in text), (
+        "fig26's suptitle no longer says `days for RSL3, weeks for SDT`. The "
+        "curve check below compares against exactly that claim, and quoted it "
+        "in its own failure message while never reading it")
 
     assert "closes ~day 3" in text, (
         "fig26's window annotation is gone. NOTE this is a hardcoded string in "
@@ -1567,9 +1719,9 @@ def test_fig26_draws_the_timepoints_its_fixture_holds():
 # regeneration, so every platform hashes the same bytes with the same pinned
 # reader. That is why it can run in CI where the figures cannot be rebuilt.
 DRAWING_FINGERPRINTS = {
-    "fig24_hypoxia_killcurve": "3cd455312c46f0a7",
-    "fig25_bliss_synergy": "675b7c1ad552f2a8",
-    "fig26_vulnerability_window": "eb8fe32f4eb9eb1e",
+    "fig24_hypoxia_killcurve": "bc6fb1c80d9f3a30",
+    "fig25_bliss_synergy": "5508eb163d0d74e7",
+    "fig26_vulnerability_window": "41d03195ab16c649",
 }
 
 
@@ -1604,6 +1756,7 @@ def _fingerprint(stem):
     doc = pymupdf.open(path)
     try:
         page = doc[0]
+        page_rect = page.rect
         # SPANS, NOT WORDS, because a word carries no colour or size. Drawing
         # fig24's four bar annotations in white leaves them invisible on a
         # white ground -- the four values this whole file exists to gate gone
@@ -1726,8 +1879,16 @@ def _fingerprint(stem):
     finally:
         doc.close()
 
-    blob = json.dumps({"words": words, "items": items, "images": images},
-                      sort_keys=True)
+    # THE PAGE BOX TOO. Every coordinate above is measured from the top-left,
+    # so extending the MediaBox leaves all of them unchanged and the hash
+    # unmoved while the rendered page is a different shape. Not reachable from
+    # a generator edit today -- matplotlib derives the box from the content --
+    # but it is one line, and "a layer it did not read" is the recurring
+    # shape of this backstop's history.
+    box = tuple(round(v, 2) for v in (page_rect.x0, page_rect.y0,
+                                      page_rect.x1, page_rect.y1))
+    blob = json.dumps({"words": words, "items": items, "images": images,
+                       "box": box}, sort_keys=True)
     return hashlib.sha256(blob.encode()).hexdigest()[:16]
 
 
