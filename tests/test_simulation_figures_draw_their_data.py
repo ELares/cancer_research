@@ -9,9 +9,14 @@ every caption guard passed.
 
 These figures read `simulations/output/`, which is gitignored, so CI cannot
 regenerate them (#788). But it does not have to: the numbers they draw are
-already committed as fixtures for the caption guards, so comparing the two
-gates the artifact a reader actually looks at, in CI, with no new data and
-without tracking simulation output.
+committed as fixtures, so comparing the two gates the artifact a reader
+actually looks at, in CI, without tracking simulation output.
+
+Most of those fixture values were already there for the caption guards. Two
+were not -- the cohort sizes fig25 and fig26 state in their footnotes -- and
+they are the reason `test_quantitative_figure_data.py`'s live-agreement guards
+were extended to cover them. A fixture value that no live guard reads lets the
+figure and the fixture agree with each other while both drift from the run.
 
 WHAT THIS DOES NOT DO. It cannot notice a figure whose PLOT is wrong while its
 annotations are right -- a mis-drawn curve, a swapped panel, a wrong colour
@@ -32,8 +37,9 @@ Four narrower limits, each measured rather than assumed:
   is the plot-level limit above, stated concretely because it is reachable by
   a one-line edit.
 - **fig25 panel (b) is backed for one pair.** `tests/fixtures/bliss_synergy.json`
-  holds `rsl3_fsp1i` only, so the other two scores are compared against
-  nothing; dropping or altering `FSP1i+HDACi` cannot be detected here.
+  holds one combination, `rsl3_fsp1i` (alongside the cohort size), so the other
+  scores are compared against nothing; dropping or altering `FSP1i+HDACi`
+  cannot be detected here.
 - **fig24 panel (b) is ungated**, as is fig26 panel (b)'s GPX4 right-hand axis,
   whose tick labels are data-derived numbers no assertion reads.
 - **`closes ~day 3` is a presence check.** It is a hardcoded string in the
@@ -152,6 +158,37 @@ def _reader():
         ) from exc
 
 
+def _filled_rects(stem):
+    """Filled rectangles as `(x0, x1, y0, y1, fill)`, page 0.
+
+    Words are not enough. fig24 draws its bar annotations at fixed offsets AND
+    its bars at fixed offsets, so swapping the two `axA.bar` x offsets moves
+    the RECTANGLES while every word stays exactly where it was -- the whole
+    `(x, y, text)` dump is identical, in text and in geometry. The red
+    "Hypoxic" bar then carries 91.9% and the blue "Normoxic" bar 87.8%,
+    hypoxia raising the kill rate, and no check that reads words can ever see
+    it. The drawing layer can: the rectangles carry their fill colour.
+    """
+    pymupdf = _reader()
+    path = FIG_DIR / f"{stem}.pdf"
+    assert path.exists(), f"{stem}.pdf is not committed"
+    doc = pymupdf.open(path)
+    try:
+        out = []
+        for d in doc[0].get_drawings():
+            fill = d.get("fill")
+            if fill is None:
+                continue
+            for item in d["items"]:
+                if item[0] == "re":
+                    r = item[1]
+                    out.append((r.x0, r.x1, r.y0, r.y1,
+                                tuple(round(c, 4) for c in fill)))
+        return out
+    finally:
+        doc.close()
+
+
 def _rows(words):
     """Group words by y, rounded, preserving `(x, text)` per row.
 
@@ -231,8 +268,13 @@ def test_fig25_draws_its_bliss_numbers():
     #    combination 40.0%, the synergy claim inverted -- with the stream
     #    unchanged. `bar.get_x() + bar.get_width()/2` anchors each label to A
     #    bar, not to ITS bar; the pairing is the zip, and nothing read it.
-    #  - `set_xticks(...[::-1])` reverses the tick labels the same way it does
-    #    on fig24, and `text.index` cannot see it.
+    #  - `set_xticks(...[::-1])` ALONE does not reverse this axis: it is
+    #    categorical, the labels stay at exactly the same x, and the run above
+    #    catches it at the `text.index` check. Adding `set_xticklabels(labels)`
+    #    after it is the mutation that matters -- stream-identical, labels
+    #    genuinely reversed on the page -- and only the row check below sees
+    #    it. An earlier version of this bullet named the wrong mutation and
+    #    claimed `text.index` could not see the one it named.
     wds = _words("fig25_bliss_synergy")
     drawn = sorted((x, t) for x, y, t in wds if re.fullmatch(r"\d+\.\d%", t))
     assert [t for _, t in drawn] == expected, (
@@ -257,6 +299,10 @@ def test_fig25_draws_its_bliss_numbers():
         f"fig25's panel (a) does not annotate "
         f"{fx['synergy_score']:.2f}x synergy; panel (b) drawing that number "
         "as a bar label is not the same claim")
+    assert "Persister kill (%)" in text, (
+        "fig25's panel (a) y axis no longer reads `Persister kill (%)`; the "
+        "four values compared above are drawn as percentages")
+
     # THE COHORT SIZE. It is drawn as a footnote and was compared against
     # nothing, so the figure could claim any n. It is a real field of the
     # simulation output, so it is now a fixture value rather than a scope
@@ -337,6 +383,13 @@ def test_fig25_binds_each_pair_to_its_own_score():
             f"{t} shares a row with {len(near)} scores, so no score can be "
             "attributed to it")
         by_row[t] = near[0][2]
+    # THE SCORE'S DEFINITION. Panel (b)'s values are pinned and the caption
+    # saying what they MEAN was not: flipping it to "(expected / observed)"
+    # inverts every score on the panel and passed.
+    assert "Bliss synergy score (observed / expected)" in text, (
+        "fig25's panel (b) x axis no longer defines the score as "
+        "`observed / expected`; the values compared here are that ratio, and "
+        "the reciprocal is a different claim")
     assert by_row[key] == f"{fx['synergy_score']:.2f}×", (
         f"fig25 draws {key} on the same row as {by_row[key]} and the fixture "
         f"says {fx['synergy_score']:.2f}x -- the pair and the score beside it "
@@ -396,9 +449,25 @@ def test_fig24_draws_its_hypoxia_numbers():
     assert len(arrow_y) == 1, (
         f"expected exactly one arrow in fig24 panel (a), found {len(arrow_y)}; "
         "the collapse annotation is what identifies the row to exclude")
+    # THE COLLAPSE PAIR IS THE TWO FLANKING THE ARROW, not everything on its
+    # row. Dropping the whole row false-failed on correct data: a bar whose top
+    # lands near the collapse annotation puts its label on that row, and with
+    # RSL3's uniform kill anywhere in roughly 56.6-59.2% the guard reported
+    # three bars and blamed the figure for numbers it had drawn correctly.
+    arrow_x = [x for x, y, t in panel_a
+               if t.strip() in {"→", "\u2192"}][0]
+    on_row = sorted((x, t) for x, y, t in panel_a
+                    if re.fullmatch(r"\d+\.\d%", t) and abs(y - arrow_y[0]) <= 3)
+    left = [w for w in on_row if w[0] < arrow_x]
+    right = [w for w in on_row if w[0] > arrow_x]
+    assert left and right, (
+        "fig24's collapse annotation does not read `N.N% -> N.N%`; the two "
+        f"percentages flanking its arrow are what identify it. row={on_row}")
     bars = sorted(((x, t) for x, y, t in panel_a
                    if re.fullmatch(r"\d+\.\d%", t)
-                   and abs(y - arrow_y[0]) > 3), key=lambda w: w[0])
+                   and not (abs(y - arrow_y[0]) <= 3
+                            and (x, t) in (left[-1], right[0]))),
+                  key=lambda w: w[0])
     assert [t for _, t in bars] == expected, (
         f"fig24's bar annotations read {[t for _, t in bars]} LEFT TO RIGHT "
         f"and the data gives {expected}. The numbers are drawn at fixed "
@@ -407,7 +476,7 @@ def test_fig24_draws_its_hypoxia_numbers():
 
     # AND THE GROUP LABELS BY POSITION TOO. Pinning the numbers to their bars
     # while leaving the labels bound to the text stream binds nothing: tick
-    # labels are emitted in tick-LOCATION order, so `set_xticks(x[::-1])`
+    # labels are emitted in tick-ARRAY order, so `set_xticks(x[::-1])`
     # moves `RSL3 (GPX4 inhibitor)` over the SDT bars and leaves the stream
     # untouched. The four numbers stay over their own bars and the figure now
     # captions 3.7%/0.1% as SDT -- the #790 inversion again, reached by a
@@ -447,6 +516,66 @@ def test_fig24_draws_its_hypoxia_numbers():
         "fig24's series legend is not `Normoxic (uniform O2)` then `Hypoxic "
         "(O2 gradient)`. The bar VALUES are compared in that order, so if the "
         "legend disagrees the figure says hypoxia raises the kill rate")
+    # THE BARS THEMSELVES, BY COLOUR AND POSITION. Everything above reads
+    # words, and fig24 draws its bars at fixed offsets exactly as it draws its
+    # annotations -- so swapping the two `axA.bar` x offsets slides the
+    # RECTANGLES under the numbers and leaves the entire word dump identical,
+    # text and geometry alike. The red "Hypoxic" bar then carries 91.9% and the
+    # blue "Normoxic" bar 87.8%: hypoxia raising the kill rate, which is the
+    # claim this figure exists to deny.
+    #
+    # The chain closed here is legend text -> swatch colour -> bar position.
+    # The four bars are the series-coloured rectangles standing on the axis
+    # baseline, which is the y1 they share and the legend swatches do not.
+    rects = _filled_rects("fig24_hypoxia_killcurve")
+    legend = {}
+    for x, y, t in panel_a:
+        if t in ("Normoxic", "Hypoxic"):
+            # MATCH ON THE TOP EDGE. Comparing the word's y0 to the rect's
+            # y1 picked the swatch of the entry ABOVE for both entries, so
+            # both resolved to the same colour and the check reported fig24
+            # drawing one colour twice. The swatch sits a few points below its
+            # own label; the entry above is a whole line away.
+            near = sorted((abs(r[2] - y), r) for r in rects
+                          if abs(r[2] - y) < 8 and r[1] - r[0] < 40)
+            assert near, f"fig24's {t!r} legend entry has no swatch beside it"
+            legend[t] = near[0][1][4]
+    assert set(legend) == {"Normoxic", "Hypoxic"}, (
+        f"fig24's panel (a) legend entries are {sorted(legend)}, expected "
+        "Normoxic and Hypoxic")
+    assert legend["Normoxic"] != legend["Hypoxic"], (
+        "fig24 draws both legend swatches in the same colour, so colour "
+        "cannot say which bar is which")
+    series = [legend["Normoxic"], legend["Hypoxic"]]
+    baseline = max(r[3] for r in rects if r[4] in series)
+    bars_drawn = sorted((r for r in rects
+                         if r[4] in series and abs(r[3] - baseline) < 0.5),
+                        key=lambda r: r[0])
+    assert len(bars_drawn) == 4, (
+        f"expected four bars standing on fig24's baseline, found "
+        f"{len(bars_drawn)}")
+    got = ["Normoxic" if r[4] == legend["Normoxic"] else "Hypoxic"
+           for r in bars_drawn]
+    assert got == ["Normoxic", "Hypoxic", "Normoxic", "Hypoxic"], (
+        f"fig24's bars read {got} LEFT TO RIGHT and its annotations are "
+        f"compared as {expected} -- normoxic then hypoxic within each "
+        "treatment. The numbers are sitting over bars of the other series")
+
+    # THE UNIT THE BARS ARE IN. Four percentages are pinned above and nothing
+    # said they were percentages: relabelling the axis "Overall tumor kill
+    # (fraction surviving)" left every value in place and passed, inverting
+    # what the bars mean. The same omission covered fig25's two axes.
+    # COUNTED, NOT MATCHED. fig24 gives BOTH panels the same y-axis label, so
+    # `"..." in text` is satisfied by panel (b)'s copy -- relabelling panel (a)
+    # alone as `(fraction surviving)` inverted what its bars mean and passed.
+    # That is the fourth time in this file a bare containment check was
+    # satisfied by the other panel. Two panels draw it, so two is the number.
+    assert text.count("Overall tumor kill (%)") == 2, (
+        f"fig24 draws `Overall tumor kill (%)` "
+        f"{text.count('Overall tumor kill (%)')} times, expected once per "
+        "panel. The four values compared above are drawn as percentages, and "
+        "a panel relabelled alone still leaves the other copy standing")
+
     # And the collapse annotation must be the ratio of the two it names, not a
     # number carried along beside them.
     collapse = re.search(r"(\d+\.\d%) → (\d+\.\d%) \(~(\d+)× collapse\)", text)
@@ -537,21 +666,28 @@ def test_fig26_draws_the_timepoints_its_fixture_holds():
     # THE TIMEPOINTS BY POSITION. The run check above reads the text stream,
     # which is tick-ARRAY order: `set_xticks(x[::-1])` reverses the time axis
     # on both panels -- day 28 at the left, the window shading and the
-    # `closes ~day 3` arrow pointing at day 7, the RSL3 collapse running
+    # `closes ~day 3` arrow pointing at the tick labelled 1, the collapse running
     # backwards -- and leaves the stream byte-identical. These labels are the
     # only data values this test gates, so stream order was gating nothing.
     #
     # Both panels share the tick row, so the row holds 2N labels: the left N
     # are panel (a)'s and the right N panel (b)'s, and each must read in
     # ascending order.
-    tick_rows = [r for r in _rows(wds).values()
-                 if [t for _, t in r] and
-                 all(re.fullmatch(r"\d+(?:\.\d+)?", t) for _, t in r)
-                 and len(r) == 2 * len(expected)]
-    assert len(tick_rows) == 1, (
-        f"expected one row of {2 * len(expected)} numeric tick labels (both "
-        f"panels share the axis), found {len(tick_rows)}")
-    ticks = [t for _, t in sorted(tick_rows[0])]
+    # SELECTED BY THE BAND ABOVE THE CAPTION, not by requiring one exact row.
+    # Requiring a single row of 2N numerics false-failed on a layout-only
+    # change: `set_xticklabels(labels, rotation=45)` -- the ordinary fix for
+    # nine crowded ticks -- gives every label its own y and the row vanishes,
+    # and the guard then reported finding no ticks at all. The tick labels sit
+    # between the axes and the x-axis caption whatever their rotation, so the
+    # caption's own y is the anchor.
+    cap_y = min(y for x, y, t in wds if t == "post-chemotherapy")
+    band = [(x, t) for x, y, t in wds
+            if re.fullmatch(r"\d+(?:\.\d+)?", t) and 0 < cap_y - y <= 25]
+    assert len(band) == 2 * len(expected), (
+        f"expected {2 * len(expected)} numeric tick labels above fig26's "
+        f"x-axis caption (both panels share the axis), found {len(band)}: "
+        f"{sorted(band)}")
+    ticks = [t for _, t in sorted(band)]
     assert ticks[:len(expected)] == expected and ticks[len(expected):] == expected, (
         f"fig26's tick labels read {ticks} LEFT TO RIGHT; each panel should "
         f"read {expected} in ascending order. The axis may be reversed, which "
@@ -562,29 +698,25 @@ def test_fig26_draws_the_timepoints_its_fixture_holds():
     # version of this check did exactly that and `"(days)" in cap` was
     # satisfied by panel (b)'s copy while panel (a) said hours. Split the row
     # at each `Time` and require every caption to end in days.
-    caption_rows = [r for r in _rows(wds).values()
-                    if any(t == "post-chemotherapy" for _, t in r)]
-    assert len(caption_rows) == 1, (
-        f"expected one x-axis caption row, found {len(caption_rows)}")
-    words_in_row = [t for _, t in sorted(caption_rows[0])]
-    caps, cur = [], None
-    for t in words_in_row:
-        if t == "Time":
-            if cur:
-                caps.append(cur)
-            cur = [t]
-        elif cur is not None:
-            cur.append(t)
-    if cur:
-        caps.append(cur)
-    assert len(caps) == 2, (
-        f"fig26 draws {len(caps)} x-axis captions, expected one per panel: "
-        f"{[' '.join(c) for c in caps]}")
-    for c in caps:
-        assert " ".join(c) == "Time post-chemotherapy (days)", (
-            f"an x axis reads {' '.join(c)!r}. The ticks are the fixture's "
-            "timepoint_days, so a panel saying anything else is declaring a "
-            "unit its own numbers are not in")
+    # EACH CAPTION'S UNIT IS ITS NEAREST ONE, by distance rather than by row.
+    # Both panels' captions are drawn at the same y, so grouping by row merges
+    # them and a substring check is satisfied by the other panel's copy -- that
+    # bug shipped once already, as the fix for the round before it. Splitting
+    # the row at each `Time` fixed that but false-failed the moment the caption
+    # wrapped onto two lines. Nearest-unit works for both: adjacent on one row,
+    # and directly below when wrapped.
+    units = [(x, y, t) for x, y, t in wds if re.fullmatch(r"\(\w+\)", t)]
+    subjects = [(x, y, t) for x, y, t in wds if t == "post-chemotherapy"]
+    assert len(subjects) == 2, (
+        f"fig26 draws {len(subjects)} x-axis captions, expected one per panel")
+    for x, y, _ in subjects:
+        assert units, "fig26 draws no parenthesised unit beside its x axis"
+        nearest = min(units, key=lambda u: (u[0] - x) ** 2 + (u[1] - y) ** 2)
+        assert nearest[2] == "(days)", (
+            f"the x-axis caption at x={x:.0f} is nearest the unit "
+            f"{nearest[2]!r}. The ticks are the fixture's timepoint_days, so a "
+            "panel saying anything else declares a unit its own numbers are "
+            "not in")
     assert "closes ~day 3" in text, (
         "fig26's window annotation is gone. NOTE this is a hardcoded string in "
         "the generator, not a derived one -- if the window moved, the "

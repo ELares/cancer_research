@@ -135,9 +135,18 @@ def test_fig22_fixture_matches_live():
     live = _load(p)
     combos = live["combinations"] if isinstance(live, dict) and "combinations" in live else live
     rf_live = next(c for c in combos if {c["drug_a"], c["drug_b"]} == {"RSL3", "FSP1i"})
-    rf_fix = _fixture("bliss_synergy.json")["rsl3_fsp1i"]
-    for key in ("rate_combo", "bliss_prediction", "synergy_score"):
+    fix = _fixture("bliss_synergy.json")
+    rf_fix = fix["rsl3_fsp1i"]
+    for key in ("rate_a", "rate_b", "rate_combo", "bliss_prediction",
+                "synergy_score"):
         assert rf_fix[key] == rf_live[key], f"Bliss fixture STALE vs live sim on {key}"
+    # THE COHORT SIZE TOO. fig25 draws it as a footnote and a guard compares
+    # the drawn text to this fixture, so without this line the fixture's copy
+    # was the only value in the file compared against nothing -- the figure and
+    # the fixture could agree with each other while both drifted from the run.
+    assert fix["n_cells_per_condition"] == live["n_cells_per_condition"], (
+        "Bliss fixture STALE vs live sim on n_cells_per_condition, which is "
+        "what fig25's cohort footnote states")
 
 
 def test_fig23_fixture_matches_live():
@@ -159,3 +168,14 @@ def test_fig23_fixture_matches_live():
                 f"window fixture STALE vs live sim on {field} at "
                 f"{r['treatment']} day {r['timepoint_days']}"
             )
+    # THE COHORT SIZE, from the rows fig26 actually PLOTS. The live file also
+    # carries a Control arm the figure never draws, and the generator used to
+    # take n_cells from any row -- so this compares the same subset the figure
+    # states in its footnote.
+    fix = _fixture("vulnerability_window.json")
+    live_n = {x["n_cells"] for x in live
+              if x["treatment"] in ("RSL3", "SDT") and x.get("n_cells")}
+    assert live_n == {fix["n_cells"]}, (
+        f"window fixture says n_cells={fix['n_cells']} and the live sim's "
+        f"plotted rows give {sorted(live_n)}; that number is fig26's cohort "
+        "footnote")

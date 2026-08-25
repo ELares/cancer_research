@@ -1486,7 +1486,9 @@ def fig25_bliss_synergy():
         # footnote would silently stop stating n.
         print(f"  {COMBO_SUMMARY} carries no n_cells_per_condition — the "
               "footnote states the cohort size, so skipping rather than "
-              "drawing a figure that cannot say it.")
+              "drawing a figure that cannot say it. The committed PDF is left "
+              "as it was and is now stale.")
+        plt.close(fig)
         return
     fig.text(0.5, -0.04,
              f"{n_cells:,} persister cells/condition, 2D culture params. Drug potencies are estimates; the "
@@ -1560,13 +1562,21 @@ def fig26_vulnerability_window():
 
     fig.suptitle("The ferroptosis-sensitive window: days for RSL3, weeks for SDT", fontsize=12, y=1.02)
     # DERIVED, for the same reason as fig25's. See that comment.
-    n_seen = {r.get("n_cells") for r in data if r.get("n_cells")}
+    # ONLY THE ROWS THIS FIGURE PLOTS. Scanning every row let the cohort size
+    # come from the `Control` arm, which fig26 never draws: stripping n_cells
+    # from the RSL3/SDT rows and setting Control's to 250 made the figure state
+    # 250 with nothing from the plotted data behind it.
+    plotted = ("RSL3", "SDT")
+    n_seen = {r.get("n_cells") for r in data
+              if r.get("treatment") in plotted and r.get("n_cells")}
     if len(n_seen) != 1:
         why = ("carry no n_cells at all" if not n_seen
                else f"disagree on n_cells {sorted(n_seen)}")
         print(f"  {WINDOW_JSON}: rows {why}, and the footnote states one "
               "cohort size for the whole figure — skipping rather than "
-              "drawing a figure that cannot say it.")
+              "drawing a figure that cannot say it. The committed PDF is left "
+              "as it was and is now stale.")
+        plt.close(fig)
         return
     n_cells = n_seen.pop()
     fig.text(0.5, -0.04,
