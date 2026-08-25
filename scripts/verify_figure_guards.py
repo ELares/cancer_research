@@ -32,6 +32,10 @@ the original assertion. That produced a vacuous guard three times, including a
 bound (`<= len(names)`) that ZERO satisfies, under which a bar chart drawn with
 no bars at all passed every semantic assertion.
 
+It deletes the sandbox's figures before the baseline run, so a generator that
+silently skips (no `simulations/output/`) is reported as such rather than
+passing a hash comparison against files it never touched.
+
 Run it after touching the guards or the generator:
 
     python3 scripts/verify_figure_guards.py            # all cases
@@ -233,14 +237,39 @@ def _sandbox(tmp: Path) -> Path:
     return root
 
 
-def _bit_identical(root: Path) -> bool:
+def _bit_identical(root: Path):
+    """Did regeneration actually WRITE figures matching the committed ones?
+
+    THE FILES ARE DELETED BEFORE THE BASELINE RUN, and that is the point.
+    Comparing hashes without deleting is satisfied by regeneration never
+    happening: with `simulations/output/` absent -- a fresh clone, and CI --
+    the generator prints "not found, skipping" and returns, the sandbox's
+    copies of the committed PDFs sit there untouched, and they are of course
+    identical to themselves. Measured: the harness then ran all 39 cases
+    against unmutated figures and reported 15 wrong-figure cases as MISSED
+    DEFECTS and one correct-figure case as a false rejection -- true
+    statements about that run, and completely misleading about the guards.
+
+    A check that ABSENCE satisfies is the defect class this harness exists to
+    catch, and it appeared here first. Worth saying plainly.
+    """
     import hashlib
+    figs = root / "article" / "figures"
+    missing = [st for st in FIGS if not (figs / f"{st}.pdf").exists()]
+    if missing:
+        return False, (
+            "the generator wrote no figures (" + ", ".join(missing) + ").\n"
+            "It reads simulations/output/, which is gitignored, so a fresh clone\n"
+            "cannot run this harness -- see the module docstring.")
     for stem in FIGS:
         a = hashlib.sha256((REPO / "article" / "figures" / f"{stem}.pdf").read_bytes())
-        b = hashlib.sha256((root / "article" / "figures" / f"{stem}.pdf").read_bytes())
+        b = hashlib.sha256((figs / f"{stem}.pdf").read_bytes())
         if a.hexdigest() != b.hexdigest():
-            return False
-    return True
+            return False, (
+                f"{stem}.pdf regenerates differently from the committed copy, so a\n"
+                "mutation's effect cannot be told from drift already present.\n"
+                "Regenerate and commit the figures first.")
+    return True, ""
 
 
 def run_case(root: Path, case_tuple) -> tuple[str, str]:
@@ -301,16 +330,19 @@ def main() -> int:
 
     with tempfile.TemporaryDirectory() as tmp:
         root = _sandbox(Path(tmp))
+        # DELETE FIRST, so "the generator skipped" cannot look like "the
+        # generator reproduced them exactly".
+        for stem in FIGS:
+            (root / "article" / "figures" / f"{stem}.pdf").unlink()
         r = subprocess.run([sys.executable, str(root / "regen.py"), "{}"],
                            capture_output=True, text=True, cwd=root)
         if r.returncode:
-            print("cannot regenerate the figures at all -- is simulations/output/ present?")
+            print("REFUSING TO RUN: the generator errored.")
             print((r.stderr.strip().splitlines() or [""])[-1])
             return 2
-        if not _bit_identical(root):
-            print("REFUSING TO RUN: regeneration is not bit-identical to the committed\n"
-                  "PDFs, so a mutation's effect cannot be told from the baseline's.\n"
-                  "Regenerate and commit the figures first.")
+        ok, why = _bit_identical(root)
+        if not ok:
+            print(f"REFUSING TO RUN: {why}")
             return 2
         print(f"baseline regeneration is bit-identical to the committed PDFs\n"
               f"running {len(selected)} cases\n")
