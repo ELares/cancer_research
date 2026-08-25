@@ -218,6 +218,25 @@ case("fig26 annotation at day 0, level with the curve", False,
 case("fig26 annotation at day 0, above the curve", False,
      [("xytext=(win_end + 0.4, 24)", "xytext=(0.0, 47)")])
 
+# ------------------------------- artists drawn AFTER the annotation
+# The arrow is taken as the last candidate in paint order, so anything drawn
+# later is the obvious attack. fig26's generator ALREADY draws its legend after
+# the `closes` annotation, and moving that legend on top of the annotation does
+# not defeat the check: a legend frame runs corner to corner and its handles
+# are nowhere near the words, so the other three conditions exclude it before
+# paint order is consulted.
+case("fig26 legend over the annotation", False,
+     [('axA.legend(fontsize=8, loc="center right")',
+       'axA.legend(fontsize=8, loc="lower left")')])
+case("fig26 legend over the annotation, arrow to the last day", True,
+     [('axA.legend(fontsize=8, loc="center right")',
+       'axA.legend(fontsize=8, loc="lower left")'),
+      ("xy=(win_end, rsl3[win_end])", "xy=(len(days) - 1, rsl3[-1])")])
+case("fig26 legend below the annotation, arrow to the last day", True,
+     [('axA.legend(fontsize=8, loc="center right")',
+       'axA.legend(fontsize=8, loc="lower center")'),
+      ("xy=(win_end, rsl3[win_end])", "xy=(len(days) - 1, rsl3[-1])")])
+
 # ------------------------------------------------- correct figures, restyled
 case("committed figures, unmodified", False)
 case("xtick.direction inout", False, rc={"xtick.direction": "inout"})

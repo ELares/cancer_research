@@ -937,6 +937,14 @@ def _annotation_arrows(stem, panel, near):
     # AFTER the artists it annotates. That is a fact about when the call is
     # made, not about what the result looks like, which is why every
     # appearance-based rule before it failed.
+    #
+    # IT IS NOT LOAD-BEARING ON ITS OWN, and saying so avoids a false sense of
+    # what protects this. fig26's generator already draws its LEGEND after the
+    # `closes` annotation, so "annotations are last" is not true of the
+    # committed figure. Moving that legend on top of the annotation still does
+    # not defeat the reading, because the three conditions above exclude it
+    # first: a legend frame runs corner to corner and its handles are nowhere
+    # near the words. The four conditions identify the arrow together.
     return out[::-1]
 
 
