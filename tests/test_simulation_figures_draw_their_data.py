@@ -52,16 +52,41 @@ the places where no assertion would name it:
   its two kill curves. Its lambda tick labels and both its axis captions ARE
   read -- an earlier version of this sentence listed them as unread, in the
   same commit that gated them.
+- **The collapse arrow's glyph is pinned, so `mathtext.fontset: cm` fails
+  here** -- and so does `plt.style.use("bmh")`, which sets that fontset. cm
+  embeds cmsy10 with no Unicode map, so PyMuPDF reads `$\to$` as `!`. This
+  was briefly not a limit: the pattern matched "one non-space character" in
+  the arrow's place so that any font would do, and that silently removed the
+  ONLY check on which way the collapse runs -- `3.7% <- 0.1%` reads as
+  hypoxia RAISING the kill rate from 0.1% to 3.7%, the #790 inversion, and it
+  passed. Both values stay in order when only the arrow flips, so nothing
+  else can see it. A loud failure on an unusual font is the better half of
+  that trade, and it is stated rather than silent. `_digits` and `_mult`
+  handle the font-dependent glyphs that carry no direction (`$O_2$` under
+  `stixsans`, `$\times$`), which is why they are normalised and this is not.
+
+- **A title that COLLIDES with the next panel's is reported, not tolerated.**
+  At `axes.titlesize: 16` fig26 draws `(b)` on top of `stays` and `open` on
+  top of `Why:`; the figure is unreadable there and the check says so. The
+  remedy is to wrap the title, and that now works -- wrapping both fig26
+  titles at that size passes.
+
 - **The figure must draw visible tick marks.** Two scale readings -- fig24
   panel (b)'s reference lines and fig26's window shading -- locate themselves
   from the tick MARKS, because reading tick LABELS carries the font's
   glyph-centre bias (up to 1.14pp under Hoefler Text). A style that sets
   `xtick.major.size: 0` or `ytick.major.size: 0`, which every `seaborn-v0_8`
-  grid preset does, therefore fails loudly with "shows 0 tick marks" rather
-  than silently. This project's own rcParams set neither, and the failure
-  names its cause, so it is a stated requirement rather than a defect to
-  chase: a label-centre fallback was tried and reintroduced the bias it was
-  built to remove.
+  grid preset does, therefore fails loudly with "shows 0 tick marks" or
+  "its scale cannot be recovered" rather than silently. This project's own
+  rcParams set neither, and the failure names its cause, so it is a stated
+  requirement rather than a defect to chase: a label-centre fallback was tried
+  and reintroduced the bias it was built to remove.
+
+  This bullet was WRONG about fig24 until the fallback was deleted. fig24 kept
+  one, widening its bound 0.1pp -> 1.5pp when no marks were drawn, so under
+  `ytick.major.size: 0` that reading did not fail at all -- it silently ran at
+  a fifteenth of its precision and passed a reference line 1.1pp off its
+  value. Only fig26 behaved as described here.
 
 - **`closes ~day 3` is a presence check.** It is a hardcoded string in the
   generator, so it would still read day 3 if the window moved.
@@ -132,6 +157,7 @@ evidence of content only, never of arrangement.
 import hashlib
 import json
 import re
+import unicodedata
 from pathlib import Path
 
 import pytest
@@ -283,31 +309,73 @@ def _panels(stem):
         leaves ONE rule per panel and aborted all three figures, and
         `width_ratios=[1.2, 1]` dropped the narrower panel outright.
 
-    What is actually true is structural: a legend frame is drawn INSIDE the
-    panel it belongs to, and a panel is not inside anything. So take every
-    long horizontal rule's x range and discard the ones another range
-    contains. No constant, and it survives a despined, recoloured or
-    unequally sized figure.
+    What is actually true is structural, in two steps. A legend frame drawn
+    INSIDE its panel is contained by it and a panel is contained by nothing,
+    so discard every x range another range contains. And a legend frame drawn
+    OUTSIDE its panel -- `bbox_to_anchor=(1.02, 0.5)` -- is contained by
+    nothing either, so nesting alone reported it as a third panel; what
+    separates it there is that a row of subplots SHARES one vertical extent
+    while a legend has its own, so the largest such group is the panels.
+    No constant, and it survives a despined, recoloured or unequally sized
+    figure with its legend inside or out.
     """
     pymupdf = _reader()
     doc = pymupdf.open(FIG_DIR / f"{stem}.pdf")
     try:
-        spans = set()
+        rules = set()
         for d in doc[0].get_drawings():
             if d.get("color") is None:
+                continue
+            # A DASHED FULL-WIDTH RULE IS A REFERENCE LINE, NOT A SPINE.
+            # `axhline` spans the whole axes, so fig24 panel (b)'s two dashed
+            # normoxic references carry that panel's exact x range. While
+            # only the x range was read that was harmless -- they duplicated a
+            # span the spine already gave. Reading their y is not: they put
+            # panel (b) in a different vertical-extent group from panel (a),
+            # and under `axes.spines.top: False` the two panels stopped being
+            # a group at all.
+            dashes = (d.get("dashes") or "").strip()
+            if dashes and dashes != "[] 0":
                 continue
             for item in d["items"]:
                 if item[0] != "l":
                     continue
                 a, b = item[1], item[2]
                 if abs(a.y - b.y) < 0.5 and abs(b.x - a.x) > 100:
-                    spans.add((round(min(a.x, b.x), 1), round(max(a.x, b.x), 1)))
+                    rules.add((round(min(a.x, b.x), 1),
+                               round(max(a.x, b.x), 1), round(a.y, 1)))
     finally:
         doc.close()
-    assert spans, f"{stem}: no horizontal axis rules found, so panels cannot be located"
+    assert rules, f"{stem}: no horizontal axis rules found, so panels cannot be located"
+    spans = {(x0, x1) for x0, x1, _ in rules}
     outer = [k for k in spans
              if not any(o != k and o[0] <= k[0] and k[1] <= o[1] for o in spans)]
-    return sorted(outer)
+    # NESTING IS NOT ENOUGH ONCE THE LEGEND LEAVES THE AXES. Placed with
+    # `bbox_to_anchor=(1.02, 0.5)` a legend frame sits BESIDE its panel rather
+    # than inside it, so nothing contains it and fig26 reported THREE panels
+    # -- which then mis-assigned the axis captions and reported a correct
+    # figure as drawing no unit.
+    #
+    # What still separates them is exact and needs no threshold: subplots in a
+    # row share one vertical extent, and a legend has its own. So group the
+    # candidates by the (top, bottom) their own rules span, and take the
+    # LARGEST GROUP -- a row of panels, against a legend that is one box.
+    #
+    # Size before height, because height alone is not enough: under
+    # `axes.spines.top: False` a panel's rules collapse to a single y and its
+    # extent is ZERO while the legend keeps its whole box, so "the tallest
+    # group" chose the legend and reported one panel where there are two.
+    # Height only breaks a tie, which is what a single-panel figure with an
+    # outside legend gives.
+    extent = {}
+    for k in outer:
+        ys = [y for x0, x1, y in rules if (x0, x1) == k]
+        extent[k] = (round(min(ys), 1), round(max(ys), 1))
+    groups = {}
+    for k, ext in extent.items():
+        groups.setdefault(ext, []).append(k)
+    best = max(groups.items(), key=lambda kv: (len(kv[1]), kv[0][1] - kv[0][0]))
+    return sorted(best[1])
 
 
 def _panel_y(stem):
@@ -355,6 +423,90 @@ def _panel_y(stem):
     return min(ys), max(ys)
 
 
+def _axes_top(stem):
+    """The y of the top of the plotting area.
+
+    `_panel_y` answers this from horizontal rules and falls back to the TICK
+    positions when a spine is missing -- which returns the topmost tick, well
+    inside the axes, not the top of them. That is fine for its own callers and
+    wrong as a title-block boundary: under `axes.spines.top: False` the band
+    then swallowed the y-axis labels and the legend, and the panel title read
+    as `(a) Kill collapse under hypoxia 100 Normoxic (uniform O2) ...`.
+
+    Either spine gives the same answer, so both are read: the top horizontal
+    rule spanning a panel, and the upper end of a long vertical rule. Anything
+    drawn INSIDE the axes has a larger y than their top, so taking the minimum
+    is safe against data strokes.
+
+    Returns None when the top genuinely cannot be established -- one lone
+    horizontal rule and no vertical spine, which is what `axes.spines.left`,
+    `.top` and `.right` all set False leaves. GUESSING THERE IS WORSE THAN
+    DECLINING: the single remaining rule is the BOTTOM of the axes, and using
+    it put every tick label and the whole legend inside the title block. The
+    caller falls back to the one-row reading, which cannot see a wrapped
+    title but also cannot invent one.
+    """
+    pymupdf = _reader()
+    panel_x = _panels(stem)
+    doc = pymupdf.open(FIG_DIR / f"{stem}.pdf")
+    try:
+        horiz, vert = [], []
+        for d in doc[0].get_drawings():
+            if d.get("color") is None:
+                continue
+            # A DASHED FULL-WIDTH RULE IS A REFERENCE LINE, NOT A SPINE.
+            # `axhline` spans the whole axes, so fig24 panel (b)'s two dashed
+            # normoxic references match a panel's x range exactly. With the
+            # top spine present that is harmless -- the real top is smaller --
+            # but under `axes.spines.top: False` the upper reference BECAME
+            # the top, and the title block then swallowed the tick labels and
+            # the legend.
+            dashes = (d.get("dashes") or "").strip()
+            if dashes and dashes != "[] 0":
+                continue
+            for item in d["items"]:
+                if item[0] != "l":
+                    continue
+                a, b = item[1], item[2]
+                if abs(a.y - b.y) < 0.5 and abs(b.x - a.x) > 100:
+                    lo, hi = min(a.x, b.x), max(a.x, b.x)
+                    if any(abs(lo - x0) < 1 and abs(hi - x1) < 1
+                           for x0, x1 in panel_x):
+                        horiz.append(a.y)
+                elif abs(a.x - b.x) < 0.5 and abs(b.y - a.y) > 100:
+                    vert.append(min(a.y, b.y))
+    finally:
+        doc.close()
+    if vert:
+        return min(vert + horiz)
+    # TWO ROWS OF RULES MEAN A TOP AND A BOTTOM; one row is only a bottom.
+    if len({round(y, 1) for y in horiz}) >= 2:
+        return min(horiz)
+    return None
+
+
+def _digits(text):
+    """Normalise non-ASCII digit glyphs to ASCII.
+
+    Exactly the problem `_mult` solves for the multiplication sign, at the
+    sites that were left literal. `mathtext.fontset: stixsans` sets `$O_2$`
+    with U+1D7E4 MATHEMATICAL SANS-SERIF DIGIT TWO, so `Normoxic (uniform
+    O2)` never matches although the figure is correct and legible. The glyph
+    a font chooses moves; the character it denotes does not.
+    """
+    # `unicodedata.digit`, NOT `.decimal`: `.decimal` RAISES on a character
+    # that is `isdigit()` without being decimal -- a superscript two is the
+    # everyday example -- so the guard would have crashed the reader on a
+    # figure it was meant to read.
+    def one(ch):
+        if ch.isascii():
+            return ch
+        value = unicodedata.digit(ch, None)
+        return ch if value is None else str(value)
+
+    return "".join(one(ch) for ch in text)
+
+
 def _mult(text):
     """Normalise the multiplication sign, whatever the font extracted it as.
 
@@ -373,8 +525,14 @@ def _mult(text):
         for tok in text.split(" "))
 
 
-def _assert_titled(panels, boxes, stem, titles):
+def _assert_titled(panels, boxes, stem, titles, top):
     """Each title in `titles` must be centred over the panel of the same index.
+
+    `top` is the y of the top of the plotting area (`_axes_top(...)`, which
+    may be None when no spine establishes it); the title block is everything
+    between the topmost title line and it. `stem` is a display label for the
+    messages, so the caller supplies `top` rather than reading it back off a
+    file name.
 
     A containment check on the extracted text cannot see a SWAP: exchanging
     two panels' titles leaves both strings present while `(b)` now captions
@@ -394,23 +552,63 @@ def _assert_titled(panels, boxes, stem, titles):
     assert len(marks) == len(titles), (
         f"{stem} draws {len(marks)} panel-letter words, expected "
         f"{len(titles)}: {sorted(b[4] for b in marks)}")
+    # THE TITLE BLOCK, NOT ONE ROW. Taking the words within 2pt of the
+    # topmost panel letter rejected a WRAPPED title. matplotlib anchors a
+    # title at its BOTTOM, so a two-line title puts its first line -- the line
+    # carrying the panel letter -- above the other panel's letter, and the
+    # single row then held one title where two were expected. That matters
+    # more than an ordinary false failure: this same check correctly reports a
+    # genuine title collision under a large `axes.titlesize`, and wrapping is
+    # the natural fix for it, so the guard was rejecting its own remedy. The
+    # block is every word between the topmost title line and the top of the
+    # plotting area.
     row_y = min(b[1] for b in marks)
-    row = sorted((b[0], b[2], b[4]) for b in boxes if abs(b[1] - row_y) < 2)
-    # Split the title row at each panel letter.
-    groups, cur = [], None
-    for x0, x1, t in row:
-        if t in heads:
-            if cur:
-                groups.append(cur)
-            cur = [(x0, x1, t)]
-        elif cur is not None:
-            cur.append((x0, x1, t))
-    if cur:
-        groups.append(cur)
+    band = ([b for b in boxes if b[1] >= row_y - 0.5 and b[3] <= top + 1.0]
+            if top is not None
+            else [b for b in boxes if abs(b[1] - row_y) < 2])
+    rows = _cluster_rows(band, key=lambda b: b[1])
+    groups, loose = [], []
+    for r in rows:
+        cur = None
+        for b in sorted(r, key=lambda w: w[0]):
+            if b[4] in heads:
+                if cur is not None:
+                    groups.append(cur)
+                cur = [b]
+            elif cur is None:
+                # A WRAPPED TITLE'S SECOND LINE SHARES A ROW WITH THE NEXT
+                # PANEL'S LETTER, because a title is anchored at its BOTTOM:
+                # wrap panel (a)'s title and `under hypoxia` lands on the row
+                # holding `(b)`, to the left of it. Skipping rows that carry
+                # no letter at all was not enough -- words before the first
+                # letter OF A LETTERED ROW are continuation text too, and
+                # dropping them silently truncated the title being compared.
+                loose.append(b)
+            else:
+                cur.append(b)
+        if cur is not None:
+            groups.append(cur)
     assert len(groups) == len(titles), (
-        f"{stem}'s title row splits into {len(groups)} titles, expected "
+        f"{stem}'s title block splits into {len(groups)} titles, expected "
         f"{len(titles)}")
-    centres = [(g[0][0] + g[-1][1]) / 2 for g in groups]
+    # ORDERED BY PANEL LETTER, not by where the fragment landed: with a
+    # wrapped title the letters sit on different rows, so reading order is no
+    # longer left-to-right. Which panel each lettered title then captions is
+    # still decided below, by the centre comparison, so this does not decide
+    # the swap question -- it only says which expected title to compare with.
+    groups.sort(key=lambda g: heads.index(g[0][4]))
+    # A CONTINUATION LINE CARRIES NO PANEL LETTER, so each of its words joins
+    # the title whose lettered fragment it sits nearest to horizontally.
+    spans = [(min(b[0] for b in g), max(b[2] for b in g)) for g in groups]
+    for b in loose:
+        c = (b[0] + b[2]) / 2
+        j = min(range(len(spans)),
+                key=lambda k: max(spans[k][0] - c, 0.0, c - spans[k][1]))
+        groups[j].append(b)
+    groups = [sorted(g, key=lambda b: (round(b[1], 1), b[0])) for g in groups]
+    groups = [[(b[0], b[2], b[4]) for b in g] for g in groups]
+    centres = [(min(g_[0] for g_ in g) + max(g_[1] for g_ in g)) / 2
+               for g in groups]
     panel_centres = [(lo + hi) / 2 for lo, hi in panels[:len(titles)]]
     for i, (want, c) in enumerate(zip(titles, centres)):
         nearest = min(range(len(panel_centres)),
@@ -420,7 +618,13 @@ def _assert_titled(panels, boxes, stem, titles):
             f"{stem}'s title {got!r} is centred at x={c:.0f}, nearest panel "
             f"{nearest} rather than panel {i}. The titles are swapped, so "
             "every reference to that panel letter points at the other panel")
-        assert got.startswith(want) or want.startswith(got), (
+        # EXACT, NOT A PREFIX. `want.startswith(got)` admitted any truncation:
+        # `(a) Kill collapse under hypoxia` cut to `(a) Kill`, or to `(a)`
+        # alone, passed -- the whole panel claim deleted with only the
+        # fingerprint firing. The branch existed to tolerate a wrapped title's
+        # first line, but the group-count assertion above rejects a wrapped
+        # title before reaching here, so it bought nothing.
+        assert got == want, (
             f"{stem}'s panel {i} is titled {got!r}, expected {want!r}")
 
 
@@ -434,9 +638,12 @@ def _major_only(marks, axis_at=None):
     legend frame's side could outrank a real tick and delete all nine.
 
     That was reachable from DATA alone, with no style change: widening RSL3's
-    day-0 confidence interval from 0.31 to 0.8 percentage points -- a purely
-    stochastic quantity no fixture pins, 2.6x from today's value -- made the
-    band's leftmost edge the longest stroke and the x axis read as empty. It
+    day-0 confidence interval from a half-width of 0.31 to 0.8 percentage
+    points -- a purely stochastic quantity no fixture pins, 2.6x today's
+    0.3063pp half-width (0.6126pp full) -- made the band's leftmost edge the
+    longest stroke and the x axis read as empty. HALF-width in both figures,
+    since the "2.6x" only holds on that reading and the bare numbers did not
+    say which they were. It
     also re-broke `xtick.major.size: 1`, which the tick window had been
     widened to 0.5 specifically to accept, one commit earlier.
 
@@ -447,11 +654,41 @@ def _major_only(marks, axis_at=None):
     if not marks:
         return []
     if axis_at is not None:
-        marks = [m for m in marks
-                 if abs(m[1] - axis_at) < 1 or abs(m[2] - axis_at) < 1]
+        # TOUCHING MEANS THE AXIS LIES IN THE STROKE'S SPAN, not that an
+        # endpoint sits on it. `xtick.direction: inout` -- a plain rcParam --
+        # straddles the axis, so at the default `major.size` 3.5 each endpoint
+        # is 1.75pt away and an endpoint test discarded all nine ticks of a
+        # perfectly correct figure. Span containment covers `out`, `in` and
+        # `inout` alike, at any tick size.
+        marks = [m for m in marks if m[1] - 1 <= axis_at <= m[2] + 1]
         if not marks:
             return []
-    longest = max(round(m[3], 1) for m in marks)
+    # TICKS ARE EVENLY SPACED, and that is what keeps the wider touch test
+    # honest. Admitting a stroke that merely touches or crosses the axis lets
+    # in data: under `axes.xmargin: 0` the first point sits ON the spine, so
+    # the first segment of each near-flat curve starts there -- two strokes of
+    # 79.71pt against six ticks of 3.5, and "the longest of the strokes that
+    # touch" then read the curves as the scale. Two coincidental strokes are
+    # not a tick series; six equally pitched ones are. Minor ticks are evenly
+    # spaced too, which is why length still decides between the series that
+    # qualify.
+    #
+    # A non-uniform axis (a log scale) has no regular series, and then this
+    # falls back to "appears more than once", which is where it started.
+    by_len = {}
+    for m in marks:
+        by_len.setdefault(round(m[3], 1), []).append(m)
+
+    def _regular(ms):
+        pos = sorted({round(m[0], 2) for m in ms})
+        if len(pos) < 3:
+            return False
+        gaps = [b - a for a, b in zip(pos, pos[1:])]
+        return max(gaps) - min(gaps) <= 0.05 * max(gaps)
+
+    regular = {length for length, ms in by_len.items() if _regular(ms)}
+    series = regular or {length for length, ms in by_len.items() if len(ms) > 1}
+    longest = max(series or by_len)
     return sorted({m[0] for m in marks if round(m[3], 1) == longest})
 
 
@@ -460,7 +697,7 @@ def _axis_ticks_vertical(stem):
     pymupdf = _reader()
     doc = pymupdf.open(FIG_DIR / f"{stem}.pdf")
     try:
-        out = []
+        cand = []
         for d in doc[0].get_drawings():
             col = d.get("color")
             # ANY COLOUR. Requiring black, then greyscale-and-dark, each
@@ -474,10 +711,21 @@ def _axis_ticks_vertical(stem):
                 if item[0] != "l":
                     continue
                 a, b = item[1], item[2]
-                if abs(a.x - b.x) < 0.2 and 0.5 <= abs(b.y - a.y) <= 20:
-                    out.append((a.x, min(a.y, b.y), b.x, max(a.y, b.y),
-                                tuple(round(c, 4) for c in col), a, b))
-        return out
+                if abs(a.x - b.x) < 0.2 and abs(b.y - a.y) >= 0.5:
+                    cand.append((abs(b.y - a.y), a, b,
+                                 tuple(round(c, 4) for c in col)))
+        # SHORT RELATIVE TO THE AXIS, not shorter than 20pt. The absolute cap
+        # was a measured constant and it false-failed exactly at its own
+        # boundary: `xtick.major.size: 20` draws a stroke of 20.000030517578125, so all
+        # nine ticks were discarded and a correct figure read as having an
+        # empty axis. What is structurally true is that a tick decorates an
+        # axis and is a fraction of it, so the longest stroke on the figure is
+        # never a tick -- and `0.5 * longest` can only ever be MORE permissive
+        # than the old 20, since it is floored there, so nothing this used to
+        # collect can stop being collected.
+        cap = max(20.0, 0.5 * max((c[0] for c in cand), default=0.0))
+        return [(a.x, min(a.y, b.y), b.x, max(a.y, b.y), col, a, b)
+                for length, a, b, col in cand if length <= cap]
     finally:
         doc.close()
 
@@ -487,7 +735,7 @@ def _axis_ticks(stem):
     pymupdf = _reader()
     doc = pymupdf.open(FIG_DIR / f"{stem}.pdf")
     try:
-        out = []
+        cand = []
         for d in doc[0].get_drawings():
             col = d.get("color")
             # ANY COLOUR. Requiring black, then greyscale-and-dark, each
@@ -501,15 +749,22 @@ def _axis_ticks(stem):
                 if item[0] != "l":
                     continue
                 a, b = item[1], item[2]
-                # 0.5 TO 20pt. The window was `1 < len < 8`, which failed at
-                # both ends on correct figures: `xtick.major.size: 8` and
-                # `1.0` each left zero ticks found, silently disabling the
-                # scale readings that depend on them. matplotlib's default is
-                # 3.5 and journal styles routinely set 1 or 8.
-                if abs(a.y - b.y) < 0.2 and 0.5 <= abs(b.x - a.x) <= 20:
-                    out.append((min(a.x, b.x), a.y, max(a.x, b.x), b.y,
-                                tuple(round(c, 4) for c in col), a, b))
-        return out
+                if abs(a.y - b.y) < 0.2 and abs(b.x - a.x) >= 0.5:
+                    cand.append((abs(b.x - a.x), a, b,
+                                 tuple(round(c, 4) for c in col)))
+        # SHORT RELATIVE TO THE AXIS, not shorter than 20pt. The window was
+        # `1 < len < 8` and failed at both ends on correct figures
+        # (`ytick.major.size: 8` and `1.0` each left zero ticks and silently
+        # disabled the scale readings); widening it to an absolute 20 then
+        # false-failed at its own boundary, since `major.size: 20` draws a
+        # stroke of 20.000030517578125. What is structurally true is that a
+        # tick decorates an axis and is a fraction of it, so the longest
+        # stroke on the figure is never a tick. Floored at the old 20, so
+        # this can only be MORE permissive -- nothing it used to collect can
+        # stop being collected.
+        cap = max(20.0, 0.5 * max((c[0] for c in cand), default=0.0))
+        return [(min(a.x, b.x), a.y, max(a.x, b.x), b.y, col, a, b)
+                for length, a, b, col in cand if length <= cap]
     finally:
         doc.close()
 
@@ -832,7 +1087,12 @@ def test_fig25_draws_its_bliss_numbers():
     # separation that does not depend on a font.
     heads = [b.split()[0] for b in bars]
     a_hi = _panels("fig25_bliss_synergy")[0][1]
-    rows = [[w for w in r if w[0] <= a_hi] for r in _rows(wds).values()]
+    # +1pt, BECAUSE THE PANEL EDGE IS ROUNDED. `_panels` rounds each x to
+    # one decimal, so an artist drawn exactly on the edge lands a few
+    # ten-thousandths outside it. Under `axes.xmargin: 0` that is where the
+    # first and last points sit, and the bare `<=` dropped fig26's ninth
+    # tick -- eight marks against nine timepoints on a correct figure.
+    rows = [[w for w in r if w[0] <= a_hi + 1] for r in _rows(wds).values()]
     rows = [r for r in rows if sorted(t for _, t in r) == sorted(heads)]
     assert len(rows) == 1, (
         f"expected one row of panel (a) holding the four bar-label heads "
@@ -905,7 +1165,7 @@ def test_fig25_draws_its_bliss_numbers():
     same_row = sorted(
         (x0, x1, t)
         for x0, y0, x1, y1, t in _word_bboxes("fig25_bliss_synergy")
-        if abs((y0 + y1) / 2 - ay_mid) < 4 and x1 <= a_hi)
+        if abs((y0 + y1) / 2 - ay_mid) < 4 and x1 <= a_hi + 1)
     at = next(i for i, (x0, _, t) in enumerate(same_row) if _mult(t) == want)
     lo = hi = at
     while lo > 0 and same_row[lo][0] - same_row[lo - 1][1] < 20:
@@ -924,7 +1184,8 @@ def test_fig25_draws_its_bliss_numbers():
     _assert_titled(_panels("fig25_bliss_synergy"),
                    _word_bboxes("fig25_bliss_synergy"), "fig25",
                    ["(a) RSL3 + FSP1i: dual-pathway synergy",
-                    "(b) Pairwise synergy"])
+                    "(b) Pairwise synergy (SDT pairs excluded: ceiling)"],
+                   _axes_top("fig25_bliss_synergy"))
 
     # THE SUPTITLE, which states this figure's whole claim. Rewriting it to
     # say the dual-pathway depletion is ANTAGONISTIC -- the reverse of what
@@ -1130,11 +1391,28 @@ def test_fig25_binds_each_pair_to_its_own_score():
         "scale cannot be recovered")
     (tx0, tv0), (tx1, tv1) = ticks[0], ticks[-1]
     scale = (tx1 - tx0) / (tv1 - tv0)
-    vlines = [x for x, y0, y1, col in _dashed_verticals("fig25_bliss_synergy")
-              if fig25_panels[-1][0] <= x <= fig25_panels[-1][1]]
+    dashed = sorted(x for x, y0, y1, col
+                    in _dashed_verticals("fig25_bliss_synergy")
+                    if fig25_panels[-1][0] <= x <= fig25_panels[-1][1])
+    # A GRID DRAWS ONE LINE AT EVERY TICK; the threshold draws one wherever
+    # its value falls. `axes.grid: True` with `grid.linestyle: '--'` -- and
+    # every style that presets it, `bmh` among them -- therefore added five
+    # more dashed verticals and a correct figure read as having five spurious
+    # thresholds. The threshold's own value is 1.0, which IS a tick here, so
+    # "drop the ones at tick positions" would drop the threshold too; what
+    # separates them is that a grid covers ALL the ticks, so it is only
+    # subtracted when all of them are covered.
+    tick_xs = [cx for cx, _ in ticks]
+    gridded = all(any(abs(x - cx) < 1 for x in dashed) for cx in tick_xs)
+    vlines = list(dashed)
+    if gridded:
+        for cx in tick_xs:
+            hit = next((x for x in vlines if abs(x - cx) < 1), None)
+            if hit is not None:
+                vlines.remove(hit)
     assert len(vlines) == 1, (
-        f"fig25's panel (b) draws {len(vlines)} dashed vertical lines, "
-        "expected one additive threshold")
+        f"fig25's panel (b) draws {len(vlines)} dashed vertical lines that "
+        f"are not grid lines, expected one additive threshold")
     drawn_at = (vlines[0] - tx0) / scale + tv0
     assert abs(drawn_at - 1.0) < 0.02, (
         f"fig25's additive threshold line is drawn at {drawn_at:.2f} on its "
@@ -1209,25 +1487,45 @@ def test_fig24_draws_its_hypoxia_numbers():
     # the comparison below fails loudly with the extra value listed, which is
     # the right way to find out.
     panel_a = _words("fig24_hypoxia_killcurve")
-    # THE COLLAPSE PAIR IS THE ROW THAT HOLDS TWO OF THEM. Identifying it by
-    # the arrow between them meant identifying a glyph, and no glyph survives
-    # every font: `mathtext.fontset: cm` extracts `$\to$` as `!` and
-    # `$\times$` as a pound sign. Nor does either box edge -- cmr10 puts the
-    # arrow's TOP 3.86pt from its percentages while their midlines are 1.08pt
-    # apart, and cm reverses that. What does not move is the layout: the
-    # collapse annotation draws its two percentages on ONE row, and the four
-    # bar annotations each sit at their own bar's height, so no two of them
-    # share one.
-    pct_rows = {}
-    for x, y, t in panel_a:
-        if re.fullmatch(r"\d+\.\d%", t):
-            pct_rows.setdefault(round(y, 1), []).append((x, t))
-    paired = [sorted(v) for v in pct_rows.values() if len(v) == 2]
-    assert len(paired) == 1, (
-        f"expected exactly one row of fig24 panel (a) carrying two "
-        f"percentages -- the collapse annotation -- found {len(paired)}. The "
-        "four bar annotations each sit at their own bar's height")
-    left, right = paired[0]
+    # THE COLLAPSE PAIR IS THE PERCENTAGES FLANKING THE ARROW. Identifying
+    # the pair instead as "the row that holds two of them" avoided naming a
+    # glyph, and put a property of today's four DISTINCT bar values in place
+    # of a property of the figure. Give SDT's four gradient rates its uniform
+    # rate -- which is what fig24's own footnote says the model assumes,
+    # "SDT is modeled as O$_2$-independent" -- and two bar annotations sit at
+    # one height, so a correct, fully legible figure was rejected. Values
+    # within ~0.04pp of each other collided the same way.
+    #
+    # The arrow is pinned rather than avoided, for the reason it is pinned in
+    # the collapse-sentence check below: it is the only thing in the figure
+    # carrying the DIRECTION of the collapse. `mathtext.fontset: cm` extracts
+    # it as `!` and fails here loudly; that is the stated limit, and a loud
+    # failure on an unusual font beats being blind to a reversed arrow.
+    boxes_a = _word_bboxes("fig24_hypoxia_killcurve")
+    arrows = [b for b in boxes_a if b[4] == "\u2192"]
+    assert len(arrows) == 1, (
+        f"expected fig24 panel (a) to draw exactly one collapse arrow, "
+        f"found {len(arrows)}")
+    ax0, ay0, ax1, ay1 = arrows[0][:4]
+    # VERTICAL OVERLAP, NOT A SHARED ROW. Clustering by the words' top edges
+    # separates the arrow from the very percentages it sits between, because
+    # a glyph box's height is a property of the FONT: under `seaborn-v0_8-
+    # ticks` the arrow spans y 152.44-166.01 while `3.7%` and `0.1%` span
+    # 154.26-164.91, so their tops are 1.82pt apart and any row tolerance
+    # tight enough to be useful splits them. Their extents nevertheless
+    # overlap -- the arrow's box CONTAINS the digits' -- and overlap is what
+    # "on the same line" actually means.
+    same_line = [b for b in boxes_a if b[1] < ay1 and b[3] > ay0]
+    pcts = [b for b in same_line if re.fullmatch(r"\d+\.\d%", b[4])]
+    # FLANKING, not merely on the line: a bar annotation that happens to land
+    # at the annotation's height must not displace either half of the pair.
+    before = [b for b in pcts if b[2] <= ax0]
+    after = [b for b in pcts if b[0] >= ax1]
+    assert before and after, (
+        f"fig24's collapse arrow is not flanked by two percentages; its line "
+        f"reads {[b[4] for b in sorted(pcts)]}")
+    lb, rb = max(before, key=lambda b: b[0]), min(after, key=lambda b: b[0])
+    left, right = (lb[0], lb[4]), (rb[0], rb[4])
 
     bars = sorted(((x, t) for x, y, t in panel_a
                    if re.fullmatch(r"\d+\.\d%", t)
@@ -1278,7 +1576,8 @@ def test_fig24_draws_its_hypoxia_numbers():
     # `axA.bar` re-captions 3.7%/91.9% as the HYPOXIC bars and 0.1%/87.8% as
     # the normoxic ones -- the thesis of the figure inverted -- and passed.
     # The legend is emitted in bar-call order, the same order as the values.
-    series = re.search(r"Normoxic \(uniform O2\)\s+Hypoxic \(O2 gradient\)", text)
+    series = re.search(r"Normoxic \(uniform O2\)\s+Hypoxic \(O2 gradient\)",
+                       _digits(text))
     assert series, (
         "fig24's series legend is not `Normoxic (uniform O2)` then `Hypoxic "
         "(O2 gradient)`. The bar VALUES are compared in that order, so if the "
@@ -1302,13 +1601,27 @@ def test_fig24_draws_its_hypoxia_numbers():
     # BELOW the real bars, so `max(y1)` picked them and every real bar was
     # excluded. The text scan beside this was scoped for exactly this reason
     # and the rectangle scan was not.
-    a_right = _panels("fig24_hypoxia_killcurve")[0][1]
+    # UP TO WHERE PANEL (b) STARTS, for the same reason as fig26's legend
+    # scan: a legend moved out of the axes with `bbox_to_anchor=(1.02, 0.5)`
+    # draws its swatches in the gap between the panels, and a scope ending at
+    # panel (a)'s own right edge lost them -- a correct figure reported that
+    # its `Normoxic` entry had no swatch. The gap holds nothing else, and the
+    # bars are still selected by standing on the axis.
+    fig24_panels = _panels("fig24_hypoxia_killcurve")
+    a_right = (fig24_panels[1][0] - 1 if len(fig24_panels) > 1
+               else fig24_panels[0][1] + 1)
     rects = [r for r in _filled_rects("fig24_hypoxia_killcurve")
-             if r[1] <= a_right + 1]
-    # The bottom-most filled edge in panel (a) is the axis the bars stand on;
-    # a legend swatch floats above it. Used below to tell the two apart
-    # without a width bound.
-    bar_baseline = max(r[3] for r in rects)
+             if r[1] <= a_right]
+    # THE AXIS ITSELF, not the bottom-most filled edge. The bars stand on the
+    # axis and a legend swatch does not, which is the distinction being drawn
+    # -- but deriving the baseline from the rectangles assumes nothing is
+    # drawn BELOW the bars, and a legend placed under the axes
+    # (`bbox_to_anchor=(0.5, -0.22)`, the ordinary way to put one there) is
+    # exactly that. With `ncol=2` both swatches then share the bottom-most
+    # edge, so both were excluded as "the baseline" and neither entry
+    # resolved, on a correct figure. The bottom spine is where the bars
+    # stand, whatever else the figure draws.
+    bar_baseline = _panel_y("fig24_hypoxia_killcurve")[1]
     # EXACTLY ONE ENTRY EACH. The scan is page-wide, and panel (b) draws
     # `normoxic` and `(hypoxic)` in its own legend -- only their case and
     # parentheses keep them out. Capitalising them there rebinds panel (a)'s
@@ -1361,9 +1674,16 @@ def test_fig24_draws_its_hypoxia_numbers():
         "fig24 draws both legend swatches in the same colour, so colour "
         "cannot say which bar is which")
     series = [legend["Normoxic"], legend["Hypoxic"]]
-    baseline = max(r[3] for r in rects if r[4] in series)
+    # THE SAME AXIS, for the same reason as `bar_baseline` above. This site
+    # had the identical shape -- a baseline derived from the rectangles -- and
+    # the round that fixed the swatch site did not look for the sibling: with
+    # the legend below the axes its two swatches ARE in the series colours and
+    # sit lower than the bars, so `max` made them the baseline and every real
+    # bar was excluded. Two sites, one assumption; the axis is not a property
+    # of what happens to be drawn lowest.
     bars_drawn = sorted((r for r in rects
-                         if r[4] in series and abs(r[3] - baseline) < 0.5),
+                         if r[4] in series
+                         and abs(r[3] - bar_baseline) < 0.5),
                         key=lambda r: r[0])
     # A ZERO-HEIGHT BAR DRAWS NO RECTANGLE AT ALL. matplotlib emits no `re`
     # item for it, so requiring four false-failed on correct data: setting
@@ -1411,7 +1731,8 @@ def test_fig24_draws_its_hypoxia_numbers():
     _assert_titled(_panels("fig24_hypoxia_killcurve"),
                    _word_bboxes("fig24_hypoxia_killcurve"), "fig24",
                    ["(a) Kill collapse under hypoxia",
-                    "(b) Robust across penetration length"])
+                    "(b) Robust across penetration length"],
+                   _axes_top("fig24_hypoxia_killcurve"))
 
     # THE SUPTITLE. It states the figure's whole claim, and nothing read it:
     # rewriting it to say hypoxia SPARES pharmacologic ferroptosis and
@@ -1586,7 +1907,14 @@ def test_fig24_draws_its_hypoxia_numbers():
                   round(abs(b.x - a.x), 2))
                  for x0, y0, x1, y1, col, a, b in _axis_ticks(
                      "fig24_hypoxia_killcurve")
-                 if abs(min(a.x, b.x) - b_x0) < 8]
+                 # THE SPINE LIES IN THE STROKE, rather than the stroke's left
+                 # end sitting within 8pt of it. `ytick.major.size: 20` puts
+                 # that end 20pt out, so every tick was discarded -- and the
+                 # test still passed, because the label fallback deleted above
+                 # silently caught it at a fifteenth of the precision. Same
+                 # rule as `_major_only`'s, so `in` / `out` / `inout` and any
+                 # tick size all read alike.
+                 if min(a.x, b.x) - 1 <= b_x0 <= max(a.x, b.x) + 1]
     labels = sorted(
         ((y0 + y1) / 2, float(t))
         for x0, y0, x1, y1, t in _word_bboxes("fig24_hypoxia_killcurve")
@@ -1598,15 +1926,16 @@ def test_fig24_draws_its_hypoxia_numbers():
     # ticks are drawn shorter, so the majors are the longest of the strokes
     # that touch the axis.
     marks = _major_only(marks_raw, axis_at=b_x0)
-    # FALL BACK TO THE LABELS WHEN NO MARKS ARE DRAWN. `xtick.major.size: 0`
-    # is what every `seaborn-v0_8*` grid style sets, and moving from labels to
-    # marks (to kill the font bias) left no path for it. The label-centre
-    # mapping carries a font-dependent offset of up to 1.14pp, so the bound
-    # widens to match when it is used -- stated here rather than silently.
+    # NO LABEL FALLBACK. This used to swap in the label centres when no marks
+    # were drawn, widening the bound 0.1pp -> 1.5pp to absorb the font bias
+    # that swap reintroduces. The widening is a 15x loss of precision and it
+    # was applied SILENTLY: under `ytick.major.size: 0` a reference line drawn
+    # 1.1pp off its value -- 91.9% rendered as 90.8% -- passed with the whole
+    # suite green. The bullet at the top of this file said BOTH scale readings
+    # fail loudly on a zero tick size, and only fig26's did. A guard that
+    # keeps running at a fifteenth of its precision without saying so is worse
+    # than one that stops, so this one stops.
     tolerance = 0.1
-    if len(marks) != len(labels):
-        marks = [c for c, _ in labels]
-        tolerance = 1.5
     assert len(marks) >= 2 and len(marks) == len(labels), (
         f"fig24's panel (b) shows {len(marks)} y tick marks against "
         f"{len(labels)} numeric labels; its scale cannot be recovered")
@@ -1649,7 +1978,13 @@ def test_fig24_draws_its_hypoxia_numbers():
         # lifts the labels 3.5pt and put them above a spine they clear by only
         # 3.15pt outward, so a correct axis read as empty and was reported
         # reversed.
-        if re.fullmatch(r"\d+", t) and b_x0 - 5 <= x0 <= b_x1 + 5
+        # BY ITS CENTRE, not its left edge. A tick label is centred on its
+        # tick and every tick lies on the axis, so the centre is in the
+        # panel by construction while the left edge is not: under
+        # `axes.xmargin: 0` the first point sits ON the spine and `80`
+        # overhangs it, so the label was dropped and the axis read as
+        # reversed on a correct figure.
+        if re.fullmatch(r"\d+", t) and b_x0 - 1 <= (x0 + x1) / 2 <= b_x1 + 1
         and y0 > (y_lo + y_hi) / 2)]
     assert lam_labels == [str(v) for v in lam], (
         f"fig24's panel (b) x axis reads {lam_labels} LEFT TO RIGHT and the "
@@ -1658,12 +1993,20 @@ def test_fig24_draws_its_hypoxia_numbers():
 
     # And the collapse annotation must be the ratio of the two it names, not a
     # number carried along beside them.
-    # GLYPH-AGNOSTIC. The arrow and the multiplication sign are whatever the
-    # font maps them to -- `!` and a pound sign under `mathtext.fontset: cm` --
-    # so the pattern matches "one non-space character" in both places rather
-    # than the codepoints this project's own rcParams happen to produce.
+    # THE ARROW IS PINNED, BECAUSE IT CARRIES THE DIRECTION. A previous
+    # version matched `\S` here so that any font's rendering would do -- and
+    # that silently removed the only check on which way the collapse runs:
+    # `3.7% <- 0.1%` reads as hypoxia RAISING the kill rate from 0.1% to 3.7%,
+    # the #790 inversion, and it passed. The two values are already compared
+    # in order, but both stay in order when only the arrow flips.
+    #
+    # So the rightward arrow is required literally. `mathtext.fontset: cm`
+    # extracts it as `!` and will fail here; that is a stated limit below,
+    # and a loud failure on an unusual font is the right trade against being
+    # blind to a reversed arrow.
     collapse = re.search(
-        r"(\d+\.\d%)\s*\S\s*(\d+\.\d%)\s*\(~(\d+)\s*\S\s*collapse\)", text)
+        r"(\d+\.\d%)\s*\u2192\s*(\d+\.\d%)\s*\(~(\d+)\s*"
+        r"\u00d7\s*collapse\)", text)
     assert collapse, "fig24 no longer annotates the collapse ratio"
     assert [collapse.group(1), collapse.group(2)] == expected[:2], (
         f"fig24's collapse annotation names {collapse.group(1)} → "
@@ -1872,10 +2215,19 @@ def test_fig26_draws_the_timepoints_its_fixture_holds():
     # Each legend entry has its line sample ~6pt below its text, and the claim
     # is which curve is still high at the last timepoint.
     a_lo, a_hi = p26[0]
+    # A PANEL'S LEGEND BELONGS TO IT EVEN WHEN DRAWN BESIDE IT. Scoping this
+    # to panel (a)'s own x range assumed the legend is inside the axes, and
+    # `bbox_to_anchor=(1.02, 0.5)` -- the standard way to move one out -- puts
+    # both entries in the gap between the panels, so a correct figure reported
+    # no legend captions at all. The region that belongs to panel (a) runs up
+    # to where panel (b) starts; only the LEGEND scan is widened, because the
+    # curve, tick and shading scans read things that are inside the axes by
+    # construction and have nothing to gain from the gap.
+    legend_hi = p26[1][0] - 1 if len(p26) > 1 else a_hi + 1
     doc_lines = _hlines_any("fig26_vulnerability_window")
     legend_col = {}
     for x, y, t in wds:
-        if t not in ("SDT", "RSL3") or not (a_lo <= x <= a_hi):
+        if t not in ("SDT", "RSL3") or not (a_lo - 1 <= x <= legend_hi):
             continue
         # NEAREST, not lowest-x. `_hlines_any` returns sorted by x, so
         # `sample[0]` took whichever candidate started furthest left rather
@@ -1912,7 +2264,7 @@ def test_fig26_draws_the_timepoints_its_fixture_holds():
         "fig26 draws both panel (a) legend samples in one colour")
     ends = {}
     for x, y, col in _stroke_points("fig26_vulnerability_window"):
-        if not (a_lo <= x <= a_hi) or col not in legend_col.values():
+        if not (a_lo - 1 <= x <= a_hi + 1) or col not in legend_col.values():
             continue
         if x > ends.get(col, (-1, 0))[0]:
             ends[col] = (x, y)
@@ -1936,7 +2288,8 @@ def test_fig26_draws_the_timepoints_its_fixture_holds():
     xmarks = _major_only([(round(a.x, 2), min(a.y, b.y), max(a.y, b.y),
                            round(abs(b.y - a.y), 2))
                           for x0, y0, x1, y1, col, a, b
-                          in _axis_ticks_vertical(stem26) if a.x <= a_hi],
+                          in _axis_ticks_vertical(stem26)
+                          if a.x <= a_hi + 1],
                          axis_at=a_bottom)
     assert len(xmarks) == len(expected), (
         f"fig26 panel (a) shows {len(xmarks)} x tick marks against "
@@ -1978,7 +2331,8 @@ def test_fig26_draws_the_timepoints_its_fixture_holds():
     # over the wrong panel while both strings remain present.
     _assert_titled(p26, _word_bboxes(stem26), "fig26",
                    ["(a) Treatment window: RSL3 closes, SDT stays open",
-                    "(b) Why: GPX4 re-expression closes the window"])
+                    "(b) Why: GPX4 re-expression closes the window"],
+                   _axes_top(stem26))
 
     # THE Y-AXIS LABELS, BOUND TO THEIR AXES. fig24's and fig25's equivalents
     # are gated with an explicit "the unit the bars are in" rationale; fig26's
