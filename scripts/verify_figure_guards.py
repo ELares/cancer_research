@@ -117,6 +117,37 @@ case("fig25 the flagship bar alone missing", True,
        "axB.barh(names[::-1], [0.0 if n == \"RSL3+FSP1i\" else s "
        "for n, s in zip(names[::-1], scores[::-1])], color=cols[::-1])")])
 
+# ------------------------ escapes found by review, each a one-token variant
+# Round 30 showed the arrow bindings defeated four separate ways, each leaving
+# the annotation pointing somewhere it does not belong. They are cases here so
+# that a future relaxation of the arrow reading re-runs them.
+case("fig25 headless arrow onto the monotherapy bar", True,
+     [('arrowprops=dict(arrowstyle="->", color="#C44E52")',
+       'arrowprops=dict(arrowstyle="-", color="#C44E52")'),
+      ("xy=(3, vals[3]), xytext=(1.9, 93)", "xy=(0, vals[0]), xytext=(1.9, 93)")])
+case("fig25 headless arrow onto the prediction bar", True,
+     [('arrowprops=dict(arrowstyle="->", color="#C44E52")',
+       'arrowprops=dict(arrowstyle="-", color="#C44E52")'),
+      ("xy=(3, vals[3]), xytext=(1.9, 93)", "xy=(2, vals[2]), xytext=(1.9, 93)")])
+case("fig26 headless arrow onto the last timepoint", True,
+     [('arrowprops=dict(arrowstyle="->", color="#4C72B0")',
+       'arrowprops=dict(arrowstyle="-", color="#4C72B0")'),
+      ("xy=(win_end, rsl3[win_end])", "xy=(len(days) - 1, rsl3[-1])")])
+case("fig26 triangle markers hide the arrow's tip", True,
+     [('axA.plot(x, rsl3, "s-"', 'axA.plot(x, rsl3, "^-"'),
+      ("xy=(win_end, rsl3[win_end])", "xy=(len(days) - 1, rsl3[-1])")])
+case("fig26 closes-arrow onto day 0", True,
+     [("xy=(win_end, rsl3[win_end])", "xy=(0, rsl3[0])")])
+case("fig26 closes-arrow onto the SDT curve", True,
+     [("xy=(win_end, rsl3[win_end])", "xy=(win_end, sdt[win_end])")])
+case("fig24 collapse note onto a value-colliding group", True,
+     [("xytext=(0.55, 55)", "xytext=(0.92, 55)")],
+     edit=lambda root: _sdt_uniform_equals_rsl3(root))
+case("fig25 colour swap with a bar shrunk below the size cut", True,
+     [('colors = ["#4C72B0", "#55A868", "#999999", "#C44E52"]',
+       'colors = ["#4C72B0", "#55A868", "#C44E52", "#999999"]')],
+     edit=lambda root: _shrink_rate_b(root))
+
 # ------------------------------------------------- correct figures, restyled
 case("committed figures, unmodified", False)
 case("xtick.direction inout", False, rc={"xtick.direction": "inout"})
@@ -182,6 +213,48 @@ def _sdt_o2_independent(root: Path) -> None:
             if (c["treatment"] == "SDT" and c["o2_condition"] != "uniform"
                     and c.get("immune_mode") == "off"):
                 c["overall_kill_rate"] = uni
+        p.write_text(json.dumps(d, indent=1))
+
+
+def _sdt_uniform_equals_rsl3(root: Path) -> None:
+    """SDT's uniform rate set equal to RSL3's, so two bar annotations collide.
+
+    A legitimate value, and it defeated a membership test keyed on annotation
+    TEXT: SDT's leftmost label then read the same as one the collapse note
+    quotes, dropped out of the "other group", and the boundary moved 53pt.
+    """
+    for rel in ("tests/fixtures/hypoxia_killcurve_rows.json",
+                "simulations/output/tme/tme_summary.json"):
+        p = root / rel
+        if not p.exists():
+            continue
+        d = json.loads(p.read_text())
+        conds = d["conditions"] if isinstance(d, dict) and "conditions" in d else d
+        rsl3 = next(c["overall_kill_rate"] for c in conds
+                    if c["treatment"] == "RSL3" and c["o2_condition"] == "uniform"
+                    and c.get("immune_mode") == "off")
+        for c in conds:
+            if (c["treatment"] == "SDT" and c["o2_condition"] == "uniform"
+                    and c.get("immune_mode") == "off"):
+                c["overall_kill_rate"] = rsl3
+        p.write_text(json.dumps(d, indent=1))
+
+
+def _shrink_rate_b(root: Path) -> None:
+    """FSP1i-alone below the height cut that `a_bars` applies.
+
+    3.7% is 9.2pt today; at 1.5% the bar drops out of the rectangle scan, and
+    a colour check gated on "exactly four bars" switched itself off.
+    """
+    for rel in ("simulations/output/combo-mech/combo_summary.json",
+                "tests/fixtures/bliss_synergy.json"):
+        p = root / rel
+        if not p.exists():
+            continue
+        d = json.loads(p.read_text())
+        for c in (d["combinations"] if "combinations" in d else [d]):
+            if isinstance(c, dict) and "rate_b" in c:
+                c["rate_b"] = 0.015
         p.write_text(json.dumps(d, indent=1))
 
 

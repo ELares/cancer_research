@@ -809,48 +809,59 @@ def _mult(text):
         for tok in text.split(" "))
 
 
-def _arrow_heads(stem, panel):
-    """Arrowhead tips inside `panel` as `[(x, y), ...]`.
+def _annotation_arrows(stem, panel):
+    """Annotation arrows inside `panel` as `[(start, tip), ...]`.
 
-    THE ARROW IS WHAT POINTS, and two placement checks in this file bound only
-    where the annotation's TEXT sits. `annotate` draws both: move `xy` and
-    leave `xytext` alone and the words stay put while the arrow swings onto a
-    different bar -- fig25's `1.99x synergy` onto `RSL3 alone`, fig26's
-    `closes ~day 3` onto day 28. Both passed.
+    THE SHAFT, NOT THE HEAD. An earlier version looked for the arrowHEAD -- "a
+    short path of at most four segments, not a spine, not a legend sample" --
+    and that description was wrong in every clause. It bounded the SEGMENT
+    COUNT and never the length, so a 249pt spine qualified; it tested colour
+    neutrality and never the "spans the panel" its own docstring claimed, so
+    `Solarize_Light2`'s tinted gridlines qualified; and for a straight line,
+    which has no shared endpoint, it MANUFACTURED a tip from the rightmost
+    point. On that style it returned six gridlines and one real arrow, picked
+    a gridline, and rejected a correct figure.
 
-    An arrowhead is a SHORT path of at most four segments, drawn in a series
-    colour, that is neither a spine (black, and spanning the panel) nor a
-    legend sample (perfectly horizontal). Its tip is the endpoint shared by
-    two of its segments, which is what `annotate` puts at `xy`.
+    What matplotlib actually emits for `annotate(..., arrowprops=...)` is two
+    paths: the shaft as a SINGLE cubic Bezier (`c`), and the head as a short
+    stroked or filled path. Measured on both figures here, the shaft's first
+    control point sits at the text and its last sits at `xy` -- which is the
+    tip, and is what the caller wants.
+
+    Keying on the shaft fixes four separate escapes at once:
+
+      * `arrowstyle="-"` draws NO head, so a head-based search returned
+        nothing and both call sites skipped themselves. The shaft is still
+        drawn, so a headless arrow is still read.
+      * a triangle MARKER (`^-`, which this very figure's other panel uses) is
+        a short multi-segment path and was classified as an arrowhead; it is
+        not a lone Bezier.
+      * spines and gridlines are single straight `l` items, never `c`.
+      * nothing is manufactured: a path that is not a Bezier is not an arrow.
     """
     pymupdf = _reader()
     lo, hi = panel
     top, bot = _axes_box(stem) or _panel_y(stem)
+
+    def inside(q):
+        return lo - 2 <= q.x <= hi + 2 and top - 2 <= q.y <= bot + 2
+
     doc = pymupdf.open(FIG_DIR / f"{stem}.pdf")
     try:
-        tips = []
+        out = []
         for d in doc[0].get_drawings():
-            col = d.get("color")
-            if col is None or max(col) - min(col) < 0.05:   # black/grey
+            if d.get("color") is None:
                 continue
-            lines = [it for it in d["items"] if it[0] == "l"]
-            if not lines or len(lines) > 4:
+            curves = [it for it in d["items"] if it[0] == "c"]
+            if len(curves) != 1 or len(d["items"]) != 1:
                 continue
-            pts = [q for it in lines for q in (it[1], it[2])]
-            if not all(lo - 2 <= q.x <= hi + 2 and top - 2 <= q.y <= bot + 2
-                       for q in pts):
+            a, b = curves[0][1], curves[0][4]
+            if not (inside(a) and inside(b)):
                 continue
-            if all(abs(it[1].y - it[2].y) < 0.2 for it in lines):
-                continue                                    # legend sample
-            counts = {}
-            for q in pts:
-                counts[(round(q.x, 2), round(q.y, 2))] = counts.get(
-                    (round(q.x, 2), round(q.y, 2)), 0) + 1
-            shared = [k for k, n in counts.items() if n > 1]
-            tips.extend(shared or [max(counts, key=lambda k: k[0])])
+            out.append(((a.x, a.y), (b.x, b.y)))
     finally:
         doc.close()
-    return tips
+    return out
 
 
 def _assert_titled(panels, boxes, stem, titles, top):
@@ -1654,7 +1665,7 @@ def test_fig25_draws_its_bliss_numbers():
     # `annotate` draws: repointing `xy` while leaving `xytext` alone moves the
     # arrow onto `RSL3 alone` and leaves the text exactly where it was, which
     # passed. The bar it names is the rightmost of panel (a)'s four.
-    heads25 = _arrow_heads("fig25_bliss_synergy", (a_lo25, a_hi25))
+    arrows25 = _annotation_arrows("fig25_bliss_synergy", (a_lo25, a_hi25))
     a_bars = sorted((r for r in _filled_rects("fig25_bliss_synergy")
                      if a_lo25 - 1 <= r[0] and r[1] <= a_hi25 + 1
                      and (r[1] - r[0]) > 5 and (r[3] - r[2]) > 5
@@ -1667,7 +1678,16 @@ def test_fig25_draws_its_bliss_numbers():
     # Re-ordering its colour list highlights the BLISS-EXPECTED bar in the
     # result colour and greys out the observed combination, so the panel
     # presents the model's own prediction as the finding, and it passed.
-    if len(a_bars) == 4:
+    # NOT BEHIND `len(a_bars) == 4`. `a_bars` drops any rectangle under 5pt
+    # tall, and FSP1i-alone is 3.7% today -- 9.2pt. One legitimate re-run
+    # below about 2% and this whole colour check vanishes, which is the exact
+    # pattern removed from fig24's collapse guard in the commit that added
+    # this one. The bars are identified by ORDER, so the two the check names
+    # are the last two whenever at least two are drawn.
+    assert len(a_bars) >= 2, (
+        f"fig25's panel (a) draws {len(a_bars)} bars; the result and "
+        "prediction cannot be identified")
+    if True:
         result, predicted = a_bars[-1][4], a_bars[-2][4]
         assert result[0] > result[2], (
             f"fig25's panel (a) draws the observed-combination bar in "
@@ -1677,14 +1697,27 @@ def test_fig25_draws_its_bliss_numbers():
             f"fig25's panel (a) draws the Bliss-expected bar in {predicted}, "
             "not grey. Colouring the PREDICTION as the result presents the "
             "model's own expectation as the measurement")
-    if heads25 and len(a_bars) >= 2:
-        tip = max(heads25, key=lambda q: q[0])
+    # THE ARROW BELONGING TO THIS ANNOTATION is the one whose START is nearest
+    # the annotation's own words -- not the one nearest the answer. Its
+    # sibling on fig26 selected `min(..., key=distance to the expected tick)`
+    # and then asserted the winner was near that tick, which cannot fail while
+    # any candidate is near it.
+    assert len(arrows25) == 1, (
+        f"fig25's panel (a) draws {len(arrows25)} annotation arrows; the "
+        "synergy annotation's cannot be identified")
+    tip = arrows25[0][1]
+    if len(a_bars) >= 2:
         last = a_bars[-1]
         assert last[0] - 2 <= tip[0] <= last[1] + 2, (
             f"fig25's panel (a) synergy arrow points at x={tip[0]:.0f}, "
             f"outside the observed-combination bar it names "
             f"({last[0]:.0f}-{last[1]:.0f}). The arrow is what attributes the "
             "score to a bar")
+        # AND ITS HEIGHT. Only the x was read, so the arrow could keep the
+        # right column and land at any height in it.
+        assert last[2] - 6 <= tip[1] <= last[3] + 6, (
+            f"fig25's panel (a) synergy arrow points at y={tip[1]:.0f}, off "
+            f"the bar it names (y {last[2]:.0f}-{last[3]:.0f})")
     assert ann_mid > (a_lo25 + a_hi25) / 2, (
         f"fig25's panel (a) synergy annotation is centred at x={ann_mid:.0f}, "
         f"in the LEFT half of a panel spanning {a_lo25:.0f}-{a_hi25:.0f}. It "
@@ -2280,8 +2313,39 @@ def test_fig24_draws_its_hypoxia_numbers():
                 and (b[0], b[4]) not in (left, right)]
     assert bars_all, (
         "fig24 draws no bar annotations to place the collapse note against")
-    others = [(x0 + x1) / 2 for x0, x1, t in bars_all
-              if t not in (left[1], right[1])]
+    # MEMBERSHIP BY POSITION, NOT BY TEXT. Moving the POSITIONS off a
+    # text-keyed dict left the membership test keyed on text, which reopens
+    # the same hole from the other side: any bar annotation whose value
+    # happens to equal one the note quotes is dropped from `others` wherever
+    # it sits. Set SDT's uniform rate equal to RSL3's -- a legitimate run --
+    # and SDT's leftmost annotation reads `3.7%`, drops out, and the boundary
+    # moves from 237.89 to 290.98 again. The two the note quotes are the two
+    # already identified by their own boxes as `left` and `right`, so
+    # membership is "not one of those two boxes".
+    # THE GROUPS ARE FOUND BY POSITION. fig24 draws two treatment groups, and
+    # the four bar annotations cluster into two pairs with a wide gap between
+    # them -- measured 53.1pt within a group against 94.4pt between. Splitting
+    # there needs no text at all, so a value collision cannot move the
+    # boundary. Which pair the note quotes is then checked by text, and that
+    # check can only fail LOUDLY: it is a sanity assertion, not a selector.
+    centres = sorted((x0 + x1) / 2 for x0, x1, t in bars_all)
+    assert len(centres) >= 4, (
+        f"fig24 draws {len(centres)} bar annotations besides the collapse "
+        "note's two; its two treatment groups cannot be located")
+    gaps = [(b - a, i) for i, (a, b) in enumerate(zip(centres, centres[1:]))]
+    _, at = max(gaps)
+    left_group, right_group = centres[:at + 1], centres[at + 1:]
+    quoted_texts = {left[1], right[1]}
+    in_left = sum(1 for x0, x1, t in bars_all
+                  if t in quoted_texts and (x0 + x1) / 2 in left_group)
+    in_right = sum(1 for x0, x1, t in bars_all
+                   if t in quoted_texts and (x0 + x1) / 2 in right_group)
+    assert in_left > in_right, (
+        f"fig24's collapse note quotes {sorted(quoted_texts)}, which match "
+        f"{in_right} annotations in the right-hand treatment group and "
+        f"{in_left} in the left. The note is placed relative to the group it "
+        "describes, and that group cannot be identified")
+    others = right_group
     # NO `if others:` GATE EITHER. That was the other half of the same defect:
     # a guard that skips itself whenever its own inputs look unusual. If the
     # two values this annotation quotes account for every bar annotation on
@@ -3189,16 +3253,40 @@ def test_fig26_draws_the_timepoints_its_fixture_holds():
     # `win_end` is the last timepoint at or under day 3 and is already
     # computed above, so the arrow's tick is compared against the window it
     # names rather than against a number picked to fit.
-    heads26 = _arrow_heads(stem26, (a_lo, a_hi))
-    if heads26:
-        tip = min(heads26, key=lambda q: abs(q[0] - xmarks[win_end]))
+    # ONE ARROW, IDENTIFIED WITHOUT REFERENCE TO THE ANSWER. The version this
+    # replaces took `min(heads, key=distance to the expected tick)` and then
+    # asserted the winner was at or left of that tick -- a selector that
+    # guarantees its own assertion whenever any candidate qualifies. With
+    # panel (a) drawn with `^-` markers (which the same figure's other panel
+    # uses) the old head-based search returned 31 candidates, discarded the
+    # real tip at x=437, and picked a triangle vertex sitting exactly on the
+    # expected tick, so the arrow could point at day 28 and pass.
+    arrows26 = _annotation_arrows(stem26, (a_lo, a_hi))
+    assert len(arrows26) == 1, (
+        f"fig26's panel (a) draws {len(arrows26)} annotation arrows; the "
+        "`closes ~day 3` arrow cannot be identified")
+    tip = arrows26[0][1]
+    if True:
         near_tick = min(range(len(xmarks)),
                         key=lambda i: abs(xmarks[i] - tip[0]))
-        assert near_tick <= win_end, (
+        # BOTH SIDES. `<= win_end` alone let the arrow point at day 0 -- the
+        # one-sidedness this same hunk condemns in the bound it replaced.
+        assert near_tick == win_end, (
             f"fig26's `closes ~day 3` arrow points at the tick for day "
             f"{expected[near_tick]}, and the window it names closes at day "
             f"{expected[win_end]}. The arrow is what says which timepoint "
             "the annotation is about")
+        # AND WHICH CURVE IT LANDS ON. Only the x was read, so repointing the
+        # arrow from RSL3's 1.4% to SDT's ~99% at the same day kept it passing
+        # while `closes ~day 3` marked the curve the panel title says STAYS
+        # OPEN. The two curves are far apart at day 3; the tip must be on the
+        # one whose window closes.
+        rsl3_y = ends[legend_col["RSL3"]][1]
+        sdt_y = ends[legend_col["SDT"]][1]
+        assert abs(tip[1] - rsl3_y) < abs(tip[1] - sdt_y), (
+            f"fig26's `closes ~day 3` arrow lands at y={tip[1]:.0f}, nearer "
+            f"the SDT curve than RSL3's. It names the window that closes, "
+            "which this figure attributes to RSL3")
     # AND THE WORDS, BOUNDED BY THE FIGURE'S OWN GEOMETRY. The arrow carries
     # the meaning and is bound above, so moving the text alone is layout
     # rather than an inverted claim -- but printing `closes ~day 3` over day
@@ -3210,7 +3298,12 @@ def test_fig26_draws_the_timepoints_its_fixture_holds():
     # shaded span or within one tick pitch of its closing edge. Both terms are
     # measured off this figure: the committed text centres 24.7pt right of the
     # shade against a local pitch of 30.6pt, day 0 falls INSIDE the span, and
-    # day 28 is 91.4pt out. Nothing here is a chosen number.
+    # day 28 centres 104.1pt out. Nothing here is a chosen number.
+    #
+    # An earlier version said 24.7 and 91.4. The first is 24.63 rounded the
+    # wrong way; the second is the day-28 box's LEFT EDGE (91.68), while the
+    # assertion below compares the CENTRE (104.08) -- the same centre-vs-edge
+    # conflation this file flags seventy lines earlier.
     if closes:
         cl_x = (closes[0][0] + closes[0][2]) / 2
         pitch = max(abs(b - a) for a, b in zip(xmarks, xmarks[1:]))
