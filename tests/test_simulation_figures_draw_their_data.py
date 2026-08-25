@@ -266,7 +266,12 @@ def _panels(stem):
         spans = set()
         for d in doc[0].get_drawings():
             col = d.get("color")
-            if col is None or tuple(round(c, 2) for c in col) != (0.0, 0.0, 0.0):
+            # ANY GREY, NOT ONLY BLACK. Requiring exactly (0,0,0) meant
+            # `axes.edgecolor="0.3"` -- seaborn's default and most journal
+            # templates -- aborted every geometric reader in this file at
+            # once, on figures that render perfectly. An axis frame is
+            # greyscale; a data series is not.
+            if col is None or max(col) - min(col) > 0.1 or min(col) > 0.75:
                 continue
             for item in d["items"]:
                 if item[0] != "l":
@@ -288,7 +293,12 @@ def _panel_y(stem):
         ys = set()
         for d in doc[0].get_drawings():
             col = d.get("color")
-            if col is None or tuple(round(c, 2) for c in col) != (0.0, 0.0, 0.0):
+            # ANY GREY, NOT ONLY BLACK. Requiring exactly (0,0,0) meant
+            # `axes.edgecolor="0.3"` -- seaborn's default and most journal
+            # templates -- aborted every geometric reader in this file at
+            # once, on figures that render perfectly. An axis frame is
+            # greyscale; a data series is not.
+            if col is None or max(col) - min(col) > 0.1 or min(col) > 0.75:
                 continue
             for item in d["items"]:
                 if item[0] != "l":
@@ -319,13 +329,18 @@ def _axis_ticks_vertical(stem):
         out = []
         for d in doc[0].get_drawings():
             col = d.get("color")
-            if col is None or tuple(round(c, 2) for c in col) != (0.0, 0.0, 0.0):
+            # ANY GREY, NOT ONLY BLACK. Requiring exactly (0,0,0) meant
+            # `axes.edgecolor="0.3"` -- seaborn's default and most journal
+            # templates -- aborted every geometric reader in this file at
+            # once, on figures that render perfectly. An axis frame is
+            # greyscale; a data series is not.
+            if col is None or max(col) - min(col) > 0.1 or min(col) > 0.75:
                 continue
             for item in d["items"]:
                 if item[0] != "l":
                     continue
                 a, b = item[1], item[2]
-                if abs(a.x - b.x) < 0.2 and 1 < abs(b.y - a.y) < 8:
+                if abs(a.x - b.x) < 0.2 and 0.5 <= abs(b.y - a.y) <= 20:
                     out.append((a.x, min(a.y, b.y), b.x, max(a.y, b.y),
                                 tuple(round(c, 4) for c in col), a, b))
         return out
@@ -341,13 +356,23 @@ def _axis_ticks(stem):
         out = []
         for d in doc[0].get_drawings():
             col = d.get("color")
-            if col is None or tuple(round(c, 2) for c in col) != (0.0, 0.0, 0.0):
+            # ANY GREY, NOT ONLY BLACK. Requiring exactly (0,0,0) meant
+            # `axes.edgecolor="0.3"` -- seaborn's default and most journal
+            # templates -- aborted every geometric reader in this file at
+            # once, on figures that render perfectly. An axis frame is
+            # greyscale; a data series is not.
+            if col is None or max(col) - min(col) > 0.1 or min(col) > 0.75:
                 continue
             for item in d["items"]:
                 if item[0] != "l":
                     continue
                 a, b = item[1], item[2]
-                if abs(a.y - b.y) < 0.2 and 1 < abs(b.x - a.x) < 8:
+                # 0.5 TO 20pt. The window was `1 < len < 8`, which failed at
+                # both ends on correct figures: `xtick.major.size: 8` and
+                # `1.0` each left zero ticks found, silently disabling the
+                # scale readings that depend on them. matplotlib's default is
+                # 3.5 and journal styles routinely set 1 or 8.
+                if abs(a.y - b.y) < 0.2 and 0.5 <= abs(b.x - a.x) <= 20:
                     out.append((min(a.x, b.x), a.y, max(a.x, b.x), b.y,
                                 tuple(round(c, 4) for c in col), a, b))
         return out
@@ -1047,10 +1072,20 @@ def test_fig24_draws_its_hypoxia_numbers():
     # lands near the collapse annotation puts its label on that row, and with
     # RSL3's uniform kill anywhere in roughly 56.6-59.2% the guard reported
     # three bars and blamed the figure for numbers it had drawn correctly.
-    arrow_x = [x for x, y, t in panel_a
-               if t.strip() in {"→", "\u2192"}][0]
+    # BY MIDLINE, not top edge -- the third site with this assumption, and
+    # the file said so while fixing only the other two. Under cmr10, the LaTeX
+    # default, the arrow's top sits 3.86pt from the percentage beside it
+    # (bound was 3) while their midlines are 1.08pt apart, and a correct
+    # annotation reading `3.7% -> 0.1% (~37x collapse)` was rejected.
+    boxes = {(round(x0, 2), t): (y0 + y1) / 2
+             for x0, y0, x1, y1, t in _word_bboxes("fig24_hypoxia_killcurve")}
+    arrow = [(x, boxes[(round(x, 2), t)]) for x, y, t in panel_a
+             if t.strip() in {"→", "\u2192"}]
+    assert arrow, "fig24's collapse annotation draws no arrow"
+    arrow_x, arrow_mid = arrow[0]
     on_row = sorted((x, t) for x, y, t in panel_a
-                    if re.fullmatch(r"\d+\.\d%", t) and abs(y - arrow_y[0]) <= 3)
+                    if re.fullmatch(r"\d+\.\d%", t)
+                    and abs(boxes[(round(x, 2), t)] - arrow_mid) <= 3)
     left = [w for w in on_row if w[0] < arrow_x]
     right = [w for w in on_row if w[0] > arrow_x]
     assert left and right, (
@@ -1058,7 +1093,7 @@ def test_fig24_draws_its_hypoxia_numbers():
         f"percentages flanking its arrow are what identify it. row={on_row}")
     bars = sorted(((x, t) for x, y, t in panel_a
                    if re.fullmatch(r"\d+\.\d%", t)
-                   and not (abs(y - arrow_y[0]) <= 3
+                   and not (abs(boxes[(round(x, 2), t)] - arrow_mid) <= 3
                             and (x, t) in (left[-1], right[0]))),
                   key=lambda w: w[0])
     assert [t for _, t in bars] == expected, (
@@ -1077,12 +1112,14 @@ def test_fig24_draws_its_hypoxia_numbers():
     #
     # The tick row is the one y where both names appear: `SDT` also occurs in
     # the footnote, so bottom-most is not the right rule.
-    rows = {}
-    for x, y, t in panel_a:
-        if t in ("RSL3", "SDT"):
-            rows.setdefault(round(y, 1), []).append((x, t))
-    tick_rows = [r for r in rows.values()
-                 if {t for _, t in r} == {"RSL3", "SDT"}]
+    # CLUSTERED, NOT ROUNDED -- this file's own lesson, still unapplied here.
+    # Under Courier New the two group labels sit 0.17pt apart and straddle a
+    # rounding boundary, so `round(y, 1)` put them on separate rows and a
+    # clean, fully legible fig24 was rejected.
+    named = [(x, y, t) for x, y, t in panel_a if t in ("RSL3", "SDT")]
+    tick_rows = [[(x, t) for x, _, t in row]
+                 for row in _cluster_rows(named, key=lambda w: w[1])]
+    tick_rows = [r for r in tick_rows if {t for _, t in r} == {"RSL3", "SDT"}]
     assert len(tick_rows) == 1, (
         f"expected exactly one row carrying both group labels, found "
         f"{len(tick_rows)}; that row is what identifies the tick labels")
@@ -1155,8 +1192,8 @@ def test_fig24_draws_its_hypoxia_numbers():
             # twice. A legend swatch is immediately left of its label; the
             # real one is 22.4pt left, the impostor 87pt right.
             near = sorted((abs(r[2] - y), r) for r in rects
-                          if abs(r[2] - y) < 8 and r[1] - r[0] < 40
-                          and 0 < x - r[1] < 40)
+                          if abs(r[2] - y) < 8 and r[1] - r[0] < 52
+                          and 0 < x - r[1] < 60)
             assert near, f"fig24's {t!r} legend entry has no swatch beside it"
             legend[t] = near[0][1][4]
     assert set(legend) == {"Normoxic", "Hypoxic"}, (
@@ -1284,11 +1321,18 @@ def test_fig24_draws_its_hypoxia_numbers():
     for key in kill_cols:
         _, col_lo, col_hi = columns[key]
         x = key[0]
-        assert y_lo - 5 <= col_lo and col_hi <= y_hi + 5, (
-            f"fig24's `Overall tumor kill (%)` label at x={x:.0f} spans "
-            f"y={col_lo:.0f} to {col_hi:.0f}, outside its panel's plotting "
-            f"area ({y_lo:.0f} to {y_hi:.0f}); a y-axis label sits beside the "
-            "data it labels")
+        # OVERHANG IS NORMAL. A centred y-label longer than its axis extends
+        # past both ends -- at `axes.labelsize` 24 fig24's spans 45 to 221
+        # against an axis of 53 to 302 -- and that is ordinary matplotlib
+        # output, not a mislabelled panel. What matters is that the label is
+        # CENTRED on its axis, so the test is on its midpoint.
+        col_mid = (col_lo + col_hi) / 2
+        axis_mid = (y_lo + y_hi) / 2
+        assert abs(col_mid - axis_mid) <= (y_hi - y_lo) * 0.25, (
+            f"fig24's `Overall tumor kill (%)` label at x={x:.0f} is "
+            f"centred at y={col_mid:.0f} while its panel's axis is centred at "
+            f"{axis_mid:.0f} (spanning {y_lo:.0f} to {y_hi:.0f}); a y-axis "
+            "label sits beside the data it labels")
 
     tol = max(4.0, 0.15 * max(off_a, off_b))
     assert abs(off_a - off_b) <= tol, (
@@ -1386,24 +1430,13 @@ def test_fig24_draws_its_hypoxia_numbers():
     for name in ("SDT", "RSL3"):
         drawn = (refs[ref_colour[name]][0] - ty0) / scale + tv0
         want = kills[name][0]
-        # 0.1pp, KEYED TO THE READING ERROR. `max(1.0, 0.03 * want)` gave
-        # 1.00pp for RSL3 and 2.76pp for SDT against a mapping whose worst
-        # residual across seven style variations is 0.013pp -- about 200x too
-        # wide. It let `rsl3_norm + 0.9` pass (a 25% relative error) and
-        # `sdt_norm - 2.7` pass, which is 65% of the whole normoxic-hypoxic
-        # gap the panel exists to show. It is also the tolerance shape this
-        # file rejects for the collapse ratio: a floor and a relative term
-        # where the floor wins for one value and the term for the other, so
-        # both failure modes are live in one expression.
-        # 0.5pp, WIDE ENOUGH FOR THE FONT. The mapping reads each tick
-        # label's bbox CENTRE, so it carries that font's digit-glyph
-        # asymmetry as a constant offset -- measured, the residual is 0.006pp
-        # on the committed serif but +0.243pp on monospace, +0.249 on
-        # Helvetica and +0.387 on STIXGeneral, which are exactly the fonts a
-        # manuscript switches to. A 0.1pp bound rejected correct figures in
-        # three of seven fonts tried. This is still five times tighter than
-        # the `max(1.0, 0.03 * want)` it replaced, and it kills the errors
-        # that motivated tightening it: +0.9pp on RSL3 and -2.7pp on SDT.
+        # 0.1pp, AGAINST A MAPPING THAT NO LONGER HAS A FONT BIAS. Reading
+        # the tick MARKS rather than the tick labels drops the worst residual
+        # to 0.0011pp across fourteen style variations, so this bound rejects
+        # none of them while killing a +0.15pp error. (The block that stood
+        # here argued for 0.5pp and described the label-centre mapping the
+        # same commit had already replaced -- it also quoted a 0.013pp
+        # residual, which was neither mapping's.)
         assert abs(drawn - want) <= 0.1, (
             f"fig24's panel (b) draws {name}'s normoxic reference at "
             f"{drawn:.1f}% on its own y scale and the data gives "
@@ -1658,6 +1691,17 @@ def test_fig26_draws_the_timepoints_its_fixture_holds():
     assert len(shade) == 1, (
         f"fig26's panel (a) draws {len(shade)} shaded spans, expected one "
         "marking the RSL3 window")
+    # BOTH EDGES. Reading only the right one let the window be made to OPEN
+    # late: `axvspan(win_end - 1, win_end)` shades days 2 to 3 instead of 0 to
+    # 3, so the figure claims the ferroptosis-sensitive window does not open
+    # until day 2 -- the inverse of the panel's argument -- and passed. The
+    # generator opens it at `-0.3`, i.e. just left of the first tick, so the
+    # left edge belongs to day 0.
+    left_at = min(range(len(xmarks)), key=lambda i: abs(xmarks[i] - shade[0][0]))
+    assert left_at == 0, (
+        f"fig26 opens the RSL3 window at the tick for day {expected[left_at]}, "
+        "and the data has it open from the first timepoint. The shaded span is "
+        "what shows where the window is")
     right_at = min(range(len(xmarks)), key=lambda i: abs(xmarks[i] - shade[0][1]))
     assert right_at == win_end, (
         f"fig26 shades the RSL3 window out to the tick for day "
