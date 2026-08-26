@@ -72,6 +72,19 @@ impl CellState {
             // Pinned by `radiation_through_from_cell_has_no_exogenous_ros`,
             // which asserts the zero rather than leaving it a silent trap.
             Treatment::Radiation => 0.0,
+            // NONE of these five kills through the exogenous-ROS path, and
+            // the zero is a routing fact rather than an absence of effect:
+            //   Immunotherapy / AdoptiveCell / OncolyticVirus -> `immune`
+            //   Ablation                                      -> `ablation`
+            //   AntibodyDrugConjugate -> the payload IS this engine, but it
+            //     arrives through `drug_transport`, so the consumer supplies
+            //     the peak via `from_cell_with_ros` as it does for radiation.
+            // Pinned by `arms_that_kill_elsewhere_carry_no_exogenous_ros`.
+            Treatment::Immunotherapy
+            | Treatment::AdoptiveCell
+            | Treatment::OncolyticVirus
+            | Treatment::Ablation
+            | Treatment::AntibodyDrugConjugate => 0.0,
         };
         if let Treatment::RSL3 = tx {
             gpx4 *= 1.0 - params.rsl3_gpx4_inhib;
@@ -531,6 +544,12 @@ pub fn sim_cell(
         // See `CellState::from_cell`: radiation's ROS is dose-driven and
         // arrives through the explicit-ROS constructor.
         Treatment::Radiation => 0.0,
+        // See `CellState::from_cell`: these five route elsewhere.
+        Treatment::Immunotherapy
+        | Treatment::AdoptiveCell
+        | Treatment::OncolyticVirus
+        | Treatment::Ablation
+        | Treatment::AntibodyDrugConjugate => 0.0,
     };
 
     // Treatment: GPX4 inhibition

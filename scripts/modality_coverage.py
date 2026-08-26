@@ -188,6 +188,11 @@ TREATMENT_KIND = {
     "SDT": "physical-ROS",
     "PDT": "physical-ROS",
     "Radiation": "DNA damage, with a separate ferroptosis channel",
+    "Immunotherapy": "immune cascade, no ferroptotic death required",
+    "AdoptiveCell": "redirected effectors, bypassing DC priming",
+    "OncolyticVirus": "lysis into the shared ICD chain",
+    "Ablation": "threshold destruction, not a dose-response",
+    "AntibodyDrugConjugate": "ferroptosis payload, delivery-limited",
 }
 
 
@@ -649,11 +654,18 @@ def _antigen_paragraph(d: dict) -> list:
            "nothing is fit to the published anti-PD-1 monotherapy response "
            "band yet, and `CALIBRATION_STATUS.md` says so."),
         "",
-        "That is why this row still reads MODIFIER rather than **treatment**. "
-        "The tier is about whether a run can APPLY the modality, and that "
-        "needs a `Treatment` variant and a binary that uses it. What changed "
-        "is that the question is now reachable at all — before it, anti-PD-1 "
-        "multiplied a term that was structurally zero.",
+        ("That is why this row read MODIFIER for so long. The tier is about "
+         "whether a run can APPLY the modality, which needs a `Treatment` "
+         "variant; the field made the question reachable, and the variant "
+         "made it askable. Before either, anti-PD-1 multiplied a term that "
+         "was structurally zero."
+         if any(r["mechanism"] == "immunotherapy" and r["engine_tier"] == "treatment"
+                for r in d["rows"]) else
+         "That is why this row still reads MODIFIER rather than **treatment**. "
+         "The tier is about whether a run can APPLY the modality, and that "
+         "needs a `Treatment` variant and a binary that uses it. What changed "
+         "is that the question is now reachable at all — before it, anti-PD-1 "
+         "multiplied a term that was structurally zero."),
         "",
     ]
 
@@ -736,15 +748,24 @@ def render(d: dict) -> str:
         L += [f"**{names} {verb}, not treatments** — the distinction this "
               "table exists to draw. A modifier changes how an existing "
               "treatment lands and cannot be the thing under test.", ""]
-        imm = next((r for r in modifier if r["mechanism"] == "immunotherapy"),
-                   None)
+        imm = next((r for r in rows if r["mechanism"] == "immunotherapy"), None)
         if imm:
             models = d["immune_models"]
             desc = "; ".join(
                 f"`{m['module']}::{m['kill_fn']}` ({m['kind']}), called from "
                 + (", ".join(f"`{c}`" for c in m["callers"]) or "nowhere")
                 for m in models)
-            L += [f"Immunotherapy is the sharpest case. The engine has "
+            tier_now = imm["engine_tier"]
+            opener = (
+                "Immunotherapy was the sharpest case in this table, and it is "
+                "the one that moved. It is now **applicable as a treatment** — "
+                "`Treatment::Immunotherapy` — where for most of this "
+                "document's life it was a MODIFIER, and the reason it was one "
+                "is worth keeping rather than deleting, because it is the "
+                "clearest example of what that tier means."
+                if tier_now == "treatment" else
+                "Immunotherapy is the sharpest case.")
+            L += [f"{opener} The engine has "
                   f"**{len(models)} immune kill paths** — {desc}.", "",
                   "The two gate on ferroptotic death in DIFFERENT ways, and "
                   "conflating them was wrong in an earlier draft of this "
@@ -764,8 +785,12 @@ def render(d: dict) -> str:
                   "subsets are all real and all downstream of it. **At the "
                   "committed defaults that is still the whole story** — see "
                   "the next paragraph for the one path that now has an "
-                  "alternative, and note it is off. That is a modifier "
-                  f"carrying {imm['census']:,} census articles and "
+                  "alternative, and note it is off. "
+                  + ("Turning that path on is what made the arm applicable: "
+                     "an unconfigured run still behaves exactly as it did."
+                     if tier_now == "treatment" else
+                     "That is a modifier.")
+                  + f" It carries {imm['census']:,} census articles and "
                   f"{imm['trials']:,} trials, the largest trial count in the "
                   "table.", "",
                   ] + _antigen_paragraph(d) + [

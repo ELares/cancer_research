@@ -481,3 +481,33 @@ figures:
       colour is its content. It is deliberately a MOVING figure: as arms land
       the grey shrinks, and the caption's arm list is derived from the same
       JSON so it cannot describe an engine that no longer exists.
+
+  - manuscript_figure: null
+    filename: fig31_modality_panel
+    generator:
+      script: scripts/generate_conceptual_diagrams.py
+      function: fig31_modality_panel
+    inputs:
+      - analysis/modality-panel.json
+    type: simulation
+    status: supplementary
+    note: >-
+      Every applicable treatment arm run against the identical tumour from the
+      identical seed by `sim-modality-panel`, so a difference between two rows
+      is the arm and nothing else. THE GROUPING IS THE FIGURE: a bar chart of
+      kill fractions alone would invite exactly the reading
+      `analysis/modality-panel.md` refuses -- a ranking of therapies -- so the
+      bars are coloured by WHAT KILLS and panel (b) reports the structural
+      claim instead, that most arms no longer route through the ferroptosis
+      engine at all. That is the answer to the criticism this campaign began
+      from, and it is structural rather than an efficacy claim. The sharpest
+      row is the ADC: it shares the payload's pharmacology with SDT exactly
+      and kills a fiftieth as much, because the payload arrives on a ~150 kDa
+      antibody whose binding-site barrier holds penetration to ~7 um -- the
+      first place in this repository where the SAME pharmacology runs through
+      two delivery routes and the gap is the only difference. SDT and PDT
+      coincide to the last digit because this panel is DEPTH-FREE and their
+      exogenous-ROS parameters are equal by default; the thing that separates
+      them is a geometry, not a mechanism, and it lives in
+      `analysis/depth-reach-comparison.md`. Every number is read from
+      analysis/modality-panel.json; nothing on the figure is typed.

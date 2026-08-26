@@ -60,7 +60,7 @@
     {
      "context": "/// the ~48-72h SCD1/MUFA enrichment is already complete). An acute/naive",
      "form": "magnitude",
-     "line": 717,
+     "line": 736,
      "value": "72h"
     }
    ],
@@ -72,25 +72,25 @@
     {
      "context": "/// FSP1 re-expression half-time (days). Slowest \u2014 epigenetic.",
      "form": "bare-unit",
-     "line": 226,
+     "line": 275,
      "value": "(days)"
     },
     {
      "context": "/// GPX4 re-expression half-time (days). Transcriptional.",
      "form": "bare-unit",
-     "line": 228,
+     "line": 277,
      "value": "(days)"
     },
     {
      "context": "/// NRF2 re-activation half-time (days).",
      "form": "bare-unit",
-     "line": 230,
+     "line": 279,
      "value": "(days)"
     },
     {
      "context": "/// GSH resynthesis half-time (days). Fastest \u2014 metabolic.",
      "form": "bare-unit",
-     "line": 232,
+     "line": 281,
      "value": "(days)"
     }
    ],
@@ -307,7 +307,7 @@
     {
      "context": "eprintln!(\"Immune model: resident T cell phase only (0-48h), not systemic.\\n\");",
      "form": "magnitude",
-     "line": 1229,
+     "line": 1256,
      "value": "48h"
     }
    ],
@@ -428,7 +428,7 @@
    "real_time_mentions": 16
   }
  },
- "modules_total": 49,
+ "modules_total": 50,
  "n_solver_timestep_conventions": 1,
  "n_solver_timestep_matches": 3,
  "n_step_bindings": 6,
@@ -551,12 +551,15 @@
   1.0
  ],
  "real_time_module_callers": {
-  "ablation.rs": [],
+  "ablation.rs": [
+   "sim-modality-panel"
+  ],
   "biochem.rs": [
    "sim-combo",
    "sim-combo-mech",
    "sim-icd",
    "sim-invivo",
+   "sim-modality-panel",
    "sim-spatial",
    "sim-tissue-pk",
    "sim-tme",
@@ -568,6 +571,7 @@
    "sim-combo-mech",
    "sim-icd",
    "sim-invivo",
+   "sim-modality-panel",
    "sim-original",
    "sim-scale",
    "sim-spatial",
@@ -578,6 +582,7 @@
    "sim-window"
   ],
   "drug_transport.rs": [
+   "sim-modality-panel",
    "sim-tissue-pk",
    "sim-tumor-pk"
   ],
@@ -586,6 +591,7 @@
    "sim-combo-mech",
    "sim-icd",
    "sim-invivo",
+   "sim-modality-panel",
    "sim-original",
    "sim-scale",
    "sim-spatial",

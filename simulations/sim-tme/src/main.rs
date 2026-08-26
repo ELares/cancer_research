@@ -210,6 +210,15 @@ fn run_spatial(
         // knob, and wiring it here means re-running this binary's committed
         // matrix, which is its own change.
         Treatment::Radiation => 0.0,
+        // Not wired into this binary. `sim-modality-panel` is the one that
+        // runs these arms; here they would silently behave as Control, which
+        // is why the arm is explicit rather than a `_ =>` catch-all -- a
+        // wildcard would have absorbed every future variant too.
+        Treatment::Immunotherapy
+        | Treatment::AdoptiveCell
+        | Treatment::OncolyticVirus
+        | Treatment::Ablation
+        | Treatment::AntibodyDrugConjugate => 0.0,
     };
 
     let rows = grid.rows;
@@ -330,6 +339,15 @@ fn run_spatial_cycling(
         // knob, and wiring it here means re-running this binary's committed
         // matrix, which is its own change.
         Treatment::Radiation => 0.0,
+        // Not wired into this binary. `sim-modality-panel` is the one that
+        // runs these arms; here they would silently behave as Control, which
+        // is why the arm is explicit rather than a `_ =>` catch-all -- a
+        // wildcard would have absorbed every future variant too.
+        Treatment::Immunotherapy
+        | Treatment::AdoptiveCell
+        | Treatment::OncolyticVirus
+        | Treatment::Ablation
+        | Treatment::AntibodyDrugConjugate => 0.0,
     };
 
     let rows = grid.rows;
@@ -516,6 +534,15 @@ fn run_spatial_with_immune(
         // knob, and wiring it here means re-running this binary's committed
         // matrix, which is its own change.
         Treatment::Radiation => 0.0,
+        // Not wired into this binary. `sim-modality-panel` is the one that
+        // runs these arms; here they would silently behave as Control, which
+        // is why the arm is explicit rather than a `_ =>` catch-all -- a
+        // wildcard would have absorbed every future variant too.
+        Treatment::Immunotherapy
+        | Treatment::AdoptiveCell
+        | Treatment::OncolyticVirus
+        | Treatment::Ablation
+        | Treatment::AntibodyDrugConjugate => 0.0,
     };
 
     let rows = grid.rows;

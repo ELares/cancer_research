@@ -33,25 +33,29 @@ ones known and deliberate:
 - **No PNG content, at all.** The eight census PNGs are checked for existence
   and nothing else. Replacing one with an unrelated image passes. PNG bytes are
   not portable, and no portable comparison is implemented.
-- **Most non-census PDFs.** Twenty-three committed figures come from other
+- **Most non-census PDFs.** Twenty-four committed figures come from other
   generators. Five of them -- the corpus-derived ones, whose inputs are tracked
   -- are regenerated and gated by `tests/test_figure_caption_statistics.py`;
-  the other eighteen are not, and ten of those eighteen `FIGURES.yaml` marks
-  `type: simulation`. The eighteenth is `fig30_modality_landscape`, which is
-  conceptual but reads a COMMITTED artifact
-  (`analysis/modality-coverage.json`), so unlike the rest of the backlog it is
-  regenerable offline and its numbers are pinned by
-  `tests/test_modality_landscape_figure.py` even though the PDF itself is not
-  byte-gated here. Eight of the ten are drawn by `generate_figures.py` from
+  the other nineteen are not, and eleven of those nineteen `FIGURES.yaml` marks
+  `type: simulation`. Two of the nineteen are different in kind:
+  `fig30_modality_landscape` and `fig31_modality_panel` read COMMITTED
+  artifacts (`analysis/modality-coverage.json`,
+  `analysis/modality-panel.json`), so unlike the rest of the backlog they
+  regenerate offline and every number on them is pinned by
+  `tests/test_modality_landscape_figure.py` and `tests/test_modality_panel.py`
+  -- including a parse of each generator that rejects any typed integer above
+  a thousand -- even though the PDFs themselves are not byte-gated here. Eight of the eleven are drawn by `generate_figures.py` from
   `simulations/output/`, which is gitignored, so CI cannot regenerate them at
   all until #788's tracking decision is made; they were regenerated in the #790
   pass and no longer embed a creation date, which is necessary for a freshness
-  check and not sufficient for one. The other two are not blocked that way, and the first
+  check and not sufficient for one. The other three are not blocked that way, and the first
   version of this bullet wrongly said they were:
   `fig29_rare_event_resolution` reads the TRACKED `analysis/rare-event-sweep.jsonl`
   through a deterministic generator, so regenerating it once -- which it
   needs anyway, being one of the seven below -- would bring it under a
-  gate; and `fig7_monte_carlo_simulation` reads the TRACKED
+  gate; `fig31_modality_panel` reads the TRACKED `analysis/modality-panel.json` and
+  is the only `type: simulation` figure whose every number is already pinned
+  by a test; and `fig7_monte_carlo_simulation` reads the TRACKED
   `simulations/simulation_results.json`, but has no committed generator at all
   -- it is a matplotlib figure whose producing code is not in this repository.
   (It is skipped below by the non-Python-generator branch, not by the orphan
@@ -853,8 +857,8 @@ def _spell(n: int) -> str:
     """Small numbers as the docstring writes them."""
     words = {0: "no", 1: "one", 2: "two", 3: "three", 5: "five", 7: "seven",
              8: "eight", 9: "nine", 10: "ten", 15: "fifteen",
-             17: "seventeen", 18: "eighteen", 22: "twenty-two",
-             23: "twenty-three"}
+             11: "eleven", 17: "seventeen", 18: "eighteen", 19: "nineteen",
+             22: "twenty-two", 23: "twenty-three", 24: "twenty-four"}
     return words.get(n, str(n))
 
 
@@ -940,7 +944,7 @@ def test_the_corpus_figure_backlog_is_stated_and_shrinking():
     # in the test compared against FIGURES.yaml -- so the docstring could say
     # three and seven, or that none of the ten is checkable, and stay green.
     # That is the defect this whole paragraph exists to retract, in its guard.
-    assert f"{_spell(len(blocked)).capitalize()} of the ten" in doc, (
+    assert f"{_spell(len(blocked)).capitalize()} of the {_spell(len(blocked) + len(free))}" in doc, (
         f"{len(blocked)} of the simulation figures read an untracked input and "
         f"the docstring says otherwise. blocked={sorted(blocked)}")
     assert f"The other {_spell(len(free))} are not blocked" in doc, (
@@ -949,7 +953,7 @@ def test_the_corpus_figure_backlog_is_stated_and_shrinking():
     for name in free:
         assert name.split("_")[0] in doc, (
             f"{name} is not blocked by a gitignored input and the docstring "
-            "does not name it among the two that are not")
+            "does not name it among those that are not")
     # THE DENOMINATORS DIFFER, and the guard should say so rather than let a
     # reader assume they match. `stale` below is counted over all 22
     # non-census figures; this sentence is about the seventeen. They agree

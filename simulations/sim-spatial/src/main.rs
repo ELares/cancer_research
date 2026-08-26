@@ -111,6 +111,14 @@ fn run_spatial(
         // ferroptosis channel's yield at full dose; the depth term arrives
         // through `local_ros_multiplier` exactly as it does for SDT and PDT.
         Treatment::Radiation => rad.ros_per_gy * rad.dose_gy,
+        // Not wired into this binary. `sim-modality-panel` runs these arms;
+        // stated explicitly rather than as a `_ =>` catch-all, which would
+        // absorb every future variant too.
+        Treatment::Immunotherapy
+        | Treatment::AdoptiveCell
+        | Treatment::OncolyticVirus
+        | Treatment::Ablation
+        | Treatment::AntibodyDrugConjugate => 0.0,
     };
 
     let rows = grid.rows;

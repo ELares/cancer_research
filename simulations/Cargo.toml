@@ -15,6 +15,7 @@ members = [
     "sim-tumor-pk",
     "ferroptosis-ffi",
     "sim-scale",
+    "sim-modality-panel",
 ]
 resolver = "2"
 

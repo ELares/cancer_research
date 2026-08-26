@@ -434,18 +434,43 @@ def test_an_attribute_line_is_not_a_variant():
         assert not v.startswith("#["), v
 
 
-def test_no_treatment_variant_is_a_non_ros_modality(d):
-    """An EQUALITY, not a bound. The first version asserted
-    `modelled <= {"sonodynamic"}`, which the empty set satisfies: deleting the
-    whole TREATMENT tier left every guard green and shipped a document calling
-    sonodynamic a modifier."""
+def test_the_treatment_tier_is_derived_from_the_enum_not_pinned(d):
+    """This guard has now been through both of its failure modes, which is
+    why it is derived rather than pinned to a name.
+
+    It began as `modelled <= {"sonodynamic"}` -- satisfied by the empty set,
+    so deleting the whole TREATMENT tier left every test green. Made an
+    equality against `{"sonodynamic"}`, it then failed correctly the moment
+    `Treatment::Immunotherapy` landed: an arm HAD been added, and the pinned
+    name was the thing that had gone stale.
+
+    So the tier is checked against the ENUM. A mechanism scores `treatment`
+    exactly when a variant names it, and both directions must hold: the tier
+    cannot empty (the detector is broken) and cannot contain a mechanism no
+    variant names (the detector is too wide).
+    """
+    variants = [v for v in d["treatment_variants"] if v != "Control"]
+    assert variants, "the enum has no non-Control variants; the detector is broken"
     tiers = {r["mechanism"]: r["engine_tier"] for r in d["rows"]}
     modelled = {m for m, t in tiers.items() if t == "treatment"}
-    assert modelled == {"sonodynamic"}, (
-        f"treatment tier is {sorted(modelled)}, expected exactly "
-        "{'sonodynamic'}. If an arm was added, the report's 'every one of them "
-        "ferroptosis or physical-ROS' sentence and its immunotherapy paragraph "
-        "both need re-deriving; if the tier emptied, the detector is broken.")
+    assert modelled, (
+        "no mechanism scores as a treatment, yet the enum carries "
+        f"{variants}. The detector has stopped reaching the variants.")
+    # Every mechanism in the tier must be named by SOME variant, recomputed
+    # here rather than trusted.
+    for mech in modelled:
+        terms = MC.ENGINE_TERMS[mech]
+        assert any(
+            re.search(MC.term_pattern(t.replace(" ", "")), v.lower())
+            for v in variants for t in terms), (
+            f"{mech} scores as a treatment and no `Treatment` variant names "
+            "it; the tier rule is matching something else")
+    # And the report must describe each arm rather than asserting a shared
+    # property of all of them, which is what broke when Radiation landed.
+    for v in variants:
+        assert MC.TREATMENT_KIND.get(v), (
+            f"{v} is a treatment arm with no entry in TREATMENT_KIND, so the "
+            "headline sentence says nothing about it")
 
 
 def test_every_taxonomy_mechanism_has_terms():
@@ -520,7 +545,11 @@ def test_both_immune_models_are_named_and_each_gate_is_the_right_one(d, md):
     models = {m["kill_fn"]: m for m in d["immune_models"]}
     assert set(models) == {"immune_kill_probability", "immune_cascade"}
     assert models["immune_kill_probability"]["callers"] == ["sim-tme", "sim-tme-3d"]
-    assert models["immune_cascade"]["callers"] == ["sim-combo", "sim-icd"]
+    assert set(models["immune_cascade"]["callers"]) >= {"sim-combo", "sim-icd"}, (
+        "the well-mixed cascade lost a consumer")
+    assert "sim-modality-panel" in models["immune_cascade"]["callers"], (
+        "the panel binary no longer runs the immune arms, so the report's "
+        "applicability claim has nothing behind it")
     assert "2 immune kill paths" in md
     # The two gates are DIFFERENT and an earlier draft conflated them. The
     # well-mixed model multiplies by `n_dead`, so it is gated on the COUNT of
@@ -803,13 +832,25 @@ def test_the_gating_sentence_is_derived_from_the_crate(d, md):
     assert live, "nothing consumes the field, so the arm is inert"
     for name in live:
         assert f"`{name}`" in md
-    # And the tier must NOT have moved on the strength of a knob: applying a
-    # modality needs a Treatment variant, which this does not add.
+    # The tier must not move on the strength of a KNOB alone: applying a
+    # modality needs a `Treatment` variant. Which of the two states holds is
+    # read off the enum, and the report must describe the one it is in --
+    # this guard fired correctly when `Treatment::Immunotherapy` landed, and
+    # the fix was the paragraph, not the assertion.
     imm = next(r for r in d["rows"] if r["mechanism"] == "immunotherapy")
-    assert imm["engine_tier"] == "modifier", (
-        "immunotherapy is no longer a MODIFIER; if a `Treatment` variant "
-        "landed, the report's explanation of why it was one needs rewriting")
-    assert "still reads MODIFIER" in md
+    has_variant = any(
+        re.search(MC.term_pattern(t.replace(" ", "")), v.lower())
+        for v in d["active_treatments"]
+        for t in MC.ENGINE_TERMS["immunotherapy"])
+    assert (imm["engine_tier"] == "treatment") == has_variant, (
+        f"immunotherapy scores {imm['engine_tier']} and the enum "
+        f"{'does' if has_variant else 'does not'} name it")
+    if has_variant:
+        assert "read MODIFIER for so long" in md, (
+            "the arm landed and the report still explains why it is one")
+        assert "the variant made it askable" in md
+    else:
+        assert "still reads MODIFIER" in md
 
 
 def test_the_rows_match_the_census_profile(d):

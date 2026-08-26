@@ -1,0 +1,93 @@
+{
+ "arms": [
+  {
+   "arm": "SDT",
+   "calibration": "uncalibrated (direction-only)",
+   "kill_fraction": 0.87245,
+   "limited_by": "energy delivery to depth",
+   "route": "ferroptosis engine (lipid peroxidation)"
+  },
+  {
+   "arm": "PDT",
+   "calibration": "uncalibrated (direction-only)",
+   "kill_fraction": 0.87245,
+   "limited_by": "energy delivery to depth",
+   "route": "ferroptosis engine (lipid peroxidation)"
+  },
+  {
+   "arm": "Ablation",
+   "calibration": "thresholds published; applicator field not modelled",
+   "kill_fraction": 0.85,
+   "limited_by": "margin geometry -- coverage, and nothing else",
+   "route": "threshold destruction (not a dose-response)"
+  },
+  {
+   "arm": "Radiation",
+   "calibration": "form checked against a published parameterisation",
+   "kill_fraction": 0.4518,
+   "limited_by": "dose, and oxygen through the OER",
+   "route": "linear-quadratic DNA damage (not CellState)"
+  },
+  {
+   "arm": "OncolyticVirus",
+   "calibration": "uncalibrated; T-VEC durable-response band not fitted",
+   "kill_fraction": 0.1358143448275862,
+   "limited_by": "infection spread, which this engine takes as an input",
+   "route": "direct lysis + the SHARED ICD chain"
+  },
+  {
+   "arm": "AntibodyDrugConjugate",
+   "calibration": "transport anchored; payload pharmacology is RSL3's",
+   "kill_fraction": 0.01715,
+   "limited_by": "the binding-site barrier (~7 um penetration)",
+   "route": "ferroptosis payload, delivered on an antibody"
+  },
+  {
+   "arm": "AdoptiveCell",
+   "calibration": "uncalibrated; B-ALL remission band not fitted",
+   "kill_fraction": 0.0011547057708749067,
+   "limited_by": "effector persistence and TME suppression",
+   "route": "redirected effectors (bypasses DC priming)"
+  },
+  {
+   "arm": "Immunotherapy",
+   "calibration": "uncalibrated; published ORR band not fitted",
+   "kill_fraction": 0.0004128,
+   "limited_by": "antigen availability and the checkpoint brake",
+   "route": "immune cascade (no ferroptotic death required)"
+  },
+  {
+   "arm": "Control",
+   "calibration": "uncalibrated (direction-only)",
+   "kill_fraction": 0.0,
+   "limited_by": "energy delivery to depth",
+   "route": "ferroptosis engine (lipid peroxidation)"
+  },
+  {
+   "arm": "RSL3",
+   "calibration": "uncalibrated (direction-only)",
+   "kill_fraction": 0.0,
+   "limited_by": "endogenous ROS supply and antioxidant defence",
+   "route": "ferroptosis engine (lipid peroxidation)"
+  }
+ ],
+ "inputs": {
+  "baseline_antigenicity": 0.004,
+  "radiation_dose_gy": 2.0
+ },
+ "n_cells": 20000,
+ "not_a_ranking": "Each arm carries its own calibration status; most are uncalibrated placeholders. These are comparisons between MECHANISMS under one model, not claims about clinical efficacy. See CALIBRATION_STATUS.md.",
+ "seed": 42,
+ "n_arms": 10,
+ "n_ferroptosis_routed": 4,
+ "n_other_routes": 6,
+ "distinct_routes": [
+  "direct lysis + the SHARED ICD chain",
+  "ferroptosis engine (lipid peroxidation)",
+  "ferroptosis payload, delivered on an antibody",
+  "immune cascade (no ferroptotic death required)",
+  "linear-quadratic DNA damage (not CellState)",
+  "redirected effectors (bypasses DC priming)",
+  "threshold destruction (not a dose-response)"
+ ]
+}
