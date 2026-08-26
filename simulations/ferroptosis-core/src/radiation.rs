@@ -210,6 +210,89 @@ pub fn delivered_dose(cfg: &RadiationConfig, o2_supply: f64, z_um: f64) -> f64 {
     oer_scaled_dose(attenuated, o2_supply, cfg.o2_dependence, cfg.p_full_mmhg)
 }
 
+/// Published sensitizer-enhancement-ratio band for PARP inhibition in glioma.
+///
+/// 1.2–1.7 (PMID 35205750, `corpus/by-pmid/35205750.md`): "The base excision
+/// repair pathway is essential to repair damaged bases caused by ionizing
+/// radiation. The pathway is blocked by PARP inhibitors, which result in
+/// sensitizer enhancement ratios of 1.2–1.7 in glioma cells."
+///
+/// **This is a real calibration target and a real failable prediction**, which
+/// is what the linear-quadratic α/β round trip is NOT. `parp_alpha_boost` is
+/// one number; the SER it produces is DOSE-DEPENDENT under LQ, because raising
+/// α alone shifts the linear term while β is unchanged. So a boost fitted at
+/// one dose predicts the SER at every other dose, and the model is free to put
+/// that outside the published band.
+pub const PARP_SER_BAND: (f64, f64) = (1.2, 1.7);
+
+/// α after PARP inhibition: `α · (1 + boost)`, β unchanged.
+///
+/// The single-hit term rises because unrepaired single-strand breaks convert
+/// to double-strand breaks at replication — one-track damage, not pairwise —
+/// so β, which models pairwise lesion interaction, is left alone. A model that
+/// scaled both would be asserting a mechanism nobody measured.
+#[must_use = "the sensitized alpha is the function's only output"]
+pub fn sensitized_alpha(cfg: &RadiationConfig) -> f64 {
+    cfg.alpha_per_gy * (1.0 + cfg.parp_alpha_boost.max(0.0))
+}
+
+/// Sensitizer enhancement ratio at a given surviving fraction.
+///
+/// The dose WITHOUT the drug divided by the dose WITH it, at equal survival —
+/// the quantity the radiobiology literature actually reports, so the model can
+/// be compared to [`PARP_SER_BAND`] rather than to itself.
+///
+/// Solved in closed form: `SF = exp(-αD - βD²)` inverts to
+/// `D = (-α + sqrt(α² + 4βL)) / (2β)` with `L = -ln(SF)`; at `β = 0` it
+/// degenerates to `L/α`, and there the SER is exactly `1 + boost` at every
+/// dose, which is the tell that the DOSE-DEPENDENCE comes from β.
+///
+/// Returns `1.0` when no boost is configured, so an unsensitized run reports
+/// no enhancement rather than a near-one artefact.
+#[must_use = "the ratio is the function's only output"]
+pub fn sensitizer_enhancement_ratio(cfg: &RadiationConfig, surviving_fraction: f64) -> f64 {
+    debug_assert!(
+        surviving_fraction > 0.0 && surviving_fraction < 1.0,
+        "sensitizer_enhancement_ratio: surviving_fraction must be in (0, 1), got {surviving_fraction}"
+    );
+    let boost = cfg.parp_alpha_boost.max(0.0);
+    if boost == 0.0 {
+        return 1.0;
+    }
+    let l = -surviving_fraction.ln();
+    let dose = |a: f64, b: f64| -> f64 {
+        if b <= 0.0 {
+            l / a
+        } else {
+            (-a + (a * a + 4.0 * b * l).sqrt()) / (2.0 * b)
+        }
+    };
+    let plain = dose(cfg.alpha_per_gy, cfg.beta_per_gy2);
+    let sens = dose(sensitized_alpha(cfg), cfg.beta_per_gy2);
+    if sens <= 0.0 {
+        return f64::INFINITY;
+    }
+    plain / sens
+}
+
+/// PARP-inhibitor MONOTHERAPY lethality — synthetic lethality proper.
+///
+/// The defining property of a synthetic-lethal pair is that neither hit alone
+/// is lethal: PARP inhibition kills HR-DEFICIENT cells and spares
+/// HR-proficient ones, which is why these drugs ship with a biomarker. So this
+/// is the PRODUCT of the two conditions and returns exactly `0.0` when either
+/// is absent, rather than a small number that would make the biomarker look
+/// optional.
+///
+/// `hr_deficiency` and `parp_alpha_boost` both default to `0.0`, so an
+/// unconfigured run gets no monotherapy kill at all.
+#[must_use = "the lethality is the function's only output"]
+pub fn parp_monotherapy_lethality(cfg: &RadiationConfig) -> f64 {
+    let hrd = cfg.hr_deficiency.clamp(0.0, 1.0);
+    let inhibition = (cfg.parp_alpha_boost.max(0.0)).min(1.0);
+    (hrd * inhibition).clamp(0.0, 1.0)
+}
+
 /// The dose-modifying factor the O₂ scaling applies — a RESTATEMENT of the
 /// OER, not a prediction of it.
 ///
@@ -257,6 +340,8 @@ mod tests {
             o2_dependence: 1.0,
             p_full_mmhg: crate::oxygen::OER_REFERENCE_PO2_MMHG,
             mu_per_cm: MU_6MV_SOFT_TISSUE_PER_CM,
+            parp_alpha_boost: 0.0,
+            hr_deficiency: 0.0,
         }
     }
 
@@ -560,6 +645,162 @@ mod tests {
         let pdt = local_ros_multiplier_3d(z, Treatment::PDT, &p);
         assert!(rad > 0.95, "radiation should be near-flat at 1 cm: {rad}");
         assert!(rad > sdt && rad > pdt, "{rad} vs sdt {sdt} pdt {pdt}");
+    }
+
+    #[test]
+    fn the_published_ser_band_constrains_the_one_free_parameter() {
+        // WHY THIS IS A REAL CALIBRATION and the alpha/beta round trip is not.
+        //
+        // `parp_alpha_boost` is one number. The SER it produces is
+        // DOSE-DEPENDENT under LQ, because raising alpha shifts the linear
+        // term while beta is unchanged -- so a single boost has to satisfy
+        // the published 1.2-1.7 band across the whole clinically relevant
+        // survival range at once, and it is free to fail.
+        //
+        // It does not fail, and the band it survives in is NARROW: scanning
+        // boosts from 0 to 2, only [0.544, 0.948] keeps the SER inside
+        // 1.2-1.7 for every SF from 0.01 to 0.5. That is 20% of the scanned
+        // range, which is what "the data constrains the parameter" means.
+        let (lo_band, hi_band) = PARP_SER_BAND;
+        let base = RadiationConfig {
+            alpha_per_gy: ALPHA_GBM_PARAMETERISATION_PER_GY,
+            beta_per_gy2: ALPHA_GBM_PARAMETERISATION_PER_GY / ALPHA_BETA_TUMOUR_GY,
+            ..RadiationConfig::default()
+        };
+        let ser_at = |boost: f64, sf: f64| {
+            sensitizer_enhancement_ratio(
+                &RadiationConfig {
+                    parp_alpha_boost: boost,
+                    ..base
+                },
+                sf,
+            )
+        };
+
+        let (sf_lo, sf_hi) = (0.01_f64, 0.5_f64);
+        let mut admissible: Vec<f64> = Vec::new();
+        let mut b = 0.0_f64;
+        while b <= 2.0 {
+            if ser_at(b, sf_lo) >= lo_band && ser_at(b, sf_hi) <= hi_band {
+                admissible.push(b);
+            }
+            b += 0.001;
+        }
+        assert!(
+            !admissible.is_empty(),
+            "NO boost satisfies the published SER band across the survival \
+             range -- the sensitization FORM is wrong, not the parameter"
+        );
+        let (first, last) = (admissible[0], admissible[admissible.len() - 1]);
+        assert!(
+            (first - 0.544).abs() < 0.01 && (last - 0.948).abs() < 0.01,
+            "the admissible boost window moved to [{first:.3}, {last:.3}] \
+             from [0.544, 0.948]; the published band now implies a different \
+             parameter and the CALIBRATION_STATUS row must say so"
+        );
+        // NON-VACUOUS: the band must actually EXCLUDE most of the range, or
+        // "constrained" means nothing.
+        assert!(
+            last - first < 0.6,
+            "the admissible window spans {:.3}, which is most of the scanned \
+             range -- the published band is not constraining anything",
+            last - first
+        );
+
+        // And the DOSE-DEPENDENCE is what makes it a joint constraint rather
+        // than a single equation. At beta = 0 the SER is exactly 1 + boost at
+        // every dose, so any boost in the band would pass at every SF and the
+        // test above would be measuring one number, not a range.
+        let flat = RadiationConfig {
+            beta_per_gy2: 0.0,
+            parp_alpha_boost: 0.4,
+            ..base
+        };
+        for &sf in &[0.5_f64, 0.1, 0.01] {
+            assert!(
+                (sensitizer_enhancement_ratio(&flat, sf) - 1.4).abs() < 1e-12,
+                "with beta = 0 the SER must be exactly 1 + boost at every dose"
+            );
+        }
+        // With beta > 0 it must MOVE, and downward as dose rises.
+        let curved = RadiationConfig {
+            parp_alpha_boost: 0.4,
+            ..base
+        };
+        assert!(
+            sensitizer_enhancement_ratio(&curved, 0.5)
+                > sensitizer_enhancement_ratio(&curved, 0.01),
+            "the SER is not dose-dependent, so one dose would fix the fit"
+        );
+    }
+
+    #[test]
+    fn no_sensitization_reports_no_enhancement_and_alpha_is_untouched() {
+        let c = cfg();
+        assert_eq!(c.parp_alpha_boost, 0.0);
+        assert_eq!(sensitized_alpha(&c).to_bits(), c.alpha_per_gy.to_bits());
+        for &sf in &[0.9_f64, 0.5, 0.1, 0.001] {
+            assert_eq!(
+                sensitizer_enhancement_ratio(&c, sf).to_bits(),
+                1.0_f64.to_bits(),
+                "an unsensitized run must report exactly 1.0, not a near-one \
+                 artefact that a reader would take for a small real effect"
+            );
+        }
+        // Beta is NOT scaled: the added lethality is one-track, not pairwise,
+        // and a model scaling both would assert a mechanism nobody measured.
+        let sens = RadiationConfig {
+            parp_alpha_boost: 0.5,
+            ..c
+        };
+        assert_eq!(sens.beta_per_gy2.to_bits(), c.beta_per_gy2.to_bits());
+        assert!((sensitized_alpha(&sens) - c.alpha_per_gy * 1.5).abs() < 1e-12);
+    }
+
+    #[test]
+    fn synthetic_lethality_needs_both_hits_and_says_so() {
+        // The defining property: neither hit alone is lethal. That is why
+        // these drugs ship with a biomarker, and a model returning a small
+        // nonzero kill for the HR-proficient case would make the biomarker
+        // look optional.
+        let c = cfg();
+        for (hrd, boost) in [(0.0, 0.0), (0.0, 0.8), (1.0, 0.0)] {
+            let x = RadiationConfig {
+                hr_deficiency: hrd,
+                parp_alpha_boost: boost,
+                ..c
+            };
+            assert_eq!(
+                parp_monotherapy_lethality(&x).to_bits(),
+                0.0_f64.to_bits(),
+                "one hit alone (hrd={hrd}, boost={boost}) produced kill; synthetic lethality requires BOTH"
+            );
+        }
+        // Both present: nonzero, monotone in each, bounded.
+        let both = RadiationConfig {
+            hr_deficiency: 0.8,
+            parp_alpha_boost: 0.7,
+            ..c
+        };
+        let l = parp_monotherapy_lethality(&both);
+        assert!(l > 0.0 && l <= 1.0, "{l}");
+        let more_hrd = RadiationConfig {
+            hr_deficiency: 1.0,
+            ..both
+        };
+        assert!(parp_monotherapy_lethality(&more_hrd) > l);
+        let more_drug = RadiationConfig {
+            parp_alpha_boost: 1.0,
+            ..both
+        };
+        assert!(parp_monotherapy_lethality(&more_drug) > l);
+        // Out-of-range inputs clamp rather than escaping [0, 1].
+        let wild = RadiationConfig {
+            hr_deficiency: 5.0,
+            parp_alpha_boost: 9.0,
+            ..c
+        };
+        assert!((parp_monotherapy_lethality(&wild) - 1.0).abs() < 1e-12);
     }
 
     #[test]

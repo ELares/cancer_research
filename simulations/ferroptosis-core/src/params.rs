@@ -632,6 +632,37 @@ pub struct RadiationConfig {
     /// [`crate::radiation::MU_6MV_SOFT_TISSUE_PER_CM`].
     #[serde(default = "default_mu_per_cm")]
     pub mu_per_cm: f64,
+
+    /// Fractional increase in linear-quadratic α from PARP inhibition
+    /// (synthetic lethality, #797's third absent mechanism).
+    ///
+    /// PARP inhibitors block base-excision repair of the single-strand breaks
+    /// ionizing radiation produces, so unrepaired SSBs convert to
+    /// double-strand breaks at replication. In LQ terms that is a rise in the
+    /// SINGLE-HIT term: `α_eff = α · (1 + boost)`, with β unchanged, because
+    /// the added lethality is one-track rather than pairwise.
+    ///
+    /// The observable is the SENSITIZER ENHANCEMENT RATIO — the dose ratio at
+    /// equal survival, with and without the drug — and it is published:
+    /// 1.2–1.7 in glioma cells (PMID 35205750). See
+    /// [`crate::radiation::sensitizer_enhancement_ratio`], which computes it
+    /// so the value can be checked rather than assumed.
+    ///
+    /// `0.0` (default) leaves α untouched and every radiation number unmoved.
+    #[serde(default)]
+    pub parp_alpha_boost: f64,
+
+    /// Homologous-recombination deficiency, in `[0, 1]` — the BRCA-like state
+    /// PARP inhibition is synthetically lethal WITH.
+    ///
+    /// `0.0` is HR-proficient: PARP inhibition alone kills essentially
+    /// nothing, which is the whole point of synthetic lethality and the
+    /// reason these drugs have a biomarker. `1.0` is fully HR-deficient.
+    ///
+    /// Off by default, and [`crate::radiation::parp_monotherapy_lethality`]
+    /// returns exactly `0.0` there.
+    #[serde(default)]
+    pub hr_deficiency: f64,
 }
 
 fn default_p_full_mmhg() -> f64 {
@@ -652,6 +683,8 @@ impl Default for RadiationConfig {
             o2_dependence: 0.0,
             p_full_mmhg: default_p_full_mmhg(),
             mu_per_cm: default_mu_per_cm(),
+            parp_alpha_boost: 0.0,
+            hr_deficiency: 0.0,
         }
     }
 }
