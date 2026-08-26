@@ -16,9 +16,10 @@ use ferroptosis_core::biochem::{sim_cell_step, CellState};
 use ferroptosis_core::cell::{norm, Treatment};
 use ferroptosis_core::grid::{death_heatmap, depth_kill_curve, TumorGrid};
 use ferroptosis_core::io::{write_depth_curves_csv, write_heatmap_csv, write_json};
-use ferroptosis_core::params::{Params, SpatialParams};
+use ferroptosis_core::params::{Params, RadiationConfig, SpatialParams};
 use ferroptosis_core::photosensitizer_pk::{validate_dli_h, Photosensitizer};
 use ferroptosis_core::physics::local_ros_multiplier;
+use ferroptosis_core::radiation;
 
 #[derive(Parser)]
 #[command(name = "sim-spatial", about = "Spatial tumor ferroptosis simulation")]
@@ -36,6 +37,20 @@ struct Args {
     seed: u64,
 
     /// Output directory.
+    /// Radiation dose in Gy for the `Radiation` arm (#726). `0` disables the
+    /// arm entirely and reproduces this binary's pre-radiation output
+    /// byte-for-byte. The default 2.0 Gy is the conventional single
+    /// fraction, and the one PMID 32307022's SF2 is quoted at.
+    #[arg(long, default_value_t = 2.0)]
+    radiation_dose_gy: f64,
+
+    /// Exogenous-ROS peak produced per effective gray. UNCALIBRATED -- the
+    /// radiation-ferroptosis literature gives a direction and no conversion
+    /// (see `CALIBRATION_STATUS.md`). Default 0 keeps the ferroptosis channel
+    /// OFF, so the depth curve shows the DNA channel alone unless asked.
+    #[arg(long, default_value_t = 0.0)]
+    radiation_ros_per_gy: f64,
+
     #[arg(long, default_value = "output/spatial")]
     output_dir: PathBuf,
 
@@ -84,6 +99,7 @@ fn run_spatial(
     tx: Treatment,
     params: &Params,
     spatial_params: &SpatialParams,
+    rad: &RadiationConfig,
     n_steps: u32,
     seed: u64,
 ) {
@@ -91,13 +107,10 @@ fn run_spatial(
         Treatment::SDT => params.sdt_ros,
         Treatment::PDT => params.pdt_ros,
         Treatment::RSL3 | Treatment::Control => 0.0,
-        // Radiation is not wired into this binary's treatment array (#726
-        // lands the engine layer only), so this arm is unreachable today. It
-        // is 0.0 rather than a dose because radiation's exogenous ROS is
-        // dose-driven and uncalibrated: `RadiationConfig::ros_per_gy` is the
-        // knob, and wiring it here means re-running this binary's committed
-        // matrix, which is its own change.
-        Treatment::Radiation => 0.0,
+        // Radiation's exogenous ROS is dose-driven, so the "base" here is the
+        // ferroptosis channel's yield at full dose; the depth term arrives
+        // through `local_ros_multiplier` exactly as it does for SDT and PDT.
+        Treatment::Radiation => rad.ros_per_gy * rad.dose_gy,
     };
 
     let rows = grid.rows;
@@ -118,6 +131,26 @@ fn run_spatial(
 
             let gc = grid.get_mut(r, c);
             gc.state = CellState::from_cell_with_ros(&gc.cell, tx, params, exo_ros_peak);
+            // RADIATION'S SECOND CHANNEL, and the reason this is not just
+            // another exogenous-ROS arm. The dominant lethal lesion is the DNA
+            // double-strand break, which does not pass through `CellState` at
+            // all: it is a one-shot survival roll against the linear-quadratic
+            // model at the dose this cell actually receives. Depth enters
+            // through `intensity_at_depth`; oxygen through the same OER the
+            // SDT path uses. `dose_gy = 0` leaves the roll untaken, so a
+            // default config is byte-identical.
+            if tx == Treatment::Radiation && rad.dose_gy > 0.0 {
+                let z_um = r as f64 * cell_size;
+                // 2D spatial model has no O2 field; full supply is the
+                // documented assumption here, matching the other arms.
+                let lethality = radiation::dna_lethality(rad, 1.0, z_um);
+                let mut rng =
+                    StdRng::seed_from_u64(seed.wrapping_add(0x5AD_u64 + (r * cols + c) as u64));
+                if rng.gen::<f64>() < lethality {
+                    gc.state.dead = true;
+                    gc.state.death_step = Some(0);
+                }
+            }
             gc.extra_iron = 0.0;
             gc.newly_dead = false;
             gc.lp_at_grace_end = 0.0;
@@ -248,12 +281,31 @@ fn main() {
         ..Default::default()
     };
 
-    let treatments = [
+    // The linear-quadratic parameters are the published GBM parameterisation
+    // (PMID 32307022) that `radiation.rs` round-trips: alpha from SF2 = 0.5445
+    // at alpha/beta = 10.
+    let rad = RadiationConfig {
+        dose_gy: args.radiation_dose_gy,
+        alpha_per_gy: radiation::ALPHA_GBM_PARAMETERISATION_PER_GY,
+        beta_per_gy2: radiation::ALPHA_GBM_PARAMETERISATION_PER_GY
+            / radiation::ALPHA_BETA_TUMOUR_GY,
+        ros_per_gy: args.radiation_ros_per_gy,
+        ..RadiationConfig::default()
+    };
+
+    let mut treatments: Vec<(Treatment, &str)> = vec![
         (Treatment::Control, "Control"),
         (Treatment::RSL3, "RSL3"),
         (Treatment::SDT, "SDT"),
         (Treatment::PDT, "PDT"),
     ];
+    // Appended rather than inserted, and only when a dose is set: at
+    // `--radiation-dose-gy 0` this binary's output is byte-for-byte what it
+    // was before radiation existed, and the four existing curves keep their
+    // order and their RNG stream either way.
+    if args.radiation_dose_gy > 0.0 {
+        treatments.push((Treatment::Radiation, "Radiation"));
+    }
 
     // Create output directory
     std::fs::create_dir_all(&args.output_dir).expect("Failed to create output directory");
@@ -284,6 +336,7 @@ fn main() {
             *tx,
             &params,
             &spatial_params,
+            &rad,
             args.n_steps,
             args.seed.wrapping_add((*tx as u64) * 10_000_000),
         );

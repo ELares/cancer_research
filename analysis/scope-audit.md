@@ -6,7 +6,7 @@
 
 | | ferroptosis / physical-ROS | other therapy | method |
 |---|--:|--:|--:|
-| committed analyses (138) | 15 | **1** | 122 |
+| committed analyses (139) | 16 | **1** | 122 |
 
 | preregistered predictions | **8 of 8** |
 |---|--:|
@@ -48,10 +48,11 @@ Note also that method analyses -- the largest bucket -- are about the INSTRUMENT
 
 - `radioligand-audit`
 
-**ferroptosis-or-physical** (15):
+**ferroptosis-or-physical** (16):
 
 - `atlas-discovery-gpx4`
 - `deep-pattern-analysis`
+- `depth-reach-comparison`
 - `distilled-hypotheses-final`
 - `engine-selectivity`
 - `hypothesis-sdt-ferroptosis-icd`
