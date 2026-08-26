@@ -40,6 +40,29 @@ def md():
     return MD.read_text()
 
 
+def test_every_treatment_arm_is_in_the_sweep(d):
+    """The sweep is only "what the microenvironment does to them" if it does
+    it to all of them.
+
+    Derived from the `Treatment` enum, so an arm added to the engine and not
+    to the sweep fails here rather than being quietly untested -- which is
+    how the sweep came to cover five of nine arms while the page implied it
+    covered the modalities.
+    """
+    import re
+    src = (REPO / "simulations/ferroptosis-core/src/cell.rs").read_text()
+    body = re.search(r"pub enum Treatment\s*\{(.*?)\n\}", src, re.S).group(1)
+    variants = {v.strip().rstrip(",") for v in body.splitlines()
+                if v.strip() and not v.strip().startswith(("//", "#["))}
+    variants.discard("Control")
+    swept = set(d["arms"])
+    missing = variants - swept
+    assert not missing, (
+        f"{sorted(missing)} are treatment arms the sweep never runs, so the "
+        "report's claim to cover the modalities is false")
+    assert swept <= variants, f"the sweep runs non-arms: {sorted(swept - variants)}"
+
+
 def test_the_sweep_is_a_full_factorial(d):
     """Every combination of every axis, in every stratum, or the paired
     comparisons below have no partner to compare against."""
@@ -140,6 +163,14 @@ def test_the_ordering_follows_the_mechanisms(d, md):
         f"ablation moved {worst['Ablation']:.3f} of its kill on an axis; a "
         "destroyed cell does not care about its oxygen tension")
     # The oxygen-dependent arm must move more than the dose-modified one.
+    # PDT must be the most depth-exposed arm: light dies in millimetres and
+    # that is the manuscript's whole tissue-access argument. If radiation ever
+    # outruns it on depth the chapter needs re-deriving.
+    depth = d["effects"]["depth"]
+    assert abs(depth["PDT"]) > abs(depth["Radiation"]), (
+        f"PDT loses {depth['PDT']:.3f} to depth against radiation's "
+        f"{depth['Radiation']:.3f}; light should die faster than megavoltage "
+        "photons")
     assert worst["SDT"] > worst["Radiation"] > 0.0, (
         f"SDT {worst['SDT']:.3f} vs Radiation {worst['Radiation']:.3f}: an "
         "arm whose lethality DEPENDS on oxygen should move more than one "

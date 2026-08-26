@@ -58,7 +58,7 @@ use ferroptosis_core::immune::{
 };
 use ferroptosis_core::io::write_json;
 use ferroptosis_core::params::{ImmuneParams, Params, RadiationConfig, SpatialParams};
-use ferroptosis_core::physics::sdt_intensity_at_depth;
+use ferroptosis_core::physics::{pdt_intensity_at_depth, sdt_intensity_at_depth};
 use ferroptosis_core::radiation;
 
 #[derive(Parser, Debug)]
@@ -436,6 +436,85 @@ fn run_tme_sweep(a: &Args, params: &Params, immune: &ImmuneParams, rad: &Radiati
                                 }
                                 dead
                             });
+                            // PDT: the same exogenous-ROS chemistry as SDT with its OWN
+                            // depth law, which is the whole difference between them and
+                            // the reason the depth axis has to be in this sweep rather
+                            // than only in the panel.
+                            let pdt_depth = pdt_intensity_at_depth(depth_um, &sp);
+                            let pdt_mean = params.pdt_ros * exo * pdt_depth;
+                            let mut pdt_lps: Vec<f64> = Vec::new();
+                            let pdt_kill = kill_fraction_pheno(n, a.seed, pheno, |cell, rng| {
+                                let mut c = cell.clone();
+                                if het > 0.0 {
+                                    c.gsh = (c.gsh * (1.0 + norm_unit(rng) * het)).max(0.1);
+                                }
+                                let peak = norm_peak(rng, pdt_mean);
+                                let (dead, lp) = run_to_death_lp(&c, Treatment::PDT, &p, peak);
+                                if dead {
+                                    pdt_lps.push(lp);
+                                }
+                                dead
+                            });
+
+                            // ADC: the ferroptosis payload again, but reaching the cell
+                            // through antibody transport. It is the arm that should be
+                            // hit by BOTH depth and pH -- the first because a 150 kDa
+                            // carrier barely penetrates, the second because the payload
+                            // is a weak base like the free drug.
+                            let adc_tissue = epithelial_well_vascularized();
+                            let adc_profile = antibody_drug_conjugate();
+                            let adc_avail = concentration_at_distance(
+                                (depth_um).min(adc_tissue.inter_vessel_distance_um / 2.0),
+                                &adc_profile,
+                                &adc_tissue,
+                            ) * trap;
+                            let adc_mean = params.sdt_ros * adc_avail;
+                            let mut adc_lps: Vec<f64> = Vec::new();
+                            let adc_kill = kill_fraction_pheno(n, a.seed, pheno, |cell, rng| {
+                                let mut c = cell.clone();
+                                if het > 0.0 {
+                                    c.gsh = (c.gsh * (1.0 + norm_unit(rng) * het)).max(0.1);
+                                }
+                                let peak = norm_peak(rng, adc_mean);
+                                let (dead, lp) =
+                                    run_to_death_lp(&c, Treatment::AntibodyDrugConjugate, &p, peak);
+                                if dead {
+                                    adc_lps.push(lp);
+                                }
+                                dead
+                            });
+
+                            // Hypoxia does not enter any immune arm's KILL term. What
+                            // it changes is the suppressor field they meet in a
+                            // hypoxic core -- a coupling the model asserts rather
+                            // than fits, and the report labels it a prediction.
+                            let suppression = if hypoxic { 0.6 } else { 0.1 };
+
+                            // Checkpoint blockade: no oxygen term in its kill at all.
+                            // What hypoxia does to it is raise the suppressor field,
+                            // which is a PREDICTION of the model rather than a fitted
+                            // coupling, and the report says so.
+                            let blockade_immune = ImmuneParams {
+                                baseline_antigenicity: a.baseline_antigenicity,
+                                tcell_kill_rate: 0.02,
+                                ..ImmuneParams::default()
+                            };
+                            let blockade = immune_cascade(&[], n, &blockade_immune, true)
+                                .immune_kills
+                                / n as f64
+                                * (1.0 - suppression);
+
+                            // Oncolytic virus: direct lysis plus the SHARED ICD chain.
+                            // Neither term touches oxygen, so its only exposure here is
+                            // the same suppressor field the other immune arms meet.
+                            let (lysed, vq) = oncolytic_lysis(n, 0.15, 0.9, 0.8);
+                            let viral_lps = vec![vq * 10.0; lysed as usize];
+                            let viral = (lysed
+                                + immune_cascade(&viral_lps, n, &blockade_immune, false)
+                                    .immune_kills
+                                    * (1.0 - suppression))
+                                / n as f64;
+
                             let sdt_immune = immune_amplification(&sdt_lps, n, immune);
                             let rsl3_immune = immune_amplification(&rsl3_lps, n, immune);
                             let sdt_quality = damp_per_death(&sdt_lps, immune);
@@ -447,9 +526,6 @@ fn run_tme_sweep(a: &Args, params: &Params, immune: &ImmuneParams, rad: &Radiati
                                 - (-(rad.alpha_per_gy * dose + rad.beta_per_gy2 * dose * dose))
                                     .exp();
 
-                            // Immune: unaffected by O2 supply directly; suppressed in a
-                            // hypoxic core, which is the asymmetry the doc predicts.
-                            let suppression = if hypoxic { 0.6 } else { 0.1 };
                             let imm = adoptive_transfer_kills(
                                 EffectorSource::CarT.effectors_after(200.0, 30, 0.15, 5_000.0),
                                 n,
@@ -472,7 +548,9 @@ fn run_tme_sweep(a: &Args, params: &Params, immune: &ImmuneParams, rad: &Radiati
                                 },
                                 "damp_per_death": {
                                     "SDT": sdt_quality,
+                                    "PDT": damp_per_death(&pdt_lps, immune),
                                     "RSL3": rsl3_quality,
+                                    "AntibodyDrugConjugate": damp_per_death(&adc_lps, immune),
                                 },
                                 "deep": depth_um > 0.0,
                                 "depth_um": depth_um,
@@ -481,9 +559,13 @@ fn run_tme_sweep(a: &Args, params: &Params, immune: &ImmuneParams, rad: &Radiati
                                 "exo_factor": exo, "ion_trap_factor": trap,
                                 "arms": {
                                     "SDT": sdt_kill,
+                                    "PDT": pdt_kill,
                                     "RSL3": rsl3_kill,
+                                    "AntibodyDrugConjugate": adc_kill,
                                     "Radiation": lq,
                                     "AdoptiveCell": imm,
+                                    "Immunotherapy": blockade,
+                                    "OncolyticVirus": viral,
                                     "Ablation": abl,
                                 },
                             }));
