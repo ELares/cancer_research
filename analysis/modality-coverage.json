@@ -1,0 +1,457 @@
+{
+ "census": 4403994,
+ "treatment_variants": [
+  "Control",
+  "RSL3",
+  "SDT",
+  "PDT"
+ ],
+ "ferroptosis_modules": [
+  "biochem",
+  "cell",
+  "clonal",
+  "drug_transport",
+  "grid",
+  "immune_spatial",
+  "io",
+  "lib",
+  "params",
+  "physics",
+  "senescence",
+  "slab",
+  "stats",
+  "trigger_wave",
+  "tumor_pk"
+ ],
+ "module_count": 33,
+ "binaries": [
+  "sim-combo",
+  "sim-combo-mech",
+  "sim-icd",
+  "sim-invivo",
+  "sim-original",
+  "sim-scale",
+  "sim-spatial",
+  "sim-tissue-pk",
+  "sim-tme",
+  "sim-tme-3d",
+  "sim-tumor-pk",
+  "sim-window"
+ ],
+ "mechanisms": [
+  {
+   "mechanism": "epigenetic",
+   "census": 41278,
+   "trials": 1307,
+   "trial_share": 3.17,
+   "growth": 0.91,
+   "code_modules": [
+    "params",
+    "persister"
+   ],
+   "prose_only_modules": [
+    "biochem",
+    "cell",
+    "lib"
+   ]
+  },
+  {
+   "mechanism": "nanoparticle",
+   "census": 36788,
+   "trials": 182,
+   "trial_share": 0.49,
+   "growth": 2.49,
+   "code_modules": [],
+   "prose_only_modules": [
+    "drug_transport"
+   ]
+  },
+  {
+   "mechanism": "immunotherapy",
+   "census": 31890,
+   "trials": 1430,
+   "trial_share": 4.48,
+   "growth": 11.62,
+   "code_modules": [
+    "immune",
+    "immune_spatial",
+    "lib",
+    "params",
+    "senescence"
+   ],
+   "prose_only_modules": [
+    "clonal",
+    "ifngamma",
+    "oxygen",
+    "ph",
+    "slab"
+   ]
+  },
+  {
+   "mechanism": "car-t",
+   "census": 15358,
+   "trials": 1020,
+   "trial_share": 6.64,
+   "growth": 6.95,
+   "code_modules": [],
+   "prose_only_modules": []
+  },
+  {
+   "mechanism": "metabolic-targeting",
+   "census": 8809,
+   "trials": 45,
+   "trial_share": 0.51,
+   "growth": 2.16,
+   "code_modules": [
+    "biochem",
+    "cell",
+    "clonal",
+    "grid",
+    "phenotype_mufa",
+    "senescence",
+    "slab",
+    "spheroid"
+   ],
+   "prose_only_modules": [
+    "lib",
+    "nutrient",
+    "params",
+    "persister",
+    "ph",
+    "stromal"
+   ]
+  },
+  {
+   "mechanism": "antibody-drug-conjugate",
+   "census": 6019,
+   "trials": 580,
+   "trial_share": 9.64,
+   "growth": 3.1,
+   "code_modules": [],
+   "prose_only_modules": []
+  },
+  {
+   "mechanism": "synthetic-lethality",
+   "census": 5437,
+   "trials": 342,
+   "trial_share": 6.29,
+   "growth": 4.16,
+   "code_modules": [],
+   "prose_only_modules": []
+  },
+  {
+   "mechanism": "oncolytic-virus",
+   "census": 5006,
+   "trials": 201,
+   "trial_share": 4.02,
+   "growth": 1.18,
+   "code_modules": [],
+   "prose_only_modules": []
+  },
+  {
+   "mechanism": "crispr",
+   "census": 3674,
+   "trials": 6,
+   "trial_share": 0.16,
+   "growth": 8.13,
+   "code_modules": [],
+   "prose_only_modules": []
+  },
+  {
+   "mechanism": "bispecific-antibody",
+   "census": 3462,
+   "trials": 326,
+   "trial_share": 9.42,
+   "growth": 5.52,
+   "code_modules": [],
+   "prose_only_modules": []
+  },
+  {
+   "mechanism": "electrochemical-therapy",
+   "census": 2515,
+   "trials": 142,
+   "trial_share": 5.65,
+   "growth": 0.81,
+   "code_modules": [],
+   "prose_only_modules": []
+  },
+  {
+   "mechanism": "sonodynamic",
+   "census": 2513,
+   "trials": 114,
+   "trial_share": 4.54,
+   "growth": 5.28,
+   "code_modules": [
+    "biochem",
+    "cell",
+    "io",
+    "physics"
+   ],
+   "prose_only_modules": [
+    "dose_schedule",
+    "grid",
+    "immune",
+    "immune_spatial",
+    "oxygen",
+    "params",
+    "persister"
+   ]
+  },
+  {
+   "mechanism": "hifu",
+   "census": 1352,
+   "trials": 96,
+   "trial_share": 7.1,
+   "growth": 1.16,
+   "code_modules": [],
+   "prose_only_modules": [
+    "oxygen"
+   ]
+  },
+  {
+   "mechanism": "phagocytosis-checkpoint",
+   "census": 918,
+   "trials": 13,
+   "trial_share": 1.42,
+   "growth": 4.06,
+   "code_modules": [],
+   "prose_only_modules": []
+  },
+  {
+   "mechanism": "microbiome",
+   "census": 380,
+   "trials": 12,
+   "trial_share": 3.16,
+   "growth": null,
+   "code_modules": [],
+   "prose_only_modules": []
+  },
+  {
+   "mechanism": "mrna-vaccine",
+   "census": 301,
+   "trials": 2,
+   "trial_share": 0.66,
+   "growth": null,
+   "code_modules": [],
+   "prose_only_modules": []
+  }
+ ],
+ "rows": [
+  {
+   "mechanism": "epigenetic",
+   "census": 41278,
+   "trials": 1307,
+   "trial_share": 3.17,
+   "growth": 0.91,
+   "code_modules": [
+    "params",
+    "persister"
+   ],
+   "prose_only_modules": [
+    "biochem",
+    "cell",
+    "lib"
+   ],
+   "engine_tier": "modifier"
+  },
+  {
+   "mechanism": "nanoparticle",
+   "census": 36788,
+   "trials": 182,
+   "trial_share": 0.49,
+   "growth": 2.49,
+   "code_modules": [],
+   "prose_only_modules": [
+    "drug_transport"
+   ],
+   "engine_tier": "absent"
+  },
+  {
+   "mechanism": "immunotherapy",
+   "census": 31890,
+   "trials": 1430,
+   "trial_share": 4.48,
+   "growth": 11.62,
+   "code_modules": [
+    "immune",
+    "immune_spatial",
+    "lib",
+    "params",
+    "senescence"
+   ],
+   "prose_only_modules": [
+    "clonal",
+    "ifngamma",
+    "oxygen",
+    "ph",
+    "slab"
+   ],
+   "engine_tier": "modifier"
+  },
+  {
+   "mechanism": "car-t",
+   "census": 15358,
+   "trials": 1020,
+   "trial_share": 6.64,
+   "growth": 6.95,
+   "code_modules": [],
+   "prose_only_modules": [],
+   "engine_tier": "absent"
+  },
+  {
+   "mechanism": "metabolic-targeting",
+   "census": 8809,
+   "trials": 45,
+   "trial_share": 0.51,
+   "growth": 2.16,
+   "code_modules": [
+    "biochem",
+    "cell",
+    "clonal",
+    "grid",
+    "phenotype_mufa",
+    "senescence",
+    "slab",
+    "spheroid"
+   ],
+   "prose_only_modules": [
+    "lib",
+    "nutrient",
+    "params",
+    "persister",
+    "ph",
+    "stromal"
+   ],
+   "engine_tier": "modifier"
+  },
+  {
+   "mechanism": "antibody-drug-conjugate",
+   "census": 6019,
+   "trials": 580,
+   "trial_share": 9.64,
+   "growth": 3.1,
+   "code_modules": [],
+   "prose_only_modules": [],
+   "engine_tier": "absent"
+  },
+  {
+   "mechanism": "synthetic-lethality",
+   "census": 5437,
+   "trials": 342,
+   "trial_share": 6.29,
+   "growth": 4.16,
+   "code_modules": [],
+   "prose_only_modules": [],
+   "engine_tier": "absent"
+  },
+  {
+   "mechanism": "oncolytic-virus",
+   "census": 5006,
+   "trials": 201,
+   "trial_share": 4.02,
+   "growth": 1.18,
+   "code_modules": [],
+   "prose_only_modules": [],
+   "engine_tier": "absent"
+  },
+  {
+   "mechanism": "crispr",
+   "census": 3674,
+   "trials": 6,
+   "trial_share": 0.16,
+   "growth": 8.13,
+   "code_modules": [],
+   "prose_only_modules": [],
+   "engine_tier": "absent"
+  },
+  {
+   "mechanism": "bispecific-antibody",
+   "census": 3462,
+   "trials": 326,
+   "trial_share": 9.42,
+   "growth": 5.52,
+   "code_modules": [],
+   "prose_only_modules": [],
+   "engine_tier": "absent"
+  },
+  {
+   "mechanism": "electrochemical-therapy",
+   "census": 2515,
+   "trials": 142,
+   "trial_share": 5.65,
+   "growth": 0.81,
+   "code_modules": [],
+   "prose_only_modules": [],
+   "engine_tier": "absent"
+  },
+  {
+   "mechanism": "sonodynamic",
+   "census": 2513,
+   "trials": 114,
+   "trial_share": 4.54,
+   "growth": 5.28,
+   "code_modules": [
+    "biochem",
+    "cell",
+    "io",
+    "physics"
+   ],
+   "prose_only_modules": [
+    "dose_schedule",
+    "grid",
+    "immune",
+    "immune_spatial",
+    "oxygen",
+    "params",
+    "persister"
+   ],
+   "engine_tier": "treatment"
+  },
+  {
+   "mechanism": "hifu",
+   "census": 1352,
+   "trials": 96,
+   "trial_share": 7.1,
+   "growth": 1.16,
+   "code_modules": [],
+   "prose_only_modules": [
+    "oxygen"
+   ],
+   "engine_tier": "absent"
+  },
+  {
+   "mechanism": "phagocytosis-checkpoint",
+   "census": 918,
+   "trials": 13,
+   "trial_share": 1.42,
+   "growth": 4.06,
+   "code_modules": [],
+   "prose_only_modules": [],
+   "engine_tier": "absent"
+  },
+  {
+   "mechanism": "microbiome",
+   "census": 380,
+   "trials": 12,
+   "trial_share": 3.16,
+   "growth": null,
+   "code_modules": [],
+   "prose_only_modules": [],
+   "engine_tier": "absent"
+  },
+  {
+   "mechanism": "mrna-vaccine",
+   "census": 301,
+   "trials": 2,
+   "trial_share": 0.66,
+   "growth": null,
+   "code_modules": [],
+   "prose_only_modules": [],
+   "engine_tier": "absent"
+  }
+ ],
+ "absent_count": 12,
+ "absent_census": 81210,
+ "absent_trials": 2922,
+ "total_census": 165700
+}
