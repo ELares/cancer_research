@@ -1,25 +1,869 @@
 {
+ "amplification": [
+  {
+   "phenotype": "glycolytic",
+   "stressed": false,
+   "heterogeneous": false,
+   "damp_per_death": {
+    "RSL3": 0.0,
+    "SDT": 16.066164872999124
+   },
+   "kill": {
+    "RSL3": 0.0,
+    "SDT": 0.8706
+   }
+  },
+  {
+   "phenotype": "glycolytic",
+   "stressed": true,
+   "heterogeneous": false,
+   "damp_per_death": {
+    "RSL3": 0.0,
+    "SDT": 16.066164872999124
+   },
+   "kill": {
+    "RSL3": 0.0,
+    "SDT": 0.8706
+   }
+  },
+  {
+   "phenotype": "glycolytic",
+   "stressed": true,
+   "heterogeneous": false,
+   "damp_per_death": {
+    "RSL3": 0.0,
+    "SDT": 16.066151899616493
+   },
+   "kill": {
+    "RSL3": 0.0,
+    "SDT": 0.8702
+   }
+  },
+  {
+   "phenotype": "glycolytic",
+   "stressed": true,
+   "heterogeneous": false,
+   "damp_per_death": {
+    "RSL3": 0.0,
+    "SDT": 16.066151899616493
+   },
+   "kill": {
+    "RSL3": 0.0,
+    "SDT": 0.8702
+   }
+  },
+  {
+   "phenotype": "glycolytic",
+   "stressed": true,
+   "heterogeneous": false,
+   "damp_per_death": {
+    "RSL3": 0.0,
+    "SDT": 15.640386518760577
+   },
+   "kill": {
+    "RSL3": 0.0,
+    "SDT": 0.2772
+   }
+  },
+  {
+   "phenotype": "glycolytic",
+   "stressed": true,
+   "heterogeneous": false,
+   "damp_per_death": {
+    "RSL3": 0.0,
+    "SDT": 15.640386518760577
+   },
+   "kill": {
+    "RSL3": 0.0,
+    "SDT": 0.2772
+   }
+  },
+  {
+   "phenotype": "glycolytic",
+   "stressed": true,
+   "heterogeneous": false,
+   "damp_per_death": {
+    "RSL3": 0.0,
+    "SDT": 15.641360265214615
+   },
+   "kill": {
+    "RSL3": 0.0,
+    "SDT": 0.2768
+   }
+  },
+  {
+   "phenotype": "glycolytic",
+   "stressed": true,
+   "heterogeneous": false,
+   "damp_per_death": {
+    "RSL3": 0.0,
+    "SDT": 15.641360265214615
+   },
+   "kill": {
+    "RSL3": 0.0,
+    "SDT": 0.2768
+   }
+  },
+  {
+   "phenotype": "glycolytic",
+   "stressed": true,
+   "heterogeneous": false,
+   "damp_per_death": {
+    "RSL3": 0.0,
+    "SDT": 15.913311673371286
+   },
+   "kill": {
+    "RSL3": 0.0,
+    "SDT": 0.8018
+   }
+  },
+  {
+   "phenotype": "glycolytic",
+   "stressed": true,
+   "heterogeneous": false,
+   "damp_per_death": {
+    "RSL3": 0.0,
+    "SDT": 15.913311673371286
+   },
+   "kill": {
+    "RSL3": 0.0,
+    "SDT": 0.8018
+   }
+  },
+  {
+   "phenotype": "glycolytic",
+   "stressed": true,
+   "heterogeneous": false,
+   "damp_per_death": {
+    "RSL3": 0.0,
+    "SDT": 15.914780706984418
+   },
+   "kill": {
+    "RSL3": 0.0,
+    "SDT": 0.8006
+   }
+  },
+  {
+   "phenotype": "glycolytic",
+   "stressed": true,
+   "heterogeneous": false,
+   "damp_per_death": {
+    "RSL3": 0.0,
+    "SDT": 15.914780706984418
+   },
+   "kill": {
+    "RSL3": 0.0,
+    "SDT": 0.8006
+   }
+  },
+  {
+   "phenotype": "glycolytic",
+   "stressed": true,
+   "heterogeneous": false,
+   "damp_per_death": {
+    "RSL3": 0.0,
+    "SDT": 15.645356199810012
+   },
+   "kill": {
+    "RSL3": 0.0,
+    "SDT": 0.187
+   }
+  },
+  {
+   "phenotype": "glycolytic",
+   "stressed": true,
+   "heterogeneous": false,
+   "damp_per_death": {
+    "RSL3": 0.0,
+    "SDT": 15.645356199810012
+   },
+   "kill": {
+    "RSL3": 0.0,
+    "SDT": 0.187
+   }
+  },
+  {
+   "phenotype": "glycolytic",
+   "stressed": true,
+   "heterogeneous": false,
+   "damp_per_death": {
+    "RSL3": 0.0,
+    "SDT": 15.647711662471425
+   },
+   "kill": {
+    "RSL3": 0.0,
+    "SDT": 0.1852
+   }
+  },
+  {
+   "phenotype": "glycolytic",
+   "stressed": true,
+   "heterogeneous": false,
+   "damp_per_death": {
+    "RSL3": 0.0,
+    "SDT": 15.647711662471425
+   },
+   "kill": {
+    "RSL3": 0.0,
+    "SDT": 0.1852
+   }
+  },
+  {
+   "phenotype": "persister",
+   "stressed": false,
+   "heterogeneous": false,
+   "damp_per_death": {
+    "RSL3": 17.728129668083106,
+    "SDT": 20.040738281202003
+   },
+   "kill": {
+    "RSL3": 0.419,
+    "SDT": 1.0
+   }
+  },
+  {
+   "phenotype": "persister",
+   "stressed": true,
+   "heterogeneous": false,
+   "damp_per_death": {
+    "RSL3": 17.58530632480983,
+    "SDT": 20.040738281202003
+   },
+   "kill": {
+    "RSL3": 0.0198,
+    "SDT": 1.0
+   }
+  },
+  {
+   "phenotype": "persister",
+   "stressed": true,
+   "heterogeneous": false,
+   "damp_per_death": {
+    "RSL3": 17.70699239688591,
+    "SDT": 20.037300793558916
+   },
+   "kill": {
+    "RSL3": 0.4108,
+    "SDT": 1.0
+   }
+  },
+  {
+   "phenotype": "persister",
+   "stressed": true,
+   "heterogeneous": false,
+   "damp_per_death": {
+    "RSL3": 17.943806487321837,
+    "SDT": 20.037300793558916
+   },
+   "kill": {
+    "RSL3": 0.0182,
+    "SDT": 1.0
+   }
+  },
+  {
+   "phenotype": "persister",
+   "stressed": true,
+   "heterogeneous": false,
+   "damp_per_death": {
+    "RSL3": 17.728129668083106,
+    "SDT": 19.090390997723933
+   },
+   "kill": {
+    "RSL3": 0.419,
+    "SDT": 1.0
+   }
+  },
+  {
+   "phenotype": "persister",
+   "stressed": true,
+   "heterogeneous": false,
+   "damp_per_death": {
+    "RSL3": 17.58530632480983,
+    "SDT": 19.090390997723933
+   },
+   "kill": {
+    "RSL3": 0.0198,
+    "SDT": 1.0
+   }
+  },
+  {
+   "phenotype": "persister",
+   "stressed": true,
+   "heterogeneous": false,
+   "damp_per_death": {
+    "RSL3": 17.70699239688591,
+    "SDT": 19.093845478161686
+   },
+   "kill": {
+    "RSL3": 0.4108,
+    "SDT": 1.0
+   }
+  },
+  {
+   "phenotype": "persister",
+   "stressed": true,
+   "heterogeneous": false,
+   "damp_per_death": {
+    "RSL3": 17.943806487321837,
+    "SDT": 19.093845478161686
+   },
+   "kill": {
+    "RSL3": 0.0182,
+    "SDT": 1.0
+   }
+  },
+  {
+   "phenotype": "persister",
+   "stressed": true,
+   "heterogeneous": false,
+   "damp_per_death": {
+    "RSL3": 17.728129668083106,
+    "SDT": 19.855112538038163
+   },
+   "kill": {
+    "RSL3": 0.419,
+    "SDT": 1.0
+   }
+  },
+  {
+   "phenotype": "persister",
+   "stressed": true,
+   "heterogeneous": false,
+   "damp_per_death": {
+    "RSL3": 17.58530632480983,
+    "SDT": 19.855112538038163
+   },
+   "kill": {
+    "RSL3": 0.0198,
+    "SDT": 1.0
+   }
+  },
+  {
+   "phenotype": "persister",
+   "stressed": true,
+   "heterogeneous": false,
+   "damp_per_death": {
+    "RSL3": 17.70699239688591,
+    "SDT": 19.8515065832599
+   },
+   "kill": {
+    "RSL3": 0.4108,
+    "SDT": 1.0
+   }
+  },
+  {
+   "phenotype": "persister",
+   "stressed": true,
+   "heterogeneous": false,
+   "damp_per_death": {
+    "RSL3": 17.943806487321837,
+    "SDT": 19.8515065832599
+   },
+   "kill": {
+    "RSL3": 0.0182,
+    "SDT": 1.0
+   }
+  },
+  {
+   "phenotype": "persister",
+   "stressed": true,
+   "heterogeneous": false,
+   "damp_per_death": {
+    "RSL3": 17.728129668083106,
+    "SDT": 18.960077612962003
+   },
+   "kill": {
+    "RSL3": 0.419,
+    "SDT": 1.0
+   }
+  },
+  {
+   "phenotype": "persister",
+   "stressed": true,
+   "heterogeneous": false,
+   "damp_per_death": {
+    "RSL3": 17.58530632480983,
+    "SDT": 18.960077612962003
+   },
+   "kill": {
+    "RSL3": 0.0198,
+    "SDT": 1.0
+   }
+  },
+  {
+   "phenotype": "persister",
+   "stressed": true,
+   "heterogeneous": false,
+   "damp_per_death": {
+    "RSL3": 17.70699239688591,
+    "SDT": 18.96024251968978
+   },
+   "kill": {
+    "RSL3": 0.4108,
+    "SDT": 1.0
+   }
+  },
+  {
+   "phenotype": "persister",
+   "stressed": true,
+   "heterogeneous": false,
+   "damp_per_death": {
+    "RSL3": 17.943806487321837,
+    "SDT": 18.96024251968978
+   },
+   "kill": {
+    "RSL3": 0.0182,
+    "SDT": 1.0
+   }
+  },
+  {
+   "phenotype": "glycolytic",
+   "stressed": true,
+   "heterogeneous": true,
+   "damp_per_death": {
+    "RSL3": 0.0,
+    "SDT": 16.071997377409907
+   },
+   "kill": {
+    "RSL3": 0.0,
+    "SDT": 0.873
+   }
+  },
+  {
+   "phenotype": "glycolytic",
+   "stressed": true,
+   "heterogeneous": true,
+   "damp_per_death": {
+    "RSL3": 0.0,
+    "SDT": 16.071997377409907
+   },
+   "kill": {
+    "RSL3": 0.0,
+    "SDT": 0.873
+   }
+  },
+  {
+   "phenotype": "glycolytic",
+   "stressed": true,
+   "heterogeneous": true,
+   "damp_per_death": {
+    "RSL3": 0.0,
+    "SDT": 16.072041490706354
+   },
+   "kill": {
+    "RSL3": 0.0,
+    "SDT": 0.8726
+   }
+  },
+  {
+   "phenotype": "glycolytic",
+   "stressed": true,
+   "heterogeneous": true,
+   "damp_per_death": {
+    "RSL3": 0.0,
+    "SDT": 16.072041490706354
+   },
+   "kill": {
+    "RSL3": 0.0,
+    "SDT": 0.8726
+   }
+  },
+  {
+   "phenotype": "glycolytic",
+   "stressed": true,
+   "heterogeneous": true,
+   "damp_per_death": {
+    "RSL3": 0.0,
+    "SDT": 15.59755983638109
+   },
+   "kill": {
+    "RSL3": 0.0,
+    "SDT": 0.2908
+   }
+  },
+  {
+   "phenotype": "glycolytic",
+   "stressed": true,
+   "heterogeneous": true,
+   "damp_per_death": {
+    "RSL3": 0.0,
+    "SDT": 15.59755983638109
+   },
+   "kill": {
+    "RSL3": 0.0,
+    "SDT": 0.2908
+   }
+  },
+  {
+   "phenotype": "glycolytic",
+   "stressed": true,
+   "heterogeneous": true,
+   "damp_per_death": {
+    "RSL3": 0.0,
+    "SDT": 15.59927316796964
+   },
+   "kill": {
+    "RSL3": 0.0,
+    "SDT": 0.2886
+   }
+  },
+  {
+   "phenotype": "glycolytic",
+   "stressed": true,
+   "heterogeneous": true,
+   "damp_per_death": {
+    "RSL3": 0.0,
+    "SDT": 15.59927316796964
+   },
+   "kill": {
+    "RSL3": 0.0,
+    "SDT": 0.2886
+   }
+  },
+  {
+   "phenotype": "glycolytic",
+   "stressed": true,
+   "heterogeneous": true,
+   "damp_per_death": {
+    "RSL3": 0.0,
+    "SDT": 15.919146362779003
+   },
+   "kill": {
+    "RSL3": 0.0,
+    "SDT": 0.8056
+   }
+  },
+  {
+   "phenotype": "glycolytic",
+   "stressed": true,
+   "heterogeneous": true,
+   "damp_per_death": {
+    "RSL3": 0.0,
+    "SDT": 15.919146362779003
+   },
+   "kill": {
+    "RSL3": 0.0,
+    "SDT": 0.8056
+   }
+  },
+  {
+   "phenotype": "glycolytic",
+   "stressed": true,
+   "heterogeneous": true,
+   "damp_per_death": {
+    "RSL3": 0.0,
+    "SDT": 15.918222226741495
+   },
+   "kill": {
+    "RSL3": 0.0,
+    "SDT": 0.8052
+   }
+  },
+  {
+   "phenotype": "glycolytic",
+   "stressed": true,
+   "heterogeneous": true,
+   "damp_per_death": {
+    "RSL3": 0.0,
+    "SDT": 15.918222226741495
+   },
+   "kill": {
+    "RSL3": 0.0,
+    "SDT": 0.8052
+   }
+  },
+  {
+   "phenotype": "glycolytic",
+   "stressed": true,
+   "heterogeneous": true,
+   "damp_per_death": {
+    "RSL3": 0.0,
+    "SDT": 15.61953024107852
+   },
+   "kill": {
+    "RSL3": 0.0,
+    "SDT": 0.1916
+   }
+  },
+  {
+   "phenotype": "glycolytic",
+   "stressed": true,
+   "heterogeneous": true,
+   "damp_per_death": {
+    "RSL3": 0.0,
+    "SDT": 15.61953024107852
+   },
+   "kill": {
+    "RSL3": 0.0,
+    "SDT": 0.1916
+   }
+  },
+  {
+   "phenotype": "glycolytic",
+   "stressed": true,
+   "heterogeneous": true,
+   "damp_per_death": {
+    "RSL3": 0.0,
+    "SDT": 15.628013041521168
+   },
+   "kill": {
+    "RSL3": 0.0,
+    "SDT": 0.19
+   }
+  },
+  {
+   "phenotype": "glycolytic",
+   "stressed": true,
+   "heterogeneous": true,
+   "damp_per_death": {
+    "RSL3": 0.0,
+    "SDT": 15.628013041521168
+   },
+   "kill": {
+    "RSL3": 0.0,
+    "SDT": 0.19
+   }
+  },
+  {
+   "phenotype": "persister",
+   "stressed": true,
+   "heterogeneous": true,
+   "damp_per_death": {
+    "RSL3": 17.671888767579382,
+    "SDT": 20.057163216927837
+   },
+   "kill": {
+    "RSL3": 0.459,
+    "SDT": 1.0
+   }
+  },
+  {
+   "phenotype": "persister",
+   "stressed": true,
+   "heterogeneous": true,
+   "damp_per_death": {
+    "RSL3": 17.676330079242312,
+    "SDT": 20.057163216927837
+   },
+   "kill": {
+    "RSL3": 0.0424,
+    "SDT": 1.0
+   }
+  },
+  {
+   "phenotype": "persister",
+   "stressed": true,
+   "heterogeneous": true,
+   "damp_per_death": {
+    "RSL3": 17.65180141849633,
+    "SDT": 20.05787605941034
+   },
+   "kill": {
+    "RSL3": 0.4472,
+    "SDT": 1.0
+   }
+  },
+  {
+   "phenotype": "persister",
+   "stressed": true,
+   "heterogeneous": true,
+   "damp_per_death": {
+    "RSL3": 17.552846511707457,
+    "SDT": 20.05787605941034
+   },
+   "kill": {
+    "RSL3": 0.0402,
+    "SDT": 1.0
+   }
+  },
+  {
+   "phenotype": "persister",
+   "stressed": true,
+   "heterogeneous": true,
+   "damp_per_death": {
+    "RSL3": 17.671888767579382,
+    "SDT": 19.090877199961835
+   },
+   "kill": {
+    "RSL3": 0.459,
+    "SDT": 1.0
+   }
+  },
+  {
+   "phenotype": "persister",
+   "stressed": true,
+   "heterogeneous": true,
+   "damp_per_death": {
+    "RSL3": 17.676330079242312,
+    "SDT": 19.090877199961835
+   },
+   "kill": {
+    "RSL3": 0.0424,
+    "SDT": 1.0
+   }
+  },
+  {
+   "phenotype": "persister",
+   "stressed": true,
+   "heterogeneous": true,
+   "damp_per_death": {
+    "RSL3": 17.65180141849633,
+    "SDT": 19.090506747025284
+   },
+   "kill": {
+    "RSL3": 0.4472,
+    "SDT": 1.0
+   }
+  },
+  {
+   "phenotype": "persister",
+   "stressed": true,
+   "heterogeneous": true,
+   "damp_per_death": {
+    "RSL3": 17.552846511707457,
+    "SDT": 19.090506747025284
+   },
+   "kill": {
+    "RSL3": 0.0402,
+    "SDT": 1.0
+   }
+  },
+  {
+   "phenotype": "persister",
+   "stressed": true,
+   "heterogeneous": true,
+   "damp_per_death": {
+    "RSL3": 17.671888767579382,
+    "SDT": 19.871495146138127
+   },
+   "kill": {
+    "RSL3": 0.459,
+    "SDT": 1.0
+   }
+  },
+  {
+   "phenotype": "persister",
+   "stressed": true,
+   "heterogeneous": true,
+   "damp_per_death": {
+    "RSL3": 17.676330079242312,
+    "SDT": 19.871495146138127
+   },
+   "kill": {
+    "RSL3": 0.0424,
+    "SDT": 1.0
+   }
+  },
+  {
+   "phenotype": "persister",
+   "stressed": true,
+   "heterogeneous": true,
+   "damp_per_death": {
+    "RSL3": 17.65180141849633,
+    "SDT": 19.868746076623736
+   },
+   "kill": {
+    "RSL3": 0.4472,
+    "SDT": 1.0
+   }
+  },
+  {
+   "phenotype": "persister",
+   "stressed": true,
+   "heterogeneous": true,
+   "damp_per_death": {
+    "RSL3": 17.552846511707457,
+    "SDT": 19.868746076623736
+   },
+   "kill": {
+    "RSL3": 0.0402,
+    "SDT": 1.0
+   }
+  },
+  {
+   "phenotype": "persister",
+   "stressed": true,
+   "heterogeneous": true,
+   "damp_per_death": {
+    "RSL3": 17.671888767579382,
+    "SDT": 18.959406790471753
+   },
+   "kill": {
+    "RSL3": 0.459,
+    "SDT": 1.0
+   }
+  },
+  {
+   "phenotype": "persister",
+   "stressed": true,
+   "heterogeneous": true,
+   "damp_per_death": {
+    "RSL3": 17.676330079242312,
+    "SDT": 18.959406790471753
+   },
+   "kill": {
+    "RSL3": 0.0424,
+    "SDT": 1.0
+   }
+  },
+  {
+   "phenotype": "persister",
+   "stressed": true,
+   "heterogeneous": true,
+   "damp_per_death": {
+    "RSL3": 17.65180141849633,
+    "SDT": 18.958760575768014
+   },
+   "kill": {
+    "RSL3": 0.4472,
+    "SDT": 1.0
+   }
+  },
+  {
+   "phenotype": "persister",
+   "stressed": true,
+   "heterogeneous": true,
+   "damp_per_death": {
+    "RSL3": 17.552846511707457,
+    "SDT": 18.958760575768014
+   },
+   "kill": {
+    "RSL3": 0.0402,
+    "SDT": 1.0
+   }
+  }
+ ],
  "axes": [
   "hypoxia",
   "stroma",
   "acidic pH",
   "depth",
-  "phenotype"
+  "clonal heterogeneity"
  ],
  "conditions": [
   {
    "acidic": false,
    "arms": {
     "Ablation": 0.85,
-    "AdoptiveCell": 0.00346411731262472,
+    "AdoptiveCell": 0.004156940775149664,
     "RSL3": 0.0,
     "Radiation": 0.4555047171958997,
-    "SDT": 0.8728333333333333
+    "SDT": 0.8706
+   },
+   "clonal_spread": 0.0,
+   "damp_per_death": {
+    "RSL3": 0.0,
+    "SDT": 16.066164872999124
    },
    "deep": false,
    "depth_um": 0.0,
    "exo_factor": 1.0,
+   "heterogeneous": false,
    "hypoxic": false,
+   "immune_amplification": {
+    "RSL3": 0.0,
+    "SDT": 0.00776574274761608
+   },
    "ion_trap_factor": 1.0,
    "o2_supply": 1.0,
    "ph": 7.4,
@@ -30,15 +874,25 @@
    "acidic": true,
    "arms": {
     "Ablation": 0.85,
-    "AdoptiveCell": 0.00346411731262472,
+    "AdoptiveCell": 0.004156940775149664,
     "RSL3": 0.0,
     "Radiation": 0.4555047171958997,
-    "SDT": 0.8728333333333333
+    "SDT": 0.8706
+   },
+   "clonal_spread": 0.0,
+   "damp_per_death": {
+    "RSL3": 0.0,
+    "SDT": 16.066164872999124
    },
    "deep": false,
    "depth_um": 0.0,
    "exo_factor": 1.0,
+   "heterogeneous": false,
    "hypoxic": false,
+   "immune_amplification": {
+    "RSL3": 0.0,
+    "SDT": 0.00776574274761608
+   },
    "ion_trap_factor": 0.3,
    "o2_supply": 1.0,
    "ph": 6.5,
@@ -49,15 +903,25 @@
    "acidic": false,
    "arms": {
     "Ablation": 0.85,
-    "AdoptiveCell": 0.00346411731262472,
+    "AdoptiveCell": 0.004156940775149664,
     "RSL3": 0.0,
     "Radiation": 0.4555047171958997,
-    "SDT": 0.8723333333333333
+    "SDT": 0.8702
+   },
+   "clonal_spread": 0.0,
+   "damp_per_death": {
+    "RSL3": 0.0,
+    "SDT": 16.066151899616493
    },
    "deep": false,
    "depth_um": 0.0,
    "exo_factor": 1.0,
+   "heterogeneous": false,
    "hypoxic": false,
+   "immune_amplification": {
+    "RSL3": 0.0,
+    "SDT": 0.007762236257416825
+   },
    "ion_trap_factor": 1.0,
    "o2_supply": 1.0,
    "ph": 7.4,
@@ -68,15 +932,25 @@
    "acidic": true,
    "arms": {
     "Ablation": 0.85,
-    "AdoptiveCell": 0.00346411731262472,
+    "AdoptiveCell": 0.004156940775149664,
     "RSL3": 0.0,
     "Radiation": 0.4555047171958997,
-    "SDT": 0.8723333333333333
+    "SDT": 0.8702
+   },
+   "clonal_spread": 0.0,
+   "damp_per_death": {
+    "RSL3": 0.0,
+    "SDT": 16.066151899616493
    },
    "deep": false,
    "depth_um": 0.0,
    "exo_factor": 1.0,
+   "heterogeneous": false,
    "hypoxic": false,
+   "immune_amplification": {
+    "RSL3": 0.0,
+    "SDT": 0.007762236257416825
+   },
    "ion_trap_factor": 0.3,
    "o2_supply": 1.0,
    "ph": 6.5,
@@ -87,15 +961,25 @@
    "acidic": false,
    "arms": {
     "Ablation": 0.85,
-    "AdoptiveCell": 0.0015396076944998755,
+    "AdoptiveCell": 0.0018475292333998508,
     "RSL3": 0.0,
     "Radiation": 0.3015514060714153,
-    "SDT": 0.2851666666666667
+    "SDT": 0.2772
+   },
+   "clonal_spread": 0.0,
+   "damp_per_death": {
+    "RSL3": 0.0,
+    "SDT": 15.640386518760577
    },
    "deep": false,
    "depth_um": 0.0,
    "exo_factor": 0.6292682926829268,
+   "heterogeneous": false,
    "hypoxic": true,
+   "immune_amplification": {
+    "RSL3": 0.0,
+    "SDT": 0.002521782237821025
+   },
    "ion_trap_factor": 1.0,
    "o2_supply": 0.05,
    "ph": 7.4,
@@ -106,15 +990,25 @@
    "acidic": true,
    "arms": {
     "Ablation": 0.85,
-    "AdoptiveCell": 0.0015396076944998755,
+    "AdoptiveCell": 0.0018475292333998508,
     "RSL3": 0.0,
     "Radiation": 0.3015514060714153,
-    "SDT": 0.2851666666666667
+    "SDT": 0.2772
+   },
+   "clonal_spread": 0.0,
+   "damp_per_death": {
+    "RSL3": 0.0,
+    "SDT": 15.640386518760577
    },
    "deep": false,
    "depth_um": 0.0,
    "exo_factor": 0.6292682926829268,
+   "heterogeneous": false,
    "hypoxic": true,
+   "immune_amplification": {
+    "RSL3": 0.0,
+    "SDT": 0.002521782237821025
+   },
    "ion_trap_factor": 0.3,
    "o2_supply": 0.05,
    "ph": 6.5,
@@ -125,15 +1019,25 @@
    "acidic": false,
    "arms": {
     "Ablation": 0.85,
-    "AdoptiveCell": 0.0015396076944998755,
+    "AdoptiveCell": 0.0018475292333998508,
     "RSL3": 0.0,
     "Radiation": 0.3015514060714153,
-    "SDT": 0.2843333333333333
+    "SDT": 0.2768
+   },
+   "clonal_spread": 0.0,
+   "damp_per_death": {
+    "RSL3": 0.0,
+    "SDT": 15.641360265214615
    },
    "deep": false,
    "depth_um": 0.0,
    "exo_factor": 0.6292682926829268,
+   "heterogeneous": false,
    "hypoxic": true,
+   "immune_amplification": {
+    "RSL3": 0.0,
+    "SDT": 0.002518463693943394
+   },
    "ion_trap_factor": 1.0,
    "o2_supply": 0.05,
    "ph": 7.4,
@@ -144,15 +1048,25 @@
    "acidic": true,
    "arms": {
     "Ablation": 0.85,
-    "AdoptiveCell": 0.0015396076944998755,
+    "AdoptiveCell": 0.0018475292333998508,
     "RSL3": 0.0,
     "Radiation": 0.3015514060714153,
-    "SDT": 0.2843333333333333
+    "SDT": 0.2768
+   },
+   "clonal_spread": 0.0,
+   "damp_per_death": {
+    "RSL3": 0.0,
+    "SDT": 15.641360265214615
    },
    "deep": false,
    "depth_um": 0.0,
    "exo_factor": 0.6292682926829268,
+   "heterogeneous": false,
    "hypoxic": true,
+   "immune_amplification": {
+    "RSL3": 0.0,
+    "SDT": 0.002518463693943394
+   },
    "ion_trap_factor": 0.3,
    "o2_supply": 0.05,
    "ph": 6.5,
@@ -163,15 +1077,25 @@
    "acidic": false,
    "arms": {
     "Ablation": 0.85,
-    "AdoptiveCell": 0.00346411731262472,
+    "AdoptiveCell": 0.004156940775149664,
     "RSL3": 0.0,
     "Radiation": 0.4497374032387358,
-    "SDT": 0.8053333333333333
+    "SDT": 0.8018
+   },
+   "clonal_spread": 0.0,
+   "damp_per_death": {
+    "RSL3": 0.0,
+    "SDT": 15.913311673371286
    },
    "deep": true,
    "depth_um": 5000.0,
    "exo_factor": 1.0,
+   "heterogeneous": false,
    "hypoxic": false,
+   "immune_amplification": {
+    "RSL3": 0.0,
+    "SDT": 0.007112767721241609
+   },
    "ion_trap_factor": 1.0,
    "o2_supply": 1.0,
    "ph": 7.4,
@@ -182,15 +1106,25 @@
    "acidic": true,
    "arms": {
     "Ablation": 0.85,
-    "AdoptiveCell": 0.00346411731262472,
+    "AdoptiveCell": 0.004156940775149664,
     "RSL3": 0.0,
     "Radiation": 0.4497374032387358,
-    "SDT": 0.8053333333333333
+    "SDT": 0.8018
+   },
+   "clonal_spread": 0.0,
+   "damp_per_death": {
+    "RSL3": 0.0,
+    "SDT": 15.913311673371286
    },
    "deep": true,
    "depth_um": 5000.0,
    "exo_factor": 1.0,
+   "heterogeneous": false,
    "hypoxic": false,
+   "immune_amplification": {
+    "RSL3": 0.0,
+    "SDT": 0.007112767721241609
+   },
    "ion_trap_factor": 0.3,
    "o2_supply": 1.0,
    "ph": 6.5,
@@ -201,15 +1135,25 @@
    "acidic": false,
    "arms": {
     "Ablation": 0.85,
-    "AdoptiveCell": 0.00346411731262472,
+    "AdoptiveCell": 0.004156940775149664,
     "RSL3": 0.0,
     "Radiation": 0.4497374032387358,
-    "SDT": 0.804
+    "SDT": 0.8006
+   },
+   "clonal_spread": 0.0,
+   "damp_per_death": {
+    "RSL3": 0.0,
+    "SDT": 15.914780706984418
    },
    "deep": true,
    "depth_um": 5000.0,
    "exo_factor": 1.0,
+   "heterogeneous": false,
    "hypoxic": false,
+   "immune_amplification": {
+    "RSL3": 0.0,
+    "SDT": 0.007102825299950044
+   },
    "ion_trap_factor": 1.0,
    "o2_supply": 1.0,
    "ph": 7.4,
@@ -220,15 +1164,25 @@
    "acidic": true,
    "arms": {
     "Ablation": 0.85,
-    "AdoptiveCell": 0.00346411731262472,
+    "AdoptiveCell": 0.004156940775149664,
     "RSL3": 0.0,
     "Radiation": 0.4497374032387358,
-    "SDT": 0.804
+    "SDT": 0.8006
+   },
+   "clonal_spread": 0.0,
+   "damp_per_death": {
+    "RSL3": 0.0,
+    "SDT": 15.914780706984418
    },
    "deep": true,
    "depth_um": 5000.0,
    "exo_factor": 1.0,
+   "heterogeneous": false,
    "hypoxic": false,
+   "immune_amplification": {
+    "RSL3": 0.0,
+    "SDT": 0.007102825299950044
+   },
    "ion_trap_factor": 0.3,
    "o2_supply": 1.0,
    "ph": 6.5,
@@ -239,15 +1193,25 @@
    "acidic": false,
    "arms": {
     "Ablation": 0.85,
-    "AdoptiveCell": 0.0015396076944998755,
+    "AdoptiveCell": 0.0018475292333998508,
     "RSL3": 0.0,
     "Radiation": 0.2973961544425532,
-    "SDT": 0.1935
+    "SDT": 0.187
+   },
+   "clonal_spread": 0.0,
+   "damp_per_death": {
+    "RSL3": 0.0,
+    "SDT": 15.645356199810012
    },
    "deep": true,
    "depth_um": 5000.0,
    "exo_factor": 0.6292682926829268,
+   "heterogeneous": false,
    "hypoxic": true,
+   "immune_amplification": {
+    "RSL3": 0.0,
+    "SDT": 0.0017484476568386087
+   },
    "ion_trap_factor": 1.0,
    "o2_supply": 0.05,
    "ph": 7.4,
@@ -258,15 +1222,25 @@
    "acidic": true,
    "arms": {
     "Ablation": 0.85,
-    "AdoptiveCell": 0.0015396076944998755,
+    "AdoptiveCell": 0.0018475292333998508,
     "RSL3": 0.0,
     "Radiation": 0.2973961544425532,
-    "SDT": 0.1935
+    "SDT": 0.187
+   },
+   "clonal_spread": 0.0,
+   "damp_per_death": {
+    "RSL3": 0.0,
+    "SDT": 15.645356199810012
    },
    "deep": true,
    "depth_um": 5000.0,
    "exo_factor": 0.6292682926829268,
+   "heterogeneous": false,
    "hypoxic": true,
+   "immune_amplification": {
+    "RSL3": 0.0,
+    "SDT": 0.0017484476568386087
+   },
    "ion_trap_factor": 0.3,
    "o2_supply": 0.05,
    "ph": 6.5,
@@ -277,15 +1251,25 @@
    "acidic": false,
    "arms": {
     "Ablation": 0.85,
-    "AdoptiveCell": 0.0015396076944998755,
+    "AdoptiveCell": 0.0018475292333998508,
     "RSL3": 0.0,
     "Radiation": 0.2973961544425532,
-    "SDT": 0.192
+    "SDT": 0.1852
+   },
+   "clonal_spread": 0.0,
+   "damp_per_death": {
+    "RSL3": 0.0,
+    "SDT": 15.647711662471425
    },
    "deep": true,
    "depth_um": 5000.0,
    "exo_factor": 0.6292682926829268,
+   "heterogeneous": false,
    "hypoxic": true,
+   "immune_amplification": {
+    "RSL3": 0.0,
+    "SDT": 0.0017331859830914623
+   },
    "ion_trap_factor": 1.0,
    "o2_supply": 0.05,
    "ph": 7.4,
@@ -296,15 +1280,25 @@
    "acidic": true,
    "arms": {
     "Ablation": 0.85,
-    "AdoptiveCell": 0.0015396076944998755,
+    "AdoptiveCell": 0.0018475292333998508,
     "RSL3": 0.0,
     "Radiation": 0.2973961544425532,
-    "SDT": 0.192
+    "SDT": 0.1852
+   },
+   "clonal_spread": 0.0,
+   "damp_per_death": {
+    "RSL3": 0.0,
+    "SDT": 15.647711662471425
    },
    "deep": true,
    "depth_um": 5000.0,
    "exo_factor": 0.6292682926829268,
+   "heterogeneous": false,
    "hypoxic": true,
+   "immune_amplification": {
+    "RSL3": 0.0,
+    "SDT": 0.0017331859830914623
+   },
    "ion_trap_factor": 0.3,
    "o2_supply": 0.05,
    "ph": 6.5,
@@ -315,15 +1309,25 @@
    "acidic": false,
    "arms": {
     "Ablation": 0.85,
-    "AdoptiveCell": 0.00346411731262472,
-    "RSL3": 0.424,
+    "AdoptiveCell": 0.004156940775149664,
+    "RSL3": 0.419,
     "Radiation": 0.4555047171958997,
     "SDT": 1.0
    },
+   "clonal_spread": 0.0,
+   "damp_per_death": {
+    "RSL3": 17.728129668083106,
+    "SDT": 20.040738281202003
+   },
    "deep": false,
    "depth_um": 0.0,
    "exo_factor": 1.0,
+   "heterogeneous": false,
    "hypoxic": false,
+   "immune_amplification": {
+    "RSL3": 0.004092301971778546,
+    "SDT": 0.0
+   },
    "ion_trap_factor": 1.0,
    "o2_supply": 1.0,
    "ph": 7.4,
@@ -334,15 +1338,25 @@
    "acidic": true,
    "arms": {
     "Ablation": 0.85,
-    "AdoptiveCell": 0.00346411731262472,
-    "RSL3": 0.021333333333333333,
+    "AdoptiveCell": 0.004156940775149664,
+    "RSL3": 0.0198,
     "Radiation": 0.4555047171958997,
     "SDT": 1.0
    },
+   "clonal_spread": 0.0,
+   "damp_per_death": {
+    "RSL3": 17.58530632480983,
+    "SDT": 20.040738281202003
+   },
    "deep": false,
    "depth_um": 0.0,
    "exo_factor": 1.0,
+   "heterogeneous": false,
    "hypoxic": false,
+   "immune_amplification": {
+    "RSL3": 0.0003294664427809667,
+    "SDT": 0.0
+   },
    "ion_trap_factor": 0.3,
    "o2_supply": 1.0,
    "ph": 6.5,
@@ -353,15 +1367,25 @@
    "acidic": false,
    "arms": {
     "Ablation": 0.85,
-    "AdoptiveCell": 0.00346411731262472,
-    "RSL3": 0.4155,
+    "AdoptiveCell": 0.004156940775149664,
+    "RSL3": 0.4108,
     "Radiation": 0.4555047171958997,
     "SDT": 1.0
    },
+   "clonal_spread": 0.0,
+   "damp_per_death": {
+    "RSL3": 17.70699239688591,
+    "SDT": 20.037300793558916
+   },
    "deep": false,
    "depth_um": 0.0,
    "exo_factor": 1.0,
+   "heterogeneous": false,
    "hypoxic": false,
+   "immune_amplification": {
+    "RSL3": 0.004011623710473817,
+    "SDT": 0.0
+   },
    "ion_trap_factor": 1.0,
    "o2_supply": 1.0,
    "ph": 7.4,
@@ -372,15 +1396,25 @@
    "acidic": true,
    "arms": {
     "Ablation": 0.85,
-    "AdoptiveCell": 0.00346411731262472,
-    "RSL3": 0.019833333333333335,
+    "AdoptiveCell": 0.004156940775149664,
+    "RSL3": 0.0182,
     "Radiation": 0.4555047171958997,
     "SDT": 1.0
    },
+   "clonal_spread": 0.0,
+   "damp_per_death": {
+    "RSL3": 17.943806487321837,
+    "SDT": 20.037300793558916
+   },
    "deep": false,
    "depth_um": 0.0,
    "exo_factor": 1.0,
+   "heterogeneous": false,
    "hypoxic": false,
+   "immune_amplification": {
+    "RSL3": 0.0003170368464517374,
+    "SDT": 0.0
+   },
    "ion_trap_factor": 0.3,
    "o2_supply": 1.0,
    "ph": 6.5,
@@ -391,15 +1425,25 @@
    "acidic": false,
    "arms": {
     "Ablation": 0.85,
-    "AdoptiveCell": 0.0015396076944998755,
-    "RSL3": 0.424,
+    "AdoptiveCell": 0.0018475292333998508,
+    "RSL3": 0.419,
     "Radiation": 0.3015514060714153,
     "SDT": 1.0
    },
+   "clonal_spread": 0.0,
+   "damp_per_death": {
+    "RSL3": 17.728129668083106,
+    "SDT": 19.090390997723933
+   },
    "deep": false,
    "depth_um": 0.0,
    "exo_factor": 0.6292682926829268,
+   "heterogeneous": false,
    "hypoxic": true,
+   "immune_amplification": {
+    "RSL3": 0.004092301971778546,
+    "SDT": 0.0
+   },
    "ion_trap_factor": 1.0,
    "o2_supply": 0.05,
    "ph": 7.4,
@@ -410,15 +1454,25 @@
    "acidic": true,
    "arms": {
     "Ablation": 0.85,
-    "AdoptiveCell": 0.0015396076944998755,
-    "RSL3": 0.021333333333333333,
+    "AdoptiveCell": 0.0018475292333998508,
+    "RSL3": 0.0198,
     "Radiation": 0.3015514060714153,
     "SDT": 1.0
    },
+   "clonal_spread": 0.0,
+   "damp_per_death": {
+    "RSL3": 17.58530632480983,
+    "SDT": 19.090390997723933
+   },
    "deep": false,
    "depth_um": 0.0,
    "exo_factor": 0.6292682926829268,
+   "heterogeneous": false,
    "hypoxic": true,
+   "immune_amplification": {
+    "RSL3": 0.0003294664427809667,
+    "SDT": 0.0
+   },
    "ion_trap_factor": 0.3,
    "o2_supply": 0.05,
    "ph": 6.5,
@@ -429,15 +1483,25 @@
    "acidic": false,
    "arms": {
     "Ablation": 0.85,
-    "AdoptiveCell": 0.0015396076944998755,
-    "RSL3": 0.4155,
+    "AdoptiveCell": 0.0018475292333998508,
+    "RSL3": 0.4108,
     "Radiation": 0.3015514060714153,
     "SDT": 1.0
    },
+   "clonal_spread": 0.0,
+   "damp_per_death": {
+    "RSL3": 17.70699239688591,
+    "SDT": 19.093845478161686
+   },
    "deep": false,
    "depth_um": 0.0,
    "exo_factor": 0.6292682926829268,
+   "heterogeneous": false,
    "hypoxic": true,
+   "immune_amplification": {
+    "RSL3": 0.004011623710473817,
+    "SDT": 0.0
+   },
    "ion_trap_factor": 1.0,
    "o2_supply": 0.05,
    "ph": 7.4,
@@ -448,15 +1512,25 @@
    "acidic": true,
    "arms": {
     "Ablation": 0.85,
-    "AdoptiveCell": 0.0015396076944998755,
-    "RSL3": 0.019833333333333335,
+    "AdoptiveCell": 0.0018475292333998508,
+    "RSL3": 0.0182,
     "Radiation": 0.3015514060714153,
     "SDT": 1.0
    },
+   "clonal_spread": 0.0,
+   "damp_per_death": {
+    "RSL3": 17.943806487321837,
+    "SDT": 19.093845478161686
+   },
    "deep": false,
    "depth_um": 0.0,
    "exo_factor": 0.6292682926829268,
+   "heterogeneous": false,
    "hypoxic": true,
+   "immune_amplification": {
+    "RSL3": 0.0003170368464517374,
+    "SDT": 0.0
+   },
    "ion_trap_factor": 0.3,
    "o2_supply": 0.05,
    "ph": 6.5,
@@ -467,15 +1541,25 @@
    "acidic": false,
    "arms": {
     "Ablation": 0.85,
-    "AdoptiveCell": 0.00346411731262472,
-    "RSL3": 0.424,
+    "AdoptiveCell": 0.004156940775149664,
+    "RSL3": 0.419,
     "Radiation": 0.4497374032387358,
     "SDT": 1.0
+   },
+   "clonal_spread": 0.0,
+   "damp_per_death": {
+    "RSL3": 17.728129668083106,
+    "SDT": 19.855112538038163
    },
    "deep": true,
    "depth_um": 5000.0,
    "exo_factor": 1.0,
+   "heterogeneous": false,
    "hypoxic": false,
+   "immune_amplification": {
+    "RSL3": 0.004092301971778546,
+    "SDT": 0.0
+   },
    "ion_trap_factor": 1.0,
    "o2_supply": 1.0,
    "ph": 7.4,
@@ -486,15 +1570,25 @@
    "acidic": true,
    "arms": {
     "Ablation": 0.85,
-    "AdoptiveCell": 0.00346411731262472,
-    "RSL3": 0.021333333333333333,
+    "AdoptiveCell": 0.004156940775149664,
+    "RSL3": 0.0198,
     "Radiation": 0.4497374032387358,
     "SDT": 1.0
+   },
+   "clonal_spread": 0.0,
+   "damp_per_death": {
+    "RSL3": 17.58530632480983,
+    "SDT": 19.855112538038163
    },
    "deep": true,
    "depth_um": 5000.0,
    "exo_factor": 1.0,
+   "heterogeneous": false,
    "hypoxic": false,
+   "immune_amplification": {
+    "RSL3": 0.0003294664427809667,
+    "SDT": 0.0
+   },
    "ion_trap_factor": 0.3,
    "o2_supply": 1.0,
    "ph": 6.5,
@@ -505,15 +1599,25 @@
    "acidic": false,
    "arms": {
     "Ablation": 0.85,
-    "AdoptiveCell": 0.00346411731262472,
-    "RSL3": 0.4155,
+    "AdoptiveCell": 0.004156940775149664,
+    "RSL3": 0.4108,
     "Radiation": 0.4497374032387358,
     "SDT": 1.0
+   },
+   "clonal_spread": 0.0,
+   "damp_per_death": {
+    "RSL3": 17.70699239688591,
+    "SDT": 19.8515065832599
    },
    "deep": true,
    "depth_um": 5000.0,
    "exo_factor": 1.0,
+   "heterogeneous": false,
    "hypoxic": false,
+   "immune_amplification": {
+    "RSL3": 0.004011623710473817,
+    "SDT": 0.0
+   },
    "ion_trap_factor": 1.0,
    "o2_supply": 1.0,
    "ph": 7.4,
@@ -524,15 +1628,25 @@
    "acidic": true,
    "arms": {
     "Ablation": 0.85,
-    "AdoptiveCell": 0.00346411731262472,
-    "RSL3": 0.019833333333333335,
+    "AdoptiveCell": 0.004156940775149664,
+    "RSL3": 0.0182,
     "Radiation": 0.4497374032387358,
     "SDT": 1.0
+   },
+   "clonal_spread": 0.0,
+   "damp_per_death": {
+    "RSL3": 17.943806487321837,
+    "SDT": 19.8515065832599
    },
    "deep": true,
    "depth_um": 5000.0,
    "exo_factor": 1.0,
+   "heterogeneous": false,
    "hypoxic": false,
+   "immune_amplification": {
+    "RSL3": 0.0003170368464517374,
+    "SDT": 0.0
+   },
    "ion_trap_factor": 0.3,
    "o2_supply": 1.0,
    "ph": 6.5,
@@ -543,15 +1657,25 @@
    "acidic": false,
    "arms": {
     "Ablation": 0.85,
-    "AdoptiveCell": 0.0015396076944998755,
-    "RSL3": 0.424,
+    "AdoptiveCell": 0.0018475292333998508,
+    "RSL3": 0.419,
     "Radiation": 0.2973961544425532,
     "SDT": 1.0
+   },
+   "clonal_spread": 0.0,
+   "damp_per_death": {
+    "RSL3": 17.728129668083106,
+    "SDT": 18.960077612962003
    },
    "deep": true,
    "depth_um": 5000.0,
    "exo_factor": 0.6292682926829268,
+   "heterogeneous": false,
    "hypoxic": true,
+   "immune_amplification": {
+    "RSL3": 0.004092301971778546,
+    "SDT": 0.0
+   },
    "ion_trap_factor": 1.0,
    "o2_supply": 0.05,
    "ph": 7.4,
@@ -562,15 +1686,25 @@
    "acidic": true,
    "arms": {
     "Ablation": 0.85,
-    "AdoptiveCell": 0.0015396076944998755,
-    "RSL3": 0.021333333333333333,
+    "AdoptiveCell": 0.0018475292333998508,
+    "RSL3": 0.0198,
     "Radiation": 0.2973961544425532,
     "SDT": 1.0
+   },
+   "clonal_spread": 0.0,
+   "damp_per_death": {
+    "RSL3": 17.58530632480983,
+    "SDT": 18.960077612962003
    },
    "deep": true,
    "depth_um": 5000.0,
    "exo_factor": 0.6292682926829268,
+   "heterogeneous": false,
    "hypoxic": true,
+   "immune_amplification": {
+    "RSL3": 0.0003294664427809667,
+    "SDT": 0.0
+   },
    "ion_trap_factor": 0.3,
    "o2_supply": 0.05,
    "ph": 6.5,
@@ -581,15 +1715,25 @@
    "acidic": false,
    "arms": {
     "Ablation": 0.85,
-    "AdoptiveCell": 0.0015396076944998755,
-    "RSL3": 0.4155,
+    "AdoptiveCell": 0.0018475292333998508,
+    "RSL3": 0.4108,
     "Radiation": 0.2973961544425532,
     "SDT": 1.0
+   },
+   "clonal_spread": 0.0,
+   "damp_per_death": {
+    "RSL3": 17.70699239688591,
+    "SDT": 18.96024251968978
    },
    "deep": true,
    "depth_um": 5000.0,
    "exo_factor": 0.6292682926829268,
+   "heterogeneous": false,
    "hypoxic": true,
+   "immune_amplification": {
+    "RSL3": 0.004011623710473817,
+    "SDT": 0.0
+   },
    "ion_trap_factor": 1.0,
    "o2_supply": 0.05,
    "ph": 7.4,
@@ -600,15 +1744,953 @@
    "acidic": true,
    "arms": {
     "Ablation": 0.85,
-    "AdoptiveCell": 0.0015396076944998755,
-    "RSL3": 0.019833333333333335,
+    "AdoptiveCell": 0.0018475292333998508,
+    "RSL3": 0.0182,
     "Radiation": 0.2973961544425532,
     "SDT": 1.0
+   },
+   "clonal_spread": 0.0,
+   "damp_per_death": {
+    "RSL3": 17.943806487321837,
+    "SDT": 18.96024251968978
    },
    "deep": true,
    "depth_um": 5000.0,
    "exo_factor": 0.6292682926829268,
+   "heterogeneous": false,
    "hypoxic": true,
+   "immune_amplification": {
+    "RSL3": 0.0003170368464517374,
+    "SDT": 0.0
+   },
+   "ion_trap_factor": 0.3,
+   "o2_supply": 0.05,
+   "ph": 6.5,
+   "phenotype": "persister",
+   "stroma": true
+  },
+  {
+   "acidic": false,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.004156940775149664,
+    "RSL3": 0.0,
+    "Radiation": 0.4555047171958997,
+    "SDT": 0.873
+   },
+   "clonal_spread": 0.35,
+   "damp_per_death": {
+    "RSL3": 0.0,
+    "SDT": 16.071997377409907
+   },
+   "deep": false,
+   "depth_um": 0.0,
+   "exo_factor": 1.0,
+   "heterogeneous": true,
+   "hypoxic": false,
+   "immune_amplification": {
+    "RSL3": 0.0,
+    "SDT": 0.007788853396696868
+   },
+   "ion_trap_factor": 1.0,
+   "o2_supply": 1.0,
+   "ph": 7.4,
+   "phenotype": "glycolytic",
+   "stroma": false
+  },
+  {
+   "acidic": true,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.004156940775149664,
+    "RSL3": 0.0,
+    "Radiation": 0.4555047171958997,
+    "SDT": 0.873
+   },
+   "clonal_spread": 0.35,
+   "damp_per_death": {
+    "RSL3": 0.0,
+    "SDT": 16.071997377409907
+   },
+   "deep": false,
+   "depth_um": 0.0,
+   "exo_factor": 1.0,
+   "heterogeneous": true,
+   "hypoxic": false,
+   "immune_amplification": {
+    "RSL3": 0.0,
+    "SDT": 0.007788853396696868
+   },
+   "ion_trap_factor": 0.3,
+   "o2_supply": 1.0,
+   "ph": 6.5,
+   "phenotype": "glycolytic",
+   "stroma": false
+  },
+  {
+   "acidic": false,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.004156940775149664,
+    "RSL3": 0.0,
+    "Radiation": 0.4555047171958997,
+    "SDT": 0.8726
+   },
+   "clonal_spread": 0.35,
+   "damp_per_death": {
+    "RSL3": 0.0,
+    "SDT": 16.072041490706354
+   },
+   "deep": false,
+   "depth_um": 0.0,
+   "exo_factor": 1.0,
+   "heterogeneous": true,
+   "hypoxic": false,
+   "immune_amplification": {
+    "RSL3": 0.0,
+    "SDT": 0.007785366471830136
+   },
+   "ion_trap_factor": 1.0,
+   "o2_supply": 1.0,
+   "ph": 7.4,
+   "phenotype": "glycolytic",
+   "stroma": true
+  },
+  {
+   "acidic": true,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.004156940775149664,
+    "RSL3": 0.0,
+    "Radiation": 0.4555047171958997,
+    "SDT": 0.8726
+   },
+   "clonal_spread": 0.35,
+   "damp_per_death": {
+    "RSL3": 0.0,
+    "SDT": 16.072041490706354
+   },
+   "deep": false,
+   "depth_um": 0.0,
+   "exo_factor": 1.0,
+   "heterogeneous": true,
+   "hypoxic": false,
+   "immune_amplification": {
+    "RSL3": 0.0,
+    "SDT": 0.007785366471830136
+   },
+   "ion_trap_factor": 0.3,
+   "o2_supply": 1.0,
+   "ph": 6.5,
+   "phenotype": "glycolytic",
+   "stroma": true
+  },
+  {
+   "acidic": false,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.0018475292333998508,
+    "RSL3": 0.0,
+    "Radiation": 0.3015514060714153,
+    "SDT": 0.2908
+   },
+   "clonal_spread": 0.35,
+   "damp_per_death": {
+    "RSL3": 0.0,
+    "SDT": 15.59755983638109
+   },
+   "deep": false,
+   "depth_um": 0.0,
+   "exo_factor": 0.6292682926829268,
+   "heterogeneous": true,
+   "hypoxic": true,
+   "immune_amplification": {
+    "RSL3": 0.0,
+    "SDT": 0.002633234886517002
+   },
+   "ion_trap_factor": 1.0,
+   "o2_supply": 0.05,
+   "ph": 7.4,
+   "phenotype": "glycolytic",
+   "stroma": false
+  },
+  {
+   "acidic": true,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.0018475292333998508,
+    "RSL3": 0.0,
+    "Radiation": 0.3015514060714153,
+    "SDT": 0.2908
+   },
+   "clonal_spread": 0.35,
+   "damp_per_death": {
+    "RSL3": 0.0,
+    "SDT": 15.59755983638109
+   },
+   "deep": false,
+   "depth_um": 0.0,
+   "exo_factor": 0.6292682926829268,
+   "heterogeneous": true,
+   "hypoxic": true,
+   "immune_amplification": {
+    "RSL3": 0.0,
+    "SDT": 0.002633234886517002
+   },
+   "ion_trap_factor": 0.3,
+   "o2_supply": 0.05,
+   "ph": 6.5,
+   "phenotype": "glycolytic",
+   "stroma": false
+  },
+  {
+   "acidic": false,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.0018475292333998508,
+    "RSL3": 0.0,
+    "Radiation": 0.3015514060714153,
+    "SDT": 0.2886
+   },
+   "clonal_spread": 0.35,
+   "damp_per_death": {
+    "RSL3": 0.0,
+    "SDT": 15.59927316796964
+   },
+   "deep": false,
+   "depth_um": 0.0,
+   "exo_factor": 0.6292682926829268,
+   "heterogeneous": true,
+   "hypoxic": true,
+   "immune_amplification": {
+    "RSL3": 0.0,
+    "SDT": 0.0026146098204922175
+   },
+   "ion_trap_factor": 1.0,
+   "o2_supply": 0.05,
+   "ph": 7.4,
+   "phenotype": "glycolytic",
+   "stroma": true
+  },
+  {
+   "acidic": true,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.0018475292333998508,
+    "RSL3": 0.0,
+    "Radiation": 0.3015514060714153,
+    "SDT": 0.2886
+   },
+   "clonal_spread": 0.35,
+   "damp_per_death": {
+    "RSL3": 0.0,
+    "SDT": 15.59927316796964
+   },
+   "deep": false,
+   "depth_um": 0.0,
+   "exo_factor": 0.6292682926829268,
+   "heterogeneous": true,
+   "hypoxic": true,
+   "immune_amplification": {
+    "RSL3": 0.0,
+    "SDT": 0.0026146098204922175
+   },
+   "ion_trap_factor": 0.3,
+   "o2_supply": 0.05,
+   "ph": 6.5,
+   "phenotype": "glycolytic",
+   "stroma": true
+  },
+  {
+   "acidic": false,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.004156940775149664,
+    "RSL3": 0.0,
+    "Radiation": 0.4497374032387358,
+    "SDT": 0.8056
+   },
+   "clonal_spread": 0.35,
+   "damp_per_death": {
+    "RSL3": 0.0,
+    "SDT": 15.919146362779003
+   },
+   "deep": true,
+   "depth_um": 5000.0,
+   "exo_factor": 1.0,
+   "heterogeneous": true,
+   "hypoxic": false,
+   "immune_amplification": {
+    "RSL3": 0.0,
+    "SDT": 0.007147742321145375
+   },
+   "ion_trap_factor": 1.0,
+   "o2_supply": 1.0,
+   "ph": 7.4,
+   "phenotype": "glycolytic",
+   "stroma": false
+  },
+  {
+   "acidic": true,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.004156940775149664,
+    "RSL3": 0.0,
+    "Radiation": 0.4497374032387358,
+    "SDT": 0.8056
+   },
+   "clonal_spread": 0.35,
+   "damp_per_death": {
+    "RSL3": 0.0,
+    "SDT": 15.919146362779003
+   },
+   "deep": true,
+   "depth_um": 5000.0,
+   "exo_factor": 1.0,
+   "heterogeneous": true,
+   "hypoxic": false,
+   "immune_amplification": {
+    "RSL3": 0.0,
+    "SDT": 0.007147742321145375
+   },
+   "ion_trap_factor": 0.3,
+   "o2_supply": 1.0,
+   "ph": 6.5,
+   "phenotype": "glycolytic",
+   "stroma": false
+  },
+  {
+   "acidic": false,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.004156940775149664,
+    "RSL3": 0.0,
+    "Radiation": 0.4497374032387358,
+    "SDT": 0.8052
+   },
+   "clonal_spread": 0.35,
+   "damp_per_death": {
+    "RSL3": 0.0,
+    "SDT": 15.918222226741495
+   },
+   "deep": true,
+   "depth_um": 5000.0,
+   "exo_factor": 1.0,
+   "heterogeneous": true,
+   "hypoxic": false,
+   "immune_amplification": {
+    "RSL3": 0.0,
+    "SDT": 0.007143956548339858
+   },
+   "ion_trap_factor": 1.0,
+   "o2_supply": 1.0,
+   "ph": 7.4,
+   "phenotype": "glycolytic",
+   "stroma": true
+  },
+  {
+   "acidic": true,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.004156940775149664,
+    "RSL3": 0.0,
+    "Radiation": 0.4497374032387358,
+    "SDT": 0.8052
+   },
+   "clonal_spread": 0.35,
+   "damp_per_death": {
+    "RSL3": 0.0,
+    "SDT": 15.918222226741495
+   },
+   "deep": true,
+   "depth_um": 5000.0,
+   "exo_factor": 1.0,
+   "heterogeneous": true,
+   "hypoxic": false,
+   "immune_amplification": {
+    "RSL3": 0.0,
+    "SDT": 0.007143956548339858
+   },
+   "ion_trap_factor": 0.3,
+   "o2_supply": 1.0,
+   "ph": 6.5,
+   "phenotype": "glycolytic",
+   "stroma": true
+  },
+  {
+   "acidic": false,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.0018475292333998508,
+    "RSL3": 0.0,
+    "Radiation": 0.2973961544425532,
+    "SDT": 0.1916
+   },
+   "clonal_spread": 0.35,
+   "damp_per_death": {
+    "RSL3": 0.0,
+    "SDT": 15.61953024107852
+   },
+   "deep": true,
+   "depth_um": 5000.0,
+   "exo_factor": 0.6292682926829268,
+   "heterogeneous": true,
+   "hypoxic": true,
+   "immune_amplification": {
+    "RSL3": 0.0,
+    "SDT": 0.0017858476541214028
+   },
+   "ion_trap_factor": 1.0,
+   "o2_supply": 0.05,
+   "ph": 7.4,
+   "phenotype": "glycolytic",
+   "stroma": false
+  },
+  {
+   "acidic": true,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.0018475292333998508,
+    "RSL3": 0.0,
+    "Radiation": 0.2973961544425532,
+    "SDT": 0.1916
+   },
+   "clonal_spread": 0.35,
+   "damp_per_death": {
+    "RSL3": 0.0,
+    "SDT": 15.61953024107852
+   },
+   "deep": true,
+   "depth_um": 5000.0,
+   "exo_factor": 0.6292682926829268,
+   "heterogeneous": true,
+   "hypoxic": true,
+   "immune_amplification": {
+    "RSL3": 0.0,
+    "SDT": 0.0017858476541214028
+   },
+   "ion_trap_factor": 0.3,
+   "o2_supply": 0.05,
+   "ph": 6.5,
+   "phenotype": "glycolytic",
+   "stroma": false
+  },
+  {
+   "acidic": false,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.0018475292333998508,
+    "RSL3": 0.0,
+    "Radiation": 0.2973961544425532,
+    "SDT": 0.19
+   },
+   "clonal_spread": 0.35,
+   "damp_per_death": {
+    "RSL3": 0.0,
+    "SDT": 15.628013041521168
+   },
+   "deep": true,
+   "depth_um": 5000.0,
+   "exo_factor": 0.6292682926829268,
+   "heterogeneous": true,
+   "hypoxic": true,
+   "immune_amplification": {
+    "RSL3": 0.0,
+    "SDT": 0.0017728106899773835
+   },
+   "ion_trap_factor": 1.0,
+   "o2_supply": 0.05,
+   "ph": 7.4,
+   "phenotype": "glycolytic",
+   "stroma": true
+  },
+  {
+   "acidic": true,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.0018475292333998508,
+    "RSL3": 0.0,
+    "Radiation": 0.2973961544425532,
+    "SDT": 0.19
+   },
+   "clonal_spread": 0.35,
+   "damp_per_death": {
+    "RSL3": 0.0,
+    "SDT": 15.628013041521168
+   },
+   "deep": true,
+   "depth_um": 5000.0,
+   "exo_factor": 0.6292682926829268,
+   "heterogeneous": true,
+   "hypoxic": true,
+   "immune_amplification": {
+    "RSL3": 0.0,
+    "SDT": 0.0017728106899773835
+   },
+   "ion_trap_factor": 0.3,
+   "o2_supply": 0.05,
+   "ph": 6.5,
+   "phenotype": "glycolytic",
+   "stroma": true
+  },
+  {
+   "acidic": false,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.004156940775149664,
+    "RSL3": 0.459,
+    "Radiation": 0.4555047171958997,
+    "SDT": 1.0
+   },
+   "clonal_spread": 0.35,
+   "damp_per_death": {
+    "RSL3": 17.671888767579382,
+    "SDT": 20.057163216927837
+   },
+   "deep": false,
+   "depth_um": 0.0,
+   "exo_factor": 1.0,
+   "heterogeneous": true,
+   "hypoxic": false,
+   "immune_amplification": {
+    "RSL3": 0.004459089992513695,
+    "SDT": 0.0
+   },
+   "ion_trap_factor": 1.0,
+   "o2_supply": 1.0,
+   "ph": 7.4,
+   "phenotype": "persister",
+   "stroma": false
+  },
+  {
+   "acidic": true,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.004156940775149664,
+    "RSL3": 0.0424,
+    "Radiation": 0.4555047171958997,
+    "SDT": 1.0
+   },
+   "clonal_spread": 0.35,
+   "damp_per_death": {
+    "RSL3": 17.676330079242312,
+    "SDT": 20.057163216927837
+   },
+   "deep": false,
+   "depth_um": 0.0,
+   "exo_factor": 1.0,
+   "heterogeneous": true,
+   "hypoxic": false,
+   "immune_amplification": {
+    "RSL3": 0.0005426792753295459,
+    "SDT": 0.0
+   },
+   "ion_trap_factor": 0.3,
+   "o2_supply": 1.0,
+   "ph": 6.5,
+   "phenotype": "persister",
+   "stroma": false
+  },
+  {
+   "acidic": false,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.004156940775149664,
+    "RSL3": 0.4472,
+    "Radiation": 0.4555047171958997,
+    "SDT": 1.0
+   },
+   "clonal_spread": 0.35,
+   "damp_per_death": {
+    "RSL3": 17.65180141849633,
+    "SDT": 20.05787605941034
+   },
+   "deep": false,
+   "depth_um": 0.0,
+   "exo_factor": 1.0,
+   "heterogeneous": true,
+   "hypoxic": false,
+   "immune_amplification": {
+    "RSL3": 0.004344625488724384,
+    "SDT": 0.0
+   },
+   "ion_trap_factor": 1.0,
+   "o2_supply": 1.0,
+   "ph": 7.4,
+   "phenotype": "persister",
+   "stroma": true
+  },
+  {
+   "acidic": true,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.004156940775149664,
+    "RSL3": 0.0402,
+    "Radiation": 0.4555047171958997,
+    "SDT": 1.0
+   },
+   "clonal_spread": 0.35,
+   "damp_per_death": {
+    "RSL3": 17.552846511707457,
+    "SDT": 20.05787605941034
+   },
+   "deep": false,
+   "depth_um": 0.0,
+   "exo_factor": 1.0,
+   "heterogeneous": true,
+   "hypoxic": false,
+   "immune_amplification": {
+    "RSL3": 0.0005200386243285925,
+    "SDT": 0.0
+   },
+   "ion_trap_factor": 0.3,
+   "o2_supply": 1.0,
+   "ph": 6.5,
+   "phenotype": "persister",
+   "stroma": true
+  },
+  {
+   "acidic": false,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.0018475292333998508,
+    "RSL3": 0.459,
+    "Radiation": 0.3015514060714153,
+    "SDT": 1.0
+   },
+   "clonal_spread": 0.35,
+   "damp_per_death": {
+    "RSL3": 17.671888767579382,
+    "SDT": 19.090877199961835
+   },
+   "deep": false,
+   "depth_um": 0.0,
+   "exo_factor": 0.6292682926829268,
+   "heterogeneous": true,
+   "hypoxic": true,
+   "immune_amplification": {
+    "RSL3": 0.004459089992513695,
+    "SDT": 0.0
+   },
+   "ion_trap_factor": 1.0,
+   "o2_supply": 0.05,
+   "ph": 7.4,
+   "phenotype": "persister",
+   "stroma": false
+  },
+  {
+   "acidic": true,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.0018475292333998508,
+    "RSL3": 0.0424,
+    "Radiation": 0.3015514060714153,
+    "SDT": 1.0
+   },
+   "clonal_spread": 0.35,
+   "damp_per_death": {
+    "RSL3": 17.676330079242312,
+    "SDT": 19.090877199961835
+   },
+   "deep": false,
+   "depth_um": 0.0,
+   "exo_factor": 0.6292682926829268,
+   "heterogeneous": true,
+   "hypoxic": true,
+   "immune_amplification": {
+    "RSL3": 0.0005426792753295459,
+    "SDT": 0.0
+   },
+   "ion_trap_factor": 0.3,
+   "o2_supply": 0.05,
+   "ph": 6.5,
+   "phenotype": "persister",
+   "stroma": false
+  },
+  {
+   "acidic": false,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.0018475292333998508,
+    "RSL3": 0.4472,
+    "Radiation": 0.3015514060714153,
+    "SDT": 1.0
+   },
+   "clonal_spread": 0.35,
+   "damp_per_death": {
+    "RSL3": 17.65180141849633,
+    "SDT": 19.090506747025284
+   },
+   "deep": false,
+   "depth_um": 0.0,
+   "exo_factor": 0.6292682926829268,
+   "heterogeneous": true,
+   "hypoxic": true,
+   "immune_amplification": {
+    "RSL3": 0.004344625488724384,
+    "SDT": 0.0
+   },
+   "ion_trap_factor": 1.0,
+   "o2_supply": 0.05,
+   "ph": 7.4,
+   "phenotype": "persister",
+   "stroma": true
+  },
+  {
+   "acidic": true,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.0018475292333998508,
+    "RSL3": 0.0402,
+    "Radiation": 0.3015514060714153,
+    "SDT": 1.0
+   },
+   "clonal_spread": 0.35,
+   "damp_per_death": {
+    "RSL3": 17.552846511707457,
+    "SDT": 19.090506747025284
+   },
+   "deep": false,
+   "depth_um": 0.0,
+   "exo_factor": 0.6292682926829268,
+   "heterogeneous": true,
+   "hypoxic": true,
+   "immune_amplification": {
+    "RSL3": 0.0005200386243285925,
+    "SDT": 0.0
+   },
+   "ion_trap_factor": 0.3,
+   "o2_supply": 0.05,
+   "ph": 6.5,
+   "phenotype": "persister",
+   "stroma": true
+  },
+  {
+   "acidic": false,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.004156940775149664,
+    "RSL3": 0.459,
+    "Radiation": 0.4497374032387358,
+    "SDT": 1.0
+   },
+   "clonal_spread": 0.35,
+   "damp_per_death": {
+    "RSL3": 17.671888767579382,
+    "SDT": 19.871495146138127
+   },
+   "deep": true,
+   "depth_um": 5000.0,
+   "exo_factor": 1.0,
+   "heterogeneous": true,
+   "hypoxic": false,
+   "immune_amplification": {
+    "RSL3": 0.004459089992513695,
+    "SDT": 0.0
+   },
+   "ion_trap_factor": 1.0,
+   "o2_supply": 1.0,
+   "ph": 7.4,
+   "phenotype": "persister",
+   "stroma": false
+  },
+  {
+   "acidic": true,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.004156940775149664,
+    "RSL3": 0.0424,
+    "Radiation": 0.4497374032387358,
+    "SDT": 1.0
+   },
+   "clonal_spread": 0.35,
+   "damp_per_death": {
+    "RSL3": 17.676330079242312,
+    "SDT": 19.871495146138127
+   },
+   "deep": true,
+   "depth_um": 5000.0,
+   "exo_factor": 1.0,
+   "heterogeneous": true,
+   "hypoxic": false,
+   "immune_amplification": {
+    "RSL3": 0.0005426792753295459,
+    "SDT": 0.0
+   },
+   "ion_trap_factor": 0.3,
+   "o2_supply": 1.0,
+   "ph": 6.5,
+   "phenotype": "persister",
+   "stroma": false
+  },
+  {
+   "acidic": false,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.004156940775149664,
+    "RSL3": 0.4472,
+    "Radiation": 0.4497374032387358,
+    "SDT": 1.0
+   },
+   "clonal_spread": 0.35,
+   "damp_per_death": {
+    "RSL3": 17.65180141849633,
+    "SDT": 19.868746076623736
+   },
+   "deep": true,
+   "depth_um": 5000.0,
+   "exo_factor": 1.0,
+   "heterogeneous": true,
+   "hypoxic": false,
+   "immune_amplification": {
+    "RSL3": 0.004344625488724384,
+    "SDT": 0.0
+   },
+   "ion_trap_factor": 1.0,
+   "o2_supply": 1.0,
+   "ph": 7.4,
+   "phenotype": "persister",
+   "stroma": true
+  },
+  {
+   "acidic": true,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.004156940775149664,
+    "RSL3": 0.0402,
+    "Radiation": 0.4497374032387358,
+    "SDT": 1.0
+   },
+   "clonal_spread": 0.35,
+   "damp_per_death": {
+    "RSL3": 17.552846511707457,
+    "SDT": 19.868746076623736
+   },
+   "deep": true,
+   "depth_um": 5000.0,
+   "exo_factor": 1.0,
+   "heterogeneous": true,
+   "hypoxic": false,
+   "immune_amplification": {
+    "RSL3": 0.0005200386243285925,
+    "SDT": 0.0
+   },
+   "ion_trap_factor": 0.3,
+   "o2_supply": 1.0,
+   "ph": 6.5,
+   "phenotype": "persister",
+   "stroma": true
+  },
+  {
+   "acidic": false,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.0018475292333998508,
+    "RSL3": 0.459,
+    "Radiation": 0.2973961544425532,
+    "SDT": 1.0
+   },
+   "clonal_spread": 0.35,
+   "damp_per_death": {
+    "RSL3": 17.671888767579382,
+    "SDT": 18.959406790471753
+   },
+   "deep": true,
+   "depth_um": 5000.0,
+   "exo_factor": 0.6292682926829268,
+   "heterogeneous": true,
+   "hypoxic": true,
+   "immune_amplification": {
+    "RSL3": 0.004459089992513695,
+    "SDT": 0.0
+   },
+   "ion_trap_factor": 1.0,
+   "o2_supply": 0.05,
+   "ph": 7.4,
+   "phenotype": "persister",
+   "stroma": false
+  },
+  {
+   "acidic": true,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.0018475292333998508,
+    "RSL3": 0.0424,
+    "Radiation": 0.2973961544425532,
+    "SDT": 1.0
+   },
+   "clonal_spread": 0.35,
+   "damp_per_death": {
+    "RSL3": 17.676330079242312,
+    "SDT": 18.959406790471753
+   },
+   "deep": true,
+   "depth_um": 5000.0,
+   "exo_factor": 0.6292682926829268,
+   "heterogeneous": true,
+   "hypoxic": true,
+   "immune_amplification": {
+    "RSL3": 0.0005426792753295459,
+    "SDT": 0.0
+   },
+   "ion_trap_factor": 0.3,
+   "o2_supply": 0.05,
+   "ph": 6.5,
+   "phenotype": "persister",
+   "stroma": false
+  },
+  {
+   "acidic": false,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.0018475292333998508,
+    "RSL3": 0.4472,
+    "Radiation": 0.2973961544425532,
+    "SDT": 1.0
+   },
+   "clonal_spread": 0.35,
+   "damp_per_death": {
+    "RSL3": 17.65180141849633,
+    "SDT": 18.958760575768014
+   },
+   "deep": true,
+   "depth_um": 5000.0,
+   "exo_factor": 0.6292682926829268,
+   "heterogeneous": true,
+   "hypoxic": true,
+   "immune_amplification": {
+    "RSL3": 0.004344625488724384,
+    "SDT": 0.0
+   },
+   "ion_trap_factor": 1.0,
+   "o2_supply": 0.05,
+   "ph": 7.4,
+   "phenotype": "persister",
+   "stroma": true
+  },
+  {
+   "acidic": true,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.0018475292333998508,
+    "RSL3": 0.0402,
+    "Radiation": 0.2973961544425532,
+    "SDT": 1.0
+   },
+   "clonal_spread": 0.35,
+   "damp_per_death": {
+    "RSL3": 17.552846511707457,
+    "SDT": 18.958760575768014
+   },
+   "deep": true,
+   "depth_um": 5000.0,
+   "exo_factor": 0.6292682926829268,
+   "heterogeneous": true,
+   "hypoxic": true,
+   "immune_amplification": {
+    "RSL3": 0.0005200386243285925,
+    "SDT": 0.0
+   },
    "ion_trap_factor": 0.3,
    "o2_supply": 0.05,
    "ph": 6.5,
@@ -623,9 +2705,19 @@
   "ph_edge": 7.4,
   "stromal_gsh_boost": 1.5
  },
- "n_cells": 6000,
+ "n_cells": 5000,
  "note": "Every axis is applied through the SAME helpers the ferroptosis chapters use, so a modality comparison is under an identical environment. Arms absent from a row are unaffected by that axis BY CONSTRUCTION, which is a prediction and not an omission -- see the function docs.",
  "seed": 42,
+ "strata": [
+  "phenotype"
+ ],
+ "quality_ratio": {
+  "phenotype": "persister",
+  "sdt": 20.040738281202003,
+  "rsl3": 17.728129668083106,
+  "ratio": 1.1304485389275107,
+  "kill_ratio": 2.3866348448687353
+ },
  "arms": [
   "Ablation",
   "AdoptiveCell",
@@ -640,22 +2732,22 @@
  "effects": {
   "hypoxia": {
    "Ablation": 0.0,
-   "AdoptiveCell": 0.5555555555555556,
+   "AdoptiveCell": -0.5555555555555555,
    "RSL3": 0.0,
-   "Radiation": 0.3387337759748542,
-   "SDT": 0.7611940298507464
+   "Radiation": -0.3387337759748542,
+   "SDT": -0.7686734948788408
   },
   "stromal shielding": {
    "Ablation": 0.0,
    "AdoptiveCell": 0.0,
-   "RSL3": 0.0703124999999999,
+   "RSL3": -0.08080808080808084,
    "Radiation": 0.0,
-   "SDT": 0.007751937984496131
+   "SDT": -0.009625668449197839
   },
   "acidic pH": {
    "Ablation": 0.0,
    "AdoptiveCell": 0.0,
-   "RSL3": 0.9522663457681508,
+   "RSL3": -0.9556962025316456,
    "Radiation": 0.0,
    "SDT": 0.0
   },
@@ -663,25 +2755,32 @@
    "Ablation": 0.0,
    "AdoptiveCell": 0.0,
    "RSL3": 0.0,
-   "Radiation": 0.013779579684261288,
-   "SDT": 0.32473622508792493
+   "Radiation": -0.013779579684261288,
+   "SDT": -0.3416493416493417
+  },
+  "clonal heterogeneity": {
+   "Ablation": 0.0,
+   "AdoptiveCell": 0.0,
+   "RSL3": 1.2087912087912087,
+   "Radiation": 0.0,
+   "SDT": 0.049062049062049064
   }
  },
  "effects_by_phenotype": {
   "glycolytic": {
    "hypoxia": {
     "Ablation": 0.0,
-    "AdoptiveCell": 0.5555555555555556,
+    "AdoptiveCell": -0.5555555555555555,
     "RSL3": 0.0,
-    "Radiation": 0.3387337759748542,
-    "SDT": 0.7611940298507464
+    "Radiation": -0.3387337759748542,
+    "SDT": -0.7686734948788408
    },
    "stromal shielding": {
     "Ablation": 0.0,
     "AdoptiveCell": 0.0,
     "RSL3": 0.0,
     "Radiation": 0.0,
-    "SDT": 0.007751937984496131
+    "SDT": -0.009625668449197839
    },
    "acidic pH": {
     "Ablation": 0.0,
@@ -694,29 +2793,36 @@
     "Ablation": 0.0,
     "AdoptiveCell": 0.0,
     "RSL3": 0.0,
-    "Radiation": 0.013779579684261288,
-    "SDT": 0.32473622508792493
+    "Radiation": -0.013779579684261288,
+    "SDT": -0.3416493416493417
+   },
+   "clonal heterogeneity": {
+    "Ablation": 0.0,
+    "AdoptiveCell": 0.0,
+    "RSL3": 0.0,
+    "Radiation": 0.0,
+    "SDT": 0.049062049062049064
    }
   },
   "persister": {
    "hypoxia": {
     "Ablation": 0.0,
-    "AdoptiveCell": 0.5555555555555556,
+    "AdoptiveCell": -0.5555555555555555,
     "RSL3": 0.0,
-    "Radiation": 0.3387337759748542,
+    "Radiation": -0.3387337759748542,
     "SDT": 0.0
    },
    "stromal shielding": {
     "Ablation": 0.0,
     "AdoptiveCell": 0.0,
-    "RSL3": 0.0703124999999999,
+    "RSL3": -0.08080808080808084,
     "Radiation": 0.0,
     "SDT": 0.0
    },
    "acidic pH": {
     "Ablation": 0.0,
     "AdoptiveCell": 0.0,
-    "RSL3": 0.9522663457681508,
+    "RSL3": -0.9556962025316456,
     "Radiation": 0.0,
     "SDT": 0.0
    },
@@ -724,7 +2830,14 @@
     "Ablation": 0.0,
     "AdoptiveCell": 0.0,
     "RSL3": 0.0,
-    "Radiation": 0.013779579684261288,
+    "Radiation": -0.013779579684261288,
+    "SDT": 0.0
+   },
+   "clonal heterogeneity": {
+    "Ablation": 0.0,
+    "AdoptiveCell": 0.0,
+    "RSL3": 1.2087912087912087,
+    "Radiation": 0.0,
     "SDT": 0.0
    }
   }
@@ -732,11 +2845,11 @@
  "dominant_axis": {
   "glycolytic": [
    "hypoxia",
-   0.7611940298507464
+   0.7686734948788408
   ],
   "persister": [
-   "acidic pH",
-   0.9522663457681508
+   "clonal heterogeneity",
+   1.2087912087912087
   ]
  },
  "inert_axes": [],
@@ -744,7 +2857,8 @@
   "hypoxia",
   "stromal shielding",
   "acidic pH",
-  "depth"
+  "depth",
+  "clonal heterogeneity"
  ],
  "robustness_order": [
   "Ablation",

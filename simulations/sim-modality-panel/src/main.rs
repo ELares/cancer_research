@@ -362,84 +362,132 @@ fn run_tme_sweep(a: &Args, params: &Params, immune: &ImmuneParams, rad: &Radiati
     //
     // DEPTH is the fifth, and it is the axis that separates the physical
     // modalities from one another rather than from the drugs.
-    for &(pheno, pheno_name) in &[
-        (Phenotype::Glycolytic, "glycolytic"),
-        (Phenotype::Persister, "persister"),
-    ] {
-        for &depth_um in &[0.0_f64, 5_000.0] {
-            for &(o2, hypoxic) in &[(O2_NORMOXIC, false), (O2_HYPOXIC, true)] {
-                for &stroma in &[false, true] {
-                    for &acid in &[false, true] {
-                        let ph = if acid { PH_CORE } else { PH_EDGE };
-                        let trap = ion_trap_factor_from_ph(ph, PH_EDGE, 1.0);
-                        let exo = oer_exo_factor(o2, 1.0, OER_REFERENCE_PO2_MMHG);
+    // CLONAL HETEROGENEITY as a sixth axis. `clonal.rs` perturbs per-subclone
+    // parameters; here the same effect is applied as a spread on the whole
+    // population's antioxidant setpoint, because what the axis tests is
+    // whether an arm's kill survives VARIANCE and not whether the variance is
+    // spatially arranged. An arm that only works on the mean cell is fragile
+    // in a way the mean cannot show.
+    for &(clonal_spread, heterogeneous) in &[(0.0_f64, false), (0.35, true)] {
+        for &(pheno, pheno_name) in &[
+            (Phenotype::Glycolytic, "glycolytic"),
+            (Phenotype::Persister, "persister"),
+        ] {
+            for &depth_um in &[0.0_f64, 5_000.0] {
+                for &(o2, hypoxic) in &[(O2_NORMOXIC, false), (O2_HYPOXIC, true)] {
+                    for &stroma in &[false, true] {
+                        for &acid in &[false, true] {
+                            let ph = if acid { PH_CORE } else { PH_EDGE };
+                            let trap = ion_trap_factor_from_ph(ph, PH_EDGE, 1.0);
+                            let exo = oer_exo_factor(o2, 1.0, OER_REFERENCE_PO2_MMHG);
 
-                        // Ferroptosis-routed arms: exogenous ROS scaled by O2, the
-                        // antioxidant setpoint raised by stroma, and the DELIVERED
-                        // arm additionally scaled by ion trapping.
-                        let mut p = params.clone();
-                        if stroma {
-                            p.gsh_max *= STROMAL_GSH_BOOST;
+                            // Ferroptosis-routed arms: exogenous ROS scaled by O2, the
+                            // antioxidant setpoint raised by stroma, and the DELIVERED
+                            // arm additionally scaled by ion trapping.
+                            let mut p = params.clone();
+                            if stroma {
+                                p.gsh_max *= STROMAL_GSH_BOOST;
+                            }
+                            // RSL3 is a weak base: acid traps it outside the cell, so the
+                            // ion-trap factor scales the GPX4 inhibition it achieves.
+                            let mut q = p.clone();
+                            q.rsl3_gpx4_inhib *= trap;
+                            // Depth attenuates the ENERGY-delivered arms through their
+                            // own published laws, and leaves the systemic drug alone --
+                            // which is the dissociation `depth-reach-comparison.md`
+                            // measures, now applied inside the resistance sweep.
+                            let sp = SpatialParams::default();
+                            let sdt_depth = sdt_intensity_at_depth(depth_um, &sp);
+                            let rad_depth = radiation::intensity_at_depth(
+                                depth_um,
+                                radiation::MU_6MV_SOFT_TISSUE_PER_CM,
+                            );
+
+                            let sdt_mean = params.sdt_ros * exo * sdt_depth;
+                            // Heterogeneity widens the antioxidant setpoint. The MEAN is
+                            // held fixed so the axis is VARIANCE and not a dose change --
+                            // otherwise it would be a second stroma axis under another
+                            // name. What it tests is whether an arm's kill survives
+                            // spread: an arm that only works on the mean cell is fragile
+                            // in a way the mean cannot show.
+                            let het = clonal_spread;
+                            let mut sdt_lps: Vec<f64> = Vec::new();
+                            let mut rsl3_lps: Vec<f64> = Vec::new();
+                            let sdt_kill = kill_fraction_pheno(n, a.seed, pheno, |cell, rng| {
+                                let mut c = cell.clone();
+                                if het > 0.0 {
+                                    c.gsh = (c.gsh * (1.0 + norm_unit(rng) * het)).max(0.1);
+                                }
+                                let peak = norm_peak(rng, sdt_mean);
+                                let (dead, lp) = run_to_death_lp(&c, Treatment::SDT, &p, peak);
+                                if dead {
+                                    sdt_lps.push(lp);
+                                }
+                                dead
+                            });
+                            let rsl3_kill = kill_fraction_pheno(n, a.seed, pheno, |cell, rng| {
+                                let mut c = cell.clone();
+                                if het > 0.0 {
+                                    c.gsh = (c.gsh * (1.0 + norm_unit(rng) * het)).max(0.1);
+                                }
+                                let (dead, lp) = run_to_death_lp(&c, Treatment::RSL3, &q, 0.0);
+                                if dead {
+                                    rsl3_lps.push(lp);
+                                }
+                                dead
+                            });
+                            let sdt_immune = immune_amplification(&sdt_lps, n, immune);
+                            let rsl3_immune = immune_amplification(&rsl3_lps, n, immune);
+                            let sdt_quality = damp_per_death(&sdt_lps, immune);
+                            let rsl3_quality = damp_per_death(&rsl3_lps, immune);
+
+                            // Radiation: O2 through the SAME hyperbola, nothing else.
+                            let dose = rad.dose_gy * exo * rad_depth;
+                            let lq = 1.0
+                                - (-(rad.alpha_per_gy * dose + rad.beta_per_gy2 * dose * dose))
+                                    .exp();
+
+                            // Immune: unaffected by O2 supply directly; suppressed in a
+                            // hypoxic core, which is the asymmetry the doc predicts.
+                            let suppression = if hypoxic { 0.6 } else { 0.1 };
+                            let imm = adoptive_transfer_kills(
+                                EffectorSource::CarT.effectors_after(200.0, 30, 0.15, 5_000.0),
+                                n,
+                                immune,
+                                suppression,
+                                false,
+                            ) / n as f64;
+
+                            // Ablation: a threshold. Nothing here touches it, and that is
+                            // the finding rather than an omission.
+                            let abl = 0.85;
+
+                            rows.push(serde_json::json!({
+                                "phenotype": pheno_name,
+                                "heterogeneous": heterogeneous,
+                                "clonal_spread": clonal_spread,
+                                "immune_amplification": {
+                                    "SDT": sdt_immune,
+                                    "RSL3": rsl3_immune,
+                                },
+                                "damp_per_death": {
+                                    "SDT": sdt_quality,
+                                    "RSL3": rsl3_quality,
+                                },
+                                "deep": depth_um > 0.0,
+                                "depth_um": depth_um,
+                                "hypoxic": hypoxic, "stroma": stroma, "acidic": acid,
+                                "o2_supply": o2, "ph": ph,
+                                "exo_factor": exo, "ion_trap_factor": trap,
+                                "arms": {
+                                    "SDT": sdt_kill,
+                                    "RSL3": rsl3_kill,
+                                    "Radiation": lq,
+                                    "AdoptiveCell": imm,
+                                    "Ablation": abl,
+                                },
+                            }));
                         }
-                        // RSL3 is a weak base: acid traps it outside the cell, so the
-                        // ion-trap factor scales the GPX4 inhibition it achieves.
-                        let mut q = p.clone();
-                        q.rsl3_gpx4_inhib *= trap;
-                        // Depth attenuates the ENERGY-delivered arms through their
-                        // own published laws, and leaves the systemic drug alone --
-                        // which is the dissociation `depth-reach-comparison.md`
-                        // measures, now applied inside the resistance sweep.
-                        let sp = SpatialParams::default();
-                        let sdt_depth = sdt_intensity_at_depth(depth_um, &sp);
-                        let rad_depth = radiation::intensity_at_depth(
-                            depth_um,
-                            radiation::MU_6MV_SOFT_TISSUE_PER_CM,
-                        );
-
-                        let sdt_mean = params.sdt_ros * exo * sdt_depth;
-                        let sdt_kill = kill_fraction_pheno(n, a.seed, pheno, |cell, rng| {
-                            let peak = norm_peak(rng, sdt_mean);
-                            run_to_death(cell, Treatment::SDT, &p, peak)
-                        });
-                        let rsl3_kill = kill_fraction_pheno(n, a.seed, pheno, |cell, _rng| {
-                            run_to_death(cell, Treatment::RSL3, &q, 0.0)
-                        });
-
-                        // Radiation: O2 through the SAME hyperbola, nothing else.
-                        let dose = rad.dose_gy * exo * rad_depth;
-                        let lq = 1.0
-                            - (-(rad.alpha_per_gy * dose + rad.beta_per_gy2 * dose * dose)).exp();
-
-                        // Immune: unaffected by O2 supply directly; suppressed in a
-                        // hypoxic core, which is the asymmetry the doc predicts.
-                        let suppression = if hypoxic { 0.6 } else { 0.1 };
-                        let imm = adoptive_transfer_kills(
-                            EffectorSource::CarT.effectors_after(200.0, 30, 0.15, 5_000.0),
-                            n,
-                            immune,
-                            suppression,
-                            false,
-                        ) / n as f64;
-
-                        // Ablation: a threshold. Nothing here touches it, and that is
-                        // the finding rather than an omission.
-                        let abl = 0.85;
-
-                        rows.push(serde_json::json!({
-                            "phenotype": pheno_name,
-                            "deep": depth_um > 0.0,
-                            "depth_um": depth_um,
-                            "hypoxic": hypoxic, "stroma": stroma, "acidic": acid,
-                            "o2_supply": o2, "ph": ph,
-                            "exo_factor": exo, "ion_trap_factor": trap,
-                            "arms": {
-                                "SDT": sdt_kill,
-                                "RSL3": rsl3_kill,
-                                "Radiation": lq,
-                                "AdoptiveCell": imm,
-                                "Ablation": abl,
-                            },
-                        }));
                     }
                 }
             }
@@ -449,7 +497,12 @@ fn run_tme_sweep(a: &Args, params: &Params, immune: &ImmuneParams, rad: &Radiati
     let out = serde_json::json!({
         "n_cells": n,
         "seed": a.seed,
-        "axes": ["hypoxia", "stroma", "acidic pH", "depth", "phenotype"],
+        "axes": ["hypoxia", "stroma", "acidic pH", "depth", "clonal heterogeneity"],
+        "strata": ["phenotype"],
+        "amplification": "immune coupling, reported per arm as the immune \
+    kills its OWN death mode earns -- the LP each arm's dead cells carried, run \
+    through the same cascade. An arm that kills quietly earns less than one that \
+    kills loudly, which is the amplification the ferroptosis chapters measure.",
         "endpoints": {
             "o2_normoxic": O2_NORMOXIC, "o2_hypoxic": O2_HYPOXIC,
             "ph_edge": PH_EDGE, "ph_core": PH_CORE,
@@ -471,15 +524,91 @@ fn norm_peak(rng: &mut StdRng, mean: f64) -> f64 {
 }
 
 fn run_to_death(cell: &ferroptosis_core::cell::Cell, tx: Treatment, p: &Params, peak: f64) -> bool {
+    run_to_death_lp(cell, tx, p, peak).0
+}
+
+/// Death, AND the lipid peroxidation the cell carried when it died.
+///
+/// The second value is what the immune-coupling axis needs, and it is the
+/// quantity the ferroptosis chapters already argue about: a cell killed by a
+/// runaway ROS cascade dies with far more LP than one killed by slow GPX4
+/// inhibition, so it releases more DAMPs per death. "Quality of death" is not
+/// a metaphor here -- it is this number.
+fn run_to_death_lp(
+    cell: &ferroptosis_core::cell::Cell,
+    tx: Treatment,
+    p: &Params,
+    peak: f64,
+) -> (bool, f64) {
     let mut state = CellState::from_cell_with_ros(cell, tx, p, peak);
     let mut rng = StdRng::seed_from_u64(7);
+    let mut death_step: Option<u32> = None;
     for step in 0..STEPS {
         ferroptosis_core::biochem::sim_cell_step(&mut state, cell, p, step, 0.0, &mut rng);
-        if state.dead {
-            return true;
+        if state.dead && death_step.is_none() {
+            death_step = Some(step);
+        }
+        // KEEP STEPPING THROUGH THE GRACE PERIOD, which is where the quality
+        // difference actually lives and where the first version of this
+        // measurement went wrong.
+        //
+        // Stopping at the threshold crossing returns LP ~= the death
+        // threshold FOR EVERY ARM, by construction -- death IS the crossing.
+        // Measured that way, a runaway ROS cascade and a slow GPX4 inhibition
+        // both reported ~10.2, and the "quality of death" difference the
+        // immune module documents vanished. It had not vanished; it was being
+        // measured before it happens.
+        //
+        // The spatial binaries read `lp_at_grace_end` rather than `lp` for
+        // exactly this reason, and the field name says so. `post_death_steps`
+        // is how long the cascade keeps running after the cell is counted
+        // dead, and an arm delivering exogenous ROS keeps climbing through it
+        // while one that merely disabled a repair enzyme does not.
+        if let Some(ds) = death_step {
+            if step >= ds + p.post_death_steps {
+                return (true, state.lp);
+            }
         }
     }
-    state.dead
+    (state.dead, state.lp)
+}
+
+/// Immune kills the arm's OWN death mode earns, per cell treated.
+///
+/// The amplification axis, and the one that separates arms which kill the
+/// same number of cells: it runs the LP values the arm actually produced
+/// through `immune_cascade`, so an arm that kills quietly earns less than one
+/// that kills loudly. `Ablation` and the DNA channel earn nothing here by
+/// construction -- they do not produce lipid peroxidation at all -- and that
+/// zero is a property of the death mode rather than a gap.
+fn immune_amplification(lps: &[f64], n: usize, immune: &ImmuneParams) -> f64 {
+    if lps.is_empty() {
+        return 0.0;
+    }
+    immune_cascade(lps, n, immune, false).immune_kills / n as f64
+}
+
+/// DAMP release PER DEATH -- the amplification measure that is not confounded
+/// by how many cells died.
+///
+/// The per-treated-cell figure above is confounded in BOTH directions and
+/// measurably so: an arm that kills nothing releases no DAMPs and scores zero,
+/// while an arm that kills everything leaves no survivors for the immune
+/// system to kill and ALSO scores zero, because `immune_cascade` caps its
+/// kills at the remaining population. In this panel RSL3 hits the first case
+/// at the glycolytic state and SDT hits the second at the persister state, so
+/// the two arms are never both readable in the same condition.
+///
+/// Per-death release has neither problem. It is the "quality of death"
+/// quantity the ferroptosis chapters actually argue about -- a cell killed by
+/// a runaway ROS cascade dies carrying far more lipid peroxidation than one
+/// killed by slow GPX4 inhibition -- and it is comparable across arms whatever
+/// their kill fraction.
+fn damp_per_death(lps: &[f64], immune: &ImmuneParams) -> f64 {
+    if lps.is_empty() {
+        return 0.0;
+    }
+    ferroptosis_core::immune::calculate_damp_release(lps, immune).1
 }
 
 fn kill_fraction<F>(n: usize, seed: u64, mut f: F) -> f64
@@ -501,4 +630,9 @@ where
         })
         .count();
     dead as f64 / n as f64
+}
+
+/// A standard normal draw, for the heterogeneity spread.
+fn norm_unit(rng: &mut StdRng) -> f64 {
+    ferroptosis_core::cell::norm(rng, 0.0, 1.0)
 }

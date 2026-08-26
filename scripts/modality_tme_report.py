@@ -50,7 +50,7 @@ def scan() -> dict:
     return json.loads(SWEEP.read_text())
 
 
-AXIS_KEYS = ("hypoxic", "stroma", "acidic", "deep")
+AXIS_KEYS = ("hypoxic", "stroma", "acidic", "deep", "heterogeneous")
 STRATA = ("phenotype",)
 
 
@@ -77,7 +77,16 @@ def _effect(conds, arm, axis, phenotype=None):
         got = on["arms"].get(arm)
         if base is None or got is None or base <= 0:
             continue
-        worst = max(worst, abs(base - got) / base)
+        # SIGNED. An earlier version took the absolute value and called every
+        # result a "loss", which produced the impossible report that an arm
+        # lost 121% of its kill. It had GAINED: heterogeneity doubles the
+        # pharmacologic arm's kill from an acid-suppressed baseline, because
+        # variance supplies a low-glutathione tail that dies even when the
+        # mean cell resists. An axis that can help is not the same kind of
+        # thing as one that only hurts, and collapsing the sign hid a result.
+        rel = (got - base) / base
+        if abs(rel) > abs(worst):
+            worst = rel
     return worst
 
 
@@ -86,7 +95,8 @@ def assemble(raw: dict) -> dict:
     arms = sorted({a for c in conds for a in c["arms"]})
     phenos = sorted({c.get("phenotype") for c in conds if c.get("phenotype")})
     axes = [("hypoxic", "hypoxia"), ("stroma", "stromal shielding"),
-            ("acidic", "acidic pH"), ("deep", "depth")]
+            ("acidic", "acidic pH"), ("deep", "depth"),
+            ("heterogeneous", "clonal heterogeneity")]
     # POOLED across phenotypes for the headline, and PER PHENOTYPE beside it,
     # because which axis bites turns out to depend on the phenotype -- and a
     # single-phenotype sweep reported two axes inert for that reason alone.
@@ -98,18 +108,47 @@ def assemble(raw: dict) -> dict:
         for ph in phenos
     }
     inert = [label for _, label in axes
-             if max(effects[label].values(), default=0.0) < INERT_THRESHOLD]
+             if max((abs(v) for v in effects[label].values()), default=0.0)
+             < INERT_THRESHOLD]
     live = [label for _, label in axes if label not in inert]
     order = sorted(
-        arms, key=lambda a: max((effects[l][a] for l in live), default=0.0))
+        arms, key=lambda a: max((abs(effects[l][a]) for l in live), default=0.0))
     # Which axis dominates in each phenotype -- the finding the stratification
     # exists to produce.
     dominant = {
-        ph: max(((l, max(per_pheno[ph][l].values(), default=0.0))
+        ph: max(((l, max((abs(v) for v in per_pheno[ph][l].values()),
+                         default=0.0))
                  for _, l in axes), key=lambda kv: kv[1])
         for ph in phenos
     }
-    return dict(raw, arms=arms, phenotypes=phenos, effects=effects,
+    # The amplification axis, reported separately because it is not a
+    # resistance pressure -- it is what an arm's death mode EARNS.
+    amp = []
+    for c in conds:
+        q = c.get("damp_per_death") or {}
+        if not q:
+            continue
+        amp.append({
+            "phenotype": c.get("phenotype"),
+            "stressed": any(c[k] for k in AXIS_KEYS),
+            "heterogeneous": c.get("heterogeneous"),
+            "damp_per_death": q,
+            "kill": {k: c["arms"][k] for k in q if k in c["arms"]},
+        })
+    base = [a for a in amp
+            if not a["stressed"] and not a["heterogeneous"]]
+    quality_ratio = None
+    for a in base:
+        q = a["damp_per_death"]
+        if q.get("RSL3", 0) > 0 and q.get("SDT", 0) > 0:
+            quality_ratio = {"phenotype": a["phenotype"],
+                             "sdt": q["SDT"], "rsl3": q["RSL3"],
+                             "ratio": q["SDT"] / q["RSL3"],
+                             "kill_ratio": (a["kill"]["SDT"] / a["kill"]["RSL3"]
+                                            if a["kill"].get("RSL3", 0) > 0 else None)}
+            break
+    return dict(raw, amplification=amp, quality_ratio=quality_ratio,
+                arms=arms, phenotypes=phenos, effects=effects,
                 effects_by_phenotype=per_pheno, dominant_axis=dominant,
                 inert_axes=inert, live_axes=live, robustness_order=order,
                 inert_threshold=INERT_THRESHOLD)
@@ -144,7 +183,7 @@ def render(d: dict) -> str:
     dom = d.get("dominant_axis", {})
     if len(dom) > 1:
         pairs = "; ".join(
-            f"**{ph}** — {axis} ({worst * 100:.0f}%)"
+            f"**{ph}** — {axis} ({abs(worst) * 100:.0f}%)"
             for ph, (axis, worst) in sorted(dom.items()))
         L += [f"The dominant pressure is not the same one in each cell state: "
               f"{pairs}.", "",
@@ -166,12 +205,13 @@ def render(d: dict) -> str:
         L += ["## The ordering under the axes that bite", "",
               "Largest relative loss first:", ""]
         rows = sorted(arms,
-                      key=lambda a: -max(d["effects"][l][a] for l in live))
+                      key=lambda a: -max(abs(d["effects"][l][a]) for l in live))
         for a in rows:
-            worst_l = max(live, key=lambda l: d["effects"][l][a])
+            worst_l = max(live, key=lambda l: abs(d["effects"][l][a]))
             worst = d["effects"][worst_l][a]
-            L.append(f"* `{a}` — loses {worst * 100:.0f}% of its kill, worst "
-                     f"to {worst_l}")
+            verb = "loses" if worst < 0 else "GAINS"
+            L.append(f"* `{a}` — {verb} {abs(worst) * 100:.0f}% of its kill, "
+                     f"largest to {worst_l}")
         L += ["", "That ordering was not tuned for. It follows from the "
               "mechanisms: a delivered drug loses most, because everything "
               "between the vessel and the target can stop it; an arm whose "
@@ -188,6 +228,60 @@ def render(d: dict) -> str:
               "pooled version could make, and still not a claim that the arms "
               "are resistant to them — only that this configuration cannot "
               "apply that pressure.", ""]
+
+    gains = {a: max((d["effects"][l][a] for l in live), key=abs, default=0.0)
+             for a in arms}
+    helped = {a: v for a, v in gains.items() if v > 0.10}
+    if helped:
+        L += ["## One axis can HELP, and it helps the arm that is failing", ""]
+        for a, v in sorted(helped.items(), key=lambda kv: -kv[1]):
+            ax = max(live, key=lambda l: d["effects"][l][a])
+            L += [f"`{a}` GAINS {v * 100:.0f}% of its kill to {ax}.", ""]
+        L += ["Clonal heterogeneity is the only axis here that can raise an "
+              "arm's kill rather than lower it, and it raises the "
+              "pharmacologic arm from an acid-suppressed baseline. The "
+              "mechanism is not subtle: widening the antioxidant setpoint "
+              "while holding its MEAN fixed supplies a low-glutathione tail "
+              "that dies even when the average cell resists. Variance rescues "
+              "a marginal drug.", "",
+              "**An earlier version of this page could not have reported "
+              "that.** It took the absolute value of every change and called "
+              "the result a loss, which produced the impossible line that an "
+              "arm had lost 121% of its kill. Collapsing the sign did not "
+              "just mislabel a number; it hid a result, because an axis that "
+              "can help is not the same kind of thing as one that only "
+              "hurts.", ""]
+
+    qr = d.get("quality_ratio")
+    if qr:
+        L += ["## Immune amplification is a COUNT effect, not a quality effect", "",
+              "The manuscript reports that sonodynamic therapy generates far "
+              "more immune kills than the pharmacologic inducer, and it does. "
+              "This measures WHY, and the answer refines the claim rather "
+              "than confirming it.", "",
+              f"In the unstressed {qr['phenotype']} state, DAMP release PER "
+              f"DEATH is {qr['sdt']:.2f} for SDT against {qr['rsl3']:.2f} for "
+              f"RSL3 — a ratio of **{qr['ratio']:.2f}×**. The two death modes "
+              "are not very different in quality. What differs is how many "
+              "cells they kill"
+              + (f", and there the ratio is {qr['kill_ratio']:.2f}×"
+                 if qr.get("kill_ratio") else "")
+              + ". The amplification advantage is overwhelmingly a count "
+              "effect.", "",
+              "**And the first version of this measurement got it wrong in an "
+              "instructive way.** It read lipid peroxidation at the moment of "
+              "death, which returns approximately the death threshold FOR "
+              "EVERY ARM by construction — death IS the threshold crossing. "
+              "Measured that way both arms reported ~10.2 and the quality "
+              "difference vanished entirely. It had not vanished; it was "
+              "being measured before it happens. The spatial binaries read "
+              "`lp_at_grace_end` rather than `lp` for exactly this reason, "
+              "and the field name says so: an arm delivering exogenous ROS "
+              "keeps climbing through the post-death grace period while one "
+              "that merely disabled a repair enzyme does not.", "",
+              "A quantity that is equal for every arm by construction is not "
+              "a measurement of anything, and the tell was that it came out "
+              "suspiciously close to a threshold the model defines.", ""]
 
     L += ["## What this does not say", "",
           "**Two of the three axes were not tested, they were not visible.** "
@@ -223,8 +317,10 @@ def main() -> int:
     print(f"wrote {OUT_JSON}")
     print(f"  live axes: {d['live_axes']}  inert: {d['inert_axes']}")
     for a_ in d["robustness_order"]:
-        worst = max((d["effects"][l][a_] for l in d["live_axes"]), default=0.0)
-        print(f"    {a_:22s} worst relative loss {worst * 100:5.1f}%")
+        worst = max((d["effects"][l][a_] for l in d["live_axes"]),
+                    key=abs, default=0.0)
+        verb = "loss" if worst < 0 else "GAIN"
+        print(f"    {a_:22s} largest relative {verb} {abs(worst) * 100:5.1f}%")
     return 0
 
 

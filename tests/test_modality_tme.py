@@ -45,11 +45,11 @@ def test_the_sweep_is_a_full_factorial(d):
     comparisons below have no partner to compare against."""
     conds = d["conditions"]
     seen = {(c["hypoxic"], c["stroma"], c["acidic"], c["deep"],
-             c["phenotype"]) for c in conds}
+             c["heterogeneous"], c["phenotype"]) for c in conds}
     n_pheno = len(d["phenotypes"])
-    assert len(seen) == 16 * n_pheno, (
-        f"{len(seen)} of {16 * n_pheno} combinations present")
-    assert len(conds) == 16 * n_pheno
+    assert len(seen) == 32 * n_pheno, (
+        f"{len(seen)} of {32 * n_pheno} combinations present")
+    assert len(conds) == 32 * n_pheno
     arms = {a for c in conds for a in c["arms"]}
     for c in conds:
         assert set(c["arms"]) == arms, (
@@ -67,7 +67,8 @@ def test_effects_are_paired_so_an_axis_cannot_borrow_anothers(d):
     """
     conds = d["conditions"]
     for label, key in (("hypoxia", "hypoxic"), ("stromal shielding", "stroma"),
-                       ("acidic pH", "acidic"), ("depth", "deep")):
+                       ("acidic pH", "acidic"), ("depth", "deep"),
+                       ("clonal heterogeneity", "heterogeneous")):
         for arm in d["arms"]:
             assert abs(TM._effect(conds, arm, key) - d["effects"][label][arm]) < 1e-12
     # And the pairing must be real: a mutated sweep where an axis co-varies
@@ -77,8 +78,8 @@ def test_effects_are_paired_so_an_axis_cannot_borrow_anothers(d):
         c["arms"] = dict(c["arms"])
         if c["stroma"]:                      # make STROMA rows differ wildly
             c["arms"]["SDT"] = 0.01
-    stroma_effect = TM._effect(doctored, "SDT", "stroma")
-    hypoxia_effect = TM._effect(doctored, "SDT", "hypoxic")
+    stroma_effect = abs(TM._effect(doctored, "SDT", "stroma"))
+    hypoxia_effect = abs(TM._effect(doctored, "SDT", "hypoxic"))
     assert stroma_effect > 0.5, "the pairing cannot see a real stroma effect"
     # Hypoxia's paired effect must be computed within matched stroma states,
     # so it is not inflated by the stroma change.
@@ -105,7 +106,7 @@ def test_an_axis_that_moved_nothing_is_called_inert(d, md):
     # rejected it would have been demanding the world be tidier than it is.
     floor = max(2.0 * thr, 0.03)
     for label in d["live_axes"]:
-        worst = max(d["effects"][label].values(), default=0.0)
+        worst = max((abs(v) for v in d["effects"][label].values()), default=0.0)
         assert worst >= floor, (
             f"{label} is reported LIVE and moves every arm by at most "
             f"{worst:.4f}, under a floor of {floor:.4f}. Either the threshold "
@@ -113,7 +114,7 @@ def test_an_axis_that_moved_nothing_is_called_inert(d, md):
             "tested, or the axis genuinely stopped biting and the page's "
             "ordering paragraph is stale.")
     for label, effs in d["effects"].items():
-        worst = max(effs.values(), default=0.0)
+        worst = max((abs(v) for v in effs.values()), default=0.0)
         inert = worst < thr
         assert (label in d["inert_axes"]) == inert, (
             f"{label} moves arms by at most {worst:.4f} and is called "
@@ -130,17 +131,18 @@ def test_the_ordering_follows_the_mechanisms(d, md):
     oxygen-dependent arm loses most."""
     live = d["live_axes"]
     assert live, "no axis discriminates at all; the sweep shows nothing"
-    worst = {a: max(d["effects"][l][a] for l in live) for a in d["arms"]}
+    worst = {a: max((abs(d["effects"][l][a]) for l in live), default=0.0)
+             for a in d["arms"]}
     assert d["robustness_order"] == sorted(d["arms"], key=lambda a: worst[a])
     # Ablation is a threshold: it must be unaffected, and if it ever is not
     # the model has stopped being self-consistent.
     assert worst["Ablation"] == 0.0, (
-        f"ablation lost {worst['Ablation']:.3f} of its kill to an axis; a "
+        f"ablation moved {worst['Ablation']:.3f} of its kill on an axis; a "
         "destroyed cell does not care about its oxygen tension")
-    # The oxygen-dependent arm must lose more than the dose-modified one.
+    # The oxygen-dependent arm must move more than the dose-modified one.
     assert worst["SDT"] > worst["Radiation"] > 0.0, (
         f"SDT {worst['SDT']:.3f} vs Radiation {worst['Radiation']:.3f}: an "
-        "arm whose lethality DEPENDS on oxygen should lose more than one "
+        "arm whose lethality DEPENDS on oxygen should move more than one "
         "whose dose is merely modified by it")
     assert "That ordering was not tuned for" in md
 
@@ -223,3 +225,48 @@ def test_the_sweep_reproduces_the_repos_own_persister_target(d):
         f"the sweep lands {abs(got - target):.4f} from the target, inside the "
         "stated tolerance but loosely; check whether the two paths still "
         "model the same thing")
+
+
+def test_the_effects_are_signed_so_a_gain_is_not_called_a_loss(d, md):
+    """Taking the absolute value produced the impossible line that an arm had
+    lost 121% of its kill. It had GAINED, and collapsing the sign did not just
+    mislabel a number -- it hid a result."""
+    signed = [v for eff in d["effects"].values() for v in eff.values()]
+    assert any(v < 0 for v in signed), "no axis lowers any arm's kill"
+    gains = [v for v in signed if v > 0.10]
+    if gains:
+        assert "One axis can HELP" in md, (
+            "an axis raises an arm's kill by more than 10% and the page does "
+            "not say so; that is a result, not a rounding artefact")
+        assert "Variance rescues a marginal drug" in md
+    # No reported LOSS may exceed 100%: an arm cannot lose more kill than it
+    # had, and a figure above 100 is the sign error this test exists for.
+    losses = [v for v in signed if v < 0]
+    assert all(v >= -1.0 for v in losses), (
+        f"a loss exceeds 100%: {min(losses):.3f}. An arm cannot lose more "
+        "than it had, so this is a sign or pairing error.")
+
+
+def test_the_amplification_is_measured_after_the_grace_period(d, md):
+    """The measurement that was wrong in an instructive way.
+
+    Reading lipid peroxidation AT death returns approximately the death
+    threshold for every arm by construction -- death IS the crossing -- so the
+    quality difference vanished. It had not vanished; it was being measured
+    before it happens.
+    """
+    qr = d.get("quality_ratio")
+    if qr is None:
+        return
+    # Death threshold is 10.0; a per-death figure at ~10 for every arm is the
+    # symptom of measuring at the crossing rather than after the grace period.
+    assert qr["sdt"] > 12.0 and qr["rsl3"] > 12.0, (
+        f"per-death DAMP release is {qr['sdt']:.1f}/{qr['rsl3']:.1f}, close to "
+        "the death threshold -- the measurement is being taken at the "
+        "crossing rather than after `post_death_steps`")
+    assert qr["ratio"] > 1.0, "the ROS arm should die louder, not quieter"
+    assert qr["ratio"] < 5.0, (
+        f"the per-death ratio is {qr['ratio']:.1f}; the page says the "
+        "amplification advantage is a COUNT effect and that sentence needs "
+        "re-deriving if the quality gap is now large")
+    assert "COUNT effect, not a quality effect" in md
