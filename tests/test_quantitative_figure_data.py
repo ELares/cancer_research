@@ -135,9 +135,32 @@ def test_fig22_fixture_matches_live():
     live = _load(p)
     combos = live["combinations"] if isinstance(live, dict) and "combinations" in live else live
     rf_live = next(c for c in combos if {c["drug_a"], c["drug_b"]} == {"RSL3", "FSP1i"})
-    rf_fix = _fixture("bliss_synergy.json")["rsl3_fsp1i"]
-    for key in ("rate_combo", "bliss_prediction", "synergy_score"):
+    fix = _fixture("bliss_synergy.json")
+    rf_fix = fix["rsl3_fsp1i"]
+    for key in ("rate_a", "rate_b", "rate_combo", "bliss_prediction",
+                "synergy_score"):
         assert rf_fix[key] == rf_live[key], f"Bliss fixture STALE vs live sim on {key}"
+    # THE COHORT SIZE TOO. fig25 draws it as a footnote and a guard compares
+    # the drawn text to this fixture, so without this line the fixture's copy
+    # was the only value in the file compared against nothing -- the figure and
+    # the fixture could agree with each other while both drifted from the run.
+    # THE SAME SCHEMA TOLERANCE AS THE LINE ABOVE. `live` is a dict OR a bare
+    # list -- three lines up handles both -- and subscripting it here raised a
+    # TypeError on the list form instead of the STALE message written for it.
+    # A missing field is reported rather than skipped: the generator skips
+    # fig25 in that case, leaving the committed PDF untouched, so the figure
+    # and the fixture still agree with each other while both drift from the
+    # run. That is the exact state these guards exist to catch, and it is
+    # silent everywhere else.
+    live_n = live.get("n_cells_per_condition") if isinstance(live, dict) else None
+    assert live_n is not None, (
+        "the live combo_summary.json carries no n_cells_per_condition, so the "
+        "fixture's copy is unverifiable. fig25 skips rather than drawing a "
+        "cohort it cannot state, which leaves the committed PDF stale and "
+        "still agreeing with this fixture")
+    assert fix["n_cells_per_condition"] == live_n, (
+        "Bliss fixture STALE vs live sim on n_cells_per_condition, which is "
+        "what fig25's cohort footnote states")
 
 
 def test_fig23_fixture_matches_live():
@@ -159,3 +182,24 @@ def test_fig23_fixture_matches_live():
                 f"window fixture STALE vs live sim on {field} at "
                 f"{r['treatment']} day {r['timepoint_days']}"
             )
+    # THE COHORT SIZE, from the rows fig26 actually PLOTS. The live file also
+    # carries a Control arm the figure never draws, and the generator used to
+    # take n_cells from any row -- so this compares the same subset the figure
+    # states in its footnote.
+    fix = _fixture("vulnerability_window.json")
+    # The loop above iterates `live` directly and would raise on the dict
+    # form, so this tolerance is unreachable today; it is here so that adding
+    # the same handling above does not leave this line behind. An earlier
+    # comment claimed it mirrored a tolerance up there. It does not.
+    live_rows = live["rows"] if isinstance(live, dict) and "rows" in live else live
+    live_n = {x["n_cells"] for x in live_rows
+              if x["treatment"] in ("RSL3", "SDT") and x.get("n_cells")}
+    assert live_n, (
+        "the live window rows carry no n_cells for the treatments fig26 "
+        "plots, so the fixture's copy is unverifiable. fig26 skips in that "
+        "case, leaving the committed PDF stale and still agreeing with this "
+        "fixture")
+    assert live_n == {fix["n_cells"]}, (
+        f"window fixture says n_cells={fix['n_cells']} and the live sim's "
+        f"plotted rows give {sorted(live_n)}; that number is fig26's cohort "
+        "footnote")

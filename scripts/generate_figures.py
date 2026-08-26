@@ -1472,8 +1472,32 @@ def fig25_bliss_synergy():
     axB.legend(fontsize=8, loc="lower right")
 
     fig.suptitle("Dual-pathway (GPX4 + FSP1) depletion is synergistic", fontsize=12, y=1.02)
+    # DERIVED, not typed. This footnote read "1,000 persister cells/condition"
+    # as a literal, so the figure asserted a cohort size the simulation never
+    # confirmed -- halving n in the sim output left the caption saying 1,000.
+    # A guard comparing the drawn text to the data could not fail while the
+    # text was a constant, so the number comes from the run.
+    # NOTE the asymmetry with `combos` three lines up, which accepts a bare
+    # list. A list-form combo_summary.json carries no cohort size anywhere, so
+    # this figure skips on an input the line above still reads. That is
+    # deliberate -- the footnote states n, and there is no n to state -- and
+    # `test_fig22_fixture_matches_live` fails loudly on it rather than letting
+    # the stale committed PDF pass as current.
+    n_cells = data.get("n_cells_per_condition") if isinstance(data, dict) else None
+    if not n_cells:
+        # SKIP, not assert. An older combo_summary.json has no such field, and
+        # aborting here would take every figure after this one down with it --
+        # the same failure this project just fixed in the conceptual-diagram
+        # generator. Drawing it with the cohort clause dropped is worse: the
+        # footnote would silently stop stating n.
+        print(f"  {COMBO_SUMMARY} carries no n_cells_per_condition — the "
+              "footnote states the cohort size, so skipping rather than "
+              "drawing a figure that cannot say it. The committed PDF is left "
+              "as it was and is now stale.")
+        plt.close(fig)
+        return
     fig.text(0.5, -0.04,
-             "1,000 persister cells/condition, 2D culture params. Drug potencies are estimates; the "
+             f"{n_cells:,} persister cells/condition, 2D culture params. Drug potencies are estimates; the "
              "directional finding (dual-pathway > single) held across the ±50% sensitivity sweep (§5).",
              ha="center", fontsize=7.5, style="italic", color="gray")
     fig.savefig(FIG_DIR / "fig25_bliss_synergy.pdf", bbox_inches="tight")
@@ -1543,8 +1567,26 @@ def fig26_vulnerability_window():
     axB.legend(lA + lB, llA + llB, fontsize=8, loc="center right")
 
     fig.suptitle("The ferroptosis-sensitive window: days for RSL3, weeks for SDT", fontsize=12, y=1.02)
+    # DERIVED, for the same reason as fig25's. See that comment.
+    # ONLY THE ROWS THIS FIGURE PLOTS. Scanning every row let the cohort size
+    # come from the `Control` arm, which fig26 never draws: stripping n_cells
+    # from the RSL3/SDT rows and setting Control's to 250 made the figure state
+    # 250 with nothing from the plotted data behind it.
+    plotted = ("RSL3", "SDT")
+    n_seen = {r.get("n_cells") for r in data
+              if r.get("treatment") in plotted and r.get("n_cells")}
+    if len(n_seen) != 1:
+        why = ("carry no n_cells at all" if not n_seen
+               else f"disagree on n_cells {sorted(n_seen)}")
+        print(f"  {WINDOW_JSON}: rows {why}, and the footnote states one "
+              "cohort size for the whole figure — skipping rather than "
+              "drawing a figure that cannot say it. The committed PDF is left "
+              "as it was and is now stale.")
+        plt.close(fig)
+        return
+    n_cells = n_seen.pop()
     fig.text(0.5, -0.04,
-             "100,000 cells/condition; x-axis shows sampled timepoints (not linear in time). Defense-recovery "
+             f"{n_cells:,} cells/condition; x-axis shows sampled timepoints (not linear in time). Defense-recovery "
              "half-times (GPX4 3 d, FSP1 7 d, NRF2 5 d, GSH 1 d) are literature-estimated, so window durations "
              "are approximate until experimentally validated.",
              ha="center", fontsize=7.5, style="italic", color="gray")
