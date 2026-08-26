@@ -139,6 +139,44 @@ mod tests {
         assert_eq!(r.immune_kills, 0.0);
     }
 
+    /// No ferroptotic death means no kills AT EVERY BLOCKADE SETTING.
+    ///
+    /// This is the claim `analysis/modality-coverage.md` rests on when it
+    /// files immunotherapy as a MODIFIER rather than a treatment: checkpoint
+    /// blockade cannot be the thing under test in this engine, because it
+    /// enters only through the brake, and the brake multiplies a term that is
+    /// already zero when nothing died by ferroptosis.
+    ///
+    /// Swept rather than asserted at one setting.
+    /// `empty_cascade_produces_no_kills` above tests `with_anti_pd1 = false`
+    /// only, so it could not have seen a blockade path that manufactured
+    /// kills of its own.
+    #[test]
+    fn no_ferroptotic_death_means_no_kills_at_any_blockade_setting() {
+        for &efficacy in &[0.0, 0.25, 0.5, 0.75, 1.0] {
+            let p = ImmuneParams {
+                anti_pd1_efficacy: efficacy,
+                ..ImmuneParams::default()
+            };
+            for &with in &[false, true] {
+                let r = immune_cascade(&[], 10_000, &p, with);
+                assert_eq!(
+                    r.immune_kills, 0.0,
+                    "anti_pd1={efficacy}, with_anti_pd1={with} produced kills \
+                     with no ferroptotic death"
+                );
+                assert_eq!(r.total_damps, 0.0);
+            }
+        }
+        // And with NO brake at all -- the most favourable case blockade could
+        // ever reach -- still zero.
+        let p = ImmuneParams {
+            pd1_brake: 0.0,
+            ..ImmuneParams::default()
+        };
+        assert_eq!(immune_cascade(&[], 10_000, &p, true).immune_kills, 0.0);
+    }
+
     #[test]
     fn activation_tracks_per_cell_quality_not_count() {
         // The model's central claim: DC activation responds to DAMP-PER-DEATH

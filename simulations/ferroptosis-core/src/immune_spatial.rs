@@ -1164,6 +1164,44 @@ mod tests {
         }
     }
 
+    /// Zero DAMPs give zero kill probability AT EVERY BRAKE, including a
+    /// fully blockaded four-axis checkpoint panel.
+    ///
+    /// The claim `analysis/modality-coverage.md` rests on when it files
+    /// immunotherapy as a MODIFIER: blockade enters only through
+    /// `effective_brake`, which multiplies an activation that is already zero
+    /// without ferroptotic death. `immune_kill_full_brake_returns_zero` below
+    /// pins the opposite corner (full brake, any activation); this pins the
+    /// one the report argues from.
+    #[test]
+    fn zero_damp_gives_zero_kill_at_every_brake() {
+        for &kd in &[1.0, 50.0, 1000.0] {
+            let activation = dc_activation(0.0, kd);
+            for &rate in &[0.0, 0.02, 1.0] {
+                for &brake in &[0.0, 0.21, 0.5, 1.0] {
+                    assert_eq!(
+                        immune_kill_probability(activation, rate, brake),
+                        0.0,
+                        "kd={kd}, rate={rate}, brake={brake} produced a kill \
+                         probability with no DAMPs"
+                    );
+                }
+            }
+        }
+        // The full panel with every inhibitor at complete efficacy -- the
+        // strongest immunotherapy this engine can express -- still cannot
+        // rescue a run with no ferroptotic death.
+        let panel = CheckpointPanel::pd1_ctla4_tumor()
+            .with_anti_pd1(1.0)
+            .with_anti_ctla4(1.0)
+            .with_anti_lag3(1.0)
+            .with_anti_tim3(1.0);
+        assert_eq!(
+            immune_kill_probability(dc_activation(0.0, 50.0), 0.02, panel.combined_brake()),
+            0.0
+        );
+    }
+
     /// `dc_activation(kd, kd) = 0.5` exactly (IEEE: x/(2x) = 0.5 for
     /// finite x; even though `kd` may not be IEEE-exact, the doubling
     /// `kd + kd = 2*kd` is exact, then x/(2x) when 2x is finite is

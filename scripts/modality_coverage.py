@@ -272,7 +272,13 @@ def strip_rust_comments(src: str) -> str:
                     j += 2
                 else:
                     j += 1
-            out.append(" ")
+            # LINE-PRESERVING: keep one newline per line removed. Every
+            # stripper here reports line numbers into the real file, and the
+            # first version counted them over the STRIPPED text -- two of the
+            # seven DAMP writers in the committed JSON pointed at the wrong
+            # line, including the 3D binary's principal one, because a
+            # mid-file `#[cfg(test)]` item shifted everything after it by six.
+            out.append("\n" * src.count("\n", i, j))
             i = j
             continue
         out.append(c)
@@ -280,45 +286,124 @@ def strip_rust_comments(src: str) -> str:
     return "".join(out)
 
 
+# `#[cfg(test)]`, but also `#[cfg(all(test, feature = "x"))]` and `#[cfg( test )]`.
+# The first version matched only the bare spelling, so a perfectly ordinary
+# `#[cfg(all(test, ...))]` left an entire test module in the scanned code --
+# the PROSE-ONLY false positive the tier exists to prevent.
+_CFG_TEST = re.compile(r"#\[\s*cfg\s*\((?:[^()]|\([^()]*\))*\)\s*\]")
+
+
+def _cfg_test_matches(text: str) -> bool:
+    """Does this `#[cfg(...)]` attribute gate on `test`?"""
+    return re.search(r"\btest\b", text) is not None
+
+
 def strip_test_blocks(src: str) -> str:
-    """Remove every `#[cfg(test)]` item, by brace matching.
+    """Remove every `test`-gated item, preserving line numbers.
 
     Run AFTER comment stripping so a brace in a comment cannot unbalance the
-    match. String literals are still present, so braces inside them are skipped
-    explicitly -- a format string like `"{x}"` is common in this crate.
+    match. Four things the first version got wrong, none of them live in this
+    crate today and all of them legal Rust -- the same class its sibling
+    `strip_rust_comments` was hardened against and this one was not:
 
-    This is the difference between an engine that models immunotherapy and one
-    whose only immunological code is an assertion message.
+    * `#[cfg(all(test, feature = "x"))]` and `#[cfg( test )]` did not match at
+      all, so the whole block survived as "engine code".
+    * The item after the attribute is not always a `mod`: `use`, `const`, `fn`
+      and `impl` are all legal. Brace-matching from the next `{` anywhere in
+      the file swallowed the following PRODUCTION item, or the rest of the
+      file.
+    * A `'{'` or `'"'` char literal inside the block unbalanced the depth
+      counter and dropped everything after it.
+    * Raw strings (`r#"{...}"#`) were not recognised, and three already exist
+      inside test blocks in this crate. They are harmless today only because
+      those blocks run to EOF, where an overshoot and a correct match are
+      indistinguishable.
+
+    Every one of those is planted in a test rather than waited for.
     """
     out, i, n = [], 0, len(src)
     while i < n:
-        m = re.compile(r"#\[cfg\(test\)\]").search(src, i)
+        m = _CFG_TEST.search(src, i)
+        while m and not _cfg_test_matches(m.group(0)):
+            m = _CFG_TEST.search(src, m.end())
         if not m:
             out.append(src[i:])
             break
         out.append(src[i:m.start()])
-        j = src.find("{", m.end())
-        if j == -1:
-            break
-        depth, j = 1, j + 1
-        while j < n and depth:
-            ch = src[j]
-            if ch == '"':
-                j += 1
-                while j < n:
-                    if src[j] == "\\":
-                        j += 2
-                        continue
-                    if src[j] == '"':
-                        break
-                    j += 1
-            elif ch == "{":
-                depth += 1
-            elif ch == "}":
-                depth -= 1
-            j += 1
-        i = j
+        j, end = m.end(), None
+        # A brace-bodied item (`mod`, `fn`, `impl`, `struct`) ends at its
+        # matching `}`; a statement item (`use`, `const`, `type`) ends at the
+        # first `;`. Whichever terminator comes first decides which it is.
+        brace = _scan_for(src, j, "{")
+        semi = _scan_for(src, j, ";")
+        if brace is not None and (semi is None or brace < semi):
+            end = _matching_brace(src, brace)
+        elif semi is not None:
+            end = semi + 1
+        if end is None:
+            end = n
+        out.append("\n" * src.count("\n", m.start(), end))
+        i = end
     return "".join(out)
+
+
+def _scan_for(src: str, i: int, ch: str):
+    """Index of the next `ch` at depth zero, skipping strings and chars."""
+    n = len(src)
+    while i < n:
+        i = _skip_literal(src, i)
+        if i >= n:
+            return None
+        if src[i] == ch:
+            return i
+        i += 1
+    return None
+
+
+def _matching_brace(src: str, open_idx: int) -> int:
+    """Index just past the `}` matching the `{` at `open_idx`."""
+    depth, i, n = 1, open_idx + 1, len(src)
+    while i < n and depth:
+        i = _skip_literal(src, i)
+        if i >= n:
+            break
+        if src[i] == "{":
+            depth += 1
+        elif src[i] == "}":
+            depth -= 1
+        i += 1
+    return i
+
+
+def _skip_literal(src: str, i: int) -> int:
+    """If a literal starts at `i`, return the index just past it.
+
+    Handles raw strings, byte strings, ordinary strings and char literals, so
+    a brace or a quote inside one cannot move the brace depth. A `'` that does
+    not open a char literal is a lifetime and is left alone.
+    """
+    n = len(src)
+    if i >= n:
+        return i
+    m = re.match(r"(?:b?r(#*)\"|b?\")", src[i:])
+    if m:
+        if m.group(1) is not None and "r" in m.group(0):
+            close = '"' + "#" * len(m.group(1))
+            end = src.find(close, i + m.end())
+            return n if end == -1 else end + len(close)
+        j = i + m.end()
+        while j < n:
+            if src[j] == "\\":
+                j += 2
+                continue
+            if src[j] == '"':
+                return j + 1
+            j += 1
+        return n
+    m = re.match(r"'(?:\\.|[^\\'])'", src[i:])
+    if m:
+        return i + m.end()
+    return i
 
 
 def _module_text() -> tuple[dict, dict]:
@@ -384,26 +469,71 @@ def _immune_models() -> list:
     return models
 
 
-def _damp_writers() -> list:
-    """Every write to a DAMP accumulator, in the crate AND the binaries.
+# Any line of production code that mentions DAMPs AND assigns. This is the
+# WRITE SURFACE, and it is deliberately broader than "lines that add DAMPs":
+# it includes the allocations, the aliases, the diffusion and the clearance,
+# because the question is not "which lines look like sources" but "has
+# anything on this surface changed".
+_DAMP_LINE = re.compile(r"damp", re.I)
+_ASSIGNS = re.compile(r"(\+=|-=|\*=|/=|=[^=])")
 
-    The first version scanned `sim-*/src/*.rs` for `damp_field[..] +=` only. It
-    therefore missed the 3D binary's PRINCIPAL writer, which is a rayon slot
-    (`*damp_slot += ...`), missed the plain-assignment form entirely, and could
-    not see `ferroptosis-core/src/immune.rs` at all. A guard that protects the
-    document's central claim must see every shape the claim is about.
+# The four lines that introduce FRESH antigen, as opposed to moving or
+# clearing what is already there. Matched on the LP term, which is the whole
+# claim: DAMPs are proportional to lipid peroxidation at death.
+_FRESH = re.compile(r"lp_at_grace_end|dead_cell_lps")
+
+
+def _rust_files() -> list:
+    return sorted(CORE.glob("*.rs")) + sorted(BINS.glob("sim-*/src/*.rs"))
+
+
+def _damp_surface() -> list:
+    """Every production line that mentions DAMPs and assigns.
+
+    ## Why this is a CHANGE DETECTOR and not a proof, stated plainly
+
+    The document's central claim is that no ferroptosis-independent antigen
+    source exists anywhere in the engine. **A text scan cannot decide that**,
+    and the first two attempts to make it look as though it could were both
+    vacuous:
+
+    1. Scanning `sim-*/src/*.rs` for `damp_field[..] +=` found 3 of the real
+       writers. A planted `*damp_slot += 42.0;` in the 3D binary's hot loop
+       left every guard green.
+    2. Widening to four literal spellings and classifying each line as
+       "LP-proportional or a redistribution" was vacuous in the SAME way, and
+       against the same attack: `damp_field[i] = 42.0 + damp_field[i] * 0.0;`
+       satisfies "the right-hand side mentions the field", and an alias
+       (`let a: &mut [f64] = damp_field; a[i] += 42.0;`) was invisible even to
+       the writer COUNT. Both left the report's headline claim false and 109
+       tests green.
+
+    The lesson is the one this repository keeps relearning: a registry that
+    records a property its scan cannot DECIDE is worse than no registry. So
+    this stops trying to classify arbitrary expressions and pins something a
+    scan CAN decide -- the exact set of production lines that touch the DAMP
+    surface. Any edit to any of them, and any new one, changes the set and
+    fails the guard, which forces a human to re-derive the claim rather than
+    letting a regex approve it.
+
+    The classification is still reported, because "which four lines introduce
+    fresh antigen" is useful, but the guard's teeth are the set, not the
+    labels. The claim itself is PROVED where it can be: `immune_spatial.rs`
+    and `immune.rs` carry Rust tests asserting that zero DAMPs give zero kills
+    at every checkpoint-blockade setting, which is exact rather than textual.
     """
     out = []
-    files = sorted(CORE.glob("*.rs")) + sorted(BINS.glob("sim-*/src/*.rs"))
-    pat = re.compile(
-        r"(?:damp_field\s*\[[^\]]+\]|\*\s*damp_slot|total_damps|let\s+total\s*:\s*f64)"
-        r"\s*(?:\+=|=)")
-    for p in files:
+    for p in _rust_files():
         body = strip_test_blocks(strip_rust_comments(p.read_text()))
         for i, line in enumerate(body.splitlines(), 1):
-            if pat.search(line):
-                rel = p.relative_to(REPO).as_posix()
-                out.append({"file": rel, "line": i, "text": line.strip()})
+            t = line.strip()
+            if _DAMP_LINE.search(t) and _ASSIGNS.search(t):
+                out.append({
+                    "file": p.relative_to(REPO).as_posix(),
+                    "line": i,
+                    "text": t,
+                    "introduces_fresh_antigen": bool(_FRESH.search(t)),
+                })
     return out
 
 
@@ -442,7 +572,17 @@ def scan() -> dict:
         "taxonomy_named": named,
         "taxonomy_without_a_row": sorted(set(named) - rows_present),
         "immune_models": _immune_models(),
-        "damp_writers": _damp_writers(),
+        # The two detector defects the report narrates, RECOMPUTED under the
+        # rules the report currently describes rather than quoted from the
+        # version that had them. Both were typed, and both had gone stale:
+        # "eight modules" was measured before `lib.rs` was excluded and test
+        # blocks stripped, and "16 of 33" used a denominator that counted the
+        # crate root.
+        "phenotype_term_credits": sorted(
+            n for n, t in code.items() if _matches(t, ("glycolytic", "oxphos"))),
+        "unbounded_t_cell_credits": sorted(
+            n for n, t in code.items() if "t cell" in t),
+        "damp_surface": _damp_surface(),
         "mechanisms": mechanisms,
     }
 
@@ -538,10 +678,13 @@ def render(d: dict) -> str:
                   "`activation = dc_activation(local_damp, kd)` = "
                   "`damp/(damp + kd)`; the well-mixed one is "
                   "`primed_tcells · kill_rate · (1 − brake)` with its own "
-                  "`damp_per_dead_cell/(damp_per_dead_cell + kd)`. Every DAMP "
-                  "source in either is proportional to lipid peroxidation at "
-                  f"death — {len(d['damp_writers'])} writers across the crate "
-                  "and the binaries, listed in the JSON — so with no "
+                  "`damp_per_dead_cell/(damp_per_dead_cell + kd)`. Every line that "
+                  "introduces FRESH antigen in either is proportional to "
+                  "lipid peroxidation at death — "
+                  f"{sum(1 for w in d['damp_surface'] if w['introduces_fresh_antigen'])} "
+                  f"of the {len(d['damp_surface'])} lines on the engine's DAMP "
+                  "write surface, all listed in the JSON; the rest allocate, "
+                  "diffuse or clear what is already there — so with no "
                   "ferroptotic kill the activation term is 0 and the product "
                   "is 0 **at every checkpoint-blockade setting**. Anti-PD-1 "
                   "enters only through `brake`, a multiplier on a term that is "
@@ -551,7 +694,20 @@ def render(d: dict) -> str:
                   "as a coefficient on ferroptosis; it cannot be given as a "
                   f"treatment arm. That is a modifier carrying "
                   f"{imm['census']:,} census articles and {imm['trials']:,} "
-                  "trials.", ""]
+                  "trials.", "",
+                  "**How that claim is checked, and what the check cannot "
+                  "do.** The zero is PROVED in Rust, where it is exact: "
+                  "`immune_spatial.rs` and `immune.rs` each carry a test "
+                  "asserting that no DAMPs give no kills at every "
+                  "checkpoint-blockade setting. What no test can prove is a "
+                  "universal negative over source text — that no "
+                  "ferroptosis-independent antigen source exists ANYWHERE — "
+                  "and two attempts to make a regex look as though it could "
+                  "were both vacuous against the same planted attack. So the "
+                  "guard here is a CHANGE DETECTOR: it pins the exact set of "
+                  "production lines that touch the DAMP surface, and any edit "
+                  "to any of them fails and forces this paragraph to be "
+                  "re-derived by a person.", ""]
     if treatment:
         names = ", ".join(f"`{r['mechanism']}`" for r in treatment)
         L += [f"Modelled as a treatment: {names}. `PDT` and `RSL3` have no row "
@@ -625,12 +781,27 @@ def render(d: dict) -> str:
           "**Word boundaries are not enough on their own, and they are also "
           "the wrong boundary.** Two opposite failures, both measured, both "
           "invisible in the output:", "",
-          "*Too wide.* `glycolytic` and `oxphos` are properly bounded, are "
+          "*Too wide, unbounded.* The first version matched `t cell`, which "
+          "sits inside `mut cell`. Under the rules this document now applies "
+          f"it would credit {len(d['unbounded_t_cell_credits'])} of "
+          f"{d['module_count']} modules — `"
+          + "`, `".join(d["unbounded_t_cell_credits"][:4])
+          + "`, and so on — with modelling immunotherapy. Recomputed here "
+          "rather than quoted from the version that had the defect, where it "
+          "read 16 of 33 over a denominator that still counted the crate "
+          "root.", "",
+          "*Too wide, bounded.* `glycolytic` and `oxphos` are properly "
+          "bounded, are "
           "real words, and are the names of two `Phenotype` enum variants — "
-          "baseline cell states, not a therapy. They credited eight modules "
-          "with modelling metabolic-targeting when what the engine models is "
-          "tumour metabolism as a substrate. The therapy-side terms fire "
-          "nowhere, which is the correct answer.", "",
+          "baseline cell states, not a therapy. Under the rules this document "
+          f"now applies they would credit {len(d['phenotype_term_credits'])} "
+          "of its "
+          f"{d['module_count']} modules with modelling metabolic-targeting, "
+          "when what the engine models is tumour metabolism as a substrate. "
+          "The therapy-side terms fire nowhere, which is the correct answer. "
+          "(That count is recomputed here rather than quoted from the version "
+          "that had the defect, where it was eight over a denominator that "
+          "still counted the crate root.)", "",
           "*Too narrow.* `_` is a word character, so `\\b` cannot match a Rust "
           "identifier: `\\bsdt\\b` misses `sdt_ros`, `\\bacsl4\\b` misses "
           "`acsl4_strength`, `\\bcd47\\b` misses `cd47_blockade`. The crate's "
