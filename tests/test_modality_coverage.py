@@ -1,28 +1,33 @@
 """Guards for `analysis/modality-coverage.{md,json}`.
 
-The document argues that this engine models one mechanism and that twelve of
-the taxonomy's sixteen have no representation at all. An argument of that shape
-is only as good as its detector, and a coverage detector fails in two opposite
-directions that a count cannot tell apart:
+The document argues that this engine models one mechanism and that thirteen of
+the sixteen it can count have no representation at all. An argument of that
+shape is only as good as its detector, and a coverage detector fails in two
+opposite directions that a count cannot tell apart:
 
-* **Too wide** and absent mechanisms look modelled. The first draft matched the
-  unbounded substring `t cell`, which sits inside `mut cell`, and credited 16
-  of 33 modules -- `physics`, `stats`, `grid` -- with modelling immunotherapy.
-  Nothing in the output looked wrong; the table just looked better.
+* **Too wide** and absent mechanisms look modelled. Three measured instances,
+  each caught by a different reviewer: the unbounded substring `t cell` sits
+  inside `mut cell` and credited 16 of 33 modules -- `physics`, `stats`,
+  `grid` -- with modelling immunotherapy; `glycolytic` and `oxphos` are
+  properly bounded real words that are also `Phenotype` ENUM VARIANTS, and
+  credited eight modules with modelling metabolic targeting; and an `assert!`
+  MESSAGE inside a `#[cfg(test)]` block credited `senescence` with the same.
 * **Too narrow** and modelled mechanisms look absent, which in a document that
-  proposes what to BUILD is an argument for writing code that already exists.
+  describes what the engine CANNOT express is an argument for writing code
+  that already exists.
 
-So every term carries a string that must match and a string that must not, and
-the case table is keyed on the terms read out of the generator rather than
-restated -- a table that lists its own terms cannot notice a new one.
+So every term carries a string that must match and a string that must not, the
+case table is keyed on the terms read out of the generator rather than
+restated, and the tier assertions are EQUALITIES rather than bounds -- the
+first version asserted `modelled <= {"sonodynamic"}`, which the empty set
+satisfies, so deleting the entire TREATMENT tier left all ninety guards green
+and shipped a document calling sonodynamic a modifier.
 
 The second half pins the prose. The report's central claim is not a count: it
-is that checkpoint blockade cannot be a treatment arm because DAMPs are
-proportional to lipid peroxidation at death, so `activation` is zero without
-ferroptosis and every blockade setting multiplies zero. That is a claim about
-Rust the report cannot check by reading itself, and it is exactly the kind of
-sentence this repo has shipped wrong before, so it is measured against the
-crate here.
+is that checkpoint blockade cannot be a treatment arm because every DAMP source
+is proportional to lipid peroxidation at death, so the activation term is zero
+without ferroptosis and every blockade setting multiplies zero. That is a claim
+about Rust the report cannot check by reading itself.
 """
 import importlib.util
 import json
@@ -62,87 +67,89 @@ def md():
 # ---------------------------------------------------------------- the detector
 
 # For every term: (a string it MUST match, a string it must NOT match). The
-# negatives are the point -- each is a real substring collision, most of them
-# taken from Rust the crate actually contains.
+# negatives are the point -- each is a real substring collision, and each
+# CONTAINS the term's text, so a matcher that dropped its boundaries entirely
+# would fail here. Three of the first version's negatives did not contain the
+# term at all and so proved nothing.
 CASES = {
-    "immun*": ("immunity falls", "the immediate neighbour"),
-    "checkpoint*": ("checkpoint brake", "check the point"),
-    "pd-1": ("anti pd-1 efficacy", "pd-12 axis"),
-    "pd-l1": ("dc pd-l1 protection", "pd-l10"),
-    "ctla-4": ("ctla-4 brake", "ctla-40"),
+    "immun*": ("immunity falls", "a preimmunisation step"),
+    "checkpoint*": ("checkpoint brake", "the recheckpoint pass"),
+    "pd-1": ("anti pd-1 efficacy", "pd-1x axis"),
+    "pd-l1": ("dc pd-l1 protection", "pd-l1x"),
+    "ctla-4": ("ctla-4 brake", "ctla-4x"),
     "t cell": ("one t cell kills", "let mut cell = grid"),
     "t-cell*": ("t-cells prime", "at-cell"),
     "cd8": ("cd8 infiltration", "cd80 costimulation"),
-    "dendritic": ("dendritic uptake", "dendritics"[:9] + "x"),
-    "icd": ("icd signal", "predicdt"),
-    "treg*": ("treg suppression", "retreg"),
+    "dendritic": ("dendritic uptake", "adendritic"),
+    "icd": ("icd signal", "aicd"),
+    "treg*": ("treg suppression", "atreg"),
     "mdsc*": ("mdscs arrive", "amdsc"),
     "hdac*": ("hdac inhibitor", "shdac"),
     "histone*": ("histone marks", "ahistone"),
-    "methylation": ("dna methylation", "methylations"),
+    "methylation": ("dna methylation", "amethylation"),
     "epigenetic*": ("epigenetically locked", "aepigenetic"),
     "dnmt*": ("dnmt1 loss", "xdnmt"),
-    "chromatin": ("chromatin state", "chromatins"),
+    "chromatin": ("chromatin state", "achromatin"),
     "nanoparticle*": ("nanoparticles deliver", "ananoparticle"),
     "liposom*": ("liposomal payload", "aliposome"),
     "micelle*": ("micelles form", "amicelle"),
     "nanocarrier*": ("nanocarrier load", "ananocarrier"),
-    "car-t": ("car-t infusion", "car-total"),
+    "car-t": ("car-t infusion", "car-tx"),
     "car t": ("car t product", "scar t"),
-    "chimeric antigen": ("chimeric antigen receptor", "chimeric antigens"),
-    "glycolysis": ("aerobic glycolysis", "glycolysises"),
-    "glycolytic": ("glycolytic tumors", "glycolytics"),
-    "oxphos": ("oxphos cells", "oxphosx"),
+    "chimeric antigen": ("chimeric antigen receptor", "chimeric antigenx"),
+    "glycolysis": ("aerobic glycolysis", "aglycolysis"),
     "metabolic*": ("metabolic reprogramming", "ametabolic"),
     "glutamin*": ("glutaminolysis", "aglutamine"),
-    "warburg": ("warburg effect", "warburgs"),
-    "lactate": ("lactate export", "lactates"),
-    "antibody-drug": ("antibody-drug conjugate", "antibody-drugs"),
-    "adc": ("adc payload", "adcs"),
+    "warburg": ("warburg effect", "awarburg"),
+    "lactate": ("lactate export", "alactate"),
+    "2-deoxyglucose": ("2-deoxyglucose dose", "x2-deoxyglucose"),
+    "dichloroacetate": ("dichloroacetate arm", "adichloroacetate"),
+    "antibody-drug": ("antibody-drug conjugate", "antibody-drugx"),
+    "adc": ("adc payload", "adcx"),
     "payload*": ("payloads released", "apayload"),
     "parp*": ("parp inhibitor", "aparp"),
     "synthetic lethal*": ("synthetic lethality", "asynthetic lethal"),
     "brca*": ("brca1 mutant", "abrca"),
     "homologous recombination": ("homologous recombination repair",
-                                 "homologous recombinations"),
-    "oncolytic": ("oncolytic virus", "oncolytics"),
-    "virotherapy": ("virotherapy arm", "virotherapies"),
+                                 "ahomologous recombination"),
+    "oncolytic": ("oncolytic virus", "aoncolytic"),
+    "virotherapy": ("virotherapy arm", "avirotherapy"),
     "adenovir*": ("adenovirus vector", "aadenovirus"),
-    "crispr": ("crispr screen", "crisprs"),
-    "cas9": ("cas9 nuclease", "cas90"),
-    "guide rna": ("guide rna pool", "guide rnas"),
+    "crispr": ("crispr screen", "acrispr"),
+    "cas9": ("cas9 nuclease", "cas9x"),
+    "guide rna": ("guide rna pool", "guide rnax"),
     "sgrna*": ("sgrnas designed", "asgrna"),
     "bispecific*": ("bispecific antibody", "abispecific"),
-    "bite": ("bite construct", "bites"),
+    "bite": ("bite construct", "bitex"),
     "t-cell engager*": ("t-cell engagers", "at-cell engager"),
-    "electroporation": ("irreversible electroporation", "electroporations"),
-    "electrochemical": ("electrochemical therapy", "electrochemicals"),
+    "electroporation": ("irreversible electroporation", "aelectroporation"),
+    "electrochemical": ("electrochemical therapy", "aelectrochemical"),
     "irreversible electro*": ("irreversible electroporation",
                               "airreversible electro"),
-    "sonodynamic": ("sonodynamic therapy", "sonodynamics"),
-    "sdt": ("sdt arm", "sdts"),
-    "ultrasound": ("ultrasound pulse", "ultrasounds"),
+    "sonodynamic": ("sonodynamic therapy", "asonodynamic"),
+    "sdt": ("sdt arm", "sdtx"),
+    "ultrasound": ("ultrasound pulse", "aultrasound"),
     "sonosensitiz*": ("sonosensitizer dose", "asonosensitizer"),
-    "hifu": ("hifu ablation", "hifus"),
-    "focused ultrasound": ("focused ultrasound beam", "focused ultrasounds"),
-    "thermal ablation": ("thermal ablation zone", "thermal ablations"),
-    "cd47": ("cd47 blockade", "cd470"),
+    "hifu": ("hifu ablation", "hifux"),
+    "focused ultrasound": ("focused ultrasound beam", "afocused ultrasound"),
+    "thermal ablation": ("thermal ablation zone", "athermal ablation"),
+    "cd47": ("cd47 blockade", "cd47x"),
     "sirp*": ("sirpalpha", "asirp"),
     "phagocytos*": ("phagocytosis checkpoint", "aphagocytosis"),
-    "microbiome": ("gut microbiome", "microbiomes"),
-    "microbiota": ("microbiota shift", "microbiotas"),
+    "microbiome": ("gut microbiome", "amicrobiome"),
+    "microbiota": ("microbiota shift", "amicrobiota"),
     "bacteri*": ("bacterial vector", "abacteria"),
-    "mrna vaccine": ("mrna vaccine arm", "mrna vaccines"),
+    "mrna vaccine": ("mrna vaccine arm", "amrna vaccine"),
     "neoantigen*": ("neoantigens presented", "aneoantigen"),
     "lipid nanoparticle vaccine": ("lipid nanoparticle vaccine dose",
-                                   "lipid nanoparticle vaccines"),
+                                   "alipid nanoparticle vaccine"),
     "ferropto*": ("ferroptotic death", "aferroptosis"),
-    "gpx4": ("gpx4 inhibition", "gpx40"),
+    "gpx4": ("gpx4 inhibition", "gpx4x"),
     "lipid perox*": ("lipid peroxidation", "alipid perox"),
-    "fsp1": ("fsp1 rescue", "fsp10"),
-    "acsl4": ("acsl4 high", "acsl40"),
-    "slc7a11": ("slc7a11 export", "slc7a110"),
-    "rsl3": ("rsl3 dose", "rsl30"),
+    "fsp1": ("fsp1 rescue", "fsp1x"),
+    "acsl4": ("acsl4 high", "acsl4x"),
+    "slc7a11": ("slc7a11 export", "slc7a11x"),
+    "rsl3": ("rsl3 dose", "rsl3x"),
     "erastin*": ("erastin arm", "aerastin"),
 }
 
@@ -161,6 +168,21 @@ def test_every_term_the_generator_uses_has_a_case_in_both_directions():
         assert yes.strip() and no.strip(), f"{term} has an empty case"
 
 
+def test_every_negative_case_actually_contains_the_term():
+    """The negatives must probe the BOUNDARY, not the word.
+
+    Three of the first version's -- `immun*`/"the immediate neighbour",
+    `checkpoint*`/"check the point", `virotherapy`/"virotherapies" -- did not
+    contain the term's characters at all, so a matcher with its boundaries
+    stripped out entirely would still have passed them.
+    """
+    for term, (_, no) in CASES.items():
+        body = term[:-1] if term.endswith("*") else term
+        assert body in no, (
+            f"{term!r}'s negative {no!r} does not contain {body!r}, so it "
+            "cannot detect a matcher that lost its boundaries")
+
+
 @pytest.mark.parametrize("term", ALL_TERMS)
 def test_each_term_matches_its_positive_and_misses_its_negative(term):
     yes, no = CASES[term]
@@ -172,24 +194,18 @@ def test_each_term_matches_its_positive_and_misses_its_negative(term):
 def test_the_motivating_collision_stays_fixed():
     """`t cell` inside `mut cell` credited 16 of 33 modules with immunotherapy.
 
-    Pinned on the real Rust rather than on the abstract rule, and pinned in
-    both directions: the fix must still find an actual T cell.
+    Pinned on the real Rust rather than on the abstract rule, and in both
+    directions: the fix must still find an actual T cell.
     """
     assert not MC._matches("let mut cell = grid.cells[idx];", ("t cell",))
     assert MC._matches("each t cell rolls once", ("t cell",))
 
 
-def test_a_stem_and_a_bounded_term_differ():
-    """`*` is the only thing separating the two rules, so it must do work."""
-    assert MC._matches("immunotherapy arm", ("immun*",))
-    assert not MC._matches("immunotherapy arm", ("immun",))
-
-
 def test_a_stem_must_stop_before_the_forms_diverge():
-    """Two stems shipped one letter too long and each missed the commonest
-    form in the crate: `ferroptos*` does not reach `ferroptotic`, and
-    `immune*` reaches neither `immunity` nor `immunotherapy`. One measured
-    form is not enough to place a stem's boundary."""
+    """Two stems shipped one letter too long. `ferroptos*` does not reach
+    `ferroptotic`, the commonest form in this crate, and `immune*` reaches
+    neither `immunity` nor `immunotherapy` nor `immunogenic`. One measured form
+    is not enough to place a stem's boundary."""
     for form in ("ferroptosis", "ferroptotic", "ferroptotically"):
         assert MC._matches(form, ("ferropto*",)), form
         assert MC._matches(form, MC.FERROPTOSIS_TERMS), form
@@ -197,6 +213,27 @@ def test_a_stem_must_stop_before_the_forms_diverge():
     for form in ("immunity", "immunotherapy", "immunogenic", "immune"):
         assert MC._matches(form, MC.ENGINE_TERMS["immunotherapy"]), form
     assert not MC._matches("immunity", ("immune*",))
+
+
+def test_a_phenotype_is_not_a_therapy():
+    """`glycolytic` and `oxphos` are bounded, real, and the wrong thing.
+
+    They name two `Phenotype` enum variants -- baseline cell states -- and
+    credited eight modules with modelling metabolic TARGETING. Word boundaries
+    do not help against a real word used for something else, so this is pinned
+    on the enum itself.
+    """
+    src = MC.strip_rust_comments((CORE / "cell.rs").read_text()).lower()
+    body = re.search(r"pub enum phenotype\s*\{(.*?)\}", src, re.S).group(1)
+    assert "glycolytic" in body and "oxphos" in body, (
+        "the Phenotype enum no longer names these; re-check whether the "
+        "exclusion still makes sense")
+    terms = MC.ENGINE_TERMS["metabolic-targeting"]
+    for state in ("glycolytic", "oxphos"):
+        assert not MC._matches(state, terms), (
+            f"{state} is a cell phenotype and is scoring as a therapy again")
+    # And the therapy side must still work.
+    assert MC._matches("2-deoxyglucose blocks glycolysis", terms)
 
 
 # ------------------------------------------------------- comments are not code
@@ -212,11 +249,87 @@ def test_comments_are_stripped_and_code_is_not():
         "pub struct Checkpoint { pub brake: f64 }",
         "let x = 1; // trailing comment naming cd47",
     ])
-    out = MC._strip_comments(src).lower()
+    out = MC.strip_rust_comments(src).lower()
     for gone in ("hifu", "crispr", "parp", "cd47"):
         assert gone not in out, f"{gone} survived comment stripping"
     assert "pub struct checkpoint" in out
     assert "let x = 1;" in out
+
+
+def test_the_stripper_handles_the_three_constructs_a_regex_cannot():
+    """All three are legal Rust, all three are latent in this crate today, and
+    the first version got all three wrong. Planted deliberately, because
+    waiting for one to appear means shipping the wrong count first."""
+    # Nested block comments: a non-greedy regex closes at the INNER `*/` and
+    # leaves the outer comment's tail behind as code.
+    nested = "/* outer /* inner */ hdac_inhibitor in prose */ let a = 1;"
+    out = MC.strip_rust_comments(nested)
+    assert "hdac_inhibitor" not in out, f"nested comment leaked: {out!r}"
+    assert "let a = 1;" in out
+    # `//` inside a string literal must not truncate the rest of the line.
+    s = 'let doc = "see http://x"; let p = Checkpoint::Pd1;'
+    out = MC.strip_rust_comments(s)
+    assert "Checkpoint::Pd1" in out, f"string-literal // truncated code: {out!r}"
+    # `/*` inside a string literal must not open a comment.
+    s = 'let a = "/*"; let panel = CheckpointPanel::new(); let b = "*/";'
+    out = MC.strip_rust_comments(s)
+    assert "CheckpointPanel::new()" in out, f"string-literal /* ate code: {out!r}"
+    # A lifetime is not a char literal.
+    s = "fn f<'a>(x: &'a str) -> Checkpoint { todo!() }"
+    assert "Checkpoint" in MC.strip_rust_comments(s)
+    # A raw string survives intact.
+    s = 'let j = r#"{"sdt_ros": 5.0}"#; let q = 1;'
+    assert "let q = 1;" in MC.strip_rust_comments(s)
+
+
+def test_test_blocks_are_stripped_and_the_measured_case_stays_fixed():
+    """An `assert!` MESSAGE credited `senescence` with modelling immunotherapy.
+
+    Pinned twice: on a synthetic block, and on the real file, so the exclusion
+    cannot quietly stop applying.
+    """
+    src = "\n".join([
+        "pub fn real() -> f64 { 1.0 }",
+        "#[cfg(test)]",
+        "mod tests {",
+        "    #[test]",
+        "    fn t() { assert!(x, \"has an immune effect {y}\"); }",
+        "}",
+        "pub fn after() -> f64 { 2.0 }",
+    ])
+    out = MC.strip_test_blocks(src)
+    assert "immune effect" not in out, f"test block leaked: {out!r}"
+    assert "pub fn real()" in out and "pub fn after()" in out, (
+        "stripping ate code outside the test block")
+    # The real file. `senescence` IS credited with immunotherapy, and after
+    # this fix it is credited for the right reason: `sasp_immune_mult` and
+    # `sasp_immune_multiplier` are production identifiers for a SASP field that
+    # modulates immune killing. What must NOT be there is the assertion message
+    # that credited it before, so both halves are pinned -- dropping the
+    # test-block strip would leave this test green on the first assertion
+    # alone.
+    code, _ = MC._module_text()
+    sen = code["senescence"]
+    assert "sasp_immune_mult" in sen, (
+        "the production identifier is gone; re-derive why senescence is "
+        "credited with immunotherapy before trusting the tier")
+    assert "sasp-only config has an immune effect" not in sen, (
+        "the #[cfg(test)] assertion message is back in the scanned code")
+    assert "#[test]" not in sen and "assert!(" not in sen, (
+        "test code survived stripping in a real module")
+
+
+def test_the_crate_root_is_not_a_module(d):
+    """`lib.rs`'s whole body is `pub mod <name>;`, so `pub mod immune;`
+    credited it with modelling immunotherapy. `scope_audit.py` excludes it for
+    the same reason, and the two denominators must agree."""
+    assert "lib" in MC.NOT_A_MODULE
+    assert "lib" not in d["ferroptosis_modules"]
+    for r in d["rows"]:
+        assert "lib" not in r["code_modules"], r["mechanism"]
+    live = len([p for p in CORE.glob("*.rs") if p.stem != "lib"])
+    assert d["module_count"] == live == 32, (
+        f"module count {d['module_count']} against {live} on disk")
 
 
 def test_hifu_is_prose_only_and_the_report_says_why(d, md):
@@ -239,81 +352,179 @@ def test_the_treatment_variants_are_read_not_asserted(d):
     src = (CORE / "cell.rs").read_text()
     body = re.search(r"pub enum Treatment\s*\{(.*?)\}", src, re.S).group(1)
     named = [v.strip().rstrip(",") for v in body.splitlines()
-             if v.strip() and not v.strip().startswith("//")]
+             if v.strip() and not v.strip().startswith(("//", "#["))]
     assert d["treatment_variants"] == named
-    assert f"**{len(named)} treatments**" in MD.read_text()
+    assert d["active_treatments"] == [v for v in named if v != "Control"]
+    assert f"**{len(d['active_treatments'])} treatments**" in MD.read_text()
+
+
+def test_the_control_arm_is_not_counted_as_a_treatment(d, md):
+    """`Control` applies nothing -- `physics.rs` returns 0.0 for it and
+    `biochem.rs` gives it no exogenous ROS -- so calling it one made the
+    headline read `4 treatments, every one of them ferroptosis or
+    physical-ROS` when the fourth is neither."""
+    assert "Control" in d["treatment_variants"]
+    assert "Control" not in d["active_treatments"]
+    phys = MC.strip_rust_comments((CORE / "physics.rs").read_text())
+    assert re.search(r"Treatment::Control\s*=>\s*0\.0", phys), (
+        "Control now does something; the headline sentence needs re-deriving")
+    assert "untreated `Control` arm that applies nothing" in md
+
+
+def test_an_attribute_line_is_not_a_variant():
+    """`#[default]` above a variant is legal Rust and was being counted, so a
+    derive change would have moved the headline count."""
+    assert MC._treatment_variants(), "the enum parse returned nothing"
+    for v in MC._treatment_variants():
+        assert not v.startswith("#["), v
 
 
 def test_no_treatment_variant_is_a_non_ros_modality(d):
-    """The report's headline -- every arm is ferroptosis or physical-ROS -- is
-    a claim about the enum, so it is checked against the enum."""
+    """An EQUALITY, not a bound. The first version asserted
+    `modelled <= {"sonodynamic"}`, which the empty set satisfies: deleting the
+    whole TREATMENT tier left every guard green and shipped a document calling
+    sonodynamic a modifier."""
     tiers = {r["mechanism"]: r["engine_tier"] for r in d["rows"]}
     modelled = {m for m, t in tiers.items() if t == "treatment"}
-    assert modelled <= {"sonodynamic"}, (
-        f"{sorted(modelled)} are now treatment arms; the report's "
-        "'every one of them ferroptosis or physical-ROS' sentence and its "
-        "immunotherapy paragraph both need re-deriving")
+    assert modelled == {"sonodynamic"}, (
+        f"treatment tier is {sorted(modelled)}, expected exactly "
+        "{'sonodynamic'}. If an arm was added, the report's 'every one of them "
+        "ferroptosis or physical-ROS' sentence and its immunotherapy paragraph "
+        "both need re-deriving; if the tier emptied, the detector is broken.")
 
 
-def _damp_writes():
-    """Every `damp_field[...] +=` in the simulation binaries."""
-    out = []
-    for p in sorted(SIMS.glob("sim-*/src/*.rs")):
-        for i, line in enumerate(p.read_text().splitlines(), 1):
-            stripped = line.split("//")[0]
-            if re.search(r"damp_field\s*\[[^\]]+\]\s*\+=", stripped):
-                out.append((p.name, i, stripped.strip()))
-    return out
+def test_every_taxonomy_mechanism_has_terms():
+    """A mechanism with no entry scores `absent` through an `any()` over an
+    empty tuple, silently inflating the headline."""
+    prof = json.loads((REPO / "analysis/census-mechanism-profile.json").read_text())
+    for r in prof["rows"]:
+        assert MC.ENGINE_TERMS.get(r["mechanism"]), (
+            f"{r['mechanism']} has no ENGINE_TERMS entry, so it scores absent "
+            "without anything being measured")
 
 
-def test_every_damp_source_is_lipid_peroxidation_at_death():
+def test_every_damp_source_is_lipid_peroxidation_or_a_redistribution(d):
     """The report's central claim, and the reason immunotherapy is a MODIFIER.
 
-    If any writer ever adds a ferroptosis-independent antigen source, the
-    paragraph asserting blockade multiplies zero becomes false -- and it is
-    the paragraph the whole 'what to build next' argument rests on.
+    The first version scanned only `sim-*/src/*.rs` for `damp_field[..] +=`,
+    which found three of the seven writers: it missed the 3D binary's
+    PRINCIPAL writer (a rayon slot, `*damp_slot += ...`), missed the
+    plain-assignment form, and could not see `ferroptosis-core` at all. A
+    planted `*damp_slot += 5.0;` left it green.
+
+    Each writer must be one of two things and nothing else: an antigen source
+    proportional to lipid peroxidation at death, or a redistribution of DAMPs
+    already in the field (diffusion, clearance).
     """
-    writes = _damp_writes()
-    assert writes, "no DAMP writer found; the scan is broken, not the engine"
-    for name, line_no, text in writes:
-        assert "lp_at_grace_end" in text, (
-            f"{name}:{line_no} adds DAMPs without lipid peroxidation at "
-            f"death: {text!r}. The report claims there is no "
-            "ferroptosis-independent antigen source in the engine.")
+    writers = d["damp_writers"]
+    assert writers, "no DAMP writer found; the scan is broken, not the engine"
+    fresh = re.compile(r"lp_at_grace_end|dead_cell_lps")
+    moves = re.compile(r"damp_field\s*\[|scratch\s*\[|damp_delta\s*\[")
+    for w in writers:
+        text = w["text"]
+        rhs = text.split("=", 1)[1] if "=" in text else ""
+        assert fresh.search(text) or moves.search(rhs), (
+            f"{w['file']}:{w['line']} adds DAMPs from neither lipid "
+            f"peroxidation at death nor the existing field: {text!r}. The "
+            "report claims there is no ferroptosis-independent antigen source "
+            "in the engine.")
+    # Pinned as a COUNT so a new writer must be classified rather than merely
+    # happening to match one of the two shapes.
+    assert len(writers) == 7, (
+        f"{len(writers)} DAMP writers, expected 7. A new one is not a "
+        "failure -- classify it and update this number in the same commit.")
 
 
-def test_activation_is_zero_without_damp_and_gates_the_kill():
-    """`damp/(damp+kd)` and `activation · rate · (1 − brake)`, both quoted in
-    the report, both read out of the crate."""
-    src = (CORE / "immune_spatial.rs").read_text()
-    act = re.search(r"pub fn dc_activation\([^)]*\)\s*->\s*f64\s*\{(.*?)\n\}",
-                    src, re.S).group(1)
-    assert "local_damp / (local_damp + kd)" in act, (
-        f"dc_activation is no longer damp/(damp+kd): {act.strip()!r}")
-    kill = re.search(
-        r"pub fn immune_kill_probability\([^)]*\)\s*->\s*f64\s*\{(.*?)\n\}",
-        src, re.S).group(1)
-    assert re.search(r"activation\s*\*\s*kill_rate\s*\*\s*\(1\.0\s*-\s*effective_brake\)",
-                     kill), (
-        f"immune_kill_probability no longer multiplies activation: {kill.strip()!r}")
+def test_the_scan_sees_the_shapes_that_used_to_be_invisible(d):
+    """Pinned by SHAPE, so narrowing the scan back to one idiom fails here."""
+    texts = [w["text"] for w in d["damp_writers"]]
+    files = {w["file"] for w in d["damp_writers"]}
+    assert any(t.startswith("*damp_slot") or t.startswith("* damp_slot")
+               for t in texts), "the rayon slot writer is invisible again"
+    assert any("damp_field[i] =" in t or "damp_field[idx] =" in t
+               for t in texts), "the assignment form is invisible again"
+    assert any(f.startswith("simulations/ferroptosis-core/") for f in files), (
+        "the scan cannot see the crate; `immune.rs` builds DAMPs too")
+    assert any(f.startswith("simulations/sim-tme-3d/") for f in files)
+
+
+def test_both_immune_models_are_named_and_both_are_damp_gated(d, md):
+    """The first version named five modules as reaching T-cell killing and four
+    of them did not -- `lib.rs` on a `pub mod` line, `senescence` on two test
+    assertion messages, `params.rs` on a struct, and `immune.rs`, which is a
+    SECOND immune model with its own DC activation and PD-1 brake rather than a
+    caller of the first."""
+    models = {m["kill_fn"]: m for m in d["immune_models"]}
+    assert set(models) == {"immune_kill_probability", "immune_cascade"}
+    assert models["immune_kill_probability"]["callers"] == ["sim-tme", "sim-tme-3d"]
+    assert models["immune_cascade"]["callers"] == ["sim-combo", "sim-icd"]
+    assert "2 immune kill paths" in md
+
+    spatial = MC.strip_rust_comments((CORE / "immune_spatial.rs").read_text())
+    assert "local_damp / (local_damp + kd)" in spatial, (
+        "dc_activation is no longer damp/(damp+kd)")
+    assert re.search(
+        r"activation\s*\*\s*kill_rate\s*\*\s*\(1\.0\s*-\s*effective_brake\)",
+        spatial), "immune_kill_probability no longer multiplies activation"
+
+    wellmixed = MC.strip_rust_comments((CORE / "immune.rs").read_text())
+    assert re.search(
+        r"damp_per_dead_cell\s*/\s*\(damp_per_dead_cell\s*\+\s*params\.dc_activation_kd\)",
+        wellmixed), "immune_cascade's DC activation changed shape"
+    assert re.search(r"primed_tcells\s*\*\s*params\.tcell_kill_rate\s*\*\s*kill_efficiency",
+                     wellmixed), "immune_cascade no longer gates kills on priming"
+    # And priming is gated on dead cells in BOTH: an empty death list must
+    # produce no DAMPs at all.
+    assert "if dead_cell_lps.is_empty()" in wellmixed
 
 
 # ----------------------------------------------------------- the refusals
 
 def test_the_report_refuses_a_volume_ranking(md):
-    """Inherited verbatim from `census-mechanism-profile.md`, because the
-    reason is the same one and a table in volume order invites the reading it
-    refuses."""
-    assert "Volume is NOT comparable across mechanisms" in md
+    """Inherited from `census-mechanism-profile.md`, INCLUDING the clause that
+    bites -- the profile refuses a cross-mechanism RANKING, and a table sorted
+    by census invites exactly that reading."""
+    assert "not a ranking" in md
     assert "how broad each descriptor is" in md
+    assert "for legibility only" in md
+    assert "the content is the ENGINE column" in md
+    # The source's own refusal must still be there to inherit.
+    profile_md = (REPO / "analysis/census-mechanism-profile.md").read_text()
+    assert "how broad each descriptor is" in profile_md
 
 
-def test_the_report_names_what_the_taxonomy_cannot_see(md):
-    """A mechanism with no MeSH descriptor is absent rather than zero, and
-    TTFields is FDA-approved in two indications."""
-    assert "Tumour-treating fields" in md or "tumour-treating fields" in md
-    assert "no descriptor" in md
-    assert "Radiotherapy" in md
+def test_the_report_counts_what_the_taxonomy_cannot_measure(d, md):
+    """A mechanism with no MeSH descriptor is absent rather than zero, and the
+    first version called the sixteen rows `this repo's own mechanism list`
+    when the taxonomy names twenty-five."""
+    import yaml
+    mp = yaml.safe_load((REPO / "analysis/mesh-mechanism-map.yaml").read_text())
+    named = set(mp.get("mechanisms", {})) | set(mp.get("unmeasurable", {}))
+    assert set(d["taxonomy_named"]) == named
+    assert len(named) > len(d["rows"]), (
+        "every named mechanism now has a row; the paragraph about the "
+        "unmeasurable ones is stale")
+    assert set(d["taxonomy_without_a_row"]) == named - {r["mechanism"] for r in d["rows"]}
+    assert f"taxonomy names {len(named)} mechanisms" in md
+    for m in ("ttfields", "frequency-therapy"):
+        assert m in d["taxonomy_without_a_row"], m
+        assert f"`{m}`" in md
+    assert "cold-atmospheric-plasma HAS a descriptor" in md
+    assert "counted elsewhere in this repository" in md
+
+
+def test_the_radiotherapy_figures_name_their_denominator(md):
+    """88 is the count TITLED about radiotherapy, not its corpus presence, and
+    the tag counts overlap. Both were stated loosely, and both are checked here
+    against the artifact they come from."""
+    assert "whose TITLES are about it" in md
+    assert "the tags overlap" in md
+    src = (REPO / "analysis/atlas-untagged-partner.md").read_text()
+    for frag in ("| radiotherapy | 88 | 13 (14.8%) | **75** (85.2%) | 24 (27.3%) |",
+                 "`immunotherapy` 45, `ttfields` 11, `nanoparticle` 7, "
+                 "`bispecific-antibody` 6"):
+        assert frag in src, f"the source no longer says {frag!r}"
+    assert "| radiotherapy | 88 (1.8%) | 907 (18.8%) | 2,436 (50.4%) |" in src
 
 
 def test_the_totals_are_the_rows(d):
@@ -324,6 +535,73 @@ def test_the_totals_are_the_rows(d):
     assert d["absent_trials"] == sum(r["trials"] for r in absent)
     assert d["total_census"] == sum(r["census"] for r in d["rows"])
     assert f"**{d['absent_count']} of {len(d['rows'])} mechanisms" in MD.read_text()
+
+
+def test_the_ferroptosis_baseline_is_guarded(d, md):
+    """The headline's other half. Nothing checked it before, and four of the
+    fifteen it then claimed were `lib.rs` or test-only matches."""
+    code, _ = MC._module_text()
+    live = sorted(n for n, t in code.items() if MC._matches(t, MC.FERROPTOSIS_TERMS))
+    assert d["ferroptosis_modules"] == live
+    assert f"**{len(live)} of its {d['module_count']} modules**" in md
+    # `io` and `slab` matched only inside `#[cfg(test)]` -- a `"rsl3"` CSV
+    # fixture and a `gpx4` field name in a byte-identity assert -- and must
+    # stay out. `lib.rs` is the crate root and is excluded upstream. This is
+    # the same exclusion `scope_audit.py` documents for itself.
+    for excluded in ("io", "slab", "lib"):
+        assert excluded not in live, (
+            f"{excluded} is credited with ferroptosis code again; check "
+            "whether the match is production code or a test fixture")
+    # And the underscore-boundary fix must still be working: these four are
+    # credited ONLY through snake_case identifiers, which `\b` refused.
+    for snake in ("acsl4", "copper", "ifngamma", "trigger_wave"):
+        assert snake in live, (
+            f"{snake} is uncredited again -- the term boundary has stopped "
+            "matching Rust identifiers like `acsl4_strength` / `gpx4_defense`")
+
+
+def test_the_two_module_counts_are_reconciled_not_left_to_collide(d, md):
+    """Two front-door artifacts count the same crate and publish different
+    numbers, and until this test neither mentioned the other.
+
+    They are genuinely comparable -- same 32 modules, same `lib.rs` and
+    `#[cfg(test)]` exclusions -- so the gap has to be the term sets and
+    nothing else. Recomputed live from `scope_audit`'s own regex rather than
+    read from either artifact, so a change to that regex fails here instead of
+    silently widening the gap.
+    """
+    import importlib.util
+    spec = importlib.util.spec_from_file_location(
+        "scope_audit", REPO / "scripts/scope_audit.py")
+    sa = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(sa)
+
+    theirs = []
+    for f in sorted(CORE.glob("*.rs")):
+        if f.stem == "lib":
+            continue
+        t = f.read_text()
+        i = t.find("#[cfg(test)]")
+        prod = t if i < 0 else t[:i]
+        code = "\n".join(ln for ln in prod.split("\n")
+                         if not ln.strip().startswith(("//", "*", "/*")))
+        if sa.FERRO.search(code):
+            theirs.append(f.stem)
+    mine = set(d["ferroptosis_modules"])
+    assert set(theirs) - mine == {"photosensitizer_pk"}, (
+        f"scope_audit now counts {sorted(set(theirs) - mine)} that this does "
+        "not; the reconciliation paragraph names only photosensitizer_pk")
+    assert mine - set(theirs) == {"acsl4", "ifngamma"}, (
+        f"this now counts {sorted(mine - set(theirs))} that scope_audit does "
+        "not; the reconciliation paragraph names only acsl4 and ifngamma")
+    # The stated CAUSE, not just the stated effect: their list has the
+    # physical-ROS terms and no acsl4.
+    for physical in ("photodynamic", "sonodynamic", "photosensitiz"):
+        assert physical in sa.FERRO.pattern, physical
+    assert "acsl4" not in sa.FERRO.pattern, (
+        "scope_audit's term list now has acsl4, so the reconciliation "
+        "paragraph is stale -- and the two counts should have converged")
+    assert "a different number, and the difference is the point" in md
 
 
 def test_the_rows_match_the_census_profile(d):

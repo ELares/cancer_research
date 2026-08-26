@@ -7,36 +7,118 @@
   "PDT"
  ],
  "ferroptosis_modules": [
+  "acsl4",
   "biochem",
   "cell",
   "clonal",
+  "copper",
   "drug_transport",
   "grid",
+  "ifngamma",
   "immune_spatial",
-  "io",
-  "lib",
   "params",
+  "persister",
   "physics",
   "senescence",
-  "slab",
   "stats",
   "trigger_wave",
   "tumor_pk"
  ],
- "module_count": 33,
- "binaries": [
-  "sim-combo",
-  "sim-combo-mech",
-  "sim-icd",
-  "sim-invivo",
-  "sim-original",
-  "sim-scale",
-  "sim-spatial",
-  "sim-tissue-pk",
-  "sim-tme",
-  "sim-tme-3d",
-  "sim-tumor-pk",
-  "sim-window"
+ "module_count": 32,
+ "taxonomy_named": [
+  "antibody-drug-conjugate",
+  "bioelectric",
+  "bispecific-antibody",
+  "car-t",
+  "cold-atmospheric-plasma",
+  "crispr",
+  "cuproptosis",
+  "disulfidptosis",
+  "electrochemical-therapy",
+  "electrolysis",
+  "epigenetic",
+  "frequency-therapy",
+  "hifu",
+  "immunotherapy",
+  "metabolic-targeting",
+  "microbiome",
+  "mrna-vaccine",
+  "nanoparticle",
+  "oncolytic-virus",
+  "phagocytosis-checkpoint",
+  "radioligand-therapy",
+  "sonodynamic",
+  "synthetic-lethality",
+  "targeted-protein-degradation",
+  "ttfields"
+ ],
+ "taxonomy_without_a_row": [
+  "bioelectric",
+  "cold-atmospheric-plasma",
+  "cuproptosis",
+  "disulfidptosis",
+  "electrolysis",
+  "frequency-therapy",
+  "radioligand-therapy",
+  "targeted-protein-degradation",
+  "ttfields"
+ ],
+ "immune_models": [
+  {
+   "kill_fn": "immune_kill_probability",
+   "module": "immune_spatial",
+   "kind": "spatial DAMP field",
+   "callers": [
+    "sim-tme",
+    "sim-tme-3d"
+   ]
+  },
+  {
+   "kill_fn": "immune_cascade",
+   "module": "immune",
+   "kind": "well-mixed cascade",
+   "callers": [
+    "sim-combo",
+    "sim-icd"
+   ]
+  }
+ ],
+ "damp_writers": [
+  {
+   "file": "simulations/ferroptosis-core/src/immune.rs",
+   "line": 45,
+   "text": "let total: f64 = dead_cell_lps.iter().map(|lp| lp * params.damp_per_lp).sum();"
+  },
+  {
+   "file": "simulations/ferroptosis-core/src/immune_spatial.rs",
+   "line": 227,
+   "text": "damp_field[i] = (damp_field[i] + scratch[i]).max(0.0);"
+  },
+  {
+   "file": "simulations/sim-tme/src/main.rs",
+   "line": 596,
+   "text": "damp_field[idx] += grid.cells[idx].lp_at_grace_end * immune.damp_per_lp;"
+  },
+  {
+   "file": "simulations/sim-tme/src/main.rs",
+   "line": 673,
+   "text": "damp_field[i] = (damp_field[i] + damp_delta[i]).max(0.0);"
+  },
+  {
+   "file": "simulations/sim-tme/src/main.rs",
+   "line": 727,
+   "text": "damp_field[idx] += grid.cells[idx].lp_at_grace_end * immune.damp_per_lp;"
+  },
+  {
+   "file": "simulations/sim-tme-3d/src/main.rs",
+   "line": 1692,
+   "text": "*damp_slot += gc.lp_at_grace_end * immune_cfg.damp_per_lp;"
+  },
+  {
+   "file": "simulations/sim-tme-3d/src/main.rs",
+   "line": 2322,
+   "text": "damp_field[idx] += gc.lp_at_grace_end * immune_cfg.damp_per_lp;"
+  }
  ],
  "mechanisms": [
   {
@@ -51,8 +133,7 @@
    ],
    "prose_only_modules": [
     "biochem",
-    "cell",
-    "lib"
+    "cell"
    ]
   },
   {
@@ -75,7 +156,6 @@
    "code_modules": [
     "immune",
     "immune_spatial",
-    "lib",
     "params",
     "senescence"
    ],
@@ -84,7 +164,8 @@
     "ifngamma",
     "oxygen",
     "ph",
-    "slab"
+    "slab",
+    "stromal"
    ]
   },
   {
@@ -102,21 +183,11 @@
    "trials": 45,
    "trial_share": 0.51,
    "growth": 2.16,
-   "code_modules": [
-    "biochem",
-    "cell",
-    "clonal",
-    "grid",
-    "phenotype_mufa",
-    "senescence",
-    "slab",
-    "spheroid"
-   ],
+   "code_modules": [],
    "prose_only_modules": [
-    "lib",
+    "cell",
     "nutrient",
     "params",
-    "persister",
     "ph",
     "stromal"
    ]
@@ -184,7 +255,7 @@
    "code_modules": [
     "biochem",
     "cell",
-    "io",
+    "params",
     "physics"
    ],
    "prose_only_modules": [
@@ -192,8 +263,8 @@
     "grid",
     "immune",
     "immune_spatial",
+    "io",
     "oxygen",
-    "params",
     "persister"
    ]
   },
@@ -249,8 +320,7 @@
    ],
    "prose_only_modules": [
     "biochem",
-    "cell",
-    "lib"
+    "cell"
    ],
    "engine_tier": "modifier"
   },
@@ -275,7 +345,6 @@
    "code_modules": [
     "immune",
     "immune_spatial",
-    "lib",
     "params",
     "senescence"
    ],
@@ -284,7 +353,8 @@
     "ifngamma",
     "oxygen",
     "ph",
-    "slab"
+    "slab",
+    "stromal"
    ],
    "engine_tier": "modifier"
   },
@@ -304,25 +374,15 @@
    "trials": 45,
    "trial_share": 0.51,
    "growth": 2.16,
-   "code_modules": [
-    "biochem",
-    "cell",
-    "clonal",
-    "grid",
-    "phenotype_mufa",
-    "senescence",
-    "slab",
-    "spheroid"
-   ],
+   "code_modules": [],
    "prose_only_modules": [
-    "lib",
+    "cell",
     "nutrient",
     "params",
-    "persister",
     "ph",
     "stromal"
    ],
-   "engine_tier": "modifier"
+   "engine_tier": "absent"
   },
   {
    "mechanism": "antibody-drug-conjugate",
@@ -393,7 +453,7 @@
    "code_modules": [
     "biochem",
     "cell",
-    "io",
+    "params",
     "physics"
    ],
    "prose_only_modules": [
@@ -401,8 +461,8 @@
     "grid",
     "immune",
     "immune_spatial",
+    "io",
     "oxygen",
-    "params",
     "persister"
    ],
    "engine_tier": "treatment"
@@ -450,8 +510,13 @@
    "engine_tier": "absent"
   }
  ],
- "absent_count": 12,
- "absent_census": 81210,
- "absent_trials": 2922,
+ "active_treatments": [
+  "RSL3",
+  "SDT",
+  "PDT"
+ ],
+ "absent_count": 13,
+ "absent_census": 90019,
+ "absent_trials": 2967,
  "total_census": 165700
 }

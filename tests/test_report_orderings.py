@@ -123,6 +123,29 @@ def test_the_untagged_partner_page_follows_its_own_opening_sentence():
         "the declared-order helper is gone, so the page will alphabetise again")
 
 
+def test_the_coverage_table_is_in_the_order_its_own_refusal_describes():
+    """`modality-coverage.md` says its rows are "sorted by census count for
+    legibility only", and that sentence is the whole basis for the refusal
+    beside it -- a document that sorts by volume while denying it ranks by
+    volume has to be checked, not trusted.
+
+    Unpinned, flipping the sort to ascending left every guard in the suite
+    green, including the freshness class gate, because a wrong order is still
+    deterministic.
+    """
+    md = (A / "modality-coverage.md").read_text()
+    assert "sorted by census count for legibility only" in md
+    counts = [_nums(r)[0] for r in _rows(md, r"\| [a-z]") if _nums(r)]
+    assert counts, "no data rows parsed out of the coverage table"
+    assert counts == sorted(counts, reverse=True), (
+        f"the table contradicts its own ordering sentence: {counts}")
+    # And the order must come from the sort, not from the profile's row order
+    # happening to agree.
+    src = (REPO / "scripts/modality_coverage.py").read_text()
+    assert 'rows.sort(key=lambda x: -x["census"])' in src, (
+        "the descending sort is gone, so the prose describing it is stale")
+
+
 @pytest.mark.parametrize("artifact,pattern", [
     ("census-normal-tissue.md", r"\| (acute kidney|chemical and drug|cardiotox)"),
 ])
