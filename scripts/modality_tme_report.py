@@ -50,19 +50,27 @@ def scan() -> dict:
     return json.loads(SWEEP.read_text())
 
 
-def _effect(conds, arm, axis):
+AXIS_KEYS = ("hypoxic", "stroma", "acidic", "deep")
+STRATA = ("phenotype",)
+
+
+def _effect(conds, arm, axis, phenotype=None):
     """Largest relative change in `arm` attributable to `axis` alone.
 
     Paired: every ON condition is compared with the OFF condition identical in
-    the other two axes, so an effect cannot be manufactured by an axis that
-    happens to co-vary.
+    every OTHER axis and in the phenotype, so an effect cannot be manufactured
+    by something that happens to co-vary. The phenotype is a stratum rather
+    than an axis -- comparing a persister against a glycolytic cell is not a
+    treatment effect.
     """
     worst = 0.0
-    for on in [c for c in conds if c[axis]]:
-        off = next((c for c in conds
+    pool = [c for c in conds
+            if phenotype is None or c.get("phenotype") == phenotype]
+    for on in [c for c in pool if c[axis]]:
+        off = next((c for c in pool
                     if not c[axis]
-                    and all(c[k] == on[k] for k in ("hypoxic", "stroma", "acidic")
-                            if k != axis)), None)
+                    and all(c[k] == on[k] for k in AXIS_KEYS if k != axis)
+                    and all(c.get(k) == on.get(k) for k in STRATA)), None)
         if off is None:
             continue
         base = off["arms"].get(arm)
@@ -76,18 +84,34 @@ def _effect(conds, arm, axis):
 def assemble(raw: dict) -> dict:
     conds = raw["conditions"]
     arms = sorted({a for c in conds for a in c["arms"]})
+    phenos = sorted({c.get("phenotype") for c in conds if c.get("phenotype")})
     axes = [("hypoxic", "hypoxia"), ("stroma", "stromal shielding"),
-            ("acidic", "acidic pH")]
+            ("acidic", "acidic pH"), ("deep", "depth")]
+    # POOLED across phenotypes for the headline, and PER PHENOTYPE beside it,
+    # because which axis bites turns out to depend on the phenotype -- and a
+    # single-phenotype sweep reported two axes inert for that reason alone.
     effects = {label: {a: _effect(conds, a, key) for a in arms}
                for key, label in axes}
+    per_pheno = {
+        ph: {label: {a: _effect(conds, a, key, ph) for a in arms}
+             for key, label in axes}
+        for ph in phenos
+    }
     inert = [label for _, label in axes
              if max(effects[label].values(), default=0.0) < INERT_THRESHOLD]
     live = [label for _, label in axes if label not in inert]
-    # Robustness ordering under the axes that actually bite.
     order = sorted(
         arms, key=lambda a: max((effects[l][a] for l in live), default=0.0))
-    return dict(raw, arms=arms, effects=effects, inert_axes=inert,
-                live_axes=live, robustness_order=order,
+    # Which axis dominates in each phenotype -- the finding the stratification
+    # exists to produce.
+    dominant = {
+        ph: max(((l, max(per_pheno[ph][l].values(), default=0.0))
+                 for _, l in axes), key=lambda kv: kv[1])
+        for ph in phenos
+    }
+    return dict(raw, arms=arms, phenotypes=phenos, effects=effects,
+                effects_by_phenotype=per_pheno, dominant_axis=dominant,
+                inert_axes=inert, live_axes=live, robustness_order=order,
                 inert_threshold=INERT_THRESHOLD)
 
 
@@ -115,43 +139,55 @@ def render(d: dict) -> str:
                  + " | ".join(f"{c['arms'][a] * 100:.2f}%" for a in arms) + " |")
 
     live, inert = d["live_axes"], d["inert_axes"]
-    L += ["", "## One axis discriminates, and two cannot be seen here", ""]
+    L += ["", "## Which axis bites depends on the phenotype, and that is the "
+          "finding", ""]
+    dom = d.get("dominant_axis", {})
+    if len(dom) > 1:
+        pairs = "; ".join(
+            f"**{ph}** — {axis} ({worst * 100:.0f}%)"
+            for ph, (axis, worst) in sorted(dom.items()))
+        L += [f"The dominant pressure is not the same one in each cell state: "
+              f"{pairs}.", "",
+              "**That is why the first version of this sweep reported two "
+              "axes INERT.** It ran one phenotype. At the glycolytic state "
+              "the delivered arm kills essentially nothing, so ion trapping "
+              "had nothing to scale and the antioxidant buffer was swamped by "
+              "an order-of-magnitude ROS insult — and both axes looked dead "
+              "when what was dead was the configuration's ability to see "
+              "them. Running the persister state as well, the state this "
+              "project's thesis is actually about, makes both bite.", "",
+              "An axis reported inert is a statement about the run, not about "
+              "the biology, and the distinction is easy to lose. This page "
+              "now stratifies rather than pooling, so an axis cannot be "
+              "declared irrelevant because it was measured in the one state "
+              "that cannot feel it.", ""]
+
     if live:
-        L += [f"**{', '.join(live)}** separates the arms, and the ordering it "
-              "produces is the finding — largest relative loss first:", ""]
+        L += ["## The ordering under the axes that bite", "",
+              "Largest relative loss first:", ""]
         rows = sorted(arms,
                       key=lambda a: -max(d["effects"][l][a] for l in live))
         for a in rows:
-            worst = max(d["effects"][l][a] for l in live)
-            L.append(f"* `{a}` — loses {worst * 100:.0f}% of its kill")
+            worst_l = max(live, key=lambda l: d["effects"][l][a])
+            worst = d["effects"][worst_l][a]
+            L.append(f"* `{a}` — loses {worst * 100:.0f}% of its kill, worst "
+                     f"to {worst_l}")
         L += ["", "That ordering was not tuned for. It follows from the "
-              "mechanisms: an arm whose lethality depends on oxygen loses "
-              "most, an arm whose dose is merely modified by oxygen loses "
-              "less, and a threshold arm loses nothing because a destroyed "
-              "cell does not care what its oxygen tension was.", ""]
+              "mechanisms: a delivered drug loses most, because everything "
+              "between the vessel and the target can stop it; an arm whose "
+              "lethality depends on oxygen loses next; an arm whose dose is "
+              "merely modified by oxygen loses less, which is what an "
+              "enhancement ratio says a dose-modifying factor should do; and "
+              "a threshold arm loses nothing, because a destroyed cell does "
+              "not care about any of it.", ""]
 
     if inert:
-        L += [f"**{', '.join(inert)} are INERT in this configuration**, "
-              f"moving every arm by less than {d['inert_threshold'] * 100:.0f}%, "
-              "and that is reported rather than listed as a row of tiny "
-              "numbers — a table of 0.08% differences invites a reader to "
-              "believe an axis was tested when the configuration could not "
-              "see it.", "",
-              "The reasons are specific and both are limits of THIS panel "
-              "rather than of the axes:", "",
-              "* **Acidic pH** acts by trapping weak bases outside the cell, "
-              "so it scales what a delivered drug achieves. The delivered arm "
-              "here kills essentially nothing at baseline, so there is "
-              "nothing for the trapping to scale. The axis is real and its "
-              "effect is measured in the spatial model "
-              "(`analysis/` pH work); a single-cell panel at default "
-              "parameters cannot show it.", "",
-              "* **Stromal shielding** raises the antioxidant setpoint, which "
-              "matters when the insult is close to the cell's repair "
-              "capacity. The exogenous-ROS arms here overwhelm it by an order "
-              "of magnitude, so raising the buffer changes almost nothing. "
-              "The stromal chapter measures this axis where it bites — at the "
-              "tumour margin, against a pharmacologic inducer.", ""]
+        L += [f"**{', '.join(inert)} remain inert even stratified**, moving "
+              f"every arm by less than {d['inert_threshold'] * 100:.0f}% in "
+              "every cell state tested. That is a stronger statement than the "
+              "pooled version could make, and still not a claim that the arms "
+              "are resistant to them — only that this configuration cannot "
+              "apply that pressure.", ""]
 
     L += ["## What this does not say", "",
           "**Two of the three axes were not tested, they were not visible.** "

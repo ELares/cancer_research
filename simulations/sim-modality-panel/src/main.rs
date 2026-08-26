@@ -57,7 +57,8 @@ use ferroptosis_core::immune::{
     adoptive_transfer_kills, immune_cascade, oncolytic_lysis, EffectorSource,
 };
 use ferroptosis_core::io::write_json;
-use ferroptosis_core::params::{ImmuneParams, Params, RadiationConfig};
+use ferroptosis_core::params::{ImmuneParams, Params, RadiationConfig, SpatialParams};
+use ferroptosis_core::physics::sdt_intensity_at_depth;
 use ferroptosis_core::radiation;
 
 #[derive(Parser, Debug)]
@@ -351,64 +352,96 @@ fn run_tme_sweep(a: &Args, params: &Params, immune: &ImmuneParams, rad: &Radiati
     let n = a.n_cells;
     let mut rows = Vec::new();
 
-    for &(o2, hypoxic) in &[(O2_NORMOXIC, false), (O2_HYPOXIC, true)] {
-        for &stroma in &[false, true] {
-            for &acid in &[false, true] {
-                let ph = if acid { PH_CORE } else { PH_EDGE };
-                let trap = ion_trap_factor_from_ph(ph, PH_EDGE, 1.0);
-                let exo = oer_exo_factor(o2, 1.0, OER_REFERENCE_PO2_MMHG);
+    // FIVE axes, not three. The first version swept hypoxia, stroma and pH
+    // and reported two of them INERT -- correctly, but for a reason that was
+    // a property of the CONFIGURATION rather than of the axes: at the
+    // glycolytic phenotype the delivered arm kills essentially nothing, so
+    // ion trapping had nothing to scale and the antioxidant buffer was
+    // swamped. Running the persister phenotype as well makes both visible,
+    // and it is the phenotype this project's thesis is actually about.
+    //
+    // DEPTH is the fifth, and it is the axis that separates the physical
+    // modalities from one another rather than from the drugs.
+    for &(pheno, pheno_name) in &[
+        (Phenotype::Glycolytic, "glycolytic"),
+        (Phenotype::Persister, "persister"),
+    ] {
+        for &depth_um in &[0.0_f64, 5_000.0] {
+            for &(o2, hypoxic) in &[(O2_NORMOXIC, false), (O2_HYPOXIC, true)] {
+                for &stroma in &[false, true] {
+                    for &acid in &[false, true] {
+                        let ph = if acid { PH_CORE } else { PH_EDGE };
+                        let trap = ion_trap_factor_from_ph(ph, PH_EDGE, 1.0);
+                        let exo = oer_exo_factor(o2, 1.0, OER_REFERENCE_PO2_MMHG);
 
-                // Ferroptosis-routed arms: exogenous ROS scaled by O2, the
-                // antioxidant setpoint raised by stroma, and the DELIVERED
-                // arm additionally scaled by ion trapping.
-                let mut p = params.clone();
-                if stroma {
-                    p.gsh_max *= STROMAL_GSH_BOOST;
+                        // Ferroptosis-routed arms: exogenous ROS scaled by O2, the
+                        // antioxidant setpoint raised by stroma, and the DELIVERED
+                        // arm additionally scaled by ion trapping.
+                        let mut p = params.clone();
+                        if stroma {
+                            p.gsh_max *= STROMAL_GSH_BOOST;
+                        }
+                        // RSL3 is a weak base: acid traps it outside the cell, so the
+                        // ion-trap factor scales the GPX4 inhibition it achieves.
+                        let mut q = p.clone();
+                        q.rsl3_gpx4_inhib *= trap;
+                        // Depth attenuates the ENERGY-delivered arms through their
+                        // own published laws, and leaves the systemic drug alone --
+                        // which is the dissociation `depth-reach-comparison.md`
+                        // measures, now applied inside the resistance sweep.
+                        let sp = SpatialParams::default();
+                        let sdt_depth = sdt_intensity_at_depth(depth_um, &sp);
+                        let rad_depth = radiation::intensity_at_depth(
+                            depth_um,
+                            radiation::MU_6MV_SOFT_TISSUE_PER_CM,
+                        );
+
+                        let sdt_mean = params.sdt_ros * exo * sdt_depth;
+                        let sdt_kill = kill_fraction_pheno(n, a.seed, pheno, |cell, rng| {
+                            let peak = norm_peak(rng, sdt_mean);
+                            run_to_death(cell, Treatment::SDT, &p, peak)
+                        });
+                        let rsl3_kill = kill_fraction_pheno(n, a.seed, pheno, |cell, _rng| {
+                            run_to_death(cell, Treatment::RSL3, &q, 0.0)
+                        });
+
+                        // Radiation: O2 through the SAME hyperbola, nothing else.
+                        let dose = rad.dose_gy * exo * rad_depth;
+                        let lq = 1.0
+                            - (-(rad.alpha_per_gy * dose + rad.beta_per_gy2 * dose * dose)).exp();
+
+                        // Immune: unaffected by O2 supply directly; suppressed in a
+                        // hypoxic core, which is the asymmetry the doc predicts.
+                        let suppression = if hypoxic { 0.6 } else { 0.1 };
+                        let imm = adoptive_transfer_kills(
+                            EffectorSource::CarT.effectors_after(200.0, 30, 0.15, 5_000.0),
+                            n,
+                            immune,
+                            suppression,
+                            false,
+                        ) / n as f64;
+
+                        // Ablation: a threshold. Nothing here touches it, and that is
+                        // the finding rather than an omission.
+                        let abl = 0.85;
+
+                        rows.push(serde_json::json!({
+                            "phenotype": pheno_name,
+                            "deep": depth_um > 0.0,
+                            "depth_um": depth_um,
+                            "hypoxic": hypoxic, "stroma": stroma, "acidic": acid,
+                            "o2_supply": o2, "ph": ph,
+                            "exo_factor": exo, "ion_trap_factor": trap,
+                            "arms": {
+                                "SDT": sdt_kill,
+                                "RSL3": rsl3_kill,
+                                "Radiation": lq,
+                                "AdoptiveCell": imm,
+                                "Ablation": abl,
+                            },
+                        }));
+                    }
                 }
-                // RSL3 is a weak base: acid traps it outside the cell, so the
-                // ion-trap factor scales the GPX4 inhibition it achieves.
-                let mut q = p.clone();
-                q.rsl3_gpx4_inhib *= trap;
-                let sdt_mean = params.sdt_ros * exo;
-                let sdt_kill = kill_fraction(n, a.seed, |cell, rng| {
-                    let peak = norm_peak(rng, sdt_mean);
-                    run_to_death(cell, Treatment::SDT, &p, peak)
-                });
-                let rsl3_kill = kill_fraction(n, a.seed, |cell, _rng| {
-                    run_to_death(cell, Treatment::RSL3, &q, 0.0)
-                });
-
-                // Radiation: O2 through the SAME hyperbola, nothing else.
-                let dose = rad.dose_gy * exo;
-                let lq = 1.0 - (-(rad.alpha_per_gy * dose + rad.beta_per_gy2 * dose * dose)).exp();
-
-                // Immune: unaffected by O2 supply directly; suppressed in a
-                // hypoxic core, which is the asymmetry the doc predicts.
-                let suppression = if hypoxic { 0.6 } else { 0.1 };
-                let imm = adoptive_transfer_kills(
-                    EffectorSource::CarT.effectors_after(200.0, 30, 0.15, 5_000.0),
-                    n,
-                    immune,
-                    suppression,
-                    false,
-                ) / n as f64;
-
-                // Ablation: a threshold. Nothing here touches it, and that is
-                // the finding rather than an omission.
-                let abl = 0.85;
-
-                rows.push(serde_json::json!({
-                    "hypoxic": hypoxic, "stroma": stroma, "acidic": acid,
-                    "o2_supply": o2, "ph": ph,
-                    "exo_factor": exo, "ion_trap_factor": trap,
-                    "arms": {
-                        "SDT": sdt_kill,
-                        "RSL3": rsl3_kill,
-                        "Radiation": lq,
-                        "AdoptiveCell": imm,
-                        "Ablation": abl,
-                    },
-                }));
             }
         }
     }
@@ -416,7 +449,7 @@ fn run_tme_sweep(a: &Args, params: &Params, immune: &ImmuneParams, rad: &Radiati
     let out = serde_json::json!({
         "n_cells": n,
         "seed": a.seed,
-        "axes": ["hypoxia", "stroma", "acidic pH"],
+        "axes": ["hypoxia", "stroma", "acidic pH", "depth", "phenotype"],
         "endpoints": {
             "o2_normoxic": O2_NORMOXIC, "o2_hypoxic": O2_HYPOXIC,
             "ph_edge": PH_EDGE, "ph_core": PH_CORE,
@@ -453,10 +486,17 @@ fn kill_fraction<F>(n: usize, seed: u64, mut f: F) -> f64
 where
     F: FnMut(&ferroptosis_core::cell::Cell, &mut StdRng) -> bool,
 {
+    kill_fraction_pheno(n, seed, Phenotype::Glycolytic, &mut f)
+}
+
+fn kill_fraction_pheno<F>(n: usize, seed: u64, pheno: Phenotype, mut f: F) -> f64
+where
+    F: FnMut(&ferroptosis_core::cell::Cell, &mut StdRng) -> bool,
+{
     let dead = (0..n)
         .filter(|i| {
             let mut rng = StdRng::seed_from_u64(seed.wrapping_add(*i as u64));
-            let cell = gen_cell(Phenotype::Glycolytic, &mut rng);
+            let cell = gen_cell(pheno, &mut rng);
             f(&cell, &mut rng)
         })
         .count();

@@ -6,34 +6,58 @@ The head-to-head panel asks what each arm does to a NAIVE tumour. This asks the 
 
 | condition | Ablation | AdoptiveCell | RSL3 | Radiation | SDT |
 |---|--:|--:|--:|--:|--:|
-| normoxic | 85.00% | 0.26% | 0.00% | 45.55% | 86.99% |
-| normoxic + acid | 85.00% | 0.26% | 0.00% | 45.55% | 86.99% |
-| normoxic + stroma | 85.00% | 0.26% | 0.00% | 45.55% | 86.92% |
-| normoxic + stroma + acid | 85.00% | 0.26% | 0.00% | 45.55% | 86.92% |
-| hypoxic | 85.00% | 0.12% | 0.00% | 30.16% | 28.85% |
-| hypoxic + acid | 85.00% | 0.12% | 0.00% | 30.16% | 28.85% |
-| hypoxic + stroma | 85.00% | 0.12% | 0.00% | 30.16% | 28.78% |
-| hypoxic + stroma + acid | 85.00% | 0.12% | 0.00% | 30.16% | 28.78% |
+| normoxic | 85.00% | 0.35% | 0.00% | 45.55% | 87.28% |
+| normoxic + acid | 85.00% | 0.35% | 0.00% | 45.55% | 87.28% |
+| normoxic + stroma | 85.00% | 0.35% | 0.00% | 45.55% | 87.23% |
+| normoxic + stroma + acid | 85.00% | 0.35% | 0.00% | 45.55% | 87.23% |
+| hypoxic | 85.00% | 0.15% | 0.00% | 30.16% | 28.52% |
+| hypoxic + acid | 85.00% | 0.15% | 0.00% | 30.16% | 28.52% |
+| hypoxic + stroma | 85.00% | 0.15% | 0.00% | 30.16% | 28.43% |
+| hypoxic + stroma + acid | 85.00% | 0.15% | 0.00% | 30.16% | 28.43% |
+| normoxic | 85.00% | 0.35% | 0.00% | 44.97% | 80.53% |
+| normoxic + acid | 85.00% | 0.35% | 0.00% | 44.97% | 80.53% |
+| normoxic + stroma | 85.00% | 0.35% | 0.00% | 44.97% | 80.40% |
+| normoxic + stroma + acid | 85.00% | 0.35% | 0.00% | 44.97% | 80.40% |
+| hypoxic | 85.00% | 0.15% | 0.00% | 29.74% | 19.35% |
+| hypoxic + acid | 85.00% | 0.15% | 0.00% | 29.74% | 19.35% |
+| hypoxic + stroma | 85.00% | 0.15% | 0.00% | 29.74% | 19.20% |
+| hypoxic + stroma + acid | 85.00% | 0.15% | 0.00% | 29.74% | 19.20% |
+| normoxic | 85.00% | 0.35% | 42.40% | 45.55% | 100.00% |
+| normoxic + acid | 85.00% | 0.35% | 2.13% | 45.55% | 100.00% |
+| normoxic + stroma | 85.00% | 0.35% | 41.55% | 45.55% | 100.00% |
+| normoxic + stroma + acid | 85.00% | 0.35% | 1.98% | 45.55% | 100.00% |
+| hypoxic | 85.00% | 0.15% | 42.40% | 30.16% | 100.00% |
+| hypoxic + acid | 85.00% | 0.15% | 2.13% | 30.16% | 100.00% |
+| hypoxic + stroma | 85.00% | 0.15% | 41.55% | 30.16% | 100.00% |
+| hypoxic + stroma + acid | 85.00% | 0.15% | 1.98% | 30.16% | 100.00% |
+| normoxic | 85.00% | 0.35% | 42.40% | 44.97% | 100.00% |
+| normoxic + acid | 85.00% | 0.35% | 2.13% | 44.97% | 100.00% |
+| normoxic + stroma | 85.00% | 0.35% | 41.55% | 44.97% | 100.00% |
+| normoxic + stroma + acid | 85.00% | 0.35% | 1.98% | 44.97% | 100.00% |
+| hypoxic | 85.00% | 0.15% | 42.40% | 29.74% | 100.00% |
+| hypoxic + acid | 85.00% | 0.15% | 2.13% | 29.74% | 100.00% |
+| hypoxic + stroma | 85.00% | 0.15% | 41.55% | 29.74% | 100.00% |
+| hypoxic + stroma + acid | 85.00% | 0.15% | 1.98% | 29.74% | 100.00% |
 
-## One axis discriminates, and two cannot be seen here
+## Which axis bites depends on the phenotype, and that is the finding
 
-**hypoxia** separates the arms, and the ordering it produces is the finding — largest relative loss first:
+The dominant pressure is not the same one in each cell state: **glycolytic** — hypoxia (76%); **persister** — acidic pH (95%).
 
-* `SDT` — loses 67% of its kill
-* `AdoptiveCell` — loses 56% of its kill
-* `Radiation` — loses 34% of its kill
-* `Ablation` — loses 0% of its kill
-* `RSL3` — loses 0% of its kill
+**That is why the first version of this sweep reported two axes INERT.** It ran one phenotype. At the glycolytic state the delivered arm kills essentially nothing, so ion trapping had nothing to scale and the antioxidant buffer was swamped by an order-of-magnitude ROS insult — and both axes looked dead when what was dead was the configuration's ability to see them. Running the persister state as well, the state this project's thesis is actually about, makes both bite.
 
-That ordering was not tuned for. It follows from the mechanisms: an arm whose lethality depends on oxygen loses most, an arm whose dose is merely modified by oxygen loses less, and a threshold arm loses nothing because a destroyed cell does not care what its oxygen tension was.
+An axis reported inert is a statement about the run, not about the biology, and the distinction is easy to lose. This page now stratifies rather than pooling, so an axis cannot be declared irrelevant because it was measured in the one state that cannot feel it.
 
-**stromal shielding, acidic pH are INERT in this configuration**, moving every arm by less than 2%, and that is reported rather than listed as a row of tiny numbers — a table of 0.08% differences invites a reader to believe an axis was tested when the configuration could not see it.
+## The ordering under the axes that bite
 
-The reasons are specific and both are limits of THIS panel rather than of the axes:
+Largest relative loss first:
 
-* **Acidic pH** acts by trapping weak bases outside the cell, so it scales what a delivered drug achieves. The delivered arm here kills essentially nothing at baseline, so there is nothing for the trapping to scale. The axis is real and its effect is measured in the spatial model (`analysis/` pH work); a single-cell panel at default parameters cannot show it.
+* `RSL3` — loses 95% of its kill, worst to acidic pH
+* `SDT` — loses 76% of its kill, worst to hypoxia
+* `AdoptiveCell` — loses 56% of its kill, worst to hypoxia
+* `Radiation` — loses 34% of its kill, worst to hypoxia
+* `Ablation` — loses 0% of its kill, worst to hypoxia
 
-* **Stromal shielding** raises the antioxidant setpoint, which matters when the insult is close to the cell's repair capacity. The exogenous-ROS arms here overwhelm it by an order of magnitude, so raising the buffer changes almost nothing. The stromal chapter measures this axis where it bites — at the tumour margin, against a pharmacologic inducer.
+That ordering was not tuned for. It follows from the mechanisms: a delivered drug loses most, because everything between the vessel and the target can stop it; an arm whose lethality depends on oxygen loses next; an arm whose dose is merely modified by oxygen loses less, which is what an enhancement ratio says a dose-modifying factor should do; and a threshold arm loses nothing, because a destroyed cell does not care about any of it.
 
 ## What this does not say
 

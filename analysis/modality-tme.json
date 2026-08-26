@@ -2,135 +2,617 @@
  "axes": [
   "hypoxia",
   "stroma",
-  "acidic pH"
+  "acidic pH",
+  "depth",
+  "phenotype"
  ],
  "conditions": [
   {
    "acidic": false,
    "arms": {
     "Ablation": 0.85,
-    "AdoptiveCell": 0.00259808798446854,
+    "AdoptiveCell": 0.00346411731262472,
     "RSL3": 0.0,
     "Radiation": 0.4555047171958997,
-    "SDT": 0.869875
+    "SDT": 0.8728333333333333
    },
+   "deep": false,
+   "depth_um": 0.0,
    "exo_factor": 1.0,
    "hypoxic": false,
    "ion_trap_factor": 1.0,
    "o2_supply": 1.0,
    "ph": 7.4,
+   "phenotype": "glycolytic",
    "stroma": false
   },
   {
    "acidic": true,
    "arms": {
     "Ablation": 0.85,
-    "AdoptiveCell": 0.00259808798446854,
+    "AdoptiveCell": 0.00346411731262472,
     "RSL3": 0.0,
     "Radiation": 0.4555047171958997,
-    "SDT": 0.869875
+    "SDT": 0.8728333333333333
    },
+   "deep": false,
+   "depth_um": 0.0,
    "exo_factor": 1.0,
    "hypoxic": false,
    "ion_trap_factor": 0.3,
    "o2_supply": 1.0,
    "ph": 6.5,
-   "stroma": false
-  },
-  {
-   "acidic": false,
-   "arms": {
-    "Ablation": 0.85,
-    "AdoptiveCell": 0.00259808798446854,
-    "RSL3": 0.0,
-    "Radiation": 0.4555047171958997,
-    "SDT": 0.86925
-   },
-   "exo_factor": 1.0,
-   "hypoxic": false,
-   "ion_trap_factor": 1.0,
-   "o2_supply": 1.0,
-   "ph": 7.4,
-   "stroma": true
-  },
-  {
-   "acidic": true,
-   "arms": {
-    "Ablation": 0.85,
-    "AdoptiveCell": 0.00259808798446854,
-    "RSL3": 0.0,
-    "Radiation": 0.4555047171958997,
-    "SDT": 0.86925
-   },
-   "exo_factor": 1.0,
-   "hypoxic": false,
-   "ion_trap_factor": 0.3,
-   "o2_supply": 1.0,
-   "ph": 6.5,
-   "stroma": true
-  },
-  {
-   "acidic": false,
-   "arms": {
-    "Ablation": 0.85,
-    "AdoptiveCell": 0.0011547057708749067,
-    "RSL3": 0.0,
-    "Radiation": 0.3015514060714153,
-    "SDT": 0.2885
-   },
-   "exo_factor": 0.6292682926829268,
-   "hypoxic": true,
-   "ion_trap_factor": 1.0,
-   "o2_supply": 0.05,
-   "ph": 7.4,
-   "stroma": false
-  },
-  {
-   "acidic": true,
-   "arms": {
-    "Ablation": 0.85,
-    "AdoptiveCell": 0.0011547057708749067,
-    "RSL3": 0.0,
-    "Radiation": 0.3015514060714153,
-    "SDT": 0.2885
-   },
-   "exo_factor": 0.6292682926829268,
-   "hypoxic": true,
-   "ion_trap_factor": 0.3,
-   "o2_supply": 0.05,
-   "ph": 6.5,
+   "phenotype": "glycolytic",
    "stroma": false
   },
   {
    "acidic": false,
    "arms": {
     "Ablation": 0.85,
-    "AdoptiveCell": 0.0011547057708749067,
+    "AdoptiveCell": 0.00346411731262472,
     "RSL3": 0.0,
-    "Radiation": 0.3015514060714153,
-    "SDT": 0.28775
+    "Radiation": 0.4555047171958997,
+    "SDT": 0.8723333333333333
    },
-   "exo_factor": 0.6292682926829268,
-   "hypoxic": true,
+   "deep": false,
+   "depth_um": 0.0,
+   "exo_factor": 1.0,
+   "hypoxic": false,
    "ion_trap_factor": 1.0,
-   "o2_supply": 0.05,
+   "o2_supply": 1.0,
    "ph": 7.4,
+   "phenotype": "glycolytic",
    "stroma": true
   },
   {
    "acidic": true,
    "arms": {
     "Ablation": 0.85,
-    "AdoptiveCell": 0.0011547057708749067,
+    "AdoptiveCell": 0.00346411731262472,
+    "RSL3": 0.0,
+    "Radiation": 0.4555047171958997,
+    "SDT": 0.8723333333333333
+   },
+   "deep": false,
+   "depth_um": 0.0,
+   "exo_factor": 1.0,
+   "hypoxic": false,
+   "ion_trap_factor": 0.3,
+   "o2_supply": 1.0,
+   "ph": 6.5,
+   "phenotype": "glycolytic",
+   "stroma": true
+  },
+  {
+   "acidic": false,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.0015396076944998755,
     "RSL3": 0.0,
     "Radiation": 0.3015514060714153,
-    "SDT": 0.28775
+    "SDT": 0.2851666666666667
    },
+   "deep": false,
+   "depth_um": 0.0,
+   "exo_factor": 0.6292682926829268,
+   "hypoxic": true,
+   "ion_trap_factor": 1.0,
+   "o2_supply": 0.05,
+   "ph": 7.4,
+   "phenotype": "glycolytic",
+   "stroma": false
+  },
+  {
+   "acidic": true,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.0015396076944998755,
+    "RSL3": 0.0,
+    "Radiation": 0.3015514060714153,
+    "SDT": 0.2851666666666667
+   },
+   "deep": false,
+   "depth_um": 0.0,
    "exo_factor": 0.6292682926829268,
    "hypoxic": true,
    "ion_trap_factor": 0.3,
    "o2_supply": 0.05,
    "ph": 6.5,
+   "phenotype": "glycolytic",
+   "stroma": false
+  },
+  {
+   "acidic": false,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.0015396076944998755,
+    "RSL3": 0.0,
+    "Radiation": 0.3015514060714153,
+    "SDT": 0.2843333333333333
+   },
+   "deep": false,
+   "depth_um": 0.0,
+   "exo_factor": 0.6292682926829268,
+   "hypoxic": true,
+   "ion_trap_factor": 1.0,
+   "o2_supply": 0.05,
+   "ph": 7.4,
+   "phenotype": "glycolytic",
+   "stroma": true
+  },
+  {
+   "acidic": true,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.0015396076944998755,
+    "RSL3": 0.0,
+    "Radiation": 0.3015514060714153,
+    "SDT": 0.2843333333333333
+   },
+   "deep": false,
+   "depth_um": 0.0,
+   "exo_factor": 0.6292682926829268,
+   "hypoxic": true,
+   "ion_trap_factor": 0.3,
+   "o2_supply": 0.05,
+   "ph": 6.5,
+   "phenotype": "glycolytic",
+   "stroma": true
+  },
+  {
+   "acidic": false,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.00346411731262472,
+    "RSL3": 0.0,
+    "Radiation": 0.4497374032387358,
+    "SDT": 0.8053333333333333
+   },
+   "deep": true,
+   "depth_um": 5000.0,
+   "exo_factor": 1.0,
+   "hypoxic": false,
+   "ion_trap_factor": 1.0,
+   "o2_supply": 1.0,
+   "ph": 7.4,
+   "phenotype": "glycolytic",
+   "stroma": false
+  },
+  {
+   "acidic": true,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.00346411731262472,
+    "RSL3": 0.0,
+    "Radiation": 0.4497374032387358,
+    "SDT": 0.8053333333333333
+   },
+   "deep": true,
+   "depth_um": 5000.0,
+   "exo_factor": 1.0,
+   "hypoxic": false,
+   "ion_trap_factor": 0.3,
+   "o2_supply": 1.0,
+   "ph": 6.5,
+   "phenotype": "glycolytic",
+   "stroma": false
+  },
+  {
+   "acidic": false,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.00346411731262472,
+    "RSL3": 0.0,
+    "Radiation": 0.4497374032387358,
+    "SDT": 0.804
+   },
+   "deep": true,
+   "depth_um": 5000.0,
+   "exo_factor": 1.0,
+   "hypoxic": false,
+   "ion_trap_factor": 1.0,
+   "o2_supply": 1.0,
+   "ph": 7.4,
+   "phenotype": "glycolytic",
+   "stroma": true
+  },
+  {
+   "acidic": true,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.00346411731262472,
+    "RSL3": 0.0,
+    "Radiation": 0.4497374032387358,
+    "SDT": 0.804
+   },
+   "deep": true,
+   "depth_um": 5000.0,
+   "exo_factor": 1.0,
+   "hypoxic": false,
+   "ion_trap_factor": 0.3,
+   "o2_supply": 1.0,
+   "ph": 6.5,
+   "phenotype": "glycolytic",
+   "stroma": true
+  },
+  {
+   "acidic": false,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.0015396076944998755,
+    "RSL3": 0.0,
+    "Radiation": 0.2973961544425532,
+    "SDT": 0.1935
+   },
+   "deep": true,
+   "depth_um": 5000.0,
+   "exo_factor": 0.6292682926829268,
+   "hypoxic": true,
+   "ion_trap_factor": 1.0,
+   "o2_supply": 0.05,
+   "ph": 7.4,
+   "phenotype": "glycolytic",
+   "stroma": false
+  },
+  {
+   "acidic": true,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.0015396076944998755,
+    "RSL3": 0.0,
+    "Radiation": 0.2973961544425532,
+    "SDT": 0.1935
+   },
+   "deep": true,
+   "depth_um": 5000.0,
+   "exo_factor": 0.6292682926829268,
+   "hypoxic": true,
+   "ion_trap_factor": 0.3,
+   "o2_supply": 0.05,
+   "ph": 6.5,
+   "phenotype": "glycolytic",
+   "stroma": false
+  },
+  {
+   "acidic": false,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.0015396076944998755,
+    "RSL3": 0.0,
+    "Radiation": 0.2973961544425532,
+    "SDT": 0.192
+   },
+   "deep": true,
+   "depth_um": 5000.0,
+   "exo_factor": 0.6292682926829268,
+   "hypoxic": true,
+   "ion_trap_factor": 1.0,
+   "o2_supply": 0.05,
+   "ph": 7.4,
+   "phenotype": "glycolytic",
+   "stroma": true
+  },
+  {
+   "acidic": true,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.0015396076944998755,
+    "RSL3": 0.0,
+    "Radiation": 0.2973961544425532,
+    "SDT": 0.192
+   },
+   "deep": true,
+   "depth_um": 5000.0,
+   "exo_factor": 0.6292682926829268,
+   "hypoxic": true,
+   "ion_trap_factor": 0.3,
+   "o2_supply": 0.05,
+   "ph": 6.5,
+   "phenotype": "glycolytic",
+   "stroma": true
+  },
+  {
+   "acidic": false,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.00346411731262472,
+    "RSL3": 0.424,
+    "Radiation": 0.4555047171958997,
+    "SDT": 1.0
+   },
+   "deep": false,
+   "depth_um": 0.0,
+   "exo_factor": 1.0,
+   "hypoxic": false,
+   "ion_trap_factor": 1.0,
+   "o2_supply": 1.0,
+   "ph": 7.4,
+   "phenotype": "persister",
+   "stroma": false
+  },
+  {
+   "acidic": true,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.00346411731262472,
+    "RSL3": 0.021333333333333333,
+    "Radiation": 0.4555047171958997,
+    "SDT": 1.0
+   },
+   "deep": false,
+   "depth_um": 0.0,
+   "exo_factor": 1.0,
+   "hypoxic": false,
+   "ion_trap_factor": 0.3,
+   "o2_supply": 1.0,
+   "ph": 6.5,
+   "phenotype": "persister",
+   "stroma": false
+  },
+  {
+   "acidic": false,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.00346411731262472,
+    "RSL3": 0.4155,
+    "Radiation": 0.4555047171958997,
+    "SDT": 1.0
+   },
+   "deep": false,
+   "depth_um": 0.0,
+   "exo_factor": 1.0,
+   "hypoxic": false,
+   "ion_trap_factor": 1.0,
+   "o2_supply": 1.0,
+   "ph": 7.4,
+   "phenotype": "persister",
+   "stroma": true
+  },
+  {
+   "acidic": true,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.00346411731262472,
+    "RSL3": 0.019833333333333335,
+    "Radiation": 0.4555047171958997,
+    "SDT": 1.0
+   },
+   "deep": false,
+   "depth_um": 0.0,
+   "exo_factor": 1.0,
+   "hypoxic": false,
+   "ion_trap_factor": 0.3,
+   "o2_supply": 1.0,
+   "ph": 6.5,
+   "phenotype": "persister",
+   "stroma": true
+  },
+  {
+   "acidic": false,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.0015396076944998755,
+    "RSL3": 0.424,
+    "Radiation": 0.3015514060714153,
+    "SDT": 1.0
+   },
+   "deep": false,
+   "depth_um": 0.0,
+   "exo_factor": 0.6292682926829268,
+   "hypoxic": true,
+   "ion_trap_factor": 1.0,
+   "o2_supply": 0.05,
+   "ph": 7.4,
+   "phenotype": "persister",
+   "stroma": false
+  },
+  {
+   "acidic": true,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.0015396076944998755,
+    "RSL3": 0.021333333333333333,
+    "Radiation": 0.3015514060714153,
+    "SDT": 1.0
+   },
+   "deep": false,
+   "depth_um": 0.0,
+   "exo_factor": 0.6292682926829268,
+   "hypoxic": true,
+   "ion_trap_factor": 0.3,
+   "o2_supply": 0.05,
+   "ph": 6.5,
+   "phenotype": "persister",
+   "stroma": false
+  },
+  {
+   "acidic": false,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.0015396076944998755,
+    "RSL3": 0.4155,
+    "Radiation": 0.3015514060714153,
+    "SDT": 1.0
+   },
+   "deep": false,
+   "depth_um": 0.0,
+   "exo_factor": 0.6292682926829268,
+   "hypoxic": true,
+   "ion_trap_factor": 1.0,
+   "o2_supply": 0.05,
+   "ph": 7.4,
+   "phenotype": "persister",
+   "stroma": true
+  },
+  {
+   "acidic": true,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.0015396076944998755,
+    "RSL3": 0.019833333333333335,
+    "Radiation": 0.3015514060714153,
+    "SDT": 1.0
+   },
+   "deep": false,
+   "depth_um": 0.0,
+   "exo_factor": 0.6292682926829268,
+   "hypoxic": true,
+   "ion_trap_factor": 0.3,
+   "o2_supply": 0.05,
+   "ph": 6.5,
+   "phenotype": "persister",
+   "stroma": true
+  },
+  {
+   "acidic": false,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.00346411731262472,
+    "RSL3": 0.424,
+    "Radiation": 0.4497374032387358,
+    "SDT": 1.0
+   },
+   "deep": true,
+   "depth_um": 5000.0,
+   "exo_factor": 1.0,
+   "hypoxic": false,
+   "ion_trap_factor": 1.0,
+   "o2_supply": 1.0,
+   "ph": 7.4,
+   "phenotype": "persister",
+   "stroma": false
+  },
+  {
+   "acidic": true,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.00346411731262472,
+    "RSL3": 0.021333333333333333,
+    "Radiation": 0.4497374032387358,
+    "SDT": 1.0
+   },
+   "deep": true,
+   "depth_um": 5000.0,
+   "exo_factor": 1.0,
+   "hypoxic": false,
+   "ion_trap_factor": 0.3,
+   "o2_supply": 1.0,
+   "ph": 6.5,
+   "phenotype": "persister",
+   "stroma": false
+  },
+  {
+   "acidic": false,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.00346411731262472,
+    "RSL3": 0.4155,
+    "Radiation": 0.4497374032387358,
+    "SDT": 1.0
+   },
+   "deep": true,
+   "depth_um": 5000.0,
+   "exo_factor": 1.0,
+   "hypoxic": false,
+   "ion_trap_factor": 1.0,
+   "o2_supply": 1.0,
+   "ph": 7.4,
+   "phenotype": "persister",
+   "stroma": true
+  },
+  {
+   "acidic": true,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.00346411731262472,
+    "RSL3": 0.019833333333333335,
+    "Radiation": 0.4497374032387358,
+    "SDT": 1.0
+   },
+   "deep": true,
+   "depth_um": 5000.0,
+   "exo_factor": 1.0,
+   "hypoxic": false,
+   "ion_trap_factor": 0.3,
+   "o2_supply": 1.0,
+   "ph": 6.5,
+   "phenotype": "persister",
+   "stroma": true
+  },
+  {
+   "acidic": false,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.0015396076944998755,
+    "RSL3": 0.424,
+    "Radiation": 0.2973961544425532,
+    "SDT": 1.0
+   },
+   "deep": true,
+   "depth_um": 5000.0,
+   "exo_factor": 0.6292682926829268,
+   "hypoxic": true,
+   "ion_trap_factor": 1.0,
+   "o2_supply": 0.05,
+   "ph": 7.4,
+   "phenotype": "persister",
+   "stroma": false
+  },
+  {
+   "acidic": true,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.0015396076944998755,
+    "RSL3": 0.021333333333333333,
+    "Radiation": 0.2973961544425532,
+    "SDT": 1.0
+   },
+   "deep": true,
+   "depth_um": 5000.0,
+   "exo_factor": 0.6292682926829268,
+   "hypoxic": true,
+   "ion_trap_factor": 0.3,
+   "o2_supply": 0.05,
+   "ph": 6.5,
+   "phenotype": "persister",
+   "stroma": false
+  },
+  {
+   "acidic": false,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.0015396076944998755,
+    "RSL3": 0.4155,
+    "Radiation": 0.2973961544425532,
+    "SDT": 1.0
+   },
+   "deep": true,
+   "depth_um": 5000.0,
+   "exo_factor": 0.6292682926829268,
+   "hypoxic": true,
+   "ion_trap_factor": 1.0,
+   "o2_supply": 0.05,
+   "ph": 7.4,
+   "phenotype": "persister",
+   "stroma": true
+  },
+  {
+   "acidic": true,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.0015396076944998755,
+    "RSL3": 0.019833333333333335,
+    "Radiation": 0.2973961544425532,
+    "SDT": 1.0
+   },
+   "deep": true,
+   "depth_um": 5000.0,
+   "exo_factor": 0.6292682926829268,
+   "hypoxic": true,
+   "ion_trap_factor": 0.3,
+   "o2_supply": 0.05,
+   "ph": 6.5,
+   "phenotype": "persister",
    "stroma": true
   }
  ],
@@ -141,7 +623,7 @@
   "ph_edge": 7.4,
   "stromal_gsh_boost": 1.5
  },
- "n_cells": 8000,
+ "n_cells": 6000,
  "note": "Every axis is applied through the SAME helpers the ferroptosis chapters use, so a modality comparison is under an identical environment. Arms absent from a row are unaffected by that axis BY CONSTRUCTION, which is a prediction and not an omission -- see the function docs.",
  "seed": 42,
  "arms": [
@@ -151,42 +633,125 @@
   "Radiation",
   "SDT"
  ],
+ "phenotypes": [
+  "glycolytic",
+  "persister"
+ ],
  "effects": {
   "hypoxia": {
    "Ablation": 0.0,
    "AdoptiveCell": 0.5555555555555556,
    "RSL3": 0.0,
-   "Radiation": 0.3379840105108581,
-   "SDT": 0.6689675007190106
+   "Radiation": 0.3387337759748542,
+   "SDT": 0.7611940298507464
   },
   "stromal shielding": {
    "Ablation": 0.0,
    "AdoptiveCell": 0.0,
-   "RSL3": 0.0,
+   "RSL3": 0.0703124999999999,
    "Radiation": 0.0,
-   "SDT": 0.0025996533795493
+   "SDT": 0.007751937984496131
   },
   "acidic pH": {
    "Ablation": 0.0,
    "AdoptiveCell": 0.0,
-   "RSL3": 0.0,
+   "RSL3": 0.9522663457681508,
    "Radiation": 0.0,
    "SDT": 0.0
+  },
+  "depth": {
+   "Ablation": 0.0,
+   "AdoptiveCell": 0.0,
+   "RSL3": 0.0,
+   "Radiation": 0.013779579684261288,
+   "SDT": 0.32473622508792493
   }
  },
- "inert_axes": [
-  "stromal shielding",
-  "acidic pH"
- ],
+ "effects_by_phenotype": {
+  "glycolytic": {
+   "hypoxia": {
+    "Ablation": 0.0,
+    "AdoptiveCell": 0.5555555555555556,
+    "RSL3": 0.0,
+    "Radiation": 0.3387337759748542,
+    "SDT": 0.7611940298507464
+   },
+   "stromal shielding": {
+    "Ablation": 0.0,
+    "AdoptiveCell": 0.0,
+    "RSL3": 0.0,
+    "Radiation": 0.0,
+    "SDT": 0.007751937984496131
+   },
+   "acidic pH": {
+    "Ablation": 0.0,
+    "AdoptiveCell": 0.0,
+    "RSL3": 0.0,
+    "Radiation": 0.0,
+    "SDT": 0.0
+   },
+   "depth": {
+    "Ablation": 0.0,
+    "AdoptiveCell": 0.0,
+    "RSL3": 0.0,
+    "Radiation": 0.013779579684261288,
+    "SDT": 0.32473622508792493
+   }
+  },
+  "persister": {
+   "hypoxia": {
+    "Ablation": 0.0,
+    "AdoptiveCell": 0.5555555555555556,
+    "RSL3": 0.0,
+    "Radiation": 0.3387337759748542,
+    "SDT": 0.0
+   },
+   "stromal shielding": {
+    "Ablation": 0.0,
+    "AdoptiveCell": 0.0,
+    "RSL3": 0.0703124999999999,
+    "Radiation": 0.0,
+    "SDT": 0.0
+   },
+   "acidic pH": {
+    "Ablation": 0.0,
+    "AdoptiveCell": 0.0,
+    "RSL3": 0.9522663457681508,
+    "Radiation": 0.0,
+    "SDT": 0.0
+   },
+   "depth": {
+    "Ablation": 0.0,
+    "AdoptiveCell": 0.0,
+    "RSL3": 0.0,
+    "Radiation": 0.013779579684261288,
+    "SDT": 0.0
+   }
+  }
+ },
+ "dominant_axis": {
+  "glycolytic": [
+   "hypoxia",
+   0.7611940298507464
+  ],
+  "persister": [
+   "acidic pH",
+   0.9522663457681508
+  ]
+ },
+ "inert_axes": [],
  "live_axes": [
-  "hypoxia"
+  "hypoxia",
+  "stromal shielding",
+  "acidic pH",
+  "depth"
  ],
  "robustness_order": [
   "Ablation",
-  "RSL3",
   "Radiation",
   "AdoptiveCell",
-  "SDT"
+  "SDT",
+  "RSL3"
  ],
  "inert_threshold": 0.02
 }
