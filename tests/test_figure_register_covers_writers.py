@@ -28,15 +28,22 @@ import yaml
 REPO = Path(__file__).resolve().parent.parent
 FIGURES = REPO / "FIGURES.yaml"
 
-# Every script the register names as a generator, plus the two that actually
-# write. Keyed on the register so a NEW generator script cannot be added
-# without appearing here.
-PYTHON_GENERATORS = (
-    "scripts/generate_figures.py",
-    "scripts/generate_census_figures.py",
-    "scripts/generate_conceptual_diagrams.py",
-    "scripts/rare_event_analysis.py",
-)
+# DERIVED FROM THE REGISTER, which is what the comment here used to claim
+# while the list was a four-element literal nothing checked. A new generator
+# script -- even one the register NAMES -- was then scanned by nothing: a
+# figure it drew and did not register passed, which is the defect this file
+# exists to close, reopened one script over.
+def _python_generators():
+    d = yaml.safe_load(FIGURES.read_text())
+    entries = d["figures"] if isinstance(d, dict) and "figures" in d else d
+    if isinstance(entries, dict):
+        entries = list(entries.values())
+    out = set()
+    for e in entries or []:
+        script = ((e or {}).get("generator") or {}).get("script", "")
+        if script.endswith(".py"):
+            out.add(script)
+    return tuple(sorted(out))
 
 _STEM = re.compile(r"(fig[0-9]+[a-z]?_[A-Za-z0-9_]+)")
 
@@ -56,7 +63,11 @@ def _written_stems(src: str) -> set[str]:
         fn = node.func
         if not (isinstance(fn, ast.Attribute) and fn.attr == "savefig"):
             continue
-        for arg in node.args:
+        # ARGS AND KEYWORDS. `fname` is savefig's first parameter, so
+        # `savefig(fname=...)` is ordinary Python and bypassed a scan that
+        # read `node.args` only -- an unregistered figure written that way
+        # passed.
+        for arg in list(node.args) + [k.value for k in node.keywords]:
             for piece in ast.walk(arg):
                 if isinstance(piece, ast.Constant) and isinstance(piece.value, str):
                     m = _STEM.search(piece.value)
@@ -76,16 +87,29 @@ def register():
 def writes():
     """stem -> the scripts whose savefig calls name it as a literal.
 
-    Only two of the four generators can be read this way; the other two build
-    the stem in a variable (`f"{name}.{ext}"` over a loop, and a Path the
-    graphviz path passes to a subprocess). That asymmetry is why the reverse
-    direction below is a definition check and not a write check -- stating it
-    here so the limit is recorded next to the code that has it, not inferred.
+    ONLY TWO OF THE GENERATORS CONTRIBUTE STEMS, and the two that do not are
+    blind for DIFFERENT reasons, which an earlier version of this note got
+    wrong by describing one of them twice:
+
+      * `generate_conceptual_diagrams.py` has no `savefig` at all -- fig19 and
+        fig22 are produced by `subprocess.run(["dot", ...])`, and its other
+        figures save through an `f"{name}.{ext}"` loop helper;
+      * `rare_event_analysis.py` passes a LITERAL stem into a helper
+        (`figure(by_cond, FIG_DIR / "fig29_rare_event_resolution")`) and the
+        `savefig` lives inside that helper, so the literal is recoverable from
+        the source -- the scan simply does not follow calls.
+
+    So "every write is registered" is vacuously true for those two: an
+    unregistered figure added to either passes. That is the limit, stated
+    plainly rather than described as a future risk, and it is why the reverse
+    direction below is a definition check and not a write check.
     """
     out: dict[str, set[str]] = {}
-    for rel in PYTHON_GENERATORS:
+    gens = _python_generators()
+    assert gens, "FIGURES.yaml names no Python generator; the scan has no input"
+    for rel in gens:
         p = REPO / rel
-        assert p.exists(), f"{rel} is named in PYTHON_GENERATORS but absent"
+        assert p.exists(), f"{rel} is named as a generator in FIGURES.yaml but absent"
         for stem in _written_stems(p.read_text()):
             out.setdefault(stem, set()).add(rel)
     return out
@@ -99,11 +123,15 @@ def test_the_scan_still_finds_writes(writes):
     trivially true. Pin the two scripts it can read, and pin fig28 by name --
     it is the only f-string save, so it is the case a literal-only scan drops.
     """
-    assert len(writes) >= 20, (
-        f"the savefig scan found only {len(writes)} stems. Removing the seven "
-        "superseded corpus figures took this from 28 to 21, so anything below "
-        "20 means saves have stopped going through .savefig() and every "
-        "assertion in this file has gone vacuous rather than failing")
+    # THE BY-NAME PINS BELOW ARE THE REAL CHECK. A count with a margin of one
+    # (21 actual against 20) fails for the wrong reason when a figure is
+    # legitimately retired, and passes at exactly 20 when one figure's saves
+    # are routed through a helper. It is kept only as a floor that a
+    # WHOLESALE change of save mechanism would trip.
+    assert len(writes) >= 10, (
+        f"the savefig scan found only {len(writes)} stems, against 21 today. "
+        "Saves have stopped going through .savefig(), so every assertion in "
+        "this file has gone vacuous rather than failing")
     assert "fig28_census_capture" in writes, (
         "fig28 is saved as f\"fig28_census_capture.{ext}\" -- losing it means "
         "the scan has stopped reading f-string saves, and any figure written "
@@ -162,6 +190,10 @@ RETIRED = {
     "fig9_evidence_tiers": "fig9c_design_composition",
     "fig14_tissue_mechanism_heatmap": "fig14c_class_by_site",
     "fig15_designed_combinations": "fig15c_mechanism_pairs",
+    # RETIRED THE SAME WAY AND OMITTED. `fig23_census_flow`'s note opens
+    # `Replaces fig23_prisma_flow.`, identical in form to the seven, and it is
+    # drawn nowhere and registered nowhere. The pin covered 7 of 8.
+    "fig23_prisma_flow": "fig23_census_flow",
     "fig16_weighted_evidence": "fig16c_trial_share",
 }
 

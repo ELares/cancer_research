@@ -429,12 +429,6 @@ def fig6_sdt_chain_evidence(articles):
     fig.savefig(FIG_DIR / "fig6_sdt_chain_evidence.png")
     plt.close()
     print(f"  Chain: {' → '.join(str(c) for c in counts)}")
-
-
-# ============================================================
-# Fig 9: Evidence Tier Composition
-# ============================================================
-
 EVIDENCE_ORDER = [
     "phase3-clinical", "phase2-clinical", "phase1-clinical", "clinical-other",
     "preclinical-invivo", "preclinical-invitro", "theoretical",
@@ -448,17 +442,6 @@ EVIDENCE_LABELS = {
     "preclinical-invitro": "Preclinical in vitro",
     "theoretical": "Theoretical",
 }
-EVIDENCE_COLORS = {
-    "phase3-clinical": "#b71c1c",
-    "phase2-clinical": "#e65100",
-    "phase1-clinical": "#f9a825",
-    "clinical-other": "#4fc3f7",
-    "preclinical-invivo": "#388e3c",
-    "preclinical-invitro": "#81c784",
-    "theoretical": "#bdbdbd",
-}
-
-TIER_RANK = {lvl: i for i, lvl in enumerate(reversed(EVIDENCE_ORDER))}
 
 
 def load_index():
@@ -784,75 +767,6 @@ def fig13_gold_set_eval():
     fig.savefig(FIG_DIR / "fig13_gold_set_eval.png")
     plt.close()
     print(f"  {len(labeled)} labeled rows, exact accuracy {exact/len(labeled):.0%}")
-
-
-# ============================================================
-# Fig 14: Tissue × Mechanism Heatmap
-# ============================================================
-
-TISSUE_ORDER = ["epithelial", "hematologic", "mesenchymal", "neuroectodermal", "mesothelial"]
-TISSUE_DISPLAY = {
-    "epithelial": "Epithelial",
-    "hematologic": "Hematologic",
-    "mesenchymal": "Mesenchymal",
-    "neuroectodermal": "Neuroectodermal",
-    "mesothelial": "Mesothelial",
-}
-
-
-
-
-# ============================================================
-# Fig 15: Designed-Combination Breakdown
-# ============================================================
-
-COMBINATION_CATEGORIES = [
-    ("designed-combination-clinical", "Clinical\ndesigned", "#b71c1c"),
-    ("designed-combination-preclinical", "Preclinical\ndesigned", "#e65100"),
-    ("co-mention-only", "Co-mention\nonly", "#4fc3f7"),
-    ("review-or-perspective-multi-lane", "Review /\nperspective", "#bdbdbd"),
-]
-
-
-
-
-# ============================================================
-# Fig 16: Weighted Evidence Score by Mechanism
-# ============================================================
-
-EVIDENCE_TIER_WEIGHTS = {
-    "phase3-clinical": 12.0,
-    "phase2-clinical": 8.0,
-    "phase1-clinical": 5.0,
-    "clinical-other": 3.0,
-    "preclinical-invivo": 2.0,
-    "preclinical-invitro": 1.0,
-    "theoretical": 0.5,
-}
-
-
-def _evidence_weight(entry: dict) -> float:
-    """Heuristic quality weight — mirrors analyze_corpus.evidence_weight()."""
-    level = entry.get("evidence_level", "")
-    base = EVIDENCE_TIER_WEIGHTS.get(level)
-    if not base:
-        return 0.0
-
-    pct = entry.get("icite_percentile") or 0
-    try:
-        pct = max(0.0, min(float(pct), 100.0))
-    except (TypeError, ValueError):
-        pct = 0.0
-    citation_modifier = 1.0 + (pct / 200.0)
-
-    year = entry.get("year") or 0
-    if year:
-        year = max(2015, min(int(year), 2026))
-        recency_modifier = 0.9 + ((year - 2015) / (2026 - 2015)) * 0.2
-    else:
-        recency_modifier = 1.0
-
-    return base * citation_modifier * recency_modifier
 
 
 
