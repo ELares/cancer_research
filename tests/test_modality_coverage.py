@@ -350,21 +350,42 @@ def test_the_crate_root_is_not_a_module(d):
     for r in d["rows"]:
         assert "lib" not in r["code_modules"], r["mechanism"]
     live = len([p for p in CORE.glob("*.rs") if p.stem != "lib"])
-    assert d["module_count"] == live == 33, (
+    assert d["module_count"] == live == 34, (
         f"module count {d['module_count']} against {live} on disk")
 
 
-def test_hifu_is_prose_only_and_the_report_says_why(d, md):
-    """The measured case that motivated the tier. If a HIFU model ever lands,
-    this fails and the paragraph explaining the tier must be rewritten with
-    it -- which is the intent."""
-    row = next(r for r in d["rows"] if r["mechanism"] == "hifu")
-    assert row["engine_tier"] == "absent", (
-        "hifu is no longer prose-only; the report's worked example for the "
-        "PROSE-ONLY tier is stale and must be replaced")
-    assert row["prose_only_modules"], (
-        "hifu has no prose mention either, so the report's example is false")
+def test_the_prose_only_tier_still_has_a_live_example(d, md):
+    """The tier is only worth having while something falls into it.
+
+    Its original worked example was HIFU, whose only appearance in the crate
+    was a docstring citing MR-guided focused ultrasound as context. A HIFU
+    model has since landed (`ablation.rs`), and the guard that said "if a HIFU
+    model ever lands, this fails and the paragraph must be rewritten with it"
+    did exactly that -- so the example moved rather than the tier being
+    dropped.
+
+    What is pinned now is the PROPERTY, not the mechanism: some module must
+    still be mentioning a mechanism it does not model, or the tier is
+    describing a situation that no longer occurs and the paragraph should say
+    so instead.
+    """
+    prose_only = {r["mechanism"]: r["prose_only_modules"]
+                  for r in d["rows"] if r["prose_only_modules"]}
+    assert prose_only, (
+        "NOTHING is prose-only any more. That is good news, and it makes the "
+        "report's PROSE-ONLY paragraph describe a situation that no longer "
+        "occurs -- rewrite it rather than deleting this test")
     assert "prose about a thing is not a model of it" in md
+    # HIFU specifically: the mechanism is modelled NOW, and its lone prose
+    # mention (`oxygen.rs`'s MR-guided focused ultrasound aside) is still
+    # there, so the historical example in the report remains accurate as
+    # history.
+    hifu = next(r for r in d["rows"] if r["mechanism"] == "hifu")
+    assert hifu["engine_tier"] != "absent", (
+        "hifu is absent again; `ablation.rs` has stopped naming it")
+    assert "oxygen" in hifu["prose_only_modules"], (
+        "the docstring the report cites as the original worked example is "
+        "gone; the paragraph's history is now unverifiable")
 
 
 # ----------------------------------------------- the claims the prose makes
@@ -587,7 +608,20 @@ def test_the_totals_are_the_rows(d):
     assert d["absent_census"] == sum(r["census"] for r in absent)
     assert d["absent_trials"] == sum(r["trials"] for r in absent)
     assert d["total_census"] == sum(r["census"] for r in d["rows"])
-    assert f"**{d['absent_count']} of {len(d['rows'])} mechanisms" in MD.read_text()
+    md = MD.read_text()
+    if d["absent_count"]:
+        assert f"**{d['absent_count']} of {len(d['rows'])} mechanisms" in md
+    else:
+        # At zero the report stops counting absences and starts counting
+        # APPLICABILITY, which is the harder number. Pinned so it cannot
+        # quietly go back to reporting a zero as an achievement.
+        assert f"**Every one of the {len(d['rows'])} mechanisms" in md
+        n_treat = sum(1 for r in d["rows"] if r["engine_tier"] == "treatment")
+        assert f"{n_treat} of {len(d['rows'])} can be APPLIED" in md, (
+            "the report reached zero absent and does not state how many are "
+            "applicable, which is now the only distinction it has")
+        assert "Presence is not applicability" in md
+        assert "presence says nothing about calibration" in md
 
 
 def test_the_ferroptosis_baseline_is_guarded(d, md):

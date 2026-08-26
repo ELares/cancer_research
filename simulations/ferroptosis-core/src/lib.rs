@@ -25,6 +25,7 @@
 //! | [`stats`] | Wilson CIs, parallel Monte Carlo execution |
 //! | [`physics`] | Depth-dependent energy deposition (Beer-Lambert, acoustic; 2D + 3D dispatchers) |
 //! | [`grid`] | 2D and 3D tumor grids with heterogeneous architecture |
+//! | [`ablation`] | Physical ablation: HIFU thermal dose (CEM43) and irreversible electroporation, as THRESHOLD phenomena rather than dose-responses |
 //! | [`oxygen`] | 3D radial oxygen gradients for spheroid tumors |
 //! | [`radiation`] | Ionizing radiation: linear-quadratic DNA lethality and radiation-induced ferroptosis as SEPARATE channels, both O2-scaled by the OER |
 //! | [`ph`] | 3D radial pH gradient + iron-release and ion-trapping modulation helpers |
@@ -57,6 +58,7 @@ pub mod clonal;
 pub mod contact;
 pub mod copper;
 // Listed before `params` because `SpatialParams` holds a `Photosensitizer`.
+pub mod ablation;
 pub mod biochem;
 pub mod dose_schedule;
 pub mod drug_transport;

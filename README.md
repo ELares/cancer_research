@@ -58,7 +58,7 @@ literature and describing a search.
 - **ferroptosis-core library** (MIT, with Python bindings) — embeddable ferroptosis biochemistry engine; module list and current unit-test count in [`simulations/ferroptosis-core/README.md`](simulations/ferroptosis-core/README.md)
 - **Calibration infrastructure** linking simulation parameters to published experimental data
 - **[Model card](MODEL_CARD.md)** with the simulation suite's intended use, out-of-scope cases, assumptions/scope checklist, and per-layer calibration/validation status (the honest "broad but mostly uncalibrated" accounting, consolidated from [`CALIBRATION_STATUS.md`](simulations/calibration/CALIBRATION_STATUS.md))
-- **Book-format manuscript (~115 pp)** with 11 chapters, 3 appendices, and 24 figures (~57,100 words), cross-referenced against all analysis outputs and indexed in [`FIGURES.yaml`](FIGURES.yaml)
+- **Book-format manuscript (~115 pp)** with 11 chapters, 3 appendices, and 24 figures (~57,200 words), cross-referenced against all analysis outputs and indexed in [`FIGURES.yaml`](FIGURES.yaml)
 
 ## What the work is actually about
 
@@ -69,9 +69,9 @@ than leaving you to count files.**
 |---|--:|--:|--:|
 | committed analyses | 16 | **1** | 122 |
 | preregistered predictions | **8 of 8** | 0 | — |
-| engine modules mentioning it anywhere | **30 of 33** | — | — |
-| engine modules mentioning it in code | **21 of 33** | — | — |
-| engine modules mentioning it in PRODUCTION code | **15 of 33** | — | — |
+| engine modules mentioning it anywhere | **31 of 34** | — | — |
+| engine modules mentioning it in code | **21 of 34** | — | — |
+| engine modules mentioning it in PRODUCTION code | **15 of 34** | — | — |
 
 The module rows read `33 of 33` until 2026-08-17 — the same number on both
 sides of "of", produced by counting `.rs` files without opening one. Measured,

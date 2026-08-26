@@ -2,6 +2,7 @@
  "bindings_reaching_production": 3,
  "carry_both": [
   "biochem.rs",
+  "cell.rs",
   "params.rs",
   "sim-tme/main.rs"
  ],
@@ -40,8 +41,20 @@
    "window_hours": 48.0
   }
  ],
- "library_modules": 34,
+ "library_modules": 35,
  "modules": {
+  "ablation.rs": {
+   "examples": [
+    {
+     "context": "assert!((base - 10.0).abs() < 1e-12, \"43C for 10 min is 10 CEM43\");",
+     "form": "magnitude",
+     "line": 209,
+     "value": "10 min"
+    }
+   ],
+   "per_step_mentions": 0,
+   "real_time_mentions": 1
+  },
   "biochem.rs": {
    "examples": [
     {
@@ -59,29 +72,29 @@
     {
      "context": "/// FSP1 re-expression half-time (days). Slowest \u2014 epigenetic.",
      "form": "bare-unit",
-     "line": 162,
+     "line": 226,
      "value": "(days)"
     },
     {
      "context": "/// GPX4 re-expression half-time (days). Transcriptional.",
      "form": "bare-unit",
-     "line": 164,
+     "line": 228,
      "value": "(days)"
     },
     {
      "context": "/// NRF2 re-activation half-time (days).",
      "form": "bare-unit",
-     "line": 166,
+     "line": 230,
      "value": "(days)"
     },
     {
      "context": "/// GSH resynthesis half-time (days). Fastest \u2014 metabolic.",
      "form": "bare-unit",
-     "line": 168,
+     "line": 232,
      "value": "(days)"
     }
    ],
-   "per_step_mentions": 0,
+   "per_step_mentions": 1,
    "real_time_mentions": 6
   },
   "clonal.rs": {
@@ -112,6 +125,11 @@
    "real_time_mentions": 1
   },
   "ifngamma.rs": {
+   "examples": [],
+   "per_step_mentions": 1,
+   "real_time_mentions": 0
+  },
+  "immune.rs": {
    "examples": [],
    "per_step_mentions": 1,
    "real_time_mentions": 0
@@ -410,7 +428,7 @@
    "real_time_mentions": 16
   }
  },
- "modules_total": 48,
+ "modules_total": 49,
  "n_solver_timestep_conventions": 1,
  "n_solver_timestep_matches": 3,
  "n_step_bindings": 6,
@@ -514,6 +532,7 @@
   "copper.rs",
   "dose_schedule.rs",
   "ifngamma.rs",
+  "immune.rs",
   "immune_spatial.rs",
   "oxygen.rs",
   "persister.rs",
@@ -532,6 +551,7 @@
   1.0
  ],
  "real_time_module_callers": {
+  "ablation.rs": [],
   "biochem.rs": [
    "sim-combo",
    "sim-combo-mech",
@@ -593,7 +613,7 @@
   ]
  },
  "real_time_only": [
-  "cell.rs",
+  "ablation.rs",
   "drug_transport.rs",
   "photosensitizer_pk.rs",
   "senescence.rs",

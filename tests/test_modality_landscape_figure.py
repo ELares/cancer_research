@@ -85,19 +85,35 @@ def test_the_manuscript_section_matches_the_measurement(d, manuscript):
     section fails the day an arm lands and it is not re-derived.
     """
     absent = [r for r in d["rows"] if r["engine_tier"] == "absent"]
-    a_vol = sum(r["census"] for r in absent)
-    a_tr = sum(r["trials"] for r in absent)
+    treat = [r for r in d["rows"] if r["engine_tier"] == "treatment"]
     assert "What This Engine Cannot Be Asked" in manuscript, (
         "Section 10.2 is gone; the criticism it answers has not gone away")
-    assert f"**{len(absent)} have no engine representation at all**" in manuscript, (
-        f"the section does not state the measured {len(absent)} absent "
-        "mechanisms")
-    assert f"{a_vol:,} census articles" in manuscript
-    assert f"{a_tr:,} registered trials" in manuscript
-    pct = f"{a_vol / d['total_census'] * 100:.0f}%"
-    assert f"({pct} of the taxonomy's volume)" in manuscript
-    # The closing accounting must use the SAME number, not a rounder one.
-    assert f"{len(absent)} of sixteen mechanisms remain absent" in manuscript
+    if absent:
+        a_vol = sum(r["census"] for r in absent)
+        a_tr = sum(r["trials"] for r in absent)
+        pct = f"{a_vol / d['total_census'] * 100:.0f}%"
+        assert f"**{len(absent)} have no engine representation at all**" in manuscript
+        assert f"{a_vol:,} census articles" in manuscript
+        assert f"{a_tr:,} registered trials" in manuscript
+        assert f"({pct} of the taxonomy's volume)" in manuscript
+        assert f"{len(absent)} of sixteen mechanisms remain absent" in manuscript
+    else:
+        # The count reached zero, which is where the section has to change
+        # what it is ABOUT rather than change a number. Presence is not
+        # applicability, and the harder count must now be the stated one.
+        assert "That column is now empty" in manuscript, (
+            "nothing is absent any more and the section still reports an "
+            "absence count; it has to move to the applicability count")
+        assert "Presence is not applicability" in manuscript
+        assert "no mechanism remains absent, but fifteen of sixteen remain " \
+               "inapplicable" in manuscript
+        assert len(treat) == 1, (
+            f"{len(treat)} mechanisms are applicable and the section still "
+            "says one")
+        # The opening figure must still be quoted, because it is what makes
+        # the closing one mean anything.
+        assert "thirteen had **no engine representation at all**" in manuscript
+        assert "90,019 census articles" in manuscript
 
 
 def test_the_section_keeps_the_refusal_and_the_limits(manuscript):

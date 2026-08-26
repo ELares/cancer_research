@@ -47,7 +47,49 @@ pub fn calculate_damp_release(dead_cell_lps: &[f64], params: &ImmuneParams) -> (
     (total, per_cell)
 }
 
-/// Published durable-response rates for the oncolytic virus T-VEC, treated
+/// Gut-microbiome modulation of checkpoint-blockade response
+/// (`microbiome`: 380 census articles, the taxonomy's second-smallest).
+///
+/// The microbiome does not kill tumour cells. It changes how well an immune
+/// therapy works — germ-free and antibiotic-treated mice respond poorly to
+/// checkpoint blockade, and faecal transfer from responders restores the
+/// response. So this is a MULTIPLIER on immune priming and nothing else, and
+/// giving it a kill term of its own would misrepresent the mechanism as a
+/// therapy in its own right.
+///
+/// Returns exactly `1.0` at the neutral state, so an unconfigured run is
+/// bit-identical, and it is bounded on both sides: a favourable microbiome
+/// improves priming, antibiotics degrade it, and the second direction is the
+/// one with the strongest clinical signal.
+#[must_use = "the multiplier is the function's only output"]
+pub fn microbiome_priming_factor(favourability: f64, strength: f64) -> f64 {
+    // `favourability` in [-1, 1]: -1 fully depleted (antibiotics), 0 neutral,
+    // +1 a responder-like community.
+    let f = favourability.clamp(-1.0, 1.0);
+    (1.0 + f * strength.max(0.0)).max(0.0)
+}
+
+/// Neoantigen supplied by an mRNA VACCINE rather than by tumour cell death
+/// (`mrna-vaccine`: 301 census articles, the smallest in the taxonomy and the
+/// fastest-growing from a base of zero in 2015).
+///
+/// The mechanism is the same one `baseline_antigenicity` opened: antigen that
+/// does not require a cell to die first. What differs is the SOURCE, and it
+/// differs in a way that matters — vaccine antigen is CHOSEN and DOSED, so it
+/// arrives on a schedule and can target an epitope the tumour is not
+/// spontaneously presenting, which is the entire clinical rationale.
+///
+/// Expressed as an additive contribution to the presenting fraction so it
+/// composes with `ImmuneParams::baseline_antigenicity` rather than replacing
+/// it: a vaccinated tumour presents its own antigen AND the vaccine's.
+///
+/// `dose = 0.0` contributes exactly `0.0`.
+#[must_use = "the presenting fraction is the function's only output"]
+pub fn mrna_vaccine_neoantigen_fraction(dose: f64, take_rate: f64) -> f64 {
+    (dose.max(0.0) * take_rate.clamp(0.0, 1.0)).clamp(0.0, 1.0)
+}
+
+/// Published durable-response rates for the oncolytic virus T-VEC/// Published durable-response rates for the oncolytic virus T-VEC, treated
 /// and control (`oncolytic-virus`: 5,006 census articles, 201 trials).
 ///
 /// 16% against 2% (PMID 27298410, `corpus/by-pmid/27298410.md`): "With
@@ -778,6 +820,82 @@ mod tests {
 
     /// The T-VEC constant carries its CONTROL arm, because 16% alone reads as
     /// a modest result and 16% against 2% is an eightfold ratio.
+    /// The microbiome MODULATES and does not kill, and antibiotics are the
+    /// direction with the strongest clinical signal.
+    #[test]
+    fn the_microbiome_is_a_multiplier_on_priming_not_a_therapy() {
+        // Neutral is bit-exact 1.0, so an unconfigured run is unmoved.
+        assert_eq!(
+            microbiome_priming_factor(0.0, 0.5).to_bits(),
+            1.0_f64.to_bits()
+        );
+        assert_eq!(
+            microbiome_priming_factor(1.0, 0.0).to_bits(),
+            1.0_f64.to_bits(),
+            "zero strength must be the identity whatever the community"
+        );
+        // Both directions, and depletion must be able to bite hard.
+        let good = microbiome_priming_factor(1.0, 0.5);
+        let bad = microbiome_priming_factor(-1.0, 0.5);
+        assert!(good > 1.0 && bad < 1.0, "{good} / {bad}");
+        assert!(
+            microbiome_priming_factor(-1.0, 1.0) <= 0.0,
+            "full depletion at full strength should be able to abolish priming"
+        );
+        // Never negative: a multiplier that flips sign would invert the
+        // immune response rather than suppress it.
+        for f in [-5.0_f64, -1.0, 0.0, 1.0, 5.0] {
+            assert!(microbiome_priming_factor(f, 3.0) >= 0.0, "{f}");
+        }
+        // It has NO kill term of its own -- composing it with the cascade is
+        // the only way it can matter, which is the modelling claim.
+        let p = ImmuneParams::default();
+        assert_eq!(immune_cascade(&[], 10_000, &p, true).immune_kills, 0.0);
+    }
+
+    /// Vaccine antigen COMPOSES with spontaneous antigen rather than
+    /// replacing it: a vaccinated tumour presents both.
+    #[test]
+    fn vaccine_antigen_adds_to_the_baseline_rather_than_replacing_it() {
+        const N: usize = 10_000;
+        assert_eq!(
+            mrna_vaccine_neoantigen_fraction(0.0, 1.0).to_bits(),
+            0.0_f64.to_bits()
+        );
+        assert_eq!(mrna_vaccine_neoantigen_fraction(1.0, 0.0), 0.0);
+        // Monotone in dose and in take rate, and bounded.
+        assert!(
+            mrna_vaccine_neoantigen_fraction(0.02, 0.5)
+                > mrna_vaccine_neoantigen_fraction(0.01, 0.5)
+        );
+        assert!(
+            mrna_vaccine_neoantigen_fraction(0.01, 0.9)
+                > mrna_vaccine_neoantigen_fraction(0.01, 0.2)
+        );
+        assert!(mrna_vaccine_neoantigen_fraction(1e6, 1.0) <= 1.0);
+
+        // THE COMPOSITION: a tumour with its own antigenicity plus a vaccine
+        // must out-prime either alone.
+        let base = ImmuneParams {
+            baseline_antigenicity: 0.002,
+            tcell_kill_rate: 0.02,
+            ..ImmuneParams::default()
+        };
+        let vaccinated = ImmuneParams {
+            baseline_antigenicity: base.baseline_antigenicity
+                + mrna_vaccine_neoantigen_fraction(0.003, 1.0),
+            ..base
+        };
+        let spontaneous = immune_cascade(&[], N, &base, false).immune_kills;
+        let both = immune_cascade(&[], N, &vaccinated, false).immune_kills;
+        assert!(spontaneous > 0.0, "the baseline arm is inert");
+        assert!(
+            both > spontaneous,
+            "vaccine antigen did not add to spontaneous antigen ({both} vs \
+             {spontaneous}), so it is replacing rather than composing"
+        );
+    }
+
     #[test]
     fn the_oncolytic_band_keeps_its_control_arm() {
         let (treated, control) = TVEC_DURABLE_RESPONSE;

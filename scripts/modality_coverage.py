@@ -696,15 +696,39 @@ def render(d: dict) -> str:
         prose = ", ".join(f"`{m}`" for m in r["prose_only_modules"]) or "—"
         L.append(f"| {r['mechanism']} | {r['census']:,} | {r['trials']:,} | "
                  f"{r['trial_share']:.1f}% | {g} | {tier} | {prose} |")
-    L += ["",
-          f"**{d['absent_count']} of {len(rows)} mechanisms have no engine "
-          f"representation at all**, and they carry {d['absent_census']:,} "
-          "census articles "
-          f"({d['absent_census'] / d['total_census'] * 100:.0f}% of the "
-          f"table's volume) and {d['absent_trials']:,} registered trials "
-          "between them. That is the only actionable content here, and it is "
-          "binary: it says which questions the engine cannot be asked, not "
-          "which are worth asking.", ""]
+    n_treat = len(by_tier.get("treatment", []))
+    n_mod = len(by_tier.get("modifier", []))
+    if d["absent_count"]:
+        L += ["",
+              f"**{d['absent_count']} of {len(rows)} mechanisms have no engine "
+              f"representation at all**, and they carry {d['absent_census']:,} "
+              "census articles "
+              f"({d['absent_census'] / d['total_census'] * 100:.0f}% of the "
+              f"table's volume) and {d['absent_trials']:,} registered trials "
+              "between them. That is the only actionable content here, and it "
+              "is binary: it says which questions the engine cannot be asked, "
+              "not which are worth asking.", ""]
+    else:
+        L += ["",
+              f"**Every one of the {len(rows)} mechanisms now has some engine "
+              "representation.** That was not true when this document was "
+              "written — it opened at thirteen absent, carrying 90,019 census "
+              "articles — and the column that mattered then is now empty.", "",
+              "**Which makes the remaining distinction the whole content, and "
+              "it is a harder one.** Presence is not applicability. "
+              f"{n_treat} of {len(rows)} can be APPLIED as a treatment — a "
+              "`Treatment` variant a run can select — and the other "
+              f"{n_mod} are MODIFIERS: real code, reachable, and only ever a "
+              "coefficient on something else. An engine where every mechanism "
+              "is present and one is applicable answers a narrower set of "
+              "questions than the first count suggests, and this table's job "
+              "is now to say so rather than to count absences.", "",
+              "**And presence says nothing about calibration.** "
+              "`simulations/calibration/CALIBRATION_STATUS.md` carries a row "
+              "per layer with its named target and its "
+              "used-in-any-reported-number status; most of these arms are "
+              "`N`. A mechanism the engine can name, cannot apply, and has not "
+              "fitted is a long way from one it can answer a question with.", ""]
 
     if modifier:
         names = ", ".join(f"`{r['mechanism']}`" for r in modifier)
