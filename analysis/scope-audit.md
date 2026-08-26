@@ -6,7 +6,7 @@
 
 | | ferroptosis / physical-ROS | other therapy | method |
 |---|--:|--:|--:|
-| committed analyses (140) | 17 | **1** | 122 |
+| committed analyses (141) | 17 | **1** | 123 |
 
 | preregistered predictions | **8 of 8** |
 |---|--:|
@@ -24,17 +24,17 @@ Every falsifiable commitment the project makes concerns ferroptosis or the physi
 
 The two buckets do not use the same admission rule. Therapy is matched on the FILENAME only; ferroptosis is matched on the filename OR the first 40 lines of body text. So the therapy count moves on a rename with contents unchanged, and an empty file with a therapy word in its name is filed as a therapy analysis.
 
-Applying the ferroptosis bucket's body rule to the SAME vocabulary admits **48** analyses. That is not an upper bound on 'other therapy', and an earlier version of this page published it as one. Where those 48 already sit in the table above:
+Applying the ferroptosis bucket's body rule to the SAME vocabulary admits **49** analyses. That is not an upper bound on 'other therapy', and an earlier version of this page published it as one. Where those 49 already sit in the table above:
 
 | already classified as | body-route matches |
 |---|--:|
 | ferroptosis-or-physical | 9 |
 | therapy-subject | 1 |
-| method | 38 |
+| method | 39 |
 
-**9 of them are in this page's own FERROPTOSIS column** (`distilled-hypotheses-final`, `key-findings`, `modality-coverage`, `modality-panel`, `pathway-target-audit`, `principle-resistance-tradeoff`, `resistant-state-map`, `scientific-lead-handoff`, `timeline`), so under a mutually exclusive bucketing 48 cannot bound the therapy count. A further 38 are method analyses -- instrument work that cites a therapy as a worked example rather than studying one.
+**9 of them are in this page's own FERROPTOSIS column** (`distilled-hypotheses-final`, `key-findings`, `modality-coverage`, `modality-panel`, `pathway-target-audit`, `principle-resistance-tradeoff`, `resistant-state-map`, `scientific-lead-handoff`, `timeline`), so under a mutually exclusive bucketing 49 cannot bound the therapy count. A further 39 are method analyses -- instrument work that cites a therapy as a worked example rather than studying one.
 
-So the body route does not measure 'other therapy' either. What it measures is how many analyses MENTION a therapy, which is a different question, and the honest reading of the table above is that the therapy figure is small and its exact value is not established by either rule. An earlier version published 'the true figure lies between 1 and 37', a range whose upper end is not a bound. That figure is quoted as a fact about a past commit and is deliberately NOT derived -- it has read 37, 38 and 37 across commits, moving TWICE on this script's 40-line head window and for opposite reasons -- once when a sibling page's head grew INTO the window past the three-hit threshold, once when this page's own therapy mention was pushed OUT of it -- rather than when any subject changed. The live figures are 1 and 48.
+So the body route does not measure 'other therapy' either. What it measures is how many analyses MENTION a therapy, which is a different question, and the honest reading of the table above is that the therapy figure is small and its exact value is not established by either rule. An earlier version published 'the true figure lies between 1 and 37', a range whose upper end is not a bound. That figure is quoted as a fact about a past commit and is deliberately NOT derived -- it has read 37, 38 and 37 across commits, moving TWICE on this script's 40-line head window and for opposite reasons -- once when a sibling page's head grew INTO the window past the three-hit threshold, once when this page's own therapy mention was pushed OUT of it -- rather than when any subject changed. The live figures are 1 and 49.
 
 ## Why this is worth stating rather than hiding
 
@@ -68,7 +68,7 @@ Note also that method analyses -- the largest bucket -- are about the INSTRUMENT
 - `sensitizer-symmetry`
 - `timeline`
 
-**method** (122): listed in `analysis/scope-audit.json`.
+**method** (123): listed in `analysis/scope-audit.json`.
 
 ## What this does not say
 
