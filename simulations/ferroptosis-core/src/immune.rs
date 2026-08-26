@@ -73,8 +73,19 @@ pub fn immune_cascade(
     let dc_activation_fraction =
         damp_per_dead_cell / (damp_per_dead_cell + params.dc_activation_kd);
 
-    // Mature DCs: activation quality × maturation rate × number of antigen-presenting deaths
-    let mature_dcs = dc_activation_fraction * params.dc_maturation_rate * n_dead as f64;
+    // Mature DCs: activation quality × maturation rate × number of
+    // antigen-presenting deaths.
+    //
+    // PLUS a ferroptosis-INDEPENDENT term (#728). Every activation path in
+    // this engine used to be gated on `n_dead`, so with no ferroptotic death
+    // the product was zero and anti-PD-1 -- which enters only through the
+    // brake -- multiplied zero at every setting. Real tumours present antigen
+    // without being killed first, and that is why checkpoint blockade is a
+    // monotherapy. `baseline_antigenicity = 0` (the default) makes this term
+    // vanish and reproduces the prior behaviour exactly.
+    let baseline_presenting = params.baseline_antigenicity.max(0.0) * total_tumor_cells as f64;
+    let mature_dcs = dc_activation_fraction * params.dc_maturation_rate * n_dead as f64
+        + params.dc_maturation_rate * baseline_presenting;
 
     // T cell priming
     let primed_tcells = mature_dcs * params.tcell_priming_rate;
@@ -226,7 +237,18 @@ mod tests {
             (lps.len(), r.immune_kills)
         }
 
-        // NEGATIVE: death is impossible, so no antigen can exist.
+        // NEGATIVE: death is impossible AND `baseline_antigenicity` is 0,
+        // so no antigen can exist. The second half is now a real condition
+        // rather than an automatic one -- see
+        // `baseline_antigenicity_makes_blockade_a_treatment` below, which is
+        // the whole point of the immunotherapy arm and the case where this
+        // assertion MUST NOT hold.
+        assert_eq!(
+            ImmuneParams::default().baseline_antigenicity,
+            0.0,
+            "the default gained antigen presentation; every committed immune \
+             number moved and this test is now about a different engine"
+        );
         let no_death = Params {
             death_threshold: f64::INFINITY,
             ..Params::default()
@@ -279,6 +301,75 @@ mod tests {
             kills_on > kills_off,
             "blockade did not raise kills ({kills_on} vs {kills_off}), so the \
              sweep in the negative case is not exercising a live path"
+        );
+    }
+
+    /// The arm itself: with antigen present, blockade KILLS without ferroptosis.
+    ///
+    /// This is the assertion `analysis/modality-coverage.md` said the engine
+    /// could not make. It filed immunotherapy as a MODIFIER -- the largest
+    /// trial count in the taxonomy, and unaskable -- because every activation
+    /// path was gated on ferroptotic death, so anti-PD-1 multiplied zero at
+    /// every setting.
+    ///
+    /// Pinned in BOTH directions, because "blockade now does something" is
+    /// satisfied by an engine that ignores the brake entirely: kills must be
+    /// zero at zero antigenicity, positive above it, MONOTONE in it, and
+    /// strictly higher with blockade than without.
+    #[test]
+    fn baseline_antigenicity_makes_blockade_a_treatment() {
+        const N: usize = 10_000;
+        let off = ImmuneParams::default();
+        assert_eq!(off.baseline_antigenicity, 0.0);
+        assert_eq!(
+            immune_cascade(&[], N, &off, true).immune_kills,
+            0.0,
+            "with no antigen and no death, blockade must still kill nothing"
+        );
+
+        // Positive, monotone, and responsive to the brake.
+        let mut prev = 0.0;
+        for &a in &[0.001, 0.005, 0.01, 0.05] {
+            let p = ImmuneParams {
+                baseline_antigenicity: a,
+                // Keep the kill rate off the survivor cap so the brake term
+                // stays visible; at the defaults both arms saturate.
+                tcell_kill_rate: 0.02,
+                ..ImmuneParams::default()
+            };
+            let no_drug = immune_cascade(&[], N, &p, false).immune_kills;
+            let drug = immune_cascade(&[], N, &p, true).immune_kills;
+            assert!(
+                no_drug > 0.0,
+                "antigenicity {a} with NO ferroptotic death produced no kills, \
+                 so blockade is still not a treatment"
+            );
+            assert!(
+                drug > no_drug,
+                "blockade did not raise kills at antigenicity {a}: {drug} vs \
+                 {no_drug}"
+            );
+            assert!(drug < N as f64, "kills hit the population cap at {a}");
+            assert!(
+                drug > prev,
+                "kills are not monotone in antigenicity at {a}: {drug} vs {prev}"
+            );
+            prev = drug;
+        }
+
+        // And it composes with ferroptotic death rather than replacing it:
+        // the same antigenicity plus real deaths must kill MORE.
+        let p = ImmuneParams {
+            baseline_antigenicity: 0.005,
+            tcell_kill_rate: 0.02,
+            ..ImmuneParams::default()
+        };
+        let alone = immune_cascade(&[], N, &p, true).immune_kills;
+        let with_death = immune_cascade(&[8.0; 50], N, &p, true).immune_kills;
+        assert!(
+            with_death > alone,
+            "ferroptotic death no longer adds to the baseline term: \
+             {with_death} vs {alone}"
         );
     }
 

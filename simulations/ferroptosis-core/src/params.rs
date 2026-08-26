@@ -546,6 +546,29 @@ pub struct ImmuneParams {
     /// Tumor cells killed per primed T cell per cycle.
     pub tcell_kill_rate: f64,
     /// PD-1 brake: fraction of T-cell kill suppressed (0.0 = no brake, 1.0 = full suppression).
+    /// Antigen presented WITHOUT ferroptotic death, as a fraction of the
+    /// tumour presenting per step (#728 / the immunotherapy arm).
+    ///
+    /// **This is the field that makes checkpoint blockade a treatment rather
+    /// than a coefficient.** Before it, every DC-activation term in this
+    /// engine was gated on ferroptotic death -- `mature_dcs` multiplies
+    /// `n_dead`, and the spatial model's activation is `damp/(damp+kd)` with
+    /// DAMPs written as `lp_at_grace_end * damp_per_lp` -- so anti-PD-1
+    /// entered only through `brake`, a multiplier on a term that was already
+    /// zero. `analysis/modality-coverage.md` measured that and filed
+    /// immunotherapy as a MODIFIER: the largest trial count in the taxonomy,
+    /// and unaskable.
+    ///
+    /// Real tumours present antigen without being killed first (mutational
+    /// burden, viral antigen, spontaneous turnover), which is why checkpoint
+    /// blockade works as a monotherapy at all.
+    ///
+    /// `0.0` (default) reproduces the pre-arm behaviour EXACTLY, so every
+    /// committed number is unmoved. Calibration target and its published ORR
+    /// band: see `simulations/calibration/CALIBRATION_STATUS.md`.
+    #[serde(default)]
+    pub baseline_antigenicity: f64,
+
     pub pd1_brake: f64,
     /// Anti-PD-1 efficacy: fraction of PD-1 brake removed (0.0 = no drug, 1.0 = complete blockade).
     pub anti_pd1_efficacy: f64,
@@ -559,6 +582,7 @@ impl Default for ImmuneParams {
             dc_maturation_rate: 0.6,
             tcell_priming_rate: 10.0,
             tcell_kill_rate: 3.0,
+            baseline_antigenicity: 0.0,
             pd1_brake: 0.7,
             anti_pd1_efficacy: 0.8,
         }

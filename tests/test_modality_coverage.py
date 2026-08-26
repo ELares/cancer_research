@@ -716,6 +716,46 @@ def test_the_test_block_stripper_handles_the_forms_it_used_to_miss():
     assert MC.strip_test_blocks(src).count("\n") == src.count("\n")
 
 
+def test_the_gating_sentence_is_derived_from_the_crate(d, md):
+    """The paragraph used to say both immune models are "gated on ferroptotic
+    death by construction". The immunotherapy arm (#728) made that false the
+    day it landed, and nothing but this file's regeneration noticed.
+
+    So the sentence is read off `params.rs` now, and this pins both halves:
+    the field's existence and its DEFAULT. A nonzero default would move every
+    committed immune number in the repository.
+    """
+    b = d["baseline_antigenicity"]
+    params = MC.strip_test_blocks(
+        MC.strip_rust_comments((CORE / "params.rs").read_text()))
+    assert b["exists"] == (b["field"] in params)
+    if not b["exists"]:
+        assert "no ferroptosis-independent antigen source" in md
+        return
+    assert b["default"] == 0.0, (
+        f"{b['field']} defaults to {b['default']}, not 0 — every committed "
+        "immune number has moved and the report's 'OFF by default' sentence "
+        "is false")
+    assert "OFF by default" in md
+    # Which modules consume it must be MEASURED, not listed: the sentence
+    # names one as still gated and one as not.
+    live = sorted(
+        n for n in ("immune", "immune_spatial")
+        if b["field"] in MC.strip_test_blocks(
+            MC.strip_rust_comments((CORE / f"{n}.rs").read_text())))
+    assert b["consumed_by"] == live
+    assert live, "nothing consumes the field, so the arm is inert"
+    for name in live:
+        assert f"`{name}`" in md
+    # And the tier must NOT have moved on the strength of a knob: applying a
+    # modality needs a Treatment variant, which this does not add.
+    imm = next(r for r in d["rows"] if r["mechanism"] == "immunotherapy")
+    assert imm["engine_tier"] == "modifier", (
+        "immunotherapy is no longer a MODIFIER; if a `Treatment` variant "
+        "landed, the report's explanation of why it was one needs rewriting")
+    assert "still reads MODIFIER" in md
+
+
 def test_the_rows_match_the_census_profile(d):
     """The counts are copied, not recomputed, so they must still be copies."""
     prof = json.loads((REPO / "analysis/census-mechanism-profile.json").read_text())
