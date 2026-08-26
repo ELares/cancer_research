@@ -84,6 +84,30 @@ def test_bad_phenotype_raises():
         assert "InvalidPhenotype" in str(e)
 
 
+def test_the_advertised_treatments_are_exactly_the_accepted_ones():
+    """The error message must BE the accepted list, in both directions.
+
+    It used to hard-code "Control, RSL3, SDT, PDT", so adding the Radiation
+    arm (#726) shipped a binding that ACCEPTED a name while telling the caller
+    it was invalid -- one artifact describing another. The Rust side derives
+    the message from `TREATMENT_NAMES`; this checks the built module agrees.
+    """
+    expected = ["Control", "RSL3", "SDT", "PDT", "Radiation"]
+    for name in expected:
+        # Accepted: a bad treatment raises, a good one does not.
+        fc.sim_cell("Glycolytic", name, seed=1)
+    with pytest.raises(ValueError) as e:
+        fc.sim_cell("Glycolytic", "Radiotherapy", seed=1)
+    msg = str(e.value)
+    for name in expected:
+        assert name in msg, f"the error message omits {name}: {msg}"
+    # And nothing outside the list parses, so the message is not merely a
+    # superset of what works.
+    for bogus in ("radiation", "SDT ", ""):
+        with pytest.raises(ValueError):
+            fc.sim_cell("Glycolytic", bogus, seed=1)
+
+
 def test_bad_treatment_raises():
     try:
         fc.sim_cell("Persister", "BadTreatment", seed=42)

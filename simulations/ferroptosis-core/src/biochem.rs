@@ -64,6 +64,14 @@ impl CellState {
             Treatment::Control | Treatment::RSL3 => 0.0,
             Treatment::SDT => norm(rng, params.sdt_ros, 1.0).max(0.0),
             Treatment::PDT => norm(rng, params.pdt_ros, 1.0).max(0.0),
+            // Radiation's exogenous ROS depends on dose, depth and local O2,
+            // none of which this constructor sees, so it is 0 here BY
+            // CONTRACT and the ferroptosis channel is reached only through
+            // `from_cell_with_ros` fed by `radiation::exo_ros_from_dose`. The
+            // DNA-damage channel does not pass through `CellState` at all.
+            // Pinned by `radiation_through_from_cell_has_no_exogenous_ros`,
+            // which asserts the zero rather than leaving it a silent trap.
+            Treatment::Radiation => 0.0,
         };
         if let Treatment::RSL3 = tx {
             gpx4 *= 1.0 - params.rsl3_gpx4_inhib;
@@ -520,6 +528,9 @@ pub fn sim_cell(
         Treatment::Control | Treatment::RSL3 => 0.0,
         Treatment::SDT => norm(rng, params.sdt_ros, 1.0).max(0.0),
         Treatment::PDT => norm(rng, params.pdt_ros, 1.0).max(0.0),
+        // See `CellState::from_cell`: radiation's ROS is dose-driven and
+        // arrives through the explicit-ROS constructor.
+        Treatment::Radiation => 0.0,
     };
 
     // Treatment: GPX4 inhibition

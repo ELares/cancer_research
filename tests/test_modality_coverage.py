@@ -328,7 +328,7 @@ def test_the_crate_root_is_not_a_module(d):
     for r in d["rows"]:
         assert "lib" not in r["code_modules"], r["mechanism"]
     live = len([p for p in CORE.glob("*.rs") if p.stem != "lib"])
-    assert d["module_count"] == live == 32, (
+    assert d["module_count"] == live == 33, (
         f"module count {d['module_count']} against {live} on disk")
 
 
@@ -356,6 +356,18 @@ def test_the_treatment_variants_are_read_not_asserted(d):
     assert d["treatment_variants"] == named
     assert d["active_treatments"] == [v for v in named if v != "Control"]
     assert f"**{len(d['active_treatments'])} treatments**" in MD.read_text()
+    # Every arm must be CLASSIFIED, so the next one cannot land under a
+    # headline sentence that no longer describes it. `Radiation` made the old
+    # blanket "every one of them ferroptosis or physical-ROS" false the moment
+    # it landed, and nothing caught it but this file's own regeneration.
+    for v in d["active_treatments"]:
+        assert MC.TREATMENT_KIND.get(v), (
+            f"{v} has no entry in TREATMENT_KIND, so the headline sentence "
+            "says nothing about it")
+        assert d["treatment_kinds"][v] == MC.TREATMENT_KIND[v]
+        assert f"`{v}`" in MD.read_text()
+    assert set(MC.TREATMENT_KIND) == set(d["active_treatments"]), (
+        "TREATMENT_KIND classifies arms that do not exist, or misses one")
 
 
 def test_the_control_arm_is_not_counted_as_a_treatment(d, md):

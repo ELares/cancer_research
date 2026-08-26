@@ -4,8 +4,15 @@
   "Control",
   "RSL3",
   "SDT",
-  "PDT"
+  "PDT",
+  "Radiation"
  ],
+ "treatment_kinds": {
+  "RSL3": "ferroptosis",
+  "SDT": "physical-ROS",
+  "PDT": "physical-ROS",
+  "Radiation": "DNA damage, with a separate ferroptosis channel"
+ },
  "ferroptosis_modules": [
   "acsl4",
   "biochem",
@@ -24,7 +31,7 @@
   "trigger_wave",
   "tumor_pk"
  ],
- "module_count": 32,
+ "module_count": 33,
  "taxonomy_named": [
   "antibody-drug-conjugate",
   "bioelectric",
@@ -149,6 +156,7 @@
     "ifngamma",
     "oxygen",
     "ph",
+    "radiation",
     "slab",
     "stromal"
    ]
@@ -250,7 +258,8 @@
     "immune_spatial",
     "io",
     "oxygen",
-    "persister"
+    "persister",
+    "radiation"
    ]
   },
   {
@@ -338,6 +347,7 @@
     "ifngamma",
     "oxygen",
     "ph",
+    "radiation",
     "slab",
     "stromal"
    ],
@@ -448,7 +458,8 @@
     "immune_spatial",
     "io",
     "oxygen",
-    "persister"
+    "persister",
+    "radiation"
    ],
    "engine_tier": "treatment"
   },
@@ -498,7 +509,8 @@
  "active_treatments": [
   "RSL3",
   "SDT",
-  "PDT"
+  "PDT",
+  "Radiation"
  ],
  "absent_count": 13,
  "absent_census": 90019,

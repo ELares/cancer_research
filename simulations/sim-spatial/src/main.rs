@@ -91,6 +91,13 @@ fn run_spatial(
         Treatment::SDT => params.sdt_ros,
         Treatment::PDT => params.pdt_ros,
         Treatment::RSL3 | Treatment::Control => 0.0,
+        // Radiation is not wired into this binary's treatment array (#726
+        // lands the engine layer only), so this arm is unreachable today. It
+        // is 0.0 rather than a dose because radiation's exogenous ROS is
+        // dose-driven and uncalibrated: `RadiationConfig::ros_per_gy` is the
+        // knob, and wiring it here means re-running this binary's committed
+        // matrix, which is its own change.
+        Treatment::Radiation => 0.0,
     };
 
     let rows = grid.rows;
