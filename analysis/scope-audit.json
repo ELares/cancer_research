@@ -153,8 +153,9 @@
   "in_code": 21,
   "in_production_code": 15,
   "mention": 31,
-  "modules": 34,
+  "modules": 35,
   "silent": [
+   "oncolytic.rs",
    "reaction_diffusion.rs",
    "spheroid.rs",
    "vasculature.rs"
