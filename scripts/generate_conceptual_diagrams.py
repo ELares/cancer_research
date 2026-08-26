@@ -12,6 +12,9 @@ Creates 6 figures:
 Usage:
   python3 scripts/generate_conceptual_diagrams.py
 """
+import shutil
+import subprocess
+
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
@@ -27,6 +30,90 @@ import numpy as np
 from pathlib import Path
 
 OUT = Path(__file__).resolve().parent.parent / "article" / "figures"
+
+
+def _render_graphviz(dot_source, out_base):
+    """Write `dot_source` to a .gv, render PDF+PNG, and leave no date behind.
+
+    THREE THINGS THIS FIXES, all measured on a machine without graphviz:
+
+    - `dot` is an external program, and `check=True` with no guard turned a
+      missing one into a crash that took the whole script down. fig19 is the
+      second of six figures, so a contributor without graphviz got fig18 and a
+      traceback -- fig20, fig21 and fig23 never ran, which is also why their
+      committed copies still carried a 2026-04 creation date nobody could clear.
+    - The .gv is a temporary, and it was unlinked only after both `dot` calls
+      returned. A missing `dot` therefore stranded it in article/figures as an
+      untracked file.
+    - `make_figures_deterministic()` patches `Figure.savefig`, so it cannot
+      reach a PDF that matplotlib never wrote. `dot` embeds its own
+      `/CreationDate`, which is why fig19 and fig22 stayed dated while every
+      matplotlib figure beside them came out clean. Rewriting the Info
+      dictionary afterwards clears it and leaves the drawing untouched.
+
+    Returns True if the figure was rendered, False if graphviz is absent.
+    """
+    gv_path = Path(str(out_base) + ".gv")
+    try:
+        gv_path.write_text(dot_source)
+        if shutil.which("dot") is None:
+            print(f"  {gv_path.stem}: graphviz `dot` not on PATH -- skipping "
+                  "(install graphviz to regenerate this figure)")
+            return False
+        subprocess.run(["dot", "-Tpdf", "-o", str(out_base) + ".pdf",
+                        str(gv_path)], check=True)
+        subprocess.run(["dot", "-Tpng", "-Gdpi=300", "-o",
+                        str(out_base) + ".png", str(gv_path)], check=True)
+    finally:
+        gv_path.unlink(missing_ok=True)
+    _strip_pdf_date(Path(str(out_base) + ".pdf"))
+    return True
+
+
+def _strip_pdf_date(path):
+    """Clear a PDF's creation/modification date in place, drawing untouched."""
+    try:
+        import pymupdf
+    except ImportError:
+        try:
+            import fitz as pymupdf
+        except ImportError:
+            # LOUD, NOT A PRINT. Returning here emits a DATED pdf, which is
+            # exactly what this function exists to prevent, and the only thing
+            # that noticed was an unrelated test whose prose pin happens to
+            # count dated figures.
+            raise RuntimeError(
+                f"{path.name}: pymupdf is absent, so the creation date cannot "
+                "be removed and this figure would be committed dated. Install "
+                "it (it is in requirements-lock.txt) or do not regenerate.")
+    # WHAT THIS DOES NOT BUY, stated because the neighbouring matplotlib
+    # figures DO have it and a reader will assume the same here.
+    #
+    # `saveIncr` writes a new trailer, and MuPDF regenerates BOTH halves of
+    # `/ID` every time -- measured, three strips of one input give three
+    # different files, differing in 62 bytes, all inside the `/ID` array. So
+    # fig19 and fig22 are date-free but NOT byte-reproducible: a contributor
+    # with graphviz who regenerates them gets a dirty tree and a MANIFEST
+    # churn every run, where a matplotlib figure comes back identical.
+    #
+    # What the freshness gate needs is that the DRAWING is unchanged, and that
+    # holds -- the incremental save appends a trailer and leaves the original
+    # content stream byte-identical. `test_pdf_output_is_deterministic` covers
+    # the matplotlib figures only, and this is the one class where its
+    # invariant does not apply.
+    #
+    # Not idempotent either: a second call appends another section. Harmless
+    # only because `dot` always writes a fresh file first.
+    doc = pymupdf.open(path)
+    try:
+        md = dict(doc.metadata or {})
+        md["creationDate"] = ""
+        md["modDate"] = ""
+        doc.set_metadata(md)
+        doc.saveIncr()
+    finally:
+        doc.close()
+
 
 # Consistent style
 COLORS = {
@@ -174,14 +261,8 @@ def fig19_immune():
     dot.edge("s3", "ratio", style="invis", weight="10")
     dot.edge("ratio", "r3", style="invis", weight="10")
 
-    out_base = str(OUT / "fig19_immune_coupling_flow")
-    gv_path = out_base + ".gv"
-    with open(gv_path, "w") as f:
-        f.write(dot.source)
-    subprocess.run(["dot", "-Tpdf", "-o", out_base + ".pdf", gv_path], check=True)
-    subprocess.run(["dot", "-Tpng", "-Gdpi=300", "-o", out_base + ".png", gv_path], check=True)
-    Path(gv_path).unlink(missing_ok=True)
-    print(f"  fig19_immune_coupling_flow")
+    if _render_graphviz(dot.source, OUT / "fig19_immune_coupling_flow"):
+        print(f"  fig19_immune_coupling_flow")
 
 
 # ── Figure 20: Stromal shielding ──────────────────────────────────────
@@ -350,23 +431,8 @@ def fig22_flowchart():
     dot.edge("q4", "direct", label="  No  ", color=red, fontcolor=red)
 
     # Render: save .gv source, then generate PDF and high-DPI PNG
-    out_base = str(OUT / "fig22_decision_flowchart")
-    gv_path = out_base + ".gv"
-
-    # Write source
-    with open(gv_path, "w") as f:
-        f.write(dot.source)
-
-    # Generate PDF
-    subprocess.run(["dot", "-Tpdf", "-o", out_base + ".pdf", gv_path], check=True)
-
-    # Generate high-DPI PNG
-    subprocess.run(["dot", "-Tpng", "-Gdpi=300", "-o", out_base + ".png", gv_path], check=True)
-
-    # Clean up .gv source (reproducible from the script itself)
-    Path(gv_path).unlink(missing_ok=True)
-
-    print(f"  fig22_decision_flowchart")
+    if _render_graphviz(dot.source, OUT / "fig22_decision_flowchart"):
+        print(f"  fig22_decision_flowchart")
 
 
 # ── Figure 23: census construction flow ──────────────────────────────
