@@ -64,6 +64,30 @@ def test_the_figure_reads_the_artifact_and_types_no_number():
     # And the legend's tier names must be the tiers the artifact actually uses.
     for tier in ("treatment", "modifier", "absent"):
         assert f'"{tier}"' in src, f"the {tier} tier is no longer drawn"
+    # Panel (b) must CHANGE SUBJECT when the absent column empties, for the
+    # same reason the report does: a 100%-vs-0% stack draws a bar with nothing
+    # in it, collides its own labels, and invites a reader to take an emptied
+    # column as a result. Both branches must exist.
+    assert "if absent:" in src and "else:" in src, (
+        "panel (b) has only one form; at zero absent it will draw an empty "
+        "stack and report it as an achievement")
+    assert "Presence is not applicability" in src
+
+
+def test_panel_b_reports_applicability_once_nothing_is_absent(d):
+    """Which branch is live is decided by the data, so this asserts the one
+    that matches it -- and that the figure's own claim is the harder count."""
+    absent = [r for r in d["rows"] if r["engine_tier"] == "absent"]
+    treat = [r for r in d["rows"] if r["engine_tier"] == "treatment"]
+    src = DIAGRAMS.read_text()
+    if absent:
+        assert "mechanisms are absent" in src
+        return
+    assert len(treat) >= 1, "nothing is applicable and nothing is absent"
+    assert "is applicable" in src, (
+        "the absent column is empty and panel (b) does not report "
+        "applicability, which is the only distinction it has left")
+    assert "The absent column emptied." in src
 
 
 def test_the_figure_is_registered_with_its_input():
