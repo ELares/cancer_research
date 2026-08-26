@@ -255,6 +255,21 @@ case("fig26 annotation level with the legend top", False,
      [("xytext=(win_end + 0.4, 24)", "xytext=(win_end + 0.4, 55)")])
 case("fig26 legend labels on the caption's row", False, rc={"legend.fontsize": 16})
 
+# ------------------------------- the gap walk's own edges (round 34, pre-empted)
+# Bounding the annotation's row by a gap walk introduces its own risks: the
+# word it keys on can vanish or repeat, and the annotation can WRAP, which puts
+# that word alone on its row. The wrapped case rejected a correct figure -- the
+# one-word-box defect of round 31 returning by another route -- so the block
+# now takes adjacent overlapping rows the way a wrapped title is taken.
+case("fig26 annotation wrapped to two lines", False,
+     [('"closes ~day 3"', '"closes\\n~day 3"')])
+case("fig26 annotation renamed away from `closes`", True,
+     [('"closes ~day 3"', '"shuts ~day 3"')])
+case("fig26 caption renamed away from `window`", True,
+     [('"RSL3 window\\nopen"', '"RSL3 period\\nopen"')])
+case("fig26 font.size 14, wider word gaps", False, rc={"font.size": 14})
+case("fig26 font.size 7, tighter word gaps", False, rc={"font.size": 7})
+
 # ------------------------------------------------- correct figures, restyled
 case("committed figures, unmodified", False)
 case("xtick.direction inout", False, rc={"xtick.direction": "inout"})

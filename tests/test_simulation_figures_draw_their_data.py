@@ -3359,7 +3359,10 @@ def test_fig26_draws_the_timepoints_its_fixture_holds():
     # naming both treatments. One fix, both sites.
     _cap_all = sorted((b for b in inside if abs(b[1] - caption[0][1]) < 2),
                       key=lambda b: b[0])
-    _cat = next(i for i, b in enumerate(_cap_all) if b[4] == "window")
+    _cat_hits = [i for i, b in enumerate(_cap_all) if b[4] == "window"]
+    assert _cat_hits, (
+        "fig26's panel (a) draws no `window` word on the caption row")
+    _cat = _cat_hits[0]
     _cgap = 1.5 * max(b[3] - b[1] for b in _cap_all)
     _clo = _chi = _cat
     while _clo > 0 and _cap_all[_clo][0] - _cap_all[_clo - 1][2] < _cgap:
@@ -3413,6 +3416,16 @@ def test_fig26_draws_the_timepoints_its_fixture_holds():
     closes = [b for b in _word_bboxes(stem26) if b[4] == "closes"
               and a_lo - 1 <= (b[0] + b[2]) / 2 <= a_hi + 1
               and b[1] > _axes_box(stem26)[0]]
+    # SAY SO, RATHER THAN INDEXING AN EMPTY LIST. Renaming the annotation --
+    # `closes ~day 3` to `shuts ~day 3` -- left every use of `closes[0]` below
+    # raising `IndexError: list index out of range`, which is a correct
+    # rejection reported as a crash. The annotation IS a hardcoded string in
+    # the generator, so this check locates it by that string; if it changes,
+    # this is the line that has to change with it.
+    assert closes, (
+        "fig26's panel (a) draws no `closes` word inside its axes. The window "
+        "annotation is located by that word, so either it was renamed -- and "
+        "this check must be renamed with it -- or the annotation is gone")
     # THE ARROW, AND THE DAY IT NAMES. Two defects in the version this
     # replaces. It read only where the WORDS sit, so repointing `xy` swung the
     # arrow to day 28 with the text unmoved, and it passed. And its bound was
@@ -3448,12 +3461,16 @@ def test_fig26_draws_the_timepoints_its_fixture_holds():
     #
     # fig25's sibling has walked gaps since round 22 for exactly this; fig26
     # had no bound at all. Words inside one annotation are a space apart.
-    _row_all = sorted((b for b in _word_bboxes(stem26)
-                       if abs(b[1] - closes[0][1]) < 2
-                       and a_lo - 1 <= (b[0] + b[2]) / 2 <= a_hi + 1
-                       and b[1] > _axes_box(stem26)[0]),
+    _inside = [b for b in _word_bboxes(stem26)
+               if a_lo - 1 <= (b[0] + b[2]) / 2 <= a_hi + 1
+               and b[1] > _axes_box(stem26)[0]]
+    _row_all = sorted((b for b in _inside if abs(b[1] - closes[0][1]) < 2),
                       key=lambda b: b[0])
-    _at = next(i for i, b in enumerate(_row_all) if b[4] == "closes")
+    _hits = [i for i, b in enumerate(_row_all) if b[4] == "closes"]
+    assert _hits, (
+        "fig26's panel (a) draws no `closes` word on the row this check "
+        "located; its annotation cannot be read")
+    _at = _hits[0]
     _gap = 1.5 * max(b[3] - b[1] for b in _row_all)
     _lo = _hi = _at
     while _lo > 0 and _row_all[_lo][0] - _row_all[_lo - 1][2] < _gap:
@@ -3461,6 +3478,35 @@ def test_fig26_draws_the_timepoints_its_fixture_holds():
     while _hi + 1 < len(_row_all) and _row_all[_hi + 1][0] - _row_all[_hi][2] < _gap:
         _hi += 1
     cl_row = _row_all[_lo:_hi + 1]
+    # AND THE ANNOTATION'S OTHER LINES. `closes ~day 3` can wrap, and then
+    # `closes` is alone on its row: the box shrinks to one word, the arrow
+    # attaches to the far edge of the whole text 30pt away, and no arrow is
+    # found -- a correct figure rejected. This is round 31's one-word-box
+    # defect returning for a wrapped annotation, so the block is taken the way
+    # `_assert_titled` takes a wrapped title: rows adjacent in y that overlap
+    # this run horizontally belong to the same annotation.
+    # ONLY WHEN THE ROW DOES NOT ALREADY HOLD THE WHOLE ANNOTATION. Extending
+    # unconditionally to nearby overlapping rows re-swept the legend's labels
+    # -- they sit about one line below and span the same x -- which is the
+    # defect the gap walk had just closed. The annotation is `closes ~day 3`,
+    # a hardcoded string this check already keys on, so "incomplete" is
+    # decidable: the run is missing `~day`.
+    if not any(b[4].startswith("~day") for b in cl_row):
+        _run_lo = min(b[0] for b in cl_row)
+        _run_hi = max(b[2] for b in cl_row)
+        _line_h = max(b[3] - b[1] for b in cl_row)
+        _cl_mid = (closes[0][1] + closes[0][3]) / 2
+        _cands = [b for b in _inside if b not in cl_row
+                  and b[0] <= _run_hi and b[2] >= _run_lo
+                  and abs((b[1] + b[3]) / 2 - _cl_mid) <= 1.6 * _line_h]
+        # The NEAREST such row only, so a third artist a line further off
+        # cannot join.
+        if _cands:
+            _near_mid = min(_cands,
+                            key=lambda b: abs((b[1] + b[3]) / 2 - _cl_mid))
+            _target = (_near_mid[1] + _near_mid[3]) / 2
+            cl_row += [b for b in _cands
+                       if abs((b[1] + b[3]) / 2 - _target) < 2]
     cl_box = (min(b[0] for b in cl_row), min(b[1] for b in cl_row),
               max(b[2] for b in cl_row), max(b[3] for b in cl_row))
     arrows26 = _annotation_arrows(stem26, (a_lo, a_hi), cl_box)
