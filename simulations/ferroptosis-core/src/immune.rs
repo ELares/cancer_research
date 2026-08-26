@@ -139,6 +139,149 @@ mod tests {
         assert_eq!(r.immune_kills, 0.0);
     }
 
+    /// No ferroptotic death means no kills AT EVERY BLOCKADE SETTING.
+    ///
+    /// This is the claim `analysis/modality-coverage.md` rests on when it
+    /// files immunotherapy as a MODIFIER rather than a treatment: checkpoint
+    /// blockade cannot be the thing under test in this engine, because it
+    /// enters only through the brake, and the brake multiplies a term that is
+    /// already zero when nothing died by ferroptosis.
+    ///
+    /// Swept rather than asserted at one setting.
+    /// `empty_cascade_produces_no_kills` above tests `with_anti_pd1 = false`
+    /// only, so it could not have seen a blockade path that manufactured
+    /// kills of its own.
+    #[test]
+    fn no_ferroptotic_death_means_no_kills_at_any_blockade_setting() {
+        for &efficacy in &[0.0, 0.25, 0.5, 0.75, 1.0] {
+            let p = ImmuneParams {
+                anti_pd1_efficacy: efficacy,
+                ..ImmuneParams::default()
+            };
+            for &with in &[false, true] {
+                let r = immune_cascade(&[], 10_000, &p, with);
+                assert_eq!(
+                    r.immune_kills, 0.0,
+                    "anti_pd1={efficacy}, with_anti_pd1={with} produced kills \
+                     with no ferroptotic death"
+                );
+                assert_eq!(r.total_damps, 0.0);
+            }
+        }
+        // And with NO brake at all -- the most favourable case blockade could
+        // ever reach -- still zero.
+        let p = ImmuneParams {
+            pd1_brake: 0.0,
+            ..ImmuneParams::default()
+        };
+        assert_eq!(immune_cascade(&[], 10_000, &p, true).immune_kills, 0.0);
+    }
+
+    /// END-TO-END: no ferroptotic death anywhere in the chain means no immune
+    /// kills, at every blockade setting.
+    ///
+    /// **This test exists because three rounds of static scanning could not
+    /// decide the claim it makes.** `analysis/modality-coverage.md` argues
+    /// that checkpoint blockade cannot be a treatment arm in this engine, and
+    /// a text scan over source lines cannot establish that: every regex
+    /// written for it was defeated by an ordinary Rust idiom that put the
+    /// mutation and the field name on different lines. A behaviour test can,
+    /// for the path it executes.
+    ///
+    /// It runs the REAL chain -- generate cells, run the ferroptosis engine,
+    /// collect lipid peroxidation at death, feed the immune cascade -- with
+    /// death made impossible, and asserts zero kills however hard the
+    /// blockade is pushed. Any antigen source reachable from this path, in
+    /// any idiom, makes it fail.
+    ///
+    /// Paired with a POSITIVE case, so it cannot pass by the chain being
+    /// broken: with death possible, the same chain must produce kills, and
+    /// they must respond to blockade. A test that only asserts zero is
+    /// satisfied by an engine that does nothing.
+    #[test]
+    fn no_ferroptotic_death_end_to_end_means_no_kills_at_any_blockade() {
+        use crate::biochem::sim_cell;
+        use crate::cell::{gen_cell, Phenotype, Treatment};
+        use crate::params::Params;
+        use rand::{rngs::StdRng, SeedableRng};
+
+        const N: usize = 400;
+
+        fn run(
+            params: &Params,
+            tx: Treatment,
+            immune: &ImmuneParams,
+            blockade: bool,
+        ) -> (usize, f64) {
+            let mut lps = Vec::new();
+            for i in 0..N {
+                let mut rng = StdRng::seed_from_u64(0xC0FFEE + i as u64);
+                let cell = gen_cell(Phenotype::Glycolytic, &mut rng);
+                let (dead, lp, _, _) = sim_cell(&cell, tx, params, &mut rng);
+                if dead {
+                    lps.push(lp);
+                }
+            }
+            let r = immune_cascade(&lps, N, immune, blockade);
+            (lps.len(), r.immune_kills)
+        }
+
+        // NEGATIVE: death is impossible, so no antigen can exist.
+        let no_death = Params {
+            death_threshold: f64::INFINITY,
+            ..Params::default()
+        };
+        for &efficacy in &[0.0, 0.5, 1.0] {
+            let immune = ImmuneParams {
+                anti_pd1_efficacy: efficacy,
+                ..ImmuneParams::default()
+            };
+            for &blockade in &[false, true] {
+                for &tx in &[Treatment::Control, Treatment::RSL3, Treatment::SDT] {
+                    let (dead, kills) = run(&no_death, tx, &immune, blockade);
+                    assert_eq!(dead, 0, "{tx:?} killed cells with an infinite threshold");
+                    assert_eq!(
+                        kills, 0.0,
+                        "{tx:?} produced {kills} immune kills with no ferroptotic \
+                         death (anti_pd1={efficacy}, blockade={blockade})"
+                    );
+                }
+            }
+        }
+
+        // POSITIVE: with death possible the same chain DOES kill, and blockade
+        // moves it. Without this the negative case is satisfied by a chain
+        // that is simply disconnected -- and `immune_cascade` caps kills at
+        // the survivors, so the rates are scaled down here to keep the
+        // comparison off that ceiling. At the defaults both arms saturate at
+        // the same number and the blockade term is invisible.
+        let immune = ImmuneParams {
+            tcell_kill_rate: 0.02,
+            ..ImmuneParams::default()
+        };
+        let (dead, kills_off) = run(&Params::default(), Treatment::SDT, &immune, false);
+        let (_, kills_on) = run(&Params::default(), Treatment::SDT, &immune, true);
+        let survivors = (N - dead) as f64;
+        assert!(
+            dead > 0,
+            "SDT killed nothing, so the negative case proves nothing"
+        );
+        assert!(
+            kills_off > 0.0,
+            "the immune chain is disconnected: {kills_off} kills"
+        );
+        assert!(
+            kills_on < survivors,
+            "both arms are at the survivor cap ({survivors}), so this cannot \
+             see the blockade term at all"
+        );
+        assert!(
+            kills_on > kills_off,
+            "blockade did not raise kills ({kills_on} vs {kills_off}), so the \
+             sweep in the negative case is not exercising a live path"
+        );
+    }
+
     #[test]
     fn activation_tracks_per_cell_quality_not_count() {
         // The model's central claim: DC activation responds to DAMP-PER-DEATH

@@ -7,6 +7,7 @@
    "engine-selectivity",
    "hypothesis-sdt-ferroptosis-icd",
    "key-findings",
+   "modality-coverage",
    "osf-registration-package",
    "pathway-target-audit",
    "principle-resistance-tradeoff",
@@ -145,7 +146,7 @@
   ]
  },
  "engine_modules": {
-  "in_code": 19,
+  "in_code": 20,
   "in_production_code": 15,
   "mention": 29,
   "modules": 32,
@@ -165,7 +166,7 @@
   "top_mechanism": "immunotherapy",
   "top_n": 2297
  },
- "n_analyses": 137,
+ "n_analyses": 138,
  "n_predictions": 8,
  "n_predictions_ferroptosis": 8,
  "n_therapy_subject": 1,
@@ -210,6 +211,7 @@
   "landmark-coverage-report",
   "mechanism-matrix",
   "mechanism-precision-report",
+  "modality-coverage",
   "oa-bias-report",
   "pathway-target-audit",
   "principle-resistance-tradeoff",
