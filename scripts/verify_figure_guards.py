@@ -221,10 +221,16 @@ case("fig26 annotation at day 0, above the curve", False,
 # ------------------------------- artists drawn AFTER the annotation
 # The arrow is taken as the last candidate in paint order, so anything drawn
 # later is the obvious attack. fig26's generator ALREADY draws its legend after
-# the `closes` annotation, and moving that legend on top of the annotation does
-# not defeat the check: a legend frame runs corner to corner and its handles
-# are nowhere near the words, so the other three conditions exclude it before
-# paint order is consulted.
+# the `closes` annotation.
+#
+# THESE THREE CASES DO NOT DECIDE THAT, and the commit that added them said
+# they did. Measured: `lower left` puts the legend frame 69.2pt from the
+# annotation's words and `lower center` 28.0pt, both outside the 12.65pt
+# admission threshold -- so no legend path is ever a candidate and paint order
+# is never consulted for it. They are kept because they pin the placements,
+# and the cases that actually reach the legend are the round-33 group below:
+# there the legend's marker SWATCH (a `re` a few points across, not the frame)
+# was admitted and won.
 case("fig26 legend over the annotation", False,
      [('axA.legend(fontsize=8, loc="center right")',
        'axA.legend(fontsize=8, loc="lower left")')])
@@ -236,6 +242,18 @@ case("fig26 legend below the annotation, arrow to the last day", True,
      [('axA.legend(fontsize=8, loc="center right")',
        'axA.legend(fontsize=8, loc="lower center")'),
       ("xy=(win_end, rsl3[win_end])", "xy=(len(days) - 1, rsl3[-1])")])
+
+# ------------------ round 33: the annotation's row, bounded to its own words
+# A row scan with no horizontal bound swept the LEGEND'S LABELS into "the
+# annotation", so `near` slid beside the legend's marker swatches -- painted
+# after the annotation, so paint order promoted a 6pt swatch to "the arrow" and
+# `closes ~day 3` pointing at day 28 passed. The mirror rejected correct
+# figures. Both sites walk gaps now, as fig25's sibling has since round 22.
+case("fig26 annotation raised clear of the legend", False,
+     [("xytext=(win_end + 0.4, 24)", "xytext=(win_end + 0.4, 60)")])
+case("fig26 annotation level with the legend top", False,
+     [("xytext=(win_end + 0.4, 24)", "xytext=(win_end + 0.4, 55)")])
+case("fig26 legend labels on the caption's row", False, rc={"legend.fontsize": 16})
 
 # ------------------------------------------------- correct figures, restyled
 case("committed figures, unmodified", False)
@@ -591,8 +609,10 @@ def main() -> int:
         print(f"\n{counts['OK']} as expected, {counts['WRONG']} wrong, "
               f"{counts['SKIP']} skipped")
         if counts["SKIP"]:
-            print("a SKIP means a case could not run -- its anchor text is gone from\n"
-                  "the generator, so that mutation is no longer being tested")
+            print("a SKIP means a case could not run, so that mutation is no longer\n"
+                  "being tested. Two causes: its anchor text is gone from the\n"
+                  "generator, or its edit callback changed no tracked value. The\n"
+                  "line above says which.")
         return 1 if counts["WRONG"] or counts["SKIP"] else 0
 
 

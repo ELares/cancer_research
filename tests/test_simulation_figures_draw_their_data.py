@@ -85,6 +85,22 @@ the places where no assertion would name it:
   matplotlib's own clip now (`_panel_boxes`), which is emitted whether or not
   a spine is painted, and both configurations pass.
 
+- **An annotation must not be drawn ON the legend.** `_annotation_arrows`
+  admits a path with an endpoint beside the annotation's words, and a legend's
+  marker swatches are paths a few points across. When the annotation is placed
+  inside the legend box -- measured, `xytext` y 48 puts `closes ~day 3` at y
+  177.5-189.1 against a legend frame at 164.1-190.5, horizontally over it too
+  -- a swatch is beside the words by construction and, being painted after the
+  annotation, wins. The reading then fails loudly ("the arrow points at no
+  plotted value") rather than silently, and the figure it rejects has its
+  annotation printed on top of its legend.
+
+  The neighbouring positions are fine and are cases in
+  `scripts/verify_figure_guards.py`: y 55 partially overlaps and passes, y 60
+  is clear and passes. What made this reachable at all was a row scan with no
+  horizontal bound, which swept the legend's LABELS into the annotation; that
+  is fixed, and this is the residue.
+
 - **A panel must not contain an INSET.** `_panel_boxes` correctly drops an
   inset's clip -- it is contained by its parent panel, so the nesting filter
   removes it -- but the inset's own tick LABELS are still words inside the
@@ -1758,9 +1774,20 @@ def test_fig25_draws_its_bliss_numbers():
     # constant standing in for the annotation's height, and the docstring of
     # the helper it feeds claims the scale is "the annotation's own height,
     # not a constant" -- true at fig26's call site and false here. It also
-    # made the box 2pt SHORTER than a `boxstyle="round"` patch around the same
-    # words, so the containment test that exists to exclude that patch missed
-    # it, the patch won on paint order, and a correct figure was rejected.
+    # made the box 1.0pt shorter than a `boxstyle="round"` patch around the
+    # same words (16.0 against 17.0).
+    #
+    # THE MEASURED HALF OF THE ORIGINAL JUSTIFICATION WAS WRONG and is
+    # withdrawn: it cited a "containment test", and the shipped exclusion is
+    # CONCENTRICITY, which is centre-based -- both boxes share the centre
+    # y=65.60, so the patch's concentric distance is 1.95pt either way and it
+    # was excluded either way. Splicing the old box into the current helper
+    # and running the rounded-bbox figure PASSES. No correct figure was
+    # rejected by it.
+    #
+    # The change stands on the ground stated first: the helper's docstring
+    # says the scale is the annotation's own height, and a hardcoded 8 made
+    # that false at this call site while true at fig26's.
     seg = same_row[lo:hi + 1]
     seg_texts = {t for _, _, t in seg}
     seg_boxes = [b for b in _word_bboxes("fig25_bliss_synergy")
@@ -2443,7 +2470,10 @@ def test_fig24_draws_its_hypoxia_numbers():
     # and the between-group gap is `1 - w`: at `w >= 0.5` a WITHIN-group gap
     # is the widest, `max` over `(gap, index)` breaks the tie toward the
     # rightmost, and the split comes out 3/1. `others` then held only SDT's
-    # rightmost annotation and the bound moved 53pt right -- so a defect this
+    # rightmost annotation and the bound moved 66.4pt right (measured at
+    # w=0.55, where the annotation centres are 97.1/163.5/217.9/284.3; the
+    # 53.1pt quoted here before is the COMMITTED w=0.36 figure's gap, borrowed
+    # into a paragraph about w=0.55) -- so a defect this
     # file's own harness catalogues became undetectable at `w = 0.55`.
     #
     # Two groups of two is what a grouped bar chart with two treatments and
@@ -3323,7 +3353,20 @@ def test_fig26_draws_the_timepoints_its_fixture_holds():
     assert len(caption) == 1, (
         f"fig26's panel (a) draws the word `window` {len(caption)} times "
         "inside the axes; the shade's caption cannot be identified")
-    cap_row = [b for b in inside if abs(b[1] - caption[0][1]) < 2]
+    # SAME GAP WALK. This row scan had the identical defect: at
+    # `legend.fontsize: 16` the legend's first label lands on the caption's
+    # row and was read as part of the caption, so it reported the caption
+    # naming both treatments. One fix, both sites.
+    _cap_all = sorted((b for b in inside if abs(b[1] - caption[0][1]) < 2),
+                      key=lambda b: b[0])
+    _cat = next(i for i, b in enumerate(_cap_all) if b[4] == "window")
+    _cgap = 1.5 * max(b[3] - b[1] for b in _cap_all)
+    _clo = _chi = _cat
+    while _clo > 0 and _cap_all[_clo][0] - _cap_all[_clo - 1][2] < _cgap:
+        _clo -= 1
+    while _chi + 1 < len(_cap_all) and _cap_all[_chi + 1][0] - _cap_all[_chi][2] < _cgap:
+        _chi += 1
+    cap_row = _cap_all[_clo:_chi + 1]
     named = {b[4] for b in cap_row} & {"RSL3", "SDT"}
     assert named == {"RSL3"}, (
         f"fig26's window caption names {sorted(named) or 'no treatment'}, and "
@@ -3394,10 +3437,30 @@ def test_fig26_draws_the_timepoints_its_fixture_holds():
     # `closes ~day 3` to the other when the text moves across the target.
     # Passing only `closes` put the anchor 30pt away and found no arrow at
     # all, on a correct figure.
-    cl_row = [b for b in _word_bboxes(stem26)
-              if abs(b[1] - closes[0][1]) < 2
-              and a_lo - 1 <= (b[0] + b[2]) / 2 <= a_hi + 1
-              and b[1] > _axes_box(stem26)[0]]
+    # THE ANNOTATION'S OWN RUN, bounded by a gap walk. Taking every word on
+    # the row was unbounded horizontally, so whatever else happens to share
+    # that row joined the annotation: the LEGEND'S LABELS at one `xytext`, and
+    # the panel's other annotation (`RSL3 window open`) at another. `near`
+    # then widened from 56pt to 97pt and slid beside the legend's marker
+    # swatches -- which are painted after the annotation, so paint order
+    # promoted a 6pt swatch to "the arrow", and `closes ~day 3` pointing at
+    # DAY 28 passed. The mirror of that rejected a correct figure.
+    #
+    # fig25's sibling has walked gaps since round 22 for exactly this; fig26
+    # had no bound at all. Words inside one annotation are a space apart.
+    _row_all = sorted((b for b in _word_bboxes(stem26)
+                       if abs(b[1] - closes[0][1]) < 2
+                       and a_lo - 1 <= (b[0] + b[2]) / 2 <= a_hi + 1
+                       and b[1] > _axes_box(stem26)[0]),
+                      key=lambda b: b[0])
+    _at = next(i for i, b in enumerate(_row_all) if b[4] == "closes")
+    _gap = 1.5 * max(b[3] - b[1] for b in _row_all)
+    _lo = _hi = _at
+    while _lo > 0 and _row_all[_lo][0] - _row_all[_lo - 1][2] < _gap:
+        _lo -= 1
+    while _hi + 1 < len(_row_all) and _row_all[_hi + 1][0] - _row_all[_hi][2] < _gap:
+        _hi += 1
+    cl_row = _row_all[_lo:_hi + 1]
     cl_box = (min(b[0] for b in cl_row), min(b[1] for b in cl_row),
               max(b[2] for b in cl_row), max(b[3] for b in cl_row))
     arrows26 = _annotation_arrows(stem26, (a_lo, a_hi), cl_box)
