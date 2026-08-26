@@ -78,8 +78,32 @@ def _strip_pdf_date(path):
         try:
             import fitz as pymupdf
         except ImportError:
-            print(f"  {path.name}: pymupdf absent, creation date left in place")
-            return
+            # LOUD, NOT A PRINT. Returning here emits a DATED pdf, which is
+            # exactly what this function exists to prevent, and the only thing
+            # that noticed was an unrelated test whose prose pin happens to
+            # count dated figures.
+            raise RuntimeError(
+                f"{path.name}: pymupdf is absent, so the creation date cannot "
+                "be removed and this figure would be committed dated. Install "
+                "it (it is in requirements-lock.txt) or do not regenerate.")
+    # WHAT THIS DOES NOT BUY, stated because the neighbouring matplotlib
+    # figures DO have it and a reader will assume the same here.
+    #
+    # `saveIncr` writes a new trailer, and MuPDF regenerates BOTH halves of
+    # `/ID` every time -- measured, three strips of one input give three
+    # different files, differing in 62 bytes, all inside the `/ID` array. So
+    # fig19 and fig22 are date-free but NOT byte-reproducible: a contributor
+    # with graphviz who regenerates them gets a dirty tree and a MANIFEST
+    # churn every run, where a matplotlib figure comes back identical.
+    #
+    # What the freshness gate needs is that the DRAWING is unchanged, and that
+    # holds -- the incremental save appends a trailer and leaves the original
+    # content stream byte-identical. `test_pdf_output_is_deterministic` covers
+    # the matplotlib figures only, and this is the one class where its
+    # invariant does not apply.
+    #
+    # Not idempotent either: a second call appends another section. Harmless
+    # only because `dot` always writes a fresh file first.
     doc = pymupdf.open(path)
     try:
         md = dict(doc.metadata or {})

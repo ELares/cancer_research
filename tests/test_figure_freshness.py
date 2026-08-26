@@ -719,7 +719,15 @@ def _has_date(data) -> bool:
     and it is blind to exactly the files that most needed it: cairo -- which
     is what `dot` renders through -- writes the Info dictionary into a
     COMPRESSED OBJECT STREAM, so the literal string never appears in the file
-    while the date is plainly there to any parser. Measured on
+    while the date is plainly there to a parser that reads the Info
+    dictionary.
+
+    THAT IS THE ONE OF TWO PLACES A PDF DATE LIVES. An XMP packet can carry
+    `xmp:CreateDate` with no Info entry, and this returns False for it, as the
+    byte scan also did. Checked: none of the 31 committed figure PDFs carries
+    any XMP packet, so the blind spot is not live -- but it is a blind spot,
+    not the "any parser" the sentence used to claim. An encrypted PDF reports
+    no metadata and also returns False silently; a non-PDF raises loudly. Measured on
     `fig19_immune_coupling_flow.pdf` at b8299eb8: the byte scan reports clean,
     `pymupdf` reports `D:20260422163455-07'00`. The backlog count this file
     states was 7 by the byte scan and 9 in fact, and the two it missed were
@@ -930,6 +938,12 @@ def test_the_corpus_figure_backlog_is_stated_and_shrinking():
         assert name.split("_")[0] in doc, (
             f"{name} is not blocked by a gitignored input and the docstring "
             "does not name it among the two that are not")
+    # THE DENOMINATORS DIFFER, and the guard should say so rather than let a
+    # reader assume they match. `stale` below is counted over all 22
+    # non-census figures; this sentence is about the seventeen. They agree
+    # today (both dated figures are inside the seventeen), and a dated
+    # corpus-derived figure would make the guard demand a sentence that is
+    # wrong about its own scope.
     assert f"{_spell(n_sim)} of those seventeen" in doc, (
         f"FIGURES.yaml marks {n_sim} of the ungated figures as simulation and "
         "the docstring says otherwise -- the first version said eight, which "
@@ -2973,3 +2987,78 @@ def test_the_byte_scan_this_replaced_is_blind_to_a_real_date():
         "the parser no longer reports a date for a blob that demonstrably "
         "carries one, so `_has_date` has stopped detecting the case the byte "
         "scan could not see")
+
+
+def test_the_graphviz_path_behaves_when_dot_is_absent(tmp_path, monkeypatch):
+    """Both halves of the graphviz fix are behavioural, and neither was pinned.
+
+    Deleting the `shutil.which("dot")` guard -- restoring the crash this change
+    exists to fix -- failed only `test_manifest_freshness.py`, i.e. the hash of
+    the file, not its behaviour. Deleting the `_strip_pdf_date` call failed
+    NOTHING. Measured with both mutants against the whole suite.
+
+    Two claims, both cheap to hold:
+
+      * with `dot` absent, `_render_graphviz` RETURNS FALSE rather than
+        raising, and STRANDS NO `.gv` -- the pre-change code raised
+        `FileNotFoundError` after fig18 and left `fig19_immune_coupling_flow.gv`
+        untracked in `article/figures`;
+      * `_strip_pdf_date` removes the date a real cairo file carries, checked
+        against the committed blob rather than a synthetic one, so the case
+        that motivated it is the case under test.
+    """
+    import importlib.util
+    import sys
+
+    # `scripts/` on the path first: the generator imports `figure_io` as a
+    # sibling, so loading it by file location alone raises ModuleNotFoundError.
+    sys.path.insert(0, str(REPO / "scripts"))
+    spec = importlib.util.spec_from_file_location(
+        "_gcd", REPO / "scripts" / "generate_conceptual_diagrams.py")
+    mod = importlib.util.module_from_spec(spec)
+    sys.modules["_gcd"] = mod
+    spec.loader.exec_module(mod)
+
+    monkeypatch.setattr(mod.shutil, "which", lambda name: None)
+    out_base = tmp_path / "figX_probe"
+    rendered = mod._render_graphviz("digraph { a -> b }", out_base)
+
+    assert rendered is False, (
+        "_render_graphviz must report that it skipped when `dot` is absent, "
+        "so main() can carry on and exit 0 instead of crashing part-way "
+        "through the figure list")
+    assert not list(tmp_path.iterdir()), (
+        f"the graphviz path left {[p.name for p in tmp_path.iterdir()]} behind "
+        "when `dot` was absent; the .gv is written before the check and must "
+        "be cleaned up whether or not the render happens")
+
+    # AND THE STRIP THROUGH ITS CALL SITE. Calling `_strip_pdf_date` directly
+    # tests the helper and not the wiring: deleting the call from
+    # `_render_graphviz` still passed. `dot` is faked here so the render path
+    # runs end to end, and what it "renders" is the REAL cairo blob, so the
+    # case under test is the case that motivated the fix.
+    blob = subprocess.run(
+        ["git", "show", "b8299eb8:article/figures/fig19_immune_coupling_flow.pdf"],
+        cwd=REPO, capture_output=True).stdout
+    assert blob, "could not read the committed cairo blob to test the strip"
+    probe = tmp_path / "cairo.pdf"
+    probe.write_bytes(blob)
+    assert _has_date(probe), (
+        "the fixture blob is supposed to be the dated cairo file; if it is not, "
+        "this test is checking nothing")
+    probe.unlink()
+
+    def fake_dot(argv, **kw):
+        out = Path(argv[argv.index("-o") + 1])
+        out.write_bytes(blob if out.suffix == ".pdf" else b"\x89PNG\r\n")
+        return subprocess.CompletedProcess(argv, 0)
+
+    monkeypatch.setattr(mod.shutil, "which", lambda name: "/usr/bin/dot")
+    monkeypatch.setattr(mod.subprocess, "run", fake_dot)
+    base2 = tmp_path / "figY_probe"
+    assert mod._render_graphviz("digraph { a -> b }", base2) is True
+    rendered = Path(str(base2) + ".pdf")
+    assert rendered.exists(), "the faked render wrote no pdf"
+    assert not _has_date(rendered), (
+        "_render_graphviz returned a PDF that still carries a creation date, "
+        "so the strip is not wired into the path that produces these figures")
