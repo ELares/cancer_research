@@ -251,6 +251,51 @@ pub fn liposomal_nanocarrier() -> DrugParams {
     }
 }
 
+/// Antibody-drug-conjugate transport profile (the taxonomy's highest trial
+/// share: 6,019 census articles and 9.6% of them carrying a trial type).
+///
+/// An ADC is a ~150 kDa antibody carrying a cytotoxic payload, and its
+/// transport is the OPPOSITE trade-off to the nanocarrier above. The carrier
+/// buys SELECTIVITY — the antibody binds a tumour antigen — and pays for it in
+/// penetration, because a full IgG diffuses roughly an order of magnitude more
+/// slowly than a small molecule and BINDS the first antigen it meets.
+///
+/// That last part is the modality's defining problem and it is not a general
+/// carrier effect: the binding-site barrier. High-affinity antibodies are
+/// consumed by the perivascular cells and never reach the core, which is why
+/// ADC penetration is worse than affinity alone would suggest. It appears here
+/// as a HIGH uptake rate — the module's `uptake_rate` is exactly "how fast
+/// cells remove drug from the interstitium", which is what antigen binding
+/// does — rather than as a new term, because inventing one would assert a
+/// mechanism this model cannot separate from uptake.
+///
+/// Diffusion is the published antibody figure this module already documents at
+/// the top of [`DrugParams`]: 0.1–1 × 10⁻⁷ cm²/s for a ~150 kDa protein,
+/// against 1–10 × 10⁻⁷ for a small molecule.
+///
+/// **Transport-only**, exactly like the two profiles beside it: the payload's
+/// pharmacology is still the RSL3/GPX4 pathway, so a comparison against a free
+/// drug reflects DELIVERY and nothing else. `NANOCARRIER_TUMOUR_ID_PER_G_PCT`
+/// has no ADC equivalent in this project's corpus, so `vessel_wall_conc` stays
+/// at the freely-permeable 1.0 rather than carrying a number nobody published
+/// here — the CALIBRATION_STATUS row says which quantities are anchored and
+/// which are order-of-magnitude reasoning.
+pub fn antibody_drug_conjugate() -> DrugParams {
+    DrugParams {
+        // ~150 kDa IgG: the low end of this module's documented antibody range.
+        diffusion_coeff_cm2_s: 1.0e-8,
+        // The binding-site barrier: antigen binding removes drug from the
+        // interstitium fast, which is why perivascular cells consume it.
+        uptake_rate: 0.02,
+        // Conjugation protects the payload in transit, as for the liposome.
+        metabolism_rate: 0.0005,
+        // No published ADC vessel-wall fraction in this corpus; left at the
+        // freely-permeable default rather than guessed.
+        vessel_wall_conc: 1.0,
+        name: "Antibody-drug-conjugate",
+    }
+}
+
 // ============================================================
 // Tissue Presets
 // ============================================================
@@ -351,6 +396,66 @@ mod tests {
              it near 1.0 is not describing this modality"
         );
         assert!(carrier.vessel_wall_conc < free.vessel_wall_conc);
+    }
+
+    /// The four transport profiles order by CARRIER SIZE, and the ADC is the
+    /// extreme -- which is the binding-site barrier, not a general carrier
+    /// effect.
+    ///
+    /// Measured across the whole set rather than pairwise, because the claim
+    /// the module makes is about an ordering and a pairwise test would let two
+    /// profiles swap without noticing.
+    #[test]
+    fn the_transport_profiles_order_by_delivery_penalty() {
+        let profiles = [
+            ("RSL3-like", rsl3_like()),
+            ("Doxorubicin", doxorubicin_transport_reference()),
+            ("Liposomal", liposomal_nanocarrier()),
+            ("ADC", antibody_drug_conjugate()),
+        ];
+        let lambdas: Vec<(&str, f64)> = profiles
+            .iter()
+            .map(|(n, d)| (*n, penetration_length_um(d)))
+            .collect();
+        for w in lambdas.windows(2) {
+            assert!(
+                w[0].1 > w[1].1,
+                "{} penetrates {:.1} um and {} {:.1}; the documented ordering \
+                 by carrier size has broken",
+                w[0].0,
+                w[0].1,
+                w[1].0,
+                w[1].1
+            );
+        }
+        // The ADC is not merely last, it is an order of magnitude short of the
+        // free drug -- the binding-site barrier is a different regime, not a
+        // worse version of the same one.
+        let (free, adc) = (lambdas[0].1, lambdas[3].1);
+        assert!(
+            free / adc > 10.0,
+            "the ADC penetrates {adc:.1} um against the free drug's \
+             {free:.1}, a ratio of {:.1}; the binding-site barrier should be \
+             an order of magnitude",
+            free / adc
+        );
+        // And it is UPTAKE that puts it there, not diffusion alone: hold
+        // uptake at the free drug's value and the gap must shrink sharply.
+        let mut relaxed = antibody_drug_conjugate();
+        relaxed.uptake_rate = rsl3_like().uptake_rate;
+        relaxed.metabolism_rate = rsl3_like().metabolism_rate;
+        let relaxed_lambda = penetration_length_um(&relaxed);
+        assert!(
+            relaxed_lambda > adc * 1.5,
+            "removing the binding-site uptake barely moved penetration \
+             ({relaxed_lambda:.1} vs {adc:.1}), so the module's explanation \
+             of the barrier does not match its own numbers"
+        );
+        // Every profile still reaches SOMEWHERE: a zero would make the
+        // ordering trivially true and the model useless.
+        for (n, l) in &lambdas {
+            assert!(*l > 1.0, "{n} penetrates {l} um, which is not a model");
+        }
     }
 
     /// Concentration at depth must fall for BOTH, and faster for the carrier.
