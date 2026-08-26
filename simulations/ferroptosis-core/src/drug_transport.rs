@@ -193,6 +193,64 @@ pub fn doxorubicin_transport_reference() -> DrugParams {
     }
 }
 
+/// Published EPR tumour accumulation for a long-circulating nanocarrier,
+/// as a percentage of the injected dose per gram of tumour.
+///
+/// "over 5% of the injected dose per gram tumor at 48 h" for redox
+/// nanoparticles in C26 tumours (PMID 29914561, `corpus/by-pmid/29914561.md`).
+///
+/// **This is the number a nanoparticle arm has to be honest about, and it is
+/// the reason the arm is a TRANSPORT change rather than a new death route.**
+/// Nanocarriers do not kill differently; they arrive differently. A few
+/// percent of the injected dose reaching the tumour is simultaneously a large
+/// improvement over free drug and a small absolute number, and any model
+/// implying otherwise is wrong about the modality.
+pub const NANOCARRIER_TUMOUR_ID_PER_G_PCT: f64 = 5.0;
+
+/// Liposomal-nanocarrier transport profile (#797's second-largest absent
+/// mechanism: 36,788 census articles, 182 trials).
+///
+/// A nanocarrier changes three transport quantities at once and NOTHING about
+/// cell-level pharmacology, which is why this belongs here rather than as a
+/// `Treatment` variant:
+///
+/// * **Diffusion falls by roughly an order of magnitude.** A ~100 nm liposome
+///   is two to three orders of magnitude larger than a small molecule, and
+///   `D` scales inversely with hydrodynamic radius (Stokes-Einstein). Taken as
+///   `3e-8 cm²/s` against doxorubicin's `3e-7`.
+/// * **Uptake falls**, because a carrier must be endocytosed and then release
+///   its payload rather than diffusing across a membrane.
+/// * **Metabolism falls**, which is the point of encapsulation: the payload
+///   is protected in transit.
+///
+/// The NET effect is the modality's actual trade-off, and the model has to
+/// show it rather than assert it: the penetration length
+/// `λ = √(D/k)` can go either way, because both numerator and denominator
+/// shrink. `nanocarrier_penetration_tradeoff_is_measured_not_assumed` computes
+/// which way it goes instead of a comment claiming a direction.
+///
+/// **Transport-only, exactly like [`doxorubicin_transport_reference`].** The
+/// cell-level pharmacology is still the RSL3/GPX4 pathway, so a comparison
+/// between this and a free drug reflects DELIVERY and nothing else. Saying so
+/// is not a caveat, it is the finding: this project's own penetration work
+/// shows delivery already dominates the in-vitro-to-in-vivo gap.
+pub fn liposomal_nanocarrier() -> DrugParams {
+    DrugParams {
+        // ~100 nm carrier: an order of magnitude below a small molecule.
+        diffusion_coeff_cm2_s: 3.0e-8,
+        // Endocytosis-limited rather than diffusion-limited.
+        uptake_rate: 0.002,
+        // Encapsulation protects the payload in transit.
+        metabolism_rate: 0.0002,
+        // EPR extravasation is the carrier's whole delivery mechanism and it
+        // is INEFFICIENT: `NANOCARRIER_TUMOUR_ID_PER_G_PCT` of the injected
+        // dose per gram. Expressed here as a fraction so the vessel-wall
+        // concentration carries the published number rather than a guess.
+        vessel_wall_conc: NANOCARRIER_TUMOUR_ID_PER_G_PCT / 100.0,
+        name: "Liposomal-nanocarrier",
+    }
+}
+
 // ============================================================
 // Tissue Presets
 // ============================================================
@@ -244,6 +302,83 @@ pub fn neuroectodermal_cns() -> TissueParams {
 
 #[cfg(test)]
 mod tests {
+
+    /// The nanocarrier trade-off, MEASURED rather than asserted.
+    ///
+    /// A carrier changes three transport quantities at once and the net
+    /// direction is not obvious: `λ = √(D/k)` has a shrinking numerator
+    /// (diffusion falls with size) AND a shrinking denominator (encapsulation
+    /// protects the payload). A comment claiming a direction would be a guess.
+    ///
+    /// It comes out NEGATIVE, and that is the field's actual tension: EPR
+    /// improves tumour ACCUMULATION while size hurts intratumoral
+    /// PENETRATION. The model reproduces it without being told to, which is
+    /// the only kind of agreement worth reporting.
+    #[test]
+    fn nanocarrier_penetration_tradeoff_is_measured_not_assumed() {
+        let free = doxorubicin_transport_reference();
+        let carrier = liposomal_nanocarrier();
+        let (l_free, l_carrier) = (
+            penetration_length_um(&free),
+            penetration_length_um(&carrier),
+        );
+
+        // Each input moved in the direction the doc comment claims, so the
+        // net result is attributable rather than coincidental.
+        assert!(carrier.diffusion_coeff_cm2_s < free.diffusion_coeff_cm2_s);
+        assert!(carrier.uptake_rate < free.uptake_rate);
+        assert!(carrier.metabolism_rate < free.metabolism_rate);
+
+        assert!(
+            l_carrier < l_free,
+            "the carrier now penetrates FURTHER ({l_carrier:.1} um vs \
+             {l_free:.1}); the trade-off the module documents has reversed \
+             and the prose must be re-derived, not the test relaxed"
+        );
+        // And the effect is real, not a rounding difference.
+        assert!(
+            l_free / l_carrier > 1.2,
+            "the penetration difference is {:.2}x, too small to support the \
+             'delivery dominates' reading",
+            l_free / l_carrier
+        );
+        // The other half of the trade-off: the carrier arrives at the vessel
+        // wall at the PUBLISHED fraction, which is small in absolute terms.
+        assert!((carrier.vessel_wall_conc - NANOCARRIER_TUMOUR_ID_PER_G_PCT / 100.0).abs() < 1e-12);
+        assert!(
+            carrier.vessel_wall_conc < 0.1,
+            "EPR delivery is a few percent of the injected dose; a model with \
+             it near 1.0 is not describing this modality"
+        );
+        assert!(carrier.vessel_wall_conc < free.vessel_wall_conc);
+    }
+
+    /// Concentration at depth must fall for BOTH, and faster for the carrier.
+    ///
+    /// The penetration length alone is a summary; this is the profile the
+    /// consumer actually reads.
+    #[test]
+    fn the_carrier_profile_falls_faster_at_every_depth() {
+        let tissue = epithelial_well_vascularized();
+        let free = doxorubicin_transport_reference();
+        let carrier = liposomal_nanocarrier();
+        let mut ratio_prev = 0.0_f64;
+        for r in [10.0_f64, 25.0, 50.0, 100.0] {
+            let cf = concentration_at_distance(r, &free, &tissue);
+            let cc = concentration_at_distance(r, &carrier, &tissue);
+            assert!(cf > 0.0 && cc > 0.0, "at {r} um");
+            assert!(cc < cf, "the carrier exceeds the free drug at {r} um");
+            // The GAP must widen with depth -- that is what "falls faster"
+            // means, and a constant offset would satisfy `cc < cf` without it.
+            let ratio = cf / cc;
+            assert!(
+                ratio > ratio_prev,
+                "the free/carrier ratio is not growing with depth at {r} um: \
+                 {ratio} vs {ratio_prev}"
+            );
+            ratio_prev = ratio;
+        }
+    }
     use super::*;
 
     #[test]

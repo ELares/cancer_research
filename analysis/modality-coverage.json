@@ -142,10 +142,10 @@
    "trials": 182,
    "trial_share": 0.49,
    "growth": 2.49,
-   "code_modules": [],
-   "prose_only_modules": [
+   "code_modules": [
     "drug_transport"
-   ]
+   ],
+   "prose_only_modules": []
   },
   {
    "mechanism": "immunotherapy",
@@ -200,7 +200,9 @@
    "trial_share": 9.64,
    "growth": 3.1,
    "code_modules": [],
-   "prose_only_modules": []
+   "prose_only_modules": [
+    "drug_transport"
+   ]
   },
   {
    "mechanism": "synthetic-lethality",
@@ -335,11 +337,11 @@
    "trials": 182,
    "trial_share": 0.49,
    "growth": 2.49,
-   "code_modules": [],
-   "prose_only_modules": [
+   "code_modules": [
     "drug_transport"
    ],
-   "engine_tier": "absent"
+   "prose_only_modules": [],
+   "engine_tier": "modifier"
   },
   {
    "mechanism": "immunotherapy",
@@ -397,7 +399,9 @@
    "trial_share": 9.64,
    "growth": 3.1,
    "code_modules": [],
-   "prose_only_modules": [],
+   "prose_only_modules": [
+    "drug_transport"
+   ],
    "engine_tier": "absent"
   },
   {
@@ -526,8 +530,8 @@
   "PDT",
   "Radiation"
  ],
- "absent_count": 12,
- "absent_census": 84582,
- "absent_trials": 2625,
+ "absent_count": 11,
+ "absent_census": 47794,
+ "absent_trials": 2443,
  "total_census": 165700
 }
