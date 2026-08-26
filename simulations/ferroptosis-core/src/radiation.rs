@@ -79,30 +79,40 @@ use crate::params::RadiationConfig;
 /// exists.
 pub const MU_6MV_SOFT_TISSUE_PER_CM: f64 = 0.03;
 
-/// α/β ratio for early-responding tumour tissue, in Gy, from this project's
-/// own frozen corpus.
+/// α/β ratio for early-responding tumour tissue, in Gy.
 ///
-/// PMID 32307022 (`corpus/by-pmid/32307022.md`) states its radiobiology
-/// explicitly for glioblastoma: `SF2 = 0.5445`, `α/β = 10 Gy`, and
-/// `SF(2.67 Gy) = 0.4244`. Three numbers, which is one more than a fit needs
-/// -- and that is what makes this a calibration target rather than a
-/// convention. Fitting α from SF2 with `β = α/(α/β)` gives
-/// [`ALPHA_GLIOBLASTOMA_PER_GY`], and PREDICTS the 2.67 Gy point without
-/// using it.
+/// The textbook split is ~10 Gy for tumours and early-responding normal
+/// tissue against ~3 Gy for late-responding tissue. This project's frozen
+/// corpus contains a worked use of it: PMID 32307022
+/// (`corpus/by-pmid/32307022.md`) characterises its fractionation sensitivity
+/// with `α/β = 10 Gy` alongside `SF2 = 0.5445`.
 ///
-/// The textbook split (~10 Gy for tumours and early-responding normal tissue,
-/// ~3 Gy for late-responding tissue) agrees, but the number here is taken from
-/// a paper in the corpus rather than from the textbook, so it can be checked.
+/// **What that paper is, stated because the first version of this comment
+/// oversold it.** It is a seven-patient TTFields + IMRT dosimetry study, not a
+/// clonogenic assay. Its SF2 is an EUD-model INPUT chosen to give a 30 %
+/// tumour control probability (with the clonogen count from Suit 1992), and
+/// it says so: "SF2 **was assumed** to be 0.5445". So this is a published
+/// PARAMETERISATION that the engine can be checked against, not a measurement
+/// the engine can be fitted to.
 pub const ALPHA_BETA_TUMOUR_GY: f64 = 10.0;
 
-/// α fitted to PMID 32307022's `SF2 = 0.5445` at `α/β = 10`, per Gy.
+/// α implied by PMID 32307022's `SF2 = 0.5445` at `α/β = 10`, per Gy.
 ///
-/// `α = −ln(SF2) / (D + D²/(α/β))` at `D = 2`. The ONE fitted parameter of the
-/// DNA channel; β follows from the ratio.
-pub const ALPHA_GLIOBLASTOMA_PER_GY: f64 = 0.25329;
+/// `α = −ln(SF2) / (D + D²/(α/β))` at `D = 2`; β follows from the ratio.
+pub const ALPHA_GBM_PARAMETERISATION_PER_GY: f64 = 0.25329;
 
-/// The published point this module PREDICTS rather than fits: `SF = 0.4244` at
-/// `2.67 Gy` (PMID 32307022). Guarded, not decorative.
+/// The third number the same paper reports, `SF = 0.4244` at `2.67 Gy`.
+///
+/// **NOT an independent prediction, and calling it one was wrong.** The paper
+/// COMPUTED it from SF2 and α/β through the LQ model — "the validity of the
+/// linear quadratic cell survival model was assumed and the respective
+/// surviving fraction of 0.4244 at 2.67 Gy was obtained" — which is the same
+/// operation this module performs. Under LQ, `(SF2, α/β)` determines it.
+///
+/// What it is good for is a ROUND TRIP: reproducing it to 1e-4 shows
+/// [`lq_survival`] implements the published parameterisation exactly, and a
+/// sign error, a dropped β term or the late-responding 3 Gy convention all
+/// move it off. That is an implementation check, not a test of the biology.
 pub const SF_AT_2_67_GY_PUBLISHED: f64 = 0.4244;
 
 /// Linear-quadratic surviving fraction, `exp(−αD − βD²)`.
@@ -274,35 +284,49 @@ mod tests {
     }
 
     #[test]
-    fn the_fitted_alpha_predicts_a_published_point_it_was_not_fitted_to() {
-        // The whole reason this layer satisfies the layer-freeze policy.
-        // PMID 32307022 states THREE numbers; a fit needs two. So alpha comes
-        // from SF2 = 0.5445 at alpha/beta = 10, and the 2.67 Gy point is a
-        // PREDICTION that the model is free to get wrong.
-        let beta = ALPHA_GLIOBLASTOMA_PER_GY / ALPHA_BETA_TUMOUR_GY;
+    fn the_lq_implementation_round_trips_the_published_parameterisation() {
+        // A ROUND TRIP, not a prediction, and the earlier name claimed
+        // otherwise. PMID 32307022 states three numbers, but it DERIVED the
+        // third from the first two through the LQ model, and under LQ
+        // `(SF2, alpha/beta)` determines `SF(2.67)` anyway. So this shows the
+        // implementation matches the published parameterisation; it does not
+        // test the biology.
+        let beta = ALPHA_GBM_PARAMETERISATION_PER_GY / ALPHA_BETA_TUMOUR_GY;
 
         // The fit reproduces the point it was fitted to.
-        let sf2 = lq_survival(2.0, ALPHA_GLIOBLASTOMA_PER_GY, beta);
+        let sf2 = lq_survival(2.0, ALPHA_GBM_PARAMETERISATION_PER_GY, beta);
         assert!(
             (sf2 - 0.5445).abs() < 1e-4,
             "the fitted alpha does not reproduce SF2 = 0.5445: {sf2}"
         );
 
         // And PREDICTS the one it was not.
-        let sf267 = lq_survival(2.67, ALPHA_GLIOBLASTOMA_PER_GY, beta);
+        let sf267 = lq_survival(2.67, ALPHA_GBM_PARAMETERISATION_PER_GY, beta);
         assert!(
             (sf267 - SF_AT_2_67_GY_PUBLISHED).abs() < 1e-3,
             "predicted SF(2.67) = {sf267}, published {SF_AT_2_67_GY_PUBLISHED}"
         );
 
-        // The prediction must not be trivially satisfied by any alpha: a
-        // 20%-different alpha has to MISS it, or the test measures nothing.
-        let wrong = lq_survival(2.67, ALPHA_GLIOBLASTOMA_PER_GY * 1.2, beta * 1.2);
-        assert!(
-            (wrong - SF_AT_2_67_GY_PUBLISHED).abs() > 1e-2,
-            "a 20% wrong alpha still hits the published point ({wrong}), so \
-             this test does not measure the fit"
-        );
+        // The control that MATTERS is the ratio, not alpha. Scaling both
+        // alpha and beta by 1.2 also breaks SF2, so it only shows that SF
+        // responds to alpha -- which nobody doubted. What this check has to
+        // discriminate is the alpha/beta CONVENTION, since a reader could
+        // reasonably reach for the late-responding 3 Gy value. So: re-derive
+        // alpha at a different ratio, keeping SF2 EXACTLY right, and require
+        // the 2.67 Gy point to move off the published number.
+        for ratio in [3.0_f64, 5.0, 20.0] {
+            let a = -0.5445_f64.ln() / (2.0 + 4.0 / ratio);
+            let b = a / ratio;
+            assert!(
+                (lq_survival(2.0, a, b) - 0.5445).abs() < 1e-9,
+                "the control must reproduce SF2 exactly, or it is testing SF2"
+            );
+            assert!(
+                (lq_survival(2.67, a, b) - SF_AT_2_67_GY_PUBLISHED).abs() > 1e-3,
+                "alpha/beta = {ratio} still hits the published SF(2.67), so \
+                 this check cannot tell the conventions apart"
+            );
+        }
     }
 
     #[test]
@@ -418,10 +442,24 @@ mod tests {
 
     #[test]
     fn attenuation_is_monotone_bounded_and_clamps_outside_the_tumour() {
+        // STRICTLY decreasing, and pinned to a computed value. Every bound in
+        // the depth tests was one-sided -- `rad > 0.95`, `rad > sdt`,
+        // `rad > pdt` all bound mu from ABOVE, the direction the "radiation is
+        // flat" claim wants -- so replacing this whole function with `1.0`
+        // passed all thirteen tests.
+        assert!(
+            (intensity_at_depth(100_000.0, MU_6MV_SOFT_TISSUE_PER_CM) - 0.740_818).abs() < 1e-5,
+            "10 cm should receive exp(-0.3) = 0.7408 of the surface dose, got {}",
+            intensity_at_depth(100_000.0, MU_6MV_SOFT_TISSUE_PER_CM)
+        );
         let mut prev = 1.0;
-        for cm in 0..30 {
+        for cm in 1..30 {
             let v = intensity_at_depth(cm as f64 * 10_000.0, MU_6MV_SOFT_TISSUE_PER_CM);
-            assert!(v <= prev && v >= 0.0 && v <= 1.0, "at {cm} cm: {v}");
+            assert!(
+                v < prev,
+                "attenuation is not strictly decreasing at {cm} cm: {v}"
+            );
+            assert!(v >= 0.0 && v <= 1.0, "at {cm} cm: {v}");
             prev = v;
         }
         // Negative depth is outside the tumour; the grid's sign convention

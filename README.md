@@ -71,7 +71,7 @@ than leaving you to count files.**
 | preregistered predictions | **8 of 8** | 0 | — |
 | engine modules mentioning it anywhere | **30 of 33** | — | — |
 | engine modules mentioning it in code | **21 of 33** | — | — |
-| engine modules mentioning it in PRODUCTION code | **16 of 33** | — | — |
+| engine modules mentioning it in PRODUCTION code | **15 of 33** | — | — |
 
 The module rows read `33 of 33` until 2026-08-17 — the same number on both
 sides of "of", produced by counting `.rs` files without opening one. Measured,

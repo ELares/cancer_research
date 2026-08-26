@@ -42,12 +42,15 @@ fn parse_phenotype(s: &str) -> PyResult<Phenotype> {
     }
 }
 
-/// Every treatment name `parse_treatment` accepts, in enum order.
+/// Every treatment name `parse_treatment` accepts.
+///
+/// NOT every `Treatment` variant: `Radiation` is excluded on purpose, because
+/// this entry point cannot deliver it (see the match arm below).
 ///
 /// Kept beside the match and asserted against it, because the error message
 /// quoting a hand-typed list is how a binding ends up accepting a name it
 /// calls invalid.
-const TREATMENT_NAMES: [&str; 5] = ["Control", "RSL3", "SDT", "PDT", "Radiation"];
+const TREATMENT_NAMES: [&str; 4] = ["Control", "RSL3", "SDT", "PDT"];
 
 fn parse_treatment(s: &str) -> PyResult<Treatment> {
     match s {
@@ -55,7 +58,14 @@ fn parse_treatment(s: &str) -> PyResult<Treatment> {
         "RSL3" => Ok(Treatment::RSL3),
         "SDT" => Ok(Treatment::SDT),
         "PDT" => Ok(Treatment::PDT),
-        "Radiation" => Ok(Treatment::Radiation),
+        // `Treatment::Radiation` is deliberately NOT accepted here. `sim_cell`
+        // takes no dose, no alpha/beta and no depth, so a Radiation cell built
+        // through this entry point carries zero exogenous ROS and no
+        // DNA-damage roll -- it would be bit-identical to Control at every
+        // seed while advertising a modality. That is the
+        // layer-without-a-caller shape this project keeps finding, and a
+        // public surface is the worst place for it. The name is admitted once
+        // the binding grows a dose argument.
         // The valid list is DERIVED from the arms above rather than typed:
         // the first version hard-coded it, so adding an arm shipped a binding
         // that ACCEPTS the new name while telling the caller it is invalid.
