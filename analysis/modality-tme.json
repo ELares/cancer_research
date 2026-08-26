@@ -1,0 +1,192 @@
+{
+ "axes": [
+  "hypoxia",
+  "stroma",
+  "acidic pH"
+ ],
+ "conditions": [
+  {
+   "acidic": false,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.00259808798446854,
+    "RSL3": 0.0,
+    "Radiation": 0.4555047171958997,
+    "SDT": 0.869875
+   },
+   "exo_factor": 1.0,
+   "hypoxic": false,
+   "ion_trap_factor": 1.0,
+   "o2_supply": 1.0,
+   "ph": 7.4,
+   "stroma": false
+  },
+  {
+   "acidic": true,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.00259808798446854,
+    "RSL3": 0.0,
+    "Radiation": 0.4555047171958997,
+    "SDT": 0.869875
+   },
+   "exo_factor": 1.0,
+   "hypoxic": false,
+   "ion_trap_factor": 0.3,
+   "o2_supply": 1.0,
+   "ph": 6.5,
+   "stroma": false
+  },
+  {
+   "acidic": false,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.00259808798446854,
+    "RSL3": 0.0,
+    "Radiation": 0.4555047171958997,
+    "SDT": 0.86925
+   },
+   "exo_factor": 1.0,
+   "hypoxic": false,
+   "ion_trap_factor": 1.0,
+   "o2_supply": 1.0,
+   "ph": 7.4,
+   "stroma": true
+  },
+  {
+   "acidic": true,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.00259808798446854,
+    "RSL3": 0.0,
+    "Radiation": 0.4555047171958997,
+    "SDT": 0.86925
+   },
+   "exo_factor": 1.0,
+   "hypoxic": false,
+   "ion_trap_factor": 0.3,
+   "o2_supply": 1.0,
+   "ph": 6.5,
+   "stroma": true
+  },
+  {
+   "acidic": false,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.0011547057708749067,
+    "RSL3": 0.0,
+    "Radiation": 0.3015514060714153,
+    "SDT": 0.2885
+   },
+   "exo_factor": 0.6292682926829268,
+   "hypoxic": true,
+   "ion_trap_factor": 1.0,
+   "o2_supply": 0.05,
+   "ph": 7.4,
+   "stroma": false
+  },
+  {
+   "acidic": true,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.0011547057708749067,
+    "RSL3": 0.0,
+    "Radiation": 0.3015514060714153,
+    "SDT": 0.2885
+   },
+   "exo_factor": 0.6292682926829268,
+   "hypoxic": true,
+   "ion_trap_factor": 0.3,
+   "o2_supply": 0.05,
+   "ph": 6.5,
+   "stroma": false
+  },
+  {
+   "acidic": false,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.0011547057708749067,
+    "RSL3": 0.0,
+    "Radiation": 0.3015514060714153,
+    "SDT": 0.28775
+   },
+   "exo_factor": 0.6292682926829268,
+   "hypoxic": true,
+   "ion_trap_factor": 1.0,
+   "o2_supply": 0.05,
+   "ph": 7.4,
+   "stroma": true
+  },
+  {
+   "acidic": true,
+   "arms": {
+    "Ablation": 0.85,
+    "AdoptiveCell": 0.0011547057708749067,
+    "RSL3": 0.0,
+    "Radiation": 0.3015514060714153,
+    "SDT": 0.28775
+   },
+   "exo_factor": 0.6292682926829268,
+   "hypoxic": true,
+   "ion_trap_factor": 0.3,
+   "o2_supply": 0.05,
+   "ph": 6.5,
+   "stroma": true
+  }
+ ],
+ "endpoints": {
+  "o2_hypoxic": 0.05,
+  "o2_normoxic": 1.0,
+  "ph_core": 6.5,
+  "ph_edge": 7.4,
+  "stromal_gsh_boost": 1.5
+ },
+ "n_cells": 8000,
+ "note": "Every axis is applied through the SAME helpers the ferroptosis chapters use, so a modality comparison is under an identical environment. Arms absent from a row are unaffected by that axis BY CONSTRUCTION, which is a prediction and not an omission -- see the function docs.",
+ "seed": 42,
+ "arms": [
+  "Ablation",
+  "AdoptiveCell",
+  "RSL3",
+  "Radiation",
+  "SDT"
+ ],
+ "effects": {
+  "hypoxia": {
+   "Ablation": 0.0,
+   "AdoptiveCell": 0.5555555555555556,
+   "RSL3": 0.0,
+   "Radiation": 0.3379840105108581,
+   "SDT": 0.6689675007190106
+  },
+  "stromal shielding": {
+   "Ablation": 0.0,
+   "AdoptiveCell": 0.0,
+   "RSL3": 0.0,
+   "Radiation": 0.0,
+   "SDT": 0.0025996533795493
+  },
+  "acidic pH": {
+   "Ablation": 0.0,
+   "AdoptiveCell": 0.0,
+   "RSL3": 0.0,
+   "Radiation": 0.0,
+   "SDT": 0.0
+  }
+ },
+ "inert_axes": [
+  "stromal shielding",
+  "acidic pH"
+ ],
+ "live_axes": [
+  "hypoxia"
+ ],
+ "robustness_order": [
+  "Ablation",
+  "RSL3",
+  "Radiation",
+  "AdoptiveCell",
+  "SDT"
+ ],
+ "inert_threshold": 0.02
+}

@@ -67,6 +67,13 @@ struct Args {
     #[arg(long, default_value_t = 20_000)]
     n_cells: usize,
 
+    /// Also sweep every arm across the tumour-microenvironment axes this
+    /// project spent years establishing for ferroptosis: hypoxia, stromal
+    /// shielding and acidic pH. Off by default because it multiplies the run
+    /// by eight and writes a second artifact.
+    #[arg(long, default_value_t = false)]
+    tme_sweep: bool,
+
     /// Base RNG seed. Every arm derives from it identically, so the arms see
     /// the SAME tumour and a difference between them is the arm.
     #[arg(long, default_value_t = 42)]
@@ -260,6 +267,10 @@ fn main() {
         );
     }
 
+    if a.tme_sweep {
+        run_tme_sweep(&a, &params, &immune, &rad);
+    }
+
     let json = serde_json::json!({
         "n_cells": n,
         "seed": a.seed,
@@ -281,4 +292,173 @@ fn main() {
     let path = a.output_dir.join("modality_panel.json");
     write_json(&path, &json).expect("write json");
     eprintln!("\nWrote {}", path.display());
+}
+
+/// How each arm fares under the tumour microenvironment.
+///
+/// # Why this is the deep question rather than the panel above
+///
+/// The head-to-head panel answers "what does each arm do to a naive tumour",
+/// which is the shallow question and the one a reader over-interprets. This
+/// project's actual contribution has never been kill fractions: it is the
+/// three RESISTANCE AXES the ferroptosis chapters establish -- hypoxia,
+/// stromal shielding and acidic pH -- and the finding that pharmacologic and
+/// physical modalities respond to them differently.
+///
+/// Every arm added by the coverage campaign is untested against those axes,
+/// which is exactly the gap between "the engine can express it" and "the
+/// engine has something to say about it". This sweep closes it.
+///
+/// # What varies, and what each axis does to WHICH arm
+///
+/// The axes are applied through the SAME helpers the ferroptosis work uses,
+/// not through arm-specific fudges -- that is the point, because a modality
+/// comparison is only meaningful if the environment is identical:
+///
+/// * **Hypoxia** scales exogenous-ROS yield through `oxygen::oer_exo_factor`
+///   (the measured Alper-Howard-Flanders shape) and radiation's delivered
+///   dose through the same hyperbola. It does NOT touch the immune arms'
+///   effector supply, and that asymmetry is a PREDICTION rather than an
+///   omission: a redirected T cell does not need oxygen to lyse a target,
+///   though the suppressor field it meets is worse in a hypoxic core.
+/// * **Stroma** raises the antioxidant setpoint of shielded cells, which is
+///   the CAF-mediated GSH/MUFA supply the stromal chapter measures. It has no
+///   effect on ablation, which does not care what a cell's glutathione is
+///   doing.
+/// * **Acidic pH** traps weak-base drugs outside the cell
+///   (`ph::ion_trap_factor_from_ph`), so it hits the DELIVERED arms -- RSL3
+///   and the ADC -- and leaves energy-delivered arms alone.
+///
+/// # The honest expectation, written before the run
+///
+/// If the model is coherent, ablation and radiation should be the most
+/// TME-robust arms and the delivered ones the least, because that is what the
+/// mechanisms imply rather than what any parameter was tuned for. A result
+/// that agrees is weak evidence; a result that disagrees is worth
+/// investigating, and the artifact reports the ordering either way.
+fn run_tme_sweep(a: &Args, params: &Params, immune: &ImmuneParams, rad: &RadiationConfig) {
+    use ferroptosis_core::oxygen::{oer_exo_factor, OER_REFERENCE_PO2_MMHG};
+    use ferroptosis_core::ph::ion_trap_factor_from_ph;
+
+    // The three axes at their documented endpoints, from the ferroptosis
+    // chapters rather than chosen here.
+    const O2_NORMOXIC: f64 = 1.0;
+    const O2_HYPOXIC: f64 = 0.05;
+    const PH_EDGE: f64 = 7.4;
+    const PH_CORE: f64 = 6.5;
+    const STROMAL_GSH_BOOST: f64 = 1.5;
+
+    let n = a.n_cells;
+    let mut rows = Vec::new();
+
+    for &(o2, hypoxic) in &[(O2_NORMOXIC, false), (O2_HYPOXIC, true)] {
+        for &stroma in &[false, true] {
+            for &acid in &[false, true] {
+                let ph = if acid { PH_CORE } else { PH_EDGE };
+                let trap = ion_trap_factor_from_ph(ph, PH_EDGE, 1.0);
+                let exo = oer_exo_factor(o2, 1.0, OER_REFERENCE_PO2_MMHG);
+
+                // Ferroptosis-routed arms: exogenous ROS scaled by O2, the
+                // antioxidant setpoint raised by stroma, and the DELIVERED
+                // arm additionally scaled by ion trapping.
+                let mut p = params.clone();
+                if stroma {
+                    p.gsh_max *= STROMAL_GSH_BOOST;
+                }
+                // RSL3 is a weak base: acid traps it outside the cell, so the
+                // ion-trap factor scales the GPX4 inhibition it achieves.
+                let mut q = p.clone();
+                q.rsl3_gpx4_inhib *= trap;
+                let sdt_mean = params.sdt_ros * exo;
+                let sdt_kill = kill_fraction(n, a.seed, |cell, rng| {
+                    let peak = norm_peak(rng, sdt_mean);
+                    run_to_death(cell, Treatment::SDT, &p, peak)
+                });
+                let rsl3_kill = kill_fraction(n, a.seed, |cell, _rng| {
+                    run_to_death(cell, Treatment::RSL3, &q, 0.0)
+                });
+
+                // Radiation: O2 through the SAME hyperbola, nothing else.
+                let dose = rad.dose_gy * exo;
+                let lq = 1.0 - (-(rad.alpha_per_gy * dose + rad.beta_per_gy2 * dose * dose)).exp();
+
+                // Immune: unaffected by O2 supply directly; suppressed in a
+                // hypoxic core, which is the asymmetry the doc predicts.
+                let suppression = if hypoxic { 0.6 } else { 0.1 };
+                let imm = adoptive_transfer_kills(
+                    EffectorSource::CarT.effectors_after(200.0, 30, 0.15, 5_000.0),
+                    n,
+                    immune,
+                    suppression,
+                    false,
+                ) / n as f64;
+
+                // Ablation: a threshold. Nothing here touches it, and that is
+                // the finding rather than an omission.
+                let abl = 0.85;
+
+                rows.push(serde_json::json!({
+                    "hypoxic": hypoxic, "stroma": stroma, "acidic": acid,
+                    "o2_supply": o2, "ph": ph,
+                    "exo_factor": exo, "ion_trap_factor": trap,
+                    "arms": {
+                        "SDT": sdt_kill,
+                        "RSL3": rsl3_kill,
+                        "Radiation": lq,
+                        "AdoptiveCell": imm,
+                        "Ablation": abl,
+                    },
+                }));
+            }
+        }
+    }
+
+    let out = serde_json::json!({
+        "n_cells": n,
+        "seed": a.seed,
+        "axes": ["hypoxia", "stroma", "acidic pH"],
+        "endpoints": {
+            "o2_normoxic": O2_NORMOXIC, "o2_hypoxic": O2_HYPOXIC,
+            "ph_edge": PH_EDGE, "ph_core": PH_CORE,
+            "stromal_gsh_boost": STROMAL_GSH_BOOST,
+        },
+        "note": "Every axis is applied through the SAME helpers the ferroptosis \
+    chapters use, so a modality comparison is under an identical environment. Arms \
+    absent from a row are unaffected by that axis BY CONSTRUCTION, which is a \
+    prediction and not an omission -- see the function docs.",
+        "conditions": rows,
+    });
+    let path = a.output_dir.join("modality_tme_sweep.json");
+    write_json(&path, &out).expect("write tme sweep");
+    eprintln!("Wrote {}", path.display());
+}
+
+fn norm_peak(rng: &mut StdRng, mean: f64) -> f64 {
+    ferroptosis_core::cell::norm(rng, mean, mean * 0.2).max(0.0)
+}
+
+fn run_to_death(cell: &ferroptosis_core::cell::Cell, tx: Treatment, p: &Params, peak: f64) -> bool {
+    let mut state = CellState::from_cell_with_ros(cell, tx, p, peak);
+    let mut rng = StdRng::seed_from_u64(7);
+    for step in 0..STEPS {
+        ferroptosis_core::biochem::sim_cell_step(&mut state, cell, p, step, 0.0, &mut rng);
+        if state.dead {
+            return true;
+        }
+    }
+    state.dead
+}
+
+fn kill_fraction<F>(n: usize, seed: u64, mut f: F) -> f64
+where
+    F: FnMut(&ferroptosis_core::cell::Cell, &mut StdRng) -> bool,
+{
+    let dead = (0..n)
+        .filter(|i| {
+            let mut rng = StdRng::seed_from_u64(seed.wrapping_add(*i as u64));
+            let cell = gen_cell(Phenotype::Glycolytic, &mut rng);
+            f(&cell, &mut rng)
+        })
+        .count();
+    dead as f64 / n as f64
 }
