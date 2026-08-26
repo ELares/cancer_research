@@ -2,18 +2,15 @@
 """
 Generate publication-quality figures and run statistical analyses.
 
-Produces:
-  article/figures/fig1_ferroptosis_comparison.pdf
-  article/figures/fig2_mechanism_heatmap.pdf
-  article/figures/fig3_literature_disconnect.pdf
-  article/figures/fig4_molecular_overlap.pdf
-  article/figures/fig5_publication_trends.pdf
-  article/figures/fig6_sdt_pdt_depth.pdf
-  article/figures/fig13_gold_set_eval.pdf
-  article/figures/fig14_tissue_mechanism_heatmap.pdf
-  article/figures/fig15_designed_combinations.pdf
-  article/figures/fig16_weighted_evidence.pdf
-  article/figures/fig17_damp_heatmap.pdf
+Every figure this script writes is registered in FIGURES.yaml, with its
+inputs, its status and why it exists. That file is the list; this docstring
+deliberately does not repeat it, because the copy that used to live here
+went wrong in all three available directions -- of its eleven names, six are
+figures this change retires and one (`fig6_sdt_pdt_depth`) was never written
+at all, while ten figures that ARE drawn on every run were missing from it.
+The phantom name stood for the function `fig6_sdt_chain_evidence`.
+`tests/test_figure_register_covers_writers.py` holds the register and the
+savefig calls together, which a prose list cannot do.
 """
 
 import csv
@@ -194,135 +191,8 @@ def fig1_ferroptosis_comparison(articles):
     print(f"  SDT ferroptosis: {sdt_ferro}/{sdt_total} ({data['SDT']['ferro_pct']:.1f}%)")
 
 
-# ============================================================
-# FIGURE 2: Mechanism-Cancer Heatmap
-# ============================================================
-
-def fig2_mechanism_heatmap(articles):
-    print("Generating Figure 2: Mechanism-cancer heatmap...")
-
-    from config import MECHANISM_KEYWORDS, CANCER_TYPE_KEYWORDS
-    mechanisms = sorted(MECHANISM_KEYWORDS.keys())
-    cancers = sorted(CANCER_TYPE_KEYWORDS.keys())
-
-    matrix = np.zeros((len(mechanisms), len(cancers)))
-    for a in articles:
-        for i, m in enumerate(mechanisms):
-            if m in a.get("mechanisms", []):
-                for j, c in enumerate(cancers):
-                    if c in a.get("cancer_types", []):
-                        matrix[i, j] += 1
-
-    # Sort by total
-    mech_totals = matrix.sum(axis=1)
-    cancer_totals = matrix.sum(axis=0)
-    mech_order = np.argsort(-mech_totals)
-    cancer_order = np.argsort(-cancer_totals)
-
-    matrix = matrix[mech_order][:, cancer_order]
-    mechanisms = [mechanisms[i] for i in mech_order]
-    cancers = [cancers[i] for i in cancer_order]
-
-    fig, ax = plt.subplots(figsize=(16, 10))
-    im = ax.imshow(matrix, cmap="YlOrRd", aspect="auto")
-
-    ax.set_xticks(range(len(cancers)))
-    ax.set_xticklabels([c[:10] for c in cancers], rotation=45, ha="right", fontsize=8)
-    ax.set_yticks(range(len(mechanisms)))
-    ax.set_yticklabels(mechanisms, fontsize=8)
-    ax.set_title("Mechanism × Cancer Type Article Count Matrix")
-
-    plt.colorbar(im, ax=ax, label="Article Count", shrink=0.8)
-
-    # Mark zeros
-    for i in range(len(mechanisms)):
-        for j in range(len(cancers)):
-            if matrix[i, j] == 0:
-                ax.plot(j, i, 'x', color='gray', markersize=4, alpha=0.3)
-
-    plt.tight_layout()
-    fig.savefig(FIG_DIR / "fig2_mechanism_heatmap.pdf")
-    fig.savefig(FIG_DIR / "fig2_mechanism_heatmap.png")
-    plt.close()
-    print(f"  Matrix: {len(mechanisms)}×{len(cancers)}, {int(matrix.sum())} total instances")
 
 
-# ============================================================
-# FIGURE 3: Literature Disconnect Analysis
-# ============================================================
-
-def fig3_literature_disconnect(articles):
-    print("Generating Figure 3: Literature disconnect (persister vs SDT)...")
-
-    # Classify articles into communities
-    persister_articles = set()
-    sdt_ferro_articles = set()
-    pdt_ferro_articles = set()
-    overlap = set()
-
-    for a in articles:
-        pmid = a.get("pmid", "")
-        text = a.get("_text", "")
-        mechs = a.get("mechanisms", [])
-
-        is_persister = bool(re.search(r"persister|drug.tolerant|minimal residual", text))
-        is_ferro = "ferroptosis" in text
-        is_sdt = "sonodynamic" in mechs
-        is_pdt = bool(re.search(r"photodynamic", text))
-
-        if is_persister and is_ferro:
-            persister_articles.add(pmid)
-        if is_sdt and is_ferro:
-            sdt_ferro_articles.add(pmid)
-        if is_pdt and is_ferro:
-            pdt_ferro_articles.add(pmid)
-
-    overlap_sdt = persister_articles & sdt_ferro_articles
-    overlap_pdt = persister_articles & pdt_ferro_articles
-
-    # Venn-like visualization
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))
-
-    # Left: Community sizes
-    communities = ["Persister-\nFerroptosis", "SDT-\nFerroptosis", "PDT-\nFerroptosis"]
-    sizes = [len(persister_articles), len(sdt_ferro_articles), len(pdt_ferro_articles)]
-    overlaps = ["-", str(len(overlap_sdt)), str(len(overlap_pdt))]
-    colors = ["#ff7f0e", "#1f77b4", "#2ca02c"]
-
-    bars = ax1.bar(communities, sizes, color=colors, alpha=0.8, edgecolor='black', linewidth=0.5)
-    ax1.set_ylabel("Number of Articles in Corpus")
-    ax1.set_title("Research Community Sizes in Our Corpus")
-
-    for bar, size in zip(bars, sizes):
-        ax1.annotate(str(size), xy=(bar.get_x() + bar.get_width() / 2, bar.get_height()),
-                    xytext=(0, 5), textcoords="offset points", ha='center', fontsize=12, fontweight='bold')
-
-    # Right: Overlap matrix
-    labels = ["Persister-Ferro", "SDT-Ferro", "PDT-Ferro"]
-    overlap_matrix = np.array([
-        [len(persister_articles), len(overlap_sdt), len(overlap_pdt)],
-        [len(overlap_sdt), len(sdt_ferro_articles), len(sdt_ferro_articles & pdt_ferro_articles)],
-        [len(overlap_pdt), len(sdt_ferro_articles & pdt_ferro_articles), len(pdt_ferro_articles)],
-    ])
-
-    im = ax2.imshow(overlap_matrix, cmap="Blues")
-    ax2.set_xticks(range(3))
-    ax2.set_xticklabels(labels, rotation=30, ha="right", fontsize=9)
-    ax2.set_yticks(range(3))
-    ax2.set_yticklabels(labels, fontsize=9)
-    ax2.set_title("Cross-Community Article Overlap")
-
-    for i in range(3):
-        for j in range(3):
-            ax2.text(j, i, str(overlap_matrix[i, j]),
-                    ha="center", va="center", fontsize=14, fontweight='bold',
-                    color="white" if overlap_matrix[i, j] > overlap_matrix.max() * 0.5 else "black")
-
-    plt.tight_layout()
-    fig.savefig(FIG_DIR / "fig3_literature_disconnect.pdf")
-    fig.savefig(FIG_DIR / "fig3_literature_disconnect.png")
-    plt.close()
-    print(f"  Persister-ferro: {len(persister_articles)}, SDT-ferro: {len(sdt_ferro_articles)}, Overlap: {len(overlap_sdt)}")
 
 
 # ============================================================
@@ -419,43 +289,6 @@ def fig4_molecular_overlap(articles):
     print("  Done")
 
 
-# ============================================================
-# FIGURE 5: Publication Trends
-# ============================================================
-
-def fig5_publication_trends(articles):
-    print("Generating Figure 5: Publication trends...")
-
-    year_mech = defaultdict(Counter)
-    for a in articles:
-        year = a.get("year")
-        if not year or year < 2015:
-            continue
-        for m in a.get("mechanisms", []):
-            year_mech[year][m] += 1
-
-    years = sorted(y for y in year_mech.keys() if 2015 <= y <= 2025)
-
-    highlight_mechs = ["immunotherapy", "nanoparticle", "sonodynamic", "car-t", "ttfields"]
-    colors = ["#1f77b4", "#ff7f0e", "#d62728", "#2ca02c", "#9467bd"]
-
-    fig, ax = plt.subplots(figsize=(12, 6))
-    for mech, color in zip(highlight_mechs, colors):
-        counts = [year_mech[y].get(mech, 0) for y in years]
-        ax.plot(years, counts, '-o', label=mech.replace("-", " ").title(),
-                color=color, linewidth=2, markersize=4)
-
-    ax.set_xlabel("Year")
-    ax.set_ylabel("Number of Articles")
-    ax.set_title("Publication Volume by Mechanism (2015-2025)")
-    ax.legend(loc="upper left")
-    ax.grid(True, alpha=0.3)
-
-    plt.tight_layout()
-    fig.savefig(FIG_DIR / "fig5_publication_trends.pdf")
-    fig.savefig(FIG_DIR / "fig5_publication_trends.png")
-    plt.close()
-    print("  Done")
 
 
 # ============================================================
@@ -596,12 +429,6 @@ def fig6_sdt_chain_evidence(articles):
     fig.savefig(FIG_DIR / "fig6_sdt_chain_evidence.png")
     plt.close()
     print(f"  Chain: {' → '.join(str(c) for c in counts)}")
-
-
-# ============================================================
-# Fig 9: Evidence Tier Composition
-# ============================================================
-
 EVIDENCE_ORDER = [
     "phase3-clinical", "phase2-clinical", "phase1-clinical", "clinical-other",
     "preclinical-invivo", "preclinical-invitro", "theoretical",
@@ -615,17 +442,6 @@ EVIDENCE_LABELS = {
     "preclinical-invitro": "Preclinical in vitro",
     "theoretical": "Theoretical",
 }
-EVIDENCE_COLORS = {
-    "phase3-clinical": "#b71c1c",
-    "phase2-clinical": "#e65100",
-    "phase1-clinical": "#f9a825",
-    "clinical-other": "#4fc3f7",
-    "preclinical-invivo": "#388e3c",
-    "preclinical-invitro": "#81c784",
-    "theoretical": "#bdbdbd",
-}
-
-TIER_RANK = {lvl: i for i, lvl in enumerate(reversed(EVIDENCE_ORDER))}
 
 
 def load_index():
@@ -637,56 +453,6 @@ def load_index():
     return entries
 
 
-def fig9_evidence_tiers(index):
-    """Stacked horizontal bar: evidence tier composition per mechanism."""
-    print("Figure 9: Evidence tier composition...")
-
-    mech_tiers = defaultdict(lambda: Counter())
-    for e in index:
-        ev = e.get("evidence_level", "")
-        if not ev:
-            continue
-        for m in e.get("mechanisms", []):
-            mech_tiers[m][ev] += 1
-
-    if not mech_tiers:
-        print("  No evidence data — skipping")
-        return
-
-    def highest_tier(counts):
-        for lvl in EVIDENCE_ORDER:
-            if counts.get(lvl, 0) > 0:
-                return TIER_RANK[lvl]
-        return -1
-
-    mechs = sorted(mech_tiers.keys(), key=lambda m: highest_tier(mech_tiers[m]))
-
-    fig, ax = plt.subplots(figsize=(10, max(6, len(mechs) * 0.35)))
-
-    y_pos = np.arange(len(mechs))
-    lefts = np.zeros(len(mechs))
-
-    for lvl in EVIDENCE_ORDER:
-        widths = [mech_tiers[m].get(lvl, 0) for m in mechs]
-        ax.barh(y_pos, widths, left=lefts, height=0.7,
-                color=EVIDENCE_COLORS[lvl], label=EVIDENCE_LABELS[lvl])
-        lefts += widths
-
-    ax.set_yticks(y_pos)
-    ax.set_yticklabels(mechs, fontsize=9)
-    ax.set_xlabel("Number of articles")
-    ax.set_title("Evidence Tier Composition by Mechanism")
-    ax.legend(loc="lower right", fontsize=8, framealpha=0.9)
-    ax.text(0.5, -0.08,
-            "Only articles with detected evidence tags shown. "
-            "Untagged and review-like articles excluded.",
-            transform=ax.transAxes, ha='center', fontsize=8, style='italic', color='gray')
-
-    plt.tight_layout()
-    fig.savefig(FIG_DIR / "fig9_evidence_tiers.pdf")
-    fig.savefig(FIG_DIR / "fig9_evidence_tiers.png")
-    plt.close()
-    print(f"  {len(mechs)} mechanisms plotted")
 
 
 # ============================================================
@@ -1003,240 +769,6 @@ def fig13_gold_set_eval():
     print(f"  {len(labeled)} labeled rows, exact accuracy {exact/len(labeled):.0%}")
 
 
-# ============================================================
-# Fig 14: Tissue × Mechanism Heatmap
-# ============================================================
-
-TISSUE_ORDER = ["epithelial", "hematologic", "mesenchymal", "neuroectodermal", "mesothelial"]
-TISSUE_DISPLAY = {
-    "epithelial": "Epithelial",
-    "hematologic": "Hematologic",
-    "mesenchymal": "Mesenchymal",
-    "neuroectodermal": "Neuroectodermal",
-    "mesothelial": "Mesothelial",
-}
-
-
-def fig14_tissue_mechanism_heatmap(index):
-    """Heatmap: tissue-of-origin × mechanism article counts."""
-    print("Figure 14: Tissue × mechanism heatmap...")
-
-    from config import MECHANISM_KEYWORDS
-    mechanisms = sorted(MECHANISM_KEYWORDS.keys())
-
-    matrix = defaultdict(Counter)
-    tissue_totals = Counter()
-    assigned = 0
-
-    for e in index:
-        tissues = e.get("tissue_categories", [])
-        if not tissues:
-            continue
-        assigned += 1
-        for tissue in tissues:
-            tissue_totals[tissue] += 1
-            for mech in e.get("mechanisms", []):
-                matrix[tissue][mech] += 1
-
-    data = np.zeros((len(TISSUE_ORDER), len(mechanisms)))
-    for i, tissue in enumerate(TISSUE_ORDER):
-        for j, mech in enumerate(mechanisms):
-            data[i, j] = matrix[tissue].get(mech, 0)
-
-    fig, ax = plt.subplots(figsize=(16, 5))
-    im = ax.imshow(data, cmap="YlOrRd", aspect="auto", interpolation="nearest")
-
-    ax.set_xticks(np.arange(len(mechanisms)))
-    ax.set_xticklabels([m.replace("-", "\n") for m in mechanisms], fontsize=7, rotation=45, ha="right")
-    ax.set_yticks(np.arange(len(TISSUE_ORDER)))
-    ax.set_yticklabels(
-        [f"{TISSUE_DISPLAY[t]} ({tissue_totals[t]})" for t in TISSUE_ORDER],
-        fontsize=10,
-    )
-
-    # Cell value annotations
-    for i in range(len(TISSUE_ORDER)):
-        for j in range(len(mechanisms)):
-            val = int(data[i, j])
-            if val > 0:
-                color = "white" if val > data.max() * 0.6 else "black"
-                ax.text(j, i, str(val), ha="center", va="center", fontsize=6, color=color)
-
-    ax.set_title(
-        f"Tissue-of-Origin × Mechanism Article Counts\n"
-        f"(Coverage: {assigned:,}/{len(index):,} records = {assigned/len(index):.0%})"
-    )
-    plt.colorbar(im, ax=ax, label="Article count", shrink=0.8, pad=0.02)
-
-    plt.tight_layout()
-    fig.savefig(FIG_DIR / "fig14_tissue_mechanism_heatmap.pdf")
-    fig.savefig(FIG_DIR / "fig14_tissue_mechanism_heatmap.png")
-    plt.close()
-    print(f"  {assigned} tissue-tagged records, {len(TISSUE_ORDER)}×{len(mechanisms)} matrix")
-
-
-# ============================================================
-# Fig 15: Designed-Combination Breakdown
-# ============================================================
-
-COMBINATION_CATEGORIES = [
-    ("designed-combination-clinical", "Clinical\ndesigned", "#b71c1c"),
-    ("designed-combination-preclinical", "Preclinical\ndesigned", "#e65100"),
-    ("co-mention-only", "Co-mention\nonly", "#4fc3f7"),
-    ("review-or-perspective-multi-lane", "Review /\nperspective", "#bdbdbd"),
-]
-
-
-def fig15_designed_combinations(index):
-    """Horizontal stacked bar: multi-mechanism article classification."""
-    print("Figure 15: Designed-combination breakdown...")
-
-    counts = Counter()
-    for e in index:
-        combo = e.get("combination_evidence", "")
-        if combo:
-            counts[combo] += 1
-
-    total = sum(counts.values())
-    if total == 0:
-        print("  No combination_evidence data — skipping")
-        return
-
-    fig, ax = plt.subplots(figsize=(12, 3.5))
-
-    left = 0
-    for key, label, color in COMBINATION_CATEGORIES:
-        val = counts.get(key, 0)
-        pct = val / total * 100 if total else 0
-        ax.barh(0, val, left=left, color=color, edgecolor="white", linewidth=0.5, height=0.6)
-        if val > 40:
-            ax.text(left + val / 2, 0, f"{label}\n{val} ({pct:.1f}%)",
-                    ha="center", va="center", fontsize=9, fontweight="bold",
-                    color="white" if key in ("designed-combination-clinical",) else "black")
-        left += val
-
-    ax.set_xlim(0, total)
-    ax.set_yticks([])
-    ax.set_xlabel("Number of articles")
-    ax.set_title(
-        f"Classification of {total:,} Multi-Mechanism Articles\n"
-        f"(articles tagged with 2+ therapeutic mechanisms)"
-    )
-
-    # Legend
-    patches = [mpatches.Patch(color=c, label=f"{l.replace(chr(10), ' ')} ({counts.get(k, 0)})")
-               for k, l, c in COMBINATION_CATEGORIES]
-    ax.legend(handles=patches, fontsize=9, loc="upper right", ncol=2)
-
-    plt.tight_layout()
-    fig.savefig(FIG_DIR / "fig15_designed_combinations.pdf")
-    fig.savefig(FIG_DIR / "fig15_designed_combinations.png")
-    plt.close()
-    print(f"  {total} multi-mechanism articles classified")
-
-
-# ============================================================
-# Fig 16: Weighted Evidence Score by Mechanism
-# ============================================================
-
-EVIDENCE_TIER_WEIGHTS = {
-    "phase3-clinical": 12.0,
-    "phase2-clinical": 8.0,
-    "phase1-clinical": 5.0,
-    "clinical-other": 3.0,
-    "preclinical-invivo": 2.0,
-    "preclinical-invitro": 1.0,
-    "theoretical": 0.5,
-}
-
-
-def _evidence_weight(entry: dict) -> float:
-    """Heuristic quality weight — mirrors analyze_corpus.evidence_weight()."""
-    level = entry.get("evidence_level", "")
-    base = EVIDENCE_TIER_WEIGHTS.get(level)
-    if not base:
-        return 0.0
-
-    pct = entry.get("icite_percentile") or 0
-    try:
-        pct = max(0.0, min(float(pct), 100.0))
-    except (TypeError, ValueError):
-        pct = 0.0
-    citation_modifier = 1.0 + (pct / 200.0)
-
-    year = entry.get("year") or 0
-    if year:
-        year = max(2015, min(int(year), 2026))
-        recency_modifier = 0.9 + ((year - 2015) / (2026 - 2015)) * 0.2
-    else:
-        recency_modifier = 1.0
-
-    return base * citation_modifier * recency_modifier
-
-
-def fig16_weighted_evidence(index):
-    """Horizontal lollipop: weighted evidence score per mechanism."""
-    print("Figure 16: Weighted evidence scores...")
-
-    from config import MECHANISM_KEYWORDS
-    mechanisms = sorted(MECHANISM_KEYWORDS.keys())
-
-    mech_data = {}
-    for mech in mechanisms:
-        mech_entries = [e for e in index if mech in e.get("mechanisms", [])]
-        tagged = [e for e in mech_entries if e.get("evidence_level")]
-        primary_like = [e for e in mech_entries if not _is_review_or_protocol(e)]
-        total_weight = sum(_evidence_weight(e) for e in tagged)
-        coverage = len(tagged) / len(primary_like) if primary_like else 0.0
-
-        # Highest tier for dot color
-        best_tier = ""
-        for lvl in EVIDENCE_ORDER:
-            if any(e.get("evidence_level") == lvl for e in tagged):
-                best_tier = lvl
-                break
-
-        mech_data[mech] = {
-            "weight": total_weight,
-            "tagged": len(tagged),
-            "coverage": coverage,
-            "best_tier": best_tier,
-        }
-
-    sorted_mechs = sorted(mechanisms, key=lambda m: mech_data[m]["weight"])
-    weights = [mech_data[m]["weight"] for m in sorted_mechs]
-    colors = [EVIDENCE_COLORS.get(mech_data[m]["best_tier"], "#bdbdbd") for m in sorted_mechs]
-    coverages = [mech_data[m]["coverage"] for m in sorted_mechs]
-
-    fig, ax = plt.subplots(figsize=(10, 8))
-    y = np.arange(len(sorted_mechs))
-
-    # Lollipop stems
-    for i, (w, c) in enumerate(zip(weights, colors)):
-        ax.plot([0, w], [i, i], color=c, linewidth=1.5, alpha=0.6)
-    # Dots
-    ax.scatter(weights, y, c=colors, s=80, zorder=5, edgecolors="white", linewidths=0.5)
-
-    ax.set_yticks(y)
-    ax.set_yticklabels([m.replace("-", " ") for m in sorted_mechs], fontsize=9)
-    ax.set_xlabel("Weighted evidence score")
-    ax.set_title("Weighted Evidence Score by Mechanism\n(tier × citation percentile × recency)")
-
-    # Coverage labels on right
-    for i, (w, cov) in enumerate(zip(weights, coverages)):
-        ax.text(max(weights) * 1.02, i, f"{cov:.0%} cov", fontsize=7, va="center", color="gray")
-
-    # Legend for tier colors
-    tier_patches = [mpatches.Patch(color=EVIDENCE_COLORS[lvl], label=EVIDENCE_LABELS[lvl])
-                    for lvl in EVIDENCE_ORDER if any(mech_data[m]["best_tier"] == lvl for m in mechanisms)]
-    ax.legend(handles=tier_patches, fontsize=8, loc="lower right", title="Highest tier", title_fontsize=9)
-
-    ax.set_xlim(0, max(weights) * 1.15)
-    plt.tight_layout()
-    fig.savefig(FIG_DIR / "fig16_weighted_evidence.pdf")
-    fig.savefig(FIG_DIR / "fig16_weighted_evidence.png")
-    plt.close()
-    print(f"  {len(mechanisms)} mechanisms, top score: {max(weights):.1f}")
 
 
 # ============================================================
@@ -1879,10 +1411,7 @@ def main():
     print(f"  Loaded {len(index)} index records\n")
 
     fig1_ferroptosis_comparison(articles)
-    fig2_mechanism_heatmap(articles)
-    fig3_literature_disconnect(articles)
     fig4_molecular_overlap(articles)
-    fig5_publication_trends(articles)
     fig6_sdt_chain_evidence(articles)
 
     # fig8 (spatial depth-kill curves) is generated here from sim-spatial's
@@ -1898,15 +1427,11 @@ def main():
     # (it PRINTS the JSON and writes no file of its own -- #530 removed the
     # unconditional write that dirtied the tracked copy on every run)
 
-    fig9_evidence_tiers(index)
     fig10_invivo_comparison()
     fig11_mufa_sweep()
     fig12_pathway_targets(index)
 
     fig13_gold_set_eval()
-    fig14_tissue_mechanism_heatmap(index)
-    fig15_designed_combinations(index)
-    fig16_weighted_evidence(index)
     fig17_damp_heatmap()
 
     # Tier-1 quantitative simulation figures (#285): manuscript figures 21, 22.

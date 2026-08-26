@@ -131,7 +131,7 @@ class TestFigureTraceability:
             pytest.skip("generate_latex.py not found")
 
         # Extract figure-number-to-filename pairs from the figs dict.
-        # Each entry looks like: '1': ('fig5_publication_trends', 'caption...'),
+        # Each entry looks like: '1': ('fig1c_ratio_straddle', 'caption...'),
         # We parse line-by-line to avoid LaTeX escapes breaking ast.literal_eval.
         source = GENERATE_LATEX.read_text()
         figs = {}
