@@ -451,3 +451,33 @@ figures:
       in-vivo set with zero calibration targets, so the rates are not
       quantitative predictions -- the figure is about resolution, not about
       biology. Regenerates offline in seconds from the committed sweep JSONL.
+
+  - manuscript_figure: null
+    filename: fig30_modality_landscape
+    generator:
+      script: scripts/generate_conceptual_diagrams.py
+      function: fig30_modality_landscape
+    inputs:
+      - analysis/modality-coverage.json
+    type: conceptual
+    status: supplementary
+    note: >-
+      What the simulation engine can be ASKED, against what the field
+      publishes. The one figure that answers the criticism this project's
+      README invites: a repository addressed to the whole cancer community
+      whose engine expresses one mechanism. Panel (a) puts each of the
+      taxonomy's sixteen MeSH-measurable mechanisms against its census volume
+      and colours it by what the engine can do with it -- applicable as a
+      treatment, present but not applicable alone, or absent entirely. Panel
+      (b) collapses that to the number a reader should carry away: the share
+      of the field's attention and of its registered trials that the engine
+      has no representation for at all. EVERY NUMBER IS READ FROM
+      analysis/modality-coverage.json, which is itself generated and guarded,
+      because a diagram summarising a measurement is the easiest place for one
+      to go stale and a picture is harder to notice it in -- this repository
+      has shipped that defect in prose more than once. The figure carries the
+      profile's refusal verbatim: volume is NOT comparable across mechanisms,
+      descriptor breadth varies, so panel (a) is not a ranking and the ENGINE
+      colour is its content. It is deliberately a MOVING figure: as arms land
+      the grey shrinks, and the caption's arm list is derived from the same
+      JSON so it cannot describe an engine that no longer exists.
