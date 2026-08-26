@@ -290,12 +290,29 @@ def strip_rust_comments(src: str) -> str:
 # The first version matched only the bare spelling, so a perfectly ordinary
 # `#[cfg(all(test, ...))]` left an entire test module in the scanned code --
 # the PROSE-ONLY false positive the tier exists to prevent.
-_CFG_TEST = re.compile(r"#\[\s*cfg\s*\((?:[^()]|\([^()]*\))*\)\s*\]")
+_CFG_TEST = re.compile(r"#\[\s*cfg\s*\((?:[^\[\]])*?\)\s*\]")
 
 
 def _cfg_test_matches(text: str) -> bool:
-    """Does this `#[cfg(...)]` attribute gate on `test`?"""
-    return re.search(r"\btest\b", text) is not None
+    """Does this `#[cfg(...)]` attribute gate ON `test` (not on NOT-test)?
+
+    `re.search(r"\\btest\\b", ...)` also matches `#[cfg(not(test))]`, whose
+    item is PRODUCTION code -- it compiles when tests are off. Stripping it is
+    a false negative in the direction that argues for building code that
+    already exists, which is the direction this whole file is most careful
+    about. Latent here (the crate has none), planted in a test.
+    """
+    if not re.search(r"\btest\b", text):
+        return False
+    # Strip every `not(...)` group, innermost first, then re-check: if the only
+    # occurrences of `test` were inside a negation, this does not gate on test.
+    stripped = text
+    while True:
+        reduced = re.sub(r"not\s*\([^()]*\)", "", stripped)
+        if reduced == stripped:
+            break
+        stripped = reduced
+    return re.search(r"\btest\b", stripped) is not None
 
 
 def strip_test_blocks(src: str) -> str:
@@ -469,72 +486,8 @@ def _immune_models() -> list:
     return models
 
 
-# Any line of production code that mentions DAMPs AND assigns. This is the
-# WRITE SURFACE, and it is deliberately broader than "lines that add DAMPs":
-# it includes the allocations, the aliases, the diffusion and the clearance,
-# because the question is not "which lines look like sources" but "has
-# anything on this surface changed".
-_DAMP_LINE = re.compile(r"damp", re.I)
-_ASSIGNS = re.compile(r"(\+=|-=|\*=|/=|=[^=])")
-
-# The four lines that introduce FRESH antigen, as opposed to moving or
-# clearing what is already there. Matched on the LP term, which is the whole
-# claim: DAMPs are proportional to lipid peroxidation at death.
-_FRESH = re.compile(r"lp_at_grace_end|dead_cell_lps")
-
-
 def _rust_files() -> list:
     return sorted(CORE.glob("*.rs")) + sorted(BINS.glob("sim-*/src/*.rs"))
-
-
-def _damp_surface() -> list:
-    """Every production line that mentions DAMPs and assigns.
-
-    ## Why this is a CHANGE DETECTOR and not a proof, stated plainly
-
-    The document's central claim is that no ferroptosis-independent antigen
-    source exists anywhere in the engine. **A text scan cannot decide that**,
-    and the first two attempts to make it look as though it could were both
-    vacuous:
-
-    1. Scanning `sim-*/src/*.rs` for `damp_field[..] +=` found 3 of the real
-       writers. A planted `*damp_slot += 42.0;` in the 3D binary's hot loop
-       left every guard green.
-    2. Widening to four literal spellings and classifying each line as
-       "LP-proportional or a redistribution" was vacuous in the SAME way, and
-       against the same attack: `damp_field[i] = 42.0 + damp_field[i] * 0.0;`
-       satisfies "the right-hand side mentions the field", and an alias
-       (`let a: &mut [f64] = damp_field; a[i] += 42.0;`) was invisible even to
-       the writer COUNT. Both left the report's headline claim false and 109
-       tests green.
-
-    The lesson is the one this repository keeps relearning: a registry that
-    records a property its scan cannot DECIDE is worse than no registry. So
-    this stops trying to classify arbitrary expressions and pins something a
-    scan CAN decide -- the exact set of production lines that touch the DAMP
-    surface. Any edit to any of them, and any new one, changes the set and
-    fails the guard, which forces a human to re-derive the claim rather than
-    letting a regex approve it.
-
-    The classification is still reported, because "which four lines introduce
-    fresh antigen" is useful, but the guard's teeth are the set, not the
-    labels. The claim itself is PROVED where it can be: `immune_spatial.rs`
-    and `immune.rs` carry Rust tests asserting that zero DAMPs give zero kills
-    at every checkpoint-blockade setting, which is exact rather than textual.
-    """
-    out = []
-    for p in _rust_files():
-        body = strip_test_blocks(strip_rust_comments(p.read_text()))
-        for i, line in enumerate(body.splitlines(), 1):
-            t = line.strip()
-            if _DAMP_LINE.search(t) and _ASSIGNS.search(t):
-                out.append({
-                    "file": p.relative_to(REPO).as_posix(),
-                    "line": i,
-                    "text": t,
-                    "introduces_fresh_antigen": bool(_FRESH.search(t)),
-                })
-    return out
 
 
 def scan() -> dict:
@@ -582,7 +535,6 @@ def scan() -> dict:
             n for n, t in code.items() if _matches(t, ("glycolytic", "oxphos"))),
         "unbounded_t_cell_credits": sorted(
             n for n, t in code.items() if "t cell" in t),
-        "damp_surface": _damp_surface(),
         "mechanisms": mechanisms,
     }
 
@@ -674,40 +626,49 @@ def render(d: dict) -> str:
             L += [f"Immunotherapy is the sharpest case. The engine has "
                   f"**{len(models)} immune kill paths** — {desc} — and both "
                   "are gated on ferroptotic death by construction.", "",
-                  "The spatial one is `activation · rate · (1 − brake)` with "
+                  "The two gate on ferroptotic death in DIFFERENT ways, and "
+                  "conflating them was wrong in an earlier draft of this "
+                  "paragraph. The spatial one gates on DAMPs: "
+                  "`activation · rate · (1 − brake)` with "
                   "`activation = dc_activation(local_damp, kd)` = "
-                  "`damp/(damp + kd)`; the well-mixed one is "
-                  "`primed_tcells · kill_rate · (1 − brake)` with its own "
-                  "`damp_per_dead_cell/(damp_per_dead_cell + kd)`. Every line that "
-                  "introduces FRESH antigen in either is proportional to "
-                  "lipid peroxidation at death — "
-                  f"{sum(1 for w in d['damp_surface'] if w['introduces_fresh_antigen'])} "
-                  f"of the {len(d['damp_surface'])} lines on the engine's DAMP "
-                  "write surface, all listed in the JSON; the rest allocate, "
-                  "diffuse or clear what is already there — so with no "
-                  "ferroptotic kill the activation term is 0 and the product "
-                  "is 0 **at every checkpoint-blockade setting**. Anti-PD-1 "
-                  "enters only through `brake`, a multiplier on a term that is "
-                  "already zero. The four-axis checkpoint panel, the "
-                  "Treg/MDSC suppressor field, exhaustion and the DC subsets "
-                  "are all real and all downstream. Blockade can be observed "
-                  "as a coefficient on ferroptosis; it cannot be given as a "
-                  f"treatment arm. That is a modifier carrying "
+                  "`damp/(damp + kd)`, and DAMPs are written as "
+                  "`lp_at_grace_end · damp_per_lp`. The well-mixed one gates "
+                  "on the COUNT: `mature_dcs = activation · maturation_rate · "
+                  "n_dead`, so zero ferroptotic deaths give zero kills even if "
+                  "DAMPs are somehow non-zero — verified by mutation, where "
+                  "injecting a constant `damp_per_dead_cell` produces no kills "
+                  "and injecting a constant `mature_dcs` does. Either way "
+                  "anti-PD-1 enters only through `brake`, a multiplier on a "
+                  "term that is already zero. The four-axis checkpoint panel, "
+                  "the Treg/MDSC suppressor field, exhaustion and the DC "
+                  "subsets are all real and all downstream. Blockade can be "
+                  "observed as a coefficient on ferroptosis; it cannot be "
+                  "given as a treatment arm. That is a modifier carrying "
                   f"{imm['census']:,} census articles and {imm['trials']:,} "
                   "trials.", "",
-                  "**How that claim is checked, and what the check cannot "
-                  "do.** The zero is PROVED in Rust, where it is exact: "
-                  "`immune_spatial.rs` and `immune.rs` each carry a test "
-                  "asserting that no DAMPs give no kills at every "
-                  "checkpoint-blockade setting. What no test can prove is a "
-                  "universal negative over source text — that no "
-                  "ferroptosis-independent antigen source exists ANYWHERE — "
-                  "and two attempts to make a regex look as though it could "
-                  "were both vacuous against the same planted attack. So the "
-                  "guard here is a CHANGE DETECTOR: it pins the exact set of "
-                  "production lines that touch the DAMP surface, and any edit "
-                  "to any of them fails and forces this paragraph to be "
-                  "re-derived by a person.", ""]
+                  "**What is proved, and what is not.** The well-mixed chain "
+                  "is proved END TO END in Rust: "
+                  "`no_ferroptotic_death_end_to_end_means_no_kills_at_any_"
+                  "blockade` generates cells, runs the ferroptosis engine with "
+                  "death made impossible, collects lipid peroxidation at "
+                  "death and feeds the immune cascade, asserting zero kills "
+                  "across three treatments, three anti-PD-1 efficacies and "
+                  "both blockade arms — and pairs that with a POSITIVE case, "
+                  "because a test that only asserts zero is satisfied by an "
+                  "engine that does nothing. Both kill formulas are pinned "
+                  "at the function level. **What no test here covers is a "
+                  "ferroptosis-independent antigen source added inside "
+                  "`sim-tme` or `sim-tme-3d`'s own loops**, which compose the "
+                  "spatial model outside the crate.", "",
+                  "That limit is stated rather than papered over, because "
+                  "three successive attempts to cover it with a source scan "
+                  "were each defeated by an ordinary Rust idiom that put the "
+                  "mutation and the field name on different lines — a helper "
+                  "function, an `iter_mut().for_each`, a plain `for` loop. A "
+                  "guard that records a property its scan cannot DECIDE is "
+                  "worse than no guard, so that scan was removed rather than "
+                  "widened a fourth time.", ""]
+
     if treatment:
         names = ", ".join(f"`{r['mechanism']}`" for r in treatment)
         L += [f"Modelled as a treatment: {names}. `PDT` and `RSL3` have no row "

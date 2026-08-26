@@ -14,7 +14,7 @@
 | engine modules mentioning it in code | **20 of 32** |
 | engine modules mentioning it in PRODUCTION code | **15 of 32** |
 
-The module rows used to read `N of N` -- the same number on both sides of "of", arithmetic that cannot come out any other way, produced by counting `.rs` files without opening one. They are content measurements now, and the LAST is the one to read: a module can cite ferroptosis in a doc comment while its code is about geometry, and four modules pass the in-code check only via their `#[cfg(test)]` block -- a field name in a byte-identity assert, a string literal in a CSV writer.
+The module rows used to read `N of N` -- the same number on both sides of "of", arithmetic that cannot come out any other way, produced by counting `.rs` files without opening one. They are content measurements now, and the LAST is the one to read: a module can cite ferroptosis in a doc comment while its code is about geometry, and 5 modules pass the in-code check only via their `#[cfg(test)]` block -- a field name in a byte-identity assert, a string literal in a CSV writer, a test FUNCTION NAME. That count was typed as "four" and went stale the moment a test was renamed; it is derived now.
 
 **3 modules mention neither ferroptosis nor a physical-ROS modality anywhere in their text**: `reaction_diffusion.rs`, `spheroid.rs`, `vasculature.rs`. An earlier version of this page said every module of the engine concerns one or the other. It does not.
 

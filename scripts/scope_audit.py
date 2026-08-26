@@ -300,9 +300,12 @@ def render(d: dict) -> str:
           "produced by counting `.rs` files without opening one. They are "
           "content measurements now, and the LAST is the one to read: a "
           "module can cite ferroptosis in a doc comment while its code is "
-          "about geometry, and four modules pass the in-code check only via "
-          "their `#[cfg(test)]` block -- a field name in a byte-identity "
-          "assert, a string literal in a CSV writer.", ""]
+          "about geometry, and "
+          f"{em['in_code'] - em['in_production_code']} modules pass the "
+          "in-code check only via their `#[cfg(test)]` block -- a field name "
+          "in a byte-identity assert, a string literal in a CSV writer, a "
+          "test FUNCTION NAME. That count was typed as \"four\" and went "
+          "stale the moment a test was renamed; it is derived now.", ""]
     if em["silent"]:
         L += [f"**{len(em['silent'])} modules mention neither ferroptosis nor a "
               f"physical-ROS modality anywhere in their text**: "

@@ -29,7 +29,6 @@ is proportional to lipid peroxidation at death, so the activation term is zero
 without ferroptosis and every blockade setting multiplies zero. That is a claim
 about Rust the report cannot check by reading itself.
 """
-import hashlib
 import importlib.util
 import json
 import re
@@ -153,12 +152,6 @@ CASES = {
     "rsl3": ("rsl3 dose", "rsl3x"),
     "erastin*": ("erastin arm", "aerastin"),
 }
-
-# sha256 of the reviewed DAMP write surface, "<file>\t<text>" per line.
-# A CONSTANT, deliberately: comparing the live scan to the committed artifact
-# alone is defeated by regenerating, and the attack that motivated this leaves
-# both the line count and the fresh-antigen count unchanged.
-SURFACE_DIGEST = "36b8eacf5f8fa7d2ef84409a9c02865754815b1f0a1b2599c50da801e31815b5"
 
 ALL_TERMS = sorted({t for ts in MC.ENGINE_TERMS.values() for t in ts}
                    | set(MC.FERROPTOSIS_TERMS))
@@ -410,139 +403,60 @@ def test_every_taxonomy_mechanism_has_terms():
             "without anything being measured")
 
 
-def test_the_damp_write_surface_is_exactly_what_was_reviewed(d):
-    """A CHANGE DETECTOR, because a text scan cannot decide the real claim.
+def test_the_immune_claim_is_proved_in_rust_and_its_limit_is_stated(md):
+    """No Python guard here decides the central claim, and the report says so.
 
-    The report's central claim is a universal negative -- that no
-    ferroptosis-independent antigen source exists anywhere in the engine --
-    and two attempts to make a regex look as though it could decide that were
-    vacuous against the SAME planted attack:
+    Three successive scans tried and each was defeated by an ordinary Rust
+    idiom that put the mutation and the field name on different lines: a
+    helper function, an `iter_mut().for_each`, a plain `for` loop. A guard
+    recording a property its scan cannot DECIDE is worse than no guard, so the
+    scan was removed rather than widened a fourth time.
 
-    1. Scanning `sim-*/src/*.rs` for `damp_field[..] +=` found 3 of the real
-       writers. A planted `*damp_slot += 42.0;` in the 3D hot loop was green.
-    2. Widening to four spellings and classifying each line as
-       "LP-proportional or a redistribution" failed identically:
-       `damp_field[i] = 42.0 + damp_field[i] * 0.0;` satisfies "the RHS
-       mentions the field", and an alias made a source invisible even to the
-       COUNT.
-
-    So this pins what a scan CAN decide: the exact set of production lines
-    that touch the DAMP surface. Any edit to any of them, and any new one,
-    fails here and forces the paragraph to be re-derived by a person. The
-    claim itself is proved in Rust, where it is exact -- see
-    `test_the_rust_proofs_of_the_central_claim_exist_and_sweep_the_brake`.
+    What replaces it is a behaviour test in the crate, and this asserts the
+    report is honest about its scope rather than re-implementing the scan.
     """
-    live = MC._damp_surface()
-    stored = d["damp_surface"]
-    # Pinned as a DIGEST in this file, not only against the artifact.
-    # Comparing live-to-stored alone is defeated by regenerating: attack 1
-    # below keeps both the line count and the fresh count unchanged, so a
-    # `python scripts/modality_coverage.py` after the edit made the two agree
-    # again. A constant here cannot be regenerated.
-    digest = hashlib.sha256("\n".join(
-        f"{w['file']}\t{w['text']}" for w in live).encode()).hexdigest()
-    assert digest == SURFACE_DIGEST, (
-        f"the DAMP write surface changed (sha256 {digest[:16]}..., expected "
-        f"{SURFACE_DIGEST[:16]}...). Read what moved, decide whether it "
-        "introduces antigen independent of ferroptotic death, update the "
-        "report's paragraph if it does, and change SURFACE_DIGEST in the same "
-        "commit.\n  only live: "
-        f"{[w['text'] for w in live if w not in stored][:5]}\n  only stored: "
-        f"{[w['text'] for w in stored if w not in live][:5]}")
-    assert live == stored, (
-        "the committed DAMP surface is not what the tree contains; "
-        f"live has {len(live)} lines, stored {len(stored)}. "
-        f"only live: {[w['text'] for w in live if w not in stored][:5]}; "
-        f"only stored: {[w['text'] for w in stored if w not in live][:5]}")
-    assert len(live) == 44, (
-        f"{len(live)} lines on the DAMP write surface, expected 44. A change "
-        "here is not a failure -- read the new or edited line, decide whether "
-        "it introduces antigen independent of ferroptotic death, update the "
-        "report's paragraph if it does, and change this number in the same "
-        "commit.")
-    fresh = [w for w in live if w["introduces_fresh_antigen"]]
-    assert len(fresh) == 6, f"{len(fresh)} fresh-antigen lines, expected 6"
-    for w in fresh:
-        assert re.search(r"lp_at_grace_end|dead_cell_lps", w["text"]), w
+    assert "proved END TO END in Rust" in md
+    assert "no test here covers" in md
+    assert "sim-tme-3d`'s own loops" in md
+    assert "worse than no guard" in md
+    # And the scan really is gone -- not merely unused.
+    src = (REPO / "scripts/modality_coverage.py").read_text()
+    for gone in ("_damp_surface", "SURFACE_DIGEST", "_FRESH", "damp_writers"):
+        assert gone not in src, f"{gone} is still in the generator"
+    d = json.loads(JSON_.read_text())
+    assert "damp_surface" not in d and "damp_writers" not in d
 
 
-def test_the_two_vacuity_attacks_are_visible_to_the_surface_scan():
-    """Both attacks that beat the previous guards must MOVE the pinned set.
+def test_the_end_to_end_rust_proof_exists_and_carries_a_positive_case(md):
+    """The proof must assert BOTH directions.
 
-    Run against the real files' text rather than against the tree, so the
-    test proves the scan's sensitivity without mutating anything.
+    A test that only asserts zero kills is satisfied by an engine that does
+    nothing, so the Rust test pairs the no-death case with a case where the
+    same chain DOES kill and blockade DOES move the number. Both halves are
+    required here, keyed on the assertions rather than on the function
+    existing -- an earlier version of this guard checked only that a `for`
+    loop was present, and passed against a body that asserted nothing.
     """
-    surface = {(w["file"], w["text"]) for w in MC._damp_surface()}
-
-    # Attack 1: a constant source phrased to look like a redistribution. The
-    # LINE TEXT changes, so the set changes.
-    edited = "damp_field[i] = 42.0 + damp_field[i] * 0.0;"
-    original = "damp_field[i] = (damp_field[i] + scratch[i]).max(0.0);"
-    assert any(t == original for _, t in surface), (
-        "the line attack 1 edits is no longer on the surface")
-    assert not any(t == edited for _, t in surface)
-
-    # Attack 2: an alias. The ALIAS LINE mentions damp and assigns, so
-    # creating one is itself a change to the surface -- which is why the set
-    # sees an attack the old spelling-list scan could not.
-    alias = 'let alias: &mut [f64] = damp_field;'
-    assert MC._DAMP_LINE.search(alias) and MC._ASSIGNS.search(alias), (
-        "an alias to the DAMP field would not register on the surface scan, "
-        "so a source written through it would be invisible")
-
-    # And the operators the previous version could not see are covered.
-    for op_line in ("damp_field[i] *= 1.0 - clearance_rate;",
-                    "damp_field[i] -= share;",
-                    "damp_field[i] /= 2.0;"):
-        assert MC._ASSIGNS.search(op_line), op_line
-    # The `*=` line is REAL and must be in the pinned set; the old scan's
-    # `(?:\+=|=)` could not match it.
-    assert any("*= 1.0 - clearance_rate" in t for _, t in surface), (
-        "the clearance line is missing from the surface again")
+    src = (CORE / "immune.rs").read_text()
+    body = re.search(
+        r"fn no_ferroptotic_death_end_to_end_means_no_kills_at_any_blockade\(\)"
+        r"\s*\{(.*?)\n    }", src, re.S)
+    assert body, "the end-to-end proof is gone"
+    b = body.group(1)
+    assert "death_threshold: f64::INFINITY" in b, (
+        "the negative case no longer makes death impossible, so it proves "
+        "nothing about ferroptosis")
+    assert 'assert_eq!(\n                        kills, 0.0' in b or "kills, 0.0" in b
+    assert "dead > 0" in b, "the positive case no longer requires real deaths"
+    assert "kills_on > kills_off" in b, (
+        "the positive case no longer requires blockade to move the number, so "
+        "the negative case could pass on a disconnected chain")
+    assert "kills_on < survivors" in b, (
+        "the survivor cap is no longer excluded, and at the default rates "
+        "both arms saturate at the same number")
 
 
-def test_the_rust_proofs_of_the_central_claim_exist_and_sweep_the_brake():
-    """Where the claim IS decidable, it is proved rather than scanned.
-
-    Asserted structurally against the crate: both immune models must carry a
-    test that drives DAMPs to zero and sweeps the blockade, because a single
-    setting cannot see a blockade path that manufactures kills of its own --
-    which is exactly what the pre-existing `empty_cascade_produces_no_kills`
-    could not see, testing `with_anti_pd1 = false` alone.
-    """
-    for mod_name, fn_name, sweep in (
-            ("immune", "no_ferroptotic_death_means_no_kills_at_any_blockade_setting",
-             "anti_pd1_efficacy"),
-            ("immune_spatial", "zero_damp_gives_zero_kill_at_every_brake",
-             "brake")):
-        src = (CORE / f"{mod_name}.rs").read_text()
-        body = re.search(rf"fn {fn_name}\(\)\s*\{{(.*?)\n    }}", src, re.S)
-        assert body, f"{mod_name}.rs has no {fn_name}"
-        assert sweep in body.group(1), (
-            f"{fn_name} no longer sweeps {sweep}, so it pins one setting")
-        assert "for &" in body.group(1), (
-            f"{fn_name} no longer loops, so it cannot be a sweep")
-        assert "0.0" in body.group(1)
-
-
-def test_the_damp_line_numbers_point_at_the_real_file(d):
-    """The line numbers are into the SOURCE, not into the stripped text.
-
-    Two of the seven writers in the first version pointed at the wrong line --
-    including the 3D binary's principal one -- because a mid-file
-    `#[cfg(test)]` item shifted everything after it by six. Both strippers are
-    line-preserving now, and this is what says so.
-    """
-    for w in d["damp_surface"]:
-        lines = (REPO / w["file"]).read_text().splitlines()
-        assert 1 <= w["line"] <= len(lines), w
-        on_disk = lines[w["line"] - 1].strip()
-        assert w["text"] in on_disk or on_disk in w["text"], (
-            f"{w['file']}:{w['line']} is {on_disk!r} on disk, but the "
-            f"artifact records {w['text']!r}")
-
-
-def test_both_immune_models_are_named_and_both_are_damp_gated(d, md):
+def test_both_immune_models_are_named_and_each_gate_is_the_right_one(d, md):
     """The first version named five modules as reaching T-cell killing and four
     of them did not -- `lib.rs` on a `pub mod` line, `senescence` on two test
     assertion messages, `params.rs` on a struct, and `immune.rs`, which is a
@@ -553,6 +467,12 @@ def test_both_immune_models_are_named_and_both_are_damp_gated(d, md):
     assert models["immune_kill_probability"]["callers"] == ["sim-tme", "sim-tme-3d"]
     assert models["immune_cascade"]["callers"] == ["sim-combo", "sim-icd"]
     assert "2 immune kill paths" in md
+    # The two gates are DIFFERENT and an earlier draft conflated them. The
+    # well-mixed model multiplies by `n_dead`, so it is gated on the COUNT of
+    # ferroptotic deaths, not on DAMPs -- verified by mutation: injecting a
+    # constant `damp_per_dead_cell` produces no kills, injecting a constant
+    # `mature_dcs` does.
+    assert "gate on ferroptotic death in DIFFERENT ways" in md
 
     spatial = MC.strip_rust_comments((CORE / "immune_spatial.rs").read_text())
     assert "local_damp / (local_damp + kd)" in spatial, (
@@ -567,6 +487,11 @@ def test_both_immune_models_are_named_and_both_are_damp_gated(d, md):
         wellmixed), "immune_cascade's DC activation changed shape"
     assert re.search(r"primed_tcells\s*\*\s*params\.tcell_kill_rate\s*\*\s*kill_efficiency",
                      wellmixed), "immune_cascade no longer gates kills on priming"
+    assert re.search(r"mature_dcs\s*=\s*dc_activation_fraction\s*\*\s*"
+                     r"params\.dc_maturation_rate\s*\*\s*n_dead as f64",
+                     wellmixed), (
+        "the well-mixed model no longer multiplies by n_dead, so the report's "
+        "'gated on the COUNT' sentence needs re-deriving")
     # And priming is gated on dead cells in BOTH: an empty death list must
     # produce no DAMPs at all.
     assert "if dead_cell_lps.is_empty()" in wellmixed
@@ -746,10 +671,34 @@ def test_the_test_block_stripper_handles_the_forms_it_used_to_miss():
     src = '#[cfg(test)]\nmod t { fn z() { let j = r#"{"a": 1}"#; } }\npub fn keep() {9}'
     out = MC.strip_test_blocks(src)
     assert "pub fn keep()" in out, out
-    # A cfg that does NOT gate on test must survive untouched.
-    src = '#[cfg(feature = "tls")]\nmod t { fn crispr_thing() {} }\npub fn keep() {9}'
+    # Deeper nesting: `all(any(test, doctest), ...)` is two levels, and a
+    # one-level pattern left the whole module behind as engine code.
+    src = ('pub fn a() {1}\n#[cfg(all(any(test, doctest), feature = "x"))]\n'
+           'mod t { fn z() { let s = "crispr"; } }\npub fn b() {2}')
     out = MC.strip_test_blocks(src)
-    assert "crispr_thing" in out, out
+    assert "crispr" not in out, f"two-level cfg nesting left the block: {out!r}"
+    assert "pub fn a()" in out and "pub fn b()" in out, out
+
+    # A cfg that does NOT gate on test must survive untouched -- and the
+    # control has to vary the NEGATION, not just the key. `\btest\b` matches
+    # inside `not(test)`, whose item is PRODUCTION code, so stripping it is a
+    # false negative in the direction that argues for rebuilding what exists.
+    for surviving in ('#[cfg(feature = "tls")]',
+                      "#[cfg(not(test))]",
+                      "#[cfg(all(not(test), unix))]"):
+        src = (f'{surviving}\nmod t {{ fn crispr_thing() {{}} }}\n'
+               'pub fn keep() {9}')
+        out = MC.strip_test_blocks(src)
+        assert "crispr_thing" in out, f"{surviving} was wrongly stripped: {out!r}"
+    # Both directions of the predicate itself, so a rule that returns a
+    # constant fails here.
+    for attr, gated in (("#[cfg(test)]", True),
+                        ("#[cfg(all(test, feature = \"x\"))]", True),
+                        ("#[cfg(all(any(test, doctest), unix))]", True),
+                        ("#[cfg(not(test))]", False),
+                        ("#[cfg(all(not(test), unix))]", False),
+                        ("#[cfg(feature = \"tls\")]", False)):
+        assert MC._cfg_test_matches(attr) is gated, attr
     # Line-preserving, so line numbers stay true to the source.
     src = "a\n#[cfg(test)]\nmod t {\n  fn z() {}\n}\nb"
     assert MC.strip_test_blocks(src).count("\n") == src.count("\n")
