@@ -31,7 +31,7 @@ numpy==2.5.2
 packaging==26.3
 pillow==12.3.0
 pluggy==1.6.0
-Pygments==2.20.0
+Pygments==2.21.0
 PyMuPDF==1.28.2
 pyparsing==3.3.2
 pytest==9.1.1
