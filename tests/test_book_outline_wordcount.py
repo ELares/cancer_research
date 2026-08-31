@@ -319,3 +319,51 @@ def test_the_outline_numbers_the_same_chapters_the_manuscript_does():
     assert int(total.group(1)) == len(ms), (
         f"the outline's Total says {total.group(1)} chapters; the manuscript "
         f"has {len(ms)}")
+
+
+def test_each_part_target_equals_its_chapters_budgets():
+    """The TARGET column was reconciled by nothing.
+
+    Inserting Chapter 6 with a 5,000-word budget left Part III's target at
+    16,500 while its chapters summed to 21,500, and the Total short by the same
+    5,000 -- with the existing guard green throughout, because it reconciles
+    the measured *Current words* column and never the planned one. A budget
+    nothing adds up is not a budget.
+    """
+    text = (REPO_ROOT / "article/book-outline.md").read_text()
+    budgets = {int(m.group(1)): int(m.group(2).replace(",", ""))
+               for m in re.finditer(
+                   r"^## Chapter (\d+): [^(]+\(~([\d,]+) words\)", text, re.M)}
+    assert budgets, "no chapter budgets found in the outline"
+    rows = re.findall(
+        r"^\| (?!\*\*Total)([^|]+?) \| (\d+)-(\d+) \| ~[\d,]+ \| ([\d,]+) \|",
+        text, re.M)
+    assert rows, "no per-part rows with a chapter range found"
+    covered = set()
+    for name, lo, hi, target in rows:
+        chapters = range(int(lo), int(hi) + 1)
+        missing = [c for c in chapters if c not in budgets]
+        assert not missing, f"{name.strip()} names chapters with no budget: {missing}"
+        got = sum(budgets[c] for c in chapters)
+        assert got == int(target.replace(",", "")), (
+            f"{name.strip()} targets {target} but chapters {lo}-{hi} budget "
+            f"{got:,}")
+        covered.update(chapters)
+    assert covered == set(budgets), (
+        f"chapters in no part row: {sorted(set(budgets) - covered)}")
+
+
+def test_the_issue_mapping_uses_the_live_chapter_numbers():
+    """The mapping kept the pre-insertion numbering when the part table above
+    it was updated, so it pointed at the wrong chapters and had no row at all
+    for the last one."""
+    text = (REPO_ROOT / "article/book-outline.md").read_text()
+    n = len(re.findall(r"^## Chapter \d+: ", text, re.M))
+    section = text.split("## Chapter → Issue Mapping", 1)
+    assert len(section) == 2, "the issue-mapping section is gone"
+    covered = set()
+    for lo, hi in re.findall(r"^\| (\d+)(?:-(\d+))? \|", section[1], re.M):
+        covered.update(range(int(lo), int(hi or lo) + 1))
+    assert covered == set(range(1, n + 1)), (
+        f"the issue mapping covers {sorted(covered)} against {n} chapters; "
+        f"missing {sorted(set(range(1, n + 1)) - covered)}")

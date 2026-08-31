@@ -6,7 +6,8 @@
    "pub_types": 1,
    "pub_consts": 2,
    "code_lines": 66,
-   "serves": "HIFU + irreversible electroporation"
+   "serves": "HIFU + irreversible electroporation",
+   "reach": 1
   },
   {
    "module": "adc",
@@ -14,7 +15,8 @@
    "pub_types": 2,
    "pub_consts": 0,
    "code_lines": 62,
-   "serves": "Antibody-drug conjugate bystander effect"
+   "serves": "Antibody-drug conjugate bystander effect",
+   "reach": 1
   },
   {
    "module": "adoptive",
@@ -22,7 +24,8 @@
    "pub_types": 1,
    "pub_consts": 0,
    "code_lines": 64,
-   "serves": "CAR-T trafficking, infiltration and activation barriers"
+   "serves": "CAR-T trafficking, infiltration and activation barriers",
+   "reach": 1
   },
   {
    "module": "oncolytic",
@@ -30,7 +33,8 @@
    "pub_types": 1,
    "pub_consts": 0,
    "code_lines": 61,
-   "serves": "Oncolytic virus spread"
+   "serves": "Oncolytic virus spread",
+   "reach": 1
   },
   {
    "module": "radiation",
@@ -38,7 +42,8 @@
    "pub_types": 0,
    "pub_consts": 5,
    "code_lines": 95,
-   "serves": "Radiation + synthetic lethality (PARP)"
+   "serves": "Radiation + synthetic lethality (PARP)",
+   "reach": 4
   }
  ],
  "shared": [
@@ -49,7 +54,7 @@
    "pub_consts": 0,
    "code_lines": 164,
    "serves": "CRISPR knockouts",
-   "reach": 35
+   "reach": 23
   },
   {
    "module": "drug_transport",
@@ -58,7 +63,7 @@
    "pub_consts": 1,
    "code_lines": 110,
    "serves": "nanocarrier + ADC delivery profiles",
-   "reach": 5
+   "reach": 4
   },
   {
    "module": "immune",

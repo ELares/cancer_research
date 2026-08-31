@@ -114,11 +114,18 @@ def _reach(mc, stem: str) -> int:
     doc comment naming the symbol is not a caller.
     """
     pat = re.compile(rf"\b{re.escape(stem)}::")
-    files = [p for p in CORE.glob("*.rs") if p.stem != stem]
-    files += [p for p in (REPO / "simulations").glob("*/src/*.rs")
-              if p.stem != stem]
+    # DEDUPLICATED BY PATH. `simulations/*/src/*.rs` fully CONTAINS
+    # `ferroptosis-core/src/*.rs`, so the first version counted every core
+    # module twice and published "35 other files call `cell.rs`" against a
+    # true 25 -- a measured-but-wrong number in a bolded sentence, on the page
+    # written to retire a hand-written one. The sibling generators glob
+    # `sim-*/src/*.rs` for exactly this reason.
+    seen = {p.resolve() for p in CORE.glob("*.rs")}
+    seen |= {p.resolve() for p in (REPO / "simulations").glob("sim-*/src/*.rs")}
     n = 0
-    for f in files:
+    for f in sorted(seen):
+        if f.stem == stem:
+            continue
         code = mc.strip_test_blocks(mc.strip_rust_comments(f.read_text()))
         if pat.search(code):
             n += 1
@@ -128,7 +135,7 @@ def _reach(mc, stem: str) -> int:
 def scan() -> dict:
     mc = _mc()
     all_stems = sorted(p.stem for p in CORE.glob("*.rs") if p.stem != "lib")
-    dedicated = [dict(_measure(mc, s), serves=DEDICATED[s])
+    dedicated = [dict(_measure(mc, s), serves=DEDICATED[s], reach=_reach(mc, s))
                  for s in sorted(DEDICATED) if (CORE / f"{s}.rs").exists()]
     shared = [dict(_measure(mc, s), serves=SHARED[s], reach=_reach(mc, s))
               for s in sorted(SHARED) if (CORE / f"{s}.rs").exists()]
@@ -185,12 +192,26 @@ def render(d: dict) -> str:
          "in its own prose, so the sentence is measured here rather than "
          "asserted there.", "",
          "## Modules a modality owns", "",
-         "| module | serves | pub fns | types | consts | lines |",
-         "|---|---|--:|--:|--:|--:|"]
+         "| module | serves | pub fns | types | consts | lines | callers |",
+         "|---|---|--:|--:|--:|--:|--:|"]
     for m in d["dedicated"]:
         L.append(f"| `{m['module']}` | {m['serves']} | {m['pub_fns']} | "
-                 f"{m['pub_types']} | {m['pub_consts']} | {m['code_lines']} |")
+                 f"{m['pub_types']} | {m['pub_consts']} | {m['code_lines']} | {m['reach']} |")
+    unreached = [m["module"] for m in d["dedicated"] if m["reach"] == 0]
     L += ["",
+          "The last column is why it is there. **" +
+          (f"`{'`, `'.join(unreached)}` " +
+           ("has" if len(unreached) == 1 else "have") +
+           " no production caller at all**, so " +
+           ("its" if len(unreached) == 1 else "their") +
+           " functions are counted below and reached by nothing — a layer "
+           "without a caller, which is the defect this campaign keeps finding "
+           "in its own work. The count that follows includes them, because "
+           "hiding them would be the more flattering error."
+           if unreached else
+           "Every module here has a production caller**, which was not true "
+           "when this column was added: two of them had none, and the table "
+           "printed their functions with no way for a reader to tell."), "",
           f"**{d['dedicated_modules']} dedicated modules, "
           f"{d['dedicated_pub_fns']} public functions, "
           f"{d['dedicated_code_lines']:,} lines of production code.** Whatever "
@@ -245,8 +266,16 @@ def render(d: dict) -> str:
           "`analysis/modality-calibration.md` carries what is fitted — and "
           "records one arm as inadmissible and one as having no fittable "
           "target at all — while `CALIBRATION_STATUS.md` carries what feeds a "
-          "reported number. For every arm counted above, that is `N`: none of "
-          "this appears in a figure or a claim the manuscript makes.", "",
+          "reported number. For every arm counted above, that is `N`. **That "
+          "is not the same as invisible, and this page said it was:** it "
+          "claimed none of this appears in a figure or a claim the manuscript "
+          "makes, while `FIGURES.yaml` feeds `analysis/modality-panel.json` "
+          "into fig31 and Chapter 6 cites that figure and quotes its numbers. "
+          "Three of the modules counted above supply rows in it. What `N` "
+          "actually means is narrower and worth stating exactly: none of this "
+          "is FITTED to an independent dataset, and nothing here feeds a "
+          "number in the manuscript's quantitative chapters. It does appear, "
+          "as a described comparison carrying its own uncalibrated status.", "",
           "**Lines of code are the weakest possible evidence of depth** and "
           "are reported only because the sentence they replace was about size "
           "too. A count going up is not progress on its own, and this page "

@@ -6,13 +6,15 @@ Chapter 6 carried a sentence since it was written, calling each modality arm *"o
 
 ## Modules a modality owns
 
-| module | serves | pub fns | types | consts | lines |
-|---|---|--:|--:|--:|--:|
-| `ablation` | HIFU + irreversible electroporation | 4 | 1 | 2 | 66 |
-| `adc` | Antibody-drug conjugate bystander effect | 5 | 2 | 0 | 62 |
-| `adoptive` | CAR-T trafficking, infiltration and activation barriers | 7 | 1 | 0 | 64 |
-| `oncolytic` | Oncolytic virus spread | 3 | 1 | 0 | 61 |
-| `radiation` | Radiation + synthetic lethality (PARP) | 10 | 0 | 5 | 95 |
+| module | serves | pub fns | types | consts | lines | callers |
+|---|---|--:|--:|--:|--:|--:|
+| `ablation` | HIFU + irreversible electroporation | 4 | 1 | 2 | 66 | 1 |
+| `adc` | Antibody-drug conjugate bystander effect | 5 | 2 | 0 | 62 | 1 |
+| `adoptive` | CAR-T trafficking, infiltration and activation barriers | 7 | 1 | 0 | 64 | 1 |
+| `oncolytic` | Oncolytic virus spread | 3 | 1 | 0 | 61 | 1 |
+| `radiation` | Radiation + synthetic lethality (PARP) | 10 | 0 | 5 | 95 | 4 |
+
+The last column is why it is there. **Every module here has a production caller**, which was not true when this column was added: two of them had none, and the table printed their functions with no way for a reader to tell.
 
 **5 dedicated modules, 29 public functions, 348 lines of production code.** Whatever else is true, it is not one function and a configuration struct.
 
@@ -20,13 +22,13 @@ Chapter 6 carried a sentence since it was written, calling each modality arm *"o
 
 | module | serves | pub fns | lines | files that call it |
 |---|---|--:|--:|--:|
-| `cell` | CRISPR knockouts | 5 | 164 | 35 |
-| `drug_transport` | nanocarrier + ADC delivery profiles | 11 | 110 | 5 |
+| `cell` | CRISPR knockouts | 5 | 164 | 23 |
+| `drug_transport` | nanocarrier + ADC delivery profiles | 11 | 110 | 4 |
 | `immune` | checkpoint blockade, CAR-T, bispecifics, oncolytic ICD, microbiome, mRNA vaccine | 8 | 139 | 3 |
 | `immune_spatial` | the spatial immune model | 28 | 346 | 2 |
 | `nutrient` | metabolic targeting | 6 | 58 | 1 |
 
-Credited to no single arm, deliberately. `cell.rs` is the deepest of them and **35 other files in the workspace call it**, so assigning its weight to any one arm would overstate that arm and assigning it to none would understate the engine. Neither number alone is the answer, so both are reported. (That reach is counted from the code. An earlier version of this page said "four arms" beside a table row naming six, and neither figure came from anything.)
+Credited to no single arm, deliberately. `cell.rs` is the deepest of them and **23 other files in the workspace call it**, so assigning its weight to any one arm would overstate that arm and assigning it to none would understate the engine. Neither number alone is the answer, so both are reported. (That reach is counted from the code. An earlier version of this page said "four arms" beside a table row naming six, and neither figure came from anything.)
 
 ## Against the ferroptosis engine
 
@@ -41,7 +43,7 @@ So the modality arms are somewhere between **1/11.5 and 1/13.8 of the engine by 
 
 ## What this does NOT measure
 
-**Quality, calibration, or use.** A module can be large and wrong. `analysis/modality-calibration.md` carries what is fitted — and records one arm as inadmissible and one as having no fittable target at all — while `CALIBRATION_STATUS.md` carries what feeds a reported number. For every arm counted above, that is `N`: none of this appears in a figure or a claim the manuscript makes.
+**Quality, calibration, or use.** A module can be large and wrong. `analysis/modality-calibration.md` carries what is fitted — and records one arm as inadmissible and one as having no fittable target at all — while `CALIBRATION_STATUS.md` carries what feeds a reported number. For every arm counted above, that is `N`. **That is not the same as invisible, and this page said it was:** it claimed none of this appears in a figure or a claim the manuscript makes, while `FIGURES.yaml` feeds `analysis/modality-panel.json` into fig31 and Chapter 6 cites that figure and quotes its numbers. Three of the modules counted above supply rows in it. What `N` actually means is narrower and worth stating exactly: none of this is FITTED to an independent dataset, and nothing here feeds a number in the manuscript's quantitative chapters. It does appear, as a described comparison carrying its own uncalibrated status.
 
 **Lines of code are the weakest possible evidence of depth** and are reported only because the sentence they replace was about size too. A count going up is not progress on its own, and this page should not be read as saying it is.
 

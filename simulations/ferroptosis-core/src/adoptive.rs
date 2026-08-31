@@ -158,6 +158,11 @@ pub fn delivery_efficiency(b: &AdoptiveBarriers) -> f64 {
 /// from the three barriers because it acts on cells that already ARRIVED. A
 /// model folding it into activation would predict that improving trafficking
 /// fixes persistence, which it does not.
+///
+/// `exhaustion_rate` is CLAMPED at both ends and both ends matter: a negative
+/// rate would make `(1 - r) > 1` and this decay function would return more
+/// effector function than was infused (`1.5^180` is about 5e31), which is the
+/// same failure the `powi` wrap produced and is reached by a different route.
 #[must_use = "the remaining function is the function's only output"]
 pub fn persistence_factor(b: &AdoptiveBarriers, steps: u32) -> f64 {
     // `powi(steps as i32)` was WRONG and the bound test could not see it: the
@@ -443,6 +448,20 @@ mod tests {
         // a real catastrophe sitting INSIDE that band.
         let total = -delivery_efficiency(&b).ln();
         assert!(total > 0.0, "the preset presents no barrier at all");
+        // The preset is the ONLY place the antigen ceiling and the exhaustion
+        // rate can be exercised, so both must actually be set: a mutant moving
+        // `antigen_positive_fraction` to 1.0 removed the ceiling from the whole
+        // suite and nothing failed.
+        assert!(
+            (0.0..1.0).contains(&b.antigen_positive_fraction),
+            "the solid-tumour preset has no antigen escape, so the ceiling is \
+             unexercised everywhere"
+        );
+        assert!(
+            b.exhaustion_rate > 0.0,
+            "the solid-tumour preset has no exhaustion, so persistence is \
+             unexercised everywhere"
+        );
         for (name, v) in ["trafficking", "infiltration", "activation"]
             .iter()
             .zip(each)
@@ -533,6 +552,27 @@ mod tests {
     }
 
     #[test]
+    fn the_serde_defaults_are_the_leukaemia_case_and_are_actually_reachable() {
+        // `fn one()` could be changed to return 0.0 and nothing failed, because
+        // nothing in the crate or its tests ever deserialised these barriers --
+        // five `#[serde(default = "one")]` attributes and the function behind
+        // them were dead. A config file omitting a field would then have
+        // silently applied a total barrier instead of an open one.
+        let from_empty: AdoptiveBarriers =
+            serde_json::from_str("{}").expect("every field must have a default");
+        assert_eq!(from_empty, AdoptiveBarriers::default());
+        // And a partial config must fill only what it omits.
+        let partial: AdoptiveBarriers = serde_json::from_str(r#"{"trafficking": 0.25}"#).unwrap();
+        assert_eq!(partial.trafficking.to_bits(), 0.25f64.to_bits());
+        assert_eq!(partial.infiltration.to_bits(), 1.0f64.to_bits());
+        assert_eq!(
+            partial.antigen_positive_fraction.to_bits(),
+            1.0f64.to_bits()
+        );
+        assert_eq!(partial.exhaustion_rate.to_bits(), 0.0f64.to_bits());
+    }
+
+    #[test]
     fn the_caps_hold_at_inputs_no_caller_should_produce() {
         // Four mutants survived round 1 because the bounds test was never
         // extended to the two functions that round ADDED. Every clamp in
@@ -566,6 +606,73 @@ mod tests {
             0.0f64.to_bits()
         );
         assert_eq!(max_killable(-100.0, &open).to_bits(), 0.0f64.to_bits());
+
+        // EVERY CLAMP, AT BOTH ENDS, ONE FACTOR AT A TIME. Nine mutants
+        // survived round 2 and almost all of them for one reason: the hostile
+        // config set `infiltration: -5.0`, which zeroes the whole product, so
+        // a broken clamp on trafficking or activation was masked by a zero and
+        // `>= 0.0` passed. A bound satisfied by zero tests nothing, so each
+        // factor below is made hostile ALONE while the others stay open.
+        for wild in [-5.0f64, 5.0] {
+            for (name, b) in [
+                (
+                    "trafficking",
+                    AdoptiveBarriers {
+                        trafficking: wild,
+                        ..open
+                    },
+                ),
+                (
+                    "infiltration",
+                    AdoptiveBarriers {
+                        infiltration: wild,
+                        ..open
+                    },
+                ),
+                (
+                    "activation",
+                    AdoptiveBarriers {
+                        activation: wild,
+                        ..open
+                    },
+                ),
+            ] {
+                let e = delivery_efficiency(&b);
+                assert!(
+                    (0.0..=1.0).contains(&e),
+                    "{name} at {wild} gives delivery {e}, which is not a fraction"
+                );
+            }
+            // A negative exhaustion rate must not manufacture effector
+            // function: unclamped it gives 1.5^180, about 5e31.
+            let ex = AdoptiveBarriers {
+                exhaustion_rate: wild,
+                ..open
+            };
+            for steps in [0u32, 11, 180] {
+                let f = persistence_factor(&ex, steps);
+                assert!(
+                    (0.0..=1.0).contains(&f),
+                    "exhaustion {wild} at {steps} steps gives {f}"
+                );
+            }
+            // And a negative antigen fraction must not make a negative cap.
+            let ag = AdoptiveBarriers {
+                antigen_positive_fraction: wild,
+                ..open
+            };
+            assert!((0.0..=1.0).contains(&antigen_ceiling(&ag)));
+            assert!(max_killable(100.0, &ag) >= 0.0);
+            assert!(barrier_limited_kills(50.0, 100.0, &ag) >= 0.0);
+        }
+        // `infused` is clamped too, and the old assertion could not see it:
+        // it used a config whose delivery was already 0, so the product was
+        // `-0.0` and `-0.0 >= 0.0` holds. Delivery is open here.
+        assert_eq!(
+            effective_effectors(-100.0, &open, 10).to_bits(),
+            0.0f64.to_bits(),
+            "a negative infusion produced a negative effector count"
+        );
 
         // Total exhaustion at zero steps is no exhaustion, not NaN: a
         // reformulation as `(ln(1-r) * steps).exp()` returns NaN here, since

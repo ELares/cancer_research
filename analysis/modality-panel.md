@@ -9,9 +9,9 @@
 | SDT | 87.24% | ferroptosis engine (lipid peroxidation) | energy delivery to depth | uncalibrated (direction-only) |
 | PDT | 87.24% | ferroptosis engine (lipid peroxidation) | energy delivery to depth | uncalibrated (direction-only) |
 | Ablation | 85.00% | threshold destruction (not a dose-response) | margin geometry -- coverage, and nothing else | thresholds published; applicator field not modelled |
+| OncolyticVirus | 58.14% | direct lysis + the SHARED ICD chain | infection spread, which this engine takes as an input | uncalibrated; T-VEC durable-response band not fitted |
 | Radiation | 45.18% | linear-quadratic DNA damage (not CellState) | dose, and oxygen through the OER | form checked against a published parameterisation |
-| OncolyticVirus | 13.58% | direct lysis + the SHARED ICD chain | infection spread, which this engine takes as an input | uncalibrated; T-VEC durable-response band not fitted |
-| AntibodyDrugConjugate | 1.71% | ferroptosis payload, delivered on an antibody | the binding-site barrier (~7 um penetration) | transport anchored; payload pharmacology is RSL3's |
+| AntibodyDrugConjugate | 1.84% | ferroptosis payload, delivered on an antibody (+ bystander) | the binding-site barrier (~7 um penetration) | transport anchored; payload pharmacology is RSL3's |
 | AdoptiveCell | 0.12% | redirected effectors (bypasses DC priming) | per-effector kill rate and the PD-1 brake (barriers open here; the solid-tumour case is reported separately) | uncalibrated; B-ALL remission band not fitted |
 | Immunotherapy | 0.04% | immune cascade (no ferroptotic death required) | antigen availability and the checkpoint brake | uncalibrated; published ORR band not fitted |
 | Control | 0.00% | ferroptosis engine (lipid peroxidation) | energy delivery to depth | uncalibrated (direction-only) |
@@ -21,7 +21,7 @@
 
 ## The sharpest row is the one about delivery
 
-`AntibodyDrugConjugate` kills 1.71% against `SDT`'s 87.24% — a factor of 51 — **and they share the payload's pharmacology exactly**. The ADC arm runs the same ferroptosis engine with the same parameters; what differs is that the payload arrives on a ~150 kDa antibody, and the binding-site barrier holds its penetration to about 7 µm.
+`AntibodyDrugConjugate` kills 1.84% against `SDT`'s 87.24% — a factor of 48 — **and they share the payload's pharmacology exactly**. The ADC arm runs the same ferroptosis engine with the same parameters; what differs is that the payload arrives on a ~150 kDa antibody, and the binding-site barrier holds its penetration to about 7 µm.
 
 This project has argued since Chapter 6 that delivery dominates the in-vitro-to-in-vivo gap. This is the first row in the repository where the SAME pharmacology is run through two delivery routes and the gap is the only difference between them.
 
@@ -40,7 +40,7 @@ The adoptive row above is the LEUKAEMIA setting, and on its own it describes the
 | leukaemia (every barrier open) | 0.1155% |
 | solid tumour | 0.000183% |
 
-**A 633-fold collapse from the same construct**, and it decomposes exactly — the factors below multiply to it:
+**A 633-fold collapse from the same construct.** Each factor below is read from the barrier it names, and their product is 633x — which is the collapse, so the decomposition is complete.
 
 | step | factor |
 |---|--:|

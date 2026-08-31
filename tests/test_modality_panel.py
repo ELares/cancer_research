@@ -148,3 +148,71 @@ def test_the_figure_types_no_number_and_groups_by_route():
     # The grouping IS the figure -- a plain bar chart would invite the ranking
     # reading the report refuses.
     assert "route_key" in src and "what kills" in src
+
+
+def test_the_adoptive_barrier_section_exists_and_its_factors_multiply_out():
+    """The PR's headline deliverable had ZERO coverage.
+
+    No test referenced `adoptive_barriers` at all, and the renderer guards it
+    with `if ab:` -- so deleting the whole block from the JSON made the "One
+    construct, two diseases" section vanish silently with the full suite green,
+    while every other section of the same report was guarded.
+
+    The identity is the load-bearing part. An earlier version computed the
+    antigen factor as `collapse / (delivery * persistence)`, a RESIDUAL that
+    absorbed whatever the other two did not explain -- so "the factors multiply
+    to the collapse" was true by construction and could not fail. All three are
+    read from independently measured quantities now, which means the product
+    CAN disagree with the collapse, and this is where that would surface.
+    """
+    d = json.loads(JSON_.read_text())
+    ab = d.get("adoptive_barriers")
+    assert ab, "the adoptive-barrier section is gone from the panel output"
+    for k in ("leukaemia_kill_fraction", "solid_tumour_kill_fraction",
+              "solid_tumour_kill_fraction_before_ceiling",
+              "delivery_efficiency_solid", "persistence_at_run_end_solid",
+              "antigen_ceiling_solid", "antigen_ceiling_binds"):
+        assert k in ab, f"the panel no longer reports {k}"
+
+    collapse = ab["leukaemia_kill_fraction"] / ab["solid_tumour_kill_fraction"]
+    product = ((1.0 / ab["delivery_efficiency_solid"])
+               * (1.0 / ab["persistence_at_run_end_solid"])
+               * (ab["solid_tumour_kill_fraction_before_ceiling"]
+                  / ab["solid_tumour_kill_fraction"]))
+    assert abs(product / collapse - 1.0) < 0.01, (
+        f"the three factors multiply to {product:,.0f}x against a {collapse:,.0f}x "
+        "collapse, so the page's decomposition is incomplete")
+
+    # The ceiling is a CAP, so its factor is 1 exactly when it does not fire.
+    # Checking the flag against the arithmetic keeps the binary and the report
+    # from disagreeing about which happened.
+    fired = ab["antigen_ceiling_binds"]
+    ceiling_x = (ab["solid_tumour_kill_fraction_before_ceiling"]
+                 / ab["solid_tumour_kill_fraction"])
+    assert fired == (ceiling_x > 1.000_001), (
+        f"the binary says the ceiling binds={fired} while its own numbers give "
+        f"a factor of {ceiling_x}")
+    assert ab["leukaemia_kill_fraction"] > ab["solid_tumour_kill_fraction"], (
+        "the solid tumour is no longer the harder case, which would invert the "
+        "whole section")
+
+
+def test_the_rendered_page_states_whichever_ceiling_verdict_is_true():
+    """The verdict is prose about a computed quantity, so it must be computed.
+
+    A reviewer set the antigen fraction to 1e-9, which made the ceiling the ONLY
+    thing determining the kill, and the page went on saying it "does not bind"
+    while the headline moved by three orders of magnitude.
+    """
+    d = json.loads(JSON_.read_text())
+    ab = d["adoptive_barriers"]
+    md = MD.read_text()
+    assert "## One construct, two diseases" in md
+    if ab["antigen_ceiling_binds"]:
+        assert "**The antigen ceiling binds here**" in md
+        assert "does not bind here" not in md
+    else:
+        assert "**The antigen ceiling does not bind here**" in md
+    # and the collapse the prose quotes is the one the JSON supports
+    collapse = ab["leukaemia_kill_fraction"] / ab["solid_tumour_kill_fraction"]
+    assert f"{collapse:,.0f}-fold collapse" in md

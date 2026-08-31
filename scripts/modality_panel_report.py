@@ -127,7 +127,22 @@ def render(d: dict) -> str:
         collapse = ab["leukaemia_kill_fraction"] / ab["solid_tumour_kill_fraction"]
         delivery_x = 1.0 / ab["delivery_efficiency_solid"]
         persist_x = 1.0 / ab["persistence_at_run_end_solid"]
-        ceiling_x = collapse / (delivery_x * persist_x)
+        # `ceiling_x` was computed as `collapse / (delivery * persistence)`,
+        # which is a RESIDUAL: it absorbed whatever the other two did not
+        # explain and then labelled it "antigen ceiling", so "the factors
+        # multiply to the collapse" was true by construction and unfalsifiable.
+        # `antigen_ceiling_solid` was sitting in the JSON unread. A reviewer
+        # pushed the leukaemia arm into its kill cap and the page printed an
+        # antigen ceiling of 0.4x -- a ceiling that multiplies kills UP -- one
+        # line above prose asserting it was exactly 1x.
+        # The ceiling is a CAP: it contributes only if it FIRES. Dividing by
+        # the antigen fraction unconditionally reported 1.2x for a cap that
+        # never bound and left the product 1.25x away from the collapse it
+        # claimed to decompose. Both quantities come from the binary now.
+        ceiling_x = (ab["solid_tumour_kill_fraction_before_ceiling"]
+                     / ab["solid_tumour_kill_fraction"])
+        product = delivery_x * persist_x * ceiling_x
+        residual = product / collapse
         binds = ceiling_x > 1.01
         L += ["## One construct, two diseases", "",
               "The adoptive row above is the LEUKAEMIA setting, and on its own "
@@ -139,9 +154,16 @@ def render(d: dict) -> str:
               "| | kill fraction |", "|---|--:|",
               f"| leukaemia (every barrier open) | {ab['leukaemia_kill_fraction']:.4%} |",
               f"| solid tumour | {ab['solid_tumour_kill_fraction']:.6%} |", "",
-              f"**A {collapse:,.0f}-fold collapse from the same construct**, "
-              "and it decomposes exactly — the factors below multiply to it:",
-              "",
+              f"**A {collapse:,.0f}-fold collapse from the same construct.** "
+              "Each factor below is read from the barrier it names, and their "
+              f"product is {product:,.0f}x — "
+              + (f"which is the collapse, so the decomposition is complete."
+                 if abs(residual - 1.0) < 0.01 else
+                 f"**{residual:.2f}x away from the collapse, so something "
+                 "outside these three barriers is acting and this "
+                 "decomposition is INCOMPLETE.** The gap is reported rather "
+                 "than absorbed into one of the factors, which is what an "
+                 "earlier version did.") + "", "",
               "| step | factor |", "|---|--:|",
               f"| delivery (the three barriers) | {delivery_x:.1f}x |",
               f"| persistence over the run | {persist_x:.1f}x |",

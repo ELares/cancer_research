@@ -2,7 +2,7 @@
 
 **Working title:** Cancer Therapy Mechanisms and Evidence: A Cross-Literature Synthesis
 
-**Target:** ~54,000 words (current: ~60,400 measured prose-only from v1.md by `tests/test_book_outline_wordcount.py`, which recomputes it and fails on drift). 5 Parts, 12 chapters, 3 appendices.
+**Target:** ~59,000 words (current: ~60,400 measured prose-only from v1.md by `tests/test_book_outline_wordcount.py`, which recomputes it and fails on drift). 5 Parts, 12 chapters, 3 appendices.
 
 > **Note:** This is a planning document, not manuscript content. Headings here
 > use the outline's own hierarchy for readability. The manuscript heading
@@ -232,15 +232,20 @@ Step-by-step: clone, build, run analysis, run simulations, compile PDF.
 |------|----------|--------------|-------------|
 | I: Why This Exists | 1-2 | ~4,200 | 6,000 |
 | II: What We Found | 3-4 | ~15,800 | 12,000 |
-| III: Simulations | 5-9 | ~23,900 | 16,500 |
+| III: Simulations | 5-9 | ~23,900 | 21,500 |
 | IV: What's Next | 10-12 | ~7,600 | 11,500 |
 | V: References/Tools | Apps A-C | ~7,600 | 8,000 |
 | front matter (title, abstract) | — | ~1,300 | — |
-| **Total** | **12 + 3 apps** | **~60,400** | **~54,000** |
+| **Total** | **12 + 3 apps** | **~60,400** | **~59,000** |
 
 Part III is over its target and Part IV well under it. The per-part figures are
 measured, not planned: an earlier revision changed only the Total and left the
-rows, so the table stopped adding up to itself by 9,300 words.
+rows, so the table stopped adding up to itself by 9,300 words. It happened again
+when Chapter 6 was inserted -- the chapter carried a 5,000-word budget that no
+part target and no total absorbed, so Part III's chapters summed to 21,500
+against a stated 16,500 while every guard stayed green, because the guard
+reconciled the measured column and nothing reconciled the target one. Both
+columns are checked now.
 
 ## Chapter → Issue Mapping
 
@@ -248,8 +253,8 @@ rows, so the table stopped adding up to itself by 9,300 words.
 |---------|-----------|------------|
 | 1-2 | #101 (closed) | #100 (closed) |
 | 3-4 | #102 (closed), #104 (closed) | #100 (closed) |
-| 5-8 | #102 (closed) | #100 (closed) |
-| 9-10 | #103 (closed) | #102 (closed) |
-| 11 | #103 (closed) | #100 (closed) |
+| 5-9 | #102 (closed) | #100 (closed) |
+| 10-11 | #103 (closed) | #102 (closed) |
+| 12 | #103 (closed) | #100 (closed) |
 | Apps A-C | #104 (closed) | #102 (closed) |
 | News sidebars | #105 | #99, #101 (closed), #102 (closed) |

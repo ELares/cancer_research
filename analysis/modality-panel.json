@@ -1,10 +1,12 @@
 {
  "adoptive_barriers": {
+  "antigen_ceiling_binds": false,
   "antigen_ceiling_solid": 0.8,
   "delivery_efficiency_solid": 0.06,
   "leukaemia_kill_fraction": 0.0011547057708749067,
   "persistence_at_run_end_solid": 0.02634472227688359,
   "solid_tumour_kill_fraction": 1.8252241707128518e-06,
+  "solid_tumour_kill_fraction_before_ceiling": 1.8252241707128518e-06,
   "why": "The same infusion, run through the three barriers PMID 31848460 names and then through the antigen ceiling. The panel row above is the leukaemia setting; this is what the identical construct does against a solid tumour. Every barrier VALUE is an uncalibrated placeholder -- the corpus establishes that the barriers are general rather than antigen-specific, not which of them dominates. Whether the antigen ceiling BINDS is not stated here and must be derived: divide the collapse by delivery x persistence, and a residue above 1 is the ceiling's contribution. At the shipped preset it is exactly 1, but that is a property of these values, not of the model."
  },
  "arms": [
@@ -30,6 +32,13 @@
    "route": "threshold destruction (not a dose-response)"
   },
   {
+   "arm": "OncolyticVirus",
+   "calibration": "uncalibrated; T-VEC durable-response band not fitted",
+   "kill_fraction": 0.5813840538668145,
+   "limited_by": "infection spread, which this engine takes as an input",
+   "route": "direct lysis + the SHARED ICD chain"
+  },
+  {
    "arm": "Radiation",
    "calibration": "form checked against a published parameterisation",
    "kill_fraction": 0.4518,
@@ -37,18 +46,11 @@
    "route": "linear-quadratic DNA damage (not CellState)"
   },
   {
-   "arm": "OncolyticVirus",
-   "calibration": "uncalibrated; T-VEC durable-response band not fitted",
-   "kill_fraction": 0.1358143448275862,
-   "limited_by": "infection spread, which this engine takes as an input",
-   "route": "direct lysis + the SHARED ICD chain"
-  },
-  {
    "arm": "AntibodyDrugConjugate",
    "calibration": "transport anchored; payload pharmacology is RSL3's",
-   "kill_fraction": 0.01715,
+   "kill_fraction": 0.0183505,
    "limited_by": "the binding-site barrier (~7 um penetration)",
-   "route": "ferroptosis payload, delivered on an antibody"
+   "route": "ferroptosis payload, delivered on an antibody (+ bystander)"
   },
   {
    "arm": "AdoptiveCell",
@@ -92,7 +94,7 @@
  "distinct_routes": [
   "direct lysis + the SHARED ICD chain",
   "ferroptosis engine (lipid peroxidation)",
-  "ferroptosis payload, delivered on an antibody",
+  "ferroptosis payload, delivered on an antibody (+ bystander)",
   "immune cascade (no ferroptotic death required)",
   "linear-quadratic DNA damage (not CellState)",
   "redirected effectors (bypasses DC priming)",

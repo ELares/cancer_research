@@ -55,6 +55,22 @@ def test_the_counts_are_recomputed_not_stored(d):
               "ferroptosis_engine_modules", "engine_pub_fns",
               "engine_code_lines"):
         assert live[k] == d[k], f"{k} drifted: live {live[k]} vs stored {d[k]}"
+    # PER-MODULE fields too. Only the six scalars above were re-scanned, so
+    # `reach`, `pub_types` and `pub_consts` were stored, RENDERED and never
+    # checked: hand-editing them made the page publish "99 other files in the
+    # workspace call it" -- in a workspace holding 55 .rs files -- and a
+    # 64-line module with 77 public types, with the freshness gate green
+    # because it compares the .md to a render of the same edited JSON.
+    for side in ("dedicated", "shared"):
+        by_live = {m["module"]: m for m in live[side]}
+        for m in d[side]:
+            ref = by_live.get(m["module"])
+            assert ref is not None, f"{m['module']} is no longer in {side}"
+            for k in ("pub_fns", "pub_types", "pub_consts", "code_lines",
+                      "reach"):
+                assert m[k] == ref[k], (
+                    f"{side}/{m['module']}.{k} is {m[k]} in the artifact and "
+                    f"{ref[k]} live")
 
 
 def test_every_named_module_exists_and_every_module_is_classified(d):
@@ -114,6 +130,17 @@ def test_the_chapter_quotes_the_measurement_and_not_the_old_sentence(d):
     _chapter_paragraph()  # it must still exist to be quoted from
 
 
+def _chapter_text() -> str:
+    """Chapter 6 alone.
+
+    `_chapter_paragraph` used to scan the whole manuscript, so the paragraph it
+    "anchored" to could have been anywhere in 60,000 words.
+    """
+    text = MANUSCRIPT.read_text()
+    start = text.index("## Chapter 6:")
+    return text[start:text.index("## Chapter 7:", start)]
+
+
 def _chapter_paragraph() -> str:
     """The ONE paragraph in Chapter 6 that quotes this measurement.
 
@@ -125,7 +152,7 @@ def _chapter_paragraph() -> str:
     green. A guard whose own message says "so it can drift from the artifact
     again" and which cannot detect drift is worse than none.
     """
-    text = MANUSCRIPT.read_text()
+    text = _chapter_text()
     hits = [ln for ln in text.split("\n")
             if "modality-module-depth.md" in ln and "counts it" in ln]
     assert len(hits) == 1, (
@@ -170,6 +197,26 @@ def test_the_chapter_quotes_every_figure_it_uses_from_the_artifact(d):
             f"Chapter 6 does not attach the live figures to the side they "
             f"belong to; expected the phrase {phrase!r}. Paragraph: {para[:300]}")
     assert "range rather than a number" in para or "the honest figure is the interval" in para
+
+    # A LIST OF `in` CHECKS CANNOT FAIL ON TEXT THAT WAS ADDED. Two mutants
+    # kept every phrase above verbatim and were still misleading: one appended
+    # "read the other way round ... the modality arms are the substantial body
+    # of work here" to this same paragraph, the other put a contradicting
+    # paragraph two lines below it, and both left the suite green. So the
+    # paragraph is BOUNDED at both ends, and the rest of the chapter is checked
+    # for a second claim about the same quantity.
+    assert para.endswith("the engine could not answer."), (
+        "the measured paragraph has been extended past its own conclusion; "
+        f"it now ends: ...{para[-160:]!r}")
+    chapter = _chapter_text()
+    others = [ln for ln in chapter.split("\n")
+              if ln.strip() and ln != para
+              and ("times smaller" in ln or "times larger" in ln.lower()
+                   or "modality-module-depth" in ln)]
+    assert not others, (
+        "a second passage in Chapter 6 makes a claim about the same "
+        f"measurement, so the guarded paragraph is not the only one a reader "
+        f"sees: {others[:1]}")
 
 
 def test_the_paragraph_cannot_be_satisfied_by_a_different_number(d):
