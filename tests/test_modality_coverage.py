@@ -350,7 +350,7 @@ def test_the_crate_root_is_not_a_module(d):
     for r in d["rows"]:
         assert "lib" not in r["code_modules"], r["mechanism"]
     live = len([p for p in CORE.glob("*.rs") if p.stem != "lib"])
-    assert d["module_count"] == live == 35, (
+    assert d["module_count"] == live == 36, (
         f"module count {d['module_count']} against {live} on disk")
 
 

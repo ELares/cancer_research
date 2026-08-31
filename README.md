@@ -69,9 +69,9 @@ than leaving you to count files.**
 |---|--:|--:|--:|
 | committed analyses | 18 | **1** | 123 |
 | preregistered predictions | **8 of 8** | 0 | — |
-| engine modules mentioning it anywhere | **31 of 35** | — | — |
-| engine modules mentioning it in code | **21 of 35** | — | — |
-| engine modules mentioning it in PRODUCTION code | **15 of 35** | — | — |
+| engine modules mentioning it anywhere | **32 of 36** | — | — |
+| engine modules mentioning it in code | **21 of 36** | — | — |
+| engine modules mentioning it in PRODUCTION code | **15 of 36** | — | — |
 
 The module rows read `33 of 33` until 2026-08-17 — the same number on both
 sides of "of", produced by counting `.rs` files without opening one. Measured,

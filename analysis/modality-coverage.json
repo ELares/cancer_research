@@ -41,7 +41,7 @@
   "trigger_wave",
   "tumor_pk"
  ],
- "module_count": 35,
+ "module_count": 36,
  "taxonomy_named": [
   "antibody-drug-conjugate",
   "bioelectric",
@@ -195,6 +195,7 @@
     "immune"
    ],
    "prose_only_modules": [
+    "adc",
     "cell"
    ]
   },
@@ -221,6 +222,7 @@
    "trial_share": 9.64,
    "growth": 3.1,
    "code_modules": [
+    "adc",
     "drug_transport"
    ],
    "prose_only_modules": [
@@ -306,6 +308,7 @@
    ],
    "prose_only_modules": [
     "ablation",
+    "adc",
     "dose_schedule",
     "grid",
     "immune",
@@ -431,6 +434,7 @@
     "immune"
    ],
    "prose_only_modules": [
+    "adc",
     "cell"
    ],
    "engine_tier": "modifier"
@@ -459,6 +463,7 @@
    "trial_share": 9.64,
    "growth": 3.1,
    "code_modules": [
+    "adc",
     "drug_transport"
    ],
    "prose_only_modules": [
@@ -550,6 +555,7 @@
    ],
    "prose_only_modules": [
     "ablation",
+    "adc",
     "dose_schedule",
     "grid",
     "immune",
