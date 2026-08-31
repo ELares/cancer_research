@@ -434,23 +434,29 @@ mod tests {
         // sentence the module is built from. No barrier may carry the collapse.
         let b = AdoptiveBarriers::solid_tumour();
         let each = [b.trafficking, b.infiltration, b.activation];
+        // The criterion is a SHARE, not a band. A first version also required
+        // each value in `0.2..=0.7`, which was arbitrary, lived in the same
+        // file as the values it bounded, and rejected legitimate presets with
+        // a false message: 0.1/0.15/0.2 is three general barriers by this
+        // file's own measure and was reported as "a single catastrophe". The
+        // share test alone does the work -- it correctly rejects 0.2/0.7/0.7,
+        // a real catastrophe sitting INSIDE that band.
+        let total = -delivery_efficiency(&b).ln();
+        assert!(total > 0.0, "the preset presents no barrier at all");
         for (name, v) in ["trafficking", "infiltration", "activation"]
             .iter()
             .zip(each)
         {
             assert!(
-                (0.2..=0.7).contains(&v),
-                "{name} at {v} makes the preset a single catastrophe, not three general barriers"
+                (0.0..1.0).contains(&v),
+                "{name} at {v} is not a fraction of the cells that got this far"
             );
-        }
-        // And the compounding must be doing the work: no single barrier may
-        // account for more than half the total loss in log terms.
-        let total = -delivery_efficiency(&b).ln();
-        for (name, v) in ["trafficking", "infiltration", "activation"]
-            .iter()
-            .zip(each)
-        {
-            assert!(-v.ln() < 0.5 * total, "{name} alone carries the collapse");
+            assert!(
+                -v.ln() < 0.5 * total,
+                "{name} at {v} carries more than half the collapse in log terms, so the \
+                 preset rests on one step and contradicts the corpus sentence the module \
+                 is built from (barriers GENERAL, not antigen-specific)"
+            );
         }
     }
 
@@ -512,7 +518,7 @@ mod tests {
             exhaustion_rate: 0.5,
             ..AdoptiveBarriers::default()
         };
-        for steps in [0u32, 10, 1 << 31, u32::MAX] {
+        for steps in [0u32, 1, 10, 1 << 31, u32::MAX] {
             let f = persistence_factor(&b, steps);
             assert!(
                 (0.0..=1.0).contains(&f),
@@ -524,5 +530,53 @@ mod tests {
             );
         }
         assert_eq!(persistence_factor(&b, 0).to_bits(), 1.0f64.to_bits());
+    }
+
+    #[test]
+    fn the_caps_hold_at_inputs_no_caller_should_produce() {
+        // Four mutants survived round 1 because the bounds test was never
+        // extended to the two functions that round ADDED. Every clamp in
+        // `max_killable` and `barrier_limited_kills` is exercised here, at the
+        // value that makes its absence visible rather than a plausible one.
+        let open = AdoptiveBarriers::default();
+
+        // An out-of-range antigen fraction must not manufacture targets.
+        let impossible = AdoptiveBarriers {
+            antigen_positive_fraction: 5.0,
+            ..open
+        };
+        assert_eq!(
+            barrier_limited_kills(1000.0, 100.0, &impossible).to_bits(),
+            100.0f64.to_bits(),
+            "an antigen fraction above 1 killed more cells than exist"
+        );
+        assert_eq!(
+            max_killable(100.0, &impossible).to_bits(),
+            100.0f64.to_bits()
+        );
+
+        // Negative kills are not negative deaths, and a negative tumour is not
+        // a negative cap.
+        assert_eq!(
+            barrier_limited_kills(-500.0, 100.0, &open).to_bits(),
+            0.0f64.to_bits()
+        );
+        assert_eq!(
+            barrier_limited_kills(10.0, -100.0, &open).to_bits(),
+            0.0f64.to_bits()
+        );
+        assert_eq!(max_killable(-100.0, &open).to_bits(), 0.0f64.to_bits());
+
+        // Total exhaustion at zero steps is no exhaustion, not NaN: a
+        // reformulation as `(ln(1-r) * steps).exp()` returns NaN here, since
+        // ln(0) is -inf and -inf * 0 is NaN. The wrap test probes steps = 0
+        // only at a survivable rate, so it cannot see this corner.
+        let dead = AdoptiveBarriers {
+            exhaustion_rate: 1.0,
+            ..open
+        };
+        assert_eq!(persistence_factor(&dead, 0).to_bits(), 1.0f64.to_bits());
+        assert_eq!(persistence_factor(&dead, 1).to_bits(), 0.0f64.to_bits());
+        assert!(effective_effectors(1000.0, &dead, 3).is_finite());
     }
 }

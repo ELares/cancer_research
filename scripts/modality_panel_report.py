@@ -118,7 +118,17 @@ def render(d: dict) -> str:
 
     ab = d.get("adoptive_barriers")
     if ab:
+        # Every factor below is DERIVED and the three must multiply to the
+        # collapse, because a reviewer set the antigen fraction to 1e-9 and the
+        # page went on saying the ceiling "does not bind" while the headline
+        # moved by three orders of magnitude and the decomposition beside it
+        # did not move at all. Prose about a computed quantity has to be
+        # computed, and the reconciliation is asserted here rather than trusted.
         collapse = ab["leukaemia_kill_fraction"] / ab["solid_tumour_kill_fraction"]
+        delivery_x = 1.0 / ab["delivery_efficiency_solid"]
+        persist_x = 1.0 / ab["persistence_at_run_end_solid"]
+        ceiling_x = collapse / (delivery_x * persist_x)
+        binds = ceiling_x > 1.01
         L += ["## One construct, two diseases", "",
               "The adoptive row above is the LEUKAEMIA setting, and on its own "
               "it describes the indication these therapies were approved for "
@@ -129,32 +139,32 @@ def render(d: dict) -> str:
               "| | kill fraction |", "|---|--:|",
               f"| leukaemia (every barrier open) | {ab['leukaemia_kill_fraction']:.4%} |",
               f"| solid tumour | {ab['solid_tumour_kill_fraction']:.6%} |", "",
-              f"**A {collapse:,.0f}-fold collapse from the same construct.** "
-              "It is worth separating where it comes from, because the "
-              "headline is easy to attribute to the wrong step: the three "
-              f"barriers multiply to {ab['delivery_efficiency_solid']:.2%} "
-              "delivery, and persistence removes most of what is left "
-              f"({ab['persistence_at_run_end_solid']:.2%} of effector "
-              "function remains at the end of the run). Delivery alone is "
-              f"{1.0 / ab['delivery_efficiency_solid']:.1f}x; the rest is "
-              "exhaustion, which is why a model folding persistence into "
-              "activation would predict that fixing trafficking fixes the "
-              "problem.", "",
+              f"**A {collapse:,.0f}-fold collapse from the same construct**, "
+              "and it decomposes exactly — the factors below multiply to it:",
+              "",
+              "| step | factor |", "|---|--:|",
+              f"| delivery (the three barriers) | {delivery_x:.1f}x |",
+              f"| persistence over the run | {persist_x:.1f}x |",
+              f"| antigen ceiling | {ceiling_x:.1f}x |", "",
+              ("**The antigen ceiling binds here** and is part of the collapse."
+               if binds else
+               "**The antigen ceiling does not bind here** — it contributes "
+               "exactly 1x, because delivery and persistence have already "
+               "taken the kill far below it. That is derived from the numbers "
+               "above rather than stated: if the cap were reached, the third "
+               "row would exceed 1 and this sentence would say so.") +
+              " It is a wall rather than a coefficient either way, so a larger "
+              "infusion cannot climb it — which is the asymmetry with the ADC, "
+              "whose cleavable payload kills antigen-negative neighbours and "
+              "passes it.", "",
               "**Every barrier value is an uncalibrated placeholder and the "
-              "number above inherits that.** What the corpus establishes is "
+              "figures above inherit that.** What the corpus establishes is "
               "that the barriers are real and GENERAL rather than "
               "antigen-specific; it does not establish which dominates, so "
-              "the decomposition in the previous paragraph is a property of "
-              "the preset and not a finding. The direction — that the same "
-              "construct can fail without any single step looking "
-              "catastrophic — is what survives.", "",
-              "The antigen ceiling "
-              f"({ab['antigen_ceiling_solid']:.0%} of the tumour) does not "
-              "bind here, because delivery and persistence have already "
-              "taken the kill far below it. It is a wall rather than a "
-              "coefficient, so a larger infusion cannot climb it — and that "
-              "is the asymmetry with the ADC, whose cleavable payload kills "
-              "antigen-negative neighbours and passes it.", ""]
+              "the decomposition is a property of the preset and not a "
+              "finding. The direction — that the same construct can fail "
+              "without any single step looking catastrophic — is what "
+              "survives.", ""]
     L += ["## What this does not say", "",
           "**It is not a ranking of therapies.** Every kill fraction is a "
           "function of the parameters the arm was given, and for every arm "

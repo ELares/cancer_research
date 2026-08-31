@@ -29,6 +29,19 @@ def _load():
 
 MD_ = _load()
 
+# The classification, as a decision record. A module must be added to one of
+# these deliberately; see `test_every_module_is_classified_by_a_decision`.
+DEDICATED_PIN = {"ablation", "adc", "adoptive", "oncolytic", "radiation"}
+SHARED_PIN = {"cell", "drug_transport", "immune", "immune_spatial", "nutrient"}
+ENGINE_PIN = {
+    "acsl4", "alox", "biochem", "clonal", "contact", "copper", "dose_schedule",
+    "grid", "ifngamma", "io", "oxygen", "params", "persister", "ph",
+    "phenotype_mufa", "photosensitizer_pk", "physics", "reaction_diffusion",
+    "repair", "senescence", "slab", "spheroid", "stats", "stromal",
+    "trigger_wave", "tumor_pk", "vasculature",
+}
+
+
 
 @pytest.fixture(scope="module")
 def d():
@@ -122,49 +135,41 @@ def _chapter_paragraph() -> str:
 
 
 def test_the_chapter_quotes_every_figure_it_uses_from_the_artifact(d):
-    """Each number in the paragraph must be the LIVE one, in that paragraph.
+    """Each number must appear in the paragraph ATTACHED TO THE RIGHT SIDE.
 
-    Including the two the earlier guard omitted -- the line counts -- which
-    were the figures the paragraph's whole claim rested on and were checked by
-    nothing.
+    Two earlier versions failed here for the same underlying reason -- they
+    checked that strings were PRESENT and never what a number was attached to.
+    The first asked whether `str(value)` appeared anywhere in a 60,000-word
+    manuscript. The second anchored to this paragraph and added a direction
+    pin, and a reviewer defeated that too: swapping only the NOUNS, so the
+    paragraph read "the arms are between 11.5 and 13.8 times LARGER by line
+    count ... the engine is that many times smaller", left the whole suite
+    green. Every number was still present, in the same order, and
+    `"engine is smaller" not in para` is satisfied by any paraphrase.
+
+    So the assertions below are PHRASES that bind a figure to its owner. A
+    paragraph that swaps the sides has to rewrite them, and rewriting them is
+    the thing the guard exists to notice.
     """
     para = _chapter_paragraph()
-    required = {
-        "dedicated_modules": str(d["dedicated_modules"]),
-        "dedicated_pub_fns": str(d["dedicated_pub_fns"]),
-        "dedicated_code_lines": str(d["dedicated_code_lines"]),
-        "ferroptosis_engine_modules": str(d["ferroptosis_engine_modules"]),
-        "engine_pub_fns": str(d["engine_pub_fns"]),
-        "engine_code_lines": f"{d['engine_code_lines']:,}",
-        "engine_modules_with_shared": str(d["engine_modules_with_shared"]),
-        "engine_pub_fns_with_shared": str(d["engine_pub_fns_with_shared"]),
-        "engine_code_lines_with_shared": f"{d['engine_code_lines_with_shared']:,}",
-        "line_ratio_narrow": str(d["line_ratio_narrow"]),
-        "line_ratio_wide": str(d["line_ratio_wide"]),
-        "fn_ratio_narrow": str(d["fn_ratio_narrow"]),
-        "fn_ratio_wide": str(d["fn_ratio_wide"]),
-    }
-    for key, val in required.items():
-        assert val in para, (
-            f"Chapter 6 does not quote the live {key} ({val}); it says: "
-            f"{para[:200]}...")
-    # A number appearing is not the same as the claim being right: the
-    # paragraph must still assert the arms are the SMALLER side, and must
-    # report an interval rather than one allocation of the shared bucket.
-    # A number appearing is not the claim being right, and the DIRECTION is
-    # what a reader takes away: every figure would still be present in a
-    # paragraph asserting the engine is 11.5x smaller than the arms. Pin the
-    # direction here, in the paragraph, rather than relying on a substring
-    # checked against the whole manuscript body somewhere else.
+    required = [
+        f"{d['dedicated_modules']} modules a modality owns outright",
+        f"{d['dedicated_pub_fns']} public functions and "
+        f"{d['dedicated_code_lines']} lines of production code",
+        f"{d['ferroptosis_engine_modules']} modules, {d['engine_pub_fns']} "
+        f"functions and {d['engine_code_lines']:,} lines",
+        f"{d['engine_modules_with_shared']}, {d['engine_pub_fns_with_shared']} "
+        f"and {d['engine_code_lines_with_shared']:,}",
+        f"the arms are between {d['line_ratio_narrow']} and "
+        f"{d['line_ratio_wide']} times smaller by line",
+        f"{d['fn_ratio_narrow']} to {d['fn_ratio_wide']} times smaller by "
+        "public function",
+    ]
+    for phrase in required:
+        assert phrase in para, (
+            f"Chapter 6 does not attach the live figures to the side they "
+            f"belong to; expected the phrase {phrase!r}. Paragraph: {para[:300]}")
     assert "range rather than a number" in para or "the honest figure is the interval" in para
-    ded, eng = para.index(str(d["dedicated_code_lines"])), para.index(f"{d['engine_code_lines']:,}")
-    assert ded < eng, (
-        "the paragraph presents the engine's figures before the arms', so the "
-        "sentence may be attributing each side's numbers to the other")
-    assert re.search(r"arms are (?:smaller|between)", para), (
-        "the paragraph no longer states which side is the smaller one")
-    assert "times smaller" in para or "smaller by line" in para
-    assert "engine is smaller" not in para and "engine are smaller" not in para
 
 
 def test_the_paragraph_cannot_be_satisfied_by_a_different_number(d):
@@ -218,13 +223,26 @@ def test_every_module_is_classified_by_a_decision_somebody_made(d):
     engine = set(d["engine_module_names"])
     dedicated = {m["module"] for m in d["dedicated"]}
     shared = {m["module"] for m in d["shared"]}
-    assert dedicated == {"ablation", "adc", "adoptive", "oncolytic", "radiation"}
-    assert shared == {"cell", "drug_transport", "immune", "immune_spatial",
-                      "nutrient"}
     on_disk = {p.stem for p in CORE.glob("*.rs") if p.stem != "lib"}
+
+    assert dedicated == DEDICATED_PIN
+    assert shared == SHARED_PIN
+    # THE ENGINE SET MUST BE PINNED TOO, and the first version of this test
+    # said it was while reading `engine` out of the JSON the generator wrote --
+    # so `engine | dedicated | shared == on_disk` was still true by
+    # construction. A reviewer added `bispecific.rs`, a modality's own file, and
+    # it was counted AS ferroptosis engine with every test green: the engine
+    # grew because a modality arm landed, which is the page's own self-flattery
+    # running backwards. Pinning the complement is what actually forces a
+    # decision.
+    assert engine == ENGINE_PIN, (
+        "the ferroptosis-engine bucket changed. If a module was added, put it "
+        "in DEDICATED, SHARED or ENGINE_PIN deliberately -- do NOT let the "
+        "complement absorb it, because an unclassified modality file inflates "
+        f"the engine it is being compared against. Added: "
+        f"{sorted(engine - ENGINE_PIN)}; removed: {sorted(ENGINE_PIN - engine)}")
     assert engine | dedicated | shared == on_disk, (
-        "a module is in no bucket -- classify it in modality_module_depth.py "
-        f"rather than letting the complement decide: "
+        "a module on disk is in no bucket: "
         f"{sorted(on_disk - (engine | dedicated | shared))}")
     assert not (engine & (dedicated | shared)), "a module is in two buckets"
     assert dedicated and shared and engine, (

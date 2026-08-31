@@ -40,11 +40,17 @@ The adoptive row above is the LEUKAEMIA setting, and on its own it describes the
 | leukaemia (every barrier open) | 0.1155% |
 | solid tumour | 0.000183% |
 
-**A 633-fold collapse from the same construct.** It is worth separating where it comes from, because the headline is easy to attribute to the wrong step: the three barriers multiply to 6.00% delivery, and persistence removes most of what is left (2.63% of effector function remains at the end of the run). Delivery alone is 16.7x; the rest is exhaustion, which is why a model folding persistence into activation would predict that fixing trafficking fixes the problem.
+**A 633-fold collapse from the same construct**, and it decomposes exactly — the factors below multiply to it:
 
-**Every barrier value is an uncalibrated placeholder and the number above inherits that.** What the corpus establishes is that the barriers are real and GENERAL rather than antigen-specific; it does not establish which dominates, so the decomposition in the previous paragraph is a property of the preset and not a finding. The direction — that the same construct can fail without any single step looking catastrophic — is what survives.
+| step | factor |
+|---|--:|
+| delivery (the three barriers) | 16.7x |
+| persistence over the run | 38.0x |
+| antigen ceiling | 1.0x |
 
-The antigen ceiling (80% of the tumour) does not bind here, because delivery and persistence have already taken the kill far below it. It is a wall rather than a coefficient, so a larger infusion cannot climb it — and that is the asymmetry with the ADC, whose cleavable payload kills antigen-negative neighbours and passes it.
+**The antigen ceiling does not bind here** — it contributes exactly 1x, because delivery and persistence have already taken the kill far below it. That is derived from the numbers above rather than stated: if the cap were reached, the third row would exceed 1 and this sentence would say so. It is a wall rather than a coefficient either way, so a larger infusion cannot climb it — which is the asymmetry with the ADC, whose cleavable payload kills antigen-negative neighbours and passes it.
+
+**Every barrier value is an uncalibrated placeholder and the figures above inherit that.** What the corpus establishes is that the barriers are real and GENERAL rather than antigen-specific; it does not establish which dominates, so the decomposition is a property of the preset and not a finding. The direction — that the same construct can fail without any single step looking catastrophic — is what survives.
 
 ## What this does not say
 

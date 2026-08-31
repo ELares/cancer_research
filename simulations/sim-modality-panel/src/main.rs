@@ -314,9 +314,10 @@ fn main() {
     names and then through the antigen ceiling. The panel row above is the leukaemia \
     setting; this is what the identical construct does against a solid tumour. Every \
     barrier VALUE is an uncalibrated placeholder -- the corpus establishes that the \
-    barriers are general rather than antigen-specific, not which of them dominates. The \
-    antigen ceiling contributes EXACTLY 1x here: delivery and persistence take the kill \
-    far below it, so the cap never binds and none of the collapse is attributable to it.",
+    barriers are general rather than antigen-specific, not which of them dominates. Whether \
+    the antigen ceiling BINDS is not stated here and must be derived: divide the collapse \
+    by delivery x persistence, and a residue above 1 is the ceiling's contribution. At the \
+    shipped preset it is exactly 1, but that is a property of these values, not of the model.",
             "leukaemia_kill_fraction": cart / n as f64,
             "solid_tumour_kill_fraction": cart_solid / n as f64,
             "delivery_efficiency_solid": ferroptosis_core::adoptive::delivery_efficiency(&solid),

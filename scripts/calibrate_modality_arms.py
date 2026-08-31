@@ -51,6 +51,7 @@ corpus scan, no simulation run.
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import json
 import math
 import re
@@ -326,6 +327,20 @@ def _ablation_arm() -> dict:
     }
 
 
+def _strip_rust_comments(src: str) -> str:
+    """Reuse `modality_coverage`'s scanner rather than writing a second one.
+
+    A regex here would be a second implementation of a thing this repository
+    already got wrong once (nested block comments, `//` inside a string), and
+    two scanners that drift is its own defect class.
+    """
+    spec = importlib.util.spec_from_file_location(
+        "modality_coverage", REPO / "scripts" / "modality_coverage.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod.strip_rust_comments(src)
+
+
 def _rust_default_barriers() -> dict:
     """`AdoptiveBarriers::default()`, parsed from the crate.
 
@@ -334,7 +349,16 @@ def _rust_default_barriers() -> dict:
     must not be able to disagree about the setting the published band was
     measured in.
     """
-    src = (CORE / "adoptive.rs").read_text()
+    # Comments are STRIPPED first, using the same scanner the coverage
+    # generators use. Without it the field regex reads values out of prose: two
+    # explanatory comment lines inside the `Default` impl mentioning
+    # `activation: 0.5` and `antigen_positive_fraction: 0.8` -- rustfmt-stable,
+    # `cargo test` green -- made this return the solid-tumour values and flipped
+    # the published CAR-T verdict from ADMISSIBLE to UNCONSTRAINED. The dict
+    # comprehension below is last-wins, so a comment AFTER the real field silently
+    # replaced it. Every other rustfmt-legal reformatting (struct-update syntax,
+    # a const, `1.0f64`, `1e0`, delegation) already failed loudly; this one did not.
+    src = _strip_rust_comments((CORE / "adoptive.rs").read_text())
     body = re.search(r"impl Default for AdoptiveBarriers \{.*?\n    \}",
                      src, re.S)
     if body is None:
