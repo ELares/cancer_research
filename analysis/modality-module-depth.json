@@ -1,0 +1,94 @@
+{
+ "dedicated": [
+  {
+   "module": "ablation",
+   "pub_fns": 4,
+   "pub_types": 1,
+   "pub_consts": 2,
+   "code_lines": 66,
+   "serves": "HIFU + irreversible electroporation"
+  },
+  {
+   "module": "adc",
+   "pub_fns": 5,
+   "pub_types": 2,
+   "pub_consts": 0,
+   "code_lines": 62,
+   "serves": "Antibody-drug conjugate bystander effect"
+  },
+  {
+   "module": "adoptive",
+   "pub_fns": 5,
+   "pub_types": 1,
+   "pub_consts": 0,
+   "code_lines": 56,
+   "serves": "CAR-T / bispecific barriers"
+  },
+  {
+   "module": "oncolytic",
+   "pub_fns": 3,
+   "pub_types": 1,
+   "pub_consts": 0,
+   "code_lines": 61,
+   "serves": "Oncolytic virus spread"
+  },
+  {
+   "module": "radiation",
+   "pub_fns": 10,
+   "pub_types": 0,
+   "pub_consts": 5,
+   "code_lines": 95,
+   "serves": "Radiation + synthetic lethality (PARP)"
+  }
+ ],
+ "shared": [
+  {
+   "module": "cell",
+   "pub_fns": 5,
+   "pub_types": 5,
+   "pub_consts": 0,
+   "code_lines": 164,
+   "serves": "CRISPR knockouts"
+  },
+  {
+   "module": "drug_transport",
+   "pub_fns": 11,
+   "pub_types": 2,
+   "pub_consts": 1,
+   "code_lines": 110,
+   "serves": "nanocarrier + ADC delivery profiles"
+  },
+  {
+   "module": "immune",
+   "pub_fns": 8,
+   "pub_types": 2,
+   "pub_consts": 2,
+   "code_lines": 139,
+   "serves": "checkpoint blockade, CAR-T, bispecifics, oncolytic ICD, microbiome, mRNA vaccine"
+  },
+  {
+   "module": "immune_spatial",
+   "pub_fns": 28,
+   "pub_types": 5,
+   "pub_consts": 1,
+   "code_lines": 346,
+   "serves": "the spatial immune model"
+  },
+  {
+   "module": "nutrient",
+   "pub_fns": 6,
+   "pub_types": 1,
+   "pub_consts": 0,
+   "code_lines": 58,
+   "serves": "metabolic targeting"
+  }
+ ],
+ "ferroptosis_engine_modules": 27,
+ "total_modules": 37,
+ "engine_pub_fns": 186,
+ "engine_code_lines": 3988,
+ "dedicated_modules": 5,
+ "dedicated_pub_fns": 27,
+ "dedicated_code_lines": 340,
+ "shared_pub_fns": 58
+}

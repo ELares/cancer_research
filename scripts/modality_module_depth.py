@@ -1,0 +1,188 @@
+"""How much engine the non-ferroptosis arms actually have.
+
+WHY THIS EXISTS
+---------------
+Chapter 6 has carried a sentence since it was written: *"nine arms are one
+function and a configuration struct each; the ferroptosis engine is thirty-odd
+modules and this does not match it."* That was true, it was the honest thing to
+say, and it stopped being true without anyone noticing -- which is precisely
+the defect this repository keeps finding in its own prose.
+
+The sentence is a MEASUREMENT and was written as an assertion. This measures
+it, so the chapter can state where the work actually stands and cannot flatter
+itself as modules land or, equally, claim a parity it has not reached.
+
+WHAT IS COUNTED, AND THE CHOICE THAT MATTERS
+--------------------------------------------
+Public functions, types and constants in PRODUCTION code, per module -- test
+blocks and comments stripped, using the same scanner
+`analysis/modality-coverage.md` uses, because two documents counting the same
+crate two ways is a defect this campaign has already had to fix once.
+
+Modules are split into DEDICATED (a modality's own file) and SHARED (machinery
+several arms reach through). The split is the honest part: `immune.rs` is deep
+and four arms use it, so crediting its full weight to any one of them would
+overstate that arm and crediting it to none would understate the engine.
+Neither number alone is the answer, so both are reported.
+
+WHAT THIS DOES NOT MEASURE
+--------------------------
+Quality, calibration, or whether any of it is used. A module can be large and
+wrong. `analysis/modality-calibration.md` carries what is fitted and
+`CALIBRATION_STATUS.md` carries what feeds a reported number -- for these arms,
+nothing does. Lines of code are the weakest possible evidence of depth and are
+reported only because the sentence they replace was about size too.
+"""
+from __future__ import annotations
+
+import argparse
+import importlib.util
+import json
+import re
+from pathlib import Path
+
+REPO = Path(__file__).resolve().parent.parent
+CORE = REPO / "simulations" / "ferroptosis-core" / "src"
+
+OUT_MD = REPO / "analysis" / "modality-module-depth.md"
+OUT_JSON = REPO / "analysis" / "modality-module-depth.json"
+
+# A modality's OWN file. Everything else is either shared machinery or the
+# ferroptosis engine proper.
+DEDICATED = {
+    "radiation": "Radiation + synthetic lethality (PARP)",
+    "ablation": "HIFU + irreversible electroporation",
+    "oncolytic": "Oncolytic virus spread",
+    "adc": "Antibody-drug conjugate bystander effect",
+    "adoptive": "CAR-T / bispecific barriers",
+}
+# Machinery more than one arm reaches through. Credited to none of them.
+SHARED = {
+    "immune": "checkpoint blockade, CAR-T, bispecifics, oncolytic ICD, microbiome, mRNA vaccine",
+    "immune_spatial": "the spatial immune model",
+    "drug_transport": "nanocarrier + ADC delivery profiles",
+    "nutrient": "metabolic targeting",
+    "cell": "CRISPR knockouts",
+}
+
+
+def _mc():
+    spec = importlib.util.spec_from_file_location(
+        "modality_coverage", REPO / "scripts" / "modality_coverage.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def _measure(mc, stem: str) -> dict:
+    path = CORE / f"{stem}.rs"
+    if not path.exists():
+        return {}
+    code = mc.strip_test_blocks(mc.strip_rust_comments(path.read_text()))
+    return {
+        "module": stem,
+        "pub_fns": len(re.findall(r"\bpub fn ", code)),
+        "pub_types": len(re.findall(r"\bpub (?:struct|enum) ", code)),
+        "pub_consts": len(re.findall(r"\bpub const ", code)),
+        "code_lines": len([l for l in code.splitlines() if l.strip()]),
+    }
+
+
+def scan() -> dict:
+    mc = _mc()
+    all_stems = sorted(p.stem for p in CORE.glob("*.rs") if p.stem != "lib")
+    dedicated = [dict(_measure(mc, s), serves=DEDICATED[s])
+                 for s in sorted(DEDICATED) if (CORE / f"{s}.rs").exists()]
+    shared = [dict(_measure(mc, s), serves=SHARED[s])
+              for s in sorted(SHARED) if (CORE / f"{s}.rs").exists()]
+    ded_names = set(DEDICATED) | set(SHARED)
+    engine = [_measure(mc, s) for s in all_stems if s not in ded_names]
+    return {"dedicated": dedicated, "shared": shared,
+            "ferroptosis_engine_modules": len(engine),
+            "total_modules": len(all_stems),
+            "engine_pub_fns": sum(e["pub_fns"] for e in engine),
+            "engine_code_lines": sum(e["code_lines"] for e in engine)}
+
+
+def assemble(raw: dict) -> dict:
+    d = raw["dedicated"]
+    return dict(raw,
+                dedicated_modules=len(d),
+                dedicated_pub_fns=sum(x["pub_fns"] for x in d),
+                dedicated_code_lines=sum(x["code_lines"] for x in d),
+                shared_pub_fns=sum(x["pub_fns"] for x in raw["shared"]))
+
+
+def render(d: dict) -> str:
+    L = ["# How much engine the non-ferroptosis arms actually have", "",
+         "*Generated by `scripts/modality_module_depth.py --render-only`. "
+         "Offline; counts production code with test blocks and comments "
+         "stripped, using the same scanner `modality-coverage.md` uses.*", "",
+         "Chapter 6 carried a sentence since it was written — *\"nine arms are "
+         "one function and a configuration struct each\"* — which was true, "
+         "was the honest thing to say, and stopped being true without anyone "
+         "noticing. That is exactly the defect this repository keeps finding "
+         "in its own prose, so the sentence is measured here rather than "
+         "asserted there.", "",
+         "## Modules a modality owns", "",
+         "| module | serves | pub fns | types | consts | lines |",
+         "|---|---|--:|--:|--:|--:|"]
+    for m in d["dedicated"]:
+        L.append(f"| `{m['module']}` | {m['serves']} | {m['pub_fns']} | "
+                 f"{m['pub_types']} | {m['pub_consts']} | {m['code_lines']} |")
+    L += ["",
+          f"**{d['dedicated_modules']} dedicated modules, "
+          f"{d['dedicated_pub_fns']} public functions, "
+          f"{d['dedicated_code_lines']:,} lines of production code.** Whatever "
+          "else is true, it is not one function and a configuration struct.", "",
+          "## Machinery several arms reach through", "",
+          "| module | serves | pub fns | lines |", "|---|---|--:|--:|"]
+    for m in d["shared"]:
+        L.append(f"| `{m['module']}` | {m['serves']} | {m['pub_fns']} | "
+                 f"{m['code_lines']} |")
+    L += ["",
+          "Credited to no single arm, deliberately. `immune.rs` is deep and "
+          "four arms reach through it, so assigning its weight to any one of "
+          "them would overstate that arm and assigning it to none would "
+          "understate the engine. Neither number alone is the answer, so both "
+          "are reported.", "",
+          "## Against the ferroptosis engine", "",
+          f"The remaining **{d['ferroptosis_engine_modules']} modules** — "
+          f"{d['engine_pub_fns']} public functions, "
+          f"{d['engine_code_lines']:,} lines — are the ferroptosis engine and "
+          "the machinery specific to it. That is still the larger body of "
+          "work by every count here, and it carries something none of the new "
+          "modules do: years of calibration against this project's own "
+          "targets, and numbers the manuscript actually reports.", "",
+          "## What this does NOT measure", "",
+          "**Quality, calibration, or use.** A module can be large and wrong. "
+          "`analysis/modality-calibration.md` carries what is fitted — and "
+          "records one arm as inadmissible and one as having no fittable "
+          "target at all — while `CALIBRATION_STATUS.md` carries what feeds a "
+          "reported number. For every arm counted above, that is `N`: none of "
+          "this appears in a figure or a claim the manuscript makes.", "",
+          "**Lines of code are the weakest possible evidence of depth** and "
+          "are reported only because the sentence they replace was about size "
+          "too. A count going up is not progress on its own, and this page "
+          "should not be read as saying it is.", ""]
+    return "\n".join(L) + "\n"
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--render-only", action="store_true")
+    a = ap.parse_args()
+    d = assemble(json.loads(OUT_JSON.read_text()) if a.render_only else scan())
+    OUT_JSON.write_text(json.dumps(d, indent=1) + "\n")
+    OUT_MD.write_text(render(d))
+    print(f"wrote {OUT_MD}")
+    print(f"wrote {OUT_JSON}")
+    print(f"  dedicated: {d['dedicated_modules']} modules, "
+          f"{d['dedicated_pub_fns']} fns, {d['dedicated_code_lines']:,} lines")
+    print(f"  ferroptosis engine: {d['ferroptosis_engine_modules']} modules, "
+          f"{d['engine_pub_fns']} fns, {d['engine_code_lines']:,} lines")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

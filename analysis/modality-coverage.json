@@ -41,7 +41,7 @@
   "trigger_wave",
   "tumor_pk"
  ],
- "module_count": 36,
+ "module_count": 37,
  "taxonomy_named": [
   "antibody-drug-conjugate",
   "bioelectric",
@@ -175,6 +175,7 @@
     "senescence"
    ],
    "prose_only_modules": [
+    "adoptive",
     "clonal",
     "ifngamma",
     "oncolytic",
@@ -196,6 +197,7 @@
    ],
    "prose_only_modules": [
     "adc",
+    "adoptive",
     "cell"
    ]
   },
@@ -226,6 +228,7 @@
     "drug_transport"
    ],
    "prose_only_modules": [
+    "adoptive",
     "biochem",
     "cell",
     "physics"
@@ -278,6 +281,7 @@
     "immune"
    ],
    "prose_only_modules": [
+    "adoptive",
     "cell"
    ]
   },
@@ -413,6 +417,7 @@
     "senescence"
    ],
    "prose_only_modules": [
+    "adoptive",
     "clonal",
     "ifngamma",
     "oncolytic",
@@ -435,6 +440,7 @@
    ],
    "prose_only_modules": [
     "adc",
+    "adoptive",
     "cell"
    ],
    "engine_tier": "modifier"
@@ -467,6 +473,7 @@
     "drug_transport"
    ],
    "prose_only_modules": [
+    "adoptive",
     "biochem",
     "cell",
     "physics"
@@ -523,6 +530,7 @@
     "immune"
    ],
    "prose_only_modules": [
+    "adoptive",
     "cell"
    ],
    "engine_tier": "modifier"
