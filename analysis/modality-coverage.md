@@ -15,7 +15,7 @@ The engine expresses **9 treatments** (`RSL3` — ferroptosis; `SDT`, `PDT` — 
 | synthetic-lethality | 5,437 | 342 | 6.3% | 4.16× | modifier | — |
 | oncolytic-virus | 5,006 | 201 | 4.0% | 1.18× | modifier | `cell`, `oncolytic` |
 | crispr | 3,674 | 6 | 0.2% | 8.13× | modifier | — |
-| bispecific-antibody | 3,462 | 326 | 9.4% | 5.52× | modifier | `adoptive`, `cell` |
+| bispecific-antibody | 3,462 | 326 | 9.4% | 5.52× | modifier | `cell` |
 | electrochemical-therapy | 2,515 | 142 | 5.7% | 0.81× | modifier | `cell` |
 | sonodynamic | 2,513 | 114 | 4.5% | 5.28× | **treatment** | `ablation`, `adc`, `dose_schedule`, `grid`, `immune`, `immune_spatial`, `io`, `oxygen`, `persister`, `radiation` |
 | hifu | 1,352 | 96 | 7.1% | 1.16× | modifier | `cell`, `oxygen` |
@@ -55,7 +55,7 @@ Modelled as a treatment: `immunotherapy`, `sonodynamic`. `PDT` and `RSL3` have n
 
 **The engine side errs generous, within production code.** A module counts as covering a mechanism if its code names any one of that mechanism's terms, which over-credits — the safe direction for a document arguing the gap is large. Three things are stripped first, each because prose about a thing is not a model of it and each was measured crediting prose as code: comments (the only HIFU term in the crate is a docstring citing MR-guided focused ultrasound as context), `#[cfg(test)]` blocks (an `assert!` MESSAGE — "sasp-only config has an immune effect" — was `senescence`'s ONLY immunological match, so it was credited for a string in a test; it is credited again below, but now for `sasp_immune_mult`, a production field), and `lib.rs`, whose whole body is `pub mod` declarations. Those mentions are kept in the prose-only column rather than dropped, so both directions of error stay visible.
 
-**A companion audit counts the same crate and gets a different number, and the difference is the point.** `analysis/scope-audit.md` asks how many modules name *ferroptosis or the physical-ROS modalities* in production code; this asks how many name ferroptosis *chemistry*. Same 32 modules, same `lib.rs` and `#[cfg(test)]` exclusions, different question, so the two counts differ by exactly the modules their term sets disagree about: that audit's list carries `photodynamic`, `sonodynamic`, `pdt`, `sdt` and `photosensitiz`, which this one does not, and this one carries `acsl4`, which that one does not. Neither is wrong; a reader comparing them without this sentence would reasonably think one of them was.
+**A companion audit counts the same crate and gets a different number, and the difference is the point.** `analysis/scope-audit.md` asks how many modules name *ferroptosis or the physical-ROS modalities* in production code; this asks how many name ferroptosis *chemistry*. Same 37 modules, same `lib.rs` and `#[cfg(test)]` exclusions, different question, so the two counts differ by exactly the modules their term sets disagree about: that audit's list carries `photodynamic`, `sonodynamic`, `pdt`, `sdt` and `photosensitiz`, which this one does not, and this one carries `acsl4`, which that one does not. Neither is wrong; a reader comparing them without this sentence would reasonably think one of them was.
 
 **Word boundaries are not enough on their own, and they are also the wrong boundary.** Two opposite failures, both measured, both invisible in the output:
 

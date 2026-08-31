@@ -1,4 +1,12 @@
 {
+ "adoptive_barriers": {
+  "antigen_ceiling_solid": 0.8,
+  "delivery_efficiency_solid": 0.06,
+  "leukaemia_kill_fraction": 0.0011547057708749067,
+  "persistence_at_run_end_solid": 0.02634472227688359,
+  "solid_tumour_kill_fraction": 1.8252241707128518e-06,
+  "why": "The same infusion, run through the three barriers PMID 31848460 names and then through the antigen ceiling. The panel row above is the leukaemia setting; this is what the identical construct does against a solid tumour. Every barrier VALUE is an uncalibrated placeholder -- the corpus establishes that the barriers are general rather than antigen-specific, not which of them dominates."
+ },
  "arms": [
   {
    "arm": "SDT",

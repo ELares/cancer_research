@@ -2,11 +2,11 @@
 
 WHY THIS EXISTS
 ---------------
-Chapter 6 has carried a sentence since it was written: *"nine arms are one
-function and a configuration struct each; the ferroptosis engine is thirty-odd
-modules and this does not match it."* That was true, it was the honest thing to
-say, and it stopped being true without anyone noticing -- which is precisely
-the defect this repository keeps finding in its own prose.
+Chapter 6 carried a sentence since it was written, claiming each modality arm
+was one function and a configuration struct beside a ferroptosis engine of many
+modules. That was true, it was the honest thing to say, and it stopped being
+true without anyone noticing -- which is precisely the defect this repository
+keeps finding in its own prose.
 
 The sentence is a MEASUREMENT and was written as an assertion. This measures
 it, so the chapter can state where the work actually stands and cannot flatter
@@ -20,10 +20,25 @@ blocks and comments stripped, using the same scanner
 crate two ways is a defect this campaign has already had to fix once.
 
 Modules are split into DEDICATED (a modality's own file) and SHARED (machinery
-several arms reach through). The split is the honest part: `immune.rs` is deep
-and four arms use it, so crediting its full weight to any one of them would
-overstate that arm and crediting it to none would understate the engine.
-Neither number alone is the answer, so both are reported.
+several arms reach through). THAT SPLIT IS A JUDGEMENT AND IT IS LOAD-BEARING,
+which an earlier version of this script hid: the two lists were hardcoded, and
+a reviewer moved ONE module between them, moved every headline figure on the
+page, and every guard stayed green. Worse, the SHARED bucket is subtracted from
+the ENGINE denominator, so every module placed there shrinks the comparator --
+an error in the direction that flatters the arms, which is the direction to go
+looking first.
+
+Two things follow, and both are in the output rather than in a caveat. The
+engine is reported under BOTH allocations (shared counted as engine, and
+shared counted as neither), so the ratio ships as a RANGE and no reader
+inherits one judgement as a fact. And the bucket membership is pinned by a
+test, so moving a module is a decision somebody has to make explicitly rather
+than a number that quietly moves.
+
+How many arms actually reach a shared module is MEASURED (`_reach`), not
+asserted: an earlier draft of the rendered page hand-wrote a count of arms
+reaching through `immune.rs` beside a table row that listed a different one,
+and neither figure came from the code.
 
 WHAT THIS DOES NOT MEASURE
 --------------------------
@@ -54,7 +69,7 @@ DEDICATED = {
     "ablation": "HIFU + irreversible electroporation",
     "oncolytic": "Oncolytic virus spread",
     "adc": "Antibody-drug conjugate bystander effect",
-    "adoptive": "CAR-T / bispecific barriers",
+    "adoptive": "CAR-T trafficking, infiltration and activation barriers",
 }
 # Machinery more than one arm reaches through. Credited to none of them.
 SHARED = {
@@ -88,16 +103,39 @@ def _measure(mc, stem: str) -> dict:
     }
 
 
+def _reach(mc, stem: str) -> int:
+    """How many OTHER crate files name this module's path, in production code.
+
+    The rendered page used to hand-write how many arms reached through
+    `immune.rs`, beside a table row listing a different count, and neither
+    number was read from anything. This counts files that write `<stem>::` --
+    every module in the core crate plus every binary in the workspace, the
+    module's own file excluded, comments and test blocks stripped first so a
+    doc comment naming the symbol is not a caller.
+    """
+    pat = re.compile(rf"\b{re.escape(stem)}::")
+    files = [p for p in CORE.glob("*.rs") if p.stem != stem]
+    files += [p for p in (REPO / "simulations").glob("*/src/*.rs")
+              if p.stem != stem]
+    n = 0
+    for f in files:
+        code = mc.strip_test_blocks(mc.strip_rust_comments(f.read_text()))
+        if pat.search(code):
+            n += 1
+    return n
+
+
 def scan() -> dict:
     mc = _mc()
     all_stems = sorted(p.stem for p in CORE.glob("*.rs") if p.stem != "lib")
     dedicated = [dict(_measure(mc, s), serves=DEDICATED[s])
                  for s in sorted(DEDICATED) if (CORE / f"{s}.rs").exists()]
-    shared = [dict(_measure(mc, s), serves=SHARED[s])
+    shared = [dict(_measure(mc, s), serves=SHARED[s], reach=_reach(mc, s))
               for s in sorted(SHARED) if (CORE / f"{s}.rs").exists()]
     ded_names = set(DEDICATED) | set(SHARED)
     engine = [_measure(mc, s) for s in all_stems if s not in ded_names]
     return {"dedicated": dedicated, "shared": shared,
+            "engine_module_names": [e["module"] for e in engine],
             "ferroptosis_engine_modules": len(engine),
             "total_modules": len(all_stems),
             "engine_pub_fns": sum(e["pub_fns"] for e in engine),
@@ -105,12 +143,33 @@ def scan() -> dict:
 
 
 def assemble(raw: dict) -> dict:
-    d = raw["dedicated"]
+    """Totals under BOTH allocations of the shared bucket.
+
+    `engine_*` counts shared machinery as NEITHER side (the narrow engine);
+    `engine_*_with_shared` counts it as engine (the wide one). Both are
+    defensible and they differ substantially, so the page publishes the ratio
+    as a range instead of picking the judgement that makes the arms look
+    larger.
+    """
+    d, sh = raw["dedicated"], raw["shared"]
+    ded_lines = sum(x["code_lines"] for x in d)
+    ded_fns = sum(x["pub_fns"] for x in d)
+    wide_lines = raw["engine_code_lines"] + sum(x["code_lines"] for x in sh)
+    wide_fns = raw["engine_pub_fns"] + sum(x["pub_fns"] for x in sh)
     return dict(raw,
                 dedicated_modules=len(d),
-                dedicated_pub_fns=sum(x["pub_fns"] for x in d),
-                dedicated_code_lines=sum(x["code_lines"] for x in d),
-                shared_pub_fns=sum(x["pub_fns"] for x in raw["shared"]))
+                dedicated_pub_fns=ded_fns,
+                dedicated_code_lines=ded_lines,
+                shared_modules=len(sh),
+                shared_pub_fns=sum(x["pub_fns"] for x in sh),
+                shared_code_lines=sum(x["code_lines"] for x in sh),
+                engine_modules_with_shared=raw["ferroptosis_engine_modules"] + len(sh),
+                engine_pub_fns_with_shared=wide_fns,
+                engine_code_lines_with_shared=wide_lines,
+                line_ratio_narrow=round(raw["engine_code_lines"] / ded_lines, 1),
+                line_ratio_wide=round(wide_lines / ded_lines, 1),
+                fn_ratio_narrow=round(raw["engine_pub_fns"] / ded_fns, 1),
+                fn_ratio_wide=round(wide_fns / ded_fns, 1))
 
 
 def render(d: dict) -> str:
@@ -118,9 +177,10 @@ def render(d: dict) -> str:
          "*Generated by `scripts/modality_module_depth.py --render-only`. "
          "Offline; counts production code with test blocks and comments "
          "stripped, using the same scanner `modality-coverage.md` uses.*", "",
-         "Chapter 6 carried a sentence since it was written — *\"nine arms are "
-         "one function and a configuration struct each\"* — which was true, "
-         "was the honest thing to say, and stopped being true without anyone "
+         "Chapter 6 carried a sentence since it was written, calling each "
+         "modality arm *\"one function and a configuration struct\"* beside "
+         "a ferroptosis engine of many modules — which was true, was the "
+         "honest thing to say, and stopped being true without anyone "
          "noticing. That is exactly the defect this repository keeps finding "
          "in its own prose, so the sentence is measured here rather than "
          "asserted there.", "",
@@ -136,24 +196,46 @@ def render(d: dict) -> str:
           f"{d['dedicated_code_lines']:,} lines of production code.** Whatever "
           "else is true, it is not one function and a configuration struct.", "",
           "## Machinery several arms reach through", "",
-          "| module | serves | pub fns | lines |", "|---|---|--:|--:|"]
+          "| module | serves | pub fns | lines | files that call it |",
+          "|---|---|--:|--:|--:|"]
     for m in d["shared"]:
         L.append(f"| `{m['module']}` | {m['serves']} | {m['pub_fns']} | "
-                 f"{m['code_lines']} |")
+                 f"{m['code_lines']} | {m['reach']} |")
+    deepest = max(d["shared"], key=lambda m: m["reach"])
     L += ["",
-          "Credited to no single arm, deliberately. `immune.rs` is deep and "
-          "four arms reach through it, so assigning its weight to any one of "
-          "them would overstate that arm and assigning it to none would "
-          "understate the engine. Neither number alone is the answer, so both "
-          "are reported.", "",
+          "Credited to no single arm, deliberately. "
+          f"`{deepest['module']}.rs` is the deepest of them and "
+          f"**{deepest['reach']} other files in the workspace call it**, so "
+          "assigning its weight to any one arm would overstate that arm and "
+          "assigning it to none would understate the engine. Neither number "
+          "alone is the answer, so both are reported. (That reach is counted "
+          "from the code. An earlier version of this page said \"four arms\" "
+          "beside a table row naming six, and neither figure came from "
+          "anything.)", "",
           "## Against the ferroptosis engine", "",
-          f"The remaining **{d['ferroptosis_engine_modules']} modules** — "
-          f"{d['engine_pub_fns']} public functions, "
-          f"{d['engine_code_lines']:,} lines — are the ferroptosis engine and "
-          "the machinery specific to it. That is still the larger body of "
-          "work by every count here, and it carries something none of the new "
-          "modules do: years of calibration against this project's own "
-          "targets, and numbers the manuscript actually reports.", "",
+          "**And here the judgement above becomes load-bearing, so the answer "
+          "is a range rather than a number.** The shared bucket is subtracted "
+          "from the engine as well as from the arms, so every module placed "
+          "in it shrinks the comparator — an error in the direction that "
+          "flatters the arms, which is the direction to check first. Both "
+          "allocations are defensible and both are reported:", "",
+          "| shared machinery counted as | engine modules | pub fns | lines | "
+          "lines per line of modality code |", "|---|--:|--:|--:|--:|",
+          f"| neither side | {d['ferroptosis_engine_modules']} | "
+          f"{d['engine_pub_fns']} | {d['engine_code_lines']:,} | "
+          f"{d['line_ratio_narrow']}x |",
+          f"| the engine | {d['engine_modules_with_shared']} | "
+          f"{d['engine_pub_fns_with_shared']} | "
+          f"{d['engine_code_lines_with_shared']:,} | {d['line_ratio_wide']}x |",
+          "",
+          "So the modality arms are somewhere between "
+          f"**1/{d['line_ratio_narrow']} and 1/{d['line_ratio_wide']} of the "
+          f"engine by line count**, and 1/{d['fn_ratio_narrow']} to "
+          f"1/{d['fn_ratio_wide']} by public function. On either reading the "
+          "ferroptosis engine is still the larger body of work, and it "
+          "carries something none of the new modules do: years of calibration "
+          "against this project's own targets, and numbers the manuscript "
+          "actually reports.", "",
           "## What this does NOT measure", "",
           "**Quality, calibration, or use.** A module can be large and wrong. "
           "`analysis/modality-calibration.md` carries what is fitted — and "

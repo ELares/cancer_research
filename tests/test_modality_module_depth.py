@@ -98,7 +98,141 @@ def test_the_chapter_quotes_the_measurement_and_not_the_old_sentence(d):
         text)
     assert live is None, (
         "the retracted sentence is still standing as a live claim")
-    for k in ("dedicated_modules", "dedicated_pub_fns", "ferroptosis_engine_modules"):
-        assert str(d[k]) in text, (
-            f"the chapter does not quote the measured {k}, so it can drift "
-            "from the artifact again")
+    _chapter_paragraph()  # it must still exist to be quoted from
+
+
+def _chapter_paragraph() -> str:
+    """The ONE paragraph in Chapter 6 that quotes this measurement.
+
+    Anchored deliberately. The first version of the guard below asked whether
+    `str(value)` appeared anywhere in a 60,000-word manuscript, and two
+    reviewers independently showed it could not fail: 265 of the integers 0-299
+    already occur somewhere in `v1.md`, so rewriting the paragraph to claim the
+    arms are twenty-five times LARGER than the engine left every assertion
+    green. A guard whose own message says "so it can drift from the artifact
+    again" and which cannot detect drift is worse than none.
+    """
+    text = MANUSCRIPT.read_text()
+    hits = [ln for ln in text.split("\n")
+            if "modality-module-depth.md" in ln and "counts it" in ln]
+    assert len(hits) == 1, (
+        f"expected exactly one Chapter 6 paragraph citing the depth "
+        f"measurement, found {len(hits)}")
+    return hits[0]
+
+
+def test_the_chapter_quotes_every_figure_it_uses_from_the_artifact(d):
+    """Each number in the paragraph must be the LIVE one, in that paragraph.
+
+    Including the two the earlier guard omitted -- the line counts -- which
+    were the figures the paragraph's whole claim rested on and were checked by
+    nothing.
+    """
+    para = _chapter_paragraph()
+    required = {
+        "dedicated_modules": str(d["dedicated_modules"]),
+        "dedicated_pub_fns": str(d["dedicated_pub_fns"]),
+        "dedicated_code_lines": str(d["dedicated_code_lines"]),
+        "ferroptosis_engine_modules": str(d["ferroptosis_engine_modules"]),
+        "engine_pub_fns": str(d["engine_pub_fns"]),
+        "engine_code_lines": f"{d['engine_code_lines']:,}",
+        "engine_modules_with_shared": str(d["engine_modules_with_shared"]),
+        "engine_pub_fns_with_shared": str(d["engine_pub_fns_with_shared"]),
+        "engine_code_lines_with_shared": f"{d['engine_code_lines_with_shared']:,}",
+        "line_ratio_narrow": str(d["line_ratio_narrow"]),
+        "line_ratio_wide": str(d["line_ratio_wide"]),
+        "fn_ratio_narrow": str(d["fn_ratio_narrow"]),
+        "fn_ratio_wide": str(d["fn_ratio_wide"]),
+    }
+    for key, val in required.items():
+        assert val in para, (
+            f"Chapter 6 does not quote the live {key} ({val}); it says: "
+            f"{para[:200]}...")
+    # A number appearing is not the same as the claim being right: the
+    # paragraph must still assert the arms are the SMALLER side, and must
+    # report an interval rather than one allocation of the shared bucket.
+    assert "smaller" in para
+    assert "range rather than a number" in para or "the honest figure is the interval" in para
+
+
+def test_the_paragraph_cannot_be_satisfied_by_a_different_number(d):
+    """Anti-vacuity, run rather than argued.
+
+    Substitutes a wrong value for each figure in turn and requires the check
+    above to reject it. Without this the anchored guard could still be passing
+    on a coincidence -- a small integer that happens to sit in the paragraph
+    for an unrelated reason.
+    """
+    para = _chapter_paragraph()
+    for key in ("dedicated_code_lines", "engine_code_lines",
+                "engine_code_lines_with_shared"):
+        wrong = d[key] + 1
+        rendered = f"{wrong:,}" if d[key] >= 1000 else str(wrong)
+        assert rendered not in para, (
+            f"the paragraph contains {rendered} as well as the true {key}, so "
+            "the guard on that figure proves nothing")
+
+
+def test_the_retracted_sentence_is_quoted_and_not_standing(d):
+    """A retraction that leaves the original standing has shipped here before."""
+    text = MANUSCRIPT.read_text()
+    assert "one function and a configuration struct each" in text, (
+        "the chapter no longer records what the old sentence said, so a "
+        "reader cannot tell the claim was retracted")
+    live = re.search(
+        r"\*\*Most of these arms are one function and a configuration struct\.\*\*",
+        text)
+    assert live is None, (
+        "the retracted sentence is still standing as a live claim")
+    para = _chapter_paragraph()
+    assert "An earlier version of this paragraph said" in para, (
+        "the retraction is no longer attached to the measurement that "
+        "replaced it")
+
+
+def test_every_module_is_classified_by_a_decision_somebody_made(d):
+    """A new modality file must NOT silently become ferroptosis engine.
+
+    `engine` is computed as the complement of the two hand-written buckets, so
+    the partition assertion is true by construction and cannot fail. A
+    reviewer added `bispecific.rs` -- a modality's own file -- and it was
+    counted as ferroptosis engine, making the engine look LARGER because a
+    modality arm landed. That is the exact self-flattery this page exists to
+    prevent, running backwards.
+
+    Pinning all three sets is the fix: any new module fails this until someone
+    classifies it. The literal below is the decision record.
+    """
+    engine = set(d["engine_module_names"])
+    dedicated = {m["module"] for m in d["dedicated"]}
+    shared = {m["module"] for m in d["shared"]}
+    assert dedicated == {"ablation", "adc", "adoptive", "oncolytic", "radiation"}
+    assert shared == {"cell", "drug_transport", "immune", "immune_spatial",
+                      "nutrient"}
+    on_disk = {p.stem for p in CORE.glob("*.rs") if p.stem != "lib"}
+    assert engine | dedicated | shared == on_disk, (
+        "a module is in no bucket -- classify it in modality_module_depth.py "
+        f"rather than letting the complement decide: "
+        f"{sorted(on_disk - (engine | dedicated | shared))}")
+    assert not (engine & (dedicated | shared)), "a module is in two buckets"
+    assert dedicated and shared and engine, (
+        "an empty bucket satisfies every structural check in this file")
+
+
+def test_the_shared_reach_is_measured_not_asserted(d):
+    """The page said "four arms reach through `immune.rs`" beside a table row
+    naming six, and neither number came from the code."""
+    md = MD.read_text()
+    # The page keeps the wrong figure as a QUOTED retraction, exactly as the
+    # chapter keeps the retracted sentence -- so the guard must forbid the
+    # LIVE form and require the quoted one, not ban the string.
+    assert "four arms reach through" not in md, (
+        "the hand-written reach count is standing as a live claim again")
+    assert 'said "four arms" beside a table row naming six' in md, (
+        "the page no longer records that the figure was hand-written")
+    deepest = max(d["shared"], key=lambda m: m["reach"])
+    assert f"**{deepest['reach']} other files in the workspace call it**" in md
+    for m in d["shared"]:
+        assert m["reach"] >= 1, (
+            f"{m['module']} is in the SHARED bucket and nothing calls it, so "
+            "it is not machinery several arms reach through")

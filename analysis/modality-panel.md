@@ -31,6 +31,21 @@ This project has argued since Chapter 6 that delivery dominates the in-vitro-to-
 
 That is worth stating rather than hiding, because it says exactly what this table can and cannot see: it compares MECHANISMS, and the thing that separates SDT from PDT is not a mechanism but a geometry. `analysis/depth-reach-comparison.md` is where that difference lives.
 
+## One construct, two diseases
+
+The adoptive row above is the LEUKAEMIA setting, and on its own it describes the indication these therapies were approved for rather than the setting this engine simulates. Run the identical infusion through the three barriers PMID 31848460 names — trafficking to, infiltration into and activation within the tumour — and then through the antigen ceiling:
+
+| | kill fraction |
+|---|--:|
+| leukaemia (every barrier open) | 0.1155% |
+| solid tumour | 0.000183% |
+
+**A 633-fold collapse from the same construct.** It is worth separating where it comes from, because the headline is easy to attribute to the wrong step: the three barriers multiply to 6.00% delivery, and persistence removes most of what is left (2.63% of effector function remains at the end of the run). Delivery alone is 16.7x; the rest is exhaustion, which is why a model folding persistence into activation would predict that fixing trafficking fixes the problem.
+
+**Every barrier value is an uncalibrated placeholder and the number above inherits that.** What the corpus establishes is that the barriers are real and GENERAL rather than antigen-specific; it does not establish which dominates, so the decomposition in the previous paragraph is a property of the preset and not a finding. The direction — that the same construct can fail without any single step looking catastrophic — is what survives.
+
+The antigen ceiling (80% of the tumour) does not bind here, because delivery and persistence have already taken the kill far below it. It is a wall rather than a coefficient, so a larger infusion cannot climb it — and that is the asymmetry with the ADC, whose cleavable payload kills antigen-negative neighbours and passes it.
+
 ## What this does not say
 
 **It is not a ranking of therapies.** Every kill fraction is a function of the parameters the arm was given, and for every arm except radiation's DNA channel those are placeholders. The calibration column is printed on every row for that reason, and `simulations/calibration/CALIBRATION_STATUS.md` carries the full accounting — most rows read `used in any reported number: N`.

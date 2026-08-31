@@ -48,6 +48,7 @@ use clap::Parser;
 use rand::{rngs::StdRng, Rng, SeedableRng};
 
 use ferroptosis_core::ablation::{margin_survival_fraction, AblationConfig};
+use ferroptosis_core::adoptive::{barrier_limited_kills, effective_effectors, AdoptiveBarriers};
 use ferroptosis_core::biochem::{sim_cell, CellState};
 use ferroptosis_core::cell::{gen_cell, Phenotype, Treatment};
 use ferroptosis_core::drug_transport::{
@@ -182,8 +183,26 @@ fn main() {
         calibration: "uncalibrated; published ORR band not fitted",
     });
 
-    let effectors = EffectorSource::CarT.effectors_after(200.0, 30, 0.15, 5_000.0);
-    let cart = adoptive_transfer_kills(effectors, n, &immune, 0.0, false);
+    // The barriers are what make this arm different from every other one: the
+    // SAME construct cures a blood cancer and does very little in a solid
+    // tumour, so the arm is run twice and the pair is the result. The panel
+    // row keeps the leukaemia setting (`Default`, every barrier open), which
+    // is exactly what it computed before this module existed -- the arm's
+    // number is unmoved and the counterfactual is new.
+    let infused = EffectorSource::CarT.effectors_after(200.0, 30, 0.15, 5_000.0);
+    let leukaemia = AdoptiveBarriers::default();
+    let solid = AdoptiveBarriers::solid_tumour();
+    let cart_kills = |b: &AdoptiveBarriers| {
+        let arrived = effective_effectors(infused, b, STEPS as u32);
+        barrier_limited_kills(
+            adoptive_transfer_kills(arrived, n, &immune, 0.0, false),
+            n as f64,
+            b,
+        )
+    };
+    let effectors = infused;
+    let cart = cart_kills(&leukaemia);
+    let cart_solid = cart_kills(&solid);
     arms.push(ArmResult {
         name: "AdoptiveCell",
         kill_fraction: cart / n as f64,
@@ -282,6 +301,19 @@ fn main() {
         "not_a_ranking": "Each arm carries its own calibration status; most are \
     uncalibrated placeholders. These are comparisons between MECHANISMS under one \
     model, not claims about clinical efficacy. See CALIBRATION_STATUS.md.",
+        "adoptive_barriers": {
+            "why": "The same infusion, run through the three barriers PMID 31848460 \
+    names and then through the antigen ceiling. The panel row above is the leukaemia \
+    setting; this is what the identical construct does against a solid tumour. Every \
+    barrier VALUE is an uncalibrated placeholder -- the corpus establishes that the \
+    barriers are general rather than antigen-specific, not which of them dominates.",
+            "leukaemia_kill_fraction": cart / n as f64,
+            "solid_tumour_kill_fraction": cart_solid / n as f64,
+            "delivery_efficiency_solid": ferroptosis_core::adoptive::delivery_efficiency(&solid),
+            "persistence_at_run_end_solid":
+                ferroptosis_core::adoptive::persistence_factor(&solid, STEPS as u32),
+            "antigen_ceiling_solid": ferroptosis_core::adoptive::antigen_ceiling(&solid),
+        },
         "arms": arms.iter().map(|r| serde_json::json!({
             "arm": r.name,
             "kill_fraction": r.kill_fraction,

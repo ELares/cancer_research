@@ -281,7 +281,6 @@
     "immune"
    ],
    "prose_only_modules": [
-    "adoptive",
     "cell"
    ]
   },
@@ -530,7 +529,6 @@
     "immune"
    ],
    "prose_only_modules": [
-    "adoptive",
     "cell"
    ],
    "engine_tier": "modifier"

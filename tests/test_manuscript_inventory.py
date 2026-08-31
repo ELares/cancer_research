@@ -152,3 +152,49 @@ def test_documented_binary_count_matches_the_crates_that_exist():
             assert int(m.group(1)) == actual, (
                 f"{name} says {m.group(1)} binaries; {actual} sim-* crates exist "
                 f"({', '.join(sorted(p.name for p in (root/'simulations').glob('sim-*') if p.is_dir()))})")
+
+
+def _core_version() -> str:
+    m = re.search(r'^version\s*=\s*"([^"]+)"', CORE_CARGO.read_text(), re.M)
+    assert m, "no version in ferroptosis-core/Cargo.toml"
+    return m.group(1)
+
+
+def test_claude_md_states_the_live_crate_version():
+    """CLAUDE.md asserted 0.67.0 and 0.69.0 in the same paragraph.
+
+    Appendix A and MODEL_CARD.md were already pinned here and were both
+    correct; the one file that is loaded into every session's context was not
+    covered, drifted two minor versions, and contradicted itself. A version a
+    reader is told is current is a claim like any other.
+    """
+    claude = (REPO_ROOT / "CLAUDE.md").read_text()
+    version = _core_version()
+    stated = re.findall(r"current crate version ([0-9]+\.[0-9]+\.[0-9]+)", claude)
+    assert stated, "CLAUDE.md no longer states a current crate version"
+    for v in stated:
+        assert v == version, (
+            f"CLAUDE.md says the crate is at {v}; Cargo.toml says {version}")
+
+
+def test_the_crate_readme_documents_every_module():
+    """`README.md` calls this table THE module list, so an omission is a
+    reader looking up a module and concluding it does not exist.
+
+    It had 31 rows against 37 files -- five modality modules missing, four of
+    them for several PRs and one added by the PR that also bumped the module
+    count in six other places. Nothing had ever compared the two.
+    """
+    src = REPO_ROOT / "simulations" / "ferroptosis-core" / "src"
+    on_disk = {p.stem for p in src.glob("*.rs") if p.stem != "lib"}
+    readme = (REPO_ROOT / "simulations" / "ferroptosis-core" / "README.md").read_text()
+    section = readme.split("## Modules", 1)
+    assert len(section) == 2, "the crate README has no Modules section"
+    body = section[1].split("\n## ", 1)[0]
+    documented = set(re.findall(r"^\| `([a-z_0-9]+)`", body, re.M))
+    assert on_disk - documented == set(), (
+        "modules on disk with no row in the crate README: "
+        f"{sorted(on_disk - documented)}")
+    assert documented - on_disk == set(), (
+        "the crate README documents modules that do not exist: "
+        f"{sorted(documented - on_disk)}")

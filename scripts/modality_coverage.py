@@ -153,7 +153,16 @@ ENGINE_TERMS = {
                             "homologous recombination"),
     "oncolytic-virus": ("oncolytic", "virotherapy", "adenovir*"),
     "crispr": ("crispr", "cas9", "guide rna", "sgrna*"),
-    "bispecific-antibody": ("bispecific*", "bite", "t-cell engager*"),
+    # `bite` was here as the BiTE acronym and matched the ENGLISH VERB: a
+    # comment-stripped line in `adoptive.rs` reading "it must actually bite
+    # over a run" credited that module with modelling bispecific antibodies.
+    # Same class as `t cell` inside `mut cell` and `glycolytic` as a Phenotype
+    # variant -- the term was right and the referent was wrong, which no
+    # boundary rule can fix because the string genuinely appears. The acronym
+    # is unreachable case-insensitively and is dropped; the two remaining
+    # terms are unambiguous, and `blinatumomab` is added because a named drug
+    # cannot collide with English.
+    "bispecific-antibody": ("bispecific*", "t-cell engager*", "blinatumomab"),
     "electrochemical-therapy": ("electroporation", "electrochemical",
                                 "irreversible electro*"),
     "sonodynamic": ("sonodynamic", "sdt", "ultrasound", "sonosensitiz*"),
@@ -879,7 +888,8 @@ def render(d: dict) -> str:
           "number, and the difference is the point.** "
           "`analysis/scope-audit.md` asks how many modules name *ferroptosis "
           "or the physical-ROS modalities* in production code; this asks how "
-          "many name ferroptosis *chemistry*. Same 32 modules, same `lib.rs` "
+          "many name ferroptosis *chemistry*. Same "
+          f"{d['module_count']} modules, same `lib.rs` "
           "and `#[cfg(test)]` exclusions, different question, so the two "
           "counts differ by exactly the modules their term sets disagree "
           "about: that audit's list carries `photodynamic`, `sonodynamic`, "

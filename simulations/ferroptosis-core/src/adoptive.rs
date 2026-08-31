@@ -52,6 +52,22 @@
 //! it, and there is no diffusing payload. That asymmetry is expressed here as
 //! a hard ceiling rather than a parameter, because it is structural.
 //!
+//! # What these four numbers can and cannot be told apart
+//!
+//! At a SINGLE time point they cannot. `effective_effectors` is
+//! `infused · (T·I·A) · (1−r)^steps`, so at fixed `steps` any trafficking,
+//! infiltration and activation with the same product are bit-identical, and
+//! an exhaustion rate can be absorbed into activation exactly — verified in
+//! `exhaustion_is_absorbable_into_activation_at_one_timepoint`, which
+//! constructs the collapsed config and asserts the two agree to the bit.
+//!
+//! Only varying `steps` separates persistence from the barriers, and nothing
+//! separates the three barriers from each other at all. So this module is
+//! four numbers whose PRODUCT is one measurable quantity, and its value is
+//! that the product decomposes into steps a reader can attack — not that the
+//! decomposition is identifiable from an outcome. Fitting all four to one
+//! endpoint would be fitting a single scalar four times.
+//!
 //! # What is NOT modelled
 //!
 //! Toxicity, which the same corpus sentence names FIRST. Cytokine release
@@ -144,7 +160,11 @@ pub fn delivery_efficiency(b: &AdoptiveBarriers) -> f64 {
 /// fixes persistence, which it does not.
 #[must_use = "the remaining function is the function's only output"]
 pub fn persistence_factor(b: &AdoptiveBarriers, steps: u32) -> f64 {
-    (1.0 - b.exhaustion_rate.clamp(0.0, 1.0)).powi(steps as i32)
+    // `powi(steps as i32)` was WRONG and the bound test could not see it: the
+    // cast wraps, so `u32::MAX` gave exponent -1 and this decay function
+    // returned 2.0 -- more effector function than was infused -- while
+    // `steps = 2^31` gave `inf`. `powf` takes the whole u32 range.
+    (1.0 - b.exhaustion_rate.clamp(0.0, 1.0)).powf(f64::from(steps))
 }
 
 /// Effectors that are both present and functional at `steps`.
@@ -162,6 +182,31 @@ pub fn effective_effectors(infused: f64, b: &AdoptiveBarriers, steps: u32) -> f6
 #[must_use = "the ceiling is the function's only output"]
 pub fn antigen_ceiling(b: &AdoptiveBarriers) -> f64 {
     b.antigen_positive_fraction.clamp(0.0, 1.0)
+}
+
+/// The most cells adoptive therapy can kill, whatever the dose.
+///
+/// This is where the ceiling is APPLIED, and it exists because for one review
+/// round it was not: `antigen_ceiling` was a clamped getter that nothing read,
+/// so the module documented a structural limit it did not have and a tenfold
+/// infusion killed tenfold more cells against a 10%-antigen-positive tumour.
+#[must_use = "the cap is the function's only output"]
+pub fn max_killable(tumour_cells: f64, b: &AdoptiveBarriers) -> f64 {
+    tumour_cells.max(0.0) * antigen_ceiling(b)
+}
+
+/// Kills after the antigen ceiling, given a raw effector-driven kill count.
+///
+/// A `min`, deliberately, and the contrast with [`crate::adc`] is the reason
+/// the function exists at all. `adc::bystander_kill_fraction` PASSES the
+/// antigen ceiling by killing antigen-negative neighbours with a diffusing
+/// payload; a T cell cannot see them, so here the ceiling is a wall rather
+/// than a coefficient. That distinction is not decorative: a multiplier can
+/// be compensated by infusing more cells and a cap cannot, which is why
+/// antigen escape ends the therapy instead of raising its dose.
+#[must_use = "the kill count is the function's only output"]
+pub fn barrier_limited_kills(raw_kills: f64, tumour_cells: f64, b: &AdoptiveBarriers) -> f64 {
+    raw_kills.max(0.0).min(max_killable(tumour_cells, b))
 }
 
 #[cfg(test)]
@@ -326,5 +371,158 @@ mod tests {
         assert!((0.0..=1.0).contains(&persistence_factor(&wild, 10)));
         assert!((0.0..=1.0).contains(&antigen_ceiling(&wild)));
         assert!(effective_effectors(-100.0, &wild, 10) >= 0.0);
+    }
+
+    #[test]
+    fn persistence_actually_reaches_the_effector_count_over_a_run() {
+        // A reviewer deleted `persistence_factor` from `effective_effectors`
+        // and all six tests stayed green: one ran on the default where
+        // persistence is exactly 1, and another compared two configs sharing
+        // an exhaustion rate and step count, so the factor cancelled on both
+        // sides. Neither varied `steps`, which is the ONLY axis that can see
+        // it. This one does.
+        let b = AdoptiveBarriers::solid_tumour();
+        let early = effective_effectors(1000.0, &b, 0);
+        let late = effective_effectors(1000.0, &b, 500);
+        assert!(
+            late < early * 0.01,
+            "500 steps of exhaustion barely moved the effector count: {early} -> {late}"
+        );
+        // And the shape is the decay, not merely "smaller": each step removes
+        // the same FRACTION, so the ratio over equal spans is constant.
+        let a = effective_effectors(1000.0, &b, 100) / effective_effectors(1000.0, &b, 50);
+        let c = effective_effectors(1000.0, &b, 200) / effective_effectors(1000.0, &b, 150);
+        assert!(
+            (a - c).abs() < 1e-12,
+            "exhaustion is not geometric: {a} vs {c}"
+        );
+    }
+
+    #[test]
+    fn exhaustion_is_absorbable_into_activation_at_one_timepoint() {
+        // NOT a property to be proud of -- it is the identifiability limit,
+        // pinned so the module cannot quietly start claiming four separable
+        // axes. At fixed `steps` the four numbers are one scalar, and the
+        // collapsed config agrees to the BIT.
+        let b = AdoptiveBarriers::solid_tumour();
+        let steps = 100;
+        let collapsed = AdoptiveBarriers {
+            activation: b.activation * persistence_factor(&b, steps),
+            exhaustion_rate: 0.0,
+            ..b
+        };
+        assert_eq!(
+            effective_effectors(1000.0, &b, steps).to_bits(),
+            effective_effectors(1000.0, &collapsed, steps).to_bits(),
+            "the collapse is the point: only `steps` separates these"
+        );
+        // Varying steps is what breaks the tie, and it must.
+        assert!(
+            effective_effectors(1000.0, &b, 200)
+                < effective_effectors(1000.0, &collapsed, 200) * 0.9,
+            "nothing distinguishes persistence from activation at any step"
+        );
+    }
+
+    #[test]
+    fn the_solid_tumour_preset_is_three_real_barriers_not_one_catastrophe() {
+        // A reviewer replaced the preset with 0.99/0.099/0.99 -- one collapsed
+        // step and two wide open -- and every test passed, because the only
+        // assertion on it was `delivery_efficiency < 0.1`, which 0.097 meets.
+        // The corpus says the barriers are GENERAL rather than antigen-specific
+        // (PMID 31848460), so a preset resting on a single step contradicts the
+        // sentence the module is built from. No barrier may carry the collapse.
+        let b = AdoptiveBarriers::solid_tumour();
+        let each = [b.trafficking, b.infiltration, b.activation];
+        for (name, v) in ["trafficking", "infiltration", "activation"]
+            .iter()
+            .zip(each)
+        {
+            assert!(
+                (0.2..=0.7).contains(&v),
+                "{name} at {v} makes the preset a single catastrophe, not three general barriers"
+            );
+        }
+        // And the compounding must be doing the work: no single barrier may
+        // account for more than half the total loss in log terms.
+        let total = -delivery_efficiency(&b).ln();
+        for (name, v) in ["trafficking", "infiltration", "activation"]
+            .iter()
+            .zip(each)
+        {
+            assert!(-v.ln() < 0.5 * total, "{name} alone carries the collapse");
+        }
+    }
+
+    #[test]
+    fn the_antigen_ceiling_is_a_wall_a_larger_dose_cannot_climb() {
+        // For one review round `antigen_ceiling` was a clamped getter nothing
+        // read, so the module's structural claim was false in the most direct
+        // way available: a 1000x infusion killed 1000x more cells against a
+        // 10%-antigen-positive tumour. The cap is applied now, and this is the
+        // test that would have caught it.
+        let b = AdoptiveBarriers {
+            antigen_positive_fraction: 0.1,
+            ..AdoptiveBarriers::default()
+        };
+        let tumour = 20_000.0;
+        let small = barrier_limited_kills(1_000.0, tumour, &b);
+        let huge = barrier_limited_kills(1_000_000.0, tumour, &b);
+        assert_eq!(
+            huge.to_bits(),
+            (tumour * 0.1).to_bits(),
+            "the cap is not applied"
+        );
+        assert!(small < huge, "the cap fires below the ceiling too");
+        // A thousandfold more cells buys nothing once the cap binds.
+        assert_eq!(
+            huge.to_bits(),
+            barrier_limited_kills(1_000_000_000.0, tumour, &b).to_bits()
+        );
+        // The ADC contrast is the reason the wall is a `min`, and it is
+        // asserted rather than described: at the SAME 10% antigen fraction a
+        // cleavable-linker ADC kills strictly MORE than that fraction, because
+        // its payload reaches the antigen-negative cells a T cell cannot see.
+        let adc = crate::adc::AdcConfig {
+            antigen_positive_fraction: 0.1,
+            direct_kill_probability: 1.0,
+            linker: crate::adc::Linker::Cleavable,
+            payload_escape_fraction: 0.8,
+            neighbours_in_reach: 0.5,
+        };
+        let past_the_ceiling = crate::adc::bystander_kill_fraction(&adc);
+        assert!(
+            past_the_ceiling > 0.0,
+            "the ADC must pass the ceiling or the contrast this module draws is empty"
+        );
+        assert_eq!(
+            huge / tumour,
+            0.1,
+            "adoptive therapy stops at the ceiling the ADC steps past"
+        );
+    }
+
+    #[test]
+    fn persistence_does_not_wrap_at_a_step_count_no_run_would_reach() {
+        // `powi(steps as i32)` wrapped: `u32::MAX` gave exponent -1 and this
+        // decay function returned 2.0, and `steps = 2^31` gave `inf`. A decay
+        // returning more than it started with is the failure a bound test
+        // exists for, and the bound test only probed `steps = 10`.
+        let b = AdoptiveBarriers {
+            exhaustion_rate: 0.5,
+            ..AdoptiveBarriers::default()
+        };
+        for steps in [0u32, 10, 1 << 31, u32::MAX] {
+            let f = persistence_factor(&b, steps);
+            assert!(
+                (0.0..=1.0).contains(&f),
+                "persistence_factor({steps}) = {f} is not a fraction"
+            );
+            assert!(
+                effective_effectors(1000.0, &b, steps).is_finite(),
+                "effective_effectors is not finite at {steps} steps"
+            );
+        }
+        assert_eq!(persistence_factor(&b, 0).to_bits(), 1.0f64.to_bits());
     }
 }
