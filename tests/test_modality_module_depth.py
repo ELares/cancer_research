@@ -151,8 +151,20 @@ def test_the_chapter_quotes_every_figure_it_uses_from_the_artifact(d):
     # A number appearing is not the same as the claim being right: the
     # paragraph must still assert the arms are the SMALLER side, and must
     # report an interval rather than one allocation of the shared bucket.
-    assert "smaller" in para
+    # A number appearing is not the claim being right, and the DIRECTION is
+    # what a reader takes away: every figure would still be present in a
+    # paragraph asserting the engine is 11.5x smaller than the arms. Pin the
+    # direction here, in the paragraph, rather than relying on a substring
+    # checked against the whole manuscript body somewhere else.
     assert "range rather than a number" in para or "the honest figure is the interval" in para
+    ded, eng = para.index(str(d["dedicated_code_lines"])), para.index(f"{d['engine_code_lines']:,}")
+    assert ded < eng, (
+        "the paragraph presents the engine's figures before the arms', so the "
+        "sentence may be attributing each side's numbers to the other")
+    assert re.search(r"arms are (?:smaller|between)", para), (
+        "the paragraph no longer states which side is the smaller one")
+    assert "times smaller" in para or "smaller by line" in para
+    assert "engine is smaller" not in para and "engine are smaller" not in para
 
 
 def test_the_paragraph_cannot_be_satisfied_by_a_different_number(d):

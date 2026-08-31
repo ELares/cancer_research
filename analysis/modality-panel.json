@@ -5,7 +5,7 @@
   "leukaemia_kill_fraction": 0.0011547057708749067,
   "persistence_at_run_end_solid": 0.02634472227688359,
   "solid_tumour_kill_fraction": 1.8252241707128518e-06,
-  "why": "The same infusion, run through the three barriers PMID 31848460 names and then through the antigen ceiling. The panel row above is the leukaemia setting; this is what the identical construct does against a solid tumour. Every barrier VALUE is an uncalibrated placeholder -- the corpus establishes that the barriers are general rather than antigen-specific, not which of them dominates."
+  "why": "The same infusion, run through the three barriers PMID 31848460 names and then through the antigen ceiling. The panel row above is the leukaemia setting; this is what the identical construct does against a solid tumour. Every barrier VALUE is an uncalibrated placeholder -- the corpus establishes that the barriers are general rather than antigen-specific, not which of them dominates. The antigen ceiling contributes EXACTLY 1x here: delivery and persistence take the kill far below it, so the cap never binds and none of the collapse is attributable to it."
  },
  "arms": [
   {
@@ -54,7 +54,7 @@
    "arm": "AdoptiveCell",
    "calibration": "uncalibrated; B-ALL remission band not fitted",
    "kill_fraction": 0.0011547057708749067,
-   "limited_by": "effector persistence and TME suppression",
+   "limited_by": "per-effector kill rate and the PD-1 brake (barriers open here; the solid-tumour case is reported separately)",
    "route": "redirected effectors (bypasses DC priming)"
   },
   {

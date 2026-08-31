@@ -207,7 +207,15 @@ fn main() {
         name: "AdoptiveCell",
         kill_fraction: cart / n as f64,
         route: "redirected effectors (bypasses DC priming)",
-        limited_by: "effector persistence and TME suppression",
+        // NOT persistence and not suppression, both of which are exactly
+        // inert in this row: the panel passes suppression 0.0 and the default
+        // barriers make `persistence_factor` bit-identical to 1.0. Naming
+        // them made the row contradict the paragraph below it, which says
+        // this is the every-barrier-open case. What actually bounds it is the
+        // per-cell kill rate and the PD-1 brake; the barriers that DO bite
+        // are in the solid-tumour counterfactual beside it.
+        limited_by: "per-effector kill rate and the PD-1 brake (barriers open here; \
+        the solid-tumour case is reported separately)",
         calibration: "uncalibrated; B-ALL remission band not fitted",
     });
 
@@ -306,7 +314,9 @@ fn main() {
     names and then through the antigen ceiling. The panel row above is the leukaemia \
     setting; this is what the identical construct does against a solid tumour. Every \
     barrier VALUE is an uncalibrated placeholder -- the corpus establishes that the \
-    barriers are general rather than antigen-specific, not which of them dominates.",
+    barriers are general rather than antigen-specific, not which of them dominates. The \
+    antigen ceiling contributes EXACTLY 1x here: delivery and persistence take the kill \
+    far below it, so the cap never binds and none of the collapse is attributable to it.",
             "leukaemia_kill_fraction": cart / n as f64,
             "solid_tumour_kill_fraction": cart_solid / n as f64,
             "delivery_efficiency_solid": ferroptosis_core::adoptive::delivery_efficiency(&solid),

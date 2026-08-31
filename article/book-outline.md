@@ -2,7 +2,7 @@
 
 **Working title:** Cancer Therapy Mechanisms and Evidence: A Cross-Literature Synthesis
 
-**Target:** ~54,000 words (current: ~60,300 measured prose-only from v1.md by `tests/test_book_outline_wordcount.py`, which recomputes it and fails on drift). 5 Parts, 12 chapters, 3 appendices.
+**Target:** ~54,000 words (current: ~60,400 measured prose-only from v1.md by `tests/test_book_outline_wordcount.py`, which recomputes it and fails on drift). 5 Parts, 12 chapters, 3 appendices.
 
 > **Note:** This is a planning document, not manuscript content. Headings here
 > use the outline's own hierarchy for readability. The manuscript heading
@@ -98,7 +98,27 @@
 
 **Source material:** simulations/ferroptosis-core/src/biochem.rs, simulations/ferroptosis-core/src/params.rs, analysis/hypothesis-sdt-ferroptosis-icd.md.
 
-## Chapter 6: Drug Combinations and Penetration (~4,000 words)
+## Chapter 6: The Multi-Modality Engine (~5,000 words)
+
+**Scope:** The arms the engine gained beyond ferroptosis and physical ROS —
+radiation on two independent channels, ablation as a threshold rather than a
+dose-response, oncolytic spread as a race, the ADC bystander effect, and the
+adoptive-cell barriers — measured head-to-head on one tumour and then through
+the resistance axes of the chapter that follows the next one. Includes the
+measured accounting of how much engine each arm actually has, against the
+ferroptosis engine it sits beside.
+
+**Non-scope:** Not a ranking of therapies and not a clinical claim. Every arm
+in it is recorded as feeding no reported number, and the chapter says so.
+Volume in the literature is not evidence of merit and no ordering of work is
+drawn from it.
+
+**Source material:** simulations/ferroptosis-core (radiation, ablation,
+oncolytic, adc, adoptive), sim-modality-panel, analysis/modality-coverage.md,
+analysis/modality-panel.md, analysis/modality-tme.md,
+analysis/modality-calibration.md, analysis/modality-module-depth.md.
+
+## Chapter 7: Drug Combinations and Penetration (~4,000 words)
 
 **Scope:** Spatial tumor simulation (depth-dependent kill), vulnerability window timing, drug combination synergy (Bliss independence), and the in-vitro-to-in-vivo gap from tissue-specific pharmacokinetics.
 
@@ -113,7 +133,7 @@
 
 **Source material:** simulations/sim-spatial, sim-vuln-window, sim-combo-mech, sim-tumor-pk output.
 
-## Chapter 7: Resistance Mechanisms (~6,000 words)
+## Chapter 8: Resistance Mechanisms (~6,000 words)
 
 **Scope:** Four TME resistance/amplification mechanisms, each with: plain-language opening, simulation finding, "what this means," "how to test this," and honest limitations. The key insight: three resistance mechanisms (hypoxia, stromal shielding, acidic pH) selectively penalize pharmacologic ferroptosis inducers while leaving physical modalities unaffected. One amplification mechanism (immune coupling) favors dense spatial kill patterns.
 
@@ -131,7 +151,7 @@
 
 **Source material:** simulations/sim-tme output, analysis/principle-resistance-tradeoff.md.
 
-## Chapter 8: Counterarguments and Failure Modes (~3,500 words)
+## Chapter 9: Counterarguments and Failure Modes (~3,500 words)
 
 **Scope:** Honest assessment of what could go wrong. Other directions the repo was underweighting (radioligand therapy, immune strategies, pathway-target layers, stromal biology). Historical precedents (PDT's 40-year translational plateau). The nanosonosensitizer confound. Evolutionary escape. Where the simulation architecture is structurally too simple.
 
@@ -152,7 +172,7 @@
 
 *PARTIALLY NEW. Issues #103 (Ch 9-10), #105 (news integration sidebars).*
 
-## Chapter 9: Research Roadmap (~6,000 words)
+## Chapter 10: Research Roadmap (~6,000 words)
 
 **Scope:** Current Section 4.7 expanded into experiment-level detail. Each proposed experiment includes: hypothesis, model system, expected outcome if right, expected outcome if wrong, confidence tier (high/medium/low based on how well-calibrated the underlying simulation parameters are). Ordered by confidence and feasibility.
 
@@ -165,7 +185,7 @@
 
 **Source material:** simulation outputs, analysis/distilled-hypotheses-final.md.
 
-## Chapter 10: The Broader Landscape (~3,500 words)
+## Chapter 11: The Broader Landscape (~3,500 words)
 
 **Scope:** Current Section 5 (Conclusion) expanded with field context. Where the current therapeutic landscape is heading (immunotherapy plateau, CAR-T solid tumor challenge, radioligand rise, AI in drug discovery). How this work fits. What's missing from everyone's approach. Competing hypotheses worth taking seriously.
 
@@ -178,7 +198,7 @@
 
 **Source material:** analysis/deep-pattern-analysis.md, news sources (after #99 pipeline).
 
-## Chapter 11: How To Contribute (~2,000 words)
+## Chapter 12: How To Contribute (~2,000 words)
 
 **Scope:** Practical guide for researchers (use ferroptosis-core, challenge parameters), engineers (extend simulations, Python bindings, PhysiCell), students (thesis project ideas), and clinicians (what to watch for in upcoming trials). Links to code, data, and the MIT license.
 
@@ -212,11 +232,11 @@ Step-by-step: clone, build, run analysis, run simulations, compile PDF.
 |------|----------|--------------|-------------|
 | I: Why This Exists | 1-2 | ~4,200 | 6,000 |
 | II: What We Found | 3-4 | ~15,800 | 12,000 |
-| III: Simulations | 5-8 | ~23,800 | 16,500 |
-| IV: What's Next | 9-11 | ~7,500 | 11,500 |
-| V: References/Tools | Apps A-C | ~7,700 | 8,000 |
+| III: Simulations | 5-9 | ~23,900 | 16,500 |
+| IV: What's Next | 10-12 | ~7,600 | 11,500 |
+| V: References/Tools | Apps A-C | ~7,600 | 8,000 |
 | front matter (title, abstract) | — | ~1,300 | — |
-| **Total** | **11 + 3 apps** | **~60,300** | **~54,000** |
+| **Total** | **12 + 3 apps** | **~60,400** | **~54,000** |
 
 Part III is over its target and Part IV well under it. The per-part figures are
 measured, not planned: an earlier revision changed only the Total and left the

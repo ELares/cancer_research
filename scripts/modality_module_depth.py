@@ -233,9 +233,13 @@ def render(d: dict) -> str:
           f"engine by line count**, and 1/{d['fn_ratio_narrow']} to "
           f"1/{d['fn_ratio_wide']} by public function. On either reading the "
           "ferroptosis engine is still the larger body of work, and it "
-          "carries something none of the new modules do: years of calibration "
-          "against this project's own targets, and numbers the manuscript "
-          "actually reports.", "",
+          "carries something none of the new modules do: legs fitted against "
+          "independent published data, and numbers the manuscript actually "
+          "reports. (That clause read \"years of calibration\" until a "
+          "reviewer checked the first commit date against it. The repository "
+          "is months old, so the claim was false — and it was the one clause "
+          "in a paragraph built around a measured interval that had been "
+          "exempted from measurement.)", "",
           "## What this does NOT measure", "",
           "**Quality, calibration, or use.** A module can be large and wrong. "
           "`analysis/modality-calibration.md` carries what is fitted — and "

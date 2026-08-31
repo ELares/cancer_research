@@ -37,7 +37,7 @@ Credited to no single arm, deliberately. `cell.rs` is the deepest of them and **
 | neither side | 27 | 186 | 3,988 | 11.5x |
 | the engine | 32 | 244 | 4,805 | 13.8x |
 
-So the modality arms are somewhere between **1/11.5 and 1/13.8 of the engine by line count**, and 1/6.4 to 1/8.4 by public function. On either reading the ferroptosis engine is still the larger body of work, and it carries something none of the new modules do: years of calibration against this project's own targets, and numbers the manuscript actually reports.
+So the modality arms are somewhere between **1/11.5 and 1/13.8 of the engine by line count**, and 1/6.4 to 1/8.4 by public function. On either reading the ferroptosis engine is still the larger body of work, and it carries something none of the new modules do: legs fitted against independent published data, and numbers the manuscript actually reports. (That clause read "years of calibration" until a reviewer checked the first commit date against it. The repository is months old, so the claim was false — and it was the one clause in a paragraph built around a measured interval that had been exempted from measurement.)
 
 ## What this does NOT measure
 

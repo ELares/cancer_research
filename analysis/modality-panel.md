@@ -12,7 +12,7 @@
 | Radiation | 45.18% | linear-quadratic DNA damage (not CellState) | dose, and oxygen through the OER | form checked against a published parameterisation |
 | OncolyticVirus | 13.58% | direct lysis + the SHARED ICD chain | infection spread, which this engine takes as an input | uncalibrated; T-VEC durable-response band not fitted |
 | AntibodyDrugConjugate | 1.71% | ferroptosis payload, delivered on an antibody | the binding-site barrier (~7 um penetration) | transport anchored; payload pharmacology is RSL3's |
-| AdoptiveCell | 0.12% | redirected effectors (bypasses DC priming) | effector persistence and TME suppression | uncalibrated; B-ALL remission band not fitted |
+| AdoptiveCell | 0.12% | redirected effectors (bypasses DC priming) | per-effector kill rate and the PD-1 brake (barriers open here; the solid-tumour case is reported separately) | uncalibrated; B-ALL remission band not fitted |
 | Immunotherapy | 0.04% | immune cascade (no ferroptotic death required) | antigen availability and the checkpoint brake | uncalibrated; published ORR band not fitted |
 | Control | 0.00% | ferroptosis engine (lipid peroxidation) | energy delivery to depth | uncalibrated (direction-only) |
 | RSL3 | 0.00% | ferroptosis engine (lipid peroxidation) | endogenous ROS supply and antioxidant defence | uncalibrated (direction-only) |

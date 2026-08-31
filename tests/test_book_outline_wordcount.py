@@ -283,3 +283,39 @@ def test_no_reader_facing_file_quotes_a_stale_word_count():
     assert not bad, (
         "files quoting a stale manuscript length:\n  " + "\n  ".join(bad)
         + "\nRun scripts/update_word_budget.py, which updates every site.")
+
+
+def test_the_outline_numbers_the_same_chapters_the_manuscript_does():
+    """The outline is the manuscript's contract; it had silently gone off by one.
+
+    Chapter 6 was inserted into `v1.md` and never into the outline, so from
+    that point on every outline heading named the chapter after it, its
+    per-part rows described the wrong chapter ranges, and its Total said
+    eleven chapters against a manuscript with twelve. The word-budget
+    arithmetic was right under the stale numbering, which is why the existing
+    guard (rows must sum) stayed green through all of it -- a sum cannot see a
+    label.
+    """
+    outline = (REPO_ROOT / "article/book-outline.md").read_text()
+    manuscript = (REPO_ROOT / "article/drafts/v1.md").read_text()
+
+    def chapters(text):
+        return [(int(m.group(1)), m.group(2).strip())
+                for m in re.finditer(r"^## Chapter (\d+): ([^(\n]+)", text, re.M)]
+
+    out = chapters(outline)
+    ms = chapters(manuscript)
+    assert [n for n, _ in out] == list(range(1, len(out) + 1)), (
+        f"the outline's chapter numbers are not consecutive: {[n for n, _ in out]}")
+    assert len(out) == len(ms), (
+        f"the outline describes {len(out)} chapters, the manuscript has "
+        f"{len(ms)}: {[t for _, t in out]} vs {[t for _, t in ms]}")
+    for (a, ta), (b, tb) in zip(out, ms):
+        assert a == b and ta.lower() == tb.lower(), (
+            f"outline Chapter {a} '{ta}' does not match manuscript "
+            f"Chapter {b} '{tb}'")
+    total = re.search(r"\| \*\*Total\*\* \| \*\*(\d+) \+ 3 apps\*\*", outline)
+    assert total, "the outline's Total row no longer states a chapter count"
+    assert int(total.group(1)) == len(ms), (
+        f"the outline's Total says {total.group(1)} chapters; the manuscript "
+        f"has {len(ms)}")
