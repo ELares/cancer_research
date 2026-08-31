@@ -70,6 +70,13 @@ def test_a_wide_fit_is_called_unconstrained_rather_than_fitted(d):
     assert 0.0 < cap < 1.0, cap
     for a in d["arms"]:
         f = a["fit"]
+        if a["target"] is None:
+            # A row with NO TARGET is a different outcome from one whose
+            # target nothing satisfies, and collapsing them would hide the
+            # more interesting admission: that this project has no number.
+            assert a["verdict"] == "NO TARGET", a["arm"]
+            assert f is None
+            continue
         if f is None:
             assert a["verdict"] == "INADMISSIBLE", a["arm"]
             continue
@@ -139,6 +146,45 @@ def test_the_checkpoint_diagnosis_is_arithmetic_that_still_holds(d):
         assert arm["ceiling_at_full_presentation"] < 0.20
 
 
+def test_a_row_with_no_target_says_so_rather_than_inventing_one(d, md):
+    """The outcome a calibration page is most tempted to hide.
+
+    Inventing a target that a flexible form then satisfies looks exactly like
+    calibration and constrains nothing, so a row with no number must SAY it
+    has none and say why -- and must not carry a fit.
+    """
+    none = [a for a in d["arms"] if a["verdict"] == "NO TARGET"]
+    if not none:
+        assert "The rows with nothing to fit to" not in md
+        return
+    assert "The rows with nothing to fit to" in md
+    assert "no target at all" in md
+    for a in none:
+        assert a["target"] is None and a["fit"] is None, a["arm"]
+        reason = a.get("no_target_reason", "")
+        assert len(reason) > 120, (
+            f"{a['arm']} has no target and a {len(reason)}-character reason; "
+            "an unexplained absence is not an admission")
+        assert reason in md
+        # The SOURCE must still exist -- the layer landed under the
+        # layer-freeze policy on a mechanism anchor, and losing that would
+        # mean the layer should not have landed.
+        assert a["source"].strip(), a["arm"]
+
+
+def test_an_unconstrained_row_is_named_and_explained(d, md):
+    """A 99%-wide window is consistent with the model and says nothing about
+    it. That has to read as a fact about the TARGET, not as a fit."""
+    unc = [a for a in d["arms"] if a["verdict"] == "UNCONSTRAINED"]
+    if not unc:
+        assert "The rows whose target excludes almost nothing" not in md
+        return
+    assert "The rows whose target excludes almost nothing" in md
+    for a in unc:
+        assert a["fit"]["width_fraction"] > d["unconstrained_width"]
+        assert f"**{a['arm']}**" in md
+
+
 def test_every_clinical_target_carries_its_mapping(d, md):
     """The weak link, and the one a reader skims past.
 
@@ -155,6 +201,15 @@ def test_every_clinical_target_carries_its_mapping(d, md):
         if "clinical" not in a["target_kind"]:
             assert not a["mapping"], (
                 f"{a['arm']} is not a clinical target and carries a mapping")
+    # The CAR-T mapping must carry the caveat from its own source, because a
+    # fit to the headline band describes the indication these therapies were
+    # approved for and not the setting this engine simulates.
+    cart = next((a for a in d["arms"] if a["arm"].startswith("CAR-T")), None)
+    if cart:
+        assert "not transferred to solid" in cart["mapping"] or \
+               "NOT transferred to solid" in cart["mapping"], (
+            "the CAR-T row fits the leukaemia band without carrying the "
+            "caveat its own source attaches to it")
 
 
 def test_the_page_refuses_to_call_a_fit_a_validation(md):
@@ -175,5 +230,8 @@ def test_only_one_parameter_moves_per_arm(d):
     for a in d["arms"]:
         assert isinstance(a["parameter"], str) and "," not in a["parameter"], (
             f"{a['arm']} fits more than one parameter: {a['parameter']}")
+        if a["range_scanned"] is None:
+            assert a["verdict"] == "NO TARGET", a["arm"]
+            continue
         lo, hi = a["range_scanned"]
         assert lo < hi and lo >= 0.0

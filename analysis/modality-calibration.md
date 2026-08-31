@@ -10,16 +10,29 @@ Every arm this project added carries a NAMED target — a published number, cite
 | Synthetic lethality (PARP) | `RadiationConfig::parp_alpha_boost` | sensitizer enhancement ratio 1.2-1.7 | **ADMISSIBLE** | 0.544 – 0.9485 | 20% |
 | Checkpoint blockade | `ImmuneParams::baseline_antigenicity` | anti-PD-1 monotherapy ORR 20-30% | **INADMISSIBLE** | — | — |
 | Oncolytic virus | `oncolytic_lysis immunogenicity` | durable-response ratio 8.0x (16% treated vs 2% control) | **ADMISSIBLE** | 0.3385 – 0.525 | 19% |
+| Ablation (thermal) | `AblationConfig::cem43_threshold` | exposure at 57 C must be seconds, not hours | **UNCONSTRAINED** | 27.49 – 2000 | 99% |
+| CAR-T (adoptive transfer) | `adoptive_transfer_kills effector count` | B-ALL complete remission 70%-94% | **ADMISSIBLE** | 8.14e+05 – 1.093e+06 | 6% |
+| ADC bystander effect | `AdcConfig::payload_escape_fraction` | *none in this corpus* | **NO TARGET** | — | — |
 
-**3 admissible, 0 unconstrained, 1 inadmissible.** The width column is the point: a fit that admits most of the search range has been given a target that cannot discriminate, and reporting it as "calibrated" would be the same error as reporting a p-value without an effect size.
+**4 admissible, 1 unconstrained, 1 inadmissible, 1 with no target at all.** The width column is the point: a fit that admits most of the search range has been given a target that cannot discriminate, and reporting it as "calibrated" would be the same error as reporting a p-value without an effect size.
 
-## Three outcomes, and they are not the same result
+## Four outcomes, and they are not the same result
 
 **ADMISSIBLE** — a value reproduces the target and the range that does is narrow. The data has said something.
 
 **UNCONSTRAINED** — a value exists and so does most of the search range. That is a fact about the TARGET, not the model, and it is reported rather than dressed up: a satisfiable target that excludes nothing has not calibrated anything.
 
-**INADMISSIBLE** — nothing in the range reproduces it, which falsifies the FORM. **This is the outcome worth wanting**, because it is the only one that can teach the model something. None of these arms produced it, which is itself worth knowing: these forms are all flexible enough to hit their targets, so hitting them is weak evidence.
+**INADMISSIBLE** — nothing in the range reproduces it, which falsifies the FORM. **This is the outcome worth wanting**, because it is the only one that can teach the model something.
+
+**NO TARGET** — the corpus anchors the MECHANISM and gives no number the parameter could be fitted to. This is the outcome a calibration page is most tempted to hide, and the temptation is specific: inventing a target that a flexible form then satisfies looks exactly like calibration and constrains nothing. A row that says it has no number is more use than a row that has made one up.
+
+## The rows with nothing to fit to
+
+**ADC bystander effect** — The corpus establishes that a cleavable linker causes bystander killing and a non-cleavable one does not -- a qualitative contrast with both arms named, which is what let the layer land under the layer-freeze policy. It gives no escape fraction, no diffusion radius and no bystander kill rate. Reporting a fit here would mean inventing a target, and an invented target that a flexible form then satisfies is worse than no target at all: it looks like calibration and constrains nothing.
+
+## The rows whose target excludes almost nothing
+
+**Ablation (thermal)** — 99% of the searched range satisfies the target, so the target is consistent with the model and constrains it barely at all. That is a fact about the target and it is reported rather than counted as a fit.
 
 ## The inadmissible row is the informative one
 
@@ -29,11 +42,13 @@ A row like this is worth more than the three that fitted. The fitted ones show t
 
 ## The mapping is the weak link, and it is stated per row
 
-2 of the 4 targets are CLINICAL, and no amount of fitting makes a clinical endpoint and a lattice kill fraction the same quantity.
+3 of the 7 targets are CLINICAL, and no amount of fitting makes a clinical endpoint and a lattice kill fraction the same quantity.
 
 **Checkpoint blockade** — An objective response in a patient is mapped onto a KILL FRACTION in a lattice. Those are different quantities and no fit makes them the same one: a partial response is a 30% diameter reduction, roughly a 66% volume reduction, and a responding patient is not a dead tumour. Even had the fit succeeded, this mapping would be the weakest link in the row.
 
 **Oncolytic virus** — A durable-response RATIO is mapped onto a ratio of DC-activation fractions. Both are dimensionless, which makes this less fragile than the ORR row -- but it assumes the clinical advantage is entirely immunological, and T-VEC also lyses cells directly.
+
+**CAR-T (adoptive transfer)** — A complete remission is mapped onto a KILL FRACTION. The same source says the result has NOT transferred to solid tumours and that 30-50% of responses were not durable, so a fit to the headline band describes the indication these therapies were approved for and not the setting this engine simulates. The fit is to the leukaemia case with suppression at zero, which is the only setting the band is measured in.
 
 ## What this does not say
 
