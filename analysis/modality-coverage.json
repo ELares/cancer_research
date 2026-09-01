@@ -208,7 +208,10 @@
    "trials": 342,
    "trial_share": 6.29,
    "growth": 4.16,
-   "code_modules": [],
+   "code_modules": [
+    "params",
+    "radiation"
+   ],
    "prose_only_modules": []
   },
   {
@@ -403,9 +406,12 @@
    "trials": 342,
    "trial_share": 6.29,
    "growth": 4.16,
-   "code_modules": [],
+   "code_modules": [
+    "params",
+    "radiation"
+   ],
    "prose_only_modules": [],
-   "engine_tier": "absent"
+   "engine_tier": "modifier"
   },
   {
    "mechanism": "oncolytic-virus",
@@ -520,8 +526,8 @@
   "PDT",
   "Radiation"
  ],
- "absent_count": 13,
- "absent_census": 90019,
- "absent_trials": 2967,
+ "absent_count": 12,
+ "absent_census": 84582,
+ "absent_trials": 2625,
  "total_census": 165700
 }

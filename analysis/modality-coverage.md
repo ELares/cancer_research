@@ -12,7 +12,7 @@ The engine expresses **4 treatments** (`RSL3` — ferroptosis; `SDT`, `PDT` — 
 | car-t | 15,358 | 1,020 | 6.6% | 6.95× | — | — |
 | metabolic-targeting | 8,809 | 45 | 0.5% | 2.16× | — | `cell`, `nutrient`, `params`, `ph`, `stromal` |
 | antibody-drug-conjugate | 6,019 | 580 | 9.6% | 3.1× | — | — |
-| synthetic-lethality | 5,437 | 342 | 6.3% | 4.16× | — | — |
+| synthetic-lethality | 5,437 | 342 | 6.3% | 4.16× | modifier | — |
 | oncolytic-virus | 5,006 | 201 | 4.0% | 1.18× | — | — |
 | crispr | 3,674 | 6 | 0.2% | 8.13× | — | — |
 | bispecific-antibody | 3,462 | 326 | 9.4% | 5.52× | — | — |
@@ -23,9 +23,9 @@ The engine expresses **4 treatments** (`RSL3` — ferroptosis; `SDT`, `PDT` — 
 | microbiome | 380 | 12 | 3.2% | — | — | — |
 | mrna-vaccine | 301 | 2 | 0.7% | — | — | — |
 
-**13 of 16 mechanisms have no engine representation at all**, and they carry 90,019 census articles (54% of the table's volume) and 2,967 registered trials between them. That is the only actionable content here, and it is binary: it says which questions the engine cannot be asked, not which are worth asking.
+**12 of 16 mechanisms have no engine representation at all**, and they carry 84,582 census articles (51% of the table's volume) and 2,625 registered trials between them. That is the only actionable content here, and it is binary: it says which questions the engine cannot be asked, not which are worth asking.
 
-**`epigenetic`, `immunotherapy` are MODIFIERS, not treatments** — the distinction this table exists to draw. A modifier changes how an existing treatment lands and cannot be the thing under test.
+**`epigenetic`, `immunotherapy`, `synthetic-lethality` are MODIFIERS, not treatments** — the distinction this table exists to draw. A modifier changes how an existing treatment lands and cannot be the thing under test.
 
 Immunotherapy is the sharpest case. The engine has **2 immune kill paths** — `immune_spatial::immune_kill_probability` (spatial DAMP field), called from `sim-tme`, `sim-tme-3d`; `immune::immune_cascade` (well-mixed cascade), called from `sim-combo`, `sim-icd`.
 
