@@ -72,8 +72,10 @@ struct Args {
     n_cells: usize,
 
     /// Also sweep every arm across the tumour-microenvironment axes this
-    /// project spent years establishing for ferroptosis: hypoxia, stromal
-    /// shielding and acidic pH. Off by default because it multiplies the run
+    /// project established for ferroptosis: hypoxia, stromal shielding and
+    /// acidic pH. (This said "spent years establishing". The repository is
+    /// months old, which is the third site of the same false claim found in
+    /// one campaign -- the others were in Chapter 6 and MISSION.md.) Off by default because it multiplies the run
     /// by eight and writes a second artifact.
     #[arg(long, default_value_t = false)]
     tme_sweep: bool,

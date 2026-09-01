@@ -452,7 +452,7 @@ figures:
       quantitative predictions -- the figure is about resolution, not about
       biology. Regenerates offline in seconds from the committed sweep JSONL.
 
-  - manuscript_figure: null
+  - manuscript_figure: 25
     filename: fig30_modality_landscape
     generator:
       script: scripts/generate_conceptual_diagrams.py
@@ -460,7 +460,7 @@ figures:
     inputs:
       - analysis/modality-coverage.json
     type: conceptual
-    status: supplementary
+    status: manuscript
     note: >-
       What the simulation engine can be ASKED, against what the field
       publishes. The one figure that answers the criticism this project's
@@ -482,7 +482,7 @@ figures:
       the grey shrinks, and the caption's arm list is derived from the same
       JSON so it cannot describe an engine that no longer exists.
 
-  - manuscript_figure: null
+  - manuscript_figure: 26
     filename: fig31_modality_panel
     generator:
       script: scripts/generate_conceptual_diagrams.py
@@ -490,7 +490,7 @@ figures:
     inputs:
       - analysis/modality-panel.json
     type: simulation
-    status: supplementary
+    status: manuscript
     note: >-
       Every applicable treatment arm run against the identical tumour from the
       identical seed by `sim-modality-panel`, so a difference between two rows
@@ -511,3 +511,50 @@ figures:
       them is a geometry, not a mechanism, and it lives in
       `analysis/depth-reach-comparison.md`. Every number is read from
       analysis/modality-panel.json; nothing on the figure is typed.
+
+  - manuscript_figure: 27
+    filename: fig32_modality_tme
+    generator:
+      script: scripts/generate_conceptual_diagrams.py
+      function: fig32_modality_tme
+    inputs:
+      - analysis/modality-tme.json
+    type: simulation
+    status: manuscript
+    note: >-
+      The resistance sweep for every arm, on a SIGNED scale and split by cell
+      state. Both choices are the figure. The analysis behind it once took the
+      absolute value of every change and reported an arm that "loses 121%" --
+      impossible, and worse, it hid a real result, because one axis HELPS:
+      clonal heterogeneity raises the pharmacologic arm's kill by supplying a
+      low-glutathione tail that dies while the average cell resists. A
+      magnitude colour map paints that the same shade as a catastrophic loss,
+      so the map is diverging and zero is neutral. The split by phenotype is
+      there because an earlier sweep ran one cell state and reported two axes
+      inert -- correctly for that run, and misleadingly, since what was inert
+      was the configuration's ability to see them. Red is a loss and blue a
+      gain, which is `RdBu` and not `RdBu_r`: the first draft drew the reverse
+      of what its own caption said.
+
+  - manuscript_figure: 28
+    filename: fig33_adoptive_barriers
+    generator:
+      script: scripts/generate_conceptual_diagrams.py
+      function: fig33_adoptive_barriers
+    inputs:
+      - analysis/modality-panel.json
+    type: simulation
+    status: manuscript
+    note: >-
+      The same CAR-T construct against a leukaemia and a solid tumour, as a
+      waterfall on a log axis. The point is that NO SINGLE STEP looks
+      catastrophic: three barriers at plausible values leave six per cent,
+      exhaustion removes most of what is left, and the product is the
+      difference between a therapy that cures a blood cancer and one that does
+      very little in a solid tumour -- which is why the model keeps them
+      separate instead of fitting one efficacy scalar. The antigen ceiling is
+      drawn even though it does NOTHING here, because it is a CAP rather than
+      a coefficient and a figure that omitted the inert step would imply all
+      three always act. The generator asserts the drawn factors against the
+      binary's own binds flag before drawing, since that decomposition was a
+      residual once and could not disagree with itself.
