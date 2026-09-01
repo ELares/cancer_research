@@ -261,12 +261,31 @@ mod tests {
         assert!(total_kill_fraction(&bystanding) > ceiling * 1.1);
     }
 
-    /// Antigen LOSS lowers the ceiling, and a bystander ADC degrades more
-    /// gracefully than one without it. That difference is the clinical
-    /// argument for the linker.
+    /// THE BYSTANDER MECHANISM IS SELF-LIMITING, and this test used to claim
+    /// the opposite.
+    ///
+    /// It was `antigen_loss_hurts_the_non_bystander_arm_more`, and it asserted
+    /// that the relative advantage `b/a` is NON-DECREASING as antigen is lost
+    /// -- with a comment saying that is what separates "addresses escape" from
+    /// "just adds kill". Measured at this module's own `heterogeneous()`
+    /// config the ratio is EXACTLY CONSTANT at `1 + escape*reach = 1.30` for
+    /// every antigen fraction, because `bystander = dying * escape * reach`
+    /// and `dying = apf * kill`, so both arms scale with `apf` and the ratio
+    /// cancels. `>=` accepts a constant, and a constant ratio IS "just adds
+    /// kill" -- the reading the guard existed to rule out. The name was false
+    /// too: both arms are hurt in exact proportion, so neither is hurt more.
+    ///
+    /// What the model actually says is more interesting and is the direction
+    /// worth preregistering: the payload comes from cells that TOOK UP the
+    /// ADC, i.e. antigen-positive ones, and antigen escape removes exactly
+    /// that population. So the bystander effect does not answer escape better
+    /// as escape worsens -- it is starved by it. The share of the
+    /// antigen-NEGATIVE pool a cleavable linker reaches falls from about 90%
+    /// at 0.9 positive to about 1% at 0.1 positive.
     #[test]
-    fn antigen_loss_hurts_the_non_bystander_arm_more() {
-        let mut prev_gap = 0.0_f64;
+    fn the_bystander_effect_is_starved_by_the_escape_it_answers() {
+        let mut prev_reach = f64::INFINITY;
+        let mut gaps = Vec::new();
         for &positive in &[0.9_f64, 0.6, 0.3, 0.1] {
             let plain = AdcConfig {
                 antigen_positive_fraction: positive,
@@ -282,17 +301,33 @@ mod tests {
                 total_kill_fraction(&bystanding),
             );
             assert!(b > a, "no bystander advantage at {positive} positive");
-            // The RELATIVE advantage must be at least as large as antigen is
-            // lost -- otherwise the mechanism does not address escape, it just
-            // adds kill.
-            let gap = b / a;
+            gaps.push(b / a);
+            // THE QUANTITY THAT ACTUALLY MOVES: what share of the cells the
+            // non-bystander arm can never touch does the payload reach? It
+            // must FALL as antigen is lost, because the dying antigen-positive
+            // cells are its source.
+            let negative_pool = 1.0 - positive;
+            let reach = (b - a) / negative_pool;
             assert!(
-                gap >= prev_gap - 1e-9,
-                "the bystander advantage shrank as antigen was lost \
-                 ({gap:.3} vs {prev_gap:.3}), so it does not address escape"
+                reach < prev_reach,
+                "the bystander arm reached a LARGER share of the \
+                 antigen-negative pool at {positive} positive ({reach:.4} vs \
+                 {prev_reach:.4}); the payload comes from antigen-POSITIVE \
+                 cells, so losing them cannot help"
             );
-            prev_gap = gap;
+            prev_reach = reach;
         }
+        // And the relative advantage is FLAT, which is the fact the old guard
+        // mistook for evidence of addressing escape. Pinned so nobody reads a
+        // constant as a rising trend again.
+        let spread = gaps.iter().cloned().fold(f64::MIN, f64::max)
+            - gaps.iter().cloned().fold(f64::MAX, f64::min);
+        assert!(
+            spread < 1e-9,
+            "the relative advantage is no longer flat (spread {spread:.6}); \
+             if the model has changed so that it rises, the preregistered \
+             P10 direction must be rewritten rather than this test relaxed"
+        );
     }
 
     #[test]

@@ -6,9 +6,9 @@
 
 | | ferroptosis / physical-ROS | other therapy | method |
 |---|--:|--:|--:|
-| committed analyses (143) | 19 | **1** | 123 |
+| committed analyses (144) | 19 | **1** | 124 |
 
-| preregistered predictions | **8 of 8** |
+| preregistered predictions | **8 of 13** |
 |---|--:|
 | engine modules mentioning it anywhere | **32 of 37** |
 | engine modules mentioning it in code | **21 of 37** |
@@ -18,7 +18,7 @@ The module rows used to read `N of N` -- the same number on both sides of "of", 
 
 **5 modules mention neither ferroptosis nor a physical-ROS modality anywhere in their text**: `adoptive.rs`, `oncolytic.rs`, `reaction_diffusion.rs`, `spheroid.rs`, `vasculature.rs`. An earlier version of this page said every module of the engine concerns one or the other. It does not.
 
-Every falsifiable commitment the project makes concerns ferroptosis or the physical-ROS modalities. The engine is mostly but not entirely about them: 32 of 37 modules mention one, and only 21 do so in code.
+8 of 13 preregistered predictions and 32 of 37 engine modules concern ferroptosis or the physical-ROS modalities.
 
 ### The '1' is a filename marker, not a subject measurement
 
@@ -70,7 +70,7 @@ Note also that method analyses -- the largest bucket -- are about the INSTRUMENT
 - `sensitizer-symmetry`
 - `timeline`
 
-**method** (123): listed in `analysis/scope-audit.json`.
+**method** (124): listed in `analysis/scope-audit.json`.
 
 ## What this does not say
 

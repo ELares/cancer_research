@@ -130,9 +130,18 @@ def test_a_non_ferroptosis_prediction_would_break_this():
     m = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(m)
     d = _doc()
-    assert d["n_predictions_ferroptosis"] == d["n_predictions"], (
-        "not every prediction is ferroptosis any more -- which is progress. "
-        "Update the README table and this assertion together.")
+    # THIS ASSERTION HAS NOW FIRED, and it fired for the reason it was written:
+    # P9 to P13 registered falsifiable predictions for the modality arms, so
+    # the denominator widened for the first time. What replaces it is the same
+    # property one level out -- the count must still be a MEASUREMENT, so it
+    # must be able to move in both directions.
+    assert d["n_predictions_ferroptosis"] < d["n_predictions"], (
+        "every preregistered prediction concerns ferroptosis again; either the "
+        "modality predictions were removed or the classifier stopped seeing "
+        "them, and the widened denominator this project worked for is gone")
+    assert d["n_predictions_ferroptosis"] >= 8, (
+        "the ferroptosis predictions have shrunk, which would make the ratio "
+        "improve by deletion rather than by addition")
     # and prove the classifier can say no
     assert not m.FERRO.search(
         "Anti-PD-1 response depends on tumour mutational burden"), (
@@ -253,7 +262,15 @@ def test_the_engine_module_row_measures_content():
         assert "every module of its simulation engine, concerns" not in md, (
             f"{len(silent)} modules mention neither ferroptosis nor a "
             "physical-ROS modality, and the page still claims every one does")
-        assert "mostly but not entirely" in md
+        # The renderer has three branches, and "mostly but not entirely" only
+        # appears in the one where EVERY prediction is ferroptosis. Registering
+        # P9-P13 moved the page to the third branch, so the guard was pinning
+        # a sentence the page correctly stops printing. What must hold in any
+        # branch is that the shortfall is stated as a ratio, not swallowed.
+        assert (f"{em['mention']} of {em['modules']} engine modules" in md
+                or "mostly but not entirely" in md), (
+            "the page no longer reports how many modules mention ferroptosis "
+            "against how many exist")
         # and the paragraph NAMING them: hiding it left the reader with a
         # count and no way to check it
         assert f"**{len(silent)} modules mention neither" in md, (

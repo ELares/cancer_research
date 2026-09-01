@@ -118,6 +118,7 @@
    "mechanism-precision-report",
    "mechanism-recall-report",
    "modality-calibration",
+   "modality-predictions",
    "news-source-criteria",
    "news-verification-audit",
    "non-oa-fulltext-audit",
@@ -173,19 +174,24 @@
   "top_mechanism": "immunotherapy",
   "top_n": 2297
  },
- "n_analyses": 143,
- "n_predictions": 8,
+ "n_analyses": 144,
+ "n_predictions": 13,
  "n_predictions_ferroptosis": 8,
  "n_therapy_subject": 1,
  "predictions": {
   "P1": true,
+  "P10": false,
+  "P11": false,
+  "P12": false,
+  "P13": false,
   "P2": true,
   "P3": true,
   "P4": true,
   "P5": true,
   "P6": true,
   "P7": true,
-  "P8": true
+  "P8": true,
+  "P9": false
  },
  "therapy_by_body": [
   "atlas-ingest-sensitivity",
