@@ -196,3 +196,54 @@ def test_every_entry_matches_the_file_on_disk():
     assert not bad, (
         f"{len(bad)} manifest entr(ies) do not match the file on disk:\n  "
         + "\n  ".join(bad[:10]))
+
+
+def test_a_new_file_lands_in_the_manifest_on_the_first_run(tmp_path):
+    """The regenerate-twice footgun (#796), pinned.
+
+    `git ls-files` lists only TRACKED files, so a newly written file was
+    invisible to the manifest until `git add` — and the obvious order
+    (regenerate, then stage) produced a manifest missing the very file the
+    author had just created. The working idiom was to regenerate TWICE,
+    straddling the `git add`, which nobody discovers from the error message.
+
+    This drives the real function against a scratch repo, because the property
+    is about what `git ls-files` returns and cannot be checked by reading the
+    source.
+    """
+    import subprocess
+    import importlib.util
+
+    repo = tmp_path / "r"
+    repo.mkdir()
+    run = lambda *a: subprocess.run(a, cwd=repo, capture_output=True, text=True)
+    run("git", "init", "-q")
+    run("git", "config", "user.email", "t@example.invalid")
+    run("git", "config", "user.name", "t")
+    (repo / "tracked.md").write_text("t\n")
+    (repo / ".gitignore").write_text("ignored.md\n")
+    run("git", "add", "-A")
+    run("git", "commit", "-qm", "init")
+    (repo / "brand_new.md").write_text("n\n")      # untracked, not ignored
+    (repo / "ignored.md").write_text("i\n")        # untracked AND ignored
+
+    spec = importlib.util.spec_from_file_location(
+        "grm", REPO / "scripts" / "generate_release_manifest.py")
+    grm = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(grm)
+    original = grm.PROJECT_ROOT
+    try:
+        grm.PROJECT_ROOT = repo
+        files = set(grm.get_tracked_files())
+    finally:
+        grm.PROJECT_ROOT = original
+
+    assert "brand_new.md" in files, (
+        "a newly created, unstaged file is missing from the manifest walk, so "
+        "regenerating before `git add` produces a manifest without it and the "
+        "freshness gate fails on the next run")
+    assert "tracked.md" in files
+    assert "ignored.md" not in files, (
+        "a gitignored file reached the release manifest; build output and the "
+        "scratch tree must not leak into a statement about what a release "
+        "contains")
