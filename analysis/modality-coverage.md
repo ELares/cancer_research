@@ -9,23 +9,23 @@ The engine expresses **4 treatments** (`RSL3` — ferroptosis; `SDT`, `PDT` — 
 | epigenetic | 41,278 | 1,307 | 3.2% | 0.91× | modifier | `biochem`, `cell` |
 | nanoparticle | 36,788 | 182 | 0.5% | 2.49× | modifier | — |
 | immunotherapy | 31,890 | 1,430 | 4.5% | 11.62× | modifier | `clonal`, `ifngamma`, `oxygen`, `ph`, `radiation`, `slab`, `stromal` |
-| car-t | 15,358 | 1,020 | 6.6% | 6.95× | — | — |
+| car-t | 15,358 | 1,020 | 6.6% | 6.95× | modifier | — |
 | metabolic-targeting | 8,809 | 45 | 0.5% | 2.16× | — | `cell`, `nutrient`, `params`, `ph`, `stromal` |
-| antibody-drug-conjugate | 6,019 | 580 | 9.6% | 3.1× | — | `drug_transport` |
+| antibody-drug-conjugate | 6,019 | 580 | 9.6% | 3.1× | modifier | — |
 | synthetic-lethality | 5,437 | 342 | 6.3% | 4.16× | modifier | — |
 | oncolytic-virus | 5,006 | 201 | 4.0% | 1.18× | — | — |
 | crispr | 3,674 | 6 | 0.2% | 8.13× | — | — |
-| bispecific-antibody | 3,462 | 326 | 9.4% | 5.52× | — | — |
+| bispecific-antibody | 3,462 | 326 | 9.4% | 5.52× | modifier | — |
 | electrochemical-therapy | 2,515 | 142 | 5.7% | 0.81× | — | — |
 | sonodynamic | 2,513 | 114 | 4.5% | 5.28× | **treatment** | `dose_schedule`, `grid`, `immune`, `immune_spatial`, `io`, `oxygen`, `persister`, `radiation` |
 | hifu | 1,352 | 96 | 7.1% | 1.16× | — | `oxygen` |
-| phagocytosis-checkpoint | 918 | 13 | 1.4% | 4.06× | — | — |
+| phagocytosis-checkpoint | 918 | 13 | 1.4% | 4.06× | modifier | — |
 | microbiome | 380 | 12 | 3.2% | — | — | — |
 | mrna-vaccine | 301 | 2 | 0.7% | — | — | — |
 
-**11 of 16 mechanisms have no engine representation at all**, and they carry 47,794 census articles (29% of the table's volume) and 2,443 registered trials between them. That is the only actionable content here, and it is binary: it says which questions the engine cannot be asked, not which are worth asking.
+**7 of 16 mechanisms have no engine representation at all**, and they carry 22,037 census articles (13% of the table's volume) and 504 registered trials between them. That is the only actionable content here, and it is binary: it says which questions the engine cannot be asked, not which are worth asking.
 
-**`epigenetic`, `nanoparticle`, `immunotherapy`, `synthetic-lethality` are MODIFIERS, not treatments** — the distinction this table exists to draw. A modifier changes how an existing treatment lands and cannot be the thing under test.
+**`epigenetic`, `nanoparticle`, `immunotherapy`, `car-t`, `antibody-drug-conjugate`, `synthetic-lethality`, `bispecific-antibody`, `phagocytosis-checkpoint` are MODIFIERS, not treatments** — the distinction this table exists to draw. A modifier changes how an existing treatment lands and cannot be the thing under test.
 
 Immunotherapy is the sharpest case. The engine has **2 immune kill paths** — `immune_spatial::immune_kill_probability` (spatial DAMP field), called from `sim-tme`, `sim-tme-3d`; `immune::immune_cascade` (well-mixed cascade), called from `sim-combo`, `sim-icd`.
 

@@ -137,7 +137,15 @@ ENGINE_TERMS = {
     "epigenetic": ("hdac*", "histone*", "methylation", "epigenetic*", "dnmt*",
                    "chromatin"),
     "nanoparticle": ("nanoparticle*", "liposom*", "micelle*", "nanocarrier*"),
-    "car-t": ("car-t", "car t", "chimeric antigen"),
+    # `cart` looks like a false-positive waiting to happen and is not: it is
+    # how RUST spells it. The crate's variant is `EffectorSource::CarT`, which
+    # lowercases to `cart`, and neither `car-t` nor `car t` can reach a
+    # CamelCase identifier. This is the same lesson as the underscore
+    # boundary above -- the boundary rule has to know the naming conventions
+    # of the language being scanned, and Rust uses CamelCase for types and
+    # snake_case for everything else. Bounded on the right, `cart` cannot fire
+    # inside `cartilage` or `cartesian`; the case table pins both.
+    "car-t": ("car-t", "car t", "cart", "chimeric antigen"),
     "metabolic-targeting": ("glycolysis", "metabolic*", "glutamin*", "warburg",
                             "lactate", "2-deoxyglucose", "dichloroacetate"),
     "antibody-drug-conjugate": ("antibody-drug", "adc", "payload*"),

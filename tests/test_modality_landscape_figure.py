@@ -106,7 +106,7 @@ def test_the_section_keeps_the_refusal_and_the_limits(manuscript):
     a claim if lifted."""
     for frag in (
         "Volume is not importance, and the table is not a ranking",
-        "Four arms is not parity",
+        "arms is not parity",
         "not wired into any binary",
         "chemotherapy and radiotherapy are not even in the taxonomy",
     ):

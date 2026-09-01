@@ -96,6 +96,7 @@ CASES = {
     "nanocarrier*": ("nanocarrier load", "ananocarrier"),
     "car-t": ("car-t infusion", "car-tx"),
     "car t": ("car t product", "scar t"),
+    "cart": ("cart cells expand", "cartilage matrix"),
     "chimeric antigen": ("chimeric antigen receptor", "chimeric antigenx"),
     "glycolysis": ("aerobic glycolysis", "aglycolysis"),
     "metabolic*": ("metabolic reprogramming", "ametabolic"),
@@ -213,6 +214,27 @@ def test_a_stem_must_stop_before_the_forms_diverge():
     for form in ("immunity", "immunotherapy", "immunogenic", "immune"):
         assert MC._matches(form, MC.ENGINE_TERMS["immunotherapy"]), form
     assert not MC._matches("immunity", ("immune*",))
+
+
+def test_the_boundary_knows_rusts_naming_conventions():
+    """Twice now the boundary rule has been blind to how Rust spells things.
+
+    `\\b` could not reach snake_case (`_` is a word character), so `acsl4`
+    missed `acsl4_strength`. Then `car-t` and `car t` could not reach
+    CamelCase, so `EffectorSource::CarT` -- the crate's own name for the
+    modality -- read as no representation at all.
+
+    Both directions pinned on the real spellings, because the fix for the
+    second is a term that LOOKS like a false positive and is not.
+    """
+    terms = MC.ENGINE_TERMS["car-t"]
+    for spelling in ("EffectorSource::CarT", "cart_kills", "CarT"):
+        assert MC._matches(spelling.lower(), terms), spelling
+    for innocent in ("cartilage matrix", "cartesian grid", "descartes"):
+        assert not MC._matches(innocent, terms), innocent
+    # And the snake_case lesson must still hold.
+    assert MC._matches("acsl4_strength", ("acsl4",))
+    assert MC._matches("sdt_ros", ("sdt",))
 
 
 def test_a_phenotype_is_not_a_therapy():

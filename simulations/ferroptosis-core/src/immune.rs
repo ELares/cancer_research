@@ -47,6 +47,161 @@ pub fn calculate_damp_release(dead_cell_lps: &[f64], params: &ImmuneParams) -> (
     (total, per_cell)
 }
 
+/// Published complete-remission band for CD19 CAR-T in B-ALL.
+///
+/// 70–94% (PMID 32607912, `corpus/by-pmid/32607912.md`): "Targeting of the
+/// CD19 antigen using CD19-specific CAR-T cells ... with complete remission
+/// rates of 70–94% seen in some clinical trials."
+///
+/// **The same source carries the number that keeps this honest**, and it is
+/// quoted in [`adoptive_transfer_kills`]'s docs rather than left out: "the use
+/// of CAR-T cells in solid tumours has been less successful", and "in 30–50%
+/// of cases, the response was not durable". A model reproducing only the
+/// headline band would be describing the indication these therapies were
+/// approved for, not the setting this engine simulates.
+pub const CART_B_ALL_CR_BAND: (f64, f64) = (0.70, 0.94);
+
+/// How the effector T cells got there — and the two differ in a way that
+/// matters more than the kill term does.
+///
+/// Both bypass dendritic-cell priming, which is why they share
+/// [`adoptive_transfer_kills`]. What separates them is PERSISTENCE, and it is
+/// the clinical difference rather than a modelling convenience:
+///
+/// * **CAR-T** cells are transferred once and then EXPAND and persist —
+///   `tisagenlecleucel` is a single infusion. The engineered population is
+///   self-renewing, so effector numbers grow after delivery.
+/// * A **bispecific engager** is a drug, not a cell. It redirects the
+///   patient's own resident T cells only while it is present, so its effect
+///   tracks the dose schedule and stops when the drug clears.
+///
+/// The model expresses that as a persistence multiplier per step rather than
+/// as two kill formulas, because the KILLING is the same event — a T cell
+/// lysing a target — and only the supply differs.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize)]
+pub enum EffectorSource {
+    /// Transferred, self-renewing (`car-t`: 15,358 census articles).
+    CarT,
+    /// Redirected while the drug is present (`bispecific-antibody`: 3,462
+    /// census articles, and the joint-highest trial share in the taxonomy at
+    /// 9.4%).
+    BispecificEngager,
+}
+
+impl EffectorSource {
+    /// Effector population after `steps`, from a starting count.
+    ///
+    /// CAR-T expands geometrically toward a cap; a bispecific decays with the
+    /// drug. `expansion_rate` and `clearance_rate` are BOTH uncalibrated and
+    /// the CALIBRATION_STATUS row says so — what is modelled here is the
+    /// DIRECTION, which is documented and clinically unambiguous, not the
+    /// magnitude.
+    #[must_use = "the effector count is the function's only output"]
+    pub fn effectors_after(self, initial: f64, steps: u32, rate: f64, cap: f64) -> f64 {
+        let r = rate.max(0.0);
+        match self {
+            // Logistic-style approach to a cap: expansion is not unbounded,
+            // and a model that let it be would predict cures the literature
+            // does not report.
+            EffectorSource::CarT => {
+                let mut n = initial.max(0.0);
+                for _ in 0..steps {
+                    n += r * n * (1.0 - n / cap.max(f64::MIN_POSITIVE));
+                    n = n.clamp(0.0, cap.max(0.0));
+                }
+                n
+            }
+            // Exponential clearance: the redirecting drug washes out.
+            EffectorSource::BispecificEngager => {
+                initial.max(0.0) * (1.0 - r.min(1.0)).powi(steps as i32)
+            }
+        }
+    }
+}
+
+/// Kills from ADOPTIVELY TRANSFERRED or REDIRECTED effector T cells.
+///
+/// Covers two of the taxonomy's absent mechanisms at once, because in this
+/// engine they differ in how the effector arrives and not in what it does:
+/// CAR-T (15,358 census articles) transfers pre-armed T cells, and bispecific
+/// antibodies (3,462, and the joint-highest trial share at 9.4%) redirect
+/// resident ones. Both **bypass the DC-priming step entirely**, which is the
+/// whole point of the modality — antigen presentation is exactly what they do
+/// not wait for.
+///
+/// So this is NOT [`immune_cascade`] with a different constant. That function
+/// gates on `n_dead` and on DAMP quality, and a redirected T cell needs
+/// neither. `effector_cells` enters the kill term directly:
+///
+/// `kills = effector_cells · kill_rate · (1 − brake) · (1 − suppression)`
+///
+/// **The brake still applies**, and that is a claim rather than a convenience:
+/// CAR-T cells express PD-1 and are suppressed in solid tumours, which is the
+/// documented reason the B-ALL result has not transferred. A model exempting
+/// them would predict solid-tumour efficacy the literature does not report.
+///
+/// `suppression` is where the TME enters — the same Treg/MDSC and exhaustion
+/// machinery [`crate::immune_spatial`] already carries — so the difference
+/// between the leukaemia and solid-tumour settings is a parameter here rather
+/// than two models.
+///
+/// Returns `0.0` for zero effector cells, so an unconfigured run is unmoved.
+#[must_use = "the kill count is the function's only output"]
+pub fn adoptive_transfer_kills(
+    effector_cells: f64,
+    total_tumor_cells: usize,
+    params: &ImmuneParams,
+    suppression: f64,
+    with_anti_pd1: bool,
+) -> f64 {
+    let effectors = effector_cells.max(0.0);
+    if effectors == 0.0 {
+        return 0.0;
+    }
+    let effective_brake = if with_anti_pd1 {
+        params.pd1_brake * (1.0 - params.anti_pd1_efficacy)
+    } else {
+        params.pd1_brake
+    };
+    let raw = effectors
+        * params.tcell_kill_rate
+        * (1.0 - effective_brake).clamp(0.0, 1.0)
+        * (1.0 - suppression.clamp(0.0, 1.0));
+    raw.min(total_tumor_cells as f64).max(0.0)
+}
+
+/// Macrophage phagocytosis after CD47/SIRPα blockade — the "don't eat me" axis.
+///
+/// The taxonomy's `phagocytosis-checkpoint` mechanism (918 census articles).
+/// CD47 on the tumour binds SIRPα on macrophages and dendritic cells and
+/// SUPPRESSES engulfment (PMID 30320184, `corpus/by-pmid/30320184.md`: "The
+/// inhibitory effect of CD47 on phagocytosis is mediated by its binding to
+/// signal-regulatory protein α (SIRPα), which is expressed on macrophages and
+/// DCs"). Blocking it releases the brake.
+///
+/// Deliberately the same SHAPE as the T-cell brake — a fraction of a rate
+/// removed by a drug — because that is what the biology is, and giving it a
+/// different form would assert a distinction nobody measured. What differs is
+/// the effector: macrophages engulf, they do not lyse, so this is a separate
+/// count rather than an addend to the T-cell kills.
+///
+/// `cd47_expression = 1.0` with no blockade returns exactly `0.0`: a fully
+/// protected tumour is not eaten at all.
+#[must_use = "the phagocytosis count is the function's only output"]
+pub fn phagocytosis_kills(
+    macrophages: f64,
+    total_tumor_cells: usize,
+    engulf_rate: f64,
+    cd47_expression: f64,
+    blockade_efficacy: f64,
+) -> f64 {
+    let residual_protection = (cd47_expression.clamp(0.0, 1.0)
+        * (1.0 - blockade_efficacy.clamp(0.0, 1.0)))
+    .clamp(0.0, 1.0);
+    let raw = macrophages.max(0.0) * engulf_rate.max(0.0) * (1.0 - residual_protection);
+    raw.min(total_tumor_cells as f64).max(0.0)
+}
+
 /// Run the DC maturation → T cell priming → killing cascade.
 ///
 /// Model stages:
@@ -371,6 +526,167 @@ mod tests {
             "ferroptotic death no longer adds to the baseline term: \
              {with_death} vs {alone}"
         );
+    }
+
+    /// Redirected effectors do NOT wait for antigen presentation, and the
+    /// brake still applies to them.
+    ///
+    /// Both halves are the claim. The first is the modality: CAR-T and
+    /// bispecifics bypass DC priming, so a run with no ferroptotic death and
+    /// no baseline antigenicity must still kill -- exactly the case
+    /// `immune_cascade` returns zero for. The second is what keeps the model
+    /// honest about solid tumours: CAR-T cells express PD-1 and are
+    /// suppressed, which is the documented reason the 70-94% B-ALL band has
+    /// not transferred, and a model exempting them would predict efficacy the
+    /// literature does not report.
+    #[test]
+    fn adoptive_transfer_bypasses_priming_but_not_the_brake() {
+        const N: usize = 10_000;
+        let p = ImmuneParams::default();
+
+        // The case the DC cascade cannot reach: no deaths, no antigen.
+        assert_eq!(immune_cascade(&[], N, &p, true).immune_kills, 0.0);
+        let redirected = adoptive_transfer_kills(100.0, N, &p, 0.0, false);
+        assert!(
+            redirected > 0.0,
+            "redirected effectors produced no kills without prior death, so \
+             the modality is indistinguishable from the DC cascade"
+        );
+
+        // Zero effectors is bit-zero, so an unconfigured run is unmoved.
+        assert_eq!(
+            adoptive_transfer_kills(0.0, N, &p, 0.0, false).to_bits(),
+            0.0_f64.to_bits()
+        );
+
+        // The brake applies, and blockade lifts it.
+        let blocked = adoptive_transfer_kills(100.0, N, &p, 0.0, true);
+        assert!(
+            blocked > redirected,
+            "anti-PD-1 did not raise redirected kills ({blocked} vs \
+             {redirected}); CAR-T cells are not brake-exempt"
+        );
+
+        // Suppression is the leukaemia-vs-solid-tumour difference, and it
+        // must be able to erase the effect entirely rather than shade it.
+        let suppressed = adoptive_transfer_kills(100.0, N, &p, 0.9, false);
+        assert!(
+            suppressed < redirected * 0.2,
+            "{suppressed} vs {redirected}"
+        );
+        assert_eq!(
+            adoptive_transfer_kills(100.0, N, &p, 1.0, true).to_bits(),
+            0.0_f64.to_bits(),
+            "total suppression must zero the kill, or the solid-tumour \
+             setting is unreachable"
+        );
+
+        // Monotone in effector count, and capped at the population.
+        let mut prev = 0.0;
+        for &e in &[1.0_f64, 10.0, 100.0, 1_000.0] {
+            let k = adoptive_transfer_kills(e, N, &p, 0.0, false);
+            assert!(k > prev, "not monotone at {e}");
+            prev = k;
+        }
+        assert!(adoptive_transfer_kills(1e9, N, &p, 0.0, true) <= N as f64);
+    }
+
+    /// A fully CD47-protected tumour is not eaten at all, and blockade is what
+    /// changes that.
+    #[test]
+    fn phagocytosis_is_gated_by_the_do_not_eat_me_signal() {
+        const N: usize = 10_000;
+        // Full protection, no drug: bit-zero. A small nonzero here would make
+        // the checkpoint look leaky and the drug look optional.
+        assert_eq!(
+            phagocytosis_kills(500.0, N, 0.01, 1.0, 0.0).to_bits(),
+            0.0_f64.to_bits()
+        );
+        // No protection at all: the macrophages engulf freely.
+        let unprotected = phagocytosis_kills(500.0, N, 0.01, 0.0, 0.0);
+        assert!(unprotected > 0.0);
+        // Blockade recovers the unprotected rate exactly at full efficacy --
+        // the drug removes the brake, it does not add an effect of its own.
+        let fully_blocked = phagocytosis_kills(500.0, N, 0.01, 1.0, 1.0);
+        assert!(
+            (fully_blocked - unprotected).abs() < 1e-12,
+            "{fully_blocked}"
+        );
+        // Monotone in blockade, and bounded.
+        let mut prev = 0.0;
+        for &eff in &[0.0_f64, 0.25, 0.5, 0.75, 1.0] {
+            let k = phagocytosis_kills(500.0, N, 0.01, 1.0, eff);
+            assert!(k >= prev, "not monotone at efficacy {eff}");
+            prev = k;
+        }
+        assert!(phagocytosis_kills(1e9, N, 1.0, 0.0, 1.0) <= N as f64);
+    }
+
+    /// The published CAR-T band is quoted WITH the caveat from the same
+    /// sentence, so the constant cannot be read as a target this engine meets.
+    /// CAR-T persists and expands; a bispecific washes out. The DIRECTIONS
+    /// are the model, and they are opposite.
+    #[test]
+    fn the_two_effector_sources_differ_in_persistence_not_in_killing() {
+        let (initial, cap) = (100.0_f64, 10_000.0_f64);
+
+        let cart_early = EffectorSource::CarT.effectors_after(initial, 5, 0.3, cap);
+        let cart_late = EffectorSource::CarT.effectors_after(initial, 40, 0.3, cap);
+        assert!(cart_early > initial, "CAR-T did not expand: {cart_early}");
+        assert!(cart_late > cart_early, "CAR-T expansion is not sustained");
+        assert!(cart_late <= cap, "expansion escaped the cap: {cart_late}");
+        // Bounded, not unbounded: a model without the cap predicts cures the
+        // literature does not report.
+        let runaway = EffectorSource::CarT.effectors_after(initial, 500, 0.9, cap);
+        assert!(runaway <= cap && (runaway - cap).abs() < cap * 0.01);
+
+        let bs_early = EffectorSource::BispecificEngager.effectors_after(initial, 5, 0.3, cap);
+        let bs_late = EffectorSource::BispecificEngager.effectors_after(initial, 40, 0.3, cap);
+        assert!(bs_early < initial, "the engager did not clear: {bs_early}");
+        assert!(bs_late < bs_early, "clearance is not sustained");
+
+        // The two must move in OPPOSITE directions over the same interval,
+        // which is the whole distinction; a shared sign would make the enum
+        // decorative.
+        assert!(
+            cart_late > initial && bs_late < initial,
+            "CAR-T {cart_late} and engager {bs_late} did not diverge from \
+             {initial}"
+        );
+
+        // Zero rate is the identity for BOTH, so an unconfigured run is
+        // unmoved whichever source it names.
+        for src in [EffectorSource::CarT, EffectorSource::BispecificEngager] {
+            assert_eq!(
+                src.effectors_after(initial, 20, 0.0, cap).to_bits(),
+                initial.to_bits(),
+                "{src:?} moved at rate 0"
+            );
+            assert_eq!(src.effectors_after(0.0, 20, 0.5, cap), 0.0);
+        }
+
+        // And the KILL term is genuinely shared: same effector count, same
+        // kills, whichever source produced it.
+        let p = ImmuneParams::default();
+        let k = adoptive_transfer_kills(250.0, 10_000, &p, 0.1, false);
+        assert!(k > 0.0);
+        assert_eq!(
+            adoptive_transfer_kills(250.0, 10_000, &p, 0.1, false).to_bits(),
+            k.to_bits()
+        );
+    }
+
+    #[test]
+    fn the_cart_band_is_the_leukaemia_one_and_the_docs_say_so() {
+        let (lo, hi) = CART_B_ALL_CR_BAND;
+        assert!(lo > 0.0 && hi > lo && hi <= 1.0, "{lo}-{hi}");
+        let src = include_str!("immune.rs");
+        for caveat in ["solid tumours has been less successful", "not durable"] {
+            assert!(
+                src.contains(caveat),
+                "the CAR-T band no longer carries its own caveat: {caveat:?}"
+            );
+        }
     }
 
     #[test]

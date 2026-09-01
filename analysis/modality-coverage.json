@@ -175,7 +175,9 @@
    "trials": 1020,
    "trial_share": 6.64,
    "growth": 6.95,
-   "code_modules": [],
+   "code_modules": [
+    "immune"
+   ],
    "prose_only_modules": []
   },
   {
@@ -199,10 +201,10 @@
    "trials": 580,
    "trial_share": 9.64,
    "growth": 3.1,
-   "code_modules": [],
-   "prose_only_modules": [
+   "code_modules": [
     "drug_transport"
-   ]
+   ],
+   "prose_only_modules": []
   },
   {
    "mechanism": "synthetic-lethality",
@@ -240,7 +242,9 @@
    "trials": 326,
    "trial_share": 9.42,
    "growth": 5.52,
-   "code_modules": [],
+   "code_modules": [
+    "immune"
+   ],
    "prose_only_modules": []
   },
   {
@@ -292,7 +296,9 @@
    "trials": 13,
    "trial_share": 1.42,
    "growth": 4.06,
-   "code_modules": [],
+   "code_modules": [
+    "immune"
+   ],
    "prose_only_modules": []
   },
   {
@@ -372,9 +378,11 @@
    "trials": 1020,
    "trial_share": 6.64,
    "growth": 6.95,
-   "code_modules": [],
+   "code_modules": [
+    "immune"
+   ],
    "prose_only_modules": [],
-   "engine_tier": "absent"
+   "engine_tier": "modifier"
   },
   {
    "mechanism": "metabolic-targeting",
@@ -398,11 +406,11 @@
    "trials": 580,
    "trial_share": 9.64,
    "growth": 3.1,
-   "code_modules": [],
-   "prose_only_modules": [
+   "code_modules": [
     "drug_transport"
    ],
-   "engine_tier": "absent"
+   "prose_only_modules": [],
+   "engine_tier": "modifier"
   },
   {
    "mechanism": "synthetic-lethality",
@@ -443,9 +451,11 @@
    "trials": 326,
    "trial_share": 9.42,
    "growth": 5.52,
-   "code_modules": [],
+   "code_modules": [
+    "immune"
+   ],
    "prose_only_modules": [],
-   "engine_tier": "absent"
+   "engine_tier": "modifier"
   },
   {
    "mechanism": "electrochemical-therapy",
@@ -499,9 +509,11 @@
    "trials": 13,
    "trial_share": 1.42,
    "growth": 4.06,
-   "code_modules": [],
+   "code_modules": [
+    "immune"
+   ],
    "prose_only_modules": [],
-   "engine_tier": "absent"
+   "engine_tier": "modifier"
   },
   {
    "mechanism": "microbiome",
@@ -530,8 +542,8 @@
   "PDT",
   "Radiation"
  ],
- "absent_count": 11,
- "absent_census": 47794,
- "absent_trials": 2443,
+ "absent_count": 7,
+ "absent_census": 22037,
+ "absent_trials": 504,
  "total_census": 165700
 }
