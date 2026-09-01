@@ -610,7 +610,7 @@ def _chapter_8_sentence() -> str:
     been moved out of the chapter it describes.
     """
     text = (REPO / "article/drafts/v1.md").read_text()
-    start = text.index("## Chapter 8:")
+    start = text.index("## Chapter 9:")
     nxt = text.find("\n## ", start + 1)
     chapter = text[start:nxt if nxt != -1 else len(text)]
     paras = [p for p in chapter.split("\n\n") if "SDT-specific data shows" in p]

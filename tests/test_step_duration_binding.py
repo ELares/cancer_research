@@ -447,12 +447,21 @@ def test_the_manuscript_adjacency_claim_is_checked_against_the_manuscript():
     doc = _doc()
     assert "bullet IMMEDIATELY above" in doc
     md = (REPO / "article/drafts/v1.md").read_text().splitlines()
-    bullets = [n for n, l in enumerate(md) if l.startswith("**")
-               and 1195 <= n <= 1225]
+    # DERIVED from the heading, not from line numbers. This window was pinned
+    # as `1195 <= n <= 1225`, and inserting a chapter shifted every line in
+    # the manuscript -- so a guard about ADJACENCY failed for a reason that
+    # had nothing to do with adjacency. A line number is a coordinate into a
+    # file that moves; a heading is the thing the claim is about.
+    start = next(n for n, l in enumerate(md)
+                 if l.startswith("### ")
+                 and "Structural Limitations of the Simulation" in l)
+    end = next((n for n in range(start + 1, len(md))
+                if md[n].startswith(("### ", "## "))), len(md))
+    bullets = [n for n in range(start, end) if md[n].startswith("**")]
     window = next((n for n in bullets if "0-48 hour" in md[n]), None)
     steps = next((n for n in bullets if "180 steps within a single" in md[n]), None)
     assert window is not None and steps is not None, (
-        "Section 8.4 no longer carries both bullets the doc cites")
+        "Section 9.4 no longer carries both bullets the doc cites")
     later = [n for n in bullets if n > window]
     assert later and later[0] == steps, (
         f"the 0-48h bullet (line {window + 1}) is not immediately above the "
