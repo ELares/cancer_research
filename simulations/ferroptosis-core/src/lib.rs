@@ -26,6 +26,7 @@
 //! | [`physics`] | Depth-dependent energy deposition (Beer-Lambert, acoustic; 2D + 3D dispatchers) |
 //! | [`grid`] | 2D and 3D tumor grids with heterogeneous architecture |
 //! | [`ablation`] | Physical ablation: HIFU thermal dose (CEM43) and irreversible electroporation, as THRESHOLD phenomena rather than dose-responses |
+//! | [`adc`] | Antibody-drug conjugates: the BYSTANDER effect, which is what makes a ~7 um penetration depth survivable, and the linker chemistry that decides whether it happens |
 //! | [`oncolytic`] | Oncolytic virus SPREAD as a race between replication and antiviral clearance, gated by interferon competence -- so infection extent is DERIVED rather than assumed |
 //! | [`oxygen`] | 3D radial oxygen gradients for spheroid tumors |
 //! | [`radiation`] | Ionizing radiation: linear-quadratic DNA lethality and radiation-induced ferroptosis as SEPARATE channels, both O2-scaled by the OER |
@@ -60,6 +61,7 @@ pub mod contact;
 pub mod copper;
 // Listed before `params` because `SpatialParams` holds a `Photosensitizer`.
 pub mod ablation;
+pub mod adc;
 pub mod biochem;
 pub mod dose_schedule;
 pub mod drug_transport;
