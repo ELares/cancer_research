@@ -7,6 +7,16 @@ on:
       - 'article/**'
       - 'scripts/generate_latex.py'
       - '.github/workflows/release-pdf.yml'
+  # The book is COMPILED on a pull request and RELEASED only from main. The
+  # design lives in a .sty that loads a dozen packages, and the only place
+  # that combination is real is this runner -- finding out after a merge that
+  # a package is missing means main's release build is red, which is the one
+  # build nobody watches.
+  pull_request:
+    paths:
+      - 'article/**'
+      - 'scripts/generate_latex.py'
+      - '.github/workflows/release-pdf.yml'
 
 permissions:
   contents: write
@@ -100,7 +110,14 @@ jobs:
             grep -n "Unicode character" v1.log | head -20 || true
           fi
 
+      - name: Upload the PDF as a build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: manuscript-pdf
+          path: article/drafts/v1.pdf
+
       - name: Generate release tag
+        if: github.event_name == 'push'
         id: tag
         run: |
           DATE="$(date -u +%Y-%m-%d)"
@@ -109,9 +126,11 @@ jobs:
           echo "date=${DATE}" >> "$GITHUB_OUTPUT"
 
       - name: Name the released PDF manuscript.{date}.pdf
+        if: github.event_name == 'push'
         run: cp article/drafts/v1.pdf "article/drafts/manuscript.${{ steps.tag.outputs.date }}.pdf"
 
       - name: Create Release
+        if: github.event_name == 'push'
         uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ steps.tag.outputs.tag }}

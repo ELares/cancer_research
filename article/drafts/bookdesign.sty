@@ -1,0 +1,449 @@
+% bookdesign.sty — the manuscript's book design.
+%
+% WHY THIS FILE EXISTS. The manuscript was set as a LaTeX report: A4, 12pt
+% Computer Modern, one-inch margins, 169 dense pages, numbered sections, and a
+% footnote block that took a third of many pages. That is the correct dress for
+% a preprint and the wrong one for something a person reads end to end.
+%
+% THE ONE RULE. Every layout decision lives HERE and nothing about layout lives
+% in scripts/generate_latex.py, which emits semantic markup only — \chapter,
+% \standfirst, \begin{finding}, \bookfigure. The generator does not know the
+% trim size, the typefaces, the palette or the measure, and cannot know them:
+% tests/test_book_design.py fails if a layout primitive appears in it. So the
+% design can be redrawn by editing this file alone, and a chapter added next
+% month is set exactly like the twelve that already exist.
+%
+% WHAT IT IS SAFE TO USE. The release build (.github/workflows/release-pdf.yml)
+% installs texlive-latex-base, -recommended, -extra, -fonts-recommended,
+% -science and -bibtex-extra. Every package and every font below was checked
+% against those package sets before it was used. In particular the typefaces
+% are psnfss (texlive-latex-base), NOT TeX Gyre or Libertinus, which live in
+% texlive-fonts-extra and are not installed. Adding a package here means
+% checking it there first.
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{bookdesign}[2026/09/01 Trade-book design for the cancer-research manuscript]
+
+\RequirePackage{etoolbox}
+\RequirePackage[utf8]{inputenc}
+\RequirePackage{amsmath}
+\RequirePackage{amssymb}
+
+% ── Options ──────────────────────────────────────────────────────────────
+% notes=end (default) sends citations to a Notes section at the back, grouped
+% under the chapter that made the claim. notes=foot restores footnotes. The
+% switch is here rather than in the generator because it is a design decision
+% about the page, and because a reader who wants the sources under their thumb
+% should be able to have them without touching the pipeline.
+\newif\ifbook@endnotes \book@endnotestrue
+\DeclareOption{notes=end}{\book@endnotestrue}
+\DeclareOption{notes=foot}{\book@endnotesfalse}
+\ProcessOptions\relax
+
+% ── Trim, grid and measure ───────────────────────────────────────────────
+% 6 x 9 inches is the US trade hardcover/paperback trim. It is not a cosmetic
+% choice: it fixes the measure at roughly 65 characters, which is where reading
+% speed peaks, and it makes "less on a page" true by construction rather than
+% by leaving white space on a sheet built for a filing cabinet.
+\RequirePackage[
+  paperwidth=6in, paperheight=9in,
+  inner=0.82in, outer=0.62in,
+  top=0.78in, bottom=0.80in,
+  headsep=14pt, footskip=26pt,
+  marginparwidth=0pt, marginparsep=0pt,
+]{geometry}
+
+\RequirePackage[T1]{fontenc}
+\RequirePackage{xcolor}
+\RequirePackage{graphicx}
+\RequirePackage{microtype}
+\RequirePackage{ragged2e}
+\RequirePackage{setspace}
+\RequirePackage{booktabs}
+\RequirePackage{enumitem}
+\RequirePackage{needspace}
+\RequirePackage{fancyhdr}
+\RequirePackage{titlesec}
+\RequirePackage{titletoc}
+\RequirePackage{lettrine}
+\RequirePackage[font=small,labelfont=normalfont,labelsep=none,
+                justification=raggedright,singlelinecheck=false]{caption}
+
+% ── Type ─────────────────────────────────────────────────────────────────
+% Palatino (URW Palladio via mathpazo) for text AND mathematics, so the many
+% inline quantities do not change voice mid-sentence — which is the single
+% commonest way a book of numbers starts to look like a report. Palatino is a
+% humanist face with a calligraphic axis and enough weight to survive the
+% figure-heavy pages; [sc] gives real small capitals for the running heads
+% rather than faked ones.
+%
+% ITC Avant Garde Gothic (URW Gothic via avant) is the display voice, used
+% ONLY at extremes: the very large chapter and part numerals, and the very
+% small letterspaced labels. Its geometry is too insistent for continuous text
+% and exactly right for a numeral standing alone on an opening page.
+\RequirePackage[sc]{mathpazo}
+\RequirePackage{avant}
+\linespread{1.12}          % ~15.2pt on an 11pt body; Palatino wants the air
+\renewcommand{\ttdefault}{cmtt}
+
+\newcommand{\bookdisplay}{\fontfamily{pag}\selectfont}
+
+% Letterspaced small display type, used for every label in the book: running
+% heads, FIGURE, the callout names, PART. Capitals set solid read as shouting;
+% tracked, they read as a caption. The tracking is microtype's \textls, which
+% is real letterspacing -- an earlier version widened the INTER-WORD space
+% instead, which is not the same thing and looked like a mistake.
+\RequirePackage{letterspace}
+\newcommand{\booktrack}[1]{\bookdisplay\fontsize{7.6}{9.5}\selectfont
+  \textls[140]{\MakeUppercase{#1}}}
+\newcommand{\booktracksize}[3]{\bookdisplay\fontsize{#1}{#2}\selectfont
+  \textls[140]{\MakeUppercase{#3}}}
+
+% ── Palette ──────────────────────────────────────────────────────────────
+% One accent, one warm secondary, three neutrals. The accent is a deep slate
+% teal: it reads as ink rather than as branding, it separates from the black of
+% the text at small sizes, and it survives being printed in grey.
+\definecolor{bookink}{HTML}{15171C}     % body text: near-black, faintly cool
+\definecolor{bookaccent}{HTML}{14505C}  % slate teal: numerals, labels, rules
+\definecolor{bookwarm}{HTML}{A2582B}    % copper: second-level marks only
+\definecolor{bookrule}{HTML}{C6CACE}    % hairlines
+\definecolor{booktint}{HTML}{F0F3F4}    % callout ground
+\definecolor{bookmute}{HTML}{5C636B}    % standfirsts, captions, folios
+
+\color{bookink}
+
+\RequirePackage[
+  colorlinks=true, linkcolor=bookaccent, citecolor=bookaccent,
+  urlcolor=bookaccent, filecolor=bookaccent,
+  bookmarksnumbered=true, pdfstartview=FitH,
+]{hyperref}
+
+% ── Page furniture ───────────────────────────────────────────────────────
+% Verso carries the book, recto carries the chapter, both in tracked small
+% caps; the folio sits in the outer corner where a thumb finds it.
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+\fancyhead[LE]{\color{bookmute}\booktrack{\booktitleshort}}
+\fancyhead[RO]{\color{bookmute}\booktrack{\leftmark}}
+\fancyfoot[LE,RO]{\color{bookaccent}\bookdisplay\fontsize{9}{9}\selectfont\thepage}
+\fancypagestyle{plain}{\fancyhf{}%
+  \fancyfoot[LE,RO]{\color{bookaccent}\bookdisplay\fontsize{9}{9}\selectfont\thepage}%
+  \renewcommand{\headrulewidth}{0pt}}
+\newcommand{\booktitleshort}{Cancer Therapy Mechanisms and Evidence}
+\renewcommand{\chaptermark}[1]{\markboth{#1}{}}
+
+% A book breaks a page where the text ends, not where the grid says it must.
+\raggedbottom
+\widowpenalty=10000
+\clubpenalty=10000
+% A narrow measure and a text full of unbreakable file names (`analysis/
+% scope-audit.md` cannot hyphenate) will produce lines that run past the trim
+% unless TeX is allowed to loosen. A slightly loose line is a typographic
+% preference; a line over the trim is a printing defect, so the tolerance is
+% raised deliberately.
+\tolerance=1800
+\setlength{\emergencystretch}{3.5em}
+\setlength{\parindent}{1.2em}
+\frenchspacing
+
+% ── Part openers ─────────────────────────────────────────────────────────
+% A slab of quiet: the numeral, the title, a rule, and the standfirst that
+% \partstandfirst supplies. Nothing else on the page.
+% The number is SPELLED, because a Roman numeral set large in a geometric sans
+% is a vertical rule: `I` and `II` carry no shape. Beyond the eighth part it
+% falls back to the numeral rather than inventing a word.
+\newcommand{\bookpartword}{%
+  \ifcase\value{part}\or One\or Two\or Three\or Four\or Five\or Six\or
+  Seven\or Eight\else \thepart\fi}
+\titleformat{\part}[display]
+  {\thispagestyle{empty}\raggedright}
+  {\parbox[t]{\linewidth}{\raggedright
+     {\color{bookaccent}\booktrack{Part}}\\[6pt]
+     {\color{bookaccent}\booktracksize{40}{44}{\bookpartword}}}}
+  {16pt}
+  {\bfseries\fontsize{26}{30}\selectfont\color{bookink}}
+  [\vspace{12pt}{\color{bookaccent}\rule{2.2in}{1.2pt}}\bookprintpartstandfirst]
+\titlespacing*{\part}{0pt}{1.4in}{20pt}
+
+% The standfirst has to be part of the part TITLE, not the text after it:
+% report.cls ends a part page with a \newpage, so a paragraph written after
+% \part lands on the following leaf, alone, and the opener stays empty. So the
+% author writes the sentence under the heading (where it belongs in the
+% source) and the pipeline hands both to \bookpart, which stores the sentence
+% for the title block to print.
+\newcommand{\book@partsf}{}
+\newcommand{\bookpart}[2]{\renewcommand{\book@partsf}{#2}\part{#1}}
+% The \par is inside the BODY, not in the after-code argument: without it the
+% rule above and this block sit in one horizontal box and the line runs 1.5
+% inches past the trim. (A \par may not appear in the argument itself, which is
+% why the whole thing is a macro.)
+\newcommand{\bookprintpartstandfirst}{%
+  \ifx\book@partsf\@empty\else
+    \par\vspace{20pt}%
+    \begin{minipage}{0.88\linewidth}\partstandfirst{\book@partsf}\end{minipage}%
+    \gdef\book@partsf{}%
+  \fi}
+
+% ── Chapter openers ──────────────────────────────────────────────────────
+% The number is the graphic element; the title is set below it in the reading
+% face so the eye lands on words, not on decoration.
+\titleformat{\chapter}[display]
+  {\raggedright}
+  {\parbox[t]{\linewidth}{\raggedright
+     {\color{bookmute}\booktrack{Chapter}}\\[2pt]
+     {\color{bookaccent}\bookdisplay\fontsize{62}{66}\selectfont\thechapter}}}
+  {12pt}
+  {\bfseries\fontsize{22}{26}\selectfont\color{bookink}}
+  [\vspace{10pt}{\color{bookrule}\rule{\linewidth}{0.5pt}}\vspace{4pt}]
+\titlespacing*{\chapter}{0pt}{0.75in}{22pt}
+
+% Unnumbered chapters (front and back matter) keep the rule and lose the
+% numeral, so a Notes section looks like it belongs to the same book.
+\titleformat{name=\chapter,numberless}[display]
+  {\raggedright}
+  {}
+  {0pt}
+  {\bfseries\fontsize{20}{24}\selectfont\color{bookink}}
+  [\vspace{8pt}{\color{bookrule}\rule{\linewidth}{0.5pt}}]
+
+% ── Section heads ────────────────────────────────────────────────────────
+% The section NUMBER is load-bearing here — the prose says "Section 7.1" in
+% dozens of places — so it is kept and set in the display face at label size,
+% where it reads as a locator rather than as an outline level.
+\titleformat{\section}
+  {\needspace{4\baselineskip}\raggedright\bfseries\fontsize{13}{16}\selectfont\color{bookink}}
+  {\bookdisplay\fontsize{9}{9}\selectfont\color{bookaccent}\thesection\hspace{0.7em}}
+  {0pt}{}
+\titlespacing*{\section}{0pt}{20pt}{7pt}
+
+\titleformat{\subsection}
+  {\needspace{3\baselineskip}\raggedright\itshape\bfseries\fontsize{11.5}{14}\selectfont\color{bookink}}
+  {\bookdisplay\upshape\mdseries\fontsize{8.5}{8.5}\selectfont\color{bookmute}\thesubsection\hspace{0.6em}}
+  {0pt}{}
+\titlespacing*{\subsection}{0pt}{14pt}{5pt}
+
+% ── Contents ─────────────────────────────────────────────────────────────
+% Parts and chapters only. A four-level contents is a reference apparatus; a
+% reader deciding what to read next wants twelve lines, not ninety.
+\setcounter{tocdepth}{0}
+\setcounter{secnumdepth}{2}
+\renewcommand{\contentsname}{Contents}
+
+% The entry TEXT is inserted by titletoc after the label code, so it cannot be
+% wrapped in a command that takes an argument; the display face and the
+% letterspacing are applied as DECLARATIONS in the above-code instead.
+\titlecontents{part}[0pt]
+  {\addvspace{22pt}\color{bookaccent}\bookdisplay\fontsize{10}{13}\selectfont\lsstyle}
+  {\upshape{\color{bookaccent}\booktrack{Part \thecontentslabel}}\quad}
+  {}
+  {}[\addvspace{7pt}]
+\titlecontents{chapter}[0pt]
+  {\addvspace{7pt}\color{bookink}}
+  {{\color{bookaccent}\bookdisplay\fontsize{9}{9}\selectfont\thecontentslabel}%
+   \hspace{0.9em}}
+  {}
+  {\hfill{\color{bookmute}\bookdisplay\fontsize{9}{9}\selectfont\contentspage}}
+
+% ── Figures and tables ───────────────────────────────────────────────────
+% Captions here are long — several run to a paragraph, deliberately, because
+% they carry the caveat that makes the picture readable. So they are set
+% smaller, ragged right, with the label in the display face: a block a reader
+% can choose to enter rather than a line they must.
+\captionsetup{
+  labelformat=empty,
+  font={color=bookmute,stretch=1.02},
+  format=plain,
+  skip=8pt,
+}
+\renewcommand{\captionfont}{\fontsize{8.8}{11.6}\selectfont\color{bookmute}}
+\newcommand{\figlabel}[1]{{\color{bookaccent}\booktrack{Figure #1}}\par\vspace{3pt}}
+
+% Figures reach past the measure into the outer margin. On a 6-inch page a
+% four-panel figure held to the text block is unreadable, and letting figures
+% (and only figures) run wide is a deliberate, repeated gesture rather than an
+% accident.
+\newlength{\bookfigwidth}
+\setlength{\bookfigwidth}{1.14\linewidth}
+\newcommand{\bookgraphic}[1]{%
+  \noindent\makebox[\linewidth][c]{\includegraphics[width=\bookfigwidth]{#1}}}
+
+\newcommand{\booktablesize}{\fontsize{9}{11.5}\selectfont}
+% Tables are centred by the design, not by a \centering the generator writes
+% into every one of them.
+\AtBeginEnvironment{table}{\centering}
+
+% ── Callouts ─────────────────────────────────────────────────────────────
+% Three, and no more, because a page with four kinds of box has none.
+%   finding  — a result, stated so it can be found again without re-reading
+%   refusal  — what the result does NOT establish. This book argues that the
+%              second is as load-bearing as the first, so it gets equal weight
+%              on the page instead of a parenthesis.
+%   numbers  — the quantities a section rests on, lifted out of the prose
+%
+% Built from rules, indentation and tracked capitals rather than from shaded
+% boxes. A tinted box wants tcolorbox and its skins library, which in turn
+% wants a package that is not in the release build's texlive set -- and a box
+% that cannot break across a page is the wrong container for a paragraph
+% anyway. Hairlines break wherever the page does.
+\newlength{\bookcalloutindent}
+\setlength{\bookcalloutindent}{16pt}
+
+\newenvironment{bookcallout}[2]% #1 label  #2 label colour
+  {\par\addvspace{13pt}\needspace{3\baselineskip}%
+   \noindent{\color{bookrule}\rule{\linewidth}{0.5pt}}\par\vspace{6pt}%
+   \begingroup
+   \setlength{\leftskip}{\bookcalloutindent}%
+   \setlength{\rightskip}{0pt plus 1em}%
+   \setlength{\parindent}{0pt}%
+   \small
+   \noindent{\color{#2}\booktrack{#1}}\par\vspace{4pt}}
+  {\par\endgroup\vspace{6pt}%
+   \noindent{\color{bookrule}\rule{\linewidth}{0.5pt}}%
+   \par\addvspace{13pt}}
+
+\newenvironment{finding}{\begin{bookcallout}{Finding}{bookaccent}}
+                        {\end{bookcallout}}
+\newenvironment{refusal}{\begin{bookcallout}{What this does not show}{bookmute}\itshape}
+                        {\end{bookcallout}}
+\newenvironment{numbers}{\begin{bookcallout}{The numbers}{bookwarm}}
+                        {\end{bookcallout}}
+
+% ── Editorial furniture ──────────────────────────────────────────────────
+% A standfirst: the sentence under a chapter title that tells a reader what
+% they are about to spend twenty minutes on. Trade non-fiction has one; a
+% report does not, which is most of why a report feels like homework.
+\newcommand{\standfirst}[1]{%
+  {\setlength{\parindent}{0pt}\itshape\color{bookmute}\fontsize{11.5}{15}\selectfont #1\par}%
+  \vspace{14pt}}
+
+% The same device on a part page, where it is the only prose.
+\newcommand{\partstandfirst}[1]{%
+  {\setlength{\parindent}{0pt}\itshape\color{bookmute}\fontsize{12}{16.5}\selectfont #1\par}}
+
+% Drop cap. Three lines of Palatino in the accent, with the first few words
+% carried in small capitals — the oldest signal in printing that a chapter has
+% started, and the cheapest.
+\setlength{\DefaultFindent}{2pt}
+\renewcommand{\LettrineFontHook}{\color{bookaccent}}
+\newcommand{\bookopen}[3]{\lettrine[lines=3,findent=2pt,nindent=0pt]{#1}{\textsc{#2}}#3}
+
+% A pull quote, for a sentence that carries a chapter.
+\newcommand{\pullquote}[1]{%
+  \par\vspace{14pt}
+  {\setlength{\parindent}{0pt}\itshape\color{bookaccent}\fontsize{13.5}{18}\selectfont #1\par}
+  \vspace{14pt}}
+
+% Scene break. A tracked triple asterisk rather than a dingbat: the dingbat
+% fonts are present but a fleuron on a book about clinical evidence reads as
+% decoration, and this does not.
+\newcommand{\dinkus}{%
+  \par\vspace{10pt}\noindent
+  {\centering\bookdisplay\color{bookmute}\fontsize{12}{12}\selectfont
+   *\hspace{1.3em}*\hspace{1.3em}*\par}
+  \vspace{10pt}}
+
+% Inline literal: file names, identifiers, enum variants. There are hundreds,
+% and \texttt at full size makes the line jump, so it is set at 0.92em in the
+% same colour as the accent's neutral sibling.
+\newcommand{\bookcode}[1]{{\ttfamily\footnotesize\color{bookink}#1}}
+
+% A terminal block: the commands a reader would actually type. Set verbatim at
+% a size that keeps a long command on one line, with the same hairlines as a
+% callout so the two read as one family.
+\newenvironment{bookterminal}
+  {\par\addvspace{11pt}\needspace{3\baselineskip}%
+   \noindent{\color{bookrule}\rule{\linewidth}{0.5pt}}\par\vspace{5pt}%
+   \begingroup\fontsize{8.4}{10.5}\selectfont\color{bookink}%
+   \setlength{\topsep}{0pt}\setlength{\partopsep}{0pt}}
+  {\endgroup\vspace{2pt}%
+   \noindent{\color{bookrule}\rule{\linewidth}{0.5pt}}\par\addvspace{11pt}}
+
+% Lists: tightened, because LaTeX's defaults were drawn for a wider measure.
+\setlist{leftmargin=1.4em, itemsep=2pt, parsep=0pt, topsep=6pt}
+\setlist[enumerate]{label=\bookdisplay\color{bookaccent}\arabic*.}
+\setlist[itemize]{label=\color{bookaccent}\textbullet}
+
+% ── Notes ────────────────────────────────────────────────────────────────
+\ifbook@endnotes
+  \RequirePackage{endnotes}
+  % Citations leave the page and gather at the back under the chapter that
+  % made the claim. The sources do not get quieter — they get out of the way
+  % of the sentence, which is the whole argument for a book over a preprint.
+  \let\footnote\endnote
+  \renewcommand{\notesname}{Notes}
+  \renewcommand\makeenmark{\textsuperscript{\color{bookaccent}\theenmark}}
+  \renewcommand\enoteformat{%
+    \bookflushnotesheading
+    \raggedright\setlength{\parindent}{0pt}%
+    \makebox[1.7em][l]{\color{bookaccent}\bookdisplay\fontsize{8}{8}\selectfont\theenmark}}
+  % A chapter heading in the Notes is PENDING until a note actually appears
+  % under it. Written eagerly it produced headings with nothing beneath them,
+  % for the chapters that cite nothing -- a heading is a promise that
+  % something follows.
+  \newcommand{\book@pendingnote}{}
+  \newcommand{\booknotesheading}[1]{%
+    \addtoendnotes{\noexpand\bookpendingchapter{#1}}}
+  \newcommand{\bookpendingchapter}[1]{\renewcommand{\book@pendingnote}{#1}}
+  \newcommand{\bookflushnotesheading}{%
+    \ifx\book@pendingnote\@empty\else
+      \par\addvspace{18pt}\needspace{3\baselineskip}%
+      {\color{bookaccent}\booktrack{\book@pendingnote}}\par\addvspace{8pt}%
+      \renewcommand{\book@pendingnote}{}%
+    \fi}
+  \newcommand{\printbooknotes}{%
+    \cleardoublepage
+    \chapter*{Notes}%
+    \markboth{Notes}{Notes}%
+    \addcontentsline{toc}{chapter}{Notes}%
+    {\setlength{\parskip}{5pt}\fontsize{8.6}{11}\selectfont
+     \renewcommand{\enotesize}{\fontsize{8.6}{11}\selectfont}%
+     \theendnotes}}
+\else
+  \newcommand{\booknotesheading}[1]{}
+  \newcommand{\printbooknotes}{}
+  \renewcommand{\thefootnote}{\arabic{footnote}}
+\fi
+
+% ── Front matter ─────────────────────────────────────────────────────────
+% \booktitlepage draws the half-title, title and colophon from arguments, so
+% the words live in the manuscript source and the arrangement lives here.
+\newcommand{\bookhalftitle}[1]{%
+  \thispagestyle{empty}\null\vspace{1.5in}
+  {\raggedright\bookdisplay\fontsize{13}{17}\selectfont\color{bookaccent}
+   \MakeUppercase{\spaceskip=0.3em #1}\par}
+  \clearpage\thispagestyle{empty}\null\clearpage}
+
+\newcommand{\booktitlepage}[4]{%
+  % #1 title  #2 subtitle  #3 author  #4 affiliation line
+  \thispagestyle{empty}\null\vspace{0.9in}
+  {\raggedright
+   {\bfseries\fontsize{27}{31}\selectfont\color{bookink} #1\par}
+   \vspace{14pt}
+   {\color{bookaccent}\rule{1.6in}{1.4pt}\par}
+   \vspace{16pt}
+   {\itshape\fontsize{14}{19}\selectfont\color{bookmute} #2\par}
+   \vfill
+   {\bookdisplay\fontsize{11}{14}\selectfont\color{bookink}\MakeUppercase{\spaceskip=0.25em #3}\par}
+   \vspace{5pt}
+   {\fontsize{10}{13}\selectfont\color{bookmute} #4\par}
+   \vspace{0.5in}}
+  \clearpage}
+
+% The colophon is several short paragraphs; they are separated HERE, by
+% \parskip, rather than by a \vspace written into each one at the other end of
+% the pipeline.
+\newcommand{\bookcolophon}[1]{%
+  \thispagestyle{empty}\null\vfill
+  {\setlength{\parindent}{0pt}\setlength{\parskip}{7pt}%
+   \fontsize{8.6}{12}\selectfont\color{bookmute}#1\par}
+  \vspace{0.4in}\clearpage}
+
+\newcommand{\bookepigraph}[2]{%
+  \thispagestyle{empty}\null\vspace{2.2in}
+  {\raggedright\itshape\fontsize{13}{18}\selectfont\color{bookink}#1\par}
+  \vspace{10pt}
+  {\raggedright\booktrack{#2}\color{bookmute}\par}
+  \clearpage}
+
+\endinput

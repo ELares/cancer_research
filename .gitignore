@@ -17,6 +17,7 @@ simulations/output/
 *.log
 *.out
 *.toc
+*.ent
 *.bbl
 *.blg
 *.synctex.gz

@@ -46,8 +46,11 @@ def _generator():
 def _caption_statistic():
     """The chi-squared value and p the caption states, as floats."""
     text = TEX.read_text()
+    # The caption now opens with the book design's figure label, so the
+    # statistic is no longer the first thing after \caption{.
     m = re.search(
-        r"\\caption\{Ferroptosis engagement \(\$\\chi\^2=([\d.]+)\$, "
+        r"\\caption\{(?:\\figlabel\{\d+\})?Ferroptosis engagement "
+        r"\(\$\\chi\^2=([\d.]+)\$, "
         r"\$p=([\d.]+)\\times10\^\{(-?\d+)\}\$",
         text)
     assert m, (

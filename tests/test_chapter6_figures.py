@@ -437,7 +437,7 @@ def test_the_compiled_pdf_prints_the_number_the_prose_cites():
     # setcounter placed after it -- but still before the label -- printed 6.26
     # and passed a regex that only required setcounter-then-label.
     pinned = {fn: int(n) + 1 for n, fn in re.findall(
-        r"\\setcounter\{figure\}\{(\d+)\}[^\\]*\\includegraphics"
+        r"\\setcounter\{figure\}\{(\d+)\}[^\\]*\\book(?:graphic|includegraphics)"
         r".*?\\caption\{.*?\\label\{fig:([^}]+)\}", tex, re.S)}
     unpinned = [f for f in floats if f not in pinned]
     assert not unpinned, (
