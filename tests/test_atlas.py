@@ -49,9 +49,21 @@ def test_adjacent_descriptors_are_experimental_context_not_topical():
 
 
 def _article_xml(pmid: str, mesh_uis, title="T", abstract="A", year="2020",
-                 pmcid=None, doi=None):
+                 pmcid=None, doi=None, qualifiers=None):
+    """Build a PubMed article fixture.
+
+    `qualifiers` maps a descriptor UI to a list of `(qualifier UI, label)`, so
+    a fixture can carry the SECOND MeSH axis. Without it this helper emitted
+    `DescriptorName` only, which made the single existing test of
+    `parse_articles` structurally incapable of failing on a dropped qualifier
+    -- the "nothing can catch this" half of #722.
+    """
+    qualifiers = qualifiers or {}
     heads = "".join(
-        f'<MeshHeading><DescriptorName UI="{u}" MajorTopicYN="N">D{u}</DescriptorName></MeshHeading>'
+        f'<MeshHeading><DescriptorName UI="{u}" MajorTopicYN="N">D{u}</DescriptorName>'
+        + "".join(f'<QualifierName UI="{qu}" MajorTopicYN="Y">{ql}</QualifierName>'
+                  for qu, ql in qualifiers.get(u, []))
+        + "</MeshHeading>"
         for u in mesh_uis)
     mesh_block = f"<MeshHeadingList>{heads}</MeshHeadingList>" if mesh_uis else ""
     ids = ""
@@ -2066,3 +2078,48 @@ def test_landscape_derives_the_understatement_verdict_from_its_sibling():
         assert "That the manuscript understates it does not" in flat
     else:
         assert "understatement reading holds under all of them" in flat
+
+
+def test_the_parser_drops_the_mesh_qualifier_axis_and_that_is_pinned(tmp_path):
+    """MeSH has TWO axes and the census carries one.
+
+    `atlas_baseline.parse_articles` reads `DescriptorName` and never
+    `QualifierName`, so `Lung Neoplasms/radiotherapy` is stored as
+    `Lung Neoplasms`. That is a real limitation of the ingest (#722) and it is
+    NOT a bug being fixed here -- re-parsing costs roughly four hours and 66 GB
+    against baseline files that disappear when the 2027 baseline lands.
+
+    What this pins is that the limitation is DELIBERATE and MEASURED rather
+    than unnoticed. Before this test the fixture emitted descriptors only, so
+    the one existing test of the parser could not have failed on a dropped
+    qualifier whatever the parser did. Now:
+
+    - a qualifier in the input does not appear in the output, which is today's
+      documented behaviour, and
+    - the descriptor it hangs off DOES survive, which is why census MEMBERSHIP
+      is unaffected -- selection keys on descriptor UIs, so a
+      `Lung Neoplasms/radiotherapy` article still enters as `Lung Neoplasms`.
+
+    If someone adds qualifier parsing, this test fails and they must state
+    which artifacts were recomputed. `analysis/atlas-ingest-sensitivity.md`
+    measures what the axis would add: surgery +14.0 points, drug therapy
+    +10.2, imaging +5.2, radiotherapy +2.4.
+    """
+    c04 = {"D008175": "Lung Neoplasms"}
+    path = _write_baseline(tmp_path, [
+        _article_xml("42", ["D008175"],
+                     qualifiers={"D008175": [("Q000532", "radiotherapy")]}),
+    ])
+    got = list(ab.parse_articles(path, c04))
+    assert len(got) == 1, got
+    rec = got[0]
+    blob = repr(rec)
+    assert "D008175" in blob, (
+        "the DESCRIPTOR was dropped too; census membership keys on descriptor "
+        "UIs, so this would change the 4,403,994 denominator")
+    assert rec["cancer_basis"] == "C04"
+    assert "Q000532" not in blob and "radiotherapy" not in blob.lower(), (
+        "the parser now reads QualifierName. That is the #722 fix and it is "
+        "welcome, but it changes topic attribution inside the census: state "
+        "which committed atlas artifacts were recomputed, and update "
+        "`analysis/atlas-ingest-sensitivity.md`, before relaxing this test")
