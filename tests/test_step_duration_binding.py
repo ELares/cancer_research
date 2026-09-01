@@ -265,9 +265,32 @@ def test_every_row_of_the_reading_table_matches_the_measurement():
         # line number appeared in the audit's implied-window list -- so a row
         # could quote words the cited file does not contain, which is the "a
         # claim in file A about file B" defect this whole section retracts.
+        # FIVE HOLES CLOSED AT ONCE, which is why this is done in the checker
+        # rather than one assert per sentence -- the recommendation #786
+        # carries is to stop adding per-sentence guards.
+        #
+        # (a) EVERY `path:N` must carry a quote. The regex demanded
+        #     `` `path:N` -- "quote" ``, so a cite in any other shape was not
+        #     checked at all; bare cites are now found separately and refused.
+        # (b) `all()`, not `any()`. Deleting two of three cites left the row
+        #     green on the survivor.
+        # (c) A quote must be long enough to mean something. Truncating one to
+        #     a single word ("minutes", "resident") passed.
+        # (d) A quote that is REAL AT THE CITED LINE but says the OPPOSITE is
+        #     the sharpest of them: citing a line reading "... is NOT modeled"
+        #     as evidence FOR the thing being modelled passes every check
+        #     above, because the words genuinely are there. A negation in the
+        #     cited line that is absent from the quote is refused.
+        bare = re.findall(r"`([A-Za-z0-9_./-]+\.rs):(\d+)`(?!\s*--\s*\")", source)
         cites = re.findall(r"`([^`]+?):(\d+)`\s*--\s*\"([^\"]+)\"", source)
+        assert not bare, (
+            f"the {v} min/step row cites {bare} with no quote beside it; a "
+            "cite the checker cannot read is a cite nothing verifies")
         assert cites, f"the {v} min/step row cites no file:line with a quote"
         for path_s, lineno, quote in cites:
+            assert len(quote.split()) >= 3, (
+                f"the {v} min/step row quotes {quote!r}, which is too short to "
+                "carry a claim -- a one-word quote matches almost any line")
             f = REPO / "simulations" / path_s if not (REPO / path_s).exists() \
                 else REPO / path_s
             for cand in (REPO / path_s, REPO / "simulations" / path_s,
@@ -284,6 +307,24 @@ def test_every_row_of_the_reading_table_matches_the_measurement():
             assert quote in line, (
                 f"the {v} min/step row quotes {quote!r} at {path_s}:{n}, "
                 f"which reads {line.strip()!r}")
+            # THE FIFTH HOLE IS NOT CLOSED, AND A HEURISTIC FOR IT WAS TRIED
+            # AND WITHDRAWN. #786 names the sharpest case: a quote that is
+            # REAL at the cited line and says the opposite -- citing a line
+            # reading "... is NOT modeled" as evidence FOR the thing.
+            #
+            # "refuse a quote that omits a negation present in the line" is the
+            # obvious rule and it REJECTS CORRECT WORK. `sim-tme/README.md:138`
+            # reads "captures only the resident T cell phase (0-48h), not
+            # systemic lymph node priming (1-7 days)", and the row quotes the
+            # affirmative half truthfully; the negation scopes the OTHER
+            # clause. Position does not separate the two cases either, because
+            # in both the negation follows the quoted span.
+            #
+            # So it is left open deliberately. A guard that fails a correct
+            # citation trains people to weaken it, and this repo has already
+            # learned that a threshold on the wrong quantity cannot be tuned
+            # into a right one -- the discriminator would have to be clause
+            # scope, which is not available from a substring match.
 
 
 def test_the_subsystem_rule_is_stated_and_not_a_per_binary_one():
@@ -341,7 +382,7 @@ def test_the_superseded_headline_is_gone_from_every_site():
 # hand-written figures being wrong is the defect this whole PR is retracting.
 # ---------------------------------------------------------------------------
 
-CORE = REPO / "simulations/ferroptosis-core/src"
+# CORE is defined once, above; this second binding was a scripted-edit scar.
 
 
 def _num_near(doc: str, phrase: str, pattern: str) -> str:
