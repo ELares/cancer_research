@@ -20,22 +20,32 @@ predictor. Breadth of coverage is not evidence of depth.**
 
 | Field | Value |
 |---|---|
-| Name | `ferroptosis-core` (embeddable engine) + `sim-tme-3d` (3D capstone binary) and 11 sibling binaries |
+| Name | `ferroptosis-core` (embeddable engine) + `sim-tme-3d` (3D capstone binary) and 12 sibling binaries. The crate name is historical: it began as a ferroptosis engine and now also carries radiation, ablation, oncolytic-spread, ADC and adoptive-cell layers. |
 | Version | ferroptosis-core 0.69.0 (see `simulations/ferroptosis-core/Cargo.toml` for the authoritative current value) |
 | Author | Ezequiel Lares |
 | License | MIT |
 | Language | Rust (core + binaries), Python bindings (PyO3), C FFI (PhysiCell-style ABI) |
-| Type | Mechanistic, stochastic (Monte Carlo) single-cell ferroptosis ODE engine + 2D/3D spatial tumor-microenvironment layers. NOT a statistical / machine-learning predictor. |
+| Type | Mechanistic, stochastic (Monte Carlo) single-cell ferroptosis ODE engine + 2D/3D spatial tumor-microenvironment layers + nine selectable treatment arms (ferroptosis induction, PDT, SDT, radiation, checkpoint blockade, adoptive cell therapy, oncolytic virus, ablation, ADC). NOT a statistical / machine-learning predictor. |
 | What it is NOT | Not a trained model, not fit to a patient dataset, not a clinical decision tool, not a validated biomarker. |
 
 ## 2. Intended use
 
 **Primary intended use:** mechanistic hypothesis exploration. Take a specific,
-mechanistically-stated claim about ferroptosis-based therapy (for example "dual
-GPX4 + FSP1 inhibition is synergistic," or "physical-ROS modalities are less
-sensitive than RSL3 to the hypoxia / stromal / pH barriers") and test whether it
-is internally consistent and what direction and rough magnitude the model
-produces, so the claim can be turned into a falsifiable wet-lab experiment.
+mechanistically-stated claim about a cancer therapy the engine can express (for
+example "dual GPX4 + FSP1 inhibition is synergistic," "physical-ROS modalities
+are less sensitive than RSL3 to the hypoxia / stromal / pH barriers," or "PARP
+inhibition enhances radiation more at low dose per fraction than at high") and
+test whether it is internally consistent and what direction and rough magnitude
+the model produces, so the claim can be turned into a falsifiable wet-lab
+experiment.
+
+**The nine arms are not equally developed, and the difference matters more than
+the count.** The ferroptosis and physical-ROS work carries the calibrated legs
+and every number the manuscript reports; the arms added later are roughly 11 to
+13 times smaller by line count, and each is recorded in
+`simulations/calibration/CALIBRATION_STATUS.md` as feeding no number in the manuscript's QUANTITATIVE chapters (Chapter 6 does report these arms' own figures, which is a different thing).
+Use a newer arm to ask whether a mechanism's DIRECTION is internally
+consistent. Do not read a magnitude off one.
 
 **Intended users:** researchers, engineers, and students with enough domain
 context to read the caveats. Every quantitative output should be read alongside

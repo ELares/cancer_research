@@ -602,14 +602,46 @@ def scan() -> dict:
     }
 
 
+# WHICH `Treatment` VARIANT, IF ANY, LETS A RUN SELECT THIS MECHANISM.
+#
+# This was a REGEX AGAINST THE VARIANT'S SPELLING, and it was a spelling
+# accident rather than a capability measurement. `oncolytic` is right-bounded
+# so it cannot match inside `OncolyticVirus`; `adc` cannot match inside
+# `AntibodyDrugConjugate`; `cart` cannot match `AdoptiveCell`; `hifu` cannot
+# match `Ablation`. Four mechanisms whose arms exist and are RUN by
+# `sim-modality-panel` were reported as modifiers, so the page told a reader
+# they could not be selected while the panel selected them.
+#
+# No regex can express this, because the enum is named after what the arm DOES
+# and the taxonomy is named after what the literature CALLS it. So it is an
+# explicit mapping -- a judgement, recorded where it can be disputed, and
+# pinned by `tests/test_modality_coverage.py` so a new variant cannot land
+# without someone deciding which mechanism (if any) it makes selectable.
+VARIANT_FOR = {
+    "sonodynamic": ["SDT"],
+    "immunotherapy": ["Immunotherapy"],
+    "car-t": ["AdoptiveCell"],
+    "bispecific-antibody": ["AdoptiveCell"],
+    "oncolytic-virus": ["OncolyticVirus"],
+    "antibody-drug-conjugate": ["AntibodyDrugConjugate"],
+    "hifu": ["Ablation"],
+    "electrochemical-therapy": ["Ablation"],
+}
+# Variants that make NO taxonomy mechanism selectable, each with the reason.
+# `RSL3`, `PDT` and `Radiation` are real arms whose mechanisms this taxonomy
+# does not name -- GPX4 inhibitors, photodynamic therapy and radiotherapy have
+# no row in the 16, which is a limit of the taxonomy and not of the engine.
+UNMAPPED_VARIANTS = {
+    "RSL3": "ferroptosis induction has no taxonomy row",
+    "PDT": "photodynamic therapy has no taxonomy row",
+    "Radiation": "radiotherapy has no taxonomy row",
+}
+
+
 def _tier(mech: str, code: list, variants: list) -> str:
-    terms = ENGINE_TERMS.get(mech, ())
-    for v in variants:
-        if v == CONTROL_VARIANT:
-            continue
-        flat = v.lower()
-        if any(re.search(term_pattern(t.replace(" ", "")), flat) for t in terms):
-            return "treatment"
+    live = {v for v in variants if v != CONTROL_VARIANT}
+    if set(VARIANT_FOR.get(mech, ())) & live:
+        return "treatment"
     return "modifier" if code else "absent"
 
 

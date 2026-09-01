@@ -501,11 +501,14 @@ figures:
       claim instead, that most arms no longer route through the ferroptosis
       engine at all. That is the answer to the criticism this campaign began
       from, and it is structural rather than an efficacy claim. The sharpest
-      row is the ADC: it shares the payload's pharmacology with SDT exactly
-      and kills a fiftieth as much, because the payload arrives on a ~150 kDa
-      antibody whose binding-site barrier holds penetration to ~7 um -- the
-      first place in this repository where the SAME pharmacology runs through
-      two delivery routes and the gap is the only difference. SDT and PDT
+      row is the ADC: the same exogenous-ROS constant drives it and SDT
+      (`params.sdt_ros`, NOT RSL3's GPX4-inhibition branch, which fires only
+      for `Treatment::RSL3`) and it kills a fiftieth as much, because the
+      payload arrives on a ~150 kDa antibody whose binding-site barrier holds
+      penetration to ~7 um -- the first place in this repository where one
+      payload constant runs through two delivery routes and the transport
+      factor is the only difference, which prices this model's transport layer
+      rather than measuring an antibody in tissue. SDT and PDT
       coincide to the last digit because this panel is DEPTH-FREE and their
       exogenous-ROS parameters are equal by default; the thing that separates
       them is a geometry, not a mechanism, and it lives in

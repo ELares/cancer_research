@@ -3,7 +3,8 @@
 
 THE QUESTION, AND WHY THE OBVIOUS ANSWER IS WRONG
 --------------------------------------------------
-Radiotherapy has no mechanism tag, no query and no engine term, and the easy
+Radiotherapy has no mechanism tag and no query (it gained an engine arm in
+#726; the taxonomy still has no row for it), and the easy
 conclusion is that the corpus does not contain it. That conclusion is wrong, and
 the way it is wrong is the finding.
 

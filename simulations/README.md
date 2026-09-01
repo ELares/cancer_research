@@ -1,6 +1,6 @@
 # Simulations
 
-Rust workspace for multi-scale cancer-therapy simulation: a mechanistic claim-testing engine spanning single-cell ferroptosis biochemistry, 2D/3D tumor microenvironment (oxygen gradients, immune coupling, stromal protection, vasculature, clonal heterogeneity), drug penetration, drug combinations, and tumor pharmacokinetics. Ferroptosis and PDT/SDT are the worked case studies; the infrastructure generalizes to testing claims about other modalities.
+Rust workspace for multi-scale cancer-therapy simulation: a mechanistic claim-testing engine spanning single-cell ferroptosis biochemistry, 2D/3D tumor microenvironment (oxygen gradients, immune coupling, stromal protection, vasculature, clonal heterogeneity), drug penetration, drug combinations, and tumor pharmacokinetics. Ferroptosis and PDT/SDT are the deepest case studies and carry the calibrated legs. Eight further arms -- radiation, checkpoint blockade, adoptive cell therapy, oncolytic virus, ablation and antibody-drug conjugates among them -- are implemented and selectable, and are roughly an order of magnitude smaller. `sim-modality-panel` runs every applicable arm against the identical tumour.
 
 ## Binaries
 

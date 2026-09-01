@@ -47,7 +47,7 @@
   },
   {
    "arm": "AntibodyDrugConjugate",
-   "calibration": "transport anchored; payload pharmacology is RSL3's",
+   "calibration": "transport anchored; payload is the SDT exo-ROS constant, not RSL3 pharmacology",
    "kill_fraction": 0.0183505,
    "limited_by": "the binding-site barrier (~7 um penetration)",
    "route": "ferroptosis payload, delivered on an antibody (+ bystander)"
@@ -68,10 +68,10 @@
   },
   {
    "arm": "Control",
-   "calibration": "uncalibrated (direction-only)",
+   "calibration": "not applicable (untreated baseline)",
    "kill_fraction": 0.0,
-   "limited_by": "energy delivery to depth",
-   "route": "ferroptosis engine (lipid peroxidation)"
+   "limited_by": "nothing: this is what the other arms are read against",
+   "route": "none -- untreated baseline"
   },
   {
    "arm": "RSL3",
@@ -89,7 +89,8 @@
  "not_a_ranking": "Each arm carries its own calibration status; most are uncalibrated placeholders. These are comparisons between MECHANISMS under one model, not claims about clinical efficacy. See CALIBRATION_STATUS.md.",
  "seed": 42,
  "n_arms": 10,
- "n_ferroptosis_routed": 4,
+ "n_treatment_arms": 9,
+ "n_ferroptosis_routed": 3,
  "n_other_routes": 6,
  "distinct_routes": [
   "direct lysis + the SHARED ICD chain",

@@ -14,7 +14,7 @@ just artifacts of how we searched, and (2) **stress-test** specific biological i
 computer simulations — honestly labeling what's backed by real data and what's still just
 a hypothesis.
 
-## What is ferroptosis (the biology at the center)?
+## What is ferroptosis (the biology this started from)?
 
 Cells normally protect themselves from a kind of rust-like chemical damage to their
 membranes (called *lipid peroxidation*). **Ferroptosis** is a way of killing a cancer cell
@@ -43,13 +43,17 @@ supportive neighbor cells) would get in the way?
    case — it is FDA-approved and has completed large trials, and it is simply invisible to
    this instrument. Throughout, such treatments are reported as *not measurable* rather than
    as zero, because a zero would read as "nobody is working on it," which would be false.
-4. **A simulation engine.** A small, reusable program that models the ferroptosis chemistry
-   and the tumor environment, used to ask "if this idea were true, what would we expect to
-   see?"
+4. **A simulation engine.** A small, reusable program that models the tumor environment and
+   nine different ways of attacking a cancer cell — ferroptosis chemistry (the deepest and
+   the one it started with), light and ultrasound, radiation, checkpoint blockade, engineered
+   T cells, a cancer-killing virus, physically destroying tissue, and antibodies carrying a
+   drug — used to ask "if this idea were true, what would we expect to see?" The newer arms
+   are much smaller than the ferroptosis one, and the project measures that gap rather than
+   glossing it.
 
-## The three headline results (and the big caveat)
+## The headline results (and the big caveat)
 
-The simulations produced three directional ideas worth testing in a lab:
+The simulations produced six directional ideas worth testing in a lab. The first three come from the ferroptosis and light/ultrasound work the project began with:
 
 1. **Hitting two defenses at once works better than one.** Blocking two parallel "repair
    crews" (GPX4 and FSP1) at the same time is more than additive.

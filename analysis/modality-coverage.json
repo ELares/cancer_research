@@ -442,7 +442,7 @@
     "adoptive",
     "cell"
    ],
-   "engine_tier": "modifier"
+   "engine_tier": "treatment"
   },
   {
    "mechanism": "metabolic-targeting",
@@ -477,7 +477,7 @@
     "cell",
     "physics"
    ],
-   "engine_tier": "modifier"
+   "engine_tier": "treatment"
   },
   {
    "mechanism": "synthetic-lethality",
@@ -505,7 +505,7 @@
     "cell",
     "oncolytic"
    ],
-   "engine_tier": "modifier"
+   "engine_tier": "treatment"
   },
   {
    "mechanism": "crispr",
@@ -531,7 +531,7 @@
    "prose_only_modules": [
     "cell"
    ],
-   "engine_tier": "modifier"
+   "engine_tier": "treatment"
   },
   {
    "mechanism": "electrochemical-therapy",
@@ -545,7 +545,7 @@
    "prose_only_modules": [
     "cell"
    ],
-   "engine_tier": "modifier"
+   "engine_tier": "treatment"
   },
   {
    "mechanism": "sonodynamic",
@@ -586,7 +586,7 @@
     "cell",
     "oxygen"
    ],
-   "engine_tier": "modifier"
+   "engine_tier": "treatment"
   },
   {
    "mechanism": "phagocytosis-checkpoint",

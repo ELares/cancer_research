@@ -124,8 +124,12 @@ pub enum Treatment {
 
     /// Antibody-drug conjugate: a payload delivered on an antibody.
     ///
-    /// The payload's pharmacology is the ferroptosis engine's, so this DOES
-    /// route through `CellState` — what the arm changes is DELIVERY, via
+    /// The payload drives the ferroptosis engine, so this DOES route
+    /// through `CellState` — but it is the SDT exogenous-ROS constant that
+    /// drives it, NOT RSL3's pharmacology: the GPX4-inhibition branch in
+    /// [`crate::biochem::exo_ros`] fires only for [`Treatment::RSL3`], and
+    /// three artifacts claimed otherwise until that was checked against this
+    /// code. What the arm changes is DELIVERY, via
     /// [`crate::drug_transport::antibody_drug_conjugate`], and the
     /// binding-site barrier that makes an ADC's reach ~7 µm.
     AntibodyDrugConjugate,

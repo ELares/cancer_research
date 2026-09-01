@@ -6,7 +6,7 @@
 > to propose new approaches for targeting drug-resistant tumour cells.
 
 That mission has been substantially executed. It produced a 4,830-article
-corpus, a 46,700-word manuscript, an 11-binary simulation suite, and a
+corpus, a 46,700-word manuscript, a 13-binary simulation suite, and a
 calibration ledger. It also hit its ceiling, and the ceiling is measurable:
 
 **4,830 articles is 0.11% of the cancer literature.** PubMed indexes 4,276,707

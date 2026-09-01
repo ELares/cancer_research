@@ -117,7 +117,7 @@ def test_every_figure_reference_in_the_manuscript_resolves():
                if e.get("manuscript_figure")}
     for stem, phrase in (
         ("fig30_modality_landscape", "shows the shape of that"),
-        ("fig30_modality_landscape", "Nine treatment arms exist where four did"),
+        ("fig30_modality_landscape", "Nine treatment arms exist where three did"),
         ("fig31_modality_panel", "runs every applicable arm against the identical tumour"),
     ):
         n = by_file[stem]

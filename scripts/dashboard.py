@@ -185,7 +185,13 @@ def simulation_tab():
         have_fc = False
 
     if have_fc:
-        st.caption("Live `ferroptosis_core.sim_batch` sweep.")
+        st.caption(
+            "Live `ferroptosis_core.sim_batch` sweep. These four arms are what "
+            "the PYTHON BINDING accepts, not what the engine has -- `sim_cell` "
+            "takes no dose, depth or alpha/beta, so the arms that need them "
+            "(radiation, ablation, ADC, adoptive cell, oncolytic) are "
+            "deliberately unreachable here and run from the Rust binaries."
+        )
         phenos = ["Glycolytic", "OXPHOS", "Persister"]
         treatments = ["RSL3", "SDT", "PDT", "Control"]
         pheno = st.selectbox("Phenotype", phenos)

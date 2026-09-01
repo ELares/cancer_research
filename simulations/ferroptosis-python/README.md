@@ -1,6 +1,6 @@
 # ferroptosis-core
 
-Mechanistic ferroptosis cell death simulation engine for cancer research.
+Mechanistic cancer-therapy simulation engine. Ferroptosis cell death is the deepest layer and the crate is named for it; eight further treatment arms sit beside it (radiation, checkpoint blockade, adoptive cell therapy, oncolytic virus, ablation, antibody-drug conjugates, PDT and SDT).
 
 Models the ferroptosis pathway from ROS generation through GSH depletion, GPX4/FSP1 repair, lipid peroxidation, and cell death. Built in Rust for speed, exposed to Python via PyO3. Simulates 10,000 cells in ~50ms.
 

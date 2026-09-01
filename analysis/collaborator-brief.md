@@ -6,7 +6,7 @@
 ## The ask
 
 This is an open, MIT-licensed, reproducible cancer-research program (a
-cross-literature corpus + an embeddable ferroptosis simulation engine) built so
+cross-literature corpus + an embeddable simulation engine whose deepest layer is ferroptosis and which now carries eight further treatment arms) built so
 far by a single non-domain author with AI assistance. It has **no domain
 co-author, no wet-lab, and an empty contributor ledger**, so self-consistency is
 its validation ceiling. The project's own scientific-review pass already caught a
